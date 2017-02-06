@@ -478,7 +478,7 @@ DefaultIEW<Impl>::squash(ThreadID tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
+DefaultIEW<Impl>::squashDueToBranch(const DynInstPtr& inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, PC: %s "
             "[sn:%i].\n", tid, inst->pcState(), inst->seqNum);
@@ -503,7 +503,7 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, ThreadID tid)
+DefaultIEW<Impl>::squashDueToMemOrder(const DynInstPtr& inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i]: Memory violation, squashing violator and younger "
             "insts, PC: %s [sn:%i].\n", tid, inst->pcState(), inst->seqNum);
@@ -566,28 +566,28 @@ DefaultIEW<Impl>::unblock(ThreadID tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::wakeDependents(DynInstPtr &inst)
+DefaultIEW<Impl>::wakeDependents(const DynInstPtr& inst)
 {
     instQueue.wakeDependents(inst);
 }
 
 template<class Impl>
 void
-DefaultIEW<Impl>::rescheduleMemInst(DynInstPtr &inst)
+DefaultIEW<Impl>::rescheduleMemInst(const DynInstPtr& inst)
 {
     instQueue.rescheduleMemInst(inst);
 }
 
 template<class Impl>
 void
-DefaultIEW<Impl>::replayMemInst(DynInstPtr &inst)
+DefaultIEW<Impl>::replayMemInst(const DynInstPtr& inst)
 {
     instQueue.replayMemInst(inst);
 }
 
 template<class Impl>
 void
-DefaultIEW<Impl>::blockMemInst(DynInstPtr& inst)
+DefaultIEW<Impl>::blockMemInst(const DynInstPtr& inst)
 {
     instQueue.blockMemInst(inst);
 }
@@ -601,7 +601,7 @@ DefaultIEW<Impl>::cacheUnblocked()
 
 template<class Impl>
 void
-DefaultIEW<Impl>::instToCommit(DynInstPtr &inst)
+DefaultIEW<Impl>::instToCommit(const DynInstPtr& inst)
 {
     // This function should not be called after writebackInsts in a
     // single cycle.  That will cause problems with an instruction
@@ -1578,7 +1578,7 @@ DefaultIEW<Impl>::tick()
 
 template <class Impl>
 void
-DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
+DefaultIEW<Impl>::updateExeInstStats(const DynInstPtr& inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -1610,7 +1610,7 @@ DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
 
 template <class Impl>
 void
-DefaultIEW<Impl>::checkMisprediction(DynInstPtr &inst)
+DefaultIEW<Impl>::checkMisprediction(const DynInstPtr& inst)
 {
     ThreadID tid = inst->threadNumber;
 

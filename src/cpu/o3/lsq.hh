@@ -106,15 +106,15 @@ class LSQ {
     { thread[tid].tick(); }
 
     /** Inserts a load into the LSQ. */
-    void insertLoad(DynInstPtr &load_inst);
+    void insertLoad(const DynInstPtr &load_inst);
     /** Inserts a store into the LSQ. */
-    void insertStore(DynInstPtr &store_inst);
+    void insertStore(const DynInstPtr &store_inst);
 
     /** Executes a load. */
-    Fault executeLoad(DynInstPtr &inst);
+    Fault executeLoad(const DynInstPtr &inst);
 
     /** Executes a store. */
-    Fault executeStore(DynInstPtr &inst);
+    Fault executeStore(const DynInstPtr &inst);
 
     /**
      * Commits loads up until the given sequence number for a specific thread.

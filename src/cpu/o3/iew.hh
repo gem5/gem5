@@ -175,24 +175,24 @@ class DefaultIEW
     void squash(ThreadID tid);
 
     /** Wakes all dependents of a completed instruction. */
-    void wakeDependents(DynInstPtr &inst);
+    void wakeDependents(const DynInstPtr &inst);
 
     /** Tells memory dependence unit that a memory instruction needs to be
      * rescheduled. It will re-execute once replayMemInst() is called.
      */
-    void rescheduleMemInst(DynInstPtr &inst);
+    void rescheduleMemInst(const DynInstPtr &inst);
 
     /** Re-executes all rescheduled memory instructions. */
-    void replayMemInst(DynInstPtr &inst);
+    void replayMemInst(const DynInstPtr &inst);
 
     /** Moves memory instruction onto the list of cache blocked instructions */
-    void blockMemInst(DynInstPtr &inst);
+    void blockMemInst(const DynInstPtr &inst);
 
     /** Notifies that the cache has become unblocked */
     void cacheUnblocked();
 
     /** Sends an instruction to commit through the time buffer. */
-    void instToCommit(DynInstPtr &inst);
+    void instToCommit(const DynInstPtr &inst);
 
     /** Inserts unused instructions of a thread into the skid buffer. */
     void skidInsert(ThreadID tid);
@@ -230,18 +230,18 @@ class DefaultIEW
     bool hasStoresToWB(ThreadID tid) { return ldstQueue.hasStoresToWB(tid); }
 
     /** Check misprediction  */
-    void checkMisprediction(DynInstPtr &inst);
+    void checkMisprediction(const DynInstPtr &inst);
 
   private:
     /** Sends commit proper information for a squash due to a branch
      * mispredict.
      */
-    void squashDueToBranch(DynInstPtr &inst, ThreadID tid);
+    void squashDueToBranch(const DynInstPtr &inst, ThreadID tid);
 
     /** Sends commit proper information for a squash due to a memory order
      * violation.
      */
-    void squashDueToMemOrder(DynInstPtr &inst, ThreadID tid);
+    void squashDueToMemOrder(const DynInstPtr &inst, ThreadID tid);
 
     /** Sets Dispatch to blocked, and signals back to other stages to block. */
     void block(ThreadID tid);
@@ -295,7 +295,7 @@ class DefaultIEW
 
   private:
     /** Updates execution stats based on the instruction. */
-    void updateExeInstStats(DynInstPtr &inst);
+    void updateExeInstStats(const DynInstPtr &inst);
 
     /** Pointer to main time buffer used for backwards communication. */
     TimeBuffer<TimeStruct> *timeBuffer;

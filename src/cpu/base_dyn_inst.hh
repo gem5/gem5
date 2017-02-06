@@ -827,7 +827,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     /**Read the micro PC of this instruction. */
     Addr microPC() const { return pc.microPC(); }
 
-    bool readPredicate()
+    bool readPredicate() const
     {
         return instFlags[Predicate];
     }
@@ -855,13 +855,13 @@ class BaseDynInst : public ExecContext, public RefCounted
 
   public:
     /** Returns whether or not the eff. addr. source registers are ready. */
-    bool eaSrcsReady();
+    bool eaSrcsReady() const;
 
     /** Is this instruction's memory access strictly ordered? */
     bool strictlyOrdered() const { return instFlags[IsStrictlyOrdered]; }
 
     /** Has this instruction generated a memory request. */
-    bool hasRequest() { return instFlags[ReqMade]; }
+    bool hasRequest() const { return instFlags[ReqMade]; }
 
     /** Returns iterator to this instruction in the list of all insts. */
     ListIt &getInstListIt() { return instListIt; }

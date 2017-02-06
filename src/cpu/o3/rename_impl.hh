@@ -524,8 +524,6 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
         ++renameRunCycles;
     }
 
-    DynInstPtr inst;
-
     // Will have to do a different calculation for the number of free
     // entries.
     int free_rob_entries = calcFreeROBEntries(tid);
@@ -596,7 +594,7 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
 
         assert(!insts_to_rename.empty());
 
-        inst = insts_to_rename.front();
+        DynInstPtr inst = insts_to_rename.front();
 
         //For all kind of instructions, check ROB and IQ first
         //For load instruction, check LQ size and take into account the inflight loads
@@ -787,7 +785,7 @@ DefaultRename<Impl>::sortInsts()
 {
     int insts_from_decode = fromDecode->size;
     for (int i = 0; i < insts_from_decode; ++i) {
-        DynInstPtr inst = fromDecode->insts[i];
+        const DynInstPtr &inst = fromDecode->insts[i];
         insts[inst->threadNumber].push_back(inst);
 #if TRACING_ON
         if (DTRACE(O3PipeView)) {
@@ -1008,7 +1006,7 @@ DefaultRename<Impl>::removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid)
 
 template <class Impl>
 inline void
-DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
+DefaultRename<Impl>::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
 {
     ThreadContext *tc = inst->tcBase();
     RenameMap *map = renameMap[tid];
@@ -1068,7 +1066,7 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
 
 template <class Impl>
 inline void
-DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
+DefaultRename<Impl>::renameDestRegs(const DynInstPtr &inst, ThreadID tid)
 {
     ThreadContext *tc = inst->tcBase();
     RenameMap *map = renameMap[tid];

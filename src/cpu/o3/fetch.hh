@@ -281,7 +281,7 @@ class DefaultFetch
      * @param next_NPC Used for ISAs which use delay slots.
      * @return Whether or not a branch was predicted as taken.
      */
-    bool lookupAndUpdateNextPC(DynInstPtr &inst, TheISA::PCState &pc);
+    bool lookupAndUpdateNextPC(const DynInstPtr &inst, TheISA::PCState &pc);
 
     /**
      * Fetches the cache line that contains the fetch PC.  Returns any

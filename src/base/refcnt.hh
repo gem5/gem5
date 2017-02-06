@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2017 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -30,6 +42,8 @@
 
 #ifndef __BASE_REFCNT_HH__
 #define __BASE_REFCNT_HH__
+
+#include <type_traits>
 
 /**
  * @file base/refcnt.hh
@@ -80,11 +94,11 @@ class RefCounted
     virtual ~RefCounted() {}
 
     /// Increment the reference count
-    void incref() { ++count; }
+    void incref() const { ++count; }
 
     /// Decrement the reference count and destroy the object if all
     /// references are gone.
-    void decref() { if (--count <= 0) delete this; }
+    void decref() const { if (--count <= 0) delete this; }
 };
 
 /**
@@ -106,6 +120,18 @@ template <class T>
 class RefCountingPtr
 {
   protected:
+    /** Convenience aliases for const/non-const versions of T w/ friendship. */
+    /** @{ */
+    static constexpr auto TisConst = std::is_const<T>::value;
+    using ConstT = typename std::conditional<TisConst,
+            RefCountingPtr<T>,
+            RefCountingPtr<typename std::add_const<T>::type>>::type;
+    friend ConstT;
+    using NonConstT = typename std::conditional<TisConst,
+            RefCountingPtr<typename std::remove_const<T>::type>,
+            RefCountingPtr<T>>::type;
+    friend NonConstT;
+    /** @} */
     /// The stored pointer.
     /// Arguably this should be private.
     T *data;
@@ -163,6 +189,18 @@ class RefCountingPtr
     /// one.  Adds a reference.
     RefCountingPtr(const RefCountingPtr &r) { copy(r.data); }
 
+    /** Move-constructor.
+     * Does not add a reference.
+     */
+    RefCountingPtr(RefCountingPtr&& r)
+    {
+        data = r.data;
+        r.data = nullptr;
+    }
+
+    template <bool B = TisConst>
+    RefCountingPtr(const NonConstT &r) { copy(r.data); }
+
     /// Destroy the pointer and any reference it may hold.
     ~RefCountingPtr() { del(); }
 
@@ -179,12 +217,30 @@ class RefCountingPtr
     /// Directly access the pointer itself without taking a reference.
     T *get() const { return data; }
 
+    template <bool B = TisConst>
+    operator RefCountingPtr<typename std::enable_if<!B, ConstT>::type>()
+    {
+        return RefCountingPtr<const T>(*this);
+    }
+
     /// Assign a new value to the pointer
     const RefCountingPtr &operator=(T *p) { set(p); return *this; }
 
     /// Copy the pointer from another RefCountingPtr
     const RefCountingPtr &operator=(const RefCountingPtr &r)
     { return operator=(r.data); }
+
+    /// Move-assign the pointer from another RefCountingPtr
+    const RefCountingPtr &operator=(RefCountingPtr&& r)
+    {
+        /* This happens regardless of whether the pointer is the same or not,
+         * because of the move semantics, the rvalue needs to be 'destroyed'.
+         */
+        del();
+        data = r.data;
+        r.data = nullptr;
+        return *this;
+    }
 
     /// Check if the pointer is empty
     bool operator!() const { return data == 0; }

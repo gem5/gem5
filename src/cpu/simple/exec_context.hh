@@ -482,7 +482,7 @@ class SimpleExecContext : public ExecContext {
         return thread->simPalCheck(palFunc);
     }
 
-    bool readPredicate() override
+    bool readPredicate() const override
     {
         return thread->readPredicate();
     }

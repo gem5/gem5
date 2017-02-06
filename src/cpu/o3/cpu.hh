@@ -537,15 +537,15 @@ class FullO3CPU : public BaseO3CPU
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
      */
-    ListIt addInst(DynInstPtr &inst);
+    ListIt addInst(const DynInstPtr &inst);
 
     /** Function to tell the CPU that an instruction has completed. */
-    void instDone(ThreadID tid, DynInstPtr &inst);
+    void instDone(ThreadID tid, const DynInstPtr &inst);
 
     /** Remove an instruction from the front end of the list.  There's
      *  no restriction on location of the instruction.
      */
-    void removeFrontInst(DynInstPtr &inst);
+    void removeFrontInst(const DynInstPtr &inst);
 
     /** Remove all instructions that are not currently in the ROB.
      *  There's also an option to not squash delay slot instructions.*/

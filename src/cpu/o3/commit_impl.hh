@@ -636,7 +636,7 @@ DefaultCommit<Impl>::squashFromSquashAfter(ThreadID tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::squashAfter(ThreadID tid, DynInstPtr &head_inst)
+DefaultCommit<Impl>::squashAfter(ThreadID tid, const DynInstPtr &head_inst)
 {
     DPRINTF(Commit, "Executing squash after for [tid:%i] inst [sn:%lli]\n",
             tid, head_inst->seqNum);
@@ -696,14 +696,14 @@ DefaultCommit<Impl>::tick()
             // will be active.
             _nextStatus = Active;
 
-            DynInstPtr inst = rob->readHeadInst(tid);
+            const DynInstPtr &inst M5_VAR_USED = rob->readHeadInst(tid);
 
             DPRINTF(Commit,"[tid:%i]: Instruction [sn:%lli] PC %s is head of"
                     " ROB and ready to commit\n",
                     tid, inst->seqNum, inst->pcState());
 
         } else if (!rob->isEmpty(tid)) {
-            DynInstPtr inst = rob->readHeadInst(tid);
+            const DynInstPtr &inst = rob->readHeadInst(tid);
 
             ppCommitStall->notify(inst);
 
@@ -1136,7 +1136,7 @@ DefaultCommit<Impl>::commitInsts()
 
 template <class Impl>
 bool
-DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
+DefaultCommit<Impl>::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
 {
     assert(head_inst);
 
@@ -1317,9 +1317,7 @@ DefaultCommit<Impl>::getInsts()
     int insts_to_process = std::min((int)renameWidth, fromRename->size);
 
     for (int inst_num = 0; inst_num < insts_to_process; ++inst_num) {
-        DynInstPtr inst;
-
-        inst = fromRename->insts[inst_num];
+        const DynInstPtr &inst = fromRename->insts[inst_num];
         ThreadID tid = inst->threadNumber;
 
         if (!inst->isSquashed() &&
@@ -1366,7 +1364,7 @@ DefaultCommit<Impl>::markCompletedInsts()
 
 template <class Impl>
 void
-DefaultCommit<Impl>::updateComInstStats(DynInstPtr &inst)
+DefaultCommit<Impl>::updateComInstStats(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -1507,7 +1505,7 @@ DefaultCommit<Impl>::oldestReady()
 
             if (rob->isHeadReady(tid)) {
 
-                DynInstPtr head_inst = rob->readHeadInst(tid);
+                const DynInstPtr &head_inst = rob->readHeadInst(tid);
 
                 if (first) {
                     oldest = tid;

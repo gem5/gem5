@@ -124,7 +124,7 @@ Checker<Impl>::handlePendingInt()
 
 template <class Impl>
 void
-Checker<Impl>::verify(DynInstPtr &completed_inst)
+Checker<Impl>::verify(const DynInstPtr &completed_inst)
 {
     DynInstPtr inst;
 
@@ -456,7 +456,7 @@ Checker<Impl>::takeOverFrom(BaseCPU *oldCPU)
 
 template <class Impl>
 void
-Checker<Impl>::validateInst(DynInstPtr &inst)
+Checker<Impl>::validateInst(const DynInstPtr &inst)
 {
     if (inst->instAddr() != thread->instAddr()) {
         warn("%lli: PCs do not match! Inst: %s, checker: %s",
@@ -477,7 +477,7 @@ Checker<Impl>::validateInst(DynInstPtr &inst)
 
 template <class Impl>
 void
-Checker<Impl>::validateExecution(DynInstPtr &inst)
+Checker<Impl>::validateExecution(const DynInstPtr &inst)
 {
     InstResult checker_val;
     InstResult inst_val;
@@ -595,8 +595,8 @@ Checker<Impl>::validateState()
 
 template <class Impl>
 void
-Checker<Impl>::copyResult(DynInstPtr &inst, const InstResult& mismatch_val,
-                          int start_idx)
+Checker<Impl>::copyResult(const DynInstPtr &inst,
+                          const InstResult& mismatch_val, int start_idx)
 {
     // We've already popped one dest off the queue,
     // so do the fix-up then start with the next dest reg;
@@ -672,7 +672,7 @@ Checker<Impl>::copyResult(DynInstPtr &inst, const InstResult& mismatch_val,
 
 template <class Impl>
 void
-Checker<Impl>::dumpAndExit(DynInstPtr &inst)
+Checker<Impl>::dumpAndExit(const DynInstPtr &inst)
 {
     cprintf("Error detected, instruction information:\n");
     cprintf("PC:%s, nextPC:%#x\n[sn:%lli]\n[tid:%i]\n"

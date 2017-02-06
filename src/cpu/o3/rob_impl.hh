@@ -209,7 +209,7 @@ ROB<Impl>::countInsts(ThreadID tid)
 
 template <class Impl>
 void
-ROB<Impl>::insertInst(DynInstPtr &inst)
+ROB<Impl>::insertInst(const DynInstPtr &inst)
 {
     assert(inst);
 
@@ -252,10 +252,11 @@ ROB<Impl>::retireHead(ThreadID tid)
 
     assert(numInstsInROB > 0);
 
-    // Get the head ROB instruction.
+    // Get the head ROB instruction by copying it and remove it from the list
     InstIt head_it = instList[tid].begin();
 
-    DynInstPtr head_inst = (*head_it);
+    DynInstPtr head_inst = std::move(*head_it);
+    instList[tid].erase(head_it);
 
     assert(head_inst->readyToCommit());
 
@@ -268,8 +269,6 @@ ROB<Impl>::retireHead(ThreadID tid)
 
     head_inst->clearInROB();
     head_inst->setCommitted();
-
-    instList[tid].erase(head_it);
 
     //Update "Global" Head of ROB
     updateHead();
@@ -513,7 +512,7 @@ ROB<Impl>::squash(InstSeqNum squash_num, ThreadID tid)
 }
 
 template <class Impl>
-typename Impl::DynInstPtr
+const typename Impl::DynInstPtr&
 ROB<Impl>::readHeadInst(ThreadID tid)
 {
     if (threadEntries[tid] != 0) {

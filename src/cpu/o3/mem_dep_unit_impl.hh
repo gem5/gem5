@@ -171,7 +171,7 @@ MemDepUnit<MemDepPred, Impl>::setIQ(InstructionQueue<Impl> *iq_ptr)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::insert(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -268,7 +268,7 @@ MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::insertNonSpec(DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::insertNonSpec(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -304,7 +304,7 @@ MemDepUnit<MemDepPred, Impl>::insertNonSpec(DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::insertBarrier(DynInstPtr &barr_inst)
+MemDepUnit<MemDepPred, Impl>::insertBarrier(const DynInstPtr &barr_inst)
 {
     InstSeqNum barr_sn = barr_inst->seqNum;
     // Memory barriers block loads and stores, write barriers only stores.
@@ -340,7 +340,7 @@ MemDepUnit<MemDepPred, Impl>::insertBarrier(DynInstPtr &barr_inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::regsReady(DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::regsReady(const DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Marking registers as ready for "
             "instruction PC %s [sn:%lli].\n",
@@ -363,7 +363,7 @@ MemDepUnit<MemDepPred, Impl>::regsReady(DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::nonSpecInstReady(DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::nonSpecInstReady(const DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Marking non speculative "
             "instruction PC %s as ready [sn:%lli].\n",
@@ -376,7 +376,7 @@ MemDepUnit<MemDepPred, Impl>::nonSpecInstReady(DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::reschedule(DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::reschedule(const DynInstPtr &inst)
 {
     instsToReplay.push_back(inst);
 }
@@ -404,7 +404,7 @@ MemDepUnit<MemDepPred, Impl>::replay()
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::completed(DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::completed(const DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Completed mem instruction PC %s [sn:%lli].\n",
             inst->pcState(), inst->seqNum);
@@ -428,7 +428,7 @@ MemDepUnit<MemDepPred, Impl>::completed(DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::completeBarrier(DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::completeBarrier(const DynInstPtr &inst)
 {
     wakeDependents(inst);
     completed(inst);
@@ -449,7 +449,7 @@ MemDepUnit<MemDepPred, Impl>::completeBarrier(DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::wakeDependents(DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::wakeDependents(const DynInstPtr &inst)
 {
     // Only stores and barriers have dependents.
     if (!inst->isStore() && !inst->isMemBarrier() && !inst->isWriteBarrier()) {
@@ -536,8 +536,8 @@ MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num,
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::violation(DynInstPtr &store_inst,
-                                        DynInstPtr &violating_load)
+MemDepUnit<MemDepPred, Impl>::violation(const DynInstPtr &store_inst,
+                                        const DynInstPtr &violating_load)
 {
     DPRINTF(MemDepUnit, "Passing violating PCs to store sets,"
             " load: %#x, store: %#x\n", violating_load->instAddr(),
@@ -548,7 +548,7 @@ MemDepUnit<MemDepPred, Impl>::violation(DynInstPtr &store_inst,
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::issue(DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::issue(const DynInstPtr &inst)
 {
     DPRINTF(MemDepUnit, "Issuing instruction PC %#x [sn:%lli].\n",
             inst->instAddr(), inst->seqNum);
@@ -558,7 +558,7 @@ MemDepUnit<MemDepPred, Impl>::issue(DynInstPtr &inst)
 
 template <class MemDepPred, class Impl>
 inline typename MemDepUnit<MemDepPred,Impl>::MemDepEntryPtr &
-MemDepUnit<MemDepPred, Impl>::findInHash(const DynInstPtr &inst)
+MemDepUnit<MemDepPred, Impl>::findInHash(const DynInstConstPtr &inst)
 {
     MemDepHashIt hash_it = memDepHash.find(inst->seqNum);
 

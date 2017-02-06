@@ -546,7 +546,7 @@ DefaultFetch<Impl>::deactivateThread(ThreadID tid)
 template <class Impl>
 bool
 DefaultFetch<Impl>::lookupAndUpdateNextPC(
-        DynInstPtr &inst, TheISA::PCState &nextPC)
+        const DynInstPtr &inst, TheISA::PCState &nextPC)
 {
     // Do branch prediction check here.
     // A bit of a misnomer...next_PC is actually the current PC until
@@ -953,7 +953,7 @@ DefaultFetch<Impl>::tick()
     while (available_insts != 0 && insts_to_decode < decodeWidth) {
         ThreadID tid = *tid_itr;
         if (!stalls[tid].decode && !fetchQueue[tid].empty()) {
-            auto inst = fetchQueue[tid].front();
+            const auto& inst = fetchQueue[tid].front();
             toDecode->insts[toDecode->size++] = inst;
             DPRINTF(Fetch, "[tid:%i][sn:%i]: Sending instruction to decode from "
                     "fetch queue. Fetch queue size: %i.\n",

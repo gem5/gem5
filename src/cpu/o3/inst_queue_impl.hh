@@ -60,7 +60,7 @@
 using std::list;
 
 template <class Impl>
-InstructionQueue<Impl>::FUCompletion::FUCompletion(DynInstPtr &_inst,
+InstructionQueue<Impl>::FUCompletion::FUCompletion(const DynInstPtr &_inst,
     int fu_idx, InstructionQueue<Impl> *iq_ptr)
     : Event(Stat_Event_Pri, AutoDelete),
       inst(_inst), fuIdx(fu_idx), iqPtr(iq_ptr), freeFU(false)
@@ -585,7 +585,7 @@ InstructionQueue<Impl>::hasReadyInsts()
 
 template <class Impl>
 void
-InstructionQueue<Impl>::insert(DynInstPtr &new_inst)
+InstructionQueue<Impl>::insert(const DynInstPtr &new_inst)
 {
     if (new_inst->isFloating()) {
         fpInstQueueWrites++;
@@ -631,7 +631,7 @@ InstructionQueue<Impl>::insert(DynInstPtr &new_inst)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::insertNonSpec(DynInstPtr &new_inst)
+InstructionQueue<Impl>::insertNonSpec(const DynInstPtr &new_inst)
 {
     // @todo: Clean up this code; can do it by setting inst as unable
     // to issue, then calling normal insert on the inst.
@@ -678,7 +678,7 @@ InstructionQueue<Impl>::insertNonSpec(DynInstPtr &new_inst)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::insertBarrier(DynInstPtr &barr_inst)
+InstructionQueue<Impl>::insertBarrier(const DynInstPtr &barr_inst)
 {
     memDepUnit[barr_inst->threadNumber].insertBarrier(barr_inst);
 
@@ -690,7 +690,7 @@ typename Impl::DynInstPtr
 InstructionQueue<Impl>::getInstToExecute()
 {
     assert(!instsToExecute.empty());
-    DynInstPtr inst = instsToExecute.front();
+    DynInstPtr inst = std::move(instsToExecute.front());
     instsToExecute.pop_front();
     if (inst->isFloating()) {
         fpInstQueueReads++;
@@ -757,7 +757,7 @@ InstructionQueue<Impl>::moveToYoungerInst(ListOrderIt list_order_it)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::processFUCompletion(DynInstPtr &inst, int fu_idx)
+InstructionQueue<Impl>::processFUCompletion(const DynInstPtr &inst, int fu_idx)
 {
     DPRINTF(IQ, "Processing FU completion [sn:%lli]\n", inst->seqNum);
     assert(!cpu->switchedOut());
@@ -789,12 +789,12 @@ InstructionQueue<Impl>::scheduleReadyInsts()
     IssueStruct *i2e_info = issueToExecuteQueue->access(0);
 
     DynInstPtr mem_inst;
-    while (mem_inst = getDeferredMemInstToExecute()) {
+    while (mem_inst = std::move(getDeferredMemInstToExecute())) {
         addReadyMemInst(mem_inst);
     }
 
     // See if any cache blocked instructions are able to be executed
-    while (mem_inst = getBlockedMemInstToExecute()) {
+    while (mem_inst = std::move(getBlockedMemInstToExecute())) {
         addReadyMemInst(mem_inst);
     }
 
@@ -995,7 +995,7 @@ InstructionQueue<Impl>::commit(const InstSeqNum &inst, ThreadID tid)
 
 template <class Impl>
 int
-InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
+InstructionQueue<Impl>::wakeDependents(const DynInstPtr &completed_inst)
 {
     int dependents = 0;
 
@@ -1079,7 +1079,7 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::addReadyMemInst(DynInstPtr &ready_inst)
+InstructionQueue<Impl>::addReadyMemInst(const DynInstPtr &ready_inst)
 {
     OpClass op_class = ready_inst->opClass();
 
@@ -1102,7 +1102,7 @@ InstructionQueue<Impl>::addReadyMemInst(DynInstPtr &ready_inst)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::rescheduleMemInst(DynInstPtr &resched_inst)
+InstructionQueue<Impl>::rescheduleMemInst(const DynInstPtr &resched_inst)
 {
     DPRINTF(IQ, "Rescheduling mem inst [sn:%lli]\n", resched_inst->seqNum);
 
@@ -1116,14 +1116,14 @@ InstructionQueue<Impl>::rescheduleMemInst(DynInstPtr &resched_inst)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::replayMemInst(DynInstPtr &replay_inst)
+InstructionQueue<Impl>::replayMemInst(const DynInstPtr &replay_inst)
 {
     memDepUnit[replay_inst->threadNumber].replay();
 }
 
 template <class Impl>
 void
-InstructionQueue<Impl>::completeMemInst(DynInstPtr &completed_inst)
+InstructionQueue<Impl>::completeMemInst(const DynInstPtr &completed_inst)
 {
     ThreadID tid = completed_inst->threadNumber;
 
@@ -1140,14 +1140,14 @@ InstructionQueue<Impl>::completeMemInst(DynInstPtr &completed_inst)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::deferMemInst(DynInstPtr &deferred_inst)
+InstructionQueue<Impl>::deferMemInst(const DynInstPtr &deferred_inst)
 {
     deferredMemInsts.push_back(deferred_inst);
 }
 
 template <class Impl>
 void
-InstructionQueue<Impl>::blockMemInst(DynInstPtr &blocked_inst)
+InstructionQueue<Impl>::blockMemInst(const DynInstPtr &blocked_inst)
 {
     blocked_inst->translationStarted(false);
     blocked_inst->translationCompleted(false);
@@ -1173,7 +1173,7 @@ InstructionQueue<Impl>::getDeferredMemInstToExecute()
     for (ListIt it = deferredMemInsts.begin(); it != deferredMemInsts.end();
          ++it) {
         if ((*it)->translationCompleted() || (*it)->isSquashed()) {
-            DynInstPtr mem_inst = *it;
+            DynInstPtr mem_inst = std::move(*it);
             deferredMemInsts.erase(it);
             return mem_inst;
         }
@@ -1188,7 +1188,7 @@ InstructionQueue<Impl>::getBlockedMemInstToExecute()
     if (retryMemInsts.empty()) {
         return nullptr;
     } else {
-        DynInstPtr mem_inst = retryMemInsts.front();
+        DynInstPtr mem_inst = std::move(retryMemInsts.front());
         retryMemInsts.pop_front();
         return mem_inst;
     }
@@ -1196,8 +1196,8 @@ InstructionQueue<Impl>::getBlockedMemInstToExecute()
 
 template <class Impl>
 void
-InstructionQueue<Impl>::violation(DynInstPtr &store,
-                                  DynInstPtr &faulting_load)
+InstructionQueue<Impl>::violation(const DynInstPtr &store,
+                                  const DynInstPtr &faulting_load)
 {
     intInstQueueWrites++;
     memDepUnit[store->threadNumber].violation(store, faulting_load);
@@ -1364,7 +1364,7 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
 
 template <class Impl>
 bool
-InstructionQueue<Impl>::addToDependents(DynInstPtr &new_inst)
+InstructionQueue<Impl>::addToDependents(const DynInstPtr &new_inst)
 {
     // Loop through the instruction's source registers, adding
     // them to the dependency list if they are not ready.
@@ -1412,7 +1412,7 @@ InstructionQueue<Impl>::addToDependents(DynInstPtr &new_inst)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::addToProducers(DynInstPtr &new_inst)
+InstructionQueue<Impl>::addToProducers(const DynInstPtr &new_inst)
 {
     // Nothing really needs to be marked when an instruction becomes
     // the producer of a register's value, but for convenience a ptr
@@ -1448,7 +1448,7 @@ InstructionQueue<Impl>::addToProducers(DynInstPtr &new_inst)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::addIfReady(DynInstPtr &inst)
+InstructionQueue<Impl>::addIfReady(const DynInstPtr &inst)
 {
     // If the instruction now has all of its source registers
     // available, then add it to the list of ready instructions.

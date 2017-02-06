@@ -217,7 +217,7 @@ BaseDynInst<Impl>::markSrcRegReady(RegIndex src_idx)
 
 template <class Impl>
 bool
-BaseDynInst<Impl>::eaSrcsReady()
+BaseDynInst<Impl>::eaSrcsReady() const
 {
     // For now I am assuming that src registers 1..n-1 are the ones that the
     // EA calc depends on.  (i.e. src reg 0 is the source of the data to be

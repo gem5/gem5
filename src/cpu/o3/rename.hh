@@ -252,10 +252,10 @@ class DefaultRename
     void removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid);
 
     /** Renames the source registers of an instruction. */
-    inline void renameSrcRegs(DynInstPtr &inst, ThreadID tid);
+    inline void renameSrcRegs(const DynInstPtr &inst, ThreadID tid);
 
     /** Renames the destination registers of an instruction. */
-    inline void renameDestRegs(DynInstPtr &inst, ThreadID tid);
+    inline void renameDestRegs(const DynInstPtr &inst, ThreadID tid);
 
     /** Calculates the number of free ROB entries for a specific thread. */
     inline int calcFreeROBEntries(ThreadID tid);

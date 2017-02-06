@@ -89,10 +89,10 @@ class DependencyGraph
     void reset();
 
     /** Inserts an instruction to be dependent on the given index. */
-    void insert(PhysRegIndex idx, DynInstPtr &new_inst);
+    void insert(PhysRegIndex idx, const DynInstPtr &new_inst);
 
     /** Sets the producing instruction of a given register. */
-    void setInst(PhysRegIndex idx, DynInstPtr &new_inst)
+    void setInst(PhysRegIndex idx, const DynInstPtr &new_inst)
     { dependGraph[idx].inst = new_inst; }
 
     /** Clears the producing instruction. */
@@ -100,7 +100,7 @@ class DependencyGraph
     { dependGraph[idx].inst = NULL; }
 
     /** Removes an instruction from a single linked list. */
-    void remove(PhysRegIndex idx, DynInstPtr &inst_to_remove);
+    void remove(PhysRegIndex idx, const DynInstPtr &inst_to_remove);
 
     /** Removes and returns the newest dependent of a specific register. */
     DynInstPtr pop(PhysRegIndex idx);
@@ -182,7 +182,8 @@ DependencyGraph<DynInstPtr>::reset()
 
 template <class DynInstPtr>
 void
-DependencyGraph<DynInstPtr>::insert(PhysRegIndex idx, DynInstPtr &new_inst)
+DependencyGraph<DynInstPtr>::insert(PhysRegIndex idx,
+        const DynInstPtr &new_inst)
 {
     //Add this new, dependent instruction at the head of the dependency
     //chain.
@@ -203,7 +204,7 @@ DependencyGraph<DynInstPtr>::insert(PhysRegIndex idx, DynInstPtr &new_inst)
 template <class DynInstPtr>
 void
 DependencyGraph<DynInstPtr>::remove(PhysRegIndex idx,
-                                    DynInstPtr &inst_to_remove)
+                                    const DynInstPtr &inst_to_remove)
 {
     DepEntry *prev = &dependGraph[idx];
     DepEntry *curr = dependGraph[idx].next;

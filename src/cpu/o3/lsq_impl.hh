@@ -257,7 +257,7 @@ LSQ<Impl>::tick()
 
 template<class Impl>
 void
-LSQ<Impl>::insertLoad(DynInstPtr &load_inst)
+LSQ<Impl>::insertLoad(const DynInstPtr &load_inst)
 {
     ThreadID tid = load_inst->threadNumber;
 
@@ -266,7 +266,7 @@ LSQ<Impl>::insertLoad(DynInstPtr &load_inst)
 
 template<class Impl>
 void
-LSQ<Impl>::insertStore(DynInstPtr &store_inst)
+LSQ<Impl>::insertStore(const DynInstPtr &store_inst)
 {
     ThreadID tid = store_inst->threadNumber;
 
@@ -275,7 +275,7 @@ LSQ<Impl>::insertStore(DynInstPtr &store_inst)
 
 template<class Impl>
 Fault
-LSQ<Impl>::executeLoad(DynInstPtr &inst)
+LSQ<Impl>::executeLoad(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
@@ -284,7 +284,7 @@ LSQ<Impl>::executeLoad(DynInstPtr &inst)
 
 template<class Impl>
 Fault
-LSQ<Impl>::executeStore(DynInstPtr &inst)
+LSQ<Impl>::executeStore(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 

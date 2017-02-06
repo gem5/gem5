@@ -116,11 +116,11 @@ class LSQUnit {
     void tick() { usedStorePorts = 0; }
 
     /** Inserts an instruction. */
-    void insert(DynInstPtr &inst);
+    void insert(const DynInstPtr &inst);
     /** Inserts a load instruction. */
-    void insertLoad(DynInstPtr &load_inst);
+    void insertLoad(const DynInstPtr &load_inst);
     /** Inserts a store instruction. */
-    void insertStore(DynInstPtr &store_inst);
+    void insertStore(const DynInstPtr &store_inst);
 
     /** Check for ordering violations in the LSQ. For a store squash if we
      * ever find a conflicting load. For a load, only squash if we
@@ -128,7 +128,7 @@ class LSQUnit {
      * @param load_idx index to start checking at
      * @param inst the instruction to check
      */
-    Fault checkViolations(int load_idx, DynInstPtr &inst);
+    Fault checkViolations(int load_idx, const DynInstPtr &inst);
 
     /** Check if an incoming invalidate hits in the lsq on a load
      * that might have issued out of order wrt another load beacuse
@@ -137,11 +137,11 @@ class LSQUnit {
     void checkSnoop(PacketPtr pkt);
 
     /** Executes a load instruction. */
-    Fault executeLoad(DynInstPtr &inst);
+    Fault executeLoad(const DynInstPtr &inst);
 
     Fault executeLoad(int lq_idx) { panic("Not implemented"); return NoFault; }
     /** Executes a store instruction. */
-    Fault executeStore(DynInstPtr &inst);
+    Fault executeStore(const DynInstPtr &inst);
 
     /** Commits the head load. */
     void commitLoad();
@@ -233,7 +233,7 @@ class LSQUnit {
     void resetState();
 
     /** Writes back the instruction, sending it to IEW. */
-    void writeback(DynInstPtr &inst, PacketPtr pkt);
+    void writeback(const DynInstPtr &inst, PacketPtr pkt);
 
     /** Writes back a store that couldn't be completed the previous cycle. */
     void writebackPendingStore();
@@ -313,7 +313,8 @@ class LSQUnit {
     class WritebackEvent : public Event {
       public:
         /** Constructs a writeback event. */
-        WritebackEvent(DynInstPtr &_inst, PacketPtr pkt, LSQUnit *lsq_ptr);
+        WritebackEvent(const DynInstPtr &_inst, PacketPtr pkt,
+                LSQUnit *lsq_ptr);
 
         /** Processes the writeback event. */
         void process();
@@ -348,7 +349,7 @@ class LSQUnit {
         }
 
         /** Constructs a store queue entry for a given instruction. */
-        SQEntry(DynInstPtr &_inst)
+        SQEntry(const DynInstPtr &_inst)
             : inst(_inst), req(NULL), sreqLow(NULL), sreqHigh(NULL), size(0),
               isSplit(0), canWB(0), committed(0), completed(0), isAllZeros(0)
         {
