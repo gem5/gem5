@@ -29,9 +29,9 @@
  *          Steve Reinhardt
  */
 
-#include "sim/py_interact.hh"
-
 #include <Python.h>
+
+#include "sim/py_interact.hh"
 
 void
 py_interact()

@@ -169,8 +169,8 @@ class SortIncludes(object):
         )
 
     block_order = (
-        ('main', ),
         ('python', ),
+        ('main', ),
         ('c', ),
         ('stl', ),
         ('cc', ),

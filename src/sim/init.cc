@@ -41,9 +41,9 @@
  * Authors: Nathan Binkert
  */
 
-#include "sim/init.hh"
-
 #include <Python.h>
+
+#include "sim/init.hh"
 
 #include <marshal.h>
 #include <zlib.h>
