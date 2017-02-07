@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011,2013 ARM Limited
+ * Copyright (c) 2011,2013,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -310,7 +310,7 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
    // If the request is to ZERO a cache block, there is no data to check
    // against, but it's all zero. We need something to compare to, so use a
    // const set of zeros.
-   if (flags & Request::CACHE_BLOCK_ZERO) {
+   if (flags & Request::STORE_NO_DATA) {
        assert(!data);
        assert(sizeof(zero_data) <= fullSize);
        data = zero_data;

@@ -202,6 +202,8 @@ class Request
          */
         STICKY_FLAGS = INST_FETCH
     };
+    static const FlagsType STORE_NO_DATA = CACHE_BLOCK_ZERO |
+        CLEAN | INVALIDATE;
 
     /** Master Ids that are statically allocated
      * @{*/

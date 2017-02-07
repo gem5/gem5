@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -679,8 +679,12 @@ LSQ::StoreBuffer::canForwardDataToLoad(LSQRequestPtr request,
     while (ret == NoAddrRangeCoverage && i != slots.rend()) {
         LSQRequestPtr slot = *i;
 
+        /* Cache maintenance instructions go down via the store path *
+         * but they carry no data and they shouldn't be considered for
+         * forwarding */
         if (slot->packet &&
-            slot->inst->id.threadId == request->inst->id.threadId) {
+            slot->inst->id.threadId == request->inst->id.threadId &&
+            !slot->packet->req->isCacheMaintenance()) {
             AddrRangeCoverage coverage = slot->containsAddrRangeOf(request);
 
             if (coverage != NoAddrRangeCoverage) {
@@ -1492,7 +1496,7 @@ LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
         /* request_data becomes the property of a ...DataRequest (see below)
          *  and destroyed by its destructor */
         request_data = new uint8_t[size];
-        if (flags & Request::CACHE_BLOCK_ZERO) {
+        if (flags & Request::STORE_NO_DATA) {
             /* For cache zeroing, just use zeroed data */
             std::memset(request_data, 0, size);
         } else {
@@ -1562,10 +1566,13 @@ makePacketForRequest(Request &request, bool isLoad,
     if (sender_state)
         ret->pushSenderState(sender_state);
 
-    if (isLoad)
+    if (isLoad) {
         ret->allocate();
-    else
+    } else if (!request.isCacheMaintenance()) {
+        // CMOs are treated as stores but they don't have data. All
+        // stores otherwise need to allocate for data.
         ret->dataDynamic(data);
+    }
 
     return ret;
 }

@@ -510,7 +510,7 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
     BaseTLB::Mode mode = BaseTLB::Write;
 
     if (data == NULL) {
-        assert(flags & Request::CACHE_BLOCK_ZERO);
+        assert(flags & Request::STORE_NO_DATA);
         // This must be a cache block cleaning request
         memset(newData, 0, size);
     } else {

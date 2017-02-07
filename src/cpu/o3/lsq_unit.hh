@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2012-2014,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -650,10 +650,14 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
 
         store_size = storeQueue[store_idx].size;
 
-        if (store_size == 0)
+        if (!store_size || storeQueue[store_idx].inst->strictlyOrdered() ||
+            (storeQueue[store_idx].req &&
+             storeQueue[store_idx].req->isCacheMaintenance())) {
+            // Cache maintenance instructions go down via the store
+            // path but they carry no data and they shouldn't be
+            // considered for forwarding
             continue;
-        else if (storeQueue[store_idx].inst->strictlyOrdered())
-            continue;
+        }
 
         assert(storeQueue[store_idx].inst->effAddrValid());
 
@@ -894,9 +898,9 @@ LSQUnit<Impl>::write(Request *req, Request *sreqLow, Request *sreqHigh,
     storeQueue[store_idx].sreqHigh = sreqHigh;
     unsigned size = req->getSize();
     storeQueue[store_idx].size = size;
-    storeQueue[store_idx].isAllZeros = req->getFlags() & Request::CACHE_BLOCK_ZERO;
-    assert(size <= sizeof(storeQueue[store_idx].data) ||
-            (req->getFlags() & Request::CACHE_BLOCK_ZERO));
+    bool store_no_data = req->getFlags() & Request::STORE_NO_DATA;
+    storeQueue[store_idx].isAllZeros = store_no_data;
+    assert(size <= sizeof(storeQueue[store_idx].data) || store_no_data);
 
     // Split stores can only occur in ISAs with unaligned memory accesses.  If
     // a store request has been split, sreqLow and sreqHigh will be non-null.
@@ -904,7 +908,8 @@ LSQUnit<Impl>::write(Request *req, Request *sreqLow, Request *sreqHigh,
         storeQueue[store_idx].isSplit = true;
     }
 
-    if (!(req->getFlags() & Request::CACHE_BLOCK_ZERO))
+    if (!(req->getFlags() & Request::CACHE_BLOCK_ZERO) && \
+        !req->isCacheMaintenance())
         memcpy(storeQueue[store_idx].data, data, size);
 
     // This function only writes the data to the store queue, so no fault

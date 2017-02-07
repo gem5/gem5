@@ -430,7 +430,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
 
     if (data == NULL) {
         assert(size <= 64);
-        assert(flags & Request::CACHE_BLOCK_ZERO);
+        assert(flags & Request::STORE_NO_DATA);
         // This must be a cache block cleaning request
         data = zero_array;
     }
@@ -462,14 +462,11 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
 
         // Now do the access.
         if (fault == NoFault) {
-            MemCmd cmd = MemCmd::WriteReq; // default
             bool do_access = true;  // flag to suppress cache access
 
             if (req->isLLSC()) {
-                cmd = MemCmd::StoreCondReq;
                 do_access = TheISA::handleLockedWrite(thread, req, dcachePort.cacheBlockMask);
             } else if (req->isSwap()) {
-                cmd = MemCmd::SwapReq;
                 if (req->isCondSwap()) {
                     assert(res);
                     req->setExtraData(*res);
@@ -477,7 +474,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
             }
 
             if (do_access && !req->getFlags().isSet(Request::NO_ACCESS)) {
-                Packet pkt = Packet(req, cmd);
+                Packet pkt(req, Packet::makeWriteCmd(req));
                 pkt.dataStatic(data);
 
                 if (req->isMmappedIpr()) {
