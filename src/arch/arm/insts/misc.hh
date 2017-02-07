@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -339,6 +339,23 @@ class RegImmRegShiftOp : public PredOp
         PredOp(mnem, _machInst, __opClass),
         dest(_dest), imm(_imm), op1(_op1),
         shiftAmt(_shiftAmt), shiftType(_shiftType)
+    {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
+
+class MiscRegRegImmMemOp : public PredOp
+{
+  protected:
+    MiscRegIndex dest;
+    IntRegIndex op1;
+    uint64_t imm;
+
+    MiscRegRegImmMemOp(const char *mnem, ExtMachInst _machInst,
+                       OpClass __opClass, MiscRegIndex _dest, IntRegIndex _op1,
+                       uint64_t _imm) :
+        PredOp(mnem, _machInst, __opClass),
+        dest(_dest), op1(_op1), imm(_imm)
     {}
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
