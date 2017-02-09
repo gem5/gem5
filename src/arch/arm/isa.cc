@@ -594,7 +594,8 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
         warn_once("The ccsidr register isn't implemented and "
                 "always reads as 0.\n");
         break;
-      case MISCREG_CTR:
+      case MISCREG_CTR:                 // AArch32, ARMv7, top bit set
+      case MISCREG_CTR_EL0:             // AArch64
         {
             //all caches have the same line size in gem5
             //4 byte words in ARM
