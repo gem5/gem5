@@ -94,6 +94,8 @@ const uint32_t REG_RAH      = 0x05404;
 const uint32_t REG_VFTA     = 0x05600;
 
 const uint32_t REG_WUC      = 0x05800;
+const uint32_t REG_WUFC     = 0x05808;
+const uint32_t REG_WUS      = 0x05810;
 const uint32_t REG_MANC     = 0x05820;
 const uint32_t REG_SWSM     = 0x05B50;
 const uint32_t REG_FWSM     = 0x05B54;
