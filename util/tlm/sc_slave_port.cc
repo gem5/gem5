@@ -265,16 +265,26 @@ SCSlavePort::pec(
     {
         CAUGHT_UP;
 
-        PacketPtr packet = Gem5Extension::getExtension(trans).getPacket();
+        auto& extension = Gem5Extension::getExtension(trans);
+        auto packet = extension.getPacket();
 
         sc_assert(!blockingResponse);
 
-        bool need_retry;
-        if (packet->needsResponse()) {
+        bool need_retry = false;
+
+        /*
+         * If the packet was piped through and needs a response, we don't need
+         * to touch the packet and can forward it directly as a response.
+         * Otherwise, we need to make a response and send the transformed
+         * packet.
+         */
+        if (extension.isPipeThrough()) {
+            if (packet->isResponse()) {
+                need_retry = !sendTimingResp(packet);
+            }
+        } else if (packet->needsResponse()) {
             packet->makeResponse();
             need_retry = !sendTimingResp(packet);
-        } else {
-            need_retry = false;
         }
 
         if (need_retry) {
@@ -289,8 +299,6 @@ SCSlavePort::pec(
                 trans.release();
             }
         }
-    } else {
-        SC_REPORT_FATAL("SCSlavePort", "Invalid protocol phase in pec");
     }
     delete pe;
 }

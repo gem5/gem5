@@ -45,6 +45,7 @@ namespace Gem5SystemC
 Gem5Extension::Gem5Extension(PacketPtr packet)
 {
     Packet = packet;
+    pipeThrough = false;
 }
 
 Gem5Extension& Gem5Extension::getExtension(const tlm_generic_payload *payload)

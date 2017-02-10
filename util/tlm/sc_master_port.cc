@@ -36,6 +36,7 @@
 
 #include "master_transactor.hh"
 #include "params/ExternalMaster.hh"
+#include "sc_ext.hh"
 #include "sc_master_port.hh"
 #include "sim/system.hh"
 
@@ -87,6 +88,7 @@ SCMasterPort::SCMasterPort(const std::string& name_,
     peq(this, &SCMasterPort::peq_cb),
     waitForRetry(false),
     pendingRequest(nullptr),
+    pendingPacket(nullptr),
     needToSendRetry(false),
     responseInProgress(false),
     transactor(nullptr),
@@ -158,6 +160,7 @@ SCMasterPort::nb_transport_fw(tlm::tlm_generic_payload& trans,
     }
 
     // ... and queue the valid transaction
+    trans.acquire();
     peq.notify(trans, phase, delay);
     return tlm::TLM_ACCEPTED;
 }
@@ -191,18 +194,35 @@ SCMasterPort::handleBeginReq(tlm::tlm_generic_payload& trans)
 {
     sc_assert(!waitForRetry);
     sc_assert(pendingRequest == nullptr);
+    sc_assert(pendingPacket == nullptr);
 
     trans.acquire();
-    auto pkt = generatePacket(trans);
+
+    PacketPtr pkt = nullptr;
+
+    Gem5Extension* extension = nullptr;
+    trans.get_extension(extension);
+
+    // If there is an extension, this transaction was initiated by the gem5
+    // world and we can pipe through the original packet. Otherwise, we
+    // generate a new packet based on the transaction.
+    if (extension != nullptr) {
+        extension->setPipeThrough();
+        pkt = extension->getPacket();
+    } else {
+        pkt = generatePacket(trans);
+    }
 
     auto tlmSenderState = new TlmSenderState(trans);
     pkt->pushSenderState(tlmSenderState);
 
     if (sendTimingReq(pkt)) { // port is free -> send END_REQ immediately
         sendEndReq(trans);
+        trans.release();
     } else { // port is blocked -> wait for retry before sending END_REQ
         waitForRetry = true;
         pendingRequest = &trans;
+        pendingPacket = pkt;
     }
 }
 
@@ -236,11 +256,25 @@ void
 SCMasterPort::b_transport(tlm::tlm_generic_payload& trans,
                         sc_core::sc_time& t)
 {
-    auto pkt = generatePacket(trans);
+    Gem5Extension* extension = nullptr;
+    trans.get_extension(extension);
+
+    PacketPtr pkt = nullptr;
+
+    // If there is an extension, this transaction was initiated by the gem5
+    // world and we can pipe through the original packet.
+    if (extension != nullptr) {
+        extension->setPipeThrough();
+        pkt = extension->getPacket();
+    } else {
+        pkt = generatePacket(trans);
+    }
+
+    Tick ticks = sendAtomic(pkt);
 
     // send an atomic request to gem5
-    Tick ticks = sendAtomic(pkt);
-    panic_if(!pkt->isResponse(), "Packet sending failed!\n");
+    panic_if(pkt->needsResponse() && !pkt->isResponse(),
+             "Packet sending failed!\n");
 
     // one tick is a pico second
     auto delay =
@@ -249,7 +283,8 @@ SCMasterPort::b_transport(tlm::tlm_generic_payload& trans,
     // update time
     t += delay;
 
-    destroyPacket(pkt);
+    if (extension != nullptr)
+        destroyPacket(pkt);
 
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }
@@ -257,11 +292,19 @@ SCMasterPort::b_transport(tlm::tlm_generic_payload& trans,
 unsigned int
 SCMasterPort::transport_dbg(tlm::tlm_generic_payload& trans)
 {
-    auto pkt = generatePacket(trans);
+    Gem5Extension* extension = nullptr;
+    trans.get_extension(extension);
 
-    sendFunctional(pkt);
-
-    destroyPacket(pkt);
+    // If there is an extension, this transaction was initiated by the gem5
+    // world and we can pipe through the original packet.
+    if (extension != nullptr) {
+        extension->setPipeThrough();
+        sendFunctional(extension->getPacket());
+    } else {
+        auto pkt = generatePacket(trans);
+        sendFunctional(pkt);
+        destroyPacket(pkt);
+    }
 
     return trans.get_data_length();
 }
@@ -291,11 +334,22 @@ SCMasterPort::recvTimingResp(PacketPtr pkt)
       sc_core::sc_time::from_value(pkt->payloadDelay + pkt->headerDelay);
 
     auto tlmSenderState = dynamic_cast<TlmSenderState*>(pkt->popSenderState());
+    sc_assert(tlmSenderState != nullptr);
+
     auto& trans = tlmSenderState->trans;
+
+    Gem5Extension* extension = nullptr;
+    trans.get_extension(extension);
 
     // clean up
     delete tlmSenderState;
-    destroyPacket(pkt);
+
+    // If there is an extension the packet was piped through and we must not
+    // delete it. The packet travels back with the transaction.
+    if (extension == nullptr)
+        destroyPacket(pkt);
+    else
+        sc_assert(extension->isPipeThrough());
 
     sendBeginResp(trans, delay);
     trans.release();
@@ -330,14 +384,18 @@ SCMasterPort::recvReqRetry()
 {
     sc_assert(waitForRetry);
     sc_assert(pendingRequest != nullptr);
+    sc_assert(pendingPacket != nullptr);
 
-    auto& trans = *pendingRequest;
+    if (sendTimingReq(pendingPacket)) {
+        waitForRetry = false;
+        pendingPacket = nullptr;
 
-    waitForRetry = false;
-    pendingRequest = nullptr;
+        auto& trans = *pendingRequest;
+        sendEndReq(trans);
+        trans.release();
 
-    // retry
-    handleBeginReq(trans);
+        pendingRequest = nullptr;
+    }
 }
 
 void

@@ -59,6 +59,13 @@ class Gem5MasterTransactor;
  * added as a sender state to the gem5 packet. This way the payload can be
  * restored when the response packet arrives at the port.
  *
+ * Special care is required, when the TLM transaction originates from a
+ * SCSlavePort (i.e. it is a gem5 packet that enters back into the gem5 world).
+ * This is a common scenario, when multiple gem5 CPUs communicate via a SystemC
+ * interconnect. In this case, the master port restores the original packet
+ * from the payload extension (added by the SCSlavePort) and forwards it to the
+ * gem5 world. Throughout the code, this mechanism is called 'pipe through'.
+ *
  * If gem5 operates in atomic mode, the master port registers the TLM blocking
  * interface and automatically translates non-blocking requests to blocking.
  * If gem5 operates in timing mode, the transactor registers the non-blocking
@@ -82,6 +89,7 @@ class SCMasterPort : public ExternalMaster::Port
 
     bool waitForRetry;
     tlm::tlm_generic_payload* pendingRequest;
+    PacketPtr pendingPacket;
 
     bool needToSendRetry;
 
