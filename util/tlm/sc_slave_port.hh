@@ -67,12 +67,10 @@ namespace Gem5SystemC
  * original packet as a payload extension, the packet can be restored and send
  * back to the gem5 world upon receiving a response from the SystemC world.
  */
-class SCSlavePort : public tlm::tlm_initiator_socket<>,
-        public tlm::tlm_bw_transport_if<>,
-        public ExternalSlave::Port
+class SCSlavePort : public ExternalSlave::Port
 {
   public:
-    SCSlavePort &iSocket;
+    tlm_utils::simple_initiator_socket<SCSlavePort> iSocket;
 
     /** One instance of pe and the related callback needed */
     //payloadEvent<SCSlavePort> pe;
@@ -110,9 +108,6 @@ class SCSlavePort : public tlm::tlm_initiator_socket<>,
     tlm::tlm_sync_enum nb_transport_bw(tlm::tlm_generic_payload& trans,
                                        tlm::tlm_phase& phase,
                                        sc_core::sc_time& t);
-
-    void invalidate_direct_mem_ptr(sc_dt::uint64 start_range,
-                                   sc_dt::uint64 end_range);
 
   public:
     SCSlavePort(const std::string &name_,

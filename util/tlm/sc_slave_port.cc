@@ -262,7 +262,7 @@ SCSlavePort::pec(
         /* Did another request arrive while blocked, schedule a retry */
         if (needToSendRequestRetry) {
             needToSendRequestRetry = false;
-           iSocket.sendRetryReq();
+            sendRetryReq();
         }
     }
     else if (phase == tlm::BEGIN_RESP)
@@ -276,7 +276,7 @@ SCSlavePort::pec(
         bool need_retry;
         if (packet->needsResponse()) {
             packet->makeResponse();
-            need_retry = !iSocket.sendTimingResp(packet);
+            need_retry = !sendTimingResp(packet);
         } else {
             need_retry = false;
         }
@@ -311,7 +311,7 @@ SCSlavePort::recvRespRetry()
     blockingResponse = NULL;
     PacketPtr packet = Gem5Extension::getExtension(trans).getPacket();
 
-    bool need_retry = !iSocket.sendTimingResp(packet);
+    bool need_retry = !sendTimingResp(packet);
 
     sc_assert(!need_retry);
 
@@ -333,24 +333,16 @@ SCSlavePort::nb_transport_bw(tlm::tlm_generic_payload& trans,
     return tlm::TLM_ACCEPTED;
 }
 
-void
-SCSlavePort::invalidate_direct_mem_ptr(sc_dt::uint64 start_range,
-     sc_dt::uint64 end_range)
-{
-    SC_REPORT_FATAL("SCSlavePort", "unimpl. func: invalidate_direct_mem_ptr");
-}
-
 SCSlavePort::SCSlavePort(const std::string &name_,
     const std::string &systemc_name,
     ExternalSlave &owner_) :
-    tlm::tlm_initiator_socket<>(systemc_name.c_str()),
     ExternalSlave::Port(name_, owner_),
-    iSocket(*this),
+    iSocket(systemc_name.c_str()),
     blockingRequest(NULL),
     needToSendRequestRetry(false),
     blockingResponse(NULL)
 {
-    m_export.bind(*this);
+    iSocket.register_nb_transport_bw(this, &SCSlavePort::nb_transport_bw);
 }
 
 class SlavePortHandler : public ExternalSlave::Handler
