@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # Copyright (c) 2005 The Regents of The University of Michigan
 # All rights reserved.
 #

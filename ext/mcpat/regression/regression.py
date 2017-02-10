@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # Copyright (c) 2010-2013 Advanced Micro Devices, Inc.
 # All rights reserved.
