@@ -36,6 +36,7 @@
  *
  * Authors: Andrew Bardsley
  *          Curtis Dunham
+ *          Christian Menard
  */
 
 /**
@@ -129,6 +130,8 @@ class ExternalMaster : public MemObject
         Handler *handler);
 
     void init();
+
+    const MasterID masterId;
 };
 
 
