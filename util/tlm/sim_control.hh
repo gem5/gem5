@@ -77,6 +77,22 @@ class Gem5SimControl : public Module, public Gem5SimControlInterface
     /// Pointer to a previously created instance.
     static Gem5SimControl* instance;
 
+    /** A callback that is called from the run thread before gem5 simulation is
+     * started.
+     *
+     * A derived class may use this to perform any additional initializations
+     * prior simulation.
+     */
+    virtual void beforeSimulate() {}
+
+    /** A callback that is called from the run thread after gem5 simulation
+     * completed.
+     *
+     * A derived class may use this to perform any additional tasks after gem5
+     * exits. For instance, a derived class could use this to call sc_stop().
+     */
+    virtual void afterSimulate() {}
+
   public:
     SC_HAS_PROCESS(Gem5SimControl);
 

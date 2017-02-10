@@ -152,6 +152,9 @@ Gem5SimControl::end_of_elaboration()
 void
 Gem5SimControl::run()
 {
+    // notify callback
+    beforeSimulate();
+
     GlobalSimLoopExitEvent *exit_event = NULL;
 
     if (simulationEnd == 0) {
@@ -164,6 +167,9 @@ Gem5SimControl::run()
               << ", cause: " << exit_event->getCause() << '\n';
 
     getEventQueue(0)->dump();
+
+    // notify callback
+    afterSimulate();
 
 #if TRY_CLEAN_DELETE
     config_manager->deleteObjects();
