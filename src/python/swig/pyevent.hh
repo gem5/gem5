@@ -31,6 +31,8 @@
 #ifndef __PYTHON_SWIG_PYEVENT_HH__
 #define __PYTHON_SWIG_PYEVENT_HH__
 
+#include <Python.h>
+
 #include "sim/eventq.hh"
 #include "sim/init.hh"
 #include "sim/sim_events.hh"
