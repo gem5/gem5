@@ -70,6 +70,8 @@
 #include <sys/stat.h>
 #if (NO_STATFS == 0)
 #include <sys/statfs.h>
+#else
+#include <sys/mount.h>
 #endif
 #include <sys/time.h>
 #include <sys/uio.h>
@@ -527,21 +529,37 @@ copyOutStatfsBuf(SETranslatingPortProxy &mem, Addr addr,
 {
     TypedBufferArg<typename OS::tgt_statfs> tgt(addr);
 
-#if defined(__OpenBSD__) || defined(__APPLE__) || defined(__FreeBSD__)
-    tgt->f_type = 0;
-#else
     tgt->f_type = TheISA::htog(host->f_type);
-#endif
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+    tgt->f_bsize = TheISA::htog(host->f_iosize);
+#else
     tgt->f_bsize = TheISA::htog(host->f_bsize);
+#endif
     tgt->f_blocks = TheISA::htog(host->f_blocks);
     tgt->f_bfree = TheISA::htog(host->f_bfree);
     tgt->f_bavail = TheISA::htog(host->f_bavail);
     tgt->f_files = TheISA::htog(host->f_files);
     tgt->f_ffree = TheISA::htog(host->f_ffree);
     memcpy(&tgt->f_fsid, &host->f_fsid, sizeof(host->f_fsid));
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+    tgt->f_namelen = TheISA::htog(host->f_namemax);
+    tgt->f_frsize = TheISA::htog(host->f_bsize);
+#elif defined(__APPLE__)
+    tgt->f_namelen = 0;
+    tgt->f_frsize = 0;
+#else
     tgt->f_namelen = TheISA::htog(host->f_namelen);
     tgt->f_frsize = TheISA::htog(host->f_frsize);
+#endif
+#if defined(__linux__)
     memcpy(&tgt->f_spare, &host->f_spare, sizeof(host->f_spare));
+#else
+    /*
+     * The fields are different sizes per OS. Don't bother with
+     * f_spare or f_reserved on non-Linux for now.
+     */
+    memset(&tgt->f_spare, 0, sizeof(tgt->f_spare));
+#endif
 
     tgt.copyOut(mem);
 }
