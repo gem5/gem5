@@ -315,7 +315,8 @@ def template MicroLdStSplitOpConstructor {{
 let {{
     class LdStOp(X86Microop):
         def __init__(self, data, segment, addr, disp,
-                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec):
+                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec,
+                implicitStack):
             self.data = data
             [self.scale, self.index, self.base] = addr
             self.disp = disp
@@ -331,8 +332,11 @@ let {{
                 self.instFlags += " | (1ULL << StaticInst::IsDataPrefetch)"
             if nonSpec:
                 self.instFlags += " | (1ULL << StaticInst::IsNonSpeculative)"
-            self.memFlags += " | (machInst.legacy.addr ? " + \
-                             "(AddrSizeFlagBit << FlagShift) : 0)"
+            # For implicit stack operations, we should use *not* use the
+            # alternative addressing mode for loads/stores if the prefix is set
+            if not implicitStack:
+                self.memFlags += " | (machInst.legacy.addr ? " + \
+                                 "(AddrSizeFlagBit << FlagShift) : 0)"
 
         def getAllocator(self, microFlags):
             allocator = '''new %(class_name)s(machInst, macrocodeBlock,
@@ -351,7 +355,8 @@ let {{
 
     class BigLdStOp(X86Microop):
         def __init__(self, data, segment, addr, disp,
-                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec):
+                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec,
+                implicitStack):
             self.data = data
             [self.scale, self.index, self.base] = addr
             self.disp = disp
@@ -367,8 +372,11 @@ let {{
                 self.instFlags += " | (1ULL << StaticInst::IsDataPrefetch)"
             if nonSpec:
                 self.instFlags += " | (1ULL << StaticInst::IsNonSpeculative)"
-            self.memFlags += " | (machInst.legacy.addr ? " + \
-                             "(AddrSizeFlagBit << FlagShift) : 0)"
+            # For implicit stack operations, we should use *not* use the
+            # alternative addressing mode for loads/stores if the prefix is set
+            if not implicitStack:
+                self.memFlags += " | (machInst.legacy.addr ? " + \
+                                 "(AddrSizeFlagBit << FlagShift) : 0)"
 
         def getAllocator(self, microFlags):
             allocString = '''
@@ -395,9 +403,11 @@ let {{
 
     class LdStSplitOp(LdStOp):
         def __init__(self, data, segment, addr, disp,
-                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec):
+                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec,
+                implicitStack):
             super(LdStSplitOp, self).__init__(0, segment, addr, disp,
-                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec)
+                dataSize, addressSize, baseFlags, atCPL0, prefetch, nonSpec,
+                implicitStack)
             (self.dataLow, self.dataHi) = data
 
         def getAllocator(self, microFlags):
@@ -435,7 +445,8 @@ let {{
     calculateEA = 'EA = SegBase + ' + segmentEAExpr
 
     def defineMicroLoadOp(mnemonic, code, bigCode='',
-                          mem_flags="0", big=True, nonSpec=False):
+                          mem_flags="0", big=True, nonSpec=False,
+                          implicitStack=False):
         global header_output
         global decoder_output
         global exec_output
@@ -460,17 +471,26 @@ let {{
             exec_output += MicroLoadInitiateAcc.subst(iop)
             exec_output += MicroLoadCompleteAcc.subst(iop)
 
+        if implicitStack:
+            # For instructions that implicitly access the stack, the address
+            # size is the same as the stack segment pointer size, not the
+            # address size if specified by the instruction prefix
+            addressSize = "env.stackSize"
+        else:
+            addressSize = "env.addressSize"
+
         base = LdStOp
         if big:
             base = BigLdStOp
         class LoadOp(base):
             def __init__(self, data, segment, addr, disp = 0,
                     dataSize="env.dataSize",
-                    addressSize="env.addressSize",
-                    atCPL0=False, prefetch=False, nonSpec=nonSpec):
+                    addressSize=addressSize,
+                    atCPL0=False, prefetch=False, nonSpec=nonSpec,
+                    implicitStack=implicitStack):
                 super(LoadOp, self).__init__(data, segment, addr,
                         disp, dataSize, addressSize, mem_flags,
-                        atCPL0, prefetch, nonSpec)
+                        atCPL0, prefetch, nonSpec, implicitStack)
                 self.className = Name
                 self.mnemonic = name
 
@@ -478,6 +498,9 @@ let {{
 
     defineMicroLoadOp('Ld', 'Data = merge(Data, Mem, dataSize);',
                             'Data = Mem & mask(dataSize * 8);')
+    defineMicroLoadOp('Ldis', 'Data = merge(Data, Mem, dataSize);',
+                              'Data = Mem & mask(dataSize * 8);',
+                               implicitStack=True)
     defineMicroLoadOp('Ldst', 'Data = merge(Data, Mem, dataSize);',
                               'Data = Mem & mask(dataSize * 8);',
                       '(StoreCheck << FlagShift)')
@@ -544,10 +567,11 @@ let {{
             def __init__(self, data, segment, addr, disp = 0,
                     dataSize="env.dataSize",
                     addressSize="env.addressSize",
-                    atCPL0=False, prefetch=False, nonSpec=nonSpec):
+                    atCPL0=False, prefetch=False, nonSpec=nonSpec,
+                    implicitStack=False):
                 super(LoadOp, self).__init__(data, segment, addr,
                         disp, dataSize, addressSize, mem_flags,
-                        atCPL0, prefetch, nonSpec)
+                        atCPL0, prefetch, nonSpec, implicitStack)
                 self.className = Name
                 self.mnemonic = name
 
@@ -574,7 +598,8 @@ let {{
                            '(StoreCheck << FlagShift) | Request::LOCKED_RMW',
                            nonSpec=True)
 
-    def defineMicroStoreOp(mnemonic, code, completeCode="", mem_flags="0"):
+    def defineMicroStoreOp(mnemonic, code, completeCode="", mem_flags="0",
+                           implicitStack=False):
         global header_output
         global decoder_output
         global exec_output
@@ -594,20 +619,30 @@ let {{
         exec_output += MicroStoreInitiateAcc.subst(iop)
         exec_output += MicroStoreCompleteAcc.subst(iop)
 
+        if implicitStack:
+            # For instructions that implicitly access the stack, the address
+            # size is the same as the stack segment pointer size, not the
+            # address size if specified by the instruction prefix
+            addressSize = "env.stackSize"
+        else:
+            addressSize = "env.addressSize"
+
         class StoreOp(LdStOp):
             def __init__(self, data, segment, addr, disp = 0,
                     dataSize="env.dataSize",
-                    addressSize="env.addressSize",
-                    atCPL0=False, nonSpec=False):
+                    addressSize=addressSize,
+                    atCPL0=False, nonSpec=False, implicitStack=implicitStack):
                 super(StoreOp, self).__init__(data, segment, addr, disp,
                         dataSize, addressSize, mem_flags, atCPL0, False,
-                        nonSpec)
+                        nonSpec, implicitStack)
                 self.className = Name
                 self.mnemonic = name
 
         microopClasses[name] = StoreOp
 
     defineMicroStoreOp('St', 'Mem = pick(Data, 2, dataSize);')
+    defineMicroStoreOp('Stis', 'Mem = pick(Data, 2, dataSize);',
+                       implicitStack=True)
     defineMicroStoreOp('Stul', 'Mem = pick(Data, 2, dataSize);',
             mem_flags="Request::LOCKED_RMW")
 
@@ -655,10 +690,10 @@ let {{
             def __init__(self, data, segment, addr, disp = 0,
                     dataSize="env.dataSize",
                     addressSize="env.addressSize",
-                    atCPL0=False, nonSpec=False):
+                    atCPL0=False, nonSpec=False, implicitStack=False):
                 super(StoreOp, self).__init__(data, segment, addr, disp,
                         dataSize, addressSize, mem_flags, atCPL0, False,
-                        nonSpec)
+                        nonSpec, implicitStack)
                 self.className = Name
                 self.mnemonic = name
 
@@ -694,7 +729,7 @@ let {{
         def __init__(self, data, segment, addr, disp = 0,
                 dataSize="env.dataSize", addressSize="env.addressSize"):
             super(LeaOp, self).__init__(data, segment, addr, disp,
-                    dataSize, addressSize, "0", False, False, False)
+                    dataSize, addressSize, "0", False, False, False, False)
             self.className = "Lea"
             self.mnemonic = "lea"
 
@@ -715,7 +750,7 @@ let {{
                 addressSize="env.addressSize"):
             super(TiaOp, self).__init__("InstRegIndex(NUM_INTREGS)", segment,
                     addr, disp, dataSize, addressSize, "0", False, False,
-                    False)
+                    False, False)
             self.className = "Tia"
             self.mnemonic = "tia"
 
@@ -727,10 +762,9 @@ let {{
                 addressSize="env.addressSize", atCPL0=False):
             super(CdaOp, self).__init__("InstRegIndex(NUM_INTREGS)", segment,
                     addr, disp, dataSize, addressSize, "Request::NO_ACCESS",
-                    atCPL0, False, False)
+                    atCPL0, False, False, False)
             self.className = "Cda"
             self.mnemonic = "cda"
 
     microopClasses["cda"] = CdaOp
 }};
-

@@ -40,7 +40,7 @@ def macroop POP_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    ld t1, ss, [1, t0, rsp], dataSize=ssz
+    ldis t1, ss, [1, t0, rsp], dataSize=ssz
     addi rsp, rsp, ssz, dataSize=asz
     mov reg, reg, t1
 };
@@ -49,7 +49,7 @@ def macroop POP_M {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    ld t1, ss, [1, t0, rsp], dataSize=ssz
+    ldis t1, ss, [1, t0, rsp], dataSize=ssz
     cda seg, sib, disp, dataSize=ssz
     addi rsp, rsp, ssz, dataSize=asz
     st t1, seg, sib, disp, dataSize=ssz
@@ -70,7 +70,7 @@ def macroop PUSH_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    st reg, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    stis reg, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
     subi rsp, rsp, ssz
 };
 
@@ -79,7 +79,7 @@ def macroop PUSH_I {
     .adjust_env oszIn64Override
 
     limm t1, imm
-    st t1, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    stis t1, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
     subi rsp, rsp, ssz
 };
 
@@ -138,7 +138,7 @@ def macroop LEAVE {
     .adjust_env oszIn64Override
 
     mov t1, t1, rbp, dataSize=ssz
-    ld rbp, ss, [1, t0, t1], dataSize=ssz
+    ldis rbp, ss, [1, t0, t1], dataSize=ssz
     mov rsp, rsp, t1, dataSize=ssz
     addi rsp, rsp, ssz, dataSize=ssz
 };
@@ -156,7 +156,7 @@ def macroop ENTER_I_I {
     # t1 is now the masked nesting level, and t2 is the amount of storage.
 
     # Push rbp.
-    st rbp, ss, [1, t0, rsp], "-env.dataSize"
+    stis rbp, ss, [1, t0, rsp], "-env.dataSize"
     subi rsp, rsp, ssz
 
     # Save the stack pointer for later
@@ -172,8 +172,8 @@ def macroop ENTER_I_I {
 
     limm t4, "ULL(-1)", dataSize=8
 topOfLoop:
-    ld t5, ss, [dsz, t4, rbp]
-    st t5, ss, [1, t0, rsp], "-env.dataSize"
+    ldis t5, ss, [dsz, t4, rbp]
+    stis t5, ss, [1, t0, rsp], "-env.dataSize"
     subi rsp, rsp, ssz
 
     # If we're not done yet, loop
@@ -183,7 +183,7 @@ topOfLoop:
 
 bottomOfLoop:
     # Push the old rbp onto the stack
-    st t6, ss, [1, t0, rsp], "-env.dataSize"
+    stis t6, ss, [1, t0, rsp], "-env.dataSize"
     subi rsp, rsp, ssz
 
 skipLoop:
