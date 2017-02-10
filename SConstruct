@@ -655,6 +655,9 @@ if main['GCC'] or main['CLANG']:
                          '-Wno-sign-compare', '-Wno-unused-parameter'])
     # We always compile using C++11
     main.Append(CXXFLAGS=['-std=c++11'])
+    if sys.platform.startswith('freebsd'):
+        main.Append(CCFLAGS=['-I/usr/local/include'])
+        main.Append(CXXFLAGS=['-I/usr/local/include'])
 else:
     print termcap.Yellow + termcap.Bold + 'Error' + termcap.Normal,
     print "Don't know what compiler options to use for your compiler."
@@ -771,6 +774,10 @@ elif main['CLANG']:
         main.Append(CXXFLAGS=['-stdlib=libc++'])
         main.Append(LIBS=['c++'])
 
+    # On FreeBSD we need libthr.
+    if sys.platform.startswith('freebsd'):
+        main.Append(LIBS=['thr'])
+
 else:
     print termcap.Yellow + termcap.Bold + 'Error' + termcap.Normal,
     print "Don't know what compiler options to use for your compiler."
@@ -884,8 +891,12 @@ main.Append(SWIGFLAGS=swig_flags)
 # Check for 'timeout' from GNU coreutils. If present, regressions will
 # be run with a time limit. We require version 8.13 since we rely on
 # support for the '--foreground' option.
-timeout_lines = readCommand(['timeout', '--version'],
-                            exception='').splitlines()
+if sys.platform.startswith('freebsd'):
+    timeout_lines = readCommand(['gtimeout', '--version'],
+                                exception='').splitlines()
+else:
+    timeout_lines = readCommand(['timeout', '--version'],
+                                exception='').splitlines()
 # Get the first line and tokenize it
 timeout_version = timeout_lines[0].split() if timeout_lines else []
 main['TIMEOUT'] =  timeout_version and \
@@ -1083,6 +1094,11 @@ backtrace_impls = [ "none" ]
 if conf.CheckLibWithHeader(None, 'execinfo.h', 'C',
                            'backtrace_symbols_fd((void*)0, 0, 0);'):
     backtrace_impls.append("glibc")
+elif conf.CheckLibWithHeader('execinfo', 'execinfo.h', 'C',
+                           'backtrace_symbols_fd((void*)0, 0, 0);'):
+    # NetBSD and FreeBSD need libexecinfo.
+    backtrace_impls.append("glibc")
+    main.Append(LIBS=['execinfo'])
 
 if backtrace_impls[-1] == "none":
     default_backtrace_impl = "none"
