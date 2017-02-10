@@ -32,50 +32,39 @@
  * Authors: Christian Menard
  */
 
-#include <systemc>
-#include <tlm>
+#ifndef __CLI_PARSER_HH__
+#define __CLI_PARSER_HH__
 
-#include "cli_parser.hh"
-#include "report_handler.hh"
-#include "sc_master_port.hh"
-#include "sim_control.hh"
-#include "stats.hh"
-#include "traffic_generator.hh"
+#include <cassert>
+#include <string>
+#include <vector>
 
-int
-sc_main(int argc, char** argv)
+class CliParser
 {
-    CliParser parser;
-    parser.parse(argc, argv);
+  private:
+    int argc;
+    char** argv;
 
-    sc_core::sc_report_handler::set_handler(reportHandler);
+    bool parsed;
 
-    Gem5SystemC::Gem5SimControl simControl("gem5",
-                                           parser.getConfigFile(),
-                                           parser.getSimulationEnd(),
-                                           parser.getDebugFlags());
+    uint64_t memoryOffset;
+    uint64_t simulationEnd;
+    bool verboseFlag;
+    std::vector<std::string> debugFlags;
+    std::string configFile;
 
-    TrafficGenerator trafficGenerator("traffic_generator");
+    void usage(const std::string& prog_name);
+  public:
 
-    tlm::tlm_target_socket<>* mem_port =
-      dynamic_cast<tlm::tlm_target_socket<>*>(
-        sc_core::sc_find_object("gem5.memory"));
+    CliParser() : parsed(false) {}
 
-    if (mem_port) {
-        SC_REPORT_INFO("sc_main", "Port Found");
-        trafficGenerator.socket.bind(*mem_port);
-    } else {
-        SC_REPORT_FATAL("sc_main", "Port Not Found");
-        std::exit(EXIT_FAILURE);
-    }
+    void parse(int argc, char** argv);
 
-    SC_REPORT_INFO("sc_main", "Start of Simulation");
+    uint64_t getMemoryOffset()  { assert(parsed); return memoryOffset; }
+    uint64_t getSimulationEnd() { assert(parsed); return simulationEnd; }
+    bool getVerboseFlag()       { assert(parsed); return verboseFlag; }
+    std::string getConfigFile() { assert(parsed); return configFile; }
+    std::string getDebugFlags();
+};
 
-    sc_core::sc_start(); // Run to end of simulation
-
-    SC_REPORT_INFO("sc_main", "End of Simulation");
-
-    CxxConfig::statsDump();
-
-    return EXIT_SUCCESS;
-}
+#endif

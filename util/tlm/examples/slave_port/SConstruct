@@ -54,7 +54,8 @@ env.ParseConfig('pkg-config --cflags --libs systemc')
 # add include dirs
 env.Append(CPPPATH=[gem5_root + '/build/' + gem5_arch,
                     gem5_root + '/util/systemc',
-                    gem5_root + '/util/tlm'])
+                    gem5_root + '/util/tlm',
+                    '../common'])
 
 env.Append(LIBS=['gem5_' + gem5_variant])
 env.Append(LIBPATH=[gem5_root + '/build/' + gem5_arch])
@@ -72,6 +73,6 @@ src_systemc = [gem5_root + '/util/systemc/sc_gem5_control.cc',
                gem5_root + '/util/systemc/stats.cc']
 
 src_tlm     = Glob(gem5_root + '/util/tlm/*.cc')
-src_main    = Glob('*.cc')
+src_main    = Glob('*.cc') + Glob('../common/*.cc')
 
 main = env.Program(target, src_systemc + src_tlm + src_main)

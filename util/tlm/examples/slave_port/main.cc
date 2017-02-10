@@ -43,48 +43,30 @@
  *
  */
 
-#include <tlm_utils/simple_target_socket.h>
-
 #include <systemc>
 #include <tlm>
 
+#include "cli_parser.hh"
+#include "report_handler.hh"
 #include "sc_target.hh"
 #include "sim_control.hh"
 #include "stats.hh"
 
-// Defining global string variable decalred in stats.hh
-std::string filename;
-
-void
-reportHandler(const sc_core::sc_report &report,
-              const sc_core::sc_actions &actions)
-{
-    uint64_t systemc_time = report.get_time().value();
-    uint64_t gem5_time = curTick();
-
-    std::cerr << report.get_time();
-
-    if (gem5_time < systemc_time) {
-        std::cerr << " (<) ";
-    } else if (gem5_time > systemc_time) {
-        std::cerr << " (!) ";
-    } else {
-        std::cerr << " (=) ";
-    }
-
-    std::cerr << ": " << report.get_msg_type()
-              << ' ' << report.get_msg() << '\n';
-}
-
 int
 sc_main(int argc, char **argv)
 {
+    CliParser parser;
+    parser.parse(argc, argv);
+
     sc_core::sc_report_handler::set_handler(reportHandler);
 
-    SimControl sim_control("gem5", argc, argv);
+    Gem5SystemC::Gem5SimControl simControl("gem5",
+                                           parser.getConfigFile(),
+                                           parser.getSimulationEnd(),
+                                           parser.getDebugFlags());
     Target *memory;
 
-    filename = "m5out/stats-systemc.txt";
+    unsigned long long int memorySize = 512*1024*1024ULL;
 
     tlm::tlm_initiator_socket <> *mem_port =
         dynamic_cast<tlm::tlm_initiator_socket<> *>(
@@ -93,17 +75,18 @@ sc_main(int argc, char **argv)
 
     if (mem_port) {
         SC_REPORT_INFO("sc_main", "Port Found");
-        unsigned long long int size = 512*1024*1024ULL;
         memory = new Target("memory",
-                            sim_control.getDebugFlag(),
-                            size,
-                            sim_control.getOffset());
+                            parser.getVerboseFlag(),
+                            memorySize,
+                            parser.getMemoryOffset());
 
         memory->socket.bind(*mem_port);
     } else {
         SC_REPORT_FATAL("sc_main", "Port Not Found");
         std::exit(EXIT_FAILURE);
     }
+
+    SC_REPORT_INFO("sc_main", "Start of Simulation");
 
     sc_core::sc_start();
 

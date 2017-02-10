@@ -54,40 +54,27 @@
 #include "sim_control.hh"
 #include "stats.hh"
 
-void
-usage(const std::string& prog_name)
+// Define global string variable decalred in stats.hh
+std::string filename = "m5out/stats-systemc.txt";
+
+namespace Gem5SystemC
 {
-    std::cerr
-      << "Usage: " << prog_name
-      << (" <config_file.ini> [ <option> ]\n\n"
-          "OPTIONS:\n"
 
-          "    -o <offset>                  -- set memory offset\n"
-          "    -p <object> <param> <value>  -- set a parameter\n"
-          "    -v <object> <param> <values> -- set a vector parameter from a\n"
-          "                                    comma separated values string\n"
-          "    -d <flag>                    -- set a debug flag\n"
-          "                                    (-<flag> clear a flag)\n"
-          "    -D                           -- debug on\n"
-          "    -e <ticks>                   -- end of simulation after a \n"
-          "                                    given number of ticks\n"
-          "\n");
-    std::exit(EXIT_FAILURE);
-}
+Gem5SimControl* Gem5SimControl::instance = nullptr;
 
-SimControl::SimControl(sc_core::sc_module_name name, int argc_, char** argv_)
+Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
+                               const std::string& configFile,
+                               uint64_t simulationEnd,
+                               const std::string& gem5DebugFlags)
   : Gem5SystemC::Module(name),
-    argc(argc_),
-    argv(argv_)
+    simulationEnd(simulationEnd)
 {
     SC_THREAD(run);
 
-    std::string prog_name(argv[0]);
-    unsigned int arg_ptr = 1;
-
-    if (argc == 1) {
-        usage(prog_name);
+    if (instance != nullptr) {
+        panic("Tried to instantiate Gem5SimControl more than once!\n");
     }
+    instance = this;
 
     cxxConfigInit();
     Gem5SystemC::SCSlavePort::registerPortHandler();
@@ -106,79 +93,32 @@ SimControl::SimControl(sc_core::sc_module_name name, int argc_, char** argv_)
 
     Trace::enable();
 
-    sim_end = 0;
-    debug = false;
-    offset = 0;
+    CxxConfigFileBase* conf = new CxxIniFile();
 
-    const std::string config_file(argv[arg_ptr]);
-
-    CxxConfigFileBase *conf = new CxxIniFile();
-
-    if (!conf->load(config_file.c_str())) {
-        std::cerr << "Can't open config file: " << config_file << '\n';
+    if (configFile.empty()) {
+        std::cerr << "No gem5 config file specified!\n";
         std::exit(EXIT_FAILURE);
     }
-    arg_ptr++;
+
+    if (!conf->load(configFile.c_str())) {
+        std::cerr << "Can't open config file: " << configFile << '\n';
+        std::exit(EXIT_FAILURE);
+    }
 
     config_manager = new CxxConfigManager(*conf);
 
-    try {
-        while (arg_ptr < argc) {
-            std::string option(argv[arg_ptr]);
-            arg_ptr++;
-            unsigned num_args = argc - arg_ptr;
-
-            if (option == "-p") {
-                if (num_args < 3) {
-                    usage(prog_name);
-                }
-
-                config_manager->setParam(argv[arg_ptr], argv[arg_ptr + 1],
-                argv[arg_ptr + 2]);
-                arg_ptr += 3;
-            } else if (option == "-v") {
-                std::vector<std::string> values;
-
-                if (num_args < 3) {
-                    usage(prog_name);
-                }
-                tokenize(values, argv[2], ',');
-                config_manager->setParamVector(argv[arg_ptr],
-                                               argv[arg_ptr],
-                                               values);
-                arg_ptr += 3;
-            } else if (option == "-d") {
-                if (num_args < 1) {
-                    usage(prog_name);
-                }
-                if (argv[arg_ptr][0] == '-') {
-                    clearDebugFlag(argv[arg_ptr] + 1);
-                } else {
-                    setDebugFlag(argv[arg_ptr]);
-                }
-                arg_ptr++;
-            } else if (option == "-e") {
-                if (num_args < 1) {
-                    usage(prog_name);
-                }
-                std::istringstream(argv[arg_ptr]) >> sim_end;
-                arg_ptr++;
-            } else if (option == "-D") {
-                debug = true;
-            } else if (option == "-o") {
-                if (num_args < 1) {
-                    usage(prog_name);
-                }
-                std::istringstream(argv[arg_ptr]) >> offset;
-                arg_ptr++;
-                /* code */
-            } else {
-                usage(prog_name);
-            }
+    // parse debug flags string and clear/set flags accordingly
+    std::stringstream ss;
+    ss.str(gem5DebugFlags);
+    std::string flag;
+    while (std::getline(ss, flag, ' ')) {
+        if (flag.at(0) == '-') {
+            flag.erase(0, 1); // remove the '-'
+            clearDebugFlag(flag.c_str());
         }
-    } catch (CxxConfigManager::Exception &e) {
-        std::cerr << e.name << ": " << e.message << "\n";
-        std::exit(EXIT_FAILURE);
+        else {
+            setDebugFlag(flag.c_str());
+        }
     }
 
     CxxConfig::statsEnable();
@@ -194,7 +134,7 @@ SimControl::SimControl(sc_core::sc_module_name name, int argc_, char** argv_)
 }
 
 void
-SimControl::before_end_of_elaboration()
+Gem5SimControl::before_end_of_elaboration()
 {
     try {
         config_manager->initState();
@@ -207,14 +147,14 @@ SimControl::before_end_of_elaboration()
 }
 
 void
-SimControl::run()
+Gem5SimControl::run()
 {
     GlobalSimLoopExitEvent *exit_event = NULL;
 
-    if (sim_end == 0) {
+    if (simulationEnd == 0) {
         exit_event = simulate();
     } else {
-        exit_event = simulate(sim_end);
+        exit_event = simulate(simulationEnd);
     }
 
     std::cerr << "Exit at tick " << curTick()
@@ -225,4 +165,6 @@ SimControl::run()
 #if TRY_CLEAN_DELETE
     config_manager->deleteObjects();
 #endif
+}
+
 }

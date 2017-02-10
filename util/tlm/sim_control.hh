@@ -47,30 +47,54 @@
 #include "sim/cxx_manager.hh"
 #include "sim/system.hh"
 
-class SimControl : public Gem5SystemC::Module
+namespace Gem5SystemC
+{
+
+/**
+ * This is the central SystemC module that orchestrates the gem5 simulation.
+ *
+ * The module is responsible for loading the configuration file, setting up and
+ * maintaining the event queues, as well as starting and ending the simulation.
+ * While it is mandatory to have one instance of this class for running a gem5
+ * simulation in SystemC, it is not allowed to have multiple instances!
+ */
+class Gem5SimControl : public Gem5SystemC::Module
 {
   protected:
-    int argc;
-    char** argv;
     CxxConfigManager* config_manager;
     Gem5SystemC::Logger logger;
 
-    Tick sim_end;
-    bool debug;
-    unsigned int offset;
+    Tick simulationEnd;
+
+    /// Pointer to a previously created instance.
+    static Gem5SimControl* instance;
 
   public:
-    SC_HAS_PROCESS(SimControl);
+    SC_HAS_PROCESS(Gem5SimControl);
 
-    SimControl(sc_core::sc_module_name name, int argc_, char** argv_);
+    /**
+     * Constructor.
+     *
+     * This class has a public constructor although the class is actually a
+     * singleton. The public constructor is required to ensure compatibility
+     * to external SystemC based tools. For the same reason, the constructor
+     * parameters are basic types (int, string).
+     *
+     * @param configFile     location of the gem5 configuration file
+     * @param simulationEnd  number of ticks to simulate
+     * @param gem5DebugFlags a space separated list of gem5 debug flags to be
+     *                       set, a prepended '-' clears the flag
+     */
+    Gem5SimControl(sc_core::sc_module_name name,
+                   const std::string& configFile,
+                   uint64_t simulationEnd,
+                   const std::string& gem5DebugFlags);
 
     void before_end_of_elaboration();
 
-    bool getDebugFlag() { return debug; }
-
-    unsigned int getOffset() { return offset; }
-
     void run();
 };
+
+}
 
 #endif

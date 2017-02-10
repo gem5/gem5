@@ -32,50 +32,56 @@
  * Authors: Christian Menard
  */
 
+#include <iostream>
 #include <systemc>
-#include <tlm>
 
-#include "cli_parser.hh"
+#include <sim/core.hh>
+#include <sim/simulate.hh>
+
 #include "report_handler.hh"
-#include "sc_master_port.hh"
-#include "sim_control.hh"
-#include "stats.hh"
-#include "traffic_generator.hh"
 
-int
-sc_main(int argc, char** argv)
+using namespace sc_core;
+
+void
+reportHandler(const sc_report &report, const sc_actions &actions)
 {
-    CliParser parser;
-    parser.parse(argc, argv);
+    uint64_t systemc_time = report.get_time().value();
+    uint64_t gem5_time = curTick();
 
-    sc_core::sc_report_handler::set_handler(reportHandler);
+    if (actions & SC_DO_NOTHING)
+        return;
 
-    Gem5SystemC::Gem5SimControl simControl("gem5",
-                                           parser.getConfigFile(),
-                                           parser.getSimulationEnd(),
-                                           parser.getDebugFlags());
+    if (actions & SC_DISPLAY || actions & SC_LOG)
+    {
+        std::ostream& stream = actions & SC_DISPLAY ? std::cout : std::cerr;
 
-    TrafficGenerator trafficGenerator("traffic_generator");
+        stream << report.get_time();
 
-    tlm::tlm_target_socket<>* mem_port =
-      dynamic_cast<tlm::tlm_target_socket<>*>(
-        sc_core::sc_find_object("gem5.memory"));
+        if (gem5_time < systemc_time) {
+            stream << " (<) ";
+        } else if (gem5_time > systemc_time) {
+            stream << " (!) ";
+        } else {
+            stream << " (=) ";
+        }
 
-    if (mem_port) {
-        SC_REPORT_INFO("sc_main", "Port Found");
-        trafficGenerator.socket.bind(*mem_port);
-    } else {
-        SC_REPORT_FATAL("sc_main", "Port Not Found");
-        std::exit(EXIT_FAILURE);
+        stream << ": " << report.get_msg_type()
+               << ' ' << report.get_msg() << '\n';
     }
 
-    SC_REPORT_INFO("sc_main", "Start of Simulation");
+    if (actions & SC_THROW) {
+        std::cerr << "warning: the report handler ignored a SC_THROW action\n";
+    } else if (actions & SC_INTERRUPT) {
+        std::cerr << "warning: the report handler ignored a SC_INTERRUPT"
+                  << "action\n";
+    } else if (actions & SC_CACHE_REPORT) {
+        std::cerr << "warning: the report handler ignored a SC_CACHE_REPORT"
+                  << "action\n";
+    }
 
-    sc_core::sc_start(); // Run to end of simulation
+    if (actions & SC_STOP)
+        sc_stop();
 
-    SC_REPORT_INFO("sc_main", "End of Simulation");
-
-    CxxConfig::statsDump();
-
-    return EXIT_SUCCESS;
+    if (actions & SC_ABORT)
+        abort();
 }

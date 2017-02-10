@@ -29,53 +29,14 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Christian Menard
+ * Authors: Matthias Jung
+ *          Christian Menard
  */
 
-#include <systemc>
-#include <tlm>
+#ifndef __REPORT_HANDLER_HH__
+#define __REPORT_HANDLER_HH__
 
-#include "cli_parser.hh"
-#include "report_handler.hh"
-#include "sc_master_port.hh"
-#include "sim_control.hh"
-#include "stats.hh"
-#include "traffic_generator.hh"
+void reportHandler(const sc_core::sc_report &report,
+                   const sc_core::sc_actions &actions);
 
-int
-sc_main(int argc, char** argv)
-{
-    CliParser parser;
-    parser.parse(argc, argv);
-
-    sc_core::sc_report_handler::set_handler(reportHandler);
-
-    Gem5SystemC::Gem5SimControl simControl("gem5",
-                                           parser.getConfigFile(),
-                                           parser.getSimulationEnd(),
-                                           parser.getDebugFlags());
-
-    TrafficGenerator trafficGenerator("traffic_generator");
-
-    tlm::tlm_target_socket<>* mem_port =
-      dynamic_cast<tlm::tlm_target_socket<>*>(
-        sc_core::sc_find_object("gem5.memory"));
-
-    if (mem_port) {
-        SC_REPORT_INFO("sc_main", "Port Found");
-        trafficGenerator.socket.bind(*mem_port);
-    } else {
-        SC_REPORT_FATAL("sc_main", "Port Not Found");
-        std::exit(EXIT_FAILURE);
-    }
-
-    SC_REPORT_INFO("sc_main", "Start of Simulation");
-
-    sc_core::sc_start(); // Run to end of simulation
-
-    SC_REPORT_INFO("sc_main", "End of Simulation");
-
-    CxxConfig::statsDump();
-
-    return EXIT_SUCCESS;
-}
+#endif
