@@ -57,13 +57,19 @@ class SparcFaultBase : public FaultBase
         SH = -1,
         ShouldntHappen = SH
     };
+    using PrivilegeLevelSpec = std::array<PrivilegeLevel, NumLevels>;
     struct FaultVals
     {
         const FaultName name;
         const TrapType trapType;
         const FaultPriority priority;
-        const PrivilegeLevel nextPrivilegeLevel[NumLevels];
+        const PrivilegeLevelSpec nextPrivilegeLevel;
         FaultStat count;
+        FaultVals(const FaultName& name_, const TrapType& trapType_,
+                const FaultPriority& priority_, const PrivilegeLevelSpec& il)
+            : name(name_), trapType(trapType_), priority(priority_),
+            nextPrivilegeLevel(il)
+        {}
     };
     void invoke(ThreadContext * tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr);

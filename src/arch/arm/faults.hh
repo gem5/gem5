@@ -171,6 +171,22 @@ class ArmFault : public FaultBase
         const ExceptionClass ec;
 
         FaultStat count;
+        FaultVals(const FaultName& name_, const FaultOffset& offset_,
+                const uint16_t& currELTOffset_, const uint16_t& currELHOffset_,
+                const uint16_t& lowerEL64Offset_,
+                const uint16_t& lowerEL32Offset_,
+                const OperatingMode& nextMode_, const uint8_t& armPcOffset_,
+                const uint8_t& thumbPcOffset_, const uint8_t& armPcElrOffset_,
+                const uint8_t& thumbPcElrOffset_, const bool& hypTrappable_,
+                const bool& abortDisable_, const bool& fiqDisable_,
+                const ExceptionClass& ec_)
+        : name(name_), offset(offset_), currELTOffset(currELTOffset_),
+          currELHOffset(currELHOffset_), lowerEL64Offset(lowerEL64Offset_),
+          lowerEL32Offset(lowerEL32Offset_), nextMode(nextMode_),
+          armPcOffset(armPcOffset_), thumbPcOffset(thumbPcOffset_),
+          armPcElrOffset(armPcElrOffset_), thumbPcElrOffset(thumbPcElrOffset_),
+          hypTrappable(hypTrappable_), abortDisable(abortDisable_),
+          fiqDisable(fiqDisable_), ec(ec_) {}
     };
 
     ArmFault(ExtMachInst _machInst = 0, uint32_t _iss = 0) :

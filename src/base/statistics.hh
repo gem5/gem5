@@ -232,7 +232,7 @@ class DataWrap : public InfoAccess
     /**
      * Copy constructor, copies are not allowed.
      */
-    DataWrap(const DataWrap &stat) {}
+    DataWrap(const DataWrap &stat) = delete;
 
     /**
      * Can't copy stats.

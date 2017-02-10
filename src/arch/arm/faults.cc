@@ -198,100 +198,100 @@ static_assert(sizeof(ArmFault::aarch64FaultSources) ==
 // Fields: name, offset, cur{ELT,ELH}Offset, lowerEL{64,32}Offset, next mode,
 //         {ARM, Thumb, ARM_ELR, Thumb_ELR} PC offset, hyp trap,
 //         {A, F} disable, class, stat
-template<> ArmFault::FaultVals ArmFaultVals<Reset>::vals = {
+template<> ArmFault::FaultVals ArmFaultVals<Reset>::vals(
     // Some dummy values (the reset vector has an IMPLEMENTATION DEFINED
     // location in AArch64)
     "Reset",                 0x000, 0x000, 0x000, 0x000, 0x000, MODE_SVC,
-    0, 0, 0, 0, false, true,  true,  EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<UndefinedInstruction>::vals = {
+    0, 0, 0, 0, false, true,  true,  EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<UndefinedInstruction>::vals(
     "Undefined Instruction", 0x004, 0x000, 0x200, 0x400, 0x600, MODE_UNDEFINED,
-    4, 2, 0, 0, true,  false, false, EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SupervisorCall>::vals = {
+    4, 2, 0, 0, true,  false, false, EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<SupervisorCall>::vals(
     "Supervisor Call",       0x008, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    4, 2, 4, 2, true,  false, false, EC_SVC_TO_HYP, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorCall>::vals = {
+    4, 2, 4, 2, true,  false, false, EC_SVC_TO_HYP
+);
+template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorCall>::vals(
     "Secure Monitor Call",   0x008, 0x000, 0x200, 0x400, 0x600, MODE_MON,
-    4, 4, 4, 4, false, true,  true,  EC_SMC_TO_HYP, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<HypervisorCall>::vals = {
+    4, 4, 4, 4, false, true,  true,  EC_SMC_TO_HYP
+);
+template<> ArmFault::FaultVals ArmFaultVals<HypervisorCall>::vals(
     "Hypervisor Call",       0x008, 0x000, 0x200, 0x400, 0x600, MODE_HYP,
-    4, 4, 4, 4, true,  false, false, EC_HVC, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<PrefetchAbort>::vals = {
+    4, 4, 4, 4, true,  false, false, EC_HVC
+);
+template<> ArmFault::FaultVals ArmFaultVals<PrefetchAbort>::vals(
     "Prefetch Abort",        0x00C, 0x000, 0x200, 0x400, 0x600, MODE_ABORT,
-    4, 4, 0, 0, true,  true,  false, EC_PREFETCH_ABORT_TO_HYP, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<DataAbort>::vals = {
+    4, 4, 0, 0, true,  true,  false, EC_PREFETCH_ABORT_TO_HYP
+);
+template<> ArmFault::FaultVals ArmFaultVals<DataAbort>::vals(
     "Data Abort",            0x010, 0x000, 0x200, 0x400, 0x600, MODE_ABORT,
-    8, 8, 0, 0, true,  true,  false, EC_DATA_ABORT_TO_HYP, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<VirtualDataAbort>::vals = {
+    8, 8, 0, 0, true,  true,  false, EC_DATA_ABORT_TO_HYP
+);
+template<> ArmFault::FaultVals ArmFaultVals<VirtualDataAbort>::vals(
     "Virtual Data Abort",    0x010, 0x000, 0x200, 0x400, 0x600, MODE_ABORT,
-    8, 8, 0, 0, true,  true,  false, EC_INVALID, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<HypervisorTrap>::vals = {
+    8, 8, 0, 0, true,  true,  false, EC_INVALID
+);
+template<> ArmFault::FaultVals ArmFaultVals<HypervisorTrap>::vals(
     // @todo: double check these values
     "Hypervisor Trap",       0x014, 0x000, 0x200, 0x400, 0x600, MODE_HYP,
-    0, 0, 0, 0, false, false, false, EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorTrap>::vals = {
+    0, 0, 0, 0, false, false, false, EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorTrap>::vals(
     "Secure Monitor Trap",   0x004, 0x000, 0x200, 0x400, 0x600, MODE_MON,
-    4, 2, 0, 0, false, false, false, EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<Interrupt>::vals = {
+    4, 2, 0, 0, false, false, false, EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<Interrupt>::vals(
     "IRQ",                   0x018, 0x080, 0x280, 0x480, 0x680, MODE_IRQ,
-    4, 4, 0, 0, false, true,  false, EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<VirtualInterrupt>::vals = {
+    4, 4, 0, 0, false, true,  false, EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<VirtualInterrupt>::vals(
     "Virtual IRQ",           0x018, 0x080, 0x280, 0x480, 0x680, MODE_IRQ,
-    4, 4, 0, 0, false, true,  false, EC_INVALID, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals = {
+    4, 4, 0, 0, false, true,  false, EC_INVALID
+);
+template<> ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals(
     "FIQ",                   0x01C, 0x100, 0x300, 0x500, 0x700, MODE_FIQ,
-    4, 4, 0, 0, false, true,  true,  EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<VirtualFastInterrupt>::vals = {
+    4, 4, 0, 0, false, true,  true,  EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<VirtualFastInterrupt>::vals(
     "Virtual FIQ",           0x01C, 0x100, 0x300, 0x500, 0x700, MODE_FIQ,
-    4, 4, 0, 0, false, true,  true,  EC_INVALID, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SupervisorTrap>::vals = {
+    4, 4, 0, 0, false, true,  true,  EC_INVALID
+);
+template<> ArmFault::FaultVals ArmFaultVals<SupervisorTrap>::vals(
     // Some dummy values (SupervisorTrap is AArch64-only)
     "Supervisor Trap",   0x014, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    0, 0, 0, 0, false, false, false, EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<PCAlignmentFault>::vals = {
+    0, 0, 0, 0, false, false, false, EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<PCAlignmentFault>::vals(
     // Some dummy values (PCAlignmentFault is AArch64-only)
     "PC Alignment Fault",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    0, 0, 0, 0, true, false, false, EC_PC_ALIGNMENT, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SPAlignmentFault>::vals = {
+    0, 0, 0, 0, true, false, false, EC_PC_ALIGNMENT
+);
+template<> ArmFault::FaultVals ArmFaultVals<SPAlignmentFault>::vals(
     // Some dummy values (SPAlignmentFault is AArch64-only)
     "SP Alignment Fault",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    0, 0, 0, 0, true, false, false, EC_STACK_PTR_ALIGNMENT, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals = {
+    0, 0, 0, 0, true, false, false, EC_STACK_PTR_ALIGNMENT
+);
+template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals(
     // Some dummy values (SError is AArch64-only)
     "SError",                0x000, 0x180, 0x380, 0x580, 0x780, MODE_SVC,
-    0, 0, 0, 0, false, true,  true,  EC_SERROR, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SoftwareBreakpoint>::vals = {
+    0, 0, 0, 0, false, true,  true,  EC_SERROR
+);
+template<> ArmFault::FaultVals ArmFaultVals<SoftwareBreakpoint>::vals(
     // Some dummy values (SoftwareBreakpoint is AArch64-only)
     "Software Breakpoint",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    0, 0, 0, 0, true, false, false,  EC_SOFTWARE_BREAKPOINT, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals = {
+    0, 0, 0, 0, true, false, false,  EC_SOFTWARE_BREAKPOINT
+);
+template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals(
     // Some dummy values
     "ArmSev Flush",          0x000, 0x000, 0x000, 0x000, 0x000, MODE_SVC,
-    0, 0, 0, 0, false, true,  true,  EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<IllegalInstSetStateFault>::vals = {
+    0, 0, 0, 0, false, true,  true,  EC_UNKNOWN
+);
+template<> ArmFault::FaultVals ArmFaultVals<IllegalInstSetStateFault>::vals(
     // Some dummy values (SPAlignmentFault is AArch64-only)
     "Illegal Inst Set State Fault",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    0, 0, 0, 0, true, false, false, EC_ILLEGAL_INST, FaultStat()
-};
+    0, 0, 0, 0, true, false, false, EC_ILLEGAL_INST
+);
 
 Addr
 ArmFault::getVector(ThreadContext *tc)
