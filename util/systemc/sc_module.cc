@@ -43,6 +43,7 @@
  *          Steve Reinhardt
  *          Andrew Bardsley
  *          Matthias Jung
+ *          Christian Menard
  */
 
 /**
@@ -77,7 +78,7 @@ setTickFrequency()
     ::setClockFrequency(1000000000000);
 }
 
-Module::Module(sc_core::sc_module_name name) : sc_core::sc_module(name),
+Module::Module(sc_core::sc_module_name name) : sc_core::sc_channel(name),
     in_simulate(false)
 {
     SC_METHOD(eventLoop);

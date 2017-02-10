@@ -42,6 +42,7 @@
  * Authors: Nathan Binkert
  *          Steve Reinhardt
  *          Andrew Bardsley
+ *          Christian Menard
  */
 
 /**
@@ -83,7 +84,7 @@ namespace Gem5SystemC
  *  This functionality is wrapped in an sc_module as its intended that
  *  the a class representing top level simulation control should be derived
  *  from this class. */
-class Module : public sc_core::sc_module
+class Module : public sc_core::sc_channel
 {
   protected:
     /** Event to trigger (via. ::notify) for event scheduling from
