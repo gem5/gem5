@@ -50,6 +50,7 @@
 #include "report_handler.hh"
 #include "sc_target.hh"
 #include "sim_control.hh"
+#include "slave_transactor.hh"
 #include "stats.hh"
 
 int
@@ -60,31 +61,21 @@ sc_main(int argc, char **argv)
 
     sc_core::sc_report_handler::set_handler(reportHandler);
 
-    Gem5SystemC::Gem5SimControl simControl("gem5",
+    Gem5SystemC::Gem5SimControl sim_control("gem5",
                                            parser.getConfigFile(),
                                            parser.getSimulationEnd(),
                                            parser.getDebugFlags());
-    Target *memory;
 
     unsigned long long int memorySize = 512*1024*1024ULL;
 
-    tlm::tlm_initiator_socket <> *mem_port =
-        dynamic_cast<tlm::tlm_initiator_socket<> *>(
-                    sc_core::sc_find_object("gem5.memory")
-                );
+    Gem5SystemC::Gem5SlaveTransactor transactor("transactor", "transactor");
+    Target memory("memory",
+                  parser.getVerboseFlag(),
+                  memorySize,
+                  parser.getMemoryOffset());
 
-    if (mem_port) {
-        SC_REPORT_INFO("sc_main", "Port Found");
-        memory = new Target("memory",
-                            parser.getVerboseFlag(),
-                            memorySize,
-                            parser.getMemoryOffset());
-
-        memory->socket.bind(*mem_port);
-    } else {
-        SC_REPORT_FATAL("sc_main", "Port Not Found");
-        std::exit(EXIT_FAILURE);
-    }
+    memory.socket.bind(transactor.socket);
+    transactor.sim_control.bind(sim_control);
 
     SC_REPORT_INFO("sc_main", "Start of Simulation");
 

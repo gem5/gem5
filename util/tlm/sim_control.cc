@@ -77,8 +77,11 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
     instance = this;
 
     cxxConfigInit();
-    Gem5SystemC::SCSlavePort::registerPortHandler();
-    Gem5SystemC::SCMasterPort::registerPortHandler(*this);
+
+    // register the systemc slave and master port handler
+    ExternalSlave::registerHandler("tlm_slave", new SCSlavePortHandler(*this));
+    ExternalMaster::registerHandler("tlm_master",
+                                    new SCMasterPortHandler(*this));
 
     Trace::setDebugLogger(&logger);
 
@@ -134,7 +137,7 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
 }
 
 void
-Gem5SimControl::before_end_of_elaboration()
+Gem5SimControl::end_of_elaboration()
 {
     try {
         config_manager->initState();
@@ -165,6 +168,50 @@ Gem5SimControl::run()
 #if TRY_CLEAN_DELETE
     config_manager->deleteObjects();
 #endif
+}
+
+void
+Gem5SimControl::registerSlavePort(const std::string& name, SCSlavePort* port)
+{
+    if (slavePorts.find(name) == slavePorts.end()) {
+        slavePorts[name] = port;
+    } else {
+        std::cerr << "Slave Port " << name << " is already registered!\n";
+        std::exit(EXIT_FAILURE);
+    }
+}
+
+void
+Gem5SimControl::registerMasterPort(const std::string& name, SCMasterPort* port)
+{
+    if (masterPorts.find(name) == masterPorts.end()) {
+        masterPorts[name] = port;
+    } else {
+        std::cerr << "Master Port " << name << " is already registered!\n";
+        std::exit(EXIT_FAILURE);
+    }
+}
+
+SCSlavePort*
+Gem5SimControl::getSlavePort(const std::string& name)
+{
+    if (slavePorts.find(name) == slavePorts.end()) {
+        std::cerr << "Slave Port " << name << " was not found!\n";
+        std::exit(EXIT_FAILURE);
+    }
+
+    return slavePorts.at(name);
+}
+
+SCMasterPort*
+Gem5SimControl::getMasterPort(const std::string& name)
+{
+    if (masterPorts.find(name) == masterPorts.end()) {
+        std::cerr << "Master Port " << name << " was not found!\n";
+        std::exit(EXIT_FAILURE);
+    }
+
+    return masterPorts.at(name);
 }
 
 }

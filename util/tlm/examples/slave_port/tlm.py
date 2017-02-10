@@ -64,7 +64,7 @@ system.clk_domain = SrcClockDomain(clock = '1.5GHz',
 system.tlm = ExternalSlave()
 system.tlm.addr_ranges = [AddrRange('512MB')]
 system.tlm.port_type = "tlm_slave"
-system.tlm.port_data = "memory"
+system.tlm.port_data = "transactor"
 
 # Route the connections:
 system.cpu.port = system.membus.slave

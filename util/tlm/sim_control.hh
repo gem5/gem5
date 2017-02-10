@@ -46,6 +46,7 @@
 #include "sc_module.hh"
 #include "sim/cxx_manager.hh"
 #include "sim/system.hh"
+#include "sim_control_if.hh"
 
 namespace Gem5SystemC
 {
@@ -58,13 +59,20 @@ namespace Gem5SystemC
  * While it is mandatory to have one instance of this class for running a gem5
  * simulation in SystemC, it is not allowed to have multiple instances!
  */
-class Gem5SimControl : public Gem5SystemC::Module
+class Gem5SimControl : public Module, public Gem5SimControlInterface
 {
   protected:
     CxxConfigManager* config_manager;
     Gem5SystemC::Logger logger;
 
     Tick simulationEnd;
+
+    /*
+     * Keep track of the slave and master ports that are created by gem5
+     * according to the config file.
+     */
+    std::map<const std::string, SCSlavePort*> slavePorts;
+    std::map<const std::string, SCMasterPort*> masterPorts;
 
     /// Pointer to a previously created instance.
     static Gem5SimControl* instance;
@@ -90,7 +98,12 @@ class Gem5SimControl : public Gem5SystemC::Module
                    uint64_t simulationEnd,
                    const std::string& gem5DebugFlags);
 
-    void before_end_of_elaboration();
+    void registerSlavePort(const std::string& name, SCSlavePort* port);
+    void registerMasterPort(const std::string& name, SCMasterPort* port);
+    SCSlavePort* getSlavePort(const std::string& name) override;
+    SCMasterPort* getMasterPort(const std::string& name) override;
+
+    void end_of_elaboration();
 
     void run();
 };

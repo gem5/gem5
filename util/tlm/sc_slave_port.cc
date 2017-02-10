@@ -35,14 +35,10 @@
  *          Christian Menard
  */
 
-#include <cctype>
-#include <iomanip>
-#include <sstream>
-
-#include "debug/ExternalPort.hh"
 #include "sc_ext.hh"
 #include "sc_mm.hh"
 #include "sc_slave_port.hh"
+#include "slave_transactor.hh"
 
 namespace Gem5SystemC
 {
@@ -116,11 +112,11 @@ SCSlavePort::recvAtomic(PacketPtr packet)
     if (packet->cmd == MemCmd::SwapReq) {
         SC_REPORT_FATAL("SCSlavePort", "SwapReq not supported");
     } else if (packet->isRead()) {
-        iSocket->b_transport(*trans, delay);
+        transactor->socket->b_transport(*trans, delay);
     } else if (packet->isInvalidate()) {
         // do nothing
     } else if (packet->isWrite()) {
-        iSocket->b_transport(*trans, delay);
+        transactor->socket->b_transport(*trans, delay);
     } else {
         SC_REPORT_FATAL("SCSlavePort", "Typo of request not supported");
     }
@@ -150,7 +146,7 @@ SCSlavePort::recvFunctional(PacketPtr packet)
     trans->set_auto_extension(extension);
 
     /* Execute Debug Transport: */
-    unsigned int bytes = iSocket->transport_dbg(*trans);
+    unsigned int bytes = transactor->socket->transport_dbg(*trans);
     if (bytes != trans->get_data_length()) {
         SC_REPORT_FATAL("SCSlavePort","debug transport was not completed");
     }
@@ -223,7 +219,7 @@ SCSlavePort::recvTimingReq(PacketPtr packet)
     sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
     tlm::tlm_phase phase = tlm::BEGIN_REQ;
     tlm::tlm_sync_enum status;
-    status = iSocket->nb_transport_fw(*trans, phase, delay);
+    status = transactor->socket->nb_transport_fw(*trans, phase, delay);
     /* Check returned value: */
     if (status == tlm::TLM_ACCEPTED) {
         sc_assert(phase == tlm::BEGIN_REQ);
@@ -288,7 +284,7 @@ SCSlavePort::pec(
                 /* Send END_RESP and we're finished: */
                 tlm::tlm_phase fw_phase = tlm::END_RESP;
                 sc_time delay = SC_ZERO_TIME;
-                iSocket->nb_transport_fw(trans, fw_phase, delay);
+                transactor->socket->nb_transport_fw(trans, fw_phase, delay);
                 /* Release the transaction with all the extensions */
                 trans.release();
             }
@@ -317,7 +313,7 @@ SCSlavePort::recvRespRetry()
 
     sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
     tlm::tlm_phase phase = tlm::END_RESP;
-    iSocket->nb_transport_fw(*trans, phase, delay);
+    transactor->socket->nb_transport_fw(*trans, phase, delay);
     // Release transaction with all the extensions
     trans->release();
 }
@@ -337,30 +333,35 @@ SCSlavePort::SCSlavePort(const std::string &name_,
     const std::string &systemc_name,
     ExternalSlave &owner_) :
     ExternalSlave::Port(name_, owner_),
-    iSocket(systemc_name.c_str()),
     blockingRequest(NULL),
     needToSendRequestRetry(false),
-    blockingResponse(NULL)
+    blockingResponse(NULL),
+    transactor(nullptr)
 {
-    iSocket.register_nb_transport_bw(this, &SCSlavePort::nb_transport_bw);
 }
 
-class SlavePortHandler : public ExternalSlave::Handler
-{
-  public:
-    ExternalSlave::Port *getExternalPort(const std::string &name,
-        ExternalSlave &owner,
-        const std::string &port_data)
-    {
-        // This will make a new initiatiator port
-        return new SCSlavePort(name, port_data, owner);
-    }
-};
-
 void
-SCSlavePort::registerPortHandler()
+SCSlavePort::bindToTransactor(Gem5SlaveTransactor* transactor)
 {
-    ExternalSlave::registerHandler("tlm_slave", new SlavePortHandler);
+    sc_assert(this->transactor == nullptr);
+
+    this->transactor = transactor;
+
+    transactor->socket.register_nb_transport_bw(this,
+                                                &SCSlavePort::nb_transport_bw);
+}
+
+ExternalSlave::Port*
+SCSlavePortHandler::getExternalPort(const std::string &name,
+                                    ExternalSlave &owner,
+                                    const std::string &port_data)
+{
+    // Create and register a new SystemC slave port
+    auto* port = new SCSlavePort(name, port_data, owner);
+
+    control.registerSlavePort(port_data, port);
+
+    return port;
 }
 
 }

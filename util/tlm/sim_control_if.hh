@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Dresden University of Technology (TU Dresden)
+ * Copyright (c) 2017, Dresden University of Technology (TU Dresden)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,42 +32,25 @@
  * Authors: Christian Menard
  */
 
+#ifndef __SC_SIM_CONTROL_IF_HH__
+#define __SC_SIM_CONTROL_IF_HH__
+
 #include <systemc>
-#include <tlm>
 
-#include "cli_parser.hh"
-#include "master_transactor.hh"
-#include "report_handler.hh"
-#include "sim_control.hh"
-#include "stats.hh"
-#include "traffic_generator.hh"
-
-int
-sc_main(int argc, char** argv)
+namespace Gem5SystemC
 {
-    CliParser parser;
-    parser.parse(argc, argv);
 
-    sc_core::sc_report_handler::set_handler(reportHandler);
+// forward declerations
+class SCSlavePort;
+class SCMasterPort;
 
-    Gem5SystemC::Gem5SimControl sim_control("gem5",
-                                            parser.getConfigFile(),
-                                            parser.getSimulationEnd(),
-                                            parser.getDebugFlags());
+class Gem5SimControlInterface : public sc_core::sc_interface
+{
+  public:
+    virtual SCSlavePort* getSlavePort(const std::string& name) = 0;
+    virtual SCMasterPort* getMasterPort(const std::string& name) = 0;
+};
 
-    TrafficGenerator trafficGenerator("traffic_generator");
-    Gem5SystemC::Gem5MasterTransactor transactor("transactor", "transactor");
-
-    trafficGenerator.socket.bind(transactor.socket);
-    transactor.sim_control.bind(sim_control);
-
-    SC_REPORT_INFO("sc_main", "Start of Simulation");
-
-    sc_core::sc_start(); // Run to end of simulation
-
-    SC_REPORT_INFO("sc_main", "End of Simulation");
-
-    CxxConfig::statsDump();
-
-    return EXIT_SUCCESS;
 }
+
+#endif

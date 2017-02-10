@@ -34,6 +34,7 @@
 
 #include <sstream>
 
+#include "master_transactor.hh"
 #include "params/ExternalMaster.hh"
 #include "sc_master_port.hh"
 #include "sim/system.hh"
@@ -81,18 +82,26 @@ SCMasterPort::destroyPacket(PacketPtr pkt)
 SCMasterPort::SCMasterPort(const std::string& name_,
                            const std::string& systemc_name,
                            ExternalMaster& owner_,
-                           Module& module)
+                           Gem5SimControl& simControl)
   : ExternalMaster::Port(name_, owner_),
-    tSocket(systemc_name.c_str()),
     peq(this, &SCMasterPort::peq_cb),
     waitForRetry(false),
     pendingRequest(nullptr),
     needToSendRetry(false),
     responseInProgress(false),
-    module(module)
+    transactor(nullptr),
+    simControl(simControl)
 {
-    auto system =
+    system =
         dynamic_cast<const ExternalMasterParams*>(owner_.params())->system;
+}
+
+void
+SCMasterPort::bindToTransactor(Gem5MasterTransactor* transactor)
+{
+    sc_assert(this->transactor == nullptr);
+
+    this->transactor = transactor;
 
     /*
      * Register the TLM non-blocking interface when using gem5 Timing mode and
@@ -104,16 +113,18 @@ SCMasterPort::SCMasterPort(const std::string& name_,
      */
     if (system->isTimingMode()) {
         SC_REPORT_INFO("SCMasterPort", "register non-blocking interface");
-        tSocket.register_nb_transport_fw(this,
-                                         &SCMasterPort::nb_transport_fw);
+        transactor->socket.register_nb_transport_fw(this,
+                                &SCMasterPort::nb_transport_fw);
     } else if (system->isAtomicMode()) {
         SC_REPORT_INFO("SCMasterPort", "register blocking interface");
-        tSocket.register_b_transport(this, &SCMasterPort::b_transport);
+        transactor->socket.register_b_transport(this,
+                                &SCMasterPort::b_transport);
     } else {
         panic("gem5 operates neither in Timing nor in Atomic mode");
     }
 
-    tSocket.register_transport_dbg(this, &SCMasterPort::transport_dbg);
+    transactor->socket.register_transport_dbg(this,
+                                              &SCMasterPort::transport_dbg);
 }
 
 void
@@ -156,7 +167,7 @@ SCMasterPort::peq_cb(tlm::tlm_generic_payload& trans,
                        const tlm::tlm_phase& phase)
 {
     // catch up with SystemC time
-    module.catchup();
+    simControl.catchup();
     assert(curTick() == sc_core::sc_time_stamp().value());
 
     switch (phase) {
@@ -172,7 +183,7 @@ SCMasterPort::peq_cb(tlm::tlm_generic_payload& trans,
 
     // the functions called above may have scheduled gem5 events
     // -> notify the event loop handler
-    module.notify();
+    simControl.notify();
 }
 
 void
@@ -216,7 +227,7 @@ SCMasterPort::sendEndReq(tlm::tlm_generic_payload& trans)
     tlm::tlm_phase phase = tlm::END_REQ;
     auto delay = sc_core::SC_ZERO_TIME;
 
-    auto status = tSocket->nb_transport_bw(trans, phase, delay);
+    auto status = transactor->socket->nb_transport_bw(trans, phase, delay);
     panic_if(status != tlm::TLM_ACCEPTED,
              "Unexpected status after sending END_REQ");
 }
@@ -300,7 +311,7 @@ SCMasterPort::sendBeginResp(tlm::tlm_generic_payload& trans,
 
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
 
-    auto status = tSocket->nb_transport_bw(trans, phase, delay);
+    auto status = transactor->socket->nb_transport_bw(trans, phase, delay);
 
     if (status == tlm::TLM_COMPLETED ||
         status == tlm::TLM_UPDATED && phase == tlm::END_RESP) {
@@ -336,27 +347,17 @@ SCMasterPort::recvRangeChange()
                       "received address range change but ignored it");
 }
 
-class SCMasterPortHandler : public ExternalMaster::Handler
+ExternalMaster::Port*
+SCMasterPortHandler::getExternalPort(const std::string &name,
+                                     ExternalMaster &owner,
+                                     const std::string &port_data)
 {
-    Module& module;
+    // Create and register a new SystemC master port
+    auto* port = new SCMasterPort(name, port_data, owner, control);
 
-  public:
-    SCMasterPortHandler(Module& module) : module(module) {}
+    control.registerMasterPort(port_data, port);
 
-    ExternalMaster::Port* getExternalPort(const std::string& name,
-                                          ExternalMaster& owner,
-                                          const std::string& port_data)
-    {
-        // This will make a new initiatiator port
-        return new SCMasterPort(name, port_data, owner, module);
-    }
-};
-
-void
-SCMasterPort::registerPortHandler(Module& module)
-{
-    ExternalMaster::registerHandler("tlm_master",
-                                    new SCMasterPortHandler(module));
+    return port;
 }
 
 } // namespace Gem5SystemC

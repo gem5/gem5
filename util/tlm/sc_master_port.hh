@@ -36,16 +36,19 @@
 #define __SC_MASTER_PORT_HH__
 
 #include <tlm_utils/peq_with_cb_and_phase.h>
-#include <tlm_utils/simple_target_socket.h>
 
+#include <systemc>
 #include <tlm>
 
 #include <mem/external_master.hh>
-#include <sc_module.hh>
 #include <sc_peq.hh>
+#include <sim_control.hh>
 
 namespace Gem5SystemC
 {
+
+// forward declaration
+class Gem5MasterTransactor;
 
 /**
  * This is a gem5 master port that translates TLM transactions to gem5 packets.
@@ -84,11 +87,11 @@ class SCMasterPort : public ExternalMaster::Port
 
     bool responseInProgress;
 
-    // Keep a reference to the gem5 SystemC module
-    Module& module;
+    Gem5MasterTransactor* transactor;
 
-  public:
-    tlm_utils::simple_target_socket<SCMasterPort> tSocket;
+    System* system;
+
+    Gem5SimControl& simControl;
 
   protected:
     // payload event call back
@@ -112,9 +115,9 @@ class SCMasterPort : public ExternalMaster::Port
     SCMasterPort(const std::string& name_,
                  const std::string& systemc_name,
                  ExternalMaster& owner_,
-                 Module& module);
+                 Gem5SimControl& simControl);
 
-    static void registerPortHandler(Module& module);
+    void bindToTransactor(Gem5MasterTransactor* transactor);
 
     friend PayloadEvent<SCMasterPort>;
 
@@ -130,6 +133,19 @@ class SCMasterPort : public ExternalMaster::Port
     void destroyPacket(PacketPtr pkt);
 
     void checkTransaction(tlm::tlm_generic_payload& trans);
+};
+
+class SCMasterPortHandler : public ExternalMaster::Handler
+{
+  private:
+    Gem5SimControl& control;
+
+  public:
+    SCMasterPortHandler(Gem5SimControl& control) : control(control) {}
+
+    ExternalMaster::Port *getExternalPort(const std::string &name,
+                                          ExternalMaster &owner,
+                                          const std::string &port_data);
 };
 
 }

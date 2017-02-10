@@ -37,19 +37,20 @@
 #ifndef __SC_SLAVE_PORT_HH__
 #define __SC_SLAVE_PORT_HH__
 
-#include <tlm_utils/simple_initiator_socket.h>
-
-#include <map>
 #include <systemc>
 #include <tlm>
 
 #include "mem/external_slave.hh"
 #include "sc_mm.hh"
-#include "sc_module.hh"
 #include "sc_peq.hh"
+#include "sim_control.hh"
 
 namespace Gem5SystemC
 {
+
+// forward declaration
+class Gem5SlaveTransactor;
+
 /**
  * Test that gem5 is at the same time as SystemC
  */
@@ -70,8 +71,6 @@ namespace Gem5SystemC
 class SCSlavePort : public ExternalSlave::Port
 {
   public:
-    tlm_utils::simple_initiator_socket<SCSlavePort> iSocket;
-
     /** One instance of pe and the related callback needed */
     //payloadEvent<SCSlavePort> pe;
     void pec(PayloadEvent<SCSlavePort> * pe,
@@ -104,19 +103,34 @@ class SCSlavePort : public ExternalSlave::Port
     void recvRespRetry();
     void recvFunctionalSnoop(PacketPtr packet);
 
+    Gem5SlaveTransactor* transactor;
+
+  public:
     /** The TLM initiator interface */
     tlm::tlm_sync_enum nb_transport_bw(tlm::tlm_generic_payload& trans,
                                        tlm::tlm_phase& phase,
                                        sc_core::sc_time& t);
 
-  public:
     SCSlavePort(const std::string &name_,
                 const std::string &systemc_name,
                 ExternalSlave &owner_);
 
-    static void registerPortHandler();
+    void bindToTransactor(Gem5SlaveTransactor* transactor);
 
     friend PayloadEvent<SCSlavePort>;
+};
+
+class SCSlavePortHandler : public ExternalSlave::Handler
+{
+  private:
+    Gem5SimControl& control;
+
+  public:
+    SCSlavePortHandler(Gem5SimControl& control) : control(control) {}
+
+    ExternalSlave::Port *getExternalPort(const std::string &name,
+                                         ExternalSlave &owner,
+                                         const std::string &port_data);
 };
 
 }

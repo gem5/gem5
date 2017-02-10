@@ -61,7 +61,7 @@ system.clk_domain = SrcClockDomain(clock = '1.5GHz',
 # Create a external TLM port:
 system.tlm = ExternalMaster()
 system.tlm.port_type = "tlm_master"
-system.tlm.port_data = "memory"
+system.tlm.port_data = "transactor"
 
 # Route the connections:
 system.system_port = system.membus.slave

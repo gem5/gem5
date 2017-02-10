@@ -32,42 +32,31 @@
  * Authors: Christian Menard
  */
 
-#include <systemc>
-#include <tlm>
-
-#include "cli_parser.hh"
-#include "master_transactor.hh"
-#include "report_handler.hh"
+#include "sc_slave_port.hh"
 #include "sim_control.hh"
-#include "stats.hh"
-#include "traffic_generator.hh"
+#include "slave_transactor.hh"
 
-int
-sc_main(int argc, char** argv)
+namespace Gem5SystemC
 {
-    CliParser parser;
-    parser.parse(argc, argv);
 
-    sc_core::sc_report_handler::set_handler(reportHandler);
+Gem5SlaveTransactor::Gem5SlaveTransactor(sc_core::sc_module_name name,
+                                         const std::string& portName)
+    : sc_core::sc_module(name),
+      socket(portName.c_str()),
+      sim_control("sim_control"),
+      portName(portName)
+{
+    if (portName.empty()) {
+        SC_REPORT_ERROR(name, "No port name specified!\n");
+    }
+}
 
-    Gem5SystemC::Gem5SimControl sim_control("gem5",
-                                            parser.getConfigFile(),
-                                            parser.getSimulationEnd(),
-                                            parser.getDebugFlags());
+void
+Gem5SlaveTransactor::before_end_of_elaboration()
+{
+    auto* port = sim_control->getSlavePort(portName);
 
-    TrafficGenerator trafficGenerator("traffic_generator");
-    Gem5SystemC::Gem5MasterTransactor transactor("transactor", "transactor");
+    port->bindToTransactor(this);
+}
 
-    trafficGenerator.socket.bind(transactor.socket);
-    transactor.sim_control.bind(sim_control);
-
-    SC_REPORT_INFO("sc_main", "Start of Simulation");
-
-    sc_core::sc_start(); // Run to end of simulation
-
-    SC_REPORT_INFO("sc_main", "End of Simulation");
-
-    CxxConfig::statsDump();
-
-    return EXIT_SUCCESS;
 }

@@ -37,7 +37,7 @@ BGre='\e[1;31m';
 echo -e "\n${BGre}Create gem5 Configuration${RCol}\n"
 
 ../../../../build/ARM/gem5.opt ../../../../configs/example/fs.py \
---tlm-memory=memory                                         \
+--tlm-memory=transactor                                     \
 --cpu-type=timing                                           \
 --num-cpu=1                                                 \
 --mem-type=SimpleMemory                                     \
