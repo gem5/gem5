@@ -30,42 +30,73 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors:
- *    Matthias Jung
- *    Christian Menard
+ * Authors: Matthias Jung
+ *          Christian Menard
  */
 
-#ifndef __SC_EXT_HH__
-#define __SC_EXT_HH__
+#ifndef PAYLOAD_EVENT_H_
+#define PAYLOAD_EVENT_H_
 
-#include <systemc.h>
+// TLM includes
 #include <tlm.h>
 
-#include <iostream>
+// gem5 includes
+#include <sim/eventq.hh>
 
-#include "mem/packet.hh"
-
-namespace Gem5SystemC
-{
-
-class Gem5Extension: public tlm::tlm_extension<Gem5Extension>
+namespace Gem5SystemC {
+/**
+ * A 'Fake Payload Event Queue', similar to the TLM PEQs. This helps the
+ * transactors to schedule events in gem5.
+ */
+template <typename OWNER>
+class PayloadEvent : public Event
 {
   public:
-    Gem5Extension(PacketPtr packet);
+    OWNER& port;
+    const std::string eventName;
+    void (OWNER::*handler)(PayloadEvent<OWNER>* pe,
+                           tlm::tlm_generic_payload& trans,
+                           const tlm::tlm_phase& phase);
 
-    virtual tlm_extension_base* clone() const;
-    virtual void copy_from(const tlm_extension_base& ext);
+  protected:
+    tlm::tlm_generic_payload* t;
+    tlm::tlm_phase p;
 
-    static Gem5Extension&
-        getExtension(const tlm::tlm_generic_payload *payload);
-    static Gem5Extension&
-        getExtension(const tlm::tlm_generic_payload &payload);
-    PacketPtr getPacket();
+    void process() { (port.*handler)(this, *t, p); }
 
-  private:
-    PacketPtr Packet;
+  public:
+    const std::string name() const { return eventName; }
+
+    PayloadEvent(OWNER& port_,
+                 void (OWNER::*handler_)(PayloadEvent<OWNER>* pe,
+                                         tlm::tlm_generic_payload& trans,
+                                         const tlm::tlm_phase& phase),
+                 const std::string& event_name)
+      : port(port_)
+      , eventName(event_name)
+      , handler(handler_)
+    {
+    }
+
+    /// Schedule an event into gem5
+    void notify(tlm::tlm_generic_payload& trans, const tlm::tlm_phase& phase,
+                const sc_core::sc_time& delay)
+    {
+        assert(!scheduled());
+
+        t = &trans;
+        p = phase;
+
+        /**
+         * Get time from SystemC as this will always be more up to date
+         * than gem5's
+         */
+        Tick nextEventTick = sc_core::sc_time_stamp().value() + delay.value();
+
+        port.owner.wakeupEventQueue(nextEventTick);
+        port.owner.schedule(this, nextEventTick);
+    }
 };
-
 }
 
 #endif

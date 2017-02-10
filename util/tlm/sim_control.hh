@@ -30,42 +30,47 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors:
- *    Matthias Jung
- *    Christian Menard
+ * Authors: Matthias Jung
+ *          Christian Menard
  */
 
-#ifndef __SC_EXT_HH__
-#define __SC_EXT_HH__
+#ifndef __SC_SIM_CONTROL_HH__
+#define __SC_SIM_CONTROL_HH__
 
-#include <systemc.h>
-#include <tlm.h>
+#include <tlm_utils/simple_target_socket.h>
 
-#include <iostream>
+#include <systemc>
+#include <tlm>
 
-#include "mem/packet.hh"
+#include "sc_logger.hh"
+#include "sc_module.hh"
+#include "sim/cxx_manager.hh"
+#include "sim/system.hh"
 
-namespace Gem5SystemC
+class SimControl : public Gem5SystemC::Module
 {
+  protected:
+    int argc;
+    char** argv;
+    CxxConfigManager* config_manager;
+    Gem5SystemC::Logger logger;
 
-class Gem5Extension: public tlm::tlm_extension<Gem5Extension>
-{
+    Tick sim_end;
+    bool debug;
+    unsigned int offset;
+
   public:
-    Gem5Extension(PacketPtr packet);
+    SC_HAS_PROCESS(SimControl);
 
-    virtual tlm_extension_base* clone() const;
-    virtual void copy_from(const tlm_extension_base& ext);
+    SimControl(sc_core::sc_module_name name, int argc_, char** argv_);
 
-    static Gem5Extension&
-        getExtension(const tlm::tlm_generic_payload *payload);
-    static Gem5Extension&
-        getExtension(const tlm::tlm_generic_payload &payload);
-    PacketPtr getPacket();
+    void before_end_of_elaboration();
 
-  private:
-    PacketPtr Packet;
+    bool getDebugFlag() { return debug; }
+
+    unsigned int getOffset() { return offset; }
+
+    void run();
 };
-
-}
 
 #endif

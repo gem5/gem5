@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015, University of Kaiserslautern
+ * Copyright (c) 2016, Dresden University of Technology (TU Dresden)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,42 +32,48 @@
  *
  * Authors:
  *    Matthias Jung
+ *    Christian Menard
  */
 
 #include "sc_ext.hh"
 
 using namespace tlm;
 
-gem5Extension::gem5Extension(PacketPtr packet)
+namespace Gem5SystemC
+{
+
+Gem5Extension::Gem5Extension(PacketPtr packet)
 {
     Packet = packet;
 }
 
-gem5Extension& gem5Extension::getExtension(const tlm_generic_payload *payload)
+Gem5Extension& Gem5Extension::getExtension(const tlm_generic_payload *payload)
 {
-    gem5Extension *result = NULL;
+    Gem5Extension *result = NULL;
     payload->get_extension(result);
     sc_assert(result!=NULL);
     return *result;
 }
 
-gem5Extension& gem5Extension::getExtension(const tlm_generic_payload &payload)
+Gem5Extension& Gem5Extension::getExtension(const tlm_generic_payload &payload)
 {
-    return gem5Extension::getExtension(&payload);
+    return Gem5Extension::getExtension(&payload);
 }
 
-PacketPtr gem5Extension::getPacket()
+PacketPtr Gem5Extension::getPacket()
 {
     return Packet;
 }
 
-tlm_extension_base* gem5Extension::clone() const
+tlm_extension_base* Gem5Extension::clone() const
 {
-    return new gem5Extension(Packet);
+    return new Gem5Extension(Packet);
 }
 
-void gem5Extension::copy_from(const tlm_extension_base& ext)
+void Gem5Extension::copy_from(const tlm_extension_base& ext)
 {
-    const gem5Extension& cpyFrom = static_cast<const gem5Extension&>(ext);
+    const Gem5Extension& cpyFrom = static_cast<const Gem5Extension&>(ext);
     Packet = cpyFrom.Packet;
+}
+
 }

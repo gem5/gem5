@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015, University of Kaiserslautern
+ * Copyright (c) 2016, Dresden University of Technology (TU Dresden)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +32,7 @@
  *
  * Authors: Matthias Jung
  *          Abdul Mutaal Ahmad
+ *          Christian Menard
  */
 
 /**
@@ -41,87 +43,41 @@
  *
  */
 
-#include <tlm_utils/simple_target_socket.h>
-
-#include <cstdlib>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
 #include <systemc>
 #include <tlm>
-#include <typeinfo>
 
-#include "base/statistics.hh"
-#include "base/str.hh"
-#include "base/trace.hh"
-#include "cpu/base.hh"
-#include "sc_logger.hh"
-#include "sc_module.hh"
-#include "sc_port.hh"
-#include "sc_target.hh"
+#include "sc_slave_port.hh"
 #include "sim/cxx_config_ini.hh"
-#include "sim/cxx_manager.hh"
 #include "sim/init_signals.hh"
-#include "sim/serialize.hh"
-#include "sim/simulate.hh"
 #include "sim/stat_control.hh"
-#include "sim/system.hh"
+#include "sim_control.hh"
 #include "stats.hh"
 
-// Defining global string variable decalred in stats.hh
-std::string filename;
-
-void usage(const std::string &prog_name)
+void
+usage(const std::string& prog_name)
 {
-    std::cerr << "Usage: " << prog_name << (
-        " <config_file.ini> [ <option> ]\n\n"
-        "OPTIONS:\n"
+    std::cerr
+      << "Usage: " << prog_name
+      << (" <config_file.ini> [ <option> ]\n\n"
+          "OPTIONS:\n"
 
-        "    -o <offset>                  -- set memory offset\n"
-        "    -p <object> <param> <value>  -- set a parameter\n"
-        "    -v <object> <param> <values> -- set a vector parameter from a\n"
-        "                                    comma separated values string\n"
-        "    -d <flag>                    -- set a debug flag\n"
-        "                                    (-<flag> clear a flag)\n"
-        "    -D                           -- debug on\n"
-        "    -e <ticks>                   -- end of simulation after a \n"
-        "                                    given number of ticks\n"
-        "\n"
-        );
+          "    -o <offset>                  -- set memory offset\n"
+          "    -p <object> <param> <value>  -- set a parameter\n"
+          "    -v <object> <param> <values> -- set a vector parameter from a\n"
+          "                                    comma separated values string\n"
+          "    -d <flag>                    -- set a debug flag\n"
+          "                                    (-<flag> clear a flag)\n"
+          "    -D                           -- debug on\n"
+          "    -e <ticks>                   -- end of simulation after a \n"
+          "                                    given number of ticks\n"
+          "\n");
     std::exit(EXIT_FAILURE);
 }
 
-class SimControl : public Gem5SystemC::Module
-{
-    protected:
-    int argc;
-    char **argv;
-    CxxConfigManager *config_manager;
-    Gem5SystemC::Logger logger;
-
-    Tick sim_end;
-    bool debug;
-    unsigned int offset;
-
-    public:
-    SC_HAS_PROCESS(SimControl);
-
-    SimControl(sc_core::sc_module_name name, int argc_, char **argv_);
-
-    void before_end_of_elaboration();
-
-    bool getDebugFlag() { return debug; }
-
-    unsigned int getOffset() { return offset; }
-
-    void run();
-};
-
-SimControl::SimControl(sc_core::sc_module_name name,
-                       int argc_,
-                       char **argv_) : Gem5SystemC::Module(name),
-                                       argc(argc_),
-                                       argv(argv_)
+SimControl::SimControl(sc_core::sc_module_name name, int argc_, char** argv_)
+  : Gem5SystemC::Module(name),
+    argc(argc_),
+    argv(argv_)
 {
     SC_THREAD(run);
 
@@ -133,7 +89,7 @@ SimControl::SimControl(sc_core::sc_module_name name,
     }
 
     cxxConfigInit();
-    Gem5SystemC::registerSCPorts();
+    Gem5SystemC::SCSlavePort::registerPortHandler();
 
     Trace::setDebugLogger(&logger);
 
@@ -267,65 +223,4 @@ SimControl::run()
 #if TRY_CLEAN_DELETE
     config_manager->deleteObjects();
 #endif
-}
-
-
-void
-reportHandler(const sc_core::sc_report &report,
-              const sc_core::sc_actions &actions)
-{
-    uint64_t systemc_time = report.get_time().value();
-    uint64_t gem5_time = curTick();
-
-    std::cerr << report.get_time();
-
-    if (gem5_time < systemc_time) {
-        std::cerr << " (<) ";
-    } else if (gem5_time > systemc_time) {
-        std::cerr << " (!) ";
-    } else {
-        std::cerr << " (=) ";
-    }
-
-    std::cerr << ": " << report.get_msg_type()
-              << ' ' << report.get_msg() << '\n';
-}
-
-
-int
-sc_main(int argc, char **argv)
-{
-    sc_core::sc_report_handler::set_handler(reportHandler);
-
-    SimControl sim_control("gem5", argc, argv);
-    Target *memory;
-
-    filename = "m5out/stats-tlm.txt";
-
-    tlm::tlm_initiator_socket <> *mem_port =
-        dynamic_cast<tlm::tlm_initiator_socket<> *>(
-                    sc_core::sc_find_object("gem5.memory")
-                );
-
-    if (mem_port) {
-        SC_REPORT_INFO("sc_main", "Port Found");
-        unsigned long long int size = 512*1024*1024ULL;
-        memory = new Target("memory",
-                            sim_control.getDebugFlag(),
-                            size,
-                            sim_control.getOffset());
-
-        memory->socket.bind(*mem_port);
-    } else {
-        SC_REPORT_FATAL("sc_main", "Port Not Found");
-        std::exit(EXIT_FAILURE);
-    }
-
-    sc_core::sc_start();
-
-    SC_REPORT_INFO("sc_main", "End of Simulation");
-
-    CxxConfig::statsDump();
-
-    return EXIT_SUCCESS;
 }

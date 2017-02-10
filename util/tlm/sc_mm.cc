@@ -40,6 +40,9 @@
 
 using namespace std;
 
+namespace Gem5SystemC
+{
+
 MemoryManager::MemoryManager(): numberOfAllocations(0), numberOfFrees(0)
 {
 
@@ -71,4 +74,6 @@ MemoryManager::free(gp* payload)
 {
     payload->reset(); //clears all extensions
     freePayloads.push_back(payload);
+}
+
 }

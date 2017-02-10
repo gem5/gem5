@@ -34,12 +34,15 @@
  *    Matthias Jung
  */
 
-#ifndef MEMORYMANAGER_H_
-#define MEMORYMANAGER_H_
+#ifndef __SC_MM_HH__
+#define __SC_MM_HH__
 
 #include <tlm.h>
 
 #include <vector>
+
+namespace Gem5SystemC
+{
 
 typedef tlm::tlm_generic_payload gp;
 
@@ -57,4 +60,6 @@ class MemoryManager : public tlm::tlm_mm_interface
     std::vector<gp*> freePayloads;
 };
 
-#endif /* MEMORYMANAGER_H_ */
+}
+
+#endif /* __SC_MM_HH__ */

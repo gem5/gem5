@@ -165,7 +165,7 @@ Target::send_end_req(tlm::tlm_generic_payload& trans)
 
     /* Queue the acceptance and the response with the appropriate latency */
     bw_phase = tlm::END_REQ;
-    delay = sc_time(10, SC_NS); // Accept delay
+    delay = sc_time(10.0, SC_NS); // Accept delay
 
     tlm::tlm_sync_enum status;
     status = socket->nb_transport_bw(trans, bw_phase, delay);
@@ -173,7 +173,7 @@ Target::send_end_req(tlm::tlm_generic_payload& trans)
     /* Ignore return value;
      * initiator cannot terminate transaction at this point
      * Queue internal event to mark beginning of response: */
-    delay = delay + sc_time(40, SC_NS); // Latency
+    delay = delay + sc_time(40.0, SC_NS); // Latency
     target_done_event.notify(delay);
 
     assert(transaction_in_progress == 0);
@@ -249,7 +249,7 @@ Target::send_response(tlm::tlm_generic_payload& trans)
 
     response_in_progress = true;
     bw_phase = tlm::BEGIN_RESP;
-    delay = sc_time(10, SC_NS);
+    delay = sc_time(10.0, SC_NS);
     status = socket->nb_transport_bw( trans, bw_phase, delay );
 
     if (status == tlm::TLM_UPDATED) {
