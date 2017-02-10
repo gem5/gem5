@@ -261,7 +261,7 @@ SCSlavePort::pec(
             sendRetryReq();
         }
     }
-    else if (phase == tlm::BEGIN_RESP)
+    if (phase == tlm::BEGIN_RESP)
     {
         CAUGHT_UP;
 
