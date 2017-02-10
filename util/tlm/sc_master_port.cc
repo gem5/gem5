@@ -329,9 +329,15 @@ SCMasterPort::recvTimingResp(PacketPtr pkt)
 
     sc_assert(pkt->isResponse());
 
-    // pay for annotaded transport delays
-    auto delay =
-      sc_core::sc_time::from_value(pkt->payloadDelay + pkt->headerDelay);
+    /*
+     * Pay for annotated transport delays.
+     *
+     * See recvTimingReq in sc_slave_port.cc for a detailed description.
+     */
+    auto delay = sc_core::sc_time::from_value(pkt->payloadDelay);
+    // reset the delays
+    pkt->payloadDelay = 0;
+    pkt->headerDelay = 0;
 
     auto tlmSenderState = dynamic_cast<TlmSenderState*>(pkt->popSenderState());
     sc_assert(tlmSenderState != nullptr);

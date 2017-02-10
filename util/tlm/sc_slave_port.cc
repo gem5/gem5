@@ -214,9 +214,34 @@ SCSlavePort::recvTimingReq(PacketPtr packet)
     Gem5Extension* extension = new Gem5Extension(packet);
     trans->set_auto_extension(extension);
 
+    /*
+     * Pay for annotated transport delays.
+     *
+     * The header delay marks the point in time, when the packet first is seen
+     * by the transactor. This is the point int time, when the transactor needs
+     * to send the BEGIN_REQ to the SystemC world.
+     *
+     * NOTE: We drop the payload delay here. Normally, the receiver would be
+     *       responsible for handling the payload delay. In this case, however,
+     *       the receiver is a SystemC module and has no notion of the gem5
+     *       transport protocol and we cannot simply forward the
+     *       payload delay to the receiving module. Instead, we expect the
+     *       receiving SystemC module to model the payload delay by deferring
+     *       the END_REQ. This could lead to incorrect delays, if the XBar
+     *       payload delay is longer than the time the receiver needs to accept
+     *       the request (time between BEGIN_REQ and END_REQ).
+     *
+     * TODO: We could detect the case described above by remembering the
+     *       payload delay and comparing it to the time between BEGIN_REQ and
+     *       END_REQ. Then, a warning should be printed.
+     */
+    auto delay = sc_core::sc_time::from_value(packet->payloadDelay);
+    // reset the delays
+    packet->payloadDelay = 0;
+    packet->headerDelay = 0;
+
     /* Starting TLM non-blocking sequence (AT) Refer to IEEE1666-2011 SystemC
      * Standard Page 507 for a visualisation of the procedure */
-    sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
     tlm::tlm_phase phase = tlm::BEGIN_REQ;
     tlm::tlm_sync_enum status;
     status = transactor->socket->nb_transport_fw(*trans, phase, delay);
