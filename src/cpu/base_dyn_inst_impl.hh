@@ -63,7 +63,15 @@ BaseDynInst<Impl>::BaseDynInst(const StaticInstPtr &_staticInst,
                                const StaticInstPtr &_macroop,
                                TheISA::PCState _pc, TheISA::PCState _predPC,
                                InstSeqNum seq_num, ImplCPU *cpu)
-  : staticInst(_staticInst), cpu(cpu), traceData(NULL), macroop(_macroop)
+  : staticInst(_staticInst), cpu(cpu),
+    thread(nullptr),
+    traceData(nullptr),
+    macroop(_macroop),
+    memData(nullptr),
+    savedReq(nullptr),
+    savedSreqLow(nullptr),
+    savedSreqHigh(nullptr),
+    reqToVerify(nullptr)
 {
     seqNum = seq_num;
 

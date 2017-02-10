@@ -76,6 +76,18 @@ DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params)
 
     // @todo: Make into a parameter.
     skidBufferMax = (decodeToRenameDelay + 1) * params->decodeWidth;
+    for (uint32_t tid = 0; tid < Impl::MaxThreads; tid++) {
+        renameStatus[tid] = Idle;
+        renameMap[tid] = nullptr;
+        instsInProgress[tid] = 0;
+        loadsInProgress[tid] = 0;
+        storesInProgress[tid] = 0;
+        freeEntries[tid] = {0, 0, 0, 0};
+        emptyROB[tid] = true;
+        stalls[tid] = {false, false};
+        serializeInst[tid] = nullptr;
+        serializeOnNextInst[tid] = false;
+    }
 }
 
 template <class Impl>

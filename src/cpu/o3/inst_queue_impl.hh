@@ -113,7 +113,7 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
     regScoreboard.resize(numPhysRegs);
 
     //Initialize Mem Dependence Units
-    for (ThreadID tid = 0; tid < numThreads; tid++) {
+    for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
         memDepUnit[tid].init(params, tid);
         memDepUnit[tid].setIQ(this);
     }
@@ -166,6 +166,9 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
        panic("Invalid IQ sharing policy. Options are: Dynamic, "
               "Partitioned, Threshold");
    }
+    for (ThreadID tid = numThreads; tid < Impl::MaxThreads; tid++) {
+        maxEntries[tid] = 0;
+    }
 }
 
 template <class Impl>
@@ -407,7 +410,7 @@ void
 InstructionQueue<Impl>::resetState()
 {
     //Initialize thread IQ counts
-    for (ThreadID tid = 0; tid <numThreads; tid++) {
+    for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
         count[tid] = 0;
         instList[tid].clear();
     }
@@ -424,7 +427,7 @@ InstructionQueue<Impl>::resetState()
         regScoreboard[i] = false;
     }
 
-    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+    for (ThreadID tid = 0; tid < Impl::MaxThreads; ++tid) {
         squashedSeqNum[tid] = 0;
     }
 

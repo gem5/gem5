@@ -121,7 +121,7 @@ class DefaultFetch
 
       public:
         FinishTranslationEvent(DefaultFetch<Impl> *_fetch)
-            : fetch(_fetch)
+            : fetch(_fetch), req(nullptr)
         {}
 
         void setFault(Fault _fault)

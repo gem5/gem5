@@ -75,6 +75,13 @@ DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params)
 
     // @todo: Make into a parameter
     skidBufferMax = (fetchToDecodeDelay + 1) *  params->fetchWidth;
+    for (int tid = 0; tid < Impl::MaxThreads; tid++) {
+        stalls[tid] = {false};
+        decodeStatus[tid] = Idle;
+        bdelayDoneSeqNum[tid] = 0;
+        squashInst[tid] = nullptr;
+        squashAfterDelaySlot[tid] = 0;
+    }
 }
 
 template<class Impl>

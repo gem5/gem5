@@ -67,7 +67,9 @@ CheckerCPU::init()
 
 CheckerCPU::CheckerCPU(Params *p)
     : BaseCPU(p, true), systemPtr(NULL), icachePort(NULL), dcachePort(NULL),
-      tc(NULL), thread(NULL)
+      tc(NULL), thread(NULL),
+      unverifiedReq(nullptr),
+      unverifiedMemData(nullptr)
 {
     curStaticInst = NULL;
     curMacroStaticInst = NULL;

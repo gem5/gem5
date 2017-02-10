@@ -76,6 +76,8 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
       issueToExecuteDelay(params->issueToExecuteDelay),
       dispatchWidth(params->dispatchWidth),
       issueWidth(params->issueWidth),
+      wbNumInst(0),
+      wbCycle(0),
       wbWidth(params->wbWidth),
       numThreads(params->numThreads)
 {
@@ -102,7 +104,7 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
     // Instruction queue needs the queue between issue and execute.
     instQueue.setIssueToExecuteQueue(&issueToExecQueue);
 
-    for (ThreadID tid = 0; tid < numThreads; tid++) {
+    for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
         dispatchStatus[tid] = Running;
         fetchRedirect[tid] = false;
     }
