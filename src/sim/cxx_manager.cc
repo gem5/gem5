@@ -415,13 +415,6 @@ CxxConfigManager::findAllObjects()
     std::vector<std::string> objects;
     configFile.getAllObjectNames(objects);
 
-    /* Sort the object names to get a consistent initialisation order
-     *  even with config file reorganisation */
-    std::sort(objects.begin(), objects.end());
-
-    for (auto i = objects.begin(); i != objects.end(); ++i)
-        findObject(*i);
-
     /* Set the traversal order for further iterators */
     objectsInOrder.clear();
     findTraversalOrder("root");
