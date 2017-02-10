@@ -57,15 +57,16 @@
  * most one Gem5Module instantiated in any simulation.
  */
 
+#include "base/misc.hh"
 #include "base/pollevent.hh"
 #include "base/trace.hh"
 #include "debug/Event.hh"
+#include "sc_module.hh"
 #include "sim/async.hh"
 #include "sim/core.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 #include "sim/stat_control.hh"
-#include "sc_module.hh"
 
 namespace Gem5SystemC
 {
