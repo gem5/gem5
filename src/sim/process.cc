@@ -134,8 +134,9 @@ Process::Process(ProcessParams * params)
       useArchPT(params->useArchPT),
       kvmInSE(params->kvmInSE),
       pTable(useArchPT ?
-        static_cast<PageTableBase *>(new ArchPageTable(name(), _pid, system)) :
-        static_cast<PageTableBase *>(new FuncPageTable(name(), _pid))),
+        static_cast<PageTableBase *>(new ArchPageTable(name(), params->pid,
+            system)) :
+        static_cast<PageTableBase *>(new FuncPageTable(name(), params->pid))),
       initVirtMem(system->getSystemPort(), this,
                   SETranslatingPortProxy::Always),
       fd_array(make_shared<array<FDEntry, NUM_FDS>>()),
