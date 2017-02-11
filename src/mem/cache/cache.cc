@@ -585,7 +585,7 @@ Cache::promoteWholeLineWrites(PacketPtr pkt)
 bool
 Cache::recvTimingReq(PacketPtr pkt)
 {
-    DPRINTF(CacheTags, "%s tags: %s\n", __func__, tags->print());
+    DPRINTF(CacheTags, "%s tags:\n%s\n", __func__, tags->print());
 
     assert(pkt->isRequest());
 
