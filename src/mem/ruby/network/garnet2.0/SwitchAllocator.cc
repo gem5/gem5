@@ -116,13 +116,6 @@ SwitchAllocator::arbitrate_inports()
     for (int inport = 0; inport < m_num_inports; inport++) {
         int invc = m_round_robin_invc[inport];
 
-        // Select next round robin vc candidate within valid vnet
-        int next_round_robin_invc = invc;
-        next_round_robin_invc++;
-        if (next_round_robin_invc >= m_num_vcs)
-            next_round_robin_invc = 0;
-        m_round_robin_invc[inport] = next_round_robin_invc;
-
         for (int invc_iter = 0; invc_iter < m_num_vcs; invc_iter++) {
 
             if (m_input_unit[inport]->need_stage(invc, SA_,
@@ -142,6 +135,12 @@ SwitchAllocator::arbitrate_inports()
                     m_input_arbiter_activity++;
                     m_port_requests[outport][inport] = true;
                     m_vc_winners[outport][inport]= invc;
+
+                    // Update Round Robin pointer
+                    m_round_robin_invc[inport]++;
+                    if (m_round_robin_invc[inport] >= m_num_vcs)
+                        m_round_robin_invc[inport] = 0;
+
                     break; // got one vc winner for this port
                 }
             }
@@ -175,10 +174,6 @@ SwitchAllocator::arbitrate_outports()
     // Independent arbiter at each output port
     for (int outport = 0; outport < m_num_outports; outport++) {
         int inport = m_round_robin_inport[outport];
-        m_round_robin_inport[outport]++;
-
-        if (m_round_robin_inport[outport] >= m_num_inports)
-            m_round_robin_inport[outport] = 0;
 
         for (int inport_iter = 0; inport_iter < m_num_inports;
                  inport_iter++) {
@@ -255,6 +250,11 @@ SwitchAllocator::arbitrate_outports()
 
                 // remove this request
                 m_port_requests[outport][inport] = false;
+
+                // Update Round Robin pointer
+                m_round_robin_inport[outport]++;
+                if (m_round_robin_inport[outport] >= m_num_inports)
+                    m_round_robin_inport[outport] = 0;
 
                 break; // got a input winner for this outport
             }
