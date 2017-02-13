@@ -850,7 +850,6 @@ FullO3CPU<Impl>::insertThread(ThreadID tid)
 
     //Reset ROB/IQ/LSQ Entries
     commit.rob->resetEntries();
-    iew.resetEntries();
 }
 
 template <class Impl>

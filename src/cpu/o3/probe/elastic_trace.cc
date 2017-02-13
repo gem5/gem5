@@ -409,7 +409,7 @@ ElasticTrace::addDepTraceRecord(const DynInstConstPtr& head_inst,
     new_record->reqFlags = head_inst->memReqFlags;
     new_record->virtAddr = head_inst->effAddr;
     new_record->asid = head_inst->asid;
-    new_record->physAddr = head_inst->physEffAddrLow;
+    new_record->physAddr = head_inst->physEffAddr;
     // Currently the tracing does not support split requests.
     new_record->size = head_inst->effSize;
     new_record->pc = head_inst->instAddr();

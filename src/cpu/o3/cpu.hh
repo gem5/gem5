@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013, 2016 ARM Limited
+ * Copyright (c) 2011-2013, 2016-2018 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -125,6 +125,7 @@ class FullO3CPU : public BaseO3CPU
 
     BaseTLB *itb;
     BaseTLB *dtb;
+    using LSQRequest = typename LSQ<Impl>::LSQRequest;
 
     /** Overall CPU status. */
     Status _status;
@@ -733,21 +734,25 @@ class FullO3CPU : public BaseO3CPU
     /** Available thread ids in the cpu*/
     std::vector<ThreadID> tids;
 
-    /** CPU read function, forwards read to LSQ. */
-    Fault read(const RequestPtr &req,
-               RequestPtr &sreqLow, RequestPtr &sreqHigh,
-               int load_idx)
+    /** CPU pushRequest function, forwards request to LSQ. */
+    Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
+                      unsigned int size, Addr addr, Request::Flags flags,
+                      uint64_t *res)
     {
-        return this->iew.ldstQueue.read(req, sreqLow, sreqHigh, load_idx);
+        return iew.ldstQueue.pushRequest(inst, isLoad, data, size, addr,
+                flags, res);
+    }
+
+    /** CPU read function, forwards read to LSQ. */
+    Fault read(LSQRequest* req, int load_idx)
+    {
+        return this->iew.ldstQueue.read(req, load_idx);
     }
 
     /** CPU write function, forwards write to LSQ. */
-    Fault write(const RequestPtr &req,
-                const RequestPtr &sreqLow, const RequestPtr &sreqHigh,
-                uint8_t *data, int store_idx)
+    Fault write(LSQRequest* req, uint8_t *data, int store_idx)
     {
-        return this->iew.ldstQueue.write(req, sreqLow, sreqHigh,
-                                         data, store_idx);
+        return this->iew.ldstQueue.write(req, data, store_idx);
     }
 
     /** Used by the fetch unit to get a hold of the instruction port. */

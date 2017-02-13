@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2010-2014, 2017 ARM Limited
+ * Copyright (c) 2010-2014, 2017-2018 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -66,6 +66,8 @@ LSQUnit<Impl>::WritebackEvent::WritebackEvent(const DynInstPtr &_inst,
     : Event(Default_Pri, AutoDelete),
       inst(_inst), pkt(_pkt), lsqPtr(lsq_ptr)
 {
+    assert(_inst->savedReq);
+    _inst->savedReq->writebackScheduled();
 }
 
 template<class Impl>
@@ -76,9 +78,8 @@ LSQUnit<Impl>::WritebackEvent::process()
 
     lsqPtr->writeback(inst, pkt);
 
-    if (pkt->senderState)
-        delete pkt->senderState;
-
+    assert(inst->savedReq);
+    inst->savedReq->writebackDone();
     delete pkt;
 }
 
@@ -89,65 +90,61 @@ LSQUnit<Impl>::WritebackEvent::description() const
     return "Store writeback";
 }
 
+template <class Impl>
+bool
+LSQUnit<Impl>::recvTimingResp(PacketPtr pkt)
+{
+    auto senderState = dynamic_cast<LSQSenderState*>(pkt->senderState);
+    LSQRequest* req = senderState->request();
+    assert(req != nullptr);
+    bool ret = true;
+    /* Check that the request is still alive before any further action. */
+    if (senderState->alive()) {
+        ret = req->recvTimingResp(pkt);
+    } else {
+        senderState->outstanding--;
+    }
+    return ret;
+
+}
+
 template<class Impl>
 void
 LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 {
     LSQSenderState *state = dynamic_cast<LSQSenderState *>(pkt->senderState);
     DynInstPtr inst = state->inst;
-    DPRINTF(IEW, "Writeback event [sn:%lli].\n", inst->seqNum);
-    DPRINTF(Activity, "Activity: Writeback event [sn:%lli].\n", inst->seqNum);
 
-    if (state->cacheBlocked) {
-        // This is the first half of a previous split load,
-        // where the 2nd half blocked, ignore this response
-        DPRINTF(IEW, "[sn:%lli]: Response from first half of earlier "
-                "blocked split load recieved. Ignoring.\n", inst->seqNum);
-        delete state;
-        return;
-    }
+    cpu->ppDataAccessComplete->notify(std::make_pair(inst, pkt));
 
-    // If this is a split access, wait until all packets are received.
-    if (TheISA::HasUnalignedMemAcc && !state->complete()) {
-        return;
-    }
+    /* Notify the sender state that the access is complete (for ownership
+     * tracking). */
+    state->complete();
 
     assert(!cpu->switchedOut());
     if (!inst->isSquashed()) {
-        if (!state->noWB) {
+        if (state->needWB) {
             // Only loads and store conditionals perform the writeback
             // after receving the response from the memory
             assert(inst->isLoad() || inst->isStoreConditional());
-            if (!TheISA::HasUnalignedMemAcc || !state->isSplit ||
-                !state->isLoad) {
-                writeback(inst, pkt);
-            } else {
-                writeback(inst, state->mainPkt);
+            writeback(inst, state->request()->mainPacket());
+            if (inst->isStore()) {
+                auto ss = dynamic_cast<SQSenderState*>(state);
+                ss->writebackDone();
+                completeStore(ss->idx);
             }
-        }
-
-        if (inst->isStore()) {
-            completeStore(state->idx);
+        } else if (inst->isStore()) {
+            completeStore(dynamic_cast<SQSenderState*>(state)->idx);
         }
     }
-
-    if (TheISA::HasUnalignedMemAcc && state->isSplit && state->isLoad) {
-        delete state->mainPkt;
-    }
-
-    pkt->req->setAccessLatency();
-    cpu->ppDataAccessComplete->notify(std::make_pair(inst, pkt));
-
-    delete state;
 }
 
 template <class Impl>
 LSQUnit<Impl>::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
     : lsqID(-1), storeQueue(sqEntries+1), loadQueue(lqEntries+1),
-      LQEntries(lqEntries+1), SQEntries(sqEntries+1),
       loads(0), stores(0), storesToWB(0), cacheBlockMask(0), stalled(false),
-      isStoreBlocked(false), storeInFlight(false), hasPendingPkt(false),
-      pendingPkt(nullptr)
+      isStoreBlocked(false), storeInFlight(false), hasPendingRequest(false),
+      pendingRequest(nullptr)
 {
 }
 
@@ -167,7 +164,6 @@ LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
 
     depCheckShift = params->LSQDepCheckShift;
     checkLoads = params->LSQCheckLoads;
-    cacheStorePorts = params->cacheStorePorts;
     needsTSO = params->needsTSO;
 
     resetState();
@@ -180,11 +176,8 @@ LSQUnit<Impl>::resetState()
 {
     loads = stores = storesToWB = 0;
 
-    loadHead = loadTail = 0;
 
-    storeHead = storeWBIdx = storeTail = 0;
-
-    usedStorePorts = 0;
+    storeWBIt = storeQueue.begin();
 
     retryPkt = NULL;
     memDepViolator = NULL;
@@ -259,24 +252,10 @@ LSQUnit<Impl>::setDcachePort(MasterPort *dcache_port)
 
 template<class Impl>
 void
-LSQUnit<Impl>::clearLQ()
-{
-    loadQueue.clear();
-}
-
-template<class Impl>
-void
-LSQUnit<Impl>::clearSQ()
-{
-    storeQueue.clear();
-}
-
-template<class Impl>
-void
 LSQUnit<Impl>::drainSanityCheck() const
 {
-    for (int i = 0; i < loadQueue.size(); ++i)
-        assert(!loadQueue[i]);
+    for (int i = 0; i < loadQueue.capacity(); ++i)
+        assert(!loadQueue[i].valid());
 
     assert(storesToWB == 0);
     assert(!retryPkt);
@@ -287,44 +266,6 @@ void
 LSQUnit<Impl>::takeOverFrom()
 {
     resetState();
-}
-
-template<class Impl>
-void
-LSQUnit<Impl>::resizeLQ(unsigned size)
-{
-    unsigned size_plus_sentinel = size + 1;
-    assert(size_plus_sentinel >= LQEntries);
-
-    if (size_plus_sentinel > LQEntries) {
-        while (size_plus_sentinel > loadQueue.size()) {
-            DynInstPtr dummy;
-            loadQueue.push_back(dummy);
-            LQEntries++;
-        }
-    } else {
-        LQEntries = size_plus_sentinel;
-    }
-
-    assert(LQEntries <= 256);
-}
-
-template<class Impl>
-void
-LSQUnit<Impl>::resizeSQ(unsigned size)
-{
-    unsigned size_plus_sentinel = size + 1;
-    if (size_plus_sentinel > SQEntries) {
-        while (size_plus_sentinel > storeQueue.size()) {
-            SQEntry dummy;
-            storeQueue.push_back(dummy);
-            SQEntries++;
-        }
-    } else {
-        SQEntries = size_plus_sentinel;
-    }
-
-    assert(SQEntries <= 256);
 }
 
 template <class Impl>
@@ -348,44 +289,42 @@ template <class Impl>
 void
 LSQUnit<Impl>::insertLoad(const DynInstPtr &load_inst)
 {
-    assert((loadTail + 1) % LQEntries != loadHead);
-    assert(loads < LQEntries);
+    assert(!loadQueue.full());
+    assert(loads < loadQueue.capacity());
 
     DPRINTF(LSQUnit, "Inserting load PC %s, idx:%i [sn:%lli]\n",
-            load_inst->pcState(), loadTail, load_inst->seqNum);
+            load_inst->pcState(), loadQueue.tail(), load_inst->seqNum);
 
-    load_inst->lqIdx = loadTail;
+    /* Grow the queue. */
+    loadQueue.advance_tail();
 
-    if (stores == 0) {
-        load_inst->sqIdx = -1;
-    } else {
-        load_inst->sqIdx = storeTail;
-    }
+    load_inst->sqIt = storeQueue.end();
 
-    loadQueue[loadTail] = load_inst;
-
-    incrLdIdx(loadTail);
+    assert(!loadQueue.back().valid());
+    loadQueue.back().set(load_inst);
+    load_inst->lqIdx = loadQueue.tail();
+    load_inst->lqIt = loadQueue.getIterator(load_inst->lqIdx);
 
     ++loads;
 }
 
 template <class Impl>
 void
-LSQUnit<Impl>::insertStore(const DynInstPtr &store_inst)
+LSQUnit<Impl>::insertStore(const DynInstPtr& store_inst)
 {
     // Make sure it is not full before inserting an instruction.
-    assert((storeTail + 1) % SQEntries != storeHead);
-    assert(stores < SQEntries);
+    assert(!storeQueue.full());
+    assert(stores < storeQueue.capacity());
 
     DPRINTF(LSQUnit, "Inserting store PC %s, idx:%i [sn:%lli]\n",
-            store_inst->pcState(), storeTail, store_inst->seqNum);
+            store_inst->pcState(), storeQueue.tail(), store_inst->seqNum);
+    storeQueue.advance_tail();
 
-    store_inst->sqIdx = storeTail;
-    store_inst->lqIdx = loadTail;
+    store_inst->sqIdx = storeQueue.tail();
+    store_inst->lqIdx = loadQueue.moduloAdd(loadQueue.tail(), 1);
+    store_inst->lqIt = loadQueue.end();
 
-    storeQueue[storeTail] = SQEntry(store_inst);
-
-    incrStIdx(storeTail);
+    storeQueue.back().set(store_inst);
 
     ++stores;
 }
@@ -407,8 +346,9 @@ LSQUnit<Impl>::numFreeLoadEntries()
 {
         //LQ has an extra dummy entry to differentiate
         //empty/full conditions. Subtract 1 from the free entries.
-        DPRINTF(LSQUnit, "LQ size: %d, #loads occupied: %d\n", LQEntries, loads);
-        return LQEntries - loads - 1;
+        DPRINTF(LSQUnit, "LQ size: %d, #loads occupied: %d\n",
+                1 + loadQueue.capacity(), loads);
+        return loadQueue.capacity() - loads;
 }
 
 template <class Impl>
@@ -417,8 +357,9 @@ LSQUnit<Impl>::numFreeStoreEntries()
 {
         //SQ has an extra dummy entry to differentiate
         //empty/full conditions. Subtract 1 from the free entries.
-        DPRINTF(LSQUnit, "SQ size: %d, #stores occupied: %d\n", SQEntries, stores);
-        return SQEntries - stores - 1;
+        DPRINTF(LSQUnit, "SQ size: %d, #stores occupied: %d\n",
+                1 + storeQueue.capacity(), stores);
+        return storeQueue.capacity() - stores;
 
  }
 
@@ -429,11 +370,8 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
     // Should only ever get invalidations in here
     assert(pkt->isInvalidate());
 
-    int load_idx = loadHead;
     DPRINTF(LSQUnit, "Got snoop for address %#x\n", pkt->getAddr());
 
-    // Only Invalidate packet calls checkSnoop
-    assert(pkt->isInvalidate());
     for (int x = 0; x < cpu->numContexts(); x++) {
         ThreadContext *tc = cpu->getContext(x);
         bool no_squash = cpu->thread[x]->noSquashFromTC;
@@ -442,44 +380,37 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
         cpu->thread[x]->noSquashFromTC = no_squash;
     }
 
-    Addr invalidate_addr = pkt->getAddr() & cacheBlockMask;
-
-    DynInstPtr ld_inst = loadQueue[load_idx];
-    if (ld_inst) {
-        Addr load_addr_low = ld_inst->physEffAddrLow & cacheBlockMask;
-        Addr load_addr_high = ld_inst->physEffAddrHigh & cacheBlockMask;
-
-        // Check that this snoop didn't just invalidate our lock flag
-        if (ld_inst->effAddrValid() && (load_addr_low == invalidate_addr
-                                        || load_addr_high == invalidate_addr)
-            && ld_inst->memReqFlags & Request::LLSC)
-            TheISA::handleLockedSnoopHit(ld_inst.get());
-    }
-
-    // If this is the only load in the LSQ we don't care
-    if (load_idx == loadTail)
+    if (loadQueue.empty())
         return;
 
-    incrLdIdx(load_idx);
+    auto iter = loadQueue.begin();
+
+    Addr invalidate_addr = pkt->getAddr() & cacheBlockMask;
+
+    DynInstPtr ld_inst = iter->instruction();
+    assert(ld_inst);
+    LSQRequest *req = iter->request();
+
+    // Check that this snoop didn't just invalidate our lock flag
+    if (ld_inst->effAddrValid() &&
+        req->isCacheBlockHit(invalidate_addr, cacheBlockMask)
+        && ld_inst->memReqFlags & Request::LLSC)
+        TheISA::handleLockedSnoopHit(ld_inst.get());
 
     bool force_squash = false;
 
-    while (load_idx != loadTail) {
-        DynInstPtr ld_inst = loadQueue[load_idx];
-
-        if (!ld_inst->effAddrValid() || ld_inst->strictlyOrdered()) {
-            incrLdIdx(load_idx);
+    while (++iter != loadQueue.end()) {
+        ld_inst = iter->instruction();
+        assert(ld_inst);
+        req = iter->request();
+        if (!ld_inst->effAddrValid() || ld_inst->strictlyOrdered())
             continue;
-        }
 
-        Addr load_addr_low = ld_inst->physEffAddrLow & cacheBlockMask;
-        Addr load_addr_high = ld_inst->physEffAddrHigh & cacheBlockMask;
+        DPRINTF(LSQUnit, "-- inst [sn:%lli] to pktAddr:%#x\n",
+                    ld_inst->seqNum, invalidate_addr);
 
-        DPRINTF(LSQUnit, "-- inst [sn:%lli] load_addr: %#x to pktAddr:%#x\n",
-                    ld_inst->seqNum, load_addr_low, invalidate_addr);
-
-        if ((load_addr_low == invalidate_addr
-             || load_addr_high == invalidate_addr) || force_squash) {
+        if (force_squash ||
+            req->isCacheBlockHit(invalidate_addr, cacheBlockMask)) {
             if (needsTSO) {
                 // If we have a TSO system, as all loads must be ordered with
                 // all other loads, this load as well as *all* subsequent loads
@@ -508,14 +439,14 @@ LSQUnit<Impl>::checkSnoop(PacketPtr pkt)
                 ld_inst->hitExternalSnoop(true);
             }
         }
-        incrLdIdx(load_idx);
     }
     return;
 }
 
 template <class Impl>
 Fault
-LSQUnit<Impl>::checkViolations(int load_idx, const DynInstPtr &inst)
+LSQUnit<Impl>::checkViolations(typename LoadQueue::iterator& loadIt,
+        const DynInstPtr& inst)
 {
     Addr inst_eff_addr1 = inst->effAddr >> depCheckShift;
     Addr inst_eff_addr2 = (inst->effAddr + inst->effSize - 1) >> depCheckShift;
@@ -525,10 +456,10 @@ LSQUnit<Impl>::checkViolations(int load_idx, const DynInstPtr &inst)
      * all instructions that will execute before the store writes back. Thus,
      * like the implementation that came before it, we're overly conservative.
      */
-    while (load_idx != loadTail) {
-        DynInstPtr ld_inst = loadQueue[load_idx];
+    while (loadIt != loadQueue.end()) {
+        DynInstPtr ld_inst = loadIt->instruction();
         if (!ld_inst->effAddrValid() || ld_inst->strictlyOrdered()) {
-            incrLdIdx(load_idx);
+            ++loadIt;
             continue;
         }
 
@@ -585,7 +516,7 @@ LSQUnit<Impl>::checkViolations(int load_idx, const DynInstPtr &inst)
             }
         }
 
-        incrLdIdx(load_idx);
+        ++loadIt;
     }
     return NoFault;
 }
@@ -608,8 +539,7 @@ LSQUnit<Impl>::executeLoad(const DynInstPtr &inst)
 
     load_fault = inst->initiateAcc();
 
-    if (inst->isTranslationDelayed() &&
-        load_fault == NoFault)
+    if (inst->isTranslationDelayed() && load_fault == NoFault)
         return load_fault;
 
     // If the instruction faulted or predicated false, then we need to send it
@@ -631,12 +561,13 @@ LSQUnit<Impl>::executeLoad(const DynInstPtr &inst)
         iewStage->instToCommit(inst);
         iewStage->activityThisCycle();
     } else {
-        assert(inst->effAddrValid());
-        int load_idx = inst->lqIdx;
-        incrLdIdx(load_idx);
+        if (inst->effAddrValid()) {
+            auto it = inst->lqIt;
+            ++it;
 
-        if (checkLoads)
-            return checkViolations(load_idx, inst);
+            if (checkLoads)
+                return checkViolations(it, inst);
+        }
     }
 
     return load_fault;
@@ -659,7 +590,7 @@ LSQUnit<Impl>::executeStore(const DynInstPtr &store_inst)
 
     // Check the recently completed loads to see if any match this store's
     // address.  If so, then we have a memory ordering violation.
-    int load_idx = store_inst->lqIdx;
+    typename LoadQueue::iterator loadIt = store_inst->lqIt;
 
     Fault store_fault = store_inst->initiateAcc();
 
@@ -674,7 +605,7 @@ LSQUnit<Impl>::executeStore(const DynInstPtr &store_inst)
         return store_fault;
     }
 
-    if (storeQueue[store_idx].size == 0) {
+    if (storeQueue[store_idx].size() == 0) {
         DPRINTF(LSQUnit,"Fault on Store PC %s, [sn:%lli], Size = 0\n",
                 store_inst->pcState(), store_inst->seqNum);
 
@@ -686,12 +617,12 @@ LSQUnit<Impl>::executeStore(const DynInstPtr &store_inst)
     if (store_inst->isStoreConditional()) {
         // Store conditionals need to set themselves as able to
         // writeback if we haven't had a fault by here.
-        storeQueue[store_idx].canWB = true;
+        storeQueue[store_idx].canWB() = true;
 
         ++storesToWB;
     }
 
-    return checkViolations(load_idx, store_inst);
+    return checkViolations(loadIt, store_inst);
 
 }
 
@@ -699,14 +630,13 @@ template <class Impl>
 void
 LSQUnit<Impl>::commitLoad()
 {
-    assert(loadQueue[loadHead]);
+    assert(loadQueue.front().valid());
 
     DPRINTF(LSQUnit, "Committing head load instruction, PC %s\n",
-            loadQueue[loadHead]->pcState());
+            loadQueue.front().instruction()->pcState());
 
-    loadQueue[loadHead] = NULL;
-
-    incrLdIdx(loadHead);
+    loadQueue.front().clear();
+    loadQueue.pop_front();
 
     --loads;
 }
@@ -715,9 +645,10 @@ template <class Impl>
 void
 LSQUnit<Impl>::commitLoads(InstSeqNum &youngest_inst)
 {
-    assert(loads == 0 || loadQueue[loadHead]);
+    assert(loads == 0 || loadQueue.front().valid());
 
-    while (loads != 0 && loadQueue[loadHead]->seqNum <= youngest_inst) {
+    while (loads != 0 && loadQueue.front().instruction()->seqNum
+            <= youngest_inst) {
         commitLoad();
     }
 }
@@ -726,45 +657,37 @@ template <class Impl>
 void
 LSQUnit<Impl>::commitStores(InstSeqNum &youngest_inst)
 {
-    assert(stores == 0 || storeQueue[storeHead].inst);
+    assert(stores == 0 || storeQueue.front().valid());
 
-    int store_idx = storeHead;
-
-    while (store_idx != storeTail) {
-        assert(storeQueue[store_idx].inst);
+    /* Forward iterate the store queue (age order). */
+    for (auto& x : storeQueue) {
+        assert(x.valid());
         // Mark any stores that are now committed and have not yet
         // been marked as able to write back.
-        if (!storeQueue[store_idx].canWB) {
-            if (storeQueue[store_idx].inst->seqNum > youngest_inst) {
+        if (!x.canWB()) {
+            if (x.instruction()->seqNum > youngest_inst) {
                 break;
             }
             DPRINTF(LSQUnit, "Marking store as able to write back, PC "
                     "%s [sn:%lli]\n",
-                    storeQueue[store_idx].inst->pcState(),
-                    storeQueue[store_idx].inst->seqNum);
+                    x.instruction()->pcState(),
+                    x.instruction()->seqNum);
 
-            storeQueue[store_idx].canWB = true;
+            x.canWB() = true;
 
             ++storesToWB;
         }
-
-        incrStIdx(store_idx);
     }
 }
 
 template <class Impl>
 void
-LSQUnit<Impl>::writebackPendingStore()
+LSQUnit<Impl>::writebackBlockedStore()
 {
-    if (hasPendingPkt) {
-        assert(pendingPkt != NULL);
-
-        // If the cache is blocked, this will store the packet for retry.
-        if (sendStore(pendingPkt)) {
-            storePostSend(pendingPkt);
-        }
-        pendingPkt = NULL;
-        hasPendingPkt = false;
+    assert(isStoreBlocked);
+    storeWBIt->request()->sendPacketToCache();
+    if (storeWBIt->request()->isSent()){
+        storePostSend();
     }
 }
 
@@ -772,18 +695,17 @@ template <class Impl>
 void
 LSQUnit<Impl>::writebackStores()
 {
-    // First writeback the second packet from any split store that didn't
-    // complete last cycle because there weren't enough cache ports available.
-    if (TheISA::HasUnalignedMemAcc) {
-        writebackPendingStore();
+    if (isStoreBlocked) {
+        DPRINTF(LSQUnit, "Writing back  blocked store\n");
+        writebackBlockedStore();
     }
 
     while (storesToWB > 0 &&
-           storeWBIdx != storeTail &&
-           storeQueue[storeWBIdx].inst &&
-           storeQueue[storeWBIdx].canWB &&
+           storeWBIt.dereferenceable() &&
+           storeWBIt->valid() &&
+           storeWBIt->canWB() &&
            ((!needsTSO) || (!storeInFlight)) &&
-           usedStorePorts < cacheStorePorts) {
+           lsq->storePortAvailable()) {
 
         if (isStoreBlocked) {
             DPRINTF(LSQUnit, "Unable to write back any more stores, cache"
@@ -793,187 +715,111 @@ LSQUnit<Impl>::writebackStores()
 
         // Store didn't write any data so no need to write it back to
         // memory.
-        if (storeQueue[storeWBIdx].size == 0) {
-            completeStore(storeWBIdx);
-
-            incrStIdx(storeWBIdx);
-
+        if (storeWBIt->size() == 0) {
+            /* It is important that the preincrement happens at (or before)
+             * the call, as the the code of completeStore checks
+             * storeWBIt. */
+            completeStore(storeWBIt++);
             continue;
         }
 
-        ++usedStorePorts;
-
-        if (storeQueue[storeWBIdx].inst->isDataPrefetch()) {
-            incrStIdx(storeWBIdx);
-
+        if (storeWBIt->instruction()->isDataPrefetch()) {
+            storeWBIt++;
             continue;
         }
 
-        assert(storeQueue[storeWBIdx].req);
-        assert(!storeQueue[storeWBIdx].committed);
+        assert(storeWBIt->hasRequest());
+        assert(!storeWBIt->committed());
 
-        if (TheISA::HasUnalignedMemAcc && storeQueue[storeWBIdx].isSplit) {
-            assert(storeQueue[storeWBIdx].sreqLow);
-            assert(storeQueue[storeWBIdx].sreqHigh);
-        }
-
-        DynInstPtr inst = storeQueue[storeWBIdx].inst;
-
-        RequestPtr &req = storeQueue[storeWBIdx].req;
-        const RequestPtr &sreqLow = storeQueue[storeWBIdx].sreqLow;
-        const RequestPtr &sreqHigh = storeQueue[storeWBIdx].sreqHigh;
-
-        storeQueue[storeWBIdx].committed = true;
+        DynInstPtr inst = storeWBIt->instruction();
+        LSQRequest* req = storeWBIt->request();
+        storeWBIt->committed() = true;
 
         assert(!inst->memData);
-        inst->memData = new uint8_t[req->getSize()];
+        inst->memData = new uint8_t[req->_size];
 
-        if (storeQueue[storeWBIdx].isAllZeros)
-            memset(inst->memData, 0, req->getSize());
+        if (storeWBIt->isAllZeros())
+            memset(inst->memData, 0, req->_size);
         else
-            memcpy(inst->memData, storeQueue[storeWBIdx].data, req->getSize());
+            memcpy(inst->memData, storeWBIt->data(), req->_size);
 
-        PacketPtr data_pkt;
-        PacketPtr snd_data_pkt = NULL;
 
-        LSQSenderState *state = new LSQSenderState;
-        state->isLoad = false;
-        state->idx = storeWBIdx;
-        state->inst = inst;
+        if (req->senderState() == nullptr) {
+            SQSenderState *state = new SQSenderState(storeWBIt);
+            state->isLoad = false;
+            state->needWB = false;
+            state->inst = inst;
 
-        if (!TheISA::HasUnalignedMemAcc || !storeQueue[storeWBIdx].isSplit) {
-
-            // Build a single data packet if the store isn't split.
-            data_pkt = Packet::createWrite(req);
-            data_pkt->dataStatic(inst->memData);
-            data_pkt->senderState = state;
-        } else {
-            // Create two packets if the store is split in two.
-            data_pkt = Packet::createWrite(sreqLow);
-            snd_data_pkt = Packet::createWrite(sreqHigh);
-
-            data_pkt->dataStatic(inst->memData);
-            snd_data_pkt->dataStatic(inst->memData + sreqLow->getSize());
-
-            data_pkt->senderState = state;
-            snd_data_pkt->senderState = state;
-
-            state->isSplit = true;
-            state->outstanding = 2;
-
-            // Can delete the main request now.
-            req = sreqLow;
+            req->senderState(state);
+            if (inst->isStoreConditional()) {
+                /* Only store conditionals need a writeback. */
+                state->needWB = true;
+            }
         }
+        req->buildPackets();
 
         DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%s "
                 "to Addr:%#x, data:%#x [sn:%lli]\n",
-                storeWBIdx, inst->pcState(),
-                req->getPaddr(), (int)*(inst->memData),
+                storeWBIt.idx(), inst->pcState(),
+                req->request()->getPaddr(), (int)*(inst->memData),
                 inst->seqNum);
 
         // @todo: Remove this SC hack once the memory system handles it.
         if (inst->isStoreConditional()) {
-            assert(!storeQueue[storeWBIdx].isSplit);
             // Disable recording the result temporarily.  Writing to
             // misc regs normally updates the result, but this is not
             // the desired behavior when handling store conditionals.
             inst->recordResult(false);
-            bool success = TheISA::handleLockedWrite(inst.get(), req, cacheBlockMask);
+            bool success = TheISA::handleLockedWrite(inst.get(),
+                    req->request(), cacheBlockMask);
             inst->recordResult(true);
+            req->packetSent();
 
             if (!success) {
+                req->complete();
                 // Instantly complete this store.
                 DPRINTF(LSQUnit, "Store conditional [sn:%lli] failed.  "
                         "Instantly completing it.\n",
                         inst->seqNum);
-                WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
+                PacketPtr new_pkt = new Packet(*req->packet());
+                WritebackEvent *wb = new WritebackEvent(inst,
+                        new_pkt, this);
                 cpu->schedule(wb, curTick() + 1);
-                completeStore(storeWBIdx);
-                incrStIdx(storeWBIdx);
+                completeStore(storeWBIt);
+                if (!storeQueue.empty())
+                    storeWBIt++;
+                else
+                    storeWBIt = storeQueue.end();
                 continue;
             }
-        } else {
-            // Non-store conditionals do not need a writeback.
-            state->noWB = true;
         }
 
-        bool split =
-            TheISA::HasUnalignedMemAcc && storeQueue[storeWBIdx].isSplit;
-
-        ThreadContext *thread = cpu->tcBase(lsqID);
-
-        if (req->isMmappedIpr()) {
+        if (req->request()->isMmappedIpr()) {
             assert(!inst->isStoreConditional());
-            TheISA::handleIprWrite(thread, data_pkt);
-            delete data_pkt;
-            if (split) {
-                assert(snd_data_pkt->req->isMmappedIpr());
-                TheISA::handleIprWrite(thread, snd_data_pkt);
-                delete snd_data_pkt;
-            }
-            delete state;
-            completeStore(storeWBIdx);
-            incrStIdx(storeWBIdx);
-        } else if (!sendStore(data_pkt)) {
-            DPRINTF(IEW, "D-Cache became blocked when writing [sn:%lli], will"
-                    "retry later\n",
-                    inst->seqNum);
+            ThreadContext *thread = cpu->tcBase(lsqID);
+            PacketPtr main_pkt = new Packet(req->mainRequest(),
+                                            MemCmd::WriteReq);
+            main_pkt->dataStatic(inst->memData);
+            req->handleIprWrite(thread, main_pkt);
+            delete main_pkt;
+            completeStore(storeWBIt);
+            storeWBIt++;
+            continue;
+        }
+        /* Send to cache */
+        req->sendPacketToCache();
 
-            // Need to store the second packet, if split.
-            if (split) {
-                state->pktToSend = true;
-                state->pendingPacket = snd_data_pkt;
-            }
+        /* If successful, do the post send */
+        if (req->isSent()) {
+            storePostSend();
         } else {
-
-            // If split, try to send the second packet too
-            if (split) {
-                assert(snd_data_pkt);
-
-                // Ensure there are enough ports to use.
-                if (usedStorePorts < cacheStorePorts) {
-                    ++usedStorePorts;
-                    if (sendStore(snd_data_pkt)) {
-                        storePostSend(snd_data_pkt);
-                    } else {
-                        DPRINTF(IEW, "D-Cache became blocked when writing"
-                                " [sn:%lli] second packet, will retry later\n",
-                                inst->seqNum);
-                    }
-                } else {
-
-                    // Store the packet for when there's free ports.
-                    assert(pendingPkt == NULL);
-                    pendingPkt = snd_data_pkt;
-                    hasPendingPkt = true;
-                }
-            } else {
-
-                // Not a split store.
-                storePostSend(data_pkt);
-            }
+            DPRINTF(LSQUnit, "D-Cache became blocked when writing [sn:%lli], "
+                    "will retry later\n",
+                    inst->seqNum);
         }
     }
-
-    // Not sure this should set it to 0.
-    usedStorePorts = 0;
-
     assert(stores >= 0 && storesToWB >= 0);
 }
-
-/*template <class Impl>
-void
-LSQUnit<Impl>::removeMSHR(InstSeqNum seqNum)
-{
-    list<InstSeqNum>::iterator mshr_it = find(mshrSeqNums.begin(),
-                                              mshrSeqNums.end(),
-                                              seqNum);
-
-    if (mshr_it != mshrSeqNums.end()) {
-        mshrSeqNums.erase(mshr_it);
-        DPRINTF(LSQUnit, "Removing MSHR. count = %i\n",mshrSeqNums.size());
-    }
-}*/
 
 template <class Impl>
 void
@@ -982,30 +828,26 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
     DPRINTF(LSQUnit, "Squashing until [sn:%lli]!"
             "(Loads:%i Stores:%i)\n", squashed_num, loads, stores);
 
-    int load_idx = loadTail;
-    decrLdIdx(load_idx);
-
-    while (loads != 0 && loadQueue[load_idx]->seqNum > squashed_num) {
+    while (loads != 0 &&
+            loadQueue.back().instruction()->seqNum > squashed_num) {
         DPRINTF(LSQUnit,"Load Instruction PC %s squashed, "
                 "[sn:%lli]\n",
-                loadQueue[load_idx]->pcState(),
-                loadQueue[load_idx]->seqNum);
+                loadQueue.back().instruction()->pcState(),
+                loadQueue.back().instruction()->seqNum);
 
-        if (isStalled() && load_idx == stallingLoadIdx) {
+        if (isStalled() && loadQueue.tail() == stallingLoadIdx) {
             stalled = false;
             stallingStoreIsn = 0;
             stallingLoadIdx = 0;
         }
 
         // Clear the smart pointer to make sure it is decremented.
-        loadQueue[load_idx]->setSquashed();
-        loadQueue[load_idx] = NULL;
+        loadQueue.back().instruction()->setSquashed();
+        loadQueue.back().clear();
+
         --loads;
 
-        // Inefficient!
-        loadTail = load_idx;
-
-        decrLdIdx(load_idx);
+        loadQueue.pop_back();
         ++lsqSquashedLoads;
     }
 
@@ -1013,76 +855,63 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         memDepViolator = NULL;
     }
 
-    int store_idx = storeTail;
-    decrStIdx(store_idx);
-
     while (stores != 0 &&
-           storeQueue[store_idx].inst->seqNum > squashed_num) {
+           storeQueue.back().instruction()->seqNum > squashed_num) {
         // Instructions marked as can WB are already committed.
-        if (storeQueue[store_idx].canWB) {
+        if (storeQueue.back().canWB()) {
             break;
         }
 
         DPRINTF(LSQUnit,"Store Instruction PC %s squashed, "
                 "idx:%i [sn:%lli]\n",
-                storeQueue[store_idx].inst->pcState(),
-                store_idx, storeQueue[store_idx].inst->seqNum);
+                storeQueue.back().instruction()->pcState(),
+                storeQueue.tail(), storeQueue.back().instruction()->seqNum);
 
         // I don't think this can happen.  It should have been cleared
         // by the stalling load.
         if (isStalled() &&
-            storeQueue[store_idx].inst->seqNum == stallingStoreIsn) {
+            storeQueue.back().instruction()->seqNum == stallingStoreIsn) {
             panic("Is stalled should have been cleared by stalling load!\n");
             stalled = false;
             stallingStoreIsn = 0;
         }
 
         // Clear the smart pointer to make sure it is decremented.
-        storeQueue[store_idx].inst->setSquashed();
-        storeQueue[store_idx].inst = NULL;
-        storeQueue[store_idx].canWB = 0;
+        storeQueue.back().instruction()->setSquashed();
 
         // Must delete request now that it wasn't handed off to
         // memory.  This is quite ugly.  @todo: Figure out the proper
         // place to really handle request deletes.
-        storeQueue[store_idx].req.reset();
-        if (TheISA::HasUnalignedMemAcc && storeQueue[store_idx].isSplit) {
-            storeQueue[store_idx].sreqLow.reset();
-            storeQueue[store_idx].sreqHigh.reset();
-        }
-
+        storeQueue.back().clear();
         --stores;
 
-        // Inefficient!
-        storeTail = store_idx;
-
-        decrStIdx(store_idx);
+        storeQueue.pop_back();
         ++lsqSquashedStores;
     }
 }
 
 template <class Impl>
 void
-LSQUnit<Impl>::storePostSend(PacketPtr pkt)
+LSQUnit<Impl>::storePostSend()
 {
     if (isStalled() &&
-        storeQueue[storeWBIdx].inst->seqNum == stallingStoreIsn) {
+        storeWBIt->instruction()->seqNum == stallingStoreIsn) {
         DPRINTF(LSQUnit, "Unstalling, stalling store [sn:%lli] "
                 "load idx:%i\n",
                 stallingStoreIsn, stallingLoadIdx);
         stalled = false;
         stallingStoreIsn = 0;
-        iewStage->replayMemInst(loadQueue[stallingLoadIdx]);
+        iewStage->replayMemInst(loadQueue[stallingLoadIdx].instruction());
     }
 
-    if (!storeQueue[storeWBIdx].inst->isStoreConditional()) {
+    if (!storeWBIt->instruction()->isStoreConditional()) {
         // The store is basically completed at this time. This
         // only works so long as the checker doesn't try to
         // verify the value in memory for stores.
-        storeQueue[storeWBIdx].inst->setCompleted();
+        storeWBIt->instruction()->setCompleted();
 
         if (cpu->checker) {
-            cpu->checker->verify(storeQueue[storeWBIdx].inst);
+            cpu->checker->verify(storeWBIt->instruction());
         }
     }
 
@@ -1090,7 +919,7 @@ LSQUnit<Impl>::storePostSend(PacketPtr pkt)
         storeInFlight = true;
     }
 
-    incrStIdx(storeWBIdx);
+    storeWBIt++;
 }
 
 template <class Impl>
@@ -1136,10 +965,10 @@ LSQUnit<Impl>::writeback(const DynInstPtr &inst, PacketPtr pkt)
 
 template <class Impl>
 void
-LSQUnit<Impl>::completeStore(int store_idx)
+LSQUnit<Impl>::completeStore(typename StoreQueue::iterator store_idx)
 {
-    assert(storeQueue[store_idx].inst);
-    storeQueue[store_idx].completed = true;
+    assert(store_idx->valid());
+    store_idx->completed() = true;
     --storesToWB;
     // A bit conservative because a store completion may not free up entries,
     // but hopefully avoids two store completions in one cycle from making
@@ -1147,39 +976,42 @@ LSQUnit<Impl>::completeStore(int store_idx)
     cpu->wakeCPU();
     cpu->activityThisCycle();
 
-    if (store_idx == storeHead) {
+    /* We 'need' a copy here because we may clear the entry from the
+     * store queue. */
+    DynInstPtr store_inst = store_idx->instruction();
+    if (store_idx == storeQueue.begin()) {
         do {
-            incrStIdx(storeHead);
-
+            storeQueue.front().clear();
+            storeQueue.pop_front();
             --stores;
-        } while (storeQueue[storeHead].completed &&
-                 storeHead != storeTail);
+        } while (storeQueue.front().completed() &&
+                 !storeQueue.empty());
 
         iewStage->updateLSQNextCycle = true;
     }
 
     DPRINTF(LSQUnit, "Completing store [sn:%lli], idx:%i, store head "
             "idx:%i\n",
-            storeQueue[store_idx].inst->seqNum, store_idx, storeHead);
+            store_inst->seqNum, store_idx.idx() - 1, storeQueue.head() - 1);
 
 #if TRACING_ON
     if (DTRACE(O3PipeView)) {
-        storeQueue[store_idx].inst->storeTick =
-            curTick() - storeQueue[store_idx].inst->fetchTick;
+        store_idx->instruction()->storeTick =
+            curTick() - store_idx->instruction()->fetchTick;
     }
 #endif
 
     if (isStalled() &&
-        storeQueue[store_idx].inst->seqNum == stallingStoreIsn) {
+        store_inst->seqNum == stallingStoreIsn) {
         DPRINTF(LSQUnit, "Unstalling, stalling store [sn:%lli] "
                 "load idx:%i\n",
                 stallingStoreIsn, stallingLoadIdx);
         stalled = false;
         stallingStoreIsn = 0;
-        iewStage->replayMemInst(loadQueue[stallingLoadIdx]);
+        iewStage->replayMemInst(loadQueue[stallingLoadIdx].instruction());
     }
 
-    storeQueue[store_idx].inst->setCompleted();
+    store_inst->setCompleted();
 
     if (needsTSO) {
         storeInFlight = false;
@@ -1188,28 +1020,52 @@ LSQUnit<Impl>::completeStore(int store_idx)
     // Tell the checker we've completed this instruction.  Some stores
     // may get reported twice to the checker, but the checker can
     // handle that case.
-
     // Store conditionals cannot be sent to the checker yet, they have
     // to update the misc registers first which should take place
     // when they commit
-    if (cpu->checker && !storeQueue[store_idx].inst->isStoreConditional()) {
-        cpu->checker->verify(storeQueue[store_idx].inst);
+    if (cpu->checker &&  !store_inst->isStoreConditional()) {
+        cpu->checker->verify(store_inst);
     }
 }
 
 template <class Impl>
 bool
-LSQUnit<Impl>::sendStore(PacketPtr data_pkt)
+LSQUnit<Impl>::trySendPacket(bool isLoad, PacketPtr data_pkt)
 {
-    if (!dcachePort->sendTimingReq(data_pkt)) {
-        // Need to handle becoming blocked on a store.
-        isStoreBlocked = true;
-        ++lsqCacheBlocked;
-        assert(retryPkt == NULL);
-        retryPkt = data_pkt;
-        return false;
+    bool ret = true;
+    bool cache_got_blocked = false;
+
+    auto state = dynamic_cast<LSQSenderState*>(data_pkt->senderState);
+
+    if (!lsq->cacheBlocked() && (isLoad || lsq->storePortAvailable())) {
+        if (!dcachePort->sendTimingReq(data_pkt)) {
+            ret = false;
+            cache_got_blocked = true;
+        }
+    } else {
+        ret = false;
     }
-    return true;
+
+    if (ret) {
+        if (!isLoad) {
+            lsq->storePortBusy();
+            isStoreBlocked = false;
+        }
+        state->outstanding++;
+        state->request()->packetSent();
+    } else {
+        if (cache_got_blocked) {
+            lsq->cacheBlocked(true);
+            ++lsqCacheBlocked;
+        }
+        if (!isLoad) {
+            assert(state->request() == storeWBIt->request());
+            isStoreBlocked = true;
+        }
+        state->request()->packetNotSent();
+    }
+
+    return ret;
 }
 
 template <class Impl>
@@ -1217,66 +1073,9 @@ void
 LSQUnit<Impl>::recvRetry()
 {
     if (isStoreBlocked) {
-        DPRINTF(LSQUnit, "Receiving retry: store blocked\n");
-        assert(retryPkt != NULL);
-
-        LSQSenderState *state =
-            dynamic_cast<LSQSenderState *>(retryPkt->senderState);
-
-        if (dcachePort->sendTimingReq(retryPkt)) {
-            // Don't finish the store unless this is the last packet.
-            if (!TheISA::HasUnalignedMemAcc || !state->pktToSend ||
-                    state->pendingPacket == retryPkt) {
-                state->pktToSend = false;
-                storePostSend(retryPkt);
-            }
-            retryPkt = NULL;
-            isStoreBlocked = false;
-
-            // Send any outstanding packet.
-            if (TheISA::HasUnalignedMemAcc && state->pktToSend) {
-                assert(state->pendingPacket);
-                if (sendStore(state->pendingPacket)) {
-                    storePostSend(state->pendingPacket);
-                }
-            }
-        } else {
-            // Still blocked!
-            ++lsqCacheBlocked;
-        }
+        DPRINTF(LSQUnit, "Receiving retry: blocked store\n");
+        writebackBlockedStore();
     }
-}
-
-template <class Impl>
-inline void
-LSQUnit<Impl>::incrStIdx(int &store_idx) const
-{
-    if (++store_idx >= SQEntries)
-        store_idx = 0;
-}
-
-template <class Impl>
-inline void
-LSQUnit<Impl>::decrStIdx(int &store_idx) const
-{
-    if (--store_idx < 0)
-        store_idx += SQEntries;
-}
-
-template <class Impl>
-inline void
-LSQUnit<Impl>::incrLdIdx(int &load_idx) const
-{
-    if (++load_idx >= LQEntries)
-        load_idx = 0;
-}
-
-template <class Impl>
-inline void
-LSQUnit<Impl>::decrLdIdx(int &load_idx) const
-{
-    if (--load_idx < 0)
-        load_idx += LQEntries;
 }
 
 template <class Impl>
@@ -1287,29 +1086,28 @@ LSQUnit<Impl>::dumpInsts() const
     cprintf("Load queue size: %i\n", loads);
     cprintf("Load queue: ");
 
-    int load_idx = loadHead;
-
-    while (load_idx != loadTail && loadQueue[load_idx]) {
-        const DynInstPtr &inst(loadQueue[load_idx]);
+    for (const auto& e: loadQueue) {
+        const DynInstPtr &inst(e.instruction());
         cprintf("%s.[sn:%i] ", inst->pcState(), inst->seqNum);
-
-        incrLdIdx(load_idx);
     }
     cprintf("\n");
 
     cprintf("Store queue size: %i\n", stores);
     cprintf("Store queue: ");
 
-    int store_idx = storeHead;
-
-    while (store_idx != storeTail && storeQueue[store_idx].inst) {
-        const DynInstPtr &inst(storeQueue[store_idx].inst);
+    for (const auto& e: storeQueue) {
+        const DynInstPtr &inst(e.instruction());
         cprintf("%s.[sn:%i] ", inst->pcState(), inst->seqNum);
-
-        incrStIdx(store_idx);
     }
 
     cprintf("\n");
+}
+
+template <class Impl>
+unsigned int
+LSQUnit<Impl>::cacheLineSize()
+{
+    return cpu->cacheLineSize();
 }
 
 #endif//__CPU_O3_LSQ_UNIT_IMPL_HH__

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2018 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -744,14 +744,6 @@ DefaultIEW<Impl>::updateStatus()
 }
 
 template <class Impl>
-void
-DefaultIEW<Impl>::resetEntries()
-{
-    instQueue.resetEntries();
-    ldstQueue.resetEntries();
-}
-
-template <class Impl>
 bool
 DefaultIEW<Impl>::checkStall(ThreadID tid)
 {
@@ -1353,7 +1345,7 @@ DefaultIEW<Impl>::executeInsts()
                 DPRINTF(IEW, "LDSTQ detected a violation. Violator PC: %s "
                         "[sn:%lli], inst PC: %s [sn:%lli]. Addr is: %#x.\n",
                         violator->pcState(), violator->seqNum,
-                        inst->pcState(), inst->seqNum, inst->physEffAddrLow);
+                        inst->pcState(), inst->seqNum, inst->physEffAddr);
 
                 fetchRedirect[tid] = true;
 
@@ -1376,7 +1368,7 @@ DefaultIEW<Impl>::executeInsts()
                 DPRINTF(IEW, "LDSTQ detected a violation.  Violator PC: "
                         "%s, inst PC: %s.  Addr is: %#x.\n",
                         violator->pcState(), inst->pcState(),
-                        inst->physEffAddrLow);
+                        inst->physEffAddr);
                 DPRINTF(IEW, "Violation will not be handled because "
                         "already squashing\n");
 
@@ -1459,6 +1451,8 @@ DefaultIEW<Impl>::tick()
 
     wroteToTimeBuffer = false;
     updatedQueues = false;
+
+    ldstQueue.tick();
 
     sortInsts();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2014 ARM Limited
+ * Copyright (c) 2011-2012, 2014, 2017-2018 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -61,6 +61,8 @@ using namespace std;
 template <class Impl>
 LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
     : cpu(cpu_ptr), iewStage(iew_ptr),
+      _cacheBlocked(false),
+      cacheStorePorts(params->cacheStorePorts), usedStorePorts(0),
       lsqPolicy(params->smtLSQPolicy),
       LQEntries(params->LQEntries),
       SQEntries(params->SQEntries),
@@ -76,8 +78,8 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
     //************ Handle SMT Parameters ***********/
     //**********************************************/
 
-    //Figure out fetch policy
-    if (lsqPolicy == SMTQueuePolicy::Dynamic) {
+    /* Run SMT olicy checks. */
+        if (lsqPolicy == SMTQueuePolicy::Dynamic) {
         DPRINTF(LSQ, "LSQ sharing policy set to Dynamic\n");
     } else if (lsqPolicy == SMTQueuePolicy::Partitioned) {
         DPRINTF(Fetch, "LSQ sharing policy set to Partitioned: "
@@ -85,8 +87,8 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
                 maxLQEntries,maxSQEntries);
     } else if (lsqPolicy == SMTQueuePolicy::Threshold) {
 
-        assert(params->smtLSQThreshold > LQEntries);
-        assert(params->smtLSQThreshold > SQEntries);
+        assert(params->smtLSQThreshold > params->LQEntries);
+        assert(params->smtLSQThreshold > params->SQEntries);
 
         DPRINTF(LSQ, "LSQ sharing policy set to Threshold: "
                 "%i entries per LQ | %i entries per SQ\n",
@@ -163,79 +165,41 @@ template <class Impl>
 void
 LSQ<Impl>::takeOverFrom()
 {
+    usedStorePorts = 0;
+    _cacheBlocked = false;
+
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         thread[tid].takeOverFrom();
     }
 }
 
-template <class Impl>
-int
-LSQ<Impl>::entryAmount(ThreadID num_threads)
+template<class Impl>
+bool
+LSQ<Impl>::cacheBlocked() const
 {
-    if (lsqPolicy == SMTQueuePolicy::Partitioned) {
-        return LQEntries / num_threads;
-    } else {
-        return 0;
-    }
-}
-
-template <class Impl>
-void
-LSQ<Impl>::resetEntries()
-{
-    if (lsqPolicy != SMTQueuePolicy::Dynamic || numThreads > 1) {
-        int active_threads = activeThreads->size();
-
-        int maxEntries;
-
-        if (lsqPolicy == SMTQueuePolicy::Partitioned) {
-            maxEntries = LQEntries / active_threads;
-        } else if (lsqPolicy == SMTQueuePolicy::Threshold &&
-                   active_threads == 1) {
-            maxEntries = LQEntries;
-        } else {
-            maxEntries = LQEntries;
-        }
-
-        list<ThreadID>::iterator threads  = activeThreads->begin();
-        list<ThreadID>::iterator end = activeThreads->end();
-
-        while (threads != end) {
-            ThreadID tid = *threads++;
-
-            resizeEntries(maxEntries, tid);
-        }
-    }
+    return _cacheBlocked;
 }
 
 template<class Impl>
 void
-LSQ<Impl>::removeEntries(ThreadID tid)
+LSQ<Impl>::cacheBlocked(bool v)
 {
-    thread[tid].clearLQ();
-    thread[tid].clearSQ();
+    _cacheBlocked = v;
+}
+
+template<class Impl>
+bool
+LSQ<Impl>::storePortAvailable() const
+{
+    return usedStorePorts < cacheStorePorts;
 }
 
 template<class Impl>
 void
-LSQ<Impl>::resizeEntries(unsigned size, ThreadID tid)
+LSQ<Impl>::storePortBusy()
 {
-    thread[tid].resizeLQ(size);
-    thread[tid].resizeSQ(size);
-}
-
-template<class Impl>
-void
-LSQ<Impl>::tick()
-{
-    list<ThreadID>::iterator threads = activeThreads->begin();
-    list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
-        thread[tid].tick();
-    }
+    usedStorePorts++;
+    assert(usedStorePorts <= cacheStorePorts);
 }
 
 template<class Impl>
@@ -316,10 +280,20 @@ void
 LSQ<Impl>::recvReqRetry()
 {
     iewStage->cacheUnblocked();
+    cacheBlocked(false);
 
     for (ThreadID tid : *activeThreads) {
         thread[tid].recvRetry();
     }
+}
+
+template <class Impl>
+void
+LSQ<Impl>::completeDataAccess(PacketPtr pkt)
+{
+    auto senderState = dynamic_cast<LSQSenderState*>(pkt->senderState);
+    thread[cpu->contextToThread(senderState->contextId())]
+        .completeDataAccess(pkt);
 }
 
 template <class Impl>
@@ -330,8 +304,10 @@ LSQ<Impl>::recvTimingResp(PacketPtr pkt)
         DPRINTF(LSQ, "Got error packet back for address: %#X\n",
                 pkt->getAddr());
 
-    thread[cpu->contextToThread(pkt->req->contextId())]
-        .completeDataAccess(pkt);
+    auto senderState = dynamic_cast<LSQSenderState*>(pkt->senderState);
+    panic_if(!senderState, "Got packet back with unknown sender state\n");
+
+    thread[cpu->contextToThread(senderState->contextId())].recvTimingResp(pkt);
 
     if (pkt->isInvalidate()) {
         // This response also contains an invalidate; e.g. this can be the case
@@ -352,8 +328,9 @@ LSQ<Impl>::recvTimingResp(PacketPtr pkt)
             thread[tid].checkSnoop(pkt);
         }
     }
+    // Update the LSQRequest state (this may delete the request)
+    senderState->request()->packetReplied();
 
-    delete pkt;
     return true;
 }
 
@@ -679,6 +656,444 @@ LSQ<Impl>::dumpInsts() const
 
         thread[tid].dumpInsts();
     }
+}
+
+static Addr
+addrBlockOffset(Addr addr, unsigned int block_size)
+{
+    return addr & (block_size - 1);
+}
+
+static Addr
+addrBlockAlign(Addr addr, uint64_t block_size)
+{
+    return addr & ~(block_size - 1);
+}
+
+static bool
+transferNeedsBurst(Addr addr, uint64_t size, uint64_t block_size)
+{
+    return (addrBlockOffset(addr, block_size) + size) > block_size;
+}
+
+template<class Impl>
+Fault
+LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
+                       unsigned int size, Addr addr, Request::Flags flags,
+                       uint64_t *res)
+{
+    ThreadID tid = cpu->contextToThread(inst->contextId());
+    auto cacheLineSize = cpu->cacheLineSize();
+    bool needs_burst = transferNeedsBurst(addr, size, cacheLineSize);
+    LSQRequest* req = nullptr;
+
+    if (inst->translationStarted()) {
+        req = inst->savedReq;
+        assert(req);
+    } else {
+        if (needs_burst) {
+            req = new SplitDataRequest(&thread[tid], inst, isLoad, addr,
+                    size, flags, data, res);
+        } else {
+            req = new SingleDataRequest(&thread[tid], inst, isLoad, addr,
+                    size, flags, data, res);
+        }
+        assert(req);
+        inst->setRequest();
+        req->taskId(cpu->taskId());
+
+        req->initiateTranslation();
+    }
+
+    /* This is the place were instructions get the effAddr. */
+    if (req->isTranslationComplete()) {
+        if (inst->getFault() == NoFault) {
+            inst->effAddr = req->getVaddr();
+            inst->effSize = size;
+            inst->effAddrValid(true);
+
+            if (cpu->checker) {
+                inst->reqToVerify = std::make_shared<Request>(*req->request());
+            }
+            if (isLoad)
+                inst->getFault() = cpu->read(req, inst->lqIdx);
+            else
+                inst->getFault() = cpu->write(req, data, inst->sqIdx);
+        } else if (isLoad) {
+            // Commit will have to clean up whatever happened.  Set this
+            // instruction as executed.
+            inst->setExecuted();
+        }
+    }
+
+    if (inst->traceData)
+        inst->traceData->setMem(addr, size, flags);
+
+    return inst->getFault();
+}
+
+template<class Impl>
+void
+LSQ<Impl>::SingleDataRequest::finish(const Fault &fault, const RequestPtr &req,
+        ThreadContext* tc, BaseTLB::Mode mode)
+{
+    _fault.push_back(fault);
+    numInTranslationFragments = 0;
+    numTranslatedFragments = 1;
+    /* If the instruction has been squahsed, let the request know
+     * as it may have to self-destruct. */
+    if (_inst->isSquashed()) {
+        this->squashTranslation();
+    } else {
+        _inst->strictlyOrdered(req->isStrictlyOrdered());
+
+        flags.set(Flag::TranslationFinished);
+        if (fault == NoFault) {
+            _inst->physEffAddr = req->getPaddr();
+            _inst->memReqFlags = req->getFlags();
+            if (req->isCondSwap()) {
+                assert(_res);
+                req->setExtraData(*_res);
+            }
+            setState(State::Request);
+        } else {
+            setState(State::Fault);
+        }
+
+        LSQRequest::_inst->fault = fault;
+        LSQRequest::_inst->translationCompleted(true);
+    }
+}
+
+template<class Impl>
+void
+LSQ<Impl>::SplitDataRequest::finish(const Fault &fault, const RequestPtr &req,
+        ThreadContext* tc, BaseTLB::Mode mode)
+{
+    _fault.push_back(fault);
+    assert(req == _requests[numTranslatedFragments] || this->isDelayed());
+
+    numInTranslationFragments--;
+    numTranslatedFragments++;
+
+    mainReq->setFlags(req->getFlags());
+
+    if (numTranslatedFragments == _requests.size()) {
+        if (_inst->isSquashed()) {
+            this->squashTranslation();
+        } else {
+            _inst->strictlyOrdered(mainReq->isStrictlyOrdered());
+            flags.set(Flag::TranslationFinished);
+            auto fault_it = _fault.begin();
+            /* Ffwd to the first NoFault. */
+            while (fault_it != _fault.end() && *fault_it == NoFault)
+                fault_it++;
+            /* If none of the fragments faulted: */
+            if (fault_it == _fault.end()) {
+                _inst->physEffAddr = request(0)->getPaddr();
+
+                _inst->memReqFlags = mainReq->getFlags();
+                if (mainReq->isCondSwap()) {
+                    assert(_res);
+                    mainReq->setExtraData(*_res);
+                }
+                setState(State::Request);
+                _inst->fault = NoFault;
+            } else {
+                setState(State::Fault);
+                _inst->fault = *fault_it;
+            }
+            _inst->translationCompleted(true);
+        }
+    }
+}
+
+template<class Impl>
+void
+LSQ<Impl>::SingleDataRequest::initiateTranslation()
+{
+    _inst->translationStarted(true);
+    setState(State::Translation);
+    flags.set(Flag::TranslationStarted);
+
+    _inst->savedReq = this;
+    sendFragmentToTranslation(0);
+
+    if (isTranslationComplete()) {
+    }
+}
+
+template<class Impl>
+PacketPtr
+LSQ<Impl>::SplitDataRequest::mainPacket()
+{
+    return _mainPacket;
+}
+
+template<class Impl>
+RequestPtr
+LSQ<Impl>::SplitDataRequest::mainRequest()
+{
+    return mainReq;
+}
+
+template<class Impl>
+void
+LSQ<Impl>::SplitDataRequest::initiateTranslation()
+{
+    _inst->translationStarted(true);
+    setState(State::Translation);
+    flags.set(Flag::TranslationStarted);
+
+    unsigned int cacheLineSize = _port.cacheLineSize();
+    Addr base_addr = _addr;
+    Addr next_addr = addrBlockAlign(_addr + cacheLineSize, cacheLineSize);
+    Addr final_addr = addrBlockAlign(_addr + _size, cacheLineSize);
+    uint32_t size_so_far = 0;
+
+    mainReq = std::make_shared<Request>(_inst->getASID(), base_addr,
+                _size, _flags, _inst->masterId(),
+                _inst->instAddr(), _inst->contextId());
+
+    // Paddr is not used in mainReq. However, we will accumulate the flags
+    // from the sub requests into mainReq by calling setFlags() in finish().
+    // setFlags() assumes that paddr is set so flip the paddr valid bit here to
+    // avoid a potential assert in setFlags() when we call it from  finish().
+    mainReq->setPaddr(0);
+
+    /* Get the pre-fix, possibly unaligned. */
+    _requests.push_back(std::make_shared<Request>(_inst->getASID(), base_addr,
+                next_addr - base_addr, _flags, _inst->masterId(),
+                _inst->instAddr(), _inst->contextId()));
+    size_so_far = next_addr - base_addr;
+
+    /* We are block aligned now, reading whole blocks. */
+    base_addr = next_addr;
+    while (base_addr != final_addr) {
+        _requests.push_back(std::make_shared<Request>(_inst->getASID(),
+                    base_addr, cacheLineSize, _flags, _inst->masterId(),
+                    _inst->instAddr(), _inst->contextId()));
+        size_so_far += cacheLineSize;
+        base_addr += cacheLineSize;
+    }
+
+    /* Deal with the tail. */
+    if (size_so_far < _size) {
+        _requests.push_back(std::make_shared<Request>(_inst->getASID(),
+                    base_addr, _size - size_so_far, _flags, _inst->masterId(),
+                    _inst->instAddr(), _inst->contextId()));
+    }
+
+    /* Setup the requests and send them to translation. */
+    for (auto& r: _requests) {
+        r->setReqInstSeqNum(_inst->seqNum);
+        r->taskId(_taskId);
+    }
+    this->_inst->savedReq = this;
+    numInTranslationFragments = 0;
+    numTranslatedFragments = 0;
+
+    for (uint32_t i = 0; i < _requests.size(); i++) {
+        sendFragmentToTranslation(i);
+    }
+}
+
+template<class Impl>
+void
+LSQ<Impl>::LSQRequest::sendFragmentToTranslation(int i)
+{
+    numInTranslationFragments++;
+    _port.dTLB()->translateTiming(
+            this->request(i),
+            this->_inst->thread->getTC(), this,
+            this->isLoad() ? BaseTLB::Read : BaseTLB::Write);
+}
+
+template<class Impl>
+bool
+LSQ<Impl>::SingleDataRequest::recvTimingResp(PacketPtr pkt)
+{
+    assert(_numOutstandingPackets == 1);
+    auto state = dynamic_cast<LSQSenderState*>(pkt->senderState);
+    setState(State::Complete);
+    flags.set(Flag::Complete);
+    state->outstanding--;
+    assert(pkt == _packets.front());
+    _port.completeDataAccess(pkt);
+    return true;
+}
+
+template<class Impl>
+bool
+LSQ<Impl>::SplitDataRequest::recvTimingResp(PacketPtr pkt)
+{
+    auto state = dynamic_cast<LSQSenderState*>(pkt->senderState);
+    uint32_t pktIdx = 0;
+    while (pktIdx < _packets.size() && pkt != _packets[pktIdx])
+        pktIdx++;
+    assert(pktIdx < _packets.size());
+    assert(pkt->req == _requests[pktIdx]);
+    assert(pkt == _packets[pktIdx]);
+    numReceivedPackets++;
+    state->outstanding--;
+    if (numReceivedPackets == _packets.size()) {
+        setState(State::Complete);
+        flags.set(Flag::Complete);
+        /* Assemble packets. */
+        PacketPtr resp = isLoad()
+            ? Packet::createRead(mainReq)
+            : Packet::createWrite(mainReq);
+        if (isLoad())
+            resp->dataStatic(_inst->memData);
+        else
+            resp->dataStatic(_data);
+        resp->senderState = _senderState;
+        _port.completeDataAccess(resp);
+        delete resp;
+    }
+    return true;
+}
+
+template<class Impl>
+void
+LSQ<Impl>::SingleDataRequest::buildPackets()
+{
+    assert(_senderState);
+    /* Retries do not create new packets. */
+    if (_packets.size() == 0) {
+        _packets.push_back(
+                isLoad()
+                    ?  Packet::createRead(request())
+                    :  Packet::createWrite(request()));
+        _packets.back()->dataStatic(_inst->memData);
+        _packets.back()->senderState = _senderState;
+    }
+    assert(_packets.size() == 1);
+}
+
+template<class Impl>
+void
+LSQ<Impl>::SplitDataRequest::buildPackets()
+{
+    /* Extra data?? */
+    ptrdiff_t offset = 0;
+    if (_packets.size() == 0) {
+        /* New stuff */
+        if (isLoad()) {
+            _mainPacket = Packet::createRead(mainReq);
+            _mainPacket->dataStatic(_inst->memData);
+        }
+        for (auto& r: _requests) {
+            PacketPtr pkt = isLoad() ? Packet::createRead(r)
+                                    : Packet::createWrite(r);
+            if (isLoad()) {
+                pkt->dataStatic(_inst->memData + offset);
+            } else {
+                uint8_t* req_data = new uint8_t[r->getSize()];
+                std::memcpy(req_data,
+                        _inst->memData + offset,
+                        r->getSize());
+                pkt->dataDynamic(req_data);
+            }
+            offset += r->getSize();
+            pkt->senderState = _senderState;
+            _packets.push_back(pkt);
+        }
+    }
+    assert(_packets.size() == _requests.size());
+}
+
+template<class Impl>
+void
+LSQ<Impl>::SingleDataRequest::sendPacketToCache()
+{
+    assert(_numOutstandingPackets == 0);
+    if (lsqUnit()->trySendPacket(isLoad(), _packets.at(0)))
+        _numOutstandingPackets = 1;
+}
+
+template<class Impl>
+void
+LSQ<Impl>::SplitDataRequest::sendPacketToCache()
+{
+    /* Try to send the packets. */
+    while (numReceivedPackets + _numOutstandingPackets < _packets.size() &&
+            lsqUnit()->trySendPacket(isLoad(),
+                _packets.at(numReceivedPackets + _numOutstandingPackets))) {
+        _numOutstandingPackets++;
+    }
+}
+
+template<class Impl>
+void
+LSQ<Impl>::SingleDataRequest::handleIprWrite(ThreadContext *thread,
+                                             PacketPtr pkt)
+{
+    TheISA::handleIprWrite(thread, pkt);
+}
+
+template<class Impl>
+void
+LSQ<Impl>::SplitDataRequest::handleIprWrite(ThreadContext *thread,
+                                            PacketPtr mainPkt)
+{
+    unsigned offset = 0;
+    for (auto r: _requests) {
+        PacketPtr pkt = new Packet(r, MemCmd::WriteReq);
+        pkt->dataStatic(mainPkt->getPtr<uint8_t>() + offset);
+        TheISA::handleIprWrite(thread, pkt);
+        offset += r->getSize();
+        delete pkt;
+    }
+}
+
+template<class Impl>
+Cycles
+LSQ<Impl>::SingleDataRequest::handleIprRead(ThreadContext *thread,
+                                            PacketPtr pkt)
+{
+    return TheISA::handleIprRead(thread, pkt);
+}
+
+template<class Impl>
+Cycles
+LSQ<Impl>::SplitDataRequest::handleIprRead(ThreadContext *thread,
+                                           PacketPtr mainPkt)
+{
+    Cycles delay(0);
+    unsigned offset = 0;
+
+    for (auto r: _requests) {
+        PacketPtr pkt = new Packet(r, MemCmd::ReadReq);
+        pkt->dataStatic(mainPkt->getPtr<uint8_t>() + offset);
+        Cycles d = TheISA::handleIprRead(thread, pkt);
+        if (d > delay)
+            delay = d;
+        offset += r->getSize();
+        delete pkt;
+    }
+    return delay;
+}
+
+template<class Impl>
+bool
+LSQ<Impl>::SingleDataRequest::isCacheBlockHit(Addr blockAddr, Addr blockMask)
+{
+    return ( (LSQRequest::_requests[0]->getPaddr() & blockMask) == blockAddr);
+}
+
+template<class Impl>
+bool
+LSQ<Impl>::SplitDataRequest::isCacheBlockHit(Addr blockAddr, Addr blockMask)
+{
+    bool is_hit = false;
+    for (auto &r: _requests) {
+        if ((r->getPaddr() & blockMask) == blockAddr) {
+            is_hit = true;
+            break;
+        }
+    }
+    return is_hit;
 }
 
 #endif//__CPU_O3_LSQ_IMPL_HH__
