@@ -1,3 +1,0 @@
-warn: Unknown operating system; assuming Linux.
-warn: Sockets disabled, not accepting gdb connections
-warn: ClockedObject: More than one power state change request encountered within the same simulation tick
