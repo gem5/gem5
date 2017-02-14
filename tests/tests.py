@@ -174,6 +174,11 @@ def _run_tests_args(subparsers):
     _add_format_args(parser)
 
 def _run_tests(args):
+    if not os.path.isfile(args.gem5) or not os.access(args.gem5, os.X_OK):
+        print >> sys.stderr, \
+            "gem5 binary '%s' not an executable file" % args.gem5
+        sys.exit(2)
+
     formatter = _create_formatter(args)
 
     out_base = os.path.abspath(args.directory)
