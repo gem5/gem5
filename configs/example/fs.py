@@ -143,7 +143,7 @@ def build_test_system(np):
                     for i in xrange(np)]
 
     if is_kvm_cpu(TestCPUClass) or is_kvm_cpu(FutureClass):
-        test_sys.vm = KvmVM()
+        test_sys.kvm_vm = KvmVM()
 
     if options.ruby:
         # Check for timing mode because ruby does not support atomic accesses
@@ -280,7 +280,7 @@ def build_drive_system(np):
         drive_sys.kernel = binary(options.kernel)
 
     if is_kvm_cpu(DriveCPUClass):
-        drive_sys.vm = KvmVM()
+        drive_sys.kvm_vm = KvmVM()
 
     drive_sys.iobridge = Bridge(delay='50ns',
                                 ranges = drive_sys.mem_ranges)

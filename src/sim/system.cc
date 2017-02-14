@@ -53,6 +53,10 @@
 #include "base/loader/symtab.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
+#include "config/use_kvm.hh"
+#if USE_KVM
+#include "cpu/kvm/vm.hh"
+#endif
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "debug/WorkItems.hh"
@@ -90,6 +94,11 @@ System::System(Params *p)
       kernel(nullptr),
       loadAddrMask(p->load_addr_mask),
       loadAddrOffset(p->load_offset),
+#if USE_KVM
+      kvmVM(p->kvm_vm),
+#else
+      kvmVM(nullptr),
+#endif
       physmem(name() + ".physmem", p->memories, p->mmap_using_noreserve),
       memoryMode(p->mem_mode),
       _cacheLineSize(p->cache_line_size),
@@ -103,6 +112,12 @@ System::System(Params *p)
 {
     // add self to global system list
     systemList.push_back(this);
+
+#if USE_KVM
+    if (kvmVM) {
+        kvmVM->setSystem(this);
+    }
+#endif
 
     if (FullSystem) {
         kernelSymtab = new SymbolTable;

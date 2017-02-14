@@ -400,6 +400,11 @@ class KvmVM : public SimObject
     /** Global KVM interface */
     Kvm *kvm;
 
+    /**
+     * Initialize system pointer. Invoked by system object.
+     */
+    void setSystem(System *s);
+
 #if defined(__aarch64__)
   public: // ARM-specific
     /**

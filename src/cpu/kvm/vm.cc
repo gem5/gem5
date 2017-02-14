@@ -292,7 +292,7 @@ Kvm::createVM()
 
 KvmVM::KvmVM(KvmVMParams *params)
     : SimObject(params),
-      kvm(new Kvm()), system(params->system),
+      kvm(new Kvm()), system(nullptr),
       vmFD(kvm->createVM()),
       started(false),
       nextVCPUID(0)
@@ -342,6 +342,7 @@ KvmVM::cpuStartup()
 void
 KvmVM::delayedStartup()
 {
+    assert(system); // set by the system during its construction
     const std::vector<BackingStoreEntry> &memories(
         system->getPhysMem().getBackingStore());
 
@@ -524,6 +525,13 @@ KvmVM::createDevice(uint32_t type, uint32_t flags)
 #else
     panic("Kernel headers don't support KVM_CREATE_DEVICE\n");
 #endif
+}
+
+void
+KvmVM::setSystem(System *s) {
+    panic_if(system != nullptr, "setSystem() can only be called once");
+    panic_if(s == nullptr, "setSystem() called with null System*");
+    system = s;
 }
 
 int

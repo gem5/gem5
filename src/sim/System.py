@@ -29,6 +29,7 @@
 #          Rick Strong
 
 from m5.SimObject import SimObject
+from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
@@ -106,3 +107,6 @@ class System(MemObject):
     # Dynamic voltage and frequency handler for the system, disabled by default
     # Provide list of domains that need to be controlled by the handler
     dvfs_handler = DVFSHandler()
+
+    if buildEnv['USE_KVM']:
+        kvm_vm = Param.KvmVM(NULL, 'KVM VM (i.e., shared memory domain)')

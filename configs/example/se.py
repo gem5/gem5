@@ -209,7 +209,7 @@ for cpu in system.cpu:
 
 if is_kvm_cpu(CPUClass) or is_kvm_cpu(FutureClass):
     if buildEnv['TARGET_ISA'] == 'x86':
-        system.vm = KvmVM()
+        system.kvm_vm = KvmVM()
         for process in multiprocesses:
             process.useArchPT = True
             process.kvmInSE = True

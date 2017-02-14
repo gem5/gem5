@@ -106,7 +106,8 @@ KvmKernelGicV2::setIntState(unsigned type, unsigned vcpu, unsigned irq,
 KvmGic::KvmGic(const KvmGicParams *p)
     : BaseGic(p),
       system(*p->system),
-      kernelGic(*p->kvmVM, p->cpu_addr, p->dist_addr, p->it_lines),
+      kernelGic(*system.getKvmVM(),
+                p->cpu_addr, p->dist_addr, p->it_lines),
       addrRanges{kernelGic.distRange, kernelGic.cpuRange}
 {
 }

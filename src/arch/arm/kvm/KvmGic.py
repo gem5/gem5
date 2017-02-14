@@ -52,4 +52,3 @@ class KvmGic(BaseGic):
 
     system = Param.System(Parent.any,
                           'System this interrupt controller belongs to')
-    kvmVM = Param.KvmVM(Parent.any, 'KVM VM (i.e., shared memory domain)')

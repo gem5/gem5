@@ -72,6 +72,7 @@
 
 class BaseRemoteGDB;
 class GDBListener;
+class KvmVM;
 class ObjectFile;
 class ThreadContext;
 
@@ -249,6 +250,14 @@ class System : public MemObject
     Addr loadAddrOffset;
 
   public:
+    /**
+     * Get a pointer to the Kernel Virtual Machine (KVM) SimObject,
+     * if present.
+     */
+    KvmVM* getKvmVM() {
+        return kvmVM;
+    }
+
     /** Get a pointer to access the physical memory of the system */
     PhysicalMemory& getPhysMem() { return physmem; }
 
@@ -288,6 +297,8 @@ class System : public MemObject
     ThermalModel * getThermalModel() const { return thermalModel; }
 
   protected:
+
+    KvmVM *const kvmVM;
 
     PhysicalMemory physmem;
 
