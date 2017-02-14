@@ -63,13 +63,17 @@ def build_switch(options):
         link.int0 = switch.interface[i]
 
     return switch
-# Add options
-parser = optparse.OptionParser()
-Options.addCommonOptions(parser)
-Options.addFSOptions(parser)
-(options, args) = parser.parse_args()
 
-system = build_switch(options)
-root = Root(full_system = True, system = system)
-Simulation.run(options, root, None, None)
+def main():
+    # Add options
+    parser = optparse.OptionParser()
+    Options.addCommonOptions(parser)
+    Options.addFSOptions(parser)
+    (options, args) = parser.parse_args()
 
+    system = build_switch(options)
+    root = Root(full_system = True, system = system)
+    Simulation.run(options, root, None, None)
+
+if __name__ == "__m5_main__":
+    main()
