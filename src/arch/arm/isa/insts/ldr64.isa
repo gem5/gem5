@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2014 ARM Limited
+// Copyright (c) 2011-2014, 2017 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -415,6 +415,11 @@ let {{
     LoadEx64("ldxr", "LDXRW64", 4, flavor="exclusive").emit()
     LoadEx64("ldxrh", "LDXRH64", 2, flavor="exclusive").emit()
     LoadEx64("ldxrb", "LDXRB64", 1, flavor="exclusive").emit()
+
+    LoadRaw64("ldapr", "LDAPRX64", 8, flavor="acquire").emit()
+    LoadRaw64("ldapr", "LDAPRW64", 4, flavor="acquire").emit()
+    LoadRaw64("ldaprh", "LDAPRH64", 2, flavor="acquire").emit()
+    LoadRaw64("ldaprb", "LDAPRB64", 1, flavor="acquire").emit()
 
     class LoadImmU64(LoadImm64):
         decConstBase = 'LoadStoreImmU64'

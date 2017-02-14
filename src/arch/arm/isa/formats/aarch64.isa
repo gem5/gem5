@@ -782,68 +782,126 @@ namespace Aarch64
                     return new Unknown64(machInst);
                 }
             } else if (bits(machInst, 21) == 1) {
-                if (bits(machInst, 11, 10) != 0x2)
-                    return new Unknown64(machInst);
-                if (!bits(machInst, 14))
-                    return new Unknown64(machInst);
-                IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 4, 0);
-                IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 9, 5);
-                IntRegIndex rnsp = makeSP(rn);
-                IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 20, 16);
-                ArmExtendType type =
-                    (ArmExtendType)(uint32_t)bits(machInst, 15, 13);
-                uint8_t s = bits(machInst, 12);
-                switch (switchVal) {
-                  case 0x00:
-                    return new STRB64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x01:
-                    return new LDRB64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x02:
-                    return new LDRSBX64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x03:
-                    return new LDRSBW64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x04:
-                    return new STRBFP64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x05:
-                    return new LDRBFP64_REG(machInst, rt, rnsp, rm, type, 0);
-                  case 0x6:
-                    return new BigFpMemReg("str", machInst, false,
-                                           rt, rnsp, rm, type, s * 4);
-                  case 0x7:
-                    return new BigFpMemReg("ldr", machInst, true,
-                                           rt, rnsp, rm, type, s * 4);
-                  case 0x08:
-                    return new STRH64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x09:
-                    return new LDRH64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x0a:
-                    return new LDRSHX64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x0b:
-                    return new LDRSHW64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x0c:
-                    return new STRHFP64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x0d:
-                    return new LDRHFP64_REG(machInst, rt, rnsp, rm, type, s);
-                  case 0x10:
-                    return new STRW64_REG(machInst, rt, rnsp, rm, type, s * 2);
-                  case 0x11:
-                    return new LDRW64_REG(machInst, rt, rnsp, rm, type, s * 2);
-                  case 0x12:
-                    return new LDRSW64_REG(machInst, rt, rnsp, rm, type, s * 2);
-                  case 0x14:
-                    return new STRSFP64_REG(machInst, rt, rnsp, rm, type, s * 2);
-                  case 0x15:
-                    return new LDRSFP64_REG(machInst, rt, rnsp, rm, type, s * 2);
-                  case 0x18:
-                    return new STRX64_REG(machInst, rt, rnsp, rm, type, s * 3);
-                  case 0x19:
-                    return new LDRX64_REG(machInst, rt, rnsp, rm, type, s * 3);
-                  case 0x1a:
-                    return new PRFM64_REG(machInst, rt, rnsp, rm, type, s * 3);
-                  case 0x1c:
-                    return new STRDFP64_REG(machInst, rt, rnsp, rm, type, s * 3);
-                  case 0x1d:
-                    return new LDRDFP64_REG(machInst, rt, rnsp, rm, type, s * 3);
+                uint8_t group = bits(machInst, 11, 10);
+                switch (group) {
+                  case 0x0:
+                    {
+                        if ((switchVal & 0x7) == 0x2 &&
+                                bits(machInst, 20, 12) == 0x1fc) {
+                            IntRegIndex rt = (IntRegIndex)(uint32_t)
+                                bits(machInst, 4, 0);
+                            IntRegIndex rn = (IntRegIndex)(uint32_t)
+                                bits(machInst, 9, 5);
+                            IntRegIndex rnsp = makeSP(rn);
+                            uint8_t size = bits(machInst, 31, 30);
+                            switch (size) {
+                              case 0x0:
+                                return new LDAPRB64(machInst, rt, rnsp);
+                              case 0x1:
+                                return new LDAPRH64(machInst, rt, rnsp);
+                              case 0x2:
+                                return new LDAPRW64(machInst, rt, rnsp);
+                              case 0x3:
+                                return new LDAPRX64(machInst, rt, rnsp);
+                              default:
+                                M5_UNREACHABLE;
+                            }
+                        } else {
+                            return new Unknown64(machInst);
+                        }
+                    }
+                  case 0x2:
+                    {
+                        if (!bits(machInst, 14))
+                            return new Unknown64(machInst);
+                        IntRegIndex rt = (IntRegIndex)(uint32_t)
+                            bits(machInst, 4, 0);
+                        IntRegIndex rn = (IntRegIndex)(uint32_t)
+                            bits(machInst, 9, 5);
+                        IntRegIndex rnsp = makeSP(rn);
+                        IntRegIndex rm = (IntRegIndex)(uint32_t)
+                            bits(machInst, 20, 16);
+                        ArmExtendType type =
+                            (ArmExtendType)(uint32_t)bits(machInst, 15, 13);
+                        uint8_t s = bits(machInst, 12);
+                        switch (switchVal) {
+                          case 0x00:
+                            return new STRB64_REG(machInst, rt, rnsp, rm,
+                                                  type, 0);
+                          case 0x01:
+                            return new LDRB64_REG(machInst, rt, rnsp, rm,
+                                                  type, 0);
+                          case 0x02:
+                            return new LDRSBX64_REG(machInst, rt, rnsp, rm,
+                                                    type, 0);
+                          case 0x03:
+                            return new LDRSBW64_REG(machInst, rt, rnsp, rm,
+                                                    type, 0);
+                          case 0x04:
+                            return new STRBFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, 0);
+                          case 0x05:
+                            return new LDRBFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, 0);
+                          case 0x6:
+                            return new BigFpMemReg("str", machInst, false,
+                                                   rt, rnsp, rm, type, s * 4);
+                          case 0x7:
+                            return new BigFpMemReg("ldr", machInst, true,
+                                                   rt, rnsp, rm, type, s * 4);
+                          case 0x08:
+                            return new STRH64_REG(machInst, rt, rnsp, rm,
+                                                  type, s);
+                          case 0x09:
+                            return new LDRH64_REG(machInst, rt, rnsp, rm,
+                                                  type, s);
+                          case 0x0a:
+                            return new LDRSHX64_REG(machInst, rt, rnsp, rm,
+                                                    type, s);
+                          case 0x0b:
+                            return new LDRSHW64_REG(machInst, rt, rnsp, rm,
+                                                    type, s);
+                          case 0x0c:
+                            return new STRHFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s);
+                          case 0x0d:
+                            return new LDRHFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s);
+                          case 0x10:
+                            return new STRW64_REG(machInst, rt, rnsp, rm,
+                                                  type, s * 2);
+                          case 0x11:
+                            return new LDRW64_REG(machInst, rt, rnsp, rm,
+                                                  type, s * 2);
+                          case 0x12:
+                            return new LDRSW64_REG(machInst, rt, rnsp, rm,
+                                                   type, s * 2);
+                          case 0x14:
+                            return new STRSFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s * 2);
+                          case 0x15:
+                            return new LDRSFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s * 2);
+                          case 0x18:
+                            return new STRX64_REG(machInst, rt, rnsp, rm,
+                                                  type, s * 3);
+                          case 0x19:
+                            return new LDRX64_REG(machInst, rt, rnsp, rm,
+                                                  type, s * 3);
+                          case 0x1a:
+                            return new PRFM64_REG(machInst, rt, rnsp, rm,
+                                                  type, s * 3);
+                          case 0x1c:
+                            return new STRDFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s * 3);
+                          case 0x1d:
+                            return new LDRDFP64_REG(machInst, rt, rnsp, rm,
+                                                    type, s * 3);
+                          default:
+                            return new Unknown64(machInst);
+
+                        }
+                    }
                   default:
                     return new Unknown64(machInst);
                 }
