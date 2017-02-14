@@ -108,10 +108,7 @@ def createSystem(caches, kernel, bootscript, disks=[]):
     return sys
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Generic ARM big.LITTLE configuration")
-
+def addOptions(parser):
     parser.add_argument("--restore-from", type=str, default=None,
                         help="Restore from checkpoint")
     parser.add_argument("--dtb", type=str, default=default_dtb,
@@ -138,10 +135,11 @@ def main():
                         help="Big CPU clock frequency")
     parser.add_argument("--little-cpu-clock", type=str, default="1GHz",
                         help="Little CPU clock frequency")
+    return parser
 
+
+def build(options):
     m5.ticks.fixGlobalFrequency()
-
-    options = parser.parse_args()
 
     kernel_cmd = [
         "earlyprintk=pl011,0x1c090000",
@@ -208,26 +206,43 @@ def main():
     # Linux device tree
     system.dtb_filename = SysPaths.binary(options.dtb)
 
+    return root
+
+
+def instantiate(checkpoint_path=None):
     # Get and load from the chkpt or simpoint checkpoint
-    if options.restore_from is not None:
-        m5.instantiate(options.restore_from)
+    if checkpoint_path is not None:
+        m5.util.inform("Restoring from checkpoint %s", checkpoint_path)
+        m5.instantiate(checkpoint_path)
     else:
         m5.instantiate()
 
+
+def run(checkpoint_dir=m5.options.outdir):
     # start simulation (and drop checkpoints when requested)
     while True:
         event = m5.simulate()
         exit_msg = event.getCause()
         if exit_msg == "checkpoint":
             print "Dropping checkpoint at tick %d" % m5.curTick()
-            cpt_dir = os.path.join(m5.options.outdir, "cpt.%d" % m5.curTick())
-            m5.checkpoint(os.path.join(cpt_dir))
+            cpt_dir = os.path.join(checkpoint_dir, "cpt.%d" % m5.curTick())
+            m5.checkpoint(cpt_dir)
             print "Checkpoint done."
         else:
             print exit_msg, " @ ", m5.curTick()
             break
 
     sys.exit(event.getCode())
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generic ARM big.LITTLE configuration")
+    addOptions(parser)
+    options = parser.parse_args()
+    root = build(options)
+    instantiate(options.restore_from)
+    run()
 
 
 if __name__ == "__m5_main__":
