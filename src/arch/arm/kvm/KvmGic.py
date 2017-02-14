@@ -38,20 +38,7 @@
 from m5.params import *
 from m5.proxy import *
 
-from Gic import BaseGic, Pl390
-from KvmVM import KvmVM
-from System import System
-
-class KvmGic(BaseGic):
-    type = 'KvmGic'
-    cxx_header = "arch/arm/kvm/gic.hh"
-
-    dist_addr = Param.Addr(0x1f001000, "Address for distributor")
-    cpu_addr = Param.Addr(0x1f000100, "Address for cpu")
-    it_lines = Param.UInt32(128, "Number of interrupt lines supported")
-
-    system = Param.System(Parent.any,
-                          'System this interrupt controller belongs to')
+from Gic import Pl390
 
 class MuxingKvmGic(Pl390):
     type = 'MuxingKvmGic'

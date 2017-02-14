@@ -44,7 +44,6 @@
 
 #include "arch/arm/kvm/base_cpu.hh"
 #include "debug/Interrupt.hh"
-#include "params/KvmGic.hh"
 #include "params/MuxingKvmGic.hh"
 
 KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, Addr cpu_addr, Addr dist_addr,
@@ -103,88 +102,6 @@ KvmKernelGicV2::setIntState(unsigned type, unsigned vcpu, unsigned irq,
         (irq << KVM_ARM_IRQ_NUM_SHIFT));
 
     vm.setIRQLine(line, high);
-}
-
-
-KvmGic::KvmGic(const KvmGicParams *p)
-    : BaseGic(p),
-      system(*p->system),
-      kernelGic(*system.getKvmVM(),
-                p->cpu_addr, p->dist_addr, p->it_lines),
-      addrRanges{kernelGic.distRange, kernelGic.cpuRange}
-{
-}
-
-KvmGic::~KvmGic()
-{
-}
-
-void
-KvmGic::serialize(CheckpointOut &cp) const
-{
-    panic("Checkpointing unsupported\n");
-}
-
-void
-KvmGic::unserialize(CheckpointIn &cp)
-{
-    panic("Checkpointing unsupported\n");
-}
-
-Tick
-KvmGic::read(PacketPtr pkt)
-{
-    panic("KvmGic: PIO from gem5 is currently unsupported\n");
-}
-
-Tick
-KvmGic::write(PacketPtr pkt)
-{
-    panic("KvmGic: PIO from gem5 is currently unsupported\n");
-}
-
-void
-KvmGic::sendInt(uint32_t num)
-{
-    DPRINTF(Interrupt, "Set SPI %d\n", num);
-    kernelGic.setSPI(num);
-}
-
-void
-KvmGic::clearInt(uint32_t num)
-{
-    DPRINTF(Interrupt, "Clear SPI %d\n", num);
-    kernelGic.clearSPI(num);
-}
-
-void
-KvmGic::sendPPInt(uint32_t num, uint32_t cpu)
-{
-    DPRINTF(Interrupt, "Set PPI %d:%d\n", cpu, num);
-    kernelGic.setPPI(cpu, num);
-}
-
-void
-KvmGic::clearPPInt(uint32_t num, uint32_t cpu)
-{
-    DPRINTF(Interrupt, "Clear PPI %d:%d\n", cpu, num);
-    kernelGic.clearPPI(cpu, num);
-}
-
-void
-KvmGic::verifyMemoryMode() const
-{
-    if (!(system.isAtomicMode() && system.bypassCaches())) {
-        fatal("The in-kernel KVM GIC can only be used with KVM CPUs, but the "
-              "current memory mode does not support KVM.\n");
-    }
-}
-
-
-KvmGic *
-KvmGicParams::create()
-{
-    return new KvmGic(this);
 }
 
 

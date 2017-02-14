@@ -44,7 +44,6 @@
 #include "arch/arm/system.hh"
 #include "cpu/kvm/device.hh"
 #include "cpu/kvm/vm.hh"
-#include "dev/arm/base_gic.hh"
 #include "dev/arm/gic_pl390.hh"
 #include "dev/platform.hh"
 
@@ -138,74 +137,6 @@ class KvmKernelGicV2
     KvmDevice kdev;
 };
 
-struct KvmGicParams;
-
-/**
- * In-kernel GIC model.
- *
- * When using a KVM-based CPU model, it is possible to offload GIC
- * emulation to the kernel. This reduces some overheads when the guest
- * accesses the GIC and makes it possible to use in-kernel
- * architected/generic timer emulation.
- *
- * This device uses interfaces with the kernel GicV2 model that is
- * documented in Documentation/virtual/kvm/devices/arm-vgic.txt in the
- * Linux kernel sources.
- *
- * This GIC model has the following known limitations:
- * <ul>
- *   <li>Checkpointing is not supported.
- *   <li>This model only works with kvm. Simulated CPUs are not
- *       supported since this would require the kernel to inject
- *       interrupt into the simulated CPU.
- * </ul>
- *
- * @warn This GIC model cannot be used with simulated CPUs!
- */
-class KvmGic : public BaseGic
-{
-  public: // SimObject / Serializable / Drainable
-    KvmGic(const KvmGicParams *p);
-    ~KvmGic();
-
-    void startup() override { verifyMemoryMode(); }
-    void drainResume() override { verifyMemoryMode(); }
-
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
-
-  public: // PioDevice
-    AddrRangeList getAddrRanges() const { return addrRanges; }
-    Tick read(PacketPtr pkt) override;
-    Tick write(PacketPtr pkt) override;
-
-  public: // BaseGic
-    void sendInt(uint32_t num) override;
-    void clearInt(uint32_t num) override;
-
-    void sendPPInt(uint32_t num, uint32_t cpu) override;
-    void clearPPInt(uint32_t num, uint32_t cpu) override;
-
-  protected:
-    /**
-     * Do memory mode sanity checks
-     *
-     * This method only really exists to warn users that try to switch
-     * to a simulate CPU. There is no fool proof method to detect
-     * simulated CPUs, but checking that we're in atomic mode and
-     * bypassing caches should be robust enough.
-     */
-    void verifyMemoryMode() const;
-
-    /** System this interrupt controller belongs to */
-    System &system;
-
-    /** Kernel GIC device */
-    KvmKernelGicV2 kernelGic;
-
-    /** Union of all memory  */
-    const AddrRangeList addrRanges;
-};
 
 struct MuxingKvmGicParams;
 
