@@ -64,6 +64,14 @@
 # its upgrader (or downgrader) can run.  It is still the case that a tag
 # can only be used once.
 
+# Dependencies between tags are expressed by two variables at the top-level
+# of the upgrader script: "depends" can be either a string naming another
+# tag that it depends upon or a list of such strings; and "fwd_depends"
+# accepts the same datatypes but it reverses the sense of the dependency
+# arrow(s) -- it expresses that that tag depends upon the tag of the current
+# upgrader. This can be especially valuable when maintaining private
+# upgraders in private branches.
+
 
 import ConfigParser
 import glob, types, sys, os
@@ -93,6 +101,20 @@ class Upgrader:
             self.depends = []
         elif isinstance(self.depends, str):
             self.depends = [self.depends]
+
+        if not isinstance(self.depends, list):
+            print "Error: 'depends' for %s is the wrong type" % self.tag
+            sys.exit(1)
+
+        if hasattr(self, 'fwd_depends'):
+            if isinstance(self.fwd_depends, str):
+                self.fwd_depends = [self.fwd_depends]
+        else:
+            self.fwd_depends = []
+
+        if not isinstance(self.fwd_depends, list):
+            print "Error: 'fwd_depends' for %s is the wrong type" % self.tag
+            sys.exit(1)
 
         if hasattr(self, 'upgrader'):
             if not isinstance(self.upgrader, types.FunctionType):
@@ -147,6 +169,20 @@ class Upgrader:
         while i in Upgrader.legacy:
             Upgrader.legacy[i].depends = [Upgrader.legacy[i-1].tag]
             i = i + 1
+
+        # resolve forward dependencies and audit normal dependencies
+        for tag, upg in Upgrader.by_tag.items():
+            for fd in upg.fwd_depends:
+                if fd not in Upgrader.by_tag:
+                    print "Error: '%s' cannot (forward) depend on "\
+                          "nonexistent tag '%s'" % (fd, tag)
+                    sys.exit(1)
+                Upgrader.by_tag[fd].depends.append(tag)
+            for dep in upg.depends:
+                if dep not in Upgrader.by_tag:
+                    print "Error: '%s' cannot depend on "\
+                          "nonexistent tag '%s'" % (tag, dep)
+                    sys.exit(1)
 
 def process_file(path, **kwargs):
     if not osp.isfile(path):
