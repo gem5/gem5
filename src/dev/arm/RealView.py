@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2015 ARM Limited
+# Copyright (c) 2009-2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -56,6 +56,18 @@ from Gic import *
 from EnergyCtrl import EnergyCtrl
 from ClockDomain import SrcClockDomain
 from SubSystem import SubSystem
+
+# Platforms with KVM support should generally use in-kernel GIC
+# emulation. Use a GIC model that automatically switches between
+# gem5's GIC model and KVM's GIC model if KVM is available.
+try:
+    from KvmGic import MuxingKvmGic
+    kvm_gicv2_class = MuxingKvmGic
+except ImportError:
+    # KVM support wasn't compiled into gem5. Fallback to a
+    # software-only GIC.
+    kvm_gicv2_class = Pl390
+    pass
 
 class AmbaPioDevice(BasicPioDevice):
     type = 'AmbaPioDevice'
@@ -883,7 +895,8 @@ Interrupts:
     dcc = CoreTile2A15DCC()
 
     ### On-chip devices ###
-    gic = Pl390(dist_addr=0x2c001000, cpu_addr=0x2c002000, it_lines=512)
+    gic = kvm_gicv2_class(dist_addr=0x2c001000, cpu_addr=0x2c002000,
+                          it_lines=512)
     vgic = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
     gicv2m = Gicv2m()
     gicv2m.frames = [
