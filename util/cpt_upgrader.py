@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-# Copyright (c) 2012-2013,2015 ARM Limited
+# Copyright (c) 2012-2013,2015-2016 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -57,6 +57,13 @@
 # be isa specific the method can verify the isa and use regexes to find the
 # correct sections that need to be updated.
 
+# It is also possible to use this mechanism to revert prior tags.  In this
+# case, implement a downgrade() method instead.  Dependencies should still
+# work naturally - a tag depending on a tag with a downgrader means that it
+# insists on the other tag being removed and its downgrader executed before
+# its upgrader (or downgrader) can run.  It is still the case that a tag
+# can only be used once.
+
 
 import ConfigParser
 import glob, types, sys, os
@@ -73,6 +80,7 @@ def verboseprint(*args):
 
 class Upgrader:
     tag_set = set()
+    untag_set = set() # tags to remove by downgrading
     by_tag = {}
     legacy = {}
     def __init__(self, filename):
@@ -86,19 +94,26 @@ class Upgrader:
         elif isinstance(self.depends, str):
             self.depends = [self.depends]
 
-        if not hasattr(self, 'upgrader'):
-            print "Error: no upgrader method for", self.tag
-            sys.exit(1)
-        elif not isinstance(self.upgrader, types.FunctionType):
-            print "Error: 'upgrader' for %s is %s, not function", \
-                self.tag, type(self)
+        if hasattr(self, 'upgrader'):
+            if not isinstance(self.upgrader, types.FunctionType):
+                print "Error: 'upgrader' for %s is %s, not function" \
+                    % (self.tag, type(self))
+                sys.exit(1)
+            Upgrader.tag_set.add(self.tag)
+        elif hasattr(self, 'downgrader'):
+            if not isinstance(self.downgrader, types.FunctionType):
+                print "Error: 'downgrader' for %s is %s, not function" \
+                    % (self.tag, type(self))
+                sys.exit(1)
+            Upgrader.untag_set.add(self.tag)
+        else:
+            print "Error: no upgrader or downgrader method for", self.tag
             sys.exit(1)
 
         if hasattr(self, 'legacy_version'):
             Upgrader.legacy[self.legacy_version] = self
 
         Upgrader.by_tag[self.tag] = self
-        Upgrader.tag_set.add(self.tag)
 
     def ready(self, tags):
         for dep in self.depends:
@@ -106,9 +121,15 @@ class Upgrader:
                 return False
         return True
 
-    def upgrade(self, cpt):
-        (self.upgrader)(cpt)
-        verboseprint("applied upgrade for", self.tag)
+    def update(self, cpt, tags):
+        if hasattr(self, 'upgrader'):
+            self.upgrader(cpt)
+            tags.add(self.tag)
+            verboseprint("applied upgrade for", self.tag)
+        else:
+            self.downgrader(cpt)
+            tags.remove(self.tag)
+            verboseprint("applied downgrade for", self.tag)
 
     @staticmethod
     def get(tag):
@@ -173,23 +194,23 @@ def process_file(path, **kwargs):
     # If the current checkpoint has a tag we don't know about, we have
     # a divergence that (in general) must be addressed by (e.g.) merging
     # simulator support for its changes.
-    unknown_tags = tags - Upgrader.tag_set
+    unknown_tags = tags - (Upgrader.tag_set | Upgrader.untag_set)
     if unknown_tags:
         print "warning: upgrade script does not recognize the following "\
               "tags in this checkpoint:", ' '.join(unknown_tags)
 
-    # Apply migrations for tags not in checkpoint, respecting dependences
-    to_apply = Upgrader.tag_set - tags
+    # Apply migrations for tags not in checkpoint and tags present for which
+    # downgraders are present, respecting dependences
+    to_apply = (Upgrader.tag_set - tags) | (Upgrader.untag_set & tags)
     while to_apply:
         ready = set([ t for t in to_apply if Upgrader.get(t).ready(tags) ])
         if not ready:
             print "could not apply these upgrades:", ' '.join(to_apply)
-            print "upgrade dependences impossible to resolve; aborting"
+            print "update dependences impossible to resolve; aborting"
             exit(1)
 
         for tag in ready:
-            Upgrader.get(tag).upgrade(cpt)
-            tags.add(tag)
+            Upgrader.get(tag).update(cpt, tags)
             change = True
 
         to_apply -= ready
