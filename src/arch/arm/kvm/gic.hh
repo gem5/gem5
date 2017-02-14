@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016 ARM Limited
+ * Copyright (c) 2015-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,6 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Andreas Sandberg
+ *          Curtis Dunham
  */
 
 #ifndef __ARCH_ARM_KVM_GIC_HH__
@@ -44,6 +45,7 @@
 #include "cpu/kvm/device.hh"
 #include "cpu/kvm/vm.hh"
 #include "dev/arm/base_gic.hh"
+#include "dev/arm/gic_pl390.hh"
 #include "dev/platform.hh"
 
 /**
@@ -203,6 +205,49 @@ class KvmGic : public BaseGic
 
     /** Union of all memory  */
     const AddrRangeList addrRanges;
+};
+
+struct MuxingKvmGicParams;
+
+class MuxingKvmGic : public Pl390
+{
+  public: // SimObject / Serializable / Drainable
+    MuxingKvmGic(const MuxingKvmGicParams *p);
+    ~MuxingKvmGic();
+
+    void startup() override;
+    void drainResume() override;
+
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+
+  public: // PioDevice
+    Tick read(PacketPtr pkt) override;
+    Tick write(PacketPtr pkt) override;
+
+  public: // Pl390
+    void sendInt(uint32_t num) override;
+    void clearInt(uint32_t num) override;
+
+    void sendPPInt(uint32_t num, uint32_t cpu) override;
+    void clearPPInt(uint32_t num, uint32_t cpu) override;
+
+  protected:
+    /** Verify gem5 configuration will support KVM emulation */
+    bool validKvmEnvironment() const;
+
+    /** System this interrupt controller belongs to */
+    System &system;
+
+    /** Kernel GIC device */
+    KvmKernelGicV2 *kernelGic;
+
+  private:
+    bool usingKvm;
+
+    /** Multiplexing implementation: state transfer functions */
+    void fromPl390ToKvm();
+    void fromKvmToPl390();
 };
 
 #endif // __ARCH_ARM_KVM_GIC_HH__

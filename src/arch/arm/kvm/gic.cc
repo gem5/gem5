@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016 ARM Limited
+ * Copyright (c) 2015-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,14 +35,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Andreas Sandberg
+ *          Curtis Dunham
  */
 
 #include "arch/arm/kvm/gic.hh"
 
 #include <linux/kvm.h>
 
+#include "arch/arm/kvm/base_cpu.hh"
 #include "debug/Interrupt.hh"
 #include "params/KvmGic.hh"
+#include "params/MuxingKvmGic.hh"
 
 KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, Addr cpu_addr, Addr dist_addr,
                                unsigned it_lines)
@@ -182,4 +185,148 @@ KvmGic *
 KvmGicParams::create()
 {
     return new KvmGic(this);
+}
+
+
+MuxingKvmGic::MuxingKvmGic(const MuxingKvmGicParams *p)
+    : Pl390(p),
+      system(*p->system),
+      kernelGic(nullptr),
+      usingKvm(false)
+{
+    if (auto vm = system.getKvmVM()) {
+        kernelGic = new KvmKernelGicV2(*vm, p->cpu_addr, p->dist_addr,
+                                       p->it_lines);
+    }
+}
+
+MuxingKvmGic::~MuxingKvmGic()
+{
+}
+
+void
+MuxingKvmGic::startup()
+{
+    usingKvm = (kernelGic != nullptr) && validKvmEnvironment();
+}
+
+void
+MuxingKvmGic::drainResume()
+{
+    bool use_kvm = (kernelGic != nullptr) && validKvmEnvironment();
+    if (use_kvm != usingKvm) {
+        if (use_kvm) // from simulation to KVM emulation
+            fromPl390ToKvm();
+        else // from KVM emulation to simulation
+            fromKvmToPl390();
+
+        usingKvm = use_kvm;
+    }
+}
+
+void
+MuxingKvmGic::serialize(CheckpointOut &cp) const
+{
+    if (!usingKvm)
+        return Pl390::serialize(cp);
+
+    panic("Checkpointing unsupported\n");
+}
+
+void
+MuxingKvmGic::unserialize(CheckpointIn &cp)
+{
+    if (!usingKvm)
+        return Pl390::unserialize(cp);
+
+    panic("Checkpointing unsupported\n");
+}
+
+Tick
+MuxingKvmGic::read(PacketPtr pkt)
+{
+    if (!usingKvm)
+        return Pl390::read(pkt);
+
+    panic("MuxingKvmGic: PIO from gem5 is currently unsupported\n");
+}
+
+Tick
+MuxingKvmGic::write(PacketPtr pkt)
+{
+    if (!usingKvm)
+        return Pl390::write(pkt);
+
+    panic("MuxingKvmGic: PIO from gem5 is currently unsupported\n");
+}
+
+void
+MuxingKvmGic::sendInt(uint32_t num)
+{
+    if (!usingKvm)
+        return Pl390::sendInt(num);
+
+    DPRINTF(Interrupt, "Set SPI %d\n", num);
+    kernelGic->setSPI(num);
+}
+
+void
+MuxingKvmGic::clearInt(uint32_t num)
+{
+    if (!usingKvm)
+        return Pl390::clearInt(num);
+
+    DPRINTF(Interrupt, "Clear SPI %d\n", num);
+    kernelGic->clearSPI(num);
+}
+
+void
+MuxingKvmGic::sendPPInt(uint32_t num, uint32_t cpu)
+{
+    if (!usingKvm)
+        return Pl390::sendPPInt(num, cpu);
+    DPRINTF(Interrupt, "Set PPI %d:%d\n", cpu, num);
+    kernelGic->setPPI(cpu, num);
+}
+
+void
+MuxingKvmGic::clearPPInt(uint32_t num, uint32_t cpu)
+{
+    if (!usingKvm)
+        return Pl390::clearPPInt(num, cpu);
+
+    DPRINTF(Interrupt, "Clear PPI %d:%d\n", cpu, num);
+    kernelGic->clearPPI(cpu, num);
+}
+
+bool
+MuxingKvmGic::validKvmEnvironment() const
+{
+    if (system.threadContexts.empty())
+        return false;
+
+    for (auto tc : system.threadContexts) {
+        if (dynamic_cast<BaseArmKvmCPU*>(tc->getCpuPtr()) == nullptr) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void
+MuxingKvmGic::fromPl390ToKvm()
+{
+    panic("Gic multiplexing not implemented.\n");
+}
+
+void
+MuxingKvmGic::fromKvmToPl390()
+{
+    panic("Gic multiplexing not implemented.\n");
+}
+
+MuxingKvmGic *
+MuxingKvmGicParams::create()
+{
+    return new MuxingKvmGic(this);
 }

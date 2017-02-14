@@ -1,4 +1,4 @@
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2015, 2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -38,7 +38,7 @@
 from m5.params import *
 from m5.proxy import *
 
-from Gic import BaseGic
+from Gic import BaseGic, Pl390
 from KvmVM import KvmVM
 from System import System
 
@@ -52,3 +52,7 @@ class KvmGic(BaseGic):
 
     system = Param.System(Parent.any,
                           'System this interrupt controller belongs to')
+
+class MuxingKvmGic(Pl390):
+    type = 'MuxingKvmGic'
+    cxx_header = "arch/arm/kvm/gic.hh"
