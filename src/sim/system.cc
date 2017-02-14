@@ -159,7 +159,7 @@ System::System(Params *p)
         }
     }
 
-    // increment the number of running systms
+    // increment the number of running systems
     numSystemsRunning++;
 
     // Set back pointers to the system in all memories

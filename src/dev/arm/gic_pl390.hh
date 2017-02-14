@@ -88,7 +88,7 @@ class Pl390 : public BaseGic
         GICC_BPR   = 0x08, // binary point register
         GICC_IAR   = 0x0C, // interrupt ack register
         GICC_EOIR  = 0x10, // end of interrupt
-        GICC_RPR   = 0x14, // runing priority
+        GICC_RPR   = 0x14, // running priority
         GICC_HPPIR = 0x18, // highest pending interrupt
         GICC_ABPR  = 0x1c, // aliased binary point
         GICC_IIDR  = 0xfc, // cpu interface id register
@@ -391,22 +391,22 @@ class Pl390 : public BaseGic
     void unserialize(CheckpointIn &cp) override;
 
   protected:
-    /** Handle a read to the distributor poriton of the GIC
+    /** Handle a read to the distributor portion of the GIC
      * @param pkt packet to respond to
      */
     Tick readDistributor(PacketPtr pkt);
 
-    /** Handle a read to the cpu poriton of the GIC
+    /** Handle a read to the cpu portion of the GIC
      * @param pkt packet to respond to
      */
     Tick readCpu(PacketPtr pkt);
 
-    /** Handle a write to the distributor poriton of the GIC
+    /** Handle a write to the distributor portion of the GIC
      * @param pkt packet to respond to
      */
     Tick writeDistributor(PacketPtr pkt);
 
-    /** Handle a write to the cpu poriton of the GIC
+    /** Handle a write to the cpu portion of the GIC
      * @param pkt packet to respond to
      */
     Tick writeCpu(PacketPtr pkt);

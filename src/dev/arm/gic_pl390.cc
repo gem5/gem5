@@ -542,7 +542,7 @@ Pl390::writeCpu(PacketPtr pkt)
       case GICC_EOIR:
         iar = pkt->get<uint32_t>();
         if (iar.ack_id < SGI_MAX) {
-            // Clear out the bit that corrseponds to the cleared int
+            // Clear out the bit that corresponds to the cleared int
             uint64_t clr_int = ULL(1) << (ctx + 8 * iar.cpu_id);
             if (!(cpuSgiActive[iar.ack_id] & clr_int) &&
                 !(cpuSgiActiveExt[ctx] & (1 << iar.ack_id)))
@@ -709,7 +709,7 @@ Pl390::updateIntState(int hint)
                    DPRINTF(GIC, "Checking for interrupt# %d \n",int_nm);
                     /* Set current pending int as highest int for current cpu
                        if the interrupt's priority higher than current priority
-                       and if currrent cpu is the target (for mp configs only)
+                       and if current cpu is the target (for mp configs only)
                      */
                     if ((bits(getIntEnabled(cpu, x), y)
                         &bits(getPendingInt(cpu, x), y)) &&
@@ -775,7 +775,7 @@ Pl390::updateRunPri()
 void
 Pl390::sendInt(uint32_t num)
 {
-    DPRINTF(Interrupt, "Received Interupt number %d,  cpuTarget %#x: \n",
+    DPRINTF(Interrupt, "Received Interrupt number %d,  cpuTarget %#x: \n",
             num, cpuTarget[num]);
     if ((cpuTarget[num] & (cpuTarget[num] - 1)) && !gem5ExtensionsEnabled)
         panic("Multiple targets for peripheral interrupts is not supported\n");
