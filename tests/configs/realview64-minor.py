@@ -40,5 +40,5 @@ from arm_generic import *
 
 root = LinuxArmFSSystemUniprocessor(machine_type='VExpress_EMM64',
                                     mem_mode='timing',
-                                    mem_class=DDR3_1600_x64,
+                                    mem_class=DDR3_1600_8x8,
                                     cpu_class=MinorCPU).create_root()

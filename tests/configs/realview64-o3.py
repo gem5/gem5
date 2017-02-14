@@ -41,5 +41,5 @@ from common.O3_ARM_v7a import O3_ARM_v7a_3
 
 root = LinuxArmFSSystemUniprocessor(machine_type='VExpress_EMM64',
                                     mem_mode='timing',
-                                    mem_class=DDR3_1600_x64,
+                                    mem_class=DDR3_1600_8x8,
                                     cpu_class=O3_ARM_v7a_3).create_root()

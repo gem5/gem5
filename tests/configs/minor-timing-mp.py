@@ -42,5 +42,5 @@ from m5.objects import *
 from base_config import *
 
 nb_cores = 4
-root = BaseSESystem(mem_mode='timing', mem_class=DDR3_1600_x64,
+root = BaseSESystem(mem_mode='timing', mem_class=DDR3_1600_8x8,
                     cpu_class=MinorCPU, num_cpus=nb_cores).create_root()

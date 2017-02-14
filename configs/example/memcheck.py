@@ -216,7 +216,7 @@ cfg_file.close()
 proto_tester = TrafficGen(config_file = cfg_file_name)
 
 # Set up the system along with a DRAM controller
-system = System(physmem = DDR3_1600_x64())
+system = System(physmem = DDR3_1600_8x8())
 
 system.voltage_domain = VoltageDomain(voltage = '1V')
 

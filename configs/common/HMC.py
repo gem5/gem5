@@ -58,7 +58,7 @@
 # serial links, the main internal crossbar, and an external hmc controller.
 #
 # - VAULT CONTROLLERS:
-#   Instances of the HMC_2500_x32 class with their functionality specified in
+#   Instances of the HMC_2500_1x32 class with their functionality specified in
 #   dram_ctrl.cc
 #
 # - THE MAIN XBAR:
