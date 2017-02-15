@@ -248,8 +248,6 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
     // or even deleted when sendTiming() is called.
     const ProbePoints::PacketInfo pkt_info(pkt);
 
-    const bool is_read = pkt->isRead();
-    const bool is_write = pkt->isWrite();
     const bool expects_response(pkt->needsResponse() &&
                                 !pkt->cacheResponding());
 
@@ -274,8 +272,8 @@ CommMonitor::recvTimingReq(PacketPtr pkt)
     }
 
     if (successful) {
-        DPRINTF(CommMonitor, "Forwarded %s request\n",
-                (is_read ? "read" : (is_write ? "write" : "non read/write")));
+        DPRINTF(CommMonitor, "Forwarded %s request\n", pkt->isRead() ? "read" :
+                pkt->isWrite() ? "write" : "non read/write");
         stats.updateReqStats(pkt_info, false, expects_response);
     }
     return successful;
@@ -291,8 +289,6 @@ CommMonitor::recvTimingResp(PacketPtr pkt)
     // or even deleted when sendTiming() is called.
     const ProbePoints::PacketInfo pkt_info(pkt);
 
-    bool is_read = pkt->isRead();
-    bool is_write = pkt->isWrite();
     Tick latency = 0;
     CommMonitorSenderState* received_state =
         dynamic_cast<CommMonitorSenderState*>(pkt->senderState);
@@ -325,8 +321,8 @@ CommMonitor::recvTimingResp(PacketPtr pkt)
 
     if (successful) {
         ppPktResp->notify(pkt_info);
-        DPRINTF(CommMonitor, "Received %s response\n",
-                (is_read ? "Read" : (is_write ? "Write" : "non read/write")));
+        DPRINTF(CommMonitor, "Received %s response\n", pkt->isRead() ? "read" :
+                pkt->isWrite() ?  "write" : "non read/write");
         stats.updateRespStats(pkt_info, latency, false);
     }
     return successful;
