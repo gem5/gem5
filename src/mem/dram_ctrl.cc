@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016 ARM Limited
+ * Copyright (c) 2010-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -678,18 +678,20 @@ DRAMCtrl::processRespondEvent()
     // read response received, decrement count
     --dram_pkt->rankRef.outstandingEvents;
 
-    // at this moment should be either ACT or IDLE depending on
-    // if PRE has occurred to close all banks
-    assert((dram_pkt->rankRef.pwrState == PWR_ACT) ||
-           (dram_pkt->rankRef.pwrState == PWR_IDLE));
+    // at this moment should not have transitioned to a low-power state
+    assert((dram_pkt->rankRef.pwrState != PWR_SREF) &&
+           (dram_pkt->rankRef.pwrState != PWR_PRE_PDN) &&
+           (dram_pkt->rankRef.pwrState != PWR_ACT_PDN));
 
     // track if this is the last packet before idling
     // and that there are no outstanding commands to this rank
-    if (dram_pkt->rankRef.lowPowerEntryReady()) {
+    // if REF in progress, transition to LP state should not occur
+    // until REF completes
+    if ((dram_pkt->rankRef.refreshState == REF_IDLE) &&
+        (dram_pkt->rankRef.lowPowerEntryReady())) {
         // verify that there are no events scheduled
         assert(!dram_pkt->rankRef.activateEvent.scheduled());
         assert(!dram_pkt->rankRef.prechargeEvent.scheduled());
-        assert(dram_pkt->rankRef.refreshState == REF_IDLE);
 
         // if coming from active state, schedule power event to
         // active power-down else go to precharge power-down
