@@ -271,7 +271,7 @@ class CommMonitor : public MemObject
     struct MonitorStats
     {
 
-        /** Disable flag for burst length historgrams **/
+        /** Disable flag for burst length histograms **/
         bool disableBurstLengthHists;
 
         /** Histogram of read burst lengths */

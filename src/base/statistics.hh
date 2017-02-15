@@ -1359,7 +1359,7 @@ struct DistParams : public StorageParams
 };
 
 /**
- * Templatized storage and interface for a distrbution stat.
+ * Templatized storage and interface for a distribution stat.
  */
 class DistStor
 {
@@ -1894,7 +1894,7 @@ class DistBase : public DataWrap<Derived, DistInfoProxy>
     }
 
     /**
-     *  Add the argument distribution to the this distibution.
+     *  Add the argument distribution to the this distribution.
      */
     void add(DistBase &d) { data()->add(d.data()); }
 

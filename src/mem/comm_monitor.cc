@@ -490,7 +490,7 @@ CommMonitor::regStats()
     stats.writeTransHist
         .init(params()->transaction_bins)
         .name(name() + ".writeTransHist")
-        .desc("Histogram of read transactions per sample period")
+        .desc("Histogram of write transactions per sample period")
         .flags(stats.disableTransactionHists ? nozero : pdf);
 
     stats.readAddrDist
