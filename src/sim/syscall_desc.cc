@@ -49,10 +49,11 @@ SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
     /**
      * Step through the first six parameters for the system call and
      * retrieve their values. Note that index is incremented as a
-     * side-effect of the calling method.
+     * side-effect of the getSyscallArg method which is why the LHS
+     * needs the "-1".
      */
     for (int index = 0; index < 6; )
-        arg[index] = process->getSyscallArg(tc, index);
+        arg[index - 1] = process->getSyscallArg(tc, index);
 
     /**
      * Linux supports up to six system call arguments through registers
