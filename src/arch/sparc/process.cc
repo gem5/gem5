@@ -149,6 +149,9 @@ SparcLiveProcess::initState()
     // Set the ASI register to something fixed
     tc->setMiscReg(MISCREG_ASI, ASI_PRIMARY);
 
+    // Set the MMU Primary Context Register to hold the process' pid
+    tc->setMiscReg(MISCREG_MMU_P_CONTEXT, _pid);
+
     /*
      * T1 specific registers
      */
