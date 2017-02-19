@@ -4,11 +4,11 @@ sim_seconds                                  0.000014                       # Nu
 sim_ticks                                    14435000                       # Number of ticks simulated
 final_tick                                   14435000                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  13240                       # Simulator instruction rate (inst/s)
-host_op_rate                                    13237                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              119615611                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 232036                       # Number of bytes of host memory used
-host_seconds                                     0.12                       # Real time elapsed on the host
+host_inst_rate                                 136295                       # Simulator instruction rate (inst/s)
+host_op_rate                                   136181                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1229999304                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 249560                       # Number of bytes of host memory used
+host_seconds                                     0.01                       # Real time elapsed on the host
 sim_insts                                        1597                       # Number of instructions simulated
 sim_ops                                          1597                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -261,16 +261,16 @@ system.pwrStateResidencyTicks::UNDEFINED     14435000                       # Cu
 system.cpu.branchPred.lookups                     995                       # Number of BP lookups
 system.cpu.branchPred.condPredicted               543                       # Number of conditional branches predicted
 system.cpu.branchPred.condIncorrect               229                       # Number of conditional branches incorrect
-system.cpu.branchPred.BTBLookups                  945                       # Number of BTB lookups
+system.cpu.branchPred.BTBLookups                  944                       # Number of BTB lookups
 system.cpu.branchPred.BTBHits                     100                       # Number of BTB hits
 system.cpu.branchPred.BTBCorrect                    0                       # Number of correct BTB predictions (this stat may not work properly.
-system.cpu.branchPred.BTBHitPct             10.582011                       # BTB Hit Percentage
+system.cpu.branchPred.BTBHitPct             10.593220                       # BTB Hit Percentage
 system.cpu.branchPred.usedRAS                       0                       # Number of times the RAS was used to get a target.
 system.cpu.branchPred.RASInCorrect                  0                       # Number of incorrect RAS predictions.
-system.cpu.branchPred.indirectLookups             204                       # Number of indirect predictor lookups.
+system.cpu.branchPred.indirectLookups             202                       # Number of indirect predictor lookups.
 system.cpu.branchPred.indirectHits                 11                       # Number of indirect target hits.
-system.cpu.branchPred.indirectMisses              193                       # Number of indirect misses.
-system.cpu.branchPredindirectMispredicted           64                       # Number of mispredicted indirect branches.
+system.cpu.branchPred.indirectMisses              191                       # Number of indirect misses.
+system.cpu.branchPredindirectMispredicted           63                       # Number of mispredicted indirect branches.
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
 system.cpu.dtb.read_hits                            0                       # DTB read hits
 system.cpu.dtb.read_misses                          0                       # DTB read misses
