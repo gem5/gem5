@@ -42,7 +42,7 @@
 
 #include <atomic>
 #include <mutex>
-#include <unordered_set>
+#include <vector>
 
 class Drainable;
 
@@ -162,7 +162,7 @@ class DrainManager
     mutable std::mutex globalLock;
 
     /** Set of all drainable objects */
-    std::unordered_set<Drainable *> _allDrainable;
+    std::vector<Drainable *> _allDrainable;
 
     /**
      * Number of objects still draining. This is flagged atomic since

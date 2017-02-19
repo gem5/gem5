@@ -52,6 +52,8 @@
 #ifndef __MEM_CACHE_CACHE_HH__
 #define __MEM_CACHE_CACHE_HH__
 
+#include <unordered_set>
+
 #include "base/misc.hh" // fatal, panic, and warn
 #include "enums/Clusivity.hh"
 #include "mem/cache/base.hh"

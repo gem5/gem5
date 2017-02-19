@@ -39,6 +39,8 @@
 
 #include "sim/drain.hh"
 
+#include <algorithm>
+
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "debug/Drain.hh"
@@ -126,6 +128,7 @@ DrainManager::preCheckpointRestore()
 void
 DrainManager::signalDrainDone()
 {
+    assert(_count > 0);
     if (--_count == 0) {
         DPRINTF(Drain, "All %u objects drained..\n", drainableCount());
         exitSimLoop("Finished drain", 0);
@@ -137,14 +140,18 @@ void
 DrainManager::registerDrainable(Drainable *obj)
 {
     std::lock_guard<std::mutex> lock(globalLock);
-    _allDrainable.insert(obj);
+    assert(std::find(_allDrainable.begin(), _allDrainable.end(), obj) ==
+           _allDrainable.end());
+    _allDrainable.push_back(obj);
 }
 
 void
 DrainManager::unregisterDrainable(Drainable *obj)
 {
     std::lock_guard<std::mutex> lock(globalLock);
-    _allDrainable.erase(obj);
+    auto o = std::find(_allDrainable.begin(), _allDrainable.end(), obj);
+    assert(o != _allDrainable.end());
+    _allDrainable.erase(o);
 }
 
 size_t
