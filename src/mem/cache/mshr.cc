@@ -415,7 +415,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         // the packet and the request as part of handling the deferred
         // snoop.
         PacketPtr cp_pkt = will_respond ? new Packet(pkt, true, true) :
-            new Packet(new Request(*pkt->req), pkt->cmd);
+            new Packet(new Request(*pkt->req), pkt->cmd, blkSize);
 
         if (will_respond) {
             // we are the ordering point, and will consequently
