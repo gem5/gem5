@@ -41,7 +41,7 @@
 #ifndef __MEM_PROBES_MEM_FOOTPRINT_HH__
 #define __MEM_PROBES_MEM_FOOTPRINT_HH__
 
-#include <unordered_map>
+#include <unordered_set>
 
 #include "base/callback.hh"
 #include "mem/packet.hh"
