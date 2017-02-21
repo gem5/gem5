@@ -305,8 +305,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 writebacks.push_back(writebackBlk(old_blk));
             else
                 writebacks.push_back(cleanEvictBlk(old_blk));
-            tags->invalidate(old_blk);
-            old_blk->invalidate();
+            invalidateBlock(old_blk);
         }
 
         blk = nullptr;
@@ -1127,7 +1126,7 @@ Cache::recvAtomic(PacketPtr pkt)
 
         tempBlockWriteback = (blk->isDirty() || writebackClean) ?
             writebackBlk(blk) : cleanEvictBlk(blk);
-        blk->invalidate();
+        invalidateBlock(blk);
     }
 
     if (pkt->needsResponse()) {
@@ -1531,7 +1530,7 @@ Cache::recvTimingResp(PacketPtr pkt)
             else
                 allocateWriteBuffer(wcPkt, forward_time);
         }
-        blk->invalidate();
+        invalidateBlock(blk);
     }
 
     DPRINTF(CacheVerbose, "%s: Leaving with %s\n", __func__, pkt->print());
@@ -1660,8 +1659,7 @@ Cache::invalidateVisitor(CacheBlk &blk)
 
     if (blk.isValid()) {
         assert(!blk.isDirty());
-        tags->invalidate(&blk);
-        blk.invalidate();
+        invalidateBlock(&blk);
     }
 
     return true;
