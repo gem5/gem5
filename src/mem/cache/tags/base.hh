@@ -223,10 +223,6 @@ class BaseTags : public ClockedObject
         return -1;
     }
 
-    virtual unsigned getNumSets() const = 0;
-
-    virtual unsigned getNumWays() const = 0;
-
     virtual void invalidate(CacheBlk *blk) = 0;
 
     virtual CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,

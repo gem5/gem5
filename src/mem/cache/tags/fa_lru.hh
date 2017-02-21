@@ -217,46 +217,6 @@ public:
     void insertBlock(PacketPtr pkt, CacheBlk *blk) override;
 
     /**
-     * Return the block size of this cache.
-     * @return The block size.
-     */
-    unsigned
-    getBlockSize() const
-    {
-        return blkSize;
-    }
-
-    /**
-     * Return the subblock size of this cache, always the block size.
-     * @return The block size.
-     */
-    unsigned
-    getSubBlockSize() const
-    {
-        return blkSize;
-    }
-
-    /**
-     * Return the number of sets this cache has
-     * @return The number of sets.
-     */
-    unsigned
-    getNumSets() const override
-    {
-        return 1;
-    }
-
-    /**
-     * Return the number of ways this cache has
-     * @return The number of ways.
-     */
-    unsigned
-    getNumWays() const override
-    {
-        return numBlocks;
-    }
-
-    /**
      * Find the cache block given set and way
      * @param set The set of the block.
      * @param way The way of the block.
