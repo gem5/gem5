@@ -56,9 +56,9 @@ LRU::LRU(const Params *p)
 }
 
 CacheBlk*
-LRU::accessBlock(Addr addr, bool is_secure, Cycles &lat, int master_id)
+LRU::accessBlock(Addr addr, bool is_secure, Cycles &lat)
 {
-    CacheBlk *blk = BaseSetAssoc::accessBlock(addr, is_secure, lat, master_id);
+    CacheBlk *blk = BaseSetAssoc::accessBlock(addr, is_secure, lat);
 
     if (blk != nullptr) {
         // move this block to head of the MRU list

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2014 The Regents of The University of Michigan
+ * Copyright (c) 2016 ARM Limited
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,9 +47,9 @@ RandomRepl::RandomRepl(const Params *p)
 }
 
 CacheBlk*
-RandomRepl::accessBlock(Addr addr, bool is_secure, Cycles &lat, int master_id)
+RandomRepl::accessBlock(Addr addr, bool is_secure, Cycles &lat)
 {
-    return BaseSetAssoc::accessBlock(addr, is_secure, lat, master_id);
+    return BaseSetAssoc::accessBlock(addr, is_secure, lat);
 }
 
 CacheBlk*

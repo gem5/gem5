@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2013,2016 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -171,14 +171,13 @@ FALRU::invalidate(CacheBlk *blk)
 }
 
 CacheBlk*
-FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat, int context_src)
+FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat)
 {
-    return accessBlock(addr, is_secure, lat, context_src, 0);
+    return accessBlock(addr, is_secure, lat, 0);
 }
 
 CacheBlk*
-FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat, int context_src,
-                   int *inCache)
+FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat, int *inCache)
 {
     accesses++;
     int tmp_in_cache = 0;

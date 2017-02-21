@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013,2016 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -182,19 +182,17 @@ public:
      * Returns the access latency and inCache flags as a side effect.
      * @param addr The address to look for.
      * @param is_secure True if the target memory space is secure.
-     * @param asid The address space ID.
      * @param lat The latency of the access.
      * @param inCache The FALRUBlk::inCache flags.
      * @return Pointer to the cache block.
      */
     CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
-                          int context_src, int *inCache);
+                          int *inCache);
 
     /**
      * Just a wrapper of above function to conform with the base interface.
      */
-    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
-                          int context_src) override;
+    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) override;
 
     /**
      * Find the block in the cache, do not update the replacement data.

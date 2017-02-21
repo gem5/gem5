@@ -155,12 +155,10 @@ public:
      * side effect.
      * @param addr The address to find.
      * @param is_secure True if the target memory space is secure.
-     * @param asid The address space ID.
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat,
-                          int context_src) override
+    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) override
     {
         Addr tag = extractTag(addr);
         int set = extractSet(addr);
