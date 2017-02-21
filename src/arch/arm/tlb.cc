@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016 ARM Limited
+ * Copyright (c) 2010-2013, 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -642,12 +642,15 @@ TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
             DPRINTF(TLB, "TLB Fault: Data abort on domain. DACR: %#x"
                     " domain: %#x write:%d\n", dacr,
                     static_cast<uint8_t>(te->domain), is_write);
-            if (is_fetch)
+            if (is_fetch) {
+                // Use PC value instead of vaddr because vaddr might
+                // be aligned to cache line and should not be the
+                // address reported in FAR
                 return std::make_shared<PrefetchAbort>(
-                    vaddr,
+                    req->getPC(),
                     ArmFault::DomainLL + te->lookupLevel,
                     isStage2, tranMethod);
-            else
+            } else
                 return std::make_shared<DataAbort>(
                     vaddr, te->domain, is_write,
                     ArmFault::DomainLL + te->lookupLevel,
@@ -735,8 +738,10 @@ TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
         DPRINTF(TLB, "TLB Fault: Prefetch abort on permission check. AP:%d "
                      "priv:%d write:%d ns:%d sif:%d sctlr.afe: %d \n",
                      ap, is_priv, is_write, te->ns, scr.sif,sctlr.afe);
+        // Use PC value instead of vaddr because vaddr might be aligned to
+        // cache line and should not be the address reported in FAR
         return std::make_shared<PrefetchAbort>(
-            vaddr,
+            req->getPC(),
             ArmFault::PermissionLL + te->lookupLevel,
             isStage2, tranMethod);
     } else if (abt | hapAbt) {
