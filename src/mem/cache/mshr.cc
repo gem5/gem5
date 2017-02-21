@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015-2016 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -465,7 +465,8 @@ MSHR::extractServiceableTargets(PacketPtr pkt)
     // avoid memory consistency violations.
     if (pkt->cmd == MemCmd::ReadRespWithInvalidate) {
         auto it = targets.begin();
-        assert(it->source == Target::FromCPU);
+        assert((it->source == Target::FromCPU) ||
+               (it->source == Target::FromPrefetcher));
         ready_targets.push_back(*it);
         it = targets.erase(it);
         while (it != targets.end()) {
