@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2015 ARM Limited
+ * Copyright (c) 2012-2016 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -92,8 +92,6 @@ class CacheBlk
      * referenced by this block.
      */
     uint8_t *data;
-    /** the number of bytes stored in this block. */
-    unsigned size;
 
     /** block state: OR of CacheBlkStatusBit */
     typedef unsigned State;
@@ -167,7 +165,7 @@ class CacheBlk
 
     CacheBlk()
         : task_id(ContextSwitchTaskId::Unknown),
-          tag(0), data(0) ,size(0), status(0), whenReady(0),
+          tag(0), data(0), status(0), whenReady(0),
           set(-1), way(-1), isTouched(false), refCount(0),
           srcMasterId(Request::invldMasterId),
           tickInserted(0)

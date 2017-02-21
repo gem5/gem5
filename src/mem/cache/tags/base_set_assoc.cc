@@ -106,7 +106,6 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
             blk->tag = j;
             blk->whenReady = 0;
             blk->isTouched = false;
-            blk->size = blkSize;
             sets[i].blks[j]=blk;
             blk->set = i;
             blk->way = j;
