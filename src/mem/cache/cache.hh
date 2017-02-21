@@ -73,11 +73,6 @@ class BasePrefetcher;
  */
 class Cache : public BaseCache
 {
-  public:
-
-    /** A typedef for a list of CacheBlk pointers. */
-    typedef std::list<CacheBlk*> BlkList;
-
   protected:
 
     /**

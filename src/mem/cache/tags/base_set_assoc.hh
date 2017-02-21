@@ -78,8 +78,6 @@ class BaseSetAssoc : public BaseTags
   public:
     /** Typedef the block type used in this tag store. */
     typedef CacheBlk BlkType;
-    /** Typedef for a list of pointers to the local block class. */
-    typedef std::list<BlkType*> BlkList;
     /** Typedef the set type used in this tag store. */
     typedef CacheSet<CacheBlk> SetType;
 

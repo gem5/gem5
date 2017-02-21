@@ -90,8 +90,6 @@ class FALRU : public BaseTags
   public:
     /** Typedef the block type used in this class. */
     typedef FALRUBlk BlkType;
-    /** Typedef a list of pointers to the local block type. */
-    typedef std::list<FALRUBlk*> BlkList;
 
   protected:
     /** Array of pointers to blocks at the cache size  boundaries. */
