@@ -351,8 +351,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
     // snoop writes as they are currently not marked as invalidations
     panic_if(pkt->needsWritable() != pkt->isInvalidate(),
              "%s got snoop %s where needsWritable, "
-             "does not match isInvalidate", name(), pkt->print(),
-             pkt->getAddr());
+             "does not match isInvalidate", name(), pkt->print());
 
     if (!inService || (pkt->isExpressSnoop() && downstreamPending)) {
         // Request has not been issued yet, or it's been issued
