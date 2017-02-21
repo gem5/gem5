@@ -1636,6 +1636,9 @@ Cache::writebackVisitor(CacheBlk &blk)
         Request request(tags->regenerateBlkAddr(blk.tag, blk.set),
                         blkSize, 0, Request::funcMasterId);
         request.taskId(blk.task_id);
+        if (blk.isSecure()) {
+            request.setFlags(Request::SECURE);
+        }
 
         Packet packet(&request, MemCmd::WriteReq);
         packet.dataStatic(blk.data);
