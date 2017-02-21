@@ -50,7 +50,7 @@ let {{
             _in = bits(resTemp, intWidth - 1);
             _iz = ((resTemp & mask(intWidth)) == 0);
             CondCodesNZ = (_in << 1) | _iz;
-            DPRINTF(Arm, "(in, iz) = (%%d, %%d)\\n", _in, _iz);
+            DPRINTF(Arm, "(in, iz) = (%d, %d)\\n", _in, _iz);
         '''
         if overflow and overflow != "none":
             code +=  '''
