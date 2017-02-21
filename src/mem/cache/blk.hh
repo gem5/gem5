@@ -82,8 +82,6 @@ class CacheBlk
     /** Task Id associated with this block */
     uint32_t task_id;
 
-    /** The address space ID of this block. */
-    int asid;
     /** Data block tag value. */
     Addr tag;
     /**
@@ -169,7 +167,7 @@ class CacheBlk
 
     CacheBlk()
         : task_id(ContextSwitchTaskId::Unknown),
-          asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0),
+          tag(0), data(0) ,size(0), status(0), whenReady(0),
           set(-1), way(-1), isTouched(false), refCount(0),
           srcMasterId(Request::invldMasterId),
           tickInserted(0)
