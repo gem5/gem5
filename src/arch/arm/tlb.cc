@@ -1007,7 +1007,10 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
 
     if ((req->isInstFetch() && (!sctlr.i)) ||
         ((!req->isInstFetch()) && (!sctlr.c))){
-       req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
+        if (!req->isCacheMaintenance()) {
+            req->setFlags(Request::UNCACHEABLE);
+        }
+        req->setFlags(Request::STRICT_ORDER);
     }
     if (!is_fetch) {
         assert(flags & MustBeOne);
@@ -1033,11 +1036,12 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
             req->setFlags(Request::SECURE);
 
         // @todo: double check this (ARM ARM issue C B3.2.1)
-        if (long_desc_format || sctlr.tre == 0) {
-            req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
-        } else {
-            if (nmrr.ir0 == 0 || nmrr.or0 == 0 || prrr.tr0 != 0x2)
-                req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
+        if (long_desc_format || sctlr.tre == 0 || nmrr.ir0 == 0 ||
+            nmrr.or0 == 0 || prrr.tr0 != 0x2) {
+            if (!req->isCacheMaintenance()) {
+                req->setFlags(Request::UNCACHEABLE);
+            }
+            req->setFlags(Request::STRICT_ORDER);
         }
 
         // Set memory attributes
@@ -1091,7 +1095,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
                 static_cast<uint8_t>(te->mtype), isStage2);
         setAttr(te->attributes);
 
-        if (te->nonCacheable)
+        if (te->nonCacheable && !req->isCacheMaintenance())
             req->setFlags(Request::UNCACHEABLE);
 
         // Require requests to be ordered if the request goes to
