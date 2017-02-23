@@ -1,6 +1,8 @@
 # Copyright (c) 2012, 2015 ARM Limited
 # All rights reserved.
 #
+# Copyright (c) 2017, Centre National de la Recherche Scientifique (CNRS)
+#
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
 # property including but not limited to intellectual property relating
@@ -34,10 +36,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Andreas Sandberg
+#          Pierre-Yves Peneau
 
 import m5.objects
 import inspect
 import sys
+from m5.util import fatal
 from textwrap import TextWrapper
 
 # Dictionary of mapping names of real CPU models to classes.
@@ -74,8 +78,7 @@ def get(name):
     try:
         return _platform_classes[real_name]
     except KeyError:
-        print "%s is not a valid Platform model." % (name,)
-        sys.exit(1)
+        fatal("%s is not a valid Platform model." % (name,))
 
 def print_platform_list():
     """Print a list of available Platform classes including their aliases."""
