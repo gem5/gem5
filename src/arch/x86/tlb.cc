@@ -231,13 +231,10 @@ TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
     AddrRange m5opRange(0xFFFF0000, 0xFFFFFFFF);
 
     if (m5opRange.contains(paddr)) {
-        if (m5opRange.contains(paddr)) {
-            req->setFlags(Request::MMAPPED_IPR | Request::GENERIC_IPR |
-                          Request::STRICT_ORDER);
-            req->setPaddr(GenericISA::iprAddressPseudoInst(
-                            (paddr >> 8) & 0xFF,
-                            paddr & 0xFF));
-        }
+        req->setFlags(Request::MMAPPED_IPR | Request::GENERIC_IPR |
+                      Request::STRICT_ORDER);
+        req->setPaddr(GenericISA::iprAddressPseudoInst((paddr >> 8) & 0xFF,
+                                                       paddr & 0xFF));
     } else if (FullSystem) {
         // Check for an access to the local APIC
         LocalApicBase localApicBase =
