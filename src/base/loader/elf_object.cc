@@ -545,6 +545,8 @@ ElfObject::getSections()
         sectionNames.insert(elf_strptr(elf, ehdr.e_shstrndx, shdr.sh_name));
         section = elf_getscn(elf, ++sec_idx);
     } // while sections
+
+    elf_end(elf);
 }
 
 bool
