@@ -67,6 +67,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('realview.cc')
     Source('rtc_pl031.cc')
     Source('timer_cpulocal.cc')
+    Source('timer_a9global.cc')
     Source('vgic.cc')
     Source('ufs_device.cc')
     Source('energy_ctrl.cc')

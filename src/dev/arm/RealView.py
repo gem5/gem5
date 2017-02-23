@@ -233,6 +233,12 @@ class Sp804(AmbaPioDevice):
     clock1 = Param.Clock('1MHz', "Clock speed of the input")
     amba_id = 0x00141804
 
+class A9GlobalTimer(BasicPioDevice):
+    type = 'A9GlobalTimer'
+    cxx_header = "dev/arm/timer_a9global.hh"
+    gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
+    int_num = Param.UInt32("Interrrupt number that connects to GIC")
+
 class CpuLocalTimer(BasicPioDevice):
     type = 'CpuLocalTimer'
     cxx_header = "dev/arm/timer_cpulocal.hh"
@@ -377,7 +383,9 @@ class RealViewPBX(RealView):
         pci_pio_base=0)
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
-    local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30, pio_addr=0x1f000600)
+    global_timer = A9GlobalTimer(int_num=27, pio_addr=0x1f000200)
+    local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30,
+                                    pio_addr=0x1f000600)
     clcd = Pl111(pio_addr=0x10020000, int_num=55)
     kmi0   = Pl050(pio_addr=0x10006000, int_num=52)
     kmi1   = Pl050(pio_addr=0x10007000, int_num=53, is_mouse=True)
@@ -416,6 +424,7 @@ class RealViewPBX(RealView):
        self.gic.pio = bus.master
        self.l2x0_fake.pio = bus.master
        self.a9scu.pio = bus.master
+       self.global_timer.pio = bus.master
        self.local_cpu_timer.pio = bus.master
        # Bridge ranges based on excluding what is part of on-chip I/O
        # (gic, l2x0, a9scu, local_cpu_timer)
