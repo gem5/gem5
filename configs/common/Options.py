@@ -338,6 +338,8 @@ def addFSOptions(parser):
         parser.add_option("--dtb-filename", action="store", type="string",
               help="Specifies device tree blob file to use with device-tree-"\
               "enabled kernels")
+        parser.add_option("--enable-security-extensions", action="store_true",
+              help="Turn on the ARM Security Extensions")
         parser.add_option("--enable-context-switch-stats-dump", \
                 action="store_true", help="Enable stats dump at context "\
                 "switches and dump tasks file (required for Streamline)")

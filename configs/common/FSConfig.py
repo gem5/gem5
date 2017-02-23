@@ -204,7 +204,7 @@ def makeSparcSystem(mem_mode, mdesc=None, cmdline=None):
 
 def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
                   dtb_filename=None, bare_metal=False, cmdline=None,
-                  external_memory="", ruby=False):
+                  external_memory="", ruby=False, security=False):
     assert machine_type
 
     default_dtbs = {
@@ -295,6 +295,8 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         fatal("The currently selected ARM platforms doesn't support" \
               " the amount of DRAM you've selected. Please try" \
               " another platform")
+
+    self.have_security = security
 
     if bare_metal:
         # EOT character on UART will end the simulation

@@ -100,7 +100,8 @@ def build_test_system(np):
                                  bare_metal=options.bare_metal,
                                  cmdline=cmdline,
                                  external_memory=options.external_memory_system,
-                                 ruby=options.ruby)
+                                 ruby=options.ruby,
+                                 security=options.enable_security_extensions)
         if options.enable_context_switch_stats_dump:
             test_sys.enable_context_switch_stats_dump = True
     else:
