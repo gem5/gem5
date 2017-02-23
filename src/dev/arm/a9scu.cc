@@ -96,7 +96,7 @@ A9SCU::write(PacketPtr pkt)
     switch (daddr) {
       default:
         // Nothing implemented at this point
-        panic("Tried to write SCU at offset %#x\n", daddr);
+        warn("Tried to write SCU at offset %#x\n", daddr);
         break;
     }
     pkt->makeAtomicResponse();
