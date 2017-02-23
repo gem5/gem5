@@ -146,6 +146,10 @@ RealViewCtrl::write(PacketPtr pkt)
       case Lock:
         sysLock.lockVal = pkt->get<uint16_t>();
         break;
+      case ResetCtl:
+        // Ignore writes to reset control
+        warn_once("Ignoring write to reset control\n");
+        break;
       case Flags:
         flags = pkt->get<uint32_t>();
         break;
