@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015 ARM Limited
+ * Copyright (c) 2010-2013, 2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -204,8 +204,11 @@ HDLcd::drainResume()
     // We restored from an old checkpoint without a pixel pump, start
     // an new refresh. This typically happens when restoring from old
     // checkpoints.
-    if (enabled() && !pixelPump.active())
-        pixelPump.start(displayTimings());
+    if (enabled() && !pixelPump.active()) {
+        // Update timing parameter before rendering frames
+        pixelPump.updateTimings(displayTimings());
+        pixelPump.start();
+    }
 
     // We restored from a checkpoint and need to update the VNC server
     if (pixelPump.active() && vnc)
@@ -476,7 +479,10 @@ HDLcd::cmdEnable()
 {
     createDmaEngine();
     conv = pixelConverter();
-    pixelPump.start(displayTimings());
+
+    // Update timing parameter before rendering frames
+    pixelPump.updateTimings(displayTimings());
+    pixelPump.start();
 }
 
 void

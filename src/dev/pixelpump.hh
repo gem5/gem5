@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -148,15 +148,22 @@ class BasePixelPump
       public Serializable
 {
   public:
-    BasePixelPump(EventManager &em, ClockDomain &pxl_clk, unsigned pixel_chunk);
+    BasePixelPump(EventManager &em, ClockDomain &pxl_clk,
+                  unsigned pixel_chunk);
     virtual ~BasePixelPump();
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
   public: // Public API
-    /** Starting pushing pixels using the supplied display timings. */
-    void start(const DisplayTimings &timings);
+    /** Update frame size using display timing */
+    void updateTimings(const DisplayTimings &timings);
+
+    /** Render an entire frame in KVM execution mode */
+    void renderFrame();
+
+    /** Starting pushing pixels in timing mode */
+    void start();
 
     /** Immediately stop pushing pixels */
     void stop();
@@ -284,6 +291,9 @@ class BasePixelPump
 
     void beginLine();
     void renderPixels();
+
+    /** Fast and event-free line rendering function */
+    void renderLine();
 
     /** Convenience vector when doing operations on all events */
     std::vector<PixelEvent *> pixelEvents;

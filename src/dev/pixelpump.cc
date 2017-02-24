@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -136,10 +136,11 @@ BasePixelPump::unserialize(CheckpointIn &cp)
         event->unserializeSection(cp, event->name());
 }
 
-
 void
-BasePixelPump::start(const DisplayTimings &timings)
+BasePixelPump::updateTimings(const DisplayTimings &timings)
 {
+    panic_if(active(), "Trying to update timings in active PixelPump\n");
+
     _timings = timings;
 
     // Resize the frame buffer if needed
@@ -149,8 +150,14 @@ BasePixelPump::start(const DisplayTimings &timings)
     // Set the current line past the last line in the frame. This
     // triggers the new frame logic in beginLine().
     line = _timings.linesPerFrame();
+}
+
+void
+BasePixelPump::start()
+{
     schedule(evBeginLine, clockEdge());
 }
+
 
 void
 BasePixelPump::stop()
@@ -240,6 +247,54 @@ BasePixelPump::renderPixels()
             onFrameDone();
     }
 }
+
+void
+BasePixelPump::renderFrame()
+{
+    _underrun = false;
+    line = 0;
+
+    // Signal vsync end and render the frame
+    line = _timings.lineVBackPorchStart();
+    onVSyncEnd();
+
+    // We only care about the visible screen area when rendering the
+    // frame
+    for (line = _timings.lineFirstVisible();
+        line < _timings.lineFrontPorchStart();
+        ++line) {
+
+        _posX = 0;
+
+        onHSyncBegin();
+        onHSyncEnd();
+
+        renderLine();
+    }
+
+    line = _timings.lineFrontPorchStart() - 1;
+    onFrameDone();
+
+    // Signal vsync until the next frame begins
+    line = _timings.lineVSyncStart();
+    onVSyncBegin();
+}
+
+void
+BasePixelPump::renderLine()
+{
+    const unsigned pos_y(posY());
+
+    Pixel pixel(0, 0, 0);
+    for (_posX = 0; _posX < _timings.width; ++_posX) {
+        if (!nextPixel(pixel)) {
+            panic("Unexpected underrun in BasePixelPump (%u, %u)\n",
+                 _posX, pos_y);
+        }
+        fb.pixel(_posX, pos_y) = pixel;
+    }
+}
+
 
 BasePixelPump::PixelEvent::PixelEvent(
     const char *name, BasePixelPump *_parent, CallbackType _func)
