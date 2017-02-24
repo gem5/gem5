@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2012-2013, 2015 ARM Limited
  * Copyright (c) 2016 Google Inc.
+ * Copyright (c) 2017, Centre National de la Recherche Scientifique
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -38,6 +39,7 @@
  * Authors: Thomas Grass
  *          Andreas Hansson
  *          Rahul Thakur
+ *          Pierre-Yves Peneau
  */
 
 #ifndef __MEM_COMM_MONITOR_HH__

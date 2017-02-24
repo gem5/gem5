@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2017, Centre National de la Recherche Scientifique
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Pierre-Yves Peneau
  */
 
 /** @file
