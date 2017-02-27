@@ -551,6 +551,11 @@ class System : public MemObject
     // For futex system call
     std::map<uint64_t, std::list<ThreadContext *> * > futexMap;
 
+    static const int maxPID = 32768;
+
+    /** Process set to track which PIDs have already been allocated */
+    std::set<int> PIDs;
+
   protected:
 
     /**

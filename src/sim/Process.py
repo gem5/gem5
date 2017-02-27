@@ -47,7 +47,8 @@ class Process(SimObject):
     gid = Param.Int(100, 'group id')
     egid = Param.Int(100, 'effective group id')
     pid = Param.Int(100, 'process id')
-    ppid = Param.Int(99, 'parent process id')
+    ppid = Param.Int(0, 'parent process id')
+    pgid = Param.Int(100, 'process group id')
 
     executable = Param.String('', "executable (overrides cmd[0] if set)")
     cmd = VectorParam.String("command line (executable plus arguments)")

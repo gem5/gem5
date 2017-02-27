@@ -95,6 +95,9 @@ class Process : public SimObject
     inline uint64_t egid() { return _egid; }
     inline uint64_t pid() { return _pid; }
     inline uint64_t ppid() { return _ppid; }
+    inline uint64_t pgid() { return _pgid; }
+    inline uint64_t tgid() { return _tgid; }
+    inline void setpgid(uint64_t pgid) { _pgid = pgid; }
 
     const char *progName() const { return executable.c_str(); }
     std::string fullPath(const std::string &filename);
@@ -199,6 +202,8 @@ class Process : public SimObject
     // pid of the process and it's parent
     uint64_t _pid;
     uint64_t _ppid;
+    uint64_t _pgid;
+    uint64_t _tgid;
 
     // Emulated drivers available to this process
     std::vector<EmulatedDriver *> drivers;

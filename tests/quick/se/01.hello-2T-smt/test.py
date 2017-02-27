@@ -26,7 +26,8 @@
 #
 # Authors: Korey Sewell
 
-process1 = Process(cmd = 'hello', executable = binpath('hello'))
-process2 = Process(cmd = 'hello', executable = binpath('hello'))
+process1 = Process(cmd = 'hello', executable = binpath('hello'), pid = 100)
+process2 = Process(cmd = 'hello', executable = binpath('hello'),
+                   pid = 101, ppid = 100)
 
 root.system.cpu[0].workload = [process1, process2]

@@ -216,11 +216,17 @@ SyscallReturn ftruncate64Func(SyscallDesc *desc, int num,
 SyscallReturn umaskFunc(SyscallDesc *desc, int num,
                         Process *p, ThreadContext *tc);
 
+/// Target gettid() handler.
+SyscallReturn gettidFunc(SyscallDesc *desc, int num,
+                         Process *p, ThreadContext *tc);
 
 /// Target chown() handler.
 SyscallReturn chownFunc(SyscallDesc *desc, int num,
                         Process *p, ThreadContext *tc);
 
+/// Target setpgid() handler.
+SyscallReturn setpgidFunc(SyscallDesc *desc, int num,
+                          Process *p, ThreadContext *tc);
 
 /// Target fchown() handler.
 SyscallReturn fchownFunc(SyscallDesc *desc, int num,

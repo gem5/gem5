@@ -112,10 +112,17 @@ Process::Process(ProcessParams * params, ObjectFile * obj_file)
       _uid(params->uid), _euid(params->euid),
       _gid(params->gid), _egid(params->egid),
       _pid(params->pid), _ppid(params->ppid),
-      drivers(params->drivers),
+      _pgid(params->pgid), drivers(params->drivers),
       fds(make_shared<FDArray>(params->input, params->output, params->errout))
 {
     mmap_end = 0;
+
+    if (_pid >= System::maxPID)
+        fatal("_pid is too large: %d", _pid);
+
+    auto ret_pair = system->PIDs.emplace(_pid);
+    if (!ret_pair.second)
+        fatal("_pid %d is already used", _pid);
 
     // load up symbols, if any... these may be used for debugging or
     // profiling.

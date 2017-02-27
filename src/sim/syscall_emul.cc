@@ -729,6 +729,41 @@ pipePseudoFunc(SyscallDesc *desc, int callnum, Process *process,
     return sim_fds[0];
 }
 
+SyscallReturn
+setpgidFunc(SyscallDesc *desc, int callnum, Process *process,
+            ThreadContext *tc)
+{
+    int index = 0;
+    int pid = process->getSyscallArg(tc, index);
+    int pgid = process->getSyscallArg(tc, index);
+
+    if (pgid < 0)
+        return -EINVAL;
+
+    if (pid == 0) {
+        process->setpgid(process->pid());
+        return 0;
+    }
+
+    Process *matched_ph = NULL;
+    System *sysh = tc->getSystemPtr();
+
+    // Retrieves process pointer from active/suspended thread contexts.
+    for (int i = 0; i < sysh->numContexts(); i++) {
+        if (sysh->threadContexts[i]->status() != ThreadContext::Halted) {
+            Process *temp_h = sysh->threadContexts[i]->getProcessPtr();
+            Process *walk_ph = (Process*)temp_h;
+
+            if (walk_ph && walk_ph->pid() == process->pid())
+                matched_ph = walk_ph;
+        }
+    }
+
+    assert(matched_ph != NULL);
+    matched_ph->setpgid((pgid == 0) ? matched_ph->pid() : pgid);
+
+    return 0;
+}
 
 SyscallReturn
 getpidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
@@ -780,11 +815,13 @@ SyscallReturn
 getpidFunc(SyscallDesc *desc, int callnum, Process *process,
            ThreadContext *tc)
 {
-    // Make up a PID.  There's no interprocess communication in
-    // fake_syscall mode, so there's no way for a process to know it's
-    // not getting a unique value.
+    return process->tgid();
+}
 
-    tc->setIntReg(SyscallPseudoReturnReg, process->ppid()); //PID
+SyscallReturn
+gettidFunc(SyscallDesc *desc, int callnum, Process *process,
+           ThreadContext *tc)
+{
     return process->pid();
 }
 
