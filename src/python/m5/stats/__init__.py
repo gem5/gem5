@@ -1,3 +1,15 @@
+# Copyright (c) 2017 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2007 The Regents of The University of Michigan
 # Copyright (c) 2010 The Hewlett-Packard Development Company
 # All rights reserved.
@@ -26,6 +38,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+#          Andreas Sandberg
 
 import m5
 
@@ -38,9 +51,100 @@ from _m5.stats import schedStatEvent as schedEvent
 from _m5.stats import periodicStatDump
 
 outputList = []
-def initText(filename, desc=True):
-    output = _m5.stats.initText(filename, desc)
-    outputList.append(output)
+
+def _url_factory(func):
+    """Wrap a plain Python function with URL parsing helpers
+
+    Wrap a plain Python function f(fn, **kwargs) to expect a URL that
+    has been split using urlparse.urlsplit. First positional argument
+    is assumed to be a filename, this is created as the concatenation
+    of the netloc (~hostname) and path in the parsed URL. Keyword
+    arguments are derived from the query values in the URL.
+
+    For example:
+        wrapped_f(urlparse.urlsplit("text://stats.txt?desc=False")) ->
+        f("stats.txt", desc=False)
+
+    """
+
+    from functools import wraps
+
+    @wraps(func)
+    def wrapper(url):
+        from urlparse import parse_qs
+        from ast import literal_eval
+
+        qs = parse_qs(url.query, keep_blank_values=True)
+
+        # parse_qs returns a list of values for each parameter. Only
+        # use the last value since kwargs don't allow multiple values
+        # per parameter. Use literal_eval to transform string param
+        # values into proper Python types.
+        def parse_value(key, values):
+            if len(values) == 0 or (len(values) == 1 and not values[0]):
+                fatal("%s: '%s' doesn't have a value." % (url.geturl(), key))
+            elif len(values) > 1:
+                fatal("%s: '%s' has multiple values." % (url.geturl(), key))
+            else:
+                try:
+                    return key, literal_eval(values[0])
+                except ValueError:
+                    fatal("%s: %s isn't a valid Python literal" \
+                          % (url.geturl(), values[0]))
+
+        kwargs = dict([ parse_value(k, v) for k, v in qs.items() ])
+
+        try:
+            return func("%s%s" % (url.netloc, url.path), **kwargs)
+        except TypeError:
+            fatal("Illegal stat visitor parameter specified")
+
+    return wrapper
+
+@_url_factory
+def _textFactory(fn, desc=True):
+    """Output stats in text format.
+
+    Text stat files contain one stat per line with an optional
+    description. The description is enabled by default, but can be
+    disabled by setting the desc parameter to False.
+
+    Example: text://stats.txt?desc=False
+
+    """
+
+    return _m5.stats.initText(fn, desc)
+
+factories = {
+    # Default to the text factory if we're given a naked path
+    "" : _textFactory,
+    "file" : _textFactory,
+    "text" : _textFactory,
+}
+
+def addStatVisitor(url):
+    """Add a stat visitor specified using a URL string
+
+    Stat visitors are specified using URLs on the following format:
+    format://path[?param=value[;param=value]]
+
+    The available formats are listed in the factories list. Factories
+    are called with the path as the first positional parameter and the
+    parameters are keyword arguments. Parameter values must be valid
+    Python literals.
+
+    """
+
+    from urlparse import urlsplit
+
+    parsed = urlsplit(url)
+
+    try:
+        factory = factories[parsed.scheme]
+    except KeyError:
+        fatal("Illegal stat file type specified.")
+
+    outputList.append(factory(parsed))
 
 def initSimStats():
     _m5.stats.initSimStats()

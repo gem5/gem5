@@ -319,7 +319,7 @@ def main(*args):
     sys.path[0:0] = options.path
 
     # set stats options
-    stats.initText(options.stats_file)
+    stats.addStatVisitor(options.stats_file)
 
     # set debugging options
     debug.setRemoteGDBPort(options.remote_gdb_port)
