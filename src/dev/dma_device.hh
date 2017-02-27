@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -494,8 +494,14 @@ class DmaReadFifo : public Drainable, public Serializable
     /** Handle pending requests that have been flagged as done. */
     void handlePending();
 
-    /** Try to issue new DMA requests */
+    /** Try to issue new DMA requests or bypass DMA requests*/
     void resumeFill();
+
+    /** Try to issue new DMA requests during normal execution*/
+    void resumeFillTiming();
+
+    /** Try to bypass DMA requests in KVM execution mode */
+    void resumeFillFunctional();
 
   private: // Internal state
     Fifo<uint8_t> buffer;

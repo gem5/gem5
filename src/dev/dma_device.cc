@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2015 ARM Limited
+ * Copyright (c) 2012, 2015, 2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -50,6 +50,7 @@
 #include "base/chunk_generator.hh"
 #include "debug/DMA.hh"
 #include "debug/Drain.hh"
+#include "mem/port_proxy.hh"
 #include "sim/system.hh"
 
 DmaPort::DmaPort(MemObject *dev, System *s)
@@ -371,6 +372,40 @@ DmaReadFifo::resumeFill()
         return;
 
     const bool old_eob(atEndOfBlock());
+
+    if (port.sys->bypassCaches())
+        resumeFillFunctional();
+    else
+        resumeFillTiming();
+
+    if (!old_eob && atEndOfBlock())
+        onEndOfBlock();
+}
+
+void
+DmaReadFifo::resumeFillFunctional()
+{
+    const size_t fifo_space = buffer.capacity() - buffer.size();
+    const size_t kvm_watermark = port.sys->cacheLineSize();
+    if (fifo_space >= kvm_watermark || buffer.capacity() < kvm_watermark) {
+        const size_t block_remaining = endAddr - nextAddr;
+        const size_t xfer_size = std::min(fifo_space, block_remaining);
+        std::vector<uint8_t> tmp_buffer(xfer_size);
+
+        assert(pendingRequests.empty());
+        DPRINTF(DMA, "KVM Bypassing startAddr=%#x xfer_size=%#x " \
+                "fifo_space=%#x block_remaining=%#x\n",
+                nextAddr, xfer_size, fifo_space, block_remaining);
+
+        port.sys->physProxy.readBlob(nextAddr, tmp_buffer.data(), xfer_size);
+        buffer.write(tmp_buffer.begin(), xfer_size);
+        nextAddr += xfer_size;
+    }
+}
+
+void
+DmaReadFifo::resumeFillTiming()
+{
     size_t size_pending(0);
     for (auto &e : pendingRequests)
         size_pending += e->requestSize();
@@ -392,11 +427,6 @@ DmaReadFifo::resumeFill()
 
         pendingRequests.emplace_back(std::move(event));
     }
-
-    // EOB can be set before a call to dmaDone() if in-flight accesses
-    // have been canceled.
-    if (!old_eob && atEndOfBlock())
-        onEndOfBlock();
 }
 
 void
@@ -429,8 +459,6 @@ DmaReadFifo::handlePending()
     if (pendingRequests.empty())
         signalDrainDone();
 }
-
-
 
 DrainState
 DmaReadFifo::drain()
