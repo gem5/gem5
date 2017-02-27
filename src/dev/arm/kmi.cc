@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -53,7 +53,7 @@
 
 Pl050::Pl050(const Params *p)
     : AmbaIntDevice(p, 0xfff), control(0), status(0x43), clkdiv(0),
-      interrupts(0), rawInterrupts(0), ackNext(false), shiftDown(false),
+      rawInterrupts(0), ackNext(false), shiftDown(false),
       vnc(p->vnc), driverInitialized(false), intEvent(this)
 {
     if (vnc) {
@@ -101,8 +101,8 @@ Pl050::read(PacketPtr pkt)
         data = clkdiv;
         break;
       case kmiISR:
-        data = interrupts;
-        DPRINTF(Pl050, "Read Interrupts: %#x\n", (uint32_t)interrupts);
+        data = getInterrupt();
+        DPRINTF(Pl050, "Read Interrupts: %#x\n", getInterrupt());
         break;
       default:
         if (readId(pkt, ambaId, pioAddr)) {
@@ -238,28 +238,29 @@ Pl050::processCommand(uint8_t byte)
 void
 Pl050::updateIntStatus()
 {
+    const bool old_interrupt(getInterrupt());
+
     if (!rxQueue.empty())
         rawInterrupts.rx = 1;
     else
         rawInterrupts.rx = 0;
 
-    interrupts.tx = rawInterrupts.tx & control.txint_enable;
-    interrupts.rx = rawInterrupts.rx & control.rxint_enable;
-
-    DPRINTF(Pl050, "rawInterupts=%#x control=%#x interrupts=%#x\n",
-            (uint32_t)rawInterrupts, (uint32_t)control, (uint32_t)interrupts);
-
-    if (interrupts && !intEvent.scheduled())
+    if ((!old_interrupt && getInterrupt()) && !intEvent.scheduled()) {
         schedule(intEvent, curTick() + intDelay);
+    } else if (old_interrupt && !(getInterrupt())) {
+            gic->clearInt(intNum);
+    }
 }
 
 void
 Pl050::generateInterrupt()
 {
+    DPRINTF(Pl050, "Generate Interrupt: rawInt=%#x ctrl=%#x int=%#x\n",
+            rawInterrupts, control, getInterrupt());
 
-    if (interrupts) {
+    if (getInterrupt()) {
         gic->sendInt(intNum);
-        DPRINTF(Pl050, "Generated interrupt\n");
+        DPRINTF(Pl050, " -- Generated\n");
     }
 }
 
@@ -318,9 +319,6 @@ Pl050::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(stsreg);
     SERIALIZE_SCALAR(clkdiv);
 
-    uint8_t ints = interrupts;
-    SERIALIZE_SCALAR(ints);
-
     uint8_t raw_ints = rawInterrupts;
     SERIALIZE_SCALAR(raw_ints);
 
@@ -343,10 +341,6 @@ Pl050::unserialize(CheckpointIn &cp)
     status = stsreg;
 
     UNSERIALIZE_SCALAR(clkdiv);
-
-    uint8_t ints;
-    UNSERIALIZE_SCALAR(ints);
-    interrupts = ints;
 
     uint8_t raw_ints;
     UNSERIALIZE_SCALAR(raw_ints);

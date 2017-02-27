@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -101,9 +101,6 @@ class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
         Bitfield<1> tx;
     EndBitUnion(InterruptReg)
 
-    /** interrupt status register. */
-    InterruptReg interrupts;
-
     /** raw interrupt register (unmasked) */
     InterruptReg rawInterrupts;
 
@@ -129,6 +126,13 @@ class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
     /** Function to generate interrupt */
     void generateInterrupt();
 
+    /** Get interrupt value */
+    InterruptReg getInterrupt() const {
+        InterruptReg tmp_interrupt(0);
+        tmp_interrupt.tx = rawInterrupts.tx & control.txint_enable;
+        tmp_interrupt.rx = rawInterrupts.rx & control.rxint_enable;
+        return tmp_interrupt;
+    }
     /** Wrapper to create an event out of the thing */
     EventWrapper<Pl050, &Pl050::generateInterrupt> intEvent;
 
