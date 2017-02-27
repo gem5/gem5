@@ -1381,6 +1381,8 @@ for root, dirs, files in os.walk(ext_dir):
         main.SConscript(joinpath(root, 'SConscript'),
                         variant_dir=joinpath(build_root, build_dir))
 
+main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
+
 ###################################################
 #
 # This function is used to set up a directory with switching headers
