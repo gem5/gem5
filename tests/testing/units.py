@@ -146,6 +146,7 @@ class RunGem5(TestUnit):
         gem5_cmd = [
             self.gem5,
             "-d", self.test_dir,
+            "--stats-file", "text://stats.txt?desc=False",
             "-re",
         ] + self.args
 
