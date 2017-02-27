@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2017 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -28,30 +40,27 @@
  * Authors: Nathan Binkert
  */
 
-#include <Python.h>
+#include "pybind11/pybind11.h"
 
 #include <string>
 
-#include "base/inifile.hh"
-#include "base/output.hh"
 #include "config/the_isa.hh"
 
 #if THE_ISA != NULL_ISA
 #include "dev/net/etherdevice.hh"
+#include "dev/net/etherint.hh"
 #include "dev/net/etherobject.hh"
 
 #endif
-#include "python/swig/pyobject.hh"
 
 #include "mem/mem_object.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "sim/full_system.hh"
-#include "sim/sim_object.hh"
 
-using namespace std;
+namespace py = pybind11;
 
 #if THE_ISA != NULL_ISA
-EtherInt *
+static EtherInt *
 lookupEthPort(SimObject *so, const std::string &name, int i)
 {
     EtherObject *eo = dynamic_cast<EtherObject *>(so);
@@ -75,7 +84,7 @@ lookupEthPort(SimObject *so, const std::string &name, int i)
  * The indices i1 & i2 will be -1 for regular ports, >= 0 for vector ports.
  * SimObject1 is the master, and SimObject2 is the slave
  */
-int
+static int
 connectPorts(SimObject *o1, const std::string &name1, int i1,
              SimObject *o2, const std::string &name2, int i2)
 {
@@ -134,62 +143,10 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
     return 1;
 }
 
-inline IniFile &
-inifile()
+void
+pybind_init_pyobject(py::module &m_native)
 {
-    static IniFile inifile;
-    return inifile;
-}
+    py::module m = m_native.def_submodule("pyobject");
 
-/**
- * Convert a pointer to the Python object that SWIG wraps around a C++
- * SimObject pointer back to the actual C++ pointer.  See main.i.
- */
-extern "C" SimObject *convertSwigSimObjectPtr(PyObject *);
-
-// Python.h is notoriously not const-correct (for 2.4, anyway)... make
-// a little define here to reduce the noise and make it easier to
-// #ifdef away if Python.h gets fixed.  Note there are a couple of
-// these in sim/main.cc as well that are handled without this define.
-#define PCC(s)  const_cast<char *>(s)
-
-/** Single instance of PythonSimObjectResolver as its action is effectively
- *  static but SimObjectResolver can use a non-persistent object */
-PythonSimObjectResolver pythonSimObjectResolver;
-
-SimObject *
-PythonSimObjectResolver::resolveSimObject(const string &name)
-{
-    PyObject *module = PyImport_ImportModule(PCC("m5.SimObject"));
-    if (module == NULL)
-        panic("Could not import m5.SimObject");
-
-    PyObject *resolver =
-        PyObject_GetAttrString(module, PCC("resolveSimObject"));
-    if (resolver == NULL) {
-        PyErr_Print();
-        panic("resolveSimObject: failed to find resolveSimObject");
-    }
-
-    PyObject *ptr = PyObject_CallFunction(resolver, PCC("(s)"), name.c_str());
-    if (ptr == NULL) {
-        PyErr_Print();
-        panic("resolveSimObject: failure on call to Python for %s", name);
-    }
-
-    SimObject *obj = convertSwigSimObjectPtr(ptr);
-    if (obj == NULL)
-        panic("resolveSimObject: failure on pointer conversion for %s", name);
-
-    Py_DECREF(module);
-    Py_DECREF(resolver);
-    Py_DECREF(ptr);
-
-    return obj;
-}
-
-CheckpointIn *
-getCheckpoint(const std::string &cpt_dir)
-{
-    return new CheckpointIn(cpt_dir, pythonSimObjectResolver);
+    m.def("connectPorts", &connectPorts);
 }

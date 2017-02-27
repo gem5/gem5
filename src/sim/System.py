@@ -28,7 +28,7 @@
 # Authors: Nathan Binkert
 #          Rick Strong
 
-from m5.SimObject import SimObject
+from m5.SimObject import *
 from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
@@ -44,12 +44,10 @@ class System(MemObject):
     cxx_header = "sim/system.hh"
     system_port = MasterPort("System port")
 
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-      Enums::MemoryMode getMemoryMode() const;
-      void setMemoryMode(Enums::MemoryMode mode);
-''')
+    cxx_exports = [
+        PyBindMethod("getMemoryMode"),
+        PyBindMethod("setMemoryMode"),
+    ]
 
     memories = VectorParam.AbstractMemory(Self.all,
                                           "All memories in the system")

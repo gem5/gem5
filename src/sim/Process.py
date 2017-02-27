@@ -26,13 +26,18 @@
 #
 # Authors: Nathan Binkert
 
-from m5.SimObject import SimObject
+from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
 
 class Process(SimObject):
     type = 'Process'
     cxx_header = "sim/process.hh"
+
+    @cxxMethod
+    def map(self, vaddr, paddr, size, cacheable=False):
+        pass
+
     input = Param.String('cin', "filename for stdin")
     output = Param.String('cout', 'filename for stdout')
     errout = Param.String('cerr', 'filename for stderr')

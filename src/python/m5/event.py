@@ -1,3 +1,15 @@
+# Copyright (c) 2017 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006 The Regents of The University of Michigan
 # Copyright (c) 2013 Advanced Micro Devices, Inc.
 # Copyright (c) 2013 Mark D. Hill and David A. Wood
@@ -31,23 +43,10 @@
 import m5
 import _m5.event
 
-from _m5.event import PythonEvent, GlobalSimLoopExitEvent as SimExit
+from _m5.event import GlobalSimLoopExitEvent as SimExit
+from _m5.event import Event, getEventQueue, setEventQueue
 
 mainq = None
-
-def create(obj, priority=None):
-    if priority is None:
-        priority = Event.Default_Pri
-    return PythonEvent(obj, priority)
-
-
-# As a reminder, priorities found in sim/eventq.hh are stuck into the
-# Event class by swig
-class Event(PythonEvent):
-    def __init__(self, priority=None):
-        if priority is None:
-            priority = Event.Default_Pri
-        super(Event, self).__init__(self, priority)
 
 class ProgressEvent(Event):
     def __init__(self, eventq, period):
@@ -60,10 +59,4 @@ class ProgressEvent(Event):
         print "Progress! Time now %fs" % (m5.curTick()/1e12)
         self.eventq.schedule(self, m5.curTick() + self.period)
 
-def getEventQueue(index):
-    return _m5.event.getEventQueue(index)
-
-def setEventQueue(eventq):
-    _m5.event.curEventQueue(eventq)
-
-__all__ = [ 'create', 'Event', 'ProgressEvent', 'SimExit', 'mainq' ]
+__all__ = [ 'Event', 'ProgressEvent', 'SimExit', 'mainq' ]

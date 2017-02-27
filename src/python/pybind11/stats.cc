@@ -11,7 +11,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2008 The Hewlett-Packard Development Company
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,87 +38,76 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Andreas Sandberg
  */
-
-#ifndef __SIM_INIT_HH__
-#define __SIM_INIT_HH__
 
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
-#include <list>
-#include <map>
-#include <string>
+#include "base/statistics.hh"
+#include "base/stats/text.hh"
+#include "sim/stat_control.hh"
+#include "sim/stat_register.hh"
 
-#include <inttypes.h>
+namespace py = pybind11;
 
-#ifndef PyObject_HEAD
-struct _object;
-typedef _object PyObject;
-#endif
+namespace Stats {
 
-/*
- * Data structure describing an embedded python file.
- */
-struct EmbeddedPython
+void
+pythonDump()
 {
-    const char *filename;
-    const char *abspath;
-    const char *modpath;
-    const uint8_t *code;
-    int zlen;
-    int len;
+    py::module m = py::module::import("m5.stats");
+    m.attr("dump")();
+}
 
-    EmbeddedPython(const char *filename, const char *abspath,
-                   const char *modpath, const uint8_t *code, int zlen, int len);
-
-    PyObject *getCode() const;
-    bool addModule() const;
-
-    static EmbeddedPython *importer;
-    static PyObject *importerModule;
-    static std::list<EmbeddedPython *> &getList();
-    static int initAll();
-};
-
-struct EmbeddedSwig
+void
+pythonReset()
 {
-    void (*initFunc)();
+    py::module m = py::module::import("m5.stats");
+    m.attr("reset")();
+}
 
-    std::string context;
+}
 
-    EmbeddedSwig(void (*init_func)(), const std::string& _context);
-
-    static std::list<EmbeddedSwig *> &getList();
-    static void initAll();
-};
-
-class EmbeddedPyBind
+void
+pybind_init_stats(py::module &m_native)
 {
-  public:
-    EmbeddedPyBind(const char *_name,
-                   void (*init_func)(pybind11::module &),
-                   const char *_base);
+    py::module m = m_native.def_submodule("stats");
 
-    EmbeddedPyBind(const char *_name,
-                   void (*init_func)(pybind11::module &));
+    m
+        .def("initSimStats", &Stats::initSimStats)
+        .def("initText", &Stats::initText, py::return_value_policy::reference)
+        .def("registerPythonStatsHandlers",
+             &Stats::registerPythonStatsHandlers)
+        .def("schedStatEvent", &Stats::schedStatEvent)
+        .def("periodicStatDump", &Stats::periodicStatDump)
+        .def("updateEvents", &Stats::updateEvents)
+        .def("processResetQueue", &Stats::processResetQueue)
+        .def("processDumpQueue", &Stats::processDumpQueue)
+        .def("enable", &Stats::enable)
+        .def("enabled", &Stats::enabled)
+        .def("statsList", &Stats::statsList)
+        ;
 
-    static void initAll();
+    py::class_<Stats::Output>(m, "Output")
+        .def("begin", &Stats::Output::begin)
+        .def("end", &Stats::Output::end)
+        .def("valid", &Stats::Output::valid)
+        ;
 
-  private:
-    void (*initFunc)(pybind11::module &);
-
-    bool depsReady() const;
-    void init(pybind11::module &m);
-
-    bool registered;
-    const std::string name;
-    const std::string base;
-
-    static std::map<std::string, EmbeddedPyBind *> &getMap();
-};
-
-int initM5Python();
-int m5Main(int argc, char **argv);
-PyMODINIT_FUNC initm5(void);
-
-#endif // __SIM_INIT_HH__
+    py::class_<Stats::Info>(m, "Info")
+        .def_readwrite("name", &Stats::Info::name)
+        .def_readonly("desc", &Stats::Info::desc)
+        .def_readonly("id", &Stats::Info::id)
+        .def_property_readonly("flags", [](const Stats::Info &info) {
+                return (Stats::FlagsType)info.flags;
+            })
+        .def("check", &Stats::Info::check)
+        .def("baseCheck", &Stats::Info::baseCheck)
+        .def("enable", &Stats::Info::enable)
+        .def("prepare", &Stats::Info::prepare)
+        .def("reset", &Stats::Info::reset)
+        .def("zero", &Stats::Info::zero)
+        .def("visit", &Stats::Info::visit)
+        ;
+}

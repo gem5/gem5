@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 ARM Limited
+# Copyright (c) 2012-2014, 2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -101,6 +101,10 @@ class ParamValue(object):
     @classmethod
     def cxx_predecls(cls, code):
         pass
+
+    @classmethod
+    def pybind_predecls(cls, code):
+        cls.cxx_predecls(code)
 
     # Generate the code needed as a prerequisite for including a
     # reference to a C++ object of this type in a SWIG .i file.
@@ -221,6 +225,9 @@ class ParamDesc(object):
     def cxx_predecls(self, code):
         code('#include <cstddef>')
         self.ptype.cxx_predecls(code)
+
+    def pybind_predecls(self, code):
+        self.ptype.pybind_predecls(code)
 
     def swig_predecls(self, code):
         self.ptype.swig_predecls(code)
@@ -407,6 +414,10 @@ class VectorParamDesc(ParamDesc):
     def cxx_predecls(self, code):
         code('#include <vector>')
         self.ptype.cxx_predecls(code)
+
+    def pybind_predecls(self, code):
+        code('#include <vector>')
+        self.ptype.pybind_predecls(code)
 
     def cxx_decl(self, code):
         code('std::vector< ${{self.ptype.cxx_type}} > ${{self.name}};')
@@ -792,6 +803,11 @@ class AddrRange(ParamValue):
         code('#include "base/addr_range.hh"')
 
     @classmethod
+    def pybind_predecls(cls, code):
+        Addr.pybind_predecls(code)
+        code('#include "base/addr_range.hh"')
+
+    @classmethod
     def swig_predecls(cls, code):
         Addr.swig_predecls(code)
 
@@ -941,7 +957,7 @@ class EthernetAddr(ParamValue):
         return self
 
     def getValue(self):
-        from m5.internal.params import EthAddr
+        from _m5.net import EthAddr
         return EthAddr(self.value)
 
     def __str__(self):
@@ -1007,7 +1023,7 @@ class IpAddress(ParamValue):
             raise TypeError, "invalid ip address %#08x" % self.ip
 
     def getValue(self):
-        from m5.internal.params import IpAddress
+        from _m5.net import IpAddress
         return IpAddress(self.ip)
 
 # When initializing an IpNetmask, pass in an existing IpNetmask, a string of
@@ -1086,7 +1102,7 @@ class IpNetmask(IpAddress):
             raise TypeError, "invalid netmask %d" % netmask
 
     def getValue(self):
-        from m5.internal.params import IpNetmask
+        from _m5.net import IpNetmask
         return IpNetmask(self.ip, self.netmask)
 
 # When initializing an IpWithPort, pass in an existing IpWithPort, a string of
@@ -1164,7 +1180,7 @@ class IpWithPort(IpAddress):
             raise TypeError, "invalid port %d" % self.port
 
     def getValue(self):
-        from m5.internal.params import IpWithPort
+        from _m5.net import IpWithPort
         return IpWithPort(self.ip, self.port)
 
 time_formats = [ "%a %b %d %H:%M:%S %Z %Y",
@@ -1224,30 +1240,10 @@ class Time(ParamValue):
         return value
 
     def getValue(self):
-        from m5.internal.params import tm
+        from _m5.core import tm
+        import calendar
 
-        c_time = tm()
-        py_time = self.value
-
-        # UNIX is years since 1900
-        c_time.tm_year = py_time.tm_year - 1900;
-
-        # Python starts at 1, UNIX starts at 0
-        c_time.tm_mon =  py_time.tm_mon - 1;
-        c_time.tm_mday = py_time.tm_mday;
-        c_time.tm_hour = py_time.tm_hour;
-        c_time.tm_min = py_time.tm_min;
-        c_time.tm_sec = py_time.tm_sec;
-
-        # Python has 0 as Monday, UNIX is 0 as sunday
-        c_time.tm_wday = py_time.tm_wday + 1
-        if c_time.tm_wday > 6:
-            c_time.tm_wday -= 7;
-
-        # Python starts at 1, Unix starts at 0
-        c_time.tm_yday = py_time.tm_yday - 1;
-
-        return c_time
+        return tm.gmtime(calendar.timegm(self.value))
 
     def __str__(self):
         return time.asctime(self.value)
@@ -1375,6 +1371,40 @@ $wrapper $wrapper_name {
             code('} // namespace $wrapper_name')
             code.dedent(1)
 
+    def pybind_def(cls, code):
+        name = cls.__name__
+        wrapper_name = cls.wrapper_name
+        enum_name = cls.__name__ if cls.enum_name is None else cls.enum_name
+
+        code('''#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+
+#include <sim/init.hh>
+
+namespace py = pybind11;
+
+static void
+module_init(py::module &m_internal)
+{
+    py::module m = m_internal.def_submodule("enum_${name}");
+
+    py::enum_<${wrapper_name}::${enum_name}>(m, "enum_${name}")
+''')
+
+        code.indent()
+        code.indent()
+        for val in cls.vals:
+            code('.value("${val}", ${wrapper_name}::${val})')
+        code('.value("Num_${name}", ${wrapper_name}::Num_${enum_name})')
+        code('.export_values()')
+        code(';')
+        code.dedent()
+
+        code('}')
+        code.dedent()
+        code()
+        code('static EmbeddedPyBind embed_enum("enum_${name}", module_init);')
+
     def swig_decl(cls, code):
         name = cls.__name__
         code('''\
@@ -1435,7 +1465,9 @@ class Enum(ParamValue):
         code('}')
 
     def getValue(self):
-        return int(self.map[self.value])
+        import m5.internal.params
+        e = getattr(m5.internal.params, "enum_%s" % self.__class__.__name__)
+        return e(self.map[self.value])
 
     def __str__(self):
         return self.value
@@ -2039,6 +2071,9 @@ class Port(object):
     # on an unsigned int.
     def cxx_predecls(self, code):
         pass
+
+    def pybind_predecls(self, code):
+        cls.cxx_predecls(self, code)
 
     # Declare an unsigned int with the same name as the port, that
     # will eventually hold the number of connected ports (and thus the

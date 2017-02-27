@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -56,6 +56,7 @@
 #include "base/misc.hh"
 #include "base/types.hh"
 #include "config/have_protobuf.hh"
+#include "python/pybind11/pybind.hh"
 #include "sim/async.hh"
 #include "sim/core.hh"
 
@@ -65,6 +66,7 @@
 #endif
 
 using namespace std;
+namespace py = pybind11;
 
 // The python library is totally messed up with respect to constness,
 // so make a simple macro to make life a little easier
@@ -184,10 +186,87 @@ EmbeddedSwig::initAll()
     _Py_PackageContext = old_context;
 }
 
+EmbeddedPyBind::EmbeddedPyBind(const char *_name,
+                               void (*init_func)(py::module &),
+                               const char *_base)
+    : initFunc(init_func), registered(false), name(_name), base(_base)
+{
+    getMap()[_name] = this;
+}
+
+EmbeddedPyBind::EmbeddedPyBind(const char *_name,
+                               void (*init_func)(py::module &))
+    : initFunc(init_func), registered(false), name(_name), base("")
+{
+    getMap()[_name] = this;
+}
+
+void
+EmbeddedPyBind::init(py::module &m)
+{
+    if (!registered) {
+        initFunc(m);
+        registered = true;
+    } else {
+        cprintf("Warning: %s already registered.\n", name);
+    }
+}
+
+bool
+EmbeddedPyBind::depsReady() const
+{
+    return base.empty() || getMap()[base]->registered;
+}
+
+std::map<std::string, EmbeddedPyBind *> &
+EmbeddedPyBind::getMap()
+{
+    static std::map<std::string, EmbeddedPyBind *> objs;
+    return objs;
+}
+
+void
+EmbeddedPyBind::initAll()
+{
+    std::list<EmbeddedPyBind *> pending;
+
+    py::module m_m5 = py::module("_m5");
+    m_m5.attr("__package__") = py::cast("_m5");
+
+    pybind_init_core(m_m5);
+    pybind_init_debug(m_m5);
+
+    pybind_init_event(m_m5);
+    pybind_init_pyobject(m_m5);
+    pybind_init_stats(m_m5);
+
+    for (auto &kv : getMap()) {
+        auto &obj = kv.second;
+        if (obj->base.empty()) {
+            obj->init(m_m5);
+        } else {
+            pending.push_back(obj);
+        }
+    }
+
+    while (!pending.empty()) {
+        for (auto it = pending.begin(); it != pending.end(); ) {
+            EmbeddedPyBind &obj = **it;
+            if (obj.depsReady()) {
+                obj.init(m_m5);
+                it = pending.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+}
+
 int
 initM5Python()
 {
     EmbeddedSwig::initAll();
+    EmbeddedPyBind::initAll();
     return EmbeddedPython::initAll();
 }
 

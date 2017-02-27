@@ -106,7 +106,7 @@ def run_test(root, switcher=None, freq=1000, verbose=False):
     # Worse yet, they include the timestamp, which makes them highly
     # variable and unsuitable for comparing as test outputs.
     if not verbose:
-        _m5.core.Logger.setLevel(_m5.core.Logger.WARN)
+        _m5.core.setLogLevel(_m5.core.LogLevel.WARN)
 
     # instantiate configuration
     m5.instantiate()

@@ -35,6 +35,7 @@
 #
 # Authors: Andreas Sandberg
 
+from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
 
@@ -46,11 +47,10 @@ class BaseKvmCPU(BaseCPU):
     cxx_header = "cpu/kvm/base.hh"
     abstract = True
 
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-      void dump() const;
-''')
+    @cxxMethod
+    def dump(self):
+        """Dump the internal state of KVM to standard out."""
+        pass
 
     @classmethod
     def memory_mode(cls):

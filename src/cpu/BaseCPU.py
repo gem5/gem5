@@ -43,6 +43,7 @@
 
 import sys
 
+from m5.SimObject import *
 from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
@@ -96,18 +97,16 @@ class BaseCPU(MemObject):
     abstract = True
     cxx_header = "cpu/base.hh"
 
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-    void switchOut();
-    void takeOverFrom(BaseCPU *cpu);
-    bool switchedOut();
-    void flushTLBs();
-    Counter totalInsts();
-    void scheduleInstStop(ThreadID tid, Counter insts, const char *cause);
-    void scheduleLoadStop(ThreadID tid, Counter loads, const char *cause);
-    uint64_t getCurrentInstCount(ThreadID tid);
-''')
+    cxx_exports = [
+        PyBindMethod("switchOut"),
+        PyBindMethod("takeOverFrom"),
+        PyBindMethod("switchedOut"),
+        PyBindMethod("flushTLBs"),
+        PyBindMethod("totalInsts"),
+        PyBindMethod("scheduleInstStop"),
+        PyBindMethod("scheduleLoadStop"),
+        PyBindMethod("getCurrentInstCount"),
+    ]
 
     @classmethod
     def memory_mode(cls):

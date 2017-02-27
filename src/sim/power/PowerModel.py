@@ -35,7 +35,7 @@
 #
 # Authors: David Guillen Fandos
 
-from m5.SimObject import SimObject
+from m5.SimObject import *
 from m5.params import *
 from m5.proxy import Parent
 
@@ -46,12 +46,10 @@ class PowerModel(SimObject):
     type = 'PowerModel'
     cxx_header = "sim/power/power_model.hh"
 
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-      double getDynamicPower() const;
-      double getStaticPower() const;
-''')
+    cxx_exports = [
+        PyBindMethod("getDynamicPower"),
+        PyBindMethod("getStaticPower"),
+    ]
 
     # Keep a list of every model for every power state
     pm = VectorParam.PowerModelState([], "List of per-state power models.")

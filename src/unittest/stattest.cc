@@ -28,6 +28,8 @@
  * Authors: Nathan Binkert
  */
 
+#include "pybind11/pybind11.h"
+
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -37,7 +39,10 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
+#include "sim/init.hh"
 #include "sim/stat_control.hh"
+
+namespace py = pybind11;
 
 // override the default main() code for this unittest
 const char *m5MainCommands[] = {
@@ -52,8 +57,6 @@ using namespace Stats;
 double testfunc();
 struct StatTest;
 StatTest & __stattest();
-void stattest_init();
-void stattest_run();
 
 
 double
@@ -120,18 +123,6 @@ __stattest()
 {
     static StatTest st;
     return st;
-}
-
-void
-stattest_init()
-{
-    __stattest().init();
-}
-
-void
-stattest_run()
-{
-    __stattest().run();
 }
 
 void
@@ -680,3 +671,16 @@ StatTest::run()
     s20[1] = 1;
 
 }
+
+static void
+stattest_init_pybind(py::module &m_internal)
+{
+    py::module m = m_internal.def_submodule("stattest");
+
+    m
+        .def("stattest_init", []() { __stattest().init(); })
+        .def("stattest_run", []() { __stattest().run(); })
+        ;
+}
+
+static EmbeddedPyBind embed_("stattest", stattest_init_pybind);

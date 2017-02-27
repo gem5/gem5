@@ -36,6 +36,7 @@
 # Authors: Ali Saidi
 
 from m5.params import *
+from m5.SimObject import *
 
 from System import System
 
@@ -98,9 +99,10 @@ class LinuxArmSystem(GenericArmSystem):
     type = 'LinuxArmSystem'
     cxx_header = "arch/arm/linux/system.hh"
 
-    @classmethod
-    def export_methods(cls, code):
-        code('''void dumpDmesg();''')
+    @cxxMethod
+    def dumpDmesg(self):
+        """Dump dmesg from the simulated kernel to standard out"""
+        pass
 
 class FreebsdArmSystem(GenericArmSystem):
     type = 'FreebsdArmSystem'

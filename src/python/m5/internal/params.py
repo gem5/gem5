@@ -1,3 +1,15 @@
+# Copyright (c) 2017 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2010 The Hewlett-Packard Development Company
 # All rights reserved.
 #
@@ -26,12 +38,9 @@
 #
 # Authors: Nathan Binkert
 
-try:
-    modules = __loader__.modules
-except NameError:
-    modules = { }
+import inspect
+import _m5
 
-for module in modules.iterkeys():
-    if module.startswith('_m5.param_') or \
-           module.startswith('_m5.enum_'):
-        exec "from %s import *" % module
+for name, module in inspect.getmembers(_m5):
+    if name.startswith('param_') or name.startswith('enum_'):
+        exec "from _m5.%s import *" % name

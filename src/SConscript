@@ -176,12 +176,11 @@ class Source(SourceFile):
         Source.current_group = group
 
     '''Add a c/c++ source file to the build'''
-    def __init__(self, source, Werror=True, swig=False, **guards):
+    def __init__(self, source, Werror=True, **guards):
         '''specify the source file, and any guards'''
         super(Source, self).__init__(source, **guards)
 
         self.Werror = Werror
-        self.swig = swig
 
         Source.source_groups[Source.current_group].append(self)
 
@@ -243,24 +242,6 @@ class SimObject(PySource):
 
         bisect.insort_right(SimObject.modnames, self.modname)
 
-class SwigSource(SourceFile):
-    '''Add a swig file to build'''
-
-    def __init__(self, package, source, **guards):
-        '''Specify the python package, the source file, and any guards'''
-        super(SwigSource, self).__init__(source, skip_no_python=True, **guards)
-
-        modname,ext = self.extname
-        assert ext == 'i'
-
-        self.package = package
-        self.module = modname
-        cc_file = joinpath(self.dirname, modname + '_wrap.cc')
-        py_file = joinpath(self.dirname, modname + '.py')
-
-        self.cc_source = Source(cc_file, swig=True, parent=self, **guards)
-        self.py_source = PySource(package, py_file, parent=self, **guards)
-
 class ProtoBuf(SourceFile):
     '''Add a Protocol Buffer to build'''
 
@@ -303,7 +284,6 @@ class UnitTest(object):
 Export('Source')
 Export('PySource')
 Export('SimObject')
-Export('SwigSource')
 Export('ProtoBuf')
 Export('UnitTest')
 
@@ -559,19 +539,6 @@ sys.meta_path.remove(importer)
 sim_objects = m5.SimObject.allClasses
 all_enums = m5.params.allEnums
 
-if m5.SimObject.noCxxHeader:
-    print >> sys.stderr, \
-        "warning: At least one SimObject lacks a header specification. " \
-        "This can cause unexpected results in the generated SWIG " \
-        "wrappers."
-
-# Find param types that need to be explicitly wrapped with swig.
-# These will be recognized because the ParamDesc will have a
-# swig_decl() method.  Most param types are based on types that don't
-# need this, either because they're based on native types (like Int)
-# or because they're SimObjects (which get swigged independently).
-# For now the only things handled here are VectorParam types.
-params_to_swig = {}
 for name,obj in sorted(sim_objects.iteritems()):
     for param in obj._params.local.values():
         # load the ptype attribute now because it depends on the
@@ -579,12 +546,6 @@ for name,obj in sorted(sim_objects.iteritems()):
         # actually uses the value, all versions of
         # SimObject.allClasses will have been loaded
         param.ptype
-
-        if not hasattr(param, 'swig_decl'):
-            continue
-        pname = param.ptype_str
-        if pname not in params_to_swig:
-            params_to_swig[pname] = param
 
 ########################################################################
 #
@@ -668,16 +629,6 @@ def createSimObjectCxxConfig(is_header):
         code.write(target[0].abspath)
     return body
 
-def createParamSwigWrapper(target, source, env):
-    assert len(target) == 1 and len(source) == 1
-
-    name = str(source[0].get_contents())
-    param = params_to_swig[name]
-
-    code = code_formatter()
-    param.swig_decl(code)
-    code.write(target[0].abspath)
-
 def createEnumStrings(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
@@ -686,6 +637,8 @@ def createEnumStrings(target, source, env):
 
     code = code_formatter()
     obj.cxx_def(code)
+    if env['USE_PYTHON']:
+        obj.pybind_def(code)
     code.write(target[0].abspath)
 
 def createEnumDecls(target, source, env):
@@ -698,27 +651,13 @@ def createEnumDecls(target, source, env):
     obj.cxx_decl(code)
     code.write(target[0].abspath)
 
-def createEnumSwigWrapper(target, source, env):
-    assert len(target) == 1 and len(source) == 1
-
-    name = str(source[0].get_contents())
-    obj = all_enums[name]
-
-    code = code_formatter()
-    obj.swig_decl(code)
-    code.write(target[0].abspath)
-
-def createSimObjectSwigWrapper(target, source, env):
+def createSimObjectPyBindWrapper(target, source, env):
     name = source[0].get_contents()
     obj = sim_objects[name]
 
     code = code_formatter()
-    obj.swig_decl(code)
+    obj.pybind_decl(code)
     code.write(target[0].abspath)
-
-# dummy target for generated code
-# we start out with all the Source files so they get copied to build/*/ also.
-SWIG = env.Dummy('swig', [s.tnode for s in Source.get()])
 
 # Generate all of the SimObject param C++ struct header files
 params_hh_files = []
@@ -731,7 +670,6 @@ for name,simobj in sorted(sim_objects.iteritems()):
     env.Command(hh_file, Value(name),
                 MakeAction(createSimObjectParamStruct, Transform("SO PARAM")))
     env.Depends(hh_file, depends + extra_deps)
-    env.Depends(SWIG, hh_file)
 
 # C++ parameter description files
 if GetOption('with_cxx_config'):
@@ -788,17 +726,6 @@ if GetOption('with_cxx_config'):
             [File('sim/cxx_config.hh')])
     Source(cxx_config_init_cc_file)
 
-# Generate any needed param SWIG wrapper files
-params_i_files = []
-for name,param in sorted(params_to_swig.iteritems()):
-    i_file = File('python/_m5/%s.i' % (param.swig_module_name()))
-    params_i_files.append(i_file)
-    env.Command(i_file, Value(name),
-                MakeAction(createParamSwigWrapper, Transform("SW PARAM")))
-    env.Depends(i_file, depends)
-    env.Depends(SWIG, i_file)
-    SwigSource('_m5', i_file)
-
 # Generate all enum header files
 for name,enum in sorted(all_enums.iteritems()):
     py_source = PySource.modules[enum.__module__]
@@ -808,67 +735,24 @@ for name,enum in sorted(all_enums.iteritems()):
     env.Command(cc_file, Value(name),
                 MakeAction(createEnumStrings, Transform("ENUM STR")))
     env.Depends(cc_file, depends + extra_deps)
-    env.Depends(SWIG, cc_file)
     Source(cc_file)
 
     hh_file = File('enums/%s.hh' % name)
     env.Command(hh_file, Value(name),
                 MakeAction(createEnumDecls, Transform("ENUMDECL")))
     env.Depends(hh_file, depends + extra_deps)
-    env.Depends(SWIG, hh_file)
 
-    i_file = File('python/_m5/enum_%s.i' % name)
-    env.Command(i_file, Value(name),
-                MakeAction(createEnumSwigWrapper, Transform("ENUMSWIG")))
-    env.Depends(i_file, depends + extra_deps)
-    env.Depends(SWIG, i_file)
-    SwigSource('_m5', i_file)
-
-# Generate SimObject SWIG wrapper files
-for name,simobj in sorted(sim_objects.iteritems()):
-    py_source = PySource.modules[simobj.__module__]
-    extra_deps = [ py_source.tnode ]
-    i_file = File('python/_m5/param_%s.i' % name)
-    env.Command(i_file, Value(name),
-                MakeAction(createSimObjectSwigWrapper, Transform("SO SWIG")))
-    env.Depends(i_file, depends + extra_deps)
-    SwigSource('_m5', i_file)
-
-# Generate the main swig init file
-def makeEmbeddedSwigInit(package):
-    def body(target, source, env):
-        assert len(target) == 1 and len(source) == 1
-
-        code = code_formatter()
-        module = source[0].get_contents()
-        # Provide the full context so that the swig-generated call to
-        # Py_InitModule ends up placing the embedded module in the
-        # right package.
-        context = str(package) + "._" + str(module)
-        code('''\
-        #include "sim/init.hh"
-
-        extern "C" {
-            void init_${module}();
-        }
-
-        EmbeddedSwig embed_swig_${module}(init_${module}, "${context}");
-        ''')
-        code.write(str(target[0]))
-    return body
-
-# Build all swig modules
-for swig in SwigSource.all:
-    env.Command([swig.cc_source.tnode, swig.py_source.tnode], swig.tnode,
-                MakeAction('$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
-                '-o ${TARGETS[0]} $SOURCES', Transform("SWIG")))
-    cc_file = str(swig.tnode)
-    init_file = '%s/%s_init.cc' % (dirname(cc_file), basename(cc_file))
-    env.Command(init_file, Value(swig.module),
-                MakeAction(makeEmbeddedSwigInit(swig.package),
-                           Transform("EMBED SW")))
-    env.Depends(SWIG, init_file)
-    Source(init_file, **swig.guards)
+# Generate SimObject Python bindings wrapper files
+if env['USE_PYTHON']:
+    for name,simobj in sorted(sim_objects.iteritems()):
+        py_source = PySource.modules[simobj.__module__]
+        extra_deps = [ py_source.tnode ]
+        cc_file = File('python/_m5/param_%s.cc' % name)
+        env.Command(cc_file, Value(name),
+                    MakeAction(createSimObjectPyBindWrapper,
+                               Transform("SO PyBind")))
+        env.Depends(cc_file, depends + extra_deps)
+        Source(cc_file)
 
 # Build all protocol buffers if we have got protoc and protobuf available
 if env['HAVE_PROTOBUF']:
@@ -882,7 +766,6 @@ if env['HAVE_PROTOBUF']:
                                '--proto_path ${SOURCE.dir} $SOURCE',
                                Transform("PROTOC")))
 
-        env.Depends(SWIG, [proto.cc_file, proto.hh_file])
         # Add the C++ source file
         Source(proto.cc_file, **proto.guards)
 elif ProtoBuf.all:
@@ -982,11 +865,9 @@ for name,flag in sorted(debug_flags.iteritems()):
     hh_file = 'debug/%s.hh' % name
     env.Command(hh_file, Value(flag),
                 MakeAction(makeDebugFlagHH, Transform("TRACING", 0)))
-    env.Depends(SWIG, hh_file)
 
 env.Command('debug/flags.cc', Value(debug_flags),
             MakeAction(makeDebugFlagCC, Transform("TRACING", 0)))
-env.Depends(SWIG, 'debug/flags.cc')
 Source('debug/flags.cc')
 
 # version tags
@@ -1052,7 +933,6 @@ EmbeddedPython embedded_${sym}(
 for source in PySource.all:
     env.Command(source.cpp, source.tnode,
                 MakeAction(embedPyFile, Transform("EMBED PY")))
-    env.Depends(SWIG, source.cpp)
     Source(source.cpp, skip_no_python=True)
 
 ########################################################################
@@ -1087,23 +967,7 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
     new_env.Label = label
     new_env.Append(**kwargs)
 
-    swig_env = new_env.Clone()
-
-    # Both gcc and clang have issues with unused labels and values in
-    # the SWIG generated code
-    swig_env.Append(CCFLAGS=['-Wno-unused-label', '-Wno-unused-value'])
-
     if env['GCC']:
-        # Depending on the SWIG version, we also need to supress
-        # warnings about uninitialized variables and missing field
-        # initializers.
-        swig_env.Append(CCFLAGS=['-Wno-uninitialized',
-                                 '-Wno-missing-field-initializers',
-                                 '-Wno-unused-but-set-variable',
-                                 '-Wno-maybe-uninitialized',
-                                 '-Wno-type-limits'])
-
-
         # The address sanitizer is available for gcc >= 4.8
         if GetOption('with_asan'):
             if GetOption('with_ubsan') and \
@@ -1125,10 +989,6 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
 
 
     if env['CLANG']:
-        swig_env.Append(CCFLAGS=['-Wno-sometimes-uninitialized',
-                                 '-Wno-deprecated-register',
-                                 '-Wno-tautological-compare'])
-
         # We require clang >= 3.1, so there is no need to check any
         # versions here.
         if GetOption('with_ubsan'):
@@ -1158,9 +1018,7 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
         build environment, and returns the corresponding SCons Object
         nodes'''
 
-        if source.swig:
-            env = swig_env
-        elif source.Werror:
+        if source.Werror:
             env = werror_env
         else:
             env = new_env
@@ -1177,8 +1035,8 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
 
     lib_guards = {'main': False, 'skip_lib': False}
 
-    # Without Python, leave out all SWIG and Python content from the
-    # library builds.  The option doesn't affect gem5 built as a program
+    # Without Python, leave out all Python content from the library
+    # builds.  The option doesn't affect gem5 built as a program
     if GetOption('without_python'):
         lib_guards['skip_no_python'] = False
 

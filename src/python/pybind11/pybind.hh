@@ -1,7 +1,15 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
- * Copyright (c) 2010 Advanced Micro Devices, Inc.
- * All rights reserved.
+ * Copyright (c) 2017 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,42 +34,19 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
- *          Gabe Black
+ * Authors: Andreas Sandberg
  */
 
-%{
-#include "base/inet.hh"
-%}
+#ifndef __PYTHON_PYBIND11_PYBIND_HH__
+#define __PYTHON_PYBIND11_PYBIND_HH__
 
-%import <std_string.i>
-%import <stdint.i>
+#include "pybind11/pybind11.h"
 
-namespace Net {
-struct EthAddr
-{
-    EthAddr();
-    EthAddr(const uint8_t ea[6]);
-    EthAddr(const std::string &addr);
-};
+void pybind_init_core(pybind11::module &m_native);
+void pybind_init_debug(pybind11::module &m_native);
 
-struct IpAddress
-{
-    IpAddress();
-    IpAddress(const uint32_t __addr);
-};
+void pybind_init_event(pybind11::module &m_native);
+void pybind_init_pyobject(pybind11::module &m_native);
+void pybind_init_stats(pybind11::module &m_native);
 
-struct IpNetmask : IpAddress
-{
-    IpNetmask();
-    IpNetmask(const uint32_t __addr, const uint8_t __netmask);
-};
-
-struct IpWithPort : IpAddress
-{
-    IpWithPort();
-    IpWithPort(const uint32_t __addr, const uint16_t __port);
-};
-
-}
-
+#endif

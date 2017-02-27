@@ -35,7 +35,7 @@
 #
 # Authors: David Guillen Fandos
 
-from m5.SimObject import SimObject
+from m5.SimObject import *
 from ClockedObject import ClockedObject
 
 from m5.params import *
@@ -52,11 +52,9 @@ class ThermalResistor(SimObject):
     type = 'ThermalResistor'
     cxx_header = "sim/power/thermal_model.hh"
 
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-      void setNodes(ThermalNode * node1, ThermalNode * node2);
-''')
+    cxx_exports = [
+        PyBindMethod("setNodes"),
+    ]
 
     resistance = Param.Float(1.0, "Thermal resistance, expressed in Kelvin per Watt")
 
@@ -65,11 +63,9 @@ class ThermalCapacitor(SimObject):
     type = 'ThermalCapacitor'
     cxx_header = "sim/power/thermal_model.hh"
 
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-      void setNodes(ThermalNode * node1, ThermalNode * node2);
-''')
+    cxx_exports = [
+        PyBindMethod("setNodes"),
+    ]
 
     capacitance = Param.Float(1.0, "Thermal capacitance, expressed in Joules per Kelvin")
 
@@ -78,11 +74,9 @@ class ThermalReference(SimObject, object):
     type = 'ThermalReference'
     cxx_header = "sim/power/thermal_model.hh"
 
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-      void setNode(ThermalNode * node);
-''')
+    cxx_exports = [
+        PyBindMethod("setNode"),
+    ]
 
     # Static temperature which may change over time
     temperature = Param.Float(25.0, "Operational temperature in Celsius")
@@ -93,16 +87,14 @@ class ThermalModel(ClockedObject):
     type = 'ThermalModel'
     cxx_header = "sim/power/thermal_model.hh"
 
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-      void addCapacitor(ThermalCapacitor *obj);
-      void addResistor(ThermalResistor *obj);
-      void addReference(ThermalReference *obj);
-      void addDomain(ThermalDomain *obj);
-      void addNode(ThermalNode *obj);
-      void doStep();
-''')
+    cxx_exports = [
+        PyBindMethod("addCapacitor"),
+        PyBindMethod("addResistor"),
+        PyBindMethod("addReference"),
+        PyBindMethod("addDomain"),
+        PyBindMethod("addNode"),
+        PyBindMethod("doStep"),
+    ]
 
     step = Param.Float(0.01, "Simulation step (in seconds) for thermal simulation")
 

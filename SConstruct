@@ -1027,7 +1027,8 @@ if main['M5_BUILD_CACHE']:
     print 'Using build cache located at', main['M5_BUILD_CACHE']
     CacheDir(main['M5_BUILD_CACHE'])
 
-if not GetOption('without_python'):
+main['USE_PYTHON'] = not GetOption('without_python')
+if main['USE_PYTHON']:
     # Find Python include and library directories for embedding the
     # interpreter. We rely on python-config to resolve the appropriate
     # includes and linker flags. ParseConfig does not seem to understand

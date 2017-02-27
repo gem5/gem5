@@ -31,9 +31,6 @@
 
 Import('*')
 
-Source('swig/pyevent.cc', skip_no_python=True)
-Source('swig/pyobject.cc', skip_no_python=True)
-
 PySource('', 'importer.py')
 PySource('m5', 'm5/__init__.py')
 PySource('m5', 'm5/SimObject.py')
@@ -62,16 +59,13 @@ PySource('m5.util', 'm5/util/orderdict.py')
 PySource('m5.util', 'm5/util/smartdict.py')
 PySource('m5.util', 'm5/util/sorteddict.py')
 PySource('m5.util', 'm5/util/terminal.py')
+PySource('m5.util', 'm5/util/pybind.py')
 
-PySource('_m5', '_m5/__init__.py')
-SwigSource('_m5', 'swig/core.i')
-SwigSource('_m5', 'swig/debug.i')
-SwigSource('_m5', 'swig/drain.i')
-SwigSource('_m5', 'swig/event.i')
-SwigSource('_m5', 'swig/pyobject.i')
-SwigSource('_m5', 'swig/range.i')
-SwigSource('_m5', 'swig/serialize.i')
-SwigSource('_m5', 'swig/stats.i')
-SwigSource('_m5', 'swig/trace.i')
 PySource('m5.internal', 'm5/internal/__init__.py')
 PySource('m5.internal', 'm5/internal/params.py')
+
+Source('pybind11/core.cc', skip_no_python=True)
+Source('pybind11/debug.cc', skip_no_python=True)
+Source('pybind11/event.cc', skip_no_python=True)
+Source('pybind11/pyobject.cc', skip_no_python=True)
+Source('pybind11/stats.cc', skip_no_python=True)

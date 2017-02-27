@@ -38,7 +38,7 @@
 #          Andreas Sandberg
 
 from m5.defines import buildEnv
-from m5.SimObject import SimObject
+from m5.SimObject import *
 from m5.params import *
 from m5.params import isNullPointer
 from m5.proxy import *
@@ -48,12 +48,9 @@ class ArmPMU(SimObject):
     cxx_class = 'ArmISA::PMU'
     cxx_header = 'arch/arm/pmu.hh'
 
-    @classmethod
-    def export_methods(cls, code):
-        code('''
-      void addEventProbe(unsigned int id,
-                        SimObject *obj, const char *name);
-''')
+    cxx_exports = [
+        PyBindMethod("addEventProbe"),
+    ]
 
     # To prevent cycles in the configuration hierarchy, we don't keep
     # a list of supported events as a configuration param. Instead, we

@@ -11,7 +11,8 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2008 The Hewlett-Packard Development Company
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2010 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,87 +39,81 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
+ *          Andreas Sandberg
  */
-
-#ifndef __SIM_INIT_HH__
-#define __SIM_INIT_HH__
 
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
-#include <list>
 #include <map>
-#include <string>
+#include <vector>
 
-#include <inttypes.h>
+#include "base/debug.hh"
+#include "base/output.hh"
+#include "base/trace.hh"
+#include "sim/debug.hh"
 
-#ifndef PyObject_HEAD
-struct _object;
-typedef _object PyObject;
-#endif
+namespace py = pybind11;
 
-/*
- * Data structure describing an embedded python file.
- */
-struct EmbeddedPython
+namespace Debug {
+extern int allFlagsVersion;
+}
+
+static void
+output(const char *filename)
 {
-    const char *filename;
-    const char *abspath;
-    const char *modpath;
-    const uint8_t *code;
-    int zlen;
-    int len;
+    OutputStream *file_stream = simout.find(filename);
 
-    EmbeddedPython(const char *filename, const char *abspath,
-                   const char *modpath, const uint8_t *code, int zlen, int len);
+    if (!file_stream)
+        file_stream = simout.create(filename);
 
-    PyObject *getCode() const;
-    bool addModule() const;
+    Trace::setDebugLogger(new Trace::OstreamLogger(*file_stream->stream()));
+}
 
-    static EmbeddedPython *importer;
-    static PyObject *importerModule;
-    static std::list<EmbeddedPython *> &getList();
-    static int initAll();
-};
-
-struct EmbeddedSwig
+static void
+ignore(const char *expr)
 {
-    void (*initFunc)();
+    ObjectMatch ignore(expr);
 
-    std::string context;
+    Trace::getDebugLogger()->setIgnore(ignore);
+}
 
-    EmbeddedSwig(void (*init_func)(), const std::string& _context);
-
-    static std::list<EmbeddedSwig *> &getList();
-    static void initAll();
-};
-
-class EmbeddedPyBind
+void
+pybind_init_debug(py::module &m_native)
 {
-  public:
-    EmbeddedPyBind(const char *_name,
-                   void (*init_func)(pybind11::module &),
-                   const char *_base);
+    py::module m_debug = m_native.def_submodule("debug");
 
-    EmbeddedPyBind(const char *_name,
-                   void (*init_func)(pybind11::module &));
+    m_debug
+        .def("getAllFlagsVersion", []() { return Debug::allFlagsVersion; })
+        .def("allFlags", &Debug::allFlags, py::return_value_policy::reference)
+        .def("findFlag", &Debug::findFlag)
+        .def("setDebugFlag", &setDebugFlag)
+        .def("clearDebugFlag", &clearDebugFlag)
+        .def("dumpDebugFlags", &dumpDebugFlags)
 
-    static void initAll();
+        .def("schedBreak", &schedBreak)
+        .def("setRemoteGDBPort", &setRemoteGDBPort)
+        ;
 
-  private:
-    void (*initFunc)(pybind11::module &);
+    py::class_<Debug::Flag> c_flag(m_debug, "Flag");
+    c_flag
+        .def("name", &Debug::Flag::name)
+        .def("desc", &Debug::Flag::desc)
+        .def("kids", &Debug::Flag::kids)
+        .def("enable", &Debug::Flag::enable)
+        .def("disable", &Debug::Flag::disable)
+        .def("sync", &Debug::Flag::sync)
+        ;
 
-    bool depsReady() const;
-    void init(pybind11::module &m);
+    py::class_<Debug::SimpleFlag>(m_debug, "SimpleFlag", c_flag);
+    py::class_<Debug::CompoundFlag>(m_debug, "CompoundFlag", c_flag);
 
-    bool registered;
-    const std::string name;
-    const std::string base;
 
-    static std::map<std::string, EmbeddedPyBind *> &getMap();
-};
-
-int initM5Python();
-int m5Main(int argc, char **argv);
-PyMODINIT_FUNC initm5(void);
-
-#endif // __SIM_INIT_HH__
+    py::module m_trace = m_native.def_submodule("trace");
+    m_trace
+        .def("output", &output)
+        .def("ignore", &ignore)
+        .def("enable", &Trace::enable)
+        .def("disable", &Trace::disable)
+        ;
+}

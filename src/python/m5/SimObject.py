@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -41,12 +41,16 @@
 # Authors: Steve Reinhardt
 #          Nathan Binkert
 #          Andreas Hansson
+#          Andreas Sandberg
 
 import sys
 from types import FunctionType, MethodType, ModuleType
+from functools import wraps
+import inspect
 
 import m5
 from m5.util import *
+from m5.util.pybind import *
 
 # Have to import params up top since Param is referenced on initial
 # load (when SimObject class references Param to create a class
@@ -268,7 +272,6 @@ def createCxxConfigDirectoryEntryFile(code, name, simobj, is_header):
         code('{')
         code.indent()
         code('this->name = name_;')
-        code('this->pyobj = NULL;')
         code.dedent()
         code('}')
 
@@ -393,12 +396,16 @@ def createCxxConfigDirectoryEntryFile(code, name, simobj, is_header):
 # class are instantiated, and provides inherited instance behavior).
 class MetaSimObject(type):
     # Attributes that can be set only at initialization time
-    init_keywords = { 'abstract' : bool,
-                      'cxx_class' : str,
-                      'cxx_type' : str,
-                      'cxx_header' : str,
-                      'type' : str,
-                      'cxx_bases' : list }
+    init_keywords = {
+        'abstract' : bool,
+        'cxx_class' : str,
+        'cxx_type' : str,
+        'cxx_header' : str,
+        'type' : str,
+        'cxx_bases' : list,
+        'cxx_exports' : list,
+        'cxx_param_exports' : list,
+    }
     # Attributes that can be set any time
     keywords = { 'check' : FunctionType }
 
@@ -415,7 +422,13 @@ class MetaSimObject(type):
         # filtered in __init__.
         cls_dict = {}
         value_dict = {}
+        cxx_exports = []
         for key,val in dict.items():
+            try:
+                cxx_exports.append(getattr(val, "__pybind"))
+            except AttributeError:
+                pass
+
             if public_value(key, val):
                 cls_dict[key] = val
             else:
@@ -425,6 +438,12 @@ class MetaSimObject(type):
             value_dict['abstract'] = False
         if 'cxx_bases' not in value_dict:
             value_dict['cxx_bases'] = []
+        if 'cxx_exports' not in value_dict:
+            value_dict['cxx_exports'] = cxx_exports
+        else:
+            value_dict['cxx_exports'] += cxx_exports
+        if 'cxx_param_exports' not in value_dict:
+            value_dict['cxx_param_exports'] = []
         cls_dict['_value_dict'] = value_dict
         cls = super(MetaSimObject, mcls).__new__(mcls, name, bases, cls_dict)
         if 'type' in value_dict:
@@ -654,6 +673,9 @@ class MetaSimObject(type):
     def cxx_predecls(cls, code):
         code('#include "params/$cls.hh"')
 
+    def pybind_predecls(cls, code):
+        code('#include "${{cls.cxx_header}}"')
+
     # See ParamValue.swig_predecls for description.
     def swig_predecls(cls, code):
         code('%import "python/_m5/param_$cls.i"')
@@ -755,6 +777,85 @@ using std::ptrdiff_t;
         code()
         code('%include "params/$cls.hh"')
 
+    def pybind_decl(cls, code):
+        class_path = cls.cxx_class.split('::')
+        namespaces, classname = class_path[:-1], class_path[-1]
+        py_class_name = '_COLONS_'.join(class_path) if namespaces else \
+                        classname;
+
+        # The 'local' attribute restricts us to the params declared in
+        # the object itself, not including inherited params (which
+        # will also be inherited from the base class's param struct
+        # here). Sort the params based on their key
+        params = map(lambda (k, v): v, sorted(cls._params.local.items()))
+        ports = cls._ports.local
+
+        code('''#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+
+#include "sim/sim_object.hh"
+#include "params/$cls.hh"
+#include "sim/init.hh"
+#include "${{cls.cxx_header}}"
+
+''')
+
+        for param in params:
+            param.pybind_predecls(code)
+
+        code('''namespace py = pybind11;
+
+static void
+module_init(py::module &m_internal)
+{
+    py::module m = m_internal.def_submodule("param_${cls}");
+''')
+        code.indent()
+        if cls._base:
+            code('py::class_<${cls}Params, ${{cls._base.type}}Params>(m, ' \
+                 '"${cls}Params")')
+        else:
+            code('py::class_<${cls}Params>(m, "${cls}Params")')
+
+        code.indent()
+        if not hasattr(cls, 'abstract') or not cls.abstract:
+            code('.def(py::init<>())')
+            code('.def("create", &${cls}Params::create)')
+
+        param_exports = cls.cxx_param_exports + [
+            PyBindProperty(k)
+            for k, v in sorted(cls._params.local.items())
+        ] + [
+            PyBindProperty("port_%s_connection_count" % port.name)
+            for port in ports.itervalues()
+        ]
+        for exp in param_exports:
+            exp.export(code, "%sParams" % cls)
+
+        code(';')
+        code()
+        code.dedent()
+
+        bases = [ cls._base.cxx_class ] + cls.cxx_bases if cls._base else \
+                cls.cxx_bases
+        if bases:
+            base_str = ", ".join(bases)
+            code('py::class_<${{cls.cxx_class}}, ${base_str}>(m, ' \
+                 '"${py_class_name}")')
+        else:
+            code('py::class_<${{cls.cxx_class}}>(m, "${py_class_name}")')
+        code.indent()
+        for exp in cls.cxx_exports:
+            exp.export(code, cls.cxx_class)
+        code(';')
+        code.dedent()
+        code()
+        code.dedent()
+        code('}')
+        code()
+        code('static EmbeddedPyBind embed_obj("${0}", module_init, "${1}");',
+             cls, cls._base.type if cls._base else "")
+
 
     # Generate the C++ declaration (.hh file) for this SimObject's
     # param struct.  Called from src/SConscript.
@@ -780,6 +881,14 @@ using std::ptrdiff_t;
 
 ''')
 
+
+        # The base SimObject has a couple of params that get
+        # automatically set from Python without being declared through
+        # the normal Param mechanism; we slip them in here (needed
+        # predecls now, actual declarations below)
+        if cls == SimObject:
+            code('''#include <string>''')
+
         # A forward class declaration is sufficient since we are just
         # declaring a pointer.
         for ns in class_path[:-1]:
@@ -789,18 +898,6 @@ using std::ptrdiff_t;
             code('} // namespace $ns')
         code()
 
-        # The base SimObject has a couple of params that get
-        # automatically set from Python without being declared through
-        # the normal Param mechanism; we slip them in here (needed
-        # predecls now, actual declarations below)
-        if cls == SimObject:
-            code('''
-#ifndef PY_VERSION
-struct PyObject;
-#endif
-
-#include <string>
-''')
         for param in params:
             param.cxx_predecls(code)
         for port in ports.itervalues():
@@ -832,8 +929,8 @@ struct PyObject;
     virtual ~SimObjectParams() {}
 
     std::string name;
-    PyObject *pyobj;
             ''')
+
         for param in params:
             param.cxx_decl(code)
         for port in ports.itervalues():
@@ -860,6 +957,47 @@ struct PyObject;
 # SimObject be defined) lower in this file.
 def isSimObjectOrVector(value):
     return False
+
+def cxxMethod(*args, **kwargs):
+    """Decorator to export C++ functions to Python"""
+
+    def decorate(func):
+        name = func.func_name
+        override = kwargs.get("override", False)
+        cxx_name = kwargs.get("cxx_name", name)
+
+        args, varargs, keywords, defaults = inspect.getargspec(func)
+        if varargs or keywords:
+            raise ValueError("Wrapped methods must not contain variable " \
+                             "arguments")
+
+        # Create tuples of (argument, default)
+        if defaults:
+            args = args[:-len(defaults)] + zip(args[-len(defaults):], defaults)
+        # Don't include self in the argument list to PyBind
+        args = args[1:]
+
+
+        @wraps(func)
+        def cxx_call(self, *args, **kwargs):
+            ccobj = self.getCCObject()
+            return getattr(ccobj, name)(*args, **kwargs)
+
+        @wraps(func)
+        def py_call(self, *args, **kwargs):
+            return self.func(*args, **kwargs)
+
+        f = py_call if override else cxx_call
+        f.__pybind = PyBindMethod(name, cxx_name=cxx_name, args=args)
+
+        return f
+
+    if len(args) == 0:
+        return decorate
+    elif len(args) == 1 and len(kwargs) == 0:
+        return decorate(*args)
+    else:
+        raise TypeError("One argument and no kwargs, or only kwargs expected")
 
 # This class holds information about each simobject parameter
 # that should be displayed on the command line for use in the
@@ -920,6 +1058,27 @@ class SimObject(object):
     void regProbeListeners();
     void startup();
 ''')
+
+    cxx_exports = [
+        PyBindMethod("init"),
+        PyBindMethod("initState"),
+        PyBindMethod("memInvalidate"),
+        PyBindMethod("memWriteback"),
+        PyBindMethod("regStats"),
+        PyBindMethod("resetStats"),
+        PyBindMethod("regProbePoints"),
+        PyBindMethod("regProbeListeners"),
+        PyBindMethod("startup"),
+    ]
+
+    cxx_param_exports = [
+        PyBindProperty("name"),
+    ]
+
+    @cxxMethod
+    def loadState(self, cp):
+        """Load SimObject state from a checkpoint"""
+        pass
 
     # Returns a dict of all the option strings that can be
     # generated as command line options for this simobject instance
@@ -1379,7 +1538,6 @@ class SimObject(object):
 
         cc_params_struct = getattr(m5.internal.params, '%sParams' % self.type)
         cc_params = cc_params_struct()
-        cc_params.pyobj = self
         cc_params.name = str(self)
 
         param_names = self._params.keys()
@@ -1395,8 +1553,7 @@ class SimObject(object):
                 assert isinstance(value, list)
                 vec = getattr(cc_params, param)
                 assert not len(vec)
-                for v in value:
-                    vec.append(v)
+                setattr(cc_params, param, list(value))
             else:
                 setattr(cc_params, param, value)
 
@@ -1517,4 +1674,9 @@ def clear():
 # __all__ defines the list of symbols that get exported when
 # 'from config import *' is invoked.  Try to keep this reasonably
 # short to avoid polluting other namespaces.
-__all__ = [ 'SimObject' ]
+__all__ = [
+    'SimObject',
+    'cxxMethod',
+    'PyBindMethod',
+    'PyBindProperty',
+]
