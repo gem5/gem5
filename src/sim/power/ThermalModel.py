@@ -45,7 +45,7 @@ from m5.objects import ThermalDomain
 # Represents a thermal node
 class ThermalNode(SimObject):
     type = 'ThermalNode'
-    cxx_header = "sim/power/thermal_model.hh"
+    cxx_header = "sim/power/thermal_node.hh"
 
 # Represents a thermal resistor
 class ThermalResistor(SimObject):

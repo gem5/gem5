@@ -37,26 +37,21 @@
  * Authors: David Guillen Fandos
  */
 
-#ifndef __SIM_THERMAL_ENTITY_HH__
-#define __SIM_THERMAL_ENTITY_HH__
 
-#include "sim/sim_object.hh"
+#include "sim/power/thermal_node.hh"
 
-class LinearEquation;
-class ThermalNode;
+#include "params/ThermalNode.hh"
 
 /**
- * An abstract class that represents any thermal entity which is used
- * in the circuital thermal equivalent model. It is necessary for
- * ThermalModel to be able to solve the circuit.
+ * ThermalNode
  */
-class ThermalEntity
+ThermalNode::ThermalNode(const ThermalNodeParams *p)
+    : SimObject(p), id(-1), isref(false), temp(0.0f)
 {
-  public:
-    // Get the equation given a node and a step in seconds (assuming N nodes)
-    virtual LinearEquation getEquation(ThermalNode *tn, unsigned n,
-                                       double step) const = 0;
-};
+}
 
-
-#endif
+ThermalNode *
+ThermalNodeParams::create()
+{
+    return new ThermalNode(this);
+}

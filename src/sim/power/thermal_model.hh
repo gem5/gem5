@@ -47,27 +47,11 @@
 #include "params/ThermalReference.hh"
 #include "params/ThermalResistor.hh"
 #include "sim/clocked_object.hh"
+#include "sim/power/thermal_domain.hh"
 #include "sim/power/thermal_entity.hh"
+#include "sim/power/thermal_node.hh"
 #include "sim/sim_object.hh"
 
-class ThermalDomain;
-
-
-/**
- * A ThermalNode is used to connect thermal entities, such as
- * resistors, capacitors, references and domains. It is the circuital
- * equivalent to a voltage node.
- */
-class ThermalNode : public SimObject
-{
-  public:
-    typedef SimObjectParams Params;
-    ThermalNode(const Params *p);
-
-    int id;
-    bool isref;
-    double temp;
-};
 
 /**
  * A ThermalResistor is used to model a thermal resistance between two

@@ -45,10 +45,10 @@
 #include "base/statistics.hh"
 #include "params/ThermalDomain.hh"
 #include "sim/power/thermal_entity.hh"
+#include "sim/power/thermal_node.hh"
 #include "sim/sim_object.hh"
+#include "sim/sub_system.hh"
 
-class SubSystem;
-class ThermalNode;
 template <class T> class ProbePointArg;
 
 /**

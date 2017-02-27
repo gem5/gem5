@@ -41,27 +41,12 @@
 
 #include "base/statistics.hh"
 #include "params/ThermalCapacitor.hh"
-#include "params/ThermalNode.hh"
 #include "params/ThermalReference.hh"
 #include "params/ThermalResistor.hh"
 #include "sim/clocked_object.hh"
 #include "sim/linear_solver.hh"
 #include "sim/power/thermal_domain.hh"
 #include "sim/sim_object.hh"
-
-/**
- * ThermalNode
- */
-ThermalNode::ThermalNode(const Params *p)
-    : SimObject(p), id(-1), isref(false), temp(0.0f)
-{
-}
-
-ThermalNode *
-ThermalNodeParams::create()
-{
-    return new ThermalNode(this);
-}
 
 /**
  * ThermalReference
