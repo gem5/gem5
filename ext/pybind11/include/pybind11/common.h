@@ -558,7 +558,8 @@ PYBIND11_DECL_FMT(bool, "?");
 struct nodelete { template <typename T> void operator()(T*) { } };
 
 // overload_cast requires variable templates: C++14 or MSVC 2015 Update 2
-#if defined(PYBIND11_CPP14) || _MSC_FULL_VER >= 190023918
+#if defined(PYBIND11_CPP14) || ( \
+    defined(_MSC_FULL_VER) &&_MSC_FULL_VER >= 190023918)
 #define PYBIND11_OVERLOAD_CAST 1
 
 NAMESPACE_BEGIN(detail)
