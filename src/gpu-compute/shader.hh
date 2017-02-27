@@ -73,7 +73,7 @@ static const int LDS_SIZE = 65536;
 // Class Shader: This describes a single shader instance. Most
 // configurations will only have a single shader.
 
-class Shader : public SimObject
+class Shader : public ClockedObject
 {
   protected:
       // Shader's clock period in terms of number of ticks of curTime,

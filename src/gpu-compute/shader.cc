@@ -50,7 +50,7 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "sim/sim_exit.hh"
 
-Shader::Shader(const Params *p) : SimObject(p),
+Shader::Shader(const Params *p) : ClockedObject(p),
     clock(p->clk_domain->clockPeriod()), cpuThread(nullptr), gpuTc(nullptr),
     cpuPointer(p->cpu_pointer), tickEvent(this), timingSim(p->timing),
     hsail_mode(SIMT), impl_kern_boundary_sync(p->impl_kern_boundary_sync),

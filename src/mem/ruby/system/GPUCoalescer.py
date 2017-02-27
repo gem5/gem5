@@ -36,7 +36,7 @@ from m5.params import *
 from m5.proxy import *
 from Sequencer import *
 
-class RubyGPUCoalescer(RubySequencer):
+class RubyGPUCoalescer(RubyPort):
    type = 'RubyGPUCoalescer'
    cxx_class = 'GPUCoalescer'
    cxx_header = "mem/ruby/system/GPUCoalescer.hh"
@@ -46,3 +46,11 @@ class RubyGPUCoalescer(RubySequencer):
                                 "max requests (incl. prefetches) outstanding")
    assume_rfo = Param.Bool(True, "assume protocol implementes Read for "
                            "Ownership coherence");
+
+   icache = Param.RubyCache("")
+   dcache = Param.RubyCache("")
+   deadlock_threshold = Param.Cycles(500000,
+       "max outstanding cycles for a request before " \
+       "deadlock/livelock declared")
+   garnet_standalone = Param.Bool(False, "")
+   dcache_hit_latency = Param.Cycles(1, "Data cache hit latency")

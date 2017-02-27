@@ -49,7 +49,7 @@
 #include "mem/request.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/system/RubyPort.hh"
+#include "mem/ruby/system/Sequencer.hh"
 
 class DataBlock;
 class CacheMsg;
@@ -255,10 +255,6 @@ class GPUCoalescer : public RubyPort
 
     bool handleLlsc(Addr address, GPUCoalescerRequest* request);
 
-    // Private copy constructor and assignment operator
-    GPUCoalescer(const GPUCoalescer& obj);
-    GPUCoalescer& operator=(const GPUCoalescer& obj);
-
     class IssueEvent : public Event
     {
       private:
@@ -370,6 +366,11 @@ class GPUCoalescer : public RubyPort
     std::vector<Stats::Histogram *> m_InitialToForwardDelayHist;
     std::vector<Stats::Histogram *> m_ForwardToFirstResponseDelayHist;
     std::vector<Stats::Histogram *> m_FirstResponseToCompletionDelayHist;
+
+private:
+    // Private copy constructor and assignment operator
+    GPUCoalescer(const GPUCoalescer& obj);
+    GPUCoalescer& operator=(const GPUCoalescer& obj);
 };
 
 inline std::ostream&
