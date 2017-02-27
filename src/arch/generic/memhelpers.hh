@@ -43,7 +43,9 @@
 #ifndef __ARCH_GENERIC_MEMHELPERS_HH__
 #define __ARCH_GENERIC_MEMHELPERS_HH__
 
+#include "arch/isa_traits.hh"
 #include "base/types.hh"
+#include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
 #include "sim/insttracer.hh"

@@ -1318,8 +1318,6 @@ class ISAParser(Grammar):
             print >>f, '#if !defined(__SPLIT) || (__SPLIT == 1)'
             self.splits[f] = 1
         # ensure requisite #include's
-        elif filename in ['decoder-g.cc.inc', 'exec-g.cc.inc']:
-            print >>f, '#include "decoder.hh"'
         elif filename == 'decoder-g.hh.inc':
             print >>f, '#include "base/bitfield.hh"'
 
@@ -1360,12 +1358,15 @@ class ISAParser(Grammar):
             f.write('#include "%s"\n' % fn)
             inc.append(fn)
 
+            fn = 'decoder.hh'
+            f.write('#include "%s"\n' % fn)
+            inc.append(fn)
+
             fn = 'decode-method.cc.inc'
             # is guaranteed to have been written for parse to complete
             f.write('#include "%s"\n' % fn)
             inc.append(fn)
 
-            inc.append("decoder.hh")
             print >>dep, file+':', ' '.join(inc)
 
         extn = re.compile('(\.[^\.]+)$')
@@ -1386,6 +1387,10 @@ class ISAParser(Grammar):
                 f.write('#include "%s"\n' % fn)
                 inc.append(fn)
 
+                fn = 'decoder.hh'
+                f.write('#include "%s"\n' % fn)
+                inc.append(fn)
+
                 fn = 'decoder-ns.cc.inc'
                 assert(fn in self.files)
                 print >>f, 'namespace %s {' % self.namespace
@@ -1395,7 +1400,6 @@ class ISAParser(Grammar):
                 print >>f, '}'
                 inc.append(fn)
 
-                inc.append("decoder.hh")
                 print >>dep, file+':', ' '.join(inc)
 
         # instruction execution per-CPU model
@@ -1415,6 +1419,10 @@ class ISAParser(Grammar):
                     inc.append(fn)
 
                     f.write(cpu.includes+"\n")
+
+                    fn = 'decoder.hh'
+                    f.write('#include "%s"\n' % fn)
+                    inc.append(fn)
 
                     fn = 'exec-ns.cc.inc'
                     assert(fn in self.files)
