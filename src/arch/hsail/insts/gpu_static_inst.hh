@@ -54,7 +54,7 @@ namespace HsailISA
     {
       public:
         HsailGPUStaticInst(const BrigObject *obj, const std::string &opcode);
-        void generateDisassembly();
+        void generateDisassembly() override;
         int instSize() const override { return sizeof(RawMachInst); }
         bool isValid() const override { return true; }
 

@@ -271,24 +271,24 @@ class KernelLaunchStaticInst : public GPUStaticInst
     }
 
     void
-    execute(GPUDynInstPtr gpuDynInst)
+    execute(GPUDynInstPtr gpuDynInst) override
     {
         fatal("kernel launch instruction should not be executed\n");
     }
 
     void
-    generateDisassembly()
+    generateDisassembly() override
     {
         disassembly = opcode;
     }
 
-    int getNumOperands() { return 0; }
-    bool isCondRegister(int operandIndex) { return false; }
-    bool isScalarRegister(int operandIndex) { return false; }
-    bool isVectorRegister(int operandIndex) { return false; }
-    bool isSrcOperand(int operandIndex) { return false; }
-    bool isDstOperand(int operandIndex) { return false; }
-    int getOperandSize(int operandIndex) { return 0; }
+    int getNumOperands() override { return 0; }
+    bool isCondRegister(int operandIndex) override { return false; }
+    bool isScalarRegister(int operandIndex) override { return false; }
+    bool isVectorRegister(int operandIndex) override { return false; }
+    bool isSrcOperand(int operandIndex) override { return false; }
+    bool isDstOperand(int operandIndex) override { return false; }
+    int getOperandSize(int operandIndex) override { return 0; }
 
     int
     getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
@@ -296,9 +296,9 @@ class KernelLaunchStaticInst : public GPUStaticInst
         return 0;
     }
 
-    int numDstRegOperands() { return 0; }
-    int numSrcRegOperands() { return 0; }
-    bool isValid() const { return true; }
+    int numDstRegOperands() override { return 0; }
+    int numSrcRegOperands() override { return 0; }
+    bool isValid() const override { return true; }
     int instSize() const override { return 0; }
 };
 
