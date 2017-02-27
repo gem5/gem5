@@ -82,6 +82,21 @@ namespace X86ISA
         SyscallDesc* getDesc(int callnum);
 
         void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
+        void clone(ThreadContext *old_tc, ThreadContext *new_tc,
+                   Process *process, TheISA::IntReg flags);
+
+        X86Process &
+        operator=(const X86Process &in)
+        {
+            if (this == &in)
+                return *this;
+
+            _gdtStart = in._gdtStart;
+            _gdtSize = in._gdtSize;
+            syscallDescs = in.syscallDescs;
+
+            return *this;
+        }
     };
 
     class X86_64Process : public X86Process
@@ -97,6 +112,20 @@ namespace X86ISA
             Addr size;
             Addr vtimeOffset;
             Addr vgettimeofdayOffset;
+
+            VSyscallPage &
+            operator=(const VSyscallPage &in)
+            {
+                if (this == &in)
+                    return *this;
+
+                base = in.base;
+                size = in.size;
+                vtimeOffset = in.vtimeOffset;
+                vgettimeofdayOffset = in.vgettimeofdayOffset;
+
+                return *this;
+            }
         };
         VSyscallPage vsyscallPage;
 
@@ -108,6 +137,8 @@ namespace X86ISA
         /// Explicitly import the otherwise hidden getSyscallArg
         using Process::getSyscallArg;
         void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
+        void clone(ThreadContext *old_tc, ThreadContext *new_tc,
+                   Process *process, TheISA::IntReg flags);
     };
 
     class I386Process : public X86Process
@@ -123,6 +154,20 @@ namespace X86ISA
             Addr size;
             Addr vsyscallOffset;
             Addr vsysexitOffset;
+
+            VSyscallPage &
+            operator=(const VSyscallPage &in)
+            {
+                if (this == &in)
+                    return *this;
+
+                base = in.base;
+                size = in.size;
+                vsyscallOffset = in.vsyscallOffset;
+                vsysexitOffset = in.vsysexitOffset;
+
+                return *this;
+            }
         };
         VSyscallPage vsyscallPage;
 
@@ -134,6 +179,8 @@ namespace X86ISA
         X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
         X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
         void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
+        void clone(ThreadContext *old_tc, ThreadContext *new_tc,
+                   Process *process, TheISA::IntReg flags);
     };
 
     /**

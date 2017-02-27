@@ -440,7 +440,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 309 */ SyscallDesc("get_kernel_syms", unimplementedFunc),
     /* 310 */ SyscallDesc("syslog", unimplementedFunc),
     /* 311 */ SyscallDesc("reboot", unimplementedFunc),
-    /* 312 */ SyscallDesc("clone", cloneFunc),
+    /* 312 */ SyscallDesc("clone", cloneFunc<AlphaLinux>),
     /* 313 */ SyscallDesc("uselib", unimplementedFunc),
     /* 314 */ SyscallDesc("mlock", unimplementedFunc),
     /* 315 */ SyscallDesc("munlock", unimplementedFunc),

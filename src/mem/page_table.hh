@@ -194,6 +194,9 @@ class PageTableBase : public Serializable
             pTableCache[2].valid = false;
         }
     }
+
+    virtual void getMappings(std::vector<std::pair<Addr, Addr>>
+                             *addr_mappings) {};
 };
 
 /**
@@ -239,6 +242,8 @@ class FuncPageTable : public PageTableBase
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
+
+    void getMappings(std::vector<std::pair<Addr, Addr>> *addr_maps) override;
 };
 
 /**

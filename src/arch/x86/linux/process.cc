@@ -276,10 +276,10 @@ static SyscallDesc syscallDescs64[] = {
     /*  53 */ SyscallDesc("socketpair", unimplementedFunc),
     /*  54 */ SyscallDesc("setsockopt", unimplementedFunc),
     /*  55 */ SyscallDesc("getsockopt", unimplementedFunc),
-    /*  56 */ SyscallDesc("clone", cloneFunc),
+    /*  56 */ SyscallDesc("clone", cloneFunc<X86Linux64>),
     /*  57 */ SyscallDesc("fork", unimplementedFunc),
     /*  58 */ SyscallDesc("vfork", unimplementedFunc),
-    /*  59 */ SyscallDesc("execve", unimplementedFunc),
+    /*  59 */ SyscallDesc("execve", execveFunc<X86Linux64>),
     /*  60 */ SyscallDesc("exit", exitFunc),
     /*  61 */ SyscallDesc("wait4", unimplementedFunc),
     /*  62 */ SyscallDesc("kill", unimplementedFunc),
@@ -438,7 +438,7 @@ static SyscallDesc syscallDescs64[] = {
     /* 215 */ SyscallDesc("epoll_wait_old", unimplementedFunc),
     /* 216 */ SyscallDesc("remap_file_pages", unimplementedFunc),
     /* 217 */ SyscallDesc("getdents64", unimplementedFunc),
-    /* 218 */ SyscallDesc("set_tid_address", unimplementedFunc),
+    /* 218 */ SyscallDesc("set_tid_address", setTidAddressFunc),
     /* 219 */ SyscallDesc("restart_syscall", unimplementedFunc),
     /* 220 */ SyscallDesc("semtimedop", unimplementedFunc),
     /* 221 */ SyscallDesc("fadvise64", unimplementedFunc),
@@ -542,6 +542,12 @@ X86_64LinuxProcess::X86_64LinuxProcess(ProcessParams * params,
                     sizeof(syscallDescs64) / sizeof(SyscallDesc))
 {}
 
+void X86_64LinuxProcess::clone(ThreadContext *old_tc, ThreadContext *new_tc,
+                               Process *process, TheISA::IntReg flags)
+{
+    X86_64Process::clone(old_tc, new_tc, (X86_64Process*)process, flags);
+}
+
 static SyscallDesc syscallDescs32[] = {
     /*   0 */ SyscallDesc("restart_syscall", unimplementedFunc),
     /*   1 */ SyscallDesc("exit", exitFunc),
@@ -554,7 +560,7 @@ static SyscallDesc syscallDescs32[] = {
     /*   8 */ SyscallDesc("creat", unimplementedFunc),
     /*   9 */ SyscallDesc("link", unimplementedFunc),
     /*  10 */ SyscallDesc("unlink", unimplementedFunc),
-    /*  11 */ SyscallDesc("execve", unimplementedFunc),
+    /*  11 */ SyscallDesc("execve", execveFunc<X86Linux32>),
     /*  12 */ SyscallDesc("chdir", unimplementedFunc),
     /*  13 */ SyscallDesc("time", timeFunc<X86Linux32>),
     /*  14 */ SyscallDesc("mknod", unimplementedFunc),
@@ -663,7 +669,7 @@ static SyscallDesc syscallDescs32[] = {
     /* 117 */ SyscallDesc("ipc", unimplementedFunc),
     /* 118 */ SyscallDesc("fsync", unimplementedFunc),
     /* 119 */ SyscallDesc("sigreturn", unimplementedFunc),
-    /* 120 */ SyscallDesc("clone", unimplementedFunc),
+    /* 120 */ SyscallDesc("clone", cloneFunc<X86Linux32>),
     /* 121 */ SyscallDesc("setdomainname", unimplementedFunc),
     /* 122 */ SyscallDesc("uname", unameFunc),
     /* 123 */ SyscallDesc("modify_ldt", unimplementedFunc),
@@ -801,7 +807,7 @@ static SyscallDesc syscallDescs32[] = {
     /* 255 */ SyscallDesc("epoll_ctl", unimplementedFunc),
     /* 256 */ SyscallDesc("epoll_wait", unimplementedFunc),
     /* 257 */ SyscallDesc("remap_file_pages", unimplementedFunc),
-    /* 258 */ SyscallDesc("set_tid_address", unimplementedFunc),
+    /* 258 */ SyscallDesc("set_tid_address", setTidAddressFunc),
     /* 259 */ SyscallDesc("timer_create", unimplementedFunc),
     /* 260 */ SyscallDesc("timer_settime", unimplementedFunc),
     /* 261 */ SyscallDesc("timer_gettime", unimplementedFunc),
@@ -873,3 +879,9 @@ I386LinuxProcess::I386LinuxProcess(ProcessParams * params, ObjectFile *objFile)
     : I386Process(params, objFile, syscallDescs32,
                   sizeof(syscallDescs32) / sizeof(SyscallDesc))
 {}
+
+void I386LinuxProcess::clone(ThreadContext *old_tc, ThreadContext *new_tc,
+                             Process *process, TheISA::IntReg flags)
+{
+    I386Process::clone(old_tc, new_tc, (I386Process*)process, flags);
+}

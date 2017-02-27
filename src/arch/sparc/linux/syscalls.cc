@@ -305,7 +305,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 214 */ SyscallDesc("sysinfo", sysinfoFunc<Sparc32Linux>), // 32 bit
     /* 215 */ SyscallDesc("ipc", unimplementedFunc), // 32 bit
     /* 216 */ SyscallDesc("sigreturn", unimplementedFunc), // 32 bit
-    /* 217 */ SyscallDesc("clone", cloneFunc),
+    /* 217 */ SyscallDesc("clone", cloneFunc<Sparc32Linux>),
     /* 218 */ SyscallDesc("ioprio_get", unimplementedFunc), // 32 bit
     /* 219 */ SyscallDesc("adjtimex", unimplementedFunc), // 32 bit
     /* 220 */ SyscallDesc("sigprocmask", unimplementedFunc), // 32 bit
@@ -611,7 +611,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 214 */ SyscallDesc("sysinfo", sysinfoFunc<SparcLinux>),
     /* 215 */ SyscallDesc("ipc", unimplementedFunc),
     /* 216 */ SyscallDesc("sigreturn", unimplementedFunc),
-    /* 217 */ SyscallDesc("clone", cloneFunc),
+    /* 217 */ SyscallDesc("clone", cloneFunc<SparcLinux>),
     /* 218 */ SyscallDesc("ioprio_get", unimplementedFunc),
     /* 219 */ SyscallDesc("adjtimex", unimplementedFunc),
     /* 220 */ SyscallDesc("sigprocmask", unimplementedFunc),

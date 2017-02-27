@@ -74,18 +74,41 @@ ignoreFunc(SyscallDesc *desc, int callnum, Process *process,
     return 0;
 }
 
+static void
+exitFutexWake(ThreadContext *tc, uint64_t uaddr)
+{
+    std::map<uint64_t, std::list<ThreadContext *> * >
+        &futex_map = tc->getSystemPtr()->futexMap;
+
+    int wokenUp = 0;
+    std::list<ThreadContext *> * tcWaitList;
+    if (futex_map.count(uaddr)) {
+        tcWaitList = futex_map.find(uaddr)->second;
+        if (tcWaitList->size() > 0) {
+            tcWaitList->front()->activate();
+            tcWaitList->pop_front();
+            wokenUp++;
+        }
+        if (tcWaitList->empty()) {
+            futex_map.erase(uaddr);
+            delete tcWaitList;
+        }
+    }
+    DPRINTF(SyscallVerbose, "exit: FUTEX_WAKE, activated %d waiting "
+                            "thread contexts\n", wokenUp);
+}
 
 SyscallReturn
-exitFunc(SyscallDesc *desc, int callnum, Process *process,
-         ThreadContext *tc)
+exitFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
-    if (process->system->numRunningContexts() == 1) {
-        // Last running context... exit simulator
+    if (p->system->numRunningContexts() == 1 && !p->childClearTID) {
+        // Last running free-parent context; exit simulator.
         int index = 0;
         exitSimLoop("target called exit()",
-                    process->getSyscallArg(tc, index) & 0xff);
+                    p->getSyscallArg(tc, index) & 0xff);
     } else {
-        // other running threads... just halt this one
+        if (p->childClearTID)
+            exitFutexWake(tc, p->childClearTID);
         tc->halt();
     }
 
@@ -130,11 +153,12 @@ brkFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     // in Linux at least, brk(0) returns the current break value
     // (note that the syscall and the glibc function have different behavior)
     if (new_brk == 0)
-        return p->brk_point;
+        return p->memState->brkPoint;
 
-    if (new_brk > p->brk_point) {
+    if (new_brk > p->memState->brkPoint) {
         // might need to allocate some new pages
-        for (ChunkGenerator gen(p->brk_point, new_brk - p->brk_point,
+        for (ChunkGenerator gen(p->memState->brkPoint,
+                                new_brk - p->memState->brkPoint,
                                 PageBytes); !gen.done(); gen.next()) {
             if (!p->pTable->translate(gen.addr()))
                 p->allocateMem(roundDown(gen.addr(), PageBytes), PageBytes);
@@ -159,12 +183,22 @@ brkFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
         }
     }
 
-    p->brk_point = new_brk;
+    p->memState->brkPoint = new_brk;
     DPRINTF_SYSCALL(Verbose, "brk: break point changed to: %#X\n",
-                    p->brk_point);
-    return p->brk_point;
+                    p->memState->brkPoint);
+    return p->memState->brkPoint;
 }
 
+SyscallReturn
+setTidAddressFunc(SyscallDesc *desc, int callnum, Process *process,
+                  ThreadContext *tc)
+{
+    int index = 0;
+    uint64_t tidPtr = process->getSyscallArg(tc, index);
+
+    process->childClearTID = tidPtr;
+    return process->pid();
+}
 
 SyscallReturn
 closeFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
@@ -858,89 +892,6 @@ getegidFunc(SyscallDesc *desc, int callnum, Process *process,
             ThreadContext *tc)
 {
     return process->egid();
-}
-
-
-SyscallReturn
-cloneFunc(SyscallDesc *desc, int callnum, Process *process,
-          ThreadContext *tc)
-{
-    int index = 0;
-    IntReg flags = process->getSyscallArg(tc, index);
-    IntReg newStack = process->getSyscallArg(tc, index);
-
-    DPRINTF(SyscallVerbose, "In sys_clone:\n");
-    DPRINTF(SyscallVerbose, " Flags=%llx\n", flags);
-    DPRINTF(SyscallVerbose, " Child stack=%llx\n", newStack);
-
-
-    if (flags != 0x10f00) {
-        warn("This sys_clone implementation assumes flags "
-             "CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD "
-             "(0x10f00), and may not work correctly with given flags "
-             "0x%llx\n", flags);
-    }
-
-    ThreadContext* ctc; // child thread context
-    if ((ctc = process->findFreeContext())) {
-        DPRINTF(SyscallVerbose, " Found unallocated thread context\n");
-
-        ctc->clearArchRegs();
-
-        // Arch-specific cloning code
-        #if THE_ISA == ALPHA_ISA or THE_ISA == X86_ISA
-            // Cloning the misc. regs for these archs is enough
-            TheISA::copyMiscRegs(tc, ctc);
-        #elif THE_ISA == SPARC_ISA
-            TheISA::copyRegs(tc, ctc);
-
-            // TODO: Explain what this code actually does :-)
-            ctc->setIntReg(NumIntArchRegs + 6, 0);
-            ctc->setIntReg(NumIntArchRegs + 4, 0);
-            ctc->setIntReg(NumIntArchRegs + 3, NWindows - 2);
-            ctc->setIntReg(NumIntArchRegs + 5, NWindows);
-            ctc->setMiscReg(MISCREG_CWP, 0);
-            ctc->setIntReg(NumIntArchRegs + 7, 0);
-            ctc->setMiscRegNoEffect(MISCREG_TL, 0);
-            ctc->setMiscReg(MISCREG_ASI, ASI_PRIMARY);
-
-            for (int y = 8; y < 32; y++)
-                ctc->setIntReg(y, tc->readIntReg(y));
-        #elif THE_ISA == ARM_ISA
-            TheISA::copyRegs(tc, ctc);
-        #else
-            fatal("sys_clone is not implemented for this ISA\n");
-        #endif
-
-        // Set up stack register
-        ctc->setIntReg(TheISA::StackPointerReg, newStack);
-
-        // Set up syscall return values in parent and child
-        ctc->setIntReg(ReturnValueReg, 0); // return value, child
-
-        // Alpha needs SyscallSuccessReg=0 in child
-        #if THE_ISA == ALPHA_ISA
-            ctc->setIntReg(TheISA::SyscallSuccessReg, 0);
-        #endif
-
-        // In SPARC/Linux, clone returns 0 on pseudo-return register if
-        // parent, non-zero if child
-        #if THE_ISA == SPARC_ISA
-            tc->setIntReg(TheISA::SyscallPseudoReturnReg, 0);
-            ctc->setIntReg(TheISA::SyscallPseudoReturnReg, 1);
-        #endif
-
-        ctc->pcState(tc->nextInstAddr());
-
-        ctc->activate();
-
-        // Should return nonzero child TID in parent's syscall return register,
-        // but for our pthread library any non-zero value will work
-        return 1;
-    } else {
-        fatal("Called sys_clone, but no unallocated thread contexts found!\n");
-        return 0;
-    }
 }
 
 SyscallReturn

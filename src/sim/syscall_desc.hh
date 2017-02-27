@@ -107,6 +107,10 @@ class SyscallDesc {
 
     std::string name() { return _name; }
 
+    int getFlags() const { return _flags; }
+
+    void setFlags(int flags) { _flags = flags; }
+
   private:
     /** System call name (e.g., open, mmap, clone, socket, etc.) */
     std::string _name;

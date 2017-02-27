@@ -104,6 +104,14 @@ class FDArray
     int getSize() const { return _fdArray.size(); }
 
     /**
+     * Put the pointer specified by fdep into the _fdArray entry indexed
+     * by tgt_fd.
+     * @param tgt_fd Use target file descriptors to index the array.
+     * @param fdep Incoming pointer used to set the entry pointed to by tgt_fd.
+     */
+    void setFDEntry(int tgt_fd, std::shared_ptr<FDEntry> fdep);
+
+    /**
      * Try to close the host file descriptor. If successful, set the
      * specified file descriptor entry object pointer to nullptr.
      * Used to "close" the target file descriptor.

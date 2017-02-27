@@ -59,11 +59,12 @@ SparcProcess::SparcProcess(ProcessParams * params, ObjectFile *objFile,
 {
 
     // XXX all the below need to be updated for SPARC - Ali
-    brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
-    brk_point = roundUp(brk_point, PageBytes);
+    memState->brkPoint = objFile->dataBase() + objFile->dataSize() +
+                          objFile->bssSize();
+    memState->brkPoint = roundUp(memState->brkPoint, PageBytes);
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
-    next_thread_stack_base = stack_base - (8 * 1024 * 1024);
+    memState->nextThreadStackBase = memState->stackBase - (8 * 1024 * 1024);
 
     // Initialize these to 0s
     fillStart = 0;
@@ -324,15 +325,16 @@ SparcProcess::argsInit(int pageSize)
         aux_padding +
         frame_size;
 
-    stack_min = stack_base - space_needed;
-    stack_min = roundDown(stack_min, align);
-    stack_size = stack_base - stack_min;
+    memState->stackMin = memState->stackBase - space_needed;
+    memState->stackMin = roundDown(memState->stackMin, align);
+    memState->stackSize = memState->stackBase - memState->stackMin;
 
     // Allocate space for the stack
-    allocateMem(roundDown(stack_min, pageSize), roundUp(stack_size, pageSize));
+    allocateMem(roundDown(memState->stackMin, pageSize),
+                roundUp(memState->stackSize, pageSize));
 
     // map out initial stack contents
-    IntType sentry_base = stack_base - sentry_size;
+    IntType sentry_base = memState->stackBase - sentry_size;
     IntType file_name_base = sentry_base - file_name_size;
     IntType env_data_base = file_name_base - env_data_size;
     IntType arg_data_base = env_data_base - arg_data_size;
@@ -356,9 +358,9 @@ SparcProcess::argsInit(int pageSize)
     DPRINTF(Stack, "%#x - argv array\n", argv_array_base);
     DPRINTF(Stack, "%#x - argc \n", argc_base);
     DPRINTF(Stack, "%#x - window save\n", window_save_base);
-    DPRINTF(Stack, "%#x - stack min\n", stack_min);
+    DPRINTF(Stack, "%#x - stack min\n", memState->stackMin);
 
-    assert(window_save_base == stack_min);
+    assert(window_save_base == memState->stackMin);
 
     // write contents to stack
 
@@ -397,7 +399,7 @@ SparcProcess::argsInit(int pageSize)
     // Set up space for the trap handlers into the processes address space.
     // Since the stack grows down and there is reserved address space abov
     // it, we can put stuff above it and stay out of the way.
-    fillStart = stack_base;
+    fillStart = memState->stackBase;
     spillStart = fillStart + sizeof(MachInst) * numFillInsts;
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
@@ -405,7 +407,7 @@ SparcProcess::argsInit(int pageSize)
     // assert(NumArgumentRegs >= 2);
     // tc->setIntReg(ArgumentReg[0], argc);
     // tc->setIntReg(ArgumentReg[1], argv_array_base);
-    tc->setIntReg(StackPointerReg, stack_min - StackBias);
+    tc->setIntReg(StackPointerReg, memState->stackMin - StackBias);
 
     // %g1 is a pointer to a function that should be run at exit. Since we
     // don't have anything like that, it should be set to 0.
@@ -414,7 +416,7 @@ SparcProcess::argsInit(int pageSize)
     tc->pcState(getStartPC());
 
     // Align the "stack_min" to a page boundary.
-    stack_min = roundDown(stack_min, pageSize);
+    memState->stackMin = roundDown(memState->stackMin, pageSize);
 }
 
 void

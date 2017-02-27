@@ -81,6 +81,7 @@
 #include <memory>
 #include <string>
 
+#include "arch/utility.hh"
 #include "base/intmath.hh"
 #include "base/loader/object_file.hh"
 #include "base/misc.hh"
@@ -90,13 +91,13 @@
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
+#include "params/Process.hh"
 #include "sim/emul_driver.hh"
 #include "sim/process.hh"
 #include "sim/syscall_debug_macros.hh"
+#include "sim/syscall_desc.hh"
 #include "sim/syscall_emul_buf.hh"
 #include "sim/syscall_return.hh"
-
-class SyscallDesc;
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -130,6 +131,10 @@ SyscallReturn exitFunc(SyscallDesc *desc, int num,
 SyscallReturn exitGroupFunc(SyscallDesc *desc, int num,
                        Process *p, ThreadContext *tc);
 
+/// Target set_tid_address() handler.
+SyscallReturn setTidAddressFunc(SyscallDesc *desc, int num,
+                                Process *p, ThreadContext *tc);
+
 /// Target getpagesize() handler.
 SyscallReturn getpagesizeFunc(SyscallDesc *desc, int num,
                               Process *p, ThreadContext *tc);
@@ -142,7 +147,7 @@ SyscallReturn brkFunc(SyscallDesc *desc, int num,
 SyscallReturn closeFunc(SyscallDesc *desc, int num,
                         Process *p, ThreadContext *tc);
 
-/// Target read() handler.
+// Target read() handler.
 SyscallReturn readFunc(SyscallDesc *desc, int num,
                        Process *p, ThreadContext *tc);
 
@@ -272,10 +277,6 @@ SyscallReturn geteuidFunc(SyscallDesc *desc, int num,
 SyscallReturn getegidFunc(SyscallDesc *desc, int num,
                           Process *p, ThreadContext *tc);
 
-/// Target clone() handler.
-SyscallReturn cloneFunc(SyscallDesc *desc, int num,
-                        Process *p, ThreadContext *tc);
-
 /// Target access() handler
 SyscallReturn accessFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc);
@@ -304,14 +305,14 @@ futexFunc(SyscallDesc *desc, int callnum, Process *process,
     std::map<uint64_t, std::list<ThreadContext *> * >
         &futex_map = tc->getSystemPtr()->futexMap;
 
-    DPRINTF(SyscallVerbose, "In sys_futex: Address=%llx, op=%d, val=%d\n",
+    DPRINTF(SyscallVerbose, "futex: Address=%llx, op=%d, val=%d\n",
             uaddr, op, val);
 
     op &= ~OS::TGT_FUTEX_PRIVATE_FLAG;
 
     if (op == OS::TGT_FUTEX_WAIT) {
         if (timeout != 0) {
-            warn("sys_futex: FUTEX_WAIT with non-null timeout unimplemented;"
+            warn("futex: FUTEX_WAIT with non-null timeout unimplemented;"
                  "we'll wait indefinitely");
         }
 
@@ -321,7 +322,7 @@ futexFunc(SyscallDesc *desc, int callnum, Process *process,
         delete[] buf;
 
         if (val != mem_val) {
-            DPRINTF(SyscallVerbose, "sys_futex: FUTEX_WAKE, read: %d, "
+            DPRINTF(SyscallVerbose, "futex: FUTEX_WAKE, read: %d, "
                                     "expected: %d\n", mem_val, val);
             return -OS::TGT_EWOULDBLOCK;
         }
@@ -336,8 +337,8 @@ futexFunc(SyscallDesc *desc, int callnum, Process *process,
                             std::list<ThreadContext *> * >(uaddr, tcWaitList));
         }
         tcWaitList->push_back(tc);
-        DPRINTF(SyscallVerbose, "sys_futex: FUTEX_WAIT, suspending calling "
-                                "thread context\n");
+        DPRINTF(SyscallVerbose, "futex: FUTEX_WAIT, suspending calling thread "
+                                "context on address 0x%lx\n", uaddr);
         tc->suspend();
         return 0;
     } else if (op == OS::TGT_FUTEX_WAKE){
@@ -355,11 +356,12 @@ futexFunc(SyscallDesc *desc, int callnum, Process *process,
                 delete tcWaitList;
             }
         }
-        DPRINTF(SyscallVerbose, "sys_futex: FUTEX_WAKE, activated %d waiting "
-                                "thread contexts\n", wokenUp);
+        DPRINTF(SyscallVerbose, "futex: FUTEX_WAKE, activated %d waiting "
+                                "thread context on address 0x%lx\n",
+                                wokenUp, uaddr);
         return wokenUp;
     } else {
-        warn("sys_futex: op %d is not implemented, just returning...", op);
+        warn("futex: op %d is not implemented, just returning...", op);
         return 0;
     }
 
@@ -883,11 +885,11 @@ mremapFunc(SyscallDesc *desc, int callnum, Process *process, ThreadContext *tc)
     new_length = roundUp(new_length, TheISA::PageBytes);
 
     if (new_length > old_length) {
-        if ((start + old_length) == process->mmap_end &&
+        if ((start + old_length) == process->memState->mmapEnd &&
             (!use_provided_address || provided_address == start)) {
             uint64_t diff = new_length - old_length;
-            process->allocateMem(process->mmap_end, diff);
-            process->mmap_end += diff;
+            process->allocateMem(process->memState->mmapEnd, diff);
+            process->memState->mmapEnd += diff;
             return start;
         } else {
             if (!use_provided_address && !(flags & OS::TGT_MREMAP_MAYMOVE)) {
@@ -895,7 +897,7 @@ mremapFunc(SyscallDesc *desc, int callnum, Process *process, ThreadContext *tc)
                 return -ENOMEM;
             } else {
                 uint64_t new_start = use_provided_address ?
-                    provided_address : process->mmap_end;
+                    provided_address : process->memState->mmapEnd;
                 process->pTable->remap(start, old_length, new_start);
                 warn("mremapping to new vaddr %08p-%08p, adding %d\n",
                      new_start, new_start + new_length,
@@ -905,9 +907,9 @@ mremapFunc(SyscallDesc *desc, int callnum, Process *process, ThreadContext *tc)
                                      new_length - old_length,
                                      use_provided_address /* clobber */);
                 if (!use_provided_address)
-                    process->mmap_end += new_length;
+                    process->memState->mmapEnd += new_length;
                 if (use_provided_address &&
-                    new_start + new_length > process->mmap_end) {
+                    new_start + new_length > process->memState->mmapEnd) {
                     // something fishy going on here, at least notify the user
                     // @todo: increase mmap_end?
                     warn("mmap region limit exceeded with MREMAP_FIXED\n");
@@ -1179,6 +1181,132 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
     return 0;
 }
 
+template <class OS>
+SyscallReturn
+cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    TheISA::IntReg flags = p->getSyscallArg(tc, index);
+    TheISA::IntReg newStack = p->getSyscallArg(tc, index);
+    Addr ptidPtr = p->getSyscallArg(tc, index);
+    Addr ctidPtr = p->getSyscallArg(tc, index);
+    Addr tlsPtr M5_VAR_USED = p->getSyscallArg(tc, index);
+
+    if (((flags & OS::TGT_CLONE_SIGHAND)&& !(flags & OS::TGT_CLONE_VM)) ||
+        ((flags & OS::TGT_CLONE_THREAD) && !(flags & OS::TGT_CLONE_SIGHAND)) ||
+        ((flags & OS::TGT_CLONE_FS)     &&  (flags & OS::TGT_CLONE_NEWNS)) ||
+        ((flags & OS::TGT_CLONE_NEWIPC) &&  (flags & OS::TGT_CLONE_SYSVSEM)) ||
+        ((flags & OS::TGT_CLONE_NEWPID) &&  (flags & OS::TGT_CLONE_THREAD)) ||
+        ((flags & OS::TGT_CLONE_VM)     && !(newStack)))
+        return -EINVAL;
+
+    ThreadContext *ctc;
+    if (!(ctc = p->findFreeContext()))
+        fatal("clone: no spare thread context in system");
+
+    /**
+     * Note that ProcessParams is generated by swig and there are no other
+     * examples of how to create anything but this default constructor. The
+     * fields are manually initialized instead of passing parameters to the
+     * constructor.
+     */
+    ProcessParams *pp = new ProcessParams();
+    pp->executable.assign(*(new std::string(p->progName())));
+    pp->cmd.push_back(*(new std::string(p->progName())));
+    pp->system = p->system;
+    pp->maxStackSize = p->maxStackSize;
+    pp->cwd.assign(p->getcwd());
+    pp->input.assign("stdin");
+    pp->output.assign("stdout");
+    pp->errout.assign("stderr");
+    pp->uid = p->uid();
+    pp->euid = p->euid();
+    pp->gid = p->gid();
+    pp->egid = p->egid();
+
+    /* Find the first free PID that's less than the maximum */
+    std::set<int> const& pids = p->system->PIDs;
+    int temp_pid = *pids.begin();
+    do {
+        temp_pid++;
+    } while (pids.find(temp_pid) != pids.end());
+    if (temp_pid >= System::maxPID)
+        fatal("temp_pid is too large: %d", temp_pid);
+
+    pp->pid = temp_pid;
+    pp->ppid = (flags & OS::TGT_CLONE_THREAD) ? p->ppid() : p->pid();
+    Process *cp = pp->create();
+    delete pp;
+
+    Process *owner = ctc->getProcessPtr();
+    ctc->setProcessPtr(cp);
+    cp->assignThreadContext(ctc->contextId());
+    owner->revokeThreadContext(ctc->contextId());
+
+    if (flags & OS::TGT_CLONE_PARENT_SETTID) {
+        BufferArg ptidBuf(ptidPtr, sizeof(long));
+        long *ptid = (long *)ptidBuf.bufferPtr();
+        *ptid = cp->pid();
+        ptidBuf.copyOut(tc->getMemProxy());
+    }
+
+    cp->initState();
+    p->clone(tc, ctc, cp, flags);
+
+    if (flags & OS::TGT_CLONE_CHILD_SETTID) {
+        BufferArg ctidBuf(ctidPtr, sizeof(long));
+        long *ctid = (long *)ctidBuf.bufferPtr();
+        *ctid = cp->pid();
+        ctidBuf.copyOut(ctc->getMemProxy());
+    }
+
+    if (flags & OS::TGT_CLONE_CHILD_CLEARTID)
+        cp->childClearTID = (uint64_t)ctidPtr;
+
+    ctc->clearArchRegs();
+
+#if THE_ISA == ALPHA_ISA
+    TheISA::copyMiscRegs(tc, ctc);
+#elif THE_ISA == SPARC_ISA
+    TheISA::copyRegs(tc, ctc);
+    ctc->setIntReg(TheISA::NumIntArchRegs + 6, 0);
+    ctc->setIntReg(TheISA::NumIntArchRegs + 4, 0);
+    ctc->setIntReg(TheISA::NumIntArchRegs + 3, TheISA::NWindows - 2);
+    ctc->setIntReg(TheISA::NumIntArchRegs + 5, TheISA::NWindows);
+    ctc->setMiscReg(TheISA::MISCREG_CWP, 0);
+    ctc->setIntReg(TheISA::NumIntArchRegs + 7, 0);
+    ctc->setMiscRegNoEffect(TheISA::MISCREG_TL, 0);
+    ctc->setMiscReg(TheISA::MISCREG_ASI, TheISA::ASI_PRIMARY);
+    for (int y = 8; y < 32; y++)
+        ctc->setIntReg(y, tc->readIntReg(y));
+#elif THE_ISA == ARM_ISA or THE_ISA == X86_ISA
+    TheISA::copyRegs(tc, ctc);
+#endif
+
+#if THE_ISA == X86_ISA
+    if (flags & OS::TGT_CLONE_SETTLS) {
+        ctc->setMiscRegNoEffect(TheISA::MISCREG_FS_BASE, tlsPtr);
+        ctc->setMiscRegNoEffect(TheISA::MISCREG_FS_EFF_BASE, tlsPtr);
+    }
+#endif
+
+    if (newStack)
+        ctc->setIntReg(TheISA::StackPointerReg, newStack);
+
+    cp->setSyscallReturn(ctc, 0);
+
+#if THE_ISA == ALPHA_ISA
+    ctc->setIntReg(TheISA::SyscallSuccessReg, 0);
+#elif THE_ISA == SPARC_ISA
+    tc->setIntReg(TheISA::SyscallPseudoReturnReg, 0);
+    ctc->setIntReg(TheISA::SyscallPseudoReturnReg, 1);
+#endif
+
+    ctc->pcState(tc->nextInstAddr());
+    ctc->activate();
+
+    return cp->pid();
+}
 
 /// Target fstatfs() handler.
 template <class OS>
@@ -1329,8 +1457,9 @@ mmapImpl(SyscallDesc *desc, int num, Process *p, ThreadContext *tc,
     // Extend global mmap region if necessary. Note that we ignore the
     // start address unless MAP_FIXED is specified.
     if (!(tgt_flags & OS::TGT_MAP_FIXED)) {
-        start = p->mmapGrowsDown() ? p->mmap_end - length : p->mmap_end;
-        p->mmap_end = p->mmapGrowsDown() ? start : p->mmap_end + length;
+        Addr *end = &p->memState->mmapEnd;
+        start = p->mmapGrowsDown() ? *end - length : *end;
+        *end = p->mmapGrowsDown() ? start : *end + length;
     }
 
     DPRINTF_SYSCALL(Verbose, " mmap range is 0x%x - 0x%x\n",
@@ -1584,6 +1713,100 @@ utimesFunc(SyscallDesc *desc, int callnum, Process *process,
 
     return 0;
 }
+
+template <class OS>
+SyscallReturn
+execveFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
+{
+    desc->setFlags(0);
+
+    int index = 0;
+    std::string path;
+    SETranslatingPortProxy & mem_proxy = tc->getMemProxy();
+    if (!mem_proxy.tryReadString(path, p->getSyscallArg(tc, index)))
+        return -EFAULT;
+
+    if (access(path.c_str(), F_OK) == -1)
+        return -EACCES;
+
+    auto read_in = [](std::vector<std::string> & vect,
+                      SETranslatingPortProxy & mem_proxy,
+                      Addr mem_loc)
+    {
+        for (int inc = 0; ; inc++) {
+            BufferArg b((mem_loc + sizeof(Addr) * inc), sizeof(Addr));
+            b.copyIn(mem_proxy);
+
+            if (!*(Addr*)b.bufferPtr())
+                break;
+
+            vect.push_back(std::string());
+            mem_proxy.tryReadString(vect[inc], *(Addr*)b.bufferPtr());
+        }
+    };
+
+    /**
+     * Note that ProcessParams is generated by swig and there are no other
+     * examples of how to create anything but this default constructor. The
+     * fields are manually initialized instead of passing parameters to the
+     * constructor.
+     */
+    ProcessParams *pp = new ProcessParams();
+    pp->executable = path;
+    Addr argv_mem_loc = p->getSyscallArg(tc, index);
+    read_in(pp->cmd, mem_proxy, argv_mem_loc);
+    Addr envp_mem_loc = p->getSyscallArg(tc, index);
+    read_in(pp->env, mem_proxy, envp_mem_loc);
+    pp->uid = p->uid();
+    pp->egid = p->egid();
+    pp->euid = p->euid();
+    pp->gid = p->gid();
+    pp->ppid = p->ppid();
+    pp->pid = p->pid();
+    pp->input.assign("cin");
+    pp->output.assign("cout");
+    pp->errout.assign("cerr");
+    pp->cwd.assign(p->getcwd());
+    pp->system = p->system;
+    pp->maxStackSize = p->maxStackSize;
+    /**
+     * Prevent process object creation with identical PIDs (which will trip
+     * a fatal check in Process constructor). The execve call is supposed to
+     * take over the currently executing process' identity but replace
+     * whatever it is doing with a new process image. Instead of hijacking
+     * the process object in the simulator, we create a new process object
+     * and bind to the previous process' thread below (hijacking the thread).
+     */
+    p->system->PIDs.erase(p->pid());
+    Process *new_p = pp->create();
+    delete pp;
+
+    /**
+     * Work through the file descriptor array and close any files marked
+     * close-on-exec.
+     */
+    new_p->fds = p->fds;
+    for (int i = 0; i < new_p->fds->getSize(); i++) {
+        std::shared_ptr<FDEntry> fdep = (*new_p->fds)[i];
+        if (fdep && fdep->getCOE())
+            new_p->fds->closeFDEntry(i);
+    }
+
+    *new_p->sigchld = true;
+
+    delete p;
+    tc->clearArchRegs();
+    tc->setProcessPtr(new_p);
+    new_p->assignThreadContext(tc->contextId());
+    new_p->initState();
+    tc->activate();
+    TheISA::PCState pcState = tc->pcState();
+    tc->setNPC(pcState.instAddr());
+
+    desc->setFlags(SyscallDesc::SuppressReturnValue);
+    return 0;
+}
+
 /// Target getrusage() function.
 template <class OS>
 SyscallReturn

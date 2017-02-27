@@ -241,7 +241,7 @@ static SyscallDesc syscallDescs32[] = {
     /* 117 */ SyscallDesc("ipc", unimplementedFunc),
     /* 118 */ SyscallDesc("fsync", unimplementedFunc),
     /* 119 */ SyscallDesc("sigreturn", unimplementedFunc),
-    /* 120 */ SyscallDesc("clone", cloneFunc),
+    /* 120 */ SyscallDesc("clone", cloneFunc<ArmLinux32>),
     /* 121 */ SyscallDesc("setdomainname", unimplementedFunc),
     /* 122 */ SyscallDesc("uname", unameFunc32),
     /* 123 */ SyscallDesc("unused#123", unimplementedFunc),

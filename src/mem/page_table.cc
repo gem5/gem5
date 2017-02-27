@@ -104,6 +104,13 @@ FuncPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
 }
 
 void
+FuncPageTable::getMappings(std::vector<std::pair<Addr, Addr>> *addr_maps)
+{
+    for (auto &iter : pTable)
+        addr_maps->push_back(make_pair(iter.first, iter.second.pageStart()));
+}
+
+void
 FuncPageTable::unmap(Addr vaddr, int64_t size)
 {
     assert(pageOffset(vaddr) == 0);

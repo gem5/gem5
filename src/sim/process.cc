@@ -95,9 +95,6 @@ using namespace TheISA;
 
 Process::Process(ProcessParams * params, ObjectFile * obj_file)
     : SimObject(params), system(params->system),
-      brk_point(0), stack_base(0), stack_size(0), stack_min(0),
-      max_stack_size(params->max_stack_size),
-      next_thread_stack_base(0),
       useArchPT(params->useArchPT),
       kvmInSE(params->kvmInSE),
       pTable(useArchPT ?
@@ -113,10 +110,10 @@ Process::Process(ProcessParams * params, ObjectFile * obj_file)
       _gid(params->gid), _egid(params->egid),
       _pid(params->pid), _ppid(params->ppid),
       _pgid(params->pgid), drivers(params->drivers),
-      fds(make_shared<FDArray>(params->input, params->output, params->errout))
+      fds(make_shared<FDArray>(params->input, params->output, params->errout)),
+      maxStackSize(params->maxStackSize),
+      childClearTID(0)
 {
-    mmap_end = 0;
-
     if (_pid >= System::maxPID)
         fatal("_pid is too large: %d", _pid);
 
@@ -124,18 +121,117 @@ Process::Process(ProcessParams * params, ObjectFile * obj_file)
     if (!ret_pair.second)
         fatal("_pid %d is already used", _pid);
 
-    // load up symbols, if any... these may be used for debugging or
-    // profiling.
+    /**
+     * Linux bundles together processes into this concept called a thread
+     * group. The thread group is responsible for recording which processes
+     * behave as threads within a process context. The thread group leader
+     * is the process who's tgid is equal to its pid. Other processes which
+     * belong to the thread group, but do not lead the thread group, are
+     * treated as child threads. These threads are created by the clone system
+     * call with options specified to create threads (differing from the
+     * options used to implement a fork). By default, set up the tgid/pid
+     * with a new, equivalent value. If CLONE_THREAD is specified, patch
+     * the tgid value with the old process' value.
+     */
+    _tgid = params->pid;
+
+    exitGroup = new bool();
+    memState = new MemState();
+    sigchld = new bool();
+
     if (!debugSymbolTable) {
         debugSymbolTable = new SymbolTable();
         if (!objFile->loadGlobalSymbols(debugSymbolTable) ||
             !objFile->loadLocalSymbols(debugSymbolTable) ||
             !objFile->loadWeakSymbols(debugSymbolTable)) {
-            // didn't load any symbols
             delete debugSymbolTable;
             debugSymbolTable = NULL;
         }
     }
+}
+
+void
+Process::clone(ThreadContext *otc, ThreadContext *ntc,
+               Process *np, TheISA::IntReg flags)
+{
+    if (CLONE_VM & flags) {
+        /**
+         * Share the process memory address space between the new process
+         * and the old process. Changes in one will be visible in the other
+         * due to the pointer use.
+         */
+        delete np->pTable;
+        np->pTable = pTable;
+        ntc->getMemProxy().setPageTable(np->pTable);
+
+        delete np->memState;
+        np->memState = memState;
+    } else {
+        /**
+         * Duplicate the process memory address space. The state needs to be
+         * copied over (rather than using pointers to share everything).
+         */
+        typedef std::vector<pair<Addr,Addr>> MapVec;
+        MapVec mappings;
+        pTable->getMappings(&mappings);
+
+        for (auto map : mappings) {
+            Addr paddr, vaddr = map.first;
+            bool alloc_page = !(np->pTable->translate(vaddr, paddr));
+            np->replicatePage(vaddr, paddr, otc, ntc, alloc_page);
+        }
+
+        *np->memState = *memState;
+    }
+
+    if (CLONE_FILES & flags) {
+        /**
+         * The parent and child file descriptors are shared because the
+         * two FDArray pointers are pointing to the same FDArray. Opening
+         * and closing file descriptors will be visible to both processes.
+         */
+        np->fds = fds;
+    } else {
+        /**
+         * Copy the file descriptors from the old process into the new
+         * child process. The file descriptors entry can be opened and
+         * closed independently of the other process being considered. The
+         * host file descriptors are also dup'd so that the flags for the
+         * host file descriptor is independent of the other process.
+         */
+        for (int tgt_fd = 0; tgt_fd < fds->getSize(); tgt_fd++) {
+            std::shared_ptr<FDArray> nfds = np->fds;
+            std::shared_ptr<FDEntry> this_fde = (*fds)[tgt_fd];
+            if (!this_fde) {
+                nfds->setFDEntry(tgt_fd, nullptr);
+                continue;
+            }
+            nfds->setFDEntry(tgt_fd, this_fde->clone());
+
+            auto this_hbfd = std::dynamic_pointer_cast<HBFDEntry>(this_fde);
+            if (!this_hbfd)
+                continue;
+
+            int this_sim_fd = this_hbfd->getSimFD();
+            if (this_sim_fd <= 2)
+                continue;
+
+            int np_sim_fd = dup(this_sim_fd);
+            assert(np_sim_fd != -1);
+
+            auto nhbfd = std::dynamic_pointer_cast<HBFDEntry>((*nfds)[tgt_fd]);
+            nhbfd->setSimFD(np_sim_fd);
+        }
+    }
+
+    if (CLONE_THREAD & flags) {
+        np->_tgid = _tgid;
+        delete np->exitGroup;
+        np->exitGroup = exitGroup;
+    }
+
+    np->argv.insert(np->argv.end(), argv.begin(), argv.end());
+    np->envp.insert(np->envp.end(), envp.begin(), envp.end());
 }
 
 void
@@ -145,8 +241,8 @@ Process::regStats()
 
     using namespace Stats;
 
-    num_syscalls
-        .name(name() + ".num_syscalls")
+    numSyscalls
+        .name(name() + ".numSyscalls")
         .desc("Number of system calls")
         ;
 }
@@ -154,12 +250,24 @@ Process::regStats()
 ThreadContext *
 Process::findFreeContext()
 {
-    for (int id : contextIds) {
-        ThreadContext *tc = system->getThreadContext(id);
-        if (tc->status() == ThreadContext::Halted)
-            return tc;
+    for (auto &it : system->threadContexts) {
+        if (ThreadContext::Halted == it->status())
+            return it;
     }
     return NULL;
+}
+
+void
+Process::revokeThreadContext(int context_id)
+{
+    std::vector<ContextID>::iterator it;
+    for (it = contextIds.begin(); it != contextIds.end(); it++) {
+        if (*it == context_id) {
+            contextIds.erase(it);
+            return;
+        }
+    }
+    warn("Unable to find thread context to revoke");
 }
 
 void
@@ -193,24 +301,44 @@ Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
                 clobber ? PageTableBase::Clobber : PageTableBase::Zero);
 }
 
+void
+Process::replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
+                       ThreadContext *new_tc, bool allocate_page)
+{
+    if (allocate_page)
+        new_paddr = system->allocPhysPages(1);
+
+    // Read from old physical page.
+    uint8_t *buf_p = new uint8_t[PageBytes];
+    old_tc->getMemProxy().readBlob(vaddr, buf_p, PageBytes);
+
+    // Create new mapping in process address space by clobbering existing
+    // mapping (if any existed) and then write to the new physical page.
+    bool clobber = true;
+    pTable->map(vaddr, new_paddr, PageBytes, clobber);
+    new_tc->getMemProxy().writeBlob(vaddr, buf_p, PageBytes);
+    delete[] buf_p;
+}
+
 bool
 Process::fixupStackFault(Addr vaddr)
 {
     // Check if this is already on the stack and there's just no page there
     // yet.
-    if (vaddr >= stack_min && vaddr < stack_base) {
+    if (vaddr >= memState->stackMin && vaddr < memState->stackBase) {
         allocateMem(roundDown(vaddr, PageBytes), PageBytes);
         return true;
     }
 
     // We've accessed the next page of the stack, so extend it to include
     // this address.
-    if (vaddr < stack_min && vaddr >= stack_base - max_stack_size) {
-        while (vaddr < stack_min) {
-            stack_min -= TheISA::PageBytes;
-            if (stack_base - stack_min > max_stack_size)
+    if (vaddr < memState->stackMin
+        && vaddr >= memState->stackBase - maxStackSize) {
+        while (vaddr < memState->stackMin) {
+            memState->stackMin -= TheISA::PageBytes;
+            if (memState->stackBase - memState->stackMin > maxStackSize)
                 fatal("Maximum stack size exceeded\n");
-            allocateMem(stack_min, TheISA::PageBytes);
+            allocateMem(memState->stackMin, TheISA::PageBytes);
             inform("Increasing stack size by one page.");
         };
         return true;
@@ -221,12 +349,12 @@ Process::fixupStackFault(Addr vaddr)
 void
 Process::serialize(CheckpointOut &cp) const
 {
-    SERIALIZE_SCALAR(brk_point);
-    SERIALIZE_SCALAR(stack_base);
-    SERIALIZE_SCALAR(stack_size);
-    SERIALIZE_SCALAR(stack_min);
-    SERIALIZE_SCALAR(next_thread_stack_base);
-    SERIALIZE_SCALAR(mmap_end);
+    SERIALIZE_SCALAR(memState->brkPoint);
+    SERIALIZE_SCALAR(memState->stackBase);
+    SERIALIZE_SCALAR(memState->stackSize);
+    SERIALIZE_SCALAR(memState->stackMin);
+    SERIALIZE_SCALAR(memState->nextThreadStackBase);
+    SERIALIZE_SCALAR(memState->mmapEnd);
     pTable->serialize(cp);
     /**
      * Checkpoints for file descriptors currently do not work. Need to
@@ -244,12 +372,12 @@ Process::serialize(CheckpointOut &cp) const
 void
 Process::unserialize(CheckpointIn &cp)
 {
-    UNSERIALIZE_SCALAR(brk_point);
-    UNSERIALIZE_SCALAR(stack_base);
-    UNSERIALIZE_SCALAR(stack_size);
-    UNSERIALIZE_SCALAR(stack_min);
-    UNSERIALIZE_SCALAR(next_thread_stack_base);
-    UNSERIALIZE_SCALAR(mmap_end);
+    UNSERIALIZE_SCALAR(memState->brkPoint);
+    UNSERIALIZE_SCALAR(memState->stackBase);
+    UNSERIALIZE_SCALAR(memState->stackSize);
+    UNSERIALIZE_SCALAR(memState->stackMin);
+    UNSERIALIZE_SCALAR(memState->nextThreadStackBase);
+    UNSERIALIZE_SCALAR(memState->mmapEnd);
     pTable->unserialize(cp);
     /**
      * Checkpoints for file descriptors currently do not work. Need to
@@ -278,7 +406,7 @@ Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
 void
 Process::syscall(int64_t callnum, ThreadContext *tc, Fault *fault)
 {
-    num_syscalls++;
+    numSyscalls++;
 
     SyscallDesc *desc = getDesc(callnum);
     if (desc == NULL)
@@ -318,12 +446,13 @@ Process::updateBias()
 
     // We are allocating the memory area; set the bias to the lowest address
     // in the allocated memory region.
-    Addr ld_bias = mmapGrowsDown() ? mmap_end - interp_mapsize : mmap_end;
+    Addr *end = &memState->mmapEnd;
+    Addr ld_bias = mmapGrowsDown() ? *end - interp_mapsize : *end;
 
     // Adjust the process mmap area to give the interpreter room; the real
     // execve system call would just invoke the kernel's internal mmap
     // functions to make these adjustments.
-    mmap_end = mmapGrowsDown() ? ld_bias : mmap_end + interp_mapsize;
+    *end = mmapGrowsDown() ? ld_bias : *end + interp_mapsize;
 
     interp->updateBias(ld_bias);
 }

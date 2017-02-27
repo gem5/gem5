@@ -148,6 +148,12 @@ class SimplePCState : public PCStateBase
         npc(val + sizeof(MachInst));
     };
 
+    void
+    setNPC(Addr val)
+    {
+        npc(val);
+    }
+
     SimplePCState() {}
     SimplePCState(Addr val) { set(val); }
 

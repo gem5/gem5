@@ -355,6 +355,12 @@ class SimpleThread : public ThreadState
         return _pcState.nextInstAddr();
     }
 
+    void
+    setNPC(Addr val)
+    {
+        _pcState.setNPC(val);
+    }
+
     MicroPC
     microPC()
     {

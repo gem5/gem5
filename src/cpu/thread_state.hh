@@ -107,6 +107,21 @@ struct ThreadState : public Serializable {
 
     Process *getProcessPtr() { return process; }
 
+    void setProcessPtr(Process *p)
+    {
+        process = p;
+        /**
+         * When the process pointer changes while operating in SE Mode,
+         * the se translating port proxy needs to be reinitialized since it
+         * holds a pointer to the process class.
+         */
+        if (proxy) {
+            delete proxy;
+            proxy = NULL;
+            initMemProxies(NULL);
+        }
+    }
+
     SETranslatingPortProxy &getMemProxy();
 
     /** Reads the number of instructions functionally executed and

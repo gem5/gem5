@@ -322,6 +322,13 @@ FDArray::getFDEntry(int tgt_fd)
     return _fdArray[tgt_fd];
 }
 
+void
+FDArray::setFDEntry(int tgt_fd, std::shared_ptr<FDEntry> fdep)
+{
+    assert(0 <= tgt_fd && tgt_fd < _fdArray.size());
+    _fdArray[tgt_fd] = fdep;
+}
+
 int
 FDArray::closeFDEntry(int tgt_fd)
 {

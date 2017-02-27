@@ -119,6 +119,8 @@ class O3ThreadContext : public ThreadContext
     /** Returns a pointer to this thread's process. */
     virtual Process *getProcessPtr() { return thread->getProcessPtr(); }
 
+    virtual void setProcessPtr(Process *p) { thread->setProcessPtr(p); }
+
     virtual PortProxy &getPhysProxy() { return thread->getPhysProxy(); }
 
     virtual FSTranslatingPortProxy &getVirtProxy();

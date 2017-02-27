@@ -79,10 +79,10 @@ class Sparc32Process : public SparcProcess
     {
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.
-        stack_base = (Addr)0xf0000000ULL;
+        memState->stackBase = (Addr)0xf0000000ULL;
 
         // Set up region for mmaps.
-        mmap_end = 0x70000000;
+        memState->mmapEnd = 0x70000000;
     }
 
     void initState();
@@ -109,10 +109,10 @@ class Sparc64Process : public SparcProcess
     {
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.
-        stack_base = (Addr)0x80000000000ULL;
+        memState->stackBase = (Addr)0x80000000000ULL;
 
         // Set up region for mmaps.
-        mmap_end = 0xfffff80000000000ULL;
+        memState->mmapEnd = 0xfffff80000000000ULL;
     }
 
     void initState();

@@ -72,6 +72,39 @@ class Process : public SimObject
         { }
     };
 
+    struct MemState
+    {
+        Addr brkPoint;
+        Addr stackBase;
+        unsigned stackSize;
+        Addr stackMin;
+        Addr nextThreadStackBase;
+        Addr mmapEnd;
+
+        MemState()
+            : brkPoint(0), stackBase(0), stackSize(0), stackMin(0),
+              nextThreadStackBase(0), mmapEnd(0)
+        { }
+
+        MemState&
+        operator=(const MemState &in)
+        {
+            if (this == &in)
+                return *this;
+
+            brkPoint = in.brkPoint;
+            stackBase = in.stackBase;
+            stackSize = in.stackSize;
+            stackMin = in.stackMin;
+            nextThreadStackBase = in.nextThreadStackBase;
+            mmapEnd = in.mmapEnd;
+            return *this;
+        }
+
+        void serialize(CheckpointOut &cp) const;
+        void unserialize(CheckpointIn &cp);
+    };
+
     Process(ProcessParams *params, ObjectFile *obj_file);
 
     void serialize(CheckpointOut &cp) const override;
@@ -140,7 +173,13 @@ class Process : public SimObject
     ThreadContext *findFreeContext();
 
     /**
-     * Does mmap region grow upward or downward from mmap_end?  Most
+     * After delegating a thread context to a child process
+     * no longer should relate to the ThreadContext
+     */
+    void revokeThreadContext(int context_id);
+
+    /**
+     * Does mmap region grow upward or downward from mmapEnd?  Most
      * platforms grow downward, but a few (such as Alpha) grow upward
      * instead, so they can override this method to return false.
      */
@@ -161,6 +200,12 @@ class Process : public SimObject
      */
     bool map(Addr vaddr, Addr paddr, int size, bool cacheable = true);
 
+    void replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
+                       ThreadContext *new_tc, bool alloc_page);
+
+    void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *new_p,
+               TheISA::IntReg flags);
+
     // list of all blocked contexts
     std::list<WaitRec> waitList;
 
@@ -170,15 +215,7 @@ class Process : public SimObject
     // system object which owns this process
     System *system;
 
-    Addr brk_point;              // top of the data segment
-    Addr stack_base;             // stack segment base
-    unsigned stack_size;         // initial stack size
-    Addr stack_min;              // furthest address accessed from stack base
-    Addr max_stack_size;         // the maximum size allowed for the stack
-    Addr next_thread_stack_base; // addr for next region w/ multithreaded apps
-    Addr mmap_end;               // base of automatic mmap region allocs
-
-    Stats::Scalar num_syscalls;  // track how many system calls are executed
+    Stats::Scalar numSyscalls;  // track how many system calls are executed
 
     bool useArchPT; // flag for using architecture specific page table
     bool kvmInSE;   // running KVM requires special initialization
@@ -209,6 +246,20 @@ class Process : public SimObject
     std::vector<EmulatedDriver *> drivers;
 
     std::shared_ptr<FDArray> fds;
+
+    bool *exitGroup;
+
+    Addr maxStackSize;
+    MemState *memState;
+
+    /**
+     * Calls a futex wakeup at the address specified by this pointer when
+     * this process exits.
+     */
+    uint64_t childClearTID;
+
+    // Process was forked with SIGCHLD set.
+    bool *sigchld;
 };
 
 #endif // __PROCESS_HH__

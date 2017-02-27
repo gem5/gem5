@@ -161,6 +161,8 @@ class ThreadContext
 
     virtual Process *getProcessPtr() = 0;
 
+    virtual void setProcessPtr(Process *p) = 0;
+
     virtual Status status() const = 0;
 
     virtual void setStatus(Status new_status) = 0;
@@ -222,6 +224,14 @@ class ThreadContext
     virtual TheISA::PCState pcState() = 0;
 
     virtual void pcState(const TheISA::PCState &val) = 0;
+
+    void
+    setNPC(Addr val)
+    {
+        TheISA::PCState pc_state = pcState();
+        pc_state.setNPC(val);
+        pcState(pc_state);
+    }
 
     virtual void pcStateNoRecord(const TheISA::PCState &val) = 0;
 
@@ -359,6 +369,8 @@ class ProxyThreadContext : public ThreadContext
     SETranslatingPortProxy &getMemProxy() { return actualTC->getMemProxy(); }
 
     Process *getProcessPtr() { return actualTC->getProcessPtr(); }
+
+    void setProcessPtr(Process *p) { actualTC->setProcessPtr(p); }
 
     Status status() const { return actualTC->status(); }
 
