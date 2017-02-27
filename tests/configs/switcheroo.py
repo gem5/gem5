@@ -105,7 +105,8 @@ def run_test(root, switcher=None, freq=1000, verbose=False):
     # Suppress "Entering event queue" messages since we get tons of them.
     # Worse yet, they include the timestamp, which makes them highly
     # variable and unsuitable for comparing as test outputs.
-    _m5.core.cvar.want_info = verbose
+    if not verbose:
+        _m5.core.Logger.setLevel(_m5.core.Logger.WARN)
 
     # instantiate configuration
     m5.instantiate()

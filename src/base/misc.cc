@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,26 +43,35 @@
 
 #include "base/misc.hh"
 
-#include <cstdlib>
-#include <cstring>
-#include <string>
+#include <array>
 
-#include "base/cprintf.hh"
 #include "base/hostinfo.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
 
-using namespace std;
 
-bool want_warn = true;
-bool want_info = true;
-bool want_hack = true;
+Logger &
+Logger::get(LogLevel ll)
+{
+    static std::array<Logger *, NUM_LOG_LEVELS> loggers{{
+        new ExitLogger(std::cerr, "panic"),
+        new ExitLogger(std::cerr, "fatal"),
+        new Logger(std::cerr, "warn"),
+        new Logger(std::cerr, "info"),
+        new Logger(std::cerr, "hack"),
+    }};
 
-bool warn_verbose = false;
-bool info_verbose = false;
-bool hack_verbose = false;
+    return *loggers[ll];
+}
+
+void
+Logger::setLevel(LogLevel ll)
+{
+    for (int i = 0; i < NUM_LOG_LEVELS; ++i)
+        get(LogLevel(i)).enabled = (i <= ll);
+}
 
 static void
 newline_if_needed(std::ostream &stream, const char *format)
@@ -78,34 +87,28 @@ newline_if_needed(std::ostream &stream, const char *format)
     }
 }
 
-void
-__exit_epilogue(int code,
-                const char *func, const char *file, int line,
-                const char *format)
+Logger::Logger(std::ostream &_stream, const char *_prefix)
+    : enabled(true), verbose(false), stream(_stream), prefix(_prefix)
 {
-    newline_if_needed(std::cerr, format);
-
-    ccprintf(std::cerr,
-             " @ tick %d\n"
-             "[%s:%s, line %d]\n"
-             "Memory Usage: %ld KBytes\n",
-             curTick(), func, file, line, memUsage());
-
-    if (code < 0)
-        abort();
-    else
-        exit(code);
 }
 
 void
-__base_message_epilogue(std::ostream &stream, bool verbose,
-                        const char *func, const char *file, int line,
+Logger::printEpilogue(const char *func, const char *file, int line,
                         const char *format)
 {
     newline_if_needed(stream, format);
 
     if (verbose) {
-        ccprintf(stream, " @ cycle %d\n[%s:%s, line %d]\n",
+        ccprintf(stream, " @ tick %d\n[%s:%s, line %d]\n",
                  curTick(), func, file, line);
     }
+}
+
+void
+ExitLogger::printEpilogue(const char *func, const char *file, int line,
+                            const char *format)
+{
+    Logger::printEpilogue(func, file, line, format);
+
+    ccprintf(stream, "Memory Usage: %ld KBytes\n", memUsage());
 }

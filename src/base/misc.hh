@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,6 +47,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <utility>
 
 #include "base/compiler.hh"
 #include "base/cprintf.hh"
@@ -55,44 +56,91 @@
 #define __FUNCTION__ "how to fix me?"
 #endif
 
-void __exit_epilogue(int code,
-                     const char *func, const char *file, int line,
-                     const char *format) M5_ATTR_NORETURN;
-
-// General exit message, these functions will never return and will
-// either abort() if code is < 0 or exit with the code if >= 0
-template<typename ...Args> void
-__exit_message(const char *prefix, int code,
-               const char *func, const char *file, int line,
-               const char *format, const Args &...args) M5_ATTR_NORETURN;
-template<typename ...Args> void
-__exit_message(const char *prefix, int code,
-               const char *func, const char *file, int line,
-               const std::string &format, const Args &...args) M5_ATTR_NORETURN;
-
-template<typename ...Args> void
-__exit_message(const char *prefix, int code,
-               const char *func, const char *file, int line,
-               const char *format, const Args &...args)
+class Logger
 {
-    std::cerr << prefix << ": ";
-    ccprintf(std::cerr, format, args...);
+  public:
+    enum LogLevel {
+        PANIC = 0,
+        FATAL,
+        WARN,
+        INFO,
+        HACK,
+        NUM_LOG_LEVELS,
+    };
 
-    __exit_epilogue(code, func, file, line, format);
-}
+    /**
+     * Set the active log level.
+     *
+     * All levels that are lower or equal to the selected log level
+     * will be activated.
+     *
+     * @param ll Maximum log level to print
+     */
+    static void setLevel(LogLevel ll);
 
-template<typename ...Args> void
-__exit_message(const char *prefix, int code,
-               const char *func, const char *file, int line,
-               const std::string &format, const Args &...args)
+    /**
+     * Get a Logger corresponding to a specific log level
+     *
+     * @param ll Log level to access
+     * @return Reference to the requested logger
+     */
+    static Logger &get(LogLevel ll);
+
+  public:
+    Logger(std::ostream &stream, const char *prefix);
+    virtual ~Logger() {};
+
+    template<typename ...Args> void
+    print(const char *func, const char *file, int line,
+          const char *format, const Args &...args)
+    {
+        if (!enabled)
+            return;
+
+        if (prefix)
+            stream << prefix << ": ";
+        ccprintf(stream, format, args...);
+
+        printEpilogue(func, file, line, format);
+    }
+
+    template<typename ...Args> void
+    print(const char *func, const char *file, int line,
+          const std::string &format, const Args &...args)
+    {
+        print(func, file, line, format.c_str(), args...);
+    }
+
+  protected:
+    virtual void printEpilogue(const char *func, const char *file, int line,
+                               const char *format);
+
+  public:
+    bool enabled;
+    bool verbose;
+
+  protected:
+    std::ostream &stream;
+    const char *prefix;
+};
+
+class ExitLogger : public Logger
 {
-    __exit_message(prefix, code, func, file, line, format.c_str(),
-                   args...);
-}
+  public:
+    using Logger::Logger;
 
-#define exit_message(prefix, code, ...)                                 \
-    __exit_message(prefix, code, __FUNCTION__, __FILE__, __LINE__,      \
-                   __VA_ARGS__)
+    void printEpilogue(const char *func, const char *file, int line,
+                       const char *format) override;
+};
+
+#define exit_message(logger, code, ...)                                 \
+    do {                                                                \
+        logger.print(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);    \
+        if (code < 0)                                                   \
+            ::abort();                                                  \
+        else                                                            \
+            ::exit(code);                                               \
+    } while (0)
 
 //
 // This implements a cprintf based panic() function.  panic() should
@@ -101,7 +149,8 @@ __exit_message(const char *prefix, int code,
 // calls abort which can dump core or enter the debugger.
 //
 //
-#define panic(...) exit_message("panic", -1, __VA_ARGS__)
+#define panic(...) exit_message(::Logger::get(::Logger::PANIC), -1, \
+                                __VA_ARGS__)
 
 //
 // This implements a cprintf based fatal() function.  fatal() should
@@ -110,7 +159,8 @@ __exit_message(const char *prefix, int code,
 // etc.) and not a simulator bug.  fatal() calls  abort() like
 // panic() does.
 //
-#define fatal(...) exit_message("fatal", -1, __VA_ARGS__)
+#define fatal(...) exit_message(::Logger::get(::Logger::FATAL), 1, \
+                                __VA_ARGS__)
 
 /**
  * Conditional panic macro that checks the supplied condition and only panics
@@ -120,10 +170,12 @@ __exit_message(const char *prefix, int code,
  * @param cond Condition that is checked; if true -> panic
  * @param ...  Printf-based format string with arguments, extends printout.
  */
-#define panic_if(cond, ...) \
-    do { \
-        if ((cond)) \
-            exit_message("panic condition "#cond" occurred", -1, __VA_ARGS__); \
+#define panic_if(cond, ...)                                  \
+    do {                                                     \
+        if ((cond)) {                                        \
+            panic("panic condition " # cond " occurred: %s", \
+                  csprintf(__VA_ARGS__));                    \
+        }                                                    \
     } while (0)
 
 
@@ -136,41 +188,17 @@ __exit_message(const char *prefix, int code,
  * @param cond Condition that is checked; if true -> fatal
  * @param ...  Printf-based format string with arguments, extends printout.
  */
-#define fatal_if(cond, ...) \
-    do { \
-        if ((cond)) \
-            exit_message("fatal condition "#cond" occurred", 1, __VA_ARGS__); \
+#define fatal_if(cond, ...)                                     \
+    do {                                                        \
+        if ((cond)) {                                           \
+            fatal("fatal condition " # cond " occurred: %s",    \
+                  csprintf(__VA_ARGS__));                       \
+        }                                                       \
     } while (0)
 
 
-void
-__base_message_epilogue(std::ostream &stream, bool verbose,
-                        const char *func, const char *file, int line,
-                        const char *format);
-
-template<typename ...Args> void
-__base_message(std::ostream &stream, const char *prefix, bool verbose,
-               const char *func, const char *file, int line,
-               const char *format, const Args &...args)
-{
-    stream << prefix << ": ";
-    ccprintf(stream, format, args...);
-
-    __base_message_epilogue(stream, verbose, func, file, line, format);
-}
-
-template<typename ...Args> void
-__base_message(std::ostream &stream, const char *prefix, bool verbose,
-               const char *func, const char *file, int line,
-               const std::string &format, const Args &...args)
-{
-    __base_message(stream, prefix, verbose, func, file, line, format.c_str(),
-                   args...);
-}
-
-#define base_message(stream, prefix, verbose, ...)                      \
-    __base_message(stream, prefix, verbose, __FUNCTION__, __FILE__, __LINE__, \
-                   __VA_ARGS__)
+#define base_message(logger, ...)                                       \
+    logger.print(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
 
 // Only print the message the first time this expression is
 // encountered.  i.e.  This doesn't check the string itself and
@@ -186,37 +214,20 @@ __base_message(std::ostream &stream, const char *prefix, bool verbose,
         }                                               \
     } while (0)
 
-#define cond_message(cond, ...) do {            \
-        if (cond)                               \
-            base_message(__VA_ARGS__);          \
-    } while (0)
-
-#define cond_message_once(cond, ...) do {               \
-        static bool once = false;                       \
-        if (!once && cond) {                            \
-            base_message(__VA_ARGS__);                  \
-            once = true;                                \
-        }                                               \
-    } while (0)
-
-
-extern bool want_warn, warn_verbose;
-extern bool want_info, info_verbose;
-extern bool want_hack, hack_verbose;
 
 #define warn(...) \
-    cond_message(want_warn, std::cerr, "warn", warn_verbose, __VA_ARGS__)
+    base_message(::Logger::get(::Logger::WARN), __VA_ARGS__)
 #define inform(...) \
-    cond_message(want_info, std::cout, "info", info_verbose, __VA_ARGS__)
+    base_message(::Logger::get(::Logger::INFO), __VA_ARGS__)
 #define hack(...) \
-    cond_message(want_hack, std::cerr, "hack", hack_verbose, __VA_ARGS__)
+    base_message(::Logger::get(::Logger::HACK), __VA_ARGS__)
 
 #define warn_once(...) \
-    cond_message_once(want_warn, std::cerr, "warn", warn_verbose, __VA_ARGS__)
+    base_message_once(::Logger::get(::Logger::WARN), __VA_ARGS__)
 #define inform_once(...) \
-    cond_message_once(want_info, std::cout, "info", info_verbose, __VA_ARGS__)
+    base_message_once(::Logger::get(::Logger::INFO), __VA_ARGS__)
 #define hack_once(...) \
-    cond_message_once(want_hack, std::cerr, "hack", hack_verbose, __VA_ARGS__)
+    base_message_once(::Logger::get(::Logger::HACK), __VA_ARGS__)
 
 /**
  * Conditional warning macro that checks the supplied condition and
@@ -244,12 +255,10 @@ extern bool want_hack, hack_verbose;
 #ifdef NDEBUG
 #define chatty_assert(cond, ...)
 #else //!NDEBUG
-#define chatty_assert(cond, ...)                                                \
-    do {                                                                        \
-        if (!(cond)) {                                                          \
-            base_message(std::cerr, "assert("#cond") failing", 1, __VA_ARGS__); \
-            assert(cond);                                                       \
-        }                                                                       \
+#define chatty_assert(cond, ...)                                        \
+    do {                                                                \
+        if (!(cond))                                                    \
+            panic("assert(" # cond ") failed: %s", csprintf(__VA_ARGS__)); \
     } while (0)
 #endif // NDEBUG
 #endif // __BASE_MISC_HH__
