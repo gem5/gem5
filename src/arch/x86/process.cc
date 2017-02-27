@@ -188,7 +188,7 @@ X86_64Process::initState()
 {
     X86Process::initState();
 
-    argsInit(sizeof(uint64_t), PageBytes);
+    argsInit(PageBytes);
 
        // Set up the vsyscall page for this process.
     allocateMem(vsyscallPage.base, vsyscallPage.size);
@@ -632,7 +632,7 @@ I386Process::initState()
 {
     X86Process::initState();
 
-    argsInit(sizeof(uint32_t), PageBytes);
+    argsInit(PageBytes);
 
     /*
      * Set up a GDT for this process. The whole GDT wouldn't really be for
@@ -749,7 +749,7 @@ I386Process::initState()
 template<class IntType>
 void
 X86Process::argsInit(int pageSize,
-        std::vector<AuxVector<IntType> > extraAuxvs)
+                     std::vector<AuxVector<IntType> > extraAuxvs)
 {
     int intSize = sizeof(IntType);
 
@@ -1034,7 +1034,7 @@ X86Process::argsInit(int pageSize,
 }
 
 void
-X86_64Process::argsInit(int intSize, int pageSize)
+X86_64Process::argsInit(int pageSize)
 {
     std::vector<AuxVector<uint64_t> > extraAuxvs;
     extraAuxvs.push_back(AuxVector<uint64_t>(M5_AT_SYSINFO_EHDR,
@@ -1043,7 +1043,7 @@ X86_64Process::argsInit(int intSize, int pageSize)
 }
 
 void
-I386Process::argsInit(int intSize, int pageSize)
+I386Process::argsInit(int pageSize)
 {
     std::vector<AuxVector<uint32_t> > extraAuxvs;
     //Tell the binary where the vsyscall part of the vsyscall page is.

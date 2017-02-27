@@ -70,7 +70,7 @@ namespace X86ISA
 
         template<class IntType>
         void argsInit(int pageSize,
-                std::vector<AuxVector<IntType> > extraAuxvs);
+                      std::vector<AuxVector<IntType> > extraAuxvs);
 
       public:
         Addr gdtStart()
@@ -101,7 +101,7 @@ namespace X86ISA
         VSyscallPage vsyscallPage;
 
       public:
-        void argsInit(int intSize, int pageSize);
+        void argsInit(int pageSize);
         void initState();
 
         X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
@@ -127,7 +127,7 @@ namespace X86ISA
         VSyscallPage vsyscallPage;
 
       public:
-        void argsInit(int intSize, int pageSize);
+        void argsInit(int pageSize);
         void initState();
 
         void syscall(int64_t callnum, ThreadContext *tc, Fault *fault);
