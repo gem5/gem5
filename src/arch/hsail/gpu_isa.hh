@@ -42,8 +42,6 @@
 #include "base/misc.hh"
 #include "gpu-compute/misc.hh"
 
-class Wavefront;
-
 namespace HsailISA
 {
     typedef uint64_t MiscReg;
@@ -51,7 +49,7 @@ namespace HsailISA
     class GPUISA
     {
       public:
-        GPUISA(Wavefront &wf) : wavefront(wf)
+        GPUISA()
         {
         }
 
@@ -74,9 +72,6 @@ namespace HsailISA
         {
             return old_pc + sizeof(RawMachInst);
         }
-
-      private:
-        Wavefront &wavefront;
     };
 }
 

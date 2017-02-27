@@ -49,7 +49,7 @@ WavefrontParams::create()
 }
 
 Wavefront::Wavefront(const Params *p)
-  : SimObject(p), callArgMem(nullptr), _gpuISA(*this)
+  : SimObject(p), callArgMem(nullptr), _gpuISA()
 {
     lastTrace = 0;
     simdId = p->simdId;
