@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 ARM Limited
+ * Copyright (c) 2016, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,6 +41,7 @@
 #define __SIM_POWER_POWER_MODEL_HH__
 
 #include "base/statistics.hh"
+#include "enums/PMType.hh"
 #include "params/PowerModel.hh"
 #include "params/PowerModelState.hh"
 #include "sim/probe/probe.hh"
@@ -184,6 +185,9 @@ class PowerModel : public SimObject
 
     /** The clocked object we belong to */
     ClockedObject * clocked_object;
+
+    /** The type of power model - collects all power, static or dynamic only */
+    Enums::PMType power_model_type;
 };
 
 #endif

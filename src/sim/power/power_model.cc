@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 ARM Limited
+ * Copyright (c) 2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -52,7 +52,7 @@ PowerModelState::PowerModelState(const Params *p)
 
 PowerModel::PowerModel(const Params *p)
     : SimObject(p), states_pm(p->pm), subsystem(p->subsystem),
-      clocked_object(NULL)
+      clocked_object(NULL), power_model_type(p->pm_type)
 {
     panic_if(subsystem == NULL,
              "Subsystem is NULL! This is not acceptable for a PowerModel!\n");
@@ -94,6 +94,10 @@ PowerModel::getDynamicPower() const
 {
     assert(clocked_object);
 
+    if (power_model_type == Enums::PMType::Static) {
+        // This power model only collects static data
+        return 0;
+    }
     std::vector<double> w = clocked_object->pwrStateWeights();
 
     // Same number of states (excluding UNDEFINED)
@@ -117,6 +121,11 @@ PowerModel::getStaticPower() const
     assert(clocked_object);
 
     std::vector<double> w = clocked_object->pwrStateWeights();
+
+    if (power_model_type == Enums::PMType::Dynamic) {
+        // This power model only collects dynamic data
+        return 0;
+    }
 
     // Same number of states (excluding UNDEFINED)
     assert(w.size() - 1 == states_pm.size());
