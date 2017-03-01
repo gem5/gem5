@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2016 ARM Limited
+ * Copyright (c) 2010-2013, 2015-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -40,6 +40,8 @@
  */
 
 #include "arch/arm/miscregs.hh"
+
+#include <tuple>
 
 #include "arch/arm/isa.hh"
 #include "base/misc.hh"
@@ -1967,11 +1969,12 @@ decodeCP15Reg64(unsigned crm, unsigned opc1)
     return MISCREG_CP15_UNIMPL;
 }
 
-bool
-canReadCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
+std::tuple<bool, bool>
+canReadCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr)
 {
     bool secure = !scr.ns;
-    bool canRead;
+    bool canRead = false;
+    bool undefined = false;
 
     switch (cpsr.mode) {
       case MODE_USER:
@@ -1995,18 +1998,19 @@ canReadCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
         canRead = miscRegInfo[reg][MISCREG_HYP_RD];
         break;
       default:
-        panic("Unrecognized mode setting in CPSR.\n");
+        undefined = true;
     }
     // can't do permissions checkes on the root of a banked pair of regs
     assert(!miscRegInfo[reg][MISCREG_BANKED]);
-    return canRead;
+    return std::make_tuple(canRead, undefined);
 }
 
-bool
-canWriteCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
+std::tuple<bool, bool>
+canWriteCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr)
 {
     bool secure = !scr.ns;
-    bool canWrite;
+    bool canWrite = false;
+    bool undefined = false;
 
     switch (cpsr.mode) {
       case MODE_USER:
@@ -2030,11 +2034,11 @@ canWriteCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
         canWrite =  miscRegInfo[reg][MISCREG_HYP_WR];
         break;
       default:
-        panic("Unrecognized mode setting in CPSR.\n");
+        undefined = true;
     }
     // can't do permissions checkes on the root of a banked pair of regs
     assert(!miscRegInfo[reg][MISCREG_BANKED]);
-    return canWrite;
+    return std::make_tuple(canWrite, undefined);
 }
 
 int

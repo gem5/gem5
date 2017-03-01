@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016 ARM Limited
+ * Copyright (c) 2010-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,7 @@
 #define __ARCH_ARM_MISCREGS_HH__
 
 #include <bitset>
+#include <tuple>
 
 #include "base/bitunion.hh"
 #include "base/compiler.hh"
@@ -1847,13 +1848,37 @@ namespace ArmISA
    EndBitUnion(CPTR)
 
 
-    // Checks read access permissions to coproc. registers
-    bool canReadCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr,
-                          ThreadContext *tc);
+    /**
+     * Check for permission to read coprocessor registers.
+     *
+     * Checks whether an instruction at the current program mode has
+     * permissions to read the coprocessor registers. This function
+     * returns whether the check is undefined and if not whether the
+     * read access is permitted.
+     *
+     * @param the misc reg indicating the coprocessor
+     * @param the SCR
+     * @param the CPSR
+     * @return a tuple of booleans: can_read, undefined
+     */
+    std::tuple<bool, bool> canReadCoprocReg(MiscRegIndex reg, SCR scr,
+                                           CPSR cpsr);
 
-    // Checks write access permissions to coproc. registers
-    bool canWriteCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr,
-                           ThreadContext *tc);
+    /**
+     * Check for permission to write coprocessor registers.
+     *
+     * Checks whether an instruction at the current program mode has
+     * permissions to write the coprocessor registers. This function
+     * returns whether the check is undefined and if not whether the
+     * write access is permitted.
+     *
+     * @param the misc reg indicating the coprocessor
+     * @param the SCR
+     * @param the CPSR
+     * @return a tuple of booleans: can_write, undefined
+     */
+    std::tuple<bool, bool> canWriteCoprocReg(MiscRegIndex reg, SCR scr,
+                                             CPSR cpsr);
 
     // Checks read access permissions to AArch64 system registers
     bool canReadAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr,
