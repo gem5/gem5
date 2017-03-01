@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015 ARM Limited
+ * Copyright (c) 2010-2013, 2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -116,6 +116,7 @@ class HDLcd: public AmbaDmaDevice
     const AddrRangeList addrRanges;
     const bool enableCapture;
     const Addr pixelBufferSize;
+    const Tick virtRefreshRate;
 
   protected: // Register handling
     /** ARM HDLcd register offsets */
@@ -343,6 +344,10 @@ class HDLcd: public AmbaDmaDevice
       protected:
         HDLcd &parent;
     };
+
+    /** Handler for fast frame refresh in KVM-mode */
+    void virtRefresh();
+    EventWrapper<HDLcd, &HDLcd::virtRefresh> virtRefreshEvent;
 
     /** Helper to write out bitmaps */
     Bitmap bmp;

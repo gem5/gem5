@@ -298,6 +298,8 @@ class HDLcd(AmbaDmaDevice):
 
     pxl_clk = Param.ClockDomain("Pixel clock source")
     pixel_chunk = Param.Unsigned(32, "Number of pixels to handle in one batch")
+    virt_refresh_rate = Param.Frequency("20Hz", "Frame refresh rate "
+                                        "in KVM mode")
 
 class RealView(Platform):
     type = 'RealView'
