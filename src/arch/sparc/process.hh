@@ -32,14 +32,15 @@
 #ifndef __SPARC_PROCESS_HH__
 #define __SPARC_PROCESS_HH__
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "arch/sparc/isa_traits.hh"
+#include "base/loader/object_file.hh"
 #include "mem/page_table.hh"
 #include "sim/byteswap.hh"
 #include "sim/process.hh"
-
-class ObjectFile;
 
 class SparcProcess : public Process
 {
@@ -77,12 +78,27 @@ class Sparc32Process : public SparcProcess
     Sparc32Process(ProcessParams * params, ObjectFile *objFile)
         : SparcProcess(params, objFile, 0)
     {
+        Addr brk_point = objFile->dataBase() + objFile->dataSize() +
+                         objFile->bssSize();
+        brk_point = roundUp(brk_point, SparcISA::PageBytes);
+
+        // Reserve 8M for main stack.
+        Addr max_stack_size = 8 * 1024 * 1024;
+
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.
-        memState->stackBase = (Addr)0xf0000000ULL;
+        Addr stack_base = 0xf0000000ULL;
+
+        // Set pointer for next thread stack.
+        Addr next_thread_stack_base = stack_base - max_stack_size;
 
         // Set up region for mmaps.
-        memState->mmapEnd = 0x70000000;
+        Addr mmap_end = 0x70000000;
+
+        memState = std::make_shared<MemState>(brk_point, stack_base,
+                                              max_stack_size,
+                                              next_thread_stack_base,
+                                              mmap_end);
     }
 
     void initState();
@@ -107,12 +123,26 @@ class Sparc64Process : public SparcProcess
     Sparc64Process(ProcessParams * params, ObjectFile *objFile)
         : SparcProcess(params, objFile, 2047)
     {
+        Addr brk_point = objFile->dataBase() + objFile->dataSize() +
+                         objFile->bssSize();
+        brk_point = roundUp(brk_point, SparcISA::PageBytes);
+
+        Addr max_stack_size = 8 * 1024 * 1024;
+
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.
-        memState->stackBase = (Addr)0x80000000000ULL;
+        Addr stack_base = 0x80000000000ULL;
+
+        // Set pointer for next thread stack.  Reserve 8M for main stack.
+        Addr next_thread_stack_base = stack_base - max_stack_size;
 
         // Set up region for mmaps.
-        memState->mmapEnd = 0xfffff80000000000ULL;
+        Addr mmap_end = 0xfffff80000000000ULL;
+
+        memState = std::make_shared<MemState>(brk_point, stack_base,
+                                              max_stack_size,
+                                              next_thread_stack_base,
+                                              mmap_end);
     }
 
     void initState();

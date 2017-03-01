@@ -111,7 +111,6 @@ Process::Process(ProcessParams * params, ObjectFile * obj_file)
       _pid(params->pid), _ppid(params->ppid),
       _pgid(params->pgid), drivers(params->drivers),
       fds(make_shared<FDArray>(params->input, params->output, params->errout)),
-      maxStackSize(params->maxStackSize),
       childClearTID(0)
 {
     if (_pid >= System::maxPID)
@@ -136,7 +135,6 @@ Process::Process(ProcessParams * params, ObjectFile * obj_file)
     _tgid = params->pid;
 
     exitGroup = new bool();
-    memState = new MemState();
     sigchld = new bool();
 
     if (!debugSymbolTable) {
@@ -164,7 +162,6 @@ Process::clone(ThreadContext *otc, ThreadContext *ntc,
         np->pTable = pTable;
         ntc->getMemProxy().setPageTable(np->pTable);
 
-        delete np->memState;
         np->memState = memState;
     } else {
         /**
@@ -323,24 +320,28 @@ Process::replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
 bool
 Process::fixupStackFault(Addr vaddr)
 {
+    Addr stack_min = memState->getStackMin();
+    Addr stack_base = memState->getStackBase();
+    Addr max_stack_size = memState->getMaxStackSize();
+
     // Check if this is already on the stack and there's just no page there
     // yet.
-    if (vaddr >= memState->stackMin && vaddr < memState->stackBase) {
+    if (vaddr >= stack_min && vaddr < stack_base) {
         allocateMem(roundDown(vaddr, PageBytes), PageBytes);
         return true;
     }
 
     // We've accessed the next page of the stack, so extend it to include
     // this address.
-    if (vaddr < memState->stackMin
-        && vaddr >= memState->stackBase - maxStackSize) {
-        while (vaddr < memState->stackMin) {
-            memState->stackMin -= TheISA::PageBytes;
-            if (memState->stackBase - memState->stackMin > maxStackSize)
+    if (vaddr < stack_min && vaddr >= stack_base - max_stack_size) {
+        while (vaddr < stack_min) {
+            stack_min -= TheISA::PageBytes;
+            if (stack_base - stack_min > max_stack_size)
                 fatal("Maximum stack size exceeded\n");
-            allocateMem(memState->stackMin, TheISA::PageBytes);
+            allocateMem(stack_min, TheISA::PageBytes);
             inform("Increasing stack size by one page.");
         };
+        memState->setStackMin(stack_min);
         return true;
     }
     return false;
@@ -349,12 +350,6 @@ Process::fixupStackFault(Addr vaddr)
 void
 Process::serialize(CheckpointOut &cp) const
 {
-    SERIALIZE_SCALAR(memState->brkPoint);
-    SERIALIZE_SCALAR(memState->stackBase);
-    SERIALIZE_SCALAR(memState->stackSize);
-    SERIALIZE_SCALAR(memState->stackMin);
-    SERIALIZE_SCALAR(memState->nextThreadStackBase);
-    SERIALIZE_SCALAR(memState->mmapEnd);
     pTable->serialize(cp);
     /**
      * Checkpoints for file descriptors currently do not work. Need to
@@ -372,12 +367,6 @@ Process::serialize(CheckpointOut &cp) const
 void
 Process::unserialize(CheckpointIn &cp)
 {
-    UNSERIALIZE_SCALAR(memState->brkPoint);
-    UNSERIALIZE_SCALAR(memState->stackBase);
-    UNSERIALIZE_SCALAR(memState->stackSize);
-    UNSERIALIZE_SCALAR(memState->stackMin);
-    UNSERIALIZE_SCALAR(memState->nextThreadStackBase);
-    UNSERIALIZE_SCALAR(memState->mmapEnd);
     pTable->unserialize(cp);
     /**
      * Checkpoints for file descriptors currently do not work. Need to
@@ -446,13 +435,14 @@ Process::updateBias()
 
     // We are allocating the memory area; set the bias to the lowest address
     // in the allocated memory region.
-    Addr *end = &memState->mmapEnd;
-    Addr ld_bias = mmapGrowsDown() ? *end - interp_mapsize : *end;
+    Addr mmap_end = memState->getMmapEnd();
+    Addr ld_bias = mmapGrowsDown() ? mmap_end - interp_mapsize : mmap_end;
 
     // Adjust the process mmap area to give the interpreter room; the real
     // execve system call would just invoke the kernel's internal mmap
     // functions to make these adjustments.
-    *end = mmapGrowsDown() ? ld_bias : *end + interp_mapsize;
+    mmap_end = mmapGrowsDown() ? ld_bias : mmap_end + interp_mapsize;
+    memState->setMmapEnd(mmap_end);
 
     interp->updateBias(ld_bias);
 }

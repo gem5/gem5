@@ -100,9 +100,6 @@ X86Process::X86Process(ProcessParams * params, ObjectFile *objFile,
     : Process(params, objFile), syscallDescs(_syscallDescs),
       numSyscallDescs(_numSyscallDescs)
 {
-    memState->brkPoint = objFile->dataBase() + objFile->dataSize()
-                       + objFile->bssSize();
-    memState->brkPoint = roundUp(memState->brkPoint, PageBytes);
 }
 
 void X86Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
@@ -123,23 +120,15 @@ X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile,
     vsyscallPage.vtimeOffset = 0x400;
     vsyscallPage.vgettimeofdayOffset = 0x0;
 
-    // Set up stack. On X86_64 Linux, stack goes from the top of memory
-    // downward, less the hole for the kernel address space plus one page
-    // for undertermined purposes.
-    memState->stackBase = (Addr)0x7FFFFFFFF000ULL;
+    Addr brk_point = roundUp(objFile->dataBase() + objFile->dataSize() +
+                             objFile->bssSize(), PageBytes);
+    Addr stack_base = 0x7FFFFFFFF000ULL;
+    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr next_thread_stack_base = stack_base - max_stack_size;
+    Addr mmap_end = 0x7FFFF7FFF000ULL;
 
-    // Set pointer for next thread stack.  Reserve 8M for main stack.
-    memState->nextThreadStackBase = memState->stackBase - (8 * 1024 * 1024);
-
-    // "mmap_base" is a function which defines where mmap region starts in
-    // the process address space.
-    // mmap_base: PAGE_ALIGN(TASK_SIZE-MIN_GAP-mmap_rnd())
-    // TASK_SIZE: (1<<47)-PAGE_SIZE
-    // MIN_GAP: 128*1024*1024+stack_maxrandom_size()
-    // We do not use any address space layout randomization in gem5
-    // therefore the random fields become zero; the smallest gap space was
-    // chosen but gap could potentially be much larger.
-    memState->mmapEnd = (Addr)0x7FFFF7FFF000ULL;
+    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
+                                     next_thread_stack_base, mmap_end);
 }
 
 void
@@ -168,20 +157,15 @@ I386Process::I386Process(ProcessParams *params, ObjectFile *objFile,
     vsyscallPage.vsyscallOffset = 0x400;
     vsyscallPage.vsysexitOffset = 0x410;
 
-    memState->stackBase = _gdtStart;
+    Addr brk_point = roundUp(objFile->dataBase() + objFile->dataSize() +
+                             objFile->bssSize(), PageBytes);
+    Addr stack_base = _gdtStart;
+    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr next_thread_stack_base = stack_base - max_stack_size;
+    Addr mmap_end = 0xB7FFF000ULL;
 
-    // Set pointer for next thread stack.  Reserve 8M for main stack.
-    memState->nextThreadStackBase = memState->stackBase - (8 * 1024 * 1024);
-
-    // "mmap_base" is a function which defines where mmap region starts in
-    // the process address space.
-    // mmap_base: PAGE_ALIGN(TASK_SIZE-MIN_GAP-mmap_rnd())
-    // TASK_SIZE: 0xC0000000
-    // MIN_GAP: 128*1024*1024+stack_maxrandom_size()
-    // We do not use any address space layout randomization in gem5
-    // therefore the random fields become zero; the smallest gap space was
-    // chosen but gap could potentially be much larger.
-    memState->mmapEnd = (Addr)0xB7FFF000ULL;
+    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
+                                     next_thread_stack_base, mmap_end);
 }
 
 SyscallDesc*
@@ -955,21 +939,23 @@ X86Process::argsInit(int pageSize,
         aux_padding +
         frame_size;
 
-    memState->stackMin = memState->stackBase - space_needed;
-    memState->stackMin = roundDown(memState->stackMin, align);
-    memState->stackSize = roundUp(memState->stackBase - memState->stackMin,
-                                  pageSize);
+    Addr stack_base = memState->getStackBase();
+
+    Addr stack_min = stack_base - space_needed;
+    stack_min = roundDown(stack_min, align);
+
+    unsigned stack_size = stack_base - stack_min;
+    stack_size = roundUp(stack_size, pageSize);
+    memState->setStackSize(stack_size);
 
     // map memory
-    Addr stack_end = roundDown(memState->stackBase - memState->stackSize,
-                               pageSize);
+    Addr stack_end = roundDown(stack_base - stack_size, pageSize);
 
-    DPRINTF(Stack, "Mapping the stack: 0x%x %dB\n",
-            stack_end, memState->stackSize);
-    allocateMem(stack_end, memState->stackSize);
+    DPRINTF(Stack, "Mapping the stack: 0x%x %dB\n", stack_end, stack_size);
+    allocateMem(stack_end, stack_size);
 
     // map out initial stack contents
-    IntType sentry_base = memState->stackBase - sentry_size;
+    IntType sentry_base = stack_base - sentry_size;
     IntType file_name_base = sentry_base - file_name_size;
     IntType env_data_base = file_name_base - env_data_size;
     IntType arg_data_base = env_data_base - arg_data_size;
@@ -988,7 +974,7 @@ X86Process::argsInit(int pageSize,
     DPRINTF(Stack, "0x%x - envp array\n", envp_array_base);
     DPRINTF(Stack, "0x%x - argv array\n", argv_array_base);
     DPRINTF(Stack, "0x%x - argc \n", argc_base);
-    DPRINTF(Stack, "0x%x - stack min\n", memState->stackMin);
+    DPRINTF(Stack, "0x%x - stack min\n", stack_min);
 
     // write contents to stack
 
@@ -1035,14 +1021,14 @@ X86Process::argsInit(int pageSize,
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     //Set the stack pointer register
-    tc->setIntReg(StackPointerReg, memState->stackMin);
+    tc->setIntReg(StackPointerReg, stack_min);
 
     // There doesn't need to be any segment base added in since we're dealing
     // with the flat segmentation model.
     tc->pcState(getStartPC());
 
     //Align the "stack_min" to a page boundary.
-    memState->stackMin = roundDown(memState->stackMin, pageSize);
+    memState->setStackMin(roundDown(stack_min, pageSize));
 }
 
 void

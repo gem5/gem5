@@ -70,36 +70,30 @@ ArmProcess32::ArmProcess32(ProcessParams *params, ObjectFile *objFile,
                            ObjectFile::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
-    memState->stackBase = 0xbf000000L;
+    Addr brk_point = roundUp(objFile->dataBase() + objFile->dataSize() +
+                             objFile->bssSize(), PageBytes);
+    Addr stack_base = 0xbf000000L;
+    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr next_thread_stack_base = stack_base - max_stack_size;
+    Addr mmap_end = 0x40000000L;
 
-    // Set pointer for next thread stack.  Reserve 8M for main stack.
-    memState->nextThreadStackBase = memState->stackBase - (8 * 1024 * 1024);
-
-    // Set up break point (Top of Heap)
-    memState->brkPoint = objFile->dataBase() + objFile->dataSize() +
-                         objFile->bssSize();
-    memState->brkPoint = roundUp(memState->brkPoint, PageBytes);
-
-    // Set up region for mmaps. For now, start at bottom of kuseg space.
-    memState->mmapEnd = 0x40000000L;
+    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
+                                     next_thread_stack_base, mmap_end);
 }
 
 ArmProcess64::ArmProcess64(ProcessParams *params, ObjectFile *objFile,
                            ObjectFile::Arch _arch)
     : ArmProcess(params, objFile, _arch)
 {
-    memState->stackBase = 0x7fffff0000L;
+    Addr brk_point = roundUp(objFile->dataBase() + objFile->dataSize() +
+                             objFile->bssSize(), PageBytes);
+    Addr stack_base = 0x7fffff0000L;
+    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr next_thread_stack_base = stack_base - max_stack_size;
+    Addr mmap_end = 0x4000000000L;
 
-    // Set pointer for next thread stack.  Reserve 8M for main stack.
-    memState->nextThreadStackBase = memState->stackBase - (8 * 1024 * 1024);
-
-    // Set up break point (Top of Heap)
-    memState->brkPoint = objFile->dataBase() + objFile->dataSize() +
-                         objFile->bssSize();
-    memState->brkPoint = roundUp(memState->brkPoint, PageBytes);
-
-    // Set up region for mmaps. For now, start at bottom of kuseg space.
-    memState->mmapEnd = 0x4000000000L;
+    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
+                                     next_thread_stack_base, mmap_end);
 }
 
 void
@@ -302,16 +296,16 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 
     int space_needed = frame_size + aux_padding;
 
-    memState->stackMin = memState->stackBase - space_needed;
-    memState->stackMin = roundDown(memState->stackMin, align);
-    memState->stackSize = memState->stackBase - memState->stackMin;
+    memState->setStackMin(memState->getStackBase() - space_needed);
+    memState->setStackMin(roundDown(memState->getStackMin(), align));
+    memState->setStackSize(memState->getStackBase() - memState->getStackMin());
 
     // map memory
-    allocateMem(roundDown(memState->stackMin, pageSize),
-                          roundUp(memState->stackSize, pageSize));
+    allocateMem(roundDown(memState->getStackMin(), pageSize),
+                          roundUp(memState->getStackSize(), pageSize));
 
     // map out initial stack contents
-    IntType sentry_base = memState->stackBase - sentry_size;
+    IntType sentry_base = memState->getStackBase() - sentry_size;
     IntType aux_data_base = sentry_base - aux_data_size;
     IntType env_data_base = aux_data_base - env_data_size;
     IntType arg_data_base = env_data_base - arg_data_size;
@@ -332,7 +326,7 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
     DPRINTF(Stack, "0x%x - envp array\n", envp_array_base);
     DPRINTF(Stack, "0x%x - argv array\n", argv_array_base);
     DPRINTF(Stack, "0x%x - argc \n", argc_base);
-    DPRINTF(Stack, "0x%x - stack min\n", memState->stackMin);
+    DPRINTF(Stack, "0x%x - stack min\n", memState->getStackMin());
 
     // write contents to stack
 
@@ -378,7 +372,7 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     //Set the stack pointer register
-    tc->setIntReg(spIndex, memState->stackMin);
+    tc->setIntReg(spIndex, memState->getStackMin());
     //A pointer to a function to run when the program exits. We'll set this
     //to zero explicitly to make sure this isn't used.
     tc->setIntReg(ArgumentReg0, 0);
@@ -405,7 +399,7 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
     tc->pcState(pc);
 
     //Align the "stackMin" to a page boundary.
-    memState->stackMin = roundDown(memState->stackMin, pageSize);
+    memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
 }
 
 ArmISA::IntReg

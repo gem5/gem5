@@ -83,15 +83,16 @@ Shader::mmap(int length)
 
     if (proc->mmapGrowsDown()) {
         DPRINTF(HSAIL, "GROWS DOWN");
-        start = mem_state->mmapEnd - length;
-        mem_state->mmapEnd = start;
+        start = mem_state->getMmapEnd() - length;
+        mem_state->setMmapEnd(start);
     } else {
         DPRINTF(HSAIL, "GROWS UP");
-        start = mem_state->mmapEnd;
-        mem_state->mmapEnd += length;
+        start = mem_state->getMmapEnd();
+        mem_state->setMmapEnd(start + length);
 
         // assertion to make sure we don't overwrite the stack (it grows down)
-        assert(mem_state->stackBase - proc->maxStackSize > mem_state->mmapEnd);
+        assert(mem_state->getStackBase() - mem_state->getMaxStackSize() >
+               mem_state->getMmapEnd());
     }
 
     DPRINTF(HSAIL,"Shader::mmap start= %#x, %#x\n", start, length);

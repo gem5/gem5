@@ -56,16 +56,21 @@ RiscvProcess::RiscvProcess(ProcessParams * params,
 {
     // Set up stack. On RISC-V, stack starts at the top of kuseg
     // user address space. RISC-V stack grows down from here
-    memState->stackBase = (Addr)0x7FFFFFFF;
+    Addr stack_base = 0x7FFFFFFF;
+
+    Addr max_stack_size = 8 * 1024 * 1024;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
-    memState->nextThreadStackBase = memState->stackBase - (8 * 1024 * 1024);
+    Addr next_thread_stack_base = stack_base - max_stack_size;
 
     // Set up break point (Top of Heap)
-    memState->brkPoint = objFile->bssBase() + objFile->bssSize();
+    Addr brk_point = objFile->bssBase() + objFile->bssSize();
 
     // Set up region for mmaps.  Start it 1GB above the top of the heap.
-    memState->mmapEnd = memState->brkPoint + 0x40000000L;
+    Addr mmap_end = brk_point + 0x40000000L;
+
+    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
+                                     next_thread_stack_base, mmap_end);
 }
 
 void
@@ -124,19 +129,24 @@ RiscvProcess::argsInit(int pageSize)
         env_data_size += env.size() + 1;
     int auxv_array_size = 2 * sizeof(IntType)*auxv.size();
 
-    memState->stackSize = sizeof(IntType) + argv_array_size + 2 *
+    Addr stack_size = sizeof(IntType) + argv_array_size + 2 * sizeof(Addr) +
         sizeof(Addr) + arg_data_size + 2 * sizeof(Addr);
     if (!envp.empty()) {
-        memState->stackSize += 2 * sizeof(Addr) + envp_array_size + 2 *
+        stack_size += 2 * sizeof(Addr) + envp_array_size + 2 *
             sizeof(Addr) + env_data_size;
     }
     if (!auxv.empty())
-        memState->stackSize += 2 * sizeof(Addr) + auxv_array_size;
-    memState->stackMin = roundDown(memState->stackBase - memState->stackSize,
-                                   pageSize);
-    allocateMem(memState->stackMin, roundUp(memState->stackSize, pageSize));
+        stack_size += 2 * sizeof(Addr) + auxv_array_size;
 
-    Addr argv_array_base = memState->stackMin + sizeof(IntType);
+    memState->setStackSize(stack_size);
+
+    Addr stack_min = roundDown(memState->getStackBase() -
+                               stack_size, pageSize);
+    allocateMem(stack_min, roundUp(memState->getStackSize(), pageSize));
+
+    memState->setStackMin(stack_min);
+
+    Addr argv_array_base = memState->getStackMin() + sizeof(IntType);
     Addr arg_data_base = argv_array_base + argv_array_size + 2 * sizeof(Addr);
     Addr envp_array_base = arg_data_base + arg_data_size;
     if (!envp.empty())
@@ -161,7 +171,7 @@ RiscvProcess::argsInit(int pageSize)
         }
     }
 
-    Addr sp = memState->stackMin;
+    Addr sp = memState->getStackMin();
     initVirtMem.writeBlob(sp, (uint8_t *)&argc, sizeof(IntType));
     sp += sizeof(IntType);
     for (Addr arg_pointer: arg_pointers) {
@@ -212,7 +222,7 @@ RiscvProcess::argsInit(int pageSize)
     }
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
-    tc->setIntReg(StackPointerReg, memState->stackMin);
+    tc->setIntReg(StackPointerReg, memState->getStackMin());
     tc->pcState(getStartPC());
 }
 

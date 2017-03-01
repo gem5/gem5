@@ -53,18 +53,23 @@ MipsProcess::MipsProcess(ProcessParams * params, ObjectFile *objFile)
 {
     // Set up stack. On MIPS, stack starts at the top of kuseg
     // user address space. MIPS stack grows down from here
-    memState->stackBase = 0x7FFFFFFF;
+    Addr stack_base = 0x7FFFFFFF;
+
+    Addr max_stack_size = 8 * 1024 * 1024;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
-    memState->nextThreadStackBase = memState->stackBase - (8 * 1024 * 1024);
+    Addr next_thread_stack_base = stack_base - max_stack_size;
 
     // Set up break point (Top of Heap)
-    memState->brkPoint = objFile->dataBase() + objFile->dataSize() +
-                         objFile->bssSize();
-    memState->brkPoint = roundUp(memState->brkPoint, PageBytes);
+    Addr brk_point = objFile->dataBase() + objFile->dataSize() +
+                     objFile->bssSize();
+    brk_point = roundUp(brk_point, PageBytes);
 
     // Set up region for mmaps.  Start it 1GB above the top of the heap.
-    memState->mmapEnd = memState->brkPoint + 0x40000000L;
+    Addr mmap_end = brk_point + 0x40000000L;
+
+    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
+                                     next_thread_stack_base, mmap_end);
 }
 
 void
@@ -141,15 +146,16 @@ MipsProcess::argsInit(int pageSize)
         env_data_size;
 
     // set bottom of stack
-    memState->stackMin = memState->stackBase - space_needed;
+    memState->setStackMin(memState->getStackBase() - space_needed);
     // align it
-    memState->stackMin = roundDown(memState->stackMin, pageSize);
-    memState->stackSize = memState->stackBase - memState->stackMin;
+    memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
+    memState->setStackSize(memState->getStackBase() - memState->getStackMin());
     // map memory
-    allocateMem(memState->stackMin, roundUp(memState->stackSize, pageSize));
+    allocateMem(memState->getStackMin(), roundUp(memState->getStackSize(),
+                pageSize));
 
-    // map out initial stack contents
-    IntType argv_array_base = memState->stackMin + intSize; // room for argc
+    // map out initial stack contents; leave room for argc
+    IntType argv_array_base = memState->getStackMin() + intSize;
     IntType envp_array_base = argv_array_base + argv_array_size;
     IntType auxv_array_base = envp_array_base + envp_array_size;
     IntType arg_data_base = auxv_array_base + auxv_array_size;
@@ -160,7 +166,7 @@ MipsProcess::argsInit(int pageSize)
 
     argc = htog((IntType)argc);
 
-    initVirtMem.writeBlob(memState->stackMin, (uint8_t*)&argc, intSize);
+    initVirtMem.writeBlob(memState->getStackMin(), (uint8_t*)&argc, intSize);
 
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
@@ -185,7 +191,7 @@ MipsProcess::argsInit(int pageSize)
 
     setSyscallArg(tc, 0, argc);
     setSyscallArg(tc, 1, argv_array_base);
-    tc->setIntReg(StackPointerReg, memState->stackMin);
+    tc->setIntReg(StackPointerReg, memState->getStackMin());
 
     tc->pcState(getStartPC());
 }

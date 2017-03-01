@@ -50,21 +50,24 @@ using namespace std;
 AlphaProcess::AlphaProcess(ProcessParams *params, ObjectFile *objFile)
     : Process(params, objFile)
 {
-    memState->brkPoint = objFile->dataBase() + objFile->dataSize() +
-                         objFile->bssSize();
-    memState->brkPoint = roundUp(memState->brkPoint, PageBytes);
+    Addr brk_point = objFile->dataBase() + objFile->dataSize() +
+                     objFile->bssSize();
+    brk_point = roundUp(brk_point, PageBytes);
 
     // Set up stack.  On Alpha, stack goes below text section.  This
     // code should get moved to some architecture-specific spot.
-    memState->stackBase = objFile->textBase() - (409600+4096);
+    Addr stack_base = objFile->textBase() - (409600+4096);
 
-    // Set up region for mmaps.  Tru64 seems to start just above 0 and
-    // grow up from there.
-    memState->mmapEnd = 0x10000;
+    // Set up region for mmaps.
+    Addr mmap_end = 0x10000;
+
+    Addr max_stack_size = 8 * 1024 * 1024;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
-    memState->nextThreadStackBase = memState->stackBase - (8 * 1024 * 1024);
+    Addr next_thread_stack_base = stack_base - max_stack_size;
 
+    memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
+                                     next_thread_stack_base, mmap_end);
 }
 
 void
@@ -131,15 +134,16 @@ AlphaProcess::argsInit(int intSize, int pageSize)
         space_needed = 32*1024;
 
     // set bottom of stack
-    memState->stackMin = memState->stackBase - space_needed;
+    memState->setStackMin(memState->getStackBase() - space_needed);
     // align it
-    memState->stackMin = roundDown(memState->stackMin, pageSize);
-    memState->stackSize = memState->stackBase - memState->stackMin;
+    memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
+    memState->setStackSize(memState->getStackBase() - memState->getStackMin());
     // map memory
-    allocateMem(memState->stackMin, roundUp(memState->stackSize, pageSize));
+    allocateMem(memState->getStackMin(), roundUp(memState->getStackSize(),
+                pageSize));
 
     // map out initial stack contents
-    Addr argv_array_base = memState->stackMin + intSize; // room for argc
+    Addr argv_array_base = memState->getStackMin() + intSize; // room for argc
     Addr envp_array_base = argv_array_base + argv_array_size;
     Addr auxv_array_base = envp_array_base + envp_array_size;
     Addr arg_data_base = auxv_array_base + auxv_array_size;
@@ -154,7 +158,7 @@ AlphaProcess::argsInit(int intSize, int pageSize)
     else
         panic("Unknown int size");
 
-    initVirtMem.writeBlob(memState->stackMin, (uint8_t*)&argc, intSize);
+    initVirtMem.writeBlob(memState->getStackMin(), (uint8_t*)&argc, intSize);
 
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
@@ -171,7 +175,7 @@ AlphaProcess::argsInit(int intSize, int pageSize)
 
     setSyscallArg(tc, 0, argc);
     setSyscallArg(tc, 1, argv_array_base);
-    tc->setIntReg(StackPointerReg, memState->stackMin);
+    tc->setIntReg(StackPointerReg, memState->getStackMin());
 
     tc->pcState(getStartPC());
 }

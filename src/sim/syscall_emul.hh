@@ -885,11 +885,14 @@ mremapFunc(SyscallDesc *desc, int callnum, Process *process, ThreadContext *tc)
     new_length = roundUp(new_length, TheISA::PageBytes);
 
     if (new_length > old_length) {
-        if ((start + old_length) == process->memState->mmapEnd &&
+        std::shared_ptr<MemState> mem_state = process->memState;
+        Addr mmap_end = mem_state->getMmapEnd();
+
+        if ((start + old_length) == mmap_end &&
             (!use_provided_address || provided_address == start)) {
             uint64_t diff = new_length - old_length;
-            process->allocateMem(process->memState->mmapEnd, diff);
-            process->memState->mmapEnd += diff;
+            process->allocateMem(mmap_end, diff);
+            mem_state->setMmapEnd(mmap_end + diff);
             return start;
         } else {
             if (!use_provided_address && !(flags & OS::TGT_MREMAP_MAYMOVE)) {
@@ -897,7 +900,7 @@ mremapFunc(SyscallDesc *desc, int callnum, Process *process, ThreadContext *tc)
                 return -ENOMEM;
             } else {
                 uint64_t new_start = use_provided_address ?
-                    provided_address : process->memState->mmapEnd;
+                    provided_address : mmap_end;
                 process->pTable->remap(start, old_length, new_start);
                 warn("mremapping to new vaddr %08p-%08p, adding %d\n",
                      new_start, new_start + new_length,
@@ -907,9 +910,9 @@ mremapFunc(SyscallDesc *desc, int callnum, Process *process, ThreadContext *tc)
                                      new_length - old_length,
                                      use_provided_address /* clobber */);
                 if (!use_provided_address)
-                    process->memState->mmapEnd += new_length;
+                    mem_state->setMmapEnd(mmap_end + new_length);
                 if (use_provided_address &&
-                    new_start + new_length > process->memState->mmapEnd) {
+                    new_start + new_length > mem_state->getMmapEnd()) {
                     // something fishy going on here, at least notify the user
                     // @todo: increase mmap_end?
                     warn("mmap region limit exceeded with MREMAP_FIXED\n");
@@ -1214,7 +1217,6 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
     pp->executable.assign(*(new std::string(p->progName())));
     pp->cmd.push_back(*(new std::string(p->progName())));
     pp->system = p->system;
-    pp->maxStackSize = p->maxStackSize;
     pp->cwd.assign(p->getcwd());
     pp->input.assign("stdin");
     pp->output.assign("stdout");
@@ -1457,9 +1459,13 @@ mmapImpl(SyscallDesc *desc, int num, Process *p, ThreadContext *tc,
     // Extend global mmap region if necessary. Note that we ignore the
     // start address unless MAP_FIXED is specified.
     if (!(tgt_flags & OS::TGT_MAP_FIXED)) {
-        Addr *end = &p->memState->mmapEnd;
-        start = p->mmapGrowsDown() ? *end - length : *end;
-        *end = p->mmapGrowsDown() ? start : *end + length;
+        std::shared_ptr<MemState> mem_state = p->memState;
+        Addr mmap_end = mem_state->getMmapEnd();
+
+        start = p->mmapGrowsDown() ? mmap_end - length : mmap_end;
+        mmap_end = p->mmapGrowsDown() ? start : mmap_end + length;
+
+        mem_state->setMmapEnd(mmap_end);
     }
 
     DPRINTF_SYSCALL(Verbose, " mmap range is 0x%x - 0x%x\n",
@@ -1768,7 +1774,6 @@ execveFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
     pp->errout.assign("cerr");
     pp->cwd.assign(p->getcwd());
     pp->system = p->system;
-    pp->maxStackSize = p->maxStackSize;
     /**
      * Prevent process object creation with identical PIDs (which will trip
      * a fatal check in Process constructor). The execve call is supposed to

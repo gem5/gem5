@@ -150,22 +150,25 @@ brkFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     int index = 0;
     Addr new_brk = p->getSyscallArg(tc, index);
 
+    std::shared_ptr<MemState> mem_state = p->memState;
+    Addr brk_point = mem_state->getBrkPoint();
+
     // in Linux at least, brk(0) returns the current break value
     // (note that the syscall and the glibc function have different behavior)
     if (new_brk == 0)
-        return p->memState->brkPoint;
+        return brk_point;
 
-    if (new_brk > p->memState->brkPoint) {
+    if (new_brk > brk_point) {
         // might need to allocate some new pages
-        for (ChunkGenerator gen(p->memState->brkPoint,
-                                new_brk - p->memState->brkPoint,
+        for (ChunkGenerator gen(brk_point,
+                                new_brk - brk_point,
                                 PageBytes); !gen.done(); gen.next()) {
             if (!p->pTable->translate(gen.addr()))
                 p->allocateMem(roundDown(gen.addr(), PageBytes), PageBytes);
 
             // if the address is already there, zero it out
             else {
-                uint8_t zero  = 0;
+                uint8_t zero = 0;
                 SETranslatingPortProxy &tp = tc->getMemProxy();
 
                 // split non-page aligned accesses
@@ -183,10 +186,10 @@ brkFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
         }
     }
 
-    p->memState->brkPoint = new_brk;
+    mem_state->setBrkPoint(new_brk);
     DPRINTF_SYSCALL(Verbose, "brk: break point changed to: %#X\n",
-                    p->memState->brkPoint);
-    return p->memState->brkPoint;
+                    mem_state->getBrkPoint());
+    return mem_state->getBrkPoint();
 }
 
 SyscallReturn

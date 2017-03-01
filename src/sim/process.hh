@@ -47,6 +47,7 @@
 #include "mem/se_translating_port_proxy.hh"
 #include "sim/fd_array.hh"
 #include "sim/fd_entry.hh"
+#include "sim/mem_state.hh"
 #include "sim/sim_object.hh"
 
 struct ProcessParams;
@@ -62,40 +63,6 @@ class ThreadContext;
 class Process : public SimObject
 {
   public:
-
-    struct MemState
-    {
-        Addr brkPoint;
-        Addr stackBase;
-        unsigned stackSize;
-        Addr stackMin;
-        Addr nextThreadStackBase;
-        Addr mmapEnd;
-
-        MemState()
-            : brkPoint(0), stackBase(0), stackSize(0), stackMin(0),
-              nextThreadStackBase(0), mmapEnd(0)
-        { }
-
-        MemState&
-        operator=(const MemState &in)
-        {
-            if (this == &in)
-                return *this;
-
-            brkPoint = in.brkPoint;
-            stackBase = in.stackBase;
-            stackSize = in.stackSize;
-            stackMin = in.stackMin;
-            nextThreadStackBase = in.nextThreadStackBase;
-            mmapEnd = in.mmapEnd;
-            return *this;
-        }
-
-        void serialize(CheckpointOut &cp) const;
-        void unserialize(CheckpointIn &cp);
-    };
-
     Process(ProcessParams *params, ObjectFile *obj_file);
 
     void serialize(CheckpointOut &cp) const override;
@@ -236,9 +203,7 @@ class Process : public SimObject
     std::shared_ptr<FDArray> fds;
 
     bool *exitGroup;
-
-    Addr maxStackSize;
-    MemState *memState;
+    std::shared_ptr<MemState> memState;
 
     /**
      * Calls a futex wakeup at the address specified by this pointer when
