@@ -889,7 +889,7 @@ setpgidFunc(SyscallDesc *desc, int callnum, Process *process,
         return 0;
     }
 
-    Process *matched_ph = NULL;
+    Process *matched_ph = nullptr;
     System *sysh = tc->getSystemPtr();
 
     // Retrieves process pointer from active/suspended thread contexts.
@@ -903,7 +903,7 @@ setpgidFunc(SyscallDesc *desc, int callnum, Process *process,
         }
     }
 
-    assert(matched_ph != NULL);
+    assert(matched_ph);
     matched_ph->setpgid((pgid == 0) ? matched_ph->pid() : pgid);
 
     return 0;

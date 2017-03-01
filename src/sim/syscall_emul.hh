@@ -1484,7 +1484,7 @@ mmapImpl(SyscallDesc *desc, int num, Process *p, ThreadContext *tc,
             return -EBADF;
         sim_fd = ffdp->getSimFD();
 
-        pmap = (decltype(pmap))mmap(NULL, length, PROT_READ, MAP_PRIVATE,
+        pmap = (decltype(pmap))mmap(nullptr, length, PROT_READ, MAP_PRIVATE,
                                     sim_fd, offset);
 
         if (pmap == (decltype(pmap))-1) {
