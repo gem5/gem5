@@ -1,0 +1,685 @@
+                Release Notes for SystemC 2.3.1
+                ===============================
+
+        Andrew C. Goodrich,  Forte Design Systems
+        Philipp A. Hartmann, OFFIS Institute for Information Technology
+
+CONTENTS
+========
+
+  1) What's new in this release?
+
+  2) Bug fixes and enhancements
+
+  3) New features
+
+  4) Incompatibitilies with previous releases
+
+  5) Expanded dynamic process support
+
+  6) Experimental features
+
+  7) Known problems
+
+  8) Fixed-point library
+
+  9) TLM Release Notes
+
+
+1) What's new in this release?
+==============================
+
+This version of SystemC contains the "Proof of Concept" simulator
+for the IEEE 1666-2011 SystemC standard. Please consult the IEEE Std
+1666-2011 SystemC Language Reference Manual for details about the 
+current SystemC standard.
+
+TLM-2.0 is merged into the main SystemC release since 2.3.0.
+Please see section 9) below for more details related to TLM.
+
+Compared to the 2.3.0, this release has the following new items:
+
+  - New features, partly beyond the current IEEE 1666-2011 standard,
+    see section 3.
+
+  - Experimental features (disabled by default), see section 5.
+    Testing and feedback welcome via the Accellera SystemC forums
+    at http://forums.accellera.org/forum/9-systemc/.
+
+  - Bug fixes, see section 2.
+
+  - Expanded platform support, see the README.
+
+
+
+2) Bug fixes and enhancements
+=============================
+
+Following is the list of bug fixes and enhancements for this release:
+
+  - For fixes and enhancements of the embedded TLM-2.0 implementation,
+    please see section 9.
+
+  - Additional changes and cleanups leading to incompatibilities with
+    previous versions of SystemC are described in section 4.
+
+  - Fix nested SC_METHOD preemptions caused by resetting a method, which
+    throws an exception in a thread process.  The control now correctly
+    goes back to the throwing method.
+
+  - Handle the case of a suppressed multiple-writer error in sc_signal
+    (and related channels) consistently with SystemC 2.2.0 again.
+
+  - The 'sc_buffer<bool>' and 'sc_buffer<sc_logic>' channels now correctly
+    notify their (pos|neg)edge_events, if someone is waiting on them.
+
+  - Cleanup the renaming of the internal Boost namespaces.  The embedded
+    Boost implementation resides in the (renamed) top-level namespaces
+     - sc_boost
+     - sc_unnamed (for placeholders, part of IEEE 1666-2011)
+     - sc_mpl_    (internal ADL barrier)
+
+  - Minor fixes in sc_vector-related classes
+     - correctly determine instantiation context
+     - sc_vector_iter: addition/substraction operators fixed
+     - sc_vector_assembly: add swap, fix missing return statement in
+       assignment
+
+  - WIF tracing of 64-bit integers: fix widths and masks on some
+    64-bit platforms.
+
+  - Suppressed a warning in case of calling sc_start in case of pending
+    delta notifications without any pending (or resulting) process
+    activations afterwards (1666-2011 compatbility).
+
+  - Fix sc_string_old implementation to handle very long strings (>1024)
+    (known issue in <=2.3.0).  Note, that sc_string_old is no longer
+    included by default, see section 4.
+
+  - Add "risc_cpu" example to Automake build system ("make check").
+
+  - Add missing files to the MS Visual C++ SystemC.vcproj project file.
+
+  - Add a missing "break" statement to "scfx_utils.h" in the "SC_CSD"
+    format parsing logic.
+
+  - Fix several integer conversion warnings raised by some compilers
+    throughout the SystemC implementation.
+
+  - Fixed incorrect GCC i386/x86_64 function call stack alignment when
+    using the QuickThreads/WinFiber-based process implementations (16-byte
+    boundary).  This avoids segmentation faults in some cases where the
+    stricter stack requirement is implicitly assumed by the compiler.
+
+  - The default stack size for threads, SC_DEFAULT_STACK_SIZE, has been
+    increased on 64-bit platforms and is overridable at library build
+    time (see INSTALL).
+
+  - The sc_report implementation now correctly handles empty and NULL
+    message type arguments (avoiding a segmentation fault in these cases).
+    The sc_report default constructor is made private to follow IEEE 1666.
+
+  - Missing namespace qualifiers added to all reporting macros, namely
+     - SC_DEFAULT_*_ACTIONS
+     - SC_REPORT_INFO_VERB
+    to make them usable again while including <systemc> instead of
+    <systemc.h>
+
+  - VCD/WIF tracing: fix support for very long values
+
+    The sc_(un)signed and sc_fxnum(_fast) data types can potentially hold
+    longer values than 1000 bit, which used to be the fixed size of the
+    intermediate buffers in sc_(vcd,wif)_trace for these types.
+
+  - Cleanup systemc.h
+
+     - Drop any in-library dependencies on the old 'sc_string' class,
+       removing the need to provide the corresponding header externally
+       (see section 4).
+     - Drop explicit in-header dependencies on <windows.h> on Windows
+       platforms, removing the automatic inclusion from <systemc[.h]>
+       (see section 4).
+     - Drop inclusion of 'strstream' by default on some platforms
+       (see section 4)
+     - assume working C++ standard library on all platforms
+     - assume working argument-dependent lookup on MSVC
+       (which should be working since MSVC 2003 already)
+     - see section 4 and INSTALL file
+
+  - Improved compile/runtime check of the SystemC library config
+
+    Some preprocessor switches need to be consistent between the application
+    and the library (e.g. if sizes of classes are affected or other parts of
+    the ABI are affected).  These can now be checked at link-time.
+  
+    Secondly, some preprocessor switches need to be consistent between
+    different translation units of an application, which is checked at
+    runtime startup.
+
+  - sc_context: avoid reinterpret_cast from integer to pointer
+
+  - The SC_VERSION_ORIGINATOR has been renamed from "ASI" to "Accellera"
+    to follow the naming policies of the Accellera Systems Initiative.
+
+  - Cleanups of the VCD/WIF tracing implementation
+
+     - Removal of internal files from the public headers (see section 4)
+     - Report any information (infos, warnings, errors) via the SystemC
+       reporting mechanism instead of directl printing to std::cout/cerr
+     - Automatically unregister trace updates when closing a trace file
+       during the simulation
+
+  - Drop the 'register' storage class specifier, which has been
+    deprecated in the C++11 standard (and therefore might cause warnings
+    on some compilers).
+
+  - Expanded naming of traced objects in VCD traces to use 5 characters
+    rather than 3 to accommodate more signals (incomplete in 2.3.0).
+
+  - Fix sc_signed/sc_unsigned conversion bug on GCC 4.8 or later, coming
+    from its aggressive optimization in case of integer over/underflows 
+    (by avoiding the C++ undefined behaviour in the implementation).
+
+  - An output stream operator<< for sc_status is added to enable
+    pretty-printing of sc_status values (and bitwise combinations of
+    such values).
+
+  - Various minor code cleanups and compiler warning fixes
+     - removal of some workarounds for very old versions of some
+       compilers (e.g. MSVC < 8.0).
+     - removal of unused variables and macros
+     - some deduplication of redundant code paths
+
+
+3) New features
+===============
+
+Here is an overview of changes in 2.3.1 compared to 2.3.0.
+
+Note: These features partly add functionality beyond the current
+      IEEE Std. 1666-2011.
+
+
+  - Major rewrite of the Autoconf/Automake build system
+    - better control of the installation directories
+    - improved libtool library dependency detection, especially
+      in cross-compilation scenarios (--host=...)
+    - support for pkg-config for SystemC and TLM
+      (see http://www.freedesktop.org/wiki/Software/pkg-config/)
+    - accept arbitrary GCC-compatible compilers
+      (e.g. Clang, Intel compiler, compiler-wrappers like scan-build)
+    - avoid deprecation warnings, cleanup implementation
+    - less recursive build, silent rules by default
+    - improved "make check" test handling
+
+
+  - Updated MS Visual C++ project and solution files to include
+    support for Visual Studio 2012 and 64-bit builds on Windows
+    platforms.
+
+
+  - Improved conversion between the underlying integral time
+    representation and sc_time objects:
+
+    - Add a nested typedef "value_type" to sc_time to enable an
+      implementation-independent use of the underlying integral
+      time representation (see IEEE 1666-2011, 5.11.1).
+
+    - Adding an inverse to the 'sc_time::value()' function to
+      convert a plain value back to an sc_time object:
+        static sc_time sc_time::from_value( value_type t );
+
+    - Adding modulus operators (%, %=) to compute time offsets from
+      clock or quantum boundaries:
+
+        sc_time operator%(const sc_time& lhs, const sc_time& rhs);
+
+        sc_time& sc_time::operator%=();
+
+      Note: These operators are missing from IEEE 1666-2011, which
+            make e.g. the tlm_global_quantum implementation nearly
+            impossible within the limits of the SystemC standard.
+
+
+  - Add function to determine the current object hierarchy:
+
+      sc_object* sc_core::sc_get_current_object()
+
+    Returns a pointer to the sc_object instance (or NULL) that would
+    currently become the parent object of a newly created sc_object
+    instance (i.e. the current module during elaboration, and the
+    currently active process during simulation).
+
+
+  - Add compile-time configurable default signal writer policy
+    (see INSTALL).
+
+    Defining SC_DEFAULT_WRITER_POLICY to one of the sc_writer_policy
+    values before including systemc(.h) allows application-wide selection
+    of the default sc_writer_policy used for signals.
+
+    Defining SC_NO_WRITE_CHECK is equivalent to 
+      SC_DEFAULT WRITER_POLICY=SC_UNCHECKED_WRITERS
+
+    By default, the writer policy still disallows multiple
+    writers (SC_ONE_WRITER).
+
+
+  - Add an sc_signal initialization which does not create an event
+    via newly provided constructors to the signal classes:
+
+     sc_signal<T>::sc_signal( const char* name
+                            , const T&    initial_value );
+
+    (similarly for sc_buffer and sc_signal_resolved)
+
+    Compared to calling the "write()" function on a signal during
+    the elaboration, these constructors will set the initial value
+    of the signal without triggering an event at the beginning of the
+    simulation (and therefore may avoid triggering sensitive processes).
+
+
+  - Add a static function to sc_report_handler to query the current
+    report handler function:
+
+      static sc_report_handler_proc sc_report_handler::get_handler();
+
+    Additionally, sc_report_handler::set_handler() now returns the
+    previously set handler (c.f. sc_report_handler::set_actions).
+
+
+  - Improved conversion from bitvector element references to bool
+
+    As it is surprising to the user that a reference to an explicit
+    element of a sc_bv could not be used in a boolean context, a safe
+    conversion has been added to this release.
+
+    This enables the following coding style:
+
+      sc_bv<8> mybits;
+      // ...
+      if( mybits[0] ) // no longer a compiler error here!
+        /* do something */ ;
+
+    Note: For logic vectors, the bit-references still need to be
+          converted to bool explicitly (e.g. via the "to_bool()"
+          function.
+
+
+
+4) Incompatibilities with previous releases
+===========================================
+
+Here is a list of known incompatibilities between this release and
+2.3.0 (or earlier):
+
+  - The non-standard sc_time constructors
+      - sc_time( uint64, bool scale )
+      - sc_time( double, bool scale )
+    have been deprecated and issue a warning when being used.
+    Use the new 'sc_time::from_value' function instead (see section 3).
+
+  - The non-standard function 'sc_object::get_parent()' has been
+    deprecated, use 'sc_object::get_parent_object()' instead.
+
+  - The non-standard function 'sc_signal::get_new_value()' has been
+    deprecated (as required by IEEE 1666-2011).
+
+  - The non-standard implementation classes for the VCD and WIF tracing
+    (vcd_trace_file, wif_trace_file) are now hidden from an application
+    and no longer part of the public headers.
+    Use the IEEE 1666-2011 functions
+      - sc_trace
+      - sc_create_[vcd|wif]_trace_file
+      - sc_close_[vcd|wif]_trace_file
+      - sc_trace_file::set_time_unit
+    to set up the tracing in your application.
+
+  - The non-standard header 'src/sysc/communication/sc_reset.h' is
+    no longer part of the public headers.
+
+  - The 'sc_string_old' class is no longer available by default.
+    Define 'SC_USE_SC_STRING_OLD' before including "systemc.h",
+    see INSTALL.
+
+  - The implicit inclusion of the system-headers "windows.h" (on Windows)
+    and (deprecated) "strstream" have been removed.  See INSTALL.
+
+  - The incomplete implementation of old "W_*" watching macros and the
+    non-standard struct sc_watch have been removed.
+
+Here is a list of known incompatibilities between this release and 2.2.0:
+
+  - The order that processes (SC_METHODs and SC_THREADs) are dispatched 
+    for execution may be different than the order with SystemC 2.2.0 for
+    some SystemC programs. This is related to the new starvation policy 
+    support for the sc_start() function introduced with IEEE 1666_2011.
+
+  - The various bind() functions for ports and exports are "virtual" as
+    of IEEE 1666-2011.  This leads to an incompatibility with the
+    TLM 2.0.x release.  To use SystemC 2.3 together with TLM 2.0.{0,1},
+    define SC_DISABLE_VIRTUAL_BIND during the build of the simulator and
+    before including systemc.h (see INSTALL).
+
+
+5) Expanded Dynamic Process Support
+===================================
+
+This version implements the dynamic process extensions described in the
+IEEE Std 1666-2011 Language Reference Manual.
+
+Compared to SystemC 2.3.0, some bugs in corner cases of the
+specification have been fixed (see section 2).
+
+
+6) Experimental features
+========================
+
+In this section the experimental features of this release are listed.
+
+Note: These features are not enabled in the default library
+      configuration and need to be explicitly activated during at
+      library build time.  See INSTALL file.
+
+
+ - Extended Simulation Phase Callbacks
+
+   This release adds an optional mechanism to register callbacks
+   to several simulation phases.  This can be used to integrate
+   custom introspection techniques in a non-invasive manner.
+
+   New phases are added to the sc_status enumeration:
+
+       SC_END_OF_INITIALIZATION,
+       SC_END_OF_UPDATE,
+       SC_BEFORE_TIMESTEP
+
+   to enable a more fine-grained view to the SystemC simulation phases.
+
+   When the phase callback mechanism is activated (see the INSTALL file),
+   any sc_object can subscribe to a (set of) elaboration/simulation phases
+   for dynamic callbacks explicitly:
+
+     // trigger current object before updating the simulation time
+     this->register_simulation_phase_callback( SC_BEFORE_TIMESTEP );
+
+     // trigger current object before returning to "sc_start"
+     this->register_simulation_phase_callback( SC_PAUSED | SC_STOPPED );
+
+   Unsubscribing from any simulation phase is possible via the corresponding
+      unregister_simulation_phase_callback( phase_cb_mask )
+   function.
+
+   Both functions return the effective mask after the requested callback mask
+   update.  Therefore, querying the currently active mask can be achieved by
+   calling the (un)registration functions with an empty mask:
+
+     sc_object::phase_cb_mask current_cb_mask =
+       this->register_simulation_phase_callback( 0u );
+
+   To enable the external (un)registration of callbacks for a user-defined
+   sc_object class, the (un)registration functions can be made public by
+   adding the following using directives to a 'public:' section of the
+   class definition:
+
+     using sc_core::sc_object::register_simulation_phase_callback;
+     using sc_core::sc_object::unregister_simulation_phase_callback;
+
+   When the simulation passes a phase where dynamic callbacks are registered,
+   the subscribed objects are triggered via the function:
+
+     virtual void sc_object::simulation_phase_callback();
+
+   which should then be implemented by the subscribing object's class.
+
+   Within a simulation callback, the triggering phase can be determined
+   via the IEEE 1666-2011 'sc_get_status()' function:
+
+     void simulation_phase_callback() {
+       std::cout << sc_core::sc_get_status() << std::endl;
+     }
+
+   A related feature is the triggering of sc_trace updates via these
+   simulation phase callbacks instead of the hard-coded calls in various
+   places of the simulation loop.  This feature has to be enabled separately,
+   see INSTALL file.
+
+
+ - Allow creation of sc_max_time() objects before fixing the sc_time
+   resolution
+
+   Currently. IEEE 1666-2011 requires that any call to
+
+     sc_core::sc_set_time_resolution( double, sc_time_unit )
+
+   happens before the construction of the first non-SC_ZERO_TIME
+   sc_time object.
+
+   This can be inconvenient in cases, where an "uninitialized sc_time value"
+   is needed, which needs to be separate from SC_ZERO_TIME in some cases.
+
+   A relaxation of the strict sc_time construction rules wrt. to
+   the simulation time resolution can be optionally enabled via the
+   preprocessor switch SC_ENABLE_EARLY_MAXTIME_CREATION (see INSTALL).
+
+   When this option is enabled, the creation of time objects with the
+   values SC_ZERO_TIME and 'sc_max_time()' are allowed before fixing the
+   time resolution.  The resolution is still fixed once the actual
+   relationship between the internal time representation and the physical
+   time units (SC_FS, SC_PS, ...) is used or observed by the application.
+
+
+
+
+7) Known Problems
+=================
+
+  - When building the SystemC library with QuickThreads support, the
+    resulting shared library is marked as requiring an executable stack
+    by certain compilers/assemblers (or rather not marked as not needing
+    one).  As a result, some system security systems (like SELinux) might
+    refuse to load the library.  As a workaround for GNU (compatible)
+    assemblers, pass the assembler flags variable with the option
+      CCASFLAGS="-Wa,--noexecstack"
+    to the `configure' script call before building the SystemC library.
+
+
+  - IEEE 1666-2011 does not explicitly define the behaviour in the corner
+    cases of attempting to create sc_time objects smaller than the time
+    resolution or bigger than sc_max_time().  This implementation currently
+    truncates "small" sc_time objects to SC_ZERO_TIME, while "too big"
+    objects wrap-around sc_max_time() and lead to a value modulo the
+    maximum time.  In both cases, no warning is generated.
+
+
+  - The sign-extension of mixed-signedness logic expressions (&,|)
+    involving one sc_bigint<> operand and C++ builtin integral types
+    (int, short, etc.) is inconsistent between 32-bit and 64-bit
+    platforms in some cases. Convert both operands to sc_bigint<> first.
+
+
+  - The definition of sc_dt::(u)int64 differs from std::(u)int64_t types
+    on some platforms.  This may lead to problems with function overloads
+    and/or format-string placeholders.  As a workaround, convert these
+    values explicitly to the correct type before passing them to functions
+    expecting one of these types.  For sc_time, use the new nested type
+    sc_time::value_type to hold values of the underlying representation.
+
+
+  - Bit/logic-vector reductions (or_reduce, and_reduce, etc.) return an
+    'sc_logic_value_t' enum value, instead of a bool or sc_logic (as required
+    by IEEE 1666-2011).  Using the return value of these functions in a
+    boolean context, e.g.
+      if( lv.or_reduce() ) { /* ... */ }
+    might lead to wrong results in case of 'X' or 'Z' bits in the vector.
+    Avoid this by converting the result to an 'sc_logic' first and perform
+    a safe conversion to bool:
+      if( sc_logic( lv.or_reduce() ).to_bool() ) { /* ... */ }
+
+
+  - The use of the DEBUG_SYSTEMC macro does not work properly with certain
+    compilers (e.g., gcc 2.95.x) if it was not also specified when the
+    SystemC library was built. The problem is caused by the use of the
+    library compiled version of some inline methods. This problem does not
+    appear to be present in the gcc 3.3, Solaris, and aCC compilers.
+    The work-around is to specify DEBUG_SYSTEMC when the SystemC library
+    is built.
+
+
+  - On some recent compilers (e.g. Clang, Solaris Studio), warnings are
+    generated about the "hidden overloaded virtual function" bind of the
+    sc_port(_b) class templates in the 'specialized_signals' example.
+    These warnings are caused by the introduction of the virtual bind
+    implementation in IEEE 1666-2011.
+    As a workaround, check your compiler documentation how to suppress
+    the warning (e.g. 'CXXFLAGS=-Wno-overloaded-virtual') or mark
+    the SystemC include directory as "system directory" by using
+    '-isystem ${SYSTEMC_HOME}/include' (or equivalent) instead of
+    the usual '-I'.
+
+    This also affects the TLM-2.0 sockets, see Section 9.3.
+
+
+  - Some paths in this release are longer than the historical 99 character
+    limit of tar archives, and several Windows archivers (e.g. WinZip)
+    have been reported to trip over this.  The open source archiver 7-zip
+    (http://7-zip.org) is known to work.
+
+
+8) Fixed-point library
+======================
+
+SystemC contains a fixed-point datatypes package.
+
+Changes compared to SystemC 2.0.1
+
+  - support for explicit construction from "float" values
+
+  - removing a conversion ambiguity by marking some constructors of
+    sc_fxval[_fast] classes as 'explicit'
+
+Compile-time macro SC_INCLUDE_FX must be defined in order to build
+applications that use fixed point types. You can specify a compiler
+flag, e.g., g++ -DSC_INCLUDE_FX ... or use a define statement before
+you include systemc.h, e.g.:
+
+  #define SC_INCLUDE_FX
+  #include "systemc.h"
+
+Due to the large size of the fixed-point datatypes header files,
+compilation can take considerably more time.
+
+If you want to use the fixed-point data types only (i.e., not data-
+types sc_int, sc_uint, sc_bigint, sc_biguint), compilation time can be
+reduced by defining compile-time macro SC_FX_EXCLUDE_OTHER (in addition
+to SC_INCLUDE_FX).
+
+
+9) TLM Release Notes
+====================
+
+CONTENTS
+========
+
+  1) Supported SystemC versions
+  2) What's changed in this kit?
+  3) Known issues
+
+
+9.1) Supported SystemC versions
+===============================
+
+SystemC 2.2.0 and 2.3.x are supported and have been tested.
+SystemC 2.1.v1 is still supported in principle, but has not
+been tested extensively.
+
+
+9.2) What's changed in this kit?
+================================
+
+Compared to TLM 2.0.2 kit (part of SystemC 2.3.0), the following has changed:
+
+
+ - The tlm_utils headers have been cleaned up to include <tlm>,
+   instead of <tlm.h>
+
+
+ - The convenience sockets with base-protocol NB/B conversion support
+   now automatically define the required SC_INCLUDE_DYNAMIC_PROCESSES,
+   if not already provided by the user (since the B/NB conversion
+   depends on the SystemC dynamic process support).
+
+
+ - Improve the NB/B conversion in the simple_target_socket to avoid
+   the dynamic allocation (and deletion) of sc_event instances in the
+   use of the spawned helper processes for the converesion.
+
+
+ - Fix a bug in the same simple_target_socket NB/B conversion thread,
+   where the target socket may not detect the early completion of the
+   response phase via a "TLM_UPDATED" return value and a "TLM_END_RESP"
+   phase (base protocol violation).
+
+
+ - Fix the "get_base_interface()" implementation provided by the 
+   multi_passthrough_target_socket.  Prior to this release, a
+   dummy interface object has been used as a return value in case
+   of a hierarchical bind.  Return the first bound interface instead.
+
+
+ - Fixed missing initialization of some member variables in the
+   callback_binder_fw|bw implementations, that caused segfaults
+   in some cases.
+
+
+ - The implementation-defined tlm::circular_buffer class has been
+   updated with the following changes
+    - now provides a "clear()" member function to drop the current
+      contents,
+    - fix a segmentation fault due to freeing invalid memory in
+      "resize()", which could happen in some cases,
+    - work around a parsing error on some EDG-based C++ frontends.
+
+
+ - tlm_global_quantum: use sc_time::operator%
+
+   Instead of relying on a manual remainder calculation based on
+   sc_time::value and the non-standard backwards conversion, the new
+   sc_time::operator% is used to compute the remaining time in the
+   current quantum (see section 3).
+
+
+ - The internal tlm_array class (to hold payload extensions) has been
+   reimplemented based on std::vector (fixes copy constructor bug).
+
+
+ - The TLM_VERSION_ORIGINATOR has been renamed from "ASI" to "Accellera"
+   to follow the naming policies of the Accellera Systems Initiative.
+
+
+
+
+9.3) Known issues
+=================
+
+a. The tlm_simple_target_socket in tlm_utils does not obey the END_REQ rule
+   when only an nb_ call is registered, an b_ call is being handled in the
+   socket and there is an nb_ call coming in at the same time. In this case
+   the incoming nb_ call will be forwarded to the registered nb_ call without
+   checking whether the earlier b_ call has passed the END_REQ timing point.
+
+b. The implementation of the PEQ 'peq_with_get' in tlm_utils does not properly
+   distinguish between immediate notifications and delta notifications. In the
+   case that a immediate and delta notification happen at the same simulation
+   time both types of notifications emerge from the PEQ in the same evaluation
+   phase. This is wrong immediate notifications should overtake delta
+   notifications.
+
+c. On some recent compilers (e.g. Clang, Solaris Studio), warnings are generated
+   about the "hidden overloaded virtual function" bind of the sc_port(_b)
+   class templates when using the TLM-2.0 sockets.  These warnings are caused by
+   the introduction of the virtual bind implementation in IEEE 1666-2011.
+   As a workaround in your application, check your compiler documentation how to
+   suppress the warning (e.g. adding the flag -Wno-overloaded-virtual), or mark
+   the SystemC include directory as "system directory" by using
+   '-isystem ${SYSTEMC_HOME}/include' (or equivalent) instead of the usual '-I'.

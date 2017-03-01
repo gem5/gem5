@@ -1,0 +1,112 @@
+Date: Tue, 11 Jan 94 13:23:11 -0800
+From: "pardo@cs.washington.edu" <pardo@meitner.cs.washington.edu>
+
+>[What's needed to get `qt' on an i860-based machine?]
+
+Almost certainly "some assembly required" (pun accepted).
+
+To write a cswap port, you need to understand the context switching
+model.  Turn to figure 2 in the QT TR.  Here's about what the assembly
+code looks like to implement that:
+
+	qt_cswap:
+		adjust stack pointer
+		save callee-save registers on to old's stack
+		argument register <- old sp
+		sp <- new sp
+		(*helper)(args...)
+		restore callee-save registers from new's stack
+		unadjust stack pointer
+		return
+
+Once more in slow motion:
+
+	- `old' thread calls context switch routine (new, a0, a1, h)
+	- cswap routine saves registers that have useful values
+	- cswap routine switches to new stack
+	- cswap routine calls helper function (*h)(old, a0, a1)
+	- when helper returns, cswap routine restores registers
+	  that were saved the last time `new' was suspended
+	- cswap routine returns to whatever `new' routine called the
+	  context switch routine
+
+There's a few tricks here.  First, how do you start a thread running
+for the very first time?  Answer is: fake some stuff on the stack
+so it *looks* like it was called from the middle of some routine.
+When the new thread is restarted, it is treated like any other
+thread.  It just so happens that it's never really run before, but
+you can't tell that because the saved state makes it look like like
+it's been run.  The return pc is set to point at a little stub of
+assembly code that loads up registers with the right values and
+then calls `only'.
+
+Second, I advise you to forget about varargs routines (at least
+until you get single-arg routines up and running).
+
+Third, on most machines `qt_abort' is the same as `qt_cswap' except
+that it need not save any callee-save registers.
+
+Fourth, `qt_cswap' needs to save and restore any floating-point
+registers that are callee-save (see your processor handbook).  On
+some machines, *no* floating-point registers are callee-save, so
+`qt_cswap' is exactly the same as the integer-only cswap routine.
+
+I suggest staring at the MIPS code for a few minutes.  It's "mostly"
+generic RISC code, so it gets a lot of the flavor across without
+getting too bogged down in little nitty details.
+
+
+
+Now for a bit more detail:  The stack is laid out to hold callee-save
+registers.  On many machines, I implemented fp cswap as save fp
+regs, call integer cswap, and when integer cswap returns (when the
+thread wakes up again), restore fp regs.
+
+For thread startup, I figure out some callee-save registers that
+I use to hold parameters to the startup routine (`only').  When
+the thread is being started it doesn't have any saved registers
+that need to be restored, but I go ahead and let the integer context
+switch routine restore some registers then "return" to the stub
+code.  The stub code then copies the "callee save" registers to
+argument registers and calls the startup routine.  That keeps the
+stub code pretty darn simple.
+
+For each machine I need to know the machine's procedure calling
+convention before I write a port.  I figure out how many callee-save
+registers are there and allocate enough stack space for those
+registers.  I also figure out how parameters are passed, since I
+will need to call the helper function.  On most RISC machines, I
+just need to put the old sp in the 0'th arg register and then call
+indirect through the 3rd arg register; the 1st and 2nd arg registers
+are already set up correctly.  Likewise, I don't touch the return
+value register between the helper's return and the context switch
+routine's return.
+
+I have a bunch of macros set up to do the stack initialization.
+The easiest way to debug this stuff is to go ahead and write a C
+routine to do stack initialization.  Once you're happy with it you
+can turn it in to a macro.
+
+In general there's a lot of ugly macros, but most of them do simple
+things like return constants, etc.  Any time you're looking at it
+and it looks confusing you just need to remember "this is actually
+simple code, the only tricky thing is calling the helper between
+the stack switch and the new thread's register restore."
+
+
+You will almost certainly need to write the assembly code fragment
+that starts a thread.  You might be able to do a lot of the context
+switch code with `setjmp' and `longjmp', if they *happen* to have
+the "right" implementation.  But getting all the details right (the
+helper can return a value to the new thread's cswap routine caller)
+is probaby trickier than writing code that does the minimum and
+thus doesn't have any extra instructions (or generality) to cause
+problems.
+
+I don't know of any ports besides those included with the source
+code distribution.   If you send me a port I will hapily add it to
+the distribution.
+
+Let me know as you have questions and/or comments.
+
+	;-D on  ( Now *that*'s a switch... )  Pardo

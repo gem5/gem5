@@ -1,0 +1,41 @@
+#! /bin/awk -f
+
+BEGIN {
+  purpose = "report times for microbenchmarks"
+
+  nmach = 0;
+
+  test_callind = "18";
+  test_callimm = "18";
+  test_addreg = "20";
+  test_loadreg = "21";
+}
+
+{
+  mach = $1
+  test = $2
+  iter = $3
+  time = $6 + $8
+
+  if (machi[mach] == 0) {
+    machn[nmach] = mach;
+    machi[mach] = 1;
+    ++nmach;
+  }
+
+  ns_per_op = time / iter * 1000000
+  times[mach "_" test] = ns_per_op;
+}
+
+
+END {
+  for (i=0; i<nmach; ++i) {
+    m = machn[i];
+
+    ind = times[m "_" test_callind];
+    imm = times[m "_" test_callimm];
+    add = times[m "_" test_addreg];
+    load = times[m "_" test_loadreg];
+    printf ("%s|%1.3f|%1.3f|%1.3f|%1.3f\n", m, ind, imm, add, load);
+  }
+}

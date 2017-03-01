@@ -1,0 +1,42 @@
+#! /bin/awk -f
+
+BEGIN {
+  nmach = 0;
+
+  init_test = "1";
+  abort_test = "6";
+  blocki_test = "7";
+  block_test = "8";
+}
+
+{
+  mach = $1
+  test = $2
+  iter = $3
+  time = $6 + $8
+
+  if (machi[mach] == 0) {
+    machn[nmach] = mach;
+    machi[mach] = 1;
+    ++nmach;
+  }
+
+  us_per_op = time / iter * 1000000
+  times[mach "_" test] = us_per_op;
+}
+
+
+END {
+  for (i=0; i<nmach; ++i) {
+    m = machn[i];
+    init = times[m "_" init_test];
+    printf ("init %s | %f\n", m, init);
+
+    init_abort_blocki = times[m "_" abort_test];
+    abort_blocki = init_abort_blocki - init;
+    blocki = times[m "_" blocki_test];
+    abort = abort_blocki - blocki;
+    blockf = times[m "_" block_test];
+    printf ("swap %s | %f | %f | %f\n", m, abort, blocki, blockf);
+  }
+}

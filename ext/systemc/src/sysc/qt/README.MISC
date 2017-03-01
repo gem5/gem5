@@ -1,0 +1,56 @@
+Here's some machine-specific informatin for various systems:
+
+m88k on g88.sim
+
+	.g88init:
+		echo (gdb) target sim\n
+		target sim
+		echo (gdb) ecatch all\n
+		ecatch all
+		echo (gdb) break exit\n
+		break exit
+	% vi Makefile		// set CC and AS
+	% setenv MEERKAT /projects/cer/meerkat
+	% set path=($MEERKAT/bin $path)
+	% make run
+	% g88.sim run
+	(g88) run run N		// where `N' is the test number
+
+
+m88k on meerkats, cross compile as above (make run)
+
+	Run w/ g88:
+	%g88 run
+	(g88) source /homes/rivers/robertb/.gdbinit
+	(g88) me
+	which does
+	(g88) set $firstchars=6
+	(g88) set $resetonattach=1
+	(g88) attach /dev/pp0
+	then download
+	(g88) dl
+	and run with
+	(g88) continue
+
+	Really the way to run it is:
+	(g88) source
+	(g88) me
+	(g88) win
+	(g88) dead 1
+	(g88) dead 2
+	(g88) dead 3
+	(g88) dl
+	(g88) cont
+
+	To rerun
+	(g88) init
+	(g88) dl
+
+	To run simulated meerkat:
+	(g88) att sim
+	<<then use normal commands>>
+
+	On 4.5 g88:
+	(g88) target sim memsize
+	instead of attatch
+	(g88) ecatch all	# catch exception before becomes error

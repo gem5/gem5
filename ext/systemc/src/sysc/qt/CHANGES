@@ -1,0 +1,15 @@
+QuickThreads 002: Changes since QuickThreads 001.
+
+ - Now can be used by C++ programs.
+ - Now *really* works with stacks that grow up.
+ - Supports AXP OSF 2.x cc's varargs.
+ - Supports HP Precision (HP-PA) on workstations and Convex.
+ - Supports assemblers for Intel iX86 ith only '//'-style comments.
+ - Supports Silicon Graphics Irix 5.x with dynamic linking.
+ - Supports System V and Solaris 2.x with no `_' on compiler-generated
+   identifiers; *some* platforms only.
+
+Note: not all "./config" arguments are compatible with QT 001.
+
+
+QuickThreads 001: Base version.

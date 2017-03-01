@@ -1,0 +1,132 @@
+                SystemC Class Library (Rel. 2.3.1)
+                ==================================
+
+This is the release of the SystemC 2.3.1 Class Library.
+This release includes TLM 2.0.3 (Transaction Level Modeling) code,
+as described in the IEEE 1666-2011 Language Reference Manual.
+
+-------------------------------------------------------------------------------
+                IMPORTANT
+
+1. This is the release of SystemC 2.3.1. This release contains bug fixes
+   for SystemC 2.3.0 as well as adding some minor and experimental features.
+
+2. This release is supported on the following platform combinations for
+   which it has been well tested:
+
+    o 64-bit Linux (x86_64)
+      (RedHat Enterprise Linux 5, 6; Scientific Linux 5, 6; Debian 7; Ubuntu 12)
+      - GNU C++ compiler versions gcc-3.4.6 through gcc-4.9.0;
+      - Clang C++ compiler versions clang-3.0 through clang-3.5
+
+    o 64-bit Linux (x86_64) with 32-bit compiler (--host=i686-linux-gnu)
+      (RedHat Enterprise Linux 5, 6; Debian 7; Ubuntu 12)
+      - GNU C++ compiler versions gcc-4.4.7 through gcc-4.9.0;
+      - Clang C++ compiler versions clang-3.0 through clang-3.5
+
+    o 32-bit Linux (x86)
+      (Scientific Linux 5, 6; Debian 6, 7; Ubuntu 12)
+      - GNU C++ compiler versions gcc-3.4.6 through gcc-4.9.0;
+      - Clang C++ compiler versions clang-3.0 through clang-3.4
+
+    o 64-bit Mac OS X (x86_64)
+      (10.6 Snow Leopard, 10.8 Mountain Lion, 10.9 Mavericks)
+      - Apple LLVM version 5.0 (based on LLVM 3.3svn);
+      - Apple GNU C++ compiler version gcc-4.2.1
+
+    o 32-bit Mac OS X (x86)
+      (10.6 Snow Leopard, 10.8 Mountain Lion)
+      - Apple LLVM version 5.0 (based on LLVM 3.3svn);
+      - Apple GNU C++ compiler version gcc-4.2.1
+
+    o 32-bit Mac OS X (powerpc)
+      (10.6 Snow Leopard, executed with Rosetta)
+      - Apple GNU C++ compiler version gcc-4.2.1
+
+    o 64-bit FreeBSD 9.0 (x86_64)
+      - GNU C++ compiler versions gcc-4.2.1 through gcc-4.8.2;
+      - Clang C++ compiler version clang-3.3
+
+    o 32-bit FreeBSD 9.0 (x86)
+      - GNU C++ compiler versions gcc-4.2.1 through gcc-4.8.2;
+      - Clang C++ compiler version clang-3.3
+
+    o 32-bit Solaris (SPARC)
+      (Sun Solaris 10, Oracle Solaris 11)
+      - GNU C++ compiler versions gcc-3.4.3 through gcc-4.8.1;
+      - Sun/Solaris Studio compiler versions 12, 12.1, 12.2, 12.3
+
+    o Windows 7 SP1 (WoW64)
+      - Microsoft Visual Studio 2005 SP1               (8.0) (Win32 and x64);
+      - Microsoft Visual Studio 2008 Express SP1       (9.0) (Win32);
+      - Microsoft Visual Studio 2010 Express SP1      (10.0) (Win32);
+      - Microsoft Visual Studio 2012 Express Update 4 (11.0) (Win32 and x64)
+      - Microsoft Visual Studio 2013 Express Update 1 (12.0) (Win32 and x64)
+
+    o Windows 7 SP1 (WoW64), (Cygwin 1.7.17)
+      - GNU C++ compiler versions gcc-3.4.4 through gcc-4.3.4 (x86)
+
+    o Windows 7 SP1 (WoW64), Msys 1.0.17(0.48/3/2)
+      - MinGW32 GNU C++ compiler versions 4.5.2 through 4.7.0 (x86);
+      - MinGW-w64 GNU C++ compiler version 4.8.1 (x86 and x86_64)
+
+
+  This release has not yet been tested or is known not to work as expected
+  on the following formerly supported platforms:
+
+    o GNU C++ compiler versions prior to 3.4.x (all platforms)
+    o HP-UX 11.00 or later with GNU C++ or HP C++ compiler
+    o Sun/Oracle Solaris with Sun Studio C++ compiler prior to 12.x
+    o Mac OS X prior 10.6 Snow Leopard with GNU C++ compiler
+    o Microsoft Visual C++ versions prior to 8.0 (2005)
+
+
+-------------------------------------------------------------------------------
+
+For details, see the separate RELEASENOTES file.
+
+
+Licensing and Copyright
+
+   See the separate LICENSE file to determine your rights
+   and responsiblities for using SystemC.
+
+User Documentation
+
+   You can find documentation for this release in the docs directory.
+
+Installation
+
+   See the separate INSTALL file that provides system
+   information and installation instructions.
+
+Release Notes
+
+   See the separate RELEASENOTES file that provides upto date
+   information about this release of SystemC.
+
+Additional information
+
+   SystemC has a web site at
+
+       http://www.accellera.org
+
+   Discussion forum: http://forums.accellera.org/forum/9-systemc/
+
+   You can post the bugs and suggestions of general interest to the forum.
+   When reporting bugs please specify the following information (if
+   applicable):
+
+     1) SystemC version 
+     2) platform, compiler, flags 
+     3) description of the problem 
+     4) steps to reproduce the problem 
+     5) compile/runtime warnings and errors 
+     6) code sample, not more than 100 lines to demonstrate the problem 
+
+   Note: All bugs will only be tested against the latest publicly available 
+         version of the product.
+
+   Note: All C++ compilers that SystemC supports have bugs of different
+         degree of severity. We cannot fix those bugs. Please report them
+         to the compiler vendor.

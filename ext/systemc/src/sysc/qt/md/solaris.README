@@ -1,0 +1,19 @@
+Solaris 2.x is like System V (maybe it *is* System V?) and is different
+from older versions in that it uses no leading underscore for variable
+and function names.  That is, the old convention was:
+
+	foo(){}
+
+got compiled as
+
+		.globl	_foo
+	_foo:
+
+and is now compiled as
+
+		.globl	foo
+	foo:
+
+The `config' script should fix up the older (leading underscore) versions
+of the machine-dependent files to use the newer (no leading underscore)
+calling conventions.
