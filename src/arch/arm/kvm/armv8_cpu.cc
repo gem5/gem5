@@ -268,7 +268,13 @@ ArmV8KvmCPU::updateThreadContext()
     for (int i = 0; i < NUM_XREGS; ++i) {
         const auto value(getOneRegU64(kvmXReg(i)));
         DPRINTF(KvmContext, "  X%i := 0x%x\n", i, value);
-        tc->setIntReg(INTREG_X0 + i, value);
+        // KVM64 returns registers in 64-bit layout. If we are in aarch32
+        // mode, we need to map these to banked ARM32 registers.
+        if (inAArch64(tc)) {
+            tc->setIntReg(INTREG_X0 + i, value);
+        } else {
+            tc->setIntRegFlat(IntReg64Map[INTREG_X0 + i], value);
+        }
     }
 
     for (const auto &ri : intRegMap) {

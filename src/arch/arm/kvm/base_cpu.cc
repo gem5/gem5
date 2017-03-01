@@ -79,6 +79,9 @@ BaseArmKvmCPU::startup()
     memset(&target_config, 0, sizeof(target_config));
 
     vm.kvmArmPreferredTarget(target_config);
+    if (!((ArmSystem *)system)->highestELIs64()) {
+        target_config.features[0] |= (1 << KVM_ARM_VCPU_EL1_32BIT);
+    }
     kvmArmVCpuInit(target_config);
 }
 
