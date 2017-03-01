@@ -241,6 +241,10 @@ SyscallReturn fchownFunc(SyscallDesc *desc, int num,
 SyscallReturn dupFunc(SyscallDesc *desc, int num,
                       Process *process, ThreadContext *tc);
 
+/// Target dup2() handler.
+SyscallReturn dup2Func(SyscallDesc *desc, int num,
+                       Process *process, ThreadContext *tc);
+
 /// Target fcntl() handler.
 SyscallReturn fcntlFunc(SyscallDesc *desc, int num,
                         Process *process, ThreadContext *tc);
@@ -252,6 +256,14 @@ SyscallReturn fcntl64Func(SyscallDesc *desc, int num,
 /// Target setuid() handler.
 SyscallReturn setuidFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc);
+
+/// Target pipe() handler.
+SyscallReturn pipeFunc(SyscallDesc *desc, int num,
+                       Process *p, ThreadContext *tc);
+
+/// Internal pipe() handler.
+SyscallReturn pipeImpl(SyscallDesc *desc, int num, Process *p,
+                       ThreadContext *tc, bool pseudoPipe);
 
 /// Target getpid() handler.
 SyscallReturn getpidFunc(SyscallDesc *desc, int num,

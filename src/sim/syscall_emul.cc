@@ -626,13 +626,11 @@ fchownFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     return (result == -1) ? -errno : result;
 }
 
-
 /**
- * TODO: there's a bit more involved here since file descriptors created with
- * dup are supposed to share a file description. So, there is a problem with
- * maintaining fields like file offset or flags since an update to such a
- * field won't be reflected in the metadata for the fd entries that we
- * maintain to hold metadata for checkpoint restoration.
+ * FIXME: The file description is not shared among file descriptors created
+ * with dup. Really, it's difficult to maintain fields like file offset or
+ * flags since an update to such a field won't be reflected in the metadata
+ * for the fd entries that we maintain for checkpoint restoration.
  */
 SyscallReturn
 dupFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
@@ -646,13 +644,44 @@ dupFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     int sim_fd = old_hbfdp->getSimFD();
 
     int result = dup(sim_fd);
-    int local_errno = errno;
+    if (result == -1)
+        return -errno;
 
-    std::shared_ptr<FDEntry> new_fdep = old_hbfdp->clone();
-    auto new_hbfdp = std::dynamic_pointer_cast<HBFDEntry>(new_fdep);
+    auto new_hbfdp = std::dynamic_pointer_cast<HBFDEntry>(old_hbfdp->clone());
     new_hbfdp->setSimFD(result);
+    new_hbfdp->setCOE(false);
+    return p->fds->allocFD(new_hbfdp);
+}
 
-    return (result == -1) ? -local_errno : p->fds->allocFD(new_fdep);
+SyscallReturn
+dup2Func(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+
+    int old_tgt_fd = p->getSyscallArg(tc, index);
+    auto old_hbp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[old_tgt_fd]);
+    if (!old_hbp)
+        return -EBADF;
+    int old_sim_fd = old_hbp->getSimFD();
+
+    /**
+     * We need a valid host file descriptor number to be able to pass into
+     * the second parameter for dup2 (newfd), but we don't know what the
+     * viable numbers are; we execute the open call to retrieve one.
+     */
+    int res_fd = dup2(old_sim_fd, open("/dev/null", O_RDONLY));
+    if (res_fd == -1)
+        return -errno;
+
+    int new_tgt_fd = p->getSyscallArg(tc, index);
+    auto new_hbp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[new_tgt_fd]);
+    if (new_hbp)
+        p->fds->closeFDEntry(new_tgt_fd);
+    new_hbp = std::dynamic_pointer_cast<HBFDEntry>(old_hbp->clone());
+    new_hbp->setSimFD(res_fd);
+    new_hbp->setCOE(false);
+
+    return p->fds->allocFD(new_hbp);
 }
 
 SyscallReturn
@@ -731,23 +760,28 @@ fcntl64Func(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 }
 
 SyscallReturn
-pipePseudoFunc(SyscallDesc *desc, int callnum, Process *process,
-               ThreadContext *tc)
+pipeImpl(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc,
+         bool pseudoPipe)
 {
+    Addr tgt_addr = 0;
+    if (!pseudoPipe) {
+        int index = 0;
+        tgt_addr = p->getSyscallArg(tc, index);
+    }
+
     int sim_fds[2], tgt_fds[2];
 
     int pipe_retval = pipe(sim_fds);
-    if (pipe_retval < 0)
-        return pipe_retval;
+    if (pipe_retval == -1)
+        return -errno;
 
     auto rend = PipeFDEntry::EndType::read;
     auto rpfd = std::make_shared<PipeFDEntry>(sim_fds[0], O_WRONLY, rend);
+    tgt_fds[0] = p->fds->allocFD(rpfd);
 
     auto wend = PipeFDEntry::EndType::write;
     auto wpfd = std::make_shared<PipeFDEntry>(sim_fds[1], O_RDONLY, wend);
-
-    tgt_fds[0] = process->fds->allocFD(rpfd);
-    tgt_fds[1] = process->fds->allocFD(wpfd);
+    tgt_fds[1] = p->fds->allocFD(wpfd);
 
     /**
      * Now patch the read object to record the target file descriptor chosen
@@ -759,8 +793,34 @@ pipePseudoFunc(SyscallDesc *desc, int callnum, Process *process,
      * Alpha Linux convention for pipe() is that fd[0] is returned as
      * the return value of the function, and fd[1] is returned in r20.
      */
-    tc->setIntReg(SyscallPseudoReturnReg, tgt_fds[1]);
-    return sim_fds[0];
+    if (pseudoPipe) {
+        tc->setIntReg(SyscallPseudoReturnReg, tgt_fds[1]);
+        return tgt_fds[0];
+    }
+
+    /**
+     * Copy the target file descriptors into buffer space and then copy
+     * the buffer space back into the target address space.
+     */
+    BufferArg tgt_handle(tgt_addr, sizeof(int[2]));
+    int *buf_ptr = (int*)tgt_handle.bufferPtr();
+    buf_ptr[0] = tgt_fds[0];
+    buf_ptr[1] = tgt_fds[1];
+    tgt_handle.copyOut(tc->getMemProxy());
+    return 0;
+}
+
+SyscallReturn
+pipePseudoFunc(SyscallDesc *desc, int callnum, Process *process,
+               ThreadContext *tc)
+{
+    return pipeImpl(desc, callnum, process, tc, true);
+}
+
+SyscallReturn
+pipeFunc(SyscallDesc *desc, int callnum, Process *process, ThreadContext *tc)
+{
+    return pipeImpl(desc, callnum, process, tc, false);
 }
 
 SyscallReturn
