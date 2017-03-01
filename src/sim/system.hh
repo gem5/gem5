@@ -61,6 +61,7 @@
 #include "mem/port_proxy.hh"
 #include "mem/physical.hh"
 #include "params/System.hh"
+#include "sim/se_signal.hh"
 
 /**
  * To avoid linking errors with LTO, only include the header if we
@@ -555,6 +556,10 @@ class System : public MemObject
 
     /** Process set to track which PIDs have already been allocated */
     std::set<int> PIDs;
+
+    // By convention, all signals are owned by the receiving process. The
+    // receiver will delete the signal upon reception.
+    std::list<BasicSignal> signalList;
 
   protected:
 
