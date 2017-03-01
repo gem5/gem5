@@ -365,7 +365,6 @@ getcwdFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     return (result == -1) ? -errno : result;
 }
 
-/// Target open() handler.
 SyscallReturn
 readlinkFunc(SyscallDesc *desc, int callnum, Process *process,
              ThreadContext *tc)

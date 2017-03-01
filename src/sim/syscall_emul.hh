@@ -613,80 +613,136 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 }
 
 template <class OS>
-static SyscallReturn
-openFunc(SyscallDesc *desc, int callnum, Process *process,
-         ThreadContext *tc, int index)
+SyscallReturn
+openImpl(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc,
+         bool isopenat)
 {
-    std::string path;
+    int index = 0;
+    int tgt_dirfd = -1;
 
-    if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index)))
+    /**
+     * If using the openat variant, read in the target directory file
+     * descriptor from the simulated process.
+     */
+    if (isopenat)
+        tgt_dirfd = p->getSyscallArg(tc, index);
+
+    /**
+     * Retrieve the simulated process' memory proxy and then read in the path
+     * string from that memory space into the host's working memory space.
+     */
+    std::string path;
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
-    int tgtFlags = process->getSyscallArg(tc, index);
-    int mode = process->getSyscallArg(tc, index);
-    int hostFlags = 0;
-
-    // translate open flags
+#ifdef __CYGWIN32__
+    int host_flags = O_BINARY;
+#else
+    int host_flags = 0;
+#endif
+    /**
+     * Translate target flags into host flags. Flags exist which are not
+     * ported between architectures which can cause check failures.
+     */
+    int tgt_flags = p->getSyscallArg(tc, index);
     for (int i = 0; i < OS::NUM_OPEN_FLAGS; i++) {
-        if (tgtFlags & OS::openFlagTable[i].tgtFlag) {
-            tgtFlags &= ~OS::openFlagTable[i].tgtFlag;
-            hostFlags |= OS::openFlagTable[i].hostFlag;
+        if (tgt_flags & OS::openFlagTable[i].tgtFlag) {
+            tgt_flags &= ~OS::openFlagTable[i].tgtFlag;
+            host_flags |= OS::openFlagTable[i].hostFlag;
         }
     }
-
-    // any target flags left?
-    if (tgtFlags != 0)
-        warn("Syscall: open: cannot decode flags 0x%x", tgtFlags);
-
+    if (tgt_flags) {
+        warn("open%s: cannot decode flags 0x%x",
+             isopenat ? "at" : "", tgt_flags);
+    }
 #ifdef __CYGWIN32__
-    hostFlags |= O_BINARY;
+    host_flags |= O_BINARY;
 #endif
 
-    // Adjust path for current working directory
-    path = process->fullPath(path);
+    int mode = p->getSyscallArg(tc, index);
 
-    DPRINTF(SyscallVerbose, "opening file %s\n", path.c_str());
-
-    if (startswith(path, "/dev/")) {
-        std::string filename = path.substr(strlen("/dev/"));
-        if (filename == "sysdev0") {
-            // This is a memory-mapped high-resolution timer device on Alpha.
-            // We don't support it, so just punt.
-            warn("Ignoring open(%s, ...)\n", path);
-            return -ENOENT;
-        }
-
-        EmulatedDriver *drv = process->findDriver(filename);
-        if (drv) {
-            // the driver's open method will allocate a fd from the
-            // process if necessary.
-            return drv->open(process, tc, mode, hostFlags);
-        }
-
-        // fall through here for pass through to host devices, such as
-        // /dev/zero
+    /**
+     * If the simulated process called open or openat with AT_FDCWD specified,
+     * take the current working directory value which was passed into the
+     * process class as a Python parameter and append the current path to
+     * create a full path.
+     * Otherwise, openat with a valid target directory file descriptor has
+     * been called. If the path option, which was passed in as a parameter,
+     * is not absolute, retrieve the directory file descriptor's path and
+     * prepend it to the path passed in as a parameter.
+     * In every case, we should have a full path (which is relevant to the
+     * host) to work with after this block has been passed.
+     */
+    if (!isopenat || (isopenat && tgt_dirfd == OS::TGT_AT_FDCWD)) {
+        path = p->fullPath(path);
+    } else if (!startswith(path, "/")) {
+        std::shared_ptr<FDEntry> fdep = ((*p->fds)[tgt_dirfd]);
+        auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
+        if (!ffdp)
+            return -EBADF;
+        path.insert(0, ffdp->getFileName());
     }
 
-    int fd;
-    int local_errno;
-    if (startswith(path, "/proc/") || startswith(path, "/system/") ||
-        startswith(path, "/platform/") || startswith(path, "/sys/")) {
-        // It's a proc/sys entry and requires special handling
-        fd = OS::openSpecialFile(path, process, tc);
-        local_errno = ENOENT;
-     } else {
-        // open the file
-        fd = open(path.c_str(), hostFlags, mode);
-        local_errno = errno;
-     }
+    /**
+     * Since this is an emulated environment, we create pseudo file
+     * descriptors for device requests that have been registered with
+     * the process class through Python; this allows us to create a file
+     * descriptor for subsequent ioctl or mmap calls.
+     */
+    if (startswith(path, "/dev/")) {
+        std::string filename = path.substr(strlen("/dev/"));
+        EmulatedDriver *drv = p->findDriver(filename);
+        if (drv) {
+            DPRINTF_SYSCALL(Verbose, "open%s: passing call to "
+                            "driver open with path[%s]\n",
+                            isopenat ? "at" : "", path.c_str());
+            return drv->open(p, tc, mode, host_flags);
+        }
+        /**
+         * Fall through here for pass through to host devices, such
+         * as /dev/zero
+         */
+    }
 
-    if (fd == -1)
-        return -local_errno;
+    /**
+     * Some special paths and files cannot be called on the host and need
+     * to be handled as special cases inside the simulator.
+     * If the full path that was created above does not match any of the
+     * special cases, pass it through to the open call on the host to let
+     * the host open the file on our behalf.
+     * If the host cannot open the file, return the host's error code back
+     * through the system call to the simulated process.
+     */
+    int sim_fd = -1;
+    std::vector<std::string> special_paths =
+            { "/proc/", "/system/", "/sys/", "/platform/", "/etc/passwd" };
+    for (auto entry : special_paths) {
+        if (startswith(path, entry))
+            sim_fd = OS::openSpecialFile(path, p, tc);
+    }
+    if (sim_fd == -1) {
+        sim_fd = open(path.c_str(), host_flags, mode);
+    }
+    if (sim_fd == -1) {
+        int local = -errno;
+        DPRINTF_SYSCALL(Verbose, "open%s: failed -> path:%s\n",
+                        isopenat ? "at" : "", path.c_str());
+        return local;
+    }
 
-    std::shared_ptr<FileFDEntry> ffdp =
-        std::make_shared<FileFDEntry>(fd, hostFlags, path.c_str(), false);
-    return process->fds->allocFD(ffdp);
+    /**
+     * The file was opened successfully and needs to be recorded in the
+     * process' file descriptor array so that it can be retrieved later.
+     * The target file descriptor that is chosen will be the lowest unused
+     * file descriptor.
+     * Return the indirect target file descriptor back to the simulated
+     * process to act as a handle for the opened file.
+     */
+    auto ffdp = std::make_shared<FileFDEntry>(sim_fd, host_flags, path, 0);
+    int tgt_fd = p->fds->allocFD(ffdp);
+    DPRINTF_SYSCALL(Verbose, "open%s: sim_fd[%d], target_fd[%d] -> path:%s\n",
+                    isopenat ? "at" : "", sim_fd, tgt_fd, path.c_str());
+    return tgt_fd;
 }
 
 /// Target open() handler.
@@ -695,7 +751,7 @@ SyscallReturn
 openFunc(SyscallDesc *desc, int callnum, Process *process,
          ThreadContext *tc)
 {
-    return openFunc<OS>(desc, callnum, process, tc, 0);
+    return openImpl<OS>(desc, callnum, process, tc, false);
 }
 
 /// Target openat() handler.
@@ -704,11 +760,7 @@ SyscallReturn
 openatFunc(SyscallDesc *desc, int callnum, Process *process,
            ThreadContext *tc)
 {
-    int index = 0;
-    int dirfd = process->getSyscallArg(tc, index);
-    if (dirfd != OS::TGT_AT_FDCWD)
-        warn("openat: first argument not AT_FDCWD; unlikely to work");
-    return openFunc<OS>(desc, callnum, process, tc, 1);
+    return openImpl<OS>(desc, callnum, process, tc, true);
 }
 
 /// Target unlinkat() handler.

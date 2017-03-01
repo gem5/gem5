@@ -226,6 +226,7 @@ class Linux : public OperatingSystem
     static int openSpecialFile(std::string path, Process *process,
                                ThreadContext *tc);
     static std::string procMeminfo(Process *process, ThreadContext *tc);
+    static std::string etcPasswd(Process *process, ThreadContext *tc);
 
     // For futex system call
     static const unsigned TGT_FUTEX_WAIT  = 0;

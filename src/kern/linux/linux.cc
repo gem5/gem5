@@ -33,6 +33,7 @@
 #include <cstdio>
 #include <string>
 
+#include "cpu/base.hh"
 #include "debug/SyscallVerbose.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
@@ -41,21 +42,35 @@ int
 Linux::openSpecialFile(std::string path, Process *process,
                        ThreadContext *tc)
 {
-    DPRINTF(SyscallVerbose, "Opening special file: %s\n", path.c_str());
+    DPRINTFR(SyscallVerbose,
+             "%d: %s: generic-open: opening special file: %s\n",
+             curTick(), tc->getCpuPtr()->name(), path.c_str());
+
+    bool matched = false;
+    std::string data;
+
     if (path.compare(0, 13, "/proc/meminfo") == 0) {
-        std::string data = Linux::procMeminfo(process, tc);
+        data = Linux::procMeminfo(process, tc);
+        matched = true;
+    } else if (path.compare(0, 11, "/etc/passwd") == 0) {
+        data = Linux::etcPasswd(process, tc);
+        matched = true;
+    }
+
+    if (matched) {
         FILE *f = tmpfile();
         int fd = fileno(f);
         size_t ret M5_VAR_USED = fwrite(data.c_str(), 1, data.size(), f);
         assert(ret == data.size());
         rewind(f);
         return fd;
+    } else {
+        warn("Attempting to open special file: %s. Ignoring. Simulation may "
+             "take un-expected code path or be non-deterministic until proper "
+             "handling is implemented.\n", path.c_str());
+        errno = EACCES;
+        return -1;
     }
-
-    warn("Attempting to open special file: %s. Ignoring. Simulation may"
-            " take un-expected code path or be non-deterministic until proper"
-            "  handling is implemented.\n", path.c_str());
-    return -1;
 }
 
 std::string
@@ -66,3 +81,9 @@ Linux::procMeminfo(Process *process, ThreadContext *tc)
             process->system->freeMemSize() >> 10);
 }
 
+std::string
+Linux::etcPasswd(Process *process, ThreadContext *tc)
+{
+    return csprintf("gem5-user:x:1000:1000:gem5-user,,,:%s:/bin/bash\n",
+                    process->getcwd());
+}
