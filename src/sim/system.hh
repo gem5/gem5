@@ -48,6 +48,7 @@
 #define __SYSTEM_HH__
 
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -57,10 +58,11 @@
 #include "config/the_isa.hh"
 #include "enums/MemoryMode.hh"
 #include "mem/mem_object.hh"
+#include "mem/physical.hh"
 #include "mem/port.hh"
 #include "mem/port_proxy.hh"
-#include "mem/physical.hh"
 #include "params/System.hh"
+#include "sim/futex_map.hh"
 #include "sim/se_signal.hh"
 
 /**
@@ -69,6 +71,7 @@
  */
 #if THE_ISA != NULL_ISA
 #include "cpu/pc_event.hh"
+
 #endif
 
 class BaseRemoteGDB;
@@ -549,8 +552,7 @@ class System : public MemObject
 
     static void printSystems();
 
-    // For futex system call
-    std::map<uint64_t, std::list<ThreadContext *> * > futexMap;
+    FutexMap futexMap;
 
     static const int maxPID = 32768;
 

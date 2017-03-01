@@ -50,6 +50,7 @@
 #include <unistd.h>
 
 #include <array>
+#include <csignal>
 #include <map>
 #include <string>
 #include <vector>
@@ -71,20 +72,27 @@
 
 #if THE_ISA == ALPHA_ISA
 #include "arch/alpha/linux/process.hh"
+
 #elif THE_ISA == SPARC_ISA
 #include "arch/sparc/linux/process.hh"
 #include "arch/sparc/solaris/process.hh"
+
 #elif THE_ISA == MIPS_ISA
 #include "arch/mips/linux/process.hh"
+
 #elif THE_ISA == ARM_ISA
-#include "arch/arm/linux/process.hh"
 #include "arch/arm/freebsd/process.hh"
+#include "arch/arm/linux/process.hh"
+
 #elif THE_ISA == X86_ISA
 #include "arch/x86/linux/process.hh"
+
 #elif THE_ISA == POWER_ISA
 #include "arch/power/linux/process.hh"
+
 #elif THE_ISA == RISCV_ISA
 #include "arch/riscv/linux/process.hh"
+
 #else
 #error "THE_ISA not set"
 #endif

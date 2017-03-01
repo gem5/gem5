@@ -34,6 +34,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <csignal>
 #include <iostream>
 #include <string>
 
@@ -75,66 +76,115 @@ ignoreFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 static void
-exitFutexWake(ThreadContext *tc, uint64_t uaddr)
+exitFutexWake(ThreadContext *tc, Addr addr, uint64_t tgid)
 {
-    std::map<uint64_t, std::list<ThreadContext *> * >
-        &futex_map = tc->getSystemPtr()->futexMap;
+    // Clear value at address pointed to by thread's childClearTID field.
+    BufferArg ctidBuf(addr, sizeof(long));
+    long *ctid = (long *)ctidBuf.bufferPtr();
+    *ctid = 0;
+    ctidBuf.copyOut(tc->getMemProxy());
 
-    int wokenUp = 0;
-    std::list<ThreadContext *> * tcWaitList;
-    if (futex_map.count(uaddr)) {
-        tcWaitList = futex_map.find(uaddr)->second;
-        if (tcWaitList->size() > 0) {
-            tcWaitList->front()->activate();
-            tcWaitList->pop_front();
-            wokenUp++;
-        }
-        if (tcWaitList->empty()) {
-            futex_map.erase(uaddr);
-            delete tcWaitList;
+    FutexMap &futex_map = tc->getSystemPtr()->futexMap;
+    // Wake one of the waiting threads.
+    futex_map.wakeup(addr, tgid, 1);
+}
+
+static SyscallReturn
+exitImpl(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc,
+         bool group)
+{
+    int index = 0;
+    int status = p->getSyscallArg(tc, index);
+
+    System *sys = tc->getSystemPtr();
+
+    int activeContexts = 0;
+    for (auto &system: sys->systemList)
+        activeContexts += system->numRunningContexts();
+    if (activeContexts == 1) {
+        exitSimLoop("exiting with last active thread context", status & 0xff);
+        return status;
+    }
+
+    if (group)
+        *p->exitGroup = true;
+
+    if (p->childClearTID)
+        exitFutexWake(tc, p->childClearTID, p->tgid());
+
+    bool last_thread = true;
+    Process *parent = nullptr, *tg_lead = nullptr;
+    for (int i = 0; last_thread && i < sys->numContexts(); i++) {
+        Process *walk;
+        if (!(walk = sys->threadContexts[i]->getProcessPtr()))
+            continue;
+
+        /**
+         * Threads in a thread group require special handing. For instance,
+         * we send the SIGCHLD signal so that it appears that it came from
+         * the head of the group. We also only delete file descriptors if
+         * we are the last thread in the thread group.
+         */
+        if (walk->pid() == p->tgid())
+            tg_lead = walk;
+
+        if ((sys->threadContexts[i]->status() != ThreadContext::Halted)
+            && (walk != p)) {
+            /**
+             * Check if we share thread group with the pointer; this denotes
+             * that we are not the last thread active in the thread group.
+             * Note that setting this to false also prevents further
+             * iterations of the loop.
+             */
+            if (walk->tgid() == p->tgid())
+                last_thread = false;
+
+            /**
+             * A corner case exists which involves execve(). After execve(),
+             * the execve will enable SIGCHLD in the process. The problem
+             * occurs when the exiting process is the root process in the
+             * system; there is no parent to receive the signal. We obviate
+             * this problem by setting the root process' ppid to zero in the
+             * Python configuration files. We really should handle the
+             * root/execve specific case more gracefully.
+             */
+            if (*p->sigchld && (p->ppid() != 0) && (walk->pid() == p->ppid()))
+                parent = walk;
         }
     }
-    DPRINTF(SyscallVerbose, "exit: FUTEX_WAKE, activated %d waiting "
-                            "thread contexts\n", wokenUp);
+
+    if (last_thread) {
+        if (parent) {
+            assert(tg_lead);
+            sys->signalList.push_back(BasicSignal(tg_lead, parent, SIGCHLD));
+        }
+
+        /**
+         * Run though FD array of the exiting process and close all file
+         * descriptors except for the standard file descriptors.
+         * (The standard file descriptors are shared with gem5.)
+         */
+        for (int i = 0; i < p->fds->getSize(); i++) {
+            if ((*p->fds)[i])
+                p->fds->closeFDEntry(i);
+        }
+    }
+
+    tc->halt();
+    return status;
 }
 
 SyscallReturn
 exitFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
-    if (p->system->numRunningContexts() == 1 && !p->childClearTID) {
-        // Last running free-parent context; exit simulator.
-        int index = 0;
-        exitSimLoop("target called exit()",
-                    p->getSyscallArg(tc, index) & 0xff);
-    } else {
-        if (p->childClearTID)
-            exitFutexWake(tc, p->childClearTID);
-        tc->halt();
-    }
-
-    return 1;
+    return exitImpl(desc, callnum, p, tc, false);
 }
-
 
 SyscallReturn
-exitGroupFunc(SyscallDesc *desc, int callnum, Process *process,
-              ThreadContext *tc)
+exitGroupFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
-    // halt all threads belonging to this process
-    for (auto i: process->contextIds) {
-        process->system->getThreadContext(i)->halt();
-    }
-
-    if (!process->system->numRunningContexts()) {
-        // all threads belonged to this process... exit simulator
-        int index = 0;
-        exitSimLoop("target called exit()",
-                    process->getSyscallArg(tc, index) & 0xff);
-    }
-
-    return 1;
+    return exitImpl(desc, callnum, p, tc, true);
 }
-
 
 SyscallReturn
 getpagesizeFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)

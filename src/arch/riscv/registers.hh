@@ -50,9 +50,9 @@
 #include <map>
 #include <string>
 
+#include "arch/isa_traits.hh"
 #include "arch/riscv/generated/max_inst_regs.hh"
 #include "base/types.hh"
-#include "sim/system.hh"
 
 namespace RiscvISA {
 

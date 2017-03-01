@@ -93,6 +93,7 @@
 #include "mem/page_table.hh"
 #include "params/Process.hh"
 #include "sim/emul_driver.hh"
+#include "sim/futex_map.hh"
 #include "sim/process.hh"
 #include "sim/syscall_debug_macros.hh"
 #include "sim/syscall_desc.hh"
@@ -304,79 +305,44 @@ SyscallReturn
 futexFunc(SyscallDesc *desc, int callnum, Process *process,
           ThreadContext *tc)
 {
-    int index_uaddr = 0;
-    int index_op = 1;
-    int index_val = 2;
-    int index_timeout = 3;
+    using namespace std;
 
-    uint64_t uaddr = process->getSyscallArg(tc, index_uaddr);
-    int op = process->getSyscallArg(tc, index_op);
-    int val = process->getSyscallArg(tc, index_val);
-    uint64_t timeout = process->getSyscallArg(tc, index_timeout);
+    int index = 0;
+    Addr uaddr = process->getSyscallArg(tc, index);
+    int op = process->getSyscallArg(tc, index);
+    int val = process->getSyscallArg(tc, index);
 
-    std::map<uint64_t, std::list<ThreadContext *> * >
-        &futex_map = tc->getSystemPtr()->futexMap;
-
-    DPRINTF(SyscallVerbose, "futex: Address=%llx, op=%d, val=%d\n",
-            uaddr, op, val);
-
+    /*
+     * Unsupported option that does not affect the correctness of the
+     * application. This is a performance optimization utilized by Linux.
+     */
     op &= ~OS::TGT_FUTEX_PRIVATE_FLAG;
 
-    if (op == OS::TGT_FUTEX_WAIT) {
-        if (timeout != 0) {
-            warn("futex: FUTEX_WAIT with non-null timeout unimplemented;"
-                 "we'll wait indefinitely");
-        }
+    FutexMap &futex_map = tc->getSystemPtr()->futexMap;
 
-        uint8_t *buf = new uint8_t[sizeof(int)];
-        tc->getMemProxy().readBlob((Addr)uaddr, buf, (int)sizeof(int));
-        int mem_val = *((int *)buf);
-        delete[] buf;
+    if (OS::TGT_FUTEX_WAIT == op) {
+        // Ensure futex system call accessed atomically.
+        BufferArg buf(uaddr, sizeof(int));
+        buf.copyIn(tc->getMemProxy());
+        int mem_val = *(int*)buf.bufferPtr();
 
-        if (val != mem_val) {
-            DPRINTF(SyscallVerbose, "futex: FUTEX_WAKE, read: %d, "
-                                    "expected: %d\n", mem_val, val);
+        /*
+         * The value in memory at uaddr is not equal with the expected val
+         * (a different thread must have changed it before the system call was
+         * invoked). In this case, we need to throw an error.
+         */
+        if (val != mem_val)
             return -OS::TGT_EWOULDBLOCK;
-        }
 
-        // Queue the thread context
-        std::list<ThreadContext *> * tcWaitList;
-        if (futex_map.count(uaddr)) {
-            tcWaitList = futex_map.find(uaddr)->second;
-        } else {
-            tcWaitList = new std::list<ThreadContext *>();
-            futex_map.insert(std::pair< uint64_t,
-                            std::list<ThreadContext *> * >(uaddr, tcWaitList));
-        }
-        tcWaitList->push_back(tc);
-        DPRINTF(SyscallVerbose, "futex: FUTEX_WAIT, suspending calling thread "
-                                "context on address 0x%lx\n", uaddr);
-        tc->suspend();
+        futex_map.suspend(uaddr, process->tgid(), tc);
+
         return 0;
-    } else if (op == OS::TGT_FUTEX_WAKE){
-        int wokenUp = 0;
-        std::list<ThreadContext *> * tcWaitList;
-        if (futex_map.count(uaddr)) {
-            tcWaitList = futex_map.find(uaddr)->second;
-            while (tcWaitList->size() > 0 && wokenUp < val) {
-                tcWaitList->front()->activate();
-                tcWaitList->pop_front();
-                wokenUp++;
-            }
-            if (tcWaitList->empty()) {
-                futex_map.erase(uaddr);
-                delete tcWaitList;
-            }
-        }
-        DPRINTF(SyscallVerbose, "futex: FUTEX_WAKE, activated %d waiting "
-                                "thread context on address 0x%lx\n",
-                                wokenUp, uaddr);
-        return wokenUp;
-    } else {
-        warn("futex: op %d is not implemented, just returning...", op);
-        return 0;
+    } else if (OS::TGT_FUTEX_WAKE == op) {
+        return futex_map.wakeup(uaddr, process->tgid(), val);
     }
 
+    warn("futex: op %d not implemented; ignoring.", op);
+    return -ENOSYS;
 }
 
 
@@ -1318,6 +1284,13 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 
     cp->initState();
     p->clone(tc, ctc, cp, flags);
+
+    if (flags & OS::TGT_CLONE_THREAD) {
+        delete cp->sigchld;
+        cp->sigchld = p->sigchld;
+    } else if (flags & OS::TGT_SIGCHLD) {
+        *cp->sigchld = true;
+    }
 
     if (flags & OS::TGT_CLONE_CHILD_SETTID) {
         BufferArg ctidBuf(ctidPtr, sizeof(long));
