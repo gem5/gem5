@@ -142,8 +142,10 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 }
 
 template <class Impl>
-LSQUnit<Impl>::LSQUnit()
-    : loads(0), stores(0), storesToWB(0), cacheBlockMask(0), stalled(false),
+LSQUnit<Impl>::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
+    : lsqID(-1), storeQueue(sqEntries+1), loadQueue(lqEntries+1),
+      LQEntries(lqEntries+1), SQEntries(lqEntries+1),
+      loads(0), stores(0), storesToWB(0), cacheBlockMask(0), stalled(false),
       isStoreBlocked(false), storeInFlight(false), hasPendingPkt(false),
       pendingPkt(nullptr)
 {
@@ -152,28 +154,16 @@ LSQUnit<Impl>::LSQUnit()
 template<class Impl>
 void
 LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
-        LSQ *lsq_ptr, unsigned maxLQEntries, unsigned maxSQEntries,
-        unsigned id)
+        LSQ *lsq_ptr, unsigned id)
 {
+    lsqID = id;
+
     cpu = cpu_ptr;
     iewStage = iew_ptr;
 
     lsq = lsq_ptr;
 
-    lsqID = id;
-
-    DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",id);
-
-    // Add 1 for the sentinel entry (they are circular queues).
-    LQEntries = maxLQEntries + 1;
-    SQEntries = maxSQEntries + 1;
-
-    //Due to uint8_t index in LSQSenderState
-    assert(LQEntries <= 256);
-    assert(SQEntries <= 256);
-
-    loadQueue.resize(LQEntries);
-    storeQueue.resize(SQEntries);
+    DPRINTF(LSQUnit, "Creating LSQUnit%i object.\n",lsqID);
 
     depCheckShift = params->LSQDepCheckShift;
     checkLoads = params->LSQCheckLoads;

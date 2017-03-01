@@ -122,7 +122,7 @@ class DependencyGraph
      *  instructions in flight that are dependent upon r34 will be
      *  in the linked list of dependGraph[34].
      */
-    DepEntry *dependGraph;
+    std::vector<DepEntry> dependGraph;
 
     /** Number of linked lists; identical to the number of registers. */
     int numEntries;
@@ -140,7 +140,6 @@ class DependencyGraph
 template <class DynInstPtr>
 DependencyGraph<DynInstPtr>::~DependencyGraph()
 {
-    delete [] dependGraph;
 }
 
 template <class DynInstPtr>
@@ -148,7 +147,7 @@ void
 DependencyGraph<DynInstPtr>::resize(int num_entries)
 {
     numEntries = num_entries;
-    dependGraph = new DepEntry[numEntries];
+    dependGraph.resize(numEntries);
 }
 
 template <class DynInstPtr>

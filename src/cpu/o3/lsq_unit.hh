@@ -86,12 +86,17 @@ class LSQUnit {
 
   public:
     /** Constructs an LSQ unit. init() must be called prior to use. */
-    LSQUnit();
+    LSQUnit(uint32_t lqEntries, uint32_t sqEntries);
+
+    /** We cannot copy LSQUnit because it has stats for which copy
+     * contructor is deleted explicitly. However, STL vector requires
+     * a valid copy constructor for the base type at compile time.
+     */
+    LSQUnit(const LSQUnit &l) { panic("LSQUnit is not copy-able"); }
 
     /** Initializes the LSQ unit with the specified number of entries. */
     void init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
-            LSQ *lsq_ptr, unsigned maxLQEntries, unsigned maxSQEntries,
-            unsigned id);
+            LSQ *lsq_ptr, unsigned id);
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;
