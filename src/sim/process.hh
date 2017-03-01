@@ -62,15 +62,6 @@ class ThreadContext;
 class Process : public SimObject
 {
   public:
-    struct WaitRec
-    {
-        Addr waitChan;
-        ThreadContext *waitingContext;
-
-        WaitRec(Addr chan, ThreadContext *ctx)
-            : waitChan(chan), waitingContext(ctx)
-        { }
-    };
 
     struct MemState
     {
@@ -205,9 +196,6 @@ class Process : public SimObject
 
     void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *new_p,
                TheISA::IntReg flags);
-
-    // list of all blocked contexts
-    std::list<WaitRec> waitList;
 
     // thread contexts associated with this process
     std::vector<ContextID> contextIds;
