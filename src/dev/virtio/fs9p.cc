@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,8 +44,12 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/un.h>
 #include <unistd.h>
 
+#include <fstream>
+
+#include "base/output.hh"
 #include "debug/VIO9P.hh"
 #include "debug/VIO9PData.hh"
 #include "params/VirtIO9PBase.hh"
@@ -334,6 +338,8 @@ VirtIO9PDiod::startDiod()
 
     const char *diod(p->diod.c_str());
 
+    DPRINTF(VIO9P, "Using diod at %s \n", p->diod.c_str());
+
     if (pipe(pipe_rfd) == -1 || pipe(pipe_wfd) == -1)
         panic("Failed to create DIOD pipes: %i\n", errno);
 
@@ -353,6 +359,33 @@ VirtIO9PDiod::startDiod()
                   errno);
         }
 
+        // Create Unix domain socket
+        int socket_id = socket(AF_UNIX, SOCK_STREAM, 0);
+        if (socket_id == -1) {
+            panic("Socket creation failed %i \n", errno);
+        }
+        // Bind the socket to a path which will not be read
+        struct sockaddr_un socket_address;
+        memset(&socket_address, 0, sizeof(struct sockaddr_un));
+        socket_address.sun_family = AF_UNIX;
+
+        const std::string socket_path = simout.resolve(p->socketPath);
+        fatal_if(!OutputDirectory::isAbsolute(socket_path), "Please make the" \
+                 " output directory an absolute path, else diod will fail!\n");
+
+        // Prevent overflow in strcpy
+        fatal_if(sizeof(socket_address.sun_path) <= socket_path.length(),
+                 "Incorrect length of socket path");
+        strncpy(socket_address.sun_path, socket_path.c_str(),
+                sizeof(socket_address.sun_path));
+
+        if (bind(socket_id, (struct sockaddr*) &socket_address,
+                 sizeof(struct sockaddr_un)) == -1){
+            perror("Socket binding");
+            panic("Socket binding to %i failed - most likely the output dir" \
+                  " and hence unused socket already exists \n", socket_id);
+        }
+
         execlp(diod, diod,
                "-f", // start in foreground
                "-r", "3", // setup read FD
@@ -360,8 +393,10 @@ VirtIO9PDiod::startDiod()
                "-e", p->root.c_str(), // path to export
                "-n", // disable security
                "-S", // squash all users
+               "-l", socket_path.c_str(), // pass the socket
                (char *)NULL);
-        panic("Failed to execute diod: %i\n", errno);
+        perror("Starting DIOD");
+        panic("Failed to execute diod to %s: %i\n",socket_path, errno);
     } else {
         close(pipe_rfd[0]);
         close(pipe_wfd[1]);

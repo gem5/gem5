@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2014 ARM Limited
+# Copyright (c) 2014,2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -61,6 +61,7 @@ class VirtIO9PDiod(VirtIO9PProxy):
 
     diod = Param.String("/usr/sbin/diod", "Path to diod")
     root = Param.String("/tmp", "Path to export through diod")
+    socketPath = Param.String("Unused socket to diod")
 
 class VirtIO9PSocket(VirtIO9PProxy):
     type = 'VirtIO9PSocket'
