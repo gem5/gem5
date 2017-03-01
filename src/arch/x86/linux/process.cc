@@ -83,7 +83,7 @@ archPrctlFunc(SyscallDesc *desc, int callnum, Process *process,
         GetGS = 0x1004
     };
 
-    //First argument is the code, second is the address
+    // First argument is the code, second is the address
     int index = 0;
     int code = process->getSyscallArg(tc, index);
     uint64_t addr = process->getSyscallArg(tc, index);
@@ -91,7 +91,7 @@ archPrctlFunc(SyscallDesc *desc, int callnum, Process *process,
     SETranslatingPortProxy &p = tc->getMemProxy();
     switch(code)
     {
-      //Each of these valid options should actually check addr.
+      // Each of these valid options should actually check addr.
       case SetFS:
         tc->setMiscRegNoEffect(MISCREG_FS_BASE, addr);
         tc->setMiscRegNoEffect(MISCREG_FS_EFF_BASE, addr);

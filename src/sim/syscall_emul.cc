@@ -177,8 +177,7 @@ brkFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
                 tp.memsetBlob(gen.addr(), zero, size_needed);
                 if (gen.addr() + PageBytes > next_page &&
                     next_page < new_brk &&
-                    p->pTable->translate(next_page))
-                {
+                    p->pTable->translate(next_page)) {
                     size_needed = PageBytes - size_needed;
                     tp.memsetBlob(next_page, zero, size_needed);
                 }
@@ -218,7 +217,7 @@ readFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
     int index = 0;
     int tgt_fd = p->getSyscallArg(tc, index);
-    Addr bufPtr = p->getSyscallArg(tc, index);
+    Addr buf_ptr = p->getSyscallArg(tc, index);
     int nbytes = p->getSyscallArg(tc, index);
 
     auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
@@ -226,7 +225,7 @@ readFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
         return -EBADF;
     int sim_fd = hbfdp->getSimFD();
 
-    BufferArg bufArg(bufPtr, nbytes);
+    BufferArg bufArg(buf_ptr, nbytes);
     int bytes_read = read(sim_fd, bufArg.bufferPtr(), nbytes);
 
     if (bytes_read > 0)
@@ -240,7 +239,7 @@ writeFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
     int index = 0;
     int tgt_fd = p->getSyscallArg(tc, index);
-    Addr bufPtr = p->getSyscallArg(tc, index);
+    Addr buf_ptr = p->getSyscallArg(tc, index);
     int nbytes = p->getSyscallArg(tc, index);
 
     auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
@@ -248,7 +247,7 @@ writeFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
         return -EBADF;
     int sim_fd = hbfdp->getSimFD();
 
-    BufferArg bufArg(bufPtr, nbytes);
+    BufferArg bufArg(buf_ptr, nbytes);
     bufArg.copyIn(tc->getMemProxy());
 
     int bytes_written = write(sim_fd, bufArg.bufferPtr(), nbytes);
@@ -324,9 +323,9 @@ SyscallReturn
 gethostnameFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
     int index = 0;
-    Addr bufPtr = p->getSyscallArg(tc, index);
+    Addr buf_ptr = p->getSyscallArg(tc, index);
     int name_len = p->getSyscallArg(tc, index);
-    BufferArg name(bufPtr, name_len);
+    BufferArg name(buf_ptr, name_len);
 
     strncpy((char *)name.bufferPtr(), hostname, name_len);
 
@@ -340,9 +339,9 @@ getcwdFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
     int result = 0;
     int index = 0;
-    Addr bufPtr = p->getSyscallArg(tc, index);
+    Addr buf_ptr = p->getSyscallArg(tc, index);
     unsigned long size = p->getSyscallArg(tc, index);
-    BufferArg buf(bufPtr, size);
+    BufferArg buf(buf_ptr, size);
 
     // Is current working directory defined?
     string cwd = p->getcwd();
@@ -386,10 +385,10 @@ readlinkFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc,
     // Adjust path for current working directory
     path = p->fullPath(path);
 
-    Addr bufPtr = p->getSyscallArg(tc, index);
+    Addr buf_ptr = p->getSyscallArg(tc, index);
     size_t bufsiz = p->getSyscallArg(tc, index);
 
-    BufferArg buf(bufPtr, bufsiz);
+    BufferArg buf(buf_ptr, bufsiz);
 
     int result = -1;
     if (path != "/proc/self/exe") {
@@ -539,7 +538,7 @@ truncate64Func(SyscallDesc *desc, int num,
     string path;
 
     if (!tc->getMemProxy().tryReadString(path, process->getSyscallArg(tc, index)))
-       return -EFAULT;
+        return -EFAULT;
 
     int64_t length = process->getSyscallArg(tc, index, 64);
 
@@ -729,7 +728,6 @@ fcntl64Func(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
         // to the underlying OS
         warn("fcntl64(%d, %d) passed through to host\n", tgt_fd, cmd);
         return fcntl(sim_fd, cmd);
-        // return 0;
     }
 }
 
@@ -823,8 +821,8 @@ getuidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
     // simulation to be deterministic.
 
     // EUID goes in r20.
-    tc->setIntReg(SyscallPseudoReturnReg, process->euid()); //EUID
-    return process->uid();              // UID
+    tc->setIntReg(SyscallPseudoReturnReg, process->euid()); // EUID
+    return process->uid(); // UID
 }
 
 
@@ -833,7 +831,7 @@ getgidPseudoFunc(SyscallDesc *desc, int callnum, Process *process,
                  ThreadContext *tc)
 {
     // Get current group ID.  EGID goes in r20.
-    tc->setIntReg(SyscallPseudoReturnReg, process->egid()); //EGID
+    tc->setIntReg(SyscallPseudoReturnReg, process->egid()); // EGID
     return process->gid();
 }
 

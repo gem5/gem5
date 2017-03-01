@@ -51,12 +51,11 @@
 class ElfObject : public ObjectFile
 {
   protected:
-
-    //The global definition of a "Section" is closest to elf's segments.
+    // The global definition of a gem5 "Section" is closest to ELF's segments.
     typedef ObjectFile::Section Segment;
 
-    //These values are provided to a linux process by the kernel, so we
-    //need to keep them around.
+    // These values are provided to a linux process by the kernel, so we
+    // need to keep them around.
     Addr _programHeaderTable;
     uint16_t _programHeaderSize;
     uint16_t _programHeaderCount;

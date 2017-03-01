@@ -285,8 +285,8 @@ SyscallReturn accessFunc(SyscallDesc *desc, int num,
                          int index);
 
 /// Futex system call
-///  Implemented by Daniel Sanchez
-///  Used by printf's in multi-threaded apps
+/// Implemented by Daniel Sanchez
+/// Used by printf's in multi-threaded apps
 template <class OS>
 SyscallReturn
 futexFunc(SyscallDesc *desc, int callnum, Process *process,
@@ -477,7 +477,7 @@ convertStatBuf(target_stat &tgt, host_stat *host, bool fakeTTY = false)
     tgt->st_mtimeX = TheISA::htog(tgt->st_mtimeX);
     tgt->st_ctimeX = host->st_ctime;
     tgt->st_ctimeX = TheISA::htog(tgt->st_ctimeX);
-    // Force the block size to be 8k. This helps to ensure buffered io works
+    // Force the block size to be 8KB. This helps to ensure buffered io works
     // consistently across different hosts.
     tgt->st_blksize = 0x2000;
     tgt->st_blksize = TheISA::htog(tgt->st_blksize);
@@ -508,11 +508,11 @@ convertStat64Buf(target_stat &tgt, host_stat64 *host, bool fakeTTY = false)
 #endif
 }
 
-//Here are a couple convenience functions
+// Here are a couple of convenience functions
 template<class OS>
 static void
 copyOutStatBuf(SETranslatingPortProxy &mem, Addr addr,
-        hst_stat *host, bool fakeTTY = false)
+               hst_stat *host, bool fakeTTY = false)
 {
     typedef TypedBufferArg<typename OS::tgt_stat> tgt_stat_buf;
     tgt_stat_buf tgt(addr);
@@ -523,7 +523,7 @@ copyOutStatBuf(SETranslatingPortProxy &mem, Addr addr,
 template<class OS>
 static void
 copyOutStat64Buf(SETranslatingPortProxy &mem, Addr addr,
-        hst_stat64 *host, bool fakeTTY = false)
+                 hst_stat64 *host, bool fakeTTY = false)
 {
     typedef TypedBufferArg<typename OS::tgt_stat64> tgt_stat_buf;
     tgt_stat_buf tgt(addr);
@@ -1604,24 +1604,24 @@ getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
     TypedBufferArg<typename OS::rlimit> rlp(process->getSyscallArg(tc, index));
 
     switch (resource) {
-        case OS::TGT_RLIMIT_STACK:
-            // max stack size in bytes: make up a number (8MB for now)
-            rlp->rlim_cur = rlp->rlim_max = 8 * 1024 * 1024;
-            rlp->rlim_cur = TheISA::htog(rlp->rlim_cur);
-            rlp->rlim_max = TheISA::htog(rlp->rlim_max);
-            break;
+      case OS::TGT_RLIMIT_STACK:
+        // max stack size in bytes: make up a number (8MB for now)
+        rlp->rlim_cur = rlp->rlim_max = 8 * 1024 * 1024;
+        rlp->rlim_cur = TheISA::htog(rlp->rlim_cur);
+        rlp->rlim_max = TheISA::htog(rlp->rlim_max);
+        break;
 
-        case OS::TGT_RLIMIT_DATA:
-            // max data segment size in bytes: make up a number
-            rlp->rlim_cur = rlp->rlim_max = 256 * 1024 * 1024;
-            rlp->rlim_cur = TheISA::htog(rlp->rlim_cur);
-            rlp->rlim_max = TheISA::htog(rlp->rlim_max);
-            break;
+      case OS::TGT_RLIMIT_DATA:
+        // max data segment size in bytes: make up a number
+        rlp->rlim_cur = rlp->rlim_max = 256 * 1024 * 1024;
+        rlp->rlim_cur = TheISA::htog(rlp->rlim_cur);
+        rlp->rlim_max = TheISA::htog(rlp->rlim_max);
+        break;
 
-        default:
-            warn("getrlimit: unimplemented resource %d", resource);
-            return -EINVAL;
-            break;
+      default:
+        warn("getrlimit: unimplemented resource %d", resource);
+        return -EINVAL;
+        break;
     }
 
     rlp.copyOut(tc->getMemProxy());
@@ -1703,8 +1703,7 @@ utimesFunc(SyscallDesc *desc, int callnum, Process *process,
     tp.copyIn(tc->getMemProxy());
 
     struct timeval hostTimeval[2];
-    for (int i = 0; i < 2; ++i)
-    {
+    for (int i = 0; i < 2; ++i) {
         hostTimeval[i].tv_sec = TheISA::gtoh((*tp)[i].tv_sec);
         hostTimeval[i].tv_usec = TheISA::gtoh((*tp)[i].tv_usec);
     }
