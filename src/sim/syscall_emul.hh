@@ -1973,5 +1973,54 @@ timeFunc(SyscallDesc *desc, int callnum, Process *process, ThreadContext *tc)
     return sec;
 }
 
+template <class OS>
+SyscallReturn
+tgkillFunc(SyscallDesc *desc, int num, Process *process, ThreadContext *tc)
+{
+    int index = 0;
+    int tgid = process->getSyscallArg(tc, index);
+    int tid = process->getSyscallArg(tc, index);
+    int sig = process->getSyscallArg(tc, index);
+
+    /**
+     * This system call is intended to allow killing a specific thread
+     * within an arbitrary thread group if sanctioned with permission checks.
+     * It's usually true that threads share the termination signal as pointed
+     * out by the pthread_kill man page and this seems to be the intended
+     * usage. Due to this being an emulated environment, assume the following:
+     * Threads are allowed to call tgkill because the EUID for all threads
+     * should be the same. There is no signal handling mechanism for kernel
+     * registration of signal handlers since signals are poorly supported in
+     * emulation mode. Since signal handlers cannot be registered, all
+     * threads within in a thread group must share the termination signal.
+     * We never exhaust PIDs so there's no chance of finding the wrong one
+     * due to PID rollover.
+     */
+
+    System *sys = tc->getSystemPtr();
+    Process *tgt_proc = nullptr;
+    for (int i = 0; i < sys->numContexts(); i++) {
+        Process *temp = sys->threadContexts[i]->getProcessPtr();
+        if (temp->pid() == tid) {
+            tgt_proc = temp;
+            break;
+        }
+    }
+
+    if (sig != 0 || sig != OS::TGT_SIGABRT)
+        return -EINVAL;
+
+    if (tgt_proc == nullptr)
+        return -ESRCH;
+
+    if (tgid != -1 && tgt_proc->tgid() != tgid)
+        return -ESRCH;
+
+    if (sig == OS::TGT_SIGABRT)
+        exitGroupFunc(desc, 252, process, tc);
+
+    return 0;
+}
+
 
 #endif // __SIM_SYSCALL_EMUL_HH__
