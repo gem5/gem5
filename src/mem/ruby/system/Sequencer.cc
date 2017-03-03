@@ -489,7 +489,9 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
             data.setData(&overwrite_val[0],
                          getOffset(request_address), pkt->getSize());
             DPRINTF(RubySequencer, "swap data %s\n", data);
-        } else {
+        } else if (type != RubyRequestType_Store_Conditional || llscSuccess) {
+            // Types of stores set the actual data here, apart from
+            // failed Store Conditional requests
             data.setData(pkt->getConstPtr<uint8_t>(),
                          getOffset(request_address), pkt->getSize());
             DPRINTF(RubySequencer, "set data %s\n", data);
