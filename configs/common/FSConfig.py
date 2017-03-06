@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012, 2015-2016 ARM Limited
+# Copyright (c) 2010-2012, 2015-2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -402,9 +402,12 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         self.system_port = self.membus.slave
 
     if ruby:
-        fatal("You're trying to use Ruby on ARM, which is not working " \
-              "properly yet. If you want to test it anyway, you " \
-              "need to remove this fatal error from FSConfig.py.")
+        if buildEnv['PROTOCOL'] == 'MI_example' and num_cpus > 1:
+            fatal("The MI_example protocol cannot implement Load/Store "
+                  "Exclusive operations. Multicore ARM systems configured "
+                  "with the MI_example protocol will not work properly.")
+        warn("You are trying to use Ruby on ARM, which is not working "
+             "properly yet.")
 
     return self
 
