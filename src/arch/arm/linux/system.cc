@@ -280,21 +280,21 @@ LinuxArmSystem::dumpDmesg()
  *  "__switch_to" is called to change running tasks.
  *
  *  r0 = task_struct of the previously running process
- *  r1 = task_info of the previously running process
- *  r2 = task_info of the next process to run
+ *  r1 = task_struct of the next process to run
  */
 void
 DumpStatsPCEvent::process(ThreadContext *tc)
 {
     Linux::ThreadInfo ti(tc);
-    Addr task_descriptor = tc->readIntReg(2);
-    uint32_t pid = ti.curTaskPID(task_descriptor);
-    uint32_t tgid = ti.curTaskTGID(task_descriptor);
-    std::string next_task_str = ti.curTaskName(task_descriptor);
+    // this is a pointer to a task_struct already 
+    Addr task_descriptor = tc->readIntReg(1);
+    uint32_t pid = ti.curTaskPID64(task_descriptor);
+    uint32_t tgid = ti.curTaskTGID64(task_descriptor);
+    std::string next_task_str = ti.curTaskName64(task_descriptor);
 
     // Streamline treats pid == -1 as the kernel process.
     // Also pid == 0 implies idle process (except during Linux boot)
-    int32_t mm = ti.curTaskMm(task_descriptor);
+    int32_t mm = ti.curTaskMm64(task_descriptor);
     bool is_kernel = (mm == 0);
     if (is_kernel && (pid != 0)) {
         pid = -1;
