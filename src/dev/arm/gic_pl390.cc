@@ -83,7 +83,7 @@ Pl390::Pl390(const Params *p)
         iccrpr[x] = 0xff;
         cpuEnabled[x] = false;
         cpuPriority[x] = 0xff;
-        cpuBpr[x] = 0;
+        cpuBpr[x] = GICC_BPR_MINIMUM;
         // Initialize cpu highest int
         cpuHighestInt[x] = SPURIOUS_INT;
         postIntEvent[x] = new PostIntEvent(*this, x);
@@ -538,9 +538,13 @@ Pl390::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
       case GICC_PMR:
         cpuPriority[ctx] = data;
         break;
-      case GICC_BPR:
-        cpuBpr[ctx] = data;
+      case GICC_BPR: {
+        auto bpr = data & 0x7;
+        if (bpr < GICC_BPR_MINIMUM)
+            bpr = GICC_BPR_MINIMUM;
+        cpuBpr[ctx] = bpr;
         break;
+      }
       case GICC_EOIR: {
         const IAR iar = data;
         if (iar.ack_id < SGI_MAX) {
@@ -666,6 +670,17 @@ Pl390::genSwiMask(int cpu)
     return ULL(0x0101010101010101) << cpu;
 }
 
+uint8_t
+Pl390::getCpuPriority(unsigned cpu)
+{
+    // see Table 3-2 in IHI0048B.b (GICv2)
+    // mask some low-order priority bits per BPR value
+    // NB: the GIC prioritization scheme is upside down:
+    // lower values are higher priority; masking off bits
+    // actually creates a higher priority, not lower.
+    return cpuPriority[cpu] & (0xff00 >> (7 - cpuBpr[cpu]));
+}
+
 void
 Pl390::updateIntState(int hint)
 {
@@ -676,7 +691,7 @@ Pl390::updateIntState(int hint)
         /*@todo use hint to do less work. */
         int highest_int = SPURIOUS_INT;
         // Priorities below that set in GICC_PMR can be ignored
-        uint8_t highest_pri = cpuPriority[cpu];
+        uint8_t highest_pri = getCpuPriority(cpu);
 
         // Check SGIs
         for (int swi = 0; swi < SGI_MAX; swi++) {
@@ -733,7 +748,8 @@ Pl390::updateIntState(int hint)
 
         /* @todo make this work for more than one cpu, need to handle 1:N, N:N
          * models */
-        if (enabled && cpuEnabled[cpu] && (highest_pri < cpuPriority[cpu]) &&
+        if (enabled && cpuEnabled[cpu] &&
+            (highest_pri < getCpuPriority(cpu)) &&
             !(getActiveInt(cpu, intNumToWord(highest_int))
               & (1 << intNumToBit(highest_int)))) {
 

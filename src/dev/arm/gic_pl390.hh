@@ -111,6 +111,10 @@ class Pl390 : public BaseGic
     static const int INT_LINES_MAX = 1020;
     static const int GLOBAL_INT_LINES = INT_LINES_MAX - SGI_MAX - PPI_MAX;
 
+    /** minimum value for Binary Point Register ("IMPLEMENTATION DEFINED");
+        chosen for consistency with Linux's in-kernel KVM GIC model */
+    static const int GICC_BPR_MINIMUM = 2;
+
     BitUnion32(SWI)
         Bitfield<3,0> sgi_id;
         Bitfield<23,16> cpu_list;
@@ -276,6 +280,7 @@ class Pl390 : public BaseGic
 
     /** CPU priority */
     uint8_t cpuPriority[CPU_MAX];
+    uint8_t getCpuPriority(unsigned cpu); // BPR-adjusted priority value
 
     /** Binary point registers */
     uint8_t cpuBpr[CPU_MAX];
