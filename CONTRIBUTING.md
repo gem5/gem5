@@ -186,6 +186,11 @@ of Origin (DCO) [https://developercertificate.org/].
 It is imperative that you use your real name and your real email address in
 both tags and in the author field of the changeset.
 
+For significant changes, authors are encouraged to add copyright information
+and their names at the beginning of the file. The main purpose of the author
+names on the file is to track who is most knowledgeable about the file (e.g.,
+who has contributed a significant amount of code to the file).
+
 Note: If you do not follow these guidelines, the gerrit review site will
 automatically reject your patch.
 If this happens, update your changeset descriptions to match the required style
