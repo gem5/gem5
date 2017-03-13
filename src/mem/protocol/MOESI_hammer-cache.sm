@@ -188,6 +188,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
   void wakeUpAllBuffers();
   void wakeUpBuffers(Addr a);
   Cycles curCycle();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   Entry getCacheEntry(Addr address), return_by_pointer="yes" {
     Entry L2cache_entry := static_cast(Entry, "pointer", L2cache.lookup(address));
@@ -554,7 +555,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:GETS;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Request_Control;
       out_msg.InitialRequestTime := curCycle();
 
@@ -569,7 +570,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:GETX;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Request_Control;
       out_msg.InitialRequestTime := curCycle();
 
@@ -585,7 +586,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
         out_msg.addr := address;
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := machineID;
-        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.InitialRequestTime := curCycle();
       }
@@ -601,7 +602,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:GETF;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Request_Control;
       out_msg.InitialRequestTime := curCycle();
 
@@ -661,7 +662,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:PUT;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -671,7 +672,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:PUTF;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -826,7 +827,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
     }
   }
@@ -836,7 +837,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCKM;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
     }
   }
@@ -848,7 +849,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
       out_msg.Type := CoherenceResponseType:UNBLOCKS;
       out_msg.Sender := machineID;
       out_msg.CurOwner := tbe.CurOwner;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
     }
   }
@@ -1126,7 +1127,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
       assert(is_valid(tbe));
       out_msg.addr := address;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := tbe.Dirty;
       if (tbe.Dirty) {
         out_msg.Type := CoherenceResponseType:WB_DIRTY;
@@ -1157,7 +1158,7 @@ machine(MachineType:L1Cache, "AMD Hammer-like protocol")
       assert(is_valid(tbe));
       out_msg.addr := address;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.DataBlk := tbe.DataBlk;
       out_msg.Dirty := tbe.Dirty;
       if (tbe.Dirty) {

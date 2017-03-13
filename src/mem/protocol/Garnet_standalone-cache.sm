@@ -69,6 +69,7 @@ machine(MachineType:L1Cache, "Garnet_standalone L1 Cache")
 
   // FUNCTIONS
   Tick clockEdge();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   // cpu/testers/networktest/networktest.cc generates packets of the type
   // ReadReq, INST_FETCH, and WriteReq.
@@ -148,7 +149,7 @@ machine(MachineType:L1Cache, "Garnet_standalone L1 Cache")
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:MSG;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
 
       // To send broadcasts in vnet0 (to emulate broadcast-based protocols),
       // replace the above line by the following:
@@ -163,7 +164,7 @@ machine(MachineType:L1Cache, "Garnet_standalone L1 Cache")
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:MSG;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Control;
     }
   }
@@ -173,7 +174,7 @@ machine(MachineType:L1Cache, "Garnet_standalone L1 Cache")
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:MSG;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Data;
     }
   }

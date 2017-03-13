@@ -1,3 +1,15 @@
+# Copyright (c) 2017 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -37,6 +49,8 @@ class RubyController(MemObject):
     cxx_header = "mem/ruby/slicc_interface/AbstractController.hh"
     abstract = True
     version = Param.Int("")
+    addr_ranges = VectorParam.AddrRange([AllMemory], "Address range this "
+                                        "controller responds to")
     cluster_id = Param.UInt32(0, "Id of this controller's cluster")
 
     transitions_per_cycle = \

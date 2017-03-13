@@ -201,6 +201,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   void wakeUpAllBuffers();
   void wakeUpBuffers(Addr a);
   Cycles curCycle();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   Entry getDirectoryEntry(Addr addr), return_by_pointer="yes" {
     Entry dir_entry := static_cast(Entry, "pointer", directory.lookup(addr));
@@ -652,7 +653,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
             out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
                                     TCC_select_low_bit, TCC_select_num_bits));
           } else {
-	        out_msg.Destination.add(map_Address_to_TCCdir(address));
+                out_msg.Destination.add(mapAddressToMachine(address, MachineType:TCCdir));
           }
         }
         out_msg.Destination.remove(in_msg.Requestor);
@@ -686,7 +687,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         if (noTCCdir) {
           //Don't need to notify TCC about reads
         } else {
-          out_msg.Destination.add(map_Address_to_TCCdir(address));
+          out_msg.Destination.add(mapAddressToMachine(address, MachineType:TCCdir));
           tbe.NumPendingAcks := tbe.NumPendingAcks + 1;
         }
         if (noTCCdir && CAB_TCC) {
@@ -724,7 +725,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
           if (noTCCdir) {
             //Don't need to notify TCC about reads
           } else {
-	    out_msg.Destination.add(map_Address_to_TCCdir(address));
+            out_msg.Destination.add(mapAddressToMachine(address, MachineType:TCCdir));
             tbe.NumPendingAcks := tbe.NumPendingAcks + 1;
           }
           if (noTCCdir && CAB_TCC) {
@@ -765,7 +766,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
               out_msg.Destination.add(mapAddressToRange(address,MachineType:TCC,
                                 TCC_select_low_bit, TCC_select_num_bits));
           } else {
-	          out_msg.Destination.add(map_Address_to_TCCdir(address));
+              out_msg.Destination.add(mapAddressToMachine(address, MachineType:TCCdir));
           }
         }
         out_msg.Destination.remove(in_msg.Requestor);

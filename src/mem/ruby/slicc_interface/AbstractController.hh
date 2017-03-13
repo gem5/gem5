@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2017 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2009-2014 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -33,8 +45,12 @@
 #include <iostream>
 #include <string>
 
+#include "base/addr_range.hh"
 #include "base/callback.hh"
+#include "mem/mem_object.hh"
+#include "mem/packet.hh"
 #include "mem/protocol/AccessPermission.hh"
+#include "mem/qport.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/DataBlock.hh"
@@ -42,10 +58,7 @@
 #include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/system/CacheRecorder.hh"
-#include "mem/packet.hh"
-#include "mem/qport.hh"
 #include "params/RubyController.hh"
-#include "mem/mem_object.hh"
 
 class Network;
 class GPUCoalescer;
@@ -123,12 +136,29 @@ class AbstractController : public MemObject, public Consumer
                                  const DataBlock &block, int size);
     void recvTimingResp(PacketPtr pkt);
 
+    const AddrRangeList &getAddrRanges() const { return addrRanges; }
+
   public:
     MachineID getMachineID() const { return m_machineID; }
 
     Stats::Histogram& getDelayHist() { return m_delayHistogram; }
     Stats::Histogram& getDelayVCHist(uint32_t index)
     { return *(m_delayVCHistogram[index]); }
+
+    /**
+     * Map an address to the correct MachineID
+     *
+     * This function querries the network for the NodeID of the
+     * destination for a given request using its address and the type
+     * of the destination. For example for a request with a given
+     * address to a directory it will return the MachineID of the
+     * authorative directory.
+     *
+     * @param the destination address
+     * @param the type of the destination
+     * @return the MachineID of the destination
+     */
+    MachineID mapAddressToMachine(Addr addr, MachineType mtype) const;
 
   protected:
     //! Profiles original cache requests including PUTs
@@ -223,6 +253,10 @@ class AbstractController : public MemObject, public Consumer
         SenderState(MachineID _id) : id(_id)
         {}
     };
+
+  private:
+    /** The address range to which the controller responds on the CPU side. */
+    const AddrRangeList addrRanges;
 };
 
 #endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

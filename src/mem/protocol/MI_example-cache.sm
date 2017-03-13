@@ -110,6 +110,7 @@ machine(MachineType:L1Cache, "MI Example L1 Cache")
   void set_tbe(TBE b);
   void unset_tbe();
   void profileMsgDelay(int virtualNetworkType, Cycles b);
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   Entry getCacheEntry(Addr address), return_by_pointer="yes" {
     return static_cast(Entry, "pointer", cacheMemory.lookup(address));
@@ -272,7 +273,7 @@ machine(MachineType:L1Cache, "MI Example L1 Cache")
     out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:GETX;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Control;
     }
   }
@@ -283,7 +284,7 @@ machine(MachineType:L1Cache, "MI Example L1 Cache")
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:PUTX;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.MessageSize := MessageSizeType:Data;
     }

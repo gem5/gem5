@@ -384,7 +384,7 @@ machine(MachineType:TCC, "TCC Cache")
     }
     enqueue(unblockToNB_out, UnblockMsg, 1) {
       out_msg.addr := address;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
@@ -555,7 +555,7 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // TCC, L3  respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := false;
       out_msg.Hit := false;
       out_msg.Ntsl := true;

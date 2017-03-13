@@ -817,7 +817,7 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
         enqueue(responseNetwork_out, ResponseMsg, response_latency_regionDir) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:DirReadyAck;
-          out_msg.Destination.add(map_Address_to_RegionDir(address));
+          out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
           out_msg.Sender := machineID;
           out_msg.MessageSize := MessageSizeType:Writeback_Control;
         }
@@ -1205,10 +1205,10 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
         out_msg.addr := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
-        out_msg.Destination.add(map_Address_to_RegionDir(address));
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
         out_msg.Shared := in_msg.Shared;
         out_msg.MessageSize := in_msg.MessageSize;
-        DPRINTF(RubySlicc, "out dest: %s\n", map_Address_to_RegionDir(address));
+        DPRINTF(RubySlicc, "out dest: %s\n", mapAddressToMachine(address, MachineType:RegionDir));
       }
     }
   }

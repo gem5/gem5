@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2017 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -29,6 +41,7 @@
 #include "mem/ruby/network/Network.hh"
 
 #include "base/misc.hh"
+#include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
@@ -73,6 +86,15 @@ Network::Network(const Params *p)
         BasicExtLink *ext_link = (*i);
         AbstractController *abs_cntrl = ext_link->params()->ext_node;
         abs_cntrl->initNetworkPtr(this);
+        const AddrRangeList &ranges = abs_cntrl->getAddrRanges();
+        if (!ranges.empty()) {
+            MachineID mid = abs_cntrl->getMachineID();
+            AddrMapNode addr_map_node = {
+                .id = mid.getNum(),
+                .ranges = ranges
+            };
+            addrMap.emplace(mid.getType(), addr_map_node);
+        }
     }
 
     // Register a callback function for combining the statistics
@@ -171,4 +193,22 @@ Network::setFromNetQueue(NodeID id, bool ordered, int network_num,
         m_fromNetQueues[id].push_back(nullptr);
     }
     m_fromNetQueues[id][network_num] = b;
+}
+
+NodeID
+Network::addressToNodeID(Addr addr, MachineType mtype)
+{
+    // Look through the address maps for entries with matching machine
+    // type to get the responsible node for this address.
+    const auto &matching_ranges = addrMap.equal_range(mtype);
+    for (auto it = matching_ranges.first; it != matching_ranges.second; it++) {
+        AddrMapNode &node = it->second;
+        auto &ranges = node.ranges;
+        for (AddrRange &range: ranges) {
+            if (range.contains(addr)) {
+                return node.id;
+            }
+        }
+    }
+    return MachineType_base_count(mtype);
 }

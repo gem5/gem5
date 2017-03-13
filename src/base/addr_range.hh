@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2014 ARM Limited
+ * Copyright (c) 2012, 2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -344,6 +344,55 @@ class AddrRange
             }
         }
         return false;
+    }
+
+    /**
+     * Remove the interleaving bits from an input address.
+     *
+     * This function returns a new address that doesn't have the bits
+     * that are use to determine which of the interleaved ranges it
+     * belongs to.
+     *
+     * e.g., if the input address is:
+     * -------------------------------
+     * | prefix | intlvBits | suffix |
+     * -------------------------------
+     * this function will return:
+     * -------------------------------
+     * |         0 | prefix | suffix |
+     * -------------------------------
+     *
+     * @param the input address
+     * @return the address without the interleaved bits
+     */
+    inline Addr removeIntlvBits(const Addr &a) const
+    {
+        const auto intlv_low_bit = intlvHighBit - intlvBits + 1;
+        return insertBits(a >> intlvBits, intlv_low_bit - 1, 0, a);
+    }
+
+    /**
+     * Determine the offset of an address within the range.
+     *
+     * This function returns the offset of the given address from the
+     * starting address discarding any bits that are used for
+     * interleaving. This way we can convert the input address to a
+     * new unique address in a continuous range that starts from 0.
+     *
+     * @param the input address
+     * @return the flat offset in the address range
+     */
+    Addr getOffset(const Addr& a) const
+    {
+        bool in_range = a >= _start && a <= _end;
+        if (!in_range) {
+            return MaxAddr;
+        }
+        if (interleaved()) {
+            return removeIntlvBits(a) - removeIntlvBits(_start);
+        } else {
+            return a - _start;
+        }
     }
 
     /**

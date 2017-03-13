@@ -152,6 +152,7 @@ machine(MachineType:L2Cache, "Token protocol")
   Tick clockEdge();
   void set_cache_entry(AbstractCacheEntry b);
   void unset_cache_entry();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   Entry getCacheEntry(Addr address), return_by_pointer="yes" {
     Entry cache_entry := static_cast(Entry, "pointer", L2cache.lookup(address));
@@ -522,7 +523,7 @@ machine(MachineType:L2Cache, "Token protocol")
            //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
            //out_msg.Destination.remove(map_L1CacheMachId_to_L2Cache(address, in_msg.Requestor));
 
-           out_msg.Destination.add(map_Address_to_Directory(address));
+           out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
            out_msg.MessageSize := MessageSizeType:Request_Control;
            out_msg.AccessMode := in_msg.AccessMode;
            out_msg.Prefetch := in_msg.Prefetch;
@@ -541,7 +542,7 @@ machine(MachineType:L2Cache, "Token protocol")
         out_msg.addr := address;
         out_msg.Type := in_msg.Type;
         out_msg.Sender := machineID;
-        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.Tokens := in_msg.Tokens;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.DataBlk := in_msg.DataBlk;
@@ -557,7 +558,7 @@ machine(MachineType:L2Cache, "Token protocol")
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
-        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.Tokens := cache_entry.Tokens;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -570,7 +571,7 @@ machine(MachineType:L2Cache, "Token protocol")
     enqueue(responseNetwork_out, ResponseMsg, l2_response_latency) {
       out_msg.addr := address;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Tokens := cache_entry.Tokens;
       out_msg.DataBlk := cache_entry.DataBlk;
       out_msg.Dirty := cache_entry.Dirty;

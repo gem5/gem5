@@ -1,3 +1,15 @@
+# Copyright (c) 2017 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -35,9 +47,5 @@ class RubyDirectoryMemory(SimObject):
     type = 'RubyDirectoryMemory'
     cxx_class = 'DirectoryMemory'
     cxx_header = "mem/ruby/structures/DirectoryMemory.hh"
-    version = Param.Int(0, "")
-    size = Param.MemorySize("1GB", "capacity in bytes")
-    # the default value of the numa high bit is specified in the command line
-    # option and must be passed into the directory memory sim object
-    numa_high_bit = Param.Int("numa high bit")
-    system = Param.System(Parent.any, "system object")
+    addr_ranges = VectorParam.AddrRange(
+        Parent.addr_ranges, "Address range this directory responds to")

@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012, 2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -84,16 +84,6 @@ def define_options(parser):
 def setup_memory_controllers(system, ruby, dir_cntrls, options):
     ruby.block_size_bytes = options.cacheline_size
     ruby.memory_size_bits = 48
-    block_size_bits = int(math.log(options.cacheline_size, 2))
-
-    if options.numa_high_bit:
-        numa_bit = options.numa_high_bit
-    else:
-        # if the numa_bit is not specified, set the directory bits as the
-        # lowest bits above the block offset bits, and the numa_bit as the
-        # highest of those directory bits
-        dir_bits = int(math.log(options.num_dirs, 2))
-        numa_bit = block_size_bits + dir_bits - 1
 
     index = 0
     mem_ctrls = []
@@ -104,8 +94,6 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
     # for each address range as the abstract memory can handle only one
     # contiguous address range as of now.
     for dir_cntrl in dir_cntrls:
-        dir_cntrl.directory.numa_high_bit = numa_bit
-
         crossbar = None
         if len(system.mem_ranges) > 1:
             crossbar = IOXBar()
@@ -207,6 +195,37 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
         ruby.access_backing_store = True
         ruby.phys_mem = SimpleMemory(range=system.mem_ranges[0],
                                      in_addr_map=False)
+
+def create_directories(options, mem_ranges, ruby_system):
+    dir_cntrl_nodes = []
+    if options.numa_high_bit:
+        numa_bit = options.numa_high_bit
+    else:
+        # if the numa_bit is not specified, set the directory bits as the
+        # lowest bits above the block offset bits, and the numa_bit as the
+        # highest of those directory bits
+        dir_bits = int(math.log(options.num_dirs, 2))
+        block_size_bits = int(math.log(options.cacheline_size, 2))
+        numa_bit = block_size_bits + dir_bits - 1
+
+    for i in xrange(options.num_dirs):
+        dir_ranges = []
+        for r in mem_ranges:
+            addr_range = m5.objects.AddrRange(r.start, size = r.size(),
+                                              intlvHighBit = numa_bit,
+                                              intlvBits = dir_bits,
+                                              intlvMatch = i)
+            dir_ranges.append(addr_range)
+
+        dir_cntrl = Directory_Controller()
+        dir_cntrl.version = i
+        dir_cntrl.directory = RubyDirectoryMemory()
+        dir_cntrl.ruby_system = ruby_system
+        dir_cntrl.addr_ranges = dir_ranges
+
+        exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
+        dir_cntrl_nodes.append(dir_cntrl)
+    return dir_cntrl_nodes
 
 def send_evicts(options):
     # currently, 2 scenarios warrant forwarding evictions to the CPU:

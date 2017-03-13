@@ -233,6 +233,7 @@ machine(MachineType:L2Cache, "Token protocol")
   void unset_cache_entry();
   void set_tbe(TBE b);
   void unset_tbe();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   Entry getCacheEntry(Addr address), return_by_pointer="yes" {
     return static_cast(Entry, "pointer", L2cache[address]);
@@ -730,7 +731,7 @@ machine(MachineType:L2Cache, "Token protocol")
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.RequestorMachine := MachineType:L2Cache;
         out_msg.Requestor := machineID;
-        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Request_Control;
       }
     }
@@ -743,7 +744,7 @@ machine(MachineType:L2Cache, "Token protocol")
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.RequestorMachine := MachineType:L2Cache;
         out_msg.Requestor := machineID;
-        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Request_Control;
       }
     }
@@ -755,7 +756,7 @@ machine(MachineType:L2Cache, "Token protocol")
       out_msg.Type := CoherenceRequestType:PUTX;
       out_msg.RequestorMachine := MachineType:L2Cache;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -766,7 +767,7 @@ machine(MachineType:L2Cache, "Token protocol")
       out_msg.Type := CoherenceRequestType:PUTO;
       out_msg.Requestor := machineID;
       out_msg.RequestorMachine := MachineType:L2Cache;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -778,7 +779,7 @@ machine(MachineType:L2Cache, "Token protocol")
       out_msg.Type := CoherenceRequestType:PUTO_SHARERS;
       out_msg.Requestor := machineID;
       out_msg.RequestorMachine := MachineType:L2Cache;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -1147,7 +1148,7 @@ machine(MachineType:L2Cache, "Token protocol")
     enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L2Cache;
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
@@ -1159,7 +1160,7 @@ machine(MachineType:L2Cache, "Token protocol")
     enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK_EXCLUSIVE;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L2Cache;
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
@@ -1432,7 +1433,7 @@ machine(MachineType:L2Cache, "Token protocol")
       out_msg.addr := address;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L2Cache;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := tbe.Dirty;
       if (tbe.Dirty) {
         out_msg.Type := CoherenceResponseType:WRITEBACK_DIRTY_DATA;
@@ -1561,7 +1562,7 @@ machine(MachineType:L2Cache, "Token protocol")
     enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:DMA_ACK;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L2Cache;
       out_msg.MessageSize := MessageSizeType:Unblock_Control;

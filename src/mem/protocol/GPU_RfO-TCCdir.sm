@@ -248,7 +248,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
   void unset_cache_entry();
   void set_tbe(TBE b);
   void unset_tbe();
-
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   bool presentOrAvail(Addr addr) {
     return directory.isTagPresent(addr) || directory.cacheAvail(addr);
@@ -765,7 +765,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:RdBlk;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Request_Control;
     }
   }
@@ -775,7 +775,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:RdBlkS;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Request_Control;
     }
   }
@@ -785,7 +785,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:RdBlkM;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Request_Control;
     }
   }
@@ -818,7 +818,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
    enqueue(requestToNB_out, CPURequestMsg, issue_latency) {
      out_msg.addr := address;
      out_msg.Requestor := machineID;
-     out_msg.Destination.add(map_Address_to_Directory(address));
+     out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
      out_msg.MessageSize := MessageSizeType:Request_Control;
      out_msg.Type := CoherenceRequestType:VicDirty;
      if (cache_entry.CacheState == State:O) {
@@ -834,7 +834,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
     enqueue(requestToNB_out, CPURequestMsg, issue_latency) {
       out_msg.addr := address;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Request_Control;
       out_msg.Type := CoherenceRequestType:VicClean;
       if (cache_entry.CacheState == State:S) {
@@ -1093,7 +1093,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // TCC, L3  respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := false;
       out_msg.Hit := false;
       out_msg.Ntsl := true;
@@ -1107,7 +1107,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and TCC respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := false;
       out_msg.Ntsl := true;
       out_msg.Hit := false;
@@ -1121,7 +1121,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and TCC respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := false;  // only true if sending back data i think
       out_msg.Hit := false;
       out_msg.Ntsl := false;
@@ -1138,7 +1138,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.DataBlk := getDataBlock(address);
       if (is_valid(tbe)) {
         out_msg.Dirty := tbe.Dirty;
@@ -1157,7 +1157,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.DataBlk := getDataBlock(address);
       if (is_valid(tbe)) {
         out_msg.Dirty := tbe.Dirty;
@@ -1172,7 +1172,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
     enqueue(requestToNB_out, CPURequestMsg, issue_latency) {
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:WrCancel;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Requestor := machineID;
       out_msg.MessageSize := MessageSizeType:Request_Control;
     }
@@ -1387,7 +1387,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
   action(uu_sendUnblock, "uu", desc="state changed, unblock") {
     enqueue(unblockToNB_out, UnblockMsg, issue_latency) {
       out_msg.addr := address;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
@@ -1510,7 +1510,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
      enqueue(responseToNB_out, ResponseMsg, issue_latency) {
          out_msg.addr := address;
          out_msg.Type := CoherenceResponseType:StaleNotif;
-         out_msg.Destination.add(map_Address_to_Directory(address));
+         out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
          out_msg.Sender := machineID;
          out_msg.MessageSize := MessageSizeType:Response_Control;
      }
@@ -1521,7 +1521,7 @@ machine(MachineType:TCCdir, "AMD read-for-ownership directory for TCC (aka GPU L
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUData;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.DataBlk := tbe.DataBlk;
       out_msg.Dirty := tbe.Dirty;
       if (tbe.Shared) {

@@ -366,7 +366,7 @@ machine(MachineType:TCC, "TCC Cache")
     }
     enqueue(unblockToNB_out, UnblockMsg, 1) {
       out_msg.addr := address;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }
@@ -380,7 +380,7 @@ machine(MachineType:TCC, "TCC Cache")
           out_msg.addr := address;
           out_msg.Type := in_msg.Type;
           out_msg.Requestor := machineID;
-          out_msg.Destination.add(map_Address_to_Directory(address));
+          out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
           out_msg.Shared := false; // unneeded for this request
           out_msg.MessageSize := in_msg.MessageSize;
           DPRINTF(RubySlicc, "%s\n", out_msg);
@@ -479,7 +479,7 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.addr := address;
         out_msg.Requestor := machineID;
         out_msg.WTRequestor := in_msg.Requestor;
-        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Data;
         out_msg.Type := CoherenceRequestType:WriteThrough;
         out_msg.Dirty := true;
@@ -494,7 +494,7 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.addr := address;
       out_msg.Requestor := machineID;
       out_msg.WTRequestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Data;
       out_msg.Type := CoherenceRequestType:WriteThrough;
       out_msg.Dirty := true;
@@ -509,7 +509,7 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.addr := address;
         out_msg.Requestor := machineID;
         out_msg.WTRequestor := in_msg.Requestor;
-        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Data;
         out_msg.Type := CoherenceRequestType:Atomic;
         out_msg.Dirty := true;
@@ -523,7 +523,7 @@ machine(MachineType:TCC, "TCC Cache")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // TCC, L3  respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := false;
       out_msg.Hit := false;
       out_msg.Ntsl := true;

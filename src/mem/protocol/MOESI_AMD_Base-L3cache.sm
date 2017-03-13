@@ -155,7 +155,7 @@ machine(MachineType:L3Cache, "L3")
   void unset_tbe();
   void wakeUpAllBuffers();
   void wakeUpBuffers(Addr a);
-
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   // FUNCTION DEFINITIONS
   Tick clockEdge();
@@ -405,7 +405,7 @@ machine(MachineType:L3Cache, "L3")
         out_msg.addr := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
-        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.Shared := false; // unneeded for this request
         out_msg.MessageSize := in_msg.MessageSize;
         DPRINTF(RubySlicc, "%s\n", out_msg);
@@ -433,7 +433,7 @@ machine(MachineType:L3Cache, "L3")
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:VicDirty;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Request_Control;
     }
   }
@@ -455,7 +455,8 @@ machine(MachineType:L3Cache, "L3")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := false;
       out_msg.Hit := false;
       out_msg.Ntsl := true;
@@ -469,7 +470,8 @@ machine(MachineType:L3Cache, "L3")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := false;
       out_msg.Hit := true;
       out_msg.Ntsl := false;
@@ -483,7 +485,8 @@ machine(MachineType:L3Cache, "L3")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := false;
       out_msg.Hit := false;
       out_msg.Ntsl := false;
@@ -497,7 +500,8 @@ machine(MachineType:L3Cache, "L3")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.DataBlk := cache_entry.DataBlk;
       assert(cache_entry.Dirty);
       out_msg.Dirty := true;
@@ -512,7 +516,7 @@ machine(MachineType:L3Cache, "L3")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.DataBlk := tbe.DataBlk;
       assert(tbe.Dirty);
       out_msg.Dirty := true;
@@ -528,7 +532,7 @@ machine(MachineType:L3Cache, "L3")
       out_msg.addr := address;
       out_msg.Type := CoherenceRequestType:WrCancel;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Request_Control;
     }
   }
@@ -571,7 +575,7 @@ machine(MachineType:L3Cache, "L3")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUData;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.DataBlk := tbe.DataBlk;
       out_msg.Dirty := tbe.Dirty;
       if (tbe.Shared) {
@@ -595,7 +599,7 @@ machine(MachineType:L3Cache, "L3")
   action(uu_sendUnblock, "uu", desc="state changed, unblock") {
     enqueue(unblockNetwork_out, UnblockMsg, l3_request_latency) {
       out_msg.addr := address;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
       DPRINTF(RubySlicc, "%s\n", out_msg);
     }

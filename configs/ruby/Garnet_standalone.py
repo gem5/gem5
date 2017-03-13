@@ -32,7 +32,7 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
-from Ruby import create_topology
+from Ruby import create_topology, create_directories
 
 #
 # Declare caches used by the protocol
@@ -59,7 +59,6 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
     # Therefore the l1 controller nodes must be listed before
     # the directory nodes and directory nodes before dma nodes, etc.
     l1_cntrl_nodes = []
-    dir_cntrl_nodes = []
 
     #
     # Must create the individual controllers before the network to ensure the
@@ -101,23 +100,9 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         l1_cntrl.forwardFromCache = MessageBuffer()
 
 
-    phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
-    assert(phys_mem_size % options.num_dirs == 0)
-    mem_module_size = phys_mem_size / options.num_dirs
-
-    for i in xrange(options.num_dirs):
-        dir_size = MemorySize('0B')
-        dir_size.value = mem_module_size
-
-        dir_cntrl = Directory_Controller(version = i,
-                                         directory = \
-                                         RubyDirectoryMemory(version = i,
-                                                             size = dir_size),
-                                         ruby_system = ruby_system)
-
-        exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
-        dir_cntrl_nodes.append(dir_cntrl)
-
+    dir_cntrl_nodes = create_directories(options, system.mem_ranges,
+                                         ruby_system)
+    for dir_cntrl in dir_cntrl_nodes:
         # Connect the directory controllers and the network
         dir_cntrl.requestToDir = MessageBuffer()
         dir_cntrl.forwardToDir = MessageBuffer()

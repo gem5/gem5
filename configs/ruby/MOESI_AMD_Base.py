@@ -166,24 +166,14 @@ class L3Cntrl(L3Cache_Controller, CntrlBase):
         self.probeToL3 = probe_to_l3
         self.respToL3 = resp_to_l3
 
-class DirMem(RubyDirectoryMemory, CntrlBase):
-    def create(self, options, ruby_system, system):
-        self.version = self.versionCount()
-
-        phys_mem_size = AddrRange(options.mem_size).size()
-        mem_module_size = phys_mem_size / options.num_dirs
-        dir_size = MemorySize('0B')
-        dir_size.value = mem_module_size
-        self.size = dir_size
-
 class DirCntrl(Directory_Controller, CntrlBase):
-    def create(self, options, ruby_system, system):
+    def create(self, options, dir_ranges, ruby_system, system):
         self.version = self.versionCount()
 
         self.response_latency = 30
 
-        self.directory = DirMem()
-        self.directory.create(options, ruby_system, system)
+        self.addr_ranges = dir_ranges
+        self.directory = RubyDirectoryMemory()
 
         self.L3CacheMemory = L3Cache()
         self.L3CacheMemory.create(options, ruby_system, system)
@@ -245,10 +235,29 @@ def create_system(options, full_system, system, dma_devices, ruby_system):
     # This is the base crossbar that connects the L3s, Dirs, and cpu
     # Cluster
     mainCluster = Cluster(extBW = 512, intBW = 512) # 1 TB/s
+
+    if options.numa_high_bit:
+        numa_bit = options.numa_high_bit
+    else:
+        # if the numa_bit is not specified, set the directory bits as the
+        # lowest bits above the block offset bits, and the numa_bit as the
+        # highest of those directory bits
+        dir_bits = int(math.log(options.num_dirs, 2))
+        block_size_bits = int(math.log(options.cacheline_size, 2))
+        numa_bit = block_size_bits + dir_bits - 1
+
     for i in xrange(options.num_dirs):
+        dir_ranges = []
+        for r in system.mem_ranges:
+            addr_range = m5.objects.AddrRange(r.start, size = r.size(),
+                                              intlvHighBit = numa_bit,
+                                              intlvBits = dir_bits,
+                                              intlvMatch = i)
+            dir_ranges.append(addr_range)
+
 
         dir_cntrl = DirCntrl(TCC_select_num_bits = 0)
-        dir_cntrl.create(options, ruby_system, system)
+        dir_cntrl.create(options, dir_ranges, ruby_system, system)
 
         # Connect the Directory controller to the ruby network
         dir_cntrl.requestFromCores = MessageBuffer(ordered = True)

@@ -31,7 +31,7 @@ import math
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
-from Ruby import create_topology
+from Ruby import create_topology, create_directories
 from Ruby import send_evicts
 
 #
@@ -65,7 +65,6 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
     # listed before the directory nodes and directory nodes before dma nodes, etc.
     #
     l1_cntrl_nodes = []
-    dir_cntrl_nodes = []
     dma_cntrl_nodes = []
 
     #
@@ -143,10 +142,6 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
         l1_cntrl.responseToCache.slave = ruby_system.network.master
 
 
-    phys_mem_size = sum(map(lambda r: r.size(), system.mem_ranges))
-    assert(phys_mem_size % options.num_dirs == 0)
-    mem_module_size = phys_mem_size / options.num_dirs
-
     #
     # determine size and index bits for probe filter
     # By default, the probe filter size is configured to be twice the
@@ -177,27 +172,18 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
                                           clk_domain=ruby_system.clk_domain,
                                           clk_divider=3)
 
-    for i in xrange(options.num_dirs):
-        dir_size = MemorySize('0B')
-        dir_size.value = mem_module_size
-
+    dir_cntrl_nodes = create_directories(options, system.mem_ranges,
+                                         ruby_system)
+    for dir_cntrl in dir_cntrl_nodes:
         pf = ProbeFilter(size = pf_size, assoc = 4,
                          start_index_bit = pf_start_bit)
 
-        dir_cntrl = Directory_Controller(version = i,
-                                         directory = RubyDirectoryMemory(
-                                            version = i, size = dir_size),
-                                         probeFilter = pf,
-                                         probe_filter_enabled = options.pf_on,
-                                         full_bit_dir_enabled = options.dir_on,
-                                         transitions_per_cycle = options.ports,
-                                         ruby_system = ruby_system)
+        dir_cntrl.probeFilter = pf
+        dir_cntrl.probe_filter_enabled = options.pf_on
+        dir_cntrl.full_bit_dir_enabled = options.dir_on
 
         if options.recycle_latency:
             dir_cntrl.recycle_latency = options.recycle_latency
-
-        exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
-        dir_cntrl_nodes.append(dir_cntrl)
 
         # Connect the directory controller to the network
         dir_cntrl.forwardFromDir = MessageBuffer()

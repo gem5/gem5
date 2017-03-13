@@ -197,6 +197,7 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
   void wakeUpAllBuffers();
   void wakeUpBuffers(Addr a);
   Cycles curCycle();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   int blockBits,  default="RubySystem::getBlockSizeBits()";
   int blockBytes, default="RubySystem::getBlockSizeBytes()";
@@ -493,7 +494,7 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
         out_msg.Dirty := in_msg.Dirty;
         out_msg.Requestor := in_msg.Requestor;
         out_msg.WTRequestor := in_msg.WTRequestor;
-        out_msg.Destination.add(map_Address_to_Directory(in_msg.addr));
+        out_msg.Destination.add(mapAddressToMachine(in_msg.addr, MachineType:Directory));
         out_msg.Shared := in_msg.Shared;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.Private := true;
@@ -591,7 +592,7 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
               out_msg.WTRequestor := in_msg.WTRequestor;
               out_msg.InitialRequestTime := curCycle();
               // will this always be ok? probably not for multisocket
-              out_msg.Destination.add(map_Address_to_RegionDir(address));
+              out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
               out_msg.MessageSize := MessageSizeType:Request_Control;
               DPRINTF(RubySlicc, "Private request %s\n", out_msg);
           }
@@ -613,7 +614,7 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
               out_msg.WTRequestor := in_msg.WTRequestor;
               out_msg.InitialRequestTime := curCycle();
               // will this always be ok? probably not for multisocket
-              out_msg.Destination.add(map_Address_to_RegionDir(address));
+              out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
               out_msg.MessageSize := MessageSizeType:Request_Control;
           }
           cache_entry.ProbeRequestTime := curCycle();
@@ -628,7 +629,8 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
         out_msg.addr := getRegionBase(address); // use the actual address so the demand request can be fulfilled
         out_msg.Type := CoherenceRequestType:CleanWbRequest;
         out_msg.Requestor := machineID;
-        out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+        // will this always be ok? probably not for multisocket
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.Dirty := tbe.dirty;
           APPEND_TRANSITION_COMMENT(getRegionBase(address));
@@ -647,7 +649,7 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
               out_msg.WTRequestor := in_msg.WTRequestor;
               out_msg.InitialRequestTime := curCycle();
               // will this always be ok? probably not for multisocket
-              out_msg.Destination.add(map_Address_to_RegionDir(address));
+              out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
               out_msg.MessageSize := MessageSizeType:Request_Control;
           }
           cache_entry.ProbeRequestTime := curCycle();
@@ -663,7 +665,8 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
         out_msg.addr := getRegionBase(address);
         out_msg.Type := CoherenceResponseType:CPUPrbResp;
         out_msg.Sender := machineID;
-        out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+        // will this always be ok? probably not for multisocket
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
         out_msg.MessageSize := MessageSizeType:Response_Control;
     }
   }
@@ -675,7 +678,8 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
           out_msg.addr := tbe.DemandAddress;
           out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
           out_msg.Sender := getPeer(machineID,address);
-          out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+          // will this always be ok? probably not for multisocket
+          out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
           out_msg.Dirty := false;  // only true if sending back data i think
           out_msg.Hit := false;
           out_msg.Ntsl := false;
@@ -695,7 +699,8 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
         out_msg.Type := CoherenceResponseType:CPUPrbResp;
         out_msg.Sender := machineID;
         out_msg.NotCached := true;
-        out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+        // will this always be ok? probably not for multisocket
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
         out_msg.MessageSize := MessageSizeType:Response_Control;
         out_msg.Dirty := tbe.dirty;
     }
@@ -706,7 +711,8 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
       out_msg.addr := getRegionBase(address);
       out_msg.Type := CoherenceResponseType:CPUPrbResp;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
       out_msg.MessageSize := MessageSizeType:Response_Control;
     }
   }
@@ -717,7 +723,8 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
       out_msg.Type := CoherenceResponseType:CPUPrbResp;
       out_msg.Sender := machineID;
       out_msg.NotCached := true;
-      out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+       // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
       out_msg.MessageSize := MessageSizeType:Response_Control;
     }
   }
@@ -727,7 +734,8 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
       out_msg.addr := getRegionBase(address);
       out_msg.Type := CoherenceResponseType:PrivateAck;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
       out_msg.MessageSize := MessageSizeType:Response_Control;
     }
   }
@@ -739,7 +747,8 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
           out_msg.addr := getRegionBase(address);
           out_msg.Type := CoherenceResponseType:RegionWbAck;
           out_msg.Sender := machineID;
-          out_msg.Destination.add(map_Address_to_RegionDir(address)); // will this always be ok? probably not for multisocket
+          // will this always be ok? probably not for multisocket
+          out_msg.Destination.add(mapAddressToMachine(address, MachineType:RegionDir));
           out_msg.MessageSize := MessageSizeType:Response_Control;
         }
       }
@@ -810,7 +819,8 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
                 out_msg.addr := in_msg.DemandAddress;
                 out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
                 out_msg.Sender := getPeer(machineID,address);
-                out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+                // will this always be ok? probably not for multisocket
+                out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
                 out_msg.Dirty := false;  // only true if sending back data i think
                 out_msg.Hit := false;
                 out_msg.Ntsl := false;

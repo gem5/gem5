@@ -459,6 +459,7 @@ out << "${{dm.ident}} = " << printAddress(m_${{dm.ident}}) << " ";''')
             code('#include "mem/protocol/AccessPermission.hh"')
 
         if self.isMachineType:
+            code('#include <functional>')
             code('#include "base/misc.hh"')
             code('#include "mem/ruby/common/Address.hh"')
             code('#include "mem/ruby/common/TypeDefines.hh"')
@@ -498,6 +499,20 @@ std::string ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj);
 ${{self.c_ident}} &operator++(${{self.c_ident}} &e);
 ''')
 
+        if self.isMachineType:
+            code('''
+
+// define a hash function for the MachineType class
+namespace std {
+template<>
+struct hash<MachineType> {
+    std::size_t operator()(const MachineType &mtype) const {
+        return hash<size_t>()(static_cast<size_t>(mtype));
+    }
+};
+}
+
+''')
         # MachineType hack used to set the base component id for each Machine
         if self.isMachineType:
             code('''

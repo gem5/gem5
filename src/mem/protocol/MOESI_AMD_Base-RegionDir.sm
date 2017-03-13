@@ -171,6 +171,7 @@ machine(MachineType:RegionDir, "Region Directory for AMD_Base-like protocol")
   void wakeUpAllBuffers();
   void wakeUpBuffers(Addr a);
   Cycles curCycle();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   int blockBits,  default="RubySystem::getBlockSizeBits()";
   int blockBytes, default="RubySystem::getBlockSizeBytes()";
@@ -479,7 +480,7 @@ machine(MachineType:RegionDir, "Region Directory for AMD_Base-like protocol")
         out_msg.Dirty := in_msg.Dirty;
         out_msg.Requestor := getCoreMachine(in_msg.Requestor,address);
         out_msg.WTRequestor := in_msg.WTRequestor;
-        out_msg.Destination.add(map_Address_to_Directory(in_msg.addr));
+        out_msg.Destination.add(mapAddressToMachine(in_msg.addr, MachineType:Directory));
         out_msg.Shared := in_msg.Shared;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.Private := in_msg.Private;
@@ -505,7 +506,7 @@ machine(MachineType:RegionDir, "Region Directory for AMD_Base-like protocol")
         out_msg.Dirty := in_msg.Dirty;
         out_msg.Requestor := getCoreMachine(in_msg.Requestor,address);
         out_msg.WTRequestor := in_msg.WTRequestor;
-        out_msg.Destination.add(map_Address_to_Directory(in_msg.addr));
+        out_msg.Destination.add(mapAddressToMachine(in_msg.addr, MachineType:Directory));
         out_msg.Shared := in_msg.Shared;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.Private := in_msg.Private;
@@ -532,7 +533,7 @@ machine(MachineType:RegionDir, "Region Directory for AMD_Base-like protocol")
         out_msg.Dirty := in_msg.Dirty;
         out_msg.Requestor := getCoreMachine(in_msg.Requestor,address);
         out_msg.WTRequestor := in_msg.WTRequestor;
-        out_msg.Destination.add(map_Address_to_Directory(in_msg.addr));
+        out_msg.Destination.add(mapAddressToMachine(in_msg.addr, MachineType:Directory));
         out_msg.Shared := in_msg.Shared;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.Private := in_msg.Private;
@@ -562,7 +563,7 @@ machine(MachineType:RegionDir, "Region Directory for AMD_Base-like protocol")
         out_msg.Dirty := in_msg.Dirty;
         out_msg.Requestor := getCoreMachine(in_msg.Requestor,address);
         out_msg.WTRequestor := in_msg.WTRequestor;
-        out_msg.Destination.add(map_Address_to_Directory(in_msg.addr));
+        out_msg.Destination.add(mapAddressToMachine(in_msg.addr, MachineType:Directory));
         out_msg.Shared := in_msg.Shared;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.Private := in_msg.Private;

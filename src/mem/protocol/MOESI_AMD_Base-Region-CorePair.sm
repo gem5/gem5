@@ -237,6 +237,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   void wakeUpAllBuffers();
   void wakeUpBuffers(Addr a);
   Cycles curCycle();
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   // END STRUCTURE DEFINITIONS
 
@@ -1119,7 +1120,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:StaleNotif;
         out_msg.Sender := machineID;
-        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.MessageSize := MessageSizeType:Response_Control;
         DPRINTF(RubySlicc, "%s\n", out_msg);
       }
@@ -1201,7 +1202,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:CPUData;
         out_msg.Sender := machineID;
-        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
         out_msg.DataBlk := tbe.DataBlk;
         out_msg.Dirty := tbe.Dirty;
         if (tbe.Shared) {
@@ -1221,7 +1222,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := false;
       out_msg.Hit := false;
       out_msg.Ntsl := true;
@@ -1236,7 +1238,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Dirty := false;
       out_msg.Ntsl := true;
       out_msg.Hit := false;
@@ -1252,7 +1255,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       assert(addressInCore(address) || is_valid(tbe));
       out_msg.Dirty := false;  // only true if sending back data i think
       out_msg.Hit := true;
@@ -1268,7 +1272,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;  // L3 and CPUs respond in same way to probes
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       if (addressInCore(address)) {
         out_msg.Hit := true;
       } else {
@@ -1288,7 +1293,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.DataBlk := cache_entry.DataBlk;
       assert(cache_entry.Dirty);
       out_msg.Dirty := true;
@@ -1305,7 +1311,8 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address)); // will this always be ok? probably not for multisocket
+      // will this always be ok? probably not for multisocket
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.DataBlk := cache_entry.DataBlk;
       assert(cache_entry.Dirty);
       out_msg.Dirty := true;
@@ -1323,7 +1330,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUPrbResp;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.DataBlk := tbe.DataBlk;
       assert(tbe.Dirty);
       out_msg.Dirty := true;
@@ -1358,7 +1365,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
     enqueue(responseNetwork_out, ResponseMsg, issue_latency) {
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:CPUCancelWB;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.Sender := machineID;
       out_msg.MessageSize := MessageSizeType:Response_Control;
     }
@@ -1372,7 +1379,7 @@ machine(MachineType:CorePair, "CP-like Core Coherence")
   action(uu_sendUnblock, "uu", desc="state changed, unblock") {
     enqueue(unblockNetwork_out, UnblockMsg, issue_latency) {
       out_msg.addr := address;
-      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
       out_msg.wasValid := isValid(address);
       DPRINTF(RubySlicc, "%s\n", out_msg);
