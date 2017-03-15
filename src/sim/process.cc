@@ -151,7 +151,7 @@ Process::Process(ProcessParams * params, ObjectFile * obj_file)
             !objFile->loadLocalSymbols(debugSymbolTable) ||
             !objFile->loadWeakSymbols(debugSymbolTable)) {
             delete debugSymbolTable;
-            debugSymbolTable = NULL;
+            debugSymbolTable = nullptr;
         }
     }
 }
@@ -259,7 +259,7 @@ Process::findFreeContext()
         if (ThreadContext::Halted == it->status())
             return it;
     }
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -406,7 +406,7 @@ Process::syscall(int64_t callnum, ThreadContext *tc, Fault *fault)
     numSyscalls++;
 
     SyscallDesc *desc = getDesc(callnum);
-    if (desc == NULL)
+    if (desc == nullptr)
         fatal("Syscall %d out of range", callnum);
 
     desc->doSyscall(callnum, this, tc, fault);
@@ -426,7 +426,7 @@ Process::findDriver(std::string filename)
             return d;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -480,7 +480,7 @@ Process::getStartPC()
 Process *
 ProcessParams::create()
 {
-    Process *process = NULL;
+    Process *process = nullptr;
 
     // If not specified, set the executable parameter equal to the
     // simulated system's zeroth command line parameter
@@ -489,7 +489,7 @@ ProcessParams::create()
     }
 
     ObjectFile *obj_file = createObjectFile(executable);
-    if (obj_file == NULL) {
+    if (obj_file == nullptr) {
         fatal("Can't load object file %s", executable);
     }
 
@@ -628,7 +628,7 @@ ProcessParams::create()
 #error "THE_ISA not set"
 #endif
 
-    if (process == NULL)
+    if (process == nullptr)
         fatal("Unknown error creating process object.");
     return process;
 }

@@ -98,7 +98,7 @@ class Process : public SimObject
      * Find an emulated device driver.
      *
      * @param filename Name of the device (under /dev)
-     * @return Pointer to driver object if found, else NULL
+     * @return Pointer to driver object if found, else nullptr
      */
     EmulatedDriver *findDriver(std::string filename);
 
