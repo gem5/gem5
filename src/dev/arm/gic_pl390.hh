@@ -360,7 +360,7 @@ class Pl390 : public BaseGic
     void unserialize(CheckpointIn &cp) override;
 
   public: /* PioDevice */
-    AddrRangeList getAddrRanges() const { return addrRanges; }
+    AddrRangeList getAddrRanges() const override { return addrRanges; }
 
     /** A PIO read to the device, immediately split up into
      * readDistributor() or readCpu()
