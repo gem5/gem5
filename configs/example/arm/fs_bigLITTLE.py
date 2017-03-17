@@ -44,6 +44,7 @@ import argparse
 import os
 import sys
 import m5
+import m5.util
 from m5.objects import *
 
 m5.util.addToPath("../../")
@@ -52,6 +53,7 @@ from common import SysPaths
 from common import CpuConfig
 
 import devices
+from devices import AtomicCluster, KvmCluster
 
 
 default_dtb = 'armv8_gem5_v1_big_little_2_2.dtb'
@@ -60,6 +62,21 @@ default_disk = 'aarch64-ubuntu-trusty-headless.img'
 default_rcs = 'bootscript.rcS'
 
 default_mem_size= "2GB"
+
+def _to_ticks(value):
+    """Helper function to convert a latency from string format to Ticks"""
+
+    return m5.ticks.fromSeconds(m5.util.convert.anyToLatency(value))
+
+def _using_pdes(root):
+    """Determine if the simulator is using multiple parallel event queues"""
+
+    for obj in root.descendants():
+        if not m5.proxy.isproxy(obj.eventq_index) and \
+               obj.eventq_index != root.eventq_index:
+            return True
+
+    return False
 
 
 class BigCluster(devices.CpuCluster):
@@ -107,6 +124,15 @@ def createSystem(caches, kernel, bootscript, disks=[]):
 
     return sys
 
+cpu_types = {
+    "atomic" : (AtomicCluster, AtomicCluster),
+    "timing" : (BigCluster, LittleCluster),
+}
+
+# Only add the KVM CPU if it has been compiled into gem5
+if devices.have_kvm:
+    cpu_types["kvm"] = (KvmCluster, KvmCluster)
+
 
 def addOptions(parser):
     parser.add_argument("--restore-from", type=str, default=None,
@@ -119,8 +145,9 @@ def addOptions(parser):
                         help="Disks to instantiate")
     parser.add_argument("--bootscript", type=str, default=default_rcs,
                         help="Linux bootscript")
-    parser.add_argument("--atomic", action="store_true", default=False,
-                        help="Use atomic CPUs")
+    parser.add_argument("--cpu-type", type=str, choices=cpu_types.keys(),
+                        default="timing",
+                        help="CPU simulation mode. Default: %(default)s")
     parser.add_argument("--kernel-init", type=str, default="/sbin/init",
                         help="Override init")
     parser.add_argument("--big-cpus", type=int, default=1,
@@ -135,8 +162,10 @@ def addOptions(parser):
                         help="Big CPU clock frequency")
     parser.add_argument("--little-cpu-clock", type=str, default="1GHz",
                         help="Little CPU clock frequency")
+    parser.add_argument("--sim-quantum", type=str, default="1ms",
+                        help="Simulation quantum for parallel simulation. " \
+                        "Default: %(default)s")
     return parser
-
 
 def build(options):
     m5.ticks.fixGlobalFrequency()
@@ -165,35 +194,31 @@ def build(options):
     root.system = system
     system.boot_osflags = " ".join(kernel_cmd)
 
-    AtomicCluster = devices.AtomicCluster
-
     if options.big_cpus + options.little_cpus == 0:
         m5.util.panic("Empty CPU clusters")
 
+    big_model, little_model = cpu_types[options.cpu_type]
+
+    all_cpus = []
     # big cluster
     if options.big_cpus > 0:
-        if options.atomic:
-            system.bigCluster = AtomicCluster(system, options.big_cpus,
-                                              options.big_cpu_clock)
-        else:
-            system.bigCluster = BigCluster(system, options.big_cpus,
-                                           options.big_cpu_clock)
-        mem_mode = system.bigCluster.memoryMode()
+        system.bigCluster = big_model(system, options.big_cpus,
+                                      options.big_cpu_clock)
+        system.mem_mode = system.bigCluster.memoryMode()
+        all_cpus += system.bigCluster.cpus
+
     # little cluster
     if options.little_cpus > 0:
-        if options.atomic:
-            system.littleCluster = AtomicCluster(system, options.little_cpus,
-                                                 options.little_cpu_clock)
+        system.littleCluster = little_model(system, options.little_cpus,
+                                            options.little_cpu_clock)
+        system.mem_mode = system.littleCluster.memoryMode()
+        all_cpus += system.littleCluster.cpus
 
-        else:
-            system.littleCluster = LittleCluster(system, options.little_cpus,
-                                                 options.little_cpu_clock)
-        mem_mode = system.littleCluster.memoryMode()
+    # Figure out the memory mode
+    if options.big_cpus > 0 and options.little_cpus > 0 and \
+       system.littleCluster.memoryMode() != system.littleCluster.memoryMode():
+        m5.util.panic("Memory mode missmatch among CPU clusters")
 
-    if options.big_cpus > 0 and options.little_cpus > 0:
-        if system.bigCluster.memoryMode() != system.littleCluster.memoryMode():
-            m5.util.panic("Memory mode missmatch among CPU clusters")
-    system.mem_mode = mem_mode
 
     # create caches
     system.addCaches(options.caches, options.last_cache_level)
@@ -203,13 +228,43 @@ def build(options):
         if options.little_cpus > 0 and system.littleCluster.requireCaches():
             m5.util.panic("Little CPU model requires caches")
 
+    # Create a KVM VM and do KVM-specific configuration
+    if issubclass(big_model, KvmCluster):
+        _build_kvm(system, all_cpus)
+
     # Linux device tree
     system.dtb_filename = SysPaths.binary(options.dtb)
 
     return root
 
+def _build_kvm(system, cpus):
+    system.kvm_vm = KvmVM()
+
+    # Assign KVM CPUs to their own event queues / threads. This
+    # has to be done after creating caches and other child objects
+    # since these mustn't inherit the CPU event queue.
+    if len(cpus) > 1:
+        device_eq = 0
+        first_cpu_eq = 1
+        for idx, cpu in enumerate(cpus):
+            # Child objects usually inherit the parent's event
+            # queue. Override that and use the same event queue for
+            # all devices.
+            for obj in cpu.descendants():
+                obj.eventq_index = device_eq
+            cpu.eventq_index = first_cpu_eq + idx
+
+
 
 def instantiate(options, checkpoint_dir=None):
+    # Setup the simulation quantum if we are running in PDES-mode
+    # (e.g., when using KVM)
+    root = Root.getInstance()
+    if root and _using_pdes(root):
+        m5.util.inform("Running in PDES mode with a %s simulation quantum.",
+                       options.sim_quantum)
+        root.sim_quantum = _to_ticks(options.sim_quantum)
+
     # Get and load from the chkpt or simpoint checkpoint
     if options.restore_from:
         if checkpoint_dir and not os.path.isabs(options.restore_from):

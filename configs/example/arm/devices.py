@@ -1,4 +1,4 @@
-# Copyright (c) 2016 ARM Limited
+# Copyright (c) 2016-2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -43,6 +43,8 @@ from m5.objects import *
 m5.util.addToPath('../../')
 from common.Caches import *
 from common import CpuConfig
+
+have_kvm = "kvm" in CpuConfig.cpu_names()
 
 class L1I(L1_ICache):
     tag_latency = 1
@@ -167,6 +169,14 @@ class AtomicCluster(CpuCluster):
         cpu_config = [ CpuConfig.get("atomic"), None, None, None, None ]
         super(AtomicCluster, self).__init__(system, num_cpus, cpu_clock,
                                             cpu_voltage, *cpu_config)
+    def addL1(self):
+        pass
+
+class KvmCluster(CpuCluster):
+    def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
+        cpu_config = [ CpuConfig.get("kvm"), None, None, None, None ]
+        super(KvmCluster, self).__init__(system, num_cpus, cpu_clock,
+                                         cpu_voltage, *cpu_config)
     def addL1(self):
         pass
 
