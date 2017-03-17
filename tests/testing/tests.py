@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 #
-# Copyright (c) 2016 ARM Limited
+# Copyright (c) 2016-2017 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -160,6 +160,16 @@ generic_configs = (
     'learning-gem5-p1-simple',
     'learning-gem5-p1-two-level',
 )
+
+default_ruby_protocol = {
+    "arm" : "MOESI_CMP_directory",
+}
+
+def get_default_protocol(arch):
+    try:
+        return default_ruby_protocol[arch]
+    except KeyError:
+        return 'MI-example'
 
 all_categories = ("quick", "long")
 all_modes = ("fs", "se")
@@ -337,8 +347,11 @@ def get_tests(isa,
     else:
         configs += generic_configs
 
-    if ruby_protocol == 'MI_example':
-        configs += [ "%s-ruby" % (c, ) for c in configs ]
+    if ruby_protocol == get_default_protocol(isa):
+        if ruby_protocol == 'MI_example':
+            configs += [ "%s-ruby" % (c, ) for c in configs ]
+        else:
+            configs += [ "%s-ruby-%s" % (c, ruby_protocol) for c in configs ]
     elif ruby_protocol is not None:
         # Override generic ISA configs when using Ruby (excluding
         # MI_example which is included in all ISAs by default). This
