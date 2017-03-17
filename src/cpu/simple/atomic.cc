@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2012-2013,2015 ARM Limited
+ * Copyright (c) 2012-2013,2015,2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -101,6 +101,9 @@ AtomicSimpleCPU::~AtomicSimpleCPU()
 DrainState
 AtomicSimpleCPU::drain()
 {
+    // Deschedule any power gating event (if any)
+    deschedulePowerGatingEvent();
+
     if (switchedOut())
         return DrainState::Drained;
 
@@ -163,6 +166,9 @@ AtomicSimpleCPU::drainResume()
             threadInfo[tid]->notIdleFraction = 0;
         }
     }
+
+    // Reschedule any power gating event (if any)
+    schedulePowerGatingEvent();
 }
 
 bool

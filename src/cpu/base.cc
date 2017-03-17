@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2016 ARM Limited
+ * Copyright (c) 2011-2012,2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -136,7 +136,9 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
       functionTraceStream(nullptr), currentFunctionStart(0),
       currentFunctionEnd(0), functionEntryTick(0),
       addressMonitor(p->numThreads),
-      syscallRetryLatency(p->syscallRetryLatency)
+      syscallRetryLatency(p->syscallRetryLatency),
+      pwrGatingLatency(p->pwr_gating_latency),
+      enterPwrGatingEvent([this]{ enterPwrGating(); }, name())
 {
     // if Python did not provide a valid ID, do it here
     if (_cpuId == -1 ) {
@@ -361,6 +363,9 @@ BaseCPU::startup()
         new CPUProgressEvent(this, params()->progress_interval);
     }
 
+    if (_switchedOut)
+        ClockedObject::pwrState(Enums::PwrState::OFF);
+
     // Assumption CPU start to operate instantaneously without any latency
     if (ClockedObject::pwrState() == Enums::PwrState::UNDEFINED)
         ClockedObject::pwrState(Enums::PwrState::ON);
@@ -472,6 +477,29 @@ BaseCPU::registerThreadContexts()
     }
 }
 
+void
+BaseCPU::deschedulePowerGatingEvent()
+{
+    if (enterPwrGatingEvent.scheduled()){
+        deschedule(enterPwrGatingEvent);
+    }
+}
+
+void
+BaseCPU::schedulePowerGatingEvent()
+{
+    for (auto tc : threadContexts) {
+        if (tc->status() == ThreadContext::Active)
+            return;
+    }
+
+    if (ClockedObject::pwrState() == Enums::PwrState::CLK_GATED) {
+        assert(!enterPwrGatingEvent.scheduled());
+        // Schedule a power gating event when clock gated for the specified
+        // amount of time
+        schedule(enterPwrGatingEvent, clockEdge(pwrGatingLatency));
+    }
+}
 
 int
 BaseCPU::findContext(ThreadContext *tc)
@@ -487,6 +515,10 @@ BaseCPU::findContext(ThreadContext *tc)
 void
 BaseCPU::activateContext(ThreadID thread_num)
 {
+    // Squash enter power gating event while cpu gets activated
+    if (enterPwrGatingEvent.scheduled())
+        deschedule(enterPwrGatingEvent);
+
     // For any active thread running, update CPU power state to active (ON)
     ClockedObject::pwrState(Enums::PwrState::ON);
 }
@@ -503,6 +535,15 @@ BaseCPU::suspendContext(ThreadID thread_num)
 
     // All CPU threads suspended, enter lower power state for the CPU
     ClockedObject::pwrState(Enums::PwrState::CLK_GATED);
+
+    //Schedule power gating event when clock gated for a configurable cycles
+    schedule(enterPwrGatingEvent, clockEdge(pwrGatingLatency));
+}
+
+void
+BaseCPU::enterPwrGating(void)
+{
+    ClockedObject::pwrState(Enums::PwrState::OFF);
 }
 
 void
@@ -516,6 +557,9 @@ BaseCPU::switchOut()
     // Flush all TLBs in the CPU to avoid having stale translations if
     // it gets switched in later.
     flushTLBs();
+
+    // Go to the power gating state
+    ClockedObject::pwrState(Enums::PwrState::OFF);
 }
 
 void
@@ -527,6 +571,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     assert(oldCPU != this);
     _pid = oldCPU->getPid();
     _taskId = oldCPU->taskId();
+    // Take over the power state of the switchedOut CPU
+    ClockedObject::pwrState(oldCPU->pwrState());
     _switchedOut = false;
 
     ThreadID size = threadContexts.size();

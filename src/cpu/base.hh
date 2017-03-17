@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2013, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -307,6 +307,11 @@ class BaseCPU : public MemObject
 
     void registerThreadContexts();
 
+    // Functions to deschedule and reschedule the events to enter the
+    // power gating sleep before and after checkpoiting respectively.
+    void deschedulePowerGatingEvent();
+    void schedulePowerGatingEvent();
+
     /**
      * Prepare for another CPU to take over execution.
      *
@@ -583,6 +588,11 @@ class BaseCPU : public MemObject
     bool waitForRemoteGDB() const;
 
     Cycles syscallRetryLatency;
+  // Enables CPU to enter power gating on a configurable cycle count
+  protected:
+    const Cycles pwrGatingLatency;
+    void enterPwrGating();
+    EventFunctionWrapper enterPwrGatingEvent;
 };
 
 #endif // THE_ISA == NULL_ISA

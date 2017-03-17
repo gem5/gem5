@@ -1031,6 +1031,9 @@ template <class Impl>
 DrainState
 FullO3CPU<Impl>::drain()
 {
+    // Deschedule any power gating event (if any)
+    deschedulePowerGatingEvent();
+
     // If the CPU isn't doing anything, then return immediately.
     if (switchedOut())
         return DrainState::Drained;
@@ -1186,6 +1189,9 @@ FullO3CPU<Impl>::drainResume()
     assert(!tickEvent.scheduled());
     if (_status == Running)
         schedule(tickEvent, nextCycle());
+
+    // Reschedule any power gating event (if any)
+    schedulePowerGatingEvent();
 }
 
 template <class Impl>
