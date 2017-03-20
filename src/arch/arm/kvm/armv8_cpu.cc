@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -65,6 +65,8 @@ static_assert(NUM_QREGS == 32, "Unexpected number of aarch64 vector regs.");
 #define INT_REG(name) CORE_REG(name, U64)
 #define SIMD_REG(name) CORE_REG(name, U128)
 
+#define SYS_MPIDR_EL1 ARM64_SYS_REG(0b11, 0b000, 0b0000, 0b0000, 0b101)
+
 constexpr uint64_t
 kvmXReg(const int num)
 {
@@ -112,6 +114,10 @@ const std::vector<ArmV8KvmCPU::MiscRegInfo> ArmV8KvmCPU::miscRegMap = {
     MiscRegInfo(INT_REG(fp_regs.fpcr), MISCREG_FPCR, "FPCR"),
 };
 
+const std::vector<ArmV8KvmCPU::MiscRegInfo> ArmV8KvmCPU::miscRegIdMap = {
+    MiscRegInfo(SYS_MPIDR_EL1, MISCREG_MPIDR_EL1, "MPIDR(EL1)"),
+};
+
 ArmV8KvmCPU::ArmV8KvmCPU(ArmV8KvmCPUParams *params)
     : BaseArmKvmCPU(params)
 {
@@ -119,6 +125,19 @@ ArmV8KvmCPU::ArmV8KvmCPU(ArmV8KvmCPUParams *params)
 
 ArmV8KvmCPU::~ArmV8KvmCPU()
 {
+}
+
+void
+ArmV8KvmCPU::startup()
+{
+    BaseArmKvmCPU::startup();
+
+    // Override ID registers that KVM should "inherit" from gem5.
+    for (const auto &ri : miscRegIdMap) {
+        const uint64_t value(tc->readMiscReg(ri.idx));
+        DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
+        setOneReg(ri.kvm, value);
+    }
 }
 
 void
@@ -138,6 +157,9 @@ ArmV8KvmCPU::dump() const
     inform("  %s: %s\n", "PSTATE", getAndFormatOneReg(INT_REG(regs.pstate)));
 
     for (const auto &ri : miscRegMap)
+        inform("  %s: %s\n", ri.name, getAndFormatOneReg(ri.kvm));
+
+    for (const auto &ri : miscRegIdMap)
         inform("  %s: %s\n", ri.name, getAndFormatOneReg(ri.kvm));
 
     for (const auto &reg : getRegList()) {

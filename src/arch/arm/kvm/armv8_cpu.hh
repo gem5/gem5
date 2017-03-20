@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -83,6 +83,8 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
     ArmV8KvmCPU(ArmV8KvmCPUParams *params);
     virtual ~ArmV8KvmCPU();
 
+    void startup() override;
+
     void dump() const override;
 
   protected:
@@ -132,6 +134,8 @@ class ArmV8KvmCPU : public BaseArmKvmCPU
     static const std::vector<ArmV8KvmCPU::IntRegInfo> intRegMap;
     /** Mapping between gem5 misc registers registers and registers in kvm */
     static const std::vector<ArmV8KvmCPU::MiscRegInfo> miscRegMap;
+    /** Mapping between gem5 ID misc registers registers and registers in kvm */
+    static const std::vector<ArmV8KvmCPU::MiscRegInfo> miscRegIdMap;
 
     /** Cached mapping between system registers in kvm and misc regs in gem5 */
     mutable std::vector<ArmV8KvmCPU::MiscRegInfo> sysRegMap;
