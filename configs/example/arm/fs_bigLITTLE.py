@@ -1,4 +1,4 @@
-# Copyright (c) 2016 ARM Limited
+# Copyright (c) 2016-2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -209,11 +209,16 @@ def build(options):
     return root
 
 
-def instantiate(checkpoint_path=None):
+def instantiate(options, checkpoint_dir=None):
     # Get and load from the chkpt or simpoint checkpoint
-    if checkpoint_path is not None:
-        m5.util.inform("Restoring from checkpoint %s", checkpoint_path)
-        m5.instantiate(checkpoint_path)
+    if options.restore_from:
+        if checkpoint_dir and not os.path.isabs(options.restore_from):
+            cpt = os.path.join(checkpoint_dir, options.restore_from)
+        else:
+            cpt = options.restore_from
+
+        m5.util.inform("Restoring from checkpoint %s", cpt)
+        m5.instantiate(cpt)
     else:
         m5.instantiate()
 
@@ -241,7 +246,7 @@ def main():
     addOptions(parser)
     options = parser.parse_args()
     root = build(options)
-    instantiate(options.restore_from)
+    instantiate(options)
     run()
 
 
