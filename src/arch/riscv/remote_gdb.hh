@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2002-2005 The Regents of The University of Michigan
- * Copyright (c) 2007-2008 The Florida State University
- * Copyright (c) 2009 The University of Edinburgh
- * Copyright (c) 2015 Sven Karlsson
+ * Copyright (c) 2017 The University of Virginia
+ * Copyright 2015 LabWare
+ * Copyright 2014 Google, Inc.
+ * Copyright (c) 2007 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,14 +29,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Nathan Binkert
- *          Stephen Hines
- *          Timothy M. Jones
- *          Sven Karlsson
+ *          Boris Shingarov
+ *          Alec Roelke
  */
 
 #ifndef __ARCH_RISCV_REMOTE_GDB_HH__
 #define __ARCH_RISCV_REMOTE_GDB_HH__
 
+#include <string>
+
+#include "arch/riscv/registers.hh"
 #include "base/remote_gdb.hh"
 
 class System;
@@ -47,20 +49,43 @@ namespace RiscvISA
 
 class RemoteGDB : public BaseRemoteGDB
 {
+  protected:
+    static const int ExplicitCSRs = 4;
+
+    bool acc(Addr addr, size_t len);
+
+    class RiscvGdbRegCache : public BaseGdbRegCache
+    {
+      using BaseGdbRegCache::BaseGdbRegCache;
+      private:
+        struct {
+            IntReg gpr[NumIntArchRegs];
+            IntReg pc;
+            FloatRegBits fpr[NumFloatRegs];
+
+            MiscReg csr_base;
+            uint32_t fflags;
+            uint32_t frm;
+            uint32_t fcsr;
+            MiscReg csr[NumMiscRegs - ExplicitCSRs];
+        } __attribute__((__packed__)) r;
+      public:
+        char *data() const { return (char *)&r; }
+        size_t size() const { return sizeof(r); }
+        void getRegs(ThreadContext*);
+        void setRegs(ThreadContext*) const;
+
+        const std::string
+        name() const
+        {
+            return gdb->name() + ".RiscvGdbRegCache";
+        }
+    };
+
+
   public:
-    RemoteGDB(System *system, ThreadContext *context);
-
-    BaseGdbRegCache *
-    gdbRegs();
-
-    bool
-    acc(Addr, size_t);
-
-    void
-    getregs();
-
-    void
-    setregs();
+    RemoteGDB(System *_system, ThreadContext *tc);
+    BaseGdbRegCache *gdbRegs();
 };
 
 } // namespace RiscvISA

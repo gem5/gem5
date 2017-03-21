@@ -58,10 +58,10 @@ class ISA : public SimObject
 {
   protected:
     std::vector<MiscReg> miscRegFile;
+    std::map<int, std::string> miscRegNames;
 
   public:
     typedef RiscvISAParams Params;
-    static std::map<int, std::string> miscRegNames;
 
     void
     clear();
