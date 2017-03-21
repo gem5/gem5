@@ -303,6 +303,17 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     if (FullSystem)
         panic("translateData not implemented in RISC-V.\n");
 
+    // In the O3 CPU model, sometimes a memory access will be speculatively
+    // executed along a branch that will end up not being taken where the
+    // address is invalid.  In that case, return a fault rather than trying
+    // to translate it (which will cause a panic).  Since RISC-V allows
+    // unaligned memory accesses, this should only happen if the request's
+    // length is long enough to wrap around from the end of the memory to the
+    // start.
+    assert(req->getSize() > 0);
+    if (req->getVaddr() + req->getSize() - 1 < req->getVaddr())
+        return make_shared<GenericPageTableFault>(req->getVaddr());
+
     Process * p = tc->getProcessPtr();
 
     Fault fault = p->pTable->translate(req);
