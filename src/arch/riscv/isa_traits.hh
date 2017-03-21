@@ -65,8 +65,8 @@ const Addr PageBytes = ULL(1) << PageShift;
 
 const ExtMachInst NoopMachInst = 0x00000013;
 
-// Memory accesses can not be unaligned
-const bool HasUnalignedMemAcc = false;
+// Memory accesses can be unaligned (at least for double-word memory accesses)
+const bool HasUnalignedMemAcc = true;
 
 const bool CurThreadInfoImplemented = false;
 const int CurThreadInfoReg = -1;
