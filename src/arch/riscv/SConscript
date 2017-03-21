@@ -50,6 +50,7 @@ if env['TARGET_ISA'] == 'riscv':
     Source('faults.cc')
     Source('isa.cc')
     Source('interrupts.cc')
+    Source('locked_mem.cc')
     Source('process.cc')
     Source('pagetable.cc')
     Source('remote_gdb.cc')

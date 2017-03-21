@@ -170,12 +170,12 @@ decode OPCODE default Unknown::unknown() {
         0x2: decode AMOFUNCT {
             0x2: LoadReserved::lr_w({{
                 Rd_sd = Mem_sw;
-            }}, mem_flags=LLSC, aq=AQ, rl=RL);
+            }}, mem_flags=LLSC);
             0x3: StoreCond::sc_w({{
                 Mem_uw = Rs2_uw;
             }}, {{
                 Rd = result;
-            }}, inst_flags=IsStoreConditional, mem_flags=LLSC, aq=AQ, rl=RL);
+            }}, inst_flags=IsStoreConditional, mem_flags=LLSC);
             format AtomicMemOp {
                 0x0: amoadd_w({{Rt_sd = Mem_sw;}}, {{
                     Mem_sw = Rs2_sw + Rt_sd;
@@ -218,12 +218,12 @@ decode OPCODE default Unknown::unknown() {
         0x3: decode AMOFUNCT {
             0x2: LoadReserved::lr_d({{
                 Rd_sd = Mem_sd;
-            }}, mem_flags=LLSC, aq=AQ, rl=RL);
+            }}, mem_flags=LLSC);
             0x3: StoreCond::sc_d({{
                 Mem = Rs2;
             }}, {{
                 Rd = result;
-            }}, mem_flags=LLSC, inst_flags=IsStoreConditional, aq=AQ, rl=RL);
+            }}, mem_flags=LLSC, inst_flags=IsStoreConditional);
             format AtomicMemOp {
                 0x0: amoadd_d({{Rt_sd = Mem_sd;}}, {{
                     Mem_sd = Rs2_sd + Rt_sd;

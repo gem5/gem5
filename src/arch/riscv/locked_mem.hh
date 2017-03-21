@@ -67,7 +67,7 @@ const int WARN_FAILURE = 10000;
 
 // RISC-V allows multiple locks per hart, but each SC has to unlock the most
 // recent one, so we use a stack here.
-static std::stack<Addr> locked_addrs;
+extern std::stack<Addr> locked_addrs;
 
 template <class XC> inline void
 handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)

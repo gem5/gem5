@@ -40,12 +40,16 @@ int main()
     using namespace insttest;
 
     // Memory (LR.W, SC.W)
-    expect<pair<int64_t, uint64_t>>({-1, 0}, []{
+    expect<pair<int64_t, int64_t>>({-1, 256}, []{
             int32_t mem = -1;
             int64_t rs2 = 256;
-            int64_t rd = A::lr_w(mem);
-            pair<int64_t, uint64_t> result = A::sc_w(rs2, mem);
-            return pair<int64_t, uint64_t>(rd, result.second);
+            int64_t rd;
+            pair<int64_t, uint64_t> result;
+            do {
+                rd = A::lr_w(mem);
+                result = A::sc_w(rs2, mem);
+            } while (result.second == 1);
+            return pair<int64_t, uint64_t>(rd, result.first);
         }, "lr.w/sc.w");
     expect<pair<bool, int64_t>>({true, 200}, []{
             int32_t mem = 200;
@@ -130,12 +134,16 @@ int main()
             "amomaxu.w, sign extend");
 
     // Memory (LR.D, SC.D)
-    expect<pair<int64_t, uint64_t>>({-1, 0}, []{
+    expect<pair<int64_t, int64_t>>({-1, 256}, []{
             int64_t mem = -1;
             int64_t rs2 = 256;
-            int64_t rd = A::lr_d(mem);
-            pair<int64_t, uint64_t> result = A::sc_d(rs2, mem);
-            return pair<int64_t, uint64_t>(rd, result.second);
+            int64_t rd;
+            pair<int64_t, uint64_t> result;
+            do {
+                rd = A::lr_d(mem);
+                result = A::sc_d(rs2, mem);
+            } while (result.second == 1);
+            return pair<int64_t, uint64_t>(rd, result.first);
         }, "lr.d/sc.d");
     expect<pair<bool, int64_t>>({true, 200}, []{
             int64_t mem = 200;
