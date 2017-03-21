@@ -26,7 +26,7 @@
 #
 # Authors: Alec Roelke
 
-CXX=riscv64-unknown-elf-g++
+CXX=riscv64-unknown-linux-gnu-g++
 CFLAGS=--std=c++11 -O3 -static
 
 TARGETS=rv64i rv64m rv64a rv64f rv64d
