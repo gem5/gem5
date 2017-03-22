@@ -51,6 +51,8 @@ m5.util.addToPath("../../")
 
 from common import SysPaths
 from common import CpuConfig
+from common import ex5_big
+from common import ex5_LITTLE
 
 import devices
 from devices import AtomicCluster, KvmCluster
@@ -95,6 +97,21 @@ class LittleCluster(devices.CpuCluster):
         super(LittleCluster, self).__init__(system, num_cpus, cpu_clock,
                                          cpu_voltage, *cpu_config)
 
+class Ex5BigCluster(devices.CpuCluster):
+    def __init__(self, system, num_cpus, cpu_clock,
+                 cpu_voltage="1.0V"):
+        cpu_config = [ CpuConfig.get("ex5_big"), ex5_big.L1I, ex5_big.L1D,
+                    ex5_big.WalkCache, ex5_big.L2 ]
+        super(Ex5BigCluster, self).__init__(system, num_cpus, cpu_clock,
+                                         cpu_voltage, *cpu_config)
+
+class Ex5LittleCluster(devices.CpuCluster):
+    def __init__(self, system, num_cpus, cpu_clock,
+                 cpu_voltage="1.0V"):
+        cpu_config = [ CpuConfig.get("ex5_LITTLE"), ex5_LITTLE.L1I,
+                    ex5_LITTLE.L1D, ex5_LITTLE.WalkCache, ex5_LITTLE.L2 ]
+        super(Ex5LittleCluster, self).__init__(system, num_cpus, cpu_clock,
+                                         cpu_voltage, *cpu_config)
 
 def createSystem(caches, kernel, bootscript, disks=[]):
     sys = devices.SimpleSystem(caches, default_mem_size,
@@ -127,6 +144,7 @@ def createSystem(caches, kernel, bootscript, disks=[]):
 cpu_types = {
     "atomic" : (AtomicCluster, AtomicCluster),
     "timing" : (BigCluster, LittleCluster),
+    "exynos" : (Ex5BigCluster, Ex5LittleCluster),
 }
 
 # Only add the KVM CPU if it has been compiled into gem5

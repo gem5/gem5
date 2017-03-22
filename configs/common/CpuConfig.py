@@ -117,6 +117,20 @@ try:
 except:
     pass
 
+# The calibrated ex5-model cores
+try:
+    from ex5_LITTLE import ex5_LITTLE
+    _cpu_classes["ex5_LITTLE"] = ex5_LITTLE
+except:
+     pass
+
+try:
+    from ex5_big import ex5_big
+    _cpu_classes["ex5_big"] = ex5_big
+except:
+     pass
+
+
 # Add all CPUs in the object hierarchy.
 for name, cls in inspect.getmembers(m5.objects, is_cpu_class):
     _cpu_classes[name] = cls
