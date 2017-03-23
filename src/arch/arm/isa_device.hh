@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,6 +43,8 @@
 #include "arch/arm/registers.hh"
 #include "base/compiler.hh"
 
+class ThreadContext;
+
 namespace ArmISA
 {
 
@@ -62,6 +64,7 @@ class BaseISADevice
     virtual ~BaseISADevice() {}
 
     virtual void setISA(ISA *isa);
+    virtual void setThreadContext(ThreadContext *tc) {}
 
     /**
      * Write to a system register belonging to this device.

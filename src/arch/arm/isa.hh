@@ -659,7 +659,7 @@ namespace ArmISA
             UNSERIALIZE_SCALAR(physAddrRange64);
         }
 
-        void startup(ThreadContext *tc) {}
+        void startup(ThreadContext *tc);
 
         Enums::DecoderFlavour decoderFlavour() const { return _decoderFlavour; }
 

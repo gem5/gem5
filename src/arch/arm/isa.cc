@@ -329,6 +329,14 @@ ISA::clear64(const ArmISAParams *p)
         encodePhysAddrRange64(physAddrRange64));
 }
 
+void
+ISA::startup(ThreadContext *tc)
+{
+    pmu->setThreadContext(tc);
+
+}
+
+
 MiscReg
 ISA::readMiscRegNoEffect(int misc_reg) const
 {
@@ -1946,6 +1954,8 @@ ISA::getGenericTimer(ThreadContext *tc)
     }
 
     timer.reset(new GenericTimerISA(*generic_timer, tc->contextId()));
+    timer->setThreadContext(tc);
+
     return *timer.get();
 }
 
