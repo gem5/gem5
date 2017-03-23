@@ -36,7 +36,7 @@ import optparse
 from m5.objects import *
 from m5.util import addToPath, fatal
 
-addToPath('../../configs/common/')
+addToPath('../../../../configs/common/')
 
 from Caches import *
 

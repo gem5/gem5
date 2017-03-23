@@ -29,11 +29,11 @@ them for the same port name.
 Gem5SlaveTransactor is a SystemC module that provides a initiator socket and
 represents the TLM end of the bridge. SCSlavePort implements gem5's
 ExternalSlave::Port interface and forms the gem5 side of the bridge. All gem5
-requests send to the SCSlavePort, are translated to TLM requests and forwarded
+requests sent to the SCSlavePort, are translated to TLM requests and forwarded
 to the TLM world through the initiator socket of the Gem5SlaveTransactor. Then
 the TLM world handles the request and eventually issues a response. When the
-response arrives at the Gem5SlaveTransactor it gets translated back into a TLM
-response and forwarded to the gem5 world through the SCSlavePort.  SCSLavePort
+response arrives at the Gem5SlaveTransactor it gets translated back into a
+gem5 response and forwarded to the gem5 world through the SCSlavePort. SCSLavePort
 and Gem5SlaveTransactor are bound to each other by configuring them for the
 same port name.
 
