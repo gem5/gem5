@@ -245,10 +245,12 @@ class VectorParamValue(list):
         return [ v.getValue() for v in self ]
 
     def unproxy(self, base):
-        if len(self) == 1 and isinstance(self[0], proxy.AllProxy):
+        if len(self) == 1 and isinstance(self[0], proxy.BaseProxy):
+            # The value is a proxy (e.g. Parent.any, Parent.all or
+            # Parent.x) therefore try resolve it
             return self[0].unproxy(base)
         else:
-             return [v.unproxy(base) for v in self]
+            return [v.unproxy(base) for v in self]
 
 class SimObjectVector(VectorParamValue):
     # support clone operation
