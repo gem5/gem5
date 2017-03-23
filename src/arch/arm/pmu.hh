@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, 2017 ARM Limited
+ * Copyright (c) 2011-2014, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -58,6 +58,7 @@
 class ArmPMUParams;
 class Platform;
 class ThreadContext;
+class ArmInterruptPin;
 
 namespace ArmISA {
 
@@ -112,6 +113,8 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     void regProbeListeners() override;
 
   public: // ISA Device interface
+    void setThreadContext(ThreadContext *tc) override;
+
     /**
      * Set a register within the PMU.
      *
@@ -599,9 +602,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     static const MiscReg reg_pmcr_wr_mask;
 
     /** Performance monitor interrupt number */
-    const unsigned int pmuInterrupt;
-    /** Platform this device belongs to */
-    Platform *const platform;
+    ArmInterruptPin *const interrupt;
 
     /**
      * List of event types supported by this PMU.

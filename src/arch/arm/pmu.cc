@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, 2017 ARM Limited
+ * Copyright (c) 2011-2014, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -50,7 +50,6 @@
 #include "debug/PMUVerbose.hh"
 #include "dev/arm/base_gic.hh"
 #include "dev/arm/generic_timer.hh"
-#include "dev/arm/realview.hh"
 #include "params/ArmPMU.hh"
 
 namespace ArmISA {
@@ -68,8 +67,7 @@ PMU::PMU(const ArmPMUParams *p)
       cycleCounterEventId(p->cycleEventId),
       swIncrementEvent(nullptr),
       reg_pmcr_conf(0),
-      pmuInterrupt(p->pmuInterrupt),
-      platform(p->platform)
+      interrupt(p->interrupt)
 {
     DPRINTF(PMUVerbose, "Initializing the PMU.\n");
 
@@ -77,6 +75,9 @@ PMU::PMU(const ArmPMUParams *p)
         fatal("The PMU can only accept 31 counters, %d counters requested.\n",
               maximumCounterCount);
     }
+
+    warn_if(!interrupt, "ARM PMU: No interrupt specified, interrupt " \
+            "delivery disabled.\n");
 
     /* Setup the performance counter ID registers */
     reg_pmcr_conf.imp = 0x41;    // ARM Ltd.
@@ -90,6 +91,14 @@ PMU::PMU(const ArmPMUParams *p)
 
 PMU::~PMU()
 {
+}
+
+void
+PMU::setThreadContext(ThreadContext *tc)
+{
+    DPRINTF(PMUVerbose, "Assigning PMU to ContextID %i.\n", tc->contextId());
+    if (interrupt)
+        interrupt->setThreadContext(tc);
 }
 
 void
@@ -638,14 +647,13 @@ PMU::setCounterTypeRegister(CounterId id, PMEVTYPER_t val)
 void
 PMU::raiseInterrupt()
 {
-    RealView *rv(dynamic_cast<RealView *>(platform));
-    if (!rv || !rv->gic) {
-        warn_once("ARM PMU: GIC missing, can't raise interrupt.\n");
-        return;
+    if (interrupt) {
+        DPRINTF(PMUVerbose, "Delivering PMU interrupt.\n");
+        interrupt->raise();
+    } else {
+        warn_once("Dropping PMU interrupt as no interrupt has "
+                  "been specified\n");
     }
-
-    DPRINTF(PMUVerbose, "Delivering PMU interrupt.\n");
-    rv->gic->sendInt(pmuInterrupt);
 }
 
 void
