@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2017 ARM Limited
+ * Copyright (c) 2012-2013, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,11 +47,18 @@
 #include "dev/io_device.hh"
 
 class Platform;
+class RealView;
+class ThreadContext;
+
+struct ArmInterruptPinParams;
+struct ArmPPIParams;
+struct ArmSPIParams;
+struct BaseGicParams;
 
 class BaseGic :  public PioDevice
 {
   public:
-    typedef struct BaseGicParams Params;
+    typedef BaseGicParams Params;
 
     BaseGic(const Params *p);
     virtual ~BaseGic();
@@ -102,5 +109,68 @@ class BaseGicRegisters
                                   uint32_t data) = 0;
     virtual void writeCpu(ContextID ctx, Addr daddr, uint32_t data) = 0;
 };
+
+/**
+ * Generic representation of an Arm interrupt pin.
+ */
+class ArmInterruptPin : public SimObject
+{
+  public:
+    ArmInterruptPin(const ArmInterruptPinParams *p);
+
+  public: /* Public interface */
+    /**
+     * Set the thread context owning this interrupt.
+     *
+     * This method is used to set the thread context for interrupts
+     * that are thread/CPU-specific. Only devices that are used in
+     * such a context are expected to call this method.
+     */
+    void setThreadContext(ThreadContext *tc);
+
+    /** Signal an interrupt */
+    virtual void raise() = 0;
+    /** Clear a signalled interrupt */
+    virtual void clear() = 0;
+
+  protected:
+    /**
+     * Get the target context ID of this interrupt.
+     *
+     * @pre setThreadContext() must have been called prior to calling
+     * this method.
+     */
+    ContextID targetContext() const;
+
+    /**
+     * Pointer to the thread context that owns this interrupt in case
+     * it is a thread-/CPU-private interrupt
+     */
+    const ThreadContext *threadContext;
+
+    /** Arm platform to use for interrupt generation */
+    RealView *const platform;
+    /** Interrupt number to generate */
+    const uint32_t intNum;
+};
+
+class ArmSPI : public ArmInterruptPin
+{
+  public:
+    ArmSPI(const ArmSPIParams *p);
+
+    void raise() override;
+    void clear() override;
+};
+
+class ArmPPI : public ArmInterruptPin
+{
+  public:
+    ArmPPI(const ArmPPIParams *p);
+
+    void raise() override;
+    void clear() override;
+};
+
 
 #endif

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013 ARM Limited
+# Copyright (c) 2012-2013, 2017-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -48,6 +48,23 @@ class BaseGic(PioDevice):
     cxx_header = "dev/arm/base_gic.hh"
 
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
+
+class ArmInterruptPin(SimObject):
+    type = 'ArmInterruptPin'
+    cxx_header = "dev/arm/base_gic.hh"
+    abstract = True
+
+    platform = Param.Platform(Parent.any, "Platform with interrupt controller")
+    num = Param.UInt32("Interrupt number in GIC")
+
+class ArmSPI(ArmInterruptPin):
+    type = 'ArmSPI'
+    cxx_header = "dev/arm/base_gic.hh"
+
+class ArmPPI(ArmInterruptPin):
+    type = 'ArmPPI'
+    cxx_header = "dev/arm/base_gic.hh"
+
 
 class Pl390(BaseGic):
     type = 'Pl390'

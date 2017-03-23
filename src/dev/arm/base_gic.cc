@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -39,7 +39,11 @@
 
 #include "dev/arm/base_gic.hh"
 
+#include "cpu/thread_context.hh"
 #include "dev/arm/realview.hh"
+#include "params/ArmInterruptPin.hh"
+#include "params/ArmPPI.hh"
+#include "params/ArmSPI.hh"
 #include "params/BaseGic.hh"
 
 BaseGic::BaseGic(const Params *p)
@@ -64,4 +68,80 @@ const BaseGic::Params *
 BaseGic::params() const
 {
     return dynamic_cast<const Params *>(_params);
+}
+
+
+ArmInterruptPin::ArmInterruptPin(const ArmInterruptPinParams *p)
+    : SimObject(p),
+      threadContext(nullptr),
+      platform(dynamic_cast<RealView*>(p->platform)),
+      intNum(p->num)
+{
+    fatal_if(!platform, "Interrupt not connected to a RealView platform");
+}
+
+void
+ArmInterruptPin::setThreadContext(ThreadContext *tc)
+{
+    panic_if(threadContext,
+             "InterruptLine::setThreadContext called twice\n");
+
+    threadContext = tc;
+}
+
+ContextID
+ArmInterruptPin::targetContext() const
+{
+    panic_if(!threadContext, "Per-context interrupt triggered without a " \
+             "call to InterruptLine::setThreadContext.\n");
+    return threadContext->contextId();
+}
+
+
+
+ArmSPI::ArmSPI(const ArmSPIParams *p)
+    : ArmInterruptPin(p)
+{
+}
+
+void
+ArmSPI::raise()
+{
+    platform->gic->sendInt(intNum);
+}
+
+void
+ArmSPI::clear()
+{
+    platform->gic->clearInt(intNum);
+}
+
+ArmPPI::ArmPPI(const ArmPPIParams *p)
+    : ArmInterruptPin(p)
+{
+}
+
+void
+ArmPPI::raise()
+{
+    platform->gic->sendPPInt(intNum, targetContext());
+}
+
+void
+ArmPPI::clear()
+{
+    platform->gic->clearPPInt(intNum, targetContext());
+}
+
+
+ArmSPI *
+ArmSPIParams::create()
+{
+    return new ArmSPI(this);
+}
+
+ArmPPI *
+ArmPPIParams::create()
+{
+    return new ArmPPI(this);
 }
