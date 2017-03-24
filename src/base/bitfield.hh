@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2017 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -211,4 +223,29 @@ popCount(uint64_t val) {
     return (val * sum) >> 56;             // horizontal sum
 #endif // defined(__GNUC__) || (defined(__clang__) && __has_builtin(__builtin_popcountl))
 }
+
+/**
+ * Align to the next highest power of two.
+ *
+ * The number passed in is aligned to the next highest power of two,
+ * if it is not already a power of two. Please note that if 0 is
+ * passed in, 0 is returned.
+ *
+ * This code has been modified from the following:
+ * http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+ */
+inline uint64_t alignToPowerOfTwo(uint64_t val)
+{
+    val--;
+    val |= val >> 1;
+    val |= val >> 2;
+    val |= val >> 4;
+    val |= val >> 8;
+    val |= val >> 16;
+    val |= val >> 32;
+    val++;
+
+    return val;
+};
+
 #endif // __BASE_BITFIELD_HH__

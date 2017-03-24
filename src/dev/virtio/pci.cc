@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -39,6 +39,7 @@
 
 #include "dev/virtio/pci.hh"
 
+#include "base/bitfield.hh"
 #include "debug/VIOIface.hh"
 #include "mem/packet_access.hh"
 #include "params/PciVirtIO.hh"
@@ -49,7 +50,12 @@ PciVirtIO::PciVirtIO(const Params *params)
 {
     // Override the subsystem ID with the device ID from VirtIO
     config.subsystemID = htole(vio.deviceId);
-    BARSize[0] = BAR0_SIZE_BASE + vio.configSize;
+
+    // The kernel driver expects the BAR size to be an exact power of
+    // two. Nothing else is supported. Therefore, we need to force
+    // that alignment here. We do not touch vio.configSize as this is
+    // used to check accesses later on.
+    BARSize[0] = alignToPowerOfTwo(BAR0_SIZE_BASE + vio.configSize);
 
     vio.registerKickCallback(&callbackKick);
 }
