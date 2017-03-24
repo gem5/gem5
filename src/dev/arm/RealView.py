@@ -63,6 +63,7 @@ from SubSystem import SubSystem
 from Graphics import ImageFormat
 from ClockedObject import ClockedObject
 from PS2 import *
+from VirtIOMMIO import MmioVirtIO
 
 # Platforms with KVM support should generally use in-kernel GIC
 # emulation. Use a GIC model that automatically switches between
@@ -1045,6 +1046,8 @@ Memory map:
        0x1c0a0000-0x1c0affff: UART1 (reserved)
        0x1c0b0000-0x1c0bffff: UART2 (reserved)
        0x1c0c0000-0x1c0cffff: UART3 (reserved)
+       0x1c130000-0x1c13ffff: VirtIO (gem5/FM extension)
+       0x1c140000-0x1c14ffff: VirtIO (gem5/FM extension)
        0x1c170000-0x1c17ffff: RTC
 
    0x20000000-0x3fffffff: On-chip peripherals:
@@ -1089,6 +1092,8 @@ Interrupts:
         48   : Reserved (USB)
     95-255: On-chip interrupt sources (we use these for
             gem5-specific devices, SPIs)
+         74    : VirtIO (gem5/FM extension)
+         75    : VirtIO (gem5/FM extension)
          95    : HDLCD
          96- 98: GPU (reserved)
         100-103: PCI
@@ -1154,6 +1159,12 @@ Interrupts:
 
     energy_ctrl = EnergyCtrl(pio_addr=0x10000000)
 
+    vio = [
+        MmioVirtIO(pio_addr=0x1c130000, pio_size=0x1000,
+                   interrupt=ArmSPI(num=74)),
+        MmioVirtIO(pio_addr=0x1c140000, pio_size=0x1000,
+                   interrupt=ArmSPI(num=75)),
+    ]
 
     def _off_chip_devices(self):
         return [
@@ -1165,6 +1176,8 @@ Interrupts:
             self.pci_host,
             self.energy_ctrl,
             self.clock24MHz,
+            self.vio[0],
+            self.vio[1],
         ]
 
     def attachPciDevice(self, device, *args, **kwargs):
