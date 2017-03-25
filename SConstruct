@@ -400,8 +400,12 @@ def install_git_style_hooks():
         if not git_hooks.exists():
             mkdir(git_hooks.get_abspath())
 
-        # Use a relative symlink if the hooks live in the source directory
-        if hook.is_under(main.root):
+        abs_symlink_hooks = git_hooks.islink() and \
+            os.path.isabs(os.readlink(git_hooks.get_abspath()))
+
+        # Use a relative symlink if the hooks live in the source directory,
+        # and the hooks directory is not a symlink to an absolute path.
+        if hook.is_under(main.root) and not abs_symlink_hooks:
             script_path = os.path.relpath(
                 script.get_abspath(),
                 hook.Dir(".").get_abspath())
