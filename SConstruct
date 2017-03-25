@@ -393,6 +393,10 @@ def install_git_style_hooks():
             print "Warning: Can't install %s, hook already exists." % hook_name
             return
 
+        if hook.islink():
+            print "Warning: Removing broken symlink for hook %s." % hook_name
+            os.unlink(hook.get_abspath())
+
         if not git_hooks.exists():
             mkdir(git_hooks.get_abspath())
 
