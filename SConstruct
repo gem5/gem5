@@ -407,8 +407,8 @@ def install_git_style_hooks():
         # and the hooks directory is not a symlink to an absolute path.
         if hook.is_under(main.root) and not abs_symlink_hooks:
             script_path = os.path.relpath(
-                script.get_abspath(),
-                hook.Dir(".").get_abspath())
+                os.path.realpath(script.get_abspath()),
+                os.path.realpath(hook.Dir(".").get_abspath()))
         else:
             script_path = script.get_abspath()
 
