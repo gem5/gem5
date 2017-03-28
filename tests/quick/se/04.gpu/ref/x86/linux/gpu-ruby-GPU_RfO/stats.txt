@@ -4,11 +4,11 @@ sim_seconds                                  0.000667                       # Nu
 sim_ticks                                   667407500                       # Number of ticks simulated
 final_tick                                  667407500                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
-host_inst_rate                                  72185                       # Simulator instruction rate (inst/s)
-host_op_rate                                   148440                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                              719412350                       # Simulator tick rate (ticks/s)
-host_mem_usage                                1308600                       # Number of bytes of host memory used
-host_seconds                                     0.93                       # Real time elapsed on the host
+host_inst_rate                                 176952                       # Simulator instruction rate (inst/s)
+host_op_rate                                   363878                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                             1763538835                       # Simulator tick rate (ticks/s)
+host_mem_usage                                1336256                       # Number of bytes of host memory used
+host_seconds                                     0.38                       # Real time elapsed on the host
 sim_insts                                       66963                       # Number of instructions simulated
 sim_ops                                        137705                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -379,8 +379,22 @@ system.cp_cntrl0.L2cache.num_data_array_reads          120                      
 system.cp_cntrl0.L2cache.num_data_array_writes        11982                       # number of data array writes
 system.cp_cntrl0.L2cache.num_tag_array_reads        12057                       # number of tag array reads
 system.cp_cntrl0.L2cache.num_tag_array_writes         1649                       # number of tag array writes
+system.cp_cntrl0.mandatoryQueue.avg_buf_msgs     0.427713                       # Average number of messages in buffer
+system.cp_cntrl0.mandatoryQueue.avg_stall_time  1999.994007                       # Average number of cycles messages are stalled in this MB
+system.cp_cntrl0.probeToCore.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.cp_cntrl0.probeToCore.avg_stall_time  3665.454806                       # Average number of cycles messages are stalled in this MB
+system.cp_cntrl0.requestFromCore.avg_buf_msgs     0.034499                       # Average number of messages in buffer
+system.cp_cntrl0.requestFromCore.avg_stall_time 14999.617925                       # Average number of cycles messages are stalled in this MB
+system.cp_cntrl0.responseFromCore.avg_buf_msgs     0.000315                       # Average number of messages in buffer
+system.cp_cntrl0.responseFromCore.avg_stall_time  1717.844815                       # Average number of cycles messages are stalled in this MB
+system.cp_cntrl0.responseToCore.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.cp_cntrl0.responseToCore.avg_stall_time 31990.122976                       # Average number of cycles messages are stalled in this MB
 system.cp_cntrl0.sequencer.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
 system.cp_cntrl0.sequencer1.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
+system.cp_cntrl0.triggerQueue.avg_buf_msgs     0.001591                       # Average number of messages in buffer
+system.cp_cntrl0.triggerQueue.avg_stall_time 15959.959998                       # Average number of cycles messages are stalled in this MB
+system.cp_cntrl0.unblockFromCore.avg_buf_msgs     0.034499                       # Average number of messages in buffer
+system.cp_cntrl0.unblockFromCore.avg_stall_time 14995.033020                       # Average number of cycles messages are stalled in this MB
 system.cp_cntrl0.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
 system.cpu0.clk_domain.clock                      500                       # Clock period in ticks
 system.cpu0.dtb.walker.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
@@ -2593,6 +2607,20 @@ system.dir_cntrl0.L3CacheMemory.demand_accesses            0                    
 system.dir_cntrl0.L3CacheMemory.num_data_array_writes         1549                       # number of data array writes
 system.dir_cntrl0.L3CacheMemory.num_tag_array_reads         1549                       # number of tag array reads
 system.dir_cntrl0.L3CacheMemory.num_tag_array_writes         1549                       # number of tag array writes
+system.dir_cntrl0.probeToCore.avg_buf_msgs     0.069628                       # Average number of messages in buffer
+system.dir_cntrl0.probeToCore.avg_stall_time 29997.797448                       # Average number of cycles messages are stalled in this MB
+system.dir_cntrl0.requestFromCores.avg_buf_msgs     0.001160                       # Average number of messages in buffer
+system.dir_cntrl0.requestFromCores.avg_stall_time 17271.531260                       # Average number of cycles messages are stalled in this MB
+system.dir_cntrl0.responseFromCores.avg_buf_msgs     0.001160                       # Average number of messages in buffer
+system.dir_cntrl0.responseFromCores.avg_stall_time 121679.841776                       # Average number of cycles messages are stalled in this MB
+system.dir_cntrl0.responseFromMemory.avg_buf_msgs     0.003110                       # Average number of messages in buffer
+system.dir_cntrl0.responseFromMemory.avg_stall_time   999.889123                       # Average number of cycles messages are stalled in this MB
+system.dir_cntrl0.responseToCore.avg_buf_msgs     0.069628                       # Average number of messages in buffer
+system.dir_cntrl0.responseToCore.avg_stall_time 29990.830190                       # Average number of cycles messages are stalled in this MB
+system.dir_cntrl0.triggerQueue.avg_buf_msgs     0.002321                       # Average number of messages in buffer
+system.dir_cntrl0.triggerQueue.avg_stall_time   999.739290                       # Average number of cycles messages are stalled in this MB
+system.dir_cntrl0.unblockFromCores.avg_buf_msgs     0.001160                       # Average number of messages in buffer
+system.dir_cntrl0.unblockFromCores.avg_stall_time 17249.343916                       # Average number of cycles messages are stalled in this MB
 system.dir_cntrl0.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
 system.dispatcher_coalescer.clk_domain.voltage_domain.voltage            1                       # Voltage in Volts
 system.dispatcher_coalescer.clk_domain.clock         1000                       # Clock period in ticks
@@ -2730,6 +2758,20 @@ system.piobus.reqLayer0.occupancy              188000                       # La
 system.piobus.reqLayer0.utilization               0.0                       # Layer utilization (%)
 system.piobus.respLayer0.occupancy              94000                       # Layer occupancy (ticks)
 system.piobus.respLayer0.utilization              0.0                       # Layer utilization (%)
+system.ruby.network.ext_links0.int_node.port_buffers00.avg_buf_msgs     0.001160                       # Average number of messages in buffer
+system.ruby.network.ext_links0.int_node.port_buffers00.avg_stall_time 16771.557856                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links0.int_node.port_buffers02.avg_buf_msgs     0.001160                       # Average number of messages in buffer
+system.ruby.network.ext_links0.int_node.port_buffers02.avg_stall_time 121180.062406                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links0.int_node.port_buffers04.avg_buf_msgs     0.001160                       # Average number of messages in buffer
+system.ruby.network.ext_links0.int_node.port_buffers04.avg_stall_time 16749.523342                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links0.int_node.port_buffers05.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.ext_links0.int_node.port_buffers05.avg_stall_time  3493.705161                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links0.int_node.port_buffers07.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.ext_links0.int_node.port_buffers07.avg_stall_time 30490.654510                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links0.int_node.port_buffers15.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.ext_links0.int_node.port_buffers15.avg_stall_time 30497.737889                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links0.int_node.port_buffers17.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.ext_links0.int_node.port_buffers17.avg_stall_time  3490.277719                       # Average number of cycles messages are stalled in this MB
 system.ruby.network.ext_links0.int_node.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
 system.ruby.network.ext_links0.int_node.percent_links_utilized     0.007895                      
 system.ruby.network.ext_links0.int_node.msg_count.Control::0         1549                      
@@ -2742,6 +2784,16 @@ system.ruby.network.ext_links0.int_node.msg_bytes.Request_Control::0        1239
 system.ruby.network.ext_links0.int_node.msg_bytes.Response_Data::2       112392                      
 system.ruby.network.ext_links0.int_node.msg_bytes.Response_Control::2        12296                      
 system.ruby.network.ext_links0.int_node.msg_bytes.Unblock_Control::4        12392                      
+system.ruby.network.ext_links1.int_node.port_buffers00.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.ext_links1.int_node.port_buffers00.avg_stall_time  3608.205673                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links1.int_node.port_buffers02.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.ext_links1.int_node.port_buffers02.avg_stall_time 31490.300903                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links1.int_node.port_buffers03.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.ext_links1.int_node.port_buffers03.avg_stall_time 15499.593577                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links1.int_node.port_buffers05.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.ext_links1.int_node.port_buffers05.avg_stall_time  1775.094697                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links1.int_node.port_buffers07.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.ext_links1.int_node.port_buffers07.avg_stall_time 15494.855841                       # Average number of cycles messages are stalled in this MB
 system.ruby.network.ext_links1.int_node.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
 system.ruby.network.ext_links1.int_node.percent_links_utilized     0.009908                      
 system.ruby.network.ext_links1.int_node.msg_count.Control::0           14                      
@@ -2779,8 +2831,46 @@ system.tcp_cntrl0.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl0.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl0.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl0.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl0.mandatoryQueue.avg_buf_msgs     0.000018                       # Average number of messages in buffer
+system.tcp_cntrl0.mandatoryQueue.avg_stall_time     0.500256                       # Average number of cycles messages are stalled in this MB
+system.tcp_cntrl0.probeToTCP.avg_buf_msgs     0.000006                       # Average number of messages in buffer
+system.tcp_cntrl0.probeToTCP.avg_stall_time   680.485319                       # Average number of cycles messages are stalled in this MB
+system.tcp_cntrl0.requestFromTCP.avg_buf_msgs     0.000430                       # Average number of messages in buffer
+system.tcp_cntrl0.requestFromTCP.avg_stall_time  4552.451142                       # Average number of cycles messages are stalled in this MB
+system.tcp_cntrl0.responseFromTCP.avg_buf_msgs     0.000479                       # Average number of messages in buffer
+system.tcp_cntrl0.responseFromTCP.avg_stall_time  4534.171455                       # Average number of cycles messages are stalled in this MB
+system.tcp_cntrl0.responseToTCP.avg_buf_msgs     0.000005                       # Average number of messages in buffer
+system.tcp_cntrl0.responseToTCP.avg_stall_time   226.969283                       # Average number of cycles messages are stalled in this MB
 system.tcp_cntrl0.sequencer.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl0.unblockFromCore.avg_buf_msgs     0.000420                       # Average number of messages in buffer
+system.tcp_cntrl0.unblockFromCore.avg_stall_time  4536.988325                       # Average number of cycles messages are stalled in this MB
 system.tcp_cntrl0.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
+system.ruby.network.ext_links2.int_node.port_buffers01.avg_buf_msgs     0.000006                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers01.avg_stall_time   623.782329                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers03.avg_buf_msgs     0.000005                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers03.avg_stall_time   170.228086                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers05.avg_buf_msgs     0.000004                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers05.avg_stall_time   555.902511                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers07.avg_buf_msgs     0.000005                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers07.avg_stall_time   170.023563                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers12.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers12.avg_stall_time 31497.616524                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers13.avg_buf_msgs     0.000013                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers13.avg_stall_time  4687.243604                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers14.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers14.avg_stall_time  3604.665857                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers15.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers15.avg_stall_time  4590.818257                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers17.avg_buf_msgs     0.000013                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers17.avg_stall_time  4671.127513                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers21.avg_buf_msgs     0.000002                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers21.avg_stall_time   171.646260                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers22.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers22.avg_stall_time 13808.776657                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers24.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers24.avg_stall_time 120469.035784                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.ext_links2.int_node.port_buffers26.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.ext_links2.int_node.port_buffers26.avg_stall_time 13752.445255                       # Average number of cycles messages are stalled in this MB
 system.ruby.network.ext_links2.int_node.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
 system.ruby.network.ext_links2.int_node.percent_links_utilized     0.000708                      
 system.ruby.network.ext_links2.int_node.msg_count.Control::0         1535                      
@@ -2827,7 +2917,19 @@ system.tcp_cntrl1.coalescer.cp_tcp_st_hits            0                       # 
 system.tcp_cntrl1.coalescer.cp_tcp_st_transfers            0                       # TCP to TCP store transfers
 system.tcp_cntrl1.coalescer.cp_tcc_st_hits            0                       # stores that hit in the TCC
 system.tcp_cntrl1.coalescer.cp_st_misses            0                       # stores that miss in the GPU
+system.tcp_cntrl1.mandatoryQueue.avg_buf_msgs     0.000024                       # Average number of messages in buffer
+system.tcp_cntrl1.mandatoryQueue.avg_stall_time     0.662049                       # Average number of cycles messages are stalled in this MB
+system.tcp_cntrl1.probeToTCP.avg_buf_msgs     0.000004                       # Average number of messages in buffer
+system.tcp_cntrl1.probeToTCP.avg_stall_time   606.434608                       # Average number of cycles messages are stalled in this MB
+system.tcp_cntrl1.requestFromTCP.avg_buf_msgs     0.000430                       # Average number of messages in buffer
+system.tcp_cntrl1.requestFromTCP.avg_stall_time  4551.971675                       # Average number of cycles messages are stalled in this MB
+system.tcp_cntrl1.responseFromTCP.avg_buf_msgs     0.000360                       # Average number of messages in buffer
+system.tcp_cntrl1.responseFromTCP.avg_stall_time  4040.500048                       # Average number of cycles messages are stalled in this MB
+system.tcp_cntrl1.responseToTCP.avg_buf_msgs     0.000005                       # Average number of messages in buffer
+system.tcp_cntrl1.responseToTCP.avg_stall_time   226.696586                       # Average number of cycles messages are stalled in this MB
 system.tcp_cntrl1.sequencer.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
+system.tcp_cntrl1.unblockFromCore.avg_buf_msgs     0.000420                       # Average number of messages in buffer
+system.tcp_cntrl1.unblockFromCore.avg_stall_time  4531.534386                       # Average number of cycles messages are stalled in this MB
 system.tcp_cntrl1.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
 system.sqc_cntrl0.L1cache.demand_hits               0                       # Number of cache demand hits
 system.sqc_cntrl0.L1cache.demand_misses             0                       # Number of cache demand misses
@@ -2837,8 +2939,16 @@ system.sqc_cntrl0.L1cache.num_data_array_writes            3                    
 system.sqc_cntrl0.L1cache.num_tag_array_reads           70                       # number of tag array reads
 system.sqc_cntrl0.L1cache.num_tag_array_writes            3                       # number of tag array writes
 system.sqc_cntrl0.L1cache.num_data_array_stalls           28                       # number of stalls caused by data array
+system.sqc_cntrl0.mandatoryQueue.avg_buf_msgs     0.000147                       # Average number of messages in buffer
+system.sqc_cntrl0.mandatoryQueue.avg_stall_time   115.508892                       # Average number of cycles messages are stalled in this MB
+system.sqc_cntrl0.requestFromSQC.avg_buf_msgs     0.000360                       # Average number of messages in buffer
+system.sqc_cntrl0.requestFromSQC.avg_stall_time  9182.216368                       # Average number of cycles messages are stalled in this MB
+system.sqc_cntrl0.responseToSQC.avg_buf_msgs     0.000002                       # Average number of messages in buffer
+system.sqc_cntrl0.responseToSQC.avg_stall_time   228.860182                       # Average number of cycles messages are stalled in this MB
 system.sqc_cntrl0.sequencer.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
 system.sqc_cntrl0.sequencer.load_waiting_on_load           75                       # Number of times a load aliased with a pending load
+system.sqc_cntrl0.unblockFromCore.avg_buf_msgs     0.000360                       # Average number of messages in buffer
+system.sqc_cntrl0.unblockFromCore.avg_stall_time  9144.817927                       # Average number of cycles messages are stalled in this MB
 system.sqc_cntrl0.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
 system.tcc_cntrl0.L2cache.demand_hits               0                       # Number of cache demand hits
 system.tcc_cntrl0.L2cache.demand_misses             0                       # Number of cache demand misses
@@ -2849,7 +2959,49 @@ system.tccdir_cntrl0.directory.demand_misses            0                       
 system.tccdir_cntrl0.directory.demand_accesses            0                       # Number of cache demand accesses
 system.tccdir_cntrl0.directory.num_tag_array_reads         1552                       # number of tag array reads
 system.tccdir_cntrl0.directory.num_tag_array_writes           25                       # number of tag array writes
+system.tccdir_cntrl0.probeFromNB.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.tccdir_cntrl0.probeFromNB.avg_stall_time 31997.554717                       # Average number of cycles messages are stalled in this MB
+system.tccdir_cntrl0.probeToCore.avg_buf_msgs     0.000097                       # Average number of messages in buffer
+system.tccdir_cntrl0.probeToCore.avg_stall_time   567.078591                       # Average number of cycles messages are stalled in this MB
+system.tccdir_cntrl0.requestFromTCP.avg_buf_msgs     0.001122                       # Average number of messages in buffer
+system.tccdir_cntrl0.requestFromTCP.avg_stall_time 31695.077969                       # Average number of cycles messages are stalled in this MB
+system.tccdir_cntrl0.requestToNB.avg_buf_msgs     0.002517                       # Average number of messages in buffer
+system.tccdir_cntrl0.requestToNB.avg_stall_time 13751.568729                       # Average number of cycles messages are stalled in this MB
+system.tccdir_cntrl0.responseFromNB.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.tccdir_cntrl0.responseFromNB.avg_stall_time  3661.858802                       # Average number of cycles messages are stalled in this MB
+system.tccdir_cntrl0.responseFromTCP.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.tccdir_cntrl0.responseFromTCP.avg_stall_time  4647.464310                       # Average number of cycles messages are stalled in this MB
+system.tccdir_cntrl0.responseToCore.avg_buf_msgs     0.000025                       # Average number of messages in buffer
+system.tccdir_cntrl0.responseToCore.avg_stall_time   114.431589                       # Average number of cycles messages are stalled in this MB
+system.tccdir_cntrl0.responseToNB.avg_buf_msgs     0.275993                       # Average number of messages in buffer
+system.tccdir_cntrl0.responseToNB.avg_stall_time 119969.254166                       # Average number of cycles messages are stalled in this MB
+system.tccdir_cntrl0.triggerQueue.avg_buf_msgs     0.000019                       # Average number of messages in buffer
+system.tccdir_cntrl0.triggerQueue.avg_stall_time   113.351290                       # Average number of cycles messages are stalled in this MB
+system.tccdir_cntrl0.unblockFromTCP.avg_buf_msgs     0.000013                       # Average number of messages in buffer
+system.tccdir_cntrl0.unblockFromTCP.avg_stall_time  4728.251535                       # Average number of cycles messages are stalled in this MB
+system.tccdir_cntrl0.unblockToNB.avg_buf_msgs     0.002517                       # Average number of messages in buffer
+system.tccdir_cntrl0.unblockToNB.avg_stall_time 13695.471067                       # Average number of cycles messages are stalled in this MB
 system.tccdir_cntrl0.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
+system.ruby.network.int_link_buffers00.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.int_link_buffers00.avg_stall_time  3550.955792                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.int_link_buffers02.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.int_link_buffers02.avg_stall_time 30990.478081                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.int_link_buffers10.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.int_link_buffers10.avg_stall_time 30997.677581                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.int_link_buffers12.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.int_link_buffers12.avg_stall_time  3547.472163                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.int_link_buffers20.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.int_link_buffers20.avg_stall_time 15999.568480                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.int_link_buffers22.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.int_link_buffers22.avg_stall_time  1832.343829                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.int_link_buffers24.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.int_link_buffers24.avg_stall_time 15994.677914                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.int_link_buffers30.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.int_link_buffers30.avg_stall_time 13865.983836                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.int_link_buffers32.avg_buf_msgs     0.001150                       # Average number of messages in buffer
+system.ruby.network.int_link_buffers32.avg_stall_time 120968.816653                       # Average number of cycles messages are stalled in this MB
+system.ruby.network.int_link_buffers34.avg_buf_msgs     0.000010                       # Average number of messages in buffer
+system.ruby.network.int_link_buffers34.avg_stall_time 13809.418694                       # Average number of cycles messages are stalled in this MB
 system.ruby.network.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
 system.ruby.network.msg_count.Control            3112                      
 system.ruby.network.msg_count.Request_Control         3115                      

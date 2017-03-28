@@ -3,12 +3,12 @@ Redirecting stderr to build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ru
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 29 2016 19:21:01
-gem5 started Nov 29 2016 19:21:23
-gem5 executing on zizzer, pid 11568
-command line: /z/powerjg/gem5-upstream/build/HSAIL_X86/gem5.opt -d build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO -re /z/powerjg/gem5-upstream/tests/testing/../run.py quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO
+gem5 compiled Mar 28 2017 14:30:03
+gem5 started Mar 28 2017 14:30:19
+gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 43422
+command line: /usr/local/google/home/gabeblack/gem5/gem5-public/build/HSAIL_X86/gem5.opt -d build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO -re /usr/local/google/home/gabeblack/gem5/gem5-public/tests/testing/../run.py quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO
 
-Using GPU kernel code file(s) /dist/m5/regression/test-progs/gpu-hello/bin/x86/linux/gpu-hello-kernel.asm
+Using GPU kernel code file(s) /usr/local/google/home/gabeblack/gem5/dist/m5/regression/test-progs/gpu-hello/bin/x86/linux/gpu-hello-kernel.asm
 Global frequency set at 1000000000000 ticks per second
 Forcing maxCoalescedReqs to 32 (TLB assoc.) 
 Forcing maxCoalescedReqs to 32 (TLB assoc.) 
