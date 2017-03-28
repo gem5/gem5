@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2015 ARM Limited
+ * Copyright (c) 2012, 2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -101,14 +101,33 @@ DrainManager::resume()
             "Resuming a system that isn't fully drained, this is untested and "
             "likely to break\n");
 
+    panic_if(_state == DrainState::Resuming,
+             "Resuming a system that is already trying to resume. This should "
+             "never happen.\n");
+
     panic_if(_count != 0,
              "Resume called in the middle of a drain cycle. %u objects "
              "left to drain.\n", _count);
 
-    DPRINTF(Drain, "Resuming %u objects.\n", drainableCount());
+    // At this point in time the DrainManager and all objects will be
+    // in the the Drained state. New objects (i.e., objects created
+    // while resuming) will inherit the Resuming state from the
+    // DrainManager, which means we have to resume objects until all
+    // objects are in the Running state.
+    _state = DrainState::Resuming;
+
+    do {
+        DPRINTF(Drain, "Resuming %u objects.\n", drainableCount());
+        for (auto *obj : _allDrainable) {
+            if (obj->drainState() != DrainState::Running) {
+                assert(obj->drainState() == DrainState::Drained ||
+                       obj->drainState() == DrainState::Resuming);
+                obj->dmDrainResume();
+            }
+        }
+    } while (!allInState(DrainState::Running));
+
     _state = DrainState::Running;
-    for (auto *obj : _allDrainable)
-        obj->dmDrainResume();
 }
 
 void
@@ -154,6 +173,17 @@ DrainManager::unregisterDrainable(Drainable *obj)
     _allDrainable.erase(o);
 }
 
+bool
+DrainManager::allInState(DrainState state) const
+{
+    for (const auto *obj : _allDrainable) {
+        if (obj->drainState() != state)
+            return false;
+    }
+
+    return true;
+}
+
 size_t
 DrainManager::drainableCount() const
 {
@@ -189,7 +219,8 @@ Drainable::dmDrain()
 void
 Drainable::dmDrainResume()
 {
-    panic_if(_drainState != DrainState::Drained,
+    panic_if(_drainState != DrainState::Drained &&
+             _drainState != DrainState::Resuming,
              "Trying to resume an object that hasn't been drained\n");
 
     _drainState = DrainState::Running;
