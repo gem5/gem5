@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2016 ARM Limited
+# Copyright (c) 2012-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
 #          Erfan Azarkhish
 
 from m5.params import *
+from m5.proxy import *
 from AbstractMemory import *
 
 # Enum for memory scheduling algorithms, currently First-Come
@@ -182,6 +183,13 @@ class DRAMCtrl(AbstractMemory):
     # tBURST is equivalent to tCCD_S; no explicit parameter required
     # for CAS-to-CAS delay for bursts to different bank groups
     tCCD_L = Param.Latency("0ns", "Same bank group CAS to CAS delay")
+
+    # Write-to-Write delay for bursts to the same bank group
+    # only utilized with bank group architectures; set to 0 for default case
+    # This will be used to enable different same bank group delays
+    # for writes versus reads
+    tCCD_L_WR = Param.Latency(Self.tCCD_L,
+        "Same bank group Write to Write delay")
 
     # time taken to complete one refresh cycle (N rows in all banks)
     tRFC = Param.Latency("Refresh cycle time")

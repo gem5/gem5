@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2017 ARM Limited
+ * Copyright (c) 2012-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -189,7 +189,8 @@ class DRAMCtrl : public AbstractMemory
         uint8_t bank;
         uint8_t bankgr;
 
-        Tick colAllowedAt;
+        Tick rdAllowedAt;
+        Tick wrAllowedAt;
         Tick preAllowedAt;
         Tick actAllowedAt;
 
@@ -198,7 +199,7 @@ class DRAMCtrl : public AbstractMemory
 
         Bank() :
             openRow(NO_ROW), bank(0), bankgr(0),
-            colAllowedAt(0), preAllowedAt(0), actAllowedAt(0),
+            rdAllowedAt(0), wrAllowedAt(0), preAllowedAt(0), actAllowedAt(0),
             rowAccesses(0), bytesAccessed(0)
         { }
     };
@@ -823,15 +824,16 @@ class DRAMCtrl : public AbstractMemory
 
     /**
      * Find which are the earliest banks ready to issue an activate
-     * for the enqueued requests. Assumes maximum of 64 banks per DIMM
+     * for the enqueued requests. Assumes maximum of 32 banks per rank
      * Also checks if the bank is already prepped.
      *
      * @param queue Queued requests to consider
-     * @param time of seamless burst command
+     * @param min_col_at time of seamless burst command
      * @return One-hot encoded mask of bank indices
      * @return boolean indicating burst can issue seamlessly, with no gaps
      */
-    std::pair<uint64_t, bool> minBankPrep(const std::deque<DRAMPacket*>& queue,
+    std::pair<std::vector<uint32_t>, bool> minBankPrep(
+                                          const std::deque<DRAMPacket*>& queue,
                                           Tick min_col_at) const;
 
     /**
@@ -939,10 +941,10 @@ class DRAMCtrl : public AbstractMemory
      * values.
      */
     const Tick M5_CLASS_VAR_USED tCK;
-    const Tick tWTR;
     const Tick tRTW;
     const Tick tCS;
     const Tick tBURST;
+    const Tick tCCD_L_WR;
     const Tick tCCD_L;
     const Tick tRCD;
     const Tick tCL;
@@ -958,6 +960,9 @@ class DRAMCtrl : public AbstractMemory
     const Tick tXP;
     const Tick tXS;
     const uint32_t activationLimit;
+    const Tick rankToRankDly;
+    const Tick wrToRdDly;
+    const Tick rdToWrDly;
 
     /**
      * Memory controller configuration initialized based on parameter
@@ -988,16 +993,16 @@ class DRAMCtrl : public AbstractMemory
     const Tick backendLatency;
 
     /**
-     * Till when has the main data bus been spoken for already?
+     * Till when must we wait before issuing next RD/WR burst?
      */
-    Tick busBusyUntil;
+    Tick nextBurstAt;
 
     Tick prevArrival;
 
     /**
      * The soonest you have to start thinking about the next request
      * is the longest access time that can occur before
-     * busBusyUntil. Assuming you need to precharge, open a new row,
+     * nextBurstAt. Assuming you need to precharge, open a new row,
      * and access, it is tRP + tRCD + tCL.
      */
     Tick nextReqTime;

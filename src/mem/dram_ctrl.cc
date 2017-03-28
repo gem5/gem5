@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2017 ARM Limited
+ * Copyright (c) 2010-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -84,17 +84,19 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     writeLowThreshold(writeBufferSize * p->write_low_thresh_perc / 100.0),
     minWritesPerSwitch(p->min_writes_per_switch),
     writesThisTime(0), readsThisTime(0),
-    tCK(p->tCK), tWTR(p->tWTR), tRTW(p->tRTW), tCS(p->tCS), tBURST(p->tBURST),
+    tCK(p->tCK), tRTW(p->tRTW), tCS(p->tCS), tBURST(p->tBURST),
+    tCCD_L_WR(p->tCCD_L_WR),
     tCCD_L(p->tCCD_L), tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS),
     tWR(p->tWR), tRTP(p->tRTP), tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
     tRRD_L(p->tRRD_L), tXAW(p->tXAW), tXP(p->tXP), tXS(p->tXS),
-    activationLimit(p->activation_limit),
+    activationLimit(p->activation_limit), rankToRankDly(tCS + tBURST),
+    wrToRdDly(tCL + tBURST + p->tWTR), rdToWrDly(tRTW + tBURST),
     memSchedPolicy(p->mem_sched_policy), addrMapping(p->addr_mapping),
     pageMgmt(p->page_policy),
     maxAccessesPerRow(p->max_accesses_per_row),
     frontendLatency(p->static_frontend_latency),
     backendLatency(p->static_backend_latency),
-    busBusyUntil(0), prevArrival(0),
+    nextBurstAt(0), prevArrival(0),
     nextReqTime(0), activeRank(0), timeStampOffset(0),
     lastStatsResetTick(0)
 {
@@ -163,6 +165,12 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
             fatal("tCCD_L (%d) should be larger than tBURST (%d) when "
                   "bank groups per rank (%d) is greater than 1\n",
                   tCCD_L, tBURST, bankGroupsPerRank);
+        }
+        // tCCD_L_WR should be greater than minimal, back-to-back burst delay
+        if (tCCD_L_WR <= tBURST) {
+            fatal("tCCD_L_WR (%d) should be larger than tBURST (%d) when "
+                  "bank groups per rank (%d) is greater than 1\n",
+                  tCCD_L_WR, tBURST, bankGroupsPerRank);
         }
         // tRRD_L is greater than minimal, same bank group ACT-to-ACT delay
         // some datasheets might specify it equal to tRRD
@@ -247,7 +255,7 @@ DRAMCtrl::startup()
         // have to worry about negative values when computing the time for
         // the next request, this will add an insignificant bubble at the
         // start of simulation
-        busBusyUntil = curTick() + tRP + tRCD + tCL;
+        nextBurstAt = curTick() + tRP + tRCD;
     }
 }
 
@@ -773,7 +781,11 @@ bool
 DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
 {
     // Only determine this if needed
-    uint64_t earliest_banks = 0;
+    vector<uint32_t> earliest_banks(ranksPerChannel, 0);
+
+    // Has minBankPrep been called to populate earliest_banks?
+    bool filled_earliest_banks = false;
+    // can the PRE/ACT sequence be done without impacting utlization?
     bool hidden_bank_prep = false;
 
     // search for seamless row hits first, if no seamless row hit is
@@ -794,12 +806,13 @@ DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
     auto selected_pkt_it = queue.end();
 
     // time we need to issue a column command to be seamless
-    const Tick min_col_at = std::max(busBusyUntil - tCL + extra_col_delay,
-                                     curTick());
+    const Tick min_col_at = std::max(nextBurstAt + extra_col_delay, curTick());
 
     for (auto i = queue.begin(); i != queue.end() ; ++i) {
         DRAMPacket* dram_pkt = *i;
         const Bank& bank = dram_pkt->bankRef;
+        const Tick col_allowed_at = dram_pkt->isRead ? bank.rdAllowedAt :
+                                                       bank.wrAllowedAt;
 
         // check if rank is not doing a refresh and thus is available, if not,
         // jump to the next packet
@@ -809,7 +822,7 @@ DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
                 // no additional rank-to-rank or same bank-group
                 // delays, or we switched read/write and might as well
                 // go for the row hit
-                if (bank.colAllowedAt <= min_col_at) {
+                if (col_allowed_at <= min_col_at) {
                     // FCFS within the hits, giving priority to
                     // commands that can issue seamlessly, without
                     // additional delay, such as same rank accesses
@@ -830,18 +843,18 @@ DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
             } else if (!found_earliest_pkt) {
                 // if we have not initialised the bank status, do it
                 // now, and only once per scheduling decisions
-                if (earliest_banks == 0) {
+                if (!filled_earliest_banks) {
                     // determine entries with earliest bank delay
-                    pair<uint64_t, bool> bankStatus =
+                    std::tie(earliest_banks, hidden_bank_prep) =
                         minBankPrep(queue, min_col_at);
-                    earliest_banks = bankStatus.first;
-                    hidden_bank_prep = bankStatus.second;
+                    filled_earliest_banks = true;
                 }
 
                 // bank is amongst first available banks
                 // minBankPrep will give priority to packets that can
                 // issue seamlessly
-                if (bits(earliest_banks, dram_pkt->bankId, dram_pkt->bankId)) {
+                if (bits(earliest_banks[dram_pkt->rank],
+                         dram_pkt->bank, dram_pkt->bank)) {
                     found_earliest_pkt = true;
                     found_hidden_bank = hidden_bank_prep;
 
@@ -937,8 +950,9 @@ DRAMCtrl::activateBank(Rank& rank_ref, Bank& bank_ref,
     // The next access has to respect tRAS for this bank
     bank_ref.preAllowedAt = act_tick + tRAS;
 
-    // Respect the row-to-column command delay
-    bank_ref.colAllowedAt = std::max(act_tick + tRCD, bank_ref.colAllowedAt);
+    // Respect the row-to-column command delay for both read and write cmds
+    bank_ref.rdAllowedAt = std::max(act_tick + tRCD, bank_ref.rdAllowedAt);
+    bank_ref.wrAllowedAt = std::max(act_tick + tRCD, bank_ref.wrAllowedAt);
 
     // start by enforcing tRRD
     for (int i = 0; i < banksPerRank; i++) {
@@ -1074,9 +1088,6 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // for the state we need to track if it is a row hit or not
     bool row_hit = true;
 
-    // respect any constraints on the command (e.g. tRCD or tCCD)
-    Tick cmd_at = std::max(bank.colAllowedAt, curTick());
-
     // Determine the access latency and update the bank state
     if (bank.openRow == dram_pkt->row) {
         // nothing to do
@@ -1095,24 +1106,23 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
         // Record the activation and deal with all the global timing
         // constraints caused be a new activation (tRRD and tXAW)
         activateBank(rank, bank, act_tick, dram_pkt->row);
-
-        // issue the command as early as possible
-        cmd_at = bank.colAllowedAt;
     }
 
+    // respect any constraints on the command (e.g. tRCD or tCCD)
+    const Tick col_allowed_at = dram_pkt->isRead ?
+                                          bank.rdAllowedAt : bank.wrAllowedAt;
+
     // we need to wait until the bus is available before we can issue
-    // the command
-    cmd_at = std::max(cmd_at, busBusyUntil - tCL);
+    // the command; need minimum of tBURST between commands
+    Tick cmd_at = std::max({col_allowed_at, nextBurstAt, curTick()});
 
     // update the packet ready time
     dram_pkt->readyTime = cmd_at + tCL + tBURST;
 
-    // only one burst can use the bus at any one point in time
-    assert(dram_pkt->readyTime - busBusyUntil >= tBURST);
-
     // update the time for the next read/write burst for each
-    // bank (add a max with tCCD/tCCD_L here)
-    Tick cmd_dly;
+    // bank (add a max with tCCD/tCCD_L/tCCD_L_WR here)
+    Tick dly_to_rd_cmd;
+    Tick dly_to_wr_cmd;
     for (int j = 0; j < ranksPerChannel; j++) {
         for (int i = 0; i < banksPerRank; i++) {
             // next burst to same bank group in this rank must not happen
@@ -1123,24 +1133,30 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
                    (bank.bankgr == ranks[j]->banks[i].bankgr)) {
                     // bank group architecture requires longer delays between
                     // RD/WR burst commands to the same bank group.
-                    // Use tCCD_L in this case
-                    cmd_dly = tCCD_L;
+                    // tCCD_L is default requirement for same BG timing
+                    // tCCD_L_WR is required for write-to-write
+                    // Need to also take bus turnaround delays into account
+                    dly_to_rd_cmd = dram_pkt->isRead ?
+                                    tCCD_L : std::max(tCCD_L, wrToRdDly);
+                    dly_to_wr_cmd = dram_pkt->isRead ?
+                                    std::max(tCCD_L, rdToWrDly) : tCCD_L_WR;
                 } else {
-                    // use tBURST (equivalent to tCCD_S), the shorter
-                    // cas-to-cas delay value, when either:
-                    // 1) bank group architecture is not supportted
-                    // 2) bank is in a different bank group
-                    cmd_dly = tBURST;
+                    // tBURST is default requirement for diff BG timing
+                    // Need to also take bus turnaround delays into account
+                    dly_to_rd_cmd = dram_pkt->isRead ? tBURST : wrToRdDly;
+                    dly_to_wr_cmd = dram_pkt->isRead ? rdToWrDly : tBURST;
                 }
             } else {
-                // different rank is by default in a different bank group
-                // use tBURST (equivalent to tCCD_S), which is the shorter
-                // cas-to-cas delay in this case
-                // Add tCS to account for rank-to-rank bus delay requirements
-                cmd_dly = tBURST + tCS;
+                // different rank is by default in a different bank group and
+                // doesn't require longer tCCD or additional RTW, WTR delays
+                // Need to account for rank-to-rank switching with tCS
+                dly_to_wr_cmd = rankToRankDly;
+                dly_to_rd_cmd = rankToRankDly;
             }
-            ranks[j]->banks[i].colAllowedAt = std::max(cmd_at + cmd_dly,
-                                             ranks[j]->banks[i].colAllowedAt);
+            ranks[j]->banks[i].rdAllowedAt = std::max(cmd_at + dly_to_rd_cmd,
+                                             ranks[j]->banks[i].rdAllowedAt);
+            ranks[j]->banks[i].wrAllowedAt = std::max(cmd_at + dly_to_wr_cmd,
+                                             ranks[j]->banks[i].wrAllowedAt);
         }
     }
 
@@ -1215,11 +1231,11 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     MemCommand::cmds command = (mem_cmd == "RD") ? MemCommand::RD :
                                                    MemCommand::WR;
 
-    // Update bus state
-    busBusyUntil = dram_pkt->readyTime;
+    // Update bus state to reflect when previous command was issued
+    nextBurstAt = cmd_at + tBURST;
 
-    DPRINTF(DRAM, "Access to %lld, ready at %lld bus busy until %lld.\n",
-            dram_pkt->addr, dram_pkt->readyTime, busBusyUntil);
+    DPRINTF(DRAM, "Access to %lld, ready at %lld next burst at %lld.\n",
+            dram_pkt->addr, dram_pkt->readyTime, nextBurstAt);
 
     dram_pkt->rankRef.cmdList.push_back(Command(command, dram_pkt->bank,
                                         cmd_at));
@@ -1241,7 +1257,7 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // conservative estimate of when we have to schedule the next
     // request to not introduce any unecessary bubbles. In most cases
     // we will wake up sooner than we have to.
-    nextReqTime = busBusyUntil - (tRP + tRCD + tCL);
+    nextReqTime = nextBurstAt - (tRP + tRCD);
 
     // Update the stats and schedule the next request
     if (dram_pkt->isRead) {
@@ -1374,8 +1390,7 @@ DRAMCtrl::processNextReqEvent()
             // front of the read queue
             // If we are changing command type, incorporate the minimum
             // bus turnaround delay which will be tCS (different rank) case
-            found_read = chooseNext(readQueue,
-                             switched_cmd_type ? tCS : 0);
+            found_read = chooseNext(readQueue, switched_cmd_type ? tCS : 0);
 
             // if no read to an available rank is found then return
             // at this point. There could be writes to the available ranks
@@ -1387,15 +1402,6 @@ DRAMCtrl::processNextReqEvent()
 
             DRAMPacket* dram_pkt = readQueue.front();
             assert(dram_pkt->rankRef.inRefIdleState());
-
-            // here we get a bit creative and shift the bus busy time not
-            // just the tWTR, but also a CAS latency to capture the fact
-            // that we are allowed to prepare a new bank, but not issue a
-            // read command until after tWTR, in essence we capture a
-            // bubble on the data bus that is tWTR + tCL
-            if (switched_cmd_type && dram_pkt->rank == activeRank) {
-                busBusyUntil += tWTR + tCL;
-            }
 
             doDRAMAccess(dram_pkt);
 
@@ -1456,14 +1462,6 @@ DRAMCtrl::processNextReqEvent()
         // sanity check
         assert(dram_pkt->size <= burstSize);
 
-        // add a bubble to the data bus, as defined by the
-        // tRTW when access is to the same rank as previous burst
-        // Different rank timing is handled with tCS, which is
-        // applied to colAllowedAt
-        if (switched_cmd_type && dram_pkt->rank == activeRank) {
-            busBusyUntil += tRTW;
-        }
-
         doDRAMAccess(dram_pkt);
 
         writeQueue.pop_front();
@@ -1522,12 +1520,12 @@ DRAMCtrl::processNextReqEvent()
     }
 }
 
-pair<uint64_t, bool>
+pair<vector<uint32_t>, bool>
 DRAMCtrl::minBankPrep(const deque<DRAMPacket*>& queue,
                       Tick min_col_at) const
 {
-    uint64_t bank_mask = 0;
     Tick min_act_at = MaxTick;
+    vector<uint32_t> bank_mask(ranksPerChannel, 0);
 
     // latest Tick for which ACT can occur without incurring additoinal
     // delay on the data bus
@@ -1567,8 +1565,10 @@ DRAMCtrl::minBankPrep(const deque<DRAMPacket*>& queue,
                     std::max(ranks[i]->banks[j].preAllowedAt, curTick()) + tRP;
 
                 // When is the earliest the R/W burst can issue?
-                Tick col_at = std::max(ranks[i]->banks[j].colAllowedAt,
-                                       act_at + tRCD);
+                const Tick col_allowed_at = (busState == READ) ?
+                                              ranks[i]->banks[j].rdAllowedAt :
+                                              ranks[i]->banks[j].wrAllowedAt;
+                Tick col_at = std::max(col_allowed_at, act_at + tRCD);
 
                 // bank can issue burst back-to-back (seamlessly) with
                 // previous burst
@@ -1586,7 +1586,7 @@ DRAMCtrl::minBankPrep(const deque<DRAMPacket*>& queue,
                     // seen so far
                     if (!found_seamless_bank &&
                         (new_seamless_bank || act_at < min_act_at)) {
-                        bank_mask = 0;
+                        std::fill(bank_mask.begin(), bank_mask.end(), 0);
                     }
 
                     found_seamless_bank |= new_seamless_bank;
@@ -1595,7 +1595,7 @@ DRAMCtrl::minBankPrep(const deque<DRAMPacket*>& queue,
                     hidden_bank_prep = act_at <= hidden_act_max;
 
                     // set the bit corresponding to the available bank
-                    replaceBits(bank_mask, bank_id, bank_id, 1);
+                    replaceBits(bank_mask[i], j, j, 1);
                     min_act_at = act_at;
                 }
             }
@@ -2068,7 +2068,8 @@ DRAMCtrl::Rank::scheduleWakeUpEvent(Tick exit_delay)
         // respect both causality and any existing bank
         // constraints, some banks could already have a
         // (auto) precharge scheduled
-        b.colAllowedAt = std::max(wake_up_tick + exit_delay, b.colAllowedAt);
+        b.wrAllowedAt = std::max(wake_up_tick + exit_delay, b.wrAllowedAt);
+        b.rdAllowedAt = std::max(wake_up_tick + exit_delay, b.rdAllowedAt);
         b.preAllowedAt = std::max(wake_up_tick + exit_delay, b.preAllowedAt);
         b.actAllowedAt = std::max(wake_up_tick + exit_delay, b.actAllowedAt);
     }
