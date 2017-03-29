@@ -3,12 +3,11 @@ Redirecting stderr to build/POWER/tests/opt/quick/se/00.hello/power/linux/simple
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 21 2016 14:27:08
-gem5 started Jul 21 2016 14:27:33
-gem5 executing on e108600-lin, pid 28000
-command line: /work/curdun01/gem5-external.hg/build/POWER/gem5.opt -d build/POWER/tests/opt/quick/se/00.hello/power/linux/simple-atomic -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/00.hello/power/linux/simple-atomic
+gem5 compiled Apr  3 2017 19:22:30
+gem5 started Apr  3 2017 19:22:48
+gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 103795
+command line: /usr/local/google/home/gabeblack/gem5/gem5-public/build/POWER/gem5.opt -d build/POWER/tests/opt/quick/se/00.hello/power/linux/simple-atomic --stats-file 'text://stats.txt?desc=False' -re /usr/local/google/home/gabeblack/gem5/gem5-public/tests/testing/../run.py quick/se/00.hello/power/linux/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
-info: Entering event queue @ 0.  Starting simulation...
 Hello world!
-Exiting @ tick 2896000 because target called exit()
+Exiting @ tick 2896000 because exiting with last active thread context

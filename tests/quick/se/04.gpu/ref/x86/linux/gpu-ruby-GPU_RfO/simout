@@ -3,9 +3,9 @@ Redirecting stderr to build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ru
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Mar 28 2017 16:47:29
-gem5 started Mar 28 2017 16:47:45
-gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 50774
+gem5 compiled Mar 29 2017 16:09:06
+gem5 started Mar 29 2017 16:09:22
+gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 54093
 command line: /usr/local/google/home/gabeblack/gem5/gem5-public/build/HSAIL_X86/gem5.opt -d build/HSAIL_X86/tests/opt/quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO --stats-file 'text://stats.txt?desc=False' -re /usr/local/google/home/gabeblack/gem5/gem5-public/tests/testing/../run.py quick/se/04.gpu/x86/linux/gpu-ruby-GPU_RfO
 
 Using GPU kernel code file(s) /usr/local/google/home/gabeblack/gem5/dist/m5/regression/test-progs/gpu-hello/bin/x86/linux/gpu-hello-kernel.asm
@@ -19,4 +19,4 @@ Forcing maxCoalescedReqs to 32 (TLB assoc.)
 keys = 0x7b2bc0, &keys = 0x798998, keys[0] = 23
 the gpu says:
 elloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloelloe
-Exiting @ tick 667407500 because target called exit()
+Exiting @ tick 667407500 because exiting with last active thread context

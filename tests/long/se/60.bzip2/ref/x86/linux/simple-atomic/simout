@@ -3,20 +3,16 @@ Redirecting stderr to build/X86/tests/opt/long/se/60.bzip2/x86/linux/simple-atom
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 21 2016 14:35:23
-gem5 started Jul 21 2016 14:36:17
-gem5 executing on e108600-lin, pid 18539
-command line: /work/curdun01/gem5-external.hg/build/X86/gem5.opt -d build/X86/tests/opt/long/se/60.bzip2/x86/linux/simple-atomic -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/60.bzip2/x86/linux/simple-atomic
+gem5 compiled Apr  3 2017 19:05:53
+gem5 started Apr  3 2017 19:06:24
+gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 87211
+command line: /usr/local/google/home/gabeblack/gem5/gem5-public/build/X86/gem5.opt -d build/X86/tests/opt/long/se/60.bzip2/x86/linux/simple-atomic --stats-file 'text://stats.txt?desc=False' -re /usr/local/google/home/gabeblack/gem5/gem5-public/tests/testing/../run.py long/se/60.bzip2/x86/linux/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
-info: Entering event queue @ 0.  Starting simulation...
 spec_init
 Loading Input Data
 Input data 1048576 bytes in length
 Compressing Input Data, level 7
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
 Compressed data 198546 bytes in length
 Uncompressing Data
 Uncompressed data 1048576 bytes in length
@@ -27,4 +23,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 2846007227500 because target called exit()
+Exiting @ tick 2846007227500 because exiting with last active thread context

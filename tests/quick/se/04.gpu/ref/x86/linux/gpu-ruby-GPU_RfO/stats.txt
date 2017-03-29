@@ -4,11 +4,11 @@ sim_seconds                                  0.000667
 sim_ticks                                   667407500                      
 final_tick                                  667407500                      
 sim_freq                                 1000000000000                      
-host_inst_rate                                 219740                      
-host_op_rate                                   451865                      
-host_tick_rate                             2189959227                      
-host_mem_usage                                1336836                      
-host_seconds                                     0.30                      
+host_inst_rate                                 212660                      
+host_op_rate                                   437306                      
+host_tick_rate                             2119397283                      
+host_mem_usage                                1336868                      
+host_seconds                                     0.32                      
 sim_insts                                       66963                      
 sim_ops                                        137705                      
 system.voltage_domain.voltage                       1                      
@@ -299,12 +299,12 @@ system.pwrStateResidencyTicks::UNDEFINED    667407500
 system.ruby.pwrStateResidencyTicks::UNDEFINED    667407500                      
 system.ruby.outstanding_req_hist_seqr::bucket_size            1                      
 system.ruby.outstanding_req_hist_seqr::max_bucket            9                      
-system.ruby.outstanding_req_hist_seqr::samples       114203                      
+system.ruby.outstanding_req_hist_seqr::samples       114204                      
 system.ruby.outstanding_req_hist_seqr::mean     1.000035                      
 system.ruby.outstanding_req_hist_seqr::gmean     1.000024                      
 system.ruby.outstanding_req_hist_seqr::stdev     0.005918                      
-system.ruby.outstanding_req_hist_seqr    |           0      0.00%      0.00% |      114199    100.00%    100.00% |           4      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
-system.ruby.outstanding_req_hist_seqr::total       114203                      
+system.ruby.outstanding_req_hist_seqr    |           0      0.00%      0.00% |      114200    100.00%    100.00% |           4      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00% |           0      0.00%    100.00%
+system.ruby.outstanding_req_hist_seqr::total       114204                      
 system.ruby.outstanding_req_hist_coalsr::bucket_size            1                      
 system.ruby.outstanding_req_hist_coalsr::max_bucket            9                      
 system.ruby.outstanding_req_hist_coalsr::samples           27                      
@@ -431,8 +431,8 @@ system.cpu0.num_cc_register_writes              42183
 system.cpu0.num_mem_refs                        27198                      
 system.cpu0.num_load_insts                      16684                      
 system.cpu0.num_store_insts                     10514                      
-system.cpu0.num_idle_cycles               4191.003994                      
-system.cpu0.num_busy_cycles              1330623.996006                      
+system.cpu0.num_idle_cycles               4191.001994                      
+system.cpu0.num_busy_cycles              1330623.998006                      
 system.cpu0.not_idle_fraction                0.996860                      
 system.cpu0.idle_fraction                    0.003140                      
 system.cpu0.Branches                            16199                      

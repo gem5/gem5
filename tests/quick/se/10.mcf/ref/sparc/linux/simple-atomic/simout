@@ -3,13 +3,12 @@ Redirecting stderr to build/SPARC/tests/opt/quick/se/10.mcf/sparc/linux/simple-a
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 21 2016 14:30:06
-gem5 started Jul 21 2016 14:30:35
-gem5 executing on e108600-lin, pid 38668
-command line: /work/curdun01/gem5-external.hg/build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/10.mcf/sparc/linux/simple-atomic -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/10.mcf/sparc/linux/simple-atomic
+gem5 compiled Apr  3 2017 18:41:19
+gem5 started Apr  3 2017 18:41:41
+gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 64903
+command line: /usr/local/google/home/gabeblack/gem5/gem5-public/build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/10.mcf/sparc/linux/simple-atomic --stats-file 'text://stats.txt?desc=False' -re /usr/local/google/home/gabeblack/gem5/gem5-public/tests/testing/../run.py quick/se/10.mcf/sparc/linux/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
-info: Entering event queue @ 0.  Starting simulation...
 
 MCF SPEC version 1.6.I
 by  Andreas Loebel
@@ -26,4 +25,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 122215823500 because target called exit()
+Exiting @ tick 122215823500 because exiting with last active thread context

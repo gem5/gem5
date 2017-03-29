@@ -3,17 +3,13 @@ Redirecting stderr to build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing/
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Oct 11 2016 00:00:58
-gem5 started Oct 13 2016 21:09:23
-gem5 executing on e108600-lin, pid 17649
-command line: /work/curdun01/gem5-external.hg/build/X86/gem5.opt -d build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing -re /work/curdun01/gem5-external.hg/tests/testing/../run.py long/se/20.parser/x86/linux/o3-timing
+gem5 compiled Apr  3 2017 19:05:53
+gem5 started Apr  3 2017 19:06:22
+gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 87198
+command line: /usr/local/google/home/gabeblack/gem5/gem5-public/build/X86/gem5.opt -d build/X86/tests/opt/long/se/20.parser/x86/linux/o3-timing --stats-file 'text://stats.txt?desc=False' -re /usr/local/google/home/gabeblack/gem5/gem5-public/tests/testing/../run.py long/se/20.parser/x86/linux/o3-timing
 
 Global frequency set at 1000000000000 ticks per second
-info: Entering event queue @ 0.  Starting simulation...
 
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
-info: Increasing stack size by one page.
  Reading the dictionary files: *************************************************
  58924 words stored in 3784810 bytes
 
@@ -72,4 +68,4 @@ Echoing of input sentence turned on.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 487015166000 because target called exit()
+Exiting @ tick 487050729500 because exiting with last active thread context

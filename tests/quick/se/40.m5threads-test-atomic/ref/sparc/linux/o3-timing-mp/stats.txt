@@ -4,11 +4,11 @@ sim_seconds                                  0.000127
 sim_ticks                                   126524000                      
 final_tick                                  126524000                      
 sim_freq                                 1000000000000                      
-host_inst_rate                                 214440                      
-host_op_rate                                   214440                      
-host_tick_rate                               23217304                      
+host_inst_rate                                 211101                      
+host_op_rate                                   211100                      
+host_tick_rate                               22855727                      
 host_mem_usage                                 280860                      
-host_seconds                                     5.45                      
+host_seconds                                     5.54                      
 sim_insts                                     1168600                      
 sim_ops                                       1168600                      
 system.voltage_domain.voltage                       1                      
@@ -316,7 +316,7 @@ system.cpu0.fetch.Insts                        585438
 system.cpu0.fetch.Branches                      99156                      
 system.cpu0.fetch.predictedBranches             90042                      
 system.cpu0.fetch.Cycles                       194902                      
-system.cpu0.fetch.SquashCycles                   3487                      
+system.cpu0.fetch.SquashCycles                   3486                      
 system.cpu0.fetch.MiscStallCycles                   9                      
 system.cpu0.fetch.PendingTrapStallCycles         2371                      
 system.cpu0.fetch.IcacheWaitRetryStallCycles            8                      
@@ -373,7 +373,7 @@ system.cpu0.iq.iqInstsAdded                    468496
 system.cpu0.iq.iqNonSpecInstsAdded               1145                      
 system.cpu0.iq.iqInstsIssued                   464441                      
 system.cpu0.iq.iqSquashedInstsIssued              106                      
-system.cpu0.iq.iqSquashedInstsExamined          16686                      
+system.cpu0.iq.iqSquashedInstsExamined          16685                      
 system.cpu0.iq.iqSquashedOperandsExamined        13469                      
 system.cpu0.iq.iqSquashedNonSpecRemoved           586                      
 system.cpu0.iq.issued_per_cycle::samples       222303                      
@@ -474,7 +474,7 @@ system.cpu0.iq.rate                          1.835380
 system.cpu0.iq.fu_busy_cnt                        333                      
 system.cpu0.iq.fu_busy_rate                  0.000717                      
 system.cpu0.iq.int_inst_queue_reads           1151624                      
-system.cpu0.iq.int_inst_queue_writes           486379                      
+system.cpu0.iq.int_inst_queue_writes           486378                      
 system.cpu0.iq.int_inst_queue_wakeup_accesses       461879                      
 system.cpu0.iq.fp_inst_queue_reads                  0                      
 system.cpu0.iq.fp_inst_queue_writes                 0                      
@@ -592,7 +592,7 @@ system.cpu0.commit.op_class_0::InstPrefetch            0      0.00%    100.00%
 system.cpu0.commit.op_class_0::total           540180                      
 system.cpu0.commit.bw_lim_events                  456                      
 system.cpu0.rob.rob_reads                      774865                      
-system.cpu0.rob.rob_writes                    1118644                      
+system.cpu0.rob.rob_writes                    1118643                      
 system.cpu0.timesIdled                            329                      
 system.cpu0.idleCycles                          30746                      
 system.cpu0.committedInsts                     452871                      
@@ -1142,7 +1142,7 @@ system.cpu1.cpi                              0.859746
 system.cpu1.cpi_total                        0.859746                      
 system.cpu1.ipc                              1.163134                      
 system.cpu1.ipc_total                        1.163134                      
-system.cpu1.int_regfile_reads                  419202                      
+system.cpu1.int_regfile_reads                  419203                      
 system.cpu1.int_regfile_writes                 195886                      
 system.cpu1.fp_regfile_writes                      64                      
 system.cpu1.misc_regfile_reads                 120419                      
@@ -1682,7 +1682,7 @@ system.cpu2.cpi                              0.897099
 system.cpu2.cpi_total                        0.897099                      
 system.cpu2.ipc                              1.114704                      
 system.cpu2.ipc_total                        1.114704                      
-system.cpu2.int_regfile_reads                  403345                      
+system.cpu2.int_regfile_reads                  403346                      
 system.cpu2.int_regfile_writes                 188790                      
 system.cpu2.fp_regfile_writes                      64                      
 system.cpu2.misc_regfile_reads                 114754                      
@@ -2218,7 +2218,7 @@ system.cpu3.cpi                              0.704137
 system.cpu3.cpi_total                        0.704137                      
 system.cpu3.ipc                              1.420178                      
 system.cpu3.ipc_total                        1.420178                      
-system.cpu3.int_regfile_reads                  509137                      
+system.cpu3.int_regfile_reads                  509138                      
 system.cpu3.int_regfile_writes                 236602                      
 system.cpu3.fp_regfile_writes                      64                      
 system.cpu3.misc_regfile_reads                 150205                      

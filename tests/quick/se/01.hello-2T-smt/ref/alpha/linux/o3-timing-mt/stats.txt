@@ -4,11 +4,11 @@ sim_seconds                                  0.000027
 sim_ticks                                    27117500                      
 final_tick                                   27117500                      
 sim_freq                                 1000000000000                      
-host_inst_rate                                 132500                      
-host_op_rate                                   132484                      
-host_tick_rate                              281303428                      
-host_mem_usage                                 265748                      
-host_seconds                                     0.10                      
+host_inst_rate                                 121145                      
+host_op_rate                                   121128                      
+host_tick_rate                              257188425                      
+host_mem_usage                                 265776                      
+host_seconds                                     0.11                      
 sim_insts                                       12770                      
 sim_ops                                         12770                      
 system.voltage_domain.voltage                       1                      
@@ -755,7 +755,7 @@ system.cpu.cpi_total                         4.247142
 system.cpu.ipc::0                            0.117726                      
 system.cpu.ipc::1                            0.117726                      
 system.cpu.ipc_total                         0.235452                      
-system.cpu.int_regfile_reads                    23898                      
+system.cpu.int_regfile_reads                    23899                      
 system.cpu.int_regfile_writes                   13306                      
 system.cpu.fp_regfile_reads                        16                      
 system.cpu.fp_regfile_writes                        4                      

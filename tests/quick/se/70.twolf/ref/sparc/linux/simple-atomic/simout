@@ -3,15 +3,14 @@ Redirecting stderr to build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Jul 21 2016 14:30:06
-gem5 started Jul 21 2016 14:30:36
-gem5 executing on e108600-lin, pid 38671
-command line: /work/curdun01/gem5-external.hg/build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-atomic -re /work/curdun01/gem5-external.hg/tests/testing/../run.py quick/se/70.twolf/sparc/linux/simple-atomic
+gem5 compiled Apr  3 2017 18:41:19
+gem5 started Apr  3 2017 18:41:37
+gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 64822
+command line: /usr/local/google/home/gabeblack/gem5/gem5-public/build/SPARC/gem5.opt -d build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-atomic --stats-file 'text://stats.txt?desc=False' -re /usr/local/google/home/gabeblack/gem5/gem5-public/tests/testing/../run.py quick/se/70.twolf/sparc/linux/simple-atomic
 
 Couldn't unlink  build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-atomic/smred.sav
 Couldn't unlink  build/SPARC/tests/opt/quick/se/70.twolf/sparc/linux/simple-atomic/smred.sv2
 Global frequency set at 1000000000000 ticks per second
-info: Entering event queue @ 0.  Starting simulation...
 
 TimberWolfSC version:v4.3a date:Mon Jan 25 18:50:36 EST 1988
 Standard Cell Placement and Global Routing Program
@@ -25,5 +24,4 @@ Authors: Carl Sechen, Bill Swartz
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-info: Increasing stack size by one page.
-122 123 124 Exiting @ tick 96722945000 because target called exit()
+122 123 124 Exiting @ tick 96722945000 because exiting with last active thread context
