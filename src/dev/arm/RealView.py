@@ -345,14 +345,13 @@ class RealView(Platform):
     def offChipIOClkDomain(self, clkdomain):
         self._attach_clk(self._off_chip_devices(), clkdomain)
 
-    def attachOnChipIO(self, bus, bridge=None, **kwargs):
-        self._attach_io(self._on_chip_devices(), bus, **kwargs)
+    def attachOnChipIO(self, bus, bridge=None, *args, **kwargs):
+        self._attach_io(self._on_chip_devices(), bus, *args, **kwargs)
         if bridge:
             bridge.ranges = self._off_chip_ranges
 
     def attachIO(self, *args, **kwargs):
         self._attach_io(self._off_chip_devices(), *args, **kwargs)
-
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
         self.nvmem = SimpleMemory(range = AddrRange('2GB', size = '64MB'),
@@ -612,27 +611,55 @@ class RealViewEB(RealView):
 
 class VExpress_EMM(RealView):
     _mem_regions = [(Addr('2GB'), Addr('2GB'))]
-    uart = Pl011(pio_addr=0x1c090000, int_num=37)
-    realview_io = RealViewCtrl(
-        proc_id0=0x14000000, proc_id1=0x14000000,
-        idreg=0x02250000, pio_addr=0x1C010000)
+
+    # Ranges based on excluding what is part of on-chip I/O (gic,
+    # a9scu)
+    _off_chip_ranges = [AddrRange(0x2F000000, size='16MB'),
+                        AddrRange(0x30000000, size='256MB'),
+                        AddrRange(0x40000000, size='512MB'),
+                        AddrRange(0x18000000, size='64MB'),
+                        AddrRange(0x1C000000, size='64MB')]
+
+    # Platform control device (off-chip)
+    realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000,
+                               idreg=0x02250000, pio_addr=0x1C010000)
+
     mcc = VExpressMCC()
     dcc = CoreTile2A15DCC()
+
+    ### On-chip devices ###
     gic = Pl390(dist_addr=0x2C001000, cpu_addr=0x2C002000)
+    vgic   = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
+
+    local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30,
+                                    pio_addr=0x2C080000)
+
+    hdlcd  = HDLcd(pxl_clk=dcc.osc_pxl,
+                   pio_addr=0x2b000000, int_num=117,
+                   workaround_swap_rb=True)
+
+    def _on_chip_devices(self):
+        devices = [
+            self.gic, self.vgic,
+            self.local_cpu_timer
+        ]
+        if hasattr(self, "gicv2m"):
+            devices.append(self.gicv2m)
+        devices.append(self.hdlcd)
+        return devices
+
+    ### Off-chip devices ###
+    uart = Pl011(pio_addr=0x1c090000, int_num=37)
     pci_host = GenericPciHost(
         conf_base=0x30000000, conf_size='256MB', conf_device_bits=16,
         pci_pio_base=0)
-    local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30, pio_addr=0x2C080000)
+
     generic_timer = GenericTimer(int_phys=29, int_virt=27)
     timer0 = Sp804(int_num0=34, int_num1=34, pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
     timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
     clcd   = Pl111(pio_addr=0x1c1f0000, int_num=46)
-    hdlcd  = HDLcd(pxl_clk=dcc.osc_pxl,
-                   pio_addr=0x2b000000, int_num=117,
-                   workaround_swap_rb=True)
     kmi0   = Pl050(pio_addr=0x1c060000, int_num=44)
     kmi1   = Pl050(pio_addr=0x1c070000, int_num=45, is_mouse=True)
-    vgic   = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
     cf_ctrl = IdeController(disks=[], pci_func=0, pci_dev=0, pci_bus=2,
                             io_shift = 2, ctrl_offset = 2, Command = 0x1,
                             BAR0 = 0x1C1A0000, BAR0Size = '256B',
@@ -655,6 +682,38 @@ class VExpress_EMM(RealView):
     mmc_fake       = AmbaFake(pio_addr=0x1c050000)
     energy_ctrl    = EnergyCtrl(pio_addr=0x1c080000)
 
+    def _off_chip_devices(self):
+        devices = [
+            self.uart,
+            self.realview_io,
+            self.pci_host,
+            self.timer0,
+            self.timer1,
+            self.clcd,
+            self.kmi0,
+            self.kmi1,
+            self.cf_ctrl,
+            self.rtc,
+            self.vram,
+            self.l2x0_fake,
+            self.uart1_fake,
+            self.uart2_fake,
+            self.uart3_fake,
+            self.sp810_fake,
+            self.watchdog_fake,
+            self.aaci_fake,
+            self.lan_fake,
+            self.usb_fake,
+            self.mmc_fake,
+            self.energy_ctrl,
+        ]
+        # Try to attach the I/O if it exists
+        if hasattr(self, "ide"):
+            devices.append(self.ide)
+        if hasattr(self, "ethernet"):
+            devices.append(self.ethernet)
+        return devices
+
     # Attach any PCI devices that are supported
     def attachPciDevices(self):
         self.ethernet = IGbE_e1000(pci_bus=0, pci_dev=0, pci_func=0,
@@ -675,100 +734,6 @@ class VExpress_EMM(RealView):
         cur_sys.atags_addr = 0x8000000
         cur_sys.load_addr_mask = 0xfffffff
         cur_sys.load_offset = 0x80000000
-
-    # Attach I/O devices that are on chip and also set the appropriate
-    # ranges for the bridge
-    def attachOnChipIO(self, bus, bridge=None):
-        self.gic.pio             = bus.master
-        self.vgic.pio            = bus.master
-        self.local_cpu_timer.pio = bus.master
-        if hasattr(self, "gicv2m"):
-            self.gicv2m.pio      = bus.master
-        self.hdlcd.dma           = bus.slave
-        if bridge:
-            # Bridge ranges based on excluding what is part of on-chip I/O
-            # (gic, a9scu)
-            bridge.ranges = [AddrRange(0x2F000000, size='16MB'),
-                             AddrRange(0x2B000000, size='4MB'),
-                             AddrRange(0x30000000, size='256MB'),
-                             AddrRange(0x40000000, size='512MB'),
-                             AddrRange(0x18000000, size='64MB'),
-                             AddrRange(0x1C000000, size='64MB')]
-
-
-    # Set the clock domain for IO objects that are considered
-    # to be "close" to the cores.
-    def onChipIOClkDomain(self, clkdomain):
-        self.gic.clk_domain             = clkdomain
-        if hasattr(self, "gicv2m"):
-            self.gicv2m.clk_domain      = clkdomain
-        self.hdlcd.clk_domain           = clkdomain
-        self.vgic.clk_domain            = clkdomain
-
-    # Attach I/O devices to specified bus object.  Done here
-    # as the specified bus to connect to may not always be fixed.
-    def attachIO(self, bus):
-       self.uart.pio            = bus.master
-       self.realview_io.pio     = bus.master
-       self.pci_host.pio        = bus.master
-       self.timer0.pio          = bus.master
-       self.timer1.pio          = bus.master
-       self.clcd.pio            = bus.master
-       self.clcd.dma            = bus.slave
-       self.hdlcd.pio           = bus.master
-       self.kmi0.pio            = bus.master
-       self.kmi1.pio            = bus.master
-       self.cf_ctrl.pio         = bus.master
-       self.cf_ctrl.dma         = bus.slave
-       self.rtc.pio             = bus.master
-       self.vram.port           = bus.master
-
-       self.l2x0_fake.pio       = bus.master
-       self.uart1_fake.pio      = bus.master
-       self.uart2_fake.pio      = bus.master
-       self.uart3_fake.pio      = bus.master
-       self.sp810_fake.pio      = bus.master
-       self.watchdog_fake.pio   = bus.master
-       self.aaci_fake.pio       = bus.master
-       self.lan_fake.pio        = bus.master
-       self.usb_fake.pio        = bus.master
-       self.mmc_fake.pio        = bus.master
-       self.energy_ctrl.pio     = bus.master
-
-       # Try to attach the I/O if it exists
-       try:
-           self.ide.pio         = bus.master
-           self.ide.dma         = bus.slave
-           self.ethernet.pio    = bus.master
-           self.ethernet.dma    = bus.slave
-       except:
-           pass
-
-    # Set the clock domain for IO objects that are considered
-    # to be "far" away from the cores.
-    def offChipIOClkDomain(self, clkdomain):
-        self.uart.clk_domain          = clkdomain
-        self.realview_io.clk_domain   = clkdomain
-        self.timer0.clk_domain        = clkdomain
-        self.timer1.clk_domain        = clkdomain
-        self.clcd.clk_domain          = clkdomain
-        self.kmi0.clk_domain          = clkdomain
-        self.kmi1.clk_domain          = clkdomain
-        self.cf_ctrl.clk_domain       = clkdomain
-        self.rtc.clk_domain           = clkdomain
-        self.vram.clk_domain          = clkdomain
-
-        self.l2x0_fake.clk_domain     = clkdomain
-        self.uart1_fake.clk_domain    = clkdomain
-        self.uart2_fake.clk_domain    = clkdomain
-        self.uart3_fake.clk_domain    = clkdomain
-        self.sp810_fake.clk_domain    = clkdomain
-        self.watchdog_fake.clk_domain = clkdomain
-        self.aaci_fake.clk_domain     = clkdomain
-        self.lan_fake.clk_domain      = clkdomain
-        self.usb_fake.clk_domain      = clkdomain
-        self.mmc_fake.clk_domain      = clkdomain
-        self.energy_ctrl.clk_domain   = clkdomain
 
 class VExpress_EMM64(VExpress_EMM):
     # Three memory regions are specified totalling 512GB
