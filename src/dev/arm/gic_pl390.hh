@@ -71,6 +71,7 @@ class Pl390 : public BaseGic, public BaseGicRegisters
         DIST_SIZE          = 0xfff
     };
 
+    static const AddrRange GICD_IGROUPR;    // interrupt group (unimplemented)
     static const AddrRange GICD_ISENABLER;  // interrupt set enable
     static const AddrRange GICD_ICENABLER;  // interrupt clear enable
     static const AddrRange GICD_ISPENDR;    // set pending interrupt

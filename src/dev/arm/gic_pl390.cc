@@ -52,6 +52,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+const AddrRange Pl390::GICD_IGROUPR   (0x080, 0x0ff);
 const AddrRange Pl390::GICD_ISENABLER (0x100, 0x17f);
 const AddrRange Pl390::GICD_ICENABLER (0x180, 0x1ff);
 const AddrRange Pl390::GICD_ISPENDR   (0x200, 0x27f);
@@ -153,6 +154,10 @@ Pl390::readDistributor(PacketPtr pkt)
 uint32_t
 Pl390::readDistributor(ContextID ctx, Addr daddr, size_t resp_sz)
 {
+    if (GICD_IGROUPR.contains(daddr)) {
+        return 0; // unimplemented; RAZ (read as zero)
+    }
+
     if (GICD_ISENABLER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ISENABLER.start()) >> 2;
         assert(ix < 32);
@@ -387,6 +392,10 @@ void
 Pl390::writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
                         size_t data_sz)
 {
+    if (GICD_IGROUPR.contains(daddr)) {
+        return; // unimplemented; WI (writes ignored)
+    }
+
     if (GICD_ISENABLER.contains(daddr)) {
         uint32_t ix = (daddr - GICD_ISENABLER.start()) >> 2;
         assert(ix < 32);
