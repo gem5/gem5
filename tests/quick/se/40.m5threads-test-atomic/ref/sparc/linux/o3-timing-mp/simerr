@@ -4,4 +4,5 @@ warn: ClockedObject: More than one power state change request encountered within
 warn: ClockedObject: More than one power state change request encountered within the same simulation tick
 warn: ClockedObject: More than one power state change request encountered within the same simulation tick
 warn: ClockedObject: More than one power state change request encountered within the same simulation tick
+info: Entering event queue @ 0.  Starting simulation...
 warn: ClockedObject: Already in the requested power state, request ignored
