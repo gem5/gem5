@@ -3,30 +3,10 @@ Redirecting stderr to build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realv
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 29 2016 19:03:48
-gem5 started Nov 29 2016 19:04:20
-gem5 executing on zizzer, pid 5756
-command line: /z/powerjg/gem5-upstream/build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing-dual -re /z/powerjg/gem5-upstream/tests/testing/../run.py quick/fs/10.linux-boot/arm/linux/realview-simple-timing-dual
+gem5 compiled Mar 29 2017 18:44:23
+gem5 started Mar 29 2017 18:44:38
+gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 53279
+command line: /usr/local/google/home/gabeblack/gem5/gem5-public/build/ARM/gem5.opt -d build/ARM/tests/opt/quick/fs/10.linux-boot/arm/linux/realview-simple-timing-dual --stats-file 'text://stats.txt?desc=False' -re /usr/local/google/home/gabeblack/gem5/gem5-public/tests/testing/../run.py quick/fs/10.linux-boot/arm/linux/realview-simple-timing-dual
 
 Global frequency set at 1000000000000 ticks per second
-info: kernel located at: /dist/m5/system/binaries/vmlinux.aarch32.ll_20131205.0-gem5
-info: Using bootloader at address 0x10
-info: Using kernel entry physical address at 0x80008000
-info: Loading DTB file: /dist/m5/system/binaries/vexpress.aarch32.ll_20131205.0-gem5.2cpu.dtb at address 0x88000000
-info: Entering event queue @ 0.  Starting simulation...
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-info: trap check M:0 N:0 1:0 2:0 hdcr 0, hcptr 3fff, hstr 0
-Exiting @ tick 2870988926500 because m5_exit instruction encountered
+Exiting @ tick 2871012355500 because m5_exit instruction encountered
