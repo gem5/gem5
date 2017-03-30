@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012, 2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -76,16 +76,18 @@ class LinuxArmSystemBuilder(object):
         Arguments:
           machine_type -- String describing the platform to simulate
           num_cpus -- integer number of CPUs in the system
+          use_ruby -- True if ruby is used instead of the classic memory system
         """
         self.machine_type = machine_type
         self.num_cpus = kwargs.get('num_cpus', 1)
         self.mem_size = kwargs.get('mem_size', '256MB')
+        self.use_ruby = kwargs.get('use_ruby', False)
 
     def create_system(self):
         sc = SysConfig(None, self.mem_size, None)
         system = FSConfig.makeArmSystem(self.mem_mode,
                                         self.machine_type, self.num_cpus,
-                                        sc, False)
+                                        sc, False, ruby=self.use_ruby)
 
         # We typically want the simulator to panic if the kernel
         # panics or oopses. This prevents the simulator from running
