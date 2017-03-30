@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2017 The University of Virginia
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +28,7 @@
  *
  * Authors: Gabe Black
  *          Ali Saidi
+ *          Alec Roelke
  */
 
 #ifndef __RISCV_PROCESS_HH__
@@ -57,6 +59,8 @@ class RiscvProcess : public Process
     using Process::getSyscallArg;
     void setSyscallArg(ThreadContext *tc, int i, RiscvISA::IntReg val);
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
+
+    virtual bool mmapGrowsDown() const override { return false; }
 };
 
 /* No architectural page table defined for this ISA */

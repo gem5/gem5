@@ -60,13 +60,12 @@ using namespace RiscvISA;
 RiscvProcess::RiscvProcess(ProcessParams * params,
     ObjectFile *objFile) : Process(params, objFile)
 {
-    const Addr mem_base = 0x80000000;
-    const Addr stack_base = mem_base;
+    const Addr stack_base = 0x7FFFFFFFFFFFFFFFL;
     const Addr max_stack_size = PageBytes * 64;
     const Addr next_thread_stack_base = stack_base - max_stack_size;
     const Addr brk_point = roundUp(objFile->bssBase() + objFile->bssSize(),
             PageBytes);
-    const Addr mmap_end = mem_base;
+    const Addr mmap_end = 0x4000000000000000L;
     memState = make_shared<MemState>(brk_point, stack_base, max_stack_size,
             next_thread_stack_base, mmap_end);
 }
