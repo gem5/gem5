@@ -42,7 +42,7 @@ system.cpu.dtb.walker.pwrStateResidencyTicks::UNDEFINED 131393279000            
 system.cpu.apic_clk_domain.clock                 8000                       # Clock period in ticks
 system.cpu.interrupts.pwrStateResidencyTicks::UNDEFINED 131393279000                       # Cumulative time (in ticks) in various power states
 system.cpu.itb.walker.pwrStateResidencyTicks::UNDEFINED 131393279000                       # Cumulative time (in ticks) in various power states
-system.cpu.workload.num_syscalls                  400                       # Number of system calls
+system.cpu.workload.numSyscalls                   400                       # Number of system calls
 system.cpu.pwrStateResidencyTicks::ON    131393279000                       # Cumulative time (in ticks) in various power states
 system.cpu.numCycles                        262786559                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started

@@ -279,7 +279,7 @@ system.mem_ctrls_1.memoryStateTime::ACT         18590                       # Ti
 system.mem_ctrls_1.memoryStateTime::ACT_PDN        57682                       # Time in different power states
 system.pwrStateResidencyTicks::UNDEFINED        86746                       # Cumulative time (in ticks) in various power states
 system.cpu.clk_domain.clock                         1                       # Clock period in ticks
-system.cpu.workload.num_syscalls                   11                       # Number of system calls
+system.cpu.workload.numSyscalls                    11                       # Number of system calls
 system.cpu.pwrStateResidencyTicks::ON           86746                       # Cumulative time (in ticks) in various power states
 system.cpu.numCycles                            86746                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started

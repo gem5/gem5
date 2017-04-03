@@ -308,8 +308,8 @@ system.cpu.itb.data_hits                            0
 system.cpu.itb.data_misses                          0                      
 system.cpu.itb.data_acv                             0                      
 system.cpu.itb.data_accesses                        0                      
-system.cpu.workload0.num_syscalls                  17                      
-system.cpu.workload1.num_syscalls                  17                      
+system.cpu.workload0.numSyscalls                   17                      
+system.cpu.workload1.numSyscalls                   17                      
 system.cpu.pwrStateResidencyTicks::ON        27117500                      
 system.cpu.numCycles                            54236                      
 system.cpu.numWorkItemsStarted                      0                      

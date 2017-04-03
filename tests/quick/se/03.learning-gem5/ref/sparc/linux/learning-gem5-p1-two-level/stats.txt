@@ -261,7 +261,7 @@ system.mem_ctrl_1.memoryStateTime::PRE_PDN      4629500                       # 
 system.mem_ctrl_1.memoryStateTime::ACT        4495750                       # Time in different power states
 system.mem_ctrl_1.memoryStateTime::ACT_PDN     45008750                       # Time in different power states
 system.pwrStateResidencyTicks::UNDEFINED     56511000                       # Cumulative time (in ticks) in various power states
-system.cpu.workload.num_syscalls                   11                       # Number of system calls
+system.cpu.workload.numSyscalls                    11                       # Number of system calls
 system.cpu.pwrStateResidencyTicks::ON        56511000                       # Cumulative time (in ticks) in various power states
 system.cpu.numCycles                            56511                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started

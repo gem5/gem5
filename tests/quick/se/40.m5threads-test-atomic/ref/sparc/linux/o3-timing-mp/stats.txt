@@ -306,7 +306,7 @@ system.cpu0.branchPred.indirectHits             87442                       # Nu
 system.cpu0.branchPred.indirectMisses            6839                       # Number of indirect misses.
 system.cpu0.branchPredindirectMispredicted          944                       # Number of mispredicted indirect branches.
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
-system.cpu0.workload.num_syscalls                  89                       # Number of system calls
+system.cpu0.workload.numSyscalls                   89                       # Number of system calls
 system.cpu0.pwrStateResidencyTicks::ON      123756000                       # Cumulative time (in ticks) in various power states
 system.cpu0.numCycles                          247513                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started

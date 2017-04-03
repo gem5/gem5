@@ -448,7 +448,7 @@ system.cpu.itb.inst_accesses                        0
 system.cpu.itb.hits                                 0                      
 system.cpu.itb.misses                               0                      
 system.cpu.itb.accesses                             0                      
-system.cpu.workload.num_syscalls                  673                      
+system.cpu.workload.numSyscalls                   673                      
 system.cpu.pwrStateResidencyTicks::ON    339069355000                      
 system.cpu.numCycles                        678138711                      
 system.cpu.numWorkItemsStarted                      0                      

@@ -13,7 +13,7 @@ system.cpu0.not_idle_fraction                0.988025                       # Pe
 system.cpu0.numCycles                         4944742                       # number of cpu cycles simulated
 system.cpu0.num_insts                          156931                       # Number of instructions executed
 system.cpu0.num_refs                            47256                       # Number of memory references
-system.cpu0.workload.PROG:num_syscalls             89                       # Number of system calls
+system.cpu0.workload.PROG:numSyscalls              89                       # Number of system calls
 system.cpu1.idle_fraction                    0.012259                       # Percentage of idle cycles
 system.cpu1.not_idle_fraction                0.987741                       # Percentage of non-idle cycles
 system.cpu1.numCycles                         4944666                       # number of cpu cycles simulated

@@ -401,7 +401,7 @@ system.cpu0.dtb.walker.pwrStateResidencyTicks::UNDEFINED    667407500           
 system.cpu0.apic_clk_domain.clock                8000                       # Clock period in ticks
 system.cpu0.interrupts.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
 system.cpu0.itb.walker.pwrStateResidencyTicks::UNDEFINED    667407500                       # Cumulative time (in ticks) in various power states
-system.cpu0.workload.num_syscalls                  21                       # Number of system calls
+system.cpu0.workload.numSyscalls                   21                       # Number of system calls
 system.cpu0.numPwrStateTransitions                  2                       # Number of power state transitions
 system.cpu0.pwrStateClkGateDist::samples            1                       # Distribution of time spent in the clock gated state
 system.cpu0.pwrStateClkGateDist::mean         2095501                       # Distribution of time spent in the clock gated state

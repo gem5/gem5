@@ -40,7 +40,7 @@ system.physmem.bw_total::cpu.data          3438835373                       # To
 system.physmem.bw_total::total            11438503207                       # Total bandwidth to/from this memory (bytes/s)
 system.pwrStateResidencyTicks::UNDEFINED 122215823500                       # Cumulative time (in ticks) in various power states
 system.cpu_clk_domain.clock                       500                       # Clock period in ticks
-system.cpu.workload.num_syscalls                  443                       # Number of system calls
+system.cpu.workload.numSyscalls                   443                       # Number of system calls
 system.cpu.pwrStateResidencyTicks::ON    122215823500                       # Cumulative time (in ticks) in various power states
 system.cpu.numCycles                        244431648                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started

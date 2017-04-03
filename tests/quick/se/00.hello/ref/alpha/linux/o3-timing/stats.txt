@@ -308,7 +308,7 @@ system.cpu.itb.data_hits                            0                       # DT
 system.cpu.itb.data_misses                          0                       # DTB misses
 system.cpu.itb.data_acv                             0                       # DTB access violations
 system.cpu.itb.data_accesses                        0                       # DTB accesses
-system.cpu.workload.num_syscalls                   17                       # Number of system calls
+system.cpu.workload.numSyscalls                    17                       # Number of system calls
 system.cpu.pwrStateResidencyTicks::ON        23776000                       # Cumulative time (in ticks) in various power states
 system.cpu.numCycles                            47553                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started

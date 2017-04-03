@@ -285,7 +285,7 @@ system.ruby.phys_mem.bw_total::cpu1.CUs1.ComputeUnit     11246837               
 system.ruby.phys_mem.bw_total::total       2851248173                       # Total bandwidth to/from this memory (bytes/s)
 system.cpu0.clk_domain.clock                      500                       # Clock period in ticks
 system.cpu0.apic_clk_domain.clock                8000                       # Clock period in ticks
-system.cpu0.workload.num_syscalls                  21                       # Number of system calls
+system.cpu0.workload.numSyscalls                   21                       # Number of system calls
 system.cpu0.numCycles                          628799                       # number of cpu cycles simulated
 system.cpu0.numWorkItemsStarted                     0                       # number of work items this cpu started
 system.cpu0.numWorkItemsCompleted                   0                       # number of work items this cpu completed
