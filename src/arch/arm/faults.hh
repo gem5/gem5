@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -565,6 +565,31 @@ class IllegalInstSetStateFault : public ArmFaultVals<IllegalInstSetStateFault>
   public:
     IllegalInstSetStateFault();
 };
+
+/*
+ * Explicitly declare template static member variables avoid warnings in some clang versions
+ */
+template<> ArmFault::FaultVals ArmFaultVals<Reset>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<UndefinedInstruction>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<SupervisorCall>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorCall>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<HypervisorCall>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<PrefetchAbort>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<DataAbort>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<VirtualDataAbort>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<HypervisorTrap>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<Interrupt>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<VirtualInterrupt>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<VirtualFastInterrupt>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<SupervisorTrap>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorTrap>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<PCAlignmentFault>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<SPAlignmentFault>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<FlushPipe>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals;
+
 
 } // namespace ArmISA
 
