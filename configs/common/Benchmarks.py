@@ -60,6 +60,8 @@ class SysConfig:
             return env.get('LINUX_IMAGE', disk('x86root.img'))
         elif buildEnv['TARGET_ISA'] == 'arm':
             return env.get('LINUX_IMAGE', disk('linux-aarch32-ael.img'))
+        elif buildEnv['TARGET_ISA'] == 'sparc':
+            return env.get('LINUX_IMAGE', disk('disk.s10hw2'))
         else:
             print "Don't know what default disk image to use for %s ISA" % \
                 buildEnv['TARGET_ISA']
