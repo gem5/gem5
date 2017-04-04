@@ -3,9 +3,9 @@ Redirecting stderr to build/SPARC/tests/opt/long/fs/80.solaris-boot/sparc/solari
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Apr  4 2017 00:40:32
-gem5 started Apr  4 2017 00:40:43
-gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 88259
+gem5 compiled Apr  4 2017 01:06:08
+gem5 started Apr  4 2017 01:06:18
+gem5 executing on gabeblack-desktop.mtv.corp.google.com, pid 98195
 command line: /usr/local/google/home/gabeblack/gem5/gem5-public/build/SPARC/gem5.opt -d build/SPARC/tests/opt/long/fs/80.solaris-boot/sparc/solaris/t1000-simple-atomic -re /usr/local/google/home/gabeblack/gem5/gem5-public/tests/testing/../run.py long/fs/80.solaris-boot/sparc/solaris/t1000-simple-atomic
 
 Global frequency set at 2000000000 ticks per second
