@@ -4,15 +4,49 @@ sim_seconds                                  2.233778                       # Nu
 sim_ticks                                  4467555024                       # Number of ticks simulated
 final_tick                                 4467555024                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
-host_inst_rate                                1658224                       # Simulator instruction rate (inst/s)
-host_op_rate                                  1658876                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                3324623                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 518260                       # Number of bytes of host memory used
-host_seconds                                  1343.78                       # Real time elapsed on the host
+host_inst_rate                                3235443                       # Simulator instruction rate (inst/s)
+host_op_rate                                  3236715                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                6486837                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 551372                       # Number of bytes of host memory used
+host_seconds                                   688.71                       # Real time elapsed on the host
 sim_insts                                  2228284650                       # Number of instructions simulated
 sim_ops                                    2229160714                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
 system.clk_domain.clock                             2                       # Clock period in ticks
+system.hypervisor_desc.numPwrStateTransitions            0                       # Number of power state transitions
+system.hypervisor_desc.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.hypervisor_desc.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.hypervisor_desc.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.hypervisor_desc.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.hypervisor_desc.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.hypervisor_desc.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
 system.hypervisor_desc.bytes_read::cpu.data        16792                       # Number of bytes read from this memory
 system.hypervisor_desc.bytes_read::total        16792                       # Number of bytes read from this memory
 system.hypervisor_desc.num_reads::cpu.data         9024                       # Number of read requests responded to by this memory
@@ -21,6 +55,40 @@ system.hypervisor_desc.bw_read::cpu.data         7517                       # To
 system.hypervisor_desc.bw_read::total            7517                       # Total read bandwidth from this memory (bytes/s)
 system.hypervisor_desc.bw_total::cpu.data         7517                       # Total bandwidth to/from this memory (bytes/s)
 system.hypervisor_desc.bw_total::total           7517                       # Total bandwidth to/from this memory (bytes/s)
+system.nvram.numPwrStateTransitions                 0                       # Number of power state transitions
+system.nvram.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::mean            nan                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::stdev           nan                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateClkGateDist::total             0                       # Distribution of time spent in the clock gated state
+system.nvram.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.nvram.pwrStateResidencyTicks::ON             0                       # Cumulative time (in ticks) in various power states
+system.nvram.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.nvram.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.nvram.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
 system.nvram.bytes_read::cpu.data                 284                       # Number of bytes read from this memory
 system.nvram.bytes_read::total                    284                       # Number of bytes read from this memory
 system.nvram.bytes_written::cpu.data               92                       # Number of bytes written to this memory
@@ -35,6 +103,40 @@ system.nvram.bw_write::cpu.data                    41                       # Wr
 system.nvram.bw_write::total                       41                       # Write bandwidth from this memory (bytes/s)
 system.nvram.bw_total::cpu.data                   168                       # Total bandwidth to/from this memory (bytes/s)
 system.nvram.bw_total::total                      168                       # Total bandwidth to/from this memory (bytes/s)
+system.partition_desc.numPwrStateTransitions            0                       # Number of power state transitions
+system.partition_desc.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.partition_desc.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.partition_desc.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.partition_desc.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.partition_desc.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.partition_desc.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
 system.partition_desc.bytes_read::cpu.data         4846                       # Number of bytes read from this memory
 system.partition_desc.bytes_read::total          4846                       # Number of bytes read from this memory
 system.partition_desc.num_reads::cpu.data          608                       # Number of read requests responded to by this memory
@@ -43,6 +145,40 @@ system.partition_desc.bw_read::cpu.data          2169                       # To
 system.partition_desc.bw_read::total             2169                       # Total read bandwidth from this memory (bytes/s)
 system.partition_desc.bw_total::cpu.data         2169                       # Total bandwidth to/from this memory (bytes/s)
 system.partition_desc.bw_total::total            2169                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem0.numPwrStateTransitions              0                       # Number of power state transitions
+system.physmem0.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.physmem0.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.physmem0.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.physmem0.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.physmem0.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.physmem0.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
 system.physmem0.bytes_read::cpu.inst        612291324                       # Number of bytes read from this memory
 system.physmem0.bytes_read::cpu.data         97534024                       # Number of bytes read from this memory
 system.physmem0.bytes_read::total           709825348                       # Number of bytes read from this memory
@@ -67,6 +203,40 @@ system.physmem0.bw_write::total               6894251                       # Wr
 system.physmem0.bw_total::cpu.inst          274105779                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem0.bw_total::cpu.data           50557518                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem0.bw_total::total             324663297                       # Total bandwidth to/from this memory (bytes/s)
+system.physmem1.numPwrStateTransitions              0                       # Number of power state transitions
+system.physmem1.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.physmem1.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.physmem1.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.physmem1.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.physmem1.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.physmem1.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
 system.physmem1.bytes_read::cpu.inst       8318106840                       # Number of bytes read from this memory
 system.physmem1.bytes_read::cpu.data       1495885127                       # Number of bytes read from this memory
 system.physmem1.bytes_read::total          9813991967                       # Number of bytes read from this memory
@@ -91,6 +261,40 @@ system.physmem1.bw_write::total             401682091                       # Wr
 system.physmem1.bw_total::cpu.inst         3723784842                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem1.bw_total::cpu.data         1071348214                       # Total bandwidth to/from this memory (bytes/s)
 system.physmem1.bw_total::total            4795133057                       # Total bandwidth to/from this memory (bytes/s)
+system.rom.numPwrStateTransitions                   0                       # Number of power state transitions
+system.rom.pwrStateClkGateDist::samples             0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::mean              nan                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::stdev             nan                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::2-1e+08             0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateClkGateDist::total               0                       # Distribution of time spent in the clock gated state
+system.rom.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.rom.pwrStateResidencyTicks::ON               0                       # Cumulative time (in ticks) in various power states
+system.rom.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.rom.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.rom.pwrStateResidencyTicks::OFF              0                       # Cumulative time (in ticks) in various power states
 system.rom.bytes_read::cpu.inst                432296                       # Number of bytes read from this memory
 system.rom.bytes_read::cpu.data                696392                       # Number of bytes read from this memory
 system.rom.bytes_read::total                  1128688                       # Number of bytes read from this memory
@@ -107,7 +311,109 @@ system.rom.bw_inst_read::total                 193527                       # In
 system.rom.bw_total::cpu.inst                  193527                       # Total bandwidth to/from this memory (bytes/s)
 system.rom.bw_total::cpu.data                  311755                       # Total bandwidth to/from this memory (bytes/s)
 system.rom.bw_total::total                     505282                       # Total bandwidth to/from this memory (bytes/s)
+system.numPwrStateTransitions                       0                       # Number of power state transitions
+system.pwrStateClkGateDist::samples                 0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::mean                  nan                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::stdev                 nan                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::underflows              0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::2-1e+08                 0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::1e+08-2e+08             0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::2e+08-3e+08             0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::3e+08-4e+08             0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::4e+08-5e+08             0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::5e+08-6e+08             0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::6e+08-7e+08             0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::7e+08-8e+08             0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::8e+08-9e+08             0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::9e+08-1e+09             0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::overflows               0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::min_value               0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::max_value               0                       # Distribution of time spent in the clock gated state
+system.pwrStateClkGateDist::total                   0                       # Distribution of time spent in the clock gated state
+system.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.pwrStateResidencyTicks::ON                   0                       # Cumulative time (in ticks) in various power states
+system.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.pwrStateResidencyTicks::OFF                  0                       # Cumulative time (in ticks) in various power states
+system.bridge.numPwrStateTransitions                0                       # Number of power state transitions
+system.bridge.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::mean           nan                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.bridge.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.bridge.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.bridge.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.bridge.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.bridge.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
 system.cpu_clk_domain.clock                         2                       # Clock period in ticks
+system.cpu.numPwrStateTransitions                   0                       # Number of power state transitions
+system.cpu.pwrStateClkGateDist::samples             0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::mean              nan                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::stdev             nan                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::2-1e+08             0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateClkGateDist::total               0                       # Distribution of time spent in the clock gated state
+system.cpu.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.cpu.pwrStateResidencyTicks::ON               0                       # Cumulative time (in ticks) in various power states
+system.cpu.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.cpu.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.cpu.pwrStateResidencyTicks::OFF              0                       # Cumulative time (in ticks) in various power states
 system.cpu.numCycles                       2233777513                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
@@ -168,6 +474,74 @@ system.cpu.op_class::MemWrite               200199782      8.96%    100.00% # Cl
 system.cpu.op_class::IprAccess                      0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::InstPrefetch                   0      0.00%    100.00% # Class of executed instruction
 system.cpu.op_class::total                 2233583679                       # Class of executed instruction
+system.disk0.numPwrStateTransitions                 0                       # Number of power state transitions
+system.disk0.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::mean            nan                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::stdev           nan                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateClkGateDist::total             0                       # Distribution of time spent in the clock gated state
+system.disk0.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.disk0.pwrStateResidencyTicks::ON             0                       # Cumulative time (in ticks) in various power states
+system.disk0.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.disk0.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.disk0.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.iobus.numPwrStateTransitions                 0                       # Number of power state transitions
+system.iobus.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::mean            nan                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::stdev           nan                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateClkGateDist::total             0                       # Distribution of time spent in the clock gated state
+system.iobus.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.iobus.pwrStateResidencyTicks::ON             0                       # Cumulative time (in ticks) in various power states
+system.iobus.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.iobus.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.iobus.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
 system.iobus.trans_dist::ReadReq              4348554                       # Transaction distribution
 system.iobus.trans_dist::ReadResp             4348554                       # Transaction distribution
 system.iobus.trans_dist::WriteReq                7569                       # Transaction distribution
@@ -200,6 +574,40 @@ system.iobus.pkt_size_system.bridge.master::system.t1000.puart0.pio        14609
 system.iobus.pkt_size_system.bridge.master::system.t1000.hvuart.pio           18                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.disk0.pio     34731524                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::total     34746591                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.numPwrStateTransitions                0                       # Number of power state transitions
+system.membus.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::mean           nan                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.membus.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.membus.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.membus.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.membus.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.membus.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
 system.membus.trans_dist::ReadReq          2573267624                       # Transaction distribution
 system.membus.trans_dist::ReadResp         2573267624                       # Transaction distribution
 system.membus.trans_dist::WriteReq          189322556                       # Transaction distribution
@@ -247,5 +655,583 @@ system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Re
 system.membus.snoop_fanout::min_value               0                       # Request fanout histogram
 system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
 system.membus.snoop_fanout::total          2767993261                       # Request fanout histogram
+system.membus.badaddr_responder.numPwrStateTransitions            0                       # Number of power state transitions
+system.membus.badaddr_responder.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.membus.badaddr_responder.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.membus.badaddr_responder.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.membus.badaddr_responder.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.membus.badaddr_responder.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_clk.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_clk.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_clk.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_clk.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_clk.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_clk.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_clk.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_jbi.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_jbi.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_jbi.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_jbi.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_jbi.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_jbi.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_jbi.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_1.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_l2_1.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_1.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_1.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_1.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_1.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_1.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_2.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_l2_2.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_2.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_2.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_2.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_2.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_2.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_3.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_l2_3.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_3.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_3.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_3.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_3.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_3.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_4.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_l2_4.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2_4.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_4.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_4.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_4.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2_4.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_1.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_1.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_1.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_1.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_1.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_1.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_2.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_2.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_2.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_2.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_2.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_2.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_3.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_3.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_3.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_3.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_3.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_3.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_4.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_l2esr_4.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_4.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_4.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_4.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_l2esr_4.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_membnks.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_membnks.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_membnks.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_membnks.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_membnks.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_membnks.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_membnks.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_ssi.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.fake_ssi.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.fake_ssi.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_ssi.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_ssi.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_ssi.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.fake_ssi.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.htod.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.htod.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.htod.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.htod.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.htod.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.htod.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.htod.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.hvuart.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.hvuart.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.hvuart.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.hvuart.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.hvuart.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.hvuart.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.hvuart.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.iob.numPwrStateTransitions             0                       # Number of power state transitions
+system.t1000.iob.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.iob.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.iob.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.iob.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.iob.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.iob.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
+system.t1000.puart0.numPwrStateTransitions            0                       # Number of power state transitions
+system.t1000.puart0.pwrStateClkGateDist::samples            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::mean          nan                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::stdev          nan                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::underflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::2-1e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::1e+08-2e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::2e+08-3e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::3e+08-4e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::4e+08-5e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::5e+08-6e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::6e+08-7e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::7e+08-8e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::8e+08-9e+08            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::9e+08-1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::1e+09-1.1e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::1.1e+09-1.2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::1.2e+09-1.3e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::1.3e+09-1.4e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::1.4e+09-1.5e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::1.5e+09-1.6e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::1.6e+09-1.7e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::1.7e+09-1.8e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::1.8e+09-1.9e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::1.9e+09-2e+09            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::overflows            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::min_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::max_value            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateClkGateDist::total            0                       # Distribution of time spent in the clock gated state
+system.t1000.puart0.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.t1000.puart0.pwrStateResidencyTicks::ON            0                       # Cumulative time (in ticks) in various power states
+system.t1000.puart0.pwrStateResidencyTicks::CLK_GATED            0                       # Cumulative time (in ticks) in various power states
+system.t1000.puart0.pwrStateResidencyTicks::SRAM_RETENTION            0                       # Cumulative time (in ticks) in various power states
+system.t1000.puart0.pwrStateResidencyTicks::OFF            0                       # Cumulative time (in ticks) in various power states
 
 ---------- End Simulation Statistics   ----------
