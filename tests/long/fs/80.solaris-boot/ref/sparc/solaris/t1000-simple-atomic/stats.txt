@@ -4,11 +4,11 @@ sim_seconds                                  2.233778                       # Nu
 sim_ticks                                  4467555024                       # Number of ticks simulated
 final_tick                                 4467555024                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
-host_inst_rate                                3288883                       # Simulator instruction rate (inst/s)
-host_op_rate                                  3290176                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                6593981                       # Simulator tick rate (ticks/s)
+host_inst_rate                                3232456                       # Simulator instruction rate (inst/s)
+host_op_rate                                  3233727                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                6480848                       # Simulator tick rate (ticks/s)
 host_mem_usage                                 550344                       # Number of bytes of host memory used
-host_seconds                                   677.52                       # Real time elapsed on the host
+host_seconds                                   689.35                       # Real time elapsed on the host
 sim_insts                                  2228284650                       # Number of instructions simulated
 sim_ops                                    2229160714                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -116,7 +116,7 @@ system.rom.bw_total::total                     505282                       # To
 system.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
 system.bridge.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
 system.cpu_clk_domain.clock                         2                       # Clock period in ticks
-system.cpu.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
+system.cpu.pwrStateResidencyTicks::ON      4467555024                       # Cumulative time (in ticks) in various power states
 system.cpu.numCycles                       2233777513                       # number of cpu cycles simulated
 system.cpu.numWorkItemsStarted                      0                       # number of work items this cpu started
 system.cpu.numWorkItemsCompleted                    0                       # number of work items this cpu completed
