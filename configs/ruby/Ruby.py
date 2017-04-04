@@ -231,6 +231,8 @@ def send_evicts(options):
     # currently, 2 scenarios warrant forwarding evictions to the CPU:
     # 1. The O3 model must keep the LSQ coherent with the caches
     # 2. The x86 mwait instruction is built on top of coherence invalidations
-    if options.cpu_type == "DerivO3CPU" or buildEnv['TARGET_ISA'] == 'x86':
+    # 3. The local exclusive monitor in ARM systems
+    if options.cpu_type == "DerivO3CPU" or \
+       buildEnv['TARGET_ISA'] in ('x86', 'arm'):
         return True
     return False
