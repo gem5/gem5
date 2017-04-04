@@ -4,11 +4,11 @@ sim_seconds                                  2.233778                       # Nu
 sim_ticks                                  4467555024                       # Number of ticks simulated
 final_tick                                 4467555024                       # Number of ticks from beginning of simulation (restored from checkpoints and never reset)
 sim_freq                                   2000000000                       # Frequency of simulated ticks
-host_inst_rate                                3251993                       # Simulator instruction rate (inst/s)
-host_op_rate                                  3253271                       # Simulator op (including micro ops) rate (op/s)
-host_tick_rate                                6520018                       # Simulator tick rate (ticks/s)
-host_mem_usage                                 552088                       # Number of bytes of host memory used
-host_seconds                                   685.21                       # Real time elapsed on the host
+host_inst_rate                                2932422                       # Simulator instruction rate (inst/s)
+host_op_rate                                  2933575                       # Simulator op (including micro ops) rate (op/s)
+host_tick_rate                                5879301                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 552092                       # Number of bytes of host memory used
+host_seconds                                   759.88                       # Real time elapsed on the host
 sim_insts                                  2228284650                       # Number of instructions simulated
 sim_ops                                    2229160714                       # Number of ops (including micro ops) simulated
 system.voltage_domain.voltage                       1                       # Voltage in Volts
@@ -211,6 +211,12 @@ system.iobus.pkt_size_system.bridge.master::system.t1000.puart0.pio        14609
 system.iobus.pkt_size_system.bridge.master::system.t1000.hvuart.pio           18                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::system.disk0.pio     34731524                       # Cumulative packet size per connected master and slave (bytes)
 system.iobus.pkt_size_system.bridge.master::total     34746591                       # Cumulative packet size per connected master and slave (bytes)
+system.membus.snoop_filter.tot_requests             0                       # Total number of requests made to the snoop filter.
+system.membus.snoop_filter.hit_single_requests            0                       # Number of requests hitting in the snoop filter with a single holder of the requested data.
+system.membus.snoop_filter.hit_multi_requests            0                       # Number of requests hitting in the snoop filter with multiple (>1) holders of the requested data.
+system.membus.snoop_filter.tot_snoops               0                       # Total number of snoops made to the snoop filter.
+system.membus.snoop_filter.hit_single_snoops            0                       # Number of snoops hitting in the snoop filter with a single holder of the requested data.
+system.membus.snoop_filter.hit_multi_snoops            0                       # Number of snoops hitting in the snoop filter with multiple (>1) holders of the requested data.
 system.membus.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
 system.membus.trans_dist::ReadReq          2573267624                       # Transaction distribution
 system.membus.trans_dist::ReadResp         2573267624                       # Transaction distribution
@@ -251,14 +257,14 @@ system.membus.pkt_size::total             11533814443                       # Cu
 system.membus.snoops                                0                       # Total snoops (count)
 system.membus.snoopTraffic                          0                       # Total snoop traffic (bytes)
 system.membus.snoop_fanout::samples        2767993261                       # Request fanout histogram
-system.membus.snoop_fanout::mean             0.806616                       # Request fanout histogram
-system.membus.snoop_fanout::stdev            0.394951                       # Request fanout histogram
+system.membus.snoop_fanout::mean                    0                       # Request fanout histogram
+system.membus.snoop_fanout::stdev                   0                       # Request fanout histogram
 system.membus.snoop_fanout::underflows              0      0.00%      0.00% # Request fanout histogram
-system.membus.snoop_fanout::0               535285646     19.34%     19.34% # Request fanout histogram
-system.membus.snoop_fanout::1              2232707615     80.66%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::0              2767993261    100.00%    100.00% # Request fanout histogram
+system.membus.snoop_fanout::1                       0      0.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::overflows               0      0.00%    100.00% # Request fanout histogram
 system.membus.snoop_fanout::min_value               0                       # Request fanout histogram
-system.membus.snoop_fanout::max_value               1                       # Request fanout histogram
+system.membus.snoop_fanout::max_value               0                       # Request fanout histogram
 system.membus.snoop_fanout::total          2767993261                       # Request fanout histogram
 system.membus.badaddr_responder.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states
 system.t1000.fake_clk.pwrStateResidencyTicks::UNDEFINED   4467555024                       # Cumulative time (in ticks) in various power states

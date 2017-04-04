@@ -721,7 +721,16 @@
                 "role": "SLAVE"
             }, 
             "p_state_clk_gate_min": 2, 
-            "snoop_filter": null, 
+            "snoop_filter": {
+                "name": "snoop_filter", 
+                "system": "system", 
+                "max_capacity": 8388608, 
+                "eventq_index": 0, 
+                "cxx_class": "SnoopFilter", 
+                "path": "system.membus.snoop_filter", 
+                "type": "SnoopFilter", 
+                "lookup_latency": 1
+            }, 
             "power_model": null, 
             "path": "system.membus", 
             "snoop_response_latency": 4, 
