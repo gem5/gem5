@@ -6,13 +6,14 @@
         "mmap_using_noreserve": false, 
         "kernel_addr_check": true, 
         "rom": {
-            "range": "1099243192320:1099251580927", 
+            "range": "1099243192320:1099251580927:0:0:0:0", 
             "latency": 60, 
             "name": "rom", 
             "p_state_clk_gate_min": 2, 
             "eventq_index": 0, 
             "p_state_clk_gate_bins": 20, 
             "default_p_state": "UNDEFINED", 
+            "kvm_map": true, 
             "clk_domain": "system.clk_domain", 
             "power_model": null, 
             "latency_var": 0, 
@@ -31,11 +32,11 @@
         }, 
         "bridge": {
             "ranges": [
-                "133412421632:133412421639", 
-                "134217728000:554050781183", 
-                "644245094400:652835028991", 
-                "725849473024:1095485095935", 
-                "1099255955456:1099255955463"
+                "133412421632:133412421639:0:0:0:0", 
+                "134217728000:554050781183:0:0:0:0", 
+                "644245094400:652835028991:0:0:0:0", 
+                "725849473024:1095485095935:0:0:0:0", 
+                "1099255955456:1099255955463:0:0:0:0"
             ], 
             "slave": {
                 "peer": "system.membus.master[2]", 
@@ -574,8 +575,8 @@
         "thermal_model": null, 
         "hypervisor_addr": 1099243257856, 
         "mem_ranges": [
-            "1048576:68157439", 
-            "2147483648:2415919103"
+            "1048576:68157439:0:0:0:0", 
+            "2147483648:2415919103:0:0:0:0"
         ], 
         "cxx_class": "SparcSystem", 
         "work_begin_cpu_id_exit": -1, 
@@ -596,13 +597,14 @@
         ], 
         "work_begin_ckpt_count": 0, 
         "partition_desc": {
-            "range": "133445976064:133445984255", 
+            "range": "133445976064:133445984255:0:0:0:0", 
             "latency": 60, 
             "name": "partition_desc", 
             "p_state_clk_gate_min": 2, 
             "eventq_index": 0, 
             "p_state_clk_gate_bins": 20, 
             "default_p_state": "UNDEFINED", 
+            "kvm_map": true, 
             "clk_domain": "system.clk_domain", 
             "power_model": null, 
             "latency_var": 0, 
@@ -633,13 +635,14 @@
             "domain_id": -1
         }, 
         "hypervisor_desc": {
-            "range": "133446500352:133446508543", 
+            "range": "133446500352:133446508543:0:0:0:0", 
             "latency": 60, 
             "name": "hypervisor_desc", 
             "p_state_clk_gate_min": 2, 
             "eventq_index": 0, 
             "p_state_clk_gate_bins": 20, 
             "default_p_state": "UNDEFINED", 
+            "kvm_map": true, 
             "clk_domain": "system.clk_domain", 
             "power_model": null, 
             "latency_var": 0, 
@@ -743,13 +746,14 @@
             "use_default_range": false
         }, 
         "nvram": {
-            "range": "133429198848:133429207039", 
+            "range": "133429198848:133429207039:0:0:0:0", 
             "latency": 60, 
             "name": "nvram", 
             "p_state_clk_gate_min": 2, 
             "eventq_index": 0, 
             "p_state_clk_gate_bins": 20, 
             "default_p_state": "UNDEFINED", 
+            "kvm_map": true, 
             "clk_domain": "system.clk_domain", 
             "power_model": null, 
             "latency_var": 0, 
@@ -801,13 +805,14 @@
         }, 
         "physmem": [
             {
-                "range": "1048576:68157439", 
+                "range": "1048576:68157439:0:0:0:0", 
                 "latency": 60, 
                 "name": "physmem0", 
                 "p_state_clk_gate_min": 2, 
                 "eventq_index": 0, 
                 "p_state_clk_gate_bins": 20, 
                 "default_p_state": "UNDEFINED", 
+                "kvm_map": true, 
                 "clk_domain": "system.clk_domain", 
                 "power_model": null, 
                 "latency_var": 0, 
@@ -825,13 +830,14 @@
                 "in_addr_map": true
             }, 
             {
-                "range": "2147483648:2415919103", 
+                "range": "2147483648:2415919103:0:0:0:0", 
                 "latency": 60, 
                 "name": "physmem1", 
                 "p_state_clk_gate_min": 2, 
                 "eventq_index": 0, 
                 "p_state_clk_gate_bins": 20, 
                 "default_p_state": "UNDEFINED", 
+                "kvm_map": true, 
                 "clk_domain": "system.clk_domain", 
                 "power_model": null, 
                 "latency_var": 0, 
