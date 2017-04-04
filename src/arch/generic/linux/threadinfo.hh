@@ -95,6 +95,9 @@ class ThreadInfo
     inline Addr
     curTaskInfo(Addr thread_info = 0)
     {
+        // Note that in Linux 4.10 the thread_info struct will no longer have a
+        // pointer to the task_struct for arm64. See:
+        // https://patchwork.kernel.org/patch/9333699/
         int32_t offset;
         if (!get_data("thread_info_task", offset))
             return 0;
@@ -109,33 +112,44 @@ class ThreadInfo
     }
 
     int32_t
-    curTaskPID(Addr thread_info = 0)
-    {
+    curTaskPIDFromTaskStruct(Addr task_struct) {
         int32_t offset;
         if (!get_data("task_struct_pid", offset))
             return -1;
 
         int32_t pid;
-        CopyOut(tc, &pid, curTaskInfo(thread_info) + offset, sizeof(pid));
+        CopyOut(tc, &pid, task_struct + offset, sizeof(pid));
 
         return pid;
     }
 
     int32_t
-    curTaskTGID(Addr thread_info = 0)
+    curTaskPID(Addr thread_info = 0)
+    {
+        return curTaskPIDFromTaskStruct(curTaskInfo(thread_info));
+    }
+
+    int32_t
+    curTaskTGIDFromTaskStruct(Addr task_struct)
     {
         int32_t offset;
         if (!get_data("task_struct_tgid", offset))
             return -1;
 
         int32_t tgid;
-        CopyOut(tc, &tgid, curTaskInfo(thread_info) + offset, sizeof(tgid));
+        CopyOut(tc, &tgid, task_struct + offset, sizeof(tgid));
 
         return tgid;
     }
 
+    int32_t
+    curTaskTGID(Addr thread_info = 0)
+    {
+        return curTaskTGIDFromTaskStruct(curTaskInfo(thread_info));
+    }
+
     int64_t
-    curTaskStart(Addr thread_info = 0)
+    curTaskStartFromTaskStruct(Addr task_struct)
     {
         int32_t offset;
         if (!get_data("task_struct_start_time", offset))
@@ -144,13 +158,19 @@ class ThreadInfo
         int64_t data;
         // start_time is actually of type timespec, but if we just
         // grab the first long, we'll get the seconds out of it
-        CopyOut(tc, &data, curTaskInfo(thread_info) + offset, sizeof(data));
+        CopyOut(tc, &data, task_struct + offset, sizeof(data));
 
         return data;
     }
 
+    int64_t
+    curTaskStart(Addr thread_info = 0)
+    {
+        return curTaskStartFromTaskStruct(curTaskInfo(thread_info));
+    }
+
     std::string
-    curTaskName(Addr thread_info = 0)
+    curTaskNameFromTaskStruct(Addr task_struct)
     {
         int32_t offset;
         int32_t size;
@@ -162,22 +182,34 @@ class ThreadInfo
             return "FailureIn_curTaskName";
 
         char buffer[size + 1];
-        CopyStringOut(tc, buffer, curTaskInfo(thread_info) + offset, size);
+        CopyStringOut(tc, buffer, task_struct + offset, size);
 
         return buffer;
     }
 
+    std::string
+    curTaskName(Addr thread_info = 0)
+    {
+        return curTaskNameFromTaskStruct(curTaskInfo(thread_info));
+    }
+
     int32_t
-    curTaskMm(Addr thread_info = 0)
+    curTaskMmFromTaskStruct(Addr task_struct)
     {
         int32_t offset;
         if (!get_data("task_struct_mm", offset))
             return -1;
 
         int32_t mm_ptr;
-        CopyOut(tc, &mm_ptr, curTaskInfo(thread_info) + offset, sizeof(mm_ptr));
+        CopyOut(tc, &mm_ptr, task_struct + offset, sizeof(mm_ptr));
 
         return mm_ptr;
+    }
+
+    int32_t
+    curTaskMm(Addr thread_info = 0)
+    {
+        return curTaskMmFromTaskStruct(curTaskInfo(thread_info));
     }
 };
 

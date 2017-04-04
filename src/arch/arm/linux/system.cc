@@ -236,7 +236,14 @@ void
 LinuxArmSystem::startup()
 {
     if (enableContextSwitchStatsDump) {
-        dumpStatsPCEvent = addKernelFuncEvent<DumpStatsPCEvent>("__switch_to");
+        if (!highestELIs64()) {
+            dumpStatsPCEvent =
+                addKernelFuncEvent<DumpStatsPCEvent>("__switch_to");
+        } else {
+            dumpStatsPCEvent =
+                addKernelFuncEvent<DumpStatsPCEvent64>("__switch_to");
+        }
+
         if (!dumpStatsPCEvent)
            panic("dumpStatsPCEvent not created!");
 
@@ -276,25 +283,64 @@ LinuxArmSystem::dumpDmesg()
     Linux::dumpDmesg(getThreadContext(0), std::cout);
 }
 
-/** This function is called whenever the the kernel function
- *  "__switch_to" is called to change running tasks.
+/**
+ * Extracts the information used by the DumpStatsPCEvent by reading the
+ * thread_info pointer passed to __switch_to() in 32 bit ARM Linux
  *
  *  r0 = task_struct of the previously running process
- *  r1 = task_info of the previously running process
- *  r2 = task_info of the next process to run
+ *  r1 = thread_info of the previously running process
+ *  r2 = thread_info of the next process to run
+ */
+void
+DumpStatsPCEvent::getTaskDetails(ThreadContext *tc, uint32_t &pid,
+    uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
+
+    Linux::ThreadInfo ti(tc);
+    Addr task_descriptor = tc->readIntReg(2);
+    pid = ti.curTaskPID(task_descriptor);
+    tgid = ti.curTaskTGID(task_descriptor);
+    next_task_str = ti.curTaskName(task_descriptor);
+
+    // Streamline treats pid == -1 as the kernel process.
+    // Also pid == 0 implies idle process (except during Linux boot)
+    mm = ti.curTaskMm(task_descriptor);
+}
+
+/**
+ * Extracts the information used by the DumpStatsPCEvent64 by reading the
+ * task_struct pointer passed to __switch_to() in 64 bit ARM Linux
+ *
+ *  r0 = task_struct of the previously running process
+ *  r1 = task_struct of next process to run
+ */
+void
+DumpStatsPCEvent64::getTaskDetails(ThreadContext *tc, uint32_t &pid,
+    uint32_t &tgid, std::string &next_task_str, int32_t &mm) {
+
+    Linux::ThreadInfo ti(tc);
+    Addr task_struct = tc->readIntReg(1);
+    pid = ti.curTaskPIDFromTaskStruct(task_struct);
+    tgid = ti.curTaskTGIDFromTaskStruct(task_struct);
+    next_task_str = ti.curTaskNameFromTaskStruct(task_struct);
+
+    // Streamline treats pid == -1 as the kernel process.
+    // Also pid == 0 implies idle process (except during Linux boot)
+    mm = ti.curTaskMmFromTaskStruct(task_struct);
+}
+
+/** This function is called whenever the the kernel function
+ *  "__switch_to" is called to change running tasks.
  */
 void
 DumpStatsPCEvent::process(ThreadContext *tc)
 {
-    Linux::ThreadInfo ti(tc);
-    Addr task_descriptor = tc->readIntReg(2);
-    uint32_t pid = ti.curTaskPID(task_descriptor);
-    uint32_t tgid = ti.curTaskTGID(task_descriptor);
-    std::string next_task_str = ti.curTaskName(task_descriptor);
+    uint32_t pid = 0;
+    uint32_t tgid = 0;
+    std::string next_task_str;
+    int32_t mm = 0;
 
-    // Streamline treats pid == -1 as the kernel process.
-    // Also pid == 0 implies idle process (except during Linux boot)
-    int32_t mm = ti.curTaskMm(task_descriptor);
+    getTaskDetails(tc, pid, tgid, next_task_str, mm);
+
     bool is_kernel = (mm == 0);
     if (is_kernel && (pid != 0)) {
         pid = -1;

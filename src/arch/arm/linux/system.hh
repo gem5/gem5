@@ -132,6 +132,20 @@ class DumpStatsPCEvent : public PCEvent
     {}
 
     virtual void process(ThreadContext* tc);
+  protected:
+    virtual void getTaskDetails(ThreadContext *tc, uint32_t &pid,
+            uint32_t &tgid, std::string &next_task_str, int32_t &mm);
+
+};
+
+class DumpStatsPCEvent64 : public DumpStatsPCEvent {
+  public:
+    DumpStatsPCEvent64(PCEventQueue *q, const std::string &desc, Addr addr)
+        : DumpStatsPCEvent(q, desc, addr)
+    {}
+  private:
+    void getTaskDetails(ThreadContext *tc, uint32_t &pid, uint32_t &tgid,
+                        std::string &next_task_str, int32_t &mm) override;
 };
 
 
