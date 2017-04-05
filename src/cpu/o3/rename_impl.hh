@@ -983,9 +983,11 @@ DefaultRename<Impl>::removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid)
            hb_it != historyBuffer[tid].end() &&
            hb_it->instSeqNum <= inst_seq_num) {
 
-        DPRINTF(Rename, "[tid:%u]: Freeing up older rename of reg %i, "
+        DPRINTF(Rename, "[tid:%u]: Freeing up older rename of reg %i (%s), "
                 "[sn:%lli].\n",
-                tid, hb_it->prevPhysReg, hb_it->instSeqNum);
+                tid, hb_it->prevPhysReg->regIdx,
+                RegClassStrings[hb_it->prevPhysReg->regClass],
+                hb_it->instSeqNum);
 
         // Don't free special phys regs like misc and zero regs, which
         // can be recognized because the new mapping is the same as
@@ -1013,7 +1015,7 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
     for (int src_idx = 0; src_idx < num_src_regs; src_idx++) {
         RegId src_reg = inst->srcRegIdx(src_idx);
         RegIndex flat_src_reg;
-        PhysRegIndex renamed_reg;
+        PhysRegIdPtr renamed_reg;
 
         switch (src_reg.regClass) {
           case IntRegClass:
@@ -1043,21 +1045,27 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
             panic("Invalid register class: %d.", src_reg.regClass);
         }
 
-        DPRINTF(Rename, "[tid:%u]: Looking up %s arch reg %i (flattened %i), "
-                "got phys reg %i\n", tid, RegClassStrings[src_reg.regClass],
-                (int)src_reg.regIdx, (int)flat_src_reg, (int)renamed_reg);
+        DPRINTF(Rename, "[tid:%u]: Looking up %s arch reg %i"
+                " (flattened %i), got phys reg %i (%s)\n", tid,
+                RegClassStrings[src_reg.regClass], src_reg.regIdx,
+                flat_src_reg, renamed_reg->regIdx,
+                RegClassStrings[renamed_reg->regClass]);
 
         inst->renameSrcReg(src_idx, renamed_reg);
 
         // See if the register is ready or not.
         if (scoreboard->getReg(renamed_reg)) {
-            DPRINTF(Rename, "[tid:%u]: Register %d is ready.\n",
-                    tid, renamed_reg);
+            DPRINTF(Rename, "[tid:%u]: Register %d (flat: %d) (%s)"
+                    " is ready.\n", tid, renamed_reg->regIdx,
+                    renamed_reg->flatIdx,
+                    RegClassStrings[renamed_reg->regClass]);
 
             inst->markSrcRegReady(src_idx);
         } else {
-            DPRINTF(Rename, "[tid:%u]: Register %d is not ready.\n",
-                    tid, renamed_reg);
+            DPRINTF(Rename, "[tid:%u]: Register %d (flat: %d) (%s)"
+                    " is not ready.\n", tid, renamed_reg->regIdx,
+                    renamed_reg->flatIdx,
+                    RegClassStrings[renamed_reg->regClass]);
         }
 
         ++renameRenameLookups;
@@ -1111,9 +1119,11 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
         // Mark Scoreboard entry as not ready
         scoreboard->unsetReg(rename_result.first);
 
-        DPRINTF(Rename, "[tid:%u]: Renaming arch reg %i to physical "
-                "reg %i.\n", tid, (int)flat_dest_reg,
-                (int)rename_result.first);
+        DPRINTF(Rename, "[tid:%u]: Renaming arch reg %i (%s) to physical "
+                "reg %i (%i).\n", tid, dest_reg.regIdx,
+                RegClassStrings[dest_reg.regClass],
+                rename_result.first->regIdx,
+                rename_result.first->flatIdx);
 
         // Record the rename information so that a history can be kept.
         RenameHistory hb_entry(inst->seqNum, flat_uni_dest_reg,
@@ -1426,11 +1436,15 @@ DefaultRename<Impl>::dumpHistory()
         buf_it = historyBuffer[tid].begin();
 
         while (buf_it != historyBuffer[tid].end()) {
-            cprintf("Seq num: %i\nArch reg[%s]: %i New phys reg: %i Old phys "
-                    "reg: %i\n", (*buf_it).instSeqNum,
+            cprintf("Seq num: %i\nArch reg[%s]: %i New phys reg:"
+                    " %i[%s] Old phys reg: %i[%s]\n",
+                    (*buf_it).instSeqNum,
                     RegClassStrings[(*buf_it).archReg.regClass],
                     (*buf_it).archReg.regIdx,
-                    (int)(*buf_it).newPhysReg, (int)(*buf_it).prevPhysReg);
+                    (*buf_it).newPhysReg->regIdx,
+                    RegClassStrings[(*buf_it).newPhysReg->regClass],
+                    (*buf_it).prevPhysReg->regIdx,
+                    RegClassStrings[(*buf_it).prevPhysReg->regClass]);
 
             buf_it++;
         }

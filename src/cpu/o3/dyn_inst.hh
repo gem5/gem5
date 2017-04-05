@@ -207,7 +207,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     {
 
         for (int idx = 0; idx < this->numDestRegs(); idx++) {
-            PhysRegIndex prev_phys_reg = this->prevDestRegIdx(idx);
+            PhysRegIdPtr prev_phys_reg = this->prevDestRegIdx(idx);
             RegId original_dest_reg =
                 this->staticInst->destRegIdx(idx);
             switch (original_dest_reg.regClass) {

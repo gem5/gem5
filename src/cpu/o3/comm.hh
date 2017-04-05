@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2016 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -39,6 +39,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Nathanael Premillieu
  */
 
 #ifndef __CPU_O3_COMM_HH__
@@ -55,6 +56,57 @@
 // most likely location for this, there are a few classes that need this
 // typedef yet are not templated on the Impl. For now it will be defined here.
 typedef short int PhysRegIndex;
+// Physical register ID
+// Associate a physical register index to a register class and
+// so it is easy to track which type of register are used.
+// A flat index is also provided for when it is useful to have a unified
+// indexing (for the dependency graph and the scoreboard for example)
+struct PhysRegId {
+    RegClass regClass;
+    PhysRegIndex regIdx;
+    PhysRegIndex flatIdx;
+    PhysRegId(RegClass _regClass, PhysRegIndex _regIdx,
+              PhysRegIndex _flatIdx)
+        : regClass(_regClass), regIdx(_regIdx), flatIdx(_flatIdx)
+    {}
+
+    bool operator==(const PhysRegId& that) const {
+        return regClass == that.regClass && regIdx == that.regIdx;
+    }
+
+    bool operator!=(const PhysRegId& that) const {
+        return !(*this==that);
+    }
+
+    bool isZeroReg() const
+    {
+        return (regIdx == TheISA::ZeroReg &&
+                (regClass == IntRegClass ||
+                 (THE_ISA == ALPHA_ISA && regClass == FloatRegClass)));
+    }
+
+    /** @return true if it is an integer physical register. */
+    bool isIntPhysReg() const { return regClass == IntRegClass; }
+
+    /** @return true if it is a floating-point physical register. */
+    bool isFloatPhysReg() const { return regClass == FloatRegClass; }
+
+    /** @Return true if it is a  condition-code physical register. */
+    bool isCCPhysReg() const { return regClass == CCRegClass; }
+
+    /**
+     * Returns true if this register is always associated to the same
+     * architectural register.
+     */
+    bool isFixedMapping() const
+    {
+        return regClass == MiscRegClass;
+    }
+};
+
+// PhysRegIds only need to be created once and then we can use the following
+// to work with them
+typedef const PhysRegId* PhysRegIdPtr;
 
 /** Struct that defines the information passed from fetch to decode. */
 template<class Impl>

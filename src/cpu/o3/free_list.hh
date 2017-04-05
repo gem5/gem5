@@ -34,6 +34,7 @@
 
 #include <iostream>
 #include <queue>
+#include <vector>
 
 #include "base/misc.hh"
 #include "base/trace.hh"
@@ -53,20 +54,20 @@ class SimpleFreeList
   private:
 
     /** The actual free list */
-    std::queue<PhysRegIndex> freeRegs;
+    std::queue<PhysRegIdPtr> freeRegs;
 
   public:
 
     SimpleFreeList() {};
 
     /** Add a physical register to the free list */
-    void addReg(PhysRegIndex reg) { freeRegs.push(reg); }
+    void addReg(PhysRegIdPtr reg) { freeRegs.push(reg); }
 
     /** Get the next available register from the free list */
-    PhysRegIndex getReg()
+    PhysRegIdPtr getReg()
     {
         assert(!freeRegs.empty());
-        PhysRegIndex free_reg = freeRegs.front();
+        PhysRegIdPtr free_reg = freeRegs.front();
         freeRegs.pop();
         return free_reg;
     }
@@ -140,25 +141,25 @@ class UnifiedFreeList
     SimpleFreeList *getCCList() { return &ccList; }
 
     /** Gets a free integer register. */
-    PhysRegIndex getIntReg() { return intList.getReg(); }
+    PhysRegIdPtr getIntReg() { return intList.getReg(); }
 
     /** Gets a free fp register. */
-    PhysRegIndex getFloatReg() { return floatList.getReg(); }
+    PhysRegIdPtr getFloatReg() { return floatList.getReg(); }
 
     /** Gets a free cc register. */
-    PhysRegIndex getCCReg() { return ccList.getReg(); }
+    PhysRegIdPtr getCCReg() { return ccList.getReg(); }
 
     /** Adds a register back to the free list. */
-    void addReg(PhysRegIndex freed_reg);
+    void addReg(PhysRegIdPtr freed_reg);
 
     /** Adds an integer register back to the free list. */
-    void addIntReg(PhysRegIndex freed_reg) { intList.addReg(freed_reg); }
+    void addIntReg(PhysRegIdPtr freed_reg) { intList.addReg(freed_reg); }
 
     /** Adds a fp register back to the free list. */
-    void addFloatReg(PhysRegIndex freed_reg) { floatList.addReg(freed_reg); }
+    void addFloatReg(PhysRegIdPtr freed_reg) { floatList.addReg(freed_reg); }
 
     /** Adds a cc register back to the free list. */
-    void addCCReg(PhysRegIndex freed_reg) { ccList.addReg(freed_reg); }
+    void addCCReg(PhysRegIdPtr freed_reg) { ccList.addReg(freed_reg); }
 
     /** Checks if there are any free integer registers. */
     bool hasFreeIntRegs() const { return intList.hasFreeRegs(); }
@@ -180,18 +181,25 @@ class UnifiedFreeList
 };
 
 inline void
-UnifiedFreeList::addReg(PhysRegIndex freed_reg)
+UnifiedFreeList::addReg(PhysRegIdPtr freed_reg)
 {
-    DPRINTF(FreeList,"Freeing register %i.\n", freed_reg);
+    DPRINTF(FreeList,"Freeing register %i (%s).\n", freed_reg->regIdx,
+            RegClassStrings[freed_reg->regClass]);
     //Might want to add in a check for whether or not this register is
     //already in there.  A bit vector or something similar would be useful.
-    if (regFile->isIntPhysReg(freed_reg)) {
-        intList.addReg(freed_reg);
-    } else if (regFile->isFloatPhysReg(freed_reg)) {
-        floatList.addReg(freed_reg);
-    } else {
-        assert(regFile->isCCPhysReg(freed_reg));
-        ccList.addReg(freed_reg);
+    switch (freed_reg->regClass) {
+        case IntRegClass:
+            intList.addReg(freed_reg);
+            break;
+        case FloatRegClass:
+            floatList.addReg(freed_reg);
+            break;
+        case CCRegClass:
+            ccList.addReg(freed_reg);
+            break;
+        default:
+            panic("Unexpected RegClass (%s)",
+                                   RegClassStrings[freed_reg->regClass]);
     }
 
     // These assert conditions ensure that the number of free

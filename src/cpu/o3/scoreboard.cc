@@ -36,12 +36,9 @@
 #include "debug/Scoreboard.hh"
 
 Scoreboard::Scoreboard(const std::string &_my_name,
-                       unsigned _numPhysicalRegs, unsigned _numMiscRegs,
-                       PhysRegIndex _zeroRegIdx, PhysRegIndex _fpZeroRegIdx)
+                       unsigned _numPhysicalRegs)
     : _name(_my_name),
       regScoreBoard(_numPhysicalRegs, true),
-      numPhysRegs(_numPhysicalRegs),
-      numTotalRegs(_numPhysicalRegs + _numMiscRegs),
-      zeroRegIdx(_zeroRegIdx), fpZeroRegIdx(_fpZeroRegIdx)
+      numPhysRegs(_numPhysicalRegs)
 {
 }

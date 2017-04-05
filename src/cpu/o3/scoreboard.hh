@@ -46,12 +46,8 @@
 /**
  * Implements a simple scoreboard to track which registers are
  * ready. This class operates on the unified physical register space,
- * so integer and floating-point registers are not distinguished.  For
- * convenience, it also accepts operations on the physical-space
- * mapping of misc registers, which are numbered starting after the
- * end of the actual physical register file.  However, there is no
- * actual scoreboard for misc registers, and they are always
- * considered ready.
+ * because the different classes of registers do not need to be distinguished.
+ * Registers being part of a fixed mapping are always considered ready.
  */
 class Scoreboard
 {
@@ -67,38 +63,13 @@ class Scoreboard
     /** The number of actual physical registers */
     unsigned numPhysRegs;
 
-    /**
-     * The total number of registers which can be indexed, including
-     * the misc registers that come after the physical registers and
-     * which are hardwired to be always considered ready.
-     */
-    unsigned M5_CLASS_VAR_USED numTotalRegs;
-
-    /** The index of the zero register. */
-    PhysRegIndex zeroRegIdx;
-
-    /** The index of the FP zero register. */
-    PhysRegIndex fpZeroRegIdx;
-
-    bool isZeroReg(PhysRegIndex idx) const
-    {
-        return (idx == zeroRegIdx ||
-                (THE_ISA == ALPHA_ISA && idx == fpZeroRegIdx));
-    }
-
   public:
     /** Constructs a scoreboard.
      *  @param _numPhysicalRegs Number of physical registers.
      *  @param _numMiscRegs Number of miscellaneous registers.
-     *  @param _zeroRegIdx Index of the zero register.
-     *  @param _fpZeroRegIdx Index of the FP zero register (if any, currently
-     *                       used only for Alpha).
      */
     Scoreboard(const std::string &_my_name,
-               unsigned _numPhysicalRegs,
-               unsigned _numMiscRegs,
-               PhysRegIndex _zeroRegIdx,
-               PhysRegIndex _fpZeroRegIdx);
+               unsigned _numPhysicalRegs);
 
     /** Destructor. */
     ~Scoreboard() {}
@@ -107,54 +78,56 @@ class Scoreboard
     std::string name() const { return _name; };
 
     /** Checks if the register is ready. */
-    bool getReg(PhysRegIndex reg_idx) const
+    bool getReg(PhysRegIdPtr phys_reg) const
     {
-        assert(reg_idx < numTotalRegs);
+        assert(phys_reg->flatIdx < numPhysRegs);
 
-        if (reg_idx >= numPhysRegs) {
-            // misc regs are always ready
+        if (phys_reg->isFixedMapping()) {
+            // Fixed mapping regs are always ready
             return true;
         }
 
-        bool ready = regScoreBoard[reg_idx];
+        bool ready = regScoreBoard[phys_reg->flatIdx];
 
-        if (isZeroReg(reg_idx))
+        if (phys_reg->isZeroReg())
             assert(ready);
 
         return ready;
     }
 
     /** Sets the register as ready. */
-    void setReg(PhysRegIndex reg_idx)
+    void setReg(PhysRegIdPtr phys_reg)
     {
-        assert(reg_idx < numTotalRegs);
+        assert(phys_reg->flatIdx < numPhysRegs);
 
-        if (reg_idx >= numPhysRegs) {
-            // misc regs are always ready, ignore attempts to change that
+        if (phys_reg->isFixedMapping()) {
+            // Fixed mapping regs are always ready, ignore attempts to change
+            // that
             return;
         }
 
-        DPRINTF(Scoreboard, "Setting reg %i as ready\n", reg_idx);
+        DPRINTF(Scoreboard, "Setting reg %i (%s) as ready\n", phys_reg->regIdx,
+                RegClassStrings[phys_reg->regClass]);
 
-        assert(reg_idx < numTotalRegs);
-        regScoreBoard[reg_idx] = true;
+        regScoreBoard[phys_reg->flatIdx] = true;
     }
 
     /** Sets the register as not ready. */
-    void unsetReg(PhysRegIndex reg_idx)
+    void unsetReg(PhysRegIdPtr phys_reg)
     {
-        assert(reg_idx < numTotalRegs);
+        assert(phys_reg->flatIdx < numPhysRegs);
 
-        if (reg_idx >= numPhysRegs) {
-            // misc regs are always ready, ignore attempts to change that
+        if (phys_reg->isFixedMapping()) {
+            // Fixed mapping regs are always ready, ignore attempts to
+            // change that
             return;
         }
 
         // zero reg should never be marked unready
-        if (isZeroReg(reg_idx))
+        if (phys_reg->isZeroReg())
             return;
 
-        regScoreBoard[reg_idx] = false;
+        regScoreBoard[phys_reg->flatIdx] = false;
     }
 
 };

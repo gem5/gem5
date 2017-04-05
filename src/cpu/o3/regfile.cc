@@ -41,17 +41,42 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     : intRegFile(_numPhysicalIntRegs),
       floatRegFile(_numPhysicalFloatRegs),
       ccRegFile(_numPhysicalCCRegs),
-      baseFloatRegIndex(_numPhysicalIntRegs),
-      baseCCRegIndex(_numPhysicalIntRegs + _numPhysicalFloatRegs),
+      numPhysicalIntRegs(_numPhysicalIntRegs),
+      numPhysicalFloatRegs(_numPhysicalFloatRegs),
+      numPhysicalCCRegs(_numPhysicalCCRegs),
       totalNumRegs(_numPhysicalIntRegs
                    + _numPhysicalFloatRegs
                    + _numPhysicalCCRegs)
 {
+    PhysRegIndex phys_reg;
+    PhysRegIndex flat_reg_idx = 0;
+
     if (TheISA::NumCCRegs == 0 && _numPhysicalCCRegs != 0) {
         // Just make this a warning and go ahead and allocate them
         // anyway, to keep from having to add checks everywhere
         warn("Non-zero number of physical CC regs specified, even though\n"
              "    ISA does not use them.\n");
+    }
+    // The initial batch of registers are the integer ones
+    for (phys_reg = 0; phys_reg < numPhysicalIntRegs; phys_reg++) {
+        intRegIds.emplace_back(IntRegClass, phys_reg, flat_reg_idx++);
+    }
+
+    // The next batch of the registers are the floating-point physical
+    // registers; put them onto the floating-point free list.
+    for (phys_reg = 0; phys_reg < numPhysicalFloatRegs; phys_reg++) {
+        floatRegIds.emplace_back(FloatRegClass, phys_reg, flat_reg_idx++);
+    }
+
+    // The rest of the registers are the condition-code physical
+    // registers; put them onto the condition-code free list.
+    for (phys_reg = 0; phys_reg < numPhysicalCCRegs; phys_reg++) {
+        ccRegIds.emplace_back(CCRegClass, phys_reg, flat_reg_idx++);
+    }
+
+    // Misc regs have a fixed mapping but still need PhysRegIds.
+    for (phys_reg = 0; phys_reg < TheISA::NumMiscRegs; phys_reg++) {
+        miscRegIds.emplace_back(MiscRegClass, phys_reg, 0);
     }
 }
 
@@ -60,22 +85,25 @@ void
 PhysRegFile::initFreeList(UnifiedFreeList *freeList)
 {
     // Initialize the free lists.
-    PhysRegIndex reg_idx = 0;
+    int reg_idx = 0;
 
     // The initial batch of registers are the integer ones
-    while (reg_idx < baseFloatRegIndex) {
-        freeList->addIntReg(reg_idx++);
+    for (reg_idx = 0; reg_idx < numPhysicalIntRegs; reg_idx++) {
+        assert(intRegIds[reg_idx].regIdx == reg_idx);
+        freeList->addIntReg(&intRegIds[reg_idx]);
     }
 
     // The next batch of the registers are the floating-point physical
     // registers; put them onto the floating-point free list.
-    while (reg_idx < baseCCRegIndex) {
-        freeList->addFloatReg(reg_idx++);
+    for (reg_idx = 0; reg_idx < numPhysicalFloatRegs; reg_idx++) {
+        assert(floatRegIds[reg_idx].regIdx == reg_idx);
+        freeList->addFloatReg(&floatRegIds[reg_idx]);
     }
 
     // The rest of the registers are the condition-code physical
     // registers; put them onto the condition-code free list.
-    while (reg_idx < totalNumRegs) {
-        freeList->addCCReg(reg_idx++);
+    for (reg_idx = 0; reg_idx < numPhysicalCCRegs; reg_idx++) {
+        assert(ccRegIds[reg_idx].regIdx == reg_idx);
+        freeList->addCCReg(&ccRegIds[reg_idx]);
     }
 }

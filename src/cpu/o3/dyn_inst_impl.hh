@@ -106,17 +106,6 @@ template <class Impl>
 void
 BaseO3DynInst<Impl>::initVars()
 {
-    // Make sure to have the renamed register entries set to the same
-    // as the normal register entries.  It will allow the IQ to work
-    // without any modifications.
-    for (int i = 0; i < this->staticInst->numDestRegs(); i++) {
-        this->_destRegIdx[i] = this->staticInst->destRegIdx(i).regIdx;
-    }
-
-    for (int i = 0; i < this->staticInst->numSrcRegs(); i++) {
-        this->_srcRegIdx[i] = this->staticInst->srcRegIdx(i).regIdx;
-    }
-
     this->_readySrcRegIdx.reset();
 
     _numDestMiscRegs = 0;

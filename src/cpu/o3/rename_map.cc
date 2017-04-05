@@ -60,11 +60,11 @@ SimpleRenameMap::init(unsigned size, SimpleFreeList *_freeList,
 SimpleRenameMap::RenameInfo
 SimpleRenameMap::rename(RegIndex arch_reg)
 {
-    PhysRegIndex renamed_reg;
+    PhysRegIdPtr renamed_reg;
 
     // Record the current physical register that is renamed to the
     // requested architected register.
-    PhysRegIndex prev_reg = map[arch_reg];
+    PhysRegIdPtr prev_reg = map[arch_reg];
 
     // If it's not referencing the zero register, then rename the
     // register.
@@ -74,12 +74,14 @@ SimpleRenameMap::rename(RegIndex arch_reg)
         map[arch_reg] = renamed_reg;
     } else {
         // Otherwise return the zero register so nothing bad happens.
-        assert(prev_reg == zeroReg);
-        renamed_reg = zeroReg;
+        assert(prev_reg->isZeroReg());
+        renamed_reg = prev_reg;
     }
 
-    DPRINTF(Rename, "Renamed reg %d to physical reg %d old mapping was %d\n",
-            arch_reg, renamed_reg, prev_reg);
+    DPRINTF(Rename, "Renamed reg %d to physical reg %d (%d) old mapping was"
+            " %d (%d)\n",
+            arch_reg, renamed_reg->regIdx, renamed_reg->flatIdx,
+            prev_reg->regIdx, prev_reg->flatIdx);
 
     return RenameInfo(renamed_reg, prev_reg);
 }
@@ -100,6 +102,7 @@ UnifiedRenameMap::init(PhysRegFile *_regFile,
     floatMap.init(TheISA::NumFloatRegs, &(freeList->floatList), _floatZeroReg);
 
     ccMap.init(TheISA::NumCCRegs, &(freeList->ccList), (RegIndex)-1);
+
 }
 
 
@@ -126,7 +129,7 @@ UnifiedRenameMap::rename(RegId arch_reg)
 }
 
 
-PhysRegIndex
+PhysRegIdPtr
 UnifiedRenameMap::lookup(RegId arch_reg) const
 {
     switch (arch_reg.regClass) {
@@ -149,7 +152,7 @@ UnifiedRenameMap::lookup(RegId arch_reg) const
 }
 
 void
-UnifiedRenameMap::setEntry(RegId arch_reg, PhysRegIndex phys_reg)
+UnifiedRenameMap::setEntry(RegId arch_reg, PhysRegIdPtr phys_reg)
 {
     switch (arch_reg.regClass) {
       case IntRegClass:

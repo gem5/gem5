@@ -267,17 +267,17 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Physical register index of the destination registers of this
      *  instruction.
      */
-    std::array<PhysRegIndex, TheISA::MaxInstDestRegs> _destRegIdx;
+    std::array<PhysRegIdPtr, TheISA::MaxInstDestRegs> _destRegIdx;
 
     /** Physical register index of the source registers of this
      *  instruction.
      */
-    std::array<PhysRegIndex, TheISA::MaxInstSrcRegs> _srcRegIdx;
+    std::array<PhysRegIdPtr, TheISA::MaxInstSrcRegs> _srcRegIdx;
 
     /** Physical register index of the previous producers of the
      *  architected destinations.
      */
-    std::array<PhysRegIndex, TheISA::MaxInstDestRegs> _prevDestRegIdx;
+    std::array<PhysRegIdPtr, TheISA::MaxInstDestRegs> _prevDestRegIdx;
 
 
   public:
@@ -368,13 +368,13 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Returns the physical register index of the i'th destination
      *  register.
      */
-    PhysRegIndex renamedDestRegIdx(int idx) const
+    PhysRegIdPtr renamedDestRegIdx(int idx) const
     {
         return _destRegIdx[idx];
     }
 
     /** Returns the physical register index of the i'th source register. */
-    PhysRegIndex renamedSrcRegIdx(int idx) const
+    PhysRegIdPtr renamedSrcRegIdx(int idx) const
     {
         assert(TheISA::MaxInstSrcRegs > idx);
         return _srcRegIdx[idx];
@@ -391,7 +391,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Returns the physical register index of the previous physical register
      *  that remapped to the same logical register index.
      */
-    PhysRegIndex prevDestRegIdx(int idx) const
+    PhysRegIdPtr prevDestRegIdx(int idx) const
     {
         return _prevDestRegIdx[idx];
     }
@@ -400,8 +400,8 @@ class BaseDynInst : public ExecContext, public RefCounted
      *  the previous physical register that the logical register mapped to.
      */
     void renameDestReg(int idx,
-                       PhysRegIndex renamed_dest,
-                       PhysRegIndex previous_rename)
+                       PhysRegIdPtr renamed_dest,
+                       PhysRegIdPtr previous_rename)
     {
         _destRegIdx[idx] = renamed_dest;
         _prevDestRegIdx[idx] = previous_rename;
@@ -411,7 +411,7 @@ class BaseDynInst : public ExecContext, public RefCounted
      *  has/will produce that logical register's result.
      *  @todo: add in whether or not the source register is ready.
      */
-    void renameSrcReg(int idx, PhysRegIndex renamed_src)
+    void renameSrcReg(int idx, PhysRegIdPtr renamed_src)
     {
         _srcRegIdx[idx] = renamed_src;
     }

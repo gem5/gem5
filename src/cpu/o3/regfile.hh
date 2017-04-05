@@ -64,34 +64,33 @@ class PhysRegFile
 
     /** Integer register file. */
     std::vector<IntReg> intRegFile;
+    std::vector<PhysRegId> intRegIds;
 
     /** Floating point register file. */
     std::vector<PhysFloatReg> floatRegFile;
+    std::vector<PhysRegId> floatRegIds;
 
     /** Condition-code register file. */
     std::vector<CCReg> ccRegFile;
+    std::vector<PhysRegId> ccRegIds;
+
+    /** Misc Reg Ids */
+    std::vector<PhysRegId> miscRegIds;
 
     /**
-     * The first floating-point physical register index.  The physical
-     * register file has a single continuous index space, with the
-     * initial indices mapping to the integer registers, followed
-     * immediately by the floating-point registers.  Thus the first
-     * floating-point index is equal to the number of integer
-     * registers.
-     *
-     * Note that this internal organizational detail on how physical
-     * register file indices are ordered should *NOT* be exposed
-     * outside of this class.  Other classes can use the is*PhysReg()
-     * methods to map from a physical register index to a class
-     * without knowing the internal structure of the index map.
+     * Number of physical general purpose registers
      */
-    unsigned baseFloatRegIndex;
+    unsigned numPhysicalIntRegs;
 
     /**
-     * The first condition-code physical register index.  The
-     * condition-code registers follow the floating-point registers.
+     * Number of physical general purpose registers
      */
-    unsigned baseCCRegIndex;
+    unsigned numPhysicalFloatRegs;
+
+    /**
+     * Number of physical general purpose registers
+     */
+    unsigned numPhysicalCCRegs;
 
     /** Total number of physical registers. */
     unsigned totalNumRegs;
@@ -114,153 +113,112 @@ class PhysRegFile
     void initFreeList(UnifiedFreeList *freeList);
 
     /** @return the number of integer physical registers. */
-    unsigned numIntPhysRegs() const { return baseFloatRegIndex; }
+    unsigned numIntPhysRegs() const { return numPhysicalIntRegs; }
 
     /** @return the number of floating-point physical registers. */
-    unsigned numFloatPhysRegs() const
-    { return baseCCRegIndex - baseFloatRegIndex; }
+    unsigned numFloatPhysRegs() const { return numPhysicalFloatRegs; }
 
     /** @return the number of condition-code physical registers. */
-    unsigned numCCPhysRegs() const
-    { return totalNumRegs - baseCCRegIndex; }
+    unsigned numCCPhysRegs() const { return numPhysicalCCRegs; }
 
     /** @return the total number of physical registers. */
     unsigned totalNumPhysRegs() const { return totalNumRegs; }
 
-    /**
-     * @return true if the specified physical register index
-     * corresponds to an integer physical register.
-     */
-    bool isIntPhysReg(PhysRegIndex reg_idx) const
-    {
-        return 0 <= reg_idx && reg_idx < baseFloatRegIndex;
-    }
-
-    /**
-     * @return true if the specified physical register index
-     * corresponds to a floating-point physical register.
-     */
-    bool isFloatPhysReg(PhysRegIndex reg_idx) const
-    {
-        return (baseFloatRegIndex <= reg_idx && reg_idx < baseCCRegIndex);
-    }
-
-    /**
-     * Return true if the specified physical register index
-     * corresponds to a condition-code physical register.
-     */
-    bool isCCPhysReg(PhysRegIndex reg_idx)
-    {
-        return (baseCCRegIndex <= reg_idx && reg_idx < totalNumRegs);
+    /** Gets a misc register PhysRegIdPtr. */
+    PhysRegIdPtr getMiscRegId(RegIndex reg_idx) {
+        return &miscRegIds[reg_idx];
     }
 
     /** Reads an integer register. */
-    uint64_t readIntReg(PhysRegIndex reg_idx) const
+    uint64_t readIntReg(PhysRegIdPtr phys_reg) const
     {
-        assert(isIntPhysReg(reg_idx));
+        assert(phys_reg->isIntPhysReg());
 
         DPRINTF(IEW, "RegFile: Access to int register %i, has data "
-                "%#x\n", int(reg_idx), intRegFile[reg_idx]);
-        return intRegFile[reg_idx];
+                "%#x\n", phys_reg->regIdx, intRegFile[phys_reg->regIdx]);
+        return intRegFile[phys_reg->regIdx];
     }
 
     /** Reads a floating point register (double precision). */
-    FloatReg readFloatReg(PhysRegIndex reg_idx) const
+    FloatReg readFloatReg(PhysRegIdPtr phys_reg) const
     {
-        assert(isFloatPhysReg(reg_idx));
-
-        // Remove the base Float reg dependency.
-        PhysRegIndex reg_offset = reg_idx - baseFloatRegIndex;
+        assert(phys_reg->isFloatPhysReg());
 
         DPRINTF(IEW, "RegFile: Access to float register %i, has "
-                "data %#x\n", int(reg_idx), floatRegFile[reg_offset].q);
+                "data %#x\n", phys_reg->regIdx,
+                floatRegFile[phys_reg->regIdx].q);
 
-        return floatRegFile[reg_offset].d;
+        return floatRegFile[phys_reg->regIdx].d;
     }
 
-    FloatRegBits readFloatRegBits(PhysRegIndex reg_idx) const
+    FloatRegBits readFloatRegBits(PhysRegIdPtr phys_reg) const
     {
-        assert(isFloatPhysReg(reg_idx));
+        assert(phys_reg->isFloatPhysReg());
 
-        // Remove the base Float reg dependency.
-        PhysRegIndex reg_offset = reg_idx - baseFloatRegIndex;
-
-        FloatRegBits floatRegBits = floatRegFile[reg_offset].q;
+        FloatRegBits floatRegBits = floatRegFile[phys_reg->regIdx].q;
 
         DPRINTF(IEW, "RegFile: Access to float register %i as int, "
-                "has data %#x\n", int(reg_idx), (uint64_t)floatRegBits);
+                "has data %#x\n", phys_reg->regIdx,
+                (uint64_t)floatRegBits);
 
         return floatRegBits;
     }
 
     /** Reads a condition-code register. */
-    CCReg readCCReg(PhysRegIndex reg_idx)
+    CCReg readCCReg(PhysRegIdPtr phys_reg)
     {
-        assert(isCCPhysReg(reg_idx));
-
-        // Remove the base CC reg dependency.
-        PhysRegIndex reg_offset = reg_idx - baseCCRegIndex;
+        assert(phys_reg->isCCPhysReg());
 
         DPRINTF(IEW, "RegFile: Access to cc register %i, has "
-                "data %#x\n", int(reg_idx), ccRegFile[reg_offset]);
+                "data %#x\n", phys_reg->regIdx,
+                ccRegFile[phys_reg->regIdx]);
 
-        return ccRegFile[reg_offset];
+        return ccRegFile[phys_reg->regIdx];
     }
 
     /** Sets an integer register to the given value. */
-    void setIntReg(PhysRegIndex reg_idx, uint64_t val)
+    void setIntReg(PhysRegIdPtr phys_reg, uint64_t val)
     {
-        assert(isIntPhysReg(reg_idx));
+        assert(phys_reg->isIntPhysReg());
 
         DPRINTF(IEW, "RegFile: Setting int register %i to %#x\n",
-                int(reg_idx), val);
+                phys_reg->regIdx, val);
 
-        if (reg_idx != TheISA::ZeroReg)
-            intRegFile[reg_idx] = val;
+        if (!phys_reg->isZeroReg())
+            intRegFile[phys_reg->regIdx] = val;
     }
 
     /** Sets a double precision floating point register to the given value. */
-    void setFloatReg(PhysRegIndex reg_idx, FloatReg val)
+    void setFloatReg(PhysRegIdPtr phys_reg, FloatReg val)
     {
-        assert(isFloatPhysReg(reg_idx));
-
-        // Remove the base Float reg dependency.
-        PhysRegIndex reg_offset = reg_idx - baseFloatRegIndex;
+        assert(phys_reg->isFloatPhysReg());
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
-                int(reg_idx), (uint64_t)val);
+                phys_reg->regIdx, (uint64_t)val);
 
-#if THE_ISA == ALPHA_ISA
-        if (reg_offset != TheISA::ZeroReg)
-#endif
-            floatRegFile[reg_offset].d = val;
+        if (!phys_reg->isZeroReg())
+            floatRegFile[phys_reg->regIdx].d = val;
     }
 
-    void setFloatRegBits(PhysRegIndex reg_idx, FloatRegBits val)
+    void setFloatRegBits(PhysRegIdPtr phys_reg, FloatRegBits val)
     {
-        assert(isFloatPhysReg(reg_idx));
-
-        // Remove the base Float reg dependency.
-        PhysRegIndex reg_offset = reg_idx - baseFloatRegIndex;
+        assert(phys_reg->isFloatPhysReg());
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
-                int(reg_idx), (uint64_t)val);
+                phys_reg->regIdx, (uint64_t)val);
 
-        floatRegFile[reg_offset].q = val;
+        floatRegFile[phys_reg->regIdx].q = val;
     }
 
     /** Sets a condition-code register to the given value. */
-    void setCCReg(PhysRegIndex reg_idx, CCReg val)
+    void setCCReg(PhysRegIdPtr phys_reg, CCReg val)
     {
-        assert(isCCPhysReg(reg_idx));
-
-        // Remove the base CC reg dependency.
-        PhysRegIndex reg_offset = reg_idx - baseCCRegIndex;
+        assert(phys_reg->isCCPhysReg());
 
         DPRINTF(IEW, "RegFile: Setting cc register %i to %#x\n",
-                int(reg_idx), (uint64_t)val);
+                phys_reg->regIdx, (uint64_t)val);
 
-        ccRegFile[reg_offset] = val;
+        ccRegFile[phys_reg->regIdx] = val;
     }
 };
 

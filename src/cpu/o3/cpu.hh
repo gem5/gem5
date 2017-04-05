@@ -411,21 +411,21 @@ class FullO3CPU : public BaseO3CPU
     void setMiscReg(int misc_reg, const TheISA::MiscReg &val,
             ThreadID tid);
 
-    uint64_t readIntReg(int reg_idx);
+    uint64_t readIntReg(PhysRegIdPtr phys_reg);
 
-    TheISA::FloatReg readFloatReg(int reg_idx);
+    TheISA::FloatReg readFloatReg(PhysRegIdPtr phys_reg);
 
-    TheISA::FloatRegBits readFloatRegBits(int reg_idx);
+    TheISA::FloatRegBits readFloatRegBits(PhysRegIdPtr phys_reg);
 
-    TheISA::CCReg readCCReg(int reg_idx);
+    TheISA::CCReg readCCReg(PhysRegIdPtr phys_reg);
 
-    void setIntReg(int reg_idx, uint64_t val);
+    void setIntReg(PhysRegIdPtr phys_reg, uint64_t val);
 
-    void setFloatReg(int reg_idx, TheISA::FloatReg val);
+    void setFloatReg(PhysRegIdPtr phys_reg, TheISA::FloatReg val);
 
-    void setFloatRegBits(int reg_idx, TheISA::FloatRegBits val);
+    void setFloatRegBits(PhysRegIdPtr phys_reg, TheISA::FloatRegBits val);
 
-    void setCCReg(int reg_idx, TheISA::CCReg val);
+    void setCCReg(PhysRegIdPtr phys_reg, TheISA::CCReg val);
 
     uint64_t readArchIntReg(int reg_idx, ThreadID tid);
 

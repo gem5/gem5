@@ -239,10 +239,11 @@ ElasticTrace::updateRegDep(const DynInstPtr &dyn_inst)
     int8_t max_regs = dyn_inst->numSrcRegs();
     for (int src_idx = 0; src_idx < max_regs; src_idx++) {
         // Get the physical register index of the i'th source register.
-        PhysRegIndex src_reg = dyn_inst->renamedSrcRegIdx(src_idx);
-        DPRINTFR(ElasticTrace, "[sn:%lli] Check map for src reg %i\n", seq_num,
-                    src_reg);
-        auto itr_last_writer = physRegDepMap.find(src_reg);
+        PhysRegIdPtr src_reg = dyn_inst->renamedSrcRegIdx(src_idx);
+        DPRINTFR(ElasticTrace, "[sn:%lli] Check map for src reg"
+                 " %i (%s)\n", seq_num,
+                 src_reg->regIdx, RegClassStrings[src_reg->regClass]);
+        auto itr_last_writer = physRegDepMap.find(src_reg->flatIdx);
         if (itr_last_writer != physRegDepMap.end()) {
             InstSeqNum last_writer = itr_last_writer->second;
             // Additionally the dependency distance is kept less than the window
@@ -267,10 +268,11 @@ ElasticTrace::updateRegDep(const DynInstPtr &dyn_inst)
             !dest_reg.isZeroReg()) {
             // Get the physical register index of the i'th destination
             // register.
-            PhysRegIndex phys_dest_reg = dyn_inst->renamedDestRegIdx(dest_idx);
-            DPRINTFR(ElasticTrace, "[sn:%lli] Update map for dest reg %i\n",
-                    seq_num, dest_reg.regIdx);
-            physRegDepMap[phys_dest_reg] = seq_num;
+            PhysRegIdPtr phys_dest_reg = dyn_inst->renamedDestRegIdx(dest_idx);
+            DPRINTFR(ElasticTrace, "[sn:%lli] Update map for dest reg"
+                     " %i (%s)\n", seq_num, dest_reg.regIdx,
+                     RegClassStrings[dest_reg.regClass]);
+            physRegDepMap[phys_dest_reg->flatIdx] = seq_num;
         }
     }
     maxPhysRegDepMapSize = std::max(physRegDepMap.size(),
@@ -281,7 +283,7 @@ void
 ElasticTrace::removeRegDepMapEntry(const SeqNumRegPair &inst_reg_pair)
 {
     DPRINTFR(ElasticTrace, "Remove Map entry for Reg %i\n",
-                inst_reg_pair.second);
+            inst_reg_pair.second);
     auto itr_regdep_map = physRegDepMap.find(inst_reg_pair.second);
     if (itr_regdep_map != physRegDepMap.end())
         physRegDepMap.erase(itr_regdep_map);

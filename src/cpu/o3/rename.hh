@@ -119,7 +119,7 @@ class DefaultRename
     ThreadStatus renameStatus[Impl::MaxThreads];
 
     /** Probe points. */
-    typedef typename std::pair<InstSeqNum, short int> SeqNumRegPair;
+    typedef typename std::pair<InstSeqNum, PhysRegIdPtr> SeqNumRegPair;
     /** To probe when register renaming for an instruction is complete */
     ProbePointArg<DynInstPtr> *ppRename;
     /**
@@ -299,7 +299,8 @@ class DefaultRename
      */
     struct RenameHistory {
         RenameHistory(InstSeqNum _instSeqNum, RegId _archReg,
-                      PhysRegIndex _newPhysReg, PhysRegIndex _prevPhysReg)
+                      PhysRegIdPtr _newPhysReg,
+                      PhysRegIdPtr _prevPhysReg)
             : instSeqNum(_instSeqNum), archReg(_archReg),
               newPhysReg(_newPhysReg), prevPhysReg(_prevPhysReg)
         {
@@ -310,9 +311,10 @@ class DefaultRename
         /** The architectural register index that was renamed. */
         RegId archReg;
         /** The new physical register that the arch. register is renamed to. */
-        PhysRegIndex newPhysReg;
-        /** The old physical register that the arch. register was renamed to. */
-        PhysRegIndex prevPhysReg;
+        PhysRegIdPtr newPhysReg;
+        /** The old physical register that the arch. register was renamed to.
+         */
+        PhysRegIdPtr prevPhysReg;
     };
 
     /** A per-thread list of all destination register renames, used to either
