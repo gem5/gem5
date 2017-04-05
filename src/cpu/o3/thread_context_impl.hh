@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2012, 2016 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -209,6 +209,28 @@ O3ThreadContext<Impl>::readFloatRegBitsFlat(int reg_idx)
 }
 
 template <class Impl>
+const TheISA::VecRegContainer&
+O3ThreadContext<Impl>::readVecRegFlat(int reg_id) const
+{
+    return cpu->readArchVecReg(reg_id, thread->threadId());
+}
+
+template <class Impl>
+TheISA::VecRegContainer&
+O3ThreadContext<Impl>::getWritableVecRegFlat(int reg_id)
+{
+    return cpu->getWritableArchVecReg(reg_id, thread->threadId());
+}
+
+template <class Impl>
+const TheISA::VecElem&
+O3ThreadContext<Impl>::readVecElemFlat(const RegIndex& idx,
+                                           const ElemIndex& elemIndex) const
+{
+    return cpu->readArchVecElem(idx, elemIndex, thread->threadId());
+}
+
+template <class Impl>
 TheISA::CCReg
 O3ThreadContext<Impl>::readCCRegFlat(int reg_idx)
 {
@@ -239,6 +261,24 @@ O3ThreadContext<Impl>::setFloatRegBitsFlat(int reg_idx, FloatRegBits val)
 {
     cpu->setArchFloatRegInt(reg_idx, val, thread->threadId());
 
+    conditionalSquash();
+}
+
+template <class Impl>
+void
+O3ThreadContext<Impl>::setVecRegFlat(int reg_idx, const VecRegContainer& val)
+{
+    cpu->setArchVecReg(reg_idx, val, thread->threadId());
+
+    conditionalSquash();
+}
+
+template <class Impl>
+void
+O3ThreadContext<Impl>::setVecElemFlat(const RegIndex& idx,
+        const ElemIndex& elemIndex, const VecElem& val)
+{
+    cpu->setArchVecElem(idx, elemIndex, val, thread->threadId());
     conditionalSquash();
 }
 

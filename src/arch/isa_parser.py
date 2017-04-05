@@ -1,4 +1,4 @@
-# Copyright (c) 2014 ARM Limited
+# Copyright (c) 2014, 2016 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -865,8 +865,8 @@ class OperandList(object):
             op_desc = self.find_base(op_base)
             if op_desc:
                 if op_desc.ext != op_ext:
-                    error('Inconsistent extensions for operand %s' % \
-                          op_base)
+                    error ('Inconsistent extensions for operand %s' % \
+                            op_base)
                 op_desc.is_src = op_desc.is_src or is_src
                 op_desc.is_dest = op_desc.is_dest or is_dest
             else:

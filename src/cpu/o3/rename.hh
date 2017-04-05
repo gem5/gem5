@@ -464,8 +464,6 @@ class DefaultRename
     /** The maximum skid buffer size. */
     unsigned skidBufferMax;
 
-    PhysRegIndex maxPhysicalRegs;
-
     /** Enum to record the source of a structure full stall.  Can come from
      * either ROB, IQ, LSQ, and it is priortized in that order.
      */
@@ -515,6 +513,7 @@ class DefaultRename
     Stats::Scalar renameRenameLookups;
     Stats::Scalar intRenameLookups;
     Stats::Scalar fpRenameLookups;
+    Stats::Scalar vecRenameLookups;
     /** Stat for total number of committed renaming mappings. */
     Stats::Scalar renameCommittedMaps;
     /** Stat for total number of mappings that were undone due to a squash. */

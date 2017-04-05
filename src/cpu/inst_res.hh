@@ -43,17 +43,24 @@
 #include <type_traits>
 
 #include "arch/generic/types.hh"
+#include "arch/generic/vec_reg.hh"
 
 class InstResult {
+    using VecRegContainer = TheISA::VecRegContainer;
+    using VecElem = TheISA::VecElem;
   public:
     union MultiResult {
         uint64_t integer;
         double dbl;
+        VecRegContainer vector;
+        VecElem vecElem;
         MultiResult() {}
     };
 
     enum class ResultType {
         Scalar,
+        VecElem,
+        VecReg,
         NumResultTypes,
         Invalid
     };
@@ -77,7 +84,32 @@ class InstResult {
             result.dbl = i;
         }
     }
+    /** Vector result. */
+    explicit InstResult(const VecRegContainer& v, const ResultType& t)
+        : type(t) { result.vector = v; }
 
+    InstResult& operator=(const InstResult& that) {
+        type = that.type;
+        switch (type) {
+        /* Given that misc regs are not written to, there may be invalids in
+         * the result stack. */
+        case ResultType::Invalid:
+            break;
+        case ResultType::Scalar:
+            result.integer = that.result.integer;
+            break;
+        case ResultType::VecElem:
+            result.vecElem = that.result.vecElem;
+            break;
+        case ResultType::VecReg:
+            result.vector = that.result.vector;
+            break;
+        default:
+            panic("Assigning result from unknown result type");
+            break;
+        }
+        return *this;
+    }
     /**
      * Result comparison
      * Two invalid results always differ.
@@ -88,6 +120,10 @@ class InstResult {
         switch (type) {
         case ResultType::Scalar:
             return result.integer == that.result.integer;
+        case ResultType::VecElem:
+            return result.vecElem == that.result.vecElem;
+        case ResultType::VecReg:
+            return result.vector == that.result.vector;
         case ResultType::Invalid:
             return false;
         default:
@@ -103,6 +139,10 @@ class InstResult {
     /** @{ */
     /** Is this a scalar result?. */
     bool isScalar() const { return type == ResultType::Scalar; }
+    /** Is this a vector result?. */
+    bool isVector() const { return type == ResultType::VecReg; }
+    /** Is this a vector element result?. */
+    bool isVecElem() const { return type == ResultType::VecElem; }
     /** Is this a valid result?. */
     bool isValid() const { return type != ResultType::Invalid; }
     /** @} */
@@ -124,6 +164,18 @@ class InstResult {
     asIntegerNoAssert() const
     {
         return result.integer;
+    }
+    const VecRegContainer&
+    asVector() const
+    {
+        panic_if(!isVector(), "Converting scalar (or invalid) to vector!!");
+        return result.vector;
+    }
+    const VecElem&
+    asVectorElem() const
+    {
+        panic_if(!isVecElem(), "Converting scalar (or invalid) to vector!!");
+        return result.vecElem;
     }
     /** @} */
 };

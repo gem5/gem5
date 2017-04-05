@@ -48,8 +48,8 @@
 
 #include <array>
 #include <bitset>
+#include <deque>
 #include <list>
-#include <queue>
 #include <string>
 
 #include "arch/generic/tlb.hh"
@@ -82,6 +82,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     // Typedef for the CPU.
     typedef typename Impl::CPUType ImplCPU;
     typedef typename ImplCPU::ImplState ImplState;
+    using VecRegContainer = TheISA::VecRegContainer;
 
     // The DynInstPtr type.
     typedef typename Impl::DynInstPtr DynInstPtr;
@@ -591,6 +592,10 @@ class BaseDynInst : public ExecContext, public RefCounted
     int8_t numFPDestRegs()  const { return staticInst->numFPDestRegs(); }
     int8_t numIntDestRegs() const { return staticInst->numIntDestRegs(); }
     int8_t numCCDestRegs() const { return staticInst->numCCDestRegs(); }
+    int8_t numVecDestRegs() const { return staticInst->numVecDestRegs(); }
+    int8_t numVecElemDestRegs() const {
+        return staticInst->numVecElemDestRegs();
+    }
 
     /** Returns the logical register index of the i'th destination register. */
     const RegId& destRegIdx(int i) const { return staticInst->destRegIdx(i); }
@@ -615,6 +620,8 @@ class BaseDynInst : public ExecContext, public RefCounted
     }
 
     /** Pushes a result onto the instResult queue. */
+    /** @{ */
+    /** Scalar result. */
     template<typename T>
     void setScalarResult(T&& t)
     {
@@ -623,6 +630,27 @@ class BaseDynInst : public ExecContext, public RefCounted
                         InstResult::ResultType::Scalar));
         }
     }
+
+    /** Full vector result. */
+    template<typename T>
+    void setVecResult(T&& t)
+    {
+        if (instFlags[RecordResult]) {
+            instResult.push(InstResult(std::forward<T>(t),
+                        InstResult::ResultType::VecReg));
+        }
+    }
+
+    /** Vector element result. */
+    template<typename T>
+    void setVecElemResult(T&& t)
+    {
+        if (instFlags[RecordResult]) {
+            instResult.push(InstResult(std::forward<T>(t),
+                        InstResult::ResultType::VecElem));
+        }
+    }
+    /** @} */
 
     /** Records an integer register being set to a value. */
     void setIntRegOperand(const StaticInst *si, int idx, IntReg val)
@@ -642,11 +670,24 @@ class BaseDynInst : public ExecContext, public RefCounted
         setScalarResult(val);
     }
 
+    /** Record a vector register being set to a value */
+    void setVecRegOperand(const StaticInst *si, int idx,
+            const VecRegContainer& val)
+    {
+        setVecResult(val);
+    }
+
     /** Records an fp register being set to an integer value. */
     void
     setFloatRegOperandBits(const StaticInst *si, int idx, FloatRegBits val)
     {
         setScalarResult(val);
+    }
+
+    /** Record a vector register being set to a value */
+    void setVecElemOperand(const StaticInst *si, int idx, const VecElem val)
+    {
+        setVecElemResult(val);
     }
 
     /** Records that one of the source registers is ready. */

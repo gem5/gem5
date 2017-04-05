@@ -41,6 +41,7 @@
 #ifndef __ARCH_X86_REGISTERS_HH__
 #define __ARCH_X86_REGISTERS_HH__
 
+#include "arch/generic/vec_reg.hh"
 #include "arch/x86/generated/max_inst_regs.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/ccr.hh"
@@ -92,6 +93,15 @@ const int SyscallPseudoReturnReg = INTREG_RDX;
 typedef uint64_t IntReg;
 typedef uint64_t CCReg;
 typedef uint64_t MiscReg;
+
+// dummy typedefs since we don't have vector regs
+constexpr unsigned NumVecElemPerVecReg = 2;
+using VecElem = uint32_t;
+using VecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, false>;
+using ConstVecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, true>;
+using VecRegContainer = VecReg::Container;
+// This has to be one to prevent warnings that are treated as errors
+constexpr unsigned NumVecRegs = 1;
 
 //These floating point types are correct for mmx, but not
 //technically for x87 (80 bits) or at all for xmm (128 bits)

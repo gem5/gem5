@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2016 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder. You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -93,15 +105,92 @@ void
 UnifiedRenameMap::init(PhysRegFile *_regFile,
                        RegIndex _intZeroReg,
                        RegIndex _floatZeroReg,
-                       UnifiedFreeList *freeList)
+                       UnifiedFreeList *freeList,
+                       VecMode _mode)
 {
     regFile = _regFile;
+    vecMode = _mode;
 
     intMap.init(TheISA::NumIntRegs, &(freeList->intList), _intZeroReg);
 
     floatMap.init(TheISA::NumFloatRegs, &(freeList->floatList), _floatZeroReg);
 
+    vecMap.init(TheISA::NumVecRegs, &(freeList->vecList), (RegIndex)-1);
+
+    vecElemMap.init(TheISA::NumVecRegs * NVecElems,
+            &(freeList->vecElemList), (RegIndex)-1);
+
     ccMap.init(TheISA::NumCCRegs, &(freeList->ccList), (RegIndex)-1);
 
+}
+
+void
+UnifiedRenameMap::switchMode(VecMode newVecMode, UnifiedFreeList* freeList)
+{
+    if (newVecMode == Enums::Elem && vecMode == Enums::Full) {
+        /* Switch to vector element rename mode. */
+        /* The free list should currently be tracking full registers. */
+        panic_if(freeList->hasFreeVecElems(),
+                "The free list is already tracking Vec elems");
+        panic_if(freeList->numFreeVecRegs() !=
+                regFile->numVecPhysRegs() - TheISA::NumVecRegs,
+                "The free list has lost vector registers");
+        /* Split the mapping of each arch reg. */
+        int reg = 0;
+        for (auto &e: vecMap) {
+            PhysRegFile::IdRange range = this->regFile->getRegElemIds(e);
+            uint32_t i;
+            for (i = 0; range.first != range.second; i++, range.first++) {
+                vecElemMap.setEntry(RegId(VecElemClass, reg, i),
+                                    &(*range.first));
+            }
+            panic_if(i != NVecElems,
+                "Wrong name of elems: expecting %u, got %d\n",
+                TheISA::NumVecElemPerVecReg, i);
+            reg++;
+        }
+        /* Split the free regs. */
+        while (freeList->hasFreeVecRegs()) {
+            auto vr = freeList->getVecReg();
+            auto range = this->regFile->getRegElemIds(vr);
+            freeList->addRegs(range.first, range.second);
+        }
+        vecMode = Enums::Elem;
+    } else if (newVecMode == Enums::Full && vecMode == Enums::Elem) {
+        /* Switch to full vector register rename mode. */
+        /* The free list should currently be tracking register elems. */
+        panic_if(freeList->hasFreeVecRegs(),
+                "The free list is already tracking full Vec");
+        panic_if(freeList->numFreeVecRegs() !=
+                regFile->numVecElemPhysRegs() - TheISA::NumFloatRegs,
+                "The free list has lost vector register elements");
+        /* To rebuild the arch regs we take the easy road:
+         *  1.- Stitch the elems together into vectors.
+         *  2.- Replace the contents of the register file with the vectors
+         *  3.- Set the remaining registers as free
+         */
+        TheISA::VecRegContainer new_RF[TheISA::NumVecRegs];
+        for (uint32_t i = 0; i < TheISA::NumVecRegs; i++) {
+            VecReg dst = new_RF[i].as<TheISA::VecElem>();
+            for (uint32_t l = 0; l < NVecElems; l++) {
+                RegId s_rid(VecElemClass, i, l);
+                PhysRegIdPtr s_prid = vecElemMap.lookup(s_rid);
+                dst[l] = regFile->readVecElem(s_prid);
+            }
+        }
+
+        for (uint32_t i = 0; i < TheISA::NumVecRegs; i++) {
+            PhysRegId pregId(VecRegClass, i, 0);
+            regFile->setVecReg(regFile->getTrueId(&pregId), new_RF[i]);
+        }
+
+        auto range = regFile->getRegIds(VecRegClass);
+        freeList->addRegs(range.first + TheISA::NumVecRegs, range.second);
+
+        /* We remove the elems from the free list. */
+        while (freeList->hasFreeVecElems())
+            freeList->getVecElem();
+        vecMode = Enums::Full;
+    }
 }
 

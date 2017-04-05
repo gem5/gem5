@@ -11,9 +11,6 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2013 Advanced Micro Devices, Inc.
- * All rights reserved
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
@@ -37,17 +34,30 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
+ * Authors: Rekai Gonzalez
  */
 
-#include "cpu/reg_class.hh"
+/* Auxiliary structs for architecture traits. */
 
-const char *RegId::regClassStrings[] = {
-    "IntRegClass",
-    "FloatRegClass",
-    "VecRegClass",
-    "VecElemClass",
-    "CCRegClass",
-    "MiscRegClass"
+#ifndef __ARCH_COMMON_TRAITS_HH__
+#define __ARCH_COMMON_TRAITS_HH__
+
+#include "enums/VecRegRenameMode.hh"
+
+/** Helper structure to get the vector register mode for a given ISA.
+ * This way we implement a default 'full' mode, and only those ISA that care
+ * have to actually specialise the template to forward the call to the
+ * appropriate member of the ISA.
+ */
+template <typename ISA>
+struct initRenameMode
+{
+    static Enums::VecRegRenameMode mode(const ISA*) { return Enums::Full; }
+    /**
+     * Compare the initial rename mode of two instances of the ISA.
+     * Result is true by definition, as the default mode is Full.
+     * */
+    static bool equals(const ISA*, const ISA*) { return true; }
 };
 
+#endif /* __ARCH_COMMON_TRAITS_HH__ */

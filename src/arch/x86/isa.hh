@@ -82,6 +82,8 @@ namespace X86ISA
                 return RegId(CCRegClass, flattenCCIndex(regId.index()));
               case MiscRegClass:
                 return RegId(MiscRegClass, flattenMiscIndex(regId.index()));
+              default:
+                break;
             }
             return regId;
         }
@@ -99,6 +101,18 @@ namespace X86ISA
                 reg = FLOATREG_STACK(reg - NUM_FLOATREGS,
                                      regVal[MISCREG_X87_TOP]);
             }
+            return reg;
+        }
+
+        int
+        flattenVecIndex(int reg) const
+        {
+            return reg;
+        }
+
+        int
+        flattenVecElemIndex(int reg) const
+        {
             return reg;
         }
 

@@ -486,6 +486,7 @@ Checker<Impl>::validateExecution(DynInstPtr &inst)
     int idx = -1;
     bool result_mismatch = false;
     bool scalar_mismatch = false;
+    bool vector_mismatch = false;
 
     if (inst->isUnverifiable()) {
         // Unverifiable instructions assume they were executed
@@ -503,8 +504,10 @@ Checker<Impl>::validateExecution(DynInstPtr &inst)
             if (checker_val != inst_val) {
                 result_mismatch = true;
                 idx = i;
-                scalar_mismatch = true;
-                break;
+                scalar_mismatch = checker_val.isScalar();
+                vector_mismatch = checker_val.isVector();
+                panic_if(!(scalar_mismatch || vector_mismatch),
+                        "Unknown type of result\n");
             }
         }
     } // Checker CPU checks all the saved results in the dyninst passed by
@@ -610,6 +613,15 @@ Checker<Impl>::copyResult(DynInstPtr &inst, const InstResult& mismatch_val,
             panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
             thread->setFloatRegBits(idx.index(), mismatch_val.asInteger());
             break;
+          case VecRegClass:
+            panic_if(!mismatch_val.isVector(), "Unexpected type of result");
+            thread->setVecReg(idx, mismatch_val.asVector());
+            break;
+          case VecElemClass:
+            panic_if(!mismatch_val.isVecElem(),
+                     "Unexpected type of result");
+            thread->setVecElem(idx, mismatch_val.asVectorElem());
+            break;
           case CCRegClass:
             panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
             thread->setCCReg(idx.index(), mismatch_val.asInteger());
@@ -618,6 +630,8 @@ Checker<Impl>::copyResult(DynInstPtr &inst, const InstResult& mismatch_val,
             panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
             thread->setMiscReg(idx.index(), mismatch_val.asInteger());
             break;
+          default:
+            panic("Unknown register class: %d", (int)idx.classValue());
         }
     }
     start_idx++;
@@ -634,6 +648,14 @@ Checker<Impl>::copyResult(DynInstPtr &inst, const InstResult& mismatch_val,
             panic_if(!res.isScalar(), "Unexpected type of result");
             thread->setFloatRegBits(idx.index(), res.asInteger());
             break;
+          case VecRegClass:
+            panic_if(!res.isVector(), "Unexpected type of result");
+            thread->setVecReg(idx, res.asVector());
+            break;
+          case VecElemClass:
+            panic_if(!res.isVecElem(), "Unexpected type of result");
+            thread->setVecElem(idx, res.asVectorElem());
+            break;
           case CCRegClass:
             panic_if(!res.isScalar(), "Unexpected type of result");
             thread->setCCReg(idx.index(), res.asInteger());
@@ -644,6 +666,8 @@ Checker<Impl>::copyResult(DynInstPtr &inst, const InstResult& mismatch_val,
             thread->setMiscReg(idx.index(), 0);
             break;
             // else Register is out of range...
+          default:
+            panic("Unknown register class: %d", (int)idx.classValue());
         }
     }
 }

@@ -292,6 +292,16 @@ BaseSimpleCPU::regStats()
             .desc("number of times the floating registers were written")
             ;
 
+        t_info.numVecRegReads
+            .name(thread_str + ".num_vec_register_reads")
+            .desc("number of times the vector registers were read")
+            ;
+
+        t_info.numVecRegWrites
+            .name(thread_str + ".num_vec_register_writes")
+            .desc("number of times the vector registers were written")
+            ;
+
         t_info.numCCRegReads
             .name(thread_str + ".num_cc_register_reads")
             .desc("number of times the CC registers were read")

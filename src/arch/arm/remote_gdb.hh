@@ -1,7 +1,7 @@
 /*
  * Copyright 2015 LabWare
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2013, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,6 +51,7 @@
 #include <algorithm>
 
 #include "arch/arm/utility.hh"
+#include "arch/generic/vec_reg.hh"
 #include "base/remote_gdb.hh"
 
 class System;
@@ -96,6 +97,7 @@ class RemoteGDB : public BaseRemoteGDB
           uint64_t pc;
           uint64_t cpsr;
           uint32_t v[32*4];
+          ArmISA::VecRegContainer vec[32];
         } r;
       public:
         char *data() const { return (char *)&r; }

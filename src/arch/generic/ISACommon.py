@@ -10,9 +10,6 @@
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
 #
-# Copyright (c) 2012 Google
-# All rights reserved.
-#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met: redistributions of source code must retain the above copyright
@@ -36,19 +33,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Gabe Black
+# Authors: Rekai Gonzalez
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from m5.SimObject import SimObject
 
-if env['TARGET_ISA'] == 'null':
-    Return()
+class VecRegRenameMode(Enum):
+    '''Enum for Rename Mode in rename map
+        Elem: Each native-elem in a vector register is renamed independently.
+        Full: Vectors are renamed as one unit.'''
 
-Source('decode_cache.cc')
-Source('mmapped_ipr.cc')
-Source('tlb.cc')
+    vals = ['Full', 'Elem']
 
-SimObject('BaseTLB.py')
-SimObject('ISACommon.py')
 
-DebugFlag('TLB')
-Source('pseudo_inst.cc')
+__all__ = ['VecRegRenameMode']

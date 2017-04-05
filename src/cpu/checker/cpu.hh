@@ -96,6 +96,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscReg MiscReg;
+    using VecRegContainer = TheISA::VecRegContainer;
 
     /** id attached to all issued requests */
     MasterID masterId;
@@ -225,6 +226,111 @@ class CheckerCPU : public BaseCPU, public ExecContext
         return thread->readFloatRegBits(reg.index());
     }
 
+    /**
+     * Read source vector register operand.
+     */
+    const VecRegContainer& readVecRegOperand(const StaticInst *si,
+                                             int idx) const override
+    {
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread->readVecReg(reg);
+    }
+
+    /**
+     * Read destination vector register operand for modification.
+     */
+    VecRegContainer& getWritableVecRegOperand(const StaticInst *si,
+                                             int idx) override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread->getWritableVecReg(reg);
+    }
+
+    /** Vector Register Lane Interfaces. */
+    /** @{ */
+    /** Reads source vector 8bit operand. */
+    virtual ConstVecLane8
+    readVec8BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread->readVec8BitLaneReg(reg);
+    }
+
+    /** Reads source vector 16bit operand. */
+    virtual ConstVecLane16
+    readVec16BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread->readVec16BitLaneReg(reg);
+    }
+
+    /** Reads source vector 32bit operand. */
+    virtual ConstVecLane32
+    readVec32BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread->readVec32BitLaneReg(reg);
+    }
+
+    /** Reads source vector 64bit operand. */
+    virtual ConstVecLane64
+    readVec64BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread->readVec64BitLaneReg(reg);
+    }
+
+    /** Write a lane of the destination vector operand. */
+    template <typename LD>
+    void
+    setVecLaneOperandT(const StaticInst *si, int idx, const LD& val)
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread->setVecLane(reg, val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::Byte>& val) override
+    {
+        setVecLaneOperandT(si, idx, val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::TwoByte>& val) override
+    {
+        setVecLaneOperandT(si, idx, val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::FourByte>& val) override
+    {
+        setVecLaneOperandT(si, idx, val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::EightByte>& val) override
+    {
+        setVecLaneOperandT(si, idx, val);
+    }
+    /** @} */
+
+    VecElem readVecElemOperand(const StaticInst *si, int idx) const override
+    {
+        const RegId& reg = si->srcRegIdx(idx);
+        return thread->readVecElem(reg);
+    }
+
     CCReg readCCRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->srcRegIdx(idx);
@@ -237,6 +343,20 @@ class CheckerCPU : public BaseCPU, public ExecContext
     {
         result.push(InstResult(std::forward<T>(t),
                         InstResult::ResultType::Scalar));
+    }
+
+    template<typename T>
+    void setVecResult(T&& t)
+    {
+        result.push(InstResult(std::forward<T>(t),
+                        InstResult::ResultType::VecReg));
+    }
+
+    template<typename T>
+    void setVecElemResult(T&& t)
+    {
+        result.push(InstResult(std::forward<T>(t),
+                        InstResult::ResultType::VecElem));
     }
 
     void setIntRegOperand(const StaticInst *si, int idx,
@@ -272,6 +392,24 @@ class CheckerCPU : public BaseCPU, public ExecContext
         assert(reg.isCCReg());
         thread->setCCReg(reg.index(), val);
         setScalarResult((uint64_t)val);
+    }
+
+    void setVecRegOperand(const StaticInst *si, int idx,
+                                const VecRegContainer& val) override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        thread->setVecReg(reg, val);
+        setVecResult(val);
+    }
+
+    void setVecElemOperand(const StaticInst *si, int idx,
+                           const VecElem val) override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecElem());
+        thread->setVecElem(reg, val);
+        setVecElemResult(val);
     }
 
     bool readPredicate() override { return thread->readPredicate(); }

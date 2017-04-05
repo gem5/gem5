@@ -57,6 +57,7 @@
 #include <string>
 #include <vector>
 
+#include "arch/generic/vec_reg.hh"
 #include "base/framebuffer.hh"
 #include "base/inifile.hh"
 #include "base/misc.hh"
@@ -471,6 +472,8 @@ INSTANTIATE_PARAM_TEMPLATES(float)
 INSTANTIATE_PARAM_TEMPLATES(double)
 INSTANTIATE_PARAM_TEMPLATES(string)
 INSTANTIATE_PARAM_TEMPLATES(Pixel)
+INSTANTIATE_PARAM_TEMPLATES(VecRegContainer<8>)
+INSTANTIATE_PARAM_TEMPLATES(VecRegContainer<16>)
 
 // set is only used with strings and furthermore doesn't agree with Pixel
 template void

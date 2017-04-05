@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -153,6 +153,13 @@ printRegName(std::ostream &os, const RegId& reg)
       case FloatRegClass:
         os << 'f' << static_cast<unsigned int>(reg.index());
         break;
+      case VecRegClass:
+        os << 'v' << static_cast<unsigned int>(reg.index());
+        break;
+      case VecElemClass:
+        os << 'v' << static_cast<unsigned int>(reg.index()) << '[' <<
+              static_cast<unsigned int>(reg.elemIndex()) << ']';
+        break;
       case IntRegClass:
         if (reg.isZeroReg()) {
             os << 'z';
@@ -162,6 +169,8 @@ printRegName(std::ostream &os, const RegId& reg)
         break;
       case CCRegClass:
         os << 'c' << static_cast<unsigned int>(reg.index());
+      default:
+        panic("Unknown register class: %d", (int)reg.classValue());
     }
 }
 

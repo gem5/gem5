@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2012, 2016 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -194,6 +194,70 @@ class O3ThreadContext : public ThreadContext
                                                  reg_idx)).index());
     }
 
+    virtual const VecRegContainer& readVecReg(const RegId& id) const {
+        return readVecRegFlat(flattenRegId(id).index());
+    }
+
+    /**
+     * Read vector register operand for modification, hierarchical indexing.
+     */
+    virtual VecRegContainer& getWritableVecReg(const RegId& id) {
+        return getWritableVecRegFlat(flattenRegId(id).index());
+    }
+
+    /** Vector Register Lane Interfaces. */
+    /** @{ */
+    /** Reads source vector 8bit operand. */
+    virtual ConstVecLane8
+    readVec8BitLaneReg(const RegId& id) const
+    {
+        return readVecLaneFlat<uint8_t>(flattenRegId(id).index(),
+                    id.elemIndex());
+    }
+
+    /** Reads source vector 16bit operand. */
+    virtual ConstVecLane16
+    readVec16BitLaneReg(const RegId& id) const
+    {
+        return readVecLaneFlat<uint16_t>(flattenRegId(id).index(),
+                    id.elemIndex());
+    }
+
+    /** Reads source vector 32bit operand. */
+    virtual ConstVecLane32
+    readVec32BitLaneReg(const RegId& id) const
+    {
+        return readVecLaneFlat<uint32_t>(flattenRegId(id).index(),
+                    id.elemIndex());
+    }
+
+    /** Reads source vector 64bit operand. */
+    virtual ConstVecLane64
+    readVec64BitLaneReg(const RegId& id) const
+    {
+        return readVecLaneFlat<uint64_t>(flattenRegId(id).index(),
+                    id.elemIndex());
+    }
+
+    /** Write a lane of the destination vector register. */
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::Byte>& val)
+    { return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val); }
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::TwoByte>& val)
+    { return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val); }
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::FourByte>& val)
+    { return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val); }
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::EightByte>& val)
+    { return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val); }
+    /** @} */
+
+    virtual const VecElem& readVecElem(const RegId& reg) const {
+        return readVecElemFlat(flattenRegId(reg).index(), reg.elemIndex());
+    }
+
     virtual CCReg readCCReg(int reg_idx) {
         return readCCRegFlat(flattenRegId(RegId(CCRegClass,
                                                  reg_idx)).index());
@@ -212,6 +276,14 @@ class O3ThreadContext : public ThreadContext
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val) {
         setFloatRegBitsFlat(flattenRegId(RegId(FloatRegClass,
                                                reg_idx)).index(), val);
+    }
+
+    virtual void setVecReg(const RegId& reg, const VecRegContainer& val) {
+        setVecRegFlat(flattenRegId(reg).index(), val);
+    }
+
+    virtual void setVecElem(const RegId& reg, const VecElem& val) {
+        setVecElemFlat(flattenRegId(reg).index(), reg.elemIndex(), val);
     }
 
     virtual void setCCReg(int reg_idx, CCReg val) {
@@ -297,6 +369,29 @@ class O3ThreadContext : public ThreadContext
 
     virtual FloatRegBits readFloatRegBitsFlat(int idx);
     virtual void setFloatRegBitsFlat(int idx, FloatRegBits val);
+
+    virtual const VecRegContainer& readVecRegFlat(int idx) const;
+    /** Read vector register operand for modification, flat indexing. */
+    virtual VecRegContainer& getWritableVecRegFlat(int idx);
+    virtual void setVecRegFlat(int idx, const VecRegContainer& val);
+
+    template <typename VecElem>
+    VecLaneT<VecElem, true> readVecLaneFlat(int idx, int lId) const
+    {
+        return cpu->template readArchVecLane<VecElem>(idx, lId,
+                thread->threadId());
+    }
+
+    template <typename LD>
+    void setVecLaneFlat(int idx, int lId, const LD& val)
+    {
+        cpu->template setArchVecLane(idx, lId, thread->threadId(), val);
+    }
+
+    virtual const VecElem& readVecElemFlat(const RegIndex& idx,
+                                           const ElemIndex& elemIndex) const;
+    virtual void setVecElemFlat(const RegIndex& idx, const ElemIndex& elemIdx,
+                                const VecElem& val);
 
     virtual CCReg readCCRegFlat(int idx);
     virtual void setCCRegFlat(int idx, CCReg val);

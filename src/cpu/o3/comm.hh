@@ -75,12 +75,18 @@ class PhysRegId : private RegId {
         : RegId(_regClass, _regIdx), flatIdx(_flatIdx)
     {}
 
+    /** Vector PhysRegId constructor (w/ elemIndex). */
+    explicit PhysRegId(RegClass _regClass, PhysRegIndex _regIdx,
+              ElemIndex elem_idx, PhysRegIndex flat_idx)
+        : RegId(_regClass, _regIdx, elem_idx), flatIdx(flat_idx) { }
+
     /** Visible RegId methods */
     /** @{ */
     using RegId::index;
     using RegId::classValue;
     using RegId::isZeroReg;
     using RegId::className;
+    using RegId::elemIndex;
      /** @} */
     /**
      * Explicit forward methods, to prevent comparisons of PhysRegId with
@@ -109,6 +115,12 @@ class PhysRegId : private RegId {
     /** @Return true if it is a  condition-code physical register. */
     bool isCCPhysReg() const { return isCCReg(); }
 
+    /** @Return true if it is a vector physical register. */
+    bool isVectorPhysReg() const { return isVecReg(); }
+
+    /** @Return true if it is a vector element physical register. */
+    bool isVectorPhysElem() const { return isVecElem(); }
+
     /** @Return true if it is a  condition-code physical register. */
     bool isMiscPhysReg() const { return isMiscReg(); }
 
@@ -123,11 +135,18 @@ class PhysRegId : private RegId {
 
     /** Flat index accessor */
     const PhysRegIndex& flatIndex() const { return flatIdx; }
+
+    static PhysRegId elemId(const PhysRegId* vid, ElemIndex elem)
+    {
+        assert(vid->isVectorPhysReg());
+        return PhysRegId(VecElemClass, vid->index(), elem);
+    }
 };
 
-// PhysRegIds only need to be created once and then we can use the following
-// to work with them
-typedef const PhysRegId* PhysRegIdPtr;
+/** Constant pointer definition.
+ * PhysRegIds only need to be created once and then we can just share
+ * pointers */
+using PhysRegIdPtr = const PhysRegId*;
 
 /** Struct that defines the information passed from fetch to decode. */
 template<class Impl>

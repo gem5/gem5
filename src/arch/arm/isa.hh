@@ -48,7 +48,9 @@
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
+#include "arch/generic/traits.hh"
 #include "debug/Checkpoint.hh"
+#include "enums/VecRegRenameMode.hh"
 #include "sim/sim_object.hh"
 #include "enums/DecoderFlavour.hh"
 
@@ -68,6 +70,7 @@ namespace ArmISA
 
         // Micro Architecture
         const Enums::DecoderFlavour _decoderFlavour;
+        const Enums::VecRegRenameMode _vecRegRenameMode;
 
         /** Dummy device for to handle non-existing ISA devices */
         DummyISADevice dummyDevice;
@@ -185,6 +188,10 @@ namespace ArmISA
                 return RegId(IntRegClass, flattenIntIndex(regId.index()));
               case FloatRegClass:
                 return RegId(FloatRegClass, flattenFloatIndex(regId.index()));
+              case VecRegClass:
+                return RegId(VecRegClass, flattenVecIndex(regId.index()));
+              case VecElemClass:
+                return RegId(VecElemClass, flattenVecElemIndex(regId.index()));
               case CCRegClass:
                 return RegId(CCRegClass, flattenCCIndex(regId.index()));
               case MiscRegClass:
@@ -227,6 +234,20 @@ namespace ArmISA
 
         int
         flattenFloatIndex(int reg) const
+        {
+            assert(reg >= 0);
+            return reg;
+        }
+
+        int
+        flattenVecIndex(int reg) const
+        {
+            assert(reg >= 0);
+            return reg;
+        }
+
+        int
+        flattenVecElemIndex(int reg) const
         {
             assert(reg >= 0);
             return reg;
@@ -406,6 +427,12 @@ namespace ArmISA
 
         Enums::DecoderFlavour decoderFlavour() const { return _decoderFlavour; }
 
+        Enums::VecRegRenameMode
+        vecRegRenameMode() const
+        {
+            return _vecRegRenameMode;
+        }
+
         /// Explicitly import the otherwise hidden startup
         using SimObject::startup;
 
@@ -416,5 +443,18 @@ namespace ArmISA
         ISA(Params *p);
     };
 }
+
+template<>
+struct initRenameMode<ArmISA::ISA>
+{
+    static Enums::VecRegRenameMode mode(const ArmISA::ISA* isa)
+    {
+        return isa->vecRegRenameMode();
+    }
+    static bool equals(const ArmISA::ISA* isa1, const ArmISA::ISA* isa2)
+    {
+        return mode(isa1) == mode(isa2);
+    }
+};
 
 #endif

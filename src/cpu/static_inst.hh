@@ -100,13 +100,20 @@ class StaticInst : public RefCounted, public StaticInstFlags
     int8_t _numCCDestRegs;
     //@}
 
+    /** To use in architectures with vector register file. */
+    /** @{ */
+    int8_t _numVecDestRegs;
+    int8_t _numVecElemDestRegs;
+    /** @} */
+
   public:
 
     /// @name Register information.
-    /// The sum of numFPDestRegs() and numIntDestRegs() equals
-    /// numDestRegs().  The former two functions are used to track
-    /// physical register usage for machines with separate int & FP
-    /// reg files.
+    /// The sum of numFPDestRegs(), numIntDestRegs(), numVecDestRegs() and
+    /// numVecelemDestRegs() equals numDestRegs().  The former two functions
+    /// are used to track physical register usage for machines with separate
+    /// int & FP reg files, the next two is for machines with vector register
+    /// file.
     //@{
     /// Number of source registers.
     int8_t numSrcRegs()  const { return _numSrcRegs; }
@@ -116,7 +123,10 @@ class StaticInst : public RefCounted, public StaticInstFlags
     int8_t numFPDestRegs()  const { return _numFPDestRegs; }
     /// Number of integer destination regs.
     int8_t numIntDestRegs() const { return _numIntDestRegs; }
-    //@}
+    /// Number of vector destination regs.
+    int8_t numVecDestRegs() const { return _numVecDestRegs; }
+    /// Number of vector element destination regs.
+    int8_t numVecElemDestRegs() const { return _numVecElemDestRegs; }
     /// Number of coprocesor destination regs.
     int8_t numCCDestRegs() const { return _numCCDestRegs; }
     //@}
@@ -252,7 +262,8 @@ class StaticInst : public RefCounted, public StaticInstFlags
     StaticInst(const char *_mnemonic, ExtMachInst _machInst, OpClass __opClass)
         : _opClass(__opClass), _numSrcRegs(0), _numDestRegs(0),
           _numFPDestRegs(0), _numIntDestRegs(0), _numCCDestRegs(0),
-          machInst(_machInst), mnemonic(_mnemonic), cachedDisassembly(0)
+          _numVecDestRegs(0), _numVecElemDestRegs(0), machInst(_machInst),
+          mnemonic(_mnemonic), cachedDisassembly(0)
     { }
 
   public:

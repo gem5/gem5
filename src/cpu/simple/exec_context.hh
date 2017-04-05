@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 ARM Limited
+ * Copyright (c) 2014-2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -64,6 +64,8 @@ class SimpleExecContext : public ExecContext {
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg CCReg;
+    using VecRegContainer = TheISA::VecRegContainer;
+    using VecElem = TheISA::VecElem;
 
   public:
     BaseSimpleCPU *cpu;
@@ -111,6 +113,10 @@ class SimpleExecContext : public ExecContext {
     // Number of float register file accesses
     Stats::Scalar numFpRegReads;
     Stats::Scalar numFpRegWrites;
+
+    // Number of vector register file accesses
+    mutable Stats::Scalar numVecRegReads;
+    Stats::Scalar numVecRegWrites;
 
     // Number of condition code register file accesses
     Stats::Scalar numCCRegReads;
@@ -217,6 +223,124 @@ class SimpleExecContext : public ExecContext {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isFloatReg());
         thread->setFloatRegBits(reg.index(), val);
+    }
+
+    /** Reads a vector register. */
+    const VecRegContainer&
+    readVecRegOperand(const StaticInst *si, int idx) const override
+    {
+        numVecRegReads++;
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread->readVecReg(reg);
+    }
+
+    /** Reads a vector register for modification. */
+    VecRegContainer&
+    getWritableVecRegOperand(const StaticInst *si, int idx) override
+    {
+        numVecRegWrites++;
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread->getWritableVecReg(reg);
+    }
+
+    /** Sets a vector register to a value. */
+    void setVecRegOperand(const StaticInst *si, int idx,
+                          const VecRegContainer& val) override
+    {
+        numVecRegWrites++;
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        thread->setVecReg(reg, val);
+    }
+
+    /** Vector Register Lane Interfaces. */
+    /** @{ */
+    /** Reads source vector lane. */
+    template <typename VecElem>
+    VecLaneT<VecElem, true>
+    readVecLaneOperand(const StaticInst *si, int idx) const
+    {
+        numVecRegReads++;
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread->readVecLane<VecElem>(reg);
+    }
+    /** Reads source vector 8bit operand. */
+    virtual ConstVecLane8
+    readVec8BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    { return readVecLaneOperand<uint8_t>(si, idx); }
+
+    /** Reads source vector 16bit operand. */
+    virtual ConstVecLane16
+    readVec16BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    { return readVecLaneOperand<uint16_t>(si, idx); }
+
+    /** Reads source vector 32bit operand. */
+    virtual ConstVecLane32
+    readVec32BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    { return readVecLaneOperand<uint32_t>(si, idx); }
+
+    /** Reads source vector 64bit operand. */
+    virtual ConstVecLane64
+    readVec64BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    { return readVecLaneOperand<uint64_t>(si, idx); }
+
+    /** Write a lane of the destination vector operand. */
+    template <typename LD>
+    void
+    setVecLaneOperandT(const StaticInst *si, int idx,
+            const LD& val)
+    {
+        numVecRegWrites++;
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread->setVecLane(reg, val);
+    }
+    /** Write a lane of the destination vector operand. */
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::Byte>& val) override
+    { return setVecLaneOperandT(si, idx, val); }
+    /** Write a lane of the destination vector operand. */
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::TwoByte>& val) override
+    { return setVecLaneOperandT(si, idx, val); }
+    /** Write a lane of the destination vector operand. */
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::FourByte>& val) override
+    { return setVecLaneOperandT(si, idx, val); }
+    /** Write a lane of the destination vector operand. */
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::EightByte>& val) override
+    { return setVecLaneOperandT(si, idx, val); }
+    /** @} */
+
+    /** Reads an element of a vector register. */
+    VecElem readVecElemOperand(const StaticInst *si, int idx) const override
+    {
+        numVecRegReads++;
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecElem());
+        return thread->readVecElem(reg);
+    }
+
+    /** Sets an element of a vector register to a value. */
+    void setVecElemOperand(const StaticInst *si, int idx,
+                           const VecElem val) override
+    {
+        numVecRegWrites++;
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecElem());
+        thread->setVecElem(reg, val);
     }
 
     CCReg readCCRegOperand(const StaticInst *si, int idx) override

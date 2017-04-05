@@ -54,6 +54,7 @@
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/regfile.hh"
 #include "cpu/reg_class.hh"
+#include "enums/VecRegRenameMode.hh"
 
 /**
  * Register rename map for a single class of registers (e.g., integer
@@ -68,6 +69,10 @@ class SimpleRenameMap
     using Arch2PhysMap = std::vector<PhysRegIdPtr>;
     /** The acutal arch-to-phys register map */
     Arch2PhysMap map;
+  public:
+    using iterator = Arch2PhysMap::iterator;
+    using const_iterator = Arch2PhysMap::const_iterator;
+  private:
 
     /**
      * Pointer to the free list from which new physical registers
@@ -139,6 +144,20 @@ class SimpleRenameMap
 
     /** Return the number of free entries on the associated free list. */
     unsigned numFreeEntries() const { return freeList->numFreeRegs(); }
+
+    /** Forward begin/cbegin to the map. */
+    /** @{ */
+    iterator begin() { return map.begin(); }
+    const_iterator begin() const { return map.begin(); }
+    const_iterator cbegin() const { return map.cbegin(); }
+    /** @} */
+
+    /** Forward end/cend to the map. */
+    /** @{ */
+    iterator end() { return map.end(); }
+    const_iterator end() const { return map.end(); }
+    const_iterator cend() const { return map.cend(); }
+    /** @} */
 };
 
 
@@ -152,6 +171,8 @@ class SimpleRenameMap
 class UnifiedRenameMap
 {
   private:
+    static constexpr uint32_t NVecElems = TheISA::NumVecElemPerVecReg;
+    using VecReg = TheISA::VecReg;
 
     /** The integer register rename map */
     SimpleRenameMap intMap;
@@ -161,6 +182,15 @@ class UnifiedRenameMap
 
     /** The condition-code register rename map */
     SimpleRenameMap ccMap;
+
+    /** The vector register rename map */
+    SimpleRenameMap vecMap;
+
+    /** The vector element register rename map */
+    SimpleRenameMap vecElemMap;
+
+    using VecMode = Enums::VecRegRenameMode;
+    VecMode vecMode;
 
     /**
      * The register file object is used only to get PhysRegIdPtr
@@ -182,7 +212,8 @@ class UnifiedRenameMap
     void init(PhysRegFile *_regFile,
               RegIndex _intZeroReg,
               RegIndex _floatZeroReg,
-              UnifiedFreeList *freeList);
+              UnifiedFreeList *freeList,
+              VecMode _mode);
 
     /**
      * Tell rename map to get a new free physical register to remap
@@ -199,6 +230,12 @@ class UnifiedRenameMap
             return intMap.rename(arch_reg);
           case FloatRegClass:
             return floatMap.rename(arch_reg);
+          case VecRegClass:
+            assert(vecMode == Enums::Full);
+            return vecMap.rename(arch_reg);
+          case VecElemClass:
+            assert(vecMode == Enums::Elem);
+            return vecElemMap.rename(arch_reg);
           case CCRegClass:
             return ccMap.rename(arch_reg);
           case MiscRegClass:
@@ -231,6 +268,14 @@ class UnifiedRenameMap
 
           case FloatRegClass:
             return  floatMap.lookup(arch_reg);
+
+          case VecRegClass:
+            assert(vecMode == Enums::Full);
+            return  vecMap.lookup(arch_reg);
+
+          case VecElemClass:
+            assert(vecMode == Enums::Elem);
+            return  vecElemMap.lookup(arch_reg);
 
           case CCRegClass:
             return ccMap.lookup(arch_reg);
@@ -265,6 +310,16 @@ class UnifiedRenameMap
             assert(phys_reg->isFloatPhysReg());
             return floatMap.setEntry(arch_reg, phys_reg);
 
+          case VecRegClass:
+            assert(phys_reg->isVectorPhysReg());
+            assert(vecMode == Enums::Full);
+            return vecMap.setEntry(arch_reg, phys_reg);
+
+          case VecElemClass:
+            assert(phys_reg->isVectorPhysElem());
+            assert(vecMode == Enums::Elem);
+            return vecElemMap.setEntry(arch_reg, phys_reg);
+
           case CCRegClass:
             assert(phys_reg->isCCPhysReg());
             return ccMap.setEntry(arch_reg, phys_reg);
@@ -291,18 +346,39 @@ class UnifiedRenameMap
      */
     unsigned numFreeEntries() const
     {
-        return std::min(intMap.numFreeEntries(), floatMap.numFreeEntries());
+        return std::min(
+                std::min(intMap.numFreeEntries(), floatMap.numFreeEntries()),
+                vecMode == Enums::Full ? vecMap.numFreeEntries()
+                                    : vecElemMap.numFreeEntries());
     }
+
+    unsigned numFreeIntEntries() const { return intMap.numFreeEntries(); }
+    unsigned numFreeFloatEntries() const { return floatMap.numFreeEntries(); }
+    unsigned numFreeVecEntries() const
+    {
+        return vecMode == Enums::Full
+                ? vecMap.numFreeEntries()
+                : vecElemMap.numFreeEntries();
+    }
+    unsigned numFreeCCEntries() const { return ccMap.numFreeEntries(); }
 
     /**
      * Return whether there are enough registers to serve the request.
      */
-    bool canRename(uint32_t intRegs, uint32_t floatRegs, uint32_t ccRegs) const
+    bool canRename(uint32_t intRegs, uint32_t floatRegs, uint32_t vectorRegs,
+                    uint32_t vecElemRegs, uint32_t ccRegs) const
     {
         return intRegs <= intMap.numFreeEntries() &&
             floatRegs <= floatMap.numFreeEntries() &&
+            vectorRegs <= vecMap.numFreeEntries() &&
+            vecElemRegs <= vecElemMap.numFreeEntries() &&
             ccRegs <= ccMap.numFreeEntries();
     }
+    /**
+     * Set vector mode to Full or Elem.
+     * Ignore 'silent' modifications.
+     */
+    void switchMode(VecMode newVecMode, UnifiedFreeList* freeList);
 
 };
 

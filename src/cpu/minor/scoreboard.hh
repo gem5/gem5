@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -94,7 +94,7 @@ class Scoreboard : public Named
     Scoreboard(const std::string &name) :
         Named(name),
         numRegs(TheISA::NumIntRegs + TheISA::NumCCRegs +
-            TheISA::NumFloatRegs),
+            TheISA::NumFloatRegs + TheISA::NumVecRegs),
         numResults(numRegs, 0),
         numUnpredictableResults(numRegs, 0),
         fuIndices(numRegs, 0),

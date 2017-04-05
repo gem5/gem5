@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2016 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -79,6 +79,8 @@ class ExecContext {
     typedef TheISA::MiscReg MiscReg;
 
     typedef TheISA::CCReg CCReg;
+    using VecRegContainer = TheISA::VecRegContainer;
+    using VecElem = TheISA::VecElem;
 
   public:
     /**
@@ -119,6 +121,63 @@ class ExecContext {
     virtual void setFloatRegOperandBits(const StaticInst *si,
                                         int idx, FloatRegBits val) = 0;
 
+    /** @} */
+
+    /** Vector Register Interfaces. */
+    /** @{ */
+    /** Reads source vector register operand. */
+    virtual const VecRegContainer&
+    readVecRegOperand(const StaticInst *si, int idx) const = 0;
+
+    /** Gets destination vector register operand for modification. */
+    virtual VecRegContainer&
+    getWritableVecRegOperand(const StaticInst *si, int idx) = 0;
+
+    /** Sets a destination vector register operand to a value. */
+    virtual void
+    setVecRegOperand(const StaticInst *si, int idx,
+                     const VecRegContainer& val) = 0;
+    /** @} */
+
+    /** Vector Register Lane Interfaces. */
+    /** @{ */
+    /** Reads source vector 8bit operand. */
+    virtual ConstVecLane8
+    readVec8BitLaneOperand(const StaticInst *si, int idx) const = 0;
+
+    /** Reads source vector 16bit operand. */
+    virtual ConstVecLane16
+    readVec16BitLaneOperand(const StaticInst *si, int idx) const = 0;
+
+    /** Reads source vector 32bit operand. */
+    virtual ConstVecLane32
+    readVec32BitLaneOperand(const StaticInst *si, int idx) const = 0;
+
+    /** Reads source vector 64bit operand. */
+    virtual ConstVecLane64
+    readVec64BitLaneOperand(const StaticInst *si, int idx) const = 0;
+
+    /** Write a lane of the destination vector operand. */
+    /** @{ */
+    virtual void setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::Byte>& val) = 0;
+    virtual void setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::TwoByte>& val) = 0;
+    virtual void setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::FourByte>& val) = 0;
+    virtual void setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::EightByte>& val) = 0;
+    /** @} */
+
+    /** Vector Elem Interfaces. */
+    /** @{ */
+    /** Reads an element of a vector register. */
+    virtual VecElem readVecElemOperand(const StaticInst *si,
+                                        int idx) const = 0;
+
+    /** Sets a vector register to a value. */
+    virtual void setVecElemOperand(const StaticInst *si, int idx,
+                                   const VecElem val) = 0;
     /** @} */
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014 ARM Limited
+ * Copyright (c) 2011-2014, 2016 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -145,6 +145,30 @@ class ExecContext : public ::ExecContext
         return thread.readFloatRegBits(reg.index());
     }
 
+    const TheISA::VecRegContainer&
+    readVecRegOperand(const StaticInst *si, int idx) const override
+    {
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread.readVecReg(reg);
+    }
+
+    TheISA::VecRegContainer&
+    getWritableVecRegOperand(const StaticInst *si, int idx) override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread.getWritableVecReg(reg);
+    }
+
+    TheISA::VecElem
+    readVecElemOperand(const StaticInst *si, int idx) const override
+    {
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread.readVecElem(reg);
+    }
+
     void
     setIntRegOperand(const StaticInst *si, int idx, IntReg val) override
     {
@@ -169,6 +193,102 @@ class ExecContext : public ::ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isFloatReg());
         thread.setFloatRegBits(reg.index(), val);
+    }
+
+    void
+    setVecRegOperand(const StaticInst *si, int idx,
+                     const TheISA::VecRegContainer& val) override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        thread.setVecReg(reg, val);
+    }
+
+    /** Vector Register Lane Interfaces. */
+    /** @{ */
+    /** Reads source vector 8bit operand. */
+    ConstVecLane8
+    readVec8BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    {
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread.readVec8BitLaneReg(reg);
+    }
+
+    /** Reads source vector 16bit operand. */
+    ConstVecLane16
+    readVec16BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    {
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread.readVec16BitLaneReg(reg);
+    }
+
+    /** Reads source vector 32bit operand. */
+    ConstVecLane32
+    readVec32BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    {
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread.readVec32BitLaneReg(reg);
+    }
+
+    /** Reads source vector 64bit operand. */
+    ConstVecLane64
+    readVec64BitLaneOperand(const StaticInst *si, int idx) const
+                            override
+    {
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread.readVec64BitLaneReg(reg);
+    }
+
+    /** Write a lane of the destination vector operand. */
+    template <typename LD>
+    void
+    setVecLaneOperandT(const StaticInst *si, int idx,
+            const LD& val)
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        return thread.setVecLane(reg, val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::Byte>& val) override
+    {
+        setVecLaneOperandT(si, idx, val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::TwoByte>& val) override
+    {
+        setVecLaneOperandT(si, idx, val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::FourByte>& val) override
+    {
+        setVecLaneOperandT(si, idx, val);
+    }
+    virtual void
+    setVecLaneOperand(const StaticInst *si, int idx,
+            const LaneData<LaneSize::EightByte>& val) override
+    {
+        setVecLaneOperandT(si, idx, val);
+    }
+    /** @} */
+
+    void
+    setVecElemOperand(const StaticInst *si, int idx,
+                      const TheISA::VecElem val) override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecReg());
+        thread.setVecElem(reg, val);
     }
 
     bool

@@ -32,6 +32,7 @@
 #ifndef __ARCH_MIPS_REGISTERS_HH__
 #define __ARCH_MIPS_REGISTERS_HH__
 
+#include "arch/generic/vec_reg.hh"
 #include "arch/mips/generated/max_inst_regs.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
@@ -288,6 +289,15 @@ typedef uint64_t MiscReg;
 
 // dummy typedef since we don't have CC regs
 typedef uint8_t CCReg;
+
+// dummy typedefs since we don't have vector regs
+constexpr unsigned NumVecElemPerVecReg = 2;
+using VecElem = uint32_t;
+using VecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, false>;
+using ConstVecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, true>;
+using VecRegContainer = VecReg::Container;
+// This has to be one to prevent warnings that are treated as errors
+constexpr unsigned NumVecRegs = 1;
 
 typedef union {
     IntReg   intreg;

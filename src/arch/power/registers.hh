@@ -31,6 +31,7 @@
 #ifndef __ARCH_POWER_REGISTERS_HH__
 #define __ARCH_POWER_REGISTERS_HH__
 
+#include "arch/generic/vec_reg.hh"
 #include "arch/power/generated/max_inst_regs.hh"
 #include "arch/power/miscregs.hh"
 
@@ -52,6 +53,15 @@ typedef uint64_t MiscReg;
 
 // dummy typedef since we don't have CC regs
 typedef uint8_t CCReg;
+
+// dummy typedefs since we don't have vector regs
+constexpr unsigned NumVecElemPerVecReg = 2;
+using VecElem = uint32_t;
+using VecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, false>;
+using ConstVecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, true>;
+using VecRegContainer = VecReg::Container;
+// This has to be one to prevent warnings that are treated as errors
+constexpr unsigned NumVecRegs = 1;
 
 // Constants Related to the number of registers
 const int NumIntArchRegs = 32;

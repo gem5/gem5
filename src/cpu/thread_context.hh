@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012 ARM Limited
+ * Copyright (c) 2011-2012, 2016 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -100,6 +100,8 @@ class ThreadContext
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg CCReg;
     typedef TheISA::MiscReg MiscReg;
+    using VecRegContainer = TheISA::VecRegContainer;
+    using VecElem = TheISA::VecElem;
   public:
 
     enum Status
@@ -212,6 +214,40 @@ class ThreadContext
 
     virtual FloatRegBits readFloatRegBits(int reg_idx) = 0;
 
+    virtual const VecRegContainer& readVecReg(const RegId& reg) const = 0;
+    virtual VecRegContainer& getWritableVecReg(const RegId& reg) = 0;
+
+    /** Vector Register Lane Interfaces. */
+    /** @{ */
+    /** Reads source vector 8bit operand. */
+    virtual ConstVecLane8
+    readVec8BitLaneReg(const RegId& reg) const = 0;
+
+    /** Reads source vector 16bit operand. */
+    virtual ConstVecLane16
+    readVec16BitLaneReg(const RegId& reg) const = 0;
+
+    /** Reads source vector 32bit operand. */
+    virtual ConstVecLane32
+    readVec32BitLaneReg(const RegId& reg) const = 0;
+
+    /** Reads source vector 64bit operand. */
+    virtual ConstVecLane64
+    readVec64BitLaneReg(const RegId& reg) const = 0;
+
+    /** Write a lane of the destination vector register. */
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::Byte>& val) = 0;
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::TwoByte>& val) = 0;
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::FourByte>& val) = 0;
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::EightByte>& val) = 0;
+    /** @} */
+
+    virtual const VecElem& readVecElem(const RegId& reg) const = 0;
+
     virtual CCReg readCCReg(int reg_idx) = 0;
 
     virtual void setIntReg(int reg_idx, uint64_t val) = 0;
@@ -219,6 +255,10 @@ class ThreadContext
     virtual void setFloatReg(int reg_idx, FloatReg val) = 0;
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val) = 0;
+
+    virtual void setVecReg(const RegId& reg, const VecRegContainer& val) = 0;
+
+    virtual void setVecElem(const RegId& reg, const VecElem& val) = 0;
 
     virtual void setCCReg(int reg_idx, CCReg val) = 0;
 
@@ -302,6 +342,15 @@ class ThreadContext
 
     virtual FloatRegBits readFloatRegBitsFlat(int idx) = 0;
     virtual void setFloatRegBitsFlat(int idx, FloatRegBits val) = 0;
+
+    virtual const VecRegContainer& readVecRegFlat(int idx) const = 0;
+    virtual VecRegContainer& getWritableVecRegFlat(int idx) = 0;
+    virtual void setVecRegFlat(int idx, const VecRegContainer& val) = 0;
+
+    virtual const VecElem& readVecElemFlat(const RegIndex& idx,
+                                           const ElemIndex& elemIdx) const = 0;
+    virtual void setVecElemFlat(const RegIndex& idx, const ElemIndex& elemIdx,
+                                const VecElem& val) = 0;
 
     virtual CCReg readCCRegFlat(int idx) = 0;
     virtual void setCCRegFlat(int idx, CCReg val) = 0;
@@ -421,6 +470,52 @@ class ProxyThreadContext : public ThreadContext
     FloatRegBits readFloatRegBits(int reg_idx)
     { return actualTC->readFloatRegBits(reg_idx); }
 
+    const VecRegContainer& readVecReg(const RegId& reg) const
+    { return actualTC->readVecReg(reg); }
+
+    VecRegContainer& getWritableVecReg(const RegId& reg)
+    { return actualTC->getWritableVecReg(reg); }
+
+    /** Vector Register Lane Interfaces. */
+    /** @{ */
+    /** Reads source vector 8bit operand. */
+    ConstVecLane8
+    readVec8BitLaneReg(const RegId& reg) const
+    { return actualTC->readVec8BitLaneReg(reg); }
+
+    /** Reads source vector 16bit operand. */
+    ConstVecLane16
+    readVec16BitLaneReg(const RegId& reg) const
+    { return actualTC->readVec16BitLaneReg(reg); }
+
+    /** Reads source vector 32bit operand. */
+    ConstVecLane32
+    readVec32BitLaneReg(const RegId& reg) const
+    { return actualTC->readVec32BitLaneReg(reg); }
+
+    /** Reads source vector 64bit operand. */
+    ConstVecLane64
+    readVec64BitLaneReg(const RegId& reg) const
+    { return actualTC->readVec64BitLaneReg(reg); }
+
+    /** Write a lane of the destination vector register. */
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::Byte>& val)
+    { return actualTC->setVecLane(reg, val); }
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::TwoByte>& val)
+    { return actualTC->setVecLane(reg, val); }
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::FourByte>& val)
+    { return actualTC->setVecLane(reg, val); }
+    virtual void setVecLane(const RegId& reg,
+            const LaneData<LaneSize::EightByte>& val)
+    { return actualTC->setVecLane(reg, val); }
+    /** @} */
+
+    const VecElem& readVecElem(const RegId& reg) const
+    { return actualTC->readVecElem(reg); }
+
     CCReg readCCReg(int reg_idx)
     { return actualTC->readCCReg(reg_idx); }
 
@@ -432,6 +527,12 @@ class ProxyThreadContext : public ThreadContext
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     { actualTC->setFloatRegBits(reg_idx, val); }
+
+    void setVecReg(const RegId& reg, const VecRegContainer& val)
+    { actualTC->setVecReg(reg, val); }
+
+    void setVecElem(const RegId& reg, const VecElem& val)
+    { actualTC->setVecElem(reg, val); }
 
     void setCCReg(int reg_idx, CCReg val)
     { actualTC->setCCReg(reg_idx, val); }
@@ -494,6 +595,23 @@ class ProxyThreadContext : public ThreadContext
 
     void setFloatRegBitsFlat(int idx, FloatRegBits val)
     { actualTC->setFloatRegBitsFlat(idx, val); }
+
+    const VecRegContainer& readVecRegFlat(int id) const
+    { return actualTC->readVecRegFlat(id); }
+
+    VecRegContainer& getWritableVecRegFlat(int id)
+    { return actualTC->getWritableVecRegFlat(id); }
+
+    void setVecRegFlat(int idx, const VecRegContainer& val)
+    { actualTC->setVecRegFlat(idx, val); }
+
+    const VecElem& readVecElemFlat(const RegIndex& id,
+                                   const ElemIndex& elemIndex) const
+    { return actualTC->readVecElemFlat(id, elemIndex); }
+
+    void setVecElemFlat(const RegIndex& id, const ElemIndex& elemIndex,
+                        const VecElem& val)
+    { actualTC->setVecElemFlat(id, elemIndex, val); }
 
     CCReg readCCRegFlat(int idx)
     { return actualTC->readCCRegFlat(idx); }

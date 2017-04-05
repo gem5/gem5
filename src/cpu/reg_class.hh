@@ -39,6 +39,7 @@
  *
  * Authors: Steve Reinhardt
  *          Nathanael Premillieu
+ *          Rekai Gonzalez
  */
 
 #ifndef __CPU__REG_CLASS_HH__
@@ -55,6 +56,10 @@
 enum RegClass {
     IntRegClass,        ///< Integer register
     FloatRegClass,      ///< Floating-point register
+    /** Vector Register. */
+    VecRegClass,
+    /** Vector Register Native Elem lane. */
+    VecElemClass,
     CCRegClass,         ///< Condition-code register
     MiscRegClass        ///< Control (misc) register
 };
@@ -75,14 +80,27 @@ class RegId {
     static const char* regClassStrings[];
     RegClass regClass;
     RegIndex regIdx;
+    ElemIndex elemIdx;
+    static constexpr size_t Scale = TheISA::NumVecElemPerVecReg;
   public:
     RegId() {};
     RegId(RegClass reg_class, RegIndex reg_idx)
-        : regClass(reg_class), regIdx(reg_idx)
-    {}
+        : regClass(reg_class), regIdx(reg_idx), elemIdx(-1)
+    {
+        panic_if(regClass == VecElemClass,
+                "Creating vector physical index w/o element index");
+    }
+
+    explicit RegId(RegClass reg_class, RegIndex reg_idx, ElemIndex elem_idx)
+        : regClass(reg_class), regIdx(reg_idx), elemIdx(elem_idx)
+    {
+        panic_if(regClass != VecElemClass,
+                "Creating non-vector physical index w/ element index");
+    }
 
     bool operator==(const RegId& that) const {
-        return regClass == that.classValue() && regIdx == that.index();
+        return regClass == that.classValue() && regIdx == that.index()
+                                             && elemIdx == that.elemIndex();
     }
 
     bool operator!=(const RegId& that) const {
@@ -94,7 +112,9 @@ class RegId {
      */
     bool operator<(const RegId& that) const {
         return regClass < that.classValue() ||
-                (regClass == that.classValue() && regIdx < that.index());
+            (regClass == that.classValue() && (
+                   regIdx < that.index() ||
+                   (regIdx == that.index() && elemIdx < that.elemIndex())));
     }
 
     /**
@@ -120,10 +140,24 @@ class RegId {
     bool isFloatReg() const { return regClass == FloatRegClass; }
 
     /** @Return true if it is a  condition-code physical register. */
+    bool isVecReg() const { return regClass == VecRegClass; }
+
+    /** @Return true if it is a  condition-code physical register. */
+    bool isVecElem() const { return regClass == VecElemClass; }
+
+    /** @Return true if it is a  condition-code physical register. */
     bool isCCReg() const { return regClass == CCRegClass; }
 
     /** @Return true if it is a  condition-code physical register. */
     bool isMiscReg() const { return regClass == MiscRegClass; }
+
+    /**
+     * Return true if this register can be renamed
+     */
+    bool isRenameable()
+    {
+        return regClass != MiscRegClass;
+    }
 
     /** Index accessors */
     /** @{ */
@@ -136,6 +170,8 @@ class RegId {
     inline RegIndex flatIndex() const;
     /** @} */
 
+    /** Elem accessor */
+    const RegIndex& elemIndex() const { return elemIdx; }
     /** Class accessor */
     const RegClass& classValue() const { return regClass; }
     /** Return a const char* with the register class name. */

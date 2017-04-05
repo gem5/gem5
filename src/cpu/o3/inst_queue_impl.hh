@@ -98,8 +98,11 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
     numThreads = params->numThreads;
 
     // Set the number of total physical registers
+    // As the vector registers have two addressing modes, they are added twice
     numPhysRegs = params->numPhysIntRegs + params->numPhysFloatRegs +
-        params->numPhysCCRegs;
+                    params->numPhysVecRegs +
+                    params->numPhysVecRegs * TheISA::NumVecElemPerVecReg +
+                    params->numPhysCCRegs;
 
     //Create an entry for each physical register within the
     //dependency graph.

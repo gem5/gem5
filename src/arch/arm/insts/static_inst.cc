@@ -331,6 +331,12 @@ ArmStaticInst::printFloatReg(std::ostream &os, RegIndex reg_idx) const
 }
 
 void
+ArmStaticInst::printVecReg(std::ostream &os, RegIndex reg_idx) const
+{
+    ccprintf(os, "v%d", reg_idx);
+}
+
+void
 ArmStaticInst::printCCReg(std::ostream &os, RegIndex reg_idx) const
 {
     ccprintf(os, "cc_%s", ArmISA::ccRegName[reg_idx]);

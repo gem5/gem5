@@ -202,6 +202,8 @@ class ISA : public SimObject
             return RegId(CCRegClass, flattenCCIndex(regId.index()));
           case MiscRegClass:
             return RegId(MiscRegClass, flattenMiscIndex(regId.index()));
+          default:
+            break;
         }
         return regId;
     }
@@ -217,6 +219,18 @@ class ISA : public SimObject
 
     int
     flattenFloatIndex(int reg) const
+    {
+        return reg;
+    }
+
+    int
+    flattenVecIndex(int reg) const
+    {
+        return reg;
+    }
+
+    int
+    flattenVecElemIndex(int reg) const
     {
         return reg;
     }

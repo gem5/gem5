@@ -55,13 +55,18 @@ bool RegId::isZeroReg() const
              regIdx == TheISA::ZeroReg));
 }
 
+static constexpr size_t Scale = TheISA::NumVecElemPerVecReg;
+
 RegIndex RegId::flatIndex() const {
     switch (regClass) {
     case IntRegClass:
     case FloatRegClass:
+    case VecRegClass:
     case CCRegClass:
     case MiscRegClass:
         return regIdx;
+    case VecElemClass:
+        return Scale*regIdx + elemIdx;
     }
     panic("Trying to flatten a register without class!");
     return -1;

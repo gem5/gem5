@@ -67,9 +67,7 @@ DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params)
       commitToRenameDelay(params->commitToRenameDelay),
       renameWidth(params->renameWidth),
       commitWidth(params->commitWidth),
-      numThreads(params->numThreads),
-      maxPhysicalRegs(params->numPhysIntRegs + params->numPhysFloatRegs
-                      + params->numPhysCCRegs)
+      numThreads(params->numThreads)
 {
     if (renameWidth > Impl::MaxWidth)
         fatal("renameWidth (%d) is larger than compiled limit (%d),\n"
@@ -182,6 +180,10 @@ DefaultRename<Impl>::regStats()
         .name(name() + ".fp_rename_lookups")
         .desc("Number of floating rename lookups")
         .prereq(fpRenameLookups);
+    vecRenameLookups
+        .name(name() + ".vec_rename_lookups")
+        .desc("Number of vector rename lookups")
+        .prereq(vecRenameLookups);
 }
 
 template <class Impl>
@@ -645,6 +647,8 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
         // to rename to.  Otherwise block.
         if (!renameMap[tid]->canRename(inst->numIntDestRegs(),
                                        inst->numFPDestRegs(),
+                                       inst->numVecDestRegs(),
+                                       inst->numVecElemDestRegs(),
                                        inst->numCCDestRegs())) {
             DPRINTF(Rename, "Blocking due to lack of free "
                     "physical registers to rename to.\n");
@@ -1239,12 +1243,17 @@ DefaultRename<Impl>::readFreeEntries(ThreadID tid)
     }
 
     DPRINTF(Rename, "[tid:%i]: Free IQ: %i, Free ROB: %i, "
-                    "Free LQ: %i, Free SQ: %i\n",
+                    "Free LQ: %i, Free SQ: %i, FreeRM %i(%i %i %i %i)\n",
             tid,
             freeEntries[tid].iqEntries,
             freeEntries[tid].robEntries,
             freeEntries[tid].lqEntries,
-            freeEntries[tid].sqEntries);
+            freeEntries[tid].sqEntries,
+            renameMap[tid]->numFreeEntries(),
+            renameMap[tid]->numFreeIntEntries(),
+            renameMap[tid]->numFreeFloatEntries(),
+            renameMap[tid]->numFreeVecEntries(),
+            renameMap[tid]->numFreeCCEntries());
 
     DPRINTF(Rename, "[tid:%i]: %i instructions not yet in ROB\n",
             tid, instsInProgress[tid]);

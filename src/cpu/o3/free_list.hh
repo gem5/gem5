@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2016 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder. You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -63,6 +75,16 @@ class SimpleFreeList
     /** Add a physical register to the free list */
     void addReg(PhysRegIdPtr reg) { freeRegs.push(reg); }
 
+    /** Add physical registers to the free list */
+    template<class InputIt>
+    void
+    addRegs(InputIt first, InputIt last) {
+        std::for_each(first, last,
+            [this](const typename InputIt::value_type& reg) {
+                this->freeRegs.push(&reg);
+            });
+    }
+
     /** Get the next available register from the free list */
     PhysRegIdPtr getReg()
     {
@@ -107,6 +129,15 @@ class UnifiedFreeList
     /** The list of free floating point registers. */
     SimpleFreeList floatList;
 
+    /** The following two are exclusive interfaces. */
+    /** @{ */
+    /** The list of free vector registers. */
+    SimpleFreeList vecList;
+
+    /** The list of free vector element registers. */
+    SimpleFreeList vecElemList;
+    /** @} */
+
     /** The list of free condition-code registers. */
     SimpleFreeList ccList;
 
@@ -146,17 +177,35 @@ class UnifiedFreeList
     /** Gets a free fp register. */
     PhysRegIdPtr getFloatReg() { return floatList.getReg(); }
 
+    /** Gets a free vector register. */
+    PhysRegIdPtr getVecReg() { return vecList.getReg(); }
+
+    /** Gets a free vector elemenet register. */
+    PhysRegIdPtr getVecElem() { return vecElemList.getReg(); }
+
     /** Gets a free cc register. */
     PhysRegIdPtr getCCReg() { return ccList.getReg(); }
 
     /** Adds a register back to the free list. */
     void addReg(PhysRegIdPtr freed_reg);
 
+    /** Adds a register back to the free list. */
+    template<class InputIt>
+    void addRegs(InputIt first, InputIt last);
+
     /** Adds an integer register back to the free list. */
     void addIntReg(PhysRegIdPtr freed_reg) { intList.addReg(freed_reg); }
 
     /** Adds a fp register back to the free list. */
     void addFloatReg(PhysRegIdPtr freed_reg) { floatList.addReg(freed_reg); }
+
+    /** Adds a vector register back to the free list. */
+    void addVecReg(PhysRegIdPtr freed_reg) { vecList.addReg(freed_reg); }
+
+    /** Adds a vector element register back to the free list. */
+    void addVecElem(PhysRegIdPtr freed_reg) {
+        vecElemList.addReg(freed_reg);
+    }
 
     /** Adds a cc register back to the free list. */
     void addCCReg(PhysRegIdPtr freed_reg) { ccList.addReg(freed_reg); }
@@ -167,6 +216,12 @@ class UnifiedFreeList
     /** Checks if there are any free fp registers. */
     bool hasFreeFloatRegs() const { return floatList.hasFreeRegs(); }
 
+    /** Checks if there are any free vector registers. */
+    bool hasFreeVecRegs() const { return vecList.hasFreeRegs(); }
+
+    /** Checks if there are any free vector registers. */
+    bool hasFreeVecElems() const { return vecElemList.hasFreeRegs(); }
+
     /** Checks if there are any free cc registers. */
     bool hasFreeCCRegs() const { return ccList.hasFreeRegs(); }
 
@@ -176,9 +231,48 @@ class UnifiedFreeList
     /** Returns the number of free fp registers. */
     unsigned numFreeFloatRegs() const { return floatList.numFreeRegs(); }
 
+    /** Returns the number of free vector registers. */
+    unsigned numFreeVecRegs() const { return vecList.numFreeRegs(); }
+
     /** Returns the number of free cc registers. */
     unsigned numFreeCCRegs() const { return ccList.numFreeRegs(); }
 };
+
+template<class InputIt>
+inline void
+UnifiedFreeList::addRegs(InputIt first, InputIt last)
+{
+    // Are there any registers to add?
+    if (first == last)
+        return;
+
+    panic_if((first != last) &&
+            first->classValue() != (last-1)->classValue(),
+            "Attempt to add mixed type regs: %s and %s",
+            first->className(),
+            (last-1)->className());
+    switch (first->classValue()) {
+        case IntRegClass:
+            intList.addRegs(first, last);
+            break;
+        case FloatRegClass:
+            floatList.addRegs(first, last);
+            break;
+        case VecRegClass:
+            vecList.addRegs(first, last);
+            break;
+        case VecElemClass:
+            vecElemList.addRegs(first, last);
+            break;
+        case CCRegClass:
+            ccList.addRegs(first, last);
+            break;
+        default:
+            panic("Unexpected RegClass (%s)",
+                                   first->className());
+    }
+
+}
 
 inline void
 UnifiedFreeList::addReg(PhysRegIdPtr freed_reg)
@@ -193,6 +287,12 @@ UnifiedFreeList::addReg(PhysRegIdPtr freed_reg)
             break;
         case FloatRegClass:
             floatList.addReg(freed_reg);
+            break;
+        case VecRegClass:
+            vecList.addReg(freed_reg);
+            break;
+        case VecElemClass:
+            vecElemList.addReg(freed_reg);
             break;
         case CCRegClass:
             ccList.addReg(freed_reg);

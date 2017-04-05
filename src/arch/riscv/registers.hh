@@ -51,6 +51,7 @@
 #include <string>
 
 #include "arch/generic/types.hh"
+#include "arch/generic/vec_reg.hh"
 #include "arch/isa_traits.hh"
 #include "arch/riscv/generated/max_inst_regs.hh"
 #include "base/types.hh"
@@ -67,10 +68,19 @@ typedef double FloatReg;
 typedef uint8_t CCReg; // Not applicable to Riscv
 typedef uint64_t MiscReg;
 
+// dummy typedefs since we don't have vector regs
+const unsigned NumVecElemPerVecReg = 2;
+using VecElem = uint32_t;
+using VecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, false>;
+using ConstVecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, true>;
+using VecRegContainer = VecReg::Container;
+
 const int NumIntArchRegs = 32;
 const int NumMicroIntRegs = 1;
 const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs;
 const int NumFloatRegs = 32;
+// This has to be one to prevent warnings that are treated as errors
+const unsigned NumVecRegs = 1;
 const int NumCCRegs = 0;
 const int NumMiscRegs = 4096;
 

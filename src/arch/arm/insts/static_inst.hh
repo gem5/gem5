@@ -157,6 +157,7 @@ class ArmStaticInst : public StaticInst
     /// dependence tag number (FP or int).
     void printIntReg(std::ostream &os, RegIndex reg_idx) const;
     void printFloatReg(std::ostream &os, RegIndex reg_idx) const;
+    void printVecReg(std::ostream &os, RegIndex reg_idx) const;
     void printCCReg(std::ostream &os, RegIndex reg_idx) const;
     void printMiscReg(std::ostream &os, RegIndex reg_idx) const;
     void printMnemonic(std::ostream &os,
