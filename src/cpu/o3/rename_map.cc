@@ -104,79 +104,73 @@ UnifiedRenameMap::init(PhysRegFile *_regFile,
 
 
 UnifiedRenameMap::RenameInfo
-UnifiedRenameMap::rename(RegIndex arch_reg)
+UnifiedRenameMap::rename(RegId arch_reg)
 {
-    RegIndex rel_arch_reg;
-
-    switch (regIdxToClass(arch_reg, &rel_arch_reg)) {
+    switch (arch_reg.regClass) {
       case IntRegClass:
-        return renameInt(rel_arch_reg);
+        return renameInt(arch_reg.regIdx);
 
       case FloatRegClass:
-        return renameFloat(rel_arch_reg);
+        return renameFloat(arch_reg.regIdx);
 
       case CCRegClass:
-        return renameCC(rel_arch_reg);
+        return renameCC(arch_reg.regIdx);
 
       case MiscRegClass:
-        return renameMisc(rel_arch_reg);
+        return renameMisc(arch_reg.regIdx);
 
       default:
         panic("rename rename(): unknown reg class %s\n",
-              RegClassStrings[regIdxToClass(arch_reg)]);
+              RegClassStrings[arch_reg.regClass]);
     }
 }
 
 
 PhysRegIndex
-UnifiedRenameMap::lookup(RegIndex arch_reg) const
+UnifiedRenameMap::lookup(RegId arch_reg) const
 {
-    RegIndex rel_arch_reg;
-
-    switch (regIdxToClass(arch_reg, &rel_arch_reg)) {
+    switch (arch_reg.regClass) {
       case IntRegClass:
-        return lookupInt(rel_arch_reg);
+        return lookupInt(arch_reg.regIdx);
 
       case FloatRegClass:
-        return lookupFloat(rel_arch_reg);
+        return lookupFloat(arch_reg.regIdx);
 
       case CCRegClass:
-        return lookupCC(rel_arch_reg);
+        return lookupCC(arch_reg.regIdx);
 
       case MiscRegClass:
-        return lookupMisc(rel_arch_reg);
+        return lookupMisc(arch_reg.regIdx);
 
       default:
         panic("rename lookup(): unknown reg class %s\n",
-              RegClassStrings[regIdxToClass(arch_reg)]);
+              RegClassStrings[arch_reg.regClass]);
     }
 }
 
 void
-UnifiedRenameMap::setEntry(RegIndex arch_reg, PhysRegIndex phys_reg)
+UnifiedRenameMap::setEntry(RegId arch_reg, PhysRegIndex phys_reg)
 {
-    RegIndex rel_arch_reg;
-
-    switch (regIdxToClass(arch_reg, &rel_arch_reg)) {
+    switch (arch_reg.regClass) {
       case IntRegClass:
-        return setIntEntry(rel_arch_reg, phys_reg);
+        return setIntEntry(arch_reg.regIdx, phys_reg);
 
       case FloatRegClass:
-        return setFloatEntry(rel_arch_reg, phys_reg);
+        return setFloatEntry(arch_reg.regIdx, phys_reg);
 
       case CCRegClass:
-        return setCCEntry(rel_arch_reg, phys_reg);
+        return setCCEntry(arch_reg.regIdx, phys_reg);
 
       case MiscRegClass:
         // Misc registers do not actually rename, so don't change
         // their mappings.  We end up here when a commit or squash
         // tries to update or undo a hardwired misc reg nmapping,
         // which should always be setting it to what it already is.
-        assert(phys_reg == lookupMisc(rel_arch_reg));
+        assert(phys_reg == lookupMisc(arch_reg.regIdx));
         return;
 
       default:
         panic("rename setEntry(): unknown reg class %s\n",
-              RegClassStrings[regIdxToClass(arch_reg)]);
+              RegClassStrings[arch_reg.regClass]);
     }
 }

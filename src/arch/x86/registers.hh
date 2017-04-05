@@ -105,8 +105,6 @@ typedef union
     MiscReg ctrlReg;
 } AnyReg;
 
-typedef uint16_t RegIndex;
-
 } // namespace X86ISA
 
 #endif // __ARCH_X86_REGFILE_HH__

@@ -68,10 +68,6 @@
  */
 class SimpleRenameMap
 {
-  public:
-
-    typedef TheISA::RegIndex RegIndex;
-
   private:
 
     /** The acutal arch-to-phys register map */
@@ -152,9 +148,9 @@ class SimpleRenameMap
 /**
  * Unified register rename map for all classes of registers.  Wraps a
  * set of class-specific rename maps.  Methods that do not specify a
- * register class (e.g., rename()) take unified register indices,
+ * register class (e.g., rename()) take register ids,
  * while methods that do specify a register class (e.g., renameInt())
- * take relative register indices.  See http://gem5.org/Register_Indexing.
+ * take register indices.
  */
 class UnifiedRenameMap
 {
@@ -179,7 +175,6 @@ class UnifiedRenameMap
     SimpleRenameMap ccMap;
 
   public:
-    typedef TheISA::RegIndex RegIndex;
 
     typedef SimpleRenameMap::RenameInfo RenameInfo;
 
@@ -197,17 +192,17 @@ class UnifiedRenameMap
 
     /**
      * Tell rename map to get a new free physical register to remap
-     * the specified architectural register.  This version takes a
-     * unified flattened architectural register index and calls the
+     * the specified architectural register. This version takes a
+     * flattened architectural register id and calls the
      * appropriate class-specific rename table.
-     * @param arch_reg The unified architectural register index to remap.
+     * @param arch_reg The architectural register index to remap.
      * @return A RenameInfo pair indicating both the new and previous
      * physical registers.
      */
-    RenameInfo rename(RegIndex arch_reg);
+    RenameInfo rename(RegId arch_reg);
 
     /**
-     * Perform rename() on an integer register, given a relative
+     * Perform rename() on an integer register, given a
      * integer register index.
      */
     RenameInfo renameInt(RegIndex rel_arch_reg)
@@ -218,7 +213,7 @@ class UnifiedRenameMap
     }
 
     /**
-     * Perform rename() on a floating-point register, given a relative
+     * Perform rename() on a floating-point register, given a
      * floating-point register index.
      */
     RenameInfo renameFloat(RegIndex rel_arch_reg)
@@ -229,7 +224,7 @@ class UnifiedRenameMap
     }
 
     /**
-     * Perform rename() on a condition-code register, given a relative
+     * Perform rename() on a condition-code register, given a
      * condition-code register index.
      */
     RenameInfo renameCC(RegIndex rel_arch_reg)
@@ -240,7 +235,7 @@ class UnifiedRenameMap
     }
 
     /**
-     * Perform rename() on a misc register, given a relative
+     * Perform rename() on a misc register, given a
      * misc register index.
      */
     RenameInfo renameMisc(RegIndex rel_arch_reg)
@@ -256,15 +251,15 @@ class UnifiedRenameMap
 
     /**
      * Look up the physical register mapped to an architectural register.
-     * This version takes a unified flattened architectural register index
+     * This version takes a flattened architectural register id
      * and calls the appropriate class-specific rename table.
-     * @param arch_reg The unified architectural register to look up.
+     * @param arch_reg The architectural register to look up.
      * @return The physical register it is currently mapped to.
      */
-    PhysRegIndex lookup(RegIndex arch_reg) const;
+    PhysRegIndex lookup(RegId arch_reg) const;
 
     /**
-     * Perform lookup() on an integer register, given a relative
+     * Perform lookup() on an integer register, given a
      * integer register index.
      */
     PhysRegIndex lookupInt(RegIndex rel_arch_reg) const
@@ -275,7 +270,7 @@ class UnifiedRenameMap
     }
 
     /**
-     * Perform lookup() on a floating-point register, given a relative
+     * Perform lookup() on a floating-point register, given a
      * floating-point register index.
      */
     PhysRegIndex lookupFloat(RegIndex rel_arch_reg) const
@@ -286,7 +281,7 @@ class UnifiedRenameMap
     }
 
     /**
-     * Perform lookup() on a condition-code register, given a relative
+     * Perform lookup() on a condition-code register, given a
      * condition-code register index.
      */
     PhysRegIndex lookupCC(RegIndex rel_arch_reg) const
@@ -311,15 +306,15 @@ class UnifiedRenameMap
     /**
      * Update rename map with a specific mapping.  Generally used to
      * roll back to old mappings on a squash.  This version takes a
-     * unified flattened architectural register index and calls the
+     * flattened architectural register id and calls the
      * appropriate class-specific rename table.
-     * @param arch_reg The unified architectural register to remap.
+     * @param arch_reg The architectural register to remap.
      * @param phys_reg The physical register to remap it to.
      */
-    void setEntry(RegIndex arch_reg, PhysRegIndex phys_reg);
+    void setEntry(RegId arch_reg, PhysRegIndex phys_reg);
 
     /**
-     * Perform setEntry() on an integer register, given a relative
+     * Perform setEntry() on an integer register, given a
      * integer register index.
      */
     void setIntEntry(RegIndex arch_reg, PhysRegIndex phys_reg)
@@ -329,7 +324,7 @@ class UnifiedRenameMap
     }
 
     /**
-     * Perform setEntry() on a floating-point register, given a relative
+     * Perform setEntry() on a floating-point register, given a
      * floating-point register index.
      */
     void setFloatEntry(RegIndex arch_reg, PhysRegIndex phys_reg)
@@ -339,7 +334,7 @@ class UnifiedRenameMap
     }
 
     /**
-     * Perform setEntry() on a condition-code register, given a relative
+     * Perform setEntry() on a condition-code register, given a
      * condition-code register index.
      */
     void setCCEntry(RegIndex arch_reg, PhysRegIndex phys_reg)

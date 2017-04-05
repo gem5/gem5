@@ -51,11 +51,27 @@ namespace X86ISA
      * wrapper struct for these lets take advantage of the compiler's type
      * checking.
      */
-    struct InstRegIndex
+    struct InstRegIndex : public RegId
     {
-        RegIndex idx;
-        explicit InstRegIndex(RegIndex _idx) : idx(_idx)
-        {}
+        explicit InstRegIndex(RegIndex _idx) :
+           RegId(computeRegClass(_idx), _idx) {}
+
+      private:
+        // TODO: As X86 register index definition is highly built on the
+        //       unified space concept, it is easier for the moment to rely on
+        //       an helper function to compute the RegClass. It would be nice
+        //       to fix those definition and get rid of this.
+        RegClass computeRegClass(RegIndex _idx) {
+            if (_idx < FP_Reg_Base) {
+                return IntRegClass;
+            } else if (_idx < CC_Reg_Base) {
+                return FloatRegClass;
+            } else if (_idx < Misc_Reg_Base) {
+                return CCRegClass;
+            } else {
+                return MiscRegClass;
+            }
+        }
     };
 
     /**
@@ -81,7 +97,7 @@ namespace X86ISA
 
         void printSegment(std::ostream &os, int segment) const;
 
-        void printReg(std::ostream &os, int reg, int size) const;
+        void printReg(std::ostream &os, RegId reg, int size) const;
         void printSrcReg(std::ostream &os, int reg, int size) const;
         void printDestReg(std::ostream &os, int reg, int size) const;
         void printMem(std::ostream &os, uint8_t segment,
@@ -91,7 +107,7 @@ namespace X86ISA
         inline uint64_t merge(uint64_t into, uint64_t val, int size) const
         {
             X86IntReg reg = into;
-            if (_destRegIdx[0] & IntFoldBit)
+            if (_destRegIdx[0].regIdx & IntFoldBit)
             {
                 reg.H = val;
                 return reg;
@@ -122,7 +138,7 @@ namespace X86ISA
         {
             X86IntReg reg = from;
             DPRINTF(X86, "Picking with size %d\n", size);
-            if (_srcRegIdx[idx] & IntFoldBit)
+            if (_srcRegIdx[idx].regIdx & IntFoldBit)
                 return reg.H;
             switch(size)
             {
@@ -143,7 +159,7 @@ namespace X86ISA
         {
             X86IntReg reg = from;
             DPRINTF(X86, "Picking with size %d\n", size);
-            if (_srcRegIdx[idx] & IntFoldBit)
+            if (_srcRegIdx[idx].regIdx & IntFoldBit)
                 return reg.SH;
             switch(size)
             {

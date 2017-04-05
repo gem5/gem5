@@ -105,12 +105,12 @@ output header {{
             std::string generateDisassembly(Addr pc,
                 const SymbolTable *symtab) const;
 
-            void printReg(std::ostream &os, int reg) const;
+            void printReg(std::ostream &os, RegId reg) const;
             void printSrcReg(std::ostream &os, int reg) const;
             void printDestReg(std::ostream &os, int reg) const;
 
             void printRegArray(std::ostream &os,
-                const RegIndex indexArray[], int num) const;
+                const RegId indexArray[], int num) const;
 
             void advancePC(SparcISA::PCState &pcState) const;
         };
@@ -251,7 +251,7 @@ output decoder {{
         }
 
         void SparcStaticInst::printRegArray(std::ostream &os,
-            const RegIndex indexArray[], int num) const
+            const RegId indexArray[], int num) const
         {
             if (num <= 0)
                 return;
@@ -283,35 +283,36 @@ output decoder {{
         }
 
         void
-        SparcStaticInst::printReg(std::ostream &os, int reg) const
+        SparcStaticInst::printReg(std::ostream &os, RegId reg) const
         {
             const int MaxGlobal = 8;
             const int MaxOutput = 16;
             const int MaxLocal = 24;
             const int MaxInput = 32;
             const int MaxMicroReg = 40;
-            if (reg < FP_Reg_Base) {
+            RegIndex reg_idx = reg.regIdx;
+            if (reg.regClass == IntRegClass) {
                 // If we used a register from the next or previous window,
                 // take out the offset.
-                while (reg >= MaxMicroReg)
-                    reg -= MaxMicroReg;
-                if (reg == FramePointerReg)
+                while (reg_idx >= MaxMicroReg)
+                    reg_idx -= MaxMicroReg;
+                if (reg_idx == FramePointerReg)
                     ccprintf(os, "%%fp");
-                else if (reg == StackPointerReg)
+                else if (reg_idx == StackPointerReg)
                     ccprintf(os, "%%sp");
-                else if (reg < MaxGlobal)
-                    ccprintf(os, "%%g%d", reg);
-                else if (reg < MaxOutput)
-                    ccprintf(os, "%%o%d", reg - MaxGlobal);
-                else if (reg < MaxLocal)
-                    ccprintf(os, "%%l%d", reg - MaxOutput);
-                else if (reg < MaxInput)
-                    ccprintf(os, "%%i%d", reg - MaxLocal);
-                else if (reg < MaxMicroReg)
-                    ccprintf(os, "%%u%d", reg - MaxInput);
+                else if (reg_idx < MaxGlobal)
+                    ccprintf(os, "%%g%d", reg_idx);
+                else if (reg_idx < MaxOutput)
+                    ccprintf(os, "%%o%d", reg_idx - MaxGlobal);
+                else if (reg_idx < MaxLocal)
+                    ccprintf(os, "%%l%d", reg_idx - MaxOutput);
+                else if (reg_idx < MaxInput)
+                    ccprintf(os, "%%i%d", reg_idx - MaxLocal);
+                else if (reg_idx < MaxMicroReg)
+                    ccprintf(os, "%%u%d", reg_idx - MaxInput);
                 // The fake int regs that are really control regs
                 else {
-                    switch (reg - MaxMicroReg) {
+                    switch (reg_idx - MaxMicroReg) {
                       case 1:
                         ccprintf(os, "%%y");
                         break;
@@ -335,10 +336,10 @@ output decoder {{
                         break;
                     }
                 }
-            } else if (reg < Misc_Reg_Base) {
-                ccprintf(os, "%%f%d", reg - FP_Reg_Base);
+            } else if (reg.regClass == FloatRegClass) {
+                ccprintf(os, "%%f%d", reg_idx);
             } else {
-                switch (reg - Misc_Reg_Base) {
+                switch (reg_idx) {
                   case MISCREG_ASI:
                     ccprintf(os, "%%asi");
                     break;
@@ -430,7 +431,7 @@ output decoder {{
                     ccprintf(os, "%%fsr");
                     break;
                   default:
-                    ccprintf(os, "%%ctrl%d", reg - Misc_Reg_Base);
+                    ccprintf(os, "%%ctrl%d", reg_idx);
                 }
             }
         }

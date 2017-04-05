@@ -58,8 +58,6 @@ const int MaxInstSrcRegs = ArmISAInst::MaxInstDestRegs +
 using ArmISAInst::MaxInstDestRegs;
 using ArmISAInst::MaxMiscDestRegs;
 
-typedef uint16_t  RegIndex;
-
 typedef uint64_t IntReg;
 
 // floating point register file entry type
@@ -108,12 +106,6 @@ const int ZeroReg = INTREG_ZERO;
 const int SyscallNumReg = ReturnValueReg;
 const int SyscallPseudoReturnReg = ReturnValueReg;
 const int SyscallSuccessReg = ReturnValueReg;
-
-// These help enumerate all the registers for dependence tracking.
-const int FP_Reg_Base = NumIntRegs * (MODE_MAXMODE + 1);
-const int CC_Reg_Base = FP_Reg_Base + NumFloatRegs;
-const int Misc_Reg_Base = CC_Reg_Base + NumCCRegs;
-const int Max_Reg_Index = Misc_Reg_Base + NumMiscRegs;
 
 typedef union {
     IntReg   intreg;

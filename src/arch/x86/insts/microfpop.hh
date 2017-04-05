@@ -66,7 +66,7 @@ namespace X86ISA
                 OpClass __opClass) :
             X86MicroopBase(_machInst, mnem, _instMnem, setFlags,
                     __opClass),
-            src1(_src1.idx), src2(_src2.idx), dest(_dest.idx),
+            src1(_src1.regIdx), src2(_src2.regIdx), dest(_dest.regIdx),
             dataSize(_dataSize), spm(_spm)
         {}
 /*

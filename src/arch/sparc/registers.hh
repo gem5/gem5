@@ -59,8 +59,6 @@ typedef union
     MiscReg ctrlreg;
 } AnyReg;
 
-typedef uint16_t RegIndex;
-
 // semantically meaningful register indices
 const int ZeroReg = 0;      // architecturally meaningful
 // the rest of these depend on the ABI
@@ -77,14 +75,6 @@ const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
 const int NumCCRegs = 0;
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
-
-// These enumerate all the registers for dependence tracking.
-enum DependenceTags {
-    FP_Reg_Base = NumIntRegs,
-    CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
-    Misc_Reg_Base = CC_Reg_Base + NumCCRegs, // NumCCRegs == 0
-    Max_Reg_Index = Misc_Reg_Base + NumMiscRegs,
-};
 
 } // namespace SparcISA
 

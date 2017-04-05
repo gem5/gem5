@@ -42,6 +42,7 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/op_class.hh"
+#include "cpu/reg_class.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/thread_context.hh"
 #include "enums/StaticInstFlags.hh"
@@ -70,8 +71,6 @@ class StaticInst : public RefCounted, public StaticInstFlags
   public:
     /// Binary extended machine instruction type.
     typedef TheISA::ExtMachInst ExtMachInst;
-    /// Logical register index type.
-    typedef TheISA::RegIndex RegIndex;
 
     enum {
         MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
@@ -185,11 +184,11 @@ class StaticInst : public RefCounted, public StaticInstFlags
 
     /// Return logical index (architectural reg num) of i'th destination reg.
     /// Only the entries from 0 through numDestRegs()-1 are valid.
-    RegIndex destRegIdx(int i) const { return _destRegIdx[i]; }
+    RegId destRegIdx(int i) const { return _destRegIdx[i]; }
 
     /// Return logical index (architectural reg num) of i'th source reg.
     /// Only the entries from 0 through numSrcRegs()-1 are valid.
-    RegIndex srcRegIdx(int i)  const { return _srcRegIdx[i]; }
+    RegId srcRegIdx(int i)  const { return _srcRegIdx[i]; }
 
     /// Pointer to a statically allocated "null" instruction object.
     /// Used to give eaCompInst() and memAccInst() something to return
@@ -220,9 +219,9 @@ class StaticInst : public RefCounted, public StaticInstFlags
   protected:
 
     /// See destRegIdx().
-    RegIndex _destRegIdx[MaxInstDestRegs];
+    RegId _destRegIdx[MaxInstDestRegs];
     /// See srcRegIdx().
-    RegIndex _srcRegIdx[MaxInstSrcRegs];
+    RegId _srcRegIdx[MaxInstSrcRegs];
 
     /**
      * Base mnemonic (e.g., "add").  Used by generateDisassembly()

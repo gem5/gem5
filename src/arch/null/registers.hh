@@ -40,6 +40,7 @@
 #ifndef __ARCH_NULL_REGISTERS_HH__
 #define __ARCH_NULL_REGISTERS_HH__
 
+#include "arch/types.hh"
 #include "base/types.hh"
 
 namespace NullISA {
@@ -49,6 +50,7 @@ typedef uint32_t FloatRegBits;
 typedef float FloatReg;
 typedef uint8_t CCReg;
 typedef uint64_t MiscReg;
+const RegIndex ZeroReg = 0;
 
 }
 

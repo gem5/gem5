@@ -110,11 +110,11 @@ BaseO3DynInst<Impl>::initVars()
     // as the normal register entries.  It will allow the IQ to work
     // without any modifications.
     for (int i = 0; i < this->staticInst->numDestRegs(); i++) {
-        this->_destRegIdx[i] = this->staticInst->destRegIdx(i);
+        this->_destRegIdx[i] = this->staticInst->destRegIdx(i).regIdx;
     }
 
     for (int i = 0; i < this->staticInst->numSrcRegs(); i++) {
-        this->_srcRegIdx[i] = this->staticInst->srcRegIdx(i);
+        this->_srcRegIdx[i] = this->staticInst->srcRegIdx(i).regIdx;
     }
 
     this->_readySrcRegIdx.reset();

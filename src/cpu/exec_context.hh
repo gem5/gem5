@@ -49,6 +49,7 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"
+#include "cpu/reg_class.hh"
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/translation.hh"
 #include "mem/request.hh"
@@ -286,9 +287,9 @@ class ExecContext {
      */
 
 #if THE_ISA == MIPS_ISA
-    virtual MiscReg readRegOtherThread(int regIdx,
+    virtual MiscReg readRegOtherThread(RegId reg,
                                        ThreadID tid = InvalidThreadID) = 0;
-    virtual void setRegOtherThread(int regIdx, MiscReg val,
+    virtual void setRegOtherThread(RegId reg, MiscReg val,
                                    ThreadID tid = InvalidThreadID) = 0;
 #endif
 

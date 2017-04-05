@@ -33,6 +33,7 @@
 
 #include "arch/alpha/generated/max_inst_regs.hh"
 #include "arch/alpha/ipr.hh"
+#include "arch/generic/types.hh"
 #include "base/types.hh"
 
 namespace AlphaISA {
@@ -43,7 +44,6 @@ using AlphaISAInst::MaxInstDestRegs;
 // Locked read/write flags are can't be detected by the ISA parser
 const int MaxMiscDestRegs = AlphaISAInst::MaxMiscDestRegs + 1;
 
-typedef uint8_t RegIndex;
 typedef uint64_t IntReg;
 
 // floating point register file entry type
@@ -99,16 +99,6 @@ const int NumMiscRegs = NUM_MISCREGS;
 
 const int TotalNumRegs =
     NumIntRegs + NumFloatRegs + NumMiscRegs;
-
-// These enumerate all the registers for dependence tracking.
-enum DependenceTags {
-    // 0..31 are the integer regs 0..31
-    // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Reg_Base)
-    FP_Reg_Base = NumIntRegs,
-    CC_Reg_Base = FP_Reg_Base + NumFloatRegs,
-    Misc_Reg_Base = CC_Reg_Base + NumCCRegs, // NumCCRegs == 0
-    Max_Reg_Index = Misc_Reg_Base + NumMiscRegs + NumInternalProcRegs
-};
 
 } // namespace AlphaISA
 

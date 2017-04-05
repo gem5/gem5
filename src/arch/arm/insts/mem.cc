@@ -54,7 +54,7 @@ MemoryReg::printOffset(std::ostream &os) const
 {
     if (!add)
         os << "-";
-    printReg(os, index);
+    printIntReg(os, index);
     if (shiftType != LSL || shiftAmt != 0) {
         switch (shiftType) {
           case LSL:
@@ -82,11 +82,11 @@ Swap::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     stringstream ss;
     printMnemonic(ss);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ss << ", ";
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ss << ", [";
-    printReg(ss, base);
+    printIntReg(ss, base);
     ss << "]";
     return ss.str();
 }
@@ -109,7 +109,7 @@ RfeOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         printMnemonic(ss, "ib");
         break;
     }
-    printReg(ss, base);
+    printIntReg(ss, base);
     if (wb) {
         ss << "!";
     }
@@ -134,7 +134,7 @@ SrsOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
         printMnemonic(ss, "ib");
         break;
     }
-    printReg(ss, INTREG_SP);
+    printIntReg(ss, INTREG_SP);
     if (wb) {
         ss << "!";
     }
@@ -180,7 +180,7 @@ Memory::printInst(std::ostream &os, AddrMode addrMode) const
     printMnemonic(os);
     printDest(os);
     os << ", [";
-    printReg(os, base);
+    printIntReg(os, base);
     if (addrMode != AddrMd_PostIndex) {
         os << ", ";
         printOffset(os);

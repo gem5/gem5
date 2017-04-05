@@ -291,54 +291,56 @@ ArmStaticInst::shift_carry_rs(uint32_t base, uint32_t shamt,
     return 0;
 }
 
+void
+ArmStaticInst::printIntReg(std::ostream &os, RegIndex reg_idx) const
+{
+    if (aarch64) {
+        if (reg_idx == INTREG_UREG0)
+            ccprintf(os, "ureg0");
+        else if (reg_idx == INTREG_SPX)
+            ccprintf(os, "%s%s", (intWidth == 32) ? "w" : "", "sp");
+        else if (reg_idx == INTREG_X31)
+            ccprintf(os, "%szr", (intWidth == 32) ? "w" : "x");
+        else
+            ccprintf(os, "%s%d", (intWidth == 32) ? "w" : "x", reg_idx);
+    } else {
+        switch (reg_idx) {
+          case PCReg:
+            ccprintf(os, "pc");
+            break;
+          case StackPointerReg:
+            ccprintf(os, "sp");
+            break;
+          case FramePointerReg:
+             ccprintf(os, "fp");
+             break;
+          case ReturnAddressReg:
+             ccprintf(os, "lr");
+             break;
+          default:
+             ccprintf(os, "r%d", reg_idx);
+             break;
+        }
+    }
+}
 
 void
-ArmStaticInst::printReg(std::ostream &os, int reg) const
+ArmStaticInst::printFloatReg(std::ostream &os, RegIndex reg_idx) const
 {
-    RegIndex rel_reg;
+    ccprintf(os, "f%d", reg_idx);
+}
 
-    switch (regIdxToClass(reg, &rel_reg)) {
-      case IntRegClass:
-        if (aarch64) {
-            if (reg == INTREG_UREG0)
-                ccprintf(os, "ureg0");
-            else if (reg == INTREG_SPX)
-               ccprintf(os, "%s%s", (intWidth == 32) ? "w" : "", "sp");
-            else if (reg == INTREG_X31)
-                ccprintf(os, "%szr", (intWidth == 32) ? "w" : "x");
-            else
-                ccprintf(os, "%s%d", (intWidth == 32) ? "w" : "x", reg);
-        } else {
-            switch (rel_reg) {
-              case PCReg:
-                ccprintf(os, "pc");
-                break;
-              case StackPointerReg:
-                ccprintf(os, "sp");
-                break;
-              case FramePointerReg:
-                ccprintf(os, "fp");
-                break;
-              case ReturnAddressReg:
-                ccprintf(os, "lr");
-                break;
-              default:
-                ccprintf(os, "r%d", reg);
-                break;
-            }
-        }
-        break;
-      case FloatRegClass:
-        ccprintf(os, "f%d", rel_reg);
-        break;
-      case MiscRegClass:
-        assert(rel_reg < NUM_MISCREGS);
-        ccprintf(os, "%s", ArmISA::miscRegName[rel_reg]);
-        break;
-      case CCRegClass:
-        ccprintf(os, "cc_%s", ArmISA::ccRegName[rel_reg]);
-        break;
-    }
+void
+ArmStaticInst::printCCReg(std::ostream &os, RegIndex reg_idx) const
+{
+    ccprintf(os, "cc_%s", ArmISA::ccRegName[reg_idx]);
+}
+
+void
+ArmStaticInst::printMiscReg(std::ostream &os, RegIndex reg_idx) const
+{
+    assert(reg_idx < NUM_MISCREGS);
+    ccprintf(os, "%s", ArmISA::miscRegName[reg_idx]);
 }
 
 void
@@ -471,7 +473,7 @@ ArmStaticInst::printShiftOperand(std::ostream &os,
     bool firstOp = false;
 
     if (rm != INTREG_ZERO) {
-        printReg(os, rm);
+        printIntReg(os, rm);
     }
 
     bool done = false;
@@ -520,7 +522,7 @@ ArmStaticInst::printShiftOperand(std::ostream &os,
         if (immShift)
             os << "#" << shiftAmt;
         else
-            printReg(os, rs);
+            printIntReg(os, rs);
     }
 }
 
@@ -531,7 +533,7 @@ ArmStaticInst::printExtendOperand(bool firstOperand, std::ostream &os,
 {
     if (!firstOperand)
         ccprintf(os, ", ");
-    printReg(os, rm);
+    printIntReg(os, rm);
     if (type == UXTX && shiftAmt == 0)
         return;
     switch (type) {
@@ -568,7 +570,7 @@ ArmStaticInst::printDataInst(std::ostream &os, bool withImm,
     // Destination
     if (rd != INTREG_ZERO) {
         firstOp = false;
-        printReg(os, rd);
+        printIntReg(os, rd);
     }
 
     // Source 1.
@@ -576,7 +578,7 @@ ArmStaticInst::printDataInst(std::ostream &os, bool withImm,
         if (!firstOp)
             os << ", ";
         firstOp = false;
-        printReg(os, rn);
+        printIntReg(os, rn);
     }
 
     if (!firstOp)

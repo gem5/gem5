@@ -37,6 +37,9 @@
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
+// Logical register index type.
+typedef uint16_t RegIndex;
+
 namespace GenericISA
 {
 

@@ -82,9 +82,6 @@ class BaseDynInst : public ExecContext, public RefCounted
     typedef typename Impl::CPUType ImplCPU;
     typedef typename ImplCPU::ImplState ImplState;
 
-    // Logical register index type.
-    typedef TheISA::RegIndex RegIndex;
-
     // The DynInstPtr type.
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef RefCountingPtr<BaseDynInst<Impl> > BaseDynInstPtr;
@@ -265,7 +262,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Flattened register index of the destination registers of this
      *  instruction.
      */
-    std::array<TheISA::RegIndex, TheISA::MaxInstDestRegs> _flatDestRegIdx;
+    std::array<RegId, TheISA::MaxInstDestRegs> _flatDestRegIdx;
 
     /** Physical register index of the destination registers of this
      *  instruction.
@@ -386,7 +383,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Returns the flattened register index of the i'th destination
      *  register.
      */
-    TheISA::RegIndex flattenedDestRegIdx(int idx) const
+    RegId flattenedDestRegIdx(int idx) const
     {
         return _flatDestRegIdx[idx];
     }
@@ -422,7 +419,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Flattens a destination architectural register index into a logical
      * index.
      */
-    void flattenDestReg(int idx, TheISA::RegIndex flattened_dest)
+    void flattenDestReg(int idx, RegId flattened_dest)
     {
         _flatDestRegIdx[idx] = flattened_dest;
     }
@@ -604,10 +601,10 @@ class BaseDynInst : public ExecContext, public RefCounted
     int8_t numCCDestRegs() const { return staticInst->numCCDestRegs(); }
 
     /** Returns the logical register index of the i'th destination register. */
-    RegIndex destRegIdx(int i) const { return staticInst->destRegIdx(i); }
+    RegId destRegIdx(int i) const { return staticInst->destRegIdx(i); }
 
     /** Returns the logical register index of the i'th source register. */
-    RegIndex srcRegIdx(int i) const { return staticInst->srcRegIdx(i); }
+    RegId srcRegIdx(int i) const { return staticInst->srcRegIdx(i); }
 
     /** Pops a result off the instResult queue */
     template <class T>

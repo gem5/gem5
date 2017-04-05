@@ -50,6 +50,7 @@
 #include <map>
 #include <string>
 
+#include "arch/generic/types.hh"
 #include "arch/isa_traits.hh"
 #include "arch/riscv/generated/max_inst_regs.hh"
 #include "base/types.hh"
@@ -60,7 +61,6 @@ using RiscvISAInst::MaxInstSrcRegs;
 using RiscvISAInst::MaxInstDestRegs;
 const int MaxMiscDestRegs = 1;
 
-typedef uint_fast16_t RegIndex;
 typedef uint64_t IntReg;
 typedef uint64_t FloatRegBits;
 typedef double FloatReg;
@@ -73,12 +73,6 @@ const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs;
 const int NumFloatRegs = 32;
 const int NumCCRegs = 0;
 const int NumMiscRegs = 4096;
-
-// These help enumerate all the registers for dependence tracking.
-const int FP_Reg_Base = NumIntRegs;
-const int CC_Reg_Base = FP_Reg_Base + NumFloatRegs;
-const int Misc_Reg_Base = CC_Reg_Base + NumCCRegs;
-const int Max_Reg_Index = Misc_Reg_Base + NumMiscRegs;
 
 // Semantically meaningful register indices
 const int ZeroReg = 0;

@@ -36,3 +36,5 @@ const char *RegClassStrings[] = {
     "CCRegClass",
     "MiscRegClass"
 };
+
+const RegId RegId::zeroReg = RegId(IntRegClass, TheISA::ZeroReg);

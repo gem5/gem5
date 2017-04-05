@@ -75,12 +75,12 @@ namespace X86ISA
                 Request::FlagsType _memFlags,
                 OpClass __opClass) :
         X86MicroopBase(_machInst, mnem, _instMnem, setFlags, __opClass),
-                scale(_scale), index(_index.idx), base(_base.idx),
-                disp(_disp), segment(_segment.idx),
+                scale(_scale), index(_index.regIdx), base(_base.regIdx),
+                disp(_disp), segment(_segment.regIdx),
                 dataSize(_dataSize), addressSize(_addressSize),
-                memFlags(_memFlags | _segment.idx)
+                memFlags(_memFlags | _segment.regIdx)
         {
-            assert(_segment.idx < NUM_SEGMENTREGS);
+            assert(_segment.regIdx < NUM_SEGMENTREGS);
             foldOBit =
                 (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
             foldABit =
@@ -110,7 +110,7 @@ namespace X86ISA
                 _scale, _index, _base, _disp, _segment,
                 _dataSize, _addressSize, _memFlags,
                 __opClass),
-                data(_data.idx)
+                data(_data.regIdx)
         {
         }
 
@@ -143,8 +143,8 @@ namespace X86ISA
                 _scale, _index, _base, _disp, _segment,
                 _dataSize, _addressSize, _memFlags,
                 __opClass),
-                dataLow(_dataLow.idx),
-                dataHi(_dataHi.idx)
+                dataLow(_dataLow.regIdx),
+                dataHi(_dataHi.regIdx)
         {
         }
 

@@ -36,19 +36,17 @@
 using namespace PowerISA;
 
 void
-PowerStaticInst::printReg(std::ostream &os, int reg) const
+PowerStaticInst::printReg(std::ostream &os, RegId reg) const
 {
-    RegIndex rel_reg;
-
-    switch (regIdxToClass(reg, &rel_reg)) {
+    switch (reg.regClass) {
       case IntRegClass:
-        ccprintf(os, "r%d", rel_reg);
+        ccprintf(os, "r%d", reg.regIdx);
         break;
       case FloatRegClass:
-        ccprintf(os, "f%d", rel_reg);
+        ccprintf(os, "f%d", reg.regIdx);
         break;
       case MiscRegClass:
-        switch (rel_reg) {
+        switch (reg.regIdx) {
           case 0: ccprintf(os, "cr"); break;
           case 1: ccprintf(os, "xer"); break;
           case 2: ccprintf(os, "lr"); break;

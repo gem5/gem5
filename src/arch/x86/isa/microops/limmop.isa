@@ -95,7 +95,7 @@ def template MicroLimmOpConstructor {{
             InstRegIndex _dest, uint64_t _imm, uint8_t _dataSize) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 setFlags, %(op_class)s),
-                dest(_dest.idx), imm(_imm), dataSize(_dataSize)
+                dest(_dest.regIdx), imm(_imm), dataSize(_dataSize)
     {
         foldOBit = (dataSize == 1 && !machInst.rex.present) ? 1 << 6 : 0;
         %(constructor)s;

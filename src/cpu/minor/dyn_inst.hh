@@ -219,7 +219,7 @@ class MinorDynInst : public RefCounted
     /** Flat register indices so that, when clearing the scoreboard, we
      *  have the same register indices as when the instruction was marked
      *  up */
-    TheISA::RegIndex flatDestRegIdx[TheISA::MaxInstDestRegs];
+    RegId flatDestRegIdx[TheISA::MaxInstDestRegs];
 
     /** Effective address as set by ExecContext::setEA */
     Addr ea;

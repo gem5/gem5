@@ -153,7 +153,7 @@ BranchNonPCRelCond::generateDisassembly(Addr pc,
 PowerISA::PCState
 BranchRegCond::branchTarget(ThreadContext *tc) const
 {
-    uint32_t regVal = tc->readIntReg(_srcRegIdx[_numSrcRegs - 1]);
+    uint32_t regVal = tc->readIntReg(_srcRegIdx[_numSrcRegs - 1].regIdx);
     return regVal & 0xfffffffc;
 }
 

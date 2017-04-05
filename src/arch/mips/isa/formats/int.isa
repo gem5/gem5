@@ -257,9 +257,9 @@ output decoder {{
 
             ccprintf(ss, "%-10s ", mnemonic);
 
-            if (_numDestRegs > 0 && _destRegIdx[0] < 32) {
+            if (_numDestRegs > 0 && _destRegIdx[0].regIdx < 32) {
                 printReg(ss, _destRegIdx[0]);
-            } else if (_numSrcRegs > 0 && _srcRegIdx[0] < 32) {
+            } else if (_numSrcRegs > 0 && _srcRegIdx[0].regIdx < 32) {
                 printReg(ss, _srcRegIdx[0]);
             }
 
@@ -272,9 +272,9 @@ output decoder {{
 
             ccprintf(ss, "%-10s ", mnemonic);
 
-            if (_numDestRegs > 0 && _destRegIdx[0] < 32) {
+            if (_numDestRegs > 0 && _destRegIdx[0].regIdx < 32) {
                 printReg(ss, _destRegIdx[0]);
-            } else if (_numSrcRegs > 0 && _srcRegIdx[0] < 32) {
+            } else if (_numSrcRegs > 0 && _srcRegIdx[0].regIdx < 32) {
                 printReg(ss, _srcRegIdx[0]);
             }
 
@@ -287,9 +287,9 @@ output decoder {{
 
             ccprintf(ss, "%-10s ", mnemonic);
 
-            if (_numDestRegs > 0 && _destRegIdx[0] < 32) {
+            if (_numDestRegs > 0 && _destRegIdx[0].regIdx < 32) {
                 printReg(ss, _destRegIdx[0]);
-            } else if (_numSrcRegs > 0 && _srcRegIdx[0] < 32) {
+            } else if (_numSrcRegs > 0 && _srcRegIdx[0].regIdx < 32) {
                 printReg(ss, _srcRegIdx[0]);
             }
 

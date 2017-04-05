@@ -155,7 +155,7 @@ output decoder {{
         IntOp::printPseudoOps(std::ostream &os, Addr pc,
                 const SymbolTable *symbab) const
         {
-            if (!std::strcmp(mnemonic, "or") && _srcRegIdx[0] == 0) {
+            if (!std::strcmp(mnemonic, "or") && _srcRegIdx[0].regIdx == 0) {
                 printMnemonic(os, "mov");
                 printSrcReg(os, 1);
                 ccprintf(os, ", ");
@@ -170,7 +170,7 @@ output decoder {{
                 const SymbolTable *symbab) const
         {
             if (!std::strcmp(mnemonic, "or")) {
-                if (_numSrcRegs > 0 && _srcRegIdx[0] == 0) {
+                if (_numSrcRegs > 0 && _srcRegIdx[0].regIdx == 0) {
                     if (imm == 0) {
                         printMnemonic(os, "clr");
                     } else {

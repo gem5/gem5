@@ -595,41 +595,40 @@ Checker<Impl>::copyResult(DynInstPtr &inst, uint64_t mismatch_val,
     // We've already popped one dest off the queue,
     // so do the fix-up then start with the next dest reg;
     if (start_idx >= 0) {
-        RegIndex idx = inst->destRegIdx(start_idx);
-        switch (regIdxToClass(idx)) {
+        RegId idx = inst->destRegIdx(start_idx);
+        switch (idx.regClass) {
           case IntRegClass:
-            thread->setIntReg(idx, mismatch_val);
+            thread->setIntReg(idx.regIdx, mismatch_val);
             break;
           case FloatRegClass:
-            thread->setFloatRegBits(idx - TheISA::FP_Reg_Base, mismatch_val);
+            thread->setFloatRegBits(idx.regIdx, mismatch_val);
             break;
           case CCRegClass:
-            thread->setCCReg(idx - TheISA::CC_Reg_Base, mismatch_val);
+            thread->setCCReg(idx.regIdx, mismatch_val);
             break;
           case MiscRegClass:
-            thread->setMiscReg(idx - TheISA::Misc_Reg_Base,
-                               mismatch_val);
+            thread->setMiscReg(idx.regIdx, mismatch_val);
             break;
         }
     }
     start_idx++;
     uint64_t res = 0;
     for (int i = start_idx; i < inst->numDestRegs(); i++) {
-        RegIndex idx = inst->destRegIdx(i);
+        RegId idx = inst->destRegIdx(i);
         inst->template popResult<uint64_t>(res);
-        switch (regIdxToClass(idx)) {
+        switch (idx.regClass) {
           case IntRegClass:
-            thread->setIntReg(idx, res);
+            thread->setIntReg(idx.regIdx, res);
             break;
           case FloatRegClass:
-            thread->setFloatRegBits(idx - TheISA::FP_Reg_Base, res);
+            thread->setFloatRegBits(idx.regIdx, res);
             break;
           case CCRegClass:
-            thread->setCCReg(idx - TheISA::CC_Reg_Base, res);
+            thread->setCCReg(idx.regIdx, res);
             break;
           case MiscRegClass:
             // Try to get the proper misc register index for ARM here...
-            thread->setMiscReg(idx - TheISA::Misc_Reg_Base, res);
+            thread->setMiscReg(idx.regIdx, res);
             break;
             // else Register is out of range...
         }

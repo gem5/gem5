@@ -149,7 +149,7 @@ output decoder {{
 
 #ifndef SS_COMPATIBLE_DISASSEMBLY
         std::string suffix("");
-        suffix += ((_destRegIdx[0] >= FP_Reg_Base)
+        suffix += ((_destRegIdx[0].regClass == FloatRegClass)
                    ? fpTrappingModeSuffix[trappingMode]
                    : intTrappingModeSuffix[trappingMode]);
         suffix += roundingModeSuffix[roundingMode];

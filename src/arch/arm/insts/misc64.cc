@@ -44,9 +44,9 @@ RegRegImmImmOp64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ss << ", ";
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ccprintf(ss, ", #%d, #%d", imm1, imm2);
     return ss.str();
 }
@@ -57,11 +57,11 @@ RegRegRegImmOp64::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printReg(ss, dest);
+    printIntReg(ss, dest);
     ss << ", ";
-    printReg(ss, op1);
+    printIntReg(ss, op1);
     ss << ", ";
-    printReg(ss, op2);
+    printIntReg(ss, op2);
     ccprintf(ss, ", #%d", imm);
     return ss.str();
 }

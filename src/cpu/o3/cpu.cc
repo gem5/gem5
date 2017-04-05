@@ -788,29 +788,27 @@ FullO3CPU<Impl>::insertThread(ThreadID tid)
         src_tc = tcBase(tid);
 
     //Bind Int Regs to Rename Map
-    for (int ireg = 0; ireg < TheISA::NumIntRegs; ireg++) {
-        PhysRegIndex phys_reg = freeList.getIntReg();
 
-        renameMap[tid].setEntry(ireg,phys_reg);
+    for (RegId reg_id(IntRegClass, 0); reg_id.regIdx < TheISA::NumIntRegs;
+         reg_id.regIdx++) {
+        PhysRegIndex phys_reg = freeList.getIntReg();
+        renameMap[tid].setEntry(reg_id, phys_reg);
         scoreboard.setReg(phys_reg);
     }
 
     //Bind Float Regs to Rename Map
-    int max_reg = TheISA::FP_Reg_Base + TheISA::NumFloatRegs;
-    for (int freg = TheISA::FP_Reg_Base; freg < max_reg; freg++) {
+    for (RegId reg_id(FloatRegClass, 0); reg_id.regIdx < TheISA::NumFloatRegs;
+         reg_id.regIdx++) {
         PhysRegIndex phys_reg = freeList.getFloatReg();
-
-        renameMap[tid].setEntry(freg,phys_reg);
+        renameMap[tid].setEntry(reg_id, phys_reg);
         scoreboard.setReg(phys_reg);
     }
 
     //Bind condition-code Regs to Rename Map
-    max_reg = TheISA::CC_Reg_Base + TheISA::NumCCRegs;
-    for (int creg = TheISA::CC_Reg_Base;
-         creg < max_reg; creg++) {
+    for (RegId reg_id(CCRegClass, 0); reg_id.regIdx < TheISA::NumCCRegs;
+         reg_id.regIdx++) {
         PhysRegIndex phys_reg = freeList.getCCReg();
-
-        renameMap[tid].setEntry(creg,phys_reg);
+        renameMap[tid].setEntry(reg_id, phys_reg);
         scoreboard.setReg(phys_reg);
     }
 
@@ -845,24 +843,25 @@ FullO3CPU<Impl>::removeThread(ThreadID tid)
     // in SMT workloads.
 
     // Unbind Int Regs from Rename Map
-    for (int ireg = 0; ireg < TheISA::NumIntRegs; ireg++) {
-        PhysRegIndex phys_reg = renameMap[tid].lookup(ireg);
+    for (RegId reg_id(IntRegClass, 0); reg_id.regIdx < TheISA::NumIntRegs;
+         reg_id.regIdx++) {
+        PhysRegIndex phys_reg = renameMap[tid].lookup(reg_id);
         scoreboard.unsetReg(phys_reg);
         freeList.addReg(phys_reg);
     }
 
     // Unbind Float Regs from Rename Map
-    int max_reg = TheISA::FP_Reg_Base + TheISA::NumFloatRegs;
-    for (int freg = TheISA::FP_Reg_Base; freg < max_reg; freg++) {
-        PhysRegIndex phys_reg = renameMap[tid].lookup(freg);
+    for (RegId reg_id(FloatRegClass, 0); reg_id.regIdx < TheISA::NumFloatRegs;
+         reg_id.regIdx++) {
+        PhysRegIndex phys_reg = renameMap[tid].lookup(reg_id);
         scoreboard.unsetReg(phys_reg);
         freeList.addReg(phys_reg);
     }
 
     // Unbind condition-code Regs from Rename Map
-    max_reg = TheISA::CC_Reg_Base + TheISA::NumCCRegs;
-    for (int creg = TheISA::CC_Reg_Base; creg < max_reg; creg++) {
-        PhysRegIndex phys_reg = renameMap[tid].lookup(creg);
+    for (RegId reg_id(CCRegClass, 0); reg_id.regIdx < TheISA::NumCCRegs;
+         reg_id.regIdx++) {
+        PhysRegIndex phys_reg = renameMap[tid].lookup(reg_id);
         scoreboard.unsetReg(phys_reg);
         freeList.addReg(phys_reg);
     }

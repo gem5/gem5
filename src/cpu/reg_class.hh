@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2016 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *.
@@ -26,6 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Steve Reinhardt
+ *          Nathanael Premillieu
  */
 
 #ifndef __CPU__REG_CLASS_HH__
@@ -34,6 +47,7 @@
 #include <cassert>
 #include <cstddef>
 
+#include "arch/generic/types.hh"
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
 
@@ -50,50 +64,49 @@ enum RegClass {
 /// unhandled cases in some switch statements.
 const int NumRegClasses = MiscRegClass + 1;
 
-/**
- * Map a 'unified' architectural register index to its register class.
- * The unified architectural register index space is used to represent
- * all architectural register identifiers in a single contiguous
- * index space.  See http://gem5.org/Register_Indexing.
- *
- * @param reg_idx Unified-space register index
- * @param rel_reg_idx Optional output param pointer; if non-NULL, location
- *        will be written with the relative register index for reg_idx
- *
- * @return Register class of reg_idx
- */
-inline
-RegClass regIdxToClass(TheISA::RegIndex reg_idx,
-                       TheISA::RegIndex *rel_reg_idx = NULL)
-{
-    assert(reg_idx < TheISA::Max_Reg_Index);
-    RegClass cl;
-    int offset;
+/// Register ID: describe an architectural register with its class and index.
+/// This structure is used instead of just the register index to disambiguate
+/// between different classes of registers.
+/// For example, a integer register with index 3 is represented by
+/// Regid(IntRegClass, 3).
+struct RegId {
+    RegClass regClass;
+    RegIndex regIdx;
+    RegId() {};
+    RegId(RegClass reg_class, RegIndex reg_idx)
+        : regClass(reg_class), regIdx(reg_idx)
+    {}
 
-    if (reg_idx < TheISA::FP_Reg_Base) {
-        cl = IntRegClass;
-        offset = 0;
-    } else if (reg_idx < TheISA::CC_Reg_Base) {
-        cl = FloatRegClass;
-        offset = TheISA::FP_Reg_Base;
-    } else if (reg_idx < TheISA::Misc_Reg_Base) {
-        // if there are no CC regs, the ISA should set
-        // CC_Reg_Base == Misc_Reg_Base so the if above
-        // never succeeds
-        cl = CCRegClass;
-        offset = TheISA::CC_Reg_Base;
-    } else {
-        cl = MiscRegClass;
-        offset = TheISA::Misc_Reg_Base;
+    bool operator==(const RegId& that) const {
+        return regClass == that.regClass && regIdx == that.regIdx;
     }
 
-    if (rel_reg_idx)
-        *rel_reg_idx = reg_idx - offset;
-    return cl;
-}
+    bool operator!=(const RegId& that) const {
+        return !(*this==that);
+    }
+
+    /**
+     * Returns true if this register is a zero register (needs to have a
+     * constant zero value throughout the execution)
+     */
+    bool isZeroReg() const
+    {
+        return (regIdx == TheISA::ZeroReg &&
+                (regClass == IntRegClass ||
+                 (THE_ISA == ALPHA_ISA && regClass == FloatRegClass)));
+    }
+
+    /**
+     * Return true if this register can be renamed
+     */
+    bool isRenameable()
+    {
+        return regClass != MiscRegClass;
+    }
+
+    static const RegId zeroReg;
+};
 
 /// Map enum values to strings for debugging
 extern const char *RegClassStrings[];
-
-
 #endif // __CPU__REG_CLASS_HH__

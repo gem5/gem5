@@ -143,13 +143,19 @@ let {{
                     regString = "INTREG_R%s" % opType.reg
                 env.addReg(regString)
                 env.addToDisassembly(
-                        "printReg(out, %s, regSize);\n" % regString)
+                    "printReg(out, InstRegIndex(%s), regSize);\n" %
+                                                                     regString)
+
                 Name += "_R"
+
             elif opType.tag == "B":
                 # This refers to registers whose index is encoded as part of the opcode
                 env.addToDisassembly(
-                        "printReg(out, %s, regSize);\n" % InstRegIndex)
+                        "printReg(out, InstRegIndex(%s), regSize);\n" %
+                                                                  InstRegIndex)
+
                 Name += "_R"
+
                 env.addReg(InstRegIndex)
             elif opType.tag == "M":
                 # This refers to memory. The macroop constructor sets up modrm
@@ -182,8 +188,11 @@ let {{
                 # Use the "reg" field of the ModRM byte to select the register
                 env.addReg(ModRMRegIndex)
                 env.addToDisassembly(
-                        "printReg(out, %s, regSize);\n" % ModRMRegIndex)
+                        "printReg(out, InstRegIndex(%s), regSize);\n" %
+                                                                 ModRMRegIndex)
+
                 if opType.tag == "P":
+
                     Name += "_MMX"
                 elif opType.tag == "V":
                     Name += "_XMM"
@@ -195,8 +204,11 @@ let {{
                 regEnv = copy.copy(env)
                 regEnv.addReg(ModRMRMIndex)
                 regEnv.addToDisassembly(
-                        "printReg(out, %s, regSize);\n" % ModRMRMIndex)
+                        "printReg(out, InstRegIndex(%s), regSize);\n" %
+                                                                  ModRMRMIndex)
+
                 # This refers to memory. The macroop constructor should set up
+
                 # modrm addressing.
                 memEnv = copy.copy(env)
                 memEnv.doModRM = True
@@ -222,8 +234,11 @@ let {{
                 # Non register modrm settings should cause an error
                 env.addReg(ModRMRMIndex)
                 env.addToDisassembly(
-                        "printReg(out, %s, regSize);\n" % ModRMRMIndex)
+                        "printReg(out, InstRegIndex(%s), regSize);\n" %
+                                                                  ModRMRMIndex)
+
                 if opType.tag == "PR":
+
                     Name += "_MMX"
                 elif opType.tag == "VR":
                     Name += "_XMM"

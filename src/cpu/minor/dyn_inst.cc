@@ -133,15 +133,15 @@ operator <<(std::ostream &os, const MinorDynInst &inst)
 /** Print a register in the form r<n>, f<n>, m<n>(<name>), z for integer,
  *  float, misc and zero registers given an 'architectural register number' */
 static void
-printRegName(std::ostream &os, TheISA::RegIndex reg)
+printRegName(std::ostream &os, RegId reg)
 {
-    RegClass reg_class = regIdxToClass(reg);
+    RegClass reg_class = reg.regClass;
 
     switch (reg_class)
     {
       case MiscRegClass:
         {
-            TheISA::RegIndex misc_reg = reg - TheISA::Misc_Reg_Base;
+            RegIndex misc_reg = reg.regIdx;
 
         /* This is an ugly test because not all archs. have miscRegName */
 #if THE_ISA == ARM_ISA
@@ -153,17 +153,17 @@ printRegName(std::ostream &os, TheISA::RegIndex reg)
         }
         break;
       case FloatRegClass:
-        os << 'f' << static_cast<unsigned int>(reg - TheISA::FP_Reg_Base);
+        os << 'f' << static_cast<unsigned int>(reg.regIdx);
         break;
       case IntRegClass:
-        if (reg == TheISA::ZeroReg) {
+        if (reg.isZeroReg()) {
             os << 'z';
         } else {
-            os << 'r' << static_cast<unsigned int>(reg);
+            os << 'r' << static_cast<unsigned int>(reg.regIdx);
         }
         break;
       case CCRegClass:
-        os << 'c' << static_cast<unsigned int>(reg - TheISA::CC_Reg_Base);
+        os << 'c' << static_cast<unsigned int>(reg.regIdx);
     }
 }
 

@@ -85,9 +85,6 @@ class DefaultRename
     typedef typename CPUPol::IEW IEW;
     typedef typename CPUPol::Commit Commit;
 
-    // Typedefs from the ISA.
-    typedef TheISA::RegIndex RegIndex;
-
     // A deque is used to queue the instructions. Barrier insts must
     // be added to the front of the queue, which is the only reason for
     // using a deque instead of a queue. (Most other stages use a
@@ -301,7 +298,7 @@ class DefaultRename
      * register for that arch. register, and the new physical register.
      */
     struct RenameHistory {
-        RenameHistory(InstSeqNum _instSeqNum, RegIndex _archReg,
+        RenameHistory(InstSeqNum _instSeqNum, RegId _archReg,
                       PhysRegIndex _newPhysReg, PhysRegIndex _prevPhysReg)
             : instSeqNum(_instSeqNum), archReg(_archReg),
               newPhysReg(_newPhysReg), prevPhysReg(_prevPhysReg)
@@ -311,7 +308,7 @@ class DefaultRename
         /** The sequence number of the instruction that renamed. */
         InstSeqNum instSeqNum;
         /** The architectural register index that was renamed. */
-        RegIndex archReg;
+        RegId archReg;
         /** The new physical register that the arch. register is renamed to. */
         PhysRegIndex newPhysReg;
         /** The old physical register that the arch. register was renamed to. */

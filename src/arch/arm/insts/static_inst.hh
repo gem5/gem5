@@ -155,7 +155,10 @@ class ArmStaticInst : public StaticInst
 
     /// Print a register name for disassembly given the unique
     /// dependence tag number (FP or int).
-    void printReg(std::ostream &os, int reg) const;
+    void printIntReg(std::ostream &os, RegIndex reg_idx) const;
+    void printFloatReg(std::ostream &os, RegIndex reg_idx) const;
+    void printCCReg(std::ostream &os, RegIndex reg_idx) const;
+    void printMiscReg(std::ostream &os, RegIndex reg_idx) const;
     void printMnemonic(std::ostream &os,
                        const std::string &suffix = "",
                        bool withPred = true,

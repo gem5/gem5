@@ -520,7 +520,14 @@ class Operand(object):
         # to avoid 'uninitialized variable' errors from the compiler.
         return self.ctype + ' ' + self.base_name + ' = 0;\n';
 
+
+src_reg_constructor = '\n\t_srcRegIdx[_numSrcRegs++] = RegId(%s, %s);'
+dst_reg_constructor = '\n\t_destRegIdx[_numDestRegs++] = RegId(%s, %s);'
+
+
 class IntRegOperand(Operand):
+    reg_class = 'IntRegClass'
+
     def isReg(self):
         return 1
 
@@ -532,14 +539,13 @@ class IntRegOperand(Operand):
         c_dest = ''
 
         if self.is_src:
-            c_src = '\n\t_srcRegIdx[_numSrcRegs++] = %s;' % (self.reg_spec)
+            c_src = src_reg_constructor % (self.reg_class, self.reg_spec)
             if self.hasReadPred():
                 c_src = '\n\tif (%s) {%s\n\t}' % \
                         (self.read_predicate, c_src)
 
         if self.is_dest:
-            c_dest = '\n\t_destRegIdx[_numDestRegs++] = %s;' % \
-                    (self.reg_spec)
+            c_dest = dst_reg_constructor % (self.reg_class, self.reg_spec)
             c_dest += '\n\t_numIntDestRegs++;'
             if self.hasWritePred():
                 c_dest = '\n\tif (%s) {%s\n\t}' % \
@@ -592,6 +598,8 @@ class IntRegOperand(Operand):
         return wb
 
 class FloatRegOperand(Operand):
+    reg_class = 'FloatRegClass'
+
     def isReg(self):
         return 1
 
@@ -603,13 +611,10 @@ class FloatRegOperand(Operand):
         c_dest = ''
 
         if self.is_src:
-            c_src = '\n\t_srcRegIdx[_numSrcRegs++] = %s + FP_Reg_Base;' % \
-                    (self.reg_spec)
+            c_src = src_reg_constructor % (self.reg_class, self.reg_spec)
 
         if self.is_dest:
-            c_dest = \
-              '\n\t_destRegIdx[_numDestRegs++] = %s + FP_Reg_Base;' % \
-              (self.reg_spec)
+            c_dest = dst_reg_constructor % (self.reg_class, self.reg_spec)
             c_dest += '\n\t_numFPDestRegs++;'
 
         return c_src + c_dest
@@ -654,6 +659,8 @@ class FloatRegOperand(Operand):
         return wb
 
 class CCRegOperand(Operand):
+    reg_class = 'CCRegClass'
+
     def isReg(self):
         return 1
 
@@ -665,16 +672,13 @@ class CCRegOperand(Operand):
         c_dest = ''
 
         if self.is_src:
-            c_src = '\n\t_srcRegIdx[_numSrcRegs++] = %s + CC_Reg_Base;' % \
-                     (self.reg_spec)
+            c_src = src_reg_constructor % (self.reg_class, self.reg_spec)
             if self.hasReadPred():
                 c_src = '\n\tif (%s) {%s\n\t}' % \
                         (self.read_predicate, c_src)
 
         if self.is_dest:
-            c_dest = \
-              '\n\t_destRegIdx[_numDestRegs++] = %s + CC_Reg_Base;' % \
-              (self.reg_spec)
+            c_dest = dst_reg_constructor % (self.reg_class, self.reg_spec)
             c_dest += '\n\t_numCCDestRegs++;'
             if self.hasWritePred():
                 c_dest = '\n\tif (%s) {%s\n\t}' % \
@@ -727,6 +731,8 @@ class CCRegOperand(Operand):
         return wb
 
 class ControlRegOperand(Operand):
+    reg_class = 'MiscRegClass'
+
     def isReg(self):
         return 1
 
@@ -738,14 +744,10 @@ class ControlRegOperand(Operand):
         c_dest = ''
 
         if self.is_src:
-            c_src = \
-              '\n\t_srcRegIdx[_numSrcRegs++] = %s + Misc_Reg_Base;' % \
-              (self.reg_spec)
+            c_src = src_reg_constructor % (self.reg_class, self.reg_spec)
 
         if self.is_dest:
-            c_dest = \
-              '\n\t_destRegIdx[_numDestRegs++] = %s + Misc_Reg_Base;' % \
-              (self.reg_spec)
+            c_dest = dst_reg_constructor % (self.reg_class, self.reg_spec)
 
         return c_src + c_dest
 

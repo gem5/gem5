@@ -155,7 +155,7 @@ output decoder {{
             ccprintf(response, " ");
             // If the first reg is %g0, don't print it.
             // This improves readability
-            if (_srcRegIdx[0] != 0) {
+            if (_srcRegIdx[0].regIdx != 0) {
                 printSrcReg(response, 0);
                 ccprintf(response, ", ");
             }
@@ -175,7 +175,7 @@ output decoder {{
             ccprintf(response, " ");
             // If the first reg is %g0, don't print it.
             // This improves readability
-            if (_srcRegIdx[0] != 0) {
+            if (_srcRegIdx[0].regIdx != 0) {
                 printSrcReg(response, 0);
                 ccprintf(response, ", ");
             }

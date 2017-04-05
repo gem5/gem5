@@ -43,8 +43,6 @@ using PowerISAInst::MaxInstDestRegs;
 // be detected by it. Manually add it here.
 const int MaxMiscDestRegs = PowerISAInst::MaxMiscDestRegs + 1;
 
-typedef uint8_t RegIndex;
-
 typedef uint64_t IntReg;
 
 // Floating point register file entry type
@@ -86,12 +84,6 @@ const int ZeroReg = NumIntRegs - 1;
 const int SyscallNumReg = 0;
 const int SyscallPseudoReturnReg = 3;
 const int SyscallSuccessReg = 3;
-
-// These help enumerate all the registers for dependence tracking.
-const int FP_Reg_Base = NumIntRegs;
-const int CC_Reg_Base = FP_Reg_Base + NumFloatRegs;
-const int Misc_Reg_Base = CC_Reg_Base + NumCCRegs; // NumCCRegs == 0
-const int Max_Reg_Index = Misc_Reg_Base + NumMiscRegs;
 
 typedef union {
     IntReg   intreg;

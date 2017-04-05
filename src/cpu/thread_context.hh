@@ -51,6 +51,7 @@
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
+#include "cpu/reg_class.hh"
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
 // DTB pointers.
@@ -255,13 +256,13 @@ class ThreadContext
     virtual int flattenMiscIndex(int reg) = 0;
 
     virtual uint64_t
-    readRegOtherThread(int misc_reg, ThreadID tid)
+    readRegOtherThread(RegId misc_reg, ThreadID tid)
     {
         return 0;
     }
 
     virtual void
-    setRegOtherThread(int misc_reg, const MiscReg &val, ThreadID tid)
+    setRegOtherThread(RegId misc_reg, const MiscReg &val, ThreadID tid)
     {
     }
 

@@ -53,7 +53,7 @@ output header {{
 
         /// Print a register name for disassembly given the unique
         /// dependence tag number (FP or int).
-        void printReg(std::ostream &os, int reg) const;
+        void printReg(std::ostream &os, RegId reg) const;
 
         std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 
@@ -70,13 +70,13 @@ output header {{
 //Ouputs to decoder.cc
 output decoder {{
 
-    void MipsStaticInst::printReg(std::ostream &os, int reg) const
+    void MipsStaticInst::printReg(std::ostream &os, RegId reg) const
     {
-        if (reg < FP_Reg_Base) {
-            ccprintf(os, "r%d", reg);
+        if (reg.regClass == IntRegClass) {
+            ccprintf(os, "r%d", reg.regIdx);
         }
         else {
-            ccprintf(os, "f%d", reg - FP_Reg_Base);
+            ccprintf(os, "f%d", reg.regIdx);
         }
     }
 

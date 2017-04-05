@@ -262,15 +262,15 @@ ElasticTrace::updateRegDep(const DynInstPtr &dyn_inst)
     for (int dest_idx = 0; dest_idx < max_regs; dest_idx++) {
         // For data dependency tracking the register must be an int, float or
         // CC register and not a Misc register.
-        TheISA::RegIndex dest_reg = dyn_inst->destRegIdx(dest_idx);
-        if (regIdxToClass(dest_reg) != MiscRegClass) {
-            // Get the physical register index of the i'th destination register.
-            dest_reg = dyn_inst->renamedDestRegIdx(dest_idx);
-            if (dest_reg != TheISA::ZeroReg) {
-                DPRINTFR(ElasticTrace, "[sn:%lli] Update map for dest reg %i\n",
-                            seq_num, dest_reg);
-                physRegDepMap[dest_reg] = seq_num;
-            }
+        RegId dest_reg = dyn_inst->destRegIdx(dest_idx);
+        if (dest_reg.isRenameable() &&
+            !dest_reg.isZeroReg()) {
+            // Get the physical register index of the i'th destination
+            // register.
+            PhysRegIndex phys_dest_reg = dyn_inst->renamedDestRegIdx(dest_idx);
+            DPRINTFR(ElasticTrace, "[sn:%lli] Update map for dest reg %i\n",
+                    seq_num, dest_reg.regIdx);
+            physRegDepMap[phys_dest_reg] = seq_num;
         }
     }
     maxPhysRegDepMapSize = std::max(physRegDepMap.size(),

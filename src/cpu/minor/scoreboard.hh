@@ -67,9 +67,6 @@ class Scoreboard : public Named
      *  [NumIntRegs+NumCCRegs, NumFloatRegs+NumIntRegs+NumCCRegs-1] */
     const unsigned numRegs;
 
-    /** Type to use for thread context registers */
-    typedef TheISA::RegIndex RegIndex;
-
     /** Type to use when indexing numResults */
     typedef unsigned short int Index;
 
@@ -109,7 +106,7 @@ class Scoreboard : public Named
     /** Sets scoreboard_index to the index into numResults of the
      *  given register index.  Returns true if the given register
      *  is in the scoreboard and false if it isn't */
-    bool findIndex(RegIndex reg, Index &scoreboard_index);
+    bool findIndex(RegId reg, Index &scoreboard_index);
 
     /** Mark up an instruction's effects by incrementing
      *  numResults counts.  If mark_unpredictable is true, the inst's
