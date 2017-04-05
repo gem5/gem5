@@ -115,8 +115,11 @@ MathExprPowerModel::getStatValue(const std::string &name) const
     using namespace Stats;
 
     // Automatic variables:
-    if (name == "temp")
+    if (name == "temp") {
         return _temp;
+    } else if (name == "voltage") {
+        return clocked_object->voltage();
+    }
 
     // Try to cast the stat, only these are supported right now
     const auto it = stats_map.find(name);
