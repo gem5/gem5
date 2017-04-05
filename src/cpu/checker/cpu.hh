@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2016 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -53,6 +53,7 @@
 #include "cpu/base.hh"
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/exec_context.hh"
+#include "cpu/inst_res.hh"
 #include "cpu/pc_event.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/static_inst.hh"
@@ -143,18 +144,9 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     Addr dbg_vtophys(Addr addr);
 
-    union Result {
-        uint64_t integer;
-        double dbl;
-        void set(uint64_t i) { integer = i; }
-        void set(double d) { dbl = d; }
-        void get(uint64_t& i) { i = integer; }
-        void get(double& d) { d = dbl; }
-    };
-
     // ISAs like ARM can have multiple destination registers to check,
     // keep them all in a std::queue
-    std::queue<Result> result;
+    std::queue<InstResult> result;
 
     // Pointer to the one memory request.
     RequestPtr memReq;
@@ -240,12 +232,11 @@ class CheckerCPU : public BaseCPU, public ExecContext
         return thread->readCCReg(reg.index());
     }
 
-    template <class T>
-    void setResult(T t)
+    template<typename T>
+    void setScalarResult(T&& t)
     {
-        Result instRes;
-        instRes.set(t);
-        result.push(instRes);
+        result.push(InstResult(std::forward<T>(t),
+                        InstResult::ResultType::Scalar));
     }
 
     void setIntRegOperand(const StaticInst *si, int idx,
@@ -254,7 +245,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isIntReg());
         thread->setIntReg(reg.index(), val);
-        setResult<uint64_t>(val);
+        setScalarResult(val);
     }
 
     void setFloatRegOperand(const StaticInst *si, int idx,
@@ -263,7 +254,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isFloatReg());
         thread->setFloatReg(reg.index(), val);
-        setResult<double>(val);
+        setScalarResult(val);
     }
 
     void setFloatRegOperandBits(const StaticInst *si, int idx,
@@ -272,7 +263,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isFloatReg());
         thread->setFloatRegBits(reg.index(), val);
-        setResult<uint64_t>(val);
+        setScalarResult(val);
     }
 
     void setCCRegOperand(const StaticInst *si, int idx, CCReg val) override
@@ -280,7 +271,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isCCReg());
         thread->setCCReg(reg.index(), val);
-        setResult<uint64_t>(val);
+        setScalarResult((uint64_t)val);
     }
 
     bool readPredicate() override { return thread->readPredicate(); }
@@ -422,7 +413,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     ThreadContext *tcBase() override { return tc; }
     SimpleThread *threadBase() { return thread; }
 
-    Result unverifiedResult;
+    InstResult unverifiedResult;
     Request *unverifiedReq;
     uint8_t *unverifiedMemData;
 
@@ -464,7 +455,8 @@ class Checker : public CheckerCPU
     void validateExecution(DynInstPtr &inst);
     void validateState();
 
-    void copyResult(DynInstPtr &inst, uint64_t mismatch_val, int start_idx);
+    void copyResult(DynInstPtr &inst, const InstResult& mismatch_val,
+                    int start_idx);
     void handlePendingInt();
 
   private:

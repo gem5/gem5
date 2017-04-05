@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011,2013 ARM Limited
+ * Copyright (c) 2011,2013,2016 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -49,18 +49,19 @@
 #include <array>
 #include <bitset>
 #include <list>
-#include <string>
 #include <queue>
+#include <string>
 
 #include "arch/generic/tlb.hh"
 #include "arch/utility.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
-#include "cpu/o3/comm.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/inst_res.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/comm.hh"
 #include "cpu/op_class.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/translation.hh"
@@ -92,15 +93,6 @@ class BaseDynInst : public ExecContext, public RefCounted
     enum {
         MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        /// Max source regs
         MaxInstDestRegs = TheISA::MaxInstDestRegs       /// Max dest regs
-    };
-
-    union Result {
-        uint64_t integer;
-        double dbl;
-        void set(uint64_t i) { integer = i; }
-        void set(double d) { dbl = d; }
-        void get(uint64_t& i) { i = integer; }
-        void get(double& d) { d = dbl; }
     };
 
   protected:
@@ -174,7 +166,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** The result of the instruction; assumes an instruction can have many
      *  destination registers.
      */
-    std::queue<Result> instResult;
+    std::queue<InstResult> instResult;
 
     /** PC state for this instruction. */
     TheISA::PCState pc;
@@ -606,56 +598,55 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Returns the logical register index of the i'th source register. */
     const RegId& srcRegIdx(int i) const { return staticInst->srcRegIdx(i); }
 
-    /** Pops a result off the instResult queue */
-    template <class T>
-    void popResult(T& t)
+    /** Return the size of the instResult queue. */
+    uint8_t resultSize() { return instResult.size(); }
+
+    /** Pops a result off the instResult queue.
+     * If the result stack is empty, return the default value.
+     * */
+    InstResult popResult(InstResult dflt = InstResult())
     {
         if (!instResult.empty()) {
-            instResult.front().get(t);
+            InstResult t = instResult.front();
             instResult.pop();
+            return t;
         }
+        return dflt;
     }
 
-    /** Read the most recent result stored by this instruction */
-    template <class T>
-    void readResult(T& t)
-    {
-        instResult.back().get(t);
-    }
-
-    /** Pushes a result onto the instResult queue */
-    template <class T>
-    void setResult(T t)
+    /** Pushes a result onto the instResult queue. */
+    template<typename T>
+    void setScalarResult(T&& t)
     {
         if (instFlags[RecordResult]) {
-            Result instRes;
-            instRes.set(t);
-            instResult.push(instRes);
+            instResult.push(InstResult(std::forward<T>(t),
+                        InstResult::ResultType::Scalar));
         }
     }
 
     /** Records an integer register being set to a value. */
     void setIntRegOperand(const StaticInst *si, int idx, IntReg val)
     {
-        setResult<uint64_t>(val);
+        setScalarResult(val);
     }
 
     /** Records a CC register being set to a value. */
     void setCCRegOperand(const StaticInst *si, int idx, CCReg val)
     {
-        setResult<uint64_t>(val);
+        setScalarResult(val);
     }
 
     /** Records an fp register being set to a value. */
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
-        setResult<double>(val);
+        setScalarResult(val);
     }
 
     /** Records an fp register being set to an integer value. */
-    void setFloatRegOperandBits(const StaticInst *si, int idx, FloatRegBits val)
+    void
+    setFloatRegOperandBits(const StaticInst *si, int idx, FloatRegBits val)
     {
-        setResult<uint64_t>(val);
+        setScalarResult(val);
     }
 
     /** Records that one of the source registers is ready. */
