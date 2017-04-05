@@ -50,6 +50,9 @@ output exec {{
         }
         return fault;
     }
+    inline Fault checkVectorEnableFault(CPU_EXEC_CONTEXT *xc) {
+        return std::make_shared<VectorEnableFault>();
+    }
 }};
 
 output header {{

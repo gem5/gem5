@@ -98,6 +98,13 @@ FaultName FloatEnableFault::_name = "fen";
 FaultVect FloatEnableFault::_vect = 0x0581;
 FaultStat FloatEnableFault::_count;
 
+/* We use the same fault vector, as for the guest system these should be the
+ * same, but for host purposes, having differentiation is helpful for
+ * debug/monitorization purposes. */
+FaultName VectorEnableFault::_name = "ven";
+FaultVect VectorEnableFault::_vect = 0x0581;
+FaultStat VectorEnableFault::_count;
+
 FaultName PalFault::_name = "pal";
 FaultVect PalFault::_vect = 0x2001;
 FaultStat PalFault::_count;

@@ -94,6 +94,9 @@ class SimpleExecContext : public ExecContext {
     // Number of float alu accesses
     Stats::Scalar numFpAluAccesses;
 
+    // Number of vector alu accesses
+    Stats::Scalar numVecAluAccesses;
+
     // Number of function calls/returns
     Stats::Scalar numCallsReturns;
 
@@ -105,6 +108,9 @@ class SimpleExecContext : public ExecContext {
 
     // Number of float instructions
     Stats::Scalar numFpInsts;
+
+    // Number of vector instructions
+    Stats::Scalar numVecInsts;
 
     // Number of integer register file accesses
     Stats::Scalar numIntRegReads;

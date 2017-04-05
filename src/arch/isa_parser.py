@@ -493,6 +493,12 @@ class Operand(object):
     def isControlReg(self):
         return 0
 
+    def isVecReg(self):
+        return 0
+
+    def isVecElem(self):
+        return 0
+
     def isPCState(self):
         return 0
 
@@ -657,6 +663,200 @@ class FloatRegOperand(Operand):
             if (traceData) { traceData->setData(final_val); }
         }''' % (self.ctype, self.base_name, wp)
         return wb
+
+class VecRegOperand(Operand):
+    reg_class = 'VecRegClass'
+
+    def __init__(self, parser, full_name, ext, is_src, is_dest):
+        Operand.__init__(self, parser, full_name, ext, is_src, is_dest)
+        self.elemExt = None
+        self.parser = parser
+
+    def isReg(self):
+        return 1
+
+    def isVecReg(self):
+        return 1
+
+    def makeDeclElem(self, elem_op):
+        (elem_name, elem_ext) = elem_op
+        (elem_spec, dflt_elem_ext, zeroing) = self.elems[elem_name]
+        if elem_ext:
+            ext = elem_ext
+        else:
+            ext = dflt_elem_ext
+        ctype = self.parser.operandTypeMap[ext]
+        return '\n\t%s %s = 0;' % (ctype, elem_name)
+
+    def makeDecl(self):
+        if not self.is_dest and self.is_src:
+            c_decl = '\t/* Vars for %s*/' % (self.base_name)
+            if hasattr(self, 'active_elems'):
+                if self.active_elems:
+                    for elem in self.active_elems:
+                        c_decl += self.makeDeclElem(elem)
+            return c_decl + '\t/* End vars for %s */\n' % (self.base_name)
+        else:
+            return ''
+
+    def makeConstructor(self, predRead, predWrite):
+        c_src = ''
+        c_dest = ''
+
+        numAccessNeeded = 1
+
+        if self.is_src:
+            c_src = src_reg_constructor % (self.reg_class, self.reg_spec)
+
+        if self.is_dest:
+            c_dest = dst_reg_constructor % (self.reg_class, self.reg_spec)
+            c_dest += '\n\t_numVecDestRegs++;'
+
+        return c_src + c_dest
+
+    # Read destination register to write
+    def makeReadWElem(self, elem_op):
+        (elem_name, elem_ext) = elem_op
+        (elem_spec, dflt_elem_ext, zeroing) = self.elems[elem_name]
+        if elem_ext:
+            ext = elem_ext
+        else:
+            ext = dflt_elem_ext
+        ctype = self.parser.operandTypeMap[ext]
+        c_read = '\t\t%s& %s = %s[%s];\n' % \
+                  (ctype, elem_name, self.base_name, elem_spec)
+        return c_read
+
+    def makeReadW(self, predWrite):
+        func = 'getWritableVecRegOperand'
+        if self.read_code != None:
+            return self.buildReadCode(func)
+
+        if predWrite:
+            rindex = '_destIndex++'
+        else:
+            rindex = '%d' % self.dest_reg_idx
+
+        c_readw = '\t\t%s& tmp_d%s = xc->%s(this, %s);\n'\
+                % ('TheISA::VecRegContainer', rindex, func, rindex)
+        if self.elemExt:
+            c_readw += '\t\tauto %s = tmp_d%s.as<%s>();\n' % (self.base_name,
+                        rindex, self.parser.operandTypeMap[self.elemExt])
+        if self.ext:
+            c_readw += '\t\tauto %s = tmp_d%s.as<%s>();\n' % (self.base_name,
+                        rindex, self.parser.operandTypeMap[self.ext])
+        if hasattr(self, 'active_elems'):
+            if self.active_elems:
+                for elem in self.active_elems:
+                    c_readw += self.makeReadWElem(elem)
+        return c_readw
+
+    # Normal source operand read
+    def makeReadElem(self, elem_op, name):
+        (elem_name, elem_ext) = elem_op
+        (elem_spec, dflt_elem_ext, zeroing) = self.elems[elem_name]
+
+        if elem_ext:
+            ext = elem_ext
+        else:
+            ext = dflt_elem_ext
+        ctype = self.parser.operandTypeMap[ext]
+        c_read = '\t\t%s = %s[%s];\n' % \
+                  (elem_name, name, elem_spec)
+        return c_read
+
+    def makeRead(self, predRead):
+        func = 'readVecRegOperand'
+        if self.read_code != None:
+            return self.buildReadCode(func)
+
+        if predRead:
+            rindex = '_sourceIndex++'
+        else:
+            rindex = '%d' % self.src_reg_idx
+
+        name = self.base_name
+        if self.is_dest and self.is_src:
+            name += '_merger'
+
+        c_read =  '\t\t%s& tmp_s%s = xc->%s(this, %s);\n' \
+                % ('const TheISA::VecRegContainer', rindex, func, rindex)
+        # If the parser has detected that elements are being access, create
+        # the appropriate view
+        if self.elemExt:
+            c_read += '\t\tauto %s = tmp_s%s.as<%s>();\n' % \
+                 (name, rindex, self.parser.operandTypeMap[self.elemExt])
+        if self.ext:
+            c_read += '\t\tauto %s = tmp_s%s.as<%s>();\n' % \
+                 (name, rindex, self.parser.operandTypeMap[self.ext])
+        if hasattr(self, 'active_elems'):
+            if self.active_elems:
+                for elem in self.active_elems:
+                    c_read += self.makeReadElem(elem, name)
+        return c_read
+
+    def makeWrite(self, predWrite):
+        func = 'setVecRegOperand'
+        if self.write_code != None:
+            return self.buildWriteCode(func)
+
+        wb = '''
+        if (traceData) {
+            panic("Vectors not supported yet in tracedata");
+            /*traceData->setData(final_val);*/
+        }
+        '''
+        return wb
+
+    def finalize(self, predRead, predWrite):
+        super(VecRegOperand, self).finalize(predRead, predWrite)
+        if self.is_dest:
+            self.op_rd = self.makeReadW(predWrite) + self.op_rd
+
+class VecElemOperand(Operand):
+    reg_class = 'VectorElemClass'
+
+    def isReg(self):
+        return 1
+
+    def isVecElem(self):
+        return 1
+
+    def makeDecl(self):
+        if self.is_dest and not self.is_src:
+            return '\n\t%s %s;' % (self.ctype, self.base_name)
+        else:
+            return ''
+
+    def makeConstructor(self, predRead, predWrite):
+        c_src = ''
+        c_dest = ''
+
+        numAccessNeeded = 1
+        regId = 'RegId(%s, %s * numVecElemPerVecReg + elemIdx, %s)' % \
+                (self.reg_class, self.reg_spec)
+
+        if self.is_src:
+            c_src = ('\n\t_srcRegIdx[_numSrcRegs++] = RegId(%s, %s, %s);' %
+                    (self.reg_class, self.reg_spec, self.elem_spec))
+
+        if self.is_dest:
+            c_dest = ('\n\t_destRegIdx[_numDestRegs++] = RegId(%s, %s, %s);' %
+                    (self.reg_class, self.reg_spec, self.elem_spec))
+            c_dest += '\n\t_numVecElemDestRegs++;'
+        return c_src + c_dest
+
+    def makeRead(self, predRead):
+        c_read = ('\n/* Elem is kept inside the operand description */' +
+                  '\n\tVecElem %s = xc->readVecElemOperand(this, %d);' %
+                  (self.base_name, self.src_reg_idx))
+        return c_read
+
+    def makeWrite(self, predWrite):
+        c_write = ('\n/* Elem is kept inside the operand description */' +
+                   '\n\txc->setVecElemOperand(this, %d, %s);' %
+                   (self.dest_reg_idx, self.base_name))
+        return c_write
 
 class CCRegOperand(Operand):
     reg_class = 'CCRegClass'
@@ -857,22 +1057,49 @@ class OperandList(object):
             op = match.groups()
             # regexp groups are operand full name, base, and extension
             (op_full, op_base, op_ext) = op
+            # If is a elem operand, define or update the corresponding
+            # vector operand
+            isElem = False
+            if op_base in parser.elemToVector:
+                isElem = True
+                elem_op = (op_base, op_ext)
+                op_base = parser.elemToVector[op_base]
+                op_ext = '' # use the default one
             # if the token following the operand is an assignment, this is
             # a destination (LHS), else it's a source (RHS)
             is_dest = (assignRE.match(code, match.end()) != None)
             is_src = not is_dest
+
             # see if we've already seen this one
             op_desc = self.find_base(op_base)
             if op_desc:
-                if op_desc.ext != op_ext:
-                    error ('Inconsistent extensions for operand %s' % \
-                            op_base)
+                if op_ext and op_ext != '' and op_desc.ext != op_ext:
+                    error ('Inconsistent extensions for operand %s: %s - %s' \
+                            % (op_base, op_desc.ext, op_ext))
                 op_desc.is_src = op_desc.is_src or is_src
                 op_desc.is_dest = op_desc.is_dest or is_dest
+                if isElem:
+                    (elem_base, elem_ext) = elem_op
+                    found = False
+                    for ae in op_desc.active_elems:
+                        (ae_base, ae_ext) = ae
+                        if ae_base == elem_base:
+                            if ae_ext != elem_ext:
+                                error('Inconsistent extensions for elem'
+                                      ' operand %s' % elem_base)
+                            else:
+                                found = True
+                    if not found:
+                        op_desc.active_elems.append(elem_op)
             else:
                 # new operand: create new descriptor
                 op_desc = parser.operandNameMap[op_base](parser,
                     op_full, op_ext, is_src, is_dest)
+                # if operand is a vector elem, add the corresponding vector
+                # operand if not already done
+                if isElem:
+                    op_desc.elemExt = elem_op[1]
+                    op_desc.active_elems = [elem_op]
                 self.append(op_desc)
             # start next search after end of current match
             next_pos = match.end()
@@ -883,6 +1110,7 @@ class OperandList(object):
         self.numDestRegs = 0
         self.numFPDestRegs = 0
         self.numIntDestRegs = 0
+        self.numVecDestRegs = 0
         self.numCCDestRegs = 0
         self.numMiscDestRegs = 0
         self.memOperand = None
@@ -904,6 +1132,8 @@ class OperandList(object):
                         self.numFPDestRegs += 1
                     elif op_desc.isIntReg():
                         self.numIntDestRegs += 1
+                    elif op_desc.isVecReg():
+                        self.numVecDestRegs += 1
                     elif op_desc.isCCReg():
                         self.numCCDestRegs += 1
                     elif op_desc.isControlReg():
@@ -994,6 +1224,11 @@ class SubOperandList(OperandList):
             op = match.groups()
             # regexp groups are operand full name, base, and extension
             (op_full, op_base, op_ext) = op
+            # If is a elem operand, define or update the corresponding
+            # vector operand
+            if op_base in parser.elemToVector:
+                elem_op = op_base
+                op_base = parser.elemToVector[elem_op]
             # find this op in the master list
             op_desc = master_list.find_base(op_base)
             if not op_desc:
@@ -1105,6 +1340,8 @@ class InstObjParams(object):
         header += '\n\t_numSrcRegs = 0;'
         header += '\n\t_numDestRegs = 0;'
         header += '\n\t_numFPDestRegs = 0;'
+        header += '\n\t_numVecDestRegs = 0;'
+        header += '\n\t_numVecElemDestRegs = 0;'
         header += '\n\t_numIntDestRegs = 0;'
         header += '\n\t_numCCDestRegs = 0;'
 
@@ -1149,6 +1386,8 @@ class InstObjParams(object):
                     self.op_class = 'MemReadOp'
             elif 'IsFloating' in self.flags:
                 self.op_class = 'FloatAddOp'
+            elif 'IsVector' in self.flags:
+                self.op_class = 'SimdAddOp'
             else:
                 self.op_class = 'IntAluOp'
 
@@ -1158,8 +1397,12 @@ class InstObjParams(object):
 
         # if 'IsFloating' is set, add call to the FP enable check
         # function (which should be provided by isa_desc via a declare)
+        # if 'IsVector' is set, add call to the Vector enable check
+        # function (which should be provided by isa_desc via a declare)
         if 'IsFloating' in self.flags:
             self.fp_enable_check = 'fault = checkFpEnableFault(xc);'
+        elif 'IsVector' in self.flags:
+            self.fp_enable_check = 'fault = checkVecEnableFault(xc);'
         else:
             self.fp_enable_check = ''
 
@@ -2300,6 +2543,16 @@ StaticInstPtr
             if dflt_ext:
                 dflt_ctype = self.operandTypeMap[dflt_ext]
                 attrList.extend(['dflt_ctype', 'dflt_ext'])
+            # reg_spec is either just a string or a dictionary
+            # (for elems of vector)
+            if isinstance(reg_spec, tuple):
+                (reg_spec, elem_spec) = reg_spec
+                if isinstance(elem_spec, str):
+                    attrList.append('elem_spec')
+                else:
+                    assert(isinstance(elem_spec, dict))
+                    elems = elem_spec
+                    attrList.append('elems')
             for attr in attrList:
                 tmp_dict[attr] = eval(attr)
             tmp_dict['base_name'] = op_name
@@ -2323,6 +2576,15 @@ StaticInstPtr
 
         # Define operand variables.
         operands = user_dict.keys()
+        # Add the elems defined in the vector operands and
+        # build a map elem -> vector (used in OperandList)
+        elem_to_vec = {}
+        for op in user_dict.keys():
+            if hasattr(self.operandNameMap[op], 'elems'):
+                for elem in self.operandNameMap[op].elems.keys():
+                    operands.append(elem)
+                    elem_to_vec[elem] = op
+        self.elemToVector = elem_to_vec
         extensions = self.operandTypeMap.keys()
 
         operandsREString = r'''

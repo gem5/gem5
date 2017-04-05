@@ -1,6 +1,6 @@
 // -*- mode: c++ -*-
 
-// Copyright (c) 2012-2013, 2015 ARM Limited
+// Copyright (c) 2012-2013, 2015-2016 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -225,11 +225,16 @@ let {{
         AA64FpDestP%(destReg)d_uw = gtoh(destReg.regs[%(reg)d]);
         ''' % { "reg" : reg, "destReg": destReg }
             destReg += 1
-        if destCnt < 4 and not hi:  # zero upper half
-            for reg in range(destCnt, 4):
-                eWalkCode += '''
-        AA64FpDestP%(reg)d_uw = 0;
-        ''' % { "reg" : reg }
+        if destCnt < 4:
+            if hi:  # Explicitly merge with lower half
+                for reg in range(0, destCnt):
+                    eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = AA64FpDestP%(reg)d_uw;''' % { "reg" : reg }
+            else:  # zero upper half
+                for reg in range(destCnt, 4):
+                    eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = 0;''' % { "reg" : reg }
+
         iop = InstObjParams(name, Name,
                             "DataX2RegImmOp" if byElem else "DataX2RegOp",
                             { "code": eWalkCode,
@@ -429,11 +434,16 @@ let {{
         AA64FpDestP%(destReg)d_uw = gtoh(destReg.regs[%(reg)d]);
         ''' % { "reg" : reg, "destReg": destReg }
             destReg += 1
-        if not hi:
+        if hi:
+            for reg in range(0, 2):  # Explicitly merge with the lower half
+                eWalkCode += '''
+        AA64FpDestP%(reg)d_uw = AA64FpDestP%(reg)d_uw;''' % { "reg" : reg }
+        else:
             for reg in range(2, 4):  # zero upper half
                 eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
+
         iop = InstObjParams(name, Name,
                             "DataX1RegImmOp" if hasImm else "DataX1RegOp",
                             { "code": eWalkCode,

@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2012-2013 ARM Limited
+// Copyright (c) 2012-2013, 2016 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -123,9 +123,11 @@ let {{
     exec_output    += BasicExecute.subst(fmovCoreRegXIop);
 
     fmovUCoreRegXCode = vfp64EnabledCheckCode + '''
+        /* Explicitly merge with previous value */
+        AA64FpDestP0_uw = AA64FpDestP0_uw;
+        AA64FpDestP1_uw = AA64FpDestP1_uw;
         AA64FpDestP2_uw = XOp1_ud;
-        AA64FpDestP3_uw = XOp1_ud >> 32;
-    '''
+        AA64FpDestP3_uw = XOp1_ud >> 32;'''
     fmovUCoreRegXIop = InstObjParams("fmov", "FmovUCoreRegX", "FpRegRegOp",
                                     { "code": fmovUCoreRegXCode,
                                       "op_class": "FloatMiscOp" }, [])

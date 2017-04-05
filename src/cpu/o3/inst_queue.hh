@@ -543,10 +543,14 @@ class InstructionQueue
     Stats::Scalar intInstQueueWakeupAccesses;
     Stats::Scalar fpInstQueueReads;
     Stats::Scalar fpInstQueueWrites;
-    Stats::Scalar fpInstQueueWakeupQccesses;
+    Stats::Scalar fpInstQueueWakeupAccesses;
+    Stats::Scalar vecInstQueueReads;
+    Stats::Scalar vecInstQueueWrites;
+    Stats::Scalar vecInstQueueWakeupAccesses;
 
     Stats::Scalar intAluAccesses;
     Stats::Scalar fpAluAccesses;
+    Stats::Scalar vecAluAccesses;
 };
 
 #endif //__CPU_O3_INST_QUEUE_HH__

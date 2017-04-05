@@ -578,6 +578,11 @@ output exec {{
             return NoFault;
         }
     }
+    static inline Fault
+    checkVecEnableFault(CPU_EXEC_CONTEXT *xc)
+    {
+        return std::make_shared<VecDisabled>();
+    }
 }};
 
 

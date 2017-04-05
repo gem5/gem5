@@ -364,7 +364,7 @@ InstructionQueue<Impl>::regStats()
         .desc("Number of floating instruction queue writes")
         .flags(total);
 
-    fpInstQueueWakeupQccesses
+    fpInstQueueWakeupAccesses
         .name(name() + ".fp_inst_queue_wakeup_accesses")
         .desc("Number of floating instruction queue wakeup accesses")
         .flags(total);
@@ -567,7 +567,13 @@ template <class Impl>
 void
 InstructionQueue<Impl>::insert(DynInstPtr &new_inst)
 {
-    new_inst->isFloating() ? fpInstQueueWrites++ : intInstQueueWrites++;
+    if (new_inst->isFloating()) {
+        fpInstQueueWrites++;
+    } else if (new_inst->isVector()) {
+        vecInstQueueWrites++;
+    } else {
+        intInstQueueWrites++;
+    }
     // Make sure the instruction is valid
     assert(new_inst);
 
@@ -609,7 +615,13 @@ InstructionQueue<Impl>::insertNonSpec(DynInstPtr &new_inst)
 {
     // @todo: Clean up this code; can do it by setting inst as unable
     // to issue, then calling normal insert on the inst.
-    new_inst->isFloating() ? fpInstQueueWrites++ : intInstQueueWrites++;
+    if (new_inst->isFloating()) {
+        fpInstQueueWrites++;
+    } else if (new_inst->isVector()) {
+        vecInstQueueWrites++;
+    } else {
+        intInstQueueWrites++;
+    }
 
     assert(new_inst);
 
@@ -660,8 +672,10 @@ InstructionQueue<Impl>::getInstToExecute()
     assert(!instsToExecute.empty());
     DynInstPtr inst = instsToExecute.front();
     instsToExecute.pop_front();
-    if (inst->isFloating()){
+    if (inst->isFloating()) {
         fpInstQueueReads++;
+    } else if (inst->isVector()) {
+        vecInstQueueReads++;
     } else {
         intInstQueueReads++;
     }
@@ -783,7 +797,13 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
         DynInstPtr issuing_inst = readyInsts[op_class].top();
 
-        issuing_inst->isFloating() ? fpInstQueueReads++ : intInstQueueReads++;
+        if (issuing_inst->isFloating()) {
+            fpInstQueueReads++;
+        } else if (issuing_inst->isVector()) {
+            vecInstQueueReads++;
+        } else {
+            intInstQueueReads++;
+        }
 
         assert(issuing_inst->seqNum == (*order_it).oldestInst);
 
@@ -810,7 +830,13 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
         if (op_class != No_OpClass) {
             idx = fuPool->getUnit(op_class);
-            issuing_inst->isFloating() ? fpAluAccesses++ : intAluAccesses++;
+            if (issuing_inst->isFloating()) {
+                fpAluAccesses++;
+            } else if (issuing_inst->isVector()) {
+                vecAluAccesses++;
+            } else {
+                intAluAccesses++;
+            }
             if (idx > FUPool::NoFreeFU) {
                 op_latency = fuPool->getOpLatency(op_class);
             }
@@ -955,7 +981,9 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
 
     // The instruction queue here takes care of both floating and int ops
     if (completed_inst->isFloating()) {
-        fpInstQueueWakeupQccesses++;
+        fpInstQueueWakeupAccesses++;
+    } else if (completed_inst->isVector()) {
+        vecInstQueueWakeupAccesses++;
     } else {
         intInstQueueWakeupAccesses++;
     }
@@ -1189,7 +1217,13 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
            (*squash_it)->seqNum > squashedSeqNum[tid]) {
 
         DynInstPtr squashed_inst = (*squash_it);
-        squashed_inst->isFloating() ? fpInstQueueWrites++ : intInstQueueWrites++;
+        if (squashed_inst->isFloating()) {
+            fpInstQueueWrites++;
+        } else if (squashed_inst->isVector()) {
+            vecInstQueueWrites++;
+        } else {
+            intInstQueueWrites++;
+        }
 
         // Only handle the instruction if it actually is in the IQ and
         // hasn't already been squashed in the IQ.

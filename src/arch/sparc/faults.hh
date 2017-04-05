@@ -122,6 +122,7 @@ class PrivilegedOpcode : public SparcFault<PrivilegedOpcode> {};
 // class UnimplementedSTD : public SparcFault<UnimplementedSTD> {};
 
 class FpDisabled : public SparcFault<FpDisabled> {};
+class VecDisabled : public SparcFault<VecDisabled> {};
 
 class FpExceptionIEEE754 : public SparcFault<FpExceptionIEEE754> {};
 

@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010, 2012, 2014 ARM Limited
+// Copyright (c) 2010, 2012, 2014, 2016 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1150,7 +1150,7 @@ def template LoadRegConstructor {{
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
-        if (_dest == INTREG_PC && !isFloating()) {
+        if (_dest == INTREG_PC && !isFloating() && !isVector()) {
             IntRegIndex wbIndexReg = index;
             uops[0] = new %(acc_name)s(machInst, INTREG_UREG0, _base, _add,
                                        _shiftAmt, _shiftType, _index);
@@ -1187,7 +1187,7 @@ def template LoadRegConstructor {{
 
         }
 #else
-        if (_dest == INTREG_PC && !isFloating()) {
+        if (_dest == INTREG_PC && !isFloating() && !isVector()) {
             flags[IsControl] = true;
             flags[IsIndirectControl] = true;
             if (conditional)
@@ -1216,7 +1216,7 @@ def template LoadImmConstructor {{
 #if %(use_uops)d
         assert(numMicroops >= 2);
         uops = new StaticInstPtr[numMicroops];
-        if (_dest == INTREG_PC && !isFloating()) {
+        if (_dest == INTREG_PC && !isFloating() && !isVector()) {
             uops[0] = new %(acc_name)s(machInst, INTREG_UREG0, _base, _add,
                                    _imm);
             uops[0]->setDelayedCommit();
@@ -1250,7 +1250,7 @@ def template LoadImmConstructor {{
             uops[1]->setLastMicroop();
         }
 #else
-        if (_dest == INTREG_PC && !isFloating()) {
+        if (_dest == INTREG_PC && !isFloating() && !isVector()) {
             flags[IsControl] = true;
             flags[IsIndirectControl] = true;
             if (conditional)

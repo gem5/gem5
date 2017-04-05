@@ -517,6 +517,8 @@ class DefaultCommit
     Stats::Vector statComMembars;
     /** Total number of committed branches. */
     Stats::Vector statComBranches;
+    /** Total number of vector instructions */
+    Stats::Vector statComVector;
     /** Total number of floating point instructions */
     Stats::Vector statComFloating;
     /** Total number of integer instructions */
