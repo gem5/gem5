@@ -399,6 +399,7 @@ def install_git_style_hooks():
 
         if not git_hooks.exists():
             mkdir(git_hooks.get_abspath())
+            git_hooks.clear()
 
         abs_symlink_hooks = git_hooks.islink() and \
             os.path.isabs(os.readlink(git_hooks.get_abspath()))
