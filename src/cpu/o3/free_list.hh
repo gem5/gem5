@@ -183,11 +183,11 @@ class UnifiedFreeList
 inline void
 UnifiedFreeList::addReg(PhysRegIdPtr freed_reg)
 {
-    DPRINTF(FreeList,"Freeing register %i (%s).\n", freed_reg->regIdx,
-            RegClassStrings[freed_reg->regClass]);
+    DPRINTF(FreeList,"Freeing register %i (%s).\n", freed_reg->index(),
+            freed_reg->className());
     //Might want to add in a check for whether or not this register is
     //already in there.  A bit vector or something similar would be useful.
-    switch (freed_reg->regClass) {
+    switch (freed_reg->classValue()) {
         case IntRegClass:
             intList.addReg(freed_reg);
             break;
@@ -199,7 +199,7 @@ UnifiedFreeList::addReg(PhysRegIdPtr freed_reg)
             break;
         default:
             panic("Unexpected RegClass (%s)",
-                                   RegClassStrings[freed_reg->regClass]);
+                                   freed_reg->className());
     }
 
     // These assert conditions ensure that the number of free

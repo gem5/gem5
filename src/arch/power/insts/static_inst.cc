@@ -38,15 +38,12 @@ using namespace PowerISA;
 void
 PowerStaticInst::printReg(std::ostream &os, RegId reg) const
 {
-    switch (reg.regClass) {
-      case IntRegClass:
-        ccprintf(os, "r%d", reg.regIdx);
-        break;
-      case FloatRegClass:
-        ccprintf(os, "f%d", reg.regIdx);
-        break;
-      case MiscRegClass:
-        switch (reg.regIdx) {
+    if (reg.isIntReg())
+        ccprintf(os, "r%d", reg.index());
+    else if (reg.isFloatReg())
+        ccprintf(os, "f%d", reg.index());
+    else if (reg.isMiscReg())
+        switch (reg.index()) {
           case 0: ccprintf(os, "cr"); break;
           case 1: ccprintf(os, "xer"); break;
           case 2: ccprintf(os, "lr"); break;
@@ -54,9 +51,8 @@ PowerStaticInst::printReg(std::ostream &os, RegId reg) const
           default: ccprintf(os, "unknown_reg");
             break;
         }
-      case CCRegClass:
+    else if (reg.isCCReg())
         panic("printReg: POWER does not implement CCRegClass\n");
-    }
 }
 
 std::string

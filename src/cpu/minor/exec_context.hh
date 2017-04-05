@@ -124,51 +124,51 @@ class ExecContext : public ::ExecContext
     IntReg
     readIntRegOperand(const StaticInst *si, int idx) override
     {
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == IntRegClass);
-        return thread.readIntReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isIntReg());
+        return thread.readIntReg(reg.index());
     }
 
     TheISA::FloatReg
     readFloatRegOperand(const StaticInst *si, int idx) override
     {
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        return thread.readFloatReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isFloatReg());
+        return thread.readFloatReg(reg.index());
     }
 
     TheISA::FloatRegBits
     readFloatRegOperandBits(const StaticInst *si, int idx) override
     {
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        return thread.readFloatRegBits(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isFloatReg());
+        return thread.readFloatRegBits(reg.index());
     }
 
     void
     setIntRegOperand(const StaticInst *si, int idx, IntReg val) override
     {
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == IntRegClass);
-        thread.setIntReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isIntReg());
+        thread.setIntReg(reg.index(), val);
     }
 
     void
     setFloatRegOperand(const StaticInst *si, int idx,
         TheISA::FloatReg val) override
     {
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        thread.setFloatReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isFloatReg());
+        thread.setFloatReg(reg.index(), val);
     }
 
     void
     setFloatRegOperandBits(const StaticInst *si, int idx,
         TheISA::FloatRegBits val) override
     {
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        thread.setFloatRegBits(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isFloatReg());
+        thread.setFloatRegBits(reg.index(), val);
     }
 
     bool
@@ -216,18 +216,18 @@ class ExecContext : public ::ExecContext
     TheISA::MiscReg
     readMiscRegOperand(const StaticInst *si, int idx) override
     {
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == MiscRegClass);
-        return thread.readMiscReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isMiscReg());
+        return thread.readMiscReg(reg.index());
     }
 
     void
     setMiscRegOperand(const StaticInst *si, int idx,
         const TheISA::MiscReg &val) override
     {
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == MiscRegClass);
-        return thread.setMiscReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isMiscReg());
+        return thread.setMiscReg(reg.index(), val);
     }
 
     Fault
@@ -279,17 +279,17 @@ class ExecContext : public ::ExecContext
     TheISA::CCReg
     readCCRegOperand(const StaticInst *si, int idx) override
     {
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == CCRegClass);
-        return thread.readCCReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isCCReg());
+        return thread.readCCReg(reg.index());
     }
 
     void
     setCCRegOperand(const StaticInst *si, int idx, TheISA::CCReg val) override
     {
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == CCRegClass);
-        thread.setCCReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isCCReg());
+        thread.setCCReg(reg.index(), val);
     }
 
     void
@@ -320,46 +320,46 @@ class ExecContext : public ::ExecContext
 
     /* MIPS: other thread register reading/writing */
     uint64_t
-    readRegOtherThread(RegId reg, ThreadID tid = InvalidThreadID)
+    readRegOtherThread(const RegId& reg, ThreadID tid = InvalidThreadID)
     {
         SimpleThread *other_thread = (tid == InvalidThreadID
             ? &thread : cpu.threads[tid]);
 
-        switch(reg.regClass) {
+        switch (reg.classValue()) {
             case IntRegClass:
-                return other_thread->readIntReg(reg.regIdx);
+                return other_thread->readIntReg(reg.index());
                 break;
             case FloatRegClass:
-                return other_thread->readFloatRegBits(reg.regIdx);
+                return other_thread->readFloatRegBits(reg.index());
                 break;
             case MiscRegClass:
-                return other_thread->readMiscReg(reg.regIdx);
+                return other_thread->readMiscReg(reg.index());
             default:
                 panic("Unexpected reg class! (%s)",
-                      RegClassStrings[reg.regClass]);
+                      reg.className());
                 return 0;
         }
     }
 
     void
-    setRegOtherThread(RegId reg, const TheISA::MiscReg &val,
+    setRegOtherThread(const RegId& reg, const TheISA::MiscReg &val,
         ThreadID tid = InvalidThreadID)
     {
         SimpleThread *other_thread = (tid == InvalidThreadID
             ? &thread : cpu.threads[tid]);
 
-         switch(reg.regClass) {
+        switch (reg.classValue()) {
             case IntRegClass:
-                return other_thread->setIntReg(reg.regIdx, val);
+                return other_thread->setIntReg(reg.index(), val);
                 break;
             case FloatRegClass:
-                return other_thread->setFloatRegBits(reg.regIdx, val);
+                return other_thread->setFloatRegBits(reg.index(), val);
                 break;
             case MiscRegClass:
-                return other_thread->setMiscReg(reg.regIdx, val);
+                return other_thread->setMiscReg(reg.index(), val);
             default:
                 panic("Unexpected reg class! (%s)",
-                      RegClassStrings[reg.regClass]);
+                      reg.className());
         }
     }
 

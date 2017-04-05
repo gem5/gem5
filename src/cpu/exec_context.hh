@@ -287,9 +287,9 @@ class ExecContext {
      */
 
 #if THE_ISA == MIPS_ISA
-    virtual MiscReg readRegOtherThread(RegId reg,
+    virtual MiscReg readRegOtherThread(const RegId& reg,
                                        ThreadID tid = InvalidThreadID) = 0;
-    virtual void setRegOtherThread(RegId reg, MiscReg val,
+    virtual void setRegOtherThread(const RegId& reg, MiscReg val,
                                    ThreadID tid = InvalidThreadID) = 0;
 #endif
 

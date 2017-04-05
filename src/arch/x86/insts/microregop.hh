@@ -64,7 +64,7 @@ namespace X86ISA
                 OpClass __opClass) :
             X86MicroopBase(_machInst, mnem, _instMnem, setFlags,
                     __opClass),
-            src1(_src1.regIdx), dest(_dest.regIdx),
+            src1(_src1.index()), dest(_dest.index()),
             dataSize(_dataSize), ext(_ext)
         {
             foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
@@ -90,7 +90,7 @@ namespace X86ISA
             RegOpBase(_machInst, mnem, _instMnem, setFlags,
                     _src1, _dest, _dataSize, _ext,
                     __opClass),
-            src2(_src2.regIdx)
+            src2(_src2.index())
         {
         }
 

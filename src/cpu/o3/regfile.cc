@@ -89,21 +89,21 @@ PhysRegFile::initFreeList(UnifiedFreeList *freeList)
 
     // The initial batch of registers are the integer ones
     for (reg_idx = 0; reg_idx < numPhysicalIntRegs; reg_idx++) {
-        assert(intRegIds[reg_idx].regIdx == reg_idx);
+        assert(intRegIds[reg_idx].index() == reg_idx);
         freeList->addIntReg(&intRegIds[reg_idx]);
     }
 
     // The next batch of the registers are the floating-point physical
     // registers; put them onto the floating-point free list.
     for (reg_idx = 0; reg_idx < numPhysicalFloatRegs; reg_idx++) {
-        assert(floatRegIds[reg_idx].regIdx == reg_idx);
+        assert(floatRegIds[reg_idx].index() == reg_idx);
         freeList->addFloatReg(&floatRegIds[reg_idx]);
     }
 
     // The rest of the registers are the condition-code physical
     // registers; put them onto the condition-code free list.
     for (reg_idx = 0; reg_idx < numPhysicalCCRegs; reg_idx++) {
-        assert(ccRegIds[reg_idx].regIdx == reg_idx);
+        assert(ccRegIds[reg_idx].index() == reg_idx);
         freeList->addCCReg(&ccRegIds[reg_idx]);
     }
 }

@@ -383,7 +383,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Returns the flattened register index of the i'th destination
      *  register.
      */
-    RegId flattenedDestRegIdx(int idx) const
+    const RegId& flattenedDestRegIdx(int idx) const
     {
         return _flatDestRegIdx[idx];
     }
@@ -419,7 +419,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Flattens a destination architectural register index into a logical
      * index.
      */
-    void flattenDestReg(int idx, RegId flattened_dest)
+    void flattenDestReg(int idx, const RegId& flattened_dest)
     {
         _flatDestRegIdx[idx] = flattened_dest;
     }
@@ -601,10 +601,10 @@ class BaseDynInst : public ExecContext, public RefCounted
     int8_t numCCDestRegs() const { return staticInst->numCCDestRegs(); }
 
     /** Returns the logical register index of the i'th destination register. */
-    RegId destRegIdx(int i) const { return staticInst->destRegIdx(i); }
+    const RegId& destRegIdx(int i) const { return staticInst->destRegIdx(i); }
 
     /** Returns the logical register index of the i'th source register. */
-    RegId srcRegIdx(int i) const { return staticInst->srcRegIdx(i); }
+    const RegId& srcRegIdx(int i) const { return staticInst->srcRegIdx(i); }
 
     /** Pops a result off the instResult queue */
     template <class T>

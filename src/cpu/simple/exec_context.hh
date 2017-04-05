@@ -165,27 +165,27 @@ class SimpleExecContext : public ExecContext {
     IntReg readIntRegOperand(const StaticInst *si, int idx) override
     {
         numIntRegReads++;
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == IntRegClass);
-        return thread->readIntReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isIntReg());
+        return thread->readIntReg(reg.index());
     }
 
     /** Sets an integer register to a value. */
     void setIntRegOperand(const StaticInst *si, int idx, IntReg val) override
     {
         numIntRegWrites++;
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == IntRegClass);
-        thread->setIntReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isIntReg());
+        thread->setIntReg(reg.index(), val);
     }
 
     /** Reads a floating point register of single register width. */
     FloatReg readFloatRegOperand(const StaticInst *si, int idx) override
     {
         numFpRegReads++;
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        return thread->readFloatReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isFloatReg());
+        return thread->readFloatReg(reg.index());
     }
 
     /** Reads a floating point register in its binary format, instead
@@ -193,9 +193,9 @@ class SimpleExecContext : public ExecContext {
     FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx) override
     {
         numFpRegReads++;
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        return thread->readFloatRegBits(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isFloatReg());
+        return thread->readFloatRegBits(reg.index());
     }
 
     /** Sets a floating point register of single width to a value. */
@@ -203,9 +203,9 @@ class SimpleExecContext : public ExecContext {
                             FloatReg val) override
     {
         numFpRegWrites++;
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        thread->setFloatReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isFloatReg());
+        thread->setFloatReg(reg.index(), val);
     }
 
     /** Sets the bits of a floating point register of single width
@@ -214,42 +214,42 @@ class SimpleExecContext : public ExecContext {
                                 FloatRegBits val) override
     {
         numFpRegWrites++;
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        thread->setFloatRegBits(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isFloatReg());
+        thread->setFloatRegBits(reg.index(), val);
     }
 
     CCReg readCCRegOperand(const StaticInst *si, int idx) override
     {
         numCCRegReads++;
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == CCRegClass);
-        return thread->readCCReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isCCReg());
+        return thread->readCCReg(reg.index());
     }
 
     void setCCRegOperand(const StaticInst *si, int idx, CCReg val) override
     {
         numCCRegWrites++;
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == CCRegClass);
-        thread->setCCReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isCCReg());
+        thread->setCCReg(reg.index(), val);
     }
 
     MiscReg readMiscRegOperand(const StaticInst *si, int idx) override
     {
         numIntRegReads++;
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == MiscRegClass);
-        return thread->readMiscReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isMiscReg());
+        return thread->readMiscReg(reg.index());
     }
 
     void setMiscRegOperand(const StaticInst *si, int idx,
                            const MiscReg &val) override
     {
         numIntRegWrites++;
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == MiscRegClass);
-        thread->setMiscReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isMiscReg());
+        thread->setMiscReg(reg.index(), val);
     }
 
     /**
@@ -411,14 +411,15 @@ class SimpleExecContext : public ExecContext {
     }
 
 #if THE_ISA == MIPS_ISA
-    MiscReg readRegOtherThread(RegId reg, ThreadID tid = InvalidThreadID)
+    MiscReg readRegOtherThread(const RegId& reg,
+                               ThreadID tid = InvalidThreadID)
         override
     {
         panic("Simple CPU models do not support multithreaded "
               "register access.");
     }
 
-    void setRegOtherThread(RegId reg, MiscReg val,
+    void setRegOtherThread(const RegId& reg, MiscReg val,
                            ThreadID tid = InvalidThreadID) override
     {
         panic("Simple CPU models do not support multithreaded "

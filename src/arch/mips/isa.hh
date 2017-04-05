@@ -37,6 +37,7 @@
 
 #include "arch/mips/registers.hh"
 #include "arch/mips/types.hh"
+#include "cpu/reg_class.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 
@@ -164,6 +165,8 @@ namespace MipsISA
         const Params *params() const;
 
         ISA(Params *p);
+
+        RegId flattenRegId(const RegId& regId) const { return regId; }
 
         int
         flattenIntIndex(int reg) const

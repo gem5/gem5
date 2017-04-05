@@ -70,13 +70,12 @@ output decoder {{
     std::string
     RiscvStaticInst::regName(RegId reg) const
     {
-        switch (reg.regClass) {
-          case IntRegClass:
-            return std::string(RegisterNames[reg.regIdx]);
-          case FloatRegClass:
-            return std::string("f") + std::to_string(reg.regIdx);
-          default:
-            return csprintf("unknown[%i/%i]", reg.regClass, reg.regIdx);
+        if (reg.isIntReg()) {
+            return std::string(RegisterNames[reg.index()]);
+        } else if (reg.isFloatReg()) {
+            return std::string("f") + std::to_string(reg.index());
+        } else {
+            return csprintf("%s{%i}", reg.className(), reg.index());
         }
     }
 }};

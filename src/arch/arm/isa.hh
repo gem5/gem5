@@ -177,6 +177,22 @@ namespace ArmISA
         void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
         void setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc);
 
+        RegId
+        flattenRegId(const RegId& regId) const
+        {
+            switch (regId.classValue()) {
+              case IntRegClass:
+                return RegId(IntRegClass, flattenIntIndex(regId.index()));
+              case FloatRegClass:
+                return RegId(FloatRegClass, flattenFloatIndex(regId.index()));
+              case CCRegClass:
+                return RegId(CCRegClass, flattenCCIndex(regId.index()));
+              case MiscRegClass:
+                return RegId(MiscRegClass, flattenMiscIndex(regId.index()));
+            }
+            return RegId();
+        }
+
         int
         flattenIntIndex(int reg) const
         {

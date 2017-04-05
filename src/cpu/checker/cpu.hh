@@ -213,31 +213,31 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     IntReg readIntRegOperand(const StaticInst *si, int idx) override
     {
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == IntRegClass);
-        return thread->readIntReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isIntReg());
+        return thread->readIntReg(reg.index());
     }
 
     FloatReg readFloatRegOperand(const StaticInst *si, int idx) override
     {
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        return thread->readFloatReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isFloatReg());
+        return thread->readFloatReg(reg.index());
     }
 
     FloatRegBits readFloatRegOperandBits(const StaticInst *si,
                                          int idx) override
     {
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        return thread->readFloatRegBits(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isFloatReg());
+        return thread->readFloatRegBits(reg.index());
     }
 
     CCReg readCCRegOperand(const StaticInst *si, int idx) override
     {
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == CCRegClass);
-        return thread->readCCReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isCCReg());
+        return thread->readCCReg(reg.index());
     }
 
     template <class T>
@@ -251,35 +251,35 @@ class CheckerCPU : public BaseCPU, public ExecContext
     void setIntRegOperand(const StaticInst *si, int idx,
                           IntReg val) override
     {
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == IntRegClass);
-        thread->setIntReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isIntReg());
+        thread->setIntReg(reg.index(), val);
         setResult<uint64_t>(val);
     }
 
     void setFloatRegOperand(const StaticInst *si, int idx,
                             FloatReg val) override
     {
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        thread->setFloatReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isFloatReg());
+        thread->setFloatReg(reg.index(), val);
         setResult<double>(val);
     }
 
     void setFloatRegOperandBits(const StaticInst *si, int idx,
                                 FloatRegBits val) override
     {
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == FloatRegClass);
-        thread->setFloatRegBits(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isFloatReg());
+        thread->setFloatRegBits(reg.index(), val);
         setResult<uint64_t>(val);
     }
 
     void setCCRegOperand(const StaticInst *si, int idx, CCReg val) override
     {
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == CCRegClass);
-        thread->setCCReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isCCReg());
+        thread->setCCReg(reg.index(), val);
         setResult<uint64_t>(val);
     }
 
@@ -327,27 +327,28 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     MiscReg readMiscRegOperand(const StaticInst *si, int idx) override
     {
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == MiscRegClass);
-        return thread->readMiscReg(reg.regIdx);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isMiscReg());
+        return thread->readMiscReg(reg.index());
     }
 
     void setMiscRegOperand(const StaticInst *si, int idx,
                            const MiscReg &val) override
     {
-        RegId reg = si->destRegIdx(idx);
-        assert(reg.regClass == MiscRegClass);
-        return this->setMiscReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isMiscReg());
+        return this->setMiscReg(reg.index(), val);
     }
 
 #if THE_ISA == MIPS_ISA
-    MiscReg readRegOtherThread(RegId misc_reg, ThreadID tid) override
+    MiscReg readRegOtherThread(const RegId& misc_reg, ThreadID tid) override
     {
         panic("MIPS MT not defined for CheckerCPU.\n");
         return 0;
     }
 
-    void setRegOtherThread(RegId misc_reg, MiscReg val, ThreadID tid) override
+    void setRegOtherThread(const RegId& misc_reg, MiscReg val,
+                               ThreadID tid) override
     {
         panic("MIPS MT not defined for CheckerCPU.\n");
     }

@@ -130,7 +130,7 @@ output decoder {{
     Jump::branchTarget(ThreadContext *tc) const
     {
         PCState pc = tc->pcState();
-        uint64_t Rb = tc->readIntReg(_srcRegIdx[0].regIdx);
+        uint64_t Rb = tc->readIntReg(_srcRegIdx[0].index());
         pc.set((Rb & ~3) | (pc.pc() & 1));
         return pc;
     }

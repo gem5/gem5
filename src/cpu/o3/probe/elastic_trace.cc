@@ -242,8 +242,8 @@ ElasticTrace::updateRegDep(const DynInstPtr &dyn_inst)
         PhysRegIdPtr src_reg = dyn_inst->renamedSrcRegIdx(src_idx);
         DPRINTFR(ElasticTrace, "[sn:%lli] Check map for src reg"
                  " %i (%s)\n", seq_num,
-                 src_reg->regIdx, RegClassStrings[src_reg->regClass]);
-        auto itr_last_writer = physRegDepMap.find(src_reg->flatIdx);
+                 src_reg->index(), src_reg->className());
+        auto itr_last_writer = physRegDepMap.find(src_reg->flatIndex());
         if (itr_last_writer != physRegDepMap.end()) {
             InstSeqNum last_writer = itr_last_writer->second;
             // Additionally the dependency distance is kept less than the window
@@ -263,16 +263,16 @@ ElasticTrace::updateRegDep(const DynInstPtr &dyn_inst)
     for (int dest_idx = 0; dest_idx < max_regs; dest_idx++) {
         // For data dependency tracking the register must be an int, float or
         // CC register and not a Misc register.
-        RegId dest_reg = dyn_inst->destRegIdx(dest_idx);
-        if (dest_reg.isRenameable() &&
+        const RegId& dest_reg = dyn_inst->destRegIdx(dest_idx);
+        if (!dest_reg.isMiscReg() &&
             !dest_reg.isZeroReg()) {
             // Get the physical register index of the i'th destination
             // register.
             PhysRegIdPtr phys_dest_reg = dyn_inst->renamedDestRegIdx(dest_idx);
             DPRINTFR(ElasticTrace, "[sn:%lli] Update map for dest reg"
-                     " %i (%s)\n", seq_num, dest_reg.regIdx,
-                     RegClassStrings[dest_reg.regClass]);
-            physRegDepMap[phys_dest_reg->flatIdx] = seq_num;
+                     " %i (%s)\n", seq_num, dest_reg.index(),
+                     dest_reg.className());
+            physRegDepMap[phys_dest_reg->flatIndex()] = seq_num;
         }
     }
     maxPhysRegDepMapSize = std::max(physRegDepMap.size(),

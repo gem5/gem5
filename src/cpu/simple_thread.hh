@@ -401,28 +401,10 @@ class SimpleThread : public ThreadState
         return isa->setMiscReg(misc_reg, val, tc);
     }
 
-    int
-    flattenIntIndex(int reg)
+    RegId
+    flattenRegId(const RegId& regId) const
     {
-        return isa->flattenIntIndex(reg);
-    }
-
-    int
-    flattenFloatIndex(int reg)
-    {
-        return isa->flattenFloatIndex(reg);
-    }
-
-    int
-    flattenCCIndex(int reg)
-    {
-        return isa->flattenCCIndex(reg);
-    }
-
-    int
-    flattenMiscIndex(int reg)
-    {
-        return isa->flattenMiscIndex(reg);
+        return isa->flattenRegId(regId);
     }
 
     unsigned readStCondFailures() { return storeCondFailures; }

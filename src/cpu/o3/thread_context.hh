@@ -175,37 +175,47 @@ class O3ThreadContext : public ThreadContext
     virtual void clearArchRegs();
 
     /** Reads an integer register. */
+    virtual uint64_t readReg(int reg_idx) {
+        return readIntRegFlat(flattenRegId(RegId(IntRegClass,
+                                                 reg_idx)).index());
+    }
     virtual uint64_t readIntReg(int reg_idx) {
-        return readIntRegFlat(flattenIntIndex(reg_idx));
+        return readIntRegFlat(flattenRegId(RegId(IntRegClass,
+                                                 reg_idx)).index());
     }
 
     virtual FloatReg readFloatReg(int reg_idx) {
-        return readFloatRegFlat(flattenFloatIndex(reg_idx));
+        return readFloatRegFlat(flattenRegId(RegId(FloatRegClass,
+                                                 reg_idx)).index());
     }
 
     virtual FloatRegBits readFloatRegBits(int reg_idx) {
-        return readFloatRegBitsFlat(flattenFloatIndex(reg_idx));
+        return readFloatRegBitsFlat(flattenRegId(RegId(FloatRegClass,
+                                                 reg_idx)).index());
     }
 
     virtual CCReg readCCReg(int reg_idx) {
-        return readCCRegFlat(flattenCCIndex(reg_idx));
+        return readCCRegFlat(flattenRegId(RegId(CCRegClass,
+                                                 reg_idx)).index());
     }
 
     /** Sets an integer register to a value. */
     virtual void setIntReg(int reg_idx, uint64_t val) {
-        setIntRegFlat(flattenIntIndex(reg_idx), val);
+        setIntRegFlat(flattenRegId(RegId(IntRegClass, reg_idx)).index(), val);
     }
 
     virtual void setFloatReg(int reg_idx, FloatReg val) {
-        setFloatRegFlat(flattenFloatIndex(reg_idx), val);
+        setFloatRegFlat(flattenRegId(RegId(FloatRegClass,
+                                           reg_idx)).index(), val);
     }
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val) {
-        setFloatRegBitsFlat(flattenFloatIndex(reg_idx), val);
+        setFloatRegBitsFlat(flattenRegId(RegId(FloatRegClass,
+                                               reg_idx)).index(), val);
     }
 
     virtual void setCCReg(int reg_idx, CCReg val) {
-        setCCRegFlat(flattenCCIndex(reg_idx), val);
+        setCCRegFlat(flattenRegId(RegId(CCRegClass, reg_idx)).index(), val);
     }
 
     /** Reads this thread's PC state. */
@@ -245,10 +255,7 @@ class O3ThreadContext : public ThreadContext
      * write might have as defined by the architecture. */
     virtual void setMiscReg(int misc_reg, const MiscReg &val);
 
-    virtual int flattenIntIndex(int reg);
-    virtual int flattenFloatIndex(int reg);
-    virtual int flattenCCIndex(int reg);
-    virtual int flattenMiscIndex(int reg);
+    virtual RegId flattenRegId(const RegId& regId) const;
 
     /** Returns the number of consecutive store conditional failures. */
     // @todo: Figure out where these store cond failures should go.

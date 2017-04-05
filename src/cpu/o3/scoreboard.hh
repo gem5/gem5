@@ -80,14 +80,14 @@ class Scoreboard
     /** Checks if the register is ready. */
     bool getReg(PhysRegIdPtr phys_reg) const
     {
-        assert(phys_reg->flatIdx < numPhysRegs);
+        assert(phys_reg->flatIndex() < numPhysRegs);
 
         if (phys_reg->isFixedMapping()) {
             // Fixed mapping regs are always ready
             return true;
         }
 
-        bool ready = regScoreBoard[phys_reg->flatIdx];
+        bool ready = regScoreBoard[phys_reg->flatIndex()];
 
         if (phys_reg->isZeroReg())
             assert(ready);
@@ -98,7 +98,7 @@ class Scoreboard
     /** Sets the register as ready. */
     void setReg(PhysRegIdPtr phys_reg)
     {
-        assert(phys_reg->flatIdx < numPhysRegs);
+        assert(phys_reg->flatIndex() < numPhysRegs);
 
         if (phys_reg->isFixedMapping()) {
             // Fixed mapping regs are always ready, ignore attempts to change
@@ -106,16 +106,16 @@ class Scoreboard
             return;
         }
 
-        DPRINTF(Scoreboard, "Setting reg %i (%s) as ready\n", phys_reg->regIdx,
-                RegClassStrings[phys_reg->regClass]);
+        DPRINTF(Scoreboard, "Setting reg %i (%s) as ready\n",
+                phys_reg->index(), phys_reg->className());
 
-        regScoreBoard[phys_reg->flatIdx] = true;
+        regScoreBoard[phys_reg->flatIndex()] = true;
     }
 
     /** Sets the register as not ready. */
     void unsetReg(PhysRegIdPtr phys_reg)
     {
-        assert(phys_reg->flatIdx < numPhysRegs);
+        assert(phys_reg->flatIndex() < numPhysRegs);
 
         if (phys_reg->isFixedMapping()) {
             // Fixed mapping regs are always ready, ignore attempts to
@@ -127,7 +127,7 @@ class Scoreboard
         if (phys_reg->isZeroReg())
             return;
 
-        regScoreBoard[phys_reg->flatIdx] = false;
+        regScoreBoard[phys_reg->flatIndex()] = false;
     }
 
 };

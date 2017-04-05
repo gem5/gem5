@@ -210,7 +210,7 @@ output decoder {{
     Jump::branchTarget(ThreadContext *tc) const
     {
         PCState pc = tc->pcState();
-        IntReg Rs1 = tc->readIntReg(_srcRegIdx[0].regIdx);
+        IntReg Rs1 = tc->readIntReg(_srcRegIdx[0].index());
         pc.set((Rs1 + imm)&~0x1);
         return pc;
     }

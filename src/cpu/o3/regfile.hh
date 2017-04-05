@@ -135,8 +135,8 @@ class PhysRegFile
         assert(phys_reg->isIntPhysReg());
 
         DPRINTF(IEW, "RegFile: Access to int register %i, has data "
-                "%#x\n", phys_reg->regIdx, intRegFile[phys_reg->regIdx]);
-        return intRegFile[phys_reg->regIdx];
+                "%#x\n", phys_reg->index(), intRegFile[phys_reg->index()]);
+        return intRegFile[phys_reg->index()];
     }
 
     /** Reads a floating point register (double precision). */
@@ -145,20 +145,20 @@ class PhysRegFile
         assert(phys_reg->isFloatPhysReg());
 
         DPRINTF(IEW, "RegFile: Access to float register %i, has "
-                "data %#x\n", phys_reg->regIdx,
-                floatRegFile[phys_reg->regIdx].q);
+                "data %#x\n", phys_reg->index(),
+                floatRegFile[phys_reg->index()].q);
 
-        return floatRegFile[phys_reg->regIdx].d;
+        return floatRegFile[phys_reg->index()].d;
     }
 
     FloatRegBits readFloatRegBits(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->isFloatPhysReg());
 
-        FloatRegBits floatRegBits = floatRegFile[phys_reg->regIdx].q;
+        FloatRegBits floatRegBits = floatRegFile[phys_reg->index()].q;
 
         DPRINTF(IEW, "RegFile: Access to float register %i as int, "
-                "has data %#x\n", phys_reg->regIdx,
+                "has data %#x\n", phys_reg->index(),
                 (uint64_t)floatRegBits);
 
         return floatRegBits;
@@ -170,10 +170,10 @@ class PhysRegFile
         assert(phys_reg->isCCPhysReg());
 
         DPRINTF(IEW, "RegFile: Access to cc register %i, has "
-                "data %#x\n", phys_reg->regIdx,
-                ccRegFile[phys_reg->regIdx]);
+                "data %#x\n", phys_reg->index(),
+                ccRegFile[phys_reg->index()]);
 
-        return ccRegFile[phys_reg->regIdx];
+        return ccRegFile[phys_reg->index()];
     }
 
     /** Sets an integer register to the given value. */
@@ -182,10 +182,10 @@ class PhysRegFile
         assert(phys_reg->isIntPhysReg());
 
         DPRINTF(IEW, "RegFile: Setting int register %i to %#x\n",
-                phys_reg->regIdx, val);
+                phys_reg->index(), val);
 
         if (!phys_reg->isZeroReg())
-            intRegFile[phys_reg->regIdx] = val;
+            intRegFile[phys_reg->index()] = val;
     }
 
     /** Sets a double precision floating point register to the given value. */
@@ -194,10 +194,10 @@ class PhysRegFile
         assert(phys_reg->isFloatPhysReg());
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
-                phys_reg->regIdx, (uint64_t)val);
+                phys_reg->index(), (uint64_t)val);
 
         if (!phys_reg->isZeroReg())
-            floatRegFile[phys_reg->regIdx].d = val;
+            floatRegFile[phys_reg->index()].d = val;
     }
 
     void setFloatRegBits(PhysRegIdPtr phys_reg, FloatRegBits val)
@@ -205,9 +205,9 @@ class PhysRegFile
         assert(phys_reg->isFloatPhysReg());
 
         DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
-                phys_reg->regIdx, (uint64_t)val);
+                phys_reg->index(), (uint64_t)val);
 
-        floatRegFile[phys_reg->regIdx].q = val;
+        floatRegFile[phys_reg->index()].q = val;
     }
 
     /** Sets a condition-code register to the given value. */
@@ -216,9 +216,9 @@ class PhysRegFile
         assert(phys_reg->isCCPhysReg());
 
         DPRINTF(IEW, "RegFile: Setting cc register %i to %#x\n",
-                phys_reg->regIdx, (uint64_t)val);
+                phys_reg->index(), (uint64_t)val);
 
-        ccRegFile[phys_reg->regIdx] = val;
+        ccRegFile[phys_reg->index()] = val;
     }
 };
 

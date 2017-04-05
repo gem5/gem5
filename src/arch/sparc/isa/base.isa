@@ -290,8 +290,8 @@ output decoder {{
             const int MaxLocal = 24;
             const int MaxInput = 32;
             const int MaxMicroReg = 40;
-            RegIndex reg_idx = reg.regIdx;
-            if (reg.regClass == IntRegClass) {
+            RegIndex reg_idx = reg.index();
+            if (reg.isIntReg()) {
                 // If we used a register from the next or previous window,
                 // take out the offset.
                 while (reg_idx >= MaxMicroReg)
@@ -336,7 +336,7 @@ output decoder {{
                         break;
                     }
                 }
-            } else if (reg.regClass == FloatRegClass) {
+            } else if (reg.isFloatReg()) {
                 ccprintf(os, "%%f%d", reg_idx);
             } else {
                 switch (reg_idx) {

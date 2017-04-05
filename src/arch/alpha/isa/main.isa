@@ -246,11 +246,11 @@ output decoder {{
     void
     AlphaStaticInst::printReg(std::ostream &os, RegId reg) const
     {
-        if (reg.regClass == IntRegClass) {
-            ccprintf(os, "r%d", reg.regIdx);
+        if (reg.isIntReg()) {
+            ccprintf(os, "r%d", reg.index());
         }
         else {
-            ccprintf(os, "f%d", reg.regIdx);
+            ccprintf(os, "f%d", reg.index());
         }
     }
 

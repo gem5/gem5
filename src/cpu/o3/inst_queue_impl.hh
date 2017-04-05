@@ -986,17 +986,17 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
         // handled by the IQ and thus have no dependency graph entry.
         if (dest_reg->isFixedMapping()) {
             DPRINTF(IQ, "Reg %d [%s] is part of a fix mapping, skipping\n",
-                    dest_reg->regIdx, RegClassStrings[dest_reg->regClass]);
+                    dest_reg->index(), dest_reg->className());
             continue;
         }
 
         DPRINTF(IQ, "Waking any dependents on register %i (%s).\n",
-                dest_reg->regIdx,
-                RegClassStrings[dest_reg->regClass]);
+                dest_reg->index(),
+                dest_reg->className());
 
         //Go through the dependency chain, marking the registers as
         //ready within the waiting instructions.
-        DynInstPtr dep_inst = dependGraph.pop(dest_reg->flatIdx);
+        DynInstPtr dep_inst = dependGraph.pop(dest_reg->flatIndex());
 
         while (dep_inst) {
             DPRINTF(IQ, "Waking up a dependent instruction, [sn:%lli] "
@@ -1010,18 +1010,18 @@ InstructionQueue<Impl>::wakeDependents(DynInstPtr &completed_inst)
 
             addIfReady(dep_inst);
 
-            dep_inst = dependGraph.pop(dest_reg->flatIdx);
+            dep_inst = dependGraph.pop(dest_reg->flatIndex());
 
             ++dependents;
         }
 
         // Reset the head node now that all of its dependents have
         // been woken up.
-        assert(dependGraph.empty(dest_reg->flatIdx));
-        dependGraph.clearInst(dest_reg->flatIdx);
+        assert(dependGraph.empty(dest_reg->flatIndex()));
+        dependGraph.clearInst(dest_reg->flatIndex());
 
         // Mark the scoreboard as having that register ready.
-        regScoreboard[dest_reg->flatIdx] = true;
+        regScoreboard[dest_reg->flatIndex()] = true;
     }
     return dependents;
 }
@@ -1233,7 +1233,8 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
 
                     if (!squashed_inst->isReadySrcRegIdx(src_reg_idx) &&
                         !src_reg->isFixedMapping()) {
-                        dependGraph.remove(src_reg->flatIdx, squashed_inst);
+                        dependGraph.remove(src_reg->flatIndex(),
+                                           squashed_inst);
                     }
 
 
@@ -1308,13 +1309,13 @@ InstructionQueue<Impl>::addToDependents(DynInstPtr &new_inst)
             // it be added to the dependency graph.
             if (src_reg->isFixedMapping()) {
                 continue;
-            } else if (!regScoreboard[src_reg->flatIdx]) {
+            } else if (!regScoreboard[src_reg->flatIndex()]) {
                 DPRINTF(IQ, "Instruction PC %s has src reg %i (%s) that "
                         "is being added to the dependency chain.\n",
-                        new_inst->pcState(), src_reg->regIdx,
-                        RegClassStrings[src_reg->regClass]);
+                        new_inst->pcState(), src_reg->index(),
+                        src_reg->className());
 
-                dependGraph.insert(src_reg->flatIdx, new_inst);
+                dependGraph.insert(src_reg->flatIndex(), new_inst);
 
                 // Change the return value to indicate that something
                 // was added to the dependency graph.
@@ -1322,8 +1323,8 @@ InstructionQueue<Impl>::addToDependents(DynInstPtr &new_inst)
             } else {
                 DPRINTF(IQ, "Instruction PC %s has src reg %i (%s) that "
                         "became ready before it reached the IQ.\n",
-                        new_inst->pcState(), src_reg->regIdx,
-                        RegClassStrings[src_reg->regClass]);
+                        new_inst->pcState(), src_reg->index(),
+                        src_reg->className());
                 // Mark a register ready within the instruction.
                 new_inst->markSrcRegReady(src_reg_idx);
             }
@@ -1355,17 +1356,17 @@ InstructionQueue<Impl>::addToProducers(DynInstPtr &new_inst)
             continue;
         }
 
-        if (!dependGraph.empty(dest_reg->flatIdx)) {
+        if (!dependGraph.empty(dest_reg->flatIndex())) {
             dependGraph.dump();
             panic("Dependency graph %i (%s) (flat: %i) not empty!",
-                  dest_reg->regIdx, RegClassStrings[dest_reg->regClass],
-                  dest_reg->flatIdx);
+                  dest_reg->index(), dest_reg->className(),
+                  dest_reg->flatIndex());
         }
 
-        dependGraph.setInst(dest_reg->flatIdx, new_inst);
+        dependGraph.setInst(dest_reg->flatIndex(), new_inst);
 
         // Mark the scoreboard to say it's not yet ready.
-        regScoreboard[dest_reg->flatIdx] = false;
+        regScoreboard[dest_reg->flatIndex()] = false;
     }
 }
 

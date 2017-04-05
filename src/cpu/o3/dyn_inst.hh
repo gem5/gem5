@@ -123,7 +123,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
   public:
 #if TRACING_ON
     /** Tick records used for the pipeline activity viewer. */
-    Tick fetchTick;	     // instruction fetch is completed.
+    Tick fetchTick;      // instruction fetch is completed.
     int32_t decodeTick;  // instruction enters decode phase
     int32_t renameTick;  // instruction enters rename phase
     int32_t dispatchTick;
@@ -170,9 +170,9 @@ class BaseO3DynInst : public BaseDynInst<Impl>
      */
     TheISA::MiscReg readMiscRegOperand(const StaticInst *si, int idx)
     {
-        RegId reg = si->srcRegIdx(idx);
-        assert(reg.regClass == MiscRegClass);
-        return this->cpu->readMiscReg(reg.regIdx, this->threadNumber);
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isMiscReg());
+        return this->cpu->readMiscReg(reg.index(), this->threadNumber);
     }
 
     /** Sets a misc. register, including any side-effects the write
@@ -181,9 +181,9 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     void setMiscRegOperand(const StaticInst *si, int idx,
                                      const MiscReg &val)
     {
-        RegId reg =  si->destRegIdx(idx);
-        assert(reg.regClass == MiscRegClass);
-        setMiscReg(reg.regIdx, val);
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isMiscReg());
+        setMiscReg(reg.index(), val);
     }
 
     /** Called at the commit stage to update the misc. registers. */
@@ -208,9 +208,9 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 
         for (int idx = 0; idx < this->numDestRegs(); idx++) {
             PhysRegIdPtr prev_phys_reg = this->prevDestRegIdx(idx);
-            RegId original_dest_reg =
+            const RegId& original_dest_reg =
                 this->staticInst->destRegIdx(idx);
-            switch (original_dest_reg.regClass) {
+            switch (original_dest_reg.classValue()) {
               case IntRegClass:
                 this->setIntRegOperand(this->staticInst.get(), idx,
                                        this->cpu->readIntReg(prev_phys_reg));
@@ -300,13 +300,13 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     }
 
 #if THE_ISA == MIPS_ISA
-    MiscReg readRegOtherThread(RegId misc_reg, ThreadID tid)
+    MiscReg readRegOtherThread(const RegId& misc_reg, ThreadID tid)
     {
         panic("MIPS MT not defined for O3 CPU.\n");
         return 0;
     }
 
-    void setRegOtherThread(RegId misc_reg, MiscReg val, ThreadID tid)
+    void setRegOtherThread(const RegId& misc_reg, MiscReg val, ThreadID tid)
     {
         panic("MIPS MT not defined for O3 CPU.\n");
     }

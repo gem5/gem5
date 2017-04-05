@@ -52,47 +52,65 @@
 #include "cpu/inst_seq.hh"
 #include "sim/faults.hh"
 
-// Typedef for physical register index type. Although the Impl would be the
-// most likely location for this, there are a few classes that need this
-// typedef yet are not templated on the Impl. For now it will be defined here.
-typedef short int PhysRegIndex;
-// Physical register ID
-// Associate a physical register index to a register class and
-// so it is easy to track which type of register are used.
-// A flat index is also provided for when it is useful to have a unified
-// indexing (for the dependency graph and the scoreboard for example)
-struct PhysRegId {
-    RegClass regClass;
-    PhysRegIndex regIdx;
+/** Physical register index type.
+ * Although the Impl might be a better for this, but there are a few classes
+ * that need this typedef yet are not templated on the Impl.
+ */
+using PhysRegIndex = short int;
+
+/** Physical register ID.
+ * Like a register ID but physical. The inheritance is private because the
+ * only relationship between this types is functional, and it is done to
+ * prevent code replication. */
+class PhysRegId : private RegId {
+  private:
     PhysRegIndex flatIdx;
-    PhysRegId(RegClass _regClass, PhysRegIndex _regIdx,
+
+  public:
+    explicit PhysRegId() : RegId(IntRegClass, -1), flatIdx(-1) {}
+
+    /** Scalar PhysRegId constructor. */
+    explicit PhysRegId(RegClass _regClass, PhysRegIndex _regIdx,
               PhysRegIndex _flatIdx)
-        : regClass(_regClass), regIdx(_regIdx), flatIdx(_flatIdx)
+        : RegId(_regClass, _regIdx), flatIdx(_flatIdx)
     {}
 
+    /** Visible RegId methods */
+    /** @{ */
+    using RegId::index;
+    using RegId::classValue;
+    using RegId::isZeroReg;
+    using RegId::className;
+     /** @} */
+    /**
+     * Explicit forward methods, to prevent comparisons of PhysRegId with
+     * RegIds.
+     */
+    /** @{ */
+    bool operator<(const PhysRegId& that) const {
+        return RegId::operator<(that);
+    }
+
     bool operator==(const PhysRegId& that) const {
-        return regClass == that.regClass && regIdx == that.regIdx;
+        return RegId::operator==(that);
     }
 
     bool operator!=(const PhysRegId& that) const {
-        return !(*this==that);
+        return RegId::operator!=(that);
     }
-
-    bool isZeroReg() const
-    {
-        return (regIdx == TheISA::ZeroReg &&
-                (regClass == IntRegClass ||
-                 (THE_ISA == ALPHA_ISA && regClass == FloatRegClass)));
-    }
+    /** @} */
 
     /** @return true if it is an integer physical register. */
-    bool isIntPhysReg() const { return regClass == IntRegClass; }
+    bool isIntPhysReg() const { return isIntReg(); }
 
     /** @return true if it is a floating-point physical register. */
-    bool isFloatPhysReg() const { return regClass == FloatRegClass; }
+    bool isFloatPhysReg() const { return isFloatReg(); }
 
     /** @Return true if it is a  condition-code physical register. */
-    bool isCCPhysReg() const { return regClass == CCRegClass; }
+    bool isCCPhysReg() const { return isCCReg(); }
+
+    /** @Return true if it is a  condition-code physical register. */
+    bool isMiscPhysReg() const { return isMiscReg(); }
 
     /**
      * Returns true if this register is always associated to the same
@@ -100,8 +118,11 @@ struct PhysRegId {
      */
     bool isFixedMapping() const
     {
-        return regClass == MiscRegClass;
+        return !isRenameable();
     }
+
+    /** Flat index accessor */
+    const PhysRegIndex& flatIndex() const { return flatIdx; }
 };
 
 // PhysRegIds only need to be created once and then we can use the following

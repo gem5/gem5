@@ -250,19 +250,16 @@ class ThreadContext
 
     virtual void setMiscReg(int misc_reg, const MiscReg &val) = 0;
 
-    virtual int flattenIntIndex(int reg) = 0;
-    virtual int flattenFloatIndex(int reg) = 0;
-    virtual int flattenCCIndex(int reg) = 0;
-    virtual int flattenMiscIndex(int reg) = 0;
+    virtual RegId flattenRegId(const RegId& regId) const = 0;
 
     virtual uint64_t
-    readRegOtherThread(RegId misc_reg, ThreadID tid)
+    readRegOtherThread(const RegId& misc_reg, ThreadID tid)
     {
         return 0;
     }
 
     virtual void
-    setRegOtherThread(RegId misc_reg, const MiscReg &val, ThreadID tid)
+    setRegOtherThread(const RegId& misc_reg, const MiscReg &val, ThreadID tid)
     {
     }
 
@@ -291,7 +288,7 @@ class ThreadContext
      *
      * Some architectures have different registers visible in
      * different modes. Such architectures "flatten" a register (see
-     * flattenIntIndex() and flattenFloatIndex()) to map it into the
+     * flattenRegId()) to map it into the
      * gem5 register file. This interface provides a flat interface to
      * the underlying register file, which allows for example
      * serialization code to access all registers.
@@ -466,17 +463,8 @@ class ProxyThreadContext : public ThreadContext
     void setMiscReg(int misc_reg, const MiscReg &val)
     { return actualTC->setMiscReg(misc_reg, val); }
 
-    int flattenIntIndex(int reg)
-    { return actualTC->flattenIntIndex(reg); }
-
-    int flattenFloatIndex(int reg)
-    { return actualTC->flattenFloatIndex(reg); }
-
-    int flattenCCIndex(int reg)
-    { return actualTC->flattenCCIndex(reg); }
-
-    int flattenMiscIndex(int reg)
-    { return actualTC->flattenMiscIndex(reg); }
+    RegId flattenRegId(const RegId& regId) const
+    { return actualTC->flattenRegId(regId); }
 
     unsigned readStCondFailures()
     { return actualTC->readStCondFailures(); }

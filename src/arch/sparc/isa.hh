@@ -37,6 +37,7 @@
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/types.hh"
 #include "cpu/cpuevent.hh"
+#include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"
 
 class Checkpoint;
@@ -188,6 +189,22 @@ class ISA : public SimObject
     void setMiscRegNoEffect(int miscReg, const MiscReg val);
     void setMiscReg(int miscReg, const MiscReg val,
             ThreadContext *tc);
+
+    RegId
+    flattenRegId(const RegId& regId) const
+    {
+        switch (regId.classValue()) {
+          case IntRegClass:
+            return RegId(IntRegClass, flattenIntIndex(regId.index()));
+          case FloatRegClass:
+            return RegId(FloatRegClass, flattenFloatIndex(regId.index()));
+          case CCRegClass:
+            return RegId(CCRegClass, flattenCCIndex(regId.index()));
+          case MiscRegClass:
+            return RegId(MiscRegClass, flattenMiscIndex(regId.index()));
+        }
+        return regId;
+    }
 
     int
     flattenIntIndex(int reg) const

@@ -270,31 +270,10 @@ O3ThreadContext<Impl>::pcStateNoRecord(const TheISA::PCState &val)
 }
 
 template <class Impl>
-int
-O3ThreadContext<Impl>::flattenIntIndex(int reg)
+RegId
+O3ThreadContext<Impl>::flattenRegId(const RegId& regId) const
 {
-    return cpu->isa[thread->threadId()]->flattenIntIndex(reg);
-}
-
-template <class Impl>
-int
-O3ThreadContext<Impl>::flattenFloatIndex(int reg)
-{
-    return cpu->isa[thread->threadId()]->flattenFloatIndex(reg);
-}
-
-template <class Impl>
-int
-O3ThreadContext<Impl>::flattenCCIndex(int reg)
-{
-    return cpu->isa[thread->threadId()]->flattenCCIndex(reg);
-}
-
-template <class Impl>
-int
-O3ThreadContext<Impl>::flattenMiscIndex(int reg)
-{
-    return cpu->isa[thread->threadId()]->flattenMiscIndex(reg);
+    return cpu->isa[thread->threadId()]->flattenRegId(regId);
 }
 
 template <class Impl>

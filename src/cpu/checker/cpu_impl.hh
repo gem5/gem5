@@ -595,40 +595,40 @@ Checker<Impl>::copyResult(DynInstPtr &inst, uint64_t mismatch_val,
     // We've already popped one dest off the queue,
     // so do the fix-up then start with the next dest reg;
     if (start_idx >= 0) {
-        RegId idx = inst->destRegIdx(start_idx);
-        switch (idx.regClass) {
+        const RegId& idx = inst->destRegIdx(start_idx);
+        switch (idx.classValue()) {
           case IntRegClass:
-            thread->setIntReg(idx.regIdx, mismatch_val);
+            thread->setIntReg(idx.index(), mismatch_val);
             break;
           case FloatRegClass:
-            thread->setFloatRegBits(idx.regIdx, mismatch_val);
+            thread->setFloatRegBits(idx.index(), mismatch_val);
             break;
           case CCRegClass:
-            thread->setCCReg(idx.regIdx, mismatch_val);
+            thread->setCCReg(idx.index(), mismatch_val);
             break;
           case MiscRegClass:
-            thread->setMiscReg(idx.regIdx, mismatch_val);
+            thread->setMiscReg(idx.index(), mismatch_val);
             break;
         }
     }
     start_idx++;
     uint64_t res = 0;
     for (int i = start_idx; i < inst->numDestRegs(); i++) {
-        RegId idx = inst->destRegIdx(i);
+        const RegId& idx = inst->destRegIdx(i);
         inst->template popResult<uint64_t>(res);
-        switch (idx.regClass) {
+        switch (idx.classValue()) {
           case IntRegClass:
-            thread->setIntReg(idx.regIdx, res);
+            thread->setIntReg(idx.index(), res);
             break;
           case FloatRegClass:
-            thread->setFloatRegBits(idx.regIdx, res);
+            thread->setFloatRegBits(idx.index(), res);
             break;
           case CCRegClass:
-            thread->setCCReg(idx.regIdx, res);
+            thread->setCCReg(idx.index(), res);
             break;
           case MiscRegClass:
             // Try to get the proper misc register index for ARM here...
-            thread->setMiscReg(idx.regIdx, res);
+            thread->setMiscReg(idx.index(), res);
             break;
             // else Register is out of range...
         }

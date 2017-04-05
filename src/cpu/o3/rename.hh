@@ -298,7 +298,7 @@ class DefaultRename
      * register for that arch. register, and the new physical register.
      */
     struct RenameHistory {
-        RenameHistory(InstSeqNum _instSeqNum, RegId _archReg,
+        RenameHistory(InstSeqNum _instSeqNum, const RegId& _archReg,
                       PhysRegIdPtr _newPhysReg,
                       PhysRegIdPtr _prevPhysReg)
             : instSeqNum(_instSeqNum), archReg(_archReg),

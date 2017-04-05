@@ -84,7 +84,7 @@ output decoder {{
                 ccprintf(response, ", ");
             }
             ccprintf(response, "[");
-            if (_srcRegIdx[!store ? 0 : 1].regIdx != 0) {
+            if (_srcRegIdx[!store ? 0 : 1].index() != 0) {
                 printSrcReg(response, !store ? 0 : 1);
                 ccprintf(response, " + ");
             }
@@ -111,7 +111,7 @@ output decoder {{
                 ccprintf(response, ", ");
             }
             ccprintf(response, "[");
-            if (_srcRegIdx[!save ? 0 : 1].regIdx != 0) {
+            if (_srcRegIdx[!save ? 0 : 1].index() != 0) {
                 printReg(response, _srcRegIdx[!save ? 0 : 1]);
                 ccprintf(response, " + ");
             }

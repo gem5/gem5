@@ -328,7 +328,7 @@ let {{
 
     buildDataXImmInst("mrs", '''
         MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
-            flattenMiscIndex(op1);
+            flattenRegId(RegId(MiscRegClass, op1)).index();
         CPSR cpsr = Cpsr;
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
         %s
@@ -346,7 +346,7 @@ let {{
 
     buildDataXImmInst("msr", '''
         MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
-            flattenMiscIndex(dest);
+            flattenRegId(RegId(MiscRegClass, dest)).index();
         CPSR cpsr = Cpsr;
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
         %s
@@ -362,7 +362,8 @@ let {{
     ''')
 
     msrdczva_ea_code = '''
-        MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest);
+        MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->flattenRegId(
+                                   RegId(MiscRegClass, dest)).index();
         CPSR cpsr = Cpsr;
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
     '''
@@ -391,7 +392,8 @@ let {{
 
     buildDataXImmInst("msrSP", '''
         if (!canWriteAArch64SysReg(
-                (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest),
+                (MiscRegIndex) xc->tcBase()->flattenRegId(
+                   RegId(MiscRegClass, dest)).index(),
                 Scr64, Cpsr, xc->tcBase())) {
             return std::make_shared<UndefinedInstruction>(machInst, false,
                                                           mnemonic);
@@ -401,7 +403,8 @@ let {{
 
     buildDataXImmInst("msrDAIFSet", '''
         if (!canWriteAArch64SysReg(
-                (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest),
+                (MiscRegIndex) xc->tcBase()->flattenRegId(
+                   RegId(MiscRegClass, dest)).index(),
                 Scr64, Cpsr, xc->tcBase())) {
             return std::make_shared<UndefinedInstruction>(
                             machInst, 0, EC_TRAPPED_MSR_MRS_64,
@@ -414,7 +417,8 @@ let {{
 
     buildDataXImmInst("msrDAIFClr", '''
         if (!canWriteAArch64SysReg(
-                (MiscRegIndex) xc->tcBase()->flattenMiscIndex(dest),
+                (MiscRegIndex) xc->tcBase()->flattenRegId(
+                   RegId(MiscRegClass, dest)).index(),
                 Scr64, Cpsr, xc->tcBase())) {
             return std::make_shared<UndefinedInstruction>(
                                 machInst, 0, EC_TRAPPED_MSR_MRS_64,

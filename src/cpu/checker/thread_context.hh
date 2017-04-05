@@ -301,10 +301,9 @@ class CheckerThreadContext : public ThreadContext
         actualTC->setMiscReg(misc_reg, val);
     }
 
-    int flattenIntIndex(int reg) { return actualTC->flattenIntIndex(reg); }
-    int flattenFloatIndex(int reg) { return actualTC->flattenFloatIndex(reg); }
-    int flattenCCIndex(int reg) { return actualTC->flattenCCIndex(reg); }
-    int flattenMiscIndex(int reg) { return actualTC->flattenMiscIndex(reg); }
+    RegId flattenRegId(const RegId& regId) const {
+        return actualTC->flattenRegId(regId);
+    }
 
     unsigned readStCondFailures()
     { return actualTC->readStCondFailures(); }

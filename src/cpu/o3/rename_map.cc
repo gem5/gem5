@@ -33,6 +33,7 @@
 
 #include <vector>
 
+#include "cpu/reg_class_impl.hh"
 #include "debug/Rename.hh"
 
 using namespace std;
@@ -40,7 +41,7 @@ using namespace std;
 /**** SimpleRenameMap methods ****/
 
 SimpleRenameMap::SimpleRenameMap()
-    : freeList(NULL), zeroReg(0)
+    : freeList(NULL), zeroReg(IntRegClass,0)
 {
 }
 
@@ -54,24 +55,23 @@ SimpleRenameMap::init(unsigned size, SimpleFreeList *_freeList,
 
     map.resize(size);
     freeList = _freeList;
-    zeroReg = _zeroReg;
+    zeroReg = RegId(IntRegClass, _zeroReg);
 }
 
 SimpleRenameMap::RenameInfo
-SimpleRenameMap::rename(RegIndex arch_reg)
+SimpleRenameMap::rename(const RegId& arch_reg)
 {
     PhysRegIdPtr renamed_reg;
-
     // Record the current physical register that is renamed to the
     // requested architected register.
-    PhysRegIdPtr prev_reg = map[arch_reg];
+    PhysRegIdPtr prev_reg = map[arch_reg.index()];
 
     // If it's not referencing the zero register, then rename the
     // register.
     if (arch_reg != zeroReg) {
         renamed_reg = freeList->getReg();
 
-        map[arch_reg] = renamed_reg;
+        map[arch_reg.index()] = renamed_reg;
     } else {
         // Otherwise return the zero register so nothing bad happens.
         assert(prev_reg->isZeroReg());
@@ -80,8 +80,8 @@ SimpleRenameMap::rename(RegIndex arch_reg)
 
     DPRINTF(Rename, "Renamed reg %d to physical reg %d (%d) old mapping was"
             " %d (%d)\n",
-            arch_reg, renamed_reg->regIdx, renamed_reg->flatIdx,
-            prev_reg->regIdx, prev_reg->flatIdx);
+            arch_reg, renamed_reg->index(), renamed_reg->flatIndex(),
+            prev_reg->index(), prev_reg->flatIndex());
 
     return RenameInfo(renamed_reg, prev_reg);
 }
@@ -105,75 +105,3 @@ UnifiedRenameMap::init(PhysRegFile *_regFile,
 
 }
 
-
-UnifiedRenameMap::RenameInfo
-UnifiedRenameMap::rename(RegId arch_reg)
-{
-    switch (arch_reg.regClass) {
-      case IntRegClass:
-        return renameInt(arch_reg.regIdx);
-
-      case FloatRegClass:
-        return renameFloat(arch_reg.regIdx);
-
-      case CCRegClass:
-        return renameCC(arch_reg.regIdx);
-
-      case MiscRegClass:
-        return renameMisc(arch_reg.regIdx);
-
-      default:
-        panic("rename rename(): unknown reg class %s\n",
-              RegClassStrings[arch_reg.regClass]);
-    }
-}
-
-
-PhysRegIdPtr
-UnifiedRenameMap::lookup(RegId arch_reg) const
-{
-    switch (arch_reg.regClass) {
-      case IntRegClass:
-        return lookupInt(arch_reg.regIdx);
-
-      case FloatRegClass:
-        return lookupFloat(arch_reg.regIdx);
-
-      case CCRegClass:
-        return lookupCC(arch_reg.regIdx);
-
-      case MiscRegClass:
-        return lookupMisc(arch_reg.regIdx);
-
-      default:
-        panic("rename lookup(): unknown reg class %s\n",
-              RegClassStrings[arch_reg.regClass]);
-    }
-}
-
-void
-UnifiedRenameMap::setEntry(RegId arch_reg, PhysRegIdPtr phys_reg)
-{
-    switch (arch_reg.regClass) {
-      case IntRegClass:
-        return setIntEntry(arch_reg.regIdx, phys_reg);
-
-      case FloatRegClass:
-        return setFloatEntry(arch_reg.regIdx, phys_reg);
-
-      case CCRegClass:
-        return setCCEntry(arch_reg.regIdx, phys_reg);
-
-      case MiscRegClass:
-        // Misc registers do not actually rename, so don't change
-        // their mappings.  We end up here when a commit or squash
-        // tries to update or undo a hardwired misc reg nmapping,
-        // which should always be setting it to what it already is.
-        assert(phys_reg == lookupMisc(arch_reg.regIdx));
-        return;
-
-      default:
-        panic("rename setEntry(): unknown reg class %s\n",
-              RegClassStrings[arch_reg.regClass]);
-    }
-}
