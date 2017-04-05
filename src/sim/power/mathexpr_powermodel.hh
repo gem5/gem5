@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 ARM Limited
+ * Copyright (c) 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -66,24 +66,14 @@ class MathExprPowerModel : public PowerModelState
      *
      * @return Power (Watts) consumed by this object (dynamic component)
      */
-    double getDynamicPower() const {
-        return dyn_expr.eval(
-            std::bind(&MathExprPowerModel::getStatValue,
-                this, std::placeholders::_1)
-        );
-    }
+    double getDynamicPower() const { return eval(dyn_expr); }
 
     /**
      * Get the static power consumption.
      *
      * @return Power (Watts) consumed by this object (static component)
      */
-    double getStaticPower() const {
-        return st_expr.eval(
-            std::bind(&MathExprPowerModel::getStatValue,
-                this, std::placeholders::_1)
-        );
-    }
+    double getStaticPower() const { return eval(st_expr); }
 
     /**
      * Get the value for a variable (maps to a stat)
@@ -99,6 +89,23 @@ class MathExprPowerModel : public PowerModelState
     void regStats();
 
   private:
+    /**
+     * Evaluate an expression in the context of this object, fatal if
+     * evaluation fails.
+     *
+     * @param expr Expression to evaluate
+     * @return Value of expression.
+     */
+    double eval(const MathExpr &expr) const;
+
+    /**
+     * Evaluate an expression in the context of this object, set
+     * failed if evaluation failed.
+     *
+     * @param expr Expression to evaluate
+     * @return Value of expression.
+     */
+    double tryEval(const MathExpr &expr) const;
 
     // Math expressions for dynamic and static power
     MathExpr dyn_expr, st_expr;
@@ -108,6 +115,10 @@ class MathExprPowerModel : public PowerModelState
 
     // Map that contains relevant stats for this power model
     std::unordered_map<std::string, Stats::Info*> stats_map;
+
+    // Did the expression fail to evaluate (e.g., because a stat value
+    // can't be resolved)
+    mutable bool failed;
 };
 
 #endif
