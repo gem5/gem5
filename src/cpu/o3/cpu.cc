@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2014, 2016 ARM Limited
+ * Copyright (c) 2011-2012, 2014, 2016, 2017 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -1048,6 +1048,17 @@ FullO3CPU<Impl>::drain()
     // Wake the CPU and record activity so everything can drain out if
     // the CPU was not able to immediately drain.
     if (!isDrained())  {
+        // If a thread is suspended, wake it up so it can be drained
+        for (auto t : threadContexts) {
+            if (t->status() == ThreadContext::Suspended){
+                DPRINTF(Drain, "Currently suspended so activate %i \n",
+                        t->threadId());
+                t->activate();
+                // As the thread is now active, change the power state as well
+                activateContext(t->threadId());
+            }
+        }
+
         wakeCPU();
         activityRec.activity();
 
