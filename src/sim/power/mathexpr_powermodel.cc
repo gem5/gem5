@@ -39,6 +39,8 @@
 
 #include "sim/power/mathexpr_powermodel.hh"
 
+#include <string>
+
 #include "base/statistics.hh"
 #include "params/MathExprPowerModel.hh"
 #include "sim/mathexpr.hh"
@@ -62,9 +64,15 @@ MathExprPowerModel::startup()
 {
     // Create a map with stats and pointers for quick access
     // Has to be done here, since we need access to the statsList
-    for (auto & i: Stats::statsList())
-        if (i->name.find(basename) == 0)
+    for (auto & i: Stats::statsList()) {
+        if (i->name.find(basename) == 0) {
+            // Add stats for this sim object and its child objects
             stats_map[i->name.substr(basename.size())] = i;
+        } else if (i->name.find(".") == std::string::npos) {
+            // Add global stats (sim_seconds, for example)
+            stats_map[i->name] = i;
+        }
+    }
 
     tryEval(st_expr);
     const bool st_failed = failed;
