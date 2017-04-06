@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015,2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,56 +44,30 @@
 #include <cassert>
 #include <vector>
 
+#include "base/circular_queue.hh"
 #include "base/logging.hh"
 #include "sim/serialize.hh"
 
 /**
- * Circular buffer backed by a vector
+ * Circular buffer backed by a vector though a CircularQueue.
  *
  * The data in the cricular buffer is stored in a standard
- * vector. _start designates the first element in the buffer and _stop
- * points to the last element + 1 (i.e., the position of the next
- * insertion). The _stop index may be outside the range of the backing
- * store, which means that the actual index must be calculated as
- * _stop % capacity.
+ * vector.
  *
- * Invariants:
- * <ul>
- *   <li>_start <= _stop
- *   <li>_start < capacity
- *   <li>_stop < 2 * capacity
- * </ul>
  */
 template<typename T>
-class CircleBuf
+class CircleBuf : public CircularQueue<T>
 {
   public:
-    typedef T value_type;
-
-  public:
     explicit CircleBuf(size_t size)
-        : buf(size), _start(0), _stop(0) {}
-
-    /** Is the buffer empty? */
-    bool empty() const { return _stop == _start; }
-    /**
-     * Return the maximum number of elements that can be stored in
-     * the buffer at any one time.
-     */
-    size_t capacity() const { return buf.size(); }
-    /** Return the number of elements stored in the buffer. */
-    size_t size() const { return _stop - _start; }
-
-    /**
-     * Remove all the elements in the buffer.
-     *
-     * Note: This does not actually remove elements from the backing
-     * store.
-     */
-    void flush() {
-        _start = 0;
-        _stop = 0;
-    }
+        : CircularQueue<T>(size) {}
+    using CircularQueue<T>::empty;
+    using CircularQueue<T>::size;
+    using CircularQueue<T>::capacity;
+    using CircularQueue<T>::begin;
+    using CircularQueue<T>::end;
+    using CircularQueue<T>::pop_front;
+    using CircularQueue<T>::advance_tail;
 
     /**
      * Copy buffer contents without advancing the read pointer
@@ -118,19 +92,7 @@ class CircleBuf
         panic_if(offset + len > size(),
                  "Trying to read past end of circular buffer.\n");
 
-        const off_t real_start((offset + _start) % buf.size());
-        if (real_start + len <= buf.size()) {
-            std::copy(buf.begin() + real_start,
-                      buf.begin() + real_start + len,
-                      out);
-        } else {
-            const size_t head_size(buf.size() - real_start);
-            const size_t tail_size(len - head_size);
-            std::copy(buf.begin() + real_start, buf.end(),
-                      out);
-            std::copy(buf.begin(), buf.begin() + tail_size,
-                      out + head_size);
-        }
+        std::copy(begin() + offset, begin() + offset + len, out);
     }
 
     /**
@@ -142,9 +104,7 @@ class CircleBuf
     template <class OutputIterator>
     void read(OutputIterator out, size_t len) {
         peek(out, len);
-
-        _start += len;
-        normalize();
+        pop_front(len);
     }
 
     /**
@@ -157,50 +117,15 @@ class CircleBuf
     void write(InputIterator in, size_t len) {
         // Writes that are larger than the backing store are allowed,
         // but only the last part of the buffer will be written.
-        if (len > buf.size()) {
-            in += len - buf.size();
-            len = buf.size();
+        if (len > capacity()) {
+            in += len - capacity();
+            len = capacity();
         }
 
-        const size_t next(_stop % buf.size());
-        const size_t head_len(std::min(buf.size() - next, len));
-
-        std::copy(in, in + head_len, buf.begin() + next);
-        std::copy(in + head_len, in + len, buf.begin());
-
-        _stop += len;
-        // We may have written past the old _start pointer. Readjust
-        // the _start pointer to remove the oldest entries in that
-        // case.
-        if (size() > buf.size())
-            _start = _stop - buf.size();
-
-        normalize();
+        std::copy(in, in + len, end());
+        advance_tail(len);
     }
-
-  protected:
-    /**
-     * Normalize the start and stop pointers to ensure that pointer
-     * invariants hold after updates.
-     */
-    void normalize() {
-        if (_start >= buf.size()) {
-            _stop -= buf.size();
-            _start -= buf.size();
-        }
-
-        assert(_start < buf.size());
-        assert(_stop < 2 * buf.size());
-        assert(_start <= _stop);
-    }
-
-  protected:
-    std::vector<value_type> buf;
-    size_t _start;
-    size_t _stop;
-
 };
-
 
 /**
  * Simple FIFO implementation backed by a circular buffer.
