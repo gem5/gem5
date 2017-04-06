@@ -1,4 +1,4 @@
-# Copyright (c) 2016 ARM Limited
+# Copyright (c) 2016-2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -44,9 +44,9 @@ class MathExprPowerModel(PowerModelState):
     type = 'MathExprPowerModel'
     cxx_header = "sim/power/mathexpr_powermodel.hh"
 
-    # Equations for dynamic and static power
+    # Equations for dynamic and static power in Watts
     # Equations may use gem5 stats ie. "1.1*ipc + 2.3*l2_cache.overall_misses"
     # It is possible to use automatic variables such as "temp"
     # You may also use stat names (relative path to the simobject)
-    dyn = Param.String("", "Expression for the dynamic power")
-    st = Param.String("", "Expression for the static power")
+    dyn = Param.String("", "Expression for the dynamic power in Watts")
+    st = Param.String("", "Expression for the static power in Watts")
