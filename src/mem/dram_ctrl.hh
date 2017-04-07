@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2016 ARM Limited
+ * Copyright (c) 2012-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -505,12 +505,12 @@ class DRAMCtrl : public AbstractMemory
         }
 
         /**
-         * Check if the current rank is idle and should enter a low-pwer state
+         * Check if the command queue of current rank is idle
          *
-         * @param Return true if the there are no read commands in Q
-         *                    and there are no outstanding events
+         * @param Return true if the there are no commands in Q.
+         *                    Bus direction determines queue checked.
          */
-        bool lowPowerEntryReady() const;
+        bool isQueueEmpty() const;
 
         /**
          * Let the rank check if it was waiting for requests to drain

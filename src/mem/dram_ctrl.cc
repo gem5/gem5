@@ -664,10 +664,8 @@ DRAMCtrl::processRespondEvent()
 
     // track if this is the last packet before idling
     // and that there are no outstanding commands to this rank
-    // if REF in progress, transition to LP state should not occur
-    // until REF completes
-    if ((dram_pkt->rankRef.refreshState == REF_IDLE) &&
-        (dram_pkt->rankRef.lowPowerEntryReady())) {
+    if (dram_pkt->rankRef.isQueueEmpty() &&
+        dram_pkt->rankRef.outstandingEvents == 0) {
         // verify that there are no events scheduled
         assert(!dram_pkt->rankRef.activateEvent.scheduled());
         assert(!dram_pkt->rankRef.prechargeEvent.scheduled());
@@ -1668,21 +1666,13 @@ DRAMCtrl::Rank::suspend()
 }
 
 bool
-DRAMCtrl::Rank::lowPowerEntryReady() const
+DRAMCtrl::Rank::isQueueEmpty() const
 {
+    // check commmands in Q based on current bus direction
     bool no_queued_cmds = ((memory.busStateNext == READ) && (readEntries == 0))
                           || ((memory.busStateNext == WRITE) &&
                               (writeEntries == 0));
-
-    if (refreshState == REF_RUN) {
-       // have not decremented outstandingEvents for refresh command
-       // still check if there are no commands queued to force PD
-       // entry after refresh completes
-       return no_queued_cmds;
-    } else {
-       // ensure no commands in Q and no commands scheduled
-       return (no_queued_cmds && (outstandingEvents == 0));
-    }
+    return no_queued_cmds;
 }
 
 void
@@ -1752,7 +1742,7 @@ DRAMCtrl::Rank::processPrechargeEvent()
     if (numBanksActive == 0) {
         // no reads to this rank in the Q and no pending
         // RD/WR or refresh commands
-        if (lowPowerEntryReady()) {
+        if (isQueueEmpty() && outstandingEvents == 0) {
             // should still be in ACT state since bank still open
             assert(pwrState == PWR_ACT);
 
@@ -1953,7 +1943,10 @@ DRAMCtrl::Rank::processRefreshEvent()
 
             // Force PRE power-down if there are no outstanding commands
             // in Q after refresh.
-            } else if (lowPowerEntryReady()) {
+            } else if (isQueueEmpty()) {
+                // still have refresh event outstanding but there should
+                // be no other events outstanding
+                assert(outstandingEvents == 1);
                 DPRINTF(DRAMState, "Rank %d sleeping after refresh but was NOT"
                         " in a low power state before refreshing\n", rank);
                 powerDownSleep(PWR_PRE_PDN, curTick());
@@ -1966,16 +1959,15 @@ DRAMCtrl::Rank::processRefreshEvent()
             }
         }
 
-        // if transitioning to self refresh do not schedule a new refresh;
-        // when waking from self refresh, a refresh is scheduled again.
-        if (pwrStateTrans != PWR_SREF) {
-            // compensate for the delay in actually performing the refresh
-            // when scheduling the next one
-            schedule(refreshEvent, refreshDueAt - memory.tRP);
+        // At this point, we have completed the current refresh.
+        // In the SREF bypass case, we do not get to this state in the
+        // refresh STM and therefore can always schedule next event.
+        // Compensate for the delay in actually performing the refresh
+        // when scheduling the next one
+        schedule(refreshEvent, refreshDueAt - memory.tRP);
 
-            DPRINTF(DRAMState, "Refresh done at %llu and next refresh"
-                    " at %llu\n", curTick(), refreshDueAt);
-        }
+        DPRINTF(DRAMState, "Refresh done at %llu and next refresh"
+                " at %llu\n", curTick(), refreshDueAt);
     }
 }
 
@@ -2022,28 +2014,25 @@ DRAMCtrl::Rank::powerDownSleep(PowerState pwr_state, Tick tick)
         DPRINTF(DRAMPower, "%llu,PDN_F_PRE,0,%d\n", divCeil(tick,
                 memory.tCK) - memory.timeStampOffset, rank);
     } else if (pwr_state == PWR_REF) {
-        // if a refresh just occured
+        // if a refresh just occurred
         // transition to PRE_PDN now that all banks are closed
-        // do not transition to SREF if commands are in Q; stay in PRE_PDN
-        if (pwrStatePostRefresh == PWR_ACT_PDN || !lowPowerEntryReady()) {
-            // prechage power down requires tCKE to enter. For simplicity
-            // this is not considered.
-            schedulePowerEvent(PWR_PRE_PDN, tick);
-            //push Command to DRAMPower
-            cmdList.push_back(Command(MemCommand::PDN_F_PRE, 0, tick));
-            DPRINTF(DRAMPower, "%llu,PDN_F_PRE,0,%d\n", divCeil(tick,
-                    memory.tCK) - memory.timeStampOffset, rank);
-        } else {
-            // last low power State was power precharge
-            assert(pwrStatePostRefresh == PWR_PRE_PDN);
-            // self refresh requires time tCKESR to enter. For simplicity,
-            // this is not considered.
-            schedulePowerEvent(PWR_SREF, tick);
-            // push Command to DRAMPower
-            cmdList.push_back(Command(MemCommand::SREN, 0, tick));
-            DPRINTF(DRAMPower, "%llu,SREN,0,%d\n", divCeil(tick,
-                    memory.tCK) - memory.timeStampOffset, rank);
-        }
+        // precharge power down requires tCKE to enter. For simplicity
+        // this is not considered.
+        schedulePowerEvent(PWR_PRE_PDN, tick);
+        //push Command to DRAMPower
+        cmdList.push_back(Command(MemCommand::PDN_F_PRE, 0, tick));
+        DPRINTF(DRAMPower, "%llu,PDN_F_PRE,0,%d\n", divCeil(tick,
+                memory.tCK) - memory.timeStampOffset, rank);
+    } else if (pwr_state == PWR_SREF) {
+        // should only enter SREF after PRE-PD wakeup to do a refresh
+        assert(pwrStatePostRefresh == PWR_PRE_PDN);
+        // self refresh requires time tCKESR to enter. For simplicity,
+        // this is not considered.
+        schedulePowerEvent(PWR_SREF, tick);
+        // push Command to DRAMPower
+        cmdList.push_back(Command(MemCommand::SREN, 0, tick));
+        DPRINTF(DRAMPower, "%llu,SREN,0,%d\n", divCeil(tick,
+                memory.tCK) - memory.timeStampOffset, rank);
     }
     // Ensure that we don't power-down and back up in same tick
     // Once we commit to PD entry, do it and wait for at least 1tCK
@@ -2148,37 +2137,33 @@ DRAMCtrl::Rank::processPowerEvent()
         // bus IDLED prior to REF
         // counter should be one for refresh command only
         assert(outstandingEvents == 1);
-        // REF complete, decrement count
+        // REF complete, decrement count and go back to IDLE
         --outstandingEvents;
+        refreshState = REF_IDLE;
 
         DPRINTF(DRAMState, "Was refreshing for %llu ticks\n", duration);
-        // if sleeping after refresh
+        // if moving back to power-down after refresh
         if (pwrState != PWR_IDLE) {
-            assert((pwrState == PWR_PRE_PDN) || (pwrState == PWR_SREF));
+            assert(pwrState == PWR_PRE_PDN);
             DPRINTF(DRAMState, "Switching to power down state after refreshing"
                     " rank %d at %llu tick\n", rank, curTick());
         }
-        if (pwrState != PWR_SREF) {
-            // rank is not available in SREF
-            // don't transition to IDLE in this case
-            refreshState = REF_IDLE;
-        }
-        // a request event could be already scheduled by the state
-        // machine of the other rank
+
+        // completed refresh event, ensure next request is scheduled
         if (!memory.nextReqEvent.scheduled()) {
-            DPRINTF(DRAM, "Scheduling next request after refreshing rank %d\n",
-                    rank);
+            DPRINTF(DRAM, "Scheduling next request after refreshing"
+                           " rank %d\n", rank);
             schedule(memory.nextReqEvent, curTick());
         }
-    } else if (pwrState == PWR_ACT) {
-        if (refreshState == REF_PD_EXIT) {
-            // kick the refresh event loop into action again
-            assert(prev_state == PWR_ACT_PDN);
+    }
 
-            // go back to REF event and close banks
-            refreshState = REF_PRE;
-            schedule(refreshEvent, curTick());
-        }
+    if ((pwrState == PWR_ACT) && (refreshState == REF_PD_EXIT)) {
+        // have exited ACT PD
+        assert(prev_state == PWR_ACT_PDN);
+
+        // go back to REF event and close banks
+        refreshState = REF_PRE;
+        schedule(refreshEvent, curTick());
     } else if (pwrState == PWR_IDLE) {
         DPRINTF(DRAMState, "All banks precharged\n");
         if (prev_state == PWR_SREF) {
@@ -2190,7 +2175,7 @@ DRAMCtrl::Rank::processPowerEvent()
             schedule(refreshEvent, curTick() + memory.tXS);
         } else {
             // if we have a pending refresh, and are now moving to
-            // the idle state, directly transition to a refresh
+            // the idle state, directly transition to, or schedule refresh
             if ((refreshState == REF_PRE) || (refreshState == REF_PD_EXIT)) {
                 // ensure refresh is restarted only after final PRE command.
                 // do not restart refresh if controller is in an intermediate
@@ -2199,37 +2184,64 @@ DRAMCtrl::Rank::processPowerEvent()
                 if (!activateEvent.scheduled()) {
                     // there should be nothing waiting at this point
                     assert(!powerEvent.scheduled());
-                    // update the state in zero time and proceed below
-                    pwrState = PWR_REF;
+                    if (refreshState == REF_PD_EXIT) {
+                        // exiting PRE PD, will be in IDLE until tXP expires
+                        // and then should transition to PWR_REF state
+                        assert(prev_state == PWR_PRE_PDN);
+                        schedulePowerEvent(PWR_REF, curTick() + memory.tXP);
+                    } else if (refreshState == REF_PRE) {
+                        // can directly move to PWR_REF state and proceed below
+                        pwrState = PWR_REF;
+                    }
                 } else {
                     // must have PRE scheduled to transition back to IDLE
                     // and re-kick off refresh
                     assert(prechargeEvent.scheduled());
                 }
             }
-       }
-    }
-
-    // we transition to the refresh state, let the refresh state
-    // machine know of this state update and let it deal with the
-    // scheduling of the next power state transition as well as the
-    // following refresh
-    if (pwrState == PWR_REF) {
-        assert(refreshState == REF_PRE || refreshState == REF_PD_EXIT);
-        DPRINTF(DRAMState, "Refreshing\n");
-
-        // kick the refresh event loop into action again, and that
-        // in turn will schedule a transition to the idle power
-        // state once the refresh is done
-        if (refreshState == REF_PD_EXIT) {
-            // Wait for PD exit timing to complete before issuing REF
-            schedule(refreshEvent, curTick() + memory.tXP);
-        } else {
-            schedule(refreshEvent, curTick());
         }
-        // Banks transitioned to IDLE, start REF
-        refreshState = REF_START;
     }
+
+    // transition to the refresh state and re-start refresh process
+    // refresh state machine will schedule the next power state transition
+    if (pwrState == PWR_REF) {
+        // completed final PRE for refresh or exiting power-down
+        assert(refreshState == REF_PRE || refreshState == REF_PD_EXIT);
+
+        // exited PRE PD for refresh, with no pending commands
+        // bypass auto-refresh and go straight to SREF, where memory
+        // will issue refresh immediately upon entry
+        if (pwrStatePostRefresh == PWR_PRE_PDN && isQueueEmpty() &&
+           (memory.drainState() != DrainState::Draining) &&
+           (memory.drainState() != DrainState::Drained)) {
+            DPRINTF(DRAMState, "Rank %d bypassing refresh and transitioning "
+                    "to self refresh at %11u tick\n", rank, curTick());
+            powerDownSleep(PWR_SREF, curTick());
+
+            // Since refresh was bypassed, remove event by decrementing count
+            assert(outstandingEvents == 1);
+            --outstandingEvents;
+
+            // reset state back to IDLE temporarily until SREF is entered
+            pwrState = PWR_IDLE;
+
+        // Not bypassing refresh for SREF entry
+        } else {
+            DPRINTF(DRAMState, "Refreshing\n");
+
+            // there should be nothing waiting at this point
+            assert(!powerEvent.scheduled());
+
+            // kick the refresh event loop into action again, and that
+            // in turn will schedule a transition to the idle power
+            // state once the refresh is done
+            schedule(refreshEvent, curTick());
+
+            // Banks transitioned to IDLE, start REF
+            refreshState = REF_START;
+        }
+    }
+
 }
 
 void
