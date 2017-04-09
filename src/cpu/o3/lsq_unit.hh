@@ -671,8 +671,9 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
             (req->getVaddr() + req->getSize()) >
             storeQueue[store_idx].inst->effAddr;
 
-        // If the store's data has all of the data needed, we can forward.
-        if ((store_has_lower_limit && store_has_upper_limit)) {
+        // If the store's data has all of the data needed and the load isn't
+        // LLSC, we can forward.
+        if (store_has_lower_limit && store_has_upper_limit && !req->isLLSC()) {
             // Get shift amount for offset into the store's data.
             int shift_amt = req->getVaddr() - storeQueue[store_idx].inst->effAddr;
 
@@ -707,11 +708,18 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
 
             ++lsqForwLoads;
             return NoFault;
-        } else if ((store_has_lower_limit && lower_load_has_store_part) ||
-                   (store_has_upper_limit && upper_load_has_store_part) ||
-                   (lower_load_has_store_part && upper_load_has_store_part)) {
+        } else if (
+                (!req->isLLSC() &&
+                 ((store_has_lower_limit && lower_load_has_store_part) ||
+                  (store_has_upper_limit && upper_load_has_store_part) ||
+                  (lower_load_has_store_part && upper_load_has_store_part))) ||
+                (req->isLLSC() &&
+                 ((store_has_lower_limit || upper_load_has_store_part) &&
+                  (store_has_upper_limit || lower_load_has_store_part)))) {
             // This is the partial store-load forwarding case where a store
-            // has only part of the load's data.
+            // has only part of the load's data and the load isn't LLSC or
+            // the load is LLSC and the store has all or part of the load's
+            // data
 
             // If it's already been written back, then don't worry about
             // stalling on it.
