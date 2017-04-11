@@ -1,0 +1,90 @@
+See CONTRIBUTING.md for details of gem5's contribution process.
+
+This file contains the keywords used in commit messages. Each keyword has one
+or more maintainers. At least one (not all) of these maintainers must review
+the patch before it can be pushed. These people will automatically be emailed
+when you upload the patch to Gerrit (https://gem5-review.googlesource.com).
+These keywords mostly follow the directory structure.
+
+Individuals on the project management committee are maintainers for all of the
+gem5 components (i.e., they can review any patch as the maintainer). These
+individuals are required to review any patches to components without explicit
+maintainers.
+
+PMC Members (general maintainers):
+  Ali Saidi <asaidi@gmail.com>
+  Andreas Hansson <andreas.hansson@arm.com>
+  Andreas Sandberg <andreas.sandberg@arm.com>
+  Tony Gutierrez <anthony.gutierrez@amd.com>
+  Brad Beckmann <brad.beckmann@amd.com>
+  Jason Lowe-Power <jason@lowepower.com>
+  Nathan Binkert <nate@binkert.org>
+  Steve Reinhardt <stever@gmail.com>
+
+arch: General architecture-specific components
+  Gabe Black <gabeblack@google.com>
+arch-alpha:
+arch-arm:
+  Andreas Sandberg <andreas.sandberg@arm.com>
+arch-hsail:
+  Tony Gutierrez <anthony.gutierrez@amd.com>
+arch-mips:
+arch-power:
+arch-riscv:
+  Alec Roelke <ar4jc@virginia.edu>
+arch-sparc:
+  Gabe Black <gabeblack@google.com>
+arch-x86:
+  Gabe Black <gabeblack@google.com>
+
+base:
+
+configs:
+  Jason Lowe-Power <jason@lowepower.com>
+
+cpu: General changes to all CPU models (e.g., BaseCPU)
+cpu-kvm:
+  Andreas Sandberg <andreas.sandberg@arm.com>
+cpu-minor:
+cpu-o3:
+cpu-simple:
+
+dev:
+dev-virtio:
+  Andreas Sandberg <andreas.sandberg@arm.com>
+
+ext: Components external to gem5
+
+gpu-compute:
+  Tony Gutierrez <anthony.gutierrez@amd.com>
+
+mem: General memory system (e.g., XBar, Packet)
+  Nikos Nikoleris <nikos.nikoleris@arm.com>
+mem-cache: Classic caches and coherence
+  Nikos Nikoleris <nikos.nikoleris@arm.com>
+mem-garnet: Garnet subcomponent of Ruby
+  Tushar Krishna <tushar@ece.gatech.edu>
+mem-ruby: Ruby structures and protocols
+  Brad Beckmann <brad.beckmann@amd.com>
+  Jason Lowe-Power <jason@lowepower.com>
+
+misc: Anything outside of the other categories
+
+python: Python SimObject wrapping and infrastructure
+  Andreas Sandberg <andreas.sandberg@arm.com>
+
+scons: Build system
+
+sim: General simulation components
+  Jason Lowe-Power <jason@lowepower.com>
+sim-se: Syscall emulation
+  Brandon Potter <brandon.potter@amd.com>
+sim-power: Power modeling
+  Andreas Sandberg <andreas.sandberg@arm.com>
+
+stats: Updates to statistics for regressions
+
+tests: testing changes (not stats updates for tests. See stats:)
+  Andreas Sandberg <andreas.sandberg@arm.com>
+
+util:

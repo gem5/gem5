@@ -113,10 +113,10 @@ changes, we require all change descriptions be strictly formatted.
 
 A canonical commit message consists of three parts:
  * A short summary line describing the change. This line starts with one or
-   more keywords separated by commas followed by a colon and a description of
-   the change. This line should be no more than 65 characters long since
-   version control systems usually add a prefix that causes line-wrapping for
-   longer lines.
+   more keywords (found in the MAINTAINERS file) separated by commas followed
+   by a colon and a description of the change. This line should be no more than
+   65 characters long since version control systems usually add a prefix that
+   causes line-wrapping for longer lines.
  * (Optional, but highly recommended) A detailed description. This describes
    what you have done and why. If the change isn't obvious, you might want to
    motivate why it is needed. Lines need to be wrapped to 75 characters or
@@ -124,31 +124,6 @@ A canonical commit message consists of three parts:
  * Tags describing patch metadata. You are highly recommended to use
    tags to acknowledge reviewers for their work. Gerrit will automatically add
    most tags.
-
-The keyword should be one or more of the following separated by commas:
- * Architecture name in lower case (e.g., arm or x86): Anything that is
-   target-architecture specific.
- * base
- * ext
- * stats
- * sim
- * syscall_emul
- * config:
- * mem: Classic memory system. Ruby uses its own keyword.
- * ruby: Ruby memory models.
- * cpu: CPU-model specific (except for kvm)
- * kvm: KVM-specific. Changes to host architecture specific components should
-   include an architecture keyword (e.g., arm or x86) as well.
- * gpu-compute
- * energy
- * dev
- * arch: General architecture support (src/arch/)
- * scons: Build-system related. Trivial changes as a side effect of doing
-   something unrelated (e.g., adding a source file to a SConscript) don't
-   require this.
- * tests
- * style: Changes to the style checkers of style fixes.
- * misc
 
 Tags are an optional mechanism to store additional metadata about a patch and
 acknowledge people who reported a bug or reviewed that patch. Tags are
