@@ -34,6 +34,7 @@ import imp
 import marshal
 import os
 import re
+import subprocess
 import sys
 import zlib
 
@@ -1194,7 +1195,18 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
     if strip:
         progname += '.unstripped'
 
-    targets = new_env.Program(progname, main_objs + static_objs)
+    # When linking the gem5 binary, the command line can be too big for the
+    # shell to handle. Use "subprocess" to spawn processes without passing
+    # through the shell to avoid this problem. That means we also can't use
+    # shell syntax in any of the commands this will run, but that isn't
+    # currently an issue.
+    def spawn_with_subprocess(sh, escape, cmd, args, env):
+        return subprocess.call(args, env=env)
+
+    # Since we're not running through a shell, no escaping is necessary either.
+    targets = new_env.Program(progname, main_objs + static_objs,
+                              SPAWN=spawn_with_subprocess,
+                              ESCAPE=lambda x: x)
 
     if strip:
         if sys.platform == 'sunos5':
