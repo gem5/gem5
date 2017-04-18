@@ -318,7 +318,8 @@ namespace X86ISA
         bool
         branching() const
         {
-            return this->npc() != this->pc() + size();
+            return (this->npc() != this->pc() + size()) ||
+                   (this->nupc() != this->upc() + 1);
         }
 
         void
