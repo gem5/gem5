@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2016 ARM Limited
+ * Copyright (c) 2014, 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -433,8 +433,8 @@ public:
      * Page size used by VirtIO.\ It's hard-coded to 4096 bytes in
      * the spec for historical reasons.
      */
-    static const unsigned ALIGN_BITS = 12;
-    static const unsigned ALIGN_SIZE = 1 << ALIGN_BITS;
+    static const Addr ALIGN_BITS = 12;
+    static const Addr ALIGN_SIZE = 1 << ALIGN_BITS;
     /** @} */
 
   protected:
