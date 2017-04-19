@@ -33,8 +33,11 @@ This file contains L1 I/D and L2 caches to be used in the simple
 gem5 configuration script. It uses the SimpleOpts wrapper to set up command
 line options from each individual class.
 """
-
+import m5
 from m5.objects import Cache
+
+# Add the common scripts to our path
+m5.util.addToPath('../../')
 
 from common import SimpleOpts
 
