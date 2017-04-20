@@ -383,7 +383,7 @@
                     0x0: MOVAPS(Vq,Wq);
                     0x1: MOVAPS(Wq,Vq);
                     0x2: CVTPI2PS(Vq,Qq);
-                    0x3: WarnUnimpl::movntps_Mo_Vo();
+                    0x3: MOVNTPS(Mq,Vq);
                     0x4: CVTTPS2PI(Pq,Wq);
                     0x5: CVTPS2PI(Pq,Wq);
                     0x6: UCOMISS(Vd,Wd);
@@ -401,7 +401,7 @@
                     0x0: MOVAPD(Vo,Wo);
                     0x1: MOVAPD(Wo,Vo);
                     0x2: CVTPI2PD(Vo,Qq);
-                    0x3: WarnUnimpl::movntpd_Mo_Vo();
+                    0x3: MOVNTPD(Mq,Vq);
                     0x4: CVTTPD2PI(Pq,Wo);
                     0x5: CVTPD2PI(Pq,Wo);
                     0x6: UCOMISD(Vq,Wq);

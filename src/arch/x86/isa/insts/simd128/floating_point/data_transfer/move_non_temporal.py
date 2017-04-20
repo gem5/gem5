@@ -1,4 +1,5 @@
 # Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2015, 2018 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,8 +35,34 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Gabe Black
+#          Steve Reinhardt
 
 microcode = '''
-# MOVNTPS
-# MOVNTPD
+# movntps is basically the same as movaps, excepting the caching hint and
+# ordering constraints
+def macroop MOVNTPS_M_XMM {
+    # Check low address.
+    stfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8, uncacheable=True
+    stfp xmml, seg, sib, disp, dataSize=8, uncacheable=True
+};
+
+def macroop MOVNTPS_P_XMM {
+    rdip t7
+    # Check low address.
+    stfp xmmh, seg, riprel, "DISPLACEMENT + 8", dataSize=8, uncacheable=True
+    stfp xmml, seg, riprel, disp, dataSize=8, uncacheable=True
+};
+
+# movntpd is basically the same as movapd, excepting the caching hint and
+# ordering constraints
+def macroop MOVNTPD_M_XMM {
+    stfp xmml, seg, sib, "DISPLACEMENT", dataSize=8, uncacheable=True
+    stfp xmmh, seg, sib, "DISPLACEMENT + 8", dataSize=8, uncacheable=True
+};
+
+def macroop MOVNTPD_P_XMM {
+    rdip t7
+    stfp xmml, seg, riprel, "DISPLACEMENT", dataSize=8, uncacheable=True
+    stfp xmmh, seg, riprel, "DISPLACEMENT + 8", dataSize=8, uncacheable=True
+};
 '''
