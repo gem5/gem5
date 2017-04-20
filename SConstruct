@@ -1013,14 +1013,17 @@ sticky_vars.AddVariables(
     EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'None',
                   all_protocols),
     EnumVariable('BACKTRACE_IMPL', 'Post-mortem dump implementation',
-                 backtrace_impls[-1], backtrace_impls)
+                 backtrace_impls[-1], backtrace_impls),
+    ('NUMBER_BITS_PER_SET', 'Max elements in set (default 64)',
+                 64),
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP', 'TARGET_ISA', 'TARGET_GPU_ISA',
                 'CP_ANNOTATE', 'USE_POSIX_CLOCK', 'USE_KVM', 'USE_TUNTAP',
                 'PROTOCOL', 'HAVE_PROTOBUF', 'HAVE_VALGRIND',
-                'HAVE_PERF_ATTR_EXCLUDE_HOST', 'USE_PNG']
+                'HAVE_PERF_ATTR_EXCLUDE_HOST', 'USE_PNG',
+                'NUMBER_BITS_PER_SET']
 
 ###################################################
 #

@@ -39,13 +39,11 @@
 #include "base/logging.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 
-// Change for systems with more than 64 controllers of a particular type.
-const int NUMBER_BITS_PER_SET = 64;
-
 class Set
 {
   private:
     // Number of bits in use in this set.
+    // can be defined in build_opts file (default=64).
     int m_nSize;
     std::bitset<NUMBER_BITS_PER_SET> bits;
 
