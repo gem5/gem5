@@ -280,8 +280,6 @@ def _test_args(subparsers):
         summary formatter, such a test would show up as 'CHANGED'.
         """)
 
-    _add_format_args(parser)
-
     parser.add_argument("result", type=argparse.FileType("rb"), nargs="*",
                         help="Pickled test results")
 
