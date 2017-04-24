@@ -351,6 +351,15 @@ class KvmVM : public SimObject
      * Is in-kernel IRQ chip emulation enabled?
      */
     bool hasKernelIRQChip() const { return _hasKernelIRQChip; }
+
+    /**
+     * Tell the VM and VCPUs to use an in-kernel IRQ chip for
+     * interrupt delivery.
+     *
+     * @note This is set automatically if the IRQ chip is created
+     * using the KvmVM::createIRQChip() API.
+     */
+    void enableKernelIRQChip() { _hasKernelIRQChip = true; }
     /** @} */
 
     struct MemSlot

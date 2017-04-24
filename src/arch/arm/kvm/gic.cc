@@ -54,6 +54,10 @@ KvmKernelGicV2::KvmKernelGicV2(KvmVM &_vm, Addr cpu_addr, Addr dist_addr,
       vm(_vm),
       kdev(vm.createDevice(KVM_DEV_TYPE_ARM_VGIC_V2))
 {
+    // Tell the VM that we will emulate the GIC in the kernel. This
+    // disables IRQ and FIQ handling in the KVM CPU model.
+    vm.enableKernelIRQChip();
+
     kdev.setAttr<uint64_t>(
         KVM_DEV_ARM_VGIC_GRP_ADDR, KVM_VGIC_V2_ADDR_TYPE_DIST, dist_addr);
     kdev.setAttr<uint64_t>(
