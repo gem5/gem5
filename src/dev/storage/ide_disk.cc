@@ -657,6 +657,7 @@ IdeDisk::startCommand()
 
         // Supported PIO data-in commands
       case WDCC_IDENTIFY:
+      case ATAPI_IDENTIFY_DEVICE:
         cmdBytes = cmdBytesLeft = sizeof(struct ataparams);
         devState = Prepare_Data_In;
         action = ACT_DATA_READY;
@@ -852,7 +853,8 @@ IdeDisk::updateState(DevAction_t action)
             status |= STATUS_DRQ_BIT;
 
             // copy the data into the data buffer
-            if (cmdReg.command == WDCC_IDENTIFY) {
+            if (cmdReg.command == WDCC_IDENTIFY ||
+                cmdReg.command == ATAPI_IDENTIFY_DEVICE) {
                 // Reset the drqBytes for this block
                 drqBytesLeft = sizeof(struct ataparams);
 
