@@ -2170,9 +2170,12 @@ let {{
         bool negSrc1 = (srcElem1 < 0);
         bool negSrc2 = (srcElem2 < 0);
         if ((negDest != negSrc1) && (negSrc1 == negSrc2)) {
-            destElem = (Element)1 << (sizeof(Element) * 8 - 1);
             if (negDest)
-                destElem -= 1;
+                /* If (>=0) plus (>=0) yields (<0), saturate to +. */
+                destElem = std::numeric_limits<Element>::max();
+            else
+                /* If (<0) plus (<0) yields (>=0), saturate to -. */
+                destElem = std::numeric_limits<Element>::min();
             fpscr.qc = 1;
         }
         FpscrQc = fpscr;
@@ -2199,9 +2202,12 @@ let {{
         bool negSrc1 = (srcElem1 < 0);
         bool posSrc2 = (srcElem2 >= 0);
         if ((negDest != negSrc1) && (negSrc1 == posSrc2)) {
-            destElem = (Element)1 << (sizeof(Element) * 8 - 1);
             if (negDest)
-                destElem -= 1;
+                /* If (>=0) minus (<0) yields (<0), saturate to +. */
+                destElem = std::numeric_limits<Element>::max();
+            else
+                /* If (<0) minus (>=0) yields (>=0), saturate to -. */
+                destElem = std::numeric_limits<Element>::min();
             fpscr.qc = 1;
         }
         FpscrQc = fpscr;
@@ -2514,7 +2520,7 @@ let {{
     vqdmlalCode = '''
         FPSCR fpscr = (FPSCR) FpscrQc;
         BigElement midElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
-        Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+        Element maxNeg = std::numeric_limits<Element>::min();
         Element halfNeg = maxNeg / 2;
         if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
             (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
@@ -2539,7 +2545,7 @@ let {{
     vqdmlslCode = '''
         FPSCR fpscr = (FPSCR) FpscrQc;
         BigElement midElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
-        Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+        Element maxNeg = std::numeric_limits<Element>::min();
         Element halfNeg = maxNeg / 2;
         if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
             (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
@@ -2565,8 +2571,7 @@ let {{
         FPSCR fpscr = (FPSCR) FpscrQc;
         destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2);
         if (srcElem1 == srcElem2 &&
-                srcElem1 == (Element)((Element)1 <<
-                    (Element)(sizeof(Element) * 8 - 1))) {
+                srcElem1 == (Element)(std::numeric_limits<Element>::min())) {
             destElem = ~((BigElement)srcElem1 << (sizeof(Element) * 8));
             fpscr.qc = 1;
         }
@@ -2611,8 +2616,7 @@ let {{
         destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2) >>
                    (sizeof(Element) * 8);
         if (srcElem1 == srcElem2 &&
-                srcElem1 == (Element)((Element)1 <<
-                    (sizeof(Element) * 8 - 1))) {
+                srcElem1 == (Element)(std::numeric_limits<Element>::min())) {
             destElem = ~srcElem1;
             fpscr.qc = 1;
         }
@@ -2626,7 +2630,7 @@ let {{
         destElem = (2 * (int64_t)srcElem1 * (int64_t)srcElem2 +
                     ((int64_t)1 << (sizeof(Element) * 8 - 1))) >>
                    (sizeof(Element) * 8);
-        Element maxNeg = (Element)1 << (sizeof(Element) * 8 - 1);
+        Element maxNeg = std::numeric_limits<Element>::min();
         Element halfNeg = maxNeg / 2;
         if ((srcElem1 == maxNeg && srcElem2 == maxNeg) ||
             (srcElem1 == halfNeg && srcElem2 == maxNeg) ||
@@ -2634,7 +2638,7 @@ let {{
             if (destElem < 0) {
                 destElem = mask(sizeof(Element) * 8 - 1);
             } else {
-                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                destElem = std::numeric_limits<Element>::min();
             }
             fpscr.qc = 1;
         }
@@ -2973,7 +2977,7 @@ let {{
         FPSCR fpscr = (FPSCR) FpscrQc;
         if (imm >= sizeof(Element) * 8) {
             if (srcElem1 != 0) {
-                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                destElem = std::numeric_limits<Element>::min();
                 if (srcElem1 > 0)
                     destElem = ~destElem;
                 fpscr.qc = 1;
@@ -2986,7 +2990,7 @@ let {{
                                     sizeof(Element) * 8 - 1,
                                     sizeof(Element) * 8 - 1 - imm);
             if (topBits != 0 && topBits != mask(imm + 1)) {
-                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                destElem = std::numeric_limits<Element>::min();
                 if (srcElem1 > 0)
                     destElem = ~destElem;
                 fpscr.qc = 1;
@@ -3489,7 +3493,7 @@ let {{
 
     vqabsCode = '''
         FPSCR fpscr = (FPSCR) FpscrQc;
-        if (srcElem1 == (Element)((Element)1 << (sizeof(Element) * 8 - 1))) {
+        if (srcElem1 == (Element)(std::numeric_limits<Element>::min())) {
             fpscr.qc = 1;
             destElem = ~srcElem1;
         } else if (srcElem1 < 0) {
@@ -3504,7 +3508,7 @@ let {{
 
     vqnegCode = '''
         FPSCR fpscr = (FPSCR) FpscrQc;
-        if (srcElem1 == (Element)((Element)1 << (sizeof(Element) * 8 - 1))) {
+        if (srcElem1 == (Element)(std::numeric_limits<Element>::min())) {
             fpscr.qc = 1;
             destElem = ~srcElem1;
         } else {
