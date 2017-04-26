@@ -241,14 +241,14 @@ do_checkpoint(int argc, char *argv[])
 }
 
 void
-do_load_symbol(int argc, char *argv[])
+do_addsymbol(int argc, char *argv[])
 {
     if (argc != 2)
         usage();
 
     uint64_t addr = strtoul(argv[0], NULL, 0);
     char *symbol = argv[1];
-    m5_loadsymbol(addr, symbol);
+    m5_addsymbol(addr, symbol);
 }
 
 void
@@ -320,7 +320,7 @@ struct MainFunc mainfuncs[] = {
     { "writefile",      do_write_file,       "<filename>" },
     { "execfile",       do_exec_file,        "" },
     { "checkpoint",     do_checkpoint,       "[delay [period]]" },
-    { "loadsymbol",     do_load_symbol,      "<address> <symbol>" },
+    { "addsymbol",      do_addsymbol,        "<address> <symbol>" },
     { "initparam",      do_initparam,        "[key] // key must be shorter than 16 chars" },
     { "sw99param",      do_sw99param,        "" },
 #ifdef linux
