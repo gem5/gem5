@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -107,9 +107,9 @@ parse_str_args_to_regs(int argc, char *argv[], uint64_t regs[], int len)
 int
 read_file(int dest_fid)
 {
-    char buf[256*1024];
+    uint8_t buf[256*1024];
     int offset = 0;
-    int len;
+    int len, ret;
 
     // Touch all buffer pages to ensure they are mapped in the
     // page table. This is required in the case of X86_FS, where
@@ -117,9 +117,25 @@ read_file(int dest_fid)
     memset(buf, 0, sizeof(buf));
 
     while ((len = m5_readfile(buf, sizeof(buf), offset)) > 0) {
-        write(dest_fid, buf, len);
+        uint8_t *base = buf;
         offset += len;
+        do {
+            ret = write(dest_fid, base, len);
+            if (ret < 0) {
+                perror("Failed to write file");
+                exit(2);
+            } else if (ret == 0) {
+                fprintf(stderr, "Failed to write file: "
+                        "Unhandled short write\n");
+                exit(2);
+            }
+
+            base += ret;
+            len -= ret;
+        } while (len);
     }
+
+    return offset;
 }
 
 void
