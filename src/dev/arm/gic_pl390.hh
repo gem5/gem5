@@ -318,7 +318,7 @@ class Pl390 : public BaseGic, public BaseGicRegisters
     /** See if some processor interrupt flags need to be enabled/disabled
      * @param hint which set of interrupts needs to be checked
      */
-    void updateIntState(int hint);
+    virtual void updateIntState(int hint);
 
     /** Update the register that records priority of the highest priority
      *  active interrupt*/
@@ -368,6 +368,7 @@ class Pl390 : public BaseGic, public BaseGicRegisters
     ~Pl390();
 
     DrainState drain() override;
+    void drainResume() override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

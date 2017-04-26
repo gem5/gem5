@@ -871,6 +871,14 @@ Pl390::drain()
     }
 }
 
+
+void
+Pl390::drainResume()
+{
+    // There may be pending interrupts if checkpointed from Kvm; post them.
+    updateIntState(-1);
+}
+
 void
 Pl390::serialize(CheckpointOut &cp) const
 {

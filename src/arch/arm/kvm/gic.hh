@@ -194,6 +194,9 @@ class MuxingKvmGic : public Pl390
     void sendPPInt(uint32_t num, uint32_t cpu) override;
     void clearPPInt(uint32_t num, uint32_t cpu) override;
 
+  protected: // Pl390
+    void updateIntState(int hint) override;
+
   protected:
     /** System this interrupt controller belongs to */
     System &system;

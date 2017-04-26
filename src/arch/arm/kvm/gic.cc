@@ -292,6 +292,17 @@ MuxingKvmGic::clearPPInt(uint32_t num, uint32_t cpu)
 }
 
 void
+MuxingKvmGic::updateIntState(int hint)
+{
+    // During Kvm->Pl390 state transfer, writes to the Pl390 will call
+    // updateIntState() which can post an interrupt.  Since we're only
+    // using the Pl390 model for holding state in this circumstance, we
+    // short-circuit this behavior, as the Pl390 is not actually active.
+    if (!usingKvm)
+        return Pl390::updateIntState(hint);
+}
+
+void
 MuxingKvmGic::copyDistRegister(BaseGicRegisters* from, BaseGicRegisters* to,
                                ContextID ctx, Addr daddr)
 {
