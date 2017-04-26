@@ -87,6 +87,7 @@ GTest('addr_range.test', 'addr_range.test.cc')
 GTest('addr_range_map.test', 'addr_range_map.test.cc')
 GTest('bitunion.test', 'bitunion.test.cc')
 GTest('circlebuf.test', 'circlebuf.test.cc')
+GTest('circular_queue.test', 'circular_queue.test.cc')
 
 DebugFlag('Annotate', "State machine annotation debugging")
 DebugFlag('AnnotateQ', "State machine annotation queue debugging")
