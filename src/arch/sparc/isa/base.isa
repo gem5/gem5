@@ -458,7 +458,7 @@ output decoder {{
             if (_numDestRegs > 0) {
                 if (_numSrcRegs > 0)
                     ss << ",";
-                    printReg(ss, _destRegIdx[0]);
+                printReg(ss, _destRegIdx[0]);
             }
 
             return ss.str();

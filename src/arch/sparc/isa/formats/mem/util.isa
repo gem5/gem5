@@ -326,8 +326,9 @@ let {{
     '''
 
     TruncateEA = '''
-        if (!FullSystem)
+        if (!FullSystem) {
             EA = Pstate.am ? EA<31:0> : EA;
+        }
     '''
 }};
 
