@@ -122,7 +122,7 @@ read_file(int dest_fid)
     }
 }
 
-int
+void
 write_file(const char *filename)
 {
     fprintf(stderr, "opening %s\n", filename);
