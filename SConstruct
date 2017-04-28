@@ -688,6 +688,13 @@ if main['GCC'] or main['CLANG']:
     if sys.platform.startswith('freebsd'):
         main.Append(CCFLAGS=['-I/usr/local/include'])
         main.Append(CXXFLAGS=['-I/usr/local/include'])
+
+    main['FILTER_PSHLINKFLAGS'] = lambda x: str(x).replace(' -shared', '')
+    main['PSHLINKFLAGS'] = main.subst('${FILTER_PSHLINKFLAGS(SHLINKFLAGS)}')
+    main['PLINKFLAGS'] = main.subst('${LINKFLAGS}')
+    shared_partial_flags = ['-Wl,--relocatable', '-nostdlib']
+    main.Append(PSHLINKFLAGS=shared_partial_flags)
+    main.Append(PLINKFLAGS=shared_partial_flags)
 else:
     print termcap.Yellow + termcap.Bold + 'Error' + termcap.Normal,
     print "Don't know what compiler options to use for your compiler."
@@ -1339,6 +1346,32 @@ def config_emitter(target, source, env):
 config_builder = Builder(emitter = config_emitter, action = config_action)
 
 main.Append(BUILDERS = { 'ConfigFile' : config_builder })
+
+###################################################
+#
+# Builders for static and shared partially linked object files.
+#
+###################################################
+
+partial_static_builder = Builder(action=SCons.Defaults.LinkAction,
+                                 src_suffix='$OBJSUFFIX',
+                                 src_builder=['StaticObject', 'Object'],
+                                 LINKFLAGS='$PLINKFLAGS',
+                                 LIBS='')
+
+def partial_shared_emitter(target, source, env):
+    for tgt in target:
+        tgt.attributes.shared = 1
+    return (target, source)
+partial_shared_builder = Builder(action=SCons.Defaults.ShLinkAction,
+                                 emitter=partial_shared_emitter,
+                                 src_suffix='$SHOBJSUFFIX',
+                                 src_builder='SharedObject',
+                                 SHLINKFLAGS='$PSHLINKFLAGS',
+                                 LIBS='')
+
+main.Append(BUILDERS = { 'PartialShared' : partial_shared_builder,
+                         'PartialStatic' : partial_static_builder })
 
 # builds in ext are shared across all configs in the build root.
 ext_dir = abspath(joinpath(str(main.root), 'ext'))
