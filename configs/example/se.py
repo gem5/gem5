@@ -250,7 +250,7 @@ for i in xrange(np):
     system.cpu[i].createThreads()
 
 if options.ruby:
-    if options.cpu_type == "atomic" or options.cpu_type == "AtomicSimpleCPU":
+    if options.cpu_type == "AtomicSimpleCPU":
         print >> sys.stderr, "Ruby does not work with atomic cpu!!"
         sys.exit(1)
 
