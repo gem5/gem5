@@ -1339,33 +1339,13 @@ config_builder = Builder(emitter = config_emitter, action = config_action)
 
 main.Append(BUILDERS = { 'ConfigFile' : config_builder })
 
-# libelf build is shared across all configs in the build root.
-main.SConscript('ext/libelf/SConscript',
-                variant_dir = joinpath(build_root, 'libelf'))
-
-# iostream3 build is shared across all configs in the build root.
-main.SConscript('ext/iostream3/SConscript',
-                variant_dir = joinpath(build_root, 'iostream3'))
-
-# libfdt build is shared across all configs in the build root.
-main.SConscript('ext/libfdt/SConscript',
-                variant_dir = joinpath(build_root, 'libfdt'))
-
-# fputils build is shared across all configs in the build root.
-main.SConscript('ext/fputils/SConscript',
-                variant_dir = joinpath(build_root, 'fputils'))
-
-# DRAMSim2 build is shared across all configs in the build root.
-main.SConscript('ext/dramsim2/SConscript',
-                variant_dir = joinpath(build_root, 'dramsim2'))
-
-# DRAMPower build is shared across all configs in the build root.
-main.SConscript('ext/drampower/SConscript',
-                variant_dir = joinpath(build_root, 'drampower'))
-
-# nomali build is shared across all configs in the build root.
-main.SConscript('ext/nomali/SConscript',
-                variant_dir = joinpath(build_root, 'nomali'))
+# builds in ext are shared across all configs in the build root.
+ext_dir = abspath(joinpath(str(main.root), 'ext'))
+for root, dirs, files in os.walk(ext_dir):
+    if 'SConscript' in files:
+        build_dir = os.path.relpath(root, ext_dir)
+        main.SConscript(joinpath(root, 'SConscript'),
+                        variant_dir=joinpath(build_root, build_dir))
 
 ###################################################
 #
