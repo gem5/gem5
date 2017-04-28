@@ -223,7 +223,7 @@ ArmV8KvmCPU::updateKvmState()
         cpsr.ge = 0;
     }
     DPRINTF(KvmContext, "  %s := 0x%x\n", "PSTATE", cpsr);
-    setOneReg(INT_REG(regs.pstate), cpsr);
+    setOneReg(INT_REG(regs.pstate), static_cast<uint64_t>(cpsr));
 
     for (const auto &ri : miscRegMap) {
         const uint64_t value(tc->readMiscReg(ri.idx));
@@ -269,7 +269,7 @@ ArmV8KvmCPU::updateThreadContext()
     DPRINTF(KvmContext, "In updateThreadContext():\n");
 
     // Update pstate thread context
-    const CPSR cpsr(tc->readMiscRegNoEffect(MISCREG_CPSR));
+    const CPSR cpsr(getOneRegU64(INT_REG(regs.pstate)));
     DPRINTF(KvmContext, "  %s := 0x%x\n", "PSTATE", cpsr);
     tc->setMiscRegNoEffect(MISCREG_CPSR, cpsr);
     tc->setCCReg(CCREG_NZ, cpsr.nz);
