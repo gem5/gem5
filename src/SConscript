@@ -72,6 +72,17 @@ from m5.util import code_formatter, compareVersions
 # values will be retrieved recursively from parents (children override
 # parents).
 #
+def guarded_source_iterator(sources, **guards):
+    '''Iterate over a set of sources, gated by a set of guards.'''
+    for src in sources:
+        for flag,value in guards.iteritems():
+            # if the flag is found and has a different value, skip
+            # this file
+            if src.all_guards.get(flag, False) != value:
+                break
+        else:
+            yield src
+
 class SourceMeta(type):
     '''Meta class for source files that keeps track of all files of a
     particular type and has a get function for finding all functions
@@ -83,14 +94,8 @@ class SourceMeta(type):
     def get(cls, **guards):
         '''Find all files that match the specified guards.  If a source
         file does not specify a flag, the default is False'''
-        for src in cls.all:
-            for flag,value in guards.iteritems():
-                # if the flag is found and has a different value, skip
-                # this file
-                if src.all_guards.get(flag, False) != value:
-                    break
-            else:
-                yield src
+        for s in guarded_source_iterator(cls.all, **guards):
+            yield s
 
 class SourceFile(object):
     '''Base object that encapsulates the notion of a source file.
@@ -161,6 +166,15 @@ class SourceFile(object):
 
 
 class Source(SourceFile):
+    current_group = None
+    source_groups = { None : [] }
+
+    @classmethod
+    def set_group(cls, group):
+        if not group in Source.source_groups:
+            Source.source_groups[group] = []
+        Source.current_group = group
+
     '''Add a c/c++ source file to the build'''
     def __init__(self, source, Werror=True, swig=False, **guards):
         '''specify the source file, and any guards'''
@@ -168,6 +182,8 @@ class Source(SourceFile):
 
         self.Werror = Werror
         self.swig = swig
+
+        Source.source_groups[Source.current_group].append(self)
 
 class PySource(SourceFile):
     '''Add a python source file to the named package'''
@@ -1165,8 +1181,37 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
     if GetOption('without_python'):
         lib_guards['skip_no_python'] = False
 
-    static_objs = [ make_obj(s, True) for s in Source.get(**lib_guards) ]
-    shared_objs = [ make_obj(s, False) for s in Source.get(**lib_guards) ]
+    static_objs = []
+    shared_objs = []
+    for s in guarded_source_iterator(Source.source_groups[None], **lib_guards):
+        static_objs.append(make_obj(s, True))
+        shared_objs.append(make_obj(s, False))
+
+    partial_objs = []
+    for group, all_srcs in Source.source_groups.iteritems():
+        # If these are the ungrouped source files, skip them.
+        if not group:
+            continue
+
+        # Get a list of the source files compatible with the current guards.
+        srcs = [ s for s in guarded_source_iterator(all_srcs, **lib_guards) ]
+        # If there aren't any left, skip this group.
+        if not srcs:
+            continue
+
+        # Set up the static partially linked objects.
+        source_objs = [ make_obj(s, True) for s in srcs ]
+        file_name = new_env.subst("${OBJPREFIX}lib${OBJSUFFIX}.partial")
+        target = File(joinpath(group, file_name))
+        partial = env.PartialStatic(target=target, source=source_objs)
+        static_objs.append(partial)
+
+        # Set up the shared partially linked objects.
+        source_objs = [ make_obj(s, False) for s in srcs ]
+        file_name = new_env.subst("${SHOBJPREFIX}lib${SHOBJSUFFIX}.partial")
+        target = File(joinpath(group, file_name))
+        partial = env.PartialShared(target=target, source=source_objs)
+        shared_objs.append(partial)
 
     static_date = make_obj(date_source, static=True, extra_deps=static_objs)
     static_objs.append(static_date)
