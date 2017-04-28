@@ -648,6 +648,7 @@ else:
     main['SWIGCOMSTR']      = Transform("SWIG")
     main['ARCOMSTR']        = Transform("AR", 0)
     main['LINKCOMSTR']      = Transform("LINK", 0)
+    main['SHLINKCOMSTR']    = Transform("SHLINK", 0)
     main['RANLIBCOMSTR']    = Transform("RANLIB", 0)
     main['M4COMSTR']        = Transform("M4")
     main['SHCCCOMSTR']      = Transform("SHCC")
