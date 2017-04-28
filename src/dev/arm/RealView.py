@@ -817,6 +817,7 @@ Memory map:
    0x0c000000-0x0fffffff: Reserved (Off-chip, CS4)
    0x10000000-0x13ffffff: gem5-specific peripherals (Off-chip, CS5)
        0x10000000-0x1000ffff: gem5 energy controller
+       0x10010000-0x1001ffff: gem5 pseudo-ops
 
    0x14000000-0x17ffffff: Reserved (Off-chip, PSRAM, CS1)
    0x18000000-0x1bffffff: Reserved (Off-chip, Peripherals, CS2)
@@ -956,3 +957,8 @@ Interrupts:
         cur_sys.atags_addr = 0x8000000
         cur_sys.load_addr_mask = 0xfffffff
         cur_sys.load_offset = 0x80000000
+
+        #  Setup m5ops. It's technically not a part of the boot
+        #  loader, but this is the only place we can configure the
+        #  system.
+        cur_sys.m5ops_base = 0x10010000
