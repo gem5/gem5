@@ -1330,7 +1330,6 @@ main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
 
 main['ALL_ISA_LIST'] = all_isa_list
 main['ALL_GPU_ISA_LIST'] = all_gpu_isa_list
-all_isa_deps = {}
 def make_switching_dir(dname, switch_headers, env):
     # Generate the header.  target[0] is the full path of the output
     # header to generate.  'source' is a dummy variable, since we get the
@@ -1355,9 +1354,6 @@ def make_switching_dir(dname, switch_headers, env):
     # Instantiate actions for each header
     for hdr in switch_headers:
         env.Command(hdr, [], switch_hdr_action)
-
-    isa_target = Dir('.').up().name.lower().replace('_', '-')
-    all_isa_deps[isa_target] = None
 
 Export('make_switching_dir')
 
@@ -1534,6 +1530,8 @@ def pairwise(iterable):
     b.next()
     return itertools.izip(a, b)
 
+variant_names = [variant_name(path) for path in variant_paths]
+
 # Create false dependencies so SCons will parse ISAs, establish
 # dependencies, and setup the build Environments serially. Either
 # SCons (likely) and/or our SConscripts (possibly) cannot cope with -j
@@ -1542,7 +1540,7 @@ def pairwise(iterable):
 # Every time I tried to remove this, builds would fail in some
 # creative new way. So, don't do that. You'll want to, though, because
 # tests/SConscript takes a long time to make its Environments.
-for t1, t2 in pairwise(sorted(all_isa_deps.iterkeys())):
+for t1, t2 in pairwise(sorted(variant_names)):
     main.Depends('#%s-deps'     % t2, '#%s-deps'     % t1)
     main.Depends('#%s-environs' % t2, '#%s-environs' % t1)
 
