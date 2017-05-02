@@ -163,7 +163,7 @@ PMU::setMiscReg(int misc_reg, MiscReg val)
         return;
 
       case MISCREG_PMEVTYPER0_EL0...MISCREG_PMEVTYPER5_EL0:
-        setCounterTypeRegister(misc_reg - MISCREG_PMEVCNTR0_EL0, val);
+        setCounterTypeRegister(misc_reg - MISCREG_PMEVTYPER0_EL0, val);
         return;
 
       case MISCREG_PMCCFILTR:
