@@ -1357,7 +1357,6 @@ def make_switching_dir(dname, switch_headers, env):
         env.Command(hdr, [], switch_hdr_action)
 
     isa_target = Dir('.').up().name.lower().replace('_', '-')
-    env['PHONY_BASE'] = '#'+isa_target
     all_isa_deps[isa_target] = None
 
 Export('make_switching_dir')
@@ -1420,6 +1419,11 @@ BUILD_TARGETS[:] = ['#all-targets']
 # Define build environments for selected configurations.
 #
 ###################################################
+
+def variant_name(path):
+    return os.path.basename(path).lower().replace('_', '-')
+main['variant_name'] = variant_name
+main['VARIANT_NAME'] = '${variant_name(BUILDDIR)}'
 
 for variant_path in variant_paths:
     if not GetOption('silent'):

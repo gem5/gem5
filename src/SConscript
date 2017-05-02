@@ -1233,9 +1233,9 @@ env.Append(BUILDERS = {'MakeEnvirons' :
                         Builder(action=MakeAction(makeEnvirons,
                                                   Transform("ENVIRONS", 1)))})
 
-isa_target = env['PHONY_BASE'] + '-deps'
-environs   = env['PHONY_BASE'] + '-environs'
-env.Depends('#all-deps',     isa_target)
+isa_target = '#${VARIANT_NAME}-deps'
+environs = '#${VARIANT_NAME}-environs'
+env.Depends('#all-deps', isa_target)
 env.Depends('#all-environs', environs)
 env.ScanISA(isa_target, File('arch/%s/generated/inc.d' % env['TARGET_ISA']))
 envSetup = env.MakeEnvirons(environs, isa_target)
