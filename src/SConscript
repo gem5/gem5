@@ -1113,7 +1113,11 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
             MakeAction('ln $SOURCE $TARGET', Transform("HARDLINK")))
 
     new_env.M5Binary = targets[0]
-    return new_env
+
+    # Set up regression tests.
+    SConscript(os.path.join(env.root.abspath, 'tests', 'SConscript'),
+               variant_dir=variantd('tests', new_env.Label),
+               exports={ 'env' : new_env }, duplicate=False)
 
 # Start out with the compiler flags common to all compilers,
 # i.e. they all use -g for opt and -g -pg for prof
@@ -1183,53 +1187,40 @@ def makeEnvirons(target, source, env):
     # cause any later Source() calls to be fatal, as a diagnostic.
     Source.done()
 
-    envList = []
-
     # Debug binary
     if 'debug' in needed_envs:
-        envList.append(
-            makeEnv(env, 'debug', '.do',
-                    CCFLAGS = Split(ccflags['debug']),
-                    CPPDEFINES = ['DEBUG', 'TRACING_ON=1'],
-                    LINKFLAGS = Split(ldflags['debug'])))
+        makeEnv(env, 'debug', '.do',
+                CCFLAGS = Split(ccflags['debug']),
+                CPPDEFINES = ['DEBUG', 'TRACING_ON=1'],
+                LINKFLAGS = Split(ldflags['debug']))
 
     # Optimized binary
     if 'opt' in needed_envs:
-        envList.append(
-            makeEnv(env, 'opt', '.o',
-                    CCFLAGS = Split(ccflags['opt']),
-                    CPPDEFINES = ['TRACING_ON=1'],
-                    LINKFLAGS = Split(ldflags['opt'])))
+        makeEnv(env, 'opt', '.o',
+                CCFLAGS = Split(ccflags['opt']),
+                CPPDEFINES = ['TRACING_ON=1'],
+                LINKFLAGS = Split(ldflags['opt']))
 
     # "Fast" binary
     if 'fast' in needed_envs:
-        envList.append(
-            makeEnv(env, 'fast', '.fo', strip = True,
-                    CCFLAGS = Split(ccflags['fast']),
-                    CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-                    LINKFLAGS = Split(ldflags['fast'])))
+        makeEnv(env, 'fast', '.fo', strip = True,
+                CCFLAGS = Split(ccflags['fast']),
+                CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
+                LINKFLAGS = Split(ldflags['fast']))
 
     # Profiled binary using gprof
     if 'prof' in needed_envs:
-        envList.append(
-            makeEnv(env, 'prof', '.po',
-                    CCFLAGS = Split(ccflags['prof']),
-                    CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-                    LINKFLAGS = Split(ldflags['prof'])))
+        makeEnv(env, 'prof', '.po',
+                CCFLAGS = Split(ccflags['prof']),
+                CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
+                LINKFLAGS = Split(ldflags['prof']))
 
     # Profiled binary using google-pprof
     if 'perf' in needed_envs:
-        envList.append(
-            makeEnv(env, 'perf', '.gpo',
-                    CCFLAGS = Split(ccflags['perf']),
-                    CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-                    LINKFLAGS = Split(ldflags['perf'])))
-
-    # Set up the regression tests for each build.
-    for e in envList:
-        SConscript(os.path.join(env.root.abspath, 'tests', 'SConscript'),
-                   variant_dir = variantd('tests', e.Label),
-                   exports = { 'env' : e }, duplicate = False)
+        makeEnv(env, 'perf', '.gpo',
+                CCFLAGS = Split(ccflags['perf']),
+                CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
+                LINKFLAGS = Split(ldflags['perf']))
 
 # The MakeEnvirons Builder defers the full dependency collection until
 # after processing the ISA definition (due to dynamically generated
