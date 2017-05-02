@@ -67,13 +67,13 @@ env.SwitchingHeaders(
     env.subst('${TARGET_ISA}'))
 
 if env['BUILD_GPU']:
-    gpu_isa_switch_hdrs = Split('''
+    env.SwitchingHeaders(
+        Split('''
             gpu_decoder.hh
             gpu_isa.hh
             gpu_types.hh
-            ''')
-
-    make_gpu_switching_dir('arch', gpu_isa_switch_hdrs, env)
+            '''),
+        env.subst('${TARGET_GPU_ISA}'))
 
 #################################################################
 #

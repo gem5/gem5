@@ -1331,8 +1331,6 @@ main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
 #
 ###################################################
 
-main['ALL_GPU_ISA_LIST'] = all_gpu_isa_list
-
 def build_switching_header(target, source, env):
     path = str(target[0])
     subdir = str(source[0])
@@ -1356,35 +1354,6 @@ def switching_headers(self, headers, source):
         self.SwitchingHeader(header, source)
 
 main.AddMethod(switching_headers, 'SwitchingHeaders')
-
-def make_gpu_switching_dir(dname, switch_headers, env):
-    # Generate the header.  target[0] is the full path of the output
-    # header to generate.  'source' is a dummy variable, since we get the
-    # list of ISAs from env['ALL_ISA_LIST'].
-    def gen_switch_hdr(target, source, env):
-        fname = str(target[0])
-
-        isa = env['TARGET_GPU_ISA'].lower()
-
-        try:
-            f = open(fname, 'w')
-            print >>f, '#include "%s/%s/%s"' % (dname, isa, basename(fname))
-            f.close()
-        except IOError:
-            print "Failed to create %s" % fname
-            raise
-
-    # Build SCons Action object. 'varlist' specifies env vars that this
-    # action depends on; when env['ALL_ISA_LIST'] changes these actions
-    # should get re-executed.
-    switch_hdr_action = MakeAction(gen_switch_hdr,
-                          Transform("GENERATE"), varlist=['ALL_ISA_GPU_LIST'])
-
-    # Instantiate actions for each header
-    for hdr in switch_headers:
-        env.Command(hdr, [], switch_hdr_action)
-
-Export('make_gpu_switching_dir')
 
 # all-isas -> all-deps -> all-environs -> all_targets
 main.Alias('#all-isas', [])
