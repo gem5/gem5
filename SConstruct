@@ -1324,38 +1324,38 @@ main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
 
 ###################################################
 #
-# This function is used to set up a directory with switching headers
+# This builder and wrapper method are used to set up a directory with
+# switching headers. Those are headers which are in a generic location and
+# that include more specific headers from a directory chosen at build time
+# based on the current build settings.
 #
 ###################################################
 
-main['ALL_ISA_LIST'] = all_isa_list
 main['ALL_GPU_ISA_LIST'] = all_gpu_isa_list
-def make_switching_dir(dname, switch_headers, env):
-    # Generate the header.  target[0] is the full path of the output
-    # header to generate.  'source' is a dummy variable, since we get the
-    # list of ISAs from env['ALL_ISA_LIST'].
-    def gen_switch_hdr(target, source, env):
-        fname = str(target[0])
-        isa = env['TARGET_ISA'].lower()
-        try:
-            f = open(fname, 'w')
-            print >>f, '#include "%s/%s/%s"' % (dname, isa, basename(fname))
-            f.close()
-        except IOError:
-            print "Failed to create %s" % fname
-            raise
 
-    # Build SCons Action object. 'varlist' specifies env vars that this
-    # action depends on; when env['ALL_ISA_LIST'] changes these actions
-    # should get re-executed.
-    switch_hdr_action = MakeAction(gen_switch_hdr,
-                          Transform("GENERATE"), varlist=['ALL_ISA_LIST'])
+def build_switching_header(target, source, env):
+    path = str(target[0])
+    subdir = str(source[0])
+    dp, fp = os.path.split(path)
+    dp = os.path.relpath(os.path.realpath(dp),
+                         os.path.realpath(env['BUILDDIR']))
+    with open(path, 'w') as hdr:
+        print >>hdr, '#include "%s/%s/%s"' % (dp, subdir, fp)
 
-    # Instantiate actions for each header
-    for hdr in switch_headers:
-        env.Command(hdr, [], switch_hdr_action)
+switching_header_action = MakeAction(build_switching_header,
+                                     Transform('GENERATE'))
 
-Export('make_switching_dir')
+switching_header_builder = Builder(action=switching_header_action,
+                                   source_factory=Value,
+                                   single_source=True)
+
+main.Append(BUILDERS = { 'SwitchingHeader': switching_header_builder })
+
+def switching_headers(self, headers, source):
+    for header in headers:
+        self.SwitchingHeader(header, source)
+
+main.AddMethod(switching_headers, 'SwitchingHeaders')
 
 def make_gpu_switching_dir(dname, switch_headers, env):
     # Generate the header.  target[0] is the full path of the output
