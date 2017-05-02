@@ -158,6 +158,8 @@ class SortIncludes(object):
     includes_re = (
         ('main', '""', _include_matcher_main()),
         ('python', '<>', _include_matcher_fname("^Python\.h$")),
+        ('pybind', '""', _include_matcher_fname("^pybind11/.*\.h$",
+                                                delim='""')),
         ('c', '<>', _include_matcher_fname("^.*\.h$")),
         ('stl', '<>', _include_matcher_fname("^\w+$")),
         ('cc', '<>', _include_matcher_fname("^.*\.(hh|hxx|hpp|H)$")),
@@ -170,6 +172,7 @@ class SortIncludes(object):
 
     block_order = (
         ('python', ),
+        ('pybind', ),
         ('main', ),
         ('c', ),
         ('stl', ),
