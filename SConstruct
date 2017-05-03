@@ -685,7 +685,7 @@ if main['GCC'] or main['CLANG']:
     main['FILTER_PSHLINKFLAGS'] = lambda x: str(x).replace(' -shared', '')
     main['PSHLINKFLAGS'] = main.subst('${FILTER_PSHLINKFLAGS(SHLINKFLAGS)}')
     main['PLINKFLAGS'] = main.subst('${LINKFLAGS}')
-    shared_partial_flags = ['-Wl,--relocatable', '-nostdlib']
+    shared_partial_flags = ['-r', '-nostdlib']
     main.Append(PSHLINKFLAGS=shared_partial_flags)
     main.Append(PLINKFLAGS=shared_partial_flags)
 else:
