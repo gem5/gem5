@@ -234,6 +234,7 @@ pybind_init_core(py::module &m_native)
 
         .def("disableAllListeners", &ListenSocket::disableAll)
         .def("listenersDisabled", &ListenSocket::allDisabled)
+        .def("listenersLoopbackOnly", &ListenSocket::loopbackOnly)
         .def("seedRandom", [](uint64_t seed) { random_mt.init(seed); })
 
 
