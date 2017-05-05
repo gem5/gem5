@@ -75,6 +75,12 @@ extern __thread EventQueue *_curEventQueue;
 //! Current mode of execution: parallel / serial
 extern bool inParallelMode;
 
+//! uncommit this if need debug event queue
+//#define EVENTQ_DEBUG
+#ifdef EVENTQ_DEBUG
+extern Tick curTick();
+#endif
+
 //! Function for returning eventq queue for the provided
 //! index. The function allocates a new queue in case one
 //! does not exist for the index, provided that the index
