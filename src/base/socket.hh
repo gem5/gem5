@@ -37,9 +37,13 @@ class ListenSocket
     static bool listeningDisabled;
     static bool anyListening;
 
+    static bool bindToLoopback;
+
   public:
     static void disableAll();
     static bool allDisabled();
+
+    static void loopbackOnly();
 
   protected:
     bool listening;
