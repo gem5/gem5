@@ -108,6 +108,26 @@ class ThreadInfo
         return addr;
     }
 
+    inline Addr
+    curTaskInfo64(Addr thread_info = 0)
+    {
+        // only look up the task_struct if no thread_info is given; otherwise,
+        // the pointer is already a task_struct and we can just return it
+        if (!thread_info) {
+            int32_t offset;
+            if (!get_data("thread_info_task", offset))
+                return 0;
+            thread_info = curThreadInfo();
+            Addr addr;
+            CopyOut(tc, &addr, thread_info + offset, sizeof(addr));
+            return addr;
+        } else {
+            return thread_info;
+        }
+
+
+    }
+
     int32_t
     curTaskPID(Addr thread_info = 0)
     {
@@ -122,6 +142,19 @@ class ThreadInfo
     }
 
     int32_t
+    curTaskPID64(Addr thread_info = 0)
+    {
+        int32_t offset;
+        if (!get_data("task_struct_pid", offset))
+            return -1;
+
+        int32_t pid;
+        CopyOut(tc, &pid, curTaskInfo64(thread_info) + offset, sizeof(pid));
+
+        return pid;
+    }
+
+    int32_t
     curTaskTGID(Addr thread_info = 0)
     {
         int32_t offset;
@@ -130,6 +163,19 @@ class ThreadInfo
 
         int32_t tgid;
         CopyOut(tc, &tgid, curTaskInfo(thread_info) + offset, sizeof(tgid));
+
+        return tgid;
+    }
+
+    int32_t
+    curTaskTGID64(Addr thread_info = 0)
+    {
+        int32_t offset;
+        if (!get_data("task_struct_tgid", offset))
+            return -1;
+
+        int32_t tgid;
+        CopyOut(tc, &tgid, curTaskInfo64(thread_info) + offset, sizeof(tgid));
 
         return tgid;
     }
@@ -167,6 +213,24 @@ class ThreadInfo
         return buffer;
     }
 
+    std::string
+    curTaskName64(Addr thread_info = 0)
+    {
+        int32_t offset;
+        int32_t size;
+
+        if (!get_data("task_struct_comm", offset))
+            return "FailureIn_curTaskName";
+
+        if (!get_data("task_struct_comm_size", size))
+            return "FailureIn_curTaskName";
+
+        char buffer[size + 1];
+        CopyStringOut(tc, buffer, curTaskInfo64(thread_info) + offset, size);
+
+        return buffer;
+    }
+
     int32_t
     curTaskMm(Addr thread_info = 0)
     {
@@ -176,6 +240,19 @@ class ThreadInfo
 
         int32_t mm_ptr;
         CopyOut(tc, &mm_ptr, curTaskInfo(thread_info) + offset, sizeof(mm_ptr));
+
+        return mm_ptr;
+    }
+
+    int32_t
+    curTaskMm64(Addr thread_info = 0)
+    {
+        int32_t offset;
+        if (!get_data("task_struct_mm", offset))
+            return -1;
+
+        int32_t mm_ptr;
+        CopyOut(tc, &mm_ptr, curTaskInfo64(thread_info) + offset, sizeof(mm_ptr));
 
         return mm_ptr;
     }
