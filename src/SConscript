@@ -610,7 +610,7 @@ PySource('m5', 'python/m5/info.py')
 def createSimObjectParamStruct(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
-    name = str(source[0].get_contents())
+    name = source[0].get_text_contents()
     obj = sim_objects[name]
 
     code = code_formatter()
@@ -632,7 +632,7 @@ def createSimObjectCxxConfig(is_header):
 def createEnumStrings(target, source, env):
     assert len(target) == 1 and len(source) == 2
 
-    name = str(source[0].get_contents())
+    name = source[0].get_text_contents()
     use_python = source[1].read()
     obj = all_enums[name]
 
@@ -645,7 +645,7 @@ def createEnumStrings(target, source, env):
 def createEnumDecls(target, source, env):
     assert len(target) == 1 and len(source) == 1
 
-    name = str(source[0].get_contents())
+    name = source[0].get_text_contents()
     obj = all_enums[name]
 
     code = code_formatter()
@@ -653,7 +653,7 @@ def createEnumDecls(target, source, env):
     code.write(target[0].abspath)
 
 def createSimObjectPyBindWrapper(target, source, env):
-    name = source[0].get_contents()
+    name = source[0].get_text_contents()
     obj = sim_objects[name]
 
     code = code_formatter()
