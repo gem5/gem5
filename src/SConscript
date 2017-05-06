@@ -630,14 +630,15 @@ def createSimObjectCxxConfig(is_header):
     return body
 
 def createEnumStrings(target, source, env):
-    assert len(target) == 1 and len(source) == 1
+    assert len(target) == 1 and len(source) == 2
 
     name = str(source[0].get_contents())
+    use_python = source[1].read()
     obj = all_enums[name]
 
     code = code_formatter()
     obj.cxx_def(code)
-    if env['USE_PYTHON']:
+    if use_python:
         obj.pybind_def(code)
     code.write(target[0].abspath)
 
@@ -732,7 +733,7 @@ for name,enum in sorted(all_enums.iteritems()):
     extra_deps = [ py_source.tnode ]
 
     cc_file = File('enums/%s.cc' % name)
-    env.Command(cc_file, Value(name),
+    env.Command(cc_file, [Value(name), Value(env['USE_PYTHON'])],
                 MakeAction(createEnumStrings, Transform("ENUM STR")))
     env.Depends(cc_file, depends + extra_deps)
     Source(cc_file)
