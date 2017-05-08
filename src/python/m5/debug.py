@@ -65,8 +65,8 @@ class AllFlags(DictMixin):
             return
 
         self._dict.clear()
-        for flag in _m5.debug.getAllFlags():
-            self._dict[flag.name()] = flag
+        for name, flag in _m5.debug.allFlags().items():
+            self._dict[name] = flag
         self._version = current_version
 
     def __contains__(self, item):
