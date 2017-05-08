@@ -251,6 +251,16 @@ do_addsymbol(int argc, char *argv[])
     m5_addsymbol(addr, symbol);
 }
 
+
+void
+do_loadsymbol(int argc, char *argv[])
+{
+    if (argc > 0)
+        usage();
+
+    m5_loadsymbol();
+}
+
 void
 do_initparam(int argc, char *argv[])
 {
@@ -321,6 +331,7 @@ struct MainFunc mainfuncs[] = {
     { "execfile",       do_exec_file,        "" },
     { "checkpoint",     do_checkpoint,       "[delay [period]]" },
     { "addsymbol",      do_addsymbol,        "<address> <symbol>" },
+    { "loadsymbol",     do_loadsymbol,       "" },
     { "initparam",      do_initparam,        "[key] // key must be shorter than 16 chars" },
     { "sw99param",      do_sw99param,        "" },
 #ifdef linux

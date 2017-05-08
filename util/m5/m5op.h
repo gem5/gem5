@@ -59,6 +59,7 @@ void m5_debugbreak(void);
 void m5_switchcpu(void);
 void m5_togglesync(void);
 void m5_addsymbol(uint64_t addr, char *symbol);
+void m5_loadsymbol();
 void m5_panic(void);
 void m5_work_begin(uint64_t workid, uint64_t threadid);
 void m5_work_end(uint64_t workid, uint64_t threadid);
