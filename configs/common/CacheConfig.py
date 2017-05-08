@@ -53,7 +53,7 @@ def config_cache(options, system):
     if options.external_memory_system:
         ExternalCache = ExternalCacheFactory(options.external_memory_system)
 
-    if options.cpu_type == "arm_detailed":
+    if options.cpu_type == "O3_ARM_v7a_3":
         try:
             from O3_ARM_v7a import *
         except:

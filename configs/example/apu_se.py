@@ -181,9 +181,9 @@ if buildEnv['PROTOCOL'] == 'None':
     fatal("GPU model requires ruby")
 
 # Currently the gpu model requires only timing or detailed CPU
-if not (options.cpu_type == "timing" or
-   options.cpu_type == "detailed"):
-    fatal("GPU model requires timing or detailed CPU")
+if not (options.cpu_type == "TimingSimpleCPU" or
+   options.cpu_type == "DerivO3CPU"):
+    fatal("GPU model requires TimingSimpleCPU or DerivO3CPU")
 
 # This file can support multiple compute units
 assert(options.num_compute_units >= 1)

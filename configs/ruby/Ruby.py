@@ -52,7 +52,7 @@ from network import Network
 
 def define_options(parser):
     # By default, ruby uses the simple timing cpu
-    parser.set_defaults(cpu_type="timing")
+    parser.set_defaults(cpu_type="TimingSimpleCPU")
 
     parser.add_option("--ruby-clock", action="store", type="string",
                       default='2GHz',
@@ -212,6 +212,6 @@ def send_evicts(options):
     # currently, 2 scenarios warrant forwarding evictions to the CPU:
     # 1. The O3 model must keep the LSQ coherent with the caches
     # 2. The x86 mwait instruction is built on top of coherence invalidations
-    if options.cpu_type == "detailed" or buildEnv['TARGET_ISA'] == 'x86':
+    if options.cpu_type == "DerivO3CPU" or buildEnv['TARGET_ISA'] == 'x86':
         return True
     return False

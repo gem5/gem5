@@ -65,9 +65,9 @@ if args:
 
 numThreads = 1
 
-if options.cpu_type != "trace":
+if options.cpu_type != "TraceCPU":
     fatal("This is a script for elastic trace replay simulation, use "\
-            "--cpu-type=trace\n");
+            "--cpu-type=TraceCPU\n");
 
 if options.num_cpus > 1:
     fatal("This script does not support multi-processor trace replay.\n")

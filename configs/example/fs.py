@@ -147,7 +147,8 @@ def build_test_system(np):
 
     if options.ruby:
         # Check for timing mode because ruby does not support atomic accesses
-        if not (options.cpu_type == "detailed" or options.cpu_type == "timing"):
+        if not (options.cpu_type == "DerivO3CPU" or
+                options.cpu_type == "TimingSimpleCPU"):
             print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
             sys.exit(1)
 
