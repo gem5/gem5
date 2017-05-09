@@ -132,7 +132,8 @@ init_serialize(py::module &m_native)
 {
     py::module m = m_native.def_submodule("serialize");
 
-    py::class_<Serializable>(m, "Serializable")
+    py::class_<Serializable, std::unique_ptr<Serializable, py::nodelete>>(
+        m, "Serializable")
         ;
 
     py::class_<CheckpointIn>(m, "CheckpointIn")
@@ -165,7 +166,7 @@ init_range(py::module &m_native)
         .def("isSubset", &AddrRange::isSubset)
         ;
 
-    // We need to make vectors of AddrRange opaque to avoid a weird
+    // We need to make vectors of AddrRange opaque to avoid weird
     // memory allocation issues in PyBind's STL wrappers.
     py::bind_vector<std::vector<AddrRange>>(m, "AddrRangeVector");
 

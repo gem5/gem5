@@ -701,10 +701,13 @@ module_init(py::module &m_internal)
 ''')
         code.indent()
         if cls._base:
-            code('py::class_<${cls}Params, ${{cls._base.type}}Params>(m, ' \
-                 '"${cls}Params")')
+            code('py::class_<${cls}Params, ${{cls._base.type}}Params, ' \
+                 'std::unique_ptr<${{cls}}Params, py::nodelete>>(' \
+                 'm, "${cls}Params")')
         else:
-            code('py::class_<${cls}Params>(m, "${cls}Params")')
+            code('py::class_<${cls}Params, ' \
+                 'std::unique_ptr<${cls}Params, py::nodelete>>(' \
+                 'm, "${cls}Params")')
 
         code.indent()
         if not hasattr(cls, 'abstract') or not cls.abstract:
@@ -729,10 +732,13 @@ module_init(py::module &m_internal)
                 cls.cxx_bases
         if bases:
             base_str = ", ".join(bases)
-            code('py::class_<${{cls.cxx_class}}, ${base_str}>(m, ' \
-                 '"${py_class_name}")')
+            code('py::class_<${{cls.cxx_class}}, ${base_str}, ' \
+                 'std::unique_ptr<${{cls.cxx_class}}, py::nodelete>>(' \
+                 'm, "${py_class_name}")')
         else:
-            code('py::class_<${{cls.cxx_class}}>(m, "${py_class_name}")')
+            code('py::class_<${{cls.cxx_class}}, ' \
+                 'std::unique_ptr<${{cls.cxx_class}}, py::nodelete>>(' \
+                 'm, "${py_class_name}")')
         code.indent()
         for exp in cls.cxx_exports:
             exp.export(code, cls.cxx_class)
