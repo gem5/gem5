@@ -24,7 +24,7 @@ function calls to constructors:
         ...
     }
 
-You can find various examples of these in several of the existing example .cpp files.  (Of course
+You can find various examples of these in several of the existing testing .cpp files.  (Of course
 you don't need to add any of the above constructors/operators that you don't actually have, except
 for the destructor).
 
@@ -41,7 +41,7 @@ value constructor) for all of the above methods which will be included in the ou
 For testing, each of these also keeps track the created instances and allows you to check how many
 of the various constructors have been invoked from the Python side via code such as:
 
-    from example import ConstructorStats
+    from pybind11_tests import ConstructorStats
     cstats = ConstructorStats.get(MyClass)
     print(cstats.alive())
     print(cstats.default_constructions)
@@ -85,27 +85,51 @@ public:
         created(inst);
         copy_constructions++;
     }
+
     void move_created(void *inst) {
         created(inst);
         move_constructions++;
     }
+
     void default_created(void *inst) {
         created(inst);
         default_constructions++;
     }
+
     void created(void *inst) {
         ++_instances[inst];
-    };
+    }
+
     void destroyed(void *inst) {
         if (--_instances[inst] < 0)
-            throw std::runtime_error("cstats.destroyed() called with unknown instance; potential double-destruction or a missing cstats.created()");
+            throw std::runtime_error("cstats.destroyed() called with unknown "
+                                     "instance; potential double-destruction "
+                                     "or a missing cstats.created()");
+    }
+
+    static void gc() {
+        // Force garbage collection to ensure any pending destructors are invoked:
+#if defined(PYPY_VERSION)
+        PyObject *globals = PyEval_GetGlobals();
+        PyObject *result = PyRun_String(
+            "import gc\n"
+            "for i in range(2):"
+            "    gc.collect()\n",
+            Py_file_input, globals, globals);
+        if (result == nullptr)
+            throw py::error_already_set();
+        Py_DECREF(result);
+#else
+        py::module::import("gc").attr("collect")();
+#endif
     }
 
     int alive() {
-        // Force garbage collection to ensure any pending destructors are invoked:
-        py::module::import("gc").attr("collect")();
+        gc();
         int total = 0;
-        for (const auto &p : _instances) if (p.second > 0) total += p.second;
+        for (const auto &p : _instances)
+            if (p.second > 0)
+                total += p.second;
         return total;
     }
 
@@ -134,6 +158,9 @@ public:
 
     // Gets constructor stats from a C++ type
     template <typename T> static ConstructorStats& get() {
+#if defined(PYPY_VERSION)
+        gc();
+#endif
         return get(typeid(T));
     }
 

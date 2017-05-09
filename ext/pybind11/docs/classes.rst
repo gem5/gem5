@@ -38,7 +38,7 @@ The binding code for ``Pet`` looks as follows:
         return m.ptr();
     }
 
-:class:`class_` creates bindings for a C++ `class` or `struct`-style data
+:class:`class_` creates bindings for a C++ *class* or *struct*-style data
 structure. :func:`init` is a convenience function that takes the types of a
 constructor's parameters as template arguments and wraps the corresponding
 constructor (see the :ref:`custom_constructors` section for details). An
@@ -298,8 +298,8 @@ different kinds of input arguments:
     struct Pet {
         Pet(const std::string &name, int age) : name(name), age(age) { }
 
-        void set(int age) { age = age; }
-        void set(const std::string &name) { name = name; }
+        void set(int age_) { age = age_; }
+        void set(const std::string &name_) { name = name_; }
 
         std::string name;
         int age;
@@ -423,6 +423,12 @@ typed enums.
     >>> int(p.type)
     1L
 
+The entries defined by the enumeration type are exposed in the ``__members__`` property:
+
+.. code-block:: pycon
+
+    >>> Pet.Kind.__members__
+    {'Dog': Kind.Dog, 'Cat': Kind.Cat}
 
 .. note::
 

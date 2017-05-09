@@ -5,10 +5,12 @@ Automatic conversion
 ====================
 
 When including the additional header file :file:`pybind11/stl.h`, conversions
-between ``std::vector<>``, ``std::list<>``, ``std::set<>``, and ``std::map<>``
-and the Python ``list``, ``set`` and ``dict`` data structures are automatically
-enabled. The types ``std::pair<>`` and ``std::tuple<>`` are already supported
-out of the box with just the core :file:`pybind11/pybind11.h` header.
+between ``std::vector<>``/``std::list<>``/``std::array<>``,
+``std::set<>``/``std::unordered_set<>``, and
+``std::map<>``/``std::unordered_map<>`` and the Python ``list``, ``set`` and
+``dict`` data structures are automatically enabled. The types ``std::pair<>``
+and ``std::tuple<>`` are already supported out of the box with just the core
+:file:`pybind11/pybind11.h` header.
 
 The major downside of these implicit conversions is that containers must be
 converted (i.e. copied) on every Python->C++ and C++->Python transition, which
@@ -72,7 +74,7 @@ functions:
     /* ... binding code ... */
 
     py::class_<MyClass>(m, "MyClass")
-        .def(py::init<>)
+        .def(py::init<>())
         .def_readwrite("contents", &MyClass::contents);
 
 In this case, properties can be read and written in their entirety. However, an

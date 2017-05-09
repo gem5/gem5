@@ -57,6 +57,7 @@ test_initializer pickling([](py::module &m) {
             p.setExtra2(t[2].cast<int>());
         });
 
+#if !defined(PYPY_VERSION)
     py::class_<PickleableWithDict>(m, "PickleableWithDict", py::dynamic_attr())
         .def(py::init<std::string>())
         .def_readwrite("value", &PickleableWithDict::value)
@@ -70,7 +71,7 @@ test_initializer pickling([](py::module &m) {
                 throw std::runtime_error("Invalid state!");
             /* Cast and construct */
             auto& p = self.cast<PickleableWithDict&>();
-            new (&p) Pickleable(t[0].cast<std::string>());
+            new (&p) PickleableWithDict(t[0].cast<std::string>());
 
             /* Assign C++ state */
             p.extra = t[1].cast<int>();
@@ -78,4 +79,5 @@ test_initializer pickling([](py::module &m) {
             /* Assign Python state */
             self.attr("__dict__") = t[2];
         });
+#endif
 });

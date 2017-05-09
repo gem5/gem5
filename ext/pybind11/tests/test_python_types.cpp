@@ -17,6 +17,11 @@
 #  include <fcntl.h>
 #endif
 
+#if defined(_MSC_VER)
+#  pragma warning(push)
+#  pragma warning(disable: 4127) // warning C4127: Conditional expression is constant
+#endif
+
 class ExamplePythonTypes {
 public:
     static ExamplePythonTypes *new_instance() {
@@ -212,8 +217,7 @@ test_initializer python_types([](py::module &m) {
         .def("test_print", &ExamplePythonTypes::test_print, "test the print function")
         .def_static("new_instance", &ExamplePythonTypes::new_instance, "Return an instance")
         .def_readwrite_static("value", &ExamplePythonTypes::value, "Static value member")
-        .def_readonly_static("value2", &ExamplePythonTypes::value2, "Static value member (readonly)")
-        ;
+        .def_readonly_static("value2", &ExamplePythonTypes::value2, "Static value member (readonly)");
 
     m.def("test_print_function", []() {
         py::print("Hello, World!");
@@ -327,14 +331,14 @@ test_initializer python_types([](py::module &m) {
 
 #ifdef PYBIND11_HAS_EXP_OPTIONAL
     has_exp_optional = true;
-    using opt_int = std::experimental::optional<int>;
-    m.def("double_or_zero_exp", [](const opt_int& x) -> int {
+    using exp_opt_int = std::experimental::optional<int>;
+    m.def("double_or_zero_exp", [](const exp_opt_int& x) -> int {
         return x.value_or(0) * 2;
     });
-    m.def("half_or_none_exp", [](int x) -> opt_int {
-        return x ? opt_int(x / 2) : opt_int();
+    m.def("half_or_none_exp", [](int x) -> exp_opt_int {
+        return x ? exp_opt_int(x / 2) : exp_opt_int();
     });
-    m.def("test_nullopt_exp", [](opt_int x) {
+    m.def("test_nullopt_exp", [](exp_opt_int x) {
         return x.value_or(42);
     }, py::arg_v("x", std::experimental::nullopt, "None"));
 #endif
@@ -427,4 +431,65 @@ test_initializer python_types([](py::module &m) {
             "l"_a=l
         );
     });
+
+    // Some test characters in utf16 and utf32 encodings.  The last one (the 𝐀) contains a null byte
+    char32_t a32 = 0x61 /*a*/, z32 = 0x7a /*z*/, ib32 = 0x203d /*‽*/, cake32 = 0x1f382 /*🎂*/,              mathbfA32 = 0x1d400 /*𝐀*/;
+    char16_t b16 = 0x62 /*b*/, z16 = 0x7a,       ib16 = 0x203d,       cake16_1 = 0xd83c, cake16_2 = 0xdf82, mathbfA16_1 = 0xd835, mathbfA16_2 = 0xdc00;
+    std::wstring wstr;
+    wstr.push_back(0x61); // a
+    wstr.push_back(0x2e18); // ⸘
+    if (sizeof(wchar_t) == 2) { wstr.push_back(mathbfA16_1); wstr.push_back(mathbfA16_2); } // 𝐀, utf16
+    else { wstr.push_back((wchar_t) mathbfA32); } // 𝐀, utf32
+    wstr.push_back(0x7a); // z
+
+    m.def("good_utf8_string", []() { return std::string(u8"Say utf8\u203d \U0001f382 \U0001d400"); }); // Say utf8‽ 🎂 𝐀
+    m.def("good_utf16_string", [=]() { return std::u16string({ b16, ib16, cake16_1, cake16_2, mathbfA16_1, mathbfA16_2, z16 }); }); // b‽🎂𝐀z
+    m.def("good_utf32_string", [=]() { return std::u32string({ a32, mathbfA32, cake32, ib32, z32 }); }); // a𝐀🎂‽z
+    m.def("good_wchar_string", [=]() { return wstr; }); // a‽𝐀z
+    m.def("bad_utf8_string", []()  { return std::string("abc\xd0" "def"); });
+    m.def("bad_utf16_string", [=]() { return std::u16string({ b16, char16_t(0xd800), z16 }); });
+    // Under Python 2.7, invalid unicode UTF-32 characters don't appear to trigger UnicodeDecodeError
+    if (PY_MAJOR_VERSION >= 3)
+        m.def("bad_utf32_string", [=]() { return std::u32string({ a32, char32_t(0xd800), z32 }); });
+    if (PY_MAJOR_VERSION >= 3 || sizeof(wchar_t) == 2)
+        m.def("bad_wchar_string", [=]() { return std::wstring({ wchar_t(0x61), wchar_t(0xd800) }); });
+    m.def("u8_Z", []() -> char { return 'Z'; });
+    m.def("u8_eacute", []() -> char { return '\xe9'; });
+    m.def("u16_ibang", [=]() -> char16_t { return ib16; });
+    m.def("u32_mathbfA", [=]() -> char32_t { return mathbfA32; });
+    m.def("wchar_heart", []() -> wchar_t { return 0x2665; });
+
+    m.attr("wchar_size") = py::cast(sizeof(wchar_t));
+    m.def("ord_char", [](char c) -> int { return static_cast<unsigned char>(c); });
+    m.def("ord_char16", [](char16_t c) -> uint16_t { return c; });
+    m.def("ord_char32", [](char32_t c) -> uint32_t { return c; });
+    m.def("ord_wchar", [](wchar_t c) -> int { return c; });
+
+    m.def("return_none_string", []() -> std::string * { return nullptr; });
+    m.def("return_none_char",   []() -> const char *  { return nullptr; });
+    m.def("return_none_bool",   []() -> bool *        { return nullptr; });
+    m.def("return_none_int",    []() -> int *         { return nullptr; });
+    m.def("return_none_float",  []() -> float *       { return nullptr; });
+
+    m.def("return_capsule_with_destructor",
+        []() {
+            py::print("creating capsule");
+            return py::capsule([]() {
+                py::print("destructing capsule");
+            });
+        }
+    );
+
+    m.def("return_capsule_with_destructor_2",
+        []() {
+            py::print("creating capsule");
+            return py::capsule((void *) 1234, [](void *ptr) {
+                py::print("destructing capsule: {}"_s.format((size_t) ptr));
+            });
+        }
+    );
 });
+
+#if defined(_MSC_VER)
+#  pragma warning(pop)
+#endif

@@ -79,7 +79,7 @@ helper class that is defined as follows:
             PYBIND11_OVERLOAD_PURE(
                 std::string, /* Return type */
                 Animal,      /* Parent class */
-                go,          /* Name of function */
+                go,          /* Name of function in C++ (must match Python name) */
                 n_times      /* Argument(s) */
             );
         }
@@ -90,7 +90,8 @@ functions, and :func:`PYBIND11_OVERLOAD` should be used for functions which have
 a default implementation.  There are also two alternate macros
 :func:`PYBIND11_OVERLOAD_PURE_NAME` and :func:`PYBIND11_OVERLOAD_NAME` which
 take a string-valued name argument between the *Parent class* and *Name of the
-function* slots. This is useful when the C++ and Python versions of the
+function* slots, which defines the name of function in Python. This is required 
+when the C++ and Python versions of the
 function have different names, e.g.  ``operator()`` vs ``__call__``.
 
 The binding code also needs a few minor adaptations (highlighted):
@@ -115,10 +116,19 @@ The binding code also needs a few minor adaptations (highlighted):
     }
 
 Importantly, pybind11 is made aware of the trampoline helper class by
-specifying it as an extra template argument to :class:`class_`.  (This can also
+specifying it as an extra template argument to :class:`class_`. (This can also
 be combined with other template arguments such as a custom holder type; the
 order of template types does not matter).  Following this, we are able to
 define a constructor as usual.
+
+Bindings should be made against the actual class, not the trampoline helper class.
+
+.. code-block:: cpp
+
+    py::class_<Animal, PyAnimal /* <--- trampoline*/> animal(m, "Animal");
+        animal
+            .def(py::init<>())
+            .def("go", &PyAnimal::go); /* <--- THIS IS WRONG, use &Animal::go */
 
 Note, however, that the above is sufficient for allowing python classes to
 extend ``Animal``, but not ``Dog``: see ref:`virtual_and_inheritance` for the
@@ -186,7 +196,7 @@ example as follows:
         virtual std::string go(int n_times) = 0;
         virtual std::string name() { return "unknown"; }
     };
-    class Dog : public class Animal {
+    class Dog : public Animal {
     public:
         std::string go(int n_times) override {
             std::string result;
@@ -220,6 +230,13 @@ override the ``name()`` method):
         std::string bark() override { PYBIND11_OVERLOAD(std::string, Dog, bark, ); }
     };
 
+.. note::
+
+    Note the trailing commas in the ``PYBIND11_OVERLOAD`` calls to ``name()``
+    and ``bark()``. These are needed to portably implement a trampoline for a
+    function that does not take any arguments. For functions that take
+    a nonzero number of arguments, the trailing comma must be omitted.
+
 A registered class derived from a pybind11-registered class with virtual
 methods requires a similar trampoline class, *even if* it doesn't explicitly
 declare or override any virtual methods itself:
@@ -228,7 +245,8 @@ declare or override any virtual methods itself:
 
     class Husky : public Dog {};
     class PyHusky : public Husky {
-        using Dog::Dog; // Inherit constructors
+    public:
+        using Husky::Husky; // Inherit constructors
         std::string go(int n_times) override { PYBIND11_OVERLOAD_PURE(std::string, Husky, go, n_times); }
         std::string name() override { PYBIND11_OVERLOAD(std::string, Husky, name, ); }
         std::string bark() override { PYBIND11_OVERLOAD(std::string, Husky, bark, ); }
@@ -242,11 +260,13 @@ follows:
 .. code-block:: cpp
 
     template <class AnimalBase = Animal> class PyAnimal : public AnimalBase {
+    public:
         using AnimalBase::AnimalBase; // Inherit constructors
         std::string go(int n_times) override { PYBIND11_OVERLOAD_PURE(std::string, AnimalBase, go, n_times); }
         std::string name() override { PYBIND11_OVERLOAD(std::string, AnimalBase, name, ); }
     };
     template <class DogBase = Dog> class PyDog : public PyAnimal<DogBase> {
+    public:
         using PyAnimal<DogBase>::PyAnimal; // Inherit constructors
         // Override PyAnimal's pure virtual go() with a non-pure one:
         std::string go(int n_times) override { PYBIND11_OVERLOAD(std::string, DogBase, go, n_times); }
@@ -373,7 +393,9 @@ crucial that instances are deallocated on the C++ side to avoid memory leaks.
     /* ... binding code ... */
 
     py::class_<MyClass, std::unique_ptr<MyClass, py::nodelete>>(m, "MyClass")
-        .def(py::init<>)
+        .def(py::init<>())
+
+.. _implicit_conversions:
 
 Implicit conversions
 ====================
@@ -422,11 +444,11 @@ The section on :ref:`properties` discussed the creation of instance properties
 that are implemented in terms of C++ getters and setters.
 
 Static properties can also be created in a similar way to expose getters and
-setters of static class attributes. It is important to note that the implicit
-``self`` argument also exists in this case and is used to pass the Python
-``type`` subclass instance. This parameter will often not be needed by the C++
-side, and the following example illustrates how to instantiate a lambda getter
-function that ignores it:
+setters of static class attributes. Note that the implicit ``self`` argument
+also exists in this case and is used to pass the Python ``type`` subclass
+instance. This parameter will often not be needed by the C++ side, and the
+following example illustrates how to instantiate a lambda getter function
+that ignores it:
 
 .. code-block:: cpp
 
@@ -478,6 +500,7 @@ to Python.
             .def(py::self += py::self)
             .def(py::self *= float())
             .def(float() * py::self)
+            .def(py::self * float())
             .def("__repr__", &Vector2::toString);
 
         return m.ptr();

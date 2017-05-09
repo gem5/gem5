@@ -33,7 +33,7 @@ completely avoid copy operations with Python expressions like
 
 .. code-block:: cpp
 
-    py::class_<Matrix>(m, "Matrix")
+    py::class_<Matrix>(m, "Matrix", py::buffer_protocol())
        .def_buffer([](Matrix &m) -> py::buffer_info {
             return py::buffer_info(
                 m.data(),                               /* Pointer to buffer */
@@ -46,9 +46,12 @@ completely avoid copy operations with Python expressions like
             );
         });
 
-The snippet above binds a lambda function, which can create ``py::buffer_info``
-description records on demand describing a given matrix. The contents of
-``py::buffer_info`` mirror the Python buffer protocol specification.
+Supporting the buffer protocol in a new type involves specifying the special
+``py::buffer_protocol()`` tag in the ``py::class_`` constructor and calling the
+``def_buffer()`` method with a lambda function that creates a
+``py::buffer_info`` description record on demand describing a given matrix
+instance. The contents of ``py::buffer_info`` mirror the Python buffer protocol
+specification.
 
 .. code-block:: cpp
 
@@ -77,7 +80,7 @@ buffer objects (e.g. a NumPy matrix).
     typedef Matrix::Scalar Scalar;
     constexpr bool rowMajor = Matrix::Flags & Eigen::RowMajorBit;
 
-    py::class_<Matrix>(m, "Matrix")
+    py::class_<Matrix>(m, "Matrix", py::buffer_protocol())
         .def("__init__", [](Matrix &m, py::buffer b) {
             typedef Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic> Strides;
 
@@ -152,7 +155,7 @@ NumPy array containing double precision values.
 When it is invoked with a different type (e.g. an integer or a list of
 integers), the binding code will attempt to cast the input into a NumPy array
 of the requested type. Note that this feature requires the
-:file:``pybind11/numpy.h`` header to be included.
+:file:`pybind11/numpy.h` header to be included.
 
 Data in NumPy arrays is not guaranteed to packed in a dense manner;
 furthermore, entries can be separated by arbitrary column and row strides.
@@ -173,9 +176,10 @@ function overload.
 Structured types
 ================
 
-In order for ``py::array_t`` to work with structured (record) types, we first need
-to register the memory layout of the type. This can be done via ``PYBIND11_NUMPY_DTYPE``
-macro which expects the type followed by field names:
+In order for ``py::array_t`` to work with structured (record) types, we first
+need to register the memory layout of the type. This can be done via
+``PYBIND11_NUMPY_DTYPE`` macro, called in the plugin definition code, which
+expects the type followed by field names:
 
 .. code-block:: cpp
 
@@ -189,10 +193,14 @@ macro which expects the type followed by field names:
         A a;
     };
 
-    PYBIND11_NUMPY_DTYPE(A, x, y);
-    PYBIND11_NUMPY_DTYPE(B, z, a);
+    // ...
+    PYBIND11_PLUGIN(test) {
+        // ...
 
-    /* now both A and B can be used as template arguments to py::array_t */
+        PYBIND11_NUMPY_DTYPE(A, x, y);
+        PYBIND11_NUMPY_DTYPE(B, z, a);
+        /* now both A and B can be used as template arguments to py::array_t */
+    }
 
 Vectorizing functions
 =====================
@@ -297,3 +305,75 @@ simply using ``vectorize``).
 
     The file :file:`tests/test_numpy_vectorize.cpp` contains a complete
     example that demonstrates using :func:`vectorize` in more detail.
+
+Direct access
+=============
+
+For performance reasons, particularly when dealing with very large arrays, it
+is often desirable to directly access array elements without internal checking
+of dimensions and bounds on every access when indices are known to be already
+valid.  To avoid such checks, the ``array`` class and ``array_t<T>`` template
+class offer an unchecked proxy object that can be used for this unchecked
+access through the ``unchecked<N>`` and ``mutable_unchecked<N>`` methods,
+where ``N`` gives the required dimensionality of the array:
+
+.. code-block:: cpp
+
+    m.def("sum_3d", [](py::array_t<double> x) {
+        auto r = x.unchecked<3>(); // x must have ndim = 3; can be non-writeable
+        double sum = 0;
+        for (size_t i = 0; i < r.shape(0); i++)
+            for (size_t j = 0; j < r.shape(1); j++)
+                for (size_t k = 0; k < r.shape(2); k++)
+                    sum += r(i, j, k);
+        return sum;
+    });
+    m.def("increment_3d", [](py::array_t<double> x) {
+        auto r = x.mutable_unchecked<3>(); // Will throw if ndim != 3 or flags.writeable is false
+        for (size_t i = 0; i < r.shape(0); i++)
+            for (size_t j = 0; j < r.shape(1); j++)
+                for (size_t k = 0; k < r.shape(2); k++)
+                    r(i, j, k) += 1.0;
+    }, py::arg().noconvert());
+
+To obtain the proxy from an ``array`` object, you must specify both the data
+type and number of dimensions as template arguments, such as ``auto r =
+myarray.mutable_unchecked<float, 2>()``.
+
+If the number of dimensions is not known at compile time, you can omit the
+dimensions template parameter (i.e. calling ``arr_t.unchecked()`` or
+``arr.unchecked<T>()``.  This will give you a proxy object that works in the
+same way, but results in less optimizable code and thus a small efficiency
+loss in tight loops.
+
+Note that the returned proxy object directly references the array's data, and
+only reads its shape, strides, and writeable flag when constructed.  You must
+take care to ensure that the referenced array is not destroyed or reshaped for
+the duration of the returned object, typically by limiting the scope of the
+returned instance.
+
+The returned proxy object supports some of the same methods as ``py::array`` so
+that it can be used as a drop-in replacement for some existing, index-checked
+uses of ``py::array``:
+
+- ``r.ndim()`` returns the number of dimensions
+
+- ``r.data(1, 2, ...)`` and ``r.mutable_data(1, 2, ...)``` returns a pointer to
+  the ``const T`` or ``T`` data, respectively, at the given indices.  The
+  latter is only available to proxies obtained via ``a.mutable_unchecked()``.
+
+- ``itemsize()`` returns the size of an item in bytes, i.e. ``sizeof(T)``.
+
+- ``ndim()`` returns the number of dimensions.
+
+- ``shape(n)`` returns the size of dimension ``n``
+
+- ``size()`` returns the total number of elements (i.e. the product of the shapes).
+
+- ``nbytes()`` returns the number of bytes used by the referenced elements
+  (i.e. ``itemsize()`` times ``size()``).
+
+.. seealso::
+
+    The file :file:`tests/test_numpy_array.cpp` contains additional examples
+    demonstrating the use of this feature.

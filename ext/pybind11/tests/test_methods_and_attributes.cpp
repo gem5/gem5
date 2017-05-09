@@ -50,10 +50,14 @@ public:
     int *internal4() { return &value; }                           // return by pointer
     const int *internal5() { return &value; }                     // return by const pointer
 
-    py::str overloaded(int, float) { return "(int, float)"; }
-    py::str overloaded(float, int) { return "(float, int)"; }
-    py::str overloaded(int, float) const { return "(int, float) const"; }
-    py::str overloaded(float, int) const { return "(float, int) const"; }
+    py::str overloaded(int, float)   { return "(int, float)"; }
+    py::str overloaded(float, int)   { return "(float, int)"; }
+    py::str overloaded(int, int)     { return "(int, int)"; }
+    py::str overloaded(float, float) { return "(float, float)"; }
+    py::str overloaded(int, float)   const { return "(int, float) const"; }
+    py::str overloaded(float, int)   const { return "(float, int) const"; }
+    py::str overloaded(int, int)     const { return "(int, int) const"; }
+    py::str overloaded(float, float) const { return "(float, float) const"; }
 
     int value = 0;
 };
@@ -97,6 +101,58 @@ public:
 
 class CppDerivedDynamicClass : public DynamicClass { };
 
+// py::arg/py::arg_v testing: these arguments just record their argument when invoked
+class ArgInspector1 { public: std::string arg = "(default arg inspector 1)"; };
+class ArgInspector2 { public: std::string arg = "(default arg inspector 2)"; };
+class ArgAlwaysConverts { };
+namespace pybind11 { namespace detail {
+template <> struct type_caster<ArgInspector1> {
+public:
+    PYBIND11_TYPE_CASTER(ArgInspector1, _("ArgInspector1"));
+
+    bool load(handle src, bool convert) {
+        value.arg = "loading ArgInspector1 argument " +
+            std::string(convert ? "WITH" : "WITHOUT") + " conversion allowed.  "
+            "Argument value = " + (std::string) str(src);
+        return true;
+    }
+
+    static handle cast(const ArgInspector1 &src, return_value_policy, handle) {
+        return str(src.arg).release();
+    }
+};
+template <> struct type_caster<ArgInspector2> {
+public:
+    PYBIND11_TYPE_CASTER(ArgInspector2, _("ArgInspector2"));
+
+    bool load(handle src, bool convert) {
+        value.arg = "loading ArgInspector2 argument " +
+            std::string(convert ? "WITH" : "WITHOUT") + " conversion allowed.  "
+            "Argument value = " + (std::string) str(src);
+        return true;
+    }
+
+    static handle cast(const ArgInspector2 &src, return_value_policy, handle) {
+        return str(src.arg).release();
+    }
+};
+template <> struct type_caster<ArgAlwaysConverts> {
+public:
+    PYBIND11_TYPE_CASTER(ArgAlwaysConverts, _("ArgAlwaysConverts"));
+
+    bool load(handle, bool convert) {
+        return convert;
+    }
+
+    static handle cast(const ArgAlwaysConverts &, return_value_policy, handle) {
+        return py::none();
+    }
+};
+}}
+
+/// Issue/PR #648: bad arg default debugging output
+class NotRegistered {};
+
 test_initializer methods_and_attributes([](py::module &m) {
     py::class_<ExampleMandA>(m, "ExampleMandA")
         .def(py::init<>())
@@ -123,19 +179,28 @@ test_initializer methods_and_attributes([](py::module &m) {
         .def("internal4", &ExampleMandA::internal4)
         .def("internal5", &ExampleMandA::internal5)
 #if defined(PYBIND11_OVERLOAD_CAST)
-        .def("overloaded", py::overload_cast<int, float>(&ExampleMandA::overloaded))
-        .def("overloaded", py::overload_cast<float, int>(&ExampleMandA::overloaded))
-        .def("overloaded_const", py::overload_cast<int, float>(&ExampleMandA::overloaded, py::const_))
-        .def("overloaded_const", py::overload_cast<float, int>(&ExampleMandA::overloaded, py::const_))
+        .def("overloaded", py::overload_cast<int,   float>(&ExampleMandA::overloaded))
+        .def("overloaded", py::overload_cast<float,   int>(&ExampleMandA::overloaded))
+        .def("overloaded", py::overload_cast<int,     int>(&ExampleMandA::overloaded))
+        .def("overloaded", py::overload_cast<float, float>(&ExampleMandA::overloaded))
+        .def("overloaded_float", py::overload_cast<float, float>(&ExampleMandA::overloaded))
+        .def("overloaded_const", py::overload_cast<int,   float>(&ExampleMandA::overloaded, py::const_))
+        .def("overloaded_const", py::overload_cast<float,   int>(&ExampleMandA::overloaded, py::const_))
+        .def("overloaded_const", py::overload_cast<int,     int>(&ExampleMandA::overloaded, py::const_))
+        .def("overloaded_const", py::overload_cast<float, float>(&ExampleMandA::overloaded, py::const_))
 #else
-        .def("overloaded", static_cast<py::str (ExampleMandA::*)(int, float)>(&ExampleMandA::overloaded))
-        .def("overloaded", static_cast<py::str (ExampleMandA::*)(float, int)>(&ExampleMandA::overloaded))
-        .def("overloaded_const", static_cast<py::str (ExampleMandA::*)(int, float) const>(&ExampleMandA::overloaded))
-        .def("overloaded_const", static_cast<py::str (ExampleMandA::*)(float, int) const>(&ExampleMandA::overloaded))
+        .def("overloaded", static_cast<py::str (ExampleMandA::*)(int,   float)>(&ExampleMandA::overloaded))
+        .def("overloaded", static_cast<py::str (ExampleMandA::*)(float,   int)>(&ExampleMandA::overloaded))
+        .def("overloaded", static_cast<py::str (ExampleMandA::*)(int,     int)>(&ExampleMandA::overloaded))
+        .def("overloaded", static_cast<py::str (ExampleMandA::*)(float, float)>(&ExampleMandA::overloaded))
+        .def("overloaded_float", static_cast<py::str (ExampleMandA::*)(float, float)>(&ExampleMandA::overloaded))
+        .def("overloaded_const", static_cast<py::str (ExampleMandA::*)(int,   float) const>(&ExampleMandA::overloaded))
+        .def("overloaded_const", static_cast<py::str (ExampleMandA::*)(float,   int) const>(&ExampleMandA::overloaded))
+        .def("overloaded_const", static_cast<py::str (ExampleMandA::*)(int,     int) const>(&ExampleMandA::overloaded))
+        .def("overloaded_const", static_cast<py::str (ExampleMandA::*)(float, float) const>(&ExampleMandA::overloaded))
 #endif
         .def("__str__", &ExampleMandA::toString)
-        .def_readwrite("value", &ExampleMandA::value)
-        ;
+        .def_readwrite("value", &ExampleMandA::value);
 
     py::class_<TestProperties>(m, "TestProperties")
         .def(py::init<>())
@@ -149,7 +214,10 @@ test_initializer methods_and_attributes([](py::module &m) {
                                       [](py::object) { return TestProperties::static_get(); })
         .def_property_static("def_property_static",
                              [](py::object) { return TestProperties::static_get(); },
-                             [](py::object, int v) { return TestProperties::static_set(v); });
+                             [](py::object, int v) { TestProperties::static_set(v); })
+        .def_property_static("static_cls",
+                             [](py::object cls) { return cls; },
+                             [](py::object cls, py::function f) { f(cls); });
 
     py::class_<SimpleValue>(m, "SimpleValue")
         .def_readwrite("value", &SimpleValue::value);
@@ -177,9 +245,53 @@ test_initializer methods_and_attributes([](py::module &m) {
         .def_property_readonly("rvalue", &TestPropRVP::get_rvalue)
         .def_property_readonly_static("static_rvalue", [](py::object) { return SimpleValue(); });
 
+    struct MetaclassOverride { };
+    py::class_<MetaclassOverride>(m, "MetaclassOverride", py::metaclass((PyObject *) &PyType_Type))
+        .def_property_readonly_static("readonly", [](py::object) { return 1; });
+
+#if !defined(PYPY_VERSION)
     py::class_<DynamicClass>(m, "DynamicClass", py::dynamic_attr())
         .def(py::init());
 
     py::class_<CppDerivedDynamicClass, DynamicClass>(m, "CppDerivedDynamicClass")
         .def(py::init());
+#endif
+
+    // Test converting.  The ArgAlwaysConverts is just there to make the first no-conversion pass
+    // fail so that our call always ends up happening via the second dispatch (the one that allows
+    // some conversion).
+    class ArgInspector {
+    public:
+        ArgInspector1 f(ArgInspector1 a, ArgAlwaysConverts) { return a; }
+        std::string g(ArgInspector1 a, const ArgInspector1 &b, int c, ArgInspector2 *d, ArgAlwaysConverts) {
+            return a.arg + "\n" + b.arg + "\n" + std::to_string(c) + "\n" + d->arg;
+        }
+        static ArgInspector2 h(ArgInspector2 a, ArgAlwaysConverts) { return a; }
+    };
+    py::class_<ArgInspector>(m, "ArgInspector")
+        .def(py::init<>())
+        .def("f", &ArgInspector::f, py::arg(), py::arg() = ArgAlwaysConverts())
+        .def("g", &ArgInspector::g, "a"_a.noconvert(), "b"_a, "c"_a.noconvert()=13, "d"_a=ArgInspector2(), py::arg() = ArgAlwaysConverts())
+        .def_static("h", &ArgInspector::h, py::arg().noconvert(), py::arg() = ArgAlwaysConverts())
+        ;
+    m.def("arg_inspect_func", [](ArgInspector2 a, ArgInspector1 b, ArgAlwaysConverts) { return a.arg + "\n" + b.arg; },
+            py::arg().noconvert(false), py::arg_v(nullptr, ArgInspector1()).noconvert(true), py::arg() = ArgAlwaysConverts());
+
+    m.def("floats_preferred", [](double f) { return 0.5 * f; }, py::arg("f"));
+    m.def("floats_only", [](double f) { return 0.5 * f; }, py::arg("f").noconvert());
+
+    /// Issue/PR #648: bad arg default debugging output
+#if !defined(NDEBUG)
+    m.attr("debug_enabled") = true;
+#else
+    m.attr("debug_enabled") = false;
+#endif
+    m.def("bad_arg_def_named", []{
+        auto m = py::module::import("pybind11_tests.issues");
+        m.def("should_fail", [](int, NotRegistered) {}, py::arg(), py::arg("a") = NotRegistered());
+    });
+    m.def("bad_arg_def_unnamed", []{
+        auto m = py::module::import("pybind11_tests.issues");
+        m.def("should_fail", [](int, NotRegistered) {}, py::arg(), py::arg() = NotRegistered());
+    });
 });

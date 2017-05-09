@@ -17,15 +17,14 @@ compatibility has its cost: arcane template tricks and workarounds are
 necessary to support the oldest and buggiest of compiler specimens. Now that
 C++11-compatible compilers are widely available, this heavy machinery has
 become an excessively large and unnecessary dependency.
-
 Think of this library as a tiny self-contained version of Boost.Python with
 everything stripped away that isn't relevant for binding generation. Without
-comments, the core header files only require ~2.5K lines of code and depend on
-Python (2.7 or 3.x) and the C++ standard library. This compact implementation
-was possible thanks to some of the new C++11 language features (specifically:
-tuples, lambda functions and variadic templates). Since its creation, this
-library has grown beyond Boost.Python in many ways, leading to dramatically
-simpler binding code in many common situations.
+comments, the core header files only require ~4K lines of code and depend on
+Python (2.7 or 3.x, or PyPy2.7 >= 5.7) and the C++ standard library. This
+compact implementation was possible thanks to some of the new C++11 language
+features (specifically: tuples, lambda functions and variadic templates). Since
+its creation, this library has grown beyond Boost.Python in many ways, leading
+to dramatically simpler binding code in many common situations.
 
 Core features
 *************
@@ -50,6 +49,9 @@ The following core C++ features can be mapped to Python
 Goodies
 *******
 In addition to the core functionality, pybind11 provides some extra goodies:
+
+- Python 2.7, 3.x, and PyPy (PyPy2.7 >= 5.7) are supported with an
+  implementation-agnostic interface.
 
 - It is possible to bind C++11 lambda functions with captured variables. The
   lambda capture data is stored inside the resulting Python function object.
@@ -88,6 +90,6 @@ Supported compilers
 *******************
 
 1. Clang/LLVM (any non-ancient version with C++11 support)
-2. GCC (any non-ancient version with C++11 support)
+2. GCC 4.8 or newer
 3. Microsoft Visual Studio 2015 or newer
 4. Intel C++ compiler v15 or newer

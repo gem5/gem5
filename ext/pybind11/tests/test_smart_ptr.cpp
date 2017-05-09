@@ -82,9 +82,21 @@ private:
 };
 
 /// Make pybind aware of the ref-counted wrapper type (s)
-PYBIND11_DECLARE_HOLDER_TYPE(T, ref<T>); // Required for custom holder type
+
+// ref<T> is a wrapper for 'Object' which uses intrusive reference counting
+// It is always possible to construct a ref<T> from an Object* pointer without
+// possible incosistencies, hence the 'true' argument at the end.
+PYBIND11_DECLARE_HOLDER_TYPE(T, ref<T>, true);
 PYBIND11_DECLARE_HOLDER_TYPE(T, std::shared_ptr<T>); // Not required any more for std::shared_ptr,
                                                      // but it should compile without error
+
+// Make pybind11 aware of the non-standard getter member function
+namespace pybind11 { namespace detail {
+    template <typename T>
+    struct holder_helper<ref<T>> {
+        static const T *get(const ref<T> &p) { return p.get_ptr(); }
+    };
+}}
 
 Object *make_object_1() { return new MyObject1(1); }
 ref<Object> make_object_2() { return new MyObject1(2); }
@@ -124,6 +136,18 @@ test_initializer smart_ptr([](py::module &m) {
 
     py::class_<MyObject1, ref<MyObject1>>(m, "MyObject1", obj)
         .def(py::init<int>());
+
+    m.def("test_object1_refcounting",
+        []() -> bool {
+            ref<MyObject1> o = new MyObject1(0);
+            bool good = o->getRefCount() == 1;
+            py::object o2 = py::cast(o, py::return_value_policy::reference);
+            // always request (partial) ownership for objects with intrusive
+            // reference counting even when using the 'reference' RVP
+            good &= o->getRefCount() == 2;
+            return good;
+        }
+    );
 
     m.def("make_object_1", &make_object_1);
     m.def("make_object_2", &make_object_2);
@@ -190,6 +214,18 @@ struct SharedFromThisRef {
     std::shared_ptr<B> shared = std::make_shared<B>();
 };
 
+template <typename T>
+class CustomUniquePtr {
+    std::unique_ptr<T> impl;
+
+public:
+    CustomUniquePtr(T* p) : impl(p) { }
+    T* get() const { return impl.get(); }
+    T* release_ptr() { return impl.release(); }
+};
+
+PYBIND11_DECLARE_HOLDER_TYPE(T, CustomUniquePtr<T>);
+
 test_initializer smart_ptr_and_references([](py::module &pm) {
     auto m = pm.def_submodule("smart_ptr");
 
@@ -221,4 +257,18 @@ test_initializer smart_ptr_and_references([](py::module &pm) {
                                py::return_value_policy::copy)
         .def("set_ref", [](SharedFromThisRef &, const B &) { return true; })
         .def("set_holder", [](SharedFromThisRef &, std::shared_ptr<B>) { return true; });
+
+    struct C {
+        C() { print_created(this); }
+        ~C() { print_destroyed(this); }
+    };
+
+    py::class_<C, CustomUniquePtr<C>>(m, "TypeWithMoveOnlyHolder")
+        .def_static("make", []() { return CustomUniquePtr<C>(new C); });
+
+    struct HeldByDefaultHolder { };
+
+    py::class_<HeldByDefaultHolder>(m, "HeldByDefaultHolder")
+        .def(py::init<>())
+        .def_static("load_shared_ptr", [](std::shared_ptr<HeldByDefaultHolder>) {});
 });

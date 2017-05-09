@@ -6,6 +6,8 @@ with the basics of binding functions and classes, as explained in :doc:`/basics`
 and :doc:`/classes`. The following guide is applicable to both free and member
 functions, i.e. *methods* in Python.
 
+.. _return_value_policies:
+
 Return value policies
 =====================
 
@@ -14,7 +16,7 @@ lifetime of objects managed by them. This can lead to issues when creating
 bindings for functions that return a non-trivial type. Just by looking at the
 type information, it is not clear whether Python should take charge of the
 returned value and eventually free its resources, or if this is handled on the
-C++ side. For this reason, pybind11 provides a several `return value policy`
+C++ side. For this reason, pybind11 provides a several *return value policy*
 annotations that can be passed to the :func:`module::def` and
 :func:`class_::def` functions. The default policy is
 :enum:`return_value_policy::automatic`.
@@ -24,11 +26,11 @@ Just to illustrate what can go wrong, consider the following simple example:
 
 .. code-block:: cpp
 
-    /* Function declaration */ 
+    /* Function declaration */
     Data *get_data() { return _data; /* (pointer to a static data structure) */ }
     ...
 
-    /* Binding code */ 
+    /* Binding code */
     m.def("get_data", &get_data); // <-- KABOOM, will cause crash when called from Python
 
 What's going on here? When ``get_data()`` is called from Python, the return
@@ -44,7 +46,7 @@ silent data corruption.
 
 In the above example, the policy :enum:`return_value_policy::reference` should have
 been specified so that the global data instance is only *referenced* without any
-implied transfer of ownership, i.e.: 
+implied transfer of ownership, i.e.:
 
 .. code-block:: cpp
 
@@ -88,11 +90,12 @@ The following table provides an overview of available policies:
 |                                                  | return value is referenced by Python. This is the default policy for       |
 |                                                  | property getters created via ``def_property``, ``def_readwrite``, etc.     |
 +--------------------------------------------------+----------------------------------------------------------------------------+
-| :enum:`return_value_policy::automatic`           | This is the default return value policy, which falls back to the policy    |
+| :enum:`return_value_policy::automatic`           | **Default policy.** This policy falls back to the policy                   |
 |                                                  | :enum:`return_value_policy::take_ownership` when the return value is a     |
-|                                                  | pointer. Otherwise, it uses :enum:`return_value::move` or                  |
-|                                                  | :enum:`return_value::copy` for rvalue and lvalue references, respectively. |
-|                                                  | See above for a description of what all of these different policies do.    |
+|                                                  | pointer. Otherwise, it uses :enum:`return_value_policy::move` or           |
+|                                                  | :enum:`return_value_policy::copy` for rvalue and lvalue references,        |
+|                                                  | respectively. See above for a description of what all of these different   |
+|                                                  | policies do.                                                               |
 +--------------------------------------------------+----------------------------------------------------------------------------+
 | :enum:`return_value_policy::automatic_reference` | As above, but use policy :enum:`return_value_policy::reference` when the   |
 |                                                  | return value is a pointer. This is the default conversion policy for       |
@@ -158,8 +161,12 @@ targeted arguments can be passed through the :class:`cpp_function` constructor:
 Additional call policies
 ========================
 
-In addition to the above return value policies, further `call policies` can be
-specified to indicate dependencies between parameters. There is currently just
+In addition to the above return value policies, further *call policies* can be
+specified to indicate dependencies between parameters. In general, call policies
+are required when the C++ object is any kind of container and another object is being
+added to the container.
+
+There is currently just
 one policy named ``keep_alive<Nurse, Patient>``, which indicates that the
 argument with index ``Patient`` should be kept alive at least until the
 argument with index ``Nurse`` is freed by the garbage collector. Argument
@@ -207,8 +214,8 @@ For instance, the following statement iterates over a Python ``dict``:
     void print_dict(py::dict dict) {
         /* Easily interact with Python types */
         for (auto item : dict)
-            std::cout << "key=" << item.first << ", "
-                      << "value=" << item.second << std::endl;
+            std::cout << "key=" << std::string(py::str(item.first)) << ", "
+                      << "value=" << std::string(py::str(item.second)) << std::endl;
     }
 
 It can be exported:
@@ -252,16 +259,21 @@ Such functions can also be created using pybind11:
    m.def("generic", &generic);
 
 The class ``py::args`` derives from ``py::tuple`` and ``py::kwargs`` derives
-from ``py::dict``. Note that the ``kwargs`` argument is invalid if no keyword
-arguments were actually provided. Please refer to the other examples for
-details on how to iterate over these, and on how to cast their entries into
-C++ objects. A demonstration is also available in
-``tests/test_kwargs_and_defaults.cpp``.
+from ``py::dict``.
 
-.. warning::
+You may also use just one or the other, and may combine these with other
+arguments as long as the ``py::args`` and ``py::kwargs`` arguments are the last
+arguments accepted by the function.
 
-   Unlike Python, pybind11 does not allow combining normal parameters with the
-   ``args`` / ``kwargs`` special parameters.
+Please refer to the other examples for details on how to iterate over these,
+and on how to cast their entries into C++ objects. A demonstration is also
+available in ``tests/test_kwargs_and_defaults.cpp``.
+
+.. note::
+
+    When combining \*args or \*\*kwargs with :ref:`keyword_args` you should
+    *not* include ``py::arg`` tags for the ``py::args`` and ``py::kwargs``
+    arguments.
 
 Default arguments revisited
 ===========================
@@ -309,3 +321,89 @@ like so:
 
     py::class_<MyClass>("MyClass")
         .def("myFunction", py::arg("arg") = (SomeType *) nullptr);
+
+.. _nonconverting_arguments:
+
+Non-converting arguments
+========================
+
+Certain argument types may support conversion from one type to another.  Some
+examples of conversions are:
+
+* :ref:`implicit_conversions` declared using ``py::implicitly_convertible<A,B>()``
+* Calling a method accepting a double with an integer argument
+* Calling a ``std::complex<float>`` argument with a non-complex python type
+  (for example, with a float).  (Requires the optional ``pybind11/complex.h``
+  header).
+* Calling a function taking an Eigen matrix reference with a numpy array of the
+  wrong type or of an incompatible data layout.  (Requires the optional
+  ``pybind11/eigen.h`` header).
+
+This behaviour is sometimes undesirable: the binding code may prefer to raise
+an error rather than convert the argument.  This behaviour can be obtained
+through ``py::arg`` by calling the ``.noconvert()`` method of the ``py::arg``
+object, such as:
+
+.. code-block:: cpp
+
+    m.def("floats_only", [](double f) { return 0.5 * f; }, py::arg("f").noconvert());
+    m.def("floats_preferred", [](double f) { return 0.5 * f; }, py::arg("f"));
+
+Attempting the call the second function (the one without ``.noconvert()``) with
+an integer will succeed, but attempting to call the ``.noconvert()`` version
+will fail with a ``TypeError``:
+
+.. code-block:: pycon
+
+    >>> floats_preferred(4)
+    2.0
+    >>> floats_only(4)
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    TypeError: floats_only(): incompatible function arguments. The following argument types are supported:
+        1. (f: float) -> float
+
+    Invoked with: 4
+
+You may, of course, combine this with the :var:`_a` shorthand notation (see
+:ref:`keyword_args`) and/or :ref:`default_args`.  It is also permitted to omit
+the argument name by using the ``py::arg()`` constructor without an argument
+name, i.e. by specifying ``py::arg().noconvert()``.
+
+.. note::
+
+    When specifying ``py::arg`` options it is necessary to provide the same
+    number of options as the bound function has arguments.  Thus if you want to
+    enable no-convert behaviour for just one of several arguments, you will
+    need to specify a ``py::arg()`` annotation for each argument with the
+    no-convert argument modified to ``py::arg().noconvert()``.
+
+Overload resolution order
+=========================
+
+When a function or method with multiple overloads is called from Python,
+pybind11 determines which overload to call in two passes.  The first pass
+attempts to call each overload without allowing argument conversion (as if
+every argument had been specified as ``py::arg().noconvert()`` as decribed
+above).
+
+If no overload succeeds in the no-conversion first pass, a second pass is
+attempted in which argument conversion is allowed (except where prohibited via
+an explicit ``py::arg().noconvert()`` attribute in the function definition).
+
+If the second pass also fails a ``TypeError`` is raised.
+
+Within each pass, overloads are tried in the order they were registered with
+pybind11.
+
+What this means in practice is that pybind11 will prefer any overload that does
+not require conversion of arguments to an overload that does, but otherwise prefers
+earlier-defined overloads to later-defined ones.
+
+.. note::
+
+    pybind11 does *not* further prioritize based on the number/pattern of
+    overloaded arguments.  That is, pybind11 does not prioritize a function
+    requiring one conversion over one requiring three, but only prioritizes
+    overloads requiring no conversion at all to overloads that require
+    conversion of at least one argument.

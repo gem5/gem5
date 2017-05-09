@@ -116,6 +116,11 @@ def test_smart_ptr(capture):
     assert cstats.move_assignments == 0
 
 
+def test_smart_ptr_refcounting():
+    from pybind11_tests import test_object1_refcounting
+    assert test_object1_refcounting()
+
+
 def test_unique_nodelete():
     from pybind11_tests import MyObject4
     o = MyObject4(23)
@@ -196,3 +201,22 @@ def test_shared_ptr_from_this_and_references():
 
     del ref, bad_wp, copy, holder_ref, holder_copy, s
     assert stats.alive() == 0
+
+
+def test_move_only_holder():
+    from pybind11_tests.smart_ptr import TypeWithMoveOnlyHolder
+
+    a = TypeWithMoveOnlyHolder.make()
+    stats = ConstructorStats.get(TypeWithMoveOnlyHolder)
+    assert stats.alive() == 1
+    del a
+    assert stats.alive() == 0
+
+
+def test_smart_ptr_from_default():
+    from pybind11_tests.smart_ptr import HeldByDefaultHolder
+
+    instance = HeldByDefaultHolder()
+    with pytest.raises(RuntimeError) as excinfo:
+        HeldByDefaultHolder.load_shared_ptr(instance)
+    assert "Unable to load a custom holder type from a default-holder instance" in str(excinfo)

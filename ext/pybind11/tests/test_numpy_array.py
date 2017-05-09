@@ -1,5 +1,6 @@
 import pytest
-import gc
+
+pytestmark = pytest.requires_numpy
 
 with pytest.suppress(ImportError):
     import numpy as np
@@ -7,10 +8,9 @@ with pytest.suppress(ImportError):
 
 @pytest.fixture(scope='function')
 def arr():
-    return np.array([[1, 2, 3], [4, 5, 6]], '<u2')
+    return np.array([[1, 2, 3], [4, 5, 6]], '=u2')
 
 
-@pytest.requires_numpy
 def test_array_attributes():
     from pybind11_tests.array import (
         ndim, shape, strides, writeable, size, itemsize, nbytes, owndata
@@ -54,7 +54,6 @@ def test_array_attributes():
     assert not owndata(a)
 
 
-@pytest.requires_numpy
 @pytest.mark.parametrize('args, ret', [([], 0), ([0], 0), ([1], 3), ([0, 1], 1), ([1, 2], 5)])
 def test_index_offset(arr, args, ret):
     from pybind11_tests.array import index_at, index_at_t, offset_at, offset_at_t
@@ -64,7 +63,6 @@ def test_index_offset(arr, args, ret):
     assert offset_at_t(arr, *args) == ret * arr.dtype.itemsize
 
 
-@pytest.requires_numpy
 def test_dim_check_fail(arr):
     from pybind11_tests.array import (index_at, index_at_t, offset_at, offset_at_t, data, data_t,
                                       mutate_data, mutate_data_t)
@@ -75,7 +73,6 @@ def test_dim_check_fail(arr):
         assert str(excinfo.value) == 'too many indices for an array: 3 (ndim = 2)'
 
 
-@pytest.requires_numpy
 @pytest.mark.parametrize('args, ret',
                          [([], [1, 2, 3, 4, 5, 6]),
                           ([1], [4, 5, 6]),
@@ -83,22 +80,21 @@ def test_dim_check_fail(arr):
                           ([1, 2], [6])])
 def test_data(arr, args, ret):
     from pybind11_tests.array import data, data_t
+    from sys import byteorder
     assert all(data_t(arr, *args) == ret)
-    assert all(data(arr, *args)[::2] == ret)
-    assert all(data(arr, *args)[1::2] == 0)
+    assert all(data(arr, *args)[(0 if byteorder == 'little' else 1)::2] == ret)
+    assert all(data(arr, *args)[(1 if byteorder == 'little' else 0)::2] == 0)
 
 
-@pytest.requires_numpy
 def test_mutate_readonly(arr):
     from pybind11_tests.array import mutate_data, mutate_data_t, mutate_at_t
     arr.flags.writeable = False
     for func, args in (mutate_data, ()), (mutate_data_t, ()), (mutate_at_t, (0, 0)):
-        with pytest.raises(RuntimeError) as excinfo:
+        with pytest.raises(ValueError) as excinfo:
             func(arr, *args)
         assert str(excinfo.value) == 'array is not writeable'
 
 
-@pytest.requires_numpy
 @pytest.mark.parametrize('dim', [0, 1, 3])
 def test_at_fail(arr, dim):
     from pybind11_tests.array import at_t, mutate_at_t
@@ -108,7 +104,6 @@ def test_at_fail(arr, dim):
         assert str(excinfo.value) == 'index dimension mismatch: {} (ndim = 2)'.format(dim)
 
 
-@pytest.requires_numpy
 def test_at(arr):
     from pybind11_tests.array import at_t, mutate_at_t
 
@@ -119,7 +114,6 @@ def test_at(arr):
     assert all(mutate_at_t(arr, 1, 0).ravel() == [1, 2, 4, 5, 5, 6])
 
 
-@pytest.requires_numpy
 def test_mutate_data(arr):
     from pybind11_tests.array import mutate_data, mutate_data_t
 
@@ -136,7 +130,6 @@ def test_mutate_data(arr):
     assert all(mutate_data_t(arr, 1, 2).ravel() == [6, 19, 27, 68, 84, 197])
 
 
-@pytest.requires_numpy
 def test_bounds_check(arr):
     from pybind11_tests.array import (index_at, index_at_t, data, data_t,
                                       mutate_data, mutate_data_t, at_t, mutate_at_t)
@@ -151,7 +144,6 @@ def test_bounds_check(arr):
         assert str(excinfo.value) == 'index 4 is out of bounds for axis 1 with size 3'
 
 
-@pytest.requires_numpy
 def test_make_c_f_array():
     from pybind11_tests.array import (
         make_c_array, make_f_array
@@ -162,11 +154,12 @@ def test_make_c_f_array():
     assert not make_f_array().flags.c_contiguous
 
 
-@pytest.requires_numpy
 def test_wrap():
     from pybind11_tests.array import wrap
 
-    def assert_references(a, b):
+    def assert_references(a, b, base=None):
+        if base is None:
+            base = a
         assert a is not b
         assert a.__array_interface__['data'][0] == b.__array_interface__['data'][0]
         assert a.shape == b.shape
@@ -178,7 +171,7 @@ def test_wrap():
         assert a.flags.updateifcopy == b.flags.updateifcopy
         assert np.all(a == b)
         assert not b.flags.owndata
-        assert b.base is a
+        assert b.base is base
         if a.flags.writeable and a.ndim == 2:
             a[0, 0] = 1234
             assert b[0, 0] == 1234
@@ -202,16 +195,15 @@ def test_wrap():
     a2 = wrap(a1)
     assert_references(a1, a2)
 
-    a1 = a1.transpose()
-    a2 = wrap(a1)
-    assert_references(a1, a2)
+    a1t = a1.transpose()
+    a2 = wrap(a1t)
+    assert_references(a1t, a2, a1)
 
-    a1 = a1.diagonal()
-    a2 = wrap(a1)
-    assert_references(a1, a2)
+    a1d = a1.diagonal()
+    a2 = wrap(a1d)
+    assert_references(a1d, a2, a1)
 
 
-@pytest.requires_numpy
 def test_numpy_view(capture):
     from pybind11_tests.array import ArrayClass
     with capture:
@@ -220,7 +212,7 @@ def test_numpy_view(capture):
         ac_view_2 = ac.numpy_view()
         assert np.all(ac_view_1 == np.array([1, 2], dtype=np.int32))
         del ac
-        gc.collect()
+        pytest.gc_collect()
     assert capture == """
         ArrayClass()
         ArrayClass::numpy_view()
@@ -233,20 +225,20 @@ def test_numpy_view(capture):
     with capture:
         del ac_view_1
         del ac_view_2
-        gc.collect()
+        pytest.gc_collect()
+        pytest.gc_collect()
     assert capture == """
         ~ArrayClass()
     """
 
 
-@pytest.requires_numpy
+@pytest.unsupported_on_pypy
 def test_cast_numpy_int64_to_uint64():
     from pybind11_tests.array import function_taking_uint64
     function_taking_uint64(123)
     function_taking_uint64(np.uint64(123))
 
 
-@pytest.requires_numpy
 def test_isinstance():
     from pybind11_tests.array import isinstance_untyped, isinstance_typed
 
@@ -254,7 +246,6 @@ def test_isinstance():
     assert isinstance_typed(np.array([1.0, 2.0, 3.0]))
 
 
-@pytest.requires_numpy
 def test_constructors():
     from pybind11_tests.array import default_constructors, converting_constructors
 
@@ -271,3 +262,118 @@ def test_constructors():
     assert results["array"].dtype == np.int_
     assert results["array_t<int32>"].dtype == np.int32
     assert results["array_t<double>"].dtype == np.float64
+
+
+def test_overload_resolution(msg):
+    from pybind11_tests.array import overloaded, overloaded2, overloaded3, overloaded4, overloaded5
+
+    # Exact overload matches:
+    assert overloaded(np.array([1], dtype='float64')) == 'double'
+    assert overloaded(np.array([1], dtype='float32')) == 'float'
+    assert overloaded(np.array([1], dtype='ushort')) == 'unsigned short'
+    assert overloaded(np.array([1], dtype='intc')) == 'int'
+    assert overloaded(np.array([1], dtype='longlong')) == 'long long'
+    assert overloaded(np.array([1], dtype='complex')) == 'double complex'
+    assert overloaded(np.array([1], dtype='csingle')) == 'float complex'
+
+    # No exact match, should call first convertible version:
+    assert overloaded(np.array([1], dtype='uint8')) == 'double'
+
+    with pytest.raises(TypeError) as excinfo:
+        overloaded("not an array")
+    assert msg(excinfo.value) == """
+        overloaded(): incompatible function arguments. The following argument types are supported:
+            1. (arg0: numpy.ndarray[float64]) -> str
+            2. (arg0: numpy.ndarray[float32]) -> str
+            3. (arg0: numpy.ndarray[int32]) -> str
+            4. (arg0: numpy.ndarray[uint16]) -> str
+            5. (arg0: numpy.ndarray[int64]) -> str
+            6. (arg0: numpy.ndarray[complex128]) -> str
+            7. (arg0: numpy.ndarray[complex64]) -> str
+
+        Invoked with: 'not an array'
+    """
+
+    assert overloaded2(np.array([1], dtype='float64')) == 'double'
+    assert overloaded2(np.array([1], dtype='float32')) == 'float'
+    assert overloaded2(np.array([1], dtype='complex64')) == 'float complex'
+    assert overloaded2(np.array([1], dtype='complex128')) == 'double complex'
+    assert overloaded2(np.array([1], dtype='float32')) == 'float'
+
+    assert overloaded3(np.array([1], dtype='float64')) == 'double'
+    assert overloaded3(np.array([1], dtype='intc')) == 'int'
+    expected_exc = """
+        overloaded3(): incompatible function arguments. The following argument types are supported:
+            1. (arg0: numpy.ndarray[int32]) -> str
+            2. (arg0: numpy.ndarray[float64]) -> str
+
+        Invoked with:"""
+
+    with pytest.raises(TypeError) as excinfo:
+        overloaded3(np.array([1], dtype='uintc'))
+    assert msg(excinfo.value) == expected_exc + " array([1], dtype=uint32)"
+    with pytest.raises(TypeError) as excinfo:
+        overloaded3(np.array([1], dtype='float32'))
+    assert msg(excinfo.value) == expected_exc + " array([ 1.], dtype=float32)"
+    with pytest.raises(TypeError) as excinfo:
+        overloaded3(np.array([1], dtype='complex'))
+    assert msg(excinfo.value) == expected_exc + " array([ 1.+0.j])"
+
+    # Exact matches:
+    assert overloaded4(np.array([1], dtype='double')) == 'double'
+    assert overloaded4(np.array([1], dtype='longlong')) == 'long long'
+    # Non-exact matches requiring conversion.  Since float to integer isn't a
+    # save conversion, it should go to the double overload, but short can go to
+    # either (and so should end up on the first-registered, the long long).
+    assert overloaded4(np.array([1], dtype='float32')) == 'double'
+    assert overloaded4(np.array([1], dtype='short')) == 'long long'
+
+    assert overloaded5(np.array([1], dtype='double')) == 'double'
+    assert overloaded5(np.array([1], dtype='uintc')) == 'unsigned int'
+    assert overloaded5(np.array([1], dtype='float32')) == 'unsigned int'
+
+
+def test_greedy_string_overload():  # issue 685
+    from pybind11_tests.array import issue685
+
+    assert issue685("abc") == "string"
+    assert issue685(np.array([97, 98, 99], dtype='b')) == "array"
+    assert issue685(123) == "other"
+
+
+def test_array_unchecked_fixed_dims(msg):
+    from pybind11_tests.array import (proxy_add2, proxy_init3F, proxy_init3, proxy_squared_L2_norm,
+                                      proxy_auxiliaries2, array_auxiliaries2)
+
+    z1 = np.array([[1, 2], [3, 4]], dtype='float64')
+    proxy_add2(z1, 10)
+    assert np.all(z1 == [[11, 12], [13, 14]])
+
+    with pytest.raises(ValueError) as excinfo:
+        proxy_add2(np.array([1., 2, 3]), 5.0)
+    assert msg(excinfo.value) == "array has incorrect number of dimensions: 1; expected 2"
+
+    expect_c = np.ndarray(shape=(3, 3, 3), buffer=np.array(range(3, 30)), dtype='int')
+    assert np.all(proxy_init3(3.0) == expect_c)
+    expect_f = np.transpose(expect_c)
+    assert np.all(proxy_init3F(3.0) == expect_f)
+
+    assert proxy_squared_L2_norm(np.array(range(6))) == 55
+    assert proxy_squared_L2_norm(np.array(range(6), dtype="float64")) == 55
+
+    assert proxy_auxiliaries2(z1) == [11, 11, True, 2, 8, 2, 2, 4, 32]
+    assert proxy_auxiliaries2(z1) == array_auxiliaries2(z1)
+
+
+def test_array_unchecked_dyn_dims(msg):
+    from pybind11_tests.array import (proxy_add2_dyn, proxy_init3_dyn, proxy_auxiliaries2_dyn,
+                                      array_auxiliaries2)
+    z1 = np.array([[1, 2], [3, 4]], dtype='float64')
+    proxy_add2_dyn(z1, 10)
+    assert np.all(z1 == [[11, 12], [13, 14]])
+
+    expect_c = np.ndarray(shape=(3, 3, 3), buffer=np.array(range(3, 30)), dtype='int')
+    assert np.all(proxy_init3_dyn(3.0) == expect_c)
+
+    assert proxy_auxiliaries2_dyn(z1) == [11, 11, True, 2, 8, 2, 2, 4, 32]
+    assert proxy_auxiliaries2_dyn(z1) == array_auxiliaries2(z1)

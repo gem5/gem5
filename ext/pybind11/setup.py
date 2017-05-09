@@ -4,21 +4,18 @@
 
 from setuptools import setup
 from pybind11 import __version__
+import os
 
-setup(
-    name='pybind11',
-    version=__version__,
-    description='Seamless operability between C++11 and Python',
-    author='Wenzel Jakob',
-    author_email='wenzel.jakob@epfl.ch',
-    url='https://github.com/wjakob/pybind11',
-    download_url='https://github.com/wjakob/pybind11/tarball/v' + __version__,
-    packages=['pybind11'],
-    license='BSD',
-    headers=[
+# Prevent installation of pybind11 headers by setting
+# PYBIND11_USE_CMAKE.
+if os.environ.get('PYBIND11_USE_CMAKE'):
+    headers = []
+else:
+    headers = [
         'include/pybind11/attr.h',
         'include/pybind11/cast.h',
         'include/pybind11/chrono.h',
+        'include/pybind11/class_support.h',
         'include/pybind11/common.h',
         'include/pybind11/complex.h',
         'include/pybind11/descr.h',
@@ -32,8 +29,20 @@ setup(
         'include/pybind11/pytypes.h',
         'include/pybind11/stl.h',
         'include/pybind11/stl_bind.h',
-        'include/pybind11/typeid.h',
-    ],
+        'include/pybind11/typeid.h'
+    ]
+
+setup(
+    name='pybind11',
+    version=__version__,
+    description='Seamless operability between C++11 and Python',
+    author='Wenzel Jakob',
+    author_email='wenzel.jakob@epfl.ch',
+    url='https://github.com/wjakob/pybind11',
+    download_url='https://github.com/wjakob/pybind11/tarball/v' + __version__,
+    packages=['pybind11'],
+    license='BSD',
+    headers=headers,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -46,14 +55,15 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
-        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python :: 3.6',
+        'License :: OSI Approved :: BSD License'
     ],
     keywords='C++11, Python bindings',
-    long_description="""pybind11 is a lightweight header library that exposes
-C++ types in Python and vice versa, mainly to create Python bindings of
+    long_description="""pybind11 is a lightweight header-only library that
+exposes C++ types in Python and vice versa, mainly to create Python bindings of
 existing C++ code. Its goals and syntax are similar to the excellent
-Boost.Python library by David Abrahams: to minimize boilerplate code in
-traditional extension modules by inferring type information using compile-time
+Boost.Python by David Abrahams: to minimize boilerplate code in traditional
+extension modules by inferring type information using compile-time
 introspection.
 
 The main issue with Boost.Python-and the reason for creating such a similar
@@ -66,9 +76,9 @@ become an excessively large and unnecessary dependency.
 
 Think of this library as a tiny self-contained version of Boost.Python with
 everything stripped away that isn't relevant for binding generation. Without
-comments, the core header files only require ~2.5K lines of code and depend on
-Python (2.7 or 3.x) and the C++ standard library. This compact implementation
-was possible thanks to some of the new C++11 language features (specifically:
-tuples, lambda functions and variadic templates). Since its creation, this
-library has grown beyond Boost.Python in many ways, leading to dramatically
-simpler binding code in many common situations.""")
+comments, the core header files only require ~4K lines of code and depend on
+Python (2.7 or 3.x, or PyPy2.7 >= 5.7) and the C++ standard library. This
+compact implementation was possible thanks to some of the new C++11 language
+features (specifically: tuples, lambda functions and variadic templates). Since
+its creation, this library has grown beyond Boost.Python in many ways, leading
+to dramatically simpler binding code in many common situations.""")

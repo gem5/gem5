@@ -36,6 +36,10 @@ public:
     Hamster(const std::string &name) : Pet(name, "rodent") {}
 };
 
+class Chimera : public Pet {
+    Chimera() : Pet("Kimmy", "chimera") {}
+};
+
 std::string pet_name_species(const Pet &pet) {
     return pet.name() + " is a " + pet.species();
 }
@@ -48,6 +52,12 @@ std::string dog_bark(const Dog &dog) {
 struct BaseClass { virtual ~BaseClass() {} };
 struct DerivedClass1 : BaseClass { };
 struct DerivedClass2 : BaseClass { };
+
+struct MismatchBase1 { };
+struct MismatchDerived1 : MismatchBase1 { };
+
+struct MismatchBase2 { };
+struct MismatchDerived2 : MismatchBase2 { };
 
 test_initializer inheritance([](py::module &m) {
     py::class_<Pet> pet_class(m, "Pet");
@@ -67,6 +77,8 @@ test_initializer inheritance([](py::module &m) {
     /* And another: list parent in class template arguments */
     py::class_<Hamster, Pet>(m, "Hamster")
         .def(py::init<std::string>());
+
+    py::class_<Chimera, Pet>(m, "Chimera");
 
     m.def("pet_name_species", pet_name_species);
     m.def("dog_bark", dog_bark);
@@ -96,5 +108,16 @@ test_initializer inheritance([](py::module &m) {
             py::isinstance<Rabbit>(l[5]),
             py::isinstance<Unregistered>(l[6])
         );
+    });
+
+    m.def("test_mismatched_holder_type_1", []() {
+        auto m = py::module::import("__main__");
+        py::class_<MismatchBase1, std::shared_ptr<MismatchBase1>>(m, "MismatchBase1");
+        py::class_<MismatchDerived1, MismatchBase1>(m, "MismatchDerived1");
+    });
+    m.def("test_mismatched_holder_type_2", []() {
+        auto m = py::module::import("__main__");
+        py::class_<MismatchBase2>(m, "MismatchBase2");
+        py::class_<MismatchDerived2, std::shared_ptr<MismatchDerived2>, MismatchBase2>(m, "MismatchDerived2");
     });
 });

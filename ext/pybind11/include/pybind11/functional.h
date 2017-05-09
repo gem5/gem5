@@ -15,9 +15,12 @@
 NAMESPACE_BEGIN(pybind11)
 NAMESPACE_BEGIN(detail)
 
-template <typename Return, typename... Args> struct type_caster<std::function<Return(Args...)>> {
-    typedef std::function<Return(Args...)> type;
-    typedef typename std::conditional<std::is_same<Return, void>::value, void_type, Return>::type retval_type;
+template <typename Return, typename... Args>
+struct type_caster<std::function<Return(Args...)>> {
+    using type = std::function<Return(Args...)>;
+    using retval_type = conditional_t<std::is_same<Return, void>::value, void_type, Return>;
+    using function_type = Return (*) (Args...);
+
 public:
     bool load(handle src_, bool) {
         if (src_.is_none())
@@ -36,12 +39,11 @@ public:
            captured variables), in which case the roundtrip can be avoided.
          */
         if (PyCFunction_Check(src_.ptr())) {
-            auto c = reinterpret_borrow<capsule>(PyCFunction_GetSelf(src_.ptr()));
+            auto c = reinterpret_borrow<capsule>(PyCFunction_GET_SELF(src_.ptr()));
             auto rec = (function_record *) c;
-            using FunctionType = Return (*) (Args...);
 
-            if (rec && rec->is_stateless && rec->data[1] == &typeid(FunctionType)) {
-                struct capture { FunctionType f; };
+            if (rec && rec->is_stateless && rec->data[1] == &typeid(function_type)) {
+                struct capture { function_type f; };
                 value = ((capture *) &rec->data)->f;
                 return true;
             }
@@ -50,7 +52,7 @@ public:
         auto src = reinterpret_borrow<object>(src_);
         value = [src](Args... args) -> Return {
             gil_scoped_acquire acq;
-            object retval(src(std::move(args)...));
+            object retval(src(std::forward<Args>(args)...));
             /* Visual studio 2015 parser issue: need parentheses around this expression */
             return (retval.template cast<Return>());
         };
@@ -62,7 +64,7 @@ public:
         if (!f_)
             return none().inc_ref();
 
-        auto result = f_.template target<Return (*)(Args...)>();
+        auto result = f_.template target<function_type>();
         if (result)
             return cpp_function(*result, policy).release();
         else
@@ -71,7 +73,7 @@ public:
 
     PYBIND11_TYPE_CASTER(type, _("Callable[[") +
             argument_loader<Args...>::arg_names() + _("], ") +
-            type_caster<retval_type>::name() +
+            make_caster<retval_type>::name() +
             _("]"));
 };
 
