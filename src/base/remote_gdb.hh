@@ -203,11 +203,11 @@ class BaseRemoteGDB
     };
 
   protected:
-    uint8_t getbyte();
-    void putbyte(uint8_t b);
+    bool getbyte(uint8_t &b);
+    bool putbyte(uint8_t b);
 
     int recv(char *data, int len);
-    void send(const char *data);
+    ssize_t send(const char *data);
 
   protected:
     // Machine memory
