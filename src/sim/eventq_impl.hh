@@ -59,6 +59,7 @@ EventQueue::schedule(Event *event, Tick when, bool global)
         insert(event);
     }
     event->flags.set(Event::Scheduled);
+    event->acquire();
 
     if (DTRACE(Event))
         event->trace("scheduled");
@@ -79,8 +80,7 @@ EventQueue::deschedule(Event *event)
     if (DTRACE(Event))
         event->trace("descheduled");
 
-    if (event->flags.isSet(Event::AutoDelete))
-        delete event;
+    event->release();
 }
 
 inline void
@@ -91,8 +91,11 @@ EventQueue::reschedule(Event *event, Tick when, bool always)
     assert(event->initialized());
     assert(!inParallelMode || this == curEventQueue());
 
-    if (event->scheduled())
+    if (event->scheduled()) {
         remove(event);
+    } else {
+        event->acquire();
+    }
 
     event->setWhen(when, this);
     insert(event);

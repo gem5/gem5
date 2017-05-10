@@ -99,7 +99,8 @@ class EventBase
     static const FlagsType PublicWrite   = 0x001d; // public writable flags
     static const FlagsType Squashed      = 0x0001; // has been squashed
     static const FlagsType Scheduled     = 0x0002; // has been scheduled
-    static const FlagsType AutoDelete    = 0x0004; // delete after dispatch
+    static const FlagsType Managed       = 0x0004; // Use life cycle manager
+    static const FlagsType AutoDelete    = Managed; // delete after dispatch
     /**
      * This used to be AutoSerialize. This value can't be reused
      * without changing the checkpoint version since the flag field
@@ -282,6 +283,55 @@ class Event : public EventBase, public Serializable
     // This function isn't really useful if TRACING_ON is not defined
     virtual void trace(const char *action);     //!< trace event activity
 
+  protected: /* Memory management */
+    /**
+     * @{
+     * Memory management hooks for events that have the Managed flag set
+     *
+     * Events can use automatic memory management by setting the
+     * Managed flag. The default implementation automatically deletes
+     * events once they have been removed from the event queue. This
+     * typically happens when events are descheduled or have been
+     * triggered and not rescheduled.
+     *
+     * The methods below may be overridden by events that need custom
+     * memory management. For example, events exported to Python need
+     * to impement reference counting to ensure that the Python
+     * implementation of the event is kept alive while it lives in the
+     * event queue.
+     *
+     * @note Memory managers are responsible for implementing
+     * reference counting (by overriding both acquireImpl() and
+     * releaseImpl()) or checking if an event is no longer scheduled
+     * in releaseImpl() before deallocating it.
+     */
+
+    /**
+     * Managed event scheduled and being held in the event queue.
+     */
+    void acquire()
+    {
+        if (flags.isSet(Event::Managed))
+            acquireImpl();
+    }
+
+    /**
+     * Managed event removed from the event queue.
+     */
+    void release() {
+        if (flags.isSet(Event::Managed))
+            releaseImpl();
+    }
+
+    virtual void acquireImpl() {}
+
+    virtual void releaseImpl() {
+        if (!scheduled())
+            delete this;
+    }
+
+    /** @} */
+
   public:
 
     /*
@@ -340,7 +390,8 @@ class Event : public EventBase, public Serializable
     bool isExitEvent() const { return flags.isSet(IsExitEvent); }
 
     /// Check whether this event will auto-delete
-    bool isAutoDelete() const { return flags.isSet(AutoDelete); }
+    bool isManaged() const { return flags.isSet(Managed); }
+    bool isAutoDelete() const { return isManaged(); }
 
     /// Get the time that the event is scheduled
     Tick when() const { return _when; }
