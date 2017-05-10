@@ -216,9 +216,9 @@ class VncServer : public VncInput
     /** Read some data from the client
      * @param buf the data to read
      * @param len the amount of data to read
-     * @return length read
+     * @return whether the read was successful
      */
-    size_t read(uint8_t *buf, size_t len);
+    bool read(uint8_t *buf, size_t len);
 
     /** Read len -1 bytes from the client into the buffer provided + 1
      * assert that we read enough bytes. This function exists to handle
@@ -226,35 +226,35 @@ class VncServer : public VncInput
      * the first byte which describes which one we're reading
      * @param buf the address of the buffer to add one to and read data into
      * @param len the amount of data  + 1 to read
-     * @return length read
+     * @return whether the read was successful.
      */
-    size_t read1(uint8_t *buf, size_t len);
+    bool read1(uint8_t *buf, size_t len);
 
 
     /** Templated version of the read function above to
      * read simple data to the client
      * @param val data to recv from the client
      */
-    template <typename T> size_t read(T* val);
+    template <typename T> bool read(T* val);
 
 
     /** Write a buffer to the client.
      * @param buf buffer to send
      * @param len length of the buffer
-     * @return number of bytes sent
+     * @return whether the write was successful
      */
-    size_t write(const uint8_t *buf, size_t len);
+    bool write(const uint8_t *buf, size_t len);
 
     /** Templated version of the write function above to
      * write simple data to the client
      * @param val data to send to the client
      */
-    template <typename T> size_t write(T* val);
+    template <typename T> bool write(T* val);
 
     /** Send a string to the client
      * @param str string to transmit
      */
-    size_t write(const char* str);
+    bool write(const char* str);
 
     /** Check the client's protocol verion for compatibility and send
      * the security types we support
