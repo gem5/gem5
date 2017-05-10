@@ -51,7 +51,7 @@ using namespace ArmISA;
 using namespace FreeBSD;
 
 FreebsdArmSystem::FreebsdArmSystem(Params *p)
-    : GenericArmSystem(p), dumpStatsPCEventF(nullptr),
+    : GenericArmSystem(p),
       enableContextSwitchStatsDump(p->enable_context_switch_stats_dump),
       taskFile(nullptr), kernelPanicEvent(nullptr), kernelOopsEvent(nullptr)
 {
@@ -150,9 +150,6 @@ FreebsdArmSystem::~FreebsdArmSystem()
         delete uDelaySkipEvent;
     if (constUDelaySkipEvent)
         delete constUDelaySkipEvent;
-
-    if (dumpStatsPCEventF)
-        delete dumpStatsPCEventF;
 }
 
 FreebsdArmSystem *
