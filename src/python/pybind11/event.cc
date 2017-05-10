@@ -46,12 +46,14 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
+#include "base/misc.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/simulate.hh"
 
 namespace py = pybind11;
+
 
 /**
  * PyBind wrapper for Events
@@ -61,46 +63,41 @@ namespace py = pybind11;
  * C++ cousin, PyEvents need to override __call__ instead of
  * Event::process().
  *
- * Memory management is mostly done using reference counting in
- * Python. However, PyBind can't keep track of the reference the event
- * queue holds to a scheduled event. We therefore need to inhibit
- * deletion and hand over ownership to the event queue in case a
- * scheduled event loses all of its Python references.
+ * Memory management is done using reference counting in Python.
  */
 class PyEvent : public Event
 {
   public:
-    struct Deleter {
-        void operator()(PyEvent *ev) {
-            assert(!ev->isAutoDelete());
-            if (ev->scheduled()) {
-                // The event is scheduled, give ownership to the event
-                // queue.
-                ev->setFlags(Event::AutoDelete);
-            } else {
-                // The event isn't scheduled, hence Python owns it and
-                // we need to free it here.
-                delete ev;
-            }
-        }
-    };
-
     PyEvent(Event::Priority priority)
-        : Event(priority)
-    { }
+        : Event(priority, Event::Managed)
+    {
+    }
 
     void process() override {
-        if (isAutoDelete()) {
-            // Ownership of the event was handed over to the event queue
-            // because the last revference in Python land was GCed. We
-            // need to claim the object again since we're creating a new
-            // Python reference.
-            clearFlags(AutoDelete);
-        }
-
         // Call the Python implementation as __call__. This provides a
         // slightly more Python-friendly interface.
         PYBIND11_OVERLOAD_PURE_NAME(void, PyEvent, "__call__", process);
+    }
+
+  protected:
+    void acquireImpl() override {
+        py::object obj = py::cast(this);
+
+        if (obj) {
+            obj.inc_ref();
+        } else {
+            panic("Failed to get PyBind object to increase ref count\n");
+        }
+    }
+
+    void releaseImpl() override {
+        py::object obj = py::cast(this);
+
+        if (obj) {
+            obj.dec_ref();
+        } else {
+            panic("Failed to get PyBind object to decrease ref count\n");
+        }
     }
 };
 
@@ -124,17 +121,15 @@ pybind_init_event(py::module &m_native)
         .def("schedule", [](EventQueue *eq, PyEvent *e, Tick t) {
                 eq->schedule(e, t);
             }, py::arg("event"), py::arg("when"))
-        .def("deschedule", [](EventQueue *eq, PyEvent *e) {
-                eq->deschedule(e);
-            }, py::arg("event"))
-        .def("reschedule", [](EventQueue *eq, PyEvent *e, Tick t, bool alw) {
-                eq->reschedule(e, t, alw);
-            }, py::arg("event"), py::arg("tick"), py::arg("always") = false)
+        .def("deschedule", &EventQueue::deschedule,
+             py::arg("event"))
+        .def("reschedule", &EventQueue::reschedule,
+             py::arg("event"), py::arg("tick"), py::arg("always") = false)
         ;
 
     // TODO: Ownership of global exit events has always been a bit
     // questionable. We currently assume they are owned by the C++
-    // word. This is what the old SWIG code did, but that will result
+    // world. This is what the old SWIG code did, but that will result
     // in memory leaks.
     py::class_<GlobalSimLoopExitEvent,
                std::unique_ptr<GlobalSimLoopExitEvent, py::nodelete>>(
@@ -143,23 +138,25 @@ pybind_init_event(py::module &m_native)
         .def("getCode", &GlobalSimLoopExitEvent::getCode)
         ;
 
-    // TODO: We currently export a wrapper class and not the Event
-    // base class. This wil be problematic if we ever return an event
-    // from C++.
-    py::class_<PyEvent, std::unique_ptr<PyEvent, PyEvent::Deleter>>
-        c_event(m, "Event");
+    // Event base class. These should never be returned directly to
+    // Python since they don't have a well-defined life cycle. Python
+    // events should be derived from PyEvent instead.
+    py::class_<Event> c_event(
+        m, "Event");
     c_event
-        .def(py::init<Event::Priority>(),
-             py::arg("priority") = (int)Event::Default_Pri)
         .def("name", &Event::name)
         .def("dump", &Event::dump)
         .def("scheduled", &Event::scheduled)
         .def("squash", &Event::squash)
         .def("squashed", &Event::squashed)
         .def("isExitEvent", &Event::isExitEvent)
-        .def("isAutoDelete", &Event::isAutoDelete)
         .def("when", &Event::when)
         .def("priority", &Event::priority)
+        ;
+
+    py::class_<PyEvent, Event>(m, "PyEvent")
+        .def(py::init<Event::Priority>(),
+             py::arg("priority") = (int)Event::Default_Pri)
         ;
 
 #define PRIO(n) c_event.attr(# n) = py::cast((int)Event::n)

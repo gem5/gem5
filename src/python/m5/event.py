@@ -44,7 +44,8 @@ import m5
 import _m5.event
 
 from _m5.event import GlobalSimLoopExitEvent as SimExit
-from _m5.event import Event, getEventQueue, setEventQueue
+from _m5.event import PyEvent as Event
+from _m5.event import getEventQueue, setEventQueue
 
 mainq = None
 
