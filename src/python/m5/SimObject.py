@@ -681,6 +681,7 @@ class MetaSimObject(type):
 #include "pybind11/stl.h"
 
 #include "params/$cls.hh"
+#include "python/pybind11/core.hh"
 #include "sim/init.hh"
 #include "sim/sim_object.hh"
 
@@ -1418,7 +1419,14 @@ class SimObject(object):
                 assert isinstance(value, list)
                 vec = getattr(cc_params, param)
                 assert not len(vec)
-                setattr(cc_params, param, list(value))
+                # Some types are exposed as opaque types. They support
+                # the append operation unlike the automatically
+                # wrapped types.
+                if isinstance(vec, list):
+                    setattr(cc_params, param, list(value))
+                else:
+                    for v in value:
+                        getattr(cc_params, param).append(v)
             else:
                 setattr(cc_params, param, value)
 

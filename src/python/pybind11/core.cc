@@ -46,6 +46,8 @@
 
 #include "pybind11/pybind11.h"
 
+#include "python/pybind11/core.hh"
+
 #include <ctime>
 
 #include "base/addr_range.hh"
@@ -162,6 +164,10 @@ init_range(py::module &m_native)
         .def("intersects", &AddrRange::intersects)
         .def("isSubset", &AddrRange::isSubset)
         ;
+
+    // We need to make vectors of AddrRange opaque to avoid a weird
+    // memory allocation issues in PyBind's STL wrappers.
+    py::bind_vector<std::vector<AddrRange>>(m, "AddrRangeVector");
 
     m.def("RangeEx", &RangeEx);
     m.def("RangeIn", &RangeIn);
