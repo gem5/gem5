@@ -36,7 +36,9 @@
 
 #include <sys/signal.h>
 
+#include <exception>
 #include <map>
+#include <string>
 
 #include "arch/types.hh"
 #include "base/intmath.hh"
@@ -49,43 +51,28 @@ class ThreadContext;
 
 class GDBListener;
 
-enum GDBCommands
+class BaseRemoteGDB;
+
+struct GdbCommand
 {
-    GDBSignal              = '?', // last signal
-    GDBSetBaud             = 'b', // set baud (depracated)
-    GDBSetBreak            = 'B', // set breakpoint (depracated)
-    GDBCont                = 'c', // resume
-    GDBAsyncCont           = 'C', // continue with signal
-    GDBDebug               = 'd', // toggle debug flags (deprecated)
-    GDBDetach              = 'D', // detach remote gdb
-    GDBRegR                = 'g', // read general registers
-    GDBRegW                = 'G', // write general registers
-    GDBSetThread           = 'H', // set thread
-    GDBCycleStep           = 'i', // step a single cycle
-    GDBSigCycleStep        = 'I', // signal then cycle step
-    GDBKill                = 'k', // kill program
-    GDBMemR                = 'm', // read memory
-    GDBMemW                = 'M', // write memory
-    GDBReadReg             = 'p', // read register
-    GDBSetReg              = 'P', // write register
-    GDBQueryVar            = 'q', // query variable
-    GDBSetVar              = 'Q', // set variable
-    GDBReset               = 'r', // reset system.  (Deprecated)
-    GDBStep                = 's', // step
-    GDBAsyncStep           = 'S', // signal and step
-    GDBThreadAlive         = 'T', // find out if the thread is alive
-    GDBTargetExit          = 'W', // target exited
-    GDBBinaryDload         = 'X', // write memory
-    GDBClrHwBkpt           = 'z', // remove breakpoint or watchpoint
-    GDBSetHwBkpt           = 'Z'  // insert breakpoint or watchpoint
+  public:
+    struct Context
+    {
+        const GdbCommand *cmd;
+        char cmd_byte;
+        int type;
+        char *data;
+        int len;
+    };
+
+    typedef bool (BaseRemoteGDB::*Func)(Context &ctx);
+
+    const char * const name;
+    const Func func;
+
+    GdbCommand(const char *_name, Func _func) : name(_name), func(_func)
+    {}
 };
-
-const char GDBStart = '$';
-const char GDBEnd = '#';
-const char GDBGoodP = '+';
-const char GDBBadP = '-';
-
-const int GDBPacketBufLen = 1024;
 
 class BaseRemoteGDB
 {
@@ -93,18 +80,55 @@ class BaseRemoteGDB
     friend void debugger();
     friend class GDBListener;
 
-    //Helper functions
+  protected:
+    /// Exception to throw when the connection to the client is broken.
+    struct BadClient
+    {
+        const char *warning;
+        BadClient(const char *_warning=NULL) : warning(_warning)
+        {}
+    };
+    /// Exception to throw when an error needs to be reported to the client.
+    struct CmdError
+    {
+        std::string error;
+        CmdError(std::string _error) : error(_error)
+        {}
+    };
+    /// Exception to throw when something isn't supported.
+    class Unsupported {};
+
+    // Helper functions
   protected:
     int digit2i(char);
     char i2digit(int);
     Addr hex2i(const char **);
-    //Address formats, break types, and gdb commands may change
-    //between architectures, so they're defined as virtual
-    //functions.
+    // Address formats, break types, and gdb commands may change
+    // between architectures, so they're defined as virtual
+    // functions.
     virtual void mem2hex(char *, const char *, int);
     virtual const char * hex2mem(char *, const char *, int);
     virtual const char * break_type(char c);
-    virtual const char * gdb_command(char cmd);
+
+  protected:
+    static std::map<char, GdbCommand> command_map;
+
+    bool cmd_unsupported(GdbCommand::Context &ctx);
+
+    bool cmd_signal(GdbCommand::Context &ctx);
+    bool cmd_cont(GdbCommand::Context &ctx);
+    bool cmd_async_cont(GdbCommand::Context &ctx);
+    bool cmd_detach(GdbCommand::Context &ctx);
+    bool cmd_reg_r(GdbCommand::Context &ctx);
+    bool cmd_reg_w(GdbCommand::Context &ctx);
+    bool cmd_set_thread(GdbCommand::Context &ctx);
+    bool cmd_mem_r(GdbCommand::Context &ctx);
+    bool cmd_mem_w(GdbCommand::Context &ctx);
+    bool cmd_query_var(GdbCommand::Context &ctx);
+    bool cmd_step(GdbCommand::Context &ctx);
+    bool cmd_async_step(GdbCommand::Context &ctx);
+    bool cmd_clr_hw_bkpt(GdbCommand::Context &ctx);
+    bool cmd_set_hw_bkpt(GdbCommand::Context &ctx);
 
   protected:
     class InputEvent : public PollEvent
@@ -138,13 +162,10 @@ class BaseRemoteGDB
     int number;
 
   protected:
-    //The socket commands come in through
+    // The socket commands come in through
     int fd;
 
   protected:
-#ifdef notyet
-    label_t recover;
-#endif
     bool active;
     bool attached;
 
@@ -197,17 +218,21 @@ class BaseRemoteGDB
 
         BaseGdbRegCache(BaseRemoteGDB *g) : gdb(g)
         {}
+        virtual ~BaseGdbRegCache()
+        {}
 
       protected:
         BaseRemoteGDB *gdb;
     };
 
+    BaseGdbRegCache *regCachePtr;
+
   protected:
-    bool getbyte(uint8_t &b);
-    bool putbyte(uint8_t b);
+    uint8_t getbyte();
+    void putbyte(uint8_t b);
 
     int recv(char *data, int len);
-    ssize_t send(const char *data);
+    void send(const char *data);
 
   protected:
     // Machine memory
@@ -284,10 +309,10 @@ class BaseRemoteGDB
     typedef break_map_t::iterator break_iter_t;
     break_map_t hardBreakMap;
 
-    bool insertSoftBreak(Addr addr, size_t len);
-    bool removeSoftBreak(Addr addr, size_t len);
-    virtual bool insertHardBreak(Addr addr, size_t len);
-    bool removeHardBreak(Addr addr, size_t len);
+    void insertSoftBreak(Addr addr, size_t len);
+    void removeSoftBreak(Addr addr, size_t len);
+    virtual void insertHardBreak(Addr addr, size_t len);
+    void removeHardBreak(Addr addr, size_t len);
 
   protected:
     void clearTempBreakpoint(Addr &bkpt);

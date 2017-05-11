@@ -149,7 +149,7 @@ using namespace std;
 using namespace RiscvISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc)
+    : BaseRemoteGDB(_system, tc), regCache(this)
 {
 }
 
@@ -201,5 +201,5 @@ RemoteGDB::RiscvGdbRegCache::setRegs(ThreadContext *context) const
 
 RemoteGDB::BaseGdbRegCache*
 RemoteGDB::gdbRegs() {
-    return new RiscvGdbRegCache(this);
+    return &regCache;
 }

@@ -262,12 +262,12 @@ RemoteGDB::write(Addr vaddr, size_t size, const char *data)
 }
 
 
-bool
+void
 RemoteGDB::insertHardBreak(Addr addr, size_t len)
 {
     warn_once("Breakpoints do not work in Alpha PAL mode.\n"
               "      See PCEventQueue::doService() in cpu/pc_event.cc.\n");
-    return BaseRemoteGDB::insertHardBreak(addr, len);
+    BaseRemoteGDB::insertHardBreak(addr, len);
 }
 
 RemoteGDB::BaseGdbRegCache*

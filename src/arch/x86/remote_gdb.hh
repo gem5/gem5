@@ -85,7 +85,11 @@ class RemoteGDB : public BaseRemoteGDB
         size_t size() const { return sizeof(r); }
         void getRegs(ThreadContext*);
         void setRegs(ThreadContext*) const;
-        const std::string name() const { return gdb->name() + ".X86GdbRegCache"; }
+        const std::string
+        name() const
+        {
+            return gdb->name() + ".X86GdbRegCache";
+        }
     };
 
     class AMD64GdbRegCache : public BaseGdbRegCache
@@ -128,8 +132,15 @@ class RemoteGDB : public BaseRemoteGDB
         size_t size() const { return sizeof(r); }
         void getRegs(ThreadContext*);
         void setRegs(ThreadContext*) const;
-        const std::string name() const { return gdb->name() + ".AMD64GdbRegCache"; }
+        const std::string
+        name() const
+        {
+            return gdb->name() + ".AMD64GdbRegCache";
+        }
     };
+
+    X86GdbRegCache regCache32;
+    AMD64GdbRegCache regCache64;
 
   public:
     RemoteGDB(System *system, ThreadContext *context);

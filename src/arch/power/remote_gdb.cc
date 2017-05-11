@@ -152,7 +152,7 @@ using namespace std;
 using namespace PowerISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc)
+    : BaseRemoteGDB(_system, tc), regCache(this)
 {
 }
 
@@ -218,6 +218,6 @@ RemoteGDB::PowerGdbRegCache::setRegs(ThreadContext *context) const
 
 RemoteGDB::BaseGdbRegCache*
 RemoteGDB::gdbRegs() {
-    return new PowerGdbRegCache(this);
+    return &regCache;
 }
 

@@ -152,7 +152,7 @@ using namespace std;
 using namespace MipsISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc)
+    : BaseRemoteGDB(_system, tc), regCache(this)
 {
 }
 
@@ -207,5 +207,5 @@ RemoteGDB::MipsGdbRegCache::setRegs(ThreadContext *context) const
 
 RemoteGDB::BaseGdbRegCache*
 RemoteGDB::gdbRegs() {
-    return new MipsGdbRegCache(this);
+    return &regCache;
 }

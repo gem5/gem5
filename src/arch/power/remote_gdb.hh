@@ -69,9 +69,14 @@ class RemoteGDB : public BaseRemoteGDB
         size_t size() const { return sizeof(r); }
         void getRegs(ThreadContext*);
         void setRegs(ThreadContext*) const;
-        const std::string name() const { return gdb->name() + ".PowerGdbRegCache"; }
+        const std::string
+        name() const
+        {
+            return gdb->name() + ".PowerGdbRegCache";
+        }
     };
 
+    PowerGdbRegCache regCache;
 
   public:
     RemoteGDB(System *_system, ThreadContext *tc);

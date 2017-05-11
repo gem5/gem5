@@ -165,7 +165,7 @@ using namespace std;
 using namespace ArmISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc)
+    : BaseRemoteGDB(_system, tc), regCache32(this), regCache64(this)
 {
 }
 
@@ -297,7 +297,7 @@ RemoteGDB::BaseGdbRegCache*
 RemoteGDB::gdbRegs()
 {
     if (inAArch64(context))
-        return new AArch64GdbRegCache(this);
+        return &regCache32;
     else
-        return new AArch32GdbRegCache(this);
+        return &regCache64;
 }

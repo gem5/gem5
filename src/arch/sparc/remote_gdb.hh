@@ -94,6 +94,9 @@ class RemoteGDB : public BaseRemoteGDB
         const std::string name() const { return gdb->name() + ".SPARC64GdbRegCache"; }
     };
 
+    SPARCGdbRegCache regCache32;
+    SPARC64GdbRegCache regCache64;
+
   public:
     RemoteGDB(System *_system, ThreadContext *tc);
     BaseGdbRegCache *gdbRegs();

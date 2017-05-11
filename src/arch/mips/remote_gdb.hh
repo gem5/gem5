@@ -70,9 +70,14 @@ class RemoteGDB : public BaseRemoteGDB
         size_t size() const { return sizeof(r); }
         void getRegs(ThreadContext*);
         void setRegs(ThreadContext*) const;
-        const std::string name() const { return gdb->name() + ".MipsGdbRegCache"; }
+        const std::string
+        name() const
+        {
+            return gdb->name() + ".MipsGdbRegCache";
+        }
     };
 
+    MipsGdbRegCache regCache;
 
   public:
     RemoteGDB(System *_system, ThreadContext *tc);
