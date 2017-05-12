@@ -84,7 +84,7 @@ def _using_pdes(root):
 class BigCluster(devices.CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock,
                  cpu_voltage="1.0V"):
-        cpu_config = [ CpuConfig.get("arm_detailed"), devices.L1I, devices.L1D,
+        cpu_config = [ CpuConfig.get("O3_ARM_v7a_3"), devices.L1I, devices.L1D,
                     devices.WalkCache, devices.L2 ]
         super(BigCluster, self).__init__(system, num_cpus, cpu_clock,
                                          cpu_voltage, *cpu_config)
@@ -92,7 +92,7 @@ class BigCluster(devices.CpuCluster):
 class LittleCluster(devices.CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock,
                  cpu_voltage="1.0V"):
-        cpu_config = [ CpuConfig.get("minor"), devices.L1I, devices.L1D,
+        cpu_config = [ CpuConfig.get("MinorCPU"), devices.L1I, devices.L1D,
                        devices.WalkCache, devices.L2 ]
         super(LittleCluster, self).__init__(system, num_cpus, cpu_clock,
                                          cpu_voltage, *cpu_config)
