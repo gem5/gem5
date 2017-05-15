@@ -477,7 +477,8 @@ class MetaSimObject(type):
             if isinstance(c, MetaSimObject):
                 bTotal += 1
             if bTotal > 1:
-                raise TypeError, "SimObjects do not support multiple inheritance"
+                raise TypeError, \
+                      "SimObjects do not support multiple inheritance"
 
         base = bases[0]
 
@@ -679,9 +680,10 @@ class MetaSimObject(type):
         code('''#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "sim/sim_object.hh"
 #include "params/$cls.hh"
 #include "sim/init.hh"
+#include "sim/sim_object.hh"
+
 #include "${{cls.cxx_header}}"
 
 ''')
@@ -982,7 +984,8 @@ class SimObject(object):
 
                     if keys in self._hr_values\
                        and keys in self._values\
-                       and not isinstance(self._values[keys], m5.proxy.BaseProxy):
+                       and not isinstance(self._values[keys],
+                                          m5.proxy.BaseProxy):
                         cmd_str = cmd_line_str + keys
                         acc_str = access_str + keys
                         flags_dict[cmd_str] = ParamInfo(ptype,
@@ -1182,8 +1185,9 @@ class SimObject(object):
         self._parent = parent
         self._name = name
 
-    # Return parent object of this SimObject, not implemented by SimObjectVector
-    # because the elements in a SimObjectVector may not share the same parent
+    # Return parent object of this SimObject, not implemented by
+    # SimObjectVector because the elements in a SimObjectVector may not share
+    # the same parent
     def get_parent(self):
         return self._parent
 
@@ -1275,7 +1279,8 @@ class SimObject(object):
                 match_obj = self._values[pname]
                 if found_obj != None and found_obj != match_obj:
                     raise AttributeError, \
-                          'parent.any matched more than one: %s and %s' % (found_obj.path, match_obj.path)
+                          'parent.any matched more than one: %s and %s' % \
+                          (found_obj.path, match_obj.path)
                 found_obj = match_obj
         return found_obj, found_obj != None
 

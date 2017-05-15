@@ -43,6 +43,7 @@
 #ifdef linux
 #define _GNU_SOURCE
 #include <sched.h>
+
 #endif
 
 #include <err.h>
@@ -348,7 +349,8 @@ struct MainFunc mainfuncs[] = {
     { "checkpoint",     do_checkpoint,       "[delay [period]]" },
     { "addsymbol",      do_addsymbol,        "<address> <symbol>" },
     { "loadsymbol",     do_loadsymbol,       "" },
-    { "initparam",      do_initparam,        "[key] // key must be shorter than 16 chars" },
+    { "initparam",      do_initparam,        "[key] // key must be shorter"
+                                             " than 16 chars" },
     { "sw99param",      do_sw99param,        "" },
 #ifdef linux
     { "pin",            do_pin,              "<cpu> <program> [args ...]" }
@@ -384,7 +386,8 @@ map_m5_mem()
         exit(1);
     }
 
-    m5_mem = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, M5OP_ADDR);
+    m5_mem = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
+                  M5OP_ADDR);
     if (!m5_mem) {
         perror("Can't mmap /dev/mem");
         exit(1);
