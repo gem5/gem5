@@ -88,6 +88,7 @@ RiscvProcess::argsInit(int pageSize)
 
     // Determine stack size and populate auxv
     Addr stack_top = memState->getStackMin();
+    stack_top -= elfObject->programHeaderSize();
     for (const string& arg: argv)
         stack_top -= arg.size() + 1;
     for (const string& env: envp)
@@ -112,6 +113,16 @@ RiscvProcess::argsInit(int pageSize)
     memState->setStackSize(memState->getStackBase() - stack_top);
     allocateMem(roundDown(stack_top, pageSize),
             roundUp(memState->getStackSize(), pageSize));
+
+    // Copy program headers to stack
+    memState->setStackMin(memState->getStackMin() -
+            elfObject->programHeaderSize());
+    uint8_t* phdr = new uint8_t[elfObject->programHeaderSize()];
+    initVirtMem.readBlob(elfObject->programHeaderTable(), phdr,
+            elfObject->programHeaderSize());
+    initVirtMem.writeBlob(memState->getStackMin(), phdr,
+            elfObject->programHeaderSize());
+    delete phdr;
 
     // Copy argv to stack
     vector<Addr> argPointers;
