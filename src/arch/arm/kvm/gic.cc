@@ -189,7 +189,7 @@ void
 MuxingKvmGic::startup()
 {
     Pl390::startup();
-    usingKvm = (kernelGic != nullptr) && validKvmEnvironment();
+    usingKvm = (kernelGic != nullptr) && system.validKvmEnvironment();
     if (usingKvm)
         fromPl390ToKvm();
 }
@@ -206,7 +206,7 @@ void
 MuxingKvmGic::drainResume()
 {
     Pl390::drainResume();
-    bool use_kvm = (kernelGic != nullptr) && validKvmEnvironment();
+    bool use_kvm = (kernelGic != nullptr) && system.validKvmEnvironment();
     if (use_kvm != usingKvm) {
         // Should only occur due to CPU switches
         if (use_kvm) // from simulation to KVM emulation
@@ -285,20 +285,6 @@ MuxingKvmGic::clearPPInt(uint32_t num, uint32_t cpu)
 
     DPRINTF(Interrupt, "Clear PPI %d:%d\n", cpu, num);
     kernelGic->clearPPI(cpu, num);
-}
-
-bool
-MuxingKvmGic::validKvmEnvironment() const
-{
-    if (system.threadContexts.empty())
-        return false;
-
-    for (auto tc : system.threadContexts) {
-        if (dynamic_cast<BaseArmKvmCPU*>(tc->getCpuPtr()) == nullptr) {
-            return false;
-        }
-    }
-    return true;
 }
 
 void

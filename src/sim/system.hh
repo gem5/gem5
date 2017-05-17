@@ -262,6 +262,9 @@ class System : public MemObject
         return kvmVM;
     }
 
+    /** Verify gem5 configuration will support KVM emulation */
+    bool validKvmEnvironment() const;
+
     /** Get a pointer to access the physical memory of the system */
     PhysicalMemory& getPhysMem() { return physmem; }
 

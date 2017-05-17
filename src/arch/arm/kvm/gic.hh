@@ -195,9 +195,6 @@ class MuxingKvmGic : public Pl390
     void clearPPInt(uint32_t num, uint32_t cpu) override;
 
   protected:
-    /** Verify gem5 configuration will support KVM emulation */
-    bool validKvmEnvironment() const;
-
     /** System this interrupt controller belongs to */
     System &system;
 

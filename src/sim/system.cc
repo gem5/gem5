@@ -55,6 +55,7 @@
 #include "base/trace.hh"
 #include "config/use_kvm.hh"
 #if USE_KVM
+#include "cpu/kvm/base.hh"
 #include "cpu/kvm/vm.hh"
 #endif
 #include "cpu/thread_context.hh"
@@ -333,6 +334,24 @@ System::replaceThreadContext(ThreadContext *tc, ContextID context_id)
     threadContexts[context_id] = tc;
     if (context_id < remoteGDB.size())
         remoteGDB[context_id]->replaceThreadContext(tc);
+}
+
+bool
+System::validKvmEnvironment() const
+{
+#if USE_KVM
+    if (threadContexts.empty())
+        return false;
+
+    for (auto tc : threadContexts) {
+        if (dynamic_cast<BaseKvmCPU*>(tc->getCpuPtr()) == nullptr) {
+            return false;
+        }
+    }
+    return true;
+#else
+    return false;
+#endif
 }
 
 Addr
