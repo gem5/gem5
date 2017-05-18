@@ -410,10 +410,6 @@ def main(*args):
     scope = { '__file__' : filename,
               '__name__' : '__m5_main__' }
 
-    # we want readline if we're doing anything interactive
-    if options.interactive or options.pdb:
-        exec "import readline" in scope
-
     # if pdb was requested, execfile the thing under pdb, otherwise,
     # just do the execfile normally
     if options.pdb:
