@@ -65,7 +65,7 @@ class VfpMacroRegRegOp : public VfpMacroOp
 };
 
 template <class VfpOp>
-static StaticInstPtr
+StaticInstPtr
 decodeVfpRegRegOp(ExtMachInst machInst,
         IntRegIndex dest, IntRegIndex op1, bool wide)
 {
@@ -101,7 +101,7 @@ class VfpMacroRegImmOp : public VfpMacroOp
 };
 
 template <class VfpOp>
-static StaticInstPtr
+StaticInstPtr
 decodeVfpRegImmOp(ExtMachInst machInst,
         IntRegIndex dest, uint64_t imm, bool wide)
 {
@@ -137,7 +137,7 @@ class VfpMacroRegRegImmOp : public VfpMacroOp
 };
 
 template <class VfpOp>
-static StaticInstPtr
+StaticInstPtr
 decodeVfpRegRegImmOp(ExtMachInst machInst, IntRegIndex dest,
                      IntRegIndex op1, uint64_t imm, bool wide)
 {
@@ -173,7 +173,7 @@ class VfpMacroRegRegRegOp : public VfpMacroOp
 };
 
 template <class VfpOp>
-static StaticInstPtr
+StaticInstPtr
 decodeVfpRegRegRegOp(ExtMachInst machInst, IntRegIndex dest,
                      IntRegIndex op1, IntRegIndex op2, bool wide)
 {

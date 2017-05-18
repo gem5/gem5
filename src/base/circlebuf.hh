@@ -247,7 +247,7 @@ class Fifo
 
 
 template <typename T>
-static void
+void
 arrayParamOut(CheckpointOut &cp, const std::string &name,
               const CircleBuf<T> &param)
 {
@@ -257,7 +257,7 @@ arrayParamOut(CheckpointOut &cp, const std::string &name,
 }
 
 template <typename T>
-static void
+void
 arrayParamIn(CheckpointIn &cp, const std::string &name,
              CircleBuf<T> &param)
 {
@@ -269,7 +269,7 @@ arrayParamIn(CheckpointIn &cp, const std::string &name,
 }
 
 template <typename T>
-static void
+void
 arrayParamOut(CheckpointOut &cp, const std::string &name,
               const Fifo<T> &param)
 {
@@ -279,7 +279,7 @@ arrayParamOut(CheckpointOut &cp, const std::string &name,
 }
 
 template <typename T>
-static void
+void
 arrayParamIn(CheckpointIn &cp, const std::string &name,
              Fifo<T> &param)
 {

@@ -201,7 +201,7 @@ bitsToFp(uint64_t bits, double junk)
 }
 
 template <class fpType>
-static bool
+static inline bool
 isSnan(fpType val)
 {
     const bool single = (sizeof(fpType) == sizeof(float));

@@ -1272,6 +1272,27 @@ namespace HsailISA
 
     template<typename T> T heynot(T arg) { return ~arg; }
     template<> inline bool heynot<bool>(bool arg) { return !arg; }
+
+
+    /* Explicitly declare template static member variables to avoid
+     * warnings in some clang versions
+     */
+    template<> const char *B1::label;
+    template<> const char *B8::label;
+    template<> const char *B16::label;
+    template<> const char *B32::label;
+    template<> const char *B64::label;
+    template<> const char *S8::label;
+    template<> const char *S16::label;
+    template<> const char *S32::label;
+    template<> const char *S64::label;
+    template<> const char *U8::label;
+    template<> const char *U16::label;
+    template<> const char *U32::label;
+    template<> const char *U64::label;
+    template<> const char *F32::label;
+    template<> const char *F64::label;
+
 } // namespace HsailISA
 
 #endif // __ARCH_HSAIL_INSTS_DECL_HH__

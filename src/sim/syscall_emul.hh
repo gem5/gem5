@@ -429,7 +429,7 @@ getElapsedTimeNano(T1 &sec, T2 &nsec)
 //// memory space.  Used by stat(), fstat(), and lstat().
 
 template <typename target_stat, typename host_stat>
-static void
+void
 convertStatBuf(target_stat &tgt, host_stat *host, bool fakeTTY = false)
 {
     using namespace TheISA;
@@ -478,7 +478,7 @@ convertStatBuf(target_stat &tgt, host_stat *host, bool fakeTTY = false)
 // Same for stat64
 
 template <typename target_stat, typename host_stat64>
-static void
+void
 convertStat64Buf(target_stat &tgt, host_stat64 *host, bool fakeTTY = false)
 {
     using namespace TheISA;
@@ -500,7 +500,7 @@ convertStat64Buf(target_stat &tgt, host_stat64 *host, bool fakeTTY = false)
 
 // Here are a couple of convenience functions
 template<class OS>
-static void
+void
 copyOutStatBuf(SETranslatingPortProxy &mem, Addr addr,
                hst_stat *host, bool fakeTTY = false)
 {
@@ -511,7 +511,7 @@ copyOutStatBuf(SETranslatingPortProxy &mem, Addr addr,
 }
 
 template<class OS>
-static void
+void
 copyOutStat64Buf(SETranslatingPortProxy &mem, Addr addr,
                  hst_stat64 *host, bool fakeTTY = false)
 {
@@ -522,7 +522,7 @@ copyOutStat64Buf(SETranslatingPortProxy &mem, Addr addr,
 }
 
 template <class OS>
-static void
+void
 copyOutStatfsBuf(SETranslatingPortProxy &mem, Addr addr,
                  hst_statfs *host)
 {

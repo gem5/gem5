@@ -567,7 +567,8 @@ class IllegalInstSetStateFault : public ArmFaultVals<IllegalInstSetStateFault>
 };
 
 /*
- * Explicitly declare template static member variables avoid warnings in some clang versions
+ * Explicitly declare template static member variables to avoid warnings
+ * in some clang versions
  */
 template<> ArmFault::FaultVals ArmFaultVals<Reset>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<UndefinedInstruction>::vals;
