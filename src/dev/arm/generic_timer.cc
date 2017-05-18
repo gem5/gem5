@@ -179,13 +179,6 @@ ArchTimer::serialize(CheckpointOut &cp) const
     paramOut(cp, "control_serial", _control);
     SERIALIZE_SCALAR(_counterLimit);
     SERIALIZE_SCALAR(_offset);
-
-    const bool event_scheduled(_counterLimitReachedEvent.scheduled());
-    SERIALIZE_SCALAR(event_scheduled);
-    if (event_scheduled) {
-        const Tick event_time(_counterLimitReachedEvent.when());
-        SERIALIZE_SCALAR(event_time);
-    }
 }
 
 void
@@ -197,13 +190,24 @@ ArchTimer::unserialize(CheckpointIn &cp)
     // compatibility.
     if (!UNSERIALIZE_OPT_SCALAR(_offset))
         _offset = 0;
-    bool event_scheduled;
-    UNSERIALIZE_SCALAR(event_scheduled);
-    if (event_scheduled) {
-        Tick event_time;
-        UNSERIALIZE_SCALAR(event_time);
-        _parent.schedule(_counterLimitReachedEvent, event_time);
-    }
+
+    // We no longer schedule an event here because we may enter KVM
+    // emulation.  The event creation is delayed until drainResume().
+}
+
+DrainState
+ArchTimer::drain()
+{
+    if (_counterLimitReachedEvent.scheduled())
+        _parent.deschedule(_counterLimitReachedEvent);
+
+    return DrainState::Drained;
+}
+
+void
+ArchTimer::drainResume()
+{
+    updateCounter();
 }
 
 void

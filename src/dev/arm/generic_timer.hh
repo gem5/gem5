@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015 ARM Limited
+ * Copyright (c) 2013, 2015, 2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -102,7 +102,7 @@ class SystemCounter : public Serializable
 };
 
 /// Per-CPU architected timer.
-class ArchTimer : public Serializable
+class ArchTimer : public Serializable, public Drainable
 {
   public:
     class Interrupt
@@ -188,8 +188,13 @@ class ArchTimer : public Serializable
     /// Returns the value of the counter which this timer relies on.
     uint64_t value() const;
 
+    // Serializable
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
+
+    // Drainable
+    DrainState drain() override;
+    void drainResume() override;
 
   private:
     // Disable copying
