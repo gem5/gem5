@@ -1314,9 +1314,11 @@ main.Append(BUILDERS = { 'PartialShared' : partial_shared_builder,
 
 # builds in ext are shared across all configs in the build root.
 ext_dir = abspath(joinpath(str(main.root), 'ext'))
+ext_build_dirs = []
 for root, dirs, files in os.walk(ext_dir):
     if 'SConscript' in files:
         build_dir = os.path.relpath(root, ext_dir)
+        ext_build_dirs.append(build_dir)
         main.SConscript(joinpath(root, 'SConscript'),
                         variant_dir=joinpath(build_root, build_dir))
 
@@ -1412,6 +1414,9 @@ for variant_path in variant_paths:
         sticky_vars.files.append(current_vars_file)
         if not GetOption('silent'):
             print "Using saved variables file %s" % current_vars_file
+    elif variant_dir in ext_build_dirs:
+        # Things in ext are built without a variant directory.
+        continue
     else:
         # Build dir-specific variables file doesn't exist.
 
