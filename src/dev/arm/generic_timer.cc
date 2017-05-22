@@ -109,8 +109,12 @@ ArchTimer::counterLimitReached()
 
     DPRINTF(Timer, "Counter limit reached\n");
     if (!_control.imask) {
-        DPRINTF(Timer, "Causing interrupt\n");
-        _interrupt.send();
+        if (scheduleEvents()) {
+            DPRINTF(Timer, "Causing interrupt\n");
+            _interrupt.send();
+        } else {
+            DPRINTF(Timer, "Kvm mode; skipping simulated interrupt\n");
+        }
     }
 }
 
@@ -122,10 +126,12 @@ ArchTimer::updateCounter()
     if (value() >= _counterLimit) {
         counterLimitReached();
     } else {
-        const auto period(_systemCounter.period());
         _control.istatus = 0;
-        _parent.schedule(_counterLimitReachedEvent,
-             curTick() + (_counterLimit - value()) * period);
+        if (scheduleEvents()) {
+            const auto period(_systemCounter.period());
+            _parent.schedule(_counterLimitReachedEvent,
+                 curTick() + (_counterLimit - value()) * period);
+        }
     }
 }
 
@@ -234,12 +240,13 @@ ArchTimer::Interrupt::clear()
 
 GenericTimer::GenericTimer(GenericTimerParams *p)
     : SimObject(p),
+      system(*p->system),
       gic(p->gic),
       irqPhys(p->int_phys),
       irqVirt(p->int_virt)
 {
     fatal_if(!p->system, "No system specified, can't instantiate timer.\n");
-    p->system->setGenericTimer(this);
+    system.setGenericTimer(this);
 }
 
 void
@@ -303,7 +310,7 @@ GenericTimer::createTimers(unsigned cpus)
     timers.resize(cpus);
     for (unsigned i = old_cpu_count; i < cpus; ++i) {
         timers[i].reset(
-            new CoreTimers(*this, i, irqPhys, irqVirt));
+            new CoreTimers(*this, system, i, irqPhys, irqVirt));
     }
 }
 
