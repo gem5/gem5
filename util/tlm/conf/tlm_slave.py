@@ -56,7 +56,7 @@ from m5.objects import *
 system = System()
 system.membus = IOXBar(width = 16)
 system.physmem = SimpleMemory() # This must be instanciated, even if not needed
-system.cpu = TrafficGen(config_file = "tgen.cfg")
+system.cpu = TrafficGen(config_file = "conf/tgen.cfg")
 system.clk_domain = SrcClockDomain(clock = '1.5GHz',
     voltage_domain = VoltageDomain(voltage = '1V'))
 

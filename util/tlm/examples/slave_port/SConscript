@@ -32,47 +32,13 @@
 #
 # Authors: Christian Menard
 
-import os
+Import('env')
+Import('deps')
 
-gem5_arch = 'ARM'
-gem5_variant = 'opt'
-#gem5_variant = 'debug'
+env = env.Clone()
 
-gem5_root = '#../../../..'
+src = [File('main.cc'), File('sc_target.cc')]
 
-target = 'gem5.' + gem5_variant + '.sc'
+bin = env.Program('gem5.sc', src + deps)
 
-env = Environment()
-
-# Import PKG_CONFIG_PATH from the external environment
-if os.environ.has_key('PKG_CONFIG_PATH'):
-    env['ENV']['PKG_CONFIG_PATH'] = os.environ['PKG_CONFIG_PATH']
-
-# search for SystemC
-env.ParseConfig('pkg-config --cflags --libs systemc')
-
-# add include dirs
-env.Append(CPPPATH=[gem5_root + '/build/' + gem5_arch,
-                    gem5_root + '/util/systemc',
-                    gem5_root + '/util/tlm',
-                    '../common'])
-
-env.Append(LIBS=['gem5_' + gem5_variant])
-env.Append(LIBPATH=[gem5_root + '/build/' + gem5_arch])
-
-env.Append(CXXFLAGS=['-std=c++11',
-                     '-DSC_INCLUDE_DYNAMIC_PROCESSES',
-                     '-DTRACING_ON'])
-
-if gem5_variant == 'debug':
-    env.Append(CXXFLAGS=['-g', '-DDEBUG'])
-
-src_systemc = [gem5_root + '/util/systemc/sc_gem5_control.cc',
-               gem5_root + '/util/systemc/sc_logger.cc',
-               gem5_root + '/util/systemc/sc_module.cc',
-               gem5_root + '/util/systemc/stats.cc']
-
-src_tlm     = Glob(gem5_root + '/util/tlm/*.cc')
-src_main    = Glob('*.cc') + Glob('../common/*.cc')
-
-main = env.Program(target, src_systemc + src_tlm + src_main)
+Return('bin')

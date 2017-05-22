@@ -36,7 +36,7 @@ import optparse
 from m5.objects import *
 from m5.util import addToPath, fatal
 
-addToPath('../../../../configs/common/')
+addToPath('../../../configs/common/')
 
 from Caches import *
 
@@ -106,8 +106,8 @@ system.physmem = SimpleMemory() # This must be instantiated, even if not needed
 # Create a external TLM port:
 system.tlm = ExternalSlave()
 system.tlm.addr_ranges = [AddrRange('512MB')]
-system.tlm.port_type = "tlm"
-system.tlm.port_data = "memory"
+system.tlm.port_type = "tlm_slave"
+system.tlm.port_data = "transactor"
 
 # Connect everything:
 system.membus = SystemXBar()

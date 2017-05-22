@@ -40,9 +40,9 @@
 #include <systemc>
 #include <tlm>
 
-#include <mem/external_master.hh>
-#include <sc_peq.hh>
-#include <sim_control.hh>
+#include "mem/external_master.hh"
+#include "sc_peq.hh"
+#include "sim_control.hh"
 
 namespace Gem5SystemC
 {

@@ -49,29 +49,32 @@ once in order to run a gem5 simulation from within an SystemC environment.
 II. Files
 =========
 
-    sc_slave_port.{cc,hh}     -- Implements SCSlavePort
-    sc_master_port.{cc,hh}    -- Implements SCMasterPort
-    sc_mm.{cc,hh}             -- Implementation of a TLM memory manager
-    sc_ext.{cc,hh}            -- TLM extension that carries a gem5 packet
-    sc_peq.{cc,hh}            -- TLM PEQ for scheduling gem5 events
-    sim_control.{cc,hh}       -- Implements Gem5SimControl
-    slave_transactor.{cc,hh}  -- Implements Gem5SlaveTransactor
-    master_transactor.{cc,hh} -- Implements Gem5MasterTransactor
+    src/sc_slave_port.{cc,hh}     -- Implements SCSlavePort
+    src/sc_master_port.{cc,hh}    -- Implements SCMasterPort
+    src/sc_mm.{cc,hh}             -- Implementation of a TLM memory manager
+    src/sc_ext.{cc,hh}            -- TLM extension that carries a gem5 packet
+    src/sc_peq.{cc,hh}            -- TLM PEQ for scheduling gem5 events
+    src/sim_control.{cc,hh}       -- Implements Gem5SimControl
+    src/slave_transactor.{cc,hh}  -- Implements Gem5SlaveTransactor
+    src/master_transactor.{cc,hh} -- Implements Gem5MasterTransactor
 
-    example/common/cli_parser.{cc,hh}     -- Simple cli argument parser
-    example/common/report_hanlder.{cc,hh} -- Custom SystemC report handler
+    examples/common/cli_parser.{cc,hh}     -- Simple cli argument parser
+    examples/common/report_hanlder.{cc,hh} -- Custom SystemC report handler
 
-    example/slave_port/main.cc           -- demonstration of the slave port
-    example/slave_port/sc_target.{cc,hh} -- an example TLM LT/AT memory module
-    example/slave_port/tlm.py            -- simple gem5 configuration
-    example/slave_port/tlm_elastic.py    -- gem5 configuration with an elastic
-                                            trace replayer
-    example/slave_port/tgen.cfg          -- elastic traceplayer configuration
+    examples/slave_port/main.cc           -- demonstration of the slave port
+    examples/slave_port/sc_target.{cc,hh} -- an example TLM LT/AT memory module
 
-    example/master_port/main.cc          -- demonstration of the master port
-    example/master_port/traffic_generator.{cc/hh}
+    examples/master_port/main.cc          -- demonstration of the master port
+    examples/master_port/traffic_generator.{cc/hh}
                                          -- an example traffic generator module
-    example/master_port/tlm.py           -- simple gem5 configuration
+
+    conf/tlm_slave.py           -- simple gem5 configuration connecting to a
+                                   SytemC/TLM slave module
+    conf/tlm_elastic_slave.py   -- gem5 configuration with an elastic trace
+                                   replayer
+    conf/tlm_master.py          -- simple gem5 configuration connecting to a
+                                   SytemC/TLM master module
+    conf/tgen.cfg               -- trace generator configuration
 
 Other Files will be used from utils/systemc example:
 
@@ -98,56 +101,36 @@ Note: For MAC / OSX this command should be used:
 > scons --with-cxx-config --without-python --without-tcmalloc \
 >       build/ARM/libgem5_opt.dylib
 
-Set a proper LD_LIBRARY_PATH e.g. for bash:
-> export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+To build all sources of the SystemC binding and the examples simply run scons:
 
-or for MAC / OSX:
-> export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
-
-The build system finds your SystemC installation using pkg-config. Make sure
-that pkg-config is installed and your systemc.pc is within your
-PKG_CONFIG_PATH. You can add SystemC to the PKG_CONFIG_PATH using the following
-command:
-> export PKG_CONFIG_PATH="/path/to/systemc/lib-<arch>/pkgconfig/:$PKG_CONFIG_PATH"
-
-To build one of the examples:
-
-> cd examples/{master,slave}_port
 > scons
-> cd ../../
 
 
 IV. Simple Examples
 ===================
 
-> cd examples/{master,slave}_port
-
 In order to run our example simulation, we first need to create a config.ini
 that represents the gem5 configuration. We do so by starting gem5 with the
 desired python configuration script.
 
-> ../../../../build/ARM/gem5.opt ./tlm.py
+> ../../build/ARM/gem5.opt conf/tlm_{master,slave}.py
 
 The message "fatal: Can't find port handler type 'tlm_{master,slave}'" is okay.
 The configuration will be stored in the m5out/ directory
 
-The build step creates a binary gem5.opt.sc in the example directory.  It can
-now be used to load in the generated configuration file from the previous
-normal gem5 run.
+The build step creates a binary 'gem5.sc' for each example in the
+build/examples/{master|slave}_port directories. It can now be used to load in
+the generated configuration file from the previous normal gem5 run.
 
 Try:
 
-> ./gem5.opt.sc m5out/config.ini -e 1000000
+> build/examples/{master,slave}_port/gem5.sc m5out/config.ini -e 1000000
 
 It should run a simulation for 1us.
 
 To see more information what happens inside the TLM modules use the -v flag:
 
-> ./gem5.opt.sc m5out/config.ini -e 1000000 -v
-
-To see more information about the port coupling use:
-
-> ./gem5.opt.sc m5out/config.ini -e 1000000 -d ExternalPort
+> build/{master,slave}_port/gem5.sc m5out/config.ini -e 1000000 -v
 
 
 V. Full System Setup
@@ -156,13 +139,11 @@ V. Full System Setup
 Apart from the simple examples, there is a full system example that uses
 the gem5-to-TLM bridge.
 
->cd examples/slave_port
-
 Build gem5 as described in Section III. Then, make a config file for the
 C++-configured gem5 using normal gem5
 
-> ../../../../build/ARM/gem5.opt ../../../../configs/example/fs.py   \
-  --tlm-memory=transactor --cpu-type=timing --num-cpu=1              \
+> ../../build/ARM/gem5.opt ../../configs/example/fs.py               \
+  --tlm-memory=transactor --cpu-type=TimingSimpleCPU --num-cpu=1     \
   --mem-type=SimpleMemory --mem-size=512MB --mem-channels=1 --caches \
   --l2cache --machine-type=VExpress_EMM                              \
   --dtb-filename=vexpress.aarch32.ll_20131205.0-gem5.1cpu.dtb        \
@@ -172,17 +153,17 @@ C++-configured gem5 using normal gem5
 The message "fatal: Can't find port handler type 'tlm_slave'" is okay.
 The configuration will be stored in the m5out/ directory
 
-The binary 'gem5.opt.sc' can now be used to load in the generated config
-file from the previous normal gem5 run.
+The binary 'build/examples/slave_port/gem5.sc' can now be used to load in the
+generated config file from the previous normal gem5 run.
 
 Try:
 
-> ./gem5.opt.sc m5out/config.ini -o 2147483648
+> build/examples/slave_port/gem5.sc m5out/config.ini -o 2147483648
 
 The parameter -o specifies the begining of the memory region (0x80000000).
 The system should boot now.
 
-For convenience a run_gem5.sh file holds all those commands
+For convenience a run_gem5_fs.sh file holds all those commands
 
 
 VI. Elastic Trace Setup
@@ -199,13 +180,13 @@ For more information on elastic traces please refer to:
    IEEE International Conference on Embedded Computer Systems Architectures
    Modeling and Simulation (SAMOS), July, 2016, Samos Island, Greece.
 
-Similar IV. the simulation can be set up with this command:
+Similar to IV. the simulation can be set up with this command:
 
-> ../../../../build/ARM/gem5.opt ./tlm_elastic.py
+> ../../build/ARM/gem5.opt ./conf/tlm_elastic_slave.py
 
 Then:
 
-> ./gem5.opt.sc m5out/config.ini
+> build/examples/slave_port/gem5.sc m5out/config.ini
 
 
 VII. Knwon issues
@@ -214,4 +195,6 @@ VII. Knwon issues
 * For some toolchains, compiling libgem5 with tcmalloc leads to errors
   ('tcmalloc Attempt to free invalid pointer xxx') when linking libgem5 into a
   SystemC application.
-* When SystemC was build with --enable-pthreads, SystemC applications linked
+* When SystemC is build with pthread support enabled, the binding of gem5 to
+  SystemC breaks. When gem5 is linked to a SystemC application, gem5's usage
+  of thread local storage results in a segfault.
