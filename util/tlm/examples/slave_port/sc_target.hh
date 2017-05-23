@@ -91,6 +91,9 @@ struct Target: sc_module
     /** Method process that runs on target_done_event */
     void execute_transaction_process();
 
+    /** Helping function that checks if a requested address is with range */
+    void check_address(unsigned long long int addr);
+
     /** Helping Variables **/
     unsigned long long int size;
     unsigned offset;
