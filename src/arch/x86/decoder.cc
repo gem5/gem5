@@ -96,19 +96,18 @@ Decoder::process()
           case PrefixState:
             state = doPrefixState(nextByte);
             break;
-
-          case TwoByteVexState:
-            state = doTwoByteVexState(nextByte);
+          case Vex2Of2State:
+            state = doVex2Of2State(nextByte);
             break;
-
-          case ThreeByteVexFirstState:
-            state = doThreeByteVexFirstState(nextByte);
+          case Vex2Of3State:
+            state = doVex2Of3State(nextByte);
             break;
-
-          case ThreeByteVexSecondState:
-            state = doThreeByteVexSecondState(nextByte);
+          case Vex3Of3State:
+            state = doVex3Of3State(nextByte);
             break;
-
+          case VexOpcodeState:
+            state = doVexOpcodeState(nextByte);
+            break;
           case OneByteOpcodeState:
             state = doOneByteOpcodeState(nextByte);
             break;
@@ -222,19 +221,16 @@ Decoder::doPrefixState(uint8_t nextByte)
         DPRINTF(Decoder, "Found Rex prefix %#x.\n", nextByte);
         emi.rex = nextByte;
         break;
-
       case Vex2Prefix:
         DPRINTF(Decoder, "Found VEX two-byte prefix %#x.\n", nextByte);
-        emi.vex.zero = nextByte;
-        nextState = TwoByteVexState;
+        emi.vex.present = 1;
+        nextState = Vex2Of2State;
         break;
-
       case Vex3Prefix:
         DPRINTF(Decoder, "Found VEX three-byte prefix %#x.\n", nextByte);
-        emi.vex.zero = nextByte;
-        nextState = ThreeByteVexFirstState;
+        emi.vex.present = 1;
+        nextState = Vex2Of3State;
         break;
-
       case 0:
         nextState = OneByteOpcodeState;
         break;
@@ -246,42 +242,132 @@ Decoder::doPrefixState(uint8_t nextByte)
 }
 
 Decoder::State
-Decoder::doTwoByteVexState(uint8_t nextByte)
+Decoder::doVex2Of2State(uint8_t nextByte)
 {
-    assert(emi.vex.zero == 0xc5);
     consumeByte();
-    TwoByteVex tbe = 0;
-    tbe.first = nextByte;
+    Vex2Of2 vex = nextByte;
 
-    emi.vex.first.r = tbe.first.r;
-    emi.vex.first.x = 1;
-    emi.vex.first.b = 1;
-    emi.vex.first.map_select = 1;
+    emi.rex.r = !vex.r;
 
-    emi.vex.second.w = 0;
-    emi.vex.second.vvvv = tbe.first.vvvv;
-    emi.vex.second.l = tbe.first.l;
-    emi.vex.second.pp = tbe.first.pp;
+    emi.vex.l = vex.l;
+    emi.vex.v = ~vex.v;
 
-    emi.opcode.type = Vex;
-    return OneByteOpcodeState;
+    switch (vex.p) {
+      case 0:
+        break;
+      case 1:
+        emi.legacy.op = 1;
+        break;
+      case 2:
+        emi.legacy.rep = 1;
+        break;
+      case 3:
+        emi.legacy.repne = 1;
+        break;
+    }
+
+    emi.opcode.type = TwoByteOpcode;
+
+    return VexOpcodeState;
 }
 
 Decoder::State
-Decoder::doThreeByteVexFirstState(uint8_t nextByte)
+Decoder::doVex2Of3State(uint8_t nextByte)
 {
+    if (emi.mode.submode != SixtyFourBitMode && bits(nextByte, 7, 6) == 0x3) {
+        // This was actually an LDS instruction. Reroute to that path.
+        emi.vex.present = 0;
+        emi.opcode.type = OneByteOpcode;
+        emi.opcode.op = 0xC4;
+        return processOpcode(ImmediateTypeOneByte, UsesModRMOneByte,
+                             nextByte >= 0xA0 && nextByte <= 0xA3);
+    }
+
     consumeByte();
-    emi.vex.first = nextByte;
-    return ThreeByteVexSecondState;
+    Vex2Of3 vex = nextByte;
+
+    emi.rex.r = !vex.r;
+    emi.rex.x = !vex.x;
+    emi.rex.b = !vex.b;
+
+    switch (vex.m) {
+      case 1:
+        emi.opcode.type = TwoByteOpcode;
+        break;
+      case 2:
+        emi.opcode.type = ThreeByte0F38Opcode;
+        break;
+      case 3:
+        emi.opcode.type = ThreeByte0F3AOpcode;
+        break;
+      default:
+        // These encodings are reserved. Pretend this was an undefined
+        // instruction so the main decoder will behave correctly, and stop
+        // trying to interpret bytes.
+        emi.opcode.type = TwoByteOpcode;
+        emi.opcode.op = 0x0B;
+        instDone = true;
+        return ResetState;
+    }
+    return Vex3Of3State;
 }
 
 Decoder::State
-Decoder::doThreeByteVexSecondState(uint8_t nextByte)
+Decoder::doVex3Of3State(uint8_t nextByte)
 {
+    if (emi.mode.submode != SixtyFourBitMode && bits(nextByte, 7, 6) == 0x3) {
+        // This was actually an LES instruction. Reroute to that path.
+        emi.vex.present = 0;
+        emi.opcode.type = OneByteOpcode;
+        emi.opcode.op = 0xC5;
+        return processOpcode(ImmediateTypeOneByte, UsesModRMOneByte,
+                             nextByte >= 0xA0 && nextByte <= 0xA3);
+    }
+
     consumeByte();
-    emi.vex.second = nextByte;
-    emi.opcode.type = Vex;
-    return OneByteOpcodeState;
+    Vex3Of3 vex = nextByte;
+
+    emi.rex.w = vex.w;
+
+    emi.vex.l = vex.l;
+    emi.vex.v = ~vex.v;
+
+    switch (vex.p) {
+      case 0:
+        break;
+      case 1:
+        emi.legacy.op = 1;
+        break;
+      case 2:
+        emi.legacy.rep = 1;
+        break;
+      case 3:
+        emi.legacy.repne = 1;
+        break;
+    }
+
+    return VexOpcodeState;
+}
+
+Decoder::State
+Decoder::doVexOpcodeState(uint8_t nextByte)
+{
+    DPRINTF(Decoder, "Found VEX opcode %#x.\n", nextByte);
+
+    emi.opcode.op = nextByte;
+
+    switch (emi.opcode.type) {
+      case TwoByteOpcode:
+        return processOpcode(ImmediateTypeTwoByte, UsesModRMTwoByte);
+      case ThreeByte0F38Opcode:
+        return processOpcode(ImmediateTypeThreeByte0F38,
+                             UsesModRMThreeByte0F38);
+      case ThreeByte0F3AOpcode:
+        return processOpcode(ImmediateTypeThreeByte0F3A,
+                             UsesModRMThreeByte0F3A);
+      default:
+        panic("Unrecognized opcode type %d.\n", emi.opcode.type);
+    }
 }
 
 // Load the first opcode byte. Determine if there are more opcode bytes, and
@@ -292,14 +378,9 @@ Decoder::doOneByteOpcodeState(uint8_t nextByte)
     State nextState = ErrorState;
     consumeByte();
 
-    if (emi.vex.zero != 0) {
-        DPRINTF(Decoder, "Found VEX opcode %#x.\n", nextByte);
-        emi.opcode.op = nextByte;
-        const uint8_t opcode_map = emi.vex.first.map_select;
-        nextState = processExtendedOpcode(ImmediateTypeVex[opcode_map]);
-    } else if (nextByte == 0x0f) {
-        nextState = TwoByteOpcodeState;
+    if (nextByte == 0x0f) {
         DPRINTF(Decoder, "Found opcode escape byte %#x.\n", nextByte);
+        nextState = TwoByteOpcodeState;
     } else {
         DPRINTF(Decoder, "Found one byte opcode %#x.\n", nextByte);
         emi.opcode.type = OneByteOpcode;
@@ -419,54 +500,6 @@ Decoder::processOpcode(ByteTable &immTable, ByteTable &modrmTable,
         }
     }
     return nextState;
-}
-
-Decoder::State
-Decoder::processExtendedOpcode(ByteTable &immTable)
-{
-    //Figure out the effective operand size. This can be overriden to
-    //a fixed value at the decoder level.
-    int logOpSize;
-    if (emi.vex.second.w)
-        logOpSize = 3; // 64 bit operand size
-    else if (emi.vex.second.pp == 1)
-        logOpSize = altOp;
-    else
-        logOpSize = defOp;
-
-    //Set the actual op size
-    emi.opSize = 1 << logOpSize;
-
-    //Figure out the effective address size. This can be overriden to
-    //a fixed value at the decoder level.
-    int logAddrSize;
-    if (emi.legacy.addr)
-        logAddrSize = altAddr;
-    else
-        logAddrSize = defAddr;
-
-    //Set the actual address size
-    emi.addrSize = 1 << logAddrSize;
-
-    //Figure out the effective stack width. This can be overriden to
-    //a fixed value at the decoder level.
-    emi.stackSize = 1 << stack;
-
-    //Figure out how big of an immediate we'll retreive based
-    //on the opcode.
-    const uint8_t opcode = emi.opcode.op;
-
-    if (emi.vex.zero == 0xc5 || emi.vex.zero == 0xc4) {
-        int immType = immTable[opcode];
-        // Assume 64-bit mode;
-        immediateSize = SizeTypeToSize[2][immType];
-    }
-
-    if (opcode == 0x77) {
-        instDone = true;
-        return ResetState;
-    }
-    return ModRMState;
 }
 
 //Get the ModRM byte and determine what displacement, if any, there is.

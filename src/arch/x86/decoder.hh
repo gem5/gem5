@@ -178,9 +178,10 @@ class Decoder
         ResetState,
         FromCacheState,
         PrefixState,
-        TwoByteVexState,
-        ThreeByteVexFirstState,
-        ThreeByteVexSecondState,
+        Vex2Of2State,
+        Vex2Of3State,
+        Vex3Of3State,
+        VexOpcodeState,
         OneByteOpcodeState,
         TwoByteOpcodeState,
         ThreeByte0F38OpcodeState,
@@ -199,9 +200,10 @@ class Decoder
     State doResetState();
     State doFromCacheState();
     State doPrefixState(uint8_t);
-    State doTwoByteVexState(uint8_t);
-    State doThreeByteVexFirstState(uint8_t);
-    State doThreeByteVexSecondState(uint8_t);
+    State doVex2Of2State(uint8_t);
+    State doVex2Of3State(uint8_t);
+    State doVex3Of3State(uint8_t);
+    State doVexOpcodeState(uint8_t);
     State doOneByteOpcodeState(uint8_t);
     State doTwoByteOpcodeState(uint8_t);
     State doThreeByte0F38OpcodeState(uint8_t);
