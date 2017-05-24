@@ -193,6 +193,7 @@ def operands {{
     'Dest2': intReg('dest2'),
     'XDest2': intRegX64('dest2'),
     'FDest2': floatReg('dest2'),
+    'IWDest2': intRegIWPC('dest2'),
     'Result': intReg('result'),
     'XResult': intRegX64('result'),
     'XBase': intRegX64('base', id = srtBase),

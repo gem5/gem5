@@ -58,7 +58,8 @@ let {{
     microLdr2UopCode = '''
                         uint64_t data = Mem_ud;
                         Dest = cSwap((uint32_t) data, ((CPSR)Cpsr).e);
-                        Dest2 = cSwap((uint32_t) (data >> 32), ((CPSR)Cpsr).e);
+                        IWDest2 = cSwap((uint32_t) (data >> 32),
+                                        ((CPSR)Cpsr).e);
                         '''
     microLdr2UopIop = InstObjParams('ldr2_uop', 'MicroLdr2Uop',
                                    'MicroMemPairOp',
