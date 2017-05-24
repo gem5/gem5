@@ -71,7 +71,7 @@ class Process : public SimObject
     void initState() override;
     DrainState drain() override;
 
-    void syscall(int64_t callnum, ThreadContext *tc, Fault *fault);
+    virtual void syscall(int64_t callnum, ThreadContext *tc, Fault *fault);
     virtual TheISA::IntReg getSyscallArg(ThreadContext *tc, int &i) = 0;
     virtual TheISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
     virtual void setSyscallArg(ThreadContext *tc, int i,

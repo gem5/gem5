@@ -43,9 +43,9 @@
 #include <string>
 #include <vector>
 
+#include "mem/multi_level_page_table.hh"
 #include "sim/aux_vector.hh"
 #include "sim/process.hh"
-#include "mem/multi_level_page_table.hh"
 
 class SyscallDesc;
 
@@ -175,7 +175,8 @@ namespace X86ISA
         void argsInit(int pageSize);
         void initState();
 
-        void syscall(int64_t callnum, ThreadContext *tc, Fault *fault);
+        void syscall(int64_t callnum, ThreadContext *tc,
+                     Fault *fault) override;
         X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
         X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
         void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
@@ -186,7 +187,8 @@ namespace X86ISA
     /**
      * Declaration of architectural page table for x86.
      *
-     * These page tables are stored in system memory and respect x86 specification.
+     * These page tables are stored in system memory and respect x86
+     * specification.
      */
     typedef MultiLevelPageTable<PageTableOps> ArchPageTable;
 
