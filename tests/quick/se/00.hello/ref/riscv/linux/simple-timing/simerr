@@ -1,3 +1,6 @@
-warn: Unknown operating system; assuming Linux.
 warn: Sockets disabled, not accepting gdb connections
 warn: ClockedObject: More than one power state change request encountered within the same simulation tick
+info: Entering event queue @ 0.  Starting simulation...
+warn: readlink() called on '/proc/self/exe' may yield unexpected results in various settings.
+      Returning '/home/ar4jc/gem5/tests/test-progs/hello/bin/riscv/linux/hello'
+info: Increasing stack size by one page.

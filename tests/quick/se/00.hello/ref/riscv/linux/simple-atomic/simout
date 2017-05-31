@@ -1,15 +1,13 @@
-Redirecting stdout to build/RISCV/tests/opt/quick/se/00.hello/riscv/linux/simple-atomic/simout
-Redirecting stderr to build/RISCV/tests/opt/quick/se/00.hello/riscv/linux/simple-atomic/simerr
+Redirecting stdout to build/RISCV/tests/debug/quick/se/00.hello/riscv/linux/simple-atomic/simout
+Redirecting stderr to build/RISCV/tests/debug/quick/se/00.hello/riscv/linux/simple-atomic/simerr
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 30 2016 14:33:35
-gem5 started Nov 30 2016 16:18:29
-gem5 executing on zizzer, pid 34058
-command line: /z/powerjg/gem5-upstream/build/RISCV/gem5.opt -d build/RISCV/tests/opt/quick/se/00.hello/riscv/linux/simple-atomic -re /z/powerjg/gem5-upstream/tests/testing/../run.py quick/se/00.hello/riscv/linux/simple-atomic
+gem5 compiled May 31 2017 18:33:59
+gem5 started May 31 2017 18:34:14
+gem5 executing on boldrock, pid 15724
+command line: /home/ar4jc/gem5/build/RISCV/gem5.debug -d build/RISCV/tests/debug/quick/se/00.hello/riscv/linux/simple-atomic --stats-file 'text://stats.txt?desc=False' -re /home/ar4jc/gem5/tests/testing/../run.py quick/se/00.hello/riscv/linux/simple-atomic
 
 Global frequency set at 1000000000000 ticks per second
-info: Entering event queue @ 0.  Starting simulation...
-info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 798000 because target called exit()
+Exiting @ tick 2783000 because exiting with last active thread context
