@@ -101,6 +101,7 @@ class EtherTap(EtherObject):
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
     port = Param.UInt16(3500, "tap port")
+    tap = SlavePort("Ethernet interface")
 
 class EtherDump(SimObject):
     type = 'EtherDump'
