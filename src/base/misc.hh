@@ -46,6 +46,7 @@
 #define __BASE_MISC_HH__
 
 #include <cassert>
+#include <cstdlib>
 #include <iostream>
 #include <utility>
 
