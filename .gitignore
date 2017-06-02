@@ -13,4 +13,7 @@ m5out
 /util/m5/*.o
 /util/m5/*.a
 /util/m5/m5
+/util/tap/*.d
+/util/tap/*.o
+/util/tap/m5tap
 /system/arm/dt/*.dtb
