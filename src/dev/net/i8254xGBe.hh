@@ -75,6 +75,7 @@ class IGbE : public EtherDevice
     EthPacketPtr txPacket;
 
     // Should to Rx/Tx State machine tick?
+    bool inTick;
     bool rxTick;
     bool txTick;
     bool txFifoTick;

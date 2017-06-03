@@ -59,9 +59,9 @@ using namespace Net;
 
 IGbE::IGbE(const Params *p)
     : EtherDevice(p), etherInt(NULL), cpa(NULL),
-      rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size), rxTick(false),
-      txTick(false), txFifoTick(false), rxDmaPacket(false), pktOffset(0),
-      fetchDelay(p->fetch_delay), wbDelay(p->wb_delay),
+      rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size), inTick(false),
+      rxTick(false), txTick(false), txFifoTick(false), rxDmaPacket(false),
+      pktOffset(0), fetchDelay(p->fetch_delay), wbDelay(p->wb_delay),
       fetchCompDelay(p->fetch_comp_delay), wbCompDelay(p->wb_comp_delay),
       rxWriteDelay(p->rx_write_delay), txReadDelay(p->tx_read_delay),
       rdtrEvent(this), radvEvent(this),
@@ -2385,9 +2385,10 @@ IGbE::rxStateMachine()
 void
 IGbE::txWire()
 {
+    txFifoTick = false;
+
     if (txFifo.empty()) {
         anWe("TXQ", "TX FIFO Q");
-        txFifoTick = false;
         return;
     }
 
@@ -2411,12 +2412,8 @@ IGbE::txWire()
 
         txBytes += txFifo.front()->length;
         txPackets++;
-        txFifoTick = false;
 
         txFifo.pop();
-    } else {
-        // We'll get woken up when the packet ethTxDone() gets called
-        txFifoTick = false;
     }
 }
 
@@ -2425,18 +2422,27 @@ IGbE::tick()
 {
     DPRINTF(EthernetSM, "IGbE: -------------- Cycle --------------\n");
 
+    inTick = true;
+
     if (rxTick)
         rxStateMachine();
 
     if (txTick)
         txStateMachine();
 
-    if (txFifoTick)
+    // If txWire returns and txFifoTick is still set, that means the data we
+    // sent to the other end was already accepted and we can send another
+    // frame right away. This is consistent with the previous behavior which
+    // would send another frame if one was ready in ethTxDone. This version
+    // avoids growing the stack with each frame sent which can cause stack
+    // overflow.
+    while (txFifoTick)
         txWire();
-
 
     if (rxTick || txTick || txFifoTick)
         schedule(tickEvent, curTick() + clockPeriod());
+
+    inTick = false;
 }
 
 void
@@ -2450,8 +2456,8 @@ IGbE::ethTxDone()
     if (txDescCache.descLeft() != 0 && drainState() != DrainState::Draining)
         txTick = true;
 
-    restartClock();
-    txWire();
+    if (!inTick)
+        restartClock();
     DPRINTF(EthernetSM, "TxFIFO: Transmission complete\n");
 }
 
