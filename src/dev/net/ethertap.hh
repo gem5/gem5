@@ -39,9 +39,16 @@
 #include <string>
 
 #include "base/pollevent.hh"
+#include "config/use_tuntap.hh"
 #include "dev/net/etherint.hh"
 #include "dev/net/etherobject.hh"
 #include "dev/net/etherpkt.hh"
+
+#if USE_TUNTAP
+#include "params/EtherTap.hh"
+
+#endif
+
 #include "params/EtherTapStub.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
@@ -174,6 +181,30 @@ class EtherTapStub : public EtherTapBase
     void recvReal(int revent) override;
     bool sendReal(const void *data, size_t len) override;
 };
+
+
+#if USE_TUNTAP
+class EtherTap : public EtherTapBase
+{
+  public:
+    typedef EtherTapParams Params;
+    EtherTap(const Params *p);
+    ~EtherTap();
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+
+  protected:
+    int tap;
+
+    void recvReal(int revent) override;
+    bool sendReal(const void *data, size_t len) override;
+};
+#endif
 
 
 #endif // __DEV_NET_ETHERTAP_HH__

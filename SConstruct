@@ -1101,6 +1101,11 @@ if not have_kvm:
     print "Info: Compatible header file <linux/kvm.h> not found, " \
         "disabling KVM support."
 
+# Check if the TUN/TAP driver is available.
+have_tuntap = conf.CheckHeader('linux/if_tun.h', '<>')
+if not have_tuntap:
+    print "Info: Compatible header file <linux/if_tun.h> not found."
+
 # x86 needs support for xsave. We test for the structure here since we
 # won't be able to run new tests by the time we know which ISA we're
 # targeting.
@@ -1233,6 +1238,9 @@ sticky_vars.AddVariables(
     BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability', False),
     BoolVariable('USE_KVM', 'Enable hardware virtualized (KVM) CPU models', have_kvm),
+    BoolVariable('USE_TUNTAP',
+                 'Enable using a tap device to bridge to the host network',
+                 have_tuntap),
     BoolVariable('BUILD_GPU', 'Build the compute-GPU model', False),
     EnumVariable('PROTOCOL', 'Coherence protocol for Ruby', 'None',
                   all_protocols),
@@ -1476,6 +1484,11 @@ for variant_path in variant_paths:
             print "Info: KVM support disabled due to unsupported host and " \
                 "target ISA combination"
             env['USE_KVM'] = False
+
+    if env['USE_TUNTAP']:
+        if not have_tuntap:
+            print "Warning: Can't connect EtherTap with a tap device."
+            env['USE_TUNTAP'] = False
 
     if env['BUILD_GPU']:
         env.Append(CPPDEFINES=['BUILD_GPU'])

@@ -38,9 +38,24 @@
 #include <sys/param.h>
 
 #endif
+
+#if USE_TUNTAP && defined(__linux__)
+#if 1 // Hide from the style checker since these have to be out of order.
+#include <sys/socket.h> // Has to be included before if.h for some reason.
+
+#endif
+
+#include <linux/if.h>
+#include <linux/if_tun.h>
+
+#endif
+
+#include <fcntl.h>
 #include <netinet/in.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
+#include <cstring>
 #include <deque>
 #include <string>
 
@@ -376,6 +391,65 @@ EtherTapStub::sendReal(const void *data, size_t len)
     return write(socket, data, len) == len;
 }
 
+
+#if USE_TUNTAP
+
+EtherTap::EtherTap(const Params *p) : EtherTapBase(p)
+{
+    int fd = open(p->tun_clone_device.c_str(), O_RDWR);
+    if (fd < 0)
+        panic("Couldn't open %s.\n", p->tun_clone_device);
+
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(ifr));
+    ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
+    strncpy(ifr.ifr_name, p->tap_device_name.c_str(), IFNAMSIZ);
+
+    if (ioctl(fd, TUNSETIFF, (void *)&ifr) < 0)
+        panic("Failed to access tap device %s.\n", ifr.ifr_name);
+    // fd now refers to the tap device.
+    tap = fd;
+    pollFd(tap);
+}
+
+EtherTap::~EtherTap()
+{
+    stopPolling();
+    close(tap);
+    tap = -1;
+}
+
+void
+EtherTap::recvReal(int revent)
+{
+    if (revent & POLLERR)
+        panic("Error polling for tap data.\n");
+
+    if (!(revent & POLLIN))
+        return;
+
+    ssize_t ret = read(tap, buffer, buflen);
+    if (ret < 0)
+        panic("Failed to read from tap device.\n");
+
+    sendSimulated(buffer, ret);
+}
+
+bool
+EtherTap::sendReal(const void *data, size_t len)
+{
+    if (write(tap, data, len) != len)
+        panic("Failed to write data to tap device.\n");
+    return true;
+}
+
+EtherTap *
+EtherTapParams::create()
+{
+    return new EtherTap(this);
+}
+
+#endif
 
 EtherTapStub *
 EtherTapStubParams::create()

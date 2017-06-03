@@ -38,6 +38,7 @@
 #
 # Authors: Nathan Binkert
 
+from m5.defines import buildEnv
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
@@ -102,6 +103,14 @@ class EtherTapBase(EtherObject):
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
     tap = SlavePort("Ethernet interface to connect to gem5's network")
+
+if buildEnv['USE_TUNTAP']:
+    class EtherTap(EtherTapBase):
+        type = 'EtherTap'
+        cxx_header = "dev/net/ethertap.hh"
+        tun_clone_device = Param.String('/dev/net/tun',
+                                        "Path to the tun clone device node")
+        tap_device_name = Param.String('gem5-tap', "Tap device name")
 
 class EtherTapStub(EtherTapBase):
     type = 'EtherTapStub'
