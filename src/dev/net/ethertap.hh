@@ -42,7 +42,7 @@
 #include "dev/net/etherint.hh"
 #include "dev/net/etherobject.hh"
 #include "dev/net/etherpkt.hh"
-#include "params/EtherTap.hh"
+#include "params/EtherTapStub.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
 
@@ -51,9 +51,12 @@ class TapListener;
 class EtherTapInt;
 
 /*
- * Interface to connect a simulated ethernet device to the real world
+ * Interface to connect a simulated ethernet device to the real world. An
+ * external helper program bridges between this object's TCP port and a
+ * source/sink for Ethernet frames. Each frame going in either direction is
+ * prepended with the frame's length in a 32 bit integer in network byte order.
  */
-class EtherTap : public EtherObject
+class EtherTapStub : public EtherObject
 {
   protected:
     friend class TapEvent;
@@ -87,22 +90,22 @@ class EtherTap : public EtherObject
     class TxEvent : public Event
     {
       protected:
-        EtherTap *tap;
+        EtherTapStub *tap;
 
       public:
-        TxEvent(EtherTap *_tap) : tap(_tap) {}
+        TxEvent(EtherTapStub *_tap) : tap(_tap) {}
         void process() { tap->retransmit(); }
         virtual const char *description() const
-            { return "EtherTap retransmit"; }
+            { return "EtherTapStub retransmit"; }
     };
 
     friend class TxEvent;
     TxEvent txEvent;
 
   public:
-    typedef EtherTapParams Params;
-    EtherTap(const Params *p);
-    virtual ~EtherTap();
+    typedef EtherTapStubParams Params;
+    EtherTapStub(const Params *p);
+    virtual ~EtherTapStub();
 
     const Params *
     params() const
@@ -122,9 +125,9 @@ class EtherTap : public EtherObject
 class EtherTapInt : public EtherInt
 {
   private:
-    EtherTap *tap;
+    EtherTapStub *tap;
   public:
-    EtherTapInt(const std::string &name, EtherTap *t)
+    EtherTapInt(const std::string &name, EtherTapStub *t)
             : EtherInt(name), tap(t)
     { }
 

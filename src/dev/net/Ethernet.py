@@ -95,13 +95,13 @@ class EtherSwitch(EtherObject):
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
     time_to_live = Param.Latency('10ms', "time to live of MAC address maping")
 
-class EtherTap(EtherObject):
-    type = 'EtherTap'
+class EtherTapStub(EtherObject):
+    type = 'EtherTapStub'
     cxx_header = "dev/net/ethertap.hh"
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
-    port = Param.UInt16(3500, "tap port")
-    tap = SlavePort("Ethernet interface")
+    port = Param.UInt16(3500, "Port helper should send packets to")
+    tap = SlavePort("Ethernet interface to gem5's network")
 
 class EtherDump(SimObject):
     type = 'EtherDump'

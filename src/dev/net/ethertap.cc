@@ -80,11 +80,11 @@ class TapListener
 
   protected:
     ListenSocket listener;
-    EtherTap *tap;
+    EtherTapStub *tap;
     int port;
 
   public:
-    TapListener(EtherTap *t, int p)
+    TapListener(EtherTapStub *t, int p)
         : event(NULL), tap(t), port(p) {}
     ~TapListener() { if (event) delete event; }
 
@@ -126,20 +126,20 @@ TapListener::accept()
 class TapEvent : public PollEvent
 {
   protected:
-    EtherTap *tap;
+    EtherTapStub *tap;
 
   public:
-    TapEvent(EtherTap *_tap, int fd, int e)
+    TapEvent(EtherTapStub *_tap, int fd, int e)
         : PollEvent(fd, e), tap(_tap) {}
     virtual void process(int revent) { tap->process(revent); }
 };
 
-EtherTap::EtherTap(const Params *p)
+EtherTapStub::EtherTapStub(const Params *p)
     : EtherObject(p), event(NULL), socket(-1), buflen(p->bufsz), dump(p->dump),
       interface(NULL), txEvent(this)
 {
     if (ListenSocket::allDisabled())
-        fatal("All listeners are disabled! EtherTap can't work!");
+        fatal("All listeners are disabled! EtherTapStub can't work!");
 
     buffer = new char[buflen];
     listener = new TapListener(this, p->port);
@@ -147,7 +147,7 @@ EtherTap::EtherTap(const Params *p)
     interface = new EtherTapInt(name() + ".interface", this);
 }
 
-EtherTap::~EtherTap()
+EtherTapStub::~EtherTapStub()
 {
     if (event)
         delete event;
@@ -159,7 +159,7 @@ EtherTap::~EtherTap()
 }
 
 void
-EtherTap::attach(int fd)
+EtherTapStub::attach(int fd)
 {
     if (socket != -1)
         close(fd);
@@ -167,15 +167,15 @@ EtherTap::attach(int fd)
     buffer_offset = 0;
     data_len = 0;
     socket = fd;
-    DPRINTF(Ethernet, "EtherTap attached\n");
+    DPRINTF(Ethernet, "EtherTapStub attached\n");
     event = new TapEvent(this, socket, POLLIN|POLLERR);
     pollQueue.schedule(event);
 }
 
 void
-EtherTap::detach()
+EtherTapStub::detach()
 {
-    DPRINTF(Ethernet, "EtherTap detached\n");
+    DPRINTF(Ethernet, "EtherTapStub detached\n");
     delete event;
     event = 0;
     close(socket);
@@ -183,12 +183,12 @@ EtherTap::detach()
 }
 
 bool
-EtherTap::recvPacket(EthPacketPtr packet)
+EtherTapStub::recvPacket(EthPacketPtr packet)
 {
     if (dump)
         dump->dump(packet);
 
-    DPRINTF(Ethernet, "EtherTap output len=%d\n", packet->length);
+    DPRINTF(Ethernet, "EtherTapStub output len=%d\n", packet->length);
     DDUMP(EthernetData, packet->data, packet->length);
     uint32_t len = htonl(packet->length);
     ssize_t ret = write(socket, &len, sizeof(len));
@@ -204,11 +204,11 @@ EtherTap::recvPacket(EthPacketPtr packet)
 }
 
 void
-EtherTap::sendDone()
+EtherTapStub::sendDone()
 {}
 
 void
-EtherTap::process(int revent)
+EtherTapStub::process(int revent)
 {
     if (revent & POLLERR) {
         detach();
@@ -250,7 +250,7 @@ EtherTap::process(int revent)
         } else
             data_len = 0;
 
-        DPRINTF(Ethernet, "EtherTap input len=%d\n", packet->length);
+        DPRINTF(Ethernet, "EtherTapStub input len=%d\n", packet->length);
         DDUMP(EthernetData, packet->data, packet->length);
         if (!interface->sendPacket(packet)) {
             DPRINTF(Ethernet, "bus busy...buffer for retransmission\n");
@@ -264,7 +264,7 @@ EtherTap::process(int revent)
 }
 
 void
-EtherTap::retransmit()
+EtherTapStub::retransmit()
 {
     if (packetBuffer.empty())
         return;
@@ -273,7 +273,7 @@ EtherTap::retransmit()
     if (interface->sendPacket(packet)) {
         if (dump)
             dump->dump(packet);
-        DPRINTF(Ethernet, "EtherTap retransmit\n");
+        DPRINTF(Ethernet, "EtherTapStub retransmit\n");
         packetBuffer.front() = NULL;
         packetBuffer.pop();
     }
@@ -283,7 +283,7 @@ EtherTap::retransmit()
 }
 
 EtherInt*
-EtherTap::getEthPort(const std::string &if_name, int idx)
+EtherTapStub::getEthPort(const std::string &if_name, int idx)
 {
     if (if_name == "tap") {
         if (interface->getPeer())
@@ -297,7 +297,7 @@ EtherTap::getEthPort(const std::string &if_name, int idx)
 //=====================================================================
 
 void
-EtherTap::serialize(CheckpointOut &cp) const
+EtherTapStub::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(socket);
     SERIALIZE_SCALAR(buflen);
@@ -318,7 +318,7 @@ EtherTap::serialize(CheckpointOut &cp) const
 }
 
 void
-EtherTap::unserialize(CheckpointIn &cp)
+EtherTapStub::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(socket);
     UNSERIALIZE_SCALAR(buflen);
@@ -342,8 +342,8 @@ EtherTap::unserialize(CheckpointIn &cp)
 
 //=====================================================================
 
-EtherTap *
-EtherTapParams::create()
+EtherTapStub *
+EtherTapStubParams::create()
 {
-    return new EtherTap(this);
+    return new EtherTapStub(this);
 }
