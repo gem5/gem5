@@ -183,6 +183,9 @@ AddLocalOption('--ignore-style', dest='ignore_style', action='store_true',
                help='Disable style checking hooks')
 AddLocalOption('--no-lto', dest='no_lto', action='store_true',
                help='Disable Link-Time Optimization for fast')
+AddLocalOption('--force-lto', dest='force_lto', action='store_true',
+               help='Use Link-Time Optimization instead of partial linking' +
+                    ' when the compiler doesn\'t support using them together.')
 AddLocalOption('--update-ref', dest='update_ref', action='store_true',
                help='Update test reference outputs')
 AddLocalOption('--verbose', dest='verbose', action='store_true',
@@ -197,6 +200,10 @@ AddLocalOption('--with-ubsan', dest='with_ubsan', action='store_true',
                help='Build with Undefined Behavior Sanitizer if available')
 AddLocalOption('--with-asan', dest='with_asan', action='store_true',
                help='Build with Address Sanitizer if available')
+
+if GetOption('no_lto') and GetOption('force_lto'):
+    print '--no-lto and --force-lto are mutually exclusive'
+    Exit(1)
 
 termcap = get_termcap(GetOption('use_colors'))
 
@@ -719,6 +726,28 @@ if main['GCC']:
 
     main['GCC_VERSION'] = gcc_version
 
+    if compareVersions(gcc_version, '4.9') >= 0:
+        # Incremental linking with LTO is currently broken in gcc versions
+        # 4.9 and above. A version where everything works completely hasn't
+        # yet been identified.
+        #
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67548
+        main['BROKEN_INCREMENTAL_LTO'] = True
+    if compareVersions(gcc_version, '6.0') >= 0:
+        # gcc versions 6.0 and greater accept an -flinker-output flag which
+        # selects what type of output the linker should generate. This is
+        # necessary for incremental lto to work, but is also broken in
+        # current versions of gcc. It may not be necessary in future
+        # versions. We add it here since it might be, and as a reminder that
+        # it exists. It's excluded if lto is being forced.
+        #
+        # https://gcc.gnu.org/gcc-6/changes.html
+        # https://gcc.gnu.org/ml/gcc-patches/2015-11/msg03161.html
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69866
+        if not GetOption('force_lto'):
+            main.Append(PSHLINKFLAGS='-flinker-output=rel')
+            main.Append(PLINKFLAGS='-flinker-output=rel')
+
     # gcc from version 4.8 and above generates "rep; ret" instructions
     # to avoid performance penalties on certain AMD chips. Older
     # assemblers detect this as an error, "Error: expecting string
@@ -749,10 +778,21 @@ if main['GCC']:
             'Warning: UBSan is only supported using gcc 4.9 and later.' + \
             termcap.Normal
 
+    disable_lto = GetOption('no_lto')
+    if not disable_lto and main.get('BROKEN_INCREMENTAL_LTO', False) and \
+            not GetOption('force_lto'):
+        print termcap.Yellow + termcap.Bold + \
+            'Warning: Your compiler doesn\'t support incremental linking' + \
+            ' and lto at the same time, so lto is being disabled. To force' + \
+            ' lto on anyway, use the --force-lto option. That will disable' + \
+            ' partial linking.' + \
+            termcap.Normal
+        disable_lto = True
+
     # Add the appropriate Link-Time Optimization (LTO) flags
     # unless LTO is explicitly turned off. Note that these flags
     # are only used by the fast target.
-    if not GetOption('no_lto'):
+    if not disable_lto:
         # Pass the LTO flag when compiling to produce GIMPLE
         # output, we merely create the flags here and only append
         # them later

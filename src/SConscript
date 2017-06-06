@@ -957,7 +957,7 @@ def variantd(*path):
 # environment 'env' with modified object suffix and optional stripped
 # binary.  Additional keyword arguments are appended to corresponding
 # build environment vars.
-def makeEnv(env, label, objsfx, strip = False, **kwargs):
+def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     # SCons doesn't know to append a library suffix when there is a '.' in the
     # name.  Use '_' instead.
     libname = variant('gem5_' + label)
@@ -1057,6 +1057,14 @@ def makeEnv(env, label, objsfx, strip = False, **kwargs):
         srcs = [ s for s in guarded_source_iterator(all_srcs, **lib_guards) ]
         # If there aren't any left, skip this group.
         if not srcs:
+            continue
+
+        # If partial linking is disabled, add these sources to the build
+        # directly, and short circuit this loop.
+        if disable_partial:
+            for s in srcs:
+                static_objs.append(make_obj(s, True))
+                shared_objs.append(make_obj(s, False))
             continue
 
         # Set up the static partially linked objects.
@@ -1204,10 +1212,14 @@ def makeEnvirons(target, source, env):
 
     # "Fast" binary
     if 'fast' in needed_envs:
+        disable_partial = \
+                env.get('BROKEN_INCREMENTAL_LTO', False) and \
+                GetOption('force_lto')
         makeEnv(env, 'fast', '.fo', strip = True,
                 CCFLAGS = Split(ccflags['fast']),
                 CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
-                LINKFLAGS = Split(ldflags['fast']))
+                LINKFLAGS = Split(ldflags['fast']),
+                disable_partial=disable_partial)
 
     # Profiled binary using gprof
     if 'prof' in needed_envs:
