@@ -110,3 +110,9 @@ CrossbarSwitch::functionalWrite(Packet *pkt)
 
    return num_functional_writes;
 }
+
+void
+CrossbarSwitch::resetStats()
+{
+    m_crossbar_activity = 0;
+}

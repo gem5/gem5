@@ -241,6 +241,9 @@ Router::resetStats()
             m_input_unit[i]->resetStats();
         }
     }
+
+    m_switch->resetStats();
+    m_sw_alloc->resetStats();
 }
 
 void

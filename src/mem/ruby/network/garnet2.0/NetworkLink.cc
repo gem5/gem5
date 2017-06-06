@@ -75,6 +75,16 @@ NetworkLink::wakeup()
     }
 }
 
+void
+NetworkLink::resetStats()
+{
+    for (int i = 0; i < m_vc_load.size(); i++) {
+        m_vc_load[i] = 0;
+    }
+
+    m_link_utilized = 0;
+}
+
 NetworkLink *
 NetworkLinkParams::create()
 {

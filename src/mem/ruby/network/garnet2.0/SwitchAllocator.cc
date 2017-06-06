@@ -387,3 +387,10 @@ SwitchAllocator::clear_request_vector()
         }
     }
 }
+
+void
+SwitchAllocator::resetStats()
+{
+    m_input_arbiter_activity = 0;
+    m_output_arbiter_activity = 0;
+}
