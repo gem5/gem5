@@ -769,26 +769,6 @@ class EventManager
 };
 
 template <class T, void (T::* F)()>
-void
-DelayFunction(EventQueue *eventq, Tick when, T *object)
-{
-    class DelayEvent : public Event
-    {
-      private:
-        T *object;
-
-      public:
-        DelayEvent(T *o)
-            : Event(Default_Pri, AutoDelete), object(o)
-        { }
-        void process() { (object->*F)(); }
-        const char *description() const { return "delay"; }
-    };
-
-    eventq->schedule(new DelayEvent(object), when);
-}
-
-template <class T, void (T::* F)()>
 class EventWrapper : public Event
 {
   private:
