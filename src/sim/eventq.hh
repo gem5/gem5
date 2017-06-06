@@ -800,4 +800,32 @@ class EventWrapper : public Event
     const char *description() const { return "EventWrapped"; }
 };
 
+class EventFunctionWrapper : public Event
+{
+  private:
+      std::function<void(void)> callback;
+      std::string _name;
+
+  public:
+    EventFunctionWrapper(const std::function<void(void)> &callback,
+                         const std::string &name,
+                         bool del = false,
+                         Priority p = Default_Pri)
+        : Event(p), callback(callback), _name(name)
+    {
+        if (del)
+            setFlags(AutoDelete);
+    }
+
+    void process() { callback(); }
+
+    const std::string
+    name() const
+    {
+        return _name + ".wrapped_function_event";
+    }
+
+    const char *description() const { return "EventFunctionWrapped"; }
+};
+
 #endif // __SIM_EVENTQ_HH__
