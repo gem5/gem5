@@ -229,8 +229,8 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         if (p->function_trace_start == 0) {
             functionTracingEnabled = true;
         } else {
-            typedef EventWrapper<BaseCPU, &BaseCPU::enableFunctionTrace> wrap;
-            Event *event = new wrap(this, true);
+            Event *event = new EventFunctionWrapper(
+                [this]{ enableFunctionTrace(); }, name(), true);
             schedule(event, p->function_trace_start);
         }
     }

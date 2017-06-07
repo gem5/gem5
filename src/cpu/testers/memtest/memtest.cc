@@ -86,9 +86,9 @@ MemTest::sendPkt(PacketPtr pkt) {
 
 MemTest::MemTest(const Params *p)
     : MemObject(p),
-      tickEvent(this),
-      noRequestEvent(this),
-      noResponseEvent(this),
+      tickEvent([this]{ tick(); }, name()),
+      noRequestEvent([this]{ noRequest(); }, name()),
+      noResponseEvent([this]{ noResponse(); }, name()),
       port("port", *this),
       retryPkt(nullptr),
       size(p->size),

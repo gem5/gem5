@@ -425,7 +425,7 @@ namespace X86ISA
         // free memory and do the required clean-up
         void cleanup();
 
-        EventWrapper<GpuTLB, &GpuTLB::cleanup> cleanupEvent;
+        EventFunctionWrapper cleanupEvent;
 
         /**
          * This hash map will use the virtual page address as a key
@@ -458,7 +458,7 @@ namespace X86ISA
         // Called at the end of simulation to dump page access stats.
         void exitCallback();
 
-        EventWrapper<GpuTLB, &GpuTLB::exitCallback> exitEvent;
+        EventFunctionWrapper exitEvent;
     };
 }
 

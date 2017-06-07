@@ -182,8 +182,7 @@ class ElasticTrace : public ProbeListenerObject
     void regStats();
 
     /** Event to trigger registering this listener for all probe points. */
-    EventWrapper<ElasticTrace,
-                 &ElasticTrace::regEtraceListeners> regEtraceListenersEvent;
+    EventFunctionWrapper regEtraceListenersEvent;
 
   private:
     /**

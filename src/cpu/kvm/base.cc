@@ -164,8 +164,7 @@ BaseKvmCPU::startup()
     thread->startup();
 
     Event *startupEvent(
-        new EventWrapper<BaseKvmCPU,
-                         &BaseKvmCPU::startupThread>(this, true));
+        new EventFunctionWrapper([this]{ startupThread(); }, name(), true));
     schedule(startupEvent, curTick());
 }
 

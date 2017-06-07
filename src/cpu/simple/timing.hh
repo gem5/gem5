@@ -159,7 +159,8 @@ class TimingSimpleCPU : public BaseSimpleCPU
       public:
 
         TimingCPUPort(const std::string& _name, TimingSimpleCPU* _cpu)
-            : MasterPort(_name, _cpu), cpu(_cpu), retryRespEvent(this)
+            : MasterPort(_name, _cpu), cpu(_cpu),
+              retryRespEvent([this]{ sendRetryResp(); }, name())
         { }
 
       protected:
@@ -176,7 +177,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
             void schedule(PacketPtr _pkt, Tick t);
         };
 
-        EventWrapper<MasterPort, &MasterPort::sendRetryResp> retryRespEvent;
+        EventFunctionWrapper retryRespEvent;
     };
 
     class IcachePort : public TimingCPUPort
@@ -315,8 +316,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
   private:
 
-    typedef EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch> FetchEvent;
-    FetchEvent fetchEvent;
+    EventFunctionWrapper fetchEvent;
 
     struct IprEvent : Event {
         Packet *pkt;

@@ -61,7 +61,9 @@ namespace X86ISA
 
     GpuTLB::GpuTLB(const Params *p)
         : MemObject(p), configAddress(0), size(p->size),
-          cleanupEvent(this, false, Event::Maximum_Pri), exitEvent(this)
+          cleanupEvent([this]{ cleanup(); }, name(), false,
+                       Event::Maximum_Pri),
+          exitEvent([this]{ exitCallback(); }, name())
     {
         assoc = p->assoc;
         assert(assoc <= size);

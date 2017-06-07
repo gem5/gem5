@@ -1082,10 +1082,10 @@ class TraceCPU : public BaseCPU
     void schedDcacheNext();
 
     /** Event for the control flow method schedIcacheNext() */
-    EventWrapper<TraceCPU, &TraceCPU::schedIcacheNext> icacheNextEvent;
+    EventFunctionWrapper icacheNextEvent;
 
     /** Event for the control flow method schedDcacheNext() */
-    EventWrapper<TraceCPU, &TraceCPU::schedDcacheNext> dcacheNextEvent;
+    EventFunctionWrapper dcacheNextEvent;
 
     /** This is called when either generator finishes executing from the trace */
     void checkAndSchedExitEvent();

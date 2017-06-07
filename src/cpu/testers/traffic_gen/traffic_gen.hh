@@ -152,7 +152,7 @@ class TrafficGen : public MemObject
     /**
      * Event to keep track of our progress, or lack thereof.
      */
-    EventWrapper<TrafficGen, &TrafficGen::noProgress> noProgressEvent;
+    EventFunctionWrapper noProgressEvent;
 
     /** Time of next transition */
     Tick nextTransitionTick;
@@ -206,7 +206,7 @@ class TrafficGen : public MemObject
     Tick retryPktTick;
 
     /** Event for scheduling updates */
-    EventWrapper<TrafficGen, &TrafficGen::update> updateEvent;
+    EventFunctionWrapper updateEvent;
 
     uint64_t numSuppressed;
 

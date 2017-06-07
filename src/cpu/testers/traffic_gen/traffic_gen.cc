@@ -61,14 +61,14 @@ TrafficGen::TrafficGen(const TrafficGenParams* p)
       configFile(p->config_file),
       elasticReq(p->elastic_req),
       progressCheck(p->progress_check),
-      noProgressEvent(this),
+      noProgressEvent([this]{ noProgress(); }, name()),
       nextTransitionTick(0),
       nextPacketTick(0),
       currState(0),
       port(name() + ".port", *this),
       retryPkt(NULL),
       retryPktTick(0),
-      updateEvent(this),
+      updateEvent([this]{ update(); }, name()),
       numSuppressed(0)
 {
 }

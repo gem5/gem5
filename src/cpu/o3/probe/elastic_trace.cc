@@ -50,7 +50,7 @@
 
 ElasticTrace::ElasticTrace(const ElasticTraceParams* params)
     :  ProbeListenerObject(params),
-       regEtraceListenersEvent(this),
+       regEtraceListenersEvent([this]{ regEtraceListeners(); }, name()),
        firstWin(true),
        lastClearedSeqNum(0),
        depWindowSize(params->depWindowSize),

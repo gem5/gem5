@@ -84,15 +84,15 @@ class MemTest : public MemObject
 
     void tick();
 
-    EventWrapper<MemTest, &MemTest::tick> tickEvent;
+    EventFunctionWrapper tickEvent;
 
     void noRequest();
 
-    EventWrapper<MemTest, &MemTest::noRequest> noRequestEvent;
+    EventFunctionWrapper noRequestEvent;
 
     void noResponse();
 
-    EventWrapper<MemTest, &MemTest::noResponse> noResponseEvent;
+    EventFunctionWrapper noResponseEvent;
 
     class CpuPort : public MasterPort
     {
