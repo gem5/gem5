@@ -83,7 +83,7 @@ HDLcd::HDLcd(const HDLcdParams *p)
       pixel_format(0),
       red_select(0), green_select(0), blue_select(0),
 
-      virtRefreshEvent(this),
+      virtRefreshEvent([this]{ virtRefresh(); }, name()),
       // Other
       bmp(&pixelPump.fb), pic(NULL), conv(PixelConverter::rgba8888_le),
       pixelPump(*this, *p->pxl_clk, p->pixel_chunk)

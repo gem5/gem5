@@ -68,10 +68,13 @@ Pl111::Pl111(const Params *p)
       vnc(p->vnc), bmp(&fb), pic(NULL),
       width(LcdMaxWidth), height(LcdMaxHeight),
       bytesPerPixel(4), startTime(0), startAddr(0), maxAddr(0), curAddr(0),
-      waterMark(0), dmaPendingNum(0), readEvent(this), fillFifoEvent(this),
+      waterMark(0), dmaPendingNum(0),
+      readEvent([this]{ readFramebuffer(); }, name()),
+      fillFifoEvent([this]{ fillFifo(); }, name()),
       dmaDoneEventAll(maxOutstandingDma, this),
       dmaDoneEventFree(maxOutstandingDma),
-      intEvent(this), enableCapture(p->enable_capture)
+      intEvent([this]{ generateInterrupt(); }, name()),
+      enableCapture(p->enable_capture)
 {
     pioSize = 0xFFFF;
 

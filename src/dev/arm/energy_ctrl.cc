@@ -54,7 +54,7 @@ EnergyCtrl::EnergyCtrl(const Params *p)
       domainIDIndexToRead(0),
       perfLevelAck(0),
       perfLevelToRead(0),
-      updateAckEvent(this)
+      updateAckEvent([this]{ updatePLAck(); }, name())
 {
     fatal_if(!p->dvfs_handler, "EnergyCtrl: Needs a DVFSHandler for a "
              "functioning system.\n");

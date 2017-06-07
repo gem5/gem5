@@ -56,7 +56,8 @@ Sp804::Sp804(Params *p)
 
 Sp804::Timer::Timer(std::string __name, Sp804 *_parent, int int_num, Tick _clock)
     : _name(__name), parent(_parent), intNum(int_num), clock(_clock), control(0x20),
-      rawInt(false), pendingInt(false), loadValue(0xffffffff), zeroEvent(this)
+      rawInt(false), pendingInt(false), loadValue(0xffffffff),
+      zeroEvent([this]{ counterAtZero(); }, name())
 {
 }
 

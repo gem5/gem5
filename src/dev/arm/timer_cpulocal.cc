@@ -66,7 +66,9 @@ CpuLocalTimer::CpuLocalTimer(Params *p)
 CpuLocalTimer::Timer::Timer()
     : timerControl(0x0), watchdogControl(0x0), rawIntTimer(false), rawIntWatchdog(false),
       rawResetWatchdog(false), watchdogDisableReg(0x0), pendingIntTimer(false), pendingIntWatchdog(false),
-      timerLoadValue(0x0), watchdogLoadValue(0x0), timerZeroEvent(this), watchdogZeroEvent(this)
+      timerLoadValue(0x0), watchdogLoadValue(0x0),
+      timerZeroEvent([this]{ timerAtZero(); }, name()),
+      watchdogZeroEvent([this]{ watchdogAtZero(); }, name())
 {
 }
 

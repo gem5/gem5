@@ -125,10 +125,10 @@ class CpuLocalTimer : public BasicPioDevice
 
         /** Called when the counter reaches 0 */
         void timerAtZero();
-        EventWrapper<Timer, &Timer::timerAtZero> timerZeroEvent;
+        EventFunctionWrapper timerZeroEvent;
 
         void watchdogAtZero();
-        EventWrapper<Timer, &Timer::watchdogAtZero> watchdogZeroEvent;
+        EventFunctionWrapper watchdogZeroEvent;
       public:
         /** Restart the counter ticking at val
          * @param val the value to start at */

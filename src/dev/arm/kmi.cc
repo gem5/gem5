@@ -54,7 +54,8 @@
 Pl050::Pl050(const Params *p)
     : AmbaIntDevice(p, 0xfff), control(0), status(0x43), clkdiv(0),
       rawInterrupts(0), ackNext(false), shiftDown(false),
-      vnc(p->vnc), driverInitialized(false), intEvent(this)
+      vnc(p->vnc), driverInitialized(false),
+      intEvent([this]{ generateInterrupt(); }, name())
 {
     if (vnc) {
         if (!p->is_mouse)

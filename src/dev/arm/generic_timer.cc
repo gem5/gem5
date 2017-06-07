@@ -95,7 +95,7 @@ ArchTimer::ArchTimer(const std::string &name,
     : _name(name), _parent(parent), _systemCounter(sysctr),
       _interrupt(interrupt),
       _control(0), _counterLimit(0), _offset(0),
-      _counterLimitReachedEvent(this)
+      _counterLimitReachedEvent([this]{ counterLimitReached(); }, name)
 {
 }
 

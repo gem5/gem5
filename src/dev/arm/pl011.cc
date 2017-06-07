@@ -56,7 +56,7 @@
 
 Pl011::Pl011(const Pl011Params *p)
     : Uart(p, 0xfff),
-      intEvent(this),
+      intEvent([this]{ generateInterrupt(); }, name()),
       control(0x300), fbrd(0), ibrd(0), lcrh(0), ifls(0x12),
       imsc(0), rawInt(0),
       gic(p->gic), endOnEOT(p->end_on_eot), intNum(p->int_num),

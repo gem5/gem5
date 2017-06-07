@@ -64,12 +64,15 @@ TableWalker::TableWalker(const Params *p)
       numSquashable(p->num_squash_per_cycle),
       pendingReqs(0),
       pendingChangeTick(curTick()),
-      doL1DescEvent(this), doL2DescEvent(this),
-      doL0LongDescEvent(this), doL1LongDescEvent(this),
-      doL2LongDescEvent(this), doL3LongDescEvent(this),
+      doL1DescEvent([this]{ doL1DescriptorWrapper(); }, name()),
+      doL2DescEvent([this]{ doL2DescriptorWrapper(); }, name()),
+      doL0LongDescEvent([this]{ doL0LongDescriptorWrapper(); }, name()),
+      doL1LongDescEvent([this]{ doL1LongDescriptorWrapper(); }, name()),
+      doL2LongDescEvent([this]{ doL2LongDescriptorWrapper(); }, name()),
+      doL3LongDescEvent([this]{ doL3LongDescriptorWrapper(); }, name()),
       LongDescEventByLevel { &doL0LongDescEvent, &doL1LongDescEvent,
                              &doL2LongDescEvent, &doL3LongDescEvent },
-      doProcessEvent(this)
+      doProcessEvent([this]{ processWalkWrapper(); }, name())
 {
     sctlr = 0;
 

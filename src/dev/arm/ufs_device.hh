@@ -1129,10 +1129,8 @@ class UFSHostDevice : public DmaDevice
      * because the flow of the events is completely in the control of these
      * classes. (Whereas in the DMA case we rely on an external class)
      */
-    std::deque<EventWrapper<UFSHostDevice, &UFSHostDevice::readDone> >
-    readDoneEvent;
-    std::deque<EventWrapper<UFSHostDevice, &UFSHostDevice::writeDone> >
-    writeDoneEvent;
+    std::deque<EventFunctionWrapper> readDoneEvent;
+    std::deque<EventFunctionWrapper> writeDoneEvent;
 
     /**
      * Callbacks for the logic units. One to indicate the completion of a

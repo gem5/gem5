@@ -347,7 +347,7 @@ class HDLcd: public AmbaDmaDevice
 
     /** Handler for fast frame refresh in KVM-mode */
     void virtRefresh();
-    EventWrapper<HDLcd, &HDLcd::virtRefresh> virtRefreshEvent;
+    EventFunctionWrapper virtRefreshEvent;
 
     /** Helper to write out bitmaps */
     Bitmap bmp;

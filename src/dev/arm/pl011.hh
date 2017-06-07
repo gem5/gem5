@@ -113,7 +113,7 @@ class Pl011 : public Uart, public AmbaDevice
     inline uint16_t maskInt() const { return rawInt & imsc; }
 
     /** Wrapper to create an event out of the thing */
-    EventWrapper<Pl011, &Pl011::generateInterrupt> intEvent;
+    EventFunctionWrapper intEvent;
 
   protected: // Registers
     static const uint64_t AMBA_ID = ULL(0xb105f00d00341011);

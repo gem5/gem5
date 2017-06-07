@@ -88,7 +88,7 @@ FlashDevice::FlashDevice(const FlashDeviceParams* p):
     blocksPerDisk(0),
     planeMask(numPlanes - 1),
     planeEventQueue(numPlanes),
-    planeEvent(this)
+    planeEvent([this]{ actionComplete(); }, name())
 {
 
     /*

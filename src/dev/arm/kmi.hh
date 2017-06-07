@@ -134,7 +134,7 @@ class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
         return tmp_interrupt;
     }
     /** Wrapper to create an event out of the thing */
-    EventWrapper<Pl050, &Pl050::generateInterrupt> intEvent;
+    EventFunctionWrapper intEvent;
 
     /** Receive queue. This list contains all the pending commands that
      * need to be sent to the driver

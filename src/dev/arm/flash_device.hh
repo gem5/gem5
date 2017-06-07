@@ -192,6 +192,6 @@ class FlashDevice : public AbstractNVM
     std::vector<std::deque<struct CallBackEntry> > planeEventQueue;
 
     /** Completion event */
-    EventWrapper<FlashDevice, &FlashDevice::actionComplete> planeEvent;
+    EventFunctionWrapper planeEvent;
 };
 #endif //__DEV_ARM_FLASH_DEVICE_HH__

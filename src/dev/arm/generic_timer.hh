@@ -157,8 +157,7 @@ class ArchTimer : public Serializable
 
     /// Called when the upcounter reaches the programmed value.
     void counterLimitReached();
-    EventWrapper<ArchTimer, &ArchTimer::counterLimitReached>
-    _counterLimitReachedEvent;
+    EventFunctionWrapper _counterLimitReachedEvent;
 
   public:
     ArchTimer(const std::string &name,

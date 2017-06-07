@@ -1890,7 +1890,9 @@ UFSHostDevice::writeDevice(Event* additional_action, bool toDisk, Addr
                                           < curTick()))
             writeDoneEvent.pop_front();
 
-        writeDoneEvent.push_back(this);
+        writeDoneEvent.push_back(
+            EventFunctionWrapper([this]{ writeDone(); },
+                                 name()));
         assert(!writeDoneEvent.back().scheduled());
 
         /**destination is an offset here since we are writing to a disk*/
@@ -2089,7 +2091,9 @@ UFSHostDevice::readDevice(bool lastTransfer, Addr start, uint32_t size,
     /** check wether interrupt is needed */
     if (lastTransfer) {
         ++readPendingNum;
-        readDoneEvent.push_back(this);
+        readDoneEvent.push_back(
+            EventFunctionWrapper([this]{ readDone(); },
+                                 name()));
         assert(!readDoneEvent.back().scheduled());
         dmaPort.dmaAction(MemCmd::WriteReq, start, size,
                           &readDoneEvent.back(), destination, 0);

@@ -920,28 +920,22 @@ class TableWalker : public MemObject
 
     void doL1Descriptor();
     void doL1DescriptorWrapper();
-    EventWrapper<TableWalker,
-                 &TableWalker::doL1DescriptorWrapper> doL1DescEvent;
+    EventFunctionWrapper doL1DescEvent;
 
     void doL2Descriptor();
     void doL2DescriptorWrapper();
-    EventWrapper<TableWalker,
-                 &TableWalker::doL2DescriptorWrapper> doL2DescEvent;
+    EventFunctionWrapper doL2DescEvent;
 
     void doLongDescriptor();
 
     void doL0LongDescriptorWrapper();
-    EventWrapper<TableWalker,
-                 &TableWalker::doL0LongDescriptorWrapper> doL0LongDescEvent;
+    EventFunctionWrapper doL0LongDescEvent;
     void doL1LongDescriptorWrapper();
-    EventWrapper<TableWalker,
-                 &TableWalker::doL1LongDescriptorWrapper> doL1LongDescEvent;
+    EventFunctionWrapper doL1LongDescEvent;
     void doL2LongDescriptorWrapper();
-    EventWrapper<TableWalker,
-                 &TableWalker::doL2LongDescriptorWrapper> doL2LongDescEvent;
+    EventFunctionWrapper doL2LongDescEvent;
     void doL3LongDescriptorWrapper();
-    EventWrapper<TableWalker,
-                 &TableWalker::doL3LongDescriptorWrapper> doL3LongDescEvent;
+    EventFunctionWrapper doL3LongDescEvent;
 
     void doLongDescriptorWrapper(LookupLevel curr_lookup_level);
     Event* LongDescEventByLevel[4];
@@ -960,7 +954,7 @@ class TableWalker : public MemObject
     static bool checkAddrSizeFaultAArch64(Addr addr, int currPhysAddrRange);
     Fault processWalkAArch64();
     void processWalkWrapper();
-    EventWrapper<TableWalker, &TableWalker::processWalkWrapper> doProcessEvent;
+    EventFunctionWrapper doProcessEvent;
 
     void nextWalk(ThreadContext *tc);
 

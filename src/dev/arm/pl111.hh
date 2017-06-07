@@ -325,10 +325,10 @@ class Pl111: public AmbaDmaDevice
     void dmaDone();
 
     /** DMA framebuffer read event */
-    EventWrapper<Pl111, &Pl111::readFramebuffer> readEvent;
+    EventFunctionWrapper readEvent;
 
     /** Fill fifo */
-    EventWrapper<Pl111, &Pl111::fillFifo> fillFifoEvent;
+    EventFunctionWrapper fillFifoEvent;
 
     /**@{*/
     /**
@@ -354,7 +354,7 @@ class Pl111: public AmbaDmaDevice
     /**@}*/
 
     /** Wrapper to create an event out of the interrupt */
-    EventWrapper<Pl111, &Pl111::generateInterrupt> intEvent;
+    EventFunctionWrapper intEvent;
 
     bool enableCapture;
 

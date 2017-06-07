@@ -104,7 +104,7 @@ class Sp804 : public AmbaPioDevice
 
         /** Called when the counter reaches 0 */
         void counterAtZero();
-        EventWrapper<Timer, &Timer::counterAtZero> zeroEvent;
+        EventFunctionWrapper zeroEvent;
 
       public:
         /** Restart the counter ticking at val

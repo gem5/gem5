@@ -51,7 +51,8 @@
 PL031::PL031(Params *p)
     : AmbaIntDevice(p, 0xfff), timeVal(mkutctime(&p->time)),
       lastWrittenTick(0), loadVal(0), matchVal(0),
-      rawInt(false), maskInt(false), pendingInt(false), matchEvent(this)
+      rawInt(false), maskInt(false), pendingInt(false),
+      matchEvent([this]{ counterMatch(); }, name())
 {
 }
 
