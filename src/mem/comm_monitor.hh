@@ -410,7 +410,7 @@ class CommMonitor : public MemObject
     void samplePeriodic();
 
     /** Periodic event called at the end of each simulation time bin */
-    EventWrapper<CommMonitor, &CommMonitor::samplePeriodic> samplePeriodicEvent;
+    EventFunctionWrapper samplePeriodicEvent;
 
     /**
      *@{

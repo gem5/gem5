@@ -257,8 +257,7 @@ class Cache : public BaseCache
      * finishes. To avoid other calls to recvAtomic getting in
      * between, we create this event with a higher priority.
      */
-    EventWrapper<Cache, &Cache::writebackTempBlockAtomic> \
-        writebackTempBlockAtomicEvent;
+    EventFunctionWrapper writebackTempBlockAtomicEvent;
 
     /**
      * Store the outstanding requests that we are expecting snoop

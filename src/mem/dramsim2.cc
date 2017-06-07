@@ -53,7 +53,8 @@ DRAMSim2::DRAMSim2(const Params* p) :
             p->traceFile, p->range.size() / 1024 / 1024, p->enableDebug),
     retryReq(false), retryResp(false), startTick(0),
     nbrOutstandingReads(0), nbrOutstandingWrites(0),
-    sendResponseEvent(this), tickEvent(this)
+    sendResponseEvent([this]{ sendResponse(); }, name()),
+    tickEvent([this]{ tick(); }, name())
 {
     DPRINTF(DRAMSim2,
             "Instantiated DRAMSim2 with clock %d ns and queue size %d\n",

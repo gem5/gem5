@@ -73,7 +73,8 @@ Cache::Cache(const CacheParams *p)
       clusivity(p->clusivity),
       writebackClean(p->writeback_clean),
       tempBlockWriteback(nullptr),
-      writebackTempBlockAtomicEvent(this, false,
+      writebackTempBlockAtomicEvent([this]{ writebackTempBlockAtomic(); },
+                                    name(), false,
                                     EventBase::Delayed_Writeback_Pri)
 {
     tempBlock = new CacheBlk();

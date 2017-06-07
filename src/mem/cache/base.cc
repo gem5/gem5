@@ -62,7 +62,8 @@ BaseCache::CacheSlavePort::CacheSlavePort(const std::string &_name,
                                           BaseCache *_cache,
                                           const std::string &_label)
     : QueuedSlavePort(_name, _cache, queue), queue(*_cache, *this, _label),
-      blocked(false), mustSendRetry(false), sendRetryEvent(this)
+      blocked(false), mustSendRetry(false),
+      sendRetryEvent([this]{ processSendRetry(); }, _name)
 {
 }
 

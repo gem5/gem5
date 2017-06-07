@@ -63,7 +63,8 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     retryRdReq(false), retryWrReq(false),
     busState(READ),
     busStateNext(READ),
-    nextReqEvent(this), respondEvent(this),
+    nextReqEvent([this]{ processNextReqEvent(); }, name()),
+    respondEvent([this]{ processRespondEvent(); }, name()),
     deviceSize(p->device_size),
     deviceBusWidth(p->device_bus_width), burstLength(p->burst_length),
     deviceRowBufferSize(p->device_rowbuffer_size),
@@ -1610,8 +1611,12 @@ DRAMCtrl::Rank::Rank(DRAMCtrl& _memory, const DRAMCtrlParams* _p, int rank)
       readEntries(0), writeEntries(0), outstandingEvents(0),
       wakeUpAllowedAt(0), power(_p, false), banks(_p->banks_per_rank),
       numBanksActive(0), actTicks(_p->activation_limit, 0),
-      writeDoneEvent(*this), activateEvent(*this), prechargeEvent(*this),
-      refreshEvent(*this), powerEvent(*this), wakeUpEvent(*this)
+      writeDoneEvent([this]{ processWriteDoneEvent(); }, name()),
+      activateEvent([this]{ processActivateEvent(); }, name()),
+      prechargeEvent([this]{ processPrechargeEvent(); }, name()),
+      refreshEvent([this]{ processRefreshEvent(); }, name()),
+      powerEvent([this]{ processPowerEvent(); }, name()),
+      wakeUpEvent([this]{ processWakeUpEvent(); }, name())
 {
     for (int b = 0; b < _p->banks_per_rank; b++) {
         banks[b].bank = b;

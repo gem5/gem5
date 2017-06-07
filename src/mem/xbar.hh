@@ -237,7 +237,7 @@ class BaseXBar : public MemObject
         void releaseLayer();
 
         /** event used to schedule a release of the layer */
-        EventWrapper<Layer, &Layer::releaseLayer> releaseEvent;
+        EventFunctionWrapper releaseEvent;
 
         /**
          * Stats for occupancy and utilization. These stats capture

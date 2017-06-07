@@ -52,7 +52,7 @@ CommMonitor::CommMonitor(Params* params)
     : MemObject(params),
       masterPort(name() + "-master", *this),
       slavePort(name() + "-slave", *this),
-      samplePeriodicEvent(this),
+      samplePeriodicEvent([this]{ samplePeriodic(); }, name()),
       samplePeriodTicks(params->sample_period),
       samplePeriod(params->sample_period / SimClock::Float::s),
       stats(params)

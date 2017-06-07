@@ -146,8 +146,7 @@ class SerialLink : public MemObject
         void trySendTiming();
 
         /** Send event for the response queue. */
-        EventWrapper<SerialLinkSlavePort,
-                     &SerialLinkSlavePort::trySendTiming> sendEvent;
+        EventFunctionWrapper sendEvent;
 
       public:
 
@@ -247,8 +246,7 @@ class SerialLink : public MemObject
         void trySendTiming();
 
         /** Send event for the request queue. */
-        EventWrapper<SerialLinkMasterPort,
-                     &SerialLinkMasterPort::trySendTiming> sendEvent;
+        EventFunctionWrapper sendEvent;
 
       public:
 

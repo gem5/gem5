@@ -66,7 +66,8 @@ SerialLink::SerialLinkSlavePort::SerialLinkSlavePort(const std::string& _name,
       masterPort(_masterPort), delay(_delay),
       ranges(_ranges.begin(), _ranges.end()),
       outstandingResponses(0), retryReq(false),
-      respQueueLimit(_resp_limit), sendEvent(*this)
+      respQueueLimit(_resp_limit),
+      sendEvent([this]{ trySendTiming(); }, _name)
 {
 }
 
@@ -76,7 +77,7 @@ SerialLink::SerialLinkMasterPort::SerialLinkMasterPort(const std::string&
                                            Cycles _delay, int _req_limit)
     : MasterPort(_name, &_serial_link), serial_link(_serial_link),
       slavePort(_slavePort), delay(_delay), reqQueueLimit(_req_limit),
-      sendEvent(*this)
+      sendEvent([this]{ trySendTiming(); }, _name)
 {
 }
 

@@ -61,8 +61,8 @@ Bridge::BridgeSlavePort::BridgeSlavePort(const std::string& _name,
                                          std::vector<AddrRange> _ranges)
     : SlavePort(_name, &_bridge), bridge(_bridge), masterPort(_masterPort),
       delay(_delay), ranges(_ranges.begin(), _ranges.end()),
-      outstandingResponses(0), retryReq(false),
-      respQueueLimit(_resp_limit), sendEvent(*this)
+      outstandingResponses(0), retryReq(false), respQueueLimit(_resp_limit),
+      sendEvent([this]{ trySendTiming(); }, _name)
 {
 }
 
@@ -71,7 +71,8 @@ Bridge::BridgeMasterPort::BridgeMasterPort(const std::string& _name,
                                            BridgeSlavePort& _slavePort,
                                            Cycles _delay, int _req_limit)
     : MasterPort(_name, &_bridge), bridge(_bridge), slavePort(_slavePort),
-      delay(_delay), reqQueueLimit(_req_limit), sendEvent(*this)
+      delay(_delay), reqQueueLimit(_req_limit),
+      sendEvent([this]{ trySendTiming(); }, _name)
 {
 }
 

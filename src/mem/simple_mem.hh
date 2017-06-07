@@ -158,7 +158,7 @@ class SimpleMemory : public AbstractMemory
      */
     void release();
 
-    EventWrapper<SimpleMemory, &SimpleMemory::release> releaseEvent;
+    EventFunctionWrapper releaseEvent;
 
     /**
      * Dequeue a packet from our internal packet queue and move it to
@@ -166,7 +166,7 @@ class SimpleMemory : public AbstractMemory
      */
     void dequeue();
 
-    EventWrapper<SimpleMemory, &SimpleMemory::dequeue> dequeueEvent;
+    EventFunctionWrapper dequeueEvent;
 
     /**
      * Detemine the latency.

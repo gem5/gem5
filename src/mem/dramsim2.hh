@@ -148,7 +148,7 @@ class DRAMSim2 : public AbstractMemory
     /**
      * Event to schedule sending of responses
      */
-    EventWrapper<DRAMSim2, &DRAMSim2::sendResponse> sendResponseEvent;
+    EventFunctionWrapper sendResponseEvent;
 
     /**
      * Progress the controller one clock cycle.
@@ -158,7 +158,7 @@ class DRAMSim2 : public AbstractMemory
     /**
      * Event to schedule clock ticks
      */
-    EventWrapper<DRAMSim2, &DRAMSim2::tick> tickEvent;
+    EventFunctionWrapper tickEvent;
 
     /**
      * Upstream caches need this packet until true is returned, so
