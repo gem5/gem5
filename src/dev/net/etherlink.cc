@@ -116,7 +116,8 @@ EtherLink::Link::Link(const string &name, EtherLink *p, int num,
                       double rate, Tick delay, Tick delay_var, EtherDump *d)
     : objName(name), parent(p), number(num), txint(NULL), rxint(NULL),
       ticksPerByte(rate), linkDelay(delay), delayVar(delay_var), dump(d),
-      doneEvent(this), txQueueEvent(this)
+      doneEvent([this]{ txDone(); }, name),
+      txQueueEvent([this]{ processTxQueue(); }, name)
 { }
 
 void

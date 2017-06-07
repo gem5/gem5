@@ -81,12 +81,14 @@ CopyEngine::CopyEngine(const Params *p)
 CopyEngine::CopyEngineChannel::CopyEngineChannel(CopyEngine *_ce, int cid)
     : cePort(_ce, _ce->sys),
       ce(_ce), channelId(cid), busy(false), underReset(false),
-    refreshNext(false), latBeforeBegin(ce->params()->latBeforeBegin),
-    latAfterCompletion(ce->params()->latAfterCompletion),
-    completionDataReg(0), nextState(Idle),
-    fetchCompleteEvent(this), addrCompleteEvent(this),
-    readCompleteEvent(this), writeCompleteEvent(this),
-    statusCompleteEvent(this)
+      refreshNext(false), latBeforeBegin(ce->params()->latBeforeBegin),
+      latAfterCompletion(ce->params()->latAfterCompletion),
+      completionDataReg(0), nextState(Idle),
+      fetchCompleteEvent([this]{ fetchDescComplete(); }, name()),
+      addrCompleteEvent([this]{ fetchAddrComplete(); }, name()),
+      readCompleteEvent([this]{ readCopyBytesComplete(); }, name()),
+      writeCompleteEvent([this]{ writeCopyBytesComplete(); }, name()),
+      statusCompleteEvent([this]{ writeStatusComplete(); }, name())
 
 {
         cr.status.dma_transfer_status(3);

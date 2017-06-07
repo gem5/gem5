@@ -123,7 +123,7 @@ class DmaPort : public MasterPort, public Drainable
     std::deque<PacketPtr> transmitList;
 
     /** Event used to schedule a future sending from the transmit list. */
-    EventWrapper<DmaPort, &DmaPort::sendDma> sendEvent;
+    EventFunctionWrapper sendEvent;
 
     /** Number of outstanding packets the dma port has. */
     uint32_t pendingCount;

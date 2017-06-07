@@ -131,7 +131,8 @@ EtherSwitch::Interface::Interface(const std::string &name,
                                   Tick delay_var, double rate, unsigned id)
     : EtherInt(name), ticksPerByte(rate), switchDelay(delay),
       delayVar(delay_var), interfaceId(id), parent(etherSwitch),
-      outputFifo(name + ".outputFifo", outputBufferSize), txEvent(this)
+      outputFifo(name + ".outputFifo", outputBufferSize),
+      txEvent([this]{ transmit(); }, name)
 {
 }
 

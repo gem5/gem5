@@ -56,7 +56,8 @@
 DmaPort::DmaPort(MemObject *dev, System *s)
     : MasterPort(dev->name() + ".dma", dev),
       device(dev), sys(s), masterId(s->getMasterId(dev->name())),
-      sendEvent(this), pendingCount(0), inRetry(false)
+      sendEvent([this]{ sendDma(); }, dev->name()),
+      pendingCount(0), inRetry(false)
 { }
 
 void

@@ -1150,28 +1150,25 @@ class UFSHostDevice : public DmaDevice
     /**
      * Wait for the SCSI specific data to arive
      */
-    EventWrapper<UFSHostDevice, &UFSHostDevice::SCSIStart> SCSIResumeEvent;
+    EventFunctionWrapper SCSIResumeEvent;
 
     /**
      * Wait for the moment where we can send the last frame
      */
-    EventWrapper<UFSHostDevice, &UFSHostDevice::finalUTP> UTPEvent;
+    EventFunctionWrapper UTPEvent;
 
     /**
      * Event after a read to clean up the UTP data structures
      */
-    std::deque<EventWrapper<UFSHostDevice, &UFSHostDevice::readGarbage> >
-    readGarbageEventQueue;
+    std::deque<EventFunctionWrapper> readGarbageEventQueue;
 
     /**
      * Multiple tasks transfers can be scheduled at once for the device, the
      * only thing we know for sure about them is that they will happen in a
      * first come first serve order; hence we need to queue.
      */
-    std::deque<EventWrapper<UFSHostDevice, &UFSHostDevice::taskStart> >
-    taskEventQueue;
-    std::deque<EventWrapper<UFSHostDevice, &UFSHostDevice::transferStart> >
-    transferEventQueue;
+    std::deque<EventFunctionWrapper> taskEventQueue;
+    std::deque<EventFunctionWrapper> transferEventQueue;
 
     /**
      * Bits of interest within UFS data packages

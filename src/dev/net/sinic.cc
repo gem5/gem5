@@ -91,7 +91,9 @@ Device::Device(const Params *p)
       virtualRegs(p->virtual_count < 1 ? 1 : p->virtual_count),
       rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size),
       rxKickTick(0), txKickTick(0),
-      txEvent(this), rxDmaEvent(this), txDmaEvent(this),
+      txEvent([this]{ txEventTransmit(); }, name()),
+      rxDmaEvent([this]{ rxDmaDone(); }, name()),
+      txDmaEvent([this]{ txDmaDone(); }, name()),
       dmaReadDelay(p->dma_read_delay), dmaReadFactor(p->dma_read_factor),
       dmaWriteDelay(p->dma_write_delay), dmaWriteFactor(p->dma_write_factor)
 {
@@ -535,7 +537,9 @@ Base::cpuIntrPost(Tick when)
 
     if (intrEvent)
         intrEvent->squash();
-    intrEvent = new IntrEvent(this, true);
+
+    intrEvent = new EventFunctionWrapper([this]{ cpuInterrupt(); },
+                                         name(), true);
     schedule(intrEvent, intrTick);
 }
 
@@ -1297,7 +1301,8 @@ Base::unserialize(CheckpointIn &cp)
     Tick intrEventTick;
     UNSERIALIZE_SCALAR(intrEventTick);
     if (intrEventTick) {
-        intrEvent = new IntrEvent(this, true);
+        intrEvent = new EventFunctionWrapper([this]{ cpuInterrupt(); },
+                                             name(), true);
         schedule(intrEvent, intrEventTick);
     }
 }

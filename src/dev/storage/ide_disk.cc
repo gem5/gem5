@@ -68,9 +68,14 @@ using namespace TheISA;
 
 IdeDisk::IdeDisk(const Params *p)
     : SimObject(p), ctrl(NULL), image(p->image), diskDelay(p->delay),
-      dmaTransferEvent(this), dmaReadCG(NULL), dmaReadWaitEvent(this),
-      dmaWriteCG(NULL), dmaWriteWaitEvent(this), dmaPrdReadEvent(this),
-      dmaReadEvent(this), dmaWriteEvent(this)
+      dmaTransferEvent([this]{ doDmaTransfer(); }, name()),
+      dmaReadCG(NULL),
+      dmaReadWaitEvent([this]{ doDmaRead(); }, name()),
+      dmaWriteCG(NULL),
+      dmaWriteWaitEvent([this]{ doDmaWrite(); }, name()),
+      dmaPrdReadEvent([this]{ dmaPrdReadDone(); }, name()),
+      dmaReadEvent([this]{ dmaReadDone(); }, name()),
+      dmaWriteEvent([this]{ dmaWriteDone(); }, name())
 {
     // Reset the device state
     reset(p->driveID);

@@ -306,34 +306,28 @@ class IdeDisk : public SimObject
 
     // DMA stuff
     void doDmaTransfer();
-    friend class EventWrapper<IdeDisk, &IdeDisk::doDmaTransfer>;
-    EventWrapper<IdeDisk, &IdeDisk::doDmaTransfer> dmaTransferEvent;
+    EventFunctionWrapper dmaTransferEvent;
 
     void doDmaDataRead();
 
     void doDmaRead();
     ChunkGenerator *dmaReadCG;
-    friend class EventWrapper<IdeDisk, &IdeDisk::doDmaRead>;
-    EventWrapper<IdeDisk, &IdeDisk::doDmaRead> dmaReadWaitEvent;
+    EventFunctionWrapper dmaReadWaitEvent;
 
     void doDmaDataWrite();
 
     void doDmaWrite();
     ChunkGenerator *dmaWriteCG;
-    friend class EventWrapper<IdeDisk, &IdeDisk::doDmaWrite>;
-    EventWrapper<IdeDisk, &IdeDisk::doDmaWrite> dmaWriteWaitEvent;
+    EventFunctionWrapper dmaWriteWaitEvent;
 
     void dmaPrdReadDone();
-    friend class EventWrapper<IdeDisk, &IdeDisk::dmaPrdReadDone>;
-    EventWrapper<IdeDisk, &IdeDisk::dmaPrdReadDone> dmaPrdReadEvent;
+    EventFunctionWrapper dmaPrdReadEvent;
 
     void dmaReadDone();
-    friend class EventWrapper<IdeDisk, &IdeDisk::dmaReadDone>;
-    EventWrapper<IdeDisk, &IdeDisk::dmaReadDone> dmaReadEvent;
+    EventFunctionWrapper dmaReadEvent;
 
     void dmaWriteDone();
-    friend class EventWrapper<IdeDisk, &IdeDisk::dmaWriteDone>;
-    EventWrapper<IdeDisk, &IdeDisk::dmaWriteDone> dmaWriteEvent;
+    EventFunctionWrapper dmaWriteEvent;
 
     // Disk image read/write
     void readDisk(uint32_t sector, uint8_t *data);

@@ -92,9 +92,7 @@ class EtherLink : public EtherObject
          */
         EthPacketPtr packet;
         void txDone();
-        typedef EventWrapper<Link, &Link::txDone> DoneEvent;
-        friend void DoneEvent::process();
-        DoneEvent doneEvent;
+        EventFunctionWrapper doneEvent;
 
         /**
          * Maintain a queue of in-flight packets. Assume that the
@@ -104,9 +102,7 @@ class EtherLink : public EtherObject
         std::deque<std::pair<Tick, EthPacketPtr>> txQueue;
 
         void processTxQueue();
-        typedef EventWrapper<Link, &Link::processTxQueue> TxQueueEvent;
-        friend void TxQueueEvent::process();
-        TxQueueEvent txQueueEvent;
+        EventFunctionWrapper txQueueEvent;
 
         void txComplete(EthPacketPtr packet);
 

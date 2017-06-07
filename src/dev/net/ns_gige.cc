@@ -111,12 +111,18 @@ NSGigE::NSGigE(Params *p)
       dmaReadFactor(p->dma_read_factor), dmaWriteFactor(p->dma_write_factor),
       rxDmaData(NULL), rxDmaAddr(0), rxDmaLen(0),
       txDmaData(NULL), txDmaAddr(0), txDmaLen(0),
-      rxDmaReadEvent(this), rxDmaWriteEvent(this),
-      txDmaReadEvent(this), txDmaWriteEvent(this),
+      rxDmaReadEvent([this]{ rxDmaReadDone(); }, name()),
+      rxDmaWriteEvent([this]{ rxDmaWriteDone(); }, name()),
+      txDmaReadEvent([this]{ txDmaReadDone(); }, name()),
+      txDmaWriteEvent([this]{ txDmaWriteDone(); }, name()),
       dmaDescFree(p->dma_desc_free), dmaDataFree(p->dma_data_free),
       txDelay(p->tx_delay), rxDelay(p->rx_delay),
-      rxKickTick(0), rxKickEvent(this), txKickTick(0), txKickEvent(this),
-      txEvent(this), rxFilterEnable(p->rx_filter),
+      rxKickTick(0),
+      rxKickEvent([this]{ rxKick(); }, name()),
+      txKickTick(0),
+      txKickEvent([this]{ txKick(); }, name()),
+      txEvent([this]{ txEventTransmit(); }, name()),
+      rxFilterEnable(p->rx_filter),
       acceptBroadcast(false), acceptMulticast(false), acceptUnicast(false),
       acceptPerfect(false), acceptArp(false), multicastHashEnable(false),
       intrDelay(p->intr_delay), intrTick(0), cpuPendingIntr(false),
@@ -959,7 +965,9 @@ NSGigE::cpuIntrPost(Tick when)
 
     if (intrEvent)
         intrEvent->squash();
-    intrEvent = new IntrEvent(this, true);
+
+    intrEvent = new EventFunctionWrapper([this]{ cpuInterrupt(); },
+                                         name(), true);
     schedule(intrEvent, intrTick);
 }
 
@@ -2470,7 +2478,8 @@ NSGigE::unserialize(CheckpointIn &cp)
     Tick intrEventTick;
     UNSERIALIZE_SCALAR(intrEventTick);
     if (intrEventTick) {
-        intrEvent = new IntrEvent(this, true);
+        intrEvent = new EventFunctionWrapper([this]{ cpuInterrupt(); },
+                                             name(), true);
         schedule(intrEvent, intrEventTick);
     }
 }

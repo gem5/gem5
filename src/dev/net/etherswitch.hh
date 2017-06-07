@@ -172,7 +172,7 @@ class EtherSwitch : public EtherObject
          */
         PortFifo outputFifo;
         void transmit();
-        EventWrapper<Interface, &Interface::transmit> txEvent;
+        EventFunctionWrapper txEvent;
     };
 
     struct SwitchTableEntry {

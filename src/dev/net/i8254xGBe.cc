@@ -64,8 +64,12 @@ IGbE::IGbE(const Params *p)
       pktOffset(0), fetchDelay(p->fetch_delay), wbDelay(p->wb_delay),
       fetchCompDelay(p->fetch_comp_delay), wbCompDelay(p->wb_comp_delay),
       rxWriteDelay(p->rx_write_delay), txReadDelay(p->tx_read_delay),
-      rdtrEvent(this), radvEvent(this),
-      tadvEvent(this), tidvEvent(this), tickEvent(this), interEvent(this),
+      rdtrEvent([this]{ rdtrProcess(); }, name()),
+      radvEvent([this]{ radvProcess(); }, name()),
+      tadvEvent([this]{ tadvProcess(); }, name()),
+      tidvEvent([this]{ tidvProcess(); }, name()),
+      tickEvent([this]{ tick(); }, name()),
+      interEvent([this]{ delayIntEvent(); }, name()),
       rxDescCache(this, name()+".RxDesc", p->rx_desc_cache_size),
       txDescCache(this, name()+".TxDesc", p->tx_desc_cache_size),
       lastInterrupt(0)
@@ -825,8 +829,10 @@ template<class T>
 IGbE::DescCache<T>::DescCache(IGbE *i, const std::string n, int s)
     : igbe(i), _name(n), cachePnt(0), size(s), curFetching(0),
       wbOut(0), moreToWb(false), wbAlignment(0), pktPtr(NULL),
-      wbDelayEvent(this), fetchDelayEvent(this), fetchEvent(this),
-      wbEvent(this)
+      wbDelayEvent([this]{ writeback1(); }, n),
+      fetchDelayEvent([this]{ fetchDescriptors1(); }, n),
+      fetchEvent([this]{ fetchComplete(); }, n),
+      wbEvent([this]{ wbComplete(); }, n)
 {
     fetchBuf = new T[size];
     wbBuf = new T[size];
@@ -1197,7 +1203,9 @@ IGbE::DescCache<T>::unserialize(CheckpointIn &cp)
 
 IGbE::RxDescCache::RxDescCache(IGbE *i, const std::string n, int s)
     : DescCache<RxDesc>(i, n, s), pktDone(false), splitCount(0),
-      pktEvent(this), pktHdrEvent(this), pktDataEvent(this)
+    pktEvent([this]{ pktComplete(); }, n),
+    pktHdrEvent([this]{ pktSplitDone(); }, n),
+    pktDataEvent([this]{ pktSplitDone(); }, n)
 
 {
     annSmFetch = "RX Desc Fetch";
@@ -1549,7 +1557,9 @@ IGbE::TxDescCache::TxDescCache(IGbE *i, const std::string n, int s)
       useTso(false), tsoHeaderLen(0), tsoMss(0), tsoTotalLen(0), tsoUsedLen(0),
       tsoPrevSeq(0), tsoPktPayloadBytes(0), tsoLoadedHeader(false),
       tsoPktHasHeader(false), tsoDescBytesUsed(0), tsoCopyBytes(0), tsoPkts(0),
-      pktEvent(this), headerEvent(this), nullEvent(this)
+    pktEvent([this]{ pktComplete(); }, n),
+    headerEvent([this]{ headerComplete(); }, n),
+    nullEvent([this]{ nullCallback(); }, n)
 {
     annSmFetch = "TX Desc Fetch";
     annSmWb = "TX Desc Writeback";

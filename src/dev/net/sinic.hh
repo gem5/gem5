@@ -61,9 +61,7 @@ class Base : public EtherDevBase
     void cpuInterrupt();
     void cpuIntrClear();
 
-    typedef EventWrapper<Base, &Base::cpuInterrupt> IntrEvent;
-    friend void IntrEvent::process();
-    IntrEvent *intrEvent;
+    EventFunctionWrapper *intrEvent;
     Interface *interface;
 
     bool cpuIntrPending() const;
@@ -196,13 +194,9 @@ class Device : public Base
 
     void rxKick();
     Tick rxKickTick;
-    typedef EventWrapper<Device, &Device::rxKick> RxKickEvent;
-    friend void RxKickEvent::process();
 
     void txKick();
     Tick txKickTick;
-    typedef EventWrapper<Device, &Device::txKick> TxKickEvent;
-    friend void TxKickEvent::process();
 
     /**
      * Retransmit event
@@ -214,9 +208,7 @@ class Device : public Base
         if (txState == txFifoBlock)
             txKick();
     }
-    typedef EventWrapper<Device, &Device::txEventTransmit> TxEvent;
-    friend void TxEvent::process();
-    TxEvent txEvent;
+    EventFunctionWrapper txEvent;
 
     void txDump() const;
     void rxDump() const;
@@ -245,12 +237,10 @@ class Device : public Base
  */
   protected:
     void rxDmaDone();
-    friend class EventWrapper<Device, &Device::rxDmaDone>;
-    EventWrapper<Device, &Device::rxDmaDone> rxDmaEvent;
+    EventFunctionWrapper rxDmaEvent;
 
     void txDmaDone();
-    friend class EventWrapper<Device, &Device::txDmaDone>;
-    EventWrapper<Device, &Device::txDmaDone> txDmaEvent;
+    EventFunctionWrapper txDmaEvent;
 
     Tick dmaReadDelay;
     Tick dmaReadFactor;

@@ -115,28 +115,23 @@ class CopyEngine : public PciDevice
       private:
         void fetchDescriptor(Addr address);
         void fetchDescComplete();
-        EventWrapper<CopyEngineChannel, &CopyEngineChannel::fetchDescComplete>
-            fetchCompleteEvent;
+        EventFunctionWrapper fetchCompleteEvent;
 
         void fetchNextAddr(Addr address);
         void fetchAddrComplete();
-        EventWrapper<CopyEngineChannel, &CopyEngineChannel::fetchAddrComplete>
-            addrCompleteEvent;
+        EventFunctionWrapper addrCompleteEvent;
 
         void readCopyBytes();
         void readCopyBytesComplete();
-        EventWrapper<CopyEngineChannel, &CopyEngineChannel::readCopyBytesComplete>
-            readCompleteEvent;
+        EventFunctionWrapper readCompleteEvent;
 
         void writeCopyBytes();
         void writeCopyBytesComplete();
-        EventWrapper <CopyEngineChannel, &CopyEngineChannel::writeCopyBytesComplete>
-            writeCompleteEvent;
+        EventFunctionWrapper writeCompleteEvent;
 
         void writeCompletionStatus();
         void writeStatusComplete();
-        EventWrapper <CopyEngineChannel, &CopyEngineChannel::writeStatusComplete>
-            statusCompleteEvent;
+        EventFunctionWrapper statusCompleteEvent;
 
 
         void continueProcessing();
