@@ -179,7 +179,7 @@ class ThermalModel : public ClockedObject
     std::vector <ThermalNode*> eq_nodes;
 
     /** Stepping event to update the model values */
-    EventWrapper<ThermalModel, &ThermalModel::doStep> stepEvent;
+    EventFunctionWrapper stepEvent;
 
     /** Step in seconds for thermal updates */
     double _step;

@@ -194,7 +194,7 @@ ThermalCapacitor::getEquation(ThermalNode * n, unsigned nnodes,
  * ThermalModel
  */
 ThermalModel::ThermalModel(const Params *p)
-    : ClockedObject(p), stepEvent(this), _step(p->step)
+    : ClockedObject(p), stepEvent([this]{ doStep(); }, name()), _step(p->step)
 {
 }
 

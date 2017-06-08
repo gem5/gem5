@@ -60,8 +60,7 @@ class Root : public SimObject
     Time lastTime;
 
     void timeSync();
-    EventWrapper<Root, &Root::timeSync> syncEvent;
-    friend class EventWrapper<Root, &Root::timeSync>;
+    EventFunctionWrapper syncEvent;
 
   public:
     /**
