@@ -451,7 +451,7 @@ class DRAMCtrl : public AbstractMemory
         /** List to keep track of activate ticks */
         std::deque<Tick> actTicks;
 
-        Rank(DRAMCtrl& _memory, const DRAMCtrlParams* _p);
+        Rank(DRAMCtrl& _memory, const DRAMCtrlParams* _p, int rank);
 
         const std::string name() const
         {
