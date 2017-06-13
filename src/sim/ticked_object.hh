@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -190,7 +190,7 @@ class Ticked : public Serializable
 class TickedObject : public ClockedObject, public Ticked
 {
   public:
-    TickedObject(TickedObjectParams *params,
+    TickedObject(const TickedObjectParams *params,
         Event::Priority priority = Event::CPU_Tick_Pri);
 
     /** Disambiguate to make these functions overload correctly */
