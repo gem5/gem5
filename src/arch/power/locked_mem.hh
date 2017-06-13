@@ -41,37 +41,6 @@
  * ISA-specific helper functions for locked memory accesses.
  */
 
-#include "mem/packet.hh"
-#include "mem/request.hh"
-
-namespace PowerISA
-{
-
-template <class XC>
-inline void
-handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
-{
-}
-
-template <class XC>
-inline void
-handleLockedRead(XC *xc, Request *req)
-{
-}
-
-template <class XC>
-inline void
-handleLockedSnoopHit(XC *xc)
-{
-}
-
-template <class XC>
-inline bool
-handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
-{
-    return true;
-}
-
-} // namespace PowerISA
+#include "arch/generic/locked_mem.hh"
 
 #endif // __ARCH_POWER_LOCKED_MEM_HH__

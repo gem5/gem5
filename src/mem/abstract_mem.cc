@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012 ARM Limited
+ * Copyright (c) 2010-2012,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -46,6 +46,7 @@
 
 #include <vector>
 
+#include "arch/locked_mem.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/LLSC.hh"
@@ -272,13 +273,12 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
             if (i->addr == paddr) {
                 DPRINTF(LLSC, "Erasing lock record: context %d addr %#x\n",
                         i->contextId, paddr);
-                // For ARM, a spinlock would typically include a Wait
-                // For Event (WFE) to conserve energy. The ARMv8
-                // architecture specifies that an event is
-                // automatically generated when clearing the exclusive
-                // monitor to wake up the processor in WFE.
-                ThreadContext* ctx = system()->getThreadContext(i->contextId);
-                ctx->getCpuPtr()->wakeup(ctx->threadId());
+                ContextID owner_cid = i->contextId;
+                ContextID requester_cid = pkt->req->contextId();
+                if (owner_cid != requester_cid) {
+                    ThreadContext* ctx = system()->getThreadContext(owner_cid);
+                    TheISA::globalClearExclusive(ctx);
+                }
                 i = lockedAddrList.erase(i);
             } else {
                 i++;
@@ -387,6 +387,9 @@ AbstractMemory::access(PacketPtr pkt)
     } else if (pkt->isRead()) {
         assert(!pkt->isWrite());
         if (pkt->isLLSC()) {
+            assert(!pkt->fromCache());
+            // if the packet is not coming from a cache then we have
+            // to do the LL/SC tracking here
             trackLoadLocked(pkt);
         }
         if (pmemAddr)

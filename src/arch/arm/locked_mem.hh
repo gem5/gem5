@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -148,6 +148,20 @@ handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
     return true;
 }
 
+template <class XC>
+inline void
+globalClearExclusive(XC *xc)
+{
+    // A spinlock would typically include a Wait For Event (WFE) to
+    // conserve energy. The ARMv8 architecture specifies that an event
+    // is automatically generated when clearing the exclusive monitor
+    // to wake up the processor in WFE.
+    DPRINTF(LLSC,"Clearing lock and signaling sev\n");
+    xc->setMiscReg(MISCREG_LOCKFLAG, false);
+    // Implement ARMv8 WFE/SEV semantics
+    xc->setMiscReg(MISCREG_SEV_MAILBOX, true);
+    xc->getCpuPtr()->wakeup(xc->threadId());
+}
 
 } // namespace ArmISA
 

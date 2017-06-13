@@ -139,6 +139,13 @@ handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
     return true;
 }
 
+template <class XC>
+inline void
+globalClearExclusive(XC *xc)
+{
+    xc->getCpuPtr()->wakeup(xc->threadId());
+}
+
 } // namespace MipsISA
 
 #endif

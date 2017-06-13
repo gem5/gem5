@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2017 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -28,8 +40,8 @@
  * Authors: Steve Reinhardt
  */
 
-#ifndef __ARCH_X86_LOCKEDMEM_HH__
-#define __ARCH_X86_LOCKEDMEM_HH__
+#ifndef __ARCH_NULL_LOCKED_MEM_HH__
+#define __ARCH_NULL_LOCKED_MEM_HH__
 
 /**
  * @file
@@ -39,4 +51,4 @@
 
 #include "arch/generic/locked_mem.hh"
 
-#endif // __ARCH_X86_LOCKEDMEM_HH__
+#endif
