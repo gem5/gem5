@@ -87,7 +87,7 @@ class PacketQueue : public Drainable
     void processSendEvent();
 
     /** Event used to call processSendEvent. */
-    EventWrapper<PacketQueue, &PacketQueue::processSendEvent> sendEvent;
+    EventFunctionWrapper sendEvent;
 
      /*
       * Optionally disable the sanity check
@@ -134,6 +134,7 @@ class PacketQueue : public Drainable
      *        on the size of the transmitList. The check is enabled by default.
      */
     PacketQueue(EventManager& _em, const std::string& _label,
+                const std::string& _sendEventName,
                 bool disable_sanity_check = false);
 
     /**
@@ -215,6 +216,12 @@ class ReqPacketQueue : public PacketQueue
 
     MasterPort& masterPort;
 
+    // Static definition so it can be called when constructing the parent
+    // without us being completely initialized.
+    static const std::string name(const MasterPort& masterPort,
+                                  const std::string& label)
+    { return masterPort.name() + "-" + label; }
+
   public:
 
     /**
@@ -232,7 +239,7 @@ class ReqPacketQueue : public PacketQueue
     virtual ~ReqPacketQueue() { }
 
     const std::string name() const
-    { return masterPort.name() + "-" + label; }
+    { return name(masterPort, label); }
 
     bool sendTiming(PacketPtr pkt);
 
@@ -244,6 +251,12 @@ class SnoopRespPacketQueue : public PacketQueue
   protected:
 
     MasterPort& masterPort;
+
+    // Static definition so it can be called when constructing the parent
+    // without us being completely initialized.
+    static const std::string name(const MasterPort& masterPort,
+                                  const std::string& label)
+    { return masterPort.name() + "-" + label; }
 
   public:
 
@@ -262,7 +275,7 @@ class SnoopRespPacketQueue : public PacketQueue
     virtual ~SnoopRespPacketQueue() { }
 
     const std::string name() const
-    { return masterPort.name() + "-" + label; }
+    { return name(masterPort, label); }
 
     bool sendTiming(PacketPtr pkt);
 
@@ -274,6 +287,12 @@ class RespPacketQueue : public PacketQueue
   protected:
 
     SlavePort& slavePort;
+
+    // Static definition so it can be called when constructing the parent
+    // without us being completely initialized.
+    static const std::string name(const SlavePort& slavePort,
+                                  const std::string& label)
+    { return slavePort.name() + "-" + label; }
 
   public:
 
@@ -292,7 +311,7 @@ class RespPacketQueue : public PacketQueue
     virtual ~RespPacketQueue() { }
 
     const std::string name() const
-    { return slavePort.name() + "-" + label; }
+    { return name(slavePort, label); }
 
     bool sendTiming(PacketPtr pkt);
 

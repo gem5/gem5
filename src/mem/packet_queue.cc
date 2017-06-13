@@ -50,8 +50,10 @@
 using namespace std;
 
 PacketQueue::PacketQueue(EventManager& _em, const std::string& _label,
+                         const std::string& _sendEventName,
                          bool disable_sanity_check)
-    : em(_em), sendEvent(this), _disableSanityCheck(disable_sanity_check),
+    : em(_em), sendEvent([this]{ processSendEvent(); }, _sendEventName),
+      _disableSanityCheck(disable_sanity_check),
       label(_label), waitingOnRetry(false)
 {
 }
@@ -237,7 +239,8 @@ PacketQueue::drain()
 
 ReqPacketQueue::ReqPacketQueue(EventManager& _em, MasterPort& _masterPort,
                                const std::string _label)
-    : PacketQueue(_em, _label), masterPort(_masterPort)
+    : PacketQueue(_em, _label, name(_masterPort, _label)),
+      masterPort(_masterPort)
 {
 }
 
@@ -250,7 +253,8 @@ ReqPacketQueue::sendTiming(PacketPtr pkt)
 SnoopRespPacketQueue::SnoopRespPacketQueue(EventManager& _em,
                                            MasterPort& _masterPort,
                                            const std::string _label)
-    : PacketQueue(_em, _label), masterPort(_masterPort)
+    : PacketQueue(_em, _label, name(_masterPort, _label)),
+      masterPort(_masterPort)
 {
 }
 
@@ -262,7 +266,8 @@ SnoopRespPacketQueue::sendTiming(PacketPtr pkt)
 
 RespPacketQueue::RespPacketQueue(EventManager& _em, SlavePort& _slavePort,
                                  const std::string _label)
-    : PacketQueue(_em, _label), slavePort(_slavePort)
+    : PacketQueue(_em, _label, name(_slavePort, _label)),
+      slavePort(_slavePort)
 {
 }
 
