@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014 ARM Limited
+ * Copyright (c) 2011-2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -148,7 +148,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     EndBitUnion(PMSELR_t)
 
     BitUnion32(PMEVTYPER_t)
-        Bitfield<9, 0> evtCount;
+        Bitfield<15, 0> evtCount;
 
         // Secure EL3 filtering
         Bitfield<26> m;
@@ -459,10 +459,11 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     /**
      * Performance counter ID register
      *
-     * This register contains a bitmask of available architected
+     * These registers contain a bitmask of available architected
      * counters.
      */
-    uint64_t reg_pmceid;
+    uint64_t reg_pmceid0;
+    uint64_t reg_pmceid1;
 
     /** Remainder part when the clock counter is divided by 64 */
     unsigned clock_remainder;

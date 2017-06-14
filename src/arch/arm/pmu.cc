@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014 ARM Limited
+ * Copyright (c) 2011-2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -59,7 +59,7 @@ PMU::PMU(const ArmPMUParams *p)
     : SimObject(p), BaseISADevice(),
       reg_pmcnten(0), reg_pmcr(0),
       reg_pmselr(0), reg_pminten(0), reg_pmovsr(0),
-      reg_pmceid(0),
+      reg_pmceid0(0),reg_pmceid1(0),
       clock_remainder(0),
       counters(p->eventCounters),
       reg_pmcr_conf(0),
@@ -94,10 +94,17 @@ PMU::addEventProbe(unsigned int id, SimObject *obj, const char *probe_name)
             id, obj->name(), probe_name);
     pmuEventTypes.insert(std::make_pair(id, EventType(obj, probe_name)));
 
-    // Flag the event as available in the PMCEID register if it is an
-    // architected event.
-    if (id < 0x40)
-        reg_pmceid |= (ULL(1) << id);
+    // Flag the event as available in the corresponding PMCEID register if it
+    // is an architected event.
+    if (id < 0x20) {
+        reg_pmceid0 |= ((uint64_t)1) << id;
+    } else if (id > 0x20 && id < 0x40) {
+        reg_pmceid1 |= ((uint64_t)1) << (id - 0x20);
+    } else if (id >= 0x4000 && id < 0x4020) {
+        reg_pmceid0 |= ((uint64_t)1) << (id - 0x4000 + 32);
+    } else if (id >= 0x4020 && id < 0x4040) {
+        reg_pmceid1 |= ((uint64_t)1) << (id - 0x4020 + 32);
+    }
 }
 
 void
@@ -154,7 +161,7 @@ PMU::setMiscReg(int misc_reg, MiscReg val)
       case MISCREG_PMSELR:
         reg_pmselr = val;
         return;
-
+      //TODO: implement MISCREF_PMCEID{2,3}
       case MISCREG_PMCEID0_EL0:
       case MISCREG_PMCEID0:
       case MISCREG_PMCEID1_EL0:
@@ -256,12 +263,17 @@ PMU::readMiscRegInt(int misc_reg)
         return reg_pmselr;
 
       case MISCREG_PMCEID0_EL0:
-      case MISCREG_PMCEID0: // Common Event ID register
-        return reg_pmceid & 0xFFFFFFFF;
+        return reg_pmceid0;
 
       case MISCREG_PMCEID1_EL0:
+        return reg_pmceid1;
+
+      //TODO: implement MISCREF_PMCEID{2,3}
+      case MISCREG_PMCEID0: // Common Event ID register
+        return reg_pmceid0 & 0xFFFFFFFF;
+
       case MISCREG_PMCEID1: // Common Event ID register
-        return (reg_pmceid >> 32) & 0xFFFFFFFF;
+        return reg_pmceid1 & 0xFFFFFFFF;
 
       case MISCREG_PMCCNTR_EL0:
         return cycleCounter.value;
@@ -522,7 +534,8 @@ PMU::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(reg_pmselr);
     SERIALIZE_SCALAR(reg_pminten);
     SERIALIZE_SCALAR(reg_pmovsr);
-    SERIALIZE_SCALAR(reg_pmceid);
+    SERIALIZE_SCALAR(reg_pmceid0);
+    SERIALIZE_SCALAR(reg_pmceid1);
     SERIALIZE_SCALAR(clock_remainder);
 
     for (size_t i = 0; i < counters.size(); ++i)
@@ -541,7 +554,16 @@ PMU::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(reg_pmselr);
     UNSERIALIZE_SCALAR(reg_pminten);
     UNSERIALIZE_SCALAR(reg_pmovsr);
-    UNSERIALIZE_SCALAR(reg_pmceid);
+
+    // Old checkpoints used to store the entire PMCEID value in a
+    // single 64-bit entry (reg_pmceid). The register was extended in
+    // ARMv8.1, so we now need to store it as two 64-bit registers.
+    if (!UNSERIALIZE_OPT_SCALAR(reg_pmceid0))
+        paramIn(cp, "reg_pmceid", reg_pmceid0);
+
+    if (!UNSERIALIZE_OPT_SCALAR(reg_pmceid1))
+        reg_pmceid1 = 0;
+
     UNSERIALIZE_SCALAR(clock_remainder);
 
     for (size_t i = 0; i < counters.size(); ++i)

@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2009-2014 ARM Limited
+# Copyright (c) 2009-2014, 2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -97,7 +97,7 @@ class ArmPMU(SimObject):
 
         # 0x01: L1I_CACHE_REFILL
         self.addEventProbe(0x02, itb, "Refills")
-        # 0x03: L2D_CACHE_REFILL
+        # 0x03: L1D_CACHE_REFILL
         # 0x04: L1D_CACHE
         self.addEventProbe(0x05, dtb, "Refills")
         self.addEventProbe(0x06, cpu, "RetiredLoads")
@@ -127,6 +127,22 @@ class ArmPMU(SimObject):
         # 0x1E: CHAIN
         # 0x1F: L1D_CACHE_ALLOCATE
         # 0x20: L2D_CACHE_ALLOCATE
+        # 0x21: BR_RETIRED
+        # 0x22: BR_MIS_PRED_RETIRED
+        # 0x23: STALL_FRONTEND
+        # 0x24: STALL_BACKEND
+        # 0x25: L1D_TLB
+        # 0x26: L1I_TLB
+        # 0x27: L2I_CACHE
+        # 0x28: L2I_CACHE_REFILL
+        # 0x29: L3D_CACHE_ALLOCATE
+        # 0x2A: L3D_CACHE_REFILL
+        # 0x2B: L3D_CACHE
+        # 0x2C: L3D_CACHE_WB
+        # 0x2D: L2D_TLB_REFILL
+        # 0x2E: L2I_TLB_REFILL
+        # 0x2F: L2D_TLB
+        # 0x30: L2I_TLB
 
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     eventCounters = Param.Int(31, "Number of supported PMU counters")
