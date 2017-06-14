@@ -12,7 +12,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2016 The University of Virginia
+ * Copyright (c) 2017 The University of Virginia
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,11 +50,35 @@
 
 namespace RiscvISA
 {
+
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
 
-typedef GenericISA::UPCState<MachInst> PCState;
-}
+class PCState : public GenericISA::UPCState<MachInst>
+{
+  private:
+    bool _compressed;
 
+  public:
+    PCState() : UPCState() { _compressed = false; }
+    PCState(Addr val) : UPCState(val) { _compressed = false; }
+
+    void compressed(bool c) { _compressed = c; }
+    bool compressed() { return _compressed; }
+
+    bool
+    branching() const
+    {
+        if (_compressed) {
+            return npc() != pc() + sizeof(MachInst)/2 ||
+                    nupc() != upc() + 1;
+        } else {
+            return npc() != pc() + sizeof(MachInst) ||
+                    nupc() != upc() + 1;
+        }
+    }
+};
+
+}
 
 #endif // __ARCH_RISCV_TYPES_HH__

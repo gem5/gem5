@@ -35,8 +35,8 @@
 // Bitfield definitions.
 //
 
-def bitfield OPCODE <6:0>;
-def bitfield NONOPCODE <31:7>;
+def bitfield QUADRANT <1:0>;
+def bitfield OPCODE <6:2>;
 
 // R-Type
 def bitfield ALL	<31:0>;
@@ -69,7 +69,7 @@ def bitfield BIMM12BITS10TO5 <30:25>;
 
 // UJ-Type
 def bitfield UJIMMBITS10TO1 <30:21>;
-def bitfield  UJIMMBIT11 <20>;
+def bitfield UJIMMBIT11 <20>;
 def bitfield UJIMMBITS19TO12 <19:12>;
 
 // System
@@ -90,3 +90,23 @@ def bitfield FUNCT2 <26:25>;
 def bitfield AMOFUNCT <31:27>;
 def bitfield AQ <26>;
 def bitfield RL <25>;
+
+// Compressed
+def bitfield COPCODE <15:13>;
+def bitfield CFUNCT1 <12>;
+def bitfield CFUNCT2HIGH <11:10>;
+def bitfield CFUNCT2LOW <6:5>;
+def bitfield RC1 <11:7>;
+def bitfield RC2 <6:2>;
+def bitfield RP1 <9:7>;
+def bitfield RP2 <4:2>;
+def bitfield FC1 <11:7>;
+def bitfield FC2 <6:2>;
+def bitfield FP2 <4:2>;
+def bitfield CJUMPIMM <12:2>;
+def bitfield CIMM8 <12:5>;
+def bitfield CIMM6 <12:7>;
+def bitfield CIMM5 <6:2>;
+def bitfield CIMM3 <12:10>;
+def bitfield CIMM2 <6:5>;
+def bitfield CIMM1 <12>;

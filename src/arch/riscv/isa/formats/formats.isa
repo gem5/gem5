@@ -33,11 +33,14 @@
 // Include the basic format
 ##include "basic.isa"
 
-//Include the type formats
+// Include the type formats
 ##include "standard.isa"
 ##include "mem.isa"
 ##include "fp.isa"
 ##include "amo.isa"
+
+// Include formats for nonstandard extensions
+##include "compressed.isa"
 
 // Include the unknown
 ##include "unknown.isa"

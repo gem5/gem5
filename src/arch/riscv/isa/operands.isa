@@ -49,6 +49,12 @@ def operands {{
     'Rs1': ('IntReg', 'ud', 'RS1', 'IsInteger', 2),
     'Rs2': ('IntReg', 'ud', 'RS2', 'IsInteger', 3),
     'Rt': ('IntReg', 'ud', 'AMOTempReg', 'IsInteger', 4),
+    'Rc1': ('IntReg', 'ud', 'RC1', 'IsInteger', 2),
+    'Rc2': ('IntReg', 'ud', 'RC2', 'IsInteger', 3),
+    'Rp1': ('IntReg', 'ud', 'RP1 + 8', 'IsInteger', 2),
+    'Rp2': ('IntReg', 'ud', 'RP2 + 8', 'IsInteger', 3),
+    'ra': ('IntReg', 'ud', 'ReturnAddrReg', 'IsInteger', 1),
+    'sp': ('IntReg', 'ud', 'StackPointerReg', 'IsInteger', 2),
 
     'Fd': ('FloatReg', 'df', 'FD', 'IsFloating', 1),
     'Fd_bits': ('FloatReg', 'ud', 'FD', 'IsFloating', 1),
@@ -58,6 +64,12 @@ def operands {{
     'Fs2_bits': ('FloatReg', 'ud', 'FS2', 'IsFloating', 3),
     'Fs3': ('FloatReg', 'df', 'FS3', 'IsFloating', 4),
     'Fs3_bits': ('FloatReg', 'ud', 'FS3', 'IsFloating', 4),
+    'Fc1': ('FloatReg', 'df', 'FC1', 'IsFloating', 1),
+    'Fc1_bits': ('FloatReg', 'ud', 'FC1', 'IsFloating', 1),
+    'Fc2': ('FloatReg', 'df', 'FC2', 'IsFloatReg', 2),
+    'Fc2_bits': ('FloatReg', 'ud', 'FC2', 'IsFloating', 2),
+    'Fp2': ('FloatReg', 'df', 'FP2 + 8', 'IsFloating', 2),
+    'Fp2_bits': ('FloatReg', 'ud', 'FP2 + 8', 'IsFloating', 2),
 
 #Memory Operand
     'Mem': ('Mem', 'ud', None, ('IsMemRef', 'IsLoad', 'IsStore'), 5),

@@ -1,0 +1,102 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2015 RISC-V Foundation
+// Copyright (c) 2017 The University of Virginia
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Alec Roelke
+
+output header {{
+    /**
+     * Base class for compressed operations that work only on registers
+     */
+    class CompRegOp : public RiscvStaticInst
+    {
+      protected:
+        /// Constructor
+        CompRegOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+            : RiscvStaticInst(mnem, _machInst, __opClass)
+        {}
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+}};
+
+output decoder {{
+    std::string
+    CompRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", " <<
+            registerName(_srcRegIdx[0]);
+        return ss.str();
+    }
+}};
+
+def format CROp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'CompRegOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+def format CIOp(imm_code, code, *opt_flags) {{
+    regs = ['_destRegIdx[0]','_srcRegIdx[0]']
+    iop = InstObjParams(name, Name, 'ImmOp',
+        {'code': code, 'imm_code': imm_code,
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = ImmDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = ImmExecute.subst(iop)
+}};
+
+def format CUIOp(imm_code, code, *opt_flags) {{
+    regs = ['_destRegIdx[0]','_srcRegIdx[0]']
+    iop = InstObjParams(name, Name, 'UImmOp',
+        {'code': code, 'imm_code': imm_code,
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = ImmDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = ImmExecute.subst(iop)
+}};
+
+def format CompressedLoad(ldisp_code, memacc_code,
+        ea_code, mem_flags=[], inst_flags=[]) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, ldisp_code, ea_code, memacc_code, mem_flags,
+        inst_flags, 'Load', exec_template_base='Load')
+}};
+
+def format CompressedStore(sdisp_code, memacc_code,
+        ea_code, mem_flags=[], inst_flags=[]) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, sdisp_code, ea_code, memacc_code, mem_flags,
+        inst_flags, 'Store', exec_template_base='Store')
+}};

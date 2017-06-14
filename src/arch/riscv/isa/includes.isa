@@ -65,6 +65,7 @@ output decoder {{
 #include "sim/full_system.hh"
 
 using namespace RiscvISA;
+using namespace std;
 }};
 
 output exec {{
@@ -90,4 +91,5 @@ output exec {{
 #include "sim/system.hh"
 
 using namespace RiscvISA;
+using namespace std;
 }};

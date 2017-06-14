@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012 Google
+ * Copyright (c) 2017 The University of Virginia
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,16 +27,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Alec Roelke
  */
 
 #ifndef __ARCH_RISCV_DECODER_HH__
 #define __ARCH_RISCV_DECODER_HH__
 
 #include "arch/generic/decode_cache.hh"
+#include "arch/riscv/isa_traits.hh"
 #include "arch/riscv/types.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
+#include "debug/Decode.hh"
 
 namespace RiscvISA
 {
@@ -43,73 +47,39 @@ namespace RiscvISA
 class ISA;
 class Decoder
 {
+  private:
+    DecodeCache::InstMap instMap;
+    bool mid;
+
   protected:
     //The extended machine instruction being generated
     ExtMachInst emi;
     bool instDone;
 
   public:
-    Decoder(ISA* isa = nullptr) : instDone(false)
+    Decoder(ISA* isa=nullptr)
+        : mid(false), emi(NoopMachInst), instDone(false)
     {}
 
-    void
-    process()
-    {
-    }
-
-    void
-    reset()
-    {
-        instDone = false;
-    }
+    void process() {}
+    void reset() { instDone = false; }
 
     //Use this to give data to the decoder. This should be used
     //when there is control flow.
-    void
-    moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
-    {
-        emi = inst;
-        instDone = true;
-    }
+    void moreBytes(const PCState &pc, Addr fetchPC, MachInst inst);
 
-    bool
-    needMoreBytes()
-    {
-        return true;
-    }
-
-    bool
-    instReady()
-    {
-        return instDone;
-    }
-
+    bool needMoreBytes() { return true; }
+    bool instReady() { return instDone; }
     void takeOverFrom(Decoder *old) {}
 
-  protected:
-    /// A cache of decoded instruction objects.
-    static GenericISA::BasicDecodeCache defaultCache;
-
-  public:
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
 
     /// Decode a machine instruction.
     /// @param mach_inst The binary instruction to decode.
     /// @retval A pointer to the corresponding StaticInst object.
-    StaticInstPtr
-    decode(ExtMachInst mach_inst, Addr addr)
-    {
-        return defaultCache.decode(this, mach_inst, addr);
-    }
+    StaticInstPtr decode(ExtMachInst mach_inst, Addr addr);
 
-    StaticInstPtr
-    decode(RiscvISA::PCState &nextPC)
-    {
-        if (!instDone)
-            return nullptr;
-        instDone = false;
-        return decode(emi, nextPC.instAddr());
-    }
+    StaticInstPtr decode(RiscvISA::PCState &nextPC);
 };
 
 } // namespace RiscvISA
