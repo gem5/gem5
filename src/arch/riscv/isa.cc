@@ -47,112 +47,6 @@ namespace RiscvISA
 
 ISA::ISA(Params *p) : SimObject(p)
 {
-    miscRegNames = {
-        {MISCREG_USTATUS, "ustatus"},
-        {MISCREG_UIE, "uie"},
-        {MISCREG_UTVEC, "utvec"},
-        {MISCREG_USCRATCH, "uscratch"},
-        {MISCREG_UEPC, "uepc"},
-        {MISCREG_UCAUSE, "ucause"},
-        {MISCREG_UBADADDR, "ubadaddr"},
-        {MISCREG_UIP, "uip"},
-        {MISCREG_FFLAGS, "fflags"},
-        {MISCREG_FRM, "frm"},
-        {MISCREG_FCSR, "fcsr"},
-        {MISCREG_CYCLE, "cycle"},
-        {MISCREG_TIME, "time"},
-        {MISCREG_INSTRET, "instret"},
-        {MISCREG_CYCLEH, "cycleh"},
-        {MISCREG_TIMEH, "timeh"},
-        {MISCREG_INSTRETH, "instreth"},
-
-        {MISCREG_SSTATUS, "sstatus"},
-        {MISCREG_SEDELEG, "sedeleg"},
-        {MISCREG_SIDELEG, "sideleg"},
-        {MISCREG_SIE, "sie"},
-        {MISCREG_STVEC, "stvec"},
-        {MISCREG_SSCRATCH, "sscratch"},
-        {MISCREG_SEPC, "sepc"},
-        {MISCREG_SCAUSE, "scause"},
-        {MISCREG_SBADADDR, "sbadaddr"},
-        {MISCREG_SIP, "sip"},
-        {MISCREG_SPTBR, "sptbr"},
-
-        {MISCREG_HSTATUS, "hstatus"},
-        {MISCREG_HEDELEG, "hedeleg"},
-        {MISCREG_HIDELEG, "hideleg"},
-        {MISCREG_HIE, "hie"},
-        {MISCREG_HTVEC, "htvec"},
-        {MISCREG_HSCRATCH, "hscratch"},
-        {MISCREG_HEPC, "hepc"},
-        {MISCREG_HCAUSE, "hcause"},
-        {MISCREG_HBADADDR, "hbadaddr"},
-        {MISCREG_HIP, "hip"},
-
-        {MISCREG_MVENDORID, "mvendorid"},
-        {MISCREG_MARCHID, "marchid"},
-        {MISCREG_MIMPID, "mimpid"},
-        {MISCREG_MHARTID, "mhartid"},
-        {MISCREG_MSTATUS, "mstatus"},
-        {MISCREG_MISA, "misa"},
-        {MISCREG_MEDELEG, "medeleg"},
-        {MISCREG_MIDELEG, "mideleg"},
-        {MISCREG_MIE, "mie"},
-        {MISCREG_MTVEC, "mtvec"},
-        {MISCREG_MSCRATCH, "mscratch"},
-        {MISCREG_MEPC, "mepc"},
-        {MISCREG_MCAUSE, "mcause"},
-        {MISCREG_MBADADDR, "mbadaddr"},
-        {MISCREG_MIP, "mip"},
-        {MISCREG_MBASE, "mbase"},
-        {MISCREG_MBOUND, "mbound"},
-        {MISCREG_MIBASE, "mibase"},
-        {MISCREG_MIBOUND, "mibound"},
-        {MISCREG_MDBASE, "mdbase"},
-        {MISCREG_MDBOUND, "mdbound"},
-        {MISCREG_MCYCLE, "mcycle"},
-        {MISCREG_MINSTRET, "minstret"},
-        {MISCREG_MUCOUNTEREN, "mucounteren"},
-        {MISCREG_MSCOUNTEREN, "mscounteren"},
-        {MISCREG_MHCOUNTEREN, "mhcounteren"},
-
-        {MISCREG_TSELECT, "tselect"},
-        {MISCREG_TDATA1, "tdata1"},
-        {MISCREG_TDATA2, "tdata2"},
-        {MISCREG_TDATA3, "tdata3"},
-        {MISCREG_DCSR, "dcsr"},
-        {MISCREG_DPC, "dpc"},
-        {MISCREG_DSCRATCH, "dscratch"}
-    };
-    for (int i = 0; i < NumHpmcounter; i++)
-    {
-        int hpmcounter = MISCREG_HPMCOUNTER_BASE + i;
-        std::stringstream ss;
-        ss << "hpmcounter" << hpmcounter;
-        miscRegNames[hpmcounter] = ss.str();
-    }
-    for (int i = 0; i < NumHpmcounterh; i++)
-    {
-        int hpmcounterh = MISCREG_HPMCOUNTERH_BASE + i;
-        std::stringstream ss;
-        ss << "hpmcounterh" << hpmcounterh;
-        miscRegNames[hpmcounterh] = ss.str();
-    }
-    for (int i = 0; i < NumMhpmcounter; i++)
-    {
-        int mhpmcounter = MISCREG_MHPMCOUNTER_BASE + i;
-        std::stringstream ss;
-        ss << "mhpmcounter" << mhpmcounter;
-        miscRegNames[mhpmcounter] = ss.str();
-    }
-    for (int i = 0; i < NumMhpmevent; i++)
-    {
-        int mhpmevent = MISCREG_MHPMEVENT_BASE + i;
-        std::stringstream ss;
-        ss << "mhpmcounterh" << mhpmevent;
-        miscRegNames[mhpmevent] = ss.str();
-    }
-
     miscRegFile.resize(NumMiscRegs);
     clear();
 }
@@ -178,7 +72,7 @@ MiscReg
 ISA::readMiscRegNoEffect(int misc_reg) const
 {
     DPRINTF(RiscvMisc, "Reading CSR %s (0x%016llx).\n",
-        miscRegNames.at(misc_reg), miscRegFile[misc_reg]);
+        MiscRegNames.at(misc_reg), miscRegFile[misc_reg]);
     switch (misc_reg) {
       case MISCREG_FFLAGS:
         return bits(miscRegFile[MISCREG_FCSR], 4, 0);
@@ -216,19 +110,19 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
     switch (misc_reg) {
       case MISCREG_INSTRET:
         DPRINTF(RiscvMisc, "Reading CSR %s (0x%016llx).\n",
-            miscRegNames[misc_reg], miscRegFile[misc_reg]);
+            MiscRegNames.at(misc_reg), miscRegFile[misc_reg]);
         return tc->getCpuPtr()->totalInsts();
       case MISCREG_CYCLE:
         DPRINTF(RiscvMisc, "Reading CSR %s (0x%016llx).\n",
-            miscRegNames[misc_reg], miscRegFile[misc_reg]);
+            MiscRegNames.at(misc_reg), miscRegFile[misc_reg]);
         return tc->getCpuPtr()->curCycle();
       case MISCREG_INSTRETH:
         DPRINTF(RiscvMisc, "Reading CSR %s (0x%016llx).\n",
-            miscRegNames[misc_reg], miscRegFile[misc_reg]);
+            MiscRegNames.at(misc_reg), miscRegFile[misc_reg]);
         return tc->getCpuPtr()->totalInsts() >> 32;
       case MISCREG_CYCLEH:
         DPRINTF(RiscvMisc, "Reading CSR %s (0x%016llx).\n",
-            miscRegNames[misc_reg], miscRegFile[misc_reg]);
+            MiscRegNames.at(misc_reg), miscRegFile[misc_reg]);
         return tc->getCpuPtr()->curCycle() >> 32;
       case MISCREG_MHARTID:
         return 0; // TODO: make this the hardware thread or cpu id
@@ -241,7 +135,7 @@ void
 ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 {
     DPRINTF(RiscvMisc, "Setting CSR %s to 0x%016llx.\n",
-        miscRegNames[misc_reg], val);
+        MiscRegNames.at(misc_reg), val);
     switch (misc_reg) {
       case MISCREG_FFLAGS:
         miscRegFile[MISCREG_FCSR] &= ~0x1F;

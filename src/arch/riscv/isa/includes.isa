@@ -71,6 +71,7 @@ output exec {{
 #include <cfenv>
 #include <cmath>
 #include <string>
+#include <vector>
 
 #include "arch/generic/memhelpers.hh"
 #include "arch/riscv/faults.hh"

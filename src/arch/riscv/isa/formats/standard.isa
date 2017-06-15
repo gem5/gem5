@@ -1,0 +1,449 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2015 RISC-V Foundation
+// Copyright (c) 2016-2017 The University of Virginia
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Alec Roelke
+
+////////////////////////////////////////////////////////////////////
+//
+// Integer instructions
+//
+output header {{
+    /**
+     * Base class for operations that work only on registers
+     */
+    class RegOp : public RiscvStaticInst
+    {
+      protected:
+        /// Constructor
+        RegOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+            : RiscvStaticInst(mnem, _machInst, __opClass)
+        {}
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+
+    /**
+     * Base class for operations with signed immediates
+     */
+    class ImmOp : public RiscvStaticInst
+    {
+      protected:
+        int64_t imm;
+
+        /// Constructor
+        ImmOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+            : RiscvStaticInst(mnem, _machInst, __opClass), imm(0)
+        {}
+
+        virtual std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const = 0;
+    };
+
+    /**
+     * Base class for operations with unsigned immediates
+     */
+    class UImmOp : public RiscvStaticInst
+    {
+      protected:
+        uint64_t imm;
+
+        /// Constructor
+        UImmOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+            : RiscvStaticInst(mnem, _machInst, __opClass), imm(0)
+        {}
+
+        virtual std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const = 0;
+    };
+
+    /**
+     * Base class for operations with branching
+     */
+    class BranchOp : public ImmOp
+    {
+      protected:
+        /// Constructor
+        BranchOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+            : ImmOp(mnem, _machInst, __opClass)
+        {}
+
+        using StaticInst::branchTarget;
+
+        virtual RiscvISA::PCState
+        branchTarget(ThreadContext *tc) const
+        {
+            return StaticInst::branchTarget(tc);
+        }
+
+        virtual RiscvISA::PCState
+        branchTarget(const RiscvISA::PCState &branchPC) const
+        {
+            return StaticInst::branchTarget(branchPC);
+        }
+
+        virtual std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const = 0;
+    };
+
+    /**
+     * Base class for system operations
+     */
+    class SystemOp : public RiscvStaticInst
+    {
+      public:
+        /// Constructor
+        SystemOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+            : RiscvStaticInst(mnem, _machInst, __opClass)
+        {}
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+            return mnemonic;
+        }
+    };
+
+    /**
+     * Base class for CSR operations
+     */
+    class CSROp : public RiscvStaticInst
+    {
+      protected:
+        uint64_t csr;
+        uint64_t uimm;
+
+      public:
+        /// Constructor
+        CSROp(const char *mnem, MachInst _machInst, OpClass __opClass)
+            : RiscvStaticInst(mnem, _machInst, __opClass),
+              csr(FUNCT12), uimm(CSRIMM)
+        {}
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+}};
+
+//Outputs to decoder.cc
+output decoder {{
+    std::string
+    RegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", " <<
+            registerName(_srcRegIdx[0]) << ", " <<
+            registerName(_srcRegIdx[1]);
+        return ss.str();
+    }
+
+    std::string
+    CSROp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+        ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", ";
+        if (_numSrcRegs > 0)
+            ss << registerName(_srcRegIdx[0]) << ", ";
+        ss << MiscRegNames.at(csr);
+        return ss.str();
+    }
+}};
+
+def template ImmDeclare {{
+    //
+    // Static instruction class for "%(mnemonic)s".
+    //
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        /// Constructor.
+        %(class_name)s(MachInst machInst);
+        %(BasicExecDeclare)s
+        std::string generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const override;
+    };
+}};
+
+def template ImmConstructor {{
+    %(class_name)s::%(class_name)s(MachInst machInst)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+    {
+        %(constructor)s;
+        %(imm_code)s;
+    }
+}};
+
+def template ImmExecute {{
+    Fault
+    %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        if (fault == NoFault) {
+            %(code)s;
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+        return fault;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::vector<RegId> indices = {%(regs)s};
+        std::stringstream ss;
+        ss << mnemonic << ' ';
+        for (const RegId& idx: indices)
+            ss << registerName(idx) << ", ";
+        ss << imm;
+        return ss.str();
+    }
+}};
+
+def template BranchDeclare {{
+    //
+    // Static instruction class for "%(mnemonic)s".
+    //
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        /// Constructor.
+        %(class_name)s(MachInst machInst);
+        %(BasicExecDeclare)s
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const override;
+
+        RiscvISA::PCState
+        branchTarget(const RiscvISA::PCState &branchPC) const override;
+
+        using StaticInst::branchTarget;
+    };
+}};
+
+def template BranchExecute {{
+    Fault
+    %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        if (fault == NoFault) {
+            %(code)s;
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+        return fault;
+    }
+
+    RiscvISA::PCState
+    %(class_name)s::branchTarget(const RiscvISA::PCState &branchPC) const
+    {
+        return branchPC.pc() + imm;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::vector<RegId> indices = {%(regs)s};
+        std::stringstream ss;
+        ss << mnemonic << ' ';
+        for (const RegId& idx: indices)
+            ss << registerName(idx) << ", ";
+        ss << imm;
+        return ss.str();
+    }
+}};
+
+def template JumpDeclare {{
+    //
+    // Static instruction class for "%(mnemonic)s".
+    //
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        /// Constructor.
+        %(class_name)s(MachInst machInst);
+        %(BasicExecDeclare)s
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const override;
+
+        RiscvISA::PCState
+        branchTarget(ThreadContext *tc) const override;
+
+        using StaticInst::branchTarget;
+    };
+}};
+
+def template JumpExecute {{
+    Fault
+    %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        if (fault == NoFault) {
+            %(code)s;
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+        return fault;
+    }
+
+    RiscvISA::PCState
+    %(class_name)s::branchTarget(ThreadContext *tc) const
+    {
+        PCState pc = tc->pcState();
+        pc.set((tc->readIntReg(_srcRegIdx[0].index()) + imm)&~0x1);
+        return pc;
+    }
+
+    std::string
+    %(class_name)s::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::vector<RegId> indices = {%(regs)s};
+        std::stringstream ss;
+        ss << mnemonic << ' ';
+        for (const RegId& idx: indices)
+            ss << registerName(idx) << ", ";
+        ss << imm;
+        return ss.str();
+    }
+}};
+
+def format ROp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'RegOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+def format IOp(code, *opt_flags) {{
+    imm_code = 'imm = IMM12; if (IMMSIGN > 0) imm |= ~((uint64_t)0x7FF);'
+    regs = ['_destRegIdx[0]','_srcRegIdx[0]']
+    iop = InstObjParams(name, Name, 'ImmOp',
+        {'code': code, 'imm_code': imm_code,
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = ImmDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = ImmExecute.subst(iop)
+}};
+
+def format BOp(code, *opt_flags) {{
+    imm_code = """
+                imm |= BIMM12BIT11 << 11;
+                imm |= BIMM12BITS4TO1 << 1;
+                imm |= BIMM12BITS10TO5 << 5;
+                if (IMMSIGN > 0)
+                    imm |= ~((uint64_t)0xFFF);
+               """
+    regs = ['_srcRegIdx[0]','_srcRegIdx[1]']
+    iop = InstObjParams(name, Name, 'BranchOp',
+        {'code': code, 'imm_code': imm_code,
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = BranchDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BranchExecute.subst(iop)
+}};
+
+def format Jump(code, *opt_flags) {{
+    imm_code = 'imm = IMM12; if (IMMSIGN > 0) imm |= ~((uint64_t)0x7FF);'
+    regs = ['_destRegIdx[0]','_srcRegIdx[0]']
+    iop = InstObjParams(name, Name, 'BranchOp',
+        {'code': code, 'imm_code': imm_code,
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = JumpDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = JumpExecute.subst(iop)
+}};
+
+def format UOp(code, *opt_flags) {{
+    imm_code = 'imm = (int32_t)(IMM20 << 12);'
+    regs = ['_destRegIdx[0]']
+    iop = InstObjParams(name, Name, 'ImmOp',
+        {'code': code, 'imm_code': imm_code,
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = ImmDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = ImmExecute.subst(iop)
+}};
+
+def format JOp(code, *opt_flags) {{
+    imm_code = """
+                imm |= UJIMMBITS19TO12 << 12;
+                imm |= UJIMMBIT11 << 11;
+                imm |= UJIMMBITS10TO1 << 1;
+                if (IMMSIGN > 0)
+                    imm |= ~((uint64_t)0xFFFFF);
+               """
+    pc = 'pc.set(pc.pc() + imm);'
+    regs = ['_destRegIdx[0]']
+    iop = InstObjParams(name, Name, 'BranchOp',
+        {'code': code, 'imm_code': imm_code,
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = BranchDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BranchExecute.subst(iop)
+}};
+
+def format SystemOp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'SystemOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+def format CSROp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'CSROp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};

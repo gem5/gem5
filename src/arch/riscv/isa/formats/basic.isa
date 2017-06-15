@@ -85,11 +85,6 @@ def template BasicDecode {{
     return new %(class_name)s(machInst);
 }};
 
-// Basic decode template, passing mnemonic in as string arg to constructor.
-def template BasicDecodeWithMnemonic {{
-    return new %(class_name)s("%(mnemonic)s", machInst);
-}};
-
 // The most basic instruction format...
 def format BasicOp(code, *flags) {{
     iop = InstObjParams(name, Name, 'RiscvStaticInst', code, flags)

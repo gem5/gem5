@@ -87,8 +87,8 @@ output decoder {{
     Load::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
         std::stringstream ss;
-        ss << mnemonic << ' ' << regName(_destRegIdx[0]) << ", " << ldisp <<
-            '(' << regName(_srcRegIdx[0]) << ')';
+        ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", " <<
+            ldisp << '(' << registerName(_srcRegIdx[0]) << ')';
         return ss.str();
     }
 
@@ -96,8 +96,8 @@ output decoder {{
     Store::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
         std::stringstream ss;
-        ss << mnemonic << ' ' << regName(_srcRegIdx[1]) << ", " << sdisp <<
-            '(' << regName(_srcRegIdx[0]) << ')';
+        ss << mnemonic << ' ' << registerName(_srcRegIdx[1]) << ", " <<
+            sdisp << '(' << registerName(_srcRegIdx[0]) << ')';
         return ss.str();
     }
 }};

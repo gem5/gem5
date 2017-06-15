@@ -50,9 +50,6 @@ output header {{
             OpClass __opClass) : StaticInst(mnem, _machInst, __opClass)
         {}
 
-        std::string
-        regName(RegId reg) const;
-
         virtual std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const = 0;
 
@@ -63,19 +60,4 @@ output header {{
             pc.advance();
         }
     };
-}};
-
-//Ouputs to decoder.cc
-output decoder {{
-    std::string
-    RiscvStaticInst::regName(RegId reg) const
-    {
-        if (reg.isIntReg()) {
-            return std::string(RegisterNames[reg.index()]);
-        } else if (reg.isFloatReg()) {
-            return std::string("f") + std::to_string(reg.index());
-        } else {
-            return csprintf("%s{%i}", reg.className(), reg.index());
-        }
-    }
 }};

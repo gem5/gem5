@@ -12,7 +12,7 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2016 The University of Virginia
+ * Copyright (c) 2016-2017 The University of Virginia
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,8 +48,11 @@
 
 #include <cmath>
 #include <cstdint>
+#include <string>
 
+#include "arch/riscv/registers.hh"
 #include "base/types.hh"
+#include "cpu/reg_class.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 
@@ -124,6 +127,16 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
 
     // Lastly copy PC/NPC
     dest->pcState(src->pcState());
+}
+
+inline std::string
+registerName(RegId reg)
+{
+    if (reg.isIntReg()) {
+        return IntRegNames[reg.index()];
+    } else {
+        return FloatRegNames[reg.index()];
+    }
 }
 
 inline void

@@ -74,7 +74,7 @@ def bitfield UJIMMBITS19TO12 <19:12>;
 
 // System
 def bitfield FUNCT12 <31:20>;
-def bitfield ZIMM <19:15>;
+def bitfield CSRIMM <19:15>;
 
 // Floating point
 def bitfield FD <11:7>;

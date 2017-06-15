@@ -467,7 +467,7 @@ decode OPCODE default Unknown::unknown() {
         }
     }
 
-    format FPR4Op {
+    format FPROp {
         0x43: decode FUNCT2 {
             0x0: fmadd_s({{
                 uint32_t temp;
@@ -680,10 +680,8 @@ decode OPCODE default Unknown::unknown() {
                 }
             }}, FloatMultOp);
         }
-    }
 
-    0x53: decode FUNCT7 {
-        format FPROp {
+        0x53: decode FUNCT7 {
             0x0: fadd_s({{
                 uint32_t temp;
                 float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
@@ -1274,8 +1272,9 @@ decode OPCODE default Unknown::unknown() {
             }}, FloatCvtOp);
         }
     }
+
     0x63: decode FUNCT3 {
-        format SBOp {
+        format BOp {
             0x0: beq({{
                 if (Rs1 == Rs2) {
                     NPC = PC + imm;
@@ -1328,13 +1327,13 @@ decode OPCODE default Unknown::unknown() {
         }}, IsIndirectControl, IsUncondControl, IsCall);
     }
 
-    0x6f: UJOp::jal({{
+    0x6f: JOp::jal({{
         Rd = NPC;
         NPC = PC + imm;
     }}, IsDirectControl, IsUncondControl, IsCall);
 
     0x73: decode FUNCT3 {
-        format IOp {
+        format SystemOp {
             0x0: decode FUNCT12 {
                 0x0: ecall({{
                     fault = std::make_shared<SyscallFault>();
@@ -1346,36 +1345,38 @@ decode OPCODE default Unknown::unknown() {
                     fault = std::make_shared<UnimplementedFault>("eret");
                 }}, No_OpClass);
             }
+        }
+        format CSROp {
             0x1: csrrw({{
-                Rd = xc->readMiscReg(FUNCT12);
-                xc->setMiscReg(FUNCT12, Rs1);
+                Rd = xc->readMiscReg(csr);
+                xc->setMiscReg(csr, Rs1);
             }}, IsNonSpeculative, No_OpClass);
             0x2: csrrs({{
-                Rd = xc->readMiscReg(FUNCT12);
+                Rd = xc->readMiscReg(csr);
                 if (Rs1 != 0) {
-                    xc->setMiscReg(FUNCT12, Rd | Rs1);
+                    xc->setMiscReg(csr, Rd | Rs1);
                 }
             }}, IsNonSpeculative, No_OpClass);
             0x3: csrrc({{
-                Rd = xc->readMiscReg(FUNCT12);
+                Rd = xc->readMiscReg(csr);
                 if (Rs1 != 0) {
-                    xc->setMiscReg(FUNCT12, Rd & ~Rs1);
+                    xc->setMiscReg(csr, Rd & ~Rs1);
                 }
             }}, IsNonSpeculative, No_OpClass);
             0x5: csrrwi({{
-                Rd = xc->readMiscReg(FUNCT12);
-                xc->setMiscReg(FUNCT12, ZIMM);
+                Rd = xc->readMiscReg(csr);
+                xc->setMiscReg(csr, uimm);
             }}, IsNonSpeculative, No_OpClass);
             0x6: csrrsi({{
-                Rd = xc->readMiscReg(FUNCT12);
-                if (ZIMM != 0) {
-                    xc->setMiscReg(FUNCT12, Rd | ZIMM);
+                Rd = xc->readMiscReg(csr);
+                if (uimm != 0) {
+                    xc->setMiscReg(csr, Rd | uimm);
                 }
             }}, IsNonSpeculative, No_OpClass);
             0x7: csrrci({{
-                Rd = xc->readMiscReg(FUNCT12);
-                if (ZIMM != 0) {
-                    xc->setMiscReg(FUNCT12, Rd & ~ZIMM);
+                Rd = xc->readMiscReg(csr);
+                if (uimm != 0) {
+                    xc->setMiscReg(csr, Rd & ~uimm);
                 }
             }}, IsNonSpeculative, No_OpClass);
         }
