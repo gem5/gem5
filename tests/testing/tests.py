@@ -166,10 +166,7 @@ default_ruby_protocol = {
 }
 
 def get_default_protocol(arch):
-    try:
-        return default_ruby_protocol[arch]
-    except KeyError:
-        return 'MI-example'
+    return default_ruby_protocol.get(arch, 'MI_example')
 
 all_categories = ("quick", "long")
 all_modes = ("fs", "se")
