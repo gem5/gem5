@@ -523,7 +523,9 @@ ISA::scheduleCP0Update(BaseCPU *cpu, Cycles delay)
         cp0Updated = true;
 
         //schedule UPDATE
-        CP0Event *cp0_event = new CP0Event(this, cpu, UpdateCP0);
+        auto cp0_event = new EventFunctionWrapper(
+            [this, cpu]{ processCP0Event(cpu, UpdateCP0); },
+            "Coprocessor-0 event", true, Event::CPU_Tick_Pri);
         cpu->schedule(cp0_event, cpu->clockEdge(delay));
     }
 }
@@ -557,38 +559,15 @@ ISA::updateCPU(BaseCPU *cpu)
     cp0Updated = false;
 }
 
-ISA::CP0Event::CP0Event(CP0 *_cp0, BaseCPU *_cpu, CP0EventType e_type)
-    : Event(CPU_Tick_Pri), cp0(_cp0), cpu(_cpu), cp0EventType(e_type)
-{  }
-
 void
-ISA::CP0Event::process()
+ISA::processCP0Event(BaseCPU *cpu, CP0EventType cp0EventType)
 {
     switch (cp0EventType)
     {
       case UpdateCP0:
-        cp0->updateCPU(cpu);
+        updateCPU(cpu);
         break;
     }
-}
-
-const char *
-ISA::CP0Event::description() const
-{
-    return "Coprocessor-0 event";
-}
-
-void
-ISA::CP0Event::scheduleEvent(Cycles delay)
-{
-    cpu->reschedule(this, cpu->clockEdge(delay), true);
-}
-
-void
-ISA::CP0Event::unscheduleEvent()
-{
-    if (scheduled())
-        squash();
 }
 
 }

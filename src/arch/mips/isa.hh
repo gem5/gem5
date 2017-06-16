@@ -118,31 +118,8 @@ namespace MipsISA
             UpdateCP0
         };
 
-        // Declare A CP0Event Class for scheduling
-        class CP0Event : public Event
-        {
-          protected:
-            ISA::CP0 *cp0;
-            BaseCPU *cpu;
-            CP0EventType cp0EventType;
-            Fault fault;
-
-          public:
-            /** Constructs a CP0 event. */
-            CP0Event(CP0 *_cp0, BaseCPU *_cpu, CP0EventType e_type);
-
-            /** Process this event. */
-            virtual void process();
-
-            /** Returns the description of this event. */
-            const char *description() const;
-
-            /** Schedule This Event */
-            void scheduleEvent(Cycles delay);
-
-            /** Unschedule This Event */
-            void unscheduleEvent();
-        };
+        /** Process a CP0 event */
+        void processCP0Event(BaseCPU *cpu, CP0EventType);
 
         // Schedule a CP0 Update Event
         void scheduleCP0Update(BaseCPU *cpu, Cycles delay = Cycles(0));
@@ -150,9 +127,6 @@ namespace MipsISA
         // If any changes have been made, then check the state for changes
         // and if necessary alert the CPU
         void updateCPU(BaseCPU *cpu);
-
-        // Keep a List of CPU Events that need to be deallocated
-        std::queue<CP0Event*> cp0EventRemoveList;
 
         static std::string miscRegNames[NumMiscRegs];
 

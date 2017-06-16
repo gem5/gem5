@@ -92,26 +92,8 @@ class Interrupts : public BasicPioDevice, IntDevice
     /*
      * Timing related stuff.
      */
-    class ApicTimerEvent : public Event
-    {
-      private:
-        Interrupts *localApic;
-      public:
-        ApicTimerEvent(Interrupts *_localApic) :
-            Event(), localApic(_localApic)
-        {}
-
-        void process()
-        {
-            assert(localApic);
-            if (localApic->triggerTimerInterrupt()) {
-                localApic->setReg(APIC_INITIAL_COUNT,
-                        localApic->readReg(APIC_INITIAL_COUNT));
-            }
-        }
-    };
-
-    ApicTimerEvent apicTimerEvent;
+    EventFunctionWrapper apicTimerEvent;
+    void processApicTimerEvent();
 
     /*
      * A set of variables to keep track of interrupts that don't go through

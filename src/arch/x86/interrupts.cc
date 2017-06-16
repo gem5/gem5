@@ -588,7 +588,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 
 X86ISA::Interrupts::Interrupts(Params * p)
     : BasicPioDevice(p, PageBytes), IntDevice(this, p->int_latency),
-      apicTimerEvent(this),
+      apicTimerEvent([this]{ processApicTimerEvent(); }, name()),
       pendingSmi(false), smiVector(0),
       pendingNmi(false), nmiVector(0),
       pendingExtInt(false), extIntVector(0),
@@ -766,4 +766,10 @@ X86ISA::Interrupts *
 X86LocalApicParams::create()
 {
     return new X86ISA::Interrupts(this);
+}
+
+void
+X86ISA::Interrupts::processApicTimerEvent() {
+    if (triggerTimerInterrupt())
+        setReg(APIC_INITIAL_COUNT, readReg(APIC_INITIAL_COUNT));
 }
