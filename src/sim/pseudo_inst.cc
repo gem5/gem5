@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2015 ARM Limited
+ * Copyright (c) 2010-2012, 2015, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -285,6 +285,13 @@ wakeCPU(ThreadContext *tc, uint64_t cpuid)
 {
     DPRINTF(PseudoInst, "PseudoInst::wakeCPU(%i)\n", cpuid);
     System *sys = tc->getSystemPtr();
+
+    if (sys->numContexts() <= cpuid) {
+        warn("PseudoInst::wakeCPU(%i), cpuid greater than number of contexts"
+             "(%i)\n",cpuid, sys->numContexts());
+        return;
+    }
+
     ThreadContext *other_tc = sys->threadContexts[cpuid];
     if (other_tc->status() == ThreadContext::Suspended)
         other_tc->activate();
