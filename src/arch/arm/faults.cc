@@ -278,6 +278,11 @@ template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals = {
     "SError",                0x000, 0x180, 0x380, 0x580, 0x780, MODE_SVC,
     0, 0, 0, 0, false, true,  true,  EC_SERROR, FaultStat()
 };
+template<> ArmFault::FaultVals ArmFaultVals<SoftwareBreakpoint>::vals = {
+    // Some dummy values (SoftwareBreakpoint is AArch64-only)
+    "Software Breakpoint",   0x000, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
+    0, 0, 0, 0, true, false, false,  EC_SOFTWARE_BREAKPOINT, FaultStat()
+};
 template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals = {
     // Some dummy values
     "ArmSev Flush",          0x000, 0x000, 0x000, 0x000, 0x000, MODE_SVC,
@@ -1393,6 +1398,25 @@ SystemError::routeToHyp(ThreadContext *tc) const
     return toHyp;
 }
 
+
+SoftwareBreakpoint::SoftwareBreakpoint(ExtMachInst _mach_inst, uint32_t _iss)
+    : ArmFaultVals<SoftwareBreakpoint>(_mach_inst, _iss)
+{}
+
+bool
+SoftwareBreakpoint::routeToHyp(ThreadContext *tc) const
+{
+    assert(from64);
+
+    const bool have_el2 = ArmSystem::haveVirtualization(tc);
+
+    const HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    const HDCR mdcr  = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+
+    return have_el2 && !inSecureState(tc) && fromEL <= EL1 &&
+        (hcr.tge || mdcr.tde);
+}
+
 void
 ArmSev::invoke(ThreadContext *tc, const StaticInstPtr &inst) {
     DPRINTF(Faults, "Invoking ArmSev Fault\n");
@@ -1425,6 +1449,7 @@ template class ArmFaultVals<SecureMonitorTrap>;
 template class ArmFaultVals<PCAlignmentFault>;
 template class ArmFaultVals<SPAlignmentFault>;
 template class ArmFaultVals<SystemError>;
+template class ArmFaultVals<SoftwareBreakpoint>;
 template class ArmFaultVals<ArmSev>;
 template class AbortFault<PrefetchAbort>;
 template class AbortFault<DataAbort>;

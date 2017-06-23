@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -621,7 +621,8 @@ namespace ArmISA
         EC_STACK_PTR_ALIGNMENT     = 0x26,
         EC_FP_EXCEPTION            = 0x28,
         EC_FP_EXCEPTION_64         = 0x2C,
-        EC_SERROR                  = 0x2F
+        EC_SERROR                  = 0x2F,
+        EC_SOFTWARE_BREAKPOINT     = 0x38,
     };
 
     /**

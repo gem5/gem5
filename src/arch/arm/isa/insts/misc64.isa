@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016 ARM Limited
+// Copyright (c) 2011-2013, 2016-2017 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -162,4 +162,16 @@ let {{
     header_output += BasicDeclare.subst(clrexIop)
     decoder_output += BasicConstructor64.subst(clrexIop)
     exec_output += BasicExecute.subst(clrexIop)
+
+
+    brkCode = '''
+    fault = std::make_shared<SoftwareBreakpoint>(machInst,
+                                                 bits(machInst, 20, 5));
+    '''
+
+    brkIop = InstObjParams("brk", "Brk64", "ArmStaticInst",
+                           brkCode, ["IsSerializeAfter"])
+    header_output += BasicDeclare.subst(brkIop)
+    decoder_output += BasicConstructor64.subst(brkIop)
+    exec_output += BasicExecute.subst(brkIop)
 }};
