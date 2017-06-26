@@ -30,27 +30,25 @@
 #          Louisa Bessad
 
 from m5.objects import *
-from O3_ARM_v7a import *
-from Caches import *
 
 #-----------------------------------------------------------------------
 #                ex5 big core (based on the ARM Cortex-A15)
 #-----------------------------------------------------------------------
 
 # Simple ALU Instructions have a latency of 1
-class ex5_big_Simple_Int(O3_ARM_v7a_Simple_Int):
+class ex5_big_Simple_Int(FUDesc):
     opList = [ OpDesc(opClass='IntAlu', opLat=1) ]
     count = 2
 
 # Complex ALU instructions have a variable latencies
-class ex5_big_Complex_Int(O3_ARM_v7a_Complex_Int):
+class ex5_big_Complex_Int(FUDesc):
     opList = [ OpDesc(opClass='IntMult', opLat=4, pipelined=True),
                OpDesc(opClass='IntDiv', opLat=11, pipelined=False),
                OpDesc(opClass='IprAccess', opLat=3, pipelined=True) ]
     count = 1
 
 # Floating point and SIMD instructions
-class ex5_big_FP(O3_ARM_v7a_FP):
+class ex5_big_FP(FUDesc):
     opList = [ OpDesc(opClass='SimdAdd', opLat=3),
                OpDesc(opClass='SimdAddAcc', opLat=4),
                OpDesc(opClass='SimdAlu', opLat=4),
@@ -81,21 +79,21 @@ class ex5_big_FP(O3_ARM_v7a_FP):
 
 
 # Load/Store Units
-class ex5_big_Load(O3_ARM_v7a_Load):
+class ex5_big_Load(FUDesc):
     opList = [ OpDesc(opClass='MemRead',opLat=2) ]
     count = 1
 
-class ex5_big_Store(O3_ARM_v7a_Store):
+class ex5_big_Store(FUDesc):
     opList = [OpDesc(opClass='MemWrite',opLat=2) ]
     count = 1
 
 # Functional Units for this CPU
-class ex5_big_FUP(O3_ARM_v7a_FUP):
+class ex5_big_FUP(FUPool):
     FUList = [ex5_big_Simple_Int(), ex5_big_Complex_Int(),
               ex5_big_Load(), ex5_big_Store(), ex5_big_FP()]
 
 # Bi-Mode Branch Predictor
-class ex5_big_BP(O3_ARM_v7a_BP):
+class ex5_big_BP(BiModeBP):
     globalPredictorSize = 4096
     globalCtrBits = 2
     choicePredictorSize = 1024
@@ -105,7 +103,7 @@ class ex5_big_BP(O3_ARM_v7a_BP):
     RASSize = 48
     instShiftAmt = 2
 
-class ex5_big(O3_ARM_v7a_3):
+class ex5_big(DerivO3CPU):
     LQEntries = 16
     SQEntries = 16
     LSQDepCheckShift = 0
@@ -148,35 +146,31 @@ class ex5_big(O3_ARM_v7a_3):
     switched_out = False
     branchPred = ex5_big_BP()
 
-# Instruction Cache
-class L1I(O3_ARM_v7a_ICache):
+class L1Cache(Cache):
     tag_latency = 2
     data_latency = 2
     response_latency = 2
-    mshrs = 2
     tgts_per_mshr = 8
-    size = '32kB'
-    assoc = 2
-    is_read_only = True
-    # Writeback clean lines as well
-    writeback_clean = True
-
-# Data Cache
-class L1D(O3_ARM_v7a_DCache):
-    tag_latency = 2
-    data_latency = 2
-    response_latency = 2
-    mshrs = 6
-    tgts_per_mshr = 8
-    size = '32kB'
-    assoc = 2
-    write_buffers = 16
     # Consider the L2 a victim cache also for clean lines
     writeback_clean = True
 
+# Instruction Cache
+class L1I(L1Cache):
+    mshrs = 2
+    size = '32kB'
+    assoc = 2
+    is_read_only = True
+
+# Data Cache
+class L1D(L1Cache):
+    mshrs = 6
+    size = '32kB'
+    assoc = 2
+    write_buffers = 16
+
 # TLB Cache
 # Use a cache as a L2 TLB
-class WalkCache(O3_ARM_v7aWalkCache):
+class WalkCache(Cache):
     tag_latency = 4
     data_latency = 4
     response_latency = 4
@@ -190,7 +184,7 @@ class WalkCache(O3_ARM_v7aWalkCache):
     writeback_clean = True
 
 # L2 Cache
-class L2(O3_ARM_v7aL2):
+class L2(Cache):
     tag_latency = 15
     data_latency = 15
     response_latency = 15

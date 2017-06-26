@@ -30,8 +30,6 @@
 #          Louisa Bessad
 
 from m5.objects import *
-from O3_ARM_v7a import *
-from Caches import *
 
 #-----------------------------------------------------------------------
 #                ex5 LITTLE core (based on the ARM Cortex-A7)
@@ -97,32 +95,30 @@ class ex5_LITTLE_FUP(MinorFUPool):
 class ex5_LITTLE(MinorCPU):
     executeFuncUnits = ex5_LITTLE_FUP()
 
-class L1I(L1Cache):
+class L1Cache(Cache):
     tag_latency = 2
     data_latency = 2
     response_latency = 2
+    tgts_per_mshr = 8
+    # Consider the L2 a victim cache also for clean lines
+    writeback_clean = True
+
+class L1I(L1Cache):
     mshrs = 2
     size = '32kB'
     assoc = 2
     is_read_only = True
-    # Writeback clean lines as well
-    writeback_clean = True
+    tgts_per_mshr = 20
 
 class L1D(L1Cache):
-    tag_latency = 2
-    data_latency = 2
-    response_latency = 2
     mshrs = 4
-    tgts_per_mshr = 8
     size = '32kB'
     assoc = 4
     write_buffers = 4
-    # Consider the L2 a victim cache also for clean lines
-    writeback_clean = True
 
 # TLB Cache
 # Use a cache as a L2 TLB
-class WalkCache(PageTableWalkerCache):
+class WalkCache(Cache):
     tag_latency = 2
     data_latency = 2
     response_latency = 2
@@ -136,7 +132,7 @@ class WalkCache(PageTableWalkerCache):
     writeback_clean = True
 
 # L2 Cache
-class L2(L2Cache):
+class L2(Cache):
     tag_latency = 9
     data_latency = 9
     response_latency = 9
