@@ -35,6 +35,7 @@
 #
 # Authors: Andreas Sandberg
 
+from m5 import fatal
 import m5.objects
 import inspect
 import sys
