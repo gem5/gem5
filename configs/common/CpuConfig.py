@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012, 2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -110,28 +110,11 @@ def config_etrace(cpu_cls, cpu_list, options):
         fatal("%s does not support data dependency tracing. Use a CPU model of"
               " type or inherited from DerivO3CPU.", cpu_cls)
 
-# The ARM detailed CPU is special in the sense that it doesn't exist
-# in the normal object hierarchy, so we have to add it manually.
-try:
-    from cores.arm.O3_ARM_v7a import O3_ARM_v7a_3
-    _cpu_classes["O3_ARM_v7a_3"] = O3_ARM_v7a_3
-except:
-    pass
-
-# The calibrated ex5-model cores
-try:
-    from cores.arm.ex5_LITTLE import ex5_LITTLE
-    _cpu_classes["ex5_LITTLE"] = ex5_LITTLE
-except:
-    pass
-
-try:
-    from cores.arm.ex5_big import ex5_big
-    _cpu_classes["ex5_big"] = ex5_big
-except:
-    pass
-
-
 # Add all CPUs in the object hierarchy.
 for name, cls in inspect.getmembers(m5.objects, is_cpu_class):
     _cpu_classes[name] = cls
+
+import cores.arm
+for mod_name, module in inspect.getmembers(cores.arm, inspect.ismodule):
+    for name, cls in inspect.getmembers(module, is_cpu_class):
+        _cpu_classes[name] = cls
