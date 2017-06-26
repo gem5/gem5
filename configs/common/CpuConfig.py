@@ -113,23 +113,23 @@ def config_etrace(cpu_cls, cpu_list, options):
 # The ARM detailed CPU is special in the sense that it doesn't exist
 # in the normal object hierarchy, so we have to add it manually.
 try:
-    from O3_ARM_v7a import O3_ARM_v7a_3
+    from cores.arm.O3_ARM_v7a import O3_ARM_v7a_3
     _cpu_classes["O3_ARM_v7a_3"] = O3_ARM_v7a_3
 except:
     pass
 
 # The calibrated ex5-model cores
 try:
-    from ex5_LITTLE import ex5_LITTLE
+    from cores.arm.ex5_LITTLE import ex5_LITTLE
     _cpu_classes["ex5_LITTLE"] = ex5_LITTLE
 except:
-     pass
+    pass
 
 try:
-    from ex5_big import ex5_big
+    from cores.arm.ex5_big import ex5_big
     _cpu_classes["ex5_big"] = ex5_big
 except:
-     pass
+    pass
 
 
 # Add all CPUs in the object hierarchy.

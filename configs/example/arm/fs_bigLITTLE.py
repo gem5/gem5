@@ -51,8 +51,7 @@ m5.util.addToPath("../../")
 
 from common import SysPaths
 from common import CpuConfig
-from common import ex5_big
-from common import ex5_LITTLE
+from common.cores.arm import ex5_big, ex5_LITTLE
 
 import devices
 from devices import AtomicCluster, KvmCluster

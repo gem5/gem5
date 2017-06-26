@@ -55,9 +55,9 @@ def config_cache(options, system):
 
     if options.cpu_type == "O3_ARM_v7a_3":
         try:
-            from O3_ARM_v7a import *
+            from cores.arm.O3_ARM_v7a import *
         except:
-            print "arm_detailed is unavailable. Did you compile the O3 model?"
+            print "O3_ARM_v7a_3 is unavailable. Did you compile the O3 model?"
             sys.exit(1)
 
         dcache_class, icache_class, l2_cache_class, walk_cache_class = \
