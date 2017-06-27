@@ -289,17 +289,18 @@ BaseRemoteGDB::TrapEvent::process()
 }
 
 void
-BaseRemoteGDB::SingleStepEvent::process()
+BaseRemoteGDB::processSingleStepEvent()
 {
-    if (!gdb->singleStepEvent.scheduled())
-        gdb->scheduleInstCommitEvent(&gdb->singleStepEvent, 1);
-    gdb->trap(SIGTRAP);
+    if (!singleStepEvent.scheduled())
+        scheduleInstCommitEvent(&singleStepEvent, 1);
+    trap(SIGTRAP);
 }
 
 BaseRemoteGDB::BaseRemoteGDB(System *_system, ThreadContext *c) :
-        inputEvent(NULL), trapEvent(this), listener(NULL),
-        number(-1), fd(-1), active(false), attached(false), system(_system),
-        context(c), singleStepEvent(this)
+        inputEvent(NULL), trapEvent(this), listener(NULL), number(-1),
+        fd(-1), active(false), attached(false), system(_system),
+        context(c),
+        singleStepEvent([this]{ processSingleStepEvent(); }, name())
 {
 }
 
@@ -1123,4 +1124,3 @@ BaseRemoteGDB::hex2i(const char **srcp)
     *srcp = src;
     return r;
 }
-

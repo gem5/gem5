@@ -60,39 +60,14 @@ class TickedObjectParams;
 class Ticked : public Serializable
 {
   protected:
-    /** An event to call process periodically */
-    class ClockEvent : public Event
-    {
-      public:
-        Ticked &owner;
-
-        ClockEvent(Ticked &owner_, Priority priority) :
-            Event(priority),
-            owner(owner_)
-        { }
-
-        /** Evaluate and reschedule */
-        void
-        process()
-        {
-            ++owner.tickCycles;
-            ++owner.numCycles;
-            owner.countCycles(Cycles(1));
-            owner.evaluate();
-            if (owner.running) {
-                owner.object.schedule(this,
-                    owner.object.clockEdge(Cycles(1)));
-            }
-        }
-    };
-
-    friend class ClockEvent;
-
     /** ClockedObject who is responsible for this Ticked's actions/stats */
     ClockedObject &object;
 
-    /** The single instance of ClockEvent used */
-    ClockEvent event;
+    /** The wrapper for processClockEvent */
+    EventFunctionWrapper event;
+
+    /** Evaluate and reschedule */
+    void processClockEvent();
 
     /** Have I been started? and am not stopped */
     bool running;
