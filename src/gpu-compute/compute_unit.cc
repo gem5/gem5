@@ -669,9 +669,8 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
         return true;
     }
 
-    ComputeUnit::DataPort::MemRespEvent *mem_resp_event =
-        new ComputeUnit::DataPort::MemRespEvent(computeUnit->memPort[index],
-                                                pkt);
+    EventFunctionWrapper *mem_resp_event =
+        computeUnit->memPort[index]->createMemRespEvent(pkt);
 
     DPRINTF(GPUPort, "CU%d: WF[%d][%d]: index %d, addr %#x received!\n",
             computeUnit->cu_id, gpuDynInst->simdId, gpuDynInst->wfSlotId,
@@ -845,8 +844,8 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
 
             // translation is done. Schedule the mem_req_event at the
             // appropriate cycle to send the timing memory request to ruby
-            ComputeUnit::DataPort::MemReqEvent *mem_req_event =
-                new ComputeUnit::DataPort::MemReqEvent(memPort[index], pkt);
+            EventFunctionWrapper *mem_req_event =
+                memPort[index]->createMemReqEvent(pkt);
 
             DPRINTF(GPUPort, "CU%d: WF[%d][%d]: index %d, addr %#x data "
                     "scheduled\n", cu_id, gpuDynInst->simdId,
@@ -923,8 +922,8 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
 void
 ComputeUnit::sendSyncRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
 {
-    ComputeUnit::DataPort::MemReqEvent *mem_req_event =
-        new ComputeUnit::DataPort::MemReqEvent(memPort[index], pkt);
+    EventFunctionWrapper *mem_req_event =
+        memPort[index]->createMemReqEvent(pkt);
 
 
     // New SenderState for the memory access
@@ -972,26 +971,20 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst, bool kernelLaunch,
     sendSyncRequest(gpuDynInst, 0, pkt);
 }
 
-const char*
-ComputeUnit::DataPort::MemRespEvent::description() const
-{
-    return "ComputeUnit memory response event";
-}
-
 void
-ComputeUnit::DataPort::MemRespEvent::process()
+ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
 {
     DataPort::SenderState *sender_state =
         safe_cast<DataPort::SenderState*>(pkt->senderState);
 
     GPUDynInstPtr gpuDynInst = sender_state->_gpuDynInst;
-    ComputeUnit *compute_unit = dataPort->computeUnit;
+    ComputeUnit *compute_unit = computeUnit;
 
     assert(gpuDynInst);
 
     DPRINTF(GPUPort, "CU%d: WF[%d][%d]: Response for addr %#x, index %d\n",
             compute_unit->cu_id, gpuDynInst->simdId, gpuDynInst->wfSlotId,
-            pkt->req->getPaddr(), dataPort->index);
+            pkt->req->getPaddr(), index);
 
     Addr paddr = pkt->req->getPaddr();
 
@@ -1045,8 +1038,9 @@ ComputeUnit::DataPort::MemRespEvent::process()
                 // this memory request
                 if (gpuDynInst->useContinuation) {
                     assert(!gpuDynInst->isNoScope());
-                    gpuDynInst->execContinuation(gpuDynInst->staticInstruction(),
-                                                 gpuDynInst);
+                    gpuDynInst->execContinuation(
+                        gpuDynInst->staticInstruction(),
+                        gpuDynInst);
                 }
             }
         }
@@ -1230,9 +1224,8 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
 
     // translation is done. Schedule the mem_req_event at the appropriate
     // cycle to send the timing memory request to ruby
-    ComputeUnit::DataPort::MemReqEvent *mem_req_event =
-        new ComputeUnit::DataPort::MemReqEvent(computeUnit->memPort[mp_index],
-                                               new_pkt);
+    EventFunctionWrapper *mem_req_event =
+        computeUnit->memPort[mp_index]->createMemReqEvent(new_pkt);
 
     DPRINTF(GPUPort, "CU%d: WF[%d][%d]: index %d, addr %#x data scheduled\n",
             computeUnit->cu_id, gpuDynInst->simdId,
@@ -1244,32 +1237,42 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
     return true;
 }
 
-const char*
-ComputeUnit::DataPort::MemReqEvent::description() const
+EventFunctionWrapper*
+ComputeUnit::DataPort::createMemReqEvent(PacketPtr pkt)
 {
-    return "ComputeUnit memory request event";
+    return new EventFunctionWrapper(
+        [this, pkt]{ processMemReqEvent(pkt); },
+        "ComputeUnit memory request event", true);
+}
+
+EventFunctionWrapper*
+ComputeUnit::DataPort::createMemRespEvent(PacketPtr pkt)
+{
+    return new EventFunctionWrapper(
+        [this, pkt]{ processMemRespEvent(pkt); },
+        "ComputeUnit memory response event", true);
 }
 
 void
-ComputeUnit::DataPort::MemReqEvent::process()
+ComputeUnit::DataPort::processMemReqEvent(PacketPtr pkt)
 {
     SenderState *sender_state = safe_cast<SenderState*>(pkt->senderState);
     GPUDynInstPtr gpuDynInst = sender_state->_gpuDynInst;
-    ComputeUnit *compute_unit M5_VAR_USED = dataPort->computeUnit;
+    ComputeUnit *compute_unit M5_VAR_USED = computeUnit;
 
-    if (!(dataPort->sendTimingReq(pkt))) {
-        dataPort->retries.push_back(std::make_pair(pkt, gpuDynInst));
+    if (!(sendTimingReq(pkt))) {
+        retries.push_back(std::make_pair(pkt, gpuDynInst));
 
         DPRINTF(GPUPort,
                 "CU%d: WF[%d][%d]: index %d, addr %#x data req failed!\n",
                 compute_unit->cu_id, gpuDynInst->simdId,
-                gpuDynInst->wfSlotId, dataPort->index,
+                gpuDynInst->wfSlotId, index,
                 pkt->req->getPaddr());
     } else {
         DPRINTF(GPUPort,
                 "CU%d: WF[%d][%d]: index %d, addr %#x data req sent!\n",
                 compute_unit->cu_id, gpuDynInst->simdId,
-                gpuDynInst->wfSlotId, dataPort->index,
+                gpuDynInst->wfSlotId, index,
                 pkt->req->getPaddr());
     }
 }

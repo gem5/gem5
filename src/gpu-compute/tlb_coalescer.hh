@@ -214,35 +214,14 @@ class TLBCoalescer : public MemObject
     BaseMasterPort& getMasterPort(const std::string &if_name, PortID idx);
     BaseSlavePort& getSlavePort(const std::string &if_name, PortID idx);
 
-    class IssueProbeEvent : public Event
-    {
-      private:
-        TLBCoalescer *coalescer;
+    void processProbeTLBEvent();
+    /// This event issues the TLB probes
+    EventFunctionWrapper probeTLBEvent;
 
-      public:
-        IssueProbeEvent(TLBCoalescer *_coalescer);
-        void process();
-        const char *description() const;
-    };
-
-    // this event issues the TLB probes
-    IssueProbeEvent probeTLBEvent;
-
-    // the cleanupEvent is scheduled after a TLBEvent triggers
-    // in order to free memory and do the required clean-up
-    class CleanupEvent : public Event
-    {
-      private:
-        TLBCoalescer *coalescer;
-
-      public:
-        CleanupEvent(TLBCoalescer *_coalescer);
-        void process();
-        const char* description() const;
-     };
-
-    // schedule cleanup
-    CleanupEvent cleanupEvent;
+    void processCleanupEvent();
+    /// The cleanupEvent is scheduled after a TLBEvent triggers
+    /// in order to free memory and do the required clean-up
+    EventFunctionWrapper cleanupEvent;
 
     // this FIFO queue keeps track of the virt. page
     // addresses that are pending cleanup

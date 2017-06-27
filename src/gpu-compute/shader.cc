@@ -50,14 +50,17 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "sim/sim_exit.hh"
 
-Shader::Shader(const Params *p) : ClockedObject(p),
-    clock(p->clk_domain->clockPeriod()), cpuThread(nullptr), gpuTc(nullptr),
-    cpuPointer(p->cpu_pointer), tickEvent(this), timingSim(p->timing),
-    hsail_mode(SIMT), impl_kern_boundary_sync(p->impl_kern_boundary_sync),
-    separate_acquire_release(p->separate_acquire_release), coissue_return(1),
-    trace_vgpr_all(1), n_cu((p->CUs).size()), n_wf(p->n_wf),
-    globalMemSize(p->globalmem), nextSchedCu(0), sa_n(0), tick_cnt(0),
-    box_tick_cnt(0), start_tick_cnt(0)
+Shader::Shader(const Params *p)
+    : ClockedObject(p), clock(p->clk_domain->clockPeriod()),
+      cpuThread(nullptr), gpuTc(nullptr), cpuPointer(p->cpu_pointer),
+      tickEvent([this]{ processTick(); }, "Shader tick",
+                false, Event::CPU_Tick_Pri),
+      timingSim(p->timing), hsail_mode(SIMT),
+      impl_kern_boundary_sync(p->impl_kern_boundary_sync),
+      separate_acquire_release(p->separate_acquire_release), coissue_return(1),
+      trace_vgpr_all(1), n_cu((p->CUs).size()), n_wf(p->n_wf),
+      globalMemSize(p->globalmem), nextSchedCu(0), sa_n(0), tick_cnt(0),
+      box_tick_cnt(0), start_tick_cnt(0)
 {
 
     cuList.resize(n_cu);
@@ -317,25 +320,14 @@ Shader::ScheduleAdd(uint32_t *val,Tick when,int x)
     ++sa_n;
 }
 
-Shader::TickEvent::TickEvent(Shader *_shader)
-    : Event(CPU_Tick_Pri), shader(_shader)
-{
-}
-
 
 void
-Shader::TickEvent::process()
+Shader::processTick()
 {
-    if (shader->busy()) {
-        shader->exec();
-        shader->schedule(this, curTick() + shader->ticks(1));
+    if (busy()) {
+        exec();
+        schedule(tickEvent, curTick() + ticks(1));
     }
-}
-
-const char*
-Shader::TickEvent::description() const
-{
-    return "Shader tick";
 }
 
 void

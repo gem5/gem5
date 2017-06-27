@@ -39,11 +39,18 @@
 
 #include "debug/GPUTLB.hh"
 
-TLBCoalescer::TLBCoalescer(const Params *p) : MemObject(p),
-    clock(p->clk_domain->clockPeriod()), TLBProbesPerCycle(p->probesPerCycle),
-    coalescingWindow(p->coalescingWindow),
-    disableCoalescing(p->disableCoalescing), probeTLBEvent(this),
-    cleanupEvent(this)
+TLBCoalescer::TLBCoalescer(const Params *p)
+    : MemObject(p),
+      clock(p->clk_domain->clockPeriod()),
+      TLBProbesPerCycle(p->probesPerCycle),
+      coalescingWindow(p->coalescingWindow),
+      disableCoalescing(p->disableCoalescing),
+      probeTLBEvent([this]{ processProbeTLBEvent(); },
+                    "Probe the TLB below",
+                    false, Event::CPU_Tick_Pri),
+      cleanupEvent([this]{ processCleanupEvent(); },
+                   "Cleanup issuedTranslationsTable hashmap",
+                   false, Event::Maximum_Pri)
 {
     // create the slave ports based on the number of connected ports
     for (size_t i = 0; i < p->port_slave_connection_count; ++i) {
@@ -390,17 +397,6 @@ TLBCoalescer::MemSidePort::recvFunctional(PacketPtr pkt)
     fatal("Memory side recvFunctional() not implemented in TLB coalescer.\n");
 }
 
-TLBCoalescer::IssueProbeEvent::IssueProbeEvent(TLBCoalescer * _coalescer)
-    : Event(CPU_Tick_Pri), coalescer(_coalescer)
-{
-}
-
-const char*
-TLBCoalescer::IssueProbeEvent::description() const
-{
-    return "Probe the TLB below";
-}
-
 /*
  * Here we scan the coalescer FIFO and issue the max
  * number of permitted probes to the TLB below. We
@@ -414,7 +410,7 @@ TLBCoalescer::IssueProbeEvent::description() const
  * track of the outstanding reqs)
  */
 void
-TLBCoalescer::IssueProbeEvent::process()
+TLBCoalescer::processProbeTLBEvent()
 {
     // number of TLB probes sent so far
     int sent_probes = 0;
@@ -425,10 +421,10 @@ TLBCoalescer::IssueProbeEvent::process()
     // returns false or when there is another outstanding request for the
     // same virt. page.
 
-    DPRINTF(GPUTLB, "triggered TLBCoalescer IssueProbeEvent\n");
+    DPRINTF(GPUTLB, "triggered TLBCoalescer %s\n", __func__);
 
-    for (auto iter = coalescer->coalescerFIFO.begin();
-         iter != coalescer->coalescerFIFO.end() && !rejected; ) {
+    for (auto iter = coalescerFIFO.begin();
+         iter != coalescerFIFO.end() && !rejected; ) {
         int coalescedReq_cnt = iter->second.size();
         int i = 0;
         int vector_index = 0;
@@ -446,7 +442,7 @@ TLBCoalescer::IssueProbeEvent::process()
 
             // is there another outstanding request for the same page addr?
             int pending_reqs =
-                coalescer->issuedTranslationsTable.count(virt_page_addr);
+                issuedTranslationsTable.count(virt_page_addr);
 
             if (pending_reqs) {
                 DPRINTF(GPUTLB, "Cannot issue - There are pending reqs for "
@@ -459,7 +455,7 @@ TLBCoalescer::IssueProbeEvent::process()
             }
 
             // send the coalesced request for virt_page_addr
-            if (!coalescer->memSidePort[0]->sendTimingReq(first_packet)) {
+            if (!memSidePort[0]->sendTimingReq(first_packet)) {
                 DPRINTF(GPUTLB, "Failed to send TLB request for page %#x",
                        virt_page_addr);
 
@@ -479,22 +475,22 @@ TLBCoalescer::IssueProbeEvent::process()
                     // by the one we just sent counting all the way from
                     // the top of TLB hiearchy (i.e., from the CU)
                     int req_cnt = tmp_sender_state->reqCnt.back();
-                    coalescer->queuingCycles += (curTick() * req_cnt);
+                    queuingCycles += (curTick() * req_cnt);
 
                     DPRINTF(GPUTLB, "%s sending pkt w/ req_cnt %d\n",
-                            coalescer->name(), req_cnt);
+                            name(), req_cnt);
 
                     // pkt_cnt is number of packets we coalesced into the one
                     // we just sent but only at this coalescer level
                     int pkt_cnt = iter->second[vector_index].size();
-                    coalescer->localqueuingCycles += (curTick() * pkt_cnt);
+                    localqueuingCycles += (curTick() * pkt_cnt);
                 }
 
                 DPRINTF(GPUTLB, "Successfully sent TLB request for page %#x",
                        virt_page_addr);
 
                 //copy coalescedReq to issuedTranslationsTable
-                coalescer->issuedTranslationsTable[virt_page_addr]
+                issuedTranslationsTable[virt_page_addr]
                     = iter->second[vector_index];
 
                 //erase the entry of this coalesced req
@@ -504,7 +500,7 @@ TLBCoalescer::IssueProbeEvent::process()
                     assert(i == coalescedReq_cnt);
 
                 sent_probes++;
-                if (sent_probes == coalescer->TLBProbesPerCycle)
+                if (sent_probes == TLBProbesPerCycle)
                    return;
             }
         }
@@ -512,31 +508,20 @@ TLBCoalescer::IssueProbeEvent::process()
         //if there are no more coalesced reqs for this tick_index
         //erase the hash_map with the first iterator
         if (iter->second.empty()) {
-            coalescer->coalescerFIFO.erase(iter++);
+            coalescerFIFO.erase(iter++);
         } else {
             ++iter;
         }
     }
 }
 
-TLBCoalescer::CleanupEvent::CleanupEvent(TLBCoalescer* _coalescer)
-    : Event(Maximum_Pri), coalescer(_coalescer)
-{
-}
-
-const char*
-TLBCoalescer::CleanupEvent::description() const
-{
-    return "Cleanup issuedTranslationsTable hashmap";
-}
-
 void
-TLBCoalescer::CleanupEvent::process()
+TLBCoalescer::processCleanupEvent()
 {
-    while (!coalescer->cleanupQueue.empty()) {
-        Addr cleanup_addr = coalescer->cleanupQueue.front();
-        coalescer->cleanupQueue.pop();
-        coalescer->issuedTranslationsTable.erase(cleanup_addr);
+    while (!cleanupQueue.empty()) {
+        Addr cleanup_addr = cleanupQueue.front();
+        cleanupQueue.pop();
+        issuedTranslationsTable.erase(cleanup_addr);
 
         DPRINTF(GPUTLB, "Cleanup - Delete coalescer entry with key %#x\n",
                 cleanup_addr);

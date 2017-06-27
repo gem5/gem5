@@ -99,18 +99,8 @@ class Shader : public ClockedObject
     ThreadContext *gpuTc;
     BaseCPU *cpuPointer;
 
-    class TickEvent : public Event
-    {
-      private:
-        Shader *shader;
-
-      public:
-        TickEvent(Shader*);
-        void process();
-        const char* description() const;
-    };
-
-    TickEvent tickEvent;
+    void processTick();
+    EventFunctionWrapper tickEvent;
 
     // is this simulation going to be timing mode in the memory?
     bool timingSim;

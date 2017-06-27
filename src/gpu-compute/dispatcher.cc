@@ -50,7 +50,9 @@ GpuDispatcher::GpuDispatcher(const Params *p)
     : DmaDevice(p), _masterId(p->system->getMasterId(name() + ".disp")),
       pioAddr(p->pio_addr), pioSize(4096), pioDelay(p->pio_latency),
       dispatchCount(0), dispatchActive(false), cpu(p->cpu),
-      shader(p->shader_pointer), driver(p->cl_driver), tickEvent(this)
+      shader(p->shader_pointer), driver(p->cl_driver),
+      tickEvent([this]{ exec(); }, "GPU Dispatcher tick",
+                false, Event::CPU_Tick_Pri)
 {
     shader->handshake(this);
     driver->handshake(this);
@@ -361,23 +363,6 @@ GpuDispatcher::accessUserVar(BaseCPU *cpu, uint64_t addr, int val, int off)
     } else {
         panic("Cannot find host");
     }
-}
-
-GpuDispatcher::TickEvent::TickEvent(GpuDispatcher *_dispatcher)
-    : Event(CPU_Tick_Pri), dispatcher(_dispatcher)
-{
-}
-
-void
-GpuDispatcher::TickEvent::process()
-{
-    dispatcher->exec();
-}
-
-const char*
-GpuDispatcher::TickEvent::description() const
-{
-    return "GPU Dispatcher tick";
 }
 
 // helper functions for driver to retrieve GPU attributes

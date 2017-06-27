@@ -440,39 +440,11 @@ class ComputeUnit : public MemObject
                   saved(sender_state) { }
         };
 
-        class MemReqEvent : public Event
-        {
-          private:
-            DataPort *dataPort;
-            PacketPtr pkt;
+        void processMemReqEvent(PacketPtr pkt);
+        EventFunctionWrapper *createMemReqEvent(PacketPtr pkt);
 
-          public:
-            MemReqEvent(DataPort *_data_port, PacketPtr _pkt)
-                : Event(), dataPort(_data_port), pkt(_pkt)
-            {
-              setFlags(Event::AutoDelete);
-            }
-
-            void process();
-            const char *description() const;
-        };
-
-        class MemRespEvent : public Event
-        {
-          private:
-            DataPort *dataPort;
-            PacketPtr pkt;
-
-          public:
-            MemRespEvent(DataPort *_data_port, PacketPtr _pkt)
-                : Event(), dataPort(_data_port), pkt(_pkt)
-            {
-              setFlags(Event::AutoDelete);
-            }
-
-            void process();
-            const char *description() const;
-        };
+        void processMemRespEvent(PacketPtr pkt);
+        EventFunctionWrapper *createMemRespEvent(PacketPtr pkt);
 
         std::deque<std::pair<PacketPtr, GPUDynInstPtr>> retries;
 

@@ -55,17 +55,6 @@ class GpuDispatcher : public DmaDevice
     public:
         typedef GpuDispatcherParams Params;
 
-        class TickEvent : public Event
-        {
-            private:
-                GpuDispatcher *dispatcher;
-
-            public:
-                TickEvent(GpuDispatcher *);
-                void process();
-                const char *description() const;
-        };
-
         MasterID masterId() { return _masterId; }
 
     protected:
@@ -93,7 +82,8 @@ class GpuDispatcher : public DmaDevice
         BaseCPU *cpu;
         Shader *shader;
         ClDriver *driver;
-        TickEvent tickEvent;
+        EventFunctionWrapper tickEvent;
+
 
         static GpuDispatcher *instance;
 
