@@ -52,17 +52,9 @@
 class StubSlavePort : public ExternalSlave::Port
 {
   public:
-    class ResponseEvent : public Event
-    {
-      public:
-        StubSlavePort &owner;
+    void processResponseEvent();
 
-        ResponseEvent(StubSlavePort &owner_) : owner(owner_) { }
-
-        void process();
-    };
-
-    ResponseEvent responseEvent;
+    EventFunctionWrapper responseEvent;
 
     /** Stub can handle a single request at a time.  This will be
      *  NULL when no packet is in flight */
@@ -75,7 +67,8 @@ class StubSlavePort : public ExternalSlave::Port
     StubSlavePort(const std::string &name_,
         ExternalSlave &owner_) :
         ExternalSlave::Port(name_, owner_),
-        responseEvent(*this), responsePacket(NULL), mustRetry(false)
+        responseEvent([this]{ processResponseEvent(); }, name()),
+        responsePacket(NULL), mustRetry(false)
     { }
 
     Tick recvAtomic(PacketPtr packet);
@@ -123,18 +116,18 @@ StubSlavePort::recvFunctional(PacketPtr packet)
 }
 
 void
-StubSlavePort::ResponseEvent::process()
+StubSlavePort::processResponseEvent()
 {
-    owner.responsePacket->makeResponse();
-    owner.responsePacket->headerDelay = 0;
-    owner.responsePacket->payloadDelay = 0;
+    responsePacket->makeResponse();
+    responsePacket->headerDelay = 0;
+    responsePacket->payloadDelay = 0;
 
-    if (owner.sendTimingResp(owner.responsePacket)) {
-        owner.responsePacket = NULL;
+    if (sendTimingResp(responsePacket)) {
+        responsePacket = NULL;
 
-        if (owner.mustRetry)
-            owner.sendRetryReq();
-        owner.mustRetry = false;
+        if (mustRetry)
+            sendRetryReq();
+        mustRetry = false;
     }
 }
 
