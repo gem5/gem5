@@ -438,7 +438,7 @@ DmaReadFifo::dmaDone()
     handlePending();
     resumeFill();
 
-    if (!old_active && isActive())
+    if (old_active && !isActive())
         onIdle();
 }
 
