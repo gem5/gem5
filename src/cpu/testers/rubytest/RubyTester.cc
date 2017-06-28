@@ -50,7 +50,9 @@
 #include "sim/system.hh"
 
 RubyTester::RubyTester(const Params *p)
-  : MemObject(p), checkStartEvent(this),
+  : MemObject(p),
+    checkStartEvent([this]{ wakeup(); }, "RubyTester tick",
+                    false, Event::CPU_Tick_Pri),
     _masterId(p->system->getMasterId(name())),
     m_checkTable_ptr(nullptr),
     m_num_cpus(p->num_cpus),

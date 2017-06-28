@@ -74,21 +74,7 @@ class GarnetSyntheticTraffic : public MemObject
     void printAddr(Addr a);
 
   protected:
-    class TickEvent : public Event
-    {
-      private:
-        GarnetSyntheticTraffic *cpu;
-
-      public:
-        TickEvent(GarnetSyntheticTraffic *c) : Event(CPU_Tick_Pri), cpu(c) {}
-        void process() { cpu->tick(); }
-        virtual const char *description() const
-        {
-            return "GarnetSyntheticTraffic tick";
-        }
-    };
-
-    TickEvent tickEvent;
+    EventFunctionWrapper tickEvent;
 
     class CpuPort : public MasterPort
     {
@@ -160,6 +146,3 @@ class GarnetSyntheticTraffic : public MemObject
 };
 
 #endif // __CPU_GARNET_SYNTHETIC_TRAFFIC_HH__
-
-
-

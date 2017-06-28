@@ -76,7 +76,8 @@ GarnetSyntheticTraffic::sendPkt(PacketPtr pkt)
 
 GarnetSyntheticTraffic::GarnetSyntheticTraffic(const Params *p)
     : MemObject(p),
-      tickEvent(this),
+      tickEvent([this]{ tick(); }, "GarnetSyntheticTraffic tick",
+                false, Event::CPU_Tick_Pri),
       cachePort("GarnetSyntheticTraffic", this),
       retryPkt(NULL),
       size(p->memory_size),

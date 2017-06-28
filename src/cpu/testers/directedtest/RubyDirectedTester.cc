@@ -47,7 +47,9 @@
 #include "sim/sim_exit.hh"
 
 RubyDirectedTester::RubyDirectedTester(const Params *p)
-  : MemObject(p), directedStartEvent(this),
+  : MemObject(p),
+    directedStartEvent([this]{ wakeup(); }, "Directed tick",
+                       false, Event::CPU_Tick_Pri),
     m_requests_to_complete(p->requests_to_complete),
     generator(p->generator)
 {

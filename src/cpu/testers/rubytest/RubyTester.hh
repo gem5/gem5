@@ -118,20 +118,7 @@ class RubyTester : public MemObject
 
     MasterID masterId() { return _masterId; }
   protected:
-    class CheckStartEvent : public Event
-    {
-      private:
-        RubyTester *tester;
-
-      public:
-        CheckStartEvent(RubyTester *_tester)
-            : Event(CPU_Tick_Pri), tester(_tester)
-        {}
-        void process() { tester->wakeup(); }
-        virtual const char *description() const { return "RubyTester tick"; }
-    };
-
-    CheckStartEvent checkStartEvent;
+    EventFunctionWrapper checkStartEvent;
 
     MasterID _masterId;
 
