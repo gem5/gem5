@@ -73,20 +73,11 @@ class Uart8250 : public Uart
     uint8_t IER, DLAB, LCR, MCR;
     Tick lastTxInt;
 
-    class IntrEvent : public Event
-    {
-        protected:
-            Uart8250 *uart;
-            int intrBit;
-        public:
-            IntrEvent(Uart8250 *u, int bit);
-            virtual void process();
-            virtual const char *description() const;
-            void scheduleIntr();
-    };
+    void processIntrEvent(int intrBit);
+    void scheduleIntr(Event *event);
 
-    IntrEvent txIntrEvent;
-    IntrEvent rxIntrEvent;
+    EventFunctionWrapper txIntrEvent;
+    EventFunctionWrapper rxIntrEvent;
 
   public:
     typedef Uart8250Params Params;

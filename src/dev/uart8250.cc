@@ -49,27 +49,14 @@
 using namespace std;
 using namespace TheISA;
 
-Uart8250::IntrEvent::IntrEvent(Uart8250 *u, int bit)
-    : uart(u)
-{
-    DPRINTF(Uart, "UART Interrupt Event Initilizing\n");
-    intrBit = bit;
-}
-
-const char *
-Uart8250::IntrEvent::description() const
-{
-    return "uart interrupt delay";
-}
-
 void
-Uart8250::IntrEvent::process()
+Uart8250::processIntrEvent(int intrBit)
 {
-    if (intrBit & uart->IER) {
+    if (intrBit & IER) {
        DPRINTF(Uart, "UART InterEvent, interrupting\n");
-       uart->platform->postConsoleInt();
-       uart->status |= intrBit;
-       uart->lastTxInt = curTick();
+       platform->postConsoleInt();
+       status |= intrBit;
+       lastTxInt = curTick();
     }
     else
        DPRINTF(Uart, "UART InterEvent, not interrupting\n");
@@ -89,21 +76,22 @@ Uart8250::IntrEvent::process()
  * character to send to alleviate this problem. --Ali
  */
 void
-Uart8250::IntrEvent::scheduleIntr()
+Uart8250::scheduleIntr(Event *event)
 {
     static const Tick interval = 225 * SimClock::Int::ns;
-    DPRINTF(Uart, "Scheduling IER interrupt for %#x, at cycle %lld\n", intrBit,
-            curTick() + interval);
-    if (!scheduled())
-        uart->schedule(this, curTick() + interval);
+    DPRINTF(Uart, "Scheduling IER interrupt for %s, at cycle %lld\n",
+            event->name(), curTick() + interval);
+    if (!event->scheduled())
+        schedule(event, curTick() + interval);
     else
-        uart->reschedule(this, curTick() + interval);
+        reschedule(event, curTick() + interval);
 }
 
 
 Uart8250::Uart8250(const Params *p)
     : Uart(p, 8), IER(0), DLAB(0), LCR(0), MCR(0), lastTxInt(0),
-      txIntrEvent(this, TX_INT), rxIntrEvent(this, RX_INT)
+      txIntrEvent([this]{ processIntrEvent(TX_INT); }, "TX"),
+      rxIntrEvent([this]{ processIntrEvent(RX_INT); }, "RX")
 {
 }
 
@@ -131,7 +119,7 @@ Uart8250::read(PacketPtr pkt)
                 platform->clearConsoleInt();
 
                 if (term->dataAvailable() && (IER & UART_IER_RDI))
-                    rxIntrEvent.scheduleIntr();
+                    scheduleIntr(&rxIntrEvent);
             } else { // dll divisor latch
                ;
             }
@@ -206,7 +194,7 @@ Uart8250::write(PacketPtr pkt)
                 platform->clearConsoleInt();
                 status &= ~TX_INT;
                 if (UART_IER_THRI & IER)
-                    txIntrEvent.scheduleIntr();
+                    scheduleIntr(&txIntrEvent);
             } else { // dll divisor latch
                ;
             }
@@ -224,7 +212,7 @@ Uart8250::write(PacketPtr pkt)
                     } else {
                         DPRINTF(Uart, "-- Delaying interrupt... %d,%d\n",
                                 curTick(), lastTxInt);
-                        txIntrEvent.scheduleIntr();
+                        scheduleIntr(&txIntrEvent);
                     }
                 }
                 else
@@ -239,7 +227,7 @@ Uart8250::write(PacketPtr pkt)
 
                 if ((UART_IER_RDI & IER) && term->dataAvailable()) {
                     DPRINTF(Uart, "IER: IER_RDI set, scheduling RX intrrupt\n");
-                    rxIntrEvent.scheduleIntr();
+                    scheduleIntr(&rxIntrEvent);
                 } else {
                     DPRINTF(Uart, "IER: IER_RDI cleared, descheduling RX intrrupt\n");
                     if (rxIntrEvent.scheduled())
