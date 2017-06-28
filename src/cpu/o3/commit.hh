@@ -101,21 +101,6 @@ class DefaultCommit
 
     typedef O3ThreadState<Impl> Thread;
 
-    /** Event class used to schedule a squash due to a trap (fault or
-     * interrupt) to happen on a specific cycle.
-     */
-    class TrapEvent : public Event {
-      private:
-        DefaultCommit<Impl> *commit;
-        ThreadID tid;
-
-      public:
-        TrapEvent(DefaultCommit<Impl> *_commit, ThreadID _tid);
-
-        void process();
-        const char *description() const;
-    };
-
     /** Overall commit status. Used to determine if the CPU can deschedule
      * itself due to a lack of activity.
      */
@@ -156,6 +141,9 @@ class DefaultCommit
     ProbePointArg<DynInstPtr> *ppCommitStall;
     /** To probe when an instruction is squashed */
     ProbePointArg<DynInstPtr> *ppSquash;
+
+    /** Mark the thread as processing a trap. */
+    void processTrapEvent(ThreadID tid);
 
   public:
     /** Construct a DefaultCommit with the given parameters. */

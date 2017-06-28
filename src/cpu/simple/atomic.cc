@@ -64,24 +64,6 @@
 using namespace std;
 using namespace TheISA;
 
-AtomicSimpleCPU::TickEvent::TickEvent(AtomicSimpleCPU *c)
-    : Event(CPU_Tick_Pri), cpu(c)
-{
-}
-
-
-void
-AtomicSimpleCPU::TickEvent::process()
-{
-    cpu->tick();
-}
-
-const char *
-AtomicSimpleCPU::TickEvent::description() const
-{
-    return "AtomicSimpleCPU tick";
-}
-
 void
 AtomicSimpleCPU::init()
 {
@@ -94,7 +76,10 @@ AtomicSimpleCPU::init()
 }
 
 AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
-    : BaseSimpleCPU(p), tickEvent(this), width(p->width), locked(false),
+    : BaseSimpleCPU(p),
+      tickEvent([this]{ tick(); }, "AtomicSimpleCPU tick",
+                false, Event::CPU_Tick_Pri),
+      width(p->width), locked(false),
       simulate_data_stalls(p->simulate_data_stalls),
       simulate_inst_stalls(p->simulate_inst_stalls),
       icachePort(name() + ".icache_port", this),

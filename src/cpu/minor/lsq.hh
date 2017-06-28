@@ -377,20 +377,7 @@ class LSQ : public Named
     {
       protected:
         /** Event to step between translations */
-        class TranslationEvent : public Event
-        {
-          protected:
-            SplitDataRequest &owner;
-
-          public:
-            TranslationEvent(SplitDataRequest &owner_)
-                : owner(owner_) { }
-
-            void process()
-            { owner.sendNextFragmentToTranslation(); }
-        };
-
-        TranslationEvent translationEvent;
+        EventFunctionWrapper translationEvent;
       protected:
         /** Number of fragments this request is split into */
         unsigned int numFragments;

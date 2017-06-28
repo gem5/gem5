@@ -248,17 +248,8 @@ class BaseCPU : public MemObject
         return FullSystem && interrupts[tc->threadId()]->checkInterrupts(tc);
     }
 
-    class ProfileEvent : public Event
-    {
-      private:
-        BaseCPU *cpu;
-        Tick interval;
-
-      public:
-        ProfileEvent(BaseCPU *cpu, Tick interval);
-        void process();
-    };
-    ProfileEvent *profileEvent;
+    void processProfileEvent();
+    EventFunctionWrapper * profileEvent;
 
   protected:
     std::vector<ThreadContext *> threadContexts;

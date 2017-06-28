@@ -137,31 +137,12 @@ FullO3CPU<Impl>::DcachePort::recvReqRetry()
 }
 
 template <class Impl>
-FullO3CPU<Impl>::TickEvent::TickEvent(FullO3CPU<Impl> *c)
-    : Event(CPU_Tick_Pri), cpu(c)
-{
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::TickEvent::process()
-{
-    cpu->tick();
-}
-
-template <class Impl>
-const char *
-FullO3CPU<Impl>::TickEvent::description() const
-{
-    return "FullO3CPU tick";
-}
-
-template <class Impl>
 FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     : BaseO3CPU(params),
       itb(params->itb),
       dtb(params->dtb),
-      tickEvent(this),
+      tickEvent([this]{ tick(); }, "FullO3CPU tick",
+                false, Event::CPU_Tick_Pri),
 #ifndef NDEBUG
       instcount(0),
 #endif

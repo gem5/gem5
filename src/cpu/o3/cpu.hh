@@ -199,24 +199,8 @@ class FullO3CPU : public BaseO3CPU
         virtual bool isSnooping() const { return true; }
     };
 
-    class TickEvent : public Event
-    {
-      private:
-        /** Pointer to the CPU. */
-        FullO3CPU<Impl> *cpu;
-
-      public:
-        /** Constructs a tick event. */
-        TickEvent(FullO3CPU<Impl> *c);
-
-        /** Processes a tick event, calling tick() on the CPU. */
-        void process();
-        /** Returns the description of the tick event. */
-        const char *description() const;
-    };
-
     /** The tick event used for scheduling CPU ticks. */
-    TickEvent tickEvent;
+    EventFunctionWrapper tickEvent;
 
     /** Schedule tick event, regardless of its current state. */
     void scheduleTickEvent(Cycles delay)

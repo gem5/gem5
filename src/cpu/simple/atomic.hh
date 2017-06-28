@@ -60,16 +60,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
   private:
 
-    struct TickEvent : public Event
-    {
-        AtomicSimpleCPU *cpu;
-
-        TickEvent(AtomicSimpleCPU *c);
-        void process();
-        const char *description() const;
-    };
-
-    TickEvent tickEvent;
+    EventFunctionWrapper tickEvent;
 
     const int width;
     bool locked;
