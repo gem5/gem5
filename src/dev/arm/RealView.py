@@ -739,7 +739,8 @@ class VExpress_EMM(RealView):
         self.nvmem = SimpleMemory(range = AddrRange('64MB'),
                                   conf_table_reported = False)
         self.nvmem.port = mem_bus.master
-        cur_sys.boot_loader = loc('boot_emm.arm')
+        if not cur_sys.boot_loader:
+            cur_sys.boot_loader = loc('boot_emm.arm')
         cur_sys.atags_addr = 0x8000000
         cur_sys.load_addr_mask = 0xfffffff
         cur_sys.load_offset = 0x80000000
@@ -756,7 +757,8 @@ class VExpress_EMM64(VExpress_EMM):
         self.nvmem = SimpleMemory(range=AddrRange(0, size='64MB'),
                                   conf_table_reported=False)
         self.nvmem.port = mem_bus.master
-        cur_sys.boot_loader = loc('boot_emm.arm64')
+        if not cur_sys.boot_loader:
+            cur_sys.boot_loader = loc('boot_emm.arm64')
         cur_sys.atags_addr = 0x8000000
         cur_sys.load_addr_mask = 0xfffffff
         cur_sys.load_offset = 0x80000000
@@ -927,7 +929,8 @@ Interrupts:
         self.nvmem = SimpleMemory(range=AddrRange(0, size='64MB'),
                                   conf_table_reported=False)
         self.nvmem.port = mem_bus.master
-        cur_sys.boot_loader = [ loc('boot_emm.arm64'), loc('boot_emm.arm') ]
+        if not cur_sys.boot_loader:
+            cur_sys.boot_loader = [ loc('boot_emm.arm64'), loc('boot_emm.arm') ]
         cur_sys.atags_addr = 0x8000000
         # the old load_add_mask 0xfffffff works for 32-bit kernel
         # but not the 64-bit one. The new value 0x7ffffff works for both
