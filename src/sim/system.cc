@@ -58,6 +58,7 @@
 #include "cpu/kvm/base.hh"
 #include "cpu/kvm/vm.hh"
 #endif
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "debug/WorkItems.hh"
@@ -221,13 +222,6 @@ bool System::breakpoint()
     return false;
 }
 
-/**
- * Setting rgdb_wait to a positive integer waits for a remote debugger to
- * connect to that context ID before continuing.  This should really
-   be a parameter on the CPU object or something...
- */
-int rgdb_wait = -1;
-
 ContextID
 System::registerThreadContext(ThreadContext *tc, ContextID assigned)
 {
@@ -259,9 +253,13 @@ System::registerThreadContext(ThreadContext *tc, ContextID assigned)
         GDBListener *gdbl = new GDBListener(rgdb, port + id);
         gdbl->listen();
 
-        if (rgdb_wait != -1 && rgdb_wait == id)
-            gdbl->accept();
+        BaseCPU *cpu = tc->getCpuPtr();
+        if (cpu->waitForRemoteGDB()) {
+            inform("%s: Waiting for a remote GDB connection on port %d.\n",
+                   cpu->name(), gdbl->getPort());
 
+            gdbl->accept();
+        }
         if (remoteGDB.size() <= id) {
             remoteGDB.resize(id + 1);
         }

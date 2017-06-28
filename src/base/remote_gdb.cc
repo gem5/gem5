@@ -250,6 +250,16 @@ GDBListener::accept()
     }
 }
 
+int
+GDBListener::getPort() const
+{
+    panic_if(!listener.islistening(),
+             "Remote GDB port is unknown until GDBListener::listen() has "
+             "been called.\n");
+
+    return port;
+}
+
 BaseRemoteGDB::InputEvent::InputEvent(BaseRemoteGDB *g, int fd, int e)
     : PollEvent(fd, e), gdb(g)
 {}

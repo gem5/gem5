@@ -364,6 +364,8 @@ class GDBListener
     void accept();
     void listen();
     std::string name();
+
+    int getPort() const;
 };
 
 #endif /* __REMOTE_GDB_H__ */

@@ -783,3 +783,9 @@ BaseCPU::traceFunctionsInternal(Addr pc)
         functionEntryTick = curTick();
     }
 }
+
+bool
+BaseCPU::waitForRemoteGDB() const
+{
+    return params()->wait_for_remote_gdb;
+}

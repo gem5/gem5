@@ -589,6 +589,8 @@ class BaseCPU : public MemObject
         return &addressMonitor[tid];
     }
 
+    bool waitForRemoteGDB() const;
+
     Cycles syscallRetryLatency;
 };
 

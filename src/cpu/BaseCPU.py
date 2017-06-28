@@ -151,6 +151,9 @@ class BaseCPU(MemObject):
     profile = Param.Latency('0ns', "trace the kernel stack")
     do_quiesce = Param.Bool(True, "enable quiesce instructions")
 
+    wait_for_remote_gdb = Param.Bool(False,
+        "Wait for a remote GDB connection");
+
     workload = VectorParam.Process([], "processes to run")
 
     if buildEnv['TARGET_ISA'] == 'sparc':
