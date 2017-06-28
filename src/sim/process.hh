@@ -161,8 +161,8 @@ class Process : public SimObject
     void replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
                        ThreadContext *new_tc, bool alloc_page);
 
-    void clone(ThreadContext *old_tc, ThreadContext *new_tc, Process *new_p,
-               TheISA::IntReg flags);
+    virtual void clone(ThreadContext *old_tc, ThreadContext *new_tc,
+                       Process *new_p, TheISA::IntReg flags);
 
     // thread contexts associated with this process
     std::vector<ContextID> contextIds;

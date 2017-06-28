@@ -84,7 +84,7 @@ namespace X86ISA
         void setSyscallReturn(ThreadContext *tc,
                               SyscallReturn return_value) override;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                   Process *process, TheISA::IntReg flags);
+                   Process *process, TheISA::IntReg flags) override;
 
         X86Process &
         operator=(const X86Process &in)
@@ -140,7 +140,7 @@ namespace X86ISA
         void setSyscallArg(ThreadContext *tc, int i,
                            X86ISA::IntReg val) override;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                   Process *process, TheISA::IntReg flags);
+                   Process *process, TheISA::IntReg flags) override;
     };
 
     class I386Process : public X86Process
@@ -186,7 +186,7 @@ namespace X86ISA
         void setSyscallArg(ThreadContext *tc, int i,
                            X86ISA::IntReg val) override;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                   Process *process, TheISA::IntReg flags);
+                   Process *process, TheISA::IntReg flags) override;
     };
 
     /**
