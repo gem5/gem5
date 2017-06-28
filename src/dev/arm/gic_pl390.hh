@@ -353,21 +353,7 @@ class Pl390 : public BaseGic, public BaseGicRegisters
      */
     void postDelayedInt(uint32_t cpu);
 
-    /** Event definition to post interrupt to CPU after a delay
-    */
-    class PostIntEvent : public Event
-    {
-      private:
-        Pl390 &parent;
-        uint32_t cpu;
-      public:
-        PostIntEvent(Pl390 &_parent, uint32_t _cpu)
-            : parent(_parent), cpu(_cpu)
-        { }
-        void process() { parent.postDelayedInt(cpu); }
-        const char *description() const { return "Post Interrupt to CPU"; }
-    };
-    PostIntEvent *postIntEvent[CPU_MAX];
+    EventFunctionWrapper *postIntEvent[CPU_MAX];
     int pendingDelayedInterrupts;
 
   public:

@@ -87,7 +87,9 @@ Pl390::Pl390(const Params *p)
         cpuBpr[x] = GICC_BPR_MINIMUM;
         // Initialize cpu highest int
         cpuHighestInt[x] = SPURIOUS_INT;
-        postIntEvent[x] = new PostIntEvent(*this, x);
+        postIntEvent[x] =
+            new EventFunctionWrapper([this, x]{ postDelayedInt(x); },
+                                     "Post Interrupt to CPU");
     }
     DPRINTF(Interrupt, "cpuEnabled[0]=%d cpuEnabled[1]=%d\n", cpuEnabled[0],
             cpuEnabled[1]);
