@@ -380,12 +380,12 @@ RubySystem::startup()
 }
 
 void
-RubySystem::RubyEvent::process()
+RubySystem::processRubyEvent()
 {
-    if (RubySystem::getWarmupEnabled()) {
-        m_ruby_system->m_cache_recorder->enqueueNextFetchRequest();
-    } else if (RubySystem::getCooldownEnabled()) {
-        m_ruby_system->m_cache_recorder->enqueueNextFlushRequest();
+    if (getWarmupEnabled()) {
+        m_cache_recorder->enqueueNextFetchRequest();
+    } else if (getCooldownEnabled()) {
+        m_cache_recorder->enqueueNextFlushRequest();
     }
 }
 

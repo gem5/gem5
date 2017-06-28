@@ -50,21 +50,6 @@ class AbstractController;
 class RubySystem : public ClockedObject
 {
   public:
-    class RubyEvent : public Event
-    {
-      public:
-        RubyEvent(RubySystem* _ruby_system)
-        {
-            m_ruby_system = _ruby_system;
-        }
-      private:
-        void process();
-
-        RubySystem* m_ruby_system;
-    };
-
-    friend class RubyEvent;
-
     typedef RubySystemParams Params;
     RubySystem(const Params *p);
     ~RubySystem();
@@ -111,7 +96,8 @@ class RubySystem : public ClockedObject
     bool eventQueueEmpty() { return eventq->empty(); }
     void enqueueRubyEvent(Tick tick)
     {
-        RubyEvent* e = new RubyEvent(this);
+        auto e = new EventFunctionWrapper(
+            [this]{ processRubyEvent(); }, "RubyEvent");
         schedule(e, tick);
     }
 
@@ -130,6 +116,7 @@ class RubySystem : public ClockedObject
     static void writeCompressedTrace(uint8_t *raw_data, std::string file,
                                      uint64_t uncompressed_trace_size);
 
+    void processRubyEvent();
   private:
     // configuration parameters
     static bool m_randomization;

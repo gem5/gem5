@@ -116,7 +116,10 @@ reqSegmentToHSASegment(Request* req)
 }
 
 GPUCoalescer::GPUCoalescer(const Params *p)
-    : RubyPort(p), issueEvent(this), deadlockCheckEvent(this)
+    : RubyPort(p),
+      issueEvent([this]{ completeIssue(); }, "Issue coalesced request",
+                 false, Event::Progress_Event_Pri),
+      deadlockCheckEvent([this]{ wakeup(); }, "GPUCoalescer deadlock check")
 {
     m_store_waiting_on_load_cycles = 0;
     m_store_waiting_on_store_cycles = 0;
@@ -996,11 +999,6 @@ GPUCoalescer::recordRequestType(SequencerRequestType requestType) {
             SequencerRequestType_to_string(requestType));
 }
 
-GPUCoalescer::IssueEvent::IssueEvent(GPUCoalescer* _seq)
-    : Event(Progress_Event_Pri), seq(_seq)
-{
-}
-
 
 void
 GPUCoalescer::completeIssue()
@@ -1039,18 +1037,6 @@ GPUCoalescer::completeIssue()
         kernelCallback(newKernelEnds[i]);
     }
     newKernelEnds.clear();
-}
-
-void
-GPUCoalescer::IssueEvent::process()
-{
-    seq->completeIssue();
-}
-
-const char *
-GPUCoalescer::IssueEvent::description() const
-{
-    return "Issue coalesced request";
 }
 
 void

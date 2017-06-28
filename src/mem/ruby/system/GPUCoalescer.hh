@@ -255,17 +255,7 @@ class GPUCoalescer : public RubyPort
 
     bool handleLlsc(Addr address, GPUCoalescerRequest* request);
 
-    class IssueEvent : public Event
-    {
-      private:
-        GPUCoalescer *seq;
-      public:
-        IssueEvent(GPUCoalescer *_seq);
-        void process();
-        const char *description() const;
-    };
-
-    IssueEvent issueEvent;
+    EventFunctionWrapper issueEvent;
 
 
   // Changed to protected to enable inheritance by VIPER Coalescer
@@ -305,22 +295,7 @@ class GPUCoalescer : public RubyPort
 
     bool m_runningGarnetStandalone;
 
-    class GPUCoalescerWakeupEvent : public Event
-    {
-      private:
-        GPUCoalescer *m_GPUCoalescer_ptr;
-
-      public:
-        GPUCoalescerWakeupEvent(GPUCoalescer *_seq) :
-            m_GPUCoalescer_ptr(_seq) {}
-        void process() { m_GPUCoalescer_ptr->wakeup(); }
-        const char *description() const
-        {
-            return "GPUCoalescer deadlock check";
-        }
-    };
-
-    GPUCoalescerWakeupEvent deadlockCheckEvent;
+    EventFunctionWrapper deadlockCheckEvent;
     bool assumingRfOCoherence;
 
     // m5 style stats for TCP hit/miss counts
@@ -382,4 +357,3 @@ operator<<(std::ostream& out, const GPUCoalescer& obj)
 }
 
 #endif // __MEM_RUBY_SYSTEM_GPU_COALESCER_HH__
-

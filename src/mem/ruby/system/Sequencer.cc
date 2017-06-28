@@ -53,7 +53,8 @@ RubySequencerParams::create()
 }
 
 Sequencer::Sequencer(const Params *p)
-    : RubyPort(p), m_IncompleteTimes(MachineType_NUM), deadlockCheckEvent(this)
+    : RubyPort(p), m_IncompleteTimes(MachineType_NUM),
+      deadlockCheckEvent([this]{ wakeup(); }, "Sequencer deadlock check")
 {
     m_outstanding_count = 0;
 

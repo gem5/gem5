@@ -76,20 +76,6 @@ class Consumer
   private:
     std::set<Tick> m_scheduled_wakeups;
     ClockedObject *em;
-
-    class ConsumerEvent : public Event
-    {
-      public:
-          ConsumerEvent(Consumer* _consumer)
-              : Event(Default_Pri, AutoDelete), m_consumer_ptr(_consumer)
-          {
-          }
-
-          void process() { m_consumer_ptr->wakeup(); }
-
-      private:
-          Consumer* m_consumer_ptr;
-    };
 };
 
 inline std::ostream&
