@@ -52,19 +52,7 @@ class EtherBus : public EtherObject
     bool loopback;
 
   protected:
-    class DoneEvent : public Event
-    {
-      protected:
-        EtherBus *bus;
-
-      public:
-        DoneEvent(EtherBus *b) : bus(b) {}
-        virtual void process() { bus->txDone(); }
-        virtual const char *description() const
-            { return "ethernet bus completion"; }
-    };
-
-    DoneEvent event;
+    EventFunctionWrapper event;
     EthPacketPtr packet;
     EtherInt *sender;
     EtherDump *dump;

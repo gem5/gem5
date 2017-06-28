@@ -109,21 +109,7 @@ class EtherTapBase : public EtherObject
   protected:
     std::queue<EthPacketPtr> packetBuffer;
     void retransmit();
-
-    class TxEvent : public Event
-    {
-      protected:
-        EtherTapBase *tap;
-
-      public:
-        TxEvent(EtherTapBase *_tap) : tap(_tap) {}
-        void process() { tap->retransmit(); }
-        virtual const char *description() const
-            { return "EtherTapBase retransmit"; }
-    };
-
-    friend class TxEvent;
-    TxEvent txEvent;
+    EventFunctionWrapper txEvent;
 };
 
 class EtherTapInt : public EtherInt

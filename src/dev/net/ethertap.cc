@@ -84,7 +84,8 @@ class TapEvent : public PollEvent
 
 EtherTapBase::EtherTapBase(const Params *p)
     : EtherObject(p), buflen(p->bufsz), dump(p->dump), event(NULL),
-      interface(NULL), txEvent(this)
+      interface(NULL),
+      txEvent([this]{ retransmit(); }, "EtherTapBase retransmit")
 {
     buffer = new uint8_t[buflen];
     interface = new EtherTapInt(name() + ".interface", this);
