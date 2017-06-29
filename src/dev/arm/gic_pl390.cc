@@ -258,6 +258,18 @@ Pl390::readDistributor(ContextID ctx, Addr daddr, size_t resp_sz)
         return (((sys->numRunningContexts() - 1) << 5) |
                 (itLines/INT_BITS_MAX -1) |
                 (haveGem5Extensions ? 0x100 : 0x0));
+      case GICD_PIDR0:
+        //ARM defined DevID
+        return (GICD_400_PIDR_VALUE & 0xFF);
+      case GICD_PIDR1:
+        return ((GICD_400_PIDR_VALUE >> 8) & 0xFF);
+      case GICD_PIDR2:
+        return ((GICD_400_PIDR_VALUE >> 16) & 0xFF);
+      case GICD_PIDR3:
+        return ((GICD_400_PIDR_VALUE >> 24) & 0xFF);
+      case GICD_IIDR:
+         /* revision id is resorted to 1 and variant to 0*/
+        return GICD_400_IIDR_VALUE;
       default:
         panic("Tried to read Gic distributor at offset %#x\n", daddr);
         break;
@@ -287,7 +299,7 @@ Pl390::readCpu(ContextID ctx, Addr daddr)
 {
     switch(daddr) {
       case GICC_IIDR:
-        return 0;
+        return GICC_400_IIDR_VALUE;
       case GICC_CTLR:
         return cpuEnabled[ctx];
       case GICC_PMR:
