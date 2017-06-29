@@ -170,6 +170,7 @@ class CacheBlk
 
     CacheBlk(const CacheBlk&) = delete;
     CacheBlk& operator=(const CacheBlk&) = delete;
+    virtual ~CacheBlk() {};
 
     /**
      * Checks the write permissions of this block.
@@ -205,7 +206,7 @@ class CacheBlk
     /**
      * Invalidate the block and clear all state.
      */
-    void invalidate()
+    virtual void invalidate()
     {
         tag = MaxAddr;
         task_id = ContextSwitchTaskId::Unknown;
