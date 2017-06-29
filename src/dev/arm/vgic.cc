@@ -60,6 +60,12 @@ VGic::VGic(const Params *p)
     assert(sys->numRunningContexts() <= VGIC_CPU_MAX);
 }
 
+VGic::~VGic()
+{
+    for (int x = 0; x < VGIC_CPU_MAX; x++)
+        delete postVIntEvent[x];
+}
+
 Tick
 VGic::read(PacketPtr pkt)
 {

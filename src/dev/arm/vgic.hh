@@ -206,6 +206,7 @@ class VGic : public PioDevice
         return dynamic_cast<const Params *>(_params);
     }
     VGic(const Params *p);
+    ~VGic();
 
     AddrRangeList getAddrRanges() const override;
 
