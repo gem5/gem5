@@ -365,6 +365,7 @@ class Pl390 : public BaseGic, public BaseGicRegisters
         return dynamic_cast<const Params *>(_params);
     }
     Pl390(const Params *p);
+    ~Pl390();
 
     DrainState drain() override;
 

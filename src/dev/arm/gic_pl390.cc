@@ -95,6 +95,12 @@ Pl390::Pl390(const Params *p)
     gem5ExtensionsEnabled = false;
 }
 
+Pl390::~Pl390()
+{
+    for (int x = 0; x < CPU_MAX; x++)
+        delete postIntEvent[x];
+}
+
 Tick
 Pl390::read(PacketPtr pkt)
 {
