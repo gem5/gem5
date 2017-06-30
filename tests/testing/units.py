@@ -270,6 +270,10 @@ class DiffStatFile(TestUnit):
         self.stat_diff = os.path.join(_test_base, "diff-out")
 
     def _run(self):
+        STATUS_OK = 0
+        STATUS_NEW_STATS = 1
+        STATUS_FAILED = 2
+
         stats = "stats.txt"
 
         cmd = [
@@ -281,9 +285,9 @@ class DiffStatFile(TestUnit):
                            stderr=subprocess.PIPE) as p:
             status, stdout, stderr = p.call()
 
-        if status == 0:
+        if status in (STATUS_OK, STATUS_NEW_STATS):
             return self.ok(stdout=stdout, stderr=stderr)
-        if status == 1:
+        elif status == STATUS_FAILED:
             return self.failure("Statistics mismatch",
                                 stdout=stdout, stderr=stderr)
         else:
