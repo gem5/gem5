@@ -114,7 +114,16 @@ def config_etrace(cpu_cls, cpu_list, options):
 for name, cls in inspect.getmembers(m5.objects, is_cpu_class):
     _cpu_classes[name] = cls
 
-import cores.arm
-for mod_name, module in inspect.getmembers(cores.arm, inspect.ismodule):
-    for name, cls in inspect.getmembers(module, is_cpu_class):
-        _cpu_classes[name] = cls
+
+from m5.defines import buildEnv
+from importlib import import_module
+for package in [ "generic", buildEnv['TARGET_ISA']]:
+    try:
+        package = import_module(".cores." + package, package=__package__)
+    except ImportError:
+        # No timing models for this ISA
+        continue
+
+    for mod_name, module in inspect.getmembers(package, inspect.ismodule):
+        for name, cls in inspect.getmembers(module, is_cpu_class):
+            _cpu_classes[name] = cls
