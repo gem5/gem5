@@ -43,6 +43,12 @@ _cpu_modules = [
 ]
 
 for c in _cpu_modules:
-    import_module("." + c, package=__package__)
+    try:
+        import_module("." + c, package=__package__)
+    except NameError:
+        # Failed to import a CPU model due to a missing
+        # dependency. This typically happens if gem5 has been compiled
+        # without a CPU model needed by the timing model.
+        pass
 
 __all__ = _cpu_modules
