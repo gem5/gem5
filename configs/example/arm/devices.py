@@ -209,13 +209,13 @@ class SimpleSystem(LinuxArmSystem):
         mem_range = self.realview._mem_regions[0]
         mem_range_size = long(mem_range[1]) - long(mem_range[0])
         assert mem_range_size >= long(Addr(mem_size))
-        self._mem_range = AddrRange(start=mem_range[0], size=mem_size)
+        self.mem_ranges = [ AddrRange(start=mem_range[0], size=mem_size) ]
         self._caches = caches
         if self._caches:
-            self.iocache = IOCache(addr_ranges=[self._mem_range])
+            self.iocache = IOCache(addr_ranges=[self.mem_ranges[0]])
         else:
             self.dmabridge = Bridge(delay='50ns',
-                                    ranges=[self._mem_range])
+                                    ranges=[self.mem_ranges[0]])
 
         self._pci_devices = 0
         self._clusters = []
