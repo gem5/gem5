@@ -77,7 +77,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            Process *_process, BaseTLB *_itb,
                            BaseTLB *_dtb, TheISA::ISA *_isa)
     : ThreadState(_cpu, _thread_num, _process), isa(_isa),
-      predicate(false), system(_sys),
+      predicate(true), memAccPredicate(true), system(_sys),
       itb(_itb), dtb(_dtb), decoder(TheISA::Decoder(_isa))
 {
     clearArchRegs();
@@ -87,8 +87,9 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            BaseTLB *_itb, BaseTLB *_dtb,
                            TheISA::ISA *_isa, bool use_kernel_stats)
-    : ThreadState(_cpu, _thread_num, NULL), isa(_isa), system(_sys), itb(_itb),
-      dtb(_dtb), decoder(TheISA::Decoder(_isa))
+    : ThreadState(_cpu, _thread_num, NULL), isa(_isa),
+      predicate(true), memAccPredicate(true), system(_sys),
+      itb(_itb), dtb(_dtb), decoder(TheISA::Decoder(_isa))
 {
     quiesceEvent = new EndQuiesceEvent(this);
 

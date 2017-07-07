@@ -50,6 +50,7 @@
 #include "arch/generic/tlb.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/lsq_unit.hh"
+#include "cpu/utils.hh"
 #include "enums/SMTQueuePolicy.hh"
 #include "mem/port.hh"
 #include "sim/sim_object.hh"
@@ -251,6 +252,7 @@ class LSQ
         const Addr _addr;
         const uint32_t _size;
         const Request::Flags _flags;
+        std::vector<bool> _byteEnable;
         uint32_t _numOutstandingPackets;
         AtomicOpFunctor *_amo_op;
       protected:
@@ -348,6 +350,28 @@ class LSQ
                     _senderState->deleteRequest();
                 }
                 flags.set(reason);
+            }
+        }
+
+        /** Helper function used to add a (sub)request, given its address
+         * `addr`, size `size` and byte-enable mask `byteEnable`.
+         *
+         * The request is only added if the mask is empty or if there is at
+         * least an active element in it.
+         */
+        void
+        addRequest(Addr addr, unsigned size,
+                   const std::vector<bool>& byteEnable)
+        {
+            if (byteEnable.empty() ||
+                isAnyActiveElement(byteEnable.begin(), byteEnable.end())) {
+                auto request = std::make_shared<Request>(_inst->getASID(),
+                        addr, size, _flags, _inst->masterId(),
+                        _inst->instAddr(), _inst->contextId());
+                if (!byteEnable.empty()) {
+                    request->setByteEnable(byteEnable);
+                }
+                _requests.push_back(request);
             }
         }
 
@@ -609,11 +633,17 @@ class LSQ
          * declaration of the names in the parent class. */
         using Flag = typename LSQRequest::Flag;
         using State = typename LSQRequest::State;
+        using LSQRequest::_addr;
         using LSQRequest::_fault;
+        using LSQRequest::_flags;
+        using LSQRequest::_size;
+        using LSQRequest::_byteEnable;
+        using LSQRequest::_requests;
         using LSQRequest::_inst;
         using LSQRequest::_packets;
         using LSQRequest::_port;
         using LSQRequest::_res;
+        using LSQRequest::_taskId;
         using LSQRequest::_senderState;
         using LSQRequest::_state;
         using LSQRequest::flags;
@@ -635,14 +665,8 @@ class LSQ
                           uint64_t* res = nullptr,
                           AtomicOpFunctor* amo_op = nullptr) :
             LSQRequest(port, inst, isLoad, addr, size, flags_, data, res,
-                       amo_op)
-        {
-            LSQRequest::_requests.push_back(
-                    std::make_shared<Request>(inst->getASID(), addr, size,
-                    flags_, inst->masterId(), inst->instAddr(),
-                    inst->contextId(), amo_op));
-            LSQRequest::_requests.back()->setReqInstSeqNum(inst->seqNum);
-        }
+                       amo_op) {}
+
         inline virtual ~SingleDataRequest() {}
         virtual void initiateTranslation();
         virtual void finish(const Fault &fault, const RequestPtr &req,
@@ -671,6 +695,7 @@ class LSQ
         using LSQRequest::_port;
         using LSQRequest::_requests;
         using LSQRequest::_res;
+        using LSQRequest::_byteEnable;
         using LSQRequest::_senderState;
         using LSQRequest::_size;
         using LSQRequest::_state;
@@ -691,14 +716,14 @@ class LSQ
         RequestPtr mainReq;
         PacketPtr _mainPacket;
 
-
       public:
         SplitDataRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad,
                          const Addr& addr, const uint32_t& size,
                          const Request::Flags & flags_,
                          PacketDataPtr data = nullptr,
                          uint64_t* res = nullptr) :
-            LSQRequest(port, inst, isLoad, addr, size, flags_, data, res),
+            LSQRequest(port, inst, isLoad, addr, size, flags_, data, res,
+                       nullptr),
             numFragments(0),
             numReceivedPackets(0),
             mainReq(nullptr),
@@ -949,7 +974,8 @@ class LSQ
 
     Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                       unsigned int size, Addr addr, Request::Flags flags,
-                      uint64_t *res, AtomicOpFunctor *amo_op);
+                      uint64_t *res, AtomicOpFunctor *amo_op,
+                      const std::vector<bool>& byteEnable);
 
     /** The CPU pointer. */
     O3CPU *cpu;

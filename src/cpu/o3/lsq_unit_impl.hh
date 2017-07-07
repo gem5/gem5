@@ -542,8 +542,7 @@ LSQUnit<Impl>::executeLoad(const DynInstPtr &inst)
 
     load_fault = inst->initiateAcc();
 
-    if (!inst->readMemAccPredicate()) {
-        assert(load_fault == NoFault);
+    if (load_fault == NoFault && !inst->readMemAccPredicate()) {
         assert(inst->readPredicate());
         inst->setExecuted();
         inst->completeAcc(nullptr);

@@ -297,7 +297,8 @@ Cache::promoteWholeLineWrites(PacketPtr pkt)
 {
     // Cache line clearing instructions
     if (doFastWrites && (pkt->cmd == MemCmd::WriteReq) &&
-        (pkt->getSize() == blkSize) && (pkt->getOffset(blkSize) == 0)) {
+        (pkt->getSize() == blkSize) && (pkt->getOffset(blkSize) == 0) &&
+        !pkt->isMaskedWrite()) {
         pkt->cmd = MemCmd::WriteLineReq;
         DPRINTF(Cache, "packet promoted from Write to WriteLineReq\n");
     }

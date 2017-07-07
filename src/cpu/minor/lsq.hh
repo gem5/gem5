@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -187,6 +187,8 @@ class LSQ : public Named
       protected:
         /** BaseTLB::Translation interface */
         void markDelayed() { }
+
+        void disableMemAccess();
 
       public:
         LSQRequest(LSQ &port_, MinorDynInstPtr inst_, bool isLoad_,
@@ -441,7 +443,8 @@ class LSQ : public Named
         { return numIssuedFragments != numRetiredFragments; }
 
         /** Have we stepped past the end of fragmentPackets? */
-        bool sentAllPackets() { return numIssuedFragments == numFragments; }
+        bool sentAllPackets()
+        { return numIssuedFragments == numTranslatedFragments; }
 
         /** For loads, paste the response data into the main
          *  response packet */
@@ -700,7 +703,9 @@ class LSQ : public Named
      *  the LSQ */
     void pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
                      unsigned int size, Addr addr, Request::Flags flags,
-                     uint64_t *res, AtomicOpFunctor *amo_op);
+                     uint64_t *res, AtomicOpFunctor *amo_op,
+                     const std::vector<bool>& byteEnable =
+                         std::vector<bool>());
 
     /** Push a predicate failed-representing request into the queues just
      *  to maintain commit order */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2015, 2017 ARM Limited
+ * Copyright (c) 2010-2012, 2015, 2017, 2018 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -493,6 +493,10 @@ BaseSimpleCPU::preExecute()
 #if THE_ISA == ALPHA_ISA
     thread->setFloatReg(ZeroReg, 0);
 #endif // ALPHA_ISA
+
+    // resets predicates
+    t_info.setPredicate(true);
+    t_info.setMemAccPredicate(true);
 
     // check for instruction-count-based events
     comInstEventQueue[curThread]->serviceEvents(t_info.numInst);

@@ -1092,6 +1092,7 @@ class Packet : public Printable
     getPtr()
     {
         assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
+        assert(!isMaskedWrite());
         return (T*)data;
     }
 
@@ -1180,10 +1181,11 @@ class Packet : public Printable
         // same pointer from source to destination and back
         assert(p != getPtr<uint8_t>() || flags.isSet(STATIC_DATA));
 
-        if (p != getPtr<uint8_t>())
+        if (p != getPtr<uint8_t>()) {
             // for packet with allocated dynamic data, we copy data from
             // one to the other, e.g. a forwarded response to a response
             std::memcpy(getPtr<uint8_t>(), p, getSize());
+        }
     }
 
     /**
@@ -1203,7 +1205,19 @@ class Packet : public Printable
     void
     writeData(uint8_t *p) const
     {
-        std::memcpy(p, getConstPtr<uint8_t>(), getSize());
+        if (!isMaskedWrite()) {
+            std::memcpy(p, getConstPtr<uint8_t>(), getSize());
+        } else {
+            assert(req->getByteEnable().size() == getSize());
+            // Write only the enabled bytes
+            const uint8_t *base = getConstPtr<uint8_t>();
+            for (int i = 0; i < getSize(); i++) {
+                if (req->getByteEnable()[i]) {
+                    p[i] = *(base + i);
+                }
+                // Disabled bytes stay untouched
+            }
+        }
     }
 
     /**
@@ -1268,6 +1282,17 @@ class Packet : public Printable
     bool
     trySatisfyFunctional(PacketPtr other)
     {
+        if (other->isMaskedWrite()) {
+            // Do not forward data if overlapping with a masked write
+            if (_isSecure == other->isSecure() &&
+                getAddr() <= (other->getAddr() + other->getSize() - 1) &&
+                other->getAddr() <= (getAddr() + getSize() - 1)) {
+                warn("Trying to check against a masked write, skipping."
+                     " (addr: 0x%x, other addr: 0x%x)", getAddr(),
+                     other->getAddr());
+            }
+            return false;
+        }
         // all packets that are carrying a payload should have a valid
         // data pointer
         return trySatisfyFunctional(other, other->getAddr(), other->isSecure(),
@@ -1294,6 +1319,12 @@ class Packet : public Printable
     isCleanEviction() const
     {
         return cmd == MemCmd::CleanEvict || cmd == MemCmd::WritebackClean;
+    }
+
+    bool
+    isMaskedWrite() const
+    {
+        return (cmd == MemCmd::WriteReq && !req->getByteEnable().empty());
     }
 
     /**

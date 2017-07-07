@@ -531,11 +531,36 @@ class CheckerCPU : public BaseCPU, public ExecContext
         this->dtb->demapPage(vaddr, asn);
     }
 
+    /**
+     * Helper function used to generate the request for a single fragment of a
+     * memory access.
+     *
+     * Takes care of setting up the appropriate byte-enable mask for the
+     * fragment, given the mask for the entire memory access.
+     *
+     * @param frag_addr Start address of the fragment.
+     * @param size Total size of the memory access in bytes.
+     * @param flags Request flags.
+     * @param byte_enable Byte-enable mask for the entire memory access.
+     * @param[out] frag_size Fragment size.
+     * @param[in,out] size_left Size left to be processed in the memory access.
+     * @return Pointer to the allocated Request, nullptr if the byte-enable
+     * mask is all-false for the fragment.
+     */
+    RequestPtr genMemFragmentRequest(Addr frag_addr, int size,
+                                     Request::Flags flags,
+                                     const std::vector<bool>& byte_enable,
+                                     int& frag_size, int& size_left) const;
+
     Fault readMem(Addr addr, uint8_t *data, unsigned size,
-                  Request::Flags flags) override;
+                  Request::Flags flags,
+                  const std::vector<bool>& byteEnable = std::vector<bool>())
+        override;
 
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
-                   Request::Flags flags, uint64_t *res) override;
+                   Request::Flags flags, uint64_t *res,
+                   const std::vector<bool>& byteEnable = std::vector<bool>())
+        override;
 
     Fault amoMem(Addr addr, uint8_t* data, unsigned size,
                  Request::Flags flags, AtomicOpFunctor *amo_op) override

@@ -235,7 +235,8 @@ class ExecContext {
      * should never be called).
      */
     virtual Fault readMem(Addr addr, uint8_t *data, unsigned int size,
-                          Request::Flags flags)
+            Request::Flags flags,
+            const std::vector<bool>& byteEnable = std::vector<bool>())
     {
         panic("ExecContext::readMem() should be overridden\n");
     }
@@ -248,7 +249,8 @@ class ExecContext {
      * should never be called).
      */
     virtual Fault initiateMemRead(Addr addr, unsigned int size,
-                                  Request::Flags flags)
+            Request::Flags flags,
+            const std::vector<bool>& byteEnable = std::vector<bool>())
     {
         panic("ExecContext::initiateMemRead() should be overridden\n");
     }
@@ -258,7 +260,9 @@ class ExecContext {
      * For timing-mode contexts, initiate a timing memory write operation.
      */
     virtual Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
-                           Request::Flags flags, uint64_t *res) = 0;
+                           Request::Flags flags, uint64_t *res,
+                           const std::vector<bool>& byteEnable =
+                               std::vector<bool>()) = 0;
 
     /**
      * For atomic-mode contexts, perform an atomic AMO (a.k.a., Atomic

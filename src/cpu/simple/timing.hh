@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2015 ARM Limited
+ * Copyright (c) 2012-2013,2015,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -283,10 +283,14 @@ class TimingSimpleCPU : public BaseSimpleCPU
     void suspendContext(ThreadID thread_num) override;
 
     Fault initiateMemRead(Addr addr, unsigned size,
-                          Request::Flags flags) override;
+            Request::Flags flags,
+            const std::vector<bool>& byteEnable =std::vector<bool>())
+        override;
 
     Fault writeMem(uint8_t *data, unsigned size,
-                   Addr addr, Request::Flags flags, uint64_t *res) override;
+                   Addr addr, Request::Flags flags, uint64_t *res,
+                   const std::vector<bool>& byteEnable = std::vector<bool>())
+        override;
 
     Fault initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
                          AtomicOpFunctor *amo_op) override;
