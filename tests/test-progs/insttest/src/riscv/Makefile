@@ -27,9 +27,9 @@
 # Authors: Alec Roelke
 
 CXX=riscv64-unknown-linux-gnu-g++
-CFLAGS=--std=c++11 -O3 -static
+CFLAGS=-std=gnu++11 -O3 -static -march=rv64gc
 
-TARGETS=rv64i rv64m rv64a rv64f rv64d
+TARGETS=rv64i rv64m rv64a rv64f rv64d rv64c
 PREFIX=../../bin/riscv/linux
 BIN=insttest
 
@@ -44,6 +44,7 @@ rv64m: rv64m.cpp
 rv64a: rv64a.cpp
 rv64f: rv64f.cpp
 rv64d: rv64d.cpp
+rv64c: rv64c.cpp
 
 clean:
 	-rm $(PREFIX)-*/$(BIN)

@@ -72,7 +72,6 @@ expect(const T& expected, std::function<T()> func,
     } else {
         cout << "\033[1;31mFAIL\033[0m (expected " << expected << "; found " <<
             result << ")" << endl;
-        exit(1);
     }
 }
 
