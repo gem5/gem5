@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -10,6 +10,9 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2008 The Regents of The University of Michigan
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -34,64 +37,56 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Gabe Black
+ *          Andreas Sandberg
  */
 
-#ifndef __DEV_PS2_HH__
-#define __DEV_PS2_HH__
+#ifndef __DEV_PS2_KEYBOARD_HH__
+#define __DEV_PS2_KEYBOARD_HH__
 
-#include <stdint.h>
-#include <list>
+#include "dev/ps2/device.hh"
 
-#include "base/bitunion.hh"
+struct PS2KeyboardParams;
 
-/** @file misc functions and constants required to interface with or emulate ps2
- * devices
- */
+class PS2Keyboard : public PS2Device
+{
+  protected:
+    static const uint8_t ID[];
 
-namespace Ps2 {
-enum {
-    Ps2Reset        = 0xff,
-    SelfTestPass    = 0xAA,
-    SetStatusLed    = 0xed,
-    SetResolution   = 0xe8,
-    StatusRequest   = 0xe9,
-    SetScaling1_2   = 0xe7,
-    SetScaling1_1   = 0xe6,
-    ReadId          = 0xf2,
-    TpReadId        = 0xe1,
-    Ack             = 0xfa,
-    Resend          = 0xfe,
-    SetRate         = 0xf3,
-    Enable          = 0xf4,
-    Disable         = 0xf5,
-    SetDefaults     = 0xf6,
-    KeyboardId      = 0xab,
-    TouchKitId      = 0x0a,
-    MouseId         = 0x00,
+    enum Command
+    {
+        LEDWrite = 0xED,
+        DiagnosticEcho = 0xEE,
+        AlternateScanCodes = 0xF0,
+        ReadID = 0xF2,
+        TypematicInfo = 0xF3,
+        Enable = 0xF4,
+        Disable = 0xF5,
+        DefaultsAndDisable = 0xF6,
+        AllKeysToTypematic = 0xF7,
+        AllKeysToMakeRelease = 0xF8,
+        AllKeysToMake = 0xF9,
+        AllKeysToTypematicMakeRelease = 0xFA,
+        KeyToTypematic = 0xFB,
+        KeyToMakeRelease = 0xFC,
+        KeyToMakeOnly = 0xFD,
+        Resend = 0xFE,
+        Reset = 0xFF
+    };
+    static const uint16_t NoCommand = (uint16_t)(-1);
+
+
+    uint16_t lastCommand;
+
+  public:
+    PS2Keyboard(const PS2KeyboardParams *p);
+
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+
+  protected: // PS2Device
+    void recv(uint8_t data) override;
 };
 
-/** A bitfield that represents the first byte of a mouse movement packet
- */
-BitUnion8(Ps2MouseMovement)
-    Bitfield<0> leftButton;
-    Bitfield<1> rightButton;
-    Bitfield<2> middleButton;
-    Bitfield<3> one;
-    Bitfield<4> xSign;
-    Bitfield<5> ySign;
-    Bitfield<6> xOverflow;
-    Bitfield<7> yOverflow;
-EndBitUnion(Ps2MouseMovement)
+#endif // __DEV_PS2_KEYBOARD_hH__
 
-/** Convert an x11 key symbol into a set of ps2 charecters.
- * @param key x11 key symbol
- * @param down if the key is being pressed or released
- * @param cur_shift if device has already sent a shift
- * @param keys list of keys command to send to emulate the x11 key symbol
- */
-void keySymToPs2(uint32_t key, bool down, bool &cur_shift,
-        std::list<uint8_t> &keys);
-
-} /* namespace Ps2 */
-#endif // __DEV_PS2_HH__

@@ -1,5 +1,14 @@
-# Copyright (c) 2008 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright (c) 2017-2018 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,26 +33,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Gabe Black
+# Authors: Andreas Sandberg
 
+from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice
-from X86IntPin import X86IntSourcePin
-from PS2 import *
 
-class I8042(BasicPioDevice):
-    type = 'I8042'
-    cxx_class = 'X86ISA::I8042'
-    cxx_header = "dev/x86/i8042.hh"
-    # This isn't actually used for anything here.
-    pio_addr = 0x0
-    data_port = Param.Addr('Data port address')
-    command_port = Param.Addr('Command/status port address')
-    mouse_int_pin = Param.X86IntSourcePin(X86IntSourcePin(),
-            'Pin to signal the mouse has data')
-    keyboard_int_pin = Param.X86IntSourcePin(X86IntSourcePin(),
-            'Pin to signal the keyboard has data')
+class PS2Device(SimObject):
+    type = 'PS2Device'
+    cxx_header = "dev/ps2/device.hh"
+    abstract = True
 
-    keyboard = Param.PS2Device(PS2Keyboard(), "PS/2 keyboard device")
-    mouse = Param.PS2Device(PS2Mouse(), "PS/2 mouse device")
+class PS2Keyboard(PS2Device):
+    type = 'PS2Keyboard'
+    cxx_header = "dev/ps2/keyboard.hh"
+
+class PS2Mouse(PS2Device):
+    type = 'PS2Mouse'
+    cxx_header = "dev/ps2/mouse.hh"

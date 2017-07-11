@@ -33,126 +33,15 @@
 
 #include <deque>
 
-#include "dev/x86/intdev.hh"
 #include "dev/io_device.hh"
+#include "dev/ps2/device.hh"
+#include "dev/x86/intdev.hh"
 #include "params/I8042.hh"
 
 namespace X86ISA
 {
 
 class IntPin;
-
-class PS2Device
-{
-  protected:
-    std::deque<uint8_t> outBuffer;
-
-    static const uint16_t NoCommand = (uint16_t)(-1);
-
-    uint16_t lastCommand;
-    void bufferData(const uint8_t *data, int size);
-    void ack();
-    void nack();
-
-  public:
-    virtual ~PS2Device()
-    {};
-
-    PS2Device() : lastCommand(NoCommand)
-    {}
-
-    virtual void serialize(const std::string &base, CheckpointOut &cp) const;
-    virtual void unserialize(const std::string &base, CheckpointIn &cp);
-
-    bool hasData()
-    {
-        return !outBuffer.empty();
-    }
-
-    uint8_t getData()
-    {
-        uint8_t data = outBuffer.front();
-        outBuffer.pop_front();
-        return data;
-    }
-
-    virtual bool processData(uint8_t data) = 0;
-};
-
-class PS2Mouse : public PS2Device
-{
-  protected:
-    static const uint8_t ID[];
-
-    enum Command
-    {
-        Scale1to1 = 0xE6,
-        Scale2to1 = 0xE7,
-        SetResolution = 0xE8,
-        GetStatus = 0xE9,
-        ReadData = 0xEB,
-        ResetWrapMode = 0xEC,
-        WrapMode = 0xEE,
-        RemoteMode = 0xF0,
-        ReadID = 0xF2,
-        SampleRate = 0xF3,
-        EnableReporting = 0xF4,
-        DisableReporting = 0xF5,
-        DefaultsAndDisable = 0xF6,
-        Resend = 0xFE,
-        Reset = 0xFF
-    };
-
-    BitUnion8(Status)
-        Bitfield<6> remote;
-        Bitfield<5> enabled;
-        Bitfield<4> twoToOne;
-        Bitfield<2> leftButton;
-        Bitfield<0> rightButton;
-    EndBitUnion(Status)
-
-    Status status;
-    uint8_t resolution;
-    uint8_t sampleRate;
-  public:
-    PS2Mouse() : PS2Device(), status(0), resolution(4), sampleRate(100)
-    {}
-
-    bool processData(uint8_t data) override;
-
-    void serialize(const std::string &base, CheckpointOut &cp) const override;
-    void unserialize(const std::string &base, CheckpointIn &cp) override;
-};
-
-class PS2Keyboard : public PS2Device
-{
-  protected:
-    static const uint8_t ID[];
-
-    enum Command
-    {
-        LEDWrite = 0xED,
-        DiagnosticEcho = 0xEE,
-        AlternateScanCodes = 0xF0,
-        ReadID = 0xF2,
-        TypematicInfo = 0xF3,
-        Enable = 0xF4,
-        Disable = 0xF5,
-        DefaultsAndDisable = 0xF6,
-        AllKeysToTypematic = 0xF7,
-        AllKeysToMakeRelease = 0xF8,
-        AllKeysToMake = 0xF9,
-        AllKeysToTypematicMakeRelease = 0xFA,
-        KeyToTypematic = 0xFB,
-        KeyToMakeRelease = 0xFC,
-        KeyToMakeOnly = 0xFD,
-        Resend = 0xFE,
-        Reset = 0xFF
-    };
-
-  public:
-    bool processData(uint8_t data) override;
-};
 
 class I8042 : public BasicPioDevice
 {
@@ -224,8 +113,8 @@ class I8042 : public BasicPioDevice
     IntSourcePin *mouseIntPin;
     IntSourcePin *keyboardIntPin;
 
-    PS2Mouse mouse;
-    PS2Keyboard keyboard;
+    PS2Device *mouse;
+    PS2Device *keyboard;
 
     void writeData(uint8_t newData, bool mouse = false);
     uint8_t readDataOut();

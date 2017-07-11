@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -10,6 +10,9 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
+ *
+ * Copyright (c) 2008 The Regents of The University of Michigan
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -34,64 +37,78 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Gabe Black
+ *          Andreas Sandberg
  */
 
-#ifndef __DEV_PS2_HH__
-#define __DEV_PS2_HH__
+#include "dev/ps2/device.hh"
 
-#include <stdint.h>
-#include <list>
+#include "base/logging.hh"
+#include "dev/ps2.hh"
+#include "params/PS2Device.hh"
 
-#include "base/bitunion.hh"
+PS2Device::PS2Device(const PS2DeviceParams *p)
+    : SimObject(p)
+{
+}
 
-/** @file misc functions and constants required to interface with or emulate ps2
- * devices
- */
+void
+PS2Device::serialize(CheckpointOut &cp) const
+{
+    std::vector<uint8_t> buffer(outBuffer.size());
+    std::copy(outBuffer.begin(), outBuffer.end(), buffer.begin());
+    arrayParamOut(cp, "outBuffer", buffer);
+}
 
-namespace Ps2 {
-enum {
-    Ps2Reset        = 0xff,
-    SelfTestPass    = 0xAA,
-    SetStatusLed    = 0xed,
-    SetResolution   = 0xe8,
-    StatusRequest   = 0xe9,
-    SetScaling1_2   = 0xe7,
-    SetScaling1_1   = 0xe6,
-    ReadId          = 0xf2,
-    TpReadId        = 0xe1,
-    Ack             = 0xfa,
-    Resend          = 0xfe,
-    SetRate         = 0xf3,
-    Enable          = 0xf4,
-    Disable         = 0xf5,
-    SetDefaults     = 0xf6,
-    KeyboardId      = 0xab,
-    TouchKitId      = 0x0a,
-    MouseId         = 0x00,
-};
+void
+PS2Device::unserialize(CheckpointIn &cp)
+{
+    std::vector<uint8_t> buffer;
+    arrayParamIn(cp, "outBuffer", buffer);
+    for (auto c : buffer)
+        outBuffer.push_back(c);
+}
 
-/** A bitfield that represents the first byte of a mouse movement packet
- */
-BitUnion8(Ps2MouseMovement)
-    Bitfield<0> leftButton;
-    Bitfield<1> rightButton;
-    Bitfield<2> middleButton;
-    Bitfield<3> one;
-    Bitfield<4> xSign;
-    Bitfield<5> ySign;
-    Bitfield<6> xOverflow;
-    Bitfield<7> yOverflow;
-EndBitUnion(Ps2MouseMovement)
+void
+PS2Device::hostRegDataAvailable(const std::function<void()> &c)
+{
+    fatal_if(dataAvailableCallback,
+             "A data pending callback has already been associated with this "
+             "PS/2 device.\n");
 
-/** Convert an x11 key symbol into a set of ps2 charecters.
- * @param key x11 key symbol
- * @param down if the key is being pressed or released
- * @param cur_shift if device has already sent a shift
- * @param keys list of keys command to send to emulate the x11 key symbol
- */
-void keySymToPs2(uint32_t key, bool down, bool &cur_shift,
-        std::list<uint8_t> &keys);
+    dataAvailableCallback = c;
+}
 
-} /* namespace Ps2 */
-#endif // __DEV_PS2_HH__
+uint8_t
+PS2Device::hostRead()
+{
+    uint8_t data = outBuffer.front();
+    outBuffer.pop_front();
+    return data;
+}
+
+void
+PS2Device::hostWrite(uint8_t c)
+{
+    recv(c);
+}
+
+void
+PS2Device::send(const uint8_t *data, size_t size)
+{
+    assert(data || size == 0);
+    while (size) {
+        outBuffer.push_back(*(data++));
+        size--;
+    }
+
+    // Registering a callback is optional.
+    if (dataAvailableCallback)
+        dataAvailableCallback();
+}
+
+void
+PS2Device::sendAck()
+{
+    send(Ps2::Ack);
+}

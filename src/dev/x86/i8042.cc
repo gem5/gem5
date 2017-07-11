@@ -43,11 +43,6 @@
 // The 8042 has a whopping 32 bytes of internal RAM.
 const uint8_t RamSize = 32;
 const uint8_t NumOutputBits = 14;
-const uint8_t X86ISA::PS2Keyboard::ID[] = {0xab, 0x83};
-const uint8_t X86ISA::PS2Mouse::ID[] = {0x00};
-const uint8_t CommandAck = 0xfa;
-const uint8_t CommandNack = 0xfe;
-const uint8_t BatSuccessful = 0xaa;
 
 
 X86ISA::I8042::I8042(Params *p)
@@ -55,8 +50,12 @@ X86ISA::I8042::I8042(Params *p)
       latency(p->pio_latency),
       dataPort(p->data_port), commandPort(p->command_port),
       statusReg(0), commandByte(0), dataReg(0), lastCommand(NoCommand),
-      mouseIntPin(p->mouse_int_pin), keyboardIntPin(p->keyboard_int_pin)
+      mouseIntPin(p->mouse_int_pin), keyboardIntPin(p->keyboard_int_pin),
+      mouse(p->mouse), keyboard(p->keyboard)
 {
+    fatal_if(!mouse, "The i8042 model requires a mouse instance");
+    fatal_if(!keyboard, "The i8042 model requires a keyboard instance");
+
     statusReg.passedSelfTest = 1;
     statusReg.commandLast = 1;
     statusReg.keyboardUnlocked = 1;
@@ -97,246 +96,19 @@ X86ISA::I8042::writeData(uint8_t newData, bool mouse)
     }
 }
 
-void
-X86ISA::PS2Device::serialize(const std::string &base, CheckpointOut &cp) const
-{
-    paramOut(cp, base + ".lastCommand", lastCommand);
-
-    std::vector<uint8_t> buffer(outBuffer.size());
-    std::copy(outBuffer.begin(), outBuffer.end(), buffer.begin());
-    arrayParamOut(cp, base + ".outBuffer.elts", buffer);
-}
-
-void
-X86ISA::PS2Device::unserialize(const std::string &base, CheckpointIn &cp)
-{
-    paramIn(cp, base + ".lastCommand", lastCommand);
-
-    std::vector<uint8_t> buffer;
-    arrayParamIn(cp, base + ".outBuffer.elts", buffer);
-    assert(outBuffer.empty());
-    for (auto c : buffer)
-        outBuffer.push_back(c);
-}
-
-
-void
-X86ISA::PS2Device::ack()
-{
-    bufferData(&CommandAck, sizeof(CommandAck));
-}
-
-void
-X86ISA::PS2Device::nack()
-{
-    bufferData(&CommandNack, sizeof(CommandNack));
-}
-
-void
-X86ISA::PS2Device::bufferData(const uint8_t *data, int size)
-{
-    assert(data || size == 0);
-    while (size) {
-        outBuffer.push_back(*(data++));
-        size--;
-    }
-}
-
 uint8_t
 X86ISA::I8042::readDataOut()
 {
     uint8_t data = dataReg;
     statusReg.outputFull = 0;
     statusReg.mouseOutputFull = 0;
-    if (keyboard.hasData()) {
-        writeData(keyboard.getData(), false);
-    } else if (mouse.hasData()) {
-        writeData(mouse.getData(), true);
+    if (keyboard->hostDataAvailable()) {
+        writeData(keyboard->hostRead(), false);
+    } else if (mouse->hostDataAvailable()) {
+        writeData(mouse->hostRead(), true);
     }
     return data;
 }
-
-bool
-X86ISA::PS2Keyboard::processData(uint8_t data)
-{
-    if (lastCommand != NoCommand) {
-        switch (lastCommand) {
-          case LEDWrite:
-            DPRINTF(I8042, "Setting LEDs: "
-                    "caps lock %s, num lock %s, scroll lock %s\n",
-                    bits(data, 2) ? "on" : "off",
-                    bits(data, 1) ? "on" : "off",
-                    bits(data, 0) ? "on" : "off");
-            ack();
-            lastCommand = NoCommand;
-            break;
-          case TypematicInfo:
-            DPRINTF(I8042, "Setting typematic info to %#02x.\n", data);
-            ack();
-            lastCommand = NoCommand;
-            break;
-        }
-        return hasData();
-    }
-    switch (data) {
-      case LEDWrite:
-        DPRINTF(I8042, "Got LED write command.\n");
-        ack();
-        lastCommand = LEDWrite;
-        break;
-      case DiagnosticEcho:
-        panic("Keyboard diagnostic echo unimplemented.\n");
-      case AlternateScanCodes:
-        panic("Accessing alternate scan codes unimplemented.\n");
-      case ReadID:
-        DPRINTF(I8042, "Got keyboard read ID command.\n");
-        ack();
-        bufferData((uint8_t *)&ID, sizeof(ID));
-        break;
-      case TypematicInfo:
-        DPRINTF(I8042, "Setting typematic info.\n");
-        ack();
-        lastCommand = TypematicInfo;
-        break;
-      case Enable:
-        DPRINTF(I8042, "Enabling the keyboard.\n");
-        ack();
-        break;
-      case Disable:
-        DPRINTF(I8042, "Disabling the keyboard.\n");
-        ack();
-        break;
-      case DefaultsAndDisable:
-        DPRINTF(I8042, "Disabling and resetting the keyboard.\n");
-        ack();
-        break;
-      case AllKeysToTypematic:
-        panic("Setting all keys to typemantic unimplemented.\n");
-      case AllKeysToMakeRelease:
-        panic("Setting all keys to make/release unimplemented.\n");
-      case AllKeysToMake:
-        panic("Setting all keys to make unimplemented.\n");
-      case AllKeysToTypematicMakeRelease:
-        panic("Setting all keys to "
-                "typematic/make/release unimplemented.\n");
-      case KeyToTypematic:
-        panic("Setting a key to typematic unimplemented.\n");
-      case KeyToMakeRelease:
-        panic("Setting a key to make/release unimplemented.\n");
-      case KeyToMakeOnly:
-        panic("Setting key to make only unimplemented.\n");
-      case Resend:
-        panic("Keyboard resend unimplemented.\n");
-      case Reset:
-        panic("Keyboard reset unimplemented.\n");
-      default:
-        panic("Unknown keyboard command %#02x.\n", data);
-    }
-    return hasData();
-}
-
-bool
-X86ISA::PS2Mouse::processData(uint8_t data)
-{
-    if (lastCommand != NoCommand) {
-        switch(lastCommand) {
-          case SetResolution:
-            DPRINTF(I8042, "Mouse resolution set to %d.\n", data);
-            resolution = data;
-            ack();
-            lastCommand = NoCommand;
-            break;
-          case SampleRate:
-            DPRINTF(I8042, "Mouse sample rate %d samples "
-                    "per second.\n", data);
-            sampleRate = data;
-            ack();
-            lastCommand = NoCommand;
-            break;
-          default:
-            panic("Not expecting data for a mouse command.\n");
-        }
-        return hasData();
-    }
-    switch (data) {
-      case Scale1to1:
-        DPRINTF(I8042, "Setting mouse scale to 1:1.\n");
-        status.twoToOne = 0;
-        ack();
-        break;
-      case Scale2to1:
-        DPRINTF(I8042, "Setting mouse scale to 2:1.\n");
-        status.twoToOne = 1;
-        ack();
-        break;
-      case SetResolution:
-        DPRINTF(I8042, "Setting mouse resolution.\n");
-        lastCommand = SetResolution;
-        ack();
-        break;
-      case GetStatus:
-        DPRINTF(I8042, "Getting mouse status.\n");
-        ack();
-        bufferData((uint8_t *)&(status), 1);
-        bufferData(&resolution, sizeof(resolution));
-        bufferData(&sampleRate, sizeof(sampleRate));
-        break;
-      case ReadData:
-        panic("Reading mouse data unimplemented.\n");
-      case ResetWrapMode:
-        panic("Resetting mouse wrap mode unimplemented.\n");
-      case WrapMode:
-        panic("Setting mouse wrap mode unimplemented.\n");
-      case RemoteMode:
-        panic("Setting mouse remote mode unimplemented.\n");
-      case ReadID:
-        DPRINTF(I8042, "Mouse ID requested.\n");
-        ack();
-        bufferData(ID, sizeof(ID));
-        break;
-      case SampleRate:
-        DPRINTF(I8042, "Setting mouse sample rate.\n");
-        lastCommand = SampleRate;
-        ack();
-        break;
-      case DisableReporting:
-        DPRINTF(I8042, "Disabling data reporting.\n");
-        status.enabled = 0;
-        ack();
-        break;
-      case EnableReporting:
-        DPRINTF(I8042, "Enabling data reporting.\n");
-        status.enabled = 1;
-        ack();
-        break;
-      case DefaultsAndDisable:
-        DPRINTF(I8042, "Disabling and resetting mouse.\n");
-        sampleRate = 100;
-        resolution = 4;
-        status.twoToOne = 0;
-        status.enabled = 0;
-        ack();
-        break;
-      case Resend:
-        panic("Mouse resend unimplemented.\n");
-      case Reset:
-        DPRINTF(I8042, "Resetting the mouse.\n");
-        sampleRate = 100;
-        resolution = 4;
-        status.twoToOne = 0;
-        status.enabled = 0;
-        ack();
-        bufferData(&BatSuccessful, sizeof(BatSuccessful));
-        bufferData(ID, sizeof(ID));
-        break;
-      default:
-        warn("Unknown mouse command %#02x.\n", data);
-        nack();
-        break;
-    }
-    return hasData();
-}
-
 
 Tick
 X86ISA::I8042::read(PacketPtr pkt)
@@ -367,14 +139,14 @@ X86ISA::I8042::write(PacketPtr pkt)
         statusReg.commandLast = 0;
         switch (lastCommand) {
           case NoCommand:
-            if (keyboard.processData(data)) {
-                writeData(keyboard.getData(), false);
-            }
+            keyboard->hostWrite(data);
+            if (keyboard->hostDataAvailable())
+                writeData(keyboard->hostRead(), false);
             break;
           case WriteToMouse:
-            if (mouse.processData(data)) {
-                writeData(mouse.getData(), true);
-            }
+            mouse->hostWrite(data);
+            if (mouse->hostDataAvailable())
+                writeData(mouse->hostRead(), true);
             break;
           case WriteCommandByte:
             commandByte = data;
@@ -510,8 +282,6 @@ X86ISA::I8042::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(commandByte);
     SERIALIZE_SCALAR(dataReg);
     SERIALIZE_SCALAR(lastCommand);
-    mouse.serialize("mouse", cp);
-    keyboard.serialize("keyboard", cp);
 }
 
 void
@@ -523,28 +293,6 @@ X86ISA::I8042::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(commandByte);
     UNSERIALIZE_SCALAR(dataReg);
     UNSERIALIZE_SCALAR(lastCommand);
-    mouse.unserialize("mouse", cp);
-    keyboard.unserialize("keyboard", cp);
-}
-
-void
-X86ISA::PS2Mouse::serialize(const std::string &base, CheckpointOut &cp) const
-{
-    PS2Device::serialize(base, cp);
-
-    paramOut(cp, base + ".status", status);
-    paramOut(cp, base + ".resolution", resolution);
-    paramOut(cp, base + ".sampleRate", sampleRate);
-}
-
-void
-X86ISA::PS2Mouse::unserialize(const std::string &base, CheckpointIn &cp)
-{
-    PS2Device::unserialize(base, cp);
-
-    paramIn(cp, base + ".status", status);
-    paramIn(cp, base + ".resolution", resolution);
-    paramIn(cp, base + ".sampleRate", sampleRate);
 }
 
 X86ISA::I8042 *
