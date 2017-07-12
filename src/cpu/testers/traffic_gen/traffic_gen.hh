@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2016 ARM Limited
+ * Copyright (c) 2012-2013, 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,13 +38,20 @@
  *          Andreas Hansson
  *          Sascha Bischoff
  */
+
 #ifndef __CPU_TRAFFIC_GEN_TRAFFIC_GEN_HH__
 #define __CPU_TRAFFIC_GEN_TRAFFIC_GEN_HH__
 
 #include <unordered_map>
 
 #include "base/statistics.hh"
-#include "cpu/testers/traffic_gen/generators.hh"
+#include "cpu/testers/traffic_gen/base_gen.hh"
+#include "cpu/testers/traffic_gen/dram_gen.hh"
+#include "cpu/testers/traffic_gen/dram_rot_gen.hh"
+#include "cpu/testers/traffic_gen/idle_gen.hh"
+#include "cpu/testers/traffic_gen/linear_gen.hh"
+#include "cpu/testers/traffic_gen/random_gen.hh"
+#include "cpu/testers/traffic_gen/trace_gen.hh"
 #include "mem/mem_object.hh"
 #include "mem/qport.hh"
 #include "params/TrafficGen.hh"
