@@ -1,0 +1,66 @@
+Redirecting stdout to build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv64c/minor-timing/simout
+Redirecting stderr to build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv64c/minor-timing/simerr
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Jul 13 2017 17:09:45
+gem5 started Jul 13 2017 17:25:07
+gem5 executing on boldrock, pid 6004
+command line: /home/ar4jc/gem5/build/RISCV/gem5.opt -d build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv64c/minor-timing --stats-file 'text://stats.txt?desc=False' -re /home/ar4jc/gem5/tests/testing/../run.py quick/se/02.insttest/riscv/linux-rv64c/minor-timing
+
+Global frequency set at 1000000000000 ticks per second
+c.lwsp: PASS
+c.ldsp: PASS
+c.fldsp: PASS
+c.swsp: PASS
+c.sdsp: PASS
+c.fsdsp: PASS
+c.lw, positive: PASS
+c.lw, negative: PASS
+c.ld: PASS
+c.fld: PASS
+c.sw: PASS
+c.sd: PASS
+c.fsd: PASS
+c.j: PASS
+c.jr: PASS
+c.jalr: PASS
+c.beqz, zero: PASS
+c.beqz, not zero: PASS
+c.bnez, not zero: PASS
+c.bnez, zero: PASS
+c.li: PASS
+c.li, sign extend: PASS
+c.lui: PASS
+c.addi: PASS
+c.addiw: PASS
+c.addiw, overflow: PASS
+c.addiw, truncate: PASS
+c.addi16sp: PASS
+c.addi4spn: PASS
+c.slli: PASS
+c.slli, overflow: PASS
+c.srli: PASS
+c.srli, overflow: PASS
+c.srli, -1: PASS
+c.srai: PASS
+c.srai, overflow: PASS
+c.srai, -1: PASS
+c.andi (0): PASS
+c.andi (1): PASS
+c.mv: PASS
+c.add: PASS
+c.and (0): PASS
+c.and (-1): PASS
+c.or (1): PASS
+c.or (A): PASS
+c.xor (1): PASS
+c.xor (0): PASS
+c.sub: PASS
+c.addw: PASS
+c.addw, overflow: PASS
+c.addw, truncate: PASS
+c.subw: PASS
+c.subw, "overflow": PASS
+c.subw, truncate: PASS
+Exiting @ tick 196383500 because exiting with last active thread context

@@ -404,6 +404,7 @@
                     }
                 ], 
                 "name": "cpu", 
+                "wait_for_remote_gdb": false, 
                 "dtb": {
                     "name": "dtb", 
                     "eventq_index": 0, 

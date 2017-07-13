@@ -970,6 +970,7 @@
                 "switched_out": false, 
                 "smtLSQPolicy": "Partitioned", 
                 "fetchBufferSize": 64, 
+                "wait_for_remote_gdb": false, 
                 "cacheStorePorts": 200, 
                 "simpoint_start_insts": [], 
                 "max_insts_any_thread": 0, 
@@ -1087,6 +1088,7 @@
                 "default_p_state": "UNDEFINED", 
                 "type": "DerivO3CPU", 
                 "wbWidth": 8, 
+                "numPhysVecRegs": 256, 
                 "interrupts": [
                     {
                         "eventq_index": 0, 

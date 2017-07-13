@@ -3,14 +3,12 @@ Redirecting stderr to build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv6
 gem5 Simulator System.  http://gem5.org
 gem5 is copyrighted software; use the --copyright option for details.
 
-gem5 compiled Nov 30 2016 14:33:35
-gem5 started Nov 30 2016 16:18:29
-gem5 executing on zizzer, pid 34061
-command line: /z/powerjg/gem5-upstream/build/RISCV/gem5.opt -d build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv64a/minor-timing -re /z/powerjg/gem5-upstream/tests/testing/../run.py quick/se/02.insttest/riscv/linux-rv64a/minor-timing
+gem5 compiled Jul 13 2017 17:09:45
+gem5 started Jul 13 2017 17:12:00
+gem5 executing on boldrock, pid 2001
+command line: /home/ar4jc/gem5/build/RISCV/gem5.opt -d build/RISCV/tests/opt/quick/se/02.insttest/riscv/linux-rv64a/minor-timing --stats-file 'text://stats.txt?desc=False' -re /home/ar4jc/gem5/tests/testing/../run.py quick/se/02.insttest/riscv/linux-rv64a/minor-timing
 
 Global frequency set at 1000000000000 ticks per second
-info: Entering event queue @ 0.  Starting simulation...
-info: Increasing stack size by one page.
 lr.w/sc.w: PASS
 sc.w, no preceding lr.d: PASS
 amoswap.w: PASS
@@ -46,4 +44,4 @@ amomin.d: PASS
 amomax.d: PASS
 amominu.d: PASS
 amomaxu.d: PASS
-Exiting @ tick 167328500 because target called exit()
+Exiting @ tick 179565500 because exiting with last active thread context

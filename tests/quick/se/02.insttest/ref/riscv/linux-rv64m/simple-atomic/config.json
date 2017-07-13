@@ -192,6 +192,7 @@
                 }, 
                 "p_state_clk_gate_bins": 20, 
                 "p_state_clk_gate_min": 1000, 
+                "syscallRetryLatency": 10000, 
                 "interrupts": [
                     {
                         "eventq_index": 0, 
@@ -216,21 +217,22 @@
                         "uid": 100, 
                         "pid": 100, 
                         "kvmInSE": false, 
-                        "cxx_class": "LiveProcess", 
-                        "executable": "/z/powerjg/gem5-upstream/tests/test-progs/insttest/bin/riscv/linux-rv64m/insttest", 
+                        "cxx_class": "Process", 
+                        "executable": "/home/ar4jc/gem5/tests/testing/../test-progs/insttest/bin/riscv/linux-rv64m/insttest", 
                         "drivers": [], 
                         "system": "system", 
                         "gid": 100, 
                         "eventq_index": 0, 
                         "env": [], 
-                        "input": "cin", 
-                        "ppid": 99, 
-                        "type": "LiveProcess", 
+                        "maxStackSize": 67108864, 
+                        "ppid": 0, 
+                        "type": "Process", 
                         "cwd": "", 
+                        "pgid": 100, 
                         "simpoint": 0, 
                         "euid": 100, 
+                        "input": "cin", 
                         "path": "system.cpu.workload", 
-                        "max_stack_size": 67108864, 
                         "name": "workload", 
                         "cmd": [
                             "insttest"
@@ -242,6 +244,7 @@
                     }
                 ], 
                 "name": "cpu", 
+                "wait_for_remote_gdb": false, 
                 "dtb": {
                     "name": "dtb", 
                     "eventq_index": 0, 
