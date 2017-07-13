@@ -48,6 +48,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <sstream>
 #include <string>
 
 #include "arch/riscv/registers.hh"
@@ -133,8 +134,27 @@ inline std::string
 registerName(RegId reg)
 {
     if (reg.isIntReg()) {
+        if (reg.index() >= NumIntArchRegs) {
+            /*
+             * This should only happen if a instruction is being speculatively
+             * executed along a not-taken branch, and if that instruction's
+             * width was incorrectly predecoded (i.e., it was predecoded as a
+             * full instruction rather than a compressed one or vice versa).
+             * It also should only happen if a debug flag is on that prints
+             * disassembly information, so rather than panic the incorrect
+             * value is printed for debugging help.
+             */
+            std::stringstream str;
+            str << "?? (x" << reg.index() << ')';
+            return str.str();
+        }
         return IntRegNames[reg.index()];
     } else {
+        if (reg.index() >= NumFloatRegs) {
+            std::stringstream str;
+            str << "?? (f" << reg.index() << ')';
+            return str.str();
+        }
         return FloatRegNames[reg.index()];
     }
 }

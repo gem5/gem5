@@ -64,6 +64,13 @@ UnknownInstFault::invoke_se(ThreadContext *tc, const StaticInstPtr &inst)
 }
 
 void
+IllegalInstFault::invoke_se(ThreadContext *tc, const StaticInstPtr &inst)
+{
+    panic("Illegal instruction 0x%08x at pc 0x%016llx: %s", inst->machInst,
+        tc->pcState().pc(), reason.c_str());
+}
+
+void
 UnimplementedFault::invoke_se(ThreadContext *tc,
         const StaticInstPtr &inst)
 {

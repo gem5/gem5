@@ -37,29 +37,45 @@
 namespace RiscvISA
 {
 
+static const MachInst LowerBitMask = (1 << sizeof(MachInst) * 4) - 1;
+static const MachInst UpperBitMask = LowerBitMask << sizeof(MachInst) * 4;
+
+void Decoder::reset()
+{
+    aligned = true;
+    mid = false;
+    more = true;
+    emi = NoopMachInst;
+    instDone = false;
+}
+
 void
 Decoder::moreBytes(const PCState &pc, Addr fetchPC, MachInst inst)
 {
-    DPRINTF(Decode, "Getting bytes 0x%08x from address %#x\n",
-            inst, pc.pc());
+    DPRINTF(Decode, "Requesting bytes 0x%08x from address %#x\n", inst,
+            fetchPC);
 
     bool aligned = pc.pc() % sizeof(MachInst) == 0;
-    if (mid) {
-        assert(!aligned);
-        emi |= (inst & 0xFFFF) << 16;
+    if (aligned) {
+        emi = inst;
+        if (compressed(emi))
+            emi &= LowerBitMask;
+        more = !compressed(emi);
         instDone = true;
     } else {
-        MachInst instChunk = aligned ? inst & 0xFFFF :
-                                      (inst & 0xFFFF0000) >> 16;
-        if (aligned) {
-            emi = (inst & 0x3) < 0x3 ? instChunk : inst;
+        if (mid) {
+            assert((emi & UpperBitMask) == 0);
+            emi |= (inst & LowerBitMask) << sizeof(MachInst)*4;
+            mid = false;
+            more = false;
             instDone = true;
         } else {
-            emi = instChunk;
-            instDone = (instChunk & 0x3) < 0x3;
+            emi = (inst & UpperBitMask) >> sizeof(MachInst)*4;
+            mid = !compressed(emi);
+            more = true;
+            instDone = compressed(emi);
         }
     }
-    mid = !instDone;
 }
 
 StaticInstPtr
@@ -83,12 +99,10 @@ Decoder::decode(RiscvISA::PCState &nextPC)
         return nullptr;
     instDone = false;
 
-    if ((emi & 0x3) < 0x3) {
-        nextPC.compressed(true);
-        nextPC.npc(nextPC.pc() + sizeof(MachInst)/2);
+    if (compressed(emi)) {
+        nextPC.npc(nextPC.instAddr() + sizeof(MachInst) / 2);
     } else {
-        nextPC.compressed(false);
-        nextPC.npc(nextPC.pc() + sizeof(MachInst));
+        nextPC.npc(nextPC.instAddr() + sizeof(MachInst));
     }
 
     return decode(emi, nextPC.instAddr());

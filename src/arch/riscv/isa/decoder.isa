@@ -42,7 +42,8 @@ decode QUADRANT default Unknown::unknown() {
                   CIMM8<7:6> << 4 |
                   CIMM8<5:2> << 6;
         }}, {{
-            assert(imm != 0);
+            if (machInst == 0)
+                fault = make_shared<IllegalInstFault>("zero instruction");
             Rp2 = sp + imm;
         }});
         format CompressedLoad {
@@ -103,7 +104,12 @@ decode QUADRANT default Unknown::unknown() {
                 if (CIMM1 > 0)
                     imm |= ~((uint64_t)0x1F);
             }}, {{
-                assert((RC1 == 0) == (imm == 0));
+                if ((RC1 == 0) != (imm == 0)) {
+                    if (RC1 == 0) {
+                        fault = make_shared<IllegalInstFault>("source reg x0");
+                    } else // imm == 0
+                        fault = make_shared<IllegalInstFault>("immediate = 0");
+                }
                 Rc1_sd = Rc1_sd + imm;
             }});
             0x1: c_addiw({{

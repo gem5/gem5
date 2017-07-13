@@ -49,7 +49,9 @@ class Decoder
 {
   private:
     DecodeCache::InstMap instMap;
+    bool aligned;
     bool mid;
+    bool more;
 
   protected:
     //The extended machine instruction being generated
@@ -57,18 +59,18 @@ class Decoder
     bool instDone;
 
   public:
-    Decoder(ISA* isa=nullptr)
-        : mid(false), emi(NoopMachInst), instDone(false)
-    {}
+    Decoder(ISA* isa=nullptr) { reset(); }
 
     void process() {}
-    void reset() { instDone = false; }
+    void reset();
+
+    inline bool compressed(ExtMachInst inst) { return (inst & 0x3) < 0x3; }
 
     //Use this to give data to the decoder. This should be used
     //when there is control flow.
     void moreBytes(const PCState &pc, Addr fetchPC, MachInst inst);
 
-    bool needMoreBytes() { return true; }
+    bool needMoreBytes() { return more; }
     bool instReady() { return instDone; }
     void takeOverFrom(Decoder *old) {}
 

@@ -116,6 +116,19 @@ class UnknownInstFault : public RiscvFault
     invoke_se(ThreadContext *tc, const StaticInstPtr &inst);
 };
 
+class IllegalInstFault : public RiscvFault
+{
+  private:
+    const std::string reason;
+  public:
+    IllegalInstFault(std::string r)
+        : RiscvFault("Illegal instruction", INST_ILLEGAL, SOFTWARE),
+          reason(r)
+    {}
+
+    void invoke_se(ThreadContext *tc, const StaticInstPtr &inst);
+};
+
 class UnimplementedFault : public RiscvFault
 {
   private:
