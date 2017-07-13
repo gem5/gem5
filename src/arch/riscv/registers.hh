@@ -93,7 +93,7 @@ const int GlobalPointerReg = 3;
 const int ThreadPointerReg = 4;
 const int FramePointerReg = 8;
 const std::vector<int> ReturnValueRegs = {10, 11};
-const int ReturnValueReg = ReturnValueRegs[0];
+const int ReturnValueReg M5_VAR_USED = ReturnValueRegs[0];
 const std::vector<int> ArgumentRegs = {10, 11, 12, 13, 14, 15, 16, 17};
 const int AMOTempReg = 32;
 
@@ -118,10 +118,10 @@ const std::vector<std::string> FloatRegNames = {
     "ft8", "ft9", "ft10", "ft11"
 };
 
-const int SyscallNumReg = ArgumentRegs[7];
+const int SyscallNumReg M5_VAR_USED = ArgumentRegs[7];
 const std::vector<int> SyscallArgumentRegs = {ArgumentRegs[0], ArgumentRegs[1],
     ArgumentRegs[2], ArgumentRegs[3]};
-const int SyscallPseudoReturnReg = ReturnValueRegs[0];
+const int SyscallPseudoReturnReg M5_VAR_USED = ReturnValueRegs[0];
 
 enum MiscRegIndex {
     MISCREG_USTATUS = 0x000,
