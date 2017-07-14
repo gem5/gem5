@@ -784,19 +784,20 @@ decode QUADRANT default Unknown::unknown() {
                     float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
                     float fd;
 
-                    if (isnan(fs1) || isnan(fs2) || isnan(fs3)) {
+                    if (std::isnan(fs1) || std::isnan(fs2) ||
+                            std::isnan(fs3)) {
                         if (issignalingnan(fs1) || issignalingnan(fs2)
                                 || issignalingnan(fs3)) {
                             FFLAGS |= FloatInvalid;
                         }
                         fd = numeric_limits<float>::quiet_NaN();
-                    } else if (isinf(fs1) || isinf(fs2) ||
-                            isinf(fs3)) {
+                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
+                            std::isinf(fs3)) {
                         if (signbit(fs1) == signbit(fs2)
-                                && !isinf(fs3)) {
+                                && !std::isinf(fs3)) {
                             fd = numeric_limits<float>::infinity();
                         } else if (signbit(fs1) != signbit(fs2)
-                                && !isinf(fs3)) {
+                                && !std::isinf(fs3)) {
                             fd = -numeric_limits<float>::infinity();
                         } else { // Fs3_sf is infinity
                             fd = fs3;
@@ -807,19 +808,20 @@ decode QUADRANT default Unknown::unknown() {
                     Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
                 }}, FloatMultOp);
                 0x1: fmadd_d({{
-                    if (isnan(Fs1) || isnan(Fs2) || isnan(Fs3)) {
+                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
+                            std::isnan(Fs3)) {
                         if (issignalingnan(Fs1) || issignalingnan(Fs2)
                                 || issignalingnan(Fs3)) {
                             FFLAGS |= FloatInvalid;
                         }
                         Fd = numeric_limits<double>::quiet_NaN();
-                    } else if (isinf(Fs1) || isinf(Fs2) ||
-                            isinf(Fs3)) {
+                    } else if (std::isinf(Fs1) || std::isinf(Fs2) ||
+                            std::isinf(Fs3)) {
                         if (signbit(Fs1) == signbit(Fs2)
-                                && !isinf(Fs3)) {
+                                && !std::isinf(Fs3)) {
                             Fd = numeric_limits<double>::infinity();
                         } else if (signbit(Fs1) != signbit(Fs2)
-                                && !isinf(Fs3)) {
+                                && !std::isinf(Fs3)) {
                             Fd = -numeric_limits<double>::infinity();
                         } else {
                             Fd = Fs3;
@@ -837,19 +839,20 @@ decode QUADRANT default Unknown::unknown() {
                     float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
                     float fd;
 
-                    if (isnan(fs1) || isnan(fs2) || isnan(fs3)) {
+                    if (std::isnan(fs1) || std::isnan(fs2) ||
+                            std::isnan(fs3)) {
                         if (issignalingnan(fs1) || issignalingnan(fs2)
                                 || issignalingnan(fs3)) {
                             FFLAGS |= FloatInvalid;
                         }
                         fd = numeric_limits<float>::quiet_NaN();
-                    } else if (isinf(fs1) || isinf(fs2) ||
-                            isinf(fs3)) {
+                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
+                            std::isinf(fs3)) {
                         if (signbit(fs1) == signbit(fs2)
-                                && !isinf(fs3)) {
+                                && !std::isinf(fs3)) {
                             fd = numeric_limits<float>::infinity();
                         } else if (signbit(fs1) != signbit(fs2)
-                                && !isinf(fs3)) {
+                                && !std::isinf(fs3)) {
                             fd = -numeric_limits<float>::infinity();
                         } else { // Fs3_sf is infinity
                             fd = -fs3;
@@ -860,19 +863,20 @@ decode QUADRANT default Unknown::unknown() {
                     Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
                 }}, FloatMultOp);
                 0x1: fmsub_d({{
-                    if (isnan(Fs1) || isnan(Fs2) || isnan(Fs3)) {
+                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
+                            std::isnan(Fs3)) {
                         if (issignalingnan(Fs1) || issignalingnan(Fs2)
                                 || issignalingnan(Fs3)) {
                             FFLAGS |= FloatInvalid;
                         }
                         Fd = numeric_limits<double>::quiet_NaN();
-                    } else if (isinf(Fs1) || isinf(Fs2) ||
-                            isinf(Fs3)) {
+                    } else if (std::isinf(Fs1) || std::isinf(Fs2) ||
+                            std::isinf(Fs3)) {
                         if (signbit(Fs1) == signbit(Fs2)
-                                && !isinf(Fs3)) {
+                                && !std::isinf(Fs3)) {
                             Fd = numeric_limits<double>::infinity();
                         } else if (signbit(Fs1) != signbit(Fs2)
-                                && !isinf(Fs3)) {
+                                && !std::isinf(Fs3)) {
                             Fd = -numeric_limits<double>::infinity();
                         } else {
                             Fd = -Fs3;
@@ -890,19 +894,20 @@ decode QUADRANT default Unknown::unknown() {
                     float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
                     float fd;
 
-                    if (isnan(fs1) || isnan(fs2) || isnan(fs3)) {
+                    if (std::isnan(fs1) || std::isnan(fs2) ||
+                            std::isnan(fs3)) {
                         if (issignalingnan(fs1) || issignalingnan(fs2)
                                 || issignalingnan(fs3)) {
                             FFLAGS |= FloatInvalid;
                         }
                         fd = numeric_limits<float>::quiet_NaN();
-                    } else if (isinf(fs1) || isinf(fs2) ||
-                            isinf(fs3)) {
+                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
+                            std::isinf(fs3)) {
                         if (signbit(fs1) == signbit(fs2)
-                                && !isinf(fs3)) {
+                                && !std::isinf(fs3)) {
                             fd = -numeric_limits<float>::infinity();
                         } else if (signbit(fs1) != signbit(fs2)
-                                && !isinf(fs3)) {
+                                && !std::isinf(fs3)) {
                             fd = numeric_limits<float>::infinity();
                         } else { // Fs3_sf is infinity
                             fd = fs3;
@@ -913,19 +918,20 @@ decode QUADRANT default Unknown::unknown() {
                     Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
                 }}, FloatMultOp);
                 0x1: fnmsub_d({{
-                    if (isnan(Fs1) || isnan(Fs2) || isnan(Fs3)) {
+                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
+                            std::isnan(Fs3)) {
                         if (issignalingnan(Fs1) || issignalingnan(Fs2)
                                 || issignalingnan(Fs3)) {
                             FFLAGS |= FloatInvalid;
                         }
                         Fd = numeric_limits<double>::quiet_NaN();
-                    } else if (isinf(Fs1) || isinf(Fs2)
-                            || isinf(Fs3)) {
+                    } else if (std::isinf(Fs1) || std::isinf(Fs2)
+                            || std::isinf(Fs3)) {
                         if (signbit(Fs1) == signbit(Fs2)
-                                && !isinf(Fs3)) {
+                                && !std::isinf(Fs3)) {
                             Fd = -numeric_limits<double>::infinity();
                         } else if (signbit(Fs1) != signbit(Fs2)
-                                && !isinf(Fs3)) {
+                                && !std::isinf(Fs3)) {
                             Fd = numeric_limits<double>::infinity();
                         } else {
                             Fd = Fs3;
@@ -943,19 +949,20 @@ decode QUADRANT default Unknown::unknown() {
                     float fs3 = reinterpret_cast<float&>(temp = Fs3_bits);
                     float fd;
 
-                    if (isnan(fs1) || isnan(fs2) || isnan(fs3)) {
+                    if (std::isnan(fs1) || std::isnan(fs2) ||
+                            std::isnan(fs3)) {
                         if (issignalingnan(fs1) || issignalingnan(fs2)
                                 || issignalingnan(fs3)) {
                             FFLAGS |= FloatInvalid;
                         }
                         fd = numeric_limits<float>::quiet_NaN();
-                    } else if (isinf(fs1) || isinf(fs2) ||
-                            isinf(fs3)) {
+                    } else if (std::isinf(fs1) || std::isinf(fs2) ||
+                            std::isinf(fs3)) {
                         if (signbit(fs1) == signbit(fs2)
-                                && !isinf(fs3)) {
+                                && !std::isinf(fs3)) {
                             fd = -numeric_limits<float>::infinity();
                         } else if (signbit(fs1) != signbit(fs2)
-                                && !isinf(fs3)) {
+                                && !std::isinf(fs3)) {
                             fd = numeric_limits<float>::infinity();
                         } else { // Fs3_sf is infinity
                             fd = -fs3;
@@ -966,19 +973,20 @@ decode QUADRANT default Unknown::unknown() {
                     Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
                 }}, FloatMultOp);
                 0x1: fnmadd_d({{
-                    if (isnan(Fs1) || isnan(Fs2) || isnan(Fs3)) {
+                    if (std::isnan(Fs1) || std::isnan(Fs2) ||
+                            std::isnan(Fs3)) {
                         if (issignalingnan(Fs1) || issignalingnan(Fs2)
                                 || issignalingnan(Fs3)) {
                             FFLAGS |= FloatInvalid;
                         }
                         Fd = numeric_limits<double>::quiet_NaN();
-                    } else if (isinf(Fs1) || isinf(Fs2) ||
-                            isinf(Fs3)) {
+                    } else if (std::isinf(Fs1) || std::isinf(Fs2) ||
+                            std::isinf(Fs3)) {
                         if (signbit(Fs1) == signbit(Fs2)
-                                && !isinf(Fs3)) {
+                                && !std::isinf(Fs3)) {
                             Fd = -numeric_limits<double>::infinity();
                         } else if (signbit(Fs1) != signbit(Fs2)
-                                && !isinf(Fs3)) {
+                                && !std::isinf(Fs3)) {
                             Fd = numeric_limits<double>::infinity();
                         } else {
                             Fd = -Fs3;
@@ -995,7 +1003,7 @@ decode QUADRANT default Unknown::unknown() {
                     float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
                     float fd;
 
-                    if (isnan(fs1) || isnan(fs2)) {
+                    if (std::isnan(fs1) || std::isnan(fs2)) {
                         if (issignalingnan(fs1) || issignalingnan(fs2)) {
                             FFLAGS |= FloatInvalid;
                         }
@@ -1006,7 +1014,7 @@ decode QUADRANT default Unknown::unknown() {
                     Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
                 }}, FloatAddOp);
                 0x1: fadd_d({{
-                    if (isnan(Fs1) || isnan(Fs2)) {
+                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
                         if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
                             FFLAGS |= FloatInvalid;
                         }
@@ -1021,7 +1029,7 @@ decode QUADRANT default Unknown::unknown() {
                     float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
                     float fd;
 
-                    if (isnan(fs1) || isnan(fs2)) {
+                    if (std::isnan(fs1) || std::isnan(fs2)) {
                         if (issignalingnan(fs1) || issignalingnan(fs2)) {
                             FFLAGS |= FloatInvalid;
                         }
@@ -1032,7 +1040,7 @@ decode QUADRANT default Unknown::unknown() {
                     Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
                 }}, FloatAddOp);
                 0x5: fsub_d({{
-                    if (isnan(Fs1) || isnan(Fs2)) {
+                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
                         if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
                             FFLAGS |= FloatInvalid;
                         }
@@ -1047,7 +1055,7 @@ decode QUADRANT default Unknown::unknown() {
                     float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
                     float fd;
 
-                    if (isnan(fs1) || isnan(fs2)) {
+                    if (std::isnan(fs1) || std::isnan(fs2)) {
                         if (issignalingnan(fs1) || issignalingnan(fs2)) {
                             FFLAGS |= FloatInvalid;
                         }
@@ -1058,7 +1066,7 @@ decode QUADRANT default Unknown::unknown() {
                     Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
                 }}, FloatMultOp);
                 0x9: fmul_d({{
-                    if (isnan(Fs1) || isnan(Fs2)) {
+                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
                         if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
                             FFLAGS |= FloatInvalid;
                         }
@@ -1073,7 +1081,7 @@ decode QUADRANT default Unknown::unknown() {
                     float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
                     float fd;
 
-                    if (isnan(fs1) || isnan(fs2)) {
+                    if (std::isnan(fs1) || std::isnan(fs2)) {
                         if (issignalingnan(fs1) || issignalingnan(fs2)) {
                             FFLAGS |= FloatInvalid;
                         }
@@ -1084,7 +1092,7 @@ decode QUADRANT default Unknown::unknown() {
                     Fd_bits = (uint64_t)reinterpret_cast<uint32_t&>(fd);
                 }}, FloatDivOp);
                 0xd: fdiv_d({{
-                    if (isnan(Fs1) || isnan(Fs2)) {
+                    if (std::isnan(Fs1) || std::isnan(Fs2)) {
                         if (issignalingnan(Fs1) || issignalingnan(Fs2)) {
                             FFLAGS |= FloatInvalid;
                         }
@@ -1268,7 +1276,7 @@ decode QUADRANT default Unknown::unknown() {
                         float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
                         float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
 
-                        if (isnan(fs1) || isnan(fs2)) {
+                        if (std::isnan(fs1) || std::isnan(fs2)) {
                             FFLAGS |= FloatInvalid;
                             Rd = 0;
                         } else {
@@ -1280,7 +1288,7 @@ decode QUADRANT default Unknown::unknown() {
                         float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
                         float fs2 = reinterpret_cast<float&>(temp = Fs2_bits);
 
-                        if (isnan(fs1) || isnan(fs2)) {
+                        if (std::isnan(fs1) || std::isnan(fs2)) {
                             FFLAGS |= FloatInvalid;
                             Rd = 0;
                         } else {
@@ -1300,7 +1308,7 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 0x51: decode ROUND_MODE {
                     0x0: fle_d({{
-                        if (isnan(Fs1) || isnan(Fs2)) {
+                        if (std::isnan(Fs1) || std::isnan(Fs2)) {
                             FFLAGS |= FloatInvalid;
                             Rd = 0;
                         } else {
@@ -1308,7 +1316,7 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }}, FloatCmpOp);
                     0x1: flt_d({{
-                        if (isnan(Fs1) || isnan(Fs2)) {
+                        if (std::isnan(Fs1) || std::isnan(Fs2)) {
                             FFLAGS |= FloatInvalid;
                             Rd = 0;
                         } else {
@@ -1327,7 +1335,7 @@ decode QUADRANT default Unknown::unknown() {
                         uint32_t temp;
                         float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
 
-                        if (isnan(fs1)) {
+                        if (std::isnan(fs1)) {
                             Rd_sd = numeric_limits<int32_t>::max();
                             FFLAGS |= FloatInvalid;
                         } else {
@@ -1361,7 +1369,7 @@ decode QUADRANT default Unknown::unknown() {
                         uint32_t temp;
                         float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
 
-                        if (isnan(fs1)) {
+                        if (std::isnan(fs1)) {
                             Rd_sd = numeric_limits<int64_t>::max();
                             FFLAGS |= FloatInvalid;
                         } else {
