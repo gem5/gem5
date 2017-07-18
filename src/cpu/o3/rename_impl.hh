@@ -1028,6 +1028,9 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
           case FloatRegClass:
             fpRenameLookups++;
             break;
+          case VecRegClass:
+            vecRenameLookups++;
+            break;
           case CCRegClass:
           case MiscRegClass:
             break;
