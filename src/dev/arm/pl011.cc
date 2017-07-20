@@ -48,7 +48,6 @@
 #include "debug/Uart.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/base_gic.hh"
-#include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/Pl011.hh"
@@ -81,12 +80,12 @@ Pl011::read(PacketPtr pkt)
     switch(daddr) {
       case UART_DR:
         data = 0;
-        if (term->dataAvailable()) {
-            data = term->in();
+        if (device->dataAvailable()) {
+            data = device->readData();
             // Since we don't simulate a FIFO for incoming data, we
             // assume it's empty and clear RXINTR and RTINTR.
             clearInterrupts(UART_RXINTR | UART_RTINTR);
-            if (term->dataAvailable()) {
+            if (device->dataAvailable()) {
                 DPRINTF(Uart, "Re-raising interrupt due to more data "
                         "after UART_DR read\n");
                 dataAvailable();
@@ -97,7 +96,7 @@ Pl011::read(PacketPtr pkt)
         data =
             UART_FR_CTS | // Clear To Send
             // Given we do not simulate a FIFO we are either empty or full.
-            (!term->dataAvailable() ? UART_FR_RXFE : UART_FR_RXFF) |
+            (!device->dataAvailable() ? UART_FR_RXFE : UART_FR_RXFF) |
             UART_FR_TXFE; // TX FIFO empty
 
         DPRINTF(Uart,
@@ -199,7 +198,7 @@ Pl011::write(PacketPtr pkt)
           if ((data & 0xFF) == 0x04 && endOnEOT)
             exitSimLoop("UART received EOT", 0);
 
-        term->out(data & 0xFF);
+        device->writeData(data & 0xFF);
         // We're supposed to clear TXINTR when this register is
         // written to, however. since we're also infinitely fast, we
         // need to immediately raise it again.
@@ -229,7 +228,7 @@ Pl011::write(PacketPtr pkt)
       case UART_ICR:
         DPRINTF(Uart, "Clearing interrupts 0x%x\n", data);
         clearInterrupts(data);
-        if (term->dataAvailable()) {
+        if (device->dataAvailable()) {
             DPRINTF(Uart, "Re-raising interrupt due to more data after "
                     "UART_ICR write\n");
             dataAvailable();

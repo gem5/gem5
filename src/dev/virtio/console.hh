@@ -40,8 +40,8 @@
 #ifndef __DEV_VIRTIO_CONSOLE_HH__
 #define __DEV_VIRTIO_CONSOLE_HH__
 
+#include "dev/serial.hh"
 #include "dev/virtio/base.hh"
-#include "dev/terminal.hh"
 
 struct VirtIOConsoleParams;
 
@@ -147,7 +147,7 @@ class VirtIOConsole : public VirtIODeviceBase
     TermTransQueue qTrans;
 
   protected:
-    Terminal &term;
+    SerialDevice &device;
     MakeCallback<VirtIOConsole::TermRecvQueue,
                  &VirtIOConsole::TermRecvQueue::trySend> callbackDataAvail;
 };

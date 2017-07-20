@@ -29,13 +29,14 @@
 from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice
+from Serial import SerialDevice
 
 class Uart(BasicPioDevice):
     type = 'Uart'
     abstract = True
     cxx_header = "dev/uart.hh"
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
-    terminal = Param.Terminal(Parent.any, "The terminal")
+    device = Param.SerialDevice(Parent.any, "The terminal")
 
 class Uart8250(Uart):
     type = 'Uart8250'

@@ -34,18 +34,17 @@
 
 #include "dev/uart.hh"
 
-#include "dev/platform.hh"
-#include "dev/terminal.hh"
+#include "dev/serial.hh"
 
 using namespace std;
 
 Uart::Uart(const Params *p, Addr pio_size)
     : BasicPioDevice(p, pio_size),
-      platform(p->platform), term(p->terminal),
+      platform(p->platform), device(p->device),
       callbackDataAvail(this)
 {
     status = 0;
 
-    // setup terminal callbacks
-    term->regDataAvailCallback(&callbackDataAvail);
+    // setup serial device callbacks
+    device->regInterfaceCallback(&callbackDataAvail);
 }

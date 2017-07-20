@@ -1,6 +1,15 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright (c) 2014, 2017 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,56 +34,40 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Andreas Sandberg
  */
 
-/** @file
- * Base class for UART
- */
-
-#ifndef __UART_HH__
-#define __UART_HH__
-
-#include "base/callback.hh"
-#include "dev/io_device.hh"
 #include "dev/serial.hh"
-#include "params/Uart.hh"
 
-class Platform;
+#include "base/misc.hh"
+#include "params/SerialDevice.hh"
 
-const int RX_INT = 0x1;
-const int TX_INT = 0x2;
-
-class Uart : public BasicPioDevice
+SerialDevice::SerialDevice(const SerialDeviceParams *p)
+    : SimObject(p), interfaceCallback(nullptr)
 {
-  protected:
-    int status;
-    Platform *platform;
-    SerialDevice *device;
+}
 
-  public:
-    typedef UartParams Params;
-    Uart(const Params *p, Addr pio_size);
+SerialDevice::~SerialDevice()
+{
+}
 
-    const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
+void
+SerialDevice::regInterfaceCallback(Callback *c)
+{
+    // This can happen if the user has connected multiple UARTs to the
+    // same terminal. In that case, each of them tries to register
+    // callbacks.
+    if (interfaceCallback)
+        fatal("A UART has already been associated with this device.\n");
+    interfaceCallback = c;
+}
 
-    /**
-     * Inform the uart that there is data available.
-     */
-    virtual void dataAvailable() = 0;
+void
+SerialDevice::notifyInterface()
+{
+    assert(dataAvailable());
+    // Registering a callback is optional.
+    if (interfaceCallback)
+        interfaceCallback->process();
+}
 
-    /**
-     * Return if we have an interrupt pending
-     * @return interrupt status
-     */
-    bool intStatus() { return status ? true : false; }
-
-  protected:
-    MakeCallback<Uart, &Uart::dataAvailable> callbackDataAvail;
-};
-
-#endif // __UART_HH__

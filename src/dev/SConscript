@@ -44,6 +44,7 @@ if env['TARGET_ISA'] == 'null':
 
 SimObject('BadDevice.py')
 SimObject('Platform.py')
+SimObject('Serial.py')
 SimObject('Terminal.py')
 SimObject('Uart.py')
 
@@ -53,6 +54,7 @@ Source('mc146818.cc')
 Source('pixelpump.cc')
 Source('platform.cc')
 Source('ps2.cc')
+Source('serial.cc')
 Source('terminal.cc')
 Source('uart.cc')
 Source('uart8250.cc')

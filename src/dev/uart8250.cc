@@ -42,7 +42,6 @@
 #include "config/the_isa.hh"
 #include "debug/Uart.hh"
 #include "dev/platform.hh"
-#include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
@@ -108,8 +107,8 @@ Uart8250::read(PacketPtr pkt)
     switch (daddr) {
         case 0x0:
             if (!(LCR & 0x80)) { // read byte
-                if (term->dataAvailable())
-                    pkt->set(term->in());
+                if (device->dataAvailable())
+                    pkt->set(device->readData());
                 else {
                     pkt->set((uint8_t)0);
                     // A limited amount of these are ok.
@@ -118,7 +117,7 @@ Uart8250::read(PacketPtr pkt)
                 status &= ~RX_INT;
                 platform->clearConsoleInt();
 
-                if (term->dataAvailable() && (IER & UART_IER_RDI))
+                if (device->dataAvailable() && (IER & UART_IER_RDI))
                     scheduleIntr(&rxIntrEvent);
             } else { // dll divisor latch
                ;
@@ -154,7 +153,7 @@ Uart8250::read(PacketPtr pkt)
             uint8_t lsr;
             lsr = 0;
             // check if there are any bytes to be read
-            if (term->dataAvailable())
+            if (device->dataAvailable())
                 lsr = UART_LSR_DR;
             lsr |= UART_LSR_TEMT | UART_LSR_THRE;
             pkt->set(lsr);
@@ -190,7 +189,7 @@ Uart8250::write(PacketPtr pkt)
     switch (daddr) {
         case 0x0:
             if (!(LCR & 0x80)) { // write byte
-                term->out(pkt->get<uint8_t>());
+                device->writeData(pkt->get<uint8_t>());
                 platform->clearConsoleInt();
                 status &= ~TX_INT;
                 if (UART_IER_THRI & IER)
@@ -225,7 +224,7 @@ Uart8250::write(PacketPtr pkt)
                     status &= ~TX_INT;
                 }
 
-                if ((UART_IER_RDI & IER) && term->dataAvailable()) {
+                if ((UART_IER_RDI & IER) && device->dataAvailable()) {
                     DPRINTF(Uart, "IER: IER_RDI set, scheduling RX intrrupt\n");
                     scheduleIntr(&rxIntrEvent);
                 } else {

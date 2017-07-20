@@ -1,5 +1,14 @@
-# Copyright (c) 2005-2007 The Regents of The University of Michigan
+# Copyright (c) 2014, 2017 ARM Limited
 # All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,17 +33,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Andreas Sandberg
 
-from m5.SimObject import SimObject
 from m5.params import *
-from m5.proxy import *
-from Serial import SerialDevice
+from m5.SimObject import SimObject
 
-class Terminal(SerialDevice):
-    type = 'Terminal'
-    cxx_header = "dev/terminal.hh"
-    intr_control = Param.IntrControl(Parent.any, "interrupt controller")
-    port = Param.TcpPort(3456, "listen port")
-    number = Param.Int(0, "terminal number")
-    output = Param.Bool(True, "Enable output dump to file")
+class SerialDevice(SimObject):
+    type = 'SerialDevice'
+    abstract = True
+    cxx_header = "dev/serial.hh"

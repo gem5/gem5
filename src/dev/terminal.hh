@@ -43,30 +43,15 @@
 #include "base/pollevent.hh"
 #include "base/socket.hh"
 #include "cpu/intr_control.hh"
+#include "dev/serial.hh"
 #include "params/Terminal.hh"
 #include "sim/sim_object.hh"
 
 class OutputStream;
 class TerminalListener;
 
-class Terminal : public SimObject
+class Terminal : public SerialDevice
 {
-  public:
-    /**
-     * Register a data available callback into the transport layer.
-     *
-     * The terminal needs to call the underlying transport layer to
-     * inform it of available data. The transport layer uses this
-     * method to register a callback that informs it of pending data.
-     *
-     * @param c Callback instance from transport layer.
-     */
-    void regDataAvailCallback(Callback *c);
-
-  protected:
-    /** Currently registered transport layer callbacks */
-    Callback *termDataAvail;
-
   protected:
     class ListenEvent : public PollEvent
     {
@@ -129,12 +114,14 @@ class Terminal : public SimObject
     size_t write(const uint8_t *buf, size_t len);
     void detach();
 
+  public: // SerialDevice interface
+    uint8_t readData() override;
+    void writeData(uint8_t c) override;
+    bool dataAvailable() const override { return !rxbuf.empty(); }
+
   public:
     /////////////////
     // OS interface
-
-    // Get a character from the terminal.
-    uint8_t  in();
 
     // get a character from the terminal in the console specific format
     // corresponds to GETC:
@@ -149,12 +136,6 @@ class Terminal : public SimObject
     //
     // Interrupts are cleared when the buffer is empty.
     uint64_t console_in();
-
-    // Send a character to the terminal
-    void out(char c);
-
-    // Ask the terminal if data is available
-    bool dataAvailable() { return !rxbuf.empty(); }
 };
 
 #endif // __DEV_TERMINAL_HH__

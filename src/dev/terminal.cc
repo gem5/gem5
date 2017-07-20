@@ -107,7 +107,7 @@ Terminal::DataEvent::process(int revent)
  * Terminal code
  */
 Terminal::Terminal(const Params *p)
-    : SimObject(p), termDataAvail(NULL), listenEvent(NULL), dataEvent(NULL),
+    : SerialDevice(p), listenEvent(NULL), dataEvent(NULL),
       number(p->number), data_fd(-1), txbuf(16384), rxbuf(16384),
       outfile(p->output ? simout.findOrCreate(p->name) : NULL)
 #if TRACING_ON == 1
@@ -133,16 +133,6 @@ Terminal::~Terminal()
         delete dataEvent;
 }
 
-void
-Terminal::regDataAvailCallback(Callback *c)
-{
-    // This can happen if the user has connected multiple UARTs to the
-    // same terminal. In that case, each of them tries to register
-    // callbacks.
-    if (termDataAvail)
-        fatal("Terminal already has already been associated with a UART.\n");
-    termDataAvail = c;
-}
 
 ///////////////////////////////////////////////////////////////////////
 // socket creation and terminal attach
@@ -233,9 +223,7 @@ Terminal::data()
     len = read(buf, sizeof(buf));
     if (len) {
         rxbuf.write((char *)buf, len);
-        // Inform the UART there is data available
-        assert(termDataAvail);
-        termDataAvail->process();
+        notifyInterface();
     }
 }
 
@@ -282,7 +270,7 @@ Terminal::write(const uint8_t *buf, size_t len)
 #define RECEIVE_ERROR (ULL(3) << 62)
 
 uint8_t
-Terminal::in()
+Terminal::readData()
 {
     uint8_t c;
 
@@ -301,7 +289,7 @@ Terminal::console_in()
     uint64_t value;
 
     if (dataAvailable()) {
-        value = RECEIVE_SUCCESS | in();
+        value = RECEIVE_SUCCESS | readData();
         if (!rxbuf.empty())
             value  |= MORE_PENDING;
     } else {
@@ -314,7 +302,7 @@ Terminal::console_in()
 }
 
 void
-Terminal::out(char c)
+Terminal::writeData(uint8_t c)
 {
 #if TRACING_ON == 1
     if (DTRACE(Terminal)) {
@@ -343,7 +331,7 @@ Terminal::out(char c)
         write(c);
 
     if (outfile)
-        outfile->stream()->write(&c, 1);
+        outfile->stream()->put((char)c);
 
     DPRINTF(TerminalVerbose, "out: \'%c\' %#02x\n",
             isprint(c) ? c : ' ', (int)c);

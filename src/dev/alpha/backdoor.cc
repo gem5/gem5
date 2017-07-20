@@ -233,7 +233,7 @@ AlphaBackdoor::write(PacketPtr pkt)
         break;
 
       case offsetof(AlphaAccess, outputChar):
-        terminal->out((char)(val & 0xff));
+        terminal->writeData((char)(val & 0xff));
         break;
 
       default:
