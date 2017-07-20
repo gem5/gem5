@@ -50,8 +50,8 @@ class RemoteGDB : public BaseRemoteGDB
 {
   protected:
     // Machine memory
-    bool acc(Addr addr, size_t len);
-    bool write(Addr addr, size_t size, const char *data);
+    bool acc(Addr addr, size_t len) override;
+    bool write(Addr addr, size_t size, const char *data) override;
 
     void insertHardBreak(Addr addr, size_t len) override;
 
@@ -75,7 +75,7 @@ class RemoteGDB : public BaseRemoteGDB
 
   public:
     RemoteGDB(System *system, ThreadContext *context);
-    BaseGdbRegCache *gdbRegs();
+    BaseGdbRegCache *gdbRegs() override;
 };
 
 } // namespace AlphaISA
