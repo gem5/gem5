@@ -44,7 +44,7 @@ m5.util.addToPath('../../')
 from common.Caches import *
 from common import CpuConfig
 
-have_kvm = "kvm" in CpuConfig.cpu_names()
+have_kvm = "ArmV8KvmCPU" in CpuConfig.cpu_names()
 
 class L1I(L1_ICache):
     tag_latency = 1
@@ -166,7 +166,7 @@ class CpuCluster(SubSystem):
 
 class AtomicCluster(CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
-        cpu_config = [ CpuConfig.get("atomic"), None, None, None, None ]
+        cpu_config = [ CpuConfig.get("AtomicSimpleCPU"), None, None, None, None ]
         super(AtomicCluster, self).__init__(system, num_cpus, cpu_clock,
                                             cpu_voltage, *cpu_config)
     def addL1(self):
@@ -174,7 +174,7 @@ class AtomicCluster(CpuCluster):
 
 class KvmCluster(CpuCluster):
     def __init__(self, system, num_cpus, cpu_clock, cpu_voltage="1.0V"):
-        cpu_config = [ CpuConfig.get("kvm"), None, None, None, None ]
+        cpu_config = [ CpuConfig.get("ArmV8KvmCPU"), None, None, None, None ]
         super(KvmCluster, self).__init__(system, num_cpus, cpu_clock,
                                          cpu_voltage, *cpu_config)
     def addL1(self):
