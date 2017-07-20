@@ -40,7 +40,6 @@
 
 #include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
-#include "dev/terminal.hh"
 #include "sim/system.hh"
 
 using namespace std;

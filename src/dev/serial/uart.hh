@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,83 +29,52 @@
  */
 
 /** @file
- * Defines a 8250 UART
+ * Base class for UART
  */
 
-#ifndef __DEV_UART8250_HH__
-#define __DEV_UART8250_HH__
+#ifndef __UART_HH__
+#define __UART_HH__
 
+#include "base/callback.hh"
 #include "dev/io_device.hh"
-#include "dev/uart.hh"
-#include "params/Uart8250.hh"
+#include "dev/serial/serial.hh"
+#include "params/Uart.hh"
 
-/* UART8250 Interrupt ID Register
- *  bit 0    Interrupt Pending 0 = true, 1 = false
- *  bit 2:1  ID of highest priority interrupt
- *  bit 7:3  zeroes
- */
-const uint8_t IIR_NOPEND = 0x1;
-
-// Interrupt IDs
-const uint8_t IIR_MODEM = 0x00; /* Modem Status (lowest priority) */
-const uint8_t IIR_TXID  = 0x02; /* Tx Data */
-const uint8_t IIR_RXID  = 0x04; /* Rx Data */
-const uint8_t IIR_LINE  = 0x06; /* Rx Line Status (highest priority)*/
-
-const uint8_t UART_IER_RDI  = 0x01;
-const uint8_t UART_IER_THRI = 0x02;
-const uint8_t UART_IER_RLSI = 0x04;
-
-
-const uint8_t UART_LSR_TEMT = 0x40;
-const uint8_t UART_LSR_THRE = 0x20;
-const uint8_t UART_LSR_DR   = 0x01;
-
-const uint8_t UART_MCR_LOOP = 0x10;
-
-
-class Terminal;
 class Platform;
 
-class Uart8250 : public Uart
+const int RX_INT = 0x1;
+const int TX_INT = 0x2;
+
+class Uart : public BasicPioDevice
 {
   protected:
-    uint8_t IER, DLAB, LCR, MCR;
-    Tick lastTxInt;
-
-    void processIntrEvent(int intrBit);
-    void scheduleIntr(Event *event);
-
-    EventFunctionWrapper txIntrEvent;
-    EventFunctionWrapper rxIntrEvent;
+    int status;
+    Platform *platform;
+    SerialDevice *device;
 
   public:
-    typedef Uart8250Params Params;
+    typedef UartParams Params;
+    Uart(const Params *p, Addr pio_size);
+
     const Params *
     params() const
     {
         return dynamic_cast<const Params *>(_params);
     }
-    Uart8250(const Params *p);
-
-    Tick read(PacketPtr pkt) override;
-    Tick write(PacketPtr pkt) override;
-    AddrRangeList getAddrRanges() const override;
 
     /**
      * Inform the uart that there is data available.
      */
-    void dataAvailable() override;
-
+    virtual void dataAvailable() = 0;
 
     /**
      * Return if we have an interrupt pending
      * @return interrupt status
      */
-    virtual bool intStatus() { return status ? true : false; }
+    bool intStatus() { return status ? true : false; }
 
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
+  protected:
+    MakeCallback<Uart, &Uart::dataAvailable> callbackDataAvail;
 };
 
-#endif // __TSUNAMI_UART_HH__
+#endif // __UART_HH__

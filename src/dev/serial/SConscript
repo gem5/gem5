@@ -1,5 +1,17 @@
 # -*- mode:python -*-
 
+# Copyright (c) 2017 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -26,31 +38,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Gabe Black
+# Authors: Andreas Sandberg
 
 Import('*')
-
-SimObject('Device.py')
-Source('io_device.cc')
-Source('isa_fake.cc')
-Source('dma_device.cc')
-
-DebugFlag('IsaFake')
-DebugFlag('DMA')
 
 if env['TARGET_ISA'] == 'null':
     Return()
 
-SimObject('BadDevice.py')
-SimObject('Platform.py')
+SimObject('Serial.py')
+SimObject('Terminal.py')
+SimObject('Uart.py')
 
-Source('baddev.cc')
-Source('intel_8254_timer.cc')
-Source('mc146818.cc')
-Source('pixelpump.cc')
-Source('platform.cc')
-Source('ps2.cc')
+Source('serial.cc')
+Source('terminal.cc')
+Source('uart.cc')
+Source('uart8250.cc')
 
-DebugFlag('Intel8254Timer')
-DebugFlag('MC146818')
+DebugFlag('Terminal')
+DebugFlag('TerminalVerbose')
+DebugFlag('Uart')

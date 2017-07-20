@@ -42,7 +42,7 @@
 #include <sys/termios.h>
 
 #endif
-#include "dev/terminal.hh"
+#include "dev/serial/terminal.hh"
 
 #include <poll.h>
 #include <unistd.h>
@@ -62,7 +62,7 @@
 #include "debug/Terminal.hh"
 #include "debug/TerminalVerbose.hh"
 #include "dev/platform.hh"
-#include "dev/uart.hh"
+#include "dev/serial/uart.hh"
 
 using namespace std;
 

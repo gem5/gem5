@@ -29,52 +29,18 @@
  */
 
 /** @file
- * Base class for UART
+ * Implements a base class for UARTs
  */
 
-#ifndef __UART_HH__
-#define __UART_HH__
+#include "dev/serial/uart.hh"
 
-#include "base/callback.hh"
-#include "dev/io_device.hh"
-#include "dev/serial.hh"
-#include "params/Uart.hh"
-
-class Platform;
-
-const int RX_INT = 0x1;
-const int TX_INT = 0x2;
-
-class Uart : public BasicPioDevice
+Uart::Uart(const Params *p, Addr pio_size)
+    : BasicPioDevice(p, pio_size),
+      platform(p->platform), device(p->device),
+      callbackDataAvail(this)
 {
-  protected:
-    int status;
-    Platform *platform;
-    SerialDevice *device;
+    status = 0;
 
-  public:
-    typedef UartParams Params;
-    Uart(const Params *p, Addr pio_size);
-
-    const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
-
-    /**
-     * Inform the uart that there is data available.
-     */
-    virtual void dataAvailable() = 0;
-
-    /**
-     * Return if we have an interrupt pending
-     * @return interrupt status
-     */
-    bool intStatus() { return status ? true : false; }
-
-  protected:
-    MakeCallback<Uart, &Uart::dataAvailable> callbackDataAvail;
-};
-
-#endif // __UART_HH__
+    // setup serial device callbacks
+    device->regInterfaceCallback(&callbackDataAvail);
+}

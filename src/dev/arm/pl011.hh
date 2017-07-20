@@ -50,7 +50,7 @@
 #define __DEV_ARM_PL011_H__
 
 #include "dev/arm/amba_device.hh"
-#include "dev/uart.hh"
+#include "dev/serial/uart.hh"
 
 class BaseGic;
 struct Pl011Params;

@@ -43,7 +43,6 @@
 #include "debug/Checkpoint.hh"
 #include "debug/VGIC.hh"
 #include "dev/arm/base_gic.hh"
-#include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 

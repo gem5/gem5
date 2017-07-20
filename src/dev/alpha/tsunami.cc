@@ -44,7 +44,6 @@
 #include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunami_io.hh"
 #include "dev/alpha/tsunami_pchip.hh"
-#include "dev/terminal.hh"
 
 using namespace std;
 //Should this be AlphaISA?

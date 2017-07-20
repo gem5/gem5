@@ -32,7 +32,7 @@
  * Implements a 8250 UART
  */
 
-#include "dev/uart8250.hh"
+#include "dev/serial/uart8250.hh"
 
 #include <string>
 #include <vector>

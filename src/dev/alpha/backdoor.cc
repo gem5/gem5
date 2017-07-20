@@ -52,7 +52,7 @@
 #include "dev/alpha/tsunami_io.hh"
 #include "dev/platform.hh"
 #include "dev/storage/simple_disk.hh"
-#include "dev/terminal.hh"
+#include "dev/serial/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"

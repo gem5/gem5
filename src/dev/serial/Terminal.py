@@ -26,18 +26,15 @@
 #
 # Authors: Nathan Binkert
 
+from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice
 from Serial import SerialDevice
 
-class Uart(BasicPioDevice):
-    type = 'Uart'
-    abstract = True
-    cxx_header = "dev/uart.hh"
-    platform = Param.Platform(Parent.any, "Platform this device is part of.")
-    device = Param.SerialDevice(Parent.any, "The terminal")
-
-class Uart8250(Uart):
-    type = 'Uart8250'
-    cxx_header = "dev/uart8250.hh"
+class Terminal(SerialDevice):
+    type = 'Terminal'
+    cxx_header = "dev/serial/terminal.hh"
+    intr_control = Param.IntrControl(Parent.any, "interrupt controller")
+    port = Param.TcpPort(3456, "listen port")
+    number = Param.Int(0, "terminal number")
+    output = Param.Bool(True, "Enable output dump to file")

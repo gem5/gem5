@@ -37,7 +37,7 @@
  * Authors: Andreas Sandberg
  */
 
-#include "dev/serial.hh"
+#include "dev/serial/serial.hh"
 
 #include "base/misc.hh"
 #include "params/SerialDevice.hh"

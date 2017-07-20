@@ -41,8 +41,8 @@ from m5.SimObject import SimObject
 class SerialDevice(SimObject):
     type = 'SerialDevice'
     abstract = True
-    cxx_header = "dev/serial.hh"
+    cxx_header = "dev/serial/serial.hh"
 
 class SerialNullDevice(SerialDevice):
     type = 'SerialNullDevice'
-    cxx_header = "dev/serial.hh"
+    cxx_header = "dev/serial/serial.hh"

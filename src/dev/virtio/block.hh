@@ -42,7 +42,6 @@
 
 #include "dev/virtio/base.hh"
 #include "dev/storage/disk_image.hh"
-#include "dev/terminal.hh"
 
 struct VirtIOBlockParams;
 
