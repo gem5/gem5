@@ -358,6 +358,13 @@ BaseKvmCPU::drain()
         return DrainState::Drained;
 
     DPRINTF(Drain, "BaseKvmCPU::drain\n");
+
+    // The event queue won't be locked when calling drain since that's
+    // not done from an event. Lock the event queue here to make sure
+    // that scoped migrations continue to work if we need to
+    // synchronize the thread context.
+    std::lock_guard<EventQueue> lock(*this->eventQueue());
+
     switch (_status) {
       case Running:
         // The base KVM code is normally ready when it is in the
