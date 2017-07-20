@@ -151,7 +151,7 @@ namespace X86ISA
         /*
          * Function to register Stats
          */
-        void regStats();
+        void regStats() override;
 
         // Checkpointing
         void serialize(CheckpointOut &cp) const override;
