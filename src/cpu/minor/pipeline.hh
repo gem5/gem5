@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014 ARM Limited
+ * Copyright (c) 2013-2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -125,11 +125,6 @@ class Pipeline : public Ticked
     /** A custom evaluate allows report in the right place (between
      *  stages and pipeline advance) */
     void evaluate() override;
-
-    void countCycles(Cycles delta) override
-    {
-        cpu.ppCycles->notify(delta);
-    }
 
     void minorTrace() const;
 

@@ -133,6 +133,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
       _switchedOut(p->switched_out), _cacheLineSize(p->system->cacheLineSize()),
       interrupts(p->interrupts), profileEvent(NULL),
       numThreads(p->numThreads), system(p->system),
+      previousCycle(0), previousState(CPU_STATE_SLEEP),
       functionTraceStream(nullptr), currentFunctionStart(0),
       currentFunctionEnd(0), functionEntryTick(0),
       addressMonitor(p->numThreads),
@@ -385,12 +386,16 @@ BaseCPU::pmuProbePoint(const char *name)
 void
 BaseCPU::regProbePoints()
 {
-    ppCycles = pmuProbePoint("Cycles");
+    ppAllCycles = pmuProbePoint("Cycles");
+    ppActiveCycles = pmuProbePoint("ActiveCycles");
 
     ppRetiredInsts = pmuProbePoint("RetiredInsts");
     ppRetiredLoads = pmuProbePoint("RetiredLoads");
     ppRetiredStores = pmuProbePoint("RetiredStores");
     ppRetiredBranches = pmuProbePoint("RetiredBranches");
+
+    ppSleeping = new ProbePointArg<bool>(this->getProbeManager(),
+                                         "Sleeping");
 }
 
 void
@@ -520,9 +525,10 @@ BaseCPU::activateContext(ThreadID thread_num)
     // Squash enter power gating event while cpu gets activated
     if (enterPwrGatingEvent.scheduled())
         deschedule(enterPwrGatingEvent);
-
     // For any active thread running, update CPU power state to active (ON)
     ClockedObject::pwrState(Enums::PwrState::ON);
+
+    updateCycleCounters(CPU_STATE_WAKEUP);
 }
 
 void
@@ -535,6 +541,9 @@ BaseCPU::suspendContext(ThreadID thread_num)
         }
     }
 
+    // All CPU thread are suspended, update cycle count
+    updateCycleCounters(CPU_STATE_SLEEP);
+
     // All CPU threads suspended, enter lower power state for the CPU
     ClockedObject::pwrState(Enums::PwrState::CLK_GATED);
 
@@ -544,6 +553,12 @@ BaseCPU::suspendContext(ThreadID thread_num)
         // cycles
         schedule(enterPwrGatingEvent, clockEdge(pwrGatingLatency));
     }
+}
+
+void
+BaseCPU::haltContext(ThreadID thread_num)
+{
+    updateCycleCounters(BaseCPU::CPU_STATE_SLEEP);
 }
 
 void
@@ -579,6 +594,10 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU)
     _taskId = oldCPU->taskId();
     // Take over the power state of the switchedOut CPU
     ClockedObject::pwrState(oldCPU->pwrState());
+
+    previousState = oldCPU->previousState;
+    previousCycle = oldCPU->previousCycle;
+
     _switchedOut = false;
 
     ThreadID size = threadContexts.size();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012,2015 ARM Limited
+ * Copyright (c) 2010-2012, 2015, 2017 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -215,6 +215,7 @@ BaseSimpleCPU::haltContext(ThreadID thread_num)
 {
     // for now, these are equivalent
     suspendContext(thread_num);
+    updateCycleCounters(BaseCPU::CPU_STATE_SLEEP);
 }
 
 

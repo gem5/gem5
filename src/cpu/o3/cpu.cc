@@ -568,7 +568,7 @@ FullO3CPU<Impl>::tick()
     assert(drainState() != DrainState::Drained);
 
     ++numCycles;
-    ppCycles->notify(1);
+    updateCycleCounters(BaseCPU::CPU_STATE_ON);
 
 //    activity = false;
 
@@ -796,6 +796,8 @@ FullO3CPU<Impl>::haltContext(ThreadID tid)
 
     deactivateThread(tid);
     removeThread(tid);
+
+    updateCycleCounters(BaseCPU::CPU_STATE_SLEEP);
 }
 
 template <class Impl>
@@ -1771,7 +1773,6 @@ FullO3CPU<Impl>::wakeCPU()
         --cycles;
         idleCycles += cycles;
         numCycles += cycles;
-        ppCycles->notify(cycles);
     }
 
     schedule(tickEvent, clockEdge());
