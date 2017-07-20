@@ -294,6 +294,7 @@ template<> SparcFaultBase::FaultVals SparcFault<InstructionAccessError>::vals;
 template<> SparcFaultBase::FaultVals SparcFault<IllegalInstruction>::vals;
 template<> SparcFaultBase::FaultVals SparcFault<PrivilegedOpcode>::vals;
 template<> SparcFaultBase::FaultVals SparcFault<FpDisabled>::vals;
+template<> SparcFaultBase::FaultVals SparcFault<VecDisabled>::vals;
 template<> SparcFaultBase::FaultVals SparcFault<FpExceptionIEEE754>::vals;
 template<> SparcFaultBase::FaultVals SparcFault<FpExceptionOther>::vals;
 template<> SparcFaultBase::FaultVals SparcFault<TagOverflow>::vals;
