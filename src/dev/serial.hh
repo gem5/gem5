@@ -44,6 +44,7 @@
 #include "sim/sim_object.hh"
 
 struct SerialDeviceParams;
+struct SerialNullDeviceParams;
 
 /**
  * Base class for serial devices such as terminals.
@@ -138,6 +139,20 @@ class SerialDevice : public SimObject
   private:
     /** Currently regisxtered host interface layer callback */
     Callback *interfaceCallback;
+};
+
+/**
+ * Dummy serial device that discards all data sent to it.
+ */
+class SerialNullDevice : public SerialDevice
+{
+  public:
+    SerialNullDevice(const SerialNullDeviceParams *p);
+
+  public:
+    bool dataAvailable() const override { return false; }
+    void writeData(uint8_t c) override {};
+    uint8_t readData() override;
 };
 
 #endif // __DEV_SERIAL_HH__

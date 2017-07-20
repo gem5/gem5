@@ -41,6 +41,7 @@
 
 #include "base/misc.hh"
 #include "params/SerialDevice.hh"
+#include "params/SerialNullDevice.hh"
 
 SerialDevice::SerialDevice(const SerialDeviceParams *p)
     : SimObject(p), interfaceCallback(nullptr)
@@ -71,3 +72,24 @@ SerialDevice::notifyInterface()
         interfaceCallback->process();
 }
 
+
+
+
+SerialNullDevice::SerialNullDevice(const SerialNullDeviceParams *p)
+    : SerialDevice(p)
+{
+}
+
+uint8_t
+SerialNullDevice::readData()
+{
+    panic("SerialNullDevice does not have pending data.\n");
+}
+
+
+
+SerialNullDevice *
+SerialNullDeviceParams::create()
+{
+    return new SerialNullDevice(this);
+}

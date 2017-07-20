@@ -42,3 +42,7 @@ class SerialDevice(SimObject):
     type = 'SerialDevice'
     abstract = True
     cxx_header = "dev/serial.hh"
+
+class SerialNullDevice(SerialDevice):
+    type = 'SerialNullDevice'
+    cxx_header = "dev/serial.hh"
