@@ -55,6 +55,9 @@ Linux::openSpecialFile(std::string path, Process *process,
     } else if (path.compare(0, 11, "/etc/passwd") == 0) {
         data = Linux::etcPasswd(process, tc);
         matched = true;
+    } else if (path.compare(0, 30, "/sys/devices/system/cpu/online") == 0) {
+        data = Linux::cpuOnline(process, tc);
+        matched = true;
     }
 
     if (matched) {
@@ -86,4 +89,11 @@ Linux::etcPasswd(Process *process, ThreadContext *tc)
 {
     return csprintf("gem5-user:x:1000:1000:gem5-user,,,:%s:/bin/bash\n",
                     process->getcwd());
+}
+
+std::string
+Linux::cpuOnline(Process *process, ThreadContext *tc)
+{
+    return csprintf("0-%d\n",
+                    tc->getSystemPtr()->numContexts() - 1);
 }

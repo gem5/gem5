@@ -227,6 +227,7 @@ class Linux : public OperatingSystem
                                ThreadContext *tc);
     static std::string procMeminfo(Process *process, ThreadContext *tc);
     static std::string etcPasswd(Process *process, ThreadContext *tc);
+    static std::string cpuOnline(Process *process, ThreadContext *tc);
 
     // For futex system call
     static const unsigned TGT_FUTEX_WAIT  = 0;
