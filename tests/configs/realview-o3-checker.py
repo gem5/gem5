@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012, 2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -37,7 +37,7 @@
 
 from m5.objects import *
 from arm_generic import *
-from common.O3_ARM_v7a import O3_ARM_v7a_3
+from common.cores.arm.O3_ARM_v7a import O3_ARM_v7a_3
 
 root = LinuxArmFSSystemUniprocessor(mem_mode='timing',
                                     mem_class=DDR3_1600_8x8,
