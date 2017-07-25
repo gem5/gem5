@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2010-2014 ARM Limited
+ * Copyright (c) 2010-2014, 2017 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -116,6 +116,9 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     assert(!cpu->switchedOut());
     if (!inst->isSquashed()) {
         if (!state->noWB) {
+            // Only loads and store conditionals perform the writeback
+            // after receving the response from the memory
+            assert(inst->isLoad() || inst->isStoreConditional());
             if (!TheISA::HasUnalignedMemAcc || !state->isSplit ||
                 !state->isLoad) {
                 writeback(inst, pkt);
@@ -898,12 +901,6 @@ LSQUnit<Impl>::writebackStores()
                         inst->seqNum);
                 WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
                 cpu->schedule(wb, curTick() + 1);
-                if (cpu->checker) {
-                    // Make sure to set the LLSC data for verification
-                    // if checker is loaded
-                    inst->reqToVerify->setExtraData(0);
-                    inst->completeAcc(data_pkt);
-                }
                 completeStore(storeWBIdx);
                 incrStIdx(storeWBIdx);
                 continue;
@@ -1211,7 +1208,11 @@ LSQUnit<Impl>::completeStore(int store_idx)
     // Tell the checker we've completed this instruction.  Some stores
     // may get reported twice to the checker, but the checker can
     // handle that case.
-    if (cpu->checker) {
+
+    // Store conditionals cannot be sent to the checker yet, they have
+    // to update the misc registers first which should take place
+    // when they commit
+    if (cpu->checker && !storeQueue[store_idx].inst->isStoreConditional()) {
         cpu->checker->verify(storeQueue[store_idx].inst);
     }
 }

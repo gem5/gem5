@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2010-2014 ARM Limited
+ * Copyright (c) 2010-2014, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1043,6 +1043,12 @@ DefaultCommit<Impl>::commitInsts()
                                            ((THE_ISA != ALPHA_ISA) ||
                                              (!(pc[0].instAddr() & 0x3)));
                 }
+
+                // at this point store conditionals should either have
+                // been completed or predicated false
+                assert(!head_inst->isStoreConditional() ||
+                       head_inst->isCompleted() ||
+                       !head_inst->readPredicate());
 
                 // Updates misc. registers.
                 head_inst->updateMiscRegs();
