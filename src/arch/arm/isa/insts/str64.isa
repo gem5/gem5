@@ -212,14 +212,18 @@ let {{
             if self.flavor == "fp":
                 accCode = '''
                     uint64_t data = AA64FpDest2P0_uw;
-                    data = (data << 32) | AA64FpDestP0_uw;
+                    data = isBigEndian64(xc->tcBase())
+                            ? ((uint64_t(AA64FpDestP0_uw) << 32) | data)
+                            : ((data << 32) | AA64FpDestP0_uw);
                     Mem_ud = cSwap(data, isBigEndian64(xc->tcBase()));
                 '''
             else:
                 if self.size == 4:
                     accCode = '''
                         uint64_t data = XDest2_uw;
-                        data = (data << 32) | XDest_uw;
+                        data = isBigEndian64(xc->tcBase())
+                                ? ((uint64_t(XDest_uw) << 32) | data)
+                                : ((data << 32) | XDest_uw);
                         Mem_ud = cSwap(data, isBigEndian64(xc->tcBase()));
                     '''
                 elif self.size == 8:
@@ -227,8 +231,8 @@ let {{
                         // This temporary needs to be here so that the parser
                         // will correctly identify this instruction as a store.
                         std::array<uint64_t, 2> temp;
-                        temp[0] = XDest_ud;
-                        temp[1] = XDest2_ud;
+                        temp[0] = cSwap(XDest_ud,isBigEndian64(xc->tcBase()));
+                        temp[1] = cSwap(XDest2_ud,isBigEndian64(xc->tcBase()));
                         Mem_tud = temp;
                     '''
             self.codeBlobs["memacc_code"] = accCode

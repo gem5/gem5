@@ -228,23 +228,31 @@ let {{
                 if self.size == 4:
                     accCode = '''
                         uint64_t data = cSwap(Mem_ud, isBigEndian64(xc->tcBase()));
-                        AA64FpDestP0_uw = (uint32_t)data;
+                        AA64FpDestP0_uw = isBigEndian64(xc->tcBase())
+                                            ? (data >> 32)
+                                            : (uint32_t)data;
                         AA64FpDestP1_uw = 0;
                         AA64FpDestP2_uw = 0;
                         AA64FpDestP3_uw = 0;
-                        AA64FpDest2P0_uw = (data >> 32);
+                        AA64FpDest2P0_uw = isBigEndian64(xc->tcBase())
+                                            ? (uint32_t)data
+                                            : (data >> 32);
                         AA64FpDest2P1_uw = 0;
                         AA64FpDest2P2_uw = 0;
                         AA64FpDest2P3_uw = 0;
                     '''
                 elif self.size == 8:
                     accCode = '''
-                        AA64FpDestP0_uw = (uint32_t)Mem_tud[0];
-                        AA64FpDestP1_uw = (uint32_t)(Mem_tud[0] >> 32);
+                        uint64_t data_a = cSwap(Mem_tud[0],
+                                                isBigEndian64(xc->tcBase()));
+                        uint64_t data_b = cSwap(Mem_tud[1],
+                                                isBigEndian64(xc->tcBase()));
+                        AA64FpDestP0_uw = (uint32_t)data_a;
+                        AA64FpDestP1_uw = (uint32_t)(data_a >> 32);
                         AA64FpDestP2_uw = 0;
                         AA64FpDestP3_uw = 0;
-                        AA64FpDest2P0_uw = (uint32_t)Mem_tud[1];
-                        AA64FpDest2P1_uw = (uint32_t)(Mem_tud[1] >> 32);
+                        AA64FpDest2P0_uw = (uint32_t)data_b;
+                        AA64FpDest2P1_uw = (uint32_t)(data_b >> 32);
                         AA64FpDest2P2_uw = 0;
                         AA64FpDest2P3_uw = 0;
                     '''
@@ -254,26 +262,38 @@ let {{
                         accCode = '''
                             uint64_t data = cSwap(Mem_ud,
                                                   isBigEndian64(xc->tcBase()));
-                            XDest = sext<32>((uint32_t)data);
-                            XDest2 = sext<32>(data >> 32);
+                            XDest = isBigEndian64(xc->tcBase())
+                                    ? sext<32>(data >> 32)
+                                    : sext<32>((uint32_t)data);
+                            XDest2 = isBigEndian64(xc->tcBase())
+                                     ? sext<32>((uint32_t)data)
+                                     : sext<32>(data >> 32);
                         '''
                     elif self.size == 8:
                         accCode = '''
-                            XDest = Mem_tud[0];
-                            XDest2 = Mem_tud[1];
+                            XDest = cSwap(Mem_tud[0],
+                                          isBigEndian64(xc->tcBase()));
+                            XDest2 = cSwap(Mem_tud[1],
+                                           isBigEndian64(xc->tcBase()));
                         '''
                 else:
                     if self.size == 4:
                         accCode = '''
                             uint64_t data = cSwap(Mem_ud,
                                                   isBigEndian64(xc->tcBase()));
-                            XDest = (uint32_t)data;
-                            XDest2 = data >> 32;
+                            XDest = isBigEndian64(xc->tcBase())
+                                    ? (data >> 32)
+                                    : (uint32_t)data;
+                            XDest2 = isBigEndian64(xc->tcBase())
+                                    ? (uint32_t)data
+                                    : (data >> 32);
                         '''
                     elif self.size == 8:
                         accCode = '''
-                            XDest = Mem_tud[0];
-                            XDest2 = Mem_tud[1];
+                            XDest = cSwap(Mem_tud[0],
+                                          isBigEndian64(xc->tcBase()));
+                            XDest2 = cSwap(Mem_tud[1],
+                                           isBigEndian64(xc->tcBase()));
                         '''
             self.codeBlobs["memacc_code"] = accCode
 
