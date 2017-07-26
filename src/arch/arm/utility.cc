@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014, 2016 ARM Limited
+ * Copyright (c) 2009-2014, 2016-2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -230,33 +230,45 @@ getMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
 bool
 ELIs64(ThreadContext *tc, ExceptionLevel el)
 {
-    if (ArmSystem::highestEL(tc) == el)
-        // Register width is hard-wired
-        return ArmSystem::highestELIs64(tc);
+    return !ELIs32(tc, el);
+}
 
-    switch (el) {
-      case EL0:
-        return opModeIs64(currOpMode(tc));
-      case EL1:
-        {
-            if (ArmSystem::haveVirtualization(tc)) {
-                HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
-                return hcr.rw;
-            } else if (ArmSystem::haveSecurity(tc)) {
-                SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-                return scr.rw;
-            }
-            panic("must haveSecurity(tc)");
+bool
+ELIs32(ThreadContext *tc, ExceptionLevel el)
+{
+    // Return true if the specified EL is in aarch32 state.
+
+    const bool have_el3 = ArmSystem::haveSecurity(tc);
+    const bool have_el2 = ArmSystem::haveVirtualization(tc);
+
+    panic_if(el == EL2 && !have_el2, "Asking for EL2 when it doesn't exist");
+    panic_if(el == EL3 && !have_el3, "Asking for EL3 when it doesn't exist");
+
+    if (ArmSystem::highestELIs64(tc)
+              && ArmSystem::highestEL(tc) == el) {
+        return false;
+    } else if (!ArmSystem::highestELIs64(tc)) {
+        // All levels are using AArch32
+        return true;
+    } else {
+        SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+        bool aarch32_below_el3 = (have_el3 && scr.rw == 0);
+
+        HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+        bool aarch32_at_el1 = (aarch32_below_el3
+                                || (have_el2
+                                && !inSecureState(tc) && hcr.rw == 0));
+
+        // Only know if EL0 using AArch32 from PSTATE
+        if (el == EL0 && !aarch32_at_el1) {
+            CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+            panic_if(cpsr.el != EL0, "EL0 state is UNKNOWN");
+            // EL0 controlled by PSTATE
+            return cpsr.width != 0;
+        } else {
+            return (aarch32_below_el3 && el != EL3)
+                     || (aarch32_at_el1 && (el == EL0 || el == EL1) );
         }
-      case EL2:
-        {
-            assert(ArmSystem::haveSecurity(tc));
-            SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
-            return scr.rw;
-        }
-      default:
-        panic("Invalid exception level");
-        break;
     }
 }
 

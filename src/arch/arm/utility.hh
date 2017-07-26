@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -156,6 +156,8 @@ currEL(ThreadContext *tc)
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
     return (ExceptionLevel) (uint8_t) cpsr.el;
 }
+
+bool ELIs32(ThreadContext *tc, ExceptionLevel el);
 
 bool ELIs64(ThreadContext *tc, ExceptionLevel el);
 
