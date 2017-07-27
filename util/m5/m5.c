@@ -57,7 +57,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "m5op.h"
+#include <gem5/m5ops.h>
 
 void *m5_mem = NULL;
 

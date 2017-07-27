@@ -29,14 +29,16 @@
  *          Ali Saidi
  */
 
-#ifndef __M5OP_H__
-#define __M5OP_H__
+#ifndef __GEM5_M5OP_H__
+#define __GEM5_M5OP_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <stdint.h>
+
+#include <gem5/asm/generic/m5op_flags.h>
 
 void m5_arm(uint64_t address);
 void m5_quiesce(void);
@@ -82,12 +84,7 @@ void m5a_l(char *lsm, const void *id, char *sm);
 void m5a_identify(uint64_t id);
 uint64_t m5a_getid(void);
 
-#define M5_AN_FL_NONE   0x0
-#define M5_AN_FL_BAD    0x2
-#define M5_AN_FL_LINK   0x10
-#define M5_AN_FL_RESET  0x20
-
 #ifdef __cplusplus
 }
 #endif
-#endif // __M5OP_H__
+#endif // __GEM5_M5OP_H__
