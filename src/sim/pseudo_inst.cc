@@ -51,6 +51,8 @@
 #include <string>
 #include <vector>
 
+#include <gem5/asm/generic/m5ops.h>
+
 #include "arch/kernel_stats.hh"
 #include "arch/pseudo_inst.hh"
 #include "arch/utility.hh"
@@ -109,111 +111,111 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
     }
 
     switch (func) {
-      case 0x00: // arm_func
+      case M5OP_ARM:
         arm(tc);
         break;
 
-      case 0x01: // quiesce_func
+      case M5OP_QUIESCE:
         quiesce(tc);
         break;
 
-      case 0x02: // quiescens_func
-        quiesceSkip(tc);
-        break;
-
-      case 0x03: // quiescecycle_func
+      case M5OP_QUIESCE_NS:
         quiesceNs(tc, args[0]);
         break;
 
-      case 0x04: // quiescetime_func
+      case M5OP_QUIESCE_CYCLE:
+        quiesceCycles(tc, args[0]);
+        break;
+
+      case M5OP_QUIESCE_TIME:
         return quiesceTime(tc);
 
-      case 0x07: // rpns_func
+      case M5OP_RPNS:
         return rpns(tc);
 
-      case 0x09: // wakecpu_func
+      case M5OP_WAKE_CPU:
         wakeCPU(tc, args[0]);
         break;
 
-      case 0x21: // exit_func
+      case M5OP_EXIT:
         m5exit(tc, args[0]);
         break;
 
-      case 0x22:
+      case M5OP_FAIL:
         m5fail(tc, args[0], args[1]);
         break;
 
-      case 0x30: // initparam_func
+      case M5OP_INIT_PARAM:
         return initParam(tc, args[0], args[1]);
 
-      case 0x31: // loadsymbol_func
+      case M5OP_LOAD_SYMBOL:
         loadsymbol(tc);
         break;
 
-      case 0x40: // resetstats_func
+      case M5OP_RESET_STATS:
         resetstats(tc, args[0], args[1]);
         break;
 
-      case 0x41: // dumpstats_func
+      case M5OP_DUMP_STATS:
         dumpstats(tc, args[0], args[1]);
         break;
 
-      case 0x42: // dumprststats_func
+      case M5OP_DUMP_RESET_STATS:
         dumpresetstats(tc, args[0], args[1]);
         break;
 
-      case 0x43: // ckpt_func
+      case M5OP_CHECKPOINT:
         m5checkpoint(tc, args[0], args[1]);
         break;
 
-      case 0x4f: // writefile_func
+      case M5OP_WRITE_FILE:
         return writefile(tc, args[0], args[1], args[2], args[3]);
 
-      case 0x50: // readfile_func
+      case M5OP_READ_FILE:
         return readfile(tc, args[0], args[1], args[2]);
 
-      case 0x51: // debugbreak_func
+      case M5OP_DEBUG_BREAK:
         debugbreak(tc);
         break;
 
-      case 0x52: // switchcpu_func
+      case M5OP_SWITCH_CPU:
         switchcpu(tc);
         break;
 
-      case 0x53: // addsymbol_func
+      case M5OP_ADD_SYMBOL:
         addsymbol(tc, args[0], args[1]);
         break;
 
-      case 0x54: // panic_func
+      case M5OP_PANIC:
         panic("M5 panic instruction called at %s\n", tc->pcState());
 
-      case 0x5a: // work_begin_func
+      case M5OP_WORK_BEGIN:
         workbegin(tc, args[0], args[1]);
         break;
 
-      case 0x5b: // work_end_func
+      case M5OP_WORK_END:
         workend(tc, args[0], args[1]);
         break;
 
-      case 0x55: // annotate_func
-      case 0x56: // reserved2_func
-      case 0x57: // reserved3_func
-      case 0x58: // reserved4_func
-      case 0x59: // reserved5_func
+      case M5OP_ANNOTATE:
+      case M5OP_RESERVED2:
+      case M5OP_RESERVED3:
+      case M5OP_RESERVED4:
+      case M5OP_RESERVED5:
         warn("Unimplemented m5 op (0x%x)\n", func);
         break;
 
       /* SE mode functions */
-      case 0x60: // syscall_func
+      case M5OP_SE_SYSCALL:
         m5Syscall(tc);
         break;
 
-      case 0x61: // pagefault_func
+      case M5OP_SE_PAGE_FAULT:
         m5PageFault(tc);
         break;
 
       /* dist-gem5 functions */
-      case 0x62: // distToggleSync_func
+      case M5OP_DIST_TOGGLE_SYNC:
         togglesync(tc);
         break;
 

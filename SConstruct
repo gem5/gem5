@@ -554,6 +554,9 @@ Export('extras_dir_list')
 # the ext directory should be on the #includes path
 main.Append(CPPPATH=[Dir('ext')])
 
+# Add shared top-level headers
+main.Prepend(CPPPATH=Dir('include'))
+
 def strip_build_path(path, env):
     path = str(path)
     variant_base = env['BUILDROOT'] + os.path.sep
