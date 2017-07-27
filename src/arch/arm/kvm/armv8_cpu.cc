@@ -260,7 +260,17 @@ ArmV8KvmCPU::updateKvmState()
     }
 
     for (const auto &ri : getSysRegMap()) {
-        const uint64_t value(tc->readMiscReg(ri.idx));
+        uint64_t value;
+        if (ri.is_device) {
+            // This system register is backed by a device. This means
+            // we need to lock the device event queue.
+            EventQueue::ScopedMigration migrate(deviceEventQueue());
+
+            value = tc->readMiscReg(ri.idx);
+        } else {
+            value = tc->readMiscReg(ri.idx);
+        }
+
         DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
         setOneReg(ri.kvm, value);
     }
@@ -323,10 +333,15 @@ ArmV8KvmCPU::updateThreadContext()
     for (const auto &ri : getSysRegMap()) {
         const auto value(getOneRegU64(ri.kvm));
         DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
-        if (ri.is_device)
+        if (ri.is_device) {
+            // This system register is backed by a device. This means
+            // we need to lock the device event queue.
+            EventQueue::ScopedMigration migrate(deviceEventQueue());
+
             tc->setMiscReg(ri.idx, value);
-        else
+        } else {
             tc->setMiscRegNoEffect(ri.idx, value);
+        }
     }
 
     PCState pc(getOneRegU64(INT_REG(regs.pc)));
