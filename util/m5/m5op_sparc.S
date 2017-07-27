@@ -32,7 +32,7 @@
 #define m5_op 0x2
 #define m5_op3 0x37
 
-#include "m5ops.h"
+#include <gem5/asm/generic/m5ops.h>
 
 #define INST(func, rs1, rs2, rd) \
         .long (m5_op) << 30 | (rd) << 25 | (m5_op3) << 19 | (func) << 7 |  \
@@ -49,10 +49,10 @@ func:
 #define END(func)         \
         .size    func, (.-func)
 
-#define DEBUGBREAK INST(debugbreak_func, 0, 0, 0)
-#define M5EXIT INST(exit_func, 0, 0, 0)
-#define PANIC INST(panic_func, 0, 0, 0)
-#define READFILE INST(readfile_func, 0, 0, 0)
+#define DEBUGBREAK INST(M5OP_DEBUG_BREAK, 0, 0, 0)
+#define M5EXIT INST(M5OP_EXIT, 0, 0, 0)
+#define PANIC INST(M5OP_PANIC, 0, 0, 0)
+#define READFILE INST(M5OP_READ_FILE, 0, 0, 0)
 
 LEAF(m5_exit)
     retl

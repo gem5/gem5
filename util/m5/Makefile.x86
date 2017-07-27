@@ -31,7 +31,7 @@ CC=gcc
 AS=as
 LD=ld
 
-CFLAGS=-O2 -DM5OP_ADDR=0xFFFF0000
+CFLAGS=-O2 -DM5OP_ADDR=0xFFFF0000 -I$(PWD)/../../include
 OBJS=m5.o m5op_x86.o
 
 all: m5

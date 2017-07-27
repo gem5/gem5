@@ -54,7 +54,8 @@ JR=jar
 ### JDK_PATH must be set to build gem5OpJni
 #JDK_PATH=/path/to/jdk/version_number
 
-CFLAGS=-O2 -I $(JDK_PATH)/include/ -I $(JDK_PATH)/include/linux -march=armv8-a
+CFLAGS=-O2 -I $(JDK_PATH)/include/ -I $(JDK_PATH)/include/linux \
+       -I$(PWD)/../../include -march=armv8-a
 LDFLAGS=-static -L. -lm5
 
 LIB_OBJS=m5op_arm_A64.o

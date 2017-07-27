@@ -49,8 +49,8 @@ AS=$(CROSS_COMPILE)as
 LD=$(CROSS_COMPILE)ld
 AR=$(CROSS_COMPILE)ar
 
-#CFLAGS=-O2 -march=armv7 -mthumb 
-CFLAGS=-O2 -mthumb 
+#CFLAGS=-O2 -march=armv7 -mthumb -I$(PWD)/../../include
+CFLAGS=-O2 -mthumb -I$(PWD)/../../include
 LDFLAGS=-L. -lm5
 
 OBJS=m5.o

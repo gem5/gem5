@@ -30,7 +30,7 @@
  *          Ali Saidi
  */
 
-#include "m5ops.h"
+#include <gem5/asm/generic/m5ops.h>
 
 #ifdef M5OP_ADDR
 /* Use the memory mapped m5op interface */
@@ -61,26 +61,26 @@ name:                                     \
 
 #endif
 
-TWO_BYTE_OP(arm, arm_func)
-TWO_BYTE_OP(quiesce, quiesce_func)
-TWO_BYTE_OP(quiesceNs, quiescens_func)
-TWO_BYTE_OP(quiesceCycle, quiescecycle_func)
-TWO_BYTE_OP(quiesceTime, quiescetime_func)
-TWO_BYTE_OP(rpns, rpns_func)
-TWO_BYTE_OP(m5_exit, exit_func)
-TWO_BYTE_OP(m5_fail, fail_func)
-TWO_BYTE_OP(m5_initparam, initparam_func)
-TWO_BYTE_OP(m5_loadsymbol, loadsymbol_func)
-TWO_BYTE_OP(m5_reset_stats, resetstats_func)
-TWO_BYTE_OP(m5_dump_stats, dumpstats_func)
-TWO_BYTE_OP(m5_dumpreset_stats, dumprststats_func)
-TWO_BYTE_OP(m5_checkpoint, ckpt_func)
-TWO_BYTE_OP(m5_readfile, readfile_func)
-TWO_BYTE_OP(m5_writefile, writefile_func)
-TWO_BYTE_OP(m5_debugbreak, debugbreak_func)
-TWO_BYTE_OP(m5_switchcpu, switchcpu_func)
-TWO_BYTE_OP(m5_addsymbol, addsymbol_func)
-TWO_BYTE_OP(m5_panic, panic_func)
-TWO_BYTE_OP(m5_work_begin, work_begin_func)
-TWO_BYTE_OP(m5_work_end, work_end_func)
-TWO_BYTE_OP(m5_togglesync, togglesync_func)
+TWO_BYTE_OP(arm, M5OP_ARM)
+TWO_BYTE_OP(quiesce, M5OP_QUIESCE)
+TWO_BYTE_OP(quiesceNs, M5OP_QUIESCE_NS)
+TWO_BYTE_OP(quiesceCycle, M5OP_QUIESCE_CYCLE)
+TWO_BYTE_OP(quiesceTime, M5OP_QUIESCE_TIME)
+TWO_BYTE_OP(rpns, M5OP_RPNS)
+TWO_BYTE_OP(m5_exit, M5OP_EXIT)
+TWO_BYTE_OP(m5_fail, M5OP_FAIL)
+TWO_BYTE_OP(m5_initparam, M5OP_INIT_PARAM)
+TWO_BYTE_OP(m5_loadsymbol, M5OP_LOAD_SYMBOL)
+TWO_BYTE_OP(m5_reset_stats, M5OP_RESET_STATS)
+TWO_BYTE_OP(m5_dump_stats, M5OP_DUMP_STATS)
+TWO_BYTE_OP(m5_dumpreset_stats, M5OP_DUMP_RESET_STATS)
+TWO_BYTE_OP(m5_checkpoint, M5OP_CHECKPOINT)
+TWO_BYTE_OP(m5_readfile, M5OP_READ_FILE)
+TWO_BYTE_OP(m5_writefile, M5OP_WRITE_FILE)
+TWO_BYTE_OP(m5_debugbreak, M5OP_DEBUG_BREAK)
+TWO_BYTE_OP(m5_switchcpu, M5OP_SWITCH_CPU)
+TWO_BYTE_OP(m5_addsymbol, M5OP_ADD_SYMBOL)
+TWO_BYTE_OP(m5_panic, M5OP_PANIC)
+TWO_BYTE_OP(m5_work_begin, M5OP_WORK_BEGIN)
+TWO_BYTE_OP(m5_work_end, M5OP_WORK_END)
+TWO_BYTE_OP(m5_togglesync, M5OP_DIST_TOGGLE_SYNC)

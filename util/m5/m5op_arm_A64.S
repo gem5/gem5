@@ -43,7 +43,7 @@
  *          Andreas Sandberg
  */
 
-#include "m5ops.h"
+#include <gem5/asm/generic/m5ops.h>
 
 #ifdef M5OP_ADDR
 .macro	m5op_func, name, func, subfunc
@@ -65,7 +65,7 @@
 
 .text
 #define M5OP(name, func, subfunc) m5op_func name, func, subfunc
-        FOREACH_M5OP
+        M5OP_FOREACH
 
-#define M5_ANNOTATION(name, ann) m5op_func name, annotate_func, ann
-        FOREACH_M5_ANNOTATION
+#define M5_ANNOTATION(name, ann) m5op_func name, M5OP_ANNOTATE, ann
+        M5OP_FOREACH_ANNOTATION

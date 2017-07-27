@@ -35,7 +35,7 @@ CC=$(CROSS_COMPILE)gcc
 AS=$(CROSS_COMPILE)as
 LD=$(CROSS_COMPILE)ld
 
-CFLAGS=-O2 
+CFLAGS=-O2 -I$(PWD)/../../include
 OBJS=m5.o m5op_alpha.o
 
 all: m5
