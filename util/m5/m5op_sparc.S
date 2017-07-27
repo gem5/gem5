@@ -64,51 +64,51 @@ LEAF(m5_panic)
     PANIC
 END(m5_panic)
 
-LEAF(m5_readfile)
+LEAF(m5_read_file)
     retl
     READFILE
-END(m5_readfile)
+END(m5_read_file)
 
-LEAF(m5_debugbreak)
+LEAF(m5_debug_break)
     retl
     DEBUGBREAK
-END(m5_debugbreak)
+END(m5_debug_break)
 
 /* !!!!!! All code below here just panics !!!!!! */
-LEAF(arm)
+LEAF(m5_arm)
     retl
     PANIC
-END(arm)
+END(m5_arm)
 
-LEAF(quiesce)
+LEAF(m5_quiesce)
     retl
     PANIC
-END(quiesce)
+END(m5_quiesce)
 
-LEAF(quiesceNs)
+LEAF(m5_quiesce_ns)
     retl
     PANIC
-END(quiesceNs)
+END(m5_quiesce_ns)
 
-LEAF(quiesceCycle)
+LEAF(m5_quiesce_cycle)
     retl
     PANIC
-END(quiesceCycle)
+END(m5_quiesce_cycle)
 
-LEAF(quiesceTime)
+LEAF(m5_quiesce_time)
     retl
     PANIC
-END(quiesceTime)
+END(m5_quiesce_time)
 
-LEAF(m5_initparam)
+LEAF(m5_init_param)
     retl
     PANIC
-END(m5_initparam)
+END(m5_init_param)
 
-LEAF(m5_loadsymbol)
+LEAF(m5_load_symbol)
     retl
     PANIC
-END(m5_loadsymbol)
+END(m5_load_symbol)
 
 LEAF(m5_reset_stats)
     retl
@@ -120,25 +120,25 @@ LEAF(m5_dump_stats)
     PANIC
 END(m5_dump_stats)
 
-LEAF(m5_dumpreset_stats)
+LEAF(m5_dump_reset_stats)
     retl
     PANIC
-END(m5_dumpreset_stats)
+END(m5_dump_reset_stats)
 
 LEAF(m5_checkpoint)
     retl
     PANIC
 END(m5_checkpoint)
 
-LEAF(m5_switchcpu)
+LEAF(m5_switch_cpu)
     retl
     PANIC
-END(m5_switchcpu)
+END(m5_switch_cpu)
 
-LEAF(m5_addsymbol)
+LEAF(m5_add_symbol)
     retl
     PANIC
-END(m5_addsymbol)
+END(m5_add_symbol)
 
 LEAF(m5_anbegin)
     retl

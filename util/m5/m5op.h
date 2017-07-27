@@ -38,27 +38,28 @@ extern "C" {
 
 #include <stdint.h>
 
-void arm(uint64_t address);
-void quiesce(void);
-void quiesceNs(uint64_t ns);
-void quiesceCycle(uint64_t cycles);
-uint64_t quiesceTime(void);
-uint64_t rpns();
-void wakeCPU(uint64_t cpuid);
+void m5_arm(uint64_t address);
+void m5_quiesce(void);
+void m5_quiesce_ns(uint64_t ns);
+void m5_quiesce_cycle(uint64_t cycles);
+uint64_t m5_quiesce_time(void);
+uint64_t m5_rpns();
+void m5_wake_cpu(uint64_t cpuid);
 
 void m5_exit(uint64_t ns_delay);
 void m5_fail(uint64_t ns_delay, uint64_t code);
-uint64_t m5_initparam(uint64_t key_str1, uint64_t key_str2);
+uint64_t m5_init_param(uint64_t key_str1, uint64_t key_str2);
 void m5_checkpoint(uint64_t ns_delay, uint64_t ns_period);
 void m5_reset_stats(uint64_t ns_delay, uint64_t ns_period);
 void m5_dump_stats(uint64_t ns_delay, uint64_t ns_period);
-void m5_dumpreset_stats(uint64_t ns_delay, uint64_t ns_period);
-uint64_t m5_readfile(void *buffer, uint64_t len, uint64_t offset);
-uint64_t m5_writefile(void *buffer, uint64_t len, uint64_t offset, const char *filename);
-void m5_debugbreak(void);
-void m5_switchcpu(void);
-void m5_togglesync(void);
-void m5_addsymbol(uint64_t addr, char *symbol);
+void m5_dump_reset_stats(uint64_t ns_delay, uint64_t ns_period);
+uint64_t m5_read_file(void *buffer, uint64_t len, uint64_t offset);
+uint64_t m5_write_file(void *buffer, uint64_t len, uint64_t offset,
+                       const char *filename);
+void m5_debug_break(void);
+void m5_switch_cpu(void);
+void m5_dist_toggle_sync(void);
+void m5_add_symbol(uint64_t addr, char *symbol);
 void m5_loadsymbol();
 void m5_panic(void);
 void m5_work_begin(uint64_t workid, uint64_t threadid);

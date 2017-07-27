@@ -117,7 +117,7 @@ read_file(int dest_fid)
     // Linux does demand paging.
     memset(buf, 0, sizeof(buf));
 
-    while ((len = m5_readfile(buf, sizeof(buf), offset)) > 0) {
+    while ((len = m5_read_file(buf, sizeof(buf), offset)) > 0) {
         uint8_t *base = buf;
         offset += len;
         do {
@@ -158,7 +158,7 @@ write_file(const char *filename)
     memset(buf, 0, sizeof(buf));
 
     while ((len = read(src_fid, buf, sizeof(buf))) > 0) {
-        bytes += m5_writefile(buf, len, offset, filename);
+        bytes += m5_write_file(buf, len, offset, filename);
         offset += len;
     }
     fprintf(stderr, "written %d bytes\n", bytes);
@@ -209,7 +209,7 @@ do_dump_reset_stats(int argc, char *argv[])
 {
     uint64_t ints[2];
     parse_int_args(argc, argv, ints, 2);
-    m5_dumpreset_stats(ints[0], ints[1]);
+    m5_dump_reset_stats(ints[0], ints[1]);
 }
 
 void
@@ -265,7 +265,7 @@ do_addsymbol(int argc, char *argv[])
 
     uint64_t addr = strtoul(argv[0], NULL, 0);
     char *symbol = argv[1];
-    m5_addsymbol(addr, symbol);
+    m5_add_symbol(addr, symbol);
 }
 
 
@@ -275,7 +275,7 @@ do_loadsymbol(int argc, char *argv[])
     if (argc > 0)
         usage();
 
-    m5_loadsymbol();
+    m5_load_symbol();
 }
 
 void
@@ -286,7 +286,7 @@ do_initparam(int argc, char *argv[])
 
     uint64_t key_str[2];
     parse_str_args_to_regs(argc, argv, key_str, 2);
-    uint64_t val = m5_initparam(key_str[0], key_str[1]);
+    uint64_t val = m5_init_param(key_str[0], key_str[1]);
     printf("%"PRIu64, val);
 }
 
@@ -296,7 +296,7 @@ do_sw99param(int argc, char *argv[])
     if (argc != 0)
         usage();
 
-    uint64_t param = m5_initparam(0, 0);
+    uint64_t param = m5_init_param(0, 0);
 
     // run-time, rampup-time, rampdown-time, warmup-time, connections
     printf("%"PRId64" %"PRId64" %"PRId64" %"PRId64" %"PRId64,

@@ -102,31 +102,31 @@
 #define M5OP_AN_GETID           0x11
 
 
-#define M5OP_FOREACH                                          \
-    M5OP(arm, M5OP_ARM, 0);                                   \
-    M5OP(quiesce, M5OP_QUIESCE, 0);                           \
-    M5OP(quiesceNs, M5OP_QUIESCE_NS, 0);                      \
-    M5OP(quiesceCycle, M5OP_QUIESCE_CYCLE, 0);                \
-    M5OP(quiesceTime, M5OP_QUIESCE_TIME, 0);                  \
-    M5OP(rpns, M5OP_RPNS, 0);                                 \
-    M5OP(wakeCPU, M5OP_WAKE_CPU, 0);                          \
-    M5OP(m5_exit, M5OP_EXIT, 0);                              \
-    M5OP(m5_fail, M5OP_FAIL, 0);                              \
-    M5OP(m5_initparam, M5OP_INIT_PARAM, 0);                   \
-    M5OP(m5_loadsymbol, M5OP_LOAD_SYMBOL, 0);                 \
-    M5OP(m5_reset_stats, M5OP_RESET_STATS, 0);                \
-    M5OP(m5_dump_stats, M5OP_DUMP_STATS, 0);                  \
-    M5OP(m5_dumpreset_stats, M5OP_DUMP_RESET_STATS, 0);       \
-    M5OP(m5_checkpoint, M5OP_CHECKPOINT, 0);                  \
-    M5OP(m5_readfile, M5OP_READ_FILE, 0);                     \
-    M5OP(m5_writefile, M5OP_WRITE_FILE, 0);                   \
-    M5OP(m5_debugbreak, M5OP_DEBUG_BREAK, 0);                 \
-    M5OP(m5_switchcpu, M5OP_SWITCH_CPU, 0);                   \
-    M5OP(m5_addsymbol, M5OP_ADD_SYMBOL, 0);                   \
-    M5OP(m5_panic, M5OP_PANIC, 0);                            \
-    M5OP(m5_work_begin, M5OP_WORK_BEGIN, 0);                  \
-    M5OP(m5_work_end, M5OP_WORK_END, 0);                      \
-    M5OP(m5_togglesync, M5OP_DIST_TOGGLE_SYNC, 0);
+#define M5OP_FOREACH                                            \
+    M5OP(m5_arm, M5OP_ARM, 0);                                  \
+    M5OP(m5_quiesce, M5OP_QUIESCE, 0);                          \
+    M5OP(m5_quiesce_ns, M5OP_QUIESCE_NS, 0);                    \
+    M5OP(m5_quiesce_cycle, M5OP_QUIESCE_CYCLE, 0);              \
+    M5OP(m5_quiesce_time, M5OP_QUIESCE_TIME, 0);                \
+    M5OP(m5_rpns, M5OP_RPNS, 0);                                \
+    M5OP(m5_wake_cpu, M5OP_WAKE_CPU, 0);                        \
+    M5OP(m5_exit, M5OP_EXIT, 0);                                \
+    M5OP(m5_fail, M5OP_FAIL, 0);                                \
+    M5OP(m5_init_param, M5OP_INIT_PARAM, 0);                    \
+    M5OP(m5_load_symbol, M5OP_LOAD_SYMBOL, 0);                  \
+    M5OP(m5_reset_stats, M5OP_RESET_STATS, 0);                  \
+    M5OP(m5_dump_stats, M5OP_DUMP_STATS, 0);                    \
+    M5OP(m5_dump_reset_stats, M5OP_DUMP_RESET_STATS, 0);        \
+    M5OP(m5_checkpoint, M5OP_CHECKPOINT, 0);                    \
+    M5OP(m5_read_file, M5OP_READ_FILE, 0);                      \
+    M5OP(m5_write_file, M5OP_WRITE_FILE, 0);                    \
+    M5OP(m5_debug_break, M5OP_DEBUG_BREAK, 0);                  \
+    M5OP(m5_switch_cpu, M5OP_SWITCH_CPU, 0);                    \
+    M5OP(m5_add_symbol, M5OP_ADD_SYMBOL, 0);                    \
+    M5OP(m5_panic, M5OP_PANIC, 0);                              \
+    M5OP(m5_work_begin, M5OP_WORK_BEGIN, 0);                    \
+    M5OP(m5_work_end, M5OP_WORK_END, 0);                        \
+    M5OP(m5_dist_togglesync, M5OP_DIST_TOGGLE_SYNC, 0);
 
 #define M5OP_FOREACH_ANNOTATION                      \
     M5_ANNOTATION(m5a_bsm, M5OP_AN_BSM);             \
