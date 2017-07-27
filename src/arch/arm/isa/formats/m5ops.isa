@@ -42,32 +42,32 @@ def format M5ops() {{
     {
         const uint32_t m5func = bits(machInst, 23, 16);
         switch(m5func) {
-            case 0x00: return new Arm(machInst);
-            case 0x01: return new Quiesce(machInst);
-            case 0x02: return new QuiesceNs(machInst);
-            case 0x03: return new QuiesceCycles(machInst);
-            case 0x04: return new QuiesceTime(machInst);
-            case 0x07: return new Rpns(machInst);
-            case 0x09: return new WakeCPU(machInst);
-            case 0x10: return new Deprecated_ivlb(machInst);
-            case 0x11: return new Deprecated_ivle(machInst);
-            case 0x20: return new Deprecated_exit (machInst);
-            case 0x21: return new M5exit(machInst);
-            case 0x22: return new M5fail(machInst);
-            case 0x31: return new Loadsymbol(machInst);
-            case 0x30: return new Initparam(machInst);
-            case 0x40: return new Resetstats(machInst);
-            case 0x41: return new Dumpstats(machInst);
-            case 0x42: return new Dumpresetstats(machInst);
-            case 0x43: return new M5checkpoint(machInst);
-            case 0x4F: return new M5writefile(machInst);
-            case 0x50: return new M5readfile(machInst);
-            case 0x51: return new M5break(machInst);
-            case 0x52: return new M5switchcpu(machInst);
-            case 0x53: return new M5addsymbol(machInst);
-            case 0x54: return new M5panic(machInst);
-            case 0x5a: return new M5workbegin(machInst);
-            case 0x5b: return new M5workend(machInst);
+            case M5OP_ARM: return new Arm(machInst);
+            case M5OP_QUIESCE: return new Quiesce(machInst);
+            case M5OP_QUIESCE_NS: return new QuiesceNs(machInst);
+            case M5OP_QUIESCE_CYCLE: return new QuiesceCycles(machInst);
+            case M5OP_QUIESCE_TIME: return new QuiesceTime(machInst);
+            case M5OP_RPNS: return new Rpns(machInst);
+            case M5OP_WAKE_CPU: return new WakeCPU(machInst);
+            case M5OP_DEPRECATED1: return new Deprecated_ivlb(machInst);
+            case M5OP_DEPRECATED2: return new Deprecated_ivle(machInst);
+            case M5OP_DEPRECATED3: return new Deprecated_exit (machInst);
+            case M5OP_EXIT: return new M5exit(machInst);
+            case M5OP_FAIL: return new M5fail(machInst);
+            case M5OP_LOAD_SYMBOL: return new Loadsymbol(machInst);
+            case M5OP_INIT_PARAM: return new Initparam(machInst);
+            case M5OP_RESET_STATS: return new Resetstats(machInst);
+            case M5OP_DUMP_STATS: return new Dumpstats(machInst);
+            case M5OP_DUMP_RESET_STATS: return new Dumpresetstats(machInst);
+            case M5OP_CHECKPOINT: return new M5checkpoint(machInst);
+            case M5OP_WRITE_FILE: return new M5writefile(machInst);
+            case M5OP_READ_FILE: return new M5readfile(machInst);
+            case M5OP_DEBUG_BREAK: return new M5break(machInst);
+            case M5OP_SWITCH_CPU: return new M5switchcpu(machInst);
+            case M5OP_ADD_SYMBOL: return new M5addsymbol(machInst);
+            case M5OP_PANIC: return new M5panic(machInst);
+            case M5OP_WORK_BEGIN: return new M5workbegin(machInst);
+            case M5OP_WORK_END: return new M5workend(machInst);
         }
    }
    '''
