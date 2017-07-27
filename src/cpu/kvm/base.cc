@@ -1147,10 +1147,9 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
         delete pkt;
         return clockPeriod() * ipr_delay;
     } else {
-        // Temporarily lock and migrate to the event queue of the
-        // VM. This queue is assumed to "own" all devices we need to
-        // access if running in multi-core mode.
-        EventQueue::ScopedMigration migrate(vm.eventQueue());
+        // Temporarily lock and migrate to the device event queue to
+        // prevent races in multi-core mode.
+        EventQueue::ScopedMigration migrate(deviceEventQueue());
 
         return dataPort.submitIO(pkt);
     }

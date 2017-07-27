@@ -1346,10 +1346,9 @@ X86KvmCPU::handleKvmExitIO()
     }
 
     const MemCmd cmd(isWrite ? MemCmd::WriteReq : MemCmd::ReadReq);
-    // Temporarily lock and migrate to the event queue of the
-    // VM. This queue is assumed to "own" all devices we need to
-    // access if running in multi-core mode.
-    EventQueue::ScopedMigration migrate(vm.eventQueue());
+    // Temporarily lock and migrate to the device event queue to
+    // prevent races in multi-core mode.
+    EventQueue::ScopedMigration migrate(deviceEventQueue());
     for (int i = 0; i < count; ++i) {
         RequestPtr io_req = new Request(pAddr, kvm_run.io.size,
                                         Request::UNCACHEABLE, dataMasterId());
