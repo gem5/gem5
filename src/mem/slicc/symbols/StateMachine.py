@@ -1400,7 +1400,7 @@ if (!checkResourceAvailable(%s_RequestType_%s, addr)) {
         code('''
       default:
         panic("Invalid transition\\n"
-              "%s time: %d addr: %s event: %s state: %s\\n",
+              "%s time: %d addr: %#x event: %s state: %s\\n",
               name(), curCycle(), addr, event, state);
     }
 
