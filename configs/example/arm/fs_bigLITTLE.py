@@ -115,8 +115,7 @@ class Ex5LittleCluster(devices.CpuCluster):
 def createSystem(caches, kernel, bootscript, disks=[]):
     sys = devices.SimpleSystem(caches, default_mem_size,
                                kernel=SysPaths.binary(kernel),
-                               readfile=bootscript,
-                               machine_type="DTOnly")
+                               readfile=bootscript)
 
     sys.mem_ctrls = SimpleMemory(range=sys._mem_range)
     sys.mem_ctrls.port = sys.membus.master

@@ -84,7 +84,7 @@ class GenericArmSystem(ArmSystem):
     type = 'GenericArmSystem'
     cxx_header = "arch/arm/system.hh"
     load_addr_mask = 0x0fffffff
-    machine_type = Param.ArmMachineType('VExpress_EMM',
+    machine_type = Param.ArmMachineType('DTOnly',
         "Machine id from http://www.arm.linux.org.uk/developer/machines/")
     atags_addr = Param.Addr("Address where default atags structure should " \
                                 "be written")

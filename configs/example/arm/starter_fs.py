@@ -110,8 +110,7 @@ def create(args):
                                   mem_mode=mem_mode,
                                   dtb_filename=dtb_file,
                                   kernel=SysPaths.binary(args.kernel),
-                                  readfile=args.script,
-                                  machine_type="DTOnly")
+                                  readfile=args.script)
 
     MemConfig.config_mem(args, system)
 
