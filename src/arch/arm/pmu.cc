@@ -147,8 +147,10 @@ PMU::setMiscReg(int misc_reg, MiscReg val)
       case MISCREG_PMSWINC:
         for (int i = 0; i < counters.size(); ++i) {
             CounterState &ctr(getCounter(i));
-            if (ctr.enabled && (val & (1 << i)))
+            if (ctr.enabled && (val & (1 << i))
+                && ctr.eventId == ARCH_EVENT_SW_INCR ) {
                 ++ctr.value;
+            }
         }
         break;
 
