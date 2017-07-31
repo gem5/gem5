@@ -41,7 +41,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <csignal>
+#include <cstring>
 
 #include "base/misc.hh"
 #include "base/types.hh"
@@ -200,25 +202,43 @@ PollQueue::service()
     }
 }
 
+template <class ArgT>
+static int fcntlHelper(int fd, int cmd, ArgT arg)
+{
+    int retval = fcntl(fd, cmd, arg);
+    if (retval == -1) {
+        char *errstr = strerror(errno);
+        panic("fcntl(%d, %d, %s): \"%s\" when setting up async IO.\n",
+              errstr, fd, cmd, arg);
+    }
+    return retval;
+}
+
+static int fcntlHelper(int fd, int cmd)
+{
+    int retval = fcntl(fd, cmd);
+    if (retval == -1) {
+        char *errstr = strerror(errno);
+        panic("fcntl(%d, %d): \"%s\" when setting up async IO.\n",
+              errstr, fd, cmd);
+    }
+    return retval;
+}
+
 void
 PollQueue::setupAsyncIO(int fd, bool set)
 {
-    int flags = fcntl(fd, F_GETFL);
-    if (flags == -1)
-        panic("Could not set up async IO");
+    int flags = fcntlHelper(fd, F_GETFL);
 
     if (set)
         flags |= FASYNC;
     else
         flags &= ~(FASYNC);
 
-    if (set) {
-      if (fcntl(fd, F_SETOWN, getpid()) == -1)
-        panic("Could not set up async IO");
-    }
+    if (set)
+        fcntlHelper(fd, F_SETOWN, getpid());
 
-    if (fcntl(fd, F_SETFL, flags) == -1)
-        panic("Could not set up async IO");
+    fcntlHelper(fd, F_SETFL, flags);
 
     // The file descriptor might already have events pending. We won't
     // see them if they occurred before we set the FASYNC
