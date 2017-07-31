@@ -135,7 +135,10 @@ pybind_init_event(py::module &m_native)
                std::unique_ptr<GlobalSimLoopExitEvent, py::nodelete>>(
                m, "GlobalSimLoopExitEvent")
         .def("getCause", &GlobalSimLoopExitEvent::getCause)
-        .def("getCode", &GlobalSimLoopExitEvent::getCode)
+        .def("getCode", [](GlobalSimLoopExitEvent *e) {
+                return py::reinterpret_steal<py::object>(
+                    PyInt_FromLong(e->getCode()));
+            })
         ;
 
     // Event base class. These should never be returned directly to
