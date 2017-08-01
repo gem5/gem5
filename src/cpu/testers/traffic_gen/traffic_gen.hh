@@ -48,6 +48,7 @@
 #include "cpu/testers/traffic_gen/base_gen.hh"
 #include "cpu/testers/traffic_gen/dram_gen.hh"
 #include "cpu/testers/traffic_gen/dram_rot_gen.hh"
+#include "cpu/testers/traffic_gen/exit_gen.hh"
 #include "cpu/testers/traffic_gen/idle_gen.hh"
 #include "cpu/testers/traffic_gen/linear_gen.hh"
 #include "cpu/testers/traffic_gen/random_gen.hh"

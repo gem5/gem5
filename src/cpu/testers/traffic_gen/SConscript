@@ -47,6 +47,7 @@ if env['HAVE_PROTOBUF']:
     Source('base_gen.cc')
     Source('dram_gen.cc')
     Source('dram_rot_gen.cc')
+    Source('exit_gen.cc')
     Source('idle_gen.cc')
     Source('linear_gen.cc')
     Source('random_gen.cc')
