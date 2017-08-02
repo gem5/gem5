@@ -2419,6 +2419,11 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
                 // mshr when all had previously been utilized
                 clearBlocked(Blocked_NoMSHRs);
             }
+
+            // given that no response is expected, delete Request and Packet
+            delete tgt_pkt->req;
+            delete tgt_pkt;
+
             return false;
         }
     }
