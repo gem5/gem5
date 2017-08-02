@@ -1423,6 +1423,9 @@ TableWalker::doL1Descriptor()
         return;
     }
 
+    currState->l1Desc.data = htog(currState->l1Desc.data,
+                                  byteOrder(currState->tc));
+
     DPRINTF(TLB, "L1 descriptor for %#x is %#x\n",
             currState->vaddr_tainted, currState->l1Desc.data);
     TlbEntry te;
@@ -1517,6 +1520,9 @@ TableWalker::doLongDescriptor()
     if (currState->fault != NoFault) {
         return;
     }
+
+    currState->longDesc.data = htog(currState->longDesc.data,
+                                    byteOrder(currState->tc));
 
     DPRINTF(TLB, "L%d descriptor for %#llx is %#llx (%s)\n",
             currState->longDesc.lookupLevel, currState->vaddr_tainted,
@@ -1708,6 +1714,9 @@ TableWalker::doL2Descriptor()
     if (currState->fault != NoFault) {
         return;
     }
+
+    currState->l2Desc.data = htog(currState->l2Desc.data,
+                                  byteOrder(currState->tc));
 
     DPRINTF(TLB, "L2 descriptor for %#x is %#x\n",
             currState->vaddr_tainted, currState->l2Desc.data);

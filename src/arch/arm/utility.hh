@@ -348,6 +348,11 @@ int decodePhysAddrRange64(uint8_t pa_enc);
  */
 uint8_t encodePhysAddrRange64(int pa_size);
 
+inline ByteOrder byteOrder(ThreadContext *tc)
+{
+    return isBigEndian64(tc) ? BigEndianByteOrder : LittleEndianByteOrder;
+};
+
 }
 
 #endif
