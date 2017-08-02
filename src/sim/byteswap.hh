@@ -154,6 +154,20 @@ template <typename T> inline T betoh(T value) {return swap_byte(value);}
         #error Invalid Endianess
 #endif
 
+template <typename T>
+inline T htog(T value, ByteOrder guest_byte_order)
+{
+    return guest_byte_order == BigEndianByteOrder ?
+        htobe(value) : htole(value);
+}
+
+template <typename T>
+inline T gtoh(T value, ByteOrder guest_byte_order)
+{
+    return guest_byte_order == BigEndianByteOrder ?
+        betoh(value) : letoh(value);
+}
+
 namespace BigEndianGuest
 {
     const ByteOrder GuestByteOrder = BigEndianByteOrder;
