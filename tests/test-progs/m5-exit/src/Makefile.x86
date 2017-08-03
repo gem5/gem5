@@ -1,0 +1,28 @@
+SERVER_USER=
+SERVER_PATH=/z/www/htdocs/dist/current/test-progs/m5-exit/bin/x86/linux
+FETCH_PATH=http://gem5.org/dist/current/test-progs/m5-exit/bin/x86/linux
+
+UPLOAD_LOCATION=$(SERVER_USER)daystrom.gem5.org:$(SERVER_PATH)
+
+M5_UTIL:=${CURDIR}/../../../../util/m5
+M5_INCLUDE:=${CURDIR}/../../../../include/
+
+all: m5_exit
+
+upload: m5_exit
+	scp m5_exit $(UPLOAD_LOCATION)
+
+# NOTE: For docker to work, all of the files must be in this directory
+m5_exit: m5-exit.c
+	cp -r $(M5_INCLUDE)/gem5 .
+	cp $(M5_UTIL)/m5op_x86.S .
+	./dockcross-x64 -c '$$CC -I. m5op_x86.S m5-exit.c -o m5_exit -static -DM5'
+	rm m5op_x86.S
+	rm -r gem5
+
+dockcross-x64:
+	docker run --rm dockcross/linux-x64 > ./dockcross-x64
+	chmod +x ./dockcross-x64
+
+clean:
+	rm -f dockcross-* m5_exit
