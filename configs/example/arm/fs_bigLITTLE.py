@@ -117,8 +117,8 @@ def createSystem(caches, kernel, bootscript, disks=[]):
                                kernel=SysPaths.binary(kernel),
                                readfile=bootscript)
 
-    sys.mem_ctrls = SimpleMemory(range=sys._mem_range)
-    sys.mem_ctrls.port = sys.membus.master
+    sys.mem_ctrls = [ SimpleMemory(range=r, port=sys.membus.master)
+                      for r in sys.mem_ranges ]
 
     sys.connect()
 
