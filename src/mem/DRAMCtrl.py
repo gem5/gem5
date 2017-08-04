@@ -47,6 +47,7 @@
 from m5.params import *
 from m5.proxy import *
 from AbstractMemory import *
+from QoSMemCtrl import *
 
 # Enum for memory scheduling algorithms, currently First-Come
 # First-Served and a First-Row Hit then First-Come First-Served
@@ -69,7 +70,7 @@ class PageManage(Enum): vals = ['open', 'open_adaptive', 'close',
 # that aims to model the most important system-level performance
 # effects of a DRAM without getting into too much detail of the DRAM
 # itself.
-class DRAMCtrl(AbstractMemory):
+class DRAMCtrl(QoSMemCtrl):
     type = 'DRAMCtrl'
     cxx_header = "mem/dram_ctrl.hh"
 

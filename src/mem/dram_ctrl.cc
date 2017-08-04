@@ -53,17 +53,16 @@
 #include "debug/DRAMPower.hh"
 #include "debug/DRAMState.hh"
 #include "debug/Drain.hh"
+#include "debug/QOS.hh"
 #include "sim/system.hh"
 
 using namespace std;
 using namespace Data;
 
 DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
-    AbstractMemory(p),
+    QoS::MemCtrl(p),
     port(name() + ".port", *this), isTimingMode(false),
     retryRdReq(false), retryWrReq(false),
-    busState(READ),
-    busStateNext(READ),
     nextReqEvent([this]{ processNextReqEvent(); }, name()),
     respondEvent([this]{ processRespondEvent(); }, name()),
     deviceSize(p->device_size),
@@ -107,6 +106,9 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
 
     fatal_if(!isPowerOf2(burstSize), "DRAM burst size %d is not allowed, "
              "must be a power of two\n", burstSize);
+    readQueue.resize(p->qos_priorities);
+    writeQueue.resize(p->qos_priorities);
+
 
     for (int i = 0; i < ranksPerChannel; i++) {
         Rank* rank = new Rank(*this, p, i);
@@ -186,7 +188,7 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
 void
 DRAMCtrl::init()
 {
-    AbstractMemory::init();
+    MemCtrl::init();
 
    if (!port.isConnected()) {
         fatal("DRAMCtrl %s is unconnected!\n", name());
@@ -283,19 +285,21 @@ bool
 DRAMCtrl::readQueueFull(unsigned int neededEntries) const
 {
     DPRINTF(DRAM, "Read queue limit %d, current size %d, entries needed %d\n",
-            readBufferSize, readQueue.size() + respQueue.size(),
+            readBufferSize, totalReadQueueSize + respQueue.size(),
             neededEntries);
 
-    return
-        (readQueue.size() + respQueue.size() + neededEntries) > readBufferSize;
+    auto rdsize_new = totalReadQueueSize + respQueue.size() + neededEntries;
+    return rdsize_new > readBufferSize;
 }
 
 bool
 DRAMCtrl::writeQueueFull(unsigned int neededEntries) const
 {
     DPRINTF(DRAM, "Write queue limit %d, current size %d, entries needed %d\n",
-            writeBufferSize, writeQueue.size(), neededEntries);
-    return (writeQueue.size() + neededEntries) > writeBufferSize;
+            writeBufferSize, totalWriteQueueSize, neededEntries);
+
+    auto wrsize_new = (totalWriteQueueSize + neededEntries);
+    return  wrsize_new > writeBufferSize;
 }
 
 DRAMCtrl::DRAMPacket*
@@ -427,6 +431,7 @@ DRAMCtrl::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
                         pkt->getAddr() + pkt->getSize()) - addr;
         readPktSize[ceilLog2(size)]++;
         readBursts++;
+        masterReadAccesses[pkt->masterId()]++;
 
         // First check write buffer to see if the data is already at
         // the controller
@@ -435,17 +440,23 @@ DRAMCtrl::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
         // if the burst address is not present then there is no need
         // looking any further
         if (isInWriteQueue.find(burst_addr) != isInWriteQueue.end()) {
-            for (const auto& p : writeQueue) {
-                // check if the read is subsumed in the write queue
-                // packet we are looking at
-                if (p->addr <= addr && (addr + size) <= (p->addr + p->size)) {
-                    foundInWrQ = true;
-                    servicedByWrQ++;
-                    pktsServicedByWrQ++;
-                    DPRINTF(DRAM, "Read to addr %lld with size %d serviced by "
-                            "write queue\n", addr, size);
-                    bytesReadWrQ += burstSize;
-                    break;
+            for (const auto& vec : writeQueue) {
+                for (const auto& p : vec) {
+                    // check if the read is subsumed in the write queue
+                    // packet we are looking at
+                    if (p->addr <= addr &&
+                       ((addr + size) <= (p->addr + p->size))) {
+
+                        foundInWrQ = true;
+                        servicedByWrQ++;
+                        pktsServicedByWrQ++;
+                        DPRINTF(DRAM,
+                                "Read to addr %lld with size %d serviced by "
+                                "write queue\n",
+                                addr, size);
+                        bytesReadWrQ += burstSize;
+                        break;
+                    }
                 }
             }
         }
@@ -465,17 +476,20 @@ DRAMCtrl::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
             dram_pkt->burstHelper = burst_helper;
 
             assert(!readQueueFull(1));
-            rdQLenPdf[readQueue.size() + respQueue.size()]++;
+            rdQLenPdf[totalReadQueueSize + respQueue.size()]++;
 
             DPRINTF(DRAM, "Adding to read queue\n");
 
-            readQueue.push_back(dram_pkt);
+            readQueue[dram_pkt->qosValue()].push_back(dram_pkt);
 
-            // increment read entries of the rank
             ++dram_pkt->rankRef.readEntries;
 
+            // log packet
+            logRequest(MemCtrl::READ, pkt->masterId(), pkt->qosValue(),
+                       dram_pkt->addr, 1);
+
             // Update stats
-            avgRdQLen = readQueue.size() + respQueue.size();
+            avgRdQLen = totalReadQueueSize + respQueue.size();
         }
 
         // Starting address of next dram pkt (aligend to burstSize boundary)
@@ -515,6 +529,7 @@ DRAMCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
                         pkt->getAddr() + pkt->getSize()) - addr;
         writePktSize[ceilLog2(size)]++;
         writeBursts++;
+        masterWriteAccesses[pkt->masterId()]++;
 
         // see if we can merge with an existing item in the write
         // queue and keep track of whether we have merged or not
@@ -526,17 +541,22 @@ DRAMCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
         if (!merged) {
             DRAMPacket* dram_pkt = decodeAddr(pkt, addr, size, false);
 
-            assert(writeQueue.size() < writeBufferSize);
-            wrQLenPdf[writeQueue.size()]++;
+            assert(totalWriteQueueSize < writeBufferSize);
+            wrQLenPdf[totalWriteQueueSize]++;
 
             DPRINTF(DRAM, "Adding to write queue\n");
 
-            writeQueue.push_back(dram_pkt);
+            writeQueue[dram_pkt->qosValue()].push_back(dram_pkt);
             isInWriteQueue.insert(burstAlign(addr));
-            assert(writeQueue.size() == isInWriteQueue.size());
+
+            // log packet
+            logRequest(MemCtrl::WRITE, pkt->masterId(), pkt->qosValue(),
+                       dram_pkt->addr, 1);
+
+            assert(totalWriteQueueSize == isInWriteQueue.size());
 
             // Update stats
-            avgWrQLen = writeQueue.size();
+            avgWrQLen = totalWriteQueueSize;
 
             // increment write entries of the rank
             ++dram_pkt->rankRef.writeEntries;
@@ -568,19 +588,28 @@ DRAMCtrl::addToWriteQueue(PacketPtr pkt, unsigned int pktCount)
 }
 
 void
-DRAMCtrl::printQs() const {
+DRAMCtrl::printQs() const
+{
+#if TRACING_ON
     DPRINTF(DRAM, "===READ QUEUE===\n\n");
-    for (auto i = readQueue.begin() ;  i != readQueue.end() ; ++i) {
-        DPRINTF(DRAM, "Read %lu\n", (*i)->addr);
+    for (const auto& queue : readQueue) {
+        for (const auto& packet : queue) {
+            DPRINTF(DRAM, "Read %lu\n", packet->addr);
+        }
     }
+
     DPRINTF(DRAM, "\n===RESP QUEUE===\n\n");
-    for (auto i = respQueue.begin() ;  i != respQueue.end() ; ++i) {
-        DPRINTF(DRAM, "Response %lu\n", (*i)->addr);
+    for (const auto& packet : respQueue) {
+        DPRINTF(DRAM, "Response %lu\n", packet->addr);
     }
+
     DPRINTF(DRAM, "\n===WRITE QUEUE===\n\n");
-    for (auto i = writeQueue.begin() ;  i != writeQueue.end() ; ++i) {
-        DPRINTF(DRAM, "Write %lu\n", (*i)->addr);
+    for (const auto& queue : writeQueue) {
+        for (const auto& packet : queue) {
+            DPRINTF(DRAM, "Write %lu\n", packet->addr);
+        }
     }
+#endif // TRACING_ON
 }
 
 bool
@@ -610,6 +639,9 @@ DRAMCtrl::recvTimingReq(PacketPtr pkt)
     unsigned size = pkt->getSize();
     unsigned offset = pkt->getAddr() & (burstSize - 1);
     unsigned int dram_pkt_count = divCeil(offset + size, burstSize);
+
+    // run the QoS scheduler and assign a QoS priority value to the packet
+    qosSchedule( { &readQueue, &writeQueue }, burstSize, pkt);
 
     // check local buffers and do not accept if full
     if (pkt->isRead()) {
@@ -721,7 +753,7 @@ DRAMCtrl::processRespondEvent()
     } else {
         // if there is nothing left in any queue, signal a drain
         if (drainState() == DrainState::Draining &&
-            writeQueue.empty() && readQueue.empty() && allRanksDrained()) {
+            !totalWriteQueueSize && !totalReadQueueSize && allRanksDrained()) {
 
             DPRINTF(Drain, "DRAM controller done draining\n");
             signalDrainDone();
@@ -736,49 +768,43 @@ DRAMCtrl::processRespondEvent()
     }
 }
 
-bool
-DRAMCtrl::chooseNext(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
+DRAMCtrl::DRAMPacketQueue::iterator
+DRAMCtrl::chooseNext(DRAMPacketQueue& queue, Tick extra_col_delay)
 {
-    // This method does the arbitration between requests. The chosen
-    // packet is simply moved to the head of the queue. The other
-    // methods know that this is the place to look. For example, with
-    // FCFS, this method does nothing
-    assert(!queue.empty());
+    // This method does the arbitration between requests.
 
-    // bool to indicate if a packet to an available rank is found
-    bool found_packet = false;
-    if (queue.size() == 1) {
-        DRAMPacket* dram_pkt = queue.front();
-        // available rank corresponds to state refresh idle
-        if (ranks[dram_pkt->rank]->inRefIdleState()) {
-            found_packet = true;
-            DPRINTF(DRAM, "Single request, going to a free rank\n");
-        } else {
-            DPRINTF(DRAM, "Single request, going to a busy rank\n");
-        }
-        return found_packet;
-    }
+    DRAMCtrl::DRAMPacketQueue::iterator ret = queue.end();
 
-    if (memSchedPolicy == Enums::fcfs) {
-        // check if there is a packet going to a free rank
-        for (auto i = queue.begin(); i != queue.end() ; ++i) {
-            DRAMPacket* dram_pkt = *i;
+    if (!queue.empty()) {
+        if (queue.size() == 1) {
+            // available rank corresponds to state refresh idle
+            DRAMPacket* dram_pkt = *(queue.begin());
             if (ranks[dram_pkt->rank]->inRefIdleState()) {
-                queue.erase(i);
-                queue.push_front(dram_pkt);
-                found_packet = true;
-                break;
+                ret = queue.begin();
+                DPRINTF(DRAM, "Single request, going to a free rank\n");
+            } else {
+                DPRINTF(DRAM, "Single request, going to a busy rank\n");
             }
+        } else if (memSchedPolicy == Enums::fcfs) {
+            // check if there is a packet going to a free rank
+            for (auto i = queue.begin(); i != queue.end(); ++i) {
+                DRAMPacket* dram_pkt = *i;
+                if (ranks[dram_pkt->rank]->inRefIdleState()) {
+                    ret = i;
+                    break;
+                }
+            }
+        } else if (memSchedPolicy == Enums::frfcfs) {
+            ret = chooseNextFRFCFS(queue, extra_col_delay);
+        } else {
+            panic("No scheduling policy chosen\n");
         }
-    } else if (memSchedPolicy == Enums::frfcfs) {
-        found_packet = reorderQueue(queue, extra_col_delay);
-    } else
-        panic("No scheduling policy chosen\n");
-    return found_packet;
+    }
+    return ret;
 }
 
-bool
-DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
+DRAMCtrl::DRAMPacketQueue::iterator
+DRAMCtrl::chooseNextFRFCFS(DRAMPacketQueue& queue, Tick extra_col_delay)
 {
     // Only determine this if needed
     vector<uint32_t> earliest_banks(ranksPerChannel, 0);
@@ -811,12 +837,20 @@ DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
     for (auto i = queue.begin(); i != queue.end() ; ++i) {
         DRAMPacket* dram_pkt = *i;
         const Bank& bank = dram_pkt->bankRef;
-        const Tick col_allowed_at = dram_pkt->isRead ? bank.rdAllowedAt :
-                                                       bank.wrAllowedAt;
+        const Tick col_allowed_at = dram_pkt->isRead() ? bank.rdAllowedAt :
+                                                         bank.wrAllowedAt;
+
+        DPRINTF(DRAM, "%s checking packet in bank %d\n",
+                __func__, dram_pkt->bankRef.bank);
 
         // check if rank is not doing a refresh and thus is available, if not,
         // jump to the next packet
         if (dram_pkt->rankRef.inRefIdleState()) {
+
+            DPRINTF(DRAM,
+                    "%s bank %d - Rank %d available\n", __func__,
+                    dram_pkt->bankRef.bank, dram_pkt->rankRef.rank);
+
             // check if it is a row hit
             if (bank.openRow == dram_pkt->row) {
                 // no additional rank-to-rank or same bank-group
@@ -827,7 +861,7 @@ DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
                     // commands that can issue seamlessly, without
                     // additional delay, such as same rank accesses
                     // and/or different bank-group accesses
-                    DPRINTF(DRAM, "Seamless row buffer hit\n");
+                    DPRINTF(DRAM, "%s Seamless row buffer hit\n", __func__);
                     selected_pkt_it = i;
                     // no need to look through the remaining queue entries
                     break;
@@ -838,7 +872,7 @@ DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
                     // the current one
                     selected_pkt_it = i;
                     found_prepped_pkt = true;
-                    DPRINTF(DRAM, "Prepped row buffer hit\n");
+                    DPRINTF(DRAM, "%s Prepped row buffer hit\n", __func__);
                 }
             } else if (!found_earliest_pkt) {
                 // if we have not initialised the bank status, do it
@@ -866,17 +900,17 @@ DRAMCtrl::reorderQueue(std::deque<DRAMPacket*>& queue, Tick extra_col_delay)
                         selected_pkt_it = i;
                 }
             }
+        } else {
+            DPRINTF(DRAM, "%s bank %d - Rank %d not available\n", __func__,
+                    dram_pkt->bankRef.bank, dram_pkt->rankRef.rank);
         }
     }
 
-    if (selected_pkt_it != queue.end()) {
-        DRAMPacket* selected_pkt = *selected_pkt_it;
-        queue.erase(selected_pkt_it);
-        queue.push_front(selected_pkt);
-        return true;
+    if (selected_pkt_it == queue.end()) {
+        DPRINTF(DRAM, "%s no available ranks found\n", __func__);
     }
 
-    return false;
+    return selected_pkt_it;
 }
 
 void
@@ -1109,7 +1143,7 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     }
 
     // respect any constraints on the command (e.g. tRCD or tCCD)
-    const Tick col_allowed_at = dram_pkt->isRead ?
+    const Tick col_allowed_at = dram_pkt->isRead() ?
                                           bank.rdAllowedAt : bank.wrAllowedAt;
 
     // we need to wait until the bus is available before we can issue
@@ -1136,15 +1170,15 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
                     // tCCD_L is default requirement for same BG timing
                     // tCCD_L_WR is required for write-to-write
                     // Need to also take bus turnaround delays into account
-                    dly_to_rd_cmd = dram_pkt->isRead ?
+                    dly_to_rd_cmd = dram_pkt->isRead() ?
                                     tCCD_L : std::max(tCCD_L, wrToRdDly);
-                    dly_to_wr_cmd = dram_pkt->isRead ?
+                    dly_to_wr_cmd = dram_pkt->isRead() ?
                                     std::max(tCCD_L, rdToWrDly) : tCCD_L_WR;
                 } else {
                     // tBURST is default requirement for diff BG timing
                     // Need to also take bus turnaround delays into account
-                    dly_to_rd_cmd = dram_pkt->isRead ? tBURST : wrToRdDly;
-                    dly_to_wr_cmd = dram_pkt->isRead ? rdToWrDly : tBURST;
+                    dly_to_rd_cmd = dram_pkt->isRead() ? tBURST : wrToRdDly;
+                    dly_to_wr_cmd = dram_pkt->isRead() ? rdToWrDly : tBURST;
                 }
             } else {
                 // different rank is by default in a different bank group and
@@ -1167,7 +1201,7 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // time before a precharge, in the case of a read, respect the
     // read to precharge constraint
     bank.preAllowedAt = std::max(bank.preAllowedAt,
-                                 dram_pkt->isRead ? cmd_at + tRTP :
+                                 dram_pkt->isRead() ? cmd_at + tRTP :
                                  dram_pkt->readyTime + tWR);
 
     // increment the bytes accessed and the accesses per row
@@ -1195,25 +1229,32 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
         bool got_bank_conflict = false;
 
         // either look at the read queue or write queue
-        const deque<DRAMPacket*>& queue = dram_pkt->isRead ? readQueue :
-            writeQueue;
-        auto p = queue.begin();
-        // make sure we are not considering the packet that we are
-        // currently dealing with (which is the head of the queue)
-        ++p;
+        const std::vector<DRAMPacketQueue>& queue =
+                dram_pkt->isRead() ? readQueue : writeQueue;
 
-        // keep on looking until we find a hit or reach the end of the queue
-        // 1) if a hit is found, then both open and close adaptive policies keep
-        // the page open
-        // 2) if no hit is found, got_bank_conflict is set to true if a bank
-        // conflict request is waiting in the queue
-        while (!got_more_hits && p != queue.end()) {
-            bool same_rank_bank = (dram_pkt->rank == (*p)->rank) &&
-                (dram_pkt->bank == (*p)->bank);
-            bool same_row = dram_pkt->row == (*p)->row;
-            got_more_hits |= same_rank_bank && same_row;
-            got_bank_conflict |= same_rank_bank && !same_row;
-            ++p;
+        for (uint8_t i = 0; i < numPriorities(); ++i) {
+            auto p = queue[i].begin();
+            // keep on looking until we find a hit or reach the end of the queue
+            // 1) if a hit is found, then both open and close adaptive policies keep
+            // the page open
+            // 2) if no hit is found, got_bank_conflict is set to true if a bank
+            // conflict request is waiting in the queue
+            // 3) make sure we are not considering the packet that we are
+            // currently dealing with
+            while (!got_more_hits && p != queue[i].end()) {
+                if (dram_pkt != (*p)) {
+                    bool same_rank_bank = (dram_pkt->rank == (*p)->rank) &&
+                                          (dram_pkt->bank == (*p)->bank);
+
+                    bool same_row = dram_pkt->row == (*p)->row;
+                    got_more_hits |= same_rank_bank && same_row;
+                    got_bank_conflict |= same_rank_bank && !same_row;
+                }
+                ++p;
+            }
+
+            if (got_more_hits)
+                break;
         }
 
         // auto pre-charge when either
@@ -1225,7 +1266,7 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     }
 
     // DRAMPower trace command to be written
-    std::string mem_cmd = dram_pkt->isRead ? "RD" : "WR";
+    std::string mem_cmd = dram_pkt->isRead() ? "RD" : "WR";
 
     // MemCommand required for DRAMPower library
     MemCommand::cmds command = (mem_cmd == "RD") ? MemCommand::RD :
@@ -1260,7 +1301,7 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     nextReqTime = nextBurstAt - (tRP + tRCD);
 
     // Update the stats and schedule the next request
-    if (dram_pkt->isRead) {
+    if (dram_pkt->isRead()) {
         ++readsThisTime;
         if (row_hit)
             readRowHits++;
@@ -1269,20 +1310,63 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
 
         // Update latency stats
         totMemAccLat += dram_pkt->readyTime - dram_pkt->entryTime;
+        masterReadTotalLat[dram_pkt->masterId()] +=
+            dram_pkt->readyTime - dram_pkt->entryTime;
+
         totBusLat += tBURST;
         totQLat += cmd_at - dram_pkt->entryTime;
+        masterReadBytes[dram_pkt->masterId()] += dram_pkt->size;
     } else {
         ++writesThisTime;
         if (row_hit)
             writeRowHits++;
         bytesWritten += burstSize;
         perBankWrBursts[dram_pkt->bankId]++;
+        masterWriteBytes[dram_pkt->masterId()] += dram_pkt->size;
+        masterWriteTotalLat[dram_pkt->masterId()] +=
+            dram_pkt->readyTime - dram_pkt->entryTime;
     }
 }
 
 void
 DRAMCtrl::processNextReqEvent()
 {
+    // transition is handled by QoS algorithm if enabled
+    if (turnPolicy) {
+        // select bus state - only done if QoS algorithms are in use
+        busStateNext = selectNextBusState();
+    }
+
+    // detect bus state change
+    bool switched_cmd_type = (busState != busStateNext);
+    // record stats
+    recordTurnaroundStats();
+
+    DPRINTF(DRAM, "QoS Turnarounds selected state %s %s\n",
+            (busState==MemCtrl::READ)?"READ":"WRITE",
+            switched_cmd_type?"[turnaround triggered]":"");
+
+    if (switched_cmd_type) {
+        if (busState == READ) {
+            DPRINTF(DRAM,
+                    "Switching to writes after %d reads with %d reads "
+                    "waiting\n", readsThisTime, totalReadQueueSize);
+            rdPerTurnAround.sample(readsThisTime);
+            readsThisTime = 0;
+        } else {
+            DPRINTF(DRAM,
+                    "Switching to reads after %d writes with %d writes "
+                    "waiting\n", writesThisTime, totalWriteQueueSize);
+            wrPerTurnAround.sample(writesThisTime);
+            writesThisTime = 0;
+        }
+    }
+
+    // updates current state
+    busState = busStateNext;
+
+    // check ranks for refresh/wakeup - uses busStateNext, so done after turnaround
+    // decisions
     int busyRanks = 0;
     for (auto r : ranks) {
         if (!r->inRefIdleState()) {
@@ -1323,48 +1407,21 @@ DRAMCtrl::processNextReqEvent()
         return;
     }
 
-    // pre-emptively set to false.  Overwrite if in transitioning to
-    // a new state
-    bool switched_cmd_type = false;
-    if (busState != busStateNext) {
-        if (busState == READ) {
-            DPRINTF(DRAM, "Switching to writes after %d reads with %d reads "
-                    "waiting\n", readsThisTime, readQueue.size());
-
-            // sample and reset the read-related stats as we are now
-            // transitioning to writes, and all reads are done
-            rdPerTurnAround.sample(readsThisTime);
-            readsThisTime = 0;
-
-            // now proceed to do the actual writes
-            switched_cmd_type = true;
-        } else {
-            DPRINTF(DRAM, "Switching to reads after %d writes with %d writes "
-                    "waiting\n", writesThisTime, writeQueue.size());
-
-            wrPerTurnAround.sample(writesThisTime);
-            writesThisTime = 0;
-
-            switched_cmd_type = true;
-        }
-        // update busState to match next state until next transition
-        busState = busStateNext;
-    }
-
     // when we get here it is either a read or a write
     if (busState == READ) {
 
         // track if we should switch or not
         bool switch_to_writes = false;
 
-        if (readQueue.empty()) {
+        if (totalReadQueueSize == 0) {
             // In the case there is no read request to go next,
             // trigger writes if we have passed the low threshold (or
             // if we are draining)
-            if (!writeQueue.empty() &&
+            if (!(totalWriteQueueSize == 0) &&
                 (drainState() == DrainState::Draining ||
-                 writeQueue.size() > writeLowThreshold)) {
+                 totalWriteQueueSize > writeLowThreshold)) {
 
+                DPRINTF(DRAM, "Switching to writes due to read queue empty\n");
                 switch_to_writes = true;
             } else {
                 // check if we are drained
@@ -1383,40 +1440,62 @@ DRAMCtrl::processNextReqEvent()
                 return;
             }
         } else {
-            // bool to check if there is a read to a free rank
-            bool found_read = false;
 
-            // Figure out which read request goes next, and move it to the
-            // front of the read queue
-            // If we are changing command type, incorporate the minimum
-            // bus turnaround delay which will be tCS (different rank) case
-            found_read = chooseNext(readQueue, switched_cmd_type ? tCS : 0);
+            bool read_found = false;
+            DRAMPacketQueue::iterator to_read;
+            uint8_t prio = numPriorities();
+
+            for (auto queue = readQueue.rbegin();
+                 queue != readQueue.rend(); ++queue) {
+
+                prio--;
+
+                DPRINTF(QOS,
+                        "DRAM controller checking READ queue [%d] priority [%d elements]\n",
+                        prio, queue->size());
+
+                // Figure out which read request goes next
+                // If we are changing command type, incorporate the minimum
+                // bus turnaround delay which will be tCS (different rank) case
+                to_read = chooseNext((*queue), switched_cmd_type ? tCS : 0);
+
+                if (to_read != queue->end()) {
+                    // candidate read found
+                    read_found = true;
+                    break;
+                }
+            }
 
             // if no read to an available rank is found then return
             // at this point. There could be writes to the available ranks
             // which are above the required threshold. However, to
             // avoid adding more complexity to the code, return and wait
             // for a refresh event to kick things into action again.
-            if (!found_read)
+            if (!read_found) {
+                DPRINTF(DRAM, "No Reads Found - exiting\n");
                 return;
+            }
 
-            DRAMPacket* dram_pkt = readQueue.front();
+            auto dram_pkt = *to_read;
+
             assert(dram_pkt->rankRef.inRefIdleState());
 
             doDRAMAccess(dram_pkt);
 
-            // At this point we're done dealing with the request
-            readQueue.pop_front();
-
             // Every respQueue which will generate an event, increment count
             ++dram_pkt->rankRef.outstandingEvents;
-
             // sanity check
             assert(dram_pkt->size <= burstSize);
             assert(dram_pkt->readyTime >= curTick());
 
+            // log the response
+            logResponse(MemCtrl::READ, (*to_read)->masterId(),
+                        dram_pkt->qosValue(), dram_pkt->getAddr(), 1,
+                        dram_pkt->readyTime - dram_pkt->entryTime);
+
+
             // Insert into response queue. It will be sent back to the
-            // requestor at its readyTime
+            // requester at its readyTime
             if (respQueue.empty()) {
                 assert(!respondEvent.scheduled());
                 schedule(respondEvent, dram_pkt->readyTime);
@@ -1428,9 +1507,12 @@ DRAMCtrl::processNextReqEvent()
             respQueue.push_back(dram_pkt);
 
             // we have so many writes that we have to transition
-            if (writeQueue.size() > writeHighThreshold) {
+            if (totalWriteQueueSize > writeHighThreshold) {
                 switch_to_writes = true;
             }
+
+            // remove the request from the queue - the iterator is no longer valid .
+            readQueue[dram_pkt->qosValue()].erase(to_read);
         }
 
         // switching to writes, either because the read queue is empty
@@ -1441,30 +1523,48 @@ DRAMCtrl::processNextReqEvent()
             busStateNext = WRITE;
         }
     } else {
-        // bool to check if write to free rank is found
-        bool found_write = false;
 
-        // If we are changing command type, incorporate the minimum
-        // bus turnaround delay
-        found_write = chooseNext(writeQueue,
-                                 switched_cmd_type ? std::min(tRTW, tCS) : 0);
+        bool write_found = false;
+        DRAMPacketQueue::iterator to_write;
+        uint8_t prio = numPriorities();
+
+        for (auto queue = writeQueue.rbegin();
+             queue != writeQueue.rend(); ++queue) {
+
+            prio--;
+
+            DPRINTF(QOS,
+                    "DRAM controller checking WRITE queue [%d] priority [%d elements]\n",
+                    prio, queue->size());
+
+            // If we are changing command type, incorporate the minimum
+            // bus turnaround delay
+            to_write = chooseNext((*queue),
+                                  switched_cmd_type ? std::min(tRTW, tCS) : 0);
+
+            if (to_write != queue->end()) {
+                write_found = true;
+                break;
+            }
+        }
 
         // if there are no writes to a rank that is available to service
         // requests (i.e. rank is in refresh idle state) are found then
         // return. There could be reads to the available ranks. However, to
         // avoid adding more complexity to the code, return at this point and
         // wait for a refresh event to kick things into action again.
-        if (!found_write)
+        if (!write_found) {
+            DPRINTF(DRAM, "No Writes Found - exiting\n");
             return;
+        }
 
-        DRAMPacket* dram_pkt = writeQueue.front();
+        auto dram_pkt = *to_write;
+
         assert(dram_pkt->rankRef.inRefIdleState());
         // sanity check
         assert(dram_pkt->size <= burstSize);
 
         doDRAMAccess(dram_pkt);
-
-        writeQueue.pop_front();
 
         // removed write from queue, decrement count
         --dram_pkt->rankRef.writeEntries;
@@ -1481,21 +1581,35 @@ DRAMCtrl::processNextReqEvent()
             ++dram_pkt->rankRef.outstandingEvents;
 
         } else if (dram_pkt->rankRef.writeDoneEvent.when() <
-                   dram_pkt-> readyTime) {
+                   dram_pkt->readyTime) {
+
             reschedule(dram_pkt->rankRef.writeDoneEvent, dram_pkt->readyTime);
         }
 
         isInWriteQueue.erase(burstAlign(dram_pkt->addr));
+
+        // log the response
+        logResponse(MemCtrl::WRITE, dram_pkt->masterId(),
+                    dram_pkt->qosValue(), dram_pkt->getAddr(), 1,
+                    dram_pkt->readyTime - dram_pkt->entryTime);
+
+
+        // remove the request from the queue - the iterator is no longer valid
+        writeQueue[dram_pkt->qosValue()].erase(to_write);
+
         delete dram_pkt;
 
         // If we emptied the write queue, or got sufficiently below the
         // threshold (using the minWritesPerSwitch as the hysteresis) and
         // are not draining, or we have reads waiting and have done enough
         // writes, then switch to reads.
-        if (writeQueue.empty() ||
-            (writeQueue.size() + minWritesPerSwitch < writeLowThreshold &&
-             drainState() != DrainState::Draining) ||
-            (!readQueue.empty() && writesThisTime >= minWritesPerSwitch)) {
+        bool below_threshold =
+            totalWriteQueueSize + minWritesPerSwitch < writeLowThreshold;
+
+        if (totalWriteQueueSize == 0 ||
+            (below_threshold && drainState() != DrainState::Draining) ||
+            (totalReadQueueSize && writesThisTime >= minWritesPerSwitch)) {
+
             // turn the bus back around for reads again
             busStateNext = READ;
 
@@ -1514,14 +1628,14 @@ DRAMCtrl::processNextReqEvent()
     // them retry. This is done here to ensure that the retry does not
     // cause a nextReqEvent to be scheduled before we do so as part of
     // the next request processing
-    if (retryWrReq && writeQueue.size() < writeBufferSize) {
+    if (retryWrReq && totalWriteQueueSize < writeBufferSize) {
         retryWrReq = false;
         port.sendRetryReq();
     }
 }
 
 pair<vector<uint32_t>, bool>
-DRAMCtrl::minBankPrep(const deque<DRAMPacket*>& queue,
+DRAMCtrl::minBankPrep(const DRAMPacketQueue& queue,
                       Tick min_col_at) const
 {
     Tick min_act_at = MaxTick;
@@ -2386,7 +2500,7 @@ DRAMCtrl::regStats()
 {
     using namespace Stats;
 
-    AbstractMemory::regStats();
+    MemCtrl::regStats();
 
     for (auto r : ranks) {
         r->regStats();
@@ -2529,7 +2643,7 @@ DRAMCtrl::regStats()
         .desc("What write queue length does an incoming req see");
 
      bytesPerActivate
-         .init(maxAccessesPerRow)
+         .init(maxAccessesPerRow ? maxAccessesPerRow : rowBufferSize)
          .name(name() + ".bytesPerActivate")
          .desc("Bytes accessed per row activation")
          .flags(nozero);
@@ -2640,6 +2754,88 @@ DRAMCtrl::regStats()
 
     pageHitRate = (writeRowHits + readRowHits) /
         (writeBursts - mergedWrBursts + readBursts - servicedByWrQ) * 100;
+
+    // per-master bytes read and written to memory
+    masterReadBytes
+        .init(_system->maxMasters())
+        .name(name() + ".masterReadBytes")
+        .desc("Per-master bytes read from memory")
+        .flags(nozero | nonan);
+
+    masterWriteBytes
+        .init(_system->maxMasters())
+        .name(name() + ".masterWriteBytes")
+        .desc("Per-master bytes write to memory")
+        .flags(nozero | nonan);
+
+    // per-master bytes read and written to memory rate
+    masterReadRate.name(name() + ".masterReadRate")
+        .desc("Per-master bytes read from memory rate (Bytes/sec)")
+        .flags(nozero | nonan)
+        .precision(12);
+
+    masterReadRate = masterReadBytes/simSeconds;
+
+    masterWriteRate
+        .name(name() + ".masterWriteRate")
+        .desc("Per-master bytes write to memory rate (Bytes/sec)")
+        .flags(nozero | nonan)
+        .precision(12);
+
+    masterWriteRate = masterWriteBytes/simSeconds;
+
+    masterReadAccesses
+        .init(_system->maxMasters())
+        .name(name() + ".masterReadAccesses")
+        .desc("Per-master read serviced memory accesses")
+        .flags(nozero);
+
+    masterWriteAccesses
+        .init(_system->maxMasters())
+        .name(name() + ".masterWriteAccesses")
+        .desc("Per-master write serviced memory accesses")
+        .flags(nozero);
+
+
+    masterReadTotalLat
+        .init(_system->maxMasters())
+        .name(name() + ".masterReadTotalLat")
+        .desc("Per-master read total memory access latency")
+        .flags(nozero | nonan);
+
+    masterReadAvgLat.name(name() + ".masterReadAvgLat")
+        .desc("Per-master read average memory access latency")
+        .flags(nonan)
+        .precision(2);
+
+    masterReadAvgLat = masterReadTotalLat/masterReadAccesses;
+
+    masterWriteTotalLat
+        .init(_system->maxMasters())
+        .name(name() + ".masterWriteTotalLat")
+        .desc("Per-master write total memory access latency")
+        .flags(nozero | nonan);
+
+    masterWriteAvgLat.name(name() + ".masterWriteAvgLat")
+        .desc("Per-master write average memory access latency")
+        .flags(nonan)
+        .precision(2);
+
+    masterWriteAvgLat = masterWriteTotalLat/masterWriteAccesses;
+
+    for (int i = 0; i < _system->maxMasters(); i++) {
+        const std::string master = _system->getMasterName(i);
+        masterReadBytes.subname(i, master);
+        masterReadRate.subname(i, master);
+        masterWriteBytes.subname(i, master);
+        masterWriteRate.subname(i, master);
+        masterReadAccesses.subname(i, master);
+        masterWriteAccesses.subname(i, master);
+        masterReadTotalLat.subname(i, master);
+        masterReadAvgLat.subname(i, master);
+        masterWriteTotalLat.subname(i, master);
+        masterWriteAvgLat.subname(i, master);
+    }
 }
 
 void
@@ -2664,16 +2860,16 @@ DRAMCtrl::drain()
 {
     // if there is anything in any of our internal queues, keep track
     // of that as well
-    if (!(writeQueue.empty() && readQueue.empty() && respQueue.empty() &&
+    if (!(!totalWriteQueueSize && !totalReadQueueSize && respQueue.empty() &&
           allRanksDrained())) {
 
         DPRINTF(Drain, "DRAM controller not drained, write: %d, read: %d,"
-                " resp: %d\n", writeQueue.size(), readQueue.size(),
+                " resp: %d\n", totalWriteQueueSize, totalReadQueueSize,
                 respQueue.size());
 
         // the only queue that is not drained automatically over time
         // is the write queue, thus kick things into action if needed
-        if (!writeQueue.empty() && !nextReqEvent.scheduled()) {
+        if (!totalWriteQueueSize && !nextReqEvent.scheduled()) {
             schedule(nextReqEvent, curTick());
         }
 
