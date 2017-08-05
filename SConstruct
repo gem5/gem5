@@ -93,10 +93,9 @@ For more details, see:
 """
     raise
 
-# We ensure the python version early because because python-config
-# requires python 2.5
+# pybind11 requires python 2.7
 try:
-    EnsurePythonVersion(2, 5)
+    EnsurePythonVersion(2, 7)
 except SystemExit, e:
     print """
 You can use a non-default installation of the Python interpreter by
