@@ -86,7 +86,8 @@ Gem5SimControl::Gem5SimControl(sc_core::sc_module_name name,
     Trace::setDebugLogger(&logger);
 
     Gem5SystemC::setTickFrequency();
-    sc_core::sc_set_time_resolution(1, sc_core::SC_PS);
+    assert(sc_core::sc_get_time_resolution()
+                    == sc_core::sc_time(1,sc_core::SC_PS));
 
     Gem5SystemC::Module::setupEventQueues(*this);
     initSignals();
