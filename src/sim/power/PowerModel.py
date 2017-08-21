@@ -63,3 +63,6 @@ class PowerModel(SimObject):
 
     # Type of power model
     pm_type = Param.PMType("All", "Type of power model")
+
+    # Ambient temperature to be used when no thermal model is present
+    ambient_temp = Param.Float(25.0, "Ambient temperature")

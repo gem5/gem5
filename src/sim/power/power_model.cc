@@ -57,6 +57,12 @@ PowerModel::PowerModel(const Params *p)
     panic_if(subsystem == NULL,
              "Subsystem is NULL! This is not acceptable for a PowerModel!\n");
     subsystem->registerPowerProducer(this);
+    // The temperature passed here will be overwritten, if there is
+    // a thermal model present
+    for (auto & pms: states_pm){
+        pms->setTemperature(p->ambient_temp);
+    }
+
 }
 
 void
