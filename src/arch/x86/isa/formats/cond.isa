@@ -1,5 +1,6 @@
-// Copyright (c) 2007 The Hewlett-Packard Development Company
-// All rights reserved.
+// -*- mode:c++ -*-
+
+// Copyright 2017 Google, Inc.
 //
 // The license below extends only to copyright in the software and shall
 // not be construed as granting a license to any other intellectual
@@ -9,9 +10,6 @@
 // terms below provided that you ensure that this notice is replicated
 // unmodified and in its entirety in all distributions of the software,
 // modified or unmodified, in source code or in binary form.
-//
-// Copyright (c) 2007 The Regents of The University of Michigan
-// All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -38,41 +36,16 @@
 //
 // Authors: Gabe Black
 
-//Include the basic format
-//Templates from this format are used later
-##include "basic.isa"
+def format CondInst(cond, *opTypeSet) {{
+    blocks = OutputBlocks()
 
-//Include a format to generate a CPUID instruction.
-##include "cpuid.isa"
+    if_blocks = specializeInst(Name, list(opTypeSet), EmulEnv())
+    blocks.append(if_blocks)
+    else_blocks = specializeInst('UD2', [], EmulEnv())
+    blocks.append(else_blocks)
 
-//Include a format to generate a monitor/mwait instructions.
-##include "monitor_mwait.isa"
-
-//Include the "unknown" format
-##include "unknown.isa"
-
-//Include the "unimp" format
-##include "unimp.isa"
-
-//Include a format to signal m5 internal errors. This is used to indicate a
-//malfunction of the decode mechanism.
-##include "error.isa"
-
-//Include a format which implements a batch of instructions which do the same
-//thing on a variety of inputs
-##include "multi.isa"
-
-//Include a format for a non-microcoded nop.
-##include "nop.isa"
-
-//Include a format which implements an extra layer of decoding to handle the
-//repe and repne prefixes
-##include "string.isa"
-
-//Include a format which makes instructions who's sole purpose is to generate
-//a syscall.
-##include "syscall.isa"
-
-//Include a format which is like Inst, except it conditionally decodes to the
-//specified instruction, or if the condition fails decodes to UD2.
-##include "cond.isa"
+    (header_output, decoder_output,
+     decode_block, exec_output) = blocks.makeList()
+    decode_block = '\tif (%s) {\n%s\n\t} else {\n%s\n}\n' % \
+        (cond, if_blocks.decode_block, else_blocks.decode_block)
+}};
