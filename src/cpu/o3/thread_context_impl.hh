@@ -134,7 +134,7 @@ void
 O3ThreadContext<Impl>::regStats(const std::string &name)
 {
     if (FullSystem) {
-        thread->kernelStats = new TheISA::Kernel::Statistics(cpu->system);
+        thread->kernelStats = new TheISA::Kernel::Statistics();
         thread->kernelStats->regStats(name + ".kern");
     }
 }

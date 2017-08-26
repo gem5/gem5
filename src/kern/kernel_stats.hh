@@ -34,13 +34,10 @@
 
 #include <string>
 
-#include "config/the_isa.hh"
 #include "sim/serialize.hh"
 #include "sim/stats.hh"
 
 // What does kernel stats expect is included?
-class System;
-
 namespace Kernel {
 
 class Statistics : public Serializable
@@ -63,7 +60,7 @@ class Statistics : public Serializable
     Tick iplLastTick;
 
   public:
-    Statistics(System *system);
+    Statistics();
     virtual ~Statistics() {}
 
     const std::string name() const { return myname; }

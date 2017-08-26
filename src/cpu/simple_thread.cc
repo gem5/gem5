@@ -100,7 +100,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     profilePC = 3;
 
     if (use_kernel_stats)
-        kernelStats = new TheISA::Kernel::Statistics(system);
+        kernelStats = new TheISA::Kernel::Statistics();
 }
 
 SimpleThread::~SimpleThread()

@@ -45,24 +45,10 @@
 namespace X86ISA {
 namespace Kernel {
 
-enum cpu_mode {
-    ring0,
-    ring1,
-    ring2,
-    ring3,
-    kernel = ring0,
-    user = ring3,
-    idle,
-    //What is this next one for?
-    cpu_mode_num
-};
-
-extern const char *modestr[];
-
 class Statistics : public ::Kernel::Statistics
 {
   public:
-    Statistics(System * system) : ::Kernel::Statistics(system)
+    Statistics() : ::Kernel::Statistics()
     {}
 };
 

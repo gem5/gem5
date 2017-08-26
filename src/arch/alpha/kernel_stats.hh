@@ -40,11 +40,7 @@
 #include "cpu/static_inst.hh"
 #include "kern/kernel_stats.hh"
 
-class BaseCPU;
 class ThreadContext;
-class FnEvent;
-// What does kernel stats expect is included?
-class System;
 
 namespace AlphaISA {
 namespace Kernel {
@@ -73,7 +69,7 @@ class Statistics : public ::Kernel::Statistics
     Stats::Scalar _swap_context;
 
   public:
-    Statistics(System *system);
+    Statistics();
 
     void regStats(const std::string &name);
 

@@ -37,16 +37,12 @@
 namespace RiscvISA {
 namespace Kernel {
 
-enum cpu_mode { kernel, user, idle, cpu_mode_num };
-extern const char *modestr[];
-
 class Statistics : public ::Kernel::Statistics
 {
   public:
-    Statistics(System *system) : ::Kernel::Statistics(system)
+    Statistics() : ::Kernel::Statistics()
     {}
 };
-
 
 } // namespace RiscvISA::Kernel
 } // namespace RiscvISA

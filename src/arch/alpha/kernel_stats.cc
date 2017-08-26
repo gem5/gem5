@@ -50,8 +50,8 @@ namespace Kernel {
 
 const char *modestr[] = { "kernel", "user", "idle" };
 
-Statistics::Statistics(System *system)
-    : ::Kernel::Statistics(system),
+Statistics::Statistics()
+    : ::Kernel::Statistics(),
       idleProcess((Addr)-1), themode(kernel), lastModeTick(0)
 {
 }

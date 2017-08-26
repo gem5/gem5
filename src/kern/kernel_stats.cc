@@ -41,7 +41,7 @@ using namespace Stats;
 
 namespace Kernel {
 
-Statistics::Statistics(System *system)
+Statistics::Statistics()
     : iplLast(0), iplLastTick(0)
 {
 }
