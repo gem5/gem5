@@ -59,7 +59,8 @@ class Statistics : public ::Kernel::Statistics
 
   private:
     Stats::Vector _callpal;
-//    Stats::Vector _faults;
+
+    Stats::Scalar _hwrei;
 
     Stats::Vector _mode;
     Stats::Vector _modeGood;
@@ -67,6 +68,15 @@ class Statistics : public ::Kernel::Statistics
     Stats::Vector _modeTicks;
 
     Stats::Scalar _swap_context;
+
+    Stats::Vector _iplCount;
+    Stats::Vector _iplGood;
+    Stats::Vector _iplTicks;
+    Stats::Formula _iplUsed;
+
+  private:
+    int iplLast;
+    Tick iplLastTick;
 
   public:
     Statistics();
@@ -78,6 +88,7 @@ class Statistics : public ::Kernel::Statistics
     void context(Addr oldpcbb, Addr newpcbb, ThreadContext *tc);
     void callpal(int code, ThreadContext *tc);
     void hwrei() { _hwrei++; }
+    void swpipl(int ipl);
 
     void setIdleProcess(Addr idle, ThreadContext *tc);
 

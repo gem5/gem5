@@ -52,7 +52,8 @@ const char *modestr[] = { "kernel", "user", "idle" };
 
 Statistics::Statistics()
     : ::Kernel::Statistics(),
-      idleProcess((Addr)-1), themode(kernel), lastModeTick(0)
+      idleProcess((Addr)-1), themode(kernel), lastModeTick(0),
+      iplLast(0), iplLastTick(0)
 {
 }
 
@@ -120,6 +121,35 @@ Statistics::regStats(const string &_name)
         .name(name() + ".swap_context")
         .desc("number of times the context was actually changed")
         ;
+
+    _iplCount
+        .init(32)
+        .name(name() + ".ipl_count")
+        .desc("number of times we switched to this ipl")
+        .flags(total | pdf | nozero | nonan)
+        ;
+
+    _iplGood
+        .init(32)
+        .name(name() + ".ipl_good")
+        .desc("number of times we switched to this ipl from a different ipl")
+        .flags(total | pdf | nozero | nonan)
+        ;
+
+    _iplTicks
+        .init(32)
+        .name(name() + ".ipl_ticks")
+        .desc("number of cycles we spent at this ipl")
+        .flags(total | pdf | nozero | nonan)
+        ;
+
+    _iplUsed
+        .name(name() + ".ipl_used")
+        .desc("fraction of swpipl calls that actually changed the ipl")
+        .flags(total | nozero | nonan)
+        ;
+
+    _iplUsed = _iplGood / _iplCount;
 }
 
 void
@@ -184,6 +214,22 @@ Statistics::callpal(int code, ThreadContext *tc)
 }
 
 void
+Statistics::swpipl(int ipl)
+{
+    assert(ipl >= 0 && ipl <= 0x1f && "invalid IPL\n");
+
+    _iplCount[ipl]++;
+
+    if (ipl == iplLast)
+        return;
+
+    _iplGood[ipl]++;
+    _iplTicks[iplLast] += curTick() - iplLastTick;
+    iplLastTick = curTick();
+    iplLast = ipl;
+}
+
+void
 Statistics::serialize(CheckpointOut &cp) const
 {
     ::Kernel::Statistics::serialize(cp);
@@ -191,6 +237,8 @@ Statistics::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(exemode);
     SERIALIZE_SCALAR(idleProcess);
     SERIALIZE_SCALAR(lastModeTick);
+    SERIALIZE_SCALAR(iplLast);
+    SERIALIZE_SCALAR(iplLastTick);
 }
 
 void
@@ -202,6 +250,8 @@ Statistics::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(idleProcess);
     UNSERIALIZE_SCALAR(lastModeTick);
     themode = (cpu_mode)exemode;
+    UNSERIALIZE_SCALAR(iplLast);
+    UNSERIALIZE_SCALAR(iplLastTick);
 }
 
 } // namespace Kernel
