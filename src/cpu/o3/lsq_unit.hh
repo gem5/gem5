@@ -610,8 +610,8 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
         Cycles delay(0);
         PacketPtr data_pkt = new Packet(req, MemCmd::ReadReq);
 
+        data_pkt->dataStatic(load_inst->memData);
         if (!TheISA::HasUnalignedMemAcc || !sreqLow) {
-            data_pkt->dataStatic(load_inst->memData);
             delay = TheISA::handleIprRead(thread, data_pkt);
         } else {
             assert(sreqLow->isMmappedIpr() && sreqHigh->isMmappedIpr());
