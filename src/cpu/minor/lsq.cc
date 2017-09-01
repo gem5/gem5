@@ -97,7 +97,7 @@ LSQ::LSQRequest::containsAddrRangeOf(
 
     AddrRangeCoverage ret;
 
-    if (req1_addr > req2_end_addr || req1_end_addr < req2_addr)
+    if (req1_addr >= req2_end_addr || req1_end_addr <= req2_addr)
         ret = NoAddrRangeCoverage;
     else if (req1_addr <= req2_addr && req1_end_addr >= req2_end_addr)
         ret = FullAddrRangeCoverage;
