@@ -105,6 +105,7 @@ MemTraceProbe::handleRequest(const ProbePoints::PacketInfo &pkt_info)
     pkt_msg.set_size(pkt_info.size);
     if (withPC && pkt_info.pc != 0)
         pkt_msg.set_pc(pkt_info.pc);
+    pkt_msg.set_pkt_id(pkt_info.master);
 
     traceStream->write(pkt_msg);
 }
