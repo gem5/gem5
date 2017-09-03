@@ -50,6 +50,11 @@
 #include <iostream>
 #include <string>
 
+#if defined(__FreeBSD__)
+#include <sys/param.h>
+
+#endif
+
 #include "base/atomicio.hh"
 #include "base/cprintf.hh"
 #include "base/misc.hh"
@@ -67,7 +72,11 @@ static bool
 setupAltStack()
 {
     stack_t stack;
+#if defined(__FreeBSD__) && (__FreeBSD_version < 1100097)
+    stack.ss_sp = (char *)fatalSigStack;
+#else
     stack.ss_sp = fatalSigStack;
+#endif
     stack.ss_size = sizeof(fatalSigStack);
     stack.ss_flags = 0;
 
