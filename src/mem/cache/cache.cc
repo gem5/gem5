@@ -1021,8 +1021,18 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
         cmd = MemCmd::SCUpgradeFailReq;
     } else {
         // block is invalid
+
+        // If the request does not need a writable there are two cases
+        // where we need to ensure the response will not fetch the
+        // block in dirty state:
+        // * this cache is read only and it does not perform
+        //   writebacks,
+        // * this cache is mostly exclusive and will not fill (since
+        //   it does not fill it will have to writeback the dirty data
+        //   immediately which generates uneccesary writebacks).
+        bool force_clean_rsp = isReadOnly || clusivity == Enums::mostly_excl;
         cmd = needsWritable ? MemCmd::ReadExReq :
-            (isReadOnly ? MemCmd::ReadCleanReq : MemCmd::ReadSharedReq);
+            (force_clean_rsp ? MemCmd::ReadCleanReq : MemCmd::ReadSharedReq);
     }
     PacketPtr pkt = new Packet(cpu_pkt->req, cmd, blkSize);
 
