@@ -239,7 +239,7 @@ ArchTimer::Interrupt::clear()
 
 
 GenericTimer::GenericTimer(GenericTimerParams *p)
-    : SimObject(p),
+    : ClockedObject(p),
       system(*p->system),
       gic(p->gic),
       irqPhys(p->int_phys),

@@ -226,7 +226,7 @@ class ArchTimerKvm : public ArchTimer
     }
 };
 
-class GenericTimer : public SimObject
+class GenericTimer : public ClockedObject
 {
   public:
     GenericTimer(GenericTimerParams *p);

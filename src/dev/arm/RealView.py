@@ -54,6 +54,7 @@ from Uart import Uart
 from SimpleMemory import SimpleMemory
 from Gic import *
 from EnergyCtrl import EnergyCtrl
+from ClockedObject import ClockedObject
 from ClockDomain import SrcClockDomain
 from SubSystem import SubSystem
 from Graphics import ImageFormat
@@ -247,7 +248,7 @@ class CpuLocalTimer(BasicPioDevice):
     int_num_timer = Param.UInt32("Interrrupt number used per-cpu to GIC")
     int_num_watchdog = Param.UInt32("Interrupt number for per-cpu watchdog to GIC")
 
-class GenericTimer(SimObject):
+class GenericTimer(ClockedObject):
     type = 'GenericTimer'
     cxx_header = "dev/arm/generic_timer.hh"
     system = Param.ArmSystem(Parent.any, "system")
