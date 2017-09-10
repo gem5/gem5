@@ -802,7 +802,7 @@ class VecRegOperand(Operand):
 
         wb = '''
         if (traceData) {
-            panic("Vectors not supported yet in tracedata");
+            warn_once("Vectors not supported yet in tracedata");
             /*traceData->setData(final_val);*/
         }
         '''
