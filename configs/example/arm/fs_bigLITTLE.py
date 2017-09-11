@@ -57,7 +57,6 @@ import devices
 from devices import AtomicCluster, KvmCluster
 
 
-default_dtb = 'armv8_gem5_v1_big_little_2_2.dtb'
 default_kernel = 'vmlinux4.3.aarch64'
 default_disk = 'aarch64-ubuntu-trusty-headless.img'
 default_rcs = 'bootscript.rcS'
@@ -153,7 +152,7 @@ if devices.have_kvm:
 def addOptions(parser):
     parser.add_argument("--restore-from", type=str, default=None,
                         help="Restore from checkpoint")
-    parser.add_argument("--dtb", type=str, default=default_dtb,
+    parser.add_argument("--dtb", type=str, default=None,
                         help="DTB file to load")
     parser.add_argument("--kernel", type=str, default=default_kernel,
                         help="Linux kernel")
@@ -249,7 +248,19 @@ def build(options):
         _build_kvm(system, all_cpus)
 
     # Linux device tree
-    system.dtb_filename = SysPaths.binary(options.dtb)
+    if options.dtb is not None:
+        system.dtb_filename = SysPaths.binary(options.dtb)
+    else:
+        def create_dtb_for_system(system, filename):
+            state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
+            rootNode = system.generateDeviceTree(state)
+
+            fdt = Fdt()
+            fdt.add_rootnode(rootNode)
+            dtb_filename = os.path.join(m5.options.outdir, filename)
+            return fdt.writeDtbFile(dtb_filename)
+
+        system.dtb_filename = create_dtb_for_system(system, 'system.dtb')
 
     return root
 
