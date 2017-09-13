@@ -399,13 +399,12 @@ AbstractMemory::access(PacketPtr pkt)
         bytesRead[pkt->req->masterId()] += pkt->getSize();
         if (pkt->req->isInstFetch())
             bytesInstRead[pkt->req->masterId()] += pkt->getSize();
-    } else if (pkt->isInvalidate()) {
+    } else if (pkt->isInvalidate() || pkt->isClean()) {
+        assert(!pkt->isWrite());
+        // in a fastmem system invalidating and/or cleaning packets
+        // can be seen due to cache maintenance requests
+
         // no need to do anything
-        // this clause is intentionally before the write clause: the only
-        // transaction that is both a write and an invalidate is
-        // WriteInvalidate, and for the sake of consistency, it does not
-        // write to memory.  in a cacheless system, there are no WriteInv's
-        // because the Write -> WriteInvalidate rewrite happens in the cache.
     } else if (pkt->isWrite()) {
         if (writeOK(pkt)) {
             if (pmemAddr) {
@@ -419,7 +418,7 @@ AbstractMemory::access(PacketPtr pkt)
             bytesWritten[pkt->req->masterId()] += pkt->getSize();
         }
     } else {
-        panic("unimplemented");
+        panic("Unexpected packet %s", pkt->print());
     }
 
     if (pkt->needsResponse()) {
