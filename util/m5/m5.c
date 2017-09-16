@@ -140,7 +140,7 @@ read_file(int dest_fid)
 }
 
 void
-write_file(const char *filename)
+write_file(const char *filename, const char *host_filename)
 {
     fprintf(stderr, "opening %s\n", filename);
     int src_fid = open(filename, O_RDONLY);
@@ -158,7 +158,7 @@ write_file(const char *filename)
     memset(buf, 0, sizeof(buf));
 
     while ((len = read(src_fid, buf, sizeof(buf))) > 0) {
-        bytes += m5_write_file(buf, len, offset, filename);
+        bytes += m5_write_file(buf, len, offset, host_filename);
         offset += len;
     }
     fprintf(stderr, "written %d bytes\n", bytes);
@@ -224,12 +224,13 @@ do_read_file(int argc, char *argv[])
 void
 do_write_file(int argc, char *argv[])
 {
-    if (argc != 1)
+    if (argc != 1 && argc != 2)
         usage();
 
     const char *filename = argv[0];
+    const char *host_filename = (argc == 2) ? argv[1] : argv[0];
 
-    write_file(filename);
+    write_file(filename, host_filename);
 }
 
 void
@@ -344,7 +345,7 @@ struct MainFunc mainfuncs[] = {
     { "dumpstats",      do_dump_stats,       "[delay [period]]" },
     { "dumpresetstats", do_dump_reset_stats, "[delay [period]]" },
     { "readfile",       do_read_file,        "" },
-    { "writefile",      do_write_file,       "<filename>" },
+    { "writefile",      do_write_file,       "<filename> [host filename]" },
     { "execfile",       do_exec_file,        "" },
     { "checkpoint",     do_checkpoint,       "[delay [period]]" },
     { "addsymbol",      do_addsymbol,        "<address> <symbol>" },
