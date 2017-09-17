@@ -1241,11 +1241,23 @@ SyscallReturn
 cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
     int index = 0;
+
     TheISA::IntReg flags = p->getSyscallArg(tc, index);
     TheISA::IntReg newStack = p->getSyscallArg(tc, index);
     Addr ptidPtr = p->getSyscallArg(tc, index);
+
+#if THE_ISA == RISCV_ISA
+    /**
+     * Linux kernel 4.15 sets CLONE_BACKWARDS flag for RISC-V.
+     * The flag defines the list of clone() arguments in the following
+     * order: flags -> newStack -> ptidPtr -> tlsPtr -> ctidPtr
+     */
+    Addr tlsPtr M5_VAR_USED = p->getSyscallArg(tc, index);
+    Addr ctidPtr = p->getSyscallArg(tc, index);
+#else
     Addr ctidPtr = p->getSyscallArg(tc, index);
     Addr tlsPtr M5_VAR_USED = p->getSyscallArg(tc, index);
+#endif
 
     if (((flags & OS::TGT_CLONE_SIGHAND)&& !(flags & OS::TGT_CLONE_VM)) ||
         ((flags & OS::TGT_CLONE_THREAD) && !(flags & OS::TGT_CLONE_SIGHAND)) ||
@@ -1340,7 +1352,7 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
     ctc->setMiscReg(TheISA::MISCREG_ASI, TheISA::ASI_PRIMARY);
     for (int y = 8; y < 32; y++)
         ctc->setIntReg(y, tc->readIntReg(y));
-#elif THE_ISA == ARM_ISA or THE_ISA == X86_ISA
+#elif THE_ISA == ARM_ISA or THE_ISA == X86_ISA or THE_ISA == RISCV_ISA
     TheISA::copyRegs(tc, ctc);
 #endif
 
