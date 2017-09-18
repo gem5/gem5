@@ -105,16 +105,21 @@ class Commit(object):
     def __str__(self):
         return "%s: %s" % (self.rev[0:8], self.log[0])
 
-def list_revs(upstream, branch):
-    """Get a generator that lists git revisions that exist in 'branch' but
-    not in 'upstream'.
+def list_revs(branch, baseline=None):
+    """Get a generator that lists git revisions that exist in 'branch'. If
+    the optional parameter 'baseline' is specified, the generator
+    excludes commits that exist on that branch.
 
     Returns: Generator of Commit objects
 
     """
 
-    changes = subprocess.check_output(
-        [ "git", "rev-list", "%s..%s" % (upstream, branch) ])
+    if baseline is not None:
+        query = "%s..%s" % (branch, baseline)
+    else:
+        query = str(branch)
+
+    changes = subprocess.check_output([ "git", "rev-list", query ])
 
     if changes == "":
         return
@@ -165,6 +170,9 @@ def _main():
                         help="Print changes without Change-Id tags")
     parser.add_argument("--show-common", action="store_true",
                         help="Print common changes")
+    parser.add_argument("--deep-search", action="store_true",
+                        help="Use a deep search to find incorrectly " \
+                        "rebased changes")
 
     args = parser.parse_args()
 
@@ -199,6 +207,19 @@ def _main():
         print "Outgoing changes without change IDs:"
         for rev in feature_unknown:
             print rev
+
+    if args.deep_search:
+        print "Incorrectly rebased changes:"
+        all_upstream_revs = list_revs(args.upstream)
+        all_upstream_cids = dict([
+            (c.change_id, c) for c in all_upstream_revs \
+            if c.change_id is not None ])
+        incorrect_outgoing = filter(
+            lambda r: r.change_id in all_upstream_cids,
+            outgoing)
+        for rev in incorrect_outgoing:
+            print rev
+
 
 
 
