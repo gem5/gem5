@@ -184,12 +184,6 @@ MuxingKvmGic::~MuxingKvmGic()
 }
 
 void
-MuxingKvmGic::loadState(CheckpointIn &cp)
-{
-    Pl390::loadState(cp);
-}
-
-void
 MuxingKvmGic::startup()
 {
     Pl390::startup();
@@ -219,19 +213,6 @@ MuxingKvmGic::drainResume()
 
         usingKvm = use_kvm;
     }
-}
-
-void
-MuxingKvmGic::serialize(CheckpointOut &cp) const
-{
-    // drain() already ensured Pl390 updated with KvmGic state if necessary
-    Pl390::serialize(cp);
-}
-
-void
-MuxingKvmGic::unserialize(CheckpointIn &cp)
-{
-    Pl390::unserialize(cp);
 }
 
 Tick

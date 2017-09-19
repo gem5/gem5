@@ -174,14 +174,9 @@ class MuxingKvmGic : public Pl390
     MuxingKvmGic(const MuxingKvmGicParams *p);
     ~MuxingKvmGic();
 
-    void loadState(CheckpointIn &cp) override;
-
     void startup() override;
     DrainState drain() override;
     void drainResume() override;
-
-    void serialize(CheckpointOut &cp) const override;
-    void unserialize(CheckpointIn &cp) override;
 
   public: // PioDevice
     Tick read(PacketPtr pkt) override;
