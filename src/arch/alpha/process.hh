@@ -43,7 +43,7 @@ class AlphaProcess : public Process
   protected:
     AlphaProcess(ProcessParams *params, ObjectFile *objFile);
 
-    void loadState(CheckpointIn &cp) override;
+    void unserialize(CheckpointIn &cp) override;
     void initState() override;
 
     void argsInit(int intSize, int pageSize);

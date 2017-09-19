@@ -189,9 +189,9 @@ AlphaProcess::setupASNReg()
 
 
 void
-AlphaProcess::loadState(CheckpointIn &cp)
+AlphaProcess::unserialize(CheckpointIn &cp)
 {
-    Process::loadState(cp);
+    Process::unserialize(cp);
     // need to set up ASN after unserialization since _pid value may
     // come from checkpoint
     setupASNReg();
