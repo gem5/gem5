@@ -38,13 +38,30 @@
 #include "sim/power_state.hh"
 
 #include "base/logging.hh"
+#include "debug/PowerDomain.hh"
+#include "sim/power_domain.hh"
 
 PowerState::PowerState(const PowerStateParams *p) :
     SimObject(p), _currState(p->default_state),
     possibleStates(p->possible_states.begin(),
                    p->possible_states.end()),
-    prvEvalTick(0), stats(*this)
+    stats(*this)
 {
+    for (auto &pm: p->leaders) {
+        // Register this object as a follower. This object is
+        // dependent on pm for power state transitions
+        pm->addFollower(this);
+    }
+}
+
+void
+PowerState::setControlledDomain(PowerDomain* pwr_dom)
+{
+    // Only a power domain can register as dependant of a power stated
+    // object
+    controlledDomain = pwr_dom;
+    DPRINTF(PowerDomain, "%s is registered as controlled by %s \n",
+                         pwr_dom->name(), name());
 }
 
 void
@@ -102,6 +119,60 @@ PowerState::set(Enums::PwrState p)
     _currState = p;
 
     stats.numTransitions++;
+
+    // Update the domain this object controls, if there is one
+    if (controlledDomain) {
+        controlledDomain->pwrStateChangeCallback(p, this);
+    }
+
+}
+
+Enums::PwrState
+PowerState::matchPwrState(Enums::PwrState p)
+{
+    // If the object is asked to match a power state, it has to be a follower
+    // and hence should not have a pointer to a powerDomain
+    assert(controlledDomain == nullptr);
+
+    // If we are already in this power state, ignore request
+    if (_currState == p) {
+        DPRINTF(PowerDomain, "Already in p-state %s requested to match \n",
+                Enums::PwrStateStrings[p]);
+        return _currState;
+    }
+
+    Enums::PwrState old_state = _currState;
+    if (possibleStates.find(p) != possibleStates.end()) {
+        // If this power state is allowed in this object, just go there
+        set(p);
+    } else {
+        // Loop over all power states in this object and find a power state
+        // which is more performant than the requested one (considering we
+        // cannot match it exactly)
+        for (auto rev_it = possibleStates.crbegin();
+             rev_it != possibleStates.crend(); rev_it++) {
+            if (*(rev_it) <= p) {
+                // This power state is the least performant power state that is
+                // still more performant than the requested one
+                DPRINTF(PowerDomain, "Best match for %s is %s \n",
+                        Enums::PwrStateStrings[p],
+                        Enums::PwrStateStrings[*(rev_it)]);
+                set(*(rev_it));
+                break;
+            }
+        }
+    }
+    // Check if the transition happened
+    // The only case in which the power state cannot change is if the
+    // object is already at in its most performant state.
+    warn_if((_currState == old_state) &&
+            possibleStates.find(_currState) != possibleStates.begin(),
+            "Transition to power state %s was not possible, SimObject already"
+            " in the most performance state %s",
+            Enums::PwrStateStrings[p], Enums::PwrStateStrings[_currState]);
+
+    stats.numPwrMatchStateTransitions++;
+    return _currState;
 }
 
 void
@@ -147,6 +218,8 @@ PowerState::PowerStateStats::PowerStateStats(PowerState &co)
     powerState(co),
     ADD_STAT(numTransitions,
              "Number of power state transitions"),
+    ADD_STAT(numPwrMatchStateTransitions,
+             "Number of power state transitions due match request"),
     ADD_STAT(ticksClkGated,
              "Distribution of time spent in the clock gated state"),
     ADD_STAT(pwrStateResidencyTicks,
@@ -164,6 +237,7 @@ PowerState::PowerStateStats::regStats()
     const PowerStateParams *p = powerState.params();
 
     numTransitions.flags(nozero);
+    numPwrMatchStateTransitions.flags(nozero);
 
     // Each sample is time in ticks
     unsigned num_bins = std::max(p->clk_gate_bins, 10U);

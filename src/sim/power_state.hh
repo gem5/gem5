@@ -52,6 +52,8 @@
 #include "sim/core.hh"
 #include "sim/sim_object.hh"
 
+class PowerDomain;
+
 /**
  * Helper class for objects that have power states. This class provides the
  * basic functionality to change between power states.
@@ -67,6 +69,9 @@ class PowerState : public SimObject
     {
         return reinterpret_cast<const Params*>(_params);
     }
+
+    virtual void addFollower(PowerState* pwr_obj) {};
+    void setControlledDomain(PowerDomain* pwr_dom);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -99,6 +104,12 @@ class PowerState : public SimObject
     void computeStats();
 
     /**
+     * Change the power state of this object to a power state equal to OR more
+     * performant than p. Returns the power state the object actually went to.
+     */
+    Enums::PwrState matchPwrState(Enums::PwrState p);
+
+    /**
      * Return the power states this object can be in
      */
     std::set<Enums::PwrState> getPossibleStates() const
@@ -112,10 +123,16 @@ class PowerState : public SimObject
     Enums::PwrState _currState;
 
     /** The possible power states this object can be in */
-    const std::set<Enums::PwrState> possibleStates;
+    std::set<Enums::PwrState> possibleStates;
 
     /** Last tick the power stats were calculated */
     Tick prvEvalTick = 0;
+
+    /**
+     * The power domain that this power state leads, nullptr if it
+     * doesn't lead any.
+     */
+    PowerDomain* controlledDomain = nullptr;
 
     struct PowerStateStats : public Stats::Group
     {
@@ -127,6 +144,7 @@ class PowerState : public SimObject
         PowerState &powerState;
 
         Stats::Scalar numTransitions;
+        Stats::Scalar numPwrMatchStateTransitions;
         Stats::Distribution ticksClkGated;
         /** Tracks the time spent in each of the power states */
         Stats::Vector pwrStateResidencyTicks;
