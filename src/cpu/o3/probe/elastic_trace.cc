@@ -238,23 +238,31 @@ ElasticTrace::updateRegDep(const DynInstPtr &dyn_inst)
     // dependency on the last writer.
     int8_t max_regs = dyn_inst->numSrcRegs();
     for (int src_idx = 0; src_idx < max_regs; src_idx++) {
-        // Get the physical register index of the i'th source register.
-        PhysRegIdPtr src_reg = dyn_inst->renamedSrcRegIdx(src_idx);
-        DPRINTFR(ElasticTrace, "[sn:%lli] Check map for src reg"
-                 " %i (%s)\n", seq_num,
-                 src_reg->index(), src_reg->className());
-        auto itr_last_writer = physRegDepMap.find(src_reg->flatIndex());
-        if (itr_last_writer != physRegDepMap.end()) {
-            InstSeqNum last_writer = itr_last_writer->second;
-            // Additionally the dependency distance is kept less than the window
-            // size parameter to limit the memory allocation to nodes in the
-            // graph. If the window were tending to infinite we would have to
-            // load a large number of node objects during replay.
-            if (seq_num - last_writer < depWindowSize) {
-                // Record a physical register dependency.
-                exec_info_ptr->physRegDepSet.insert(last_writer);
+
+        const RegId& src_reg = dyn_inst->srcRegIdx(src_idx);
+        if (!src_reg.isMiscReg() &&
+            !src_reg.isZeroReg()) {
+            // Get the physical register index of the i'th source register.
+            PhysRegIdPtr phys_src_reg = dyn_inst->renamedSrcRegIdx(src_idx);
+            DPRINTFR(ElasticTrace, "[sn:%lli] Check map for src reg"
+                     " %i (%s)\n", seq_num,
+                     phys_src_reg->flatIndex(), phys_src_reg->className());
+            auto itr_writer = physRegDepMap.find(phys_src_reg->flatIndex());
+            if (itr_writer != physRegDepMap.end()) {
+                InstSeqNum last_writer = itr_writer->second;
+                // Additionally the dependency distance is kept less than the
+                // window size parameter to limit the memory allocation to
+                // nodes in the graph. If the window were tending to infinite
+                // we would have to load a large number of node objects during
+                // replay.
+                if (seq_num - last_writer < depWindowSize) {
+                    // Record a physical register dependency.
+                    exec_info_ptr->physRegDepSet.insert(last_writer);
+                }
             }
+
         }
+
     }
 
     // Loop through the destination registers of this instruction and update
@@ -270,7 +278,7 @@ ElasticTrace::updateRegDep(const DynInstPtr &dyn_inst)
             // register.
             PhysRegIdPtr phys_dest_reg = dyn_inst->renamedDestRegIdx(dest_idx);
             DPRINTFR(ElasticTrace, "[sn:%lli] Update map for dest reg"
-                     " %i (%s)\n", seq_num, dest_reg.index(),
+                     " %i (%s)\n", seq_num, phys_dest_reg->flatIndex(),
                      dest_reg.className());
             physRegDepMap[phys_dest_reg->flatIndex()] = seq_num;
         }
