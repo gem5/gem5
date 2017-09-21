@@ -47,6 +47,16 @@ message PacketHeader {
   required string obj_id = 1;
   optional uint32 ver = 2 [default = 0];
   required uint64 tick_freq = 3;
+
+  // This is supposed to be wire equivalent to the "map" construct supported
+  // by the proto3 version of the protobuf description syntax. When that
+  // becomes widely available, this should be converted over to use it.
+  message IdStringEntry {
+    optional uint32 key = 1;
+    optional string value = 2;
+  }
+
+  repeated IdStringEntry id_strings = 4;
 }
 
 // Each packet in the trace contains a tick (which can be translated
