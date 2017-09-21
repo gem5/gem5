@@ -36,13 +36,19 @@ High-level flow for submitting changes
            |
            |
            v
-    +------+------+
-    | Post review |
-    +------+------+
-           |
-           v
-    +--------+---------+
-    | Wait for reviews | <--------+
+    +-------------+
+    |  Run tests  |<--------------+
+    +------+------+               |
+           |                      |
+           |                      |
+           v                      |
+    +------+------+               |
+    | Post review |               |
+    +------+------+               |
+           |                      |
+           v                      |
+    +--------+---------+          |
+    | Wait for reviews |          |
     +--------+---------+          |
            |                      |
            |                      |
@@ -177,6 +183,13 @@ commit (HEAD).
 ```
  git commit --amend
 ```
+
+Running tests
+=============
+
+Before posting a change to the code review site, you should always run the
+quick tests!
+See TESTING.md for more information.
 
 Posting a review
 ================
