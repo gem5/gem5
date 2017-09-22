@@ -1,0 +1,31 @@
+SERVER_USER=
+SERVER_PATH=/z/www/htdocs/dist/current/test-progs/hello/bin/x86/linux
+FETCH_PATH=http://gem5.org/dist/current/test-progs/hello/bin/x86/linux
+
+UPLOAD_LOCATION=$(SERVER_USER)daystrom.gem5.org:$(SERVER_PATH)
+
+all: hello64-static hello64-dynamic hello32-static
+
+
+upload: hello64-static hello64-dynamic hello32-static
+	scp hello64-static hello64-dynamic hello32-static $(UPLOAD_LOCATION)
+
+hello64-static: hello.c dockcross-x64
+	./dockcross-x64 bash -c '$$CC hello.c -o hello64-static -static'
+
+hello64-dynamic: hello.c dockcross-x64
+	./dockcross-x64 bash -c '$$CC hello.c -o hello64-dynamic'
+
+hello32-static: hello.c dockcross-x86
+	./dockcross-x86 bash -c '$$CC hello.c -o hello32-static -static'
+
+dockcross-x64:
+	docker run --rm dockcross/linux-x64 > ./dockcross-x64
+	chmod +x ./dockcross-x64
+
+dockcross-x86:
+	docker run --rm dockcross/linux-x86 > ./dockcross-x86
+	chmod +x ./dockcross-x86
+
+clean:
+	rm -f dockcross-* hello64-static hello64-dynamic hello32-static
