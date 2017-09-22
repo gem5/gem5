@@ -44,10 +44,12 @@
 #include "base/output.hh"
 #include "params/MemTraceProbe.hh"
 #include "proto/packet.pb.h"
+#include "sim/system.hh"
 
 MemTraceProbe::MemTraceProbe(MemTraceProbeParams *p)
     : BaseMemProbe(p),
       traceStream(nullptr),
+      system(p->system),
       withPC(p->with_pc)
 {
     std::string filename;
@@ -72,18 +74,29 @@ MemTraceProbe::MemTraceProbe(MemTraceProbeParams *p)
 
     traceStream = new ProtoOutputStream(filename);
 
-    // Create a protobuf message for the header and write it to
-    // the stream
-    ProtoMessage::PacketHeader header_msg;
-    header_msg.set_obj_id(name());
-    header_msg.set_tick_freq(SimClock::Frequency);
-    traceStream->write(header_msg);
-
     // Register a callback to compensate for the destructor not
     // being called. The callback forces the stream to flush and
     // closes the output file.
     registerExitCallback(
         new MakeCallback<MemTraceProbe, &MemTraceProbe::closeStreams>(this));
+}
+
+void
+MemTraceProbe::startup()
+{
+    // Create a protobuf message for the header and write it to
+    // the stream
+    ProtoMessage::PacketHeader header_msg;
+    header_msg.set_obj_id(name());
+    header_msg.set_tick_freq(SimClock::Frequency);
+
+    for (int i = 0; i < system->maxMasters(); i++) {
+        auto id_string = header_msg.add_id_strings();
+        id_string->set_key(i);
+        id_string->set_value(system->getMasterName(i));
+    }
+
+    traceStream->write(header_msg);
 }
 
 void

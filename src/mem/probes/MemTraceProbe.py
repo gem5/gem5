@@ -52,3 +52,5 @@ class MemTraceProbe(BaseMemProbe):
     # packet trace output file, disabled by default
     trace_file = Param.String("", "Packet trace output file")
 
+    # System object to look up the name associated with a master ID
+    system = Param.System(Parent.any, "System the probe belongs to")
