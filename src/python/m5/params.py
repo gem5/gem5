@@ -270,8 +270,7 @@ class SimObjectVector(VectorParamValue):
                 v.set_parent(parent, "%s%0*d" % (name, width, i))
 
     def has_parent(self):
-        elements = [e for e in self if not isNullPointer(e)]
-        return reduce(lambda x,y: x and y, [v.has_parent() for v in elements])
+        return any([e.has_parent() for e in self if not isNullPointer(e)])
 
     # return 'cpu0 cpu1' etc. for print_ini()
     def get_name(self):
