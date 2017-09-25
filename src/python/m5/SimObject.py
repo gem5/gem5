@@ -579,7 +579,8 @@ class MetaSimObject(type):
         # object is not an orphan and can provide better error
         # messages.
         child.set_parent(cls, name)
-        cls._children[name] = child
+        if not isNullPointer(child):
+            cls._children[name] = child
 
     def _new_port(cls, name, port):
         # each port should be uniquely assigned to one variable
@@ -1226,7 +1227,8 @@ class SimObject(object):
             # exercised without specialized testing.
             self.clear_child(name)
         child.set_parent(self, name)
-        self._children[name] = child
+        if not isNullPointer(child):
+            self._children[name] = child
 
     # Take SimObject-valued parameters that haven't been explicitly
     # assigned as children and make them children of the object that
