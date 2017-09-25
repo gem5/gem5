@@ -1694,6 +1694,7 @@ class MemoryBandwidth(float,ParamValue):
 # only one copy of a particular node
 class NullSimObject(object):
     __metaclass__ = Singleton
+    _name = 'Null'
 
     def __call__(cls):
         return cls
@@ -1721,7 +1722,7 @@ class NullSimObject(object):
         yield None
 
     def __str__(self):
-        return 'Null'
+        return self._name
 
     def config_value(self):
         return None
