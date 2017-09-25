@@ -1721,6 +1721,9 @@ class NullSimObject(object):
         return
         yield None
 
+    def get_config_as_dict(self):
+        return {}
+
     def __str__(self):
         return self._name
 
