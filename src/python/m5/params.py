@@ -1710,6 +1710,9 @@ class NullSimObject(object):
     def set_path(self, parent, name):
         pass
 
+    def set_parent(self, parent, name):
+        pass
+
     def __str__(self):
         return 'Null'
 
