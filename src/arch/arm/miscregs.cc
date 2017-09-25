@@ -1066,7 +1066,7 @@ bitset<NUM_MISCREG_INFOS> miscRegInfo[NUM_MISCREGS] = {
     // MISCREG_IC_IALLU
     bitset<NUM_MISCREG_INFOS>(string("10101010100000000101")),
     // MISCREG_DC_IVAC_Xt
-    bitset<NUM_MISCREG_INFOS>(string("10101010100000000101")),
+    bitset<NUM_MISCREG_INFOS>(string("10101010101010000101")),
     // MISCREG_DC_ISW_Xt
     bitset<NUM_MISCREG_INFOS>(string("10101010100000000101")),
     // MISCREG_AT_S1E1R_Xt
@@ -2149,7 +2149,8 @@ canWriteAArch64SysReg(MiscRegIndex reg, SCR scr, CPSR cpsr, ThreadContext *tc)
         if (el == EL0 && !sctlr.dze)
             return false;
     }
-    if (reg == MISCREG_DC_CVAC_Xt || reg == MISCREG_DC_CIVAC_Xt) {
+    if (reg == MISCREG_DC_CVAC_Xt || reg == MISCREG_DC_CIVAC_Xt ||
+        reg == MISCREG_DC_IVAC_Xt) {
         SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR_EL1);
         if (el == EL0 && !sctlr.uci)
             return false;
