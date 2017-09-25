@@ -1713,6 +1713,9 @@ class NullSimObject(object):
     def set_parent(self, parent, name):
         pass
 
+    def clear_parent(self, old_parent):
+        pass
+
     def __str__(self):
         return 'Null'
 
