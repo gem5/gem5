@@ -361,7 +361,7 @@
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x0: CondInst::MOV(
-                        {{isValidMiscReg(MISCREG_CR(MODRM_RM))}},Rd,Cd);
+                        {{isValidMiscReg(MISCREG_CR(MODRM_REG))}},Rd,Cd);
                     0x1: MOV(Rd,Dd);
                     0x2: CondInst::MOV(
                         {{isValidMiscReg(MISCREG_CR(MODRM_REG))}},Cd,Rd);
