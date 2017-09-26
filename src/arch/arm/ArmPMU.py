@@ -43,37 +43,60 @@ from m5.params import *
 from m5.params import isNullPointer
 from m5.proxy import *
 
+class ProbeEvent(object):
+    def __init__(self, pmu, _eventId, obj, *listOfNames):
+        self.obj = obj
+        self.names = listOfNames
+        self.eventId = _eventId
+        self.pmu = pmu
+
+    def register(self):
+        if self.obj:
+            for name in self.names:
+                self.pmu.getCCObject().addEventProbe(self.eventId,
+                    self.obj.getCCObject(), name)
+
+class SoftwareIncrement(object):
+    def __init__(self,pmu, _eventId):
+        self.eventId = _eventId
+        self.pmu = pmu
+
+    def register(self):
+        self.pmu.getCCObject().addSoftwareIncrementEvent(self.eventId)
+
+ARCH_EVENT_CORE_CYCLES = 0x11
+
 class ArmPMU(SimObject):
+
     type = 'ArmPMU'
     cxx_class = 'ArmISA::PMU'
     cxx_header = 'arch/arm/pmu.hh'
 
     cxx_exports = [
         PyBindMethod("addEventProbe"),
+        PyBindMethod("addSoftwareIncrementEvent"),
     ]
 
-    # To prevent cycles in the configuration hierarchy, we don't keep
-    # a list of supported events as a configuration param. Instead, we
-    # keep them in a local list and register them using the
-    # addEventProbe interface when other SimObjects register their
-    # probe listeners.
-    _deferred_event_types = []
+    _events = None
+
+    def addEvent(self, newObject):
+        if not (isinstance(newObject, ProbeEvent)
+            or isinstance(newObject, SoftwareIncrement)):
+            raise TypeError("argument must be of ProbeEvent or "
+                "SoftwareIncrement type")
+
+        if not self._events:
+            self._events = []
+
+        self._events.append(newObject)
+
     # Override the normal SimObject::regProbeListeners method and
     # register deferred event handlers.
     def regProbeListeners(self):
-        for event_id, obj, name in self._deferred_event_types:
-            self.getCCObject().addEventProbe(event_id, obj.getCCObject(), name)
+        for event in self._events:
+           event.register()
 
         self.getCCObject().regProbeListeners()
-
-    def addEventProbe(self, event_id, obj, *args):
-        """Add a probe-based event to the PMU if obj is not None."""
-
-        if obj is None:
-            return
-
-        for name in args:
-            self._deferred_event_types.append((event_id, obj, name))
 
     def addArchEvents(self,
                       cpu=None,
@@ -95,25 +118,28 @@ class ArmPMU(SimObject):
         bpred = cpu.branchPred if cpu and not isNullPointer(cpu.branchPred) \
             else None
 
+        self.addEvent(SoftwareIncrement(self,0x00))
         # 0x01: L1I_CACHE_REFILL
-        self.addEventProbe(0x02, itb, "Refills")
+        self.addEvent(ProbeEvent(self,0x02, itb, "Refills"))
         # 0x03: L1D_CACHE_REFILL
         # 0x04: L1D_CACHE
-        self.addEventProbe(0x05, dtb, "Refills")
-        self.addEventProbe(0x06, cpu, "RetiredLoads")
-        self.addEventProbe(0x07, cpu, "RetiredStores")
-        self.addEventProbe(0x08, cpu, "RetiredInsts")
+        self.addEvent(ProbeEvent(self,0x05, dtb, "Refills"))
+        self.addEvent(ProbeEvent(self,0x06, cpu, "RetiredLoads"))
+        self.addEvent(ProbeEvent(self,0x07, cpu, "RetiredStores"))
+        self.addEvent(ProbeEvent(self,0x08, cpu, "RetiredInsts"))
         # 0x09: EXC_TAKEN
         # 0x0A: EXC_RETURN
         # 0x0B: CID_WRITE_RETIRED
-        self.addEventProbe(0x0C, cpu, "RetiredBranches")
+        self.addEvent(ProbeEvent(self,0x0C, cpu, "RetiredBranches"))
         # 0x0D: BR_IMMED_RETIRED
         # 0x0E: BR_RETURN_RETIRED
         # 0x0F: UNALIGEND_LDST_RETIRED
-        self.addEventProbe(0x10, bpred, "Misses")
-        self.addEventProbe(0x11, cpu, "ActiveCycles")
-        self.addEventProbe(0x12, bpred, "Branches")
-        self.addEventProbe(0x13, cpu, "RetiredLoads", "RetiredStores")
+        self.addEvent(ProbeEvent(self,0x10, bpred, "Misses"))
+        self.addEvent(ProbeEvent(self, ARCH_EVENT_CORE_CYCLES, cpu,
+                                 "ActiveCycles"))
+        self.addEvent(ProbeEvent(self,0x12, bpred, "Branches"))
+        self.addEvent(ProbeEvent(self,0x13, cpu, "RetiredLoads",
+                                 "RetiredStores"))
         # 0x14: L1I_CACHE
         # 0x15: L1D_CACHE_WB
         # 0x16: L2D_CACHE
@@ -144,6 +170,7 @@ class ArmPMU(SimObject):
         # 0x2F: L2D_TLB
         # 0x30: L2I_TLB
 
+    cycleEventId = Param.Int(ARCH_EVENT_CORE_CYCLES, "Cycle event id")
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     eventCounters = Param.Int(31, "Number of supported PMU counters")
     pmuInterrupt = Param.Int(68, "PMU GIC interrupt number")

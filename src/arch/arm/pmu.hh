@@ -47,8 +47,13 @@
 
 #include "arch/arm/isa_device.hh"
 #include "arch/arm/registers.hh"
-#include "sim/probe/probe.hh"
+#include "arch/arm/system.hh"
+#include "base/cprintf.hh"
+#include "cpu/base.hh"
+#include "debug/PMUVerbose.hh"
+#include "sim/eventq.hh"
 #include "sim/sim_object.hh"
+#include "sim/system.hh"
 
 class ArmPMUParams;
 class Platform;
@@ -94,6 +99,9 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     ~PMU();
 
     void addEventProbe(unsigned int id, SimObject *obj, const char *name);
+    void addSoftwareIncrementEvent(unsigned int id);
+
+    void registerEvent(uint32_t id);
 
   public: // SimObject and related interfaces
     void serialize(CheckpointOut &cp) const override;
@@ -101,6 +109,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
 
     void drainResume() override;
 
+    void regProbeListeners() override;
 
   public: // ISA Device interface
     /**
@@ -183,9 +192,6 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
      */
     typedef unsigned int EventTypeId;
 
-    /** ID of the software increment event */
-    static const EventTypeId ARCH_EVENT_SW_INCR = 0x00;
-
   protected: /* High-level register and interrupt handling */
     MiscReg readMiscRegInt(int misc_reg);
 
@@ -220,7 +226,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
      * not exist.
      */
     uint64_t getCounterValue(CounterId id) const {
-        return isValidCounter(id) ? getCounter(id).value : 0;
+        return isValidCounter(id) ? getCounter(id).getValue() : 0;
     }
 
     /**
@@ -261,73 +267,134 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     void setCounterTypeRegister(CounterId id, PMEVTYPER_t type);
 
   protected: /* Probe handling and counter state */
-    class ProbeListener : public ProbeListenerArgBase<uint64_t>
-    {
-      public:
-        ProbeListener(PMU &_pmu, CounterId _id,
-                      ProbeManager *pm, const std::string &name)
-            : ProbeListenerArgBase(pm, name),
-              pmu(_pmu), id(_id) {}
+    struct CounterState;
 
-        void notify(const uint64_t &val) override
-        {
-            pmu.handleEvent(id, val);
+    /**
+     * Event definition base class
+     */
+    struct PMUEvent {
+
+        PMUEvent() {}
+
+        virtual ~PMUEvent() {}
+
+        /**
+         * attach this event to a given counter
+         *
+         * @param a pointer to the counter where to attach this event
+         */
+        void attachEvent(PMU::CounterState *user);
+
+        /**
+         * detach this event from a given counter
+         *
+         * @param a pointer to the counter where to detach this event from
+         */
+        void detachEvent(PMU::CounterState *user);
+
+        /**
+         * notify an event increment of val units, all the attached counters'
+         * value is incremented by val units.
+         *
+         * @param the quantity by which to increment the attached counter
+         * values
+         */
+        virtual void increment(const uint64_t val);
+
+        /**
+         * Enable the current event
+         */
+        virtual void enable() = 0;
+
+        /**
+         * Disable the current event
+         */
+        virtual void disable() = 0;
+
+        /**
+         *  Method called immediately before a counter access in order for
+         *  the associated event to update its state (if required)
+         */
+        virtual void updateAttachedCounters() {}
+
+      protected:
+
+        /** set of counters using this event  **/
+        std::set<PMU::CounterState*> userCounters;
+    };
+
+    struct RegularEvent : public PMUEvent {
+        typedef std::pair<SimObject*, std::string> EventTypeEntry;
+
+        void addMicroarchitectureProbe(SimObject* object,
+            std::string name) {
+
+            panic_if(!object,"malformed probe-point"
+                " definition with name %s\n", name);
+
+            microArchitectureEventSet.emplace(object, name);
         }
 
       protected:
-        PMU &pmu;
-        const CounterId id;
+        struct RegularProbe: public  ProbeListenerArgBase<uint64_t>
+        {
+            RegularProbe(RegularEvent *parent, SimObject* obj,
+                std::string name)
+                : ProbeListenerArgBase(obj->getProbeManager(), name),
+                  parentEvent(parent) {}
+
+            RegularProbe() = delete;
+
+            void notify(const uint64_t &val);
+
+          protected:
+            RegularEvent *parentEvent;
+        };
+
+        /** The set of events driving the event value **/
+        std::set<EventTypeEntry> microArchitectureEventSet;
+
+        /** Set of probe listeners tapping onto each of the input micro-arch
+         *  events which compose this pmu event
+         */
+        std::vector<std::unique_ptr<RegularProbe>> attachedProbePointList;
+
+        void enable() override;
+
+        void disable() override;
     };
-    typedef std::unique_ptr<ProbeListener> ProbeListenerUPtr;
+
+    class SWIncrementEvent : public PMUEvent
+    {
+        void enable() override {}
+        void disable() override {}
+
+      public:
+
+        /**
+         * write on the sw increment register inducing an increment of the
+         * counters with this event selected according to the bitfield written.
+         *
+         * @param the bitfield selecting the counters to increment.
+         */
+        void write(uint64_t val);
+    };
 
     /**
-     * Event type configuration
+     * Obtain the event of a given id
      *
-     * The main purpose of this class is to describe how a PMU event
-     * type is sampled. It is implemented as a probe factory that
-     * returns a probe attached to the object the event is mointoring.
+     * @param the id of the event to obtain
+     * @return a pointer to the event with id eventId
      */
-    struct EventType {
-        /**
-         * @param _obj Target SimObject
-         * @param _name Probe name
-         */
-        EventType(SimObject *_obj, const std::string &_name)
-            : obj(_obj), name(_name) {}
+    PMUEvent* getEvent(uint64_t eventId);
 
-        /**
-         * Create and attach a probe used to drive this event.
-         *
-         * @param pmu PMU owning the probe.
-         * @param CounterID counter ID within the PMU.
-         * @return Pointer to a probe listener.
-         */
-        std::unique_ptr<ProbeListener> create(PMU &pmu, CounterId cid) const
-        {
-            std::unique_ptr<ProbeListener> ptr;
-            ptr.reset(new ProbeListener(pmu, cid,
-                                        obj->getProbeManager(), name));
-            return ptr;
-        }
-
-        /** SimObject being measured by this probe */
-        SimObject *const obj;
-        /** Probe name within obj */
-        const std::string name;
-
-      private:
-        // Disable the default constructor
-        EventType();
-    };
-
-    /** State of a counter within the PMU. */
+    /** State of a counter within the PMU. **/
     struct CounterState : public Serializable {
-        CounterState()
-            : eventId(0), filter(0), value(0), enabled(false),
-              overflow64(false) {
-
-            listeners.reserve(4);
-        }
+        CounterState(PMU &pmuReference, uint64_t counter_id)
+            : eventId(0), filter(0), enabled(false),
+              overflow64(false), sourceEvent(nullptr),
+              counterId(counter_id), value(0), resetValue(false),
+              pmu(pmuReference) {}
 
         void serialize(CheckpointOut &cp) const override;
         void unserialize(CheckpointIn &cp)  override;
@@ -336,9 +403,46 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
          * Add an event count to the counter and check for overflow.
          *
          * @param delta Number of events to add to the counter.
-         * @return true on overflow, false otherwise.
+         * @return the quantity remaining until a counter overflow occurs.
          */
-        bool add(uint64_t delta);
+        uint64_t add(uint64_t delta);
+
+        bool isFiltered() const;
+
+        /**
+         * Detach the counter from its event
+         */
+        void detach();
+
+        /**
+         * Attach this counter to an event
+         *
+         * @param the event to attach the counter to
+         */
+        void attach(PMUEvent* event);
+
+        /**
+         * Obtain the counter id
+         *
+         * @return the pysical counter id
+         */
+        uint64_t getCounterId() const{
+            return counterId;
+        }
+
+        /**
+         * rReturn the counter value
+         *
+         * @return the counter value
+         */
+        uint64_t getValue() const;
+
+        /**
+         * overwrite the value of the counter
+         *
+         * @param the new counter value
+         */
+        void setValue(uint64_t val);
 
       public: /* Serializable state */
         /** Counter event ID */
@@ -347,32 +451,37 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
         /** Filtering settings (evtCount is unused) */
         PMEVTYPER_t filter;
 
-        /** Current value of the counter */
-        uint64_t value;
-
         /** Is the counter enabled? */
         bool enabled;
 
         /** Is this a 64-bit counter? */
         bool overflow64;
 
-      public: /* Configuration */
-        /** Probe listeners driving this counter */
-        std::vector<ProbeListenerUPtr> listeners;
-    };
+      protected: /* Configuration */
+        /** PmuEvent currently in use (if any) **/
+        PMUEvent *sourceEvent;
 
-    /**
-     * Handle an counting event triggered by a probe.
-     *
-     * This method is called by the ProbeListener class whenever an
-     * active probe is triggered. Ths method adds the event count from
-     * the probe to the affected counter, checks for overflows, and
-     * delivers an interrupt if needed.
-     *
-     * @param id Counter ID affected by the probe.
-     * @param delta Counter increment
-     */
-    void handleEvent(CounterId id, uint64_t delta);
+        /** id of the counter instance **/
+        uint64_t counterId;
+
+        /** Current value of the counter */
+        uint64_t value;
+
+        /** Flag keeping track if the counter has been reset **/
+        bool resetValue;
+
+        PMU &pmu;
+
+        template <typename ...Args>
+        void debugCounter(const char* mainString, Args &...args) const {
+
+            std::string userString = csprintf(mainString, args...);
+
+            warn("[counterId = %d, eventId = %d, sourceEvent = 0x%x] %s",
+                counterId, eventId, sourceEvent, userString.c_str());
+
+        }
+    };
 
     /**
      * Is this a valid counter ID?
@@ -398,7 +507,6 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
         return id == PMCCNTR ? cycleCounter : counters[id];
     }
 
-
     /**
      * Return the state of a counter.
      *
@@ -422,7 +530,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
      * @param id ID of counter within the PMU.
      * @param ctr Reference to the counter's state
      */
-    void updateCounter(CounterId id, CounterState &ctr);
+    void updateCounter(CounterState &ctr);
 
     /**
      * Check if a counter's settings allow it to be counted.
@@ -468,14 +576,25 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     /** Remainder part when the clock counter is divided by 64 */
     unsigned clock_remainder;
 
+    /** The number of regular event counters **/
+    uint64_t maximumCounterCount;
+
     /** State of all general-purpose counters supported by PMU */
     std::vector<CounterState> counters;
+
     /** State of the cycle counter */
     CounterState cycleCounter;
+
+    /** The id of the counter hardwired to the cpu cycle counter **/
+    const uint64_t cycleCounterEventId;
+
+    /** The event that implements the software increment **/
+    SWIncrementEvent *swIncrementEvent;
 
   protected: /* Configuration and constants */
     /** Constant (configuration-dependent) part of the PMCR */
     PMCR_t reg_pmcr_conf;
+
     /** PMCR write mask when accessed from the guest */
     static const MiscReg reg_pmcr_wr_mask;
 
@@ -485,22 +604,9 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     Platform *const platform;
 
     /**
-     * Event types supported by this PMU.
-     *
-     * Each event type ID can map to multiple EventType structures,
-     * which enables the PMU to use multiple probes for a single
-     * event. This can be useful in the following cases:
-     * <ul>
-     *   <li>Some events can are increment by multiple different probe
-     *       points (e.g., the CPU memory access counter gets
-     *       incremented for both loads and stores).
-     *
-     *   <li>A system switching between multiple CPU models can
-     *       register events for all models that will execute a thread
-     *       and tehreby ensure that the PMU continues to work.
-     * </ul>
+     * List of event types supported by this PMU.
      */
-    std::multimap<EventTypeId, EventType> pmuEventTypes;
+    std::map<EventTypeId, PMUEvent*> eventMap;
 };
 
 } // namespace ArmISA
