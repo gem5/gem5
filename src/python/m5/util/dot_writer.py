@@ -59,12 +59,23 @@
 
 import m5, os, re
 from m5.SimObject import isRoot, isSimObjectVector
-from m5.params import PortRef
+from m5.params import PortRef, isNullPointer
 from m5.util import warn
 try:
     import pydot
 except:
     pydot = False
+
+def simnode_children(simNode):
+    for child in simNode._children.itervalues():
+        if isNullPointer(child):
+            continue
+        if isSimObjectVector(child):
+            for obj in child:
+                if not isNullPointer(obj):
+                    yield obj
+        else:
+            yield child
 
 # need to create all nodes (components) before creating edges (memory channels)
 def dot_create_nodes(simNode, callgraph):
@@ -88,14 +99,8 @@ def dot_create_nodes(simNode, callgraph):
             cluster.add_node(port_node)
 
     # recurse to children
-    if simNode._children:
-        for c in simNode._children:
-            child = simNode._children[c]
-            if isSimObjectVector(child):
-                for obj in child:
-                    dot_create_nodes(obj, cluster)
-            else:
-                dot_create_nodes(child, cluster)
+    for child in simnode_children(simNode):
+        dot_create_nodes(child, cluster)
 
     callgraph.add_subgraph(cluster)
 
@@ -115,14 +120,8 @@ def dot_create_edges(simNode, callgraph):
                     dot_add_edge(simNode, callgraph, full_port_name, p)
 
     # recurse to children
-    if simNode._children:
-        for c in simNode._children:
-            child = simNode._children[c]
-            if isSimObjectVector(child):
-                for obj in child:
-                    dot_create_edges(obj, callgraph)
-            else:
-                dot_create_edges(child, callgraph)
+    for child in simnode_children(simNode):
+        dot_create_edges(child, callgraph)
 
 def dot_add_edge(simNode, callgraph, full_port_name, peerPort):
     if peerPort.role == "MASTER":
@@ -299,48 +298,25 @@ def dot_create_dvfs_nodes(simNode, callgraph, domain=None):
     dvfs_domains = {}
 
     # recurse to children
-    if simNode._children:
-        for c in simNode._children:
-            child = simNode._children[c]
-            if isSimObjectVector(child):
-                for obj in child:
-                    try:
-                        c_dom = obj.__getattr__('clk_domain')
-                        v_dom = c_dom.__getattr__('voltage_domain')
-                    except AttributeError:
-                        # Just re-use the domain from above
-                        c_dom = domain
-                        v_dom = c_dom.__getattr__('voltage_domain')
-                        pass
+    for child in simnode_children(simNode):
+        try:
+            c_dom = child.__getattr__('clk_domain')
+            v_dom = c_dom.__getattr__('voltage_domain')
+        except AttributeError:
+            # Just re-use the domain from above
+            c_dom = domain
+            v_dom = c_dom.__getattr__('voltage_domain')
+            pass
 
-                    if c_dom == domain or c_dom == None:
-                        dot_create_dvfs_nodes(obj, cluster, domain)
-                    else:
-                        if c_dom not in dvfs_domains:
-                            dvfs_cluster = dot_add_clk_domain(c_dom, v_dom)
-                            dvfs_domains[c_dom] = dvfs_cluster
-                        else:
-                            dvfs_cluster = dvfs_domains[c_dom]
-                        dot_create_dvfs_nodes(obj, dvfs_cluster, c_dom)
+        if c_dom == domain or c_dom == None:
+            dot_create_dvfs_nodes(child, cluster, domain)
+        else:
+            if c_dom not in dvfs_domains:
+                dvfs_cluster = dot_add_clk_domain(c_dom, v_dom)
+                dvfs_domains[c_dom] = dvfs_cluster
             else:
-                try:
-                    c_dom = child.__getattr__('clk_domain')
-                    v_dom = c_dom.__getattr__('voltage_domain')
-                except AttributeError:
-                    # Just re-use the domain from above
-                    c_dom = domain
-                    v_dom = c_dom.__getattr__('voltage_domain')
-                    pass
-
-                if c_dom == domain or c_dom == None:
-                    dot_create_dvfs_nodes(child, cluster, domain)
-                else:
-                    if c_dom not in dvfs_domains:
-                        dvfs_cluster = dot_add_clk_domain(c_dom, v_dom)
-                        dvfs_domains[c_dom] = dvfs_cluster
-                    else:
-                        dvfs_cluster = dvfs_domains[c_dom]
-                    dot_create_dvfs_nodes(child, dvfs_cluster, c_dom)
+                dvfs_cluster = dvfs_domains[c_dom]
+            dot_create_dvfs_nodes(child, dvfs_cluster, c_dom)
 
     for key in dvfs_domains:
         cluster.add_subgraph(dvfs_domains[key])
