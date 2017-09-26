@@ -102,23 +102,31 @@ IdeController::IdeController(Params *p)
     ioEnabled(false), bmEnabled(false),
     ioShift(p->io_shift), ctrlOffset(p->ctrl_offset)
 {
-    if (params()->disks.size() > 4)
-        panic("IDE controllers support a maximum of 4 devices attached!\n");
 
     // Assign the disks to channels
-    int numDisks = params()->disks.size();
-    if (numDisks > 0)
-        primary.master = params()->disks[0];
-    if (numDisks > 1)
-        primary.slave = params()->disks[1];
-    if (numDisks > 2)
-        secondary.master = params()->disks[2];
-    if (numDisks > 3)
-        secondary.slave = params()->disks[3];
-
     for (int i = 0; i < params()->disks.size(); i++) {
+        if (!params()->disks[i])
+            continue;
+        switch (i) {
+          case 0:
+            primary.master = params()->disks[0];
+            break;
+          case 1:
+            primary.slave = params()->disks[1];
+            break;
+          case 2:
+            secondary.master = params()->disks[2];
+            break;
+          case 3:
+            secondary.slave = params()->disks[3];
+            break;
+          default:
+            panic("IDE controllers support a maximum "
+                  "of 4 devices attached!\n");
+        }
         params()->disks[i]->setController(this);
     }
+
     primary.select(false);
     secondary.select(false);
 
