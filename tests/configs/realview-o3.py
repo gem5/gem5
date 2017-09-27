@@ -37,7 +37,7 @@
 
 from m5.objects import *
 from arm_generic import *
-from common.O3_ARM_v7a import O3_ARM_v7a_3
+from common.cores.arm.O3_ARM_v7a import O3_ARM_v7a_3
 
 root = LinuxArmFSSystemUniprocessor(mem_mode='timing',
                                     mem_class=DDR3_1600_8x8,
