@@ -48,7 +48,6 @@
 #include <iostream>
 
 #include "base/vnc/vncinput.hh"
-#include "base/bitmap.hh"
 #include "base/circlebuf.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"

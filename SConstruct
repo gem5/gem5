@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2013, 2015, 2016 ARM Limited
+# Copyright (c) 2013, 2015-2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -1134,6 +1134,14 @@ if not have_fenv:
     print "Warning: Header file <fenv.h> not found."
     print "         This host has no IEEE FP rounding mode control."
 
+# Check for <png.h> (libpng library needed if wanting to dump
+# frame buffer image in png format)
+have_png = conf.CheckHeader('png.h', '<>')
+if not have_png:
+    print "Warning: Header file <png.h> not found."
+    print "         This host has no libpng library."
+    print "         Disabling support for PNG framebuffers."
+
 # Check if we should enable KVM-based hardware virtualization. The API
 # we rely on exists since version 2.6.36 of the kernel, but somehow
 # the KVM_API_VERSION does not reflect the change. We test for one of
@@ -1278,8 +1286,11 @@ sticky_vars.AddVariables(
                  False),
     BoolVariable('USE_POSIX_CLOCK', 'Use POSIX Clocks', have_posix_clock),
     BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
-    BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability', False),
-    BoolVariable('USE_KVM', 'Enable hardware virtualized (KVM) CPU models', have_kvm),
+    BoolVariable('USE_PNG',  'Enable support for PNG images', have_png),
+    BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability',
+                 False),
+    BoolVariable('USE_KVM', 'Enable hardware virtualized (KVM) CPU models',
+                 have_kvm),
     BoolVariable('USE_TUNTAP',
                  'Enable using a tap device to bridge to the host network',
                  have_tuntap),
@@ -1293,7 +1304,8 @@ sticky_vars.AddVariables(
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP', 'TARGET_ISA', 'TARGET_GPU_ISA',
                 'CP_ANNOTATE', 'USE_POSIX_CLOCK', 'USE_KVM', 'USE_TUNTAP',
-                'PROTOCOL', 'HAVE_PROTOBUF', 'HAVE_PERF_ATTR_EXCLUDE_HOST']
+                'PROTOCOL', 'HAVE_PROTOBUF', 'HAVE_PERF_ATTR_EXCLUDE_HOST',
+                'USE_PNG']
 
 ###################################################
 #
@@ -1485,6 +1497,14 @@ for variant_path in variant_paths:
     if not env['USE_FENV']:
         print "Warning: No IEEE FP rounding mode control in", variant_dir + "."
         print "         FP results may deviate slightly from other platforms."
+
+    if not have_png and env['USE_PNG']:
+        print "Warning: <png.h> not available; " \
+              "forcing USE_PNG to False in", variant_dir + "."
+        env['USE_PNG'] = False
+
+    if env['USE_PNG']:
+        env.Append(LIBS=['png'])
 
     if env['EFENCE']:
         env.Append(LIBS=['efence'])

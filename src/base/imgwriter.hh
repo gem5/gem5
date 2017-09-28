@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2015 ARM Limited
+ * Copyright (c) 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -34,81 +34,58 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: William Wang
- *          Ali Saidi
- *          Chris Emmons
- *          Andreas Sandberg
+ * Authors: Giacomo Travaglini
  */
+#ifndef __BASE_IMGWRITER_HH__
+#define __BASE_IMGWRITER_HH__
 
-#include "base/bitmap.hh"
+#include <ostream>
 
-#include <cassert>
+#include "base/compiler.hh"
+#include "base/framebuffer.hh"
 
-#include "base/misc.hh"
+#include "enums/ImageFormat.hh"
 
-// bitmap class ctor
-Bitmap::Bitmap(const FrameBuffer *_fb)
-    : fb(*_fb)
+// write frame buffer to an image
+class ImgWriter
 {
-}
+  public:
+    ImgWriter(const FrameBuffer *_fb)
+      : fb(*_fb)
+    {}
 
-Bitmap::~Bitmap()
-{
-}
+    virtual ~ImgWriter() {};
+    /**
+     * Write the frame buffer data into the provided ostream
+     *
+     * @param out output stream to write to
+     */
+    virtual void write(std::ostream &out) const = 0;
+    /*
+     * Return Image format as a string
+     *
+     * @return img extension (e.g. bmp for Bitmap)
+     */
+    virtual const char* getImgExtension() const = 0;
 
-const Bitmap::CompleteV1Header
-Bitmap::getCompleteHeader() const
-{
-    const uint32_t pixel_array_size(sizeof(PixelType) * fb.area());
-    const uint32_t file_size(sizeof(CompleteV1Header) + pixel_array_size);
+  protected:
+    const FrameBuffer &fb;
+};
 
-    const CompleteV1Header header = {
-        // File header
-        {
-            {'B','M'}, /* Magic */
-            file_size,
-            0, 0, /* Reserved */
-            sizeof(CompleteV1Header) /* Offset to pixel array */
-        },
-        // Info/DIB header
-        {
-            sizeof(InfoHeaderV1),
-            fb.width(),
-            fb.height(),
-            1, /* Color planes */
-            32, /* Bits per pixel */
-            0, /* No compression */
-            pixel_array_size, /* Image size in bytes */
-            2835, /* x pixels per meter (assume 72 DPI) */
-            2835, /* y pixels per meter (assume 72 DPI) */
-            0, /* Colors in color table */
-            0 /* Important color count (0 == all are important) */
-        }
-    };
+/**
+ * Factory Function which allocates a ImgWriter object and returns
+ * a smart pointer to it. The dynamic type of the object being pointed
+ * depends upon the enum type passed as a first parameter.
+ * If the enum contains an invalid value, the function will produce a warning
+ * and will default to Bitamp.
+ *
+ * @param type Image writer type (e.g. Bitamp, Png)
+ * @param fb Pointer to a FrameBuffer object
+ *           This contains the raw data which will be stored as an image
+ *           when calling the appropriate object method
+ * @return smart pointer to the allocated Image Writer
+ */
+std::unique_ptr<ImgWriter>
+createImgWriter(Enums::ImageFormat type, const FrameBuffer *fb);
 
-    return header;
-}
-
-void
-Bitmap::write(std::ostream &bmp) const
-{
-    const CompleteV1Header header(getCompleteHeader());
-
-    // 1.  write the header
-    bmp.write(reinterpret_cast<const char *>(&header), sizeof(header));
-
-    // 2.  write the bitmap data
-    // BMP start store data left to right starting with the bottom row
-    // so we need to do some creative flipping
-    std::vector<PixelType> line_buffer(fb.width());
-    for (int y = 0; y < fb.height(); ++y) {
-        for (unsigned x = 0; x < fb.width(); ++x)
-            line_buffer[x] = fb.pixel(x, fb.height() - y - 1);
-
-        bmp.write(reinterpret_cast<const char *>(line_buffer.data()),
-                  line_buffer.size() * sizeof(line_buffer[0]));
-    }
-
-    bmp.flush();
-}
-
+#endif //__BASE_IMGWRITER_HH__

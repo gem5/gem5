@@ -49,7 +49,7 @@
 #include <fstream>
 #include <memory>
 
-#include "base/bitmap.hh"
+#include "base/bmpwriter.hh"
 #include "base/framebuffer.hh"
 #include "base/output.hh"
 #include "dev/arm/amba_device.hh"
@@ -266,7 +266,7 @@ class Pl111: public AmbaDmaDevice
     VncInput *vnc;
 
     /** Helper to write out bitmaps */
-    Bitmap bmp;
+    BmpWriter bmp;
 
     /** Picture of what the current frame buffer looks like */
     OutputStream *pic;

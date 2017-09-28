@@ -64,7 +64,6 @@
 #include <cstdio>
 
 #include "base/atomicio.hh"
-#include "base/bitmap.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "base/socket.hh"

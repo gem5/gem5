@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2015 ARM Limited
+ * Copyright (c) 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -34,93 +34,76 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: William Wang
- *          Ali Saidi
- *          Chris Emmons
- *          Andreas Sandberg
+ * Authors: Giacomo Travaglini
  */
-#ifndef __BASE_BITMAP_HH__
-#define __BASE_BITMAP_HH__
 
-#include <ostream>
+/**
+ * @file Declaration of a class that writes a frame buffer to a png
+ */
+
+#ifndef __BASE_PNG_HH__
+#define __BASE_PNG_HH__
 
 #include "base/compiler.hh"
 #include "base/framebuffer.hh"
+#include "base/imgwriter.hh"
 
-/**
- * @file Declaration of a class that writes a frame buffer to a bitmap
- */
-
-
-// write frame buffer into a bitmap picture
-class  Bitmap
+/** Image writer implementing support for PNG */
+class PngWriter : public ImgWriter
 {
   public:
     /**
-     * Create a bitmap that takes data in a given mode & size and
+     * Create a png that takes data in a given mode & size and
      * outputs to an ostream.
      */
-    Bitmap(const FrameBuffer *fb);
+    PngWriter(const FrameBuffer *_fb)
+      : ImgWriter(_fb)
+    {}
 
-    ~Bitmap();
+    ~PngWriter() {};
+
+    /**
+     * Return Image format as a string
+     *
+     * @return img extension (e.g. .png for Png)
+     */
+    const char* getImgExtension() const override
+    { return _imgExtension; }
 
     /**
      * Write the frame buffer data into the provided ostream
      *
-     * @param bmp stream to write to
+     * @param png stream to write to
      */
-    void write(std::ostream &bmp) const;
-
-
+    void write(std::ostream &png) const override;
   private:
-    struct FileHeader {
-        unsigned char magic_number[2];
-        uint32_t size;
-        uint16_t reserved1;
-        uint16_t reserved2;
-        uint32_t offset;
-    } M5_ATTR_PACKED;
-
-    struct InfoHeaderV1 { /* Aka DIB header */
-        uint32_t Size;
-        uint32_t Width;
-        uint32_t Height;
-        uint16_t Planes;
-        uint16_t BitCount;
-        uint32_t Compression;
-        uint32_t SizeImage;
-        uint32_t XPelsPerMeter;
-        uint32_t YPelsPerMeter;
-        uint32_t ClrUsed;
-        uint32_t ClrImportant;
-    } M5_ATTR_PACKED;
-
-    struct CompleteV1Header {
-        FileHeader file;
-        InfoHeaderV1 info;
-    } M5_ATTR_PACKED;
-
-    struct BmpPixel32 {
-        BmpPixel32 &operator=(const Pixel &rhs) {
+    /** Png Pixel type: not containing padding */
+    struct PngPixel24 {
+        PngPixel24 &operator=(const Pixel &rhs) {
             red = rhs.red;
             green = rhs.green;
             blue = rhs.blue;
-            padding = 0;
 
             return *this;
         }
-        uint8_t blue;
-        uint8_t green;
         uint8_t red;
-        uint8_t padding;
+        uint8_t green;
+        uint8_t blue;
     } M5_ATTR_PACKED;
 
-    typedef BmpPixel32 PixelType;
+    /**
+     * Handle to resources used by libpng:
+     *   - png_struct: Structure holding write informations
+     *   - png_info  : Structure holding image informations
+     *
+     * The class is automatically taking care of struct
+     * allocation/deallocation
+     */
+    struct PngStructHandle;
 
-    const CompleteV1Header getCompleteHeader() const;
+    typedef PngPixel24 PixelType;
 
-    const FrameBuffer &fb;
+    static const char* _imgExtension;
 };
 
-#endif // __BASE_BITMAP_HH__
-
+#endif // __BASE_PNG_HH__

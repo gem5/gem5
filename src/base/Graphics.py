@@ -1,5 +1,5 @@
-# Copyright (c) 2010 ARM Limited
-# All rights reserved.
+# Copyright (c) 2017 ARM Limited
+# All rights reserved
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
@@ -33,23 +33,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: William Wang
+# Authors: Giacomo Travaglini
 
 from m5.SimObject import SimObject
 from m5.params import *
-from Graphics import *
 
-
-class VncInput(SimObject):
-    type = 'VncInput'
-    cxx_header = "base/vnc/vncinput.hh"
-    frame_capture = Param.Bool(False, "capture changed frames to files")
-    img_format = Param.ImageFormat(
-        "Bitmap", "Format of the dumped Framebuffer"
-    )
-
-class VncServer(VncInput):
-    type = 'VncServer'
-    cxx_header = "base/vnc/vncserver.hh"
-    port = Param.TcpPort(5900, "listen port")
-    number = Param.Int(0, "vnc client number")
+# Image Formats:
+# Auto option will let gem5 to choose the image format it prefers.
+class ImageFormat(Enum): vals = ['Auto', 'Bitmap', 'Png']
