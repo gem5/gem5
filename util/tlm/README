@@ -184,6 +184,10 @@ Similar to IV. the simulation can be set up with this command:
 
 > ../../build/ARM/gem5.opt ./conf/tlm_elastic_slave.py
 
+or
+
+> ../../build/ARM/gem5.opt ./conf/tlm_elastic_slave_with_l2.py
+
 Then:
 
 > build/examples/slave_port/gem5.sc m5out/config.ini
