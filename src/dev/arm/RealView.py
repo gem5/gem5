@@ -56,6 +56,7 @@ from Gic import *
 from EnergyCtrl import EnergyCtrl
 from ClockDomain import SrcClockDomain
 from SubSystem import SubSystem
+from Graphics import ImageFormat
 
 # Platforms with KVM support should generally use in-kernel GIC
 # emulation. Use a GIC model that automatically switches between
@@ -298,7 +299,10 @@ class HDLcd(AmbaDmaDevice):
                                     "selector order in some kernels")
     workaround_dma_line_count = Param.Bool(True, "Workaround incorrect "
                                            "DMA line count (off by 1)")
-    enable_capture = Param.Bool(True, "capture frame to system.framebuffer.bmp")
+    enable_capture = Param.Bool(True, "capture frame to "
+                                      "system.framebuffer.{extension}")
+    frame_format = Param.ImageFormat("Auto",
+                                     "image format of the captured frame")
 
     pixel_buffer_size = Param.MemorySize32("2kB", "Size of address range")
 

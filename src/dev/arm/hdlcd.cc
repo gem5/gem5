@@ -47,6 +47,7 @@
 #include "debug/HDLcd.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/arm/base_gic.hh"
+#include "enums/ImageFormat.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/HDLcd.hh"
@@ -85,11 +86,13 @@ HDLcd::HDLcd(const HDLcdParams *p)
 
       virtRefreshEvent([this]{ virtRefresh(); }, name()),
       // Other
-      bmp(&pixelPump.fb), pic(NULL), conv(PixelConverter::rgba8888_le),
+      imgFormat(p->frame_format), pic(NULL), conv(PixelConverter::rgba8888_le),
       pixelPump(*this, *p->pxl_clk, p->pixel_chunk)
 {
     if (vnc)
         vnc->setFrameBuffer(&pixelPump.fb);
+
+    imgWriter = createImgWriter(imgFormat, &pixelPump.fb);
 }
 
 HDLcd::~HDLcd()
@@ -572,13 +575,14 @@ HDLcd::pxlFrameDone()
     if (enableCapture) {
         if (!pic) {
             pic = simout.create(
-                csprintf("%s.framebuffer.bmp", sys->name()),
+                csprintf("%s.framebuffer.%s",
+                         sys->name(), imgWriter->getImgExtension()),
                 true);
         }
 
         assert(pic);
         pic->stream()->seekp(0);
-        bmp.write(*pic->stream());
+        imgWriter->write(*pic->stream());
     }
 }
 
