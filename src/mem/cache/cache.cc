@@ -2542,30 +2542,35 @@ Cache::CpuSidePort::getAddrRanges() const
 }
 
 bool
+Cache::CpuSidePort::tryTiming(PacketPtr pkt)
+{
+    assert(!cache->system->bypassCaches());
+
+    // always let express snoop packets through if even if blocked
+    if (pkt->isExpressSnoop()) {
+        return true;
+    } else if (isBlocked() || mustSendRetry) {
+        // either already committed to send a retry, or blocked
+        mustSendRetry = true;
+        return false;
+    }
+    mustSendRetry = false;
+    return true;
+}
+
+bool
 Cache::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
     assert(!cache->system->bypassCaches());
 
-    bool success = false;
-
     // always let express snoop packets through if even if blocked
     if (pkt->isExpressSnoop()) {
-        // do not change the current retry state
         bool M5_VAR_USED bypass_success = cache->recvTimingReq(pkt);
         assert(bypass_success);
         return true;
-    } else if (blocked || mustSendRetry) {
-        // either already committed to send a retry, or blocked
-        success = false;
-    } else {
-        // pass it on to the cache, and let the cache decide if we
-        // have to retry or not
-        success = cache->recvTimingReq(pkt);
     }
 
-    // remember if we have to retry
-    mustSendRetry = !success;
-    return success;
+    return tryTiming(pkt) && cache->recvTimingReq(pkt);
 }
 
 Tick

@@ -90,6 +90,8 @@ class Cache : public BaseCache
 
         virtual bool recvTimingSnoopResp(PacketPtr pkt);
 
+        virtual bool tryTiming(PacketPtr pkt);
+
         virtual bool recvTimingReq(PacketPtr pkt);
 
         virtual Tick recvAtomic(PacketPtr pkt);
