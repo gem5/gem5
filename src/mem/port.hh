@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012,2015 ARM Limited
+ * Copyright (c) 2011-2012,2015,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -222,6 +222,19 @@ class MasterPort : public BaseMasterPort
      * @return If the send was succesful or not.
     */
     bool sendTimingReq(PacketPtr pkt);
+
+    /**
+     * Check if the slave can handle a timing request.
+     *
+     * If the send cannot be handled at the moment, as indicated by
+     * the return value, then the sender will receive a recvReqRetry
+     * at which point it can re-issue a sendTimingReq.
+     *
+     * @param pkt Packet to send.
+     *
+     * @return If the send was succesful or not.
+     */
+    bool tryTiming(PacketPtr pkt) const;
 
     /**
      * Attempt to send a timing snoop response packet to the slave
@@ -450,6 +463,13 @@ class SlavePort : public BaseSlavePort
      * Receive a timing request from the master port.
      */
     virtual bool recvTimingReq(PacketPtr pkt) = 0;
+
+    /**
+     * Availability request from the master port.
+     */
+    virtual bool tryTiming(PacketPtr pkt) {
+        panic("%s was not expecting a %s\n", name(), __func__);
+    }
 
     /**
      * Receive a timing snoop response from the master port.

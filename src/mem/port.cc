@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012,2015 ARM Limited
+ * Copyright (c) 2012,2015,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -181,6 +181,13 @@ MasterPort::sendTimingReq(PacketPtr pkt)
 {
     assert(pkt->isRequest());
     return _slavePort->recvTimingReq(pkt);
+}
+
+bool
+MasterPort::tryTiming(PacketPtr pkt) const
+{
+  assert(pkt->isRequest());
+  return _slavePort->tryTiming(pkt);
 }
 
 bool
