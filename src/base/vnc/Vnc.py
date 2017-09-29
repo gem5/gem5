@@ -45,7 +45,7 @@ class VncInput(SimObject):
     cxx_header = "base/vnc/vncinput.hh"
     frame_capture = Param.Bool(False, "capture changed frames to files")
     img_format = Param.ImageFormat(
-        "Bitmap", "Format of the dumped Framebuffer"
+        "Auto", "Format of the dumped Framebuffer"
     )
 
 class VncServer(VncInput):
