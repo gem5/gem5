@@ -44,3 +44,4 @@
 /Tested-by:/d;
 /Copyright-Check:/d;
 /Style-Check:/d;
+/For-Upstream:/d;
