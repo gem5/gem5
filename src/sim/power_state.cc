@@ -41,7 +41,9 @@
 
 PowerState::PowerState(const PowerStateParams *p) :
     SimObject(p), _currState(p->default_state),
-    stats(*this)
+    possibleStates(p->possible_states.begin(),
+                   p->possible_states.end()),
+    prvEvalTick(0), stats(*this)
 {
 }
 
@@ -68,6 +70,11 @@ PowerState::unserialize(CheckpointIn &cp)
 void
 PowerState::set(Enums::PwrState p)
 {
+    // Check if this power state is actually allowed by checking whether it is
+    // present in pwrStateToIndex-dictionary
+    panic_if(possibleStates.find(p) == possibleStates.end(),
+             "Cannot go to %s in %s \n", Enums::PwrStateStrings[p], name());
+
     // Function should ideally be called only when there is a state change
     if (_currState == p) {
         warn_once("PowerState: Already in the requested power state, "

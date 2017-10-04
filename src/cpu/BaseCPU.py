@@ -303,3 +303,7 @@ class BaseCPU(ClockedObject):
             cpus_node.append(node)
 
         yield cpus_node
+
+    def __init__(self, **kwargs):
+        super(BaseCPU, self).__init__(**kwargs)
+        self.power_state.possible_states=['ON', 'CLK_GATED', 'OFF']

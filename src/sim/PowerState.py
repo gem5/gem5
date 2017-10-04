@@ -62,6 +62,11 @@ class PowerState(SimObject):
     # routine
     default_state = Param.PwrState("UNDEFINED", "Default Power State")
 
+    # Possible power states this object can be in sorted from the most
+    # to the least performant
+    possible_states = VectorParam.PwrState(
+        [], "Power states this object can be in")
+
     clk_gate_min = Param.Latency('1ns',"Min value of the distribution")
     clk_gate_max = Param.Latency('1s',"Max value of the distribution")
     clk_gate_bins = Param.Unsigned('20', "# bins in clk gated distribution")

@@ -98,10 +98,21 @@ class PowerState : public SimObject
      */
     void computeStats();
 
+    /**
+     * Return the power states this object can be in
+     */
+    std::set<Enums::PwrState> getPossibleStates() const
+    {
+        return possibleStates;
+    }
+
   protected:
 
     /** To keep track of the current power state */
     Enums::PwrState _currState;
+
+    /** The possible power states this object can be in */
+    const std::set<Enums::PwrState> possibleStates;
 
     /** Last tick the power stats were calculated */
     Tick prvEvalTick = 0;
