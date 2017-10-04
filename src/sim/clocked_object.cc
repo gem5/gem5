@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016 ARM Limited
+ * Copyright (c) 2015-2017, 2019-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,12 +41,13 @@
 #include "sim/power/power_model.hh"
 
 ClockedObject::ClockedObject(const ClockedObjectParams *p) :
-    SimObject(p), Clocked(*p->clk_domain),
-    _currPwrState(p->default_p_state),
-    prvEvalTick(0),
-    stats(*this)
+    SimObject(p), Clocked(*p->clk_domain), powerState(p->power_state)
 {
     // Register the power_model with the object
+    // Slightly counter-intuitively, power models need to to register with the
+    // clocked object and not the power stated object because the power model
+    // needs information from the clock domain, which is an attribute of the
+    // clocked object.
     for (auto & power_model: p->power_model)
         power_model->setClockedObject(this);
 }
@@ -54,149 +55,10 @@ ClockedObject::ClockedObject(const ClockedObjectParams *p) :
 void
 ClockedObject::serialize(CheckpointOut &cp) const
 {
-    unsigned int currPwrState = (unsigned int)_currPwrState;
-
-    SERIALIZE_SCALAR(currPwrState);
-    SERIALIZE_SCALAR(prvEvalTick);
+    powerState->serialize(cp);
 }
-
 void
 ClockedObject::unserialize(CheckpointIn &cp)
 {
-    unsigned int currPwrState;
-
-    UNSERIALIZE_SCALAR(currPwrState);
-    UNSERIALIZE_SCALAR(prvEvalTick);
-
-    _currPwrState = Enums::PwrState(currPwrState);
-}
-
-void
-ClockedObject::pwrState(Enums::PwrState p)
-{
-    // Function should ideally be called only when there is a state change
-    if (_currPwrState == p) {
-        warn_once("ClockedObject: Already in the requested power state, " \
-                  "request ignored");
-        return;
-    }
-
-    // No need to compute stats if in the same tick, update state though. This
-    // can happen in cases like a) during start of the simulation multiple
-    // state changes happens in init/startup phase, b) one takes a decision to
-    // migrate state but decides to reverts back to the original state in the
-    // same tick if other conditions are not met elsewhere.
-    // Any state change related stats would have been recorded on previous call
-    // to the pwrState() function.
-    if (prvEvalTick == curTick() && curTick() != 0) {
-       warn("ClockedObject %s: More than one power state change request "\
-             "encountered within the same simulation tick %d",
-             name(), prvEvalTick);
-        _currPwrState = p;
-        return;
-    }
-
-    // Record stats for previous state.
-    computeStats();
-
-    _currPwrState = p;
-
-    stats.numPwrStateTransitions++;
-}
-
-void
-ClockedObject::computeStats()
-{
-    // Calculate time elapsed from last (valid) state change
-    Tick elapsed_time = curTick() - prvEvalTick;
-
-    stats.pwrStateResidencyTicks[_currPwrState] += elapsed_time;
-
-    // Time spent in CLK_GATED state, this might change depending on
-    // transition to other low power states in respective simulation
-    // objects.
-    if (_currPwrState == Enums::PwrState::CLK_GATED) {
-        stats.pwrStateClkGateDist.sample(elapsed_time);
-    }
-
-    prvEvalTick = curTick();
-}
-
-std::vector<double>
-ClockedObject::pwrStateWeights() const
-{
-    // Get residency stats
-    std::vector<double> ret;
-    Stats::VCounter residencies;
-    stats.pwrStateResidencyTicks.value(residencies);
-
-    // Account for current state too!
-    Tick elapsed_time = curTick() - prvEvalTick;
-    residencies[_currPwrState] += elapsed_time;
-
-    ret.resize(Enums::PwrState::Num_PwrState);
-    for (unsigned i = 0; i < Enums::PwrState::Num_PwrState; i++)
-        ret[i] = residencies[i] / \
-                     (stats.pwrStateResidencyTicks.total() + elapsed_time);
-
-    return ret;
-}
-
-
-ClockedObject::ClockedObjectStats::ClockedObjectStats(ClockedObject &co)
-    : Stats::Group(&co),
-    clockedObject(co),
-    ADD_STAT(numPwrStateTransitions,
-             "Number of power state transitions"),
-    ADD_STAT(pwrStateClkGateDist,
-             "Distribution of time spent in the clock gated state"),
-    ADD_STAT(pwrStateResidencyTicks,
-             "Cumulative time (in ticks) in various power states")
-{
-}
-
-void
-ClockedObject::ClockedObjectStats::regStats()
-{
-    Stats::Group::regStats();
-
-    using namespace Stats;
-
-    const ClockedObjectParams *p = clockedObject.params();
-
-    numPwrStateTransitions.flags(nozero);
-
-    // Each sample is time in ticks
-    unsigned num_bins = std::max(p->p_state_clk_gate_bins, 10U);
-    pwrStateClkGateDist
-        .init(p->p_state_clk_gate_min, p->p_state_clk_gate_max,
-          (p->p_state_clk_gate_max / num_bins))
-        .flags(pdf | nozero | nonan)
-        ;
-
-    pwrStateResidencyTicks
-        .init(Enums::PwrState::Num_PwrState)
-        .flags(nozero)
-        ;
-    for (int i = 0; i < Enums::PwrState::Num_PwrState; i++) {
-        pwrStateResidencyTicks.subname(i, Enums::PwrStateStrings[i]);
-    }
-
-    numPwrStateTransitions = 0;
-}
-
-void
-ClockedObject::ClockedObjectStats::preDumpStats()
-{
-    Stats::Group::preDumpStats();
-
-    /**
-     * For every stats dump, the power state residency and other distribution
-     * stats should be computed just before the dump to ensure correct stats
-     * value being reported for current dump window. It avoids things like
-     * having any unreported time spent in a power state to be forwarded to the
-     * next dump window which might have rather unpleasant effects (like
-     * perturbing the distribution stats).
-     */
-    clockedObject.computeStats();
+    powerState->unserialize(cp);
 }

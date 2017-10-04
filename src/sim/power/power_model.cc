@@ -102,7 +102,7 @@ PowerModel::getDynamicPower() const
         // This power model only collects static data
         return 0;
     }
-    std::vector<double> w = clocked_object->pwrStateWeights();
+    std::vector<double> w = clocked_object->powerState->getWeights();
 
     // Same number of states (excluding UNDEFINED)
     assert(w.size() - 1 == states_pm.size());
@@ -124,7 +124,7 @@ PowerModel::getStaticPower() const
 {
     assert(clocked_object);
 
-    std::vector<double> w = clocked_object->pwrStateWeights();
+    std::vector<double> w = clocked_object->powerState->getWeights();
 
     if (power_model_type == Enums::PMType::Dynamic) {
         // This power model only collects dynamic data

@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2015-2017, 2019-2020 ARM Limited
+# Copyright (c) 2012, 2015-2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -32,23 +32,36 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 
-from m5.objects.PowerState import PowerState
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 
-class ClockedObject(SimObject):
-    type = 'ClockedObject'
-    abstract = True
-    cxx_header = "sim/clocked_object.hh"
+# Enumerate set of allowed power states that can be used by a clocked object.
+# The list is kept generic to express a base minimal set.
+# State definition :-
+#   Undefined: Invalid state, no power state derived information is available.
+#   On: The logic block is actively running and consuming dynamic and leakage
+#       energy depending on the amount of processing required.
+#   Clk_gated: The clock circuity within the block is gated to save dynamic
+#              energy, the power supply to the block is still on and leakage
+#              energy is being consumed by the block.
+#   Sram_retention: The SRAMs within the logic blocks are pulled into retention
+#                   state to reduce leakage energy further.
+#   Off: The logic block is power gated and is not consuming any energy.
+class PwrState(Enum): vals = [
+        'UNDEFINED', 'ON', 'CLK_GATED', 'SRAM_RETENTION', 'OFF'
+]
 
-    # The clock domain this clocked object belongs to, inheriting the
-    # parent's clock domain by default
-    clk_domain = Param.ClockDomain(Parent.clk_domain, "Clock domain")
+class PowerState(SimObject):
+    type = 'PowerState'
+    cxx_header = "sim/power_state.hh"
 
-    # Power model for this ClockedObject
-    power_model = VectorParam.PowerModel([], "Power models")
+    # Provide initial power state, should ideally get redefined in startup
+    # routine
+    default_state = Param.PwrState("UNDEFINED", "Default Power State")
 
-    power_state = Param.PowerState(PowerState(), "Power state")
-
+    clk_gate_min = Param.Latency('1ns',"Min value of the distribution")
+    clk_gate_max = Param.Latency('1s',"Max value of the distribution")
+    clk_gate_bins = Param.Unsigned('20', "# bins in clk gated distribution")

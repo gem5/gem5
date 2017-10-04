@@ -114,7 +114,7 @@ def main():
         if not isinstance(cpu, m5.objects.BaseCPU):
             continue
 
-        cpu.default_p_state = "ON"
+        cpu.power_state.default_state = "ON"
         cpu.power_model = CpuPowerModel(cpu.path())
 
     # Example power model for the L2 Cache of the bigCluster
@@ -122,7 +122,7 @@ def main():
         if not isinstance(l2, m5.objects.Cache):
             continue
 
-        l2.default_p_state = "ON"
+        l2.power_state.default_state = "ON"
         l2.power_model = L2PowerModel(l2.path())
 
     bL.instantiate(options)

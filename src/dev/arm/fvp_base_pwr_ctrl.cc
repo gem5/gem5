@@ -280,7 +280,7 @@ FVPBasePwrCtrl::powerCoreOn(ThreadContext *const tc, PwrStatus *const pwrs)
             npwrs->pc = 0;
         }
     }
-    tc->getCpuPtr()->pwrState(Enums::PwrState::ON);
+    tc->getCpuPtr()->powerState->set(Enums::PwrState::ON);
 }
 
 void
@@ -295,7 +295,7 @@ FVPBasePwrCtrl::powerCoreOff(ThreadContext *const tc, PwrStatus *const pwrs)
     pwrs->pc = 0;
     // Clear power-on reason
     pwrs->wk = 0;
-    tc->getCpuPtr()->pwrState(Enums::PwrState::OFF);
+    tc->getCpuPtr()->powerState->set(Enums::PwrState::OFF);
 }
 
 void
