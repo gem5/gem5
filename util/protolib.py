@@ -152,7 +152,7 @@ def _EncodeVarint32(out_file, value):
   bits = value & 0x7f
   value >>= 7
   while value:
-    out_file.write(struct.pack('<B', 0x80|bits))
+    out_file.write(struct.pack('<B', 0x80 | bits))
     bits = value & 0x7f
     value >>= 7
   out_file.write(struct.pack('<B', bits))
