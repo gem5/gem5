@@ -98,7 +98,7 @@ def openFileRd(in_file):
         exit(-1)
     return proto_in
 
-def DecodeVarint(in_file):
+def _DecodeVarint32(in_file):
     """
     The decoding of the Varint32 is copied from
     google.protobuf.internal.decoder and is only repeated here to
@@ -134,7 +134,7 @@ def decodeMessage(in_file, message):
     False if no message could be read.
     """
     try:
-        size, pos = DecodeVarint(in_file)
+        size, pos = _DecodeVarint32(in_file)
         if size == 0:
             return False
         buf = in_file.read(size)
@@ -143,7 +143,7 @@ def decodeMessage(in_file, message):
     except IOError:
         return False
 
-def EncodeVarint(out_file, value):
+def _EncodeVarint32(out_file, value):
   """
   The encoding of the Varint32 is copied from
   google.protobuf.internal.encoder and is only repeated here to
@@ -162,5 +162,5 @@ def encodeMessage(out_file, message):
     Encoded a message with the length prepended as a 32-bit varint.
     """
     out = message.SerializeToString()
-    EncodeVarint(out_file, len(out))
+    _EncodeVarint32(out_file, len(out))
     out_file.write(out)
