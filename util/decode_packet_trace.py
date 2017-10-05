@@ -52,15 +52,18 @@ import protolib
 import sys
 
 # Import the packet proto definitions. If they are not found, attempt
-# to generate them automatically. This assumes that the script is
-# executed from the gem5 root.
+# to generate them automatically.
 try:
     import packet_pb2
 except:
     print "Did not find packet proto definitions, attempting to generate"
+    import os
+    util_dir = os.path.dirname(os.path.realpath(__file__))
+    proto_dir = os.path.join(os.path.dirname(util_dir), 'src', 'proto')
+    proto_file = os.path.join(proto_dir, 'packet.proto')
     from subprocess import call
-    error = call(['protoc', '--python_out=util', '--proto_path=src/proto',
-                  'src/proto/packet.proto'])
+    error = call(['protoc', '--python_out=' + util_dir,
+                  '--proto_path=' + proto_dir, proto_file])
     if not error:
         print "Generated packet proto definitions"
 
