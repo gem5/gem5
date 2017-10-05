@@ -105,6 +105,9 @@ def main():
     print "Object id:", header.obj_id
     print "Tick frequency:", header.tick_freq
 
+    for id_string in header.id_strings:
+        print 'Master id %d: %s' % (id_string.key, id_string.value)
+
     print "Parsing packets"
 
     num_packets = 0
