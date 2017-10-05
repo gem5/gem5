@@ -123,10 +123,10 @@ def DecodeVarint(in_file):
                 result |= ~mask
             else:
                 result &= mask
-                return (result, pos)
-            shift += 7
-            if shift >= 64:
-                raise IOError('Too many bytes when decoding varint.')
+            return (result, pos)
+        shift += 7
+        if shift >= 64:
+            raise IOError('Too many bytes when decoding varint.')
 
 def decodeMessage(in_file, message):
     """
