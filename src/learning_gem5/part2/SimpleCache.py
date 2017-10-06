@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2016 Jason Lowe-Power
+# Copyright (c) 2017 Jason Lowe-Power
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,19 +27,21 @@
 #
 # Authors: Jason Lowe-Power
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from MemObject import MemObject
 
-SimObject('SimpleObject.py')
-SimObject('HelloObject.py')
-SimObject('SimpleMemobj.py')
-SimObject('SimpleCache.py')
+class SimpleCache(MemObject):
+    type = 'SimpleCache'
+    cxx_header = "learning_gem5/part2/simple_cache.hh"
 
-Source('simple_object.cc')
-Source('hello_object.cc')
-Source('goodbye_object.cc')
-Source('simple_memobj.cc')
-Source('simple_cache.cc')
+    # Vector port example. Both the instruction and data ports connect to this
+    # port which is automatically split out into two ports.
+    cpu_side = VectorSlavePort("CPU side port, receives requests")
+    mem_side = MasterPort("Memory side port, sends requests")
 
-DebugFlag('HelloExample', "For Learning gem5 Part 2. Simple example debug flag")
-DebugFlag('SimpleMemobj', "For Learning gem5 Part 2.")
-DebugFlag('SimpleCache', "For Learning gem5 Part 2.")
+    latency = Param.Cycles(1, "Cycles taken on a hit or to resolve a miss")
+
+    size = Param.MemorySize('16kB', "The size of the cache")
+
+    system = Param.System(Parent.any, "The system this cache is part of")
