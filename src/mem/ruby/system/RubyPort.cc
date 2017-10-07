@@ -237,6 +237,14 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
         panic("RubyPort should never see request with the "
               "cacheResponding flag set\n");
 
+    // ruby doesn't support cache maintenance operations at the
+    // moment, as a workaround, we respond right away
+    if (pkt->req->isCacheMaintenance()) {
+        warn_once("Cache maintenance operations are not supported in Ruby.\n");
+        pkt->makeResponse();
+        schedTimingResp(pkt, curTick());
+        return true;
+    }
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     if (pkt->cmd != MemCmd::MemFenceReq) {
