@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2016 ARM Limited
+ * Copyright (c) 2010-2012, 2016-2017 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -108,6 +108,11 @@ O3ThreadContext<Impl>::suspend()
 
     if (thread->status() == ThreadContext::Suspended)
         return;
+
+    if (cpu->isDraining()) {
+        DPRINTF(O3CPU, "Ignoring suspend on TC due to pending drain\n");
+        return;
+    }
 
     thread->lastActivate = curTick();
     thread->lastSuspend = curTick();
