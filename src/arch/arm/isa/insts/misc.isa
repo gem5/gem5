@@ -136,7 +136,47 @@ let {{
     decoder_output += BasicConstructor.subst(eretIop)
     exec_output += PredOpExecute.subst(eretIop)
 
+    crcCode = '''
+    constexpr uint8_t size_bytes = %(sz)d;
+    constexpr uint32_t poly = %(polynom)s;
 
+    uint32_t data = htole(Op2);
+    auto data_buffer = reinterpret_cast<uint8_t*>(&data);
+
+    Dest = crc32<poly>(
+        data_buffer,   /* Message Register */
+        Op1,           /* Initial Value  of the CRC */
+        size_bytes     /* Size of the original Message */
+    );
+    '''
+
+    def crc32Emit(mnem, implCode, castagnoli, size):
+        global header_output, decoder_output, exec_output
+
+        if castagnoli:
+            # crc32c instructions
+            poly = "0x1EDC6F41"
+        else:
+            # crc32 instructions
+            poly = "0x04C11DB7"
+
+        data = {'sz' : size, 'polynom': poly}
+
+        instCode = implCode % data
+
+        crcIop = InstObjParams(mnem, mnem.capitalize(), "RegRegRegOp",
+                               { "code": instCode,
+                                 "predicate_test": predicateTest }, [])
+        header_output += RegRegRegOpDeclare.subst(crcIop)
+        decoder_output += RegRegRegOpConstructor.subst(crcIop)
+        exec_output += PredOpExecute.subst(crcIop)
+
+    crc32Emit("crc32b", crcCode, False, 1);
+    crc32Emit("crc32h", crcCode, False, 2);
+    crc32Emit("crc32w", crcCode, False, 4);
+    crc32Emit("crc32cb", crcCode, True, 1);
+    crc32Emit("crc32ch", crcCode, True, 2);
+    crc32Emit("crc32cw", crcCode, True, 4);
 
 }};
 

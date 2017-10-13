@@ -1202,6 +1202,22 @@ namespace Aarch64
                         return new Asrv64(machInst, rdzr, rn, rm);
                       case 0xb:
                         return new Rorv64(machInst, rdzr, rn, rm);
+                      case 0x10:
+                        return new Crc32b64(machInst, rdzr, rn, rm);
+                      case 0x11:
+                        return new Crc32h64(machInst, rdzr, rn, rm);
+                      case 0x12:
+                        return new Crc32w64(machInst, rdzr, rn, rm);
+                      case 0x13:
+                        return new Crc32x64(machInst, rdzr, rn, rm);
+                      case 0x14:
+                        return new Crc32cb64(machInst, rdzr, rn, rm);
+                      case 0x15:
+                        return new Crc32ch64(machInst, rdzr, rn, rm);
+                      case 0x16:
+                        return new Crc32cw64(machInst, rdzr, rn, rm);
+                      case 0x17:
+                        return new Crc32cx64(machInst, rdzr, rn, rm);
                       default:
                         return new Unknown64(machInst);
                     }

@@ -226,6 +226,42 @@ let {{
         "Dest64 = shiftReg64(Op164, Op264, LSR, intWidth)")
     buildDataXRegInst("rorv", 2,
         "Dest64 = shiftReg64(Op164, Op264, ROR, intWidth)")
+
+    crcCode = '''
+    constexpr uint8_t size_bytes = %(sz)d;
+    constexpr uint32_t poly = %(polynom)s;
+
+    // Initial value is often a previously evaluated
+    // crc value hence is always 32bit in CRC32
+    uint32_t initial_crc = Op164 & 0xFFFFFFFF;
+
+    uint64_t data = htole(Op264);
+    auto data_buffer = reinterpret_cast<uint8_t*>(&data);
+
+    Dest = crc32<poly>(
+        data_buffer,   /* Message register */
+        initial_crc,   /* Initial value of the CRC */
+        size_bytes     /* Size of the original Message */
+    );
+    '''
+    buildDataXRegInst("crc32b", 2,
+        crcCode % {"sz": 1, "polynom": "0x04C11DB7"})
+    buildDataXRegInst("crc32h", 2,
+        crcCode % {"sz": 2, "polynom": "0x04C11DB7"})
+    buildDataXRegInst("crc32w", 2,
+        crcCode % {"sz": 4, "polynom": "0x04C11DB7"})
+    buildDataXRegInst("crc32x", 2,
+        crcCode % {"sz": 8, "polynom": "0x04C11DB7"})
+
+    buildDataXRegInst("crc32cb", 2,
+        crcCode % {"sz": 1, "polynom": "0x1EDC6F41"})
+    buildDataXRegInst("crc32ch", 2,
+        crcCode % {"sz": 2, "polynom": "0x1EDC6F41"})
+    buildDataXRegInst("crc32cw", 2,
+        crcCode % {"sz": 4, "polynom": "0x1EDC6F41"})
+    buildDataXRegInst("crc32cx", 2,
+        crcCode % {"sz": 8, "polynom": "0x1EDC6F41"})
+
     buildDataXRegInst("sdiv", 2, '''
         int64_t op1 = Op164;
         int64_t op2 = Op264;

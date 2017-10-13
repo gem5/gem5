@@ -38,6 +38,37 @@
 // Authors: Gabe Black
 //          Giacomo Gabrielli
 
+def format Crc32() {{
+    decode_block = '''
+    {
+        const IntRegIndex rm = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
+        const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
+        const IntRegIndex rd = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
+
+        uint8_t c_poly = bits(machInst, 9);
+        uint8_t sz = bits(machInst, 22, 21);
+        uint8_t crc_select = (c_poly << 2) | sz;
+
+        switch(crc_select) {
+          case 0x0:
+            return new Crc32b(machInst, rd, rn, rm);
+          case 0x1:
+            return new Crc32h(machInst, rd, rn, rm);
+          case 0x2:
+            return new Crc32w(machInst, rd, rn, rm);
+          case 0x4:
+            return new Crc32cb(machInst, rd, rn, rm);
+          case 0x5:
+            return new Crc32ch(machInst, rd, rn, rm);
+          case 0x6:
+            return new Crc32cw(machInst, rd, rn, rm);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+    '''
+}};
+
 def format ArmERet() {{
     decode_block = "return new Eret(machInst);"
 }};

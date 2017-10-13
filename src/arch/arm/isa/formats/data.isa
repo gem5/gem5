@@ -1,4 +1,4 @@
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010,2017 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -788,7 +788,7 @@ def format Thumb32DataProcReg() {{
                     }
                 }
             } else if (bits(op1, 3, 2) == 0x2 && bits(op2, 3, 2) == 0x2) {
-                const uint32_t op1 = bits(machInst, 21, 20);
+                const uint32_t op1 = bits(machInst, 22, 20);
                 const uint32_t op2 = bits(machInst, 5, 4);
                 const IntRegIndex rd =
                     (IntRegIndex)(uint32_t)bits(machInst, 11, 8);
@@ -832,6 +832,27 @@ def format Thumb32DataProcReg() {{
                     if (op2 == 0) {
                         return new Clz(machInst, rd, rm);
                     }
+                    break;
+                  case 0x4:
+                    switch (op2) {
+                      case 0x0:
+                        return new Crc32b(machInst, rd, rn, rm);
+                      case 0x1:
+                        return new Crc32h(machInst, rd, rn, rm);
+                      case 0x2:
+                        return new Crc32w(machInst, rd, rn, rm);
+                    }
+                    break;
+                  case 0x5:
+                    switch (op2) {
+                      case 0x0:
+                        return new Crc32cb(machInst, rd, rn, rm);
+                      case 0x1:
+                        return new Crc32ch(machInst, rd, rn, rm);
+                      case 0x2:
+                        return new Crc32cw(machInst, rd, rn, rm);
+                    }
+                    break;
                 }
             }
             return new Unknown(machInst);
