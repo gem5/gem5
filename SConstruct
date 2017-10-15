@@ -1407,40 +1407,11 @@ def switching_headers(self, headers, source):
 
 main.AddMethod(switching_headers, 'SwitchingHeaders')
 
-# all-isas -> all-deps -> all-environs -> all_targets
-main.Alias('#all-isas', [])
-main.Alias('#all-deps', '#all-isas')
-
-# Dummy target to ensure all environments are created before telling
-# SCons what to actually make (the command line arguments).  We attach
-# them to the dependence graph after the environments are complete.
-ORIG_BUILD_TARGETS = list(BUILD_TARGETS) # force a copy; gets closure to work.
-def environsComplete(target, source, env):
-    for t in ORIG_BUILD_TARGETS:
-        main.Depends('#all-targets', t)
-
-# Each build/* switching_dir attaches its *-environs target to #all-environs.
-main.Append(BUILDERS = {'CompleteEnvirons' :
-                        Builder(action=MakeAction(environsComplete, None))})
-main.CompleteEnvirons('#all-environs', [])
-
-def doNothing(**ignored): pass
-main.Append(BUILDERS = {'Dummy': Builder(action=MakeAction(doNothing, None))})
-
-# The final target to which all the original targets ultimately get attached.
-main.Dummy('#all-targets', '#all-environs')
-BUILD_TARGETS[:] = ['#all-targets']
-
 ###################################################
 #
 # Define build environments for selected configurations.
 #
 ###################################################
-
-def variant_name(path):
-    return os.path.basename(path).lower().replace('_', '-')
-main['variant_name'] = variant_name
-main['VARIANT_NAME'] = '${variant_name(BUILDDIR)}'
 
 for variant_path in variant_paths:
     if not GetOption('silent'):
@@ -1552,26 +1523,6 @@ for variant_path in variant_paths:
     # to the configured variables.  It returns a list of environments,
     # one for each variant build (debug, opt, etc.)
     SConscript('src/SConscript', variant_dir = variant_path, exports = 'env')
-
-def pairwise(iterable):
-    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    a, b = itertools.tee(iterable)
-    b.next()
-    return itertools.izip(a, b)
-
-variant_names = [variant_name(path) for path in variant_paths]
-
-# Create false dependencies so SCons will parse ISAs, establish
-# dependencies, and setup the build Environments serially. Either
-# SCons (likely) and/or our SConscripts (possibly) cannot cope with -j
-# greater than 1. It appears to be standard race condition stuff; it
-# doesn't always fail, but usually, and the behaviors are different.
-# Every time I tried to remove this, builds would fail in some
-# creative new way. So, don't do that. You'll want to, though, because
-# tests/SConscript takes a long time to make its Environments.
-for t1, t2 in pairwise(sorted(variant_names)):
-    main.Depends('#%s-deps'     % t2, '#%s-deps'     % t1)
-    main.Depends('#%s-environs' % t2, '#%s-environs' % t1)
 
 # base help text
 Help('''

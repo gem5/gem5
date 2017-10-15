@@ -1573,46 +1573,31 @@ class ISAParser(Grammar):
     # These small files make it much clearer how this tool works, since
     # you directly see the chunks emitted as files that are #include'd.
     def write_top_level_files(self):
-        dep = self.open('inc.d', bare=True)
-
         # decoder header - everything depends on this
         file = 'decoder.hh'
         with self.open(file) as f:
-            inc = []
-
             fn = 'decoder-g.hh.inc'
             assert(fn in self.files)
             f.write('#include "%s"\n' % fn)
-            inc.append(fn)
 
             fn = 'decoder-ns.hh.inc'
             assert(fn in self.files)
             f.write('namespace %s {\n#include "%s"\n}\n'
                     % (self.namespace, fn))
-            inc.append(fn)
-
-            print >>dep, file+':', ' '.join(inc)
 
         # decoder method - cannot be split
         file = 'decoder.cc'
         with self.open(file) as f:
-            inc = []
-
             fn = 'decoder-g.cc.inc'
             assert(fn in self.files)
             f.write('#include "%s"\n' % fn)
-            inc.append(fn)
 
             fn = 'decoder.hh'
             f.write('#include "%s"\n' % fn)
-            inc.append(fn)
 
             fn = 'decode-method.cc.inc'
             # is guaranteed to have been written for parse to complete
             f.write('#include "%s"\n' % fn)
-            inc.append(fn)
-
-            print >>dep, file+':', ' '.join(inc)
 
         extn = re.compile('(\.[^\.]+)$')
 
@@ -1625,16 +1610,12 @@ class ISAParser(Grammar):
             else:
                 file = file_
             with self.open(file) as f:
-                inc = []
-
                 fn = 'decoder-g.cc.inc'
                 assert(fn in self.files)
                 f.write('#include "%s"\n' % fn)
-                inc.append(fn)
 
                 fn = 'decoder.hh'
                 f.write('#include "%s"\n' % fn)
-                inc.append(fn)
 
                 fn = 'decoder-ns.cc.inc'
                 assert(fn in self.files)
@@ -1643,9 +1624,6 @@ class ISAParser(Grammar):
                     print >>f, '#define __SPLIT %u' % i
                 print >>f, '#include "%s"' % fn
                 print >>f, '}'
-                inc.append(fn)
-
-                print >>dep, file+':', ' '.join(inc)
 
         # instruction execution per-CPU model
         splits = self.splits[self.get_file('exec')]
@@ -1656,18 +1634,14 @@ class ISAParser(Grammar):
                 else:
                     file = cpu.filename
                 with self.open(file) as f:
-                    inc = []
-
                     fn = 'exec-g.cc.inc'
                     assert(fn in self.files)
                     f.write('#include "%s"\n' % fn)
-                    inc.append(fn)
 
                     f.write(cpu.includes+"\n")
 
                     fn = 'decoder.hh'
                     f.write('#include "%s"\n' % fn)
-                    inc.append(fn)
 
                     fn = 'exec-ns.cc.inc'
                     assert(fn in self.files)
@@ -1678,10 +1652,6 @@ class ISAParser(Grammar):
                         print >>f, '#define __SPLIT %u' % i
                     print >>f, '#include "%s"' % fn
                     print >>f, '}'
-                    inc.append(fn)
-
-                    inc.append("decoder.hh")
-                    print >>dep, file+':', ' '.join(inc)
 
         # max_inst_regs.hh
         self.update('max_inst_regs.hh',
@@ -1689,10 +1659,6 @@ class ISAParser(Grammar):
     const int MaxInstSrcRegs = %(maxInstSrcRegs)d;
     const int MaxInstDestRegs = %(maxInstDestRegs)d;
     const int MaxMiscDestRegs = %(maxMiscDestRegs)d;\n}\n''' % self)
-        print >>dep, 'max_inst_regs.hh:'
-
-        dep.close()
-
 
     scaremonger_template ='''// DO NOT EDIT
 // This file was automatically generated from an ISA description:
