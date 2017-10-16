@@ -44,11 +44,9 @@ REL_SCRIPT_DIR=`dirname "$0"`
 SCRIPT_NAME=`basename "$0"`
 SCRIPT_DIR=$(cd "$REL_SCRIPT_DIR" && echo "$(pwd -P)")
 MSG_FILTER="$SCRIPT_DIR"/upstream_msg_filter.sed
-CONV_HG="$SCRIPT_DIR"/git-patch-to-hg-patch
 
 PATCH_DIR="./patches/"
 UPSTREAM="upstream/master"
-PATCH_FORMAT=
 
 usage()
 {
@@ -59,7 +57,6 @@ Format a patch series suitable for upstream consumption.
 Options:
   -u BRANCH      Upstream branch
   -d DIR         Patch directory
-  -f FMT         Patch format (hg or git)
   -h             Show this help string.
 
 This script creates a series of patches suitable from upstream
@@ -70,7 +67,7 @@ the following operations in order:
   1. Rebase the patches in the current branch onto the upstream
      branch.
   2. Filter commit messages.
-  3. Generate a set of patches in git format or Mercurial format.
+  3. Generate a set of patches in git format.
 EOF
 }
 
@@ -79,16 +76,13 @@ branch_exists()
     git rev-parse --verify -q "$1" > /dev/null
 }
 
-while getopts ":u:d:f:h" OPT; do
+while getopts ":u:d:h" OPT; do
     case $OPT in
         d)
             PATCH_DIR="$OPTARG"
             ;;
         u)
             UPSTREAM="$OPTARG"
-            ;;
-        f)
-            PATCH_FORMAT="$OPTARG"
             ;;
         h)
             usage
@@ -116,21 +110,6 @@ done
 shift $((OPTIND - 1))
 
 BRANCH="${1:-HEAD}"
-
-case "$PATCH_FORMAT" in
-    git|hg)
-        ;;
-
-    "")
-        echo "Error: No patch format specified" >&2
-        exit 1
-        ;;
-
-    *)
-        echo "Error: Illegal patch format specified: '$PATCH_FORMAT'" >&2
-        exit 1
-esac
-
 
 if ! branch_exists "$BRANCH"; then
     echo "Error: Patch branch '$BRANCH' doesn't exist" 1>&2
@@ -168,10 +147,3 @@ git filter-branch -f \
 
 echo "Creating patches..."
 git format-patch -p -o "$PATCH_DIR" "$UPSTREAM"
-
-if [ "$PATCH_FORMAT" == "hg" ]; then
-    echo "Converting patches..."
-    for P in "$PATCH_DIR"/*.patch; do
-        "$CONV_HG" $P
-    done
-fi
