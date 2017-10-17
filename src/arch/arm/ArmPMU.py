@@ -111,7 +111,7 @@ class ArmPMU(SimObject):
         # 0x0E: BR_RETURN_RETIRED
         # 0x0F: UNALIGEND_LDST_RETIRED
         self.addEventProbe(0x10, bpred, "Misses")
-        self.addEventProbe(0x11, cpu, "Cycles")
+        self.addEventProbe(0x11, cpu, "ActiveCycles")
         self.addEventProbe(0x12, bpred, "Branches")
         self.addEventProbe(0x13, cpu, "RetiredLoads", "RetiredStores")
         # 0x14: L1I_CACHE
