@@ -579,7 +579,6 @@ PMU::CounterState::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(eventId);
     SERIALIZE_SCALAR(value);
-    SERIALIZE_SCALAR(enabled);
     SERIALIZE_SCALAR(overflow64);
 }
 
@@ -588,7 +587,6 @@ PMU::CounterState::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(eventId);
     UNSERIALIZE_SCALAR(value);
-    UNSERIALIZE_SCALAR(enabled);
     UNSERIALIZE_SCALAR(overflow64);
 }
 
