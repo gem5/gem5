@@ -1117,7 +1117,7 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
 
     # Set up regression tests.
     SConscript(os.path.join(env.root.abspath, 'tests', 'SConscript'),
-               variant_dir=Dir('tests').Dir(new_env.Label).path,
+               variant_dir=Dir('tests').Dir(new_env.Label),
                exports={ 'env' : new_env }, duplicate=False)
 
 # Start out with the compiler flags common to all compilers,
