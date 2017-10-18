@@ -39,12 +39,19 @@
  *
  * Authors: Steve Reinhardt
  *          Nathan Binkert
+ *          Giacomo Travaglini
  */
 
 #ifndef __BASE_BITFIELD_HH__
 #define __BASE_BITFIELD_HH__
 
 #include <inttypes.h>
+#include <cassert>
+#include <cstddef>
+#include <type_traits>
+
+/** Lookup table used for High Speed bit reversing */
+extern const uint8_t reverseLookUpTable[];
 
 /**
  * Generate a 64-bit mask of 'nbits' 1s, right justified.
@@ -54,8 +61,6 @@ mask(int nbits)
 {
     return (nbits == 64) ? (uint64_t)-1LL : (1ULL << nbits) - 1;
 }
-
-
 
 /**
  * Extract the bitfield from position 'first' to 'last' (inclusive)
@@ -155,6 +160,35 @@ replaceBits(T& val, int bit, B bit_val)
 {
     val = insertBits(val, bit, bit, bit_val);
 }
+
+/**
+ * Takes a variable lenght word and returns the mirrored version
+ * (Bit by bit, LSB=>MSB).
+ *
+ * algorithm from
+ * http://graphics.stanford.edu/~seander/bithacks.html
+ * #ReverseBitsByLookupTable
+ *
+ * @param val: variable lenght word
+ * @param size: number of bytes to mirror
+ * @return mirrored word
+ */
+template <class T>
+T
+reverseBits(T val, std::size_t size = sizeof(T))
+{
+    static_assert(std::is_integral<T>::value, "Expecting an integer type");
+
+    assert(size <= sizeof(T));
+
+    T output = 0;
+    for (auto byte = 0; byte < size; byte++, val >>= 8) {
+        output = (output << 8) | reverseLookUpTable[val & 0xFF];
+    }
+
+    return output;
+}
+
 /**
  * Returns the bit position of the MSB that is set in the input
  */
