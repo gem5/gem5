@@ -248,18 +248,7 @@ let {{
         Dest64 = (Op164 == 0) ? intWidth : (intWidth - 1 - findMsbSet(Op164));
     ''')
     buildDataXRegInst("rbit", 1, '''
-        uint64_t result = Op164;
-        uint64_t lBit = 1ULL << (intWidth - 1);
-        uint64_t rBit = 1ULL;
-        while (lBit > rBit) {
-            uint64_t maskBits = lBit | rBit;
-            uint64_t testBits = result & maskBits;
-            // If these bits are different, swap them by toggling them.
-            if (testBits && testBits != maskBits)
-                result ^= maskBits;
-            lBit >>= 1; rBit <<= 1;
-        }
-        Dest64 = result;
+        Dest64 = reverseBits(Op164, intWidth/8);
     ''')
     buildDataXRegInst("rev", 1, '''
         if (intWidth == 32)

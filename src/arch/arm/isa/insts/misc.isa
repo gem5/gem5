@@ -329,17 +329,7 @@ let {{
     exec_output += PredOpExecute.subst(revshIop)
 
     rbitCode = '''
-    uint8_t *opBytes = (uint8_t *)&Op1;
-    uint32_t resTemp;
-    uint8_t *destBytes = (uint8_t *)&resTemp;
-    // This reverses the bytes and bits of the input, or so says the
-    // internet.
-    for (int i = 0; i < 4; i++) {
-        uint32_t temp = opBytes[i];
-        temp = (temp * 0x0802 & 0x22110) | (temp * 0x8020 & 0x88440);
-        destBytes[3 - i] = (temp * 0x10101) >> 16;
-    }
-    Dest = resTemp;
+    Dest = reverseBits(Op1);
     '''
     rbitIop = InstObjParams("rbit", "Rbit", "RegRegOp",
                             { "code": rbitCode,
