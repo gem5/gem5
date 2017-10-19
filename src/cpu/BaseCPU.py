@@ -138,6 +138,10 @@ class BaseCPU(MemObject):
     pwr_gating_latency = Param.Cycles(300,
         "Latency to enter power gating state when all contexts are suspended")
 
+    power_gating_on_idle = Param.Bool(False, "Control whether the core goes "\
+        "to the OFF power state after all thread are disabled for "\
+        "pwr_gating_latency cycles")
+
     function_trace = Param.Bool(False, "Enable function trace")
     function_trace_start = Param.Tick(0, "Tick to start function trace")
 

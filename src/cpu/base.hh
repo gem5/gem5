@@ -588,10 +588,13 @@ class BaseCPU : public MemObject
     bool waitForRemoteGDB() const;
 
     Cycles syscallRetryLatency;
+
   // Enables CPU to enter power gating on a configurable cycle count
   protected:
-    const Cycles pwrGatingLatency;
     void enterPwrGating();
+
+    const Cycles pwrGatingLatency;
+    const bool powerGatingOnIdle;
     EventFunctionWrapper enterPwrGatingEvent;
 };
 

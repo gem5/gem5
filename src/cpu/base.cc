@@ -138,6 +138,7 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
       addressMonitor(p->numThreads),
       syscallRetryLatency(p->syscallRetryLatency),
       pwrGatingLatency(p->pwr_gating_latency),
+      powerGatingOnIdle(p->power_gating_on_idle),
       enterPwrGatingEvent([this]{ enterPwrGating(); }, name())
 {
     // if Python did not provide a valid ID, do it here
@@ -493,7 +494,8 @@ BaseCPU::schedulePowerGatingEvent()
             return;
     }
 
-    if (ClockedObject::pwrState() == Enums::PwrState::CLK_GATED) {
+    if (ClockedObject::pwrState() == Enums::PwrState::CLK_GATED &&
+        powerGatingOnIdle) {
         assert(!enterPwrGatingEvent.scheduled());
         // Schedule a power gating event when clock gated for the specified
         // amount of time
@@ -536,8 +538,12 @@ BaseCPU::suspendContext(ThreadID thread_num)
     // All CPU threads suspended, enter lower power state for the CPU
     ClockedObject::pwrState(Enums::PwrState::CLK_GATED);
 
-    //Schedule power gating event when clock gated for a configurable cycles
-    schedule(enterPwrGatingEvent, clockEdge(pwrGatingLatency));
+    // If pwrGatingLatency is set to 0 then this mechanism is disabled
+    if (powerGatingOnIdle) {
+        // Schedule power gating event when clock gated for pwrGatingLatency
+        // cycles
+        schedule(enterPwrGatingEvent, clockEdge(pwrGatingLatency));
+    }
 }
 
 void
