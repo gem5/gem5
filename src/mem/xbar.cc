@@ -327,17 +327,10 @@ BaseXBar::findPort(Addr addr)
     // ranges of all connected slave modules
     assert(gotAllAddrRanges);
 
-    // Check the cache
-    PortID dest_id = checkPortCache(addr);
-    if (dest_id != InvalidPortID)
-        return dest_id;
-
     // Check the address map interval tree
     auto i = portMap.contains(addr);
     if (i != portMap.end()) {
-        dest_id = i->second;
-        updatePortCache(dest_id, i->first);
-        return dest_id;
+        return i->second;
     }
 
     // Check if this matches the default range
@@ -518,8 +511,6 @@ BaseXBar::recvRangeChange(PortID master_port_id)
         for (const auto& s: slavePorts)
             s->sendRangeChange();
     }
-
-    clearPortCache();
 }
 
 AddrRangeList

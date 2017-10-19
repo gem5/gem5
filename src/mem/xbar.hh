@@ -319,7 +319,7 @@ class BaseXBar : public MemObject
     /** the width of the xbar in bytes */
     const uint32_t width;
 
-    AddrRangeMap<PortID> portMap;
+    AddrRangeMap<PortID, 3> portMap;
 
     /**
      * Remember where request packets came from so that we can route
@@ -349,53 +349,6 @@ class BaseXBar : public MemObject
      * @return id of port that the packet should be sent out of.
      */
     PortID findPort(Addr addr);
-
-    // Cache for the findPort function storing recently used ports from portMap
-    struct PortCache {
-        bool valid;
-        PortID id;
-        AddrRange range;
-    };
-
-    PortCache portCache[3];
-
-    // Checks the cache and returns the id of the port that has the requested
-    // address within its range
-    inline PortID checkPortCache(Addr addr) const {
-        if (portCache[0].valid && portCache[0].range.contains(addr)) {
-            return portCache[0].id;
-        }
-        if (portCache[1].valid && portCache[1].range.contains(addr)) {
-            return portCache[1].id;
-        }
-        if (portCache[2].valid && portCache[2].range.contains(addr)) {
-            return portCache[2].id;
-        }
-
-        return InvalidPortID;
-    }
-
-    // Clears the earliest entry of the cache and inserts a new port entry
-    inline void updatePortCache(short id, const AddrRange& range) {
-        portCache[2].valid = portCache[1].valid;
-        portCache[2].id    = portCache[1].id;
-        portCache[2].range = portCache[1].range;
-
-        portCache[1].valid = portCache[0].valid;
-        portCache[1].id    = portCache[0].id;
-        portCache[1].range = portCache[0].range;
-
-        portCache[0].valid = true;
-        portCache[0].id    = id;
-        portCache[0].range = range;
-    }
-
-    // Clears the cache. Needs to be called in constructor.
-    inline void clearPortCache() {
-        portCache[2].valid = false;
-        portCache[1].valid = false;
-        portCache[0].valid = false;
-    }
 
     /**
      * Return the address ranges the crossbar is responsible for.

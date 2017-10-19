@@ -88,8 +88,6 @@ NoncoherentXBar::NoncoherentXBar(const NoncoherentXBarParams *p)
         respLayers.push_back(new RespLayer(*bp, *this,
                                            csprintf(".respLayer%d", i)));
     }
-
-    clearPortCache();
 }
 
 NoncoherentXBar::~NoncoherentXBar()

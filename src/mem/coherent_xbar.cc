@@ -99,8 +99,6 @@ CoherentXBar::CoherentXBar(const CoherentXBarParams *p)
                                            csprintf(".respLayer%d", i)));
         snoopRespPorts.push_back(new SnoopRespPort(*bp, *this));
     }
-
-    clearPortCache();
 }
 
 CoherentXBar::~CoherentXBar()
