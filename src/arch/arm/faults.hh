@@ -546,15 +546,6 @@ class SystemError : public ArmFaultVals<SystemError>
 };
 
 // A fault that flushes the pipe, excluding the faulting instructions
-class FlushPipe : public ArmFaultVals<FlushPipe>
-{
-  public:
-    FlushPipe() {}
-    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
-                StaticInst::nullStaticInstPtr) override;
-};
-
-// A fault that flushes the pipe, excluding the faulting instructions
 class ArmSev : public ArmFaultVals<ArmSev>
 {
   public:
@@ -592,7 +583,6 @@ template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorTrap>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<PCAlignmentFault>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SPAlignmentFault>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals;
-template<> ArmFault::FaultVals ArmFaultVals<FlushPipe>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals;
 
 

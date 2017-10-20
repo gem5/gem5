@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014,2016 ARM Limited
+ * Copyright (c) 2014,2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -190,6 +190,9 @@ McrMrcMiscInst::McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
     flags[IsNonSpeculative] = true;
     iss = _iss;
     miscReg = _miscReg;
+
+    if (miscReg == MISCREG_DCCMVAC)
+        flags[IsSquashAfter] = true;
 }
 
 Fault
@@ -207,12 +210,9 @@ McrMrcMiscInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
     if (hypTrap) {
         return std::make_shared<HypervisorTrap>(machInst, iss,
                                                 EC_TRAPPED_CP15_MCR_MRC);
-    }
-
-    if (miscReg == MISCREG_DCCMVAC)
-        return std::make_shared<FlushPipe>();
-    else
+    } else {
         return NoFault;
+    }
 }
 
 std::string

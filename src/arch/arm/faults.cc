@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2014, 2016 ARM Limited
+ * Copyright (c) 2010, 2012-2014, 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -277,11 +277,6 @@ template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals = {
     // Some dummy values (SError is AArch64-only)
     "SError",                0x000, 0x180, 0x380, 0x580, 0x780, MODE_SVC,
     0, 0, 0, 0, false, true,  true,  EC_SERROR, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<FlushPipe>::vals = {
-    // Some dummy values
-    "Pipe Flush",            0x000, 0x000, 0x000, 0x000, 0x000, MODE_SVC,
-    0, 0, 0, 0, false, true,  true,  EC_UNKNOWN, FaultStat()
 };
 template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals = {
     // Some dummy values
@@ -1399,19 +1394,6 @@ SystemError::routeToHyp(ThreadContext *tc) const
 }
 
 void
-FlushPipe::invoke(ThreadContext *tc, const StaticInstPtr &inst) {
-    DPRINTF(Faults, "Invoking FlushPipe Fault\n");
-
-    // Set the PC to the next instruction of the faulting instruction.
-    // Net effect is simply squashing all instructions behind and
-    // start refetching from the next instruction.
-    PCState pc = tc->pcState();
-    assert(inst);
-    inst->advancePC(pc);
-    tc->pcState(pc);
-}
-
-void
 ArmSev::invoke(ThreadContext *tc, const StaticInstPtr &inst) {
     DPRINTF(Faults, "Invoking ArmSev Fault\n");
     if (!FullSystem)
@@ -1443,7 +1425,6 @@ template class ArmFaultVals<SecureMonitorTrap>;
 template class ArmFaultVals<PCAlignmentFault>;
 template class ArmFaultVals<SPAlignmentFault>;
 template class ArmFaultVals<SystemError>;
-template class ArmFaultVals<FlushPipe>;
 template class ArmFaultVals<ArmSev>;
 template class AbortFault<PrefetchAbort>;
 template class AbortFault<DataAbort>;

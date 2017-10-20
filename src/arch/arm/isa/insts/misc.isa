@@ -1070,12 +1070,11 @@ let {{
             return std::make_shared<HypervisorTrap>(machInst, imm,
                 EC_TRAPPED_CP15_MCR_MRC);
         }
-        fault = std::make_shared<FlushPipe>();
     '''
     isbIop = InstObjParams("isb", "Isb", "ImmOp",
                              {"code": isbCode,
                                "predicate_test": predicateTest},
-                                ['IsSerializeAfter'])
+                                ['IsSerializeAfter', 'IsSquashAfter'])
     header_output += ImmOpDeclare.subst(isbIop)
     decoder_output += ImmOpConstructor.subst(isbIop)
     exec_output += PredOpExecute.subst(isbIop)
@@ -1087,12 +1086,12 @@ let {{
             return std::make_shared<HypervisorTrap>(machInst, imm,
                 EC_TRAPPED_CP15_MCR_MRC);
         }
-        fault = std::make_shared<FlushPipe>();
     '''
     dsbIop = InstObjParams("dsb", "Dsb", "ImmOp",
                              {"code": dsbCode,
                                "predicate_test": predicateTest},
-                              ['IsMemBarrier', 'IsSerializeAfter'])
+                              ['IsMemBarrier', 'IsSerializeAfter',
+                               'IsSquashAfter'])
     header_output += ImmOpDeclare.subst(dsbIop)
     decoder_output += ImmOpConstructor.subst(dsbIop)
     exec_output += PredOpExecute.subst(dsbIop)

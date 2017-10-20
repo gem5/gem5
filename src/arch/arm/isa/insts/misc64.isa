@@ -139,16 +139,15 @@ let {{
     decoder_output += BasicConstructor64.subst(unknown64Iop)
     exec_output += BasicExecute.subst(unknown64Iop)
 
-    isbIop = InstObjParams("isb", "Isb64", "ArmStaticInst",
-                           "fault = std::make_shared<FlushPipe>();",
-                           ['IsSerializeAfter'])
+    isbIop = InstObjParams("isb", "Isb64", "ArmStaticInst", "",
+                           ['IsSerializeAfter', 'IsSquashAfter'])
     header_output += BasicDeclare.subst(isbIop)
     decoder_output += BasicConstructor64.subst(isbIop)
     exec_output += BasicExecute.subst(isbIop)
 
-    dsbIop = InstObjParams("dsb", "Dsb64", "ArmStaticInst",
-                           "fault = std::make_shared<FlushPipe>();",
-                           ['IsMemBarrier', 'IsSerializeAfter'])
+    dsbIop = InstObjParams("dsb", "Dsb64", "ArmStaticInst", "",
+                           ['IsMemBarrier', 'IsSerializeAfter',
+                            'IsSquashAfter'])
     header_output += BasicDeclare.subst(dsbIop)
     decoder_output += BasicConstructor64.subst(dsbIop)
     exec_output += BasicExecute.subst(dsbIop)
