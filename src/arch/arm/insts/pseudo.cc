@@ -190,9 +190,6 @@ McrMrcMiscInst::McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
     flags[IsNonSpeculative] = true;
     iss = _iss;
     miscReg = _miscReg;
-
-    if (miscReg == MISCREG_DCCMVAC)
-        flags[IsSquashAfter] = true;
 }
 
 Fault
