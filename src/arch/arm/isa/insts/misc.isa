@@ -1090,8 +1090,7 @@ let {{
     dsbIop = InstObjParams("dsb", "Dsb", "ImmOp",
                              {"code": dsbCode,
                                "predicate_test": predicateTest},
-                              ['IsMemBarrier', 'IsSerializeAfter',
-                               'IsSquashAfter'])
+                              ['IsMemBarrier', 'IsSerializeAfter'])
     header_output += ImmOpDeclare.subst(dsbIop)
     decoder_output += ImmOpConstructor.subst(dsbIop)
     exec_output += PredOpExecute.subst(dsbIop)
