@@ -355,6 +355,7 @@ Decoder::doVexOpcodeState(uint8_t nextByte)
     DPRINTF(Decoder, "Found VEX opcode %#x.\n", nextByte);
 
     emi.opcode.op = nextByte;
+    consumeByte();
 
     switch (emi.opcode.type) {
       case TwoByteOpcode:
