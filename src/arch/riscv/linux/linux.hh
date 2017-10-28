@@ -152,6 +152,41 @@ class RiscvLinux : public Linux
         uint64_t st_ctime_nsec;
         int32_t ___glibc_reserved[2];
     } tgt_stat64;
+
+    typedef struct {
+        int32_t val[2];
+    } tgt_fsid_t;
+
+    typedef struct {
+        uint64_t f_type;
+        uint64_t f_bsize;
+        uint64_t f_blocks;
+        uint64_t f_bfree;
+        uint64_t f_bavail;
+        uint64_t f_files;
+        uint64_t f_ffree;
+        tgt_fsid_t f_fsid;
+        uint64_t f_namelen;
+        uint64_t f_frsize;
+        uint64_t f_flags;
+        uint64_t f_spare[4];
+    } tgt_statfs;
+
+    typedef struct {
+        int64_t uptime;
+        uint64_t loads[3];
+        uint64_t totalram;
+        uint64_t freeram;
+        uint64_t sharedram;
+        uint64_t bufferram;
+        uint64_t totalswap;
+        uint64_t freeswap;
+        uint16_t procs;
+        uint16_t pad;
+        uint64_t totalhigh;
+        uint64_t freehigh;
+        uint32_t mem_unit;
+    } tgt_sysinfo;
 };
 
 #endif
