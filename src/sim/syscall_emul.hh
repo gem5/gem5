@@ -1687,6 +1687,48 @@ getrlimitFunc(SyscallDesc *desc, int callnum, Process *process,
     return 0;
 }
 
+template <class OS>
+SyscallReturn
+prlimitFunc(SyscallDesc *desc, int callnum, Process *process,
+            ThreadContext *tc)
+{
+    int index = 0;
+    if (process->getSyscallArg(tc, index) != 0)
+    {
+        warn("prlimit: ignoring rlimits for nonzero pid");
+        return -EPERM;
+    }
+    int resource = process->getSyscallArg(tc, index);
+    Addr n = process->getSyscallArg(tc, index);
+    if (n != 0)
+        warn("prlimit: ignoring new rlimit");
+    Addr o = process->getSyscallArg(tc, index);
+    if (o != 0)
+    {
+        TypedBufferArg<typename OS::rlimit> rlp(
+                process->getSyscallArg(tc, index));
+        switch (resource) {
+          case OS::TGT_RLIMIT_STACK:
+            // max stack size in bytes: make up a number (8MB for now)
+            rlp->rlim_cur = rlp->rlim_max = 8 * 1024 * 1024;
+            rlp->rlim_cur = TheISA::htog(rlp->rlim_cur);
+            rlp->rlim_max = TheISA::htog(rlp->rlim_max);
+            break;
+          case OS::TGT_RLIMIT_DATA:
+            // max data segment size in bytes: make up a number
+            rlp->rlim_cur = rlp->rlim_max = 256*1024*1024;
+            rlp->rlim_cur = TheISA::htog(rlp->rlim_cur);
+            rlp->rlim_max = TheISA::htog(rlp->rlim_max);
+          default:
+            warn("prlimit: unimplemented resource %d", resource);
+            return -EINVAL;
+            break;
+        }
+        rlp.copyOut(tc->getMemProxy());
+    }
+    return 0;
+}
+
 /// Target clock_gettime() function.
 template <class OS>
 SyscallReturn
