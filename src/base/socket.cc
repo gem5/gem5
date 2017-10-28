@@ -106,7 +106,7 @@ ListenSocket::listen(int port, bool reuse)
     struct sockaddr_in sockaddr;
     sockaddr.sin_family = PF_INET;
     sockaddr.sin_addr.s_addr =
-        htobe<unsigned long>(bindToLoopback ? INADDR_LOOPBACK : INADDR_ANY);
+        htobe<in_addr_t>(bindToLoopback ? INADDR_LOOPBACK : INADDR_ANY);
     sockaddr.sin_port = htons(port);
     // finally clear sin_zero
     memset(&sockaddr.sin_zero, 0, sizeof(sockaddr.sin_zero));
