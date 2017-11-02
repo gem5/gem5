@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016 ARM Limited
+ * Copyright (c) 2010-2013,2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -417,6 +417,12 @@ class ArmStaticInst : public StaticInst
   public:
     virtual void
     annotateFault(ArmFault *fault) {}
+
+    uint8_t
+    getIntWidth() const
+    {
+        return intWidth;
+    }
 };
 }
 
