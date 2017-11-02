@@ -565,7 +565,7 @@ output exec {{
     /// @retval Full-system mode: NoFault if FP is enabled, FpDisabled
     /// if not.  Non-full-system mode: always returns NoFault.
     static inline Fault
-    checkFpEnableFault(CPU_EXEC_CONTEXT *xc)
+    checkFpEnableFault(ExecContext *xc)
     {
         if (FullSystem) {
             PSTATE pstate = xc->readMiscReg(MISCREG_PSTATE);
@@ -579,7 +579,7 @@ output exec {{
         }
     }
     static inline Fault
-    checkVecEnableFault(CPU_EXEC_CONTEXT *xc)
+    checkVecEnableFault(ExecContext *xc)
     {
         return std::make_shared<VecDisabled>();
     }

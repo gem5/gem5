@@ -54,12 +54,12 @@ def template LoadStoreDeclare {{
 
 
 def template InitiateAccDeclare {{
-    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
 }};
 
 
 def template CompleteAccDeclare {{
-    Fault completeAcc(PacketPtr,  %(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault completeAcc(PacketPtr,  ExecContext *, Trace::InstRecord *) const;
 }};
 
 
@@ -73,7 +73,7 @@ def template LoadStoreConstructor {{
 
 
 def template LoadExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -98,7 +98,7 @@ def template LoadExecute {{
 
 
 def template LoadInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -120,7 +120,7 @@ def template LoadInitiateAcc {{
 
 def template LoadCompleteAcc {{
     Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      CPU_EXEC_CONTEXT *xc,
+                                      ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr M5_VAR_USED EA;
@@ -147,7 +147,7 @@ def template LoadCompleteAcc {{
 
 
 def template StoreExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -176,7 +176,7 @@ def template StoreExecute {{
 
 
 def template StoreInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -206,8 +206,7 @@ def template StoreInitiateAcc {{
 
 
 def template StoreCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         return NoFault;

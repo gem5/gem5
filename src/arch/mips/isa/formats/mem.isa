@@ -97,7 +97,7 @@ output decoder {{
 }};
 
 output header {{
-    uint64_t getMemData(%(CPU_exec_context)s *xc, Packet *packet);
+    uint64_t getMemData(ExecContext *xc, Packet *packet);
 
 }};
 
@@ -105,7 +105,7 @@ output exec {{
     /** return data in cases where there the size of data is only
         known in the packet
     */
-    uint64_t getMemData(CPU_EXEC_CONTEXT *xc, Packet *packet) {
+    uint64_t getMemData(ExecContext *xc, Packet *packet) {
         switch (packet->getSize())
         {
           case 1:
@@ -153,16 +153,16 @@ def template LoadStoreDeclare {{
 }};
 
 def template EACompDeclare {{
-    Fault eaComp(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault eaComp(ExecContext *, Trace::InstRecord *) const;
 }};
 
 def template InitiateAccDeclare {{
-    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
 }};
 
 
 def template CompleteAccDeclare {{
-    Fault completeAcc(Packet *, %(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault completeAcc(Packet *, ExecContext *, Trace::InstRecord *) const;
 }};
 
 def template LoadStoreConstructor {{
@@ -176,8 +176,7 @@ def template LoadStoreConstructor {{
 
 def template EACompExecute {{
     Fault
-    %(class_name)s::eaComp(CPU_EXEC_CONTEXT *xc,
-                                   Trace::InstRecord *traceData) const
+    %(class_name)s::eaComp(ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -203,7 +202,7 @@ def template EACompExecute {{
 }};
 
 def template LoadExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -235,7 +234,7 @@ def template LoadExecute {{
 
 
 def template LoadInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -261,8 +260,7 @@ def template LoadInitiateAcc {{
 }};
 
 def template LoadCompleteAcc {{
-    Fault %(class_name)s::completeAcc(Packet *pkt,
-                                      CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::completeAcc(Packet *pkt, ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -292,7 +290,7 @@ def template LoadCompleteAcc {{
 }};
 
 def template StoreExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -326,7 +324,7 @@ def template StoreExecute {{
 
 
 def template StoreFPExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -361,7 +359,7 @@ def template StoreFPExecute {{
 }};
 
 def template StoreCondExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -395,7 +393,7 @@ def template StoreCondExecute {{
 }};
 
 def template StoreInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -422,7 +420,7 @@ def template StoreInitiateAcc {{
 
 def template StoreCompleteAcc {{
     Fault %(class_name)s::completeAcc(Packet *pkt,
-                                      CPU_EXEC_CONTEXT *xc,
+                                      ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         return NoFault;
@@ -431,7 +429,7 @@ def template StoreCompleteAcc {{
 
 def template StoreCondCompleteAcc {{
     Fault %(class_name)s::completeAcc(Packet *pkt,
-                                      CPU_EXEC_CONTEXT *xc,
+                                      ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -454,7 +452,7 @@ def template StoreCondCompleteAcc {{
 }};
 
 def template MiscExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA M5_VAR_USED = 0;
@@ -474,7 +472,7 @@ def template MiscExecute {{
 }};
 
 def template MiscInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         panic("Misc instruction does not support split access method!");
@@ -484,8 +482,7 @@ def template MiscInitiateAcc {{
 
 
 def template MiscCompleteAcc {{
-    Fault %(class_name)s::completeAcc(Packet *pkt,
-                                      CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::completeAcc(Packet *pkt, ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         panic("Misc instruction does not support split access method!");

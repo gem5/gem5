@@ -35,7 +35,7 @@
 // Per-cpu-model nop execute method.
 def template NopExec {{
 
-    Fault execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const
     {
         // Nothing to see here, move along
         return NoFault;
@@ -79,7 +79,7 @@ output decoder {{
 }};
 
 def template NopExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Fault %(class_name)s::execute(ExecContext *xc,
                 Trace::InstRecord *traceData) const
         {
             // Nothing to see here, move along

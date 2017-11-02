@@ -30,18 +30,18 @@
 
 // Declarations for execute() methods.
 def template BasicExecDeclare {{
-        Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 }};
 
 def template DoFpOpDeclare {{
-        Fault doFpOp(%(CPU_exec_context)s *, Trace::InstRecord *)
+        Fault doFpOp(ExecContext *, Trace::InstRecord *)
             const M5_NO_INLINE;
 }};
 
 // Definitions of execute methods that panic.
 def template BasicExecPanic {{
         Fault
-        execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
+        execute(ExecContext *, Trace::InstRecord *) const
         {
             panic("Execute method called when it shouldn't!");
             M5_DUMMY_RETURN
@@ -113,7 +113,7 @@ def template BasicConstructorWithMnemonic {{
 // Basic instruction class execute method template.
 def template BasicExecute {{
         Fault
-        %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        %(class_name)s::execute(ExecContext *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
@@ -132,7 +132,7 @@ def template BasicExecute {{
 
 def template DoFpOpExecute {{
         Fault
-        %(class_name)s::doFpOp(CPU_EXEC_CONTEXT *xc,
+        %(class_name)s::doFpOp(ExecContext *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;

@@ -35,6 +35,7 @@
 #include <array>
 
 #include "base/types.hh"
+#include "cpu/exec_context.hh"
 #include "sim/byteswap.hh"
 #include "sim/insttracer.hh"
 
@@ -42,9 +43,8 @@ namespace X86ISA
 {
 
 /// Initiate a read from memory in timing mode.
-template <class XC>
-Fault
-initiateMemRead(XC *xc, Trace::InstRecord *traceData, Addr addr,
+static Fault
+initiateMemRead(ExecContext *xc, Trace::InstRecord *traceData, Addr addr,
                 unsigned dataSize, Request::Flags flags)
 {
     return xc->initiateMemRead(addr, dataSize, flags);
@@ -97,10 +97,9 @@ getMem(PacketPtr pkt, std::array<uint64_t, N> &mem, unsigned dataSize,
 }
 
 
-template <class XC>
-Fault
-readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, uint64_t &mem,
-              unsigned dataSize, Request::Flags flags)
+static Fault
+readMemAtomic(ExecContext *xc, Trace::InstRecord *traceData, Addr addr,
+              uint64_t &mem, unsigned dataSize, Request::Flags flags)
 {
     memset(&mem, 0, sizeof(mem));
     Fault fault = xc->readMem(addr, (uint8_t *)&mem, dataSize, flags);
@@ -115,9 +114,9 @@ readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr, uint64_t &mem,
     return fault;
 }
 
-template <class XC, size_t N>
+template <size_t N>
 Fault
-readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr,
+readMemAtomic(ExecContext *xc, Trace::InstRecord *traceData, Addr addr,
               std::array<uint64_t, N> &mem, unsigned dataSize,
               unsigned flags)
 {
@@ -139,9 +138,8 @@ readMemAtomic(XC *xc, Trace::InstRecord *traceData, Addr addr,
     return fault;
 }
 
-template <class XC>
-Fault
-writeMemTiming(XC *xc, Trace::InstRecord *traceData, uint64_t mem,
+static Fault
+writeMemTiming(ExecContext *xc, Trace::InstRecord *traceData, uint64_t mem,
                unsigned dataSize, Addr addr, Request::Flags flags,
                uint64_t *res)
 {
@@ -152,9 +150,9 @@ writeMemTiming(XC *xc, Trace::InstRecord *traceData, uint64_t mem,
     return xc->writeMem((uint8_t *)&mem, dataSize, addr, flags, res);
 }
 
-template <class XC, size_t N>
+template <size_t N>
 Fault
-writeMemTiming(XC *xc, Trace::InstRecord *traceData,
+writeMemTiming(ExecContext *xc, Trace::InstRecord *traceData,
                std::array<uint64_t, N> &mem, unsigned dataSize,
                Addr addr, unsigned flags, uint64_t *res)
 {
@@ -174,9 +172,8 @@ writeMemTiming(XC *xc, Trace::InstRecord *traceData,
     return xc->writeMem((uint8_t *)&mem, dataSize, addr, flags, res);
 }
 
-template <class XC>
-Fault
-writeMemAtomic(XC *xc, Trace::InstRecord *traceData, uint64_t mem,
+static Fault
+writeMemAtomic(ExecContext *xc, Trace::InstRecord *traceData, uint64_t mem,
                unsigned dataSize, Addr addr, Request::Flags flags,
                uint64_t *res)
 {
@@ -192,9 +189,9 @@ writeMemAtomic(XC *xc, Trace::InstRecord *traceData, uint64_t mem,
     return fault;
 }
 
-template <class XC, size_t N>
+template <size_t N>
 Fault
-writeMemAtomic(XC *xc, Trace::InstRecord *traceData,
+writeMemAtomic(ExecContext *xc, Trace::InstRecord *traceData,
                std::array<uint64_t, N> &mem, unsigned dataSize,
                Addr addr, unsigned flags, uint64_t *res)
 {

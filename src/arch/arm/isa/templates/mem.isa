@@ -42,7 +42,7 @@
 
 
 def template PanicExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         panic("Execute function executed when it shouldn't be!\n");
@@ -51,7 +51,7 @@ def template PanicExecute {{
 }};
 
 def template PanicInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         panic("InitiateAcc function executed when it shouldn't be!\n");
@@ -60,8 +60,7 @@ def template PanicInitiateAcc {{
 }};
 
 def template PanicCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         panic("CompleteAcc function executed when it shouldn't be!\n");
@@ -71,7 +70,7 @@ def template PanicCompleteAcc {{
 
 
 def template SwapExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -107,7 +106,7 @@ def template SwapExecute {{
 }};
 
 def template SwapInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -135,8 +134,7 @@ def template SwapInitiateAcc {{
 }};
 
 def template SwapCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -162,7 +160,7 @@ def template SwapCompleteAcc {{
 }};
 
 def template LoadExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -193,7 +191,7 @@ def template LoadExecute {{
 def template NeonLoadExecute {{
     template <class Element>
     Fault %(class_name)s<Element>::execute(
-            CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -225,7 +223,7 @@ def template NeonLoadExecute {{
 }};
 
 def template StoreExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -260,7 +258,7 @@ def template StoreExecute {{
 def template NeonStoreExecute {{
     template <class Element>
     Fault %(class_name)s<Element>::execute(
-            CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -296,7 +294,7 @@ def template NeonStoreExecute {{
 }};
 
 def template StoreExExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
                                   Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -335,7 +333,7 @@ def template StoreExExecute {{
 }};
 
 def template StoreExInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -364,7 +362,7 @@ def template StoreExInitiateAcc {{
 }};
 
 def template StoreInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -395,7 +393,7 @@ def template StoreInitiateAcc {{
 def template NeonStoreInitiateAcc {{
     template <class Element>
     Fault %(class_name)s<Element>::initiateAcc(
-            CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -425,7 +423,7 @@ def template NeonStoreInitiateAcc {{
 }};
 
 def template LoadInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::initiateAcc(ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -452,7 +450,7 @@ def template LoadInitiateAcc {{
 def template NeonLoadInitiateAcc {{
     template <class Element>
     Fault %(class_name)s<Element>::initiateAcc(
-            CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+            ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -476,8 +474,7 @@ def template NeonLoadInitiateAcc {{
 }};
 
 def template LoadCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -506,7 +503,7 @@ def template LoadCompleteAcc {{
 def template NeonLoadCompleteAcc {{
     template <class Element>
     Fault %(class_name)s<Element>::completeAcc(
-            PacketPtr pkt, CPU_EXEC_CONTEXT *xc,
+            PacketPtr pkt, ExecContext *xc,
             Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -534,8 +531,7 @@ def template NeonLoadCompleteAcc {{
 }};
 
 def template StoreCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         return NoFault;
@@ -545,16 +541,14 @@ def template StoreCompleteAcc {{
 def template NeonStoreCompleteAcc {{
     template <class Element>
     Fault %(class_name)s<Element>::completeAcc(
-            PacketPtr pkt, CPU_EXEC_CONTEXT *xc,
-            Trace::InstRecord *traceData) const
+            PacketPtr pkt, ExecContext *xc, Trace::InstRecord *traceData) const
     {
         return NoFault;
     }
 }};
 
 def template StoreExCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
                                       Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -850,11 +844,11 @@ def template LoadImmDeclare {{
 }};
 
 def template InitiateAccDeclare {{
-    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
 }};
 
 def template CompleteAccDeclare {{
-    Fault completeAcc(PacketPtr,  %(CPU_exec_context)s *, Trace::InstRecord *) const;
+    Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 }};
 
 def template RfeConstructor {{

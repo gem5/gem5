@@ -213,19 +213,19 @@ def template MicroIntConstructor {{
 def template MicroNeonMemExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
-            CPU_EXEC_CONTEXT *, Trace::InstRecord *) const;
+            ExecContext *, Trace::InstRecord *) const;
     template
     Fault %(class_name)s<%(targs)s>::initiateAcc(
-            CPU_EXEC_CONTEXT *, Trace::InstRecord *) const;
+            ExecContext *, Trace::InstRecord *) const;
     template
     Fault %(class_name)s<%(targs)s>::completeAcc(PacketPtr,
-            CPU_EXEC_CONTEXT *, Trace::InstRecord *) const;
+            ExecContext *, Trace::InstRecord *) const;
 }};
 
 def template MicroNeonExecDeclare {{
     template
     Fault %(class_name)s<%(targs)s>::execute(
-            CPU_EXEC_CONTEXT *, Trace::InstRecord *) const;
+            ExecContext *, Trace::InstRecord *) const;
 }};
 
 ////////////////////////////////////////////////////////////////////
@@ -257,7 +257,7 @@ def template MicroNeonMixDeclare {{
 
 def template MicroNeonMixExecute {{
     template <class Element>
-    Fault %(class_name)s<Element>::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s<Element>::execute(ExecContext *xc,
             Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;

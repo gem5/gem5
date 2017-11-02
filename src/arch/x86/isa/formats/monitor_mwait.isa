@@ -47,10 +47,9 @@ def format MonitorInst(code, *opt_flags) {{
 
 // Declarations for execute() methods.
 def template MwaitExecDeclare {{
-    Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const;
-    Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
-    Fault completeAcc(PacketPtr, %(CPU_exec_context)s *,
-                      Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+    Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 }};
 
 def template MwaitDeclare {{
@@ -64,7 +63,7 @@ def template MwaitDeclare {{
 }};
 
 def template MwaitInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(CPU_EXEC_CONTEXT * xc,
+    Fault %(class_name)s::initiateAcc(ExecContext * xc,
             Trace::InstRecord * traceData) const
     {
         unsigned s = 0x8;        //size
@@ -75,7 +74,7 @@ def template MwaitInitiateAcc {{
 }};
 
 def template MwaitCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt, CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
             Trace::InstRecord *traceData) const
     {
         MicroHalt hltObj(machInst, mnemonic, 0x0);

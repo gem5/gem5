@@ -42,7 +42,7 @@
 
 // Declarations for execute() methods.
 def template BasicExecDeclare {{
-        Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 }};
 
 // Basic instruction class declaration template.
@@ -82,7 +82,8 @@ def template BasicConstructor64 {{
 
 // Basic instruction class execute method template.
 def template BasicExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 
@@ -110,7 +111,7 @@ def template BasicDecodeWithMnemonic {{
 
 // Definitions of execute methods that panic.
 def template BasicExecPanic {{
-Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
+Fault execute(ExecContext *, Trace::InstRecord *) const
 {
         panic("Execute method called when it shouldn't!");
         // GCC < 4.3 fail to recognize the above panic as no return

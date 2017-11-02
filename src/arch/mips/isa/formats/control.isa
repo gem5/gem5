@@ -80,7 +80,8 @@ output header {{
 
 // Basic instruction class execute method template.
 def template CP0Execute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
                 %(op_decl)s;
@@ -101,7 +102,8 @@ def template CP0Execute {{
 }};
 
 def template CP1Execute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
                 %(op_decl)s;
@@ -122,7 +124,8 @@ def template CP1Execute {{
 }};
 // Basic instruction class execute method template.
 def template ControlTLBExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
             %(op_decl)s;
@@ -173,15 +176,15 @@ output decoder {{
 }};
 
 output header {{
-        bool isCoprocessorEnabled(%(CPU_exec_context)s *xc, unsigned cop_num);
+        bool isCoprocessorEnabled(ExecContext *xc, unsigned cop_num);
 
-        bool isMMUTLB(%(CPU_exec_context)s *xc);
+        bool isMMUTLB(ExecContext *xc);
 
 }};
 
 output exec {{
         bool
-        isCoprocessorEnabled(CPU_EXEC_CONTEXT *xc, unsigned cop_num)
+        isCoprocessorEnabled(ExecContext *xc, unsigned cop_num)
         {
             if (!FullSystem)
                 return true;
@@ -203,7 +206,7 @@ output exec {{
         }
 
         bool inline
-        isCoprocessor0Enabled(CPU_EXEC_CONTEXT *xc)
+        isCoprocessor0Enabled(ExecContext *xc)
         {
             if (FullSystem) {
                 MiscReg Stat = xc->readMiscReg(MISCREG_STATUS);
@@ -219,7 +222,7 @@ output exec {{
         }
 
         bool
-        isMMUTLB(CPU_EXEC_CONTEXT *xc)
+        isMMUTLB(ExecContext *xc)
         {
             MiscReg Config = xc->readMiscReg(MISCREG_CONFIG);
             return FullSystem && (Config & 0x380) == 0x80;

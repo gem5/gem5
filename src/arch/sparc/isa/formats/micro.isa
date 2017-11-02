@@ -29,7 +29,7 @@
 // This delcares the initiateAcc function in memory operations
 def template MacroInitiateAcc {{
     Fault
-    initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const
+    initiateAcc(ExecContext *, Trace::InstRecord *) const
     {
         panic("Tried to execute a macroop directly!\n");
         return NoFault;
@@ -38,7 +38,7 @@ def template MacroInitiateAcc {{
 
 def template MacroCompleteAcc {{
     Fault
-    completeAcc(PacketPtr, %(CPU_exec_context)s *, Trace::InstRecord *) const
+    completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const
     {
         panic("Tried to execute a macroop directly!\n");
         return NoFault;
@@ -48,7 +48,7 @@ def template MacroCompleteAcc {{
 // This template provides the execute functions for a store
 def template MacroExecute {{
     Fault
-    execute(%(CPU_exec_context)s *, Trace::InstRecord *) const
+    execute(ExecContext *, Trace::InstRecord *) const
     {
         panic("Tried to execute a macroop directly!\n");
         return NoFault;

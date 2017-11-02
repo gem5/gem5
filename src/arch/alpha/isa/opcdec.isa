@@ -66,8 +66,7 @@ output decoder {{
 
 output exec {{
     Fault
-    OpcdecFault::execute(CPU_EXEC_CONTEXT *xc,
-                     Trace::InstRecord *traceData) const
+    OpcdecFault::execute(ExecContext *xc, Trace::InstRecord *traceData) const
     {
         return std::make_shared<UnimplementedOpcodeFault>();
     }

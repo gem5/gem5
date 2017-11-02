@@ -46,7 +46,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 def template MicroFpOpExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+        Fault %(class_name)s::execute(ExecContext *xc,
                 Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;

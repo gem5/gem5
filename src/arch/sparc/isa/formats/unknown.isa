@@ -63,7 +63,7 @@ output decoder {{
 }};
 
 output exec {{
-        Fault Unknown::execute(CPU_EXEC_CONTEXT *xc,
+        Fault Unknown::execute(ExecContext *xc,
                 Trace::InstRecord *traceData) const
         {
             return std::make_shared<IllegalInstruction>();

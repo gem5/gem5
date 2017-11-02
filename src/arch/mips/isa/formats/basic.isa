@@ -33,7 +33,7 @@
 
 // Declarations for execute() methods.
 def template BasicExecDeclare {{
-        Fault execute(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 }};
 
 // Basic instruction class declaration template.
@@ -61,7 +61,8 @@ def template BasicConstructor {{
 
 // Basic instruction class execute method template.
 def template BasicExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
 

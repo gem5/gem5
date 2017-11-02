@@ -223,7 +223,7 @@ def template AtomicMemOpStoreConstructor {{
 }};
 
 def template StoreCondExecute {{
-    Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::execute(ExecContext *xc,
         Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -259,7 +259,7 @@ def template StoreCondExecute {{
 }};
 
 def template AtomicMemOpLoadExecute {{
-    Fault %(class_name)s::%(class_name)sLoad::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::%(class_name)sLoad::execute(ExecContext *xc,
         Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -286,7 +286,7 @@ def template AtomicMemOpLoadExecute {{
 }};
 
 def template AtomicMemOpStoreExecute {{
-    Fault %(class_name)s::%(class_name)sStore::execute(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::%(class_name)sStore::execute(ExecContext *xc,
         Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -315,7 +315,7 @@ def template AtomicMemOpStoreExecute {{
 
 def template AtomicMemOpEACompExecute {{
     Fault
-    %(class_name)s::%(class_name)s%(op_name)s::eaComp(CPU_EXEC_CONTEXT *xc,
+    %(class_name)s::%(class_name)s%(op_name)s::eaComp(ExecContext *xc,
         Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -335,7 +335,7 @@ def template AtomicMemOpEACompExecute {{
 }};
 
 def template AtomicMemOpLoadInitiateAcc {{
-    Fault %(class_name)s::%(class_name)sLoad::initiateAcc(CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::%(class_name)sLoad::initiateAcc(ExecContext *xc,
         Trace::InstRecord *traceData) const
     {
         Addr EA;
@@ -355,7 +355,7 @@ def template AtomicMemOpLoadInitiateAcc {{
 
 def template AtomicMemOpStoreInitiateAcc {{
     Fault %(class_name)s::%(class_name)sStore::initiateAcc(
-        CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -382,7 +382,7 @@ def template AtomicMemOpStoreInitiateAcc {{
 }};
 
 def template StoreCondCompleteAcc {{
-    Fault %(class_name)s::completeAcc(Packet *pkt, CPU_EXEC_CONTEXT *xc,
+    Fault %(class_name)s::completeAcc(Packet *pkt, ExecContext *xc,
         Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -407,7 +407,7 @@ def template StoreCondCompleteAcc {{
 
 def template AtomicMemOpLoadCompleteAcc {{
     Fault %(class_name)s::%(class_name)sLoad::completeAcc(PacketPtr pkt,
-        CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
 
@@ -430,7 +430,7 @@ def template AtomicMemOpLoadCompleteAcc {{
 
 def template AtomicMemOpStoreCompleteAcc {{
     Fault %(class_name)s::%(class_name)sStore::completeAcc(PacketPtr pkt,
-        CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        ExecContext *xc, Trace::InstRecord *traceData) const
     {
         return NoFault;
     }

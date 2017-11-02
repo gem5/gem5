@@ -82,7 +82,7 @@ output decoder {{
 
 output exec {{
     Fault
-    Nop::execute(CPU_EXEC_CONTEXT *, Trace::InstRecord *) const
+    Nop::execute(ExecContext *, Trace::InstRecord *) const
     {
         return NoFault;
     }

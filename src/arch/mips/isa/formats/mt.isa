@@ -85,18 +85,18 @@ output decoder {{
 }};
 
 output header {{
-   void getThrRegExValues(%(CPU_exec_context)s *xc,
+   void getThrRegExValues(ExecContext *xc,
                           MipsISA::VPEConf0Reg &vpe_conf0,
                           MipsISA::TCBindReg &tc_bind_mt,
                           MipsISA::TCBindReg &tc_bind,
                           MipsISA::VPEControlReg &vpe_control,
                           MipsISA::MVPConf0Reg &mvp_conf0);
 
-   void getMTExValues(%(CPU_exec_context)s *xc, MipsISA::Config3Reg &config3);
+   void getMTExValues(ExecContext *xc, MipsISA::Config3Reg &config3);
 }};
 
 output exec {{
-    void getThrRegExValues(CPU_EXEC_CONTEXT *xc,
+    void getThrRegExValues(ExecContext *xc,
             VPEConf0Reg &vpe_conf0, TCBindReg &tc_bind_mt,
             TCBindReg &tc_bind, VPEControlReg &vpe_control,
             MVPConf0Reg &mvp_conf0)
@@ -109,14 +109,15 @@ output exec {{
         mvp_conf0 = xc->readMiscReg(MISCREG_MVP_CONF0);
     }
 
-    void getMTExValues(CPU_EXEC_CONTEXT *xc, Config3Reg &config3)
+    void getMTExValues(ExecContext *xc, Config3Reg &config3)
     {
         config3 = xc->readMiscReg(MISCREG_CONFIG3);
     }
 }};
 
 def template ThreadRegisterExecute {{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
         {
             Fault fault = NoFault;
             int64_t data M5_VAR_USED;
@@ -154,7 +155,8 @@ def template ThreadRegisterExecute {{
 }};
 
 def template MTExecute{{
-        Fault %(class_name)s::execute(CPU_EXEC_CONTEXT *xc, Trace::InstRecord *traceData) const
+        Fault %(class_name)s::execute(
+            ExecContext *xc, Trace::InstRecord *traceData) const
         {
                 Fault fault = NoFault;
                 %(op_decl)s;

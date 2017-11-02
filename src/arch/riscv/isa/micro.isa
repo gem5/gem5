@@ -30,8 +30,7 @@
 // Authors: Alec Roelke
 
 def template MacroInitiateAcc {{
-    Fault initiateAcc(%(CPU_exec_context)s *xc,
-        Trace::InstRecord *traceData) const
+    Fault initiateAcc(ExecContext *xc, Trace::InstRecord *traceData) const
     {
         panic("Tried to execute a macroop directly!\n");
         return NoFault;
@@ -39,7 +38,7 @@ def template MacroInitiateAcc {{
 }};
 
 def template MacroCompleteAcc {{
-    Fault completeAcc(PacketPtr pkt, %(CPU_exec_context)s *xc,
+    Fault completeAcc(PacketPtr pkt, ExecContext *xc,
         Trace::InstRecord *traceData) const
     {
         panic("Tried to execute a macroop directly!\n");
@@ -48,7 +47,7 @@ def template MacroCompleteAcc {{
 }};
 
 def template MacroExecute {{
-    Fault execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const
     {
         panic("Tried to execute a macroop directly!\n");
         return NoFault;
