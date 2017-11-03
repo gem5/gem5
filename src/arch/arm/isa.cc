@@ -205,6 +205,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_PMXEVCNTR_EL0).mapsTo(MISCREG_PMXEVCNTR);
     InitReg(MISCREG_PMXEVTYPER_EL0).mapsTo(MISCREG_PMXEVTYPER);
 
+    InitReg(MISCREG_SCR).res0(0xff40)  // [31:16], [6]
+                        .res1(0x0030); // [5:4]
+
     // from ARM DDI 0487A.i, template text
     // "AArch64 System register ___ can be mapped to
     //  AArch32 System register ___, but this is not
@@ -492,10 +495,22 @@ ISA::readMiscRegNoEffect(int misc_reg) const
 {
     assert(misc_reg < NumMiscRegs);
 
-    auto regs = getMiscIndices(misc_reg);
-    int lower = regs.first, upper = regs.second;
-    return !upper ? miscRegs[lower] : ((miscRegs[lower] & mask(32))
-                                      |(miscRegs[upper] << 32));
+    const auto &reg = lookUpMiscReg[misc_reg]; // bit masks
+    const auto &map = getMiscIndices(misc_reg);
+    int lower = map.first, upper = map.second;
+    // NB!: apply architectural masks according to desired register,
+    // despite possibly getting value from different (mapped) register.
+    auto val = !upper ? miscRegs[lower] : ((miscRegs[lower] & mask(32))
+                                          |(miscRegs[upper] << 32));
+    if (val & reg.res0()) {
+        DPRINTF(MiscRegs, "Reading MiscReg %s with set res0 bits: %#x\n",
+                miscRegName[misc_reg], val & reg.res0());
+    }
+    if ((val & reg.res1()) != reg.res1()) {
+        DPRINTF(MiscRegs, "Reading MiscReg %s with clear res1 bits: %#x\n",
+                miscRegName[misc_reg], (val & reg.res1()) ^ reg.res1());
+    }
+    return (val & ~reg.raz()) | reg.rao(); // enforce raz/rao
 }
 
 
@@ -814,17 +829,20 @@ ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 {
     assert(misc_reg < NumMiscRegs);
 
-    auto regs = getMiscIndices(misc_reg);
-    int lower = regs.first, upper = regs.second;
+    const auto &reg = lookUpMiscReg[misc_reg]; // bit masks
+    const auto &map = getMiscIndices(misc_reg);
+    int lower = map.first, upper = map.second;
+
+    auto v = (val & ~reg.wi()) | reg.rao();
     if (upper > 0) {
-        miscRegs[lower] = bits(val, 31, 0);
-        miscRegs[upper] = bits(val, 63, 32);
+        miscRegs[lower] = bits(v, 31, 0);
+        miscRegs[upper] = bits(v, 63, 32);
         DPRINTF(MiscRegs, "Writing to misc reg %d (%d:%d) : %#x\n",
-                misc_reg, lower, upper, val);
+                misc_reg, lower, upper, v);
     } else {
-        miscRegs[lower] = val;
+        miscRegs[lower] = v;
         DPRINTF(MiscRegs, "Writing to misc reg %d (%d) : %#x\n",
-                misc_reg, lower, val);
+                misc_reg, lower, v);
     }
 }
 

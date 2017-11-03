@@ -89,10 +89,26 @@ namespace ArmISA
         bool haveLargeAsid64;
         uint8_t physAddrRange64;
 
-        /** Register translation entry used in lookUpMiscReg */
+        /** MiscReg metadata **/
         struct MiscRegLUTEntry {
             uint32_t lower;  // Lower half mapped to this register
             uint32_t upper;  // Upper half mapped to this register
+            uint64_t _reset; // value taken on reset (i.e. initialization)
+            uint64_t _res0;  // reserved
+            uint64_t _res1;  // reserved
+            uint64_t _raz;   // read as zero (fixed at 0)
+            uint64_t _rao;   // read as one (fixed at 1)
+          public:
+            MiscRegLUTEntry() :
+              lower(0), upper(0),
+              _reset(0), _res0(0), _res1(0), _raz(0), _rao(0) {}
+            uint64_t reset() const { return _reset; }
+            uint64_t res0()  const { return _res0; }
+            uint64_t res1()  const { return _res1; }
+            uint64_t raz()   const { return _raz; }
+            uint64_t rao()   const { return _rao; }
+            // raz/rao implies writes ignored
+            uint64_t wi()    const { return _raz | _rao; }
         };
 
         /** Metadata table accessible via the value of the register */
@@ -105,6 +121,22 @@ namespace ArmISA
             chain mapsTo(uint32_t l, uint32_t u = 0) const {
                 entry.lower = l;
                 entry.upper = u;
+                return *this;
+            }
+            chain res0(uint64_t mask) const {
+                entry._res0 = mask;
+                return *this;
+            }
+            chain res1(uint64_t mask) const {
+                entry._res1 = mask;
+                return *this;
+            }
+            chain raz(uint64_t mask) const {
+                entry._raz  = mask;
+                return *this;
+            }
+            chain rao(uint64_t mask) const {
+                entry._rao  = mask;
                 return *this;
             }
             MiscRegLUTEntryInitializer(struct MiscRegLUTEntry &e)
