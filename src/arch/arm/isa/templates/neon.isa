@@ -71,7 +71,7 @@ class %(class_name)s : public %(base_class)s
         }
     }
 
-    %(BasicExecDeclare)s
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
@@ -97,7 +97,7 @@ class %(class_name)s : public %(base_class)s
         }
     }
 
-    %(BasicExecDeclare)s
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
@@ -122,7 +122,7 @@ class %(class_name)s : public %(base_class)s
         }
     }
 
-    %(BasicExecDeclare)s
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
@@ -145,7 +145,7 @@ class %(class_name)s : public %(base_class)s
         }
     }
 
-    %(BasicExecDeclare)s
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
@@ -170,7 +170,7 @@ class %(class_name)s : public %(base_class)s
         }
     }
 
-    %(BasicExecDeclare)s
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 

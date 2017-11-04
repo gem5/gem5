@@ -44,22 +44,10 @@ def template LoadStoreDeclare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst);
 
-        %(BasicExecDeclare)s
-
-        %(InitiateAccDeclare)s
-
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
     };
-}};
-
-
-def template InitiateAccDeclare {{
-    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-}};
-
-
-def template CompleteAccDeclare {{
-    Fault completeAcc(PacketPtr,  ExecContext *, Trace::InstRecord *) const;
 }};
 
 

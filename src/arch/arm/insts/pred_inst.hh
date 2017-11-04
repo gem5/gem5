@@ -333,6 +333,12 @@ class PredMacroOp : public PredOp
         return microOps[microPC];
     }
 
+    Fault
+    execute(ExecContext *, Trace::InstRecord *) const
+    {
+        panic("Execute method called when it shouldn't!");
+    }
+
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 

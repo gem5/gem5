@@ -53,12 +53,6 @@ namespace RiscvISA;
 //Include the operand_types and operand definitions
 ##include "operands.isa"
 
-//Include the base class for riscv instructions, and some support code
-##include "base.isa"
-
-// Include the base class for instructions with micro code
-##include "micro.isa"
-
 //Include the definitions for the instruction formats
 ##include "formats/formats.isa"
 

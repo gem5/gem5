@@ -61,7 +61,12 @@ output header {{
                     uint32_t _numMicroops, X86ISA::EmulEnv _env)
                         : MacroopBase(mnem, _machInst, _numMicroops, _env)
             {}
-            %(MacroExecPanic)s
+
+            Fault
+            execute(ExecContext *, Trace::InstRecord *) const
+            {
+                panic("Tried to execute macroop directly!");
+            }
         };
 }};
 

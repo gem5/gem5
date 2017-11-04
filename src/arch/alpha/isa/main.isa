@@ -285,11 +285,6 @@ output decoder {{
     }
 }};
 
-// Declarations for execute() methods.
-def template BasicExecDeclare {{
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
-}};
-
 // Basic instruction class declaration template.
 def template BasicDeclare {{
     /**
@@ -301,7 +296,7 @@ def template BasicDeclare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst);
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -383,7 +378,7 @@ output header {{
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 
     /// Helper function for decoding nops.  Substitute Nop object

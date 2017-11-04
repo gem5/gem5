@@ -34,12 +34,6 @@
 
 // Per-cpu-model nop execute method.
 def template NopExec {{
-
-    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const
-    {
-        // Nothing to see here, move along
-        return NoFault;
-    }
 }};
 
 output header {{
@@ -56,12 +50,11 @@ output header {{
                 flags[IsNop] = true;
             }
 
-            // All Nop instructions do the same thing, so this can be
-            // defined here. Nops can be defined directly, so there
-            // needs to be a default implementation.  Interpolate via
-            // template so i gets expanded to a set of
-            // cpu-model-specific functions.
-            %(NopExec)s
+            Fault
+            execute(ExecContext *xc, Trace::InstRecord *traceData) const
+            {
+                return NoFault;
+            }
 
             std::string generateDisassembly(Addr pc,
                     const SymbolTable *symtab) const;

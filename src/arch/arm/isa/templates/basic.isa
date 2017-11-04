@@ -40,11 +40,6 @@
 //
 // Authors: Stephen Hines
 
-// Declarations for execute() methods.
-def template BasicExecDeclare {{
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-}};
-
 // Basic instruction class declaration template.
 def template BasicDeclare {{
         /**
@@ -55,7 +50,7 @@ def template BasicDeclare {{
           public:
                 /// Constructor.
                 %(class_name)s(ExtMachInst machInst);
-                %(BasicExecDeclare)s
+                Fault execute(ExecContext *, Trace::InstRecord *) const;
         };
 }};
 
@@ -107,14 +102,4 @@ def template BasicDecode {{
 // Basic decode template, passing mnemonic in as string arg to constructor.
 def template BasicDecodeWithMnemonic {{
         return new %(class_name)s("%(mnemonic)s", machInst);
-}};
-
-// Definitions of execute methods that panic.
-def template BasicExecPanic {{
-Fault execute(ExecContext *, Trace::InstRecord *) const
-{
-        panic("Execute method called when it shouldn't!");
-        // GCC < 4.3 fail to recognize the above panic as no return
-        return NoFault;
-}
 }};

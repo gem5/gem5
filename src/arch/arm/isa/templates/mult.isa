@@ -44,7 +44,7 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst, IntRegIndex _reg0,
                        IntRegIndex _reg1, IntRegIndex _reg2);
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
@@ -73,7 +73,7 @@ class %(class_name)s : public %(base_class)s
         %(class_name)s(ExtMachInst machInst,
                        IntRegIndex _reg0, IntRegIndex _reg1,
                        IntRegIndex _reg2, IntRegIndex _reg3);
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 

@@ -53,9 +53,9 @@ def template MicroMemDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb, bool _up,
                        uint8_t _imm);
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -85,9 +85,9 @@ def template MicroMemPairDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _dreg1, RegIndex _dreg2, RegIndex _base,
                        bool _up, uint8_t _imm);
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -134,9 +134,9 @@ def template MicroNeonMemDeclare {{
             }
         }
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -154,7 +154,7 @@ def template MicroSetPCCPSRDeclare {{
                        IntRegIndex _ura,
                        IntRegIndex _urb,
                        IntRegIndex _urc);
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -189,7 +189,7 @@ def template MicroIntDeclare {{
       public:
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb, RegIndex _urc);
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -251,7 +251,7 @@ def template MicroNeonMixDeclare {{
             }
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -304,7 +304,7 @@ def template MicroNeonMixLaneDeclare {{
             }
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -319,7 +319,7 @@ def template MicroIntMovDeclare {{
       public:
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb);
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 def template MicroIntMovConstructor {{
@@ -350,7 +350,7 @@ def template MicroIntImmDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb,
                        int32_t _imm);
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -390,7 +390,7 @@ def template MicroIntRegDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb, RegIndex _urc,
                        int32_t _shiftAmt, ArmShiftType _shiftType);
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -412,7 +412,7 @@ def template MicroIntXERegDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb, RegIndex _urc,
                        ArmExtendType _type, uint32_t _shiftAmt);
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -448,7 +448,6 @@ class %(class_name)s : public %(base_class)s
         %(class_name)s(ExtMachInst machInst, IntRegIndex rn,
                 bool index, bool up, bool user, bool writeback, bool load,
                 uint32_t reglist);
-        %(BasicExecPanic)s
 };
 }};
 
@@ -476,7 +475,6 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(const char *mnemonic, ExtMachInst machInst,
                    bool load, IntRegIndex dest, IntRegIndex base, int64_t imm);
-    %(BasicExecPanic)s
 };
 }};
 
@@ -497,7 +495,6 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(const char *mnemonic, ExtMachInst machInst,
                    bool load, IntRegIndex dest, IntRegIndex base,
                    IntRegIndex offset, ArmExtendType type, int64_t imm);
-    %(BasicExecPanic)s
 };
 }};
 
@@ -519,7 +516,6 @@ class %(class_name)s : public %(base_class)s
     // Constructor
     %(class_name)s(const char *mnemonic, ExtMachInst machInst,
                    IntRegIndex dest, int64_t imm);
-    %(BasicExecPanic)s
 };
 }};
 
@@ -542,7 +538,6 @@ class %(class_name)s : public %(base_class)s
                 bool exclusive, bool acrel, uint32_t imm,
                 AddrMode mode, IntRegIndex rn, IntRegIndex rt,
                 IntRegIndex rt2);
-        %(BasicExecPanic)s
 };
 }};
 
@@ -567,7 +562,6 @@ class %(class_name)s : public %(base_class)s
         %(class_name)s(ExtMachInst machInst, unsigned width,
                 RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
                 uint32_t size, uint32_t align, RegIndex rm);
-        %(BasicExecPanic)s
 };
 }};
 
@@ -595,7 +589,6 @@ class %(class_name)s : public %(base_class)s
         %(class_name)s(ExtMachInst machInst, bool all, unsigned width,
                 RegIndex rn, RegIndex vd, unsigned regs, unsigned inc,
                 uint32_t size, uint32_t align, RegIndex rm, unsigned lane = 0);
-        %(BasicExecPanic)s
 };
 }};
 
@@ -626,7 +619,6 @@ class %(class_name)s : public %(base_class)s
         %(class_name)s(ExtMachInst machInst, IntRegIndex rn,
                 RegIndex vd, bool single, bool up, bool writeback,
                 bool load, uint32_t offset);
-        %(BasicExecPanic)s
 };
 }};
 

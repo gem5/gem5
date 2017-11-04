@@ -258,9 +258,9 @@ def template DCStore64Declare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, IntRegIndex _base, IntRegIndex _dest, uint64_t _imm);
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 
         virtual void
         annotateFault(ArmFault *fault) {
@@ -340,9 +340,9 @@ def template LoadStoreImm64Declare {{
         %(class_name)s(ExtMachInst machInst,
                 IntRegIndex _dest, IntRegIndex _base, int64_t _imm);
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 
         virtual void
         annotateFault(ArmFault *fault) {
@@ -362,9 +362,9 @@ def template LoadStoreImmU64Declare {{
                 bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 
         virtual void
         annotateFault(ArmFault *fault) {
@@ -384,9 +384,9 @@ def template LoadStoreImmDU64Declare {{
                 int64_t _imm = 0, bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 
         virtual void
         annotateFault(ArmFault *fault) {
@@ -408,11 +408,9 @@ def template StoreImmDEx64Declare {{
                 IntRegIndex _result, IntRegIndex _dest, IntRegIndex _dest2,
                 IntRegIndex _base, int64_t _imm = 0);
 
-        %(BasicExecDeclare)s
-
-        %(InitiateAccDeclare)s
-
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -427,9 +425,9 @@ def template LoadStoreReg64Declare {{
                 IntRegIndex _dest, IntRegIndex _base, IntRegIndex _offset,
                 ArmExtendType _type, uint32_t _shiftAmt);
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 
         virtual void
         annotateFault(ArmFault *fault) {
@@ -450,9 +448,9 @@ def template LoadStoreRegU64Declare {{
                 bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 
         virtual void
         annotateFault(ArmFault *fault) {
@@ -470,9 +468,9 @@ def template LoadStoreRaw64Declare {{
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                        IntRegIndex _base);
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 
         virtual void
         annotateFault(ArmFault *fault) {
@@ -490,9 +488,9 @@ def template LoadStoreEx64Declare {{
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                        IntRegIndex _base, IntRegIndex _result);
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 
         virtual void
         annotateFault(ArmFault *fault) {
@@ -509,9 +507,9 @@ def template LoadStoreLit64Declare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, int64_t _imm);
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 
         virtual void
         annotateFault(ArmFault *fault) {
@@ -530,9 +528,9 @@ def template LoadStoreLitU64Declare {{
                 bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
 
         virtual void
         annotateFault(ArmFault *fault) {

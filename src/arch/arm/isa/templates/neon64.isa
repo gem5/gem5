@@ -58,7 +58,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    %(BasicExecDeclare)s
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
@@ -79,7 +79,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    %(BasicExecDeclare)s
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
@@ -99,7 +99,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    %(BasicExecDeclare)s
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
@@ -119,7 +119,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    %(BasicExecDeclare)s
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
@@ -140,7 +140,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    %(BasicExecDeclare)s
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
@@ -160,7 +160,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    %(BasicExecDeclare)s
+    Fault execute(ExecContext *, Trace::InstRecord *) const;
 };
 }};
 
@@ -267,9 +267,9 @@ def template MicroNeonMemDeclare64 {{
             %(constructor)s;
         }
 
-        %(BasicExecDeclare)s
-        %(InitiateAccDeclare)s
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -420,7 +420,6 @@ def template VMemMultDeclare64 {{
         %(class_name)s(ExtMachInst machInst, RegIndex rn, RegIndex vd,
                        RegIndex rm, uint8_t eSize, uint8_t dataSize,
                        uint8_t numStructElems, uint8_t numRegs, bool wb);
-        %(BasicExecPanic)s
     };
 }};
 
@@ -433,7 +432,6 @@ def template VMemSingleDeclare64 {{
                        RegIndex rm, uint8_t eSize, uint8_t dataSize,
                        uint8_t numStructElems, uint8_t index, bool wb,
                        bool replicate = false);
-        %(BasicExecPanic)s
     };
 }};
 
@@ -479,7 +477,7 @@ def template MicroNeonMixDeclare64 {{
             %(constructor)s;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -498,7 +496,7 @@ def template MicroNeonMixLaneDeclare64 {{
             %(constructor)s;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 

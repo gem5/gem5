@@ -38,20 +38,6 @@
 //
 // Authors: Gabe Black
 
-// Declarations for execute() methods.
-def template BasicExecDeclare {{
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-}};
-
-// Definitions of execute methods that panic.
-def template BasicExecPanic {{
-        Fault execute(ExecContext *, Trace::InstRecord *) const
-        {
-            panic("Execute method called when it shouldn't!");
-            M5_DUMMY_RETURN
-        }
-}};
-
 // Basic instruction class declaration template.
 def template BasicDeclare {{
         /**
@@ -62,7 +48,7 @@ def template BasicDeclare {{
           public:
             // Constructor.
             %(class_name)s(ExtMachInst machInst);
-            %(BasicExecDeclare)s
+            Fault execute(ExecContext *, Trace::InstRecord *) const;
         };
 }};
 

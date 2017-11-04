@@ -56,7 +56,7 @@ output header {{
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 

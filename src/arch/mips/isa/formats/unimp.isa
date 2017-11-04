@@ -53,7 +53,7 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -70,7 +70,7 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -87,7 +87,7 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -104,7 +104,7 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -135,7 +135,7 @@ output header {{
             flags[IsNonSpeculative] = true;
         }
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;

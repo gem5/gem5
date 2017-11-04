@@ -31,11 +31,6 @@
 // Authors: Steve Reinhardt
 //          Korey Sewell
 
-// Declarations for execute() methods.
-def template BasicExecDeclare {{
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-}};
-
 // Basic instruction class declaration template.
 def template BasicDeclare {{
         /**
@@ -46,7 +41,7 @@ def template BasicDeclare {{
           public:
                 /// Constructor.
                 %(class_name)s(MachInst machInst);
-                %(BasicExecDeclare)s
+                Fault execute(ExecContext *, Trace::InstRecord *) const;
         };
 }};
 

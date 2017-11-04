@@ -161,9 +161,10 @@ def template BlockMemDeclare {{
               public:
                 // Constructor
                 %(class_name)s_0(ExtMachInst machInst);
-                %(BasicExecDeclare)s
-                %(InitiateAccDeclare)s
-                %(CompleteAccDeclare)s
+                Fault execute(ExecContext *, Trace::InstRecord *) const;
+                Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+                Fault completeAcc(PacketPtr, ExecContext *,
+                                  Trace::InstRecord *) const;
             };
 
             class %(class_name)s_1 : public %(base_class)sMicro
@@ -171,9 +172,10 @@ def template BlockMemDeclare {{
               public:
                 // Constructor
                 %(class_name)s_1(ExtMachInst machInst);
-                %(BasicExecDeclare)s
-                %(InitiateAccDeclare)s
-                %(CompleteAccDeclare)s
+                Fault execute(ExecContext *, Trace::InstRecord *) const;
+                Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+                Fault completeAcc(PacketPtr, ExecContext *,
+                                  Trace::InstRecord *) const;
             };
 
             class %(class_name)s_2 : public %(base_class)sMicro
@@ -181,9 +183,10 @@ def template BlockMemDeclare {{
               public:
                 // Constructor
                 %(class_name)s_2(ExtMachInst machInst);
-                %(BasicExecDeclare)s
-                %(InitiateAccDeclare)s
-                %(CompleteAccDeclare)s
+                Fault execute(ExecContext *, Trace::InstRecord *) const;
+                Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+                Fault completeAcc(PacketPtr, ExecContext *,
+                                  Trace::InstRecord *) const;
             };
 
             class %(class_name)s_3 : public %(base_class)sMicro
@@ -191,9 +194,10 @@ def template BlockMemDeclare {{
               public:
                 // Constructor
                 %(class_name)s_3(ExtMachInst machInst);
-                %(BasicExecDeclare)s
-                %(InitiateAccDeclare)s
-                %(CompleteAccDeclare)s
+                Fault execute(ExecContext *, Trace::InstRecord *) const;
+                Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+                Fault completeAcc(PacketPtr, ExecContext *,
+                                  Trace::InstRecord *) const;
             };
 
             class %(class_name)s_4 : public %(base_class)sMicro
@@ -201,9 +205,10 @@ def template BlockMemDeclare {{
               public:
                 // Constructor
                 %(class_name)s_4(ExtMachInst machInst);
-                %(BasicExecDeclare)s
-                %(InitiateAccDeclare)s
-                %(CompleteAccDeclare)s
+                Fault execute(ExecContext *, Trace::InstRecord *) const;
+                Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+                Fault completeAcc(PacketPtr, ExecContext *,
+                                  Trace::InstRecord *) const;
             };
 
             class %(class_name)s_5 : public %(base_class)sMicro
@@ -211,9 +216,10 @@ def template BlockMemDeclare {{
               public:
                 // Constructor
                 %(class_name)s_5(ExtMachInst machInst);
-                %(BasicExecDeclare)s
-                %(InitiateAccDeclare)s
-                %(CompleteAccDeclare)s
+                Fault execute(ExecContext *, Trace::InstRecord *) const;
+                Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+                Fault completeAcc(PacketPtr, ExecContext *,
+                                  Trace::InstRecord *) const;
             };
 
             class %(class_name)s_6 : public %(base_class)sMicro
@@ -221,9 +227,10 @@ def template BlockMemDeclare {{
               public:
                 // Constructor
                 %(class_name)s_6(ExtMachInst machInst);
-                %(BasicExecDeclare)s
-                %(InitiateAccDeclare)s
-                %(CompleteAccDeclare)s
+                Fault execute(ExecContext *, Trace::InstRecord *) const;
+                Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+                Fault completeAcc(PacketPtr, ExecContext *,
+                                  Trace::InstRecord *) const;
             };
 
             class %(class_name)s_7 : public %(base_class)sMicro
@@ -231,9 +238,10 @@ def template BlockMemDeclare {{
               public:
                 // Constructor
                 %(class_name)s_7(ExtMachInst machInst);
-                %(BasicExecDeclare)s
-                %(InitiateAccDeclare)s
-                %(CompleteAccDeclare)s
+                Fault execute(ExecContext *, Trace::InstRecord *) const;
+                Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+                Fault completeAcc(PacketPtr, ExecContext *,
+                                  Trace::InstRecord *) const;
             };
         };
 }};

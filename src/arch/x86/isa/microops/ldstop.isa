@@ -81,7 +81,7 @@ def template MicroLeaDeclare {{
                 uint8_t _dataSize, uint8_t _addressSize,
                 Request::FlagsType _memFlags);
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -223,18 +223,6 @@ def template MicroStoreCompleteAcc {{
     }
 }};
 
-// Common templates
-
-//This delcares the initiateAcc function in memory operations
-def template InitiateAccDeclare {{
-    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-}};
-
-//This declares the completeAcc function in memory operations
-def template CompleteAccDeclare {{
-    Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
-}};
-
 def template MicroLdStOpDeclare {{
     class %(class_name)s : public %(base_class)s
     {
@@ -247,11 +235,9 @@ def template MicroLdStOpDeclare {{
                 uint8_t _dataSize, uint8_t _addressSize,
                 Request::FlagsType _memFlags);
 
-        %(BasicExecDeclare)s
-
-        %(InitiateAccDeclare)s
-
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
@@ -269,11 +255,9 @@ def template MicroLdStSplitOpDeclare {{
                 uint8_t _dataSize, uint8_t _addressSize,
                 Request::FlagsType _memFlags);
 
-        %(BasicExecDeclare)s
-
-        %(InitiateAccDeclare)s
-
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
     };
 }};
 

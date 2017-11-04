@@ -26,35 +26,6 @@
 //
 // Authors: Gabe Black
 
-// This delcares the initiateAcc function in memory operations
-def template MacroInitiateAcc {{
-    Fault
-    initiateAcc(ExecContext *, Trace::InstRecord *) const
-    {
-        panic("Tried to execute a macroop directly!\n");
-        return NoFault;
-    }
-}};
-
-def template MacroCompleteAcc {{
-    Fault
-    completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const
-    {
-        panic("Tried to execute a macroop directly!\n");
-        return NoFault;
-    }
-}};
-
-// This template provides the execute functions for a store
-def template MacroExecute {{
-    Fault
-    execute(ExecContext *, Trace::InstRecord *) const
-    {
-        panic("Tried to execute a macroop directly!\n");
-        return NoFault;
-    }
-}};
-
 output header {{
 
         class SparcMacroInst : public SparcStaticInst
@@ -90,9 +61,23 @@ output header {{
                 return microops[upc];
             }
 
-            %(MacroExecute)s
-            %(MacroInitiateAcc)s
-            %(MacroCompleteAcc)s
+            Fault
+            execute(ExecContext *, Trace::InstRecord *) const
+            {
+                panic("Tried to execute a macroop directly!\n");
+            }
+
+            Fault
+            initiateAcc(ExecContext *, Trace::InstRecord *) const
+            {
+                panic("Tried to execute a macroop directly!\n");
+            }
+
+            Fault
+            completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const
+            {
+                panic("Tried to execute a macroop directly!\n");
+            }
         };
 
         class SparcMicroInst : public SparcStaticInst

@@ -71,7 +71,7 @@ def template MicroLimmOpDeclare {{
                 uint64_t setFlags, InstRegIndex _dest,
                 uint64_t _imm, uint8_t _dataSize);
 
-        %(BasicExecDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
     };
 }};
 

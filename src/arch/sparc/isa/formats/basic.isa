@@ -28,26 +28,6 @@
 //          Gabe Black
 //          Steve Reinhardt
 
-// Declarations for execute() methods.
-def template BasicExecDeclare {{
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-}};
-
-def template DoFpOpDeclare {{
-        Fault doFpOp(ExecContext *, Trace::InstRecord *)
-            const M5_NO_INLINE;
-}};
-
-// Definitions of execute methods that panic.
-def template BasicExecPanic {{
-        Fault
-        execute(ExecContext *, Trace::InstRecord *) const
-        {
-            panic("Execute method called when it shouldn't!");
-            M5_DUMMY_RETURN
-        }
-}};
-
 // Basic instruction class declaration template.
 def template BasicDeclare {{
         /**
@@ -58,7 +38,7 @@ def template BasicDeclare {{
           public:
             // Constructor.
             %(class_name)s(ExtMachInst machInst);
-            %(BasicExecDeclare)s
+            Fault execute(ExecContext *, Trace::InstRecord *) const;
         };
 }};
 
@@ -72,8 +52,9 @@ def template FpBasicDeclare {{
           public:
             // Constructor.
             %(class_name)s(ExtMachInst machInst);
-            %(BasicExecDeclare)s
-            %(DoFpOpDeclare)s
+            Fault execute(ExecContext *, Trace::InstRecord *) const;
+            Fault doFpOp(ExecContext *,
+                         Trace::InstRecord *) const M5_NO_INLINE;
         };
 }};
 
@@ -87,7 +68,7 @@ def template BasicDeclareWithMnemonic {{
           public:
             // Constructor.
             %(class_name)s(const char * mnemonic, ExtMachInst machInst);
-            %(BasicExecDeclare)s
+            Fault execute(ExecContext *, Trace::InstRecord *) const;
         };
 }};
 

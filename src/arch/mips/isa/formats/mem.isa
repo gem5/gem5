@@ -142,28 +142,13 @@ def template LoadStoreDeclare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst);
 
-        %(BasicExecDeclare)s
-
-        %(EACompDeclare)s
-
-        %(InitiateAccDeclare)s
-
-        %(CompleteAccDeclare)s
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault eaComp(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(Packet *, ExecContext *, Trace::InstRecord *) const;
     };
 }};
 
-def template EACompDeclare {{
-    Fault eaComp(ExecContext *, Trace::InstRecord *) const;
-}};
-
-def template InitiateAccDeclare {{
-    Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-}};
-
-
-def template CompleteAccDeclare {{
-    Fault completeAcc(Packet *, ExecContext *, Trace::InstRecord *) const;
-}};
 
 def template LoadStoreConstructor {{
     %(class_name)s::%(class_name)s(ExtMachInst machInst)

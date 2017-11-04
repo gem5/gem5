@@ -42,6 +42,7 @@ output header {{
 #include <tuple>
 #include <vector>
 
+#include "arch/riscv/static_inst.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
