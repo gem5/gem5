@@ -367,7 +367,7 @@ decode OP default Unknown::unknown()
             }
             0x29: decode RS1 {
                 0x00: HPriv::rdhprhpstate({{Rd = Hpstate;}});
-                0x01: HPriv::rdhprhtstate({{Rd = Htstate;}}, checkTl=true);
+                0x01: HPriv::rdhprhtstate({{Rd = Htstate;}}, check_tl=true);
                 // 0x02 should cause an illegal instruction exception
                 0x03: HPriv::rdhprhintp({{Rd = Hintp;}});
                 // 0x04 should cause an illegal instruction exception
@@ -377,10 +377,10 @@ decode OP default Unknown::unknown()
                 0x1F: HPriv::rdhprhstick_cmpr({{Rd = HstickCmpr;}});
             }
             0x2A: decode RS1 {
-                0x00: Priv::rdprtpc({{Rd = Tpc;}}, checkTl=true);
-                0x01: Priv::rdprtnpc({{Rd = Tnpc;}}, checkTl=true);
-                0x02: Priv::rdprtstate({{Rd = Tstate;}}, checkTl=true);
-                0x03: Priv::rdprtt({{Rd = Tt;}}, checkTl=true);
+                0x00: Priv::rdprtpc({{Rd = Tpc;}}, check_tl=true);
+                0x01: Priv::rdprtnpc({{Rd = Tnpc;}}, check_tl=true);
+                0x02: Priv::rdprtstate({{Rd = Tstate;}}, check_tl=true);
+                0x03: Priv::rdprtt({{Rd = Tt;}}, check_tl=true);
                 0x04: Priv::rdprtick({{Rd = Tick;}});
                 0x05: Priv::rdprtba({{Rd = Tba;}});
                 0x06: Priv::rdprpstate({{Rd = Pstate;}});
@@ -469,7 +469,7 @@ decode OP default Unknown::unknown()
                 0x00: NoPriv::wry({{Y = (Rs1 ^ Rs2_or_imm13)<31:0>;}});
                 // 0x01 should cause an illegal instruction exception
                 0x02: NoPriv::wrccr({{Ccr = Rs1 ^ Rs2_or_imm13;}});
-                0x03: NoPriv::wrasi({{Asi = Rs1 ^ Rs2_or_imm13;}}, false,
+                0x03: NoPriv::wrasi({{Asi = Rs1 ^ Rs2_or_imm13;}},
                                     IsSquashAfter);
                 // 0x04-0x05 should cause an illegal instruction exception
                 0x06: NoPriv::wrfprs({{Fprs = Rs1 ^ Rs2_or_imm13;}});
@@ -525,13 +525,13 @@ decode OP default Unknown::unknown()
             }
             0x32: decode RD {
                 0x00: Priv::wrprtpc(
-                              {{Tpc = Rs1 ^ Rs2_or_imm13;}}, checkTl=true);
+                              {{Tpc = Rs1 ^ Rs2_or_imm13;}}, check_tl=true);
                 0x01: Priv::wrprtnpc(
-                              {{Tnpc = Rs1 ^ Rs2_or_imm13;}}, checkTl=true);
+                              {{Tnpc = Rs1 ^ Rs2_or_imm13;}}, check_tl=true);
                 0x02: Priv::wrprtstate(
-                              {{Tstate = Rs1 ^ Rs2_or_imm13;}}, checkTl=true);
+                              {{Tstate = Rs1 ^ Rs2_or_imm13;}}, check_tl=true);
                 0x03: Priv::wrprtt(
-                              {{Tt = Rs1 ^ Rs2_or_imm13;}}, checkTl=true);
+                              {{Tt = Rs1 ^ Rs2_or_imm13;}}, check_tl=true);
                 0x04: HPriv::wrprtick({{Tick = Rs1 ^ Rs2_or_imm13;}});
                 0x05: Priv::wrprtba({{Tba = Rs1 ^ Rs2_or_imm13;}});
                 0x06: Priv::wrprpstate({{Pstate = Rs1 ^ Rs2_or_imm13;}});
@@ -560,7 +560,7 @@ decode OP default Unknown::unknown()
             0x33: decode RD {
                 0x00: HPriv::wrhprhpstate({{Hpstate = Rs1 ^ Rs2_or_imm13;}});
                 0x01: HPriv::wrhprhtstate(
-                              {{Htstate = Rs1 ^ Rs2_or_imm13;}}, checkTl=true);
+                      {{Htstate = Rs1 ^ Rs2_or_imm13;}}, check_tl=true);
                 // 0x02 should cause an illegal instruction exception
                 0x03: HPriv::wrhprhintp({{Hintp = Rs1 ^ Rs2_or_imm13;}});
                 // 0x04 should cause an illegal instruction exception
@@ -1082,7 +1082,7 @@ decode OP default Unknown::unknown()
                     NPC = Tnpc;
                     NNPC = Tnpc + 4;
                     Tl = Tl - 1;
-                }}, checkTl=true);
+                }}, check_tl=true);
                 0x1: Priv::retry({{
                     Cwp = Tstate<4:0>;
                     Pstate = Tstate<20:8>;
@@ -1093,7 +1093,7 @@ decode OP default Unknown::unknown()
                     NPC = Tpc;
                     NNPC = Tnpc;
                     Tl = Tl - 1;
-                }}, checkTl=true);
+                }}, check_tl=true);
             }
         }
     }

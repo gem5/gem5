@@ -33,226 +33,77 @@
 // Privilege mode instructions
 //
 
-output header {{
-        /**
-         * Base class for privelege mode operations.
-         */
-        class Priv : public SparcStaticInst
-        {
-          protected:
-            // Constructor
-            Priv(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-                SparcStaticInst(mnem, _machInst, __opClass)
-            {
-            }
-
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const;
-        };
-
-        // This class is for instructions that explicitly read control
-        // registers. It provides a special generateDisassembly function.
-        class RdPriv : public Priv
-        {
-          protected:
-            // Constructor
-            RdPriv(const char *mnem, ExtMachInst _machInst,
-                    OpClass __opClass, char const * _regName) :
-                Priv(mnem, _machInst, __opClass), regName(_regName)
-            {
-            }
-
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const;
-
-            char const * regName;
-        };
-
-        // This class is for instructions that explicitly write control
-        // registers. It provides a special generateDisassembly function.
-        class WrPriv : public Priv
-        {
-          protected:
-            // Constructor
-            WrPriv(const char *mnem, ExtMachInst _machInst,
-                    OpClass __opClass, char const * _regName) :
-                Priv(mnem, _machInst, __opClass), regName(_regName)
-            {
-            }
-
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const;
-
-            char const * regName;
-        };
-
-        /**
-         * Base class for privelege mode operations with immediates.
-         */
-        class PrivImm : public Priv
-        {
-          protected:
-            // Constructor
-            PrivImm(const char *mnem, ExtMachInst _machInst,
-                    OpClass __opClass) :
-                Priv(mnem, _machInst, __opClass), imm(SIMM13)
-            {
-            }
-
-            int32_t imm;
-        };
-
-        // This class is for instructions that explicitly write control
-        // registers. It provides a special generateDisassembly function.
-        class WrPrivImm : public PrivImm
-        {
-          protected:
-            // Constructor
-            WrPrivImm(const char *mnem, ExtMachInst _machInst,
-                    OpClass __opClass, char const * _regName) :
-                PrivImm(mnem, _machInst, __opClass), regName(_regName)
-            {
-            }
-
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const;
-
-            char const * regName;
-        };
-}};
-
-output decoder {{
-        std::string
-        Priv::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream response;
-
-            printMnemonic(response, mnemonic);
-
-            return response.str();
-        }
-
-        std::string
-        RdPriv::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream response;
-
-            printMnemonic(response, mnemonic);
-
-            ccprintf(response, " %%%s, ", regName);
-            printDestReg(response, 0);
-
-            return response.str();
-        }
-
-        std::string
-        WrPriv::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream response;
-
-            printMnemonic(response, mnemonic);
-
-            ccprintf(response, " ");
-            // If the first reg is %g0, don't print it.
-            // This improves readability
-            if (_srcRegIdx[0].index() != 0) {
-                printSrcReg(response, 0);
-                ccprintf(response, ", ");
-            }
-            printSrcReg(response, 1);
-            ccprintf(response, ", %%%s", regName);
-
-            return response.str();
-        }
-
-        std::string WrPrivImm::generateDisassembly(Addr pc,
-                const SymbolTable *symtab) const
-        {
-            std::stringstream response;
-
-            printMnemonic(response, mnemonic);
-
-            ccprintf(response, " ");
-            // If the first reg is %g0, don't print it.
-            // This improves readability
-            if (_srcRegIdx[0].index() != 0) {
-                printSrcReg(response, 0);
-                ccprintf(response, ", ");
-            }
-            ccprintf(response, "0x%x, %%%s", imm, regName);
-
-            return response.str();
-        }
-}};
-
 def template ControlRegConstructor {{
-        %(class_name)s::%(class_name)s(ExtMachInst machInst)
-            : %(base_class)s("%(mnemonic)s", machInst,
-                    %(op_class)s, "%(reg_name)s")
-        {
-                %(constructor)s;
-        }
+%(class_name)s::%(class_name)s(ExtMachInst machInst) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, "%(reg_name)s")
+{
+    %(constructor)s;
+}
 }};
 
 def template PrivExecute {{
-    Fault %(class_name)s::execute(ExecContext *xc,
-            Trace::InstRecord *traceData) const
-    {
-        %(op_decl)s;
-        %(op_rd)s;
+Fault
+%(class_name)s::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+{
+    %(op_decl)s;
+    %(op_rd)s;
 
-        // If the processor isn't in privileged mode, fault out right away
-        if (%(check)s)
-            return std::make_shared<PrivilegedAction>();
+    // If the processor isn't in privileged mode, fault out right away
+    if (%(check)s)
+        return std::make_shared<PrivilegedAction>();
 
-        if (%(tlCheck)s)
-            return std::make_shared<IllegalInstruction>();
+    %(tl_check)s
 
-        Fault fault = NoFault;
-        %(code)s;
-        %(op_wb)s;
-        return fault;
-    }
+    Fault fault = NoFault;
+    %(code)s;
+    %(op_wb)s;
+    return fault;
+}
 }};
 
 let {{
-    def doPrivFormat(code, checkCode, name, Name, tlCheck, opt_flags):
-        (usesImm, code, immCode,
-         rString, iString) = splitOutImm(code)
-        #If these are rd, rdpr, rdhpr, wr, wrpr, or wrhpr instructions,
-        #cut any other info out of the mnemonic. Also pick a different
-        #base class.
-        regBase = 'Priv'
-        regName = ''
+    tl_check_code = '''
+    if (Tl == 0)
+        return std::make_shared<IllegalInstruction>();
+'''
+
+    def doPrivFormat(code, check_code, name, Name, opt_flags, check_tl=False):
+        (uses_imm, code, imm_code, r_string, i_string) = splitOutImm(code)
+        tl_check = tl_check_code if check_tl else ''
+        # If these are rd, rdpr, rdhpr, wr, wrpr, or wrhpr instructions,
+        # cut any other info out of the mnemonic. Also pick a different
+        # base class.
+        reg_base = 'Priv'
+        reg_name = ''
         for mnem in ["rdhpr", "rdpr", "rd"]:
             if name.startswith(mnem):
-                regName = name[len(mnem):]
+                reg_name = name[len(mnem):]
                 name = mnem
-                regBase = 'RdPriv'
+                reg_base = 'RdPriv'
                 break
         for mnem in ["wrhpr", "wrpr", "wr"]:
             if name.startswith(mnem):
-                regName = name[len(mnem):]
+                reg_name = name[len(mnem):]
                 name = mnem
-                regBase = 'WrPriv'
+                reg_base = 'WrPriv'
                 break
-        iop = InstObjParams(name, Name, regBase,
-                {"code": code, "check": checkCode,
-                 "tlCheck": tlCheck, "reg_name": regName},
+        iop = InstObjParams(name, Name, reg_base,
+                {"code": code, "check": check_code,
+                 "tl_check": tl_check, "reg_name": reg_name},
                 opt_flags)
         header_output = BasicDeclare.subst(iop)
-        if regName == '':
+        if reg_name == '':
             decoder_output = BasicConstructor.subst(iop)
         else:
             decoder_output = ControlRegConstructor.subst(iop)
         exec_output = PrivExecute.subst(iop)
-        if usesImm:
-            imm_iop = InstObjParams(name, Name + 'Imm', regBase + 'Imm',
-                    {"code": immCode, "check": checkCode,
-                     "tlCheck": tlCheck, "reg_name": regName},
+        if uses_imm:
+            imm_iop = InstObjParams(name, Name + 'Imm', reg_base + 'Imm',
+                    {"code": imm_code, "check": check_code,
+                     "tl_check": tl_check, "reg_name": reg_name},
                     opt_flags)
             header_output += BasicDeclare.subst(imm_iop)
-            if regName == '':
+            if reg_name == '':
                 decoder_output += BasicConstructor.subst(imm_iop)
             else:
                 decoder_output += ControlRegConstructor.subst(imm_iop)
@@ -263,39 +114,26 @@ let {{
         return (header_output, decoder_output, exec_output, decode_block)
 }};
 
-def format Priv(code, extraCond=true, checkTl=false, *opt_flags) {{
-        checkCode = "(%s) && !(Pstate.priv || Hpstate.hpriv)" % extraCond
-        if checkTl != "false":
-            tlCheck = "Tl == 0"
-        else:
-            tlCheck = "false"
-        (header_output, decoder_output,
-         exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, tlCheck, opt_flags)
+def format Priv(code, extraCond=true, check_tl=false, *opt_flags) {{
+    check_code = "(%s) && !(Pstate.priv || Hpstate.hpriv)" % extraCond
+    (header_output, decoder_output, exec_output, decode_block) = \
+            doPrivFormat(code, check_code, name, Name, opt_flags,
+                         check_tl=(check_tl != 'false'))
 }};
 
-def format NoPriv(code, checkTl=false, *opt_flags) {{
-        #Instructions which use this format don't really check for
-        #any particular mode, but the disassembly is performed
-        #using the control registers actual name
-        checkCode = "false"
-        if checkTl != "false":
-            tlCheck = "Tl == 0"
-        else:
-            tlCheck = "false"
-        (header_output, decoder_output,
-         exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, tlCheck, opt_flags)
+def format NoPriv(code, *opt_flags) {{
+    # Instructions which use this format don't really check for any
+    # particular mode, but the disassembly is performed using the control
+    # register's actual name
+    check_code = "false"
+    (header_output, decoder_output, exec_output, decode_block) = \
+            doPrivFormat(code, check_code, name, Name, opt_flags)
 }};
 
-def format HPriv(code, checkTl=false, *opt_flags) {{
-        checkCode = "!Hpstate.hpriv"
-        if checkTl != "false":
-            tlCheck = "Tl == 0"
-        else:
-            tlCheck = "false"
-        (header_output, decoder_output,
-         exec_output, decode_block) = doPrivFormat(code,
-             checkCode, name, Name, tlCheck, opt_flags)
+def format HPriv(code, check_tl=false, *opt_flags) {{
+    check_code = "!Hpstate.hpriv"
+    (header_output, decoder_output, exec_output, decode_block) = \
+            doPrivFormat(code, check_code, name, Name, opt_flags,
+                         check_tl=(check_tl != 'false'))
 }};
 
