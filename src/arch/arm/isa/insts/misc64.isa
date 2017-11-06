@@ -140,7 +140,7 @@ let {{
     exec_output += BasicExecute.subst(unknown64Iop)
 
     isbIop = InstObjParams("isb", "Isb64", "ArmStaticInst", "",
-                           ['IsSerializeAfter', 'IsSquashAfter'])
+                           ['IsSquashAfter'])
     header_output += BasicDeclare.subst(isbIop)
     decoder_output += BasicConstructor64.subst(isbIop)
     exec_output += BasicExecute.subst(isbIop)

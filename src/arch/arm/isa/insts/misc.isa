@@ -1154,7 +1154,7 @@ let {{
     isbIop = InstObjParams("isb", "Isb", "ImmOp",
                              {"code": isbCode,
                                "predicate_test": predicateTest},
-                                ['IsSerializeAfter', 'IsSquashAfter'])
+                                ['IsSquashAfter'])
     header_output += ImmOpDeclare.subst(isbIop)
     decoder_output += ImmOpConstructor.subst(isbIop)
     exec_output += PredOpExecute.subst(isbIop)
