@@ -39,8 +39,10 @@ output header {{
 #include <sstream>
 
 #include "arch/sparc/faults.hh"
+#include "arch/sparc/insts/branch.hh"
 #include "arch/sparc/insts/priv.hh"
 #include "arch/sparc/insts/static_inst.hh"
+#include "arch/sparc/insts/trap.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/registers.hh"
 #include "base/condcodes.hh"

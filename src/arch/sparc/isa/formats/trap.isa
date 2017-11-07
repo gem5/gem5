@@ -32,44 +32,6 @@
 // Trap instructions
 //
 
-output header {{
-        /**
-         * Base class for trap instructions,
-         * or instructions that always fault.
-         */
-        class Trap : public SparcStaticInst
-        {
-          protected:
-
-            // Constructor
-            Trap(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
-                SparcStaticInst(mnem, _machInst, __opClass), trapNum(SW_TRAP)
-            {
-            }
-
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const;
-
-            int trapNum;
-        };
-}};
-
-output decoder {{
-        std::string
-        Trap::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-        {
-            std::stringstream response;
-
-            printMnemonic(response, mnemonic);
-            ccprintf(response, " ");
-            printReg(response, _srcRegIdx[0]);
-            ccprintf(response, ", 0x%x", trapNum);
-            ccprintf(response, ", or ");
-            printReg(response, _srcRegIdx[1]);
-            return response.str();
-        }
-}};
-
 def template TrapExecute {{
         Fault
         %(class_name)s::execute(ExecContext *xc,
@@ -103,24 +65,6 @@ def format Trap(code, *opt_flags) {{
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
         exec_output = TrapExecute.subst(iop)
-}};
-
-output header {{
-        class FpUnimpl : public SparcStaticInst
-        {
-          protected:
-            FpUnimpl(const char *mnem,
-                    ExtMachInst _machInst, OpClass __opClass)
-                : SparcStaticInst(mnem, _machInst, __opClass)
-            {
-            }
-
-            std::string
-            generateDisassembly(Addr pc,  const SymbolTable *symtab) const
-            {
-                return mnemonic;
-            }
-        };
 }};
 
 def format FpUnimpl(*flags) {{

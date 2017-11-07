@@ -32,5 +32,7 @@
 Import('*')
 
 if env['TARGET_ISA'] == 'sparc':
+    Source('branch.cc')
     Source('priv.cc')
     Source('static_inst.cc')
+    Source('trap.cc')
