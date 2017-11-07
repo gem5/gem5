@@ -44,6 +44,7 @@ output header {{
 
 #include "arch/riscv/insts/standard.hh"
 #include "arch/riscv/insts/static_inst.hh"
+#include "arch/riscv/insts/unknown.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"

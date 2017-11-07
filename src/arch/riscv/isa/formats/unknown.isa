@@ -34,47 +34,6 @@
 //
 // Unknown instructions
 //
-
-output header {{
-    /**
-     * Static instruction class for unknown (illegal) instructions.
-     * These cause simulator termination if they are executed in a
-     * non-speculative mode.  This is a leaf class.
-     */
-    class Unknown : public RiscvStaticInst
-    {
-      public:
-        /// Constructor
-        Unknown(MachInst _machInst)
-            : RiscvStaticInst("unknown", _machInst, No_OpClass)
-        {
-            flags[IsNonSpeculative] = true;
-        }
-
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-    };
-}};
-
-output decoder {{
-    std::string
-    Unknown::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-    {
-        return csprintf("unknown opcode 0x%02x", OPCODE);
-    }
-}};
-
-output exec {{
-    Fault
-    Unknown::execute(ExecContext *xc, Trace::InstRecord *traceData) const
-    {
-        Fault fault = std::make_shared<UnknownInstFault>();
-        return fault;
-    }
-}};
-
 def format Unknown() {{
     decode_block = 'return new Unknown(machInst);\n'
 }};
