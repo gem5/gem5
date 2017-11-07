@@ -31,21 +31,60 @@
 //
 // Nop instruction
 //
-def template NopDeclare {{
-/**
- * Static instruction class for "%(mnemonic)s".
- */
-class %(class_name)s : public %(base_class)s
-{
-  public:
-    %(class_name)s(ExtMachInst machInst);
-};
+
+// Per-cpu-model nop execute method.
+def template NopExec {{
 }};
 
-// Format for instructions that don't actually do anything:
-def format Nop(*opt_flags) {{
-        iop = InstObjParams(name, Name, 'Nop', '', opt_flags)
-        header_output = NopDeclare.subst(iop)
+output header {{
+        /**
+         * Nop class.
+         */
+        class Nop : public SparcStaticInst
+        {
+          public:
+            // Constructor
+            Nop(const char *mnem, ExtMachInst _machInst, OpClass __opClass) :
+                SparcStaticInst(mnem, _machInst, __opClass)
+            {
+                flags[IsNop] = true;
+            }
+
+            Fault
+            execute(ExecContext *xc, Trace::InstRecord *traceData) const
+            {
+                return NoFault;
+            }
+
+            std::string generateDisassembly(Addr pc,
+                    const SymbolTable *symtab) const;
+        };
+}};
+
+output decoder {{
+        std::string Nop::generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const
+        {
+            std::stringstream response;
+            printMnemonic(response, mnemonic);
+            return response.str();
+        }
+}};
+
+def template NopExecute {{
+        Fault %(class_name)s::execute(ExecContext *xc,
+                Trace::InstRecord *traceData) const
+        {
+            // Nothing to see here, move along
+            return NoFault;
+        }
+}};
+
+// Primary format for integer operate instructions:
+def format Nop(code, *opt_flags) {{
+        iop = InstObjParams(name, Name, 'Nop', code, opt_flags)
+        header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)
+        exec_output = NopExecute.subst(iop)
 }};

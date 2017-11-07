@@ -338,8 +338,8 @@ decode OP default Unknown::unknown()
                 }});
                 // 7-14 should cause an illegal instruction exception
                 0x0F: decode I {
-                    0x0: Nop::stbar({{/*stuff*/}}, IsWriteBarrier, MemWriteOp);
-                    0x1: Nop::membar({{/*stuff*/}}, IsMemBarrier, MemReadOp);
+                    0x0: Nop::stbar(IsWriteBarrier, MemWriteOp);
+                    0x1: Nop::membar(IsMemBarrier, MemReadOp);
                 }
                 0x10: Priv::rdpcr({{Rd = Pcr;}});
                 0x11: Priv::rdpic({{Rd = Pic;}}, {{Pcr<0:>}});
@@ -1041,8 +1041,7 @@ decode OP default Unknown::unknown()
                     }
                 }}, IsSerializeAfter, IsNonSpeculative, IsSyscall);
             }
-            0x3B: Nop::flush({{/*Instruction memory flush*/}}, IsWriteBarrier,
-                          MemWriteOp);
+            0x3B: Nop::flush(IsWriteBarrier, MemWriteOp);
             0x3C: save({{
                 if (Cansave == 0) {
                     if (Otherwin)
@@ -1267,7 +1266,7 @@ decode OP default Unknown::unknown()
             }
             0x26: stqf({{fault = std::make_shared<FpDisabled>();}});
             0x27: Store::stdf({{Mem_udw = Frd_udw;}});
-            0x2D: Nop::prefetch({{ }});
+            0x2D: Nop::prefetch();
             0x30: LoadAlt::ldfa({{Frds_uw = Mem_uw;}});
             0x32: ldqfa({{fault = std::make_shared<FpDisabled>();}});
             format LoadAlt {
@@ -1441,7 +1440,7 @@ decode OP default Unknown::unknown()
                                uint32_t tmp = mem_data;
                                Rd_uw = tmp;
                          }}, MEM_SWAP_COND);
-            0x3D: Nop::prefetcha({{ }});
+            0x3D: Nop::prefetcha();
             0x3E: CasAlt::casxa({{mem_data = gtoh(Rs2);
                                 Mem_udw = Rd_udw; }},
                          {{ Rd_udw = mem_data; }}, MEM_SWAP_COND);
