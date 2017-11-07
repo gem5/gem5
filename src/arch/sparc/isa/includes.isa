@@ -39,7 +39,9 @@ output header {{
 #include <sstream>
 
 #include "arch/sparc/faults.hh"
+#include "arch/sparc/insts/blockmem.hh"
 #include "arch/sparc/insts/branch.hh"
+#include "arch/sparc/insts/mem.hh"
 #include "arch/sparc/insts/micro.hh"
 #include "arch/sparc/insts/nop.hh"
 #include "arch/sparc/insts/priv.hh"
