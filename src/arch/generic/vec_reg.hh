@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016 ARM Limited
+ * Copyright (c) 2015-2016, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -635,11 +635,14 @@ template <size_t Sz>
 inline bool
 to_number(const std::string& value, VecRegContainer<Sz>& v)
 {
-    int i = 0;
-    while (i < Sz) {
-        std::string byte = value.substr(i<<1, 2);
-        v.template raw_ptr<uint8_t>()[i] = stoul(byte, 0, 16);
-        i++;
+    fatal_if(value.size() > 2 * VecRegContainer<Sz>::SIZE,
+             "Vector register value overflow at unserialize");
+
+    for (int i = 0; i < VecRegContainer<Sz>::SIZE; i++) {
+        uint8_t b = 0;
+        if (2 * i < value.size())
+            b = stoul(value.substr(i * 2, 2), nullptr, 16);
+        v.template raw_ptr<uint8_t>()[i] = b;
     }
     return true;
 }
