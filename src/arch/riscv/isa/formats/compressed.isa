@@ -67,7 +67,7 @@ def format CROp(code, *opt_flags) {{
 
 def format CIOp(imm_code, code, *opt_flags) {{
     regs = ['_destRegIdx[0]','_srcRegIdx[0]']
-    iop = InstObjParams(name, Name, 'ImmOp',
+    iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
         {'code': code, 'imm_code': imm_code,
          'regs': ','.join(regs)}, opt_flags)
     header_output = ImmDeclare.subst(iop)
@@ -78,7 +78,7 @@ def format CIOp(imm_code, code, *opt_flags) {{
 
 def format CUIOp(imm_code, code, *opt_flags) {{
     regs = ['_destRegIdx[0]','_srcRegIdx[0]']
-    iop = InstObjParams(name, Name, 'UImmOp',
+    iop = InstObjParams(name, Name, 'ImmOp<uint64_t>',
         {'code': code, 'imm_code': imm_code,
          'regs': ','.join(regs)}, opt_flags)
     header_output = ImmDeclare.subst(iop)
