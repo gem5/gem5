@@ -31,6 +31,9 @@
 #ifndef __ARCH_SPARC_INSTS_UNIMP_HH__
 #define __ARCH_SPARC_INSTS_UNIMP_HH__
 
+#include <memory>
+
+#include "arch/generic/debugfaults.hh"
 #include "arch/sparc/insts/static_inst.hh"
 #include "base/cprintf.hh"
 
@@ -55,17 +58,14 @@ class FailUnimplemented : public SparcStaticInst
     /// Constructor
     FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst) :
             SparcStaticInst(_mnemonic, _machInst, No_OpClass)
-    {
-        // don't call execute() (which panics) if we're on a
-        // speculative path
-        flags[IsNonSpeculative] = true;
-    }
+    {}
 
     Fault
     execute(ExecContext *xc, Trace::InstRecord *traceData) const override
     {
-        panic("attempt to execute unimplemented instruction '%s' "
-              "(inst 0x%08x)", mnemonic, machInst);
+        return std::make_shared<GenericISA::M5PanicFault>(
+            "attempt to execute unimplemented instruction '%s' (inst %#08x)",
+            mnemonic, machInst);
     }
 
     std::string
@@ -94,17 +94,14 @@ class WarnUnimplemented : public SparcStaticInst
     /// Constructor
     WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst) :
             SparcStaticInst(_mnemonic, _machInst, No_OpClass), warned(false)
-    {
-        // don't call execute() (which panics) if we're on a
-        // speculative path
-        flags[IsNonSpeculative] = true;
-    }
+    {}
 
     Fault
     execute(ExecContext *xc, Trace::InstRecord *traceData) const override
     {
         if (!warned) {
-            warn("instruction '%s' unimplemented\n", mnemonic);
+            return std::make_shared<GenericISA::M5WarnFault>(
+                "instruction '%s' unimplemented\n", mnemonic);
             warned = true;
         }
         return NoFault;
