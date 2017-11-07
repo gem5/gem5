@@ -1,0 +1,4 @@
+Import('*')
+
+if env['TARGET_ISA'] == 'riscv':
+    Source('static_inst.cc')

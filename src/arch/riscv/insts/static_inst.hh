@@ -33,12 +33,15 @@
 #ifndef __ARCH_RISCV_STATIC_INST_HH__
 #define __ARCH_RISCV_STATIC_INST_HH__
 
-////////////////////////////////////////////////////////////////////
-//
-// Base class for Riscv instructions, and some support functions
-//
+#include <string>
 
-namespace RiscvISA {
+#include "arch/riscv/types.hh"
+#include "cpu/exec_context.hh"
+#include "cpu/static_inst.hh"
+#include "mem/packet.hh"
+
+namespace RiscvISA
+{
 
 /**
  * Base class for all RISC-V static instructions.
@@ -46,20 +49,13 @@ namespace RiscvISA {
 class RiscvStaticInst : public StaticInst
 {
   protected:
-    // Constructor
-    RiscvStaticInst(const char *mnem, MachInst _machInst,
-        OpClass __opClass) : StaticInst(mnem, _machInst, __opClass)
-    {}
+    using StaticInst::StaticInst;
 
     virtual std::string
     generateDisassembly(Addr pc, const SymbolTable *symtab) const = 0;
 
   public:
-    void
-    advancePC(RiscvISA::PCState &pc) const
-    {
-        pc.advance();
-    }
+    void advancePC(PCState &pc) const { pc.advance(); }
 };
 
 /**
@@ -78,16 +74,9 @@ class RiscvMacroInst : public RiscvStaticInst
         flags[IsMacroop] = true;
     }
 
-    ~RiscvMacroInst()
-    {
-        microops.clear();
-    }
+    ~RiscvMacroInst() { microops.clear(); }
 
-    StaticInstPtr
-    fetchMicroop(MicroPC upc) const
-    {
-        return microops[upc];
-    }
+    StaticInstPtr fetchMicroop(MicroPC upc) const { return microops[upc]; }
 
     Fault
     initiateAcc(ExecContext *xc, Trace::InstRecord *traceData) const
@@ -123,15 +112,7 @@ class RiscvMicroInst : public RiscvStaticInst
         flags[IsMicroop] = true;
     }
 
-    void
-    advancePC(RiscvISA::PCState &pcState) const
-    {
-        if (flags[IsLastMicroop]) {
-            pcState.uEnd();
-        } else {
-            pcState.uAdvance();
-        }
-    }
+    void advancePC(PCState &pcState) const;
 };
 
 }
