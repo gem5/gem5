@@ -34,6 +34,7 @@ Import('*')
 if env['TARGET_ISA'] == 'sparc':
     Source('blockmem.cc')
     Source('branch.cc')
+    Source('integer.cc')
     Source('mem.cc')
     Source('micro.cc')
     Source('priv.cc')
