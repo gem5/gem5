@@ -48,52 +48,52 @@ decode QUADRANT default Unknown::unknown() {
         }});
         format CompressedLoad {
             0x1: c_fld({{
-                ldisp = CIMM3 << 3 | CIMM2 << 6;
+                offset = CIMM3 << 3 | CIMM2 << 6;
             }}, {{
                 Fp2_bits = Mem;
             }}, {{
-                EA = Rp1 + ldisp;
+                EA = Rp1 + offset;
             }});
             0x2: c_lw({{
-                ldisp = CIMM2<1:1> << 2 |
-                        CIMM3 << 3 |
-                        CIMM2<0:0> << 6;
+                offset = CIMM2<1:1> << 2 |
+                         CIMM3 << 3 |
+                         CIMM2<0:0> << 6;
             }}, {{
                 Rp2_sd = Mem_sw;
             }}, {{
-                EA = Rp1 + ldisp;
+                EA = Rp1 + offset;
             }});
             0x3: c_ld({{
-                ldisp = CIMM3 << 3 | CIMM2 << 6;
+                offset = CIMM3 << 3 | CIMM2 << 6;
             }}, {{
                 Rp2_sd = Mem_sd;
             }}, {{
-                EA = Rp1 + ldisp;
+                EA = Rp1 + offset;
             }});
         }
         format CompressedStore {
             0x5: c_fsd({{
-                sdisp = CIMM3 << 3 | CIMM2 << 6;
+                offset = CIMM3 << 3 | CIMM2 << 6;
             }}, {{
                 Mem = Fp2_bits;
             }}, {{
-                EA = Rp1 + sdisp;
+                EA = Rp1 + offset;
             }});
             0x6: c_sw({{
-                sdisp = CIMM2<1:1> << 2 |
-                        CIMM3 << 3 |
-                        CIMM2<0:0> << 6;
+                offset = CIMM2<1:1> << 2 |
+                         CIMM3 << 3 |
+                         CIMM2<0:0> << 6;
             }}, {{
                 Mem_uw = Rp2_uw;
             }}, ea_code={{
-                EA = Rp1 + sdisp;
+                EA = Rp1 + offset;
             }});
             0x7: c_sd({{
-                sdisp = CIMM3 << 3 | CIMM2 << 6;
+                offset = CIMM3 << 3 | CIMM2 << 6;
             }}, {{
                     Mem_ud = Rp2_ud;
             }}, {{
-                EA = Rp1 + sdisp;
+                EA = Rp1 + offset;
             }});
         }
     }
@@ -202,12 +202,12 @@ decode QUADRANT default Unknown::unknown() {
         }
         0x5: JOp::c_j({{
             int64_t offset = CJUMPIMM<3:1> << 1 |
-                          CJUMPIMM<9:9> << 4 |
-                          CJUMPIMM<0:0> << 5 |
-                          CJUMPIMM<5:5> << 6 |
-                          CJUMPIMM<4:4> << 7 |
-                          CJUMPIMM<8:7> << 8 |
-                          CJUMPIMM<6:6> << 10;
+                             CJUMPIMM<9:9> << 4 |
+                             CJUMPIMM<0:0> << 5 |
+                             CJUMPIMM<5:5> << 6 |
+                             CJUMPIMM<4:4> << 7 |
+                             CJUMPIMM<8:7> << 8 |
+                             CJUMPIMM<6:6> << 10;
             if (CJUMPIMM<10:10> > 0)
                 offset |= ~((int64_t)0x7FF);
             NPC = PC + offset;
@@ -251,33 +251,33 @@ decode QUADRANT default Unknown::unknown() {
         }});
         format CompressedLoad {
             0x1: c_fldsp({{
-                ldisp = CIMM5<4:3> << 3 |
-                        CIMM1 << 5 |
-                        CIMM5<2:0> << 6;
+                offset = CIMM5<4:3> << 3 |
+                         CIMM1 << 5 |
+                         CIMM5<2:0> << 6;
             }}, {{
                 Fc1_bits = Mem;
             }}, {{
-                EA = sp + ldisp;
+                EA = sp + offset;
             }});
             0x2: c_lwsp({{
-                ldisp = CIMM5<4:2> << 2 |
-                        CIMM1 << 5 |
-                        CIMM5<1:0> << 6;
+                offset = CIMM5<4:2> << 2 |
+                         CIMM1 << 5 |
+                         CIMM5<1:0> << 6;
             }}, {{
                 assert(RC1 != 0);
                 Rc1_sd = Mem_sw;
             }}, {{
-                EA = sp + ldisp;
+                EA = sp + offset;
             }});
             0x3: c_ldsp({{
-                ldisp = CIMM5<4:3> << 3 |
-                        CIMM1 << 5 |
-                        CIMM5<2:0> << 6;
+                offset = CIMM5<4:3> << 3 |
+                         CIMM1 << 5 |
+                         CIMM5<2:0> << 6;
             }}, {{
                 assert(RC1 != 0);
                 Rc1_sd = Mem_sd;
             }}, {{
-                EA = sp + ldisp;
+                EA = sp + offset;
             }});
         }
         0x4: decode CFUNCT1 {
@@ -310,28 +310,28 @@ decode QUADRANT default Unknown::unknown() {
         }
         format CompressedStore {
             0x5: c_fsdsp({{
-                sdisp = CIMM6<5:3> << 3 |
-                        CIMM6<2:0> << 6;
+                offset = CIMM6<5:3> << 3 |
+                         CIMM6<2:0> << 6;
             }}, {{
                 Mem_ud = Fc2_bits;
             }}, {{
-                EA = sp + sdisp;
+                EA = sp + offset;
             }});
             0x6: c_swsp({{
-                sdisp = CIMM6<5:2> << 2 |
-                        CIMM6<1:0> << 6;
+                offset = CIMM6<5:2> << 2 |
+                         CIMM6<1:0> << 6;
             }}, {{
                 Mem_uw = Rc2_uw;
             }}, {{
-                EA = sp + sdisp;
+                EA = sp + offset;
             }});
             0x7: c_sdsp({{
-                sdisp = CIMM6<5:3> << 3 |
-                        CIMM6<2:0> << 6;
+                offset = CIMM6<5:3> << 3 |
+                         CIMM6<2:0> << 6;
             }}, {{
                 Mem = Rc2;
             }}, {{
-                EA = sp + sdisp;
+                EA = sp + offset;
             }});
         }
     }

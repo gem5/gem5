@@ -33,72 +33,6 @@
 //
 // Memory operation instructions
 //
-output header {{
-    class Load : public RiscvStaticInst
-    {
-      public:
-        /// Displacement for EA calculation (signed).
-        int64_t ldisp;
-
-      protected:
-        /// Memory request flags.  See mem_req_base.hh.
-        Request::Flags memAccessFlags;
-
-        /// Constructor
-        Load(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-            : RiscvStaticInst(mnem, _machInst, __opClass), ldisp(0)
-        {}
-
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-    };
-
-    class Store : public RiscvStaticInst
-    {
-      public:
-        /// Displacement for EA calculation (signed).
-        int64_t sdisp;
-
-      protected:
-        /// Memory request flags.  See mem_req_base.hh.
-        Request::Flags memAccessFlags;
-
-        /// Constructor
-        Store(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-            : RiscvStaticInst(mnem, _machInst, __opClass), sdisp(0)
-        {
-            sdisp = IMM5 | (IMM7 << 5);
-            if (IMMSIGN > 0)
-                sdisp |= ~((uint64_t)0xFFF);
-        }
-
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-    };
-
-}};
-
-
-output decoder {{
-    std::string
-    Load::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-    {
-        std::stringstream ss;
-        ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", " <<
-            ldisp << '(' << registerName(_srcRegIdx[0]) << ')';
-        return ss.str();
-    }
-
-    std::string
-    Store::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-    {
-        std::stringstream ss;
-        ss << mnemonic << ' ' << registerName(_srcRegIdx[1]) << ", " <<
-            sdisp << '(' << registerName(_srcRegIdx[0]) << ')';
-        return ss.str();
-    }
-}};
-
 def template LoadStoreDeclare {{
     /**
      * Static instruction class for "%(mnemonic)s".
@@ -320,24 +254,24 @@ def template StoreCompleteAcc {{
     }
 }};
 
-def format Load(memacc_code, ea_code = {{EA = Rs1 + ldisp;}}, mem_flags=[],
+def format Load(memacc_code, ea_code = {{EA = Rs1 + offset;}}, mem_flags=[],
         inst_flags=[]) {{
     offset_code = """
-                    ldisp = IMM12;
+                    offset = IMM12;
                     if (IMMSIGN > 0)
-                        ldisp |= ~((uint64_t)0xFFF);
+                        offset |= ~((uint64_t)0xFFF);
                   """
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
         inst_flags, 'Load', exec_template_base='Load')
 }};
 
-def format Store(memacc_code, ea_code={{EA = Rs1 + sdisp;}}, mem_flags=[],
+def format Store(memacc_code, ea_code={{EA = Rs1 + offset;}}, mem_flags=[],
         inst_flags=[]) {{
     offset_code = """
-                    sdisp = IMM5 | (IMM7 << 5);
+                    offset = IMM5 | (IMM7 << 5);
                     if (IMMSIGN > 0)
-                        sdisp |= ~((uint64_t)0xFFF);
+                        offset |= ~((uint64_t)0xFFF);
                   """
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
