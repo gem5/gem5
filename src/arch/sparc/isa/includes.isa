@@ -40,6 +40,7 @@ output header {{
 
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/insts/branch.hh"
+#include "arch/sparc/insts/micro.hh"
 #include "arch/sparc/insts/nop.hh"
 #include "arch/sparc/insts/priv.hh"
 #include "arch/sparc/insts/static_inst.hh"

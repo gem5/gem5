@@ -30,9 +30,6 @@
 // Templates from this format are used later
 ##include "basic.isa"
 
-// Include base classes for microcoding instructions
-##include "micro.isa"
-
 // Include the noop format
 ##include "nop.isa"
 
