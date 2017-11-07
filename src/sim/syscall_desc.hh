@@ -51,8 +51,12 @@
 #include "base/types.hh"
 
 class Process;
+class SyscallDesc;
 class SyscallReturn;
 class ThreadContext;
+
+SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
+    Process *p, ThreadContext *tc);
 
 /**
  * This class provides the wrapper interface for the system call
@@ -66,7 +70,8 @@ class SyscallDesc {
     typedef SyscallReturn (*SyscallExecutor)(SyscallDesc*, int num,
                                              Process*, ThreadContext*);
 
-    SyscallDesc(const char *name, SyscallExecutor sys_exec, int flags = 0)
+    SyscallDesc(const char *name,
+                SyscallExecutor sys_exec=unimplementedFunc, int flags=0)
         : _name(name), executor(sys_exec), _flags(flags), _warned(false)
     {
     }
