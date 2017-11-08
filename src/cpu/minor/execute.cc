@@ -219,13 +219,14 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
     const TheISA::PCState &pc_before = inst->pc;
     TheISA::PCState target = thread->pcState();
 
-    /* Force a branch for SerializeAfter instructions at the end of micro-op
-     *  sequence when we're not suspended */
+    /* Force a branch for SerializeAfter/SquashAfter instructions
+     * at the end of micro-op sequence when we're not suspended */
     bool force_branch = thread->status() != ThreadContext::Suspended &&
         !inst->isFault() &&
         inst->isLastOpInInst() &&
         (inst->staticInst->isSerializeAfter() ||
-            inst->staticInst->isIprAccess());
+         inst->staticInst->isSquashAfter() ||
+         inst->staticInst->isIprAccess());
 
     DPRINTF(Branch, "tryToBranch before: %s after: %s%s\n",
         pc_before, target, (force_branch ? " (forcing)" : ""));
