@@ -1,0 +1,453 @@
+// Copyright (c) 2017 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Giacomo Gabrielli
+
+// @file Definition of SVE memory access instructions.
+
+output header {{
+
+    // Decodes SVE contiguous load instructions, scalar plus scalar form.
+    template <template <typename T1, typename T2> class Base>
+    StaticInstPtr
+    decodeSveContigLoadSSInsts(uint8_t dtype, ExtMachInst machInst,
+                               IntRegIndex zt, IntRegIndex pg, IntRegIndex rn,
+                               IntRegIndex rm, bool firstFaulting)
+    {
+        const char* mn = firstFaulting ? "ldff1" : "ld1";
+        switch (dtype) {
+          case 0x0:
+            return new Base<uint8_t, uint8_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x1:
+            return new Base<uint16_t, uint8_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x2:
+            return new Base<uint32_t, uint8_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x3:
+            return new Base<uint64_t, uint8_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x4:
+            return new Base<int64_t, int32_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x5:
+            return new Base<uint16_t, uint16_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x6:
+            return new Base<uint32_t, uint16_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x7:
+            return new Base<uint64_t, uint16_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x8:
+            return new Base<int64_t, int16_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x9:
+            return new Base<int32_t, int16_t>(mn, machInst, zt, pg, rn, rm);
+          case 0xa:
+            return new Base<uint32_t, uint32_t>(mn, machInst, zt, pg, rn, rm);
+          case 0xb:
+            return new Base<uint64_t, uint32_t>(mn, machInst, zt, pg, rn, rm);
+          case 0xc:
+            return new Base<int64_t, int8_t>(mn, machInst, zt, pg, rn, rm);
+          case 0xd:
+            return new Base<int32_t, int8_t>(mn, machInst, zt, pg, rn, rm);
+          case 0xe:
+            return new Base<int16_t, int8_t>(mn, machInst, zt, pg, rn, rm);
+          case 0xf:
+            return new Base<uint64_t, uint64_t>(mn, machInst, zt, pg, rn, rm);
+        }
+        return new Unknown64(machInst);
+    }
+
+    // Decodes SVE contiguous load instructions, scalar plus immediate form.
+    template <template <typename T1, typename T2> class Base>
+    StaticInstPtr
+    decodeSveContigLoadSIInsts(uint8_t dtype, ExtMachInst machInst,
+                               IntRegIndex zt, IntRegIndex pg, IntRegIndex rn,
+                               uint64_t imm, bool firstFaulting,
+                               bool replicate = false)
+    {
+        assert(!(replicate && firstFaulting));
+
+        const char* mn = replicate ? "ld1r" :
+                                     (firstFaulting ? "ldff1" : "ld1");
+        switch (dtype) {
+          case 0x0:
+            return new Base<uint8_t, uint8_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x1:
+            return new Base<uint16_t, uint8_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x2:
+            return new Base<uint32_t, uint8_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x3:
+            return new Base<uint64_t, uint8_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x4:
+            return new Base<int64_t, int32_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x5:
+            return new Base<uint16_t, uint16_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x6:
+            return new Base<uint32_t, uint16_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x7:
+            return new Base<uint64_t, uint16_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x8:
+            return new Base<int64_t, int16_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x9:
+            return new Base<int32_t, int16_t>(mn, machInst, zt, pg, rn, imm);
+          case 0xa:
+            return new Base<uint32_t, uint32_t>(mn, machInst, zt, pg, rn, imm);
+          case 0xb:
+            return new Base<uint64_t, uint32_t>(mn, machInst, zt, pg, rn, imm);
+          case 0xc:
+            return new Base<int64_t, int8_t>(mn, machInst, zt, pg, rn, imm);
+          case 0xd:
+            return new Base<int32_t, int8_t>(mn, machInst, zt, pg, rn, imm);
+          case 0xe:
+            return new Base<int16_t, int8_t>(mn, machInst, zt, pg, rn, imm);
+          case 0xf:
+            return new Base<uint64_t, uint64_t>(mn, machInst, zt, pg, rn, imm);
+        }
+        return new Unknown64(machInst);
+    }
+
+    // Decodes SVE contiguous store instructions, scalar plus scalar form.
+    template <template <typename T1, typename T2> class Base>
+    StaticInstPtr
+    decodeSveContigStoreSSInsts(uint8_t dtype, ExtMachInst machInst,
+                                IntRegIndex zt, IntRegIndex pg, IntRegIndex rn,
+                                IntRegIndex rm)
+    {
+        const char* mn = "st1";
+        switch (dtype) {
+          case 0x0:
+            return new Base<uint8_t, uint8_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x1:
+            return new Base<uint16_t, uint8_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x2:
+            return new Base<uint32_t, uint8_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x3:
+            return new Base<uint64_t, uint8_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x5:
+            return new Base<uint16_t, uint16_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x6:
+            return new Base<uint32_t, uint16_t>(mn, machInst, zt, pg, rn, rm);
+          case 0x7:
+            return new Base<uint64_t, uint16_t>(mn, machInst, zt, pg, rn, rm);
+          case 0xa:
+            return new Base<uint32_t, uint32_t>(mn, machInst, zt, pg, rn, rm);
+          case 0xb:
+            return new Base<uint64_t, uint32_t>(mn, machInst, zt, pg, rn, rm);
+          case 0xf:
+            return new Base<uint64_t, uint64_t>(mn, machInst, zt, pg, rn, rm);
+        }
+        return new Unknown64(machInst);
+    }
+
+    // Decodes SVE contiguous store instructions, scalar plus immediate form.
+    template <template <typename T1, typename T2> class Base>
+    StaticInstPtr
+    decodeSveContigStoreSIInsts(uint8_t dtype, ExtMachInst machInst,
+                                IntRegIndex zt, IntRegIndex pg, IntRegIndex rn,
+                                int8_t imm)
+    {
+        const char* mn = "st1";
+        switch (dtype) {
+          case 0x0:
+            return new Base<uint8_t, uint8_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x1:
+            return new Base<uint16_t, uint8_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x2:
+            return new Base<uint32_t, uint8_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x3:
+            return new Base<uint64_t, uint8_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x5:
+            return new Base<uint16_t, uint16_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x6:
+            return new Base<uint32_t, uint16_t>(mn, machInst, zt, pg, rn, imm);
+          case 0x7:
+            return new Base<uint64_t, uint16_t>(mn, machInst, zt, pg, rn, imm);
+          case 0xa:
+            return new Base<uint32_t, uint32_t>(mn, machInst, zt, pg, rn, imm);
+          case 0xb:
+            return new Base<uint64_t, uint32_t>(mn, machInst, zt, pg, rn, imm);
+          case 0xf:
+            return new Base<uint64_t, uint64_t>(mn, machInst, zt, pg, rn, imm);
+        }
+        return new Unknown64(machInst);
+    }
+
+    // NOTE: SVE load-and-replicate instructions are decoded with
+    // decodeSveContigLoadSIInsts(...).
+
+}};
+
+let {{
+
+    header_output = ''
+    exec_output = ''
+    decoders = { 'Generic': {} }
+
+    SPAlignmentCheckCode = '''
+        if (this->baseIsSP && bits(XBase, 3, 0) &&
+            SPAlignmentCheckEnabled(xc->tcBase())) {
+            return std::make_shared<SPAlignmentFault>();
+        }
+    '''
+
+    def emitSveMemFillSpill(isPred):
+        global header_output, exec_output, decoders
+        eaCode = SPAlignmentCheckCode + '''
+        int memAccessSize = %(memacc_size)s;
+        EA = XBase + ((int64_t) imm * %(memacc_size)s)''' % {
+            'memacc_size': 'eCount / 8' if isPred else 'eCount'}
+        if isPred:
+            loadMemAccCode = '''
+            int index = 0;
+            uint8_t byte;
+            for (int i = 0; i < eCount / 8; i++) {
+                byte = memDataView[i];
+                for (int j = 0; j < 8; j++, index++) {
+                    PDest_x[index] = (byte >> j) & 1;
+                }
+            }
+            '''
+            storeMemAccCode = '''
+            int index = 0;
+            uint8_t byte;
+            for (int i = 0; i < eCount / 8; i++) {
+                byte = 0;
+                for (int j = 0; j < 8; j++, index++) {
+                    byte |= PDest_x[index] << j;
+                }
+                memDataView[i] = byte;
+            }
+            '''
+            storeWrEnableCode = '''
+            auto wrEn = std::vector<bool>(eCount / 8, true);
+            '''
+        else:
+            loadMemAccCode = '''
+            for (int i = 0; i < eCount; i++) {
+                AA64FpDest_x[i] = memDataView[i];
+            }
+            '''
+            storeMemAccCode = '''
+            for (int i = 0; i < eCount; i++) {
+                memDataView[i] = AA64FpDest_x[i];
+            }
+            '''
+            storeWrEnableCode = '''
+            auto wrEn = std::vector<bool>(sizeof(MemElemType) * eCount, true);
+            '''
+        loadIop = InstObjParams('ldr',
+            'SveLdrPred' if isPred else 'SveLdrVec',
+            'SveMemPredFillSpill' if isPred else 'SveMemVecFillSpill',
+            {'tpl_header': '',
+             'tpl_args': '',
+             'memacc_code': loadMemAccCode,
+             'ea_code' : sveEnabledCheckCode + eaCode,
+             'fa_code' : ''},
+            ['IsMemRef', 'IsLoad'])
+        storeIop = InstObjParams('str',
+            'SveStrPred' if isPred else 'SveStrVec',
+            'SveMemPredFillSpill' if isPred else 'SveMemVecFillSpill',
+            {'tpl_header': '',
+             'tpl_args': '',
+             'wren_code': storeWrEnableCode,
+             'memacc_code': storeMemAccCode,
+             'ea_code' : sveEnabledCheckCode + eaCode,
+             'fa_code' : ''},
+            ['IsMemRef', 'IsStore'])
+        header_output += SveMemFillSpillOpDeclare.subst(loadIop)
+        header_output += SveMemFillSpillOpDeclare.subst(storeIop)
+        exec_output += (
+            SveContigLoadExecute.subst(loadIop) +
+            SveContigLoadInitiateAcc.subst(loadIop) +
+            SveContigLoadCompleteAcc.subst(loadIop) +
+            SveContigStoreExecute.subst(storeIop) +
+            SveContigStoreInitiateAcc.subst(storeIop) +
+            SveContigStoreCompleteAcc.subst(storeIop))
+
+    loadTplArgs = (
+        ('uint8_t', 'uint8_t'),
+        ('uint16_t', 'uint8_t'),
+        ('uint32_t', 'uint8_t'),
+        ('uint64_t', 'uint8_t'),
+        ('int64_t', 'int32_t'),
+        ('uint16_t', 'uint16_t'),
+        ('uint32_t', 'uint16_t'),
+        ('uint64_t', 'uint16_t'),
+        ('int64_t', 'int16_t'),
+        ('int32_t', 'int16_t'),
+        ('uint32_t', 'uint32_t'),
+        ('uint64_t', 'uint32_t'),
+        ('int64_t', 'int8_t'),
+        ('int32_t', 'int8_t'),
+        ('int16_t', 'int8_t'),
+        ('uint64_t', 'uint64_t'),
+    )
+
+    storeTplArgs = (
+        ('uint8_t', 'uint8_t'),
+        ('uint16_t', 'uint8_t'),
+        ('uint32_t', 'uint8_t'),
+        ('uint64_t', 'uint8_t'),
+        ('uint16_t', 'uint16_t'),
+        ('uint32_t', 'uint16_t'),
+        ('uint64_t', 'uint16_t'),
+        ('uint32_t', 'uint32_t'),
+        ('uint64_t', 'uint32_t'),
+        ('uint64_t', 'uint64_t'),
+    )
+
+    # Generates definitions for SVE contiguous loads
+    def emitSveContigMemInsts(offsetIsImm):
+        global header_output, exec_output, decoders
+        tplHeader = 'template <class RegElemType, class MemElemType>'
+        tplArgs = '<RegElemType, MemElemType>'
+        eaCode = SPAlignmentCheckCode + '''
+        int memAccessSize = eCount * sizeof(MemElemType);
+        EA = XBase + '''
+        if offsetIsImm:
+            eaCode += '((int64_t) this->imm * eCount * sizeof(MemElemType))'
+        else:
+            eaCode += '(XOffset * sizeof(MemElemType));'
+        loadMemAccCode = '''
+        for (int i = 0; i < eCount; i++) {
+            if (GpOp_x[i]) {
+                AA64FpDest_x[i] = memDataView[i];
+            } else {
+                AA64FpDest_x[i] = 0;
+            }
+        }
+        '''
+        storeMemAccCode = '''
+        for (int i = 0; i < eCount; i++) {
+            if (GpOp_x[i]) {
+                memDataView[i] = AA64FpDest_x[i];
+            } else {
+                memDataView[i] = 0;
+                for (int j = 0; j < sizeof(MemElemType); j++) {
+                    wrEn[sizeof(MemElemType) * i + j] = false;
+                }
+            }
+        }
+        '''
+        storeWrEnableCode = '''
+        auto wrEn = std::vector<bool>(sizeof(MemElemType) * eCount, true);
+        '''
+        loadIop = InstObjParams('ld1',
+            'SveContigLoadSI' if offsetIsImm else 'SveContigLoadSS',
+            'SveContigMemSI' if offsetIsImm else 'SveContigMemSS',
+            {'tpl_header': tplHeader,
+             'tpl_args': tplArgs,
+             'memacc_code': loadMemAccCode,
+             'ea_code' : sveEnabledCheckCode + eaCode,
+             'fa_code' : ''},
+            ['IsMemRef', 'IsLoad'])
+        storeIop = InstObjParams('st1',
+            'SveContigStoreSI' if offsetIsImm else 'SveContigStoreSS',
+            'SveContigMemSI' if offsetIsImm else 'SveContigMemSS',
+            {'tpl_header': tplHeader,
+             'tpl_args': tplArgs,
+             'wren_code': storeWrEnableCode,
+             'memacc_code': storeMemAccCode,
+             'ea_code' : sveEnabledCheckCode + eaCode,
+             'fa_code' : ''},
+            ['IsMemRef', 'IsStore'])
+        if offsetIsImm:
+            header_output += SveContigMemSIOpDeclare.subst(loadIop)
+            header_output += SveContigMemSIOpDeclare.subst(storeIop)
+        else:
+            header_output += SveContigMemSSOpDeclare.subst(loadIop)
+            header_output += SveContigMemSSOpDeclare.subst(storeIop)
+        exec_output += (
+            SveContigLoadExecute.subst(loadIop) +
+            SveContigLoadInitiateAcc.subst(loadIop) +
+            SveContigLoadCompleteAcc.subst(loadIop) +
+            SveContigStoreExecute.subst(storeIop) +
+            SveContigStoreInitiateAcc.subst(storeIop) +
+            SveContigStoreCompleteAcc.subst(storeIop))
+        for args in loadTplArgs:
+            substDict = {'tpl_args': '<%s>' % ', '.join(args),
+                         'class_name': 'SveContigLoadSI' if offsetIsImm
+                                       else 'SveContigLoadSS'}
+            exec_output += SveContigMemExecDeclare.subst(substDict)
+        for args in storeTplArgs:
+            substDict = {'tpl_args': '<%s>' % ', '.join(args),
+                         'class_name': 'SveContigStoreSI' if offsetIsImm
+                                       else 'SveContigStoreSS'}
+            exec_output += SveContigMemExecDeclare.subst(substDict)
+
+    # Generates definitions for SVE load-and-replicate instructions
+    def emitSveLoadAndRepl():
+        global header_output, exec_output, decoders
+        tplHeader = 'template <class RegElemType, class MemElemType>'
+        tplArgs = '<RegElemType, MemElemType>'
+        eaCode = SPAlignmentCheckCode + '''
+        EA = XBase + imm * sizeof(MemElemType);'''
+        memAccCode = '''
+        for (int i = 0; i < eCount; i++) {
+            if (GpOp_x[i]) {
+                AA64FpDest_x[i] = memData;
+            } else {
+                AA64FpDest_x[i] = 0;
+            }
+        }
+        '''
+        iop = InstObjParams('ld1r',
+            'SveLoadAndRepl',
+            'SveContigMemSI',
+            {'tpl_header': tplHeader,
+             'tpl_args': tplArgs,
+             'memacc_code': memAccCode,
+             'ea_code' : sveEnabledCheckCode + eaCode,
+             'fa_code' : ''},
+            ['IsMemRef', 'IsLoad'])
+        header_output += SveContigMemSIOpDeclare.subst(iop)
+        exec_output += (
+            SveLoadAndReplExecute.subst(iop) +
+            SveLoadAndReplInitiateAcc.subst(iop) +
+            SveLoadAndReplCompleteAcc.subst(iop))
+        for args in loadTplArgs:
+            substDict = {'tpl_args': '<%s>' % ', '.join(args),
+                         'class_name': 'SveLoadAndRepl'}
+            exec_output += SveContigMemExecDeclare.subst(substDict)
+
+    # LD1[S]{B,H,W,D} (scalar plus immediate)
+    emitSveContigMemInsts(True)
+    # LD1[S]{B,H,W,D} (scalar plus scalar)
+    emitSveContigMemInsts(False)
+
+    # LD1R[S]{B,H,W,D}
+    emitSveLoadAndRepl()
+
+    # LDR (predicate), STR (predicate)
+    emitSveMemFillSpill(True)
+    # LDR (vector), STR (vector)
+    emitSveMemFillSpill(False)
+
+}};

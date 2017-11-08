@@ -38,7 +38,7 @@
 let {{
     sveEnabledCheckCode = '''
         if (FullSystem) {
-            fault = checkSveEnabled(xc->tcBase(), Cpsr, Cpacr64);
+            fault = this->checkSveEnabled(xc->tcBase(), Cpsr, Cpacr64);
             if (fault != NoFault) {
                 return fault;
             }

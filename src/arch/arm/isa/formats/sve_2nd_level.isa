@@ -2896,12 +2896,152 @@ namespace Aarch64
     StaticInstPtr
     decodeSveMemGather32(ExtMachInst machInst)
     {
+        // TODO: for now only LDR and LD1R are implemented
+        if (bits(machInst, 22) && bits(machInst, 15)) {
+            IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex rn = makeSP(
+                (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+            uint64_t imm = bits(machInst, 21, 16);
+            IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+            uint8_t dtype = (bits(machInst, 24, 23) << 2) |
+                            bits(machInst, 14, 13);
+            return decodeSveContigLoadSIInsts<SveLoadAndRepl>(
+                    dtype, machInst, zt, pg, rn, imm, false, true);
+        } else if (bits(machInst, 24, 22) == 0x6 &&
+                   bits(machInst, 15, 13) == 0x0 &&
+                   bits(machInst, 4) == 0x0) {
+            IntRegIndex pt = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+            IntRegIndex rn = makeSP(
+                (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+            uint64_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
+                                   bits(machInst, 12, 10));
+            return new SveLdrPred(machInst, pt, rn, imm);
+        } else if (bits(machInst, 24, 22) == 0x6 &&
+                   bits(machInst, 15, 13) == 0x2) {
+            IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex rn = makeSP(
+                (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+            uint64_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
+                                   bits(machInst, 12, 10));
+            return new SveLdrVec(machInst, zt, rn, imm);
+        }
         return new Unknown64(machInst);
     }  // decodeSveMemGather32
 
     StaticInstPtr
+    decodeSveLoadBcastQuadSS(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveLoadBcastQuadSS
+
+    StaticInstPtr
+    decodeSveLoadBcastQuadSI(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveLoadBcastQuadSI
+
+    StaticInstPtr
+    decodeSveContigLoadSS(ExtMachInst machInst)
+    {
+        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex rn = makeSP((IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+        IntRegIndex rm = makeSP(
+            (IntRegIndex) (uint8_t) bits(machInst, 20, 16));
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        if (rm == 0x1f) {
+            return new Unknown64(machInst);
+        }
+
+        return decodeSveContigLoadSSInsts<SveContigLoadSS>(
+            bits(machInst, 24, 21), machInst, zt, pg, rn, rm, false);
+    }  // decodeSveContigLoadSS
+
+    StaticInstPtr
+    decodeSveContigFFLoadSS(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveContigFFLoadSS
+
+    StaticInstPtr
+    decodeSveContigLoadSI(ExtMachInst machInst)
+    {
+        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex rn = makeSP((IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+        uint64_t imm = sext<4>(bits(machInst, 19, 16));
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        return decodeSveContigLoadSIInsts<SveContigLoadSI>(
+            bits(machInst, 24, 21), machInst, zt, pg, rn, imm, false);
+    }  // decodeSveContigLoadSI
+
+    StaticInstPtr
+    decodeSveContigNFLoadSI(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveContigNFLoadSI
+
+    StaticInstPtr
+    decodeSveContigNTLoadSS(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveContigNTLoadSS
+
+    StaticInstPtr
+    decodeSveLoadStructsSS(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveLoadStructsSS
+
+    StaticInstPtr
+    decodeSveContigNTLoadSI(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveContigNTLoadSI
+
+    StaticInstPtr
+    decodeSveLoadStructsSI(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveLoadStructsSI
+
+    StaticInstPtr
     decodeSveMemContigLoad(ExtMachInst machInst)
     {
+        switch (bits(machInst, 15, 13)) {
+          case 0x0:
+            return decodeSveLoadBcastQuadSS(machInst);
+          case 0x1:
+            if (bits(machInst, 20) == 0x0) {
+                return decodeSveLoadBcastQuadSI(machInst);
+            }
+            break;
+          case 0x2:
+            return decodeSveContigLoadSS(machInst);
+          case 0x3:
+            return decodeSveContigFFLoadSS(machInst);
+          case 0x5:
+            if (bits(machInst, 20) == 0x0) {
+                return decodeSveContigLoadSI(machInst);
+            } else {
+                return decodeSveContigNFLoadSI(machInst);
+            }
+          case 0x6:
+            if (bits(machInst, 22, 21) == 0x0) {
+                return decodeSveContigNTLoadSS(machInst);
+            } else {
+                return decodeSveLoadStructsSS(machInst);
+            }
+          case 0x7:
+            if (bits(machInst, 20) == 0) {
+                if (bits(machInst, 22, 21) == 0x0) {
+                    return decodeSveContigNTLoadSI(machInst);
+                } else {
+                return decodeSveLoadStructsSI(machInst);
+                }
+            }
+            break;
+        }
         return new Unknown64(machInst);
     }  // decodeSveMemContigLoad
 
@@ -2912,8 +3052,184 @@ namespace Aarch64
     }  // decodeSveMemGather64
 
     StaticInstPtr
+    decodeSveContigStoreSS(ExtMachInst machInst)
+    {
+        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex rn = makeSP((IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+        IntRegIndex rm = makeSP(
+            (IntRegIndex) (uint8_t) bits(machInst, 20, 16));
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        if (rm == 0x1f) {
+            return new Unknown64(machInst);
+        }
+
+        return decodeSveContigStoreSSInsts<SveContigStoreSS>(
+            bits(machInst, 24, 21), machInst, zt, pg, rn, rm);
+    }  // decodeSveContigStoreSS
+
+    StaticInstPtr
+    decodeSveContigStoreSI(ExtMachInst machInst)
+    {
+        IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex rn = makeSP((IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+        int8_t imm = sext<4>(bits(machInst, 19, 16));
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        return decodeSveContigStoreSIInsts<SveContigStoreSI>(
+            bits(machInst, 24, 21), machInst, zt, pg, rn, imm);
+    }  // decodeSveContigStoreSI
+
+    StaticInstPtr
+    decodeSveContigNTStoreSS(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveContigNTStoreSS
+
+    StaticInstPtr
+    decodeSveScatterStore64SV32U(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveScatterStore64SV32U
+
+    StaticInstPtr
+    decodeSveScatterStore64SV64U(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveScatterStore64SV64U
+
+    StaticInstPtr
+    decodeSveContigNTStoreSI(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveContigNTStoreSI
+
+    StaticInstPtr
+    decodeSveScatterStore64VI(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveScatterStore64VI
+
+    StaticInstPtr
+    decodeSveScatterStore32SV32S(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveScatterStore32SV32S
+
+    StaticInstPtr
+    decodeSveStoreStructsSS(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveStoreStructsSS
+
+    StaticInstPtr
+    decodeSveStoreStructsSI(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveStoreStructsSI
+
+    StaticInstPtr
+    decodeSveScatterStore32SV32U(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveScatterStore32SV32U
+
+    StaticInstPtr
+    decodeSveScatterStore32VI(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveScatterStore32VI
+
+    StaticInstPtr
+    decodeSveScatterStore64SV32S(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveScatterStore64SV32S
+
+    StaticInstPtr
+    decodeSveScatterStore64SV64S(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveScatterStore64SV64S
+
+    StaticInstPtr
     decodeSveMemStore(ExtMachInst machInst)
     {
+        switch (bits(machInst, 15, 13)) {
+          case 0x0:
+            if (bits(machInst, 24, 22) == 0x6 && bits(machInst, 4) == 0x0) {
+                IntRegIndex pt = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+                IntRegIndex rn = makeSP(
+                    (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+                int16_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
+                                      bits(machInst, 12, 10));
+                return new SveStrPred(machInst, pt, rn, imm);
+            }
+            break;
+          case 0x2:
+            if (bits(machInst, 24, 22) == 0x6) {
+                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+                IntRegIndex rn = makeSP(
+                    (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+                int16_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
+                                      bits(machInst, 12, 10));
+                return new SveStrVec(machInst, zt, rn, imm);
+            } else {
+                return decodeSveContigStoreSS(machInst);
+            }
+            break;
+          case 0x3:
+            if (bits(machInst, 22, 21) == 0x0) {
+                return decodeSveContigNTStoreSS(machInst);
+            } else {
+                return decodeSveStoreStructsSS(machInst);
+            }
+          case 0x4:
+          case 0x6:
+            switch (bits(machInst, 22, 21)) {
+              case 0x0:
+                return decodeSveScatterStore64SV32U(machInst);
+              case 0x1:
+                if (bits(machInst, 24, 23) != 0x0) {
+                    return decodeSveScatterStore64SV32S(machInst);
+                }
+                break;
+              case 0x2:
+                if (bits(machInst, 24, 23) != 0x3) {
+                    return decodeSveScatterStore32SV32U(machInst);
+                }
+                break;
+              case 0x3:
+                return decodeSveScatterStore32SV32S(machInst);
+            }
+            break;
+          case 0x5:
+            switch (bits(machInst, 22, 21)) {
+              case 0x0:
+                return decodeSveScatterStore64SV64U(machInst);
+              case 0x1:
+                if (bits(machInst, 24, 23) != 0x0) {
+                    return decodeSveScatterStore64SV64S(machInst);
+                }
+                break;
+              case 0x2:
+                return decodeSveScatterStore64VI(machInst);
+              case 0x3:
+                if (bits(machInst, 24, 23) != 0x3) {
+                    return decodeSveScatterStore64VI(machInst);
+                }
+                break;
+            }
+            break;
+          case 0x7:
+            if (bits(machInst, 20) == 0x0) {
+                return decodeSveContigStoreSI(machInst);
+            } else if (bits(machInst, 22, 21) == 0x0) {
+                return decodeSveContigNTStoreSI(machInst);
+            } else {
+                return decodeSveStoreStructsSI(machInst);
+            }
+        }
         return new Unknown64(machInst);
     }  // decodeSveMemStore
 

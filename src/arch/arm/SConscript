@@ -61,6 +61,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('insts/pseudo.cc')
     Source('insts/static_inst.cc')
     Source('insts/sve.cc')
+    Source('insts/sve_mem.cc')
     Source('insts/vfp.cc')
     Source('insts/fplib.cc')
     Source('insts/crypto.cc')
