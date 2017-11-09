@@ -39231,8 +39231,80 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_ATOMIC_SWAP::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (wf->execMask().none()) {
+            wf->wrGmReqsInPipe--;
+            wf->rdGmReqsInPipe--;
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+
+        addr.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        if (gpuDynInst->executedAs() == Enums::SC_GLOBAL ||
+            gpuDynInst->executedAs() == Enums::SC_PRIVATE) {
+            // TODO: additional address computation required for scratch
+            panic_if(gpuDynInst->executedAs() == Enums::SC_PRIVATE,
+                     "Flats to private aperture not tested yet\n");
+            gpuDynInst->computeUnit()->globalMemoryPipe.
+                issueRequest(gpuDynInst);
+            wf->wrGmReqsInPipe--;
+            wf->outstandingReqsWrGm++;
+            wf->rdGmReqsInPipe--;
+            wf->outstandingReqsRdGm++;
+        } else {
+            fatal("Non global flat instructions not implemented yet.\n");
+        }
+
+        gpuDynInst->wavefront()->outstandingReqs++;
+        gpuDynInst->wavefront()->validateRequestCounters();
+
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
+
+        data.read();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
+
+    } // execute
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SWAP::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_FLAT__FLAT_ATOMIC_SWAP::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        if (isAtomicRet()) {
+            VecOperandU32 vdst(gpuDynInst, extData.VDST);
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane];
+                }
+            }
+
+            vdst.write();
+        }
+    } // completeAcc
+
+    // --- Inst_FLAT__FLAT_ATOMIC_CMPSWAP class methods ---
 
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP
         ::Inst_FLAT__FLAT_ATOMIC_CMPSWAP(InFmt_FLAT *iFmt)

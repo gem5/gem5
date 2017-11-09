@@ -79949,9 +79949,9 @@ namespace Gcn3ISA
               case 0: //vgpr_addr
                 return 8;
               case 1: //vgpr_src
-                return 32;
+                return 4;
               case 2: //vgpr_dst
-                return 32;
+                return 4;
               default:
                 fatal("op idx %i out of bounds\n", opIdx);
                 return -1;
@@ -79991,6 +79991,8 @@ namespace Gcn3ISA
         } // isDstOperand
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_FLAT__FLAT_ATOMIC_SWAP
 
     class Inst_FLAT__FLAT_ATOMIC_CMPSWAP : public Inst_FLAT
