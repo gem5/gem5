@@ -50,11 +50,12 @@ import sys
 sys.path.insert(0, Dir(".").srcnode().abspath)
 import testing.tests as tests
 import testing.results as results
+from gem5_scons.util import get_termcap
 
 Import('env')
 
 # get the termcap from the environment
-termcap = env['TERMCAP']
+termcap = get_termcap()
 
 # Dict that accumulates lists of tests by category (quick, medium, long)
 env.Tests = {}

@@ -44,6 +44,8 @@ import sys
 import os
 import re
 
+from gem5_scons import Transform
+
 Import('*')
 
 #################################################################

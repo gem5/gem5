@@ -42,6 +42,11 @@ import sys
 
 import SCons.Script
 
+import m5.util.terminal
+
 def ignore_style():
     """Determine whether we should ignore style checks"""
     return SCons.Script.GetOption('ignore_style') or not sys.stdin.isatty()
+
+def get_termcap():
+    return m5.util.terminal.get_termcap(SCons.Script.GetOption('use_colors'))

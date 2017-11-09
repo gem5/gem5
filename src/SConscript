@@ -42,6 +42,8 @@ from os.path import basename, dirname, exists, isdir, isfile, join as joinpath
 
 import SCons
 
+from gem5_scons import Transform
+
 # This file defines how to build a particular configuration of gem5
 # based on variable settings in the 'env' build environment.
 

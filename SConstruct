@@ -96,7 +96,6 @@ import SCons
 import SCons.Node
 
 from m5.util import compareVersions, readCommand
-from m5.util.terminal import get_termcap
 
 help_texts = {
     "options" : "",
@@ -168,8 +167,6 @@ if GetOption('no_lto') and GetOption('force_lto'):
     print '--no-lto and --force-lto are mutually exclusive'
     Exit(1)
 
-termcap = get_termcap(GetOption('use_colors'))
-
 ########################################################################
 #
 # Set up the main build environment.
@@ -177,6 +174,10 @@ termcap = get_termcap(GetOption('use_colors'))
 ########################################################################
 
 main = Environment()
+
+from gem5_scons import Transform
+from gem5_scons.util import get_termcap
+termcap = get_termcap()
 
 main_dict_keys = main.Dictionary().keys()
 
@@ -300,90 +301,6 @@ main.Append(CPPPATH=[Dir('ext')])
 
 # Add shared top-level headers
 main.Prepend(CPPPATH=Dir('include'))
-
-def strip_build_path(path, env):
-    path = str(path)
-    variant_base = env['BUILDROOT'] + os.path.sep
-    if path.startswith(variant_base):
-        path = path[len(variant_base):]
-    elif path.startswith('build/'):
-        path = path[6:]
-    return path
-
-# Generate a string of the form:
-#   common/path/prefix/src1, src2 -> tgt1, tgt2
-# to print while building.
-class Transform(object):
-    # all specific color settings should be here and nowhere else
-    tool_color = termcap.Normal
-    pfx_color = termcap.Yellow
-    srcs_color = termcap.Yellow + termcap.Bold
-    arrow_color = termcap.Blue + termcap.Bold
-    tgts_color = termcap.Yellow + termcap.Bold
-
-    def __init__(self, tool, max_sources=99):
-        self.format = self.tool_color + (" [%8s] " % tool) \
-                      + self.pfx_color + "%s" \
-                      + self.srcs_color + "%s" \
-                      + self.arrow_color + " -> " \
-                      + self.tgts_color + "%s" \
-                      + termcap.Normal
-        self.max_sources = max_sources
-
-    def __call__(self, target, source, env, for_signature=None):
-        # truncate source list according to max_sources param
-        source = source[0:self.max_sources]
-        def strip(f):
-            return strip_build_path(str(f), env)
-        if len(source) > 0:
-            srcs = map(strip, source)
-        else:
-            srcs = ['']
-        tgts = map(strip, target)
-        # surprisingly, os.path.commonprefix is a dumb char-by-char string
-        # operation that has nothing to do with paths.
-        com_pfx = os.path.commonprefix(srcs + tgts)
-        com_pfx_len = len(com_pfx)
-        if com_pfx:
-            # do some cleanup and sanity checking on common prefix
-            if com_pfx[-1] == ".":
-                # prefix matches all but file extension: ok
-                # back up one to change 'foo.cc -> o' to 'foo.cc -> .o'
-                com_pfx = com_pfx[0:-1]
-            elif com_pfx[-1] == "/":
-                # common prefix is directory path: OK
-                pass
-            else:
-                src0_len = len(srcs[0])
-                tgt0_len = len(tgts[0])
-                if src0_len == com_pfx_len:
-                    # source is a substring of target, OK
-                    pass
-                elif tgt0_len == com_pfx_len:
-                    # target is a substring of source, need to back up to
-                    # avoid empty string on RHS of arrow
-                    sep_idx = com_pfx.rfind(".")
-                    if sep_idx != -1:
-                        com_pfx = com_pfx[0:sep_idx]
-                    else:
-                        com_pfx = ''
-                elif src0_len > com_pfx_len and srcs[0][com_pfx_len] == ".":
-                    # still splitting at file extension: ok
-                    pass
-                else:
-                    # probably a fluke; ignore it
-                    com_pfx = ''
-        # recalculate length in case com_pfx was modified
-        com_pfx_len = len(com_pfx)
-        def fmt(files):
-            f = map(lambda s: s[com_pfx_len:], files)
-            return ', '.join(f)
-        return self.format % (com_pfx, fmt(srcs), fmt(tgts))
-
-Export('Transform')
-
-# enable the regression script to use the termcap
-main['TERMCAP'] = termcap
 
 if GetOption('verbose'):
     def MakeAction(action, string, *args, **kwargs):

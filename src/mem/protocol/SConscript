@@ -36,6 +36,8 @@ from os.path import isdir, isfile, join as joinpath
 
 from SCons.Scanner import Classic
 
+from gem5_scons import Transform
+
 Import('*')
 
 if env['PROTOCOL'] == 'None':

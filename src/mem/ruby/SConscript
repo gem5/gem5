@@ -35,6 +35,8 @@ from os.path import basename, isdir, join as joinpath
 
 import SCons
 
+from gem5_scons import Transform
+
 Import('*')
 
 DebugFlag('ProtocolTrace')
