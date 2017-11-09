@@ -95,13 +95,6 @@ from os.path import join as joinpath, split as splitpath
 import SCons
 import SCons.Node
 
-extra_python_paths = [
-    Dir('src/python').srcnode().abspath, # gem5 includes
-    Dir('ext/ply').srcnode().abspath, # ply is used by several files
-    ]
-
-sys.path[1:1] = extra_python_paths
-
 from m5.util import compareVersions, readCommand
 from m5.util.terminal import get_termcap
 
@@ -191,10 +184,6 @@ main_dict_keys = main.Dictionary().keys()
 if not ('CC' in main_dict_keys and 'CXX' in main_dict_keys):
     print "No C++ compiler installed (package g++ on Ubuntu and RedHat)"
     Exit(1)
-
-# add useful python code PYTHONPATH so it can be used by subprocesses
-# as well
-main.AppendENVPath('PYTHONPATH', extra_python_paths)
 
 ###################################################
 #

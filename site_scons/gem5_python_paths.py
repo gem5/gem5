@@ -38,35 +38,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from gem5_python_paths import extra_python_paths
+import SCons.Node.FS
 
-# Check for recent-enough Python and SCons versions.
-try:
-    # Really old versions of scons only take two options for the
-    # function, so check once without the revision and once with the
-    # revision, the first instance will fail for stuff other than
-    # 0.98, and the second will fail for 0.98.0
-    EnsureSConsVersion(0, 98)
-    EnsureSConsVersion(0, 98, 1)
-except SystemExit, e:
-    print """
-For more details, see:
-    http://gem5.org/Dependencies
-"""
-    raise
+fs = SCons.Node.FS.get_default_fs()
+root = fs.Dir('#')
+extra_python_nodes = [
+    root.Dir('src').Dir('python').srcnode(), # gem5 includes
+    root.Dir('ext').Dir('ply').srcnode(), # ply is used by several files
+]
 
-# pybind11 requires python 2.7
-try:
-    EnsurePythonVersion(2, 7)
-except SystemExit, e:
-    print """
-You can use a non-default installation of the Python interpreter by
-rearranging your PATH so that scons finds the non-default 'python' and
-'python-config' first.
+extra_python_paths = [ node.abspath for node in extra_python_nodes ]
 
-For more details, see:
-    http://gem5.org/wiki/index.php/Using_a_non-default_Python_installation
-"""
-    raise
-
-sys.path[1:1] = extra_python_paths
+__all__ = ['extra_python_paths']

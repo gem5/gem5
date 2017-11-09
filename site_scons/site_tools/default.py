@@ -39,9 +39,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import sys
 
 import SCons.Tool
 import SCons.Tool.default
+
+from gem5_python_paths import extra_python_paths
 
 def common_config(env):
     # export TERM so that clang reports errors in color
@@ -70,6 +73,10 @@ def common_config(env):
     env.Decider('MD5-timestamp')
     env.root = env.Dir('#')
     env.srcdir = env.root.Dir('src')
+
+    # add useful python code PYTHONPATH so it can be used by subprocesses
+    # as well
+    env.AppendENVPath('PYTHONPATH', extra_python_paths)
 
 gem5_tool_list = [
     'git',
