@@ -183,33 +183,7 @@ termcap = get_termcap(GetOption('use_colors'))
 #
 ########################################################################
 
-# export TERM so that clang reports errors in color
-use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH',
-                 'LIBRARY_PATH', 'PATH', 'PKG_CONFIG_PATH', 'PROTOC',
-                 'PYTHONPATH', 'RANLIB', 'TERM' ])
-
-use_prefixes = [
-    "ASAN_",           # address sanitizer symbolizer path and settings
-    "CCACHE_",         # ccache (caching compiler wrapper) configuration
-    "CCC_",            # clang static analyzer configuration
-    "DISTCC_",         # distcc (distributed compiler wrapper) configuration
-    "INCLUDE_SERVER_", # distcc pump server settings
-    "M5",              # M5 configuration (e.g., path to kernels)
-    ]
-
-use_env = {}
-for key,val in sorted(os.environ.iteritems()):
-    if key in use_vars or \
-            any([key.startswith(prefix) for prefix in use_prefixes]):
-        use_env[key] = val
-
-# Tell scons to avoid implicit command dependencies to avoid issues
-# with the param wrappes being compiled twice (see
-# http://scons.tigris.org/issues/show_bug.cgi?id=2811)
-main = Environment(ENV=use_env, IMPLICIT_COMMAND_DEPENDENCIES=0)
-main.Decider('MD5-timestamp')
-main.root = Dir(".")         # The current directory (where this file lives).
-main.srcdir = Dir("src")     # The source directory
+main = Environment()
 
 main_dict_keys = main.Dictionary().keys()
 
