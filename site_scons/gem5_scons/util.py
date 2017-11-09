@@ -38,49 +38,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
+import sys
 
-import SCons.Tool
-import SCons.Tool.default
+import SCons.Script
 
-def common_config(env):
-    # export TERM so that clang reports errors in color
-    use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH',
-                     'LIBRARY_PATH', 'PATH', 'PKG_CONFIG_PATH', 'PROTOC',
-                     'PYTHONPATH', 'RANLIB', 'TERM' ])
-
-    use_prefixes = [
-        "ASAN_",           # address sanitizer symbolizer path and settings
-        "CCACHE_",         # ccache (caching compiler wrapper) configuration
-        "CCC_",            # clang static analyzer configuration
-        "DISTCC_",         # distcc (distributed compiler wrapper) config
-        "INCLUDE_SERVER_", # distcc pump server settings
-        "M5",              # M5 configuration (e.g., path to kernels)
-        ]
-
-    for key,val in sorted(os.environ.iteritems()):
-        if key in use_vars or \
-                any([key.startswith(prefix) for prefix in use_prefixes]):
-            env[key] = val
-
-    # Tell scons to avoid implicit command dependencies to avoid issues
-    # with the param wrappes being compiled twice (see
-    # http://scons.tigris.org/issues/show_bug.cgi?id=2811)
-    env['IMPLICIT_COMMAND_DEPENDENCIES'] = 0
-    env.Decider('MD5-timestamp')
-    env.root = env.Dir('#')
-    env.srcdir = env.root.Dir('src')
-
-gem5_tool_list = [
-    'git',
-    'mercurial',
-]
-
-def generate(env):
-    common_config(env)
-    SCons.Tool.default.generate(env)
-    for tool in gem5_tool_list:
-        SCons.Tool.Tool(tool)(env)
-
-def exists(env):
-    return 1
+def ignore_style():
+    """Determine whether we should ignore style checks"""
+    return SCons.Script.GetOption('ignore_style') or not sys.stdin.isatty()
