@@ -49,7 +49,7 @@ import os
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
-from m5.util import addToPath, fatal
+from m5.util import addToPath, fatal, warn
 
 addToPath('../')
 
@@ -250,10 +250,6 @@ for i in xrange(np):
     system.cpu[i].createThreads()
 
 if options.ruby:
-    if options.cpu_type == "AtomicSimpleCPU":
-        print >> sys.stderr, "Ruby does not work with atomic cpu!!"
-        sys.exit(1)
-
     Ruby.create_system(options, False, system)
     assert(options.num_cpus == len(system.ruby._cpu_ports))
 

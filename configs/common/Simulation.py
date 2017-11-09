@@ -83,6 +83,11 @@ def setCPUClass(options):
         TmpClass = AtomicSimpleCPU
         test_mem_mode = 'atomic'
 
+    # Ruby only supports atomic accesses in noncaching mode
+    if test_mem_mode == 'atomic' and options.ruby:
+        warn("Memory mode will be changed to atomic_noncaching")
+        test_mem_mode = 'atomic_noncaching'
+
     return (TmpClass, test_mem_mode, CPUClass)
 
 def setMemClass(options):

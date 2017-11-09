@@ -135,6 +135,7 @@ class AbstractController : public MemObject, public Consumer
     void queueMemoryWritePartial(const MachineID &id, Addr addr, Cycles latency,
                                  const DataBlock &block, int size);
     void recvTimingResp(PacketPtr pkt);
+    Tick recvAtomic(PacketPtr pkt);
 
     const AddrRangeList &getAddrRanges() const { return addrRanges; }
 

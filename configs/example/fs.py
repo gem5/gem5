@@ -47,7 +47,7 @@ import sys
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
-from m5.util import addToPath, fatal
+from m5.util import addToPath, fatal, warn
 
 addToPath('../')
 
@@ -147,12 +147,6 @@ def build_test_system(np):
         test_sys.kvm_vm = KvmVM()
 
     if options.ruby:
-        # Check for timing mode because ruby does not support atomic accesses
-        if not (options.cpu_type == "DerivO3CPU" or
-                options.cpu_type == "TimingSimpleCPU"):
-            print >> sys.stderr, "Ruby requires TimingSimpleCPU or O3CPU!!"
-            sys.exit(1)
-
         Ruby.create_system(options, True, test_sys, test_sys.iobus,
                            test_sys._dma_ports)
 

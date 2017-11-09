@@ -226,6 +226,26 @@ RubyPort::PioSlavePort::recvTimingReq(PacketPtr pkt)
     panic("Should never reach here!\n");
 }
 
+Tick
+RubyPort::PioSlavePort::recvAtomic(PacketPtr pkt)
+{
+    RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
+    // Only atomic_noncaching mode supported!
+    if (!ruby_port->system->bypassCaches()) {
+        panic("Ruby supports atomic accesses only in noncaching mode\n");
+    }
+
+    for (size_t i = 0; i < ruby_port->master_ports.size(); ++i) {
+        AddrRangeList l = ruby_port->master_ports[i]->getAddrRanges();
+        for (auto it = l.begin(); it != l.end(); ++it) {
+            if (it->contains(pkt->getAddr())) {
+                return ruby_port->master_ports[i]->sendAtomic(pkt);
+            }
+        }
+    }
+    panic("Could not find address in Ruby PIO address ranges!\n");
+}
+
 bool
 RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
 {
@@ -293,6 +313,48 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
     addToRetryList();
 
     return false;
+}
+
+Tick
+RubyPort::MemSlavePort::recvAtomic(PacketPtr pkt)
+{
+    RubyPort *ruby_port = static_cast<RubyPort *>(&owner);
+    // Only atomic_noncaching mode supported!
+    if (!ruby_port->system->bypassCaches()) {
+        panic("Ruby supports atomic accesses only in noncaching mode\n");
+    }
+
+    // Check for pio requests and directly send them to the dedicated
+    // pio port.
+    if (pkt->cmd != MemCmd::MemFenceReq) {
+        if (!isPhysMemAddress(pkt->getAddr())) {
+            assert(ruby_port->memMasterPort.isConnected());
+            DPRINTF(RubyPort, "Request address %#x assumed to be a "
+                    "pio address\n", pkt->getAddr());
+
+            // Save the port in the sender state object to be used later to
+            // route the response
+            pkt->pushSenderState(new SenderState(this));
+
+            // send next cycle
+            Tick req_ticks = ruby_port->memMasterPort.sendAtomic(pkt);
+            return ruby_port->ticksToCycles(req_ticks);
+        }
+
+        assert(getOffset(pkt->getAddr()) + pkt->getSize() <=
+               RubySystem::getBlockSizeBytes());
+    }
+
+    // Find appropriate directory for address
+    // This assumes that protocols have a Directory machine,
+    // which has its memPort hooked up to memory. This can
+    // fail for some custom protocols.
+    MachineID id = ruby_port->m_controller->mapAddressToMachine(
+                    pkt->getAddr(), MachineType_Directory);
+    RubySystem *rs = ruby_port->m_ruby_system;
+    AbstractController *directory =
+        rs->m_abstract_controls[id.getType()][id.getNum()];
+    return directory->recvAtomic(pkt);
 }
 
 void

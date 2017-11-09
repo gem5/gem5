@@ -360,6 +360,12 @@ AbstractController::recvTimingResp(PacketPtr pkt)
     delete pkt;
 }
 
+Tick
+AbstractController::recvAtomic(PacketPtr pkt)
+{
+   return ticksToCycles(memoryPort.sendAtomic(pkt));
+}
+
 MachineID
 AbstractController::mapAddressToMachine(Addr addr, MachineType mtype) const
 {
