@@ -413,6 +413,7 @@ namespace ArmISA
         Bitfield<12> ixe;
         Bitfield<15> ide;
         Bitfield<18, 16> len;
+        Bitfield<19> fz16;
         Bitfield<21, 20> stride;
         Bitfield<23, 22> rMode;
         Bitfield<24> fz;
