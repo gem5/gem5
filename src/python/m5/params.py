@@ -1563,6 +1563,17 @@ class Current(Float):
         value = convert.toCurrent(value)
         super(Current, self).__init__(value)
 
+class Energy(Float):
+    ex_str = "1pJ"
+
+    def __new__(cls, value):
+        value = convert.toEnergy(value)
+        return super(cls, Energy).__new__(cls, value)
+
+    def __init__(self, value):
+        value = convert.toEnergy(value)
+        super(Energy, self).__init__(value)
+
 class NetworkBandwidth(float,ParamValue):
     cxx_type = 'float'
     ex_str = "1Gbps"
@@ -2035,7 +2046,7 @@ __all__ = ['Param', 'VectorParam',
            'TcpPort', 'UdpPort', 'EthernetAddr',
            'IpAddress', 'IpNetmask', 'IpWithPort',
            'MemorySize', 'MemorySize32',
-           'Latency', 'Frequency', 'Clock', 'Voltage', 'Current',
+           'Latency', 'Frequency', 'Clock', 'Voltage', 'Current', 'Energy',
            'NetworkBandwidth', 'MemoryBandwidth',
            'AddrRange',
            'MaxAddr', 'MaxTick', 'AllMemory',
