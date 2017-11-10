@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2013,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -53,7 +53,7 @@ RegRegImmImmOp64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 
 std::string
 RegRegRegImmOp64::generateDisassembly(
-        Addr pc, const SymbolTable *symtab) const
+    Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -70,4 +70,28 @@ std::string
 UnknownOp64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     return csprintf("%-10s (inst %#08x)", "unknown", machInst);
+}
+
+std::string
+MiscRegRegImmOp64::generateDisassembly(
+    Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printMiscReg(ss, dest);
+    ss << ", ";
+    printIntReg(ss, op1);
+    return ss.str();
+}
+
+std::string
+RegMiscRegImmOp64::generateDisassembly(
+    Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printIntReg(ss, dest);
+    ss << ", ";
+    printMiscReg(ss, op1);
+    return ss.str();
 }

@@ -351,15 +351,21 @@ let {{
         }
     '''
 
-    buildDataXImmInst("mrs", '''
+    mrsCode = '''
         MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
             flattenRegId(RegId(MiscRegClass, op1)).index();
         CPSR cpsr = Cpsr;
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
         %s
         XDest = MiscOp1_ud;
-    ''' % (msrMrs64EnabledCheckCode % ('Read', 'true'),),
-        ["IsSerializeBefore"])
+    ''' % (msrMrs64EnabledCheckCode % ('Read', 'true'),)
+
+    mrsIop = InstObjParams("mrs", "Mrs64", "RegMiscRegImmOp64",
+                           mrsCode,
+                           ["IsSerializeBefore"])
+    header_output += RegMiscRegOp64Declare.subst(mrsIop)
+    decoder_output += RegMiscRegOp64Constructor.subst(mrsIop)
+    exec_output += BasicExecute.subst(mrsIop)
 
     buildDataXRegInst("mrsNZCV", 1, '''
         CPSR cpsr = 0;
@@ -369,15 +375,22 @@ let {{
         XDest = cpsr;
     ''')
 
-    buildDataXImmInst("msr", '''
+    msrCode = '''
         MiscRegIndex flat_idx = (MiscRegIndex) xc->tcBase()->
             flattenRegId(RegId(MiscRegClass, dest)).index();
         CPSR cpsr = Cpsr;
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
         %s
         MiscDest_ud = XOp1;
-    ''' % (msrMrs64EnabledCheckCode % ('Write', 'false'),),
-        ["IsSerializeAfter", "IsNonSpeculative"])
+    ''' % (msrMrs64EnabledCheckCode % ('Write', 'false'),)
+
+    msrIop = InstObjParams("msr", "Msr64", "MiscRegRegImmOp64",
+                           msrCode,
+                           ["IsSerializeAfter", "IsNonSpeculative"])
+    header_output += MiscRegRegOp64Declare.subst(msrIop)
+    decoder_output += MiscRegRegOp64Constructor.subst(msrIop)
+    exec_output += BasicExecute.subst(msrIop)
+
 
     buildDataXRegInst("msrNZCV", 1, '''
         CPSR cpsr = XOp1;
