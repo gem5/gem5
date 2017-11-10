@@ -43,6 +43,7 @@ output header {{
 #include <vector>
 
 #include "arch/riscv/insts/amo.hh"
+#include "arch/riscv/insts/compressed.hh"
 #include "arch/riscv/insts/mem.hh"
 #include "arch/riscv/insts/standard.hh"
 #include "arch/riscv/insts/static_inst.hh"

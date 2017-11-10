@@ -28,35 +28,6 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Authors: Alec Roelke
-
-output header {{
-    /**
-     * Base class for compressed operations that work only on registers
-     */
-    class CompRegOp : public RiscvStaticInst
-    {
-      protected:
-        /// Constructor
-        CompRegOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-            : RiscvStaticInst(mnem, _machInst, __opClass)
-        {}
-
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-    };
-}};
-
-output decoder {{
-    std::string
-    CompRegOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-    {
-        std::stringstream ss;
-        ss << mnemonic << ' ' << registerName(_destRegIdx[0]) << ", " <<
-            registerName(_srcRegIdx[0]);
-        return ss.str();
-    }
-}};
-
 def format CROp(code, *opt_flags) {{
     iop = InstObjParams(name, Name, 'CompRegOp', code, opt_flags)
     header_output = BasicDeclare.subst(iop)
