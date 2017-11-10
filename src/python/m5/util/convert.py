@@ -242,3 +242,6 @@ def toVoltage(value):
 
 def toCurrent(value):
     return toMetricFloat(value, 'current', 'A')
+
+def toEnergy(value):
+    return toMetricFloat(value, 'energy', 'J')
