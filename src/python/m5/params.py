@@ -1541,71 +1541,27 @@ class Clock(TickParamValue):
     def ini_str(self):
         return self.period.ini_str()
 
-class Voltage(float,ParamValue):
-    cxx_type = 'double'
+class Voltage(Float):
     ex_str = "1V"
-    cmd_line_settable = True
 
     def __new__(cls, value):
-        # convert to voltage
-        val = convert.toVoltage(value)
-        return super(cls, Voltage).__new__(cls, val)
+        value = convert.toVoltage(value)
+        return super(cls, Voltage).__new__(cls, value)
 
-    def __call__(self, value):
-        val = convert.toVoltage(value)
-        self.__init__(val)
-        return value
+    def __init__(self, value):
+        value = convert.toVoltage(value)
+        super(Voltage, self).__init__(value)
 
-    def __str__(self):
-        return str(self.getValue())
-
-    def getValue(self):
-        value = float(self)
-        return value
-
-    def ini_str(self):
-        return '%f' % self.getValue()
-
-    @classmethod
-    def cxx_ini_predecls(cls, code):
-        code('#include <sstream>')
-
-    @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
-        code('%s (std::istringstream(%s) >> %s).eof();' % (ret, src, dest))
-
-class Current(float, ParamValue):
-    cxx_type = 'double'
+class Current(Float):
     ex_str = "1mA"
-    cmd_line_settable = False
 
     def __new__(cls, value):
-        # convert to current
-        val = convert.toCurrent(value)
-        return super(cls, Current).__new__(cls, val)
+        value = convert.toCurrent(value)
+        return super(cls, Current).__new__(cls, value)
 
-    def __call__(self, value):
-        val = convert.toCurrent(value)
-        self.__init__(val)
-        return value
-
-    def __str__(self):
-        return str(self.getValue())
-
-    def getValue(self):
-        value = float(self)
-        return value
-
-    def ini_str(self):
-        return '%f' % self.getValue()
-
-    @classmethod
-    def cxx_ini_predecls(cls, code):
-        code('#include <sstream>')
-
-    @classmethod
-    def cxx_ini_parse(self, code, src, dest, ret):
-        code('%s (std::istringstream(%s) >> %s).eof();' % (ret, src, dest))
+    def __init__(self, value):
+        value = convert.toCurrent(value)
+        super(Current, self).__init__(value)
 
 class NetworkBandwidth(float,ParamValue):
     cxx_type = 'float'
