@@ -34,8 +34,12 @@ config_root = os.path.dirname(config_path)
 class PathSearchFunc(object):
     _sys_paths = None
 
-    def __init__(self, *subdirs):
+    def __init__(self, subdirs, sys_paths=None):
+        if isinstance(subdirs, basestring):
+            subdirs = [subdirs]
         self._subdir = os.path.join(*subdirs)
+        if sys_paths:
+            self._sys_paths = sys_paths
 
     def __call__(self, filename):
         if self._sys_paths is None:
@@ -64,4 +68,4 @@ class PathSearchFunc(object):
 
 disk = PathSearchFunc('disks')
 binary = PathSearchFunc('binaries')
-script = PathSearchFunc('boot')
+script = PathSearchFunc('boot', sys_paths=[config_root])
