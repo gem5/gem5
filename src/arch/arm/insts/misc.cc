@@ -259,10 +259,9 @@ MiscRegRegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printIntReg(ss, dest);
+    printMiscReg(ss, dest);
     ss << ", ";
     printIntReg(ss, op1);
-    ccprintf(ss, ", #%d", imm);
     return ss.str();
 }
 
@@ -273,8 +272,7 @@ RegMiscRegImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     printMnemonic(ss);
     printIntReg(ss, dest);
     ss << ", ";
-    printIntReg(ss, op1);
-    ccprintf(ss, ", #%d", imm);
+    printMiscReg(ss, op1);
     return ss.str();
 }
 
