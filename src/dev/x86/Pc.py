@@ -65,7 +65,7 @@ class Pc(Platform):
     # Serial port and terminal
     com_1 = Uart8250()
     com_1.pio_addr = x86IOAddress(0x3f8)
-    com_1.terminal = Terminal()
+    com_1.device = Terminal()
 
     # Devices to catch access to non-existant serial ports.
     fake_com_2 = IsaFake(pio_addr=x86IOAddress(0x2f8), pio_size=8)

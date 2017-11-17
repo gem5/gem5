@@ -121,8 +121,8 @@ class T1000(Platform):
     # earlier, since the bus object itself is typically defined at the
     # System level.
     def attachIO(self, bus):
-        self.hvuart.terminal = self.hterm
-        self.puart0.terminal = self.pterm
+        self.hvuart.device = self.hterm
+        self.puart0.device = self.pterm
         self.fake_clk.pio = bus.master
         self.fake_membnks.pio = bus.master
         self.fake_l2_1.pio = bus.master
