@@ -12,7 +12,7 @@ option(PYBIND11_WERROR  "Report all warnings as errors"  OFF)
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     # We're being loaded directly, i.e. not via add_subdirectory, so make this
     # work as its own project and load the pybind11Config to get the tools we need
-    project(pybind11_tests)
+    project(pybind11_tests CXX)
 
     find_package(pybind11 REQUIRED CONFIG)
 endif()
@@ -26,22 +26,23 @@ endif()
 
 # Full set of test files (you can override these; see below)
 set(PYBIND11_TEST_FILES
-  test_alias_initialization.cpp
   test_buffers.cpp
+  test_builtin_casters.cpp
+  test_call_policies.cpp
   test_callbacks.cpp
   test_chrono.cpp
-  test_class_args.cpp
+  test_class.cpp
   test_constants_and_functions.cpp
-  test_copy_move_policies.cpp
+  test_copy_move.cpp
   test_docstring_options.cpp
   test_eigen.cpp
   test_enum.cpp
   test_eval.cpp
   test_exceptions.cpp
-  test_inheritance.cpp
-  test_issues.cpp
-  test_keep_alive.cpp
+  test_factory_constructors.cpp
+  test_iostream.cpp
   test_kwargs_and_defaults.cpp
+  test_local_bindings.cpp
   test_methods_and_attributes.cpp
   test_modules.cpp
   test_multiple_inheritance.cpp
@@ -51,15 +52,16 @@ set(PYBIND11_TEST_FILES
   test_opaque_types.cpp
   test_operator_overloading.cpp
   test_pickling.cpp
-  test_python_types.cpp
+  test_pytypes.cpp
   test_sequences_and_iterators.cpp
   test_smart_ptr.cpp
+  test_stl.cpp
   test_stl_binders.cpp
   test_virtual_functions.cpp
 )
 
 # Invoking cmake with something like:
-#     cmake -DPYBIND11_TEST_OVERRIDE="test_issues.cpp;test_picking.cpp" ..
+#     cmake -DPYBIND11_TEST_OVERRIDE="test_callbacks.cpp;test_picking.cpp" ..
 # lets you override the tests that get compiled and run.  You can restore to all tests with:
 #     cmake -DPYBIND11_TEST_OVERRIDE= ..
 if (PYBIND11_TEST_OVERRIDE)
@@ -67,6 +69,16 @@ if (PYBIND11_TEST_OVERRIDE)
 endif()
 
 string(REPLACE ".cpp" ".py" PYBIND11_PYTEST_FILES "${PYBIND11_TEST_FILES}")
+
+# Contains the set of test files that require pybind11_cross_module_tests to be
+# built; if none of these are built (i.e. because TEST_OVERRIDE is used and
+# doesn't include them) the second module doesn't get built.
+set(PYBIND11_CROSS_MODULE_TESTS
+  test_exceptions.py
+  test_local_bindings.py
+  test_stl.py
+  test_stl_binders.py
+)
 
 # Check if Eigen is available; if not, remove from PYBIND11_TEST_FILES (but
 # keep it in PYBIND11_PYTEST_FILES, so that we get the "eigen is not installed"
@@ -104,6 +116,9 @@ if(PYBIND11_TEST_FILES_EIGEN_I GREATER -1)
   endif()
 endif()
 
+# Optional dependency for some tests (boost::variant is only supported with version >= 1.56)
+find_package(Boost 1.56)
+
 # Compile with compiler warnings turned on
 function(pybind11_enable_warnings target_name)
   if(MSVC)
@@ -121,32 +136,55 @@ function(pybind11_enable_warnings target_name)
   endif()
 endfunction()
 
+set(test_targets pybind11_tests)
 
-# Create the binding library
-pybind11_add_module(pybind11_tests THIN_LTO pybind11_tests.cpp
-  ${PYBIND11_TEST_FILES} ${PYBIND11_HEADERS})
-
-pybind11_enable_warnings(pybind11_tests)
-
-if(EIGEN3_FOUND)
-  if (PYBIND11_EIGEN_VIA_TARGET)
-    target_link_libraries(pybind11_tests PRIVATE Eigen3::Eigen)
-  else()
-    target_include_directories(pybind11_tests PRIVATE ${EIGEN3_INCLUDE_DIR})
+# Build pybind11_cross_module_tests if any test_whatever.py are being built that require it
+foreach(t ${PYBIND11_CROSS_MODULE_TESTS})
+  list(FIND PYBIND11_PYTEST_FILES ${t} i)
+  if (i GREATER -1)
+    list(APPEND test_targets pybind11_cross_module_tests)
+    break()
   endif()
-  target_compile_definitions(pybind11_tests PRIVATE -DPYBIND11_TEST_EIGEN)
-endif()
+endforeach()
 
 set(testdir ${CMAKE_CURRENT_SOURCE_DIR})
+foreach(target ${test_targets})
+  set(test_files ${PYBIND11_TEST_FILES})
+  if(NOT target STREQUAL "pybind11_tests")
+    set(test_files "")
+  endif()
 
-# Always write the output file directly into the 'tests' directory (even on MSVC)
-if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-  set_target_properties(pybind11_tests PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${testdir})
-  foreach(config ${CMAKE_CONFIGURATION_TYPES})
-    string(TOUPPER ${config} config)
-    set_target_properties(pybind11_tests PROPERTIES LIBRARY_OUTPUT_DIRECTORY_${config} ${testdir})
-  endforeach()
-endif()
+  # Create the binding library
+  pybind11_add_module(${target} THIN_LTO ${target}.cpp ${test_files} ${PYBIND11_HEADERS})
+  pybind11_enable_warnings(${target})
+
+  if(MSVC)
+    target_compile_options(${target} PRIVATE /utf-8)
+  endif()
+
+  if(EIGEN3_FOUND)
+    if (PYBIND11_EIGEN_VIA_TARGET)
+      target_link_libraries(${target} PRIVATE Eigen3::Eigen)
+    else()
+      target_include_directories(${target} PRIVATE ${EIGEN3_INCLUDE_DIR})
+    endif()
+    target_compile_definitions(${target} PRIVATE -DPYBIND11_TEST_EIGEN)
+  endif()
+
+  if(Boost_FOUND)
+    target_include_directories(${target} PRIVATE ${Boost_INCLUDE_DIRS})
+    target_compile_definitions(${target} PRIVATE -DPYBIND11_TEST_BOOST)
+  endif()
+
+  # Always write the output file directly into the 'tests' directory (even on MSVC)
+  if(NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    set_target_properties(${target} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${testdir})
+    foreach(config ${CMAKE_CONFIGURATION_TYPES})
+      string(TOUPPER ${config} config)
+      set_target_properties(${target} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_${config} ${testdir})
+    endforeach()
+  endif()
+endforeach()
 
 # Make sure pytest is found or produce a fatal error
 if(NOT PYBIND11_PYTEST_FOUND)
@@ -162,9 +200,15 @@ if(NOT PYBIND11_PYTEST_FOUND)
   set(PYBIND11_PYTEST_FOUND TRUE CACHE INTERNAL "")
 endif()
 
+if(CMAKE_VERSION VERSION_LESS 3.2)
+  set(PYBIND11_USES_TERMINAL "")
+else()
+  set(PYBIND11_USES_TERMINAL "USES_TERMINAL")
+endif()
+
 # A single command to compile and run the tests
 add_custom_target(pytest COMMAND ${PYTHON_EXECUTABLE} -m pytest ${PYBIND11_PYTEST_FILES}
-                  DEPENDS pybind11_tests WORKING_DIRECTORY ${testdir})
+                  DEPENDS ${test_targets} WORKING_DIRECTORY ${testdir} ${PYBIND11_USES_TERMINAL})
 
 if(PYBIND11_TEST_OVERRIDE)
   add_custom_command(TARGET pytest POST_BUILD
@@ -180,59 +224,13 @@ if (NOT PROJECT_NAME STREQUAL "pybind11")
   return()
 endif()
 
-# Add a post-build comment to show the .so size and, if a previous size, compare it:
+# Add a post-build comment to show the primary test suite .so size and, if a previous size, compare it:
 add_custom_command(TARGET pybind11_tests POST_BUILD
   COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/tools/libsize.py
   $<TARGET_FILE:pybind11_tests> ${CMAKE_CURRENT_BINARY_DIR}/sosize-$<TARGET_FILE_NAME:pybind11_tests>.txt)
 
+# Test embedding the interpreter. Provides the `cpptest` target.
+add_subdirectory(test_embed)
+
 # Test CMake build using functions and targets from subdirectory or installed location
-add_custom_target(test_cmake_build)
-if(NOT CMAKE_VERSION VERSION_LESS 3.1)
-  # 3.0 needed for interface library for subdirectory_target/installed_target
-  # 3.1 needed for cmake -E env for testing
-
-  include(CMakeParseArguments)
-  function(pybind11_add_build_test name)
-    cmake_parse_arguments(ARG "INSTALL" "" "" ${ARGN})
-
-    set(build_options "-DCMAKE_PREFIX_PATH=${PROJECT_BINARY_DIR}/mock_install"
-                      "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
-                      "-DPYTHON_EXECUTABLE=${PYTHON_EXECUTABLE}"
-                      "-DPYBIND11_CPP_STANDARD=${PYBIND11_CPP_STANDARD}")
-    if(NOT ARG_INSTALL)
-      list(APPEND build_options "-DPYBIND11_PROJECT_DIR=${PROJECT_SOURCE_DIR}")
-    endif()
-
-    add_custom_target(test_${name} ${CMAKE_CTEST_COMMAND}
-      --quiet --output-log test_cmake_build/${name}.log
-      --build-and-test "${CMAKE_CURRENT_SOURCE_DIR}/test_cmake_build/${name}"
-                       "${CMAKE_CURRENT_BINARY_DIR}/test_cmake_build/${name}"
-      --build-config Release
-      --build-noclean
-      --build-generator ${CMAKE_GENERATOR}
-      $<$<BOOL:${CMAKE_GENERATOR_PLATFORM}>:--build-generator-platform> ${CMAKE_GENERATOR_PLATFORM}
-      --build-makeprogram ${CMAKE_MAKE_PROGRAM}
-      --build-target check
-      --build-options ${build_options}
-    )
-    if(ARG_INSTALL)
-      add_dependencies(test_${name} mock_install)
-    endif()
-    add_dependencies(test_cmake_build test_${name})
-  endfunction()
-
-  pybind11_add_build_test(subdirectory_function)
-  pybind11_add_build_test(subdirectory_target)
-
-  if(PYBIND11_INSTALL)
-    add_custom_target(mock_install ${CMAKE_COMMAND}
-      "-DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/mock_install"
-      -P "${PROJECT_BINARY_DIR}/cmake_install.cmake"
-    )
-
-    pybind11_add_build_test(installed_function INSTALL)
-    pybind11_add_build_test(installed_target INSTALL)
-  endif()
-endif()
-
-add_dependencies(check test_cmake_build)
+add_subdirectory(test_cmake_build)

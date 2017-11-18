@@ -196,7 +196,7 @@ def pytest_namespace():
     except ImportError:
         scipy = None
     try:
-        from pybind11_tests import have_eigen
+        from pybind11_tests.eigen import have_eigen
     except ImportError:
         have_eigen = False
     pypy = platform.python_implementation() == "PyPy"
@@ -211,6 +211,8 @@ def pytest_namespace():
         'requires_eigen_and_scipy': skipif(not have_eigen or not scipy,
                                            reason="eigen and/or scipy are not installed"),
         'unsupported_on_pypy': skipif(pypy, reason="unsupported on PyPy"),
+        'unsupported_on_py2': skipif(sys.version_info.major < 3,
+                                     reason="unsupported on Python 2.x"),
         'gc_collect': gc_collect
     }
 

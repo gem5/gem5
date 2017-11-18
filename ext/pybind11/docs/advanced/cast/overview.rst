@@ -116,6 +116,9 @@ as arguments and return values, refer to the section on binding :ref:`classes`.
 +------------------------------------+---------------------------+-------------------------------+
 | ``std::wstring``                   | STL dynamic wide string   | :file:`pybind11/pybind11.h`   |
 +------------------------------------+---------------------------+-------------------------------+
+| ``std::string_view``,              | STL C++17 string views    | :file:`pybind11/pybind11.h`   |
+| ``std::u16string_view``, etc.      |                           |                               |
++------------------------------------+---------------------------+-------------------------------+
 | ``std::pair<T1, T2>``              | Pair of two custom types  | :file:`pybind11/pybind11.h`   |
 +------------------------------------+---------------------------+-------------------------------+
 | ``std::tuple<...>``                | Arbitrary tuple of types  | :file:`pybind11/pybind11.h`   |
@@ -143,6 +146,8 @@ as arguments and return values, refer to the section on binding :ref:`classes`.
 | ``std::optional<T>``               | STL optional type (C++17) | :file:`pybind11/stl.h`        |
 +------------------------------------+---------------------------+-------------------------------+
 | ``std::experimental::optional<T>`` | STL optional type (exp.)  | :file:`pybind11/stl.h`        |
++------------------------------------+---------------------------+-------------------------------+
+| ``std::variant<...>``              | Type-safe union (C++17)   | :file:`pybind11/stl.h`        |
 +------------------------------------+---------------------------+-------------------------------+
 | ``std::function<...>``             | STL polymorphic function  | :file:`pybind11/functional.h` |
 +------------------------------------+---------------------------+-------------------------------+
