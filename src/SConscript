@@ -152,14 +152,6 @@ class SourceFile(object):
     def __eq__(self, other): return self.filename == other.filename
     def __ne__(self, other): return self.filename != other.filename
 
-    @staticmethod
-    def done():
-        def disabled(cls, name, *ignored):
-            raise RuntimeError("Additional SourceFile '%s'" % name,\
-                  "declared, but targets deps are already fixed.")
-        SourceFile.__init__ = disabled
-
-
 class Source(SourceFile):
     ungrouped_tag = 'No link group'
     source_groups = set()
