@@ -31,6 +31,8 @@
 #ifndef SRC_SIM_MEM_STATE_HH
 #define SRC_SIM_MEM_STATE_HH
 
+#include "sim/serialize.hh"
+
 /**
  * This class holds the memory state for the Process class and all of its
  * derived, architecture-specific children.
@@ -45,7 +47,7 @@
  * pointer interface because two process can potentially share their virtual
  * address space if certain options are passed into the clone(2).
  */
-class MemState
+class MemState : public Serializable
 {
   public:
     MemState(Addr brk_point, Addr stack_base, Addr max_stack_size,
@@ -86,6 +88,29 @@ class MemState
     void setStackMin(Addr stack_min) { _stackMin = stack_min; }
     void setNextThreadStackBase(Addr ntsb) { _nextThreadStackBase = ntsb; }
     void setMmapEnd(Addr mmap_end) { _mmapEnd = mmap_end; }
+
+    void
+    serialize(CheckpointOut &cp) const override
+    {
+        paramOut(cp, "brkPoint", _brkPoint);
+        paramOut(cp, "stackBase", _stackBase);
+        paramOut(cp, "stackSize", _stackSize);
+        paramOut(cp, "maxStackSize", _maxStackSize);
+        paramOut(cp, "stackMin", _stackMin);
+        paramOut(cp, "nextThreadStackBase", _nextThreadStackBase);
+        paramOut(cp, "mmapEnd", _mmapEnd);
+    }
+    void
+    unserialize(CheckpointIn &cp) override
+    {
+        paramIn(cp, "brkPoint", _brkPoint);
+        paramIn(cp, "stackBase", _stackBase);
+        paramIn(cp, "stackSize", _stackSize);
+        paramIn(cp, "maxStackSize", _maxStackSize);
+        paramIn(cp, "stackMin", _stackMin);
+        paramIn(cp, "nextThreadStackBase", _nextThreadStackBase);
+        paramIn(cp, "mmapEnd", _mmapEnd);
+    }
 
   private:
     Addr _brkPoint;

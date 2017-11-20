@@ -367,6 +367,7 @@ Process::fixupStackFault(Addr vaddr)
 void
 Process::serialize(CheckpointOut &cp) const
 {
+    memState->serialize(cp);
     pTable->serialize(cp);
     /**
      * Checkpoints for file descriptors currently do not work. Need to
@@ -384,6 +385,7 @@ Process::serialize(CheckpointOut &cp) const
 void
 Process::unserialize(CheckpointIn &cp)
 {
+    memState->unserialize(cp);
     pTable->unserialize(cp);
     /**
      * Checkpoints for file descriptors currently do not work. Need to
