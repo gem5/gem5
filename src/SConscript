@@ -968,42 +968,40 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
         static_objs.append(make_static(s))
         shared_objs.append(make_shared(s))
 
-    partial_objs = []
-
     for group in Source.source_groups:
         srcs = lib_sources.with_tag(Source.link_group_tag(group))
         if not srcs:
             continue
 
+        group_static = [ make_static(s) for s in srcs ]
+        group_shared = [ make_shared(s) for s in srcs ]
+
         # If partial linking is disabled, add these sources to the build
         # directly, and short circuit this loop.
         if disable_partial:
-            for s in srcs:
-                static_objs.append(make_static(s))
-                shared_objs.append(make_shared(s))
+            static_objs.extend(group_static)
+            shared_objs.extend(group_shared)
             continue
 
         # Set up the static partially linked objects.
-        source_objs = [ make_static(s) for s in srcs ]
         file_name = new_env.subst("${OBJPREFIX}lib${OBJSUFFIX}.partial")
         target = File(joinpath(group, file_name))
-        partial = env.PartialStatic(target=target, source=source_objs)
-        static_objs.append(partial)
+        partial = env.PartialStatic(target=target, source=group_static)
+        static_objs.extend(partial)
 
         # Set up the shared partially linked objects.
-        source_objs = [ make_shared(s) for s in srcs ]
         file_name = new_env.subst("${SHOBJPREFIX}lib${SHOBJSUFFIX}.partial")
         target = File(joinpath(group, file_name))
-        partial = env.PartialShared(target=target, source=source_objs)
-        shared_objs.append(partial)
+        partial = env.PartialShared(target=target, source=group_shared)
+        shared_objs.extend(partial)
 
     static_date = make_static(date_source)
     new_env.Depends(static_date, static_objs)
-    static_objs.append(static_date)
+    static_objs.extend(static_date)
 
     shared_date = make_shared(date_source)
     new_env.Depends(shared_date, shared_objs)
-    shared_objs.append(shared_date)
+    shared_objs.extend(shared_date)
 
     # First make a library of everything but main() so other programs can
     # link against m5.
