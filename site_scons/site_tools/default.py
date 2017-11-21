@@ -64,7 +64,7 @@ def common_config(env):
     for key,val in sorted(os.environ.iteritems()):
         if key in use_vars or \
                 any([key.startswith(prefix) for prefix in use_prefixes]):
-            env[key] = val
+            env['ENV'][key] = val
 
     # Tell scons to avoid implicit command dependencies to avoid issues
     # with the param wrappes being compiled twice (see
