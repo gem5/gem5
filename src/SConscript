@@ -172,11 +172,10 @@ class Source(SourceFile):
         self.tags.add(Source._current_group_tag)
 
     '''Add a c/c++ source file to the build'''
-    def __init__(self, source, tags=None, add_tags=None, Werror=True):
+    def __init__(self, source, tags=None, add_tags=None):
         '''specify the source file, and any tags'''
         super(Source, self).__init__(source, tags, add_tags)
         self._add_link_group_tag()
-        self.Werror = Werror
 
 class PySource(SourceFile):
     '''Add a python source file to the named package'''
@@ -952,31 +951,17 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     new_env.Label = label
     new_env.Append(**kwargs)
 
-    werror_env = new_env.Clone()
-    # Treat warnings as errors but white list some warnings that we
-    # want to allow (e.g., deprecation warnings).
-    werror_env.Append(CCFLAGS=['-Werror',
-                               '-Wno-error=deprecated-declarations',
-                               '-Wno-error=deprecated',
-                               ])
-
-    def make_obj(source, static, extra_deps = None):
-        '''This function adds the specified source to the correct
-        build environment, and returns the corresponding SCons Object
-        nodes'''
-
-        if source.Werror:
-            env = werror_env
-        else:
-            env = new_env
+    def make_obj(source, static, extra_deps=None):
+        '''This function creates a scons node of the requested type, and sets
+        up any additional dependencies.'''
 
         if static:
-            obj = env.StaticObject(source.tnode)
+            obj = new_env.StaticObject(source.tnode)
         else:
-            obj = env.SharedObject(source.tnode)
+            obj = new_env.SharedObject(source.tnode)
 
         if extra_deps:
-            env.Depends(obj, extra_deps)
+            new_env.Depends(obj, extra_deps)
 
         return obj
 
