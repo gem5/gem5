@@ -951,19 +951,12 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     new_env.Label = label
     new_env.Append(**kwargs)
 
-    def make_obj(source, static, extra_deps=None):
-        '''This function creates a scons node of the requested type, and sets
-        up any additional dependencies.'''
-
+    def make_obj(source, static):
+        '''This function creates a scons node of the requested type.'''
         if static:
-            obj = new_env.StaticObject(source.tnode)
+            return new_env.StaticObject(source.tnode)
         else:
-            obj = new_env.SharedObject(source.tnode)
-
-        if extra_deps:
-            new_env.Depends(obj, extra_deps)
-
-        return obj
+            return new_env.SharedObject(source.tnode)
 
     lib_sources = Source.all.with_tag('gem5 lib')
 
@@ -1008,10 +1001,12 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
         partial = env.PartialShared(target=target, source=source_objs)
         shared_objs.append(partial)
 
-    static_date = make_obj(date_source, static=True, extra_deps=static_objs)
+    static_date = make_obj(date_source, static=True)
+    new_env.Depends(static_date, static_objs)
     static_objs.append(static_date)
 
-    shared_date = make_obj(date_source, static=False, extra_deps=shared_objs)
+    shared_date = make_obj(date_source, static=False)
+    new_env.Depends(shared_date, shared_objs)
     shared_objs.append(shared_date)
 
     # First make a library of everything but main() so other programs can
