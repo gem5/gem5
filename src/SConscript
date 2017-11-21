@@ -951,12 +951,8 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     new_env.Label = label
     new_env.Append(**kwargs)
 
-    def make_obj(source, static):
-        '''This function creates a scons node of the requested type.'''
-        if static:
-            return new_env.StaticObject(source.tnode)
-        else:
-            return new_env.SharedObject(source.tnode)
+    make_static = lambda source: new_env.StaticObject(source.tnode)
+    make_shared = lambda source: new_env.SharedObject(source.tnode)
 
     lib_sources = Source.all.with_tag('gem5 lib')
 
@@ -969,8 +965,8 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     shared_objs = []
 
     for s in lib_sources.with_tag(Source.ungrouped_tag):
-        static_objs.append(make_obj(s, True))
-        shared_objs.append(make_obj(s, False))
+        static_objs.append(make_static(s))
+        shared_objs.append(make_shared(s))
 
     partial_objs = []
 
@@ -983,29 +979,29 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
         # directly, and short circuit this loop.
         if disable_partial:
             for s in srcs:
-                static_objs.append(make_obj(s, True))
-                shared_objs.append(make_obj(s, False))
+                static_objs.append(make_static(s))
+                shared_objs.append(make_shared(s))
             continue
 
         # Set up the static partially linked objects.
-        source_objs = [ make_obj(s, True) for s in srcs ]
+        source_objs = [ make_static(s) for s in srcs ]
         file_name = new_env.subst("${OBJPREFIX}lib${OBJSUFFIX}.partial")
         target = File(joinpath(group, file_name))
         partial = env.PartialStatic(target=target, source=source_objs)
         static_objs.append(partial)
 
         # Set up the shared partially linked objects.
-        source_objs = [ make_obj(s, False) for s in srcs ]
+        source_objs = [ make_shared(s) for s in srcs ]
         file_name = new_env.subst("${SHOBJPREFIX}lib${SHOBJSUFFIX}.partial")
         target = File(joinpath(group, file_name))
         partial = env.PartialShared(target=target, source=source_objs)
         shared_objs.append(partial)
 
-    static_date = make_obj(date_source, static=True)
+    static_date = make_static(date_source)
     new_env.Depends(static_date, static_objs)
     static_objs.append(static_date)
 
-    shared_date = make_obj(date_source, static=False)
+    shared_date = make_shared(date_source)
     new_env.Depends(shared_date, shared_objs)
     shared_objs.append(shared_date)
 
@@ -1015,11 +1011,11 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     shared_lib = new_env.SharedLibrary(libname, shared_objs)
 
     # Now link a stub with main() and the static library.
-    main_objs = [ make_obj(s, True) for s in Source.all.with_tag('main') ]
+    main_objs = [ make_static(s) for s in Source.all.with_tag('main') ]
 
     for test in UnitTest.all:
         test_sources = Source.all.with_tag(str(test.target))
-        test_objs = [ make_obj(s, static=True) for s in test_sources ]
+        test_objs = [ make_static(s) for s in test_sources ]
         if test.main:
             test_objs += main_objs
         path = 'unittest/%s.%s' % (test.target, label)
