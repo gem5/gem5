@@ -6,7 +6,7 @@ def main():
 
     # Initialize the global statistics
     m5.stats.initSimStats()
-    m5.stats.initText("cout")
+    m5.stats.addStatVisitor("cout")
 
     # We're done registering statistics.  Enable the stats package now.
     m5.stats.enable()
