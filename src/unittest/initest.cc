@@ -39,72 +39,35 @@
 
 using namespace std;
 
-char *progname;
+namespace {
 
-void usage();
+std::istringstream iniFile(R"ini_file(
+[General]
+   Test1=BARasdf
+   Test2=bar
 
-void
-usage()
-{
-    cout << "Usage: " << progname << " <ini file>\n";
-    exit(1);
-}
+[Junk]
+Test3=yo
+Test4=mama
 
-#if 0
-char *defines = getenv("CONFIG_DEFINES");
-if (defines) {
-    char *c = defines;
-    while ((c = strchr(c, ' ')) != NULL) {
-        *c++ = '\0';
-        count++;
-    }
-    count++;
-}
+[Foo]
+Foo1=89
+Foo2=384
 
-#endif
+[General]
+Test3=89
+
+[Junk]
+Test4+=mia
+)ini_file");
+
+};
 
 int
 main(int argc, char *argv[])
 {
     IniFile simConfigDB;
-
-    progname = argv[0];
-
-    for (int i = 1; i < argc; ++i) {
-        char *arg_str = argv[i];
-
-        // if arg starts with '-', parse as option,
-        // else treat it as a configuration file name and load it
-        if (arg_str[0] == '-') {
-            // switch on second char
-            switch (arg_str[1]) {
-              case '-':
-                // command-line configuration parameter:
-                // '--<section>:<parameter>=<value>'
-
-                if (!simConfigDB.add(arg_str + 2)) {
-                    // parse error
-                    ccprintf(cerr,
-                             "Could not parse configuration argument '%s'\n"
-                             "Expecting --<section>:<parameter>=<value>\n",
-                             arg_str);
-                    exit(0);
-                }
-                break;
-
-              default:
-                usage();
-            }
-        }
-        else {
-            // no '-', treat as config file name
-
-            if (!simConfigDB.load(arg_str)) {
-                cprintf("Error processing file %s\n", arg_str);
-                exit(1);
-            }
-        }
-    }
+    simConfigDB.load(iniFile);
 
     string value;
 
