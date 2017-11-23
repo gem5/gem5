@@ -269,7 +269,12 @@ class UnitTest(object):
         self.sources = srcs
         self.target = target
         self.main = kwargs.get('main', False)
-        UnitTest.all.append(self)
+        self.all.append(self)
+
+class GTest(UnitTest):
+    '''Create a unit test based on the google test framework.'''
+
+    all = []
 
 # Children should have access
 Export('Source')
@@ -277,6 +282,7 @@ Export('PySource')
 Export('SimObject')
 Export('ProtoBuf')
 Export('UnitTest')
+Export('GTest')
 
 ########################################################################
 #
@@ -1018,6 +1024,14 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
             test_objs += main_objs
         path = 'unittest/%s.%s' % (test.target, label)
         new_env.Program(path, test_objs + static_objs)
+
+    gtest_env = new_env.Clone()
+    gtest_env.Append(LIBS=gtest_env['GTEST_LIBS'])
+    gtest_env.Append(CPPFLAGS=gtest_env['GTEST_CPPFLAGS'])
+    for test in GTest.all:
+        test_sources = Source.all.with_tag(str(test.target))
+        test_objs = [ gtest_env.StaticObject(s.tnode) for s in test_sources ]
+        gtest_env.Program('unittest/%s.%s' % (test.target, label), test_objs)
 
     progname = exename
     if strip:
