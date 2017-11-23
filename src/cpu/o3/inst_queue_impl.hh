@@ -369,6 +369,21 @@ InstructionQueue<Impl>::regStats()
         .desc("Number of floating instruction queue wakeup accesses")
         .flags(total);
 
+    vecInstQueueReads
+        .name(name() + ".vec_inst_queue_reads")
+        .desc("Number of vector instruction queue reads")
+        .flags(total);
+
+    vecInstQueueWrites
+        .name(name() + ".vec_inst_queue_writes")
+        .desc("Number of vector instruction queue writes")
+        .flags(total);
+
+    vecInstQueueWakeupAccesses
+        .name(name() + ".vec_inst_queue_wakeup_accesses")
+        .desc("Number of vector instruction queue wakeup accesses")
+        .flags(total);
+
     intAluAccesses
         .name(name() + ".int_alu_accesses")
         .desc("Number of integer alu accesses")
@@ -377,6 +392,11 @@ InstructionQueue<Impl>::regStats()
     fpAluAccesses
         .name(name() + ".fp_alu_accesses")
         .desc("Number of floating point alu accesses")
+        .flags(total);
+
+    vecAluAccesses
+        .name(name() + ".vec_alu_accesses")
+        .desc("Number of vector alu accesses")
         .flags(total);
 
 }
