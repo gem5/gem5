@@ -27,15 +27,15 @@
  * Authors: Gabe Black
  */
 
+#include <gtest/gtest.h>
+
 #include <cassert>
 #include <iostream>
 
 #include "base/bitunion.hh"
 #include "base/cprintf.hh"
-#include "unittest/unittest.hh"
 
 using namespace std;
-using UnitTest::setCase;
 
 namespace {
 
@@ -96,39 +96,46 @@ EmptyThirtyTwo emptyThirtyTwo;
 EmptySixteen emptySixteen;
 EmptyEight emptyEight(0);
 
-int
-main()
-{
-    SixtyFour sixtyFour = 0;
+class BitUnionData : public testing::Test {
+  protected:
+    SixtyFour sixtyFour;
 
-    setCase("normal bitfield");
+    void SetUp() override { sixtyFour = 0; }
+};
+
+TEST_F(BitUnionData, NormalBitfield)
+{
     EXPECT_EQ(sixtyFour.byte5, 0);
     sixtyFour.byte5 = 0xff;
     EXPECT_EQ(sixtyFour, 0xff00000000);
     sixtyFour.byte5 = 0xfff;
     EXPECT_EQ(sixtyFour, 0xff00000000);
     EXPECT_EQ(sixtyFour.byte5, 0xff);
-    sixtyFour = 0;
+}
 
-    setCase("single bitfield");
+TEST_F(BitUnionData, SingleBitfield)
+{
     EXPECT_EQ(sixtyFour.bit2, 0);
     sixtyFour.bit2 = 0x1;
     EXPECT_EQ(sixtyFour, 0x4);
     EXPECT_EQ(sixtyFour.bit2, 0x1);
-    sixtyFour = 0;
+}
 
-    setCase("read only bitfield");
+TEST_F(BitUnionData, ReadOnlyBitfield)
+{
     EXPECT_EQ(sixtyFour.byte5RO, 0);
     sixtyFour.byte5 = 0xff;
     EXPECT_EQ(sixtyFour.byte5RO, 0xff);
-    sixtyFour = 0;
+}
 
-    setCase("write only bitfield");
+TEST_F(BitUnionData, WriteOnlyBitfield)
+{
     sixtyFour.byte5WO = 0xff;
     EXPECT_EQ(sixtyFour, 0xff00000000);
-    sixtyFour = 0;
+}
 
-    setCase("sub bitunions and their bitfields");
+TEST_F(BitUnionData, SubBitUnions)
+{
     EXPECT_EQ(sixtyFour.byte6.bit41, 0);
     sixtyFour.byte6 = 0x2;
     EXPECT_EQ(sixtyFour.byte6.bit41, 1);
@@ -137,9 +144,10 @@ main()
     sixtyFour.byte6 = 0xff;
     sixtyFour.byte6.bit41 = 0;
     EXPECT_EQ(sixtyFour, 0xfd0000000000);
-    sixtyFour = 0;
+}
 
-    setCase("normal, read only, and write only signed bitfields");
+TEST_F(BitUnionData, SignedBitfields)
+{
     sixtyFour.byte6 = 0xff;
     EXPECT_EQ(sixtyFour.byte6Signed, -1);
     EXPECT_EQ(sixtyFour.byte6SignedRO, -1);
@@ -147,28 +155,34 @@ main()
     EXPECT_EQ(sixtyFour.byte6Signed, 0);
     EXPECT_EQ(sixtyFour.byte6SignedRO, 0);
     EXPECT_EQ(sixtyFour.byte6, 0);
-    sixtyFour = 0;
+}
 
-    setCase("bitunion declared inside a struct");
+TEST_F(BitUnionData, InsideStruct)
+{
     ContainingStruct containing;
     containing.contained = 0;
     containing.contained.topNibble = 0xd;
     EXPECT_EQ(containing.contained, 0xd000000000000000);
+}
 
-    setCase("bitunion declared inside a function");
+TEST_F(BitUnionData, InsideFunction)
+{
     EXPECT_EQ(containingFunc(0xfffff, 0), 0xe7fff);
+}
 
-    setCase("assigning bitfields to other bitfields");
+TEST_F(BitUnionData, BitfieldToBitfieldAssignment)
+{
     SixtyFour otherSixtyFour = 0;
     sixtyFour.bit2 = 1;
     otherSixtyFour.byte6.bit41 = sixtyFour.bit2;
     EXPECT_EQ(otherSixtyFour, 0x20000000000);
     otherSixtyFour.bit2 = sixtyFour.bit2;
     EXPECT_EQ(otherSixtyFour, 0x20000000004);
+}
 
-    setCase("bitunion operators");
-    sixtyFour = 0;
-    otherSixtyFour = 0x4;
+TEST_F(BitUnionData, Operators)
+{
+    SixtyFour otherSixtyFour = 0x4;
     sixtyFour = otherSixtyFour;
     EXPECT_EQ(sixtyFour, 0x4);
     sixtyFour = 0;
@@ -177,6 +191,4 @@ main()
     EXPECT_TRUE(sixtyFour != otherSixtyFour);
     sixtyFour = otherSixtyFour;
     EXPECT_TRUE(sixtyFour == otherSixtyFour);
-
-    return UnitTest::printResults();
 }
