@@ -60,37 +60,37 @@ if buildEnv['TARGET_ISA'] == 'alpha':
     from AlphaTLB import AlphaDTB, AlphaITB
     from AlphaInterrupts import AlphaInterrupts
     from AlphaISA import AlphaISA
-    isa_class = AlphaISA
+    default_isa_class = AlphaISA
 elif buildEnv['TARGET_ISA'] == 'sparc':
     from SparcTLB import SparcTLB
     from SparcInterrupts import SparcInterrupts
     from SparcISA import SparcISA
-    isa_class = SparcISA
+    default_isa_class = SparcISA
 elif buildEnv['TARGET_ISA'] == 'x86':
     from X86TLB import X86TLB
     from X86LocalApic import X86LocalApic
     from X86ISA import X86ISA
-    isa_class = X86ISA
+    default_isa_class = X86ISA
 elif buildEnv['TARGET_ISA'] == 'mips':
     from MipsTLB import MipsTLB
     from MipsInterrupts import MipsInterrupts
     from MipsISA import MipsISA
-    isa_class = MipsISA
+    default_isa_class = MipsISA
 elif buildEnv['TARGET_ISA'] == 'arm':
     from ArmTLB import ArmTLB, ArmStage2IMMU, ArmStage2DMMU
     from ArmInterrupts import ArmInterrupts
     from ArmISA import ArmISA
-    isa_class = ArmISA
+    default_isa_class = ArmISA
 elif buildEnv['TARGET_ISA'] == 'power':
     from PowerTLB import PowerTLB
     from PowerInterrupts import PowerInterrupts
     from PowerISA import PowerISA
-    isa_class = PowerISA
+    default_isa_class = PowerISA
 elif buildEnv['TARGET_ISA'] == 'riscv':
     from RiscvTLB import RiscvTLB
     from RiscvInterrupts import RiscvInterrupts
     from RiscvISA import RiscvISA
-    isa_class = RiscvISA
+    default_isa_class = RiscvISA
 
 class BaseCPU(MemObject):
     type = 'BaseCPU'
@@ -167,24 +167,24 @@ class BaseCPU(MemObject):
         itb = Param.SparcTLB(SparcTLB(), "Instruction TLB")
         interrupts = VectorParam.SparcInterrupts(
                 [], "Interrupt Controller")
-        isa = VectorParam.SparcISA([ isa_class() ], "ISA instance")
+        isa = VectorParam.SparcISA([], "ISA instance")
     elif buildEnv['TARGET_ISA'] == 'alpha':
         dtb = Param.AlphaTLB(AlphaDTB(), "Data TLB")
         itb = Param.AlphaTLB(AlphaITB(), "Instruction TLB")
         interrupts = VectorParam.AlphaInterrupts(
                 [], "Interrupt Controller")
-        isa = VectorParam.AlphaISA([ isa_class() ], "ISA instance")
+        isa = VectorParam.AlphaISA([], "ISA instance")
     elif buildEnv['TARGET_ISA'] == 'x86':
         dtb = Param.X86TLB(X86TLB(), "Data TLB")
         itb = Param.X86TLB(X86TLB(), "Instruction TLB")
         interrupts = VectorParam.X86LocalApic([], "Interrupt Controller")
-        isa = VectorParam.X86ISA([ isa_class() ], "ISA instance")
+        isa = VectorParam.X86ISA([], "ISA instance")
     elif buildEnv['TARGET_ISA'] == 'mips':
         dtb = Param.MipsTLB(MipsTLB(), "Data TLB")
         itb = Param.MipsTLB(MipsTLB(), "Instruction TLB")
         interrupts = VectorParam.MipsInterrupts(
                 [], "Interrupt Controller")
-        isa = VectorParam.MipsISA([ isa_class() ], "ISA instance")
+        isa = VectorParam.MipsISA([], "ISA instance")
     elif buildEnv['TARGET_ISA'] == 'arm':
         dtb = Param.ArmTLB(ArmTLB(), "Data TLB")
         itb = Param.ArmTLB(ArmTLB(), "Instruction TLB")
@@ -192,20 +192,20 @@ class BaseCPU(MemObject):
         dstage2_mmu = Param.ArmStage2MMU(ArmStage2DMMU(), "Stage 2 trans")
         interrupts = VectorParam.ArmInterrupts(
                 [], "Interrupt Controller")
-        isa = VectorParam.ArmISA([ isa_class() ], "ISA instance")
+        isa = VectorParam.ArmISA([], "ISA instance")
     elif buildEnv['TARGET_ISA'] == 'power':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.PowerTLB(PowerTLB(), "Data TLB")
         itb = Param.PowerTLB(PowerTLB(), "Instruction TLB")
         interrupts = VectorParam.PowerInterrupts(
                 [], "Interrupt Controller")
-        isa = VectorParam.PowerISA([ isa_class() ], "ISA instance")
+        isa = VectorParam.PowerISA([], "ISA instance")
     elif buildEnv['TARGET_ISA'] == 'riscv':
         dtb = Param.RiscvTLB(RiscvTLB(), "Data TLB")
         itb = Param.RiscvTLB(RiscvTLB(), "Instruction TLB")
         interrupts = VectorParam.RiscvInterrupts(
                 [], "Interrupt Controller")
-        isa = VectorParam.RiscvISA([ isa_class() ], "ISA instance")
+        isa = VectorParam.RiscvISA([], "ISA instance")
     else:
         print "Don't know what TLB to use for ISA %s" % \
             buildEnv['TARGET_ISA']
@@ -319,7 +319,14 @@ class BaseCPU(MemObject):
         self._cached_ports = ['l2cache.mem_side']
 
     def createThreads(self):
-        self.isa = [ isa_class() for i in xrange(self.numThreads) ]
+        # If no ISAs have been created, assume that the user wants the
+        # default ISA.
+        if len(self.isa) == 0:
+            self.isa = [ default_isa_class() for i in xrange(self.numThreads) ]
+        else:
+            if len(self.isa) != int(self.numThreads):
+                raise RuntimeError("Number of ISA instances doesn't "
+                                   "match thread count")
         if self.checker != NULL:
             self.checker.createThreads()
 
