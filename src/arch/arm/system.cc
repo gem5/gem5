@@ -225,6 +225,23 @@ ArmSystem::highestEL(ThreadContext *tc)
     return FullSystem? getArmSystem(tc)->highestEL() : EL1;
 }
 
+bool
+ArmSystem::haveEL(ThreadContext *tc, ExceptionLevel el)
+{
+    switch (el) {
+      case EL0:
+      case EL1:
+        return true;
+      case EL2:
+        return haveVirtualization(tc);
+      case EL3:
+        return haveSecurity(tc);
+      default:
+        warn("Unimplemented Exception Level\n");
+        return false;
+    }
+}
+
 Addr
 ArmSystem::resetAddr64(ThreadContext *tc)
 {

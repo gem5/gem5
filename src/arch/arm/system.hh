@@ -259,8 +259,11 @@ class ArmSystem : public System
      */
     static ExceptionLevel highestEL(ThreadContext *tc);
 
-    /** Returns the reset address if the highest implemented exception level for
-     * the system of a specific thread context is 64 bits (ARMv8)
+    /** Return true if the system implements a specific exception level */
+    static bool haveEL(ThreadContext *tc, ExceptionLevel el);
+
+    /** Returns the reset address if the highest implemented exception level
+     * for the system of a specific thread context is 64 bits (ARMv8)
      */
     static Addr resetAddr64(ThreadContext *tc);
 
