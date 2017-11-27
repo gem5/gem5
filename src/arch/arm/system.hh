@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015-2016 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -227,6 +227,12 @@ class ArmSystem : public System
      * an invalid/empty range if disabled.
      */
     const AddrRange &m5opRange() const { return _m5opRange; }
+
+    /**
+     * Returns a valid ArmSystem pointer if using ARM ISA, it fails
+     * otherwise.
+     */
+    static ArmSystem* getArmSystem(ThreadContext *tc);
 
     /** Returns true if the system of a specific thread context implements the
      * Security Extensions

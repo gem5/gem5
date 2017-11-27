@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015,2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -169,15 +169,18 @@ ArmSystem::initState()
     }
 }
 
+ArmSystem*
+ArmSystem::getArmSystem(ThreadContext *tc)
+{
+    ArmSystem *a_sys = dynamic_cast<ArmSystem *>(tc->getSystemPtr());
+    assert(a_sys);
+    return a_sys;
+}
+
 bool
 ArmSystem::haveSecurity(ThreadContext *tc)
 {
-    if (!FullSystem)
-        return false;
-
-    ArmSystem *a_sys = dynamic_cast<ArmSystem *>(tc->getSystemPtr());
-    assert(a_sys);
-    return a_sys->haveSecurity();
+    return FullSystem? getArmSystem(tc)->haveSecurity() : false;
 }
 
 
@@ -201,63 +204,49 @@ ArmSystem::getBootLoader(ObjectFile *const obj)
 bool
 ArmSystem::haveLPAE(ThreadContext *tc)
 {
-    if (!FullSystem)
-        return false;
-
-    ArmSystem *a_sys = dynamic_cast<ArmSystem *>(tc->getSystemPtr());
-    assert(a_sys);
-    return a_sys->haveLPAE();
+    return FullSystem? getArmSystem(tc)->haveLPAE() : false;
 }
 
 bool
 ArmSystem::haveVirtualization(ThreadContext *tc)
 {
-    if (!FullSystem)
-        return false;
-
-    ArmSystem *a_sys = dynamic_cast<ArmSystem *>(tc->getSystemPtr());
-    assert(a_sys);
-    return a_sys->haveVirtualization();
+    return FullSystem? getArmSystem(tc)->haveVirtualization() : false;
 }
 
 bool
 ArmSystem::highestELIs64(ThreadContext *tc)
 {
-    return FullSystem ?
-        dynamic_cast<ArmSystem *>(tc->getSystemPtr())->highestELIs64() :
-        true;
+    return FullSystem? getArmSystem(tc)->highestELIs64() : true;
 }
 
 ExceptionLevel
 ArmSystem::highestEL(ThreadContext *tc)
 {
-    return FullSystem ?
-        dynamic_cast<ArmSystem *>(tc->getSystemPtr())->highestEL() :
-        EL1;
+    return FullSystem? getArmSystem(tc)->highestEL() : EL1;
 }
 
 Addr
 ArmSystem::resetAddr64(ThreadContext *tc)
 {
-    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->resetAddr64();
+    return getArmSystem(tc)->resetAddr64();
 }
 
 uint8_t
 ArmSystem::physAddrRange(ThreadContext *tc)
 {
-    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->physAddrRange();
+    return getArmSystem(tc)->physAddrRange();
 }
 
 Addr
 ArmSystem::physAddrMask(ThreadContext *tc)
 {
-    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->physAddrMask();
+    return getArmSystem(tc)->physAddrMask();
 }
 
 bool
 ArmSystem::haveLargeAsid64(ThreadContext *tc)
 {
-    return dynamic_cast<ArmSystem *>(tc->getSystemPtr())->haveLargeAsid64();
+    return getArmSystem(tc)->haveLargeAsid64();
 }
 
 ArmSystem *
