@@ -76,6 +76,8 @@ Source('loader/symtab.cc')
 
 Source('stats/text.cc')
 
+GTest('bituniontest', 'bituniontest.cc')
+
 DebugFlag('Annotate', "State machine annotation debugging")
 DebugFlag('AnnotateQ', "State machine annotation queue debugging")
 DebugFlag('AnnotateVerbose', "Dump all state machine annotation details")
