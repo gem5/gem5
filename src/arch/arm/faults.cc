@@ -237,6 +237,10 @@ template<> ArmFault::FaultVals ArmFaultVals<HypervisorTrap>::vals = {
     "Hypervisor Trap",       0x014, 0x000, 0x200, 0x400, 0x600, MODE_HYP,
     0, 0, 0, 0, false, false, false, EC_UNKNOWN, FaultStat()
 };
+template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorTrap>::vals = {
+    "Secure Monitor Trap",   0x004, 0x000, 0x200, 0x400, 0x600, MODE_MON,
+    4, 2, 0, 0, false, false, false, EC_UNKNOWN, FaultStat()
+};
 template<> ArmFault::FaultVals ArmFaultVals<Interrupt>::vals = {
     "IRQ",                   0x018, 0x080, 0x280, 0x480, 0x680, MODE_IRQ,
     4, 4, 0, 0, false, true,  false, EC_UNKNOWN, FaultStat()
@@ -256,11 +260,6 @@ template<> ArmFault::FaultVals ArmFaultVals<VirtualFastInterrupt>::vals = {
 template<> ArmFault::FaultVals ArmFaultVals<SupervisorTrap>::vals = {
     // Some dummy values (SupervisorTrap is AArch64-only)
     "Supervisor Trap",   0x014, 0x000, 0x200, 0x400, 0x600, MODE_SVC,
-    0, 0, 0, 0, false, false, false, EC_UNKNOWN, FaultStat()
-};
-template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorTrap>::vals = {
-    // Some dummy values (SecureMonitorTrap is AArch64-only)
-    "Secure Monitor Trap",   0x014, 0x000, 0x200, 0x400, 0x600, MODE_MON,
     0, 0, 0, 0, false, false, false, EC_UNKNOWN, FaultStat()
 };
 template<> ArmFault::FaultVals ArmFaultVals<PCAlignmentFault>::vals = {
