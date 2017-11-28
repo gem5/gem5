@@ -32,7 +32,6 @@ Import('*')
 
 Source('unittest.cc')
 
-UnitTest('bitvectest', 'bitvectest.cc')
 UnitTest('circlebuf', 'circlebuf.cc')
 UnitTest('cprintftest', 'cprintftest.cc')
 UnitTest('cprintftime', 'cprintftest.cc')
