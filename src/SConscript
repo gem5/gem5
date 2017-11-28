@@ -275,6 +275,9 @@ class GTest(UnitTest):
     '''Create a unit test based on the google test framework.'''
 
     all = []
+    def __init__(self, *args, **kwargs):
+        super(GTest, self).__init__(*args, **kwargs)
+        self.dir = Dir('.')
 
 # Children should have access
 Export('Source')
@@ -1031,7 +1034,8 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     for test in GTest.all:
         test_sources = Source.all.with_tag(str(test.target))
         test_objs = [ gtest_env.StaticObject(s.tnode) for s in test_sources ]
-        gtest_env.Program('unittest/%s.%s' % (test.target, label), test_objs)
+        gtest_env.Program(test.dir.File('%s.%s' % (test.target, label)),
+                          test_objs)
 
     progname = exename
     if strip:
