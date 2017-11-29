@@ -64,8 +64,8 @@ def bitfield IMM20  <31:12>;
 // SB-Type
 def bitfield BIMM12BIT11 <7>;
 def bitfield BIMM12BITS4TO1<11:8>;
-def bitfield IMMSIGN <31>;
 def bitfield BIMM12BITS10TO5 <30:25>;
+def bitfield IMMSIGN <31>;
 
 // UJ-Type
 def bitfield UJIMMBITS10TO1 <30:21>;
