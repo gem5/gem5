@@ -254,7 +254,7 @@ def template StoreCompleteAcc {{
     }
 }};
 
-def format Load(memacc_code, ea_code = {{EA = Rs1 + offset;}}, mem_flags=[],
+def format Load(memacc_code, ea_code={{EA = Rs1 + offset;}}, mem_flags=[],
         inst_flags=[]) {{
     offset_code = """
                     offset = IMM12;
