@@ -185,6 +185,10 @@ class Trie
     Handle
     insert(Key key, unsigned width, Value *val)
     {
+        // We use NULL value pointers to mark internal nodes of the trie, so
+        // we don't allow inserting them as real values.
+        assert(val);
+
         // Build a mask which masks off all the bits we don't care about.
         Key new_mask = ~(Key)0;
         if (width < MaxBits)
