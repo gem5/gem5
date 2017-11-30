@@ -299,9 +299,10 @@ class BaseCPU(MemObject):
                 self._cached_ports += ["checker.itb.walker.port", \
                                        "checker.dtb.walker.port"]
 
-    def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc = None, dwc = None):
+    def addTwoLevelCacheHierarchy(self, ic, dc, l2c, iwc=None, dwc=None,
+                                  xbar=None):
         self.addPrivateSplitL1Caches(ic, dc, iwc, dwc)
-        self.toL2Bus = L2XBar()
+        self.toL2Bus = xbar if xbar else L2XBar()
         self.connectCachedPorts(self.toL2Bus)
         self.l2cache = l2c
         self.toL2Bus.master = self.l2cache.cpu_side
