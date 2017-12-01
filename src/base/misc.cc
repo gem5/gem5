@@ -51,21 +51,6 @@
 #include "base/types.hh"
 #include "sim/core.hh"
 
-
-Logger &
-Logger::get(LogLevel ll)
-{
-    static std::array<Logger *, NUM_LOG_LEVELS> loggers{{
-        new ExitLogger(std::cerr, "panic"),
-        new ExitLogger(std::cerr, "fatal"),
-        new Logger(std::cerr, "warn"),
-        new Logger(std::cerr, "info"),
-        new Logger(std::cerr, "hack"),
-    }};
-
-    return *loggers[ll];
-}
-
 void
 Logger::setLevel(LogLevel ll)
 {
@@ -104,6 +89,15 @@ Logger::printEpilogue(const char *func, const char *file, int line,
     }
 }
 
+class ExitLogger : public Logger
+{
+  public:
+    using Logger::Logger;
+
+    void printEpilogue(const char *func, const char *file, int line,
+                       const char *format) override;
+};
+
 void
 ExitLogger::printEpilogue(const char *func, const char *file, int line,
                             const char *format)
@@ -111,4 +105,18 @@ ExitLogger::printEpilogue(const char *func, const char *file, int line,
     Logger::printEpilogue(func, file, line, format);
 
     ccprintf(stream, "Memory Usage: %ld KBytes\n", memUsage());
+}
+
+Logger &
+Logger::get(LogLevel ll)
+{
+    static std::array<Logger *, NUM_LOG_LEVELS> loggers{{
+        new ExitLogger(std::cerr, "panic"),
+        new ExitLogger(std::cerr, "fatal"),
+        new Logger(std::cerr, "warn"),
+        new Logger(std::cerr, "info"),
+        new Logger(std::cerr, "hack"),
+    }};
+
+    return *loggers[ll];
 }

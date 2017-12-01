@@ -125,15 +125,6 @@ class Logger
     const char *prefix;
 };
 
-class ExitLogger : public Logger
-{
-  public:
-    using Logger::Logger;
-
-    void printEpilogue(const char *func, const char *file, int line,
-                       const char *format) override;
-};
-
 #define exit_message(logger, code, ...)                                 \
     do {                                                                \
         logger.print(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);    \
