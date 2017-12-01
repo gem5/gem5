@@ -102,6 +102,10 @@ class SourceFile(object):
     of those.  A source file also specifies a set of tags which
     describing arbitrary properties of the source file.'''
     __metaclass__ = SourceMeta
+
+    static_objs = {}
+    shared_objs = {}
+
     def __init__(self, source, tags=None, add_tags=None):
         if tags is None:
             tags='gem5 lib'
@@ -123,6 +127,18 @@ class SourceFile(object):
         for base in type(self).__mro__:
             if issubclass(base, SourceFile):
                 base.all.append(self)
+
+    def static(self, env):
+        key = (self.tnode, env['OBJSUFFIX'])
+        if not key in self.static_objs:
+            self.static_objs[key] = env.StaticObject(self.tnode)
+        return self.static_objs[key]
+
+    def shared(self, env):
+        key = (self.tnode, env['OBJSUFFIX'])
+        if not key in self.shared_objs:
+            self.shared_objs[key] = env.SharedObject(self.tnode)
+        return self.shared_objs[key]
 
     @property
     def filename(self):
@@ -960,9 +976,6 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     new_env.Label = label
     new_env.Append(**kwargs)
 
-    make_static = lambda source: new_env.StaticObject(source.tnode)
-    make_shared = lambda source: new_env.SharedObject(source.tnode)
-
     lib_sources = Source.all.with_tag('gem5 lib')
 
     # Without Python, leave out all Python content from the library
@@ -974,16 +987,16 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     shared_objs = []
 
     for s in lib_sources.with_tag(Source.ungrouped_tag):
-        static_objs.append(make_static(s))
-        shared_objs.append(make_shared(s))
+        static_objs.append(s.static(new_env))
+        shared_objs.append(s.shared(new_env))
 
     for group in Source.source_groups:
         srcs = lib_sources.with_tag(Source.link_group_tag(group))
         if not srcs:
             continue
 
-        group_static = [ make_static(s) for s in srcs ]
-        group_shared = [ make_shared(s) for s in srcs ]
+        group_static = [ s.static(new_env) for s in srcs ]
+        group_shared = [ s.shared(new_env) for s in srcs ]
 
         # If partial linking is disabled, add these sources to the build
         # directly, and short circuit this loop.
@@ -1004,11 +1017,11 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
         partial = env.PartialShared(target=target, source=group_shared)
         shared_objs.extend(partial)
 
-    static_date = make_static(date_source)
+    static_date = date_source.static(new_env)
     new_env.Depends(static_date, static_objs)
     static_objs.extend(static_date)
 
-    shared_date = make_shared(date_source)
+    shared_date = date_source.shared(new_env)
     new_env.Depends(shared_date, shared_objs)
     shared_objs.extend(shared_date)
 
@@ -1018,11 +1031,11 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     shared_lib = new_env.SharedLibrary(libname, shared_objs)
 
     # Now link a stub with main() and the static library.
-    main_objs = [ make_static(s) for s in Source.all.with_tag('main') ]
+    main_objs = [ s.static(new_env) for s in Source.all.with_tag('main') ]
 
     for test in UnitTest.all:
         test_sources = Source.all.with_tag(str(test.target))
-        test_objs = [ make_static(s) for s in test_sources ]
+        test_objs = [ s.static(new_env) for s in test_sources ]
         if test.main:
             test_objs += main_objs
         path = 'unittest/%s.%s' % (test.target, label)
@@ -1033,7 +1046,7 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     gtest_env.Append(CPPFLAGS=gtest_env['GTEST_CPPFLAGS'])
     for test in GTest.all:
         test_sources = Source.all.with_tag(str(test.target))
-        test_objs = [ gtest_env.StaticObject(s.tnode) for s in test_sources ]
+        test_objs = [ s.static(gtest_env) for s in test_sources ]
         gtest_env.Program(test.dir.File('%s.%s' % (test.target, label)),
                           test_objs)
 
