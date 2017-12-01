@@ -670,10 +670,8 @@ let {{
     exec_output += PredOpExecute.subst(yieldIop)
 
     wfeCode = '''
-    HCR  hcr  = Hcr;
     CPSR cpsr = Cpsr;
     SCR  scr  = Scr64;
-    SCTLR sctlr = Sctlr;
 
     // WFE Sleeps if SevMailbox==0 and no unmasked interrupts are pending,
     ThreadContext *tc = xc->tcBase();
@@ -683,22 +681,13 @@ let {{
     } else if (tc->getCpuPtr()->getInterruptController(
                 tc->threadId())->checkInterrupts(tc)) {
         PseudoInst::quiesceSkip(tc);
-    } else if (cpsr.el == EL0 && !sctlr.ntwe) {
-        PseudoInst::quiesceSkip(tc);
-        fault = std::make_shared<SupervisorTrap>(machInst, 0x1E00001,
-                                                 EC_TRAPPED_WFI_WFE);
-    } else if (ArmSystem::haveVirtualization(tc) &&
-               !inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP) &&
-               hcr.twe) {
-        PseudoInst::quiesceSkip(tc);
-        fault = std::make_shared<HypervisorTrap>(machInst, 0x1E00001,
-                                                 EC_TRAPPED_WFI_WFE);
-    } else if (ArmSystem::haveSecurity(tc) && cpsr.el != EL3 && scr.twe) {
-        PseudoInst::quiesceSkip(tc);
-        fault = std::make_shared<SecureMonitorTrap>(machInst, 0x1E00001,
-                                                    EC_TRAPPED_WFI_WFE);
     } else {
-        PseudoInst::quiesce(tc);
+        fault = trapWFx(tc, cpsr, scr, true);
+        if (fault == NoFault) {
+            PseudoInst::quiesce(tc);
+        } else {
+            PseudoInst::quiesceSkip(tc);
+        }
     }
     '''
     wfePredFixUpCode = '''
@@ -720,28 +709,19 @@ let {{
     HCR  hcr  = Hcr;
     CPSR cpsr = Cpsr;
     SCR  scr  = Scr64;
-    SCTLR sctlr = Sctlr;
 
     // WFI doesn't sleep if interrupts are pending (masked or not)
     ThreadContext *tc = xc->tcBase();
     if (tc->getCpuPtr()->getInterruptController(
                 tc->threadId())->checkWfiWake(hcr, cpsr, scr)) {
         PseudoInst::quiesceSkip(tc);
-    } else if (cpsr.el == EL0 && !sctlr.ntwi) {
-        PseudoInst::quiesceSkip(tc);
-        fault = std::make_shared<SupervisorTrap>(machInst, 0x1E00000,
-                                                 EC_TRAPPED_WFI_WFE);
-    } else if (ArmSystem::haveVirtualization(tc) && hcr.twi &&
-               (cpsr.mode != MODE_HYP) && !inSecureState(scr, cpsr)) {
-        PseudoInst::quiesceSkip(tc);
-        fault = std::make_shared<HypervisorTrap>(machInst, 0x1E00000,
-                                                 EC_TRAPPED_WFI_WFE);
-    } else if (ArmSystem::haveSecurity(tc) && cpsr.el != EL3 && scr.twi) {
-        PseudoInst::quiesceSkip(tc);
-        fault = std::make_shared<SecureMonitorTrap>(machInst, 0x1E00000,
-                                                    EC_TRAPPED_WFI_WFE);
     } else {
-        PseudoInst::quiesce(tc);
+        fault = trapWFx(tc, cpsr, scr, false);
+        if (fault == NoFault) {
+            PseudoInst::quiesce(tc);
+        } else {
+            PseudoInst::quiesceSkip(tc);
+        }
     }
     tc->getCpuPtr()->clearInterrupt(tc->threadId(), INT_ABT, 0);
     '''

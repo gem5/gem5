@@ -364,6 +364,11 @@ class ArmStaticInst : public StaticInst
                                                       mnemonic, true);
     }
 
+    // Utility function used by checkForWFxTrap32 and checkForWFxTrap64
+    // Returns true if processor has to trap a WFI/WFE instruction.
+    bool isWFxTrapping(ThreadContext *tc,
+                       ExceptionLevel targetEL, bool isWfe) const;
+
     /**
      * Trap an access to Advanced SIMD or FP registers due to access
      * control bits.
@@ -404,6 +409,29 @@ class ArmStaticInst : public StaticInst
                                     CPSR cpsr, CPACR cpacr,
                                     NSACR nsacr, FPEXC fpexc,
                                     bool fpexc_check, bool advsimd) const;
+
+    /**
+     * Check if WFE/WFI instruction execution in aarch32 should be trapped.
+     *
+     * See aarch32/exceptions/traps/AArch32.checkForWFxTrap in the
+     * ARM ARM psueodcode library.
+     */
+    Fault checkForWFxTrap32(ThreadContext *tc,
+                            ExceptionLevel tgtEl, bool isWfe) const;
+
+    /**
+     * Check if WFE/WFI instruction execution in aarch64 should be trapped.
+     *
+     * See aarch64/exceptions/traps/AArch64.checkForWFxTrap in the
+     * ARM ARM psueodcode library.
+     */
+    Fault checkForWFxTrap64(ThreadContext *tc,
+                            ExceptionLevel tgtEl, bool isWfe) const;
+
+    /**
+     * WFE/WFI trapping helper function.
+     */
+    Fault trapWFx(ThreadContext *tc, CPSR cpsr, SCR scr, bool isWfe) const;
 
     /**
      * Get the new PSTATE from a SPSR register in preparation for an

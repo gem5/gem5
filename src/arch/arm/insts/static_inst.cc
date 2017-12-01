@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014, 2016 ARM Limited
+ * Copyright (c) 2010-2014, 2016-2017 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -735,6 +735,129 @@ ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
     return NoFault;
 }
 
+inline bool
+ArmStaticInst::isWFxTrapping(ThreadContext *tc,
+                             ExceptionLevel tgtEl,
+                             bool isWfe) const
+{
+    bool trap = false;
+    SCTLR sctlr = ((SCTLR)tc->readMiscReg(MISCREG_SCTLR_EL1));
+    HCR hcr = ((HCR)tc->readMiscReg(MISCREG_HCR_EL2));
+    SCR scr = ((SCR)tc->readMiscReg(MISCREG_SCR_EL3));
+
+    switch (tgtEl) {
+      case EL1:
+        trap = isWfe? !sctlr.ntwe : !sctlr.ntwi;
+        break;
+      case EL2:
+        trap = isWfe? hcr.twe : hcr.twi;
+        break;
+      case EL3:
+        trap = isWfe? scr.twe : scr.twi;
+        break;
+      default:
+        break;
+    }
+
+    return trap;
+}
+
+Fault
+ArmStaticInst::checkForWFxTrap32(ThreadContext *tc,
+                                 ExceptionLevel targetEL,
+                                 bool isWfe) const
+{
+    // Check if target exception level is implemented.
+    assert(ArmSystem::haveEL(tc, targetEL));
+
+    // Check for routing to AArch64: this happens if the
+    // target exception level (where the trap will be handled)
+    // is using aarch64
+    if (ELIs64(tc, targetEL)) {
+        return checkForWFxTrap64(tc, targetEL, isWfe);
+    }
+
+    // Check if processor needs to trap at selected exception level
+    bool trap = isWFxTrapping(tc, targetEL, isWfe);
+
+    if (trap) {
+        uint32_t iss = isWfe? 0x1E00001 : /* WFE Instruction syndrome */
+                              0x1E00000;  /* WFI Instruction syndrome */
+        switch (targetEL) {
+          case EL1:
+            return std::make_shared<UndefinedInstruction>(
+                machInst, iss,
+                EC_TRAPPED_WFI_WFE, mnemonic);
+          case EL2:
+            return std::make_shared<HypervisorTrap>(machInst, iss,
+                                                    EC_TRAPPED_WFI_WFE);
+          case EL3:
+            return std::make_shared<SecureMonitorTrap>(machInst, iss,
+                                                       EC_TRAPPED_WFI_WFE);
+          default:
+            panic("Unrecognized Exception Level: %d\n", targetEL);
+        }
+    }
+
+    return NoFault;
+}
+
+Fault
+ArmStaticInst::checkForWFxTrap64(ThreadContext *tc,
+                                 ExceptionLevel targetEL,
+                                 bool isWfe) const
+{
+    // Check if target exception level is implemented.
+    assert(ArmSystem::haveEL(tc, targetEL));
+
+    // Check if processor needs to trap at selected exception level
+    bool trap = isWFxTrapping(tc, targetEL, isWfe);
+
+    if (trap) {
+        uint32_t iss = isWfe? 0x1E00001 : /* WFE Instruction syndrome */
+                              0x1E00000;  /* WFI Instruction syndrome */
+        switch (targetEL) {
+          case EL1:
+            return std::make_shared<SupervisorTrap>(machInst, iss,
+                                                    EC_TRAPPED_WFI_WFE);
+          case EL2:
+            return std::make_shared<HypervisorTrap>(machInst, iss,
+                                                    EC_TRAPPED_WFI_WFE);
+          case EL3:
+            return std::make_shared<SecureMonitorTrap>(machInst, iss,
+                                                       EC_TRAPPED_WFI_WFE);
+          default:
+            panic("Unrecognized Exception Level: %d\n", targetEL);
+        }
+    }
+
+    return NoFault;
+}
+
+Fault
+ArmStaticInst::trapWFx(ThreadContext *tc,
+                       CPSR cpsr, SCR scr,
+                       bool isWfe) const
+{
+    Fault fault = NoFault;
+    if (cpsr.el == EL0) {
+        fault = checkForWFxTrap32(tc, EL1, isWfe);
+    }
+
+    if ((fault == NoFault) &&
+        ArmSystem::haveEL(tc, EL2) && !inSecureState(scr, cpsr) &&
+        ((cpsr.el == EL0) || (cpsr.el == EL1))) {
+
+        fault = checkForWFxTrap32(tc, EL2, isWfe);
+    }
+
+    if ((fault == NoFault) &&
+        ArmSystem::haveEL(tc, EL3) && cpsr.el != EL3) {
+        fault = checkForWFxTrap32(tc, EL3, isWfe);
+    }
+
+    return fault;
+}
 
 static uint8_t
 getRestoredITBits(ThreadContext *tc, CPSR spsr)
