@@ -66,7 +66,7 @@ output header {{
 #include "arch/x86/registers.hh"
 #include "arch/x86/types.hh"
 #include "arch/x86/utility.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 #include "sim/faults.hh"
@@ -84,7 +84,7 @@ output decoder {{
 #include "arch/x86/tlb.hh"
 #include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
 #include "mem/packet.hh"
 #include "sim/full_system.hh"

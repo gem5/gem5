@@ -30,7 +30,7 @@
 
 #include <iostream>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 #ifndef __BASE_BIGINT_HH__

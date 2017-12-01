@@ -41,7 +41,7 @@
 
 #include <cassert>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 using namespace X86ISA;
 

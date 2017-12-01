@@ -38,7 +38,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/smt.hh"
 #include "debug/Checkpoint.hh"

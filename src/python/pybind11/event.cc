@@ -46,7 +46,7 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"

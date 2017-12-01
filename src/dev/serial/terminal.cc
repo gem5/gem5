@@ -55,7 +55,7 @@
 #include <string>
 
 #include "base/atomicio.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/output.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"

@@ -52,7 +52,7 @@
 
 #include "base/addr_range.hh"
 #include "base/inet.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/random.hh"
 #include "base/socket.hh"
 #include "base/types.hh"

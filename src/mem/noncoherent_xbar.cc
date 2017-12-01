@@ -49,7 +49,7 @@
 
 #include "mem/noncoherent_xbar.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/NoncoherentXBar.hh"
 #include "debug/XBar.hh"

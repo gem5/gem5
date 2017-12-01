@@ -38,7 +38,7 @@
 #include <string>
 #include <vector>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/Ethernet.hh"
 #include "debug/EthernetData.hh"

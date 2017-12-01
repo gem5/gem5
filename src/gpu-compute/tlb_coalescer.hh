@@ -46,7 +46,7 @@
 #include "arch/isa_traits.hh"
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/regs/segment.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/statistics.hh"
 #include "gpu-compute/gpu_tlb.hh"
 #include "mem/mem_object.hh"

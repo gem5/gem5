@@ -40,7 +40,7 @@
 
 #include "sim/clocked_object.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "sim/power/power_model.hh"
 
 ClockedObject::ClockedObject(const ClockedObjectParams *p) :

@@ -47,7 +47,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/MemChecker.hh"

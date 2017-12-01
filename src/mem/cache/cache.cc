@@ -53,7 +53,7 @@
 
 #include "mem/cache/cache.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "debug/Cache.hh"
 #include "debug/CachePort.hh"

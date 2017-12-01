@@ -36,7 +36,7 @@
 #include "arch/mips/registers.hh"
 #include "arch/mips/vtophys.hh"
 #include "base/bitfield.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "mem/fs_translating_port_proxy.hh"

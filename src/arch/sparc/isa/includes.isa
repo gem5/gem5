@@ -53,7 +53,7 @@ output header {{
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/registers.hh"
 #include "base/condcodes.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"  // some constructors use MemReq flags

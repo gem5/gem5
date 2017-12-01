@@ -33,7 +33,7 @@
 
 #include "arch/generic/decode_cache.hh"
 #include "arch/mips/types.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
 

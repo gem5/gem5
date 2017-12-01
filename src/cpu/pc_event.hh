@@ -34,7 +34,7 @@
 
 #include <vector>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 class ThreadContext;

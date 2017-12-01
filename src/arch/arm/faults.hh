@@ -50,7 +50,7 @@
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/pagetable.hh"
 #include "arch/arm/types.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 

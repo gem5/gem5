@@ -45,7 +45,7 @@
 #include <csignal>
 #include <cstring>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "sim/async.hh"
 #include "sim/core.hh"

@@ -42,7 +42,7 @@
 #include <cstring>
 #include <string>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/SimpleDisk.hh"
 #include "debug/SimpleDiskData.hh"

@@ -59,7 +59,7 @@
 #include "base/cast.hh"
 #include "base/compiler.hh"
 #include "base/flags.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/printable.hh"
 #include "base/types.hh"
 #include "mem/request.hh"

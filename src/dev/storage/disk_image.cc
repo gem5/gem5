@@ -44,7 +44,7 @@
 #include <string>
 
 #include "base/callback.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/DiskImageRead.hh"
 #include "debug/DiskImageWrite.hh"

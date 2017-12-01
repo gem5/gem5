@@ -44,7 +44,7 @@
 #include <cassert>
 #include <vector>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "sim/serialize.hh"
 
 /**

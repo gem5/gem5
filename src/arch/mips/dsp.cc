@@ -32,7 +32,7 @@
 
 #include "arch/mips/isa_traits.hh"
 #include "base/bitfield.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/static_inst.hh"
 #include "sim/serialize.hh"
 

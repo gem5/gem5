@@ -43,7 +43,7 @@
 #ifndef __ARCH_GENERIC_TLB_HH__
 #define __ARCH_GENERIC_TLB_HH__
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "mem/request.hh"
 #include "sim/sim_object.hh"
 

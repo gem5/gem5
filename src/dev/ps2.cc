@@ -41,7 +41,7 @@
 
 #include <list>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "x11keysym/keysym.h"
 
 namespace Ps2 {

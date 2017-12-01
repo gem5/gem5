@@ -35,7 +35,7 @@
 #define __ARCH_MIPS_UTILITY_HH__
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/types.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"

@@ -40,7 +40,7 @@
 
 #include "mem/ruby/network/Network.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/system/RubySystem.hh"

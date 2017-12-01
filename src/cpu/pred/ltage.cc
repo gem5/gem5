@@ -41,7 +41,7 @@
 #include "cpu/pred/ltage.hh"
 
 #include "base/intmath.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Fetch.hh"

@@ -48,7 +48,7 @@
 #include <queue>
 #include <vector>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/regfile.hh"

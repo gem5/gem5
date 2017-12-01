@@ -54,7 +54,7 @@
 
 #include "base/bitfield.hh"
 #include "base/loader/symtab.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/Loader.hh"
 #include "gelf.h"

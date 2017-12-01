@@ -39,7 +39,7 @@
 
 #include "dev/serial/serial.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "params/SerialDevice.hh"
 #include "params/SerialNullDevice.hh"
 

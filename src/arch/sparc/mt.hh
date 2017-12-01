@@ -42,7 +42,7 @@
 
 #include "arch/isa_traits.hh"
 #include "base/bitfield.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 
 namespace SparcISA

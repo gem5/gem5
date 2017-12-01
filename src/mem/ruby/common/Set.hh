@@ -36,7 +36,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 
 // Change for systems with more than 64 controllers of a particular type.

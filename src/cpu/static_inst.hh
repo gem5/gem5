@@ -37,7 +37,7 @@
 
 #include "arch/registers.hh"
 #include "arch/types.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/refcnt.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"

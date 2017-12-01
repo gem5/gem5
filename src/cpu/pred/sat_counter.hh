@@ -31,7 +31,7 @@
 #ifndef __CPU_PRED_SAT_COUNTER_HH__
 #define __CPU_PRED_SAT_COUNTER_HH__
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 /**

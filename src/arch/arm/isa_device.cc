@@ -39,7 +39,7 @@
 
 #include "arch/arm/isa_device.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 namespace ArmISA
 {

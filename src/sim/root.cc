@@ -31,7 +31,7 @@
  *          Gabe Black
  */
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/TimeSync.hh"

@@ -51,7 +51,7 @@
 #include <sstream>
 
 #include "base/intmath.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 using namespace std;
 

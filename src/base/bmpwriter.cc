@@ -44,7 +44,7 @@
 
 #include <cassert>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 const char* BmpWriter::_imgExtension = "bmp";
 

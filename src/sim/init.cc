@@ -53,7 +53,7 @@
 #include <string>
 
 #include "base/cprintf.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "config/have_protobuf.hh"
 #include "python/pybind11/pybind.hh"

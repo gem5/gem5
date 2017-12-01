@@ -42,8 +42,8 @@
  *          Andreas Sandberg
  */
 
-#ifndef __BASE_MISC_HH__
-#define __BASE_MISC_HH__
+#ifndef __BASE_LOGGING_HH__
+#define __BASE_LOGGING_HH__
 
 #include <cassert>
 #include <cstdlib>
@@ -236,8 +236,8 @@ class Logger
     } while (0)
 
 /**
- * The chatty assert macro will function like a normal assert, but will allow the
- * specification of additional, helpful material to aid debugging why the
+ * The chatty assert macro will function like a normal assert, but will allow
+ * the specification of additional, helpful material to aid debugging why the
  * assertion actually failed.  Like the normal assertion, the chatty_assert
  * will not be active in fast builds.
  *
@@ -253,4 +253,4 @@ class Logger
             panic("assert(" # cond ") failed: %s", csprintf(__VA_ARGS__)); \
     } while (0)
 #endif // NDEBUG
-#endif // __BASE_MISC_HH__
+#endif // __BASE_LOGGING_HH__

@@ -45,7 +45,7 @@
 
 #include "arch/generic/types.hh"
 #include "base/bitunion.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "debug/Decoder.hh"
 

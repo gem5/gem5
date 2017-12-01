@@ -32,7 +32,7 @@
 #define __ARCH_RISCV_PSEUDO_INST_HH__
 
 #include "arch/generic/pseudo_inst.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 class ThreadContext;
 

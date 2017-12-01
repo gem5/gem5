@@ -46,7 +46,7 @@
 #include <csignal>
 #include <ctime>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/KvmTimer.hh"
 

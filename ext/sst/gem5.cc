@@ -57,7 +57,7 @@
 #include <sim/init_signals.hh>
 #include <sim/system.hh>
 #include <sim/sim_object.hh>
-#include <base/misc.hh>
+#include <base/logging.hh>
 #include <base/debug.hh>
 
 #ifdef fatal  // gem5 sets this

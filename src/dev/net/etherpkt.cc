@@ -33,7 +33,7 @@
 #include <iostream>
 
 #include "base/inet.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "sim/serialize.hh"
 
 using namespace std;

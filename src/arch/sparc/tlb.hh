@@ -34,7 +34,7 @@
 #include "arch/generic/tlb.hh"
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/tlb_map.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "mem/request.hh"
 #include "params/SparcTLB.hh"
 

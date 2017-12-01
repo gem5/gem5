@@ -44,7 +44,7 @@
 #include "cpu/thread_context.hh"
 
 #include "arch/kernel_stats.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "cpu/base.hh"

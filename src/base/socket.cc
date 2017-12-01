@@ -38,7 +38,7 @@
 
 #include <cerrno>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "sim/byteswap.hh"
 

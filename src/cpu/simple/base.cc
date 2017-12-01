@@ -52,7 +52,7 @@
 #include "base/cprintf.hh"
 #include "base/inifile.hh"
 #include "base/loader/symtab.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/pollevent.hh"
 #include "base/trace.hh"
 #include "base/types.hh"

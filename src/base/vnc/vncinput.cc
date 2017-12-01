@@ -46,7 +46,7 @@
 
 #include <sys/types.h>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/output.hh"
 
 #include "base/trace.hh"

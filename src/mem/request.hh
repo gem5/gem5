@@ -56,7 +56,7 @@
 #include <climits>
 
 #include "base/flags.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "sim/core.hh"

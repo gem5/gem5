@@ -38,7 +38,7 @@
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/types.hh"
 #include "base/bitfield.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/decode_cache.hh"

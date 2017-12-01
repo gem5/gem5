@@ -30,7 +30,7 @@
 
 #include "mem/ruby/structures/AbstractReplacementPolicy.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 AbstractReplacementPolicy::AbstractReplacementPolicy(const Params * p)
   : SimObject(p)

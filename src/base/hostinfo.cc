@@ -47,7 +47,7 @@
 #include <cstring>
 #include <string>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/str.hh"
 #include "base/types.hh"
 

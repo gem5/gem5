@@ -31,7 +31,7 @@
 #include "cpu/o3/store_set.hh"
 
 #include "base/intmath.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/StoreSet.hh"
 

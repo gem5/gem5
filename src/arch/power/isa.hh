@@ -35,7 +35,7 @@
 
 #include "arch/power/registers.hh"
 #include "arch/power/types.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"
 

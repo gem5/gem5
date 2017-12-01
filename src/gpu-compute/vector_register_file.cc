@@ -37,7 +37,7 @@
 
 #include <string>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/shader.hh"

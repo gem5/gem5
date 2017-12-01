@@ -38,7 +38,7 @@
 #include <cassert>
 #include <fstream>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 HsaObject::HsaObject(const std::string &fname)
     : readonlyData(nullptr), filename(fname)

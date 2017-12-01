@@ -35,7 +35,7 @@
 #include <string>
 #include <vector>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/str.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"

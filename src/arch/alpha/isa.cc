@@ -32,7 +32,7 @@
 
 #include <cassert>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/thread_context.hh"
 #include "params/AlphaISA.hh"
 #include "sim/serialize.hh"

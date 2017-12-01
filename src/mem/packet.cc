@@ -54,7 +54,7 @@
 #include <iostream>
 
 #include "base/cprintf.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 
 using namespace std;

@@ -52,7 +52,7 @@
 #include <string>
 
 #include "base/cast.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/stats/info.hh"
 #include "base/str.hh"
 

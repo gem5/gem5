@@ -38,13 +38,14 @@
  */
 
 #include "base/imgwriter.hh"
-#include "base/bmpwriter.hh"
-#include "base/misc.hh"
 
+#include "base/bmpwriter.hh"
+#include "base/logging.hh"
 #include "config/use_png.hh"
 
 #if USE_PNG
 #include "base/pngwriter.hh"
+
 #endif
 
 std::unique_ptr<ImgWriter>

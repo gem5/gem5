@@ -35,7 +35,7 @@
 
 #include "arch/mips/faults.hh"
 #include "base/compiler.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "params/MipsInterrupts.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"

@@ -31,7 +31,7 @@
 
 #include "dev/platform.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "config/the_isa.hh"
 #include "sim/sim_exit.hh"
 

@@ -54,7 +54,7 @@
 #include "arch/tlb.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/checker/cpu.hh"

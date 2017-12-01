@@ -35,7 +35,7 @@
 #include <limits>
 #include <string>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 class PortProxy;

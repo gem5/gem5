@@ -41,7 +41,7 @@
 
 #include "cpu/testers/rubytest/RubyTester.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "cpu/testers/rubytest/Check.hh"
 #include "debug/RubyTest.hh"

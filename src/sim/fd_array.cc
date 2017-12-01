@@ -42,7 +42,7 @@
 #include <memory>
 #include <string>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "params/Process.hh"
 #include "sim/fd_entry.hh"
 

@@ -36,7 +36,7 @@
 #include <mutex>
 #include <thread>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/pollevent.hh"
 #include "base/types.hh"
 #include "sim/async.hh"

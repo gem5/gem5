@@ -60,7 +60,7 @@
 #include "arch/generic/vec_reg.hh"
 #include "base/framebuffer.hh"
 #include "base/inifile.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/output.hh"
 #include "base/str.hh"
 #include "base/trace.hh"

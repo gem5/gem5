@@ -42,7 +42,7 @@
 
 #include <string>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "sim/faults.hh"
 
 namespace GenericISA

@@ -32,8 +32,8 @@
 
 #include "sim/sim_object.hh"
 
+#include "base/logging.hh"
 #include "base/match.hh"
-#include "base/misc.hh"
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
 #include "sim/probe/probe.hh"

@@ -39,7 +39,7 @@
 
 #include "proto/protoio.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 using namespace std;
 using namespace google::protobuf;

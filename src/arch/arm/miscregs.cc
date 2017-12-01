@@ -44,7 +44,7 @@
 #include <tuple>
 
 #include "arch/arm/isa.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/thread_context.hh"
 #include "sim/full_system.hh"
 

@@ -54,7 +54,7 @@
 
 #include <unordered_set>
 
-#include "base/misc.hh" // fatal, panic, and warn
+#include "base/logging.hh" // fatal, panic, and warn
 #include "enums/Clusivity.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/blk.hh"

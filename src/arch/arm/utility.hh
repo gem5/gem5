@@ -48,7 +48,7 @@
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"

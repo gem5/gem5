@@ -152,7 +152,7 @@
 #include <vector>
 
 #include "base/cprintf.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 template <size_t Sz>
 class VecRegContainer;

@@ -43,7 +43,7 @@
 #include <vector>
 
 #include "arch/gpu_isa.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "config/the_gpu_isa.hh"
 #include "gpu-compute/condition_register_state.hh"

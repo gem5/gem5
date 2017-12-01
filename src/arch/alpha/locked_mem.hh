@@ -58,7 +58,7 @@
  */
 
 #include "arch/alpha/registers.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 

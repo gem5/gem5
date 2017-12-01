@@ -32,7 +32,7 @@
 #include "sim/faults.hh"
 
 #include "arch/isa_traits.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Fault.hh"

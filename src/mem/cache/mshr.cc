@@ -54,7 +54,7 @@
 #include <string>
 #include <vector>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "debug/Cache.hh"
 #include "mem/cache/cache.hh"

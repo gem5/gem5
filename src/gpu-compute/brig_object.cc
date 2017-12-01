@@ -45,7 +45,7 @@
 #include <cstdlib>
 
 #include "arch/hsail/Brig.h"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/BRIG.hh"
 #include "debug/HSAILObject.hh"

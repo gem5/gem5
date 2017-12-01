@@ -42,7 +42,7 @@
 #include <utility>
 #include <vector>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 class Wavefront;
 

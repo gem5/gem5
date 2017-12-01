@@ -30,7 +30,7 @@
 
 #include "sim/microcode_rom.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/static_inst_fwd.hh"
 
 StaticInstPtr

@@ -51,7 +51,7 @@ extern "C"
 #include <cstdio>
 #include <cstdlib>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 const char* PngWriter::_imgExtension = "png";
 

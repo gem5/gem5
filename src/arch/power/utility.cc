@@ -34,7 +34,7 @@
 
 #include "arch/power/utility.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 namespace PowerISA {
 

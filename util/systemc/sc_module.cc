@@ -57,7 +57,7 @@
  * most one Gem5Module instantiated in any simulation.
  */
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/pollevent.hh"
 #include "base/trace.hh"
 #include "debug/Event.hh"

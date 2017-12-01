@@ -32,7 +32,7 @@
 
 #include "dev/intel_8254_timer.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "debug/Intel8254Timer.hh"
 
 using namespace std;

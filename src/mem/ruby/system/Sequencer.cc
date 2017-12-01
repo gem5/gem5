@@ -29,7 +29,7 @@
 #include "mem/ruby/system/Sequencer.hh"
 
 #include "arch/x86/ldstflags.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/str.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/MemoryAccess.hh"

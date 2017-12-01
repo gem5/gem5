@@ -50,7 +50,7 @@
 #include <csignal>
 #include <cstring>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "perfevent.hh"
 
 PerfKvmCounterConfig::PerfKvmCounterConfig(uint32_t type, uint64_t config)

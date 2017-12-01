@@ -30,7 +30,7 @@
 
 #include "dev/net/pktfifo.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 using namespace std;
 

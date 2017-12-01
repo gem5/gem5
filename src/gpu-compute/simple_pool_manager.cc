@@ -35,7 +35,7 @@
 
 #include "gpu-compute/simple_pool_manager.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 // return the min number of elements that the manager can reserve given
 // a request for "size" elements

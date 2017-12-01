@@ -59,7 +59,7 @@
 #include <deque>
 #include <string>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"
 #include "base/trace.hh"

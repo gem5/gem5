@@ -30,7 +30,7 @@
 
 #include "dev/net/etherint.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "sim/sim_object.hh"
 
 void

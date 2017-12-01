@@ -41,7 +41,7 @@
 
 #include <algorithm>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/Drain.hh"
 #include "sim/sim_exit.hh"

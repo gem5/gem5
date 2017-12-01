@@ -47,7 +47,7 @@
 #include "arch/x86/pagetable_walker.hh"
 #include "arch/x86/regs/segment.hh"
 #include "base/callback.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/statistics.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "mem/mem_object.hh"

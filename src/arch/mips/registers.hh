@@ -34,7 +34,7 @@
 
 #include "arch/generic/vec_reg.hh"
 #include "arch/mips/generated/max_inst_regs.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 
 class ThreadContext;

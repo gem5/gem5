@@ -31,7 +31,7 @@
 #ifndef __ARCH_RISCV_INTERRUPT_HH__
 #define __ARCH_RISCV_INTERRUPT_HH__
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "params/RiscvInterrupts.hh"
 #include "sim/sim_object.hh"
 

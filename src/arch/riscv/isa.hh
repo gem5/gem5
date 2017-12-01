@@ -43,7 +43,7 @@
 
 #include "arch/riscv/registers.hh"
 #include "arch/riscv/types.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/reg_class.hh"
 #include "sim/sim_object.hh"
 

@@ -42,7 +42,7 @@
 
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "sim/core.hh"
 
 namespace X86ISA

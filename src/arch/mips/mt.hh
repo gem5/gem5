@@ -45,7 +45,7 @@
 #include "arch/mips/pra_constants.hh"
 #include "arch/mips/registers.hh"
 #include "base/bitfield.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 
 namespace MipsISA

@@ -54,7 +54,7 @@
 
 #include "DRAMSim2/MultiChannelMemorySystem.h"
 #include "base/compiler.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 /**
  * DRAMSim2 requires SHOW_SIM_OUTPUT to be defined (declared extern in

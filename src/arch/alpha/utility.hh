@@ -35,7 +35,7 @@
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/registers.hh"
 #include "arch/alpha/types.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "arch/alpha/ev5.hh"

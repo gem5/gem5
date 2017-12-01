@@ -31,7 +31,7 @@
 
 #include "kern/operatingsystem.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 int
 OperatingSystem::openSpecialFile(std::string path, Process *process,

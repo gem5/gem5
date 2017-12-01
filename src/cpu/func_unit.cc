@@ -32,7 +32,7 @@
 
 #include <sstream>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 
 using namespace std;
 

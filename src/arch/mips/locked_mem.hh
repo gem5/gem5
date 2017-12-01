@@ -50,7 +50,7 @@
  */
 
 #include "arch/registers.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/LLSC.hh"
 #include "mem/packet.hh"

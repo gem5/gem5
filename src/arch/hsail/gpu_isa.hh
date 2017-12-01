@@ -39,7 +39,7 @@
 #include <cstdint>
 
 #include "arch/hsail/gpu_types.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "gpu-compute/misc.hh"
 
 namespace HsailISA

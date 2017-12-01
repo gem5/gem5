@@ -54,7 +54,7 @@
 
 #include "base/inifile.hh"
 #include "base/intmath.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "debug/PciDevice.hh"

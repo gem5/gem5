@@ -40,7 +40,7 @@
 #include "base/cprintf.hh"
 #include "base/debug.hh"
 #include "base/hostinfo.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/str.hh"
 #include "base/time.hh"
 #include "base/trace.hh"

@@ -46,7 +46,7 @@
 
 #include <sstream>
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "sim/serialize.hh"
 
 Random::Random()

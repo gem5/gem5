@@ -50,9 +50,9 @@
 #include <queue>
 #include <sstream>
 
-#include "base/misc.hh"
-#include "cpu/minor/trace.hh"
+#include "base/logging.hh"
 #include "cpu/activity.hh"
+#include "cpu/minor/trace.hh"
 #include "cpu/timebuf.hh"
 
 namespace Minor

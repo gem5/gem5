@@ -35,7 +35,7 @@
 #include "arch/sparc/registers.hh"
 #include "arch/sparc/tlb.hh"
 #include "base/bitfield.hh"
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "sim/full_system.hh"

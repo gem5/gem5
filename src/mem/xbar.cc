@@ -49,7 +49,7 @@
 
 #include "mem/xbar.hh"
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/AddrRanges.hh"
 #include "debug/Drain.hh"

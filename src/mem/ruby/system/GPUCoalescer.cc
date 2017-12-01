@@ -33,7 +33,7 @@
  * Author: Sooraj Puthoor
  */
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/str.hh"
 #include "config/the_isa.hh"
 
