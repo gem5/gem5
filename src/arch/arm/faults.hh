@@ -73,6 +73,8 @@ class ArmFault : public FaultBase
     ExceptionLevel toEL;  // Target exception level
     OperatingMode fromMode;  // Source operating mode
 
+    bool hypRouted; // True if the fault has been routed to Hypervisor
+
     Addr getVector(ThreadContext *tc);
     Addr getVector64(ThreadContext *tc);
 
@@ -173,7 +175,7 @@ class ArmFault : public FaultBase
 
     ArmFault(ExtMachInst _machInst = 0, uint32_t _iss = 0) :
         machInst(_machInst), issRaw(_iss), from64(false), to64(false),
-        fromEL(EL0), toEL(EL0), fromMode(MODE_UNDEFINED) {}
+        fromEL(EL0), toEL(EL0), fromMode(MODE_UNDEFINED), hypRouted(false) {}
 
     // Returns the actual syndrome register to use based on the target
     // exception level

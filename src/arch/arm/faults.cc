@@ -391,6 +391,7 @@ ArmFault::setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg)
     uint32_t value;
     uint32_t exc_class = (uint32_t) ec(tc);
     uint32_t issVal = iss();
+
     assert(!from64 || ArmSystem::highestELIs64(tc));
 
     value = exc_class << 26;
@@ -438,12 +439,15 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             from64 = true;
 
         // Determine target exception level
-        if (ArmSystem::haveSecurity(tc) && routeToMonitor(tc))
+        if (ArmSystem::haveSecurity(tc) && routeToMonitor(tc)) {
             toEL = EL3;
-        else if (ArmSystem::haveVirtualization(tc) && routeToHyp(tc))
+        } else if (ArmSystem::haveVirtualization(tc) && routeToHyp(tc)) {
             toEL = EL2;
-        else
+            hypRouted = true;
+        } else {
             toEL = opModeToEL(nextMode());
+        }
+
         if (fromEL > toEL)
             toEL = fromEL;
 
@@ -486,12 +490,14 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         armInst->annotateFault(this);
     }
 
-    if (have_security && routeToMonitor(tc))
+    if (have_security && routeToMonitor(tc)) {
         cpsr.mode = MODE_MON;
-    else if (have_virtualization && routeToHyp(tc))
+    } else if (have_virtualization && routeToHyp(tc)) {
         cpsr.mode = MODE_HYP;
-    else
+        hypRouted = true;
+    } else {
         cpsr.mode = nextMode();
+    }
 
     // Ensure Secure state if initially in Monitor mode
     if (have_security && saved_cpsr.mode == MODE_MON) {
@@ -747,6 +753,12 @@ UndefinedInstruction::routeToHyp(ThreadContext *tc) const
 uint32_t
 UndefinedInstruction::iss() const
 {
+
+    // If UndefinedInstruction is routed to hypervisor, iss field is 0.
+    if (hypRouted) {
+        return 0;
+    }
+
     if (overrideEc == EC_INVALID)
         return issRaw;
 
@@ -836,7 +848,12 @@ SecureMonitorCall::iss() const
 ExceptionClass
 UndefinedInstruction::ec(ThreadContext *tc) const
 {
-    return (overrideEc != EC_INVALID) ? overrideEc : vals.ec;
+    // If UndefinedInstruction is routed to hypervisor,
+    // HSR.EC field is 0.
+    if (hypRouted)
+        return EC_UNKNOWN;
+    else
+        return (overrideEc != EC_INVALID) ? overrideEc : vals.ec;
 }
 
 
