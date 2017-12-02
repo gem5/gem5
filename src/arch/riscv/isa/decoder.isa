@@ -36,7 +36,7 @@
 
 decode QUADRANT default Unknown::unknown() {
     0x0: decode COPCODE {
-        0x0: CUIOp::c_addi4spn({{
+        0x0: CIOp::c_addi4spn({{
             imm = CIMM8<1:1> << 2 |
                   CIMM8<0:0> << 3 |
                   CIMM8<7:6> << 4 |
@@ -45,7 +45,7 @@ decode QUADRANT default Unknown::unknown() {
             if (machInst == 0)
                 fault = make_shared<IllegalInstFault>("zero instruction");
             Rp2 = sp + imm;
-        }});
+        }}, uint64_t);
         format CompressedLoad {
             0x1: c_fld({{
                 offset = CIMM3 << 3 | CIMM2 << 6;
@@ -152,26 +152,26 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
         0x4: decode CFUNCT2HIGH {
-            format CUIOp {
+            format CIOp {
                 0x0: c_srli({{
                     imm = CIMM5 | (CIMM1 << 5);
                     assert(imm != 0);
                 }}, {{
                     Rp1 = Rp1 >> imm;
-                }});
+                }}, uint64_t);
                 0x1: c_srai({{
                     imm = CIMM5 | (CIMM1 << 5);
                     assert(imm != 0);
                 }}, {{
                     Rp1_sd = Rp1_sd >> imm;
-                }});
+                }}, uint64_t);
                 0x2: c_andi({{
                     imm = CIMM5;
                     if (CIMM1 > 0)
                         imm |= ~((uint64_t)0x1F);
                 }}, {{
                     Rp1 = Rp1 & imm;
-                }});
+                }}, uint64_t);
             }
             format ROp {
                 0x3: decode CFUNCT1 {
@@ -242,13 +242,13 @@ decode QUADRANT default Unknown::unknown() {
         }
     }
     0x2: decode COPCODE {
-        0x0: CUIOp::c_slli({{
+        0x0: CIOp::c_slli({{
             imm = CIMM5 | (CIMM1 << 5);
             assert(imm != 0);
         }}, {{
             assert(RC1 != 0);
             Rc1 = Rc1 << imm;
-        }});
+        }}, uint64_t);
         format CompressedLoad {
             0x1: c_fldsp({{
                 offset = CIMM5<4:3> << 3 |
@@ -376,9 +376,9 @@ decode QUADRANT default Unknown::unknown() {
         0x03: decode FUNCT3 {
             format IOp {
                 0x0: fence({{
-                }}, IsNonSpeculative, IsMemBarrier, No_OpClass);
+                }}, uint64_t, IsNonSpeculative, IsMemBarrier, No_OpClass);
                 0x1: fence_i({{
-                }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+                }}, uint64_t, IsNonSpeculative, IsSerializeAfter, No_OpClass);
             }
         }
 
@@ -394,11 +394,11 @@ decode QUADRANT default Unknown::unknown() {
                     Rd = (Rs1_sd < imm) ? 1 : 0;
                 }});
                 0x3: sltiu({{
-                    Rd = (Rs1 < (uint64_t)imm) ? 1 : 0;
-                }});
+                    Rd = (Rs1 < imm) ? 1 : 0;
+                }}, uint64_t);
                 0x4: xori({{
-                    Rd = Rs1 ^ (uint64_t)imm;
-                }});
+                    Rd = Rs1 ^ imm;
+                }}, uint64_t);
                 0x5: decode SRTYPE {
                     0x0: srli({{
                         Rd = Rs1 >> SHAMT6;
@@ -408,11 +408,11 @@ decode QUADRANT default Unknown::unknown() {
                     }});
                 }
                 0x6: ori({{
-                    Rd = Rs1 | (uint64_t)imm;
-                }});
+                    Rd = Rs1 | imm;
+                }}, uint64_t);
                 0x7: andi({{
-                    Rd = Rs1 & (uint64_t)imm;
-                }});
+                    Rd = Rs1 & imm;
+                }}, uint64_t);
             }
         }
 
@@ -423,8 +423,8 @@ decode QUADRANT default Unknown::unknown() {
         0x06: decode FUNCT3 {
             format IOp {
                 0x0: addiw({{
-                    Rd_sd = (int32_t)Rs1 + (int32_t)imm;
-                }});
+                    Rd_sd = Rs1_sw + imm;
+                }}, int32_t);
                 0x1: slliw({{
                     Rd_sd = Rs1_sw << SHAMT5;
                 }});

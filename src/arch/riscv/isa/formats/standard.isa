@@ -218,9 +218,9 @@ def format ROp(code, *opt_flags) {{
     exec_output = BasicExecute.subst(iop)
 }};
 
-def format IOp(code, *opt_flags) {{
+def format IOp(code, imm_type='int64_t', *opt_flags) {{
     regs = ['_destRegIdx[0]','_srcRegIdx[0]']
-    iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
+    iop = InstObjParams(name, Name, 'ImmOp<%s>' % imm_type,
         {'code': code, 'imm_code': 'imm = sext<12>(IMM12);',
          'regs': ','.join(regs)}, opt_flags)
     header_output = ImmDeclare.subst(iop)
