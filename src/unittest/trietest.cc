@@ -31,6 +31,8 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #include "base/trie.hh"
 #include "base/types.hh"
@@ -49,43 +51,51 @@ class TrieTestData : public testing::Test
   protected:
     typedef Trie<Addr, uint32_t> TrieType;
     TrieType trie;
+
+    std::string
+    dumpTrie()
+    {
+        std::stringstream ss;
+        trie.dump("test trie", ss);
+        return ss.str();
+    }
 };
 
 TEST_F(TrieTestData, Empty)
 {
-    EXPECT_EQ(trie.lookup(0x123456701234567), nullptr);
+    EXPECT_EQ(trie.lookup(0x123456701234567), nullptr) << dumpTrie();
 }
 
 TEST_F(TrieTestData, SingleEntry)
 {
     trie.insert(0x0123456789abcdef, 40, ptr(1));
-    EXPECT_EQ(trie.lookup(0x123456701234567), nullptr);
-    EXPECT_EQ(trie.lookup(0x123456789ab0000), ptr(1));
+    EXPECT_EQ(trie.lookup(0x123456701234567), nullptr) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x123456789ab0000), ptr(1)) << dumpTrie();
 }
 
 TEST_F(TrieTestData, TwoOverlappingEntries)
 {
     trie.insert(0x0123456789abcdef, 40, ptr(1));
     trie.insert(0x0123456789abcdef, 36, ptr(2));
-    EXPECT_EQ(trie.lookup(0x123456700000000), nullptr);
-    EXPECT_EQ(trie.lookup(0x123456789ab0000), ptr(2));
+    EXPECT_EQ(trie.lookup(0x123456700000000), nullptr) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x123456789ab0000), ptr(2)) << dumpTrie();
 }
 
 TEST_F(TrieTestData, TwoOverlappingEntriesReversed)
 {
     trie.insert(0x0123456789abcdef, 36, ptr(2));
     trie.insert(0x0123456789abcdef, 40, ptr(1));
-    EXPECT_EQ(trie.lookup(0x123456700000000), nullptr);
-    EXPECT_EQ(trie.lookup(0x123456789ab0000), ptr(2));
+    EXPECT_EQ(trie.lookup(0x123456700000000), nullptr) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x123456789ab0000), ptr(2)) << dumpTrie();
 }
 
 TEST_F(TrieTestData, TwoIndependentEntries)
 {
     trie.insert(0x0123456789abcdef, 40, ptr(2));
     trie.insert(0x0123456776543210, 40, ptr(1));
-    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(2));
-    EXPECT_EQ(trie.lookup(0x0123456776000000), ptr(1));
-    EXPECT_EQ(trie.lookup(0x0123456700000000), nullptr);
+    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(2)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456776000000), ptr(1)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456700000000), nullptr) << dumpTrie();
 }
 
 TEST_F(TrieTestData, TwoEntries)
@@ -95,10 +105,10 @@ TEST_F(TrieTestData, TwoEntries)
     trie.insert(0x0123456780000000, 40, ptr(3));
     trie.insert(0x0123456700000000, 40, ptr(2));
 
-    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1));
-    EXPECT_EQ(trie.lookup(0x0123456700000000), ptr(2));
-    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(3));
-    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(4));
+    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456700000000), ptr(2)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(3)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(4)) << dumpTrie();
 }
 
 TEST_F(TrieTestData, RemovingEntries)
@@ -110,22 +120,22 @@ TEST_F(TrieTestData, RemovingEntries)
     node1 = trie.insert(0x0123456700000000, 40, ptr(2));
     node2 = trie.insert(0x0123456700000000, 32, ptr(10));
 
-    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1));
-    EXPECT_EQ(trie.lookup(0x0123456700000000), ptr(10));
-    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(10));
-    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(10));
+    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456700000000), ptr(10)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(10)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(10)) << dumpTrie();
 
     trie.remove(node2);
 
-    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1));
-    EXPECT_EQ(trie.lookup(0x0123456700000000), ptr(2));
-    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(3));
-    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(4));
+    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456700000000), ptr(2)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(3)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(4)) << dumpTrie();
 
     trie.remove(node1);
 
-    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1));
-    EXPECT_EQ(trie.lookup(0x0123456700000000), nullptr);
-    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(3));
-    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(4));
+    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456700000000), nullptr) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(3)) << dumpTrie();
+    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(4)) << dumpTrie();
 }
