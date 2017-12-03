@@ -1049,11 +1049,15 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     gtest_env = new_env.Clone()
     gtest_env.Append(LIBS=gtest_env['GTEST_LIBS'])
     gtest_env.Append(CPPFLAGS=gtest_env['GTEST_CPPFLAGS'])
+    gtests = []
     for test in GTest.all:
         test_sources = Source.all.with_tag(str(test.target))
         test_objs = [ s.static(gtest_env) for s in test_sources ]
-        gtest_env.Program(test.dir.File('%s.%s' % (test.target, label)),
-                          test_objs)
+        gtests.append(gtest_env.Program(
+            test.dir.File('%s.%s' % (test.target, label)), test_objs))
+
+    gtest_target = Dir(new_env['BUILDDIR']).File('unittests.%s' % label)
+    AlwaysBuild(Command(gtest_target, gtests, gtests))
 
     progname = exename
     if strip:
