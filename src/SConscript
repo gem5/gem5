@@ -71,11 +71,11 @@ class SourceList(list):
 
     def with_any_tags(self, *tags):
         '''Return a list of sources with any of the supplied tags.'''
-        return self.with_tags_that(lambda stags: len(tags & stags) > 0)
+        return self.with_tags_that(lambda stags: len(set(tags) & stags) > 0)
 
     def with_all_tags(self, *tags):
         '''Return a list of sources with all of the supplied tags.'''
-        return self.with_tags_that(lambda stags: tags <= stags)
+        return self.with_tags_that(lambda stags: set(tags) <= stags)
 
     def with_tag(self, tag):
         '''Return a list of sources with the supplied tag.'''
@@ -83,7 +83,7 @@ class SourceList(list):
 
     def without_tags(self, *tags):
         '''Return a list of sources without any of the supplied tags.'''
-        return self.with_tags_that(lambda stags: len(tags & stags) == 0)
+        return self.with_tags_that(lambda stags: len(set(tags) & stags) == 0)
 
     def without_tag(self, tag):
         '''Return a list of sources with the supplied tag.'''
@@ -111,11 +111,16 @@ class SourceFile(object):
             tags='gem5 lib'
         if isinstance(tags, basestring):
             tags = set([tags])
-        if isinstance(add_tags, basestring):
-            add_tags = set([add_tags])
+        if not isinstance(tags, set):
+            tags = set(tags)
+        self.tags = tags
+
         if add_tags:
-            tags = tags | add_tags
-        self.tags = set(tags)
+            if isinstance(add_tags, basestring):
+                add_tags = set([add_tags])
+            if not isinstance(add_tags, set):
+                add_tags = set(add_tags)
+            self.tags |= add_tags
 
         tnode = source
         if not isinstance(source, SCons.Node.FS.File):
