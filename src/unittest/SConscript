@@ -41,7 +41,7 @@ UnitTest('nmtest', 'nmtest.cc')
 UnitTest('rangemaptest', 'rangemaptest.cc')
 UnitTest('refcnttest', 'refcnttest.cc')
 UnitTest('strnumtest', 'strnumtest.cc')
-UnitTest('trietest', 'trietest.cc')
+GTest('trietest', 'trietest.cc')
 
 stattest_py = PySource('m5', 'stattestmain.py', tags='stattest')
 UnitTest('stattest', 'stattest.cc', stattest_py, main=True)

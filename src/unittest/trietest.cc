@@ -28,15 +28,12 @@
  * Authors: Gabe Black
  */
 
+#include <gtest/gtest.h>
+
 #include <iostream>
 
 #include "base/trie.hh"
 #include "base/types.hh"
-#include "unittest/unittest.hh"
-
-using UnitTest::setCase;
-
-typedef Trie<Addr, uint32_t> TestTrie;
 
 namespace {
 
@@ -47,80 +44,88 @@ static inline uint32_t *ptr(uintptr_t val)
 
 } // anonymous namespace
 
-int
-main()
+class TrieTestData : public testing::Test
 {
-    // Create an empty Ptr and verify it's data pointer is NULL.
-    setCase("An empty trie.");
-    TestTrie trie1;
-    EXPECT_EQ(trie1.lookup(0x123456701234567), NULL);
+  protected:
+    typedef Trie<Addr, uint32_t> TrieType;
+    TrieType trie;
+};
 
-    setCase("A single entry.");
-    trie1.insert(0x0123456789abcdef, 40, ptr(1));
-    EXPECT_EQ(trie1.lookup(0x123456701234567), NULL);
-    EXPECT_EQ(trie1.lookup(0x123456789ab0000), ptr(1));
+TEST_F(TrieTestData, Empty)
+{
+    EXPECT_EQ(trie.lookup(0x123456701234567), nullptr);
+}
 
-    setCase("Two entries, one on the way to the other.");
-    TestTrie trie2;
-    trie2.insert(0x0123456789abcdef, 40, ptr(1));
-    trie2.insert(0x0123456789abcdef, 36, ptr(2));
-    EXPECT_EQ(trie2.lookup(0x123456700000000), NULL);
-    EXPECT_EQ(trie2.lookup(0x123456789ab0000), ptr(2));
+TEST_F(TrieTestData, SingleEntry)
+{
+    trie.insert(0x0123456789abcdef, 40, ptr(1));
+    EXPECT_EQ(trie.lookup(0x123456701234567), nullptr);
+    EXPECT_EQ(trie.lookup(0x123456789ab0000), ptr(1));
+}
 
-    TestTrie trie3;
-    trie3.insert(0x0123456789abcdef, 36, ptr(2));
-    trie3.insert(0x0123456789abcdef, 40, ptr(1));
-    EXPECT_EQ(trie3.lookup(0x123456700000000), NULL);
-    EXPECT_EQ(trie3.lookup(0x123456789ab0000), ptr(2));
+TEST_F(TrieTestData, TwoOverlappingEntries)
+{
+    trie.insert(0x0123456789abcdef, 40, ptr(1));
+    trie.insert(0x0123456789abcdef, 36, ptr(2));
+    EXPECT_EQ(trie.lookup(0x123456700000000), nullptr);
+    EXPECT_EQ(trie.lookup(0x123456789ab0000), ptr(2));
+}
 
-    setCase("Two entries on different paths.");
-    TestTrie trie4;
-    trie4.insert(0x0123456789abcdef, 40, ptr(2));
-    trie4.insert(0x0123456776543210, 40, ptr(1));
-    EXPECT_EQ(trie4.lookup(0x0123456789000000), ptr(2));
-    EXPECT_EQ(trie4.lookup(0x0123456776000000), ptr(1));
-    EXPECT_EQ(trie4.lookup(0x0123456700000000), NULL);
+TEST_F(TrieTestData, TwoOverlappingEntriesReversed)
+{
+    trie.insert(0x0123456789abcdef, 36, ptr(2));
+    trie.insert(0x0123456789abcdef, 40, ptr(1));
+    EXPECT_EQ(trie.lookup(0x123456700000000), nullptr);
+    EXPECT_EQ(trie.lookup(0x123456789ab0000), ptr(2));
+}
 
-    setCase("Skipping past an entry but not two.");
-    TestTrie trie5;
-    trie5.insert(0x0123456789000000, 40, ptr(4));
-    trie5.insert(0x0123000000000000, 40, ptr(1));
-    trie5.insert(0x0123456780000000, 40, ptr(3));
-    trie5.insert(0x0123456700000000, 40, ptr(2));
+TEST_F(TrieTestData, TwoIndependentEntries)
+{
+    trie.insert(0x0123456789abcdef, 40, ptr(2));
+    trie.insert(0x0123456776543210, 40, ptr(1));
+    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(2));
+    EXPECT_EQ(trie.lookup(0x0123456776000000), ptr(1));
+    EXPECT_EQ(trie.lookup(0x0123456700000000), nullptr);
+}
 
-    setCase("Looking things up.");
-    EXPECT_EQ(trie5.lookup(0x0123000000000000), ptr(1));
-    EXPECT_EQ(trie5.lookup(0x0123456700000000), ptr(2));
-    EXPECT_EQ(trie5.lookup(0x0123456780000000), ptr(3));
-    EXPECT_EQ(trie5.lookup(0x0123456789000000), ptr(4));
+TEST_F(TrieTestData, TwoEntries)
+{
+    trie.insert(0x0123456789000000, 40, ptr(4));
+    trie.insert(0x0123000000000000, 40, ptr(1));
+    trie.insert(0x0123456780000000, 40, ptr(3));
+    trie.insert(0x0123456700000000, 40, ptr(2));
 
-    setCase("Removing entries.");
-    TestTrie trie6;
-    TestTrie::Handle node1, node2;
-    trie6.insert(0x0123456789000000, 40, ptr(4));
-    trie6.insert(0x0123000000000000, 40, ptr(1));
-    trie6.insert(0x0123456780000000, 40, ptr(3));
-    node1 = trie6.insert(0x0123456700000000, 40, ptr(2));
-    node2 = trie6.insert(0x0123456700000000, 32, ptr(10));
+    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1));
+    EXPECT_EQ(trie.lookup(0x0123456700000000), ptr(2));
+    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(3));
+    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(4));
+}
 
-    EXPECT_EQ(trie6.lookup(0x0123000000000000), ptr(1));
-    EXPECT_EQ(trie6.lookup(0x0123456700000000), ptr(10));
-    EXPECT_EQ(trie6.lookup(0x0123456780000000), ptr(10));
-    EXPECT_EQ(trie6.lookup(0x0123456789000000), ptr(10));
+TEST_F(TrieTestData, RemovingEntries)
+{
+    TrieType::Handle node1, node2;
+    trie.insert(0x0123456789000000, 40, ptr(4));
+    trie.insert(0x0123000000000000, 40, ptr(1));
+    trie.insert(0x0123456780000000, 40, ptr(3));
+    node1 = trie.insert(0x0123456700000000, 40, ptr(2));
+    node2 = trie.insert(0x0123456700000000, 32, ptr(10));
 
-    trie6.remove(node2);
+    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1));
+    EXPECT_EQ(trie.lookup(0x0123456700000000), ptr(10));
+    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(10));
+    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(10));
 
-    EXPECT_EQ(trie6.lookup(0x0123000000000000), ptr(1));
-    EXPECT_EQ(trie6.lookup(0x0123456700000000), ptr(2));
-    EXPECT_EQ(trie6.lookup(0x0123456780000000), ptr(3));
-    EXPECT_EQ(trie6.lookup(0x0123456789000000), ptr(4));
+    trie.remove(node2);
 
-    trie6.remove(node1);
+    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1));
+    EXPECT_EQ(trie.lookup(0x0123456700000000), ptr(2));
+    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(3));
+    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(4));
 
-    EXPECT_EQ(trie6.lookup(0x0123000000000000), ptr(1));
-    EXPECT_EQ(trie6.lookup(0x0123456700000000), NULL);
-    EXPECT_EQ(trie6.lookup(0x0123456780000000), ptr(3));
-    EXPECT_EQ(trie6.lookup(0x0123456789000000), ptr(4));
+    trie.remove(node1);
 
-    return UnitTest::printResults();
+    EXPECT_EQ(trie.lookup(0x0123000000000000), ptr(1));
+    EXPECT_EQ(trie.lookup(0x0123456700000000), nullptr);
+    EXPECT_EQ(trie.lookup(0x0123456780000000), ptr(3));
+    EXPECT_EQ(trie.lookup(0x0123456789000000), ptr(4));
 }
