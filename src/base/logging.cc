@@ -43,80 +43,55 @@
 
 #include "base/logging.hh"
 
-#include <array>
+#include <sstream>
 
 #include "base/hostinfo.hh"
-#include "base/output.hh"
-#include "base/trace.hh"
-#include "base/types.hh"
-#include "sim/core.hh"
 
-void
-Logger::setLevel(LogLevel ll)
-{
-    for (int i = 0; i < NUM_LOG_LEVELS; ++i)
-        get(LogLevel(i)).enabled = (i <= ll);
-}
+namespace {
 
-static void
-newline_if_needed(std::ostream &stream, const char *format)
-{
-    const size_t format_len(strlen(format));
-
-    switch (format_len ? format[format_len - 1] : '\0') {
-      case '\n':
-      case '\r':
-        break;
-      default:
-        stream << std::endl;
-    }
-}
-
-Logger::Logger(std::ostream &_stream, const char *_prefix)
-    : enabled(true), verbose(false), stream(_stream), prefix(_prefix)
-{
-}
-
-void
-Logger::printEpilogue(const char *func, const char *file, int line,
-                        const char *format)
-{
-    newline_if_needed(stream, format);
-
-    if (verbose) {
-        ccprintf(stream, " @ tick %d\n[%s:%s, line %d]\n",
-                 curTick(), func, file, line);
-    }
-}
-
-class ExitLogger : public Logger
+class NormalLogger : public Logger
 {
   public:
     using Logger::Logger;
 
-    void printEpilogue(const char *func, const char *file, int line,
-                       const char *format) override;
+  protected:
+    void log(const Loc &loc, std::string s) override { std::cerr << s; }
 };
 
-void
-ExitLogger::printEpilogue(const char *func, const char *file, int line,
-                            const char *format)
+class ExitLogger : public NormalLogger
 {
-    Logger::printEpilogue(func, file, line, format);
+  public:
+    using NormalLogger::NormalLogger;
 
-    ccprintf(stream, "Memory Usage: %ld KBytes\n", memUsage());
-}
+  protected:
+    void
+    log(const Loc &loc, std::string s) override
+    {
+        std::stringstream ss;
+        ccprintf(ss, "Memory Usage: %ld KBytes\n", memUsage());
+        NormalLogger::log(loc, s + ss.str());
+    }
+};
 
-Logger &
-Logger::get(LogLevel ll)
+class FatalLogger : public ExitLogger
 {
-    static std::array<Logger *, NUM_LOG_LEVELS> loggers{{
-        new ExitLogger(std::cerr, "panic"),
-        new ExitLogger(std::cerr, "fatal"),
-        new Logger(std::cerr, "warn"),
-        new Logger(std::cerr, "info"),
-        new Logger(std::cerr, "hack"),
-    }};
+  public:
+    using ExitLogger::ExitLogger;
 
-    return *loggers[ll];
-}
+  protected:
+    void exit() override { ::exit(1); }
+};
+
+ExitLogger panicLogger("panic: ");
+FatalLogger fatalLogger("fatal: ");
+NormalLogger warnLogger("warn: ");
+NormalLogger infoLogger("info: ");
+NormalLogger hackLogger("hack: ");
+
+} // anonymous namespace
+
+Logger &Logger::getPanic() { return panicLogger; }
+Logger &Logger::getFatal() { return fatalLogger; }
+Logger &Logger::getWarn() { return warnLogger; }
+Logger &Logger::getInfo() { return infoLogger; }
+Logger &Logger::getHack() { return hackLogger; }

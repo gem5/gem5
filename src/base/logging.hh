@@ -46,113 +46,133 @@
 #define __BASE_LOGGING_HH__
 
 #include <cassert>
-#include <cstdlib>
-#include <iostream>
+#include <sstream>
 #include <utility>
 
 #include "base/compiler.hh"
 #include "base/cprintf.hh"
 
-#if defined(__SUNPRO_CC)
-#define __FUNCTION__ "how to fix me?"
-#endif
-
 class Logger
 {
   public:
+
+    // Get a Logger for the specified type of message.
+    static Logger &getPanic();
+    static Logger &getFatal();
+    static Logger &getWarn();
+    static Logger &getInfo();
+    static Logger &getHack();
+
     enum LogLevel {
-        PANIC = 0,
-        FATAL,
-        WARN,
-        INFO,
-        HACK,
+        PANIC, FATAL, WARN, INFO, HACK,
         NUM_LOG_LEVELS,
     };
 
-    /**
-     * Set the active log level.
-     *
-     * All levels that are lower or equal to the selected log level
-     * will be activated.
-     *
-     * @param ll Maximum log level to print
-     */
-    static void setLevel(LogLevel ll);
+    static void
+    setLevel(LogLevel ll)
+    {
+        getPanic().enabled = (ll >= PANIC);
+        getFatal().enabled = (ll >= FATAL);
+        getWarn().enabled = (ll >= WARN);
+        getInfo().enabled = (ll >= INFO);
+        getHack().enabled = (ll >= HACK);
+    }
 
-    /**
-     * Get a Logger corresponding to a specific log level
-     *
-     * @param ll Log level to access
-     * @return Reference to the requested logger
-     */
-    static Logger &get(LogLevel ll);
+    struct Loc
+    {
+        Loc(const char *file, int line) : file(file), line(line) {}
+        const char *file;
+        int line;
+    };
 
-  public:
-    Logger(std::ostream &stream, const char *prefix);
+    Logger(const char *prefix) : enabled(true), prefix(prefix)
+    {
+        assert(prefix);
+    }
+
     virtual ~Logger() {};
 
-    template<typename ...Args> void
-    print(const char *func, const char *file, int line,
-          const char *format, const Args &...args)
+    void
+    print(const Loc &loc, const std::string &str)
     {
+        std::stringstream ss;
+        ss << prefix << str;
+        if (str.length() && str.back() != '\n' && str.back() != '\r')
+            ss << std::endl;
         if (!enabled)
             return;
-
-        if (prefix)
-            stream << prefix << ": ";
-        ccprintf(stream, format, args...);
-
-        printEpilogue(func, file, line, format);
+        log(loc, ss.str());
     }
 
     template<typename ...Args> void
-    print(const char *func, const char *file, int line,
-          const std::string &format, const Args &...args)
+    print(const Loc &loc, const char *format, const Args &...args)
     {
-        print(func, file, line, format.c_str(), args...);
+        std::stringstream ss;
+        ccprintf(ss, format, args...);
+        print(loc, ss.str());
     }
 
-  protected:
-    virtual void printEpilogue(const char *func, const char *file, int line,
-                               const char *format);
+    template<typename ...Args> void
+    print(const Loc &loc, const std::string &format, const Args &...args)
+    {
+        print(loc, format.c_str(), args...);
+    }
 
-  public:
+    // This helper is necessary since noreturn isn't inherited by virtual
+    // functions, and gcc will get mad if a function calls panic and then
+    // doesn't return.
+    void exit_helper() M5_ATTR_NORETURN { exit(); ::abort(); }
+
+  protected:
     bool enabled;
-    bool verbose;
 
-  protected:
-    std::ostream &stream;
+    virtual void log(const Loc &loc, std::string s) = 0;
+    virtual void exit() { /* Fall through to the abort in exit_helper. */ }
+
     const char *prefix;
 };
 
-#define exit_message(logger, code, ...)                                 \
-    do {                                                                \
-        logger.print(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);    \
-        if (code < 0)                                                   \
-            ::abort();                                                  \
-        else                                                            \
-            ::exit(code);                                               \
+
+#define base_message(logger, ...) \
+    logger.print(::Logger::Loc(__FILE__, __LINE__), __VA_ARGS__)
+
+/*
+ * Only print the message the first time this expression is
+ * encountered.  i.e.  This doesn't check the string itself and
+ * prevent duplicate strings, this prevents the statement from
+ * happening more than once. So, even if the arguments change and that
+ * would have resulted in a different message thoes messages would be
+ * supressed.
+ */
+#define base_message_once(...) do {                     \
+        static bool once = false;                       \
+        if (!once) {                                    \
+            base_message(__VA_ARGS__);                  \
+            once = true;                                \
+        }                                               \
     } while (0)
 
-//
-// This implements a cprintf based panic() function.  panic() should
-// be called when something happens that should never ever happen
-// regardless of what the user does (i.e., an acutal m5 bug).  panic()
-// calls abort which can dump core or enter the debugger.
-//
-//
-#define panic(...) exit_message(::Logger::get(::Logger::PANIC), -1, \
-                                __VA_ARGS__)
+#define exit_message(logger, ...)                       \
+    do {                                                \
+        base_message(logger, __VA_ARGS__);              \
+        logger.exit_helper();                           \
+    } while (0)
 
-//
-// This implements a cprintf based fatal() function.  fatal() should
-// be called when the simulation cannot continue due to some condition
-// that is the user's fault (bad configuration, invalid arguments,
-// etc.) and not a simulator bug.  fatal() calls  abort() like
-// panic() does.
-//
-#define fatal(...) exit_message(::Logger::get(::Logger::FATAL), 1, \
-                                __VA_ARGS__)
+/**
+ * This implements a cprintf based panic() function.  panic() should
+ * be called when something happens that should never ever happen
+ * regardless of what the user does (i.e., an acutal m5 bug).  panic()
+ * might call abort which can dump core or enter the debugger.
+ */
+#define panic(...) exit_message(::Logger::getPanic(), __VA_ARGS__)
+
+/**
+ * This implements a cprintf based fatal() function.  fatal() should
+ * be called when the simulation cannot continue due to some condition
+ * that is the user's fault (bad configuration, invalid arguments,
+ * etc.) and not a simulator bug.  fatal() might call exit, unlike panic().
+ */
+#define fatal(...) exit_message(::Logger::getFatal(), __VA_ARGS__)
 
 /**
  * Conditional panic macro that checks the supplied condition and only panics
@@ -189,37 +209,13 @@ class Logger
     } while (0)
 
 
-#define base_message(logger, ...)                                       \
-    logger.print(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define warn(...) base_message(::Logger::getWarn(), __VA_ARGS__)
+#define inform(...) base_message(::Logger::getInfo(), __VA_ARGS__)
+#define hack(...) base_message(::Logger::getHack(), __VA_ARGS__)
 
-// Only print the message the first time this expression is
-// encountered.  i.e.  This doesn't check the string itself and
-// prevent duplicate strings, this prevents the statement from
-// happening more than once. So, even if the arguments change and that
-// would have resulted in a different message thoes messages would be
-// supressed.
-#define base_message_once(...) do {                     \
-        static bool once = false;                       \
-        if (!once) {                                    \
-            base_message(__VA_ARGS__);                  \
-            once = true;                                \
-        }                                               \
-    } while (0)
-
-
-#define warn(...) \
-    base_message(::Logger::get(::Logger::WARN), __VA_ARGS__)
-#define inform(...) \
-    base_message(::Logger::get(::Logger::INFO), __VA_ARGS__)
-#define hack(...) \
-    base_message(::Logger::get(::Logger::HACK), __VA_ARGS__)
-
-#define warn_once(...) \
-    base_message_once(::Logger::get(::Logger::WARN), __VA_ARGS__)
-#define inform_once(...) \
-    base_message_once(::Logger::get(::Logger::INFO), __VA_ARGS__)
-#define hack_once(...) \
-    base_message_once(::Logger::get(::Logger::HACK), __VA_ARGS__)
+#define warn_once(...) base_message_once(::Logger::getWarn(), __VA_ARGS__)
+#define inform_once(...) base_message_once(::Logger::getInfo(), __VA_ARGS__)
+#define hack_once(...) base_message_once(::Logger::getHack(), __VA_ARGS__)
 
 /**
  * Conditional warning macro that checks the supplied condition and
