@@ -41,6 +41,7 @@ Source('imgwriter.cc')
 Source('bmpwriter.cc')
 Source('callback.cc')
 Source('cprintf.cc', add_tags='gtest lib')
+GTest('cprintftest', 'cprintftest.cc')
 Source('debug.cc')
 if env['USE_FENV']:
     Source('fenv.c')

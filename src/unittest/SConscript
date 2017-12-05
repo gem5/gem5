@@ -33,7 +33,6 @@ Import('*')
 Source('unittest.cc')
 
 UnitTest('circlebuf', 'circlebuf.cc')
-GTest('cprintftest', 'cprintftest.cc')
 UnitTest('cprintftime', 'cprintftime.cc')
 UnitTest('pixeltest', 'pixeltest.cc')
 UnitTest('initest', 'initest.cc')
