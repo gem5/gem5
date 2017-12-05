@@ -28,152 +28,155 @@
  * Authors: Nathan Binkert
  */
 
-#include <iostream>
-#include <list>
+#include <gtest/gtest.h>
+
+#include <cstdio>
 #include <sstream>
 #include <string>
 
 #include "base/cprintf.hh"
-#include "base/logging.hh"
 
-using namespace std;
+#define CPRINTF_TEST(...)                                \
+    do {                                                 \
+        std::stringstream ss;                            \
+        ccprintf(ss, __VA_ARGS__);                       \
+        int maxlen = ss.str().length() + 3;              \
+        char *buf = new char[maxlen];                    \
+        buf[maxlen - 1] = '\0';                          \
+        snprintf(buf, maxlen - 2, __VA_ARGS__);          \
+        EXPECT_EQ(ss.str(), std::string(buf));           \
+        delete [] buf;                                   \
+    } while (0)
 
-int
-main()
+TEST(CPrintf, Misc)
 {
     char foo[] = "foo";
-    cprintf("%s\n", foo);
+    CPRINTF_TEST("%s\n", foo);
 
-    string _bar = "asdfkhasdlkfjhasdlkfhjalksdjfhalksdjhfalksdjfhalksdjhf";
-    const int length = 11;
-    char bar[length + 1];
-    bar[length] = 0;
+    CPRINTF_TEST("%d\n", 'A');
+    CPRINTF_TEST("%shits%%s + %smisses%%s\n", "test", "test");
+    CPRINTF_TEST("%%s%-10s %c he went home \'\"%d %#o %#llx %1.5f %1.2E\n",
+                 "hello", 'A', 1, 0xff, 0xfffffffffffffULL, 3.141592653589,
+                 1.1e10);
 
-    memcpy(bar, _bar.c_str(), length);
-    warn("%s\n", bar);
+    CPRINTF_TEST("another test\n");
 
-    cprintf("%d\n", 'A');
-    cprintf("%shits%%s + %smisses%%s\n", "test", "test");
-    cprintf("%%s%-10s %c he went home \'\"%d %#o %#x %1.5f %1.2E\n",
-            "hello", 'A', 1, 0xff, 0xfffffffffffffULL, 3.141592653589, 1.1e10);
+    CPRINTF_TEST("%-10s %c he home \'\"%d %#o %#llx %1.5f %1.2E\n",
+                 "hello", 'A', 1, 0xff, 0xfffffffffffffULL,
+                 3.14159265, 1.1e10);
+}
 
-    cprintf("another test\n");
-
-    stringstream buffer;
-    ccprintf(buffer, "%-10s %c he home \'\"%d %#o %#x %1.5f %1.2E\n",
-             "hello", 'A', 1, 0xff, 0xfffffffffffffULL, 3.14159265, 1.1e10);
-
+TEST(CPrintf, FloatingPoint)
+{
     double f = 314159.26535897932384;
 
-    #define ctest(x, y) printf(x, y); cprintf(x, y); cprintf("\n");
-    ctest("%1.8f\n", f);
-    ctest("%2.8f\n", f);
-    ctest("%3.8f\n", f);
-    ctest("%4.8f\n", f);
-    ctest("%5.8f\n", f);
-    ctest("%6.8f\n", f);
-    ctest("%12.8f\n", f);
-    ctest("%1000.8f\n", f);
-    ctest("%1.0f\n", f);
-    ctest("%1.1f\n", f);
-    ctest("%1.2f\n", f);
-    ctest("%1.3f\n", f);
-    ctest("%1.4f\n", f);
-    ctest("%1.5f\n", f);
-    ctest("%1.6f\n", f);
-    ctest("%1.7f\n", f);
-    ctest("%1.8f\n", f);
-    ctest("%1.9f\n", f);
-    ctest("%1.10f\n", f);
-    ctest("%1.11f\n", f);
-    ctest("%1.12f\n", f);
-    ctest("%1.13f\n", f);
-    ctest("%1.14f\n", f);
-    ctest("%1.15f\n", f);
-    ctest("%1.16f\n", f);
-    ctest("%1.17f\n", f);
-    ctest("%1.18f\n", f);
-
-    cout << "foo\n";
+    CPRINTF_TEST("%1.8f\n", f);
+    CPRINTF_TEST("%2.8f\n", f);
+    CPRINTF_TEST("%3.8f\n", f);
+    CPRINTF_TEST("%4.8f\n", f);
+    CPRINTF_TEST("%5.8f\n", f);
+    CPRINTF_TEST("%6.8f\n", f);
+    CPRINTF_TEST("%12.8f\n", f);
+    CPRINTF_TEST("%1000.8f\n", f);
+    CPRINTF_TEST("%1.0f\n", f);
+    CPRINTF_TEST("%1.1f\n", f);
+    CPRINTF_TEST("%1.2f\n", f);
+    CPRINTF_TEST("%1.3f\n", f);
+    CPRINTF_TEST("%1.4f\n", f);
+    CPRINTF_TEST("%1.5f\n", f);
+    CPRINTF_TEST("%1.6f\n", f);
+    CPRINTF_TEST("%1.7f\n", f);
+    CPRINTF_TEST("%1.8f\n", f);
+    CPRINTF_TEST("%1.9f\n", f);
+    CPRINTF_TEST("%1.10f\n", f);
+    CPRINTF_TEST("%1.11f\n", f);
+    CPRINTF_TEST("%1.12f\n", f);
+    CPRINTF_TEST("%1.13f\n", f);
+    CPRINTF_TEST("%1.14f\n", f);
+    CPRINTF_TEST("%1.15f\n", f);
+    CPRINTF_TEST("%1.16f\n", f);
+    CPRINTF_TEST("%1.17f\n", f);
+    CPRINTF_TEST("%1.18f\n", f);
 
     f = 0.00000026535897932384;
-    ctest("%1.8f\n", f);
-    ctest("%2.8f\n", f);
-    ctest("%3.8f\n", f);
-    ctest("%4.8f\n", f);
-    ctest("%5.8f\n", f);
-    ctest("%6.8f\n", f);
-    ctest("%12.8f\n", f);
-    ctest("%1.0f\n", f);
-    ctest("%1.1f\n", f);
-    ctest("%1.2f\n", f);
-    ctest("%1.3f\n", f);
-    ctest("%1.4f\n", f);
-    ctest("%1.5f\n", f);
-    ctest("%1.6f\n", f);
-    ctest("%1.7f\n", f);
-    ctest("%1.8f\n", f);
-    ctest("%1.9f\n", f);
-    ctest("%1.10f\n", f);
-    ctest("%1.11f\n", f);
-    ctest("%1.12f\n", f);
-    ctest("%1.13f\n", f);
-    ctest("%1.14f\n", f);
-    ctest("%1.15f\n", f);
-    ctest("%1.16f\n", f);
-    ctest("%1.17f\n", f);
-    ctest("%1.18f\n", f);
+    CPRINTF_TEST("%1.8f\n", f);
+    CPRINTF_TEST("%2.8f\n", f);
+    CPRINTF_TEST("%3.8f\n", f);
+    CPRINTF_TEST("%4.8f\n", f);
+    CPRINTF_TEST("%5.8f\n", f);
+    CPRINTF_TEST("%6.8f\n", f);
+    CPRINTF_TEST("%12.8f\n", f);
+    CPRINTF_TEST("%1.0f\n", f);
+    CPRINTF_TEST("%1.1f\n", f);
+    CPRINTF_TEST("%1.2f\n", f);
+    CPRINTF_TEST("%1.3f\n", f);
+    CPRINTF_TEST("%1.4f\n", f);
+    CPRINTF_TEST("%1.5f\n", f);
+    CPRINTF_TEST("%1.6f\n", f);
+    CPRINTF_TEST("%1.7f\n", f);
+    CPRINTF_TEST("%1.8f\n", f);
+    CPRINTF_TEST("%1.9f\n", f);
+    CPRINTF_TEST("%1.10f\n", f);
+    CPRINTF_TEST("%1.11f\n", f);
+    CPRINTF_TEST("%1.12f\n", f);
+    CPRINTF_TEST("%1.13f\n", f);
+    CPRINTF_TEST("%1.14f\n", f);
+    CPRINTF_TEST("%1.15f\n", f);
+    CPRINTF_TEST("%1.16f\n", f);
+    CPRINTF_TEST("%1.17f\n", f);
+    CPRINTF_TEST("%1.18f\n", f);
 
     f = 0.00000026535897932384;
-    ctest("%1.8e\n", f);
-    ctest("%2.8e\n", f);
-    ctest("%3.8e\n", f);
-    ctest("%4.8e\n", f);
-    ctest("%5.8e\n", f);
-    ctest("%6.8e\n", f);
-    ctest("%12.8e\n", f);
-    ctest("%1.0e\n", f);
-    ctest("%1.1e\n", f);
-    ctest("%1.2e\n", f);
-    ctest("%1.3e\n", f);
-    ctest("%1.4e\n", f);
-    ctest("%1.5e\n", f);
-    ctest("%1.6e\n", f);
-    ctest("%1.7e\n", f);
-    ctest("%1.8e\n", f);
-    ctest("%1.9e\n", f);
-    ctest("%1.10e\n", f);
-    ctest("%1.11e\n", f);
-    ctest("%1.12e\n", f);
-    ctest("%1.13e\n", f);
-    ctest("%1.14e\n", f);
-    ctest("%1.15e\n", f);
-    ctest("%1.16e\n", f);
-    ctest("%1.17e\n", f);
-    ctest("%1.18e\n", f);
+    CPRINTF_TEST("%1.8e\n", f);
+    CPRINTF_TEST("%2.8e\n", f);
+    CPRINTF_TEST("%3.8e\n", f);
+    CPRINTF_TEST("%4.8e\n", f);
+    CPRINTF_TEST("%5.8e\n", f);
+    CPRINTF_TEST("%6.8e\n", f);
+    CPRINTF_TEST("%12.8e\n", f);
+    CPRINTF_TEST("%1.0e\n", f);
+    CPRINTF_TEST("%1.1e\n", f);
+    CPRINTF_TEST("%1.2e\n", f);
+    CPRINTF_TEST("%1.3e\n", f);
+    CPRINTF_TEST("%1.4e\n", f);
+    CPRINTF_TEST("%1.5e\n", f);
+    CPRINTF_TEST("%1.6e\n", f);
+    CPRINTF_TEST("%1.7e\n", f);
+    CPRINTF_TEST("%1.8e\n", f);
+    CPRINTF_TEST("%1.9e\n", f);
+    CPRINTF_TEST("%1.10e\n", f);
+    CPRINTF_TEST("%1.11e\n", f);
+    CPRINTF_TEST("%1.12e\n", f);
+    CPRINTF_TEST("%1.13e\n", f);
+    CPRINTF_TEST("%1.14e\n", f);
+    CPRINTF_TEST("%1.15e\n", f);
+    CPRINTF_TEST("%1.16e\n", f);
+    CPRINTF_TEST("%1.17e\n", f);
+    CPRINTF_TEST("%1.18e\n", f);
+}
 
-    cout << buffer.str();
+TEST(CPrintf, Types)
+{
+    std::stringstream ss;
 
-    cout.width(0);
-    cout.precision(1);
-    cout << f << "\n";
+    std::string foo1 = "string test";
+    ccprintf(ss, "%s\n", foo1);
+    EXPECT_EQ(ss.str(), "string test\n");
+    ss.str("");
 
-    string foo1 = "string test";
-    cprintf("%s\n", foo1);
-
-    stringstream foo2;
+    std::stringstream foo2;
     foo2 << "stringstream test";
-    cprintf("%s\n", foo2);
+    ccprintf(ss, "%s\n", foo2);
+    EXPECT_EQ(ss.str(), "stringstream test\n");
+    ss.str("");
 
-    cprintf("%c  %c\n", 'c', 65);
+    CPRINTF_TEST("%c  %c\n", 'c', 65);
+}
 
-    cout << '9' << endl;
-
-    cout << endl;
-
-    cprintf("%08.4f\n", 99.99);
-    cprintf("%0*.*f\n", 8, 4, 99.99);
-    cprintf("%07.*f\n", 4, 1.234);
-    cprintf("%#0*x\n", 9, 123412);
-    return 0;
+TEST(CPrintf, SpecialFormatting)
+{
+    CPRINTF_TEST("%08.4f\n", 99.99);
+    CPRINTF_TEST("%0*.*f\n", 8, 4, 99.99);
+    CPRINTF_TEST("%07.*f\n", 4, 1.234);
+    CPRINTF_TEST("%#0*x\n", 9, 123412);
 }
