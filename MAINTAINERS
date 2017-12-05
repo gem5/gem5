@@ -58,6 +58,10 @@ ext: Components external to gem5
 gpu-compute:
   Tony Gutierrez <anthony.gutierrez@amd.com>
 
+learning-gem5: The code and configs for the Learning gem5 book (see
+               learning.gem5.com)
+  Jason Lowe-Power <jason@lowepower.com>
+
 mem: General memory system (e.g., XBar, Packet)
   Nikos Nikoleris <nikos.nikoleris@arm.com>
 mem-cache: Classic caches and coherence
