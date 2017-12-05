@@ -56,6 +56,7 @@ Source('logging.cc')
 Source('match.cc')
 Source('output.cc')
 Source('pixel.cc')
+GTest('pixeltest', 'pixeltest.cc', 'pixel.cc')
 Source('pollevent.cc')
 Source('random.cc')
 if env['TARGET_ISA'] != 'null':

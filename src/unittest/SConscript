@@ -34,7 +34,6 @@ Source('unittest.cc')
 
 UnitTest('circlebuf', 'circlebuf.cc')
 UnitTest('cprintftime', 'cprintftime.cc')
-UnitTest('pixeltest', 'pixeltest.cc')
 UnitTest('initest', 'initest.cc')
 UnitTest('nmtest', 'nmtest.cc')
 UnitTest('rangemaptest', 'rangemaptest.cc')
