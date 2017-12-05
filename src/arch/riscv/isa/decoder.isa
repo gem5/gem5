@@ -1338,31 +1338,31 @@ decode QUADRANT default Unknown::unknown() {
                         if (std::isnan(fs1)) {
                             Rd_sd = numeric_limits<int32_t>::max();
                             FFLAGS |= FloatInvalid;
+                        } else if (fs1 >= numeric_limits<int32_t>::max()) {
+                            Rd_sd = numeric_limits<int32_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 <= numeric_limits<int32_t>::min()) {
+                            Rd_sd = numeric_limits<int32_t>::min();
+                            FFLAGS |= FloatInvalid;
                         } else {
                             Rd_sd = (int32_t)fs1;
-                            if (fetestexcept(FE_INVALID)) {
-                                if (signbit(fs1)) {
-                                    Rd_sd = numeric_limits<int32_t>::min();
-                                } else {
-                                    Rd_sd = numeric_limits<int32_t>::max();
-                                }
-                                feclearexcept(FE_INEXACT);
-                            }
                         }
                     }}, FloatCvtOp);
                     0x1: fcvt_wu_s({{
                         uint32_t temp;
                         float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
 
-                        if (fs1 < 0.0) {
+                        if (std::isnan(fs1)) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 < 0.0) {
                             Rd = 0;
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 > numeric_limits<uint32_t>::max()) {
+                            Rd = numeric_limits<uint64_t>::max();
                             FFLAGS |= FloatInvalid;
                         } else {
                             Rd = (uint32_t)fs1;
-                            if (fetestexcept(FE_INVALID)) {
-                                Rd = numeric_limits<uint64_t>::max();
-                                feclearexcept(FE_INEXACT);
-                            }
                         }
                     }}, FloatCvtOp);
                     0x2: fcvt_l_s({{
@@ -1372,79 +1372,89 @@ decode QUADRANT default Unknown::unknown() {
                         if (std::isnan(fs1)) {
                             Rd_sd = numeric_limits<int64_t>::max();
                             FFLAGS |= FloatInvalid;
+                        } else if (fs1 > numeric_limits<int64_t>::max()) {
+                            Rd_sd = numeric_limits<int64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 < numeric_limits<int64_t>::min()) {
+                            Rd_sd = numeric_limits<int64_t>::min();
+                            FFLAGS |= FloatInvalid;
                         } else {
                             Rd_sd = (int64_t)fs1;
-                            if (fetestexcept(FE_INVALID)) {
-                                if (signbit(fs1)) {
-                                    Rd_sd = numeric_limits<int64_t>::min();
-                                } else {
-                                    Rd_sd = numeric_limits<int64_t>::max();
-                                }
-                                feclearexcept(FE_INEXACT);
-                            }
                         }
                     }}, FloatCvtOp);
                     0x3: fcvt_lu_s({{
                         uint32_t temp;
                         float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
 
-                        if (fs1 < 0.0) {
+                        if (std::isnan(fs1)) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 < 0.0) {
                             Rd = 0;
+                            FFLAGS |= FloatInvalid;
+                        } else if (fs1 > numeric_limits<uint64_t>::max()) {
+                            Rd = numeric_limits<uint64_t>::max();
                             FFLAGS |= FloatInvalid;
                         } else {
                             Rd = (uint64_t)fs1;
-                            if (fetestexcept(FE_INVALID)) {
-                                Rd = numeric_limits<uint64_t>::max();
-                                feclearexcept(FE_INEXACT);
-                            }
                         }
                     }}, FloatCvtOp);
                 }
                 0x61: decode CONV_SGN {
                     0x0: fcvt_w_d({{
-                        Rd_sd = (int32_t)Fs1;
-                        if (fetestexcept(FE_INVALID)) {
-                            if (Fs1 < 0.0) {
-                                Rd_sd = numeric_limits<int32_t>::min();
-                            } else {
-                                Rd_sd = numeric_limits<int32_t>::max();
-                            }
-                            feclearexcept(FE_INEXACT);
+                        if (std::isnan(Fs1)) {
+                            Rd_sd = numeric_limits<int32_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 > numeric_limits<int32_t>::max()) {
+                            Rd_sd = numeric_limits<int32_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 < numeric_limits<int32_t>::min()) {
+                            Rd_sd = numeric_limits<int32_t>::min();
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Rd_sd = (int32_t)Fs1;
                         }
                     }}, FloatCvtOp);
                     0x1: fcvt_wu_d({{
-                        if (Fs1 < 0.0) {
+                        if (std::isnan(Fs1)) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 < 0) {
                             Rd = 0;
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 > numeric_limits<uint32_t>::max()) {
+                            Rd = numeric_limits<uint64_t>::max();
                             FFLAGS |= FloatInvalid;
                         } else {
                             Rd = (uint32_t)Fs1;
-                            if (fetestexcept(FE_INVALID)) {
-                                Rd = numeric_limits<uint64_t>::max();
-                                feclearexcept(FE_INEXACT);
-                            }
                         }
                     }}, FloatCvtOp);
                     0x2: fcvt_l_d({{
-                        Rd_sd = Fs1;
-                        if (fetestexcept(FE_INVALID)) {
-                            if (Fs1 < 0.0) {
-                                Rd_sd = numeric_limits<int64_t>::min();
-                            } else {
-                                Rd_sd = numeric_limits<int64_t>::max();
-                            }
-                            feclearexcept(FE_INEXACT);
+                        if (std::isnan(Fs1)) {
+                            Rd_sd = numeric_limits<int64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 > numeric_limits<int64_t>::max()) {
+                            Rd_sd = numeric_limits<int64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 < numeric_limits<int64_t>::min()) {
+                            Rd_sd = numeric_limits<int64_t>::min();
+                            FFLAGS |= FloatInvalid;
+                        } else {
+                            Rd_sd = Fs1;
                         }
                     }}, FloatCvtOp);
                     0x3: fcvt_lu_d({{
-                        if (Fs1 < 0.0) {
+                        if (std::isnan(Fs1)) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
+                        } else if (Fs1 < 0) {
                             Rd = 0;
                             FFLAGS |= FloatInvalid;
+                        } else if (Fs1 > numeric_limits<uint64_t>::max()) {
+                            Rd = numeric_limits<uint64_t>::max();
+                            FFLAGS |= FloatInvalid;
                         } else {
-                            Rd = (uint64_t)Fs1;
-                            if (fetestexcept(FE_INVALID)) {
-                                Rd = numeric_limits<uint64_t>::max();
-                                feclearexcept(FE_INEXACT);
-                            }
+                            Rd = Fs1;
                         }
                     }}, FloatCvtOp);
                 }
