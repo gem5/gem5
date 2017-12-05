@@ -37,93 +37,64 @@
  * Authors: Andreas Sandberg
  */
 
-#include "base/framebuffer.hh"
+#include "base/pixel.hh"
 
-#include <zlib.h>
+#include <cassert>
 
 #include "base/bitfield.hh"
 
-const FrameBuffer FrameBuffer::dummy(320, 240);
+const PixelConverter PixelConverter::rgba8888_le(4, 0, 8, 16, 8, 8, 8);
+const PixelConverter PixelConverter::rgba8888_be(4, 0, 8, 16, 8, 8, 8,
+                                                 BigEndianByteOrder);
+const PixelConverter PixelConverter::rgb565_le(2,  0, 5, 11, 5, 6, 5);
+const PixelConverter PixelConverter::rgb565_be(2,  0, 5, 11, 5, 6, 5,
+                                               BigEndianByteOrder);
 
-FrameBuffer::FrameBuffer(unsigned width, unsigned height)
-    : pixels(width * height),
-      _width(width), _height(height)
+PixelConverter::PixelConverter(unsigned _length,
+                               unsigned ro, unsigned go, unsigned bo,
+                               unsigned rw, unsigned gw, unsigned bw,
+                               ByteOrder _byte_order)
+    : length(_length),
+      depth(rw + gw + bw),
+      byte_order(_byte_order),
+      ch_r(ro, rw),
+      ch_g(go, gw),
+      ch_b(bo, bw)
 {
-    clear();
+    assert(length > 1);
 }
 
-FrameBuffer::FrameBuffer()
-    : _width(0), _height(0)
+PixelConverter::Channel::Channel(unsigned _offset, unsigned width)
+    : offset(_offset),
+      mask(::mask(width)),
+      factor(255.0 / mask)
 {
 }
 
-FrameBuffer::~FrameBuffer()
+uint32_t
+PixelConverter::readWord(const uint8_t *p) const
 {
-}
+    uint32_t word(0);
 
-
-void
-FrameBuffer::serialize(CheckpointOut &cp) const
-{
-    SERIALIZE_SCALAR(_width);
-    SERIALIZE_SCALAR(_height);
-    SERIALIZE_CONTAINER(pixels);
-}
-
-void
-FrameBuffer::unserialize(CheckpointIn &cp)
-{
-    UNSERIALIZE_SCALAR(_width);
-    UNSERIALIZE_SCALAR(_height);
-    UNSERIALIZE_CONTAINER(pixels);
-}
-
-void
-FrameBuffer::resize(unsigned width, unsigned height)
-{
-    _width = width;
-    _height = height;
-
-    pixels.resize(width * height);
-}
-
-void
-FrameBuffer::fill(const Pixel &pixel)
-{
-    for (auto &p : pixels)
-        p = pixel;
-}
-
-void
-FrameBuffer::clear()
-{
-    static const Pixel black(0, 0, 0);
-
-    fill(black);
-}
-
-void
-FrameBuffer::copyIn(const uint8_t *fb, const PixelConverter &conv)
-{
-    for (auto &p : pixels) {
-        p = conv.toPixel(fb);
-        fb += conv.length;
+    if (byte_order == LittleEndianByteOrder) {
+        for (int i = 0; i < length; ++i)
+            word |= p[i] << (8 * i);
+    } else {
+        for (int i = 0; i < length; ++i)
+            word |= p[i] << (8 * (length - i - 1));
     }
+
+    return word;
 }
 
 void
-FrameBuffer::copyOut(uint8_t *fb, const PixelConverter &conv) const
+PixelConverter::writeWord(uint8_t *p, uint32_t word) const
 {
-    for (auto &p : pixels) {
-        conv.fromPixel(fb, p);
-        fb += conv.length;
+    if (byte_order == LittleEndianByteOrder) {
+        for (int i = 0; i < length; ++i)
+            p[i] = (word >> (8 * i)) & 0xFF;
+    } else {
+        for (int i = 0; i < length; ++i)
+            p[i] = (word >> (8 * (length - i - 1))) & 0xFF;
     }
-}
-
-uint64_t
-FrameBuffer::getHash() const
-{
-    return adler32(0UL,
-                   reinterpret_cast<const Bytef *>(pixels.data()),
-                   area() * sizeof(Pixel));
 }
