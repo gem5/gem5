@@ -151,6 +151,9 @@ _format_float(std::ostream &out, const T &data, Format &fmt)
 
     ios::fmtflags flags(out.flags());
 
+    if (fmt.fill_zero)
+        out.fill('0');
+
     switch (fmt.float_format) {
       case Format::scientific:
         if (fmt.precision != -1) {
