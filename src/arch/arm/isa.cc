@@ -55,177 +55,12 @@
 namespace ArmISA
 {
 
-
-/**
- * Some registers alias with others, and therefore need to be translated.
- * When two mapping registers are given, they are the 32b lower and
- * upper halves, respectively, of the 64b register being mapped.
- * aligned with reference documentation ARM DDI 0487A.i pp 1540-1543
- */
-void
-ISA::initializeMiscRegMetadata()
-{
-    InitReg(MISCREG_ACTLR_EL1).mapsTo(MISCREG_ACTLR_NS);
-    InitReg(MISCREG_AFSR0_EL1).mapsTo(MISCREG_ADFSR_NS);
-    InitReg(MISCREG_AFSR1_EL1).mapsTo(MISCREG_AIFSR_NS);
-    InitReg(MISCREG_AMAIR_EL1).mapsTo(MISCREG_AMAIR0_NS,
-                                      MISCREG_AMAIR1_NS);
-    InitReg(MISCREG_CONTEXTIDR_EL1).mapsTo(MISCREG_CONTEXTIDR_NS);
-    InitReg(MISCREG_CPACR_EL1).mapsTo(MISCREG_CPACR);
-    InitReg(MISCREG_CSSELR_EL1).mapsTo(MISCREG_CSSELR_NS);
-    InitReg(MISCREG_DACR32_EL2).mapsTo(MISCREG_DACR_NS);
-    InitReg(MISCREG_FAR_EL1).mapsTo(MISCREG_DFAR_NS,
-                                    MISCREG_IFAR_NS);
-    // ESR_EL1 -> DFSR
-    InitReg(MISCREG_HACR_EL2).mapsTo(MISCREG_HACR);
-    InitReg(MISCREG_ACTLR_EL2).mapsTo(MISCREG_HACTLR);
-    InitReg(MISCREG_AFSR0_EL2).mapsTo(MISCREG_HADFSR);
-    InitReg(MISCREG_AFSR1_EL2).mapsTo(MISCREG_HAIFSR);
-    InitReg(MISCREG_AMAIR_EL2).mapsTo(MISCREG_HAMAIR0,
-                                      MISCREG_HAMAIR1);
-    InitReg(MISCREG_CPTR_EL2).mapsTo(MISCREG_HCPTR);
-    InitReg(MISCREG_HCR_EL2).mapsTo(MISCREG_HCR /*,
-                                    MISCREG_HCR2*/);
-    InitReg(MISCREG_MDCR_EL2).mapsTo(MISCREG_HDCR);
-    InitReg(MISCREG_FAR_EL2).mapsTo(MISCREG_HDFAR,
-                                    MISCREG_HIFAR);
-    InitReg(MISCREG_MAIR_EL2).mapsTo(MISCREG_HMAIR0,
-                                     MISCREG_HMAIR1);
-    InitReg(MISCREG_HPFAR_EL2).mapsTo(MISCREG_HPFAR);
-    InitReg(MISCREG_SCTLR_EL2).mapsTo(MISCREG_HSCTLR);
-    InitReg(MISCREG_ESR_EL2).mapsTo(MISCREG_HSR);
-    InitReg(MISCREG_HSTR_EL2).mapsTo(MISCREG_HSTR);
-    InitReg(MISCREG_TCR_EL2).mapsTo(MISCREG_HTCR);
-    InitReg(MISCREG_TPIDR_EL2).mapsTo(MISCREG_HTPIDR);
-    InitReg(MISCREG_TTBR0_EL2).mapsTo(MISCREG_HTTBR);
-    InitReg(MISCREG_VBAR_EL2).mapsTo(MISCREG_HVBAR);
-    InitReg(MISCREG_IFSR32_EL2).mapsTo(MISCREG_IFSR_NS);
-    InitReg(MISCREG_MAIR_EL1).mapsTo(MISCREG_PRRR_NS,
-                                     MISCREG_NMRR_NS);
-    InitReg(MISCREG_PAR_EL1).mapsTo(MISCREG_PAR_NS);
-    // RMR_EL1 -> RMR
-    // RMR_EL2 -> HRMR
-    InitReg(MISCREG_SCTLR_EL1).mapsTo(MISCREG_SCTLR_NS);
-    InitReg(MISCREG_SDER32_EL3).mapsTo(MISCREG_SDER);
-    InitReg(MISCREG_TPIDR_EL1).mapsTo(MISCREG_TPIDRPRW_NS);
-    InitReg(MISCREG_TPIDRRO_EL0).mapsTo(MISCREG_TPIDRURO_NS);
-    InitReg(MISCREG_TPIDR_EL0).mapsTo(MISCREG_TPIDRURW_NS);
-    InitReg(MISCREG_TCR_EL1).mapsTo(MISCREG_TTBCR_NS);
-    InitReg(MISCREG_TTBR0_EL1).mapsTo(MISCREG_TTBR0_NS);
-    InitReg(MISCREG_TTBR1_EL1).mapsTo(MISCREG_TTBR1_NS);
-    InitReg(MISCREG_VBAR_EL1).mapsTo(MISCREG_VBAR_NS);
-    InitReg(MISCREG_VMPIDR_EL2).mapsTo(MISCREG_VMPIDR);
-    InitReg(MISCREG_VPIDR_EL2).mapsTo(MISCREG_VPIDR);
-    InitReg(MISCREG_VTCR_EL2).mapsTo(MISCREG_VTCR);
-    InitReg(MISCREG_VTTBR_EL2).mapsTo(MISCREG_VTTBR);
-    InitReg(MISCREG_CNTFRQ_EL0).mapsTo(MISCREG_CNTFRQ);
-    InitReg(MISCREG_CNTHCTL_EL2).mapsTo(MISCREG_CNTHCTL);
-    InitReg(MISCREG_CNTHP_CTL_EL2).mapsTo(MISCREG_CNTHP_CTL);
-    InitReg(MISCREG_CNTHP_CVAL_EL2).mapsTo(MISCREG_CNTHP_CVAL); /* 64b */
-    InitReg(MISCREG_CNTHP_TVAL_EL2).mapsTo(MISCREG_CNTHP_TVAL);
-    InitReg(MISCREG_CNTKCTL_EL1).mapsTo(MISCREG_CNTKCTL);
-    InitReg(MISCREG_CNTP_CTL_EL0).mapsTo(MISCREG_CNTP_CTL_NS);
-    InitReg(MISCREG_CNTP_CVAL_EL0).mapsTo(MISCREG_CNTP_CVAL_NS); /* 64b */
-    InitReg(MISCREG_CNTP_TVAL_EL0).mapsTo(MISCREG_CNTP_TVAL_NS);
-    InitReg(MISCREG_CNTPCT_EL0).mapsTo(MISCREG_CNTPCT); /* 64b */
-    InitReg(MISCREG_CNTV_CTL_EL0).mapsTo(MISCREG_CNTV_CTL);
-    InitReg(MISCREG_CNTV_CVAL_EL0).mapsTo(MISCREG_CNTV_CVAL); /* 64b */
-    InitReg(MISCREG_CNTV_TVAL_EL0).mapsTo(MISCREG_CNTV_TVAL);
-    InitReg(MISCREG_CNTVCT_EL0).mapsTo(MISCREG_CNTVCT); /* 64b */
-    InitReg(MISCREG_CNTVOFF_EL2).mapsTo(MISCREG_CNTVOFF); /* 64b */
-    InitReg(MISCREG_DBGAUTHSTATUS_EL1).mapsTo(MISCREG_DBGAUTHSTATUS);
-    InitReg(MISCREG_DBGBCR0_EL1).mapsTo(MISCREG_DBGBCR0);
-    InitReg(MISCREG_DBGBCR1_EL1).mapsTo(MISCREG_DBGBCR1);
-    InitReg(MISCREG_DBGBCR2_EL1).mapsTo(MISCREG_DBGBCR2);
-    InitReg(MISCREG_DBGBCR3_EL1).mapsTo(MISCREG_DBGBCR3);
-    InitReg(MISCREG_DBGBCR4_EL1).mapsTo(MISCREG_DBGBCR4);
-    InitReg(MISCREG_DBGBCR5_EL1).mapsTo(MISCREG_DBGBCR5);
-    InitReg(MISCREG_DBGBVR0_EL1).mapsTo(MISCREG_DBGBVR0 /*,
-                                        MISCREG_DBGBXVR0 */);
-    InitReg(MISCREG_DBGBVR1_EL1).mapsTo(MISCREG_DBGBVR1 /*,
-                                        MISCREG_DBGBXVR1 */);
-    InitReg(MISCREG_DBGBVR2_EL1).mapsTo(MISCREG_DBGBVR2 /*,
-                                        MISCREG_DBGBXVR2 */);
-    InitReg(MISCREG_DBGBVR3_EL1).mapsTo(MISCREG_DBGBVR3 /*,
-                                        MISCREG_DBGBXVR3 */);
-    InitReg(MISCREG_DBGBVR4_EL1).mapsTo(MISCREG_DBGBVR4 /*,
-                                        MISCREG_DBGBXVR4 */);
-    InitReg(MISCREG_DBGBVR5_EL1).mapsTo(MISCREG_DBGBVR5 /*,
-                                        MISCREG_DBGBXVR5 */);
-    InitReg(MISCREG_DBGCLAIMSET_EL1).mapsTo(MISCREG_DBGCLAIMSET);
-    InitReg(MISCREG_DBGCLAIMCLR_EL1).mapsTo(MISCREG_DBGCLAIMCLR);
-    // DBGDTR_EL0 -> DBGDTR{R or T}Xint
-    // DBGDTRRX_EL0 -> DBGDTRRXint
-    // DBGDTRTX_EL0 -> DBGDTRRXint
-    InitReg(MISCREG_DBGPRCR_EL1).mapsTo(MISCREG_DBGPRCR);
-    InitReg(MISCREG_DBGVCR32_EL2).mapsTo(MISCREG_DBGVCR);
-    InitReg(MISCREG_DBGWCR0_EL1).mapsTo(MISCREG_DBGWCR0);
-    InitReg(MISCREG_DBGWCR1_EL1).mapsTo(MISCREG_DBGWCR1);
-    InitReg(MISCREG_DBGWCR2_EL1).mapsTo(MISCREG_DBGWCR2);
-    InitReg(MISCREG_DBGWCR3_EL1).mapsTo(MISCREG_DBGWCR3);
-    InitReg(MISCREG_DBGWVR0_EL1).mapsTo(MISCREG_DBGWVR0);
-    InitReg(MISCREG_DBGWVR1_EL1).mapsTo(MISCREG_DBGWVR1);
-    InitReg(MISCREG_DBGWVR2_EL1).mapsTo(MISCREG_DBGWVR2);
-    InitReg(MISCREG_DBGWVR3_EL1).mapsTo(MISCREG_DBGWVR3);
-    InitReg(MISCREG_ID_DFR0_EL1).mapsTo(MISCREG_ID_DFR0);
-    InitReg(MISCREG_MDCCSR_EL0).mapsTo(MISCREG_DBGDSCRint);
-    InitReg(MISCREG_MDRAR_EL1).mapsTo(MISCREG_DBGDRAR);
-    InitReg(MISCREG_MDSCR_EL1).mapsTo(MISCREG_DBGDSCRext);
-    InitReg(MISCREG_OSDLR_EL1).mapsTo(MISCREG_DBGOSDLR);
-    InitReg(MISCREG_OSDTRRX_EL1).mapsTo(MISCREG_DBGDTRRXext);
-    InitReg(MISCREG_OSDTRTX_EL1).mapsTo(MISCREG_DBGDTRTXext);
-    InitReg(MISCREG_OSECCR_EL1).mapsTo(MISCREG_DBGOSECCR);
-    InitReg(MISCREG_OSLAR_EL1).mapsTo(MISCREG_DBGOSLAR);
-    InitReg(MISCREG_OSLSR_EL1).mapsTo(MISCREG_DBGOSLSR);
-    InitReg(MISCREG_PMCCNTR_EL0).mapsTo(MISCREG_PMCCNTR);
-    InitReg(MISCREG_PMCEID0_EL0).mapsTo(MISCREG_PMCEID0);
-    InitReg(MISCREG_PMCEID1_EL0).mapsTo(MISCREG_PMCEID1);
-    InitReg(MISCREG_PMCNTENSET_EL0).mapsTo(MISCREG_PMCNTENSET);
-    InitReg(MISCREG_PMCNTENCLR_EL0).mapsTo(MISCREG_PMCNTENCLR);
-    InitReg(MISCREG_PMCR_EL0).mapsTo(MISCREG_PMCR);
-/*  InitReg(MISCREG_PMEVCNTR0_EL0).mapsTo(MISCREG_PMEVCNTR0);
-    InitReg(MISCREG_PMEVCNTR1_EL0).mapsTo(MISCREG_PMEVCNTR1);
-    InitReg(MISCREG_PMEVCNTR2_EL0).mapsTo(MISCREG_PMEVCNTR2);
-    InitReg(MISCREG_PMEVCNTR3_EL0).mapsTo(MISCREG_PMEVCNTR3);
-    InitReg(MISCREG_PMEVCNTR4_EL0).mapsTo(MISCREG_PMEVCNTR4);
-    InitReg(MISCREG_PMEVCNTR5_EL0).mapsTo(MISCREG_PMEVCNTR5);
-    InitReg(MISCREG_PMEVTYPER0_EL0).mapsTo(MISCREG_PMEVTYPER0);
-    InitReg(MISCREG_PMEVTYPER1_EL0).mapsTo(MISCREG_PMEVTYPER1);
-    InitReg(MISCREG_PMEVTYPER2_EL0).mapsTo(MISCREG_PMEVTYPER2);
-    InitReg(MISCREG_PMEVTYPER3_EL0).mapsTo(MISCREG_PMEVTYPER3);
-    InitReg(MISCREG_PMEVTYPER4_EL0).mapsTo(MISCREG_PMEVTYPER4);
-    InitReg(MISCREG_PMEVTYPER5_EL0).mapsTo(MISCREG_PMEVTYPER5); */
-    InitReg(MISCREG_PMINTENCLR_EL1).mapsTo(MISCREG_PMINTENCLR);
-    InitReg(MISCREG_PMINTENSET_EL1).mapsTo(MISCREG_PMINTENSET);
-//  InitReg(MISCREG_PMOVSCLR_EL0).mapsTo(MISCREG_PMOVSCLR);
-    InitReg(MISCREG_PMOVSSET_EL0).mapsTo(MISCREG_PMOVSSET);
-    InitReg(MISCREG_PMSELR_EL0).mapsTo(MISCREG_PMSELR);
-    InitReg(MISCREG_PMSWINC_EL0).mapsTo(MISCREG_PMSWINC);
-    InitReg(MISCREG_PMUSERENR_EL0).mapsTo(MISCREG_PMUSERENR);
-    InitReg(MISCREG_PMXEVCNTR_EL0).mapsTo(MISCREG_PMXEVCNTR);
-    InitReg(MISCREG_PMXEVTYPER_EL0).mapsTo(MISCREG_PMXEVTYPER);
-
-    InitReg(MISCREG_SCR).res0(0xff40)  // [31:16], [6]
-                        .res1(0x0030); // [5:4]
-
-    // from ARM DDI 0487A.i, template text
-    // "AArch64 System register ___ can be mapped to
-    //  AArch32 System register ___, but this is not
-    //  architecturally mandated."
-    InitReg(MISCREG_SCR_EL3).mapsTo(MISCREG_SCR); // D7-2005
-    // MDCR_EL3 -> SDCR, D7-2108 (the latter is unimpl. in gem5)
-    InitReg(MISCREG_SPSR_EL1).mapsTo(MISCREG_SPSR_SVC); // C5.2.17 SPSR_EL1
-    InitReg(MISCREG_SPSR_EL2).mapsTo(MISCREG_SPSR_HYP); // C5.2.18 SPSR_EL2
-    InitReg(MISCREG_SPSR_EL3).mapsTo(MISCREG_SPSR_MON); // C5.2.19 SPSR_EL3
-}
-
 ISA::ISA(Params *p)
     : SimObject(p),
       system(NULL),
       _decoderFlavour(p->decoderFlavour),
       _vecRegRenameMode(p->vecRegRenameMode),
-      pmu(p->pmu),
-      lookUpMiscReg(NUM_MISCREGS)
+      pmu(p->pmu)
 {
     miscRegs[MISCREG_SCTLR_RST] = 0;
 
@@ -260,6 +95,8 @@ ISA::ISA(Params *p)
 
     clear();
 }
+
+std::vector<struct ISA::MiscRegLUTEntry> ISA::lookUpMiscReg(NUM_MISCREGS);
 
 const ArmISAParams *
 ISA::params() const

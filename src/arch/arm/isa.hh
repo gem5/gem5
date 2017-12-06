@@ -44,6 +44,7 @@
 #define __ARCH_ARM_ISA_HH__
 
 #include "arch/arm/isa_device.hh"
+#include "arch/arm/miscregs.hh"
 #include "arch/arm/registers.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/tlb.hh"
@@ -112,10 +113,11 @@ namespace ArmISA
         };
 
         /** Metadata table accessible via the value of the register */
-        std::vector<struct MiscRegLUTEntry> lookUpMiscReg;
+        static std::vector<struct MiscRegLUTEntry> lookUpMiscReg;
 
         class MiscRegLUTEntryInitializer {
             struct MiscRegLUTEntry &entry;
+            std::bitset<NUM_MISCREG_INFOS> &info;
             typedef const MiscRegLUTEntryInitializer& chain;
           public:
             chain mapsTo(uint32_t l, uint32_t u = 0) const {
@@ -139,13 +141,197 @@ namespace ArmISA
                 entry._rao  = mask;
                 return *this;
             }
-            MiscRegLUTEntryInitializer(struct MiscRegLUTEntry &e)
-                : entry(e)
-              {}
+            chain implemented(bool v = true) const {
+                info[MISCREG_IMPLEMENTED] = v;
+                return *this;
+            }
+            chain unimplemented() const {
+                return implemented(false);
+            }
+            chain unverifiable(bool v = true) const {
+                info[MISCREG_UNVERIFIABLE] = v;
+                return *this;
+            }
+            chain warnNotFail(bool v = true) const {
+                info[MISCREG_WARN_NOT_FAIL] = v;
+                return *this;
+            }
+            chain mutex(bool v = true) const {
+                info[MISCREG_MUTEX] = v;
+                return *this;
+            }
+            chain banked(bool v = true) const {
+                info[MISCREG_BANKED] = v;
+                return *this;
+            }
+            chain bankedChild(bool v = true) const {
+                info[MISCREG_BANKED_CHILD] = v;
+                return *this;
+            }
+            chain userNonSecureRead(bool v = true) const {
+                info[MISCREG_USR_NS_RD] = v;
+                return *this;
+            }
+            chain userNonSecureWrite(bool v = true) const {
+                info[MISCREG_USR_NS_WR] = v;
+                return *this;
+            }
+            chain userSecureRead(bool v = true) const {
+                info[MISCREG_USR_S_RD] = v;
+                return *this;
+            }
+            chain userSecureWrite(bool v = true) const {
+                info[MISCREG_USR_S_WR] = v;
+                return *this;
+            }
+            chain user(bool v = true) const {
+                userNonSecureRead(v);
+                userNonSecureWrite(v);
+                userSecureRead(v);
+                userSecureWrite(v);
+                return *this;
+            }
+            chain privNonSecureRead(bool v = true) const {
+                info[MISCREG_PRI_NS_RD] = v;
+                return *this;
+            }
+            chain privNonSecureWrite(bool v = true) const {
+                info[MISCREG_PRI_NS_WR] = v;
+                return *this;
+            }
+            chain privSecureRead(bool v = true) const {
+                info[MISCREG_PRI_S_RD] = v;
+                return *this;
+            }
+            chain privSecureWrite(bool v = true) const {
+                info[MISCREG_PRI_S_WR] = v;
+                return *this;
+            }
+            chain privSecure(bool v = true) const {
+                privSecureRead(v);
+                privSecureWrite(v);
+                return *this;
+            }
+            chain hypRead(bool v = true) const {
+                info[MISCREG_HYP_RD] = v;
+                return *this;
+            }
+            chain hypWrite(bool v = true) const {
+                info[MISCREG_HYP_WR] = v;
+                return *this;
+            }
+            chain hyp(bool v = true) const {
+                hypRead(v);
+                hypWrite(v);
+                return *this;
+            }
+            chain monSecureRead(bool v = true) const {
+                info[MISCREG_MON_NS0_RD] = v;
+                return *this;
+            }
+            chain monSecureWrite(bool v = true) const {
+                info[MISCREG_MON_NS0_WR] = v;
+                return *this;
+            }
+            chain monNonSecureRead(bool v = true) const {
+                info[MISCREG_MON_NS1_RD] = v;
+                return *this;
+            }
+            chain monNonSecureWrite(bool v = true) const {
+                info[MISCREG_MON_NS1_WR] = v;
+                return *this;
+            }
+            chain mon(bool v = true) const {
+                monSecureRead(v);
+                monSecureWrite(v);
+                monNonSecureRead(v);
+                monNonSecureWrite(v);
+                return *this;
+            }
+            chain monSecure(bool v = true) const {
+                monSecureRead(v);
+                monSecureWrite(v);
+                return *this;
+            }
+            chain monNonSecure(bool v = true) const {
+                monNonSecureRead(v);
+                monNonSecureWrite(v);
+                return *this;
+            }
+            chain allPrivileges(bool v = true) const {
+                userNonSecureRead(v);
+                userNonSecureWrite(v);
+                userSecureRead(v);
+                userSecureWrite(v);
+                privNonSecureRead(v);
+                privNonSecureWrite(v);
+                privSecureRead(v);
+                privSecureWrite(v);
+                hypRead(v);
+                hypWrite(v);
+                monSecureRead(v);
+                monSecureWrite(v);
+                monNonSecureRead(v);
+                monNonSecureWrite(v);
+                return *this;
+            }
+            chain nonSecure(bool v = true) const {
+                userNonSecureRead(v);
+                userNonSecureWrite(v);
+                privNonSecureRead(v);
+                privNonSecureWrite(v);
+                hypRead(v);
+                hypWrite(v);
+                monNonSecureRead(v);
+                monNonSecureWrite(v);
+                return *this;
+            }
+            chain secure(bool v = true) const {
+                userSecureRead(v);
+                userSecureWrite(v);
+                privSecureRead(v);
+                privSecureWrite(v);
+                monSecureRead(v);
+                monSecureWrite(v);
+                return *this;
+            }
+            chain reads(bool v) const {
+                userNonSecureRead(v);
+                userSecureRead(v);
+                privNonSecureRead(v);
+                privSecureRead(v);
+                hypRead(v);
+                monSecureRead(v);
+                monNonSecureRead(v);
+                return *this;
+            }
+            chain writes(bool v) const {
+                userNonSecureWrite(v);
+                userSecureWrite(v);
+                privNonSecureWrite(v);
+                privSecureWrite(v);
+                hypWrite(v);
+                monSecureWrite(v);
+                monNonSecureWrite(v);
+                return *this;
+            }
+            chain exceptUserMode() const {
+                user(0);
+                return *this;
+            }
+            MiscRegLUTEntryInitializer(struct MiscRegLUTEntry &e,
+                                       std::bitset<NUM_MISCREG_INFOS> &i)
+              : entry(e),
+                info(i)
+            {
+                // force unimplemented registers to be thusly declared
+                implemented(1);
+            }
         };
 
         const MiscRegLUTEntryInitializer InitReg(uint32_t reg) {
-            return MiscRegLUTEntryInitializer(lookUpMiscReg[reg]);
+            return MiscRegLUTEntryInitializer(lookUpMiscReg[reg],
+                                              miscRegInfo[reg]);
         }
 
         void initializeMiscRegMetadata();
