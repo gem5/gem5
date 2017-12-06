@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2016 ARM Limited
+ * Copyright (c) 2010, 2012-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -91,20 +91,32 @@ namespace ArmISA
 
         /** Register translation entry used in lookUpMiscReg */
         struct MiscRegLUTEntry {
-            uint32_t lower;
-            uint32_t upper;
+            uint32_t lower;  // Lower half mapped to this register
+            uint32_t upper;  // Upper half mapped to this register
         };
 
-        struct MiscRegInitializerEntry {
-            uint32_t index;
-            struct MiscRegLUTEntry entry;
-        };
-
-        /** Register table noting all translations */
-        static const struct MiscRegInitializerEntry MiscRegSwitch[];
-
-        /** Translation table accessible via the value of the register */
+        /** Metadata table accessible via the value of the register */
         std::vector<struct MiscRegLUTEntry> lookUpMiscReg;
+
+        class MiscRegLUTEntryInitializer {
+            struct MiscRegLUTEntry &entry;
+            typedef const MiscRegLUTEntryInitializer& chain;
+          public:
+            chain mapsTo(uint32_t l, uint32_t u = 0) const {
+                entry.lower = l;
+                entry.upper = u;
+                return *this;
+            }
+            MiscRegLUTEntryInitializer(struct MiscRegLUTEntry &e)
+                : entry(e)
+              {}
+        };
+
+        const MiscRegLUTEntryInitializer InitReg(uint32_t reg) {
+            return MiscRegLUTEntryInitializer(lookUpMiscReg[reg]);
+        }
+
+        void initializeMiscRegMetadata();
 
         MiscReg miscRegs[NumMiscRegs];
         const IntRegIndex *intRegMap;
