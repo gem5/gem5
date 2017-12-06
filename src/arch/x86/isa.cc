@@ -145,7 +145,7 @@ ISA::readMiscReg(int miscReg, ThreadContext * tc)
     if (miscReg == MISCREG_FSW) {
         MiscReg fsw = regVal[MISCREG_FSW];
         MiscReg top = regVal[MISCREG_X87_TOP];
-        return (fsw & (~(7ULL << 11))) + (top << 11);
+        return insertBits(fsw, 11, 13, top);
     }
 
     return readMiscRegNoEffect(miscReg);
@@ -159,41 +159,38 @@ ISA::setMiscRegNoEffect(int miscReg, MiscReg val)
     // attempt to write to them directly.
     assert(isValidMiscReg(miscReg));
 
-    HandyM5Reg m5Reg = readMiscRegNoEffect(MISCREG_M5_REG);
+    HandyM5Reg m5Reg = regVal[MISCREG_M5_REG];
+    int reg_width = 64;
     switch (miscReg) {
-      case MISCREG_FSW:
-        val &= (1ULL << 16) - 1;
-        regVal[miscReg] = val;
-        miscReg = MISCREG_X87_TOP;
-        val <<= 11;
       case MISCREG_X87_TOP:
-        val &= (1ULL << 3) - 1;
+        reg_width = 3;
         break;
       case MISCREG_FTW:
-        val &= (1ULL << 8) - 1;
+        reg_width = 8;
         break;
+      case MISCREG_FSW:
       case MISCREG_FCW:
       case MISCREG_FOP:
-        val &= (1ULL << 16) - 1;
+        reg_width = 16;
         break;
       case MISCREG_MXCSR:
-        val &= (1ULL << 32) - 1;
+        reg_width = 32;
         break;
       case MISCREG_FISEG:
       case MISCREG_FOSEG:
         if (m5Reg.submode != SixtyFourBitMode)
-            val &= (1ULL << 16) - 1;
+            reg_width = 16;
         break;
       case MISCREG_FIOFF:
       case MISCREG_FOOFF:
         if (m5Reg.submode != SixtyFourBitMode)
-            val &= (1ULL << 32) - 1;
+            reg_width = 32;
         break;
       default:
         break;
     }
 
-    regVal[miscReg] = val;
+    regVal[miscReg] = val & mask(reg_width);
 }
 
 void
