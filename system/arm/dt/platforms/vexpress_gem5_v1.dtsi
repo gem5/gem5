@@ -51,9 +51,9 @@
 	timer {
 		compatible = "arm,cortex-a15-timer",
 			     "arm,armv7-timer";
-		interrupts = <1 13 0xff01>,
-		             <1 14 0xff01>,
-		             <1 11 0xff01>;
+		interrupts = <1 13 0xf08>,
+		             <1 14 0xf08>,
+		             <1 11 0xf08>;
 		clocks = <&osc_sys>;
 		clock-names="apb_pclk";
 	};
