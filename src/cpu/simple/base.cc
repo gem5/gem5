@@ -475,13 +475,13 @@ BaseSimpleCPU::setupFetchRequest(Request *req)
     SimpleThread* thread = t_info.thread;
 
     Addr instAddr = thread->instAddr();
+    Addr fetchPC = (instAddr & PCMask) + t_info.fetchOffset;
 
     // set up memory request for instruction fetch
-    DPRINTF(Fetch, "Fetch: PC:%08p\n", instAddr);
+    DPRINTF(Fetch, "Fetch: Inst PC:%08p, Fetch PC:%08p\n", instAddr, fetchPC);
 
-    Addr fetchPC = (instAddr & PCMask) + t_info.fetchOffset;
-    req->setVirt(0, fetchPC, sizeof(MachInst), Request::INST_FETCH, instMasterId(),
-            instAddr);
+    req->setVirt(0, fetchPC, sizeof(MachInst), Request::INST_FETCH,
+                 instMasterId(), instAddr);
 }
 
 

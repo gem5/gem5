@@ -44,6 +44,7 @@
 
 #include "arch/x86/generated/decoder.hh"
 #include "arch/x86/isa_traits.hh"
+#include "base/loader/symtab.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Faults.hh"
@@ -161,7 +162,15 @@ namespace X86ISA
                 modeStr = "write";
             else
                 modeStr = "read";
-            panic("Tried to %s unmapped address %#x.\n", modeStr, addr);
+
+            // print information about what we are panic'ing on
+            if (!inst) {
+                panic("Tried to %s unmapped address %#x.\n", modeStr, addr);
+            } else {
+                panic("Tried to %s unmapped address %#x.\nPC: %#x, Instr: %s",
+                      modeStr, addr, tc->pcState().pc(),
+                      inst->disassemble(tc->pcState().pc(), debugSymbolTable));
+            }
         }
     }
 
