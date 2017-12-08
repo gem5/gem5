@@ -128,7 +128,7 @@
     M5OP(m5_panic, M5OP_PANIC, 0);                              \
     M5OP(m5_work_begin, M5OP_WORK_BEGIN, 0);                    \
     M5OP(m5_work_end, M5OP_WORK_END, 0);                        \
-    M5OP(m5_dist_togglesync, M5OP_DIST_TOGGLE_SYNC, 0);
+    M5OP(m5_dist_toggle_sync, M5OP_DIST_TOGGLE_SYNC, 0);
 
 #define M5OP_FOREACH_ANNOTATION                      \
     M5_ANNOTATION(m5a_bsm, M5OP_AN_BSM);             \
