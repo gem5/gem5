@@ -58,9 +58,13 @@ CFLAGS=-O2 -I $(JDK_PATH)/include/ -I $(JDK_PATH)/include/linux \
        -I$(PWD)/../../include -march=armv8-a
 LDFLAGS=-static -L. -lm5
 
-LIB_OBJS=m5op_arm_A64.o
+LIB_OBJS=m5op_arm_A64.o m5_mmap.o
 OBJS=m5.o
 JNI_OBJS=m5op_arm_A64.o jni_gem5Op.o
+LUA_OBJS=lua_gem5Op.o m5op_arm_A64.o m5_mmap.o
+
+### Need to install lua5.1 library to compile gem5OpLua.so
+LUA_HEADER_INCLUDE=$(shell pkg-config --cflags lua51) -I/usr/include/x86_64-linux-gnu
 
 all: libm5.a m5
 
@@ -71,10 +75,10 @@ all: libm5.a m5
 	$(CC)  $(CFLAGS) -o $@ -c $<
 
 m5: $(OBJS) libm5.a
-	$(CC) -o $@ $(OBJS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 libm5.a: $(LIB_OBJS)
-	$(AR) rcs $@ $<
+	$(AR) rcs $@ $^
 
 gem5OpJni: gem5OpJni.jar $(JNI_OBJS)
 	$(CC) --shared -o lib$@.so $(JNI_OBJS)
@@ -84,5 +88,11 @@ gem5OpJni.jar:
 	$(JH) jni.gem5Op; \
 	$(JR) cvf $@ jni/*.class
 
+lua_gem5Op.o: lua_gem5Op.c
+	$(CC) $(CFLAGS) $(LUA_HEADER_INCLUDE) -o $@ -c $<
+
+gem5OpLua.so: $(LUA_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ -shared
+
 clean:
-	rm -f *.o m5 libgemOpJni.so gem5OpJni.jar jni/*.class libm5.a
+	rm -f *.o m5 libgem5OpJni.so gem5OpJni.jar jni/*.class libm5.a gem5OpLua.so

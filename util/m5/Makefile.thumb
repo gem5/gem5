@@ -54,8 +54,7 @@ CFLAGS=-O2 -mthumb -I$(PWD)/../../include
 LDFLAGS=-L. -lm5
 
 OBJS=m5.o
-LIB_OBJS=m5op_arm.o
-
+LIB_OBJS=m5op_arm.o m5_mmap.o
 
 all: libm5.a m5
 
@@ -65,11 +64,11 @@ all: libm5.a m5
 %.o: %.c
 	$(CC)  $(CFLAGS) -o $@ -c $<
 
-m5: $(OBJS)
+m5: $(OBJS) libm5.a
 	$(CC) -o $@ -march=armv7 -mthumb $(OBJS) $(LDFLAGS)
 
 libm5.a: $(LIB_OBJS)
-	$(AR) rcs $@ $<
+	$(AR) rcs $@ $^
 
 
 clean:

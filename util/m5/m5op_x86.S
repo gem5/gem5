@@ -58,6 +58,7 @@ name:                                     \
         mov 0(%r11, %rax, 1), %rax;       \
         ret;                              \
         .endfunc;
+
 #else
 /* Use the magic instruction based m5op interface. This does not work
  * in virtualized environments.
