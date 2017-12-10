@@ -210,6 +210,72 @@ def template JumpExecute {{
     }
 }};
 
+def template CSRExecute {{
+    Fault
+    %(class_name)s::execute(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        MiscReg data, olddata;
+        switch (csr) {
+          case CSR_FCSR:
+            olddata = xc->readMiscReg(MISCREG_FFLAGS) |
+                      (xc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
+            break;
+          default:
+            if (CSRData.find(csr) != CSRData.end()) {
+                olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
+            } else {
+                std::string error = csprintf("Illegal CSR index %#x\n", csr);
+                fault = make_shared<IllegalInstFault>(error);
+                olddata = 0;
+            }
+            break;
+        }
+        auto mask = CSRMasks.find(csr);
+        if (mask != CSRMasks.end())
+            olddata &= mask->second;
+        DPRINTF(RiscvMisc, "Reading CSR %s: %#x\n", CSRData.at(csr).name,
+                olddata);
+        data = olddata;
+
+        if (fault == NoFault) {
+            %(code)s;
+            if (fault == NoFault) {
+                if (mask != CSRMasks.end())
+                    data &= mask->second;
+                if (data != olddata) {
+                    if (bits(csr, 11, 10) == 0x3) {
+                        std::string error = csprintf("CSR %s is read-only\n",
+                                                     CSRData.at(csr).name);
+                        fault = make_shared<IllegalInstFault>(error);
+                    } else {
+                        DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n", data,
+                                CSRData.at(csr).name);
+                        switch (csr) {
+                          case CSR_FCSR:
+                            xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
+                            xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
+                            break;
+                          default:
+                            xc->setMiscReg(CSRData.at(csr).physIndex, data);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (fault == NoFault) {
+                %(op_wb)s;
+            }
+        }
+        return fault;
+    }
+}};
+
 def format ROp(code, *opt_flags) {{
     iop = InstObjParams(name, Name, 'RegOp', code, opt_flags)
     header_output = BasicDeclare.subst(iop)
@@ -301,5 +367,5 @@ def format CSROp(code, *opt_flags) {{
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
-    exec_output = BasicExecute.subst(iop)
+    exec_output = CSRExecute.subst(iop)
 }};

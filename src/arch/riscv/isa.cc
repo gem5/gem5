@@ -61,72 +61,98 @@ void ISA::clear()
 {
     std::fill(miscRegFile.begin(), miscRegFile.end(), 0);
 
-    miscRegFile[MISCREG_MVENDORID] = 0;
-    miscRegFile[MISCREG_MARCHID] = 0;
-    miscRegFile[MISCREG_MIMPID] = 0;
-    miscRegFile[MISCREG_MISA] = 0x8000000000101129ULL;
+    miscRegFile[MISCREG_PRV] = PRV_M;
+    miscRegFile[MISCREG_ISA] = (2ULL << MXL_OFFSET) | 0x14112D;
+    miscRegFile[MISCREG_VENDORID] = 0;
+    miscRegFile[MISCREG_ARCHID] = 0;
+    miscRegFile[MISCREG_IMPID] = 0;
+    miscRegFile[MISCREG_STATUS] = (2ULL << UXL_OFFSET) | (2ULL << SXL_OFFSET) |
+                                  (1ULL << FS_OFFSET);
+    miscRegFile[MISCREG_MCOUNTEREN] = 0x7;
+    miscRegFile[MISCREG_SCOUNTEREN] = 0x7;
 }
 
+bool
+ISA::hpmCounterEnabled(int misc_reg) const
+{
+    int hpmcounter = misc_reg - MISCREG_CYCLE;
+    if (hpmcounter < 0 || hpmcounter > 31)
+        panic("Illegal HPM counter %d\n", hpmcounter);
+    int counteren;
+    switch (readMiscRegNoEffect(MISCREG_PRV)) {
+      case PRV_M:
+        return true;
+      case PRV_S:
+        counteren = MISCREG_MCOUNTEREN;
+        break;
+      case PRV_U:
+        counteren = MISCREG_SCOUNTEREN;
+        break;
+      default:
+        panic("Unknown privilege level %d\n", miscRegFile[MISCREG_PRV]);
+        return false;
+    }
+    return (miscRegFile[counteren] & (1ULL << (hpmcounter))) > 0;
+}
 
 MiscReg
 ISA::readMiscRegNoEffect(int misc_reg) const
 {
-    DPRINTF(RiscvMisc, "Reading CSR %s (0x%016llx).\n",
-        MiscRegNames.at(misc_reg), miscRegFile[misc_reg]);
-    switch (misc_reg) {
-      case MISCREG_FFLAGS:
-        return bits(miscRegFile[MISCREG_FCSR], 4, 0);
-      case MISCREG_FRM:
-        return bits(miscRegFile[MISCREG_FCSR], 7, 5);
-      case MISCREG_FCSR:
-        return bits(miscRegFile[MISCREG_FCSR], 31, 0);
-      case MISCREG_CYCLE:
-        warn("Use readMiscReg to read the cycle CSR.");
-        return 0;
-      case MISCREG_TIME:
-        return std::time(nullptr);
-      case MISCREG_INSTRET:
-        warn("Use readMiscReg to read the instret CSR.");
-        return 0;
-      case MISCREG_CYCLEH:
-        warn("Use readMiscReg to read the cycleh CSR.");
-        return 0;
-      case MISCREG_TIMEH:
-        return std::time(nullptr) >> 32;
-      case MISCREG_INSTRETH:
-        warn("Use readMiscReg to read the instreth CSR.");
-        return 0;
-      case MISCREG_MHARTID:
-        warn("Use readMiscReg to read the mhartid CSR.");
-        return 0;
-      default:
-        return miscRegFile[misc_reg];
+    if (misc_reg > NumMiscRegs || misc_reg < 0) {
+        // Illegal CSR
+        panic("Illegal CSR index %#x\n", misc_reg);
+        return -1;
     }
+    DPRINTF(RiscvMisc, "Reading MiscReg %d: %#llx.\n", misc_reg,
+            miscRegFile[misc_reg]);
+    return miscRegFile[misc_reg];
 }
 
 MiscReg
 ISA::readMiscReg(int misc_reg, ThreadContext *tc)
 {
     switch (misc_reg) {
-      case MISCREG_INSTRET:
-        DPRINTF(RiscvMisc, "Reading CSR %s (0x%016llx).\n",
-            MiscRegNames.at(misc_reg), miscRegFile[misc_reg]);
-        return tc->getCpuPtr()->totalInsts();
       case MISCREG_CYCLE:
-        DPRINTF(RiscvMisc, "Reading CSR %s (0x%016llx).\n",
-            MiscRegNames.at(misc_reg), miscRegFile[misc_reg]);
-        return tc->getCpuPtr()->curCycle();
-      case MISCREG_INSTRETH:
-        DPRINTF(RiscvMisc, "Reading CSR %s (0x%016llx).\n",
-            MiscRegNames.at(misc_reg), miscRegFile[misc_reg]);
-        return tc->getCpuPtr()->totalInsts() >> 32;
-      case MISCREG_CYCLEH:
-        DPRINTF(RiscvMisc, "Reading CSR %s (0x%016llx).\n",
-            MiscRegNames.at(misc_reg), miscRegFile[misc_reg]);
-        return tc->getCpuPtr()->curCycle() >> 32;
-      case MISCREG_MHARTID:
-        return 0; // TODO: make this the hardware thread or cpu id
+        if (hpmCounterEnabled(MISCREG_CYCLE)) {
+            DPRINTF(RiscvMisc, "Cycle counter at: %llu.\n",
+                    tc->getCpuPtr()->curCycle());
+            return tc->getCpuPtr()->curCycle();
+        } else {
+            warn("Cycle counter disabled.\n");
+            return 0;
+        }
+      case MISCREG_TIME:
+        if (hpmCounterEnabled(MISCREG_TIME)) {
+            DPRINTF(RiscvMisc, "Wall-clock counter at: %llu.\n",
+                    std::time(nullptr));
+            return std::time(nullptr);
+        } else {
+            warn("Wall clock disabled.\n");
+            return 0;
+        }
+      case MISCREG_INSTRET:
+        if (hpmCounterEnabled(MISCREG_INSTRET)) {
+            DPRINTF(RiscvMisc, "Instruction counter at: %llu.\n",
+                    tc->getCpuPtr()->totalInsts());
+            return tc->getCpuPtr()->totalInsts();
+        } else {
+            warn("Instruction counter disabled.\n");
+            return 0;
+        }
       default:
+        // Try reading HPM counters
+        // As a placeholder, all HPM counters are just cycle counters
+        if (misc_reg >= MISCREG_HPMCOUNTER03 &&
+                misc_reg <= MISCREG_HPMCOUNTER31) {
+            if (hpmCounterEnabled(misc_reg)) {
+                DPRINTF(RiscvMisc, "HPM counter %d: %llu.\n",
+                        misc_reg - MISCREG_CYCLE, tc->getCpuPtr()->curCycle());
+                return tc->getCpuPtr()->curCycle();
+            } else {
+                warn("HPM counter %d disabled.\n", misc_reg - MISCREG_CYCLE);
+                return 0;
+            }
+        }
         return readMiscRegNoEffect(misc_reg);
     }
 }
@@ -134,34 +160,23 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
 void
 ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 {
-    DPRINTF(RiscvMisc, "Setting CSR %s to 0x%016llx.\n",
-        MiscRegNames.at(misc_reg), val);
-    switch (misc_reg) {
-      case MISCREG_FFLAGS:
-        miscRegFile[MISCREG_FCSR] &= ~0x1F;
-        miscRegFile[MISCREG_FCSR] |= bits(val, 4, 0);
-        break;
-      case MISCREG_FRM:
-        miscRegFile[MISCREG_FCSR] &= ~0x70;
-        miscRegFile[MISCREG_FCSR] |= bits(val, 2, 0) << 5;
-        break;
-      case MISCREG_FCSR:
-        miscRegFile[MISCREG_FCSR] = bits(val, 7, 0);
-        break;
-      default:
-        miscRegFile[misc_reg] = val;
-        break;
+    if (misc_reg > NumMiscRegs || misc_reg < 0) {
+        // Illegal CSR
+        panic("Illegal CSR index %#x\n", misc_reg);
     }
+    DPRINTF(RiscvMisc, "Setting MiscReg %d to %#x.\n", misc_reg, val);
+    miscRegFile[misc_reg] = val;
 }
 
 void
 ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
 {
-    if (bits((unsigned)misc_reg, 11, 10) == 0x3) {
-        warn("Ignoring write to read-only CSR.");
-        return;
+    if (misc_reg >= MISCREG_CYCLE && misc_reg <= MISCREG_HPMCOUNTER31) {
+        // Ignore writes to HPM counters for now
+        warn("Ignoring write to %s.\n", CSRData.at(misc_reg).name);
+    } else {
+        setMiscRegNoEffect(misc_reg, val);
     }
-    setMiscRegNoEffect(misc_reg, val);
 }
 
 }

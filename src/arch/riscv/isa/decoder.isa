@@ -1699,36 +1699,28 @@ decode QUADRANT default Unknown::unknown() {
             }
             format CSROp {
                 0x1: csrrw({{
-                    Rd = xc->readMiscReg(csr);
-                    xc->setMiscReg(csr, Rs1);
+                    Rd = data;
+                    data = Rs1;
                 }}, IsNonSpeculative, No_OpClass);
                 0x2: csrrs({{
-                    Rd = xc->readMiscReg(csr);
-                    if (Rs1 != 0) {
-                        xc->setMiscReg(csr, Rd | Rs1);
-                    }
+                    Rd = data;
+                    data |= Rs1;
                 }}, IsNonSpeculative, No_OpClass);
                 0x3: csrrc({{
-                    Rd = xc->readMiscReg(csr);
-                    if (Rs1 != 0) {
-                        xc->setMiscReg(csr, Rd & ~Rs1);
-                    }
+                    Rd = data;
+                    data &= ~Rs1;
                 }}, IsNonSpeculative, No_OpClass);
                 0x5: csrrwi({{
-                    Rd = xc->readMiscReg(csr);
-                    xc->setMiscReg(csr, uimm);
+                    Rd = data;
+                    data = uimm;
                 }}, IsNonSpeculative, No_OpClass);
                 0x6: csrrsi({{
-                    Rd = xc->readMiscReg(csr);
-                    if (uimm != 0) {
-                        xc->setMiscReg(csr, Rd | uimm);
-                    }
+                    Rd = data;
+                    data |= uimm;
                 }}, IsNonSpeculative, No_OpClass);
                 0x7: csrrci({{
-                    Rd = xc->readMiscReg(csr);
-                    if (uimm != 0) {
-                        xc->setMiscReg(csr, Rd & ~uimm);
-                    }
+                    Rd = data;
+                    data &= ~uimm;
                 }}, IsNonSpeculative, No_OpClass);
             }
         }
