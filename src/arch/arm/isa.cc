@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016 ARM Limited
+ * Copyright (c) 2010-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1695,8 +1695,11 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 } else {
                     newVal = (newVal & ttbcrMask) | (ttbcr & (~ttbcrMask));
                 }
+                // Invalidate TLB MiscReg
+                getITBPtr(tc)->invalidateMiscReg();
+                getDTBPtr(tc)->invalidateMiscReg();
+                break;
             }
-            M5_FALLTHROUGH;
           case MISCREG_TTBR0:
           case MISCREG_TTBR1:
             {
@@ -1709,15 +1712,12 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                         newVal = (newVal & (~ttbrMask));
                     }
                 }
-            }
-            M5_FALLTHROUGH;
-          case MISCREG_SCTLR_EL1:
-            {
+                // Invalidate TLB MiscReg
                 getITBPtr(tc)->invalidateMiscReg();
                 getDTBPtr(tc)->invalidateMiscReg();
-                setMiscRegNoEffect(misc_reg, newVal);
+                break;
             }
-            M5_FALLTHROUGH;
+          case MISCREG_SCTLR_EL1:
           case MISCREG_CONTEXTIDR:
           case MISCREG_PRRR:
           case MISCREG_NMRR:
