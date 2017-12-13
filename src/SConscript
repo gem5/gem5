@@ -1102,7 +1102,7 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
             test.dir.File('%s.%s' % (test.target, label)), test_objs))
 
     gtest_target = Dir(new_env['BUILDDIR']).File('unittests.%s' % label)
-    AlwaysBuild(Command(gtest_target, gtests, gtests))
+    AlwaysBuild(gtest_env.Command(gtest_target, gtests, gtests))
 
     progname = exename
     if strip:
