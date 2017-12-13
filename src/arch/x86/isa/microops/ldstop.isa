@@ -99,8 +99,7 @@ def template MicroLoadExecute {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = readMemAtomic(xc, traceData, EA, Mem,
-                              %(memDataSize)s, memFlags);
+        fault = readMemAtomic(xc, traceData, EA, Mem, dataSize, memFlags);
 
         if (fault == NoFault) {
             %(code)s;
@@ -145,7 +144,7 @@ def template MicroLoadCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        getMem(pkt, Mem, %(memDataSize)s, traceData);
+        getMem(pkt, Mem, dataSize, traceData);
 
         %(code)s;
 
@@ -174,12 +173,10 @@ def template MicroStoreExecute {{
 
         %(code)s;
 
-        if(fault == NoFault)
-        {
-            fault = writeMemAtomic(xc, traceData, Mem, %(memDataSize)s, EA,
-                    memFlags, NULL);
-            if(fault == NoFault)
-            {
+        if (fault == NoFault) {
+            fault = writeMemAtomic(xc, traceData, Mem, dataSize, EA,
+                                   memFlags, NULL);
+            if (fault == NoFault) {
                 %(op_wb)s;
             }
         }
@@ -202,10 +199,9 @@ def template MicroStoreInitiateAcc {{
 
         %(code)s;
 
-        if(fault == NoFault)
-        {
-            fault = writeMemTiming(xc, traceData, Mem, %(memDataSize)s, EA,
-                    memFlags, NULL);
+        if (fault == NoFault) {
+            fault = writeMemTiming(xc, traceData, Mem, dataSize, EA,
+                                   memFlags, NULL);
         }
         return fault;
     }
@@ -561,18 +557,9 @@ let {{
         microopClasses[name] = LoadOp
 
     code = '''
-        switch (dataSize) {
-          case 4:
-            DataLow = bits(Mem_u2qw[0], 31, 0);
-            DataHi  = bits(Mem_u2qw[0], 63, 32);
-            break;
-          case 8:
-            DataLow = Mem_u2qw[0];
-            DataHi  = Mem_u2qw[1];
-            break;
-          default:
-            panic("Unhandled data size %d in LdSplit.\\n", dataSize);
-        }'''
+        DataLow = Mem_u2qw[0];
+        DataHi = Mem_u2qw[1];
+    '''
 
     defineMicroLoadSplitOp('LdSplit', code,
                            '(StoreCheck << FlagShift)')
@@ -683,17 +670,9 @@ let {{
         microopClasses[name] = StoreOp
 
     code = '''
-        switch (dataSize) {
-          case 4:
-            Mem_u2qw[0] = (DataHi << 32) | DataLow;
-            break;
-          case 8:
-            Mem_u2qw[0] = DataLow;
-            Mem_u2qw[1] = DataHi;
-            break;
-          default:
-            panic("Unhandled data size %d in StSplit.\\n", dataSize);
-        }'''
+        Mem_u2qw[0] = DataLow;
+        Mem_u2qw[1] = DataHi;
+    '''
 
     defineMicroStoreSplitOp('StSplit', code);
 
