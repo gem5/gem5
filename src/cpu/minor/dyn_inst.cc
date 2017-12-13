@@ -169,6 +169,7 @@ printRegName(std::ostream &os, const RegId& reg)
         break;
       case CCRegClass:
         os << 'c' << static_cast<unsigned int>(reg.index());
+        break;
       default:
         panic("Unknown register class: %d", (int)reg.classValue());
     }

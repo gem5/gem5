@@ -316,7 +316,7 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
         break;
       case MISCREG_DR4:
         miscReg = MISCREG_DR6;
-        /* Fall through to have the same effects as DR6. */
+        M5_FALLTHROUGH;
       case MISCREG_DR6:
         {
             DR6 dr6 = regVal[MISCREG_DR6];
@@ -333,7 +333,7 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
         break;
       case MISCREG_DR5:
         miscReg = MISCREG_DR7;
-        /* Fall through to have the same effects as DR7. */
+        M5_FALLTHROUGH;
       case MISCREG_DR7:
         {
             DR7 dr7 = regVal[MISCREG_DR7];

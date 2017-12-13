@@ -385,7 +385,7 @@ GenericTimer::setMiscReg(int reg, unsigned cpu, MiscReg val)
       case MISCREG_CNTPS_CVAL_EL1:
       case MISCREG_CNTPS_TVAL_EL1:
       case MISCREG_CNTPS_CTL_EL1:
-        /* FALLTHROUGH */
+        M5_FALLTHROUGH;
 
       // PL2 phys. timer, non-secure
       case MISCREG_CNTHCTL:
@@ -466,7 +466,7 @@ GenericTimer::readMiscReg(int reg, unsigned cpu)
       case MISCREG_CNTPS_CVAL_EL1:
       case MISCREG_CNTPS_TVAL_EL1:
       case MISCREG_CNTPS_CTL_EL1:
-        /* FALLTHROUGH */
+        M5_FALLTHROUGH;
 
       // PL2 phys. timer, non-secure
       case MISCREG_CNTHCTL:

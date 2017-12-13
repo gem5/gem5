@@ -35,6 +35,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "base/compiler.hh"
+
 using namespace std;
 
 namespace cp {
@@ -138,6 +140,7 @@ Print::process_flag()
 
           case 'X':
             fmt.uppercase = true;
+            M5_FALLTHROUGH;
           case 'x':
             fmt.base = Format::hex;
             fmt.format = Format::integer;
@@ -159,6 +162,7 @@ Print::process_flag()
 
           case 'G':
             fmt.uppercase = true;
+            M5_FALLTHROUGH;
           case 'g':
             fmt.format = Format::floating;
             fmt.float_format = Format::best;
@@ -167,6 +171,7 @@ Print::process_flag()
 
           case 'E':
             fmt.uppercase = true;
+            M5_FALLTHROUGH;
           case 'e':
             fmt.format = Format::floating;
             fmt.float_format = Format::scientific;
@@ -213,6 +218,7 @@ Print::process_flag()
                 fmt.fill_zero = true;
                 break;
             }
+            M5_FALLTHROUGH;
           case '1':
           case '2':
           case '3':

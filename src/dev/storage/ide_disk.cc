@@ -705,6 +705,7 @@ IdeDisk::startCommand()
         // Supported DMA commands
       case WDCC_WRITEDMA:
         dmaRead = true;  // a write to the disk is a DMA read from memory
+        M5_FALLTHROUGH;
       case WDCC_READDMA:
         if (!(cmdReg.drive & DRIVE_LBA_BIT))
             panic("Attempt to perform CHS access, only supports LBA\n");

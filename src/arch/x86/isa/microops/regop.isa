@@ -1427,6 +1427,7 @@ let {{
                         if (bits(newVal, 63, 4))
                             fault = std::make_shared<GeneralProtection>(0);
                     }
+                    break;
                   default:
                     fault = std::make_shared<GenericISA::M5PanicFault>(
                             "Unrecognized control register %d.\\n", dest);
@@ -1528,7 +1529,7 @@ let {{
                     fault = std::make_shared<GeneralProtection>(selector);
                     break;
                 }
-                // Fall through on purpose
+                M5_FALLTHROUGH;
               case SegIntGateCheck:
                 // Make sure the gate's the right type.
                 if ((m5reg.mode == LongMode && (desc.type & 0xe) != 0xe) ||

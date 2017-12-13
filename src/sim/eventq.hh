@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <cassert>
 #include <climits>
+#include <functional>
 #include <iosfwd>
 #include <memory>
 #include <mutex>

@@ -455,10 +455,12 @@ X86ISA::I8042::write(PacketPtr pkt)
           case WriteOutputPort:
             warn("i8042 \"Write output port\" command not implemented.\n");
             lastCommand = WriteOutputPort;
+            break;
           case WriteKeyboardOutputBuff:
             warn("i8042 \"Write keyboard output buffer\" "
                     "command not implemented.\n");
             lastCommand = WriteKeyboardOutputBuff;
+            break;
           case WriteMouseOutputBuff:
             DPRINTF(I8042, "Got command to write to mouse output buffer.\n");
             lastCommand = WriteMouseOutputBuff;

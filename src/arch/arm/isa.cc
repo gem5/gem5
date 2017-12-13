@@ -1653,6 +1653,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                     newVal = (newVal & ttbcrMask) | (ttbcr & (~ttbcrMask));
                 }
             }
+            M5_FALLTHROUGH;
           case MISCREG_TTBR0:
           case MISCREG_TTBR1:
             {
@@ -1666,12 +1667,14 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                     }
                 }
             }
+            M5_FALLTHROUGH;
           case MISCREG_SCTLR_EL1:
             {
                 tc->getITBPtr()->invalidateMiscReg();
                 tc->getDTBPtr()->invalidateMiscReg();
                 setMiscRegNoEffect(misc_reg, newVal);
             }
+            M5_FALLTHROUGH;
           case MISCREG_CONTEXTIDR:
           case MISCREG_PRRR:
           case MISCREG_NMRR:

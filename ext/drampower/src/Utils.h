@@ -46,7 +46,6 @@
 template<typename T>
 T fromString(const std::string& s,
              std::ios_base& (*f)(std::ios_base &) = std::dec)
-throw(std::runtime_error)
 {
   std::istringstream is(s);
   T t;

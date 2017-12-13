@@ -101,6 +101,7 @@ Printk(stringstream &out, Arguments args)
                   break;
                 case 'P':
                   format = true;
+                  M5_FALLTHROUGH;
                 case 'p':
                   hexnum = true;
                   break;
@@ -258,4 +259,3 @@ Printk(stringstream &out, Arguments args)
     }
 
 }
-

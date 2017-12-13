@@ -383,7 +383,7 @@ BaseKvmCPU::drain()
             deschedule(tickEvent);
         _status = Idle;
 
-        /** FALLTHROUGH */
+        M5_FALLTHROUGH;
       case Idle:
         // Idle, no need to drain
         assert(!tickEvent.scheduled());
