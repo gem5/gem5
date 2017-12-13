@@ -1092,7 +1092,7 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     gtestlib_sources = Source.all.with_tag('gtest lib')
     gtest_out_dir = Dir(new_env['BUILDDIR']).Dir('unittests.%s' % label)
     for test in GTest.all:
-        test_sources = test.sources
+        test_sources = list(test.sources)
         if not test.skip_lib:
             test_sources += gtestlib_sources
         for f in test.filters:
