@@ -1090,7 +1090,7 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     gtest_env.Append(LIBS=gtest_env['GTEST_LIBS'])
     gtest_env.Append(CPPFLAGS=gtest_env['GTEST_CPPFLAGS'])
     gtestlib_sources = Source.all.with_tag('gtest lib')
-    gtests = []
+    gtest_out_dir = Dir(new_env['BUILDDIR']).Dir('unittests.%s' % label)
     for test in GTest.all:
         test_sources = test.sources
         if not test.skip_lib:
@@ -1098,11 +1098,12 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
         for f in test.filters:
             test_sources += Source.all.apply_filter(f)
         test_objs = [ s.static(gtest_env) for s in test_sources ]
-        gtests.append(gtest_env.Program(
-            test.dir.File('%s.%s' % (test.target, label)), test_objs))
+        test_binary = gtest_env.Program(
+            test.dir.File('%s.%s' % (test.target, label)), test_objs)
 
-    gtest_target = Dir(new_env['BUILDDIR']).File('unittests.%s' % label)
-    AlwaysBuild(gtest_env.Command(gtest_target, gtests, gtests))
+        AlwaysBuild(gtest_env.Command(
+            gtest_out_dir.File("%s/%s.xml" % (test.dir, test.target)),
+            test_binary, "${SOURCES[0]} --gtest_output=xml:${TARGETS[0]}"))
 
     progname = exename
     if strip:
