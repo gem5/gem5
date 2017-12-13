@@ -139,6 +139,15 @@ inline Twin32_t swap_byte<Twin32_t>(Twin32_t x)
     return x;
 }
 
+template <typename T, size_t N>
+inline std::array<T, N>
+swap_byte(std::array<T, N> a)
+{
+    for (T &v: a)
+        v = swap_byte(v);
+    return a;
+}
+
 //The conversion functions with fixed endianness on both ends don't need to
 //be in a namespace
 template <typename T> inline T betole(T value) {return swap_byte(value);}
