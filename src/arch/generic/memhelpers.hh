@@ -114,7 +114,7 @@ writeMemAtomic(XC *xc, Trace::InstRecord *traceData, const MemT &mem,
           xc->writeMem((uint8_t *)&host_mem, sizeof(MemT), addr, flags, res);
     if (fault == NoFault && res != NULL) {
         if (flags & Request::MEM_SWAP || flags & Request::MEM_SWAP_COND)
-            *res = TheISA::gtoh((MemT)*res);
+            *(MemT *)res = TheISA::gtoh(*(MemT *)res);
         else
             *res = TheISA::gtoh(*res);
     }

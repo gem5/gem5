@@ -46,7 +46,6 @@
 #include "arch/locked_mem.hh"
 #include "arch/mmapped_ipr.hh"
 #include "arch/utility.hh"
-#include "base/bigint.hh"
 #include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "debug/Config.hh"

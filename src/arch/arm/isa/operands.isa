@@ -47,7 +47,7 @@ def operand_types {{
     'sw' : 'int32_t',
     'uw' : 'uint32_t',
     'ud' : 'uint64_t',
-    'tud' : 'Twin64_t',
+    'tud' : 'std::array<uint64_t, 2>',
     'sf' : 'float',
     'df' : 'double',
     'vc' : 'TheISA::VecRegContainer',

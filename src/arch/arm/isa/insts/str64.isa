@@ -226,9 +226,9 @@ let {{
                     accCode = '''
                         // This temporary needs to be here so that the parser
                         // will correctly identify this instruction as a store.
-                        Twin64_t temp;
-                        temp.a = XDest_ud;
-                        temp.b = XDest2_ud;
+                        std::array<uint64_t, 2> temp;
+                        temp[0] = XDest_ud;
+                        temp[1] = XDest2_ud;
                         Mem_tud = temp;
                     '''
             self.codeBlobs["memacc_code"] = accCode

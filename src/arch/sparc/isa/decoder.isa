@@ -1102,8 +1102,8 @@ decode OP default Unknown::unknown()
             0x01: ldub({{Rd = Mem_ub;}});
             0x02: lduh({{Rd = Mem_uhw;}});
             0x03: ldtw({{
-                        RdLow = (Mem_tuw).a;
-                        RdHigh = (Mem_tuw).b;
+                        RdLow = Mem_tuw[0];
+                        RdHigh = Mem_tuw[1];
             }});
         }
         format Store {
@@ -1115,9 +1115,9 @@ decode OP default Unknown::unknown()
                       // will correctly identify this instruction as a store.
                       // It's probably either the parenthesis or referencing
                       // the member variable that throws confuses it.
-                      Twin32_t temp;
-                      temp.a = RdLow<31:0>;
-                      temp.b = RdHigh<31:0>;
+                      std::array<uint32_t, 2> temp;
+                      temp[0] = RdLow<31:0>;
+                      temp[1] = RdHigh<31:0>;
                       Mem_tuw = temp;
                   }});
         }
@@ -1145,63 +1145,63 @@ decode OP default Unknown::unknown()
             0x13: decode EXT_ASI {
                 // ASI_LDTD_AIUP
                 0x22: TwinLoad::ldtx_aiup(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTD_AIUS
                 0x23: TwinLoad::ldtx_aius(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_QUAD_LDD
                 0x24: TwinLoad::ldtx_quad_ldd(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTX_REAL
                 0x26: TwinLoad::ldtx_real(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTX_N
                 0x27: TwinLoad::ldtx_n(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTX_AIUP_L
                 0x2A: TwinLoad::ldtx_aiup_l(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTX_AIUS_L
                 0x2B: TwinLoad::ldtx_aius_l(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTX_L
                 0x2C: TwinLoad::ldtx_l(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTX_REAL_L
                 0x2E: TwinLoad::ldtx_real_l(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTX_N_L
                 0x2F: TwinLoad::ldtx_n_l(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTX_P
                 0xE2: TwinLoad::ldtx_p(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTX_S
                 0xE3: TwinLoad::ldtx_s(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTX_PL
                 0xEA: TwinLoad::ldtx_pl(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 // ASI_LDTX_SL
                 0xEB: TwinLoad::ldtx_sl(
-                    {{RdLow_udw = (Mem_tudw).a;
-                      RdHigh_udw = (Mem_tudw).b;}});
+                    {{RdLow_udw = Mem_tudw[0];
+                      RdHigh_udw = Mem_tudw[1];}});
                 default: ldtwa({{
-                        RdLow = (Mem_tuw).a;
-                        RdHigh = (Mem_tuw).b;}});
+                        RdLow = Mem_tuw[0];
+                        RdHigh = Mem_tuw[1];}});
             }
         }
         format StoreAlt {
@@ -1213,9 +1213,9 @@ decode OP default Unknown::unknown()
                       // will correctly identify this instruction as a store.
                       // It's probably either the parenthesis or referencing
                       // the member variable that throws confuses it.
-                      Twin32_t temp;
-                      temp.a = RdLow<31:0>;
-                      temp.b = RdHigh<31:0>;
+                      std::array<uint32_t, 2> temp;
+                      temp[0] = RdLow<31:0>;
+                      temp[1] = RdHigh<31:0>;
                       Mem_tuw = temp;
                   }});
         }

@@ -44,7 +44,6 @@
 #ifndef __INSTRECORD_HH__
 #define __INSTRECORD_HH__
 
-#include "base/bigint.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/static_inst.hh"
@@ -113,7 +112,7 @@ class InstRecord
     /** @ingroup data
      * What size of data was written?
      */
-    enum {
+    enum DataStatus {
         DataInvalid = 0,
         DataInt8 = 1,   // set to equal number of bytes
         DataInt16 = 2,
@@ -159,8 +158,17 @@ class InstRecord
         addr = a; size = s; flags = f; mem_valid = true;
     }
 
-    void setData(Twin64_t d) { data.as_int = d.a; data_status = DataInt64; }
-    void setData(Twin32_t d) { data.as_int = d.a; data_status = DataInt32; }
+    template <typename T, size_t N>
+    void
+    setData(std::array<T, N> d)
+    {
+        data.as_int = d[0];
+        data_status = (DataStatus)sizeof(T);
+        static_assert(sizeof(T) == DataInt8 || sizeof(T) == DataInt16 ||
+                      sizeof(T) == DataInt32 || sizeof(T) == DataInt64,
+                      "Type T has an unrecognized size.");
+    }
+
     void setData(uint64_t d) { data.as_int = d; data_status = DataInt64; }
     void setData(uint32_t d) { data.as_int = d; data_status = DataInt32; }
     void setData(uint16_t d) { data.as_int = d; data_status = DataInt16; }

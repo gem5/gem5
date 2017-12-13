@@ -36,7 +36,6 @@ if env['CP_ANNOTATE']:
 SimObject('Graphics.py')
 Source('atomicio.cc')
 Source('bitfield.cc')
-Source('bigint.cc')
 Source('imgwriter.cc')
 Source('bmpwriter.cc')
 Source('callback.cc')

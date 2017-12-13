@@ -80,7 +80,6 @@ output exec {{
 
 #include "arch/generic/memhelpers.hh"
 #include "arch/sparc/asi.hh"
-#include "base/bigint.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "debug/Sparc.hh"
