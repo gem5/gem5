@@ -52,7 +52,6 @@ def template AtomicMemOpDeclare {{
             %(class_name)sLoad(ExtMachInst machInst, %(class_name)s *_p);
 
             Fault execute(ExecContext *, Trace::InstRecord *) const;
-            Fault eaComp(ExecContext *, Trace::InstRecord *) const;
             Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
             Fault completeAcc(PacketPtr, ExecContext *,
                               Trace::InstRecord *) const;
@@ -65,7 +64,6 @@ def template AtomicMemOpDeclare {{
             %(class_name)sStore(ExtMachInst machInst, %(class_name)s *_p);
 
             Fault execute(ExecContext *, Trace::InstRecord *) const;
-            Fault eaComp(ExecContext *, Trace::InstRecord *) const;
             Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
             Fault completeAcc(PacketPtr, ExecContext *,
                               Trace::InstRecord *) const;
@@ -212,27 +210,6 @@ def template AtomicMemOpStoreExecute {{
     }
 }};
 
-def template AtomicMemOpEACompExecute {{
-    Fault
-    %(class_name)s::%(class_name)s%(op_name)s::eaComp(ExecContext *xc,
-        Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
-
-        %(op_decl)s;
-        %(op_rd)s;
-        %(ea_code)s;
-
-        if (fault == NoFault) {
-            %(op_wb)s;
-            xc->setEA(EA);
-        }
-
-        return fault;
-    }
-}};
-
 def template AtomicMemOpLoadInitiateAcc {{
     Fault %(class_name)s::%(class_name)sLoad::initiateAcc(ExecContext *xc,
         Trace::InstRecord *traceData) const
@@ -349,7 +326,6 @@ def format LoadReserved(memacc_code, postacc_code={{ }}, ea_code={{EA = Rs1;}},
     decoder_output = LRSCConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
     exec_output = LoadExecute.subst(iop) \
-        + EACompExecute.subst(iop) \
         + LoadInitiateAcc.subst(iop) \
         + LoadCompleteAcc.subst(iop)
 }};
@@ -368,7 +344,6 @@ def format StoreCond(memacc_code, postacc_code={{ }}, ea_code={{EA = Rs1;}},
     decoder_output = LRSCConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
     exec_output = StoreCondExecute.subst(iop) \
-        + EACompExecute.subst(iop) \
         + StoreInitiateAcc.subst(iop) \
         + StoreCondCompleteAcc.subst(iop)
 }};
@@ -387,7 +362,6 @@ def format AtomicMemOp(load_code, store_code, ea_code, load_flags=[],
         load_inst_flags)
     decoder_output += AtomicMemOpLoadConstructor.subst(load_iop)
     exec_output += AtomicMemOpLoadExecute.subst(load_iop) \
-        + AtomicMemOpEACompExecute.subst(load_iop) \
         + AtomicMemOpLoadInitiateAcc.subst(load_iop) \
         + AtomicMemOpLoadCompleteAcc.subst(load_iop)
 
@@ -397,7 +371,6 @@ def format AtomicMemOp(load_code, store_code, ea_code, load_flags=[],
         store_inst_flags)
     decoder_output += AtomicMemOpStoreConstructor.subst(store_iop)
     exec_output += AtomicMemOpStoreExecute.subst(store_iop) \
-        + AtomicMemOpEACompExecute.subst(store_iop) \
         + AtomicMemOpStoreInitiateAcc.subst(store_iop) \
         + AtomicMemOpStoreCompleteAcc.subst(store_iop)
 }};

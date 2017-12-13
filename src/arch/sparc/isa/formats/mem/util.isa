@@ -163,28 +163,6 @@ def template StoreCompleteAcc {{
         }
 }};
 
-def template EACompExecute {{
-    Fault
-    %(class_name)s::eaComp(ExecContext *xc,
-                                   Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
-        %(op_decl)s;
-        %(op_rd)s;
-        %(ea_code)s;
-        %(fault_check)s;
-
-        // NOTE: Trace Data is written using execute or completeAcc templates
-        if (fault == NoFault) {
-            %(EA_trunc)s
-            xc->setEA(EA);
-        }
-
-        return fault;
-    }
-}};
-
 // Here are some code snippets which check for various fault conditions
 let {{
     LoadFuncs = [LoadExecute, LoadInitiateAcc, LoadCompleteAcc]

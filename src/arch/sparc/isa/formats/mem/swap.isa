@@ -164,7 +164,7 @@ let {{
             "EA_trunc" : TruncateEA}
         exec_output = doSplitExecute(execute, name, Name, mem_flags,
                 ["IsStoreConditional"], microParams);
-        return (header_output, decoder_output, exec_output + EACompExecute.subst(iop), decode_block)
+        return (header_output, decoder_output, exec_output, decode_block)
 }};
 
 

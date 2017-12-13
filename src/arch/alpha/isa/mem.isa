@@ -130,7 +130,6 @@ def template LoadStoreDeclare {{
         %(class_name)s(ExtMachInst machInst);
 
         Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault eaComp(ExecContext *, Trace::InstRecord *) const;
         Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
         Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
     };
@@ -141,27 +140,6 @@ def template LoadStoreConstructor {{
          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(constructor)s;
-    }
-}};
-
-def template EACompExecute {{
-    Fault %(class_name)s::eaComp(ExecContext *xc,
-                                 Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
-
-        %(fp_enable_check)s;
-        %(op_decl)s;
-        %(op_rd)s;
-        %(ea_code)s;
-
-        if (fault == NoFault) {
-            %(op_wb)s;
-            xc->setEA(EA);
-        }
-
-        return fault;
     }
 }};
 
@@ -467,7 +445,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
             LoadStoreConstructor.subst(iop),
             decode_template.subst(iop),
             fullExecTemplate.subst(iop)
-            + EACompExecute.subst(iop)
             + initiateAccTemplate.subst(iop)
             + completeAccTemplate.subst(iop))
 }};

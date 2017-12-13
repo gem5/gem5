@@ -203,27 +203,7 @@ class StaticInst : public RefCounted, public StaticInstFlags
     const RegId& srcRegIdx(int i)  const { return _srcRegIdx[i]; }
 
     /// Pointer to a statically allocated "null" instruction object.
-    /// Used to give eaCompInst() and memAccInst() something to return
-    /// when called on non-memory instructions.
     static StaticInstPtr nullStaticInstPtr;
-
-    /**
-     * Memory references only: returns "fake" instruction representing
-     * the effective address part of the memory operation.  Used to
-     * obtain the dependence info (numSrcRegs and srcRegIdx[]) for
-     * just the EA computation.
-     */
-    virtual const
-    StaticInstPtr &eaCompInst() const { return nullStaticInstPtr; }
-
-    /**
-     * Memory references only: returns "fake" instruction representing
-     * the memory access part of the memory operation.  Used to
-     * obtain the dependence info (numSrcRegs and srcRegIdx[]) for
-     * just the memory access (not the EA computation).
-     */
-    virtual const
-    StaticInstPtr &memAccInst() const { return nullStaticInstPtr; }
 
     /// The binary machine instruction.
     const ExtMachInst machInst;
@@ -272,11 +252,6 @@ class StaticInst : public RefCounted, public StaticInstFlags
 
     virtual Fault execute(ExecContext *xc,
                           Trace::InstRecord *traceData) const = 0;
-    virtual Fault eaComp(ExecContext *xc,
-                         Trace::InstRecord *traceData) const
-    {
-        panic("eaComp not defined!");
-    }
 
     virtual Fault initiateAcc(ExecContext *xc,
                               Trace::InstRecord *traceData) const

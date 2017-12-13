@@ -45,19 +45,11 @@ class MemOp : public PowerStaticInst
 
     /// Memory request flags.  See mem_req_base.hh.
     unsigned memAccessFlags;
-    /// Pointer to EAComp object.
-    const StaticInstPtr eaCompPtr;
-    /// Pointer to MemAcc object.
-    const StaticInstPtr memAccPtr;
 
     /// Constructor
-    MemOp(const char *mnem, MachInst _machInst, OpClass __opClass,
-          StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-          StaticInstPtr _memAccPtr = nullStaticInstPtr)
+    MemOp(const char *mnem, MachInst _machInst, OpClass __opClass)
       : PowerStaticInst(mnem, _machInst, __opClass),
-        memAccessFlags(0),
-        eaCompPtr(_eaCompPtr),
-        memAccPtr(_memAccPtr)
+        memAccessFlags(0)
     {
     }
 
@@ -75,11 +67,8 @@ class MemDispOp : public MemOp
     int16_t disp;
 
     /// Constructor
-    MemDispOp(const char *mnem, MachInst _machInst, OpClass __opClass,
-              StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-              StaticInstPtr _memAccPtr = nullStaticInstPtr)
-      : MemOp(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr),
-        disp(machInst.d)
+    MemDispOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+      : MemOp(mnem, _machInst, __opClass), disp(machInst.d)
     {
     }
 

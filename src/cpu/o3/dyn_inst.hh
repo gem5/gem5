@@ -429,25 +429,6 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         panic("MIPS MT not defined for O3 CPU.\n");
     }
 #endif
-
-  public:
-    /** Calculates EA part of a memory instruction. Currently unused,
-     * though it may be useful in the future if we want to split
-     * memory operations into EA calculation and memory access parts.
-     */
-    Fault calcEA()
-    {
-        return this->staticInst->eaCompInst()->execute(this, this->traceData);
-    }
-
-    /** Does the memory access part of a memory instruction. Currently unused,
-     * though it may be useful in the future if we want to split
-     * memory operations into EA calculation and memory access parts.
-     */
-    Fault memAccess()
-    {
-        return this->staticInst->memAccInst()->execute(this, this->traceData);
-    }
 };
 
 #endif // __CPU_O3_ALPHA_DYN_INST_HH__
