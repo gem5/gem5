@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2017 ARM Limited
+ * Copyright (c) 2010-2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -405,6 +405,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // only mark the block dirty if we got a writeback command,
         // and leave it as is for a clean writeback
         if (pkt->cmd == MemCmd::WritebackDirty) {
+            assert(!blk->isDirty());
             blk->status |= BlkDirty;
         }
         // if the packet does not have sharers, it is passing
@@ -467,6 +468,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // write clean operation and the block is already in this
         // cache, we need to update the data and the block flags
         assert(blk);
+        assert(!blk->isDirty());
         if (!pkt->writeThrough()) {
             blk->status |= BlkDirty;
         }
@@ -1697,21 +1699,32 @@ Cache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
         req->setFlags(Request::SECURE);
     }
     req->taskId(blk->task_id);
-    blk->task_id = ContextSwitchTaskId::Unknown;
+
     PacketPtr pkt = new Packet(req, MemCmd::WriteClean, blkSize, id);
-    DPRINTF(Cache, "Create %s writable: %d, dirty: %d\n", pkt->print(),
-            blk->isWritable(), blk->isDirty());
-    // make sure the block is not marked dirty
-    blk->status &= ~BlkDirty;
-    pkt->allocate();
-    // We inform the cache below that the block has sharers in the
-    // system as we retain our copy.
-    pkt->setHasSharers();
+
     if (dest) {
         req->setFlags(dest);
         pkt->setWriteThrough();
     }
+
+    DPRINTF(Cache, "Create %s writable: %d, dirty: %d\n", pkt->print(),
+            blk->isWritable(), blk->isDirty());
+
+    if (blk->isWritable()) {
+        // not asserting shared means we pass the block in modified
+        // state, mark our own block non-writeable
+        blk->status &= ~BlkWritable;
+    } else {
+        // we are in the Owned state, tell the receiver
+        pkt->setHasSharers();
+    }
+
+    // make sure the block is not marked dirty
+    blk->status &= ~BlkDirty;
+
+    pkt->allocate();
     std::memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
+
     return pkt;
 }
 
