@@ -61,7 +61,7 @@ RiscvProcess::RiscvProcess(ProcessParams * params,
     ObjectFile *objFile) : Process(params, objFile)
 {
     const Addr stack_base = 0x7FFFFFFFFFFFFFFFL;
-    const Addr max_stack_size = PageBytes * 64;
+    const Addr max_stack_size = 8 * 1024 * 1024;
     const Addr next_thread_stack_base = stack_base - max_stack_size;
     const Addr brk_point = roundUp(objFile->bssBase() + objFile->bssSize(),
             PageBytes);
