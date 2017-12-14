@@ -859,6 +859,77 @@ ArmStaticInst::trapWFx(ThreadContext *tc,
     return fault;
 }
 
+Fault
+ArmStaticInst::checkSETENDEnabled(ThreadContext *tc, CPSR cpsr) const
+{
+    bool setend_disabled(false);
+    ExceptionLevel pstateEL = (ExceptionLevel)(uint8_t)(cpsr.el);
+
+    if (pstateEL == EL2) {
+       setend_disabled = ((SCTLR)tc->readMiscRegNoEffect(MISCREG_HSCTLR)).sed;
+    } else {
+        // Please note: in the armarm pseudocode there is a distinction
+        // whether EL1 is aarch32 or aarch64:
+        // if ELUsingAArch32(EL1) then SCTLR.SED else SCTLR[].SED;
+        // Considering that SETEND is aarch32 only, ELUsingAArch32(EL1)
+        // will always be true (hence using SCTLR.SED) except for
+        // instruction executed at EL0, and with an AArch64 EL1.
+        // In this case SCTLR_EL1 will be used. In gem5 the register is
+        // mapped to SCTLR_ns. We can safely use SCTLR and choose the
+        // appropriate bank version.
+
+        // Get the index of the banked version of SCTLR:
+        // SCTLR_s or SCTLR_ns.
+        auto banked_sctlr = flattenMiscRegNsBanked(
+            MISCREG_SCTLR, tc, !inSecureState(tc));
+
+        // SCTLR.SED bit is enabling/disabling the ue of SETEND instruction.
+        setend_disabled = ((SCTLR)tc->readMiscRegNoEffect(banked_sctlr)).sed;
+    }
+
+    return setend_disabled ? undefinedFault32(tc, pstateEL) :
+                             NoFault;
+}
+
+Fault
+ArmStaticInst::undefinedFault32(ThreadContext *tc,
+                                ExceptionLevel pstateEL) const
+{
+    // Even if we are running in aarch32, the fault might be dealt with in
+    // aarch64 ISA.
+    if (generalExceptionsToAArch64(tc, pstateEL)) {
+        return undefinedFault64(tc, pstateEL);
+    } else {
+        // Please note: according to the ARM ARM pseudocode we should handle
+        // the case when EL2 is aarch64 and HCR.TGE is 1 as well.
+        // However this case is already handled by the routeToHyp method in
+        // ArmFault class.
+        return std::make_shared<UndefinedInstruction>(
+            machInst, 0,
+            EC_UNKNOWN, mnemonic);
+    }
+}
+
+Fault
+ArmStaticInst::undefinedFault64(ThreadContext *tc,
+                                ExceptionLevel pstateEL) const
+{
+    switch (pstateEL) {
+      case EL0:
+      case EL1:
+        return std::make_shared<SupervisorTrap>(machInst, 0, EC_UNKNOWN);
+      case EL2:
+        return std::make_shared<HypervisorTrap>(machInst, 0, EC_UNKNOWN);
+      case EL3:
+        return std::make_shared<SecureMonitorTrap>(machInst, 0, EC_UNKNOWN);
+      default:
+        panic("Unrecognized Exception Level: %d\n", pstateEL);
+        break;
+    }
+
+    return NoFault;
+}
+
 static uint8_t
 getRestoredITBits(ThreadContext *tc, CPSR spsr)
 {
@@ -981,6 +1052,18 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
     return new_cpsr;
 }
 
+bool
+ArmStaticInst::generalExceptionsToAArch64(ThreadContext *tc,
+                                          ExceptionLevel pstateEL) const
+{
+    // Returns TRUE if exceptions normally routed to EL1 are being handled
+    // at an Exception level using AArch64, because either EL1 is using
+    // AArch64 or TGE is in force and EL2 is using AArch64.
+    HCR hcr = ((HCR)tc->readMiscReg(MISCREG_HCR_EL2));
+    return (pstateEL == EL0 && !ELIs32(tc, EL1)) ||
+           (ArmSystem::haveEL(tc, EL2) && !inSecureState(tc) &&
+               !ELIs32(tc, EL2) && hcr.tge);
+}
 
 
 }

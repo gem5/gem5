@@ -1024,6 +1024,7 @@ let {{
         CPSR cpsr = Cpsr;
         cpsr.e = imm;
         Cpsr = cpsr;
+        fault = checkSETENDEnabled(xc->tcBase(), cpsr);
     '''
     setendIop = InstObjParams("setend", "Setend", "ImmOp",
                               { "code": setendCode,
