@@ -165,7 +165,7 @@ std::map<int, SyscallDesc> RiscvLinuxProcess::syscallDescs = {
     {93,   SyscallDesc("exit", exitFunc)},
     {94,   SyscallDesc("exit_group", exitGroupFunc)},
     {95,   SyscallDesc("waitid")},
-    {96,   SyscallDesc("set_tid_address")},
+    {96,   SyscallDesc("set_tid_address", setTidAddressFunc)},
     {97,   SyscallDesc("unshare")},
     {98,   SyscallDesc("futex", futexFunc<RiscvLinux>)},
     {99,   SyscallDesc("set_robust_list")},
