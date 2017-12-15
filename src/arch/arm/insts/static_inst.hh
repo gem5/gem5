@@ -423,6 +423,25 @@ class ArmStaticInst : public StaticInst
     {
         return intWidth;
     }
+
+    /** Returns the byte size of current instruction */
+    ssize_t
+    instSize() const
+    {
+        return (!machInst.thumb || machInst.bigThumb) ? 4 : 2;
+    }
+
+    /**
+     * Returns the real encoding of the instruction:
+     * the machInst field is in fact always 64 bit wide and
+     * contains some instruction metadata, which means it differs
+     * from the real opcode.
+     */
+    MachInst
+    encoding() const
+    {
+        return static_cast<MachInst>(mask(instSize() * 8));
+    }
 };
 }
 
