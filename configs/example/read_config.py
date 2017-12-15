@@ -510,6 +510,9 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('config_file', metavar='config-file.ini',
     help='.ini configuration file to load and run')
+parser.add_argument('--checkpoint-dir', type=str, default=None,
+                    help='A checkpoint to directory to restore when starting '
+                         'the simulation')
 
 args = parser.parse_args(sys.argv[1:])
 
@@ -526,7 +529,7 @@ mgr = ConfigManager(config)
 
 mgr.find_all_objects()
 
-m5.instantiate()
+m5.instantiate(args.checkpoint_dir)
 
 exit_event = m5.simulate()
 print 'Exiting @ tick %i because %s' % (
