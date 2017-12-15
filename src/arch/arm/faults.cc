@@ -482,7 +482,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     // extra information. This is used to generate the correct fault syndrome
     // information
     if (inst) {
-        ArmStaticInst *armInst = reinterpret_cast<ArmStaticInst *>(inst.get());
+        ArmStaticInst *armInst = static_cast<ArmStaticInst *>(inst.get());
         armInst->annotateFault(this);
     }
 
@@ -672,7 +672,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     // extra information. This is used to generate the correct fault syndrome
     // information
     if (inst)
-        reinterpret_cast<ArmStaticInst *>(inst.get())->annotateFault(this);
+        static_cast<ArmStaticInst *>(inst.get())->annotateFault(this);
     // Save exception syndrome
     if ((nextMode() != MODE_IRQ) && (nextMode() != MODE_FIQ))
         setSyndrome(tc, getSyndromeReg64());
