@@ -199,6 +199,11 @@ namespace ArmISA
                 info[MISCREG_PRI_NS_WR] = v;
                 return *this;
             }
+            chain privNonSecure(bool v = true) const {
+                privNonSecureRead(v);
+                privNonSecureWrite(v);
+                return *this;
+            }
             chain privSecureRead(bool v = true) const {
                 info[MISCREG_PRI_S_RD] = v;
                 return *this;
@@ -210,6 +215,11 @@ namespace ArmISA
             chain privSecure(bool v = true) const {
                 privSecureRead(v);
                 privSecureWrite(v);
+                return *this;
+            }
+            chain priv(bool v = true) const {
+                privSecure(v);
+                privNonSecure(v);
                 return *this;
             }
             chain hypRead(bool v = true) const {
