@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016-2017 ARM Limited
+// Copyright (c) 2011-2013, 2016-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -524,6 +524,12 @@ let {{
            Request::Flags memAccessFlags = Request::INVALIDATE |
               Request::DST_POC | ArmISA::TLB::MustBeOne;
            EA = XBase;
+           HCR hcr = Hcr64;
+           SCR scr = Scr64;
+           if (el == EL1 && ArmSystem::haveVirtualization(xc->tcBase()) &&
+               hcr.vm && (scr.ns || !ArmSystem::haveSecurity(xc->tcBase()))) {
+               memAccessFlags = memAccessFlags | Request::CLEAN;
+           }
            System *sys = xc->tcBase()->getSystemPtr();
            Addr op_size = sys->cacheLineSize();
            EA &= ~(op_size - 1);
