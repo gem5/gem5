@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2017 ARM Limited
+// Copyright (c) 2010-2013,2017-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -646,9 +646,9 @@ def template Mcr15Execute {{
             }
 
             if (fault == NoFault) {
-                Addr size = 64;
-                EA &= ~(size - 1);
-                fault = xc->writeMem(NULL, size, EA, memAccessFlags, NULL);
+                Addr op_size = xc->tcBase()->getSystemPtr()->cacheLineSize();
+                EA &= ~(op_size - 1);
+                fault = xc->writeMem(NULL, op_size, EA, memAccessFlags, NULL);
             }
         } else {
             xc->setPredicate(false);
@@ -675,9 +675,9 @@ def template Mcr15InitiateAcc {{
             }
 
             if (fault == NoFault) {
-                Addr size = 64;
-                EA &= ~(size - 1);
-                fault = xc->writeMem(NULL, size, EA, memAccessFlags, NULL);
+                Addr op_size = xc->tcBase()->getSystemPtr()->cacheLineSize();
+                EA &= ~(op_size - 1);
+                fault = xc->writeMem(NULL, op_size, EA, memAccessFlags, NULL);
             }
         } else {
             xc->setPredicate(false);
