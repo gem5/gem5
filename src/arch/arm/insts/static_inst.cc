@@ -1018,7 +1018,17 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
     new_cpsr.ss = 0;
 
     if (illegalExceptionReturn(tc, cpsr, spsr)) {
+        // If the SPSR specifies an illegal exception return,
+        // then PSTATE.{M, nRW, EL, SP} are unchanged and PSTATE.IL
+        // is set to 1.
         new_cpsr.il = 1;
+        if (cpsr.width) {
+            new_cpsr.mode = cpsr.mode;
+        } else {
+            new_cpsr.width = cpsr.width;
+            new_cpsr.el = cpsr.el;
+            new_cpsr.sp = cpsr.sp;
+        }
     } else {
         new_cpsr.il = spsr.il;
         if (spsr.width && badMode32((OperatingMode)(uint8_t)spsr.mode)) {

@@ -726,7 +726,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
         CPSR old_cpsr = miscRegs[MISCREG_CPSR];
         int old_mode = old_cpsr.mode;
         CPSR cpsr = val;
-        if (old_mode != cpsr.mode) {
+        if (old_mode != cpsr.mode || cpsr.il != old_cpsr.il) {
             getITBPtr(tc)->invalidateMiscReg();
             getDTBPtr(tc)->invalidateMiscReg();
         }
