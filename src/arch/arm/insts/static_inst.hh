@@ -440,7 +440,7 @@ class ArmStaticInst : public StaticInst
     MachInst
     encoding() const
     {
-        return static_cast<MachInst>(mask(instSize() * 8));
+        return static_cast<MachInst>(machInst & (mask(instSize() * 8)));
     }
 };
 }
