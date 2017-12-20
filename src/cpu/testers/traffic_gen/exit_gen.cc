@@ -37,7 +37,7 @@
  * Authors: Riken Gohil
  */
 
-#include "base/misc.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/TrafficGen.hh"
 #include "exit_gen.hh"
