@@ -142,9 +142,6 @@ enum mode_type
     mode_number             // number of modes
 };
 
-// return a no-op instruction... used for instruction fetch faults
-const ExtMachInst NoopMachInst = 0x00000000;
-
 const int ANNOTE_NONE = 0;
 const uint32_t ITOUCH_ANNOTE = 0xffffffff;
 

@@ -63,9 +63,6 @@ const Addr PteMask = NPtePage - 1;
 
 const int MachineBytes = 4;
 
-// This is ori 0, 0, 0
-const ExtMachInst NoopMachInst = 0x60000000;
-
 // Memory accesses can be unaligned
 const bool HasUnalignedMemAcc = true;
 

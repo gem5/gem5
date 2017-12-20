@@ -96,9 +96,6 @@ namespace ArmISA
     // Max. physical address range in bits supported by the architecture
     const unsigned MaxPhysAddrRange = 48;
 
-    // return a no-op instruction... used for instruction fetch faults
-    const ExtMachInst NoopMachInst = 0x01E320F000ULL;
-
     const int MachineBytes = 4;
 
     const uint32_t HighVecs = 0xFFFF0000;

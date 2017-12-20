@@ -47,9 +47,6 @@ using namespace BigEndianGuest;
 // SPARC has a delay slot
 #define ISA_HAS_DELAY_SLOT 1
 
-// SPARC NOP (sethi %(hi(0), g0)
-const MachInst NoopMachInst = 0x01000000;
-
 // real address virtual mapping
 // sort of like alpha super page, but less frequently used
 const Addr SegKPMEnd  = ULL(0xfffffffc00000000);

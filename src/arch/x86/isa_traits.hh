@@ -56,10 +56,6 @@ namespace X86ISA
     // X86 does not have a delay slot
 #define ISA_HAS_DELAY_SLOT 0
 
-    // X86 NOP (XCHG rAX, rAX)
-    //XXX This needs to be set to an intermediate instruction struct
-    //which encodes this instruction
-
     const Addr PageShift = 12;
     const Addr PageBytes = ULL(1) << PageShift;
 
@@ -68,19 +64,6 @@ namespace X86ISA
 
     const bool CurThreadInfoImplemented = false;
     const int CurThreadInfoReg = -1;
-
-    const ExtMachInst NoopMachInst M5_VAR_USED = {
-        0x0,                            // No legacy prefixes.
-        0x0,                            // No rex prefix.
-        0x0,                            // No two / three byte escape sequence
-        { OneByteOpcode, 0x90 },        // One opcode byte, 0x90.
-        0x0, 0x0,                       // No modrm or sib.
-        0, 0,                           // No immediate or displacement.
-        8, 8, 8,                        // All sizes are 8.
-        0,                              // Displacement size is 0.
-        SixtyFourBitMode                // Behave as if we're in 64 bit
-                                        // mode (this doesn't actually matter).
-    };
 }
 
 #endif // __ARCH_X86_ISATRAITS_HH__
