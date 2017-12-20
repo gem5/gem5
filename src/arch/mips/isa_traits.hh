@@ -47,9 +47,6 @@ using namespace LittleEndianGuest;
 
 StaticInstPtr decodeInst(ExtMachInst);
 
-// MIPS DOES have a delay slot
-#define ISA_HAS_DELAY_SLOT 1
-
 const Addr PageShift = 13;
 const Addr PageBytes = ULL(1) << PageShift;
 const Addr Page_Mask = ~(PageBytes - 1);

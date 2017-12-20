@@ -1277,17 +1277,6 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 break;
             }
 
-            if (ISA_HAS_DELAY_SLOT && pcOffset == 0) {
-                // Walk past any annulled delay slot instructions.
-                Addr pcAddr = thisPC.instAddr() & BaseCPU::PCMask;
-                while (fetchAddr != pcAddr && blkOffset < numInsts) {
-                    blkOffset++;
-                    fetchAddr += instSize;
-                }
-                if (blkOffset >= numInsts)
-                    break;
-            }
-
             MachInst inst = TheISA::gtoh(cacheInsts[blkOffset]);
             decoder[tid]->moreBytes(thisPC, fetchAddr, inst);
 

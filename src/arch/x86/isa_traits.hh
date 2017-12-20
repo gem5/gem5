@@ -53,9 +53,6 @@ namespace X86ISA
     //are used.
     using namespace LittleEndianGuest;
 
-    // X86 does not have a delay slot
-#define ISA_HAS_DELAY_SLOT 0
-
     const Addr PageShift = 12;
     const Addr PageBytes = ULL(1) << PageShift;
 

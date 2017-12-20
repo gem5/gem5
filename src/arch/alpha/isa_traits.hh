@@ -45,9 +45,6 @@ using namespace LittleEndianGuest;
 
 StaticInstPtr decodeInst(ExtMachInst);
 
-// Alpha Does NOT have a delay slot
-#define ISA_HAS_DELAY_SLOT 0
-
 const Addr PageShift = 13;
 const Addr PageBytes = ULL(1) << PageShift;
 const Addr PageMask = ~(PageBytes - 1);
