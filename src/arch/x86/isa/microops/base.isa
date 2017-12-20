@@ -59,8 +59,7 @@ let {{
             ''' + generatorNameTemplate + '''(StaticInstPtr curMacroop)
             {
                 static const char *macrocodeBlock = romMnemonic;
-                static const ExtMachInst dummyExtMachInst = \
-                    X86ISA::NoopMachInst;
+                static ExtMachInst dummyExtMachInst;
                 static const EmulEnv dummyEmulEnv(0, 0, 1, 1, 1);
 
                 Macroop * macroop = dynamic_cast<Macroop *>(curMacroop.get());

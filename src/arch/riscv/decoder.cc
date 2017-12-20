@@ -45,7 +45,7 @@ void Decoder::reset()
     aligned = true;
     mid = false;
     more = true;
-    emi = NoopMachInst;
+    emi = 0;
     instDone = false;
 }
 
