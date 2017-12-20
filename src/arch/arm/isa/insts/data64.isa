@@ -317,8 +317,7 @@ let {{
             if (flat_idx == MISCREG_DAIF ||
                 flat_idx == MISCREG_DC_ZVA_Xt ||
                 flat_idx == MISCREG_DC_CVAC_Xt ||
-                flat_idx == MISCREG_DC_CIVAC_Xt ||
-                flat_idx == MISCREG_DC_IVAC_Xt
+                flat_idx == MISCREG_DC_CIVAC_Xt
                 )
                 return std::make_shared<UndefinedInstruction>(
                                     machInst, 0, EC_TRAPPED_MSR_MRS_64,
