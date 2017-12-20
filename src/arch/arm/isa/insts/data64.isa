@@ -417,7 +417,7 @@ let {{
 
    '''
 
-    msrDCZVAIop = InstObjParams("dczva", "Dczva", "SysDC64",
+    msrDCZVAIop = InstObjParams("dc zva", "Dczva", "SysDC64",
                 { "ea_code" : msrdczva_ea_code,
                   "memacc_code" : ";", "use_uops" : 0,
                   "op_wb" : ";", "fa_code" : ";"}, ['IsStore', 'IsMemRef']);

@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2017 ARM Limited
+// Copyright (c) 2010-2013,2017-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1073,8 +1073,8 @@ let {{
                                             Request::DST_POC);
         EA = Op1;
     '''
-    McrDcimvacIop = InstObjParams("mcr dcimvac", "McrDcimvac",
-                                  "MiscRegRegImmMemOp",
+    McrDcimvacIop = InstObjParams("mcr", "McrDcimvac",
+                                  "MiscRegRegImmOp",
                                   {"memacc_code": McrDcCheckCode,
                                    "postacc_code": "",
                                    "ea_code": McrDcimvacCode,
@@ -1092,8 +1092,8 @@ let {{
                                             Request::DST_POC);
         EA = Op1;
     '''
-    McrDccmvacIop = InstObjParams("mcr dccmvac", "McrDccmvac",
-                                  "MiscRegRegImmMemOp",
+    McrDccmvacIop = InstObjParams("mcr", "McrDccmvac",
+                                  "MiscRegRegImmOp",
                                   {"memacc_code": McrDcCheckCode,
                                    "postacc_code": "",
                                    "ea_code": McrDccmvacCode,
@@ -1111,8 +1111,8 @@ let {{
                                             Request::DST_POU);
         EA = Op1;
     '''
-    McrDccmvauIop = InstObjParams("mcr dccmvau", "McrDccmvau",
-                                  "MiscRegRegImmMemOp",
+    McrDccmvauIop = InstObjParams("mcr", "McrDccmvau",
+                                  "MiscRegRegImmOp",
                                   {"memacc_code": McrDcCheckCode,
                                    "postacc_code": "",
                                    "ea_code": McrDccmvauCode,
@@ -1131,8 +1131,8 @@ let {{
                                             Request::DST_POC);
         EA = Op1;
     '''
-    McrDccimvacIop = InstObjParams("mcr dccimvac", "McrDccimvac",
-                                  "MiscRegRegImmMemOp",
+    McrDccimvacIop = InstObjParams("mcr", "McrDccimvac",
+                                  "MiscRegRegImmOp",
                                   {"memacc_code": McrDcCheckCode,
                                    "postacc_code": "",
                                    "ea_code": McrDccimvacCode,
