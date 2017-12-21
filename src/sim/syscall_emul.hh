@@ -1705,8 +1705,7 @@ prlimitFunc(SyscallDesc *desc, int callnum, Process *process,
     Addr o = process->getSyscallArg(tc, index);
     if (o != 0)
     {
-        TypedBufferArg<typename OS::rlimit> rlp(
-                process->getSyscallArg(tc, index));
+        TypedBufferArg<typename OS::rlimit> rlp(o);
         switch (resource) {
           case OS::TGT_RLIMIT_STACK:
             // max stack size in bytes: make up a number (8MB for now)
