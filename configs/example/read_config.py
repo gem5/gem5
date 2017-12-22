@@ -215,8 +215,10 @@ class ConfigManager(object):
                     param_values = self.config.get_param_vector(object_name,
                         param_name)
 
-                    setattr(obj, param_name, [ self.objects_by_name[name]
-                        for name in param_values ])
+                    setattr(obj, param_name,
+                            [ self.objects_by_name[name]
+                                  if name != 'Null' else m5.params.NULL
+                              for name in param_values ])
                 else:
                     param_value = self.config.get_param(object_name,
                         param_name)
@@ -235,6 +237,8 @@ class ConfigManager(object):
 
         for child_name, child_paths in children:
             param = obj.__class__._params.get(child_name, None)
+            if child_name == 'Null':
+                continue
 
             if isinstance(child_paths, list):
                 child_list = [ self.objects_by_name[path]
