@@ -82,8 +82,12 @@ def tick_parser(cast=lambda i: i):
 
 def addr_range_parser(cls, flags, param):
     sys.stdout.flush()
-    low, high = param.split(':')
-    return m5.objects.AddrRange(long(low), long(high))
+    (low, high, intlv_high_bit, xor_high_bit,
+     intlv_bits, intlv_match) = param.split(':')
+    return m5.objects.AddrRange(
+        start=long(low), end=long(high),
+        intlvHighBit=long(intlv_high_bit), xorHighBit=long(xor_high_bit),
+        intlvBits=long(intlv_bits), intlvMatch=long(intlv_match))
 
 def memory_bandwidth_parser(cls, flags, param):
     # The string will be in tick/byte
