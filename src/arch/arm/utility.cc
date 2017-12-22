@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014, 2016-2017 ARM Limited
+ * Copyright (c) 2009-2014, 2016-2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -184,6 +184,13 @@ inSecureState(ThreadContext *tc)
         scr, tc->readMiscReg(MISCREG_CPSR));
 }
 
+inline bool
+isSecureBelowEL3(ThreadContext *tc)
+{
+    SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
+    return ArmSystem::haveEL(tc, EL3) && scr.ns == 0;
+}
+
 bool
 inAArch64(ThreadContext *tc)
 {
@@ -256,8 +263,8 @@ ELIs32(ThreadContext *tc, ExceptionLevel el)
 
         HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
         bool aarch32_at_el1 = (aarch32_below_el3
-                                || (have_el2
-                                && !inSecureState(tc) && hcr.rw == 0));
+                               || (have_el2
+                               && !isSecureBelowEL3(tc) && hcr.rw == 0));
 
         // Only know if EL0 using AArch32 from PSTATE
         if (el == EL0 && !aarch32_at_el1) {

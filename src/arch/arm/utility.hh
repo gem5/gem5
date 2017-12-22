@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2017 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -201,9 +201,16 @@ inSecureState(SCR scr, CPSR cpsr)
     }
 }
 
-bool longDescFormatInUse(ThreadContext *tc);
-
 bool inSecureState(ThreadContext *tc);
+
+/**
+ * Return TRUE if an Exception level below EL3 is in Secure state.
+ * Differs from inSecureState in that it ignores the current EL
+ * or Mode in considering security state.
+ */
+inline bool isSecureBelowEL3(ThreadContext *tc);
+
+bool longDescFormatInUse(ThreadContext *tc);
 
 uint32_t getMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
 
