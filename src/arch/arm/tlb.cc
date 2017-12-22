@@ -1183,7 +1183,7 @@ TLB::translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode,
     return fault;
 }
 
-Fault
+void
 TLB::translateTiming(RequestPtr req, ThreadContext *tc,
     Translation *translation, Mode mode, TLB::ArmTranslationType tranType)
 {
@@ -1191,12 +1191,13 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
 
     if (directToStage2) {
         assert(stage2Tlb);
-        return stage2Tlb->translateTiming(req, tc, translation, mode, tranType);
+        stage2Tlb->translateTiming(req, tc, translation, mode, tranType);
+        return;
     }
 
     assert(translation);
 
-    return translateComplete(req, tc, translation, mode, tranType, isStage2);
+    translateComplete(req, tc, translation, mode, tranType, isStage2);
 }
 
 Fault

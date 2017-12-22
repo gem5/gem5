@@ -60,7 +60,7 @@ namespace X86ISA
     Addr
     vtophys(ThreadContext *tc, Addr vaddr)
     {
-        Walker *walker = tc->getDTBPtr()->getWalker();
+        Walker *walker = dynamic_cast<TLB *>(tc->getDTBPtr())->getWalker();
         unsigned logBytes;
         Addr addr = vaddr;
         Fault fault = walker->startFunctional(

@@ -51,7 +51,7 @@ handleIprRead(ThreadContext *xc, Packet *pkt)
     if (GenericISA::isGenericIprAccess(pkt))
         return GenericISA::handleGenericIprRead(xc, pkt);
     else
-        return xc->getDTBPtr()->doMmuRegRead(xc, pkt);
+        return dynamic_cast<TLB *>(xc->getDTBPtr())->doMmuRegRead(xc, pkt);
 }
 
 inline Cycles
@@ -60,7 +60,7 @@ handleIprWrite(ThreadContext *xc, Packet *pkt)
     if (GenericISA::isGenericIprAccess(pkt))
         return GenericISA::handleGenericIprWrite(xc, pkt);
     else
-        return xc->getDTBPtr()->doMmuRegWrite(xc, pkt);
+        return dynamic_cast<TLB *>(xc->getDTBPtr())->doMmuRegWrite(xc, pkt);
 }
 
 

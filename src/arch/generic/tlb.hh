@@ -60,32 +60,6 @@ class BaseTLB : public SimObject
   public:
     enum Mode { Read, Write, Execute };
 
-  public:
-    virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
-
-    /**
-     * Remove all entries from the TLB
-     */
-    virtual void flushAll() = 0;
-
-    /**
-     * Take over from an old tlb context
-     */
-    virtual void takeOverFrom(BaseTLB *otlb) = 0;
-
-    /**
-     * Get the table walker master port if present. This is used for
-     * migrating port connections during a CPU takeOverFrom()
-     * call. For architectures that do not have a table walker, NULL
-     * is returned, hence the use of a pointer rather than a
-     * reference.
-     *
-     * @return A pointer to the walker master port or NULL if not present
-     */
-    virtual BaseMasterPort* getMasterPort() { return NULL; }
-
-    void memInvalidate() { flushAll(); }
-
     class Translation
     {
       public:
@@ -113,22 +87,20 @@ class BaseTLB : public SimObject
          */
         virtual bool squashed() const { return false; }
     };
-};
-
-class GenericTLB : public BaseTLB
-{
-  protected:
-    GenericTLB(const Params *p)
-        : BaseTLB(p)
-    {}
 
   public:
-    void demapPage(Addr vaddr, uint64_t asn) override;
+    virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
 
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-                         Translation *translation, Mode mode);
-
+    virtual Fault translateAtomic(
+            RequestPtr req, ThreadContext *tc, Mode mode) = 0;
+    virtual void translateTiming(
+            RequestPtr req, ThreadContext *tc,
+            Translation *translation, Mode mode) = 0;
+    virtual Fault
+    translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode)
+    {
+        panic("Not implemented.\n");
+    }
 
     /**
      * Do post-translation physical address finalization.
@@ -144,7 +116,51 @@ class GenericTLB : public BaseTLB
      * @param mode Request type (read/write/execute).
      * @return A fault on failure, NoFault otherwise.
      */
-    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
+    virtual Fault finalizePhysical(
+            RequestPtr req, ThreadContext *tc, Mode mode) const = 0;
+
+    /**
+     * Remove all entries from the TLB
+     */
+    virtual void flushAll() = 0;
+
+    /**
+     * Take over from an old tlb context
+     */
+    virtual void takeOverFrom(BaseTLB *otlb) = 0;
+
+    /**
+     * Get the table walker master port if present. This is used for
+     * migrating port connections during a CPU takeOverFrom()
+     * call. For architectures that do not have a table walker, NULL
+     * is returned, hence the use of a pointer rather than a
+     * reference.
+     *
+     * @return A pointer to the walker master port or NULL if not present
+     */
+    virtual BaseMasterPort* getMasterPort() { return NULL; }
+
+    void memInvalidate() { flushAll(); }
+};
+
+class GenericTLB : public BaseTLB
+{
+  protected:
+    GenericTLB(const Params *p)
+        : BaseTLB(p)
+    {}
+
+  public:
+    void demapPage(Addr vaddr, uint64_t asn) override;
+
+    Fault translateAtomic(
+        RequestPtr req, ThreadContext *tc, Mode mode) override;
+    void translateTiming(
+        RequestPtr req, ThreadContext *tc,
+        Translation *translation, Mode mode) override;
+
+    Fault finalizePhysical(
+        RequestPtr req, ThreadContext *tc, Mode mode) const override;
 };
 
 #endif // __ARCH_GENERIC_TLB_HH__

@@ -163,14 +163,13 @@ class TLB : public BaseTLB
 
     void dumpAll();
 
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, Mode mode);
-    /** Stub function for compilation support with CheckerCPU. SPARC ISA
-     *  does not support the Checker model at the moment
-     */
-    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
-    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
+    Fault translateAtomic(
+            RequestPtr req, ThreadContext *tc, Mode mode) override;
+    void translateTiming(
+            RequestPtr req, ThreadContext *tc,
+            Translation *translation, Mode mode) override;
+    Fault finalizePhysical(
+            RequestPtr req, ThreadContext *tc, Mode mode) const override;
     Cycles doMmuRegRead(ThreadContext *tc, Packet *pkt);
     Cycles doMmuRegWrite(ThreadContext *tc, Packet *pkt);
     void GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs);

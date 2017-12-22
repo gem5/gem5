@@ -96,9 +96,9 @@ class Stage2MMU : public SimObject
             req.setVirt(0, vaddr, size, flags, masterId, 0);
         }
 
-        Fault translateTiming(ThreadContext *tc)
+        void translateTiming(ThreadContext *tc)
         {
-            return (parent.stage2Tlb()->translateTiming(&req, tc, this, BaseTLB::Read));
+            parent.stage2Tlb()->translateTiming(&req, tc, this, BaseTLB::Read);
         }
     };
 
@@ -114,9 +114,9 @@ class Stage2MMU : public SimObject
 
     Fault readDataUntimed(ThreadContext *tc, Addr oVAddr, Addr descAddr,
         uint8_t *data, int numBytes, Request::Flags flags, bool isFunctional);
-    Fault readDataTimed(ThreadContext *tc, Addr descAddr,
-                        Stage2Translation *translation, int numBytes,
-                        Request::Flags flags);
+    void readDataTimed(ThreadContext *tc, Addr descAddr,
+                       Stage2Translation *translation, int numBytes,
+                       Request::Flags flags);
 
     TLB* stage1Tlb() const { return _stage1Tlb; }
     TLB* stage2Tlb() const { return _stage2Tlb; }

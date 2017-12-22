@@ -51,8 +51,8 @@
 #include <map>
 #include <queue>
 
+#include "arch/generic/tlb.hh"
 #include "arch/isa_traits.hh"
-#include "arch/tlb.hh"
 #include "arch/utility.hh"
 #include "arch/vtophys.hh"
 #include "base/random.hh"

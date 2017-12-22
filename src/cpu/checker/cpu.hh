@@ -62,12 +62,7 @@
 #include "params/CheckerCPU.hh"
 #include "sim/eventq.hh"
 
-// forward declarations
-namespace TheISA
-{
-    class TLB;
-}
-
+class BaseTLB;
 template <class>
 class BaseDynInst;
 class ThreadContext;
@@ -140,8 +135,8 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     ThreadContext *tc;
 
-    TheISA::TLB *itb;
-    TheISA::TLB *dtb;
+    BaseTLB *itb;
+    BaseTLB *dtb;
 
     Addr dbg_vtophys(Addr addr);
 
@@ -166,8 +161,8 @@ class CheckerCPU : public BaseCPU, public ExecContext
     // Primary thread being run.
     SimpleThread *thread;
 
-    TheISA::TLB* getITBPtr() { return itb; }
-    TheISA::TLB* getDTBPtr() { return dtb; }
+    BaseTLB* getITBPtr() { return itb; }
+    BaseTLB* getDTBPtr() { return dtb; }
 
     virtual Counter totalInsts() const override
     {

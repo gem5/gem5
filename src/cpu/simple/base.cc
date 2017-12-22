@@ -45,7 +45,6 @@
 
 #include "arch/kernel_stats.hh"
 #include "arch/stacktrace.hh"
-#include "arch/tlb.hh"
 #include "arch/utility.hh"
 #include "arch/vtophys.hh"
 #include "base/cp_annotate.hh"

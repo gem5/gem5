@@ -112,15 +112,13 @@ class TLB : public BaseTLB
 
     void regStats() override;
 
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, Mode mode);
-
-    /** Function stub for CheckerCPU compilation issues. MIPS does not
-     *  support the Checker model at the moment.
-     */
-    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
-    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
+    Fault translateAtomic(
+            RequestPtr req, ThreadContext *tc, Mode mode) override;
+    void translateTiming(
+            RequestPtr req, ThreadContext *tc,
+            Translation *translation, Mode mode) override;
+    Fault finalizePhysical(
+            RequestPtr req, ThreadContext *tc, Mode mode) const override;
 
   private:
     Fault translateInst(RequestPtr req, ThreadContext *tc);

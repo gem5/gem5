@@ -141,14 +141,13 @@ class TLB : public BaseTLB
     Fault translateInst(RequestPtr req, ThreadContext *tc);
 
   public:
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-                         Translation *translation, Mode mode);
-    /**
-     * translateFunctional stub function for future CheckerCPU support
-     */
-    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
-    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
+    Fault translateAtomic(
+            RequestPtr req, ThreadContext *tc, Mode mode) override;
+    void translateTiming(
+            RequestPtr req, ThreadContext *tc,
+            Translation *translation, Mode mode) override;
+    Fault finalizePhysical(
+            RequestPtr req, ThreadContext *tc, Mode mode) const override;
 };
 
 } // namespace AlphaISA

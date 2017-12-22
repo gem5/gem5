@@ -35,7 +35,6 @@
 #include <string>
 
 #include "arch/isa_traits.hh"
-#include "arch/tlb.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
 #include "debug/MMU.hh"

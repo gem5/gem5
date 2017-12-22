@@ -1790,8 +1790,8 @@ TableWalker::doL1DescriptorWrapper()
         if (!currState->doingStage2) {
             statWalkServiceTime.sample(curTick() - currState->startTime);
             DPRINTF(TLBVerbose, "calling translateTiming again\n");
-            currState->fault = tlb->translateTiming(currState->req, currState->tc,
-                currState->transState, currState->mode);
+            tlb->translateTiming(currState->req, currState->tc,
+                                 currState->transState, currState->mode);
             statWalksShortTerminatedAtLevel[0]++;
         }
 
@@ -1835,8 +1835,8 @@ TableWalker::doL2DescriptorWrapper()
         if (!currState->doingStage2) {
             statWalkServiceTime.sample(curTick() - currState->startTime);
             DPRINTF(TLBVerbose, "calling translateTiming again\n");
-            currState->fault = tlb->translateTiming(currState->req,
-                currState->tc, currState->transState, currState->mode);
+            tlb->translateTiming(currState->req, currState->tc,
+                                 currState->transState, currState->mode);
             statWalksShortTerminatedAtLevel[1]++;
         }
     }
@@ -1915,9 +1915,8 @@ TableWalker::doLongDescriptorWrapper(LookupLevel curr_lookup_level)
         if (!currState->doingStage2) {
             DPRINTF(TLBVerbose, "calling translateTiming again\n");
             statWalkServiceTime.sample(curTick() - currState->startTime);
-            currState->fault = tlb->translateTiming(currState->req, currState->tc,
-                                                    currState->transState,
-                                                    currState->mode);
+            tlb->translateTiming(currState->req, currState->tc,
+                                 currState->transState, currState->mode);
             statWalksLongTerminatedAtLevel[(unsigned) curr_lookup_level]++;
         }
 

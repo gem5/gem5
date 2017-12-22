@@ -123,8 +123,8 @@ class FullO3CPU : public BaseO3CPU
         SwitchedOut
     };
 
-    TheISA::TLB * itb;
-    TheISA::TLB * dtb;
+    BaseTLB *itb;
+    BaseTLB *dtb;
 
     /** Overall CPU status. */
     Status _status;

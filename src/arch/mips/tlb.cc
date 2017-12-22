@@ -329,13 +329,6 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
 }
 
 Fault
-TLB::translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode)
-{
-    panic("Not implemented\n");
-    return NoFault;
-}
-
-Fault
 TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
 {
     return NoFault;

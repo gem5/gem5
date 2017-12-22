@@ -46,10 +46,10 @@
 #define __CPU_SIMPLE_THREAD_HH__
 
 #include "arch/decoder.hh"
+#include "arch/generic/tlb.hh"
 #include "arch/isa.hh"
 #include "arch/isa_traits.hh"
 #include "arch/registers.hh"
-#include "arch/tlb.hh"
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
@@ -135,19 +135,19 @@ class SimpleThread : public ThreadState
 
     System *system;
 
-    TheISA::TLB *itb;
-    TheISA::TLB *dtb;
+    BaseTLB *itb;
+    BaseTLB *dtb;
 
     TheISA::Decoder decoder;
 
     // constructor: initialize SimpleThread from given process structure
     // FS
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 TheISA::TLB *_itb, TheISA::TLB *_dtb, TheISA::ISA *_isa,
+                 BaseTLB *_itb, BaseTLB *_dtb, TheISA::ISA *_isa,
                  bool use_kernel_stats = true);
     // SE
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 Process *_process, TheISA::TLB *_itb, TheISA::TLB *_dtb,
+                 Process *_process, BaseTLB *_itb, BaseTLB *_dtb,
                  TheISA::ISA *_isa);
 
     virtual ~SimpleThread();
@@ -201,9 +201,9 @@ class SimpleThread : public ThreadState
 
     BaseCPU *getCpuPtr() { return baseCpu; }
 
-    TheISA::TLB *getITBPtr() { return itb; }
+    BaseTLB *getITBPtr() { return itb; }
 
-    TheISA::TLB *getDTBPtr() { return dtb; }
+    BaseTLB *getDTBPtr() { return dtb; }
 
     CheckerCPU *getCheckerCpuPtr() { return NULL; }
 

@@ -97,16 +97,15 @@ Stage2MMU::readDataUntimed(ThreadContext *tc, Addr oVAddr, Addr descAddr,
     return fault;
 }
 
-Fault
+void
 Stage2MMU::readDataTimed(ThreadContext *tc, Addr descAddr,
                          Stage2Translation *translation, int numBytes,
                          Request::Flags flags)
 {
-    Fault fault;
     // translate to physical address using the second stage MMU
-    translation->setVirt(descAddr, numBytes, flags | Request::PT_WALK, masterId);
-    fault = translation->translateTiming(tc);
-    return fault;
+    translation->setVirt(
+            descAddr, numBytes, flags | Request::PT_WALK, masterId);
+    translation->translateTiming(tc);
 }
 
 Stage2MMU::Stage2Translation::Stage2Translation(Stage2MMU &_parent,

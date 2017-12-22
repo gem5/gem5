@@ -38,7 +38,6 @@
 
 #include <string>
 
-#include "arch/tlb.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "mem/page_table.hh"

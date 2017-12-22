@@ -72,7 +72,8 @@ bool
 RemoteGDB::acc(Addr va, size_t len)
 {
     if (FullSystem) {
-        Walker *walker = context->getDTBPtr()->getWalker();
+        Walker *walker = dynamic_cast<TLB *>(
+            context->getDTBPtr())->getWalker();
         unsigned logBytes;
         Fault fault = walker->startFunctional(context, va, logBytes,
                                               BaseTLB::Read);

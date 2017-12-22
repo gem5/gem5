@@ -51,7 +51,7 @@
 #include <sstream>
 #include <string>
 
-#include "arch/tlb.hh"
+#include "arch/generic/tlb.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
 #include "base/logging.hh"
@@ -313,7 +313,7 @@ BaseCPU::mwait(ThreadID tid, PacketPtr pkt)
 }
 
 void
-BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, TheISA::TLB *dtb)
+BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb)
 {
     assert(tid < numThreads);
     AddressMonitor &monitor = addressMonitor[tid];

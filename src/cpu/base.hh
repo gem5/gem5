@@ -626,7 +626,7 @@ class BaseCPU : public MemObject
   public:
     void armMonitor(ThreadID tid, Addr address);
     bool mwait(ThreadID tid, PacketPtr pkt);
-    void mwaitAtomic(ThreadID tid, ThreadContext *tc, TheISA::TLB *dtb);
+    void mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb);
     AddressMonitor *getCpuAddrMonitor(ThreadID tid)
     {
         assert(tid < numThreads);

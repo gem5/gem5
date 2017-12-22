@@ -58,9 +58,9 @@
 namespace TheISA
 {
     class Decoder;
-    class TLB;
 }
 class BaseCPU;
+class BaseTLB;
 class CheckerCPU;
 class Checkpoint;
 class EndQuiesceEvent;
@@ -136,9 +136,9 @@ class ThreadContext
 
     virtual void setContextId(int id) = 0;
 
-    virtual TheISA::TLB *getITBPtr() = 0;
+    virtual BaseTLB *getITBPtr() = 0;
 
-    virtual TheISA::TLB *getDTBPtr() = 0;
+    virtual BaseTLB *getDTBPtr() = 0;
 
     virtual CheckerCPU *getCheckerCpuPtr() = 0;
 
@@ -394,9 +394,9 @@ class ProxyThreadContext : public ThreadContext
 
     void setContextId(int id) { actualTC->setContextId(id); }
 
-    TheISA::TLB *getITBPtr() { return actualTC->getITBPtr(); }
+    BaseTLB *getITBPtr() { return actualTC->getITBPtr(); }
 
-    TheISA::TLB *getDTBPtr() { return actualTC->getDTBPtr(); }
+    BaseTLB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
     CheckerCPU *getCheckerCpuPtr() { return actualTC->getCheckerCpuPtr(); }
 

@@ -171,8 +171,8 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
     dest->pcState(src->pcState());
 
     // Invalidate the tlb misc register cache
-    dest->getITBPtr()->invalidateMiscReg();
-    dest->getDTBPtr()->invalidateMiscReg();
+    dynamic_cast<TLB *>(dest->getITBPtr())->invalidateMiscReg();
+    dynamic_cast<TLB *>(dest->getDTBPtr())->invalidateMiscReg();
 }
 
 bool

@@ -79,10 +79,10 @@ class O3ThreadContext : public ThreadContext
     O3ThreadState<Impl> *thread;
 
     /** Returns a pointer to the ITB. */
-    TheISA::TLB *getITBPtr() { return cpu->itb; }
+    BaseTLB *getITBPtr() { return cpu->itb; }
 
     /** Returns a pointer to the DTB. */
-    TheISA::TLB *getDTBPtr() { return cpu->dtb; }
+    BaseTLB *getDTBPtr() { return cpu->dtb; }
 
     CheckerCPU *getCheckerCpuPtr() { return NULL; }
 

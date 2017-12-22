@@ -333,14 +333,27 @@ class TLB : public BaseTLB
     Fault translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
             Translation *translation, bool &delay, bool timing);
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode,
-            ArmTranslationType tranType = NormalTran);
-    Fault translateTiming(RequestPtr req, ThreadContext *tc,
+            ArmTranslationType tranType);
+    Fault
+    translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode) override
+    {
+        return translateAtomic(req, tc, mode, NormalTran);
+    }
+    void translateTiming(
+            RequestPtr req, ThreadContext *tc,
             Translation *translation, Mode mode,
-            ArmTranslationType tranType = NormalTran);
+            ArmTranslationType tranType);
+    void
+    translateTiming(RequestPtr req, ThreadContext *tc,
+                    Translation *translation, Mode mode) override
+    {
+        translateTiming(req, tc, translation, mode, NormalTran);
+    }
     Fault translateComplete(RequestPtr req, ThreadContext *tc,
             Translation *translation, Mode mode, ArmTranslationType tranType,
             bool callFromS2);
-    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
+    Fault finalizePhysical(
+            RequestPtr req, ThreadContext *tc, Mode mode) const override;
 
     void drainResume() override;
 

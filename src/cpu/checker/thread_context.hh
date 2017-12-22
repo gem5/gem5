@@ -112,9 +112,9 @@ class CheckerThreadContext : public ThreadContext
         actualTC->setThreadId(id);
     }
 
-    TheISA::TLB *getITBPtr() { return actualTC->getITBPtr(); }
+    BaseTLB *getITBPtr() { return actualTC->getITBPtr(); }
 
-    TheISA::TLB *getDTBPtr() { return actualTC->getDTBPtr(); }
+    BaseTLB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
     CheckerCPU *getCheckerCpuPtr()
     {

@@ -122,13 +122,11 @@ namespace X86ISA
             return ++lruSeq;
         }
 
-        Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-        void translateTiming(RequestPtr req, ThreadContext *tc,
-                Translation *translation, Mode mode);
-        /** Stub function for compilation support of CheckerCPU. x86 ISA does
-         *  not support Checker model at the moment
-         */
-        Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
+        Fault translateAtomic(
+            RequestPtr req, ThreadContext *tc, Mode mode) override;
+        void translateTiming(
+            RequestPtr req, ThreadContext *tc,
+            Translation *translation, Mode mode) override;
 
         /**
          * Do post-translation physical address finalization.
@@ -144,7 +142,7 @@ namespace X86ISA
          * @return A fault on failure, NoFault otherwise.
          */
         Fault finalizePhysical(RequestPtr req, ThreadContext *tc,
-                               Mode mode) const;
+                               Mode mode) const override;
 
         TlbEntry * insert(Addr vpn, TlbEntry &entry);
 

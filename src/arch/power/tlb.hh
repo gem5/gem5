@@ -162,14 +162,13 @@ class TLB : public BaseTLB
     static Fault checkCacheability(RequestPtr &req);
     Fault translateInst(RequestPtr req, ThreadContext *tc);
     Fault translateData(RequestPtr req, ThreadContext *tc, bool write);
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-                         Translation *translation, Mode mode);
-    /** Stub function for CheckerCPU compilation support.  Power ISA not
-     *  supported by Checker at the moment
-     */
-    Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode);
-    Fault finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const;
+    Fault translateAtomic(
+            RequestPtr req, ThreadContext *tc, Mode mode) override;
+    void translateTiming(
+            RequestPtr req, ThreadContext *tc,
+            Translation *translation, Mode mode) override;
+    Fault finalizePhysical(
+            RequestPtr req, ThreadContext *tc, Mode mode) const override;
 
     // Checkpointing
     void serialize(CheckpointOut &cp) const override;
