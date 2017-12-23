@@ -60,6 +60,7 @@
 #include "debug/Stack.hh"
 #include "mem/multi_level_page_table.hh"
 #include "mem/page_table.hh"
+#include "params/Process.hh"
 #include "sim/aux_vector.hh"
 #include "sim/process_impl.hh"
 #include "sim/syscall_desc.hh"
@@ -95,10 +96,16 @@ static const int ArgumentReg32[] = {
 static const int NumArgumentRegs32 M5_VAR_USED =
     sizeof(ArgumentReg) / sizeof(const int);
 
-X86Process::X86Process(ProcessParams * params, ObjectFile *objFile,
+X86Process::X86Process(ProcessParams *params, ObjectFile *objFile,
                        SyscallDesc *_syscallDescs, int _numSyscallDescs)
-    : Process(params, objFile), syscallDescs(_syscallDescs),
-      numSyscallDescs(_numSyscallDescs)
+    : Process(params, params->useArchPT ?
+                      static_cast<PageTableBase *>(
+                              new ArchPageTable(params->name, params->pid,
+                                                params->system)) :
+                      static_cast<PageTableBase *>(
+                              new FuncPageTable(params->name, params->pid)),
+              objFile),
+      syscallDescs(_syscallDescs), numSyscallDescs(_numSyscallDescs)
 {
 }
 

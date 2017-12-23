@@ -59,6 +59,14 @@ namespace X86ISA
     class X86Process : public Process
     {
       protected:
+        /**
+         * Declaration of architectural page table for x86.
+         *
+         * These page tables are stored in system memory and respect x86
+         * specification.
+         */
+        typedef MultiLevelPageTable<PageTableOps> ArchPageTable;
+
         Addr _gdtStart;
         Addr _gdtSize;
 
@@ -188,14 +196,6 @@ namespace X86ISA
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
                    Process *process, TheISA::IntReg flags) override;
     };
-
-    /**
-     * Declaration of architectural page table for x86.
-     *
-     * These page tables are stored in system memory and respect x86
-     * specification.
-     */
-    typedef MultiLevelPageTable<PageTableOps> ArchPageTable;
 
 }
 

@@ -61,7 +61,4 @@ class AlphaProcess : public Process
     virtual bool mmapGrowsDown() const override { return false; }
 };
 
-/* No architectural page table defined for this ISA */
-typedef NoArchPageTable ArchPageTable;
-
 #endif // __ARCH_ALPHA_PROCESS_HH__

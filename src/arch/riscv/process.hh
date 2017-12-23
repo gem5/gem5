@@ -65,8 +65,4 @@ class RiscvProcess : public Process
     virtual bool mmapGrowsDown() const override { return false; }
 };
 
-/* No architectural page table defined for this ISA */
-typedef NoArchPageTable ArchPageTable;
-
-
 #endif // __RISCV_PROCESS_HH__

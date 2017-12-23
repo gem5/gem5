@@ -95,8 +95,5 @@ class ArmProcess64 : public ArmProcess
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
-/* No architectural page table defined for this ISA */
-typedef NoArchPageTable ArchPageTable;
-
 #endif // __ARM_PROCESS_HH__
 

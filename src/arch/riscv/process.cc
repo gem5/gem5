@@ -59,9 +59,10 @@
 using namespace std;
 using namespace RiscvISA;
 
-RiscvProcess::RiscvProcess(ProcessParams * params,
-    ObjectFile *objFile) : Process(params, objFile)
+RiscvProcess::RiscvProcess(ProcessParams *params, ObjectFile *objFile) :
+        Process(params, new FuncPageTable(params->name, params->pid), objFile)
 {
+    fatal_if(!params->useArchPT, "Arch page tables not implemented.");
     const Addr stack_base = 0x7FFFFFFFFFFFFFFFL;
     const Addr max_stack_size = 8 * 1024 * 1024;
     const Addr next_thread_stack_base = stack_base - max_stack_size;

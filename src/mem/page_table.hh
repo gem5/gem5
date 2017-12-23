@@ -246,19 +246,4 @@ class FuncPageTable : public PageTableBase
     void getMappings(std::vector<std::pair<Addr, Addr>> *addr_maps) override;
 };
 
-/**
- * Faux page table class indended to stop the usage of
- * an architectural page table, when there is none defined
- * for a particular ISA.
- */
-class NoArchPageTable : public FuncPageTable
-{
-  public:
-    NoArchPageTable(const std::string &__name, uint64_t _pid, System *_sys,
-              Addr _pageSize = TheISA::PageBytes) : FuncPageTable(__name, _pid)
-    {
-        fatal("No architectural page table defined for this ISA.\n");
-    }
-};
-
 #endif // __MEM_PAGE_TABLE_HH__

@@ -63,7 +63,8 @@ class ThreadContext;
 class Process : public SimObject
 {
   public:
-    Process(ProcessParams *params, ObjectFile *obj_file);
+    Process(ProcessParams *params, PageTableBase *pTable,
+            ObjectFile *obj_file);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

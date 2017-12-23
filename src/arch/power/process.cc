@@ -40,6 +40,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Stack.hh"
 #include "mem/page_table.hh"
+#include "params/Process.hh"
 #include "sim/aux_vector.hh"
 #include "sim/process_impl.hh"
 #include "sim/syscall_return.hh"
@@ -49,8 +50,9 @@ using namespace std;
 using namespace PowerISA;
 
 PowerProcess::PowerProcess(ProcessParams *params, ObjectFile *objFile)
-    : Process(params, objFile)
+    : Process(params, new FuncPageTable(params->name, params->pid), objFile)
 {
+    fatal_if(!params->useArchPT, "Arch page tables not implemented.");
     // Set up break point (Top of Heap)
     Addr brk_point = objFile->dataBase() + objFile->dataSize() +
                      objFile->bssSize();

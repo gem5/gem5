@@ -101,14 +101,12 @@
 using namespace std;
 using namespace TheISA;
 
-Process::Process(ProcessParams * params, ObjectFile * obj_file)
+Process::Process(ProcessParams *params, PageTableBase *pTable,
+                 ObjectFile *obj_file)
     : SimObject(params), system(params->system),
       useArchPT(params->useArchPT),
       kvmInSE(params->kvmInSE),
-      pTable(useArchPT ?
-        static_cast<PageTableBase *>(new ArchPageTable(name(), params->pid,
-            system)) :
-        static_cast<PageTableBase *>(new FuncPageTable(name(), params->pid))),
+      pTable(pTable),
       initVirtMem(system->getSystemPort(), this,
                   SETranslatingPortProxy::Always),
       objFile(obj_file),

@@ -51,6 +51,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Stack.hh"
 #include "mem/page_table.hh"
+#include "params/Process.hh"
 #include "sim/aux_vector.hh"
 #include "sim/byteswap.hh"
 #include "sim/process_impl.hh"
@@ -62,8 +63,10 @@ using namespace ArmISA;
 
 ArmProcess::ArmProcess(ProcessParams *params, ObjectFile *objFile,
                        ObjectFile::Arch _arch)
-    : Process(params, objFile), arch(_arch)
+    : Process(params, new FuncPageTable(params->name, params->pid), objFile),
+              arch(_arch)
 {
+    fatal_if(!params->useArchPT, "Arch page tables not implemented.");
 }
 
 ArmProcess32::ArmProcess32(ProcessParams *params, ObjectFile *objFile,

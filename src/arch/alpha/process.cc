@@ -38,6 +38,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "mem/page_table.hh"
+#include "params/Process.hh"
 #include "sim/aux_vector.hh"
 #include "sim/byteswap.hh"
 #include "sim/process_impl.hh"
@@ -48,8 +49,9 @@ using namespace AlphaISA;
 using namespace std;
 
 AlphaProcess::AlphaProcess(ProcessParams *params, ObjectFile *objFile)
-    : Process(params, objFile)
+    : Process(params, new FuncPageTable(params->name, params->pid), objFile)
 {
+    fatal_if(!params->useArchPT, "Arch page tables not implemented.");
     Addr brk_point = objFile->dataBase() + objFile->dataSize() +
                      objFile->bssSize();
     brk_point = roundUp(brk_point, PageBytes);

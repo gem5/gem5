@@ -58,8 +58,4 @@ class MipsProcess : public Process
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
-/* No architectural page table defined for this ISA */
-typedef NoArchPageTable ArchPageTable;
-
-
 #endif // __MIPS_PROCESS_HH__

@@ -39,6 +39,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Loader.hh"
 #include "mem/page_table.hh"
+#include "params/Process.hh"
 #include "sim/aux_vector.hh"
 #include "sim/process.hh"
 #include "sim/process_impl.hh"
@@ -48,9 +49,10 @@
 using namespace std;
 using namespace MipsISA;
 
-MipsProcess::MipsProcess(ProcessParams * params, ObjectFile *objFile)
-    : Process(params, objFile)
+MipsProcess::MipsProcess(ProcessParams *params, ObjectFile *objFile)
+    : Process(params, new FuncPageTable(params->name, params->pid), objFile)
 {
+    fatal_if(!params->useArchPT, "Arch page tables not implemented.");
     // Set up stack. On MIPS, stack starts at the top of kuseg
     // user address space. MIPS stack grows down from here
     Addr stack_base = 0x7FFFFFFF;
