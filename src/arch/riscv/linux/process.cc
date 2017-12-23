@@ -193,7 +193,7 @@ std::map<int, SyscallDesc> RiscvLinuxProcess::syscallDescs = {
     {121,  SyscallDesc("sched_getparam")},
     {122,  SyscallDesc("sched_setaffinity")},
     {123,  SyscallDesc("sched_getaffinity")},
-    {124,  SyscallDesc("sched_yield")},
+    {124,  SyscallDesc("sched_yield", ignoreFunc, SyscallDesc::WarnOnce)},
     {125,  SyscallDesc("sched_get_priority_max")},
     {126,  SyscallDesc("sched_get_priority_min")},
     {127,  SyscallDesc("scheD_rr_get_interval")},
