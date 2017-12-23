@@ -101,9 +101,10 @@ X86Process::X86Process(ProcessParams *params, ObjectFile *objFile,
     : Process(params, params->useArchPT ?
                       static_cast<PageTableBase *>(
                               new ArchPageTable(params->name, params->pid,
-                                                params->system)) :
+                                                params->system, PageBytes)) :
                       static_cast<PageTableBase *>(
-                              new FuncPageTable(params->name, params->pid)),
+                              new FuncPageTable(params->name, params->pid,
+                                                PageBytes)),
               objFile),
       syscallDescs(_syscallDescs), numSyscallDescs(_numSyscallDescs)
 {

@@ -46,8 +46,9 @@ using namespace TheISA;
 
 template <class ISAOps>
 MultiLevelPageTable<ISAOps>::MultiLevelPageTable(const std::string &__name,
-                                                 uint64_t _pid, System *_sys)
-    : PageTableBase(__name, _pid), system(_sys),
+                                                 uint64_t _pid, System *_sys,
+                                                 Addr pageSize)
+    : PageTableBase(__name, _pid, pageSize), system(_sys),
     logLevelSize(PageTableLayout),
     numLevels(logLevelSize.size())
 {

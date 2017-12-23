@@ -50,7 +50,8 @@ using namespace std;
 using namespace PowerISA;
 
 PowerProcess::PowerProcess(ProcessParams *params, ObjectFile *objFile)
-    : Process(params, new FuncPageTable(params->name, params->pid), objFile)
+    : Process(params, new FuncPageTable(params->name, params->pid, PageBytes),
+              objFile)
 {
     fatal_if(!params->useArchPT, "Arch page tables not implemented.");
     // Set up break point (Top of Heap)

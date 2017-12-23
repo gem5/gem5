@@ -140,7 +140,7 @@ class MultiLevelPageTable : public PageTableBase
 
 public:
     MultiLevelPageTable(const std::string &__name, uint64_t _pid,
-                        System *_sys);
+                        System *_sys, Addr pageSize);
     ~MultiLevelPageTable();
 
     void initState(ThreadContext* tc) override;

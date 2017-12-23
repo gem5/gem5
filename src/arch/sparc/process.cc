@@ -56,8 +56,9 @@ static const int FirstArgumentReg = 8;
 
 SparcProcess::SparcProcess(ProcessParams *params, ObjectFile *objFile,
                            Addr _StackBias)
-    : Process(params, new FuncPageTable(params->name, params->pid), objFile),
-              StackBias(_StackBias)
+    : Process(params, new FuncPageTable(params->name, params->pid, PageBytes),
+              objFile),
+      StackBias(_StackBias)
 {
     fatal_if(!params->useArchPT, "Arch page tables not implemented.");
     // Initialize these to 0s

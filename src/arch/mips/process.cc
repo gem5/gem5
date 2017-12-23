@@ -50,7 +50,8 @@ using namespace std;
 using namespace MipsISA;
 
 MipsProcess::MipsProcess(ProcessParams *params, ObjectFile *objFile)
-    : Process(params, new FuncPageTable(params->name, params->pid), objFile)
+    : Process(params, new FuncPageTable(params->name, params->pid, PageBytes),
+              objFile)
 {
     fatal_if(!params->useArchPT, "Arch page tables not implemented.");
     // Set up stack. On MIPS, stack starts at the top of kuseg

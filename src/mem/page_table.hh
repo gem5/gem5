@@ -73,8 +73,7 @@ class PageTableBase : public Serializable
 
   public:
 
-    PageTableBase(const std::string &__name, uint64_t _pid,
-              Addr _pageSize = TheISA::PageBytes)
+    PageTableBase(const std::string &__name, uint64_t _pid, Addr _pageSize)
             : pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
               pid(_pid), _name(__name)
     {
@@ -211,8 +210,7 @@ class FuncPageTable : public PageTableBase
 
   public:
 
-    FuncPageTable(const std::string &__name, uint64_t _pid,
-                  Addr _pageSize = TheISA::PageBytes);
+    FuncPageTable(const std::string &__name, uint64_t _pid, Addr _pageSize);
 
     ~FuncPageTable();
 
