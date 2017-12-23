@@ -164,10 +164,10 @@ MultiLevelPageTable<ISAOps>::map(Addr vaddr, Addr paddr,
             p.write<PageTableEntry>(PTE_addr, PTE);
             DPRINTF(MMU, "New mapping: %#x-%#x\n", vaddr, paddr);
 
-            eraseCacheEntry(vaddr);
-            updateCache(vaddr, TlbEntry(pid, vaddr, paddr,
-                                        flags & Uncacheable,
-                                        flags & ReadOnly));
+            delete eraseCacheEntry(vaddr);
+            delete updateCache(vaddr, new TlbEntry(pid, vaddr, paddr,
+                                                   flags & Uncacheable,
+                                                   flags & ReadOnly));
         }
 
     }
@@ -211,8 +211,9 @@ MultiLevelPageTable<ISAOps>::remap(Addr vaddr, int64_t size, Addr new_vaddr)
                 DPRINTF(MMU, "Remapping: %#x-%#x\n", vaddr, new_PTE_addr);
             }
 
-            eraseCacheEntry(vaddr);
-            updateCache(new_vaddr, TlbEntry(pid, new_vaddr, paddr,
+            delete eraseCacheEntry(vaddr);
+            delete updateCache(new_vaddr,
+                               new TlbEntry(pid, new_vaddr, paddr,
                                             pTableISAOps.isUncacheable(PTE),
                                             pTableISAOps.isReadOnly(PTE)));
         } else {
@@ -243,7 +244,7 @@ MultiLevelPageTable<ISAOps>::unmap(Addr vaddr, int64_t size)
                 p.write<PageTableEntry>(PTE_addr, PTE);
                 DPRINTF(MMU, "Unmapping: %#x\n", vaddr);
             }
-           eraseCacheEntry(vaddr);
+           delete eraseCacheEntry(vaddr);
         } else {
             fatal("Page fault while unmapping");
         }
@@ -277,16 +278,16 @@ MultiLevelPageTable<ISAOps>::lookup(Addr vaddr, TlbEntry &entry)
 {
     Addr page_addr = pageAlign(vaddr);
 
-    if (pTableCache[0].valid && pTableCache[0].vaddr == page_addr) {
-        entry = pTableCache[0].entry;
+    if (pTableCache[0].entry && pTableCache[0].vaddr == page_addr) {
+        entry = *pTableCache[0].entry;
         return true;
     }
-    if (pTableCache[1].valid && pTableCache[1].vaddr == page_addr) {
-        entry = pTableCache[1].entry;
+    if (pTableCache[1].entry && pTableCache[1].vaddr == page_addr) {
+        entry = *pTableCache[1].entry;
         return true;
     }
-    if (pTableCache[2].valid && pTableCache[2].vaddr == page_addr) {
-        entry = pTableCache[2].entry;
+    if (pTableCache[2].entry && pTableCache[2].vaddr == page_addr) {
+        entry = *pTableCache[2].entry;
         return true;
     }
 
@@ -299,10 +300,11 @@ MultiLevelPageTable<ISAOps>::lookup(Addr vaddr, TlbEntry &entry)
         if (pnum == 0)
             return false;
 
-        entry = TlbEntry(pid, vaddr, pnum << PageShift,
-                         pTableISAOps.isUncacheable(PTE),
-                         pTableISAOps.isReadOnly(PTE));
-        updateCache(page_addr, entry);
+        TlbEntry *new_entry = new TlbEntry(pid, vaddr, pnum << PageShift,
+                                           pTableISAOps.isUncacheable(PTE),
+                                           pTableISAOps.isReadOnly(PTE));
+        entry = *new_entry;
+        delete updateCache(page_addr, new_entry);
     } else {
         return false;
     }

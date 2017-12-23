@@ -56,6 +56,8 @@ FuncPageTable::FuncPageTable(const std::string &__name,
 
 FuncPageTable::~FuncPageTable()
 {
+    for (auto &iter : pTable)
+        delete iter.second;
 }
 
 void
@@ -68,12 +70,20 @@ FuncPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
     DPRINTF(MMU, "Allocating Page: %#x-%#x\n", vaddr, vaddr+ size);
 
     for (; size > 0; size -= pageSize, vaddr += pageSize, paddr += pageSize) {
-        if (!clobber && (pTable.find(vaddr) != pTable.end())) {
-            // already mapped
-            fatal("FuncPageTable::allocate: addr 0x%x already mapped", vaddr);
+        auto it = pTable.find(vaddr);
+        if (it != pTable.end()) {
+            if (clobber) {
+                delete it->second;
+            } else {
+                // already mapped
+                fatal("FuncPageTable::allocate: addr %#x already mapped",
+                      vaddr);
+            }
+        } else {
+            it = pTable.emplace(vaddr, nullptr).first;
         }
 
-        pTable[vaddr] = TheISA::TlbEntry(pid, vaddr, paddr,
+        it->second = new TheISA::TlbEntry(pid, vaddr, paddr,
                                          flags & Uncacheable,
                                          flags & ReadOnly);
         eraseCacheEntry(vaddr);
@@ -93,13 +103,15 @@ FuncPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
     for (; size > 0;
          size -= pageSize, vaddr += pageSize, new_vaddr += pageSize)
     {
-        assert(pTable.find(vaddr) != pTable.end());
+        auto new_it = pTable.find(new_vaddr);
+        auto old_it = pTable.find(vaddr);
+        assert(old_it != pTable.end() && new_it == pTable.end());
 
-        pTable[new_vaddr] = pTable[vaddr];
-        pTable.erase(vaddr);
+        new_it->second = old_it->second;
+        pTable.erase(old_it);
         eraseCacheEntry(vaddr);
-        pTable[new_vaddr].updateVaddr(new_vaddr);
-        updateCache(new_vaddr, pTable[new_vaddr]);
+        new_it->second->updateVaddr(new_vaddr);
+        updateCache(new_vaddr, new_it->second);
     }
 }
 
@@ -107,7 +119,7 @@ void
 FuncPageTable::getMappings(std::vector<std::pair<Addr, Addr>> *addr_maps)
 {
     for (auto &iter : pTable)
-        addr_maps->push_back(make_pair(iter.first, iter.second.pageStart()));
+        addr_maps->push_back(make_pair(iter.first, iter.second->pageStart()));
 }
 
 void
@@ -118,9 +130,11 @@ FuncPageTable::unmap(Addr vaddr, int64_t size)
     DPRINTF(MMU, "Unmapping page: %#x-%#x\n", vaddr, vaddr+ size);
 
     for (; size > 0; size -= pageSize, vaddr += pageSize) {
-        assert(pTable.find(vaddr) != pTable.end());
-        pTable.erase(vaddr);
+        auto it = pTable.find(vaddr);
+        assert(it != pTable.end());
         eraseCacheEntry(vaddr);
+        delete it->second;
+        pTable.erase(it);
     }
 
 }
@@ -145,16 +159,16 @@ FuncPageTable::lookup(Addr vaddr, TheISA::TlbEntry &entry)
 {
     Addr page_addr = pageAlign(vaddr);
 
-    if (pTableCache[0].valid && pTableCache[0].vaddr == page_addr) {
-        entry = pTableCache[0].entry;
+    if (pTableCache[0].entry && pTableCache[0].vaddr == page_addr) {
+        entry = *pTableCache[0].entry;
         return true;
     }
-    if (pTableCache[1].valid && pTableCache[1].vaddr == page_addr) {
-        entry = pTableCache[1].entry;
+    if (pTableCache[1].entry && pTableCache[1].vaddr == page_addr) {
+        entry = *pTableCache[1].entry;
         return true;
     }
-    if (pTableCache[2].valid && pTableCache[2].vaddr == page_addr) {
-        entry = pTableCache[2].entry;
+    if (pTableCache[2].entry && pTableCache[2].vaddr == page_addr) {
+        entry = *pTableCache[2].entry;
         return true;
     }
 
@@ -165,7 +179,7 @@ FuncPageTable::lookup(Addr vaddr, TheISA::TlbEntry &entry)
     }
 
     updateCache(page_addr, iter->second);
-    entry = iter->second;
+    entry = *iter->second;
     return true;
 }
 
@@ -209,7 +223,7 @@ FuncPageTable::serialize(CheckpointOut &cp) const
         ScopedCheckpointSection sec(cp, csprintf("Entry%d", count++));
 
         paramOut(cp, "vaddr", pte.first);
-        pte.second.serialize(cp);
+        pte.second->serialize(cp);
     }
     assert(count == pTable.size());
 }
@@ -223,14 +237,13 @@ FuncPageTable::unserialize(CheckpointIn &cp)
     for (int i = 0; i < count; ++i) {
         ScopedCheckpointSection sec(cp, csprintf("Entry%d", i));
 
-        std::unique_ptr<TheISA::TlbEntry> entry;
-        Addr vaddr;
-
-        paramIn(cp, "vaddr", vaddr);
-        entry.reset(new TheISA::TlbEntry());
+        TheISA::TlbEntry *entry = new TheISA::TlbEntry();
         entry->unserialize(cp);
 
-        pTable[vaddr] = *entry;
+        Addr vaddr;
+        paramIn(cp, "vaddr", vaddr);
+
+        pTable[vaddr] = entry;
     }
 }
 

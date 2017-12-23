@@ -58,9 +58,8 @@ class PageTableBase : public Serializable
 {
   protected:
     struct cacheElement {
-        bool valid;
         Addr vaddr;
-        TheISA::TlbEntry entry;
+        TheISA::TlbEntry *entry;
     };
 
     struct cacheElement pTableCache[3];
@@ -78,9 +77,9 @@ class PageTableBase : public Serializable
               pid(_pid), _name(__name)
     {
         assert(isPowerOf2(pageSize));
-        pTableCache[0].valid = false;
-        pTableCache[1].valid = false;
-        pTableCache[2].valid = false;
+        pTableCache[0].entry = nullptr;
+        pTableCache[1].entry = nullptr;
+        pTableCache[2].entry = nullptr;
     }
 
     virtual ~PageTableBase() {};
@@ -162,36 +161,46 @@ class PageTableBase : public Serializable
      * Update the page table cache.
      * @param vaddr virtual address (page aligned) to check
      * @param pte page table entry to return
+     * @return A pointer to any entry which is displaced from the cache.
      */
-    inline void updateCache(Addr vaddr, TheISA::TlbEntry entry)
+    TheISA::TlbEntry *
+    updateCache(Addr vaddr, TheISA::TlbEntry *entry)
     {
+        TheISA::TlbEntry *evicted = pTableCache[2].entry;
+
         pTableCache[2].entry = pTableCache[1].entry;
         pTableCache[2].vaddr = pTableCache[1].vaddr;
-        pTableCache[2].valid = pTableCache[1].valid;
 
         pTableCache[1].entry = pTableCache[0].entry;
         pTableCache[1].vaddr = pTableCache[0].vaddr;
-        pTableCache[1].valid = pTableCache[0].valid;
 
         pTableCache[0].entry = entry;
         pTableCache[0].vaddr = vaddr;
-        pTableCache[0].valid = true;
+
+        return evicted;
     }
 
     /**
      * Erase an entry from the page table cache.
      * @param vaddr virtual address (page aligned) to check
+     * @return A pointer to the entry (if any) which is kicked out.
      */
-    inline void eraseCacheEntry(Addr vaddr)
+    TheISA::TlbEntry *
+    eraseCacheEntry(Addr vaddr)
     {
+        TheISA::TlbEntry *evicted = nullptr;
         // Invalidate cached entries if necessary
-        if (pTableCache[0].valid && pTableCache[0].vaddr == vaddr) {
-            pTableCache[0].valid = false;
-        } else if (pTableCache[1].valid && pTableCache[1].vaddr == vaddr) {
-            pTableCache[1].valid = false;
-        } else if (pTableCache[2].valid && pTableCache[2].vaddr == vaddr) {
-            pTableCache[2].valid = false;
+        if (pTableCache[0].entry && pTableCache[0].vaddr == vaddr) {
+            evicted = pTableCache[0].entry;
+            pTableCache[0].entry = nullptr;
+        } else if (pTableCache[1].entry && pTableCache[1].vaddr == vaddr) {
+            evicted = pTableCache[1].entry;
+            pTableCache[1].entry = nullptr;
+        } else if (pTableCache[2].entry && pTableCache[2].vaddr == vaddr) {
+            evicted = pTableCache[2].entry;
+            pTableCache[2].entry = nullptr;
         }
+        return evicted;
     }
 
     virtual void getMappings(std::vector<std::pair<Addr, Addr>>
@@ -204,7 +213,7 @@ class PageTableBase : public Serializable
 class FuncPageTable : public PageTableBase
 {
   private:
-    typedef std::unordered_map<Addr, TheISA::TlbEntry> PTable;
+    typedef std::unordered_map<Addr, TheISA::TlbEntry *> PTable;
     typedef PTable::iterator PTableItr;
     PTable pTable;
 
