@@ -137,6 +137,7 @@ machine(MachineType:DMA, "DMA Controller")
       enqueue(requestToDir_out, RequestMsg, request_latency) {
         out_msg.addr := in_msg.PhysicalAddress;
         out_msg.Type := CoherenceRequestType:DMA_READ;
+        out_msg.Requestor := machineID;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Len := in_msg.Len;
         out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
@@ -150,6 +151,7 @@ machine(MachineType:DMA, "DMA Controller")
       enqueue(requestToDir_out, RequestMsg, request_latency) {
           out_msg.addr := in_msg.PhysicalAddress;
           out_msg.Type := CoherenceRequestType:DMA_WRITE;
+          out_msg.Requestor := machineID;
           out_msg.DataBlk := in_msg.DataBlk;
           out_msg.Len := in_msg.Len;
           out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));

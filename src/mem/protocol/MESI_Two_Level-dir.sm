@@ -83,6 +83,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
     State TBEState,        desc="Transient State";
     DataBlock DataBlk,     desc="Data to be written (DMA write only)";
     int Len,               desc="...";
+    MachineID Requestor,   desc="The DMA engine that sent the request";
   }
 
   structure(TBETable, external="yes") {
@@ -330,10 +331,11 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   action(dr_sendDMAData, "dr", desc="Send Data to DMA controller from directory") {
     peek(memQueue_in, MemoryMsg) {
       enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
+        assert(is_valid(tbe));
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
-        out_msg.Destination.add(map_Address_to_DMA(address));
+        out_msg.Destination.add(tbe.Requestor);
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -349,9 +351,10 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
   action(da_sendDMAAck, "da", desc="Send Ack to DMA controller") {
       enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
+        assert(is_valid(tbe));
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:ACK;
-        out_msg.Destination.add(map_Address_to_DMA(address));
+        out_msg.Destination.add(tbe.Requestor);
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
   }
@@ -380,10 +383,11 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   action(drp_sendDMAData, "drp", desc="Send Data to DMA controller from incoming PUTX") {
     peek(responseNetwork_in, ResponseMsg) {
       enqueue(responseNetwork_out, ResponseMsg, to_mem_ctrl_latency) {
+        assert(is_valid(tbe));
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
-        out_msg.Destination.add(map_Address_to_DMA(address));
+        out_msg.Destination.add(tbe.Requestor);
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -396,6 +400,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
       tbe.DataBlk := in_msg.DataBlk;
       tbe.PhysicalAddress := in_msg.addr;
       tbe.Len := in_msg.Len;
+      tbe.Requestor := in_msg.Requestor;
     }
   }
 
@@ -451,23 +456,27 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
 //added by SS for dma support
   transition(I, DMA_READ, ID) {
+    v_allocateTBE;
     qf_queueMemoryFetchRequestDMA;
     j_popIncomingRequestQueue;
   }
 
   transition(ID, Memory_Data, I) {
     dr_sendDMAData;
+    w_deallocateTBE;
     l_popMemQueue;
     kd_wakeUpDependents;
   }
 
   transition(I, DMA_WRITE, ID_W) {
+    v_allocateTBE;
     qw_queueMemoryWBRequest_partial;
     j_popIncomingRequestQueue;
   }
 
   transition(ID_W, Memory_Ack, I) {
     da_sendDMAAck;
+    w_deallocateTBE;
     l_popMemQueue;
     kd_wakeUpDependents;
   }
@@ -482,12 +491,14 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
 
   transition(M, DMA_READ, M_DRD) {
+    v_allocateTBE;
     inv_sendCacheInvalidate;
     j_popIncomingRequestQueue;
   }
 
   transition(M_DRD, Data, M_DRDI) {
     drp_sendDMAData;
+    w_deallocateTBE;
     qw_queueMemoryWBRequest;
     k_popIncomingResponseQueue;
   }
