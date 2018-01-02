@@ -629,9 +629,7 @@ ArmStaticInst::advSIMDFPAccessTrap64(ExceptionLevel el) const
 Fault
 ArmStaticInst::checkFPAdvSIMDTrap64(ThreadContext *tc, CPSR cpsr) const
 {
-    const ExceptionLevel el = (ExceptionLevel) (uint8_t)cpsr.el;
-
-    if (ArmSystem::haveVirtualization(tc) && el <= EL2) {
+    if (ArmSystem::haveVirtualization(tc) && !inSecureState(tc)) {
         HCPTR cptrEnCheck = tc->readMiscReg(MISCREG_CPTR_EL2);
         if (cptrEnCheck.tfp)
             return advSIMDFPAccessTrap64(EL2);
