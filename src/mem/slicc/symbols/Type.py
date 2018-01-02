@@ -523,10 +523,6 @@ int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj);
 ''')
 
             for enum in self.enums.itervalues():
-                if enum.ident == "DMA":
-                    code('''
-MachineID map_Address_to_DMA(const Addr &addr);
-''')
                 code('''
 
 MachineID get${{enum.ident}}MachineID(NodeID RubyNode);
@@ -774,16 +770,6 @@ ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
 ''')
 
             for enum in self.enums.itervalues():
-                if enum.ident == "DMA":
-                    code('''
-MachineID
-map_Address_to_DMA(const Addr &addr)
-{
-      MachineID dma = {MachineType_DMA, 0};
-      return dma;
-}
-''')
-
                 code('''
 
 MachineID
