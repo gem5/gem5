@@ -49,14 +49,15 @@
 #include <string>
 
 #include "arch/utility.hh"
-#include "base/loader/symtab.hh"
 #include "base/cp_annotate.hh"
+#include "base/loader/symtab.hh"
+#include "commit.hh"
 #include "config/the_isa.hh"
+#include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
+#include "cpu/exetrace.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/thread_state.hh"
-#include "cpu/base.hh"
-#include "cpu/exetrace.hh"
 #include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
 #include "debug/Commit.hh"
@@ -656,6 +657,8 @@ DefaultCommit<Impl>::tick()
     if (activeThreads->empty())
         return;
 
+    std::fill(skipThisCycle.begin(), skipThisCycle.end(), false);
+
     list<ThreadID>::iterator threads = activeThreads->begin();
     list<ThreadID>::iterator end = activeThreads->end();
 
@@ -1103,7 +1106,8 @@ DefaultCommit<Impl>::commitInsts()
                     if (count > 1) {
                         DPRINTF(Commit,
                                 "PC skip function event, stopping commit\n");
-                        break;
+                        skipThisCycle[tid] = true;
+                        continue;
                     }
                 }
 
@@ -1121,7 +1125,9 @@ DefaultCommit<Impl>::commitInsts()
                 DPRINTF(Commit, "Unable to commit head instruction PC:%s "
                         "[tid:%i] [sn:%i].\n",
                         head_inst->pcState(), tid ,head_inst->seqNum);
-                break;
+
+                skipThisCycle[tid] = true;
+                continue;
             }
         }
     }
@@ -1502,7 +1508,7 @@ DefaultCommit<Impl>::oldestReady()
              commitStatus[tid] == Idle ||
              commitStatus[tid] == FetchTrapPending)) {
 
-            if (rob->isHeadReady(tid)) {
+            if (rob->isHeadReady(tid) && !skipThisCycle[tid]) {
 
                 DynInstPtr head_inst = rob->readHeadInst(tid);
 
