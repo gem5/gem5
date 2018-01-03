@@ -104,6 +104,11 @@ system.cpu_clk_domain = SrcClockDomain(clock = options.cpu_clock,
 for cpu in system.cpu:
     cpu.clk_domain = system.cpu_clk_domain
 
+# BaseCPU no longer has default values for the BaseCPU.isa
+# createThreads() is needed to fill in the cpu.isa
+for cpu in system.cpu:
+    cpu.createThreads()
+
 # Assign input trace files to the Trace CPU
 system.cpu.instTraceFile=options.inst_trace_file
 system.cpu.dataTraceFile=options.data_trace_file
