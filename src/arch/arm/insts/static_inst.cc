@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014, 2016-2017 ARM Limited
+ * Copyright (c) 2010-2014, 2016-2018 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -897,27 +897,40 @@ illegalExceptionReturn(ThreadContext *tc, CPSR cpsr, CPSR spsr)
 
     const OperatingMode cur_mode = (OperatingMode) (uint8_t)cpsr.mode;
     const ExceptionLevel target_el = opModeToEL(mode);
+
+    HCR hcr = ((HCR)tc->readMiscReg(MISCREG_HCR_EL2));
+    SCR scr = ((SCR)tc->readMiscReg(MISCREG_SCR_EL3));
+
     if (target_el > opModeToEL(cur_mode))
         return true;
 
-    if (target_el == EL3 && !ArmSystem::haveSecurity(tc))
+    if (!ArmSystem::haveEL(tc, target_el))
         return true;
 
-    if (target_el == EL2 && !ArmSystem::haveVirtualization(tc))
+    if (target_el == EL1 && ArmSystem::haveEL(tc, EL2) && scr.ns && hcr.tge)
+        return true;
+
+    if (target_el == EL2 && ArmSystem::haveEL(tc, EL3) && !scr.ns)
+        return true;
+
+    bool spsr_mode_is_aarch32 = (spsr.width == 1);
+    bool known, target_el_is_aarch32;
+    std::tie(known, target_el_is_aarch32) = ELUsingAArch32K(tc, target_el);
+    assert(known || (target_el == EL0 && ELIs64(tc, EL1)));
+
+    if (known && (spsr_mode_is_aarch32 != target_el_is_aarch32))
         return true;
 
     if (!spsr.width) {
         // aarch64
         if (!ArmSystem::highestELIs64(tc))
             return true;
-
         if (spsr & 0x2)
             return true;
         if (target_el == EL0 && spsr.sp)
             return true;
-        if (target_el == EL2 && !((SCR)tc->readMiscReg(MISCREG_SCR_EL3)).ns)
-            return false;
     } else {
+        // aarch32
         return badMode32(mode);
     }
 
