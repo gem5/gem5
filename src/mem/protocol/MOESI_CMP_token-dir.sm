@@ -173,6 +173,7 @@ machine(MachineType:Directory, "Token protocol")
   int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
   Tick clockEdge();
+  Tick clockEdge(Cycles c);
   Tick cyclesToTicks(Cycles c);
   void set_tbe(TBE b);
   void unset_tbe();
@@ -494,7 +495,7 @@ machine(MachineType:Directory, "Token protocol")
       // IssueCount.
 
       // Set a wakeup timer
-      reissueTimerTable.set(address, cyclesToTicks(reissue_wakeup_latency));
+      reissueTimerTable.set(address, clockEdge(reissue_wakeup_latency));
     }
   }
 
@@ -562,7 +563,7 @@ machine(MachineType:Directory, "Token protocol")
       // IssueCount.
 
       // Set a wakeup timer
-      reissueTimerTable.set(address, cyclesToTicks(reissue_wakeup_latency));
+      reissueTimerTable.set(address, clockEdge(reissue_wakeup_latency));
     }
   }
 
@@ -808,7 +809,7 @@ machine(MachineType:Directory, "Token protocol")
     //
     if (reissueTimerTable.isSet(address)) {
       reissueTimerTable.unset(address);
-      reissueTimerTable.set(address, cyclesToTicks(fixed_timeout_latency));
+      reissueTimerTable.set(address, clockEdge(fixed_timeout_latency));
     }
   }
 
@@ -816,7 +817,7 @@ machine(MachineType:Directory, "Token protocol")
     //
     // currently only support a fixed timeout latency
     //
-    reissueTimerTable.set(address, cyclesToTicks(fixed_timeout_latency));
+    reissueTimerTable.set(address, clockEdge(fixed_timeout_latency));
   }
 
   action(ut_unsetReissueTimer, "ut", desc="Unset reissue timer.") {
