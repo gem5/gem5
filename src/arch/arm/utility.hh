@@ -157,6 +157,24 @@ currEL(ThreadContext *tc)
     return (ExceptionLevel) (uint8_t) cpsr.el;
 }
 
+/**
+ * This function checks whether selected EL provided as an argument
+ * is using the AArch32 ISA. This information might be unavailable
+ * at the current EL status: it hence returns a pair of boolean values:
+ * a first boolean, true if information is available (known),
+ * and a second one, true if EL is using AArch32, false for AArch64.
+ *
+ * @param tc The thread context.
+ * @param el The target exception level.
+ * @retval known is FALSE for EL0 if the current Exception level
+ *               is not EL0 and EL1 is using AArch64, since it cannot
+ *               determine the state of EL0; TRUE otherwise.
+ * @retval aarch32 is TRUE if the specified Exception level is using AArch32;
+ *                 FALSE otherwise.
+ */
+std::pair<bool, bool>
+ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el);
+
 bool ELIs32(ThreadContext *tc, ExceptionLevel el);
 
 bool ELIs64(ThreadContext *tc, ExceptionLevel el);

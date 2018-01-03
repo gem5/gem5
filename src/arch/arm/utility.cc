@@ -243,20 +243,31 @@ ELIs64(ThreadContext *tc, ExceptionLevel el)
 bool
 ELIs32(ThreadContext *tc, ExceptionLevel el)
 {
-    // Return true if the specified EL is in aarch32 state.
+    bool known, aarch32;
+    std::tie(known, aarch32) = ELUsingAArch32K(tc, el);
+    panic_if(!known, "EL state is UNKNOWN");
+    return aarch32;
+}
 
+std::pair<bool, bool>
+ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el)
+{
+    // Return true if the specified EL is in aarch32 state.
     const bool have_el3 = ArmSystem::haveSecurity(tc);
     const bool have_el2 = ArmSystem::haveVirtualization(tc);
 
     panic_if(el == EL2 && !have_el2, "Asking for EL2 when it doesn't exist");
     panic_if(el == EL3 && !have_el3, "Asking for EL3 when it doesn't exist");
 
-    if (ArmSystem::highestELIs64(tc)
-              && ArmSystem::highestEL(tc) == el) {
-        return false;
+    bool known, aarch32;
+    known = aarch32 = false;
+    if (ArmSystem::highestELIs64(tc) && ArmSystem::highestEL(tc) == el) {
+        // Target EL is the highest one in a system where
+        // the highest is using AArch64.
+        known = true; aarch32 = false;
     } else if (!ArmSystem::highestELIs64(tc)) {
-        // All levels are using AArch32
-        return true;
+        // All ELs are using AArch32:
+        known = true; aarch32 = true;
     } else {
         SCR scr = tc->readMiscReg(MISCREG_SCR_EL3);
         bool aarch32_below_el3 = (have_el3 && scr.rw == 0);
@@ -268,15 +279,19 @@ ELIs32(ThreadContext *tc, ExceptionLevel el)
 
         // Only know if EL0 using AArch32 from PSTATE
         if (el == EL0 && !aarch32_at_el1) {
-            CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-            panic_if(cpsr.el != EL0, "EL0 state is UNKNOWN");
             // EL0 controlled by PSTATE
-            return cpsr.width != 0;
+            CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+
+            known = (cpsr.el == EL0);
+            aarch32 = (cpsr.width == 1);
         } else {
-            return (aarch32_below_el3 && el != EL3)
-                     || (aarch32_at_el1 && (el == EL0 || el == EL1) );
+            known = true;
+            aarch32 = (aarch32_below_el3 && el != EL3)
+                      || (aarch32_at_el1 && (el == EL0 || el == EL1) );
         }
     }
+
+    return std::make_pair(known, aarch32);
 }
 
 bool
