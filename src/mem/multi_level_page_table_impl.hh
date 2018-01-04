@@ -48,7 +48,7 @@ template <class ISAOps>
 MultiLevelPageTable<ISAOps>::MultiLevelPageTable(const std::string &__name,
                                                  uint64_t _pid, System *_sys,
                                                  Addr pageSize)
-    : PageTableBase(__name, _pid, pageSize), system(_sys),
+    : FuncPageTable(__name, _pid, pageSize), system(_sys),
     logLevelSize(PageTableLayout),
     numLevels(logLevelSize.size())
 {
@@ -64,7 +64,8 @@ void
 MultiLevelPageTable<ISAOps>::initState(ThreadContext* tc)
 {
     basePtr = pTableISAOps.getBasePtr(tc);
-    if (basePtr == 0) basePtr++;
+    if (basePtr == 0)
+        basePtr++;
     DPRINTF(MMU, "basePtr: %d\n", basePtr);
 
     system->pagePtr = basePtr;
@@ -83,7 +84,7 @@ MultiLevelPageTable<ISAOps>::initState(ThreadContext* tc)
 
 
 template <class ISAOps>
-bool
+void
 MultiLevelPageTable<ISAOps>::walk(Addr vaddr, bool allocate, Addr &PTE_addr)
 {
     std::vector<uint64_t> offsets = pTableISAOps.getOffsets(vaddr);
@@ -100,10 +101,10 @@ MultiLevelPageTable<ISAOps>::walk(Addr vaddr, bool allocate, Addr &PTE_addr)
         Addr next_entry_pnum = pTableISAOps.getPnum(entry);
         if (next_entry_pnum == 0) {
 
-            if (!allocate) return false;
+            fatal_if(!allocate, "Page fault while walking the page table.");
 
             uint64_t log_req_size = floorLog2(sizeof(PageTableEntry)) +
-                                    logLevelSize[i-1];
+                                    logLevelSize[i - 1];
             assert(log_req_size >= PageShift);
             uint64_t npages = 1 << (log_req_size - PageShift);
 
@@ -125,10 +126,9 @@ MultiLevelPageTable<ISAOps>::walk(Addr vaddr, bool allocate, Addr &PTE_addr)
         level_base = next_entry_pnum;
 
     }
-    PTE_addr = (level_base<<PageShift) +
+    PTE_addr = (level_base << PageShift) +
         offsets[0] * sizeof(PageTableEntry);
     DPRINTF(MMU, "Returning PTE_addr: %x\n", PTE_addr);
-    return true;
 }
 
 template <class ISAOps>
@@ -136,40 +136,28 @@ void
 MultiLevelPageTable<ISAOps>::map(Addr vaddr, Addr paddr,
                                  int64_t size, uint64_t flags)
 {
-    bool clobber = flags & Clobber;
-    // starting address must be page aligned
-    assert(pageOffset(vaddr) == 0);
-
-    DPRINTF(MMU, "Allocating Page: %#x-%#x\n", vaddr, vaddr + size);
+    FuncPageTable::map(vaddr, paddr, size, flags);
 
     PortProxy &p = system->physProxy;
 
-    for (; size > 0; size -= pageSize, vaddr += pageSize, paddr += pageSize) {
+    while (size > 0) {
         Addr PTE_addr;
-        if (walk(vaddr, true, PTE_addr)) {
-            PageTableEntry PTE = p.read<PageTableEntry>(PTE_addr);
-            Addr entry_paddr = pTableISAOps.getPnum(PTE);
-            if (!clobber && entry_paddr != 0) {
-                fatal("addr 0x%x already mapped to %x", vaddr, entry_paddr);
-            }
-            pTableISAOps.setPnum(PTE, paddr >> PageShift);
-            uint64_t PTE_flags = 0;
-            if (flags & NotPresent)
-                PTE_flags |= TheISA::PTE_NotPresent;
-            if (flags & Uncacheable)
-                PTE_flags |= TheISA::PTE_Uncacheable;
-            if (flags & ReadOnly)
-                PTE_flags |= TheISA::PTE_ReadOnly;
-            pTableISAOps.setPTEFields(PTE, PTE_flags);
-            p.write<PageTableEntry>(PTE_addr, PTE);
-            DPRINTF(MMU, "New mapping: %#x-%#x\n", vaddr, paddr);
-
-            delete eraseCacheEntry(vaddr);
-            delete updateCache(vaddr, new TlbEntry(pid, vaddr, paddr,
-                                                   flags & Uncacheable,
-                                                   flags & ReadOnly));
-        }
-
+        walk(vaddr, true, PTE_addr);
+        PageTableEntry PTE = p.read<PageTableEntry>(PTE_addr);
+        pTableISAOps.setPnum(PTE, paddr >> PageShift);
+        uint64_t PTE_flags = 0;
+        if (flags & NotPresent)
+            PTE_flags |= TheISA::PTE_NotPresent;
+        if (flags & Uncacheable)
+            PTE_flags |= TheISA::PTE_Uncacheable;
+        if (flags & ReadOnly)
+            PTE_flags |= TheISA::PTE_ReadOnly;
+        pTableISAOps.setPTEFields(PTE, PTE_flags);
+        p.write<PageTableEntry>(PTE_addr, PTE);
+        DPRINTF(MMU, "New mapping: %#x-%#x\n", vaddr, paddr);
+        size -= pageSize;
+        vaddr += pageSize;
+        paddr += pageSize;
     }
 }
 
@@ -177,48 +165,33 @@ template <class ISAOps>
 void
 MultiLevelPageTable<ISAOps>::remap(Addr vaddr, int64_t size, Addr new_vaddr)
 {
-    assert(pageOffset(vaddr) == 0);
-    assert(pageOffset(new_vaddr) == 0);
-
-    DPRINTF(MMU, "moving pages from vaddr %08p to %08p, size = %d\n", vaddr,
-            new_vaddr, size);
+    FuncPageTable::remap(vaddr, size, new_vaddr);
 
     PortProxy &p = system->physProxy;
 
-    for (; size > 0;
-         size -= pageSize, vaddr += pageSize, new_vaddr += pageSize)
-    {
+    while (size > 0) {
         Addr PTE_addr;
-        if (walk(vaddr, false, PTE_addr)) {
-            PageTableEntry PTE = p.read<PageTableEntry>(PTE_addr);
-            Addr paddr = pTableISAOps.getPnum(PTE);
+        walk(vaddr, false, PTE_addr);
+        PageTableEntry PTE = p.read<PageTableEntry>(PTE_addr);
+        Addr paddr = pTableISAOps.getPnum(PTE);
 
-            if (paddr == 0) {
-                fatal("Page fault while remapping");
-            } else {
-                /* unmapping vaddr */
-                pTableISAOps.setPnum(PTE, 0);
-                p.write<PageTableEntry>(PTE_addr, PTE);
+        fatal_if(paddr == 0, "Page fault while remapping");
+        /* unmapping vaddr */
+        pTableISAOps.setPnum(PTE, 0);
+        p.write<PageTableEntry>(PTE_addr, PTE);
 
-                /* maping new_vaddr */
-                Addr new_PTE_addr;
-                walk(new_vaddr, true, new_PTE_addr);
-                PageTableEntry new_PTE = p.read<PageTableEntry>(new_PTE_addr);
+        /* maping new_vaddr */
+        Addr new_PTE_addr;
+        walk(new_vaddr, true, new_PTE_addr);
+        PageTableEntry new_PTE = p.read<PageTableEntry>(new_PTE_addr);
 
-                pTableISAOps.setPnum(new_PTE, paddr>>PageShift);
-                pTableISAOps.setPTEFields(new_PTE);
-                p.write<PageTableEntry>(new_PTE_addr, new_PTE);
-                DPRINTF(MMU, "Remapping: %#x-%#x\n", vaddr, new_PTE_addr);
-            }
-
-            delete eraseCacheEntry(vaddr);
-            delete updateCache(new_vaddr,
-                               new TlbEntry(pid, new_vaddr, paddr,
-                                            pTableISAOps.isUncacheable(PTE),
-                                            pTableISAOps.isReadOnly(PTE)));
-        } else {
-            fatal("Page fault while remapping");
-        }
+        pTableISAOps.setPnum(new_PTE, paddr >> PageShift);
+        pTableISAOps.setPTEFields(new_PTE);
+        p.write<PageTableEntry>(new_PTE_addr, new_PTE);
+        DPRINTF(MMU, "Remapping: %#x-%#x\n", vaddr, new_PTE_addr);
+        size -= pageSize;
+        vaddr += pageSize;
+        new_vaddr += pageSize;
     }
 }
 
@@ -226,95 +199,30 @@ template <class ISAOps>
 void
 MultiLevelPageTable<ISAOps>::unmap(Addr vaddr, int64_t size)
 {
-    assert(pageOffset(vaddr) == 0);
-
-    DPRINTF(MMU, "Unmapping page: %#x-%#x\n", vaddr, vaddr+ size);
+    FuncPageTable::unmap(vaddr, size);
 
     PortProxy &p = system->physProxy;
 
-    for (; size > 0; size -= pageSize, vaddr += pageSize) {
+    while (size > 0) {
         Addr PTE_addr;
-        if (walk(vaddr, false, PTE_addr)) {
-            PageTableEntry PTE = p.read<PageTableEntry>(PTE_addr);
-            Addr paddr = pTableISAOps.getPnum(PTE);
-            if (paddr == 0) {
-                fatal("PageTable::allocate: address 0x%x not mapped", vaddr);
-            } else {
-                pTableISAOps.setPnum(PTE, 0);
-                p.write<PageTableEntry>(PTE_addr, PTE);
-                DPRINTF(MMU, "Unmapping: %#x\n", vaddr);
-            }
-           delete eraseCacheEntry(vaddr);
-        } else {
-            fatal("Page fault while unmapping");
-        }
-    }
-
-}
-
-template <class ISAOps>
-bool
-MultiLevelPageTable<ISAOps>::isUnmapped(Addr vaddr, int64_t size)
-{
-    // starting address must be page aligned
-    assert(pageOffset(vaddr) == 0);
-    PortProxy &p = system->physProxy;
-
-    for (; size > 0; size -= pageSize, vaddr += pageSize) {
-        Addr PTE_addr;
-        if (walk(vaddr, false, PTE_addr)) {
-            PageTableEntry PTE = p.read<PageTableEntry>(PTE_addr);
-            if (pTableISAOps.getPnum(PTE) != 0)
-                return false;
-        }
-    }
-
-    return true;
-}
-
-template <class ISAOps>
-bool
-MultiLevelPageTable<ISAOps>::lookup(Addr vaddr, TlbEntry &entry)
-{
-    Addr page_addr = pageAlign(vaddr);
-
-    if (pTableCache[0].entry && pTableCache[0].vaddr == page_addr) {
-        entry = *pTableCache[0].entry;
-        return true;
-    }
-    if (pTableCache[1].entry && pTableCache[1].vaddr == page_addr) {
-        entry = *pTableCache[1].entry;
-        return true;
-    }
-    if (pTableCache[2].entry && pTableCache[2].vaddr == page_addr) {
-        entry = *pTableCache[2].entry;
-        return true;
-    }
-
-    DPRINTF(MMU, "lookup page_addr: %#x\n", page_addr);
-    Addr PTE_addr;
-    if (walk(page_addr, false, PTE_addr)) {
-        PortProxy &p = system->physProxy;
+        walk(vaddr, false, PTE_addr);
         PageTableEntry PTE = p.read<PageTableEntry>(PTE_addr);
-        Addr pnum = pTableISAOps.getPnum(PTE);
-        if (pnum == 0)
-            return false;
-
-        TlbEntry *new_entry = new TlbEntry(pid, vaddr, pnum << PageShift,
-                                           pTableISAOps.isUncacheable(PTE),
-                                           pTableISAOps.isReadOnly(PTE));
-        entry = *new_entry;
-        delete updateCache(page_addr, new_entry);
-    } else {
-        return false;
+        Addr paddr = pTableISAOps.getPnum(PTE);
+        fatal_if(paddr == 0,
+                 "PageTable::allocate: address %#x not mapped", vaddr);
+        pTableISAOps.setPnum(PTE, 0);
+        p.write<PageTableEntry>(PTE_addr, PTE);
+        DPRINTF(MMU, "Unmapping: %#x\n", vaddr);
+        size -= pageSize;
+        vaddr += pageSize;
     }
-    return true;
 }
 
 template <class ISAOps>
 void
 MultiLevelPageTable<ISAOps>::serialize(CheckpointOut &cp) const
 {
+    FuncPageTable::serialize(cp);
     /** Since, the page table is stored in system memory
      * which is serialized separately, we will serialize
      * just the base pointer
@@ -326,5 +234,6 @@ template <class ISAOps>
 void
 MultiLevelPageTable<ISAOps>::unserialize(CheckpointIn &cp)
 {
+    FuncPageTable::unserialize(cp);
     paramIn(cp, "ptable.pointer", basePtr);
 }

@@ -100,7 +100,7 @@ class System;
  * @see MultiLevelPageTable
  */
 template <class ISAOps>
-class MultiLevelPageTable : public PageTableBase
+class MultiLevelPageTable : public FuncPageTable
 {
     /**
      * ISA specific operations
@@ -134,9 +134,8 @@ class MultiLevelPageTable : public PageTableBase
      * @param allocate Specifies whether memory should be allocated while
      *                  walking the page table
      * @return PTE_addr The address of the found PTE
-     * @retval true if the page table walk has succeded, false otherwhise
      */
-    bool walk(Addr vaddr, bool allocate, Addr &PTE_addr);
+    void walk(Addr vaddr, bool allocate, Addr &PTE_addr);
 
 public:
     MultiLevelPageTable(const std::string &__name, uint64_t _pid,
@@ -149,8 +148,6 @@ public:
              uint64_t flags = 0) override;
     void remap(Addr vaddr, int64_t size, Addr new_vaddr) override;
     void unmap(Addr vaddr, int64_t size) override;
-    bool isUnmapped(Addr vaddr, int64_t size) override;
-    bool lookup(Addr vaddr, TheISA::TlbEntry &entry) override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 };
