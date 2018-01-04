@@ -54,7 +54,7 @@ struct ProcessParams;
 
 class EmulatedDriver;
 class ObjectFile;
-class PageTableBase;
+class EmulationPageTable;
 class SyscallDesc;
 class SyscallReturn;
 class System;
@@ -63,7 +63,7 @@ class ThreadContext;
 class Process : public SimObject
 {
   public:
-    Process(ProcessParams *params, PageTableBase *pTable,
+    Process(ProcessParams *params, EmulationPageTable *pTable,
             ObjectFile *obj_file);
 
     void serialize(CheckpointOut &cp) const override;
@@ -176,7 +176,7 @@ class Process : public SimObject
     bool useArchPT; // flag for using architecture specific page table
     bool kvmInSE;   // running KVM requires special initialization
 
-    PageTableBase* pTable;
+    EmulationPageTable *pTable;
 
     SETranslatingPortProxy initVirtMem; // memory proxy for initial image load
 

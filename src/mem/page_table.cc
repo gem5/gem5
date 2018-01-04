@@ -48,35 +48,29 @@
 using namespace std;
 using namespace TheISA;
 
-FuncPageTable::FuncPageTable(const std::string &__name,
-                             uint64_t _pid, Addr _pageSize)
-        : PageTableBase(__name, _pid, _pageSize)
-{
-}
-
-FuncPageTable::~FuncPageTable()
+EmulationPageTable::~EmulationPageTable()
 {
     for (auto &iter : pTable)
         delete iter.second;
 }
 
 void
-FuncPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
+EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
 {
     bool clobber = flags & Clobber;
     // starting address must be page aligned
     assert(pageOffset(vaddr) == 0);
 
-    DPRINTF(MMU, "Allocating Page: %#x-%#x\n", vaddr, vaddr+ size);
+    DPRINTF(MMU, "Allocating Page: %#x-%#x\n", vaddr, vaddr + size);
 
-    for (; size > 0; size -= pageSize, vaddr += pageSize, paddr += pageSize) {
+    while (size > 0) {
         auto it = pTable.find(vaddr);
         if (it != pTable.end()) {
             if (clobber) {
                 delete it->second;
             } else {
                 // already mapped
-                fatal("FuncPageTable::allocate: addr %#x already mapped",
+                fatal("EmulationPageTable::allocate: addr %#x already mapped",
                       vaddr);
             }
         } else {
@@ -86,13 +80,14 @@ FuncPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
         it->second = new TheISA::TlbEntry(pid, vaddr, paddr,
                                          flags & Uncacheable,
                                          flags & ReadOnly);
-        eraseCacheEntry(vaddr);
-        updateCache(vaddr, pTable[vaddr]);
+        size -= pageSize;
+        vaddr += pageSize;
+        paddr += pageSize;
     }
 }
 
 void
-FuncPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
+EmulationPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
 {
     assert(pageOffset(vaddr) == 0);
     assert(pageOffset(new_vaddr) == 0);
@@ -100,91 +95,73 @@ FuncPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
     DPRINTF(MMU, "moving pages from vaddr %08p to %08p, size = %d\n", vaddr,
             new_vaddr, size);
 
-    for (; size > 0;
-         size -= pageSize, vaddr += pageSize, new_vaddr += pageSize)
-    {
+    while (size > 0) {
         auto new_it = pTable.find(new_vaddr);
         auto old_it = pTable.find(vaddr);
         assert(old_it != pTable.end() && new_it == pTable.end());
 
         new_it->second = old_it->second;
         pTable.erase(old_it);
-        eraseCacheEntry(vaddr);
         new_it->second->updateVaddr(new_vaddr);
-        updateCache(new_vaddr, new_it->second);
+        size -= pageSize;
+        vaddr += pageSize;
+        new_vaddr += pageSize;
     }
 }
 
 void
-FuncPageTable::getMappings(std::vector<std::pair<Addr, Addr>> *addr_maps)
+EmulationPageTable::getMappings(std::vector<std::pair<Addr, Addr>> *addr_maps)
 {
     for (auto &iter : pTable)
         addr_maps->push_back(make_pair(iter.first, iter.second->pageStart()));
 }
 
 void
-FuncPageTable::unmap(Addr vaddr, int64_t size)
+EmulationPageTable::unmap(Addr vaddr, int64_t size)
 {
     assert(pageOffset(vaddr) == 0);
 
     DPRINTF(MMU, "Unmapping page: %#x-%#x\n", vaddr, vaddr+ size);
 
-    for (; size > 0; size -= pageSize, vaddr += pageSize) {
+    while (size > 0) {
         auto it = pTable.find(vaddr);
         assert(it != pTable.end());
-        eraseCacheEntry(vaddr);
         delete it->second;
         pTable.erase(it);
+        size -= pageSize;
+        vaddr += pageSize;
     }
-
 }
 
 bool
-FuncPageTable::isUnmapped(Addr vaddr, int64_t size)
+EmulationPageTable::isUnmapped(Addr vaddr, int64_t size)
 {
     // starting address must be page aligned
     assert(pageOffset(vaddr) == 0);
 
-    for (; size > 0; size -= pageSize, vaddr += pageSize) {
-        if (pTable.find(vaddr) != pTable.end()) {
+    for (int64_t offset = 0; offset < size; offset += pageSize)
+        if (pTable.find(vaddr + offset) != pTable.end())
             return false;
-        }
-    }
 
     return true;
 }
 
 bool
-FuncPageTable::lookup(Addr vaddr, TheISA::TlbEntry &entry)
+EmulationPageTable::lookup(Addr vaddr, TheISA::TlbEntry &entry)
 {
     Addr page_addr = pageAlign(vaddr);
 
-    if (pTableCache[0].entry && pTableCache[0].vaddr == page_addr) {
-        entry = *pTableCache[0].entry;
-        return true;
-    }
-    if (pTableCache[1].entry && pTableCache[1].vaddr == page_addr) {
-        entry = *pTableCache[1].entry;
-        return true;
-    }
-    if (pTableCache[2].entry && pTableCache[2].vaddr == page_addr) {
-        entry = *pTableCache[2].entry;
-        return true;
-    }
-
     PTableItr iter = pTable.find(page_addr);
 
-    if (iter == pTable.end()) {
+    if (iter == pTable.end())
         return false;
-    }
 
-    updateCache(page_addr, iter->second);
     entry = *iter->second;
     return true;
 }
 
 bool
-PageTableBase::translate(Addr vaddr, Addr &paddr)
+EmulationPageTable::translate(Addr vaddr, Addr &paddr)
 {
     TheISA::TlbEntry entry;
     if (!lookup(vaddr, entry)) {
@@ -197,14 +174,13 @@ PageTableBase::translate(Addr vaddr, Addr &paddr)
 }
 
 Fault
-PageTableBase::translate(RequestPtr req)
+EmulationPageTable::translate(RequestPtr req)
 {
     Addr paddr;
-    assert(pageAlign(req->getVaddr() + req->getSize() - 1)
-           == pageAlign(req->getVaddr()));
-    if (!translate(req->getVaddr(), paddr)) {
+    assert(pageAlign(req->getVaddr() + req->getSize() - 1) ==
+           pageAlign(req->getVaddr()));
+    if (!translate(req->getVaddr(), paddr))
         return Fault(new GenericPageTableFault(req->getVaddr()));
-    }
     req->setPaddr(paddr);
     if ((paddr & (pageSize - 1)) + req->getSize() > pageSize) {
         panic("Request spans page boundaries!\n");
@@ -214,7 +190,7 @@ PageTableBase::translate(RequestPtr req)
 }
 
 void
-FuncPageTable::serialize(CheckpointOut &cp) const
+EmulationPageTable::serialize(CheckpointOut &cp) const
 {
     paramOut(cp, "ptable.size", pTable.size());
 
@@ -229,7 +205,7 @@ FuncPageTable::serialize(CheckpointOut &cp) const
 }
 
 void
-FuncPageTable::unserialize(CheckpointIn &cp)
+EmulationPageTable::unserialize(CheckpointIn &cp)
 {
     int count;
     paramIn(cp, "ptable.size", count);

@@ -100,7 +100,7 @@ class System;
  * @see MultiLevelPageTable
  */
 template <class ISAOps>
-class MultiLevelPageTable : public FuncPageTable
+class MultiLevelPageTable : public EmulationPageTable
 {
     /**
      * ISA specific operations

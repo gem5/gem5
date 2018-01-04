@@ -99,12 +99,11 @@ static const int NumArgumentRegs32 M5_VAR_USED =
 X86Process::X86Process(ProcessParams *params, ObjectFile *objFile,
                        SyscallDesc *_syscallDescs, int _numSyscallDescs)
     : Process(params, params->useArchPT ?
-                      static_cast<PageTableBase *>(
+                      static_cast<EmulationPageTable *>(
                               new ArchPageTable(params->name, params->pid,
                                                 params->system, PageBytes)) :
-                      static_cast<PageTableBase *>(
-                              new FuncPageTable(params->name, params->pid,
-                                                PageBytes)),
+                      new EmulationPageTable(params->name, params->pid,
+                                             PageBytes),
               objFile),
       syscallDescs(_syscallDescs), numSyscallDescs(_numSyscallDescs)
 {

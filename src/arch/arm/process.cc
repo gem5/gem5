@@ -63,9 +63,10 @@ using namespace ArmISA;
 
 ArmProcess::ArmProcess(ProcessParams *params, ObjectFile *objFile,
                        ObjectFile::Arch _arch)
-    : Process(params, new FuncPageTable(params->name, params->pid, PageBytes),
+    : Process(params,
+              new EmulationPageTable(params->name, params->pid, PageBytes),
               objFile),
-              arch(_arch)
+      arch(_arch)
 {
     fatal_if(params->useArchPT, "Arch page tables not implemented.");
 }

@@ -48,7 +48,7 @@ template <class ISAOps>
 MultiLevelPageTable<ISAOps>::MultiLevelPageTable(const std::string &__name,
                                                  uint64_t _pid, System *_sys,
                                                  Addr pageSize)
-    : FuncPageTable(__name, _pid, pageSize), system(_sys),
+    : EmulationPageTable(__name, _pid, pageSize), system(_sys),
     logLevelSize(PageTableLayout),
     numLevels(logLevelSize.size())
 {
@@ -136,7 +136,7 @@ void
 MultiLevelPageTable<ISAOps>::map(Addr vaddr, Addr paddr,
                                  int64_t size, uint64_t flags)
 {
-    FuncPageTable::map(vaddr, paddr, size, flags);
+    EmulationPageTable::map(vaddr, paddr, size, flags);
 
     PortProxy &p = system->physProxy;
 
@@ -165,7 +165,7 @@ template <class ISAOps>
 void
 MultiLevelPageTable<ISAOps>::remap(Addr vaddr, int64_t size, Addr new_vaddr)
 {
-    FuncPageTable::remap(vaddr, size, new_vaddr);
+    EmulationPageTable::remap(vaddr, size, new_vaddr);
 
     PortProxy &p = system->physProxy;
 
@@ -199,7 +199,7 @@ template <class ISAOps>
 void
 MultiLevelPageTable<ISAOps>::unmap(Addr vaddr, int64_t size)
 {
-    FuncPageTable::unmap(vaddr, size);
+    EmulationPageTable::unmap(vaddr, size);
 
     PortProxy &p = system->physProxy;
 
@@ -222,7 +222,7 @@ template <class ISAOps>
 void
 MultiLevelPageTable<ISAOps>::serialize(CheckpointOut &cp) const
 {
-    FuncPageTable::serialize(cp);
+    EmulationPageTable::serialize(cp);
     /** Since, the page table is stored in system memory
      * which is serialized separately, we will serialize
      * just the base pointer
@@ -234,6 +234,6 @@ template <class ISAOps>
 void
 MultiLevelPageTable<ISAOps>::unserialize(CheckpointIn &cp)
 {
-    FuncPageTable::unserialize(cp);
+    EmulationPageTable::unserialize(cp);
     paramIn(cp, "ptable.pointer", basePtr);
 }

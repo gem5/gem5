@@ -101,7 +101,7 @@
 using namespace std;
 using namespace TheISA;
 
-Process::Process(ProcessParams *params, PageTableBase *pTable,
+Process::Process(ProcessParams *params, EmulationPageTable *pTable,
                  ObjectFile *obj_file)
     : SimObject(params), system(params->system),
       useArchPT(params->useArchPT),
@@ -310,7 +310,8 @@ Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
     int npages = divCeil(size, (int64_t)PageBytes);
     Addr paddr = system->allocPhysPages(npages);
     pTable->map(vaddr, paddr, size,
-                clobber ? PageTableBase::Clobber : PageTableBase::Zero);
+                clobber ? EmulationPageTable::Clobber :
+                          EmulationPageTable::Zero);
 }
 
 void
@@ -405,7 +406,8 @@ bool
 Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
 {
     pTable->map(vaddr, paddr, size,
-                cacheable ? PageTableBase::Zero : PageTableBase::Uncacheable);
+                cacheable ? EmulationPageTable::Zero :
+                            EmulationPageTable::Uncacheable);
     return true;
 }
 

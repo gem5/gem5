@@ -56,7 +56,8 @@ static const int FirstArgumentReg = 8;
 
 SparcProcess::SparcProcess(ProcessParams *params, ObjectFile *objFile,
                            Addr _StackBias)
-    : Process(params, new FuncPageTable(params->name, params->pid, PageBytes),
+    : Process(params,
+              new EmulationPageTable(params->name, params->pid, PageBytes),
               objFile),
       StackBias(_StackBias)
 {

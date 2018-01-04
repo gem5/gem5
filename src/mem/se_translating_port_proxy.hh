@@ -47,7 +47,7 @@
 
 #include "mem/port_proxy.hh"
 
-class PageTableBase;
+class EmulationPageTable;
 class Process;
 
 /**
@@ -75,7 +75,7 @@ class SETranslatingPortProxy : public PortProxy
     };
 
   private:
-    PageTableBase *pTable;
+    EmulationPageTable *pTable;
     Process *process;
     AllocType allocating;
 
@@ -83,7 +83,7 @@ class SETranslatingPortProxy : public PortProxy
     SETranslatingPortProxy(MasterPort& port, Process* p, AllocType alloc);
     virtual ~SETranslatingPortProxy();
 
-    void setPageTable(PageTableBase *p) { pTable = p; }
+    void setPageTable(EmulationPageTable *p) { pTable = p; }
     void setProcess(Process *p) { process = p; }
     bool tryReadBlob(Addr addr, uint8_t *p, int size) const;
     bool tryWriteBlob(Addr addr, const uint8_t *p, int size) const;

@@ -49,20 +49,13 @@
 #include "sim/serialize.hh"
 
 class ThreadContext;
-class System;
 
-/**
- * Declaration of base class for page table
- */
-class PageTableBase : public Serializable
+class EmulationPageTable : public Serializable
 {
   protected:
-    struct cacheElement {
-        Addr vaddr;
-        TheISA::TlbEntry *entry;
-    };
-
-    struct cacheElement pTableCache[3];
+    typedef std::unordered_map<Addr, TheISA::TlbEntry *> PTable;
+    typedef PTable::iterator PTableItr;
+    PTable pTable;
 
     const Addr pageSize;
     const Addr offsetMask;
@@ -72,17 +65,15 @@ class PageTableBase : public Serializable
 
   public:
 
-    PageTableBase(const std::string &__name, uint64_t _pid, Addr _pageSize)
-            : pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
-              pid(_pid), _name(__name)
+    EmulationPageTable(
+            const std::string &__name, uint64_t _pid, Addr _pageSize) :
+            pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
+            pid(_pid), _name(__name)
     {
         assert(isPowerOf2(pageSize));
-        pTableCache[0].entry = nullptr;
-        pTableCache[1].entry = nullptr;
-        pTableCache[2].entry = nullptr;
     }
 
-    virtual ~PageTableBase() {};
+    virtual ~EmulationPageTable();
 
     /* generic page table mapping flags
      *              unset | set
@@ -99,7 +90,7 @@ class PageTableBase : public Serializable
         ReadOnly    = 8,
     };
 
-    virtual void initState(ThreadContext* tc) = 0;
+    virtual void initState(ThreadContext* tc) {};
 
     // for DPRINTF compatibility
     const std::string name() const { return _name; }
@@ -115,10 +106,9 @@ class PageTableBase : public Serializable
      * @param flags Generic mapping flags that can be set by or-ing values
      *              from MappingFlags enum.
      */
-    virtual void map(Addr vaddr, Addr paddr, int64_t size,
-                     uint64_t flags = 0) = 0;
-    virtual void remap(Addr vaddr, int64_t size, Addr new_vaddr) = 0;
-    virtual void unmap(Addr vaddr, int64_t size) = 0;
+    virtual void map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags = 0);
+    virtual void remap(Addr vaddr, int64_t size, Addr new_vaddr);
+    virtual void unmap(Addr vaddr, int64_t size);
 
     /**
      * Check if any pages in a region are already allocated
@@ -126,14 +116,14 @@ class PageTableBase : public Serializable
      * @param size The length of the region.
      * @return True if no pages in the region are mapped.
      */
-    virtual bool isUnmapped(Addr vaddr, int64_t size) = 0;
+    virtual bool isUnmapped(Addr vaddr, int64_t size);
 
     /**
      * Lookup function
      * @param vaddr The virtual address.
      * @return entry The page table entry corresponding to vaddr.
      */
-    virtual bool lookup(Addr vaddr, TheISA::TlbEntry &entry) = 0;
+    virtual bool lookup(Addr vaddr, TheISA::TlbEntry &entry);
 
     /**
      * Translate function
@@ -157,100 +147,10 @@ class PageTableBase : public Serializable
      */
     Fault translate(RequestPtr req);
 
-    /**
-     * Update the page table cache.
-     * @param vaddr virtual address (page aligned) to check
-     * @param pte page table entry to return
-     * @return A pointer to any entry which is displaced from the cache.
-     */
-    TheISA::TlbEntry *
-    updateCache(Addr vaddr, TheISA::TlbEntry *entry)
-    {
-        TheISA::TlbEntry *evicted = pTableCache[2].entry;
-
-        pTableCache[2].entry = pTableCache[1].entry;
-        pTableCache[2].vaddr = pTableCache[1].vaddr;
-
-        pTableCache[1].entry = pTableCache[0].entry;
-        pTableCache[1].vaddr = pTableCache[0].vaddr;
-
-        pTableCache[0].entry = entry;
-        pTableCache[0].vaddr = vaddr;
-
-        return evicted;
-    }
-
-    /**
-     * Erase an entry from the page table cache.
-     * @param vaddr virtual address (page aligned) to check
-     * @return A pointer to the entry (if any) which is kicked out.
-     */
-    TheISA::TlbEntry *
-    eraseCacheEntry(Addr vaddr)
-    {
-        TheISA::TlbEntry *evicted = nullptr;
-        // Invalidate cached entries if necessary
-        if (pTableCache[0].entry && pTableCache[0].vaddr == vaddr) {
-            evicted = pTableCache[0].entry;
-            pTableCache[0].entry = nullptr;
-        } else if (pTableCache[1].entry && pTableCache[1].vaddr == vaddr) {
-            evicted = pTableCache[1].entry;
-            pTableCache[1].entry = nullptr;
-        } else if (pTableCache[2].entry && pTableCache[2].vaddr == vaddr) {
-            evicted = pTableCache[2].entry;
-            pTableCache[2].entry = nullptr;
-        }
-        return evicted;
-    }
-
-    virtual void getMappings(std::vector<std::pair<Addr, Addr>>
-                             *addr_mappings) {};
-};
-
-/**
- * Declaration of functional page table.
- */
-class FuncPageTable : public PageTableBase
-{
-  private:
-    typedef std::unordered_map<Addr, TheISA::TlbEntry *> PTable;
-    typedef PTable::iterator PTableItr;
-    PTable pTable;
-
-  public:
-
-    FuncPageTable(const std::string &__name, uint64_t _pid, Addr _pageSize);
-
-    ~FuncPageTable();
-
-    void initState(ThreadContext* tc) override
-    {
-    }
-
-    void map(Addr vaddr, Addr paddr, int64_t size,
-             uint64_t flags = 0) override;
-    void remap(Addr vaddr, int64_t size, Addr new_vaddr) override;
-    void unmap(Addr vaddr, int64_t size) override;
-
-    /**
-     * Check if any pages in a region are already allocated
-     * @param vaddr The starting virtual address of the region.
-     * @param size The length of the region.
-     * @return True if no pages in the region are mapped.
-     */
-    bool isUnmapped(Addr vaddr, int64_t size) override;
-
-    /**
-     * Lookup function
-     * @param vaddr The virtual address.
-     * @return entry The page table entry corresponding to vaddr.
-     */
-    bool lookup(Addr vaddr, TheISA::TlbEntry &entry) override;
+    void getMappings(std::vector<std::pair<Addr, Addr>> *addr_mappings);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-
-    void getMappings(std::vector<std::pair<Addr, Addr>> *addr_maps) override;
 };
 
 #endif // __MEM_PAGE_TABLE_HH__
