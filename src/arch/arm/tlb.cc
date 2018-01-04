@@ -603,6 +603,12 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
 Fault
 TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
 {
+    // a data cache maintenance instruction that operates by MVA does
+    // not generate a Data Abort exeception due to a Permission fault
+    if (req->isCacheMaintenance()) {
+        return NoFault;
+    }
+
     Addr vaddr = req->getVaddr(); // 32-bit don't have to purify
     Request::Flags flags = req->getFlags();
     bool is_fetch  = (mode == Execute);
@@ -778,12 +784,22 @@ TLB::checkPermissions64(TlbEntry *te, RequestPtr req, Mode mode,
 {
     assert(aarch64);
 
+    // A data cache maintenance instruction that operates by VA does
+    // not generate a Permission fault unless:
+    // * It is a data cache invalidate (dc ivac) which requires write
+    //   permissions to the VA, or
+    // * It is executed from EL0
+    if (req->isCacheClean() && aarch64EL != EL0 && !isStage2) {
+        return NoFault;
+    }
+
     Addr vaddr_tainted = req->getVaddr();
     Addr vaddr = purifyTaggedAddr(vaddr_tainted, tc, aarch64EL, ttbcr);
 
     Request::Flags flags = req->getFlags();
     bool is_fetch  = (mode == Execute);
-    bool is_write  = (mode == Write);
+    // Cache clean operations require read permissions to the specified VA
+    bool is_write = !req->isCacheClean() && mode == Write;
     bool is_priv M5_VAR_USED  = isPriv && !(flags & UserMode);
 
     updateMiscReg(tc, curTranType);
@@ -1528,7 +1544,8 @@ TLB::setTestInterface(SimObject *_ti)
 Fault
 TLB::testTranslation(RequestPtr req, Mode mode, TlbEntry::DomainType domain)
 {
-    if (!test || !req->hasSize() || req->getSize() == 0) {
+    if (!test || !req->hasSize() || req->getSize() == 0 ||
+        req->isCacheMaintenance()) {
         return NoFault;
     } else {
         return test->translationCheck(req, isPriv, mode, domain);
