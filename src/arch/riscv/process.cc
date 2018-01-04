@@ -215,10 +215,10 @@ RiscvProcess::argsInit(int pageSize)
 RiscvISA::IntReg
 RiscvProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
-    // RISC-V only has four system call argument registers by convention, so
-    // if a larger index is requested return 0
+    // If a larger index is requested than there are syscall argument
+    // registers, return 0
     RiscvISA::IntReg retval = 0;
-    if (i < 4)
+    if (i < SyscallArgumentRegs.size())
         retval = tc->readIntReg(SyscallArgumentRegs[i]);
     i++;
     return retval;
