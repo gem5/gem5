@@ -392,6 +392,7 @@ else:
 # OpenCL driver
 driver = ClDriver(filename="hsa", codefile=kernel_files)
 for cpu in cpu_list:
+    cpu.createThreads()
     cpu.workload = Process(executable = executable,
                            cmd = [options.cmd] + options.options.split(),
                            drivers = [driver])
@@ -401,6 +402,7 @@ for cp in cp_list:
 if fast_forward:
     for i in xrange(len(future_cpu_list)):
         future_cpu_list[i].workload = cpu_list[i].workload
+        future_cpu_list[i].createThreads()
 
 ########################## Create the overall system ########################
 # List of CPUs that must be switched when moving between KVM and simulation
