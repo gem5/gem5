@@ -124,6 +124,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     };
 
     enum Flags {
+        NotAnInst,
         TranslationStarted,
         TranslationCompleted,
         PossibleLoadViolation,
@@ -273,6 +274,9 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** Whether or not the memory operation is done. */
     bool memOpDone() const { return instFlags[MemOpDone]; }
     void memOpDone(bool f) { instFlags[MemOpDone] = f; }
+
+    bool notAnInst() const { return instFlags[NotAnInst]; }
+    void setNotAnInst() { instFlags[NotAnInst] = true; }
 
 
     ////////////////////////////////////////////
