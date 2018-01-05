@@ -162,13 +162,10 @@ RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
-    TlbEntry entry;
-    //Check to make sure the first byte is mapped into the processes address
-    //space.
-    if (FullSystem)
-        panic("acc not implemented for MIPS FS!");
-    else
-        return context()->getProcessPtr()->pTable->lookup(va, entry);
+    // Check to make sure the first byte is mapped into the processes address
+    // space.
+    panic_if(FullSystem, "acc not implemented for MIPS FS!");
+    return context()->getProcessPtr()->pTable->lookup(va) != nullptr;
 }
 
 void

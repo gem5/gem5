@@ -163,16 +163,11 @@ RemoteGDB::acc(Addr va, size_t len)
     // from va to va + len have valid page map entries. Not
     // sure how this will work for other OSes or in general.
     if (FullSystem) {
-        if (va)
-            return true;
-        return false;
+        return va != 0;
     } else {
-        TlbEntry entry;
         // Check to make sure the first byte is mapped into the processes
         // address space.
-        if (context()->getProcessPtr()->pTable->lookup(va, entry))
-            return true;
-        return false;
+        return context()->getProcessPtr()->pTable->lookup(va) != nullptr;
     }
 }
 

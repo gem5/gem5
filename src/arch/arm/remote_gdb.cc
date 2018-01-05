@@ -186,12 +186,9 @@ RemoteGDB::acc(Addr va, size_t len)
         DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
         return true;
     } else {
-        TlbEntry entry;
-        //Check to make sure the first byte is mapped into the processes address
-        //space.
-        if (context()->getProcessPtr()->pTable->lookup(va, entry))
-            return true;
-        return false;
+        // Check to make sure the first byte is mapped into the processes
+        // address space.
+        return context()->getProcessPtr()->pTable->lookup(va) != nullptr;
     }
 }
 

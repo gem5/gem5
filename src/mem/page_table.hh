@@ -121,9 +121,9 @@ class EmulationPageTable : public Serializable
     /**
      * Lookup function
      * @param vaddr The virtual address.
-     * @return entry The page table entry corresponding to vaddr.
+     * @return The page table entry corresponding to vaddr.
      */
-    virtual bool lookup(Addr vaddr, TheISA::TlbEntry &entry);
+    virtual TheISA::TlbEntry *lookup(Addr vaddr);
 
     /**
      * Translate function

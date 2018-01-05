@@ -146,29 +146,25 @@ EmulationPageTable::isUnmapped(Addr vaddr, int64_t size)
     return true;
 }
 
-bool
-EmulationPageTable::lookup(Addr vaddr, TheISA::TlbEntry &entry)
+TheISA::TlbEntry *
+EmulationPageTable::lookup(Addr vaddr)
 {
     Addr page_addr = pageAlign(vaddr);
-
     PTableItr iter = pTable.find(page_addr);
-
     if (iter == pTable.end())
-        return false;
-
-    entry = *iter->second;
-    return true;
+        return nullptr;
+    return iter->second;
 }
 
 bool
 EmulationPageTable::translate(Addr vaddr, Addr &paddr)
 {
-    TheISA::TlbEntry entry;
-    if (!lookup(vaddr, entry)) {
+    TheISA::TlbEntry *entry = lookup(vaddr);
+    if (!entry) {
         DPRINTF(MMU, "Couldn't Translate: %#x\n", vaddr);
         return false;
     }
-    paddr = pageOffset(vaddr) + entry.pageStart();
+    paddr = pageOffset(vaddr) + entry->pageStart();
     DPRINTF(MMU, "Translating: %#x->%#x\n", vaddr, paddr);
     return true;
 }

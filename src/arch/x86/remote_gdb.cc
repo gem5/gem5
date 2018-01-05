@@ -88,8 +88,7 @@ RemoteGDB::acc(Addr va, size_t len)
                                         BaseTLB::Read);
         return fault == NoFault;
     } else {
-        TlbEntry entry;
-        return context()->getProcessPtr()->pTable->lookup(va, entry);
+        return context()->getProcessPtr()->pTable->lookup(va) != nullptr;
     }
 }
 
