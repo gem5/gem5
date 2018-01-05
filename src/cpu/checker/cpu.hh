@@ -181,13 +181,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    // These functions are only used in CPU models that split
-    // effective address computation from the actual memory access.
-    void setEA(Addr EA) override
-    { panic("CheckerCPU::setEA() not implemented\n"); }
-    Addr getEA() const  override
-    { panic("CheckerCPU::getEA() not implemented\n"); }
-
     // The register accessor methods provide the index of the
     // instruction's operand (e.g., 0 or 1), not the architectural
     // register index, to simplify the implementation of register

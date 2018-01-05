@@ -221,9 +221,6 @@ class MinorDynInst : public RefCounted
      *  up */
     RegId flatDestRegIdx[TheISA::MaxInstDestRegs];
 
-    /** Effective address as set by ExecContext::setEA */
-    Addr ea;
-
   public:
     MinorDynInst(InstId id_ = InstId(), Fault fault_ = NoFault) :
         staticInst(NULL), id(id_), traceData(NULL),
@@ -232,8 +229,7 @@ class MinorDynInst : public RefCounted
         fuIndex(0), inLSQ(false), inStoreBuffer(false),
         canEarlyIssue(false),
         instToWaitFor(0), extraCommitDelay(Cycles(0)),
-        extraCommitDelayExpr(NULL), minimumCommitCycle(Cycles(0)),
-        ea(0)
+        extraCommitDelayExpr(NULL), minimumCommitCycle(Cycles(0))
     { }
 
   public:

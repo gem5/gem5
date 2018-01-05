@@ -413,22 +413,6 @@ class SimpleExecContext : public ExecContext {
     }
 
 
-    /**
-     * Record the effective address of the instruction.
-     *
-     * @note Only valid for memory ops.
-     */
-    void setEA(Addr EA) override
-    { panic("BaseSimpleCPU::setEA() not implemented\n"); }
-
-    /**
-     * Get the effective address of the instruction.
-     *
-     * @note Only valid for memory ops.
-     */
-    Addr getEA() const override
-    { panic("BaseSimpleCPU::getEA() not implemented\n"); }
-
     Fault readMem(Addr addr, uint8_t *data, unsigned int size,
                   Request::Flags flags) override
     {

@@ -132,10 +132,6 @@ class BaseDynInst : public ExecContext, public RefCounted
         RecordResult,
         Predicate,
         PredTaken,
-        /** Whether or not the effective address calculation is completed.
-         *  @todo: Consider if this is necessary or not.
-         */
-        EACalcDone,
         IsStrictlyOrdered,
         ReqMade,
         MemOpDone,
@@ -244,12 +240,6 @@ class BaseDynInst : public ExecContext, public RefCounted
     /////////////////////// Checker //////////////////////
     // Need a copy of main request pointer to verify on writes.
     RequestPtr reqToVerify;
-
-  private:
-    /** Instruction effective address.
-     *  @todo: Consider if this is necessary or not.
-     */
-    Addr instEffAddr;
 
   protected:
     /** Flattened register index of the destination registers of this
@@ -859,15 +849,6 @@ class BaseDynInst : public ExecContext, public RefCounted
     ThreadContext *tcBase() { return thread->getTC(); }
 
   public:
-    /** Sets the effective address. */
-    void setEA(Addr ea) { instEffAddr = ea; instFlags[EACalcDone] = true; }
-
-    /** Returns the effective address. */
-    Addr getEA() const { return instEffAddr; }
-
-    /** Returns whether or not the eff. addr. calculation has been completed. */
-    bool doneEACalc() { return instFlags[EACalcDone]; }
-
     /** Returns whether or not the eff. addr. source registers are ready. */
     bool eaSrcsReady();
 
