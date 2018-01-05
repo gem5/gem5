@@ -350,7 +350,7 @@ ArmFault::getVector64(ThreadContext *tc)
         panic("Invalid target exception level");
         break;
     }
-    return vbar + offset64();
+    return vbar + offset64(tc);
 }
 
 MiscRegIndex
@@ -654,6 +654,8 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         ret_addr += spsr.t ? thumbPcElrOffset() : armPcElrOffset();
     tc->setMiscReg(elr_idx, ret_addr);
 
+    Addr vec_address = getVector64(tc);
+
     // Update process state
     OperatingMode64 mode = 0;
     mode.spX = 1;
@@ -666,7 +668,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     tc->setMiscReg(MISCREG_CPSR, cpsr);
 
     // Set PC to start of exception handler
-    Addr new_pc = purifyTaggedAddr(getVector64(tc), tc, toEL);
+    Addr new_pc = purifyTaggedAddr(vec_address, tc, toEL);
     DPRINTF(Faults, "Invoking Fault (AArch64 target EL):%s cpsr:%#x PC:%#x "
             "elr:%#x newVec: %#x\n", name(), cpsr, curr_pc, ret_addr, new_pc);
     PCState pc(new_pc);
@@ -891,6 +893,31 @@ ArmFaultVals<T>::offset(ThreadContext *tc)
         }
     }
     return isHypTrap ? 0x14 : vals.offset;
+}
+
+template<class T>
+FaultOffset
+ArmFaultVals<T>::offset64(ThreadContext *tc)
+{
+    if (toEL == fromEL) {
+        if (opModeIsT(fromMode))
+            return vals.currELTOffset;
+        return vals.currELHOffset;
+    } else {
+        bool lower_32 = false;
+        if (toEL == EL3) {
+            if (!inSecureState(tc) && ArmSystem::haveEL(tc, EL2))
+                lower_32 = ELIs32(tc, EL2);
+            else
+                lower_32 = ELIs32(tc, EL1);
+        } else {
+            lower_32 = ELIs32(tc, static_cast<ExceptionLevel>(toEL - 1));
+        }
+
+        if (lower_32)
+            return vals.lowerEL32Offset;
+        return vals.lowerEL64Offset;
+    }
 }
 
 // void

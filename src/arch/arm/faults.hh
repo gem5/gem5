@@ -191,7 +191,7 @@ class ArmFault : public FaultBase
     virtual void annotate(AnnotationIDs id, uint64_t val) {}
     virtual FaultStat& countStat() = 0;
     virtual FaultOffset offset(ThreadContext *tc) = 0;
-    virtual FaultOffset offset64() = 0;
+    virtual FaultOffset offset64(ThreadContext *tc) = 0;
     virtual OperatingMode nextMode() = 0;
     virtual bool routeToMonitor(ThreadContext *tc) const = 0;
     virtual bool routeToHyp(ThreadContext *tc) const { return false; }
@@ -221,17 +221,7 @@ class ArmFaultVals : public ArmFault
     FaultStat & countStat() override { return vals.count; }
     FaultOffset offset(ThreadContext *tc) override;
 
-    FaultOffset offset64() override {
-        if (toEL == fromEL) {
-            if (opModeIsT(fromMode))
-                return vals.currELTOffset;
-            return vals.currELHOffset;
-        } else {
-            if (from64)
-                return vals.lowerEL64Offset;
-            return vals.lowerEL32Offset;
-        }
-    }
+    FaultOffset offset64(ThreadContext *tc) override;
 
     OperatingMode nextMode() override { return vals.nextMode; }
     virtual bool routeToMonitor(ThreadContext *tc) const override {
