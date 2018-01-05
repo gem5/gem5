@@ -97,6 +97,10 @@ const std::vector<int> ReturnValueRegs = {10, 11};
 const std::vector<int> ArgumentRegs = {10, 11, 12, 13, 14, 15, 16, 17};
 const int AMOTempReg = 32;
 
+const int SyscallPseudoReturnReg = 10;
+const std::vector<int> SyscallArgumentRegs = {10, 11, 12, 13, 14, 15, 16};
+const int SyscallNumReg = 17;
+
 const std::vector<std::string> IntRegNames = {
     "zero", "ra", "sp", "gp",
     "tp", "t0", "t1", "t2",
@@ -117,10 +121,6 @@ const std::vector<std::string> FloatRegNames = {
     "fs8", "fs9", "fs10", "fs11",
     "ft8", "ft9", "ft10", "ft11"
 };
-
-const int SyscallNumReg = 17;
-const std::vector<int> SyscallArgumentRegs = {10, 11, 12, 13};
-const int SyscallPseudoReturnReg = 10;
 
 enum MiscRegIndex {
     MISCREG_USTATUS = 0x000,
