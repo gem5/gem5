@@ -47,10 +47,9 @@ using namespace TheISA;
 template <class ISAOps>
 MultiLevelPageTable<ISAOps>::MultiLevelPageTable(
         const std::string &__name, uint64_t _pid, System *_sys,
-        Addr pageSize, const std::vector<uint8_t> &layout)
+        Addr pageSize, const std::vector<uint8_t> &layout, Addr _basePtr)
     : EmulationPageTable(__name, _pid, pageSize), system(_sys),
-    logLevelSize(layout),
-    numLevels(logLevelSize.size())
+    basePtr(_basePtr), logLevelSize(layout), numLevels(logLevelSize.size())
 {
 }
 
@@ -63,11 +62,6 @@ template <class ISAOps>
 void
 MultiLevelPageTable<ISAOps>::initState(ThreadContext* tc)
 {
-    basePtr = pTableISAOps.getBasePtr(tc);
-    if (basePtr == 0)
-        basePtr++;
-    DPRINTF(MMU, "basePtr: %d\n", basePtr);
-
     system->pagePtr = basePtr;
 
     /* setting first level of the page table */

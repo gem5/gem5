@@ -179,14 +179,6 @@ namespace X86ISA
             PTE.u   = flags & PTE_Supervisor  ? 0 : 1;
         }
 
-        /** returns the physical memory address of the page table */
-        Addr getBasePtr(ThreadContext* tc)
-        {
-            CR3 cr3 = pageTablePhysAddr;
-            DPRINTF(MMU, "CR3: %d\n", cr3);
-            return cr3.longPdtb;
-        }
-
         /** returns the page number out of a page table entry */
         Addr getPnum(PageTableEntry PTE)
         {

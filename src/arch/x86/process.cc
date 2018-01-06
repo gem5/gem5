@@ -100,9 +100,11 @@ X86Process::X86Process(ProcessParams *params, ObjectFile *objFile,
                        SyscallDesc *_syscallDescs, int _numSyscallDescs)
     : Process(params, params->useArchPT ?
                       static_cast<EmulationPageTable *>(
-                              new ArchPageTable(params->name, params->pid,
-                                                params->system, PageBytes,
-                                                PageTableLayout)) :
+                              new ArchPageTable(
+                                      params->name, params->pid,
+                                      params->system, PageBytes,
+                                      PageTableLayout,
+                                      pageTablePhysAddr >> PageShift)) :
                       new EmulationPageTable(params->name, params->pid,
                                              PageBytes),
               objFile),

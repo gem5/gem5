@@ -140,7 +140,8 @@ class MultiLevelPageTable : public EmulationPageTable
 public:
     MultiLevelPageTable(const std::string &__name, uint64_t _pid,
                         System *_sys, Addr pageSize,
-                        const std::vector<uint8_t> &layout);
+                        const std::vector<uint8_t> &layout,
+                        Addr _basePtr);
     ~MultiLevelPageTable();
 
     void initState(ThreadContext* tc) override;
