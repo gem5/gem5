@@ -741,10 +741,10 @@ namespace std {
 
 template<>
 struct hash<ArmISA::ExtMachInst> :
-        public hash<ArmISA::ExtMachInst::__DataType> {
+        public hash<ArmISA::ExtMachInst::__StorageType> {
 
     size_t operator()(const ArmISA::ExtMachInst &emi) const {
-        return hash<ArmISA::ExtMachInst::__DataType>::operator()(emi);
+        return hash<ArmISA::ExtMachInst::__StorageType>::operator()(emi);
     }
 
 };

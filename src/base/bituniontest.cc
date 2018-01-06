@@ -66,6 +66,44 @@ EndBitUnion(EmptySixteen)
 BitUnion8(EmptyEight)
 EndBitUnion(EmptyEight)
 
+class SplitField
+{
+  protected:
+    BitUnion64(In)
+        Bitfield<15, 12> high;
+        Bitfield<7, 4> low;
+    EndBitUnion(In)
+
+    BitUnion64(Out)
+        Bitfield<7, 4> high;
+        Bitfield<3, 0> low;
+    EndBitUnion(Out)
+  public:
+    uint64_t
+    getter(const uint64_t &storage) const
+    {
+        Out out = 0;
+        In in = storage;
+        out.high = in.high;
+        out.low = in.low;
+        return out;
+    }
+
+    void
+    setter(uint64_t &storage, uint64_t val)
+    {
+        Out out = val;
+        In in = 0;
+        in.high = out.high;
+        in.low = out.low;
+        storage = in;
+    }
+};
+
+BitUnion64(Split)
+    BitfieldType<SplitField> split;
+EndBitUnion(Split)
+
 struct ContainingStruct
 {
     BitUnion64(Contained)
@@ -99,8 +137,9 @@ EmptyEight emptyEight(0);
 class BitUnionData : public testing::Test {
   protected:
     SixtyFour sixtyFour;
+    Split split;
 
-    void SetUp() override { sixtyFour = 0; }
+    void SetUp() override { sixtyFour = 0; split = 0; }
 };
 
 TEST_F(BitUnionData, NormalBitfield)
@@ -191,4 +230,12 @@ TEST_F(BitUnionData, Operators)
     EXPECT_TRUE(sixtyFour != otherSixtyFour);
     sixtyFour = otherSixtyFour;
     EXPECT_TRUE(sixtyFour == otherSixtyFour);
+}
+
+TEST_F(BitUnionData, Custom)
+{
+    EXPECT_EQ(split, 0);
+    split.split = 0xfff;
+    EXPECT_EQ(split, 0xf0f0);
+    EXPECT_EQ((uint64_t)split.split, 0xff);
 }

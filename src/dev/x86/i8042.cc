@@ -491,13 +491,10 @@ X86ISA::I8042::write(PacketPtr pkt)
 void
 X86ISA::I8042::serialize(CheckpointOut &cp) const
 {
-    uint8_t statusRegData = statusReg.__data;
-    uint8_t commandByteData = commandByte.__data;
-
     SERIALIZE_SCALAR(dataPort);
     SERIALIZE_SCALAR(commandPort);
-    SERIALIZE_SCALAR(statusRegData);
-    SERIALIZE_SCALAR(commandByteData);
+    SERIALIZE_SCALAR(statusReg);
+    SERIALIZE_SCALAR(commandByte);
     SERIALIZE_SCALAR(dataReg);
     SERIALIZE_SCALAR(lastCommand);
     mouse.serialize("mouse", cp);
@@ -507,20 +504,14 @@ X86ISA::I8042::serialize(CheckpointOut &cp) const
 void
 X86ISA::I8042::unserialize(CheckpointIn &cp)
 {
-    uint8_t statusRegData;
-    uint8_t commandByteData;
-
     UNSERIALIZE_SCALAR(dataPort);
     UNSERIALIZE_SCALAR(commandPort);
-    UNSERIALIZE_SCALAR(statusRegData);
-    UNSERIALIZE_SCALAR(commandByteData);
+    UNSERIALIZE_SCALAR(statusReg);
+    UNSERIALIZE_SCALAR(commandByte);
     UNSERIALIZE_SCALAR(dataReg);
     UNSERIALIZE_SCALAR(lastCommand);
     mouse.unserialize("mouse", cp);
     keyboard.unserialize("keyboard", cp);
-
-    statusReg.__data = statusRegData;
-    commandByte.__data = commandByteData;
 }
 
 void

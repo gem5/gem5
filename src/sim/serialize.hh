@@ -72,33 +72,33 @@ typedef std::ostream CheckpointOut;
 template <class T>
 void paramOut(CheckpointOut &cp, const std::string &name, const T &param);
 
-template <typename DataType, typename BitUnion>
+template <typename BitUnion>
 void paramOut(CheckpointOut &cp, const std::string &name,
-              const BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p)
+              const BitfieldBackend::BitUnionOperators<BitUnion> &p)
 {
-    paramOut(cp, name, p.__data);
+    paramOut(cp, name, p.__storage);
 }
 
 template <class T>
 void paramIn(CheckpointIn &cp, const std::string &name, T &param);
 
-template <typename DataType, typename BitUnion>
+template <typename BitUnion>
 void paramIn(CheckpointIn &cp, const std::string &name,
-             BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p)
+             BitfieldBackend::BitUnionOperators<BitUnion> &p)
 {
-    paramIn(cp, name, p.__data);
+    paramIn(cp, name, p.__storage);
 }
 
 template <class T>
 bool optParamIn(CheckpointIn &cp, const std::string &name, T &param,
                 bool warn = true);
 
-template <typename DataType, typename BitUnion>
+template <typename BitUnion>
 bool optParamIn(CheckpointIn &cp, const std::string &name,
-                BitfieldBackend::BitUnionOperators<DataType, BitUnion> &p,
+                BitfieldBackend::BitUnionOperators<BitUnion> &p,
                 bool warn = true)
 {
-    return optParamIn(cp, name, p.__data, warn);
+    return optParamIn(cp, name, p.__storage, warn);
 }
 
 template <class T>
