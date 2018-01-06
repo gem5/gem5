@@ -729,6 +729,7 @@ DefaultFetch<Impl>::finishTranslation(const Fault &fault, RequestPtr mem_req)
         // We will use a nop in ordier to carry the fault.
         DynInstPtr instruction = buildInst(tid, StaticInst::nopStaticInstPtr,
                                            NULL, fetchPC, fetchPC, false);
+        instruction->setNotAnInst();
 
         instruction->setPredTarg(fetchPC);
         instruction->fault = fault;
