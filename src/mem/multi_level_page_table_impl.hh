@@ -45,11 +45,11 @@ using namespace std;
 using namespace TheISA;
 
 template <class ISAOps>
-MultiLevelPageTable<ISAOps>::MultiLevelPageTable(const std::string &__name,
-                                                 uint64_t _pid, System *_sys,
-                                                 Addr pageSize)
+MultiLevelPageTable<ISAOps>::MultiLevelPageTable(
+        const std::string &__name, uint64_t _pid, System *_sys,
+        Addr pageSize, const std::vector<uint8_t> &layout)
     : EmulationPageTable(__name, _pid, pageSize), system(_sys),
-    logLevelSize(PageTableLayout),
+    logLevelSize(layout),
     numLevels(logLevelSize.size())
 {
 }

@@ -101,7 +101,8 @@ X86Process::X86Process(ProcessParams *params, ObjectFile *objFile,
     : Process(params, params->useArchPT ?
                       static_cast<EmulationPageTable *>(
                               new ArchPageTable(params->name, params->pid,
-                                                params->system, PageBytes)) :
+                                                params->system, PageBytes,
+                                                PageTableLayout)) :
                       new EmulationPageTable(params->name, params->pid,
                                              PageBytes),
               objFile),
