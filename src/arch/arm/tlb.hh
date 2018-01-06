@@ -311,7 +311,12 @@ class TLB : public BaseTLB
      * behaves like a normal lookup without modifying any page table state.
      */
     Fault translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode,
-            ArmTranslationType tranType = NormalTran);
+            ArmTranslationType tranType);
+    Fault
+    translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode) override
+    {
+        return translateFunctional(req, tc, mode, NormalTran);
+    }
 
     /** Accessor functions for memory attributes for last accessed TLB entry
      */
