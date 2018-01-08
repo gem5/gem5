@@ -70,7 +70,7 @@ EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
                 delete it->second;
             } else {
                 // already mapped
-                fatal("EmulationPageTable::allocate: addr %#x already mapped",
+                panic("EmulationPageTable::allocate: addr %#x already mapped",
                       vaddr);
             }
         } else {

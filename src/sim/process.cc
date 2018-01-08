@@ -311,7 +311,7 @@ Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
     Addr paddr = system->allocPhysPages(npages);
     pTable->map(vaddr, paddr, size,
                 clobber ? EmulationPageTable::Clobber :
-                          EmulationPageTable::Zero);
+                          EmulationPageTable::MappingFlags(0));
 }
 
 void
@@ -406,7 +406,7 @@ bool
 Process::map(Addr vaddr, Addr paddr, int size, bool cacheable)
 {
     pTable->map(vaddr, paddr, size,
-                cacheable ? EmulationPageTable::Zero :
+                cacheable ? EmulationPageTable::MappingFlags(0) :
                             EmulationPageTable::Uncacheable);
     return true;
 }

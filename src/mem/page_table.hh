@@ -78,14 +78,11 @@ class EmulationPageTable : public Serializable
     /* generic page table mapping flags
      *              unset | set
      * bit 0 - no-clobber | clobber
-     * bit 1 - present    | not-present
      * bit 2 - cacheable  | uncacheable
      * bit 3 - read-write | read-only
      */
     enum MappingFlags : uint32_t {
-        Zero        = 0,
         Clobber     = 1,
-        NotPresent  = 2,
         Uncacheable = 4,
         ReadOnly    = 8,
     };

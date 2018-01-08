@@ -43,6 +43,7 @@
 #include <string>
 #include <vector>
 
+#include "arch/x86/pagetable.hh"
 #include "mem/multi_level_page_table.hh"
 #include "sim/aux_vector.hh"
 #include "sim/process.hh"
@@ -65,7 +66,6 @@ namespace X86ISA
          * These page tables are stored in system memory and respect x86
          * specification.
          */
-        typedef MultiLevelPageTable<PageTableOps> ArchPageTable;
 
         Addr _gdtStart;
         Addr _gdtSize;

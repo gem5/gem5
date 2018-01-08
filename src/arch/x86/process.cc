@@ -96,14 +96,21 @@ static const int ArgumentReg32[] = {
 static const int NumArgumentRegs32 M5_VAR_USED =
     sizeof(ArgumentReg) / sizeof(const int);
 
+template class MultiLevelPageTable<LongModePTE<47, 39>,
+                                   LongModePTE<38, 30>,
+                                   LongModePTE<29, 21>,
+                                   LongModePTE<20, 12> >;
+typedef MultiLevelPageTable<LongModePTE<47, 39>,
+                            LongModePTE<38, 30>,
+                            LongModePTE<29, 21>,
+                            LongModePTE<20, 12> > ArchPageTable;
+
 X86Process::X86Process(ProcessParams *params, ObjectFile *objFile,
                        SyscallDesc *_syscallDescs, int _numSyscallDescs)
     : Process(params, params->useArchPT ?
                       static_cast<EmulationPageTable *>(
-                              new ArchPageTable(
-                                      params->name, params->pid,
-                                      params->system, PageBytes,
-                                      PageTableLayout)) :
+                              new ArchPageTable(params->name, params->pid,
+                                                params->system, PageBytes)) :
                       new EmulationPageTable(params->name, params->pid,
                                              PageBytes),
               objFile),
@@ -543,23 +550,22 @@ X86_64Process::initState()
 
         physProxy.writeBlob(pfHandlerPhysAddr, faultBlob, sizeof(faultBlob));
 
-        MultiLevelPageTable<PageTableOps> *pt =
-            dynamic_cast<MultiLevelPageTable<PageTableOps> *>(pTable);
-
         /* Syscall handler */
-        pt->map(syscallCodeVirtAddr, syscallCodePhysAddr, PageBytes, false);
+        pTable->map(syscallCodeVirtAddr, syscallCodePhysAddr,
+                    PageBytes, false);
         /* GDT */
-        pt->map(GDTVirtAddr, gdtPhysAddr, PageBytes, false);
+        pTable->map(GDTVirtAddr, gdtPhysAddr, PageBytes, false);
         /* IDT */
-        pt->map(IDTVirtAddr, idtPhysAddr, PageBytes, false);
+        pTable->map(IDTVirtAddr, idtPhysAddr, PageBytes, false);
         /* TSS */
-        pt->map(TSSVirtAddr, tssPhysAddr, PageBytes, false);
+        pTable->map(TSSVirtAddr, tssPhysAddr, PageBytes, false);
         /* IST */
-        pt->map(ISTVirtAddr, istPhysAddr, PageBytes, false);
+        pTable->map(ISTVirtAddr, istPhysAddr, PageBytes, false);
         /* PF handler */
-        pt->map(PFHandlerVirtAddr, pfHandlerPhysAddr, PageBytes, false);
+        pTable->map(PFHandlerVirtAddr, pfHandlerPhysAddr, PageBytes, false);
         /* MMIO region for m5ops */
-        pt->map(MMIORegionVirtAddr, MMIORegionPhysAddr, 16*PageBytes, false);
+        pTable->map(MMIORegionVirtAddr, MMIORegionPhysAddr,
+                    16 * PageBytes, false);
     } else {
         for (int i = 0; i < contextIds.size(); i++) {
             ThreadContext * tc = system->getThreadContext(contextIds[i]);
