@@ -351,4 +351,41 @@ namespace BitfieldBackend
 #define BitUnion16(name) __BitUnion(uint16_t, name)
 #define BitUnion8(name) __BitUnion(uint8_t, name)
 
+
+//These templates make it possible to define other templates related to
+//BitUnions without having to refer to internal typedefs or the BitfieldBackend
+//namespace.
+
+//To build a template specialization which works for all BitUnions, accept a
+//template argument T, and then use BitUnionType<T> as an argument in the
+//template. To refer to the basic type the BitUnion wraps, use
+//BitUnionBaseType<T>.
+
+//For example:
+//template <typename T>
+//void func(BitUnionType<T> u) { BitUnionBaseType<T> b = u; }
+
+//Also, BitUnionBaseType can be used on a BitUnion type directly.
+
+template <typename T>
+using BitUnionType = BitfieldBackend::BitUnionOperators<T>;
+
+namespace BitfieldBackend
+{
+    template<typename T>
+    struct BitUnionBaseType
+    {
+        typedef typename BitUnionType<T>::__StorageType Type;
+    };
+
+    template<typename T>
+    struct BitUnionBaseType<BitUnionType<T> >
+    {
+        typedef typename BitUnionType<T>::__StorageType Type;
+    };
+}
+
+template <typename T>
+using BitUnionBaseType = typename BitfieldBackend::BitUnionBaseType<T>::Type;
+
 #endif // __BASE_BITUNION_HH__

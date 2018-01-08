@@ -31,6 +31,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <type_traits>
 
 #include "base/bitunion.hh"
 #include "base/cprintf.hh"
@@ -140,6 +141,17 @@ class BitUnionData : public testing::Test {
     Split split;
 
     void SetUp() override { sixtyFour = 0; split = 0; }
+
+    template <typename T>
+    uint64_t templatedFunction(T) { return 0; }
+
+    template <typename T>
+    uint64_t
+    templatedFunction(BitUnionType<T> u)
+    {
+        BitUnionBaseType<T> b = u;
+        return b;
+    }
 };
 
 TEST_F(BitUnionData, NormalBitfield)
@@ -238,4 +250,23 @@ TEST_F(BitUnionData, Custom)
     split.split = 0xfff;
     EXPECT_EQ(split, 0xf0f0);
     EXPECT_EQ((uint64_t)split.split, 0xff);
+}
+
+TEST_F(BitUnionData, Templating)
+{
+    sixtyFour = 0xff;
+    EXPECT_EQ(templatedFunction(sixtyFour), 0xff);
+    EXPECT_EQ(templatedFunction((uint64_t)sixtyFour), 0);
+
+    BitUnion(uint64_t, Dummy64)
+    EndBitUnion(Dummy64);
+
+    BitUnion(uint32_t, Dummy32)
+    EndBitUnion(Dummy32);
+
+    bool is64;
+    is64 = std::is_same<BitUnionBaseType<Dummy64>, uint64_t>::value;
+    EXPECT_TRUE(is64);
+    is64 = std::is_same<BitUnionBaseType<Dummy32>, uint64_t>::value;
+    EXPECT_FALSE(is64);
 }
