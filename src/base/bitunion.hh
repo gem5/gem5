@@ -291,8 +291,14 @@ namespace BitfieldBackend
     class BitfieldUnderlyingClasses##name : \
         public BitfieldBackend::BitfieldTypes<type> \
     { \
-      public: \
+      protected: \
         typedef type __StorageType; \
+        friend BitfieldBackend::BitUnionBaseType< \
+            BitfieldBackend::BitUnionOperators< \
+                BitfieldUnderlyingClasses##name> >; \
+        friend BitfieldBackend::BitUnionBaseType< \
+                BitfieldUnderlyingClasses##name>; \
+      public: \
         union { \
             type __storage;
 
@@ -388,6 +394,8 @@ namespace BitfieldBackend
 template <typename T>
 using BitUnionBaseType = typename BitfieldBackend::BitUnionBaseType<T>::Type;
 
+
+//An STL style hash structure for hashing BitUnions based on their base type.
 namespace std
 {
     template <typename T>
