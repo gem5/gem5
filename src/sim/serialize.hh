@@ -72,33 +72,41 @@ typedef std::ostream CheckpointOut;
 template <class T>
 void paramOut(CheckpointOut &cp, const std::string &name, const T &param);
 
-template <typename BitUnion>
-void paramOut(CheckpointOut &cp, const std::string &name,
-              const BitfieldBackend::BitUnionOperators<BitUnion> &p)
+template <typename T>
+void
+paramOut(CheckpointOut &cp, const std::string &name, const BitUnionType<T> &p)
 {
-    paramOut(cp, name, p.__storage);
+    paramOut(cp, name, static_cast<BitUnionBaseType<T> >(p));
 }
 
 template <class T>
 void paramIn(CheckpointIn &cp, const std::string &name, T &param);
 
-template <typename BitUnion>
-void paramIn(CheckpointIn &cp, const std::string &name,
-             BitfieldBackend::BitUnionOperators<BitUnion> &p)
+template <typename T>
+void
+paramIn(CheckpointIn &cp, const std::string &name, BitUnionType<T> &p)
 {
-    paramIn(cp, name, p.__storage);
+    BitUnionBaseType<T> b;
+    paramIn(cp, name, b);
+    p = b;
 }
 
 template <class T>
 bool optParamIn(CheckpointIn &cp, const std::string &name, T &param,
                 bool warn = true);
 
-template <typename BitUnion>
-bool optParamIn(CheckpointIn &cp, const std::string &name,
-                BitfieldBackend::BitUnionOperators<BitUnion> &p,
-                bool warn = true)
+template <typename T>
+bool
+optParamIn(CheckpointIn &cp, const std::string &name,
+           BitUnionType<T> &p, bool warn = true)
 {
-    return optParamIn(cp, name, p.__storage, warn);
+    BitUnionBaseType<T> b;
+    if (optParamIn(cp, name, b, warn)) {
+        p = b;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 template <class T>
