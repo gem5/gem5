@@ -115,7 +115,7 @@ class MultiLevelPageTable : public EmulationPageTable
     /**
      * Physical address to the last level of the page table
      */
-    Addr basePtr;
+    Addr _basePtr;
 
     /**
      * Vector with sizes of all levels in base 2 logarithmic
@@ -140,11 +140,12 @@ class MultiLevelPageTable : public EmulationPageTable
 public:
     MultiLevelPageTable(const std::string &__name, uint64_t _pid,
                         System *_sys, Addr pageSize,
-                        const std::vector<uint8_t> &layout,
-                        Addr _basePtr);
+                        const std::vector<uint8_t> &layout);
     ~MultiLevelPageTable();
 
     void initState(ThreadContext* tc) override;
+
+    Addr basePtr() { return _basePtr; }
 
     void map(Addr vaddr, Addr paddr, int64_t size,
              uint64_t flags = 0) override;

@@ -47,9 +47,9 @@ using namespace TheISA;
 template <class ISAOps>
 MultiLevelPageTable<ISAOps>::MultiLevelPageTable(
         const std::string &__name, uint64_t _pid, System *_sys,
-        Addr pageSize, const std::vector<uint8_t> &layout, Addr _basePtr)
+        Addr pageSize, const std::vector<uint8_t> &layout)
     : EmulationPageTable(__name, _pid, pageSize), system(_sys),
-    basePtr(_basePtr), logLevelSize(layout), numLevels(logLevelSize.size())
+      logLevelSize(layout), numLevels(logLevelSize.size())
 {
 }
 
@@ -62,18 +62,16 @@ template <class ISAOps>
 void
 MultiLevelPageTable<ISAOps>::initState(ThreadContext* tc)
 {
-    system->pagePtr = basePtr;
-
     /* setting first level of the page table */
     uint64_t log_req_size = floorLog2(sizeof(PageTableEntry)) +
-                            logLevelSize[numLevels-1];
+                            logLevelSize[numLevels - 1];
     assert(log_req_size >= PageShift);
     uint64_t npages = 1 << (log_req_size - PageShift);
 
-    Addr paddr = system->allocPhysPages(npages);
+    Addr _basePtr = system->allocPhysPages(npages);
 
     PortProxy &p = system->physProxy;
-    p.memsetBlob(paddr, 0, npages << PageShift);
+    p.memsetBlob(_basePtr, 0, npages << PageShift);
 }
 
 
@@ -83,7 +81,7 @@ MultiLevelPageTable<ISAOps>::walk(Addr vaddr, bool allocate, Addr &PTE_addr)
 {
     std::vector<uint64_t> offsets = pTableISAOps.getOffsets(vaddr);
 
-    Addr level_base = basePtr;
+    Addr level_base = _basePtr;
     for (int i = numLevels - 1; i > 0; i--) {
 
         Addr entry_addr = (level_base<<PageShift) +
@@ -221,7 +219,7 @@ MultiLevelPageTable<ISAOps>::serialize(CheckpointOut &cp) const
      * which is serialized separately, we will serialize
      * just the base pointer
      */
-    paramOut(cp, "ptable.pointer", basePtr);
+    paramOut(cp, "ptable.pointer", _basePtr);
 }
 
 template <class ISAOps>
@@ -229,5 +227,5 @@ void
 MultiLevelPageTable<ISAOps>::unserialize(CheckpointIn &cp)
 {
     EmulationPageTable::unserialize(cp);
-    paramIn(cp, "ptable.pointer", basePtr);
+    paramIn(cp, "ptable.pointer", _basePtr);
 }

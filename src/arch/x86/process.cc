@@ -103,8 +103,7 @@ X86Process::X86Process(ProcessParams *params, ObjectFile *objFile,
                               new ArchPageTable(
                                       params->name, params->pid,
                                       params->system, PageBytes,
-                                      PageTableLayout,
-                                      pageTablePhysAddr >> PageShift)) :
+                                      PageTableLayout)) :
                       new EmulationPageTable(params->name, params->pid,
                                              PageBytes),
               objFile),
@@ -214,12 +213,19 @@ X86_64Process::initState()
     if (kvmInSE) {
         PortProxy physProxy = system->physProxy;
 
+        Addr syscallCodePhysAddr = system->allocPhysPages(1);
+        Addr gdtPhysAddr = system->allocPhysPages(1);
+        Addr idtPhysAddr = system->allocPhysPages(1);
+        Addr istPhysAddr = system->allocPhysPages(1);
+        Addr tssPhysAddr = system->allocPhysPages(1);
+        Addr pfHandlerPhysAddr = system->allocPhysPages(1);
+
         /*
          * Set up the gdt.
          */
         uint8_t numGDTEntries = 0;
         uint64_t nullDescriptor = 0;
-        physProxy.writeBlob(GDTPhysAddr + numGDTEntries * 8,
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
                             (uint8_t *)(&nullDescriptor), 8);
         numGDTEntries++;
 
@@ -243,7 +249,7 @@ X86_64Process::initState()
         csLowPLDesc.type.codeOrData = 1;
         csLowPLDesc.dpl = 0;
         uint64_t csLowPLDescVal = csLowPLDesc;
-        physProxy.writeBlob(GDTPhysAddr + numGDTEntries * 8,
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
                             (uint8_t *)(&csLowPLDescVal), 8);
 
         numGDTEntries++;
@@ -257,7 +263,7 @@ X86_64Process::initState()
         dsLowPLDesc.type.codeOrData = 0;
         dsLowPLDesc.dpl = 0;
         uint64_t dsLowPLDescVal = dsLowPLDesc;
-        physProxy.writeBlob(GDTPhysAddr + numGDTEntries * 8,
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
                             (uint8_t *)(&dsLowPLDescVal), 8);
 
         numGDTEntries++;
@@ -271,7 +277,7 @@ X86_64Process::initState()
         dsDesc.type.codeOrData = 0;
         dsDesc.dpl = 3;
         uint64_t dsDescVal = dsDesc;
-        physProxy.writeBlob(GDTPhysAddr + numGDTEntries * 8,
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
                             (uint8_t *)(&dsDescVal), 8);
 
         numGDTEntries++;
@@ -285,7 +291,7 @@ X86_64Process::initState()
         csDesc.type.codeOrData = 1;
         csDesc.dpl = 3;
         uint64_t csDescVal = csDesc;
-        physProxy.writeBlob(GDTPhysAddr + numGDTEntries * 8,
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
                             (uint8_t *)(&csDescVal), 8);
 
         numGDTEntries++;
@@ -321,7 +327,7 @@ X86_64Process::initState()
             uint64_t high;
         } tssDescVal = {TSSDescLow, TSSDescHigh};
 
-        physProxy.writeBlob(GDTPhysAddr + numGDTEntries * 8,
+        physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
                             (uint8_t *)(&tssDescVal), sizeof(tssDescVal));
 
         numGDTEntries++;
@@ -405,7 +411,7 @@ X86_64Process::initState()
             CR0 cr2 = 0;
             tc->setMiscReg(MISCREG_CR2, cr2);
 
-            CR3 cr3 = pageTablePhysAddr;
+            CR3 cr3 = dynamic_cast<ArchPageTable *>(pTable)->basePtr();
             tc->setMiscReg(MISCREG_CR3, cr3);
 
             CR4 cr4 = 0;
@@ -427,10 +433,6 @@ X86_64Process::initState()
 
             CR4 cr8 = 0;
             tc->setMiscReg(MISCREG_CR8, cr8);
-
-            const Addr PageMapLevel4 = pageTablePhysAddr;
-            //Point to the page tables.
-            tc->setMiscReg(MISCREG_CR3, PageMapLevel4);
 
             tc->setMiscReg(MISCREG_MXCSR, 0x1f80);
 
@@ -493,7 +495,7 @@ X86_64Process::initState()
         tss.RSP1_high = tss.IST1_high;
         tss.RSP2_low  = tss.IST1_low;
         tss.RSP2_high = tss.IST1_high;
-        physProxy.writeBlob(TSSPhysAddr, (uint8_t *)(&tss), sizeof(tss));
+        physProxy.writeBlob(tssPhysAddr, (uint8_t *)(&tss), sizeof(tss));
 
         /* Setting IDT gates */
         GateDescriptorLow PFGateLow = 0;
@@ -513,7 +515,7 @@ X86_64Process::initState()
             uint64_t high;
         } PFGate = {PFGateLow, PFGateHigh};
 
-        physProxy.writeBlob(IDTPhysAddr + 0xE0,
+        physProxy.writeBlob(idtPhysAddr + 0xE0,
                             (uint8_t *)(&PFGate), sizeof(PFGate));
 
         /* System call handler */
@@ -539,7 +541,7 @@ X86_64Process::initState()
             0x48, 0xcf
         };
 
-        physProxy.writeBlob(PFHandlerPhysAddr, faultBlob, sizeof(faultBlob));
+        physProxy.writeBlob(pfHandlerPhysAddr, faultBlob, sizeof(faultBlob));
 
         MultiLevelPageTable<PageTableOps> *pt =
             dynamic_cast<MultiLevelPageTable<PageTableOps> *>(pTable);
@@ -547,15 +549,15 @@ X86_64Process::initState()
         /* Syscall handler */
         pt->map(syscallCodeVirtAddr, syscallCodePhysAddr, PageBytes, false);
         /* GDT */
-        pt->map(GDTVirtAddr, GDTPhysAddr, PageBytes, false);
+        pt->map(GDTVirtAddr, gdtPhysAddr, PageBytes, false);
         /* IDT */
-        pt->map(IDTVirtAddr, IDTPhysAddr, PageBytes, false);
+        pt->map(IDTVirtAddr, idtPhysAddr, PageBytes, false);
         /* TSS */
-        pt->map(TSSVirtAddr, TSSPhysAddr, PageBytes, false);
+        pt->map(TSSVirtAddr, tssPhysAddr, PageBytes, false);
         /* IST */
-        pt->map(ISTVirtAddr, ISTPhysAddr, PageBytes, false);
+        pt->map(ISTVirtAddr, istPhysAddr, PageBytes, false);
         /* PF handler */
-        pt->map(PFHandlerVirtAddr, PFHandlerPhysAddr, PageBytes, false);
+        pt->map(PFHandlerVirtAddr, pfHandlerPhysAddr, PageBytes, false);
         /* MMIO region for m5ops */
         pt->map(MMIORegionVirtAddr, MMIORegionPhysAddr, 16*PageBytes, false);
     } else {
