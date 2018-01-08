@@ -388,4 +388,20 @@ namespace BitfieldBackend
 template <typename T>
 using BitUnionBaseType = typename BitfieldBackend::BitUnionBaseType<T>::Type;
 
+namespace std
+{
+    template <typename T>
+    struct hash;
+
+    template <typename T>
+    struct hash<BitUnionType<T> > : public hash<BitUnionBaseType<T> >
+    {
+        size_t
+        operator() (const BitUnionType<T> &val) const
+        {
+            return hash<BitUnionBaseType<T> >::operator()(val);
+        }
+    };
+}
+
 #endif // __BASE_BITUNION_HH__
