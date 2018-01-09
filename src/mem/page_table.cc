@@ -40,19 +40,11 @@
 #include <string>
 
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "debug/MMU.hh"
 #include "sim/faults.hh"
 #include "sim/serialize.hh"
 
 using namespace std;
-using namespace TheISA;
-
-EmulationPageTable::~EmulationPageTable()
-{
-    for (auto &iter : pTable)
-        delete iter.second;
-}
 
 void
 EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
@@ -66,20 +58,15 @@ EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
     while (size > 0) {
         auto it = pTable.find(vaddr);
         if (it != pTable.end()) {
-            if (clobber) {
-                delete it->second;
-            } else {
-                // already mapped
-                panic("EmulationPageTable::allocate: addr %#x already mapped",
-                      vaddr);
-            }
+            // already mapped
+            panic_if(!clobber,
+                     "EmulationPageTable::allocate: addr %#x already mapped",
+                     vaddr);
+            it->second = Entry(paddr, flags);
         } else {
-            it = pTable.emplace(vaddr, nullptr).first;
+            pTable.emplace(vaddr, Entry(paddr, flags));
         }
 
-        it->second = new TheISA::TlbEntry(pid, vaddr, paddr,
-                                         flags & Uncacheable,
-                                         flags & ReadOnly);
         size -= pageSize;
         vaddr += pageSize;
         paddr += pageSize;
@@ -102,7 +89,6 @@ EmulationPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
 
         new_it->second = old_it->second;
         pTable.erase(old_it);
-        new_it->second->updateVaddr(new_vaddr);
         size -= pageSize;
         vaddr += pageSize;
         new_vaddr += pageSize;
@@ -113,7 +99,7 @@ void
 EmulationPageTable::getMappings(std::vector<std::pair<Addr, Addr>> *addr_maps)
 {
     for (auto &iter : pTable)
-        addr_maps->push_back(make_pair(iter.first, iter.second->pageStart()));
+        addr_maps->push_back(make_pair(iter.first, iter.second.paddr));
 }
 
 void
@@ -121,12 +107,11 @@ EmulationPageTable::unmap(Addr vaddr, int64_t size)
 {
     assert(pageOffset(vaddr) == 0);
 
-    DPRINTF(MMU, "Unmapping page: %#x-%#x\n", vaddr, vaddr+ size);
+    DPRINTF(MMU, "Unmapping page: %#x-%#x\n", vaddr, vaddr + size);
 
     while (size > 0) {
         auto it = pTable.find(vaddr);
         assert(it != pTable.end());
-        delete it->second;
         pTable.erase(it);
         size -= pageSize;
         vaddr += pageSize;
@@ -146,25 +131,25 @@ EmulationPageTable::isUnmapped(Addr vaddr, int64_t size)
     return true;
 }
 
-TheISA::TlbEntry *
+const EmulationPageTable::Entry *
 EmulationPageTable::lookup(Addr vaddr)
 {
     Addr page_addr = pageAlign(vaddr);
     PTableItr iter = pTable.find(page_addr);
     if (iter == pTable.end())
         return nullptr;
-    return iter->second;
+    return &(iter->second);
 }
 
 bool
 EmulationPageTable::translate(Addr vaddr, Addr &paddr)
 {
-    TheISA::TlbEntry *entry = lookup(vaddr);
+    const Entry *entry = lookup(vaddr);
     if (!entry) {
         DPRINTF(MMU, "Couldn't Translate: %#x\n", vaddr);
         return false;
     }
-    paddr = pageOffset(vaddr) + entry->pageStart();
+    paddr = pageOffset(vaddr) + entry->paddr;
     DPRINTF(MMU, "Translating: %#x->%#x\n", vaddr, paddr);
     return true;
 }
@@ -195,7 +180,8 @@ EmulationPageTable::serialize(CheckpointOut &cp) const
         ScopedCheckpointSection sec(cp, csprintf("Entry%d", count++));
 
         paramOut(cp, "vaddr", pte.first);
-        pte.second->serialize(cp);
+        paramOut(cp, "paddr", pte.second.paddr);
+        paramOut(cp, "flags", pte.second.flags);
     }
     assert(count == pTable.size());
 }
@@ -209,13 +195,14 @@ EmulationPageTable::unserialize(CheckpointIn &cp)
     for (int i = 0; i < count; ++i) {
         ScopedCheckpointSection sec(cp, csprintf("Entry%d", i));
 
-        TheISA::TlbEntry *entry = new TheISA::TlbEntry();
-        entry->unserialize(cp);
-
         Addr vaddr;
-        paramIn(cp, "vaddr", vaddr);
+        UNSERIALIZE_SCALAR(vaddr);
+        Addr paddr;
+        uint64_t flags;
+        UNSERIALIZE_SCALAR(paddr);
+        UNSERIALIZE_SCALAR(flags);
 
-        pTable[vaddr] = entry;
+        pTable.emplace(vaddr, Entry(paddr, flags));
     }
 }
 

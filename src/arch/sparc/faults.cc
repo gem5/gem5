@@ -35,6 +35,7 @@
 
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/process.hh"
+#include "arch/sparc/tlb.hh"
 #include "arch/sparc/types.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
@@ -629,8 +630,8 @@ FastInstructionAccessMMUMiss::invoke(ThreadContext *tc,
     }
 
     Process *p = tc->getProcessPtr();
-    TlbEntry *entry = p->pTable->lookup(vaddr);
-    panic_if(!entry, "Tried to execute unmapped address %#x.\n", vaddr);
+    const EmulationPageTable::Entry *pte = p->pTable->lookup(vaddr);
+    panic_if(!pte, "Tried to execute unmapped address %#x.\n", vaddr);
 
     Addr alignedvaddr = p->pTable->pageAlign(vaddr);
 
@@ -662,13 +663,17 @@ FastInstructionAccessMMUMiss::invoke(ThreadContext *tc,
     // the logic works out to the following for the context.
     int context_id = (is_real_address || trapped) ? 0 : primary_context;
 
+    TlbEntry entry(p->pTable->pid(), alignedvaddr, pte->paddr,
+                   pte->flags & EmulationPageTable::Uncacheable,
+                   pte->flags & EmulationPageTable::ReadOnly);
+
     // Insert the TLB entry.
     // The entry specifying whether the address is "real" is set to
     // false for syscall emulation mode regardless of whether the
     // address is real in preceding code. Not sure sure that this is
     // correct, but also not sure if it matters at all.
     dynamic_cast<TLB *>(tc->getITBPtr())->
-        insert(alignedvaddr, partition_id, context_id, false, entry->pte);
+        insert(alignedvaddr, partition_id, context_id, false, entry.pte);
 }
 
 void
@@ -680,10 +685,10 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     }
 
     Process *p = tc->getProcessPtr();
-    TlbEntry *entry = p->pTable->lookup(vaddr);
-    if (!entry && p->fixupStackFault(vaddr))
-        entry = p->pTable->lookup(vaddr);
-    panic_if(!entry, "Tried to access unmapped address %#x.\n", vaddr);
+    const EmulationPageTable::Entry *pte = p->pTable->lookup(vaddr);
+    if (!pte && p->fixupStackFault(vaddr))
+        pte = p->pTable->lookup(vaddr);
+    panic_if(!pte, "Tried to access unmapped address %#x.\n", vaddr);
 
     Addr alignedvaddr = p->pTable->pageAlign(vaddr);
 
@@ -745,13 +750,17 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     // The partition id distinguishes between virtualized environments.
     int const partition_id = 0;
 
+    TlbEntry entry(p->pTable->pid(), alignedvaddr, pte->paddr,
+                   pte->flags & EmulationPageTable::Uncacheable,
+                   pte->flags & EmulationPageTable::ReadOnly);
+
     // Insert the TLB entry.
     // The entry specifying whether the address is "real" is set to
     // false for syscall emulation mode regardless of whether the
     // address is real in preceding code. Not sure sure that this is
     // correct, but also not sure if it matters at all.
     dynamic_cast<TLB *>(tc->getDTBPtr())->
-        insert(alignedvaddr, partition_id, context_id, false, entry->pte);
+        insert(alignedvaddr, partition_id, context_id, false, entry.pte);
 }
 
 void

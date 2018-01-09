@@ -93,6 +93,7 @@
 #include <memory>
 #include <string>
 
+#include "arch/generic/tlb.hh"
 #include "arch/utility.hh"
 #include "base/intmath.hh"
 #include "base/loader/object_file.hh"

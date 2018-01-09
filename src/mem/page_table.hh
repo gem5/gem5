@@ -40,11 +40,8 @@
 #include <string>
 #include <unordered_map>
 
-#include "arch/isa_traits.hh"
-#include "arch/tlb.hh"
 #include "base/intmath.hh"
 #include "base/types.hh"
-#include "config/the_isa.hh"
 #include "mem/request.hh"
 #include "sim/serialize.hh"
 
@@ -52,15 +49,25 @@ class ThreadContext;
 
 class EmulationPageTable : public Serializable
 {
+  public:
+    struct Entry
+    {
+        Addr paddr;
+        uint64_t flags;
+
+        Entry(Addr paddr, uint64_t flags) : paddr(paddr), flags(flags) {}
+        Entry() {}
+    };
+
   protected:
-    typedef std::unordered_map<Addr, TheISA::TlbEntry *> PTable;
+    typedef std::unordered_map<Addr, Entry> PTable;
     typedef PTable::iterator PTableItr;
     PTable pTable;
 
     const Addr pageSize;
     const Addr offsetMask;
 
-    const uint64_t pid;
+    const uint64_t _pid;
     const std::string _name;
 
   public:
@@ -68,12 +75,14 @@ class EmulationPageTable : public Serializable
     EmulationPageTable(
             const std::string &__name, uint64_t _pid, Addr _pageSize) :
             pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
-            pid(_pid), _name(__name)
+            _pid(_pid), _name(__name)
     {
         assert(isPowerOf2(pageSize));
     }
 
-    virtual ~EmulationPageTable();
+    uint64_t pid() const { return _pid; };
+
+    virtual ~EmulationPageTable() {};
 
     /* generic page table mapping flags
      *              unset | set
@@ -120,7 +129,7 @@ class EmulationPageTable : public Serializable
      * @param vaddr The virtual address.
      * @return The page table entry corresponding to vaddr.
      */
-    virtual TheISA::TlbEntry *lookup(Addr vaddr);
+    const Entry *lookup(Addr vaddr);
 
     /**
      * Translate function

@@ -357,22 +357,26 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                     assert(entry);
                 } else {
                     Process *p = tc->getProcessPtr();
-                    TlbEntry *newEntry = p->pTable->lookup(vaddr);
-                    if (!newEntry && mode != Execute) {
+                    const EmulationPageTable::Entry *pte =
+                        p->pTable->lookup(vaddr);
+                    if (!pte && mode != Execute) {
                         // Check if we just need to grow the stack.
                         if (p->fixupStackFault(vaddr)) {
                             // If we did, lookup the entry for the new page.
-                            newEntry = p->pTable->lookup(vaddr);
+                            pte = p->pTable->lookup(vaddr);
                         }
                     }
-                    if (!newEntry) {
+                    if (!pte) {
                         return std::make_shared<PageFault>(vaddr, true, mode,
                                                            true, false);
                     } else {
                         Addr alignedVaddr = p->pTable->pageAlign(vaddr);
                         DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
-                                newEntry->pageStart());
-                        entry = insert(alignedVaddr, *newEntry);
+                                pte->paddr);
+                        entry = insert(alignedVaddr, TlbEntry(
+                                p->pTable->pid(), alignedVaddr, pte->paddr,
+                                pte->flags & EmulationPageTable::Uncacheable,
+                                pte->flags & EmulationPageTable::ReadOnly));
                     }
                     DPRINTF(TLB, "Miss was serviced.\n");
                 }
