@@ -31,7 +31,9 @@
 from m5.SimObject import SimObject
 from m5.params import *
 
-class PowerTLB(SimObject):
+from BaseTLB import BaseTLB
+
+class PowerTLB(BaseTLB):
     type = 'PowerTLB'
     cxx_class = 'PowerISA::TLB'
     cxx_header = 'arch/power/tlb.hh'
