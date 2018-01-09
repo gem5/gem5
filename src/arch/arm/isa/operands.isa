@@ -102,11 +102,11 @@ let {{
         xc->%(func)s(this, %(op_idx)s, (%(final_val)s) & mask(32))
     '''
     cntrlNsBankedWrite = '''
-        xc->setMiscReg(flattenMiscRegNsBanked(dest, xc->tcBase()), %(final_val)s)
+        xc->setMiscReg(snsBankedIndex(dest, xc->tcBase()), %(final_val)s)
     '''
 
     cntrlNsBankedRead = '''
-        xc->readMiscReg(flattenMiscRegNsBanked(op1, xc->tcBase()))
+        xc->readMiscReg(snsBankedIndex(op1, xc->tcBase()))
     '''
 
     #PCState operands need to have a sorting index (the number at the end)

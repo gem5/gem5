@@ -872,7 +872,7 @@ let {{
     exec_output += PredOpExecute.subst(mcr14Iop)
 
     mrc15code = '''
-    int preFlatOp1 = flattenMiscRegNsBanked(op1, xc->tcBase());
+    int preFlatOp1 = snsBankedIndex(op1, xc->tcBase());
     MiscRegIndex miscReg = (MiscRegIndex)
                            xc->tcBase()->flattenRegId(RegId(MiscRegClass,
                                                       preFlatOp1)).index();
@@ -904,7 +904,7 @@ let {{
 
 
     mcr15code = '''
-    int preFlatDest = flattenMiscRegNsBanked(dest, xc->tcBase());
+    int preFlatDest = snsBankedIndex(dest, xc->tcBase());
     MiscRegIndex miscReg = (MiscRegIndex)
                        xc->tcBase()->flattenRegId(RegId(MiscRegClass,
                                                   preFlatDest)).index();
@@ -937,7 +937,7 @@ let {{
 
 
     mrrc15code = '''
-    int preFlatOp1 = flattenMiscRegNsBanked(op1, xc->tcBase());
+    int preFlatOp1 = snsBankedIndex(op1, xc->tcBase());
     MiscRegIndex miscReg = (MiscRegIndex)
                            xc->tcBase()->flattenRegId(RegId(MiscRegClass,
                                                       preFlatOp1)).index();
@@ -968,7 +968,7 @@ let {{
 
 
     mcrr15code = '''
-    int preFlatDest = flattenMiscRegNsBanked(dest, xc->tcBase());
+    int preFlatDest = snsBankedIndex(dest, xc->tcBase());
     MiscRegIndex miscReg = (MiscRegIndex)
                            xc->tcBase()->flattenRegId(RegId(MiscRegClass,
                                                       preFlatDest)).index();
@@ -1045,7 +1045,7 @@ let {{
     exec_output += PredOpExecute.subst(clrexIop)
 
     McrDcCheckCode = '''
-        int preFlatDest = flattenMiscRegNsBanked(dest, xc->tcBase());
+        int preFlatDest = snsBankedIndex(dest, xc->tcBase());
         MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
             RegId(MiscRegClass, preFlatDest)).index();
         bool hypTrap  = mcrMrc15TrapToHyp(miscReg, Hcr, Cpsr, Scr, Hdcr, Hstr,

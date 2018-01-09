@@ -815,14 +815,14 @@ canWriteCoprocReg(MiscRegIndex reg, SCR scr, CPSR cpsr)
 }
 
 int
-flattenMiscRegNsBanked(MiscRegIndex reg, ThreadContext *tc)
+snsBankedIndex(MiscRegIndex reg, ThreadContext *tc)
 {
     SCR scr = tc->readMiscReg(MISCREG_SCR);
-    return flattenMiscRegNsBanked(reg, tc, scr.ns);
+    return snsBankedIndex(reg, tc, scr.ns);
 }
 
 int
-flattenMiscRegNsBanked(MiscRegIndex reg, ThreadContext *tc, bool ns)
+snsBankedIndex(MiscRegIndex reg, ThreadContext *tc, bool ns)
 {
     int reg_as_int = static_cast<int>(reg);
     if (miscRegInfo[reg][MISCREG_BANKED]) {

@@ -880,7 +880,7 @@ ArmStaticInst::checkSETENDEnabled(ThreadContext *tc, CPSR cpsr) const
 
         // Get the index of the banked version of SCTLR:
         // SCTLR_s or SCTLR_ns.
-        auto banked_sctlr = flattenMiscRegNsBanked(
+        auto banked_sctlr = snsBankedIndex(
             MISCREG_SCTLR, tc, !inSecureState(tc));
 
         // SCTLR.SED bit is enabling/disabling the ue of SETEND instruction.

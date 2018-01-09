@@ -281,9 +281,9 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
         }
         currState->hcr = currState->tc->readMiscReg(MISCREG_HCR_EL2);
     } else {
-        currState->sctlr = currState->tc->readMiscReg(flattenMiscRegNsBanked(
+        currState->sctlr = currState->tc->readMiscReg(snsBankedIndex(
             MISCREG_SCTLR, currState->tc, !currState->isSecure));
-        currState->ttbcr = currState->tc->readMiscReg(flattenMiscRegNsBanked(
+        currState->ttbcr = currState->tc->readMiscReg(snsBankedIndex(
             MISCREG_TTBCR, currState->tc, !currState->isSecure));
         currState->htcr  = currState->tc->readMiscReg(MISCREG_HTCR);
         currState->hcr   = currState->tc->readMiscReg(MISCREG_HCR);
@@ -484,7 +484,7 @@ TableWalker::processWalk()
                     ArmFault::TranslationLL + L1, isStage2,
                     ArmFault::VmsaTran);
         }
-        ttbr = currState->tc->readMiscReg(flattenMiscRegNsBanked(
+        ttbr = currState->tc->readMiscReg(snsBankedIndex(
             MISCREG_TTBR0, currState->tc, !currState->isSecure));
     } else {
         DPRINTF(TLB, " - Selecting TTBR1\n");
@@ -503,7 +503,7 @@ TableWalker::processWalk()
                     ArmFault::TranslationLL + L1, isStage2,
                     ArmFault::VmsaTran);
         }
-        ttbr = currState->tc->readMiscReg(flattenMiscRegNsBanked(
+        ttbr = currState->tc->readMiscReg(snsBankedIndex(
             MISCREG_TTBR1, currState->tc, !currState->isSecure));
         currState->ttbcr.n = 0;
     }
@@ -616,7 +616,7 @@ TableWalker::processWalkLPAE()
                         isStage2,
                         ArmFault::LpaeTran);
             }
-            ttbr = currState->tc->readMiscReg(flattenMiscRegNsBanked(
+            ttbr = currState->tc->readMiscReg(snsBankedIndex(
                 MISCREG_TTBR0, currState->tc, !currState->isSecure));
             tsz = currState->ttbcr.t0sz;
             if (ttbr0_max < (1ULL << 30))  // Upper limit < 1 GB
@@ -640,7 +640,7 @@ TableWalker::processWalkLPAE()
                         isStage2,
                         ArmFault::LpaeTran);
             }
-            ttbr = currState->tc->readMiscReg(flattenMiscRegNsBanked(
+            ttbr = currState->tc->readMiscReg(snsBankedIndex(
                 MISCREG_TTBR1, currState->tc, !currState->isSecure));
             tsz = currState->ttbcr.t1sz;
             if (ttbr1_min >= (1ULL << 31) + (1ULL << 30))  // Lower limit >= 3 GB
@@ -1064,9 +1064,9 @@ TableWalker::memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,
         }
     } else {
         assert(tc);
-        PRRR prrr = tc->readMiscReg(flattenMiscRegNsBanked(MISCREG_PRRR,
+        PRRR prrr = tc->readMiscReg(snsBankedIndex(MISCREG_PRRR,
                                     currState->tc, !currState->isSecure));
-        NMRR nmrr = tc->readMiscReg(flattenMiscRegNsBanked(MISCREG_NMRR,
+        NMRR nmrr = tc->readMiscReg(snsBankedIndex(MISCREG_NMRR,
                                     currState->tc, !currState->isSecure));
         DPRINTF(TLBVerbose, "memAttrs PRRR:%08x NMRR:%08x\n", prrr, nmrr);
         uint8_t curr_tr = 0, curr_ir = 0, curr_or = 0;
@@ -1228,8 +1228,8 @@ TableWalker::memAttrsLPAE(ThreadContext *tc, TlbEntry &te,
         // LPAE always uses remapping of memory attributes, irrespective of the
         // value of SCTLR.TRE
         MiscRegIndex reg = attrIndx & 0x4 ? MISCREG_MAIR1 : MISCREG_MAIR0;
-        int reg_as_int = flattenMiscRegNsBanked(reg, currState->tc,
-                                                !currState->isSecure);
+        int reg_as_int = snsBankedIndex(reg, currState->tc,
+                                        !currState->isSecure);
         uint32_t mair = currState->tc->readMiscReg(reg_as_int);
         attr = (mair >> (8 * (attrIndx % 4))) & 0xff;
         uint8_t attr_7_4 = bits(attr, 7, 4);

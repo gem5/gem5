@@ -1328,28 +1328,28 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
             stage2Req      = false;
         }
     } else {  // AArch32
-        sctlr  = tc->readMiscReg(flattenMiscRegNsBanked(MISCREG_SCTLR, tc,
+        sctlr  = tc->readMiscReg(snsBankedIndex(MISCREG_SCTLR, tc,
                                  !isSecure));
-        ttbcr  = tc->readMiscReg(flattenMiscRegNsBanked(MISCREG_TTBCR, tc,
+        ttbcr  = tc->readMiscReg(snsBankedIndex(MISCREG_TTBCR, tc,
                                  !isSecure));
         scr    = tc->readMiscReg(MISCREG_SCR);
         isPriv = cpsr.mode != MODE_USER;
         if (longDescFormatInUse(tc)) {
             uint64_t ttbr_asid = tc->readMiscReg(
-                flattenMiscRegNsBanked(ttbcr.a1 ? MISCREG_TTBR1
-                                                : MISCREG_TTBR0,
+                snsBankedIndex(ttbcr.a1 ? MISCREG_TTBR1 :
+                                          MISCREG_TTBR0,
                                        tc, !isSecure));
             asid = bits(ttbr_asid, 55, 48);
         } else { // Short-descriptor translation table format in use
-            CONTEXTIDR context_id = tc->readMiscReg(flattenMiscRegNsBanked(
+            CONTEXTIDR context_id = tc->readMiscReg(snsBankedIndex(
                 MISCREG_CONTEXTIDR, tc,!isSecure));
             asid = context_id.asid;
         }
-        prrr = tc->readMiscReg(flattenMiscRegNsBanked(MISCREG_PRRR, tc,
+        prrr = tc->readMiscReg(snsBankedIndex(MISCREG_PRRR, tc,
                                !isSecure));
-        nmrr = tc->readMiscReg(flattenMiscRegNsBanked(MISCREG_NMRR, tc,
+        nmrr = tc->readMiscReg(snsBankedIndex(MISCREG_NMRR, tc,
                                !isSecure));
-        dacr = tc->readMiscReg(flattenMiscRegNsBanked(MISCREG_DACR, tc,
+        dacr = tc->readMiscReg(snsBankedIndex(MISCREG_DACR, tc,
                                !isSecure));
         hcr  = tc->readMiscReg(MISCREG_HCR);
 
