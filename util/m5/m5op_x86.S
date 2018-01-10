@@ -32,7 +32,21 @@
 
 #include <gem5/asm/generic/m5ops.h>
 
-#ifdef M5OP_ADDR
+#if defined(M5OP_ADDR) && defined(M5OP_PIC)
+/* Use the memory mapped m5op interface */
+#define TWO_BYTE_OP(name, number)         \
+        .globl name;                      \
+        .func name;                       \
+name:                                     \
+        mov m5_mem@gotpcrel(%rip), %r11;  \
+        mov (%r11), %r11;                 \
+        mov $number, %rax;                \
+        shl $8, %rax;                     \
+        mov 0(%r11, %rax, 1), %rax;       \
+        ret;                              \
+        .endfunc;
+
+#elif defined(M5OP_ADDR) && !defined(M5OP_PIC)
 /* Use the memory mapped m5op interface */
 #define TWO_BYTE_OP(name, number)         \
         .globl name;                      \
@@ -44,7 +58,6 @@ name:                                     \
         mov 0(%r11, %rax, 1), %rax;       \
         ret;                              \
         .endfunc;
-
 #else
 /* Use the magic instruction based m5op interface. This does not work
  * in virtualized environments.
