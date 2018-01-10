@@ -44,6 +44,7 @@
 #ifndef __CPU_O3_COMMIT_HH__
 #define __CPU_O3_COMMIT_HH__
 
+#include <array>
 #include <queue>
 
 #include "base/statistics.hh"
@@ -518,6 +519,9 @@ class DefaultCommit
 
     /** Number of cycles where the commit bandwidth limit is reached. */
     Stats::Scalar commitEligibleSamples;
+
+private:
+    std::array<bool, Impl::MaxThreads> skipThisCycle{};
 };
 
 #endif // __CPU_O3_COMMIT_HH__
