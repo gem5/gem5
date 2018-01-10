@@ -35,6 +35,11 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
+/**
+ * Note: For details on the implementation see
+ * https://wiki.osdev.org/%228042%22_PS/2_Controller
+ */
+
 // The 8042 has a whopping 32 bytes of internal RAM.
 const uint8_t RamSize = 32;
 const uint8_t NumOutputBits = 14;
@@ -382,6 +387,17 @@ X86ISA::I8042::write(PacketPtr pkt)
                     "mouse output buffer\" command.\n", data);
             writeData(data, true);
             break;
+          case WriteKeyboardOutputBuff:
+            DPRINTF(I8042, "Got data %#02x for \"Write "
+                    "keyboad output buffer\" command.\n", data);
+            writeData(data, false);
+            break;
+          case WriteOutputPort:
+            DPRINTF(I8042, "Got data %#02x for \"Write "
+                    "output port\" command.\n", data);
+            panic_if(bits(data, 0) != 1, "Reset bit should be 1");
+            // Safe to ignore otherwise
+            break;
           default:
             panic("Data written for unrecognized "
                     "command %#02x\n", lastCommand);
@@ -453,12 +469,9 @@ X86ISA::I8042::write(PacketPtr pkt)
           case ReadOutputPort:
             panic("i8042 \"Read output port\" command not implemented.\n");
           case WriteOutputPort:
-            warn("i8042 \"Write output port\" command not implemented.\n");
             lastCommand = WriteOutputPort;
             break;
           case WriteKeyboardOutputBuff:
-            warn("i8042 \"Write keyboard output buffer\" "
-                    "command not implemented.\n");
             lastCommand = WriteKeyboardOutputBuff;
             break;
           case WriteMouseOutputBuff:
