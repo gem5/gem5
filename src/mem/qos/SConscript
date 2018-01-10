@@ -1,5 +1,3 @@
-# -*- mode:python -*-
-#
 # Copyright (c) 2018 ARM Limited
 # All rights reserved
 #
@@ -11,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2006 The Regents of The University of Michigan
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -38,88 +33,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Giacomo Travaglini
 
 Import('*')
 
-SimObject('CommMonitor.py')
-Source('comm_monitor.cc')
+SimObject('QoSMemCtrl.py')
+SimObject('QoSPolicy.py')
+SimObject('QoSTurnaround.py')
 
-SimObject('AbstractMemory.py')
-SimObject('AddrMapper.py')
-SimObject('Bridge.py')
-SimObject('DRAMCtrl.py')
-SimObject('ExternalMaster.py')
-SimObject('ExternalSlave.py')
-SimObject('MemObject.py')
-SimObject('SimpleMemory.py')
-SimObject('XBar.py')
-SimObject('HMCController.py')
-SimObject('SerialLink.py')
-SimObject('MemDelay.py')
-
-Source('abstract_mem.cc')
-Source('addr_mapper.cc')
-Source('bridge.cc')
-Source('coherent_xbar.cc')
-Source('drampower.cc')
-Source('dram_ctrl.cc')
-Source('external_master.cc')
-Source('external_slave.cc')
-Source('mem_object.cc')
-Source('mport.cc')
-Source('noncoherent_xbar.cc')
-Source('packet.cc')
-Source('port.cc')
-Source('packet_queue.cc')
-Source('port_proxy.cc')
-Source('physical.cc')
-Source('simple_mem.cc')
-Source('snoop_filter.cc')
-Source('stack_dist_calc.cc')
-Source('tport.cc')
-Source('xbar.cc')
-Source('hmc_controller.cc')
-Source('serial_link.cc')
-Source('mem_delay.cc')
-
-if env['TARGET_ISA'] != 'null':
-    Source('fs_translating_port_proxy.cc')
-    Source('se_translating_port_proxy.cc')
-    Source('page_table.cc')
-
-if env['HAVE_DRAMSIM']:
-    SimObject('DRAMSim2.py')
-    Source('dramsim2_wrapper.cc')
-    Source('dramsim2.cc')
-
-SimObject('MemChecker.py')
-Source('mem_checker.cc')
-Source('mem_checker_monitor.cc')
-
-DebugFlag('AddrRanges')
-DebugFlag('BaseXBar')
-DebugFlag('CoherentXBar')
-DebugFlag('NoncoherentXBar')
-DebugFlag('SnoopFilter')
-CompoundFlag('XBar', ['BaseXBar', 'CoherentXBar', 'NoncoherentXBar',
-                      'SnoopFilter'])
-
-DebugFlag('Bridge')
-DebugFlag('CommMonitor')
-DebugFlag('DRAM')
-DebugFlag('DRAMPower')
-DebugFlag('DRAMState')
-DebugFlag('ExternalPort')
-DebugFlag('LLSC')
-DebugFlag('MMU')
-DebugFlag('MemoryAccess')
-DebugFlag('PacketQueue')
-DebugFlag('StackDist')
-DebugFlag("DRAMSim2")
-DebugFlag('HMCController')
-DebugFlag('SerialLink')
-
-DebugFlag("MemChecker")
-DebugFlag("MemCheckerMonitor")
-DebugFlag("QOS")
+Source('policy.cc')
+Source('q_policy.cc')
+Source('mem_ctrl.cc')

@@ -347,6 +347,9 @@ class Packet : public Printable
      */
     std::vector<bool> bytesValid;
 
+    // Quality of Service priority value
+    uint8_t _qosValue;
+
   public:
 
     /**
@@ -670,6 +673,25 @@ class Packet : public Printable
     bool isBlockCached() const     { return flags.isSet(BLOCK_CACHED); }
     void clearBlockCached()        { flags.clear(BLOCK_CACHED); }
 
+    /**
+     * QoS Value getter
+     * Returns 0 if QoS value was never set (constructor default).
+     *
+     * @return QoS priority value of the packet
+     */
+    inline uint8_t qosValue() const { return _qosValue; }
+
+    /**
+     * QoS Value setter
+     * Interface for setting QoS priority value of the packet.
+     *
+     * @param qos_value QoS priority value
+     */
+    inline void qosValue(const uint8_t qos_value)
+    { _qosValue = qos_value; }
+
+    inline MasterID masterId() const { return req->masterId(); }
+
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command
     // field, etc.)
@@ -746,8 +768,9 @@ class Packet : public Printable
      * not be valid. The command must be supplied.
      */
     Packet(const RequestPtr &_req, MemCmd _cmd)
-        :  cmd(_cmd), id((PacketId)_req.get()), req(_req), data(nullptr),
-           addr(0), _isSecure(false), size(0), headerDelay(0), snoopDelay(0),
+        :  cmd(_cmd), id((PacketId)_req.get()), req(_req),
+           data(nullptr), addr(0), _isSecure(false), size(0),
+           _qosValue(0), headerDelay(0), snoopDelay(0),
            payloadDelay(0), senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -768,7 +791,8 @@ class Packet : public Printable
      */
     Packet(const RequestPtr &_req, MemCmd _cmd, int _blkSize, PacketId _id = 0)
         :  cmd(_cmd), id(_id ? _id : (PacketId)_req.get()), req(_req),
-           data(nullptr), addr(0), _isSecure(false), headerDelay(0),
+           data(nullptr), addr(0), _isSecure(false),
+           _qosValue(0), headerDelay(0),
            snoopDelay(0), payloadDelay(0), senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -792,6 +816,7 @@ class Packet : public Printable
            data(nullptr),
            addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
            bytesValid(pkt->bytesValid),
+           _qosValue(pkt->qosValue()),
            headerDelay(pkt->headerDelay),
            snoopDelay(0),
            payloadDelay(pkt->payloadDelay),
