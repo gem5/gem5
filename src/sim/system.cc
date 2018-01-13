@@ -241,23 +241,19 @@ bool System::breakpoint()
 ContextID
 System::registerThreadContext(ThreadContext *tc, ContextID assigned)
 {
-    int id;
-    if (assigned == InvalidContextID) {
-        for (id = 0; id < threadContexts.size(); id++) {
-            if (!threadContexts[id])
-                break;
-        }
-
-        if (threadContexts.size() <= id)
-            threadContexts.resize(id + 1);
-    } else {
-        if (threadContexts.size() <= assigned)
-            threadContexts.resize(assigned + 1);
-        id = assigned;
+    int id = assigned;
+    if (id == InvalidContextID) {
+        // Find an unused context ID for this thread.
+        id = 0;
+        while (id < threadContexts.size() && threadContexts[id])
+            id++;
     }
 
-    if (threadContexts[id])
-        fatal("Cannot have two CPUs with the same id (%d)\n", id);
+    if (threadContexts.size() <= id)
+        threadContexts.resize(id + 1);
+
+    fatal_if(threadContexts[id],
+             "Cannot have two CPUs with the same id (%d)\n", id);
 
     threadContexts[id] = tc;
     _numContexts++;
