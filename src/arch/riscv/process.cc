@@ -64,7 +64,7 @@ RiscvProcess::RiscvProcess(ProcessParams *params, ObjectFile *objFile) :
                                           PageBytes),
                 objFile)
 {
-    fatal_if(!params->useArchPT, "Arch page tables not implemented.");
+    fatal_if(params->useArchPT, "Arch page tables not implemented.");
     const Addr stack_base = 0x7FFFFFFFFFFFFFFFL;
     const Addr max_stack_size = 8 * 1024 * 1024;
     const Addr next_thread_stack_base = stack_base - max_stack_size;

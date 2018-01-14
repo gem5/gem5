@@ -67,7 +67,7 @@ ArmProcess::ArmProcess(ProcessParams *params, ObjectFile *objFile,
               objFile),
               arch(_arch)
 {
-    fatal_if(!params->useArchPT, "Arch page tables not implemented.");
+    fatal_if(params->useArchPT, "Arch page tables not implemented.");
 }
 
 ArmProcess32::ArmProcess32(ProcessParams *params, ObjectFile *objFile,

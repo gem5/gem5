@@ -53,7 +53,7 @@ PowerProcess::PowerProcess(ProcessParams *params, ObjectFile *objFile)
     : Process(params, new FuncPageTable(params->name, params->pid, PageBytes),
               objFile)
 {
-    fatal_if(!params->useArchPT, "Arch page tables not implemented.");
+    fatal_if(params->useArchPT, "Arch page tables not implemented.");
     // Set up break point (Top of Heap)
     Addr brk_point = objFile->dataBase() + objFile->dataSize() +
                      objFile->bssSize();

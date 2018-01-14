@@ -53,7 +53,7 @@ MipsProcess::MipsProcess(ProcessParams *params, ObjectFile *objFile)
     : Process(params, new FuncPageTable(params->name, params->pid, PageBytes),
               objFile)
 {
-    fatal_if(!params->useArchPT, "Arch page tables not implemented.");
+    fatal_if(params->useArchPT, "Arch page tables not implemented.");
     // Set up stack. On MIPS, stack starts at the top of kuseg
     // user address space. MIPS stack grows down from here
     Addr stack_base = 0x7FFFFFFF;

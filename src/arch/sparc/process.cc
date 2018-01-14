@@ -60,7 +60,7 @@ SparcProcess::SparcProcess(ProcessParams *params, ObjectFile *objFile,
               objFile),
       StackBias(_StackBias)
 {
-    fatal_if(!params->useArchPT, "Arch page tables not implemented.");
+    fatal_if(params->useArchPT, "Arch page tables not implemented.");
     // Initialize these to 0s
     fillStart = 0;
     spillStart = 0;
