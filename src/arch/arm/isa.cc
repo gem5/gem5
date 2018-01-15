@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2017 ARM Limited
+ * Copyright (c) 2010-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -400,7 +400,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
             if (haveSecurity) {
                 scr = readMiscRegNoEffect(MISCREG_SCR);
                 cpsr = readMiscRegNoEffect(MISCREG_CPSR);
-                if (scr.ns && (cpsr.mode != MODE_MON)) {
+                if (scr.ns && (cpsr.mode != MODE_MON) && ELIs32(tc, EL3)) {
                     NSACR nsacr = readMiscRegNoEffect(MISCREG_NSACR);
                     // NB: Skipping the full loop, here
                     if (!nsacr.cp10) cpacrMask.cp10 = 0;
@@ -745,7 +745,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 if (haveSecurity) {
                     scr = readMiscRegNoEffect(MISCREG_SCR);
                     CPSR cpsr = readMiscRegNoEffect(MISCREG_CPSR);
-                    if (scr.ns && (cpsr.mode != MODE_MON)) {
+                    if (scr.ns && (cpsr.mode != MODE_MON) && ELIs32(tc, EL3)) {
                         NSACR nsacr = readMiscRegNoEffect(MISCREG_NSACR);
                         // NB: Skipping the full loop, here
                         if (!nsacr.cp10) cpacrMask.cp10 = 0;
