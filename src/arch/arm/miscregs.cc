@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2017 ARM Limited
+ * Copyright (c) 2010-2013, 2015-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -3601,7 +3601,7 @@ ISA::initializeMiscRegMetadata()
       .hyp().mon()
       .mapsTo(MISCREG_HSR);
     InitReg(MISCREG_FPEXC32_EL2)
-      .hyp().mon();
+      .hyp().mon().mapsTo(MISCREG_FPEXC);
     InitReg(MISCREG_AFSR0_EL3)
       .mon();
     InitReg(MISCREG_AFSR1_EL3)
