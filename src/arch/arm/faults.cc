@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2014, 2016-2017 ARM Limited
+ * Copyright (c) 2010, 2012-2014, 2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -923,10 +923,37 @@ SecureMonitorCall::ec(ThreadContext *tc) const
     return (from64 ? EC_SMC_64 : vals.ec);
 }
 
+bool
+SupervisorTrap::routeToHyp(ThreadContext *tc) const
+{
+    bool toHyp = false;
+
+    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
+    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
+
+    // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
+    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (cpsr.el == EL0);
+    return toHyp;
+}
+
+uint32_t
+SupervisorTrap::iss() const
+{
+    // If SupervisorTrap is routed to hypervisor, iss field is 0.
+    if (hypRouted) {
+        return 0;
+    }
+    return issRaw;
+}
+
 ExceptionClass
 SupervisorTrap::ec(ThreadContext *tc) const
 {
-    return (overrideEc != EC_INVALID) ? overrideEc : vals.ec;
+    if (hypRouted)
+        return EC_UNKNOWN;
+    else
+        return (overrideEc != EC_INVALID) ? overrideEc : vals.ec;
 }
 
 ExceptionClass

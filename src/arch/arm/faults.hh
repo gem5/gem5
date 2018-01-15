@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2017 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -335,6 +335,8 @@ class SupervisorTrap : public ArmFaultVals<SupervisorTrap>
         overrideEc(_overrideEc)
     {}
 
+    bool routeToHyp(ThreadContext *tc) const override;
+    uint32_t iss() const override;
     ExceptionClass ec(ThreadContext *tc) const override;
 };
 
