@@ -261,16 +261,15 @@ System::registerThreadContext(ThreadContext *tc, ContextID assigned)
 #if THE_ISA != NULL_ISA
     int port = getRemoteGDBPort();
     if (port) {
-        RemoteGDB *rgdb = new RemoteGDB(this, tc);
-        GDBListener *gdbl = new GDBListener(rgdb, port + id);
-        gdbl->listen();
+        RemoteGDB *rgdb = new RemoteGDB(this, tc, port + id);
+        rgdb->listen();
 
         BaseCPU *cpu = tc->getCpuPtr();
         if (cpu->waitForRemoteGDB()) {
             inform("%s: Waiting for a remote GDB connection on port %d.\n",
-                   cpu->name(), gdbl->getPort());
+                   cpu->name(), rgdb->port());
 
-            gdbl->accept();
+            rgdb->connect();
         }
         if (remoteGDB.size() <= id) {
             remoteGDB.resize(id + 1);

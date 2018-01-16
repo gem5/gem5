@@ -144,9 +144,11 @@
 using namespace std;
 using namespace AlphaISA;
 
-RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc)
+RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)
+    : BaseRemoteGDB(_system, tc, _port)
 {
+    warn_once("Breakpoints do not work in Alpha PAL mode.\n"
+              "      See PCEventQueue::doService() in cpu/pc_event.cc.\n");
 }
 
 /*
@@ -165,7 +167,7 @@ RemoteGDB::acc(Addr va, size_t len)
 
     do  {
         if (IsK0Seg(va)) {
-            if (va < (K0SegBase + system->memSize())) {
+            if (va < (K0SegBase + system()->memSize())) {
                 DPRINTF(GDBAcc, "acc:   Mapping is valid  K0SEG <= "
                         "%#x < K0SEG + size\n", va);
                 return true;
@@ -187,9 +189,9 @@ RemoteGDB::acc(Addr va, size_t len)
         if (PcPAL(va) || va < 0x10000)
             return true;
 
-        Addr ptbr = context->readMiscRegNoEffect(IPR_PALtemp20);
+        Addr ptbr = context()->readMiscRegNoEffect(IPR_PALtemp20);
         PageTableEntry pte =
-            kernel_pte_lookup(context->getPhysProxy(), ptbr, va);
+            kernel_pte_lookup(context()->getPhysProxy(), ptbr, va);
         if (!pte.valid()) {
             DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
             return false;
@@ -247,31 +249,10 @@ RemoteGDB::AlphaGdbRegCache::setRegs(ThreadContext *context) const
     context->pcState(r.pc);
 }
 
-// Write bytes to kernel address space for debugger.
-bool
-RemoteGDB::write(Addr vaddr, size_t size, const char *data)
+
+BaseGdbRegCache*
+RemoteGDB::gdbRegs()
 {
-    if (BaseRemoteGDB::write(vaddr, size, data)) {
-#ifdef IMB
-        alpha_pal_imb();
-#endif
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
-void
-RemoteGDB::insertHardBreak(Addr addr, size_t len)
-{
-    warn_once("Breakpoints do not work in Alpha PAL mode.\n"
-              "      See PCEventQueue::doService() in cpu/pc_event.cc.\n");
-    BaseRemoteGDB::insertHardBreak(addr, len);
-}
-
-RemoteGDB::BaseGdbRegCache*
-RemoteGDB::gdbRegs() {
-            return new AlphaGdbRegCache(this);
+    return new AlphaGdbRegCache(this);
 }
 

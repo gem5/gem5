@@ -69,7 +69,11 @@ class RemoteGDB : public BaseRemoteGDB
         size_t size() const { return sizeof(r); }
         void getRegs(ThreadContext*);
         void setRegs(ThreadContext*) const;
-        const std::string name() const { return gdb->name() + ".SPARCGdbRegCache"; }
+        const std::string
+        name() const
+        {
+            return gdb->name() + ".SPARCGdbRegCache";
+        }
     };
 
     class SPARC64GdbRegCache : public BaseGdbRegCache
@@ -91,14 +95,18 @@ class RemoteGDB : public BaseRemoteGDB
         size_t size() const { return sizeof(r); }
         void getRegs(ThreadContext*);
         void setRegs(ThreadContext*) const;
-        const std::string name() const { return gdb->name() + ".SPARC64GdbRegCache"; }
+        const std::string
+        name() const
+        {
+            return gdb->name() + ".SPARC64GdbRegCache";
+        }
     };
 
     SPARCGdbRegCache regCache32;
     SPARC64GdbRegCache regCache64;
 
   public:
-    RemoteGDB(System *_system, ThreadContext *tc);
+    RemoteGDB(System *_system, ThreadContext *tc, int _port);
     BaseGdbRegCache *gdbRegs();
 };
 } // namespace SparcISA

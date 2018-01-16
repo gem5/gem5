@@ -147,8 +147,8 @@
 using namespace std;
 using namespace SparcISA;
 
-RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
-    : BaseRemoteGDB(_system, c), regCache32(this), regCache64(this)
+RemoteGDB::RemoteGDB(System *_system, ThreadContext *c, int _port)
+    : BaseRemoteGDB(_system, c, _port), regCache32(this), regCache64(this)
 {}
 
 ///////////////////////////////////////////////////////////
@@ -170,7 +170,7 @@ RemoteGDB::acc(Addr va, size_t len)
         TlbEntry entry;
         // Check to make sure the first byte is mapped into the processes
         // address space.
-        if (context->getProcessPtr()->pTable->lookup(va, entry))
+        if (context()->getProcessPtr()->pTable->lookup(va, entry))
             return true;
         return false;
     }
@@ -244,10 +244,10 @@ RemoteGDB::SPARC64GdbRegCache::setRegs(ThreadContext *context) const
 }
 
 
-RemoteGDB::BaseGdbRegCache*
+BaseGdbRegCache*
 RemoteGDB::gdbRegs()
 {
-    PSTATE pstate = context->readMiscReg(MISCREG_PSTATE);
+    PSTATE pstate = context()->readMiscReg(MISCREG_PSTATE);
     if (pstate.am) {
         return &regCache32;
     } else {

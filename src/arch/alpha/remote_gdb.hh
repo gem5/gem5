@@ -51,9 +51,6 @@ class RemoteGDB : public BaseRemoteGDB
   protected:
     // Machine memory
     bool acc(Addr addr, size_t len) override;
-    bool write(Addr addr, size_t size, const char *data) override;
-
-    void insertHardBreak(Addr addr, size_t len) override;
 
     class AlphaGdbRegCache : public BaseGdbRegCache
     {
@@ -70,11 +67,15 @@ class RemoteGDB : public BaseRemoteGDB
         size_t size() const { return sizeof(r); }
         void getRegs(ThreadContext*);
         void setRegs(ThreadContext*) const;
-        const std::string name() const { return gdb->name() + ".AlphaGdbRegCache"; }
+        const std::string
+        name() const
+        {
+            return gdb->name() + ".AlphaGdbRegCache";
+        }
     };
 
   public:
-    RemoteGDB(System *system, ThreadContext *context);
+    RemoteGDB(System *system, ThreadContext *context, int _port);
     BaseGdbRegCache *gdbRegs() override;
 };
 

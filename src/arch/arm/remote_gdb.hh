@@ -115,7 +115,7 @@ class RemoteGDB : public BaseRemoteGDB
     AArch64GdbRegCache regCache64;
 
   public:
-    RemoteGDB(System *_system, ThreadContext *tc);
+    RemoteGDB(System *_system, ThreadContext *tc, int _port);
     BaseGdbRegCache *gdbRegs();
 };
 } // namespace ArmISA

@@ -79,7 +79,7 @@ class RemoteGDB : public BaseRemoteGDB
     PowerGdbRegCache regCache;
 
   public:
-    RemoteGDB(System *_system, ThreadContext *tc);
+    RemoteGDB(System *_system, ThreadContext *tc, int _port);
     BaseGdbRegCache *gdbRegs();
 };
 

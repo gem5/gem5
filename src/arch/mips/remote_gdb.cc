@@ -151,8 +151,8 @@
 using namespace std;
 using namespace MipsISA;
 
-RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc), regCache(this)
+RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)
+    : BaseRemoteGDB(_system, tc, _port), regCache(this)
 {
 }
 
@@ -168,7 +168,7 @@ RemoteGDB::acc(Addr va, size_t len)
     if (FullSystem)
         panic("acc not implemented for MIPS FS!");
     else
-        return context->getProcessPtr()->pTable->lookup(va, entry);
+        return context()->getProcessPtr()->pTable->lookup(va, entry);
 }
 
 void
@@ -205,7 +205,8 @@ RemoteGDB::MipsGdbRegCache::setRegs(ThreadContext *context) const
     context->setFloatRegBits(FLOATREG_FIR, r.fir);
 }
 
-RemoteGDB::BaseGdbRegCache*
-RemoteGDB::gdbRegs() {
+BaseGdbRegCache*
+RemoteGDB::gdbRegs()
+{
     return &regCache;
 }

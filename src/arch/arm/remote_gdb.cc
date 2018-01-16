@@ -164,8 +164,8 @@
 using namespace std;
 using namespace ArmISA;
 
-RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc), regCache32(this), regCache64(this)
+RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)
+    : BaseRemoteGDB(_system, tc, _port), regCache32(this), regCache64(this)
 {
 }
 
@@ -177,7 +177,7 @@ RemoteGDB::acc(Addr va, size_t len)
 {
     if (FullSystem) {
         for (ChunkGenerator gen(va, len, PageBytes); !gen.done(); gen.next()) {
-            if (!virtvalid(context, gen.addr())) {
+            if (!virtvalid(context(), gen.addr())) {
                 DPRINTF(GDBAcc, "acc:   %#x mapping is invalid\n", va);
                 return false;
             }
@@ -189,7 +189,7 @@ RemoteGDB::acc(Addr va, size_t len)
         TlbEntry entry;
         //Check to make sure the first byte is mapped into the processes address
         //space.
-        if (context->getProcessPtr()->pTable->lookup(va, entry))
+        if (context()->getProcessPtr()->pTable->lookup(va, entry))
             return true;
         return false;
     }
@@ -301,10 +301,10 @@ RemoteGDB::AArch32GdbRegCache::setRegs(ThreadContext *context) const
     context->setMiscRegNoEffect(MISCREG_CPSR, r.cpsr);
 }
 
-RemoteGDB::BaseGdbRegCache*
+BaseGdbRegCache*
 RemoteGDB::gdbRegs()
 {
-    if (inAArch64(context))
+    if (inAArch64(context()))
         return &regCache64;
     else
         return &regCache32;

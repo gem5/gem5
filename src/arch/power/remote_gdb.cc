@@ -151,8 +151,8 @@
 using namespace std;
 using namespace PowerISA;
 
-RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
-    : BaseRemoteGDB(_system, tc), regCache(this)
+RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc, int _port)
+    : BaseRemoteGDB(_system, tc, _port), regCache(this)
 {
 }
 
@@ -171,7 +171,7 @@ RemoteGDB::acc(Addr va, size_t len)
     if (FullSystem)
         panic("acc not implemented for POWER FS!");
     else
-        return context->getProcessPtr()->pTable->lookup(va, entry);
+        return context()->getProcessPtr()->pTable->lookup(va, entry);
 }
 
 void
@@ -216,8 +216,9 @@ RemoteGDB::PowerGdbRegCache::setRegs(ThreadContext *context) const
     context->setIntReg(INTREG_XER, betoh(r.xer));
 }
 
-RemoteGDB::BaseGdbRegCache*
-RemoteGDB::gdbRegs() {
+BaseGdbRegCache*
+RemoteGDB::gdbRegs()
+{
     return &regCache;
 }
 
