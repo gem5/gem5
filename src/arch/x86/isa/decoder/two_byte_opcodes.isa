@@ -800,8 +800,16 @@
                     0x3: Inst::STMXCSR(Md);
                     0x4: xsave();
                     0x5: xrstor();
-                    0x6: Inst::UD2();
-                    0x7: clflush();
+                    0x6: decode LEGACY_DECODEVAL {
+                        0x0: Inst::UD2();
+                        0x1: Inst::CLWB(Mb);
+                        default: Inst::UD2();
+                    }
+                    0x7: decode LEGACY_DECODEVAL {
+                        0x0: Inst::CLFLUSH(Mb);
+                        0x1: Inst::CLFLUSHOPT(Mb);
+                        default: Inst::CLFLUSH(Mb);
+                    }
                 }
             }
             0x7: Inst::IMUL(Gv,Ev);
