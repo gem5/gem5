@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 #
-# Copyright (c) 2017 ARM Limited
+# Copyright (c) 2017-2018 Arm Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -105,7 +105,7 @@ class Commit(object):
     def __str__(self):
         return "%s: %s" % (self.rev[0:8], self.log[0])
 
-def list_revs(branch, baseline=None):
+def list_revs(branch, baseline=None, paths=[]):
     """Get a generator that lists git revisions that exist in 'branch'. If
     the optional parameter 'baseline' is specified, the generator
     excludes commits that exist on that branch.
@@ -119,7 +119,9 @@ def list_revs(branch, baseline=None):
     else:
         query = str(branch)
 
-    changes = subprocess.check_output([ "git", "rev-list", query ])
+    changes = subprocess.check_output(
+        [ "git", "rev-list", query, '--'] + paths
+    )
 
     if changes == "":
         return
@@ -128,9 +130,9 @@ def list_revs(branch, baseline=None):
         assert rev != ""
         yield Commit(rev)
 
-def list_changes(upstream, feature):
-    feature_revs = tuple(list_revs(upstream, feature))
-    upstream_revs = tuple(list_revs(feature, upstream))
+def list_changes(upstream, feature, paths=[]):
+    feature_revs = tuple(list_revs(upstream, feature, paths=paths))
+    upstream_revs = tuple(list_revs(feature, upstream, paths=paths))
 
     feature_cids = dict([
         (c.change_id, c) for c in feature_revs if c.change_id is not None ])
@@ -173,11 +175,13 @@ def _main():
     parser.add_argument("--deep-search", action="store_true",
                         help="Use a deep search to find incorrectly " \
                         "rebased changes")
+    parser.add_argument("paths", metavar="PATH", type=str, nargs="*",
+                        help="Paths to list changes for")
 
     args = parser.parse_args()
 
     incoming, outgoing, common, upstream_unknown, feature_unknown = \
-        list_changes(args.upstream, args.feature)
+        list_changes(args.upstream, args.feature, paths=args.paths)
 
     if incoming:
         print "Incoming changes:"
@@ -210,7 +214,7 @@ def _main():
 
     if args.deep_search:
         print "Incorrectly rebased changes:"
-        all_upstream_revs = list_revs(args.upstream)
+        all_upstream_revs = list_revs(args.upstream, paths=args.paths)
         all_upstream_cids = dict([
             (c.change_id, c) for c in all_upstream_revs \
             if c.change_id is not None ])
