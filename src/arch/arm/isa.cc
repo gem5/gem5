@@ -754,17 +754,6 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                         miscRegName[misc_reg], newVal);
             }
             break;
-          case MISCREG_CPACR_EL1:
-            {
-                const uint32_t ones = (uint32_t)(-1);
-                CPACR cpacrMask = 0;
-                cpacrMask.tta = ones;
-                cpacrMask.fpen = ones;
-                newVal &= cpacrMask;
-                DPRINTF(MiscRegs, "Writing misc reg %s: %#x\n",
-                        miscRegName[misc_reg], newVal);
-            }
-            break;
           case MISCREG_CPTR_EL2:
             {
                 const uint32_t ones = (uint32_t)(-1);
