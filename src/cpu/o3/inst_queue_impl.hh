@@ -1338,6 +1338,25 @@ InstructionQueue<Impl>::doSquash(ThreadID tid)
             ++freeEntries;
         }
 
+        // IQ clears out the heads of the dependency graph only when
+        // instructions reach writeback stage. If an instruction is squashed
+        // before writeback stage, its head of dependency graph would not be
+        // cleared out; it holds the instruction's DynInstPtr. This prevents
+        // freeing the squashed instruction's DynInst.
+        // Thus, we need to manually clear out the squashed instructions' heads
+        // of dependency graph.
+        for (int dest_reg_idx = 0;
+             dest_reg_idx < squashed_inst->numDestRegs();
+             dest_reg_idx++)
+        {
+            PhysRegIdPtr dest_reg =
+                squashed_inst->renamedDestRegIdx(dest_reg_idx);
+            if (dest_reg->isFixedMapping()){
+                continue;
+            }
+            assert(dependGraph.empty(dest_reg->flatIndex()));
+            dependGraph.clearInst(dest_reg->flatIndex());
+        }
         instList[tid].erase(squash_it--);
         ++iqSquashedInstsExamined;
     }
