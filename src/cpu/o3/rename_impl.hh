@@ -647,7 +647,7 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
             }
         }
 
-        if (inst->isStore()) {
+        if (inst->isStore() || inst->isAtomic()) {
             if (calcFreeSQEntries(tid) <= 0) {
                 DPRINTF(Rename, "[tid:%u]: Cannot rename due to no free SQ\n");
                 source = SQ;
@@ -741,12 +741,12 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
 
         renameDestRegs(inst, inst->threadNumber);
 
-        if (inst->isLoad()) {
-                loadsInProgress[tid]++;
+        if (inst->isAtomic() || inst->isStore()) {
+            storesInProgress[tid]++;
+        } else if (inst->isLoad()) {
+            loadsInProgress[tid]++;
         }
-        if (inst->isStore()) {
-                storesInProgress[tid]++;
-        }
+
         ++renamed_insts;
         // Notify potential listeners that source and destination registers for
         // this instruction have been renamed.

@@ -696,11 +696,11 @@ class LSQ : public Named
     void completeMemBarrierInst(MinorDynInstPtr inst,
         bool committed);
 
-    /** Single interface for readMem/writeMem to issue requests into
+    /** Single interface for readMem/writeMem/amoMem to issue requests into
      *  the LSQ */
     void pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
                      unsigned int size, Addr addr, Request::Flags flags,
-                     uint64_t *res);
+                     uint64_t *res, AtomicOpFunctor *amo_op);
 
     /** Push a predicate failed-representing request into the queues just
      *  to maintain commit order */

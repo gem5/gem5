@@ -456,6 +456,19 @@ class SimpleExecContext : public ExecContext {
         return cpu->writeMem(data, size, addr, flags, res);
     }
 
+    Fault amoMem(Addr addr, uint8_t *data, unsigned int size,
+                 Request::Flags flags, AtomicOpFunctor *amo_op) override
+    {
+        return cpu->amoMem(addr, data, size, flags, amo_op);
+    }
+
+    Fault initiateMemAMO(Addr addr, unsigned int size,
+                         Request::Flags flags,
+                         AtomicOpFunctor *amo_op) override
+    {
+        return cpu->initiateMemAMO(addr, size, flags, amo_op);
+    }
+
     /**
      * Sets the number of consecutive store conditional failures.
      */

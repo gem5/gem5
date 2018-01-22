@@ -163,6 +163,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     RequestPtr ifetch_req;
     RequestPtr data_read_req;
     RequestPtr data_write_req;
+    RequestPtr data_amo_req;
 
     bool dcache_access;
     Tick dcache_latency;
@@ -197,11 +198,11 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     Fault readMem(Addr addr, uint8_t *data, unsigned size,
                   Request::Flags flags) override;
 
-    Fault initiateMemRead(Addr addr, unsigned size,
-                          Request::Flags flags) override;
-
     Fault writeMem(uint8_t *data, unsigned size,
                    Addr addr, Request::Flags flags, uint64_t *res) override;
+
+    Fault amoMem(Addr addr, uint8_t* data, unsigned size,
+                 Request::Flags flags, AtomicOpFunctor *amo_op) override;
 
     void regProbePoints() override;
 

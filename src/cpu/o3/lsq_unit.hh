@@ -702,10 +702,12 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
             bool lower_load_has_store_part = req_s < st_e;
             bool upper_load_has_store_part = req_e > st_s;
 
-            // If the store's data has all of the data needed and the load
-            // isn't LLSC then
-            // we can forward.
-            if (store_has_lower_limit && store_has_upper_limit &&
+            // If the store entry is not atomic (atomic does not have valid
+            // data), the store has all of the data needed, and
+            // the load is not LLSC, then
+            // we can forward data from the store to the load
+            if (!store_it->instruction()->isAtomic() &&
+                store_has_lower_limit && store_has_upper_limit &&
                 !req->mainRequest()->isLLSC()) {
 
                 // Get shift amount for offset into the store's data.
@@ -755,17 +757,22 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
 
                 return NoFault;
             } else if (
+                // This is the partial store-load forwarding case where a store
+                // has only part of the load's data and the load isn't LLSC
                 (!req->mainRequest()->isLLSC() &&
                  ((store_has_lower_limit && lower_load_has_store_part) ||
                   (store_has_upper_limit && upper_load_has_store_part) ||
                   (lower_load_has_store_part && upper_load_has_store_part))) ||
+                // The load is LLSC, and the store has all or part of the
+                // load's data
                 (req->mainRequest()->isLLSC() &&
                  ((store_has_lower_limit || upper_load_has_store_part) &&
-                  (store_has_upper_limit || lower_load_has_store_part)))) {
-                // This is the partial store-load forwarding case where a store
-                // has only part of the load's data and the load isn't LLSC or
-                // the load is LLSC and the store has all or part of the load's
+                  (store_has_upper_limit || lower_load_has_store_part))) ||
+                // The store entry is atomic and has all or part of the load's
                 // data
+                (store_it->instruction()->isAtomic() &&
+                 ((store_has_lower_limit || upper_load_has_store_part) &&
+                  (store_has_upper_limit || lower_load_has_store_part)))) {
 
                 // If it's already been written back, then don't worry about
                 // stalling on it.
@@ -857,8 +864,10 @@ LSQUnit<Impl>::write(LSQRequest *req, uint8_t *data, int store_idx)
     storeQueue[store_idx].isAllZeros() = store_no_data;
     assert(size <= SQEntry::DataSize || store_no_data);
 
+    // copy data into the storeQueue only if the store request has valid data
     if (!(req->request()->getFlags() & Request::CACHE_BLOCK_ZERO) &&
-        !req->request()->isCacheMaintenance())
+        !req->request()->isCacheMaintenance() &&
+        !req->request()->isAtomic())
         memcpy(storeQueue[store_idx].data(), data, size);
 
     // This function only writes the data to the store queue, so no fault

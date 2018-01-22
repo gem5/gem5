@@ -72,6 +72,7 @@ AtomicSimpleCPU::init()
     ifetch_req->setContext(cid);
     data_read_req->setContext(cid);
     data_write_req->setContext(cid);
+    data_amo_req->setContext(cid);
 }
 
 AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
@@ -90,6 +91,7 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
     ifetch_req = std::make_shared<Request>();
     data_read_req = std::make_shared<Request>();
     data_write_req = std::make_shared<Request>();
+    data_amo_req = std::make_shared<Request>();
 }
 
 
@@ -417,14 +419,6 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data, unsigned size,
 }
 
 Fault
-AtomicSimpleCPU::initiateMemRead(Addr addr, unsigned size,
-                                 Request::Flags flags)
-{
-    panic("initiateMemRead() is for timing accesses, and should "
-          "never be called on AtomicSimpleCPU.\n");
-}
-
-Fault
 AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
                           Request::Flags flags, uint64_t *res)
 {
@@ -534,6 +528,70 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
     }
 }
 
+Fault
+AtomicSimpleCPU::amoMem(Addr addr, uint8_t* data, unsigned size,
+                        Request::Flags flags, AtomicOpFunctor *amo_op)
+{
+    SimpleExecContext& t_info = *threadInfo[curThread];
+    SimpleThread* thread = t_info.thread;
+
+    // use the CPU's statically allocated amo request and packet objects
+    const RequestPtr &req = data_amo_req;
+
+    if (traceData)
+        traceData->setMem(addr, size, flags);
+
+    //The address of the second part of this access if it needs to be split
+    //across a cache line boundary.
+    Addr secondAddr = roundDown(addr + size - 1, cacheLineSize());
+
+    // AMO requests that access across a cache line boundary are not
+    // allowed since the cache does not guarantee AMO ops to be executed
+    // atomically in two cache lines
+    // For ISAs such as x86 that requires AMO operations to work on
+    // accesses that cross cache-line boundaries, the cache needs to be
+    // modified to support locking both cache lines to guarantee the
+    // atomicity.
+    if (secondAddr > addr) {
+        panic("AMO request should not access across a cache line boundary\n");
+    }
+
+    dcache_latency = 0;
+
+    req->taskId(taskId());
+    req->setVirt(0, addr, size, flags, dataMasterId(),
+                 thread->pcState().instAddr(), amo_op);
+
+    // translate to physical address
+    Fault fault = thread->dtb->translateAtomic(req, thread->getTC(),
+                                                      BaseTLB::Write);
+
+    // Now do the access.
+    if (fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
+        // We treat AMO accesses as Write accesses with SwapReq command
+        // data will hold the return data of the AMO access
+        Packet pkt(req, Packet::makeWriteCmd(req));
+        pkt.dataStatic(data);
+
+        if (req->isMmappedIpr())
+            dcache_latency += TheISA::handleIprRead(thread->getTC(), &pkt);
+        else {
+            dcache_latency += sendPacket(dcachePort, &pkt);
+        }
+
+        dcache_access = true;
+
+        assert(!pkt.isError());
+        assert(!req->isLLSC());
+    }
+
+    if (fault != NoFault && req->isPrefetch()) {
+        return NoFault;
+    }
+
+    //If there's a fault and we're not doing prefetch, return it
+    return fault;
+}
 
 void
 AtomicSimpleCPU::tick()
@@ -550,6 +608,7 @@ AtomicSimpleCPU::tick()
         ifetch_req->setContext(cid);
         data_read_req->setContext(cid);
         data_write_req->setContext(cid);
+        data_amo_req->setContext(cid);
     }
 
     SimpleExecContext& t_info = *threadInfo[curThread];

@@ -644,7 +644,7 @@ BaseSimpleCPU::postExecute()
         t_info.numLoadInsts++;
     }
 
-    if (curStaticInst->isStore()){
+    if (curStaticInst->isStore() || curStaticInst->isAtomic()){
         t_info.numStoreInsts++;
     }
     /* End power model statistics */

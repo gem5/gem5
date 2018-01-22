@@ -680,12 +680,25 @@ template<class Impl>
 Fault
 LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                        unsigned int size, Addr addr, Request::Flags flags,
-                       uint64_t *res)
+                       uint64_t *res, AtomicOpFunctor *amo_op)
 {
+    // This comming request can be either load, store or atomic.
+    // Atomic request has a corresponding pointer to its atomic memory
+    // operation
+    bool isAtomic = !isLoad && amo_op;
+
     ThreadID tid = cpu->contextToThread(inst->contextId());
     auto cacheLineSize = cpu->cacheLineSize();
     bool needs_burst = transferNeedsBurst(addr, size, cacheLineSize);
     LSQRequest* req = nullptr;
+
+    // Atomic requests that access data across cache line boundary are
+    // currently not allowed since the cache does not guarantee corresponding
+    // atomic memory operations to be executed atomically across a cache line.
+    // For ISAs such as x86 that supports cross-cache-line atomic instructions,
+    // the cache needs to be modified to perform atomic update to both cache
+    // lines. For now, such cross-line update is not supported.
+    assert(!isAtomic || (isAtomic && !needs_burst));
 
     if (inst->translationStarted()) {
         req = inst->savedReq;
@@ -696,7 +709,7 @@ LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                     size, flags, data, res);
         } else {
             req = new SingleDataRequest(&thread[tid], inst, isLoad, addr,
-                    size, flags, data, res);
+                    size, flags, data, res, amo_op);
         }
         assert(req);
         inst->setRequest();

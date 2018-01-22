@@ -171,6 +171,7 @@ class Fetch2 : public Named
     Stats::Scalar vecInstructions;
     Stats::Scalar loadInstructions;
     Stats::Scalar storeInstructions;
+    Stats::Scalar amoInstructions;
 
   public:
     /** Dump the whole contents of the input buffer.  Useful after a

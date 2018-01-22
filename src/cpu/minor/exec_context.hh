@@ -108,7 +108,7 @@ class ExecContext : public ::ExecContext
                     Request::Flags flags) override
     {
         execute.getLSQ().pushRequest(inst, true /* load */, nullptr,
-            size, addr, flags, NULL);
+            size, addr, flags, NULL, nullptr);
         return NoFault;
     }
 
@@ -117,7 +117,17 @@ class ExecContext : public ::ExecContext
              Request::Flags flags, uint64_t *res) override
     {
         execute.getLSQ().pushRequest(inst, false /* store */, data,
-            size, addr, flags, res);
+            size, addr, flags, res, nullptr);
+        return NoFault;
+    }
+
+    Fault
+    initiateMemAMO(Addr addr, unsigned int size, Request::Flags flags,
+                   AtomicOpFunctor *amo_op) override
+    {
+        // AMO requests are pushed through the store path
+        execute.getLSQ().pushRequest(inst, false /* amo */, nullptr,
+            size, addr, flags, nullptr, amo_op);
         return NoFault;
     }
 

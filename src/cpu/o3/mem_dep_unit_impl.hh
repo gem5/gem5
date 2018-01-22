@@ -191,11 +191,11 @@ MemDepUnit<MemDepPred, Impl>::insert(const DynInstPtr &inst)
     // Check any barriers and the dependence predictor for any
     // producing memrefs/stores.
     InstSeqNum producing_store;
-    if (inst->isLoad() && loadBarrier) {
+    if ((inst->isLoad() || inst->isAtomic()) && loadBarrier) {
         DPRINTF(MemDepUnit, "Load barrier [sn:%lli] in flight\n",
                 loadBarrierSN);
         producing_store = loadBarrierSN;
-    } else if (inst->isStore() && storeBarrier) {
+    } else if ((inst->isStore() || inst->isAtomic()) && storeBarrier) {
         DPRINTF(MemDepUnit, "Store barrier [sn:%lli] in flight\n",
                 storeBarrierSN);
         producing_store = storeBarrierSN;
@@ -252,8 +252,8 @@ MemDepUnit<MemDepPred, Impl>::insert(const DynInstPtr &inst)
         }
     }
 
-    if (inst->isStore()) {
-        DPRINTF(MemDepUnit, "Inserting store PC %s [sn:%lli].\n",
+    if (inst->isStore() || inst->isAtomic()) {
+        DPRINTF(MemDepUnit, "Inserting store/atomic PC %s [sn:%lli].\n",
                 inst->pcState(), inst->seqNum);
 
         depPred.insertStore(inst->instAddr(), inst->seqNum, inst->threadNumber);
@@ -288,8 +288,8 @@ MemDepUnit<MemDepPred, Impl>::insertNonSpec(const DynInstPtr &inst)
 
     // Might want to turn this part into an inline function or something.
     // It's shared between both insert functions.
-    if (inst->isStore()) {
-        DPRINTF(MemDepUnit, "Inserting store PC %s [sn:%lli].\n",
+    if (inst->isStore() || inst->isAtomic()) {
+        DPRINTF(MemDepUnit, "Inserting store/atomic PC %s [sn:%lli].\n",
                 inst->pcState(), inst->seqNum);
 
         depPred.insertStore(inst->instAddr(), inst->seqNum, inst->threadNumber);
@@ -451,8 +451,9 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::wakeDependents(const DynInstPtr &inst)
 {
-    // Only stores and barriers have dependents.
-    if (!inst->isStore() && !inst->isMemBarrier() && !inst->isWriteBarrier()) {
+    // Only stores, atomics and barriers have dependents.
+    if (!inst->isStore() && !inst->isAtomic() && !inst->isMemBarrier() &&
+        !inst->isWriteBarrier()) {
         return;
     }
 

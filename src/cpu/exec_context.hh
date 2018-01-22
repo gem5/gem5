@@ -261,6 +261,28 @@ class ExecContext {
                            Request::Flags flags, uint64_t *res) = 0;
 
     /**
+     * For atomic-mode contexts, perform an atomic AMO (a.k.a., Atomic
+     * Read-Modify-Write Memory Operation)
+     */
+    virtual Fault amoMem(Addr addr, uint8_t *data, unsigned int size,
+                         Request::Flags flags,
+                         AtomicOpFunctor *amo_op)
+    {
+        panic("ExecContext::amoMem() should be overridden\n");
+    }
+
+    /**
+     * For timing-mode contexts, initiate an atomic AMO (atomic
+     * read-modify-write memory operation)
+     */
+    virtual Fault initiateMemAMO(Addr addr, unsigned int size,
+                                 Request::Flags flags,
+                                 AtomicOpFunctor *amo_op)
+    {
+        panic("ExecContext::initiateMemAMO() should be overridden\n");
+    }
+
+    /**
      * Sets the number of consecutive store conditional failures.
      */
     virtual void setStCondFailures(unsigned int sc_failures) = 0;

@@ -536,8 +536,15 @@ class CheckerCPU : public BaseCPU, public ExecContext
 
     Fault readMem(Addr addr, uint8_t *data, unsigned size,
                   Request::Flags flags) override;
+
     Fault writeMem(uint8_t *data, unsigned size, Addr addr,
                    Request::Flags flags, uint64_t *res) override;
+
+    Fault amoMem(Addr addr, uint8_t* data, unsigned size,
+                 Request::Flags flags, AtomicOpFunctor *amo_op) override
+    {
+        panic("AMO is not supported yet in CPU checker\n");
+    }
 
     unsigned int
     readStCondFailures() const override {

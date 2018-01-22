@@ -191,7 +191,7 @@ class LSQ
         enum Flag : FlagsStorage
         {
             IsLoad              = 0x00000001,
-            /** True if this is a store that writes registers (SC). */
+            /** True if this is a store/atomic that writes registers (SC). */
             WbStore             = 0x00000002,
             Delayed             = 0x00000004,
             IsSplit             = 0x00000008,
@@ -211,7 +211,9 @@ class LSQ
             LSQEntryFreed       = 0x00000800,
             /** Store written back. */
             WritebackScheduled  = 0x00001000,
-            WritebackDone       = 0x00002000
+            WritebackDone       = 0x00002000,
+            /** True if this is an atomic request */
+            IsAtomic            = 0x00004000
         };
         FlagsType flags;
 
@@ -250,32 +252,39 @@ class LSQ
         const uint32_t _size;
         const Request::Flags _flags;
         uint32_t _numOutstandingPackets;
+        AtomicOpFunctor *_amo_op;
       protected:
         LSQUnit* lsqUnit() { return &_port; }
         LSQRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad) :
             _state(State::NotIssued), _senderState(nullptr),
             _port(*port), _inst(inst), _data(nullptr),
             _res(nullptr), _addr(0), _size(0), _flags(0),
-            _numOutstandingPackets(0)
+            _numOutstandingPackets(0), _amo_op(nullptr)
         {
             flags.set(Flag::IsLoad, isLoad);
-            flags.set(Flag::WbStore, _inst->isStoreConditional());
+            flags.set(Flag::WbStore,
+                      _inst->isStoreConditional() || _inst->isAtomic());
+            flags.set(Flag::IsAtomic, _inst->isAtomic());
             install();
         }
         LSQRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad,
                    const Addr& addr, const uint32_t& size,
                    const Request::Flags& flags_,
-                   PacketDataPtr data = nullptr, uint64_t* res = nullptr)
+                   PacketDataPtr data = nullptr, uint64_t* res = nullptr,
+                   AtomicOpFunctor* amo_op = nullptr)
             : _state(State::NotIssued), _senderState(nullptr),
             numTranslatedFragments(0),
             numInTranslationFragments(0),
             _port(*port), _inst(inst), _data(data),
             _res(res), _addr(addr), _size(size),
             _flags(flags_),
-            _numOutstandingPackets(0)
+            _numOutstandingPackets(0),
+            _amo_op(amo_op)
         {
             flags.set(Flag::IsLoad, isLoad);
-            flags.set(Flag::WbStore, _inst->isStoreConditional());
+            flags.set(Flag::WbStore,
+                      _inst->isStoreConditional() || _inst->isAtomic());
+            flags.set(Flag::IsAtomic, _inst->isAtomic());
             install();
         }
 
@@ -285,12 +294,20 @@ class LSQ
             return flags.isSet(Flag::IsLoad);
         }
 
+        bool
+        isAtomic() const
+        {
+            return flags.isSet(Flag::IsAtomic);
+        }
+
         /** Install the request in the LQ/SQ. */
         void install()
         {
             if (isLoad()) {
                 _port.loadQueue[_inst->lqIdx].setRequest(this);
             } else {
+                // Store, StoreConditional, and Atomic requests are pushed
+                // to this storeQueue
                 _port.storeQueue[_inst->sqIdx].setRequest(this);
             }
         }
@@ -609,17 +626,21 @@ class LSQ
         using LSQRequest::numInTranslationFragments;
         using LSQRequest::numTranslatedFragments;
         using LSQRequest::_numOutstandingPackets;
+        using LSQRequest::_amo_op;
       public:
         SingleDataRequest(LSQUnit* port, const DynInstPtr& inst, bool isLoad,
                           const Addr& addr, const uint32_t& size,
                           const Request::Flags& flags_,
                           PacketDataPtr data = nullptr,
-                          uint64_t* res = nullptr) :
-            LSQRequest(port, inst, isLoad, addr, size, flags_, data, res)
+                          uint64_t* res = nullptr,
+                          AtomicOpFunctor* amo_op = nullptr) :
+            LSQRequest(port, inst, isLoad, addr, size, flags_, data, res,
+                       amo_op)
         {
             LSQRequest::_requests.push_back(
-                std::make_shared<Request>(inst->getASID(), addr, size, flags_,
-                    inst->masterId(), inst->instAddr(), inst->contextId()));
+                    std::make_shared<Request>(inst->getASID(), addr, size,
+                    flags_, inst->masterId(), inst->instAddr(),
+                    inst->contextId(), amo_op));
             LSQRequest::_requests.back()->setReqInstSeqNum(inst->seqNum);
         }
         inline virtual ~SingleDataRequest() {}
@@ -928,7 +949,7 @@ class LSQ
 
     Fault pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                       unsigned int size, Addr addr, Request::Flags flags,
-                      uint64_t *res);
+                      uint64_t *res, AtomicOpFunctor *amo_op);
 
     /** The CPU pointer. */
     O3CPU *cpu;
