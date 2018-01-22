@@ -445,10 +445,28 @@ class Request
 
     Request(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
             Addr pc, ContextID cid, AtomicOpFunctor *atomic_op)
-        : atomicOpFunctor(atomic_op)
     {
-        setVirt(asid, vaddr, size, flags, mid, pc);
+        setVirt(asid, vaddr, size, flags, mid, pc, atomic_op);
         setContext(cid);
+    }
+
+    Request(const Request& other)
+        : _paddr(other._paddr), _size(other._size),
+          _masterId(other._masterId),
+          _flags(other._flags),
+          _memSpaceConfigFlags(other._memSpaceConfigFlags),
+          privateFlags(other.privateFlags),
+          _time(other._time),
+          _taskId(other._taskId), _asid(other._asid), _vaddr(other._vaddr),
+          _extraData(other._extraData), _contextId(other._contextId),
+          _pc(other._pc), _reqInstSeqNum(other._reqInstSeqNum),
+          translateDelta(other.translateDelta),
+          accessDelta(other.accessDelta), depth(other.depth)
+    {
+        if (other.atomicOpFunctor)
+            atomicOpFunctor = (other.atomicOpFunctor)->clone();
+        else
+            atomicOpFunctor = nullptr;
     }
 
     ~Request()
@@ -474,7 +492,7 @@ class Request
      */
     void
     setVirt(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
-            Addr pc)
+            Addr pc, AtomicOpFunctor *amo_op = nullptr)
     {
         _asid = asid;
         _vaddr = vaddr;
@@ -490,6 +508,7 @@ class Request
         depth = 0;
         accessDelta = 0;
         translateDelta = 0;
+        atomicOpFunctor = amo_op;
     }
 
     /**

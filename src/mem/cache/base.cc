@@ -836,7 +836,22 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
     // Check RMW operations first since both isRead() and
     // isWrite() will be true for them
     if (pkt->cmd == MemCmd::SwapReq) {
-        cmpAndSwap(blk, pkt);
+        if (pkt->isAtomicOp()) {
+            // extract data from cache and save it into the data field in
+            // the packet as a return value from this atomic op
+
+            int offset = tags->extractBlkOffset(pkt->getAddr());
+            uint8_t *blk_data = blk->data + offset;
+            std::memcpy(pkt->getPtr<uint8_t>(), blk_data, pkt->getSize());
+
+            // execute AMO operation
+            (*(pkt->getAtomicOp()))(blk_data);
+
+            // set block status to dirty
+            blk->status |= BlkDirty;
+        } else {
+            cmpAndSwap(blk, pkt);
+        }
     } else if (pkt->isWrite()) {
         // we have the block in a writable state and can go ahead,
         // note that the line may be also be considered writable in

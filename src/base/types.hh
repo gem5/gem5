@@ -191,6 +191,7 @@ constexpr decltype(nullptr) NoFault = nullptr;
 struct AtomicOpFunctor
 {
     virtual void operator()(uint8_t *p) = 0;
+    virtual AtomicOpFunctor* clone() = 0;
     virtual ~AtomicOpFunctor() {}
 };
 
@@ -198,6 +199,7 @@ template <class T>
 struct TypedAtomicOpFunctor : public AtomicOpFunctor
 {
     void operator()(uint8_t *p) { execute((T *)p); }
+    virtual AtomicOpFunctor* clone() = 0;
     virtual void execute(T * p) = 0;
 };
 
