@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2017 ARM Limited
+ * Copyright (c) 2010-2013, 2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1473,8 +1473,8 @@ TLB::getResultTe(TlbEntry **te, RequestPtr req, ThreadContext *tc, Mode mode,
         fault = getTE(&s2Te, req, tc, mode, translation, timing, functional,
                       isSecure, curTranType);
         // Check permissions of stage 2
-        if ((s2Te != NULL) && (fault = NoFault)) {
-            if(aarch64)
+        if ((s2Te != NULL) && (fault == NoFault)) {
+            if (aarch64)
                 fault = checkPermissions64(s2Te, req, mode, tc);
             else
                 fault = checkPermissions(s2Te, req, mode);
