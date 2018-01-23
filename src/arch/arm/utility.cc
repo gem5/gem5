@@ -464,6 +464,8 @@ mcrMrc15TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
               case MISCREG_TLBIMVAIS:
               case MISCREG_TLBIASIDIS:
               case MISCREG_TLBIMVAAIS:
+              case MISCREG_TLBIMVALIS:
+              case MISCREG_TLBIMVAALIS:
               case MISCREG_DTLBIALL:
               case MISCREG_ITLBIALL:
               case MISCREG_DTLBIMVA:
@@ -473,6 +475,8 @@ mcrMrc15TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
               case MISCREG_TLBIMVAA:
               case MISCREG_TLBIALL:
               case MISCREG_TLBIMVA:
+              case MISCREG_TLBIMVAL:
+              case MISCREG_TLBIMVAAL:
               case MISCREG_TLBIASID:
                 trapToHype = hcr.ttlb;
                 break;

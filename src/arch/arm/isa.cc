@@ -1062,8 +1062,13 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             getDTBPtr(tc)->flushAllSecurity(secure_lookup, target_el);
             return;
           // TLBI based on VA, EL0&1 inner sharable (ignored)
-          case MISCREG_TLBIMVAIS:
+          case MISCREG_TLBIMVAL:
+          case MISCREG_TLBIMVALIS:
+            // mcr tlbimval(is) is invalidating all matching entries
+            // regardless of the level of lookup, since in gem5 we cache
+            // in the tlb the last level of lookup only.
           case MISCREG_TLBIMVA:
+          case MISCREG_TLBIMVAIS:
             assert32(tc);
             target_el = 1; // el 0 and 1 are handled together
             scr = readMiscReg(MISCREG_SCR, tc);
@@ -1111,8 +1116,13 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             }
             return;
           // TLBI by address, EL0&1, inner sharable (ignored)
-          case MISCREG_TLBIMVAAIS:
+          case MISCREG_TLBIMVAAL:
+          case MISCREG_TLBIMVAALIS:
+            // mcr tlbimvaal(is) is invalidating all matching entries
+            // regardless of the level of lookup, since in gem5 we cache
+            // in the tlb the last level of lookup only.
           case MISCREG_TLBIMVAA:
+          case MISCREG_TLBIMVAAIS:
             assert32(tc);
             target_el = 1; // el 0 and 1 are handled together
             scr = readMiscReg(MISCREG_SCR, tc);
@@ -1121,6 +1131,11 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             tlbiMVA(tc, newVal, secure_lookup, hyp, target_el);
             return;
           // TLBI by address, EL2, hypervisor mode
+          case MISCREG_TLBIMVALH:
+          case MISCREG_TLBIMVALHIS:
+            // mcr tlbimvalh(is) is invalidating all matching entries
+            // regardless of the level of lookup, since in gem5 we cache
+            // in the tlb the last level of lookup only.
           case MISCREG_TLBIMVAH:
           case MISCREG_TLBIMVAHIS:
             assert32(tc);

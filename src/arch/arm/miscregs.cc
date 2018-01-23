@@ -444,6 +444,10 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_TLBIASIDIS;
                   case 3:
                     return MISCREG_TLBIMVAAIS;
+                  case 5:
+                    return MISCREG_TLBIMVALIS;
+                  case 7:
+                    return MISCREG_TLBIMVAALIS;
                 }
                 break;
               case 5:
@@ -476,6 +480,10 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_TLBIASID;
                   case 3:
                     return MISCREG_TLBIMVAA;
+                  case 5:
+                    return MISCREG_TLBIMVAL;
+                  case 7:
+                    return MISCREG_TLBIMVAAL;
                 }
                 break;
             }
@@ -488,6 +496,8 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_TLBIMVAHIS;
                   case 4:
                     return MISCREG_TLBIALLNSNHIS;
+                  case 5:
+                    return MISCREG_TLBIMVALHIS;
                 }
             } else if (crm == 7) {
                 switch (opc2) {
@@ -497,6 +507,8 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_TLBIMVAH;
                   case 4:
                     return MISCREG_TLBIALLNSNH;
+                  case 5:
+                    return MISCREG_TLBIMVALH;
                 }
             }
         }
@@ -2892,10 +2904,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TLBIMVAAIS)
       .writes(1).exceptUserMode();
     InitReg(MISCREG_TLBIMVALIS)
-      .unimplemented()
       .writes(1).exceptUserMode();
     InitReg(MISCREG_TLBIMVAALIS)
-      .unimplemented()
       .writes(1).exceptUserMode();
     InitReg(MISCREG_ITLBIALL)
       .writes(1).exceptUserMode();
@@ -2918,10 +2928,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TLBIMVAA)
       .writes(1).exceptUserMode();
     InitReg(MISCREG_TLBIMVAL)
-      .unimplemented()
       .writes(1).exceptUserMode();
     InitReg(MISCREG_TLBIMVAAL)
-      .unimplemented()
       .writes(1).exceptUserMode();
     InitReg(MISCREG_TLBIIPAS2IS)
       .unimplemented()
@@ -2936,7 +2944,6 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TLBIALLNSNHIS)
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBIMVALHIS)
-      .unimplemented()
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBIIPAS2)
       .unimplemented()
@@ -2951,7 +2958,6 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TLBIALLNSNH)
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBIMVALH)
-      .unimplemented()
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_PMCR)
       .allPrivileges();
