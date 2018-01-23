@@ -303,6 +303,7 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
             if (tc->getKernelStats())
                 tc->getKernelStats()->mode(Kernel::kernel, tc);
         }
+        M5_FALLTHROUGH;
 
       case IPR_ICM:
         // only write two mode bits - processor mode
