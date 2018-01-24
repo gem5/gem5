@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2017 ARM Limited
+ * Copyright (c) 2010, 2012-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -629,7 +629,7 @@ namespace ArmISA
         void serialize(CheckpointOut &cp) const
         {
             DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");
-            SERIALIZE_ARRAY(miscRegs, NumMiscRegs);
+            SERIALIZE_ARRAY(miscRegs, NUM_PHYS_MISCREGS);
 
             SERIALIZE_SCALAR(highestELIs64);
             SERIALIZE_SCALAR(haveSecurity);
@@ -641,7 +641,7 @@ namespace ArmISA
         void unserialize(CheckpointIn &cp)
         {
             DPRINTF(Checkpoint, "Unserializing Arm Misc Registers\n");
-            UNSERIALIZE_ARRAY(miscRegs, NumMiscRegs);
+            UNSERIALIZE_ARRAY(miscRegs, NUM_PHYS_MISCREGS);
             CPSR tmp_cpsr = miscRegs[MISCREG_CPSR];
             updateRegMap(tmp_cpsr);
 
