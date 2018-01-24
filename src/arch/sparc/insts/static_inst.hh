@@ -105,6 +105,12 @@ class SparcStaticInst : public StaticInst
 
     static bool passesFpCondition(uint32_t fcc, uint32_t condition);
     static bool passesCondition(uint32_t codes, uint32_t condition);
+
+    size_t
+    asBytes(void *buf, size_t size) override
+    {
+        return simpleAsBytes(buf, size, machInst);
+    }
 };
 
 }

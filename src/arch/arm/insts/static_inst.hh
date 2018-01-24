@@ -505,6 +505,12 @@ class ArmStaticInst : public StaticInst
     {
         return static_cast<MachInst>(machInst & (mask(instSize() * 8)));
     }
+
+    size_t
+    asBytes(void *buf, size_t max_size) override
+    {
+        return simpleAsBytes(buf, max_size, machInst);
+    }
 };
 }
 

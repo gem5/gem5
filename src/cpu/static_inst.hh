@@ -33,6 +33,7 @@
 #define __CPU_STATIC_INST_HH__
 
 #include <bitset>
+#include <memory>
 #include <string>
 
 #include "arch/registers.hh"
@@ -47,6 +48,7 @@
 #include "cpu/static_inst_fwd.hh"
 #include "cpu/thread_context.hh"
 #include "enums/StaticInstFlags.hh"
+#include "sim/byteswap.hh"
 
 // forward declarations
 class Packet;
@@ -317,6 +319,31 @@ class StaticInst : public RefCounted, public StaticInstFlags
 
     /// Return name of machine instruction
     std::string getName() { return mnemonic; }
+
+  protected:
+    template<typename T>
+    size_t
+    simpleAsBytes(void *buf, size_t max_size, const T &t)
+    {
+        size_t size = sizeof(T);
+        if (size <= max_size)
+            *reinterpret_cast<T *>(buf) = htole<T>(t);
+        return size;
+    }
+
+  public:
+    /**
+     * Instruction classes can override this function to return a
+     * a representation of themselves as a blob of bytes, generally assumed to
+     * be that instructions ExtMachInst.
+     *
+     * buf is a buffer to hold the bytes.
+     * max_size is the size allocated for that buffer by the caller.
+     * The return value is how much data was actually put into the buffer,
+     * zero if no data was put in the buffer, or the necessary size of the
+     * buffer if there wasn't enough space.
+     */
+    virtual size_t asBytes(void *buf, size_t max_size) { return 0; }
 };
 
 #endif // __CPU_STATIC_INST_HH__

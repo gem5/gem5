@@ -56,6 +56,12 @@ class RiscvStaticInst : public StaticInst
 
   public:
     void advancePC(PCState &pc) const { pc.advance(); }
+
+    size_t
+    asBytes(void *buf, size_t size) override
+    {
+        return simpleAsBytes(buf, size, machInst);
+    }
 };
 
 /**

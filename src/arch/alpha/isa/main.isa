@@ -51,6 +51,8 @@ output header {{
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"  // some constructors use MemReq flags
+#include "sim/byteswap.hh"
+
 }};
 
 output decoder {{
@@ -59,9 +61,9 @@ output decoder {{
 #include "arch/alpha/decoder.hh"
 #include "arch/alpha/registers.hh"
 #include "arch/alpha/regredir.hh"
-#include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
 #include "base/fenv.hh"
+#include "base/loader/symtab.hh"
 #include "config/ss_compatible_fp.hh"
 #include "cpu/thread_context.hh"  // for Jump::branchTarget()
 #include "mem/packet.hh"
@@ -219,7 +221,6 @@ output header {{
     class AlphaStaticInst : public StaticInst
     {
       protected:
-
         /// Constructor.
         AlphaStaticInst(const char *mnem, ExtMachInst _machInst,
                         OpClass __opClass)
@@ -238,6 +239,13 @@ output header {{
         advancePC(AlphaISA::PCState &pcState) const
         {
             pcState.advance();
+        }
+
+      public:
+        size_t
+        asBytes(void *buf, size_t max_size) override
+        {
+            return simpleAsBytes(buf, max_size, machInst);
         }
     };
 }};

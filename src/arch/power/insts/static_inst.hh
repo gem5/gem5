@@ -69,6 +69,12 @@ class PowerStaticInst : public StaticInst
     {
         pcState.advance();
     }
+
+    size_t
+    asBytes(void *buf, size_t max_size) override
+    {
+        return simpleAsBytes(buf, max_size, machInst);
+    }
 };
 
 } // namespace PowerISA
