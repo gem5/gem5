@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014,2016-2017 ARM Limited
+ * Copyright (c) 2014,2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -181,10 +181,8 @@ WarnUnimplemented::generateDisassembly(Addr pc, const SymbolTable *symtab) const
                     fullMnemonic.size() ? fullMnemonic.c_str() : mnemonic);
 }
 
-
-
 McrMrcMiscInst::McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
-                             uint64_t _iss, MiscRegIndex _miscReg)
+                               uint64_t _iss, MiscRegIndex _miscReg)
     : ArmStaticInst(_mnemonic, _machInst, No_OpClass)
 {
     flags[IsNonSpeculative] = true;
@@ -216,4 +214,38 @@ std::string
 McrMrcMiscInst::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     return csprintf("%-10s (pipe flush)", mnemonic);
+}
+
+McrMrcImplDefined::McrMrcImplDefined(const char *_mnemonic,
+                                     ExtMachInst _machInst, uint64_t _iss,
+                                     MiscRegIndex _miscReg)
+    : McrMrcMiscInst(_mnemonic, _machInst, _iss, _miscReg)
+{}
+
+Fault
+McrMrcImplDefined::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+{
+    uint32_t cpsr = xc->readMiscReg(MISCREG_CPSR);
+    uint32_t hcr = xc->readMiscReg(MISCREG_HCR);
+    uint32_t scr = xc->readMiscReg(MISCREG_SCR);
+    uint32_t hdcr = xc->readMiscReg(MISCREG_HDCR);
+    uint32_t hstr = xc->readMiscReg(MISCREG_HSTR);
+    uint32_t hcptr = xc->readMiscReg(MISCREG_HCPTR);
+
+    bool hypTrap  = mcrMrc15TrapToHyp(miscReg, hcr, cpsr, scr, hdcr, hstr,
+                                      hcptr, iss);
+    if (hypTrap) {
+        return std::make_shared<HypervisorTrap>(machInst, iss,
+                                                EC_TRAPPED_CP15_MCR_MRC);
+    } else {
+        return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                      mnemonic);
+    }
+}
+
+std::string
+McrMrcImplDefined::generateDisassembly(Addr pc,
+                                       const SymbolTable *symtab) const
+{
+    return csprintf("%-10s (implementation defined)", mnemonic);
 }

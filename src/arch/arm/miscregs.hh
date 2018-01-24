@@ -677,7 +677,7 @@ namespace ArmISA
 
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
-        // (dummy registers), like UNKNOWN, CP15_UNIMPL...
+        // (dummy registers), like UNKNOWN, CP15_UNIMPL, MISCREG_IMPDEF_UNIMPL.
         // Checkpointing should use this physical index when
         // saving/restoring register values.
         NUM_PHYS_MISCREGS = 606,        // 606
@@ -689,6 +689,11 @@ namespace ArmISA
         MISCREG_CP15_UNIMPL,
         MISCREG_A64_UNIMPL,
         MISCREG_UNKNOWN,
+
+        // Implementation defined register: this represent
+        // a pool of unimplemented registers whose access can throw
+        // either UNDEFINED or hypervisor trap exception.
+        MISCREG_IMPDEF_UNIMPL,
 
         // Total number of Misc Registers: Physical + Dummy
         NUM_MISCREGS
@@ -1380,7 +1385,8 @@ namespace ArmISA
         "cp14_unimpl",
         "cp15_unimpl",
         "a64_unimpl",
-        "unknown"
+        "unknown",
+        "impl_defined"
     };
 
     static_assert(sizeof(miscRegName) / sizeof(*miscRegName) == NUM_MISCREGS,

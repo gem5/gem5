@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014,2016 ARM Limited
+ * Copyright (c) 2014,2016,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -123,13 +123,30 @@ class WarnUnimplemented : public ArmStaticInst
  */
 class McrMrcMiscInst : public ArmStaticInst
 {
-  private:
+  protected:
     uint64_t iss;
     MiscRegIndex miscReg;
 
   public:
     McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
                    uint64_t _iss, MiscRegIndex _miscReg);
+
+    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+
+    std::string
+    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+};
+
+/**
+ * This class is also used for IMPLEMENTATION DEFINED registers, whose mcr/mrc
+ * behaviour is trappable even for unimplemented registers.
+ */
+class McrMrcImplDefined : public McrMrcMiscInst
+{
+  public:
+    McrMrcImplDefined(const char *_mnemonic, ExtMachInst _machInst,
+                      uint64_t _iss, MiscRegIndex _miscReg);
 
     Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
 

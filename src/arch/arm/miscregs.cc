@@ -502,6 +502,19 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         }
         break;
       case 9:
+        // Every cop register with CRn = 9 and CRm in
+        // {0-2}, {5-8} is implementation defined regardless
+        // of opc1 and opc2.
+        switch (crm) {
+          case 0:
+          case 1:
+          case 2:
+          case 5:
+          case 6:
+          case 7:
+          case 8:
+            return MISCREG_IMPDEF_UNIMPL;
+        }
         if (opc1 == 0) {
             switch (crm) {
               case 12:
@@ -565,7 +578,9 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
       case 10:
         if (opc1 == 0) {
             // crm 0, 1, 4, and 8, with op2 0 - 7, reserved for TLB lockdown
-            if (crm == 2) { // TEX Remap Registers
+            if (crm < 2) {
+                return MISCREG_IMPDEF_UNIMPL;
+            } else if (crm == 2) { // TEX Remap Registers
                 if (opc2 == 0) {
                     // Selector is TTBCR.EAE
                     return MISCREG_PRRR_MAIR0;
@@ -609,6 +624,8 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
               case 8:
               case 15:
                 // Reserved for DMA operations for TCM access
+                return MISCREG_IMPDEF_UNIMPL;
+              default:
                 break;
             }
         }
@@ -689,7 +706,7 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
         break;
       case 15:
         // Implementation defined
-        return MISCREG_CP15_UNIMPL;
+        return MISCREG_IMPDEF_UNIMPL;
     }
     // Unrecognized register
     return MISCREG_CP15_UNIMPL;
