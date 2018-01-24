@@ -401,6 +401,9 @@ namespace ArmISA
         void tlbiMVA(ThreadContext *tc, MiscReg newVal, bool secure_lookup,
                      bool hyp, uint8_t target_el);
 
+        void tlbiIPA(ThreadContext *tc, MiscReg newVal, bool secure_lookup,
+                     uint8_t target_el);
+
       public:
         void clear();
         void clear64(const ArmISAParams *p);

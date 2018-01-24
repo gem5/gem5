@@ -1145,6 +1145,19 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             hyp = 1;
             tlbiMVA(tc, newVal, secure_lookup, hyp, target_el);
             return;
+          case MISCREG_TLBIIPAS2L:
+          case MISCREG_TLBIIPAS2LIS:
+            // mcr tlbiipas2l(is) is invalidating all matching entries
+            // regardless of the level of lookup, since in gem5 we cache
+            // in the tlb the last level of lookup only.
+          case MISCREG_TLBIIPAS2:
+          case MISCREG_TLBIIPAS2IS:
+            assert32(tc);
+            target_el = 1; // EL 0 and 1 are handled together
+            scr = readMiscReg(MISCREG_SCR, tc);
+            secure_lookup = haveSecurity && !scr.ns;
+            tlbiIPA(tc, newVal, secure_lookup, target_el);
+            return;
           // TLBI by address and asid, EL0&1, instruction side only
           case MISCREG_ITLBIMVA:
             assert32(tc);
@@ -1330,23 +1343,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             target_el = 1; // EL 0 and 1 are handled together
             scr = readMiscReg(MISCREG_SCR, tc);
             secure_lookup = haveSecurity && !scr.ns;
-            sys = tc->getSystemPtr();
-            for (x = 0; x < sys->numContexts(); x++) {
-                oc = sys->getThreadContext(x);
-                Addr ipa = ((Addr) bits(newVal, 35, 0)) << 12;
-                getITBPtr(oc)->flushIpaVmid(ipa,
-                    secure_lookup, false, target_el);
-                getDTBPtr(oc)->flushIpaVmid(ipa,
-                    secure_lookup, false, target_el);
-
-                CheckerCPU *checker = oc->getCheckerCpuPtr();
-                if (checker) {
-                    getITBPtr(checker)->flushIpaVmid(ipa,
-                        secure_lookup, false, target_el);
-                    getDTBPtr(checker)->flushIpaVmid(ipa,
-                        secure_lookup, false, target_el);
-                }
-            }
+            tlbiIPA(tc, newVal, secure_lookup, target_el);
             return;
           case MISCREG_ACTLR:
             warn("Not doing anything for write of miscreg ACTLR\n");
@@ -1873,6 +1870,29 @@ ISA::tlbiMVA(ThreadContext *tc, MiscReg newVal, bool secure_lookup, bool hyp,
                 secure_lookup, hyp, target_el);
             getDTBPtr(checker)->flushMva(mbits(newVal, 31,12),
                 secure_lookup, hyp, target_el);
+        }
+    }
+}
+
+void
+ISA::tlbiIPA(ThreadContext *tc, MiscReg newVal, bool secure_lookup,
+             uint8_t target_el)
+{
+    System *sys = tc->getSystemPtr();
+    for (auto x = 0; x < sys->numContexts(); x++) {
+        tc = sys->getThreadContext(x);
+        Addr ipa = ((Addr) bits(newVal, 35, 0)) << 12;
+        getITBPtr(tc)->flushIpaVmid(ipa,
+            secure_lookup, false, target_el);
+        getDTBPtr(tc)->flushIpaVmid(ipa,
+            secure_lookup, false, target_el);
+
+        CheckerCPU *checker = tc->getCheckerCpuPtr();
+        if (checker) {
+            getITBPtr(checker)->flushIpaVmid(ipa,
+                secure_lookup, false, target_el);
+            getDTBPtr(checker)->flushIpaVmid(ipa,
+                secure_lookup, false, target_el);
         }
     }
 }

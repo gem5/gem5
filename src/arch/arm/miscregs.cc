@@ -488,7 +488,14 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                 break;
             }
         } else if (opc1 == 4) {
-            if (crm == 3) {
+            if (crm == 0) {
+                switch (opc2) {
+                  case 1:
+                    return MISCREG_TLBIIPAS2IS;
+                  case 5:
+                    return MISCREG_TLBIIPAS2LIS;
+                }
+            } else if (crm == 3) {
                 switch (opc2) {
                   case 0:
                     return MISCREG_TLBIALLHIS;
@@ -498,6 +505,13 @@ decodeCP15Reg(unsigned crn, unsigned opc1, unsigned crm, unsigned opc2)
                     return MISCREG_TLBIALLNSNHIS;
                   case 5:
                     return MISCREG_TLBIMVALHIS;
+                }
+            } else if (crm == 4) {
+                switch (opc2) {
+                  case 1:
+                    return MISCREG_TLBIIPAS2;
+                  case 5:
+                    return MISCREG_TLBIIPAS2L;
                 }
             } else if (crm == 7) {
                 switch (opc2) {
@@ -2932,10 +2946,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TLBIMVAAL)
       .writes(1).exceptUserMode();
     InitReg(MISCREG_TLBIIPAS2IS)
-      .unimplemented()
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBIIPAS2LIS)
-      .unimplemented()
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBIALLHIS)
       .monNonSecureWrite().hypWrite();
@@ -2946,10 +2958,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TLBIMVALHIS)
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBIIPAS2)
-      .unimplemented()
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBIIPAS2L)
-      .unimplemented()
       .monNonSecureWrite().hypWrite();
     InitReg(MISCREG_TLBIALLH)
       .monNonSecureWrite().hypWrite();
