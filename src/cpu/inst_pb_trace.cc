@@ -69,7 +69,7 @@ InstPBTraceRecord::dump()
 }
 
 InstPBTrace::InstPBTrace(const InstPBTraceParams *p)
-    : InstTracer(p), curMsg(nullptr)
+    : InstTracer(p), buf(nullptr), bufSize(0), curMsg(nullptr)
 {
     // Create our output file
     createTraceFile(p->file_name);
@@ -141,10 +141,22 @@ InstPBTrace::traceInst(ThreadContext *tc, StaticInstPtr si, TheISA::PCState pc)
         curMsg = NULL;
     }
 
+    size_t instSize = si->asBytes(buf.get(), bufSize);
+    if (instSize > bufSize) {
+        bufSize = instSize;
+        buf.reset(new uint8_t[bufSize]);
+        instSize = si->asBytes(buf.get(), bufSize);
+    }
+
     // Create a new instruction message and fill out the fields
     curMsg = new ProtoMessage::Inst;
     curMsg->set_pc(pc.pc());
-    curMsg->set_inst(static_cast<uint32_t>(bits(si->machInst, 31, 0)));
+    if (instSize == sizeof(uint32_t)) {
+        curMsg->set_inst(letoh(*reinterpret_cast<uint32_t *>(buf.get())));
+    } else if (instSize) {
+        curMsg->set_inst_bytes(
+            std::string(reinterpret_cast<const char *>(buf.get()), bufSize));
+    }
     curMsg->set_cpuid(tc->cpuId());
     curMsg->set_tick(curTick());
     curMsg->set_type(static_cast<ProtoMessage::Inst_InstType>(si->opClass()));
