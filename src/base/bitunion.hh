@@ -55,26 +55,31 @@ class BitfieldTypeImpl : public Base
                   "Bitfield base class must be empty.");
 
   private:
-    using Base::setter;
 
-    template<typename T>
-    struct TypeDeducer;
-
-    template<typename T>
-    friend class TypeDeducer;
-
-    template<typename Type1, typename Type2>
-    struct TypeDeducer<void (Base::*)(Type1 &, Type2)>
+    struct TypeDeducer
     {
-        typedef Type1 Storage;
-        typedef Type2 Type;
+        template<typename>
+        struct T;
+
+        template<typename C, typename Type1, typename Type2>
+        struct T<void (C::*)(Type1 &, Type2)>
+        {
+            typedef Type1 Storage;
+            typedef Type2 Type;
+        };
+
+        struct Wrapper : public Base
+        {
+            using Base::setter;
+        };
+
+        typedef typename T<decltype(&Wrapper::setter)>::Storage Storage;
+        typedef typename T<decltype(&Wrapper::setter)>::Type Type;
     };
 
   protected:
-    typedef typename TypeDeducer<
-            decltype(&BitfieldTypeImpl<Base>::setter)>::Storage Storage;
-    typedef typename TypeDeducer<
-            decltype(&BitfieldTypeImpl<Base>::setter)>::Type Type;
+    typedef typename TypeDeducer::Storage Storage;
+    typedef typename TypeDeducer::Type Type;
 
     Type getter(const Storage &storage) const = delete;
     void setter(Storage &storage, Type val) = delete;
