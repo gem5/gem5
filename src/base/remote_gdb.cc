@@ -172,7 +172,7 @@ class HardBreakpoint : public PCEvent
         DPRINTF(GDBMisc, "creating hardware breakpoint at %#x\n", evpc);
     }
 
-    const std::string name() const { return gdb->name() + ".hwbkpt"; }
+    const std::string name() const override { return gdb->name() + ".hwbkpt"; }
 
     void
     process(ThreadContext *tc) override
