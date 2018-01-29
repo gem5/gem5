@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2018 TU Dresden
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -35,6 +36,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Maximilian Stein
  */
 
 #include "arch/x86/system.hh"
@@ -67,6 +69,8 @@ X86ISA::installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
                                   seg == SEGMENT_REG_TSL ||
                                   seg == SYS_SEGMENT_REG_TR;
     uint64_t limit = desc.limitLow | (desc.limitHigh << 16);
+    if (desc.g)
+        limit = (limit << 12) | mask(12);
 
     SegAttr attr = 0;
 
@@ -155,8 +159,8 @@ X86System::initState()
     initDesc.d = 0;               // operand size
     initDesc.g = 1;               // granularity
     initDesc.s = 1;               // system segment
-    initDesc.limitHigh = 0xFFFF;
-    initDesc.limitLow = 0xF;
+    initDesc.limitHigh = 0xF;
+    initDesc.limitLow = 0xFFFF;
     initDesc.baseHigh = 0x0;
     initDesc.baseLow = 0x0;
 
