@@ -166,7 +166,7 @@ TEST(CPrintf, Types)
 
     std::stringstream foo2;
     foo2 << "stringstream test";
-    ccprintf(ss, "%s\n", foo2);
+    ccprintf(ss, "%s\n", foo2.str());
     EXPECT_EQ(ss.str(), "stringstream test\n");
     ss.str("");
 
