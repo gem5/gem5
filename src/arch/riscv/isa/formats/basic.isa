@@ -40,7 +40,7 @@ def template BasicDeclare {{
       public:
         /// Constructor.
         %(class_name)s(MachInst machInst);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
         using %(base_class)s::generateDisassembly;
     };
 }};

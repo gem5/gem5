@@ -51,10 +51,11 @@ def template AtomicMemOpDeclare {{
             // Constructor
             %(class_name)sLoad(ExtMachInst machInst, %(class_name)s *_p);
 
-            Fault execute(ExecContext *, Trace::InstRecord *) const;
-            Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+            Fault execute(ExecContext *, Trace::InstRecord *) const override;
+            Fault initiateAcc(ExecContext *,
+                              Trace::InstRecord *) const override;
             Fault completeAcc(PacketPtr, ExecContext *,
-                              Trace::InstRecord *) const;
+                              Trace::InstRecord *) const override;
         };
 
         class %(class_name)sStore : public %(base_class)sMicro
@@ -63,10 +64,11 @@ def template AtomicMemOpDeclare {{
             // Constructor
             %(class_name)sStore(ExtMachInst machInst, %(class_name)s *_p);
 
-            Fault execute(ExecContext *, Trace::InstRecord *) const;
-            Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+            Fault execute(ExecContext *, Trace::InstRecord *) const override;
+            Fault initiateAcc(ExecContext *,
+                              Trace::InstRecord *) const override;
             Fault completeAcc(PacketPtr, ExecContext *,
-                              Trace::InstRecord *) const;
+                              Trace::InstRecord *) const override;
         };
     };
 }};

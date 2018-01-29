@@ -75,23 +75,27 @@ class RiscvMacroInst : public RiscvStaticInst
 
     ~RiscvMacroInst() { microops.clear(); }
 
-    StaticInstPtr fetchMicroop(MicroPC upc) const { return microops[upc]; }
+    StaticInstPtr
+    fetchMicroop(MicroPC upc) const override
+    {
+        return microops[upc];
+    }
 
     Fault
-    initiateAcc(ExecContext *xc, Trace::InstRecord *traceData) const
+    initiateAcc(ExecContext *xc, Trace::InstRecord *traceData) const override
     {
         panic("Tried to execute a macroop directly!\n");
     }
 
     Fault
     completeAcc(PacketPtr pkt, ExecContext *xc,
-                Trace::InstRecord *traceData) const
+                Trace::InstRecord *traceData) const override
     {
         panic("Tried to execute a macroop directly!\n");
     }
 
     Fault
-    execute(ExecContext *xc, Trace::InstRecord *traceData) const
+    execute(ExecContext *xc, Trace::InstRecord *traceData) const override
     {
         panic("Tried to execute a macroop directly!\n");
     }
