@@ -814,11 +814,12 @@ if not GetOption('without_tcmalloc'):
 # list will be used by default.
 backtrace_impls = [ "none" ]
 
-if conf.CheckLibWithHeader(None, 'execinfo.h', 'C',
-                           'backtrace_symbols_fd((void*)0, 0, 0);'):
+backtrace_checker = 'char temp;' + \
+    ' backtrace_symbols_fd((void*)&temp, 0, 0);'
+if conf.CheckLibWithHeader(None, 'execinfo.h', 'C', backtrace_checker):
     backtrace_impls.append("glibc")
 elif conf.CheckLibWithHeader('execinfo', 'execinfo.h', 'C',
-                           'backtrace_symbols_fd((void*)0, 0, 0);'):
+                             backtrace_checker):
     # NetBSD and FreeBSD need libexecinfo.
     backtrace_impls.append("glibc")
     main.Append(LIBS=['execinfo'])
