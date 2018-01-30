@@ -105,7 +105,7 @@ class X86System : public System
 
     virtual Addr fixFuncEventAddr(Addr addr)
     {
-        //XXX This may eventually have to do something useful.
+        // XXX This may eventually have to do something useful.
         return addr;
     }
 };

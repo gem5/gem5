@@ -164,14 +164,14 @@ X86System::initState()
     initDesc.baseHigh = 0x0;
     initDesc.baseLow = 0x0;
 
-    //64 bit code segment
+    // 64 bit code segment
     SegDescriptor csDesc = initDesc;
     csDesc.type.codeOrData = 1;
     csDesc.dpl = 0;
-    //Because we're dealing with a pointer and I don't think it's
-    //guaranteed that there isn't anything in a nonvirtual class between
-    //it's beginning in memory and it's actual data, we'll use an
-    //intermediary.
+    // Because we're dealing with a pointer and I don't think it's
+    // guaranteed that there isn't anything in a nonvirtual class between
+    // it's beginning in memory and it's actual data, we'll use an
+    // intermediary.
     uint64_t csDescVal = csDesc;
     physProxy.writeBlob(GDTBase + numGDTEntries * 8,
                         (uint8_t *)(&csDescVal), 8);
@@ -183,7 +183,7 @@ X86System::initState()
 
     tc->setMiscReg(MISCREG_CS, (MiscReg)cs);
 
-    //32 bit data segment
+    // 32 bit data segment
     SegDescriptor dsDesc = initDesc;
     uint64_t dsDescVal = dsDesc;
     physProxy.writeBlob(GDTBase + numGDTEntries * 8,
@@ -275,27 +275,27 @@ X86System::initState()
      * Transition from real mode all the way up to Long mode
      */
     CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
-    //Turn off paging.
+    // Turn off paging.
     cr0.pg = 0;
     tc->setMiscReg(MISCREG_CR0, cr0);
-    //Turn on protected mode.
+    // Turn on protected mode.
     cr0.pe = 1;
     tc->setMiscReg(MISCREG_CR0, cr0);
 
     CR4 cr4 = tc->readMiscRegNoEffect(MISCREG_CR4);
-    //Turn on pae.
+    // Turn on pae.
     cr4.pae = 1;
     tc->setMiscReg(MISCREG_CR4, cr4);
 
-    //Point to the page tables.
+    // Point to the page tables.
     tc->setMiscReg(MISCREG_CR3, PageMapLevel4);
 
     Efer efer = tc->readMiscRegNoEffect(MISCREG_EFER);
-    //Enable long mode.
+    // Enable long mode.
     efer.lme = 1;
     tc->setMiscReg(MISCREG_EFER, efer);
 
-    //Start using longmode segments.
+    // Start using longmode segments.
     installSegDesc(tc, SEGMENT_REG_CS, csDesc, true);
     installSegDesc(tc, SEGMENT_REG_DS, dsDesc, true);
     installSegDesc(tc, SEGMENT_REG_ES, dsDesc, true);
@@ -303,7 +303,7 @@ X86System::initState()
     installSegDesc(tc, SEGMENT_REG_GS, dsDesc, true);
     installSegDesc(tc, SEGMENT_REG_SS, dsDesc, true);
 
-    //Activate long mode.
+    // Activate long mode.
     cr0.pg = 1;
     tc->setMiscReg(MISCREG_CR0, cr0);
 
@@ -314,12 +314,12 @@ X86System::initState()
     Addr ebdaPos = 0xF0000;
     Addr fixed, table;
 
-    //Write out the SMBios/DMI table
+    // Write out the SMBios/DMI table.
     writeOutSMBiosTable(ebdaPos, fixed, table);
     ebdaPos += (fixed + table);
     ebdaPos = roundUp(ebdaPos, 16);
 
-    //Write out the Intel MP Specification configuration table
+    // Write out the Intel MP Specification configuration table.
     writeOutMPTable(ebdaPos, fixed, table);
     ebdaPos += (fixed + table);
 }
@@ -329,7 +329,7 @@ X86System::writeOutSMBiosTable(Addr header,
         Addr &headerSize, Addr &structSize, Addr table)
 {
     // If the table location isn't specified, just put it after the header.
-    // The header size as of the 2.5 SMBios specification is 0x1F bytes
+    // The header size as of the 2.5 SMBios specification is 0x1F bytes.
     if (!table)
         table = header + 0x1F;
     smbiosTable->setTableAddr(table);
