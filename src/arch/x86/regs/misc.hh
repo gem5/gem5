@@ -43,6 +43,7 @@
 #include "arch/x86/regs/segment.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
+#include "base/logging.hh"
 
 //These get defined in some system headers (at least termbits.h). That confuses
 //things here significantly.
@@ -867,9 +868,54 @@ namespace X86ISA
      * Segment Descriptors
      */
 
+    class SegDescriptorBase
+    {
+      public:
+        uint32_t
+        getter(const uint64_t &storage) const
+        {
+            return (bits(storage, 63, 56) << 24) | bits(storage, 39, 16);
+        }
+
+        void
+        setter(uint64_t &storage, uint32_t base)
+        {
+            replaceBits(storage, 63, 56, bits(base, 31, 24));
+            replaceBits(storage, 39, 16, bits(base, 23, 0));
+        }
+    };
+
+    class SegDescriptorLimit
+    {
+      public:
+        uint32_t
+        getter(const uint64_t &storage) const
+        {
+            uint32_t limit = (bits(storage, 51, 48) << 16) |
+                             bits(storage, 15, 0);
+            if (bits(storage, 55))
+                limit = (limit << 12) | mask(12);
+            return limit;
+        }
+
+        void
+        setter(uint64_t &storage, uint32_t limit)
+        {
+            bool g = (bits(limit, 31, 24) != 0);
+            panic_if(g && bits(limit, 11, 0) != mask(12),
+                     "Inlimitid segment limit %#x", limit);
+            if (g)
+                limit = limit >> 12;
+            replaceBits(storage, 51, 48, bits(limit, 23, 16));
+            replaceBits(storage, 15, 0, bits(limit, 15, 0));
+            replaceBits(storage, 55, g ? 1 : 0);
+        }
+    };
+
     BitUnion64(SegDescriptor)
         Bitfield<63, 56> baseHigh;
         Bitfield<39, 16> baseLow;
+        BitfieldType<SegDescriptorBase> base;
         Bitfield<55> g; // Granularity
         Bitfield<54> d; // Default Operand Size
         Bitfield<54> b; // Default Operand Size
@@ -877,6 +923,7 @@ namespace X86ISA
         Bitfield<52> avl; // Available To Software
         Bitfield<51, 48> limitHigh;
         Bitfield<15, 0> limitLow;
+        BitfieldType<SegDescriptorLimit> limit;
         Bitfield<47> p; // Present
         Bitfield<46, 45> dpl; // Descriptor Privilege-Level
         Bitfield<44> s; // System
@@ -904,10 +951,12 @@ namespace X86ISA
     BitUnion64(TSSlow)
         Bitfield<63, 56> baseHigh;
         Bitfield<39, 16> baseLow;
+        BitfieldType<SegDescriptorBase> base;
         Bitfield<55> g; // Granularity
         Bitfield<52> avl; // Available To Software
         Bitfield<51, 48> limitHigh;
         Bitfield<15, 0> limitLow;
+        BitfieldType<SegDescriptorLimit> limit;
         Bitfield<47> p; // Present
         Bitfield<46, 45> dpl; // Descriptor Privilege-Level
         SubBitUnion(type, 43, 40)

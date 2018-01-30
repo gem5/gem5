@@ -63,14 +63,10 @@ void
 X86ISA::installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
         SegDescriptor desc, bool longmode)
 {
-    uint64_t base = desc.baseLow + (desc.baseHigh << 24);
     bool honorBase = !longmode || seg == SEGMENT_REG_FS ||
                                   seg == SEGMENT_REG_GS ||
                                   seg == SEGMENT_REG_TSL ||
                                   seg == SYS_SEGMENT_REG_TR;
-    uint64_t limit = desc.limitLow | (desc.limitHigh << 16);
-    if (desc.g)
-        limit = (limit << 12) | mask(12);
 
     SegAttr attr = 0;
 
@@ -101,9 +97,9 @@ X86ISA::installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
         attr.expandDown = 0;
     }
 
-    tc->setMiscReg(MISCREG_SEG_BASE(seg), base);
-    tc->setMiscReg(MISCREG_SEG_EFF_BASE(seg), honorBase ? base : 0);
-    tc->setMiscReg(MISCREG_SEG_LIMIT(seg), limit);
+    tc->setMiscReg(MISCREG_SEG_BASE(seg), desc.base);
+    tc->setMiscReg(MISCREG_SEG_EFF_BASE(seg), honorBase ? desc.base : 0);
+    tc->setMiscReg(MISCREG_SEG_LIMIT(seg), desc.limit);
     tc->setMiscReg(MISCREG_SEG_ATTR(seg), (MiscReg)attr);
 }
 
@@ -159,10 +155,8 @@ X86System::initState()
     initDesc.d = 0;               // operand size
     initDesc.g = 1;               // granularity
     initDesc.s = 1;               // system segment
-    initDesc.limitHigh = 0xF;
-    initDesc.limitLow = 0xFFFF;
-    initDesc.baseHigh = 0x0;
-    initDesc.baseLow = 0x0;
+    initDesc.limit = 0xFFFFFFFF;
+    initDesc.base = 0;
 
     // 64 bit code segment
     SegDescriptor csDesc = initDesc;

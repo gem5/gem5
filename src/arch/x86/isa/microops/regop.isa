@@ -1627,8 +1627,7 @@ let {{
               case LDT64:
               case AvailableTSS64:
               case BusyTSS64:
-                replaceBits(target, 23, 0, desc.baseLow);
-                replaceBits(target, 31, 24, desc.baseHigh);
+                replaceBits(target, 31, 0, desc.base);
                 break;
               case CallGate64:
               case IntGate64:
@@ -1703,12 +1702,8 @@ let {{
                             attr.writable = desc.type.w;
                         }
                     }
-                    Addr base = desc.baseLow | (desc.baseHigh << 24);
-                    Addr limit = desc.limitLow | (desc.limitHigh << 16);
-                    if (desc.g)
-                        limit = (limit << 12) | mask(12);
-                    SegBaseDest = base;
-                    SegLimitDest = limit;
+                    SegBaseDest = desc.base;
+                    SegLimitDest = desc.limit;
                     SegAttrDest = attr;
                 } else {
                     SegBaseDest = SegBaseDest;

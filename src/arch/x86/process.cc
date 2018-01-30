@@ -244,12 +244,9 @@ X86_64Process::initState()
         initDesc.p = 1;               // present
         initDesc.l = 1;               // longmode - 64 bit
         initDesc.d = 0;               // operand size
-        initDesc.g = 1;               // granularity
         initDesc.s = 1;               // system segment
-        initDesc.limitHigh = 0xFFFF;
-        initDesc.limitLow = 0xF;
-        initDesc.baseHigh = 0x0;
-        initDesc.baseLow = 0x0;
+        initDesc.limit = 0xFFFFFFFF;
+        initDesc.base = 0;
 
         //64 bit code segment
         SegDescriptor csLowPLDesc = initDesc;
@@ -320,11 +317,8 @@ X86_64Process::initState()
         TSSDescLow.type = 0xB;
         TSSDescLow.dpl = 0; // Privelege level 0
         TSSDescLow.p = 1; // Present
-        TSSDescLow.g = 1; // Page granularity
-        TSSDescLow.limitHigh = 0xF;
-        TSSDescLow.limitLow = 0xFFFF;
-        TSSDescLow.baseLow = bits(TSSVirtAddr, 23, 0);
-        TSSDescLow.baseHigh = bits(TSSVirtAddr, 31, 24);
+        TSSDescLow.limit = 0xFFFFFFFF;
+        TSSDescLow.base = bits(TSSVirtAddr, 31, 0);
 
         TSShigh TSSDescHigh = 0;
         TSSDescHigh.base = bits(TSSVirtAddr, 63, 32);
@@ -342,10 +336,8 @@ X86_64Process::initState()
         SegSelector tssSel = 0;
         tssSel.si = numGDTEntries - 1;
 
-        uint64_t tss_base_addr = (TSSDescHigh.base << 32) |
-                                 (TSSDescLow.baseHigh << 24) |
-                                  TSSDescLow.baseLow;
-        uint64_t tss_limit = TSSDescLow.limitLow | (TSSDescLow.limitHigh << 16);
+        uint64_t tss_base_addr = (TSSDescHigh.base << 32) | TSSDescLow.base;
+        uint64_t tss_limit = TSSDescLow.limit;
 
         SegAttr tss_attr = 0;
 
