@@ -53,7 +53,7 @@
 #include "base/printable.hh"
 #include "mem/cache/queue_entry.hh"
 
-class Cache;
+class BaseCache;
 
 /**
  * Miss Status and handling Register. This class keeps all the information
@@ -263,7 +263,7 @@ class MSHR : public QueueEntry, public Printable
         assert(inService); return postDowngrade;
     }
 
-    bool sendPacket(Cache &cache);
+    bool sendPacket(BaseCache &cache);
 
     bool allocOnFill() const {
         return targets.allocOnFill;

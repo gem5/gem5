@@ -54,7 +54,7 @@
 #include "base/printable.hh"
 #include "mem/cache/queue_entry.hh"
 
-class Cache;
+class BaseCache;
 
 /**
  * Write queue entry
@@ -101,7 +101,7 @@ class WriteQueueEntry : public QueueEntry, public Printable
     /** WriteQueueEntry list iterator. */
     typedef List::iterator Iterator;
 
-    bool sendPacket(Cache &cache);
+    bool sendPacket(BaseCache &cache);
 
   private:
 
