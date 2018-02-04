@@ -392,8 +392,5 @@ if buildEnv['TARGET_ISA'] == "arm" and options.generate_dtb:
             sys = getattr(root, sysname)
             sys.dtb_filename = create_dtb_for_system(sys, '%s.dtb' % sysname)
 
-elif buildEnv['TARGET_ISA'] != "arm" and options.generate_dtb:
-    fatal("Can only generate dtb files for ARM systems.")
-
 Simulation.setWorkCountOptions(test_sys, options)
 Simulation.run(options, root, test_sys, FutureClass)
