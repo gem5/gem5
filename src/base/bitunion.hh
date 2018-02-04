@@ -31,7 +31,7 @@
 #ifndef __BASE_BITUNION_HH__
 #define __BASE_BITUNION_HH__
 
-#include <iostream>
+#include <functional>
 #include <type_traits>
 
 #include "base/bitfield.hh"
@@ -403,9 +403,6 @@ using BitUnionBaseType = typename BitfieldBackend::BitUnionBaseType<T>::Type;
 //An STL style hash structure for hashing BitUnions based on their base type.
 namespace std
 {
-    template <typename T>
-    struct hash;
-
     template <typename T>
     struct hash<BitUnionType<T> > : public hash<BitUnionBaseType<T> >
     {
