@@ -264,7 +264,9 @@ from common.Caches import *
 # a starting point for an L3 cache
 class L3Cache(Cache):
     assoc = 16
-    hit_latency = 40
+    tag_latency = 20
+    data_latency = 20
+    sequential_access = True
     response_latency = 40
     mshrs = 32
     tgts_per_mshr = 12
