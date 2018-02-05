@@ -350,9 +350,8 @@ class Cache : public BaseCache
     /**
      * Performs the access specified by the request.
      * @param pkt The request to perform.
-     * @return The result of the access.
      */
-    bool recvTimingReq(PacketPtr pkt);
+    void recvTimingReq(PacketPtr pkt);
 
     /**
      * Insert writebacks into the write buffer
