@@ -31,8 +31,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_CROSSBAR_SWITCH_HH__
-#define __MEM_RUBY_NETWORK_GARNET_CROSSBAR_SWITCH_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET2_0_CROSSBARSWITCH_HH__
+#define __MEM_RUBY_NETWORK_GARNET2_0_CROSSBARSWITCH_HH__
 
 #include <iostream>
 #include <vector>
@@ -70,4 +70,4 @@ class CrossbarSwitch : public Consumer
     std::vector<OutputUnit *> m_output_unit;
 };
 
-#endif // __MEM_RUBY_NETWORK_GARNET_CROSSBAR_SWITCH_HH__
+#endif // __MEM_RUBY_NETWORK_GARNET2_0_CROSSBARSWITCH_HH__

@@ -32,8 +32,8 @@
  * components of the system
  */
 
-#ifndef __MEM_RUBY_SYSTEM_SYSTEM_HH__
-#define __MEM_RUBY_SYSTEM_SYSTEM_HH__
+#ifndef __MEM_RUBY_SYSTEM_RUBYSYSTEM_HH__
+#define __MEM_RUBY_SYSTEM_RUBYSYSTEM_HH__
 
 #include "base/callback.hh"
 #include "base/output.hh"
@@ -151,4 +151,4 @@ class RubyStatsCallback : public Callback
     void process() { m_ruby_system->collateStats(); }
 };
 
-#endif // __MEM_RUBY_SYSTEM_SYSTEM_HH__
+#endif //__MEM_RUBY_SYSTEM_RUBYSYSTEM_HH__

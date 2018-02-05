@@ -31,8 +31,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_CREDIT_HH__
-#define __MEM_RUBY_NETWORK_GARNET_CREDIT_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET2_0_CREDIT_HH__
+#define __MEM_RUBY_NETWORK_GARNET2_0_CREDIT_HH__
 
 #include <cassert>
 #include <iostream>
@@ -57,4 +57,4 @@ class Credit : public flit
     bool m_is_free_signal;
 };
 
-#endif // __MEM_RUBY_NETWORK_GARNET_CREDIT_HH__
+#endif // __MEM_RUBY_NETWORK_GARNET2_0_CREDIT_HH__

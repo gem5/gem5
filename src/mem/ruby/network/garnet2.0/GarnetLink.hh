@@ -31,8 +31,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_LINK_HH__
-#define __MEM_RUBY_NETWORK_GARNET_LINK_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET2_0_GARNETLINK_HH__
+#define __MEM_RUBY_NETWORK_GARNET2_0_GARNETLINK_HH__
 
 #include <iostream>
 #include <string>
@@ -94,4 +94,4 @@ operator<<(std::ostream& out, const GarnetExtLink& obj)
     return out;
 }
 
-#endif // __MEM_RUBY_NETWORK_GARNET_LINK_HH__
+#endif //__MEM_RUBY_NETWORK_GARNET2_0_GARNETLINK_HH__

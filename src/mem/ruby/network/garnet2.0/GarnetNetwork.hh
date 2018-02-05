@@ -31,8 +31,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_NETWORK_HH__
-#define __MEM_RUBY_NETWORK_GARNET_NETWORK_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET2_0_GARNETNETWORK_HH__
+#define __MEM_RUBY_NETWORK_GARNET2_0_GARNETNETWORK_HH__
 
 #include <iostream>
 #include <vector>
@@ -205,4 +205,4 @@ operator<<(std::ostream& out, const GarnetNetwork& obj)
     return out;
 }
 
-#endif // __MEM_RUBY_NETWORK_GARNET_NETWORK_HH__
+#endif //__MEM_RUBY_NETWORK_GARNET2_0_GARNETNETWORK_HH__

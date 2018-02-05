@@ -31,8 +31,8 @@
  * that they can be dequeued after a given delta time has expired.
  */
 
-#ifndef __MEM_RUBY_BUFFERS_MESSAGEBUFFER_HH__
-#define __MEM_RUBY_BUFFERS_MESSAGEBUFFER_HH__
+#ifndef __MEM_RUBY_NETWORK_MESSAGEBUFFER_HH__
+#define __MEM_RUBY_NETWORK_MESSAGEBUFFER_HH__
 
 #include <algorithm>
 #include <cassert>
@@ -212,4 +212,4 @@ operator<<(std::ostream& out, const MessageBuffer& obj)
     return out;
 }
 
-#endif // __MEM_RUBY_BUFFERS_MESSAGEBUFFER_HH__
+#endif //__MEM_RUBY_NETWORK_MESSAGEBUFFER_HH__

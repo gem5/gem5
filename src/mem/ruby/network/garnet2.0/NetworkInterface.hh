@@ -31,8 +31,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_NETWORK_INTERFACE_HH__
-#define __MEM_RUBY_NETWORK_GARNET_NETWORK_INTERFACE_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET2_0_NETWORKINTERFACE_HH__
+#define __MEM_RUBY_NETWORK_GARNET2_0_NETWORKINTERFACE_HH__
 
 #include <iostream>
 #include <vector>
@@ -118,4 +118,4 @@ class NetworkInterface : public ClockedObject, public Consumer
     void incrementStats(flit *t_flit);
 };
 
-#endif // __MEM_RUBY_NETWORK_GARNET_NETWORK_INTERFACE_HH__
+#endif // __MEM_RUBY_NETWORK_GARNET2_0_NETWORKINTERFACE_HH__

@@ -56,8 +56,8 @@
  * the system.
  */
 
-#ifndef __MEM_FS_PORT_PROXY_HH__
-#define __MEM_FS_PORT_PROXY_HH__
+#ifndef __MEM_FS_TRANSLATING_PORT_PROXY_HH__
+#define __MEM_FS_TRANSLATING_PORT_PROXY_HH__
 
 #include "mem/port_proxy.hh"
 
@@ -102,4 +102,4 @@ void CopyIn(ThreadContext *tc, Addr dest, const void *source, size_t cplen);
 void CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen);
 void CopyStringIn(ThreadContext *tc, const char *src, Addr vaddr);
 
-#endif //__MEM_FS_PORT_PROXY_HH__
+#endif //__MEM_FS_TRANSLATING_PORT_PROXY_HH__

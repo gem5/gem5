@@ -45,8 +45,8 @@
  * Declaration of a base set associative tag store.
  */
 
-#ifndef __MEM_CACHE_TAGS_BASESETASSOC_HH__
-#define __MEM_CACHE_TAGS_BASESETASSOC_HH__
+#ifndef __MEM_CACHE_TAGS_BASE_SET_ASSOC_HH__
+#define __MEM_CACHE_TAGS_BASE_SET_ASSOC_HH__
 
 #include <cassert>
 #include <cstring>
@@ -365,4 +365,4 @@ public:
     }
 };
 
-#endif // __MEM_CACHE_TAGS_BASESETASSOC_HH__
+#endif //__MEM_CACHE_TAGS_BASE_SET_ASSOC_HH__

@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_NETWORK_BASIC_LINK_HH__
-#define __MEM_RUBY_NETWORK_BASIC_LINK_HH__
+#ifndef __MEM_RUBY_NETWORK_BASICLINK_HH__
+#define __MEM_RUBY_NETWORK_BASICLINK_HH__
 
 #include <iostream>
 #include <string>
@@ -85,4 +85,4 @@ class BasicIntLink : public BasicLink
     friend class Topology;
 };
 
-#endif // __MEM_RUBY_NETWORK_BASIC_LINK_HH__
+#endif //__MEM_RUBY_NETWORK_BASICLINK_HH__

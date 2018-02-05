@@ -33,9 +33,14 @@
  * Authors: Brad Beckmann
  */
 
+#ifndef __MEM_RUBY_COMMON_INTVEC_HH__
+#define __MEM_RUBY_COMMON_INTVEC_HH__
+
 #include <ostream>
 #include <vector>
 
 typedef std::vector<int> IntVec;
 
 std::ostream& operator<<(std::ostream& os, const std::vector<int>& myvector);
+
+#endif //__MEM_RUBY_COMMON_INTVEC_HH__

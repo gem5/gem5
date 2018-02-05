@@ -46,8 +46,8 @@
  * AbstractMemory declaration
  */
 
-#ifndef __ABSTRACT_MEMORY_HH__
-#define __ABSTRACT_MEMORY_HH__
+#ifndef __MEM_ABSTRACT_MEMORY_HH__
+#define __MEM_ABSTRACT_MEMORY_HH__
 
 #include "mem/mem_object.hh"
 #include "params/AbstractMemory.hh"
@@ -319,4 +319,4 @@ class AbstractMemory : public MemObject
 
 };
 
-#endif //__ABSTRACT_MEMORY_HH__
+#endif //__MEM_ABSTRACT_MEMORY_HH__

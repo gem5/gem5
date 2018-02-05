@@ -31,8 +31,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_FLIT_BUFFER_HH__
-#define __MEM_RUBY_NETWORK_GARNET_FLIT_BUFFER_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET2_0_FLITBUFFER_HH__
+#define __MEM_RUBY_NETWORK_GARNET2_0_FLITBUFFER_HH__
 
 #include <algorithm>
 #include <iostream>
@@ -91,4 +91,4 @@ operator<<(std::ostream& out, const flitBuffer& obj)
     return out;
 }
 
-#endif // __MEM_RUBY_NETWORK_GARNET_FLIT_BUFFER_HH__
+#endif // __MEM_RUBY_NETWORK_GARNET2_0_FLITBUFFER_HH__

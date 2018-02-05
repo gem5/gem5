@@ -57,8 +57,8 @@
  * object).
  */
 
-#ifndef __MEM_EXTERNAL_SLAVE__
-#define __MEM_EXTERNAL_SLAVE__
+#ifndef __MEM_EXTERNAL_SLAVE_HH__
+#define __MEM_EXTERNAL_SLAVE_HH__
 
 #include "mem/mem_object.hh"
 #include "params/ExternalSlave.hh"
@@ -139,4 +139,4 @@ class ExternalSlave : public MemObject
 };
 
 
-#endif // __MEM_EXTERNAL_SLAVE__
+#endif //__MEM_EXTERNAL_SLAVE_HH__

@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __MEM_RUBY_SLICC_INTERFACE_RUBY_REQUEST_HH__
-#define __MEM_RUBY_SLICC_INTERFACE_RUBY_REQUEST_HH__
+#ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYREQUEST_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_RUBYREQUEST_HH__
 
 #include <ostream>
 #include <vector>
@@ -165,4 +165,4 @@ operator<<(std::ostream& out, const RubyRequest& obj)
   return out;
 }
 
-#endif  // __MEM_RUBY_SLICC_INTERFACE_RUBY_REQUEST_HH__
+#endif  //__MEM_RUBY_SLICC_INTERFACE_RUBYREQUEST_HH__

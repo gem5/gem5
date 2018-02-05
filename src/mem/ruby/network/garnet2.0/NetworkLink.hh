@@ -31,8 +31,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_NETWORK_LINK_HH__
-#define __MEM_RUBY_NETWORK_GARNET_NETWORK_LINK_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET2_0_NETWORKLINK_HH__
+#define __MEM_RUBY_NETWORK_GARNET2_0_NETWORKLINK_HH__
 
 #include <iostream>
 #include <vector>
@@ -86,4 +86,4 @@ class NetworkLink : public ClockedObject, public Consumer
     std::vector<unsigned int> m_vc_load;
 };
 
-#endif // __MEM_RUBY_NETWORK_GARNET_NETWORK_LINK_HH__
+#endif // __MEM_RUBY_NETWORK_GARNET2_0_NETWORKLINK_HH__

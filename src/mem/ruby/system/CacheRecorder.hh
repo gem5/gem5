@@ -32,8 +32,8 @@
  * time. Also dump the requests to a gziped file.
  */
 
-#ifndef __MEM_RUBY_RECORDER_CACHERECORDER_HH__
-#define __MEM_RUBY_RECORDER_CACHERECORDER_HH__
+#ifndef __MEM_RUBY_SYSTEM_CACHERECORDER_HH__
+#define __MEM_RUBY_SYSTEM_CACHERECORDER_HH__
 
 #include <vector>
 
@@ -126,4 +126,4 @@ operator<<(std::ostream& out, const TraceRecord& obj)
     return out;
 }
 
-#endif // __MEM_RUBY_RECORDER_CACHERECORDER_HH__
+#endif //__MEM_RUBY_SYSTEM_CACHERECORDER_HH__

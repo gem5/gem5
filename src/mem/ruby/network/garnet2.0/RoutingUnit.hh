@@ -31,8 +31,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_ROUTING_UNIT_HH__
-#define __MEM_RUBY_NETWORK_GARNET_ROUTING_UNIT_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET2_0_ROUTINGUNIT_HH__
+#define __MEM_RUBY_NETWORK_GARNET2_0_ROUTINGUNIT_HH__
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/NetDest.hh"
@@ -86,4 +86,4 @@ class RoutingUnit
     std::map<PortDirection, int> m_outports_dirn2idx;
 };
 
-#endif // __MEM_RUBY_NETWORK_GARNET_ROUTING_UNIT_HH__
+#endif // __MEM_RUBY_NETWORK_GARNET2_0_ROUTINGUNIT_HH__

@@ -46,8 +46,8 @@
  * SimpleMemory declaration
  */
 
-#ifndef __SIMPLE_MEMORY_HH__
-#define __SIMPLE_MEMORY_HH__
+#ifndef __MEM_SIMPLE_MEMORY_HH__
+#define __MEM_SIMPLE_MEMORY_HH__
 
 #include <list>
 
@@ -203,4 +203,4 @@ class SimpleMemory : public AbstractMemory
 
 };
 
-#endif //__SIMPLE_MEMORY_HH__
+#endif //__MEM_SIMPLE_MEMORY_HH__

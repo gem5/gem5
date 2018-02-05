@@ -31,8 +31,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_SWITCH_ALLOCATOR_HH__
-#define __MEM_RUBY_NETWORK_GARNET_SWITCH_ALLOCATOR_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET2_0_SWITCHALLOCATOR_HH__
+#define __MEM_RUBY_NETWORK_GARNET2_0_SWITCHALLOCATOR_HH__
 
 #include <iostream>
 #include <vector>
@@ -87,4 +87,4 @@ class SwitchAllocator : public Consumer
     std::vector<OutputUnit *> m_output_unit;
 };
 
-#endif // __MEM_RUBY_NETWORK_GARNET_SWITCH_ALLOCATOR_HH__
+#endif // __MEM_RUBY_NETWORK_GARNET2_0_SWITCHALLOCATOR_HH__

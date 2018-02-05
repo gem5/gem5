@@ -46,8 +46,8 @@
  * Declaration of a common base class for cache tagstore objects.
  */
 
-#ifndef __BASE_TAGS_HH__
-#define __BASE_TAGS_HH__
+#ifndef __MEM_CACHE_TAGS_BASE_HH__
+#define __MEM_CACHE_TAGS_BASE_HH__
 
 #include <string>
 
@@ -268,4 +268,4 @@ class BaseTagsDumpCallback : public Callback
     virtual void process() { tags->computeStats(); };
 };
 
-#endif //__BASE_TAGS_HH__
+#endif //__MEM_CACHE_TAGS_BASE_HH__

@@ -37,9 +37,14 @@
  * Authors: Brad Beckmann
  */
 
+#ifndef __MEM_RUBY_COMMON_BOOLVEC_HH__
+#define __MEM_RUBY_COMMON_BOOLVEC_HH__
+
 #include <ostream>
 #include <vector>
 
 typedef std::vector<bool> BoolVec;
 
 std::ostream& operator<<(std::ostream& os, const std::vector<bool>& myvector);
+
+#endif //__MEM_RUBY_COMMON_BOOLVEC_HH__

@@ -31,8 +31,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_ROUTER_HH__
-#define __MEM_RUBY_NETWORK_GARNET_ROUTER_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET2_0_ROUTER_HH__
+#define __MEM_RUBY_NETWORK_GARNET2_0_ROUTER_HH__
 
 #include <iostream>
 #include <vector>
@@ -137,4 +137,4 @@ class Router : public BasicRouter, public Consumer
     Stats::Scalar m_crossbar_activity;
 };
 
-#endif // __MEM_RUBY_NETWORK_GARNET_ROUTER_HH__
+#endif // __MEM_RUBY_NETWORK_GARNET2_0_ROUTER_HH__

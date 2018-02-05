@@ -27,11 +27,11 @@
  */
 
 
-#ifndef TYPEDEFINES_H
-#define TYPEDEFINES_H
+#ifndef __MEM_RUBY_COMMON_TYPEDEFINES_HH__
+#define __MEM_RUBY_COMMON_TYPEDEFINES_HH__
 
 typedef unsigned int LinkID;
 typedef unsigned int NodeID;
 typedef unsigned int SwitchID;
 
-#endif
+#endif //__MEM_RUBY_COMMON_TYPEDEFINES_HH__

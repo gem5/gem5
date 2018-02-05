@@ -33,8 +33,8 @@
  * Author: Sooraj Puthoor
  */
 
-#ifndef __MEM_RUBY_SYSTEM_VI_COALESCER_HH__
-#define __MEM_RUBY_SYSTEM_VI_COALESCER_HH__
+#ifndef __MEM_RUBY_SYSTEM_VIPERCOALESCER_HH__
+#define __MEM_RUBY_SYSTEM_VIPERCOALESCER_HH__
 
 #include <iostream>
 
@@ -71,5 +71,4 @@ class VIPERCoalescer : public GPUCoalescer
     uint64_t m_max_inv_per_cycle;
     uint64_t m_max_wb_per_cycle;
 };
-#endif // __MEM_RUBY_SYSTEM_VI_COALESCER_HH__
-
+#endif //__MEM_RUBY_SYSTEM_VIPERCOALESCER_HH__

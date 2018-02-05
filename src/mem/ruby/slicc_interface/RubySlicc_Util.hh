@@ -31,8 +31,8 @@
  * These are the functions that exported to slicc from ruby.
  */
 
-#ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYSLICCUTIL_HH__
-#define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICCUTIL_HH__
+#ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_UTIL_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_UTIL_HH__
 
 #include <cassert>
 
@@ -183,4 +183,4 @@ countBoolVec(BoolVec bVec)
     return count;
 }
 
-#endif // __MEM_RUBY_SLICC_INTERFACE_RUBYSLICCUTIL_HH__
+#endif //__MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_UTIL_HH__

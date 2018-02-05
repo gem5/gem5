@@ -31,8 +31,8 @@
  */
 
 
-#ifndef __MEM_RUBY_NETWORK_GARNET_INPUT_UNIT_HH__
-#define __MEM_RUBY_NETWORK_GARNET_INPUT_UNIT_HH__
+#ifndef __MEM_RUBY_NETWORK_GARNET2_0_INPUTUNIT_HH__
+#define __MEM_RUBY_NETWORK_GARNET2_0_INPUTUNIT_HH__
 
 #include <iostream>
 #include <vector>
@@ -167,4 +167,4 @@ class InputUnit : public Consumer
     std::vector<double> m_num_buffer_reads;
 };
 
-#endif // __MEM_RUBY_NETWORK_GARNET_INPUT_UNIT_HH__
+#endif // __MEM_RUBY_NETWORK_GARNET2_0_INPUTUNIT_HH__
