@@ -47,6 +47,8 @@
 
 #include "sim/system.hh"
 
+#include <algorithm>
+
 #include "arch/remote_gdb.hh"
 #include "arch/utility.hh"
 #include "base/loader/object_file.hh"
@@ -87,7 +89,6 @@ int System::numSystemsRunning = 0;
 
 System::System(Params *p)
     : MemObject(p), _systemPort("system_port", this),
-      _numContexts(0),
       multiThread(p->multi_thread),
       pagePtr(0),
       init_param(p->init_param),
@@ -256,7 +257,6 @@ System::registerThreadContext(ThreadContext *tc, ContextID assigned)
              "Cannot have two CPUs with the same id (%d)\n", id);
 
     threadContexts[id] = tc;
-    _numContexts++;
 
 #if THE_ISA != NULL_ISA
     int port = getRemoteGDBPort();
@@ -287,12 +287,13 @@ System::registerThreadContext(ThreadContext *tc, ContextID assigned)
 int
 System::numRunningContexts()
 {
-    int running = 0;
-    for (int i = 0; i < _numContexts; ++i) {
-        if (threadContexts[i]->status() != ThreadContext::Halted)
-            ++running;
-    }
-    return running;
+    return std::count_if(
+        threadContexts.cbegin(),
+        threadContexts.cend(),
+        [] (ThreadContext* tc) {
+            return tc->status() != ThreadContext::Halted;
+        }
+    );
 }
 
 void

@@ -250,8 +250,7 @@ LinuxArmSystem::startup()
         std::string task_filename = "tasks.txt";
         taskFile = simout.create(name() + "." + task_filename);
 
-        for (int i = 0; i < _numContexts; i++) {
-            ThreadContext *tc = threadContexts[i];
+        for (const auto tc : threadContexts) {
             uint32_t pid = tc->getCpuPtr()->getPid();
             if (pid != BaseCPU::invldPid) {
                 mapPid(tc, pid);

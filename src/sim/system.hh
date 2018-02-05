@@ -196,7 +196,6 @@ class System : public MemObject
 #endif
 
     std::vector<ThreadContext *> threadContexts;
-    int _numContexts;
     const bool multiThread;
 
     ThreadContext *getThreadContext(ContextID tid)
@@ -204,11 +203,7 @@ class System : public MemObject
         return threadContexts[tid];
     }
 
-    int numContexts()
-    {
-        assert(_numContexts == (int)threadContexts.size());
-        return _numContexts;
-    }
+    unsigned numContexts() const { return threadContexts.size(); }
 
     /** Return number of running (non-halted) thread contexts in
      * system.  These threads could be Active or Suspended. */

@@ -305,7 +305,7 @@ void
 MuxingKvmGic::copyBankedDistRange(BaseGicRegisters* from, BaseGicRegisters* to,
                                   Addr daddr, size_t size)
 {
-    for (int ctx = 0; ctx < system._numContexts; ++ctx)
+    for (int ctx = 0; ctx < system.numContexts(); ++ctx)
         for (auto a = daddr; a < daddr + size; a += 4)
             copyDistRegister(from, to, ctx, a);
 }
@@ -314,7 +314,7 @@ void
 MuxingKvmGic::clearBankedDistRange(BaseGicRegisters* to,
                                    Addr daddr, size_t size)
 {
-    for (int ctx = 0; ctx < system._numContexts; ++ctx)
+    for (int ctx = 0; ctx < system.numContexts(); ++ctx)
         for (auto a = daddr; a < daddr + size; a += 4)
             to->writeDistributor(ctx, a, 0xFFFFFFFF);
 }
@@ -345,7 +345,7 @@ MuxingKvmGic::copyGicState(BaseGicRegisters* from, BaseGicRegisters* to)
     // Copy CPU Interface Control Register (CTLR),
     //      Interrupt Priority Mask Register (PMR), and
     //      Binary Point Register (BPR)
-    for (int ctx = 0; ctx < system._numContexts; ++ctx) {
+    for (int ctx = 0; ctx < system.numContexts(); ++ctx) {
         copyCpuRegister(from, to, ctx, GICC_CTLR);
         copyCpuRegister(from, to, ctx, GICC_PMR);
         copyCpuRegister(from, to, ctx, GICC_BPR);
@@ -423,7 +423,7 @@ MuxingKvmGic::fromKvmToPl390()
     // have been shifted by three bits due to its having been emulated by
     // a VGIC with only 5 PMR bits in its VMCR register.  Presently the
     // Linux kernel does not repair this inaccuracy, so we correct it here.
-    for (int cpu = 0; cpu < system._numContexts; ++cpu) {
+    for (int cpu = 0; cpu < system.numContexts(); ++cpu) {
        cpuPriority[cpu] <<= 3;
        assert((cpuPriority[cpu] & ~0xff) == 0);
     }
