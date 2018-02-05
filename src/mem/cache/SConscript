@@ -33,10 +33,11 @@ Import('*')
 SimObject('Cache.py')
 
 Source('base.cc')
-Source('cache.cc')
 Source('blk.cc')
+Source('cache.cc')
 Source('mshr.cc')
 Source('mshr_queue.cc')
+Source('noncoherent_cache.cc')
 Source('write_queue.cc')
 Source('write_queue_entry.cc')
 

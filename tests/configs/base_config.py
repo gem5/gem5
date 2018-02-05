@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2017 ARM Limited
+# Copyright (c) 2012-2013, 2017-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -278,8 +278,19 @@ class BaseFSSystem(BaseSystem):
             # the physmem name to avoid bumping all the reference stats
             system.physmem = [self.mem_class(range = r)
                               for r in system.mem_ranges]
+            system.llc = [NoncoherentCache(addr_ranges = [r],
+                                           size = '4kB',
+                                           assoc = 2,
+                                           mshrs = 128,
+                                           tag_latency = 10,
+                                           data_latency = 10,
+                                           sequential_access = True,
+                                           response_latency = 20,
+                                           tgts_per_mshr = 8)
+                          for r in system.mem_ranges]
             for i in xrange(len(system.physmem)):
-                system.physmem[i].port = system.membus.master
+                system.physmem[i].port = system.llc[i].mem_side
+                system.llc[i].cpu_side = system.membus.master
 
             # create the iocache, which by default runs at the system clock
             system.iocache = IOCache(addr_ranges=system.mem_ranges)

@@ -1,4 +1,4 @@
-# Copyright (c) 2015 ARM Limited
+# Copyright (c) 2015, 2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -83,6 +83,8 @@ parser.add_option("-c", "--caches", type="string", default="2:2:1",
                   help="Colon-separated cache hierarchy specification, "
                   "see script comments for details "
                   "[default: %default]")
+parser.add_option("--noncoherent-cache", action="store_true",
+                  help="Adds a non-coherent, last-level cache")
 parser.add_option("-t", "--testers", type="string", default="1:1:0:2",
                   help="Colon-separated tester hierarchy specification, "
                   "see script comments for details "
@@ -299,10 +301,19 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
 # Top level call to create the cache hierarchy, bottom up
 make_cache_level(cachespec, cache_proto, len(cachespec), None)
 
-# Connect the lowest level crossbar to the memory
+# Connect the lowest level crossbar to the last-level cache and memory
+# controller
 last_subsys = getattr(system, 'l%dsubsys0' % len(cachespec))
-last_subsys.xbar.master = system.physmem.port
 last_subsys.xbar.point_of_coherency = True
+if options.noncoherent_cache:
+     system.llc = NoncoherentCache(size = '16MB', assoc = 16, tag_latency = 10,
+                                   data_latency = 10, sequential_access = True,
+                                   response_latency = 20, tgts_per_mshr = 8,
+                                   mshrs = 64)
+     last_subsys.xbar.master = system.llc.cpu_side
+     system.llc.mem_side = system.physmem.port
+else:
+     last_subsys.xbar.master = system.physmem.port
 
 root = Root(full_system = False, system = system)
 if options.atomic:

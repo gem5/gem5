@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015 ARM Limited
+# Copyright (c) 2012-2013, 2015, 2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -120,3 +120,13 @@ class BaseCache(MemObject):
 class Cache(BaseCache):
     type = 'Cache'
     cxx_header = 'mem/cache/cache.hh'
+
+
+class NoncoherentCache(BaseCache):
+    type = 'NoncoherentCache'
+    cxx_header = 'mem/cache/noncoherent_cache.hh'
+
+    # This is typically a last level cache and any clean
+    # writebacks would be unnecessary traffic to the main memory.
+    writeback_clean = False
+

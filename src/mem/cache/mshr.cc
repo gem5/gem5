@@ -310,11 +310,6 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order,
     // outstanding miss
     assert(pkt->cmd != MemCmd::HardPFReq);
 
-    // uncacheable accesses always allocate a new MSHR, and cacheable
-    // accesses ignore any uncacheable MSHRs, thus we should never
-    // have targets addded if originally allocated uncacheable
-    assert(!_isUncacheable);
-
     // if there's a request already in service for this MSHR, we will
     // have to defer the new target until after the response if any of
     // the following are true:
