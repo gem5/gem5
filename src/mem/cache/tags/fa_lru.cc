@@ -73,7 +73,6 @@ FALRU::FALRU(const Params *p)
         cacheMask = 0;
     }
 
-    warmupBound = size/blkSize;
     numBlocks = size/blkSize;
 
     blks = new FALRUBlk[numBlocks];

@@ -86,7 +86,7 @@ class BaseTags : public ClockedObject
      * The number of tags that need to be touched to meet the warmup
      * percentage.
      */
-    int warmupBound;
+    const unsigned warmupBound;
     /** Marked true when the cache is warmed up. */
     bool warmedUp;
 
@@ -95,6 +95,7 @@ class BaseTags : public ClockedObject
 
     // Statistics
     /**
+     * TODO: It would be good if these stats were acquired after warmup.
      * @addtogroup CacheStatistics
      * @{
      */
@@ -120,7 +121,7 @@ class BaseTags : public ClockedObject
      */
     Stats::Formula avgRefs;
 
-    /** The cycle that the warmup percentage was hit. */
+    /** The cycle that the warmup percentage was hit. 0 on failure. */
     Stats::Scalar warmupCycle;
 
     /** Average occupancy of each requestor using the cache */

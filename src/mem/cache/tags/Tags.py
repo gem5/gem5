@@ -57,6 +57,10 @@ class BaseTags(ClockedObject):
     data_latency = Param.Cycles(Parent.data_latency,
                                "The data access latency for this cache")
 
+    # Get the warmup percentage from the parent (cache)
+    warmup_percentage = Param.Percent(Parent.warmup_percentage,
+        "Percentage of tags to be touched to warm up the cache")
+
     sequential_access = Param.Bool(Parent.sequential_access,
         "Whether to access tags and data sequentially")
 

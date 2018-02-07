@@ -61,7 +61,8 @@ BaseTags::BaseTags(const Params *p)
       accessLatency(p->sequential_access ?
                     p->tag_latency + p->data_latency :
                     std::max(p->tag_latency, p->data_latency)),
-      cache(nullptr), warmupBound(0),
+      cache(nullptr),
+      warmupBound((p->warmup_percentage/100.0) * (p->size / p->block_size)),
       warmedUp(false), numBlocks(0)
 {
 }

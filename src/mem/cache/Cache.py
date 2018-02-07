@@ -57,6 +57,9 @@ class BaseCache(MemObject):
     data_latency = Param.Cycles("Data access latency")
     response_latency = Param.Cycles("Latency for the return path on a miss");
 
+    warmup_percentage = Param.Percent(0,
+        "Percentage of tags to be touched to warm up the cache")
+
     max_miss_count = Param.Counter(0,
         "Number of misses to handle before calling exit")
 
