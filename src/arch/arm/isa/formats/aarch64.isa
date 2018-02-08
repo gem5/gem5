@@ -254,7 +254,7 @@ namespace Aarch64
                   case 0x03:
                     return new Smc64(machInst);
                   case 0x04:
-                    return new FailUnimplemented("brk", machInst);
+                    return new Brk64(machInst);
                   case 0x08:
                     return new FailUnimplemented("hlt", machInst);
                   case 0x15:
