@@ -76,6 +76,10 @@ AbstractController::init()
         m_delayVCHistogram.push_back(new Stats::Histogram());
         m_delayVCHistogram[i]->init(10);
     }
+
+    if (getMemReqQueue()) {
+        getMemReqQueue()->setConsumer(this);
+    }
 }
 
 void
@@ -202,6 +206,61 @@ AbstractController::wakeUpAllBuffers()
     }
 }
 
+bool
+AbstractController::serviceMemoryQueue()
+{
+    auto mem_queue = getMemReqQueue();
+    assert(mem_queue);
+    if (!mem_queue->isReady(clockEdge())) {
+        return false;
+    }
+
+    const MemoryMsg *mem_msg = (const MemoryMsg*)mem_queue->peek();
+    unsigned int req_size = RubySystem::getBlockSizeBytes();
+    if (mem_msg->m_Len > 0) {
+        req_size = mem_msg->m_Len;
+    }
+
+    RequestPtr req
+        = std::make_shared<Request>(mem_msg->m_addr, req_size, 0, m_masterId);
+    PacketPtr pkt;
+    if (mem_msg->getType() == MemoryRequestType_MEMORY_WB) {
+        pkt = Packet::createWrite(req);
+        pkt->allocate();
+        pkt->setData(mem_msg->m_DataBlk.getData(getOffset(mem_msg->m_addr),
+            req_size));
+    } else if (mem_msg->getType() == MemoryRequestType_MEMORY_READ) {
+        pkt = Packet::createRead(req);
+        uint8_t *newData = new uint8_t[req_size];
+        pkt->dataDynamic(newData);
+    } else {
+        panic("Unknown memory request type (%s) for addr %p",
+              MemoryRequestType_to_string(mem_msg->getType()),
+              mem_msg->m_addr);
+    }
+
+    SenderState *s = new SenderState(mem_msg->m_Sender);
+    pkt->pushSenderState(s);
+
+    if (RubySystem::getWarmupEnabled()) {
+        // Use functional rather than timing accesses during warmup
+        mem_queue->dequeue(clockEdge());
+        memoryPort.sendFunctional(pkt);
+        // Since the queue was popped the controller may be able
+        // to make more progress. Make sure it wakes up
+        scheduleEvent(Cycles(1));
+        recvTimingResp(pkt);
+    } else {
+        mem_queue->dequeue(clockEdge());
+        memoryPort.schedTimingReq(pkt, clockEdge());
+        // Since the queue was popped the controller may be able
+        // to make more progress. Make sure it wakes up
+        scheduleEvent(Cycles(1));
+    }
+
+    return true;
+}
+
 void
 AbstractController::blockOnQueue(Addr addr, MessageBuffer* port)
 {
@@ -237,73 +296,6 @@ AbstractController::getPort(const std::string &if_name, PortID idx)
 }
 
 void
-AbstractController::queueMemoryRead(const MachineID &id, Addr addr,
-                                    Cycles latency)
-{
-    RequestPtr req = std::make_shared<Request>(
-        addr, RubySystem::getBlockSizeBytes(), 0, m_masterId);
-
-    PacketPtr pkt = Packet::createRead(req);
-    uint8_t *newData = new uint8_t[RubySystem::getBlockSizeBytes()];
-    pkt->dataDynamic(newData);
-
-    SenderState *s = new SenderState(id);
-    pkt->pushSenderState(s);
-
-    // Use functional rather than timing accesses during warmup
-    if (RubySystem::getWarmupEnabled()) {
-        memoryPort.sendFunctional(pkt);
-        recvTimingResp(pkt);
-        return;
-    }
-
-    memoryPort.schedTimingReq(pkt, clockEdge(latency));
-}
-
-void
-AbstractController::queueMemoryWrite(const MachineID &id, Addr addr,
-                                     Cycles latency, const DataBlock &block)
-{
-    RequestPtr req = std::make_shared<Request>(
-        addr, RubySystem::getBlockSizeBytes(), 0, m_masterId);
-
-    PacketPtr pkt = Packet::createWrite(req);
-    pkt->allocate();
-    pkt->setData(block.getData(0, RubySystem::getBlockSizeBytes()));
-
-    SenderState *s = new SenderState(id);
-    pkt->pushSenderState(s);
-
-    // Use functional rather than timing accesses during warmup
-    if (RubySystem::getWarmupEnabled()) {
-        memoryPort.sendFunctional(pkt);
-        recvTimingResp(pkt);
-        return;
-    }
-
-    // Create a block and copy data from the block.
-    memoryPort.schedTimingReq(pkt, clockEdge(latency));
-}
-
-void
-AbstractController::queueMemoryWritePartial(const MachineID &id, Addr addr,
-                                            Cycles latency,
-                                            const DataBlock &block, int size)
-{
-    RequestPtr req = std::make_shared<Request>(addr, size, 0, m_masterId);
-
-    PacketPtr pkt = Packet::createWrite(req);
-    pkt->allocate();
-    pkt->setData(block.getData(getOffset(addr), size));
-
-    SenderState *s = new SenderState(id);
-    pkt->pushSenderState(s);
-
-    // Create a block and copy data from the block.
-    memoryPort.schedTimingReq(pkt, clockEdge(latency));
-}
-
-void
 AbstractController::functionalMemoryRead(PacketPtr pkt)
 {
     memoryPort.sendFunctional(pkt);
@@ -327,7 +319,7 @@ AbstractController::functionalMemoryWrite(PacketPtr pkt)
 void
 AbstractController::recvTimingResp(PacketPtr pkt)
 {
-    assert(getMemoryQueue());
+    assert(getMemRespQueue());
     assert(pkt->isResponse());
 
     std::shared_ptr<MemoryMsg> msg = std::make_shared<MemoryMsg>(clockEdge());
@@ -352,7 +344,7 @@ AbstractController::recvTimingResp(PacketPtr pkt)
         panic("Incorrect packet type received from memory controller!");
     }
 
-    getMemoryQueue()->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
+    getMemRespQueue()->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
     delete pkt;
 }
 

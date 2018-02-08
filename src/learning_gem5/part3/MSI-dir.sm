@@ -74,6 +74,9 @@ machine(MachineType:Directory, "Directory protocol")
     MessageBuffer *responseFromCache, network="From", virtual_network="2",
           vnet_type="response";
 
+    // Special buffer for memory requests. Kind of like the mandatory queue
+    MessageBuffer *requestToMemory;
+
     // Special buffer for memory responses. Kind of like the mandatory queue
     MessageBuffer *responseFromMemory;
 
@@ -209,6 +212,7 @@ machine(MachineType:Directory, "Directory protocol")
 
     out_port(forward_out, RequestMsg, forwardToCache);
     out_port(response_out, ResponseMsg, responseToCache);
+    out_port(memQueue_out, MemoryMsg, requestToMemory);
 
     in_port(memQueue_in, MemoryMsg, responseFromMemory) {
         if (memQueue_in.isReady(clockEdge())) {
@@ -279,11 +283,16 @@ machine(MachineType:Directory, "Directory protocol")
 
     action(sendMemRead, "r", desc="Send a memory read request") {
         peek(request_in, RequestMsg) {
-            // Special function from AbstractController that will send a new
-            // packet out of the "Ruby" black box to the memory side. At some
-            // point the response will be on the memory queue.
-            // Like enqeue, this takes a latency for the request.
-            queueMemoryRead(in_msg.Requestor, address, toMemLatency);
+            // Send request through special memory request queue. At some
+            // point the response will be on the memory response queue.
+            // Like enqueue, this takes a latency for the request.
+            enqueue(memQueue_out, MemoryMsg, toMemLatency) {
+                out_msg.addr := address;
+                out_msg.Type := MemoryRequestType:MEMORY_READ;
+                out_msg.Sender := in_msg.Requestor;
+                out_msg.MessageSize := MessageSizeType:Request_Control;
+                out_msg.Len := 0;
+            }
         }
     }
 
@@ -291,8 +300,14 @@ machine(MachineType:Directory, "Directory protocol")
         peek(request_in, RequestMsg) {
             DPRINTF(RubySlicc, "Writing memory for %#x\n", address);
             DPRINTF(RubySlicc, "Writing %s\n", in_msg.DataBlk);
-            queueMemoryWrite(in_msg.Requestor, address, toMemLatency,
-                             in_msg.DataBlk);
+            enqueue(memQueue_out, MemoryMsg, toMemLatency) {
+                out_msg.addr := address;
+                out_msg.Type := MemoryRequestType:MEMORY_WB;
+                out_msg.Sender := in_msg.Requestor;
+                out_msg.MessageSize := MessageSizeType:Writeback_Data;
+                out_msg.DataBlk := in_msg.DataBlk;
+                out_msg.Len := 0;
+            }
         }
     }
 
@@ -300,8 +315,14 @@ machine(MachineType:Directory, "Directory protocol")
         peek(response_in, ResponseMsg) {
             DPRINTF(RubySlicc, "Writing memory for %#x\n", address);
             DPRINTF(RubySlicc, "Writing %s\n", in_msg.DataBlk);
-            queueMemoryWrite(in_msg.Sender, address, toMemLatency,
-                             in_msg.DataBlk);
+            enqueue(memQueue_out, MemoryMsg, toMemLatency) {
+                out_msg.addr := address;
+                out_msg.Type := MemoryRequestType:MEMORY_WB;
+                out_msg.Sender := in_msg.Sender;
+                out_msg.MessageSize := MessageSizeType:Writeback_Data;
+                out_msg.DataBlk := in_msg.DataBlk;
+                out_msg.Len := 0;
+            }
         }
     }
 

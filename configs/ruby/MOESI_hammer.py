@@ -206,6 +206,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         dir_cntrl.requestToDir.slave = ruby_system.network.master
         dir_cntrl.dmaRequestToDir = MessageBuffer(ordered = True)
         dir_cntrl.dmaRequestToDir.slave = ruby_system.network.master
+        dir_cntrl.requestToMemory = MessageBuffer()
         dir_cntrl.responseFromMemory = MessageBuffer()
 
 

@@ -214,6 +214,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         dir_cntrl.persistentFromDir.master = ruby_system.network.slave
         dir_cntrl.dmaResponseFromDir = MessageBuffer(ordered = True)
         dir_cntrl.dmaResponseFromDir.master = ruby_system.network.slave
+        dir_cntrl.requestToMemory = MessageBuffer()
         dir_cntrl.responseFromMemory = MessageBuffer()
 
 

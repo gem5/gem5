@@ -38,6 +38,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
    MessageBuffer * responseFromDir, network="To", virtual_network="1",
         vnet_type="response";
 
+   MessageBuffer * requestToMemory;
    MessageBuffer * responseFromMemory;
 {
   // STATES
@@ -189,6 +190,7 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
   // ** OUT_PORTS **
   out_port(responseNetwork_out, ResponseMsg, responseFromDir);
+  out_port(memQueue_out, MemoryMsg, requestToMemory);
 
   // ** IN_PORTS **
 
@@ -306,21 +308,39 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestNetwork_in, RequestMsg) {
-      queueMemoryRead(in_msg.Requestor, address, to_mem_ctrl_latency);
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_READ;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.Len := 0;
+      }
     }
   }
 
   action(qw_queueMemoryWBRequest, "qw", desc="Queue off-chip writeback request") {
     peek(responseNetwork_in, ResponseMsg) {
-      queueMemoryWrite(in_msg.Sender, address, to_mem_ctrl_latency,
-                       in_msg.DataBlk);
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := in_msg.Sender;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Len := 0;
+      }
     }
   }
 
 //added by SS for dma
   action(qf_queueMemoryFetchRequestDMA, "qfd", desc="Queue off-chip fetch request") {
     peek(requestNetwork_in, RequestMsg) {
-      queueMemoryRead(in_msg.Requestor, address, to_mem_ctrl_latency);
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_READ;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.Len := 0;
+      }
     }
   }
 
@@ -344,8 +364,14 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   action(qw_queueMemoryWBRequest_partial, "qwp",
          desc="Queue off-chip writeback request") {
     peek(requestNetwork_in, RequestMsg) {
-      queueMemoryWritePartial(machineID, address, to_mem_ctrl_latency,
-                              in_msg.DataBlk, in_msg.Len);
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := machineID;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Len := in_msg.Len;
+      }
     }
   }
 
@@ -407,8 +433,14 @@ machine(MachineType:Directory, "MESI Two Level directory protocol")
   action(qw_queueMemoryWBRequest_partialTBE, "qwt",
          desc="Queue off-chip writeback request") {
     peek(responseNetwork_in, ResponseMsg) {
-      queueMemoryWritePartial(in_msg.Sender, tbe.PhysicalAddress,
-                              to_mem_ctrl_latency, tbe.DataBlk, tbe.Len);
+      enqueue(memQueue_out, MemoryMsg, to_mem_ctrl_latency) {
+        out_msg.addr := tbe.PhysicalAddress;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := in_msg.Sender;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := tbe.DataBlk;
+        out_msg.Len := tbe.Len;
+      }
     }
   }
 

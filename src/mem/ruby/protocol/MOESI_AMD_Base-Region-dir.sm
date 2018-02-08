@@ -59,6 +59,8 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
 
   MessageBuffer * triggerQueue;
   MessageBuffer * L3triggerQueue;
+
+  MessageBuffer * requestToMemory;
   MessageBuffer * responseFromMemory;
 {
   // STATES
@@ -318,6 +320,8 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
 
   out_port(triggerQueue_out, TriggerMsg, triggerQueue);
   out_port(L3TriggerQueue_out, TriggerMsg, L3triggerQueue);
+
+  out_port(memQueue_out, MemoryMsg, requestToMemory);
 
   // ** IN_PORTS **
 
@@ -841,7 +845,12 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
         DPRINTF(RubySlicc, "L3 data is %s\n", entry.DataBlk);
         L3CacheMemory.deallocate(address);
       } else {
-        queueMemoryRead(machineID, address, to_memory_controller_latency);
+        enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+          out_msg.addr := address;
+          out_msg.Type := MemoryRequestType:MEMORY_READ;
+          out_msg.Sender := machineID;
+          out_msg.MessageSize := MessageSizeType:Request_Control;
+        }
       }
     }
   }
@@ -862,7 +871,12 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
         DPRINTF(RubySlicc, "L3 data is %s\n", entry.DataBlk);
         L3CacheMemory.deallocate(address);
       } else {
-        queueMemoryRead(machineID, address, to_memory_controller_latency);
+        enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+          out_msg.addr := address;
+          out_msg.Type := MemoryRequestType:MEMORY_READ;
+          out_msg.Sender := machineID;
+          out_msg.MessageSize := MessageSizeType:Request_Control;
+        }
       }
     }
   }
@@ -1254,8 +1268,13 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
           Addr victim := L3CacheMemory.cacheProbe(address);
           CacheEntry victim_entry := static_cast(CacheEntry, "pointer",
                                                  L3CacheMemory.lookup(victim));
-          queueMemoryWrite(machineID, victim, to_memory_controller_latency,
-                           victim_entry.DataBlk);
+          enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+            out_msg.addr := victim;
+            out_msg.Type := MemoryRequestType:MEMORY_WB;
+            out_msg.Sender := machineID;
+            out_msg.MessageSize := MessageSizeType:Writeback_Data;
+            out_msg.DataBlk := victim_entry.DataBlk;
+          }
           L3CacheMemory.deallocate(victim);
         }
         assert(L3CacheMemory.cacheAvail(address));
@@ -1279,8 +1298,13 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
           Addr victim := L3CacheMemory.cacheProbe(address);
           CacheEntry victim_entry := static_cast(CacheEntry, "pointer",
                                                  L3CacheMemory.lookup(victim));
-          queueMemoryWrite(machineID, victim, to_memory_controller_latency,
-                           victim_entry.DataBlk);
+          enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+            out_msg.addr := victim;
+            out_msg.Type := MemoryRequestType:MEMORY_WB;
+            out_msg.Sender := machineID;
+            out_msg.MessageSize := MessageSizeType:Writeback_Data;
+            out_msg.DataBlk := victim_entry.DataBlk;
+          }
           L3CacheMemory.deallocate(victim);
         }
         assert(L3CacheMemory.cacheAvail(address));
@@ -1304,8 +1328,13 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
           Addr victim := L3CacheMemory.cacheProbe(address);
           CacheEntry victim_entry := static_cast(CacheEntry, "pointer",
                                                  L3CacheMemory.lookup(victim));
-          queueMemoryWrite(machineID, victim, to_memory_controller_latency,
-                           victim_entry.DataBlk);
+          enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+            out_msg.addr := victim;
+            out_msg.Type := MemoryRequestType:MEMORY_WB;
+            out_msg.Sender := machineID;
+            out_msg.MessageSize := MessageSizeType:Writeback_Data;
+            out_msg.DataBlk := victim_entry.DataBlk;
+          }
           L3CacheMemory.deallocate(victim);
         }
         assert(L3CacheMemory.cacheAvail(address));
@@ -1330,8 +1359,13 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
             Addr victim := L3CacheMemory.cacheProbe(address);
             CacheEntry victim_entry := static_cast(CacheEntry, "pointer",
                                                    L3CacheMemory.lookup(victim));
-            queueMemoryWrite(machineID, victim, to_memory_controller_latency,
-                             victim_entry.DataBlk);
+            enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+              out_msg.addr := victim;
+              out_msg.Type := MemoryRequestType:MEMORY_WB;
+              out_msg.Sender := machineID;
+              out_msg.MessageSize := MessageSizeType:Writeback_Data;
+              out_msg.DataBlk := victim_entry.DataBlk;
+            }
             L3CacheMemory.deallocate(victim);
           }
           assert(L3CacheMemory.cacheAvail(address));

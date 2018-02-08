@@ -90,7 +90,8 @@ class AbstractController : public ClockedObject, public Consumer
     bool isBlocked(Addr);
 
     virtual MessageBuffer* getMandatoryQueue() const = 0;
-    virtual MessageBuffer* getMemoryQueue() const = 0;
+    virtual MessageBuffer* getMemReqQueue() const = 0;
+    virtual MessageBuffer* getMemRespQueue() const = 0;
     virtual AccessPermission getAccessPermission(const Addr &addr) = 0;
 
     virtual void print(std::ostream & out) const = 0;
@@ -136,11 +137,6 @@ class AbstractController : public ClockedObject, public Consumer
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID);
 
-    void queueMemoryRead(const MachineID &id, Addr addr, Cycles latency);
-    void queueMemoryWrite(const MachineID &id, Addr addr, Cycles latency,
-                          const DataBlock &block);
-    void queueMemoryWritePartial(const MachineID &id, Addr addr, Cycles latency,
-                                 const DataBlock &block, int size);
     void recvTimingResp(PacketPtr pkt);
     Tick recvAtomic(PacketPtr pkt);
 
@@ -178,6 +174,7 @@ class AbstractController : public ClockedObject, public Consumer
     void wakeUpBuffers(Addr addr);
     void wakeUpAllBuffers(Addr addr);
     void wakeUpAllBuffers();
+    bool serviceMemoryQueue();
 
   protected:
     const NodeID m_version;

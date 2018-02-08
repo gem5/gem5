@@ -54,6 +54,7 @@ machine(MachineType:Directory, "Directory protocol")
    MessageBuffer * responseFromDir, network="To", virtual_network="2",
         vnet_type="response";  // Dir -> mod-L2 bank
 
+   MessageBuffer * requestToMemory;
    MessageBuffer * responseFromMemory;
 {
   // STATES
@@ -237,6 +238,7 @@ machine(MachineType:Directory, "Directory protocol")
   // ** OUT_PORTS **
   out_port(forwardNetwork_out, RequestMsg, forwardFromDir);
   out_port(responseNetwork_out, ResponseMsg, responseFromDir);
+  out_port(memQueue_out, MemoryMsg, requestToMemory);
 
   // ** IN_PORTS **
 
@@ -479,18 +481,36 @@ machine(MachineType:Directory, "Directory protocol")
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestQueue_in, RequestMsg) {
-      queueMemoryRead(in_msg.Requestor, address, to_memory_controller_latency);
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_READ;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.Len := 0;
+      }
     }
   }
 
   action(qw_queueMemoryWBFromCacheRequest, "qw", desc="Queue off-chip writeback request") {
     peek(requestQueue_in, RequestMsg) {
       if (is_valid(tbe)) {
-        queueMemoryWrite(tbe.Requestor, address, to_memory_controller_latency,
-                         in_msg.DataBlk);
+        enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+          out_msg.addr := address;
+          out_msg.Type := MemoryRequestType:MEMORY_WB;
+          out_msg.Sender := tbe.Requestor;
+          out_msg.MessageSize := MessageSizeType:Writeback_Data;
+          out_msg.DataBlk := in_msg.DataBlk;
+          out_msg.Len := 0;
+        }
       } else {
-        queueMemoryWrite(in_msg.Requestor, address, to_memory_controller_latency,
-                         in_msg.DataBlk);
+        enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+          out_msg.addr := address;
+          out_msg.Type := MemoryRequestType:MEMORY_WB;
+          out_msg.Sender := in_msg.Requestor;
+          out_msg.MessageSize := MessageSizeType:Writeback_Data;
+          out_msg.DataBlk := in_msg.DataBlk;
+          out_msg.Len := 0;
+        }
       }
     }
   }
@@ -501,15 +521,27 @@ machine(MachineType:Directory, "Directory protocol")
       DataBlock DataBlk := in_msg.DataBlk;
       DataBlk.copyPartial(tbe.DataBlk, getOffset(tbe.PhysicalAddress),
                           tbe.Len);
-      queueMemoryWrite(tbe.Requestor, address, to_memory_controller_latency,
-                       DataBlk);
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := tbe.Requestor;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := DataBlk;
+        out_msg.Len := 0;
+      }
     }
   }
 
   action(qw_queueMemoryWBFromDMARequest, "/qw", desc="Queue off-chip writeback request") {
     peek(requestQueue_in, RequestMsg) {
-      queueMemoryWrite(in_msg.Requestor, address, to_memory_controller_latency,
-                       in_msg.DataBlk);
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Len := 0;
+      }
     }
   }
 

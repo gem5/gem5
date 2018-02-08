@@ -61,6 +61,7 @@ machine(MachineType:Directory, "Token protocol")
    MessageBuffer * dmaRequestToDir, network="From", virtual_network="0",
         vnet_type="request";
 
+   MessageBuffer * requestToMemory;
    MessageBuffer * responseFromMemory;
 {
   // STATES
@@ -276,6 +277,7 @@ machine(MachineType:Directory, "Token protocol")
   out_port(persistentNetwork_out, PersistentMsg, persistentFromDir);
   out_port(requestNetwork_out, RequestMsg, requestFromDir);
   out_port(dmaResponseNetwork_out, DMAResponseMsg, dmaResponseFromDir);
+  out_port(memQueue_out, MemoryMsg, requestToMemory);
 
   // ** IN_PORTS **
   // off-chip memory request/response is done
@@ -656,39 +658,73 @@ machine(MachineType:Directory, "Token protocol")
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestNetwork_in, RequestMsg) {
-      queueMemoryRead(in_msg.Requestor, address, to_memory_controller_latency);
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_READ;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.Len := 0;
+      }
     }
   }
 
   action(qp_queueMemoryForPersistent, "qp", desc="Queue off-chip fetch request") {
-    queueMemoryRead(persistentTable.findSmallest(address), address,
-                    to_memory_controller_latency);
+    enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+      out_msg.addr := address;
+      out_msg.Type := MemoryRequestType:MEMORY_READ;
+      out_msg.Sender := persistentTable.findSmallest(address);
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.Len := 0;
+    }
   }
 
   action(fd_memoryDma, "fd", desc="Queue off-chip fetch request") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      queueMemoryRead(in_msg.Requestor, address, to_memory_controller_latency);
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_READ;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.Len := 0;
+      }
     }
   }
 
   action(lq_queueMemoryWbRequest, "lq", desc="Write data to memory") {
     peek(responseNetwork_in, ResponseMsg) {
-      queueMemoryWrite(in_msg.Sender, address, to_memory_controller_latency,
-                       in_msg.DataBlk);
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := in_msg.Sender;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Len := 0;
+      }
     }
   }
 
   action(ld_queueMemoryDmaWriteFromTbe, "ld", desc="Write DMA data to memory") {
-    queueMemoryWritePartial(tbe.DmaRequestor, address,
-                            to_memory_controller_latency, tbe.DataBlk,
-                            tbe.Len);
+    enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+      out_msg.addr := address;
+      out_msg.Type := MemoryRequestType:MEMORY_WB;
+      out_msg.Sender := tbe.DmaRequestor;
+      out_msg.MessageSize := MessageSizeType:Writeback_Data;
+      out_msg.DataBlk := tbe.DataBlk;
+      out_msg.Len := tbe.Len;
+    }
   }
 
   action(lr_queueMemoryDmaReadWriteback, "lr",
          desc="Write DMA data from read to memory") {
     peek(responseNetwork_in, ResponseMsg) {
-      queueMemoryWrite(machineID, address, to_memory_controller_latency,
-                       in_msg.DataBlk);
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := machineID;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Len := 0;
+      }
     }
   }
 

@@ -63,6 +63,7 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
             vnet_type="request";
 
       MessageBuffer * triggerQueue;
+      MessageBuffer * requestToMemory;
       MessageBuffer * responseFromMemory;
 {
   // STATES
@@ -304,12 +305,13 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
   // ** OUT_PORTS **
   out_port(requestQueue_out, ResponseMsg, requestToDir); // For recycling requests
   out_port(forwardNetwork_out, RequestMsg, forwardFromDir);
+  out_port(memQueue_out, MemoryMsg, requestToMemory);
   out_port(responseNetwork_out, ResponseMsg, responseFromDir);
   out_port(dmaResponseNetwork_out, DMAResponseMsg, dmaResponseFromDir);
   out_port(triggerQueue_out, TriggerMsg, triggerQueue);
-  
+
   // ** IN_PORTS **
-  
+
   // Trigger Queue
   in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=5) {
     if (triggerQueue_in.isReady(clockEdge())) {
@@ -844,13 +846,25 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestQueue_in, RequestMsg) {
-      queueMemoryRead(in_msg.Requestor, address, to_memory_controller_latency);
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_READ;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.Len := 0;
+      }
     }
   }
 
   action(qd_queueMemoryRequestFromDmaRead, "qd", desc="Queue off-chip fetch request") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      queueMemoryRead(in_msg.Requestor, address, to_memory_controller_latency);
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_READ;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        out_msg.Len := 0;
+      }
     }
   }
 
@@ -1204,21 +1218,38 @@ machine(MachineType:Directory, "AMD Hammer-like protocol")
 
   action(l_queueMemoryWBRequest, "lq", desc="Write PUTX data to memory") {
     peek(unblockNetwork_in, ResponseMsg) {
-      queueMemoryWrite(in_msg.Sender, address, to_memory_controller_latency,
-                       in_msg.DataBlk);
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := in_msg.Sender;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Len := 0;
+      }
     }
   }
 
   action(ld_queueMemoryDmaWrite, "ld", desc="Write DMA data to memory") {
     assert(is_valid(tbe));
-    queueMemoryWritePartial(tbe.DmaRequestor, tbe.PhysicalAddress,
-                            to_memory_controller_latency, tbe.DmaDataBlk,
-                            tbe.Len);
+    enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+      out_msg.addr := tbe.PhysicalAddress;
+      out_msg.Type := MemoryRequestType:MEMORY_WB;
+      out_msg.Sender := tbe.DmaRequestor;
+      out_msg.MessageSize := MessageSizeType:Writeback_Data;
+      out_msg.DataBlk := tbe.DmaDataBlk;
+      out_msg.Len := tbe.Len;
+    }
   }
 
   action(ly_queueMemoryWriteFromTBE, "ly", desc="Write data to memory from TBE") {
-    queueMemoryWrite(machineID, address, to_memory_controller_latency,
-                     tbe.DataBlk);
+    enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+      out_msg.addr := address;
+      out_msg.Type := MemoryRequestType:MEMORY_WB;
+      out_msg.Sender := tbe.DmaRequestor;
+      out_msg.MessageSize := MessageSizeType:Writeback_Data;
+      out_msg.DataBlk := tbe.DataBlk;
+      out_msg.Len := 0;
+    }
   }
 
   action(ll_checkIncomingWriteback, "\l", desc="Check PUTX/PUTO response message") {

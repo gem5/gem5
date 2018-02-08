@@ -299,7 +299,8 @@ class $c_ident : public AbstractController
     void init();
 
     MessageBuffer *getMandatoryQueue() const;
-    MessageBuffer *getMemoryQueue() const;
+    MessageBuffer *getMemReqQueue() const;
+    MessageBuffer *getMemRespQueue() const;
     void initNetQueues();
 
     void print(std::ostream& out) const;
@@ -672,6 +673,11 @@ $c_ident::init()
             if port.code.find("mandatoryQueue_ptr") >= 0:
                 mq_ident = "m_mandatoryQueue_ptr"
 
+        memoutq_ident = "NULL"
+        for param in self.config_parameters:
+            if param.ident.find("requestToMemory") >= 0:
+                memoutq_ident = "m_requestToMemory_ptr"
+
         memq_ident = "NULL"
         for port in self.in_ports:
             if port.code.find("responseFromMemory_ptr") >= 0:
@@ -854,7 +860,13 @@ $c_ident::getMandatoryQueue() const
 }
 
 MessageBuffer*
-$c_ident::getMemoryQueue() const
+$c_ident::getMemReqQueue() const
+{
+    return $memoutq_ident;
+}
+
+MessageBuffer*
+$c_ident::getMemRespQueue() const
 {
     return $memq_ident;
 }
@@ -1085,6 +1097,10 @@ using namespace std;
 void
 ${ident}_Controller::wakeup()
 {
+    if (getMemReqQueue() && getMemReqQueue()->isReady(clockEdge())) {
+        serviceMemoryQueue();
+    }
+
     int counter = 0;
     while (true) {
         unsigned char rejected[${{len(msg_bufs)}}];
