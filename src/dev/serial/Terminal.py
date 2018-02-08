@@ -34,7 +34,6 @@ from Serial import SerialDevice
 class Terminal(SerialDevice):
     type = 'Terminal'
     cxx_header = "dev/serial/terminal.hh"
-    intr_control = Param.IntrControl(Parent.any, "interrupt controller")
     port = Param.TcpPort(3456, "listen port")
     number = Param.Int(0, "terminal number")
     output = Param.Bool(True, "Enable output dump to file")

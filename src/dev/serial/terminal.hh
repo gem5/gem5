@@ -42,7 +42,6 @@
 #include "base/circlebuf.hh"
 #include "base/pollevent.hh"
 #include "base/socket.hh"
-#include "cpu/intr_control.hh"
 #include "dev/serial/serial.hh"
 #include "params/Terminal.hh"
 #include "sim/sim_object.hh"
