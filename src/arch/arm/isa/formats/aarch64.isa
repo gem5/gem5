@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2016 ARM Limited
+// Copyright (c) 2011-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -256,7 +256,7 @@ namespace Aarch64
                   case 0x04:
                     return new Brk64(machInst);
                   case 0x08:
-                    return new FailUnimplemented("hlt", machInst);
+                    return new Hlt64(machInst);
                   case 0x15:
                     return new FailUnimplemented("dcps1", machInst);
                   case 0x16:

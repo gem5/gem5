@@ -44,6 +44,7 @@
 
 #include <iostream>
 
+#include "arch/arm/semihosting.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
@@ -70,6 +71,7 @@ ArmSystem::ArmSystem(Params *p)
       _m5opRange(p->m5ops_base ?
                  RangeSize(p->m5ops_base, 0x10000) :
                  AddrRange(1, 0)), // Create an empty range if disabled
+      semihosting(p->semihosting),
       multiProc(p->multi_proc)
 {
     // Check if the physical address range is valid
@@ -266,6 +268,28 @@ bool
 ArmSystem::haveLargeAsid64(ThreadContext *tc)
 {
     return getArmSystem(tc)->haveLargeAsid64();
+}
+
+bool
+ArmSystem::haveSemihosting(ThreadContext *tc)
+{
+    return getArmSystem(tc)->haveSemihosting();
+}
+
+uint64_t
+ArmSystem::callSemihosting64(ThreadContext *tc,
+                             uint32_t op, uint64_t param)
+{
+    ArmSystem *sys = getArmSystem(tc);
+    return sys->semihosting->call64(tc, op, param);
+}
+
+uint32_t
+ArmSystem::callSemihosting32(ThreadContext *tc,
+                             uint32_t op, uint32_t param)
+{
+    ArmSystem *sys = getArmSystem(tc);
+    return sys->semihosting->call32(tc, op, param);
 }
 
 ArmSystem *

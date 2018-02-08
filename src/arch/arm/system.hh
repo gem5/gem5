@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015-2017 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -122,6 +122,11 @@ class ArmSystem : public System
      */
     const AddrRange _m5opRange;
 
+    /**
+     * True if the Semihosting interface is enabled.
+     */
+    ArmSemihosting *const semihosting;
+
   protected:
     /**
      * Get a boot loader that matches the kernel.
@@ -228,6 +233,9 @@ class ArmSystem : public System
      */
     const AddrRange &m5opRange() const { return _m5opRange; }
 
+    /** Is Arm Semihosting support enabled? */
+    bool haveSemihosting() const { return semihosting != nullptr; }
+
     /**
      * Returns a valid ArmSystem pointer if using ARM ISA, it fails
      * otherwise.
@@ -280,6 +288,17 @@ class ArmSystem : public System
     /** Returns true if ASID is 16 bits for the system of a specific thread
      * context while in AArch64 (ARMv8) */
     static bool haveLargeAsid64(ThreadContext *tc);
+
+    /** Is Arm Semihosting support enabled? */
+    static bool haveSemihosting(ThreadContext *tc);
+
+    /** Make a Semihosting call from aarch64 */
+    static uint64_t callSemihosting64(ThreadContext *tc,
+                                      uint32_t op, uint64_t param);
+
+    /** Make a Semihosting call from aarch32 */
+    static uint32_t callSemihosting32(ThreadContext *tc,
+                                      uint32_t op, uint32_t param);
 };
 
 class GenericArmSystem : public ArmSystem
