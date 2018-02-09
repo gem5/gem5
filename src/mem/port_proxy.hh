@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013 ARM Limited
+ * Copyright (c) 2011-2013, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -123,6 +123,20 @@ class PortProxy
     template <typename T>
     void write(Addr address, T data) const;
 
+    /**
+     * Read sizeof(T) bytes from address and return as object T.
+     * Performs selected endianness transform.
+     */
+    template <typename T>
+    T readGtoH(Addr address, ByteOrder guest_byte_order) const;
+
+    /**
+     * Write object T to address. Writes sizeof(T) bytes.
+     * Performs selected endianness transform.
+     */
+    template <typename T>
+    void writeHtoG(Addr address, T data, ByteOrder guest_byte_order) const;
+
 #if THE_ISA != NULL_ISA
     /**
      * Read sizeof(T) bytes from address and return as object T.
@@ -154,6 +168,23 @@ template <typename T>
 void
 PortProxy::write(Addr address, T data) const
 {
+    writeBlob(address, (uint8_t*)&data, sizeof(T));
+}
+
+template <typename T>
+T
+PortProxy::readGtoH(Addr address, ByteOrder byte_order) const
+{
+    T data;
+    readBlob(address, (uint8_t*)&data, sizeof(T));
+    return gtoh(data, byte_order);
+}
+
+template <typename T>
+void
+PortProxy::writeHtoG(Addr address, T data, ByteOrder byte_order) const
+{
+    data = htog(data, byte_order);
     writeBlob(address, (uint8_t*)&data, sizeof(T));
 }
 
