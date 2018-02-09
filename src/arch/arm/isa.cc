@@ -1477,6 +1477,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                           val, newVal);
               } else {
                   ArmFault *armFault = static_cast<ArmFault *>(fault.get());
+                  armFault->update(tc);
                   // Set fault bit and FSR
                   FSR fsr = armFault->getFsr(tc);
 
@@ -1726,6 +1727,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                           val, newVal);
                 } else {
                     ArmFault *armFault = static_cast<ArmFault *>(fault.get());
+                    armFault->update(tc);
                     // Set fault bit and FSR
                     FSR fsr = armFault->getFsr(tc);
 

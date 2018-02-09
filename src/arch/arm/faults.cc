@@ -1032,13 +1032,13 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     }
     // Get effective fault source encoding
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
-    FSR  fsr  = getFsr(tc);
 
     // source must be determined BEFORE invoking generic routines which will
     // try to set hsr etc. and are based upon source!
     ArmFaultVals<T>::invoke(tc, inst);
 
     if (!this->to64) {  // AArch32
+        FSR  fsr  = getFsr(tc);
         if (cpsr.mode == MODE_HYP) {
             tc->setMiscReg(T::HFarIndex, faultAddr);
         } else if (stage2) {
@@ -1068,33 +1068,64 @@ AbortFault<T>::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 }
 
 template<class T>
-FSR
-AbortFault<T>::getFsr(ThreadContext *tc)
+void
+AbortFault<T>::setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg)
 {
-    FSR fsr = 0;
-
-    if (((CPSR) tc->readMiscRegNoEffect(MISCREG_CPSR)).width) {
-        // AArch32
-        assert(tranMethod != ArmFault::UnknownTran);
-        if (tranMethod == ArmFault::LpaeTran) {
-            srcEncoded = ArmFault::longDescFaultSources[source];
-            fsr.status = srcEncoded;
-            fsr.lpae   = 1;
-        } else {
-            srcEncoded = ArmFault::shortDescFaultSources[source];
-            fsr.fsLow  = bits(srcEncoded, 3, 0);
-            fsr.fsHigh = bits(srcEncoded, 4);
-            fsr.domain = static_cast<uint8_t>(domain);
-        }
-        fsr.wnr = (write ? 1 : 0);
-        fsr.ext = 0;
-    } else {
-        // AArch64
-        srcEncoded = ArmFault::aarch64FaultSources[source];
-    }
+    srcEncoded = getFaultStatusCode(tc);
     if (srcEncoded == ArmFault::FaultSourceInvalid) {
         panic("Invalid fault source\n");
     }
+    ArmFault::setSyndrome(tc, syndrome_reg);
+}
+
+template<class T>
+uint8_t
+AbortFault<T>::getFaultStatusCode(ThreadContext *tc) const
+{
+
+    panic_if(!this->faultUpdated,
+             "Trying to use un-updated ArmFault internal variables\n");
+
+    uint8_t fsc = 0;
+
+    if (!this->to64) {
+        // AArch32
+        assert(tranMethod != ArmFault::UnknownTran);
+        if (tranMethod == ArmFault::LpaeTran) {
+            fsc = ArmFault::longDescFaultSources[source];
+        } else {
+            fsc = ArmFault::shortDescFaultSources[source];
+        }
+    } else {
+        // AArch64
+        fsc = ArmFault::aarch64FaultSources[source];
+    }
+
+    return fsc;
+}
+
+template<class T>
+FSR
+AbortFault<T>::getFsr(ThreadContext *tc) const
+{
+    FSR fsr = 0;
+
+    auto fsc = getFaultStatusCode(tc);
+
+    // AArch32
+    assert(tranMethod != ArmFault::UnknownTran);
+    if (tranMethod == ArmFault::LpaeTran) {
+        fsr.status = fsc;
+        fsr.lpae   = 1;
+    } else {
+        fsr.fsLow  = bits(fsc, 3, 0);
+        fsr.fsHigh = bits(fsc, 4);
+        fsr.domain = static_cast<uint8_t>(domain);
+    }
+
+    fsr.wnr = (write ? 1 : 0);
+    fsr.ext = 0;
+
     return fsr;
 }
 

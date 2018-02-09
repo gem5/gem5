@@ -228,7 +228,7 @@ class ArmFault : public FaultBase
     virtual ExceptionClass ec(ThreadContext *tc) const = 0;
     virtual uint32_t iss() const = 0;
     virtual bool isStage2() const { return false; }
-    virtual FSR getFsr(ThreadContext *tc) { return 0; }
+    virtual FSR getFsr(ThreadContext *tc) const { return 0; }
     virtual void setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg);
 };
 
@@ -431,11 +431,13 @@ class AbortFault : public ArmFaultVals<T>
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr) override;
 
-    FSR getFsr(ThreadContext *tc) override;
+    FSR getFsr(ThreadContext *tc) const override;
+    uint8_t getFaultStatusCode(ThreadContext *tc) const;
     bool abortDisable(ThreadContext *tc) override;
     uint32_t iss() const override;
     bool isStage2() const override { return stage2; }
     void annotate(ArmFault::AnnotationIDs id, uint64_t val) override;
+    void setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg) override;
     bool isMMUFault() const;
 };
 
