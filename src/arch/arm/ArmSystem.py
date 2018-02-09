@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2017 ARM Limited
+# Copyright (c) 2009, 2012-2013, 2015-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -72,6 +72,8 @@ class ArmSystem(System):
     reset_addr_64 = Param.Addr(0x0,
         "Reset address if the highest implemented exception level is 64 bits "
         "(ARMv8)")
+    auto_reset_addr_64 = Param.Bool(False,
+        "Determine reset address from kernel entry point if no boot loader")
     phys_addr_range_64 = Param.UInt8(40,
         "Supported physical address range in bits when using AArch64 (ARMv8)")
     have_large_asid_64 = Param.Bool(False,

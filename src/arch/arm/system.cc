@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2015,2017 ARM Limited
+ * Copyright (c) 2010, 2012-2013, 2015,2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -62,7 +62,9 @@ ArmSystem::ArmSystem(Params *p)
       _haveVirtualization(p->have_virtualization),
       _genericTimer(nullptr),
       _highestELIs64(p->highest_el_is_64),
-      _resetAddr64(p->reset_addr_64),
+      _resetAddr64(p->auto_reset_addr_64 ?
+                   (kernelEntry & loadAddrMask) + loadAddrOffset :
+                   p->reset_addr_64),
       _physAddrRange64(p->phys_addr_range_64),
       _haveLargeAsid64(p->have_large_asid_64),
       _m5opRange(p->m5ops_base ?
