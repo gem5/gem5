@@ -642,6 +642,9 @@ class DDR4_2400_8x8(DDR4_2400_16x4):
     # Each device has a page (row buffer) size of 1 Kbyte (1K columns x8)
     device_rowbuffer_size = '1kB'
 
+    # 8x8 configuration, so 8 devices
+    devices_per_rank = 8
+
     # RRD_L (same bank group) for 1K page is MAX(4 CK, 4.9ns)
     tRRD_L = '4.9ns';
 
