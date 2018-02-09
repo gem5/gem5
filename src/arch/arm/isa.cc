@@ -1476,7 +1476,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                           "MISCREG: Translated addr 0x%08x: PAR: 0x%08x\n",
                           val, newVal);
               } else {
-                  ArmFault *armFault = reinterpret_cast<ArmFault *>(fault.get());
+                  ArmFault *armFault = static_cast<ArmFault *>(fault.get());
                   // Set fault bit and FSR
                   FSR fsr = armFault->getFsr(tc);
 
@@ -1725,7 +1725,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                           "MISCREG: Translated addr %#x: PAR_EL1: %#xx\n",
                           val, newVal);
                 } else {
-                    ArmFault *armFault = reinterpret_cast<ArmFault *>(fault.get());
+                    ArmFault *armFault = static_cast<ArmFault *>(fault.get());
                     // Set fault bit and FSR
                     FSR fsr = armFault->getFsr(tc);
 
