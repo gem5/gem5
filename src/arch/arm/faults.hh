@@ -71,7 +71,13 @@ class ArmFault : public FaultBase
     bool to64;  // True if the exception is taken in AArch64 state
     ExceptionLevel fromEL;  // Source exception level
     ExceptionLevel toEL;  // Target exception level
-    OperatingMode fromMode;  // Source operating mode
+    OperatingMode fromMode;  // Source operating mode (aarch32)
+    OperatingMode toMode;  // Next operating mode (aarch32)
+
+    // This variable is true if the above fault specific informations
+    // have been updated. This is to prevent that a client is using their
+    // un-updated default constructed value.
+    bool faultUpdated;
 
     bool hypRouted; // True if the fault has been routed to Hypervisor
 
@@ -191,7 +197,8 @@ class ArmFault : public FaultBase
 
     ArmFault(ExtMachInst _machInst = 0, uint32_t _iss = 0) :
         machInst(_machInst), issRaw(_iss), from64(false), to64(false),
-        fromEL(EL0), toEL(EL0), fromMode(MODE_UNDEFINED), hypRouted(false) {}
+        fromEL(EL0), toEL(EL0), fromMode(MODE_UNDEFINED),
+        faultUpdated(false), hypRouted(false) {}
 
     // Returns the actual syndrome register to use based on the target
     // exception level
@@ -204,6 +211,7 @@ class ArmFault : public FaultBase
                 StaticInst::nullStaticInstPtr) override;
     void invoke64(ThreadContext *tc, const StaticInstPtr &inst =
                   StaticInst::nullStaticInstPtr);
+    void update(ThreadContext *tc);
     virtual void annotate(AnnotationIDs id, uint64_t val) {}
     virtual FaultStat& countStat() = 0;
     virtual FaultOffset offset(ThreadContext *tc) = 0;

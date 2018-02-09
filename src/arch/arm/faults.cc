@@ -426,36 +426,54 @@ ArmFault::setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg)
 }
 
 void
-ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+ArmFault::update(ThreadContext *tc)
 {
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
 
-    if (ArmSystem::highestELIs64(tc)) {  // ARMv8
-        // Determine source exception level and mode
-        fromMode = (OperatingMode) (uint8_t) cpsr.mode;
-        fromEL = opModeToEL(fromMode);
-        if (opModeIs64(fromMode))
-            from64 = true;
+    // Determine source exception level and mode
+    fromMode = (OperatingMode) (uint8_t) cpsr.mode;
+    fromEL = opModeToEL(fromMode);
+    if (opModeIs64(fromMode))
+        from64 = true;
 
-        // Determine target exception level
-        if (ArmSystem::haveSecurity(tc) && routeToMonitor(tc)) {
-            toEL = EL3;
-        } else if (ArmSystem::haveVirtualization(tc) && routeToHyp(tc)) {
-            toEL = EL2;
-            hypRouted = true;
-        } else {
-            toEL = opModeToEL(nextMode());
-        }
+    // Determine target exception level (aarch64) or target execution
+    // mode (aarch32).
+    if (ArmSystem::haveSecurity(tc) && routeToMonitor(tc)) {
+        toMode = MODE_MON;
+        toEL = EL3;
+    } else if (ArmSystem::haveVirtualization(tc) && routeToHyp(tc)) {
+        toMode = MODE_HYP;
+        toEL = EL2;
+        hypRouted = true;
+    } else {
+        toMode = nextMode();
+        toEL = opModeToEL(toMode);
+    }
 
-        if (fromEL > toEL)
-            toEL = fromEL;
+    if (fromEL > toEL)
+        toEL = fromEL;
 
-        if (toEL == ArmSystem::highestEL(tc) || ELIs64(tc, toEL)) {
-            // Invoke exception handler in AArch64 state
-            to64 = true;
-            invoke64(tc, inst);
-            return;
-        }
+    to64 = ELIs64(tc, toEL);
+
+    // The fault specific informations have been updated; it is
+    // now possible to use them inside the fault.
+    faultUpdated = true;
+}
+
+void
+ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+{
+
+    // Update fault state informations, like the starting mode (aarch32)
+    // or EL (aarch64) and the ending mode or EL.
+    // From the update function we are also evaluating if the fault must
+    // be handled in AArch64 mode (to64).
+    update(tc);
+
+    if (to64) {
+        // Invoke exception handler in AArch64 state
+        invoke64(tc, inst);
+        return;
     }
 
     // ARMv7 (ARM ARM issue C B1.9)
@@ -489,15 +507,6 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         armInst->annotateFault(this);
     }
 
-    if (have_security && routeToMonitor(tc)) {
-        cpsr.mode = MODE_MON;
-    } else if (have_virtualization && routeToHyp(tc)) {
-        cpsr.mode = MODE_HYP;
-        hypRouted = true;
-    } else {
-        cpsr.mode = nextMode();
-    }
-
     // Ensure Secure state if initially in Monitor mode
     if (have_security && saved_cpsr.mode == MODE_MON) {
         SCR scr = tc->readMiscRegNoEffect(MISCREG_SCR);
@@ -506,6 +515,9 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             tc->setMiscRegNoEffect(MISCREG_SCR, scr);
         }
     }
+
+    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    cpsr.mode = toMode;
 
     // some bits are set differently if we have been routed to hyp mode
     if (cpsr.mode == MODE_HYP) {
