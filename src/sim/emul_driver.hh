@@ -93,7 +93,7 @@ class EmulatedDriver : public SimObject
      * (see the SyscallReturn class).
      */
     virtual Addr mmap(ThreadContext *tc, Addr start, uint64_t length,
-                      int prot, int tgtFlags, int tgtFd, int offset)
+                      int prot, int tgtFlags, int tgtFd, off_t offset)
                       { return -EBADF; }
 };
 

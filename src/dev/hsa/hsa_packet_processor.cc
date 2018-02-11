@@ -401,29 +401,20 @@ HSAPacketProcessor::processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr)
             dep_sgnl_rd_st->resetSigVals();
             // The completion signal is connected
             if (bar_and_pkt->completion_signal != 0) {
-                // The signal value is aligned 8 bytes
-                // from the actual handle in the runtime
-                uint64_t signal_addr =
-                    (uint64_t) (((uint64_t *)
-                    bar_and_pkt->completion_signal) + 1);
+                // HACK: The semantics of the HSA signal is to
+                // decrement the current signal value
+                // I'm going to cheat here and read out
+                // the value from main memory using functional
+                // access, and then just DMA the decremented value.
+                uint64_t signal_value = hsa_device->functionalReadHsaSignal(\
+                                            bar_and_pkt->completion_signal);
+
                 DPRINTF(HSAPacketProcessor, "Triggering barrier packet" \
-                       " completion signal: %x!\n", signal_addr);
-                /**
-                 * HACK: The semantics of the HSA signal is to
-                 * decrement the current signal value.
-                 * I'm going to cheat here and read out
-                 * the value from main memory using functional
-                 * access, and then just DMA the decremented value.
-                 * The reason for this is that the DMASequencer does
-                 * not support atomic operations.
-                 */
-                VPtr<uint64_t> prev_signal(signal_addr, sys->threads[0]);
+                       " completion signal! Addr: %x\n",
+                       bar_and_pkt->completion_signal);
 
-                hsa_signal_value_t *new_signal = new hsa_signal_value_t;
-                *new_signal = (hsa_signal_value_t)*prev_signal - 1;
-
-                dmaWriteVirt(signal_addr,
-                             sizeof(hsa_signal_value_t), NULL, new_signal, 0);
+                hsa_device->updateHsaSignal(bar_and_pkt->completion_signal,
+                                            signal_value - 1);
             }
         }
         if (dep_sgnl_rd_st->pendingReads > 0) {

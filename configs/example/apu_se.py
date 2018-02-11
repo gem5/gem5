@@ -470,7 +470,7 @@ else:
                "/usr/lib/x86_64-linux-gnu"
            ]),
            'HOME=%s' % os.getenv('HOME','/'),
-           "HSA_ENABLE_INTERRUPT=0"]
+           "HSA_ENABLE_INTERRUPT=1"]
 
 process = Process(executable = executable, cmd = [options.cmd]
                   + options.options.split(), drivers = [gpu_driver], env = env)

@@ -39,6 +39,9 @@
 #include "debug/GPUKernelInfo.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "params/GPUCommandProcessor.hh"
+#include "sim/process.hh"
+#include "sim/proxy_ptr.hh"
+#include "sim/syscall_emul_buf.hh"
 
 GPUCommandProcessor::GPUCommandProcessor(const Params &p)
     : HSADevice(p), dispatcher(*p.dispatcher)
@@ -146,6 +149,57 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
     ++dynamic_task_id;
 }
 
+uint64_t
+GPUCommandProcessor::functionalReadHsaSignal(Addr signal_handle)
+{
+    Addr value_addr = getHsaSignalValueAddr(signal_handle);
+    auto tc = system()->threads[0];
+    ConstVPtr<Addr> prev_value(value_addr, tc);
+    return *prev_value;
+}
+
+void
+GPUCommandProcessor::updateHsaSignal(Addr signal_handle, uint64_t signal_value)
+{
+    // The signal value is aligned 8 bytes from
+    // the actual handle in the runtime
+    Addr value_addr = getHsaSignalValueAddr(signal_handle);
+    Addr mailbox_addr = getHsaSignalMailboxAddr(signal_handle);
+    Addr event_addr = getHsaSignalEventAddr(signal_handle);
+    DPRINTF(GPUCommandProc, "Triggering completion signal: %x!\n", value_addr);
+
+    Addr *new_signal = new Addr;
+    *new_signal = signal_value;
+
+    dmaWriteVirt(value_addr, sizeof(Addr), nullptr, new_signal, 0);
+
+    auto tc = system()->threads[0];
+    ConstVPtr<uint64_t> mailbox_ptr(mailbox_addr, tc);
+
+    // Notifying an event with its mailbox pointer is
+    // not supported in the current implementation. Just use
+    // mailbox pointer to distinguish between interruptible
+    // and default signal. Interruptible signal will have
+    // a valid mailbox pointer.
+    if (*mailbox_ptr != 0) {
+        // This is an interruptible signal. Now, read the
+        // event ID and directly communicate with the driver
+        // about that event notification.
+        ConstVPtr<uint32_t> event_val(event_addr, tc);
+
+        DPRINTF(GPUCommandProc, "Calling signal wakeup event on "
+                "signal event value %d\n", *event_val);
+        signalWakeupEvent(*event_val);
+    }
+}
+
+void
+GPUCommandProcessor::attachDriver(HSADriver *hsa_driver)
+{
+    fatal_if(driver, "Should not overwrite driver.");
+    driver = hsa_driver;
+}
+
 /**
  * submitVendorPkt() is for accepting vendor-specific packets from
  * the HSAPP. Vendor-specific packets may be used by the runtime to
@@ -228,6 +282,12 @@ void
 GPUCommandProcessor::dispatchPkt(HSAQueueEntry *task)
 {
     dispatcher.dispatch(task);
+}
+
+void
+GPUCommandProcessor::signalWakeupEvent(uint32_t event_id)
+{
+    driver->signalWakeupEvent(event_id);
 }
 
 /**

@@ -304,6 +304,13 @@ class HSAPacketProcessor: public DmaDevice
         return regdQList.at(queId);
     }
 
+    uint64_t
+    inFlightPkts(uint32_t queId)
+    {
+        auto aqlBuf = regdQList.at(queId)->qCntxt.aqlBuf;
+        return aqlBuf->dispIdx() - aqlBuf->rdIdx();
+    }
+
     int numHWQueues;
     Addr pioAddr;
     Addr pioSize;

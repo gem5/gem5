@@ -43,10 +43,13 @@
 #include "dev/hsa/hsa_packet_processor.hh"
 #include "params/HSADevice.hh"
 
+class HSADriver;
+
 class HSADevice : public DmaDevice
 {
   public:
     typedef HSADeviceParams Params;
+    typedef std::function<void(const uint64_t &)> HsaSignalCallbackFunction;
 
     HSADevice(const Params &p) : DmaDevice(p), hsaPP(p.hsapp)
     {
@@ -92,7 +95,21 @@ class HSADevice : public DmaDevice
     {
         fatal("%s does not accept vendor specific packets\n", name());
     }
-
+    virtual void
+    attachDriver(HSADriver *driver)
+    {
+        fatal("%s does not need HSA driver\n", name());
+    }
+    virtual void
+    updateHsaSignal(Addr signal_handle, uint64_t signal_value)
+    {
+        fatal("%s does not have HSA signal update functionality.\n", name());
+    }
+    virtual uint64_t
+    functionalReadHsaSignal(Addr signal_handle)
+    {
+        fatal("%s does not have HSA signal read functionality.\n", name());
+    }
     void dmaReadVirt(Addr host_addr, unsigned size, DmaCallback *cb,
                      void *data, Tick delay = 0);
     void dmaWriteVirt(Addr host_addr, unsigned size, DmaCallback *cb,

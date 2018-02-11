@@ -55,6 +55,7 @@ class GPUComputeDriver final : public HSADriver
     typedef GPUComputeDriverParams Params;
     GPUComputeDriver(const Params &p);
     int ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf) override;
+    void sleepCPU(ThreadContext *tc, uint32_t milliSecTimeout);
 
   private:
     /**

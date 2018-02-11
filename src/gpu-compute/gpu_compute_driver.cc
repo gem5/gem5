@@ -40,6 +40,7 @@
 #include "debug/GPUDriver.hh"
 #include "dev/hsa/hsa_device.hh"
 #include "dev/hsa/hsa_packet_processor.hh"
+#include "dev/hsa/kfd_event_defines.h"
 #include "dev/hsa/kfd_ioctl.h"
 #include "params/GPUComputeDriver.hh"
 #include "sim/syscall_emul_buf.hh"
@@ -47,6 +48,7 @@
 GPUComputeDriver::GPUComputeDriver(const Params &p)
     : HSADriver(p)
 {
+    device->attachDriver(this);
     DPRINTF(GPUDriver, "Constructing KFD: device\n");
 }
 
@@ -61,8 +63,8 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             DPRINTF(GPUDriver, "ioctl: AMDKFD_IOC_GET_VERSION\n");
 
             TypedBufferArg<kfd_ioctl_get_version_args> args(ioc_buf);
-            args->major_version = 1;
-            args->minor_version = 0;
+            args->major_version = KFD_IOCTL_MAJOR_VERSION;
+            args->minor_version = KFD_IOCTL_MINOR_VERSION;
 
             args.copyOut(virt_proxy);
           }
@@ -205,17 +207,59 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
           break;
         case AMDKFD_IOC_CREATE_EVENT:
           {
-            warn("unimplemented ioctl: AMDKFD_IOC_CREATE_EVENT\n");
+            DPRINTF(GPUDriver, "ioctl: AMDKFD_IOC_CREATE_EVENT\n");
+
+            TypedBufferArg<kfd_ioctl_create_event_args> args(ioc_buf);
+            args.copyIn(virt_proxy);
+            if (args->event_type != KFD_IOC_EVENT_SIGNAL) {
+                fatal("Signal events are only supported currently\n");
+            } else if (eventSlotIndex == SLOTS_PER_PAGE) {
+                fatal("Signal event wasn't created; signal limit reached\n");
+            }
+            // Currently, we allocate only one signal_page for events.
+            // Note that this signal page is of size 8 * KFD_SIGNAL_EVENT_LIMIT
+            uint64_t page_index = 0;
+            args->event_page_offset = (page_index | KFD_MMAP_TYPE_EVENTS);
+            args->event_page_offset <<= PAGE_SHIFT;
+            // TODO: Currently we support only signal events, hence using
+            // the same ID for both signal slot and event slot
+            args->event_slot_index = eventSlotIndex;
+            args->event_id = eventSlotIndex++;
+            args->event_trigger_data = args->event_id;
+            DPRINTF(GPUDriver, "amdkfd create events"
+                    "(event_id: 0x%x, offset: 0x%x)\n",
+                    args->event_id, args->event_page_offset);
+            // Since eventSlotIndex is increased everytime a new event is
+            // created ETable at eventSlotIndex(event_id) is guaranteed to be
+            // empty. In a future implementation that reuses deleted event_ids,
+            // we should check if event table at this
+            // eventSlotIndex(event_id) is empty before inserting a new event
+            // table entry
+            ETable.emplace(std::pair<uint32_t, ETEntry>(args->event_id, {}));
+            args.copyOut(virt_proxy);
           }
           break;
         case AMDKFD_IOC_DESTROY_EVENT:
           {
-            warn("unimplemented ioctl: AMDKFD_IOC_DESTROY_EVENT\n");
+            DPRINTF(GPUDriver, "ioctl: AMDKFD_IOC_DESTROY_EVENT\n");
+            TypedBufferArg<kfd_ioctl_destroy_event_args> args(ioc_buf);
+            args.copyIn(virt_proxy);
+            DPRINTF(GPUDriver, "amdkfd destroying event %d\n", args->event_id);
+            fatal_if(ETable.count(args->event_id) == 0,
+                     "Event ID invalid, cannot destroy this event\n");
+            ETable.erase(args->event_id);
           }
           break;
         case AMDKFD_IOC_SET_EVENT:
           {
-            warn("unimplemented ioctl: AMDKFD_IOC_SET_EVENT\n");
+            DPRINTF(GPUDriver, "ioctl: AMDKFD_IOC_SET_EVENTS\n");
+            TypedBufferArg<kfd_ioctl_set_event_args> args(ioc_buf);
+            args.copyIn(virt_proxy);
+            DPRINTF(GPUDriver, "amdkfd set event %d\n", args->event_id);
+            fatal_if(ETable.count(args->event_id) == 0,
+                     "Event ID invlaid, cannot set this event\n");
+            ETable[args->event_id].setEvent = true;
+            signalWakeupEvent(args->event_id);
           }
           break;
         case AMDKFD_IOC_RESET_EVENT:
@@ -225,7 +269,69 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
           break;
         case AMDKFD_IOC_WAIT_EVENTS:
           {
-            warn("unimplemented ioctl: AMDKFD_IOC_WAIT_EVENTS\n");
+            DPRINTF(GPUDriver, "ioctl: AMDKFD_IOC_WAIT_EVENTS\n");
+            TypedBufferArg<kfd_ioctl_wait_events_args> args(ioc_buf);
+            args.copyIn(virt_proxy);
+            kfd_event_data *events =
+                (kfd_event_data *)args->events_ptr;
+            DPRINTF(GPUDriver, "amdkfd wait for events"
+                    "(wait on all: %d, timeout : %d, num_events: %s)\n",
+                    args->wait_for_all, args->timeout, args->num_events);
+            panic_if(args->wait_for_all != 0 && args->num_events > 1,
+                    "Wait for all events not supported\n");
+            bool should_sleep = true;
+            if (TCEvents.count(tc) == 0) {
+                // This thread context trying to wait on an event for the first
+                // time, initialize it.
+                TCEvents.emplace(std::piecewise_construct, std::make_tuple(tc),
+                                 std::make_tuple(this, tc));
+                DPRINTF(GPUDriver, "\tamdkfd creating event list"
+                        " for thread  %d\n", tc->cpuId());
+            }
+            panic_if(TCEvents[tc].signalEvents.size() != 0,
+                     "There are %d events that put this thread to sleep,"
+                     " this thread should not be running\n",
+                     TCEvents[tc].signalEvents.size());
+            for (int i = 0; i < args->num_events; i++) {
+                panic_if(!events,
+                         "Event pointer invalid\n");
+                Addr eventDataAddr = (Addr)(events + i);
+                TypedBufferArg<kfd_event_data> EventData(
+                    eventDataAddr, sizeof(kfd_event_data));
+                EventData.copyIn(virt_proxy);
+                DPRINTF(GPUDriver,
+                        "\tamdkfd wait for event %d\n", EventData->event_id);
+                panic_if(ETable.count(EventData->event_id) == 0,
+                         "Event ID invalid, cannot set this event\n");
+                panic_if(ETable[EventData->event_id].threadWaiting,
+                         "Multiple threads waiting on the same event\n");
+                if (ETable[EventData->event_id].setEvent) {
+                    // If event is already set, the event has already happened.
+                    // Just unset the event and dont put this thread to sleep.
+                    ETable[EventData->event_id].setEvent = false;
+                    should_sleep = false;
+                }
+                if (should_sleep) {
+                    // Put this thread to sleep
+                    ETable[EventData->event_id].threadWaiting = true;
+                    ETable[EventData->event_id].tc = tc;
+                    TCEvents[tc].signalEvents.insert(EventData->event_id);
+                }
+            }
+
+            // TODO: Return the correct wait_result back. Currently, returning
+            // success for both KFD_WAIT_TIMEOUT and KFD_WAIT_COMPLETE.
+            // Ideally, this needs to be done after the event is triggered and
+            // after the thread is woken up.
+            args->wait_result = 0;
+            args.copyOut(virt_proxy);
+            if (should_sleep) {
+                // Put this thread to sleep
+                sleepCPU(tc, args->timeout);
+            } else {
+                // Remove events that tried to put this thread to sleep
+                TCEvents[tc].clearEvents();
+            }
           }
           break;
         case AMDKFD_IOC_DBG_REGISTER:
@@ -373,6 +479,18 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
           break;
     }
     return 0;
+}
+
+void
+GPUComputeDriver::sleepCPU(ThreadContext *tc, uint32_t milliSecTimeout)
+{
+    // Convert millisecs to ticks
+    Tick wakeup_delay((uint64_t)milliSecTimeout * 1000000000);
+    assert(TCEvents.count(tc) == 1);
+    TCEvents[tc].timerEvent.scheduleWakeup(wakeup_delay);
+    tc->suspend();
+    DPRINTF(GPUDriver,
+            "CPU %d is put to sleep\n", tc->cpuId());
 }
 
 Addr

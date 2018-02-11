@@ -39,6 +39,8 @@
 #include "cpu/thread_context.hh"
 #include "debug/HSADriver.hh"
 #include "dev/hsa/hsa_device.hh"
+#include "dev/hsa/hsa_packet_processor.hh"
+#include "dev/hsa/kfd_event_defines.h"
 #include "dev/hsa/kfd_ioctl.h"
 #include "params/HSADriver.hh"
 #include "sim/process.hh"
@@ -65,32 +67,56 @@ HSADriver::open(ThreadContext *tc, int mode, int flags)
 
 /**
  * Currently, mmap() will simply setup a mapping for the associated
- * device's packet processor's doorbells.
+ * device's packet processor's doorbells and creates the event page.
  */
 Addr
 HSADriver::mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
-                int tgt_flags, int tgt_fd, int offset)
+                int tgt_flags, int tgt_fd, off_t offset)
 {
-    DPRINTF(HSADriver, "amdkfd doorbell mmap (start: %p, length: 0x%x,"
-            "offset: 0x%x)\n", start, length, offset);
-
-    auto process = tc->getProcessPtr();
-    auto mem_state = process->memState;
+     // Is this a signal event mmap
+     bool is_event_mmap = false;
+     // If addr == 0, then we may need to do mmap.
+     bool should_mmap = (start == 0);
+     auto process = tc->getProcessPtr();
+     auto mem_state = process->memState;
+     // Check if mmap is for signal events first
+     if (((offset >> PAGE_SHIFT) & KFD_MMAP_TYPE_MASK) ==
+         KFD_MMAP_TYPE_EVENTS) {
+         is_event_mmap = true;
+         DPRINTF(HSADriver, "amdkfd mmap for events(start: %p, length: 0x%x,"
+                 "offset: 0x%x,  )\n", start, length, offset);
+         panic_if(start != 0,
+                  "Start address should be provided by KFD\n");
+         panic_if(length != 8 * KFD_SIGNAL_EVENT_LIMIT,
+                  "Requested length %d, expected length %d; length mismatch\n",
+                   length, 8 * KFD_SIGNAL_EVENT_LIMIT);
+         // For signal event, do mmap only is eventPage is uninitialized
+         should_mmap = (!eventPage);
+    } else {
+        DPRINTF(HSADriver, "amdkfd doorbell mmap (start: %p, length: 0x%x,"
+                "offset: 0x%x)\n", start, length, offset);
+    }
 
     // Extend global mmap region if necessary.
-    if (start == 0) {
-        // Assume mmap grows down, as in x86 Linux.
+    if (should_mmap) {
+        // Assume mmap grows down, as in x86 Linux
         start = mem_state->getMmapEnd() - length;
         mem_state->setMmapEnd(start);
     }
 
-    /**
-     * Now map this virtual address to our PIO doorbell interface
-     * in the page tables (non-cacheable).
-     */
-    process->pTable->map(start, device->hsaPacketProc().pioAddr,
-                         length, false);
-    DPRINTF(HSADriver, "amdkfd doorbell mapped to %xp\n", start);
+    if (is_event_mmap) {
+         if (should_mmap) {
+             eventPage = start;
+         }
+    } else {
+        // Now map this virtual address to our PIO doorbell interface
+        // in the page tables (non-cacheable)
+        process->pTable->map(start, device->hsaPacketProc().pioAddr,
+                             length, false);
+
+        DPRINTF(HSADriver, "amdkfd doorbell mapped to %xp\n", start);
+    }
+
     return start;
 }
 
@@ -115,4 +141,55 @@ HSADriver::allocateQueue(ThreadContext *tc, Addr ioc_buf)
     hsa_pp.setDeviceQueueDesc(args->read_pointer_address,
                               args->ring_base_address, args->queue_id,
                               args->ring_size);
+}
+
+const char*
+HSADriver::DriverWakeupEvent::description() const
+{
+    return "DriverWakeupEvent";
+}
+
+void
+HSADriver::DriverWakeupEvent::scheduleWakeup(Tick wakeup_delay)
+{
+    assert(driver);
+    driver->schedule(this, curTick() + wakeup_delay);
+}
+
+void
+HSADriver::signalWakeupEvent(uint32_t event_id)
+{
+    panic_if(event_id >= eventSlotIndex,
+        "Trying wakeup on an event that is not yet created\n");
+    if (ETable[event_id].threadWaiting) {
+        panic_if(!ETable[event_id].tc,
+                 "No thread context to wake up\n");
+        ThreadContext *tc = ETable[event_id].tc;
+        DPRINTF(HSADriver,
+                "Signal event: Waking up CPU %d\n", tc->cpuId());
+        // Wake up this thread
+        tc->activate();
+        // Remove events that can wake up this thread
+        TCEvents[tc].clearEvents();
+    } else {
+       // This may be a race condition between an ioctl call asking to wait on
+       // this event and this signalWakeupEvent. Taking care of this race
+       // condition here by setting the event here. The ioctl call should take
+       // the necessary action when waiting on an already set event.  However,
+       // this may be a genuine instance in which the runtime has decided not
+       // to wait on this event. But since we cannot distinguish this case with
+       // the race condition, we are any way setting the event.
+       ETable[event_id].setEvent = true;
+    }
+}
+
+void
+HSADriver::DriverWakeupEvent::process()
+{
+    DPRINTF(HSADriver,
+            "Timer event: Waking up CPU %d\n", tc->cpuId());
+    // Wake up this thread
+    tc->activate();
+    // Remove events that can wake up this thread
+    driver->TCEvents[tc].clearEvents();
 }
