@@ -427,7 +427,8 @@ def define_options(parser):
     parser.add_option("--tcc-dir-factor", type='int', default=4,
                       help="TCCdir size = factor *(TCPs + TCC)")
 
-def create_system(options, full_system, system, dma_devices, ruby_system):
+def create_system(options, full_system, system, dma_devices, bootmem,
+                  ruby_system):
     if buildEnv['PROTOCOL'] != 'GPU_RfO':
         panic("This script requires the GPU_RfO protocol to be built.")
 

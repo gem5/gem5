@@ -170,8 +170,9 @@ class BaseSystem(object):
             options.num_cpus = self.num_cpus
             options.num_dirs = 2
 
+            bootmem = getattr(system, 'bootmem', None)
             Ruby.create_system(options, True, system, system.iobus,
-                               system._dma_ports)
+                               system._dma_ports, bootmem)
 
             # Create a seperate clock domain for Ruby
             system.ruby.clk_domain = SrcClockDomain(

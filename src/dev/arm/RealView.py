@@ -1,4 +1,4 @@
-# Copyright (c) 2009-2017 ARM Limited
+# Copyright (c) 2009-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -580,9 +580,11 @@ class RealView(Platform):
         self._attach_io(self._off_chip_devices(), *args, **kwargs)
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        self.nvmem = SimpleMemory(range = AddrRange('2GB', size = '64MB'),
-                                  conf_table_reported = False)
-        self.nvmem.port = mem_bus.master
+        cur_sys.bootmem = SimpleMemory(
+            range = AddrRange('2GB', size = '64MB'),
+            conf_table_reported = False)
+        if mem_bus is not None:
+            cur_sys.bootmem.port = mem_bus.master
         cur_sys.boot_loader = loc('boot.arm')
         cur_sys.atags_addr = 0x100
         cur_sys.load_offset = 0
@@ -971,9 +973,10 @@ class VExpress_EMM(RealView):
         self.gicv2m.frames = [Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2C1C0000)]
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        self.nvmem = SimpleMemory(range = AddrRange('64MB'),
-                                  conf_table_reported = False)
-        self.nvmem.port = mem_bus.master
+        cur_sys.bootmem = SimpleMemory(range = AddrRange('64MB'),
+                                       conf_table_reported = False)
+        if mem_bus is not None:
+            cur_sys.bootmem.port = mem_bus.master
         if not cur_sys.boot_loader:
             cur_sys.boot_loader = loc('boot_emm.arm')
         cur_sys.atags_addr = 0x8000000
@@ -988,14 +991,14 @@ class VExpress_EMM64(VExpress_EMM):
         pci_pio_base=0x2f000000)
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        self.nvmem = SimpleMemory(range=AddrRange(0, size='64MB'),
-                                  conf_table_reported=False)
-        self.nvmem.port = mem_bus.master
+        cur_sys.bootmem = SimpleMemory(range=AddrRange(0, size='64MB'),
+                                       conf_table_reported=False)
+        if mem_bus is not None:
+            cur_sys.bootmem.port = mem_bus.master
         if not cur_sys.boot_loader:
             cur_sys.boot_loader = loc('boot_emm.arm64')
         cur_sys.atags_addr = 0x8000000
         cur_sys.load_offset = 0x80000000
-
 
 class VExpress_GEM5_V1(RealView):
     """
@@ -1164,9 +1167,10 @@ Interrupts:
         self._attach_device(device, *args, **kwargs)
 
     def setupBootLoader(self, mem_bus, cur_sys, loc):
-        self.nvmem = SimpleMemory(range=AddrRange(0, size='64MB'),
-                                  conf_table_reported=False)
-        self.nvmem.port = mem_bus.master
+        cur_sys.bootmem = SimpleMemory(range=AddrRange(0, size='64MB'),
+                                       conf_table_reported=False)
+        if mem_bus is not None:
+            cur_sys.bootmem.port = mem_bus.master
         if not cur_sys.boot_loader:
             cur_sys.boot_loader = [ loc('boot_emm.arm64'), loc('boot_emm.arm') ]
         cur_sys.atags_addr = 0x8000000

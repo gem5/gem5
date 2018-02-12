@@ -50,7 +50,8 @@ def define_options(parser):
     parser.add_option("--allow-atomic-migration", action="store_true",
           help="allow migratory sharing for atomic only accessed blocks")
 
-def create_system(options, full_system, system, dma_ports, ruby_system):
+def create_system(options, full_system, system, dma_ports, bootmem,
+                  ruby_system):
 
     if buildEnv['PROTOCOL'] != 'MOESI_CMP_token':
         panic("This script requires the MOESI_CMP_token protocol to be built.")
@@ -190,8 +191,11 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
                                           clk_domain=ruby_system.clk_domain,
                                           clk_divider=3)
 
-    dir_cntrl_nodes = create_directories(options, system.mem_ranges,
-                                         ruby_system)
+    mem_dir_cntrl_nodes, rom_dir_cntrl_node = create_directories(
+        options, system.mem_ranges, bootmem, ruby_system, system)
+    dir_cntrl_nodes = mem_dir_cntrl_nodes[:]
+    if rom_dir_cntrl_node is not None:
+        dir_cntrl_nodes.append(rom_dir_cntrl_node)
     for dir_cntrl in dir_cntrl_nodes:
         dir_cntrl.l2_select_num_bits = l2_bits
         # Connect the directory controllers and the network
@@ -264,4 +268,4 @@ def create_system(options, full_system, system, dma_ports, ruby_system):
 
     ruby_system.network.number_of_virtual_networks = 6
     topology = create_topology(all_cntrls, options)
-    return (cpu_sequencers, dir_cntrl_nodes, topology)
+    return (cpu_sequencers, mem_dir_cntrl_nodes, topology)

@@ -373,7 +373,8 @@ def define_options(parser):
     parser.add_option("--noL2", action = "store_true", default = False,
                       help = "bypassL2")
 
-def create_system(options, full_system, system, dma_devices, ruby_system):
+def create_system(options, full_system, system, dma_devices, bootmem,
+                  ruby_system):
     if buildEnv['PROTOCOL'] != 'GPU_VIPER_Baseline':
         panic("This script requires the" \
         "GPU_VIPER_Baseline protocol to be built.")

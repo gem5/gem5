@@ -209,7 +209,8 @@ def define_options(parser):
     parser.add_option("--num-tbes", type="int", default=256)
     parser.add_option("--l2-latency", type="int", default=50) # load to use
 
-def create_system(options, full_system, system, dma_devices, ruby_system):
+def create_system(options, full_system, system, dma_devices, bootmem,
+                  ruby_system):
     if buildEnv['PROTOCOL'] != 'MOESI_AMD_Base':
         panic("This script requires the MOESI_AMD_Base protocol.")
 

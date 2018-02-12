@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2017 ARM Limited
+# Copyright (c) 2012, 2017-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -135,7 +135,8 @@ def create_topology(controllers, options):
     topology = eval("Topo.%s(controllers)" % options.topology)
     return topology
 
-def create_system(options, full_system, system, piobus = None, dma_ports = []):
+def create_system(options, full_system, system, piobus = None, dma_ports = [],
+                  bootmem=None):
 
     system.ruby = RubySystem()
     ruby = system.ruby
@@ -150,7 +151,7 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
     try:
         (cpu_sequencers, dir_cntrls, topology) = \
              eval("%s.create_system(options, full_system, system, dma_ports,\
-                                    ruby)"
+                                    bootmem, ruby)"
                   % protocol)
     except:
         print("Error: could not create sytem for ruby protocol %s" % protocol)
@@ -198,7 +199,8 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
         ruby.phys_mem = SimpleMemory(range=system.mem_ranges[0],
                                      in_addr_map=False)
 
-def create_directories(options, mem_ranges, ruby_system):
+def create_directories(options, mem_ranges, bootmem, ruby_system,
+                       system):
     dir_cntrl_nodes = []
     if options.numa_high_bit:
         numa_bit = options.numa_high_bit
@@ -227,7 +229,17 @@ def create_directories(options, mem_ranges, ruby_system):
 
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
-    return dir_cntrl_nodes
+
+    if bootmem is not None:
+        rom_dir_cntrl = Directory_Controller()
+        rom_dir_cntrl.directory = RubyDirectoryMemory()
+        rom_dir_cntrl.ruby_system = ruby_system
+        rom_dir_cntrl.version = i + 1
+        rom_dir_cntrl.memory = bootmem.port
+        rom_dir_cntrl.addr_ranges = bootmem.range
+        return (dir_cntrl_nodes, rom_dir_cntrl)
+
+    return (dir_cntrl_nodes, None)
 
 def send_evicts(options):
     # currently, 2 scenarios warrant forwarding evictions to the CPU:

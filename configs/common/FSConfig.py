@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012, 2015-2017 ARM Limited
+# Copyright (c) 2010-2012, 2015-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -326,8 +326,10 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
         # iobus, as gem5's membus is only used for initialization and
         # SST doesn't use it.  Attaching nvmem to iobus solves this issue.
         # During initialization, system_port -> membus -> iobus -> nvmem.
-        if external_memory or ruby:
+        if external_memory:
             self.realview.setupBootLoader(self.iobus,  self, binary)
+        elif ruby:
+            self.realview.setupBootLoader(None, self, binary)
         else:
             self.realview.setupBootLoader(self.membus, self, binary)
         self.gic_cpu_addr = self.realview.gic.cpu_addr
@@ -386,8 +388,6 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     elif ruby:
         self._dma_ports = [ ]
         self.realview.attachOnChipIO(self.iobus, dma_ports=self._dma_ports)
-        # Force Ruby to treat the boot ROM as an IO device.
-        self.realview.nvmem.in_addr_map = False
         self.realview.attachIO(self.iobus, dma_ports=self._dma_ports)
     else:
         self.realview.attachOnChipIO(self.membus, self.bridge)

@@ -442,7 +442,8 @@ def define_options(parser):
         action="store_true", default=False)
     parser.add_option("--use-L3-on-WT", action="store_true", default=False)
 
-def create_system(options, full_system, system, dma_devices, ruby_system):
+def create_system(options, full_system, system, dma_devices, bootmem,
+                  ruby_system):
     if buildEnv['PROTOCOL'] != 'GPU_VIPER_Region':
         panic("This script requires the GPU_VIPER_Region protocol to be built.")
 
