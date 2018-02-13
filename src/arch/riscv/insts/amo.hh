@@ -41,24 +41,62 @@
 namespace RiscvISA
 {
 
-class LoadReserved : public MemInst
+// memfence micro instruction
+class MemFenceMicro : public RiscvMicroInst
+{
+  public:
+    MemFenceMicro(ExtMachInst _machInst, OpClass __opClass)
+        : RiscvMicroInst("fence", _machInst, __opClass)
+    { }
+  protected:
+    using RiscvMicroInst::RiscvMicroInst;
+
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
+    std::string generateDisassembly(
+        Addr pc, const SymbolTable *symtab) const override;
+};
+
+// load-reserved
+class LoadReserved : public RiscvMacroInst
 {
   protected:
-    using MemInst::MemInst;
+    using RiscvMacroInst::RiscvMacroInst;
 
     std::string generateDisassembly(
         Addr pc, const SymbolTable *symtab) const override;
 };
 
-class StoreCond : public MemInst
+class LoadReservedMicro : public RiscvMicroInst
 {
   protected:
-    using MemInst::MemInst;
+    Request::Flags memAccessFlags;
+    using RiscvMicroInst::RiscvMicroInst;
 
     std::string generateDisassembly(
         Addr pc, const SymbolTable *symtab) const override;
 };
 
+// store-cond
+class StoreCond : public RiscvMacroInst
+{
+  protected:
+    using RiscvMacroInst::RiscvMacroInst;
+
+    std::string generateDisassembly(
+        Addr pc, const SymbolTable *symtab) const override;
+};
+
+class StoreCondMicro : public RiscvMicroInst
+{
+  protected:
+    Request::Flags memAccessFlags;
+    using RiscvMicroInst::RiscvMicroInst;
+
+    std::string generateDisassembly(
+        Addr pc, const SymbolTable *symtab) const override;
+};
+
+// AMOs
 class AtomicMemOp : public RiscvMacroInst
 {
   protected:
@@ -76,6 +114,23 @@ class AtomicMemOpMicro : public RiscvMicroInst
 
     std::string generateDisassembly(
         Addr pc, const SymbolTable *symtab) const override;
+};
+
+/**
+ * A generic atomic op class
+ */
+
+template<typename T>
+class AtomicGenericOp : public TypedAtomicOpFunctor<T>
+{
+  public:
+    AtomicGenericOp(T _a, std::function<void(T*,T)> _op)
+      : a(_a), op(_op) { }
+    AtomicOpFunctor* clone() { return new AtomicGenericOp<T>(*this); }
+    void execute(T *b) { op(b, a); }
+  private:
+    T a;
+    std::function<void(T*,T)> op;
 };
 
 }
