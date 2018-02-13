@@ -99,17 +99,41 @@ class PortProxy
     /**
      * Read size bytes memory at address and store in p.
      */
-    virtual void readBlob(Addr addr, uint8_t* p, int size) const;
+    virtual void readBlob(Addr addr, uint8_t* p, int size) const {
+        readBlobPhys(addr, 0, p, size);
+    }
 
     /**
      * Write size bytes from p to address.
      */
-    virtual void writeBlob(Addr addr, const uint8_t* p, int size) const;
+    virtual void writeBlob(Addr addr, const uint8_t* p, int size) const {
+        writeBlobPhys(addr, 0, p, size);
+    }
 
     /**
      * Fill size bytes starting at addr with byte value val.
      */
-    virtual void memsetBlob(Addr addr, uint8_t v, int size) const;
+    virtual void memsetBlob(Addr addr, uint8_t v, int size) const {
+        memsetBlobPhys(addr, 0, v, size);
+    }
+
+    /**
+     * Read size bytes memory at physical address and store in p.
+     */
+    void readBlobPhys(Addr addr, Request::Flags flags,
+                      uint8_t* p, int size) const;
+
+    /**
+     * Write size bytes from p to physical address.
+     */
+    void writeBlobPhys(Addr addr, Request::Flags flags,
+                       const uint8_t* p, int size) const;
+
+    /**
+     * Fill size bytes starting at physical addr with byte value val.
+     */
+    void memsetBlobPhys(Addr addr, Request::Flags flags,
+                        uint8_t v, int size) const;
 
     /**
      * Read sizeof(T) bytes from address and return as object T.
@@ -154,6 +178,23 @@ class PortProxy
 #endif
 };
 
+
+/**
+ * This object is a proxy for a structural port, to be used for debug
+ * accesses to secure memory.
+ *
+ * The addresses are interpreted as physical addresses to secure memory.
+ */
+class SecurePortProxy : public PortProxy
+{
+  public:
+    SecurePortProxy(MasterPort &port, unsigned int cache_line_size)
+        : PortProxy(port, cache_line_size) {}
+
+    void readBlob(Addr addr, uint8_t *p, int size) const override;
+    void writeBlob(Addr addr, const uint8_t *p, int size) const override;
+    void memsetBlob(Addr addr, uint8_t val, int size) const override;
+};
 
 template <typename T>
 T

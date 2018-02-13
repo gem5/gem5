@@ -81,20 +81,20 @@ class FSTranslatingPortProxy : public PortProxy
 
     FSTranslatingPortProxy(MasterPort &port, unsigned int cacheLineSize);
 
-    virtual ~FSTranslatingPortProxy();
+    ~FSTranslatingPortProxy();
 
     /** Version of readblob that translates virt->phys and deals
       * with page boundries. */
-    virtual void readBlob(Addr addr, uint8_t *p, int size) const;
+    void readBlob(Addr addr, uint8_t *p, int size) const override;
 
     /** Version of writeBlob that translates virt->phys and deals
       * with page boundries. */
-    virtual void writeBlob(Addr addr, const uint8_t *p, int size) const;
+    void writeBlob(Addr addr, const uint8_t *p, int size) const override;
 
     /**
      * Fill size bytes starting at addr with byte value val.
      */
-    virtual void memsetBlob(Addr address, uint8_t  v, int size) const;
+    void memsetBlob(Addr address, uint8_t  v, int size) const override;
 };
 
 void CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen);

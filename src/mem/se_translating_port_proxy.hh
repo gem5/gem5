@@ -81,7 +81,7 @@ class SETranslatingPortProxy : public PortProxy
 
   public:
     SETranslatingPortProxy(MasterPort& port, Process* p, AllocType alloc);
-    virtual ~SETranslatingPortProxy();
+    ~SETranslatingPortProxy();
 
     void setPageTable(EmulationPageTable *p) { pTable = p; }
     void setProcess(Process *p) { process = p; }
@@ -91,9 +91,9 @@ class SETranslatingPortProxy : public PortProxy
     bool tryWriteString(Addr addr, const char *str) const;
     bool tryReadString(std::string &str, Addr addr) const;
 
-    virtual void readBlob(Addr addr, uint8_t *p, int size) const;
-    virtual void writeBlob(Addr addr, const uint8_t *p, int size) const;
-    virtual void memsetBlob(Addr addr, uint8_t val, int size) const;
+    void readBlob(Addr addr, uint8_t *p, int size) const override;
+    void writeBlob(Addr addr, const uint8_t *p, int size) const override;
+    void memsetBlob(Addr addr, uint8_t val, int size) const override;
 
     void writeString(Addr addr, const char *str) const;
     void readString(std::string &str, Addr addr) const;
