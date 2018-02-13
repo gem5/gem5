@@ -62,6 +62,31 @@ let {{
     decoder_output = SemihostConstructor.subst(svcIop)
     exec_output = PredOpExecute.subst(svcIop)
 
+    hltCode = '''
+    ThreadContext *tc = xc->tcBase();
+
+    const auto semihost_imm = Thumb? 0x3C : 0xF000;
+
+    if (ArmSystem::haveSemihosting(tc) && imm == semihost_imm) {
+        R0 = ArmSystem::callSemihosting32(tc, R0, R1);
+    } else {
+        // HLT instructions aren't implemented, so treat them as undefined
+        // instructions.
+        fault = std::make_shared<UndefinedInstruction>(
+            machInst, false, mnemonic);
+    }
+    '''
+
+    hltIop = InstObjParams("hlt", "Hlt", "ImmOp",
+                           { "code": hltCode,
+                             "predicate_test": predicateTest,
+                             "thumb_semihost": '0x3C',
+                             "arm_semihost": '0xF000' },
+                           ["IsNonSpeculative"])
+    header_output += ImmOpDeclare.subst(hltIop)
+    decoder_output += SemihostConstructor.subst(hltIop)
+    exec_output += PredOpExecute.subst(hltIop)
+
     smcCode = '''
     HCR  hcr  = Hcr;
     CPSR cpsr = Cpsr;
