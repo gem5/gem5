@@ -48,6 +48,7 @@
 #include "sim/sim_object.hh"
 
 struct ArmSemihostingParams;
+class PortProxy;
 class SerialDevice;
 class ThreadContext;
 
@@ -253,7 +254,10 @@ class ArmSemihosting : public SimObject
         return tick >> tickShift;
     }
     void semiExit(uint64_t code, uint64_t subcode);
+    PortProxy &physProxy(ThreadContext *tc);
     std::string readString(ThreadContext *tc, Addr ptr, size_t len);
+
+    std::unique_ptr<PortProxy> physProxyS;
 
   private:
     typedef std::pair<uint64_t, SemiErrno> RetErrno;
