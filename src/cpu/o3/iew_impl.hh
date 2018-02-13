@@ -1100,7 +1100,7 @@ DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
             add_to_iq = true;
         }
 
-        if (inst->isNonSpeculative()) {
+        if (add_to_iq && inst->isNonSpeculative()) {
             DPRINTF(IEW, "[tid:%i]: Issue: Nonspeculative instruction "
                     "encountered, skipping.\n", tid);
 
