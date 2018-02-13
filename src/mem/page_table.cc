@@ -87,7 +87,7 @@ EmulationPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
         auto old_it = pTable.find(vaddr);
         assert(old_it != pTable.end() && new_it == pTable.end());
 
-        new_it->second = old_it->second;
+        pTable.emplace(new_vaddr, old_it->second);
         pTable.erase(old_it);
         size -= pageSize;
         vaddr += pageSize;
