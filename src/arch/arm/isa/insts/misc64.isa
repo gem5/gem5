@@ -42,11 +42,11 @@ let {{
     fault = std::make_shared<SupervisorCall>(machInst, bits(machInst, 20, 5));
     '''
 
-    svcIop = InstObjParams("svc", "Svc64", "ArmStaticInst",
+    svcIop = InstObjParams("svc", "Svc64", "ImmOp64",
                            svcCode, ["IsSyscall", "IsNonSpeculative",
                                      "IsSerializeAfter"])
-    header_output = BasicDeclare.subst(svcIop)
-    decoder_output = BasicConstructor64.subst(svcIop)
+    header_output = ImmOp64Declare.subst(svcIop)
+    decoder_output = ImmOp64Constructor.subst(svcIop)
     exec_output = BasicExecute.subst(svcIop)
 
     hvcCode = '''
@@ -60,11 +60,11 @@ let {{
     }
     '''
 
-    hvcIop = InstObjParams("hvc", "Hvc64", "ArmStaticInst",
+    hvcIop = InstObjParams("hvc", "Hvc64", "ImmOp64",
                            hvcCode, ["IsSyscall", "IsNonSpeculative",
                                      "IsSerializeAfter"])
-    header_output += BasicDeclare.subst(hvcIop)
-    decoder_output += BasicConstructor64.subst(hvcIop)
+    header_output += ImmOp64Declare.subst(hvcIop)
+    decoder_output += ImmOp64Constructor.subst(hvcIop)
     exec_output += BasicExecute.subst(hvcIop)
 
     # @todo: extend to take into account Virtualization.
@@ -79,10 +79,10 @@ let {{
     }
     '''
 
-    smcIop = InstObjParams("smc", "Smc64", "ArmStaticInst",
+    smcIop = InstObjParams("smc", "Smc64", "ImmOp64",
                            smcCode, ["IsNonSpeculative", "IsSerializeAfter"])
-    header_output += BasicDeclare.subst(smcIop)
-    decoder_output += BasicConstructor64.subst(smcIop)
+    header_output += ImmOp64Declare.subst(smcIop)
+    decoder_output += ImmOp64Constructor.subst(smcIop)
     exec_output += BasicExecute.subst(smcIop)
 
     def subst(templateBase, iop):
@@ -169,10 +169,10 @@ let {{
                                                  bits(machInst, 20, 5));
     '''
 
-    brkIop = InstObjParams("brk", "Brk64", "ArmStaticInst",
+    brkIop = InstObjParams("brk", "Brk64", "ImmOp64",
                            brkCode, ["IsSerializeAfter"])
-    header_output += BasicDeclare.subst(brkIop)
-    decoder_output += BasicConstructor64.subst(brkIop)
+    header_output += ImmOp64Declare.subst(brkIop)
+    decoder_output += ImmOp64Constructor.subst(brkIop)
     exec_output += BasicExecute.subst(brkIop)
 
     hltCode = '''
@@ -188,9 +188,9 @@ let {{
 
     '''
 
-    hltIop = InstObjParams("hlt", "Hlt64", "ArmStaticInst",
+    hltIop = InstObjParams("hlt", "Hlt64", "ImmOp64",
                            hltCode, ["IsNonSpeculative"])
-    header_output += BasicDeclare.subst(hltIop)
-    decoder_output += BasicConstructor64.subst(hltIop)
+    header_output += ImmOp64Declare.subst(hltIop)
+    decoder_output += ImmOp64Constructor.subst(hltIop)
     exec_output += BasicExecute.subst(hltIop)
 }};

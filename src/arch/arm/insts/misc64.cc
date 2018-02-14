@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017 ARM Limited
+ * Copyright (c) 2011-2013,2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -38,6 +38,15 @@
  */
 
 #include "arch/arm/insts/misc64.hh"
+
+std::string
+ImmOp64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    ccprintf(ss, "#0x%x", imm);
+    return ss.str();
+}
 
 std::string
 RegRegImmImmOp64::generateDisassembly(Addr pc, const SymbolTable *symtab) const

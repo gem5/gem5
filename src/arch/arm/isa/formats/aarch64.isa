@@ -242,21 +242,25 @@ namespace Aarch64
                     (ConditionCode)(uint8_t)(bits(machInst, 3, 0));
                 return new BCond64(machInst, imm, condCode);
             } else if (bits(machInst, 25, 24) == 0x0) {
+
                 if (bits(machInst, 4, 2))
                     return new Unknown64(machInst);
+
+                auto imm16 = bits(machInst, 20, 5);
                 uint8_t decVal = (bits(machInst, 1, 0) << 0) |
                                  (bits(machInst, 23, 21) << 2);
+
                 switch (decVal) {
                   case 0x01:
-                    return new Svc64(machInst);
+                    return new Svc64(machInst, imm16);
                   case 0x02:
-                    return new Hvc64(machInst);
+                    return new Hvc64(machInst, imm16);
                   case 0x03:
-                    return new Smc64(machInst);
+                    return new Smc64(machInst, imm16);
                   case 0x04:
-                    return new Brk64(machInst);
+                    return new Brk64(machInst, imm16);
                   case 0x08:
-                    return new Hlt64(machInst);
+                    return new Hlt64(machInst, imm16);
                   case 0x15:
                     return new FailUnimplemented("dcps1", machInst);
                   case 0x16:
