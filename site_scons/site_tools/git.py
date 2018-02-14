@@ -38,6 +38,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
 import os
 
 import gem5_scons.util
@@ -54,7 +55,7 @@ def install_style_hooks(env):
         gitdir = env.Dir(readCommand(
             ["git", "rev-parse", "--git-dir"]).strip("\n"))
     except Exception, e:
-        print "Warning: Failed to find git repo directory: %s" % e
+        print("Warning: Failed to find git repo directory: %s" % e)
         return
 
     git_hooks = gitdir.Dir("hooks")
@@ -65,11 +66,12 @@ def install_style_hooks(env):
     def hook_install(hook_name, script):
         hook = git_hooks.File(hook_name)
         if hook.exists():
-            print "Warning: Can't install %s, hook already exists." % hook_name
+            print("Warning: Can't install %s, hook already exists." %
+                    hook_name)
             return
 
         if hook.islink():
-            print "Warning: Removing broken symlink for hook %s." % hook_name
+            print("Warning: Removing broken symlink for hook %s." % hook_name)
             os.unlink(hook.get_abspath())
 
         if not git_hooks.exists():
@@ -91,17 +93,17 @@ def install_style_hooks(env):
         try:
             os.symlink(script_path, hook.get_abspath())
         except:
-            print "Error updating git %s hook" % hook_name
+            print("Error updating git %s hook" % hook_name)
             raise
 
     if hook_exists("pre-commit") and hook_exists("commit-msg"):
         return
 
-    print git_style_message,
+    print(git_style_message, end=' ')
     try:
         raw_input()
     except:
-        print "Input exception, exiting scons.\n"
+        print("Input exception, exiting scons.\n")
         sys.exit(1)
 
     git_style_script = env.root.Dir("util").File("git-pre-commit.py")
