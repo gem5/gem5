@@ -177,7 +177,7 @@ let {{
 
     hltCode = '''
     ThreadContext *tc = xc->tcBase();
-    if (ArmSystem::haveSemihosting(tc) && bits(machInst, 20, 5) == 0xF000) {
+    if (ArmSystem::haveSemihosting(tc) && imm == 0xF000) {
         X0 = ArmSystem::callSemihosting64(tc, X0 & mask(32), X1);
     } else {
         // HLT instructions aren't implemented, so treat them as undefined
