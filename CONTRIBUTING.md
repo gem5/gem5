@@ -79,7 +79,9 @@ repository directly from our gerrit instance at
 https://gem5.googlesource.com/.
 
 To clone the master gem5 repository:
- > git clone https://gem5.googlesource.com/public/gem5
+```
+ git clone https://gem5.googlesource.com/public/gem5
+```
 
 Other gem5 repositories
 -----------------------
@@ -172,7 +174,9 @@ If this happens, update your changeset descriptions to match the required style
 and resubmit. The following is a useful git command to update the most recent
 commit (HEAD).
 
- > git commit --amend
+```
+ git commit --amend
+```
 
 Posting a review
 ================
@@ -199,13 +203,17 @@ There are three ways to push your changes to gerrit.
 Push change to gerrit review
 ----------------------------
 
- > git push origin HEAD:refs/for/master
+```
+ git push origin HEAD:refs/for/master
+```
 
 Assuming origin is https://gem5.googlesource.com/public/gem5 and you want to
 push the changeset at HEAD, this will create a new review request on top of the
 master branch. More generally,
 
- > git push <gem5 gerrit instance> <changeset>:refs/for/<branch>
+```
+ git push <gem5 gerrit instance> <changeset>:refs/for/<branch>
+```
 
 See https://gerrit-review.googlesource.com/Documentation/user-upload.html for
 more information.
@@ -214,33 +222,43 @@ Pushing your first change
 --------------------------
 The first time you push a change you may get the following error:
 
- > remote: ERROR: [fb1366b] missing Change-Id in commit message footer
- > ...
+```
+ remote: ERROR: [fb1366b] missing Change-Id in commit message footer
+ ...
+```
 
 Within the error message, there is a command line you should run. For every new
 clone of the git repo, you need to run the following command to automatically
 insert the change id in the the commit (all on one line).
 
- > curl -Lo `git rev-parse --git-dir`/hooks/commit-msg
-   https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; chmod +x
-   `git rev-parse --git-dir`/hooks/commit-msg
+```
+ curl -Lo `git rev-parse --git-dir`/hooks/commit-msg \
+	https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; \
+ chmod +x `git rev-parse --git-dir`/hooks/commit-msg
+```
 
 If you receive the above error, simply run this command and then amend your
 changeset.
 
- > git commit --amend
+```
+ git commit --amend
+```
 
 Push change to gerrit as a draft
 --------------------------------
 
- > git push origin HEAD:refs/drafts/master
+```
+ git push origin HEAD:refs/drafts/master
+```
 
 Push change bypassing gerrit
 -----------------------------
 
 Only maintainers can bypass gerrit review. This should very rarely be used.
 
- > git push origin HEAD:refs/heads/master
+```
+ git push origin HEAD:refs/heads/master
+```
 
 Other gerrit push options
 -------------------------
@@ -291,7 +309,9 @@ changes. To do this, you should update the original git changeset. Then, you
 can simply push the changeset again to the same Gerrit branch to update the
 review request.
 
- > git push origin HEAD:refs/for/master
+```
+ git push origin HEAD:refs/for/master
+```
 
 Note: If you have posted a patch and don't receive any reviews, you may need to
 prod the reviewers. You can do this by adding a reply to your changeset review
