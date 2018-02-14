@@ -273,7 +273,7 @@ ArmSystem::haveLargeAsid64(ThreadContext *tc)
 bool
 ArmSystem::haveSemihosting(ThreadContext *tc)
 {
-    return getArmSystem(tc)->haveSemihosting();
+    return FullSystem && getArmSystem(tc)->haveSemihosting();
 }
 
 uint64_t
