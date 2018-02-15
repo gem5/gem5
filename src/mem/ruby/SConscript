@@ -41,6 +41,9 @@ from gem5_scons import Transform
 
 Import('*')
 
+if env['PROTOCOL'] == 'None':
+    Return()
+
 DebugFlag('ProtocolTrace')
 DebugFlag('RubyCache')
 DebugFlag('RubyCacheTrace')
@@ -61,9 +64,6 @@ CompoundFlag('Ruby', [ 'RubyQueue', 'RubyNetwork', 'RubyTester',
     'RubyGenerated', 'RubySlicc', 'RubySystem', 'RubyCache',
     'RubyDma', 'RubyPort', 'RubySequencer', 'RubyCacheTrace',
     'RubyPrefetcher'])
-
-if env['PROTOCOL'] == 'None':
-    Return()
 
 def do_embed_text(target, source, env):
     """convert a text file into a file that can be embedded in C

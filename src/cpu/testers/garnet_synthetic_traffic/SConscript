@@ -30,6 +30,9 @@
 
 Import('*')
 
+if env['PROTOCOL'] == 'None':
+    Return()
+
 SimObject('GarnetSyntheticTraffic.py')
 
 Source('GarnetSyntheticTraffic.cc')
