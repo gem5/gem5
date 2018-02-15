@@ -628,7 +628,8 @@ AtomicSimpleCPU::tick()
                     traceData = NULL;
                 }
 
-                if (dynamic_pointer_cast<SyscallRetryFault>(fault)) {
+                if (fault != NoFault &&
+                    dynamic_pointer_cast<SyscallRetryFault>(fault)) {
                     // Retry execution of system calls after a delay.
                     // Prevents immediate re-execution since conditions which
                     // caused the retry are unlikely to change every tick.
