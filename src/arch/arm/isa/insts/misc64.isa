@@ -191,6 +191,6 @@ let {{
     hltIop = InstObjParams("hlt", "Hlt64", "ImmOp64",
                            hltCode, ["IsNonSpeculative"])
     header_output += ImmOp64Declare.subst(hltIop)
-    decoder_output += ImmOp64Constructor.subst(hltIop)
+    decoder_output += SemihostConstructor64.subst(hltIop)
     exec_output += BasicExecute.subst(hltIop)
 }};
