@@ -177,7 +177,7 @@ uint8_t ArmFault::aarch64FaultSources[] = {
     0x0d,  // PermissionL1
     0x0e,  // PermissionL2
     0x0f,  // PermissionL3
-    0xff,  // DebugEvent (INVALID)
+    0x22,  // DebugEvent
     0x10,  // SynchronousExternalAbort
     0x30,  // TLBConflictAbort
     0x18,  // SynchPtyErrOnMemoryAccess
