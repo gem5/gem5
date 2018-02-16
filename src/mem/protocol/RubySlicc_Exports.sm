@@ -218,6 +218,7 @@ enumeration(MemoryControlRequestType, desc="...", default="MemoryControlRequestT
 // you cannot use anything other than the ones defined here.  Also, a protocol
 // can have only one state machine for a given type.
 enumeration(MachineType, desc="...", default="MachineType_NULL") {
+    L0Cache,     desc="L0 Cache Mach";
     L1Cache,     desc="L1 Cache Mach";
     L2Cache,     desc="L2 Cache Mach";
     L3Cache,     desc="L3 Cache Mach";
