@@ -371,7 +371,7 @@ VirtIO9PDiod::startDiod()
     fatal_if(sizeof(socket_address.sun_path) <= socket_path.length(),
              "Incorrect length of socket path");
     strncpy(socket_address.sun_path, socket_path.c_str(),
-            sizeof(socket_address.sun_path));
+            sizeof(socket_address.sun_path) - 1);
     if (bind(socket_id, (struct sockaddr*) &socket_address,
              sizeof(struct sockaddr_un)) == -1){
         perror("Socket binding");

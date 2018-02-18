@@ -404,7 +404,7 @@ EtherTap::EtherTap(const Params *p) : EtherTapBase(p)
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
     ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
-    strncpy(ifr.ifr_name, p->tap_device_name.c_str(), IFNAMSIZ);
+    strncpy(ifr.ifr_name, p->tap_device_name.c_str(), IFNAMSIZ - 1);
 
     if (ioctl(fd, TUNSETIFF, (void *)&ifr) < 0)
         panic("Failed to access tap device %s.\n", ifr.ifr_name);
