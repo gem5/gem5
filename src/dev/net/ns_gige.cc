@@ -742,6 +742,7 @@ NSGigE::write(PacketPtr pkt)
                 panic("writing RFDR for something other than pattern matching "
                     "or hashing! %#x\n", rfaddr);
             }
+            break;
 
           case BRAR:
             regs.brar = reg;
