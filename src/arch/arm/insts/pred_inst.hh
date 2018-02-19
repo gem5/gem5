@@ -150,7 +150,7 @@ simd_modified_imm(bool op, uint8_t cmode, uint8_t data, bool &immValid,
                 break;
             }
         }
-        // Fall through, immediate encoding is invalid.
+        M5_FALLTHROUGH;
       default:
         immValid = false;
         break;

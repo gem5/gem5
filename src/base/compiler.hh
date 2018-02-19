@@ -55,6 +55,7 @@
 #  define M5_NO_INLINE __attribute__ ((__noinline__))
 #  define M5_DEPRECATED __attribute__((deprecated))
 #  define M5_DEPRECATED_MSG(MSG) __attribute__((deprecated(MSG)))
+#  define M5_UNREACHABLE __builtin_unreachable()
 #endif
 
 #if defined(__clang__)

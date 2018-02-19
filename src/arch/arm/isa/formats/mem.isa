@@ -470,6 +470,7 @@ def format Thumb32LoadWord() {{
                     return new %(imm_puw)s(machInst, RT, RN, true, imm);
                 }
             }
+          return new Unknown(machInst);
         } else {
             return new Unknown(machInst);
         }
@@ -514,6 +515,8 @@ def format Thumb32StoreSingle() {{
                         return new %(imm_pu)s(machInst, RT, RN, true, imm);
                       case 7:
                         return new %(imm_puw)s(machInst, RT, RN, true, imm);
+                      default:
+                        M5_UNREACHABLE;
                     }
                 }
         '''
@@ -978,6 +981,8 @@ def format Thumb16MemReg() {{
             return new %(ldrb)s(machInst, rt, rn, true, 0, LSL, rm);
           case 0x7:
             return new %(ldrsh)s(machInst, rt, rn, true, 0, LSL, rm);
+          default:
+            M5_UNREACHABLE;
         }
     }
     '''

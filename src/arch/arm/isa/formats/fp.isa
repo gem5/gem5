@@ -130,7 +130,7 @@ let {{
                     width = 1;
                     break;
                 }
-                // Fall through on purpose.
+                M5_FALLTHROUGH;
               default:
                 return new Unknown(machInst);
             }
@@ -404,6 +404,8 @@ let {{
                         } else {
                             return new VbifD<uint64_t>(machInst, vd, vn, vm);
                         }
+                      default:
+                        M5_UNREACHABLE;
                     }
                 } else {
                     switch (c) {
@@ -445,6 +447,8 @@ let {{
                             return new VornD<uint64_t>(
                                     machInst, vd, vn, vm);
                         }
+                      default:
+                        M5_UNREACHABLE;
                     }
                 }
             }
@@ -1550,6 +1554,8 @@ let {{
                     return decodeNeonSTwoMiscReg<NVnegD, NVnegQ>(
                             q, size, machInst, vd, vm);
                 }
+              default:
+                return new Unknown64(machInst);
             }
           case 0x2:
             switch (bits(b, 4, 1)) {
@@ -1859,6 +1865,8 @@ let {{
                     // If rn == sp, then this is called vpop.
                     return new VLdmStm(machInst, rn, vd, single,
                                        true, true, true, offset);
+                  default:
+                    M5_UNREACHABLE;
                 }
             }
           case 0x2:
@@ -1870,7 +1878,7 @@ let {{
                 return new VLdmStm(machInst, rn, vd, single,
                                    false, true, true, offset);
             }
-            // Fall through on purpose
+            M5_FALLTHROUGH;
           case 0x3:
             const bool up = (bits(machInst, 23) == 1);
             const uint32_t imm = bits(machInst, 7, 0) << 2;
