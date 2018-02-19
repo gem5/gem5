@@ -39,6 +39,7 @@
 
 #include <string>
 
+#include "base/compiler.hh"
 #include "base/trace.hh"
 #include "debug/MMU.hh"
 #include "sim/faults.hh"
@@ -83,7 +84,7 @@ EmulationPageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
             new_vaddr, size);
 
     while (size > 0) {
-        auto new_it = pTable.find(new_vaddr);
+        auto new_it M5_VAR_USED = pTable.find(new_vaddr);
         auto old_it = pTable.find(vaddr);
         assert(old_it != pTable.end() && new_it == pTable.end());
 
