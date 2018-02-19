@@ -30,13 +30,6 @@
 
 using namespace std;
 
-// randomize so that handoffs are not locality-aware
-#if 0
-int persistent_randomize[] = {0, 4, 8, 12, 1, 5, 9, 13, 2, 6,
-                              10, 14, 3, 7, 11, 15};
-int persistent_randomize[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-                              10, 11, 12, 13, 14, 15};
-#endif
 
 PersistentTable::PersistentTable()
 {
@@ -51,14 +44,6 @@ PersistentTable::persistentRequestLock(Addr address,
                                        MachineID locker,
                                        AccessType type)
 {
-#if 0
-    if (locker == m_chip_ptr->getID())
-        cout << "Chip " << m_chip_ptr->getID() << ": " << llocker
-             << " requesting lock for " << address << endl;
-
-    MachineID locker = (MachineID) persistent_randomize[llocker];
-#endif
-
     assert(address == makeLineAddress(address));
 
     static const PersistentTableEntry dflt;
@@ -85,14 +70,6 @@ void
 PersistentTable::persistentRequestUnlock(Addr address,
                                          MachineID unlocker)
 {
-#if 0
-    if (unlocker == m_chip_ptr->getID())
-        cout << "Chip " << m_chip_ptr->getID() << ": " << uunlocker
-             << " requesting unlock for " << address << endl;
-
-    MachineID unlocker = (MachineID) persistent_randomize[uunlocker];
-#endif
-
     assert(address == makeLineAddress(address));
     assert(m_map.count(address));
     PersistentTableEntry& entry = m_map[address];
