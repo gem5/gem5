@@ -47,6 +47,25 @@ def format CIOp(imm_code, code, imm_type='int64_t', *opt_flags) {{
     exec_output = ImmExecute.subst(iop)
 }};
 
+def format CBOp(code, *opt_flags) {{
+    imm_code = """
+                imm = CIMM5<2:1> << 1 |
+                      CIMM3<1:0> << 3 |
+                      CIMM5<0:0> << 5 |
+                      CIMM5<4:3> << 6;
+                if (CIMM3<2:2> > 0)
+                    imm |= ~((int64_t)0xFF);
+               """
+    regs = ['_srcRegIdx[0]','_srcRegIdx[1]']
+    iop = InstObjParams(name, Name, 'ImmOp<int64_t>',
+        {'code': code, 'imm_code': imm_code,
+         'regs': ','.join(regs)}, opt_flags)
+    header_output = BranchDeclare.subst(iop)
+    decoder_output = ImmConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BranchExecute.subst(iop)
+}};
+
 def format CompressedLoad(ldisp_code, memacc_code,
         ea_code, mem_flags=[], inst_flags=[]) {{
     (header_output, decoder_output, decode_block, exec_output) = \

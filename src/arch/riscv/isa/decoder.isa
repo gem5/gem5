@@ -212,30 +212,16 @@ decode QUADRANT default Unknown::unknown() {
                 offset |= ~((int64_t)0x7FF);
             NPC = PC + offset;
         }}, IsIndirectControl, IsUncondControl, IsCall);
-        format BOp {
+        format CBOp {
             0x6: c_beqz({{
-                int64_t offset = CIMM5<2:1> << 1 |
-                                 CIMM3<1:0> << 3 |
-                                 CIMM5<0:0> << 5 |
-                                 CIMM5<4:3> << 6;
-                if (CIMM3<2:2> > 0)
-                    offset |= ~((int64_t)0xFF);
-
                 if (Rp1 == 0)
-                    NPC = PC + offset;
+                    NPC = PC + imm;
                 else
                     NPC = NPC;
             }}, IsDirectControl, IsCondControl);
             0x7: c_bnez({{
-                int64_t offset = CIMM5<2:1> << 1 |
-                                 CIMM3<1:0> << 3 |
-                                 CIMM5<0:0> << 5 |
-                                 CIMM5<4:3> << 6;
-                if (CIMM3<2:2> > 0)
-                    offset |= ~((int64_t)0xFF);
-
                 if (Rp1 != 0)
-                    NPC = PC + offset;
+                    NPC = PC + imm;
                 else
                     NPC = NPC;
             }}, IsDirectControl, IsCondControl);
