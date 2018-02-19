@@ -36,19 +36,22 @@
 
 #include <string>
 
+#include "arch/riscv/registers.hh"
 #include "cpu/thread_context.hh"
 #include "sim/faults.hh"
 
 namespace RiscvISA
 {
 
-const uint32_t FloatInexact = 1 << 0;
-const uint32_t FloatUnderflow = 1 << 1;
-const uint32_t FloatOverflow = 1 << 2;
-const uint32_t FloatDivZero = 1 << 3;
-const uint32_t FloatInvalid = 1 << 4;
+enum FloatException : MiscReg {
+    FloatInexact = 0x1,
+    FloatUnderflow = 0x2,
+    FloatOverflow = 0x4,
+    FloatDivZero = 0x8,
+    FloatInvalid = 0x10
+};
 
-enum ExceptionCode {
+enum ExceptionCode : MiscReg {
     INST_ADDR_MISALIGNED = 0,
     INST_ACCESS = 1,
     INST_ILLEGAL = 2,
@@ -61,49 +64,77 @@ enum ExceptionCode {
     AMO_ACCESS = 7,
     ECALL_USER = 8,
     ECALL_SUPER = 9,
-    ECALL_HYPER = 10,
-    ECALL_MACH = 11
+    ECALL_MACHINE = 11,
+    INST_PAGE = 12,
+    LOAD_PAGE = 13,
+    STORE_PAGE = 15,
+    AMO_PAGE = 15
 };
 
-enum InterruptCode {
-    SOFTWARE,
-    TIMER
-};
+/**
+ * These fields are specified in the RISC-V Instruction Set Manual, Volume II,
+ * v1.10, accessible at www.riscv.org. in Figure 3.7. The main register that
+ * uses these fields is the MSTATUS register, which is shadowed by two others
+ * accessible at lower privilege levels (SSTATUS and USTATUS) that can't see
+ * the fields for higher privileges.
+ */
+BitUnion64(STATUS)
+    Bitfield<63> sd;
+    Bitfield<35, 34> sxl;
+    Bitfield<33, 32> uxl;
+    Bitfield<22> tsr;
+    Bitfield<21> tw;
+    Bitfield<20> tvm;
+    Bitfield<19> mxr;
+    Bitfield<18> sum;
+    Bitfield<17> mprv;
+    Bitfield<16, 15> xs;
+    Bitfield<14, 13> fs;
+    Bitfield<12, 11> mpp;
+    Bitfield<8> spp;
+    Bitfield<7> mpie;
+    Bitfield<5> spie;
+    Bitfield<4> upie;
+    Bitfield<3> mie;
+    Bitfield<1> sie;
+    Bitfield<0> uie;
+EndBitUnion(STATUS)
+
+/**
+ * These fields are specified in the RISC-V Instruction Set Manual, Volume II,
+ * v1.10 in Figures 3.11 and 3.12, accessible at www.riscv.org. Both the MIP
+ * and MIE registers have the same fields, so accesses to either should use
+ * this bit union.
+ */
+BitUnion64(INTERRUPT)
+    Bitfield<11> mei;
+    Bitfield<9> sei;
+    Bitfield<8> uei;
+    Bitfield<7> mti;
+    Bitfield<5> sti;
+    Bitfield<4> uti;
+    Bitfield<3> msi;
+    Bitfield<1> ssi;
+    Bitfield<0> usi;
+EndBitUnion(INTERRUPT)
 
 class RiscvFault : public FaultBase
 {
   protected:
     const FaultName _name;
+    bool _interrupt;
     const ExceptionCode _code;
-    const InterruptCode _int;
 
-    RiscvFault(FaultName n, ExceptionCode c, InterruptCode i)
-        : _name(n), _code(c), _int(i)
+    RiscvFault(FaultName n, bool i, ExceptionCode c)
+        : _name(n), _interrupt(i), _code(c)
     {}
 
-    FaultName
-    name() const
-    {
-        return _name;
-    }
+    FaultName name() const { return _name; }
+    bool isInterrupt() const { return _interrupt; }
+    ExceptionCode exception() const { return _code; }
 
-    ExceptionCode
-    exception() const
-    {
-        return _code;
-    }
-
-    InterruptCode
-    interrupt() const
-    {
-        return _int;
-    }
-
-    virtual void
-    invoke_se(ThreadContext *tc, const StaticInstPtr &inst);
-
-    void
-    invoke(ThreadContext *tc, const StaticInstPtr &inst);
+    virtual void invokeSE(ThreadContext *tc, const StaticInstPtr &inst);
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
 class Reset : public FaultBase
@@ -131,63 +162,59 @@ class Reset : public FaultBase
 class UnknownInstFault : public RiscvFault
 {
   public:
-    UnknownInstFault() : RiscvFault("Unknown instruction", INST_ILLEGAL,
-            SOFTWARE)
+    UnknownInstFault() : RiscvFault("Unknown instruction", false, INST_ILLEGAL)
     {}
 
-    void
-    invoke_se(ThreadContext *tc, const StaticInstPtr &inst);
+    void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
 class IllegalInstFault : public RiscvFault
 {
   private:
     const std::string reason;
+
   public:
     IllegalInstFault(std::string r)
-        : RiscvFault("Illegal instruction", INST_ILLEGAL, SOFTWARE),
-          reason(r)
+        : RiscvFault("Illegal instruction", false, INST_ILLEGAL)
     {}
 
-    void invoke_se(ThreadContext *tc, const StaticInstPtr &inst);
+    void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
 class UnimplementedFault : public RiscvFault
 {
   private:
     const std::string instName;
+
   public:
     UnimplementedFault(std::string name)
-        : RiscvFault("Unimplemented instruction", INST_ILLEGAL, SOFTWARE),
-        instName(name)
+        : RiscvFault("Unimplemented instruction", false, INST_ILLEGAL),
+          instName(name)
     {}
 
-    void
-    invoke_se(ThreadContext *tc, const StaticInstPtr &inst);
+    void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
 class IllegalFrmFault: public RiscvFault
 {
   private:
     const uint8_t frm;
+
   public:
     IllegalFrmFault(uint8_t r)
-        : RiscvFault("Illegal floating-point rounding mode", INST_ILLEGAL,
-                SOFTWARE),
-        frm(r)
+        : RiscvFault("Illegal floating-point rounding mode", false,
+                     INST_ILLEGAL),
+          frm(r)
     {}
 
-    void invoke_se(ThreadContext *tc, const StaticInstPtr &inst);
+    void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
 class BreakpointFault : public RiscvFault
 {
   public:
-    BreakpointFault() : RiscvFault("Breakpoint", BREAKPOINT, SOFTWARE)
-    {}
-
-    void
-    invoke_se(ThreadContext *tc, const StaticInstPtr &inst);
+    BreakpointFault() : RiscvFault("Breakpoint", false, BREAKPOINT) {}
+    void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
 class SyscallFault : public RiscvFault
@@ -195,11 +222,8 @@ class SyscallFault : public RiscvFault
   public:
     // TODO: replace ECALL_USER with the appropriate privilege level of the
     // caller
-    SyscallFault() : RiscvFault("System call", ECALL_USER, SOFTWARE)
-    {}
-
-    void
-    invoke_se(ThreadContext *tc, const StaticInstPtr &inst);
+    SyscallFault() : RiscvFault("System call", false, ECALL_USER) {}
+    void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
 } // namespace RiscvISA
