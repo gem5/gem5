@@ -43,7 +43,8 @@ decode QUADRANT default Unknown::unknown() {
                   CIMM8<5:2> << 6;
         }}, {{
             if (machInst == 0)
-                fault = make_shared<IllegalInstFault>("zero instruction");
+                fault = make_shared<IllegalInstFault>("zero instruction",
+                                                      machInst);
             Rp2 = sp + imm;
         }}, uint64_t);
         format CompressedLoad {
@@ -106,9 +107,11 @@ decode QUADRANT default Unknown::unknown() {
             }}, {{
                 if ((RC1 == 0) != (imm == 0)) {
                     if (RC1 == 0) {
-                        fault = make_shared<IllegalInstFault>("source reg x0");
+                        fault = make_shared<IllegalInstFault>("source reg x0",
+                                                              machInst);
                     } else // imm == 0
-                        fault = make_shared<IllegalInstFault>("immediate = 0");
+                        fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                              machInst);
                 }
                 Rc1_sd = Rc1_sd + imm;
             }});
@@ -118,7 +121,8 @@ decode QUADRANT default Unknown::unknown() {
                     imm |= ~((uint64_t)0x1F);
             }}, {{
                 if (RC1 == 0) {
-                    fault = make_shared<IllegalInstFault>("source reg x0");
+                    fault = make_shared<IllegalInstFault>("source reg x0",
+                                                          machInst);
                 }
                 Rc1_sd = (int32_t)Rc1_sd + imm;
             }});
@@ -128,7 +132,8 @@ decode QUADRANT default Unknown::unknown() {
                     imm |= ~((uint64_t)0x1F);
             }}, {{
                 if (RC1 == 0) {
-                    fault = make_shared<IllegalInstFault>("source reg x0");
+                    fault = make_shared<IllegalInstFault>("source reg x0",
+                                                          machInst);
                 }
                 Rc1_sd = imm;
             }});
@@ -142,7 +147,8 @@ decode QUADRANT default Unknown::unknown() {
                         imm |= ~((int64_t)0x1FF);
                 }}, {{
                     if (imm == 0) {
-                        fault = make_shared<IllegalInstFault>("immediate = 0");
+                        fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                              machInst);
                     }
                     sp_sd = sp_sd + imm;
                 }});
@@ -152,10 +158,12 @@ decode QUADRANT default Unknown::unknown() {
                         imm |= ~((uint64_t)0x1FFFF);
                 }}, {{
                     if (RC1 == 0 || RC1 == 2) {
-                        fault = make_shared<IllegalInstFault>("source reg x0");
+                        fault = make_shared<IllegalInstFault>("source reg x0",
+                                                              machInst);
                     }
                     if (imm == 0) {
-                        fault = make_shared<IllegalInstFault>("immediate = 0");
+                        fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                              machInst);
                     }
                     Rc1_sd = imm;
                 }});
@@ -167,7 +175,8 @@ decode QUADRANT default Unknown::unknown() {
                     imm = CIMM5 | (CIMM1 << 5);
                 }}, {{
                     if (imm == 0) {
-                        fault = make_shared<IllegalInstFault>("immediate = 0");
+                        fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                              machInst);
                     }
                     Rp1 = Rp1 >> imm;
                 }}, uint64_t);
@@ -175,7 +184,8 @@ decode QUADRANT default Unknown::unknown() {
                     imm = CIMM5 | (CIMM1 << 5);
                 }}, {{
                     if (imm == 0) {
-                        fault = make_shared<IllegalInstFault>("immediate = 0");
+                        fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                              machInst);
                     }
                     Rp1_sd = Rp1_sd >> imm;
                 }}, uint64_t);
@@ -246,10 +256,12 @@ decode QUADRANT default Unknown::unknown() {
             imm = CIMM5 | (CIMM1 << 5);
         }}, {{
             if (imm == 0) {
-                fault = make_shared<IllegalInstFault>("immediate = 0");
+                fault = make_shared<IllegalInstFault>("immediate = 0",
+                                                      machInst);
             }
             if (RC1 == 0) {
-                fault = make_shared<IllegalInstFault>("source reg x0");
+                fault = make_shared<IllegalInstFault>("source reg x0",
+                                                      machInst);
             }
             Rc1 = Rc1 << imm;
         }}, uint64_t);
@@ -269,7 +281,8 @@ decode QUADRANT default Unknown::unknown() {
                          CIMM5<1:0> << 6;
             }}, {{
                 if (RC1 == 0) {
-                    fault = make_shared<IllegalInstFault>("source reg x0");
+                    fault = make_shared<IllegalInstFault>("source reg x0",
+                                                          machInst);
                 }
                 Rc1_sd = Mem_sw;
             }}, {{
@@ -281,7 +294,8 @@ decode QUADRANT default Unknown::unknown() {
                          CIMM5<2:0> << 6;
             }}, {{
                 if (RC1 == 0) {
-                    fault = make_shared<IllegalInstFault>("source reg x0");
+                    fault = make_shared<IllegalInstFault>("source reg x0",
+                                                          machInst);
                 }
                 Rc1_sd = Mem_sd;
             }}, {{
@@ -292,13 +306,15 @@ decode QUADRANT default Unknown::unknown() {
             0x0: decode RC2 {
                 0x0: Jump::c_jr({{
                     if (RC1 == 0) {
-                        fault = make_shared<IllegalInstFault>("source reg x0");
+                        fault = make_shared<IllegalInstFault>("source reg x0",
+                                                              machInst);
                     }
                     NPC = Rc1;
                 }}, IsIndirectControl, IsUncondControl, IsCall);
                 default: CROp::c_mv({{
                     if (RC1 == 0) {
-                        fault = make_shared<IllegalInstFault>("source reg x0");
+                        fault = make_shared<IllegalInstFault>("source reg x0",
+                                                              machInst);
                     }
                     Rc1 = Rc2;
                 }});
@@ -306,15 +322,17 @@ decode QUADRANT default Unknown::unknown() {
             0x1: decode RC1 {
                 0x0: SystemOp::c_ebreak({{
                     if (RC2 != 0) {
-                        fault = make_shared<IllegalInstFault>("source reg x1");
+                        fault = make_shared<IllegalInstFault>("source reg x1",
+                                                              machInst);
                     }
-                    fault = make_shared<BreakpointFault>();
+                    fault = make_shared<BreakpointFault>(xc->pcState());
                 }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                 default: decode RC2 {
                     0x0: Jump::c_jalr({{
                         if (RC1 == 0) {
                             fault = make_shared<IllegalInstFault>
-                                                        ("source reg x0");
+                                                        ("source reg x0",
+                                                         machInst);
                         }
                         ra = NPC;
                         NPC = Rc1;
@@ -1250,7 +1268,8 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 0x20: fcvt_s_d({{
                     if (CONV_SGN != 1) {
-                        fault = make_shared<IllegalInstFault>("CONV_SGN != 1");
+                        fault = make_shared<IllegalInstFault>("CONV_SGN != 1",
+                                                              machInst);
                     }
                     float fd;
                     if (issignalingnan(Fs1)) {
@@ -1263,7 +1282,8 @@ decode QUADRANT default Unknown::unknown() {
                 }}, FloatCvtOp);
                 0x21: fcvt_d_s({{
                     if (CONV_SGN != 0) {
-                        fault = make_shared<IllegalInstFault>("CONV_SGN != 0");
+                        fault = make_shared<IllegalInstFault>("CONV_SGN != 0",
+                                                              machInst);
                     }
                     uint32_t temp;
                     float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
@@ -1277,7 +1297,8 @@ decode QUADRANT default Unknown::unknown() {
                 }}, FloatCvtOp);
                 0x2c: fsqrt_s({{
                     if (RS2 != 0) {
-                        fault = make_shared<IllegalInstFault>("source reg x1");
+                        fault = make_shared<IllegalInstFault>("source reg x1",
+                                                              machInst);
                     }
                     uint32_t temp;
                     float fs1 = reinterpret_cast<float&>(temp = Fs1_bits);
@@ -1291,7 +1312,8 @@ decode QUADRANT default Unknown::unknown() {
                 }}, FloatSqrtOp);
                 0x2d: fsqrt_d({{
                     if (RS2 != 0) {
-                        fault = make_shared<IllegalInstFault>("source reg x1");
+                        fault = make_shared<IllegalInstFault>("source reg x1",
+                                                              machInst);
                     }
                     Fd = sqrt(Fs1);
                 }}, FloatSqrtOp);
@@ -1690,10 +1712,11 @@ decode QUADRANT default Unknown::unknown() {
                     }}, IsSerializeAfter, IsNonSpeculative, IsSyscall,
                         No_OpClass);
                     0x1: ebreak({{
-                        fault = make_shared<BreakpointFault>();
+                        fault = make_shared<BreakpointFault>(xc->pcState());
                     }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                     0x100: eret({{
-                        fault = make_shared<UnimplementedFault>("eret");
+                        fault = make_shared<UnimplementedFault>("eret",
+                                                                machInst);
                     }}, No_OpClass);
                 }
             }

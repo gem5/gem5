@@ -231,7 +231,7 @@ def template CSRExecute {{
                 olddata = xc->readMiscReg(CSRData.at(csr).physIndex);
             } else {
                 std::string error = csprintf("Illegal CSR index %#x\n", csr);
-                fault = make_shared<IllegalInstFault>(error);
+                fault = make_shared<IllegalInstFault>(error, machInst);
                 olddata = 0;
             }
             break;
@@ -252,7 +252,7 @@ def template CSRExecute {{
                     if (bits(csr, 11, 10) == 0x3) {
                         std::string error = csprintf("CSR %s is read-only\n",
                                                      CSRData.at(csr).name);
-                        fault = make_shared<IllegalInstFault>(error);
+                        fault = make_shared<IllegalInstFault>(error, machInst);
                     } else {
                         DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n", data,
                                 CSRData.at(csr).name);

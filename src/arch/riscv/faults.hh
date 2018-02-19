@@ -129,9 +129,10 @@ class RiscvFault : public FaultBase
         : _name(n), _interrupt(i), _code(c)
     {}
 
-    FaultName name() const { return _name; }
+    FaultName name() const override { return _name; }
     bool isInterrupt() const { return _interrupt; }
     ExceptionCode exception() const { return _code; }
+    virtual MiscReg trap_value() const { return 0; }
 
     virtual void invokeSE(ThreadContext *tc, const StaticInstPtr &inst);
     void invoke(ThreadContext *tc, const StaticInstPtr &inst) override;
@@ -159,61 +160,94 @@ class Reset : public FaultBase
         const FaultName _name;
 };
 
-class UnknownInstFault : public RiscvFault
+class InstFault : public RiscvFault
+{
+  protected:
+    const ExtMachInst _inst;
+
+  public:
+    InstFault(FaultName n, const ExtMachInst inst)
+        : RiscvFault(n, false, INST_ILLEGAL), _inst(inst)
+    {}
+
+    MiscReg trap_value() const override { return _inst; }
+};
+
+class UnknownInstFault : public InstFault
 {
   public:
-    UnknownInstFault() : RiscvFault("Unknown instruction", false, INST_ILLEGAL)
+    UnknownInstFault(const ExtMachInst inst)
+        : InstFault("Unknown instruction", inst)
     {}
 
     void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
-class IllegalInstFault : public RiscvFault
+class IllegalInstFault : public InstFault
 {
   private:
     const std::string reason;
 
   public:
-    IllegalInstFault(std::string r)
-        : RiscvFault("Illegal instruction", false, INST_ILLEGAL)
+    IllegalInstFault(std::string r, const ExtMachInst inst)
+        : InstFault("Illegal instruction", inst)
     {}
 
     void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
-class UnimplementedFault : public RiscvFault
+class UnimplementedFault : public InstFault
 {
   private:
     const std::string instName;
 
   public:
-    UnimplementedFault(std::string name)
-        : RiscvFault("Unimplemented instruction", false, INST_ILLEGAL),
+    UnimplementedFault(std::string name, const ExtMachInst inst)
+        : InstFault("Unimplemented instruction", inst),
           instName(name)
     {}
 
     void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
-class IllegalFrmFault: public RiscvFault
+class IllegalFrmFault: public InstFault
 {
   private:
     const uint8_t frm;
 
   public:
-    IllegalFrmFault(uint8_t r)
-        : RiscvFault("Illegal floating-point rounding mode", false,
-                     INST_ILLEGAL),
+    IllegalFrmFault(uint8_t r, const ExtMachInst inst)
+        : InstFault("Illegal floating-point rounding mode", inst),
           frm(r)
     {}
 
     void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
+class AddressFault : public RiscvFault
+{
+  private:
+    const Addr _addr;
+
+  public:
+    AddressFault(const Addr addr, ExceptionCode code)
+        : RiscvFault("Address", false, code), _addr(addr)
+    {}
+
+    MiscReg trap_value() const override { return _addr; }
+};
+
 class BreakpointFault : public RiscvFault
 {
+  private:
+    const PCState pcState;
+
   public:
-    BreakpointFault() : RiscvFault("Breakpoint", false, BREAKPOINT) {}
+    BreakpointFault(const PCState &pc)
+        : RiscvFault("Breakpoint", false, BREAKPOINT), pcState(pc)
+    {}
+
+    MiscReg trap_value() const override { return pcState.pc(); }
     void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 

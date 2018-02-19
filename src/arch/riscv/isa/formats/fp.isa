@@ -57,7 +57,7 @@ def template FloatExecute {{
                 break;
             case 0x4:
                 // Round to nearest, ties to max magnitude not implemented
-                fault = make_shared<IllegalFrmFault>(ROUND_MODE);
+                fault = make_shared<IllegalFrmFault>(ROUND_MODE, machInst);
                 break;
             case 0x7: {
                 uint8_t frm = xc->readMiscReg(MISCREG_FRM);
@@ -76,16 +76,17 @@ def template FloatExecute {{
                     break;
                 case 0x4:
                     // Round to nearest, ties to max magnitude not implemented
-                    fault = make_shared<IllegalFrmFault>(ROUND_MODE);
+                    fault = make_shared<IllegalFrmFault>(ROUND_MODE, machInst);
                     break;
                 default:
-                    fault = std::make_shared<IllegalFrmFault>(frm);
+                    fault = std::make_shared<IllegalFrmFault>(frm, machInst);
                     break;
                 }
                 break;
             }
             default:
-                fault = std::make_shared<IllegalFrmFault>(ROUND_MODE);
+                fault = std::make_shared<IllegalFrmFault>(ROUND_MODE,
+                                                          machInst);
                 break;
             }
 

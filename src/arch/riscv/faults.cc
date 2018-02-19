@@ -71,12 +71,13 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         }
 
         // Set fault registers and status
-        MiscRegIndex cause, epc, tvec;
+        MiscRegIndex cause, epc, tvec, tval;
         switch (prv) {
           case PRV_U:
             cause = MISCREG_UCAUSE;
             epc = MISCREG_UEPC;
             tvec = MISCREG_UTVEC;
+            tval = MISCREG_UTVAL;
 
             status.upie = status.uie;
             status.uie = 0;
@@ -85,6 +86,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             cause = MISCREG_SCAUSE;
             epc = MISCREG_SEPC;
             tvec = MISCREG_STVEC;
+            tval = MISCREG_STVAL;
 
             status.spp = pp;
             status.spie = status.sie;
@@ -94,6 +96,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             cause = MISCREG_MCAUSE;
             epc = MISCREG_MEPC;
             tvec = MISCREG_MTVEC;
+            tval = MISCREG_MTVAL;
 
             status.mpp = pp;
             status.mpie = status.sie;
@@ -108,6 +111,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         tc->setMiscReg(cause,
                        (isInterrupt() << (sizeof(MiscReg) * 4 - 1)) | _code);
         tc->setMiscReg(epc, tc->instAddr());
+        tc->setMiscReg(tval, trap_value());
         tc->setMiscReg(MISCREG_PRV, prv);
         tc->setMiscReg(MISCREG_STATUS, status);
 
