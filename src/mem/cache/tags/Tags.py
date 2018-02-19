@@ -66,19 +66,12 @@ class BaseTags(ClockedObject):
 
 class BaseSetAssoc(BaseTags):
     type = 'BaseSetAssoc'
-    abstract = True
     cxx_header = "mem/cache/tags/base_set_assoc.hh"
     assoc = Param.Int(Parent.assoc, "associativity")
 
-class LRU(BaseSetAssoc):
-    type = 'LRU'
-    cxx_class = 'LRU'
-    cxx_header = "mem/cache/tags/lru.hh"
-
-class RandomRepl(BaseSetAssoc):
-    type = 'RandomRepl'
-    cxx_class = 'RandomRepl'
-    cxx_header = "mem/cache/tags/random_repl.hh"
+    # Get replacement policy from the parent (cache)
+    replacement_policy = Param.BaseReplacementPolicy(
+        Parent.replacement_policy, "Replacement policy")
 
 class FALRU(BaseTags):
     type = 'FALRU'

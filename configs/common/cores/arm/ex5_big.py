@@ -197,4 +197,5 @@ class L2(Cache):
     clusivity = 'mostly_excl'
     # Simple stride prefetcher
     prefetcher = StridePrefetcher(degree=8, latency = 1)
-    tags = RandomRepl()
+    tags = BaseSetAssoc()
+    repl_policy = RandomRP()

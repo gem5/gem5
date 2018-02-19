@@ -1816,6 +1816,7 @@ Cache::invalidateVisitor(CacheBlk &blk)
 CacheBlk*
 Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
 {
+    // Find replacement victim
     CacheBlk *blk = tags->findVictim(addr);
 
     // It is valid to return nullptr if there is no victim
@@ -2802,6 +2803,7 @@ Cache*
 CacheParams::create()
 {
     assert(tags);
+    assert(replacement_policy);
 
     return new Cache(this);
 }

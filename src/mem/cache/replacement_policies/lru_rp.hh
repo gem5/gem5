@@ -1,17 +1,5 @@
-/*
- * Copyright (c) 2017 ARM Limited
- * All rights reserved.
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2014 The Regents of The University of Michigan
+/**
+ * Copyright (c) 2018 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,42 +25,60 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Anthony Gutierrez
+ * Authors: Daniel Carvalho
  */
 
 /**
  * @file
- * Declaration of a random replacement tag store.
- * The RandomRepl tags first try to evict an invalid
- * block. If no invalid blocks are found, a candidate
- * for eviction is found at random.
+ * Declaration of a Least Recently Used replacement policy.
+ * The victim is chosen using the timestamp. The timestamp may be true or
+ * pseudo, depending on the quantity of bits allocated for that.
  */
 
-#ifndef __MEM_CACHE_TAGS_RANDOM_REPL_HH__
-#define __MEM_CACHE_TAGS_RANDOM_REPL_HH__
+#ifndef __MEM_CACHE_REPLACEMENT_POLICIES_LRU_RP_HH__
+#define __MEM_CACHE_REPLACEMENT_POLICIES_LRU_RP_HH__
 
-#include "mem/cache/tags/base_set_assoc.hh"
-#include "params/RandomRepl.hh"
+#include "mem/cache/replacement_policies/base.hh"
+#include "params/LRURP.hh"
 
-class RandomRepl : public BaseSetAssoc
+class LRURP : public BaseReplacementPolicy
 {
   public:
     /** Convenience typedef. */
-    typedef RandomReplParams Params;
+    typedef LRURPParams Params;
 
     /**
-     * Construct and initiliaze this tag store.
+     * Construct and initiliaze this replacement policy.
      */
-    RandomRepl(const Params *p);
+    LRURP(const Params *p);
 
     /**
-     * Destructor
+     * Destructor.
      */
-    ~RandomRepl() {}
+    ~LRURP() {}
 
-    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat);
-    CacheBlk* findVictim(Addr addr);
-    void insertBlock(PacketPtr pkt, BlkType *blk);
+    /**
+     * Touch a block to update its last touch tick.
+     *
+     * @param blk Cache block to be touched.
+     */
+    void touch(CacheBlk *blk);
+
+    /**
+     * Reset replacement data for a block. Used when a block is inserted.
+     * Sets its last touch tick as the current tick.
+     *
+     * @param blk Cache block to be reset.
+     */
+    void reset(CacheBlk *blk);
+
+    /**
+     * Find replacement victim using LRU timestamps.
+     *
+     * @param candidates Replacement candidates, selected by indexing policy.
+     * @return Cache block to be replaced.
+     */
+    CacheBlk* getVictim(const ReplacementCandidates& candidates) override;
 };
 
-#endif // __MEM_CACHE_TAGS_RANDOM_REPL_HH__
+#endif // __MEM_CACHE_REPLACEMENT_POLICIES_LRU_RP_HH__

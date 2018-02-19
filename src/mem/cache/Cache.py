@@ -43,6 +43,7 @@ from m5.params import *
 from m5.proxy import *
 from MemObject import MemObject
 from Prefetcher import BasePrefetcher
+from ReplacementPolicies import *
 from Tags import *
 
 class BaseCache(MemObject):
@@ -74,7 +75,10 @@ class BaseCache(MemObject):
     prefetch_on_access = Param.Bool(False,
          "Notify the hardware prefetcher on every access (not just misses)")
 
-    tags = Param.BaseTags(LRU(), "Tag store (replacement policy)")
+    tags = Param.BaseTags(BaseSetAssoc(), "Tag store")
+    replacement_policy = Param.BaseReplacementPolicy(LRURP(),
+        "Replacement policy")
+
     sequential_access = Param.Bool(False,
         "Whether to access tags and data sequentially")
 

@@ -1,17 +1,5 @@
-/*
- * Copyright (c) 2012-2013 ARM Limited
- * All rights reserved.
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2003-2005,2014 The Regents of The University of Michigan
+/**
+ * Copyright (c) 2018 Inria
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,42 +25,43 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Erik Hallnor
+ * Authors: Daniel Carvalho
  */
 
 /**
  * @file
- * Declaration of a LRU tag store.
- * The LRU tags guarantee that the true least-recently-used way in
- * a set will always be evicted.
+ * Declaration of a random replacement policy.
+ * The victim is chosen at random, if there are no invalid entries.
  */
 
-#ifndef __MEM_CACHE_TAGS_LRU_HH__
-#define __MEM_CACHE_TAGS_LRU_HH__
+#ifndef __MEM_CACHE_REPLACEMENT_POLICIES_RANDOM_RP_HH__
+#define __MEM_CACHE_REPLACEMENT_POLICIES_RANDOM_RP_HH__
 
-#include "mem/cache/tags/base_set_assoc.hh"
-#include "params/LRU.hh"
+#include "mem/cache/replacement_policies/base.hh"
+#include "params/RandomRP.hh"
 
-class LRU : public BaseSetAssoc
+class RandomRP : public BaseReplacementPolicy
 {
   public:
     /** Convenience typedef. */
-    typedef LRUParams Params;
+    typedef RandomRPParams Params;
 
     /**
-     * Construct and initialize this tag store.
+     * Construct and initiliaze this replacement policy.
      */
-    LRU(const Params *p);
+    RandomRP(const Params *p);
 
     /**
-     * Destructor
+     * Destructor.
      */
-    ~LRU() {}
+    ~RandomRP() {}
 
-    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) override;
-    CacheBlk* findVictim(Addr addr) override;
-    void insertBlock(PacketPtr pkt, BlkType *blk) override;
-    void invalidate(CacheBlk *blk) override;
+    /**
+     * Find replacement victim at random.
+     * @param candidates Replacement candidates, selected by indexing policy.
+     * @return Cache block to be replaced.
+     */
+    CacheBlk* getVictim(const ReplacementCandidates& candidates) override;
 };
 
-#endif // __MEM_CACHE_TAGS_LRU_HH__
+#endif // __MEM_CACHE_REPLACEMENT_POLICIES_RANDOM_RP_HH__

@@ -64,14 +64,9 @@
  * A BaseSetAssoc cache tag store.
  * @sa  \ref gem5MemorySystem "gem5 Memory System"
  *
- * The BaseSetAssoc tags provide a base, as well as the functionality
- * common to any set associative tags. Any derived class must implement
- * the methods related to the specifics of the actual replacment policy.
- * These are:
- *
- * BlkType* accessBlock();
- * BlkType* findVictim();
- * void insertBlock();
+ * The BaseSetAssoc placement policy divides the cache into s sets of w
+ * cache lines (ways). A cache line is mapped onto a set, and can be placed
+ * into any of the ways of this set.
  */
 class BaseSetAssoc : public BaseTags
 {
@@ -109,7 +104,10 @@ class BaseSetAssoc : public BaseTags
     /** Mask out all bits that aren't part of the set index. */
     unsigned setMask;
 
-public:
+    /** Replacement policy */
+    BaseReplacementPolicy *replacementPolicy;
+
+  public:
 
     /** Convenience typedef. */
      typedef BaseSetAssocParams Params;
@@ -169,7 +167,9 @@ public:
                 lat = cache->ticksToCycles(blk->whenReady - curTick()) +
                 accessLatency;
             }
-            blk->refCount += 1;
+
+            // Update replacement data of accessed block
+            replacementPolicy->touch(blk);
         } else {
             // If a cache miss
             lat = lookupLatency;
@@ -189,25 +189,29 @@ public:
     CacheBlk* findBlock(Addr addr, bool is_secure) const override;
 
     /**
-     * Find an invalid block to evict for the address provided.
-     * If there are no invalid blocks, this will return the block
-     * in the least-recently-used position.
-     * @param addr The addr to a find a replacement candidate for.
-     * @return The candidate block.
+     * Find replacement victim based on address.
+     *
+     * @param addr Address to find a victim for.
+     * @return Cache block to be replaced.
      */
     CacheBlk* findVictim(Addr addr) override
     {
-        BlkType *blk = nullptr;
-        int set = extractSet(addr);
+        // Choose replacement victim from replacement candidates
+        return replacementPolicy->getVictim(getPossibleLocations(addr));
+    }
 
-        // prefer to evict an invalid block
-        for (int i = 0; i < allocAssoc; ++i) {
-            blk = sets[set].blks[i];
-            if (!blk->isValid())
-                break;
-        }
-
-        return blk;
+    /**
+     * Find all possible block locations for insertion and replacement of
+     * an address. Should be called immediately before ReplacementPolicy's
+     * findVictim() not to break cache resizing.
+     * Returns blocks in all ways belonging to the set of the address.
+     *
+     * @param addr The addr to a find possible locations for.
+     * @return The possible locations.
+     */
+    const std::vector<CacheBlk*> getPossibleLocations(Addr addr)
+    {
+        return sets[extractSet(addr)].blks;
     }
 
     /**
@@ -242,9 +246,8 @@ public:
          }
 
          // Previous block, if existed, has been removed, and now we have
-         // to insert the new one and mark it as touched
+         // to insert the new one
          tagsInUse++;
-         blk->isTouched = true;
 
          // Set tag for new block.  Caller is responsible for setting status.
          blk->tag = extractTag(addr);
@@ -254,11 +257,12 @@ public:
          occupancies[master_id]++;
          blk->srcMasterId = master_id;
          blk->task_id = task_id;
-         blk->tickInserted = curTick();
 
          // We only need to write into one tag and one data block.
          tagAccesses += 1;
          dataAccesses += 1;
+
+         replacementPolicy->reset(blk);
      }
 
     /**

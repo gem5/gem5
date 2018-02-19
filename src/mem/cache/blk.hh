@@ -99,7 +99,7 @@ class CacheBlk
     /** The current status of this block. @sa CacheBlockStatusBits */
     State status;
 
-    /** Which curTick() will this block be accessable */
+    /** Which curTick() will this block be accessible */
     Tick whenReady;
 
     /**
@@ -108,7 +108,10 @@ class CacheBlk
      */
     int set, way;
 
-    /** whether this block has been touched */
+    /**
+      * Whether this block has been touched since simulation started.
+      * Used to calculate number of used tags.
+      */
     bool isTouched;
 
     /** Number of references to this block since it was brought in. */
@@ -117,7 +120,14 @@ class CacheBlk
     /** holds the source requestor ID for this block. */
     int srcMasterId;
 
+    /** Tick on which the block was inserted in the cache. */
     Tick tickInserted;
+
+    /**
+     * Replacement policy data. As of now it is only an update timestamp.
+     * Tick on which the block was last touched.
+     */
+    Tick lastTouchTick;
 
   protected:
     /**

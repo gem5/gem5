@@ -67,8 +67,6 @@ public:
     FALRUBlk *prev;
     /** The next block in LRU order. */
     FALRUBlk *next;
-    /** Has this block been touched? */
-    bool isTouched;
 
     /**
      * A bit mask of the sizes of cache that this block is resident in.
@@ -204,9 +202,10 @@ public:
     CacheBlk* findBlock(Addr addr, bool is_secure) const override;
 
     /**
-     * Find a replacement block for the address provided.
-     * @param pkt The request to a find a replacement candidate for.
-     * @return The block to place the replacement in.
+     * Find replacement victim based on address.
+     *
+     * @param addr Address to find a victim for.
+     * @return Cache block to be replaced.
      */
     CacheBlk* findVictim(Addr addr) override;
 

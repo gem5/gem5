@@ -98,7 +98,6 @@ FALRU::FALRU(const Params *p)
         }
         blks[i].prev = &(blks[i-1]);
         blks[i].next = &(blks[i+1]);
-        blks[i].isTouched = false;
         blks[i].set = 0;
         blks[i].way = i;
     }
@@ -255,13 +254,13 @@ FALRU::findVictim(Addr addr)
         replacements[0]++;
     } else {
         tagsInUse++;
-        blk->isTouched = true;
         if (!warmedUp && tagsInUse.value() >= warmupBound) {
             warmedUp = true;
             warmupCycle = curTick();
         }
     }
     //assert(check());
+
     return blk;
 }
 
