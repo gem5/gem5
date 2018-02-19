@@ -131,6 +131,13 @@ void Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         tc->clearArchRegs();
     }
 
+    tc->setMiscReg(MISCREG_PRV, PRV_M);
+    STATUS status = tc->readMiscReg(MISCREG_STATUS);
+    status.mie = 0;
+    status.mprv = 0;
+    tc->setMiscReg(MISCREG_STATUS, status);
+    tc->setMiscReg(MISCREG_MCAUSE, 0);
+
     // Advance the PC to the implementation-defined reset vector
     PCState pc = static_cast<RiscvSystem *>(tc->getSystemPtr())->resetVect();
     tc->pcState(pc);

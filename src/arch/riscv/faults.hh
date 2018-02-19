@@ -95,24 +95,15 @@ class RiscvFault : public FaultBase
 
 class Reset : public FaultBase
 {
+  private:
+    const FaultName _name;
 
-    public:
-        Reset()
-            : _name("reset")
-        {}
+  public:
+    Reset() : _name("reset") {}
+    FaultName name() const override { return _name; }
 
-        FaultName
-        name() const override
-        {
-            return _name;
-        }
-
-        void
-        invoke(ThreadContext *tc, const StaticInstPtr &inst =
-            StaticInst::nullStaticInstPtr) override;
-
-    private:
-        const FaultName _name;
+    void invoke(ThreadContext *tc, const StaticInstPtr &inst =
+        StaticInst::nullStaticInstPtr) override;
 };
 
 class InstFault : public RiscvFault
