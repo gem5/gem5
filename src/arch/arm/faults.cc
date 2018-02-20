@@ -1432,6 +1432,20 @@ PCAlignmentFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     tc->setMiscReg(getFaultAddrReg64(), faultPC);
 }
 
+bool
+PCAlignmentFault::routeToHyp(ThreadContext *tc) const
+{
+    bool toHyp = false;
+
+    SCR  scr  = tc->readMiscRegNoEffect(MISCREG_SCR_EL3);
+    HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
+    CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
+
+    // if HCR.TGE is set to 1, take to Hyp mode through Hyp Trap vector
+    toHyp |= !inSecureState(scr, cpsr) && hcr.tge && (cpsr.el == EL0);
+    return toHyp;
+}
+
 SPAlignmentFault::SPAlignmentFault()
 {}
 

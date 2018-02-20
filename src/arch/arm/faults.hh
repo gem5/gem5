@@ -535,6 +535,7 @@ class PCAlignmentFault : public ArmFaultVals<PCAlignmentFault>
     {}
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr) override;
+    bool routeToHyp(ThreadContext *tc) const override;
 };
 
 /// Stack pointer alignment fault (AArch64 only)
