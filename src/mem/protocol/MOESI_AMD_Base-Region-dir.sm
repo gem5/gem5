@@ -210,6 +210,8 @@ machine(MachineType:Directory, "AMD_Base-like protocol")
   void wakeUpBuffers(Addr a);
   Cycles curCycle();
 
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
+
   Entry getDirectoryEntry(Addr addr), return_by_pointer="yes" {
     Entry dir_entry := static_cast(Entry, "pointer", directory.lookup(addr));
 

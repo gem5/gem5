@@ -126,6 +126,7 @@ machine(MachineType:TCC, "TCC Cache")
   void wakeUpAllBuffers();
   void wakeUpBuffers(Addr a);
 
+  MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
   // FUNCTION DEFINITIONS
   Tick clockEdge();
