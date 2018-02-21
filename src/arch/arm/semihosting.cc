@@ -121,6 +121,15 @@ const std::vector<uint8_t> ArmSemihosting::features{
     0x3,                    // EXT_EXIT_EXTENDED, EXT_STDOUT_STDERR
 };
 
+const std::map<const std::string, FILE *> ArmSemihosting::stdioMap{
+    {"cin",    ::stdin},
+    {"stdin",  ::stdin},
+    {"cout",   ::stdout},
+    {"stdout", ::stdout},
+    {"cerr",   ::stderr},
+    {"stderr", ::stderr},
+};
+
 ArmSemihosting::ArmSemihosting(const ArmSemihostingParams *p)
     : SimObject(p),
       cmdLine(p->cmd_line),
@@ -128,7 +137,11 @@ ArmSemihosting::ArmSemihosting(const ArmSemihostingParams *p)
       stackSize(p->stack_size),
       timeBase([p]{ struct tm t = p->time; return mkutctime(&t); }()),
       tickShift(calcTickShift()),
-      semiErrno(0)
+      semiErrno(0),
+      stdin(getSTDIO("stdin", p->stdin, "r")),
+      stdout(getSTDIO("stdout", p->stdout, "w")),
+      stderr(p->stderr == p->stdout ?
+             stdout : getSTDIO("stderr", p->stderr, "w"))
 {
     // Create an empty place-holder file for position 0 as semi-hosting
     // calls typically expect non-zero file handles.
@@ -681,6 +694,23 @@ ArmSemihosting::getCall(uint32_t op, bool aarch64)
     }
 }
 
+FILE *
+ArmSemihosting::getSTDIO(const char *stream_name,
+                         const std::string &name, const char *mode)
+{
+    auto it = stdioMap.find(name);
+    if (it == stdioMap.end()) {
+        FILE *f = fopen(name.c_str(), mode);
+        if (!f) {
+            fatal("Failed to open %s (%s): %s\n",
+                  stream_name, name, strerror(errno));
+        }
+        return f;
+    } else {
+        return it->second;
+    }
+}
+
 std::unique_ptr<ArmSemihosting::FileBase>
 ArmSemihosting::FileBase::create(
     ArmSemihosting &parent, const std::string &fname, const char *mode)
@@ -819,11 +849,11 @@ ArmSemihosting::File::openImpl(bool in_cpt)
 
     if (_name == ":tt") {
         if (mode[0] == 'r') {
-            file = stdin;
+            file = parent.stdin;
         } else if (mode[0] == 'w') {
-            file = stdout;
+            file = parent.stdout;
         } else if (mode[0] == 'a') {
-            file = stderr;
+            file = parent.stderr;
         } else {
             warn("Unknown file mode for the ':tt' special file");
             return -EINVAL;
@@ -857,7 +887,9 @@ ArmSemihosting::File::close()
 bool
 ArmSemihosting::File::isTTY() const
 {
-    return file == stdout || file == stderr || file == stdin;
+    return file == parent.stdout ||
+        file == parent.stderr ||
+        file == parent.stdin;
 }
 
 int64_t

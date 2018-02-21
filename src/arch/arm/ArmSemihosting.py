@@ -46,6 +46,12 @@ class ArmSemihosting(SimObject):
     cxx_header = "arch/arm/semihosting.hh"
 
     cmd_line = Param.String("", "Command line to report to guest");
+    stdin = Param.String("stdin",
+                         "Standard input (stdin for gem5's terminal)")
+    stdout = Param.String("stdout",
+                          "Standard output (stdout for gem5's terminal)")
+    stderr = Param.String("stderr",
+                          "Standard error (stderr for gem5's terminal)")
 
     mem_reserve = Param.MemorySize("32MB",
         "Amount of memory to reserve at the start of the address map. This "

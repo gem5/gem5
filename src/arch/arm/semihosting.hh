@@ -244,6 +244,9 @@ class ArmSemihosting : public SimObject
     };
 
     std::vector<std::unique_ptr<FileBase>> files;
+    FILE *stdin;
+    FILE *stdout;
+    FILE *stderr;
 
   protected: // Helper functions
     unsigned calcTickShift() const {
@@ -342,11 +345,14 @@ class ArmSemihosting : public SimObject
 #undef SEMI_CALL
 
     static const SemiCall *getCall(uint32_t op, bool aarch64);
+    static FILE *getSTDIO(const char *stream_name,
+                          const std::string &name, const char *mode);
 
     static const std::map<uint32_t, SemiCall> calls;
     static const std::vector<const char *> fmodes;
     static const std::map<uint64_t, const char *> exitCodes;
     static const std::vector<uint8_t> features;
+    static const std::map<const std::string, FILE *> stdioMap;
 };
 
 #endif // __ARCH_ARM_SEMIHOSTING_HH__
