@@ -69,7 +69,10 @@ class SystemCounter : public Serializable
     /// Tick when the counter was reset.
     Tick _resetTick;
 
+    /// Kernel event stream control register
     uint32_t _regCntkctl;
+    /// Hypervisor event stream control register
+    uint32_t _regCnthctl;
 
   public:
     SystemCounter();
@@ -93,6 +96,9 @@ class SystemCounter : public Serializable
 
     void setKernelControl(uint32_t val) { _regCntkctl = val; }
     uint32_t getKernelControl() { return _regCntkctl; }
+
+    void setHypControl(uint32_t val) { _regCnthctl = val; }
+    uint32_t getHypControl() { return _regCnthctl; }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -241,24 +247,37 @@ class GenericTimer : public ClockedObject
   protected:
     struct CoreTimers {
         CoreTimers(GenericTimer &parent, ArmSystem &system, unsigned cpu,
-                   unsigned _irqPhys, unsigned _irqVirt)
-            : irqPhys(*parent.gic, _irqPhys, cpu),
+                   unsigned _irqPhysS, unsigned _irqPhysNS,
+                   unsigned _irqVirt, unsigned _irqHyp)
+            : irqPhysS(*parent.gic, _irqPhysS, cpu),
+              irqPhysNS(*parent.gic, _irqPhysNS, cpu),
               irqVirt(*parent.gic, _irqVirt, cpu),
+              irqHyp(*parent.gic, _irqHyp, cpu),
+              physS(csprintf("%s.phys_s_timer%d", parent.name(), cpu),
+                     system, parent, parent.systemCounter,
+                     irqPhysS),
               // This should really be phys_timerN, but we are stuck with
               // arch_timer for backwards compatibility.
-              phys(csprintf("%s.arch_timer%d", parent.name(), cpu),
-                   system, parent, parent.systemCounter,
-                   irqPhys),
+              physNS(csprintf("%s.arch_timer%d", parent.name(), cpu),
+                     system, parent, parent.systemCounter,
+                     irqPhysNS),
               virt(csprintf("%s.virt_timer%d", parent.name(), cpu),
                    system, parent, parent.systemCounter,
-                   irqVirt)
+                   irqVirt),
+              hyp(csprintf("%s.hyp_timer%d", parent.name(), cpu),
+                   system, parent, parent.systemCounter,
+                   irqHyp)
         {}
 
-        ArchTimer::Interrupt irqPhys;
+        ArchTimer::Interrupt irqPhysS;
+        ArchTimer::Interrupt irqPhysNS;
         ArchTimer::Interrupt irqVirt;
+        ArchTimer::Interrupt irqHyp;
 
-        ArchTimerKvm phys;
+        ArchTimerKvm physS;
+        ArchTimerKvm physNS;
         ArchTimerKvm virt;
+        ArchTimerKvm hyp;
 
       private:
         // Disable copying
@@ -281,11 +300,16 @@ class GenericTimer : public ClockedObject
     /// Pointer to the GIC, needed to trigger timer interrupts.
     BaseGic *const gic;
 
-    /// Physical timer interrupt
-    const unsigned irqPhys;
+    /// Physical timer interrupt (S)
+    const unsigned irqPhysS;
+    /// Physical timer interrupt (NS)
+    const unsigned irqPhysNS;
 
     /// Virtual timer interrupt
     const unsigned irqVirt;
+
+    /// Hypervisor timer interrupt
+    const unsigned irqHyp;
 };
 
 class GenericTimerISA : public ArmISA::BaseISADevice

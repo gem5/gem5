@@ -3176,7 +3176,6 @@ ISA::initializeMiscRegMetadata()
       .privSecure(!aarch32EL3)
       .monSecure(0);
     InitReg(MISCREG_CNTP_TVAL_S)
-      .unimplemented()
       .bankedChild()
       .secure().user(1);
     InitReg(MISCREG_CNTP_CTL)
@@ -3187,7 +3186,6 @@ ISA::initializeMiscRegMetadata()
       .privSecure(!aarch32EL3)
       .monSecure(0);
     InitReg(MISCREG_CNTP_CTL_S)
-      .unimplemented()
       .bankedChild()
       .secure().user(1);
     InitReg(MISCREG_CNTV_TVAL)
@@ -3195,13 +3193,10 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_CNTV_CTL)
       .allPrivileges();
     InitReg(MISCREG_CNTHCTL)
-      .unimplemented()
       .hypWrite().monNonSecureRead();
     InitReg(MISCREG_CNTHP_TVAL)
-      .unimplemented()
       .hypWrite().monNonSecureRead();
     InitReg(MISCREG_CNTHP_CTL)
-      .unimplemented()
       .hypWrite().monNonSecureRead();
     InitReg(MISCREG_IL1DATA0)
       .unimplemented()
@@ -3256,7 +3251,6 @@ ISA::initializeMiscRegMetadata()
       .privSecure(!aarch32EL3)
       .monSecure(0);
     InitReg(MISCREG_CNTP_CVAL_S)
-      .unimplemented()
       .bankedChild()
       .secure().user(1);
     InitReg(MISCREG_CNTV_CVAL)
@@ -3264,7 +3258,6 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_CNTVOFF)
       .hyp().monNonSecure();
     InitReg(MISCREG_CNTHP_CVAL)
-      .unimplemented()
       .hypWrite().monNonSecureRead();
     InitReg(MISCREG_CPUMERRSR)
       .unimplemented()
@@ -3936,31 +3929,23 @@ ISA::initializeMiscRegMetadata()
       .hyp().mon()
       .mapsTo(MISCREG_CNTVOFF); /* 64b */
     InitReg(MISCREG_CNTHCTL_EL2)
-      .unimplemented()
-      .warnNotFail()
-      .mon().monNonSecureWrite(0).hypWrite()
+      .mon().hyp()
       .mapsTo(MISCREG_CNTHCTL);
     InitReg(MISCREG_CNTHP_TVAL_EL2)
-      .unimplemented()
-      .mon().monNonSecureWrite(0).hypWrite()
+      .mon().hyp()
       .mapsTo(MISCREG_CNTHP_TVAL);
     InitReg(MISCREG_CNTHP_CTL_EL2)
-      .unimplemented()
-      .mon().monNonSecureWrite(0).hypWrite()
+      .mon().hyp()
       .mapsTo(MISCREG_CNTHP_CTL);
     InitReg(MISCREG_CNTHP_CVAL_EL2)
-      .unimplemented()
-      .mon().monNonSecureWrite(0).hypWrite()
+      .mon().hyp()
       .mapsTo(MISCREG_CNTHP_CVAL); /* 64b */
     InitReg(MISCREG_CNTPS_TVAL_EL1)
-      .unimplemented()
-      .mon().monNonSecureWrite(0).hypWrite();
+      .mon().privSecure();
     InitReg(MISCREG_CNTPS_CTL_EL1)
-      .unimplemented()
-      .mon().monNonSecureWrite(0).hypWrite();
+      .mon().privSecure();
     InitReg(MISCREG_CNTPS_CVAL_EL1)
-      .unimplemented()
-      .mon().monNonSecureWrite(0).hypWrite();
+      .mon().privSecure();
     InitReg(MISCREG_IL1DATA0_EL1)
       .allPrivileges().exceptUserMode();
     InitReg(MISCREG_IL1DATA1_EL1)
