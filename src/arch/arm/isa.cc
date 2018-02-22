@@ -710,11 +710,8 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
 {
 
     MiscReg newVal = val;
-    int x;
     bool secure_lookup;
     bool hyp;
-    System *sys;
-    ThreadContext *oc;
     uint8_t target_el;
     uint16_t asid;
     SCR scr;
@@ -1029,21 +1026,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             target_el = 1; // el 0 and 1 are handled together
             scr = readMiscReg(MISCREG_SCR, tc);
             secure_lookup = haveSecurity && !scr.ns;
-            sys = tc->getSystemPtr();
-            for (x = 0; x < sys->numContexts(); x++) {
-                oc = sys->getThreadContext(x);
-                getITBPtr(oc)->flushAllSecurity(secure_lookup, target_el);
-                getDTBPtr(oc)->flushAllSecurity(secure_lookup, target_el);
-
-                // If CheckerCPU is connected, need to notify it of a flush
-                CheckerCPU *checker = oc->getCheckerCpuPtr();
-                if (checker) {
-                    getITBPtr(checker)->flushAllSecurity(secure_lookup,
-                                                         target_el);
-                    getDTBPtr(checker)->flushAllSecurity(secure_lookup,
-                                                         target_el);
-                }
-            }
+            tlbiALL(tc, secure_lookup, target_el);
             return;
           // TLBI all entries, EL0&1, instruction side
           case MISCREG_ITLBIALL:
@@ -1073,24 +1056,8 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             target_el = 1; // el 0 and 1 are handled together
             scr = readMiscReg(MISCREG_SCR, tc);
             secure_lookup = haveSecurity && !scr.ns;
-            sys = tc->getSystemPtr();
-            for (x = 0; x < sys->numContexts(); x++) {
-                oc = sys->getThreadContext(x);
-                getITBPtr(oc)->flushMvaAsid(mbits(newVal, 31, 12),
-                                              bits(newVal, 7,0),
-                                              secure_lookup, target_el);
-                getDTBPtr(oc)->flushMvaAsid(mbits(newVal, 31, 12),
-                                              bits(newVal, 7,0),
-                                              secure_lookup, target_el);
-
-                CheckerCPU *checker = oc->getCheckerCpuPtr();
-                if (checker) {
-                    getITBPtr(checker)->flushMvaAsid(mbits(newVal, 31, 12),
-                        bits(newVal, 7,0), secure_lookup, target_el);
-                    getDTBPtr(checker)->flushMvaAsid(mbits(newVal, 31, 12),
-                        bits(newVal, 7,0), secure_lookup, target_el);
-                }
-            }
+            tlbiVA(tc, mbits(newVal, 31, 12), bits(newVal, 7,0),
+                   secure_lookup, target_el);
             return;
           // TLBI by ASID, EL0&1, inner sharable
           case MISCREG_TLBIASIDIS:
@@ -1099,21 +1066,8 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             target_el = 1; // el 0 and 1 are handled together
             scr = readMiscReg(MISCREG_SCR, tc);
             secure_lookup = haveSecurity && !scr.ns;
-            sys = tc->getSystemPtr();
-            for (x = 0; x < sys->numContexts(); x++) {
-                oc = sys->getThreadContext(x);
-                getITBPtr(oc)->flushAsid(bits(newVal, 7,0),
-                    secure_lookup, target_el);
-                getDTBPtr(oc)->flushAsid(bits(newVal, 7,0),
-                    secure_lookup, target_el);
-                CheckerCPU *checker = oc->getCheckerCpuPtr();
-                if (checker) {
-                    getITBPtr(checker)->flushAsid(bits(newVal, 7,0),
-                        secure_lookup, target_el);
-                    getDTBPtr(checker)->flushAsid(bits(newVal, 7,0),
-                        secure_lookup, target_el);
-                }
-            }
+            asid = bits(newVal, 7,0);
+            tlbiASID(tc, asid, secure_lookup, target_el);
             return;
           // TLBI by address, EL0&1, inner sharable (ignored)
           case MISCREG_TLBIMVAAL:
@@ -1128,7 +1082,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             scr = readMiscReg(MISCREG_SCR, tc);
             secure_lookup = haveSecurity && !scr.ns;
             hyp = 0;
-            tlbiMVA(tc, newVal, secure_lookup, hyp, target_el);
+            tlbiMVA(tc, mbits(newVal, 31,12), secure_lookup, hyp, target_el);
             return;
           // TLBI by address, EL2, hypervisor mode
           case MISCREG_TLBIMVALH:
@@ -1143,7 +1097,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             scr = readMiscReg(MISCREG_SCR, tc);
             secure_lookup = haveSecurity && !scr.ns;
             hyp = 1;
-            tlbiMVA(tc, newVal, secure_lookup, hyp, target_el);
+            tlbiMVA(tc, mbits(newVal, 31,12), secure_lookup, hyp, target_el);
             return;
           case MISCREG_TLBIIPAS2L:
           case MISCREG_TLBIIPAS2LIS:
@@ -1251,7 +1205,8 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             target_el = 3;
             asid = 0xbeef; // does not matter, tlbi is global
             secure_lookup = true;
-            tlbiVA(tc, newVal, asid, secure_lookup, target_el);
+            tlbiVA(tc, ((Addr) bits(newVal, 43, 0)) << 12,
+                   asid, secure_lookup, target_el);
             return;
           // TLBI by VA, EL2
           case MISCREG_TLBI_VAE2IS_Xt:
@@ -1264,7 +1219,8 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             asid = 0xbeef; // does not matter, tlbi is global
             scr = readMiscReg(MISCREG_SCR, tc);
             secure_lookup = haveSecurity && !scr.ns;
-            tlbiVA(tc, newVal, asid, secure_lookup, target_el);
+            tlbiVA(tc, ((Addr) bits(newVal, 43, 0)) << 12,
+                   asid, secure_lookup, target_el);
             return;
           // TLBI by VA EL1 & 0, stage1, ASID, current VMID
           case MISCREG_TLBI_VAE1IS_Xt:
@@ -1276,7 +1232,8 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             target_el = 1; // el 0 and 1 are handled together
             scr = readMiscReg(MISCREG_SCR, tc);
             secure_lookup = haveSecurity && !scr.ns;
-            tlbiVA(tc, newVal, asid, secure_lookup, target_el);
+            tlbiVA(tc, ((Addr) bits(newVal, 43, 0)) << 12,
+                   asid, secure_lookup, target_el);
             return;
           // AArch64 TLBI: invalidate by ASID, stage 1, current VMID
           // @todo: handle VMID to enable Virtualization
@@ -1286,22 +1243,8 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             target_el = 1; // el 0 and 1 are handled together
             scr = readMiscReg(MISCREG_SCR, tc);
             secure_lookup = haveSecurity && !scr.ns;
-            sys = tc->getSystemPtr();
-            for (x = 0; x < sys->numContexts(); x++) {
-                oc = sys->getThreadContext(x);
-                asid = bits(newVal, 63, 48);
-                if (!haveLargeAsid64)
-                    asid &= mask(8);
-                getITBPtr(oc)->flushAsid(asid, secure_lookup, target_el);
-                getDTBPtr(oc)->flushAsid(asid, secure_lookup, target_el);
-                CheckerCPU *checker = oc->getCheckerCpuPtr();
-                if (checker) {
-                    getITBPtr(checker)->flushAsid(asid,
-                        secure_lookup, target_el);
-                    getDTBPtr(checker)->flushAsid(asid,
-                        secure_lookup, target_el);
-                }
-            }
+            asid = bits(newVal, 63, 48);
+            tlbiASID(tc, asid, secure_lookup, target_el);
             return;
           // AArch64 TLBI: invalidate by VA, ASID, stage 1, current VMID
           // VAAE1(IS) and VAALE1(IS) are the same because TLBs only store
@@ -1315,24 +1258,9 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             target_el = 1; // el 0 and 1 are handled together
             scr = readMiscReg(MISCREG_SCR, tc);
             secure_lookup = haveSecurity && !scr.ns;
-            sys = tc->getSystemPtr();
-            for (x = 0; x < sys->numContexts(); x++) {
-                // @todo: extra controls on TLBI broadcast?
-                oc = sys->getThreadContext(x);
-                Addr va = ((Addr) bits(newVal, 43, 0)) << 12;
-                getITBPtr(oc)->flushMva(va,
+            tlbiMVA(tc,
+                    ((Addr)bits(newVal, 43, 0)) << 12,
                     secure_lookup, false, target_el);
-                getDTBPtr(oc)->flushMva(va,
-                    secure_lookup, false, target_el);
-
-                CheckerCPU *checker = oc->getCheckerCpuPtr();
-                if (checker) {
-                    getITBPtr(checker)->flushMva(va,
-                        secure_lookup, false, target_el);
-                    getDTBPtr(checker)->flushMva(va,
-                        secure_lookup, false, target_el);
-                }
-            }
             return;
           // AArch64 TLBI: invalidate by IPA, stage 2, current VMID
           case MISCREG_TLBI_IPAS2LE1IS_Xt:
@@ -1791,12 +1719,11 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
 }
 
 void
-ISA::tlbiVA(ThreadContext *tc, MiscReg newVal, uint16_t asid,
+ISA::tlbiVA(ThreadContext *tc, Addr va, uint16_t asid,
             bool secure_lookup, uint8_t target_el)
 {
     if (!haveLargeAsid64)
         asid &= mask(8);
-    Addr va = ((Addr) bits(newVal, 43, 0)) << 12;
     System *sys = tc->getSystemPtr();
     for (int x = 0; x < sys->numContexts(); x++) {
         ThreadContext *oc = sys->getThreadContext(x);
@@ -1853,23 +1780,19 @@ ISA::tlbiALLN(ThreadContext *tc, bool hyp, uint8_t target_el)
 }
 
 void
-ISA::tlbiMVA(ThreadContext *tc, MiscReg newVal, bool secure_lookup, bool hyp,
+ISA::tlbiMVA(ThreadContext *tc, Addr va, bool secure_lookup, bool hyp,
              uint8_t target_el)
 {
     System *sys = tc->getSystemPtr();
     for (int x = 0; x < sys->numContexts(); x++) {
         ThreadContext *oc = sys->getThreadContext(x);
-        getITBPtr(oc)->flushMva(mbits(newVal, 31,12),
-            secure_lookup, hyp, target_el);
-        getDTBPtr(oc)->flushMva(mbits(newVal, 31,12),
-            secure_lookup, hyp, target_el);
+        getITBPtr(oc)->flushMva(va, secure_lookup, hyp, target_el);
+        getDTBPtr(oc)->flushMva(va, secure_lookup, hyp, target_el);
 
         CheckerCPU *checker = oc->getCheckerCpuPtr();
         if (checker) {
-            getITBPtr(checker)->flushMva(mbits(newVal, 31,12),
-                secure_lookup, hyp, target_el);
-            getDTBPtr(checker)->flushMva(mbits(newVal, 31,12),
-                secure_lookup, hyp, target_el);
+            getITBPtr(checker)->flushMva(va, secure_lookup, hyp, target_el);
+            getDTBPtr(checker)->flushMva(va, secure_lookup, hyp, target_el);
         }
     }
 }
@@ -1893,6 +1816,26 @@ ISA::tlbiIPA(ThreadContext *tc, MiscReg newVal, bool secure_lookup,
                 secure_lookup, false, target_el);
             getDTBPtr(checker)->flushIpaVmid(ipa,
                 secure_lookup, false, target_el);
+        }
+    }
+}
+
+void
+ISA::tlbiASID(ThreadContext *tc, uint16_t asid, bool secure_lookup,
+              uint8_t target_el)
+{
+    if (!haveLargeAsid64)
+        asid &= mask(8);
+
+    System *sys = tc->getSystemPtr();
+    for (auto x = 0; x < sys->numContexts(); x++) {
+        tc = sys->getThreadContext(x);
+        getITBPtr(tc)->flushAsid(asid, secure_lookup, target_el);
+        getDTBPtr(tc)->flushAsid(asid, secure_lookup, target_el);
+        CheckerCPU *checker = tc->getCheckerCpuPtr();
+        if (checker) {
+            getITBPtr(checker)->flushAsid(asid, secure_lookup, target_el);
+            getDTBPtr(checker)->flushAsid(asid, secure_lookup, target_el);
         }
     }
 }
