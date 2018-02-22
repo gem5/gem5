@@ -445,6 +445,24 @@ private:
                    LookupLevel lookup_level);
 };
 
+template<typename T>
+TLB *
+getITBPtr(T *tc)
+{
+    auto tlb = static_cast<TLB *>(tc->getITBPtr());
+    assert(tlb);
+    return tlb;
+}
+
+template<typename T>
+TLB *
+getDTBPtr(T *tc)
+{
+    auto tlb = static_cast<TLB *>(tc->getDTBPtr());
+    assert(tlb);
+    return tlb;
+}
+
 } // namespace ArmISA
 
 #endif // __ARCH_ARM_TLB_HH__

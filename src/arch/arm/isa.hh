@@ -391,22 +391,6 @@ namespace ArmISA
             assert(!cpsr.width);
         }
 
-        void tlbiVA(ThreadContext *tc, MiscReg newVal, uint16_t asid,
-                    bool secure_lookup, uint8_t target_el);
-
-        void tlbiALL(ThreadContext *tc, bool secure_lookup, uint8_t target_el);
-
-        void tlbiALLN(ThreadContext *tc, bool hyp, uint8_t target_el);
-
-        void tlbiMVA(ThreadContext *tc, MiscReg newVal, bool secure_lookup,
-                     bool hyp, uint8_t target_el);
-
-        void tlbiIPA(ThreadContext *tc, MiscReg newVal, bool secure_lookup,
-                     uint8_t target_el);
-
-        void tlbiASID(ThreadContext *tc, uint16_t asid, bool secure_lookup,
-                      uint8_t target_el);
-
       public:
         void clear();
         void clear64(const ArmISAParams *p);
