@@ -1367,12 +1367,12 @@ TLB::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(cx_config);
     SERIALIZE_SCALAR(sfsr);
     SERIALIZE_SCALAR(tag_access);
+    SERIALIZE_SCALAR(sfar);
 
     for (int x = 0; x < size; x++) {
         ScopedCheckpointSection sec(cp, csprintf("PTE%d", x));
         tlb[x].serialize(cp);
     }
-    SERIALIZE_SCALAR(sfar);
 }
 
 void

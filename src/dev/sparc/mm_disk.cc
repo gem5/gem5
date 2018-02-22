@@ -182,6 +182,7 @@ MmDisk::serialize(CheckpointOut &cp) const
             image->write(diskData, curSector);
         assert(bytes_read == SectorSize);
     }
+    ClockedObject::serialize(cp);
 }
 
 MmDisk *

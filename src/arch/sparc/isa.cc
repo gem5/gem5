@@ -654,12 +654,12 @@ ISA::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(tstate,MaxTL);
     SERIALIZE_ARRAY(tt,MaxTL);
     SERIALIZE_SCALAR(tba);
-    SERIALIZE_SCALAR((uint16_t)pstate);
+    SERIALIZE_SCALAR(pstate);
     SERIALIZE_SCALAR(tl);
     SERIALIZE_SCALAR(pil);
     SERIALIZE_SCALAR(cwp);
     SERIALIZE_SCALAR(gl);
-    SERIALIZE_SCALAR((uint64_t)hpstate);
+    SERIALIZE_SCALAR(hpstate);
     SERIALIZE_ARRAY(htstate,MaxTL);
     SERIALIZE_SCALAR(hintp);
     SERIALIZE_SCALAR(htba);
