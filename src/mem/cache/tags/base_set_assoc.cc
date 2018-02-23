@@ -84,7 +84,7 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
     for (unsigned i = 0; i < numSets; ++i) {
         sets[i].assoc = assoc;
 
-        sets[i].blks = new BlkType*[assoc];
+        sets[i].blks.resize(assoc);
 
         // link in the data blocks
         for (unsigned j = 0; j < assoc; ++j) {

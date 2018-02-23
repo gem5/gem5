@@ -61,7 +61,7 @@ class CacheSet
     int assoc;
 
     /** Cache blocks in this set, maintained in LRU order 0 = MRU. */
-    Blktype **blks;
+    std::vector<Blktype*> blks;
 
     /**
      * Find a block matching the tag in this set.
