@@ -2930,11 +2930,11 @@ namespace Aarch64
                     uint8_t b14_13 = bits(machInst, 14, 13);
                     if (b14_13 == 0x2 && bits(machInst, 4) == 0) {
                         // TODO: SVE contiguous prefetch (scalar plus scalar)
-                        return new Unknown64(machInst);
+                        return new WarnUnimplemented("prf[bhwd]", machInst);
                     } else if (b14_13 == 0x3 && bits(machInst, 4) == 0) {
                         // TODO: SVE 32-bit gather prefetch (vector plus
                         // immediate)
-                        return new Unknown64(machInst);
+                        return new WarnUnimplemented("prf[bhwd]", machInst);
                     }
                 }
             }
@@ -2963,7 +2963,7 @@ namespace Aarch64
               case 0x0:
                 if (bits(machInst, 21) && bits(machInst, 4) == 0) {
                     // TODO: SVE 32-bit gather prefetch (vector plus immediate)
-                    break;
+                    return new WarnUnimplemented("prf[bhwd]", machInst);
                 }
                 break;
               case 0x1:
@@ -3040,6 +3040,10 @@ namespace Aarch64
                     uint64_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
                                            bits(machInst, 12, 10));
                     return new SveLdrVec(machInst, zt, rn, imm);
+                } else if (bits(machInst, 22) == 1 &&
+                           bits(machInst, 4) == 0) {
+                    // TODO: SVE contiguous prefetch (scalar plus immediate)
+                    return new WarnUnimplemented("prf[bhwd]", machInst);
                 }
                 break;
             }
@@ -3210,7 +3214,7 @@ namespace Aarch64
             } else {
                 if (bits(machInst, 14, 13) == 0x3 && bits(machInst, 4) == 0) {
                     // TODO: SVE 64-bit gather prefetch (vector plus immediate)
-                    break;
+                    return new WarnUnimplemented("prf[bhwd]", machInst);
                 }
             }
             break;
@@ -3237,7 +3241,7 @@ namespace Aarch64
             } else if (bits(machInst, 4) == 0) {
                 // TODO: SVE 64-bit gather prefetch (scalar plus unpacked
                 // 32-bit scaled offsets)
-                return new Unknown64(machInst);
+                return new WarnUnimplemented("prf[bhwd]", machInst);
             }
             break;
           case 0x3:
@@ -3280,7 +3284,7 @@ namespace Aarch64
                 } else if (bits(machInst, 4) == 0) {
                     // TODO: SVE 64-bit gather prefetch (scalar plus 64-bit
                     // scaled offsets)
-                    break;
+                    return new WarnUnimplemented("prf[bhwd]", machInst);
                 }
             }
             break;
