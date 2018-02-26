@@ -1,3 +1,15 @@
+# Copyright (c) 2018 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -37,6 +49,14 @@ class Uart(BasicPioDevice):
     cxx_header = "dev/serial/uart.hh"
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     device = Param.SerialDevice(Parent.any, "The terminal")
+
+class SimpleUart(Uart):
+    type = 'SimpleUart'
+    cxx_header = "dev/serial/simple.hh"
+    big_endian = Param.Bool(False, "Is the device Big Endian?")
+    pio_size = Param.Addr(0x4, "Size of address range")
+    end_on_eot = Param.Bool(False, "End the simulation when a EOT is "\
+                            "received on the UART")
 
 class Uart8250(Uart):
     type = 'Uart8250'

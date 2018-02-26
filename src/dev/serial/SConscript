@@ -50,6 +50,7 @@ SimObject('Terminal.py')
 SimObject('Uart.py')
 
 Source('serial.cc')
+Source('simple.cc')
 Source('terminal.cc')
 Source('uart.cc')
 Source('uart8250.cc')
