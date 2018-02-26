@@ -264,11 +264,11 @@ class ArmSemihosting : public SimObject
 
   private:
     typedef std::pair<uint64_t, SemiErrno> RetErrno;
-    static constexpr RetErrno retError(SemiErrno e) {
+    static  RetErrno retError(SemiErrno e) {
         return RetErrno((uint64_t)-1, e);
     }
 
-    static constexpr RetErrno retOK(uint64_t r) {
+    static  RetErrno retOK(uint64_t r) {
         return RetErrno(r, 0);
     }
 
