@@ -50,7 +50,8 @@
 
 #include <cassert>
 #include <cstring>
-#include <list>
+#include <memory>
+#include <vector>
 
 #include "mem/cache/base.hh"
 #include "mem/cache/blk.hh"
@@ -87,18 +88,20 @@ class BaseSetAssoc : public BaseTags
     const unsigned assoc;
     /** The allocatable associativity of the cache (alloc mask). */
     unsigned allocAssoc;
+
+    /** The cache blocks. */
+    std::vector<BlkType> blks;
+    /** The data blocks, 1 per cache block. */
+    std::unique_ptr<uint8_t[]> dataBlks;
+
     /** The number of sets in the cache. */
     const unsigned numSets;
+
     /** Whether tags and data are accessed sequentially. */
     const bool sequentialAccess;
 
     /** The cache sets. */
-    SetType *sets;
-
-    /** The cache blocks. */
-    BlkType *blks;
-    /** The data blocks, 1 per cache block. */
-    uint8_t *dataBlks;
+    std::vector<SetType> sets;
 
     /** The amount to shift the address to get the set. */
     int setShift;
@@ -120,7 +123,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~BaseSetAssoc();
+    virtual ~BaseSetAssoc() {};
 
     /**
      * Find the cache block given set and way
