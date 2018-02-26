@@ -76,7 +76,7 @@ const std::map<uint32_t, ArmSemihosting::SemiCall> ArmSemihosting::calls{
     { 0x11, { "SYS_TIME", &ArmSemihosting::callTime, 0, 0} },
     { 0x12, { "SYS_SYSTEM", &ArmSemihosting::callSystem, 2, 2} },
     { 0x13, { "SYS_ERRNO", &ArmSemihosting::callErrno, 0, 0 } },
-    { 0x15, { "SYS_GET_CMDLINE", &ArmSemihosting::callGetCmdLine, 1, 1} },
+    { 0x15, { "SYS_GET_CMDLINE", &ArmSemihosting::callGetCmdLine, 2, 2} },
     { 0x16, { "SYS_HEAPINFO", &ArmSemihosting::callHeapInfo, 1, 1} },
 
     // Exit is special and requires custom handling in aarch32.
