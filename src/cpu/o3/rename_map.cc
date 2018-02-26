@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017,2019 ARM Limited
+ * Copyright (c) 2016-2018,2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -78,16 +78,23 @@ SimpleRenameMap::rename(const RegId& arch_reg)
     // requested architected register.
     PhysRegIdPtr prev_reg = map[arch_reg.flatIndex()];
 
-    // If it's not referencing the zero register, then rename the
-    // register.
-    if (arch_reg != zeroReg) {
-        renamed_reg = freeList->getReg();
-
-        map[arch_reg.flatIndex()] = renamed_reg;
-    } else {
-        // Otherwise return the zero register so nothing bad happens.
+    if (arch_reg == zeroReg) {
         assert(prev_reg->isZeroReg());
         renamed_reg = prev_reg;
+    } else if (prev_reg->getNumPinnedWrites() > 0) {
+        // Do not rename if the register is pinned
+        assert(arch_reg.getNumPinnedWrites() == 0);  // Prevent pinning the
+                                                     // same register twice
+        DPRINTF(Rename, "Renaming pinned reg, numPinnedWrites %d\n",
+                prev_reg->getNumPinnedWrites());
+        renamed_reg = prev_reg;
+        renamed_reg->decrNumPinnedWrites();
+    } else {
+        renamed_reg = freeList->getReg();
+        map[arch_reg.flatIndex()] = renamed_reg;
+        renamed_reg->setNumPinnedWrites(arch_reg.getNumPinnedWrites());
+        renamed_reg->setNumPinnedWritesToComplete(
+            arch_reg.getNumPinnedWrites() + 1);
     }
 
     DPRINTF(Rename, "Renamed reg %d to physical reg %d (%d) old mapping was"

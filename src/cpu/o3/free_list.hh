@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 ARM Limited
+ * Copyright (c) 2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -79,10 +79,9 @@ class SimpleFreeList
     template<class InputIt>
     void
     addRegs(InputIt first, InputIt last) {
-        std::for_each(first, last,
-            [this](const typename InputIt::value_type& reg) {
-                this->freeRegs.push(&reg);
-            });
+        std::for_each(first, last, [this](typename InputIt::value_type& reg) {
+            this->freeRegs.push(&reg);
+        });
     }
 
     /** Get the next available register from the free list */

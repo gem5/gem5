@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2013, 2016-2018 ARM Limited
+ * Copyright (c) 2011, 2013, 2016-2019 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -116,6 +116,9 @@ class BaseDynInst : public ExecContext, public RefCounted
         SquashedInIQ,            /// Instruction is squashed in the IQ
         SquashedInLSQ,           /// Instruction is squashed in the LSQ
         SquashedInROB,           /// Instruction is squashed in the ROB
+        PinnedRegsRenamed,       /// Pinned registers are renamed
+        PinnedRegsWritten,       /// Pinned registers are written back
+        PinnedRegsSquashDone,    /// Regs pinning status updated after squash
         RecoverInst,             /// Is a recover instruction
         BlockingInst,            /// Is a blocking instruction
         ThreadsyncWait,          /// Is a thread synchronization instruction
@@ -173,12 +176,14 @@ class BaseDynInst : public ExecContext, public RefCounted
     /** PC state for this instruction. */
     TheISA::PCState pc;
 
+  private:
     /* An amalgamation of a lot of boolean values into one */
     std::bitset<MaxFlags> instFlags;
 
     /** The status of this BaseDynInst.  Several bits can be set. */
     std::bitset<NumStatus> status;
 
+  protected:
      /** Whether or not the source register is ready.
      *  @todo: Not sure this should be here vs the derived class.
      */
@@ -385,6 +390,8 @@ class BaseDynInst : public ExecContext, public RefCounted
     {
         _destRegIdx[idx] = renamed_dest;
         _prevDestRegIdx[idx] = previous_rename;
+        if (renamed_dest->isPinned())
+            setPinnedRegsRenamed();
     }
 
     /** Renames a source logical register to the physical register which
@@ -767,7 +774,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     bool isCommitted() const { return status[Committed]; }
 
     /** Sets this instruction as squashed. */
-    void setSquashed() { status.set(Squashed); }
+    void setSquashed();
 
     /** Returns whether or not this instruction is squashed. */
     bool isSquashed() const { return status[Squashed]; }
@@ -802,7 +809,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     bool isInLSQ() const { return status[LsqEntry]; }
 
     /** Sets this instruction as squashed in the LSQ. */
-    void setSquashedInLSQ() { status.set(SquashedInLSQ);}
+    void setSquashedInLSQ() { status.set(SquashedInLSQ); status.set(Squashed);}
 
     /** Returns whether or not this instruction is squashed in the LSQ. */
     bool isSquashedInLSQ() const { return status[SquashedInLSQ]; }
@@ -824,6 +831,41 @@ class BaseDynInst : public ExecContext, public RefCounted
 
     /** Returns whether or not this instruction is squashed in the ROB. */
     bool isSquashedInROB() const { return status[SquashedInROB]; }
+
+    /** Returns whether pinned registers are renamed */
+    bool isPinnedRegsRenamed() const { return status[PinnedRegsRenamed]; }
+
+    /** Sets the destination registers as renamed */
+    void
+    setPinnedRegsRenamed()
+    {
+        assert(!status[PinnedRegsSquashDone]);
+        assert(!status[PinnedRegsWritten]);
+        status.set(PinnedRegsRenamed);
+    }
+
+    /** Returns whether destination registers are written */
+    bool isPinnedRegsWritten() const { return status[PinnedRegsWritten]; }
+
+    /** Sets destination registers as written */
+    void
+    setPinnedRegsWritten()
+    {
+        assert(!status[PinnedRegsSquashDone]);
+        assert(status[PinnedRegsRenamed]);
+        status.set(PinnedRegsWritten);
+    }
+
+    /** Return whether dest registers' pinning status updated after squash */
+    bool
+    isPinnedRegsSquashDone() const { return status[PinnedRegsSquashDone]; }
+
+    /** Sets dest registers' status updated after squash */
+    void
+    setPinnedRegsSquashDone() {
+        assert(!status[PinnedRegsSquashDone]);
+        status.set(PinnedRegsSquashDone);
+    }
 
     /** Read the PC state of this instruction. */
     TheISA::PCState pcState() const { return pc; }

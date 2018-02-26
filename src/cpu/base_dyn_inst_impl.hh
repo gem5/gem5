@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018 ARM Limited
+ * Copyright (c) 2011, 2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -236,5 +236,35 @@ BaseDynInst<Impl>::eaSrcsReady() const
 
     return true;
 }
+
+
+
+template <class Impl>
+void
+BaseDynInst<Impl>::setSquashed()
+{
+    status.set(Squashed);
+
+    if (!isPinnedRegsRenamed() || isPinnedRegsSquashDone())
+        return;
+
+    // This inst has been renamed already so it may go through rename
+    // again (e.g. if the squash is due to memory access order violation).
+    // Reset the write counters for all pinned destination register to ensure
+    // that they are in a consistent state for a possible re-rename. This also
+    // ensures that dest regs will be pinned to the same phys register if
+    // re-rename happens.
+    for (int idx = 0; idx < numDestRegs(); idx++) {
+        PhysRegIdPtr phys_dest_reg = renamedDestRegIdx(idx);
+        if (phys_dest_reg->isPinned()) {
+            phys_dest_reg->incrNumPinnedWrites();
+            if (isPinnedRegsWritten())
+                phys_dest_reg->incrNumPinnedWritesToComplete();
+        }
+    }
+    setPinnedRegsSquashDone();
+}
+
+
 
 #endif//__CPU_BASE_DYN_INST_IMPL_HH__

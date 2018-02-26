@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 ARM Limited
+ * Copyright (c) 2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -216,8 +216,8 @@ PhysRegFile::getRegIds(RegClass cls) -> IdRange
         return std::make_pair(miscRegIds.begin(), miscRegIds.end());
     }
     /* There is no way to make an empty iterator */
-    return std::make_pair(PhysIds::const_iterator(),
-                          PhysIds::const_iterator());
+    return std::make_pair(PhysIds::iterator(),
+                          PhysIds::iterator());
 }
 
 PhysRegIdPtr

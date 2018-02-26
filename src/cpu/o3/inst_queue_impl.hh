@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, 2017-2018 ARM Limited
+ * Copyright (c) 2011-2014, 2017-2019 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -1029,6 +1029,17 @@ InstructionQueue<Impl>::wakeDependents(const DynInstPtr &completed_inst)
         // handled by the IQ and thus have no dependency graph entry.
         if (dest_reg->isFixedMapping()) {
             DPRINTF(IQ, "Reg %d [%s] is part of a fix mapping, skipping\n",
+                    dest_reg->index(), dest_reg->className());
+            continue;
+        }
+
+        // Avoid waking up dependents if the register is pinned
+        dest_reg->decrNumPinnedWritesToComplete();
+        if (dest_reg->isPinned())
+            completed_inst->setPinnedRegsWritten();
+
+        if (dest_reg->getNumPinnedWritesToComplete() != 0) {
+            DPRINTF(IQ, "Reg %d [%s] is pinned, skipping\n",
                     dest_reg->index(), dest_reg->className());
             continue;
         }

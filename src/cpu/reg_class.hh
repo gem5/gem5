@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 ARM Limited
+ * Copyright (c) 2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -77,24 +77,29 @@ const int NumRegClasses = MiscRegClass + 1;
  * index 3 is represented by Regid(IntRegClass, 3).
  */
 class RegId {
-  private:
+  protected:
     static const char* regClassStrings[];
     RegClass regClass;
     RegIndex regIdx;
     ElemIndex elemIdx;
     static constexpr size_t Scale = TheISA::NumVecElemPerVecReg;
+    int numPinnedWrites;
+
     friend struct std::hash<RegId>;
+
   public:
     RegId() : regClass(IntRegClass), regIdx(0), elemIdx(-1) {}
     RegId(RegClass reg_class, RegIndex reg_idx)
-        : regClass(reg_class), regIdx(reg_idx), elemIdx(-1)
+        : regClass(reg_class), regIdx(reg_idx), elemIdx(-1),
+          numPinnedWrites(0)
     {
         panic_if(regClass == VecElemClass,
                 "Creating vector physical index w/o element index");
     }
 
     explicit RegId(RegClass reg_class, RegIndex reg_idx, ElemIndex elem_idx)
-        : regClass(reg_class), regIdx(reg_idx), elemIdx(elem_idx)
+        : regClass(reg_class), regIdx(reg_idx), elemIdx(elem_idx),
+          numPinnedWrites(0)
     {
         panic_if(regClass != VecElemClass,
                 "Creating non-vector physical index w/ element index");
@@ -202,6 +207,9 @@ class RegId {
     /** Return a const char* with the register class name. */
     const char* className() const { return regClassStrings[regClass]; }
 
+    int getNumPinnedWrites() const { return numPinnedWrites; }
+    void setNumPinnedWrites(int num_writes) { numPinnedWrites = num_writes; }
+
     friend std::ostream&
     operator<<(std::ostream& os, const RegId& rid) {
         return os << rid.className() << "{" << rid.index() << "}";
@@ -221,20 +229,27 @@ using PhysRegIndex = short int;
 class PhysRegId : private RegId {
   private:
     PhysRegIndex flatIdx;
+    int numPinnedWritesToComplete;
+    bool pinned;
 
   public:
-    explicit PhysRegId() : RegId(IntRegClass, -1), flatIdx(-1) {}
+    explicit PhysRegId() : RegId(IntRegClass, -1), flatIdx(-1),
+                           numPinnedWritesToComplete(0)
+    {}
 
     /** Scalar PhysRegId constructor. */
     explicit PhysRegId(RegClass _regClass, PhysRegIndex _regIdx,
               PhysRegIndex _flatIdx)
-        : RegId(_regClass, _regIdx), flatIdx(_flatIdx)
+        : RegId(_regClass, _regIdx), flatIdx(_flatIdx),
+          numPinnedWritesToComplete(0), pinned(false)
     {}
 
     /** Vector PhysRegId constructor (w/ elemIndex). */
     explicit PhysRegId(RegClass _regClass, PhysRegIndex _regIdx,
               ElemIndex elem_idx, PhysRegIndex flat_idx)
-        : RegId(_regClass, _regIdx, elem_idx), flatIdx(flat_idx) { }
+        : RegId(_regClass, _regIdx, elem_idx), flatIdx(flat_idx),
+          numPinnedWritesToComplete(0), pinned(false)
+    {}
 
     /** Visible RegId methods */
     /** @{ */
@@ -295,17 +310,46 @@ class PhysRegId : private RegId {
     /** Flat index accessor */
     const PhysRegIndex& flatIndex() const { return flatIdx; }
 
-    static PhysRegId elemId(const PhysRegId* vid, ElemIndex elem)
+    static PhysRegId elemId(PhysRegId* vid, ElemIndex elem)
     {
         assert(vid->isVectorPhysReg());
         return PhysRegId(VecElemClass, vid->index(), elem);
     }
+
+    int getNumPinnedWrites() const { return numPinnedWrites; }
+
+    void setNumPinnedWrites(int numWrites)
+    {
+        // An instruction with a pinned destination reg can get
+        // squashed. The numPinnedWrites counter may be zero when
+        // the squash happens but we need to know if the dest reg
+        // was pinned originally in order to reset counters properly
+        // for a possible re-rename using the same physical reg (which
+        // may be required in case of a mem access order violation).
+        pinned = (numWrites != 0);
+        numPinnedWrites = numWrites;
+    }
+
+    void decrNumPinnedWrites() { --numPinnedWrites; }
+    void incrNumPinnedWrites() { ++numPinnedWrites; }
+
+    bool isPinned() const { return pinned; }
+
+    int getNumPinnedWritesToComplete() const
+    {
+        return numPinnedWritesToComplete;
+    }
+
+    void setNumPinnedWritesToComplete(int numWrites)
+    {
+        numPinnedWritesToComplete = numWrites;
+    }
+
+    void decrNumPinnedWritesToComplete() { --numPinnedWritesToComplete; }
+    void incrNumPinnedWritesToComplete() { ++numPinnedWritesToComplete; }
 };
 
-/** Constant pointer definition.
- * PhysRegIds only need to be created once and then we can just share
- * pointers */
-using PhysRegIdPtr = const PhysRegId*;
+using PhysRegIdPtr = PhysRegId*;
 
 namespace std
 {
