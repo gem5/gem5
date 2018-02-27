@@ -85,24 +85,25 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
 
         // link in the data blocks
         for (unsigned j = 0; j < assoc; ++j) {
-            // locate next cache block
-            BlkType *blk = &blks[blkIndex];
+            // Select block within the set to be linked
+            BlkType*& blk = sets[i].blks[j];
+
+            // Locate next cache block
+            blk = &blks[blkIndex];
+
+            // Associate a data chunk to the block
             blk->data = &dataBlks[blkSize*blkIndex];
-            ++blkIndex;
 
-            // invalidate new cache block
-            blk->invalidate();
-
-            //EGH Fix Me : do we need to initialize blk?
-
-            // Setting the tag to j is just to prevent long chains in the hash
-            // table; won't matter because the block is invalid
+            // Setting the tag to j is just to prevent long chains in the
+            // hash table; won't matter because the block is invalid
             blk->tag = j;
-            blk->whenReady = 0;
-            blk->isTouched = false;
-            sets[i].blks[j]=blk;
+
+            // Set its set and way
             blk->set = i;
             blk->way = j;
+
+            // Update block index
+            ++blkIndex;
         }
     }
 }
