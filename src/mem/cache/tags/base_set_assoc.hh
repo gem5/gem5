@@ -161,9 +161,7 @@ public:
      */
     CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) override
     {
-        Addr tag = extractTag(addr);
-        int set = extractSet(addr);
-        BlkType *blk = sets[set].findBlk(tag, is_secure);
+        BlkType *blk = findBlock(addr, is_secure);
 
         // Access all tags in parallel, hence one in each way.  The data side
         // either accesses all blocks in parallel, or one block sequentially on
