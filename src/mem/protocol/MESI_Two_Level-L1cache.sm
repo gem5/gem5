@@ -104,6 +104,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
     // internal generated request
     L1_Replacement,  desc="L1 Replacement", format="!r";
+    PF_L1_Replacement,  desc="Prefetch L1 Replacement", format="!pr";
 
     // other requests
     Fwd_GETX,   desc="GETX from other processor";
@@ -132,7 +133,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     State CacheState,        desc="cache state";
     DataBlock DataBlk,       desc="data for the block";
     bool Dirty, default="false",   desc="data is dirty";
-    bool isPrefetch, desc="Set if this block was prefetched";
+    bool isPrefetch, desc="Set if this block was prefetched and not yet accessed";
   }
 
   // TBE fields
@@ -329,7 +330,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                               L1Icache_entry, TBEs[in_msg.LineAddress]);
                   } else {
                       // No room in the L1, so we need to make room in the L1
-                      trigger(Event:L1_Replacement,
+                      trigger(Event:PF_L1_Replacement,
                               L1Icache.cacheProbe(in_msg.LineAddress),
                               getL1ICacheEntry(L1Icache.cacheProbe(in_msg.LineAddress)),
                               TBEs[L1Icache.cacheProbe(in_msg.LineAddress)]);
@@ -363,7 +364,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
                               L1Dcache_entry, TBEs[in_msg.LineAddress]);
                   } else {
                       // No room in the L1, so we need to make room in the L1
-                      trigger(Event:L1_Replacement,
+                      trigger(Event:PF_L1_Replacement,
                               L1Dcache.cacheProbe(in_msg.LineAddress),
                               getL1DCacheEntry(L1Dcache.cacheProbe(in_msg.LineAddress)),
                               TBEs[L1Dcache.cacheProbe(in_msg.LineAddress)]);
@@ -927,8 +928,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     }
   }
 
-  action(z_stallAndWaitMandatoryQueue, "\z", desc="recycle L1 request queue") {
+  action(z_stallAndWaitMandatoryQueue, "\z", desc="Stall and wait the L1 mandatory request queue") {
     stall_and_wait(mandatoryQueue_in, address);
+  }
+
+  action(z_stallAndWaitOptionalQueue, "\pz", desc="Stall and wait the L1 prefetch request queue") {
+    stall_and_wait(optionalQueue_in, address);
   }
 
   action(kd_wakeUpDependents, "kd", desc="wake-up dependents") {
@@ -951,6 +956,15 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       ++L1Dcache.demand_hits;
   }
 
+  action(po_observeHit, "\ph", desc="Inform the prefetcher about the hit") {
+      peek(mandatoryQueue_in, RubyRequest) {
+          if (cache_entry.isPrefetch) {
+              prefetcher.observePfHit(in_msg.LineAddress);
+              cache_entry.isPrefetch := false;
+          }
+      }
+  }
+
   action(po_observeMiss, "\po", desc="Inform the prefetcher about the miss") {
       peek(mandatoryQueue_in, RubyRequest) {
           if (enable_prefetch) {
@@ -970,7 +984,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       optionalQueue_in.dequeue(clockEdge());
   }
 
-  action(mp_markPrefetched, "mp", desc="Write data from response queue to cache") {
+  action(mp_markPrefetched, "mp", desc="Set the isPrefetch flag") {
       assert(is_valid(cache_entry));
       cache_entry.isPrefetch := true;
   }
@@ -993,12 +1007,16 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     z_stallAndWaitMandatoryQueue;
   }
 
+  transition({IS, IM, IS_I, M_I, SM, SINK_WB_ACK, PF_IS, PF_IS_I, PF_IM, PF_SM}, PF_L1_Replacement) {
+    z_stallAndWaitOptionalQueue;
+  }
+
   // Transitions from Idle
-  transition({NP,I}, L1_Replacement) {
+  transition({NP,I}, {L1_Replacement, PF_L1_Replacement}) {
     ff_deallocateL1CacheBlock;
   }
 
-  transition({S,E,M,IS,IM,SM,IS_I,M_I,SINK_WB_ACK,PF_IS,PF_IM},
+  transition({S,E,M,IS,IM,SM,IS_I,PF_IS_I,M_I,SINK_WB_ACK,PF_IS,PF_IM},
              {PF_Load, PF_Store, PF_Ifetch}) {
       pq_popPrefetchQueue;
   }
@@ -1027,6 +1045,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
   transition(PF_IS_I, Load, IS_I) {
     uu_profileDataMiss;
+    ppm_observePfMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(PF_IS_I, Ifetch, IS_I) {
+    uu_profileInstMiss;
     ppm_observePfMiss;
     k_popMandatoryQueue;
   }
@@ -1092,12 +1116,14 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   transition({S,E,M}, Load) {
     h_load_hit;
     uu_profileDataHit;
+    po_observeHit;
     k_popMandatoryQueue;
   }
 
   transition({S,E,M}, Ifetch) {
     h_ifetch_hit;
     uu_profileInstHit;
+    po_observeHit;
     k_popMandatoryQueue;
   }
 
@@ -1108,7 +1134,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     k_popMandatoryQueue;
   }
 
-  transition(S, L1_Replacement, I) {
+  transition(S, {L1_Replacement, PF_L1_Replacement}, I) {
     forward_eviction_to_cpu;
     ff_deallocateL1CacheBlock;
   }
@@ -1124,10 +1150,11 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   transition({E,M}, Store, M) {
     hh_store_hit;
     uu_profileDataHit;
+    po_observeHit;
     k_popMandatoryQueue;
   }
 
-  transition(E, L1_Replacement, M_I) {
+  transition(E, {L1_Replacement, PF_L1_Replacement}, M_I) {
     // silent E replacement??
     forward_eviction_to_cpu;
     i_allocateTBE;
@@ -1156,7 +1183,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
   // Transitions from Modified
 
-  transition(M, L1_Replacement, M_I) {
+  transition(M, {L1_Replacement, PF_L1_Replacement}, M_I) {
     forward_eviction_to_cpu;
     i_allocateTBE;
     g_issuePUTX;   // send data, but hold in case forwarded request
