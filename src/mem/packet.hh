@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2017 ARM Limited
+ * Copyright (c) 2012-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1067,6 +1067,20 @@ class Packet : public Printable
     /** Set the value in the data pointer to v as guest endian. */
     template <typename T>
     void set(T v);
+
+
+    /**
+     * Get the data in the packet byte swapped from the specified
+     * endianness and zero-extended to 64 bits.
+     */
+    uint64_t getUintX(ByteOrder endian) const;
+
+    /**
+     * Set the value in the word w after truncating it to the length
+     * of the packet and then byteswapping it to the desired
+     * endianness.
+     */
+    void setUintX(uint64_t w, ByteOrder endian);
 
     /**
      * Copy data into the packet from the provided pointer.
