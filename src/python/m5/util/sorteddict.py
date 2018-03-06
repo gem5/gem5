@@ -24,6 +24,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 from bisect import bisect_left, bisect_right
 
 class SortedDict(dict):
@@ -181,21 +183,21 @@ class SortedDict(dict):
 
 if __name__ == '__main__':
     def display(d):
-        print d
-        print d.keys()
-        print list(d.iterkeys())
-        print d.values()
-        print list(d.itervalues())
-        print d.items()
-        print list(d.iteritems())
+        print(d)
+        print(d.keys())
+        print(list(d.iterkeys()))
+        print(d.values())
+        print(list(d.itervalues()))
+        print(d.items())
+        print(list(d.iteritems()))
 
     d = SortedDict(x=24,e=5,j=4,b=2,z=26,d=4)
     display(d)
 
-    print 'popitem', d.popitem()
+    print('popitem', d.popitem())
     display(d)
 
-    print 'pop j'
+    print('pop j')
     d.pop('j')
     display(d)
 
@@ -212,9 +214,9 @@ if __name__ == '__main__':
     d['y'] = 26
     display(d)
 
-    print `d`
+    print(`d`)
 
-    print d.copy()
+    print(d.copy())
 
     for k,v in d.itemrange('d', 'z', inclusive=True):
-        print k,v
+        print(k, v)

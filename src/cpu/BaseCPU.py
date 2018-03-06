@@ -42,6 +42,8 @@
 #          Andreas Hansson
 #          Glenn Bergmans
 
+from __future__ import print_function
+
 import sys
 
 from m5.SimObject import *
@@ -200,8 +202,8 @@ class BaseCPU(MemObject):
                 [], "Interrupt Controller")
         isa = VectorParam.RiscvISA([], "ISA instance")
     else:
-        print "Don't know what TLB to use for ISA %s" % \
-            buildEnv['TARGET_ISA']
+        print("Don't know what TLB to use for ISA %s" %
+              buildEnv['TARGET_ISA'])
         sys.exit(1)
 
     max_insts_all_threads = Param.Counter(0,
@@ -260,8 +262,8 @@ class BaseCPU(MemObject):
             self.interrupts = \
                 [RiscvInterrupts() for i in xrange(self.numThreads)]
         else:
-            print "Don't know what Interrupt Controller to use for ISA %s" % \
-                buildEnv['TARGET_ISA']
+            print("Don't know what Interrupt Controller to use for ISA %s" %
+                  buildEnv['TARGET_ISA'])
             sys.exit(1)
 
     def connectCachedPorts(self, bus):

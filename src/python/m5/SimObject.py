@@ -43,6 +43,8 @@
 #          Andreas Hansson
 #          Andreas Sandberg
 
+from __future__ import print_function
+
 import sys
 from types import FunctionType, MethodType, ModuleType
 from functools import wraps
@@ -768,8 +770,8 @@ module_init(py::module &m_internal)
         try:
             ptypes = [p.ptype for p in params]
         except:
-            print cls, p, p.ptype_str
-            print params
+            print(cls, p, p.ptype_str)
+            print(params)
             raise
 
         class_path = cls._value_dict['cxx_class'].split('::')
@@ -962,7 +964,7 @@ class SimObject(object):
     def enumerateParams(self, flags_dict = {},
                         cmd_line_str = "", access_str = ""):
         if hasattr(self, "_paramEnumed"):
-            print "Cycle detected enumerating params"
+            print("Cycle detected enumerating params")
         else:
             self._paramEnumed = True
             # Scan the children first to pick up all the objects in this SimObj
@@ -1334,8 +1336,8 @@ class SimObject(object):
                 try:
                     value = value.unproxy(self)
                 except:
-                    print "Error in unproxying param '%s' of %s" % \
-                          (param, self.path())
+                    print("Error in unproxying param '%s' of %s" %
+                          (param, self.path()))
                     raise
                 setattr(self, param, value)
 
@@ -1349,30 +1351,31 @@ class SimObject(object):
                 port.unproxy(self)
 
     def print_ini(self, ini_file):
-        print >>ini_file, '[' + self.path() + ']'       # .ini section header
+        print('[' + self.path() + ']', file=ini_file)    # .ini section header
 
         instanceDict[self.path()] = self
 
         if hasattr(self, 'type'):
-            print >>ini_file, 'type=%s' % self.type
+            print('type=%s' % self.type, file=ini_file)
 
         if len(self._children.keys()):
-            print >>ini_file, 'children=%s' % \
-                  ' '.join(self._children[n].get_name() \
-                  for n in sorted(self._children.keys()))
+            print('children=%s' %
+                  ' '.join(self._children[n].get_name()
+                           for n in sorted(self._children.keys())),
+                  file=ini_file)
 
         for param in sorted(self._params.keys()):
             value = self._values.get(param)
             if value != None:
-                print >>ini_file, '%s=%s' % (param,
-                                             self._values[param].ini_str())
+                print('%s=%s' % (param, self._values[param].ini_str()),
+                      file=ini_file)
 
         for port_name in sorted(self._ports.keys()):
             port = self._port_refs.get(port_name, None)
             if port != None:
-                print >>ini_file, '%s=%s' % (port_name, port.ini_str())
+                print('%s=%s' % (port_name, port.ini_str()), file=ini_file)
 
-        print >>ini_file        # blank line between objects
+        print(file=ini_file)        # blank line between objects
 
     # generate a tree of dictionaries expressing all the parameters in the
     # instantiated system for use by scripts that want to do power, thermal

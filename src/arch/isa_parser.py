@@ -39,7 +39,7 @@
 #
 # Authors: Steve Reinhardt
 
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 import os
 import sys
 import re
@@ -1537,11 +1537,11 @@ class ISAParser(Grammar):
         # select the different chunks. If no 'split' directives are used,
         # the cpp emissions have no effect.
         if re.search('-ns.cc.inc$', filename):
-            print >>f, '#if !defined(__SPLIT) || (__SPLIT == 1)'
+            print('#if !defined(__SPLIT) || (__SPLIT == 1)', file=f)
             self.splits[f] = 1
         # ensure requisite #include's
         elif filename == 'decoder-g.hh.inc':
-            print >>f, '#include "base/bitfield.hh"'
+            print('#include "base/bitfield.hh"', file=f)
 
         return f
 
@@ -1596,11 +1596,11 @@ class ISAParser(Grammar):
 
                 fn = 'decoder-ns.cc.inc'
                 assert(fn in self.files)
-                print >>f, 'namespace %s {' % self.namespace
+                print('namespace %s {' % self.namespace, file=f)
                 if splits > 1:
-                    print >>f, '#define __SPLIT %u' % i
-                print >>f, '#include "%s"' % fn
-                print >>f, '}'
+                    print('#define __SPLIT %u' % i, file=f)
+                print('#include "%s"' % fn, file=f)
+                print('}', file=f)
 
         # instruction execution
         splits = self.splits[self.get_file('exec')]
@@ -1617,11 +1617,11 @@ class ISAParser(Grammar):
 
                 fn = 'exec-ns.cc.inc'
                 assert(fn in self.files)
-                print >>f, 'namespace %s {' % self.namespace
+                print('namespace %s {' % self.namespace, file=f)
                 if splits > 1:
-                    print >>f, '#define __SPLIT %u' % i
-                print >>f, '#include "%s"' % fn
-                print >>f, '}'
+                    print('#define __SPLIT %u' % i, file=f)
+                print('#include "%s"' % fn, file=f)
+                print('}', file=f)
 
         # max_inst_regs.hh
         self.update('max_inst_regs.hh',
@@ -2019,7 +2019,7 @@ del wrap
     def p_def_template(self, t):
         'def_template : DEF TEMPLATE ID CODELIT SEMI'
         if t[3] in self.templateMap:
-            print "warning: template %s already defined" % t[3]
+            print("warning: template %s already defined" % t[3])
         self.templateMap[t[3]] = Template(self, t[4])
 
     # An instruction format definition looks like
@@ -2604,9 +2604,9 @@ StaticInstPtr
         try:
             self._parse_isa_desc(*args, **kwargs)
         except ISAParserError, e:
-            print backtrace(self.fileNameStack)
-            print "At %s:" % e.lineno
-            print e
+            print(backtrace(self.fileNameStack))
+            print("At %s:" % e.lineno)
+            print(e)
             sys.exit(1)
 
 # Called as script: get args from command line.

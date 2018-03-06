@@ -26,6 +26,8 @@
 #
 # Authors: Gabe Black
 
+from __future__ import print_function
+
 from m5.defines import buildEnv
 from m5.params import *
 from BaseCPU import BaseCPU
@@ -45,7 +47,7 @@ class BaseSimpleCPU(BaseCPU):
             self.checker.itb = ArmTLB(size = self.itb.size)
             self.checker.dtb = ArmTLB(size = self.dtb.size)
         else:
-            print "ERROR: Checker only supported under ARM ISA!"
+            print("ERROR: Checker only supported under ARM ISA!")
             exit(1)
 
     branchPred = Param.BranchPredictor(NULL, "Branch Predictor")

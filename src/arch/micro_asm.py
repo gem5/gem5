@@ -26,6 +26,8 @@
 #
 # Authors: Gabe Black
 
+from __future__ import print_function
+
 import os
 import sys
 import re
@@ -117,9 +119,9 @@ class Directive(Statement):
 ##########################################################################
 
 def print_error(message):
-    print
-    print "*** %s" % message
-    print
+    print()
+    print("*** %s" % message)
+    print()
 
 def handle_statement(parser, container, statement):
     if statement.is_microop:
@@ -153,7 +155,7 @@ def handle_statement(parser, container, statement):
                     statement.params, {}, parser.symbols)
         except:
             print_error("Error executing directive.")
-            print container.directives
+            print(container.directives)
             raise
     else:
         raise Exception, "Didn't recognize the type of statement", statement

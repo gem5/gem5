@@ -40,6 +40,8 @@
 #          Nathan Binkert
 #          Andrew Bardsley
 
+from __future__ import print_function
+
 from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
@@ -275,5 +277,5 @@ class MinorCPU(BaseCPU):
         numThreads = Parent.numThreads), "Branch Predictor")
 
     def addCheckerCpu(self):
-        print "Checker not yet supported by MinorCPU"
+        print("Checker not yet supported by MinorCPU")
         exit(1)

@@ -28,6 +28,8 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+
 import os
 import sys
 
@@ -101,7 +103,7 @@ generated_dir = Dir('../protocol')
 def MakeIncludeAction(target, source, env):
     f = file(str(target[0]), 'w')
     for s in source:
-        print >>f, '#include "%s"' % str(s.abspath)
+        print('#include "%s"' % str(s.abspath), file=f)
     f.close()
 
 def MakeInclude(source):

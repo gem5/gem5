@@ -26,6 +26,8 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+
 __all__ = [ 'multidict' ]
 
 class multidict(object):
@@ -116,10 +118,10 @@ class multidict(object):
             return default
 
     def _dump(self):
-        print 'multidict dump'
+        print('multidict dump')
         node = self
         while isinstance(node, multidict):
-            print '    ', node.local
+            print('    ', node.local)
             node = node.parent
 
     def _dumpkey(self, key):
@@ -129,7 +131,7 @@ class multidict(object):
             if key in node.local:
                 values.append(node.local[key])
             node = node.parent
-        print key, values
+        print(key, values)
 
 if __name__ == '__main__':
     test1 = multidict()
@@ -150,33 +152,33 @@ if __name__ == '__main__':
 
     test2.setdefault('f', multidict)
 
-    print 'test1>', test1.items()
-    print 'test2>', test2.items()
-    #print test1['a']
-    print test1['b']
-    print test1['c']
-    print test1['d']
-    print test1['e']
+    print('test1>', test1.items())
+    print('test2>', test2.items())
+    #print(test1['a'])
+    print(test1['b'])
+    print(test1['c'])
+    print(test1['d'])
+    print(test1['e'])
 
-    print test2['a']
-    #print test2['b']
-    print test2['c']
-    print test2['d']
-    print test2['e']
+    print(test2['a'])
+    #print(test2['b'])
+    print(test2['c'])
+    print(test2['d'])
+    print(test2['e'])
 
     for key in test2.iterkeys():
-        print key
+        print(key)
 
     test2.get('g', 'foo')
     #test2.get('b')
     test2.get('b', 'bar')
     test2.setdefault('b', 'blah')
-    print test1
-    print test2
-    print `test2`
+    print(test1)
+    print(test2)
+    print(`test2`)
 
-    print len(test2)
+    print(len(test2))
 
     test3['a'] = [ 0, 1, 2, 3 ]
 
-    print test4
+    print(test4)

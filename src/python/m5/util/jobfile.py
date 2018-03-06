@@ -26,6 +26,8 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+
 import sys
 
 class Data(object):
@@ -69,12 +71,12 @@ class Data(object):
 
     def printinfo(self):
         if self.name:
-            print 'name: %s' % self.name
+            print('name: %s' % self.name)
         if self.desc:
-            print 'desc: %s' % self.desc
+            print('desc: %s' % self.desc)
         try:
             if self.system:
-                print 'system: %s' % self.system
+                print('system: %s' % self.system)
         except AttributeError:
             pass
 
@@ -84,8 +86,8 @@ class Data(object):
             if isinstance(val, dict):
                 import pprint
                 val = pprint.pformat(val)
-            print '%-20s = %s' % (key, val)
-        print
+            print('%-20s = %s' % (key, val))
+        print()
 
     def __contains__(self, attr):
         if attr.startswith('_'):
@@ -186,10 +188,10 @@ class Job(Data):
     def printinfo(self):
         super(Job, self).printinfo()
         if self._checkpoint:
-            print 'checkpoint: %s' % self._checkpoint.name
-        print 'config: %s' % self._config.name
-        print 'groups: %s' % [ g.name for g in self._groups ]
-        print 'options: %s' % [ o.name for o in self._options ]
+            print('checkpoint: %s' % self._checkpoint.name)
+        print('config: %s' % self._config.name)
+        print('groups: %s' % [ g.name for g in self._groups ])
+        print('options: %s' % [ o.name for o in self._options ])
         super(Job, self).printverbose()
 
 class SubOption(Data):
@@ -253,7 +255,7 @@ class Option(Data):
 
     def printinfo(self):
         super(Option, self).printinfo()
-        print 'config: %s' % self._config.name
+        print('config: %s' % self._config.name)
         super(Option, self).printverbose()
 
 class Group(Data):
@@ -283,8 +285,8 @@ class Group(Data):
 
     def printinfo(self):
         super(Group, self).printinfo()
-        print 'config: %s' % self._config.name
-        print 'options: %s' % [ o.name for o in self._options ]
+        print('config: %s' % self._config.name)
+        print('options: %s' % [ o.name for o in self._options ])
         super(Group, self).printverbose()
 
 class Configuration(Data):
@@ -397,7 +399,7 @@ class Configuration(Data):
 
     def printinfo(self):
         super(Configuration, self).printinfo()
-        print 'groups: %s' % [ g.name for g in self._groups ]
+        print('groups: %s' % [ g.name for g in self._groups ])
         super(Configuration, self).printverbose()
 
 def JobFile(jobfile):
@@ -466,7 +468,7 @@ def main(conf=None):
             cpt = ''
             if job._checkpoint:
                 cpt = job._checkpoint.name
-            print job.name, cpt
+            print(job.name, cpt)
 
 if __name__ == '__main__':
     main()

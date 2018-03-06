@@ -23,6 +23,8 @@
 # Authors: Christian Menard
 #          Matthias Jung
 
+from __future__ import print_function
+
 import os
 from m5.util.terminal import get_termcap
 
@@ -57,8 +59,8 @@ elif conf.CheckDeclaration('__x86_64__'):
     arch = 'x86_64'
 else:
     termcap = get_termcap(GetOption('use_colors'))
-    print termcap.Yellow + termcap.Bold + \
-          "Warning: Unrecognized architecture for systemc." + termcap.Normal
+    print(termcap.Yellow + termcap.Bold +
+          "Warning: Unrecognized architecture for systemc." + termcap.Normal)
 
 conf.Finish()
 

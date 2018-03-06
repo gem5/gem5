@@ -38,6 +38,8 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+
 import code
 import datetime
 import os
@@ -230,12 +232,12 @@ def main(*args):
 
     # Print redirection notices here before doing any redirection
     if options.redirect_stdout and not options.redirect_stderr:
-        print "Redirecting stdout and stderr to", stdout_file
+        print("Redirecting stdout and stderr to", stdout_file)
     else:
         if options.redirect_stdout:
-            print "Redirecting stdout to", stdout_file
+            print("Redirecting stdout to", stdout_file)
         if options.redirect_stderr:
-            print "Redirecting stderr to", stderr_file
+            print("Redirecting stderr to", stderr_file)
 
     # Now redirect stdout/stderr as desired
     if options.redirect_stdout:
@@ -252,28 +254,28 @@ def main(*args):
 
     if options.build_info:
         done = True
-        print 'Build information:'
-        print
-        print 'compiled %s' % defines.compileDate;
-        print 'build options:'
+        print('Build information:')
+        print()
+        print('compiled %s' % defines.compileDate)
+        print('build options:')
         keys = defines.buildEnv.keys()
         keys.sort()
         for key in keys:
             val = defines.buildEnv[key]
-            print '    %s = %s' % (key, val)
-        print
+            print('    %s = %s' % (key, val))
+        print()
 
     if options.copyright:
         done = True
-        print info.COPYING
-        print
+        print(info.COPYING)
+        print()
 
     if options.readme:
         done = True
-        print 'Readme:'
-        print
-        print info.README
-        print
+        print('Readme:')
+        print()
+        print(info.README)
+        print()
 
     if options.debug_help:
         done = True
@@ -283,23 +285,23 @@ def main(*args):
     if options.list_sim_objects:
         import SimObject
         done = True
-        print "SimObjects:"
+        print("SimObjects:")
         objects = SimObject.allClasses.keys()
         objects.sort()
         for name in objects:
             obj = SimObject.allClasses[name]
-            print "    %s" % obj
+            print("    %s" % obj)
             params = obj._params.keys()
             params.sort()
             for pname in params:
                 param = obj._params[pname]
                 default = getattr(param, 'default', '')
-                print "        %s" % pname
+                print("        %s" % pname)
                 if default:
-                    print "            default: %s" % default
-                print "            desc: %s" % param.desc
-                print
-            print
+                    print("            default: %s" % default)
+                print("            desc: %s" % param.desc)
+                print()
+            print()
 
     if done:
         sys.exit(0)
@@ -310,26 +312,26 @@ def main(*args):
 
     verbose = options.verbose - options.quiet
     if verbose >= 0:
-        print "gem5 Simulator System.  http://gem5.org"
-        print brief_copyright
-        print
+        print("gem5 Simulator System.  http://gem5.org")
+        print(brief_copyright)
+        print()
 
-        print "gem5 compiled %s" % defines.compileDate;
+        print("gem5 compiled %s" % defines.compileDate)
 
-        print "gem5 started %s" % \
-            datetime.datetime.now().strftime("%b %e %Y %X")
-        print "gem5 executing on %s, pid %d" % \
-            (socket.gethostname(), os.getpid())
+        print("gem5 started %s" %
+              datetime.datetime.now().strftime("%b %e %Y %X"))
+        print("gem5 executing on %s, pid %d" %
+              (socket.gethostname(), os.getpid()))
 
         # in Python 3 pipes.quote() is moved to shlex.quote()
         import pipes
-        print "command line:", " ".join(map(pipes.quote, sys.argv))
-        print
+        print("command line:", " ".join(map(pipes.quote, sys.argv)))
+        print()
 
     # check to make sure we can find the listed script
     if not arguments or not os.path.isfile(arguments[0]):
         if arguments and not os.path.isfile(arguments[0]):
-            print "Script %s not found" % arguments[0]
+            print("Script %s not found" % arguments[0])
 
         options.usage(2)
 
@@ -375,7 +377,7 @@ def main(*args):
                 off = True
 
             if flag not in debug.flags:
-                print >>sys.stderr, "invalid debug flag '%s'" % flag
+                print("invalid debug flag '%s'" % flag, file=sys.stderr)
                 sys.exit(1)
 
             if off:
@@ -420,11 +422,11 @@ def main(*args):
         try:
             pdb.run(filecode, scope)
         except SystemExit:
-            print "The program exited via sys.exit(). Exit status: ",
-            print sys.exc_info()[1]
+            print("The program exited via sys.exit(). Exit status: ", end=' ')
+            print(sys.exc_info()[1])
         except:
             traceback.print_exc()
-            print "Uncaught exception. Entering post mortem debugging"
+            print("Uncaught exception. Entering post mortem debugging")
             t = sys.exc_info()[2]
             while t.tb_next is not None:
                 t = t.tb_next
@@ -441,9 +443,9 @@ if __name__ == '__main__':
 
     options, arguments = parse_options()
 
-    print 'opts:'
+    print('opts:')
     pprint(options, indent=4)
-    print
+    print()
 
-    print 'args:'
+    print('args:')
     pprint(arguments, indent=4)

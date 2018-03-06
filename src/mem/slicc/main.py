@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
+
 import os
 import sys
 
@@ -45,7 +47,7 @@ def eprint(format, *args):
     if args:
         format = format % args
 
-    print >>sys.stderr, format
+    print(format, file=sys.stderr)
 
 def main(args=None):
     import optparse
@@ -79,7 +81,7 @@ def main(args=None):
 
     if opts.print_files:
         for i in sorted(slicc.files()):
-            print '    %s' % i
+            print('    %s' % i)
     else:
         output("Processing AST...")
         slicc.process()

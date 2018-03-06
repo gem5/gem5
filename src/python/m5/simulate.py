@@ -40,6 +40,8 @@
 # Authors: Nathan Binkert
 #          Steve Reinhardt
 
+from __future__ import print_function
+
 import atexit
 import os
 import sys
@@ -223,7 +225,7 @@ def checkpoint(dir):
 
     drain()
     memWriteback(root)
-    print "Writing checkpoint"
+    print("Writing checkpoint")
     _m5.core.serializeAll(dir)
 
 def _changeMemoryMode(system, mode):
@@ -233,7 +235,7 @@ def _changeMemoryMode(system, mode):
     if system.getMemoryMode() != mode:
         system.setMemoryMode(mode)
     else:
-        print "System already in target mode. Memory mode unchanged."
+        print("System already in target mode. Memory mode unchanged.")
 
 def switchCpus(system, cpuList, verbose=True):
     """Switch CPUs in a system.
@@ -248,7 +250,7 @@ def switchCpus(system, cpuList, verbose=True):
     """
 
     if verbose:
-        print "switching cpus"
+        print("switching cpus")
 
     if not isinstance(cpuList, list):
         raise RuntimeError, "Must pass a list to this function"

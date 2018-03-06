@@ -28,6 +28,8 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+
 import array
 import bisect
 import functools
@@ -831,7 +833,7 @@ if env['HAVE_PROTOBUF']:
         # Add the C++ source file
         Source(proto.cc_file, tags=proto.tags)
 elif ProtoBuf.all:
-    print 'Got protobuf to build, but lacks support!'
+    print('Got protobuf to build, but lacks support!')
     Exit(1)
 
 #
@@ -1166,7 +1168,7 @@ elif env['CLANG']:
     for target in ['opt', 'fast', 'prof', 'perf']:
         ccflags[target] += ['-O3']
 else:
-    print 'Unknown compiler, please fix compiler options'
+    print('Unknown compiler, please fix compiler options')
     Exit(1)
 
 

@@ -35,12 +35,14 @@
 #  Author: Steve Reinhardt
 #
 
+from __future__ import print_function
+
 import sys, re
 
 from m5.util import code_formatter
 
 if len(sys.argv) != 4:
-    print "Error: need 3 args (file names)"
+    print("Error: need 3 args (file names)")
     sys.exit(0)
 
 header_code = code_formatter()

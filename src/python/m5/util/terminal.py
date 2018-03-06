@@ -26,6 +26,8 @@
 #
 # Author: Steve Reinhardt
 
+from __future__ import print_function
+
 import sys
 
 # Intended usage example:
@@ -36,7 +38,7 @@ import sys
 #    from m5.util.terminal import no_termcap as termcap
 # else:
 #    from m5.util.terminal import tty_termcap as termcap
-# print termcap.Blue + "This could be blue!" + termcap.Normal
+# print(termcap.Blue + "This could be blue!" + termcap.Normal)
 
 # ANSI color names in index order
 color_names = "Black Red Green Yellow Blue Magenta Cyan".split()
@@ -105,18 +107,18 @@ def get_termcap(use_colors = None):
 def test_termcap(obj):
     for c_name in color_names:
         c_str = getattr(obj, c_name)
-        print c_str + c_name + obj.Normal
+        print(c_str + c_name + obj.Normal)
         for attr_name in capability_names:
             if attr_name == 'Normal':
                 continue
             attr_str = getattr(obj, attr_name)
-            print attr_str + c_str + attr_name + " " + c_name + obj.Normal
-        print obj.Bold + obj.Underline + \
-              c_name + "Bold Underline " + c + obj.Normal
+            print(attr_str + c_str + attr_name + " " + c_name + obj.Normal)
+        print(obj.Bold + obj.Underline +
+              c_name + "Bold Underline " + c + obj.Normal)
 
 if __name__ == '__main__':
-    print "=== termcap enabled ==="
+    print("=== termcap enabled ===")
     test_termcap(termcap)
-    print termcap.Normal
-    print "=== termcap disabled ==="
+    print(termcap.Normal)
+    print("=== termcap disabled ===")
     test_termcap(no_termcap)

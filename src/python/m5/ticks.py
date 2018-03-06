@@ -26,6 +26,8 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+
 import sys
 from m5.util import warn
 
@@ -39,7 +41,7 @@ def fixGlobalFrequency():
     if not tps_fixed:
         tps_fixed = True
         _m5.core.setClockFrequency(int(tps))
-        print "Global frequency set at %d ticks per second" % int(tps)
+        print("Global frequency set at %d ticks per second" % int(tps))
 
 def setGlobalFrequency(ticksPerSecond):
     from m5.util import convert

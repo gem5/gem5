@@ -42,6 +42,8 @@
 #          Kevin Lim
 #          Andreas Sandberg
 
+from __future__ import print_function
+
 from SCons.Script.SConscript import SConsEnvironment
 import os
 import pickle
@@ -136,7 +138,7 @@ def print_test(target, source, env):
     if formatter:
         formatter.dump_suites([result])
 
-    print "***** %s: %s" % (source[0].dir, status)
+    print("***** %s: %s" % (source[0].dir, status))
     return 0
 
 printAction = env.Action(print_test, strfunction=None)
@@ -163,19 +165,19 @@ def update_test(target, source, env):
     result = result[0]
 
     if result.skipped():
-        print "*** %s: %s: Test skipped, not updating." % (
-            source[0].dir, color_message(termcap.Yellow, "WARNING"), )
+        print("*** %s: %s: Test skipped, not updating." %
+              (source[0].dir, color_message(termcap.Yellow, "WARNING")))
         return 0
     elif result:
-        print "*** %s: %s: Test successful, not updating." % (
-            source[0].dir, color_message(termcap.Green, "skipped"), )
+        print("*** %s: %s: Test successful, not updating." %
+              (source[0].dir, color_message(termcap.Green, "skipped")))
         return 0
     elif result.failed_run():
-        print "*** %s: %s: Test failed, not updating." % (
-            source[0].dir, color_message(termcap.Red, "ERROR"), )
+        print("*** %s: %s: Test failed, not updating." %
+              (source[0].dir, color_message(termcap.Red, "ERROR")))
         return 1
 
-    print "** Updating %s" % (test, )
+    print("** Updating %s" % test)
     test.update_ref()
 
     return 0
@@ -236,7 +238,7 @@ def list_tests(target, source, env):
     with open(target[0].abspath, "w") as fout:
         for cat in categories:
             for test in env.Tests[cat]:
-                print >> fout,"/".join(test)
+                print("/".join(test), file=fout)
 
     return 0
 

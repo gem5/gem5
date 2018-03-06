@@ -27,6 +27,8 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+
 import getopt, os, os.path, sys
 from os.path import join as joinpath, realpath
 
@@ -71,4 +73,4 @@ for arg in args:
 if globals().has_key('root') and isinstance(root, Root):
     instantiate(root)
 else:
-    print "Instantiation skipped: no root object found."
+    print("Instantiation skipped: no root object found.")

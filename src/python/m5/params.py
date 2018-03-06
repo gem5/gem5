@@ -59,6 +59,8 @@
 #
 #####################################################################
 
+from __future__ import print_function
+
 import copy
 import datetime
 import re
@@ -311,7 +313,7 @@ class SimObjectVector(VectorParamValue):
                         cmd_line_str = "",
                         access_str = ""):
         if hasattr(self, "_paramEnumed"):
-            print "Cycle detected enumerating params at %s?!" % (cmd_line_str)
+            print("Cycle detected enumerating params at %s?!" % (cmd_line_str))
         else:
             x = 0
             for vals in self:
@@ -1826,8 +1828,8 @@ class PortRef(object):
             try:
                 realPeer = self.peer.unproxy(self.simobj)
             except:
-                print "Error in unproxying port '%s' of %s" % \
-                      (self.name, self.simobj.path())
+                print("Error in unproxying port '%s' of %s" %
+                      (self.name, self.simobj.path()))
                 raise
             self.connect(realPeer)
 
@@ -1856,9 +1858,9 @@ class PortRef(object):
             connectPorts(self.simobj.getCCObject(), self.name, self.index,
                          peer.simobj.getCCObject(), peer.name, peer.index)
         except:
-            print "Error connecting port %s.%s to %s.%s" % \
+            print("Error connecting port %s.%s to %s.%s" %
                   (self.simobj.path(), self.name,
-                   peer.simobj.path(), peer.name)
+                   peer.simobj.path(), peer.name))
             raise
         self.ccConnected = True
         peer.ccConnected = True

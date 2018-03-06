@@ -23,6 +23,8 @@
 # Authors: Christian Menard
 #          Matthias Jung
 
+from __future__ import print_function
+
 Import('systemc', 'SystemCSource')
 
 SystemCSource(
@@ -63,5 +65,5 @@ elif coroutine_lib == 'pthreads':
 elif coroutine_lib == 'fiber':
     SystemCSource('sc_cor_fiber.cpp')
 else:
-    print 'Unrecognized threading implementation \'%s\'' % coroutine_lib
+    print('Unrecognized threading implementation \'%s\'' % coroutine_lib)
     Exit(1)

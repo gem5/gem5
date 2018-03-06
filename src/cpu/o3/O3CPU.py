@@ -38,6 +38,8 @@
 #
 # Authors: Kevin Lim
 
+from __future__ import print_function
+
 from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
@@ -173,5 +175,5 @@ class DerivO3CPU(BaseCPU):
             self.checker.cpu_id = self.cpu_id
 
         else:
-            print "ERROR: Checker only supported under ARM ISA!"
+            print("ERROR: Checker only supported under ARM ISA!")
             exit(1)
