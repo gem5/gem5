@@ -239,8 +239,6 @@ public:
          uint32_t task_id = pkt->req->taskId();
 
          if (!blk->isTouched) {
-             tagsInUse++;
-             blk->isTouched = true;
              if (!warmedUp && tagsInUse.value() >= warmupBound) {
                  warmedUp = true;
                  warmupCycle = curTick();
@@ -260,6 +258,9 @@ public:
              blk->invalidate();
          }
 
+         // Previous block, if existed, has been removed, and now we have
+         // to insert the new one and mark it as touched
+         tagsInUse++;
          blk->isTouched = true;
 
          // Set tag for new block.  Caller is responsible for setting status.
