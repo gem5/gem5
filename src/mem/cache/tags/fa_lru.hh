@@ -242,14 +242,14 @@ public:
     }
 
     /**
-     * Regenerate the block address from the tag and the set.
-     * @param tag The tag of the block.
-     * @param set The set the block belongs to.
+     * Regenerate the block address from the tag.
+     *
+     * @param block The block.
      * @return the block address.
      */
-    Addr regenerateBlkAddr(Addr tag, unsigned set) const override
+    Addr regenerateBlkAddr(const CacheBlk* blk) const override
     {
-        return (tag);
+        return blk->tag;
     }
 
     /**

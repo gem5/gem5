@@ -1659,8 +1659,8 @@ Cache::writebackBlk(CacheBlk *blk)
 
     writebacks[Request::wbMasterId]++;
 
-    Request *req = new Request(tags->regenerateBlkAddr(blk->tag, blk->set),
-                               blkSize, 0, Request::wbMasterId);
+    Request *req = new Request(tags->regenerateBlkAddr(blk), blkSize, 0,
+                               Request::wbMasterId);
     if (blk->isSecure())
         req->setFlags(Request::SECURE);
 
@@ -1694,8 +1694,8 @@ Cache::writebackBlk(CacheBlk *blk)
 PacketPtr
 Cache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
 {
-    Request *req = new Request(tags->regenerateBlkAddr(blk->tag, blk->set),
-                               blkSize, 0, Request::wbMasterId);
+    Request *req = new Request(tags->regenerateBlkAddr(blk), blkSize, 0,
+                               Request::wbMasterId);
     if (blk->isSecure()) {
         req->setFlags(Request::SECURE);
     }
@@ -1737,7 +1737,7 @@ Cache::cleanEvictBlk(CacheBlk *blk)
     assert(blk && blk->isValid() && !blk->isDirty());
     // Creating a zero sized write, a message to the snoop filter
     Request *req =
-        new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0,
+        new Request(tags->regenerateBlkAddr(blk), blkSize, 0,
                     Request::wbMasterId);
     if (blk->isSecure())
         req->setFlags(Request::SECURE);
@@ -1780,8 +1780,8 @@ Cache::writebackVisitor(CacheBlk &blk)
     if (blk.isDirty()) {
         assert(blk.isValid());
 
-        Request request(tags->regenerateBlkAddr(blk.tag, blk.set),
-                        blkSize, 0, Request::funcMasterId);
+        Request request(tags->regenerateBlkAddr(&blk), blkSize, 0,
+                        Request::funcMasterId);
         request.taskId(blk.task_id);
         if (blk.isSecure()) {
             request.setFlags(Request::SECURE);
@@ -1823,7 +1823,7 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
         return nullptr;
 
     if (blk->isValid()) {
-        Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
+        Addr repl_addr = tags->regenerateBlkAddr(blk);
         MSHR *repl_mshr = mshrQueue.findMatch(repl_addr, blk->isSecure());
         if (repl_mshr) {
             // must be an outstanding upgrade request

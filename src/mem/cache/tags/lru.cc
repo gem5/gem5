@@ -64,7 +64,7 @@ LRU::accessBlock(Addr addr, bool is_secure, Cycles &lat)
         // move this block to head of the MRU list
         sets[blk->set].moveToHead(blk);
         DPRINTF(CacheRepl, "set %x: moving blk %x (%s) to MRU\n",
-                blk->set, regenerateBlkAddr(blk->tag, blk->set),
+                blk->set, regenerateBlkAddr(blk),
                 is_secure ? "s" : "ns");
     }
 
@@ -88,7 +88,7 @@ LRU::findVictim(Addr addr)
 
     if (blk && blk->isValid()) {
         DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
-                set, regenerateBlkAddr(blk->tag, set));
+                set, regenerateBlkAddr(blk));
     }
 
     return blk;

@@ -86,7 +86,7 @@ RandomRepl::findVictim(Addr addr)
         assert(blk->way < allocAssoc);
 
         DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
-                blk->set, regenerateBlkAddr(blk->tag, blk->set));
+                blk->set, regenerateBlkAddr(blk));
     }
 
     return blk;

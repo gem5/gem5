@@ -301,14 +301,14 @@ public:
     }
 
     /**
-     * Regenerate the block address from the tag.
-     * @param tag The tag of the block.
-     * @param set The set of the block.
-     * @return The block address.
+     * Regenerate the block address from the tag and set.
+     *
+     * @param block The block.
+     * @return the block address.
      */
-    Addr regenerateBlkAddr(Addr tag, unsigned set) const override
+    Addr regenerateBlkAddr(const CacheBlk* blk) const override
     {
-        return ((tag << tagShift) | ((Addr)set << setShift));
+        return ((blk->tag << tagShift) | ((Addr)blk->set << setShift));
     }
 
     /**

@@ -255,7 +255,13 @@ class BaseTags : public ClockedObject
 
     virtual void insertBlock(PacketPtr pkt, CacheBlk *blk) = 0;
 
-    virtual Addr regenerateBlkAddr(Addr tag, unsigned set) const = 0;
+    /**
+     * Regenerate the block address.
+     *
+     * @param block The block.
+     * @return the block address.
+     */
+    virtual Addr regenerateBlkAddr(const CacheBlk* blk) const = 0;
 
     virtual CacheBlk* findVictim(Addr addr) = 0;
 
