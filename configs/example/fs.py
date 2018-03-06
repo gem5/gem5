@@ -41,6 +41,8 @@
 # Authors: Ali Saidi
 #          Brad Beckmann
 
+from __future__ import print_function
+
 import optparse
 import sys
 
@@ -74,8 +76,8 @@ def is_kvm_cpu(cpu_class):
 
 def cmd_line_template():
     if options.command_line and options.command_line_file:
-        print "Error: --command-line and --command-line-file are " \
-              "mutually exclusive"
+        print("Error: --command-line and --command-line-file are "
+              "mutually exclusive")
         sys.exit(1)
     if options.command_line:
         return options.command_line
@@ -310,7 +312,7 @@ if '--ruby' in sys.argv:
 (options, args) = parser.parse_args()
 
 if args:
-    print "Error: script doesn't take any positional arguments"
+    print("Error: script doesn't take any positional arguments")
     sys.exit(1)
 
 # system under test can be any CPU
@@ -323,8 +325,8 @@ if options.benchmark:
     try:
         bm = Benchmarks[options.benchmark]
     except KeyError:
-        print "Error benchmark %s has not been defined." % options.benchmark
-        print "Valid benchmarks are: %s" % DefinedBenchmarks
+        print("Error benchmark %s has not been defined." % options.benchmark)
+        print("Valid benchmarks are: %s" % DefinedBenchmarks)
         sys.exit(1)
 else:
     if options.dual:
@@ -357,7 +359,7 @@ elif len(bm) == 1 and options.dist:
 elif len(bm) == 1:
     root = Root(full_system=True, system=test_sys)
 else:
-    print "Error I don't know how to create more than 2 systems."
+    print("Error I don't know how to create more than 2 systems.")
     sys.exit(1)
 
 if options.timesync:

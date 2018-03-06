@@ -39,6 +39,8 @@
 # Authors: Ron Dreslinski
 #          Andreas Hansson
 
+from __future__ import print_function
+
 import optparse
 import random
 import sys
@@ -107,7 +109,7 @@ parser.add_option("--sys-clock", action="store", type="string",
 (options, args) = parser.parse_args()
 
 if args:
-     print "Error: script doesn't take any positional arguments"
+     print("Error: script doesn't take any positional arguments")
      sys.exit(1)
 
 # Get the total number of testers
@@ -137,41 +139,41 @@ if options.random:
           if numtesters(cachespec, testerspec) < block_size:
                break
 
-     print "Generated random tree -c", ':'.join(map(str, cachespec)), \
-         "-t", ':'.join(map(str, testerspec))
+     print("Generated random tree -c", ':'.join(map(str, cachespec)),
+         "-t", ':'.join(map(str, testerspec)))
 else:
      try:
           cachespec = [int(x) for x in options.caches.split(':')]
           testerspec = [int(x) for x in options.testers.split(':')]
      except:
-          print "Error: Unable to parse caches or testers option"
+          print("Error: Unable to parse caches or testers option")
           sys.exit(1)
 
      if len(cachespec) < 1:
-          print "Error: Must have at least one level of caches"
+          print("Error: Must have at least one level of caches")
           sys.exit(1)
 
      if len(cachespec) != len(testerspec) - 1:
-          print "Error: Testers must have one element more than caches"
+          print("Error: Testers must have one element more than caches")
           sys.exit(1)
 
      if testerspec[-1] == 0:
-          print "Error: Must have testers at the uppermost level"
+          print("Error: Must have testers at the uppermost level")
           sys.exit(1)
 
      for t in testerspec:
           if t < 0:
-               print "Error: Cannot have a negative number of testers"
+               print("Error: Cannot have a negative number of testers")
                sys.exit(1)
 
      for c in cachespec:
           if c < 1:
-               print "Error: Must have 1 or more caches at each level"
+               print("Error: Must have 1 or more caches at each level")
                sys.exit(1)
 
      if numtesters(cachespec, testerspec) > block_size:
-          print "Error: Limited to %s testers because of false sharing" \
-              % (block_size)
+          print("Error: Limited to %s testers because of false sharing"
+              % (block_size))
           sys.exit(1)
 
 # Define a prototype L1 cache that we scale for all successive levels
@@ -280,7 +282,7 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
                cache.mem_side = xbar.slave
      else:
           if not next_cache:
-               print "Error: No next-level cache at top level"
+               print("Error: No next-level cache at top level")
                sys.exit(1)
 
           if ntesters > 1:
@@ -318,4 +320,4 @@ m5.instantiate()
 # Simulate until program terminates
 exit_event = m5.simulate(options.maxtick)
 
-print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())

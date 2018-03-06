@@ -39,6 +39,8 @@
 #
 # Authors: Lisa Hsu
 
+from __future__ import print_function
+
 import sys
 from os import getcwd
 from os.path import join as joinpath
@@ -170,7 +172,7 @@ def findCptDir(options, cptdir, testsys):
             weight_inst = float(match.group(3))
             interval_length = int(match.group(4))
             warmup_length = int(match.group(5))
-        print "Resuming from", checkpoint_dir
+        print("Resuming from", checkpoint_dir)
         simpoint_start_insts = []
         simpoint_start_insts.append(warmup_length)
         simpoint_start_insts.append(warmup_length + interval_length)
@@ -178,9 +180,9 @@ def findCptDir(options, cptdir, testsys):
         if testsys.switch_cpus != None:
             testsys.switch_cpus[0].simpoint_start_insts = simpoint_start_insts
 
-        print "Resuming from SimPoint",
-        print "#%d, start_inst:%d, weight:%f, interval:%d, warmup:%d" % \
-            (index, start_inst, weight_inst, interval_length, warmup_length)
+        print("Resuming from SimPoint", end=' ')
+        print("#%d, start_inst:%d, weight:%f, interval:%d, warmup:%d" %
+            (index, start_inst, weight_inst, interval_length, warmup_length))
 
     else:
         dirs = listdir(cptdir)
@@ -210,10 +212,10 @@ def scriptCheckpoints(options, maxtick, cptdir):
         if options.checkpoint_restore != None:
             checkpoint_inst += options.checkpoint_restore
 
-        print "Creating checkpoint at inst:%d" % (checkpoint_inst)
+        print("Creating checkpoint at inst:%d" % (checkpoint_inst))
         exit_event = m5.simulate()
         exit_cause = exit_event.getCause()
-        print "exit cause = %s" % exit_cause
+        print("exit cause = %s" % exit_cause)
 
         # skip checkpoint instructions should they exist
         while exit_cause == "checkpoint":
@@ -223,7 +225,7 @@ def scriptCheckpoints(options, maxtick, cptdir):
         if exit_cause == "a thread reached the max instruction count":
             m5.checkpoint(joinpath(cptdir, "cpt.%s.%d" % \
                     (options.bench, checkpoint_inst)))
-            print "Checkpoint written."
+            print("Checkpoint written.")
 
     else:
         when, period = options.take_checkpoints.split(",", 1)
@@ -288,10 +290,10 @@ def parseSimpointAnalysisFile(options, testsys):
 
     simpoint_filename, weight_filename, interval_length, warmup_length = \
         options.take_simpoint_checkpoints.split(",", 3)
-    print "simpoint analysis file:", simpoint_filename
-    print "simpoint weight file:", weight_filename
-    print "interval length:", interval_length
-    print "warmup length:", warmup_length
+    print("simpoint analysis file:", simpoint_filename)
+    print("simpoint weight file:", weight_filename)
+    print("interval length:", interval_length)
+    print("warmup length:", warmup_length)
 
     interval_length = int(interval_length)
     warmup_length = int(warmup_length)
@@ -339,11 +341,11 @@ def parseSimpointAnalysisFile(options, testsys):
     simpoints.sort(key=lambda obj: obj[2])
     for s in simpoints:
         interval, weight, starting_inst_count, actual_warmup_length = s
-        print str(interval), str(weight), starting_inst_count, \
-            actual_warmup_length
+        print(str(interval), str(weight), starting_inst_count,
+            actual_warmup_length)
         simpoint_start_insts.append(starting_inst_count)
 
-    print "Total # of simpoints:", len(simpoints)
+    print("Total # of simpoints:", len(simpoints))
     testsys.cpu[0].simpoint_start_insts = simpoint_start_insts
 
     return (simpoints, interval_length)
@@ -364,7 +366,7 @@ def takeSimpointCheckpoints(simpoints, interval_length, cptdir):
 
             # skip checkpoint instructions should they exist
             while exit_event.getCause() == "checkpoint":
-                print "Found 'checkpoint' exit event...ignoring..."
+                print("Found 'checkpoint' exit event...ignoring...")
                 exit_event = m5.simulate()
 
             exit_cause = exit_event.getCause()
@@ -375,16 +377,16 @@ def takeSimpointCheckpoints(simpoints, interval_length, cptdir):
                 "cpt.simpoint_%02d_inst_%d_weight_%f_interval_%d_warmup_%d"
                 % (index, starting_inst_count, weight, interval_length,
                 actual_warmup_length)))
-            print "Checkpoint #%d written. start inst:%d weight:%f" % \
-                (num_checkpoints, starting_inst_count, weight)
+            print("Checkpoint #%d written. start inst:%d weight:%f" %
+                (num_checkpoints, starting_inst_count, weight))
             num_checkpoints += 1
             last_chkpnt_inst_count = starting_inst_count
         else:
             break
         index += 1
 
-    print 'Exiting @ tick %i because %s' % (m5.curTick(), exit_cause)
-    print "%d checkpoints taken" % num_checkpoints
+    print('Exiting @ tick %i because %s' % (m5.curTick(), exit_cause))
+    print("%d checkpoints taken" % num_checkpoints)
     sys.exit(code)
 
 def restoreSimpointCheckpoint():
@@ -392,7 +394,7 @@ def restoreSimpointCheckpoint():
     exit_cause = exit_event.getCause()
 
     if exit_cause == "simpoint starting point found":
-        print "Warmed up! Dumping and resetting stats!"
+        print("Warmed up! Dumping and resetting stats!")
         m5.stats.dump()
         m5.stats.reset()
 
@@ -400,14 +402,14 @@ def restoreSimpointCheckpoint():
         exit_cause = exit_event.getCause()
 
         if exit_cause == "simpoint starting point found":
-            print "Done running SimPoint!"
+            print("Done running SimPoint!")
             sys.exit(exit_event.getCode())
 
-    print 'Exiting @ tick %i because %s' % (m5.curTick(), exit_cause)
+    print('Exiting @ tick %i because %s' % (m5.curTick(), exit_cause))
     sys.exit(exit_event.getCode())
 
 def repeatSwitch(testsys, repeat_switch_cpu_list, maxtick, switch_freq):
-    print "starting switch loop"
+    print("starting switch loop")
     while True:
         exit_event = m5.simulate(switch_freq)
         exit_cause = exit_event.getCause()
@@ -489,10 +491,10 @@ def run(options, root, testsys, cpu_class):
         switch_class = getCPUClass(options.cpu_type)[0]
         if switch_class.require_caches() and \
                 not options.caches:
-            print "%s: Must be used with caches" % str(switch_class)
+            print("%s: Must be used with caches" % str(switch_class))
             sys.exit(1)
         if not switch_class.support_take_over():
-            print "%s: CPU switching not supported" % str(switch_class)
+            print("%s: CPU switching not supported" % str(switch_class))
             sys.exit(1)
 
         repeat_switch_cpus = [switch_class(switched_out=True, \
@@ -641,32 +643,32 @@ def run(options, root, testsys, cpu_class):
 
     if options.standard_switch or cpu_class:
         if options.standard_switch:
-            print "Switch at instruction count:%s" % \
-                    str(testsys.cpu[0].max_insts_any_thread)
+            print("Switch at instruction count:%s" %
+                    str(testsys.cpu[0].max_insts_any_thread))
             exit_event = m5.simulate()
         elif cpu_class and options.fast_forward:
-            print "Switch at instruction count:%s" % \
-                    str(testsys.cpu[0].max_insts_any_thread)
+            print("Switch at instruction count:%s" %
+                    str(testsys.cpu[0].max_insts_any_thread))
             exit_event = m5.simulate()
         else:
-            print "Switch at curTick count:%s" % str(10000)
+            print("Switch at curTick count:%s" % str(10000))
             exit_event = m5.simulate(10000)
-        print "Switched CPUS @ tick %s" % (m5.curTick())
+        print("Switched CPUS @ tick %s" % (m5.curTick()))
 
         m5.switchCpus(testsys, switch_cpu_list)
 
         if options.standard_switch:
-            print "Switch at instruction count:%d" % \
-                    (testsys.switch_cpus[0].max_insts_any_thread)
+            print("Switch at instruction count:%d" %
+                    (testsys.switch_cpus[0].max_insts_any_thread))
 
             #warmup instruction count may have already been set
             if options.warmup_insts:
                 exit_event = m5.simulate()
             else:
                 exit_event = m5.simulate(options.standard_switch)
-            print "Switching CPUS @ tick %s" % (m5.curTick())
-            print "Simulation ends instruction count:%d" % \
-                    (testsys.switch_cpus_1[0].max_insts_any_thread)
+            print("Switching CPUS @ tick %s" % (m5.curTick()))
+            print("Simulation ends instruction count:%d" %
+                    (testsys.switch_cpus_1[0].max_insts_any_thread))
             m5.switchCpus(testsys, switch_cpu_list1)
 
     # If we're taking and restoring checkpoints, use checkpoint_dir
@@ -699,7 +701,7 @@ def run(options, root, testsys, cpu_class):
     else:
         if options.fast_forward:
             m5.stats.reset()
-        print "**** REAL SIMULATION ****"
+        print("**** REAL SIMULATION ****")
 
         # If checkpoints are being taken, then the checkpoint instruction
         # will occur in the benchmark code it self.
@@ -709,7 +711,8 @@ def run(options, root, testsys, cpu_class):
         else:
             exit_event = benchCheckpoints(options, maxtick, cptdir)
 
-    print 'Exiting @ tick %i because %s' % (m5.curTick(), exit_event.getCause())
+    print('Exiting @ tick %i because %s' %
+          (m5.curTick(), exit_event.getCause()))
     if options.checkpoint_at_end:
         m5.checkpoint(joinpath(cptdir, "cpt.%d"))
 

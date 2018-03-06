@@ -30,6 +30,8 @@
 #
 # "m5 test.py"
 
+from __future__ import print_function
+
 import os
 import optparse
 import sys
@@ -70,7 +72,7 @@ parser.add_option("-b", "--benchmark",
 (options, args) = parser.parse_args()
 
 if args:
-    print "Error: script doesn't take any positional arguments"
+    print("Error: script doesn't take any positional arguments")
     sys.exit(1)
 
 # --------------------
@@ -297,5 +299,5 @@ if options.maxtick:
 else:
     exit_event = m5.simulate(m5.MaxTick)
 
-print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())
 

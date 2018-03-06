@@ -36,6 +36,8 @@
 # Authors: Radhika Jagtap
 #          Andreas Hansson
 
+from __future__ import print_function
+
 import argparse
 
 import m5
@@ -239,13 +241,13 @@ m5.instantiate()
 # Simulate for exactly as long as it takes to go through all the states
 # This is why sim exists.
 m5.simulate(nxt_state * period + idle_period)
-print "--- Done DRAM low power sweep ---"
-print "Fixed params - "
-print "\tburst: %d, banks: %d, max stride: %d, itt min: %s ns" %  \
-  (burst_size, nbr_banks, max_stride, itt_min)
-print "Swept params - "
-print "\titt max multiples input:", itt_max_multiples
-print "\titt max values", itt_max_values
-print "\tbank utilization values", bank_util_values
-print "\tstride values:", stride_values
-print "Traffic gen config file:", cfg_file_name
+print("--- Done DRAM low power sweep ---")
+print("Fixed params - ")
+print("\tburst: %d, banks: %d, max stride: %d, itt min: %s ns" %  \
+  (burst_size, nbr_banks, max_stride, itt_min))
+print("Swept params - ")
+print("\titt max multiples input:", itt_max_multiples)
+print("\titt max values", itt_max_values)
+print("\tbank utilization values", bank_util_values)
+print("\tstride values:", stride_values)
+print("Traffic gen config file:", cfg_file_name)

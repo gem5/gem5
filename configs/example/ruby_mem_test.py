@@ -28,6 +28,8 @@
 # Authors: Ron Dreslinski
 #          Brad Beckmann
 
+from __future__ import print_function
+
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
@@ -81,14 +83,14 @@ options.l2_assoc=2
 options.l3_assoc=2
 
 if args:
-     print "Error: script doesn't take any positional arguments"
+     print("Error: script doesn't take any positional arguments")
      sys.exit(1)
 
 block_size = 64
 
 if options.num_cpus > block_size:
-     print "Error: Number of testers %d limited to %d because of false sharing" \
-           % (options.num_cpus, block_size)
+     print("Error: Number of testers %d limited to %d because of false sharing"
+           % (options.num_cpus, block_size))
      sys.exit(1)
 
 #
@@ -183,4 +185,4 @@ m5.instantiate()
 # simulate until program terminates
 exit_event = m5.simulate(options.abs_max_tick)
 
-print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())

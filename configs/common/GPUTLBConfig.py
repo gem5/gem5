@@ -33,6 +33,8 @@
 #  Author: Lisa Hsu
 #
 
+from __future__ import print_function
+
 # Configure the TLB hierarchy
 # Places which would probably need to be modified if you
 # want a different hierarchy are specified by a <Modify here .. >'
@@ -88,7 +90,7 @@ def config_tlb_hierarchy(options, system, shader_idx):
     elif options.TLB_config == "2CU":
         num_TLBs = n_cu >> 1
     else:
-        print "Bad option for TLB Configuration."
+        print("Bad option for TLB Configuration.")
         sys.exit(1)
 
     #----------------------------------------------------------------------------------------

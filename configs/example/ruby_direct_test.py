@@ -28,6 +28,8 @@
 # Authors: Ron Dreslinski
 #          Brad Beckmann
 
+from __future__ import print_function
+
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
@@ -65,7 +67,7 @@ Ruby.define_options(parser)
 (options, args) = parser.parse_args()
 
 if args:
-     print "Error: script doesn't take any positional arguments"
+     print("Error: script doesn't take any positional arguments")
      sys.exit(1)
 
 #
@@ -83,7 +85,7 @@ elif options.test_type == "SeriesGetMixed":
 elif options.test_type == "Invalidate":
     generator = InvalidateGenerator(num_cpus = options.num_cpus)
 else:
-    print "Error: unknown direct test generator"
+    print("Error: unknown direct test generator")
     sys.exit(1)
 
 # Create the M5 system.
@@ -130,4 +132,4 @@ m5.instantiate()
 # simulate until program terminates
 exit_event = m5.simulate(options.abs_max_tick)
 
-print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())

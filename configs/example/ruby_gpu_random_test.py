@@ -33,6 +33,8 @@
 #  Author: Brad Beckmann
 #
 
+from __future__ import print_function
+
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
@@ -100,7 +102,7 @@ n_cu = options.num_compute_units
 options.num_sqc = int((n_cu + options.cu_per_sqc - 1) / options.cu_per_sqc)
 
 if args:
-     print "Error: script doesn't take any positional arguments"
+     print("Error: script doesn't take any positional arguments")
      sys.exit(1)
 
 #
@@ -183,4 +185,4 @@ m5.instantiate()
 # simulate until program terminates
 exit_event = m5.simulate(options.abs_max_tick)
 
-print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())

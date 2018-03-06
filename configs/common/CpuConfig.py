@@ -35,6 +35,8 @@
 #
 # Authors: Andreas Sandberg
 
+from __future__ import print_function
+
 from m5 import fatal
 import m5.objects
 import inspect
@@ -64,23 +66,23 @@ def get(name):
         cpu_class = _cpu_classes[name]
         return cpu_class
     except KeyError:
-        print "%s is not a valid CPU model." % (name,)
+        print("%s is not a valid CPU model." % (name,))
         sys.exit(1)
 
 def print_cpu_list():
     """Print a list of available CPU classes including their aliases."""
 
-    print "Available CPU classes:"
+    print("Available CPU classes:")
     doc_wrapper = TextWrapper(initial_indent="\t\t", subsequent_indent="\t\t")
     for name, cls in _cpu_classes.items():
-        print "\t%s" % name
+        print("\t%s" % name)
 
         # Try to extract the class documentation from the class help
         # string.
         doc = inspect.getdoc(cls)
         if doc:
             for line in doc_wrapper.wrap(doc):
-                print line
+                print(line)
 
 def cpu_names():
     """Return a list of valid CPU names."""

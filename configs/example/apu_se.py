@@ -33,6 +33,8 @@
 #  Author: Sooraj Puthoor
 #
 
+from __future__ import print_function
+
 import optparse, os, re
 import math
 import glob
@@ -385,7 +387,7 @@ else:
     kernel_path = os.path.dirname(executable)
     kernel_files = glob.glob(os.path.join(kernel_path, '*.asm'))
     if kernel_files:
-        print "Using GPU kernel code file(s)", ",".join(kernel_files)
+        print("Using GPU kernel code file(s)", ",".join(kernel_files))
     else:
         fatal("Can't locate kernel code (.asm) in " + kernel_path)
 
@@ -489,7 +491,7 @@ for i in xrange(n_cu):
 
 for i in xrange(n_cu):
     if i > 0 and not i % options.cu_per_sqc:
-        print "incrementing idx on ", i
+        print("incrementing idx on ", i)
         gpu_port_idx += 1
     system.cpu[shader_idx].CUs[i].sqc_port = \
             system.ruby._cpu_ports[gpu_port_idx].slave
@@ -552,15 +554,14 @@ m5.instantiate(checkpoint_dir)
 host_cpu.workload[0].map(0x10000000, 0x200000000, 4096)
 
 if options.fast_forward:
-    print "Switch at instruction count: %d" % \
-        cpu_list[0].max_insts_any_thread
+    print("Switch at instruction count: %d" % cpu_list[0].max_insts_any_thread)
 
 exit_event = m5.simulate(maxtick)
 
 if options.fast_forward:
     if exit_event.getCause() == "a thread reached the max instruction count":
         m5.switchCpus(system, switch_cpu_list)
-        print "Switched CPUS @ tick %s" % (m5.curTick())
+        print("Switched CPUS @ tick %s" % (m5.curTick()))
         m5.stats.reset()
         exit_event = m5.simulate(maxtick - m5.curTick())
 elif options.fast_forward_pseudo_op:
@@ -568,15 +569,15 @@ elif options.fast_forward_pseudo_op:
         # If we are switching *to* kvm, then the current stats are meaningful
         # Note that we don't do any warmup by default
         if type(switch_cpu_list[0][0]) == FutureCpuClass:
-            print "Dumping stats..."
+            print("Dumping stats...")
             m5.stats.dump()
         m5.switchCpus(system, switch_cpu_list)
-        print "Switched CPUS @ tick %s" % (m5.curTick())
+        print("Switched CPUS @ tick %s" % (m5.curTick()))
         m5.stats.reset()
         # This lets us switch back and forth without keeping a counter
         switch_cpu_list = [(x[1], x[0]) for x in switch_cpu_list]
         exit_event = m5.simulate(maxtick - m5.curTick())
 
-print "Ticks:", m5.curTick()
-print 'Exiting because ', exit_event.getCause()
+print("Ticks:", m5.curTick())
+print('Exiting because ', exit_event.getCause())
 sys.exit(exit_event.getCode())

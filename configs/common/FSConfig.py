@@ -39,6 +39,8 @@
 #
 # Authors: Kevin Lim
 
+from __future__ import print_function
+
 from m5.objects import *
 from Benchmarks import *
 from m5.util import *
@@ -259,7 +261,8 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 
     if isinstance(self.realview, VExpress_EMM64):
         if os.path.split(mdesc.disk())[-1] == 'linux-aarch32-ael.img':
-            print "Selected 64-bit ARM architecture, updating default disk image..."
+            print("Selected 64-bit ARM architecture, updating default "
+                  "disk image...")
             mdesc.diskname = 'linaro-minimal-aarch64.img'
 
 

@@ -35,6 +35,8 @@
 #
 # Authors: Andreas Hansson
 
+from __future__ import print_function
+
 import optparse
 
 import m5
@@ -75,7 +77,7 @@ parser.add_option("--addr_map", type="int", default=1,
 (options, args) = parser.parse_args()
 
 if args:
-    print "Error: script doesn't take any positional arguments"
+    print("Error: script doesn't take any positional arguments")
     sys.exit(1)
 
 # at the moment we stay with the default open-adaptive page policy,
@@ -204,5 +206,5 @@ root.system.mem_mode = 'timing'
 m5.instantiate()
 m5.simulate(nxt_state * period)
 
-print "DRAM sweep with burst: %d, banks: %d, max stride: %d" % \
-    (burst_size, nbr_banks, max_stride)
+print("DRAM sweep with burst: %d, banks: %d, max stride: %d" %
+    (burst_size, nbr_banks, max_stride))

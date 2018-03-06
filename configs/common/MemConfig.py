@@ -36,6 +36,8 @@
 # Authors: Andreas Sandberg
 #          Andreas Hansson
 
+from __future__ import print_function
+
 import m5.objects
 import inspect
 import sys
@@ -64,23 +66,23 @@ def get(name):
         mem_class = _mem_classes[name]
         return mem_class
     except KeyError:
-        print "%s is not a valid memory controller." % (name,)
+        print("%s is not a valid memory controller." % (name,))
         sys.exit(1)
 
 def print_mem_list():
     """Print a list of available memory classes."""
 
-    print "Available memory classes:"
+    print("Available memory classes:")
     doc_wrapper = TextWrapper(initial_indent="\t\t", subsequent_indent="\t\t")
     for name, cls in _mem_classes.items():
-        print "\t%s" % name
+        print("\t%s" % name)
 
         # Try to extract the class documentation from the class help
         # string.
         doc = inspect.getdoc(cls)
         if doc:
             for line in doc_wrapper.wrap(doc):
-                print line
+                print(line)
 
 def mem_names():
     """Return a list of valid memory names."""
@@ -223,8 +225,8 @@ def config_mem(options, system):
 
             if opt_elastic_trace_en:
                 mem_ctrl.latency = '1ns'
-                print "For elastic trace, over-riding Simple Memory " \
-                    "latency to 1ns."
+                print("For elastic trace, over-riding Simple Memory "
+                    "latency to 1ns.")
 
             mem_ctrls.append(mem_ctrl)
 

@@ -45,6 +45,8 @@ at: http://www.arm.com/ResearchEnablement/SystemModeling
 
 """
 
+from __future__ import print_function
+
 from m5.objects import *
 
 # Simple function to allow a string of [01x_] to be converted into a
@@ -71,7 +73,7 @@ def make_implicant(implicant_string):
         elif char == 'x':
             pass
         else:
-            print "Can't parse implicant character", char
+            print("Can't parse implicant character", char)
 
     return (ret_mask, ret_match)
 
@@ -133,7 +135,7 @@ def ref(name):
             ret = TimingExprRef()
             ret.index = env[name]
         else:
-            print "Invalid expression name", name
+            print("Invalid expression name", name)
             ret = TimingExprNull()
         return ret
     return body

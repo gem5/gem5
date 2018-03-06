@@ -40,6 +40,8 @@
 # a generic ARM bigLITTLE system.
 
 
+from __future__ import print_function
+
 import argparse
 import os
 import sys
@@ -311,12 +313,12 @@ def run(checkpoint_dir=m5.options.outdir):
         event = m5.simulate()
         exit_msg = event.getCause()
         if exit_msg == "checkpoint":
-            print "Dropping checkpoint at tick %d" % m5.curTick()
+            print("Dropping checkpoint at tick %d" % m5.curTick())
             cpt_dir = os.path.join(checkpoint_dir, "cpt.%d" % m5.curTick())
             m5.checkpoint(cpt_dir)
-            print "Checkpoint done."
+            print("Checkpoint done.")
         else:
-            print exit_msg, " @ ", m5.curTick()
+            print(exit_msg, " @ ", m5.curTick())
             break
 
     sys.exit(event.getCode())

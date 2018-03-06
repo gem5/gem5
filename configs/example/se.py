@@ -42,6 +42,8 @@
 #
 # "m5 test.py"
 
+from __future__ import print_function
+
 import optparse
 import sys
 import os
@@ -131,7 +133,7 @@ if '--ruby' in sys.argv:
 (options, args) = parser.parse_args()
 
 if args:
-    print "Error: script doesn't take any positional arguments"
+    print("Error: script doesn't take any positional arguments")
     sys.exit(1)
 
 multiprocesses = []
@@ -140,7 +142,7 @@ numThreads = 1
 if options.bench:
     apps = options.bench.split("-")
     if len(apps) != options.num_cpus:
-        print "number of benchmarks not equal to set num_cpus!"
+        print("number of benchmarks not equal to set num_cpus!")
         sys.exit(1)
 
     for app in apps:
@@ -156,13 +158,14 @@ if options.bench:
                         app, options.spec_input))
             multiprocesses.append(workload.makeProcess())
         except:
-            print >>sys.stderr, "Unable to find workload for %s: %s" % (
-                    buildEnv['TARGET_ISA'], app)
+            print("Unable to find workload for %s: %s" %
+                  (buildEnv['TARGET_ISA'], app),
+                  file=sys.stderr)
             sys.exit(1)
 elif options.cmd:
     multiprocesses, numThreads = get_processes(options)
 else:
-    print >> sys.stderr, "No workload specified. Exiting!\n"
+    print("No workload specified. Exiting!\n", file=sys.stderr)
     sys.exit(1)
 
 

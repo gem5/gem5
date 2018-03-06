@@ -37,6 +37,8 @@
 
 # Basic elastic traces replay script that configures a Trace CPU
 
+from __future__ import print_function
+
 import optparse
 
 from m5.util import addToPath, fatal
@@ -53,14 +55,14 @@ parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 
 if '--ruby' in sys.argv:
-    print "This script does not support Ruby configuration, mainly"\
-    " because Trace CPU has been tested only with classic memory system"
+    print("This script does not support Ruby configuration, mainly"
+    " because Trace CPU has been tested only with classic memory system")
     sys.exit(1)
 
 (options, args) = parser.parse_args()
 
 if args:
-    print "Error: script doesn't take any positional arguments"
+    print("Error: script doesn't take any positional arguments")
     sys.exit(1)
 
 numThreads = 1

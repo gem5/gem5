@@ -43,6 +43,8 @@ Research Starter Kit on System Modeling. More information can be found
 at: http://www.arm.com/ResearchEnablement/SystemModeling
 """
 
+from __future__ import print_function
+
 import os
 import m5
 from m5.util import addToPath
@@ -97,7 +99,7 @@ def create(args):
         dtb_file = args.dtb
 
     if args.script and not os.path.isfile(args.script):
-        print "Error: Bootscript %s does not exist" % args.script
+        print("Error: Bootscript %s does not exist" % args.script)
         sys.exit(1)
 
     cpu_class = cpu_types[args.cpu][0]
@@ -175,18 +177,18 @@ def create(args):
 def run(args):
     cptdir = m5.options.outdir
     if args.checkpoint:
-        print "Checkpoint directory: %s" % cptdir
+        print("Checkpoint directory: %s" % cptdir)
 
     while True:
         event = m5.simulate()
         exit_msg = event.getCause()
         if exit_msg == "checkpoint":
-            print "Dropping checkpoint at tick %d" % m5.curTick()
+            print("Dropping checkpoint at tick %d" % m5.curTick())
             cpt_dir = os.path.join(m5.options.outdir, "cpt.%d" % m5.curTick())
             m5.checkpoint(os.path.join(cpt_dir))
-            print "Checkpoint done."
+            print("Checkpoint done.")
         else:
-            print exit_msg, " @ ", m5.curTick()
+            print(exit_msg, " @ ", m5.curTick())
             break
 
     sys.exit(event.getCode())

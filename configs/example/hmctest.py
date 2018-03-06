@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 import argparse
 import subprocess
@@ -100,13 +102,13 @@ def main():
     root = build_system(options)
     # instantiate all of the objects we've created so far
     m5.instantiate()
-    print "Beginning simulation!"
+    print("Beginning simulation!")
     event = m5.simulate(10000000000)
     m5.stats.dump()
-    print 'Exiting @ tick %i because %s (exit code is %i)' % (m5.curTick(),
+    print('Exiting @ tick %i because %s (exit code is %i)' % (m5.curTick(),
                                                               event.getCause(),
-                                                              event.getCode())
-    print "Done"
+                                                              event.getCode()))
+    print("Done")
 
 
 if __name__ == "__m5_main__":

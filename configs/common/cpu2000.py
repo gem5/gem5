@@ -26,6 +26,8 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+
 import os
 import sys
 from os.path import basename, exists, join as joinpath, normpath
@@ -747,8 +749,8 @@ if __name__ == '__main__':
     from pprint import pprint
     for bench in all:
         for input_set in 'ref', 'test', 'train':
-            print 'class: %s' % bench.__name__
+            print('class: %s' % bench.__name__)
             x = bench('alpha', 'tru64', input_set)
-            print '%s: %s' % (x, input_set)
+            print('%s: %s' % (x, input_set))
             pprint(x.makeProcessArgs())
-            print
+            print()

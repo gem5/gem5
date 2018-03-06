@@ -36,6 +36,8 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
 
 """
 
+from __future__ import print_function
+
 # import the m5 (gem5) library created when gem5 is built
 import m5
 # import all of the SimObjects
@@ -51,6 +53,6 @@ root.hello.goodbye_object = GoodbyeObject(buffer_size='100B')
 # instantiate all of the objects we've created above
 m5.instantiate()
 
-print "Beginning simulation!"
+print("Beginning simulation!")
 exit_event = m5.simulate()
-print 'Exiting @ tick %i because %s' % (m5.curTick(), exit_event.getCause())
+print('Exiting @ tick %i because %s' % (m5.curTick(), exit_event.getCause()))

@@ -39,6 +39,8 @@
 #
 # Authors: Brad Beckmann
 
+from __future__ import print_function
+
 import math
 import m5
 from m5.objects import *
@@ -151,7 +153,7 @@ def create_system(options, full_system, system, piobus = None, dma_ports = []):
                                     ruby)"
                   % protocol)
     except:
-        print "Error: could not create sytem for ruby protocol %s" % protocol
+        print("Error: could not create sytem for ruby protocol %s" % protocol)
         raise
 
     # Create the network topology
