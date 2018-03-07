@@ -832,7 +832,7 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
                         gpuDynInst->wfSlotId, gpuDynInst->wfDynId,
                         gpuDynInst->disassemble(), w->outstandingReqs,
                         w->outstandingReqs - 1);
-        if (gpuDynInst->statusBitVector.none()) {
+        if (gpuDynInst->allLanesZero()) {
             // ask gm pipe to decrement request counters, instead of directly
             // performing here, to avoid asynchronous counter update and
             // instruction retirement (which may hurt waincnt effects)
@@ -1078,7 +1078,6 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
             gpuDynInst->memStatusVector[pkt->getAddr()].push_back(index);
             gpuDynInst->tlbHitLevel[index] = hit_level;
 
-
             // translation is done. Schedule the mem_req_event at the
             // appropriate cycle to send the timing memory request to ruby
             EventFunctionWrapper *mem_req_event =
@@ -1116,9 +1115,9 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
         }
     } else {
         if (pkt->cmd == MemCmd::MemSyncReq) {
-            gpuDynInst->statusBitVector = VectorMask(0);
+            gpuDynInst->resetEntireStatusVector();
         } else {
-            gpuDynInst->statusBitVector &= (~(1ll << index));
+            gpuDynInst->decrementStatusVector(index);
         }
 
         // New SenderState for the memory access
@@ -1289,12 +1288,10 @@ ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
     gpuDynInst->memStatusVector[paddr].pop_back();
     gpuDynInst->pAddr = pkt->req->getPaddr();
 
-    gpuDynInst->statusBitVector &= (~(1ULL << index));
+    gpuDynInst->decrementStatusVector(index);
+    DPRINTF(GPUMem, "bitvector is now %s\n", gpuDynInst->printStatusVector());
 
-    DPRINTF(GPUMem, "bitvector is now %#x\n",
-            gpuDynInst->statusBitVector);
-
-    if (gpuDynInst->statusBitVector == VectorMask(0)) {
+    if (gpuDynInst->allLanesZero()) {
         auto iter = gpuDynInst->memStatusVector.begin();
         auto end = gpuDynInst->memStatusVector.end();
 

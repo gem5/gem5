@@ -107,7 +107,6 @@ DataBlock::getDataMod(int offset)
 void
 DataBlock::setData(const uint8_t *data, int offset, int len)
 {
-    assert(offset + len <= RubySystem::getBlockSizeBytes());
     memcpy(&m_data[offset], data, len);
 }
 

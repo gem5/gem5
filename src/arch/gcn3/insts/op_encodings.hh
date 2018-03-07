@@ -37,6 +37,7 @@
 #define __ARCH_GCN3_INSTS_OP_ENCODINGS_HH__
 
 #include "arch/gcn3/gpu_decoder.hh"
+#include "arch/gcn3/gpu_mem_helpers.hh"
 #include "arch/gcn3/insts/gpu_static_inst.hh"
 #include "arch/gcn3/operand.hh"
 #include "debug/GPUExec.hh"
@@ -174,47 +175,8 @@ namespace Gcn3ISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            int block_size = gpuDynInst->computeUnit()->cacheLineSize();
-            int req_size = N * sizeof(ScalarRegU32);
-            Addr vaddr = gpuDynInst->scalarAddr;
-
-            /**
-             * the base address of the cache line where the the last byte of
-             * the request will be stored.
-             */
-            Addr split_addr = roundDown(vaddr + req_size - 1, block_size);
-
-            assert(split_addr <= vaddr || split_addr - vaddr < block_size);
-            /**
-             * if the base cache line address of the last byte is greater
-             * than the address of the first byte then we have a misaligned
-             * access.
-             */
-            bool misaligned_acc = split_addr > vaddr;
-
-            RequestPtr req = std::make_shared<Request>(vaddr, req_size, 0,
-                    gpuDynInst->computeUnit()->masterId(), 0,
-                    gpuDynInst->wfDynId);
-
-            if (misaligned_acc) {
-                RequestPtr req1, req2;
-                req->splitOnVaddr(split_addr, req1, req2);
-                gpuDynInst->numScalarReqs = 2;
-                gpuDynInst->setRequestFlags(req1);
-                gpuDynInst->setRequestFlags(req2);
-                PacketPtr pkt1 = new Packet(req1, MemCmd::ReadReq);
-                PacketPtr pkt2 = new Packet(req2, MemCmd::ReadReq);
-                pkt1->dataStatic(gpuDynInst->scalar_data);
-                pkt2->dataStatic(gpuDynInst->scalar_data + req1->getSize());
-                gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt1);
-                gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt2);
-            } else {
-                gpuDynInst->numScalarReqs = 1;
-                gpuDynInst->setRequestFlags(req);
-                PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-                pkt->dataStatic(gpuDynInst->scalar_data);
-                gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt);
-            }
+            initMemReqScalarHelper<ScalarRegU32, N>(gpuDynInst,
+                                                    MemCmd::ReadReq);
         }
 
         /**
@@ -224,47 +186,8 @@ namespace Gcn3ISA
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            int block_size = gpuDynInst->computeUnit()->cacheLineSize();
-            int req_size = N * sizeof(ScalarRegU32);
-            Addr vaddr = gpuDynInst->scalarAddr;
-
-            /**
-             * the base address of the cache line where the the last byte of
-             * the request will be stored.
-             */
-            Addr split_addr = roundDown(vaddr + req_size - 1, block_size);
-
-            assert(split_addr <= vaddr || split_addr - vaddr < block_size);
-            /**
-             * if the base cache line address of the last byte is greater
-             * than the address of the first byte then we have a misaligned
-             * access.
-             */
-            bool misaligned_acc = split_addr > vaddr;
-
-            RequestPtr req = std::make_shared<Request>(vaddr, req_size, 0,
-                    gpuDynInst->computeUnit()->masterId(), 0,
-                    gpuDynInst->wfDynId);
-
-            if (misaligned_acc) {
-                RequestPtr req1, req2;
-                req->splitOnVaddr(split_addr, req1, req2);
-                gpuDynInst->numScalarReqs = 2;
-                gpuDynInst->setRequestFlags(req1);
-                gpuDynInst->setRequestFlags(req2);
-                PacketPtr pkt1 = new Packet(req1, MemCmd::WriteReq);
-                PacketPtr pkt2 = new Packet(req2, MemCmd::WriteReq);
-                pkt1->dataStatic(gpuDynInst->scalar_data);
-                pkt2->dataStatic(gpuDynInst->scalar_data + req1->getSize());
-                gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt1);
-                gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt2);
-            } else {
-                gpuDynInst->numScalarReqs = 1;
-                gpuDynInst->setRequestFlags(req);
-                PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-                pkt->dataStatic(gpuDynInst->scalar_data);
-                gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt);
-            }
+            initMemReqScalarHelper<ScalarRegU32, N>(gpuDynInst,
+                                                    MemCmd::WriteReq);
         }
 
         void
@@ -566,59 +489,22 @@ namespace Gcn3ISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            gpuDynInst->statusBitVector = gpuDynInst->exec_mask;
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane];
-
-                    RequestPtr req = std::make_shared<Request>(vaddr,
-                        sizeof(T), 0,
-                        gpuDynInst->computeUnit()->masterId(), 0,
-                        gpuDynInst->wfDynId);
-
-                    gpuDynInst->setRequestFlags(req);
-
-                    PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-                    pkt->dataStatic(&(reinterpret_cast<T*>(
-                        gpuDynInst->d_data))[lane]);
-
-                    gpuDynInst->computeUnit()->sendRequest(gpuDynInst, lane,
-                        pkt);
-                }
-            }
+            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
         }
 
         template<typename T>
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            gpuDynInst->statusBitVector = gpuDynInst->exec_mask;
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane];
-
-                    RequestPtr req = std::make_shared<Request>(vaddr,
-                        sizeof(T), 0,
-                        gpuDynInst->computeUnit()->masterId(),
-                        0, gpuDynInst->wfDynId);
-
-                    gpuDynInst->setRequestFlags(req);
-                    PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
-                    pkt->dataStatic(&(reinterpret_cast<T*>(
-                        gpuDynInst->d_data))[lane]);
-                    gpuDynInst->computeUnit()->sendRequest(gpuDynInst, lane,
-                        pkt);
-                }
-            }
+            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
         }
 
         void
         injectGlobalMemFence(GPUDynInstPtr gpuDynInst)
         {
             // create request and set flags
-            gpuDynInst->statusBitVector = VectorMask(1);
+            gpuDynInst->resetEntireStatusVector();
+            gpuDynInst->setStatusVector(0, 1);
             RequestPtr req = std::make_shared<Request>(0, 0, 0,
                                        gpuDynInst->computeUnit()->
                                        masterId(), 0,
@@ -771,133 +657,35 @@ namespace Gcn3ISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            gpuDynInst->statusBitVector = gpuDynInst->exec_mask;
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane];
-
-                    RequestPtr req = std::make_shared<Request>(vaddr,
-                        sizeof(T), 0,
-                            gpuDynInst->computeUnit()->masterId(), 0,
-                            gpuDynInst->wfDynId);
-
-                    gpuDynInst->setRequestFlags(req);
-                    PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-                    pkt->dataStatic(&(reinterpret_cast<T*>(
-                        gpuDynInst->d_data))[lane]);
-                    gpuDynInst->computeUnit()
-                        ->sendRequest(gpuDynInst, lane, pkt);
-                }
-            }
+            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
         }
 
         template<int N>
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
-            int req_size = N * sizeof(VecElemU32);
-            gpuDynInst->statusBitVector = gpuDynInst->exec_mask;
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane];
-
-                    RequestPtr req = std::make_shared<Request>(vaddr, req_size,
-                        0,
-                        gpuDynInst->computeUnit()->masterId(), 0,
-                        gpuDynInst->wfDynId);
-
-                   gpuDynInst->setRequestFlags(req);
-                   PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
-                   pkt->dataStatic(&(reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane * N]);
-                   gpuDynInst->computeUnit()
-                        ->sendRequest(gpuDynInst, lane, pkt);
-                }
-            }
+            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
         }
 
         template<typename T>
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            gpuDynInst->statusBitVector = gpuDynInst->exec_mask;
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane];
-
-                    RequestPtr req = std::make_shared<Request>(vaddr,
-                        sizeof(T), 0,
-                        gpuDynInst->computeUnit()->masterId(),
-                            0, gpuDynInst->wfDynId);
-
-                    gpuDynInst->setRequestFlags(req);
-                    PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
-                    pkt->dataStatic(&(reinterpret_cast<T*>(
-                        gpuDynInst->d_data))[lane]);
-                    gpuDynInst->computeUnit()->sendRequest(gpuDynInst, lane,
-                                                           pkt);
-                }
-            }
+            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
         }
 
         template<int N>
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
-            int req_size = N * sizeof(VecElemU32);
-            gpuDynInst->statusBitVector = gpuDynInst->exec_mask;
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane];
-
-                    RequestPtr req = std::make_shared<Request>(vaddr, req_size,
-                        0,
-                        gpuDynInst->computeUnit()->masterId(),
-                            0, gpuDynInst->wfDynId);
-
-                    gpuDynInst->setRequestFlags(req);
-                    PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
-                    pkt->dataStatic(&(reinterpret_cast<VecElemU32*>(
-                        gpuDynInst->d_data))[lane * N]);
-                    gpuDynInst->computeUnit()->sendRequest(gpuDynInst, lane,
-                        pkt);
-                }
-            }
+            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
         }
 
         template<typename T>
         void
         initAtomicAccess(GPUDynInstPtr gpuDynInst)
         {
-            gpuDynInst->statusBitVector = gpuDynInst->exec_mask;
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (gpuDynInst->exec_mask[lane]) {
-                    Addr vaddr = gpuDynInst->addr[lane];
-
-                    RequestPtr req = std::make_shared<Request>(vaddr,
-                        sizeof(T), 0,
-                        gpuDynInst->computeUnit()->masterId(), 0,
-                        gpuDynInst->wfDynId,
-                        gpuDynInst->makeAtomicOpFunctor<T>(
-                            &(reinterpret_cast<T*>(gpuDynInst->a_data))[lane],
-                            &(reinterpret_cast<T*>(
-                                gpuDynInst->x_data))[lane]));
-
-                    gpuDynInst->setRequestFlags(req);
-
-                    PacketPtr pkt = new Packet(req, MemCmd::SwapReq);
-                    pkt->dataStatic(&(reinterpret_cast<T*>(
-                        gpuDynInst->d_data))[lane]);
-
-                    gpuDynInst->computeUnit()->sendRequest(gpuDynInst, lane,
-                        pkt);
-                }
-            }
+            initMemReqHelper<T, 1>(gpuDynInst, MemCmd::SwapReq, true);
         }
 
         void

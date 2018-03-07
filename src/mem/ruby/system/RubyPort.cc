@@ -267,9 +267,6 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
                 curTick() + rs->clockPeriod());
             return true;
         }
-
-        assert(getOffset(pkt->getAddr()) + pkt->getSize() <=
-               RubySystem::getBlockSizeBytes());
     }
 
     // Save the port in the sender state object to be used later to

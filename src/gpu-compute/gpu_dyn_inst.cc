@@ -42,9 +42,10 @@
 GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
                        GPUStaticInst *static_inst, InstSeqNum instSeqNum)
     : GPUExecContext(_cu, _wf), scalarAddr(0), addr(computeUnit()->wfSize(),
-      (Addr)0), statusBitVector(0), numScalarReqs(0), isSaveRestore(false),
+      (Addr)0), numScalarReqs(0), isSaveRestore(false),
       _staticInst(static_inst), _seqNum(instSeqNum)
 {
+    statusVector.assign(TheGpuISA::NumVecElemPerVecReg, 0);
     tlbHitLevel.assign(computeUnit()->wfSize(), -1);
     // vector instructions can have up to 4 source/destination operands
     d_data = new uint8_t[computeUnit()->wfSize() * 4 * sizeof(double)];
