@@ -44,6 +44,8 @@ import m5
 # import all of the SimObjects
 from m5.objects import *
 
+# You can import ruby_caches_MI_example to use the MI_example protocol instead
+# of the MSI protocol
 from msi_caches import MyCacheSystem
 
 # create the system we are going to simulate
