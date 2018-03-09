@@ -52,6 +52,7 @@
 
 #include "base/types.hh"
 #include "mem/cache/base.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
 #include "mem/request.hh"
 #include "sim/core.hh"
 #include "sim/sim_exit.hh"
@@ -64,7 +65,7 @@ BaseTags::BaseTags(const Params *p)
       accessLatency(p->sequential_access ?
                     p->tag_latency + p->data_latency :
                     std::max(p->tag_latency, p->data_latency)),
-      cache(nullptr),
+      cache(nullptr), indexingPolicy(p->indexing_policy),
       warmupBound((p->warmup_percentage/100.0) * (p->size / p->block_size)),
       warmedUp(false), numBlocks(p->size / p->block_size),
       dataBlks(new uint8_t[p->size]) // Allocate data storage in one big chunk
@@ -78,10 +79,10 @@ BaseTags::setCache(BaseCache *_cache)
     cache = _cache;
 }
 
-std::vector<ReplaceableEntry*>
-BaseTags::getPossibleLocations(const Addr addr) const
+ReplaceableEntry*
+BaseTags::findBlockBySetAndWay(int set, int way) const
 {
-    panic("Unimplemented getPossibleLocations for tags subclass");
+    return indexingPolicy->getEntry(set, way);
 }
 
 CacheBlk*
@@ -90,12 +91,12 @@ BaseTags::findBlock(Addr addr, bool is_secure) const
     // Extract block tag
     Addr tag = extractTag(addr);
 
-    // Find possible locations for the given address
-    const std::vector<ReplaceableEntry*> locations =
-        getPossibleLocations(addr);
+    // Find possible entries that may contain the given address
+    const std::vector<ReplaceableEntry*> entries =
+        indexingPolicy->getPossibleEntries(addr);
 
     // Search for block
-    for (const auto& location : locations) {
+    for (const auto& location : entries) {
         CacheBlk* blk = static_cast<CacheBlk*>(location);
         if ((blk->tag == tag) && blk->isValid() &&
             (blk->isSecure() == is_secure)) {
@@ -132,6 +133,12 @@ BaseTags::insertBlock(const Addr addr, const bool is_secure,
     // We only need to write into one tag and one data block.
     tagAccesses += 1;
     dataAccesses += 1;
+}
+
+Addr
+BaseTags::extractTag(const Addr addr) const
+{
+    return indexingPolicy->extractTag(addr);
 }
 
 void

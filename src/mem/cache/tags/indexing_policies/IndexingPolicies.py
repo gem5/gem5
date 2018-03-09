@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2018 Inria
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,13 +24,32 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Daniel Carvalho
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from m5.SimObject import SimObject
 
-SimObject('Tags.py')
+class BaseIndexingPolicy(SimObject):
+    type = 'BaseIndexingPolicy'
+    abstract = True
+    cxx_header = "mem/cache/tags/indexing_policies/base.hh"
 
-Source('base.cc')
-Source('base_set_assoc.cc')
-Source('fa_lru.cc')
-Source('sector_tags.cc')
+    # Get the size from the parent (cache)
+    size = Param.MemorySize(Parent.size, "capacity in bytes")
+
+    # Get the entry size from the parent (tags)
+    entry_size = Param.Int(Parent.entry_size, "entry size in bytes")
+
+    # Get the associativity
+    assoc = Param.Int(Parent.assoc, "associativity")
+
+class SetAssociative(BaseIndexingPolicy):
+    type = 'SetAssociative'
+    cxx_class = 'SetAssociative'
+    cxx_header = "mem/cache/tags/indexing_policies/set_associative.hh"
+
+class SkewedAssociative(BaseIndexingPolicy):
+    type = 'SkewedAssociative'
+    cxx_class = 'SkewedAssociative'
+    cxx_header = "mem/cache/tags/indexing_policies/skewed_associative.hh"

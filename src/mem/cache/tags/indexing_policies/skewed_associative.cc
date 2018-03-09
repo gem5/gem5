@@ -30,18 +30,18 @@
 
 /**
  * @file
- * Definitions of a skewed associative placement policy.
+ * Definitions of a skewed associative indexing policy.
  */
 
-#include "mem/cache/tags/skewed_assoc.hh"
-
-#include <vector>
+#include "mem/cache/tags/indexing_policies/skewed_associative.hh"
 
 #include "base/bitfield.hh"
+#include "base/intmath.hh"
 #include "base/logging.hh"
+#include "mem/cache/replacement_policies/base.hh"
 
-SkewedAssoc::SkewedAssoc(const Params *p)
-    : BaseSetAssoc(p), msbShift(floorLog2(numSets) - 1)
+SkewedAssociative::SkewedAssociative(const Params *p)
+    : BaseIndexingPolicy(p), msbShift(floorLog2(numSets) - 1)
 {
     if (assoc > NUM_SKEWING_FUNCTIONS) {
         warn_once("Associativity higher than number of skewing functions. " \
@@ -59,7 +59,7 @@ SkewedAssoc::SkewedAssoc(const Params *p)
 }
 
 Addr
-SkewedAssoc::hash(const Addr addr) const
+SkewedAssociative::hash(const Addr addr) const
 {
     // Get relevant bits
     const uint8_t lsb = bits<Addr>(addr, 0);
@@ -71,7 +71,7 @@ SkewedAssoc::hash(const Addr addr) const
 }
 
 Addr
-SkewedAssoc::dehash(const Addr addr) const
+SkewedAssociative::dehash(const Addr addr) const
 {
     // Get relevant bits. The original MSB is one bit away on the current MSB
     // (which is the XOR bit). The original LSB can be retrieved from inverting
@@ -86,7 +86,7 @@ SkewedAssoc::dehash(const Addr addr) const
 }
 
 Addr
-SkewedAssoc::skew(const Addr addr, const unsigned way) const
+SkewedAssociative::skew(const Addr addr, const uint32_t way) const
 {
     // Assume an address of size A bits can be decomposed into
     // {addr3, addr2, addr1, addr0}, where:
@@ -130,7 +130,7 @@ SkewedAssoc::skew(const Addr addr, const unsigned way) const
     // If we have more than 8 ways, just pile them up on hashes. This is not
     // the optimal solution, and can be improved by adding more skewing
     // functions to the previous selector
-    for (int i = 0; i < way/NUM_SKEWING_FUNCTIONS; i++) {
+    for (uint32_t i = 0; i < way/NUM_SKEWING_FUNCTIONS; i++) {
         addr1 = hash(addr1);
     }
 
@@ -138,7 +138,7 @@ SkewedAssoc::skew(const Addr addr, const unsigned way) const
 }
 
 Addr
-SkewedAssoc::deskew(const Addr addr, const unsigned way) const
+SkewedAssociative::deskew(const Addr addr, const uint32_t way) const
 {
     // Get relevant bits of the addr
     Addr addr1 = bits<Addr>(addr, msbShift, 0);
@@ -146,7 +146,7 @@ SkewedAssoc::deskew(const Addr addr, const unsigned way) const
 
     // If we have more than NUM_SKEWING_FUNCTIONS ways, unpile the hashes
     if (way >= NUM_SKEWING_FUNCTIONS) {
-        for (int i = 0; i < way/NUM_SKEWING_FUNCTIONS; i++) {
+        for (uint32_t i = 0; i < way/NUM_SKEWING_FUNCTIONS; i++) {
             addr1 = dehash(addr1);
         }
     }
@@ -190,58 +190,37 @@ SkewedAssoc::deskew(const Addr addr, const unsigned way) const
     }
 }
 
-unsigned
-SkewedAssoc::extractSet(Addr addr, unsigned way) const
+uint32_t
+SkewedAssociative::extractSet(const Addr addr, const uint32_t way) const
 {
     return skew(addr >> setShift, way) & setMask;
 }
 
 Addr
-SkewedAssoc::regenerateBlkAddr(const CacheBlk* blk) const
+SkewedAssociative::regenerateAddr(const Addr tag,
+                                  const ReplaceableEntry* entry) const
 {
-    const Addr addr = (blk->tag << (msbShift + 1)) | blk->getSet();
-    const Addr set = deskew(addr, blk->getWay()) & setMask;
-    return (blk->tag << tagShift) | (set << setShift);
+    const Addr addr_set = (tag << (msbShift + 1)) | entry->getSet();
+    return (tag << tagShift) |
+           ((deskew(addr_set, entry->getWay()) & setMask) << setShift);
 }
 
 std::vector<ReplaceableEntry*>
-SkewedAssoc::getPossibleLocations(const Addr addr) const
+SkewedAssociative::getPossibleEntries(const Addr addr) const
 {
-    std::vector<ReplaceableEntry*> locations;
+    std::vector<ReplaceableEntry*> entries;
 
     // Parse all ways
-    for (int way = 0; way < assoc; ++way) {
+    for (uint32_t way = 0; way < assoc; ++way) {
         // Apply hash to get set, and get way entry in it
-        locations.push_back(sets[extractSet(addr, way)][way]);
+        entries.push_back(sets[extractSet(addr, way)][way]);
     }
 
-    return locations;
+    return entries;
 }
 
-CacheBlk*
-SkewedAssoc::findBlock(Addr addr, bool is_secure) const
+SkewedAssociative *
+SkewedAssociativeParams::create()
 {
-    // Extract block tag
-    Addr tag = extractTag(addr);
-
-    // Find possible locations for the given address
-    std::vector<ReplaceableEntry*> locations = getPossibleLocations(addr);
-
-    // Search for block
-    for (const auto& location : locations) {
-        CacheBlk* blk = static_cast<CacheBlk*>(location);
-        if ((blk->tag == tag) && blk->isValid() &&
-            (blk->isSecure() == is_secure)) {
-            return blk;
-        }
-    }
-
-    // Did not find block
-    return nullptr;
-}
-
-SkewedAssoc *
-SkewedAssocParams::create()
-{
-    return new SkewedAssoc(this);
+    return new SkewedAssociative(this);
 }

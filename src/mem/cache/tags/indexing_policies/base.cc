@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2018 Inria
+ * Copyright (c) 2012-2014,2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -37,70 +38,65 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Erik Hallnor
+ * Authors: Daniel Carvalho
+ *          Erik Hallnor
  */
 
 /**
  * @file
- * Definitions of a conventional tag store.
+ * Definitions of a common framework for indexing policies.
  */
 
-#include "mem/cache/tags/base_set_assoc.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
 
-#include <string>
+#include <cstdlib>
 
 #include "base/intmath.hh"
+#include "base/logging.hh"
+#include "mem/cache/replacement_policies/base.hh"
 
-BaseSetAssoc::BaseSetAssoc(const Params *p)
-    :BaseTags(p), allocAssoc(p->assoc), blks(p->size / p->block_size),
-     sequentialAccess(p->sequential_access),
-     replacementPolicy(p->replacement_policy)
+BaseIndexingPolicy::BaseIndexingPolicy(const Params *p)
+    : SimObject(p), assoc(p->assoc),
+      numSets(p->size / (p->entry_size * assoc)),
+      setShift(floorLog2(p->entry_size)), setMask(numSets - 1), sets(numSets),
+      tagShift(setShift + floorLog2(numSets))
 {
-    // Check parameters
-    if (blkSize < 4 || !isPowerOf2(blkSize)) {
-        fatal("Block size must be at least 4 and a power of 2");
+    fatal_if(!isPowerOf2(numSets), "# of sets must be non-zero and a power " \
+             "of 2");
+    fatal_if(assoc <= 0, "associativity must be greater than zero");
+
+    // Make space for the entries
+    for (uint32_t i = 0; i < numSets; ++i) {
+        sets[i].resize(assoc);
     }
 }
 
-void
-BaseSetAssoc::init(BaseCache* cache)
+ReplaceableEntry*
+BaseIndexingPolicy::getEntry(const uint32_t set, const uint32_t way) const
 {
-    // Set parent cache
-    setCache(cache);
-
-    // Initialize all blocks
-    for (unsigned blk_index = 0; blk_index < numBlocks; blk_index++) {
-        // Locate next cache block
-        BlkType* blk = &blks[blk_index];
-
-        // Link block to indexing policy
-        indexingPolicy->setEntry(blk, blk_index);
-
-        // Associate a data chunk to the block
-        blk->data = &dataBlks[blkSize*blk_index];
-
-        // Associate a replacement data entry to the block
-        blk->replacementData = replacementPolicy->instantiateEntry();
-    }
+    return sets[set][way];
 }
 
 void
-BaseSetAssoc::invalidate(CacheBlk *blk)
+BaseIndexingPolicy::setEntry(ReplaceableEntry* entry, const uint64_t index)
 {
-    BaseTags::invalidate(blk);
+    // Calculate set and way from entry index
+    const std::lldiv_t div_result = std::div((long long)index, assoc);
+    const uint32_t set = div_result.quot;
+    const uint32_t way = div_result.rem;
 
-    // Decrease the number of tags in use
-    tagsInUse--;
+    // Sanity check
+    assert(set < numSets);
 
-    // Invalidate replacement data
-    replacementPolicy->invalidate(blk->replacementData);
+    // Assign a free pointer
+    sets[set][way] = entry;
+
+    // Inform the entry its position
+    entry->setPosition(set, way);
 }
 
-BaseSetAssoc *
-BaseSetAssocParams::create()
+Addr
+BaseIndexingPolicy::extractTag(const Addr addr) const
 {
-    // There must be a indexing policy
-    fatal_if(!indexing_policy, "An indexing policy is required");
-
-    return new BaseSetAssoc(this);
+    return (addr >> tagShift);
 }

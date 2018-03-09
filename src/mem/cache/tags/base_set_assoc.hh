@@ -59,70 +59,34 @@
 #include "mem/cache/blk.hh"
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/tags/base.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
 #include "params/BaseSetAssoc.hh"
 
 /**
- * A BaseSetAssoc cache tag store.
+ * A basic cache tag store.
  * @sa  \ref gem5MemorySystem "gem5 Memory System"
  *
  * The BaseSetAssoc placement policy divides the cache into s sets of w
- * cache lines (ways). A cache line is mapped onto a set, and can be placed
- * into any of the ways of this set.
+ * cache lines (ways).
  */
 class BaseSetAssoc : public BaseTags
 {
   public:
     /** Typedef the block type used in this tag store. */
     typedef CacheBlk BlkType;
-    /** Typedef the set type used in this tag store. */
-    typedef std::vector<CacheBlk*> SetType;
 
   protected:
-    /** The associativity of the cache. */
-    const unsigned assoc;
     /** The allocatable associativity of the cache (alloc mask). */
     unsigned allocAssoc;
 
     /** The cache blocks. */
     std::vector<BlkType> blks;
 
-    /** The number of sets in the cache. */
-    const unsigned numSets;
-
     /** Whether tags and data are accessed sequentially. */
     const bool sequentialAccess;
 
-    /** The cache sets. */
-    std::vector<SetType> sets;
-
-    /** The amount to shift the address to get the set. */
-    int setShift;
-    /** The amount to shift the address to get the tag. */
-    int tagShift;
-    /** Mask out all bits that aren't part of the set index. */
-    unsigned setMask;
-
     /** Replacement policy */
     BaseReplacementPolicy *replacementPolicy;
-
-    /**
-     * Find all possible block locations for insertion and replacement of
-     * an address. Should be called immediately before ReplacementPolicy's
-     * findVictim() not to break cache resizing.
-     * Returns blocks in all ways belonging to the set of the address.
-     *
-     * @param addr The addr to a find possible locations for.
-     * @return The possible locations.
-     */
-    std::vector<ReplaceableEntry*> getPossibleLocations(const Addr addr) const
-                                                                      override
-    {
-        std::vector<ReplaceableEntry*> locations;
-        for (const auto& blk : sets[extractSet(addr)]) {
-            locations.push_back(static_cast<ReplaceableEntry*>(blk));
-        }
-        return locations;
-    }
 
   public:
     /** Convenience typedef. */
@@ -205,15 +169,6 @@ class BaseSetAssoc : public BaseTags
     }
 
     /**
-     * Find a block given set and way.
-     *
-     * @param set The set of the block.
-     * @param way The way of the block.
-     * @return The block.
-     */
-    ReplaceableEntry* findBlockBySetAndWay(int set, int way) const override;
-
-    /**
      * Find replacement victim based on address. The list of evicted blocks
      * only contains the victim.
      *
@@ -225,13 +180,13 @@ class BaseSetAssoc : public BaseTags
     CacheBlk* findVictim(Addr addr, const bool is_secure,
                          std::vector<CacheBlk*>& evict_blks) const override
     {
-        // Get possible locations for the victim block
-        std::vector<ReplaceableEntry*> locations = getPossibleLocations(addr);
+        // Get possible entries to be victimized
+        const std::vector<ReplaceableEntry*> entries =
+            indexingPolicy->getPossibleEntries(addr);
 
         // Choose replacement victim from replacement candidates
         CacheBlk* victim = static_cast<CacheBlk*>(replacementPolicy->getVictim(
-                               std::vector<ReplaceableEntry*>(
-                                   locations.begin(), locations.end())));
+                                entries));
 
         // There is only one eviction for this replacement
         evict_blks.push_back(victim);
@@ -285,25 +240,14 @@ class BaseSetAssoc : public BaseTags
     }
 
     /**
-     * Generate the tag from the given address.
-     * @param addr The address to get the tag from.
-     * @return The tag of the address.
-     */
-    Addr extractTag(Addr addr) const override
-    {
-        return (addr >> tagShift);
-    }
-
-    /**
-     * Regenerate the block address from the tag and set.
+     * Regenerate the block address from the tag and indexing location.
      *
      * @param block The block.
      * @return the block address.
      */
     Addr regenerateBlkAddr(const CacheBlk* blk) const override
     {
-        const Addr set = blk->getSet() << setShift;
-        return ((blk->tag << tagShift) | set);
+        return indexingPolicy->regenerateAddr(blk->tag, blk);
     }
 
     void forEachBlk(std::function<void(CacheBlk &)> visitor) override {
@@ -319,18 +263,6 @@ class BaseSetAssoc : public BaseTags
             }
         }
         return false;
-    }
-
-  private:
-    /**
-     * Calculate the set index from the address.
-     *
-     * @param addr The address to get the set from.
-     * @return The set index of the address.
-     */
-    int extractSet(Addr addr) const
-    {
-        return ((addr >> setShift) & setMask);
     }
 };
 

@@ -30,7 +30,7 @@
 
 /**
  * @file
- * Declaration of a sector set associative tag store.
+ * Declaration of a sector tag store.
  */
 
 #ifndef __MEM_CACHE_TAGS_SECTOR_TAGS_HH__
@@ -58,11 +58,6 @@ class ReplaceableEntry;
 class SectorTags : public BaseTags
 {
   protected:
-    /** Typedef the set type used in this tag store. */
-    typedef std::vector<SectorBlk*> SetType;
-
-    /** The associativity of the cache. */
-    const unsigned assoc;
     /** The allocatable associativity of the cache (alloc mask). */
     unsigned allocAssoc;
 
@@ -77,40 +72,19 @@ class SectorTags : public BaseTags
 
     /** The number of sectors in the cache. */
     const unsigned numSectors;
-    /** The number of sets in the cache. */
-    const unsigned numSets;
 
     /** The cache blocks. */
     std::vector<SectorSubBlk> blks;
     /** The cache sector blocks. */
     std::vector<SectorBlk> secBlks;
-    /** The cache sets. */
-    std::vector<SetType> sets;
 
-    // Organization of an address: Tag | Set # | Sector Offset # | Offset #
+    // Organization of an address:
+    // Tag | Placement Location | Sector Offset # | Offset #
     /** The amount to shift the address to get the sector tag. */
     const int sectorShift;
-    /** The amount to shift the address to get the set. */
-    const int setShift;
-    /** The amount to shift the address to get the tag. */
-    const int tagShift;
 
     /** Mask out all bits that aren't part of the sector tag. */
     const unsigned sectorMask;
-    /** Mask out all bits that aren't part of the set index. */
-    const unsigned setMask;
-
-    /**
-     * Find all possible block locations for insertion and replacement of
-     * an address. Should be called immediately before ReplacementPolicy's
-     * findVictim() not to break cache resizing.
-     * Returns sector blocks in all ways belonging to the set of the address.
-     *
-     * @param addr The addr to a find possible locations for.
-     * @return The possible locations.
-     */
-    std::vector<ReplaceableEntry*> getPossibleLocations(const Addr addr) const
-                                                                     override;
 
   public:
     /** Convenience typedef. */
@@ -178,15 +152,6 @@ class SectorTags : public BaseTags
     CacheBlk* findBlock(Addr addr, bool is_secure) const override;
 
     /**
-     * Find a sector block given set and way.
-     *
-     * @param set The set of the block.
-     * @param way The way of the block.
-     * @return The block.
-     */
-    ReplaceableEntry* findBlockBySetAndWay(int set, int way) const override;
-
-    /**
      * Find replacement victim based on address.
      *
      * @param addr Address to find a victim for.
@@ -198,22 +163,6 @@ class SectorTags : public BaseTags
                          std::vector<CacheBlk*>& evict_blks) const override;
 
     /**
-     * Generate the sector tag from the given address.
-     *
-     * @param addr The address to get the sector tag from.
-     * @return The sector tag of the address.
-     */
-    Addr extractTag(Addr addr) const override;
-
-    /**
-     * Calculate the set index from the address.
-     *
-     * @param addr The address to get the set from.
-     * @return The set index of the address.
-     */
-    int extractSet(Addr addr) const;
-
-    /**
      * Calculate a block's offset in a sector from the address.
      *
      * @param addr The address to get the offset from.
@@ -222,7 +171,7 @@ class SectorTags : public BaseTags
     int extractSectorOffset(Addr addr) const;
 
     /**
-     * Regenerate the block address from the tag and set.
+     * Regenerate the block address from the tag and location.
      *
      * @param block The block.
      * @return the block address.

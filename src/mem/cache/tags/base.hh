@@ -62,6 +62,7 @@
 #include "sim/clocked_object.hh"
 
 class BaseCache;
+class IndexingPolicy;
 class ReplaceableEntry;
 
 /**
@@ -86,6 +87,9 @@ class BaseTags : public ClockedObject
     const Cycles accessLatency;
     /** Pointer to the parent cache. */
     BaseCache *cache;
+
+    /** Indexing policy */
+    BaseIndexingPolicy *indexingPolicy;
 
     /**
      * The number of tags that need to be touched to meet the warmup
@@ -161,18 +165,6 @@ class BaseTags : public ClockedObject
      */
     void setCache(BaseCache *_cache);
 
-    /**
-     * Find all possible block locations for insertion and replacement of
-     * an address. Should be called immediately before ReplacementPolicy's
-     * findVictim() not to break cache resizing.
-     * Returns blocks in all ways belonging to the set of the address.
-     *
-     * @param addr The addr to a find possible locations for.
-     * @return The possible locations.
-     */
-    virtual std::vector<ReplaceableEntry*> getPossibleLocations(
-        const Addr addr) const;
-
   public:
     typedef BaseTagsParams Params;
     BaseTags(const Params *p);
@@ -226,7 +218,7 @@ class BaseTags : public ClockedObject
      * @param way The way of the block.
      * @return The block.
      */
-    virtual ReplaceableEntry* findBlockBySetAndWay(int set, int way) const = 0;
+    virtual ReplaceableEntry* findBlockBySetAndWay(int set, int way) const;
 
     /**
      * Align an address to the block size.
@@ -303,7 +295,13 @@ class BaseTags : public ClockedObject
 
     virtual CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) = 0;
 
-    virtual Addr extractTag(Addr addr) const = 0;
+    /**
+     * Generate the tag from the given address.
+     *
+     * @param addr The address to get the tag from.
+     * @return The tag of the address.
+     */
+    virtual Addr extractTag(const Addr addr) const;
 
     /**
      * Insert the new block into the cache and update stats.

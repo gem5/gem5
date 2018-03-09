@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2018 Inria
+ * Copyright (c) 2012-2014,2017 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -37,70 +38,45 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Erik Hallnor
+ * Authors: Daniel Carvalho
+ *          Erik Hallnor
  */
 
 /**
  * @file
- * Definitions of a conventional tag store.
+ * Definitions of a set associative indexing policy.
  */
 
-#include "mem/cache/tags/base_set_assoc.hh"
+#include "mem/cache/tags/indexing_policies/set_associative.hh"
 
-#include <string>
+#include "mem/cache/replacement_policies/base.hh"
 
-#include "base/intmath.hh"
-
-BaseSetAssoc::BaseSetAssoc(const Params *p)
-    :BaseTags(p), allocAssoc(p->assoc), blks(p->size / p->block_size),
-     sequentialAccess(p->sequential_access),
-     replacementPolicy(p->replacement_policy)
+SetAssociative::SetAssociative(const Params *p)
+    : BaseIndexingPolicy(p)
 {
-    // Check parameters
-    if (blkSize < 4 || !isPowerOf2(blkSize)) {
-        fatal("Block size must be at least 4 and a power of 2");
-    }
 }
 
-void
-BaseSetAssoc::init(BaseCache* cache)
+uint32_t
+SetAssociative::extractSet(const Addr addr) const
 {
-    // Set parent cache
-    setCache(cache);
-
-    // Initialize all blocks
-    for (unsigned blk_index = 0; blk_index < numBlocks; blk_index++) {
-        // Locate next cache block
-        BlkType* blk = &blks[blk_index];
-
-        // Link block to indexing policy
-        indexingPolicy->setEntry(blk, blk_index);
-
-        // Associate a data chunk to the block
-        blk->data = &dataBlks[blkSize*blk_index];
-
-        // Associate a replacement data entry to the block
-        blk->replacementData = replacementPolicy->instantiateEntry();
-    }
+    return (addr >> setShift) & setMask;
 }
 
-void
-BaseSetAssoc::invalidate(CacheBlk *blk)
+Addr
+SetAssociative::regenerateAddr(const Addr tag, const ReplaceableEntry* entry)
+                                                                        const
 {
-    BaseTags::invalidate(blk);
-
-    // Decrease the number of tags in use
-    tagsInUse--;
-
-    // Invalidate replacement data
-    replacementPolicy->invalidate(blk->replacementData);
+    return (tag << tagShift) | (entry->getSet() << setShift);
 }
 
-BaseSetAssoc *
-BaseSetAssocParams::create()
+std::vector<ReplaceableEntry*>
+SetAssociative::getPossibleEntries(const Addr addr) const
 {
-    // There must be a indexing policy
-    fatal_if(!indexing_policy, "An indexing policy is required");
+    return sets[extractSet(addr)];
+}
 
-    return new BaseSetAssoc(this);
+SetAssociative*
+SetAssociativeParams::create()
+{
+    return new SetAssociative(this);
 }

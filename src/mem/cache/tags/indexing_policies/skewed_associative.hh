@@ -30,28 +30,45 @@
 
 /**
  * @file
- * Declaration of a skewed associative tag store.
+ * Declaration of a skewed associative indexing policy.
  */
 
-#ifndef __MEM_CACHE_TAGS_SKEWED_ASSOC_HH__
-#define __MEM_CACHE_TAGS_SKEWED_ASSOC_HH__
+#ifndef __MEM_CACHE_INDEXING_POLICIES_SKEWED_ASSOCIATIVE_HH__
+#define __MEM_CACHE_INDEXING_POLICIES_SKEWED_ASSOCIATIVE_HH__
 
-#include "mem/cache/blk.hh"
-#include "mem/cache/tags/base_set_assoc.hh"
-#include "params/SkewedAssoc.hh"
+#include <vector>
+
+#include "mem/cache/tags/indexing_policies/base.hh"
+#include "params/SkewedAssociative.hh"
+
+class ReplaceableEntry;
 
 /**
- * A SkewedAssoc cache tag store.
- * @sa \ref gem5MemorySystem "gem5 Memory System"
+ * A skewed associative indexing policy.
+ * @sa  \ref gem5MemorySystem "gem5 Memory System"
  *
- * The SkewedAssoc placement policy divides the cache into s sets of w
- * cache lines (ways). A cache line has a different set mapping for each way,
- * according to a skewing function.
+ * The skewed indexing policy has a variable mapping based on a hash function,
+ * so a value x can be mapped to different sets, based on the way being used.
+ *
+ * For example, let's assume address A maps to set 3 on way 0. It will likely
+ * have a different set for every other way. Visually, the possible locations
+ * of A are, for a table with 4 ways and 8 sets (arbitrarily chosen sets; these
+ * locations depend on A and the hashing function used):
+ *    Way 0   1   2   3
+ *  Set   _   _   _   _
+ *    0  |_| |_| |X| |_|
+ *    1  |_| |_| |_| |X|
+ *    2  |_| |_| |_| |_|
+ *    3  |X| |_| |_| |_|
+ *    4  |_| |_| |_| |_|
+ *    5  |_| |X| |_| |_|
+ *    6  |_| |_| |_| |_|
+ *    7  |_| |_| |_| |_|
  *
  * If provided with an associativity higher than the number of skewing
  * functions, the skewing functions of the extra ways might be sub-optimal.
  */
-class SkewedAssoc : public BaseSetAssoc
+class SkewedAssociative : public BaseIndexingPolicy
 {
   private:
     /**
@@ -98,7 +115,7 @@ class SkewedAssoc : public BaseSetAssoc
      * @param way The cache way, used to select a hash function.
      * @return The skewed address.
      */
-    Addr skew(const Addr addr, const unsigned way) const;
+    Addr skew(const Addr addr, const uint32_t way) const;
 
     /**
      * Address deskewing function (inverse of the skew function) of the given
@@ -109,7 +126,7 @@ class SkewedAssoc : public BaseSetAssoc
      * @param way The cache way, used to select a hash function.
      * @return The deskewed address.
      */
-    Addr deskew(const Addr addr, const unsigned way) const;
+    Addr deskew(const Addr addr, const uint32_t way) const;
 
     /**
      * Apply a skewing function to calculate address' set given a way.
@@ -118,53 +135,43 @@ class SkewedAssoc : public BaseSetAssoc
      * @param way The way to get the set from.
      * @return The set index for given combination of address and way.
      */
-    unsigned extractSet(Addr addr, unsigned way) const;
-
-  protected:
-    /**
-     * Find all possible block locations for insertion and replacement of
-     * an address. Should be called immediately before ReplacementPolicy's
-     * findVictim() not to break cache resizing.
-     * Returns blocks in all ways belonging to the set of the address.
-     *
-     * @param addr The addr to a find possible locations for.
-     * @return The possible locations.
-     */
-    std::vector<ReplaceableEntry*> getPossibleLocations(const Addr addr) const
-                                                                     override;
+    uint32_t extractSet(const Addr addr, const uint32_t way) const;
 
   public:
     /** Convenience typedef. */
-     typedef SkewedAssocParams Params;
+     typedef SkewedAssociativeParams Params;
 
     /**
-     * Construct and initialize this tag store.
+     * Construct and initialize this policy.
      */
-    SkewedAssoc(const Params *p);
+    SkewedAssociative(const Params *p);
 
     /**
-     * Destructor
+     * Destructor.
      */
-    ~SkewedAssoc() {};
+    ~SkewedAssociative() {};
 
     /**
-     * Finds the given address in the cache, do not update replacement data.
-     * i.e. This is a no-side-effect find of a block.
+     * Find all possible entries for insertion and replacement of an address.
+     * Should be called immediately before ReplacementPolicy's findVictim()
+     * not to break cache resizing.
      *
-     * @param addr The address to find.
-     * @param is_secure True if the target memory space is secure.
-     * @return Pointer to the cache block if found.
+     * @param addr The addr to a find possible entries for.
+     * @return The possible entries.
      */
-    CacheBlk* findBlock(Addr addr, bool is_secure) const override;
+    std::vector<ReplaceableEntry*> getPossibleEntries(const Addr addr) const
+                                                                   override;
 
     /**
-     * Regenerate the block address from the tag, set and way. Uses the
-     * inverse of the skewing function.
+     * Regenerate an entry's address from its tag and assigned set and way.
+     * Uses the inverse of the skewing function.
      *
-     * @param block The block.
-     * @return the block address.
+     * @param tag The tag bits.
+     * @param entry The entry.
+     * @return the entry's address.
      */
-    Addr regenerateBlkAddr(const CacheBlk* blk) const override;
+    Addr regenerateAddr(const Addr tag, const ReplaceableEntry* entry) const
+                                                                   override;
 };
 
-#endif //__MEM_CACHE_TAGS_SKEWED_ASSOC_HH__
+#endif //__MEM_CACHE_INDEXING_POLICIES_SKEWED_ASSOCIATIVE_HH__
