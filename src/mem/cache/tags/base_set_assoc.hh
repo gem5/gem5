@@ -183,9 +183,9 @@ class BaseSetAssoc : public BaseTags
     /**
      * Finds the given address in the cache, do not update replacement data.
      * i.e. This is a no-side-effect find of a block.
+     *
      * @param addr The address to find.
      * @param is_secure True if the target memory space is secure.
-     * @param asid The address space ID.
      * @return Pointer to the cache block if found.
      */
     CacheBlk* findBlock(Addr addr, bool is_secure) const override;
@@ -237,7 +237,7 @@ class BaseSetAssoc : public BaseTags
      * @param addr The addr to a find possible locations for.
      * @return The possible locations.
      */
-    const std::vector<CacheBlk*> getPossibleLocations(Addr addr) const
+    virtual const std::vector<CacheBlk*> getPossibleLocations(Addr addr) const
     {
         return sets[extractSet(addr)].blks;
     }

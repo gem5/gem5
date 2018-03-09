@@ -96,3 +96,6 @@ class FALRU(BaseTags):
 
     min_tracked_cache_size = Param.MemorySize("128kB", "Minimum cache size for"
                                               " which we track statistics")
+class SkewedAssoc(BaseSetAssoc):
+    type = 'SkewedAssoc'
+    cxx_header = "mem/cache/tags/skewed_assoc.hh"
