@@ -78,6 +78,35 @@ BaseTags::setCache(BaseCache *_cache)
     cache = _cache;
 }
 
+std::vector<ReplaceableEntry*>
+BaseTags::getPossibleLocations(const Addr addr) const
+{
+    panic("Unimplemented getPossibleLocations for tags subclass");
+}
+
+CacheBlk*
+BaseTags::findBlock(Addr addr, bool is_secure) const
+{
+    // Extract block tag
+    Addr tag = extractTag(addr);
+
+    // Find possible locations for the given address
+    const std::vector<ReplaceableEntry*> locations =
+        getPossibleLocations(addr);
+
+    // Search for block
+    for (const auto& location : locations) {
+        CacheBlk* blk = static_cast<CacheBlk*>(location);
+        if ((blk->tag == tag) && blk->isValid() &&
+            (blk->isSecure() == is_secure)) {
+            return blk;
+        }
+    }
+
+    // Did not find block
+    return nullptr;
+}
+
 void
 BaseTags::insertBlock(const Addr addr, const bool is_secure,
                       const int src_master_ID, const uint32_t task_ID,

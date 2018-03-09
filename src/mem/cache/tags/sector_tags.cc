@@ -194,10 +194,14 @@ SectorTags::accessBlock(Addr addr, bool is_secure, Cycles &lat)
     return blk;
 }
 
-const std::vector<SectorBlk*>
-SectorTags::getPossibleLocations(Addr addr) const
+std::vector<ReplaceableEntry*>
+SectorTags::getPossibleLocations(const Addr addr) const
 {
-    return sets[extractSet(addr)];
+    std::vector<ReplaceableEntry*> locations;
+    for (const auto& blk : sets[extractSet(addr)]) {
+        locations.push_back(static_cast<ReplaceableEntry*>(blk));
+    }
+    return locations;
 }
 
 void
@@ -238,11 +242,12 @@ SectorTags::findBlock(Addr addr, bool is_secure) const
     const Addr offset = extractSectorOffset(addr);
 
     // Find all possible sector locations for the given address
-    const std::vector<SectorBlk*> locations = getPossibleLocations(addr);
+    const std::vector<ReplaceableEntry*> locations =
+        getPossibleLocations(addr);
 
     // Search for block
     for (const auto& sector : locations) {
-        auto blk = sector->blks[offset];
+        auto blk = static_cast<SectorBlk*>(sector)->blks[offset];
         if (blk->getTag() == tag && blk->isValid() &&
             blk->isSecure() == is_secure) {
             return blk;
@@ -264,16 +269,17 @@ SectorTags::findVictim(Addr addr, const bool is_secure,
                        std::vector<CacheBlk*>& evict_blks) const
 {
     // Get all possible locations of this sector
-    const std::vector<SectorBlk*> sector_locations =
+    const std::vector<ReplaceableEntry*> sector_locations =
         getPossibleLocations(addr);
 
     // Check if the sector this address belongs to has been allocated
     Addr tag = extractTag(addr);
     SectorBlk* victim_sector = nullptr;
-    for (const auto& sector : sector_locations){
-        if ((tag == sector->getTag()) && sector->isValid() &&
-            (is_secure == sector->isSecure())){
-            victim_sector = sector;
+    for (const auto& sector : sector_locations) {
+        SectorBlk* sector_blk = static_cast<SectorBlk*>(sector);
+        if ((tag == sector_blk->getTag()) && sector_blk->isValid() &&
+            (is_secure == sector_blk->isSecure())){
+            victim_sector = sector_blk;
             break;
         }
     }
@@ -282,8 +288,7 @@ SectorTags::findVictim(Addr addr, const bool is_secure,
     if (victim_sector == nullptr){
         // Choose replacement victim from replacement candidates
         victim_sector = static_cast<SectorBlk*>(replacementPolicy->getVictim(
-                          std::vector<ReplaceableEntry*>(
-                          sector_locations.begin(), sector_locations.end())));
+                                                sector_locations));
     }
 
     // Get the location of the victim block within the sector

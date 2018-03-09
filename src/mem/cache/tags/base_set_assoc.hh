@@ -59,7 +59,6 @@
 #include "mem/cache/blk.hh"
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/tags/base.hh"
-#include "mem/cache/tags/cacheset.hh"
 #include "params/BaseSetAssoc.hh"
 
 /**
@@ -76,7 +75,7 @@ class BaseSetAssoc : public BaseTags
     /** Typedef the block type used in this tag store. */
     typedef CacheBlk BlkType;
     /** Typedef the set type used in this tag store. */
-    typedef CacheSet<CacheBlk> SetType;
+    typedef std::vector<CacheBlk*> SetType;
 
   protected:
     /** The associativity of the cache. */
@@ -105,6 +104,25 @@ class BaseSetAssoc : public BaseTags
 
     /** Replacement policy */
     BaseReplacementPolicy *replacementPolicy;
+
+    /**
+     * Find all possible block locations for insertion and replacement of
+     * an address. Should be called immediately before ReplacementPolicy's
+     * findVictim() not to break cache resizing.
+     * Returns blocks in all ways belonging to the set of the address.
+     *
+     * @param addr The addr to a find possible locations for.
+     * @return The possible locations.
+     */
+    std::vector<ReplaceableEntry*> getPossibleLocations(const Addr addr) const
+                                                                      override
+    {
+        std::vector<ReplaceableEntry*> locations;
+        for (const auto& blk : sets[extractSet(addr)]) {
+            locations.push_back(static_cast<ReplaceableEntry*>(blk));
+        }
+        return locations;
+    }
 
   public:
     /** Convenience typedef. */
@@ -187,16 +205,6 @@ class BaseSetAssoc : public BaseTags
     }
 
     /**
-     * Finds the given address in the cache, do not update replacement data.
-     * i.e. This is a no-side-effect find of a block.
-     *
-     * @param addr The address to find.
-     * @param is_secure True if the target memory space is secure.
-     * @return Pointer to the cache block if found.
-     */
-    CacheBlk* findBlock(Addr addr, bool is_secure) const override;
-
-    /**
      * Find a block given set and way.
      *
      * @param set The set of the block.
@@ -218,7 +226,7 @@ class BaseSetAssoc : public BaseTags
                          std::vector<CacheBlk*>& evict_blks) const override
     {
         // Get possible locations for the victim block
-        std::vector<CacheBlk*> locations = getPossibleLocations(addr);
+        std::vector<ReplaceableEntry*> locations = getPossibleLocations(addr);
 
         // Choose replacement victim from replacement candidates
         CacheBlk* victim = static_cast<CacheBlk*>(replacementPolicy->getVictim(
@@ -232,20 +240,6 @@ class BaseSetAssoc : public BaseTags
             victim->set, victim->way);
 
         return victim;
-    }
-
-    /**
-     * Find all possible block locations for insertion and replacement of
-     * an address. Should be called immediately before ReplacementPolicy's
-     * findVictim() not to break cache resizing.
-     * Returns blocks in all ways belonging to the set of the address.
-     *
-     * @param addr The addr to a find possible locations for.
-     * @return The possible locations.
-     */
-    virtual const std::vector<CacheBlk*> getPossibleLocations(Addr addr) const
-    {
-        return sets[extractSet(addr)].blks;
     }
 
     /**

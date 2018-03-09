@@ -120,6 +120,19 @@ class SkewedAssoc : public BaseSetAssoc
      */
     unsigned extractSet(Addr addr, unsigned way) const;
 
+  protected:
+    /**
+     * Find all possible block locations for insertion and replacement of
+     * an address. Should be called immediately before ReplacementPolicy's
+     * findVictim() not to break cache resizing.
+     * Returns blocks in all ways belonging to the set of the address.
+     *
+     * @param addr The addr to a find possible locations for.
+     * @return The possible locations.
+     */
+    std::vector<ReplaceableEntry*> getPossibleLocations(const Addr addr) const
+                                                                     override;
+
   public:
     /** Convenience typedef. */
      typedef SkewedAssocParams Params;
@@ -133,18 +146,6 @@ class SkewedAssoc : public BaseSetAssoc
      * Destructor
      */
     ~SkewedAssoc() {};
-
-    /**
-     * Find all possible block locations for insertion and replacement of
-     * an address. Should be called immediately before ReplacementPolicy's
-     * findVictim() not to break cache resizing.
-     * Returns blocks in all ways belonging to the set of the address.
-     *
-     * @param addr The addr to a find possible locations for.
-     * @return The possible locations.
-     */
-    const std::vector<CacheBlk*> getPossibleLocations(Addr addr) const
-                                                             override;
 
     /**
      * Finds the given address in the cache, do not update replacement data.

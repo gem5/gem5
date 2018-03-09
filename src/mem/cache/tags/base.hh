@@ -161,6 +161,18 @@ class BaseTags : public ClockedObject
      */
     void setCache(BaseCache *_cache);
 
+    /**
+     * Find all possible block locations for insertion and replacement of
+     * an address. Should be called immediately before ReplacementPolicy's
+     * findVictim() not to break cache resizing.
+     * Returns blocks in all ways belonging to the set of the address.
+     *
+     * @param addr The addr to a find possible locations for.
+     * @return The possible locations.
+     */
+    virtual std::vector<ReplaceableEntry*> getPossibleLocations(
+        const Addr addr) const;
+
   public:
     typedef BaseTagsParams Params;
     BaseTags(const Params *p);
@@ -199,9 +211,13 @@ class BaseTags : public ClockedObject
     std::string print();
 
     /**
-     * Find a block using the memory address
+     * Finds the block in the cache without touching it.
+     *
+     * @param addr The address to look for.
+     * @param is_secure True if the target memory space is secure.
+     * @return Pointer to the cache block.
      */
-    virtual CacheBlk * findBlock(Addr addr, bool is_secure) const = 0;
+    virtual CacheBlk *findBlock(Addr addr, bool is_secure) const;
 
     /**
      * Find a block given set and way.

@@ -84,14 +84,12 @@ BaseSetAssoc::init(BaseCache* cache)
     // Initialize blocks
     unsigned blkIndex = 0;       // index into blks array
     for (unsigned i = 0; i < numSets; ++i) {
-        sets[i].assoc = assoc;
-
-        sets[i].blks.resize(assoc);
+        sets[i].resize(assoc);
 
         // link in the data blocks
         for (unsigned j = 0; j < assoc; ++j) {
             // Select block within the set to be linked
-            BlkType*& blk = sets[i].blks[j];
+            BlkType*& blk = sets[i][j];
 
             // Locate next cache block
             blk = &blks[blkIndex];
@@ -128,19 +126,10 @@ BaseSetAssoc::invalidate(CacheBlk *blk)
     replacementPolicy->invalidate(blk->replacementData);
 }
 
-CacheBlk*
-BaseSetAssoc::findBlock(Addr addr, bool is_secure) const
-{
-    Addr tag = extractTag(addr);
-    unsigned set = extractSet(addr);
-    BlkType *blk = sets[set].findBlk(tag, is_secure);
-    return blk;
-}
-
 ReplaceableEntry*
 BaseSetAssoc::findBlockBySetAndWay(int set, int way) const
 {
-    return sets[set].blks[way];
+    return sets[set][way];
 }
 
 BaseSetAssoc *

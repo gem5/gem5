@@ -100,6 +100,18 @@ class SectorTags : public BaseTags
     /** Mask out all bits that aren't part of the set index. */
     const unsigned setMask;
 
+    /**
+     * Find all possible block locations for insertion and replacement of
+     * an address. Should be called immediately before ReplacementPolicy's
+     * findVictim() not to break cache resizing.
+     * Returns sector blocks in all ways belonging to the set of the address.
+     *
+     * @param addr The addr to a find possible locations for.
+     * @return The possible locations.
+     */
+    std::vector<ReplaceableEntry*> getPossibleLocations(const Addr addr) const
+                                                                     override;
+
   public:
     /** Convenience typedef. */
      typedef SectorTagsParams Params;
@@ -141,18 +153,6 @@ class SectorTags : public BaseTags
      * @return Pointer to the cache block if found.
      */
     CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) override;
-
-    /**
-     * Find all possible block locations for insertion and replacement of
-     * an address. Should be called immediately before ReplacementPolicy's
-     * findVictim() not to break cache resizing.
-     * Returns sector blocks in all ways belonging to the set of the address.
-     *
-     * @param addr The addr to a find possible locations for.
-     * @return The possible locations.
-     */
-    virtual const std::vector<SectorBlk*> getPossibleLocations(Addr addr)
-                                                                   const;
 
     /**
      * Insert the new block into the cache and update replacement data.

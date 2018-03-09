@@ -204,15 +204,15 @@ SkewedAssoc::regenerateBlkAddr(const CacheBlk* blk) const
     return (blk->tag << tagShift) | (set << setShift);
 }
 
-const std::vector<CacheBlk*>
-SkewedAssoc::getPossibleLocations(Addr addr) const
+std::vector<ReplaceableEntry*>
+SkewedAssoc::getPossibleLocations(const Addr addr) const
 {
-    std::vector<CacheBlk*> locations;
+    std::vector<ReplaceableEntry*> locations;
 
     // Parse all ways
     for (int way = 0; way < assoc; ++way) {
         // Apply hash to get set, and get way entry in it
-        locations.push_back(sets[extractSet(addr, way)].blks[way]);
+        locations.push_back(sets[extractSet(addr, way)][way]);
     }
 
     return locations;
@@ -225,10 +225,11 @@ SkewedAssoc::findBlock(Addr addr, bool is_secure) const
     Addr tag = extractTag(addr);
 
     // Find possible locations for the given address
-    std::vector<CacheBlk*> locations = getPossibleLocations(addr);
+    std::vector<ReplaceableEntry*> locations = getPossibleLocations(addr);
 
     // Search for block
-    for (const auto& blk : locations) {
+    for (const auto& location : locations) {
+        CacheBlk* blk = static_cast<CacheBlk*>(location);
         if ((blk->tag == tag) && blk->isValid() &&
             (blk->isSecure() == is_secure)) {
             return blk;
