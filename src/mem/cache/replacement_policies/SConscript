@@ -34,4 +34,5 @@ SimObject('ReplacementPolicies.py')
 
 Source('base.cc')
 Source('lru_rp.cc')
+Source('mru_rp.cc')
 Source('random_rp.cc')
