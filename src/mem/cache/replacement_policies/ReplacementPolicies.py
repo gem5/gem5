@@ -40,6 +40,11 @@ class FIFORP(BaseReplacementPolicy):
     cxx_class = 'FIFORP'
     cxx_header = "mem/cache/replacement_policies/fifo_rp.hh"
 
+class LFURP(BaseReplacementPolicy):
+    type = 'LFURP'
+    cxx_class = 'LFURP'
+    cxx_header = "mem/cache/replacement_policies/lfu_rp.hh"
+
 class LRURP(BaseReplacementPolicy):
     type = 'LRURP'
     cxx_class = 'LRURP'
