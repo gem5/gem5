@@ -265,7 +265,13 @@ class BaseTags : public ClockedObject
 
     virtual Addr extractTag(Addr addr) const = 0;
 
-    virtual void insertBlock(PacketPtr pkt, CacheBlk *blk) = 0;
+    /**
+     * Insert the new block into the cache and update stats.
+     *
+     * @param pkt Packet holding the address to update
+     * @param blk The block to update.
+     */
+    virtual void insertBlock(PacketPtr pkt, CacheBlk *blk);
 
     /**
      * Regenerate the block address.

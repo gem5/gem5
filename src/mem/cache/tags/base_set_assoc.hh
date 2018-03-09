@@ -212,55 +212,19 @@ class BaseSetAssoc : public BaseTags
     }
 
     /**
-     * Insert the new block into the cache.
+     * Insert the new block into the cache and update replacement data.
+     *
      * @param pkt Packet holding the address to update
      * @param blk The block to update.
      */
-     void insertBlock(PacketPtr pkt, CacheBlk *blk) override
-     {
-         Addr addr = pkt->getAddr();
-         MasterID master_id = pkt->req->masterId();
-         uint32_t task_id = pkt->req->taskId();
+    void insertBlock(PacketPtr pkt, CacheBlk *blk) override
+    {
+        // Insert block
+        BaseTags::insertBlock(pkt, blk);
 
-         if (!blk->isTouched) {
-             if (!warmedUp && tagsInUse.value() >= warmupBound) {
-                 warmedUp = true;
-                 warmupCycle = curTick();
-             }
-         }
-
-         // If we're replacing a block that was previously valid update
-         // stats for it. This can't be done in findBlock() because a
-         // found block might not actually be replaced there if the
-         // coherence protocol says it can't be.
-         if (blk->isValid()) {
-             replacements[0]++;
-             totalRefs += blk->refCount;
-             ++sampledRefs;
-
-             invalidate(blk);
-             blk->invalidate();
-         }
-
-         // Previous block, if existed, has been removed, and now we have
-         // to insert the new one
-         tagsInUse++;
-
-         // Set tag for new block.  Caller is responsible for setting status.
-         blk->tag = extractTag(addr);
-
-         // deal with what we are bringing in
-         assert(master_id < cache->system->maxMasters());
-         occupancies[master_id]++;
-         blk->srcMasterId = master_id;
-         blk->task_id = task_id;
-
-         // We only need to write into one tag and one data block.
-         tagAccesses += 1;
-         dataAccesses += 1;
-
-         replacementPolicy->reset(blk);
-     }
+        // Update replacement policy
+        replacementPolicy->reset(blk);
+    }
 
     /**
      * Limit the allocation for the cache ways.

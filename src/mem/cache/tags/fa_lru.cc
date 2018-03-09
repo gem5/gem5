@@ -169,6 +169,9 @@ FALRU::invalidate(CacheBlk *blk)
 {
     // TODO: We need to move the block to the tail to make it the next victim
     BaseTags::invalidate(blk);
+
+    // Erase block entry in the hash table
+    tagHash.erase(blk->tag);
 }
 
 CacheBlk*
@@ -250,28 +253,27 @@ FALRU::findBlockBySetAndWay(int set, int way) const
 CacheBlk*
 FALRU::findVictim(Addr addr)
 {
-    FALRUBlk * blk = tail;
-    assert(blk->inCache == 0);
-    moveToHead(blk);
-    tagHash.erase(blk->tag);
-    tagHash[blkAlign(addr)] = blk;
-    if (blk->isValid()) {
-        replacements[0]++;
-    } else {
-        tagsInUse++;
-        if (!warmedUp && tagsInUse.value() >= warmupBound) {
-            warmedUp = true;
-            warmupCycle = curTick();
-        }
-    }
-    //assert(check());
-
-    return blk;
+    return tail;
 }
 
 void
 FALRU::insertBlock(PacketPtr pkt, CacheBlk *blk)
 {
+    FALRUBlk* falruBlk = static_cast<FALRUBlk*>(blk);
+
+    // Make sure block is not present in the cache
+    assert(falruBlk->inCache == 0);
+
+    // Do common block insertion functionality
+    BaseTags::insertBlock(pkt, blk);
+
+    // New block is the MRU
+    moveToHead(falruBlk);
+
+    // Insert new block in the hash table
+    tagHash[falruBlk->tag] = falruBlk;
+
+    //assert(check());
 }
 
 void

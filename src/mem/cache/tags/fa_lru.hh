@@ -62,7 +62,7 @@
  */
 class FALRUBlk : public CacheBlk
 {
-public:
+  public:
     /** The previous block in LRU order. */
     FALRUBlk *prev;
     /** The next block in LRU order. */
@@ -151,8 +151,7 @@ class FALRU : public BaseTags
      * @}
      */
 
-public:
-
+  public:
     typedef FALRUParams Params;
 
     /**
@@ -209,6 +208,12 @@ public:
      */
     CacheBlk* findVictim(Addr addr) override;
 
+    /**
+     * Insert the new block into the cache and update replacement data.
+     *
+     * @param pkt Packet holding the address to update
+     * @param blk The block to update.
+     */
     void insertBlock(PacketPtr pkt, CacheBlk *blk) override;
 
     /**
@@ -274,7 +279,6 @@ public:
                 return;
         }
     }
-
 };
 
 #endif // __MEM_CACHE_TAGS_FA_LRU_HH__
