@@ -1731,6 +1731,7 @@ prlimitFunc(SyscallDesc *desc, int callnum, Process *process,
             rlp->rlim_cur = rlp->rlim_max = 256*1024*1024;
             rlp->rlim_cur = TheISA::htog(rlp->rlim_cur);
             rlp->rlim_max = TheISA::htog(rlp->rlim_max);
+            break;
           default:
             warn("prlimit: unimplemented resource %d", resource);
             return -EINVAL;
