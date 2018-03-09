@@ -522,7 +522,7 @@ static SyscallDesc syscallDescs64[] = {
     /* 299 */ SyscallDesc("recvmmsg", unimplementedFunc),
     /* 300 */ SyscallDesc("fanotify_init", unimplementedFunc),
     /* 301 */ SyscallDesc("fanotify_mark", unimplementedFunc),
-    /* 302 */ SyscallDesc("prlimit64", unimplementedFunc),
+    /* 302 */ SyscallDesc("prlimit64", prlimitFunc<X86Linux64>),
     /* 303 */ SyscallDesc("name_to_handle_at", unimplementedFunc),
     /* 304 */ SyscallDesc("open_by_handle_at", unimplementedFunc),
     /* 305 */ SyscallDesc("clock_adjtime", unimplementedFunc),
