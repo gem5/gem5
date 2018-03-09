@@ -37,6 +37,8 @@
 #
 # Authors: Andreas Sandberg
 
+from __future__ import print_function
+
 import subprocess
 from threading import Timer
 import time
@@ -187,4 +189,4 @@ if __name__ == "__main__":
     ignore_list.rules.append(FileIgnoreList.simple("bar.txt"))
     assert "bar.txt" in ignore_list
 
-    print "SUCCESS!"
+    print("SUCCESS!")

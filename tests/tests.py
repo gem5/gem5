@@ -37,6 +37,8 @@
 #
 # Authors: Andreas Sandberg
 
+from __future__ import print_function
+
 import argparse
 import sys
 import os
@@ -126,7 +128,7 @@ def _list_tests(args):
         for test in get_tests(isa, categories=categories, modes=modes,
                               ruby_protocol=args.ruby_protocol,
                               gpu_isa=args.gpu_isa):
-            print "/".join(test)
+            print("/".join(test))
     sys.exit(0)
 
 def _run_tests_args(subparsers):
@@ -175,8 +177,8 @@ def _run_tests_args(subparsers):
 
 def _run_tests(args):
     if not os.path.isfile(args.gem5) or not os.access(args.gem5, os.X_OK):
-        print >> sys.stderr, \
-            "gem5 binary '%s' not an executable file" % args.gem5
+        print("gem5 binary '%s' not an executable file" % args.gem5,
+            file=sys.stderr)
         sys.exit(2)
 
     formatter = _create_formatter(args)
@@ -195,9 +197,9 @@ def _run_tests(args):
                         skip_diff_out=args.skip_diff_out))
 
     all_results = []
-    print "Running %i tests" % len(tests)
+    print("Running %i tests" % len(tests))
     for testno, test in enumerate(tests):
-        print "%i: Running '%s'..." % (testno, test)
+        print("%i: Running '%s'..." % (testno, test))
 
         all_results.append(test.run())
 
@@ -249,7 +251,7 @@ def _show(args):
         try:
             return pickle.load(f)
         except EOFError:
-            print >> sys.stderr, 'Could not read file %s' % f.name
+            print('Could not read file %s' % f.name, file=sys.stderr)
             return []
 
     formatter = _create_formatter(args)
@@ -287,7 +289,7 @@ def _test(args):
     try:
         suites = sum([ pickle.load(f) for f in args.result ], [])
     except EOFError:
-        print >> sys.stderr, 'Could not read all files'
+        print('Could not read all files', file=sys.stderr)
         sys.exit(2)
 
     if all(s for s in suites):

@@ -35,6 +35,8 @@
 #
 # Authors: Andreas Sandberg
 
+from __future__ import print_function
+
 from multiprocessing import Process
 import sys
 import os
@@ -80,7 +82,7 @@ def _run_step(name, restore=None, interval=0.5):
     elif cause in _exit_normal:
         sys.exit(_exitcode_done)
     else:
-        print "Test failed: Unknown exit cause: %s" % cause
+        print("Test failed: Unknown exit cause: %s" % cause)
         sys.exit(_exitcode_fail)
 
 def run_test(root, interval=0.5, max_checkpoints=5):
@@ -112,12 +114,12 @@ def run_test(root, interval=0.5, max_checkpoints=5):
         restore = cpt_name
 
         if p.exitcode == _exitcode_done:
-            print >> sys.stderr, "Test done."
+            print("Test done.", file=sys.stderr)
             sys.exit(0)
         elif p.exitcode == _exitcode_checkpoint:
             pass
         else:
-            print >> sys.stderr, "Test failed."
+            print("Test failed.", file=sys.stderr)
             sys.exit(1)
 
     # Maximum number of checkpoints reached. Just run full-speed from
@@ -128,5 +130,5 @@ def run_test(root, interval=0.5, max_checkpoints=5):
     if cause in _exit_normal:
         sys.exit(0)
     else:
-        print "Test failed: Unknown exit cause: %s" % cause
+        print("Test failed: Unknown exit cause: %s" % cause)
         sys.exit(1)

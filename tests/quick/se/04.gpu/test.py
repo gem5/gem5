@@ -32,11 +32,14 @@
 #
 #  Author: Brad Beckmann
 #
+
+from __future__ import print_function
+
 executable = binpath('gpu-hello')
 kernel_path = os.path.dirname(executable)
 kernel_files = glob.glob(os.path.join(kernel_path, '*.asm'))
 if kernel_files:
-    print "Using GPU kernel code file(s)", ",".join(kernel_files)
+    print("Using GPU kernel code file(s)", ",".join(kernel_files))
 else:
     fatal("Can't locate kernel code (.asm) in " + kernel_path)
 

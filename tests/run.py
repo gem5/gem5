@@ -38,6 +38,8 @@
 #
 # Authors: Steve Reinhardt
 
+from __future__ import print_function
+
 import os
 import sys
 import re
@@ -57,7 +59,7 @@ def skip_test(reason=""):
     """
 
     if reason:
-        print "Skipping test: %s" % reason
+        print("Skipping test: %s" % reason)
     sys.exit(2)
 
 def has_sim_object(name):
@@ -143,7 +145,7 @@ def run_test(root):
 
     # simulate until program terminates
     exit_event = m5.simulate(maxtick)
-    print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+    print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())
 
 # Since we're in batch mode, dont allow tcp socket connections
 m5.disableAllListeners()

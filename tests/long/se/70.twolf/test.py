@@ -26,6 +26,8 @@
 #
 # Authors: Korey Sewell
 
+from __future__ import print_function
+
 m5.util.addToPath('../configs/common')
 from cpu2000 import twolf
 import os
@@ -40,8 +42,8 @@ sv2_file = os.path.join(cwd, workload.input_set + '.sv2')
 try:
     os.unlink(sav_file)
 except:
-    print "Couldn't unlink ", sav_file
+    print("Couldn't unlink ", sav_file)
 try:
     os.unlink(sv2_file)
 except:
-    print "Couldn't unlink ", sv2_file
+    print("Couldn't unlink ", sv2_file)

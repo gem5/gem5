@@ -35,6 +35,8 @@
 #
 # Authors: Andreas Sandberg
 
+from __future__ import print_function
+
 import m5
 import _m5
 from m5.objects import *
@@ -122,19 +124,20 @@ def run_test(root, switcher=None, freq=1000, verbose=False):
             next_cpu = switcher.next()
 
             if verbose:
-                print "Switching CPUs..."
-                print "Next CPU: %s" % type(next_cpu)
+                print("Switching CPUs...")
+                print("Next CPU: %s" % type(next_cpu))
             m5.drain()
             if current_cpu != next_cpu:
                 m5.switchCpus(system, [ (current_cpu, next_cpu) ],
                               verbose=verbose)
             else:
-                print "Source CPU and destination CPU are the same, skipping..."
+                print("Source CPU and destination CPU are the same,"
+                    " skipping...")
             current_cpu = next_cpu
         elif exit_cause == "target called exit()" or \
                 exit_cause == "m5_exit instruction encountered":
 
             sys.exit(0)
         else:
-            print "Test failed: Unknown exit cause: %s" % exit_cause
+            print("Test failed: Unknown exit cause: %s" % exit_cause)
             sys.exit(1)
