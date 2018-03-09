@@ -129,6 +129,11 @@ class CacheBlk
      */
     Tick lastTouchTick;
 
+    /**
+     * Re-Reference Interval Prediction Value. Used with RRIP repl policy.
+     */
+    unsigned rrpv;
+
   protected:
     /**
      * Represents that the indicated thread context has a "lock" on

@@ -54,3 +54,13 @@ class RandomRP(BaseReplacementPolicy):
     type = 'RandomRP'
     cxx_class = 'RandomRP'
     cxx_header = "mem/cache/replacement_policies/random_rp.hh"
+
+class BRRIPRP(BaseReplacementPolicy):
+    type = 'BRRIPRP'
+    cxx_class = 'BRRIPRP'
+    cxx_header = "mem/cache/replacement_policies/brrip_rp.hh"
+    max_RRPV = Param.Unsigned(3, "Maximum RRPV possible")
+    hit_priority = Param.Bool(False,
+        "Prioritize evicting blocks that havent had a hit recently")
+    btp = Param.Percent(3,
+        "Percentage of blocks to be inserted with long RRPV")
