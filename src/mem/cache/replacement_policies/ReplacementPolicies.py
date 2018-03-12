@@ -50,6 +50,12 @@ class LRURP(BaseReplacementPolicy):
     cxx_class = 'LRURP'
     cxx_header = "mem/cache/replacement_policies/lru_rp.hh"
 
+class BIPRP(LRURP):
+    type = 'BIPRP'
+    cxx_class = 'BIPRP'
+    cxx_header = "mem/cache/replacement_policies/bip_rp.hh"
+    btp = Param.Percent(3, "Percentage of blocks to be inserted as MRU")
+
 class MRURP(BaseReplacementPolicy):
     type = 'MRURP'
     cxx_class = 'MRURP'
