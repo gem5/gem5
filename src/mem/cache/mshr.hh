@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015-2016 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2016, 2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -234,6 +234,11 @@ class MSHR : public QueueEntry, public Printable
 
     /** True if we need to get a writable copy of the block. */
     bool needsWritable() const { return targets.needsWritable; }
+
+    bool isCleaning() const {
+        PacketPtr pkt = targets.front().pkt;
+        return pkt->isClean();
+    }
 
     bool isPendingModified() const {
         assert(inService); return pendingModified;

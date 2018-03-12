@@ -1826,10 +1826,10 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
         Addr repl_addr = tags->regenerateBlkAddr(blk);
         MSHR *repl_mshr = mshrQueue.findMatch(repl_addr, blk->isSecure());
         if (repl_mshr) {
-            // must be an outstanding upgrade request
+            // must be an outstanding upgrade or clean request
             // on a block we're about to replace...
-            assert(!blk->isWritable() || blk->isDirty());
-            assert(repl_mshr->needsWritable());
+            assert((!blk->isWritable() && repl_mshr->needsWritable()) ||
+                   repl_mshr->isCleaning());
             // too hard to replace block with transient state
             // allocation failed, block not inserted
             return nullptr;
