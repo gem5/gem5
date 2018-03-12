@@ -81,3 +81,7 @@ class BRRIPRP(BaseReplacementPolicy):
 
 class RRIPRP(BRRIPRP):
     btp = 0
+
+class NRURP(BRRIPRP):
+    btp = 0
+    max_RRPV = 1
