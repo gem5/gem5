@@ -479,7 +479,6 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     // ARMv7 (ARM ARM issue C B1.9)
 
     bool have_security       = ArmSystem::haveSecurity(tc);
-    bool have_virtualization = ArmSystem::haveVirtualization(tc);
 
     FaultBase::invoke(tc);
     if (!FullSystem)
@@ -584,7 +583,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             setSyndrome(tc, MISCREG_HSR);
         break;
       case MODE_HYP:
-        assert(have_virtualization);
+        assert(ArmSystem::haveVirtualization(tc));
         tc->setMiscReg(MISCREG_SPSR_HYP, saved_cpsr);
         setSyndrome(tc, MISCREG_HSR);
         break;
