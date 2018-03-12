@@ -64,3 +64,6 @@ class BRRIPRP(BaseReplacementPolicy):
         "Prioritize evicting blocks that havent had a hit recently")
     btp = Param.Percent(3,
         "Percentage of blocks to be inserted with long RRPV")
+
+class RRIPRP(BRRIPRP):
+    btp = 0
