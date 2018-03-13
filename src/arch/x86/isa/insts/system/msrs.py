@@ -50,7 +50,7 @@ def macroop RDMSR
 
 def macroop WRMSR
 {
-    .serializing
+    .serialize_after
     mov t2, t2, rax, dataSize=4
     slli t3, rdx, 32, dataSize=8
     or t2, t2, t3, dataSize=8

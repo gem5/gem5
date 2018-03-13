@@ -37,12 +37,12 @@
 
 microcode = '''
 def macroop IRET_REAL {
-    .serializing
+    .serialize_after
     panic "Real mode iret isn't implemented!"
 };
 
 def macroop IRET_PROT {
-    .serializing
+    .serialize_after
     .adjust_env oszIn64Override
 
     # Check for a nested task. This isn't supported at the moment.

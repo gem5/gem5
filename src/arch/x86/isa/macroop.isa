@@ -144,8 +144,10 @@ let {{
             self.adjust_imm += val
         def adjustDisp(self, val):
             self.adjust_disp += val
-        def serializing(self):
-            self.serializing = True
+        def serializeBefore(self):
+            self.serialize_before = True
+        def serializeAfter(self):
+            self.serialize_after = True
 
         def function_call(self):
             self.function_call = True
@@ -158,7 +160,8 @@ let {{
                 "adjust_env" : self.setAdjustEnv,
                 "adjust_imm" : self.adjustImm,
                 "adjust_disp" : self.adjustDisp,
-                "serializing" : self.serializing,
+                "serialize_before" : self.serializeBefore,
+                "serialize_after" : self.serializeAfter,
                 "function_call" : self.function_call,
                 "function_return" : self.function_return
             }
@@ -175,7 +178,8 @@ let {{
                 //This is to pacify gcc in case the displacement isn't used.
                 adjustedDisp = adjustedDisp;
             '''
-            self.serializing = False
+            self.serialize_before = False
+            self.serialize_after = False
             self.function_call = False
             self.function_return = False
 
@@ -206,10 +210,17 @@ let {{
             micropc = 0
             for op in self.microops:
                 flags = ["IsMicroop"]
+                if micropc == 0:
+                    flags.append("IsFirstMicroop")
+
+                    if self.serialize_before:
+                        flags.append("IsSerializing")
+                        flags.append("IsSerializeBefore")
+
                 if micropc == numMicroops - 1:
                     flags.append("IsLastMicroop")
 
-                    if self.serializing:
+                    if self.serialize_after:
                         flags.append("IsSerializing")
                         flags.append("IsSerializeAfter")
 
@@ -219,8 +230,7 @@ let {{
                         flags.append("IsReturn")
                 else:
                     flags.append("IsDelayedCommit")
-                if micropc == 0:
-                    flags.append("IsFirstMicroop")
+
                 allocMicroops += \
                     "microops[%d] = %s;\n" % \
                     (micropc, op.getAllocator(flags))

@@ -40,12 +40,12 @@
 
 microcode = '''
 def macroop INVLPG_M {
-    .serializing
+    .serialize_after
     tia seg, sib, disp
 };
 
 def macroop INVLPG_P {
-    .serializing
+    .serialize_after
     rdip t7
     tia seg, riprel, disp
 };
