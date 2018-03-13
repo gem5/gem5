@@ -60,6 +60,7 @@ def macroop WRMSR
 
 def macroop RDTSC
 {
+    .serialize_before
     rdtsc t1
     mov rax, rax, t1, dataSize=4
     srli t1, t1, 32, dataSize=8
