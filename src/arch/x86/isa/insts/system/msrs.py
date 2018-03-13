@@ -66,4 +66,15 @@ def macroop RDTSC
     srli t1, t1, 32, dataSize=8
     mov rdx, rdx, t1, dataSize=4
 };
+
+def macroop RDTSCP
+{
+    .serialize_before
+    mfence
+    rdtsc t1
+    mov rax, rax, t1, dataSize=4
+    srli t1, t1, 32, dataSize=8
+    mov rdx, rdx, t1, dataSize=4
+    rdval rcx, "InstRegIndex(MISCREG_TSC_AUX)", dataSize=4
+};
 '''
