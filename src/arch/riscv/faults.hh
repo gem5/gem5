@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2016 RISC-V Foundation
  * Copyright (c) 2016 The University of Virginia
+ * Copyright (c) 2018 TU Dresden
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Alec Roelke
+ *          Robert Scheffel
  */
 
 #ifndef __ARCH_RISCV_FAULTS_HH__
@@ -104,6 +106,27 @@ class RiscvFault : public FaultBase
     invoke(ThreadContext *tc, const StaticInstPtr &inst);
 };
 
+class Reset : public FaultBase
+{
+
+    public:
+        Reset()
+            : _name("reset")
+        {}
+
+        FaultName
+        name() const override
+        {
+            return _name;
+        }
+
+        void
+        invoke(ThreadContext *tc, const StaticInstPtr &inst =
+            StaticInst::nullStaticInstPtr) override;
+
+    private:
+        const FaultName _name;
+};
 
 class UnknownInstFault : public RiscvFault
 {

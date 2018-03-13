@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2016 RISC-V Foundation
  * Copyright (c) 2016 The University of Virginia
+ * Copyright (c) 2018 TU Dresden
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,10 +28,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Alec Roelke
+ *          Robert Scheffel
  */
 #include "arch/riscv/faults.hh"
 
+#include "arch/riscv/system.hh"
 #include "arch/riscv/utility.hh"
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "sim/debug.hh"
 #include "sim/full_system.hh"
@@ -54,6 +58,18 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         advancePC(pcState, inst);
         tc->pcState(pcState);
     }
+}
+
+void Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+{
+    if (FullSystem) {
+        tc->getCpuPtr()->clearInterrupts(tc->threadId());
+        tc->clearArchRegs();
+    }
+
+    // Advance the PC to the implementation-defined reset vector
+    PCState pc = static_cast<RiscvSystem *>(tc->getSystemPtr())->resetVect();
+    tc->pcState(pc);
 }
 
 void

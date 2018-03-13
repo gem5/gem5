@@ -41,6 +41,7 @@
 #include "arch/riscv/faults.hh"
 #include "arch/riscv/pagetable.hh"
 #include "arch/riscv/pra_constants.hh"
+#include "arch/riscv/system.hh"
 #include "arch/riscv/utility.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
@@ -285,42 +286,82 @@ TLB::regStats()
 Fault
 TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
 {
-    if (FullSystem)
-        panic("translateInst not implemented in RISC-V.\n");
+    if (FullSystem) {
+        /**
+         * check if we simulate a bare metal system
+         * if so, we have no tlb, phys addr == virt addr
+         */
+        if (static_cast<RiscvSystem *>(tc->getSystemPtr())->isBareMetal())
+            req->setFlags(Request::PHYSICAL);
 
-    Process * p = tc->getProcessPtr();
+        if (req->getFlags() & Request::PHYSICAL) {
+            /**
+             * we simply set the virtual address to physical address
+             */
+            req->setPaddr(req->getVaddr());
+            return checkCacheability(req);
+        } else {
+            /**
+             * as we currently support bare metal only, we throw a panic,
+             * if it is not a bare metal system
+             */
+            panic("translateInst not implemented in RISC-V.\n");
+        }
+    } else {
+        Process * p = tc->getProcessPtr();
 
-    Fault fault = p->pTable->translate(req);
-    if (fault != NoFault)
-        return fault;
+        Fault fault = p->pTable->translate(req);
+        if (fault != NoFault)
+            return fault;
 
-    return NoFault;
+        return NoFault;
+    }
 }
 
 Fault
 TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
 {
-    if (FullSystem)
-        panic("translateData not implemented in RISC-V.\n");
+    if (FullSystem) {
+        /**
+         * check if we simulate a bare metal system
+         * if so, we have no tlb, phys addr == virt addr
+         */
+        if (static_cast<RiscvSystem *>(tc->getSystemPtr())->isBareMetal())
+            req->setFlags(Request::PHYSICAL);
 
-    // In the O3 CPU model, sometimes a memory access will be speculatively
-    // executed along a branch that will end up not being taken where the
-    // address is invalid.  In that case, return a fault rather than trying
-    // to translate it (which will cause a panic).  Since RISC-V allows
-    // unaligned memory accesses, this should only happen if the request's
-    // length is long enough to wrap around from the end of the memory to the
-    // start.
-    assert(req->getSize() > 0);
-    if (req->getVaddr() + req->getSize() - 1 < req->getVaddr())
-        return make_shared<GenericPageTableFault>(req->getVaddr());
+        if (req->getFlags() & Request::PHYSICAL) {
+            /**
+             * we simply set the virtual address to physical address
+             */
+            req->setPaddr(req->getVaddr());
+            return checkCacheability(req);
+        } else {
+            /**
+             * as we currently support bare metal only, we throw a panic,
+             * if it is not a bare metal system
+             */
+            panic("translateData not implemented in RISC-V.\n");
+        }
+    } else {
+        // In the O3 CPU model, sometimes a memory access will be speculatively
+        // executed along a branch that will end up not being taken where the
+        // address is invalid.  In that case, return a fault rather than trying
+        // to translate it (which will cause a panic).  Since RISC-V allows
+        // unaligned memory accesses, this should only happen if the request's
+        // length is long enough to wrap around from the end of the memory to
+        // the start.
+        assert(req->getSize() > 0);
+        if (req->getVaddr() + req->getSize() - 1 < req->getVaddr())
+            return make_shared<GenericPageTableFault>(req->getVaddr());
 
-    Process * p = tc->getProcessPtr();
+        Process * p = tc->getProcessPtr();
 
-    Fault fault = p->pTable->translate(req);
-    if (fault != NoFault)
-        return fault;
+        Fault fault = p->pTable->translate(req);
+        if (fault != NoFault)
+            return fault;
 
-    return NoFault;
+        return NoFault;
+    }
 }
 
 Fault

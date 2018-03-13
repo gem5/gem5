@@ -28,10 +28,23 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Alec Roelke
+#          Robert Scheffel
 
+from m5.params import *
 from System import System
+
 
 class RiscvSystem(System):
     type = 'RiscvSystem'
     cxx_header = 'arch/riscv/system.hh'
+    bare_metal = Param.Bool(False, "Using Bare Metal Application?")
+    reset_vect = Param.Addr(0x0, 'Reset vector')
     load_addr_mask = 0xFFFFFFFFFFFFFFFF
+
+
+class BareMetalRiscvSystem(RiscvSystem):
+    type = 'BareMetalRiscvSystem'
+    cxx_header = 'arch/riscv/bare_metal/system.hh'
+    bootloader = Param.String("File, that contains the bootloader code")
+
+    bare_metal = True

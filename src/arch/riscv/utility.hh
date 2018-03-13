@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2013 ARM Limited
  * Copyright (c) 2014-2015 Sven Karlsson
+ * Copyright (c) 2018 TU Dresden
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,6 +42,7 @@
  * Authors: Andreas Hansson
  *          Sven Karlsson
  *          Alec Roelke
+ *          Robert Scheffel
  */
 
 #ifndef __ARCH_RISCV_UTILITY_HH__
@@ -117,6 +119,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 
 inline void startupCPU(ThreadContext *tc, int cpuId)
 {
+    tc->activate();
 }
 
 inline void
@@ -183,11 +186,10 @@ getExecutingAsid(ThreadContext *tc)
     return 0;
 }
 
-inline void
-initCPU(ThreadContext *, int cpuId)
-{
-    panic("initCPU not implemented for Riscv.\n");
-}
+/**
+ * init Cpu function
+ */
+void initCPU(ThreadContext *tc, int cpuId);
 
 } // namespace RiscvISA
 

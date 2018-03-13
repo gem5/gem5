@@ -32,6 +32,7 @@
 #define __ARCH_RISCV_INTERRUPT_HH__
 
 #include "base/logging.hh"
+#include "cpu/thread_context.hh"
 #include "params/RiscvInterrupts.hh"
 #include "sim/sim_object.hh"
 
@@ -78,13 +79,23 @@ class Interrupts : public SimObject
     void
     clearAll()
     {
-        panic("Interrupts::clearAll not implemented.\n");
+        warn_once("Interrupts::clearAll not implemented.\n");
     }
 
     bool
     checkInterrupts(ThreadContext *tc) const
     {
-        panic("Interrupts::checkInterrupts not implemented.\n");
+        warn_once("Interrupts::checkInterrupts just rudimentary implemented");
+        /**
+         * read the machine interrupt register in order to check if interrupts
+         * are pending
+         * should be sufficient for now, as interrupts
+         * are not implemented at all
+         */
+        if (tc->readMiscReg(MISCREG_IP))
+            return true;
+
+        return false;
     }
 
     Fault

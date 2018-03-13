@@ -57,9 +57,12 @@ if env['TARGET_ISA'] == 'riscv':
     Source('stacktrace.cc')
     Source('tlb.cc')
     Source('system.cc')
+    Source('utility.cc')
 
     Source('linux/process.cc')
     Source('linux/linux.cc')
+
+    Source('bare_metal/system.cc')
 
     SimObject('RiscvInterrupts.py')
     SimObject('RiscvISA.py')
