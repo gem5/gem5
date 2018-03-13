@@ -336,7 +336,8 @@ let {{
             eCode = '''
                 //input data from scratch area
                 VReg input[4] = { {0, 0}, {0, 0}, {0, 0}, {0, 0} };
-                VReg output[2];  //output data to arch. SIMD regs
+                //output data to arch. SIMD regs
+                VReg output[2] = { {0, 0}, {0, 0} };
             '''
 
             eCode += getInputCodeOp1L
