@@ -33,6 +33,8 @@
 #  Author: Brad Beckmann
 #
 
+from __future__ import print_function
+
 import m5
 from m5.objects import *
 from m5.defines import buildEnv
@@ -77,7 +79,7 @@ def run_test(root):
 
     # simulate until program terminates
     exit_event = m5.simulate(maxtick)
-    print 'Exiting @ tick', m5.curTick(), 'because', exit_event.getCause()
+    print('Exiting @ tick', m5.curTick(), 'because', exit_event.getCause())
 
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)

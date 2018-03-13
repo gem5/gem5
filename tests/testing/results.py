@@ -37,6 +37,8 @@
 #
 # Authors: Andreas Sandberg
 
+from __future__ import print_function
+
 from abc import ABCMeta, abstractmethod
 import inspect
 import pickle
@@ -173,21 +175,21 @@ class Text(ResultFormatter):
     def dump_suites(self, suites):
         fout = self.fout
         for suite in suites:
-            print >> fout, "--- %s ---" % suite.name
+            print("--- %s ---" % suite.name, file=fout)
 
             for t in suite.results:
-                print >> fout, "*** %s" % t
+                print("*** %s" % t, file=fout)
 
                 if t and not self.verbose:
                     continue
 
                 if t.message:
-                    print >> fout, t.message
+                    print(t.message, file=fout)
 
                 if t.stderr:
-                    print >> fout, t.stderr
+                    print(t.stderr, file=fout)
                 if t.stdout:
-                    print >> fout, t.stdout
+                    print(t.stdout, file=fout)
 
 class TextSummary(ResultFormatter):
     """Output test results as a text summary"""
@@ -209,7 +211,7 @@ class TextSummary(ResultFormatter):
         fout = self.fout
         for suite in suites:
             status = self.test_status(suite)
-            print >> fout, "%s: %s" % (suite.name, status)
+            print("%s: %s" % (suite.name, status), file=fout)
 
 class JUnit(ResultFormatter):
     """Output test results as JUnit XML"""
