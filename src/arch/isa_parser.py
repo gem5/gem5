@@ -1565,6 +1565,9 @@ class ISAParser(Grammar):
         # decoder method - cannot be split
         file = 'decoder.cc'
         with self.open(file) as f:
+            fn = 'base/compiler.hh'
+            f.write('#include "%s"\n' % fn)
+
             fn = 'decoder-g.cc.inc'
             assert(fn in self.files)
             f.write('#include "%s"\n' % fn)
@@ -2206,7 +2209,8 @@ StaticInstPtr
         codeObj = t[3]
         # just wrap the decoding code from the block as a case in the
         # outer switch statement.
-        codeObj.wrap_decode_block('\n%s\n' % ''.join(case_list))
+        codeObj.wrap_decode_block('\n%s\n' % ''.join(case_list),
+                                  'M5_UNREACHABLE;\n')
         codeObj.has_decode_default = (case_list == ['default:'])
         t[0] = codeObj
 

@@ -1897,6 +1897,7 @@ namespace Aarch64
                         return new Unknown64(machInst);
                     }
                 }
+                M5_UNREACHABLE;
               case 0x1:
               {
                 if (bits(machInst, 31) ||
@@ -2005,7 +2006,7 @@ namespace Aarch64
                 M5_UNREACHABLE;
             }
         }
-        return new FailUnimplemented("Unhandled Case4", machInst);
+        M5_UNREACHABLE;
     }
 }
 }};
