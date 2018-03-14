@@ -64,3 +64,14 @@ class TarmacParser(InstTracer):
 
     ignore_mem_addr = Param.AddrRange(AddrRange(0, size=0),
         "Range of unverifiable memory addresses")
+
+class TarmacTracer(InstTracer):
+    type = 'TarmacTracer'
+    cxx_class = 'Trace::TarmacTracer'
+    cxx_header = "arch/arm/tracers/tarmac_tracer.hh"
+
+    start_tick = Param.Tick(0,
+        "tracing starts when the tick time gets this value")
+
+    end_tick = Param.Tick(MaxTick,
+        "tracing ends when the tick time gets this value")

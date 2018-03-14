@@ -42,3 +42,6 @@ if env['TARGET_ISA'] == 'arm':
     SimObject('TarmacTrace.py')
     Source('tarmac_base.cc')
     Source('tarmac_parser.cc')
+    Source('tarmac_tracer.cc')
+    Source('tarmac_record.cc')
+    Source('tarmac_record_v8.cc')
