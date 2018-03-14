@@ -160,7 +160,7 @@ PngWriter::write(std::ostream &png) const
     // libpng requires an array of pointers to the frame buffer's rows.
     std::vector<PixelType> rowPacked(width);
     for (unsigned y=0; y < height; ++y) {
-        for (unsigned x=0; x < height; ++x) {
+        for (unsigned x=0; x < width; ++x) {
             rowPacked[x] = fb.pixel(x, y);
         }
 
