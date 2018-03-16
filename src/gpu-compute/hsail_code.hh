@@ -245,11 +245,9 @@ class StorageSpace
     DirVarToSE_map elements_by_brigptr;
 
     uint64_t nextOffset;
-    Brig::BrigSegment segment;
 
   public:
-    StorageSpace(Brig::BrigSegment _class)
-        : nextOffset(0), segment(_class)
+    StorageSpace(Brig::BrigSegment _class) : nextOffset(0)
     {
     }
 
