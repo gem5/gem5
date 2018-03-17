@@ -179,23 +179,30 @@ MSHR::TargetList::replaceUpgrades()
 
 
 void
-MSHR::TargetList::clearDownstreamPending()
+MSHR::TargetList::clearDownstreamPending(MSHR::TargetList::iterator begin,
+                                         MSHR::TargetList::iterator end)
 {
-    for (auto& t : *this) {
-        if (t.markedPending) {
+    for (auto t = begin; t != end; t++) {
+        if (t->markedPending) {
             // Iterate over the SenderState stack and see if we find
             // an MSHR entry. If we find one, clear the
             // downstreamPending flag by calling
             // clearDownstreamPending(). This recursively clears the
             // downstreamPending flag in all caches this packet has
             // passed through.
-            MSHR *mshr = t.pkt->findNextSenderState<MSHR>();
+            MSHR *mshr = t->pkt->findNextSenderState<MSHR>();
             if (mshr != nullptr) {
                 mshr->clearDownstreamPending();
             }
-            t.markedPending = false;
+            t->markedPending = false;
         }
     }
+}
+
+void
+MSHR::TargetList::clearDownstreamPending()
+{
+    clearDownstreamPending(begin(), end());
 }
 
 

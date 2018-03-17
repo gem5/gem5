@@ -234,6 +234,7 @@ class MSHR : public QueueEntry, public Printable
         void replaceUpgrades();
 
         void clearDownstreamPending();
+        void clearDownstreamPending(iterator begin, iterator end);
         bool checkFunctional(PacketPtr pkt);
         void print(std::ostream &os, int verbosity,
                    const std::string &prefix) const;
