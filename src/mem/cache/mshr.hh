@@ -385,6 +385,13 @@ class MSHR : public QueueEntry, public Printable
 
     bool promoteDeferredTargets();
 
+    /**
+     * Promotes deferred targets that do not require writable
+     *
+     * Requests in the deferred target list are moved to the target
+     * list up until the first target that is a cache maintenance
+     * operation or needs a writable copy of the block
+     */
     void promoteWritable();
 
     bool checkFunctional(PacketPtr pkt);

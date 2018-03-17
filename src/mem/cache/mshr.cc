@@ -566,10 +566,20 @@ MSHR::promoteWritable()
         // if any of the deferred targets were upper-level cache
         // requests marked downstreamPending, need to clear that
         assert(!downstreamPending);  // not pending here anymore
-        deferredTargets.clearDownstreamPending();
-        // this clears out deferredTargets too
-        targets.splice(targets.end(), deferredTargets);
-        deferredTargets.resetFlags();
+
+        auto last_it = std::find_if(
+            deferredTargets.begin(), deferredTargets.end(),
+            [](MSHR::Target &t) {
+                assert(t.source == Target::FromCPU);
+                return t.pkt->req->isCacheInvalidate();
+            });
+        deferredTargets.clearDownstreamPending(deferredTargets.begin(),
+                                               last_it);
+        targets.splice(targets.end(), deferredTargets,
+                       deferredTargets.begin(), last_it);
+        // We need to update the flags for the target lists after the
+        // modifications
+        deferredTargets.populateFlags();
     }
 }
 
