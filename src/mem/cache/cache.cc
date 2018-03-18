@@ -674,8 +674,6 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk,
     const int initial_offset = initial_tgt->pkt->getOffset(blkSize);
 
     const bool is_error = pkt->isError();
-    bool is_fill = !mshr->isForward &&
-        (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp);
     // allow invalidation responses originating from write-line
     // requests to be discarded
     bool is_invalidate = pkt->isInvalidate();
@@ -716,13 +714,11 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk,
                                  targets.allocOnFill);
                 assert(blk);
 
-                // treat as a fill, and discard the invalidation
-                // response
-                is_fill = true;
+                // discard the invalidation response
                 is_invalidate = false;
             }
 
-            if (is_fill) {
+            if (blk && blk->isValid() && !mshr->isForward) {
                 satisfyRequest(tgt_pkt, blk, true, mshr->hasPostDowngrade());
 
                 // How many bytes past the first request is this one

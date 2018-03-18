@@ -491,6 +491,12 @@ BaseCache::recvTimingResp(PacketPtr pkt)
         // The block was marked not readable while there was a pending
         // cache maintenance operation, restore its flag.
         blk->status |= BlkReadable;
+
+        // This was a cache clean operation (without invalidate)
+        // and we have a copy of the block already. Since there
+        // is no invalidation, we can promote targets that don't
+        // require a writable copy
+        mshr->promoteReadable();
     }
 
     if (blk && blk->isWritable() && !pkt->req->isCacheInvalidate()) {
@@ -887,6 +893,8 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
             pkt->setCacheResponding();
             blk->status &= ~BlkDirty;
         }
+    } else if (pkt->isClean()) {
+        blk->status &= ~BlkDirty;
     } else {
         assert(pkt->isInvalidate());
         invalidateBlock(blk);
