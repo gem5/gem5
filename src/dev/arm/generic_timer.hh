@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015, 2017 ARM Limited
+ * Copyright (c) 2013, 2015, 2017-2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -318,12 +318,8 @@ class GenericTimerISA : public ArmISA::BaseISADevice
     GenericTimerISA(GenericTimer &_parent, unsigned _cpu)
         : parent(_parent), cpu(_cpu) {}
 
-    void setMiscReg(int misc_reg, ArmISA::MiscReg val) override {
-        parent.setMiscReg(misc_reg, cpu, val);
-    }
-    ArmISA::MiscReg readMiscReg(int misc_reg) override {
-        return parent.readMiscReg(misc_reg, cpu);
-    }
+    void setMiscReg(int misc_reg, ArmISA::MiscReg val) override;
+    ArmISA::MiscReg readMiscReg(int misc_reg) override;
 
   protected:
     GenericTimer &parent;

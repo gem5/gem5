@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015, 2017 ARM Limited
+ * Copyright (c) 2013, 2015, 2017-2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -521,6 +521,20 @@ GenericTimer::readMiscReg(int reg, unsigned cpu)
 }
 
 
+void
+GenericTimerISA::setMiscReg(int reg, MiscReg val)
+{
+    DPRINTF(Timer, "Setting %s := 0x%x\n", miscRegName[reg], val);
+    parent.setMiscReg(reg, cpu, val);
+}
+
+MiscReg
+GenericTimerISA::readMiscReg(int reg)
+{
+    MiscReg value = parent.readMiscReg(reg, cpu);
+    DPRINTF(Timer, "Reading %s as 0x%x\n", miscRegName[reg], value);
+    return value;
+}
 
 GenericTimerMem::GenericTimerMem(GenericTimerMemParams *p)
     : PioDevice(p),
