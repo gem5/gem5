@@ -80,10 +80,12 @@ FALRU::FALRU(const Params *p)
     head->prev = nullptr;
     head->next = &(blks[1]);
     head->inCache = cacheMask;
+    head->data = &dataBlks[0];
 
     tail->prev = &(blks[numBlocks-2]);
     tail->next = nullptr;
     tail->inCache = 0;
+    tail->data = &dataBlks[(numBlocks-1)*blkSize];
 
     unsigned index = (1 << 17) / blkSize;
     unsigned j = 0;
@@ -100,6 +102,9 @@ FALRU::FALRU(const Params *p)
         blks[i].next = &(blks[i+1]);
         blks[i].set = 0;
         blks[i].way = i;
+
+        // Associate a data chunk to the block
+        blks[i].data = &dataBlks[blkSize*i];
     }
     assert(j == numCaches);
     assert(index == numBlocks);

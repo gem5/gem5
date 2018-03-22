@@ -76,7 +76,6 @@ class BaseSetAssoc : public BaseTags
     /** Typedef the set type used in this tag store. */
     typedef CacheSet<CacheBlk> SetType;
 
-
   protected:
     /** The associativity of the cache. */
     const unsigned assoc;
@@ -85,8 +84,6 @@ class BaseSetAssoc : public BaseTags
 
     /** The cache blocks. */
     std::vector<BlkType> blks;
-    /** The data blocks, 1 per cache block. */
-    std::unique_ptr<uint8_t[]> dataBlks;
 
     /** The number of sets in the cache. */
     const unsigned numSets;

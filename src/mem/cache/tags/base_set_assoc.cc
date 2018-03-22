@@ -57,7 +57,6 @@ using namespace std;
 BaseSetAssoc::BaseSetAssoc(const Params *p)
     :BaseTags(p), assoc(p->assoc), allocAssoc(p->assoc),
      blks(p->size / p->block_size),
-     dataBlks(new uint8_t[p->size]), // Allocate data storage in one big chunk
      numSets(p->size / (p->block_size * p->assoc)),
      sequentialAccess(p->sequential_access),
      sets(p->size / (p->block_size * p->assoc)),

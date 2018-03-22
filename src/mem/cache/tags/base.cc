@@ -63,7 +63,8 @@ BaseTags::BaseTags(const Params *p)
                     std::max(p->tag_latency, p->data_latency)),
       cache(nullptr),
       warmupBound((p->warmup_percentage/100.0) * (p->size / p->block_size)),
-      warmedUp(false), numBlocks(p->size / p->block_size)
+      warmedUp(false), numBlocks(p->size / p->block_size),
+      dataBlks(new uint8_t[p->size]) // Allocate data storage in one big chunk
 {
 }
 
