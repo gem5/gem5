@@ -30,49 +30,64 @@
 
 /**
  * @file
- * Declaration of a First In First Out replacement policy.
- * The victim is chosen using the timestamp. The oldest entry is always chosen
- * to be evicted, regardless of the amount of times it has been touched.
+ * Declaration of a Second-Chance replacement policy.
+ * The victim is chosen using the timestamp. The oldest entry is chosen
+ * to be evicted, if it hasn't been touched since its insertion. If it
+ * has been touched, it is given a second chance and re-inserted at the
+ * end of the queue.
  */
 
-#ifndef __MEM_CACHE_REPLACEMENT_POLICIES_FIFO_RP_HH__
-#define __MEM_CACHE_REPLACEMENT_POLICIES_FIFO_RP_HH__
+#ifndef __MEM_CACHE_REPLACEMENT_POLICIES_SECOND_CHANCE_RP_HH__
+#define __MEM_CACHE_REPLACEMENT_POLICIES_SECOND_CHANCE_RP_HH__
 
-#include "mem/cache/replacement_policies/base.hh"
-#include "params/FIFORP.hh"
+#include "mem/cache/replacement_policies/fifo_rp.hh"
+#include "params/SecondChanceRP.hh"
 
-class FIFORP : public BaseReplacementPolicy
+class SecondChanceRP : public FIFORP
 {
   protected:
-    /** FIFO-specific implementation of replacement data. */
-    struct FIFOReplData : ReplacementData
+    /** Second-Chance-specific implementation of replacement data. */
+    struct SecondChanceReplData : public FIFOReplData
     {
-        /** Tick on which the entry was inserted. */
-        Tick tickInserted;
+        /**
+         * This is different from isTouched because isTouched accounts only
+         * for insertion, while this bit is reset every new re-insertion.
+         * @sa SecondChanceRP.
+         */
+        bool hasSecondChance;
 
         /**
-         * Default constructor. Invalidate data.
+         * Default constructor.
          */
-        FIFOReplData() : tickInserted(0) {}
+        SecondChanceReplData() : FIFOReplData(), hasSecondChance(false) {}
     };
+
+    /**
+     * Use replacement data's second chance.
+     *
+     * @param replacement_data Entry that will use its second chance.
+     */
+    void useSecondChance(
+        const std::shared_ptr<SecondChanceReplData>& replacement_data) const;
 
   public:
     /** Convenience typedef. */
-    typedef FIFORPParams Params;
+    typedef SecondChanceRPParams Params;
 
     /**
      * Construct and initiliaze this replacement policy.
      */
-    FIFORP(const Params *p);
+    SecondChanceRP(const Params *p);
 
     /**
      * Destructor.
      */
-    ~FIFORP() {}
+    ~SecondChanceRP() {}
 
     /**
      * Invalidate replacement data to set it as the next probable victim.
-     * Reset insertion tick to 0.
+     * Invalid entries do not have a second chance, and their last touch tick
+     * is set as the oldest possible.
      *
      * @param replacement_data Replacement data to be invalidated.
      */
@@ -80,8 +95,7 @@ class FIFORP : public BaseReplacementPolicy
                                                               const override;
 
     /**
-     * Touch an entry to update its replacement data.
-     * Does not modify the replacement data.
+     * Touch an entry to update its re-insertion tick and second chance bit.
      *
      * @param replacement_data Replacement data to be touched.
      */
@@ -89,8 +103,9 @@ class FIFORP : public BaseReplacementPolicy
                                                                      override;
 
     /**
-     * Reset replacement data. Used when an entry is inserted.
-     * Sets its insertion tick.
+     * Reset replacement data. Used when an entry is inserted or re-inserted
+     * in the queue.
+     * Sets its insertion tick and second chance bit.
      *
      * @param replacement_data Replacement data to be reset.
      */
@@ -98,7 +113,8 @@ class FIFORP : public BaseReplacementPolicy
                                                                      override;
 
     /**
-     * Find replacement victim using insertion timestamps.
+     * Find replacement victim using insertion timestamps and second chance
+     * bit.
      *
      * @param cands Replacement candidates, selected by indexing policy.
      * @return Replacement entry to be replaced.
@@ -114,4 +130,4 @@ class FIFORP : public BaseReplacementPolicy
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
-#endif // __MEM_CACHE_REPLACEMENT_POLICIES_FIFO_RP_HH__
+#endif // __MEM_CACHE_REPLACEMENT_POLICIES_SECOND_CHANCE_RP_HH__
