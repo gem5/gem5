@@ -62,7 +62,7 @@ class LRURP : public BaseReplacementPolicy
      *
      * @param blk Cache block to be touched.
      */
-    void touch(CacheBlk *blk);
+    void touch(CacheBlk *blk) override;
 
     /**
      * Reset replacement data for a block. Used when a block is inserted.
@@ -70,7 +70,7 @@ class LRURP : public BaseReplacementPolicy
      *
      * @param blk Cache block to be reset.
      */
-    void reset(CacheBlk *blk);
+    void reset(CacheBlk *blk) override;
 
     /**
      * Find replacement victim using LRU timestamps.
