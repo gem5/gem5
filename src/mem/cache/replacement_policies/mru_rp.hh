@@ -77,7 +77,7 @@ class MRURP : public BaseReplacementPolicy
      * @param cands Replacement candidates, selected by indexing policy.
      * @return Cache block to be replaced.
      */
-    CacheBlk* getVictim(ReplacementCandidates& candidates) override;
+    CacheBlk* getVictim(const ReplacementCandidates& candidates) override;
 };
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_MRU_RP_HH__

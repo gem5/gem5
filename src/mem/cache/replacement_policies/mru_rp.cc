@@ -56,7 +56,7 @@ MRURP::reset(CacheBlk *blk)
 }
 
 CacheBlk*
-MRURP::getVictim(ReplacementCandidates& candidates)
+MRURP::getVictim(const ReplacementCandidates& candidates)
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
