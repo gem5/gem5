@@ -1005,7 +1005,7 @@ class VExpress_EMM64(VExpress_EMM):
         cur_sys.atags_addr = 0x8000000
         cur_sys.load_offset = 0x80000000
 
-class VExpress_GEM5_V1(RealView):
+class VExpress_GEM5_V1_Base(RealView):
     """
 The VExpress gem5 memory map is loosely based on a modified
 Versatile Express RS1 memory map.
@@ -1130,13 +1130,9 @@ Interrupts:
     generic_timer = GenericTimer(int_phys_s=29, int_phys_ns=30,
                                  int_virt=27, int_hyp=26)
 
-    hdlcd  = HDLcd(pxl_clk=dcc.osc_pxl,
-                   pio_addr=0x2b000000, int_num=95)
-
     def _on_chip_devices(self):
         return [
             self.gic, self.vgic, self.gicv2m,
-            self.hdlcd,
             self.generic_timer,
         ]
 
@@ -1201,7 +1197,7 @@ Interrupts:
 
     def generateDeviceTree(self, state):
         # Generate using standard RealView function
-        dt = list(super(VExpress_GEM5_V1, self).generateDeviceTree(state))
+        dt = list(super(VExpress_GEM5_V1_Base, self).generateDeviceTree(state))
         if len(dt) > 1:
             raise Exception("System returned too many DT nodes")
         node = dt[0]
@@ -1212,3 +1208,13 @@ Interrupts:
         node.append(FdtPropertyWords("arm,vexpress,site", [0xf]))
 
         yield node
+
+
+class VExpress_GEM5_V1(VExpress_GEM5_V1_Base):
+    hdlcd  = HDLcd(pxl_clk=VExpress_GEM5_V1_Base.dcc.osc_pxl,
+                   pio_addr=0x2b000000, int_num=95)
+
+    def _on_chip_devices(self):
+        return super(VExpress_GEM5_V1,self)._on_chip_devices() + [
+                self.hdlcd,
+            ]
