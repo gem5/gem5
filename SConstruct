@@ -478,10 +478,6 @@ if main['GCC']:
     main.Append(TCMALLOC_CCFLAGS=['-fno-builtin-malloc', '-fno-builtin-calloc',
                                   '-fno-builtin-realloc', '-fno-builtin-free'])
 
-    # add option to check for undeclared overrides
-    if compareVersions(gcc_version, "5.0") > 0:
-        main.Append(CCFLAGS=['-Wno-error=suggest-override'])
-
     # The address sanitizer is available for gcc >= 4.8
     if GetOption('with_asan'):
         if GetOption('with_ubsan') and \
