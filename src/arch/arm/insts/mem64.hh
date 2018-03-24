@@ -56,7 +56,8 @@ class SysDC64 : public ArmStaticInst
         : ArmStaticInst(mnem, _machInst, __opClass), base(_base),
           dest((IntRegIndex)miscReg), imm(_imm)
     {}
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class MightBeMicro64 : public ArmStaticInst
@@ -113,7 +114,7 @@ class Memory64 : public MightBeMicro64
     }
 
     StaticInstPtr
-    fetchMicroop(MicroPC microPC) const
+    fetchMicroop(MicroPC microPC) const override
     {
         assert(uops != NULL && microPC < numMicroops);
         return uops[microPC];
@@ -136,7 +137,8 @@ class MemoryImm64 : public Memory64
         : Memory64(mnem, _machInst, __opClass, _dest, _base), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class MemoryDImm64 : public MemoryImm64
@@ -151,7 +153,8 @@ class MemoryDImm64 : public MemoryImm64
           dest2(_dest2)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class MemoryDImmEx64 : public MemoryDImm64
@@ -166,7 +169,8 @@ class MemoryDImmEx64 : public MemoryDImm64
                      _base, _imm), result(_result)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class MemoryPreIndex64 : public MemoryImm64
@@ -178,7 +182,8 @@ class MemoryPreIndex64 : public MemoryImm64
         : MemoryImm64(mnem, _machInst, __opClass, _dest, _base, _imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class MemoryPostIndex64 : public MemoryImm64
@@ -190,7 +195,8 @@ class MemoryPostIndex64 : public MemoryImm64
         : MemoryImm64(mnem, _machInst, __opClass, _dest, _base, _imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class MemoryReg64 : public Memory64
@@ -208,7 +214,8 @@ class MemoryReg64 : public Memory64
           offset(_offset), type(_type), shiftAmt(_shiftAmt)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class MemoryRaw64 : public Memory64
@@ -219,7 +226,8 @@ class MemoryRaw64 : public Memory64
         : Memory64(mnem, _machInst, __opClass, _dest, _base)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class MemoryEx64 : public Memory64
@@ -233,7 +241,8 @@ class MemoryEx64 : public Memory64
         : Memory64(mnem, _machInst, __opClass, _dest, _base), result(_result)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class MemoryLiteral64 : public Memory64
@@ -246,7 +255,8 @@ class MemoryLiteral64 : public Memory64
         : Memory64(mnem, _machInst, __opClass, _dest, INTREG_ZERO), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 }
 

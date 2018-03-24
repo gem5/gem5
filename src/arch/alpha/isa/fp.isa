@@ -126,8 +126,8 @@ output header {{
 
         // This differs from the AlphaStaticInst version only in
         // printing suffixes for non-default rounding & trapping modes.
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
     };
 
 }};

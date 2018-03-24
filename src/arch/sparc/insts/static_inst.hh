@@ -90,7 +90,8 @@ class SparcStaticInst : public StaticInst
   protected:
     using StaticInst::StaticInst;
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 
     static void printMnemonic(std::ostream &os, const char *mnemonic);
     static void printReg(std::ostream &os, RegId reg);
@@ -101,7 +102,7 @@ class SparcStaticInst : public StaticInst
     void printRegArray(std::ostream &os,
         const RegId indexArray[], int num) const;
 
-    void advancePC(PCState &pcState) const;
+    void advancePC(PCState &pcState) const override;
 
     static bool passesFpCondition(uint32_t fcc, uint32_t condition);
     static bool passesCondition(uint32_t codes, uint32_t condition);

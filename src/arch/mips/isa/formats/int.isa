@@ -48,7 +48,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
 
@@ -62,7 +63,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
         class HiLoRsSelOp: public HiLoOp
@@ -75,7 +77,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
         class HiLoRdSelOp: public HiLoOp
@@ -88,7 +91,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
         class HiLoRdSelValOp: public HiLoOp
@@ -101,7 +105,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
         class IntImmOp : public MipsStaticInst
@@ -124,9 +129,8 @@ output header {{
                     }
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-
-
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
 }};

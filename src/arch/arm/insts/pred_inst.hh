@@ -223,7 +223,8 @@ class PredImmOp : public PredOp
             rotated_carry = bits(rotated_imm, 31);
     }
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**
@@ -243,7 +244,8 @@ class PredIntOp : public PredOp
     {
     }
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class DataImmOp : public PredOp
@@ -261,7 +263,8 @@ class DataImmOp : public PredOp
         dest(_dest), op1(_op1), imm(_imm), rotC(_rotC)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class DataRegOp : public PredOp
@@ -279,7 +282,8 @@ class DataRegOp : public PredOp
         shiftAmt(_shiftAmt), shiftType(_shiftType)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class DataRegRegOp : public PredOp
@@ -296,7 +300,8 @@ class DataRegRegOp : public PredOp
         shiftType(_shiftType)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**
@@ -327,19 +332,20 @@ class PredMacroOp : public PredOp
     }
 
     StaticInstPtr
-    fetchMicroop(MicroPC microPC) const
+    fetchMicroop(MicroPC microPC) const override
     {
         assert(microPC < numMicroops);
         return microOps[microPC];
     }
 
     Fault
-    execute(ExecContext *, Trace::InstRecord *) const
+    execute(ExecContext *, Trace::InstRecord *) const override
     {
         panic("Execute method called when it shouldn't!");
     }
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**

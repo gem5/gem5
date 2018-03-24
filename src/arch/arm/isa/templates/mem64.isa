@@ -259,12 +259,14 @@ def template DCStore64Declare {{
         %(class_name)s(ExtMachInst machInst, IntRegIndex _base,
                        MiscRegIndex _dest, uint64_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
 
-        virtual void
-        annotateFault(ArmFault *fault) {
+        void
+        annotateFault(ArmFault *fault) override
+        {
             %(fa_code)s
         }
     };
@@ -342,12 +344,14 @@ def template LoadStoreImm64Declare {{
         %(class_name)s(ExtMachInst machInst,
                 IntRegIndex _dest, IntRegIndex _base, int64_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
 
-        virtual void
-        annotateFault(ArmFault *fault) {
+        void
+        annotateFault(ArmFault *fault) override
+        {
             %(fa_code)s
         }
     };
@@ -364,12 +368,14 @@ def template LoadStoreImmU64Declare {{
                 bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
 
-        virtual void
-        annotateFault(ArmFault *fault) {
+        void
+        annotateFault(ArmFault *fault) override
+        {
             %(fa_code)s
         }
     };
@@ -386,12 +392,14 @@ def template LoadStoreImmDU64Declare {{
                 int64_t _imm = 0, bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
 
-        virtual void
-        annotateFault(ArmFault *fault) {
+        void
+        annotateFault(ArmFault *fault) override
+        {
             %(fa_code)s
         }
     };
@@ -410,9 +418,10 @@ def template StoreImmDEx64Declare {{
                 IntRegIndex _result, IntRegIndex _dest, IntRegIndex _dest2,
                 IntRegIndex _base, int64_t _imm = 0);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
     };
 }};
 
@@ -427,12 +436,14 @@ def template LoadStoreReg64Declare {{
                 IntRegIndex _dest, IntRegIndex _base, IntRegIndex _offset,
                 ArmExtendType _type, uint32_t _shiftAmt);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
 
-        virtual void
-        annotateFault(ArmFault *fault) {
+        void
+        annotateFault(ArmFault *fault) override
+        {
             %(fa_code)s
         }
     };
@@ -450,12 +461,14 @@ def template LoadStoreRegU64Declare {{
                 bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
 
-        virtual void
-        annotateFault(ArmFault *fault) {
+        void
+        annotateFault(ArmFault *fault) override
+        {
             %(fa_code)s
         }
     };
@@ -470,12 +483,14 @@ def template LoadStoreRaw64Declare {{
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                        IntRegIndex _base);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
 
-        virtual void
-        annotateFault(ArmFault *fault) {
+        void
+        annotateFault(ArmFault *fault) override
+        {
             %(fa_code)s
         }
     };
@@ -490,12 +505,14 @@ def template LoadStoreEx64Declare {{
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                        IntRegIndex _base, IntRegIndex _result);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
 
-        virtual void
-        annotateFault(ArmFault *fault) {
+        void
+        annotateFault(ArmFault *fault) override
+        {
             %(fa_code)s
         }
     };
@@ -509,12 +526,14 @@ def template LoadStoreLit64Declare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest, int64_t _imm);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
 
-        virtual void
-        annotateFault(ArmFault *fault) {
+        void
+        annotateFault(ArmFault *fault) override
+        {
             %(fa_code)s
         }
     };
@@ -530,12 +549,14 @@ def template LoadStoreLitU64Declare {{
                 bool noAlloc = false, bool exclusive = false,
                 bool acrel = false);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
 
-        virtual void
-        annotateFault(ArmFault *fault) {
+        void
+        annotateFault(ArmFault *fault) override
+        {
             %(fa_code)s
         }
     };

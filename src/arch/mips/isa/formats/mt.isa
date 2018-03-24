@@ -47,7 +47,8 @@ output header {{
                 {
                 }
 
-               std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+               std::string generateDisassembly(
+                       Addr pc, const SymbolTable *symtab) const override;
 
                 bool user_mode;
         };
@@ -62,8 +63,6 @@ output header {{
                 {
                     user_mode = true;
                 }
-
-            //std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
         };
 }};
 

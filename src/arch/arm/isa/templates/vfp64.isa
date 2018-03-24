@@ -92,7 +92,7 @@ class %(class_name)s : public %(base_class)s
     %(class_name)s(ExtMachInst machInst,
                    IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _op2,
                    IntRegIndex _op3, VfpMicroMode mode = VfpNotAMicroop);
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 

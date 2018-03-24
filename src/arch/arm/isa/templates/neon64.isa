@@ -58,7 +58,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -79,7 +79,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -99,7 +99,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -119,7 +119,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -140,7 +140,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -160,7 +160,7 @@ class %(class_name)s : public %(base_class)s
         %(constructor)s;
     }
 
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -267,9 +267,10 @@ def template MicroNeonMemDeclare64 {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
     };
 }};
 
@@ -477,7 +478,7 @@ def template MicroNeonMixDeclare64 {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
@@ -496,7 +497,7 @@ def template MicroNeonMixLaneDeclare64 {{
             %(constructor)s;
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 

@@ -81,13 +81,14 @@ output header {{
         {
         }
 
-        AlphaISA::PCState branchTarget(const AlphaISA::PCState &branchPC) const;
+        AlphaISA::PCState branchTarget(
+                const AlphaISA::PCState &branchPC) const override;
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
     };
 
     /**
@@ -109,13 +110,13 @@ output header {{
         {
         }
 
-        AlphaISA::PCState branchTarget(ThreadContext *tc) const;
+        AlphaISA::PCState branchTarget(ThreadContext *tc) const override;
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
     };
 }};
 

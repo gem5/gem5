@@ -38,7 +38,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor.
     %(class_name)s(ExtMachInst machInst);
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -52,7 +52,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor.
     %(class_name)s(ExtMachInst machInst);
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
     Fault doFpOp(ExecContext *, Trace::InstRecord *) const M5_NO_INLINE;
 };
 }};
@@ -67,7 +67,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor.
     %(class_name)s(const char *mnemonic, ExtMachInst machInst);
-    Fault execute(ExecContext *, Trace::InstRecord *) const;
+    Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 

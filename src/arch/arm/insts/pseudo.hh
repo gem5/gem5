@@ -56,9 +56,11 @@ class DecoderFaultInst : public ArmStaticInst
   public:
     DecoderFaultInst(ExtMachInst _machInst);
 
-    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+    Fault execute(ExecContext *xc,
+                  Trace::InstRecord *traceData) const override;
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**
@@ -80,10 +82,11 @@ class FailUnimplemented : public ArmStaticInst
     FailUnimplemented(const char *_mnemonic, ExtMachInst _machInst,
                       const std::string& _fullMnemonic);
 
-    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+    Fault execute(ExecContext *xc,
+                  Trace::InstRecord *traceData) const override;
 
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**
@@ -109,10 +112,11 @@ class WarnUnimplemented : public ArmStaticInst
     WarnUnimplemented(const char *_mnemonic, ExtMachInst _machInst,
                       const std::string& _fullMnemonic);
 
-    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+    Fault execute(ExecContext *xc,
+                  Trace::InstRecord *traceData) const override;
 
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 /**
@@ -131,10 +135,11 @@ class McrMrcMiscInst : public ArmStaticInst
     McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
                    uint64_t _iss, MiscRegIndex _miscReg);
 
-    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+    Fault execute(ExecContext *xc,
+                  Trace::InstRecord *traceData) const override;
 
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 
 };
 
@@ -148,10 +153,11 @@ class McrMrcImplDefined : public McrMrcMiscInst
     McrMrcImplDefined(const char *_mnemonic, ExtMachInst _machInst,
                       uint64_t _iss, MiscRegIndex _miscReg);
 
-    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+    Fault execute(ExecContext *xc,
+                  Trace::InstRecord *traceData) const override;
 
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 
 };
 

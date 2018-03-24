@@ -47,7 +47,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
         class TrapImm : public MipsStaticInst
         {
@@ -61,9 +62,8 @@ output header {{
                 {
                 }
 
-                std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-
-
+                std::string generateDisassembly(
+                        Addr pc, const SymbolTable *symtab) const override;
         };
 
 }};

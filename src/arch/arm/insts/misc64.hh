@@ -52,7 +52,8 @@ class ImmOp64 : public ArmStaticInst
         ArmStaticInst(mnem, _machInst, __opClass), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class RegRegImmImmOp64 : public ArmStaticInst
@@ -70,7 +71,8 @@ class RegRegImmImmOp64 : public ArmStaticInst
         dest(_dest), op1(_op1), imm1(_imm1), imm2(_imm2)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class RegRegRegImmOp64 : public ArmStaticInst
@@ -88,7 +90,8 @@ class RegRegRegImmOp64 : public ArmStaticInst
         dest(_dest), op1(_op1), op2(_op2), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class UnknownOp64 : public ArmStaticInst
@@ -99,7 +102,8 @@ class UnknownOp64 : public ArmStaticInst
         ArmStaticInst(mnem, _machInst, __opClass)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class MiscRegRegImmOp64 : public ArmStaticInst
@@ -116,7 +120,8 @@ class MiscRegRegImmOp64 : public ArmStaticInst
         dest(_dest), op1(_op1), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 class RegMiscRegImmOp64 : public ArmStaticInst
@@ -133,7 +138,8 @@ class RegMiscRegImmOp64 : public ArmStaticInst
         dest(_dest), op1(_op1), imm(_imm)
     {}
 
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
 };
 
 #endif

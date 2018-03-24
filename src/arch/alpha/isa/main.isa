@@ -232,11 +232,11 @@ output header {{
         /// dependence tag number (FP or int).
         void printReg(std::ostream &os, RegId reg) const;
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
 
         void
-        advancePC(AlphaISA::PCState &pcState) const
+        advancePC(AlphaISA::PCState &pcState) const override
         {
             pcState.advance();
         }
@@ -263,8 +263,8 @@ output decoder {{
     }
 
     std::string
-    AlphaStaticInst::generateDisassembly(Addr pc,
-                                         const SymbolTable *symtab) const
+    AlphaStaticInst::generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const
     {
         std::stringstream ss;
 
@@ -304,7 +304,7 @@ def template BasicDeclare {{
         /// Constructor.
         %(class_name)s(ExtMachInst machInst);
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
@@ -383,10 +383,10 @@ output header {{
 
         ~Nop() { }
 
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 
     /// Helper function for decoding nops.  Substitute Nop object

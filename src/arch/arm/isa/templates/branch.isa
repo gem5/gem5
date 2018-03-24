@@ -43,7 +43,7 @@ class %(class_name)s : public %(base_class)s
     public:
         // Constructor
         %(class_name)s(ExtMachInst machInst, int32_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -72,8 +72,9 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst, int32_t _imm,
                        ConditionCode _condCode);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        ArmISA::PCState branchTarget(const ArmISA::PCState &branchPC) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        ArmISA::PCState branchTarget(
+                const ArmISA::PCState &branchPC) const override;
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;
@@ -105,7 +106,7 @@ class %(class_name)s : public %(base_class)s
     public:
         // Constructor
         %(class_name)s(ExtMachInst machInst, IntRegIndex _op1);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -135,7 +136,7 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst, IntRegIndex _op1,
                        ConditionCode _condCode);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -167,7 +168,7 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst,
                        IntRegIndex _op1, IntRegIndex _op2);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -178,9 +179,10 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst,
                        IntRegIndex _op1, IntRegIndex _op2);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
 };
 }};
 
@@ -209,8 +211,9 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst,
                        int32_t imm, IntRegIndex _op1);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        ArmISA::PCState branchTarget(const ArmISA::PCState &branchPC) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        ArmISA::PCState branchTarget(
+                const ArmISA::PCState &branchPC) const override;
 
         /// Explicitly import the otherwise hidden branchTarget
         using StaticInst::branchTarget;

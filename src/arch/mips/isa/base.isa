@@ -55,11 +55,12 @@ output header {{
         /// dependence tag number (FP or int).
         void printReg(std::ostream &os, RegId reg) const;
 
-        std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(
+                Addr pc, const SymbolTable *symtab) const override;
 
       public:
         void
-        advancePC(MipsISA::PCState &pc) const
+        advancePC(MipsISA::PCState &pc) const override
         {
             pc.advance();
         }

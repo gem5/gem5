@@ -57,7 +57,7 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                 IntRegIndex _op1, uint32_t _imm, bool _rotC=true);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -96,7 +96,7 @@ class %(class_name)s : public %(base_class)s
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                 IntRegIndex _op1, IntRegIndex _op2,
                 int32_t _shiftAmt, ArmShiftType _shiftType);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -141,7 +141,7 @@ class %(class_name)s : public %(base_class)s
         %(class_name)s(ExtMachInst machInst, IntRegIndex _dest,
                 IntRegIndex _op1, IntRegIndex _op2, IntRegIndex _shift,
                 ArmShiftType _shiftType);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 

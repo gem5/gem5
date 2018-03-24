@@ -43,7 +43,7 @@ class %(class_name)s : public %(base_class)s
     public:
         // Constructor
         %(class_name)s(ExtMachInst machInst, int64_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -63,7 +63,7 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst, int64_t _imm,
                        ConditionCode _condCode);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -84,7 +84,7 @@ class %(class_name)s : public %(base_class)s
     public:
         // Constructor
         %(class_name)s(ExtMachInst machInst, IntRegIndex _op1);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -104,7 +104,7 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst,
                        int64_t imm, IntRegIndex _op1);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 
@@ -125,7 +125,7 @@ class %(class_name)s : public %(base_class)s
         // Constructor
         %(class_name)s(ExtMachInst machInst, int64_t _imm1, int64_t _imm2,
                        IntRegIndex _op1);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
 };
 }};
 

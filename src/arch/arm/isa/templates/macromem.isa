@@ -53,9 +53,10 @@ def template MicroMemDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb, bool _up,
                        uint8_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
     };
 }};
 
@@ -85,9 +86,10 @@ def template MicroMemPairDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _dreg1, RegIndex _dreg2, RegIndex _base,
                        bool _up, uint8_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
     };
 }};
 
@@ -134,9 +136,10 @@ def template MicroNeonMemDeclare {{
             }
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
-        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
-        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          Trace::InstRecord *) const override;
     };
 }};
 
@@ -154,7 +157,7 @@ def template MicroSetPCCPSRDeclare {{
                        IntRegIndex _ura,
                        IntRegIndex _urb,
                        IntRegIndex _urc);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
@@ -189,7 +192,7 @@ def template MicroIntDeclare {{
       public:
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb, RegIndex _urc);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
@@ -251,7 +254,7 @@ def template MicroNeonMixDeclare {{
             }
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
@@ -304,7 +307,7 @@ def template MicroNeonMixLaneDeclare {{
             }
         }
 
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
@@ -319,7 +322,7 @@ def template MicroIntMovDeclare {{
       public:
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 def template MicroIntMovConstructor {{
@@ -350,7 +353,7 @@ def template MicroIntImmDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb,
                        int32_t _imm);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
@@ -390,7 +393,7 @@ def template MicroIntRegDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb, RegIndex _urc,
                        int32_t _shiftAmt, ArmShiftType _shiftType);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
@@ -412,7 +415,7 @@ def template MicroIntXERegDeclare {{
         %(class_name)s(ExtMachInst machInst,
                        RegIndex _ura, RegIndex _urb, RegIndex _urc,
                        ArmExtendType _type, uint32_t _shiftAmt);
-        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault execute(ExecContext *, Trace::InstRecord *) const override;
     };
 }};
 
