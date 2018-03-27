@@ -2387,6 +2387,11 @@ ISA::initializeMiscRegMetadata()
     if (completed)
         return;
 
+    // This boolean variable specifies if the system is running in aarch32 at
+    // EL3 (aarch32EL3 = true). It is false if EL3 is not implemented, or it
+    // is running in aarch64 (aarch32EL3 = false)
+    bool aarch32EL3 = haveSecurity && !highestELIs64;
+
     /**
      * Some registers alias with others, and therefore need to be translated.
      * When two mapping registers are given, they are the 32b lower and
@@ -2449,6 +2454,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_PRRR_MAIR0_NS)
       .mutex()
+      .privSecure(!aarch32EL3)
       .bankedChild();
     InitReg(MISCREG_PRRR_MAIR0_S)
       .mutex()
@@ -2458,6 +2464,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_NMRR_MAIR1_NS)
       .mutex()
+      .privSecure(!aarch32EL3)
       .bankedChild();
     InitReg(MISCREG_NMRR_MAIR1_S)
       .mutex()
@@ -2669,6 +2676,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_CSSELR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_CSSELR_S)
       .bankedChild()
@@ -2681,6 +2689,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_SCTLR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_SCTLR_S)
       .bankedChild()
@@ -2689,6 +2698,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_ACTLR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_ACTLR_S)
       .bankedChild()
@@ -2723,6 +2733,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_TTBR0_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_TTBR0_S)
       .bankedChild()
@@ -2731,6 +2742,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_TTBR1_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_TTBR1_S)
       .bankedChild()
@@ -2739,6 +2751,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_TTBCR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_TTBCR_S)
       .bankedChild()
@@ -2751,6 +2764,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_DACR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_DACR_S)
       .bankedChild()
@@ -2759,6 +2773,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_DFSR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_DFSR_S)
       .bankedChild()
@@ -2767,6 +2782,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_IFSR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_IFSR_S)
       .bankedChild()
@@ -2779,6 +2795,7 @@ ISA::initializeMiscRegMetadata()
       .unimplemented()
       .warnNotFail()
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_ADFSR_S)
       .unimplemented()
@@ -2793,6 +2810,7 @@ ISA::initializeMiscRegMetadata()
       .unimplemented()
       .warnNotFail()
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_AIFSR_S)
       .unimplemented()
@@ -2809,6 +2827,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_DFAR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_DFAR_S)
       .bankedChild()
@@ -2817,6 +2836,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_IFAR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_IFAR_S)
       .bankedChild()
@@ -2839,6 +2859,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_PAR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_PAR_S)
       .bankedChild()
@@ -3011,6 +3032,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_PRRR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_PRRR_S)
       .bankedChild()
@@ -3019,6 +3041,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_MAIR0_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_MAIR0_S)
       .bankedChild()
@@ -3027,6 +3050,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_NMRR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_NMRR_S)
       .bankedChild()
@@ -3035,6 +3059,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_MAIR1_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_MAIR1_S)
       .bankedChild()
@@ -3043,6 +3068,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_AMAIR0_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_AMAIR0_S)
       .bankedChild()
@@ -3051,6 +3077,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_AMAIR1_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_AMAIR1_S)
       .bankedChild()
@@ -3071,6 +3098,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_VBAR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_VBAR_S)
       .bankedChild()
@@ -3092,6 +3120,7 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_CONTEXTIDR_NS)
       .bankedChild()
+      .privSecure(!aarch32EL3)
       .nonSecure().exceptUserMode();
     InitReg(MISCREG_CONTEXTIDR_S)
       .bankedChild()
@@ -3100,7 +3129,9 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_TPIDRURW_NS)
       .bankedChild()
-      .allPrivileges().monSecure(0).privSecure(0);
+      .allPrivileges()
+      .privSecure(!aarch32EL3)
+      .monSecure(0);
     InitReg(MISCREG_TPIDRURW_S)
       .bankedChild()
       .secure();
@@ -3108,7 +3139,10 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_TPIDRURO_NS)
       .bankedChild()
-      .allPrivileges().secure(0).userNonSecureWrite(0).userSecureRead(1);
+      .allPrivileges()
+      .userNonSecureWrite(0).userSecureRead(1)
+      .privSecure(!aarch32EL3)
+      .monSecure(0);
     InitReg(MISCREG_TPIDRURO_S)
       .bankedChild()
       .secure().userSecureWrite(0);
@@ -3116,7 +3150,8 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_TPIDRPRW_NS)
       .bankedChild()
-      .nonSecure().exceptUserMode();
+      .nonSecure().exceptUserMode()
+      .privSecure(!aarch32EL3);
     InitReg(MISCREG_TPIDRPRW_S)
       .bankedChild()
       .secure().exceptUserMode();
@@ -3131,7 +3166,9 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_CNTP_TVAL_NS)
       .bankedChild()
-      .allPrivileges().monSecure(0).privSecure(0);
+      .allPrivileges()
+      .privSecure(!aarch32EL3)
+      .monSecure(0);
     InitReg(MISCREG_CNTP_TVAL_S)
       .unimplemented()
       .bankedChild()
@@ -3140,7 +3177,9 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_CNTP_CTL_NS)
       .bankedChild()
-      .allPrivileges().monSecure(0).privSecure(0);
+      .allPrivileges()
+      .privSecure(!aarch32EL3)
+      .monSecure(0);
     InitReg(MISCREG_CNTP_CTL_S)
       .unimplemented()
       .bankedChild()
@@ -3207,7 +3246,9 @@ ISA::initializeMiscRegMetadata()
       .banked();
     InitReg(MISCREG_CNTP_CVAL_NS)
       .bankedChild()
-      .allPrivileges().monSecure(0).privSecure(0);
+      .allPrivileges()
+      .privSecure(!aarch32EL3)
+      .monSecure(0);
     InitReg(MISCREG_CNTP_CVAL_S)
       .unimplemented()
       .bankedChild()
