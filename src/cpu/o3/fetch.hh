@@ -83,7 +83,6 @@ class DefaultFetch
 
     /** Typedefs from ISA. */
     typedef TheISA::MachInst MachInst;
-    typedef TheISA::ExtMachInst ExtMachInst;
 
     class FetchTranslation : public BaseTLB::Translation
     {

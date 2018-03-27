@@ -65,8 +65,6 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 
     /** Binary machine instruction type. */
     typedef TheISA::MachInst MachInst;
-    /** Extended machine instruction type. */
-    typedef TheISA::ExtMachInst ExtMachInst;
     /** Register types. */
     typedef TheISA::IntReg   IntReg;
     typedef TheISA::FloatReg FloatReg;
