@@ -32,7 +32,9 @@
 #define __BASE_BITUNION_HH__
 
 #include <functional>
+#include <iostream>
 #include <type_traits>
+#include <typeinfo>
 
 #include "base/bitfield.hh"
 
@@ -412,6 +414,50 @@ namespace std
             return hash<BitUnionBaseType<T> >::operator()(val);
         }
     };
+}
+
+
+namespace BitfieldBackend
+{
+namespace
+{
+    template<typename T>
+    std::ostream &
+    bitfieldBackendPrinter(std::ostream &os, const T &t)
+    {
+        os << t;
+        return os;
+    }
+
+    //Since BitUnions are generally numerical values and not character codes,
+    //these specializations attempt to ensure that they get cast to integers
+    //of the appropriate type before printing.
+    template <>
+    std::ostream &
+    bitfieldBackendPrinter(std::ostream &os, const char &t)
+    {
+        os << (const int)t;
+        return os;
+    }
+
+    template <>
+    std::ostream &
+    bitfieldBackendPrinter(std::ostream &os, const unsigned char &t)
+    {
+        os << (const unsigned int)t;
+        return os;
+    }
+}
+}
+
+//A default << operator which casts a bitunion to its underlying type and
+//passes it to BitfieldBackend::bitfieldBackendPrinter.
+template <typename T>
+std::ostream &
+operator << (std::ostream &os, const BitUnionType<T> &bu)
+{
+    return BitfieldBackend::bitfieldBackendPrinter(
+            os, (BitUnionBaseType<T>)bu);
 }
 
 #endif // __BASE_BITUNION_HH__

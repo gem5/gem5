@@ -270,3 +270,17 @@ TEST_F(BitUnionData, Templating)
     is64 = std::is_same<BitUnionBaseType<Dummy32>, uint64_t>::value;
     EXPECT_FALSE(is64);
 }
+
+TEST_F(BitUnionData, Output)
+{
+    sixtyFour = 1234567812345678;
+    std::stringstream ss;
+    ss << sixtyFour;
+    EXPECT_EQ(ss.str(), "1234567812345678");
+    ss.str("");
+
+    EmptyEight eight = 65;
+    ss << eight;
+    EXPECT_EQ(ss.str(), "65");
+    ss.str("");
+}
