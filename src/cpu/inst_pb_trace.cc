@@ -160,8 +160,6 @@ InstPBTrace::traceInst(ThreadContext *tc, StaticInstPtr si, TheISA::PCState pc)
     curMsg->set_cpuid(tc->cpuId());
     curMsg->set_tick(curTick());
     curMsg->set_type(static_cast<ProtoMessage::Inst_InstType>(si->opClass()));
-    curMsg->set_inst_flags(bits(si->machInst, 7, 0));
-
 }
 
 void
