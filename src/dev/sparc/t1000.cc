@@ -38,13 +38,10 @@
 #include <string>
 #include <vector>
 
-#include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "sim/system.hh"
 
 using namespace std;
-//Should this be AlphaISA?
-using namespace TheISA;
 
 T1000::T1000(const Params *p)
     : Platform(p), system(p->system)

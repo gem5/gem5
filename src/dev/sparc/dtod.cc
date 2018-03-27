@@ -41,14 +41,12 @@
 
 #include "base/time.hh"
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "dev/platform.hh"
 #include "mem/packet_access.hh"
 #include "mem/port.hh"
 #include "sim/system.hh"
 
 using namespace std;
-using namespace TheISA;
 
 DumbTOD::DumbTOD(const Params *p)
     : BasicPioDevice(p, 0x08)
