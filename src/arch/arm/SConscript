@@ -49,6 +49,7 @@ if env['TARGET_ISA'] == 'arm':
     Dir('isa/formats')
     Source('decoder.cc')
     Source('faults.cc')
+    Source('insts/branch.cc')
     Source('insts/branch64.cc')
     Source('insts/data64.cc')
     Source('insts/macromem.cc')

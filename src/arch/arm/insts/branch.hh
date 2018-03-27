@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -58,6 +58,7 @@ class BranchImm : public PredOp
         PredOp(mnem, _machInst, __opClass), imm(_imm)
     {}
 
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 // Conditionally Branch to a target computed with an immediate
@@ -85,6 +86,8 @@ class BranchReg : public PredOp
               IntRegIndex _op1) :
         PredOp(mnem, _machInst, __opClass), op1(_op1)
     {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 // Conditionally Branch to a target computed with a register
@@ -113,6 +116,8 @@ class BranchRegReg : public PredOp
                  IntRegIndex _op1, IntRegIndex _op2) :
         PredOp(mnem, _machInst, __opClass), op1(_op1), op2(_op2)
     {}
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 // Branch to a target computed with an immediate and a register
