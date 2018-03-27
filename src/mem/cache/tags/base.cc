@@ -100,6 +100,11 @@ BaseTags::insertBlock(PacketPtr pkt, CacheBlk *blk)
         blk->invalidate();
     }
 
+    // Touch block
+    blk->isTouched = true;
+    blk->refCount = 1;
+    blk->tickInserted = curTick();
+
     // Previous block, if existed, has been removed, and now we have
     // to insert the new one
     tagsInUse++;

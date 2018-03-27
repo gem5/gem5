@@ -50,11 +50,12 @@
 
 #include <cassert>
 #include <cstring>
-#include <memory>
 #include <vector>
 
+#include "debug/CacheRepl.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/blk.hh"
+#include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/tags/cacheset.hh"
 #include "mem/packet.hh"
@@ -105,7 +106,6 @@ class BaseSetAssoc : public BaseTags
     BaseReplacementPolicy *replacementPolicy;
 
   public:
-
     /** Convenience typedef. */
      typedef BaseSetAssocParams Params;
 
@@ -118,6 +118,14 @@ class BaseSetAssoc : public BaseTags
      * Destructor
      */
     virtual ~BaseSetAssoc() {};
+
+    /**
+     * This function updates the tags when a block is invalidated but does
+     * not invalidate the block itself. It also updates the replacement data.
+     *
+     * @param blk The block to invalidate.
+     */
+    void invalidate(CacheBlk *blk) override;
 
     /**
      * Find the cache block given set and way
@@ -165,8 +173,11 @@ class BaseSetAssoc : public BaseTags
                 accessLatency;
             }
 
+            // Update number of references to accessed block
+            blk->refCount++;
+
             // Update replacement data of accessed block
-            replacementPolicy->touch(blk);
+            replacementPolicy->touch(blk->replacementData);
         } else {
             // If a cache miss
             lat = lookupLatency;
@@ -193,8 +204,18 @@ class BaseSetAssoc : public BaseTags
      */
     CacheBlk* findVictim(Addr addr) override
     {
+        // Get possible locations for the victim block
+        std::vector<CacheBlk*> locations = getPossibleLocations(addr);
+
         // Choose replacement victim from replacement candidates
-        return replacementPolicy->getVictim(getPossibleLocations(addr));
+        CacheBlk* victim = static_cast<CacheBlk*>(replacementPolicy->getVictim(
+                               std::vector<ReplaceableEntry*>(
+                                   locations.begin(), locations.end())));
+
+        DPRINTF(CacheRepl, "set %x, way %x: selecting blk for replacement\n",
+            victim->set, victim->way);
+
+        return victim;
     }
 
     /**
@@ -223,7 +244,7 @@ class BaseSetAssoc : public BaseTags
         BaseTags::insertBlock(pkt, blk);
 
         // Update replacement policy
-        replacementPolicy->reset(blk);
+        replacementPolicy->reset(blk->replacementData);
     }
 
     /**

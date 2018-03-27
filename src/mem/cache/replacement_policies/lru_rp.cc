@@ -30,7 +30,7 @@
 
 #include "mem/cache/replacement_policies/lru_rp.hh"
 
-#include "debug/CacheRepl.hh"
+#include <memory>
 
 LRURP::LRURP(const Params *p)
     : BaseReplacementPolicy(p)
@@ -38,46 +38,55 @@ LRURP::LRURP(const Params *p)
 }
 
 void
-LRURP::touch(CacheBlk *blk)
+LRURP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+const
 {
-    BaseReplacementPolicy::touch(blk);
-
-    // Update last touch timestamp
-    blk->lastTouchTick = curTick();
+    // Reset last touch timestamp
+    std::static_pointer_cast<LRUReplData>(
+        replacement_data)->lastTouchTick = Tick(0);
 }
 
 void
-LRURP::reset(CacheBlk *blk)
+LRURP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
-    BaseReplacementPolicy::reset(blk);
-
-    // Set last touch timestamp
-    blk->lastTouchTick = blk->tickInserted;
+    // Update last touch timestamp
+    std::static_pointer_cast<LRUReplData>(
+        replacement_data)->lastTouchTick = curTick();
 }
 
-CacheBlk*
-LRURP::getVictim(const ReplacementCandidates& candidates)
+void
+LRURP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+{
+    // Set last touch timestamp
+    std::static_pointer_cast<LRUReplData>(
+        replacement_data)->lastTouchTick = curTick();
+}
+
+ReplaceableEntry*
+LRURP::getVictim(const ReplacementCandidates& candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
     // Visit all candidates to find victim
-    CacheBlk* blk = candidates[0];
+    ReplaceableEntry* victim = candidates[0];
     for (const auto& candidate : candidates) {
-        // Stop iteration if found an invalid block
-        if (!candidate->isValid()) {
-            blk = candidate;
-            break;
-        // Update victim block if necessary
-        } else if (candidate->lastTouchTick < blk->lastTouchTick) {
-            blk = candidate;
+        // Update victim entry if necessary
+        if (std::static_pointer_cast<LRUReplData>(
+                    candidate->replacementData)->lastTouchTick <
+                std::static_pointer_cast<LRUReplData>(
+                    victim->replacementData)->lastTouchTick) {
+            victim = candidate;
         }
     }
 
-    DPRINTF(CacheRepl, "set %x, way %x: selecting blk for replacement\n",
-            blk->set, blk->way);
+    return victim;
+}
 
-    return blk;
+std::shared_ptr<ReplacementData>
+LRURP::instantiateEntry()
+{
+    return std::shared_ptr<ReplacementData>(new LRUReplData());
 }
 
 LRURP*

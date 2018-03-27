@@ -30,36 +30,61 @@
 
 #include "mem/cache/replacement_policies/fifo_rp.hh"
 
-#include "debug/CacheRepl.hh"
+#include <memory>
 
 FIFORP::FIFORP(const Params *p)
     : BaseReplacementPolicy(p)
 {
 }
 
-CacheBlk*
-FIFORP::getVictim(const ReplacementCandidates& candidates)
+void
+FIFORP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+const
+{
+    // Reset insertion tick
+    std::static_pointer_cast<FIFOReplData>(
+        replacement_data)->tickInserted = Tick(0);
+}
+
+void
+FIFORP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+{
+    // A touch does not modify the insertion tick
+}
+
+void
+FIFORP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+{
+    // Set insertion tick
+    std::static_pointer_cast<FIFOReplData>(
+        replacement_data)->tickInserted = curTick();
+}
+
+ReplaceableEntry*
+FIFORP::getVictim(const ReplacementCandidates& candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
     // Visit all candidates to find victim
-    CacheBlk* blk = candidates[0];
+    ReplaceableEntry* victim = candidates[0];
     for (const auto& candidate : candidates) {
-        // Stop iteration if found an invalid block
-        if (!candidate->isValid()) {
-            blk = candidate;
-            break;
-        // Update victim block if necessary
-        } else if (candidate->tickInserted < blk->tickInserted) {
-            blk = candidate;
+        // Update victim entry if necessary
+        if (std::static_pointer_cast<FIFOReplData>(
+                    candidate->replacementData)->tickInserted <
+                std::static_pointer_cast<FIFOReplData>(
+                    victim->replacementData)->tickInserted) {
+            victim = candidate;
         }
     }
 
-    DPRINTF(CacheRepl, "set %x, way %x: selecting blk for replacement\n",
-            blk->set, blk->way);
+    return victim;
+}
 
-    return blk;
+std::shared_ptr<ReplacementData>
+FIFORP::instantiateEntry()
+{
+    return std::shared_ptr<ReplacementData>(new FIFOReplData());
 }
 
 FIFORP*

@@ -33,22 +33,22 @@
  * Declaration of a Re-Reference Interval Prediction replacement policy.
  *
  * Not-Recently Used (NRU) is an approximation of LRU that uses a single bit
- * to determine if a block is going to be re-referenced in the near or distant
+ * to determine if an entry is going to be re-referenced in the near or distant
  * future.
  *
  * Re-Reference Interval Prediction (RRIP) is an extension of NRU that uses a
- * re-reference prediction value to determine if blocks are going to be re-
+ * re-reference prediction value to determine if entries are going to be re-
  * used in the near future or not.
  *
- * The higher the value of the RRPV, the more distant the block is from
- * its next access.
+ * The higher the value of the RRPV, the more distant the entry is from its
+ * next access.
  *
  * Bimodal Re-Reference Interval Prediction (BRRIP) is an extension of RRIP
- * that has a probability of not inserting blocks as the LRU. This probability
+ * that has a probability of not inserting entries as the LRU. This probability
  * is controlled by the bimodal throtle parameter (btp).
  *
  * From the original paper, this implementation of RRIP is also called
- * Static RRIP (SRRIP), as it always inserts blocks with the same RRPV.
+ * Static RRIP (SRRIP), as it always inserts entries with the same RRPV.
  */
 
 #ifndef __MEM_CACHE_REPLACEMENT_POLICIES_BRRIP_RP_HH__
@@ -60,25 +60,40 @@
 class BRRIPRP : public BaseReplacementPolicy
 {
   protected:
+    /** BRRIP-specific implementation of replacement data. */
+    struct BRRIPReplData : ReplacementData
+    {
+        /**
+         * Re-Reference Interval Prediction Value.
+         * A value equal to max_RRPV + 1 indicates an invalid entry.
+         */
+        int rrpv;
+
+        /**
+         * Default constructor. Invalidate data.
+         */
+        BRRIPReplData(const int max_RRPV) : rrpv(max_RRPV + 1) {}
+    };
+
     /**
-     * Maximum Re-Reference Prediction Value possible. A block with this
+     * Maximum Re-Reference Prediction Value possible. An entry with this
      * value as the rrpv has the longest possible re-reference interval,
      * that is, it is likely not to be used in the near future, and is
      * among the best eviction candidates.
      * A maxRRPV of 1 implies in a NRU.
      */
-    const unsigned maxRRPV;
+    const int maxRRPV;
 
     /**
-     * The hit priority (HP) policy replaces blocks that do not receive cache
-     * hits over any cache block that receives a hit, while the frequency
-     * priority (FP) policy replaces infrequently re-referenced blocks.
+     * The hit priority (HP) policy replaces entries that do not receive cache
+     * hits over any cache entry that receives a hit, while the frequency
+     * priority (FP) policy replaces infrequently re-referenced entries.
      */
     const bool hitPriority;
 
     /**
      * Bimodal throtle parameter. Value in the range [0,100] used to decide
-     * if a new block is inserted with long or distant re-reference.
+     * if a new entry is inserted with long or distant re-reference.
      */
     const unsigned btp;
 
@@ -97,28 +112,46 @@ class BRRIPRP : public BaseReplacementPolicy
     ~BRRIPRP() {}
 
     /**
-     * Touch a block to update its replacement data.
+     * Invalidate replacement data to set it as the next probable victim.
+     * Set RRPV as the the most distant re-reference.
      *
-     * @param blk Cache block to be touched.
+     * @param replacement_data Replacement data to be invalidated.
      */
-    void touch(CacheBlk *blk) override;
+    void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+                                                              const override;
 
     /**
-     * Reset replacement data for a block. Used when a block is inserted.
-     * Sets the insertion tick, and update correspondent replacement data.
+     * Touch an entry to update its replacement data.
+     *
+     * @param replacement_data Replacement data to be touched.
+     */
+    void touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+                                                                     override;
+
+    /**
+     * Reset replacement data. Used when an entry is inserted.
      * Set RRPV according to the insertion policy used.
      *
-     * @param blk Cache block to be reset.
+     * @param replacement_data Replacement data to be reset.
      */
-    void reset(CacheBlk *blk) override;
+    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+                                                                     override;
 
     /**
      * Find replacement victim using rrpv.
      *
      * @param cands Replacement candidates, selected by indexing policy.
-     * @return Cache block to be replaced.
+     * @return Replacement entry to be replaced.
      */
-    CacheBlk* getVictim(const ReplacementCandidates& candidates) override;
+    ReplaceableEntry* getVictim(const ReplacementCandidates& candidates) const
+                                                                     override;
+
+    /**
+     * Instantiate a replacement data entry.
+     *
+     * @return A shared pointer to the new replacement data.
+     */
+    std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BRRIP_RP_HH__

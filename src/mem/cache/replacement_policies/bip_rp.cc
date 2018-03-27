@@ -30,8 +30,9 @@
 
 #include "mem/cache/replacement_policies/bip_rp.hh"
 
+#include <memory>
+
 #include "base/random.hh"
-#include "debug/CacheRepl.hh"
 
 BIPRP::BIPRP(const Params *p)
     : LRURP(p), btp(p->btp)
@@ -39,16 +40,17 @@ BIPRP::BIPRP(const Params *p)
 }
 
 void
-BIPRP::reset(CacheBlk *blk)
+BIPRP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
-    BaseReplacementPolicy::reset(blk);
+    std::shared_ptr<LRUReplData> casted_replacement_data =
+        std::static_pointer_cast<LRUReplData>(replacement_data);
 
-    // Blocks are inserted as MRU if lower than btp, LRU otherwise
+    // Entries are inserted as MRU if lower than btp, LRU otherwise
     if (random_mt.random<unsigned>(1, 100) <= btp) {
-        blk->lastTouchTick = curTick();
+        casted_replacement_data->lastTouchTick = curTick();
     } else {
         // Make their timestamps as old as possible, so that they become LRU
-        blk->lastTouchTick = 0;
+        casted_replacement_data->lastTouchTick = 1;
     }
 }
 

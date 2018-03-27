@@ -30,88 +30,110 @@
 
 #include "mem/cache/replacement_policies/brrip_rp.hh"
 
+#include <memory>
+
+#include "base/logging.hh" // For fatal_if
 #include "base/random.hh"
-#include "debug/CacheRepl.hh"
 
 BRRIPRP::BRRIPRP(const Params *p)
     : BaseReplacementPolicy(p),
       maxRRPV(p->max_RRPV), hitPriority(p->hit_priority), btp(p->btp)
 {
-    if (maxRRPV == 0){
-        fatal("max_RRPV should be greater than zero.\n");
-    }
+    fatal_if(maxRRPV <= 0, "max_RRPV should be greater than zero.\n");
 }
 
 void
-BRRIPRP::touch(CacheBlk *blk)
+BRRIPRP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+const
 {
-    BaseReplacementPolicy::touch(blk);
+    std::shared_ptr<BRRIPReplData> casted_replacement_data =
+        std::static_pointer_cast<BRRIPReplData>(replacement_data);
+
+    // Set RRPV to an invalid distance
+    casted_replacement_data->rrpv = maxRRPV + 1;
+}
+
+void
+BRRIPRP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+{
+    std::shared_ptr<BRRIPReplData> casted_replacement_data =
+        std::static_pointer_cast<BRRIPReplData>(replacement_data);
 
     // Update RRPV if not 0 yet
-    // Every hit in HP mode makes the block the last to be evicted, while
-    // in FP mode a hit makes the block less likely to be evicted
+    // Every hit in HP mode makes the entry the last to be evicted, while
+    // in FP mode a hit makes the entry less likely to be evicted
     if (hitPriority) {
-        blk->rrpv = 0;
-    } else if (blk->rrpv > 0) {
-        blk->rrpv--;
+        casted_replacement_data->rrpv = 0;
+    } else if (casted_replacement_data->rrpv > 0) {
+        casted_replacement_data->rrpv--;
     }
 }
 
 void
-BRRIPRP::reset(CacheBlk *blk)
+BRRIPRP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
-    BaseReplacementPolicy::reset(blk);
+    std::shared_ptr<BRRIPReplData> casted_replacement_data =
+        std::static_pointer_cast<BRRIPReplData>(replacement_data);
 
     // Reset RRPV
-    // Blocks are inserted as "long re-reference" if lower than btp,
+    // Replacement data is inserted as "long re-reference" if lower than btp,
     // "distant re-reference" otherwise
     if (random_mt.random<unsigned>(1, 100) <= btp) {
-        blk->rrpv = maxRRPV-1;
+        casted_replacement_data->rrpv = maxRRPV-1;
     } else {
-        blk->rrpv = maxRRPV;
+        casted_replacement_data->rrpv = maxRRPV;
     }
 }
 
-CacheBlk*
-BRRIPRP::getVictim(const ReplacementCandidates& candidates)
+ReplaceableEntry*
+BRRIPRP::getVictim(const ReplacementCandidates& candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
-    // Use visitor to search for the victim
-    CacheBlk* blk = candidates[0];
+    // Use first candidate as dummy victim
+    ReplaceableEntry* victim = candidates[0];
+
+    // Store victim->rrpv in a variable to improve code readability
+    int victim_RRPV = std::static_pointer_cast<BRRIPReplData>(
+                        victim->replacementData)->rrpv;
+
+    // Visit all candidates to find victim
     for (const auto& candidate : candidates) {
-        // Stop iteration if found an invalid block
-        if (!candidate->isValid()) {
-            blk = candidate;
-            blk->rrpv = maxRRPV;
-            break;
-        // Update victim block if necessary
-        } else if (candidate->rrpv > blk->rrpv) {
-            blk = candidate;
+        // Get candidate's rrpv
+        int candidate_RRPV = std::static_pointer_cast<BRRIPReplData>(
+                                    candidate->replacementData)->rrpv;
+
+        // Stop searching for victims if an invalid entry is found
+        if (candidate_RRPV == maxRRPV + 1) {
+            return candidate;
+        // Update victim entry if necessary
+        } else if (candidate_RRPV > victim_RRPV) {
+            victim = candidate;
+            victim_RRPV = candidate_RRPV;
         }
     }
 
-    // Make sure we don't have an invalid rrpv
-    assert(blk->rrpv <= maxRRPV);
-
-    // Get difference of block's RRPV to the highest possible RRPV in
-    // order to update the RRPV of all the other blocks accordingly
-    unsigned diff = maxRRPV - blk->rrpv;
+    // Get difference of victim's RRPV to the highest possible RRPV in
+    // order to update the RRPV of all the other entries accordingly
+    int diff = maxRRPV - victim_RRPV;
 
     // No need to update RRPV if there is no difference
     if (diff > 0){
         // Update RRPV of all candidates
         for (const auto& candidate : candidates) {
-            // Update the block's RPPV with the new value
-            candidate->rrpv += diff;
+            std::static_pointer_cast<BRRIPReplData>(
+                candidate->replacementData)->rrpv += diff;
         }
     }
 
-    DPRINTF(CacheRepl, "set %x, way %x: selecting blk for replacement\n",
-            blk->set, blk->way);
+    return victim;
+}
 
-    return blk;
+std::shared_ptr<ReplacementData>
+BRRIPRP::instantiateEntry()
+{
+    return std::shared_ptr<ReplacementData>(new BRRIPReplData(maxRRPV));
 }
 
 BRRIPRP*

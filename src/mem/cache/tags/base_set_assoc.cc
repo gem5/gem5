@@ -50,7 +50,6 @@
 #include <string>
 
 #include "base/intmath.hh"
-#include "sim/core.hh"
 
 BaseSetAssoc::BaseSetAssoc(const Params *p)
     :BaseTags(p), assoc(p->assoc), allocAssoc(p->assoc),
@@ -92,6 +91,9 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
             // Associate a data chunk to the block
             blk->data = &dataBlks[blkSize*blkIndex];
 
+            // Associate a replacement data entry to the block
+            blk->replacementData = replacementPolicy->instantiateEntry();
+
             // Setting the tag to j is just to prevent long chains in the
             // hash table; won't matter because the block is invalid
             blk->tag = j;
@@ -104,6 +106,15 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
             ++blkIndex;
         }
     }
+}
+
+void
+BaseSetAssoc::invalidate(CacheBlk *blk)
+{
+    BaseTags::invalidate(blk);
+
+    // Invalidate replacement data
+    replacementPolicy->invalidate(blk->replacementData);
 }
 
 CacheBlk*

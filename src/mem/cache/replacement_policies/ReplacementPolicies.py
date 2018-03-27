@@ -73,7 +73,7 @@ class BRRIPRP(BaseReplacementPolicy):
     type = 'BRRIPRP'
     cxx_class = 'BRRIPRP'
     cxx_header = "mem/cache/replacement_policies/brrip_rp.hh"
-    max_RRPV = Param.Unsigned(3, "Maximum RRPV possible")
+    max_RRPV = Param.Int(3, "Maximum RRPV possible")
     hit_priority = Param.Bool(False,
         "Prioritize evicting blocks that havent had a hit recently")
     btp = Param.Percent(3,

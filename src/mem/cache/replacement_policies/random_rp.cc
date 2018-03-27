@@ -31,37 +31,62 @@
 #include "mem/cache/replacement_policies/random_rp.hh"
 
 #include "base/random.hh"
-#include "debug/CacheRepl.hh"
+#include "mem/cache/blk.hh"
 
 RandomRP::RandomRP(const Params *p)
     : BaseReplacementPolicy(p)
 {
 }
 
-CacheBlk*
-RandomRP::getVictim(const ReplacementCandidates& candidates)
+void
+RandomRP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+const
+{
+    // Unprioritize replacement data victimization
+    std::static_pointer_cast<RandomReplData>(
+        replacement_data)->valid = false;
+}
+
+void
+RandomRP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+{
+}
+
+void
+RandomRP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+{
+    // Unprioritize replacement data victimization
+    std::static_pointer_cast<RandomReplData>(
+        replacement_data)->valid = true;
+}
+
+ReplaceableEntry*
+RandomRP::getVictim(const ReplacementCandidates& candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
 
     // Choose one candidate at random
-    CacheBlk* blk = candidates[random_mt.random<unsigned>(0,
+    ReplaceableEntry* victim = candidates[random_mt.random<unsigned>(0,
                                     candidates.size() - 1)];
 
-    // Visit all candidates to find an invalid entry
+    // Visit all candidates to search for an invalid entry. If one is found,
+    // its eviction is prioritized
     for (const auto& candidate : candidates) {
-        // Give priority to victimise invalid entries
-        if (!candidate->isValid()){
-            blk = candidate;
+        if (!std::static_pointer_cast<RandomReplData>(
+                    candidate->replacementData)->valid) {
+            victim = candidate;
             break;
         }
     }
 
-    // If no invalid blocks were found, choose one of the candidates randomly
-    DPRINTF(CacheRepl, "set %x, way %x: selecting blk for replacement\n",
-            blk->set, blk->way);
+    return victim;
+}
 
-    return blk;
+std::shared_ptr<ReplacementData>
+RandomRP::instantiateEntry()
+{
+    return std::shared_ptr<ReplacementData>(new ReplacementData());
 }
 
 RandomRP*

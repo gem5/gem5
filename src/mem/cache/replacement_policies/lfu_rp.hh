@@ -32,7 +32,7 @@
  * @file
  * Declaration of a Least Frequently Used replacement policy.
  * The victim is chosen using the reference frequency. The least referenced
- * block is always chosen to be evicted, regardless of the amount of times
+ * entry is always chosen to be evicted, regardless of the amount of times
  * it has been touched, or how long has passed since its last touch.
  */
 
@@ -44,6 +44,19 @@
 
 class LFURP : public BaseReplacementPolicy
 {
+  protected:
+    /** LFU-specific implementation of replacement data. */
+    struct LFUReplData : ReplacementData
+    {
+        /** Number of references to this entry since it was reset. */
+        unsigned refCount;
+
+        /**
+         * Default constructor. Invalidate data.
+         */
+        LFUReplData() : refCount(0) {}
+    };
+
   public:
     /** Convenience typedef. */
     typedef LFURPParams Params;
@@ -59,12 +72,47 @@ class LFURP : public BaseReplacementPolicy
     ~LFURP() {}
 
     /**
+     * Invalidate replacement data to set it as the next probable victim.
+     * Clear the number of references.
+     *
+     * @param replacement_data Replacement data to be invalidated.
+     */
+    void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+                                                              const override;
+
+    /**
+     * Touch an entry to update its replacement data.
+     * Increase number of references.
+     *
+     * @param replacement_data Replacement data to be touched.
+     */
+    void touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+                                                                     override;
+
+    /**
+     * Reset replacement data. Used when an entry is inserted.
+     * Reset number of references.
+     *
+     * @param replacement_data Replacement data to be reset.
+     */
+    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+                                                                     override;
+
+    /**
      * Find replacement victim using reference frequency.
      *
      * @param cands Replacement candidates, selected by indexing policy.
-     * @return Cache block to be replaced.
+     * @return Replacement entry to be replaced.
      */
-    CacheBlk* getVictim(const ReplacementCandidates& candidates) override;
+    ReplaceableEntry* getVictim(const ReplacementCandidates& candidates) const
+                                                                     override;
+
+    /**
+     * Instantiate a replacement data entry.
+     *
+     * @return A shared pointer to the new replacement data.
+     */
+    std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_LFU_RP_HH__

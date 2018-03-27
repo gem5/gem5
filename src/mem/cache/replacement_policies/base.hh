@@ -31,26 +31,37 @@
 #ifndef __MEM_CACHE_REPLACEMENT_POLICIES_BASE_HH__
 #define __MEM_CACHE_REPLACEMENT_POLICIES_BASE_HH__
 
-#include "mem/cache/base.hh"
-#include "mem/cache/blk.hh"
+#include <memory>
+
 #include "params/BaseReplacementPolicy.hh"
 #include "sim/sim_object.hh"
 
 /**
- * Replacement candidates as chosen by the indexing policy.
- *
- * The base functions touch() and reset() must be called by all subclasses
- * that override them.
- *
- * @todo
- *   Currently the replacement candidates are simply the cache blocks
- *   derived from the possible placement locations of an address, as
- *   defined by the getPossibleLocations() from BaseTags. In a future
- *   patch it should be an inheritable class to allow the replacement
- *   policies to be used with any table-like structure that needs to
- *   replace its entries.
+ * The replacement data needed by the replacement policy.
+ * Each replacement policy should have its own replacement data.
  */
-typedef std::vector<CacheBlk*> ReplacementCandidates;
+struct ReplacementData {};
+
+/**
+ * A replaceable entry is used by any table-like structure that needs to
+ * implement replacement functionality. It provides the replacement data
+ * pointer instantiated and needed by the replacement policy used.
+ * @sa Replacement Policies
+ */
+class ReplaceableEntry
+{
+  public:
+    /**
+     * Replacement data associated to this entry.
+     * It is instantiated by the replacement policy.
+     */
+    std::shared_ptr<ReplacementData> replacementData;
+};
+
+/**
+ * Replacement candidates as chosen by the indexing policy.
+ */
+typedef std::vector<ReplaceableEntry*> ReplacementCandidates;
 
 /**
  * A common base class of cache replacement policy objects.
@@ -66,7 +77,7 @@ class BaseReplacementPolicy : public SimObject
     /**
      * Construct and initiliaze this replacement policy.
      */
-    BaseReplacementPolicy(const Params *p);
+    BaseReplacementPolicy(const Params *p) : SimObject(p) {}
 
     /**
      * Destructor.
@@ -74,32 +85,44 @@ class BaseReplacementPolicy : public SimObject
     virtual ~BaseReplacementPolicy() {}
 
     /**
-     * Touch a block to update its replacement data.
-     * Updates number of references.
+     * Invalidate replacement data to set it as the next probable victim.
      *
-     * This base function must be called by all subclasses that override it.
-     *
-     * @param blk Cache block to be touched.
+     * @param replacement_data Replacement data to be invalidated.
      */
-    virtual void touch(CacheBlk *blk);
+    virtual void invalidate(const std::shared_ptr<ReplacementData>&
+                                                replacement_data) const = 0;
 
     /**
-     * Reset replacement data for a block. Used when a block is inserted.
-     * Sets the insertion tick, and update number of references.
+     * Update replacement data.
      *
-     * This base function must be called by all subclasses that override it.
-     *
-     * @param blk Cache block to be reset.
+     * @param replacement_data Replacement data to be touched.
      */
-    virtual void reset(CacheBlk *blk);
+    virtual void touch(const std::shared_ptr<ReplacementData>&
+                                                replacement_data) const = 0;
+
+    /**
+     * Reset replacement data. Used when it's holder is inserted/validated.
+     *
+     * @param replacement_data Replacement data to be reset.
+     */
+    virtual void reset(const std::shared_ptr<ReplacementData>&
+                                                replacement_data) const = 0;
 
     /**
      * Find replacement victim among candidates.
      *
      * @param candidates Replacement candidates, selected by indexing policy.
-     * @return Cache block to be replaced.
+     * @return Replacement entry to be replaced.
      */
-    virtual CacheBlk* getVictim(const ReplacementCandidates& candidates) = 0;
+    virtual ReplaceableEntry* getVictim(
+                           const ReplacementCandidates& candidates) const = 0;
+
+    /**
+     * Instantiate a replacement data entry.
+     *
+     * @return A shared pointer to the new replacement data.
+     */
+    virtual std::shared_ptr<ReplacementData> instantiateEntry() = 0;
 };
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_BASE_HH__

@@ -51,6 +51,7 @@
 #include <list>
 
 #include "base/printable.hh"
+#include "mem/cache/replacement_policies/base.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
@@ -76,7 +77,7 @@ enum CacheBlkStatusBits : unsigned {
  * A Basic Cache block.
  * Contains the tag, status, and a pointer to data.
  */
-class CacheBlk
+class CacheBlk : public ReplaceableEntry
 {
   public:
     /** Task Id associated with this block */
@@ -109,9 +110,9 @@ class CacheBlk
     int set, way;
 
     /**
-      * Whether this block has been touched since simulation started.
-      * Used to calculate number of used tags.
-      */
+     * Whether this block has been touched since simulation started.
+     * Used to calculate number of used tags.
+     */
     bool isTouched;
 
     /** Number of references to this block since it was brought in. */
@@ -122,17 +123,6 @@ class CacheBlk
 
     /** Tick on which the block was inserted in the cache. */
     Tick tickInserted;
-
-    /**
-     * Replacement policy data. As of now it is only an update timestamp.
-     * Tick on which the block was last touched.
-     */
-    Tick lastTouchTick;
-
-    /**
-     * Re-Reference Interval Prediction Value. Used with RRIP repl policy.
-     */
-    unsigned rrpv;
 
   protected:
     /**

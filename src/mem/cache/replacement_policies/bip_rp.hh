@@ -31,7 +31,7 @@
 /**
  * @file
  * Declaration of a Bimodal Interval Prediction replacement policy.
- * Has a probability of when placing new blocks, placing them as MRU.
+ * Has a probability of when placing new entries, placing them as MRU.
  *
  * Although both LRU and LIP can be seen as specific cases of BIP
  * where the bimodal throtle parameter are 1 and 0, respectively, we
@@ -41,8 +41,8 @@
  * In the original paper they use btp = 1/32 ~= 3%.
  */
 
-#ifndef __MEM_CACHE_REPLACEMENT_POLICIES_LIP_RP_HH__
-#define __MEM_CACHE_REPLACEMENT_POLICIES_LIP_RP_HH__
+#ifndef __MEM_CACHE_REPLACEMENT_POLICIES_BIP_RP_HH__
+#define __MEM_CACHE_REPLACEMENT_POLICIES_BIP_RP_HH__
 
 #include "mem/cache/replacement_policies/lru_rp.hh"
 #include "params/BIPRP.hh"
@@ -52,7 +52,7 @@ class BIPRP : public LRURP
   protected:
     /**
      * Bimodal throtle parameter. Value in the range [0,100] used to decide
-     * if a new block is inserted at the MRU or LRU position.
+     * if a new entry is inserted at the MRU or LRU position.
      */
     const unsigned btp;
 
@@ -71,14 +71,14 @@ class BIPRP : public LRURP
     ~BIPRP() {}
 
     /**
-     * Reset replacement data for a block. Used when a block is inserted.
-     * Sets the insertion tick, and update correspondent replacement data.
-     * Uses the bimodal throtle parameter to decide whether the new block
+     * Reset replacement data for an entry. Used when an entry is inserted.
+     * Uses the bimodal throtle parameter to decide whether the new entry
      * should be inserted as MRU, or LRU.
      *
-     * @param blk Cache block to be reset.
+     * @param replacement_data Replacement data to be reset.
      */
-    void reset(CacheBlk *blk) override;
+    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+                                                                     override;
 };
 
-#endif // __MEM_CACHE_REPLACEMENT_POLICIES_LIP_RP_HH__
+#endif // __MEM_CACHE_REPLACEMENT_POLICIES_BIP_RP_HH__

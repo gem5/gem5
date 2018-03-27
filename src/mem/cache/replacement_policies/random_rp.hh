@@ -42,6 +42,22 @@
 
 class RandomRP : public BaseReplacementPolicy
 {
+  protected:
+    /** MRU-specific implementation of replacement data. */
+    struct RandomReplData : ReplacementData
+    {
+        /**
+         * Flag informing if the replacement data is valid or not.
+         * Invalid entries are prioritized to be evicted.
+         */
+        bool valid;
+
+        /**
+         * Default constructor. Invalidate data.
+         */
+        RandomReplData() : valid(false) {}
+    };
+
   public:
     /** Convenience typedef. */
     typedef RandomRPParams Params;
@@ -57,11 +73,47 @@ class RandomRP : public BaseReplacementPolicy
     ~RandomRP() {}
 
     /**
-     * Find replacement victim at random.
-     * @param candidates Replacement candidates, selected by indexing policy.
-     * @return Cache block to be replaced.
+     * Invalidate replacement data to set it as the next probable victim.
+     * Prioritize replacement data for victimization.
+     *
+     * @param replacement_data Replacement data to be invalidated.
      */
-    CacheBlk* getVictim(const ReplacementCandidates& candidates) override;
+    void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+                                                               const override;
+
+    /**
+     * Touch an entry to update its replacement data.
+     * Does not do anything.
+     *
+     * @param replacement_data Replacement data to be touched.
+     */
+    void touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+                                                                     override;
+
+    /**
+     * Reset replacement data. Used when an entry is inserted.
+     * Unprioritize replacement data for victimization.
+     *
+     * @param replacement_data Replacement data to be reset.
+     */
+    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+                                                                     override;
+
+    /**
+     * Find replacement victim at random.
+     *
+     * @param candidates Replacement candidates, selected by indexing policy.
+     * @return Replacement entry to be replaced.
+     */
+    ReplaceableEntry* getVictim(const ReplacementCandidates& candidates) const
+                                                                     override;
+
+    /**
+     * Instantiate a replacement data entry.
+     *
+     * @return A shared pointer to the new replacement data.
+     */
+    std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_RANDOM_RP_HH__

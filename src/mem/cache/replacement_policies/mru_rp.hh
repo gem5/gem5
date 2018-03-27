@@ -31,7 +31,7 @@
 /**
  * @file
  * Declaration of a Most Recently Used replacement policy.
- * The victim is chosen using the timestamp. The block that was accessed the
+ * The victim is chosen using the timestamp. The entry that was accessed the
  * last is the one chosen to be replaced.
  */
 
@@ -43,6 +43,19 @@
 
 class MRURP : public BaseReplacementPolicy
 {
+  protected:
+    /** MRU-specific implementation of replacement data. */
+    struct MRUReplData : ReplacementData
+    {
+        /** Tick on which the entry was last touched. */
+        Tick lastTouchTick;
+
+        /**
+         * Default constructor. Invalidate data.
+         */
+        MRUReplData() : lastTouchTick(0) {}
+    };
+
   public:
     /** Convenience typedef. */
     typedef MRURPParams Params;
@@ -58,26 +71,47 @@ class MRURP : public BaseReplacementPolicy
     ~MRURP() {}
 
     /**
-     * Touch a block to update its last touch tick.
+     * Invalidate replacement data to set it as the next probable victim.
+     * Sets its last touch tick as the starting tick.
      *
-     * @param blk Cache block to be touched.
+     * @param replacement_data Replacement data to be invalidated.
      */
-    void touch(CacheBlk *blk) override;
+    void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+                                                              const override;
 
     /**
-     * Reset replacement data for a block. Used when a block is inserted.
+     * Touch an entry to update its replacement data.
      * Sets its last touch tick as the current tick.
      *
-     * @param blk Cache block to be reset.
+     * @param replacement_data Replacement data to be touched.
      */
-    void reset(CacheBlk *blk) override;
+    void touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+                                                                     override;
+
+    /**
+     * Reset replacement data. Used when an entry is inserted.
+     * Sets its last touch tick as the current tick.
+     *
+     * @param replacement_data Replacement data to be reset.
+     */
+    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+                                                                     override;
 
     /**
      * Find replacement victim using access timestamps.
+     *
      * @param cands Replacement candidates, selected by indexing policy.
-     * @return Cache block to be replaced.
+     * @return Replacement entry to be replaced.
      */
-    CacheBlk* getVictim(const ReplacementCandidates& candidates) override;
+    ReplaceableEntry* getVictim(const ReplacementCandidates& candidates) const
+                                                                     override;
+
+    /**
+     * Instantiate a replacement data entry.
+     *
+     * @return A shared pointer to the new replacement data.
+     */
+    std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 
 #endif // __MEM_CACHE_REPLACEMENT_POLICIES_MRU_RP_HH__
