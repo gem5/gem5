@@ -137,6 +137,7 @@ ISA::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
 
       case MISCREG_PSTATE:
         setMiscRegNoEffect(miscReg, val);
+        break;
 
       case MISCREG_PIL:
         setMiscRegNoEffect(miscReg, val);

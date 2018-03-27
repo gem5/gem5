@@ -480,6 +480,7 @@ ISA::setMiscRegNoEffect(int miscReg, MiscReg val)
         break;
       case MISCREG_HINTP:
         hintp = val;
+        break;
       case MISCREG_HTBA:
         htba = val;
         break;
