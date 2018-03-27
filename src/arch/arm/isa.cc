@@ -952,8 +952,14 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
             {
                 DPRINTF(MiscRegs, "Writing SCTLR: %#x\n", newVal);
                 scr = readMiscRegNoEffect(MISCREG_SCR);
-                MiscRegIndex sctlr_idx = (haveSecurity && !scr.ns)
-                                         ? MISCREG_SCTLR_S : MISCREG_SCTLR_NS;
+
+                MiscRegIndex sctlr_idx;
+                if (haveSecurity && !highestELIs64 && !scr.ns) {
+                    sctlr_idx = MISCREG_SCTLR_S;
+                } else {
+                    sctlr_idx =  MISCREG_SCTLR_NS;
+                }
+
                 SCTLR sctlr = miscRegs[sctlr_idx];
                 SCTLR new_sctlr = newVal;
                 new_sctlr.nmfi =  ((bool)sctlr.nmfi) && !haveVirtualization;
