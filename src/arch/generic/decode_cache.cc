@@ -46,7 +46,7 @@ BasicDecodeCache::decode(TheISA::Decoder *decoder,
     if (si && (si->machInst == mach_inst))
         return si;
 
-    DecodeCache::InstMap::iterator iter = instMap.find(mach_inst);
+    auto iter = instMap.find(mach_inst);
     if (iter != instMap.end()) {
         si = iter->second;
         return si;
