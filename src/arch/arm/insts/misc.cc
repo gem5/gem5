@@ -153,7 +153,7 @@ MrrcOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     ss << ", ";
     printIntReg(ss, dest2);
     ss << ", ";
-    printIntReg(ss, op1);
+    printMiscReg(ss, op1);
     return ss.str();
 }
 
@@ -162,7 +162,7 @@ McrrOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss);
-    printIntReg(ss, dest);
+    printMiscReg(ss, dest);
     ss << ", ";
     printIntReg(ss, op1);
     ss << ", ";
