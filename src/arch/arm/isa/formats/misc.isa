@@ -177,9 +177,9 @@ let {{
           default:
             uint32_t iss = mcrMrcIssBuild(isRead, crm, rt, crn, opc1, opc2);
             if (isRead) {
-                return new Mrc14(machInst, rt, (IntRegIndex)miscReg, iss);
+                return new Mrc14(machInst, rt, miscReg, iss);
             } else {
-                return new Mcr14(machInst, (IntRegIndex)miscReg, rt, iss);
+                return new Mcr14(machInst, miscReg, rt, iss);
             }
         }
     }
