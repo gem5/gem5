@@ -79,7 +79,16 @@ class TapEvent : public PollEvent
   public:
     TapEvent(EtherTapBase *_tap, int fd, int e)
         : PollEvent(fd, e), tap(_tap) {}
-    virtual void process(int revent) { tap->recvReal(revent); }
+
+    void
+    process(int revent) override
+    {
+        // Ensure that our event queue is active. It may not be since we get
+        // here from the PollQueue whenever a real packet happens to arrive.
+        EventQueue::ScopedMigration migrate(tap->eventQueue());
+
+        tap->recvReal(revent);
+    }
 };
 
 EtherTapBase::EtherTapBase(const Params *p)
