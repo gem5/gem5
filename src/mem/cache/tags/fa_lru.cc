@@ -64,7 +64,7 @@ FALRU::FALRU(const Params *p)
 
     // Track all cache sizes from 128K up by powers of 2
     numCaches = floorLog2(size) - 17;
-    if (numCaches >0){
+    if (numCaches > 0){
         cacheBoundaries = new FALRUBlk *[numCaches];
         cacheMask = (ULL(1) << numCaches) - 1;
     } else {
@@ -164,8 +164,10 @@ FALRU::hashLookup(Addr addr) const
 void
 FALRU::invalidate(CacheBlk *blk)
 {
-    // TODO: We need to move the block to the tail to make it the next victim
     BaseTags::invalidate(blk);
+
+    // Move the block to the tail to make it the next victim
+    moveToTail((FALRUBlk*)blk);
 
     // Erase block entry in the hash table
     tagHash.erase(blk->tag);
@@ -276,29 +278,89 @@ FALRU::insertBlock(PacketPtr pkt, CacheBlk *blk)
 void
 FALRU::moveToHead(FALRUBlk *blk)
 {
-    int updateMask = blk->inCache ^ cacheMask;
-    for (unsigned i = 0; i < numCaches; i++){
-        if ((1<<i) & updateMask) {
-            cacheBoundaries[i]->inCache &= ~(1<<i);
-            cacheBoundaries[i] = cacheBoundaries[i]->prev;
-        } else if (cacheBoundaries[i] == blk) {
-            cacheBoundaries[i] = blk->prev;
-        }
-    }
-    blk->inCache = cacheMask;
+    // If block is not already head, do the moving
     if (blk != head) {
+        // Get all caches that this block does not reside in
+        int updateMask = blk->inCache ^ cacheMask;
+
+        // Update boundaries for all cache sizes
+        for (unsigned i = 0; i < numCaches; i++){
+            // If block has been moved to a place before this boundary,
+            // all blocks in it will be pushed towards the LRU position,
+            // making one leave the boundary
+            if ((1U<<i) & updateMask) {
+                cacheBoundaries[i]->inCache &= ~(1U<<i);
+                cacheBoundaries[i] = cacheBoundaries[i]->prev;
+            // If the block resides exactly at this boundary, the previous
+            // block is pushed to its position
+            } else if (cacheBoundaries[i] == blk) {
+                cacheBoundaries[i] = blk->prev;
+            }
+        }
+
+        // Make block reside in all caches
+        blk->inCache = cacheMask;
+
+        // If block is tail, set previous block as new tail
         if (blk == tail){
             assert(blk->next == nullptr);
             tail = blk->prev;
             tail->next = nullptr;
+        // Inform block's surrounding blocks that it has been moved
         } else {
             blk->prev->next = blk->next;
             blk->next->prev = blk->prev;
         }
+
+        // Swap pointers
         blk->next = head;
         blk->prev = nullptr;
         head->prev = blk;
         head = blk;
+    }
+}
+
+void
+FALRU::moveToTail(FALRUBlk *blk)
+{
+    // If block is not already tail, do the moving
+    if (blk != tail) {
+        // Update boundaries for all cache sizes
+        for (unsigned i = 0; i < numCaches; i++){
+            // If block has been moved to a place after this boundary,
+            // all blocks in it will be pushed towards the MRU position,
+            // making one enter the boundary
+            if ((1U<<i) & blk->inCache) {
+                // If the first block after the boundary is the block,
+                // get its successor
+                if (cacheBoundaries[i]->next == blk){
+                    cacheBoundaries[i] = cacheBoundaries[i]->next->next;
+                } else {
+                    cacheBoundaries[i] = cacheBoundaries[i]->next;
+                }
+                cacheBoundaries[i]->inCache |= (1U<<i);
+            }
+        }
+
+        // Make block reside in the last cache only
+        blk->inCache = 0;
+
+        // If block is head, set next block as new head
+        if (blk == head){
+            assert(blk->prev == nullptr);
+            head = blk->next;
+            head->prev = nullptr;
+        // Inform block's surrounding blocks that it has been moved
+        } else {
+            blk->prev->next = blk->next;
+            blk->next->prev = blk->prev;
+        }
+
+        // Swap pointers
+        blk->prev = tail;
+        blk->next = nullptr;
+        tail->next = blk;
+        tail = blk;
     }
 }
 

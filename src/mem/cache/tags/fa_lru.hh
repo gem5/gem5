@@ -122,9 +122,17 @@ class FALRU : public BaseTags
 
     /**
      * Move a cache block to the MRU position.
+     *
      * @param blk The block to promote.
      */
     void moveToHead(FALRUBlk *blk);
+
+    /**
+     * Move a cache block to the LRU position.
+     *
+     * @param blk The block to demote.
+     */
+    void moveToTail(FALRUBlk *blk);
 
     /**
      * Check to make sure all the cache boundaries are still where they should
