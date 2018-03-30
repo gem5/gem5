@@ -419,10 +419,9 @@ namespace std
 
 namespace BitfieldBackend
 {
-namespace
-{
+
     template<typename T>
-    std::ostream &
+    static inline std::ostream &
     bitfieldBackendPrinter(std::ostream &os, const T &t)
     {
         os << t;
@@ -433,7 +432,7 @@ namespace
     //these specializations attempt to ensure that they get cast to integers
     //of the appropriate type before printing.
     template <>
-    std::ostream &
+    inline std::ostream &
     bitfieldBackendPrinter(std::ostream &os, const char &t)
     {
         os << (const int)t;
@@ -441,13 +440,12 @@ namespace
     }
 
     template <>
-    std::ostream &
+    inline std::ostream &
     bitfieldBackendPrinter(std::ostream &os, const unsigned char &t)
     {
         os << (const unsigned int)t;
         return os;
     }
-}
 }
 
 //A default << operator which casts a bitunion to its underlying type and
