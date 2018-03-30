@@ -45,8 +45,6 @@
 #include "sim/faults.hh"
 #include "sim/serialize.hh"
 
-using namespace std;
-
 void
 EmulationPageTable::map(Addr vaddr, Addr paddr, int64_t size, uint64_t flags)
 {
@@ -100,7 +98,7 @@ void
 EmulationPageTable::getMappings(std::vector<std::pair<Addr, Addr>> *addr_maps)
 {
     for (auto &iter : pTable)
-        addr_maps->push_back(make_pair(iter.first, iter.second.paddr));
+        addr_maps->push_back(std::make_pair(iter.first, iter.second.paddr));
 }
 
 void

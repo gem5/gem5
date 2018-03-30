@@ -47,8 +47,6 @@
 #include "base/trace.hh"
 #include "debug/MemCheckerMonitor.hh"
 
-using namespace std;
-
 MemCheckerMonitor::MemCheckerMonitor(Params* params)
     : MemObject(params),
       masterPort(name() + "-master", *this),

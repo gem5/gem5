@@ -60,8 +60,6 @@
 #include "mem/cache/cache.hh"
 #include "sim/core.hh"
 
-using namespace std;
-
 MSHR::MSHR() : downstreamPending(false),
                pendingModified(false),
                postInvalidate(false), postDowngrade(false),
@@ -617,7 +615,7 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
 std::string
 MSHR::print() const
 {
-    ostringstream str;
+    std::ostringstream str;
     print(str);
     return str.str();
 }

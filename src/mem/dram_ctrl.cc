@@ -2302,8 +2302,6 @@ DRAMCtrl::Rank::resetStats() {
 void
 DRAMCtrl::Rank::regStats()
 {
-    using namespace Stats;
-
     pwrStateTime
         .init(6)
         .name(name() + ".memoryStateTime")
@@ -2367,8 +2365,8 @@ DRAMCtrl::Rank::regStats()
         .name(name() + ".totalIdleTime")
         .desc("Total Idle time Per DRAM Rank");
 
-    registerDumpCallback(new RankDumpCallback(this));
-    registerResetCallback(new RankResetCallback(this));
+    Stats::registerDumpCallback(new RankDumpCallback(this));
+    Stats::registerResetCallback(new RankResetCallback(this));
 }
 void
 DRAMCtrl::regStats()

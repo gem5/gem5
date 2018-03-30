@@ -54,8 +54,6 @@
 #include "cpu/thread_context.hh"
 #include "sim/system.hh"
 
-using namespace TheISA;
-
 FSTranslatingPortProxy::FSTranslatingPortProxy(ThreadContext *tc)
     : PortProxy(tc->getCpuPtr()->getDataPort(),
                 tc->getSystemPtr()->cacheLineSize()), _tc(tc)

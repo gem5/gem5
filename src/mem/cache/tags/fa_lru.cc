@@ -53,8 +53,6 @@
 #include "base/intmath.hh"
 #include "base/logging.hh"
 
-using namespace std;
-
 FALRU::FALRU(const Params *p)
     : BaseTags(p), cacheBoundaries(nullptr)
 {
@@ -122,7 +120,6 @@ FALRU::~FALRU()
 void
 FALRU::regStats()
 {
-    using namespace Stats;
     BaseTags::regStats();
     hits
         .init(numCaches+1)
@@ -140,7 +137,7 @@ FALRU::regStats()
         ;
 
     for (unsigned i = 0; i <= numCaches; ++i) {
-        stringstream size_str;
+        std::stringstream size_str;
         if (i < 3){
             size_str << (1<<(i+7)) <<"K";
         } else {

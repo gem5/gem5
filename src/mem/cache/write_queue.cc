@@ -48,8 +48,6 @@
 
 #include "mem/cache/write_queue.hh"
 
-using namespace std;
-
 WriteQueue::WriteQueue(const std::string &_label,
                        int num_entries, int reserve)
     : Queue<WriteQueueEntry>(_label, num_entries, reserve)

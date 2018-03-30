@@ -61,8 +61,6 @@
 #include "mem/cache/cache.hh"
 #include "sim/core.hh"
 
-using namespace std;
-
 inline void
 WriteQueueEntry::TargetList::add(PacketPtr pkt, Tick readyTime,
                                  Counter order)
@@ -163,7 +161,7 @@ WriteQueueEntry::print(std::ostream &os, int verbosity,
 std::string
 WriteQueueEntry::print() const
 {
-    ostringstream str;
+    std::ostringstream str;
     print(str);
     return str.str();
 }

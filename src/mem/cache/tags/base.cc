@@ -52,8 +52,6 @@
 #include "mem/cache/base.hh"
 #include "sim/sim_exit.hh"
 
-using namespace std;
-
 BaseTags::BaseTags(const Params *p)
     : ClockedObject(p), blkSize(p->block_size), blkMask(blkSize - 1),
       size(p->size),

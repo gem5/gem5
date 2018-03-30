@@ -52,8 +52,6 @@
 #include "base/intmath.hh"
 #include "sim/core.hh"
 
-using namespace std;
-
 BaseSetAssoc::BaseSetAssoc(const Params *p)
     :BaseTags(p), assoc(p->assoc), allocAssoc(p->assoc),
      blks(p->size / p->block_size),

@@ -47,8 +47,6 @@
 #include "debug/Drain.hh"
 #include "debug/PacketQueue.hh"
 
-using namespace std;
-
 PacketQueue::PacketQueue(EventManager& _em, const std::string& _label,
                          const std::string& _sendEventName,
                          bool disable_sanity_check)
