@@ -39,6 +39,69 @@
 #include "base/logging.hh"
 
 CompressionBlk::CompressionBlk()
-    : SectorSubBlk()
+    : SectorSubBlk(), _size(0), _decompressionLatency(0)
 {
+}
+
+bool
+CompressionBlk::isCompressed() const
+{
+    return (status & BlkCompressed) != 0;
+}
+
+void
+CompressionBlk::setCompressed()
+{
+    status |= BlkCompressed;
+}
+
+void
+CompressionBlk::setUncompressed()
+{
+    status &= ~BlkCompressed;
+}
+
+std::size_t
+CompressionBlk::getSizeBits() const
+{
+    return _size;
+}
+
+void
+CompressionBlk::setSizeBits(const std::size_t size)
+{
+    _size = size;
+}
+
+Cycles
+CompressionBlk::getDecompressionLatency() const
+{
+    return _decompressionLatency;
+}
+
+void
+CompressionBlk::setDecompressionLatency(const Cycles lat)
+{
+    _decompressionLatency = lat;
+}
+
+std::string
+CompressionBlk::print() const
+{
+    return csprintf("%s compressed: %d size: %llu decompression latency: %d",
+                    SectorSubBlk::print(), isCompressed(), getSizeBits(),
+                    getDecompressionLatency());
+}
+
+bool
+SuperBlk::isCompressed() const
+{
+    for (const auto& blk : blks) {
+        if (blk->isValid()) {
+            return static_cast<CompressionBlk*>(blk)->isCompressed();
+        }
+    }
+
+    // An invalid block is seen as compressed
+    return true;
 }

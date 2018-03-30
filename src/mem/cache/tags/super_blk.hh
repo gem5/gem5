@@ -49,11 +49,75 @@ class SuperBlk;
  */
 class CompressionBlk : public SectorSubBlk
 {
+  private:
+    /**
+     * Set size, in bits, of this compressed block's data.
+     */
+    std::size_t _size;
+
+    /**
+     * Number of cycles needed to decompress this block. We store it to avoid
+     * doing decompressions.
+     */
+    Cycles _decompressionLatency;
+
   public:
     CompressionBlk();
     CompressionBlk(const CompressionBlk&) = delete;
     CompressionBlk& operator=(const CompressionBlk&) = delete;
     ~CompressionBlk() {};
+
+    /**
+     * Check if this block holds compressed data.
+     *
+     * @return True if the block holds compressed data.
+     */
+    bool isCompressed() const;
+
+    /**
+     * Set compression bit.
+     */
+    void setCompressed();
+
+    /**
+     * Clear compression bit.
+     */
+    void setUncompressed();
+
+    /*
+     * Get size, in bits, of this compressed block's data.
+     *
+     * @return The compressed size.
+     */
+    std::size_t getSizeBits() const;
+
+    /**
+     * Set size, in bits, of this compressed block's data.
+     *
+     * @param The compressed size.
+     */
+    void setSizeBits(const std::size_t size);
+
+    /**
+     * Get number of cycles needed to decompress this block.
+     *
+     * @return Decompression latency.
+     */
+    Cycles getDecompressionLatency() const;
+
+    /**
+     * Set number of cycles needed to decompress this block.
+     *
+     * @param Decompression latency.
+     */
+    void setDecompressionLatency(const Cycles lat);
+
+    /**
+     * Pretty-print sector offset and other CacheBlk information.
+     *
+     * @return string with basic state information
+     */
+    std::string print() const override;
 };
 
 /**
@@ -67,6 +131,14 @@ class SuperBlk : public SectorBlk
     SuperBlk(const SuperBlk&) = delete;
     SuperBlk& operator=(const SuperBlk&) = delete;
     ~SuperBlk() {};
+
+    /**
+     * Returns whether the superblock contains compressed blocks or not. By
+     * default, if not blocks are valid, the superblock is compressible.
+     *
+     * @return The compressibility state of the superblock.
+     */
+    bool isCompressed() const;
 };
 
 #endif //__MEM_CACHE_TAGS_SUPER_BLK_HH__

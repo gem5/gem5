@@ -76,6 +76,8 @@ enum CacheBlkStatusBits : unsigned {
     BlkHWPrefetched =   0x20,
     /** block holds data from the secure memory space */
     BlkSecure =         0x40,
+    /** block holds compressed data */
+    BlkCompressed =     0x80
 };
 
 /**
