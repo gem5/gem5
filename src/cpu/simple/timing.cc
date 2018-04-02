@@ -680,25 +680,32 @@ TimingSimpleCPU::advanceInst(const Fault &fault)
         return;
 
     if (fault != NoFault) {
-        DPRINTF(SimpleCPU, "Fault occured, scheduling fetch event\n");
+        DPRINTF(SimpleCPU, "Fault occured. Handling the fault\n");
 
         advancePC(fault);
 
-        Tick stall = dynamic_pointer_cast<SyscallRetryFault>(fault) ?
-                     clockEdge(syscallRetryLatency) : clockEdge();
+        // A syscall fault could suspend this CPU (e.g., futex_wait)
+        // If the _status is not Idle, schedule an event to fetch the next
+        // instruction after 'stall' ticks.
+        // If the cpu has been suspended (i.e., _status == Idle), another
+        // cpu will wake this cpu up later.
+        if (_status != Idle) {
+            DPRINTF(SimpleCPU, "Scheduling fetch event after the Fault\n");
 
-        reschedule(fetchEvent, stall, true);
+            Tick stall = dynamic_pointer_cast<SyscallRetryFault>(fault) ?
+                         clockEdge(syscallRetryLatency) : clockEdge();
+            reschedule(fetchEvent, stall, true);
+            _status = Faulting;
+        }
 
-        _status = Faulting;
         return;
     }
-
 
     if (!t_info.stayAtPC)
         advancePC(fault);
 
     if (tryCompleteDrain())
-            return;
+        return;
 
     if (_status == BaseSimpleCPU::Running) {
         // kick off fetch of next instruction... callback from icache
