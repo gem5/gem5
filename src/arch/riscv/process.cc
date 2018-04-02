@@ -279,6 +279,6 @@ RiscvProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
         tc->setIntReg(SyscallPseudoReturnReg, sysret.returnValue());
     } else {
         // got an error, return details
-        tc->setIntReg(SyscallPseudoReturnReg, sysret.errnoValue());
+        tc->setIntReg(SyscallPseudoReturnReg, sysret.encodedValue());
     }
 }
