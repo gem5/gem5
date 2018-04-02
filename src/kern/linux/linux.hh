@@ -239,11 +239,14 @@ class Linux : public OperatingSystem
     static std::string cpuOnline(Process *process, ThreadContext *tc);
 
     // For futex system call
-    static const unsigned TGT_FUTEX_WAIT  = 0;
-    static const unsigned TGT_FUTEX_WAKE  = 1;
-    static const unsigned TGT_EAGAIN      = 11;
-    static const unsigned TGT_EWOULDBLOCK = TGT_EAGAIN;
-    static const unsigned TGT_FUTEX_PRIVATE_FLAG = 128;
+    static const unsigned TGT_FUTEX_WAIT                = 0;
+    static const unsigned TGT_FUTEX_WAKE                = 1;
+    static const unsigned TGT_FUTEX_WAIT_BITSET         = 9;
+    static const unsigned TGT_FUTEX_WAKE_BITSET         = 10;
+    static const unsigned TGT_EAGAIN                    = 11;
+    static const unsigned TGT_EWOULDBLOCK               = TGT_EAGAIN;
+    static const unsigned TGT_FUTEX_PRIVATE_FLAG        = 128;
+    static const unsigned TGT_FUTEX_CLOCK_REALTIME_FLAG = 256;
 
     // for *at syscalls
     static const int TGT_AT_FDCWD   = -100;

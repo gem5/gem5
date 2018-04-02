@@ -79,12 +79,46 @@ namespace std {
     };
 }
 
-typedef std::list<ThreadContext *> ThreadContextList;
+/**
+ * WaiterState defines internal state of a waiter thread. The state
+ * includes a pointer to the thread's context and its associated bitmask.
+ */
+class WaiterState {
+  public:
+    ThreadContext* tc;
+    int bitmask;
+
+    /**
+     * this constructor is used if futex ops with bitset are used
+     */
+    WaiterState(ThreadContext* _tc, int _bitmask)
+      : tc(_tc), bitmask(_bitmask)
+    { }
+
+    /**
+     * if bitset is not defined, just set bitmask to 0xffffffff
+     */
+    WaiterState(ThreadContext* _tc)
+      : tc(_tc), bitmask(0xffffffff)
+    { }
+
+    /**
+     * return true if the bit-wise AND of the wakeup_bitmask given by
+     * a waking thread and this thread's internal bitmask is non-zero
+     */
+    bool
+    checkMask(int wakeup_bitmask) const
+    {
+        return bitmask & wakeup_bitmask;
+    }
+};
+
+typedef std::list<WaiterState> WaiterList;
 
 /**
  * FutexMap class holds a map of all futexes used in the system
  */
-class FutexMap : public std::unordered_map<FutexKey, ThreadContextList>
+class FutexMap : public std::unordered_map<FutexKey, WaiterList>
 {
   public:
     /** Inserts a futex into the map with one waiting TC */
@@ -95,10 +129,10 @@ class FutexMap : public std::unordered_map<FutexKey, ThreadContextList>
         auto it = find(key);
 
         if (it == end()) {
-            ThreadContextList tcList {tc};
-            insert({key, tcList});
+            WaiterList waiterList {WaiterState(tc)};
+            insert({key, waiterList});
         } else {
-            it->second.push_back(tc);
+            it->second.push_back(WaiterState(tc));
         }
 
         /** Suspend the thread context */
@@ -116,20 +150,77 @@ class FutexMap : public std::unordered_map<FutexKey, ThreadContextList>
             return 0;
 
         int woken_up = 0;
-        auto &tcList = it->second;
+        auto &waiterList = it->second;
 
-        while (!tcList.empty() && woken_up < count) {
-            tcList.front()->activate();
-            tcList.pop_front();
+        while (!waiterList.empty() && woken_up < count) {
+            waiterList.front().tc->activate();
+            waiterList.pop_front();
             woken_up++;
         }
 
-        if (tcList.empty())
+        if (waiterList.empty())
             erase(it);
 
         return woken_up;
     }
 
+    /**
+     * inserts a futex into the map with one waiting TC
+     * associates the waiter with a given bitmask
+     */
+    void
+    suspend_bitset(Addr addr, uint64_t tgid, ThreadContext *tc,
+                   int bitmask)
+    {
+        FutexKey key(addr, tgid);
+        auto it = find(key);
+
+        if (it == end()) {
+            WaiterList waiterList {WaiterState(tc, bitmask)};
+            insert({key, waiterList});
+        } else {
+            it->second.push_back(WaiterState(tc, bitmask));
+        }
+
+        /** Suspend the thread context */
+        tc->suspend();
+    }
+
+    /**
+     * Wakes up all waiters waiting on the addr and associated with the
+     * given bitset
+     */
+    int
+    wakeup_bitset(Addr addr, uint64_t tgid, int bitmask)
+    {
+        FutexKey key(addr, tgid);
+        auto it = find(key);
+
+        if (it == end())
+            return 0;
+
+        int woken_up = 0;
+
+        auto &waiterList = it->second;
+        auto iter = waiterList.begin();
+
+        while (iter != waiterList.end()) {
+            WaiterState& waiter = *iter;
+
+            if (waiter.checkMask(bitmask)) {
+                waiter.tc->activate();
+                iter = waiterList.erase(iter);
+                woken_up++;
+            } else {
+                ++iter;
+            }
+        }
+
+        if (waiterList.empty())
+            erase(it);
+
+        return woken_up;
+    }
 };
 
 #endif // __FUTEX_MAP_HH__

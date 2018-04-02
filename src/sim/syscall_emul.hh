@@ -403,16 +403,20 @@ futexFunc(SyscallDesc *desc, int callnum, Process *process,
     Addr uaddr = process->getSyscallArg(tc, index);
     int op = process->getSyscallArg(tc, index);
     int val = process->getSyscallArg(tc, index);
+    int timeout M5_VAR_USED = process->getSyscallArg(tc, index);
+    Addr uaddr2 M5_VAR_USED = process->getSyscallArg(tc, index);
+    int val3 = process->getSyscallArg(tc, index);
 
     /*
      * Unsupported option that does not affect the correctness of the
      * application. This is a performance optimization utilized by Linux.
      */
     op &= ~OS::TGT_FUTEX_PRIVATE_FLAG;
+    op &= ~OS::TGT_FUTEX_CLOCK_REALTIME_FLAG;
 
     FutexMap &futex_map = tc->getSystemPtr()->futexMap;
 
-    if (OS::TGT_FUTEX_WAIT == op) {
+    if (OS::TGT_FUTEX_WAIT == op || OS::TGT_FUTEX_WAIT_BITSET == op) {
         // Ensure futex system call accessed atomically.
         BufferArg buf(uaddr, sizeof(int));
         buf.copyIn(tc->getMemProxy());
@@ -426,11 +430,17 @@ futexFunc(SyscallDesc *desc, int callnum, Process *process,
         if (val != mem_val)
             return -OS::TGT_EWOULDBLOCK;
 
-        futex_map.suspend(uaddr, process->tgid(), tc);
+        if (OS::TGT_FUTEX_WAIT) {
+            futex_map.suspend(uaddr, process->tgid(), tc);
+        } else {
+            futex_map.suspend_bitset(uaddr, process->tgid(), tc, val3);
+        }
 
         return 0;
     } else if (OS::TGT_FUTEX_WAKE == op) {
         return futex_map.wakeup(uaddr, process->tgid(), val);
+    } else if (OS::TGT_FUTEX_WAKE_BITSET == op) {
+        return futex_map.wakeup_bitset(uaddr, process->tgid(), val3);
     }
 
     warn("futex: op %d not implemented; ignoring.", op);
