@@ -1861,9 +1861,8 @@ FullO3CPU<Impl>::addThreadToExitingList(ThreadID tid)
 {
     DPRINTF(O3CPU, "Thread %d is inserted to exitingThreads list\n", tid);
 
-    // make sure the thread is Active
-    assert(std::find(activeThreads.begin(), activeThreads.end(), tid)
-                                              != activeThreads.end());
+    // the thread trying to exit can't be already halted
+    assert(tcBase(tid)->status() != ThreadContext::Halted);
 
     // make sure the thread has not been added to the list yet
     assert(exitingThreads.count(tid) == 0);

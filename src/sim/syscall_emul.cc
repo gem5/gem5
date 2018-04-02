@@ -102,28 +102,6 @@ exitImpl(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc,
 
     System *sys = tc->getSystemPtr();
 
-    int activeContexts = 0;
-    for (auto &system: sys->systemList)
-        activeContexts += system->numRunningContexts();
-    if (activeContexts == 1) {
-        /**
-         * Even though we are terminating the final thread context, dist-gem5
-         * requires the simulation to remain active and provide
-         * synchronization messages to the switch process. So we just halt
-         * the last thread context and return. The simulation will be
-         * terminated by dist-gem5 in a coordinated manner once all nodes
-         * have signaled their readiness to exit. For non dist-gem5
-         * simulations, readyToExit() always returns true.
-         */
-        if (!DistIface::readyToExit(0)) {
-            tc->halt();
-            return status;
-        }
-
-        exitSimLoop("exiting with last active thread context", status & 0xff);
-        return status;
-    }
-
     if (group)
         *p->exitGroup = true;
 
@@ -146,16 +124,34 @@ exitImpl(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc,
         if (walk->pid() == p->tgid())
             tg_lead = walk;
 
-        if ((sys->threadContexts[i]->status() != ThreadContext::Halted)
-            && (walk != p)) {
+        if ((sys->threadContexts[i]->status() != ThreadContext::Halted) &&
+            (sys->threadContexts[i]->status() != ThreadContext::Halting) &&
+            (walk != p)) {
             /**
              * Check if we share thread group with the pointer; this denotes
              * that we are not the last thread active in the thread group.
              * Note that setting this to false also prevents further
              * iterations of the loop.
              */
-            if (walk->tgid() == p->tgid())
-                last_thread = false;
+            if (walk->tgid() == p->tgid()) {
+                /**
+                 * If p is trying to exit_group and both walk and p are in
+                 * the same thread group (i.e., sharing the same tgid),
+                 * we need to halt walk's thread context. After all threads
+                 * except p are halted, p becomes the last thread in the
+                 * group.
+                 *
+                 * If p is not doing exit_group and there exists another
+                 * active thread context in the group, last_thread is
+                 * set to false to prevent the parent thread from killing
+                 * all threads in the group.
+                 */
+                if (*(p->exitGroup)) {
+                    sys->threadContexts[i]->halt();
+                } else {
+                    last_thread = false;
+                }
+            }
 
             /**
              * A corner case exists which involves execve(). After execve(),
@@ -189,6 +185,33 @@ exitImpl(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc,
     }
 
     tc->halt();
+
+    /**
+     * check to see if there is no more active thread in the system. If so,
+     * exit the simulation loop
+     */
+    int activeContexts = 0;
+    for (auto &system: sys->systemList)
+        activeContexts += system->numRunningContexts();
+
+    if (activeContexts == 0) {
+        /**
+         * Even though we are terminating the final thread context, dist-gem5
+         * requires the simulation to remain active and provide
+         * synchronization messages to the switch process. So we just halt
+         * the last thread context and return. The simulation will be
+         * terminated by dist-gem5 in a coordinated manner once all nodes
+         * have signaled their readiness to exit. For non dist-gem5
+         * simulations, readyToExit() always returns true.
+         */
+        if (!DistIface::readyToExit(0)) {
+            return status;
+        }
+
+        exitSimLoop("exiting with last active thread context", status & 0xff);
+        return status;
+    }
+
     return status;
 }
 
