@@ -441,8 +441,21 @@ futexFunc(SyscallDesc *desc, int callnum, Process *process,
         return futex_map.wakeup(uaddr, process->tgid(), val);
     } else if (OS::TGT_FUTEX_WAKE_BITSET == op) {
         return futex_map.wakeup_bitset(uaddr, process->tgid(), val3);
-    }
+    } else if (OS::TGT_FUTEX_REQUEUE == op ||
+               OS::TGT_FUTEX_CMP_REQUEUE == op) {
 
+        // Ensure futex system call accessed atomically.
+        BufferArg buf(uaddr, sizeof(int));
+        buf.copyIn(tc->getMemProxy());
+        int mem_val = *(int*)buf.bufferPtr();
+        /*
+         * For CMP_REQUEUE, the whole operation is only started only if
+         * val3 is still the value of the futex pointed to by uaddr.
+         */
+        if (OS::TGT_FUTEX_CMP_REQUEUE && val3 != mem_val)
+            return -OS::TGT_EWOULDBLOCK;
+        return futex_map.requeue(uaddr, process->tgid(), val, timeout, uaddr2);
+    }
     warn("futex: op %d not implemented; ignoring.", op);
     return -ENOSYS;
 }

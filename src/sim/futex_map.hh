@@ -221,6 +221,60 @@ class FutexMap : public std::unordered_map<FutexKey, WaiterList>
 
         return woken_up;
     }
+
+    /**
+     * This operation wakes a given number (val) of waiters. If there are
+     * more threads waiting than woken, they are removed from the wait
+     * queue of the futex pointed to by addr1 and added to the wait queue
+     * of the futex pointed to by addr2. The number of waiter moved is
+     * capped by count2 (misused timeout parameter).
+     *
+     * The return value is the number of waiters that are woken or
+     * requeued.
+     */
+    int
+    requeue(Addr addr1, uint64_t tgid, int count, int count2, Addr addr2)
+    {
+        FutexKey key1(addr1, tgid);
+        auto it1 = find(key1);
+
+        if (it1 == end())
+            return 0;
+
+        int woken_up = 0;
+        auto &waiterList1 = it1->second;
+
+        while (!waiterList1.empty() && woken_up < count) {
+            waiterList1.front().tc->activate();
+            waiterList1.pop_front();
+            woken_up++;
+        }
+
+        WaiterList tmpList;
+        int requeued = 0;
+
+        while (!waiterList1.empty() && requeued < count2) {
+          auto w = waiterList1.front();
+          waiterList1.pop_front();
+          tmpList.push_back(w);
+          requeued++;
+        }
+
+        FutexKey key2(addr2, tgid);
+        auto it2 = find(key2);
+
+        if (it2 == end() && requeued > 0) {
+            insert({key2, tmpList});
+        } else {
+            it2->second.insert(it2->second.end(),
+                               tmpList.begin(), tmpList.end());
+        }
+
+        if (waiterList1.empty())
+            erase(it1);
+
+        return woken_up + requeued;
+    }
 };
 
 #endif // __FUTEX_MAP_HH__
