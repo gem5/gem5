@@ -455,6 +455,77 @@ futexFunc(SyscallDesc *desc, int callnum, Process *process,
         if (OS::TGT_FUTEX_CMP_REQUEUE && val3 != mem_val)
             return -OS::TGT_EWOULDBLOCK;
         return futex_map.requeue(uaddr, process->tgid(), val, timeout, uaddr2);
+    } else if (OS::TGT_FUTEX_WAKE_OP == op) {
+        /*
+         * The FUTEX_WAKE_OP operation is equivalent to executing the
+         * following code atomically and totally ordered with respect to
+         * other futex operations on any of the two supplied futex words:
+         *
+         *   int oldval = *(int *) addr2;
+         *   *(int *) addr2 = oldval op oparg;
+         *   futex(addr1, FUTEX_WAKE, val, 0, 0, 0);
+         *   if (oldval cmp cmparg)
+         *        futex(addr2, FUTEX_WAKE, val2, 0, 0, 0);
+         *
+         * (op, oparg, cmp, cmparg are encoded in val3)
+         *
+         * +---+---+-----------+-----------+
+         * |op |cmp|   oparg   |  cmparg   |
+         * +---+---+-----------+-----------+
+         *   4   4       12          12    <== # of bits
+         *
+         * reference: http://man7.org/linux/man-pages/man2/futex.2.html
+         *
+         */
+        // get value from simulated-space
+        BufferArg buf(uaddr2, sizeof(int));
+        buf.copyIn(tc->getMemProxy());
+        int oldval = *(int*)buf.bufferPtr();
+        int newval = oldval;
+        // extract op, oparg, cmp, cmparg from val3
+        int wake_cmparg =  val3 & 0xfff;
+        int wake_oparg  = (val3 & 0xfff000)   >> 12;
+        int wake_cmp    = (val3 & 0xf000000)  >> 24;
+        int wake_op     = (val3 & 0xf0000000) >> 28;
+        if ((wake_op & OS::TGT_FUTEX_OP_ARG_SHIFT) >> 3 == 1)
+            wake_oparg = (1 << wake_oparg);
+        wake_op &= ~OS::TGT_FUTEX_OP_ARG_SHIFT;
+        // perform operation on the value of the second futex
+        if (wake_op == OS::TGT_FUTEX_OP_SET)
+            newval = wake_oparg;
+        else if (wake_op == OS::TGT_FUTEX_OP_ADD)
+            newval += wake_oparg;
+        else if (wake_op == OS::TGT_FUTEX_OP_OR)
+            newval |= wake_oparg;
+        else if (wake_op == OS::TGT_FUTEX_OP_ANDN)
+            newval &= ~wake_oparg;
+        else if (wake_op == OS::TGT_FUTEX_OP_XOR)
+            newval ^= wake_oparg;
+        // copy updated value back to simulated-space
+        *(int*)buf.bufferPtr() = newval;
+        buf.copyOut(tc->getMemProxy());
+        // perform the first wake-up
+        int woken1 = futex_map.wakeup(uaddr, process->tgid(), val);
+        int woken2 = 0;
+        // calculate the condition of the second wake-up
+        bool is_wake2 = false;
+        if (wake_cmp == OS::TGT_FUTEX_OP_CMP_EQ)
+            is_wake2 = oldval == wake_cmparg;
+        else if (wake_cmp == OS::TGT_FUTEX_OP_CMP_NE)
+            is_wake2 = oldval != wake_cmparg;
+        else if (wake_cmp == OS::TGT_FUTEX_OP_CMP_LT)
+            is_wake2 = oldval < wake_cmparg;
+        else if (wake_cmp == OS::TGT_FUTEX_OP_CMP_LE)
+            is_wake2 = oldval <= wake_cmparg;
+        else if (wake_cmp == OS::TGT_FUTEX_OP_CMP_GT)
+            is_wake2 = oldval > wake_cmparg;
+        else if (wake_cmp == OS::TGT_FUTEX_OP_CMP_GE)
+            is_wake2 = oldval >= wake_cmparg;
+        // perform the second wake-up
+        if (is_wake2)
+            woken2 = futex_map.wakeup(uaddr2, process->tgid(), timeout);
+
+        return woken1 + woken2;
     }
     warn("futex: op %d not implemented; ignoring.", op);
     return -ENOSYS;

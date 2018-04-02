@@ -243,12 +243,28 @@ class Linux : public OperatingSystem
     static const unsigned TGT_FUTEX_WAKE                = 1;
     static const unsigned TGT_FUTEX_REQUEUE             = 3;
     static const unsigned TGT_FUTEX_CMP_REQUEUE         = 4;
+    static const unsigned TGT_FUTEX_WAKE_OP             = 5;
     static const unsigned TGT_FUTEX_WAIT_BITSET         = 9;
     static const unsigned TGT_FUTEX_WAKE_BITSET         = 10;
     static const unsigned TGT_EAGAIN                    = 11;
     static const unsigned TGT_EWOULDBLOCK               = TGT_EAGAIN;
     static const unsigned TGT_FUTEX_PRIVATE_FLAG        = 128;
     static const unsigned TGT_FUTEX_CLOCK_REALTIME_FLAG = 256;
+    // op field of futex_wake_op operation
+    static const unsigned TGT_FUTEX_OP_SET  = 0; // uaddr2 = oparg;
+    static const unsigned TGT_FUTEX_OP_ADD  = 1; // uaddr2 += oparg;
+    static const unsigned TGT_FUTEX_OP_OR   = 2; // uaddr2 |= oparg;
+    static const unsigned TGT_FUTEX_OP_ANDN = 3; // uaddr2 &= ~oparg;
+    static const unsigned TGT_FUTEX_OP_XOR  = 4; // uaddr2 ^= oparg;
+    // Use (1 << oparg) as operand
+    static const unsigned TGT_FUTEX_OP_ARG_SHIFT = 8;
+    // cmp field of futex_wake_op operation
+    static const unsigned TGT_FUTEX_OP_CMP_EQ = 0;
+    static const unsigned TGT_FUTEX_OP_CMP_NE = 1;
+    static const unsigned TGT_FUTEX_OP_CMP_LT = 2;
+    static const unsigned TGT_FUTEX_OP_CMP_LE = 3;
+    static const unsigned TGT_FUTEX_OP_CMP_GT = 4;
+    static const unsigned TGT_FUTEX_OP_CMP_GE = 5;
 
     // for *at syscalls
     static const int TGT_AT_FDCWD   = -100;
