@@ -196,6 +196,8 @@ class RiscvLinux64 : public Linux
               uint64_t stack, uint64_t tls)
     {
         RiscvISA::copyRegs(ptc, ctc);
+        if (flags & TGT_CLONE_SETTLS)
+            ctc->setIntReg(RiscvISA::ThreadPointerReg, tls);
         if (stack)
             ctc->setIntReg(RiscvISA::StackPointerReg, stack);
     }
