@@ -169,6 +169,9 @@ class DefaultRename
     /** Initializes variables for the stage. */
     void startupStage();
 
+    /** Clear all thread-specific states */
+    void clearStates(ThreadID tid);
+
     /** Sets pointer to list of active threads. */
     void setActiveThreads(std::list<ThreadID> *at_ptr);
 

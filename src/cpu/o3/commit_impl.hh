@@ -366,6 +366,22 @@ DefaultCommit<Impl>::startupStage()
 
 template <class Impl>
 void
+DefaultCommit<Impl>::clearStates(ThreadID tid)
+{
+    commitStatus[tid] = Idle;
+    changedROBNumEntries[tid] = false;
+    checkEmptyROB[tid] = false;
+    trapInFlight[tid] = false;
+    committedStores[tid] = false;
+    trapSquash[tid] = false;
+    tcSquash[tid] = false;
+    pc[tid].set(0);
+    lastCommitedSeqNum[tid] = 0;
+    squashAfterInst[tid] = NULL;
+}
+
+template <class Impl>
+void
 DefaultCommit<Impl>::drain()
 {
     drainPending = true;
@@ -813,6 +829,13 @@ DefaultCommit<Impl>::commit()
         if (trapSquash[tid]) {
             assert(!tcSquash[tid]);
             squashFromTrap(tid);
+
+            // If the thread is trying to exit (i.e., an exit syscall was
+            // executed), this trapSquash was originated by the exit
+            // syscall earlier. In this case, schedule an exit event in
+            // the next cycle to fully terminate this thread
+            if (cpu->isThreadExiting(tid))
+                cpu->scheduleThreadExitEvent(tid);
         } else if (tcSquash[tid]) {
             assert(commitStatus[tid] != TrapPending);
             squashFromTC(tid);

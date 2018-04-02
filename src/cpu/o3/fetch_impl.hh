@@ -328,6 +328,26 @@ DefaultFetch<Impl>::startupStage()
 
 template<class Impl>
 void
+DefaultFetch<Impl>::clearStates(ThreadID tid)
+{
+    fetchStatus[tid] = Running;
+    pc[tid] = cpu->pcState(tid);
+    fetchOffset[tid] = 0;
+    macroop[tid] = NULL;
+    delayedCommit[tid] = false;
+    memReq[tid] = NULL;
+    stalls[tid].decode = false;
+    stalls[tid].drain = false;
+    fetchBufferPC[tid] = 0;
+    fetchBufferValid[tid] = false;
+    fetchQueue[tid].clear();
+
+    // TODO not sure what to do with priorityList for now
+    // priorityList.push_back(tid);
+}
+
+template<class Impl>
+void
 DefaultFetch<Impl>::resetStage()
 {
     numInst = 0;

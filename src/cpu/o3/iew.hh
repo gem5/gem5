@@ -147,6 +147,9 @@ class DefaultIEW
     /** Initializes stage; sends back the number of free IQ and LSQ entries. */
     void startupStage();
 
+    /** Clear all thread-specific states */
+    void clearStates(ThreadID tid);
+
     /** Sets main time buffer used for backwards communication. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
 

@@ -102,6 +102,10 @@ class DefaultDecode
     DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params);
 
     void startupStage();
+
+    /** Clear all thread-specific states */
+    void clearStates(ThreadID tid);
+
     void resetStage();
 
     /** Returns the name of decode. */

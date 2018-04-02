@@ -187,6 +187,9 @@ class DefaultCommit
     /** Initializes stage by sending back the number of free entries. */
     void startupStage();
 
+    /** Clear all thread-specific states */
+    void clearStates(ThreadID tid);
+
     /** Initializes the draining of commit. */
     void drain();
 

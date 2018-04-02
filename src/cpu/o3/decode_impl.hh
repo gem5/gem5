@@ -93,6 +93,14 @@ DefaultDecode<Impl>::startupStage()
 
 template<class Impl>
 void
+DefaultDecode<Impl>::clearStates(ThreadID tid)
+{
+    decodeStatus[tid] = Idle;
+    stalls[tid].rename = false;
+}
+
+template<class Impl>
+void
 DefaultDecode<Impl>::resetStage()
 {
     _status = Inactive;

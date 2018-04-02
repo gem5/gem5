@@ -128,11 +128,18 @@ O3ThreadContext<Impl>::halt()
 {
     DPRINTF(O3CPU, "Calling halt on Thread Context %d\n", threadId());
 
-    if (thread->status() == ThreadContext::Halted)
+    if (thread->status() == ThreadContext::Halting ||
+        thread->status() == ThreadContext::Halted)
         return;
 
-    thread->setStatus(ThreadContext::Halted);
-    cpu->haltContext(thread->threadId());
+    // the thread is not going to halt/terminate immediately in this cycle.
+    // The thread will be removed after an exit trap is processed
+    // (e.g., after trapLatency cycles). Until then, the thread's status
+    // will be Halting.
+    thread->setStatus(ThreadContext::Halting);
+
+    // add this thread to the exiting list to mark that it is trying to exit.
+    cpu->addThreadToExitingList(thread->threadId());
 }
 
 template <class Impl>

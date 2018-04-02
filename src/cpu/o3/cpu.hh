@@ -205,6 +205,9 @@ class FullO3CPU : public BaseO3CPU
     /** The tick event used for scheduling CPU ticks. */
     EventFunctionWrapper tickEvent;
 
+    /** The exit event used for terminating all ready-to-exit threads */
+    EventFunctionWrapper threadExitEvent;
+
     /** Schedule tick event, regardless of its current state. */
     void scheduleTickEvent(Cycles delay)
     {
@@ -330,6 +333,21 @@ class FullO3CPU : public BaseO3CPU
 
     void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
     void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
+
+    /** Insert tid to the list of threads trying to exit */
+    void addThreadToExitingList(ThreadID tid);
+
+    /** Is the thread trying to exit? */
+    bool isThreadExiting(ThreadID tid) const;
+
+    /**
+     *  If a thread is trying to exit and its corresponding trap event
+     *  has been completed, schedule an event to terminate the thread.
+     */
+    void scheduleThreadExitEvent(ThreadID tid);
+
+    /** Terminate all threads that are ready to exit */
+    void exitThreads();
 
   public:
     /** Executes a syscall.
@@ -647,6 +665,13 @@ class FullO3CPU : public BaseO3CPU
 
     /** Active Threads List */
     std::list<ThreadID> activeThreads;
+
+    /**
+     *  This is a list of threads that are trying to exit. Each thread id
+     *  is mapped to a boolean value denoting whether the thread is ready
+     *  to exit.
+     */
+    std::unordered_map<ThreadID, bool> exitingThreads;
 
     /** Integer Register Scoreboard */
     Scoreboard scoreboard;

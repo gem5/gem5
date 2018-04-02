@@ -111,6 +111,10 @@ class ThreadContext
         /// synchronization, etc.
         Suspended,
 
+        /// Trying to exit and waiting for an event to completely exit.
+        /// Entered when target executes an exit syscall.
+        Halting,
+
         /// Permanently shut down.  Entered when target executes
         /// m5exit pseudo-instruction.  When all contexts enter
         /// this state, the simulation will terminate.

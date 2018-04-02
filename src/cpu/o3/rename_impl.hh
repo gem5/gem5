@@ -256,6 +256,28 @@ DefaultRename<Impl>::startupStage()
 
 template <class Impl>
 void
+DefaultRename<Impl>::clearStates(ThreadID tid)
+{
+    renameStatus[tid] = Idle;
+
+    freeEntries[tid].iqEntries = iew_ptr->instQueue.numFreeEntries(tid);
+    freeEntries[tid].lqEntries = iew_ptr->ldstQueue.numFreeLoadEntries(tid);
+    freeEntries[tid].sqEntries = iew_ptr->ldstQueue.numFreeStoreEntries(tid);
+    freeEntries[tid].robEntries = commit_ptr->numROBFreeEntries(tid);
+    emptyROB[tid] = true;
+
+    stalls[tid].iew = false;
+    serializeInst[tid] = NULL;
+
+    instsInProgress[tid] = 0;
+    loadsInProgress[tid] = 0;
+    storesInProgress[tid] = 0;
+
+    serializeOnNextInst[tid] = false;
+}
+
+template <class Impl>
+void
 DefaultRename<Impl>::resetStage()
 {
     _status = Inactive;

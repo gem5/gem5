@@ -325,6 +325,19 @@ DefaultIEW<Impl>::startupStage()
 
 template<class Impl>
 void
+DefaultIEW<Impl>::clearStates(ThreadID tid)
+{
+    toRename->iewInfo[tid].usedIQ = true;
+    toRename->iewInfo[tid].freeIQEntries =
+        instQueue.numFreeEntries(tid);
+
+    toRename->iewInfo[tid].usedLSQ = true;
+    toRename->iewInfo[tid].freeLQEntries = ldstQueue.numFreeLoadEntries(tid);
+    toRename->iewInfo[tid].freeSQEntries = ldstQueue.numFreeStoreEntries(tid);
+}
+
+template<class Impl>
+void
 DefaultIEW<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 {
     timeBuffer = tb_ptr;
