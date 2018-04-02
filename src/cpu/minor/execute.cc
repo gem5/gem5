@@ -1676,7 +1676,12 @@ Execute::getCommittingThread()
 
     for (auto tid : priority_list) {
         ExecuteThreadInfo &ex_info = executeInfo[tid];
-        bool can_commit_insts = !ex_info.inFlightInsts->empty();
+
+        bool is_thread_active =
+                cpu.getContext(tid)->status() == ThreadContext::Active;
+        bool can_commit_insts = !ex_info.inFlightInsts->empty() &&
+                                is_thread_active;
+
         if (can_commit_insts) {
             QueuedInst *head_inflight_inst = &(ex_info.inFlightInsts->front());
             MinorDynInstPtr inst = head_inflight_inst->inst;
@@ -1742,7 +1747,8 @@ Execute::getIssuingThread()
     }
 
     for (auto tid : priority_list) {
-        if (getInput(tid)) {
+        if (cpu.getContext(tid)->status() == ThreadContext::Active &&
+            getInput(tid)) {
             issuePriority = tid;
             return tid;
         }
