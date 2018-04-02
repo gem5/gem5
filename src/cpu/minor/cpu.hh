@@ -83,6 +83,13 @@ class MinorCPU : public BaseCPU
      *  Elements of pipeline call TheISA to implement the model. */
     Minor::Pipeline *pipeline;
 
+    /** An event that wakes up the pipeline when a thread context is
+     * activated */
+    EventFunctionWrapper pipelineStartupEvent;
+
+    /** List of threads that are ready to wake up and run */
+    std::vector<ThreadID> readyThreads;
+
   public:
     /** Activity recording for pipeline.  This belongs to Pipeline but
      *  stages will access it through the CPU as the MinorCPU object
@@ -164,6 +171,9 @@ class MinorCPU : public BaseCPU
     /** Thread activation interface from BaseCPU. */
     void activateContext(ThreadID thread_id) override;
     void suspendContext(ThreadID thread_id) override;
+
+    /** Wake up ready-to-run threads */
+    void wakeupPipeline();
 
     /** Thread scheduling utility functions */
     std::vector<ThreadID> roundRobinPriority(ThreadID priority)

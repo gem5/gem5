@@ -49,6 +49,7 @@
 
 MinorCPU::MinorCPU(MinorCPUParams *params) :
     BaseCPU(params),
+    pipelineStartupEvent([this]{ wakeupPipeline(); }, name()),
     threadPolicy(params->threadPolicy)
 {
     /* This is only written for one thread at the moment */
@@ -279,20 +280,43 @@ MinorCPU::takeOverFrom(BaseCPU *old_cpu)
 void
 MinorCPU::activateContext(ThreadID thread_id)
 {
-    DPRINTF(MinorCPU, "ActivateContext thread: %d\n", thread_id);
+    /* Remember to wake up this thread_id by scheduling the
+     * pipelineStartup event.
+     * We can't wakeupFetch the thread right away because its context may
+     * not have been fully initialized. For example, in the case of clone
+     * syscall, this activateContext function is called in the middle of
+     * the syscall and before the new thread context is initialized.
+     * If we start fetching right away, the new thread will fetch from an
+     * invalid address (i.e., pc is not initialized yet), which could lead
+     * to a page fault. Instead, we remember which threads to wake up and
+     * schedule an event to wake all them up after their contexts are
+     * fully initialized */
+    readyThreads.push_back(thread_id);
+    if (!pipelineStartupEvent.scheduled())
+        schedule(pipelineStartupEvent, clockEdge(Cycles(0)));
+}
 
-    /* Do some cycle accounting.  lastStopped is reset to stop the
-     *  wakeup call on the pipeline from adding the quiesce period
-     *  to BaseCPU::numCycles */
-    stats.quiesceCycles += pipeline->cyclesSinceLastStopped();
-    pipeline->resetLastStopped();
+void
+MinorCPU::wakeupPipeline()
+{
+    for (auto thread_id : readyThreads) {
+        DPRINTF(MinorCPU, "ActivateContext thread: %d\n", thread_id);
 
-    /* Wake up the thread, wakeup the pipeline tick */
-    threads[thread_id]->activate();
-    wakeupOnEvent(Minor::Pipeline::CPUStageId);
-    pipeline->wakeupFetch(thread_id);
+        /* Do some cycle accounting.  lastStopped is reset to stop the
+         *  wakeup call on the pipeline from adding the quiesce period
+         *  to BaseCPU::numCycles */
+        stats.quiesceCycles += pipeline->cyclesSinceLastStopped();
+        pipeline->resetLastStopped();
 
-    BaseCPU::activateContext(thread_id);
+        /* Wake up the thread, wakeup the pipeline tick */
+        threads[thread_id]->activate();
+        wakeupOnEvent(Minor::Pipeline::CPUStageId);
+
+        pipeline->wakeupFetch(thread_id);
+        BaseCPU::activateContext(thread_id);
+    }
+
+    readyThreads.clear();
 }
 
 void

@@ -1054,7 +1054,8 @@ Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
         !branch.isStreamChange() && /* No real branch */
         fault == NoFault && /* No faults */
         completed_inst && /* Still finding instructions to execute */
-        num_insts_committed != commitLimit /* Not reached commit limit */
+        num_insts_committed != commitLimit && /* Not reached commit limit */
+        cpu.getContext(thread_id)->status() != ThreadContext::Suspended
         )
     {
         if (only_commit_microops) {
