@@ -188,8 +188,6 @@ Pl050::processCommand(uint8_t byte)
       case SetResolution:
       case SetRate:
       case SetStatusLed:
-      case SetScaling1_1:
-      case SetScaling1_2:
         rxQueue.push_back(Ack);
         ackNext = 1;
         break;
@@ -211,6 +209,8 @@ Pl050::processCommand(uint8_t byte)
       case Disable:
       case Enable:
       case SetDefaults:
+      case SetScaling1_1:
+      case SetScaling1_2:
         rxQueue.push_back(Ack);
         break;
       case StatusRequest:
