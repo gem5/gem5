@@ -143,7 +143,7 @@ StackTrace::trace(ThreadContext *_tc, bool is_call)
     bool usermode =
         (tc->readMiscRegNoEffect(IPR_DTB_CM) & 0x18) != 0;
 
-    Addr pc = tc->pcState().pc();
+    Addr pc = tc->pcState().npc();
     bool kernel = sys->kernelStart <= pc && pc <= sys->kernelEnd;
 
     if (usermode) {
