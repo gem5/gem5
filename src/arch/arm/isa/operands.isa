@@ -530,6 +530,51 @@ def operands {{
         'AA64FpDestQV1L':  vectorRegElem('0', 'tud', zeroing = True)
     }),
 
+    # Temporary registers for SVE interleaving
+    'AA64IntrlvReg0': vectorReg('INTRLVREG0',
+    {
+        'AA64IntrlvReg0P0': vectorRegElem('0'),
+        'AA64IntrlvReg0P1': vectorRegElem('1'),
+        'AA64IntrlvReg0P2': vectorRegElem('2'),
+        'AA64IntrlvReg0P3': vectorRegElem('3'),
+        'AA64IntrlvReg0S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64IntrlvReg0D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64IntrlvReg0Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64IntrlvReg1': vectorReg('INTRLVREG1',
+    {
+        'AA64IntrlvReg1P0': vectorRegElem('0'),
+        'AA64IntrlvReg1P1': vectorRegElem('1'),
+        'AA64IntrlvReg1P2': vectorRegElem('2'),
+        'AA64IntrlvReg1P3': vectorRegElem('3'),
+        'AA64IntrlvReg1S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64IntrlvReg1D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64IntrlvReg1Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64IntrlvReg2': vectorReg('INTRLVREG2',
+    {
+        'AA64IntrlvReg2P0': vectorRegElem('0'),
+        'AA64IntrlvReg2P1': vectorRegElem('1'),
+        'AA64IntrlvReg2P2': vectorRegElem('2'),
+        'AA64IntrlvReg2P3': vectorRegElem('3'),
+        'AA64IntrlvReg2S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64IntrlvReg2D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64IntrlvReg2Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64IntrlvReg3': vectorReg('INTRLVREG3',
+    {
+        'AA64IntrlvReg3P0': vectorRegElem('0'),
+        'AA64IntrlvReg3P1': vectorRegElem('1'),
+        'AA64IntrlvReg3P2': vectorRegElem('2'),
+        'AA64IntrlvReg3P3': vectorRegElem('3'),
+        'AA64IntrlvReg3S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64IntrlvReg3D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64IntrlvReg3Q':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
     'AA64FpDestMerge':       vectorReg('dest',
     {
         'AA64FpDestMergeP0': vectorRegElem('0'),

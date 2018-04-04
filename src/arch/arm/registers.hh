@@ -85,15 +85,20 @@ const int NumVecV7ArchRegs  = 64;
 const int NumVecV8ArchRegs  = 32;
 const int NumVecSpecialRegs = 8;
 
+const int NumVecIntrlvRegs = 4;
 const int NumIntRegs = NUM_INTREGS;
 const int NumFloatRegs = NumFloatV8ArchRegs + NumFloatSpecialRegs;
-const int NumVecRegs = NumVecV8ArchRegs + NumVecSpecialRegs;
+const int NumVecRegs = NumVecV8ArchRegs + NumVecSpecialRegs + NumVecIntrlvRegs;
 const int VECREG_UREG0 = 32;
 const int NumVecPredRegs = 18;  // P0-P15, FFR, UREG0
 const int PREDREG_FFR = 16;
 const int PREDREG_UREG0 = 17;
 const int NumCCRegs = NUM_CCREGS;
 const int NumMiscRegs = NUM_MISCREGS;
+const int INTRLVREG0 = NumVecV8ArchRegs + NumVecSpecialRegs;
+const int INTRLVREG1 = INTRLVREG0 + 1;
+const int INTRLVREG2 = INTRLVREG0 + 2;
+const int INTRLVREG3 = INTRLVREG0 + 3;
 
 #define ISA_HAS_CC_REGS
 
