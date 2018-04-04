@@ -74,7 +74,7 @@ ComputeUnit::ComputeUnit(const Params *p) : MemObject(p), fetchStage(p),
     coalescerToVrfBusWidth(p->coalescer_to_vrf_bus_width),
     req_tick_latency(p->mem_req_latency * p->clk_domain->clockPeriod()),
     resp_tick_latency(p->mem_resp_latency * p->clk_domain->clockPeriod()),
-    _masterId(p->system->getMasterId(name() + ".ComputeUnit")),
+    _masterId(p->system->getMasterId(this, "ComputeUnit")),
     lds(*p->localDataStore), _cacheLineSize(p->system->cacheLineSize()),
     globalSeqNum(0), wavefrontSize(p->wfSize),
     kernelLaunchInst(new KernelLaunchStaticInst())

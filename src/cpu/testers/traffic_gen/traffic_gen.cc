@@ -57,7 +57,7 @@ using namespace std;
 TrafficGen::TrafficGen(const TrafficGenParams* p)
     : MemObject(p),
       system(p->system),
-      masterID(system->getMasterId(name())),
+      masterID(system->getMasterId(this)),
       configFile(p->config_file),
       elasticReq(p->elastic_req),
       progressCheck(p->progress_check),

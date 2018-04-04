@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014,2017 ARM Limited
+ * Copyright (c) 2011-2014,2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -135,11 +135,11 @@ System::System(Params *p)
 
     // Get the generic system master IDs
     MasterID tmp_id M5_VAR_USED;
-    tmp_id = getMasterId("writebacks");
+    tmp_id = getMasterId(this, "writebacks");
     assert(tmp_id == Request::wbMasterId);
-    tmp_id = getMasterId("functional");
+    tmp_id = getMasterId(this, "functional");
     assert(tmp_id == Request::funcMasterId);
-    tmp_id = getMasterId("interrupt");
+    tmp_id = getMasterId(this, "interrupt");
     assert(tmp_id == Request::intMasterId);
 
     if (FullSystem) {
@@ -492,15 +492,27 @@ printSystems()
 }
 
 MasterID
-System::getMasterId(std::string master_name)
+System::getGlobalMasterId(std::string master_name)
 {
-    // strip off system name if the string starts with it
+    return _getMasterId(nullptr, master_name);
+}
+
+MasterID
+System::getMasterId(const SimObject* master, std::string submaster)
+{
+    auto master_name = leafMasterName(master, submaster);
+    return _getMasterId(master, master_name);
+}
+
+MasterID
+System::_getMasterId(const SimObject* master, std::string master_name)
+{
     if (startswith(master_name, name()))
         master_name = master_name.erase(0, name().size() + 1);
 
     // CPUs in switch_cpus ask for ids again after switching
-    for (int i = 0; i < masterIds.size(); i++) {
-        if (masterIds[i] == master_name) {
+    for (int i = 0; i < masters.size(); i++) {
+        if (masters[i].masterName == master_name) {
             return i;
         }
     }
@@ -514,18 +526,32 @@ System::getMasterId(std::string master_name)
                 "You must do so in init().\n");
     }
 
-    masterIds.push_back(master_name);
+    // Generate a new MasterID incrementally
+    MasterID master_id = masters.size();
 
-    return masterIds.size() - 1;
+    // Append the new Master metadata to the group of system Masters.
+    masters.emplace_back(master, master_name, master_id);
+
+    return masters.back().masterId;
+}
+
+std::string
+System::leafMasterName(const SimObject* master, const std::string& submaster)
+{
+    // Get the full master name by appending the submaster name to
+    // the root SimObject master name
+    auto master_name = master->name() + "." + submaster;
+    return master_name;
 }
 
 std::string
 System::getMasterName(MasterID master_id)
 {
-    if (master_id >= masterIds.size())
+    if (master_id >= masters.size())
         fatal("Invalid master_id passed to getMasterName()\n");
 
-    return masterIds[master_id];
+    const auto& master_info = masters[master_id];
+    return master_info.masterName;
 }
 
 System *

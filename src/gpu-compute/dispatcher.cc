@@ -47,7 +47,7 @@
 GpuDispatcher *GpuDispatcher::instance = nullptr;
 
 GpuDispatcher::GpuDispatcher(const Params *p)
-    : DmaDevice(p), _masterId(p->system->getMasterId(name() + ".disp")),
+    : DmaDevice(p), _masterId(p->system->getMasterId(this, "disp")),
       pioAddr(p->pio_addr), pioSize(4096), pioDelay(p->pio_latency),
       dispatchCount(0), dispatchActive(false), cpu(p->cpu),
       shader(p->shader_pointer), driver(p->cl_driver),

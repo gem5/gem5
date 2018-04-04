@@ -58,7 +58,7 @@ BasePrefetcher::BasePrefetcher(const BasePrefetcherParams *p)
     : ClockedObject(p), cache(nullptr), blkSize(0), lBlkSize(0),
       system(p->sys), onMiss(p->on_miss), onRead(p->on_read),
       onWrite(p->on_write), onData(p->on_data), onInst(p->on_inst),
-      masterId(system->getMasterId(name())),
+      masterId(system->getMasterId(this)),
       pageBytes(system->getPageBytes())
 {
 }

@@ -51,7 +51,7 @@ using namespace ArmISA;
 Stage2MMU::Stage2MMU(const Params *p)
     : SimObject(p), _stage1Tlb(p->tlb), _stage2Tlb(p->stage2_tlb),
       port(_stage1Tlb->getTableWalker(), p->sys),
-      masterId(p->sys->getMasterId(_stage1Tlb->getTableWalker()->name()))
+      masterId(p->sys->getMasterId(_stage1Tlb->getTableWalker()))
 {
     // we use the stage-one table walker as the parent of the port,
     // and to get our master id, this is done to keep things

@@ -1,7 +1,15 @@
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
- * Copyright (c) 2009-2010 Advanced Micro Devices, Inc.
- * All rights reserved.
+ * Copyright (c) 2018 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,23 +33,40 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Giacomo Travaglini
  */
 
-#include "cpu/testers/directedtest/DirectedGenerator.hh"
+/**
+ * @file
+ * MasterInfo declaration.
+ */
 
-#include "sim/system.hh"
+#ifndef __MEM_MEM_MASTER_HH__
+#define __MEM_MEM_MASTER_HH__
 
-DirectedGenerator::DirectedGenerator(const Params *p)
-    : SimObject(p),
-      masterId(p->system->getMasterId(this))
+#include "mem/request.hh"
+#include "sim/sim_object.hh"
+
+/**
+ * The MasterInfo class contains data about a specific master.
+ */
+struct MasterInfo
 {
-    m_num_cpus = p->num_cpus;
-    m_directed_tester = NULL;
-}
+    MasterInfo(const SimObject* _obj,
+               std::string master_name,
+               MasterID master_id)
+      : obj(_obj), masterName(master_name), masterId(master_id)
+    {}
 
-void
-DirectedGenerator::setDirectedTester(RubyDirectedTester* directed_tester)
-{
-    assert(m_directed_tester == NULL);
-    m_directed_tester = directed_tester;
-}
+    /** SimObject related to the Master */
+    const SimObject* obj;
+
+    /** Master Name */
+    std::string masterName;
+
+    /** Master ID */
+    MasterID masterId;
+};
+
+#endif // __MEM_MEM_MASTER_HH__

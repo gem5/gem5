@@ -53,7 +53,7 @@ RubyTester::RubyTester(const Params *p)
   : MemObject(p),
     checkStartEvent([this]{ wakeup(); }, "RubyTester tick",
                     false, Event::CPU_Tick_Pri),
-    _masterId(p->system->getMasterId(name())),
+    _masterId(p->system->getMasterId(this)),
     m_checkTable_ptr(nullptr),
     m_num_cpus(p->num_cpus),
     m_checks_to_complete(p->checks_to_complete),
