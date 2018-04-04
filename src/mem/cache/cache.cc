@@ -416,7 +416,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
-        std::memcpy(blk->data, pkt->getConstPtr<uint8_t>(), blkSize);
+        pkt->writeDataToBlock(blk->data, blkSize);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
         // populate the time when the block will be ready to access.
@@ -477,7 +477,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
-        std::memcpy(blk->data, pkt->getConstPtr<uint8_t>(), blkSize);
+        pkt->writeDataToBlock(blk->data, blkSize);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
 
         incHitCount(pkt);
@@ -1684,7 +1684,7 @@ Cache::writebackBlk(CacheBlk *blk)
     blk->status &= ~BlkDirty;
 
     pkt->allocate();
-    std::memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
+    pkt->setDataFromBlock(blk->data, blkSize);
 
     return pkt;
 }
@@ -1722,7 +1722,7 @@ Cache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
     blk->status &= ~BlkDirty;
 
     pkt->allocate();
-    std::memcpy(pkt->getPtr<uint8_t>(), blk->data, blkSize);
+    pkt->setDataFromBlock(blk->data, blkSize);
 
     return pkt;
 }
@@ -1970,7 +1970,7 @@ Cache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         assert(pkt->hasData());
         assert(pkt->getSize() == blkSize);
 
-        std::memcpy(blk->data, pkt->getConstPtr<uint8_t>(), blkSize);
+        pkt->writeDataToBlock(blk->data, blkSize);
     }
     // We pay for fillLatency here.
     blk->whenReady = clockEdge() + fillLatency * clockPeriod() +
