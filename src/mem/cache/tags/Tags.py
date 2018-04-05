@@ -67,7 +67,23 @@ class BaseTags(ClockedObject):
 class BaseSetAssoc(BaseTags):
     type = 'BaseSetAssoc'
     cxx_header = "mem/cache/tags/base_set_assoc.hh"
+
+    # Get the cache associativity
     assoc = Param.Int(Parent.assoc, "associativity")
+
+    # Get replacement policy from the parent (cache)
+    replacement_policy = Param.BaseReplacementPolicy(
+        Parent.replacement_policy, "Replacement policy")
+
+class SectorTags(BaseTags):
+    type = 'SectorTags'
+    cxx_header = "mem/cache/tags/sector_tags.hh"
+
+    # Get the cache associativity
+    assoc = Param.Int(Parent.assoc, "associativity")
+
+    # Number of sub-sectors (data blocks) per sector
+    num_blocks_per_sector = Param.Int(1, "Number of sub-sectors per sector");
 
     # Get replacement policy from the parent (cache)
     replacement_policy = Param.BaseReplacementPolicy(

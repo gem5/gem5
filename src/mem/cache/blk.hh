@@ -260,8 +260,8 @@ class CacheBlk : public ReplaceableEntry
      * @param src_master_ID The source requestor ID.
      * @param task_ID The new task ID.
      */
-    void insert(const Addr tag, const bool is_secure, const int src_master_ID,
-                const uint32_t task_ID);
+    virtual void insert(const Addr tag, const bool is_secure,
+                        const int src_master_ID, const uint32_t task_ID);
 
     /**
      * Track the fact that a local locked was issued to the

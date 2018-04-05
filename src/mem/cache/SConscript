@@ -38,6 +38,7 @@ Source('cache.cc')
 Source('mshr.cc')
 Source('mshr_queue.cc')
 Source('noncoherent_cache.cc')
+Source('sector_blk.cc')
 Source('write_queue.cc')
 Source('write_queue_entry.cc')
 
