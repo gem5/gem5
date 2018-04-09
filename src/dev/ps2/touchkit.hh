@@ -50,6 +50,12 @@ class PS2TouchKit : public PS2Device, public VncMouse
   protected:
     static const uint8_t ID[];
 
+    enum TKCommands {
+        TouchKitActive = 'A',
+        TouchKitFWRev = 'D',
+        TouchKitCtrlType = 'E',
+    };
+
   public:
     PS2TouchKit(const PS2TouchKitParams *p);
 
@@ -63,14 +69,21 @@ class PS2TouchKit : public PS2Device, public VncMouse
     void mouseAt(uint16_t x, uint16_t y, uint8_t buttons) override;
 
   protected:
+    bool recvTouchKit(const std::vector<uint8_t> &data);
+    void sendTouchKit(const uint8_t *data, size_t size);
+    void sendTouchKit(uint8_t data) { sendTouchKit(&data, 1); }
+
     /** The vnc server we're connected to (if any) */
     VncInput *const vnc;
 
+    /** Is the device enabled? */
+    bool enabled;
+
     /**
-     * Has the driver been initialized in TouchKit mode? The model
-     * suppresses touch event generation until this is true.
+     * Has the driver enabled TouchKit mode?  The model suppresses
+     * touch event generation until this is true.
      */
-    bool driverInitialized;
+    bool touchKitEnabled;
 };
 
 #endif // __DEV_PS2_TOUCHKIT_HH__

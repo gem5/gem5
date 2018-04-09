@@ -54,7 +54,7 @@ const uint8_t PS2TouchKit::ID[] = {0x00};
 PS2TouchKit::PS2TouchKit(const PS2TouchKitParams *p)
     : PS2Device(p),
       vnc(p->vnc),
-      driverInitialized(false)
+      enabled(false), touchKitEnabled(false)
 {
     if (vnc)
         vnc->setMouse(this);
@@ -65,7 +65,8 @@ PS2TouchKit::serialize(CheckpointOut &cp) const
 {
     PS2Device::serialize(cp);
 
-    SERIALIZE_SCALAR(driverInitialized);
+    SERIALIZE_SCALAR(enabled);
+    SERIALIZE_SCALAR(touchKitEnabled);
 }
 
 void
@@ -73,7 +74,8 @@ PS2TouchKit::unserialize(CheckpointIn &cp)
 {
     PS2Device::unserialize(cp);
 
-    UNSERIALIZE_SCALAR(driverInitialized);
+    UNSERIALIZE_SCALAR(enabled);
+    UNSERIALIZE_SCALAR(touchKitEnabled);
 }
 
 bool
@@ -81,6 +83,9 @@ PS2TouchKit::recv(const std::vector<uint8_t> &data)
 {
     switch (data[0]) {
       case Ps2::Ps2Reset:
+        DPRINTF(PS2, "Resetting device.\n");
+        enabled = false;
+        touchKitEnabled = false;
         sendAck();
         send(Ps2::SelfTestPass);
         return true;
@@ -107,9 +112,24 @@ PS2TouchKit::recv(const std::vector<uint8_t> &data)
 
       case Ps2::SetScaling1_1:
       case Ps2::SetScaling1_2:
+        sendAck();
+        return true;
+
       case Ps2::Disable:
+        DPRINTF(PS2, "Disabling device.\n");
+        enabled = false;
+        sendAck();
+        return true;
+
       case Ps2::Enable:
+        DPRINTF(PS2, "Enabling device.\n");
+        enabled = true;
+        sendAck();
+        return true;
+
       case Ps2::SetDefaults:
+        DPRINTF(PS2, "Setting defaults and disabling device.\n");
+        enabled = false;
         sendAck();
         return true;
 
@@ -121,24 +141,52 @@ PS2TouchKit::recv(const std::vector<uint8_t> &data)
         return true;
 
       case Ps2::TouchKitId:
-        sendAck();
-        if (data.size() == 1) {
-            send(Ps2::TouchKitId);
-            send(1);
-            send('A');
-
-            return false;
-        } else if (data.size() == 3) {
-            driverInitialized = true;
-            return true;
-        } else {
-            return false;
-        }
+        return recvTouchKit(data);
 
       default:
-        panic("Unknown byte received: %d\n", data[0]);
+        panic("Unknown byte received: %#x\n", data[0]);
     }
 }
+
+bool
+PS2TouchKit::recvTouchKit(const std::vector<uint8_t> &data)
+{
+    // Ack all incoming bytes
+    sendAck();
+
+    // Packet format is: 0x0A SIZE CMD DATA
+    assert(data[0] == Ps2::TouchKitId);
+    if (data.size() < 3 || data.size() - 2 < data[1])
+        return false;
+
+    const uint8_t len = data[1];
+    const uint8_t cmd = data[2];
+
+    // We have received at least one TouchKit diagnostic
+    // command. Enabled TouchKit reports.
+    touchKitEnabled = true;
+
+
+    switch (cmd) {
+      case TouchKitActive:
+        warn_if(len != 1, "Unexpected activate packet length: %u\n", len);
+        sendTouchKit('A');
+        return true;
+
+      default:
+        panic("Unimplemented touchscreen command: %#x\n", cmd);
+    }
+}
+
+void
+PS2TouchKit::sendTouchKit(const uint8_t *data, size_t size)
+{
+    send(Ps2::TouchKitId);
+    send(size);
+    for (int i = 0; i < size; ++i)
+        send(data[i]);
+}
+
 
 void
 PS2TouchKit::mouseAt(uint16_t x, uint16_t y, uint8_t buttons)
@@ -147,7 +195,7 @@ PS2TouchKit::mouseAt(uint16_t x, uint16_t y, uint8_t buttons)
     // it anything. Similarly we can get vnc mouse events orders of magnitude
     // faster than m5 can process them. Only queue up two sets mouse movements
     // and don't add more until those are processed.
-    if (!driverInitialized || sendPending() > 10)
+    if (!enabled || !touchKitEnabled || sendPending() > 10)
         return;
 
     // Convert screen coordinates to touchpad coordinates
