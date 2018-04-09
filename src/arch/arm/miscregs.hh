@@ -1478,6 +1478,7 @@ namespace ArmISA
     EndBitUnion(HSTR)
 
     BitUnion64(HCR)
+        Bitfield<34>     e2h;   // AArch64
         Bitfield<33>     id;    // AArch64
         Bitfield<32>     cd;    // AArch64
         Bitfield<31>     rw;    // AArch64
