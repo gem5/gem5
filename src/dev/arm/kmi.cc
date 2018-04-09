@@ -54,10 +54,9 @@
 Pl050::Pl050(const Pl050Params *p)
     : AmbaIntDevice(p, 0xfff), control(0), status(0x43), clkdiv(0),
       rawInterrupts(0),
-      intEvent([this]{ generateInterrupt(); }, name()),
       ps2(p->ps2)
 {
-    ps2->hostRegDataAvailable([this]() { this->updateIntStatus(); });
+    ps2->hostRegDataAvailable([this]() { this->updateRxInt(); });
 }
 
 Tick
@@ -83,8 +82,8 @@ Pl050::read(PacketPtr pkt)
 
       case kmiData:
         data = ps2->hostDataAvailable() ? ps2->hostRead() : 0;
+        updateRxInt();
         DPRINTF(Pl050, "Read Data: %#x\n", (uint32_t)data);
-        updateIntStatus();
         break;
 
       case kmiClkDiv:
@@ -107,21 +106,7 @@ Pl050::read(PacketPtr pkt)
         break;
     }
 
-    switch(pkt->getSize()) {
-      case 1:
-        pkt->set<uint8_t>(data);
-        break;
-      case 2:
-        pkt->set<uint16_t>(data);
-        break;
-      case 4:
-        pkt->set<uint32_t>(data);
-        break;
-      default:
-        panic("KMI read size too big?\n");
-        break;
-    }
-
+    pkt->setUintX(data, LittleEndianByteOrder);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -133,29 +118,36 @@ Pl050::write(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
 
     Addr daddr = pkt->getAddr() - pioAddr;
+    const uint32_t data = pkt->getUintX(LittleEndianByteOrder);
 
-    assert(pkt->getSize() == sizeof(uint8_t));
-
+    panic_if(pkt->getSize() != 1,
+             "PL050: Unexpected write size "
+             "(offset: %#x, data: %#x, size: %u)\n",
+             daddr, data, pkt->getSize());
 
     switch (daddr) {
       case kmiCr:
-        DPRINTF(Pl050, "Write Commmand: %#x\n", (uint32_t)pkt->get<uint8_t>());
-        control = pkt->get<uint8_t>();
-        updateIntStatus();
+        DPRINTF(Pl050, "Write Commmand: %#x\n", data);
+        // Use the update interrupts helper to make sure any interrupt
+        // mask changes are handled correctly.
+        setControl((uint8_t)data);
         break;
 
       case kmiData:
-        DPRINTF(Pl050, "Write Data: %#x\n", (uint32_t)pkt->get<uint8_t>());
-        ps2->hostWrite(pkt->get<uint8_t>());
-        updateIntStatus();
+        DPRINTF(Pl050, "Write Data: %#x\n", data);
+        // Clear the TX interrupt before writing new data.
+        setTxInt(false);
+        ps2->hostWrite((uint8_t)data);
+        // Data is written in 0 time, so raise the TX interrupt again.
+        setTxInt(true);
         break;
 
       case kmiClkDiv:
-        clkdiv = pkt->get<uint8_t>();
+        clkdiv = (uint8_t)data;
         break;
 
       default:
-        warn("Tried to write PL050 at offset %#x that doesn't exist\n", daddr);
+        warn("PL050: Unhandled write of %#x to offset %#x\n", data, daddr);
         break;
     }
 
@@ -163,18 +155,42 @@ Pl050::write(PacketPtr pkt)
     return pioDelay;
 }
 
+void
+Pl050::setTxInt(bool value)
+{
+    InterruptReg ints = rawInterrupts;
+
+    ints.tx = value ? 1 : 0;
+
+    setInterrupts(ints);
+}
 
 void
-Pl050::updateIntStatus()
+Pl050::updateRxInt()
 {
-    const bool old_interrupt(getInterrupt());
+    InterruptReg ints = rawInterrupts;
 
-    rawInterrupts.rx = ps2->hostDataAvailable() ? 1 : 0;
+    ints.rx = ps2->hostDataAvailable() ? 1 : 0;
 
-    if ((!old_interrupt && getInterrupt()) && !intEvent.scheduled()) {
-        schedule(intEvent, curTick() + intDelay);
-    } else if (old_interrupt && !(getInterrupt())) {
-            gic->clearInt(intNum);
+    setInterrupts(ints);
+}
+
+void
+Pl050::updateIntCtrl(InterruptReg ints, ControlReg ctrl)
+{
+    const bool old_pending(getInterrupt());
+    control = ctrl;
+    rawInterrupts = ints;
+    const bool new_pending(getInterrupt());
+
+    if (!old_pending && new_pending) {
+        DPRINTF(Pl050, "Generate interrupt: rawInt=%#x ctrl=%#x int=%#x\n",
+                rawInterrupts, control, getInterrupt());
+        gic->sendInt(intNum);
+    } else if (old_pending && !new_pending) {
+        DPRINTF(Pl050, "Clear interrupt: rawInt=%#x ctrl=%#x int=%#x\n",
+                rawInterrupts, control, getInterrupt());
+        gic->clearInt(intNum);
     }
 }
 
@@ -190,47 +206,21 @@ Pl050::getInterrupt() const
 }
 
 void
-Pl050::generateInterrupt()
-{
-    DPRINTF(Pl050, "Generate Interrupt: rawInt=%#x ctrl=%#x int=%#x\n",
-            rawInterrupts, control, getInterrupt());
-
-    if (getInterrupt()) {
-        gic->sendInt(intNum);
-        DPRINTF(Pl050, " -- Generated\n");
-    }
-}
-
-void
 Pl050::serialize(CheckpointOut &cp) const
 {
-    uint8_t ctrlreg = control;
-    SERIALIZE_SCALAR(ctrlreg);
-
-    uint8_t stsreg = status;
-    SERIALIZE_SCALAR(stsreg);
+    paramOut(cp, "ctrlreg", control);
+    paramOut(cp, "stsreg", status);
     SERIALIZE_SCALAR(clkdiv);
-
-    uint8_t raw_ints = rawInterrupts;
-    SERIALIZE_SCALAR(raw_ints);
+    paramOut(cp, "raw_ints", rawInterrupts);
 }
 
 void
 Pl050::unserialize(CheckpointIn &cp)
 {
-    uint8_t ctrlreg;
-    UNSERIALIZE_SCALAR(ctrlreg);
-    control = ctrlreg;
-
-    uint8_t stsreg;
-    UNSERIALIZE_SCALAR(stsreg);
-    status = stsreg;
-
+    paramIn(cp, "ctrlreg", control);
+    paramIn(cp, "stsreg", status);
     UNSERIALIZE_SCALAR(clkdiv);
-
-    uint8_t raw_ints;
-    UNSERIALIZE_SCALAR(raw_ints);
-    rawInterrupts = raw_ints;
+    paramIn(cp, "raw_ints", rawInterrupts);
 }
 
 Pl050 *

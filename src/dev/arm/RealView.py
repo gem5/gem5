@@ -466,7 +466,6 @@ class PL031(AmbaIntDevice):
 class Pl050(AmbaIntDevice):
     type = 'Pl050'
     cxx_header = "dev/arm/kmi.hh"
-    int_delay = '1us'
     amba_id = 0x00141050
 
     ps2 = Param.PS2Device("PS/2 device")

@@ -106,18 +106,23 @@ class Pl050 : public AmbaIntDevice
     /** raw interrupt register (unmasked) */
     InterruptReg rawInterrupts;
 
-    /** Update the status of the interrupt registers and schedule an interrupt
-     * if required */
-    void updateIntStatus();
+    /** Set or clear the TX interrupt */
+    void setTxInt(bool value);
 
-    /** Function to generate interrupt */
-    void generateInterrupt();
+    /** Update the RX interrupt using PS/2 device state */
+    void updateRxInt();
 
-    /** Get interrupt value */
+    /**
+     * Update the status of the interrupt and control registers and
+     * deliver an interrupt if required.
+     */
+    void updateIntCtrl(InterruptReg ints, ControlReg ctrl);
+
+    void setInterrupts(InterruptReg ints) { updateIntCtrl(ints, control); }
+    void setControl(ControlReg ctrl) { updateIntCtrl(rawInterrupts, ctrl); }
+
+    /** Get current interrupt value */
     InterruptReg getInterrupt() const;
-
-    /** Wrapper to create an event out of the thing */
-    EventFunctionWrapper intEvent;
 
     /** PS2 device connected to this KMI interface */
     PS2Device *ps2;
