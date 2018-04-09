@@ -52,7 +52,6 @@ const uint8_t PS2Keyboard::ID[] = {0xab, 0x83};
 
 PS2Keyboard::PS2Keyboard(const PS2KeyboardParams *p)
     : PS2Device(p),
-      lastCommand(NoCommand),
       shiftDown(false),
       enabled(false)
 {
@@ -64,7 +63,6 @@ void
 PS2Keyboard::serialize(CheckpointOut &cp) const
 {
     PS2Device::serialize(cp);
-    SERIALIZE_SCALAR(lastCommand);
     SERIALIZE_SCALAR(shiftDown);
     SERIALIZE_SCALAR(enabled);
 }
@@ -73,40 +71,28 @@ void
 PS2Keyboard::unserialize(CheckpointIn &cp)
 {
     PS2Device::unserialize(cp);
-    UNSERIALIZE_SCALAR(lastCommand);
     UNSERIALIZE_SCALAR(shiftDown);
     UNSERIALIZE_SCALAR(enabled);
 }
 
-void
-PS2Keyboard::recv(uint8_t data)
+bool
+PS2Keyboard::recv(const std::vector<uint8_t> &data)
 {
-    if (lastCommand != NoCommand) {
-        switch (lastCommand) {
-          case LEDWrite:
+    switch (data[0]) {
+      case LEDWrite:
+        if (data.size() == 1) {
+            DPRINTF(PS2, "Got LED write command.\n");
+            sendAck();
+            return false;
+        } else {
             DPRINTF(PS2, "Setting LEDs: "
                     "caps lock %s, num lock %s, scroll lock %s\n",
-                    bits(data, 2) ? "on" : "off",
-                    bits(data, 1) ? "on" : "off",
-                    bits(data, 0) ? "on" : "off");
+                    bits(data[1], 2) ? "on" : "off",
+                    bits(data[1], 1) ? "on" : "off",
+                    bits(data[1], 0) ? "on" : "off");
             sendAck();
-            lastCommand = NoCommand;
-            break;
-          case TypematicInfo:
-            DPRINTF(PS2, "Setting typematic info to %#02x.\n", data);
-            sendAck();
-            lastCommand = NoCommand;
-            break;
+            return true;
         }
-        return;
-    }
-
-    switch (data) {
-      case LEDWrite:
-        DPRINTF(PS2, "Got LED write command.\n");
-        sendAck();
-        lastCommand = LEDWrite;
-        break;
       case DiagnosticEcho:
         panic("Keyboard diagnostic echo unimplemented.\n");
       case AlternateScanCodes:
@@ -115,27 +101,32 @@ PS2Keyboard::recv(uint8_t data)
         DPRINTF(PS2, "Got keyboard read ID command.\n");
         sendAck();
         send((uint8_t *)&ID, sizeof(ID));
-        break;
+        return true;
       case TypematicInfo:
-        DPRINTF(PS2, "Setting typematic info.\n");
-        sendAck();
-        lastCommand = TypematicInfo;
-        break;
+        if (data.size() == 1) {
+            DPRINTF(PS2, "Setting typematic info.\n");
+            sendAck();
+            return false;
+        } else {
+            DPRINTF(PS2, "Setting typematic info to %#02x.\n", data[1]);
+            sendAck();
+            return true;
+        }
       case Enable:
         DPRINTF(PS2, "Enabling the keyboard.\n");
         enabled = true;
         sendAck();
-        break;
+        return true;
       case Disable:
         DPRINTF(PS2, "Disabling the keyboard.\n");
         enabled = false;
         sendAck();
-        break;
+        return true;
       case DefaultsAndDisable:
         DPRINTF(PS2, "Disabling and resetting the keyboard.\n");
         enabled = false;
         sendAck();
-        break;
+        return true;
       case AllKeysToTypematic:
         panic("Setting all keys to typemantic unimplemented.\n");
       case AllKeysToMakeRelease:
@@ -156,7 +147,7 @@ PS2Keyboard::recv(uint8_t data)
       case Reset:
         panic("Keyboard reset unimplemented.\n");
       default:
-        panic("Unknown keyboard command %#02x.\n", data);
+        panic("Unknown keyboard command %#02x.\n", data[0]);
     }
 }
 

@@ -71,7 +71,6 @@ class PS2Mouse : public PS2Device
         Resend = 0xFE,
         Reset = 0xFF
     };
-    static const uint16_t NoCommand = (uint16_t)(-1);
 
     BitUnion8(Status)
         Bitfield<6> remote;
@@ -80,8 +79,6 @@ class PS2Mouse : public PS2Device
         Bitfield<2> leftButton;
         Bitfield<0> rightButton;
     EndBitUnion(Status)
-
-    uint16_t lastCommand;
 
     Status status;
     uint8_t resolution;
@@ -94,7 +91,7 @@ class PS2Mouse : public PS2Device
     void unserialize(CheckpointIn &cp) override;
 
   protected: // PS2Device
-    void recv(uint8_t data) override;
+    bool recv(const std::vector<uint8_t> &data) override;
 };
 
 #endif // __DEV_PS2_MOUSE_hH__

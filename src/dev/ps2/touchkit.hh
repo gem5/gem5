@@ -57,7 +57,7 @@ class PS2TouchKit : public PS2Device, public VncMouse
     void unserialize(CheckpointIn &cp) override;
 
   protected: // PS2Device
-    void recv(uint8_t data) override;
+    bool recv(const std::vector<uint8_t> &data) override;
 
   public: // VncMouse
     void mouseAt(uint16_t x, uint16_t y, uint8_t buttons) override;
@@ -65,13 +65,6 @@ class PS2TouchKit : public PS2Device, public VncMouse
   protected:
     /** The vnc server we're connected to (if any) */
     VncInput *const vnc;
-
-    /**
-     * If the controller should ignore the next N data bytes and
-     * acknowledge them. This occurs when the driver is attempting to
-     * setup some feature we don't care about.
-     */
-    int ackNext;
 
     /**
      * Has the driver been initialized in TouchKit mode? The model

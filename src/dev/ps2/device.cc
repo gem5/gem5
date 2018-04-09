@@ -44,12 +44,14 @@
 #include "dev/ps2/device.hh"
 
 #include "base/logging.hh"
+#include "debug/PS2.hh"
 #include "dev/ps2.hh"
 #include "params/PS2Device.hh"
 
 PS2Device::PS2Device(const PS2DeviceParams *p)
     : SimObject(p)
 {
+    inBuffer.reserve(16);
 }
 
 void
@@ -58,6 +60,8 @@ PS2Device::serialize(CheckpointOut &cp) const
     std::vector<uint8_t> buffer(outBuffer.size());
     std::copy(outBuffer.begin(), outBuffer.end(), buffer.begin());
     arrayParamOut(cp, "outBuffer", buffer);
+
+    SERIALIZE_CONTAINER(inBuffer);
 }
 
 void
@@ -67,6 +71,8 @@ PS2Device::unserialize(CheckpointIn &cp)
     arrayParamIn(cp, "outBuffer", buffer);
     for (auto c : buffer)
         outBuffer.push_back(c);
+
+    UNSERIALIZE_CONTAINER(inBuffer);
 }
 
 void
@@ -90,7 +96,10 @@ PS2Device::hostRead()
 void
 PS2Device::hostWrite(uint8_t c)
 {
-    recv(c);
+    DPRINTF(PS2, "PS2: Host -> device: %#x\n", c);
+    inBuffer.push_back(c);
+    if (recv(inBuffer))
+        inBuffer.clear();
 }
 
 void
@@ -98,6 +107,7 @@ PS2Device::send(const uint8_t *data, size_t size)
 {
     assert(data || size == 0);
     while (size) {
+        DPRINTF(PS2, "PS2: Device -> host: %#x\n", *data);
         outBuffer.push_back(*(data++));
         size--;
     }

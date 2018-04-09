@@ -45,6 +45,7 @@
 #define __DEV_PS2_DEVICE_HH__
 
 #include <deque>
+#include <vector>
 
 #include "sim/sim_object.hh"
 
@@ -92,8 +93,18 @@ class PS2Device : public SimObject
   protected: /* Device interface */
     /**
      * Data received from host.
+     *
+     * Data sent to the device is buffered one byte at a time. Each
+     * time a byte is added, this function is called and passed the
+     * current buffer. It should return true if it has consumed the
+     * data and the buffer can be cleared, or false if more data is
+     * needed to process the current command.
+     *
+     * @param data Pending input data (at least one byte)
+     * @return false if more data is needed to process the current
+     * command, true otherwise.
      */
-    virtual void recv(uint8_t data) = 0;
+    virtual bool recv(const std::vector<uint8_t> &data) = 0;
 
     /**
      * Send data from a PS/2 device to a host
@@ -127,6 +138,9 @@ class PS2Device : public SimObject
   private:
     /** Device -> host FIFO */
     std::deque<uint8_t> outBuffer;
+
+    /** Host -> device buffer */
+    std::vector<uint8_t> inBuffer;
 
     std::function<void()> dataAvailableCallback;
 };

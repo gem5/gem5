@@ -54,7 +54,6 @@ const uint8_t PS2TouchKit::ID[] = {0x00};
 PS2TouchKit::PS2TouchKit(const PS2TouchKitParams *p)
     : PS2Device(p),
       vnc(p->vnc),
-      ackNext(false),
       driverInitialized(false)
 {
     if (vnc)
@@ -66,7 +65,6 @@ PS2TouchKit::serialize(CheckpointOut &cp) const
 {
     PS2Device::serialize(cp);
 
-    SERIALIZE_SCALAR(ackNext);
     SERIALIZE_SCALAR(driverInitialized);
 }
 
@@ -75,36 +73,28 @@ PS2TouchKit::unserialize(CheckpointIn &cp)
 {
     PS2Device::unserialize(cp);
 
-    UNSERIALIZE_SCALAR(ackNext);
     UNSERIALIZE_SCALAR(driverInitialized);
 }
 
-void
-PS2TouchKit::recv(uint8_t data)
+bool
+PS2TouchKit::recv(const std::vector<uint8_t> &data)
 {
-    if (ackNext) {
-        ackNext--;
-        sendAck();
-        return;
-    }
-
-    switch (data) {
+    switch (data[0]) {
       case Ps2::Ps2Reset:
         sendAck();
         send(Ps2::SelfTestPass);
-        break;
+        return true;
 
       case Ps2::SetResolution:
       case Ps2::SetRate:
       case Ps2::SetStatusLed:
         sendAck();
-        ackNext = 1;
-        break;
+        return data.size() == 2;
 
       case Ps2::ReadId:
         sendAck();
         send((const uint8_t *)&ID, sizeof(ID));
-        break;
+        return true;
 
       case Ps2::TpReadId:
         // We're not a trackpoint device, this should make the probe
@@ -113,7 +103,7 @@ PS2TouchKit::recv(uint8_t data)
         send(0);
         send(0);
         sendAck();
-        break;
+        return true;
 
       case Ps2::SetScaling1_1:
       case Ps2::SetScaling1_2:
@@ -121,27 +111,32 @@ PS2TouchKit::recv(uint8_t data)
       case Ps2::Enable:
       case Ps2::SetDefaults:
         sendAck();
-        break;
+        return true;
 
       case Ps2::StatusRequest:
         sendAck();
         send(0);
         send(2); // default resolution
         send(100); // default sample rate
-        break;
+        return true;
 
       case Ps2::TouchKitId:
-        ackNext = 2;
         sendAck();
-        send(Ps2::TouchKitId);
-        send(1);
-        send('A');
+        if (data.size() == 1) {
+            send(Ps2::TouchKitId);
+            send(1);
+            send('A');
 
-        driverInitialized = true;
-        break;
+            return false;
+        } else if (data.size() == 3) {
+            driverInitialized = true;
+            return true;
+        } else {
+            return false;
+        }
 
       default:
-        panic("Unknown byte received: %d\n", data);
+        panic("Unknown byte received: %d\n", data[0]);
     }
 }
 

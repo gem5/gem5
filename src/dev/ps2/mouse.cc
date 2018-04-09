@@ -52,57 +52,42 @@ const uint8_t BatSuccessful = 0xaa;
 
 PS2Mouse::PS2Mouse(const PS2MouseParams *p)
     : PS2Device(p),
-      lastCommand(NoCommand),
       status(0), resolution(4), sampleRate(100)
 {
 }
 
-void
-PS2Mouse::recv(uint8_t data)
+bool
+PS2Mouse::recv(const std::vector<uint8_t> &data)
 {
-    if (lastCommand != NoCommand) {
-        switch(lastCommand) {
-          case SetResolution:
-            DPRINTF(PS2, "Mouse resolution set to %d.\n", data);
-            resolution = data;
-            sendAck();
-            lastCommand = NoCommand;
-            break;
-          case SampleRate:
-            DPRINTF(PS2, "Mouse sample rate %d samples "
-                    "per second.\n", data);
-            sampleRate = data;
-            sendAck();
-            lastCommand = NoCommand;
-            break;
-          default:
-            panic("Not expecting data for a mouse command.\n");
-        }
-        return;
-    }
-    switch (data) {
+    switch (data[0]) {
       case Scale1to1:
         DPRINTF(PS2, "Setting mouse scale to 1:1.\n");
         status.twoToOne = 0;
         sendAck();
-        break;
+        return true;
       case Scale2to1:
         DPRINTF(PS2, "Setting mouse scale to 2:1.\n");
         status.twoToOne = 1;
         sendAck();
-        break;
+        return true;
       case SetResolution:
-        DPRINTF(PS2, "Setting mouse resolution.\n");
-        lastCommand = SetResolution;
-        sendAck();
-        break;
+        if (data.size() == 1) {
+            DPRINTF(PS2, "Setting mouse resolution.\n");
+            sendAck();
+            return false;
+        } else {
+            DPRINTF(PS2, "Mouse resolution set to %d.\n", data[1]);
+            resolution = data[1];
+            sendAck();
+            return true;
+        }
       case GetStatus:
         DPRINTF(PS2, "Getting mouse status.\n");
         sendAck();
         send((uint8_t *)&(status), 1);
         send(&resolution, sizeof(resolution));
         send(&sampleRate, sizeof(sampleRate));
-        break;
+        return true;
       case ReadData:
         panic("Reading mouse data unimplemented.\n");
       case ResetWrapMode:
@@ -115,22 +100,29 @@ PS2Mouse::recv(uint8_t data)
         DPRINTF(PS2, "Mouse ID requested.\n");
         sendAck();
         send(ID, sizeof(ID));
-        break;
+        return true;
       case SampleRate:
-        DPRINTF(PS2, "Setting mouse sample rate.\n");
-        lastCommand = SampleRate;
-        sendAck();
-        break;
+        if (data.size() == 1) {
+            DPRINTF(PS2, "Setting mouse sample rate.\n");
+            sendAck();
+            return false;
+        } else {
+            DPRINTF(PS2, "Mouse sample rate %d samples "
+                    "per second.\n", data[1]);
+            sampleRate = data[1];
+            sendAck();
+            return true;
+        }
       case DisableReporting:
         DPRINTF(PS2, "Disabling data reporting.\n");
         status.enabled = 0;
         sendAck();
-        break;
+        return true;
       case EnableReporting:
         DPRINTF(PS2, "Enabling data reporting.\n");
         status.enabled = 1;
         sendAck();
-        break;
+        return true;
       case DefaultsAndDisable:
         DPRINTF(PS2, "Disabling and resetting mouse.\n");
         sampleRate = 100;
@@ -138,7 +130,7 @@ PS2Mouse::recv(uint8_t data)
         status.twoToOne = 0;
         status.enabled = 0;
         sendAck();
-        break;
+        return true;
       case Resend:
         panic("Mouse resend unimplemented.\n");
       case Reset:
@@ -150,11 +142,11 @@ PS2Mouse::recv(uint8_t data)
         sendAck();
         send(&BatSuccessful, sizeof(BatSuccessful));
         send(ID, sizeof(ID));
-        break;
+        return true;
       default:
-        warn("Unknown mouse command %#02x.\n", data);
+        warn("Unknown mouse command %#02x.\n", data[0]);
         send(Resend);
-        break;
+        return true;
     }
 }
 
@@ -162,8 +154,6 @@ void
 PS2Mouse::serialize(CheckpointOut &cp) const
 {
     PS2Device::serialize(cp);
-
-    SERIALIZE_SCALAR(lastCommand);
 
     SERIALIZE_SCALAR(status);
     SERIALIZE_SCALAR(resolution);
@@ -174,8 +164,6 @@ void
 PS2Mouse::unserialize(CheckpointIn &cp)
 {
     PS2Device::unserialize(cp);
-
-    UNSERIALIZE_SCALAR(lastCommand);
 
     UNSERIALIZE_SCALAR(status);
     UNSERIALIZE_SCALAR(resolution);

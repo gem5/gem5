@@ -74,10 +74,7 @@ class PS2Keyboard : public PS2Device, VncKeyboard
         Resend = 0xFE,
         Reset = 0xFF
     };
-    static const uint16_t NoCommand = (uint16_t)(-1);
 
-
-    uint16_t lastCommand;
 
     /** is the shift key currently down */
     bool shiftDown;
@@ -92,7 +89,7 @@ class PS2Keyboard : public PS2Device, VncKeyboard
     void unserialize(CheckpointIn &cp) override;
 
   protected: // PS2Device
-    void recv(uint8_t data) override;
+    bool recv(const std::vector<uint8_t> &data) override;
 
   public: // VncKeyboard
     void keyPress(uint32_t key, bool down) override;
