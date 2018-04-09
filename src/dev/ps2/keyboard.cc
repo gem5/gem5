@@ -45,14 +45,19 @@
 
 #include "base/logging.hh"
 #include "debug/PS2.hh"
+#include "dev/ps2.hh"
 #include "params/PS2Keyboard.hh"
 
 const uint8_t PS2Keyboard::ID[] = {0xab, 0x83};
 
 PS2Keyboard::PS2Keyboard(const PS2KeyboardParams *p)
     : PS2Device(p),
-      lastCommand(NoCommand)
+      lastCommand(NoCommand),
+      shiftDown(false),
+      enabled(false)
 {
+    if (p->vnc)
+        p->vnc->setKeyboard(this);
 }
 
 void
@@ -60,6 +65,8 @@ PS2Keyboard::serialize(CheckpointOut &cp) const
 {
     PS2Device::serialize(cp);
     SERIALIZE_SCALAR(lastCommand);
+    SERIALIZE_SCALAR(shiftDown);
+    SERIALIZE_SCALAR(enabled);
 }
 
 void
@@ -67,6 +74,8 @@ PS2Keyboard::unserialize(CheckpointIn &cp)
 {
     PS2Device::unserialize(cp);
     UNSERIALIZE_SCALAR(lastCommand);
+    UNSERIALIZE_SCALAR(shiftDown);
+    UNSERIALIZE_SCALAR(enabled);
 }
 
 void
@@ -114,14 +123,17 @@ PS2Keyboard::recv(uint8_t data)
         break;
       case Enable:
         DPRINTF(PS2, "Enabling the keyboard.\n");
+        enabled = true;
         sendAck();
         break;
       case Disable:
         DPRINTF(PS2, "Disabling the keyboard.\n");
+        enabled = false;
         sendAck();
         break;
       case DefaultsAndDisable:
         DPRINTF(PS2, "Disabling and resetting the keyboard.\n");
+        enabled = false;
         sendAck();
         break;
       case AllKeysToTypematic:
@@ -147,6 +159,27 @@ PS2Keyboard::recv(uint8_t data)
         panic("Unknown keyboard command %#02x.\n", data);
     }
 }
+
+void
+PS2Keyboard::keyPress(uint32_t key, bool down)
+{
+    std::list<uint8_t> keys;
+
+    // convert the X11 keysym into ps2 codes and update the shift
+    // state (shiftDown)
+    Ps2::keySymToPs2(key, down, shiftDown, keys);
+
+    // Drop key presses if the keyboard hasn't been enabled by the
+    // host. We do that after translating the key code to ensure that
+    // we keep track of the shift state.
+    if (!enabled)
+        return;
+
+    // Insert into our queue of characters
+    for (uint8_t c : keys)
+        send(c);
+}
+
 
 PS2Keyboard *
 PS2KeyboardParams::create()

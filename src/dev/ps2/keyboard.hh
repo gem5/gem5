@@ -44,11 +44,12 @@
 #ifndef __DEV_PS2_KEYBOARD_HH__
 #define __DEV_PS2_KEYBOARD_HH__
 
+#include "base/vnc/vncinput.hh"
 #include "dev/ps2/device.hh"
 
 struct PS2KeyboardParams;
 
-class PS2Keyboard : public PS2Device
+class PS2Keyboard : public PS2Device, VncKeyboard
 {
   protected:
     static const uint8_t ID[];
@@ -78,6 +79,12 @@ class PS2Keyboard : public PS2Device
 
     uint16_t lastCommand;
 
+    /** is the shift key currently down */
+    bool shiftDown;
+
+    /** Is the device enabled? */
+    bool enabled;
+
   public:
     PS2Keyboard(const PS2KeyboardParams *p);
 
@@ -86,6 +93,9 @@ class PS2Keyboard : public PS2Device
 
   protected: // PS2Device
     void recv(uint8_t data) override;
+
+  public: // VncKeyboard
+    void keyPress(uint32_t key, bool down) override;
 };
 
 #endif // __DEV_PS2_KEYBOARD_hH__

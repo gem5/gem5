@@ -45,5 +45,5 @@ class I8042(BasicPioDevice):
     keyboard_int_pin = Param.X86IntSourcePin(X86IntSourcePin(),
             'Pin to signal the keyboard has data')
 
-    keyboard = Param.PS2Device(PS2Keyboard(), "PS/2 keyboard device")
+    keyboard = Param.PS2Device(PS2Keyboard(vnc=NULL), "PS/2 keyboard device")
     mouse = Param.PS2Device(PS2Mouse(), "PS/2 mouse device")

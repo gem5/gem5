@@ -48,6 +48,8 @@ class PS2Keyboard(PS2Device):
     type = 'PS2Keyboard'
     cxx_header = "dev/ps2/keyboard.hh"
 
+    vnc = Param.VncInput(Parent.any, "VNC server providing keyboard input")
+
 class PS2Mouse(PS2Device):
     type = 'PS2Mouse'
     cxx_header = "dev/ps2/mouse.hh"
