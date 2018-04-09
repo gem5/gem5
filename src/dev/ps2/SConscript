@@ -46,5 +46,6 @@ SimObject('PS2.py')
 Source('device.cc')
 Source('keyboard.cc')
 Source('mouse.cc')
+Source('touchkit.cc')
 
 DebugFlag('PS2')

@@ -53,3 +53,9 @@ class PS2Keyboard(PS2Device):
 class PS2Mouse(PS2Device):
     type = 'PS2Mouse'
     cxx_header = "dev/ps2/mouse.hh"
+
+class PS2TouchKit(PS2Device):
+    type = 'PS2TouchKit'
+    cxx_header = "dev/ps2/touchkit.hh"
+
+    vnc = Param.VncInput(Parent.any, "VNC server providing mouse input")
