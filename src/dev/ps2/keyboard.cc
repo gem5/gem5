@@ -127,6 +127,12 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
         enabled = false;
         sendAck();
         return true;
+      case Reset:
+        DPRINTF(PS2, "Resetting keyboard.\n");
+        sendAck();
+        enabled = true;
+        send(Ps2::SelfTestPass);
+        return true;
       case AllKeysToTypematic:
         panic("Setting all keys to typemantic unimplemented.\n");
       case AllKeysToMakeRelease:
@@ -144,8 +150,6 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
         panic("Setting key to make only unimplemented.\n");
       case Resend:
         panic("Keyboard resend unimplemented.\n");
-      case Reset:
-        panic("Keyboard reset unimplemented.\n");
       default:
         panic("Unknown keyboard command %#02x.\n", data[0]);
     }
