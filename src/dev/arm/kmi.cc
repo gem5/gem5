@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2017 ARM Limited
+ * Copyright (c) 2010, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,21 +48,17 @@
 #include "debug/Pl050.hh"
 #include "dev/arm/amba_device.hh"
 #include "dev/ps2.hh"
+#include "dev/ps2/device.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-Pl050::Pl050(const Params *p)
+Pl050::Pl050(const Pl050Params *p)
     : AmbaIntDevice(p, 0xfff), control(0), status(0x43), clkdiv(0),
-      rawInterrupts(0), ackNext(false), shiftDown(false),
-      vnc(p->vnc), driverInitialized(false),
-      intEvent([this]{ generateInterrupt(); }, name())
+      rawInterrupts(0),
+      intEvent([this]{ generateInterrupt(); }, name()),
+      ps2(p->ps2)
 {
-    if (vnc) {
-        if (!p->is_mouse)
-            vnc->setKeyboard(this);
-        else
-            vnc->setMouse(this);
-    }
+    ps2->hostRegDataAvailable([this]() { this->updateIntStatus(); });
 }
 
 Tick
@@ -79,32 +75,28 @@ Pl050::read(PacketPtr pkt)
         DPRINTF(Pl050, "Read Commmand: %#x\n", (uint32_t)control);
         data = control;
         break;
-      case kmiStat:
-        if (rxQueue.empty())
-            status.rxfull = 0;
-        else
-            status.rxfull = 1;
 
+      case kmiStat:
+        status.rxfull = ps2->hostDataAvailable() ? 1 : 0;
         DPRINTF(Pl050, "Read Status: %#x\n", (uint32_t)status);
         data = status;
         break;
+
       case kmiData:
-        if (rxQueue.empty()) {
-            data = 0;
-        } else {
-            data = rxQueue.front();
-            rxQueue.pop_front();
-        }
+        data = ps2->hostDataAvailable() ? ps2->hostRead() : 0;
         DPRINTF(Pl050, "Read Data: %#x\n", (uint32_t)data);
         updateIntStatus();
         break;
+
       case kmiClkDiv:
         data = clkdiv;
         break;
+
       case kmiISR:
         data = getInterrupt();
         DPRINTF(Pl050, "Read Interrupts: %#x\n", getInterrupt());
         break;
+
       default:
         if (readId(pkt, ambaId, pioAddr)) {
             // Hack for variable size accesses
@@ -152,87 +144,24 @@ Pl050::write(PacketPtr pkt)
         control = pkt->get<uint8_t>();
         updateIntStatus();
         break;
+
       case kmiData:
         DPRINTF(Pl050, "Write Data: %#x\n", (uint32_t)pkt->get<uint8_t>());
-        processCommand(pkt->get<uint8_t>());
+        ps2->hostWrite(pkt->get<uint8_t>());
         updateIntStatus();
         break;
+
       case kmiClkDiv:
         clkdiv = pkt->get<uint8_t>();
         break;
+
       default:
         warn("Tried to write PL050 at offset %#x that doesn't exist\n", daddr);
         break;
     }
+
     pkt->makeAtomicResponse();
     return pioDelay;
-}
-
-void
-Pl050::processCommand(uint8_t byte)
-{
-    using namespace Ps2;
-
-    if (ackNext) {
-        ackNext--;
-        rxQueue.push_back(Ack);
-        updateIntStatus();
-        return;
-    }
-
-    switch (byte) {
-      case Ps2Reset:
-        rxQueue.push_back(Ack);
-        rxQueue.push_back(SelfTestPass);
-        break;
-      case SetResolution:
-      case SetRate:
-      case SetStatusLed:
-        rxQueue.push_back(Ack);
-        ackNext = 1;
-        break;
-      case ReadId:
-        rxQueue.push_back(Ack);
-        if (params()->is_mouse)
-            rxQueue.push_back(MouseId);
-        else
-            rxQueue.push_back(KeyboardId);
-        break;
-      case TpReadId:
-        if (!params()->is_mouse)
-            break;
-        // We're not a trackpoint device, this should make the probe go away
-        rxQueue.push_back(Ack);
-        rxQueue.push_back(0);
-        rxQueue.push_back(0);
-        // fall through
-      case Disable:
-      case Enable:
-      case SetDefaults:
-      case SetScaling1_1:
-      case SetScaling1_2:
-        rxQueue.push_back(Ack);
-        break;
-      case StatusRequest:
-        rxQueue.push_back(Ack);
-        rxQueue.push_back(0);
-        rxQueue.push_back(2); // default resolution
-        rxQueue.push_back(100); // default sample rate
-        break;
-      case TouchKitId:
-        ackNext = 2;
-        rxQueue.push_back(Ack);
-        rxQueue.push_back(TouchKitId);
-        rxQueue.push_back(1);
-        rxQueue.push_back('A');
-
-        driverInitialized = true;
-        break;
-      default:
-        panic("Unknown byte received: %d\n", byte);
-    }
-
-    updateIntStatus();
 }
 
 
@@ -241,16 +170,24 @@ Pl050::updateIntStatus()
 {
     const bool old_interrupt(getInterrupt());
 
-    if (!rxQueue.empty())
-        rawInterrupts.rx = 1;
-    else
-        rawInterrupts.rx = 0;
+    rawInterrupts.rx = ps2->hostDataAvailable() ? 1 : 0;
 
     if ((!old_interrupt && getInterrupt()) && !intEvent.scheduled()) {
         schedule(intEvent, curTick() + intDelay);
     } else if (old_interrupt && !(getInterrupt())) {
             gic->clearInt(intNum);
     }
+}
+
+Pl050::InterruptReg
+Pl050::getInterrupt() const
+{
+    InterruptReg tmp_interrupt(0);
+
+    tmp_interrupt.tx = rawInterrupts.tx & control.txint_enable;
+    tmp_interrupt.rx = rawInterrupts.rx & control.rxint_enable;
+
+    return tmp_interrupt;
 }
 
 void
@@ -266,51 +203,6 @@ Pl050::generateInterrupt()
 }
 
 void
-Pl050::mouseAt(uint16_t x, uint16_t y, uint8_t buttons)
-{
-    using namespace Ps2;
-
-    // If the driver hasn't initialized the device yet, no need to try and send
-    // it anything. Similarly we can get vnc mouse events orders of maginture
-    // faster than m5 can process them. Only queue up two sets mouse movements
-    // and don't add more until those are processed.
-    if (!driverInitialized || rxQueue.size() > 10)
-        return;
-
-    // We shouldn't be here unless a vnc server called us in which case
-    // we should have a pointer to it
-    assert(vnc);
-
-    // Convert screen coordinates to touchpad coordinates
-    uint16_t _x = (2047.0/vnc->videoWidth()) * x;
-    uint16_t _y = (2047.0/vnc->videoHeight()) * y;
-
-    rxQueue.push_back(buttons);
-    rxQueue.push_back(_x >> 7);
-    rxQueue.push_back(_x & 0x7f);
-    rxQueue.push_back(_y >> 7);
-    rxQueue.push_back(_y & 0x7f);
-
-    updateIntStatus();
-}
-
-
-void
-Pl050::keyPress(uint32_t key, bool down)
-{
-    using namespace Ps2;
-
-    std::list<uint8_t> keys;
-
-    // convert the X11 keysym into ps2 codes
-    keySymToPs2(key, down, shiftDown, keys);
-
-    // Insert into our queue of charecters
-    rxQueue.splice(rxQueue.end(), keys);
-    updateIntStatus();
-}
-
-void
 Pl050::serialize(CheckpointOut &cp) const
 {
     uint8_t ctrlreg = control;
@@ -322,12 +214,6 @@ Pl050::serialize(CheckpointOut &cp) const
 
     uint8_t raw_ints = rawInterrupts;
     SERIALIZE_SCALAR(raw_ints);
-
-    SERIALIZE_SCALAR(ackNext);
-    SERIALIZE_SCALAR(shiftDown);
-    SERIALIZE_SCALAR(driverInitialized);
-
-    SERIALIZE_CONTAINER(rxQueue);
 }
 
 void
@@ -346,15 +232,7 @@ Pl050::unserialize(CheckpointIn &cp)
     uint8_t raw_ints;
     UNSERIALIZE_SCALAR(raw_ints);
     rawInterrupts = raw_ints;
-
-    UNSERIALIZE_SCALAR(ackNext);
-    UNSERIALIZE_SCALAR(shiftDown);
-    UNSERIALIZE_SCALAR(driverInitialized);
-
-    UNSERIALIZE_CONTAINER(rxQueue);
 }
-
-
 
 Pl050 *
 Pl050Params::create()

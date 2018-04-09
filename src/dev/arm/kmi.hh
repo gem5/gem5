@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2017 ARM Limited
+ * Copyright (c) 2010, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -54,7 +54,9 @@
 #include "dev/arm/amba_device.hh"
 #include "params/Pl050.hh"
 
-class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
+class PS2Device;
+
+class Pl050 : public AmbaIntDevice
 {
   protected:
     static const int kmiCr       = 0x000;
@@ -104,21 +106,6 @@ class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
     /** raw interrupt register (unmasked) */
     InterruptReg rawInterrupts;
 
-    /** If the controller should ignore the next data byte and acknowledge it.
-     * The driver is attempting to setup some feature we don't care about
-     */
-    int ackNext;
-
-    /** is the shift key currently down */
-    bool shiftDown;
-
-    /** The vnc server we're connected to (if any) */
-    VncInput *vnc;
-
-    /** If the linux driver has initialized the device yet and thus can we send
-     * mouse data */
-    bool driverInitialized;
-
     /** Update the status of the interrupt registers and schedule an interrupt
      * if required */
     void updateIntStatus();
@@ -127,39 +114,19 @@ class Pl050 : public AmbaIntDevice, public VncKeyboard, public VncMouse
     void generateInterrupt();
 
     /** Get interrupt value */
-    InterruptReg getInterrupt() const {
-        InterruptReg tmp_interrupt(0);
-        tmp_interrupt.tx = rawInterrupts.tx & control.txint_enable;
-        tmp_interrupt.rx = rawInterrupts.rx & control.rxint_enable;
-        return tmp_interrupt;
-    }
+    InterruptReg getInterrupt() const;
+
     /** Wrapper to create an event out of the thing */
     EventFunctionWrapper intEvent;
 
-    /** Receive queue. This list contains all the pending commands that
-     * need to be sent to the driver
-     */
-    std::list<uint8_t> rxQueue;
-
-    /** Handle a command sent to the kmi and respond appropriately
-     */
-    void processCommand(uint8_t byte);
+    /** PS2 device connected to this KMI interface */
+    PS2Device *ps2;
 
   public:
-    typedef Pl050Params Params;
-    const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
-
-    Pl050(const Params *p);
+    Pl050(const Pl050Params *p);
 
     Tick read(PacketPtr pkt) override;
     Tick write(PacketPtr pkt) override;
-
-    void mouseAt(uint16_t x, uint16_t y, uint8_t buttons) override;
-    void keyPress(uint32_t key, bool down) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
