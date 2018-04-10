@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -41,34 +41,66 @@
 #define __DEV_PS2_HH__
 
 #include <stdint.h>
+
 #include <list>
+#include <vector>
 
 #include "base/bitunion.hh"
 
-/** @file misc functions and constants required to interface with or emulate ps2
- * devices
+/** @file misc functions and constants required to interface with or
+ * emulate ps2 devices
  */
 
 namespace Ps2 {
+
 enum {
-    Ps2Reset        = 0xff,
-    SelfTestPass    = 0xAA,
-    SetStatusLed    = 0xed,
-    SetResolution   = 0xe8,
-    StatusRequest   = 0xe9,
-    SetScaling1_2   = 0xe7,
-    SetScaling1_1   = 0xe6,
-    ReadId          = 0xf2,
-    TpReadId        = 0xe1,
-    Ack             = 0xfa,
-    Resend          = 0xfe,
-    SetRate         = 0xf3,
-    Enable          = 0xf4,
-    Disable         = 0xf5,
-    SetDefaults     = 0xf6,
-    KeyboardId      = 0xab,
-    TouchKitId      = 0x0a,
-    MouseId         = 0x00,
+    SelfTestPass       = 0xAA,
+    ReadID             = 0xF2,
+    Enable             = 0xF4,
+    Disable            = 0xF5,
+    DefaultsAndDisable = 0xF6,
+    SelfTestFail       = 0xFC,
+    Ack                = 0xFA,
+    Resend             = 0xFE,
+    Reset              = 0xFF,
+};
+
+namespace Keyboard {
+
+enum {
+    LEDWrite = 0xED,
+    DiagnosticEcho = 0xEE,
+    AlternateScanCodes = 0xF0,
+    TypematicInfo = 0xF3,
+    AllKeysToTypematic = 0xF7,
+    AllKeysToMakeRelease = 0xF8,
+    AllKeysToMake = 0xF9,
+    AllKeysToTypematicMakeRelease = 0xFA,
+    KeyToTypematic = 0xFB,
+    KeyToMakeRelease = 0xFC,
+    KeyToMakeOnly = 0xFD,
+};
+
+extern const std::vector<uint8_t> ID;
+
+};
+
+namespace Mouse {
+
+enum {
+    Scale1to1 = 0xE6,
+    Scale2to1 = 0xE7,
+    SetResolution = 0xE8,
+    GetStatus = 0xE9,
+    ReadData = 0xEB,
+    ResetWrapMode = 0xEC,
+    WrapMode = 0xEE,
+    RemoteMode = 0xF0,
+    SampleRate = 0xF3,
+};
+
+extern const std::vector<uint8_t> ID;
+
 };
 
 /** A bitfield that represents the first byte of a mouse movement packet

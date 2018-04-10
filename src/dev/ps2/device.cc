@@ -45,7 +45,7 @@
 
 #include "base/logging.hh"
 #include "debug/PS2.hh"
-#include "dev/ps2.hh"
+#include "dev/ps2/types.hh"
 #include "params/PS2Device.hh"
 
 PS2Device::PS2Device(const PS2DeviceParams *p)

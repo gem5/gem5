@@ -45,10 +45,8 @@
 
 #include "base/logging.hh"
 #include "debug/PS2.hh"
-#include "dev/ps2.hh"
+#include "dev/ps2/types.hh"
 #include "params/PS2Keyboard.hh"
-
-const uint8_t PS2Keyboard::ID[] = {0xab, 0x83};
 
 PS2Keyboard::PS2Keyboard(const PS2KeyboardParams *p)
     : PS2Device(p),
@@ -79,7 +77,36 @@ bool
 PS2Keyboard::recv(const std::vector<uint8_t> &data)
 {
     switch (data[0]) {
-      case LEDWrite:
+      case Ps2::ReadID:
+        DPRINTF(PS2, "Got keyboard read ID command.\n");
+        sendAck();
+        send(Ps2::Keyboard::ID);
+        return true;
+      case Ps2::Enable:
+        DPRINTF(PS2, "Enabling the keyboard.\n");
+        enabled = true;
+        sendAck();
+        return true;
+      case Ps2::Disable:
+        DPRINTF(PS2, "Disabling the keyboard.\n");
+        enabled = false;
+        sendAck();
+        return true;
+      case Ps2::DefaultsAndDisable:
+        DPRINTF(PS2, "Disabling and resetting the keyboard.\n");
+        enabled = false;
+        sendAck();
+        return true;
+      case Ps2::Reset:
+        DPRINTF(PS2, "Resetting keyboard.\n");
+        enabled = true;
+        sendAck();
+        send(Ps2::SelfTestPass);
+        return true;
+      case Ps2::Resend:
+        panic("Keyboard resend unimplemented.\n");
+
+      case Ps2::Keyboard::LEDWrite:
         if (data.size() == 1) {
             DPRINTF(PS2, "Got LED write command.\n");
             sendAck();
@@ -93,16 +120,11 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
             sendAck();
             return true;
         }
-      case DiagnosticEcho:
+      case Ps2::Keyboard::DiagnosticEcho:
         panic("Keyboard diagnostic echo unimplemented.\n");
-      case AlternateScanCodes:
+      case Ps2::Keyboard::AlternateScanCodes:
         panic("Accessing alternate scan codes unimplemented.\n");
-      case ReadID:
-        DPRINTF(PS2, "Got keyboard read ID command.\n");
-        sendAck();
-        send((uint8_t *)&ID, sizeof(ID));
-        return true;
-      case TypematicInfo:
+      case Ps2::Keyboard::TypematicInfo:
         if (data.size() == 1) {
             DPRINTF(PS2, "Setting typematic info.\n");
             sendAck();
@@ -112,44 +134,21 @@ PS2Keyboard::recv(const std::vector<uint8_t> &data)
             sendAck();
             return true;
         }
-      case Enable:
-        DPRINTF(PS2, "Enabling the keyboard.\n");
-        enabled = true;
-        sendAck();
-        return true;
-      case Disable:
-        DPRINTF(PS2, "Disabling the keyboard.\n");
-        enabled = false;
-        sendAck();
-        return true;
-      case DefaultsAndDisable:
-        DPRINTF(PS2, "Disabling and resetting the keyboard.\n");
-        enabled = false;
-        sendAck();
-        return true;
-      case Reset:
-        DPRINTF(PS2, "Resetting keyboard.\n");
-        sendAck();
-        enabled = true;
-        send(Ps2::SelfTestPass);
-        return true;
-      case AllKeysToTypematic:
+      case Ps2::Keyboard::AllKeysToTypematic:
         panic("Setting all keys to typemantic unimplemented.\n");
-      case AllKeysToMakeRelease:
+      case Ps2::Keyboard::AllKeysToMakeRelease:
         panic("Setting all keys to make/release unimplemented.\n");
-      case AllKeysToMake:
+      case Ps2::Keyboard::AllKeysToMake:
         panic("Setting all keys to make unimplemented.\n");
-      case AllKeysToTypematicMakeRelease:
+      case Ps2::Keyboard::AllKeysToTypematicMakeRelease:
         panic("Setting all keys to "
                 "typematic/make/release unimplemented.\n");
-      case KeyToTypematic:
+      case Ps2::Keyboard::KeyToTypematic:
         panic("Setting a key to typematic unimplemented.\n");
-      case KeyToMakeRelease:
+      case Ps2::Keyboard::KeyToMakeRelease:
         panic("Setting a key to make/release unimplemented.\n");
-      case KeyToMakeOnly:
+      case Ps2::Keyboard::KeyToMakeOnly:
         panic("Setting key to make only unimplemented.\n");
-      case Resend:
-        panic("Keyboard resend unimplemented.\n");
       default:
         panic("Unknown keyboard command %#02x.\n", data[0]);
     }

@@ -50,7 +50,6 @@ Source('intel_8254_timer.cc')
 Source('mc146818.cc')
 Source('pixelpump.cc')
 Source('platform.cc')
-Source('ps2.cc')
 
 DebugFlag('Intel8254Timer')
 DebugFlag('MC146818')

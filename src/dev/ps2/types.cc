@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,12 +37,15 @@
  * Authors: Ali Saidi
  */
 
-#include "dev/ps2.hh"
+#include "dev/ps2/types.hh"
 
 #include <list>
 
 #include "base/logging.hh"
 #include "x11keysym/keysym.h"
+
+const std::vector<uint8_t> Ps2::Keyboard::ID{0xAB, 0x83};
+const std::vector<uint8_t> Ps2::Mouse::ID{0x00};
 
 namespace Ps2 {
 

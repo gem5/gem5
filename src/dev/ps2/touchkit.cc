@@ -46,10 +46,8 @@
 
 #include "base/logging.hh"
 #include "debug/PS2.hh"
-#include "dev/ps2.hh"
+#include "dev/ps2/types.hh"
 #include "params/PS2TouchKit.hh"
-
-const uint8_t PS2TouchKit::ID[] = {0x00};
 
 PS2TouchKit::PS2TouchKit(const PS2TouchKitParams *p)
     : PS2Device(p),
@@ -82,7 +80,7 @@ bool
 PS2TouchKit::recv(const std::vector<uint8_t> &data)
 {
     switch (data[0]) {
-      case Ps2::Ps2Reset:
+      case Ps2::Reset:
         DPRINTF(PS2, "Resetting device.\n");
         enabled = false;
         touchKitEnabled = false;
@@ -90,29 +88,9 @@ PS2TouchKit::recv(const std::vector<uint8_t> &data)
         send(Ps2::SelfTestPass);
         return true;
 
-      case Ps2::SetResolution:
-      case Ps2::SetRate:
-      case Ps2::SetStatusLed:
+      case Ps2::ReadID:
         sendAck();
-        return data.size() == 2;
-
-      case Ps2::ReadId:
-        sendAck();
-        send((const uint8_t *)&ID, sizeof(ID));
-        return true;
-
-      case Ps2::TpReadId:
-        // We're not a trackpoint device, this should make the probe
-        // go away
-        sendAck();
-        send(0);
-        send(0);
-        sendAck();
-        return true;
-
-      case Ps2::SetScaling1_1:
-      case Ps2::SetScaling1_2:
-        sendAck();
+        send(Ps2::Mouse::ID);
         return true;
 
       case Ps2::Disable:
@@ -127,20 +105,39 @@ PS2TouchKit::recv(const std::vector<uint8_t> &data)
         sendAck();
         return true;
 
-      case Ps2::SetDefaults:
+      case Ps2::DefaultsAndDisable:
         DPRINTF(PS2, "Setting defaults and disabling device.\n");
         enabled = false;
         sendAck();
         return true;
 
-      case Ps2::StatusRequest:
+      case Ps2::Mouse::Scale1to1:
+      case Ps2::Mouse::Scale2to1:
+        sendAck();
+        return true;
+
+      case Ps2::Mouse::SetResolution:
+      case Ps2::Mouse::SampleRate:
+        sendAck();
+        return data.size() == 2;
+
+      case Ps2::Mouse::GetStatus:
         sendAck();
         send(0);
         send(2); // default resolution
         send(100); // default sample rate
         return true;
 
-      case Ps2::TouchKitId:
+      case TpReadId:
+        // We're not a trackpoint device, this should make the probe
+        // go away
+        sendAck();
+        send(0);
+        send(0);
+        sendAck();
+        return true;
+
+      case TouchKitDiag:
         return recvTouchKit(data);
 
       default:
@@ -155,7 +152,7 @@ PS2TouchKit::recvTouchKit(const std::vector<uint8_t> &data)
     sendAck();
 
     // Packet format is: 0x0A SIZE CMD DATA
-    assert(data[0] == Ps2::TouchKitId);
+    assert(data[0] == TouchKitDiag);
     if (data.size() < 3 || data.size() - 2 < data[1])
         return false;
 
@@ -181,7 +178,7 @@ PS2TouchKit::recvTouchKit(const std::vector<uint8_t> &data)
 void
 PS2TouchKit::sendTouchKit(const uint8_t *data, size_t size)
 {
-    send(Ps2::TouchKitId);
+    send(TouchKitDiag);
     send(size);
     for (int i = 0; i < size; ++i)
         send(data[i]);

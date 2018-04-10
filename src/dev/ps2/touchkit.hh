@@ -48,7 +48,10 @@ struct PS2TouchKitParams;
 class PS2TouchKit : public PS2Device, public VncMouse
 {
   protected:
-    static const uint8_t ID[];
+    enum PS2Commands {
+        TpReadId = 0xE1,
+        TouchKitDiag = 0x0A,
+    };
 
     enum TKCommands {
         TouchKitActive = 'A',

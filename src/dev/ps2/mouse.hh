@@ -51,27 +51,6 @@ struct PS2MouseParams;
 class PS2Mouse : public PS2Device
 {
   protected:
-    static const uint8_t ID[];
-
-    enum Command
-    {
-        Scale1to1 = 0xE6,
-        Scale2to1 = 0xE7,
-        SetResolution = 0xE8,
-        GetStatus = 0xE9,
-        ReadData = 0xEB,
-        ResetWrapMode = 0xEC,
-        WrapMode = 0xEE,
-        RemoteMode = 0xF0,
-        ReadID = 0xF2,
-        SampleRate = 0xF3,
-        EnableReporting = 0xF4,
-        DisableReporting = 0xF5,
-        DefaultsAndDisable = 0xF6,
-        Resend = 0xFE,
-        Reset = 0xFF
-    };
-
     BitUnion8(Status)
         Bitfield<6> remote;
         Bitfield<5> enabled;

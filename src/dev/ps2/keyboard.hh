@@ -52,30 +52,6 @@ struct PS2KeyboardParams;
 class PS2Keyboard : public PS2Device, VncKeyboard
 {
   protected:
-    static const uint8_t ID[];
-
-    enum Command
-    {
-        LEDWrite = 0xED,
-        DiagnosticEcho = 0xEE,
-        AlternateScanCodes = 0xF0,
-        ReadID = 0xF2,
-        TypematicInfo = 0xF3,
-        Enable = 0xF4,
-        Disable = 0xF5,
-        DefaultsAndDisable = 0xF6,
-        AllKeysToTypematic = 0xF7,
-        AllKeysToMakeRelease = 0xF8,
-        AllKeysToMake = 0xF9,
-        AllKeysToTypematicMakeRelease = 0xFA,
-        KeyToTypematic = 0xFB,
-        KeyToMakeRelease = 0xFC,
-        KeyToMakeOnly = 0xFD,
-        Resend = 0xFE,
-        Reset = 0xFF
-    };
-
-
     /** is the shift key currently down */
     bool shiftDown;
 

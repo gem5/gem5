@@ -47,5 +47,6 @@ Source('device.cc')
 Source('keyboard.cc')
 Source('mouse.cc')
 Source('touchkit.cc')
+Source('types.cc')
 
 DebugFlag('PS2')
