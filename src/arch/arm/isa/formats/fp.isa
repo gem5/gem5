@@ -606,6 +606,34 @@ let {{
                         }
                     }
                 }
+            } else {
+                if (u) {
+                    switch (c) {
+                      case 0x0:
+                        return new SHA256H(machInst, vd, vn, vm);
+                      case 0x1:
+                        return new SHA256H2(machInst, vd, vn, vm);
+                      case 0x2:
+                        return new SHA256SU1(machInst, vd, vn, vm);
+                      case 0x3:
+                        return new Unknown(machInst);
+                      default:
+                        M5_UNREACHABLE;
+                    }
+                } else {
+                    switch (c) {
+                      case 0x0:
+                        return new SHA1C(machInst, vd, vn, vm);
+                      case 0x1:
+                        return new SHA1P(machInst, vd, vn, vm);
+                      case 0x2:
+                        return new SHA1M(machInst, vd, vn, vm);
+                      case 0x3:
+                        return new SHA1SU0(machInst, vd, vn, vm);
+                      default:
+                        M5_UNREACHABLE;
+                    }
+                }
             }
             return new Unknown(machInst);
           case 0xd:
@@ -1534,6 +1562,12 @@ let {{
                     return decodeNeonSTwoMiscReg<NVcltD, NVcltQ>(
                             q, size, machInst, vd, vm);
                 }
+              case 0x5:
+                if (q) {
+                    return new SHA1H(machInst, vd, vm);
+                } else {
+                    return new Unknown(machInst);
+                }
               case 0x6:
                 if (bits(machInst, 10)) {
                     if (q)
@@ -1595,6 +1629,12 @@ let {{
                             size, machInst, vd, vm, 8 << size);
                 } else {
                     return new Unknown(machInst);
+                }
+              case 0x7:
+                if (q) {
+                    return new SHA256SU0(machInst, vd, vm);
+                } else {
+                    return new SHA1SU1(machInst, vd, vm);
                 }
               case 0xc:
               case 0xe:

@@ -51,6 +51,7 @@ output header {{
 
 #include "arch/arm/insts/branch.hh"
 #include "arch/arm/insts/branch64.hh"
+#include "arch/arm/insts/crypto.hh"
 #include "arch/arm/insts/data64.hh"
 #include "arch/arm/insts/fplib.hh"
 #include "arch/arm/insts/macromem.hh"

@@ -102,3 +102,6 @@ split decoder;
 
 //m5 Pseudo-ops
 ##include "m5ops.isa"
+
+//Crypto
+##include "crypto.isa"
