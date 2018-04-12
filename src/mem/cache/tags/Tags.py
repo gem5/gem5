@@ -77,3 +77,6 @@ class FALRU(BaseTags):
     type = 'FALRU'
     cxx_class = 'FALRU'
     cxx_header = "mem/cache/tags/fa_lru.hh"
+
+    min_tracked_cache_size = Param.MemorySize("128kB", "Minimum cache size for"
+                                              " which we track statistics")
