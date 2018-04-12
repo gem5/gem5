@@ -71,7 +71,7 @@ BaseSetAssoc::init(BaseCache* cache)
     // Initialize all blocks
     for (unsigned blk_index = 0; blk_index < numBlocks; blk_index++) {
         // Locate next cache block
-        BlkType* blk = &blks[blk_index];
+        CacheBlk* blk = &blks[blk_index];
 
         // Link block to indexing policy
         indexingPolicy->setEntry(blk, blk_index);

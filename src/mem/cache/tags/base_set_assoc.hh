@@ -71,16 +71,12 @@
  */
 class BaseSetAssoc : public BaseTags
 {
-  public:
-    /** Typedef the block type used in this tag store. */
-    typedef CacheBlk BlkType;
-
   protected:
     /** The allocatable associativity of the cache (alloc mask). */
     unsigned allocAssoc;
 
     /** The cache blocks. */
-    std::vector<BlkType> blks;
+    std::vector<CacheBlk> blks;
 
     /** Whether tags and data are accessed sequentially. */
     const bool sequentialAccess;
@@ -129,7 +125,7 @@ class BaseSetAssoc : public BaseTags
      */
     CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) override
     {
-        BlkType *blk = findBlock(addr, is_secure);
+        CacheBlk *blk = findBlock(addr, is_secure);
 
         // Access all tags in parallel, hence one in each way.  The data side
         // either accesses all blocks in parallel, or one block sequentially on
