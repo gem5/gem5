@@ -397,10 +397,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             }
             tags->insertBlock(pkt, blk);
 
-            blk->status = (BlkValid | BlkReadable);
-            if (pkt->isSecure()) {
-                blk->status |= BlkSecure;
-            }
+            blk->status |= (BlkValid | BlkReadable);
         }
         // only mark the block dirty if we got a writeback command,
         // and leave it as is for a clean writeback
@@ -460,10 +457,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 }
                 tags->insertBlock(pkt, blk);
 
-                blk->status = (BlkValid | BlkReadable);
-                if (pkt->isSecure()) {
-                    blk->status |= BlkSecure;
-                }
+                blk->status |= (BlkValid | BlkReadable);
             }
         }
 

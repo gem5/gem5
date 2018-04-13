@@ -43,6 +43,36 @@
 #include "base/cprintf.hh"
 
 void
+CacheBlk::insert(const Addr tag, const State is_secure,
+                 const int src_master_ID, const uint32_t task_ID)
+{
+    // Touch block
+    isTouched = true;
+
+    // Set block tag
+    this->tag = tag;
+
+    // Set source requestor ID
+    srcMasterId = src_master_ID;
+
+    // Set task ID
+    task_id = task_ID;
+
+    // Set insertion tick as current tick
+    tickInserted = curTick();
+
+    // Insertion counts as a reference to the block
+    refCount = 1;
+
+    // Set secure state
+    if (is_secure) {
+        status = BlkSecure;
+    } else {
+        status = 0;
+    }
+}
+
+void
 CacheBlkPrintWrapper::print(std::ostream &os, int verbosity,
                             const std::string &prefix) const
 {

@@ -253,6 +253,20 @@ class CacheBlk : public ReplaceableEntry
     }
 
     /**
+     * Set member variables when a block insertion occurs. Resets reference
+     * count to 1 (the insertion counts as a reference), and touch block if
+     * it hadn't been touched previously. Sets the insertion tick to the
+     * current tick. Does not make block valid.
+     *
+     * @param tag Block address tag.
+     * @param is_secure Whether the block is in secure space or not.
+     * @param src_master_ID The source requestor ID.
+     * @param task_ID The new task ID.
+     */
+    void insert(const Addr tag, const State is_secure, const int src_master_ID,
+                const uint32_t task_ID);
+
+    /**
      * Track the fact that a local locked was issued to the
      * block. Invalidate any previous LL to the same address.
      */
