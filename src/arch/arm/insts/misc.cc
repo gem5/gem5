@@ -324,5 +324,5 @@ RegImmRegShiftOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 std::string
 UnknownOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
-    return csprintf("%-10s (inst %#08x)", "unknown", machInst);
+    return csprintf("%-10s (inst %#08x)", "unknown", machInst & mask(32));
 }

@@ -78,7 +78,7 @@ RegRegRegImmOp64::generateDisassembly(
 std::string
 UnknownOp64::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
-    return csprintf("%-10s (inst %#08x)", "unknown", machInst);
+    return csprintf("%-10s (inst %#08x)", "unknown", machInst & mask(32));
 }
 
 std::string
