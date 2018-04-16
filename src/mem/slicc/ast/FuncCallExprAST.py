@@ -74,6 +74,24 @@ class FuncCallExprAST(ExprAST):
 
             return self.symtab.find("void", Type)
 
+        if self.proc_name == "DPRINTFN":
+            format = "%s" % (self.exprs[0].inline())
+            format_length = len(format)
+            str_list = []
+
+            for i in range(1, len(self.exprs)):
+                str_list.append("%s" % self.exprs[i].inline())
+
+            if len(str_list) == 0:
+                code('DPRINTFN("$0: $1")',
+                     self.exprs[0].location, format[2:format_length-2])
+            else:
+                code('DPRINTFN("$0: $1", $2)',
+                     self.exprs[0].location, format[2:format_length-2],
+                     ', '.join(str_list))
+
+            return self.symtab.find("void", Type)
+
         # hack for adding comments to profileTransition
         if self.proc_name == "APPEND_TRANSITION_COMMENT":
             # FIXME - check for number of parameters
