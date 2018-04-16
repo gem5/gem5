@@ -334,7 +334,7 @@ class BaseCache : public MemObject
      * is an outstanding request that accesses the victim block) or
      * when we want to avoid allocation (e.g., exclusive caches)
      */
-    CacheBlk *tempBlock;
+    TempCacheBlk *tempBlock;
 
     /**
      * Upstream caches need this packet until true is returned, so
@@ -388,6 +388,16 @@ class BaseCache : public MemObject
             cmd.isPrefetch() ||
             cmd.isLLSC();
     }
+
+    /**
+     * Regenerate block address using tags.
+     * Block address regeneration depends on whether we're using a temporary
+     * block or not.
+     *
+     * @param blk The block to regenerate address.
+     * @return The block's address.
+     */
+    Addr regenerateBlkAddr(CacheBlk* blk);
 
     /**
      * Does all the processing necessary to perform the provided request.

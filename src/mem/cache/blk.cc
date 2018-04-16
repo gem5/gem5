@@ -43,7 +43,7 @@
 #include "base/cprintf.hh"
 
 void
-CacheBlk::insert(const Addr tag, const State is_secure,
+CacheBlk::insert(const Addr tag, const bool is_secure,
                  const int src_master_ID, const uint32_t task_ID)
 {
     // Set block tag

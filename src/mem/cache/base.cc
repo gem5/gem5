@@ -113,7 +113,7 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
     // forward snoops is overridden in init() once we can query
     // whether the connected master is actually snooping or not
 
-    tempBlock = new CacheBlk();
+    tempBlock = new TempCacheBlk();
     tempBlock->data = new uint8_t[blkSize];
 
     tags->setCache(this);
@@ -162,6 +162,16 @@ BaseCache::CacheSlavePort::processSendRetry()
     // reset the flag and call retry
     mustSendRetry = false;
     sendRetryReq();
+}
+
+Addr
+BaseCache::regenerateBlkAddr(CacheBlk* blk)
+{
+    if (blk != tempBlock) {
+        return tags->regenerateBlkAddr(blk);
+    } else {
+        return tempBlock->getAddr();
+    }
 }
 
 void
@@ -1123,8 +1133,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
             // current request and then get rid of it
             assert(!tempBlock->isValid());
             blk = tempBlock;
-            tempBlock->set = tags->extractSet(addr);
-            tempBlock->tag = tags->extractTag(addr);
+            tempBlock->insert(addr, is_secure);
             DPRINTF(Cache, "using temp block for %#llx (%s)\n", addr,
                     is_secure ? "s" : "ns");
         } else {
@@ -1207,7 +1216,7 @@ BaseCache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
         return nullptr;
 
     if (blk->isValid()) {
-        Addr repl_addr = tags->regenerateBlkAddr(blk);
+        Addr repl_addr = regenerateBlkAddr(blk);
         MSHR *repl_mshr = mshrQueue.findMatch(repl_addr, blk->isSecure());
         if (repl_mshr) {
             // must be an outstanding upgrade or clean request
@@ -1251,7 +1260,7 @@ BaseCache::writebackBlk(CacheBlk *blk)
 
     writebacks[Request::wbMasterId]++;
 
-    Request *req = new Request(tags->regenerateBlkAddr(blk), blkSize, 0,
+    Request *req = new Request(regenerateBlkAddr(blk), blkSize, 0,
                                Request::wbMasterId);
     if (blk->isSecure())
         req->setFlags(Request::SECURE);
@@ -1286,7 +1295,7 @@ BaseCache::writebackBlk(CacheBlk *blk)
 PacketPtr
 BaseCache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
 {
-    Request *req = new Request(tags->regenerateBlkAddr(blk), blkSize, 0,
+    Request *req = new Request(regenerateBlkAddr(blk), blkSize, 0,
                                Request::wbMasterId);
     if (blk->isSecure()) {
         req->setFlags(Request::SECURE);
@@ -1346,7 +1355,7 @@ BaseCache::writebackVisitor(CacheBlk &blk)
     if (blk.isDirty()) {
         assert(blk.isValid());
 
-        Request request(tags->regenerateBlkAddr(&blk),
+        Request request(regenerateBlkAddr(&blk),
                         blkSize, 0, Request::funcMasterId);
         request.taskId(blk.task_id);
         if (blk.isSecure()) {

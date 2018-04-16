@@ -166,7 +166,6 @@ class CacheBlk : public ReplaceableEntry
     std::list<Lock> lockList;
 
   public:
-
     CacheBlk()
     {
         invalidate();
@@ -261,7 +260,7 @@ class CacheBlk : public ReplaceableEntry
      * @param src_master_ID The source requestor ID.
      * @param task_ID The new task ID.
      */
-    void insert(const Addr tag, const State is_secure, const int src_master_ID,
+    void insert(const Addr tag, const bool is_secure, const int src_master_ID,
                 const uint32_t task_ID);
 
     /**
@@ -390,6 +389,66 @@ class CacheBlk : public ReplaceableEntry
             clearLoadLocks(req);
             return true;
         }
+    }
+};
+
+/**
+ * Special instance of CacheBlk for use with tempBlk that deals with its
+ * block address regeneration.
+ * @sa Cache
+ */
+class TempCacheBlk final : public CacheBlk
+{
+  private:
+    /**
+     * Copy of the block's address, used to regenerate tempBlock's address.
+     */
+    Addr _addr;
+
+  public:
+    TempCacheBlk() : CacheBlk() {}
+    TempCacheBlk(const TempCacheBlk&) = delete;
+    TempCacheBlk& operator=(const TempCacheBlk&) = delete;
+    ~TempCacheBlk() {};
+
+    /**
+     * Invalidate the block and clear all state.
+     */
+    void invalidate() override {
+        CacheBlk::invalidate();
+
+        _addr = MaxAddr;
+    }
+
+    /**
+     * Set member variables when a block insertion occurs. A TempCacheBlk does
+     * not have all the information required to regenerate the block's address,
+     * so it is provided the address itself for easy regeneration.
+     *
+     * @param addr Block address.
+     * @param is_secure Whether the block is in secure space or not.
+     */
+    void insert(const Addr addr, const bool is_secure)
+    {
+        // Set block address
+        _addr = addr;
+
+        // Set secure state
+        if (is_secure) {
+            status = BlkSecure;
+        } else {
+            status = 0;
+        }
+    }
+
+    /**
+     * Get block's address.
+     *
+     * @return addr Address value.
+     */
+    Addr getAddr() const
+    {
+        return _addr;
     }
 };
 
