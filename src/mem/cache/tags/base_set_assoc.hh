@@ -279,16 +279,6 @@ class BaseSetAssoc : public BaseTags
     }
 
     /**
-     * Calculate the set index from the address.
-     * @param addr The address to get the set from.
-     * @return The set index of the address.
-     */
-    int extractSet(Addr addr) const override
-    {
-        return ((addr >> setShift) & setMask);
-    }
-
-    /**
      * Regenerate the block address from the tag and set.
      *
      * @param block The block.
@@ -312,6 +302,18 @@ class BaseSetAssoc : public BaseTags
             }
         }
         return false;
+    }
+
+  private:
+    /**
+     * Calculate the set index from the address.
+     *
+     * @param addr The address to get the set from.
+     * @return The set index of the address.
+     */
+    int extractSet(Addr addr) const
+    {
+        return ((addr >> setShift) & setMask);
     }
 };
 

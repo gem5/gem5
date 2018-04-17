@@ -221,16 +221,6 @@ class FALRU : public BaseTags
     }
 
     /**
-     * Return the set of an address. Only one set in a fully associative cache.
-     * @param addr The address to get the set from.
-     * @return 0.
-     */
-    int extractSet(Addr addr) const override
-    {
-        return 0;
-    }
-
-    /**
      * Regenerate the block address from the tag.
      *
      * @param block The block.

@@ -288,9 +288,6 @@ class BaseTags : public ClockedObject
      */
     virtual Addr regenerateBlkAddr(const CacheBlk* blk) const = 0;
 
-    virtual int extractSet(Addr addr) const = 0;
-
-
     /**
      * Visit each block in the tags and apply a visitor
      *
