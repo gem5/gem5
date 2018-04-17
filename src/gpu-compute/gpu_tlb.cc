@@ -1544,14 +1544,14 @@ namespace X86ISA
                 if (!sender_state->prefetch) {
                     // no PageFaults are permitted after
                     // the second page table lookup
-                    assert(success);
+                    assert(pte);
 
                     DPRINTF(GPUTLB, "Mapping %#x to %#x\n", alignedVaddr,
                             pte->paddr);
 
                     sender_state->tlbEntry =
                         new GpuTlbEntry(0, virt_page_addr,
-                                        pte->paddr, success);
+                                        pte->paddr, true);
                 } else {
                     // If this was a prefetch, then do the normal thing if it
                     // was a successful translation.  Otherwise, send an empty
@@ -1563,7 +1563,7 @@ namespace X86ISA
 
                         sender_state->tlbEntry =
                             new GpuTlbEntry(0, virt_page_addr,
-                                            pte->paddr, success);
+                                            pte->paddr, true);
                     } else {
                         DPRINTF(GPUPrefetch, "Prefetch failed %#x\n",
                                 alignedVaddr);
