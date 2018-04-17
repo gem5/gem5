@@ -139,6 +139,8 @@ class ThermalReference : public SimObject, public ThermalEntity
 
 
 /**
+ * @sa \ref gem5PowerModel "gem5 Thermal Model"
+ *
  * A ThermalModel is the element which ties all thermal objects
  * together and provides the thermal solver to the system.
  * It is reponsible for updating temperature for all Thermal
