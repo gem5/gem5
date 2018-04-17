@@ -1713,6 +1713,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
           case MISCREG_TTBR0_EL1:
           case MISCREG_TTBR1_EL1:
           case MISCREG_TTBR0_EL2:
+          case MISCREG_TTBR1_EL2:
           case MISCREG_TTBR0_EL3:
             getITBPtr(tc)->invalidateMiscReg();
             getDTBPtr(tc)->invalidateMiscReg();

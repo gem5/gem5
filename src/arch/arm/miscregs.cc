@@ -1689,6 +1689,8 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                     switch (op2) {
                       case 0:
                         return MISCREG_TTBR0_EL2;
+                      case 1:
+                        return MISCREG_TTBR1_EL2;
                       case 2:
                         return MISCREG_TCR_EL2;
                     }
@@ -3519,6 +3521,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_TTBR0_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_HTTBR);
+    InitReg(MISCREG_TTBR1_EL2)
+      .unimplemented();
     InitReg(MISCREG_TCR_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_HTCR);
