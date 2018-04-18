@@ -754,7 +754,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
     int tgt_fd = p->getSyscallArg(tc, index);
     unsigned req = p->getSyscallArg(tc, index);
 
-    DPRINTF(SyscallVerbose, "ioctl(%d, 0x%x, ...)\n", tgt_fd, req);
+    DPRINTF_SYSCALL(Verbose, "ioctl(%d, 0x%x, ...)\n", tgt_fd, req);
 
     if (OS::isTtyReq(req))
         return -ENOTTY;
@@ -2741,10 +2741,9 @@ wait4Func(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     Addr rusagePtr = p->getSyscallArg(tc, index);
 
     if (rusagePtr)
-        DPRINTFR(SyscallVerbose,
-                 "%d: %s: syscall wait4: rusage pointer provided however "
+        DPRINTF_SYSCALL(Verbose, "wait4: rusage pointer provided %lx, however "
                  "functionality not supported. Ignoring rusage pointer.\n",
-                 curTick(), tc->getCpuPtr()->name());
+                 rusagePtr);
 
     /**
      * Currently, wait4 is only implemented so that it will wait for children
