@@ -302,6 +302,10 @@ SyscallReturn pipeImpl(SyscallDesc *desc, int num, Process *p,
 SyscallReturn getpidFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc);
 
+// Target getpeername() handler.
+SyscallReturn getpeernameFunc(SyscallDesc *desc, int num,
+                              Process *p, ThreadContext *tc);
+
 // Target bind() handler.
 SyscallReturn bindFunc(SyscallDesc *desc, int num,
                        Process *p, ThreadContext *tc);
@@ -368,6 +372,18 @@ SyscallReturn accessFunc(SyscallDesc *desc, int num,
 SyscallReturn accessFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc,
                          int index);
+
+// Target getsockopt() handler.
+SyscallReturn getsockoptFunc(SyscallDesc *desc, int num,
+                             Process *p, ThreadContext *tc);
+
+// Target setsockopt() handler.
+SyscallReturn setsockoptFunc(SyscallDesc *desc, int num,
+                             Process *p, ThreadContext *tc);
+
+// Target getsockname() handler.
+SyscallReturn getsocknameFunc(SyscallDesc *desc, int num,
+                              Process *p, ThreadContext *tc);
 
 /// Futex system call
 /// Implemented by Daniel Sanchez

@@ -1567,3 +1567,137 @@ sendmsgFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     return (sent_size < 0) ? -local_errno : sent_size;
 }
 
+SyscallReturn
+getsockoptFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    // union of all possible return value types from getsockopt
+    union val {
+        int i_val;
+        long l_val;
+        struct linger linger_val;
+        struct timeval timeval_val;
+    } val;
+
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    int level = p->getSyscallArg(tc, index);
+    int optname = p->getSyscallArg(tc, index);
+    Addr valPtr = p->getSyscallArg(tc, index);
+    Addr lenPtr = p->getSyscallArg(tc, index);
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    socklen_t len = sizeof(val);
+    int status = getsockopt(sim_fd, level, optname, &val, &len);
+
+    if (status == -1)
+        return -errno;
+
+    // copy val to valPtr and pass it on
+    BufferArg valBuf(valPtr, sizeof(val));
+    memcpy(valBuf.bufferPtr(), &val, sizeof(val));
+    valBuf.copyOut(tc->getMemProxy());
+
+    // copy len to lenPtr and pass  it on
+    BufferArg lenBuf(lenPtr, sizeof(len));
+    memcpy(lenBuf.bufferPtr(), &len, sizeof(len));
+    lenBuf.copyOut(tc->getMemProxy());
+
+    return status;
+}
+
+SyscallReturn
+getsocknameFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr addrPtr = p->getSyscallArg(tc, index);
+    Addr lenPtr = p->getSyscallArg(tc, index);
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    // lenPtr is an in-out paramenter:
+    // sending the address length in, conveying the final length out
+
+    // Read in the value of len from the passed pointer.
+    BufferArg lenBuf(lenPtr, sizeof(socklen_t));
+    lenBuf.copyIn(tc->getMemProxy());
+    socklen_t len = *(socklen_t *)lenBuf.bufferPtr();
+
+    struct sockaddr sa;
+    int status = getsockname(sim_fd, &sa, &len);
+
+    if (status == -1)
+        return -errno;
+
+    // Copy address to addrPtr and pass it on.
+    BufferArg addrBuf(addrPtr, sizeof(sa));
+    memcpy(addrBuf.bufferPtr(), &sa, sizeof(sa));
+    addrBuf.copyOut(tc->getMemProxy());
+
+    // Copy len to lenPtr and pass  it on.
+    *(socklen_t *)lenBuf.bufferPtr() = len;
+    lenBuf.copyOut(tc->getMemProxy());
+
+    return status;
+}
+
+SyscallReturn
+getpeernameFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr sockAddrPtr = p->getSyscallArg(tc, index);
+    Addr addrlenPtr = p->getSyscallArg(tc, index);
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    BufferArg bufAddrlen(addrlenPtr, sizeof(unsigned));
+    bufAddrlen.copyIn(tc->getMemProxy());
+    BufferArg bufSock(sockAddrPtr, *(unsigned *)bufAddrlen.bufferPtr());
+
+    int retval = getpeername(sim_fd,
+                             (struct sockaddr *)bufSock.bufferPtr(),
+                             (unsigned *)bufAddrlen.bufferPtr());
+
+    if (retval != -1) {
+        bufSock.copyOut(tc->getMemProxy());
+        bufAddrlen.copyOut(tc->getMemProxy());
+    }
+
+    return (retval == -1) ? -errno : retval;
+}
+
+SyscallReturn
+setsockoptFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    int level = p->getSyscallArg(tc, index);
+    int optname = p->getSyscallArg(tc, index);
+    Addr valPtr = p->getSyscallArg(tc, index);
+    socklen_t len = p->getSyscallArg(tc, index);
+
+    BufferArg valBuf(valPtr, len);
+    valBuf.copyIn(tc->getMemProxy());
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    int status = setsockopt(sim_fd, level, optname,
+                            (struct sockaddr *)valBuf.bufferPtr(), len);
+
+    return (status == -1) ? -errno : status;
+}
+
