@@ -57,9 +57,9 @@ class FDEntry : public Serializable
 
     virtual std::shared_ptr<FDEntry> clone() const = 0;
 
-    inline bool getCOE() const { return _closeOnExec; }
+    bool getCOE() const { return _closeOnExec; }
 
-    inline void setCOE(bool close_on_exec) { _closeOnExec = close_on_exec; }
+    void setCOE(bool close_on_exec) { _closeOnExec = close_on_exec; }
 
     virtual void serialize(CheckpointOut &cp) const;
     virtual void unserialize(CheckpointIn &cp);
@@ -80,11 +80,11 @@ class HBFDEntry: public FDEntry
         : FDEntry(close_on_exec), _flags(flags), _simFD(sim_fd)
     { }
 
-    inline int getFlags() const { return _flags; }
-    inline int getSimFD() const { return _simFD; }
+    int getFlags() const { return _flags; }
+    int getSimFD() const { return _simFD; }
 
-    inline void setFlags(int flags) { _flags = flags; }
-    inline void setSimFD(int sim_fd) { _simFD = sim_fd; }
+    void setFlags(int flags) { _flags = flags; }
+    void setSimFD(int sim_fd) { _simFD = sim_fd; }
 
   protected:
     int _flags;
@@ -113,17 +113,17 @@ class FileFDEntry: public HBFDEntry
           _fileName(reg._fileName), _fileOffset(reg._fileOffset)
     { }
 
-    inline std::shared_ptr<FDEntry>
+    std::shared_ptr<FDEntry>
     clone() const override
     {
         return std::make_shared<FileFDEntry>(*this);
     }
 
-    inline std::string getFileName() const { return _fileName; }
-    inline uint64_t getFileOffset() const { return _fileOffset; }
+    std::string const& getFileName() const { return _fileName; }
+    uint64_t getFileOffset() const { return _fileOffset; }
 
-    inline void setFileName(std::string file_name) { _fileName = file_name; }
-    inline void setFileOffset (uint64_t f_off) { _fileOffset = f_off; }
+    void setFileName(std::string const& file_name) { _fileName = file_name; }
+    void setFileOffset(uint64_t f_off) { _fileOffset = f_off; }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -157,17 +157,17 @@ class PipeFDEntry: public HBFDEntry
           _pipeEndType(pipe._pipeEndType)
     { }
 
-    inline std::shared_ptr<FDEntry>
+    std::shared_ptr<FDEntry>
     clone() const override
     {
         return std::make_shared<PipeFDEntry>(*this);
     }
 
-    inline EndType getEndType() const { return _pipeEndType; }
-    inline int getPipeReadSource() const { return _pipeReadSource; }
+    EndType getEndType() const { return _pipeEndType; }
+    int getPipeReadSource() const { return _pipeReadSource; }
 
-    inline void setPipeReadSource(int tgt_fd) { _pipeReadSource = tgt_fd; }
-    inline void setEndType(EndType type) { _pipeEndType = type; }
+    void setPipeReadSource(int tgt_fd) { _pipeReadSource = tgt_fd; }
+    void setEndType(EndType type) { _pipeEndType = type; }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -200,8 +200,8 @@ class DeviceFDEntry : public FDEntry
         return std::make_shared<DeviceFDEntry>(*this);
     }
 
-    inline EmulatedDriver *getDriver() const { return _driver; }
-    inline std::string getFileName() const { return _fileName; }
+    EmulatedDriver *getDriver() const { return _driver; }
+    std::string const& getFileName() const { return _fileName; }
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
