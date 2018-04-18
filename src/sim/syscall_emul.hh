@@ -934,8 +934,7 @@ openImpl(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc,
     int sim_fd = -1;
     std::string used_path;
     std::vector<std::string> special_paths =
-            { "/proc/meminfo/", "/system/", "/sys/", "/platform/",
-              "/etc/passwd" };
+            { "/proc/meminfo/", "/system/", "/platform/", "/etc/passwd" };
     for (auto entry : special_paths) {
         if (startswith(path, entry)) {
             sim_fd = OS::openSpecialFile(abs_path, p, tc);
