@@ -78,14 +78,19 @@
 
 #endif
 #include <fcntl.h>
+#include <net/if.h>
 #include <poll.h>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+
 #if (NO_STATFS == 0)
 #include <sys/statfs.h>
+
 #else
 #include <sys/mount.h>
+
 #endif
 #include <sys/time.h>
 #include <sys/types.h>
@@ -755,17 +760,59 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
         return -ENOTTY;
 
     auto dfdp = std::dynamic_pointer_cast<DeviceFDEntry>((*p->fds)[tgt_fd]);
-    if (!dfdp)
-        return -EBADF;
+    if (dfdp) {
+        EmulatedDriver *emul_driver = dfdp->getDriver();
+        if (emul_driver)
+            return emul_driver->ioctl(p, tc, req);
+    }
 
-    /**
-     * If the driver is valid, issue the ioctl through it. Otherwise,
-     * there's an implicit assumption that the device is a TTY type and we
-     * return that we do not have a valid TTY.
-     */
-    EmulatedDriver *emul_driver = dfdp->getDriver();
-    if (emul_driver)
-        return emul_driver->ioctl(p, tc, req);
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (sfdp) {
+        int status;
+
+        switch (req) {
+          case SIOCGIFCONF: {
+            Addr conf_addr = p->getSyscallArg(tc, index);
+            BufferArg conf_arg(conf_addr, sizeof(ifconf));
+            conf_arg.copyIn(tc->getMemProxy());
+
+            ifconf *conf = (ifconf*)conf_arg.bufferPtr();
+            Addr ifc_buf_addr = (Addr)conf->ifc_buf;
+            BufferArg ifc_buf_arg(ifc_buf_addr, conf->ifc_len);
+            ifc_buf_arg.copyIn(tc->getMemProxy());
+
+            conf->ifc_buf = (char*)ifc_buf_arg.bufferPtr();
+
+            status = ioctl(sfdp->getSimFD(), req, conf_arg.bufferPtr());
+            if (status != -1) {
+                conf->ifc_buf = (char*)ifc_buf_addr;
+                ifc_buf_arg.copyOut(tc->getMemProxy());
+                conf_arg.copyOut(tc->getMemProxy());
+            }
+
+            return status;
+          }
+          case SIOCGIFFLAGS:
+#ifdef __linux__
+          case SIOCGIFINDEX:
+#endif
+          case SIOCGIFNETMASK:
+          case SIOCGIFADDR:
+#ifdef __linux__
+          case SIOCGIFHWADDR:
+#endif
+          case SIOCGIFMTU: {
+            Addr req_addr = p->getSyscallArg(tc, index);
+            BufferArg req_arg(req_addr, sizeof(ifreq));
+            req_arg.copyIn(tc->getMemProxy());
+
+            status = ioctl(sfdp->getSimFD(), req, req_arg.bufferPtr());
+            if (status != -1)
+                req_arg.copyOut(tc->getMemProxy());
+            return status;
+          }
+        }
+    }
 
     /**
      * For lack of a better return code, return ENOTTY. Ideally, we should
