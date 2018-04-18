@@ -70,6 +70,7 @@
 #include "sim/byteswap.hh"
 #include "sim/debug.hh"
 #include "sim/full_system.hh"
+#include "sim/redirect_path.hh"
 
 /**
  * To avoid linking errors with LTO, only include the header if we
@@ -111,8 +112,10 @@ System::System(Params *p)
       thermalModel(p->thermal_model),
       _params(p),
       totalNumInsts(0),
-      instEventQueue("system instruction-based event queue")
+      instEventQueue("system instruction-based event queue"),
+      redirectPaths(p->redirect_paths)
 {
+
     // add self to global system list
     systemList.push_back(this);
 

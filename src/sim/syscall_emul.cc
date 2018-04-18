@@ -388,7 +388,7 @@ getcwdFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     BufferArg buf(buf_ptr, size);
 
     // Is current working directory defined?
-    string cwd = p->getcwd();
+    string cwd = p->tgtCwd;
     if (!cwd.empty()) {
         if (cwd.length() >= size) {
             // Buffer too small
@@ -425,8 +425,8 @@ readlinkFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc,
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
-    // Adjust path for current working directory
-    path = p->fullPath(path);
+    // Adjust path for cwd and redirection
+    path = p->checkPathRedirect(path);
 
     Addr buf_ptr = p->getSyscallArg(tc, index);
     size_t bufsiz = p->getSyscallArg(tc, index);
@@ -491,7 +491,7 @@ unlinkHelper(SyscallDesc *desc, int num, Process *p, ThreadContext *tc,
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
-    path = p->fullPath(path);
+    path = p->checkPathRedirect(path);
 
     int result = unlink(path.c_str());
     return (result == -1) ? -errno : result;
@@ -510,8 +510,8 @@ linkFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     if (!virt_mem.tryReadString(new_path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
-    path = p->fullPath(path);
-    new_path = p->fullPath(new_path);
+    path = p->absolutePath(path, true);
+    new_path = p->absolutePath(new_path, true);
 
     int result = link(path.c_str(), new_path.c_str());
     return (result == -1) ? -errno : result;
@@ -530,8 +530,8 @@ symlinkFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     if (!virt_mem.tryReadString(new_path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
-    path = p->fullPath(path);
-    new_path = p->fullPath(new_path);
+    path = p->absolutePath(path, true);
+    new_path = p->absolutePath(new_path, true);
 
     int result = symlink(path.c_str(), new_path.c_str());
     return (result == -1) ? -errno : result;
@@ -540,18 +540,15 @@ symlinkFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 SyscallReturn
 mkdirFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
-    string path;
-
     int index = 0;
+    std::string path;
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
-    // Adjust path for current working directory
-    path = p->fullPath(path);
-
+    path = p->checkPathRedirect(path);
     mode_t mode = p->getSyscallArg(tc, index);
 
-    int result = mkdir(path.c_str(), mode);
+    auto result = mkdir(path.c_str(), mode);
     return (result == -1) ? -errno : result;
 }
 
@@ -569,9 +566,9 @@ renameFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     if (!tc->getMemProxy().tryReadString(new_name, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
-    // Adjust path for current working directory
-    old_name = p->fullPath(old_name);
-    new_name = p->fullPath(new_name);
+    // Adjust path for cwd and redirection
+    old_name = p->checkPathRedirect(old_name);
+    new_name = p->checkPathRedirect(new_name);
 
     int64_t result = rename(old_name.c_str(), new_name.c_str());
     return (result == -1) ? -errno : result;
@@ -588,8 +585,8 @@ truncateFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 
     off_t length = p->getSyscallArg(tc, index);
 
-    // Adjust path for current working directory
-    path = p->fullPath(path);
+    // Adjust path for cwd and redirection
+    path = p->checkPathRedirect(path);
 
     int result = truncate(path.c_str(), length);
     return (result == -1) ? -errno : result;
@@ -623,8 +620,8 @@ truncate64Func(SyscallDesc *desc, int num,
 
     int64_t length = process->getSyscallArg(tc, index, 64);
 
-    // Adjust path for current working directory
-    path = process->fullPath(path);
+    // Adjust path for cwd and redirection
+    path = process->checkPathRedirect(path);
 
 #if NO_STAT64
     int result = truncate(path.c_str(), length);
@@ -680,8 +677,8 @@ chownFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     uint32_t group = p->getSyscallArg(tc, index);
     gid_t hostGroup = group;
 
-    // Adjust path for current working directory
-    path = p->fullPath(path);
+    // Adjust path for cwd and redirection
+    path = p->checkPathRedirect(path);
 
     int result = chown(path.c_str(), hostOwner, hostGroup);
     return (result == -1) ? -errno : result;
@@ -1068,8 +1065,8 @@ accessFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc,
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
-    // Adjust path for current working directory
-    path = p->fullPath(path);
+    // Adjust path for cwd and redirection
+    path = p->checkPathRedirect(path);
 
     mode_t mode = p->getSyscallArg(tc, index);
 
@@ -1091,7 +1088,7 @@ mknodFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
-    path = p->fullPath(path);
+    path = p->checkPathRedirect(path);
     mode_t mode = p->getSyscallArg(tc, index);
     dev_t dev = p->getSyscallArg(tc, index);
 
@@ -1107,10 +1104,23 @@ chdirFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
-    path = p->fullPath(path);
+    std::string tgt_cwd;
+    if (startswith(path, "/")) {
+        tgt_cwd = path;
+    } else {
+        char buf[PATH_MAX];
+        tgt_cwd = realpath((p->tgtCwd + "/" + path).c_str(), buf);
+    }
+    std::string host_cwd = p->checkPathRedirect(tgt_cwd);
 
-    auto result = chdir(path.c_str());
-    return (result == -1) ? -errno : result;
+    int result = chdir(host_cwd.c_str());
+
+    if (result == -1)
+        return -errno;
+
+    p->hostCwd = host_cwd;
+    p->tgtCwd = tgt_cwd;
+    return result;
 }
 
 SyscallReturn
@@ -1121,7 +1131,7 @@ rmdirFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
-    path = p->fullPath(path);
+    path = p->checkPathRedirect(path);
 
     auto result = rmdir(path.c_str());
     return (result == -1) ? -errno : result;

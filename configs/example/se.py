@@ -64,6 +64,7 @@ from common import CacheConfig
 from common import CpuConfig
 from common import BPConfig
 from common import MemConfig
+from common.FileSystemConfig import redirect_paths, config_filesystem
 from common.Caches import *
 from common.cpu2000 import *
 
@@ -240,6 +241,9 @@ for i in range(np):
         system.cpu[i].branchPred = bpClass()
 
     system.cpu[i].createThreads()
+
+system.redirect_paths = redirect_paths(os.path.expanduser(options.chroot))
+config_filesystem(options)
 
 if options.ruby:
     Ruby.create_system(options, False, system)

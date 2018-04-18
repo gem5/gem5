@@ -64,6 +64,7 @@
 #include "mem/port_proxy.hh"
 #include "params/System.hh"
 #include "sim/futex_map.hh"
+#include "sim/redirect_path.hh"
 #include "sim/se_signal.hh"
 
 /**
@@ -628,6 +629,11 @@ class System : public MemObject
     // receiver will delete the signal upon reception.
     std::list<BasicSignal> signalList;
 
+    // Used by syscall-emulation mode. This member contains paths which need
+    // to be redirected to the faux-filesystem (a duplicate filesystem
+    // intended to replace certain files on the host filesystem).
+    std::vector<RedirectPath*> redirectPaths;
+
   protected:
 
     /**
@@ -647,7 +653,6 @@ class System : public MemObject
      * @param section relevant section in the checkpoint
      */
     virtual void unserializeSymtab(CheckpointIn &cp) {}
-
 };
 
 void printSystems();

@@ -88,7 +88,7 @@ std::string
 Linux::etcPasswd(Process *process, ThreadContext *tc)
 {
     return csprintf("gem5-user:x:1000:1000:gem5-user,,,:%s:/bin/bash\n",
-                    process->getcwd());
+                    process->tgtCwd);
 }
 
 std::string

@@ -29,6 +29,7 @@
 from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
+from os import getcwd
 
 class Process(SimObject):
     type = 'Process'
@@ -58,7 +59,7 @@ class Process(SimObject):
     executable = Param.String('', "executable (overrides cmd[0] if set)")
     cmd = VectorParam.String("command line (executable plus arguments)")
     env = VectorParam.String([], "environment settings")
-    cwd = Param.String('', "current working directory")
+    cwd = Param.String(getcwd(), "current working directory")
     simpoint = Param.UInt64(0, 'simulation point at which to start simulation')
     drivers = VectorParam.EmulatedDriver([], 'Available emulated drivers')
 

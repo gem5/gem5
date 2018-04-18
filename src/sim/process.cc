@@ -50,6 +50,7 @@
 #include <unistd.h>
 
 #include <array>
+#include <climits>
 #include <csignal>
 #include <map>
 #include <string>
@@ -67,6 +68,7 @@
 #include "sim/emul_driver.hh"
 #include "sim/fd_array.hh"
 #include "sim/fd_entry.hh"
+#include "sim/redirect_path.hh"
 #include "sim/syscall_desc.hh"
 #include "sim/system.hh"
 
@@ -101,6 +103,14 @@
 using namespace std;
 using namespace TheISA;
 
+static std::string
+normalize(std::string& directory)
+{
+    if (directory.back() != '/')
+        directory += '/';
+    return directory;
+}
+
 Process::Process(ProcessParams *params, EmulationPageTable *pTable,
                  ObjectFile *obj_file)
     : SimObject(params), system(params->system),
@@ -111,8 +121,10 @@ Process::Process(ProcessParams *params, EmulationPageTable *pTable,
       initVirtMem(system->getSystemPort(), this,
                   SETranslatingPortProxy::Always),
       objFile(obj_file),
-      argv(params->cmd), envp(params->env), cwd(params->cwd),
+      argv(params->cmd), envp(params->env),
       executable(params->executable),
+      tgtCwd(normalize(params->cwd)),
+      hostCwd(checkPathRedirect(tgtCwd)),
       _uid(params->uid), _euid(params->euid),
       _gid(params->gid), _egid(params->egid),
       _pid(params->pid), _ppid(params->ppid),
@@ -441,6 +453,42 @@ Process::findDriver(std::string filename)
     return nullptr;
 }
 
+std::string
+Process::checkPathRedirect(const std::string &filename)
+{
+    // If the input parameter contains a relative path, convert it. Note,
+    // the return value for this method should always return an absolute
+    // path on the host filesystem. The return value will be used to
+    // open and manipulate the path specified by the input parameter. Since
+    // all filesystem handling in syscall mode is passed through to the host,
+    // we deal only with host paths.
+    auto host_fs_abs_path = absolutePath(filename, true);
+
+    for (auto path : system->redirectPaths) {
+        // Search through the redirect paths to see if a starting substring of
+        // our path falls into any buckets which need to redirected.
+        if (startswith(host_fs_abs_path, path->appPath())) {
+            std::string tail = host_fs_abs_path.substr(path->appPath().size());
+
+            // If this path needs to be redirected, search through a list
+            // of targets to see if we can match a valid file (or directory).
+            for (auto host_path : path->hostPaths()) {
+                if (access((host_path + tail).c_str(), R_OK) == 0) {
+                    // Return the valid match.
+                    return host_path + tail;
+                }
+            }
+            // The path needs to be redirected, but the file or directory
+            // does not exist on the host filesystem. Return the first
+            // host path as a default.
+            return path->hostPaths()[0] + tail;
+        }
+    }
+
+    // The path does not need to be redirected.
+    return host_fs_abs_path;
+}
+
 void
 Process::updateBias()
 {
@@ -487,6 +535,33 @@ Process::getStartPC()
     ObjectFile *interp = getInterpreter();
 
     return interp ? interp->entryPoint() : objFile->entryPoint();
+}
+
+std::string
+Process::absolutePath(const std::string &filename, bool host_filesystem)
+{
+    if (filename.empty() || startswith(filename, "/"))
+        return filename;
+
+    // Verify that the current working directories are initialized properly.
+    // These members should be set initially via params from 'Process.py',
+    // although they may change over time depending on what the application
+    // does during simulation.
+    assert(!tgtCwd.empty());
+    assert(!hostCwd.empty());
+
+    // Construct the absolute path given the current working directory for
+    // either the host filesystem or target filesystem. The distinction only
+    // matters if filesystem redirection is utilized in the simulation.
+    auto path_base = host_filesystem ? hostCwd : tgtCwd;
+
+    // Add a trailing '/' if the current working directory did not have one.
+    normalize(path_base);
+
+    // Append the filename onto the current working path.
+    auto absolute_path = path_base + filename;
+
+    return absolute_path;
 }
 
 Process *
@@ -648,18 +723,4 @@ ProcessParams::create()
     if (process == nullptr)
         fatal("Unknown error creating process object.");
     return process;
-}
-
-std::string
-Process::fullPath(const std::string &file_name)
-{
-    if (file_name[0] == '/' || cwd.empty())
-        return file_name;
-
-    std::string full = cwd;
-
-    if (cwd[cwd.size() - 1] != '/')
-        full += '/';
-
-    return full + file_name;
 }

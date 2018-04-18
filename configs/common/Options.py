@@ -359,6 +359,19 @@ def addSEOptions(parser):
                       help="Redirect stdout to a file.")
     parser.add_option("--errout", default="",
                       help="Redirect stderr to a file.")
+    parser.add_option("--chroot", action="store", type="string", default="/",
+                      help="The chroot option allows a user to alter the "    \
+                           "search path for processes running in SE mode. "   \
+                           "Normally, the search path would begin at the "    \
+                           "root of the filesystem (i.e. /). With chroot, "   \
+                           "a user can force the process to begin looking at" \
+                           "some other location (i.e. /home/user/rand_dir)."  \
+                           "The intended use is to trick sophisticated "      \
+                           "software which queries the __HOST__ filesystem "  \
+                           "for information or functionality. Instead of "    \
+                           "finding files on the __HOST__ filesystem, the "   \
+                           "process will find the user's replacment files.")
+
 
 def addFSOptions(parser):
     from .FSConfig import os_types
