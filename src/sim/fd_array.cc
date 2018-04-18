@@ -43,6 +43,7 @@
 #include <string>
 
 #include "base/logging.hh"
+#include "base/output.hh"
 #include "params/Process.hh"
 #include "sim/fd_entry.hh"
 
@@ -311,7 +312,8 @@ FDArray::openInputFile(std::string const& filename) const
 int
 FDArray::openOutputFile(std::string const& filename) const
 {
-    return openFile(filename, O_WRONLY | O_CREAT | O_TRUNC, 0664);
+    return openFile(simout.resolve(filename),
+                    O_WRONLY | O_CREAT | O_TRUNC, 0664);
 }
 
 std::shared_ptr<FDEntry>
