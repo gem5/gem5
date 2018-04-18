@@ -848,12 +848,6 @@ SyscallReturn
 pipeImpl(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc,
          bool pseudoPipe)
 {
-    Addr tgt_addr = 0;
-    if (!pseudoPipe) {
-        int index = 0;
-        tgt_addr = p->getSyscallArg(tc, index);
-    }
-
     int sim_fds[2], tgt_fds[2];
 
     int pipe_retval = pipe(sim_fds);
@@ -882,6 +876,9 @@ pipeImpl(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc,
         tc->setIntReg(SyscallPseudoReturnReg, tgt_fds[1]);
         return tgt_fds[0];
     }
+
+    int index = 0;
+    Addr tgt_addr = p->getSyscallArg(tc, index);
 
     /**
      * Copy the target file descriptors into buffer space and then copy
