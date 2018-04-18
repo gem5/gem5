@@ -1224,3 +1224,83 @@ getdents64Func(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
     return getdentsImpl<LinDent64, SYS_getdents64>(desc, callnum, p, tc);
 }
 #endif
+
+SyscallReturn
+shutdownFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    int how = p->getSyscallArg(tc, index);
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    int retval = shutdown(sim_fd, how);
+
+    return (retval == -1) ? -errno : retval;
+}
+
+SyscallReturn
+bindFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr buf_ptr = p->getSyscallArg(tc, index);
+    int addrlen = p->getSyscallArg(tc, index);
+
+    BufferArg bufSock(buf_ptr, addrlen);
+    bufSock.copyIn(tc->getMemProxy());
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    int status = ::bind(sim_fd,
+                        (struct sockaddr *)bufSock.bufferPtr(),
+                        addrlen);
+
+    return (status == -1) ? -errno : status;
+}
+
+SyscallReturn
+listenFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    int backlog = p->getSyscallArg(tc, index);
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    int status = listen(sim_fd, backlog);
+
+    return (status == -1) ? -errno : status;
+}
+
+SyscallReturn
+connectFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr buf_ptr = p->getSyscallArg(tc, index);
+    int addrlen = p->getSyscallArg(tc, index);
+
+    BufferArg addr(buf_ptr, addrlen);
+    addr.copyIn(tc->getMemProxy());
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    int status = connect(sim_fd,
+                         (struct sockaddr *)addr.bufferPtr(),
+                         (socklen_t)addrlen);
+
+    return (status == -1) ? -errno : status;
+}

@@ -211,4 +211,30 @@ class DeviceFDEntry : public FDEntry
     std::string _fileName;
 };
 
+class SocketFDEntry: public HBFDEntry
+{
+  public:
+    SocketFDEntry(int sim_fd, int domain, int type, int protocol,
+                  bool close_on_exec = false)
+        : HBFDEntry(0, sim_fd, close_on_exec),
+          _domain(domain), _type(type), _protocol(protocol)
+    { }
+
+    SocketFDEntry(SocketFDEntry const& reg, bool close_on_exec = false)
+        : HBFDEntry(reg._flags, reg._simFD, close_on_exec),
+          _domain(reg._domain), _type(reg._type), _protocol(reg._protocol)
+    { }
+
+    std::shared_ptr<FDEntry>
+    clone() const override
+    {
+        return std::make_shared<SocketFDEntry>(*this);
+    }
+
+  private:
+    int _domain;
+    int _type;
+    int _protocol;
+};
+
 #endif // __FD_ENTRY_HH__

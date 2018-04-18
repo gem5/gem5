@@ -79,6 +79,7 @@
 #endif
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #if (NO_STATFS == 0)
 #include <sys/statfs.h>
@@ -180,6 +181,10 @@ SyscallReturn _llseekFunc(SyscallDesc *desc, int num,
 /// Target munmap() handler.
 SyscallReturn munmapFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc);
+
+/// Target shutdown() handler.
+SyscallReturn shutdownFunc(SyscallDesc *desc, int num,
+                           Process *p, ThreadContext *tc);
 
 /// Target gethostname() handler.
 SyscallReturn gethostnameFunc(SyscallDesc *desc, int num,
@@ -302,6 +307,18 @@ SyscallReturn pipeImpl(SyscallDesc *desc, int num, Process *p,
 /// Target getpid() handler.
 SyscallReturn getpidFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc);
+
+// Target bind() handler.
+SyscallReturn bindFunc(SyscallDesc *desc, int num,
+                       Process *p, ThreadContext *tc);
+
+// Target listen() handler.
+SyscallReturn listenFunc(SyscallDesc *desc, int num,
+                         Process *p, ThreadContext *tc);
+
+// Target connect() handler.
+SyscallReturn connectFunc(SyscallDesc *desc, int num,
+                          Process *p, ThreadContext *tc);
 
 #if defined(SYS_getdents)
 // Target getdents() handler.
@@ -2080,5 +2097,49 @@ tgkillFunc(SyscallDesc *desc, int num, Process *process, ThreadContext *tc)
     return 0;
 }
 
+template <class OS>
+SyscallReturn
+socketFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int domain = p->getSyscallArg(tc, index);
+    int type = p->getSyscallArg(tc, index);
+    int prot = p->getSyscallArg(tc, index);
+
+    int sim_fd = socket(domain, type, prot);
+    if (sim_fd == -1)
+        return -errno;
+
+    auto sfdp = std::make_shared<SocketFDEntry>(sim_fd, domain, type, prot);
+    int tgt_fd = p->fds->allocFD(sfdp);
+
+    return tgt_fd;
+}
+
+template <class OS>
+SyscallReturn
+socketpairFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int domain = p->getSyscallArg(tc, index);
+    int type = p->getSyscallArg(tc, index);
+    int prot = p->getSyscallArg(tc, index);
+    Addr svPtr = p->getSyscallArg(tc, index);
+
+    BufferArg svBuf((Addr)svPtr, 2 * sizeof(int));
+    int status = socketpair(domain, type, prot, (int *)svBuf.bufferPtr());
+    if (status == -1)
+        return -errno;
+
+    int *fds = (int *)svBuf.bufferPtr();
+
+    auto sfdp1 = std::make_shared<SocketFDEntry>(fds[0], domain, type, prot);
+    fds[0] = p->fds->allocFD(sfdp1);
+    auto sfdp2 = std::make_shared<SocketFDEntry>(fds[1], domain, type, prot);
+    fds[1] = p->fds->allocFD(sfdp2);
+    svBuf.copyOut(tc->getMemProxy());
+
+    return status;
+}
 
 #endif // __SIM_SYSCALL_EMUL_HH__
