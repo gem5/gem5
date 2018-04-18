@@ -332,6 +332,22 @@ SyscallReturn getdents64Func(SyscallDesc *desc, int num,
                            Process *p, ThreadContext *tc);
 #endif
 
+// Target sendto() handler.
+SyscallReturn sendtoFunc(SyscallDesc *desc, int num,
+                         Process *p, ThreadContext *tc);
+
+// Target recvfrom() handler.
+SyscallReturn recvfromFunc(SyscallDesc *desc, int num,
+                           Process *p, ThreadContext *tc);
+
+// Target recvmsg() handler.
+SyscallReturn recvmsgFunc(SyscallDesc *desc, int num,
+                          Process *p, ThreadContext *tc);
+
+// Target sendmsg() handler.
+SyscallReturn sendmsgFunc(SyscallDesc *desc, int num,
+                          Process *p, ThreadContext *tc);
+
 // Target getuid() handler.
 SyscallReturn getuidFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc);

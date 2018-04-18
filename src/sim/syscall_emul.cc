@@ -1304,3 +1304,313 @@ connectFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 
     return (status == -1) ? -errno : status;
 }
+
+SyscallReturn
+recvfromFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr bufrPtr = p->getSyscallArg(tc, index);
+    size_t bufrLen = p->getSyscallArg(tc, index);
+    int flags = p->getSyscallArg(tc, index);
+    Addr addrPtr = p->getSyscallArg(tc, index);
+    Addr addrlenPtr = p->getSyscallArg(tc, index);
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    // Reserve buffer space.
+    BufferArg bufrBuf(bufrPtr, bufrLen);
+
+    // Get address length.
+    socklen_t addrLen = 0;
+    if (addrlenPtr != 0) {
+        // Read address length parameter.
+        BufferArg addrlenBuf(addrlenPtr, sizeof(socklen_t));
+        addrlenBuf.copyIn(tc->getMemProxy());
+        addrLen = *((socklen_t *)addrlenBuf.bufferPtr());
+    }
+
+    struct sockaddr sa, *sap = NULL;
+    if (addrLen != 0) {
+        BufferArg addrBuf(addrPtr, addrLen);
+        addrBuf.copyIn(tc->getMemProxy());
+        memcpy(&sa, (struct sockaddr *)addrBuf.bufferPtr(),
+               sizeof(struct sockaddr));
+        sap = &sa;
+    }
+
+    ssize_t recvd_size = recvfrom(sim_fd,
+                                  (void *)bufrBuf.bufferPtr(),
+                                  bufrLen, flags, sap, (socklen_t *)&addrLen);
+
+    if (recvd_size == -1)
+        return -errno;
+
+    // Pass the received data out.
+    bufrBuf.copyOut(tc->getMemProxy());
+
+    // Copy address to addrPtr and pass it on.
+    if (sap != NULL) {
+        BufferArg addrBuf(addrPtr, addrLen);
+        memcpy(addrBuf.bufferPtr(), sap, sizeof(sa));
+        addrBuf.copyOut(tc->getMemProxy());
+    }
+
+    // Copy len to addrlenPtr and pass it on.
+    if (addrLen != 0) {
+        BufferArg addrlenBuf(addrlenPtr, sizeof(socklen_t));
+        *(socklen_t *)addrlenBuf.bufferPtr() = addrLen;
+        addrlenBuf.copyOut(tc->getMemProxy());
+    }
+
+    return recvd_size;
+}
+
+SyscallReturn
+sendtoFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr bufrPtr = p->getSyscallArg(tc, index);
+    size_t bufrLen = p->getSyscallArg(tc, index);
+    int flags = p->getSyscallArg(tc, index);
+    Addr addrPtr = p->getSyscallArg(tc, index);
+    socklen_t addrLen = p->getSyscallArg(tc, index);
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    // Reserve buffer space.
+    BufferArg bufrBuf(bufrPtr, bufrLen);
+    bufrBuf.copyIn(tc->getMemProxy());
+
+    struct sockaddr sa, *sap = nullptr;
+    memset(&sa, 0, sizeof(sockaddr));
+    if (addrLen != 0) {
+        BufferArg addrBuf(addrPtr, addrLen);
+        addrBuf.copyIn(tc->getMemProxy());
+        memcpy(&sa, (sockaddr*)addrBuf.bufferPtr(), addrLen);
+        sap = &sa;
+    }
+
+    ssize_t sent_size = sendto(sim_fd,
+                               (void *)bufrBuf.bufferPtr(),
+                               bufrLen, flags, sap, (socklen_t)addrLen);
+
+    return (sent_size == -1) ? -errno : sent_size;
+}
+
+SyscallReturn
+recvmsgFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr msgPtr = p->getSyscallArg(tc, index);
+    int flags = p->getSyscallArg(tc, index);
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+     /**
+      *  struct msghdr {
+      *     void         *msg_name;       // optional address
+      *    socklen_t     msg_namelen;    // size of address
+      *    struct iovec *msg_iov;        // iovec array
+      *    size_t        msg_iovlen;     // number entries in msg_iov
+      *    i                             // entries correspond to buffer
+      *    void         *msg_control;    // ancillary data
+      *    size_t        msg_controllen; // ancillary data buffer len
+      *    int           msg_flags;      // flags on received message
+      *  };
+      *
+      *  struct iovec {
+      *    void  *iov_base;              // starting address
+      *    size_t iov_len;               // number of bytes to transfer
+      *  };
+      */
+
+    /**
+     * The plan with this system call is to replace all of the pointers in the
+     * structure and the substructure with BufferArg class pointers. We will
+     * copy every field from the structures into our BufferArg classes.
+     */
+    BufferArg msgBuf(msgPtr, sizeof(struct msghdr));
+    msgBuf.copyIn(tc->getMemProxy());
+    struct msghdr *msgHdr = (struct msghdr *)msgBuf.bufferPtr();
+
+    /**
+     * We will use these address place holders to retain the pointers which
+     * we are going to replace with our own buffers in our simulator address
+     * space.
+     */
+    Addr msg_name_phold = 0;
+    Addr msg_iov_phold = 0;
+    Addr iovec_base_phold[msgHdr->msg_iovlen];
+    Addr msg_control_phold = 0;
+
+    /**
+     * Record msg_name pointer then replace with buffer pointer.
+     */
+    BufferArg *nameBuf = NULL;
+    if (msgHdr->msg_name) {
+        /*1*/msg_name_phold = (Addr)msgHdr->msg_name;
+        /*2*/nameBuf = new BufferArg(msg_name_phold, msgHdr->msg_namelen);
+        /*3*/nameBuf->copyIn(tc->getMemProxy());
+        /*4*/msgHdr->msg_name = nameBuf->bufferPtr();
+    }
+
+    /**
+     * Record msg_iov pointer then replace with buffer pointer. Also, setup
+     * an array of buffer pointers for the iovec structs record and replace
+     * their pointers with buffer pointers.
+     */
+    BufferArg *iovBuf = NULL;
+    BufferArg *iovecBuf[msgHdr->msg_iovlen];
+    for (int i = 0; i < msgHdr->msg_iovlen; i++) {
+        iovec_base_phold[i] = 0;
+        iovecBuf[i] = NULL;
+    }
+
+    if (msgHdr->msg_iov) {
+        /*1*/msg_iov_phold = (Addr)msgHdr->msg_iov;
+        /*2*/iovBuf = new BufferArg(msg_iov_phold, msgHdr->msg_iovlen *
+                                    sizeof(struct iovec));
+        /*3*/iovBuf->copyIn(tc->getMemProxy());
+        for (int i = 0; i < msgHdr->msg_iovlen; i++) {
+            if (((struct iovec *)iovBuf->bufferPtr())[i].iov_base) {
+                /*1*/iovec_base_phold[i] =
+                     (Addr)((struct iovec *)iovBuf->bufferPtr())[i].iov_base;
+                /*2*/iovecBuf[i] = new BufferArg(iovec_base_phold[i],
+                     ((struct iovec *)iovBuf->bufferPtr())[i].iov_len);
+                /*3*/iovecBuf[i]->copyIn(tc->getMemProxy());
+                /*4*/((struct iovec *)iovBuf->bufferPtr())[i].iov_base =
+                     iovecBuf[i]->bufferPtr();
+            }
+        }
+        /*4*/msgHdr->msg_iov = (struct iovec *)iovBuf->bufferPtr();
+    }
+
+    /**
+     * Record msg_control pointer then replace with buffer pointer.
+     */
+    BufferArg *controlBuf = NULL;
+    if (msgHdr->msg_control) {
+        /*1*/msg_control_phold = (Addr)msgHdr->msg_control;
+        /*2*/controlBuf = new BufferArg(msg_control_phold,
+                                        CMSG_ALIGN(msgHdr->msg_controllen));
+        /*3*/controlBuf->copyIn(tc->getMemProxy());
+        /*4*/msgHdr->msg_control = controlBuf->bufferPtr();
+    }
+
+    ssize_t recvd_size = recvmsg(sim_fd, msgHdr, flags);
+
+    if (recvd_size < 0)
+        return -errno;
+
+    if (msgHdr->msg_name) {
+        nameBuf->copyOut(tc->getMemProxy());
+        delete(nameBuf);
+        msgHdr->msg_name = (void *)msg_name_phold;
+    }
+
+    if (msgHdr->msg_iov) {
+        for (int i = 0; i< msgHdr->msg_iovlen; i++) {
+            if (((struct iovec *)iovBuf->bufferPtr())[i].iov_base) {
+                iovecBuf[i]->copyOut(tc->getMemProxy());
+                delete iovecBuf[i];
+                ((struct iovec *)iovBuf->bufferPtr())[i].iov_base =
+                (void *)iovec_base_phold[i];
+            }
+        }
+        iovBuf->copyOut(tc->getMemProxy());
+        delete iovBuf;
+        msgHdr->msg_iov = (struct iovec *)msg_iov_phold;
+    }
+
+    if (msgHdr->msg_control) {
+        controlBuf->copyOut(tc->getMemProxy());
+        delete(controlBuf);
+        msgHdr->msg_control = (void *)msg_control_phold;
+    }
+
+    msgBuf.copyOut(tc->getMemProxy());
+
+    return recvd_size;
+}
+
+SyscallReturn
+sendmsgFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+    Addr msgPtr = p->getSyscallArg(tc, index);
+    int flags = p->getSyscallArg(tc, index);
+
+    auto sfdp = std::dynamic_pointer_cast<SocketFDEntry>((*p->fds)[tgt_fd]);
+    if (!sfdp)
+        return -EBADF;
+    int sim_fd = sfdp->getSimFD();
+
+    /**
+     * Reserve buffer space.
+     */
+    BufferArg msgBuf(msgPtr, sizeof(struct msghdr));
+    msgBuf.copyIn(tc->getMemProxy());
+    struct msghdr msgHdr = *((struct msghdr *)msgBuf.bufferPtr());
+
+    /**
+     * Assuming msgHdr.msg_iovlen >= 1, then there is no point calling
+     * recvmsg without a buffer.
+     */
+    struct iovec *iovPtr = msgHdr.msg_iov;
+    BufferArg iovBuf((Addr)iovPtr, sizeof(struct iovec) * msgHdr.msg_iovlen);
+    iovBuf.copyIn(tc->getMemProxy());
+    struct iovec *iov = (struct iovec *)iovBuf.bufferPtr();
+    msgHdr.msg_iov = iov;
+
+    /**
+     * Cannot instantiate buffers till inside the loop.
+     * Create array to hold buffer addresses, to be used during copyIn of
+     * send data.
+     */
+    BufferArg **bufferArray = (BufferArg **)malloc(msgHdr.msg_iovlen
+                                                   * sizeof(BufferArg *));
+
+    /**
+     * Iterate through the iovec structures:
+     * Get the base buffer addreses, reserve iov_len amount of space for each.
+     * Put the buf address into the bufferArray for later retrieval.
+     */
+    for (int iovIndex = 0 ; iovIndex < msgHdr.msg_iovlen; iovIndex++) {
+        Addr basePtr = (Addr) iov[iovIndex].iov_base;
+        bufferArray[iovIndex] = new BufferArg(basePtr, iov[iovIndex].iov_len);
+        bufferArray[iovIndex]->copyIn(tc->getMemProxy());
+        iov[iovIndex].iov_base = bufferArray[iovIndex]->bufferPtr();
+    }
+
+    ssize_t sent_size = sendmsg(sim_fd, &msgHdr, flags);
+    int local_errno = errno;
+
+    /**
+     * Free dynamically allocated memory.
+     */
+    for (int iovIndex = 0 ; iovIndex < msgHdr.msg_iovlen; iovIndex++) {
+        BufferArg *baseBuf = ( BufferArg *)bufferArray[iovIndex];
+        delete(baseBuf);
+    }
+
+    /**
+     * Malloced above.
+     */
+    free(bufferArray);
+
+    return (sent_size < 0) ? -local_errno : sent_size;
+}
+
