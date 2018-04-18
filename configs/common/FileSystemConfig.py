@@ -61,7 +61,7 @@ def config_filesystem(options):
     mkdir(procdir)
 
     for i in xrange(options.num_cpus):
-        one_cpu = 'processor       : 0\n'                         + \
+        one_cpu = 'processor       : %d\n' % (i)                  + \
                   'vendor_id       : Generic\n'                   + \
                   'cpu family      : 0\n'                         + \
                   'model           : 0\n'                         + \

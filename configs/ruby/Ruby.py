@@ -50,6 +50,7 @@ from m5.util import addToPath, fatal
 addToPath('../')
 
 from common import MemConfig
+from common import FileSystemConfig
 
 from topologies import *
 from network import Network
@@ -154,6 +155,9 @@ def create_system(options, full_system, system, piobus = None, dma_ports = [],
     system.ruby = RubySystem()
     ruby = system.ruby
 
+    # Generate pseudo filesystem
+    FileSystemConfig.config_filesystem(options)
+
     # Create the network object
     (network, IntLinkClass, ExtLinkClass, RouterClass, InterfaceClass) = \
         Network.create_network(options, ruby)
@@ -173,6 +177,11 @@ def create_system(options, full_system, system, piobus = None, dma_ports = [],
     # Create the network topology
     topology.makeTopology(options, network, IntLinkClass, ExtLinkClass,
             RouterClass)
+
+    # Register the topology elements with faux filesystem (SE mode only)
+    if not full_system:
+        topology.registerTopology(options)
+
 
     # Initialize network based on topology
     Network.init_network(options, network, InterfaceClass)

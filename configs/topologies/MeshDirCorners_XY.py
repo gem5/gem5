@@ -32,6 +32,8 @@ from __future__ import absolute_import
 from m5.params import *
 from m5.objects import *
 
+from common import FileSystemConfig
+
 from .BaseTopology import SimpleTopology
 
 # Creates a Mesh topology with 4 directories, one at each corner.
@@ -97,6 +99,27 @@ class MeshDirCorners_XY(SimpleTopology):
                                     int_node=routers[router_id],
                                     latency = link_latency))
             link_count += 1
+
+        # NUMA Node for each quadrant
+        # With odd columns or rows, the nodes will be unequal
+        numa_nodes = [ [], [], [], []]
+        for i in xrange(num_routers):
+            if i % num_columns < num_columns / 2  and \
+               i < num_routers / 2:
+                numa_nodes[0].append(i)
+            elif i % num_columns >= num_columns / 2  and \
+               i < num_routers / 2:
+                numa_nodes[1].append(i)
+            elif i % num_columns < num_columns / 2  and \
+               i >= num_routers / 2:
+                numa_nodes[2].append(i)
+            else:
+                numa_nodes[3].append(i)
+
+        num_numa_nodes = 0
+        for n in numa_nodes:
+            if n:
+                num_numa_nodes += 1
 
         # Connect the dir nodes to the corners.
         ext_links.append(ExtLink(link_id=link_count, ext_node=dir_nodes[0],
@@ -190,3 +213,13 @@ class MeshDirCorners_XY(SimpleTopology):
 
 
         network.int_links = int_links
+
+    # Register nodes with filesystem
+    def registerTopology(self, options):
+        i = 0
+        for n in numa_nodes:
+            if n:
+                FileSystemConfig.register_node(n,
+                    MemorySize(options.mem_size) / num_numa_nodes, i)
+            i += 1
+

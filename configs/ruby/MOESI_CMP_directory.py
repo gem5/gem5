@@ -237,7 +237,6 @@ def create_system(options, full_system, system, dma_ports, bootmem,
 
         all_cntrls = all_cntrls + [io_controller]
 
-
     ruby_system.network.number_of_virtual_networks = 3
     topology = create_topology(all_cntrls, options)
     return (cpu_sequencers, mem_dir_cntrl_nodes, topology)

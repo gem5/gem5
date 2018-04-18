@@ -51,6 +51,15 @@ class BaseTopology(object):
         """
         m5.util.fatal("BaseTopology should have been overridden!!")
 
+    def registerTopology(self, options):
+        """ Called from configs/ruby/Ruby.py
+            There is no return value. This should only be called in
+            SE mode. It is used by some topology objects to populate
+            the faux filesystem with accurate file contents.
+            No need to implement if not using FilesystemRegister
+            functionality.
+        """
+
 class SimpleTopology(BaseTopology):
     """ Provides methods needed for the topologies included in Ruby before
         topology changes.

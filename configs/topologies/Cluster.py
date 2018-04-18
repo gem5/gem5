@@ -85,7 +85,8 @@ class Cluster(BaseTopology):
 
         for node in self.nodes:
             if type(node) == Cluster:
-                node.makeTopology(options, network, IntLink, ExtLink, Router)
+                node.makeTopology(options, network, IntLink,
+                                  ExtLink, Router)
 
                 # connect this cluster to the router
                 link_out = IntLink(link_id=self.num_int_links(), src_node=self.router,

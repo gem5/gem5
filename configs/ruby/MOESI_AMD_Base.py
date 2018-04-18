@@ -38,6 +38,7 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 from Ruby import create_topology
 from Ruby import send_evicts
+import FileSystemConfig
 
 addToPath('../')
 
@@ -325,6 +326,59 @@ def create_system(options, full_system, system, dma_devices, bootmem,
         cp_cntrl.triggerQueue = MessageBuffer(ordered = True)
 
         cpuCluster.add(cp_cntrl)
+
+    # Register CPUs and caches for each CorePair and directory (SE mode only)
+    if not full_system:
+        FileSystemConfig.config_filesystem(options)
+        for i in xrange((options.num_cpus + 1) // 2):
+            FileSystemConfig.register_cpu(physical_package_id = 0,
+                                          core_siblings =
+                                            xrange(options.num_cpus),
+                                          core_id = i*2,
+                                          thread_siblings = [])
+
+            FileSystemConfig.register_cpu(physical_package_id = 0,
+                                          core_siblings =
+                                            xrange(options.num_cpus),
+                                          core_id = i*2+1,
+                                          thread_siblings = [])
+
+            FileSystemConfig.register_cache(level = 0,
+                                            idu_type = 'Instruction',
+                                            size = options.l1i_size,
+                                            line_size = options.cacheline_size,
+                                            assoc = options.l1i_assoc,
+                                            cpus = [i*2, i*2+1])
+
+            FileSystemConfig.register_cache(level = 0,
+                                            idu_type = 'Data',
+                                            size = options.l1d_size,
+                                            line_size = options.cacheline_size,
+                                            assoc = options.l1d_assoc,
+                                            cpus = [i*2])
+
+            FileSystemConfig.register_cache(level = 0,
+                                            idu_type = 'Data',
+                                            size = options.l1d_size,
+                                            line_size = options.cacheline_size,
+                                            assoc = options.l1d_assoc,
+                                            cpus = [i*2+1])
+
+            FileSystemConfig.register_cache(level = 1,
+                                            idu_type = 'Unified',
+                                            size = options.l2_size,
+                                            line_size = options.cacheline_size,
+                                            assoc = options.l2_assoc,
+                                            cpus = [i*2, i*2+1])
+
+        for i in range(options.num_dirs):
+            FileSystemConfig.register_cache(level = 2,
+                                            idu_type = 'Unified',
+                                            size = options.l3_size,
+                                            line_size = options.cacheline_size,
+                                            assoc = options.l3_assoc,
+                                            cpus = [n for n in
+                                                xrange(options.num_cpus)])
 
     # Assuming no DMA devices
     assert(len(dma_devices) == 0)
