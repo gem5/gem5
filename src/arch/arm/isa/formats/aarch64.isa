@@ -369,7 +369,14 @@ namespace Aarch64
                     }
                     // Check for invalid registers
                     if (miscReg == MISCREG_UNKNOWN) {
-                        return new Unknown64(machInst);
+                        auto full_mnemonic =
+                            csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
+                                     read ? "mrs" : "msr",
+                                     op0, op1, crn, crm, op2);
+
+                        return new FailUnimplemented(read ? "mrs" : "msr",
+                            machInst, full_mnemonic);
+
                     } else if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
                         if (miscReg == MISCREG_NZCV) {
                             if (read)
