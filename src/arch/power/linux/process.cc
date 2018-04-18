@@ -69,8 +69,8 @@ SyscallDesc PowerLinuxProcess::syscallDescs[] = {
     /*  0 */ SyscallDesc("syscall", unimplementedFunc),
     /*  1 */ SyscallDesc("exit", exitFunc),
     /*  2 */ SyscallDesc("fork", unimplementedFunc),
-    /*  3 */ SyscallDesc("read", readFunc),
-    /*  4 */ SyscallDesc("write", writeFunc),
+    /*  3 */ SyscallDesc("read", readFunc<PowerLinux>),
+    /*  4 */ SyscallDesc("write", writeFunc<PowerLinux>),
     /*  5 */ SyscallDesc("open", openFunc<PowerLinux>),
     /*  6 */ SyscallDesc("close", closeFunc),
     /*  7 */ SyscallDesc("waitpid", unimplementedFunc), //???

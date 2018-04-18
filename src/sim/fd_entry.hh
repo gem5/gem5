@@ -231,7 +231,6 @@ class SocketFDEntry: public HBFDEntry
         return std::make_shared<SocketFDEntry>(*this);
     }
 
-  private:
     int _domain;
     int _type;
     int _protocol;

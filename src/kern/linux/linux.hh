@@ -153,6 +153,15 @@ class Linux : public OperatingSystem
         uint64_t iov_len;
     };
 
+    // For select().
+    // linux-3.14-src/include/uapi/linux/posix_types.h
+    struct fd_set{
+#ifndef LINUX__FD_SETSIZE
+#define LINUX__FD_SETSIZE 1024
+        unsigned long fds_bits[LINUX__FD_SETSIZE / (8 * sizeof(long))];
+#endif
+    };
+
     //@{
     /// ioctl() command codes.
     static const unsigned TGT_TCGETS     = 0x5401;
@@ -265,6 +274,14 @@ class Linux : public OperatingSystem
     static const unsigned TGT_CLONE_NEWPID          = 0x20000000;
     static const unsigned TGT_CLONE_NEWNET          = 0x40000000;
     static const unsigned TGT_CLONE_IO              = 0x80000000;
+
+    // linux-3.13-src/include/uapi/linux/wait.h
+    static const unsigned TGT_WNOHANG               = 0x00000001;
+    static const unsigned TGT_WUNTRACED             = 0x00000002;
+    static const unsigned TGT_WSTOPPED              = TGT_WUNTRACED;
+    static const unsigned TGT_WEXITED               = 0x00000004;
+    static const unsigned TGT_WCONTINUED            = 0x00000008;
+    static const unsigned TGT_WNOWAIT               = 0x01000000;
 };  // class Linux
 
 #endif // __LINUX_HH__

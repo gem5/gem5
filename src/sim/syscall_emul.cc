@@ -279,53 +279,6 @@ closeFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     return p->fds->closeFDEntry(tgt_fd);
 }
 
-
-SyscallReturn
-readFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
-{
-    int index = 0;
-    int tgt_fd = p->getSyscallArg(tc, index);
-    Addr buf_ptr = p->getSyscallArg(tc, index);
-    int nbytes = p->getSyscallArg(tc, index);
-
-    auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
-    if (!hbfdp)
-        return -EBADF;
-    int sim_fd = hbfdp->getSimFD();
-
-    BufferArg bufArg(buf_ptr, nbytes);
-    int bytes_read = read(sim_fd, bufArg.bufferPtr(), nbytes);
-
-    if (bytes_read > 0)
-        bufArg.copyOut(tc->getMemProxy());
-
-    return bytes_read;
-}
-
-SyscallReturn
-writeFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
-{
-    int index = 0;
-    int tgt_fd = p->getSyscallArg(tc, index);
-    Addr buf_ptr = p->getSyscallArg(tc, index);
-    int nbytes = p->getSyscallArg(tc, index);
-
-    auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
-    if (!hbfdp)
-        return -EBADF;
-    int sim_fd = hbfdp->getSimFD();
-
-    BufferArg bufArg(buf_ptr, nbytes);
-    bufArg.copyIn(tc->getMemProxy());
-
-    int bytes_written = write(sim_fd, bufArg.bufferPtr(), nbytes);
-
-    fsync(sim_fd);
-
-    return bytes_written;
-}
-
-
 SyscallReturn
 lseekFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {

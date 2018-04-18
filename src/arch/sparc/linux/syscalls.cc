@@ -91,8 +91,8 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /*   0 */ SyscallDesc("restart_syscall", unimplementedFunc),
     /*   1 */ SyscallDesc("exit", exitFunc), // 32 bit
     /*   2 */ SyscallDesc("fork", unimplementedFunc),
-    /*   3 */ SyscallDesc("read", readFunc),
-    /*   4 */ SyscallDesc("write", writeFunc),
+    /*   3 */ SyscallDesc("read", readFunc<Sparc32Linux>),
+    /*   4 */ SyscallDesc("write", writeFunc<Sparc32Linux>),
     /*   5 */ SyscallDesc("open", openFunc<Sparc32Linux>), // 32 bit
     /*   6 */ SyscallDesc("close", closeFunc),
     /*   7 */ SyscallDesc("wait4", unimplementedFunc), // 32 bit
@@ -397,8 +397,8 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /*  0 */ SyscallDesc("restart_syscall", unimplementedFunc),
     /*  1 */ SyscallDesc("exit", exitFunc),
     /*  2 */ SyscallDesc("fork", unimplementedFunc),
-    /*  3 */ SyscallDesc("read", readFunc),
-    /*  4 */ SyscallDesc("write", writeFunc),
+    /*  3 */ SyscallDesc("read", readFunc<SparcLinux>),
+    /*  4 */ SyscallDesc("write", writeFunc<SparcLinux>),
     /*  5 */ SyscallDesc("open", openFunc<SparcLinux>),
     /*  6 */ SyscallDesc("close", closeFunc),
     /*  7 */ SyscallDesc("wait4", unimplementedFunc),
