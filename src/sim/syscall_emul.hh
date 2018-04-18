@@ -53,25 +53,17 @@
 #define NO_STAT64 0
 #endif
 
-#if (defined(__APPLE__) || defined(__OpenBSD__) ||      \
-     defined(__FreeBSD__) || defined(__NetBSD__))
-#define NO_STATFS 1
-#else
-#define NO_STATFS 0
-#endif
-
-#if (defined(__APPLE__) || defined(__OpenBSD__) ||      \
-     defined(__FreeBSD__) || defined(__NetBSD__))
-#define NO_FALLOCATE 1
-#else
-#define NO_FALLOCATE 0
-#endif
-
 ///
 /// @file syscall_emul.hh
 ///
 /// This file defines objects used to emulate syscalls from the target
 /// application on the host machine.
+
+#ifdef __linux__
+#include <sys/eventfd.h>
+#include <sys/statfs.h>
+
+#endif
 
 #ifdef __CYGWIN32__
 #include <sys/fcntl.h>
@@ -84,14 +76,6 @@
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-
-#if (NO_STATFS == 0)
-#include <sys/statfs.h>
-
-#else
-#include <sys/mount.h>
-
-#endif
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/uio.h>
@@ -133,6 +117,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+void warnUnsupportedOS(std::string syscall_name);
 
 /// Handler for unimplemented syscalls that we haven't thought about.
 SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
@@ -1530,9 +1515,7 @@ SyscallReturn
 statfsFunc(SyscallDesc *desc, int callnum, Process *process,
            ThreadContext *tc)
 {
-#if NO_STATFS
-    warn("Host OS cannot support calls to statfs. Ignoring syscall");
-#else
+#ifdef __linux__
     std::string path;
 
     int index = 0;
@@ -1552,8 +1535,11 @@ statfsFunc(SyscallDesc *desc, int callnum, Process *process,
         return -errno;
 
     copyOutStatfsBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
-#endif
     return 0;
+#else
+    warnUnsupportedOS("statfs");
+    return -1;
+#endif
 }
 
 template <class OS>
@@ -2858,6 +2844,34 @@ acceptFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     auto afdp = std::make_shared<SocketFDEntry>(host_fd, sfdp->_domain,
                                                 sfdp->_type, sfdp->_protocol);
     return p->fds->allocFD(afdp);
+}
+
+/// Target eventfd() function.
+template <class OS>
+SyscallReturn
+eventfdFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+#ifdef __linux__
+    int index = 0;
+    unsigned initval = p->getSyscallArg(tc, index);
+    int in_flags = p->getSyscallArg(tc, index);
+
+    int sim_fd = eventfd(initval, in_flags);
+    if (sim_fd == -1)
+        return -errno;
+
+    bool cloexec = in_flags & OS::TGT_O_CLOEXEC;
+
+    int flags = cloexec ? OS::TGT_O_CLOEXEC : 0;
+    flags |= (in_flags & OS::TGT_O_NONBLOCK) ? OS::TGT_O_NONBLOCK : 0;
+
+    auto hbfdp = std::make_shared<HBFDEntry>(flags, sim_fd, cloexec);
+    int tgt_fd = p->fds->allocFD(hbfdp);
+    return tgt_fd;
+#else
+    warnUnsupportedOS("eventfd");
+    return -1;
+#endif
 }
 
 #endif // __SIM_SYSCALL_EMUL_HH__

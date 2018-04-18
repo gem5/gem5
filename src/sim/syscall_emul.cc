@@ -57,6 +57,12 @@
 using namespace std;
 using namespace TheISA;
 
+void
+warnUnsupportedOS(std::string syscall_name)
+{
+    warn("Cannot invoke %s on host operating system.", syscall_name);
+}
+
 SyscallReturn
 unimplementedFunc(SyscallDesc *desc, int callnum, Process *process,
                   ThreadContext *tc)
@@ -1036,9 +1042,7 @@ getegidFunc(SyscallDesc *desc, int callnum, Process *process,
 SyscallReturn
 fallocateFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
-#if NO_FALLOCATE
-    warn("Host OS cannot support calls to fallocate. Ignoring syscall");
-#else
+#if __linux__
     int index = 0;
     int tgt_fd = p->getSyscallArg(tc, index);
     int mode = p->getSyscallArg(tc, index);
@@ -1053,8 +1057,11 @@ fallocateFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
     int result = fallocate(sim_fd, mode, offset, len);
     if (result < 0)
         return -errno;
-#endif
     return 0;
+#else
+    warnUnsupportedOS("fallocate");
+    return -1;
+#endif
 }
 
 SyscallReturn

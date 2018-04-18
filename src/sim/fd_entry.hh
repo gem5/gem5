@@ -80,6 +80,16 @@ class HBFDEntry: public FDEntry
         : FDEntry(close_on_exec), _flags(flags), _simFD(sim_fd)
     { }
 
+    HBFDEntry(HBFDEntry const& reg, bool close_on_exec = false)
+        : FDEntry(close_on_exec), _flags(reg._flags), _simFD(reg._simFD)
+    { }
+
+    std::shared_ptr<FDEntry>
+    clone() const override
+    {
+        return std::make_shared<HBFDEntry>(*this);
+    }
+
     int getFlags() const { return _flags; }
     int getSimFD() const { return _simFD; }
 

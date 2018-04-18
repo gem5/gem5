@@ -510,13 +510,13 @@ static SyscallDesc syscallDescs64[] = {
     /* 281 */ SyscallDesc("epoll_pwait", unimplementedFunc),
     /* 282 */ SyscallDesc("signalfd", unimplementedFunc),
     /* 283 */ SyscallDesc("timerfd_create", unimplementedFunc),
-    /* 284 */ SyscallDesc("eventfd", unimplementedFunc),
+    /* 284 */ SyscallDesc("eventfd", eventfdFunc<X86Linux64>),
     /* 285 */ SyscallDesc("fallocate", fallocateFunc),
     /* 286 */ SyscallDesc("timerfd_settime", unimplementedFunc),
     /* 287 */ SyscallDesc("timerfd_gettime", unimplementedFunc),
     /* 288 */ SyscallDesc("accept4", unimplementedFunc),
     /* 289 */ SyscallDesc("signalfd4", unimplementedFunc),
-    /* 290 */ SyscallDesc("eventfd2", unimplementedFunc),
+    /* 290 */ SyscallDesc("eventfd2", eventfdFunc<X86Linux64>),
     /* 291 */ SyscallDesc("epoll_create1", unimplementedFunc),
     /* 292 */ SyscallDesc("dup3", unimplementedFunc),
     /* 293 */ SyscallDesc("pipe2", unimplementedFunc),
@@ -882,7 +882,7 @@ static SyscallDesc syscallDescs32[] = {
     /* 320 */ SyscallDesc("utimensat", unimplementedFunc),
     /* 321 */ SyscallDesc("signalfd", unimplementedFunc),
     /* 322 */ SyscallDesc("timerfd", unimplementedFunc),
-    /* 323 */ SyscallDesc("eventfd", unimplementedFunc)
+    /* 323 */ SyscallDesc("eventfd", eventfdFunc<X86Linux32>)
 };
 
 I386LinuxProcess::I386LinuxProcess(ProcessParams * params, ObjectFile *objFile)
