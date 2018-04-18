@@ -44,9 +44,6 @@
 
 class FDArray
 {
-  private:
-    static const int NUM_FDS = 1024;
-
   public:
     /**
      * Initialize the file descriptor array and set the standard file
@@ -58,10 +55,6 @@ class FDArray
      */
     FDArray(std::string const& input, std::string const& output,
             std::string const& errout);
-
-    std::string _input;
-    std::string _output;
-    std::string _errout;
 
     /**
      * Figure out the file offsets for all currently open files and save them
@@ -76,15 +69,28 @@ class FDArray
     void restoreFileOffsets();
 
     /**
+     * Put the pointer specified by fdep into the _fdArray entry indexed
+     * by tgt_fd.
+     * @param tgt_fd Use target file descriptors to index the array.
+     * @param fdep Incoming pointer used to set the entry pointed to by tgt_fd.
+     */
+    void setFDEntry(int tgt_fd, std::shared_ptr<FDEntry> fdep);
+
+    /**
      * Treat this object like a normal array in using the subscript operator
      * to pull entries out of it.
      * @param tgt_fd Use target file descriptors to index the array.
      */
-    inline std::shared_ptr<FDEntry>
+    std::shared_ptr<FDEntry>
     operator[](int tgt_fd)
     {
         return getFDEntry(tgt_fd);
     }
+
+    /**
+     * Return the size of the _fdArray field
+     */
+    int getSize() const { return _fdArray.size(); }
 
     /**
      * Step through the file descriptor array and find the first available
@@ -97,19 +103,6 @@ class FDArray
      * correct type before dereferencing to access the needed fields.
      */
     int allocFD(std::shared_ptr<FDEntry> fdp);
-
-    /**
-     * Return the size of the _fdArray field
-     */
-    int getSize() const { return _fdArray.size(); }
-
-    /**
-     * Put the pointer specified by fdep into the _fdArray entry indexed
-     * by tgt_fd.
-     * @param tgt_fd Use target file descriptors to index the array.
-     * @param fdep Incoming pointer used to set the entry pointed to by tgt_fd.
-     */
-    void setFDEntry(int tgt_fd, std::shared_ptr<FDEntry> fdep);
 
     /**
      * Try to close the host file descriptor. If successful, set the
@@ -141,7 +134,17 @@ class FDArray
      * Hold pointers to the file descriptor entries. The array size is
      * statically defined by the operating system.
      */
-    std::array<std::shared_ptr<FDEntry>, NUM_FDS> _fdArray;
+    static constexpr size_t _numFDs {1024};
+    std::array<std::shared_ptr<FDEntry>, _numFDs> _fdArray;
+
+    /**
+     * Hold param strings passed from the Process class which indicate
+     * the filename for each of the corresponding files or some keyword
+     * indicating the use of standard file descriptors.
+     */
+    std::string _input;
+    std::string _output;
+    std::string _errout;
 
     /**
      * Hold strings which represent the default values which are checked
@@ -149,8 +152,8 @@ class FDArray
      * provided doesn't hit against these maps, then a file is opened on the
      * host instead of using the host's standard file descriptors.
      */
-    std::map<std::string, int> imap;
-    std::map<std::string, int> oemap;
+    std::map<std::string, int> _imap;
+    std::map<std::string, int> _oemap;
 };
 
 #endif // __FD_ARRAY_HH__
