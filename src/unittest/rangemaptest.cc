@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -59,11 +59,14 @@ main()
     i = r.insert(RangeIn(60, 90), 3);
     assert(i != r.end());
 
-    i = r.find(RangeIn(20, 30));
+    i = r.intersects(RangeIn(20, 30));
     assert(i != r.end());
     cout << i->first.to_string() << " " << i->second << endl;
 
-    i = r.find(RangeIn(55, 55));
+    i = r.contains(RangeIn(55, 55));
+    assert(i == r.end());
+
+    i = r.intersects(RangeIn(55, 55));
     assert(i == r.end());
 
     i = r.insert(RangeIn(0, 12), 1);
@@ -72,7 +75,7 @@ main()
     i = r.insert(RangeIn(0, 9), 1);
     assert(i != r.end());
 
-    i = r.find(RangeIn(20, 30));
+    i = r.contains(RangeIn(20, 30));
     assert(i != r.end());
     cout << i->first.to_string() << " " << i->second << endl;
 

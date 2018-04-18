@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -59,71 +59,63 @@ class AddrRangeMap
 {
   private:
     typedef std::map<AddrRange, V> RangeMap;
-    RangeMap tree;
 
   public:
     typedef typename RangeMap::iterator iterator;
     typedef typename RangeMap::const_iterator const_iterator;
 
+    /**
+     * Find entry that contains the given address range
+     *
+     * Searches through the ranges in the address map and returns an
+     * iterator to the entry which range is a superset of the input
+     * address range. Returns end() if none found.
+     *
+     * @param r An input address range
+     * @return An iterator that contains the input address range
+     */
     const_iterator
-    find(const AddrRange &r) const
+    contains(const AddrRange &r) const
     {
-        if (tree.empty())
-            return tree.end();
-
-        const_iterator i = tree.upper_bound(r);
-
-        if (i == tree.begin()) {
-            if (i->first.intersects(r)) {
-                return i;
-            } else {
-                return tree.end();
-            }
-        }
-
-        --i;
-
-        if (i->first.intersects(r))
-            return i;
-
-        // if we are looking at an interleaved range, also step
-        // backwards through the ranges while we are looking at ranges
-        // that are part of the same contigous chunk
-        if (i->first.interleaved()) {
-            AddrRange orig_range = i->first;
-
-            while (i != tree.begin() && i->first.mergesWith(orig_range)) {
-                --i;
-                if (i->first.intersects(r)) {
-                    return i;
-                }
-            }
-
-            // we could leave the loop based on reaching the first
-            // element, so we must still check for an intersection
-            if (i->first.intersects(r))
-                return i;
-        }
-
-        return tree.end();
+        return find(r, [r](const AddrRange r1) { return r.isSubset(r1); });
     }
 
+    /**
+     * Find entry that contains the given address
+     *
+     * Searches through the ranges in the address map and returns an
+     * iterator to the entry which range is a superset of the input
+     * address. Returns end() if none found.
+     *
+     * @param r An input address
+     * @return An iterator that contains the input address
+     */
     const_iterator
-    find(const Addr &r) const
+    contains(Addr r) const
     {
-        return find(RangeSize(r, 1));
+        return contains(RangeSize(r, 1));
     }
 
-    bool
-    intersect(const AddrRange &r) const
+    /**
+     * Find entry that intersects with the given address range
+     *
+     * Searches through the ranges in the address map and returns an
+     * iterator to the first entry which range intersects with the
+     * input address.
+     *
+     * @param r An input address
+     * @return An iterator that intersects with the input address range
+     */
+    const_iterator
+    intersects(const AddrRange &r) const
     {
-        return find(r) != tree.end();
+        return find(r, [r](const AddrRange r1) { return r.intersects(r1); });
     }
 
     const_iterator
     insert(const AddrRange &r, const V& d)
     {
-        if (intersect(r))
+        if (intersects(r) != end())
             return tree.end();
 
         return tree.insert(std::make_pair(r, d)).first;
@@ -182,6 +174,44 @@ class AddrRangeMap
     {
         return tree.empty();
     }
+
+  private:
+    /**
+     * Find entry that satisfies a condition on an address range
+     *
+     * Searches through the ranges in the address map and returns an
+     * iterator to the entry that satisfies the input conidition on
+     * the input address range. Returns end() if none found.
+     *
+     * @param r An input address range
+     * @param f A condition on an address range
+     * @return An iterator that contains the input address range
+     */
+    const_iterator
+    find(const AddrRange &r, std::function<bool(const AddrRange)> cond) const
+    {
+        const_iterator next = tree.upper_bound(r);
+        if (next != end() && cond(next->first)) {
+            return next;
+        }
+        if (next == begin())
+            return end();
+        next--;
+
+        const_iterator i;
+        do {
+            i = next;
+            if (cond(i->first)) {
+                return i;
+            }
+            // Keep looking if the next range merges with the current one.
+        } while (next != begin() &&
+                 (--next)->first.mergesWith(i->first));
+
+        return end();
+    }
+
+    RangeMap tree;
 };
 
 #endif //__BASE_ADDR_RANGE_MAP_HH__

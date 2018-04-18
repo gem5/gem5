@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 ARM Limited
+ * Copyright (c) 2011-2015, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -333,7 +333,7 @@ BaseXBar::findPort(Addr addr)
         return dest_id;
 
     // Check the address map interval tree
-    auto i = portMap.find(addr);
+    auto i = portMap.contains(addr);
     if (i != portMap.end()) {
         dest_id = i->second;
         updatePortCache(dest_id, i->first);
@@ -420,8 +420,9 @@ BaseXBar::recvRangeChange(PortID master_port_id)
             DPRINTF(AddrRanges, "Adding range %s for id %d\n",
                     r.to_string(), master_port_id);
             if (portMap.insert(r, master_port_id) == portMap.end()) {
-                PortID conflict_id = portMap.find(r)->second;
-                fatal("%s has two ports responding within range %s:\n\t%s\n\t%s\n",
+                PortID conflict_id = portMap.intersects(r)->second;
+                fatal("%s has two ports responding within range "
+                      "%s:\n\t%s\n\t%s\n",
                       name(),
                       r.to_string(),
                       masterPorts[master_port_id]->getSlavePort().name(),
@@ -496,7 +497,7 @@ BaseXBar::recvRangeChange(PortID master_port_id)
             }
         }
 
-        // also check that no range partially overlaps with the
+        // also check that no range partially intersects with the
         // default range, this has to be done after all ranges are set
         // as there are no guarantees for when the default range is
         // update with respect to the other ones

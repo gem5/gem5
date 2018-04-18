@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2014 ARM Limited
+ * Copyright (c) 2012, 2014, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -241,7 +241,7 @@ PhysicalMemory::isMemAddr(Addr addr) const
         return true;
     } else {
         // lookup in the interval tree
-        const auto& r = addrMap.find(addr);
+        const auto& r = addrMap.contains(addr);
         if (r == addrMap.end()) {
             // not in the cache, and not in the tree
             return false;
@@ -298,7 +298,7 @@ PhysicalMemory::access(PacketPtr pkt)
     } else {
         // do not update the cache here, as we typically call
         // isMemAddr before calling access
-        const auto& m = addrMap.find(addr);
+        const auto& m = addrMap.contains(addr);
         assert(m != addrMap.end());
         m->second->access(pkt);
     }
@@ -314,7 +314,7 @@ PhysicalMemory::functionalAccess(PacketPtr pkt)
     } else {
         // do not update the cache here, as we typically call
         // isMemAddr before calling functionalAccess
-        const auto& m = addrMap.find(addr);
+        const auto& m = addrMap.contains(addr);
         assert(m != addrMap.end());
         m->second->functionalAccess(pkt);
     }
@@ -406,7 +406,7 @@ PhysicalMemory::unserialize(CheckpointIn &cp)
     UNSERIALIZE_CONTAINER(lal_addr);
     UNSERIALIZE_CONTAINER(lal_cid);
     for (size_t i = 0; i < lal_addr.size(); ++i) {
-        const auto& m = addrMap.find(lal_addr[i]);
+        const auto& m = addrMap.contains(lal_addr[i]);
         m->second->addLockedAddr(LockedAddr(lal_addr[i], lal_cid[i]));
     }
 
