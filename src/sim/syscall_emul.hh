@@ -1531,6 +1531,44 @@ fstatfsFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
     return 0;
 }
 
+/// Target readv() handler.
+template <class OS>
+SyscallReturn
+readvFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
+{
+    int index = 0;
+    int tgt_fd = p->getSyscallArg(tc, index);
+
+    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    if (!ffdp)
+        return -EBADF;
+    int sim_fd = ffdp->getSimFD();
+
+    SETranslatingPortProxy &prox = tc->getMemProxy();
+    uint64_t tiov_base = p->getSyscallArg(tc, index);
+    size_t count = p->getSyscallArg(tc, index);
+    typename OS::tgt_iovec tiov[count];
+    struct iovec hiov[count];
+    for (size_t i = 0; i < count; ++i) {
+        prox.readBlob(tiov_base + (i * sizeof(typename OS::tgt_iovec)),
+                      (uint8_t*)&tiov[i], sizeof(typename OS::tgt_iovec));
+        hiov[i].iov_len = TheISA::gtoh(tiov[i].iov_len);
+        hiov[i].iov_base = new char [hiov[i].iov_len];
+    }
+
+    int result = readv(sim_fd, hiov, count);
+    int local_errno = errno;
+
+    for (size_t i = 0; i < count; ++i) {
+        if (result != -1) {
+            prox.writeBlob(TheISA::htog(tiov[i].iov_base),
+                           (uint8_t*)hiov[i].iov_base, hiov[i].iov_len);
+        }
+        delete [] (char *)hiov[i].iov_base;
+    }
+
+    return (result == -1) ? -local_errno : result;
+}
 
 /// Target writev() handler.
 template <class OS>
@@ -1565,10 +1603,7 @@ writevFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
     for (size_t i = 0; i < count; ++i)
         delete [] (char *)hiov[i].iov_base;
 
-    if (result < 0)
-        return -errno;
-
-    return result;
+    return (result == -1) ? -errno : result;
 }
 
 /// Real mmap handler.
