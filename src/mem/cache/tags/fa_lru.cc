@@ -139,10 +139,9 @@ FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat,
                    CachesMask *in_caches_mask)
 {
     CachesMask mask = 0;
-    Addr blkAddr = blkAlign(addr);
-    FALRUBlk* blk = hashLookup(blkAddr);
+    FALRUBlk* blk = static_cast<FALRUBlk*>(findBlock(addr, is_secure));
 
-    if (blk && blk->isValid()) {
+    if (blk != nullptr) {
         // If a cache hit
         lat = accessLatency;
         // Check if the block to be accessed is available. If not,
@@ -153,13 +152,12 @@ FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat,
             lat = cache->ticksToCycles(blk->whenReady - curTick()) +
             accessLatency;
         }
-        assert(blk->tag == blkAddr);
         mask = blk->inCachesMask;
+
         moveToHead(blk);
     } else {
         // If a cache miss
         lat = lookupLatency;
-        blk = nullptr;
     }
     if (in_caches_mask) {
         *in_caches_mask = mask;
@@ -174,11 +172,11 @@ FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat,
 CacheBlk*
 FALRU::findBlock(Addr addr, bool is_secure) const
 {
-    Addr blkAddr = blkAlign(addr);
-    FALRUBlk* blk = hashLookup(blkAddr);
+    Addr tag = extractTag(addr);
+    FALRUBlk* blk = hashLookup(tag);
 
     if (blk && blk->isValid()) {
-        assert(blk->tag == blkAddr);
+        assert(blk->tag == tag);
         assert(blk->isSecure() == is_secure);
     } else {
         blk = nullptr;
