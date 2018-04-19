@@ -179,6 +179,7 @@ FALRU::findBlock(Addr addr, bool is_secure) const
 
     if (blk && blk->isValid()) {
         assert(blk->tag == blkAddr);
+        assert(blk->isSecure() == is_secure);
     } else {
         blk = nullptr;
     }
