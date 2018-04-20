@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2017 ARM Limited
+ * Copyright (c) 2010, 2012-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -739,9 +739,9 @@ TableWalker::processWalkAArch64()
     DPRINTF(TLB, "Beginning table walk for address %#llx, TCR: %#llx\n",
             currState->vaddr_tainted, currState->tcr);
 
-    static const GrainSize GrainMapDefault[] =
+    static const GrainSize GrainMap_tg0[] =
       { Grain4KB, Grain64KB, Grain16KB, ReservedGrain };
-    static const GrainSize GrainMap_EL1_tg1[] =
+    static const GrainSize GrainMap_tg1[] =
       { ReservedGrain, Grain16KB, Grain4KB, Grain64KB };
 
     statWalkWaitTime.sample(curTick() - currState->startTime);
@@ -761,7 +761,7 @@ TableWalker::processWalkAArch64()
             DPRINTF(TLB, " - Selecting VTTBR0 (AArch64 stage 2)\n");
             ttbr = currState->tc->readMiscReg(MISCREG_VTTBR_EL2);
             tsz = 64 - currState->vtcr.t0sz64;
-            tg = GrainMapDefault[currState->vtcr.tg0];
+            tg = GrainMap_tg0[currState->vtcr.tg0];
             // ARM DDI 0487A.f D7-2148
             // The starting level of stage 2 translation depends on
             // VTCR_EL2.SL0 and VTCR_EL2.TG0
@@ -781,7 +781,7 @@ TableWalker::processWalkAArch64()
             DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
             ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL1);
             tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
-            tg = GrainMapDefault[currState->tcr.tg0];
+            tg = GrainMap_tg0[currState->tcr.tg0];
             if (bits(currState->vaddr, 63, tsz) != 0x0 ||
                 currState->tcr.epd0)
               fault = true;
@@ -790,7 +790,7 @@ TableWalker::processWalkAArch64()
             DPRINTF(TLB, " - Selecting TTBR1 (AArch64)\n");
             ttbr = currState->tc->readMiscReg(MISCREG_TTBR1_EL1);
             tsz = adjustTableSizeAArch64(64 - currState->tcr.t1sz);
-            tg = GrainMap_EL1_tg1[currState->tcr.tg1];
+            tg = GrainMap_tg1[currState->tcr.tg1];
             if (bits(currState->vaddr, 63, tsz) != mask(64-tsz) ||
                 currState->tcr.epd1)
               fault = true;
@@ -802,16 +802,37 @@ TableWalker::processWalkAArch64()
         ps = currState->tcr.ips;
         break;
       case EL2:
+        switch(bits(currState->vaddr, 63,48)) {
+          case 0:
+            DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
+            ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL2);
+            tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
+            tg = GrainMap_tg0[currState->tcr.tg0];
+            break;
+
+          case 0xffff:
+            DPRINTF(TLB, " - Selecting TTBR1 (AArch64)\n");
+            ttbr = currState->tc->readMiscReg(MISCREG_TTBR1_EL2);
+            tsz = adjustTableSizeAArch64(64 - currState->tcr.t1sz);
+            tg = GrainMap_tg1[currState->tcr.tg1];
+            if (bits(currState->vaddr, 63, tsz) != mask(64-tsz) ||
+                currState->tcr.epd1 || !currState->hcr.e2h)
+              fault = true;
+            break;
+
+           default:
+              // invalid addr if top two bytes are not all 0s
+              fault = true;
+        }
+        ps = currState->tcr.ips;
+        break;
       case EL3:
         switch(bits(currState->vaddr, 63,48)) {
             case 0:
                 DPRINTF(TLB, " - Selecting TTBR0 (AArch64)\n");
-                if (currState->el == EL2)
-                    ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL2);
-                else
-                    ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL3);
+                ttbr = currState->tc->readMiscReg(MISCREG_TTBR0_EL3);
                 tsz = adjustTableSizeAArch64(64 - currState->tcr.t0sz);
-                tg = GrainMapDefault[currState->tcr.tg0];
+                tg = GrainMap_tg0[currState->tcr.tg0];
                 break;
             default:
                 // invalid addr if top two bytes are not all 0s

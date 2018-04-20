@@ -3535,7 +3535,7 @@ ISA::initializeMiscRegMetadata()
       .hyp().mon()
       .mapsTo(MISCREG_HTTBR);
     InitReg(MISCREG_TTBR1_EL2)
-      .unimplemented();
+      .hyp().mon();
     InitReg(MISCREG_TCR_EL2)
       .hyp().mon()
       .mapsTo(MISCREG_HTCR);
