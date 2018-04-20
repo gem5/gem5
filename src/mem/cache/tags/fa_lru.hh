@@ -186,6 +186,15 @@ class FALRU : public BaseTags
     CacheBlk* findBlock(Addr addr, bool is_secure) const override;
 
     /**
+     * Find a block given set and way.
+     *
+     * @param set The set of the block.
+     * @param way The way of the block.
+     * @return The block.
+     */
+    ReplaceableEntry* findBlockBySetAndWay(int set, int way) const override;
+
+    /**
      * Find replacement victim based on address.
      *
      * @param addr Address to find a victim for.
@@ -200,14 +209,6 @@ class FALRU : public BaseTags
      * @param blk The block to update.
      */
     void insertBlock(PacketPtr pkt, CacheBlk *blk) override;
-
-    /**
-     * Find the cache block given set and way
-     * @param set The set of the block.
-     * @param way The way of the block.
-     * @return The cache block.
-     */
-    CacheBlk* findBlockBySetAndWay(int set, int way) const override;
 
     /**
      * Generate the tag from the addres. For fully associative this is just the

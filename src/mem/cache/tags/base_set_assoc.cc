@@ -126,7 +126,7 @@ BaseSetAssoc::findBlock(Addr addr, bool is_secure) const
     return blk;
 }
 
-CacheBlk*
+ReplaceableEntry*
 BaseSetAssoc::findBlockBySetAndWay(int set, int way) const
 {
     return sets[set].blks[way];

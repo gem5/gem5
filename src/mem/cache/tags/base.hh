@@ -196,6 +196,15 @@ class BaseTags : public ClockedObject
     virtual CacheBlk * findBlock(Addr addr, bool is_secure) const = 0;
 
     /**
+     * Find a block given set and way.
+     *
+     * @param set The set of the block.
+     * @param way The way of the block.
+     * @return The block.
+     */
+    virtual ReplaceableEntry* findBlockBySetAndWay(int set, int way) const = 0;
+
+    /**
      * Align an address to the block size.
      * @param addr the address to align.
      * @return The block address.
@@ -214,14 +223,6 @@ class BaseTags : public ClockedObject
     {
         return (addr & blkMask);
     }
-
-    /**
-     * Find the cache block given set and way
-     * @param set The set of the block.
-     * @param way The way of the block.
-     * @return The cache block.
-     */
-    virtual CacheBlk *findBlockBySetAndWay(int set, int way) const = 0;
 
     /**
      * Limit the allocation for the cache ways.

@@ -130,14 +130,6 @@ class BaseSetAssoc : public BaseTags
     void invalidate(CacheBlk *blk) override;
 
     /**
-     * Find the cache block given set and way
-     * @param set The set of the block.
-     * @param way The way of the block.
-     * @return The cache block.
-     */
-    CacheBlk *findBlockBySetAndWay(int set, int way) const override;
-
-    /**
      * Access block and update replacement data. May not succeed, in which case
      * nullptr is returned. This has all the implications of a cache
      * access and should only be used as such. Returns the access latency as a
@@ -197,6 +189,15 @@ class BaseSetAssoc : public BaseTags
      * @return Pointer to the cache block if found.
      */
     CacheBlk* findBlock(Addr addr, bool is_secure) const override;
+
+    /**
+     * Find a block given set and way.
+     *
+     * @param set The set of the block.
+     * @param way The way of the block.
+     * @return The block.
+     */
+    ReplaceableEntry* findBlockBySetAndWay(int set, int way) const override;
 
     /**
      * Find replacement victim based on address.

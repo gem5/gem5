@@ -185,7 +185,7 @@ FALRU::findBlock(Addr addr, bool is_secure) const
     return blk;
 }
 
-CacheBlk*
+ReplaceableEntry*
 FALRU::findBlockBySetAndWay(int set, int way) const
 {
     assert(set == 0);
