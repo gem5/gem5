@@ -195,12 +195,15 @@ class FALRU : public BaseTags
     ReplaceableEntry* findBlockBySetAndWay(int set, int way) const override;
 
     /**
-     * Find replacement victim based on address.
+     * Find replacement victim based on address. The list of evicted blocks
+     * only contains the victim.
      *
      * @param addr Address to find a victim for.
+     * @param evict_blks Cache blocks to be evicted.
      * @return Cache block to be replaced.
      */
-    CacheBlk* findVictim(Addr addr) override;
+    CacheBlk* findVictim(Addr addr, std::vector<CacheBlk*>& evict_blks) const
+                                                                    override;
 
     /**
      * Insert the new block into the cache and update replacement data.

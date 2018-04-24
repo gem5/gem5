@@ -262,12 +262,20 @@ class BaseTags : public ClockedObject
     }
 
     /**
-     * Find replacement victim based on address.
+     * Find replacement victim based on address. If the address requires
+     * blocks to be evicted, their locations are listed for eviction. If a
+     * conventional cache is being used, the list only contains the victim.
+     * However, if using sector or compressed caches, the victim is one of
+     * the blocks to be evicted, but its location is the only one that will
+     * be assigned to the newly allocated block associated to this address.
+     * @sa insertBlock
      *
      * @param addr Address to find a victim for.
+     * @param evict_blks Cache blocks to be evicted.
      * @return Cache block to be replaced.
      */
-    virtual CacheBlk* findVictim(Addr addr) = 0;
+    virtual CacheBlk* findVictim(Addr addr, std::vector<CacheBlk*>& evict_blks)
+                                                                     const = 0;
 
     virtual CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) = 0;
 

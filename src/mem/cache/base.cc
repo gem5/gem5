@@ -1209,38 +1209,56 @@ CacheBlk*
 BaseCache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
 {
     // Find replacement victim
-    CacheBlk *blk = tags->findVictim(addr);
+    std::vector<CacheBlk*> evict_blks;
+    CacheBlk *victim = tags->findVictim(addr, evict_blks);
 
     // It is valid to return nullptr if there is no victim
-    if (!blk)
+    if (!victim)
         return nullptr;
 
-    if (blk->isValid()) {
-        Addr repl_addr = regenerateBlkAddr(blk);
-        MSHR *repl_mshr = mshrQueue.findMatch(repl_addr, blk->isSecure());
-        if (repl_mshr) {
-            // must be an outstanding upgrade or clean request
-            // on a block we're about to replace...
-            assert((!blk->isWritable() && repl_mshr->needsWritable()) ||
-                   repl_mshr->isCleaning());
-            // too hard to replace block with transient state
-            // allocation failed, block not inserted
-            return nullptr;
-        } else {
-            DPRINTF(Cache, "replacement: replacing %#llx (%s) with %#llx "
-                    "(%s): %s\n", repl_addr, blk->isSecure() ? "s" : "ns",
-                    addr, is_secure ? "s" : "ns",
-                    blk->isDirty() ? "writeback" : "clean");
+    // Check for transient state allocations. If any of the entries listed
+    // for eviction has a transient state, the allocation fails
+    for (const auto& blk : evict_blks) {
+        if (blk->isValid()) {
+            Addr repl_addr = regenerateBlkAddr(blk);
+            MSHR *repl_mshr = mshrQueue.findMatch(repl_addr, blk->isSecure());
+            if (repl_mshr) {
+                // must be an outstanding upgrade or clean request
+                // on a block we're about to replace...
+                assert((!blk->isWritable() && repl_mshr->needsWritable()) ||
+                       repl_mshr->isCleaning());
 
-            if (blk->wasPrefetched()) {
-                unusedPrefetches++;
+                // too hard to replace block with transient state
+                // allocation failed, block not inserted
+                return nullptr;
             }
-            evictBlock(blk, writebacks);
-            replacements++;
         }
     }
 
-    return blk;
+    // The victim will be replaced by a new entry, so increase the replacement
+    // counter if a valid block is being replaced
+    if (victim->isValid()) {
+        DPRINTF(Cache, "replacement: replacing %#llx (%s) with %#llx "
+                "(%s): %s\n", regenerateBlkAddr(victim),
+                victim->isSecure() ? "s" : "ns",
+                addr, is_secure ? "s" : "ns",
+                victim->isDirty() ? "writeback" : "clean");
+
+        replacements++;
+    }
+
+    // Evict valid blocks associated to this victim block
+    for (const auto& blk : evict_blks) {
+        if (blk->isValid()) {
+            if (blk->wasPrefetched()) {
+                unusedPrefetches++;
+            }
+
+            evictBlock(blk, writebacks);
+        }
+    }
+
+    return victim;
 }
 
 void
