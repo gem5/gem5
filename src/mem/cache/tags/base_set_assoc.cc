@@ -124,14 +124,10 @@ BaseSetAssoc::findBlockBySetAndWay(int set, int way) const
 std::string
 BaseSetAssoc::print() const {
     std::string cache_state;
-    for (unsigned i = 0; i < numSets; ++i) {
-        // link in the data blocks
-        for (unsigned j = 0; j < assoc; ++j) {
-            BlkType *blk = sets[i].blks[j];
-            if (blk->isValid())
-                cache_state += csprintf("\tset: %d block: %d %s\n", i, j,
-                        blk->print());
-        }
+    for (const CacheBlk& blk : blks) {
+        if (blk.isValid())
+            cache_state += csprintf("\tset: %d way: %d %s\n", blk.set,
+                                    blk.way, blk.print());
     }
     if (cache_state.empty())
         cache_state = "no valid tags\n";
@@ -141,9 +137,9 @@ BaseSetAssoc::print() const {
 void
 BaseSetAssoc::cleanupRefs()
 {
-    for (unsigned i = 0; i < numSets*assoc; ++i) {
-        if (blks[i].isValid()) {
-            totalRefs += blks[i].refCount;
+    for (const CacheBlk& blk : blks) {
+        if (blk.isValid()) {
+            totalRefs += blk.refCount;
             ++sampledRefs;
         }
     }
@@ -159,12 +155,12 @@ BaseSetAssoc::computeStats()
         }
     }
 
-    for (unsigned i = 0; i < numSets * assoc; ++i) {
-        if (blks[i].isValid()) {
-            assert(blks[i].task_id < ContextSwitchTaskId::NumTaskId);
-            occupanciesTaskId[blks[i].task_id]++;
-            assert(blks[i].tickInserted <= curTick());
-            Tick age = curTick() - blks[i].tickInserted;
+    for (const CacheBlk& blk : blks) {
+        if (blk.isValid()) {
+            assert(blk.task_id < ContextSwitchTaskId::NumTaskId);
+            occupanciesTaskId[blk.task_id]++;
+            assert(blk.tickInserted <= curTick());
+            Tick age = curTick() - blk.tickInserted;
 
             int age_index;
             if (age / SimClock::Int::us < 10) { // <10us
@@ -178,7 +174,7 @@ BaseSetAssoc::computeStats()
             } else
                 age_index = 4; // >10ms
 
-            ageTaskId[blks[i].task_id][age_index]++;
+            ageTaskId[blk.task_id][age_index]++;
         }
     }
 }

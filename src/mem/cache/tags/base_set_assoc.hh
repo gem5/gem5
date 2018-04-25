@@ -304,8 +304,8 @@ class BaseSetAssoc : public BaseTags
      * \param visitor Visitor to call on each block.
      */
     void forEachBlk(CacheBlkVisitor &visitor) override {
-        for (unsigned i = 0; i < numSets * assoc; ++i) {
-            if (!visitor(blks[i]))
+        for (CacheBlk& blk : blks) {
+            if (!visitor(blk))
                 return;
         }
     }
