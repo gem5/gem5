@@ -52,7 +52,6 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 #include "mem/packet.hh"
-#include "proto/protoio.hh"
 #include "random_gen.hh"
 
 /**

@@ -53,7 +53,6 @@
 #include "base/intmath.hh"
 #include "base_gen.hh"
 #include "mem/packet.hh"
-#include "proto/protoio.hh"
 
 /**
  * The random generator is similar to the linear one, but does

@@ -47,7 +47,6 @@
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/TrafficGen.hh"
-#include "proto/packet.pb.h"
 
 BaseGen::BaseGen(const std::string& _name, MasterID master_id, Tick _duration)
     : _name(_name), masterID(master_id), duration(_duration)

@@ -51,7 +51,6 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 #include "mem/packet.hh"
-#include "proto/protoio.hh"
 
 /**
  * Base class for all generators, with the shared functionality and

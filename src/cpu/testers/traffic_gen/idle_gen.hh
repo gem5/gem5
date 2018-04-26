@@ -52,7 +52,6 @@
 #include "base/intmath.hh"
 #include "base_gen.hh"
 #include "mem/packet.hh"
-#include "proto/protoio.hh"
 
 /**
  * The idle generator does nothing.

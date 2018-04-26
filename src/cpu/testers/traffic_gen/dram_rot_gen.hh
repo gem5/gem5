@@ -53,7 +53,6 @@
 #include "base/intmath.hh"
 #include "dram_gen.hh"
 #include "mem/packet.hh"
-#include "proto/protoio.hh"
 
 class DramRotGen : public DramGen
 {
