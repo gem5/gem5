@@ -28,6 +28,7 @@ arch: General architecture-specific components
 arch-arm:
   Andreas Sandberg <andreas.sandberg@arm.com>
   Giacomo Travaglini <giacomo.travaglini@arm.com>
+arch-gcn3:
 arch-hsail:
   Tony Gutierrez <anthony.gutierrez@amd.com>
 arch-mips:

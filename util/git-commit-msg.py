@@ -88,13 +88,14 @@ def _validateTags(commit_header):
     # @todo this is error prone, and should be extracted automatically from
     #       a file
 
-    valid_tags = ["arch", "arch-alpha", "arch-arm", "arch-hsail", "arch-mips",
-        "arch-power", "arch-riscv", "arch-sparc", "arch-x86", "base",
-        "configs", "cpu", "cpu-kvm", "cpu-minor", "cpu-o3", "cpu-simple",
-        "dev", "dev-arm", "dev-virtio", "ext", "fastmodel", "gpu-compute",
-        "learning-gem5", "mem", "mem-cache", "mem-garnet", "mem-ruby", "misc",
-        "python", "scons", "sim", "sim-se", "sim-power", "stats", "system",
-        "system-alpha", "system-arm", "systemc", "tests", "util", "RFC", "WIP"]
+    valid_tags = ["arch", "arch-alpha", "arch-arm", "arch-gcn3", "arch-hsail",
+        "arch-mips", "arch-power", "arch-riscv", "arch-sparc", "arch-x86",
+        "base", "configs", "cpu", "cpu-kvm", "cpu-minor", "cpu-o3",
+        "cpu-simple", "dev", "dev-arm", "dev-virtio", "ext", "fastmodel",
+        "gpu-compute", "learning-gem5", "mem", "mem-cache", "mem-garnet",
+        "mem-ruby", "misc", "python", "scons", "sim", "sim-se", "sim-power",
+        "stats", "system", "system-alpha", "system-arm", "systemc", "tests",
+        "util", "RFC", "WIP"]
 
     tags = ''.join(commit_header.split(':')[0].split()).split(',')
     if (any(tag not in valid_tags for tag in tags)):
