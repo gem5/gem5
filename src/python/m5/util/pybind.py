@@ -63,7 +63,7 @@ class PyBindMethod(PyBindExport):
     def _conv_arg(self, value):
         if isinstance(value, bool):
             return "true" if value else "false"
-        elif isinstance(value, float, int):
+        elif isinstance(value, (float, int)):
             return repr(value)
         else:
             raise TypeError("Unsupported PyBind default value type")
