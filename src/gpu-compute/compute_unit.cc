@@ -1083,7 +1083,7 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
                safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
 
     // no PageFaults are permitted for data accesses
-    if (!translation_state->tlbEntry->valid) {
+    if (!translation_state->tlbEntry) {
         DTLBPort::SenderState *sender_state =
             safe_cast<DTLBPort::SenderState*>(translation_state->saved);
 
@@ -1094,8 +1094,6 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
         DPRINTFN("Wave %d couldn't tranlate vaddr %#x\n", w->wfDynId,
                  pkt->req->getVaddr());
     }
-
-    assert(translation_state->tlbEntry->valid);
 
     // update the hitLevel distribution
     int hit_level = translation_state->hitLevel;
@@ -1329,7 +1327,7 @@ ComputeUnit::ITLBPort::recvTimingResp(PacketPtr pkt)
     TheISA::GpuTLB::TranslationState *translation_state =
                  safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
 
-    bool success = translation_state->tlbEntry->valid;
+    bool success = translation_state->tlbEntry != nullptr;
     delete translation_state->tlbEntry;
     assert(!translation_state->ports.size());
     pkt->senderState = translation_state->saved;

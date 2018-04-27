@@ -62,23 +62,12 @@ class ThreadContext;
 
 namespace X86ISA
 {
-    class GpuTlbEntry : public TlbEntry
-    {
-      public:
-        GpuTlbEntry(Addr asn, Addr _vaddr, Addr _paddr, bool _valid)
-          : TlbEntry(asn, _vaddr, _paddr, false, false), valid(_valid) { }
-
-        GpuTlbEntry() : TlbEntry(), valid(false) { }
-
-        bool valid;
-    };
-
     class GpuTLB : public MemObject
     {
       protected:
         friend class Walker;
 
-        typedef std::list<GpuTlbEntry*> EntryList;
+        typedef std::list<TlbEntry*> EntryList;
 
         uint32_t configAddress;
 
@@ -129,7 +118,7 @@ namespace X86ISA
         };
 
         void dumpAll();
-        GpuTlbEntry *lookup(Addr va, bool update_lru=true);
+        TlbEntry *lookup(Addr va, bool update_lru=true);
         void setConfigAddress(uint32_t addr);
 
       protected:
@@ -170,7 +159,7 @@ namespace X86ISA
          */
         bool accessDistance;
 
-        std::vector<GpuTlbEntry> tlb;
+        std::vector<TlbEntry> tlb;
 
         /*
          * It's a per-set list. As long as we have not reached
@@ -243,7 +232,7 @@ namespace X86ISA
         Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
         Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
 
-        GpuTlbEntry *insert(Addr vpn, GpuTlbEntry &entry);
+        TlbEntry *insert(Addr vpn, TlbEntry &entry);
 
         // Checkpointing
         virtual void serialize(CheckpointOut& cp) const;
@@ -258,9 +247,9 @@ namespace X86ISA
         void handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome outcome);
 
         void pagingProtectionChecks(ThreadContext *tc, PacketPtr pkt,
-                                    GpuTlbEntry *tlb_entry, Mode mode);
+                                    TlbEntry *tlb_entry, Mode mode);
 
-        void updatePhysAddresses(Addr virt_page_addr, GpuTlbEntry *tlb_entry,
+        void updatePhysAddresses(Addr virt_page_addr, TlbEntry *tlb_entry,
                                  Addr phys_page_addr);
 
         void issueTLBLookup(PacketPtr pkt);
@@ -352,7 +341,7 @@ namespace X86ISA
             * previous TLBs.  Equivalent to the data cache concept of
             * "data return."
             */
-            GpuTlbEntry *tlbEntry;
+            TlbEntry *tlbEntry;
             // Is this a TLB prefetch request?
             bool prefetch;
             // When was the req for this translation issued
