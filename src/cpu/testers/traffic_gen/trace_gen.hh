@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2017 ARM Limited
+ * Copyright (c) 2012-2013, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -152,15 +152,14 @@ class TraceGen : public BaseGen
     /**
      * Create a trace generator.
      *
-     * @param _name Name to use for status and debug
-     * @param master_id MasterID set on each request
+     * @param gen Traffic generator owning this sequence generator
      * @param _duration duration of this state before transitioning
      * @param trace_file File to read the transactions from
      * @param addr_offset Positive offset to add to trace address
      */
-    TraceGen(const std::string& _name, MasterID master_id, Tick _duration,
+    TraceGen(BaseTrafficGen &gen, Tick _duration,
              const std::string& trace_file, Addr addr_offset)
-        : BaseGen(_name, master_id, _duration),
+        : BaseGen(gen, _duration),
           trace(trace_file),
           tickOffset(0),
           addrOffset(addr_offset),

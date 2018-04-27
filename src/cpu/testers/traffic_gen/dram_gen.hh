@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2017 ARM Limited
+ * Copyright (c) 2012-2013, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -67,8 +67,7 @@ class DramGen : public RandomGen
     /**
      * Create a DRAM address sequence generator.
      *
-     * @param _name Name to use for status and debug
-     * @param master_id MasterID set on each request
+     * @param gen Traffic generator owning this sequence generator
      * @param _duration duration of this state before transitioning
      * @param start_addr Start address
      * @param end_addr End address
@@ -86,31 +85,14 @@ class DramGen : public RandomGen
      *                     0: RoCoRaBaCh, 1: RoRaBaCoCh/RoRaBaChCo
      *                     assumes single channel system
      */
-    DramGen(const std::string& _name, MasterID master_id, Tick _duration,
+    DramGen(BaseTrafficGen &gen, Tick _duration,
             Addr start_addr, Addr end_addr, Addr _blocksize,
             Tick min_period, Tick max_period,
             uint8_t read_percent, Addr data_limit,
             unsigned int num_seq_pkts, unsigned int page_size,
             unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
             unsigned int addr_mapping,
-            unsigned int nbr_of_ranks)
-        : RandomGen(_name, master_id, _duration, start_addr, end_addr,
-          _blocksize, min_period, max_period, read_percent, data_limit),
-          numSeqPkts(num_seq_pkts), countNumSeqPkts(0), addr(0),
-          isRead(true), pageSize(page_size),
-          pageBits(floorLog2(page_size / _blocksize)),
-          bankBits(floorLog2(nbr_of_banks_DRAM)),
-          blockBits(floorLog2(_blocksize)),
-          nbrOfBanksDRAM(nbr_of_banks_DRAM),
-          nbrOfBanksUtil(nbr_of_banks_util), addrMapping(addr_mapping),
-          rankBits(floorLog2(nbr_of_ranks)),
-          nbrOfRanks(nbr_of_ranks)
-    {
-        if (addrMapping != 1 && addrMapping != 0) {
-            addrMapping = 1;
-            warn("Unknown address mapping specified, using RoRaBaCoCh\n");
-        }
-    }
+            unsigned int nbr_of_ranks);
 
     PacketPtr getNextPacket();
 

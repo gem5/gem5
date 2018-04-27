@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -56,8 +56,8 @@ class ExitGen : public BaseGen
 
   public:
 
-    ExitGen(const std::string& _name, MasterID master_id, Tick _duration)
-        : BaseGen(_name, master_id, _duration)
+    ExitGen(BaseTrafficGen &gen, Tick _duration)
+        : BaseGen(gen, _duration)
     { }
 
     void enter();

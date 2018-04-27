@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2017 ARM Limited
+ * Copyright (c) 2012-2013, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -61,7 +61,7 @@
  * read percent. There is an optional data limit for when to
  * stop generating new requests.
  */
-class LinearGen : public BaseGen
+class LinearGen : public StochasticGen
 {
 
   public:
@@ -71,8 +71,7 @@ class LinearGen : public BaseGen
      * min_period == max_period for a fixed inter-transaction
      * time.
      *
-     * @param _name Name to use for status and debug
-     * @param master_id MasterID set on each request
+     * @param gen Traffic generator owning this sequence generator
      * @param _duration duration of this state before transitioning
      * @param start_addr Start address
      * @param end_addr End address
@@ -82,15 +81,15 @@ class LinearGen : public BaseGen
      * @param read_percent Percent of transactions that are reads
      * @param data_limit Upper limit on how much data to read/write
      */
-    LinearGen(const std::string& _name, MasterID master_id, Tick _duration,
+    LinearGen(BaseTrafficGen &gen, Tick _duration,
               Addr start_addr, Addr end_addr, Addr _blocksize,
               Tick min_period, Tick max_period,
               uint8_t read_percent, Addr data_limit)
-        : BaseGen(_name, master_id, _duration),
-          startAddr(start_addr), endAddr(end_addr),
-          blocksize(_blocksize), minPeriod(min_period),
-          maxPeriod(max_period), readPercent(read_percent),
-          dataLimit(data_limit), nextAddr(startAddr), dataManipulated(0)
+        : StochasticGen(gen, _duration, start_addr, end_addr,
+                        _blocksize, min_period, max_period, read_percent,
+                        data_limit),
+          nextAddr(0),
+          dataManipulated(0)
     { }
 
     void enter();
@@ -100,28 +99,6 @@ class LinearGen : public BaseGen
     Tick nextPacketTick(bool elastic, Tick delay) const;
 
   private:
-
-    /** Start of address range */
-    const Addr startAddr;
-
-    /** End of address range */
-    const Addr endAddr;
-
-    /** Blocksize and address increment */
-    const Addr blocksize;
-
-    /** Request generation period */
-    const Tick minPeriod;
-    const Tick maxPeriod;
-
-    /**
-     * Percent of generated transactions that should be reads
-     */
-    const uint8_t readPercent;
-
-    /** Maximum amount of data to manipulate */
-    const Addr dataLimit;
-
     /** Address of next request */
     Addr nextAddr;
 

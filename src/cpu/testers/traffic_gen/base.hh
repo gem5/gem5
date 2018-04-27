@@ -64,6 +64,8 @@ struct BaseTrafficGenParams;
  */
 class BaseTrafficGen : public MemObject
 {
+    friend class BaseGen;
+
   protected: // Params
     /**
      * The system used to determine which mode we are currently operating
@@ -190,6 +192,47 @@ class BaseTrafficGen : public MemObject
 
     /** Register statistics */
     void regStats() override;
+
+  public: // Generator factory methods
+    std::shared_ptr<BaseGen> createIdle(Tick duration);
+    std::shared_ptr<BaseGen> createExit(Tick duration);
+
+    std::shared_ptr<BaseGen> createLinear(
+        Tick duration,
+        Addr start_addr, Addr end_addr, Addr blocksize,
+        Tick min_period, Tick max_period,
+        uint8_t read_percent, Addr data_limit);
+
+    std::shared_ptr<BaseGen> createRandom(
+        Tick duration,
+        Addr start_addr, Addr end_addr, Addr blocksize,
+        Tick min_period, Tick max_period,
+        uint8_t read_percent, Addr data_limit);
+
+    std::shared_ptr<BaseGen> createDram(
+        Tick duration,
+        Addr start_addr, Addr end_addr, Addr blocksize,
+        Tick min_period, Tick max_period,
+        uint8_t read_percent, Addr data_limit,
+        unsigned int num_seq_pkts, unsigned int page_size,
+        unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
+        unsigned int addr_mapping,
+        unsigned int nbr_of_ranks);
+
+    std::shared_ptr<BaseGen> createDramRot(
+        Tick duration,
+        Addr start_addr, Addr end_addr, Addr blocksize,
+        Tick min_period, Tick max_period,
+        uint8_t read_percent, Addr data_limit,
+        unsigned int num_seq_pkts, unsigned int page_size,
+        unsigned int nbr_of_banks_DRAM, unsigned int nbr_of_banks_util,
+        unsigned int addr_mapping,
+        unsigned int nbr_of_ranks,
+        unsigned int max_seq_count_per_rank);
+
+    std::shared_ptr<BaseGen> createTrace(
+        Tick duration,
+        const std::string& trace_file, Addr addr_offset);
 
   protected:
     void start();

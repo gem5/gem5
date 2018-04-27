@@ -44,13 +44,25 @@
 
 #include "base/intmath.hh"
 #include "base/random.hh"
+#include "config/have_protobuf.hh"
 #include "cpu/testers/traffic_gen/base_gen.hh"
+#include "cpu/testers/traffic_gen/dram_gen.hh"
+#include "cpu/testers/traffic_gen/dram_rot_gen.hh"
+#include "cpu/testers/traffic_gen/exit_gen.hh"
+#include "cpu/testers/traffic_gen/idle_gen.hh"
+#include "cpu/testers/traffic_gen/linear_gen.hh"
+#include "cpu/testers/traffic_gen/random_gen.hh"
 #include "debug/Checkpoint.hh"
 #include "debug/TrafficGen.hh"
 #include "params/BaseTrafficGen.hh"
 #include "sim/sim_exit.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
+
+#if HAVE_PROTOBUF
+#include "cpu/testers/traffic_gen/trace_gen.hh"
+#endif
+
 
 using namespace std;
 
@@ -295,6 +307,105 @@ BaseTrafficGen::regStats()
     retryTicks
         .name(name() + ".retryTicks")
         .desc("Time spent waiting due to back-pressure (ticks)");
+}
+
+std::shared_ptr<BaseGen>
+BaseTrafficGen::createIdle(Tick duration)
+{
+    return std::shared_ptr<BaseGen>(new IdleGen(*this, duration));
+}
+
+std::shared_ptr<BaseGen>
+BaseTrafficGen::createExit(Tick duration)
+{
+    return std::shared_ptr<BaseGen>(new ExitGen(*this, duration));
+}
+
+std::shared_ptr<BaseGen>
+BaseTrafficGen::createLinear(Tick duration,
+                             Addr start_addr, Addr end_addr, Addr blocksize,
+                             Tick min_period, Tick max_period,
+                             uint8_t read_percent, Addr data_limit)
+{
+    return std::shared_ptr<BaseGen>(new LinearGen(*this,
+                                                  duration, start_addr,
+                                                  end_addr, blocksize,
+                                                  min_period, max_period,
+                                                  read_percent, data_limit));
+}
+
+std::shared_ptr<BaseGen>
+BaseTrafficGen::createRandom(Tick duration,
+                             Addr start_addr, Addr end_addr, Addr blocksize,
+                             Tick min_period, Tick max_period,
+                             uint8_t read_percent, Addr data_limit)
+{
+    return std::shared_ptr<BaseGen>(new RandomGen(*this,
+                                                  duration, start_addr,
+                                                  end_addr, blocksize,
+                                                  min_period, max_period,
+                                                  read_percent, data_limit));
+}
+
+std::shared_ptr<BaseGen>
+BaseTrafficGen::createDram(Tick duration,
+                           Addr start_addr, Addr end_addr, Addr blocksize,
+                           Tick min_period, Tick max_period,
+                           uint8_t read_percent, Addr data_limit,
+                           unsigned int num_seq_pkts, unsigned int page_size,
+                           unsigned int nbr_of_banks_DRAM,
+                           unsigned int nbr_of_banks_util,
+                           unsigned int addr_mapping,
+                           unsigned int nbr_of_ranks)
+{
+    return std::shared_ptr<BaseGen>(new DramGen(*this,
+                                                duration, start_addr,
+                                                end_addr, blocksize,
+                                                min_period, max_period,
+                                                read_percent, data_limit,
+                                                num_seq_pkts, page_size,
+                                                nbr_of_banks_DRAM,
+                                                nbr_of_banks_util,
+                                                addr_mapping,
+                                                nbr_of_ranks));
+}
+
+std::shared_ptr<BaseGen>
+BaseTrafficGen::createDramRot(Tick duration,
+                              Addr start_addr, Addr end_addr, Addr blocksize,
+                              Tick min_period, Tick max_period,
+                              uint8_t read_percent, Addr data_limit,
+                              unsigned int num_seq_pkts,
+                              unsigned int page_size,
+                              unsigned int nbr_of_banks_DRAM,
+                              unsigned int nbr_of_banks_util,
+                              unsigned int addr_mapping,
+                              unsigned int nbr_of_ranks,
+                              unsigned int max_seq_count_per_rank)
+{
+    return std::shared_ptr<BaseGen>(new DramRotGen(*this,
+                                                   duration, start_addr,
+                                                   end_addr, blocksize,
+                                                   min_period, max_period,
+                                                   read_percent, data_limit,
+                                                   num_seq_pkts, page_size,
+                                                   nbr_of_banks_DRAM,
+                                                   nbr_of_banks_util,
+                                                   addr_mapping,
+                                                   nbr_of_ranks,
+                                                   max_seq_count_per_rank));
+}
+
+std::shared_ptr<BaseGen>
+BaseTrafficGen::createTrace(Tick duration,
+                            const std::string& trace_file, Addr addr_offset)
+{
+#if HAVE_PROTOBUF
+    return std::shared_ptr<BaseGen>(
+        new TraceGen(*this, duration, trace_file, addr_offset));
+#else
+    panic("Can't instantiate trace generation without Protobuf support!\n");
+#endif
 }
 
 bool

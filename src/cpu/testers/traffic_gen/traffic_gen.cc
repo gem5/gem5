@@ -43,17 +43,11 @@
 #include <libgen.h>
 #include <unistd.h>
 
+#include <fstream>
 #include <sstream>
 
 #include "base/intmath.hh"
 #include "base/random.hh"
-#include "cpu/testers/traffic_gen/dram_gen.hh"
-#include "cpu/testers/traffic_gen/dram_rot_gen.hh"
-#include "cpu/testers/traffic_gen/exit_gen.hh"
-#include "cpu/testers/traffic_gen/idle_gen.hh"
-#include "cpu/testers/traffic_gen/linear_gen.hh"
-#include "cpu/testers/traffic_gen/random_gen.hh"
-#include "cpu/testers/traffic_gen/trace_gen.hh"
 #include "debug/TrafficGen.hh"
 #include "params/TrafficGen.hh"
 #include "sim/stats.hh"
@@ -183,14 +177,13 @@ TrafficGen::parseConfig()
                     is >> traceFile >> addrOffset;
                     traceFile = resolveFile(traceFile);
 
-                    states[id].reset(new TraceGen(name(), masterID, duration,
-                                                  traceFile, addrOffset));
+                    states[id] = createTrace(duration, traceFile, addrOffset);
                     DPRINTF(TrafficGen, "State: %d TraceGen\n", id);
                 } else if (mode == "IDLE") {
-                    states[id].reset(new IdleGen(name(), masterID, duration));
+                    states[id] = createIdle(duration);
                     DPRINTF(TrafficGen, "State: %d IdleGen\n", id);
                 } else if (mode == "EXIT") {
-                    states[id].reset(new ExitGen(name(), masterID, duration));
+                    states[id] = createExit(duration);
                     DPRINTF(TrafficGen, "State: %d ExitGen\n", id);
                 } else if (mode == "LINEAR" || mode == "RANDOM" ||
                            mode == "DRAM"   || mode == "DRAM_ROTATE") {
@@ -211,30 +204,17 @@ TrafficGen::parseConfig()
                             max_period, read_percent);
 
 
-                    if (blocksize > system->cacheLineSize())
-                        fatal("TrafficGen %s block size (%d) is larger than "
-                              "cache line size (%d)\n", name(),
-                              blocksize, system->cacheLineSize());
-
-                    if (read_percent > 100)
-                        fatal("%s cannot have more than 100% reads", name());
-
-                    if (min_period > max_period)
-                        fatal("%s cannot have min_period > max_period", name());
-
                     if (mode == "LINEAR") {
-                        states[id].reset(new LinearGen(name(), masterID,
-                                                   duration, start_addr,
-                                                   end_addr, blocksize,
-                                                   min_period, max_period,
-                                                   read_percent, data_limit));
+                        states[id] = createLinear(duration, start_addr,
+                                                  end_addr, blocksize,
+                                                  min_period, max_period,
+                                                  read_percent, data_limit);
                         DPRINTF(TrafficGen, "State: %d LinearGen\n", id);
                     } else if (mode == "RANDOM") {
-                        states[id].reset(new RandomGen(name(), masterID,
-                                                   duration, start_addr,
-                                                   end_addr, blocksize,
-                                                   min_period, max_period,
-                                                   read_percent, data_limit));
+                        states[id] = createRandom(duration, start_addr,
+                                                  end_addr, blocksize,
+                                                  min_period, max_period,
+                                                  read_percent, data_limit);
                         DPRINTF(TrafficGen, "State: %d RandomGen\n", id);
                     } else if (mode == "DRAM" || mode == "DRAM_ROTATE") {
                         // stride size (bytes) of the request for achieving
@@ -255,11 +235,6 @@ TrafficGen::parseConfig()
                                  "than page size (%d)  of the memory\n",
                                  blocksize, page_size);
 
-                        if (nbr_of_banks_util > nbr_of_banks_DRAM)
-                            fatal("Attempting to use more banks (%d) than "
-                                  "what is available (%d)\n",
-                                  nbr_of_banks_util, nbr_of_banks_DRAM);
-
                         // count the number of sequential packets to
                         // generate
                         unsigned int num_seq_pkts = 1;
@@ -272,16 +247,15 @@ TrafficGen::parseConfig()
                         }
 
                         if (mode == "DRAM") {
-                            states[id].reset(new DramGen(name(), masterID,
-                                                     duration, start_addr,
-                                                     end_addr, blocksize,
-                                                     min_period, max_period,
-                                                     read_percent, data_limit,
-                                                     num_seq_pkts, page_size,
-                                                     nbr_of_banks_DRAM,
-                                                     nbr_of_banks_util,
-                                                     addr_mapping,
-                                                     nbr_of_ranks));
+                            states[id] = createDram(duration, start_addr,
+                                                    end_addr, blocksize,
+                                                    min_period, max_period,
+                                                    read_percent, data_limit,
+                                                    num_seq_pkts, page_size,
+                                                    nbr_of_banks_DRAM,
+                                                    nbr_of_banks_util,
+                                                    addr_mapping,
+                                                    nbr_of_ranks);
                             DPRINTF(TrafficGen, "State: %d DramGen\n", id);
                         } else {
                             // Will rotate to the next rank after rotating
@@ -292,17 +266,17 @@ TrafficGen::parseConfig()
                                 (read_percent == 50) ? nbr_of_banks_util * 2
                                                      : nbr_of_banks_util;
 
-                            states[id].reset(new DramRotGen(name(), masterID,
-                                                     duration, start_addr,
-                                                     end_addr, blocksize,
-                                                     min_period, max_period,
-                                                     read_percent, data_limit,
-                                                     num_seq_pkts, page_size,
-                                                     nbr_of_banks_DRAM,
-                                                     nbr_of_banks_util,
-                                                     addr_mapping,
-                                                     nbr_of_ranks,
-                                                     max_seq_count_per_rank));
+                            states[id] = createDramRot(duration, start_addr,
+                                                       end_addr, blocksize,
+                                                       min_period, max_period,
+                                                       read_percent,
+                                                       data_limit,
+                                                       num_seq_pkts, page_size,
+                                                       nbr_of_banks_DRAM,
+                                                       nbr_of_banks_util,
+                                                       addr_mapping,
+                                                       nbr_of_ranks,
+                                                       max_seq_count_per_rank);
                             DPRINTF(TrafficGen, "State: %d DramRotGen\n", id);
                         }
                     }

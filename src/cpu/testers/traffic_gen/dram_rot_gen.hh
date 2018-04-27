@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2017 ARM Limited
+ * Copyright (c) 2012-2013, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -66,8 +66,7 @@ class DramRotGen : public DramGen
      * 2) Command type (if applicable)
      * 3) Ranks per channel
      *
-     * @param _name Name to use for status and debug
-     * @param master_id MasterID set on each request
+     * @param gen Traffic generator owning this sequence generator
      * @param _duration duration of this state before transitioning
      * @param start_addr Start address
      * @param end_addr End address
@@ -86,7 +85,7 @@ class DramRotGen : public DramGen
      *                     0: RoCoRaBaCh, 1: RoRaBaCoCh/RoRaBaChCo
      *                     assumes single channel system
      */
-    DramRotGen(const std::string& _name, MasterID master_id, Tick _duration,
+    DramRotGen(BaseTrafficGen &gen, Tick _duration,
             Addr start_addr, Addr end_addr, Addr _blocksize,
             Tick min_period, Tick max_period,
             uint8_t read_percent, Addr data_limit,
@@ -95,7 +94,7 @@ class DramRotGen : public DramGen
             unsigned int addr_mapping,
             unsigned int nbr_of_ranks,
             unsigned int max_seq_count_per_rank)
-        : DramGen(_name, master_id, _duration, start_addr, end_addr,
+        : DramGen(gen, _duration, start_addr, end_addr,
           _blocksize, min_period, max_period, read_percent, data_limit,
           num_seq_pkts, page_size, nbr_of_banks_DRAM,
           nbr_of_banks_util, addr_mapping,

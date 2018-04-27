@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2016-2017 ARM Limited
+ * Copyright (c) 2012-2013, 2016-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,6 +47,39 @@
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/TrafficGen.hh"
+
+
+DramGen::DramGen(BaseTrafficGen &gen, Tick _duration,
+                 Addr start_addr, Addr end_addr, Addr _blocksize,
+                 Tick min_period, Tick max_period,
+                 uint8_t read_percent, Addr data_limit,
+                 unsigned int num_seq_pkts, unsigned int page_size,
+                 unsigned int nbr_of_banks_DRAM,
+                 unsigned int nbr_of_banks_util,
+                 unsigned int addr_mapping,
+                 unsigned int nbr_of_ranks)
+        : RandomGen(gen, _duration, start_addr, end_addr,
+          _blocksize, min_period, max_period, read_percent, data_limit),
+          numSeqPkts(num_seq_pkts), countNumSeqPkts(0), addr(0),
+          isRead(true), pageSize(page_size),
+          pageBits(floorLog2(page_size / _blocksize)),
+          bankBits(floorLog2(nbr_of_banks_DRAM)),
+          blockBits(floorLog2(_blocksize)),
+          nbrOfBanksDRAM(nbr_of_banks_DRAM),
+          nbrOfBanksUtil(nbr_of_banks_util), addrMapping(addr_mapping),
+          rankBits(floorLog2(nbr_of_ranks)),
+          nbrOfRanks(nbr_of_ranks)
+{
+    if (addrMapping != 1 && addrMapping != 0) {
+        addrMapping = 1;
+        warn("Unknown address mapping specified, using RoRaBaCoCh\n");
+    }
+
+    if (nbr_of_banks_util > nbr_of_banks_DRAM)
+        fatal("Attempting to use more banks (%d) than "
+              "what is available (%d)\n",
+              nbr_of_banks_util, nbr_of_banks_DRAM);
+}
 
 PacketPtr
 DramGen::getNextPacket()
