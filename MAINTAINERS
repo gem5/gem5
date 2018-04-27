@@ -53,6 +53,8 @@ cpu-o3:
 cpu-simple:
 
 dev:
+dev-hsa:
+  Tony Gutierrez <anthony.gutierrez@amd.com>
 dev-virtio:
   Andreas Sandberg <andreas.sandberg@arm.com>
 
