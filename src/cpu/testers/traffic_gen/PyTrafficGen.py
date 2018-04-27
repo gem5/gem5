@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2012, 2017-2018 ARM Limited
+# Copyright (c) 2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,31 +33,39 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Andreas Hansson
+# Authors: Andreas Sandberg
 
-Import('*')
+from m5.defines import buildEnv
+from m5.SimObject import *
+from BaseTrafficGen import *
 
+class PyTrafficGen(BaseTrafficGen):
+    type = 'PyTrafficGen'
+    cxx_header = "cpu/testers/traffic_gen/pygen.hh"
 
-Source('base.cc')
-Source('base_gen.cc')
-Source('dram_gen.cc')
-Source('dram_rot_gen.cc')
-Source('exit_gen.cc')
-Source('idle_gen.cc')
-Source('linear_gen.cc')
-Source('random_gen.cc')
+    @cxxMethod
+    def start(self, meta_generator):
+        """
+        Start generating traffic using the provided meta-generator. The
+        meta-generator is an iterable Python object that describes a
+        list of traffic generator instances.
+        """
+        pass
 
-DebugFlag('TrafficGen')
-SimObject('BaseTrafficGen.py')
+    cxx_exports = [
+        PyBindMethod("createIdle"),
+        PyBindMethod("createExit"),
+        PyBindMethod("createLinear"),
+        PyBindMethod("createRandom"),
+        PyBindMethod("createDram"),
+        PyBindMethod("createDramRot"),
+    ]
 
-if env['USE_PYTHON']:
-    Source('pygen.cc', add_tags='python')
-    SimObject('PyTrafficGen.py')
-
-# Only build the traffic generator if we have support for protobuf as the
-# tracing relies on it
-if env['HAVE_PROTOBUF']:
-    SimObject('TrafficGen.py')
-    Source('trace_gen.cc')
-    Source('traffic_gen.cc')
-
+    @cxxMethod(override=True)
+    def createTrace(self, duration, trace_file, addr_offset=0):
+        if buildEnv['HAVE_PROTOBUF']:
+            return self.getCCObject().createTrace(duration, trace_file,
+                                                  addr_offset=addr_offset)
+        else:
+            raise NotImplementedError("Trace playback requires that gem5 "
+                                      "was built with protobuf support.")
