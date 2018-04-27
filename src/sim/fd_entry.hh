@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Brandon Potter
+ * Authors: Brandon Potter
  */
 
 #ifndef __FD_ENTRY_HH__
