@@ -1,0 +1,5 @@
+PROTOCOL = 'GPU_VIPER'
+TARGET_ISA = 'x86'
+TARGET_GPU_ISA = 'gcn3'
+BUILD_GPU = True
+CPU_MODELS = 'AtomicSimpleCPU,O3CPU,TimingSimpleCPU'
