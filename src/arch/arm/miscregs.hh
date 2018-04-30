@@ -1423,6 +1423,17 @@ namespace ArmISA
     static const uint32_t CondCodesMask   = 0xF00F0000;
     static const uint32_t CpsrMaskQ       = 0x08000000;
 
+    // APSR (Application Program Status Register Mask). It is the user level
+    // alias for the CPSR. The APSR is a subset of the CPSR. Although
+    // bits[15:0] are UNKNOWN on reads, it is permitted that, on a read of
+    // APSR:
+    // Bit[9] returns the value of CPSR.E.
+    // Bits[8:6] return the value of CPSR.{A,I, F}, the mask bits.
+    static const uint32_t ApsrMask = CpsrMaskQ | CondCodesMask | 0x000001D0;
+
+    // CPSR (Current Program Status Register Mask).
+    static const uint32_t CpsrMask = ApsrMask | 0x00F003DF;
+
     BitUnion32(HDCR)
         Bitfield<11>   tdra;
         Bitfield<10>   tdosa;

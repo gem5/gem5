@@ -226,7 +226,7 @@ let {{
         cpsr.c = CondCodesC;
         cpsr.v = CondCodesV;
         cpsr.ge = CondCodesGE;
-        Dest = cpsr & 0xF8FF03DF
+        Dest = cpsr & (cpsr.mode == MODE_USER ? ApsrMask : CpsrMask);
     '''
 
     mrsCpsrIop = InstObjParams("mrs", "MrsCpsr", "MrsOp",
