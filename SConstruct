@@ -481,21 +481,21 @@ if main['GCC']:
     # The address sanitizer is available for gcc >= 4.8
     if GetOption('with_asan'):
         if GetOption('with_ubsan') and \
-                compareVersions(env['GCC_VERSION'], '4.9') >= 0:
-            env.Append(CCFLAGS=['-fsanitize=address,undefined',
-                                '-fno-omit-frame-pointer'],
+                compareVersions(main['GCC_VERSION'], '4.9') >= 0:
+            main.Append(CCFLAGS=['-fsanitize=address,undefined',
+                                 '-fno-omit-frame-pointer'],
                        LINKFLAGS='-fsanitize=address,undefined')
         else:
-            env.Append(CCFLAGS=['-fsanitize=address',
-                                '-fno-omit-frame-pointer'],
+            main.Append(CCFLAGS=['-fsanitize=address',
+                                 '-fno-omit-frame-pointer'],
                        LINKFLAGS='-fsanitize=address')
     # Only gcc >= 4.9 supports UBSan, so check both the version
     # and the command-line option before adding the compiler and
     # linker flags.
     elif GetOption('with_ubsan') and \
-            compareVersions(env['GCC_VERSION'], '4.9') >= 0:
-        env.Append(CCFLAGS='-fsanitize=undefined')
-        env.Append(LINKFLAGS='-fsanitize=undefined')
+            compareVersions(main['GCC_VERSION'], '4.9') >= 0:
+        main.Append(CCFLAGS='-fsanitize=undefined')
+        main.Append(LINKFLAGS='-fsanitize=undefined')
 
 elif main['CLANG']:
     # Check for a supported version of clang, >= 3.1 is needed to
