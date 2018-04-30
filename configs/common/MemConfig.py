@@ -40,7 +40,8 @@ import m5.objects
 from common import ObjectList
 from common import HMC
 
-def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
+def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size,\
+                    xor_low_bit):
     """
     Helper function for creating a single memoy controller from the given
     options.  This function is invoked multiple times in config_mem function
@@ -55,7 +56,10 @@ def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
     # the details of the caches here, make an educated guess. 4 MByte
     # 4-way associative with 64 byte cache lines is 6 offset bits and
     # 14 index bits.
-    xor_low_bit = 20
+    if (xor_low_bit):
+        xor_high_bit = xor_low_bit + intlv_bits - 1
+    else:
+        xor_high_bit = 0
 
     # Create an instance so we can figure out the address
     # mapping and row-buffer size
@@ -81,8 +85,7 @@ def create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits, intlv_size):
     ctrl.range = m5.objects.AddrRange(r.start, size = r.size(),
                                       intlvHighBit = \
                                           intlv_low_bit + intlv_bits - 1,
-                                      xorHighBit = \
-                                          xor_low_bit + intlv_bits - 1,
+                                      xorHighBit = xor_high_bit,
                                       intlvBits = intlv_bits,
                                       intlvMatch = i)
     return ctrl
@@ -110,6 +113,7 @@ def config_mem(options, system):
     opt_mem_ranks = getattr(options, "mem_ranks", None)
     opt_dram_powerdown = getattr(options, "enable_dram_powerdown", None)
     opt_mem_channels_intlv = getattr(options, "mem_channels_intlv", 128)
+    opt_xor_low_bit = getattr(options, "xor_low_bit", 0)
 
     if opt_mem_type == "HMC_2500_1x32":
         HMChost = HMC.config_hmc_host_ctrl(options, system)
@@ -163,7 +167,7 @@ def config_mem(options, system):
     for r in system.mem_ranges:
         for i in range(nbr_mem_ctrls):
             mem_ctrl = create_mem_ctrl(cls, r, i, nbr_mem_ctrls, intlv_bits,
-                                       intlv_size)
+                                       intlv_size, opt_xor_low_bit)
             # Set the number of ranks based on the command-line
             # options if it was explicitly set
             if issubclass(cls, m5.objects.DRAMCtrl) and opt_mem_ranks:
