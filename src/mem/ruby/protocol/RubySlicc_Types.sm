@@ -63,6 +63,7 @@ structure(InPort, external = "yes", primitive="yes") {
   bool isEmpty();
   bool isStallMapEmpty();
   int getStallMapSize();
+  bool hasStalledMsg(Addr addr);
 }
 
 external_type(NodeID, default="0", primitive="yes");

@@ -394,6 +394,12 @@ MessageBuffer::stallMessage(Addr addr, Tick current_time)
     m_stall_count++;
 }
 
+bool
+MessageBuffer::hasStalledMsg(Addr addr) const
+{
+    return (m_stall_msg_map.count(addr) != 0);
+}
+
 void
 MessageBuffer::deferEnqueueingMessage(Addr addr, MsgPtr message)
 {

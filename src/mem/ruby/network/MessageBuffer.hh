@@ -74,6 +74,8 @@ class MessageBuffer : public SimObject
     void reanalyzeMessages(Addr addr, Tick current_time);
     void reanalyzeAllMessages(Tick current_time);
     void stallMessage(Addr addr, Tick current_time);
+    // return true if the stall map has a message of this address
+    bool hasStalledMsg(Addr addr) const;
 
     // TRUE if head of queue timestamp <= SystemTime
     bool isReady(Tick current_time) const;
@@ -124,7 +126,6 @@ class MessageBuffer : public SimObject
     // enqueue all previously deferred messages that are associated with the
     // input address
     void enqueueDeferredMessages(Addr addr, Tick curTime, Tick delay);
-
     bool isDeferredMsgMapEmpty(Addr addr) const;
 
     //! Updates the delay cycles of the message at the head of the queue,
