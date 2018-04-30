@@ -56,6 +56,12 @@ makeLineAddress(Addr addr)
     return mbits<Addr>(addr, 63, RubySystem::getBlockSizeBits());
 }
 
+Addr
+makeLineAddress(Addr addr, int cacheLineBits)
+{
+    return maskLowOrderBits(addr, cacheLineBits);
+}
+
 // returns the next stride address based on line address
 Addr
 makeNextStrideAddress(Addr addr, int stride)
