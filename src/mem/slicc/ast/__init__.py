@@ -33,6 +33,7 @@ from slicc.ast.CheckAllocateStatementAST import *
 from slicc.ast.CheckNextCycleAST import *
 from slicc.ast.DeclAST import *
 from slicc.ast.DeclListAST import *
+from slicc.ast.DeferEnqueueingStatementAST import *
 from slicc.ast.EnqueueStatementAST import *
 from slicc.ast.EnumDeclAST import *
 from slicc.ast.EnumExprAST import *

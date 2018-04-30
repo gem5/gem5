@@ -49,8 +49,12 @@
 //
 
 external_type(MessageBuffer, buffer="yes", inport="yes", outport="yes");
-external_type(OutPort, primitive="yes");
 external_type(Scalar, primitive="yes");
+
+structure(OutPort, external = "yes", primitive="yes") {
+    void enqueueDeferredMessages(Addr addr, Tick curTime, Tick delay);
+    bool isDeferredMsgMapEmpty(Addr addr);
+}
 
 structure(InPort, external = "yes", primitive="yes") {
   bool isReady(Tick current_time);
