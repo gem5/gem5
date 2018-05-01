@@ -76,6 +76,16 @@ VIPERCoalescer::~VIPERCoalescer()
 {
 }
 
+void
+VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
+{
+}
+
+void
+VIPERCoalescer::issueMemSyncRequest(PacketPtr pkt)
+{
+}
+
 // Places an uncoalesced packet in uncoalescedTable. If the packet is a
 // special type (MemFence, scoping, etc), it is issued immediately.
 RequestStatus
