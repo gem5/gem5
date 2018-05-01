@@ -407,6 +407,7 @@ class MetaSimObject(type):
         'cxx_type' : str,
         'cxx_header' : str,
         'type' : str,
+        'cxx_base' : (str, type(None)),
         'cxx_extra_bases' : list,
         'cxx_exports' : list,
         'cxx_param_exports' : list,
@@ -734,8 +735,19 @@ module_init(py::module &m_internal)
         code()
         code.dedent()
 
-        bases = [ cls._base.cxx_class ] + cls.cxx_extra_bases if \
-                cls._base else cls.cxx_extra_bases
+        bases = []
+        if 'cxx_base' in cls._value_dict:
+            # If the c++ base class implied by python inheritance was
+            # overridden, use that value.
+            if cls.cxx_base:
+                bases.append(cls.cxx_base)
+        elif cls._base:
+            # If not and if there was a SimObject base, use its c++ class
+            # as this class' base.
+            bases.append(cls._base.cxx_class)
+        # Add in any extra bases that were requested.
+        bases.extend(cls.cxx_extra_bases)
+
         if bases:
             base_str = ", ".join(bases)
             code('py::class_<${{cls.cxx_class}}, ${base_str}, ' \
