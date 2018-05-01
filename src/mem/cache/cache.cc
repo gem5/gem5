@@ -1611,32 +1611,16 @@ Cache::recvTimingResp(PacketPtr pkt)
     // reset the xbar additional timinig  as it is now accounted for
     pkt->headerDelay = pkt->payloadDelay = 0;
 
-    // copy writebacks to write buffer
-    doWritebacks(writebacks, forward_time);
-
     // if we used temp block, check to see if its valid and then clear it out
     if (blk == tempBlock && tempBlock->isValid()) {
-        // We use forwardLatency here because we are copying
-        // Writebacks/CleanEvicts to write buffer. It specifies the latency to
-        // allocate an internal buffer and to schedule an event to the
-        // queued port.
-        if (blk->isDirty() || writebackClean) {
-            PacketPtr wbPkt = writebackBlk(blk);
-            allocateWriteBuffer(wbPkt, forward_time);
-            // Set BLOCK_CACHED flag if cached above.
-            if (isCachedAbove(wbPkt))
-                wbPkt->setBlockCached();
-        } else {
-            PacketPtr wcPkt = cleanEvictBlk(blk);
-            // Check to see if block is cached above. If not allocate
-            // write buffer
-            if (isCachedAbove(wcPkt))
-                delete wcPkt;
-            else
-                allocateWriteBuffer(wcPkt, forward_time);
-        }
-        invalidateBlock(blk);
+        PacketPtr wb_pkt = tempBlock->isDirty() || writebackClean ?
+            writebackBlk(blk) : cleanEvictBlk(blk);
+        writebacks.push_back(wb_pkt);
+        invalidateBlock(tempBlock);
     }
+
+    // copy writebacks to write buffer
+    doWritebacks(writebacks, forward_time);
 
     DPRINTF(CacheVerbose, "%s: Leaving with %s\n", __func__, pkt->print());
     delete pkt;
