@@ -34,111 +34,76 @@
 #ifndef __VECTOR_REGISTER_FILE_HH__
 #define __VECTOR_REGISTER_FILE_HH__
 
-#include <list>
-
-#include "base/statistics.hh"
-#include "base/trace.hh"
-#include "base/types.hh"
+#include "arch/gpu_isa.hh"
+#include "config/the_gpu_isa.hh"
 #include "debug/GPUVRF.hh"
-#include "gpu-compute/vector_register_state.hh"
-#include "sim/sim_object.hh"
-
-class ComputeUnit;
-class Shader;
-class SimplePoolManager;
-class Wavefront;
+#include "gpu-compute/register_file.hh"
+#include "gpu-compute/wavefront.hh"
 
 struct VectorRegisterFileParams;
 
-enum class VrfAccessType : uint8_t
-{
-    READ = 0x01,
-    WRITE = 0x02,
-    RD_WR = READ | WRITE
-};
-
 // Vector Register File
-class VectorRegisterFile : public SimObject
+class VectorRegisterFile : public RegisterFile
 {
   public:
+    using VecRegContainer = TheGpuISA::VecRegContainerU32;
+
     VectorRegisterFile(const VectorRegisterFileParams *p);
+    ~VectorRegisterFile() { }
 
-    void setParent(ComputeUnit *_computeUnit);
+    virtual bool operandsReady(Wavefront *w, GPUDynInstPtr ii) const override;
+    virtual void scheduleWriteOperands(Wavefront *w,
+                                       GPUDynInstPtr ii) override;
+    virtual void scheduleWriteOperandsFromLoad(Wavefront *w,
+                                               GPUDynInstPtr ii) override;
+    virtual void waveExecuteInst(Wavefront *w, GPUDynInstPtr ii) override;
 
-    // Read a register
-    template<typename T>
-    T
-    read(int regIdx, int threadId=0)
+    void
+    setParent(ComputeUnit *_computeUnit) override
     {
-        T p0 = vgprState->read<T>(regIdx, threadId);
-        DPRINTF(GPUVRF, "reading vreg[%d][%d] = %u\n", regIdx, threadId, (uint64_t)p0);
+        RegisterFile::setParent(_computeUnit);
+    }
 
-        return p0;
+    // Read a register that is writeable (e.g., a DST operand)
+    VecRegContainer&
+    readWriteable(int regIdx)
+    {
+        return regFile[regIdx];
+    }
+
+    // Read a register that is not writeable (e.g., src operand)
+    const VecRegContainer&
+    read(int regIdx) const
+    {
+        return regFile[regIdx];
     }
 
     // Write a register
-    template<typename T>
     void
-    write(int regIdx, T value, int threadId=0)
+    write(int regIdx, const VecRegContainer &value)
     {
-        DPRINTF(GPUVRF, "writing vreg[%d][%d] = %u\n", regIdx, threadId, (uint64_t)value);
-        vgprState->write<T>(regIdx, value, threadId);
+        regFile[regIdx] = value;
     }
 
-    uint8_t regBusy(int idx, uint32_t operandSize) const;
-    uint8_t regNxtBusy(int idx, uint32_t operandSize) const;
-
-    int numRegs() const { return numRegsPerSimd; }
-
-    void markReg(int regIdx, uint32_t operandSize, uint8_t value);
-    void preMarkReg(int regIdx, uint32_t operandSize, uint8_t value);
-
-    virtual void exec(GPUDynInstPtr ii, Wavefront *w);
-
-    virtual int exec(uint64_t dynamic_id, Wavefront *w,
-                     std::vector<uint32_t> &regVec, uint32_t operandSize,
-                     uint64_t timestamp);
-
-    bool operandsReady(Wavefront *w, GPUDynInstPtr ii) const;
-    virtual void updateEvents() { }
-    virtual void updateResources(Wavefront *w, GPUDynInstPtr ii);
-
-    virtual bool
-    isReadConflict(int memWfId, int exeWfId) const
+    void
+    printReg(Wavefront *wf, int regIdx) const
     {
-        return false;
+#ifndef NDEBUG
+        const auto &vec_reg_cont = regFile[regIdx];
+        auto vgpr = vec_reg_cont.as<TheGpuISA::VecElemU32>();
+
+        for (int lane = 0; lane < TheGpuISA::NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                DPRINTF(GPUVRF, "WF[%d][%d]: WV[%d] v[%d][%d] = %#x\n",
+                    wf->simdId, wf->wfSlotId, wf->wfDynId, regIdx, lane,
+                    vgpr[lane]);
+            }
+        }
+#endif
     }
 
-    virtual bool
-    isWriteConflict(int memWfId, int exeWfId) const
-    {
-        return false;
-    }
-
-    virtual bool vrfOperandAccessReady(uint64_t dynamic_id, Wavefront *w,
-                                       GPUDynInstPtr ii,
-                                       VrfAccessType accessType);
-
-    virtual bool vrfOperandAccessReady(Wavefront *w, GPUDynInstPtr ii,
-                                       VrfAccessType accessType);
-
-    SimplePoolManager *manager;
-
-  protected:
-    ComputeUnit* computeUnit;
-    int simdId;
-
-    // flag indicating if a register is busy
-    std::vector<uint8_t> busy;
-    // flag indicating if a register will be busy (by instructions
-    // in the SIMD pipeline)
-    std::vector<uint8_t> nxtBusy;
-
-    // numer of registers (bank size) per simd unit (bank)
-    int numRegsPerSimd;
-
-    // vector register state
-    VecRegisterState *vgprState;
+  private:
+    std::vector<VecRegContainer> regFile;
 };
 
 #endif // __VECTOR_REGISTER_FILE_HH__

@@ -3728,7 +3728,7 @@ namespace Gcn3ISA
         DPRINTF(GPUExec, "CU%d: decrease ref ctr WG[%d] to [%d]\n",
             wf->computeUnit->cu_id, wf->wgId, refCount);
 
-        wf->computeUnit->registerManager.freeRegisters(wf);
+        wf->computeUnit->registerManager->freeRegisters(wf);
         wf->computeUnit->completedWfs++;
         wf->computeUnit->activeWaves--;
 

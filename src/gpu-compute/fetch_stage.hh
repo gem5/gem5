@@ -62,14 +62,15 @@ class FetchStage
     std::string name() { return _name; }
     void regStats();
     Stats::Distribution instFetchInstReturned;
+    FetchUnit &fetchUnit(int simdId) { return _fetchUnit.at(simdId); }
 
   private:
-    uint32_t numSIMDs;
+    int numVectorALUs;
     ComputeUnit *computeUnit;
 
     // List of fetch units. A fetch unit is
-    // instantiated per SIMD
-    std::vector<FetchUnit> fetchUnit;
+    // instantiated per VALU/SIMD
+    std::vector<FetchUnit> _fetchUnit;
     std::string _name;
 };
 

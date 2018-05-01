@@ -151,7 +151,7 @@ HSAPacketProcessor::translateOrDie(Addr vaddr, Addr &paddr)
     // Grab the process and try to translate the virtual address with it; with
     // new extensions, it will likely be wrong to just arbitrarily grab context
     // zero.
-    auto process = sys->getThreadContext(0)->getProcessPtr();
+    auto process = sys->threads[0]->getProcessPtr();
 
     if (!process->pTable->translate(vaddr, paddr))
         fatal("failed translation: vaddr 0x%x\n", vaddr);
@@ -393,7 +393,7 @@ HSAPacketProcessor::processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr)
                  * The reason for this is that the DMASequencer does
                  * not support atomic operations.
                  */
-                auto tc = sys->getThreadContext(0);
+                auto tc = sys->threads[0];
                 auto &virt_proxy = tc->getVirtProxy();
                 TypedBufferArg<uint64_t> prev_signal(signal_addr);
                 prev_signal.copyIn(virt_proxy);

@@ -31,161 +31,116 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __WAVEFRONT_HH__
-#define __WAVEFRONT_HH__
+#ifndef __GPU_COMPUTE_WAVEFRONT_HH__
+#define __GPU_COMPUTE_WAVEFRONT_HH__
 
 #include <cassert>
 #include <deque>
+#include <list>
 #include <memory>
-#include <stack>
+#include <unordered_map>
 #include <vector>
 
 #include "arch/gpu_isa.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
 #include "config/the_gpu_isa.hh"
-#include "gpu-compute/condition_register_state.hh"
+#include "gpu-compute/compute_unit.hh"
+#include "gpu-compute/dispatcher.hh"
+#include "gpu-compute/gpu_dyn_inst.hh"
+#include "gpu-compute/hsa_queue_entry.hh"
 #include "gpu-compute/lds_state.hh"
 #include "gpu-compute/misc.hh"
-#include "gpu-compute/ndrange.hh"
 #include "params/Wavefront.hh"
 #include "sim/sim_object.hh"
-
-static const int MAX_NUM_INSTS_PER_WF = 12;
-
-/**
- * A reconvergence stack entry conveys the necessary state to implement
- * control flow divergence.
- */
-struct ReconvergenceStackEntry {
-    /**
-     * PC of current instruction.
-     */
-    uint32_t pc;
-    /**
-     * PC of the immediate post-dominator instruction, i.e., the value of
-     * @a pc for the first instruction that will be executed by the wavefront
-     * when a reconvergence point is reached.
-     */
-    uint32_t rpc;
-    /**
-     * Execution mask.
-     */
-    VectorMask execMask;
-};
-
-/*
- * Arguments for the hsail opcode call, are user defined and variable length.
- * The hardware/finalizer can support arguments in hardware or use memory to
- * pass arguments. For now, let's assume that an unlimited number of arguments
- * are supported in hardware (the compiler inlines functions whenver it can
- * anyways, so unless someone is interested in the implications of linking/
- * library functions, I think this is a reasonable assumption given the typical
- * size of an OpenCL kernel).
- *
- * Note that call args are different than kernel arguments:
- *   * All work-items in a kernel refer the same set of kernel arguments
- *   * Each work-item has it's on set of call args. So a call argument at
- *     address 0x4 is different for work-item 0 and work-item 1.
- *
- * Ok, the table below shows an example of how we organize the call arguments in
- * the CallArgMem class.
- *
- * int foo(int arg1, double arg2)
- *  ___________________________________________________
- * | 0: return.0 | 4: return.1 | ... | 252: return.63  |
- * |---------------------------------------------------|
- * | 256: arg1.0 | 260: arg1.1 | ... | 508: arg1.63    |
- * |---------------------------------------------------|
- * | 512: arg2.0 | 520: arg2.1 | ... | 1016: arg2.63   |
- *  ___________________________________________________
- */
-class CallArgMem
-{
-  public:
-    // pointer to buffer for storing function arguments
-    uint8_t *mem;
-    int wfSize;
-    // size of function args
-    int funcArgsSizePerItem;
-
-    template<typename CType>
-    int
-    getLaneOffset(int lane, int addr)
-    {
-        return addr * wfSize + sizeof(CType) * lane;
-    }
-
-    CallArgMem(int func_args_size_per_item, int wf_size)
-        : wfSize(wf_size), funcArgsSizePerItem(func_args_size_per_item)
-    {
-        mem = (uint8_t*)malloc(funcArgsSizePerItem * wfSize);
-    }
-
-    ~CallArgMem()
-    {
-        free(mem);
-    }
-
-    template<typename CType>
-    uint8_t*
-    getLaneAddr(int lane, int addr)
-    {
-        return mem + getLaneOffset<CType>(lane, addr);
-    }
-
-    template<typename CType>
-    void
-    setLaneAddr(int lane, int addr, CType val)
-    {
-        *((CType*)(mem + getLaneOffset<CType>(lane, addr))) = val;
-    }
-};
 
 class Wavefront : public SimObject
 {
   public:
-    enum itype_e {I_ALU,I_GLOBAL,I_SHARED,I_FLAT,I_PRIVATE};
-    enum status_e {S_STOPPED,S_RETURNING,S_RUNNING};
-
-    // Base pointer for array of instruction pointers
-    uint64_t basePtr;
+    enum status_e {
+        // wavefront is stalled
+        S_STOPPED,
+        // wavefront is returning from a kernel
+        S_RETURNING,
+        // wavefront is running normally
+        S_RUNNING,
+        // wavefront is stalled
+        S_STALLED,
+        /**
+         * wavefront has unsatisfied wait counts
+         *
+         * while in this state the WF will only execute if
+         * the oldest instruction is the waitcnt. while in
+         * S_WAITCNT, the wavefront will not be ready until
+         * all of its waitcnts have been satisfied. the
+         * scoreboard ready() function will check the status
+         * of the waitcnts whenever the WF is in S_WAITCNT,
+         * and once they are satisfied, it will resume normal
+         * operation.
+         */
+        S_WAITCNT
+    };
 
     uint32_t oldBarrierCnt;
     uint32_t barrierCnt;
     uint32_t barrierId;
     uint32_t barrierSlots;
-    status_e status;
     // HW slot id where the WF is mapped to inside a SIMD unit
-    int wfSlotId;
+    const int wfSlotId;
     int kernId;
     // SIMD unit where the WV has been scheduled
-    int simdId;
+    const int simdId;
+    // id of the execution unit (or pipeline) where the oldest instruction
+    // of the WF is scheduled
+    int execUnitId;
+    int flatLmUnitId;
+    int flatGmUnitId;
     // pointer to parent CU
     ComputeUnit *computeUnit;
+    int maxIbSize;
 
     std::deque<GPUDynInstPtr> instructionBuffer;
 
     bool pendingFetch;
     bool dropFetch;
+    // last tick during which all WFs in the CU are not idle
+    Tick lastNonIdleTick;
 
-    // Condition Register State (for HSAIL simulations only)
-    class ConditionRegisterState *condRegState;
-    // number of single precision VGPRs required by WF
-    uint32_t maxSpVgprs;
-    // number of double precision VGPRs required by WF
-    uint32_t maxDpVgprs;
-    // map virtual to physical vector register
-    uint32_t remap(uint32_t vgprIndex, uint32_t size, uint8_t mode=0);
-    void resizeRegFiles(int num_cregs, int num_sregs, int num_dregs);
+    // Execution unit resource ID's associated with this WF
+    // These are static mappings set at WF slot construction and
+    // based off of the simdId and wfSlotId.
+
+    // Index to scalarALUs resource vector in CU
+    int scalarAlu;
+
+    // Indices into readyList/dispatchList of resources used by this
+    // wavefront
+    int scalarAluGlobalIdx;
+    int globalMem;
+    int localMem;
+    int scalarMem;
+
+    // number of VGPRs required by WF
+    uint32_t maxVgprs;
+    // number of SGPRs required by WF
+    uint32_t maxSgprs;
+    void freeResources();
+    GPUDynInstPtr nextInstr();
+    void setStatus(status_e newStatus);
+    status_e getStatus() { return status; }
+    void resizeRegFiles(int num_vregs, int num_sregs);
     bool isGmInstruction(GPUDynInstPtr ii);
     bool isLmInstruction(GPUDynInstPtr ii);
+    bool isOldestInstWaitcnt();
     bool isOldestInstGMem();
     bool isOldestInstLMem();
     bool isOldestInstPrivMem();
     bool isOldestInstFlatMem();
-    bool isOldestInstALU();
+    bool isOldestInstVectorALU();
+    bool isOldestInstScalarALU();
+    bool isOldestInstScalarMem();
     bool isOldestInstBarrier();
+
     // used for passing spill address to DDInstGPU
     std::vector<Addr> lastAddr;
     std::vector<uint32_t> workItemId[3];
@@ -199,36 +154,44 @@ class Wavefront : public SimObject
     /* the actual WG size can differ than the maximum size */
     uint32_t actualWgSz[3];
     uint32_t actualWgSzTotal;
-    void computeActualWgSz(NDRange *ndr);
+    void computeActualWgSz(HSAQueueEntry *task);
     // wavefront id within a workgroup
     uint32_t wfId;
     uint32_t maxDynWaveId;
     uint32_t dispatchId;
-    // outstanding global+local memory requests
-    uint32_t outstandingReqs;
-    // memory requests between scoreboard
-    // and execute stage not yet executed
-    uint32_t memReqsInPipe;
+    // vector and scalar memory requests pending in memory system
+    int outstandingReqs;
     // outstanding global memory write requests
-    uint32_t outstandingReqsWrGm;
+    int outstandingReqsWrGm;
     // outstanding local memory write requests
-    uint32_t outstandingReqsWrLm;
+    int outstandingReqsWrLm;
     // outstanding global memory read requests
-    uint32_t outstandingReqsRdGm;
+    int outstandingReqsRdGm;
     // outstanding local memory read requests
-    uint32_t outstandingReqsRdLm;
-    uint32_t rdLmReqsInPipe;
-    uint32_t rdGmReqsInPipe;
-    uint32_t wrLmReqsInPipe;
-    uint32_t wrGmReqsInPipe;
+    int outstandingReqsRdLm;
+    // outstanding scalar memory read requests
+    int scalarOutstandingReqsRdGm;
+    // outstanding scalar memory write requests
+    int scalarOutstandingReqsWrGm;
+    int rdLmReqsInPipe;
+    int rdGmReqsInPipe;
+    int wrLmReqsInPipe;
+    int wrGmReqsInPipe;
+    int scalarRdGmReqsInPipe;
+    int scalarWrGmReqsInPipe;
 
     int memTraceBusy;
     uint64_t lastTrace;
-    // number of vector registers reserved by WF
+    // number of virtual vector registers reserved by WF
     int reservedVectorRegs;
+    // number of virtual scalar registers reserved by WF
+    int reservedScalarRegs;
     // Index into the Vector Register File's namespace where the WF's registers
     // will live while the WF is executed
     uint32_t startVgprIndex;
+    // Index into the Scalar Register File's namespace where the WF's registers
+    // will live while the WF is executed
+    uint32_t startSgprIndex;
 
     // Old value of destination gpr (for trace)
     std::vector<uint32_t> oldVgpr;
@@ -257,64 +220,63 @@ class Wavefront : public SimObject
     // to this workgroup (thus this wavefront)
     LdsChunk *ldsChunk;
 
-    // A pointer to the spill area
-    Addr spillBase;
-    // The size of the spill area
-    uint32_t spillSizePerItem;
-    // The vector width of the spill area
-    uint32_t spillWidth;
-
-    // A pointer to the private memory area
-    Addr privBase;
-    // The size of the private memory area
-    uint32_t privSizePerItem;
-
-    // A pointer ot the read-only memory area
-    Addr roBase;
-    // size of the read-only memory area
-    uint32_t roSize;
-
-    // pointer to buffer for storing kernel arguments
-    uint8_t *kernelArgs;
     // unique WF id over all WFs executed across all CUs
     uint64_t wfDynId;
 
-    // number of times instruction issue for this wavefront is blocked
-    // due to VRF port availability
-    Stats::Scalar numTimesBlockedDueVrfPortAvail;
+    // Wavefront slot stats
+
+    // Number of instructions executed by this wavefront slot across all
+    // dynamic wavefronts
+    Stats::Scalar numInstrExecuted;
+
+    // Number of cycles this WF spends in SCH stage
+    Stats::Scalar schCycles;
+
+    // Number of stall cycles encounterd by this WF in SCH stage
+    Stats::Scalar schStalls;
+
+    // The following stats sum to the value of schStalls, and record, per
+    // WF slot, what the cause of each stall was at a coarse granularity.
+
+    // Cycles WF is selected by scheduler, but RFs cannot support instruction
+    Stats::Scalar schRfAccessStalls;
+    // Cycles spent waiting for execution resources
+    Stats::Scalar schResourceStalls;
+    // cycles spent waiting for RF reads to complete in SCH stage
+    Stats::Scalar schOpdNrdyStalls;
+    // LDS arbitration stall cycles. WF attempts to execute LM instruction,
+    // but another wave is executing FLAT, which requires LM and GM and forces
+    // this WF to stall.
+    Stats::Scalar schLdsArbStalls;
+
     // number of times an instruction of a WF is blocked from being issued
     // due to WAR and WAW dependencies
     Stats::Scalar numTimesBlockedDueWAXDependencies;
     // number of times an instruction of a WF is blocked from being issued
     // due to WAR and WAW dependencies
     Stats::Scalar numTimesBlockedDueRAWDependencies;
-    // distribution of executed instructions based on their register
-    // operands; this is used to highlight the load on the VRF
-    Stats::Distribution srcRegOpDist;
-    Stats::Distribution dstRegOpDist;
 
-    // Functions to operate on call argument memory
-    // argument memory for hsail call instruction
-    CallArgMem *callArgMem;
-    void
-    initCallArgMem(int func_args_size_per_item, int wf_size)
-    {
-        callArgMem = new CallArgMem(func_args_size_per_item, wf_size);
-    }
+    // dyn inst id (per SIMD) of last instruction exec from this wave
+    uint64_t lastInstExec;
 
-    template<typename CType>
-    CType
-    readCallArgMem(int lane, int addr)
-    {
-        return *((CType*)(callArgMem->getLaneAddr<CType>(lane, addr)));
-    }
+    // Distribution to track the distance between producer and consumer
+    // for vector register values
+    Stats::Distribution vecRawDistance;
+    // Map to track the dyn instruction id of each vector register value
+    // produced, indexed by physical vector register ID
+    std::unordered_map<int,uint64_t> rawDist;
 
-    template<typename CType>
-    void
-    writeCallArgMem(int lane, int addr, CType val)
-    {
-        callArgMem->setLaneAddr<CType>(lane, addr, val);
-    }
+    // Distribution to track the number of times every vector register
+    // value produced is consumed.
+    Stats::Distribution readsPerWrite;
+    // Counts the number of reads performed to each physical register
+    // - counts are reset to 0 for each dynamic wavefront launched
+    std::vector<int> vecReads;
+
+    void initRegState(HSAQueueEntry *task, int wgSizeInWorkItems);
+
+    // context for save/restore
+    uint8_t *context;
 
     typedef WavefrontParams Params;
     Wavefront(const Params *p);
@@ -327,50 +289,31 @@ class Wavefront : public SimObject
         computeUnit = cu;
     }
 
+    void validateRequestCounters();
     void start(uint64_t _wfDynId, uint64_t _base_ptr);
     void exec();
-    void updateResources();
-    int ready(itype_e type);
-    bool instructionBufferHasBranch();
+    // called by SCH stage to reserve
+    std::vector<int> reserveResources();
+    bool stopFetch();
     void regStats();
-    VectorMask getPred() { return execMask() & initMask; }
 
     bool waitingAtBarrier(int lane);
 
-    void pushToReconvergenceStack(uint32_t pc, uint32_t rpc,
-                                  const VectorMask& exec_mask);
+    Addr pc() const;
+    void pc(Addr new_pc);
 
-    void popFromReconvergenceStack();
-
-    uint32_t pc() const;
-
-    uint32_t rpc() const;
-
-    VectorMask execMask() const;
-
+    VectorMask& execMask();
     bool execMask(int lane) const;
 
-    void pc(uint32_t new_pc);
 
     void discardFetch();
 
-    /**
-     * Returns the size of the static hardware context of a particular wavefront
-     * This should be updated everytime the context is changed
-     */
-    uint32_t getStaticContextSize() const;
+    bool waitCntsSatisfied();
+    void setWaitCnts(int vm_wait_cnt, int exp_wait_cnt, int lgkm_wait_cnt);
+    void clearWaitCnts();
 
-    /**
-     * Returns the hardware context as a stream of bytes
-     * This method is designed for HSAIL execution
-     */
-    void getContext(const void *out);
-
-    /**
-     * Sets the hardware context fromt a stream of bytes
-     * This method is designed for HSAIL execution
-     */
-    void setContext(const void *in);
+    /** Freeing VRF space */
+    void freeRegisterFile();
 
     TheGpuISA::GPUISA&
     gpuISA()
@@ -380,14 +323,32 @@ class Wavefront : public SimObject
 
   private:
     TheGpuISA::GPUISA _gpuISA;
+
+    void reserveGmResource(GPUDynInstPtr ii);
+    void reserveLmResource(GPUDynInstPtr ii);
+
     /**
-     * Stack containing Control Flow Graph nodes (i.e., kernel instructions)
-     * to be visited by the wavefront, and the associated execution masks. The
-     * reconvergence stack grows every time the wavefront reaches a divergence
-     * point (branch instruction), and shrinks every time the wavefront
-     * reaches a reconvergence point (immediate post-dominator instruction).
+     * the following are used for waitcnt instructions
+     * vmWaitCnt: once set, we wait for the oustanding
+     *            number of vector mem instructions to be
+     *            at, or below vmWaitCnt.
+     *
+     * expWaitCnt: once set, we wait for the outstanding
+     *             number outstanding VM writes or EXP
+     *             insts to be at, or below expWaitCnt.
+     *
+     * lgkmWaitCnt: once set, we wait for the oustanding
+     *              number of LDS, GDS, scalar memory,
+     *              and message instructions to be at, or
+     *              below lgkmCount. we currently do not
+     *              support GDS/message ops.
      */
-    std::deque<std::unique_ptr<ReconvergenceStackEntry>> reconvergenceStack;
+    int vmWaitCnt;
+    int expWaitCnt;
+    int lgkmWaitCnt;
+    status_e status;
+    Addr _pc;
+    VectorMask _execMask;
 };
 
-#endif // __WAVEFRONT_HH__
+#endif // __GPU_COMPUTE_WAVEFRONT_HH__

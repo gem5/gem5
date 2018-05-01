@@ -33,6 +33,7 @@
 
 #include "gpu-compute/local_memory_pipeline.hh"
 
+#include "debug/GPUMem.hh"
 #include "debug/GPUPort.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
@@ -62,23 +63,30 @@ LocalMemPipeline::exec()
     bool accessVrf = true;
     Wavefront *w = nullptr;
 
-    if ((m) && (m->isLoad() || m->isAtomicRet())) {
+    if ((m) && m->latency.rdy() && (m->isLoad() || m->isAtomicRet())) {
         w = m->wavefront();
 
-        accessVrf =
-            w->computeUnit->vrf[w->simdId]->
-            vrfOperandAccessReady(m->seqNum(), w, m,
-                                  VrfAccessType::WRITE);
+        accessVrf = w->computeUnit->vrf[w->simdId]->
+            canScheduleWriteOperandsFromLoad(w, m);
+
     }
 
     if (!lmReturnedRequests.empty() && m->latency.rdy() && accessVrf &&
-        computeUnit->locMemToVrfBus.rdy() && (computeUnit->shader->coissue_return
-                 || computeUnit->wfWait.at(m->pipeId).rdy())) {
+        computeUnit->locMemToVrfBus.rdy()
+        && (computeUnit->shader->coissue_return
+        || computeUnit->vectorSharedMemUnit.rdy())) {
 
         lmReturnedRequests.pop();
         w = m->wavefront();
 
+        DPRINTF(GPUMem, "CU%d: WF[%d][%d]: Completing local mem instr %s\n",
+                m->cu_id, m->simdId, m->wfSlotId, m->disassemble());
         m->completeAcc(m);
+
+        if (m->isLoad() || m->isAtomicRet()) {
+            w->computeUnit->vrf[w->simdId]->
+                scheduleWriteOperandsFromLoad(w, m);
+        }
 
         // Decrement outstanding request count
         computeUnit->shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
@@ -96,7 +104,7 @@ LocalMemPipeline::exec()
         // Mark write bus busy for appropriate amount of time
         computeUnit->locMemToVrfBus.set(m->time);
         if (computeUnit->shader->coissue_return == 0)
-            w->computeUnit->wfWait.at(m->pipeId).set(m->time);
+            w->computeUnit->vectorSharedMemUnit.set(m->time);
     }
 
     // If pipeline has executed a local memory instruction
@@ -112,6 +120,13 @@ LocalMemPipeline::exec()
         }
         lmIssuedRequests.pop();
     }
+}
+
+void
+LocalMemPipeline::issueRequest(GPUDynInstPtr gpuDynInst)
+{
+    gpuDynInst->setAccessTime(curTick());
+    lmIssuedRequests.push(gpuDynInst);
 }
 
 void

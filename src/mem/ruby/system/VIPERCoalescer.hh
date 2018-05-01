@@ -58,7 +58,7 @@ class VIPERCoalescer : public GPUCoalescer
     VIPERCoalescer(const Params *);
     ~VIPERCoalescer();
 
-    void issueMemSyncRequest(PacketPtr pkt);
+    void issueMemSyncRequest(PacketPtr pkt) override;
     void issueRequest(CoalescedRequest* crequest) override;
     void wbCallback(Addr address);
     void invCallback(Addr address);

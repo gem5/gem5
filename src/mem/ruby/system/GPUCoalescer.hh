@@ -38,11 +38,11 @@
 #include <unordered_map>
 
 #include "base/statistics.hh"
+#include "gpu-compute/gpu_dyn_inst.hh"
+#include "gpu-compute/misc.hh"
 #include "mem/request.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/protocol/HSAScope.hh"
-#include "mem/ruby/protocol/HSASegment.hh"
 #include "mem/ruby/protocol/PrefetchBit.hh"
 #include "mem/ruby/protocol/RubyAccessMode.hh"
 #include "mem/ruby/protocol/RubyRequestType.hh"
@@ -56,9 +56,6 @@ class MachineID;
 class CacheMemory;
 
 class RubyGPUCoalescerParams;
-
-HSAScope reqScopeToHSAScope(const RequestPtr &req);
-HSASegment reqSegmentToHSASegment(const RequestPtr &req);
 
 // List of packets that belongs to a specific instruction.
 typedef std::list<PacketPtr> PerInstPackets;
@@ -78,6 +75,7 @@ class UncoalescedTable
     // instructions at the offset.
     PerInstPackets* getInstPackets(int offset);
     void updateResources();
+    bool areRequestsDone(const uint64_t instSeqNum);
 
     // Check if a packet hasn't been removed from instMap in too long.
     // Panics if a deadlock is detected and returns nothing otherwise.
@@ -120,6 +118,86 @@ class CoalescedRequest
     std::vector<PacketPtr> pkts;
 };
 
+// PendingWriteInst tracks the number of outstanding Ruby requests
+// per write instruction. Once all requests associated with one instruction
+// are completely done in Ruby, we call back the requester to mark
+// that this instruction is complete.
+class PendingWriteInst
+{
+  public:
+    PendingWriteInst()
+        : numPendingStores(0),
+          originalPort(nullptr),
+          gpuDynInstPtr(nullptr)
+    {}
+
+    ~PendingWriteInst()
+    {}
+
+    void
+    addPendingReq(RubyPort::MemSlavePort* port, GPUDynInstPtr inst,
+                  bool usingRubyTester)
+    {
+        assert(port);
+        originalPort = port;
+
+        if (!usingRubyTester) {
+            gpuDynInstPtr = inst;
+        }
+
+        numPendingStores++;
+    }
+
+    // return true if no more ack is expected
+    bool
+    receiveWriteCompleteAck()
+    {
+        assert(numPendingStores > 0);
+        numPendingStores--;
+        return (numPendingStores == 0) ? true : false;
+    }
+
+    // ack the original requester that this write instruction is complete
+    void
+    ackWriteCompletion(bool usingRubyTester)
+    {
+        assert(numPendingStores == 0);
+
+        // make a response packet
+        PacketPtr pkt = new Packet(std::make_shared<Request>(),
+                                   MemCmd::WriteCompleteResp);
+
+        if (!usingRubyTester) {
+            assert(gpuDynInstPtr);
+            ComputeUnit::DataPort::SenderState* ss =
+                    new ComputeUnit::DataPort::SenderState
+                                            (gpuDynInstPtr, 0, nullptr);
+            pkt->senderState = ss;
+        }
+
+        // send the ack response to the requester
+        originalPort->sendTimingResp(pkt);
+    }
+
+    int
+    getNumPendingStores() {
+        return numPendingStores;
+    }
+
+  private:
+    // the number of stores waiting for writeCompleteCallback
+    int numPendingStores;
+    // The original port that sent one of packets associated with this
+    // write instruction. We may have more than one packet per instruction,
+    // which implies multiple ports per instruction. However, we need
+    // only 1 of the ports to call back the CU. Therefore, here we keep
+    // track the port that sent the first packet of this instruction.
+    RubyPort::MemSlavePort* originalPort;
+    // similar to the originalPort, this gpuDynInstPtr is set only for
+    // the first packet of this instruction.
+    GPUDynInstPtr gpuDynInstPtr;
+};
+
 class GPUCoalescer : public RubyPort
 {
   public:
@@ -159,6 +237,17 @@ class GPUCoalescer : public RubyPort
     void collateStats();
     void regStats() override;
 
+    // each store request needs two callbacks:
+    //  (1) writeCallback is called when the store is received and processed
+    //      by TCP. This writeCallback does not guarantee the store is actually
+    //      completed at its destination cache or memory. writeCallback helps
+    //      release hardware resources (e.g., its entry in coalescedTable)
+    //      allocated for the store so that subsequent requests will not be
+    //      blocked unnecessarily due to hardware resource constraints.
+    //  (2) writeCompleteCallback is called when the store is fully completed
+    //      at its destination cache or memory. writeCompleteCallback
+    //      guarantees that the store is fully completed. This callback
+    //      will decrement hardware counters in CU
     void writeCallback(Addr address, DataBlock& data);
 
     void writeCallback(Addr address,
@@ -180,6 +269,10 @@ class GPUCoalescer : public RubyPort
                        Cycles forwardRequestTime,
                        Cycles firstResponseTime);
 
+    void writeCompleteCallback(Addr address,
+                               uint64_t instSeqNum,
+                               MachineType mach);
+
     void readCallback(Addr address, DataBlock& data);
 
     void readCallback(Addr address,
@@ -200,18 +293,12 @@ class GPUCoalescer : public RubyPort
                       Cycles forwardRequestTime,
                       Cycles firstResponseTime,
                       bool isRegion);
-    /* atomics need their own callback because the data
-       might be const coming from SLICC */
+
     void atomicCallback(Addr address,
                         MachineType mach,
                         const DataBlock& data);
 
-    void recordCPReadCallBack(MachineID myMachID, MachineID senderMachID);
-    void recordCPWriteCallBack(MachineID myMachID, MachineID senderMachID);
-
-    // Alternate implementations in VIPER Coalescer
-    virtual RequestStatus makeRequest(PacketPtr pkt) override;
-
+    RequestStatus makeRequest(PacketPtr pkt) override;
     int outstandingCount() const override { return m_outstanding_count; }
 
     bool
@@ -237,7 +324,6 @@ class GPUCoalescer : public RubyPort
 
     GMTokenPort& getGMTokenPort() { return gmTokenPort; }
 
-    void recordRequestType(SequencerRequestType requestType);
     Stats::Histogram& getOutstandReqHist() { return m_outstandReqHist; }
 
     Stats::Histogram& getLatencyHist() { return m_latencyHist; }
@@ -271,15 +357,17 @@ class GPUCoalescer : public RubyPort
     getFirstResponseToCompletionDelayHist(const MachineType t) const
     { return *m_FirstResponseToCompletionDelayHist[t]; }
 
-  // Changed to protected to enable inheritance by VIPER Coalescer
   protected:
     bool tryCacheAccess(Addr addr, RubyRequestType type,
                         Addr pc, RubyAccessMode access_mode,
                         int size, DataBlock*& data_ptr);
-    // Alternate implementations in VIPER Coalescer
-    virtual void issueRequest(CoalescedRequest* crequest);
 
-    void kernelCallback(int wavfront_id);
+    // since the two following issue functions are protocol-specific,
+    // they must be implemented in a derived coalescer
+    virtual void issueRequest(CoalescedRequest* crequest) = 0;
+    virtual void issueMemSyncRequest(PacketPtr pkt) = 0;
+
+    void kernelCallback(int wavefront_id);
 
     void hitCallback(CoalescedRequest* crequest,
                      MachineType mach,
@@ -297,7 +385,6 @@ class GPUCoalescer : public RubyPort
                            bool success, bool isRegion);
     void completeHitCallback(std::vector<PacketPtr> & mylist);
 
-
     virtual RubyRequestType getRequestType(PacketPtr pkt);
 
     // Attempt to remove a packet from the uncoalescedTable and coalesce
@@ -309,8 +396,6 @@ class GPUCoalescer : public RubyPort
 
     EventFunctionWrapper issueEvent;
 
-
-  // Changed to protected to enable inheritance by VIPER Coalescer
   protected:
     int m_max_outstanding_requests;
     Cycles m_deadlock_threshold;
@@ -334,6 +419,11 @@ class GPUCoalescer : public RubyPort
     // an address, the are serviced in age order.
     std::map<Addr, std::deque<CoalescedRequest*>> coalescedTable;
 
+    // a map btw an instruction sequence number and PendingWriteInst
+    // this is used to do a final call back for each write when it is
+    // completely done in the memory system
+    std::unordered_map<uint64_t, PendingWriteInst> pendingWriteInsts;
+
     // Global outstanding request count, across all request tables
     int m_outstanding_count;
     bool m_deadlock_check_scheduled;
@@ -350,26 +440,28 @@ class GPUCoalescer : public RubyPort
     EventFunctionWrapper deadlockCheckEvent;
     bool assumingRfOCoherence;
 
-    // m5 style stats for TCP hit/miss counts
-    Stats::Scalar GPU_TCPLdHits;
-    Stats::Scalar GPU_TCPLdTransfers;
-    Stats::Scalar GPU_TCCLdHits;
-    Stats::Scalar GPU_LdMiss;
-
-    Stats::Scalar GPU_TCPStHits;
-    Stats::Scalar GPU_TCPStTransfers;
-    Stats::Scalar GPU_TCCStHits;
-    Stats::Scalar GPU_StMiss;
-
-    Stats::Scalar CP_TCPLdHits;
-    Stats::Scalar CP_TCPLdTransfers;
-    Stats::Scalar CP_TCCLdHits;
-    Stats::Scalar CP_LdMiss;
-
-    Stats::Scalar CP_TCPStHits;
-    Stats::Scalar CP_TCPStTransfers;
-    Stats::Scalar CP_TCCStHits;
-    Stats::Scalar CP_StMiss;
+// TODO - Need to update the following stats once the VIPER protocol
+//        is re-integrated.
+//    // m5 style stats for TCP hit/miss counts
+//    Stats::Scalar GPU_TCPLdHits;
+//    Stats::Scalar GPU_TCPLdTransfers;
+//    Stats::Scalar GPU_TCCLdHits;
+//    Stats::Scalar GPU_LdMiss;
+//
+//    Stats::Scalar GPU_TCPStHits;
+//    Stats::Scalar GPU_TCPStTransfers;
+//    Stats::Scalar GPU_TCCStHits;
+//    Stats::Scalar GPU_StMiss;
+//
+//    Stats::Scalar CP_TCPLdHits;
+//    Stats::Scalar CP_TCPLdTransfers;
+//    Stats::Scalar CP_TCCLdHits;
+//    Stats::Scalar CP_LdMiss;
+//
+//    Stats::Scalar CP_TCPStHits;
+//    Stats::Scalar CP_TCPStTransfers;
+//    Stats::Scalar CP_TCCStHits;
+//    Stats::Scalar CP_StMiss;
 
     //! Histogram for number of outstanding requests per cycle.
     Stats::Histogram m_outstandReqHist;
@@ -393,6 +485,21 @@ class GPUCoalescer : public RubyPort
     std::vector<Stats::Histogram *> m_InitialToForwardDelayHist;
     std::vector<Stats::Histogram *> m_ForwardToFirstResponseDelayHist;
     std::vector<Stats::Histogram *> m_FirstResponseToCompletionDelayHist;
+
+// TODO - Need to update the following stats once the VIPER protocol
+//        is re-integrated.
+//    Stats::Distribution numHopDelays;
+//    Stats::Distribution tcpToTccDelay;
+//    Stats::Distribution tccToSdDelay;
+//    Stats::Distribution sdToSdDelay;
+//    Stats::Distribution sdToTccDelay;
+//    Stats::Distribution tccToTcpDelay;
+//
+//    Stats::Average avgTcpToTcc;
+//    Stats::Average avgTccToSd;
+//    Stats::Average avgSdToSd;
+//    Stats::Average avgSdToTcc;
+//    Stats::Average avgTccToTcp;
 
   private:
     // Token port is used to send/receive tokens to/from GPU's global memory

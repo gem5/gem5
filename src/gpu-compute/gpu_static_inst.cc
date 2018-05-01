@@ -34,10 +34,10 @@
 #include "gpu-compute/gpu_static_inst.hh"
 
 GPUStaticInst::GPUStaticInst(const std::string &opcode)
-    : executed_as(Enums::SC_NONE), opcode(opcode),
-      _instNum(0), _instAddr(0)
+    : executed_as(Enums::SC_NONE), _opcode(opcode),
+      _instNum(0), _instAddr(0), srcVecOperands(-1), dstVecOperands(-1),
+      srcVecDWORDs(-1), dstVecDWORDs(-1)
 {
-    setFlag(NoOrder);
 }
 
 const std::string&
@@ -49,4 +49,81 @@ GPUStaticInst::disassemble()
     }
 
     return disassembly;
+}
+
+int
+GPUStaticInst::numSrcVecOperands()
+{
+    if (srcVecOperands > -1)
+        return srcVecOperands;
+
+    srcVecOperands = 0;
+    if (!isScalar()) {
+        for (int k = 0; k < getNumOperands(); ++k) {
+            if (isVectorRegister(k) && isSrcOperand(k))
+                srcVecOperands++;
+        }
+    }
+    return srcVecOperands;
+}
+
+int
+GPUStaticInst::numDstVecOperands()
+{
+    if (dstVecOperands > -1)
+        return dstVecOperands;
+
+    dstVecOperands = 0;
+    if (!isScalar()) {
+        for (int k = 0; k < getNumOperands(); ++k) {
+            if (isVectorRegister(k) && isDstOperand(k))
+                dstVecOperands++;
+        }
+    }
+    return dstVecOperands;
+}
+
+int
+GPUStaticInst::numSrcVecDWORDs()
+{
+    if (srcVecDWORDs > -1) {
+        return srcVecDWORDs;
+    }
+
+    srcVecDWORDs = 0;
+    if (!isScalar()) {
+        for (int i = 0; i < getNumOperands(); i++) {
+            if (isVectorRegister(i) && isSrcOperand(i)) {
+                int dwords = numOpdDWORDs(i);
+                srcVecDWORDs += dwords;
+            }
+        }
+    }
+    return srcVecDWORDs;
+}
+
+int
+GPUStaticInst::numDstVecDWORDs()
+{
+    if (dstVecDWORDs > -1) {
+        return dstVecDWORDs;
+    }
+
+    dstVecDWORDs = 0;
+    if (!isScalar()) {
+        for (int i = 0; i < getNumOperands(); i++) {
+            if (isVectorRegister(i) && isDstOperand(i)) {
+                int dwords = numOpdDWORDs(i);
+                dstVecDWORDs += dwords;
+            }
+        }
+    }
+    return dstVecDWORDs;
+}
+
+int
+GPUStaticInst::numOpdDWORDs(int operandIdx)
+{
+    return getOperandSize(operandIdx) <= 4 ? 1
+        : getOperandSize(operandIdx) / 4;
 }

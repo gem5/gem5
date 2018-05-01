@@ -41,7 +41,6 @@
 
 TLBCoalescer::TLBCoalescer(const Params *p)
     : ClockedObject(p),
-      clock(p->clk_domain->clockPeriod()),
       TLBProbesPerCycle(p->probesPerCycle),
       coalescingWindow(p->coalescingWindow),
       disableCoalescing(p->disableCoalescing),
@@ -317,7 +316,7 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
     //coalesced requests to the TLB
     if (!coalescer->probeTLBEvent.scheduled()) {
         coalescer->schedule(coalescer->probeTLBEvent,
-                curTick() + coalescer->ticks(1));
+                curTick() + coalescer->clockPeriod());
     }
 
     return true;
@@ -380,7 +379,7 @@ TLBCoalescer::MemSidePort::recvReqRetry()
     //we've receeived a retry. Schedule a probeTLBEvent
     if (!coalescer->probeTLBEvent.scheduled())
         coalescer->schedule(coalescer->probeTLBEvent,
-                curTick() + coalescer->ticks(1));
+                curTick() + coalescer->clockPeriod());
 }
 
 void
@@ -448,7 +447,7 @@ TLBCoalescer::processProbeTLBEvent()
 
             // send the coalesced request for virt_page_addr
             if (!memSidePort[0]->sendTimingReq(first_packet)) {
-                DPRINTF(GPUTLB, "Failed to send TLB request for page %#x",
+                DPRINTF(GPUTLB, "Failed to send TLB request for page %#x\n",
                        virt_page_addr);
 
                 // No need for a retries queue since we are already buffering

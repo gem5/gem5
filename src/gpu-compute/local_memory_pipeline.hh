@@ -58,9 +58,10 @@ class LocalMemPipeline
     LocalMemPipeline(const ComputeUnitParams *params);
     void init(ComputeUnit *cu);
     void exec();
-
-    std::queue<GPUDynInstPtr> &getLMReqFIFO() { return lmIssuedRequests; }
     std::queue<GPUDynInstPtr> &getLMRespFIFO() { return lmReturnedRequests; }
+
+    void issueRequest(GPUDynInstPtr gpuDynInst);
+
 
     bool
     isLMRespFIFOWrRdy() const

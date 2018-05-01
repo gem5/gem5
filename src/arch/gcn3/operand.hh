@@ -153,7 +153,7 @@ namespace Gcn3ISA
             ComputeUnit *cu = _gpuDynInst->computeUnit();
 
             for (auto i = 0; i < NumDwords; ++i) {
-                int vgprIdx = cu->registerManager.mapVgpr(wf, _opIdx + i);
+                int vgprIdx = cu->registerManager->mapVgpr(wf, _opIdx + i);
                 vrfData[i] = &cu->vrf[wf->simdId]->readWriteable(vgprIdx);
 
                 DPRINTF(GPUVRF, "Read v[%d]\n", vgprIdx);
@@ -207,7 +207,7 @@ namespace Gcn3ISA
                 ? _gpuDynInst->exec_mask : wf->execMask();
 
             if (NumDwords == 1) {
-                int vgprIdx = cu->registerManager.mapVgpr(wf, _opIdx);
+                int vgprIdx = cu->registerManager->mapVgpr(wf, _opIdx);
                 vrfData[0] = &cu->vrf[wf->simdId]->readWriteable(vgprIdx);
                 assert(vrfData[0]);
                 auto reg_file_vgpr = vrfData[0]->template as<VecElemU32>();
@@ -223,8 +223,8 @@ namespace Gcn3ISA
                 DPRINTF(GPUVRF, "Write v[%d]\n", vgprIdx);
                 cu->vrf[wf->simdId]->printReg(wf, vgprIdx);
             } else if (NumDwords == 2) {
-                int vgprIdx0 = cu->registerManager.mapVgpr(wf, _opIdx);
-                int vgprIdx1 = cu->registerManager.mapVgpr(wf, _opIdx + 1);
+                int vgprIdx0 = cu->registerManager->mapVgpr(wf, _opIdx);
+                int vgprIdx1 = cu->registerManager->mapVgpr(wf, _opIdx + 1);
                 vrfData[0] = &cu->vrf[wf->simdId]->readWriteable(vgprIdx0);
                 vrfData[1] = &cu->vrf[wf->simdId]->readWriteable(vgprIdx1);
                 assert(vrfData[0]);
@@ -605,16 +605,16 @@ namespace Gcn3ISA
 
             if (_opIdx == REG_VCC_LO) {
                 sgprIdx = cu->registerManager
-                    .mapSgpr(wf, wf->reservedScalarRegs - 2 + dword);
+                    ->mapSgpr(wf, wf->reservedScalarRegs - 2 + dword);
             } else if (_opIdx == REG_FLAT_SCRATCH_HI) {
                 sgprIdx = cu->registerManager
-                    .mapSgpr(wf, wf->reservedScalarRegs - 3 + dword);
+                    ->mapSgpr(wf, wf->reservedScalarRegs - 3 + dword);
             } else if (_opIdx == REG_FLAT_SCRATCH_LO) {
                 assert(NumDwords == 1);
                 sgprIdx = cu->registerManager
-                    .mapSgpr(wf, wf->reservedScalarRegs - 4 + dword);
+                    ->mapSgpr(wf, wf->reservedScalarRegs - 4 + dword);
             } else {
-                sgprIdx = cu->registerManager.mapSgpr(wf, _opIdx + dword);
+                sgprIdx = cu->registerManager->mapSgpr(wf, _opIdx + dword);
             }
 
             assert(sgprIdx > -1);

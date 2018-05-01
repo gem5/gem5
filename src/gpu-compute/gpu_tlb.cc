@@ -74,7 +74,6 @@ namespace X86ISA
         allocationPolicy = p->allocationPolicy;
         hasMemSidePort = false;
         accessDistance = p->accessDistance;
-        clock = p->clk_domain->clockPeriod();
 
         tlb.assign(size, TlbEntry());
 
@@ -624,8 +623,8 @@ namespace X86ISA
     {
         bool delayedResponse;
 
-        return GpuTLB::translate(req, tc, nullptr, mode, delayedResponse, false,
-                                 latency);
+        return GpuTLB::translate(req, tc, nullptr, mode, delayedResponse,
+            false, latency);
     }
 
     void
@@ -803,13 +802,13 @@ namespace X86ISA
         }
 
         /*
-         * We now know the TLB lookup outcome (if it's a hit or a miss), as well
-         * as the TLB access latency.
+         * We now know the TLB lookup outcome (if it's a hit or a miss), as
+         * well as the TLB access latency.
          *
          * We create and schedule a new TLBEvent which will help us take the
-         * appropriate actions (e.g., update TLB on a hit, send request to lower
-         * level TLB on a miss, or start a page walk if this was the last-level
-         * TLB)
+         * appropriate actions (e.g., update TLB on a hit, send request to
+         * lower level TLB on a miss, or start a page walk if this was the
+         * last-level TLB)
          */
         TLBEvent *tlb_event =
             new TLBEvent(this, virt_page_addr, lookup_outcome, pkt);
@@ -823,15 +822,15 @@ namespace X86ISA
         assert(tlb_event);
 
         DPRINTF(GPUTLB, "schedule translationReturnEvent @ curTick %d\n",
-                curTick() + this->ticks(hitLatency));
+                curTick() + cyclesToTicks(Cycles(hitLatency)));
 
-        schedule(tlb_event, curTick() + this->ticks(hitLatency));
+        schedule(tlb_event, curTick() + cyclesToTicks(Cycles(hitLatency)));
     }
 
-    GpuTLB::TLBEvent::TLBEvent(GpuTLB* _tlb, Addr _addr, tlbOutcome tlb_outcome,
-                               PacketPtr _pkt)
-        : Event(CPU_Tick_Pri), tlb(_tlb), virtPageAddr(_addr),
-        outcome(tlb_outcome), pkt(_pkt)
+    GpuTLB::TLBEvent::TLBEvent(GpuTLB* _tlb, Addr _addr,
+        tlbOutcome tlb_outcome, PacketPtr _pkt)
+            : Event(CPU_Tick_Pri), tlb(_tlb), virtPageAddr(_addr),
+              outcome(tlb_outcome), pkt(_pkt)
     {
     }
 
@@ -848,7 +847,8 @@ namespace X86ISA
         bool storeCheck = flags & (StoreCheck << FlagShift);
 
         // Do paging protection checks.
-        bool inUser = (m5Reg.cpl == 3 && !(flags & (CPL0FlagBit << FlagShift)));
+        bool inUser
+            = (m5Reg.cpl == 3 && !(flags & (CPL0FlagBit << FlagShift)));
         CR0 cr0 = tc->readMiscRegNoEffect(MISCREG_CR0);
 
         bool badWrite = (!tlb_entry->writable && (inUser || cr0.wp));
@@ -874,10 +874,9 @@ namespace X86ISA
      * The latter calls handelHit with TLB miss as tlbOutcome.
      */
     void
-    GpuTLB::handleTranslationReturn(Addr virt_page_addr, tlbOutcome tlb_outcome,
-            PacketPtr pkt)
+    GpuTLB::handleTranslationReturn(Addr virt_page_addr,
+        tlbOutcome tlb_outcome, PacketPtr pkt)
     {
-
         assert(pkt);
         Addr vaddr = pkt->req->getVaddr();
 
@@ -890,15 +889,18 @@ namespace X86ISA
         TlbEntry *local_entry, *new_entry;
 
         if (tlb_outcome == TLB_HIT) {
-            DPRINTF(GPUTLB, "Translation Done - TLB Hit for addr %#x\n", vaddr);
+            DPRINTF(GPUTLB, "Translation Done - TLB Hit for addr %#x\n",
+                vaddr);
             local_entry = sender_state->tlbEntry;
         } else {
             DPRINTF(GPUTLB, "Translation Done - TLB Miss for addr %#x\n",
                     vaddr);
 
-            // We are returning either from a page walk or from a hit at a lower
-            // TLB level. The senderState should be "carrying" a pointer to the
-            // correct TLBEntry.
+            /**
+             * We are returning either from a page walk or from a hit at a
+             * lower TLB level. The senderState should be "carrying" a pointer
+             * to the correct TLBEntry.
+             */
             new_entry = sender_state->tlbEntry;
             assert(new_entry);
             local_entry = new_entry;
@@ -1024,7 +1026,8 @@ namespace X86ISA
                 TLBEvent *tlb_event = translationReturnEvent[virtPageAddr];
                 assert(tlb_event);
                 tlb_event->updateOutcome(PAGE_WALK);
-                schedule(tlb_event, curTick() + ticks(missLatency2));
+                schedule(tlb_event,
+                         curTick() + cyclesToTicks(Cycles(missLatency2)));
             }
         } else if (outcome == PAGE_WALK) {
             if (update_stats)
@@ -1095,7 +1098,7 @@ namespace X86ISA
         return virtPageAddr;
     }
 
-    /*
+    /**
      * recvTiming receives a coalesced timing request from a TLBCoalescer
      * and it calls issueTLBLookup()
      * It only rejects the packet if we have exceeded the max
@@ -1145,9 +1148,11 @@ namespace X86ISA
             DPRINTF(GPUTLB, "Functional Translation Done - TLB miss for addr "
                     "%#x\n", vaddr);
 
-            // We are returning either from a page walk or from a hit at a lower
-            // TLB level. The senderState should be "carrying" a pointer to the
-            // correct TLBEntry.
+            /**
+             * We are returning either from a page walk or from a hit at a
+             * lower TLB level. The senderState should be "carrying" a pointer
+             * to the correct TLBEntry.
+             */
             new_entry = sender_state->tlbEntry;
             assert(new_entry);
             local_entry = new_entry;
@@ -1267,8 +1272,8 @@ namespace X86ISA
                 } else {
                     // If this was a prefetch, then do the normal thing if it
                     // was a successful translation.  Otherwise, send an empty
-                    // TLB entry back so that it can be figured out as empty and
-                    // handled accordingly.
+                    // TLB entry back so that it can be figured out as empty
+                    // and handled accordingly.
                     if (pte) {
                         DPRINTF(GPUTLB, "Mapping %#x to %#x\n", alignedVaddr,
                                 pte->paddr);
@@ -1343,7 +1348,7 @@ namespace X86ISA
         assert(virt_page_addr == tlb_event->getTLBEventVaddr());
 
         tlb_event->updateOutcome(MISS_RETURN);
-        tlb->schedule(tlb_event, curTick()+tlb->ticks(1));
+        tlb->schedule(tlb_event, curTick()+tlb->clockPeriod());
 
         return true;
     }
@@ -1393,8 +1398,8 @@ namespace X86ISA
         tmp_access_info.sumDistance = 0;
         tmp_access_info.meanDistance = 0;
 
-        ret = TLBFootprint.insert(AccessPatternTable::value_type(virt_page_addr,
-                                  tmp_access_info));
+        ret = TLBFootprint.insert(
+            AccessPatternTable::value_type(virt_page_addr, tmp_access_info));
 
         bool first_page_access = ret.second;
 
@@ -1428,74 +1433,74 @@ namespace X86ISA
             page_stat_file = simout.create(name().c_str())->stream();
 
             // print header
-            *page_stat_file << "page,max_access_distance,mean_access_distance, "
-                            << "stddev_distance" << std::endl;
+            *page_stat_file
+                << "page,max_access_distance,mean_access_distance, "
+                << "stddev_distance" << std::endl;
         }
 
         // update avg. reuse distance footprint
-        AccessPatternTable::iterator iter, iter_begin, iter_end;
         unsigned int sum_avg_reuse_distance_per_page = 0;
 
         // iterate through all pages seen by this TLB
-        for (iter = TLBFootprint.begin(); iter != TLBFootprint.end(); iter++) {
-            sum_avg_reuse_distance_per_page += iter->second.totalReuseDistance /
-                                               iter->second.accessesPerPage;
+        for (auto &iter : TLBFootprint) {
+            sum_avg_reuse_distance_per_page += iter.second.totalReuseDistance /
+                                               iter.second.accessesPerPage;
 
             if (accessDistance) {
-                unsigned int tmp = iter->second.localTLBAccesses[0];
+                unsigned int tmp = iter.second.localTLBAccesses[0];
                 unsigned int prev = tmp;
 
-                for (int i = 0; i < iter->second.localTLBAccesses.size(); ++i) {
+                for (int i = 0; i < iter.second.localTLBAccesses.size(); ++i) {
                     if (i) {
                         tmp = prev + 1;
                     }
 
-                    prev = iter->second.localTLBAccesses[i];
+                    prev = iter.second.localTLBAccesses[i];
                     // update the localTLBAccesses value
                     // with the actual differece
-                    iter->second.localTLBAccesses[i] -= tmp;
+                    iter.second.localTLBAccesses[i] -= tmp;
                     // compute the sum of AccessDistance per page
                     // used later for mean
-                    iter->second.sumDistance +=
-                        iter->second.localTLBAccesses[i];
+                    iter.second.sumDistance +=
+                        iter.second.localTLBAccesses[i];
                 }
 
-                iter->second.meanDistance =
-                    iter->second.sumDistance / iter->second.accessesPerPage;
+                iter.second.meanDistance =
+                    iter.second.sumDistance / iter.second.accessesPerPage;
 
                 // compute std_dev and max  (we need a second round because we
                 // need to know the mean value
                 unsigned int max_distance = 0;
                 unsigned int stddev_distance = 0;
 
-                for (int i = 0; i < iter->second.localTLBAccesses.size(); ++i) {
+                for (int i = 0; i < iter.second.localTLBAccesses.size(); ++i) {
                     unsigned int tmp_access_distance =
-                        iter->second.localTLBAccesses[i];
+                        iter.second.localTLBAccesses[i];
 
                     if (tmp_access_distance > max_distance) {
                         max_distance = tmp_access_distance;
                     }
 
                     unsigned int diff =
-                        tmp_access_distance - iter->second.meanDistance;
+                        tmp_access_distance - iter.second.meanDistance;
                     stddev_distance += pow(diff, 2);
 
                 }
 
                 stddev_distance =
-                    sqrt(stddev_distance/iter->second.accessesPerPage);
+                    sqrt(stddev_distance/iter.second.accessesPerPage);
 
                 if (page_stat_file) {
-                    *page_stat_file << std::hex << iter->first << ",";
+                    *page_stat_file << std::hex << iter.first << ",";
                     *page_stat_file << std::dec << max_distance << ",";
-                    *page_stat_file << std::dec << iter->second.meanDistance
+                    *page_stat_file << std::dec << iter.second.meanDistance
                                     << ",";
                     *page_stat_file << std::dec << stddev_distance;
                     *page_stat_file << std::endl;
                 }
 
                 // erase the localTLBAccesses array
-                iter->second.localTLBAccesses.clear();
+                iter.second.localTLBAccesses.clear();
             }
         }
 

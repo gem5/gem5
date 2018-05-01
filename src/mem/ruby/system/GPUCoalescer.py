@@ -36,6 +36,7 @@ from m5.objects.Sequencer import *
 
 class RubyGPUCoalescer(RubyPort):
    type = 'RubyGPUCoalescer'
+   abstract = True
    cxx_class = 'GPUCoalescer'
    cxx_header = "mem/ruby/system/GPUCoalescer.hh"
 
@@ -44,8 +45,6 @@ class RubyGPUCoalescer(RubyPort):
                                 "max requests (incl. prefetches) outstanding")
    max_coalesces_per_cycle = Param.Int(1, "max instructions that can be " \
                                 "coalesced in a single cycle")
-   assume_rfo = Param.Bool(True, "assume protocol implementes Read for "
-                           "Ownership coherence");
 
    icache = Param.RubyCache("")
    dcache = Param.RubyCache("")

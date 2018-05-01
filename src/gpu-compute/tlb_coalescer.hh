@@ -65,13 +65,6 @@ class ThreadContext;
  */
 class TLBCoalescer : public ClockedObject
 {
-   protected:
-    // TLB clock: will inherit clock from shader's clock period in terms
-    // of nuber of ticks of curTime (aka global simulation clock)
-    // The assignment of TLB clock from shader clock is done in the
-    // python config files.
-    int clock;
-
   public:
     typedef TLBCoalescerParams Params;
     TLBCoalescer(const Params *p);
@@ -105,7 +98,8 @@ class TLBCoalescer : public ClockedObject
      * option is to change it to curTick(), so we coalesce based
      * on the receive time.
      */
-    typedef std::unordered_map<int64_t, std::vector<coalescedReq>> CoalescingFIFO;
+    typedef std::unordered_map<int64_t, std::vector<coalescedReq>>
+        CoalescingFIFO;
 
     CoalescingFIFO coalescerFIFO;
 
@@ -143,13 +137,6 @@ class TLBCoalescer : public ClockedObject
     void updatePhysAddresses(PacketPtr pkt);
     void regStats() override;
 
-    // Clock related functions. Maps to-and-from
-    // Simulation ticks and object clocks.
-    Tick frequency() const { return SimClock::Frequency / clock; }
-    Tick ticks(int numCycles) const { return (Tick)clock * numCycles; }
-    Tick curCycle() const { return curTick() / clock; }
-    Tick tickToCycles(Tick val) const { return val / clock;}
-
     class CpuSidePort : public SlavePort
     {
       public:
@@ -171,7 +158,8 @@ class TLBCoalescer : public ClockedObject
         virtual void
         recvRespRetry()
         {
-            fatal("recvRespRetry() is not implemented in the TLB coalescer.\n");
+            fatal("recvRespRetry() is not implemented in the TLB "
+                "coalescer.\n");
         }
 
         virtual AddrRangeList getAddrRanges() const;

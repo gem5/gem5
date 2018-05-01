@@ -31,125 +31,69 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __GPU_DISPATCHER_HH__
-#define __GPU_DISPATCHER_HH__
+/**
+ * @file
+ * The GPUDispatcher is the component of the shader that is responsible
+ * for creating and dispatching WGs to the compute units. If all WGs in
+ * a kernel cannot be dispatched simultaneously, then the dispatcher will
+ * keep track of all pending WGs and dispatch them as resources become
+ * available.
+ */
+
+#ifndef __GPU_COMPUTE_DISPATCHER_HH__
+#define __GPU_COMPUTE_DISPATCHER_HH__
 
 #include <queue>
+#include <unordered_map>
 #include <vector>
 
 #include "base/statistics.hh"
-#include "dev/dma_device.hh"
-#include "gpu-compute/compute_unit.hh"
-#include "gpu-compute/ndrange.hh"
-#include "gpu-compute/qstruct.hh"
-#include "mem/port.hh"
-#include "params/GpuDispatcher.hh"
+#include "dev/hsa/hsa_packet.hh"
+#include "params/GPUDispatcher.hh"
+#include "sim/sim_object.hh"
 
-class BaseCPU;
+class GPUCommandProcessor;
+class HSAQueueEntry;
 class Shader;
+class Wavefront;
 
-class GpuDispatcher : public DmaDevice
+class GPUDispatcher : public SimObject
 {
-    public:
-        typedef GpuDispatcherParams Params;
+  public:
+    typedef GPUDispatcherParams Params;
 
-        MasterID masterId() { return _masterId; }
+    GPUDispatcher(const Params *p);
+    ~GPUDispatcher();
 
-    protected:
-        MasterID _masterId;
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
+    void regStats() override;
+    void setCommandProcessor(GPUCommandProcessor *gpu_cmd_proc);
+    void setShader(Shader *new_shader);
+    void exec();
+    bool isReachingKernelEnd(Wavefront *wf);
+    void updateInvCounter(int kern_id, int val=-1);
+    bool updateWbCounter(int kern_id, int val=-1);
+    int getOutstandingWbs(int kern_id);
+    void notifyWgCompl(Wavefront *wf);
+    void scheduleDispatch();
+    void dispatch(HSAQueueEntry *task);
+    HSAQueueEntry* hsaTask(int disp_id);
 
-        // Base and length of PIO register space
-        Addr pioAddr;
-        Addr pioSize;
-        Tick pioDelay;
-
-        HsaQueueEntry curTask;
-
-        std::unordered_map<int, NDRange> ndRangeMap;
-        NDRange ndRange;
-
-        // list of kernel_ids to launch
-        std::queue<int> execIds;
-        // list of kernel_ids that have finished
-        std::queue<int> doneIds;
-
-        uint64_t dispatchCount;
-        // is there a kernel in execution?
-        bool dispatchActive;
-
-        BaseCPU *cpu;
-        Shader *shader;
-        ClDriver *driver;
-        EventFunctionWrapper tickEvent;
-
-
-        static GpuDispatcher *instance;
-
-        // sycall emulation mode can have only 1 application running(?)
-        // else we have to do some pid based tagging
-        // unused
-        typedef std::unordered_map<uint64_t, uint64_t> TranslationBuffer;
-        TranslationBuffer tlb;
-
-    public:
-        /*statistics*/
-        Stats::Scalar num_kernelLaunched;
-        GpuDispatcher(const Params *p);
-
-        ~GpuDispatcher() { }
-
-        void exec();
-        virtual void serialize(CheckpointOut &cp) const override;
-        virtual void unserialize(CheckpointIn &cp) override;
-        void notifyWgCompl(Wavefront *w);
-        void scheduleDispatch();
-        void accessUserVar(BaseCPU *cpu, uint64_t addr, int val, int off);
-
-        // using singleton so that glue code can pass pointer locations
-        // to the dispatcher. when there are multiple dispatchers, we can
-        // call something like getInstance(index)
-        static void
-         setInstance(GpuDispatcher *_instance)
-        {
-            instance = _instance;
-        }
-
-        static GpuDispatcher* getInstance() { return instance; }
-
-        class TLBPort : public MasterPort
-        {
-          public:
-
-            TLBPort(const std::string &_name, GpuDispatcher *_dispatcher)
-                : MasterPort(_name, _dispatcher), dispatcher(_dispatcher) { }
-
-          protected:
-            GpuDispatcher *dispatcher;
-
-            virtual bool recvTimingResp(PacketPtr pkt) { return true; }
-            virtual Tick recvAtomic(PacketPtr pkt) { return 0; }
-            virtual void recvFunctional(PacketPtr pkt) { }
-            virtual void recvRangeChange() { }
-            virtual void recvReqRetry() { }
-
-        };
-
-        TLBPort *tlbPort;
-
-        Port &getPort(const std::string &if_name,
-                      PortID idx=InvalidPortID) override;
-
-        AddrRangeList getAddrRanges() const override;
-        Tick read(PacketPtr pkt) override;
-        Tick write(PacketPtr pkt) override;
-
-        // helper functions to retrieve/set GPU attributes
-        int getNumCUs();
-        int wfSize() const;
-        void setFuncargsSize(int funcargs_size);
-
-        /** Returns the size of the static hardware context of a wavefront */
-        uint32_t getStaticContextSize() const;
+  private:
+    Shader *shader;
+    GPUCommandProcessor *gpuCmdProc;
+    EventFunctionWrapper tickEvent;
+    std::unordered_map<int, HSAQueueEntry*> hsaQueueEntries;
+    // list of kernel_ids to launch
+    std::queue<int> execIds;
+    // list of kernel_ids that have finished
+    std::queue<int> doneIds;
+    // is there a kernel in execution?
+    bool dispatchActive;
+    /*statistics*/
+    Stats::Scalar numKernelLaunched;
+    Stats::Scalar cyclesWaitingForDispatch;
 };
 
-#endif // __GPU_DISPATCHER_HH__
+#endif // __GPU_COMPUTE_DISPATCHER_HH__

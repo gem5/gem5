@@ -35,6 +35,7 @@
 #define __EXEC_STAGE_HH__
 
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -53,8 +54,9 @@ enum STAT_STATUS
 
 enum DISPATCH_STATUS
 {
-    EMPTY = 0,
-    FILLED
+    EMPTY = 0, // no wave present in dispatchList slot
+    EXREADY, // wave ready for execution
+    SKIP, // extra memory resource needed, Shared Mem. only
 };
 
 // Execution stage.
@@ -72,18 +74,21 @@ class ExecStage
     void init(ComputeUnit *cu);
     void exec();
 
+    std::string dispStatusToStr(int j);
+    void dumpDispList();
+
     std::string name() { return _name; }
     void regStats();
     // number of idle cycles
     Stats::Scalar numCyclesWithNoIssue;
     // number of busy cycles
     Stats::Scalar numCyclesWithInstrIssued;
-    // number of cycles (per execution unit) during which at least one
-    // instruction was issued to that unit
+    // number of cycles during which at least one
+    // instruction was issued to an execution resource type
     Stats::Vector numCyclesWithInstrTypeIssued;
-    // number of idle cycles (per execution unit) during which the unit issued
-    // no instruction targeting that unit, even though there is at least one
-    // Wavefront with such an instruction as the oldest
+    // number of idle cycles during which the scheduler
+    // issued no instructions targeting a specific
+    // execution resource type
     Stats::Vector numCyclesWithNoInstrTypeIssued;
     // SIMDs active per cycle
     Stats::Distribution spc;
@@ -92,11 +97,6 @@ class ExecStage
     void collectStatistics(enum STAT_STATUS stage, int unitId);
     void initStatistics();
     ComputeUnit *computeUnit;
-    uint32_t numSIMDs;
-
-    // Number of memory execution resources;
-    // both global and local memory execution resources in CU
-    uint32_t numMemUnits;
 
     // List of waves which will be dispatched to
     // each execution resource. A FILLED implies
@@ -108,18 +108,12 @@ class ExecStage
     // dispatchList is used to communicate between schedule
     // and exec stage
     std::vector<std::pair<Wavefront*, DISPATCH_STATUS>> *dispatchList;
-    // flag per vector SIMD unit that is set when there is at least one
-    // WV that has a vector ALU instruction as the oldest in its
-    // Instruction Buffer
-    std::vector<bool> *vectorAluInstAvail;
-    int *glbMemInstAvail;
-    int *shrMemInstAvail;
     bool lastTimeInstExecuted;
     bool thisTimeInstExecuted;
     bool instrExecuted;
     Stats::Scalar  numTransActiveIdle;
     Stats::Distribution idleDur;
-    uint32_t executionResourcesUsed;
+    int executionResourcesUsed;
     uint64_t idle_dur;
     std::string _name;
 };

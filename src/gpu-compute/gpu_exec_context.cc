@@ -59,8 +59,8 @@ GPUExecContext::readMiscReg(int opIdx) const
 }
 
 void
-GPUExecContext::writeMiscReg(int opIdx, RegVal operandVal)
+GPUExecContext::writeMiscReg(int opIdx, RegVal val)
 {
     assert(gpuISA);
-    gpuISA->writeMiscReg(opIdx, operandVal);
+    gpuISA->writeMiscReg(opIdx, val);
 }

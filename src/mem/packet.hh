@@ -83,6 +83,7 @@ class MemCmd
         ReadRespWithInvalidate,
         WriteReq,
         WriteResp,
+        WriteCompleteResp,
         WritebackDirty,
         WritebackClean,
         WriteClean,            // writes dirty data below without evicting

@@ -138,42 +138,6 @@ structure (Sequencer, external = "yes") {
   bool checkResourceAvailable(CacheResourceType, Addr);
 }
 
-structure (GPUCoalescer, external = "yes") {
-  void readCallback(Addr, DataBlock);
-  void readCallback(Addr, MachineType, DataBlock);
-  void readCallback(Addr, MachineType, DataBlock,
-                    Cycles, Cycles, Cycles);
-  void readCallback(Addr, MachineType, DataBlock,
-                    Cycles, Cycles, Cycles, bool);
-  void writeCallback(Addr, DataBlock);
-  void writeCallback(Addr, MachineType, DataBlock);
-  void writeCallback(Addr, MachineType, DataBlock,
-                     Cycles, Cycles, Cycles);
-  void writeCallback(Addr, MachineType, DataBlock,
-                     Cycles, Cycles, Cycles, bool);
-  void evictionCallback(Addr);
-  void recordCPReadCallBack(MachineID, MachineID);
-  void recordCPWriteCallBack(MachineID, MachineID);
-}
-
-structure (VIPERCoalescer, external = "yes") {
-  void readCallback(Addr, DataBlock);
-  void readCallback(Addr, MachineType, DataBlock);
-  void readCallback(Addr, MachineType, DataBlock,
-                    Cycles, Cycles, Cycles);
-  void readCallback(Addr, MachineType, DataBlock,
-                    Cycles, Cycles, Cycles, bool);
-  void writeCallback(Addr, DataBlock);
-  void writeCallback(Addr, MachineType, DataBlock);
-  void writeCallback(Addr, MachineType, DataBlock,
-                     Cycles, Cycles, Cycles);
-  void writeCallback(Addr, MachineType, DataBlock,
-                     Cycles, Cycles, Cycles, bool);
-  void invCallback(Addr);
-  void wbCallback(Addr);
-  void evictionCallback(Addr);
-}
-
 structure(RubyRequest, desc="...", interface="Message", external="yes") {
   Addr LineAddress,       desc="Line address for this request";
   Addr PhysicalAddress,   desc="Physical address for this request";
@@ -186,8 +150,6 @@ structure(RubyRequest, desc="...", interface="Message", external="yes") {
   WriteMask writeMask,       desc="Writethrough mask";
   DataBlock WTData,          desc="Writethrough data block";
   int wfid,                  desc="Writethrough wavefront";
-  HSAScope scope,            desc="HSA scope";
-  HSASegment segment,        desc="HSA segment";
   PacketPtr pkt,             desc="Packet associated with this request";
 }
 

@@ -59,6 +59,7 @@ class GPUStaticInst : public GPUStaticInstFlags
 {
   public:
     GPUStaticInst(const std::string &opcode);
+    virtual ~GPUStaticInst() { }
     void instAddr(int inst_addr) { _instAddr = inst_addr; }
     int instAddr() const { return _instAddr; }
     int nextInstAddr() const { return _instAddr + instSize(); }
@@ -71,15 +72,18 @@ class GPUStaticInst : public GPUStaticInstFlags
 
     int ipdInstNum() const { return _ipdInstNum; }
 
+    virtual TheGpuISA::ScalarRegU32 srcLiteral() const { return 0; }
+
     virtual void execute(GPUDynInstPtr gpuDynInst) = 0;
     virtual void generateDisassembly() = 0;
     const std::string& disassemble();
     virtual int getNumOperands() = 0;
-    virtual bool isCondRegister(int operandIndex) = 0;
     virtual bool isScalarRegister(int operandIndex) = 0;
     virtual bool isVectorRegister(int operandIndex) = 0;
     virtual bool isSrcOperand(int operandIndex) = 0;
     virtual bool isDstOperand(int operandIndex) = 0;
+    virtual bool isFlatScratchRegister(int opIdx) = 0;
+    virtual bool isExecMaskRegister(int opIdx) = 0;
     virtual int getOperandSize(int operandIndex) = 0;
 
     virtual int getRegisterIndex(int operandIndex,
@@ -88,12 +92,24 @@ class GPUStaticInst : public GPUStaticInstFlags
     virtual int numDstRegOperands() = 0;
     virtual int numSrcRegOperands() = 0;
 
-    virtual bool isValid() const = 0;
+    virtual int coalescerTokenCount() const { return 0; }
+
+    int numDstVecOperands();
+    int numSrcVecOperands();
+    int numDstVecDWORDs();
+    int numSrcVecDWORDs();
+
+    int numOpdDWORDs(int operandIdx);
 
     bool isALU() const { return _flags[ALU]; }
     bool isBranch() const { return _flags[Branch]; }
+    bool isCondBranch() const { return _flags[CondBranch]; }
     bool isNop() const { return _flags[Nop]; }
     bool isReturn() const { return _flags[Return]; }
+    bool isEndOfKernel() const { return _flags[EndOfKernel]; }
+    bool isKernelLaunch() const { return _flags[KernelLaunch]; }
+    bool isSDWAInst() const { return _flags[IsSDWA]; }
+    bool isDPPInst() const { return _flags[IsDPP]; }
 
     bool
     isUnconditionalJump() const
@@ -105,7 +121,7 @@ class GPUStaticInst : public GPUStaticInstFlags
     bool isWaitcnt() const { return _flags[Waitcnt]; }
 
     bool isBarrier() const { return _flags[MemBarrier]; }
-    bool isMemFence() const { return _flags[MemFence]; }
+    bool isMemSync() const { return _flags[MemSync]; }
     bool isMemRef() const { return _flags[MemoryRef]; }
     bool isFlat() const { return _flags[Flat]; }
     bool isLoad() const { return _flags[Load]; }
@@ -125,6 +141,13 @@ class GPUStaticInst : public GPUStaticInstFlags
     bool writesSCC() const { return _flags[WritesSCC]; }
     bool readsVCC() const { return _flags[ReadsVCC]; }
     bool writesVCC() const { return _flags[WritesVCC]; }
+    // Identify instructions that implicitly read the Execute mask
+    // as a source operand but not to dictate which threads execute.
+    bool readsEXEC() const { return _flags[ReadsEXEC]; }
+    bool writesEXEC() const { return _flags[WritesEXEC]; }
+    bool readsMode() const { return _flags[ReadsMode]; }
+    bool writesMode() const { return _flags[WritesMode]; }
+    bool ignoreExec() const { return _flags[IgnoreExec]; }
 
     bool isAtomicAnd() const { return _flags[AtomicAnd]; }
     bool isAtomicOr() const { return _flags[AtomicOr]; }
@@ -166,33 +189,28 @@ class GPUStaticInst : public GPUStaticInstFlags
     bool isReadOnlySeg() const { return _flags[ReadOnlySegment]; }
     bool isSpillSeg() const { return _flags[SpillSegment]; }
 
-    bool isWorkitemScope() const { return _flags[WorkitemScope]; }
-    bool isWavefrontScope() const { return _flags[WavefrontScope]; }
-    bool isWorkgroupScope() const { return _flags[WorkgroupScope]; }
-    bool isDeviceScope() const { return _flags[DeviceScope]; }
-    bool isSystemScope() const { return _flags[SystemScope]; }
-    bool isNoScope() const { return _flags[NoScope]; }
-
-    bool isRelaxedOrder() const { return _flags[RelaxedOrder]; }
-    bool isAcquire() const { return _flags[Acquire]; }
-    bool isRelease() const { return _flags[Release]; }
-    bool isAcquireRelease() const { return _flags[AcquireRelease]; }
-    bool isNoOrder() const { return _flags[NoOrder]; }
-
     /**
-     * Coherence domain of a memory instruction. Only valid for
-     * machine ISA. The coherence domain specifies where it is
-     * possible to perform memory synchronization, e.g., acquire
-     * or release, from the shader kernel.
+     * Coherence domain of a memory instruction. The coherence domain
+     * specifies where it is possible to perform memory synchronization
+     * (e.g., acquire or release) from the shader kernel.
      *
-     * isGloballyCoherent(): returns true if kernel is sharing memory
-     * with other work-items on the same device (GPU)
+     * isGloballyCoherent(): returns true if WIs share same device
+     * isSystemCoherent(): returns true if WIs or threads in different
+     *                     devices share memory
      *
-     * isSystemCoherent(): returns true if kernel is sharing memory
-     * with other work-items on a different device (GPU) or the host (CPU)
      */
     bool isGloballyCoherent() const { return _flags[GloballyCoherent]; }
     bool isSystemCoherent() const { return _flags[SystemCoherent]; }
+
+    // Floating-point instructions
+    bool isF16() const { return _flags[F16]; }
+    bool isF32() const { return _flags[F32]; }
+    bool isF64() const { return _flags[F64]; }
+
+    // FMA, MAC, MAD instructions
+    bool isFMA() const { return _flags[FMA]; }
+    bool isMAC() const { return _flags[MAC]; }
+    bool isMAD() const { return _flags[MAD]; }
 
     virtual int instSize() const = 0;
 
@@ -217,37 +235,36 @@ class GPUStaticInst : public GPUStaticInstFlags
     // For flat memory accesses
     Enums::StorageClassType executed_as;
 
-    void setFlag(Flags flag) { _flags[flag] = true; }
+    void setFlag(Flags flag) {
+        _flags[flag] = true;
 
-    virtual void
-    execLdAcq(GPUDynInstPtr gpuDynInst)
-    {
-        fatal("calling execLdAcq() on a non-load instruction.\n");
+        if (isGroupSeg()) {
+            executed_as = Enums::SC_GROUP;
+        } else if (isGlobalSeg()) {
+            executed_as = Enums::SC_GLOBAL;
+        } else if (isPrivateSeg()) {
+            executed_as = Enums::SC_PRIVATE;
+        } else if (isSpillSeg()) {
+            executed_as = Enums::SC_SPILL;
+        } else if (isReadOnlySeg()) {
+            executed_as = Enums::SC_READONLY;
+        } else if (isKernArgSeg()) {
+            executed_as = Enums::SC_KERNARG;
+        } else if (isArgSeg()) {
+            executed_as = Enums::SC_ARG;
+        }
     }
-
-    virtual void
-    execSt(GPUDynInstPtr gpuDynInst)
-    {
-        fatal("calling execLdAcq() on a non-load instruction.\n");
-    }
-
-    virtual void
-    execAtomic(GPUDynInstPtr gpuDynInst)
-    {
-        fatal("calling execAtomic() on a non-atomic instruction.\n");
-    }
-
-    virtual void
-    execAtomicAcq(GPUDynInstPtr gpuDynInst)
-    {
-        fatal("calling execAtomicAcq() on a non-atomic instruction.\n");
-    }
+    const std::string& opcode() const { return _opcode; }
 
   protected:
-    const std::string opcode;
+    const std::string _opcode;
     std::string disassembly;
     int _instNum;
     int _instAddr;
+    int srcVecOperands;
+    int dstVecOperands;
+    int srcVecDWORDs;
+    int dstVecDWORDs;
     /**
      * Identifier of the immediate post-dominator instruction.
      */
@@ -262,9 +279,9 @@ class KernelLaunchStaticInst : public GPUStaticInst
     KernelLaunchStaticInst() : GPUStaticInst("kernel_launch")
     {
         setFlag(Nop);
+        setFlag(KernelLaunch);
+        setFlag(MemSync);
         setFlag(Scalar);
-        setFlag(Acquire);
-        setFlag(SystemScope);
         setFlag(GlobalSegment);
     }
 
@@ -277,11 +294,14 @@ class KernelLaunchStaticInst : public GPUStaticInst
     void
     generateDisassembly() override
     {
-        disassembly = opcode;
+        disassembly = _opcode;
     }
 
     int getNumOperands() override { return 0; }
-    bool isCondRegister(int operandIndex) override { return false; }
+    bool isFlatScratchRegister(int opIdx) override { return false; }
+    // return true if the Execute mask is explicitly used as a source
+    // register operand
+    bool isExecMaskRegister(int opIdx) override { return false; }
     bool isScalarRegister(int operandIndex) override { return false; }
     bool isVectorRegister(int operandIndex) override { return false; }
     bool isSrcOperand(int operandIndex) override { return false; }
@@ -296,7 +316,6 @@ class KernelLaunchStaticInst : public GPUStaticInst
 
     int numDstRegOperands() override { return 0; }
     int numSrcRegOperands() override { return 0; }
-    bool isValid() const override { return true; }
     int instSize() const override { return 0; }
 };
 

@@ -69,26 +69,7 @@ namespace X86ISA
 
         uint32_t configAddress;
 
-        // TLB clock: will inherit clock from shader's clock period in terms
-        // of nuber of ticks of curTime (aka global simulation clock)
-        // The assignment of TLB clock from shader clock is done in the python
-        // config files.
-        int clock;
-
       public:
-        // clock related functions ; maps to-and-from Simulation ticks and
-        // object clocks.
-        Tick frequency() const { return SimClock::Frequency / clock; }
-
-        Tick
-        ticks(int numCycles) const
-        {
-            return (Tick)clock * numCycles;
-        }
-
-        Tick curCycle() const { return curTick() / clock; }
-        Tick tickToCycles(Tick val) const { return val / clock;}
-
         typedef X86GPUTLBParams Params;
         GpuTLB(const Params *p);
         ~GpuTLB();

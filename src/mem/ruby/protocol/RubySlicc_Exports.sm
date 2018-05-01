@@ -103,26 +103,6 @@ enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent")
   NotPresent, desc="block is NotPresent";
   Busy,       desc="block is in a transient state, currently invalid";
 }
-//HSA scopes
-enumeration(HSAScope, desc="...", default="HSAScope_UNSPECIFIED") {
-  UNSPECIFIED, desc="Unspecified scope";
-  NOSCOPE,     desc="Explictly unscoped";
-  WAVEFRONT,   desc="Wavefront scope";
-  WORKGROUP,   desc="Workgroup scope";
-  DEVICE,      desc="Device scope";
-  SYSTEM,      desc="System scope";
-}
-
-// HSA segment types
-enumeration(HSASegment, desc="...", default="HSASegment_GLOBAL") {
-  GLOBAL,   desc="Global segment";
-  GROUP,    desc="Group segment";
-  PRIVATE,  desc="Private segment";
-  KERNARG,  desc="Kernarg segment";
-  READONLY, desc="Readonly segment";
-  SPILL,    desc="Spill segment";
-  ARG,      desc="Arg segment";
-}
 
 // TesterStatus
 enumeration(TesterStatus, desc="...") {

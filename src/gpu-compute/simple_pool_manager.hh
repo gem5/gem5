@@ -38,14 +38,15 @@
 #include <cstdint>
 
 #include "gpu-compute/pool_manager.hh"
+#include "params/SimplePoolManager.hh"
 
 // Simple Pool Manager: allows one region per pool. No region merging is
 // supported.
 class SimplePoolManager : public PoolManager
 {
   public:
-    SimplePoolManager(uint32_t minAlloc, uint32_t poolSize)
-        : PoolManager(minAlloc, poolSize), _regionSize(0), _nxtFreeIdx(0),
+    SimplePoolManager(const PoolManagerParams *p)
+        : PoolManager(p), _regionSize(0), _nxtFreeIdx(0),
           _reservedGroups(0)
     {
     }
@@ -62,7 +63,7 @@ class SimplePoolManager : public PoolManager
     // be reserved)
     uint32_t _regionSize;
     // next index to allocate a region
-    uint8_t _nxtFreeIdx;
+    int _nxtFreeIdx;
     // number of groups that reserve a region
     uint32_t _reservedGroups;
 };

@@ -39,4 +39,3 @@ class VIPERCoalescer(RubyGPUCoalescer):
     cxx_header = "mem/ruby/system/VIPERCoalescer.hh"
     max_inv_per_cycle = Param.Int(32, "max invalidations per cycle")
     max_wb_per_cycle = Param.Int(32, "max writebacks per cycle")
-    assume_rfo = False

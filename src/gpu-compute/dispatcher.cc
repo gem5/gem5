@@ -34,66 +34,76 @@
 
 #include "gpu-compute/dispatcher.hh"
 
-#include "cpu/base.hh"
 #include "debug/GPUDisp.hh"
-#include "gpu-compute/cl_driver.hh"
-#include "gpu-compute/cl_event.hh"
+#include "debug/GPUKernelInfo.hh"
+#include "debug/GPUWgLatency.hh"
+#include "gpu-compute/gpu_command_processor.hh"
+#include "gpu-compute/hsa_queue_entry.hh"
 #include "gpu-compute/shader.hh"
 #include "gpu-compute/wavefront.hh"
-#include "mem/packet_access.hh"
+#include "sim/syscall_emul_buf.hh"
+#include "sim/system.hh"
 
-GpuDispatcher *GpuDispatcher::instance = nullptr;
-
-GpuDispatcher::GpuDispatcher(const Params *p)
-    : DmaDevice(p), _masterId(p->system->getMasterId(this, "disp")),
-      pioAddr(p->pio_addr), pioSize(4096), pioDelay(p->pio_latency),
-      dispatchCount(0), dispatchActive(false), cpu(p->cpu),
-      shader(p->shader_pointer), driver(p->cl_driver),
-      tickEvent([this]{ exec(); }, "GPU Dispatcher tick",
-                false, Event::CPU_Tick_Pri)
+GPUDispatcher::GPUDispatcher(const Params *p)
+    : SimObject(p), shader(nullptr), gpuCmdProc(nullptr),
+      tickEvent([this]{ exec(); },
+          "GPU Dispatcher tick", false, Event::CPU_Tick_Pri),
+      dispatchActive(false)
 {
-    shader->handshake(this);
-    driver->handshake(this);
-
-    ndRange.wg_disp_rem = false;
-    ndRange.globalWgId = 0;
-
     schedule(&tickEvent, 0);
-
-    // translation port for the dispatcher
-    tlbPort = new TLBPort(csprintf("%s-port%d", name()), this);
-
-    num_kernelLaunched
-    .name(name() + ".num_kernel_launched")
-    .desc("number of kernel launched")
-    ;
 }
 
-GpuDispatcher *GpuDispatcherParams::create()
+GPUDispatcher::~GPUDispatcher()
 {
-    GpuDispatcher *dispatcher = new GpuDispatcher(this);
-    GpuDispatcher::setInstance(dispatcher);
-
-    return GpuDispatcher::getInstance();
 }
 
 void
-GpuDispatcher::serialize(CheckpointOut &cp) const
+GPUDispatcher::regStats()
+{
+    numKernelLaunched
+    .name(name() + ".num_kernel_launched")
+    .desc("number of kernel launched")
+    ;
+
+    cyclesWaitingForDispatch
+    .name(name() + ".cycles_wait_dispatch")
+    .desc("number of cycles with outstanding wavefronts "
+          "that are waiting to be dispatched")
+    ;
+}
+
+HSAQueueEntry*
+GPUDispatcher::hsaTask(int disp_id)
+{
+    assert(hsaQueueEntries.find(disp_id) != hsaQueueEntries.end());
+    return hsaQueueEntries[disp_id];
+}
+
+void
+GPUDispatcher::setCommandProcessor(GPUCommandProcessor *gpu_cmd_proc)
+{
+    gpuCmdProc = gpu_cmd_proc;
+}
+
+void
+GPUDispatcher::setShader(Shader *new_shader)
+{
+    shader = new_shader;
+}
+
+void
+GPUDispatcher::serialize(CheckpointOut &cp) const
 {
     Tick event_tick = 0;
-
-    if (ndRange.wg_disp_rem)
-        fatal("Checkpointing not supported during active workgroup execution");
 
     if (tickEvent.scheduled())
         event_tick = tickEvent.when();
 
     SERIALIZE_SCALAR(event_tick);
-
 }
 
 void
-GpuDispatcher::unserialize(CheckpointIn &cp)
+GPUDispatcher::unserialize(CheckpointIn &cp)
 {
     Tick event_tick;
 
@@ -102,288 +112,256 @@ GpuDispatcher::unserialize(CheckpointIn &cp)
 
     UNSERIALIZE_SCALAR(event_tick);
 
-    if (event_tick)
+    if (event_tick) {
         schedule(&tickEvent, event_tick);
+    }
 }
 
-AddrRangeList
-GpuDispatcher::getAddrRanges() const
+/**
+ * After all relevant HSA data structures have been traversed/extracted
+ * from memory by the CP, dispatch() is called on the dispatcher. This will
+ * schedule a dispatch event that, when triggered, will attempt to dispatch
+ * the WGs associated with the given task to the CUs.
+ */
+void
+GPUDispatcher::dispatch(HSAQueueEntry *task)
 {
-    AddrRangeList ranges;
+    ++numKernelLaunched;
 
-    DPRINTF(GPUDisp, "dispatcher registering addr range at %#x size %#x\n",
-            pioAddr, pioSize);
+    DPRINTF(GPUDisp, "launching kernel: %s, dispatch ID: %d\n",
+            task->kernelName(), task->dispatchId());
 
-    ranges.push_back(RangeSize(pioAddr, pioSize));
+    execIds.push(task->dispatchId());
+    dispatchActive = true;
+    hsaQueueEntries.emplace(task->dispatchId(), task);
 
-    return ranges;
-}
-
-Tick
-GpuDispatcher::read(PacketPtr pkt)
-{
-    assert(pkt->getAddr() >= pioAddr);
-    assert(pkt->getAddr() < pioAddr + pioSize);
-
-    int offset = pkt->getAddr() - pioAddr;
-    pkt->allocate();
-
-    DPRINTF(GPUDisp, " read register %#x size=%d\n", offset, pkt->getSize());
-
-    if (offset < 8) {
-        assert(!offset);
-        assert(pkt->getSize() == 8);
-
-        uint64_t retval = dispatchActive;
-        pkt->setLE(retval);
-    } else {
-        offset -= 8;
-        assert(offset + pkt->getSize() < sizeof(HsaQueueEntry));
-        char *curTaskPtr = (char*)&curTask;
-
-        memcpy(pkt->getPtr<const void*>(), curTaskPtr + offset, pkt->getSize());
+    if (!tickEvent.scheduled()) {
+        schedule(&tickEvent, curTick() + shader->clockPeriod());
     }
-
-    pkt->makeAtomicResponse();
-
-    return pioDelay;
-}
-
-Tick
-GpuDispatcher::write(PacketPtr pkt)
-{
-    assert(pkt->getAddr() >= pioAddr);
-    assert(pkt->getAddr() < pioAddr + pioSize);
-
-    int offset = pkt->getAddr() - pioAddr;
-
-#if TRACING_ON
-    uint64_t data_val = 0;
-
-    switch (pkt->getSize()) {
-      case 1:
-        data_val = pkt->getLE<uint8_t>();
-        break;
-      case 2:
-        data_val = pkt->getLE<uint16_t>();
-        break;
-      case 4:
-        data_val = pkt->getLE<uint32_t>();
-        break;
-      case 8:
-        data_val = pkt->getLE<uint64_t>();
-        break;
-      default:
-        DPRINTF(GPUDisp, "bad size %d\n", pkt->getSize());
-    }
-
-    DPRINTF(GPUDisp, "write register %#x value %#x size=%d\n", offset, data_val,
-            pkt->getSize());
-#endif
-    if (!offset) {
-        static int nextId = 0;
-
-        // The depends field of the qstruct, which was previously unused, is
-        // used to communicate with simulated application.
-        if (curTask.depends) {
-            HostState hs;
-            shader->ReadMem((uint64_t)(curTask.depends), &hs,
-                            sizeof(HostState), 0);
-
-            // update event start time (in nano-seconds)
-            uint64_t start = curTick() / 1000;
-
-            shader->WriteMem((uint64_t)(&((_cl_event*)hs.event)->start),
-                             &start, sizeof(uint64_t), 0);
-        }
-
-        // launch kernel
-        ++num_kernelLaunched;
-
-        NDRange *ndr = &(ndRangeMap[nextId]);
-        // copy dispatch info
-        ndr->q = curTask;
-
-        // update the numDispTask polled by the runtime
-        accessUserVar(cpu, (uint64_t)(curTask.numDispLeft), 0, 1);
-
-        ndr->numWgTotal = 1;
-
-        for (int i = 0; i < 3; ++i) {
-            ndr->wgId[i] = 0;
-            ndr->numWg[i] = divCeil(curTask.gdSize[i], curTask.wgSize[i]);
-            ndr->numWgTotal *= ndr->numWg[i];
-        }
-
-        ndr->numWgCompleted = 0;
-        ndr->globalWgId = 0;
-        ndr->wg_disp_rem = true;
-        ndr->execDone = false;
-        ndr->addrToNotify = (volatile bool*)curTask.addrToNotify;
-        ndr->numDispLeft = (volatile uint32_t*)curTask.numDispLeft;
-        ndr->dispatchId = nextId;
-        ndr->curCid = pkt->req->contextId();
-        DPRINTF(GPUDisp, "launching kernel %d\n",nextId);
-        execIds.push(nextId);
-        ++nextId;
-
-        dispatchActive = true;
-
-        if (!tickEvent.scheduled()) {
-            schedule(&tickEvent, curTick() + shader->ticks(1));
-        }
-    } else {
-        // populate current task struct
-        // first 64 bits are launch reg
-        offset -= 8;
-        assert(offset < sizeof(HsaQueueEntry));
-        char *curTaskPtr = (char*)&curTask;
-        memcpy(curTaskPtr + offset, pkt->getPtr<const void*>(), pkt->getSize());
-    }
-
-    pkt->makeAtomicResponse();
-
-    return pioDelay;
-}
-
-
-Port &
-GpuDispatcher::getPort(const std::string &if_name, PortID idx)
-{
-    if (if_name == "translation_port") {
-        return *tlbPort;
-    }
-
-    return DmaDevice::getPort(if_name, idx);
 }
 
 void
-GpuDispatcher::exec()
+GPUDispatcher::exec()
 {
-    int fail_count = 0;
+    int fail_count(0);
 
-    // There are potentially multiple outstanding kernel launches.
-    // It is possible that the workgroups in a different kernel
-    // can fit on the GPU even if another kernel's workgroups cannot
+    /**
+     * There are potentially multiple outstanding kernel launches.
+     * It is possible that the workgroups in a different kernel
+     * can fit on the GPU even if another kernel's workgroups cannot
+     */
     DPRINTF(GPUDisp, "Launching %d Kernels\n", execIds.size());
 
+    if (execIds.size() > 0) {
+        ++cyclesWaitingForDispatch;
+    }
+
+    /**
+     * dispatch work cannot start until the kernel's invalidate is
+     * completely finished; hence, kernel will always initiates
+     * invalidate first and keeps waiting until inv done
+     */
     while (execIds.size() > fail_count) {
-        int execId = execIds.front();
+        int exec_id = execIds.front();
+        auto task = hsaQueueEntries[exec_id];
+        bool launched(false);
 
-        while (ndRangeMap[execId].wg_disp_rem) {
-            //update the thread context
-            shader->updateContext(ndRangeMap[execId].curCid);
+        // invalidate is needed before starting dispatch
+        if (shader->impl_kern_boundary_sync) {
+            // try to invalidate cache
+            shader->prepareInvalidate(task);
+        } else {
+            // kern boundary sync is not set, skip invalidate
+            task->markInvDone();
+        }
 
-            // attempt to dispatch_workgroup
-            if (!shader->dispatch_workgroups(&ndRangeMap[execId])) {
-                // if we failed try the next kernel,
-                // it may have smaller workgroups.
-                // put it on the queue to rety latter
-                DPRINTF(GPUDisp, "kernel %d failed to launch\n", execId);
-                execIds.push(execId);
+        /**
+         * invalidate is still ongoing, put the kernel on the queue to
+         * retry later
+         */
+        if (!task->isInvDone()){
+            execIds.push(exec_id);
+            ++fail_count;
+
+            DPRINTF(GPUDisp, "kernel %d failed to launch, due to [%d] pending"
+                " invalidate requests\n", exec_id, task->outstandingInvs());
+
+            // try the next kernel_id
+            execIds.pop();
+            continue;
+        }
+
+        // kernel invalidate is done, start workgroup dispatch
+        while (!task->dispComplete()) {
+            // update the thread context
+            shader->updateContext(task->contextId());
+
+            // attempt to dispatch workgroup
+            DPRINTF(GPUWgLatency, "Attempt Kernel Launch cycle:%d kernel:%d\n",
+                curTick(), exec_id);
+
+            if (!shader->dispatchWorkgroups(task)) {
+                /**
+                 * if we failed try the next kernel,
+                 * it may have smaller workgroups.
+                 * put it on the queue to rety latter
+                 */
+                DPRINTF(GPUDisp, "kernel %d failed to launch\n", exec_id);
+                execIds.push(exec_id);
                 ++fail_count;
                 break;
+            } else if (!launched) {
+                launched = true;
+                DPRINTF(GPUKernelInfo, "Launched kernel %d\n", exec_id);
             }
         }
-        // let's try the next kernel_id
+
+        // try the next kernel_id
         execIds.pop();
     }
 
     DPRINTF(GPUDisp, "Returning %d Kernels\n", doneIds.size());
 
-    if (doneIds.size() && cpu) {
-        shader->hostWakeUp(cpu);
-    }
-
     while (doneIds.size()) {
-        // wakeup the CPU if any Kernels completed this cycle
-        DPRINTF(GPUDisp, "WorkGroup %d completed\n", doneIds.front());
+        DPRINTF(GPUDisp, "Kernel %d completed\n", doneIds.front());
         doneIds.pop();
     }
 }
 
-void
-GpuDispatcher::notifyWgCompl(Wavefront *w)
+bool
+GPUDispatcher::isReachingKernelEnd(Wavefront *wf)
 {
-    int kern_id = w->kernId;
-    DPRINTF(GPUDisp, "notify WgCompl %d\n",kern_id);
-    assert(ndRangeMap[kern_id].dispatchId == kern_id);
-    ndRangeMap[kern_id].numWgCompleted++;
+    int kern_id = wf->kernId;
+    assert(hsaQueueEntries.find(kern_id) != hsaQueueEntries.end());
+    auto task = hsaQueueEntries[kern_id];
+    assert(task->dispatchId() == kern_id);
 
-    if (ndRangeMap[kern_id].numWgCompleted == ndRangeMap[kern_id].numWgTotal) {
-        ndRangeMap[kern_id].execDone = true;
-        doneIds.push(kern_id);
+    /**
+     * whether the next workgroup is the final one in the kernel,
+     * +1 as we check first before taking action
+     */
+    return (task->numWgCompleted() + 1 == task->numWgTotal());
+}
 
-        if (ndRangeMap[kern_id].addrToNotify) {
-            accessUserVar(cpu, (uint64_t)(ndRangeMap[kern_id].addrToNotify), 1,
-                          0);
+/**
+ * update the counter of oustanding inv requests for the kernel
+ * kern_id: kernel id
+ * val: +1/-1, increment or decrement the counter (default: -1)
+ */
+void
+GPUDispatcher::updateInvCounter(int kern_id, int val) {
+    assert(val == -1 || val == 1);
+
+    auto task = hsaQueueEntries[kern_id];
+    task->updateOutstandingInvs(val);
+
+    // kernel invalidate is done, schedule dispatch work
+    if (task->isInvDone() && !tickEvent.scheduled()) {
+        schedule(&tickEvent, curTick() + shader->clockPeriod());
+    }
+}
+
+/**
+ * update the counter of oustanding wb requests for the kernel
+ * kern_id: kernel id
+ * val: +1/-1, increment or decrement the counter (default: -1)
+ *
+ * return true if all wbs are done for the kernel
+ */
+bool
+GPUDispatcher::updateWbCounter(int kern_id, int val) {
+    assert(val == -1 || val == 1);
+
+    auto task = hsaQueueEntries[kern_id];
+    task->updateOutstandingWbs(val);
+
+    // true: WB is done, false: WB is still ongoing
+    return (task->outstandingWbs() == 0);
+}
+
+/**
+ * get kernel's outstanding cache writeback requests
+ */
+int
+GPUDispatcher::getOutstandingWbs(int kernId) {
+    auto task = hsaQueueEntries[kernId];
+
+    return task->outstandingWbs();
+}
+
+/**
+ * When an end program instruction detects that the last WF in
+ * a WG has completed it will call this method on the dispatcher.
+ * If we detect that this is the last WG for the given task, then
+ * we ring the completion signal, which is used by the CPU to
+ * synchronize with the GPU. The HSAPP is also notified that the
+ * task has completed so it can be removed from its task queues.
+ */
+void
+GPUDispatcher::notifyWgCompl(Wavefront *wf)
+{
+    int kern_id = wf->kernId;
+    DPRINTF(GPUDisp, "notify WgCompl %d\n", wf->wgId);
+    auto task = hsaQueueEntries[kern_id];
+    assert(task->dispatchId() == kern_id);
+    task->notifyWgCompleted();
+
+    DPRINTF(GPUWgLatency, "WG Complete cycle:%d wg:%d kernel:%d cu:%d\n",
+        curTick(), wf->wgId, kern_id, wf->computeUnit->cu_id);
+
+    if (task->numWgCompleted() == task->numWgTotal()) {
+        // Notify the HSA PP that this kernel is complete
+        gpuCmdProc->hsaPacketProc()
+            .finishPkt(task->dispPktPtr(), task->queueId());
+        if (task->completionSignal()) {
+            // The signal value is aligned 8 bytes from
+            // the actual handle in the runtime
+            Addr signal_addr = task->completionSignal() + sizeof(Addr);
+            DPRINTF(GPUDisp, "HSA AQL Kernel Complete! Triggering "
+                    "completion signal: %x!\n", signal_addr);
+
+            /**
+             * HACK: The semantics of the HSA signal is to decrement
+             * the current signal value. We cheat here and read out
+             * he value from main memory using functional access and
+             * then just DMA the decremented value. This is because
+             * the DMA controller does not currently support GPU
+             * atomics.
+             */
+            auto *tc = gpuCmdProc->system()->threads[0];
+            auto &virt_proxy = tc->getVirtProxy();
+            TypedBufferArg<Addr> prev_signal(signal_addr);
+            prev_signal.copyIn(virt_proxy);
+
+            Addr *new_signal = new Addr;
+            *new_signal = (Addr)*prev_signal - 1;
+
+            gpuCmdProc->dmaWriteVirt(signal_addr, sizeof(Addr), nullptr,
+                new_signal, 0);
+        } else {
+            DPRINTF(GPUDisp, "HSA AQL Kernel Complete! No completion "
+                "signal\n");
         }
 
-        accessUserVar(cpu, (uint64_t)(ndRangeMap[kern_id].numDispLeft), 0, -1);
-
-        // update event end time (in nano-seconds)
-        if (ndRangeMap[kern_id].q.depends) {
-            HostState *host_state = (HostState*)ndRangeMap[kern_id].q.depends;
-            uint64_t event;
-            shader->ReadMem((uint64_t)(&host_state->event), &event,
-                            sizeof(uint64_t), 0);
-
-            uint64_t end = curTick() / 1000;
-
-            shader->WriteMem((uint64_t)(&((_cl_event*)event)->end), &end,
-                             sizeof(uint64_t), 0);
-        }
+        DPRINTF(GPUWgLatency, "Kernel Complete ticks:%d kernel:%d\n",
+                curTick(), kern_id);
+        DPRINTF(GPUKernelInfo, "Completed kernel %d\n", kern_id);
     }
 
     if (!tickEvent.scheduled()) {
-        schedule(&tickEvent, curTick() + shader->ticks(1));
+        schedule(&tickEvent, curTick() + shader->clockPeriod());
     }
 }
 
 void
-GpuDispatcher::scheduleDispatch()
+GPUDispatcher::scheduleDispatch()
 {
-    if (!tickEvent.scheduled())
-        schedule(&tickEvent, curTick() + shader->ticks(1));
-}
-
-void
-GpuDispatcher::accessUserVar(BaseCPU *cpu, uint64_t addr, int val, int off)
-{
-    if (cpu) {
-        if (off) {
-            shader->AccessMem(addr, &val, sizeof(int), 0, MemCmd::ReadReq,
-                              true);
-            val += off;
-        }
-
-        shader->AccessMem(addr, &val, sizeof(int), 0, MemCmd::WriteReq, true);
-    } else {
-        panic("Cannot find host");
+    if (!tickEvent.scheduled()) {
+        schedule(&tickEvent, curTick() + shader->clockPeriod());
     }
 }
 
-// helper functions for driver to retrieve GPU attributes
-int
-GpuDispatcher::getNumCUs()
+GPUDispatcher *GPUDispatcherParams::create()
 {
-    return shader->cuList.size();
-}
-
-int
-GpuDispatcher::wfSize() const
-{
-    return shader->cuList[0]->wfSize();
-}
-
-void
-GpuDispatcher::setFuncargsSize(int funcargs_size)
-{
-    shader->funcargs_size = funcargs_size;
-}
-
-uint32_t
-GpuDispatcher::getStaticContextSize() const
-{
-    return shader->cuList[0]->wfList[0][0]->getStaticContextSize();
+    return new GPUDispatcher(this);
 }

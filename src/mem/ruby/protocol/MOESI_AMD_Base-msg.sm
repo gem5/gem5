@@ -135,7 +135,6 @@ structure(CPURequestMsg, desc="...", interface="Message") {
   CoherenceRequestType OriginalType, default="CoherenceRequestType_NA",  desc="Type of request from core fwded through region buffer";
   WriteMask writeMask, desc="Write Through Data";
   MachineID WTRequestor,            desc="Node who initiated the write through";
-  HSAScope scope,                      default="HSAScope_SYSTEM", desc="Request Scope";
   int wfid,                         default="0", desc="wavefront id";
   bool NoWriteConflict,             default="true", desc="write collided with CAB entry";
   int ProgramCounter,               desc="PC that accesses to this block";

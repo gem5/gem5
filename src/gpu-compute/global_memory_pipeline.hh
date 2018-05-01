@@ -60,51 +60,33 @@ class GlobalMemPipeline
     void init(ComputeUnit *cu);
     void exec();
 
-    std::queue<GPUDynInstPtr> &getGMStRespFIFO() { return gmReturnedStores; }
-    std::queue<GPUDynInstPtr> &getGMLdRespFIFO() { return gmReturnedLoads; }
-
     /**
-     * find the next ready response to service. for OoO mode we
-     * simply pop the oldest (based on when the response was
-     * received) response in the response FIFOs. for in-order mode
-     * we pop the oldest (in program order) response, and only if
-     * it is marked as done.
+     * Find the next ready response to service. In order to ensure
+     * that no waitcnts are violated, we pop the oldest (in program order)
+     * response, and only if it is marked as done. This is because waitcnt
+     * values expect memory operations to complete and decrement their
+     * counter values in program order.
      */
     GPUDynInstPtr getNextReadyResp();
 
     /**
      * once a memory request is finished we remove it from the
-     * buffer. this method determines which response buffer
-     * we're using based on the mode (in-order vs. OoO).
+     * buffer.
      */
     void completeRequest(GPUDynInstPtr gpuDynInst);
 
     /**
-     * issues a request to the pipeline - i.e., enqueue it
-     * in the request buffer.
+     * Issues a request to the pipeline (i.e., enqueue it
+     * in the request buffer).
      */
     void issueRequest(GPUDynInstPtr gpuDynInst);
 
     /**
-     * this method handles responses sent to this GM pipeline by the
-     * CU. in the case of in-order delivery it simply marks the reqeust
-     * as done in the ordered buffer to indicate that the requst is
-     * finished. for out-of-order data delivery, the requests are enqueued
-     * (in the order in which they are received) in the response FIFOs.
+     * This method handles responses sent to this GM pipeline by the
+     * CU. Simply marks the reqeust as done in the ordered buffer to
+     * indicate that the requst is finished.
      */
     void handleResponse(GPUDynInstPtr gpuDynInst);
-
-    bool
-    isGMLdRespFIFOWrRdy() const
-    {
-        return gmReturnedLoads.size() < gmQueueSize;
-    }
-
-    bool
-    isGMStRespFIFOWrRdy() const
-    {
-        return gmReturnedStores.size() < gmQueueSize;
-    }
 
     bool
     isGMReqFIFOWrRdy(uint32_t pendReqs=0) const
@@ -114,7 +96,6 @@ class GlobalMemPipeline
 
     const std::string &name() const { return _name; }
     void regStats();
-
     void
     incLoadVRFBankConflictCycles(int num_cycles)
     {
@@ -122,12 +103,15 @@ class GlobalMemPipeline
     }
 
     bool coalescerReady(GPUDynInstPtr mp) const;
+    bool outstandingReqsCheck(GPUDynInstPtr mp) const;
+
+    void acqCoalescerToken(GPUDynInstPtr mp);
 
   private:
     ComputeUnit *computeUnit;
     std::string _name;
     int gmQueueSize;
-    bool outOfOrderDataDelivery;
+    int maxWaveRequests;
 
     // number of cycles of delaying the update of a VGPR that is the
     // target of a load instruction (or the load component of an atomic)
@@ -143,12 +127,11 @@ class GlobalMemPipeline
     int globalMemSize;
 
     /*
-     * this buffer holds the memory responses when in-order data
-     * deilvery is used - the responses are ordered by their unique
-     * sequence number, which is monotonically increasing. when a
-     * memory request returns its "done" flag is set to true. during
-     * each tick the the GM pipeline will check if the oldest request
-     * is finished, and if so it will be removed from the queue.
+     * This buffer holds the memory responses in order data - the responses
+     * are ordered by their unique sequence number, which is monotonically
+     * increasing. When a memory request returns its "done" flag is set to
+     * true. During each tick the the GM pipeline will check if the oldest
+     * request is finished, and if so it will be removed from the queue.
      *
      * key:   memory instruction's sequence ID
      *
@@ -161,14 +144,6 @@ class GlobalMemPipeline
     // Global Memory Request FIFO: all global memory requests
     // are issued to this FIFO from the memory pipelines
     std::queue<GPUDynInstPtr> gmIssuedRequests;
-
-    // Globa Store Response FIFO: all responses of global memory
-    // stores are sent to this FIFO from TCP
-    std::queue<GPUDynInstPtr> gmReturnedStores;
-
-    // Global Load Response FIFO: all responses of global memory
-    // loads are sent to this FIFO from TCP
-    std::queue<GPUDynInstPtr> gmReturnedLoads;
 };
 
 #endif // __GLOBAL_MEMORY_PIPELINE_HH__

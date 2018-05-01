@@ -35,25 +35,49 @@
 
 #include "debug/GPUMem.hh"
 #include "gpu-compute/gpu_static_inst.hh"
+#include "gpu-compute/scalar_register_file.hh"
 #include "gpu-compute/shader.hh"
 #include "gpu-compute/wavefront.hh"
 
 GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
-                       GPUStaticInst *static_inst, uint64_t instSeqNum)
-    : GPUExecContext(_cu, _wf), addr(computeUnit()->wfSize(), (Addr)0),
-      n_reg(0), useContinuation(false),
-      statusBitVector(0), _staticInst(static_inst), _seqNum(instSeqNum)
+                       GPUStaticInst *static_inst, InstSeqNum instSeqNum)
+    : GPUExecContext(_cu, _wf), scalarAddr(0), addr(computeUnit()->wfSize(),
+      (Addr)0), statusBitVector(0), numScalarReqs(0), isSaveRestore(false),
+      _staticInst(static_inst), _seqNum(instSeqNum)
 {
     tlbHitLevel.assign(computeUnit()->wfSize(), -1);
-    d_data = new uint8_t[computeUnit()->wfSize() * 16];
+    // vector instructions can have up to 4 source/destination operands
+    d_data = new uint8_t[computeUnit()->wfSize() * 4 * sizeof(double)];
     a_data = new uint8_t[computeUnit()->wfSize() * 8];
     x_data = new uint8_t[computeUnit()->wfSize() * 8];
+    // scalar loads can read up to 16 Dwords of data (see publicly
+    // available GCN3 ISA manual)
+    scalar_data = new uint8_t[16 * sizeof(uint32_t)];
+    for (int i = 0; i < (16 * sizeof(uint32_t)); ++i) {
+        scalar_data[i] = 0;
+    }
     for (int i = 0; i < (computeUnit()->wfSize() * 8); ++i) {
         a_data[i] = 0;
         x_data[i] = 0;
     }
-    for (int i = 0; i < (computeUnit()->wfSize() * 16); ++i) {
+    for (int i = 0; i < (computeUnit()->wfSize() * 4 * sizeof(double)); ++i) {
         d_data[i] = 0;
+    }
+    time = 0;
+
+    cu_id = _cu->cu_id;
+    if (_wf) {
+        simdId = _wf->simdId;
+        wfDynId = _wf->wfDynId;
+        kern_id = _wf->kernId;
+        wg_id = _wf->wgId;
+        wfSlotId = _wf->wfSlotId;
+    } else {
+        simdId = -1;
+        wfDynId = -1;
+        kern_id = -1;
+        wg_id = -1;
+        wfSlotId = -1;
     }
 }
 
@@ -62,6 +86,8 @@ GPUDynInst::~GPUDynInst()
     delete[] d_data;
     delete[] a_data;
     delete[] x_data;
+    delete[] scalar_data;
+    delete _staticInst;
 }
 
 void
@@ -83,6 +109,36 @@ GPUDynInst::numDstRegOperands()
 }
 
 int
+GPUDynInst::numSrcVecOperands()
+{
+    return _staticInst->numSrcVecOperands();
+}
+
+int
+GPUDynInst::numDstVecOperands()
+{
+    return _staticInst->numDstVecOperands();
+}
+
+int
+GPUDynInst::numSrcVecDWORDs()
+{
+    return _staticInst->numSrcVecDWORDs();
+}
+
+int
+GPUDynInst::numDstVecDWORDs()
+{
+    return _staticInst->numDstVecDWORDs();
+}
+
+int
+GPUDynInst::numOpdDWORDs(int operandIdx)
+{
+    return _staticInst->numOpdDWORDs(operandIdx);
+}
+
+int
 GPUDynInst::getNumOperands()
 {
     return _staticInst->getNumOperands();
@@ -98,12 +154,6 @@ bool
 GPUDynInst::isScalarRegister(int operandIdx)
 {
     return _staticInst->isScalarRegister(operandIdx);
-}
-
-bool
-GPUDynInst::isCondRegister(int operandIdx)
-{
-    return _staticInst->isCondRegister(operandIdx);
 }
 
 int
@@ -130,13 +180,82 @@ GPUDynInst::isSrcOperand(int operandIdx)
     return _staticInst->isSrcOperand(operandIdx);
 }
 
+bool
+GPUDynInst::hasSourceSgpr() const
+{
+    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
+        if (_staticInst->isScalarRegister(i) && _staticInst->isSrcOperand(i)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool
+GPUDynInst::hasSourceVgpr() const
+{
+    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
+        if (_staticInst->isVectorRegister(i) && _staticInst->isSrcOperand(i)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool
+GPUDynInst::hasDestinationSgpr() const
+{
+    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
+        if (_staticInst->isScalarRegister(i) && _staticInst->isDstOperand(i)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool
+GPUDynInst::srcIsVgpr(int index) const
+{
+    assert(index >= 0 && index < _staticInst->getNumOperands());
+    if (_staticInst->isVectorRegister(index) &&
+        _staticInst->isSrcOperand(index)) {
+        return true;
+    }
+    return false;
+}
+
+bool
+GPUDynInst::hasDestinationVgpr() const
+{
+    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
+        if (_staticInst->isVectorRegister(i) && _staticInst->isDstOperand(i)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool
+GPUDynInst::isOpcode(const std::string& opcodeStr,
+                     const std::string& extStr) const
+{
+    return _staticInst->opcode().find(opcodeStr) != std::string::npos &&
+        _staticInst->opcode().find(extStr) != std::string::npos;
+}
+
+bool
+GPUDynInst::isOpcode(const std::string& opcodeStr) const
+{
+    return _staticInst->opcode().find(opcodeStr) != std::string::npos;
+}
+
 const std::string&
 GPUDynInst::disassemble() const
 {
     return _staticInst->disassemble();
 }
 
-uint64_t
+InstSeqNum
 GPUDynInst::seqNum() const
 {
     return _seqNum;
@@ -148,6 +267,40 @@ GPUDynInst::executedAs()
     return _staticInst->executed_as;
 }
 
+bool
+GPUDynInst::hasVgprRawDependence(GPUDynInstPtr s)
+{
+    assert(s);
+    for (int i = 0; i < getNumOperands(); ++i) {
+        if (isVectorRegister(i) && isSrcOperand(i)) {
+            for (int j = 0; j < s->getNumOperands(); ++j) {
+                if (s->isVectorRegister(j) && s->isDstOperand(j)) {
+                    if (i == j)
+                        return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool
+GPUDynInst::hasSgprRawDependence(GPUDynInstPtr s)
+{
+    assert(s);
+    for (int i = 0; i < getNumOperands(); ++i) {
+        if (isScalarRegister(i) && isSrcOperand(i)) {
+            for (int j = 0; j < s->getNumOperands(); ++j) {
+                if (s->isScalarRegister(j) && s->isDstOperand(j)) {
+                    if (i == j)
+                        return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 // Process a memory instruction and (if necessary) submit timing request
 void
 GPUDynInst::initiateAcc(GPUDynInstPtr gpuDynInst)
@@ -156,12 +309,15 @@ GPUDynInst::initiateAcc(GPUDynInstPtr gpuDynInst)
             cu->cu_id, simdId, wfSlotId, exec_mask);
 
     _staticInst->initiateAcc(gpuDynInst);
-    time = 0;
 }
 
 void
 GPUDynInst::completeAcc(GPUDynInstPtr gpuDynInst)
 {
+    DPRINTF(GPUMem, "CU%d: WF[%d][%d]: mempacket status bitvector="
+            "%#x\n complete",
+            cu->cu_id, simdId, wfSlotId, exec_mask);
+
     _staticInst->completeAcc(gpuDynInst);
 }
 
@@ -182,9 +338,39 @@ GPUDynInst::isBranch() const
 }
 
 bool
+GPUDynInst::isCondBranch() const
+{
+    return _staticInst->isCondBranch();
+}
+
+bool
 GPUDynInst::isNop() const
 {
     return _staticInst->isNop();
+}
+
+bool
+GPUDynInst::isEndOfKernel() const
+{
+    return _staticInst->isEndOfKernel();
+}
+
+bool
+GPUDynInst::isKernelLaunch() const
+{
+    return _staticInst->isKernelLaunch();
+}
+
+bool
+GPUDynInst::isSDWAInst() const
+{
+    return _staticInst->isSDWAInst();
+}
+
+bool
+GPUDynInst::isDPPInst() const
+{
+    return _staticInst->isDPPInst();
 }
 
 bool
@@ -218,9 +404,9 @@ GPUDynInst::isBarrier() const
 }
 
 bool
-GPUDynInst::isMemFence() const
+GPUDynInst::isMemSync() const
 {
-    return _staticInst->isMemFence();
+    return _staticInst->isMemSync();
 }
 
 bool
@@ -266,6 +452,12 @@ GPUDynInst::isAtomicRet() const
 }
 
 bool
+GPUDynInst::isVector() const
+{
+    return !_staticInst->isScalar();
+}
+
+bool
 GPUDynInst::isScalar() const
 {
     return _staticInst->isScalar();
@@ -293,6 +485,78 @@ bool
 GPUDynInst::writesVCC() const
 {
     return _staticInst->writesVCC();
+}
+
+bool
+GPUDynInst::readsMode() const
+{
+    return _staticInst->readsMode();
+}
+
+bool
+GPUDynInst::writesMode() const
+{
+    return _staticInst->writesMode();
+}
+
+bool
+GPUDynInst::readsEXEC() const
+{
+    return _staticInst->readsEXEC();
+}
+
+bool
+GPUDynInst::writesEXEC() const
+{
+    return _staticInst->writesEXEC();
+}
+
+bool
+GPUDynInst::ignoreExec() const
+{
+    return _staticInst->ignoreExec();
+}
+
+bool
+GPUDynInst::writesExecMask() const
+{
+    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
+        return _staticInst->isDstOperand(i) &&
+            _staticInst->isExecMaskRegister(i);
+    }
+    return false;
+}
+
+bool
+GPUDynInst::readsExecMask() const
+{
+    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
+        return _staticInst->isSrcOperand(i) &&
+            _staticInst->isExecMaskRegister(i);
+    }
+    return false;
+}
+
+bool
+GPUDynInst::writesFlatScratch() const
+{
+    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
+        if (_staticInst->isScalarRegister(i) && _staticInst->isDstOperand(i)) {
+            return _staticInst->isFlatScratchRegister(i);
+        }
+    }
+    return false;
+}
+
+bool
+GPUDynInst::readsFlatScratch() const
+{
+    for (int i = 0; i < _staticInst->getNumOperands(); ++i) {
+        if (_staticInst->isScalarRegister(i) && _staticInst->isSrcOperand(i)) {
+            return _staticInst->isFlatScratchRegister(i);
+        }
+    }
+    return false;
 }
 
 bool
@@ -421,72 +685,6 @@ GPUDynInst::isSpillSeg() const
 }
 
 bool
-GPUDynInst::isWorkitemScope() const
-{
-    return _staticInst->isWorkitemScope();
-}
-
-bool
-GPUDynInst::isWavefrontScope() const
-{
-    return _staticInst->isWavefrontScope();
-}
-
-bool
-GPUDynInst::isWorkgroupScope() const
-{
-    return _staticInst->isWorkgroupScope();
-}
-
-bool
-GPUDynInst::isDeviceScope() const
-{
-    return _staticInst->isDeviceScope();
-}
-
-bool
-GPUDynInst::isSystemScope() const
-{
-    return _staticInst->isSystemScope();
-}
-
-bool
-GPUDynInst::isNoScope() const
-{
-    return _staticInst->isNoScope();
-}
-
-bool
-GPUDynInst::isRelaxedOrder() const
-{
-    return _staticInst->isRelaxedOrder();
-}
-
-bool
-GPUDynInst::isAcquire() const
-{
-    return _staticInst->isAcquire();
-}
-
-bool
-GPUDynInst::isRelease() const
-{
-    return _staticInst->isRelease();
-}
-
-bool
-GPUDynInst::isAcquireRelease() const
-{
-    return _staticInst->isAcquireRelease();
-}
-
-bool
-GPUDynInst::isNoOrder() const
-{
-    return _staticInst->isNoOrder();
-}
-
-bool
 GPUDynInst::isGloballyCoherent() const
 {
     return _staticInst->isGloballyCoherent();
@@ -498,12 +696,240 @@ GPUDynInst::isSystemCoherent() const
     return _staticInst->isSystemCoherent();
 }
 
+bool
+GPUDynInst::isF16() const
+{
+    return _staticInst->isF16();
+}
+
+bool
+GPUDynInst::isF32() const
+{
+    return _staticInst->isF32();
+}
+
+bool
+GPUDynInst::isF64() const
+{
+    return _staticInst->isF64();
+}
+
+bool
+GPUDynInst::isFMA() const
+{
+    return _staticInst->isFMA();
+}
+
+bool
+GPUDynInst::isMAC() const
+{
+    return _staticInst->isMAC();
+}
+
+bool
+GPUDynInst::isMAD() const
+{
+    return _staticInst->isMAD();
+}
+
+void
+GPUDynInst::doApertureCheck(const VectorMask &mask)
+{
+    assert(mask.any());
+    // find the segment of the first active address, after
+    // that we check that all other active addresses also
+    // fall within the same APE
+    for (int lane = 0; lane < computeUnit()->wfSize(); ++lane) {
+        if (mask[lane]) {
+            if (computeUnit()->shader->isLdsApe(addr[lane])) {
+                // group segment
+                staticInstruction()->executed_as = Enums::SC_GROUP;
+                break;
+            } else if (computeUnit()->shader->isScratchApe(addr[lane])) {
+                // private segment
+                staticInstruction()->executed_as = Enums::SC_PRIVATE;
+                break;
+            } else if (computeUnit()->shader->isGpuVmApe(addr[lane])) {
+                // we won't support GPUVM
+                fatal("flat access is in GPUVM APE\n");
+            } else if (bits(addr[lane], 63, 47) != 0x1FFFF &&
+                       bits(addr[lane], 63, 47)) {
+                // we are in the "hole", this is a memory violation
+                fatal("flat access at addr %#x has a memory violation\n",
+                      addr[lane]);
+            } else {
+                // global memory segment
+                staticInstruction()->executed_as = Enums::SC_GLOBAL;
+                break;
+            }
+        }
+    }
+
+    // we should have found the segment
+    assert(executedAs() != Enums::SC_NONE);
+
+    // flat accesses should not straddle multiple APEs so we
+    // must check that all addresses fall within the same APE
+    if (executedAs() == Enums::SC_GROUP) {
+        for (int lane = 0; lane < computeUnit()->wfSize(); ++lane) {
+            if (mask[lane]) {
+                // if the first valid addr we found above was LDS,
+                // all the rest should be
+                assert(computeUnit()->shader->isLdsApe(addr[lane]));
+            }
+        }
+    } else if (executedAs() == Enums::SC_PRIVATE) {
+        for (int lane = 0; lane < computeUnit()->wfSize(); ++lane) {
+            if (mask[lane]) {
+                // if the first valid addr we found above was private,
+                // all the rest should be
+                assert(computeUnit()->shader->isScratchApe(addr[lane]));
+            }
+        }
+    } else {
+        for (int lane = 0; lane < computeUnit()->wfSize(); ++lane) {
+            if (mask[lane]) {
+                // if the first valid addr we found above was global,
+                // all the rest should be. because we don't have an
+                // explicit range of the global segment, we just make
+                // sure that the address fall in no other APE and that
+                // it is not a memory violation
+                assert(!computeUnit()->shader->isLdsApe(addr[lane]));
+                assert(!computeUnit()->shader->isScratchApe(addr[lane]));
+                assert(!computeUnit()->shader->isGpuVmApe(addr[lane]));
+                assert(!(bits(addr[lane], 63, 47) != 0x1FFFF
+                       && bits(addr[lane], 63, 47)));
+            }
+        }
+    }
+}
+
+void
+GPUDynInst::resolveFlatSegment(const VectorMask &mask)
+{
+    doApertureCheck(mask);
+
+
+    // Now that we know the aperature, do the following:
+    // 1. Transform the flat address to its segmented equivalent.
+    // 2. Set the execUnitId based an the aperture check.
+    // 3. Decrement any extra resources that were reserved. Other
+    //    resources are released as normal, below.
+    if (executedAs() == Enums::SC_GLOBAL) {
+        // no transormation for global segment
+        wavefront()->execUnitId =  wavefront()->flatGmUnitId;
+        if (isLoad()) {
+            wavefront()->rdLmReqsInPipe--;
+        } else if (isStore()) {
+            wavefront()->wrLmReqsInPipe--;
+        } else if (isAtomic() || isMemSync()) {
+            wavefront()->wrLmReqsInPipe--;
+            wavefront()->rdLmReqsInPipe--;
+        } else {
+            panic("Invalid memory operation!\n");
+        }
+    } else if (executedAs() == Enums::SC_GROUP) {
+        for (int lane = 0; lane < wavefront()->computeUnit->wfSize(); ++lane) {
+            if (mask[lane]) {
+                // flat address calculation goes here.
+                // addr[lane] = segmented address
+                panic("Flat group memory operation is unimplemented!\n");
+            }
+        }
+        wavefront()->execUnitId =  wavefront()->flatLmUnitId;
+        if (isLoad()) {
+            wavefront()->rdGmReqsInPipe--;
+        } else if (isStore()) {
+            wavefront()->wrGmReqsInPipe--;
+        } else if (isAtomic() || isMemSync()) {
+            wavefront()->rdGmReqsInPipe--;
+            wavefront()->wrGmReqsInPipe--;
+        } else {
+            panic("Invalid memory operation!\n");
+        }
+    } else if (executedAs() == Enums::SC_PRIVATE) {
+        /**
+         * Flat instructions may resolve to the private segment (scratch),
+         * which is backed by main memory and provides per-lane scratch
+         * memory. Flat addressing uses apertures - registers that specify
+         * the address range in the VA space where LDS/private memory is
+         * mapped. The value of which is set by the kernel mode driver.
+         * These apertures use addresses that are not used by x86 CPUs.
+         * When the address of a Flat operation falls into one of the
+         * apertures, the Flat operation is redirected to either LDS or
+         * to the private memory segment.
+         *
+         * For private memory the SW runtime will allocate some space in
+         * the VA space for each AQL queue. The base address of which is
+         * stored in scalar registers per the AMD GPU ABI. The amd_queue_t
+         * scratch_backing_memory_location provides the base address in
+         * memory for the queue's private segment. Various other fields
+         * loaded into register state during kernel launch specify per-WF
+         * and per-work-item offsets so that individual lanes may access
+         * their private segment allocation.
+         *
+         * For more details about flat addressing see:
+         *     http://rocm-documentation.readthedocs.io/en/latest/
+         *     ROCm_Compiler_SDK/ROCm-Native-ISA.html#flat-scratch
+         *
+         *     https://github.com/ROCm-Developer-Tools/
+         *     ROCm-ComputeABI-Doc/blob/master/AMDGPU-ABI.md
+         *     #flat-addressing
+         */
+
+        uint32_t numSgprs = wavefront()->maxSgprs;
+        uint32_t physSgprIdx =
+            wavefront()->computeUnit->registerManager->mapSgpr(wavefront(),
+                                                          numSgprs - 3);
+        uint32_t offset =
+            wavefront()->computeUnit->srf[simdId]->read(physSgprIdx);
+        physSgprIdx =
+            wavefront()->computeUnit->registerManager->mapSgpr(wavefront(),
+                                                          numSgprs - 4);
+        uint32_t size =
+            wavefront()->computeUnit->srf[simdId]->read(physSgprIdx);
+        for (int lane = 0; lane < wavefront()->computeUnit->wfSize(); ++lane) {
+            if (mask[lane]) {
+                addr[lane] = addr[lane] + lane * size + offset +
+                    wavefront()->computeUnit->shader->getHiddenPrivateBase() -
+                    wavefront()->computeUnit->shader->getScratchBase();
+            }
+        }
+        wavefront()->execUnitId =  wavefront()->flatLmUnitId;
+        if (isLoad()) {
+            wavefront()->rdGmReqsInPipe--;
+        } else if (isStore()) {
+            wavefront()->wrGmReqsInPipe--;
+        } else if (isAtomic() || isMemSync()) {
+            wavefront()->rdGmReqsInPipe--;
+            wavefront()->wrGmReqsInPipe--;
+        } else {
+            panic("Invalid memory operation!\n");
+        }
+    } else {
+        for (int lane = 0; lane < wavefront()->computeUnit->wfSize(); ++lane) {
+            if (mask[lane]) {
+                panic("flat addr %#llx maps to bad segment %d\n",
+                      addr[lane], executedAs());
+            }
+        }
+    }
+}
+
+TheGpuISA::ScalarRegU32
+GPUDynInst::srcLiteral() const
+{
+    return _staticInst->srcLiteral();
+}
+
 void
 GPUDynInst::updateStats()
 {
     if (_staticInst->isLocalMem()) {
         // access to LDS (shared) memory
         cu->dynamicLMemInstrCnt++;
+    } else if (_staticInst->isFlat()) {
+        cu->dynamicFlatMemInstrCnt++;
     } else {
         // access to global memory
 
@@ -534,5 +960,30 @@ GPUDynInst::updateStats()
         // Atomics are counted as a single memory instruction.
         // this is # memory instructions per wavefronts, not per workitem
         cu->dynamicGMemInstrCnt++;
+    }
+}
+
+void
+GPUDynInst::profileRoundTripTime(Tick currentTime, int hopId)
+{
+    // Only take the first measurement in the case of coalescing
+    if (roundTripTime.size() > hopId)
+        return;
+
+    roundTripTime.push_back(currentTime);
+}
+
+void
+GPUDynInst::profileLineAddressTime(Addr addr, Tick currentTime, int hopId)
+{
+    if (lineAddressTime.count(addr)) {
+        if (lineAddressTime[addr].size() > hopId) {
+            return;
+        }
+
+        lineAddressTime[addr].push_back(currentTime);
+    } else if (hopId == 0) {
+        auto addressTimeVec = std::vector<Tick> { currentTime };
+        lineAddressTime.insert(std::make_pair(addr, addressTimeVec));
     }
 }

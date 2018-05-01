@@ -92,7 +92,7 @@ HWScheduler::registerNewQueue(uint64_t hostReadIndexPointer,
     // We use the same mapping function used by hsa runtime to do this mapping
     //
     // Originally
-    // #define VOID_PTR_ADD32(ptr,n) \
+    // #define VOID_PTR_ADD32(ptr,n)
     //     (void*)((uint32_t*)(ptr) + n)/*ptr + offset*/
     // (Addr)VOID_PTR_ADD32(0, queue_id)
     Addr db_offset = queue_id;
@@ -343,7 +343,7 @@ HWScheduler::unregisterQueue(uint64_t queue_id)
     // `(Addr)(VOID_PRT_ADD32(0, queue_id))`
     //
     // Originally
-    // #define VOID_PTR_ADD32(ptr,n) \
+    // #define VOID_PTR_ADD32(ptr,n)
     //     (void*)((uint32_t*)(ptr) + n)/*ptr + offset*/
     // (Addr)VOID_PTR_ADD32(0, queue_id)
     Addr db_offset = queue_id;

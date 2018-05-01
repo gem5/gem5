@@ -101,7 +101,7 @@ HSADevice::translateOrDie(Addr vaddr, Addr &paddr)
      * with new extensions, it will likely be wrong to just arbitrarily
      * grab context zero.
      */
-    auto process = sys->getThreadContext(0)->getProcessPtr();
+    auto process = sys->threads[0]->getProcessPtr();
 
     if (!process->pTable->translate(vaddr, paddr)) {
         fatal("failed translation: vaddr 0x%x\n", vaddr);

@@ -41,7 +41,6 @@
 #include <utility>
 #include <vector>
 
-#include "enums/MemType.hh"
 #include "gpu-compute/misc.hh"
 #include "mem/port.hh"
 #include "params/LdsState.hh"
@@ -50,8 +49,8 @@
 class ComputeUnit;
 
 /**
- * this represents a slice of the overall LDS, intended to be associated with an
- * individual workgroup
+ * this represents a slice of the overall LDS, intended to be associated with
+ * an individual workgroup
  */
 class LdsChunk
 {
@@ -71,7 +70,8 @@ class LdsChunk
     read(const uint32_t index)
     {
         fatal_if(!chunk.size(), "cannot read from an LDS chunk of size 0");
-        fatal_if(index >= chunk.size(), "out-of-bounds access to an LDS chunk");
+        fatal_if(index >= chunk.size(), "out-of-bounds access to an LDS "
+            "chunk");
         T *p0 = (T *) (&(chunk.at(index)));
         return *p0;
     }
@@ -84,7 +84,8 @@ class LdsChunk
     write(const uint32_t index, const T value)
     {
         fatal_if(!chunk.size(), "cannot write to an LDS chunk of size 0");
-        fatal_if(index >= chunk.size(), "out-of-bounds access to an LDS chunk");
+        fatal_if(index >= chunk.size(), "out-of-bounds access to an LDS "
+            "chunk");
         T *p0 = (T *) (&(chunk.at(index)));
         *p0 = value;
     }
@@ -203,14 +204,16 @@ class LdsState: public ClockedObject
 
   protected:
 
-    // the lds reference counter
-    // The key is the workgroup ID and dispatch ID
-    // The value is the number of wavefronts that reference this LDS, as
-    // wavefronts are launched, the counter goes up for that workgroup and when
-    // they return it decreases, once it reaches 0 then this chunk of the LDS is
-    // returned to the available pool. However,it is deallocated on the 1->0
-    // transition, not whenever the counter is 0 as it always starts with 0 when
-    // the workgroup asks for space
+    /**
+     * the lds reference counter
+     * The key is the workgroup ID and dispatch ID
+     * The value is the number of wavefronts that reference this LDS, as
+     * wavefronts are launched, the counter goes up for that workgroup and when
+     * they return it decreases, once it reaches 0 then this chunk of the LDS
+     * is returned to the available pool. However,it is deallocated on the 1->0
+     * transition, not whenever the counter is 0 as it always starts with 0
+     * when the workgroup asks for space
+     */
     std::unordered_map<uint32_t,
                        std::unordered_map<uint32_t, int32_t>> refCounter;
 
@@ -356,22 +359,41 @@ class LdsState: public ClockedObject
             const uint32_t size)
     {
         if (chunkMap.find(dispatchId) != chunkMap.end()) {
-            fatal_if(
+            panic_if(
                 chunkMap[dispatchId].find(wgId) != chunkMap[dispatchId].end(),
                 "duplicate workgroup ID asking for space in the LDS "
                 "did[%d] wgid[%d]", dispatchId, wgId);
         }
 
-        fatal_if(bytesAllocated + size > maximumSize,
-                 "request would ask for more space than is available");
+        if (bytesAllocated + size > maximumSize) {
+            return nullptr;
+        } else {
+            bytesAllocated += size;
 
-        bytesAllocated += size;
+            auto value = chunkMap[dispatchId].emplace(wgId, LdsChunk(size));
+            panic_if(!value.second, "was unable to allocate a new chunkMap");
 
-        chunkMap[dispatchId].emplace(wgId, LdsChunk(size));
-        // make an entry for this workgroup
-        refCounter[dispatchId][wgId] = 0;
+            // make an entry for this workgroup
+            refCounter[dispatchId][wgId] = 0;
 
-        return &chunkMap[dispatchId][wgId];
+            return &chunkMap[dispatchId][wgId];
+        }
+    }
+
+    /*
+     * return pointer to lds chunk for wgid
+     */
+    LdsChunk *
+    getLdsChunk(const uint32_t dispatchId, const uint32_t wgId)
+    {
+      fatal_if(chunkMap.find(dispatchId) == chunkMap.end(),
+          "fetch for unknown dispatch ID did[%d]", dispatchId);
+
+      fatal_if(chunkMap[dispatchId].find(wgId) == chunkMap[dispatchId].end(),
+          "fetch for unknown workgroup ID wgid[%d] in dispatch ID did[%d]",
+          wgId, dispatchId);
+
+      return &chunkMap[dispatchId][wgId];
     }
 
     bool

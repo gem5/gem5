@@ -34,10 +34,13 @@
 #include "gpu-compute/wavefront.hh"
 
 #include "debug/GPUExec.hh"
+#include "debug/GPUInitAbi.hh"
 #include "debug/WavefrontStack.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
+#include "gpu-compute/scalar_register_file.hh"
 #include "gpu-compute/shader.hh"
+#include "gpu-compute/simple_pool_manager.hh"
 #include "gpu-compute/vector_register_file.hh"
 
 Wavefront*
@@ -47,16 +50,18 @@ WavefrontParams::create()
 }
 
 Wavefront::Wavefront(const Params *p)
-  : SimObject(p), callArgMem(nullptr), _gpuISA()
+  : SimObject(p), wfSlotId(p->wf_slot_id), simdId(p->simdId),
+    maxIbSize(p->max_ib_size), _gpuISA(*this),
+    vmWaitCnt(-1), expWaitCnt(-1), lgkmWaitCnt(-1)
 {
     lastTrace = 0;
-    simdId = p->simdId;
-    wfSlotId = p->wf_slot_id;
+    execUnitId = -1;
     status = S_STOPPED;
     reservedVectorRegs = 0;
+    reservedScalarRegs = 0;
     startVgprIndex = 0;
+    startSgprIndex = 0;
     outstandingReqs = 0;
-    memReqsInPipe = 0;
     outstandingReqsWrGm = 0;
     outstandingReqsWrLm = 0;
     outstandingReqsRdGm = 0;
@@ -65,47 +70,44 @@ Wavefront::Wavefront(const Params *p)
     rdGmReqsInPipe = 0;
     wrLmReqsInPipe = 0;
     wrGmReqsInPipe = 0;
-
+    scalarRdGmReqsInPipe = 0;
+    scalarWrGmReqsInPipe = 0;
+    scalarOutstandingReqsRdGm = 0;
+    scalarOutstandingReqsWrGm = 0;
+    lastNonIdleTick = 0;
     barrierCnt = 0;
     oldBarrierCnt = 0;
     stalledAtBarrier = false;
+    ldsChunk = nullptr;
 
     memTraceBusy = 0;
     oldVgprTcnt = 0xffffffffffffffffll;
     oldDgprTcnt = 0xffffffffffffffffll;
-    oldVgpr.resize(p->wfSize);
+    oldVgpr.resize(p->wf_size);
 
     pendingFetch = false;
     dropFetch = false;
-    condRegState = new ConditionRegisterState();
-    maxSpVgprs = 0;
-    maxDpVgprs = 0;
-    lastAddr.resize(p->wfSize);
-    workItemFlatId.resize(p->wfSize);
-    oldDgpr.resize(p->wfSize);
-    barCnt.resize(p->wfSize);
+    maxVgprs = 0;
+    maxSgprs = 0;
+
+    lastAddr.resize(p->wf_size);
+    workItemFlatId.resize(p->wf_size);
+    oldDgpr.resize(p->wf_size);
+    barCnt.resize(p->wf_size);
     for (int i = 0; i < 3; ++i) {
-        workItemId[i].resize(p->wfSize);
+        workItemId[i].resize(p->wf_size);
     }
+
+    _execMask.set();
+    rawDist.clear();
+    lastInstExec = 0;
+    vecReads.clear();
 }
 
 void
 Wavefront::regStats()
 {
     SimObject::regStats();
-
-    srcRegOpDist
-        .init(0, 4, 2)
-        .name(name() + ".src_reg_operand_dist")
-        .desc("number of executed instructions with N source register operands")
-        ;
-
-    dstRegOpDist
-        .init(0, 3, 2)
-        .name(name() + ".dst_reg_operand_dist")
-        .desc("number of executed instructions with N destination register "
-              "operands")
-        ;
 
     // FIXME: the name of the WF needs to be unique
     numTimesBlockedDueWAXDependencies
@@ -121,11 +123,53 @@ Wavefront::regStats()
               "dependencies")
         ;
 
-    // FIXME: the name of the WF needs to be unique
-    numTimesBlockedDueVrfPortAvail
-        .name(name() + ".timesBlockedDueVrfPortAvail")
-        .desc("number of times instructions are blocked due to VRF port "
-              "availability")
+    numInstrExecuted
+        .name(name() + ".num_instr_executed")
+        .desc("number of instructions executed by this WF slot")
+        ;
+
+    schCycles
+        .name(name() + ".sch_cycles")
+        .desc("number of cycles spent in schedule stage")
+        ;
+
+    schStalls
+        .name(name() + ".sch_stalls")
+        .desc("number of cycles WF is stalled in SCH stage")
+        ;
+
+    schRfAccessStalls
+        .name(name() + ".sch_rf_access_stalls")
+        .desc("number of cycles wave selected in SCH but RF denied adding "
+              "instruction")
+        ;
+
+    schResourceStalls
+        .name(name() + ".sch_resource_stalls")
+        .desc("number of cycles stalled in sch by resource not available")
+        ;
+
+    schOpdNrdyStalls
+        .name(name() + ".sch_opd_nrdy_stalls")
+        .desc("number of cycles stalled in sch waiting for RF reads to "
+              "complete")
+        ;
+
+    schLdsArbStalls
+        .name(name() + ".sch_lds_arb_stalls")
+        .desc("number of cycles wave stalled due to LDS-VRF arbitration")
+        ;
+
+    vecRawDistance
+        .init(0,20,1)
+        .name(name() + ".vec_raw_distance")
+        .desc("Count of RAW distance in dynamic instructions for this WF")
+        ;
+
+    readsPerWrite
+        .init(0,4,1)
+        .name(name() + ".vec_reads_per_write")
+        .desc("Count of Vector reads per write for this WF")
         ;
 }
 
@@ -133,45 +177,471 @@ void
 Wavefront::init()
 {
     reservedVectorRegs = 0;
+    reservedScalarRegs = 0;
     startVgprIndex = 0;
+    startSgprIndex = 0;
+
+    scalarAlu = computeUnit->mapWaveToScalarAlu(this);
+    scalarAluGlobalIdx = computeUnit->mapWaveToScalarAluGlobalIdx(this);
+    globalMem = computeUnit->mapWaveToGlobalMem(this);
+    localMem = computeUnit->mapWaveToLocalMem(this);
+    scalarMem = computeUnit->mapWaveToScalarMem(this);
 }
 
 void
-Wavefront::resizeRegFiles(int num_cregs, int num_sregs, int num_dregs)
+Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
 {
-    condRegState->init(num_cregs);
-    maxSpVgprs = num_sregs;
-    maxDpVgprs = num_dregs;
+    int regInitIdx = 0;
+
+    // iterate over all the init fields and check which
+    // bits are enabled
+    for (int en_bit = 0; en_bit < NumScalarInitFields; ++en_bit) {
+
+        if (task->sgprBitEnabled(en_bit)) {
+            int physSgprIdx = 0;
+            uint32_t wiCount = 0;
+            uint32_t firstWave = 0;
+            int orderedAppendTerm = 0;
+            int numWfsInWg = 0;
+            uint32_t finalValue = 0;
+            Addr host_disp_pkt_addr = task->hostDispPktAddr();
+            Addr kernarg_addr = task->kernargAddr();
+            Addr hidden_priv_base(0);
+
+            switch (en_bit) {
+              case PrivateSegBuf:
+                    physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[0]);
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting PrivateSegBuffer: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[0]);
+
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[1]);
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting PrivateSegBuffer: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[1]);
+
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[2]);
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting PrivateSegBuffer: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[2]);
+
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[3]);
+
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting PrivateSegBuffer: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                        task->amdQueue.scratch_resource_descriptor[3]);
+                break;
+              case DispatchPtr:
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                        ((uint32_t*)&host_disp_pkt_addr)[0]);
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting DispatchPtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                        ((uint32_t*)&host_disp_pkt_addr)[0]);
+
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                        ((uint32_t*)&host_disp_pkt_addr)[1]);
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting DispatchPtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                        ((uint32_t*)&host_disp_pkt_addr)[1]);
+
+                ++regInitIdx;
+                break;
+              case QueuePtr:
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                        ((uint32_t*)&task->hostAMDQueueAddr)[0]);
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting QueuePtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                       ((uint32_t*)&task->hostAMDQueueAddr)[0]);
+
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                        ((uint32_t*)&task->hostAMDQueueAddr)[1]);
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting QueuePtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                       ((uint32_t*)&task->hostAMDQueueAddr)[1]);
+
+                ++regInitIdx;
+                break;
+              case KernargSegPtr:
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                        ((uint32_t*)&kernarg_addr)[0]);
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting KernargSegPtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                       ((uint32_t*)kernarg_addr)[0]);
+
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                        ((uint32_t*)&kernarg_addr)[1]);
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting KernargSegPtr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                       ((uint32_t*)kernarg_addr)[1]);
+
+                ++regInitIdx;
+                break;
+              case FlatScratchInit:
+                physSgprIdx
+                    = computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                    (TheGpuISA::ScalarRegU32)(task->amdQueue
+                        .scratch_backing_memory_location & 0xffffffff));
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting FlatScratch Addr: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                        (TheGpuISA::ScalarRegU32)(task->amdQueue
+                        .scratch_backing_memory_location & 0xffffffff));
+
+                physSgprIdx =
+                       computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                // This vallue should be sizeof(DWORD) aligned, that is
+                // 4 byte aligned
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                    task->amdQueue.scratch_workitem_byte_size);
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting FlatScratch size: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                        task->amdQueue.scratch_workitem_byte_size);
+                /**
+                 * Since flat scratch init is needed for this kernel, this
+                 * kernel is going to have flat memory instructions and we
+                 * need to initialize the hidden private base for this queue.
+                 * scratch_resource_descriptor[0] has this queue's scratch
+                 * base address. scratch_backing_memory_location has the
+                 * offset to this queue's scratch base address from the
+                 * SH_HIDDEN_PRIVATE_BASE_VMID. Ideally, we only require this
+                 * queue's scratch base address for address calculation
+                 * (stored in scratch_resource_descriptor[0]). But that
+                 * address calculation shoule be done by first finding the
+                 * queue's scratch base address using the calculation
+                 * "SH_HIDDEN_PRIVATE_BASE_VMID + offset". So, we initialize
+                 * SH_HIDDEN_PRIVATE_BASE_VMID.
+                 *
+                 * For more details see:
+                 *     http://rocm-documentation.readthedocs.io/en/latest/
+                 *     ROCm_Compiler_SDK/ROCm-Native-ISA.html#flat-scratch
+                 *
+                 *     https://github.com/ROCm-Developer-Tools/
+                 *     ROCm-ComputeABI-Doc/blob/master/AMDGPU-ABI.md
+                 *     #flat-addressing
+                 */
+                hidden_priv_base =
+                    (uint64_t)task->amdQueue.scratch_resource_descriptor[0] |
+                    (((uint64_t)task->amdQueue.scratch_resource_descriptor[1]
+                    & 0x000000000000ffff) << 32);
+                computeUnit->shader->initShHiddenPrivateBase(
+                       hidden_priv_base,
+                       task->amdQueue.scratch_backing_memory_location);
+                break;
+              case GridWorkgroupCountX:
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                wiCount = ((task->gridSize(0) +
+                           task->wgSize(0) - 1) /
+                           task->wgSize(0));
+                computeUnit->srf[simdId]->write(physSgprIdx, wiCount);
+
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting num WG X: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx, wiCount);
+                break;
+              case GridWorkgroupCountY:
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                wiCount = ((task->gridSize(1) +
+                           task->wgSize(1) - 1) /
+                           task->wgSize(1));
+                computeUnit->srf[simdId]->write(physSgprIdx, wiCount);
+
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting num WG Y: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx, wiCount);
+                break;
+              case GridWorkgroupCountZ:
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                wiCount = ((task->gridSize(2) +
+                           task->wgSize(2) - 1) /
+                           task->wgSize(2));
+                computeUnit->srf[simdId]->write(physSgprIdx, wiCount);
+
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting num WG Z: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx, wiCount);
+                break;
+              case WorkgroupIdX:
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                                                     workGroupId[0]);
+
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting WG ID X: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx, workGroupId[0]);
+                break;
+              case WorkgroupIdY:
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                                                     workGroupId[1]);
+
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting WG ID Y: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx, workGroupId[1]);
+                break;
+              case WorkgroupIdZ:
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->write(physSgprIdx,
+                                                     workGroupId[2]);
+
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting WG ID Z: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx, workGroupId[2]);
+                break;
+              case PrivSegWaveByteOffset:
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                /**
+                  * the compute_tmpring_size_wavesize specifies the number of
+                  * kB allocated per wavefront, hence the multiplication by
+                  * 1024.
+                  *
+                  * to get the per wavefront offset into the scratch
+                  * memory, we also multiply this by the wfId. the wfId stored
+                  * in the Wavefront class, however, is the wave ID within the
+                  * WG, whereas here we need the global WFID because the
+                  * scratch space will be divided amongst all waves in the
+                  * kernel. to get the global ID we multiply the WGID by
+                  * the WG size, then add the WFID of the wave within its WG.
+                  */
+                computeUnit->srf[simdId]->write(physSgprIdx, 1024 *
+                    (wgId * (wgSz / 64) + wfId) *
+                    task->amdQueue.compute_tmpring_size_wavesize);
+
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting Private Seg Offset: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx,
+                        1024 * (wgId * (wgSz / 64) + wfId) *
+                        task->amdQueue.compute_tmpring_size_wavesize);
+                break;
+              case WorkgroupInfo:
+                firstWave = (wfId == 0) ? 1 : 0;
+                numWfsInWg = divCeil(wgSizeInWorkItems,
+                                         computeUnit->wfSize());
+                finalValue = firstWave << ((sizeof(uint32_t) * 8) - 1);
+                finalValue |= (orderedAppendTerm << 6);
+                finalValue |= numWfsInWg;
+                physSgprIdx =
+                    computeUnit->registerManager->mapSgpr(this, regInitIdx);
+                computeUnit->srf[simdId]->
+                    write(physSgprIdx, finalValue);
+
+                ++regInitIdx;
+                DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
+                        "Setting WG Info: s[%d] = %x\n",
+                        computeUnit->cu_id, simdId,
+                        wfSlotId, wfDynId, physSgprIdx, finalValue);
+                break;
+              default:
+                fatal("SGPR enable bit %i not supported\n", en_bit);
+                break;
+            }
+        }
+    }
+
+    regInitIdx = 0;
+
+    // iterate over all the init fields and check which
+    // bits are enabled
+    for (int en_bit = 0; en_bit < NumVectorInitFields; ++en_bit) {
+        if (task->vgprBitEnabled(en_bit)) {
+            uint32_t physVgprIdx = 0;
+            TheGpuISA::VecRegContainerU32 raw_vgpr;
+
+            switch (en_bit) {
+              case WorkitemIdX:
+                {
+                    physVgprIdx = computeUnit->registerManager
+                        ->mapVgpr(this, regInitIdx);
+                    TheGpuISA::VecRegU32 vgpr_x
+                        = raw_vgpr.as<TheGpuISA::VecElemU32>();
+
+                    for (int lane = 0; lane < workItemId[0].size(); ++lane) {
+                        vgpr_x[lane] = workItemId[0][lane];
+                    }
+
+                    computeUnit->vrf[simdId]->write(physVgprIdx, raw_vgpr);
+                    rawDist[regInitIdx] = 0;
+                    ++regInitIdx;
+                }
+                break;
+              case WorkitemIdY:
+                {
+                    physVgprIdx = computeUnit->registerManager
+                        ->mapVgpr(this, regInitIdx);
+                    TheGpuISA::VecRegU32 vgpr_y
+                        = raw_vgpr.as<TheGpuISA::VecElemU32>();
+
+                    for (int lane = 0; lane < workItemId[1].size(); ++lane) {
+                        vgpr_y[lane] = workItemId[1][lane];
+                    }
+
+                    computeUnit->vrf[simdId]->write(physVgprIdx, raw_vgpr);
+                    rawDist[regInitIdx] = 0;
+                    ++regInitIdx;
+                }
+                break;
+              case WorkitemIdZ:
+                {
+                    physVgprIdx = computeUnit->registerManager->
+                        mapVgpr(this, regInitIdx);
+                    TheGpuISA::VecRegU32 vgpr_z
+                        = raw_vgpr.as<TheGpuISA::VecElemU32>();
+
+                    for (int lane = 0; lane < workItemId[2].size(); ++lane) {
+                        vgpr_z[lane] = workItemId[2][lane];
+                    }
+
+                    computeUnit->vrf[simdId]->write(physVgprIdx, raw_vgpr);
+                    rawDist[regInitIdx] = 0;
+                    ++regInitIdx;
+                }
+                break;
+            }
+        }
+    }
+}
+
+void
+Wavefront::resizeRegFiles(int num_vregs, int num_sregs)
+{
+    maxVgprs = num_vregs;
+    maxSgprs = num_sregs;
 }
 
 Wavefront::~Wavefront()
 {
-    if (callArgMem)
-        delete callArgMem;
-    delete condRegState;
 }
 
 void
-Wavefront::start(uint64_t _wf_dyn_id,uint64_t _base_ptr)
+Wavefront::setStatus(status_e newStatus)
+{
+    if (computeUnit->idleCUTimeout > 0) {
+        // Wavefront's status transitions to stalled or stopped
+        if ((newStatus == S_STOPPED || newStatus == S_STALLED ||
+             newStatus == S_WAITCNT) &&
+            (status != newStatus)) {
+            computeUnit->idleWfs++;
+            assert(computeUnit->idleWfs <=
+                   (computeUnit->shader->n_wf * computeUnit->numVectorALUs));
+            if (computeUnit->idleWfs ==
+                (computeUnit->shader->n_wf * computeUnit->numVectorALUs)) {
+                lastNonIdleTick = curTick();
+            }
+            // Wavefront's status transitions to an active state (from
+            // a stopped or stalled state)
+        } else if ((status == S_STOPPED || status == S_STALLED ||
+                    status == S_WAITCNT) &&
+                   (status != newStatus)) {
+            // if all WFs in the CU were idle then check if the idleness
+            // period exceeded the timeout threshold
+            if (computeUnit->idleWfs ==
+                (computeUnit->shader->n_wf * computeUnit->numVectorALUs)) {
+                panic_if((curTick() - lastNonIdleTick) >=
+                         computeUnit->idleCUTimeout,
+                         "CU%d has been idle for %d ticks at tick %d",
+                         computeUnit->cu_id, computeUnit->idleCUTimeout,
+                         curTick());
+            }
+            computeUnit->idleWfs--;
+            assert(computeUnit->idleWfs >= 0);
+        }
+    }
+    status = newStatus;
+}
+
+void
+Wavefront::start(uint64_t _wf_dyn_id, Addr init_pc)
 {
     wfDynId = _wf_dyn_id;
-    basePtr = _base_ptr;
+    _pc = init_pc;
+
     status = S_RUNNING;
+
+    vecReads.resize(maxVgprs, 0);
 }
 
 bool
 Wavefront::isGmInstruction(GPUDynInstPtr ii)
 {
-    if (ii->isGlobalMem() || ii->isFlat())
-        return true;
-
-    return false;
-}
-
-bool
-Wavefront::isLmInstruction(GPUDynInstPtr ii)
-{
-    if (ii->isLocalMem()) {
+    if (ii->isGlobalMem() ||
+        (ii->isFlat() && ii->executedAs() == Enums::SC_GLOBAL)) {
         return true;
     }
 
@@ -179,14 +649,57 @@ Wavefront::isLmInstruction(GPUDynInstPtr ii)
 }
 
 bool
-Wavefront::isOldestInstALU()
+Wavefront::isLmInstruction(GPUDynInstPtr ii)
+{
+    if (ii->isLocalMem() ||
+        (ii->isFlat() && ii->executedAs() == Enums::SC_GROUP)) {
+        return true;
+    }
+
+    return false;
+}
+
+bool
+Wavefront::isOldestInstWaitcnt()
+{
+    if (instructionBuffer.empty())
+        return false;
+
+    GPUDynInstPtr ii = instructionBuffer.front();
+
+    if (ii->isWaitcnt()) {
+        // waitcnt is a scalar
+        assert(ii->isScalar());
+        return true;
+    }
+
+    return false;
+}
+
+bool
+Wavefront::isOldestInstScalarALU()
 {
     assert(!instructionBuffer.empty());
     GPUDynInstPtr ii = instructionBuffer.front();
 
-    if (status != S_STOPPED && (ii->isNop() ||
-        ii->isReturn() || ii->isBranch() ||
-        ii->isALU() || (ii->isKernArgSeg() && ii->isLoad()))) {
+    if (status != S_STOPPED && ii->isScalar() && (ii->isNop() || ii->isReturn()
+        || ii->isEndOfKernel() || ii->isBranch() || ii->isALU() ||
+        (ii->isKernArgSeg() && ii->isLoad()))) {
+        return true;
+    }
+
+    return false;
+}
+
+bool
+Wavefront::isOldestInstVectorALU()
+{
+    assert(!instructionBuffer.empty());
+    GPUDynInstPtr ii = instructionBuffer.front();
+
+    if (status != S_STOPPED && !ii->isScalar() && (ii->isNop() ||
+        ii->isReturn() || ii->isBranch() || ii->isALU() || ii->isEndOfKernel()
+        || (ii->isKernArgSeg() && ii->isLoad()))) {
         return true;
     }
 
@@ -212,7 +725,20 @@ Wavefront::isOldestInstGMem()
     assert(!instructionBuffer.empty());
     GPUDynInstPtr ii = instructionBuffer.front();
 
-    if (status != S_STOPPED && ii->isGlobalMem()) {
+    if (status != S_STOPPED && !ii->isScalar() && ii->isGlobalMem()) {
+        return true;
+    }
+
+    return false;
+}
+
+bool
+Wavefront::isOldestInstScalarMem()
+{
+    assert(!instructionBuffer.empty());
+    GPUDynInstPtr ii = instructionBuffer.front();
+
+    if (status != S_STOPPED && ii->isScalar() && ii->isGlobalMem()) {
         return true;
     }
 
@@ -258,15 +784,13 @@ Wavefront::isOldestInstFlatMem()
     return false;
 }
 
-// Return true if the Wavefront's instruction
-// buffer has branch instruction.
 bool
-Wavefront::instructionBufferHasBranch()
+Wavefront::stopFetch()
 {
     for (auto it : instructionBuffer) {
         GPUDynInstPtr ii = it;
-
-        if (ii->isReturn() || ii->isBranch()) {
+        if (ii->isReturn() || ii->isBranch() ||
+            ii->isEndOfKernel()) {
             return true;
         }
     }
@@ -274,377 +798,125 @@ Wavefront::instructionBufferHasBranch()
     return false;
 }
 
-// Remap HSAIL register to physical VGPR.
-// HSAIL register = virtual register assigned to an operand by HLC compiler
-uint32_t
-Wavefront::remap(uint32_t vgprIndex, uint32_t size, uint8_t mode)
+void
+Wavefront::freeResources()
 {
-    assert((vgprIndex < reservedVectorRegs) && (reservedVectorRegs > 0));
-    // add the offset from where the VGPRs of the wavefront have been assigned
-    uint32_t physicalVgprIndex = startVgprIndex + vgprIndex;
-    // HSAIL double precision (DP) register: calculate the physical VGPR index
-    // assuming that DP registers are placed after SP ones in the VRF. The DP
-    // and SP VGPR name spaces in HSAIL mode are separate so we need to adjust
-    // the DP VGPR index before mapping it to the physical VRF address space
-    if (mode == 1 && size > 4) {
-        physicalVgprIndex = startVgprIndex + maxSpVgprs + (2 * vgprIndex);
-    }
-
-    assert((startVgprIndex <= physicalVgprIndex) &&
-           (startVgprIndex + reservedVectorRegs - 1) >= physicalVgprIndex);
-
-    // calculate absolute physical VGPR index
-    return physicalVgprIndex % computeUnit->vrf[simdId]->numRegs();
+    execUnitId = -1;
 }
 
-// Return true if this wavefront is ready
-// to execute an instruction of the specified type.
-int
-Wavefront::ready(itype_e type)
+void Wavefront::validateRequestCounters()
 {
-    // Check to make sure wave is running
-    if (status == S_STOPPED || status == S_RETURNING ||
-        instructionBuffer.empty()) {
-        return 0;
-    }
-
-    // Is the wave waiting at a barrier
-    if (stalledAtBarrier) {
-        if (!computeUnit->AllAtBarrier(barrierId,barrierCnt,
-                        computeUnit->getRefCounter(dispatchId, wgId))) {
-            // Are all threads at barrier?
-            return 0;
-        }
-        oldBarrierCnt = barrierCnt;
-        stalledAtBarrier = false;
-    }
-
-    // Read instruction
-    GPUDynInstPtr ii = instructionBuffer.front();
-
-    bool ready_inst M5_VAR_USED = false;
-    bool glbMemBusRdy = false;
-    bool glbMemIssueRdy = false;
-    if (type == I_GLOBAL || type == I_FLAT || type == I_PRIVATE) {
-        for (int j=0; j < computeUnit->numGlbMemUnits; ++j) {
-            if (computeUnit->vrfToGlobalMemPipeBus[j].prerdy())
-                glbMemBusRdy = true;
-            if (computeUnit->wfWait[j].prerdy())
-                glbMemIssueRdy = true;
-        }
-    }
-    bool locMemBusRdy = false;
-    bool locMemIssueRdy = false;
-    if (type == I_SHARED || type == I_FLAT) {
-        for (int j=0; j < computeUnit->numLocMemUnits; ++j) {
-            if (computeUnit->vrfToLocalMemPipeBus[j].prerdy())
-                locMemBusRdy = true;
-            if (computeUnit->wfWait[j].prerdy())
-                locMemIssueRdy = true;
-        }
-    }
-
-    // The following code is very error prone and the entire process for
-    // checking readiness will be fixed eventually.  In the meantime, let's
-    // make sure that we do not silently let an instruction type slip
-    // through this logic and always return not ready.
-    if (!(ii->isBarrier() || ii->isNop() || ii->isReturn() || ii->isBranch() ||
-        ii->isALU() || ii->isLoad() || ii->isStore() || ii->isAtomic() ||
-        ii->isMemFence() || ii->isFlat())) {
-        panic("next instruction: %s is of unknown type\n", ii->disassemble());
-    }
-
-    DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Checking Read for Inst : %s\n",
-            computeUnit->cu_id, simdId, wfSlotId, ii->disassemble());
-
-    if (type == I_ALU && ii->isBarrier()) {
-        // Here for ALU instruction (barrier)
-        if (!computeUnit->wfWait[simdId].prerdy()) {
-            // Is wave slot free?
-            return 0;
-        }
-
-        // Are there in pipe or outstanding memory requests?
-        if ((outstandingReqs + memReqsInPipe) > 0) {
-            return 0;
-        }
-
-        ready_inst = true;
-    } else if (type == I_ALU && ii->isNop()) {
-        // Here for ALU instruction (nop)
-        if (!computeUnit->wfWait[simdId].prerdy()) {
-            // Is wave slot free?
-            return 0;
-        }
-
-        ready_inst = true;
-    } else if (type == I_ALU && ii->isReturn()) {
-        // Here for ALU instruction (return)
-        if (!computeUnit->wfWait[simdId].prerdy()) {
-            // Is wave slot free?
-            return 0;
-        }
-
-        // Are there in pipe or outstanding memory requests?
-        if ((outstandingReqs + memReqsInPipe) > 0) {
-            return 0;
-        }
-
-        ready_inst = true;
-    } else if (type == I_ALU && (ii->isBranch() ||
-               ii->isALU() ||
-               (ii->isKernArgSeg() && ii->isLoad()) ||
-               ii->isArgSeg())) {
-        // Here for ALU instruction (all others)
-        if (!computeUnit->wfWait[simdId].prerdy()) {
-            // Is alu slot free?
-            return 0;
-        }
-        if (!computeUnit->vrf[simdId]->vrfOperandAccessReady(this, ii,
-                    VrfAccessType::RD_WR)) {
-            return 0;
-        }
-
-        if (!computeUnit->vrf[simdId]->operandsReady(this, ii)) {
-            return 0;
-        }
-        ready_inst = true;
-    } else if (type == I_GLOBAL && ii->isGlobalMem()) {
-        // Here Global memory instruction
-        if (ii->isLoad() || ii->isAtomic() || ii->isMemFence()) {
-            // Are there in pipe or outstanding global memory write requests?
-            if ((outstandingReqsWrGm + wrGmReqsInPipe) > 0) {
-                return 0;
-            }
-        }
-
-        if (ii->isStore() || ii->isAtomic() || ii->isMemFence()) {
-            // Are there in pipe or outstanding global memory read requests?
-            if ((outstandingReqsRdGm + rdGmReqsInPipe) > 0)
-                return 0;
-        }
-
-        if (!glbMemIssueRdy) {
-            // Is WV issue slot free?
-            return 0;
-        }
-
-        if (!glbMemBusRdy) {
-            // Is there an available VRF->Global memory read bus?
-            return 0;
-        }
-
-        // Does the coalescer have space for our instruction?
-        if (!computeUnit->globalMemoryPipe.coalescerReady(ii)) {
-            return 0;
-        }
-
-        if (!computeUnit->globalMemoryPipe.
-            isGMReqFIFOWrRdy(rdGmReqsInPipe + wrGmReqsInPipe)) {
-            // Can we insert a new request to the Global Mem Request FIFO?
-            return 0;
-        }
-        // can we schedule source & destination operands on the VRF?
-        if (!computeUnit->vrf[simdId]->vrfOperandAccessReady(this, ii,
-                    VrfAccessType::RD_WR)) {
-            return 0;
-        }
-        if (!computeUnit->vrf[simdId]->operandsReady(this, ii)) {
-            return 0;
-        }
-        ready_inst = true;
-    } else if (type == I_SHARED && ii->isLocalMem()) {
-        // Here for Shared memory instruction
-        if (ii->isLoad() || ii->isAtomic() || ii->isMemFence()) {
-            if ((outstandingReqsWrLm + wrLmReqsInPipe) > 0) {
-                return 0;
-            }
-        }
-
-        if (ii->isStore() || ii->isAtomic() || ii->isMemFence()) {
-            if ((outstandingReqsRdLm + rdLmReqsInPipe) > 0) {
-                return 0;
-            }
-        }
-
-        if (!locMemBusRdy) {
-            // Is there an available VRF->LDS read bus?
-            return 0;
-        }
-        if (!locMemIssueRdy) {
-            // Is wave slot free?
-            return 0;
-        }
-
-        if (!computeUnit->localMemoryPipe.
-            isLMReqFIFOWrRdy(rdLmReqsInPipe + wrLmReqsInPipe)) {
-            // Can we insert a new request to the LDS Request FIFO?
-            return 0;
-        }
-        // can we schedule source & destination operands on the VRF?
-        if (!computeUnit->vrf[simdId]->vrfOperandAccessReady(this, ii,
-                    VrfAccessType::RD_WR)) {
-            return 0;
-        }
-        if (!computeUnit->vrf[simdId]->operandsReady(this, ii)) {
-            return 0;
-        }
-        ready_inst = true;
-    } else if (type == I_FLAT && ii->isFlat()) {
-        if (!glbMemBusRdy) {
-            // Is there an available VRF->Global memory read bus?
-            return 0;
-        }
-
-        if (!locMemBusRdy) {
-            // Is there an available VRF->LDS read bus?
-            return 0;
-        }
-
-        if (!glbMemIssueRdy) {
-            // Is wave slot free?
-            return 0;
-        }
-
-        if (!locMemIssueRdy) {
-            return 0;
-        }
-
-        // Does the coalescer have space for our instruction?
-        if (!computeUnit->globalMemoryPipe.coalescerReady(ii)) {
-            return 0;
-        }
-
-        if (!computeUnit->globalMemoryPipe.
-            isGMReqFIFOWrRdy(rdGmReqsInPipe + wrGmReqsInPipe)) {
-            // Can we insert a new request to the Global Mem Request FIFO?
-            return 0;
-        }
-
-        if (!computeUnit->localMemoryPipe.
-            isLMReqFIFOWrRdy(rdLmReqsInPipe + wrLmReqsInPipe)) {
-            // Can we insert a new request to the LDS Request FIFO?
-            return 0;
-        }
-        // can we schedule source & destination operands on the VRF?
-        if (!computeUnit->vrf[simdId]->vrfOperandAccessReady(this, ii,
-                    VrfAccessType::RD_WR)) {
-            return 0;
-        }
-        // are all the operands ready? (RAW, WAW and WAR depedencies met?)
-        if (!computeUnit->vrf[simdId]->operandsReady(this, ii)) {
-            return 0;
-        }
-        ready_inst = true;
-    } else {
-        return 0;
-    }
-
-    assert(ready_inst);
-
-    DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Ready Inst : %s\n", computeUnit->cu_id,
-            simdId, wfSlotId, ii->disassemble());
-    return 1;
+    panic_if(wrGmReqsInPipe < 0 || rdGmReqsInPipe < 0 ||
+             wrLmReqsInPipe < 0 || rdLmReqsInPipe < 0 ||
+             outstandingReqs < 0,
+             "Negative requests in pipe for WF%d for slot%d"
+             " and SIMD%d: Rd GlobalMem Reqs=%d, Wr GlobalMem Reqs=%d,"
+             " Rd LocalMem Reqs=%d, Wr LocalMem Reqs=%d,"
+             " Outstanding Reqs=%d\n",
+             wfDynId, wfSlotId, simdId, rdGmReqsInPipe, wrGmReqsInPipe,
+             rdLmReqsInPipe, wrLmReqsInPipe, outstandingReqs);
 }
 
 void
-Wavefront::updateResources()
+Wavefront::reserveGmResource(GPUDynInstPtr ii)
 {
+    if (!ii->isScalar()) {
+        if (ii->isLoad()) {
+            rdGmReqsInPipe++;
+        } else if (ii->isStore()) {
+            wrGmReqsInPipe++;
+        } else if (ii->isAtomic() || ii->isMemSync()) {
+            rdGmReqsInPipe++;
+            wrGmReqsInPipe++;
+        } else {
+            panic("Invalid memory operation!\n");
+        }
+        execUnitId = globalMem;
+    } else {
+        if (ii->isLoad()) {
+            scalarRdGmReqsInPipe++;
+        } else if (ii->isStore()) {
+            scalarWrGmReqsInPipe++;
+        } else if (ii->isAtomic() || ii->isMemSync()) {
+            scalarWrGmReqsInPipe++;
+            scalarRdGmReqsInPipe++;
+        } else {
+            panic("Invalid memory operation!\n");
+        }
+        execUnitId = scalarMem;
+    }
+}
+
+void
+Wavefront::reserveLmResource(GPUDynInstPtr ii)
+{
+    fatal_if(ii->isScalar(),
+             "Scalar instructions can not access Shared memory!!!");
+    if (ii->isLoad()) {
+        rdLmReqsInPipe++;
+    } else if (ii->isStore()) {
+        wrLmReqsInPipe++;
+    } else if (ii->isAtomic() || ii->isMemSync()) {
+        wrLmReqsInPipe++;
+        rdLmReqsInPipe++;
+    } else {
+        panic("Invalid memory operation!\n");
+    }
+    execUnitId = localMem;
+}
+
+std::vector<int>
+Wavefront::reserveResources()
+{
+    // vector of execution unit IDs to return to schedule stage
+    // this return is only used for debugging and an assertion...
+    std::vector<int> execUnitIds;
+
     // Get current instruction
     GPUDynInstPtr ii = instructionBuffer.front();
     assert(ii);
-    computeUnit->vrf[simdId]->updateResources(this, ii);
+
     // Single precision ALU or Branch or Return or Special instruction
     if (ii->isALU() || ii->isSpecialOp() ||
-        ii->isBranch() ||
-        // FIXME: Kernel argument loads are currently treated as ALU operations
-        // since we don't send memory packets at execution. If we fix that then
-        // we should map them to one of the memory pipelines
+        ii->isBranch() || ii->isNop() ||
         (ii->isKernArgSeg() && ii->isLoad()) || ii->isArgSeg() ||
-        ii->isReturn()) {
-        computeUnit->aluPipe[simdId].preset(computeUnit->shader->
-                                            ticks(computeUnit->spBypassLength()));
+        ii->isReturn() || ii->isEndOfKernel()) {
+        if (!ii->isScalar()) {
+            execUnitId = simdId;
+        } else {
+            execUnitId = scalarAluGlobalIdx;
+        }
         // this is to enforce a fixed number of cycles per issue slot per SIMD
-        computeUnit->wfWait[simdId].preset(computeUnit->shader->
-                                           ticks(computeUnit->issuePeriod));
     } else if (ii->isBarrier()) {
-        computeUnit->wfWait[simdId].preset(computeUnit->shader->
-                                           ticks(computeUnit->issuePeriod));
-    } else if (ii->isLoad() && ii->isFlat()) {
-        assert(Enums::SC_NONE != ii->executedAs());
-        memReqsInPipe++;
-        rdGmReqsInPipe++;
-        if ( Enums::SC_SHARED == ii->executedAs() ) {
-            computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
-                preset(computeUnit->shader->ticks(4));
-            computeUnit->wfWait[computeUnit->ShrMemUnitId()].
-                preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-        } else {
-            computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-                preset(computeUnit->shader->ticks(4));
-            computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-                preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-        }
-    } else if (ii->isStore() && ii->isFlat()) {
-        assert(Enums::SC_NONE != ii->executedAs());
-        memReqsInPipe++;
-        wrGmReqsInPipe++;
-        if (Enums::SC_SHARED == ii->executedAs()) {
-            computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
-                preset(computeUnit->shader->ticks(8));
-            computeUnit->wfWait[computeUnit->ShrMemUnitId()].
-                preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-        } else {
-            computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-                preset(computeUnit->shader->ticks(8));
-            computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-                preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-        }
-    } else if (ii->isLoad() && ii->isGlobalMem()) {
-        memReqsInPipe++;
-        rdGmReqsInPipe++;
-        computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-            preset(computeUnit->shader->ticks(4));
-        computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-            preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (ii->isStore() && ii->isGlobalMem()) {
-        memReqsInPipe++;
-        wrGmReqsInPipe++;
-        computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-            preset(computeUnit->shader->ticks(8));
-        computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-            preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if ((ii->isAtomic() || ii->isMemFence()) && ii->isGlobalMem()) {
-        memReqsInPipe++;
-        wrGmReqsInPipe++;
-        rdGmReqsInPipe++;
-        computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-            preset(computeUnit->shader->ticks(8));
-        computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-            preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (ii->isLoad() && ii->isLocalMem()) {
-        memReqsInPipe++;
-        rdLmReqsInPipe++;
-        computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
-            preset(computeUnit->shader->ticks(4));
-        computeUnit->wfWait[computeUnit->ShrMemUnitId()].
-            preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (ii->isStore() && ii->isLocalMem()) {
-        memReqsInPipe++;
-        wrLmReqsInPipe++;
-        computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
-            preset(computeUnit->shader->ticks(8));
-        computeUnit->wfWait[computeUnit->ShrMemUnitId()].
-            preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if ((ii->isAtomic() || ii->isMemFence()) && ii->isLocalMem()) {
-        memReqsInPipe++;
-        wrLmReqsInPipe++;
-        rdLmReqsInPipe++;
-        computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
-            preset(computeUnit->shader->ticks(8));
-        computeUnit->wfWait[computeUnit->ShrMemUnitId()].
-            preset(computeUnit->shader->ticks(computeUnit->issuePeriod));
+        execUnitId = ii->isScalar() ? scalarAluGlobalIdx : simdId;
+    } else if (ii->isFlat()) {
+        assert(!ii->isScalar());
+        reserveLmResource(ii);
+        // add execUnitId, reserved by reserveLmResource, list before it is
+        // overwriten by reserveGmResource
+        execUnitIds.push_back(execUnitId);
+        flatLmUnitId = execUnitId;
+        reserveGmResource(ii);
+        flatGmUnitId = execUnitId;
+        execUnitIds.push_back(flatGmUnitId);
+        execUnitId = -1;
+    } else if (ii->isGlobalMem()) {
+        reserveGmResource(ii);
+    } else if (ii->isLocalMem()) {
+        reserveLmResource(ii);
+    } else if (ii->isPrivateSeg()) {
+        fatal_if(ii->isScalar(),
+                 "Scalar instructions can not access Private memory!!!");
+        reserveGmResource(ii);
+    } else {
+        panic("reserveResources -> Couldn't process op!\n");
     }
+
+    if (execUnitId != -1) {
+        execUnitIds.push_back(execUnitId);
+    }
+    assert(execUnitIds.size());
+    return execUnitIds;
 }
 
 void
@@ -653,49 +925,171 @@ Wavefront::exec()
     // ---- Exit if wavefront is inactive ----------------------------- //
 
     if (status == S_STOPPED || status == S_RETURNING ||
-        instructionBuffer.empty()) {
+        status==S_STALLED || instructionBuffer.empty()) {
         return;
+    }
+
+    if (status == S_WAITCNT) {
+        /**
+         * if this wave is in S_WAITCNT state, then
+         * it should enter exec() precisely one time
+         * before the waitcnts are satisfied, in order
+         * to execute the waitcnt instruction itself
+         * thus we assert that the waitcnt is the
+         * oldest instruction. if we enter exec() with
+         * active waitcnts, and we're not executing
+         * the waitcnt instruction, something must be
+         * wrong
+         */
+        assert(isOldestInstWaitcnt());
     }
 
     // Get current instruction
 
     GPUDynInstPtr ii = instructionBuffer.front();
 
-    const uint32_t old_pc = pc();
+    const Addr old_pc = pc();
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: wave[%d] Executing inst: %s "
-            "(pc: %i)\n", computeUnit->cu_id, simdId, wfSlotId, wfDynId,
-            ii->disassemble(), old_pc);
-
-    // update the instruction stats in the CU
+            "(pc: %#x; seqNum: %d)\n", computeUnit->cu_id, simdId, wfSlotId,
+            wfDynId, ii->disassemble(), old_pc, ii->seqNum());
 
     ii->execute(ii);
+    // delete the dynamic instruction from the pipeline map
+    computeUnit->deleteFromPipeMap(this);
+    // update the instruction stats in the CU
     computeUnit->updateInstStats(ii);
-    // access the VRF
-    computeUnit->vrf[simdId]->exec(ii, this);
-    srcRegOpDist.sample(ii->numSrcRegOperands());
-    dstRegOpDist.sample(ii->numDstRegOperands());
+
+    // inform VRF of instruction execution to schedule write-back
+    // and scoreboard ready for registers
+    if (!ii->isScalar()) {
+        computeUnit->vrf[simdId]->waveExecuteInst(this, ii);
+    }
+    computeUnit->srf[simdId]->waveExecuteInst(this, ii);
+
+    computeUnit->shader->vectorInstSrcOperand[ii->numSrcVecOperands()]++;
+    computeUnit->shader->vectorInstDstOperand[ii->numDstVecOperands()]++;
     computeUnit->numInstrExecuted++;
+    numInstrExecuted++;
+    computeUnit->instExecPerSimd[simdId]++;
     computeUnit->execRateDist.sample(computeUnit->totalCycles.value() -
                                      computeUnit->lastExecCycle[simdId]);
     computeUnit->lastExecCycle[simdId] = computeUnit->totalCycles.value();
-    if (pc() == old_pc) {
-        uint32_t new_pc = _gpuISA.advancePC(old_pc, ii);
-        // PC not modified by instruction, proceed to next or pop frame
-        pc(new_pc);
-        if (new_pc == rpc()) {
-            popFromReconvergenceStack();
-            discardFetch();
-        } else {
-            instructionBuffer.pop_front();
+
+    if (lastInstExec) {
+        computeUnit->instInterleave[simdId].
+            sample(computeUnit->instExecPerSimd[simdId] - lastInstExec);
+    }
+    lastInstExec = computeUnit->instExecPerSimd[simdId];
+
+    // want to track:
+    // number of reads that occur per value written
+
+    // vector RAW dependency tracking
+    for (int i = 0; i < ii->getNumOperands(); i++) {
+        if (ii->isVectorRegister(i)) {
+            int vgpr = ii->getRegisterIndex(i, ii);
+            int nReg = ii->getOperandSize(i) <= 4 ? 1 :
+                ii->getOperandSize(i) / 4;
+            for (int n = 0; n < nReg; n++) {
+                if (ii->isSrcOperand(i)) {
+                    // This check should never fail, but to be safe we check
+                    if (rawDist.find(vgpr+n) != rawDist.end()) {
+                        vecRawDistance.
+                            sample(numInstrExecuted.value() - rawDist[vgpr+n]);
+                    }
+                    // increment number of reads to this register
+                    vecReads[vgpr+n]++;
+                } else if (ii->isDstOperand(i)) {
+                    // rawDist is set on writes, but will not be set
+                    // for the first write to each physical register
+                    if (rawDist.find(vgpr+n) != rawDist.end()) {
+                        // sample the number of reads that were performed
+                        readsPerWrite.sample(vecReads[vgpr+n]);
+                    }
+                    // on a write, reset count of reads to 0
+                    vecReads[vgpr+n] = 0;
+
+                    rawDist[vgpr+n] = numInstrExecuted.value();
+                }
+            }
         }
+    }
+
+    if (pc() == old_pc) {
+        // PC not modified by instruction, proceed to next
+        _gpuISA.advancePC(ii);
+        instructionBuffer.pop_front();
     } else {
+        DPRINTF(GPUExec, "CU%d: WF[%d][%d]: wave%d %s taken branch\n",
+                computeUnit->cu_id, simdId, wfSlotId, wfDynId,
+                ii->disassemble());
         discardFetch();
     }
+    DPRINTF(GPUExec, "CU%d: WF[%d][%d]: wave[%d] (pc: %#x)\n",
+            computeUnit->cu_id, simdId, wfSlotId, wfDynId, pc());
 
     if (computeUnit->shader->hsail_mode==Shader::SIMT) {
         const int num_active_lanes = execMask().count();
         computeUnit->controlFlowDivergenceDist.sample(num_active_lanes);
         computeUnit->numVecOpsExecuted += num_active_lanes;
+
+        if (ii->isF16() && ii->isALU()) {
+            if (ii->isF32() || ii->isF64()) {
+                fatal("Instruction is tagged as both (1) F16, and (2)"
+                       "either F32 or F64.");
+            }
+            computeUnit->numVecOpsExecutedF16 += num_active_lanes;
+            if (ii->isFMA()) {
+                computeUnit->numVecOpsExecutedFMA16 += num_active_lanes;
+                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+            }
+            else if (ii->isMAC()) {
+                computeUnit->numVecOpsExecutedMAC16 += num_active_lanes;
+                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+            }
+            else if (ii->isMAD()) {
+                computeUnit->numVecOpsExecutedMAD16 += num_active_lanes;
+                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+            }
+        }
+        if (ii->isF32() && ii->isALU()) {
+            if (ii->isF16() || ii->isF64()) {
+                fatal("Instruction is tagged as both (1) F32, and (2)"
+                       "either F16 or F64.");
+            }
+            computeUnit->numVecOpsExecutedF32 += num_active_lanes;
+            if (ii->isFMA()) {
+                computeUnit->numVecOpsExecutedFMA32 += num_active_lanes;
+                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+            }
+            else if (ii->isMAC()) {
+                computeUnit->numVecOpsExecutedMAC32 += num_active_lanes;
+                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+            }
+            else if (ii->isMAD()) {
+                computeUnit->numVecOpsExecutedMAD32 += num_active_lanes;
+                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+            }
+        }
+        if (ii->isF64() && ii->isALU()) {
+            if (ii->isF16() || ii->isF32()) {
+                fatal("Instruction is tagged as both (1) F64, and (2)"
+                       "either F16 or F32.");
+            }
+            computeUnit->numVecOpsExecutedF64 += num_active_lanes;
+            if (ii->isFMA()) {
+                computeUnit->numVecOpsExecutedFMA64 += num_active_lanes;
+                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+            }
+            else if (ii->isMAC()) {
+                computeUnit->numVecOpsExecutedMAC64 += num_active_lanes;
+                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+            }
+            else if (ii->isMAD()) {
+                computeUnit->numVecOpsExecutedMAD64 += num_active_lanes;
+                computeUnit->numVecOpsExecutedTwoOpFP += num_active_lanes;
+            }
+        }
         if (isGmInstruction(ii)) {
             computeUnit->activeLanesPerGMemInstrDist.sample(num_active_lanes);
         } else if (isLmInstruction(ii)) {
@@ -703,82 +1097,120 @@ Wavefront::exec()
         }
     }
 
-    // ---- Update Vector ALU pipeline and other resources ------------------ //
+    /**
+     * we return here to avoid spurious errors related to flat insts
+     * and their address segment resolution.
+     */
+    if (execMask().none() && ii->isFlat()) {
+        computeUnit->getTokenManager()->recvTokens(1);
+        return;
+    }
+
+    // Update Vector ALU pipeline and other resources
+    bool flat_as_gm = false;
+    bool flat_as_lm = false;
+    if (ii->isFlat()) {
+        flat_as_gm = (ii->executedAs() == Enums::SC_GLOBAL) ||
+                     (ii->executedAs() == Enums::SC_PRIVATE);
+        flat_as_lm = (ii->executedAs() == Enums::SC_GROUP);
+    }
+
     // Single precision ALU or Branch or Return or Special instruction
+    // Note, we use the same timing regardless of SP or DP ALU operation.
     if (ii->isALU() || ii->isSpecialOp() ||
-        ii->isBranch() ||
-        // FIXME: Kernel argument loads are currently treated as ALU operations
-        // since we don't send memory packets at execution. If we fix that then
-        // we should map them to one of the memory pipelines
+        ii->isBranch() || ii->isNop() ||
         (ii->isKernArgSeg() && ii->isLoad()) ||
-        ii->isArgSeg() ||
-        ii->isReturn()) {
-        computeUnit->aluPipe[simdId].set(computeUnit->shader->
-                                         ticks(computeUnit->spBypassLength()));
-
+        ii->isArgSeg() || ii->isEndOfKernel() || ii->isReturn()) {
         // this is to enforce a fixed number of cycles per issue slot per SIMD
-        computeUnit->wfWait[simdId].set(computeUnit->shader->
-                                        ticks(computeUnit->issuePeriod));
+        if (!ii->isScalar()) {
+            computeUnit->vectorALUs[simdId].set(computeUnit->
+                cyclesToTicks(computeUnit->issuePeriod));
+        } else {
+            computeUnit->scalarALUs[scalarAlu].set(computeUnit->
+                cyclesToTicks(computeUnit->issuePeriod));
+        }
+    // Barrier on Scalar ALU
     } else if (ii->isBarrier()) {
-        computeUnit->wfWait[simdId].set(computeUnit->shader->
-                                        ticks(computeUnit->issuePeriod));
-    } else if (ii->isLoad() && ii->isFlat()) {
-        assert(Enums::SC_NONE != ii->executedAs());
-
-        if (Enums::SC_SHARED == ii->executedAs()) {
-            computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
-                set(computeUnit->shader->ticks(4));
-            computeUnit->wfWait[computeUnit->ShrMemUnitId()].
-                set(computeUnit->shader->ticks(computeUnit->issuePeriod));
+        computeUnit->scalarALUs[scalarAlu].set(computeUnit->
+            cyclesToTicks(computeUnit->issuePeriod));
+    // GM or Flat as GM Load
+    } else if (ii->isLoad() && (ii->isGlobalMem() || flat_as_gm)) {
+        if (!ii->isScalar()) {
+            computeUnit->vrfToGlobalMemPipeBus.set(
+                computeUnit->cyclesToTicks(computeUnit->vrf_gm_bus_latency));
+            computeUnit->vectorGlobalMemUnit.
+                set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
+            computeUnit->instCyclesVMemPerSimd[simdId] +=
+                computeUnit->vrf_gm_bus_latency;
         } else {
-            computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-                set(computeUnit->shader->ticks(4));
-            computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-                set(computeUnit->shader->ticks(computeUnit->issuePeriod));
+            computeUnit->srfToScalarMemPipeBus.set(computeUnit->
+                cyclesToTicks(computeUnit->srf_scm_bus_latency));
+            computeUnit->scalarMemUnit.
+                set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
+            computeUnit->instCyclesScMemPerSimd[simdId] +=
+                computeUnit->srf_scm_bus_latency;
         }
-    } else if (ii->isStore() && ii->isFlat()) {
-        assert(Enums::SC_NONE != ii->executedAs());
-        if (Enums::SC_SHARED == ii->executedAs()) {
-            computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
-                set(computeUnit->shader->ticks(8));
-            computeUnit->wfWait[computeUnit->ShrMemUnitId()].
-                set(computeUnit->shader->ticks(computeUnit->issuePeriod));
+    // GM or Flat as GM Store
+    } else if (ii->isStore() && (ii->isGlobalMem() || flat_as_gm)) {
+        if (!ii->isScalar()) {
+            computeUnit->vrfToGlobalMemPipeBus.set(computeUnit->
+                cyclesToTicks(Cycles(2 * computeUnit->vrf_gm_bus_latency)));
+            computeUnit->vectorGlobalMemUnit.
+                set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
+            computeUnit->instCyclesVMemPerSimd[simdId] +=
+                (2 * computeUnit->vrf_gm_bus_latency);
         } else {
-            computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-                set(computeUnit->shader->ticks(8));
-            computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-                set(computeUnit->shader->ticks(computeUnit->issuePeriod));
+            computeUnit->srfToScalarMemPipeBus.set(computeUnit->
+                cyclesToTicks(Cycles(2 * computeUnit->srf_scm_bus_latency)));
+            computeUnit->scalarMemUnit.
+                set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
+            computeUnit->instCyclesScMemPerSimd[simdId] +=
+                (2 * computeUnit->srf_scm_bus_latency);
         }
-    } else if (ii->isLoad() && ii->isGlobalMem()) {
-        computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-            set(computeUnit->shader->ticks(4));
-        computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-            set(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (ii->isStore() && ii->isGlobalMem()) {
-        computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-            set(computeUnit->shader->ticks(8));
-        computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-            set(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if ((ii->isAtomic() || ii->isMemFence()) && ii->isGlobalMem()) {
-        computeUnit->vrfToGlobalMemPipeBus[computeUnit->nextGlbRdBus()].
-            set(computeUnit->shader->ticks(8));
-        computeUnit->wfWait[computeUnit->GlbMemUnitId()].
-            set(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (ii->isLoad() && ii->isLocalMem()) {
-        computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
-            set(computeUnit->shader->ticks(4));
-        computeUnit->wfWait[computeUnit->ShrMemUnitId()].
-            set(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if (ii->isStore() && ii->isLocalMem()) {
-        computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
-            set(computeUnit->shader->ticks(8));
-        computeUnit->wfWait[computeUnit->ShrMemUnitId()].
-            set(computeUnit->shader->ticks(computeUnit->issuePeriod));
-    } else if ((ii->isAtomic() || ii->isMemFence()) && ii->isLocalMem()) {
-        computeUnit->vrfToLocalMemPipeBus[computeUnit->nextLocRdBus()].
-            set(computeUnit->shader->ticks(8));
-        computeUnit->wfWait[computeUnit->ShrMemUnitId()].
-            set(computeUnit->shader->ticks(computeUnit->issuePeriod));
+    } else if ((ii->isAtomic() || ii->isMemSync()) &&
+               (ii->isGlobalMem() || flat_as_gm)) {
+        if (!ii->isScalar()) {
+            computeUnit->vrfToGlobalMemPipeBus.set(computeUnit->
+                cyclesToTicks(Cycles(2 * computeUnit->vrf_gm_bus_latency)));
+            computeUnit->vectorGlobalMemUnit.
+                set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
+            computeUnit->instCyclesVMemPerSimd[simdId] +=
+                (2 * computeUnit->vrf_gm_bus_latency);
+        } else {
+            computeUnit->srfToScalarMemPipeBus.set(computeUnit->
+                cyclesToTicks(Cycles(2 * computeUnit->srf_scm_bus_latency)));
+            computeUnit->scalarMemUnit.
+                set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
+            computeUnit->instCyclesScMemPerSimd[simdId] +=
+                (2 * computeUnit->srf_scm_bus_latency);
+        }
+    // LM or Flat as LM Load
+    } else if (ii->isLoad() && (ii->isLocalMem() || flat_as_lm)) {
+        computeUnit->vrfToLocalMemPipeBus.set(computeUnit->
+            cyclesToTicks(computeUnit->vrf_lm_bus_latency));
+        computeUnit->vectorSharedMemUnit.
+            set(computeUnit->shader->cyclesToTicks(computeUnit->issuePeriod));
+        computeUnit->instCyclesLdsPerSimd[simdId] +=
+            computeUnit->vrf_lm_bus_latency;
+    // LM or Flat as LM Store
+    } else if (ii->isStore() && (ii->isLocalMem() || flat_as_lm)) {
+        computeUnit->vrfToLocalMemPipeBus.set(computeUnit->
+            cyclesToTicks(Cycles(2 * computeUnit->vrf_lm_bus_latency)));
+        computeUnit->vectorSharedMemUnit.
+            set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
+        computeUnit->instCyclesLdsPerSimd[simdId] +=
+            (2 * computeUnit->vrf_lm_bus_latency);
+    // LM or Flat as LM, Atomic or MemFence
+    } else if ((ii->isAtomic() || ii->isMemSync()) &&
+               (ii->isLocalMem() || flat_as_lm)) {
+        computeUnit->vrfToLocalMemPipeBus.set(computeUnit->
+            cyclesToTicks(Cycles(2 * computeUnit->vrf_lm_bus_latency)));
+        computeUnit->vectorSharedMemUnit.
+            set(computeUnit->cyclesToTicks(computeUnit->issuePeriod));
+        computeUnit->instCyclesLdsPerSimd[simdId] +=
+            (2 * computeUnit->vrf_lm_bus_latency);
+    } else {
+        panic("Bad instruction type!\n");
     }
 }
 
@@ -788,212 +1220,197 @@ Wavefront::waitingAtBarrier(int lane)
     return barCnt[lane] < maxBarCnt;
 }
 
-void
-Wavefront::pushToReconvergenceStack(uint32_t pc, uint32_t rpc,
-                                    const VectorMask& mask)
+GPUDynInstPtr
+Wavefront::nextInstr()
 {
-    assert(mask.count());
-    reconvergenceStack.emplace_back(new ReconvergenceStackEntry{pc, rpc, mask});
-}
-
-void
-Wavefront::popFromReconvergenceStack()
-{
-    assert(!reconvergenceStack.empty());
-
-    DPRINTF(WavefrontStack, "[%2d, %2d, %2d, %2d] %s %3i => ",
-            computeUnit->cu_id, simdId, wfSlotId, wfDynId,
-            execMask().to_string<char, std::string::traits_type,
-            std::string::allocator_type>().c_str(), pc());
-
-    reconvergenceStack.pop_back();
-
-    DPRINTF(WavefrontStack, "%3i %s\n", pc(),
-            execMask().to_string<char, std::string::traits_type,
-            std::string::allocator_type>().c_str());
-
+    // Read next instruction from instruction buffer
+    GPUDynInstPtr ii = instructionBuffer.front();
+    // if the WF has been dispatched in the schedule stage then
+    // check the next oldest instruction for readiness
+    if (computeUnit->pipeMap.find(ii->seqNum()) !=
+        computeUnit->pipeMap.end()) {
+        if (instructionBuffer.size() > 1) {
+            auto it = instructionBuffer.begin() + 1;
+            return *it;
+        } else { // No new instructions to check
+            return nullptr;
+        }
+    }
+    return ii;
 }
 
 void
 Wavefront::discardFetch()
 {
     instructionBuffer.clear();
-    dropFetch |=pendingFetch;
+    dropFetch |= pendingFetch;
+
+    /**
+     * clear the fetch buffer for this wave in order to
+     * remove any stale inst data
+     */
+    computeUnit->fetchStage.fetchUnit(simdId).flushBuf(wfSlotId);
 }
 
-uint32_t
+bool
+Wavefront::waitCntsSatisfied()
+{
+    // Both vmWaitCnt && lgkmWaitCnt uninitialized means
+    // waitCnt instruction has been dispatched but not executed yet: next
+    // instruction should be blocked until waitCnt is executed.
+    if (vmWaitCnt == -1 && expWaitCnt == -1 && lgkmWaitCnt == -1) {
+        return false;
+    }
+
+    // If we reach here, that means waitCnt instruction is executed and
+    // the waitcnts are set by the execute method. Check if waitcnts are
+    // satisfied.
+
+    // current number of vector memory ops in flight
+    int vm_cnt = outstandingReqsWrGm + outstandingReqsRdGm;
+
+    // current number of export insts or vector memory writes in flight
+    int exp_cnt = outstandingReqsWrGm;
+
+    // current number of scalar/LDS memory ops in flight
+    // we do not consider GDS/message ops
+    int lgkm_cnt = outstandingReqsWrLm + outstandingReqsRdLm +
+        scalarOutstandingReqsRdGm + scalarOutstandingReqsWrGm;
+
+    if (vmWaitCnt != -1) {
+        if (vm_cnt > vmWaitCnt) {
+            // vmWaitCnt not satisfied
+            return false;
+        }
+    }
+
+    if (expWaitCnt != -1) {
+        if (exp_cnt > expWaitCnt) {
+            // expWaitCnt not satisfied
+            return false;
+        }
+    }
+
+    if (lgkmWaitCnt != -1) {
+        if (lgkm_cnt > lgkmWaitCnt) {
+            // lgkmWaitCnt not satisfied
+            return false;
+        }
+    }
+
+    // if we get here all outstanding waitcnts must
+    // be satisfied, so we resume normal operation
+    clearWaitCnts();
+
+    return true;
+}
+
+void
+Wavefront::setWaitCnts(int vm_wait_cnt, int exp_wait_cnt, int lgkm_wait_cnt)
+{
+    // the scoreboard should have set the status
+    // to S_WAITCNT once a waitcnt instruction
+    // was marked as ready
+    assert(status == S_WAITCNT);
+
+    // waitcnt instruction shouldn't be sending
+    // negative counts
+    assert(vm_wait_cnt >= 0);
+    assert(exp_wait_cnt >= 0);
+    assert(lgkm_wait_cnt >= 0);
+    // waitcnts are a max of 15 because we have
+    // only 1 nibble (4 bits) to set the counts
+    assert(vm_wait_cnt <= 0xf);
+    assert(exp_wait_cnt <= 0x7);
+    assert(lgkm_wait_cnt <= 0x1f);
+
+    /**
+     * prior waitcnts should be satisfied,
+     * at which time the WF resets them
+     * back to -1, indicating they are no
+     * longer active
+     */
+    assert(vmWaitCnt == -1);
+    assert(expWaitCnt == -1);
+    assert(lgkmWaitCnt == -1);
+
+    /**
+     * if the instruction encoding
+     * indicates a waitcnt of 0xf,
+     * that means the waitcnt is
+     * not being used
+     */
+    if (vm_wait_cnt != 0xf)
+        vmWaitCnt = vm_wait_cnt;
+
+    if (exp_wait_cnt != 0x7)
+        expWaitCnt = exp_wait_cnt;
+
+    if (lgkm_wait_cnt != 0x1f)
+        lgkmWaitCnt = lgkm_wait_cnt;
+}
+
+void
+Wavefront::clearWaitCnts()
+{
+    // reset the waitcnts back to
+    // -1, indicating they are no
+    // longer valid
+    vmWaitCnt = -1;
+    expWaitCnt = -1;
+    lgkmWaitCnt = -1;
+
+    // resume running normally
+    status = S_RUNNING;
+}
+
+Addr
 Wavefront::pc() const
 {
-    return reconvergenceStack.back()->pc;
+    return _pc;
 }
 
-uint32_t
-Wavefront::rpc() const
+void
+Wavefront::pc(Addr new_pc)
 {
-    return reconvergenceStack.back()->rpc;
+    _pc = new_pc;
 }
 
-VectorMask
-Wavefront::execMask() const
+VectorMask&
+Wavefront::execMask()
 {
-    return reconvergenceStack.back()->execMask;
+    return _execMask;
 }
 
 bool
 Wavefront::execMask(int lane) const
 {
-    return reconvergenceStack.back()->execMask[lane];
-}
-
-
-void
-Wavefront::pc(uint32_t new_pc)
-{
-    reconvergenceStack.back()->pc = new_pc;
-}
-
-uint32_t
-Wavefront::getStaticContextSize() const
-{
-    return barCnt.size() * sizeof(int) + sizeof(wfId) + sizeof(maxBarCnt) +
-           sizeof(oldBarrierCnt) + sizeof(barrierCnt) + sizeof(wgId) +
-           sizeof(computeUnit->cu_id) + sizeof(barrierId) + sizeof(initMask) +
-           sizeof(privBase) + sizeof(spillBase) + sizeof(ldsChunk) +
-           computeUnit->wfSize() * sizeof(ReconvergenceStackEntry);
+    return _execMask[lane];
 }
 
 void
-Wavefront::getContext(const void *out)
+Wavefront::freeRegisterFile()
 {
-    uint8_t *iter = (uint8_t *)out;
-    for (int i = 0; i < barCnt.size(); i++) {
-        *(int *)iter = barCnt[i]; iter += sizeof(barCnt[i]);
-    }
-    *(int *)iter = wfId; iter += sizeof(wfId);
-    *(int *)iter = maxBarCnt; iter += sizeof(maxBarCnt);
-    *(int *)iter = oldBarrierCnt; iter += sizeof(oldBarrierCnt);
-    *(int *)iter = barrierCnt; iter += sizeof(barrierCnt);
-    *(int *)iter = computeUnit->cu_id; iter += sizeof(computeUnit->cu_id);
-    *(uint32_t *)iter = wgId; iter += sizeof(wgId);
-    *(uint32_t *)iter = barrierId; iter += sizeof(barrierId);
-    *(uint64_t *)iter = initMask.to_ullong(); iter += sizeof(initMask.to_ullong());
-    *(Addr *)iter = privBase; iter += sizeof(privBase);
-    *(Addr *)iter = spillBase; iter += sizeof(spillBase);
-
-    int stackSize = reconvergenceStack.size();
-    ReconvergenceStackEntry empty = {std::numeric_limits<uint32_t>::max(),
-                                    std::numeric_limits<uint32_t>::max(),
-                                    std::numeric_limits<uint64_t>::max()};
-    for (int i = 0; i < workItemId[0].size(); i++) {
-        if (i < stackSize) {
-            *(ReconvergenceStackEntry *)iter = *reconvergenceStack.back();
-            iter += sizeof(ReconvergenceStackEntry);
-            reconvergenceStack.pop_back();
-        } else {
-            *(ReconvergenceStackEntry *)iter = empty;
-            iter += sizeof(ReconvergenceStackEntry);
-        }
+    /* clear busy registers */
+    for (int i=0; i < maxVgprs; i++) {
+        int vgprIdx = computeUnit->registerManager->mapVgpr(this, i);
+        computeUnit->vrf[simdId]->markReg(vgprIdx, false);
     }
 
-    int wf_size = computeUnit->wfSize();
-    for (int i = 0; i < maxSpVgprs; i++) {
-        uint32_t vgprIdx = remap(i, sizeof(uint32_t), 1);
-        for (int lane = 0; lane < wf_size; lane++) {
-            uint32_t regVal = computeUnit->vrf[simdId]->
-                            read<uint32_t>(vgprIdx,lane);
-            *(uint32_t *)iter = regVal; iter += sizeof(regVal);
-        }
-    }
-
-    for (int i = 0; i < maxDpVgprs; i++) {
-        uint32_t vgprIdx = remap(i, sizeof(uint64_t), 1);
-        for (int lane = 0; lane < wf_size; lane++) {
-            uint64_t regVal = computeUnit->vrf[simdId]->
-                            read<uint64_t>(vgprIdx,lane);
-            *(uint64_t *)iter = regVal; iter += sizeof(regVal);
-        }
-    }
-
-    for (int i = 0; i < condRegState->numRegs(); i++) {
-        for (int lane = 0; lane < wf_size; lane++) {
-            uint64_t regVal = condRegState->read<uint64_t>(i, lane);
-            *(uint64_t *)iter = regVal; iter += sizeof(regVal);
-        }
-    }
-
-    /* saving LDS content */
-    if (ldsChunk)
-        for (int i = 0; i < ldsChunk->size(); i++) {
-            char val = ldsChunk->read<char>(i);
-            *(char *) iter = val; iter += sizeof(val);
-        }
+    /* Free registers used by this wavefront */
+    uint32_t endIndex = (startVgprIndex + reservedVectorRegs - 1) %
+                         computeUnit->vrf[simdId]->numRegs();
+    computeUnit->registerManager->vrfPoolMgrs[simdId]->
+        freeRegion(startVgprIndex, endIndex);
 }
 
 void
-Wavefront::setContext(const void *in)
-{
-    uint8_t *iter = (uint8_t *)in;
-    for (int i = 0; i < barCnt.size(); i++) {
-        barCnt[i] = *(int *)iter; iter += sizeof(barCnt[i]);
-    }
-    wfId = *(int *)iter; iter += sizeof(wfId);
-    maxBarCnt = *(int *)iter; iter += sizeof(maxBarCnt);
-    oldBarrierCnt = *(int *)iter; iter += sizeof(oldBarrierCnt);
-    barrierCnt = *(int *)iter; iter += sizeof(barrierCnt);
-    computeUnit->cu_id = *(int *)iter; iter += sizeof(computeUnit->cu_id);
-    wgId = *(uint32_t *)iter; iter += sizeof(wgId);
-    barrierId = *(uint32_t *)iter; iter += sizeof(barrierId);
-    initMask = VectorMask(*(uint64_t *)iter); iter += sizeof(initMask);
-    privBase = *(Addr *)iter; iter += sizeof(privBase);
-    spillBase = *(Addr *)iter; iter += sizeof(spillBase);
-
-    for (int i = 0; i < workItemId[0].size(); i++) {
-        ReconvergenceStackEntry newEntry = *(ReconvergenceStackEntry *)iter;
-        iter += sizeof(ReconvergenceStackEntry);
-        if (newEntry.pc != std::numeric_limits<uint32_t>::max()) {
-            pushToReconvergenceStack(newEntry.pc, newEntry.rpc,
-                                     newEntry.execMask);
-        }
-    }
-    int wf_size = computeUnit->wfSize();
-
-    for (int i = 0; i < maxSpVgprs; i++) {
-        uint32_t vgprIdx = remap(i, sizeof(uint32_t), 1);
-        for (int lane = 0; lane < wf_size; lane++) {
-            uint32_t regVal = *(uint32_t *)iter; iter += sizeof(regVal);
-            computeUnit->vrf[simdId]->write<uint32_t>(vgprIdx, regVal, lane);
-        }
-    }
-
-    for (int i = 0; i < maxDpVgprs; i++) {
-        uint32_t vgprIdx = remap(i, sizeof(uint64_t), 1);
-        for (int lane = 0; lane < wf_size; lane++) {
-            uint64_t regVal = *(uint64_t *)iter; iter += sizeof(regVal);
-            computeUnit->vrf[simdId]->write<uint64_t>(vgprIdx, regVal, lane);
-        }
-    }
-
-    for (int i = 0; i < condRegState->numRegs(); i++) {
-        for (int lane = 0; lane < wf_size; lane++) {
-            uint64_t regVal = *(uint64_t *)iter; iter += sizeof(regVal);
-            condRegState->write<uint64_t>(i, lane, regVal);
-        }
-    }
-    /** Restoring LDS contents */
-    if (ldsChunk)
-        for (int i = 0; i < ldsChunk->size(); i++) {
-            char val = *(char *) iter; iter += sizeof(val);
-            ldsChunk->write<char>(i, val);
-        }
-}
-
-void
-Wavefront::computeActualWgSz(NDRange *ndr)
+Wavefront::computeActualWgSz(HSAQueueEntry *task)
 {
     actualWgSzTotal = 1;
-    for (int d = 0; d < 3; ++d) {
-        actualWgSz[d] = std::min(workGroupSz[d],
-                                 gridSz[d] - ndr->wgId[d] * workGroupSz[d]);
+    for (int d = 0; d < HSAQueueEntry::MAX_DIM; ++d) {
+        actualWgSz[d] = std::min(workGroupSz[d], gridSz[d]
+                                 - task->wgId(d) * workGroupSz[d]);
         actualWgSzTotal *= actualWgSz[d];
     }
 }

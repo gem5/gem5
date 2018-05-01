@@ -86,6 +86,14 @@ MemCmd::commandInfo[] =
             WriteResp, "WriteReq" },
     /* WriteResp */
     { SET2(IsWrite, IsResponse), InvalidCmd, "WriteResp" },
+    /* WriteCompleteResp - The WriteCompleteResp command is needed
+     * because in the GPU memory model we use a WriteResp to indicate
+     * that a write has reached the cache controller so we can free
+     * resources at the coalescer. Later, when the write succesfully
+     * completes we send a WriteCompleteResp to the CU so its wait
+     * counters can be updated. Wait counters in the CU is how memory
+     * dependences are handled in the GPU ISA. */
+    { SET2(IsWrite, IsResponse), InvalidCmd, "WriteCompleteResp" },
     /* WritebackDirty */
     { SET5(IsWrite, IsRequest, IsEviction, HasData, FromCache),
             InvalidCmd, "WritebackDirty" },

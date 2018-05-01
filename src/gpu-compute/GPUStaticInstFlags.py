@@ -13,9 +13,9 @@
 # this list of conditions and the following disclaimer in the documentation
 # and/or other materials provided with the distribution.
 #
-# 3. Neither the name of the copyright holder nor the names of its contributors
-# may be used to endorse or promote products derived from this software
-# without specific prior written permission.
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -40,15 +40,18 @@ class GPUStaticInstFlags(Enum):
         # Op types
         'ALU',               # ALU op
         'Branch',            # Branch instruction
+        'CondBranch',        # Conditinal Branch instruction
         'Nop',               # No-op (no effect at all)
-        'Return',            # Return instruction
+        'Return',            # Subroutine return instruction
+        'EndOfKernel',       # Kernel termination instruction
+        'KernelLaunch',      # Kernel launch inst
         'UnconditionalJump', #
         'SpecialOp',         # Special op
         'Waitcnt',           # Is a waitcnt instruction
 
         # Memory ops
         'MemBarrier',        # Barrier instruction
-        'MemFence',          # Memory fence instruction
+        'MemSync',           # Synchronizing instruction
         'MemoryRef',         # References memory (load, store, or atomic)
         'Flat',              # Flat memory op
         'Load',              # Reads from memory
@@ -64,6 +67,13 @@ class GPUStaticInstFlags(Enum):
         'WritesSCC',         # The instruction writes SCC
         'ReadsVCC',          # The instruction reads VCC
         'WritesVCC',         # The instruction writes VCC
+        'ReadsEXEC',         # The instruction reads Exec Mask
+        'WritesEXEC',        # The instruction writes Exec Mask
+        'ReadsMode',         # The instruction reads Mode register
+        'WritesMode',        # The instruction writes Mode register
+        'IgnoreExec',        # The instruction ignores the Exec Mask
+        'IsSDWA',            # The instruction is a SDWA instruction
+        'IsDPP',             # The instruction is a DPP instruction
 
         # Atomic OP types
         'AtomicAnd',
@@ -78,13 +88,6 @@ class GPUStaticInstFlags(Enum):
         'AtomicMax',
         'AtomicMin',
 
-        # Memory order flags
-        'RelaxedOrder',
-        'Acquire',           # Has acquire semantics
-        'Release',           # Has release semantics
-        'AcquireRelease',    # Has acquire and release semantics
-        'NoOrder',           # Has no ordering restrictions
-
         # Segment access flags
         'ArgSegment',        # Accesses the arg segment
         'GlobalSegment',     # Accesses global memory
@@ -95,15 +98,17 @@ class GPUStaticInstFlags(Enum):
         'SpillSegment',      # Accesses the spill segment
         'NoSegment',         # Does not have an associated segment
 
-        # Scope flags
-        'WorkitemScope',
-        'WavefrontScope',
-        'WorkgroupScope',
-        'DeviceScope',
-        'SystemScope',
-        'NoScope',           # Does not have an associated scope
-
         # Coherence flags
-        'GloballyCoherent',  # Coherent with other workitems on same device
-        'SystemCoherent'     # Coherent with a different device, or the host
+        'GloballyCoherent',  # Coherent with other work-items on same device
+        'SystemCoherent',    # Coherent with a different device, or the host
+
+        # Floating-point flags
+        'F16',               # F16 operation
+        'F32',               # F32 operation
+        'F64',               # F64 operation
+
+        # MAC, MAD, FMA
+        'FMA',               # FMA
+        'MAC',               # MAC
+        'MAD'                # MAD
         ]

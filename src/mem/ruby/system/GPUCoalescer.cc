@@ -61,58 +61,6 @@
 
 using namespace std;
 
-GPUCoalescer *
-RubyGPUCoalescerParams::create()
-{
-    return new GPUCoalescer(this);
-}
-
-HSAScope
-reqScopeToHSAScope(const RequestPtr &req)
-{
-    HSAScope accessScope = HSAScope_UNSPECIFIED;
-    if (req->isScoped()) {
-        if (req->isWavefrontScope()) {
-            accessScope = HSAScope_WAVEFRONT;
-        } else if (req->isWorkgroupScope()) {
-            accessScope = HSAScope_WORKGROUP;
-        } else if (req->isDeviceScope()) {
-            accessScope = HSAScope_DEVICE;
-        } else if (req->isSystemScope()) {
-            accessScope = HSAScope_SYSTEM;
-        } else {
-            fatal("Bad scope type");
-        }
-    }
-    return accessScope;
-}
-
-HSASegment
-reqSegmentToHSASegment(const RequestPtr &req)
-{
-    HSASegment accessSegment = HSASegment_GLOBAL;
-
-    if (req->isGlobalSegment()) {
-        accessSegment = HSASegment_GLOBAL;
-    } else if (req->isGroupSegment()) {
-        accessSegment = HSASegment_GROUP;
-    } else if (req->isPrivateSegment()) {
-        accessSegment = HSASegment_PRIVATE;
-    } else if (req->isKernargSegment()) {
-        accessSegment = HSASegment_KERNARG;
-    } else if (req->isReadonlySegment()) {
-        accessSegment = HSASegment_READONLY;
-    } else if (req->isSpillSegment()) {
-        accessSegment = HSASegment_SPILL;
-    } else if (req->isArgSegment()) {
-        accessSegment = HSASegment_ARG;
-    } else {
-        fatal("Bad segment type");
-    }
-
-    return accessSegment;
-}
-
 UncoalescedTable::UncoalescedTable(GPUCoalescer *gc)
     : coalescer(gc)
 {
@@ -152,6 +100,7 @@ UncoalescedTable::updateResources()
 {
     for (auto iter = instMap.begin(); iter != instMap.end(); ) {
         if (iter->second.empty()) {
+            DPRINTF(GPUCoalescer, "Returning token seqNum %d\n", iter->first);
             instMap.erase(iter++);
             coalescer->getGMTokenPort().sendTokens(1);
         } else {
@@ -160,15 +109,27 @@ UncoalescedTable::updateResources()
     }
 }
 
+bool
+UncoalescedTable::areRequestsDone(const uint64_t instSeqNum) {
+    // iterate the instructions held in UncoalescedTable to see whether there
+    // are more requests to issue; if yes, not yet done; otherwise, done
+    for (auto& inst : instMap) {
+        DPRINTF(GPUCoalescer, "instSeqNum= %d, pending packets=%d\n"
+            ,inst.first, inst.second.size());
+        if (inst.first == instSeqNum) { return false; }
+    }
+
+    return true;
+}
+
 void
 UncoalescedTable::printRequestTable(std::stringstream& ss)
 {
-    ss << "UncoalescedTable contains " << instMap.size()
-       << " address entries." << std::endl;
+    ss << "Listing pending packets from " << instMap.size() << " instructions";
+
     for (auto& inst : instMap) {
-        ss << "Addr 0x" << std::hex << inst.first << std::dec
-           << " with " << inst.second.size() << " packets"
-           << std::endl;
+        ss << "\tAddr: " << printAddress(inst.first) << " with "
+           << inst.second.size() << " pending packets" << std::endl;
     }
 }
 
@@ -227,7 +188,6 @@ GPUCoalescer::GPUCoalescer(const Params *p)
     assert(m_dataCache_ptr);
 
     m_runningGarnetStandalone = p->garnet_standalone;
-    assumingRfOCoherence = p->assume_rfo;
 }
 
 GPUCoalescer::~GPUCoalescer()
@@ -254,18 +214,9 @@ GPUCoalescer::wakeup()
             if (current_time - req->getIssueTime() > m_deadlock_threshold) {
                 std::stringstream ss;
                 printRequestTable(ss);
-                ss << "Outstanding requests: " << m_outstanding_count
-                   << std::endl;
-
-                panic("Possible Deadlock detected. Aborting!\n"
-                     "version: %d request.paddr: 0x%x coalescedTable: %d "
-                     "current time: %u issue_time: %d difference: %d\n"
-                     "Request Tables:\n %s", m_version,
-                      req->getFirstPkt()->getAddr(),
-                      coalescedTable.size(), cyclesToTicks(current_time),
-                      cyclesToTicks(req->getIssueTime()),
-                      cyclesToTicks(current_time - req->getIssueTime()),
-                      ss.str());
+                warn("GPUCoalescer %d Possible deadlock detected!\n%s\n",
+                     m_version, ss.str());
+                panic("Aborting due to deadlock!\n");
             }
         }
     }
@@ -283,21 +234,27 @@ GPUCoalescer::wakeup()
 void
 GPUCoalescer::printRequestTable(std::stringstream& ss)
 {
-    uncoalescedTable.printRequestTable(ss);
+    ss << "Printing out " << coalescedTable.size()
+       << " outstanding requests in the coalesced table\n";
 
-    ss << "CoalescedTable contains " << coalescedTable.size()
-       << " address entries." << std::endl;
     for (auto& requestList : coalescedTable) {
-        ss << "Addr 0x" << std::hex << requestList.first << std::dec
-           << ": type-";
         for (auto& request : requestList.second) {
-            ss << RubyRequestType_to_string(request->getRubyType())
-               << " pkts-" << request->getPackets().size()
-               << " issued-" << request->getIssueTime() << " seqNum-"
-               << request->getSeqNum() << "; ";
+            ss << "\tAddr: " << printAddress(requestList.first) << "\n"
+               << "\tInstruction sequence number: "
+               << request->getSeqNum() << "\n"
+               << "\t\tType: "
+               << RubyRequestType_to_string(request->getRubyType()) << "\n"
+               << "\t\tNumber of associated packets: "
+               << request->getPackets().size() << "\n"
+               << "\t\tIssue time: "
+               << request->getIssueTime() * clockPeriod() << "\n"
+               << "\t\tDifference from current tick: "
+               << (curCycle() - request->getIssueTime()) * clockPeriod();
         }
-        ss << std::endl;
     }
+
+    // print out packets waiting to be issued in uncoalesced table
+    uncoalescedTable.printRequestTable(ss);
 }
 
 void
@@ -387,6 +344,7 @@ GPUCoalescer::writeCallback(Addr address,
     hitCallback(crequest, mach, data, true, crequest->getIssueTime(),
                 forwardRequestTime, firstResponseTime, isRegion);
 
+    // remove this crequest in coalescedTable
     delete crequest;
     coalescedTable.at(address).pop_front();
 
@@ -395,6 +353,36 @@ GPUCoalescer::writeCallback(Addr address,
     } else {
         auto nextRequest = coalescedTable.at(address).front();
         issueRequest(nextRequest);
+    }
+}
+
+void
+GPUCoalescer::writeCompleteCallback(Addr address,
+                                    uint64_t instSeqNum,
+                                    MachineType mach)
+{
+    DPRINTF(GPUCoalescer, "writeCompleteCallback for address 0x%x"
+            " instSeqNum = %d\n", address, instSeqNum);
+
+    assert(pendingWriteInsts.count(instSeqNum) == 1);
+    PendingWriteInst& inst = pendingWriteInsts[instSeqNum];
+
+    // check the uncoalescedTable to see whether all requests for the inst
+    // have been issued or not
+    bool reqsAllIssued = uncoalescedTable.areRequestsDone(instSeqNum);
+    DPRINTF(GPUCoalescer, "instSeqNum = %d, pendingStores=%d, "
+                    "reqsAllIssued=%d\n", reqsAllIssued,
+                    inst.getNumPendingStores()-1, reqsAllIssued);
+
+    if (inst.receiveWriteCompleteAck() && reqsAllIssued ) {
+        // if the pending write instruction has received all write completion
+        // callbacks for its issued Ruby requests, we can now start respond
+        // the requesting CU in one response packet.
+        inst.ackWriteCompletion(m_usingRubyTester);
+
+        DPRINTF(GPUCoalescer, "write inst %d completed at coalescer\n",
+                instSeqNum);
+        pendingWriteInsts.erase(instSeqNum);
     }
 }
 
@@ -477,7 +465,7 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
 {
     PacketPtr pkt = crequest->getFirstPkt();
     Addr request_address = pkt->getAddr();
-    Addr request_line_address = makeLineAddress(request_address);
+    Addr request_line_address M5_VAR_USED = makeLineAddress(request_address);
 
     RubyRequestType type = crequest->getRubyType();
 
@@ -516,20 +504,6 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
                     "%s\n",
                     RubyRequestType_to_string(type));
         }
-
-        // If using the RubyTester, update the RubyTester sender state's
-        // subBlock with the recieved data.  The tester will later access
-        // this state.
-        // Note: RubyPort will access it's sender state before the
-        // RubyTester.
-        if (m_usingRubyTester) {
-            RubyPort::SenderState *requestSenderState =
-                safe_cast<RubyPort::SenderState*>(pkt->senderState);
-            RubyTester::SenderState* testerSenderState =
-                safe_cast<RubyTester::SenderState*>
-                    (requestSenderState->predecessor);
-            testerSenderState->subBlock.mergeFrom(data);
-        }
     }
 
 
@@ -566,8 +540,6 @@ GPUCoalescer::getRequestType(PacketPtr pkt)
     } else if (pkt->isWrite()) {
         req_type = RubyRequestType_ST;
     } else {
-        // Acquire and release packets will have been issued by
-        // makeRequest, so we do not need to check for it here.
         panic("Unsupported ruby packet type\n");
     }
 
@@ -579,71 +551,43 @@ GPUCoalescer::getRequestType(PacketPtr pkt)
 RequestStatus
 GPUCoalescer::makeRequest(PacketPtr pkt)
 {
-    // Check for GPU Barrier Kernel End or Kernel Begin
-    // Leave these to be handled by the child class
-    // Kernel End/Barrier = isFlush + isRelease
-    // Kernel Begin = isFlush + isAcquire
-    if (pkt->req->isKernel()) {
-        if (pkt->req->isAcquire()){
-            // This is a Kernel Begin leave handling to
-            // virtual xCoalescer::makeRequest
-            return RequestStatus_Issued;
-        }else if (pkt->req->isRelease()) {
-            // This is a Kernel End leave handling to
-            // virtual xCoalescer::makeRequest
-            // If we are here then we didn't call
-            // a virtual version of this function
-            // so we will also schedule the callback
-            int wf_id = 0;
-            if (pkt->req->hasContextId()) {
-                wf_id = pkt->req->contextId();
-            }
-            insertKernel(wf_id, pkt);
-            newKernelEnds.push_back(wf_id);
-            if (!issueEvent.scheduled()) {
-                schedule(issueEvent, curTick());
-            }
-            return RequestStatus_Issued;
+    // all packets must have valid instruction sequence numbers
+    assert(pkt->req->hasInstSeqNum());
+
+    if (pkt->cmd == MemCmd::MemSyncReq) {
+        // issue mem_sync requests immedidately to the cache system without
+        // going though uncoalescedTable like normal LD/ST/Atomic requests
+        issueMemSyncRequest(pkt);
+    } else {
+        // otherwise, this must be either read or write command
+        assert(pkt->isRead() || pkt->isWrite());
+
+        // the pkt is temporarily stored in the uncoalesced table until
+        // it's picked for coalescing process later in this cycle or in a
+        // future cycle
+        uncoalescedTable.insertPacket(pkt);
+        DPRINTF(GPUCoalescer, "Put pkt with addr 0x%X to uncoalescedTable\n",
+                pkt->getAddr());
+
+        // we schedule an issue event here to process the uncoalesced table
+        // and try to issue Ruby request to cache system
+        if (!issueEvent.scheduled()) {
+            schedule(issueEvent, curTick());
         }
     }
 
-    if (!pkt->isLLSC() && !pkt->req->isLockedRMW() && !pkt->isAtomicOp() &&
-        !pkt->isRead() && !pkt->isWrite() && !pkt->isFlush() &&
-        (pkt->req->isRelease() || pkt->req->isAcquire())) {
-        if (assumingRfOCoherence) {
-            // If we reached here, this request must be a memFence
-            // and the protocol implements RfO, the coalescer can
-            // assume sequentially consistency and schedule the callback
-            // immediately.
-            // Currently the code implements fence callbacks
-            // by reusing the mechanism for kernel completions.
-            // This should be fixed.
-            int wf_id = 0;
-            if (pkt->req->hasContextId()) {
-                wf_id = pkt->req->contextId();
-            }
-            insertKernel(wf_id, pkt);
-            newKernelEnds.push_back(wf_id);
-            if (!issueEvent.scheduled()) {
-                schedule(issueEvent, curTick());
-            }
-            return RequestStatus_Issued;
-        } else {
-            // If not RfO, return issued here and let the child coalescer
-            // take care of it.
-            return RequestStatus_Issued;
-        }
-    }
-
-    uncoalescedTable.insertPacket(pkt);
-    DPRINTF(GPUCoalescer, "UC insertPacket 0x%X\n", pkt->getAddr());
-
-    if (!issueEvent.scheduled())
-        schedule(issueEvent, curTick());
-    // TODO: issue hardware prefetches here
+    // we always return RequestStatus_Issued in this coalescer
+    // b/c the coalescer's resouce was checked ealier and the coalescer is
+    // queueing up aliased requets in its coalesced table
     return RequestStatus_Issued;
 }
 
+/**
+ * TODO: Figure out what do with this code. This code may go away
+ *       and/or be merged into the VIPER coalescer once the VIPER
+ *       protocol is re-integrated with GCN3 codes.
+ */
+/*
 void
 GPUCoalescer::issueRequest(CoalescedRequest* crequest)
 {
@@ -736,8 +680,8 @@ GPUCoalescer::issueRequest(CoalescedRequest* crequest)
     }
 
     assert(m_mandatory_q_ptr);
-    m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
-}
+    m_mandatory_q_ptr->enqueue(msg, clockEdge(), m_data_cache_hit_latency);
+}*/
 
 template <class KEY, class VALUE>
 std::ostream &
@@ -759,12 +703,6 @@ GPUCoalescer::print(ostream& out) const
         << "]";
 }
 
-
-void
-GPUCoalescer::recordRequestType(SequencerRequestType requestType) {
-    DPRINTF(RubyStats, "Recorded statistic: %s\n",
-            SequencerRequestType_to_string(requestType));
-}
 
 bool
 GPUCoalescer::coalescePacket(PacketPtr pkt)
@@ -818,6 +756,41 @@ GPUCoalescer::coalescePacket(PacketPtr pkt)
         // In both cases, requests are added to the coalescing table and will
         // be counted as outstanding requests.
         m_outstanding_count++;
+
+        // We track all issued or to-be-issued Ruby requests associated with
+        // write instructions. An instruction may have multiple Ruby
+        // requests.
+        if (pkt->cmd == MemCmd::WriteReq) {
+            DPRINTF(GPUCoalescer, "adding write inst %d at line 0x%x to"
+                    " the pending write instruction list\n", seqNum,
+                    line_addr);
+
+            RubyPort::SenderState* ss =
+                    safe_cast<RubyPort::SenderState*>(pkt->senderState);
+
+            // we need to save this port because it will be used to call
+            // back the requesting CU when we receive write
+            // complete callbacks for all issued Ruby requests of this
+            // instruction.
+            RubyPort::MemSlavePort* mem_slave_port = ss->port;
+
+            GPUDynInstPtr gpuDynInst = nullptr;
+
+            if (!m_usingRubyTester) {
+                // If this coalescer is connected to a real CU, we need
+                // to save the corresponding gpu dynamic instruction.
+                // CU will use that instruction to decrement wait counters
+                // in the issuing wavefront.
+                // For Ruby tester, gpuDynInst == nullptr
+                ComputeUnit::DataPort::SenderState* cu_state =
+                    safe_cast<ComputeUnit::DataPort::SenderState*>
+                        (ss->predecessor);
+                gpuDynInst = cu_state->_gpuDynInst;
+            }
+
+            PendingWriteInst& inst = pendingWriteInsts[seqNum];
+            inst.addPendingReq(mem_slave_port, gpuDynInst, m_usingRubyTester);
+        }
 
         return true;
     }
@@ -908,34 +881,6 @@ GPUCoalescer::atomicCallback(Addr address,
 }
 
 void
-GPUCoalescer::recordCPReadCallBack(MachineID myMachID, MachineID senderMachID)
-{
-    if (myMachID == senderMachID) {
-        CP_TCPLdHits++;
-    } else if (machineIDToMachineType(senderMachID) == MachineType_TCP) {
-        CP_TCPLdTransfers++;
-    } else if (machineIDToMachineType(senderMachID) == MachineType_TCC) {
-        CP_TCCLdHits++;
-    } else {
-        CP_LdMiss++;
-    }
-}
-
-void
-GPUCoalescer::recordCPWriteCallBack(MachineID myMachID, MachineID senderMachID)
-{
-    if (myMachID == senderMachID) {
-        CP_TCPStHits++;
-    } else if (machineIDToMachineType(senderMachID) == MachineType_TCP) {
-        CP_TCPStTransfers++;
-    } else if (machineIDToMachineType(senderMachID) == MachineType_TCC) {
-        CP_TCCStHits++;
-    } else {
-        CP_StMiss++;
-    }
-}
-
-void
 GPUCoalescer::completeHitCallback(std::vector<PacketPtr> & mylist)
 {
     for (auto& pkt : mylist) {
@@ -970,74 +915,6 @@ GPUCoalescer::recordMissLatency(CoalescedRequest* crequest,
                                 Cycles firstResponseTime,
                                 bool success, bool isRegion)
 {
-    RubyRequestType type = crequest->getRubyType();
-    Cycles issued_time = crequest->getIssueTime();
-    Cycles completion_time = curCycle();
-    assert(completion_time >= issued_time);
-    Cycles total_lat = completion_time - issued_time;
-
-    // cache stats (valid for RfO protocol only)
-    if (mach == MachineType_TCP) {
-        if (type == RubyRequestType_LD) {
-            GPU_TCPLdHits++;
-        } else {
-            GPU_TCPStHits++;
-        }
-    } else if (mach == MachineType_L1Cache_wCC) {
-        if (type == RubyRequestType_LD) {
-            GPU_TCPLdTransfers++;
-        } else {
-            GPU_TCPStTransfers++;
-        }
-    } else if (mach == MachineType_TCC) {
-        if (type == RubyRequestType_LD) {
-            GPU_TCCLdHits++;
-        } else {
-            GPU_TCCStHits++;
-        }
-    } else  {
-        if (type == RubyRequestType_LD) {
-            GPU_LdMiss++;
-        } else {
-            GPU_StMiss++;
-        }
-    }
-
-    // Profile all access latency, even zero latency accesses
-    m_latencyHist.sample(total_lat);
-    m_typeLatencyHist[type]->sample(total_lat);
-
-    // Profile the miss latency for all non-zero demand misses
-    if (total_lat != Cycles(0)) {
-        m_missLatencyHist.sample(total_lat);
-        m_missTypeLatencyHist[type]->sample(total_lat);
-
-        if (mach != MachineType_NUM) {
-            m_missMachLatencyHist[mach]->sample(total_lat);
-            m_missTypeMachLatencyHist[type][mach]->sample(total_lat);
-
-            if ((issued_time <= initialRequestTime) &&
-                (initialRequestTime <= forwardRequestTime) &&
-                (forwardRequestTime <= firstResponseTime) &&
-                (firstResponseTime <= completion_time)) {
-
-                m_IssueToInitialDelayHist[mach]->sample(
-                    initialRequestTime - issued_time);
-                m_InitialToForwardDelayHist[mach]->sample(
-                    forwardRequestTime - initialRequestTime);
-                m_ForwardToFirstResponseDelayHist[mach]->sample(
-                    firstResponseTime - forwardRequestTime);
-                m_FirstResponseToCompletionDelayHist[mach]->sample(
-                    completion_time - firstResponseTime);
-            }
-        }
-
-    }
-
-    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %d cycles\n",
-             curTick(), m_version, "Coal",
-             success ? "Done" : "SC_Failed", "", "",
-             printAddress(crequest->getFirstPkt()->getAddr()), total_lat);
 }
 
 void
@@ -1085,74 +962,4 @@ GPUCoalescer::regStats()
             m_missTypeMachLatencyHist[i][j]->init(10);
         }
     }
-
-    // GPU cache stats
-    GPU_TCPLdHits
-        .name(name() + ".gpu_tcp_ld_hits")
-        .desc("loads that hit in the TCP")
-        ;
-    GPU_TCPLdTransfers
-        .name(name() + ".gpu_tcp_ld_transfers")
-        .desc("TCP to TCP load transfers")
-        ;
-    GPU_TCCLdHits
-        .name(name() + ".gpu_tcc_ld_hits")
-        .desc("loads that hit in the TCC")
-        ;
-    GPU_LdMiss
-        .name(name() + ".gpu_ld_misses")
-        .desc("loads that miss in the GPU")
-        ;
-
-    GPU_TCPStHits
-        .name(name() + ".gpu_tcp_st_hits")
-        .desc("stores that hit in the TCP")
-        ;
-    GPU_TCPStTransfers
-        .name(name() + ".gpu_tcp_st_transfers")
-        .desc("TCP to TCP store transfers")
-        ;
-    GPU_TCCStHits
-        .name(name() + ".gpu_tcc_st_hits")
-        .desc("stores that hit in the TCC")
-        ;
-    GPU_StMiss
-        .name(name() + ".gpu_st_misses")
-        .desc("stores that miss in the GPU")
-        ;
-
-    // CP cache stats
-    CP_TCPLdHits
-        .name(name() + ".cp_tcp_ld_hits")
-        .desc("loads that hit in the TCP")
-        ;
-    CP_TCPLdTransfers
-        .name(name() + ".cp_tcp_ld_transfers")
-        .desc("TCP to TCP load transfers")
-        ;
-    CP_TCCLdHits
-        .name(name() + ".cp_tcc_ld_hits")
-        .desc("loads that hit in the TCC")
-        ;
-    CP_LdMiss
-        .name(name() + ".cp_ld_misses")
-        .desc("loads that miss in the GPU")
-        ;
-
-    CP_TCPStHits
-        .name(name() + ".cp_tcp_st_hits")
-        .desc("stores that hit in the TCP")
-        ;
-    CP_TCPStTransfers
-        .name(name() + ".cp_tcp_st_transfers")
-        .desc("TCP to TCP store transfers")
-        ;
-    CP_TCCStHits
-        .name(name() + ".cp_tcc_st_hits")
-        .desc("stores that hit in the TCC")
-        ;
-    CP_StMiss
-        .name(name() + ".cp_st_misses")
-        .desc("stores that miss in the GPU")
-        ;
 }

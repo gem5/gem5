@@ -34,6 +34,9 @@
 #ifndef __SCHEDULE_STAGE_HH__
 #define __SCHEDULE_STAGE_HH__
 
+#include <deque>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -54,40 +57,169 @@ struct ComputeUnitParams;
 class ScheduleStage
 {
   public:
-    ScheduleStage(const ComputeUnitParams *params);
+    ScheduleStage(const ComputeUnitParams *params, ComputeUnit *cu);
     ~ScheduleStage();
     void init(ComputeUnit *cu);
     void exec();
-    void arbitrate();
+
     // Stats related variables and methods
     std::string name() { return _name; }
+    enum SchNonRdyType {
+        SCH_SCALAR_ALU_NRDY,
+        SCH_VECTOR_ALU_NRDY,
+        SCH_VECTOR_MEM_ISSUE_NRDY,
+        SCH_VECTOR_MEM_BUS_BUSY_NRDY,
+        SCH_VECTOR_MEM_COALESCER_NRDY,
+        SCH_VECTOR_MEM_REQS_NRDY,
+        SCH_CEDE_SIMD_NRDY,
+        SCH_SCALAR_MEM_ISSUE_NRDY,
+        SCH_SCALAR_MEM_BUS_BUSY_NRDY,
+        SCH_SCALAR_MEM_FIFO_NRDY,
+        SCH_LOCAL_MEM_ISSUE_NRDY,
+        SCH_LOCAL_MEM_BUS_BUSY_NRDY,
+        SCH_LOCAL_MEM_FIFO_NRDY,
+        SCH_FLAT_MEM_ISSUE_NRDY,
+        SCH_FLAT_MEM_BUS_BUSY_NRDY,
+        SCH_FLAT_MEM_COALESCER_NRDY,
+        SCH_FLAT_MEM_REQS_NRDY,
+        SCH_FLAT_MEM_FIFO_NRDY,
+        SCH_RDY,
+        SCH_NRDY_CONDITIONS
+    };
+    enum schopdnonrdytype_e {
+        SCH_VRF_OPD_NRDY,
+        SCH_SRF_OPD_NRDY,
+        SCH_RF_OPD_NRDY,
+        SCH_RF_OPD_NRDY_CONDITIONS
+    };
+    enum schrfaccessnonrdytype_e {
+        SCH_VRF_RD_ACCESS_NRDY,
+        SCH_VRF_WR_ACCESS_NRDY,
+        SCH_SRF_RD_ACCESS_NRDY,
+        SCH_SRF_WR_ACCESS_NRDY,
+        SCH_RF_ACCESS_NRDY,
+        SCH_RF_ACCESS_NRDY_CONDITIONS
+    };
+
     void regStats();
+
+    // Called by ExecStage to inform SCH of instruction execution
+    void deleteFromSch(Wavefront *w);
+
+    // Schedule List status
+    enum SCH_STATUS
+    {
+        RFBUSY = 0, // RF busy reading operands
+        RFREADY, // ready for exec
+    };
 
   private:
     ComputeUnit *computeUnit;
-    uint32_t numSIMDs;
-    uint32_t numMemUnits;
-
     // Each execution resource will have its own
     // scheduler and a dispatch list
     std::vector<Scheduler> scheduler;
 
-    // Stores the status of waves. A READY implies the
-    // wave is ready to be scheduled this cycle and
-    // is already present in the readyList
-    std::vector<std::vector<std::pair<Wavefront*, WAVE_STATUS>>*>
-        waveStatusList;
-
     // List of waves which will be dispatched to
-    // each execution resource. A FILLED implies
-    // dispatch list is non-empty and
-    // execution unit has something to execute
-    // this cycle. Currently, the dispatch list of
+    // each execution resource.
+    // Currently, the dispatch list of
     // an execution resource can hold only one wave because
     // an execution resource can execute only one wave in a cycle.
     std::vector<std::pair<Wavefront*, DISPATCH_STATUS>> *dispatchList;
 
+    // Stats
+
+    // Number of cycles with empty (or not empty) readyList, per execution
+    // resource, when the CU is active (not sleeping)
+    Stats::Vector rdyListEmpty;
+    Stats::Vector rdyListNotEmpty;
+
+    // Number of cycles, per execution resource, when at least one wave
+    // was on the readyList and picked by scheduler, but was unable to be
+    // added to the schList, when the CU is active (not sleeping)
+    Stats::Vector addToSchListStalls;
+
+    // Number of cycles, per execution resource, when a wave is selected
+    // as candidate for dispatchList from schList
+    // Note: may be arbitrated off dispatchList (e.g., LDS arbitration)
+    Stats::Vector schListToDispList;
+
+    // Per execution resource stat, incremented once per cycle if no wave
+    // was selected as candidate for dispatch and moved to dispatchList
+    Stats::Vector schListToDispListStalls;
+
+    // Number of times a wave is selected by the scheduler but cannot
+    // be added to the schList due to register files not being able to
+    // support reads or writes of operands. RF_ACCESS_NRDY condition is always
+    // incremented if at least one read/write not supported, other
+    // conditions are incremented independently from each other.
+    Stats::Vector rfAccessStalls;
+
+    // Number of times a wave is executing FLAT instruction and
+    // forces another wave occupying its required local memory resource
+    // to be deselected for execution, and placed back on schList
+    Stats::Scalar ldsBusArbStalls;
+
+    // Count of times VRF and/or SRF blocks waves on schList from
+    // performing RFBUSY->RFREADY transition
+    Stats::Vector opdNrdyStalls;
+
+    // Count of times resource required for dispatch is not ready and
+    // blocks wave in RFREADY state on schList from potentially moving
+    // to dispatchList
+    Stats::Vector dispNrdyStalls;
+
     std::string _name;
+
+    // called by exec() to add a wave to schList if the RFs can support it
+    bool addToSchList(int exeType, Wavefront *w);
+    // re-insert a wave to schList if wave lost arbitration
+    // wave is inserted such that age order (oldest to youngest) is preserved
+    void reinsertToSchList(int exeType, Wavefront *w);
+    // check waves in schList to see if RF reads complete
+    void checkRfOperandReadComplete();
+    // check execution resources for readiness
+    bool vectorAluRdy;
+    bool scalarAluRdy;
+    bool scalarMemBusRdy;
+    bool scalarMemIssueRdy;
+    bool glbMemBusRdy;
+    bool glbMemIssueRdy;
+    bool locMemBusRdy;
+    bool locMemIssueRdy;
+    // check status of memory pipes and RF to Mem buses
+    void checkMemResources();
+    // resource ready check called by fillDispatchList
+    bool dispatchReady(Wavefront *w);
+    // pick waves from schList and populate dispatchList with one wave
+    // per EXE resource type
+    void fillDispatchList();
+    // arbitrate Shared Mem Pipe VRF/LDS bus for waves in dispatchList
+    void arbitrateVrfToLdsBus();
+    // schedule destination operand writes to register files for waves in
+    // dispatchList
+    void scheduleRfDestOperands();
+    // invoked by scheduleRfDestOperands to schedule RF writes for a wave
+    bool schedRfWrites(int exeType, Wavefront *w);
+    // reserve resources for waves surviving arbitration in dispatchList
+    void reserveResources();
+
+    void doDispatchListTransition(int unitId, DISPATCH_STATUS s,
+                                  Wavefront *w = nullptr);
+
+    // Set tracking wfDynId for each wave present in schedule stage
+    // Used to allow only one instruction per wave in schedule
+    std::unordered_set<uint64_t> wavesInSch;
+
+    // List of waves (one list per exe resource) that are in schedule
+    // stage. Waves are added to this list after selected by scheduler
+    // from readyList. Waves are removed from this list and placed on
+    // dispatchList when status reaches SCHREADY.
+    // Waves are kept ordered by age for each resource, always favoring
+    // forward progress for the oldest wave.
+    // The maximum number of waves per resource can be determined by either
+    // the VRF/SRF availability or limits imposed by paremeters (to be added)
+    // of the SCH stage or CU.
+    std::vector<std::deque<std::pair<Wavefront*, SCH_STATUS>>> schList;
 };
 
 #endif // __SCHEDULE_STAGE_HH__

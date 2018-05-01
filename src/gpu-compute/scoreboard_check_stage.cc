@@ -33,29 +33,23 @@
 
 #include "gpu-compute/scoreboard_check_stage.hh"
 
+#include "debug/GPUExec.hh"
+#include "debug/GPUSched.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_static_inst.hh"
+#include "gpu-compute/scalar_register_file.hh"
 #include "gpu-compute/shader.hh"
+#include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 #include "params/ComputeUnit.hh"
 
 ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams *p)
-    : numSIMDs(p->num_SIMDs),
-      numMemUnits(p->num_global_mem_pipes + p->num_shared_mem_pipes),
-      numShrMemPipes(p->num_shared_mem_pipes),
-      vectorAluInstAvail(nullptr),
-      lastGlbMemSimd(-1),
-      lastShrMemSimd(-1), glbMemInstAvail(nullptr),
-      shrMemInstAvail(nullptr)
 {
 }
 
 ScoreboardCheckStage::~ScoreboardCheckStage()
 {
     readyList.clear();
-    waveStatusList.clear();
-    shrMemInstAvail = nullptr;
-    glbMemInstAvail = nullptr;
 }
 
 void
@@ -64,102 +58,212 @@ ScoreboardCheckStage::init(ComputeUnit *cu)
     computeUnit = cu;
     _name = computeUnit->name() + ".ScoreboardCheckStage";
 
-    for (int unitId = 0; unitId < numSIMDs + numMemUnits; ++unitId) {
+    for (int unitId = 0; unitId < computeUnit->numExeUnits(); ++unitId) {
         readyList.push_back(&computeUnit->readyList[unitId]);
     }
-
-    for (int unitId = 0; unitId < numSIMDs; ++unitId) {
-        waveStatusList.push_back(&computeUnit->waveStatusList[unitId]);
-    }
-
-    vectorAluInstAvail = &computeUnit->vectorAluInstAvail;
-    glbMemInstAvail= &computeUnit->glbMemInstAvail;
-    shrMemInstAvail= &computeUnit->shrMemInstAvail;
 }
 
 void
-ScoreboardCheckStage::initStatistics()
+ScoreboardCheckStage::collectStatistics(nonrdytype_e rdyStatus)
 {
-    lastGlbMemSimd = -1;
-    lastShrMemSimd = -1;
-    *glbMemInstAvail = 0;
-    *shrMemInstAvail = 0;
-
-    for (int unitId = 0; unitId < numSIMDs; ++unitId)
-        vectorAluInstAvail->at(unitId) = false;
+    panic_if(rdyStatus == NRDY_ILLEGAL || rdyStatus >= NRDY_CONDITIONS,
+             "Instruction ready status %d is illegal!!!", rdyStatus);
+    stallCycles[rdyStatus]++;
 }
 
-void
-ScoreboardCheckStage::collectStatistics(Wavefront *curWave, int unitId)
+// Return true if this wavefront is ready
+// to execute an instruction of the specified type.
+// It also returns the reason (in rdyStatus) if the instruction is not
+// ready. Finally it sets the execution resource type (in exesResType)
+// of the instruction, only if it ready.
+bool
+ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
+                            int *exeResType, int wfSlot)
 {
-    if (curWave->instructionBuffer.empty())
-        return;
+    /**
+     * The waitCnt checks have to be done BEFORE checking for Instruction
+     * buffer empty condition. Otherwise, it will result into a deadlock if
+     * the last instruction in the Instruction buffer is a waitCnt: after
+     * executing the waitCnt, the Instruction buffer would be empty and the
+     * ready check logic will exit BEFORE checking for wait counters being
+     * satisfied.
+     */
 
-    // track which vector SIMD unit has at least one WV with a vector
-    // ALU as the oldest instruction in its Instruction buffer
-    vectorAluInstAvail->at(unitId) = vectorAluInstAvail->at(unitId) ||
-                                     curWave->isOldestInstALU();
-
-    // track how many vector SIMD units have at least one WV with a
-    // vector Global memory instruction as the oldest instruction
-    // in its Instruction buffer
-    if ((curWave->isOldestInstGMem() || curWave->isOldestInstPrivMem() ||
-         curWave->isOldestInstFlatMem()) && lastGlbMemSimd != unitId &&
-        *glbMemInstAvail <= 1) {
-        (*glbMemInstAvail)++;
-        lastGlbMemSimd = unitId;
+    // waitCnt instruction has been dispatched or executed: next
+    // instruction should be blocked until waitCnts are satisfied.
+    if (w->getStatus() == Wavefront::S_WAITCNT) {
+        if (!w->waitCntsSatisfied()) {
+            *rdyStatus = NRDY_WAIT_CNT;
+            return false;
+        }
     }
 
-    // track how many vector SIMD units have at least one WV with a
-    // vector shared memory (LDS) instruction as the oldest instruction
-    // in its Instruction buffer
-    // TODO: parametrize the limit of the LDS units
-    if (curWave->isOldestInstLMem() && (*shrMemInstAvail <= numShrMemPipes) &&
-        lastShrMemSimd != unitId) {
-        (*shrMemInstAvail)++;
-        lastShrMemSimd = unitId;
+    // Is the wave waiting at a barrier. Check this condition BEFORE checking
+    // for instruction buffer occupancy to avoid a deadlock when the barrier is
+    // the last instruction in the instruction buffer.
+    if (w->stalledAtBarrier) {
+        if (!computeUnit->AllAtBarrier(w->barrierId,w->barrierCnt,
+                        computeUnit->getRefCounter(w->dispatchId, w->wgId))) {
+            // Are all threads at barrier?
+            *rdyStatus = NRDY_BARRIER_WAIT;
+            return false;
+        }
+        w->oldBarrierCnt = w->barrierCnt;
+        w->stalledAtBarrier = false;
     }
+
+    // Check WF status: it has to be running
+    if (w->getStatus() == Wavefront::S_STOPPED ||
+        w->getStatus() == Wavefront::S_RETURNING ||
+        w->getStatus() == Wavefront::S_STALLED) {
+        *rdyStatus = NRDY_WF_STOP;
+        return false;
+    }
+
+    // is the Instruction buffer empty
+    if ( w->instructionBuffer.empty()) {
+        *rdyStatus = NRDY_IB_EMPTY;
+        return false;
+    }
+
+    // Check next instruction from instruction buffer
+    GPUDynInstPtr ii = w->nextInstr();
+    // Only instruction in the instruction buffer has been dispatched.
+    // No need to check it again for readiness
+    if (!ii) {
+        *rdyStatus = NRDY_IB_EMPTY;
+        return false;
+    }
+
+    // The following code is very error prone and the entire process for
+    // checking readiness will be fixed eventually.  In the meantime, let's
+    // make sure that we do not silently let an instruction type slip
+    // through this logic and always return not ready.
+    if (!(ii->isBarrier() || ii->isNop() || ii->isReturn() || ii->isBranch() ||
+         ii->isALU() || ii->isLoad() || ii->isStore() || ii->isAtomic() ||
+         ii->isEndOfKernel() || ii->isMemSync() || ii->isFlat())) {
+        panic("next instruction: %s is of unknown type\n", ii->disassemble());
+    }
+
+    DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Checking Ready for Inst : %s\n",
+            computeUnit->cu_id, w->simdId, w->wfSlotId, ii->disassemble());
+
+    // Non-scalar (i.e., vector) instructions may use VGPRs
+    if (!ii->isScalar()) {
+        if (!computeUnit->vrf[w->simdId]->operandsReady(w, ii)) {
+            *rdyStatus = NRDY_VGPR_NRDY;
+            return false;
+        }
+    }
+    // Scalar and non-scalar instructions may use SGPR
+    if (!computeUnit->srf[w->simdId]->operandsReady(w, ii)) {
+        *rdyStatus = NRDY_SGPR_NRDY;
+        return false;
+    }
+
+    // The hardware implicitly executes S_WAITCNT 0 before executing
+    // the S_ENDPGM instruction. Implementing this implicit S_WAITCNT.
+    // isEndOfKernel() is used to identify the S_ENDPGM instruction
+    // On identifying it, we do the following:
+    // 1. Wait for all older instruction to execute
+    // 2. Once all the older instruction are executed, we add a wait
+    //    count for the executed instruction(s) to complete.
+    if (ii->isEndOfKernel()) {
+        // Waiting for older instruction to execute
+        if (w->instructionBuffer.front()->seqNum() != ii->seqNum()) {
+            *rdyStatus = NRDY_WAIT_CNT;
+            return false;
+        }
+        // Older instructions have executed, adding implicit wait count
+        w->setStatus(Wavefront::S_WAITCNT);
+        w->setWaitCnts(0, 0, 0);
+        if (!w->waitCntsSatisfied()) {
+            *rdyStatus = NRDY_WAIT_CNT;
+            return false;
+        }
+    }
+    DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Ready Inst : %s\n", computeUnit->cu_id,
+            w->simdId, w->wfSlotId, ii->disassemble());
+    *exeResType = mapWaveToExeUnit(w);
+    *rdyStatus = INST_RDY;
+    return true;
+}
+
+int
+ScoreboardCheckStage::mapWaveToExeUnit(Wavefront *w)
+{
+    GPUDynInstPtr ii = w->nextInstr();
+    assert(ii);
+    if (ii->isFlat()) {
+        /**
+         * NOTE: Flat memory ops requires both GM and LM resources.
+         * The simulator models consumption of both GM and LM
+         * resources in the schedule stage. At instruction execution time,
+         * after the aperture check is performed, only the GM or LM pipe
+         * is actually reserved by the timing model. The GM unit is returned
+         * here since Flat ops occupy the GM slot in the ready and dispatch
+         * lists. They also consume the LM slot in the dispatch list.
+         */
+        return w->globalMem;
+    } else if (ii->isLocalMem()) {
+        return w->localMem;
+    } else if (ii->isGlobalMem()) {
+        if (!ii->isScalar()) {
+            return w->globalMem;
+        } else {
+            return w->scalarMem;
+        }
+    } else if (ii->isBranch() ||
+               ii->isALU() ||
+               (ii->isKernArgSeg() && ii->isLoad()) ||
+               ii->isArgSeg() ||
+               ii->isReturn() ||
+               ii->isEndOfKernel() ||
+               ii->isNop() ||
+               ii->isBarrier()) {
+        if (!ii->isScalar()) {
+            return w->simdId;
+        } else {
+            return w->scalarAluGlobalIdx;
+        }
+    }
+    panic("%s: unmapped to an execution resource", ii->disassemble());
+    return computeUnit->numExeUnits();
 }
 
 void
 ScoreboardCheckStage::exec()
 {
-    initStatistics();
-
     // reset the ready list for all execution units; it will be
     // constructed every cycle since resource availability may change
-    for (int unitId = 0; unitId < numSIMDs + numMemUnits; ++unitId) {
+    for (int unitId = 0; unitId < computeUnit->numExeUnits(); ++unitId) {
+        // Reset wavefront pointers to nullptr so clear() on the vector
+        // does not accidentally destruct the wavefront object
+        for (int i = 0; i < readyList[unitId]->size(); i++) {
+            readyList[unitId]->at(i) = nullptr;
+        }
         readyList[unitId]->clear();
     }
-
-    // iterate over the Wavefronts of all SIMD units
-    for (int unitId = 0; unitId < numSIMDs; ++unitId) {
-        for (int wvId = 0; wvId < computeUnit->shader->n_wf; ++wvId) {
+    // iterate over all WF slots across all vector ALUs
+    for (int simdId = 0; simdId < computeUnit->numVectorALUs; ++simdId) {
+        for (int wfSlot = 0; wfSlot < computeUnit->shader->n_wf; ++wfSlot) {
             // reset the ready status of each wavefront
-            waveStatusList[unitId]->at(wvId).second = BLOCKED;
-            Wavefront *curWave = waveStatusList[unitId]->at(wvId).first;
-            collectStatistics(curWave, unitId);
-
-            if (curWave->ready(Wavefront::I_ALU)) {
-                readyList[unitId]->push_back(curWave);
-                waveStatusList[unitId]->at(wvId).second = READY;
-            } else if (curWave->ready(Wavefront::I_GLOBAL)) {
-                if (computeUnit->cedeSIMD(unitId, wvId)) {
-                    continue;
-                }
-
-                readyList[computeUnit->GlbMemUnitId()]->push_back(curWave);
-                waveStatusList[unitId]->at(wvId).second = READY;
-            } else if (curWave->ready(Wavefront::I_SHARED)) {
-                readyList[computeUnit->ShrMemUnitId()]->push_back(curWave);
-                waveStatusList[unitId]->at(wvId).second = READY;
-            } else if (curWave->ready(Wavefront::I_FLAT)) {
-                readyList[computeUnit->GlbMemUnitId()]->push_back(curWave);
-                waveStatusList[unitId]->at(wvId).second = READY;
-            } else if (curWave->ready(Wavefront::I_PRIVATE)) {
-                readyList[computeUnit->GlbMemUnitId()]->push_back(curWave);
-                waveStatusList[unitId]->at(wvId).second = READY;
+            Wavefront *curWave = computeUnit->wfList[simdId][wfSlot];
+            nonrdytype_e rdyStatus = NRDY_ILLEGAL;
+            int exeResType = -1;
+            // check WF readiness: If the WF's oldest
+            // instruction is ready to issue then add the WF to the ready list
+            if (ready(curWave, &rdyStatus, &exeResType, wfSlot)) {
+                assert(curWave->simdId == simdId);
+                DPRINTF(GPUSched,
+                        "Adding to readyList[%d]: SIMD[%d] WV[%d]: %d: %s\n",
+                        exeResType,
+                        curWave->simdId, curWave->wfDynId,
+                        curWave->nextInstr()->seqNum(),
+                        curWave->nextInstr()->disassemble());
+                readyList.at(exeResType)->push_back(curWave);
             }
+            collectStatistics(rdyStatus);
         }
     }
 }
@@ -167,4 +271,16 @@ ScoreboardCheckStage::exec()
 void
 ScoreboardCheckStage::regStats()
 {
+    stallCycles
+        .init(NRDY_CONDITIONS)
+        .name(name() + ".stall_cycles")
+        .desc("number of cycles wave stalled in SCB")
+        ;
+    stallCycles.subname(NRDY_WF_STOP, csprintf("WFStop"));
+    stallCycles.subname(NRDY_IB_EMPTY, csprintf("IBEmpty"));
+    stallCycles.subname(NRDY_WAIT_CNT, csprintf("WaitCnt"));
+    stallCycles.subname(NRDY_BARRIER_WAIT, csprintf("BarrierWait"));
+    stallCycles.subname(NRDY_VGPR_NRDY, csprintf("VgprBusy"));
+    stallCycles.subname(NRDY_SGPR_NRDY, csprintf("SgprBusy"));
+    stallCycles.subname(INST_RDY, csprintf("InstrReady"));
 }

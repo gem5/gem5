@@ -298,9 +298,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
             trigger(Event:StoreThrough, in_msg.LineAddress, cache_entry, tbe);
           } else {
             if (is_valid(cache_entry) || L1cache.cacheAvail(in_msg.LineAddress)) {
-              if (in_msg.segment == HSASegment:SPILL) {
-                trigger(Event:StoreLocal, in_msg.LineAddress, cache_entry, tbe);
-              } else if (WB) {
+              if (WB) {
                 trigger(Event:Store, in_msg.LineAddress, cache_entry, tbe);
               } else {
                 trigger(Event:StoreThrough, in_msg.LineAddress, cache_entry, tbe);

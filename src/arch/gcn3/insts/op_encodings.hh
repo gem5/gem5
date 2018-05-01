@@ -192,7 +192,7 @@ namespace Gcn3ISA
              */
             bool misaligned_acc = split_addr > vaddr;
 
-            RequestPtr req = new Request(0, vaddr, req_size, 0,
+            RequestPtr req = std::make_shared<Request>(vaddr, req_size, 0,
                     gpuDynInst->computeUnit()->masterId(), 0,
                     gpuDynInst->wfDynId);
 
@@ -208,7 +208,6 @@ namespace Gcn3ISA
                 pkt2->dataStatic(gpuDynInst->scalar_data + req1->getSize());
                 gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt1);
                 gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt2);
-                delete req;
             } else {
                 gpuDynInst->numScalarReqs = 1;
                 gpuDynInst->setRequestFlags(req);
@@ -243,7 +242,7 @@ namespace Gcn3ISA
              */
             bool misaligned_acc = split_addr > vaddr;
 
-            RequestPtr req = new Request(0, vaddr, req_size, 0,
+            RequestPtr req = std::make_shared<Request>(vaddr, req_size, 0,
                     gpuDynInst->computeUnit()->masterId(), 0,
                     gpuDynInst->wfDynId);
 
@@ -259,7 +258,6 @@ namespace Gcn3ISA
                 pkt2->dataStatic(gpuDynInst->scalar_data + req1->getSize());
                 gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt1);
                 gpuDynInst->computeUnit()->sendScalarRequest(gpuDynInst, pkt2);
-                delete req;
             } else {
                 gpuDynInst->numScalarReqs = 1;
                 gpuDynInst->setRequestFlags(req);
@@ -574,7 +572,8 @@ namespace Gcn3ISA
                 if (gpuDynInst->exec_mask[lane]) {
                     Addr vaddr = gpuDynInst->addr[lane];
 
-                    RequestPtr req = new Request(0, vaddr, sizeof(T), 0,
+                    RequestPtr req = std::make_shared<Request>(vaddr,
+                        sizeof(T), 0,
                         gpuDynInst->computeUnit()->masterId(), 0,
                         gpuDynInst->wfDynId);
 
@@ -600,7 +599,8 @@ namespace Gcn3ISA
                 if (gpuDynInst->exec_mask[lane]) {
                     Addr vaddr = gpuDynInst->addr[lane];
 
-                    RequestPtr req = new Request(0, vaddr, sizeof(T), 0,
+                    RequestPtr req = std::make_shared<Request>(vaddr,
+                        sizeof(T), 0,
                         gpuDynInst->computeUnit()->masterId(),
                         0, gpuDynInst->wfDynId);
 
@@ -619,7 +619,7 @@ namespace Gcn3ISA
         {
             // create request and set flags
             gpuDynInst->statusBitVector = VectorMask(1);
-            Request *req = new Request(0, 0, 0, 0,
+            RequestPtr req = std::make_shared<Request>(0, 0, 0,
                                        gpuDynInst->computeUnit()->
                                        masterId(), 0,
                                        gpuDynInst->wfDynId);
@@ -777,7 +777,8 @@ namespace Gcn3ISA
                 if (gpuDynInst->exec_mask[lane]) {
                     Addr vaddr = gpuDynInst->addr[lane];
 
-                    RequestPtr req = new Request(0, vaddr, sizeof(T), 0,
+                    RequestPtr req = std::make_shared<Request>(vaddr,
+                        sizeof(T), 0,
                             gpuDynInst->computeUnit()->masterId(), 0,
                             gpuDynInst->wfDynId);
 
@@ -802,7 +803,8 @@ namespace Gcn3ISA
                 if (gpuDynInst->exec_mask[lane]) {
                     Addr vaddr = gpuDynInst->addr[lane];
 
-                    RequestPtr req = new Request(0, vaddr, req_size, 0,
+                    RequestPtr req = std::make_shared<Request>(vaddr, req_size,
+                        0,
                         gpuDynInst->computeUnit()->masterId(), 0,
                         gpuDynInst->wfDynId);
 
@@ -826,7 +828,8 @@ namespace Gcn3ISA
                 if (gpuDynInst->exec_mask[lane]) {
                     Addr vaddr = gpuDynInst->addr[lane];
 
-                    RequestPtr req = new Request(0, vaddr, sizeof(T), 0,
+                    RequestPtr req = std::make_shared<Request>(vaddr,
+                        sizeof(T), 0,
                         gpuDynInst->computeUnit()->masterId(),
                             0, gpuDynInst->wfDynId);
 
@@ -851,7 +854,8 @@ namespace Gcn3ISA
                 if (gpuDynInst->exec_mask[lane]) {
                     Addr vaddr = gpuDynInst->addr[lane];
 
-                    RequestPtr req = new Request(0, vaddr, req_size, 0,
+                    RequestPtr req = std::make_shared<Request>(vaddr, req_size,
+                        0,
                         gpuDynInst->computeUnit()->masterId(),
                             0, gpuDynInst->wfDynId);
 
@@ -875,7 +879,8 @@ namespace Gcn3ISA
                 if (gpuDynInst->exec_mask[lane]) {
                     Addr vaddr = gpuDynInst->addr[lane];
 
-                    RequestPtr req = new Request(0, vaddr, sizeof(T), 0,
+                    RequestPtr req = std::make_shared<Request>(vaddr,
+                        sizeof(T), 0,
                         gpuDynInst->computeUnit()->masterId(), 0,
                         gpuDynInst->wfDynId,
                         gpuDynInst->makeAtomicOpFunctor<T>(

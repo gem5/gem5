@@ -36,81 +36,21 @@
 #include <string>
 
 #include "base/logging.hh"
+#include "base/trace.hh"
+#include "debug/GPUVRF.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
-#include "gpu-compute/shader.hh"
 #include "gpu-compute/simple_pool_manager.hh"
 #include "gpu-compute/wavefront.hh"
 #include "params/VectorRegisterFile.hh"
 
 VectorRegisterFile::VectorRegisterFile(const VectorRegisterFileParams *p)
-    : SimObject(p),
-      manager(new SimplePoolManager(p->min_alloc, p->num_regs_per_simd)),
-      simdId(p->simd_id), numRegsPerSimd(p->num_regs_per_simd),
-      vgprState(new VecRegisterState())
+    : RegisterFile(p)
 {
-    fatal_if(numRegsPerSimd % 2, "VRF size is illegal\n");
-    fatal_if(simdId < 0, "Illegal SIMD id for VRF");
+    regFile.resize(numRegs(), VecRegContainer());
 
-    fatal_if(numRegsPerSimd % p->min_alloc, "Min VGPR region allocation is not "
-             "multiple of VRF size\n");
-
-    busy.clear();
-    busy.resize(numRegsPerSimd, 0);
-    nxtBusy.clear();
-    nxtBusy.resize(numRegsPerSimd, 0);
-
-    vgprState->init(numRegsPerSimd, p->wfSize);
-}
-
-void
-VectorRegisterFile::setParent(ComputeUnit *_computeUnit)
-{
-    computeUnit = _computeUnit;
-    vgprState->setParent(computeUnit);
-}
-
-uint8_t
-VectorRegisterFile::regNxtBusy(int idx, uint32_t operandSize) const
-{
-    uint8_t status = nxtBusy.at(idx);
-
-    if (operandSize > 4) {
-        status = status | (nxtBusy.at((idx + 1) % numRegs()));
-    }
-
-    return status;
-}
-
-uint8_t
-VectorRegisterFile::regBusy(int idx, uint32_t operandSize) const
-{
-    uint8_t status = busy.at(idx);
-
-    if (operandSize > 4) {
-        status = status | (busy.at((idx + 1) % numRegs()));
-    }
-
-    return status;
-}
-
-void
-VectorRegisterFile::preMarkReg(int regIdx, uint32_t operandSize, uint8_t value)
-{
-    nxtBusy.at(regIdx) = value;
-
-    if (operandSize > 4) {
-        nxtBusy.at((regIdx + 1) % numRegs()) = value;
-    }
-}
-
-void
-VectorRegisterFile::markReg(int regIdx, uint32_t operandSize, uint8_t value)
-{
-    busy.at(regIdx) = value;
-
-    if (operandSize > 4) {
-        busy.at((regIdx + 1) % numRegs()) = value;
+    for (auto &reg : regFile) {
+        reg.zero();
     }
 }
 
@@ -118,127 +58,154 @@ bool
 VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 {
     for (int i = 0; i < ii->getNumOperands(); ++i) {
-        if (ii->isVectorRegister(i)) {
-            uint32_t vgprIdx = ii->getRegisterIndex(i, ii);
-            uint32_t pVgpr = w->remap(vgprIdx, ii->getOperandSize(i), 1);
+        if (ii->isVectorRegister(i) && ii->isSrcOperand(i)) {
+            int vgprIdx = ii->getRegisterIndex(i, ii);
 
-            if (regBusy(pVgpr, ii->getOperandSize(i)) == 1) {
-                if (ii->isDstOperand(i)) {
-                    w->numTimesBlockedDueWAXDependencies++;
-                } else if (ii->isSrcOperand(i)) {
-                    w->numTimesBlockedDueRAWDependencies++;
+            // determine number of registers
+            int nRegs =
+                ii->getOperandSize(i) <= 4 ? 1 : ii->getOperandSize(i) / 4;
+            for (int j = 0; j < nRegs; j++) {
+                int pVgpr = computeUnit->registerManager
+                    ->mapVgpr(w, vgprIdx + j);
+                if (regBusy(pVgpr)) {
+                    if (ii->isDstOperand(i)) {
+                        w->numTimesBlockedDueWAXDependencies++;
+                    } else if (ii->isSrcOperand(i)) {
+                        DPRINTF(GPUVRF, "RAW stall: WV[%d]: %s: physReg[%d]\n",
+                                w->wfDynId, ii->disassemble(), pVgpr);
+                        w->numTimesBlockedDueRAWDependencies++;
+                    }
+                    return false;
                 }
-
-                return false;
-            }
-
-            if (regNxtBusy(pVgpr, ii->getOperandSize(i)) == 1) {
-                if (ii->isDstOperand(i)) {
-                    w->numTimesBlockedDueWAXDependencies++;
-                } else if (ii->isSrcOperand(i)) {
-                    w->numTimesBlockedDueRAWDependencies++;
-                }
-
-                return false;
             }
         }
     }
-
     return true;
 }
 
 void
-VectorRegisterFile::exec(GPUDynInstPtr ii, Wavefront *w)
+VectorRegisterFile::scheduleWriteOperands(Wavefront *w, GPUDynInstPtr ii)
 {
-    bool loadInstr = ii->isLoad();
-    bool atomicInstr = ii->isAtomic() || ii->isMemFence();
-
-    bool loadNoArgInstr = loadInstr && !ii->isArgLoad();
-
     // iterate over all register destination operands
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-            uint32_t physReg = w->remap(ii->getRegisterIndex(i, ii),
-                                        ii->getOperandSize(i), 1);
+            int vgprIdx = ii->getRegisterIndex(i, ii);
+            int nRegs = ii->getOperandSize(i) <= 4 ? 1 :
+                ii->getOperandSize(i) / 4;
 
-            // mark the destination vector register as busy
-            markReg(physReg, ii->getOperandSize(i), 1);
-            // clear the in-flight status of the destination vector register
-            preMarkReg(physReg, ii->getOperandSize(i), 0);
+            for (int j = 0; j < nRegs; ++j) {
+                int physReg = computeUnit->registerManager
+                    ->mapVgpr(w, vgprIdx + j);
 
-            // FIXME: if we ever model correct timing behavior
-            // for load argument instructions then we should not
-            // set the destination register as busy now but when
-            // the data returns. Loads and Atomics should free
-            // their destination registers when the data returns,
-            // not now
-            if (!atomicInstr && !loadNoArgInstr) {
-                uint32_t pipeLen = ii->getOperandSize(i) <= 4 ?
-                    computeUnit->spBypassLength() :
-                    computeUnit->dpBypassLength();
-
-                // schedule an event for marking the register as ready
-                computeUnit->registerEvent(w->simdId, physReg,
-                                           ii->getOperandSize(i),
-                                           computeUnit->shader->tick_cnt +
-                                           computeUnit->shader->ticks(pipeLen),
-                                           0);
+                // If instruction is atomic instruction and
+                // the atomics do not return value, then
+                // do not mark this reg as busy.
+                if (!(ii->isAtomic() && !ii->isAtomicRet())) {
+                    /**
+                     * if the instruction is a load with EXEC = 0, then
+                     * we do not mark the reg. we do this to avoid a
+                     * deadlock that can occur because a load reserves
+                     * its destination regs before checking its exec mask,
+                     * and in the case it is 0, it will not send/recv any
+                     * packets, and therefore it will never free its dest
+                     * reg(s).
+                     */
+                    if (!ii->isLoad() || (ii->isLoad()
+                        && ii->exec_mask.any())) {
+                        markReg(physReg, true);
+                    }
+                }
             }
         }
     }
 }
 
-int
-VectorRegisterFile::exec(uint64_t dynamic_id, Wavefront *w,
-                         std::vector<uint32_t> &regVec, uint32_t operandSize,
-                         uint64_t timestamp)
+void
+VectorRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
 {
-    int delay = 0;
+    // increment count of number of DWORDs read from VRF
+    int DWORDs = ii->numSrcVecDWORDs();
+    registerReads += (DWORDs * w->execMask().count());
 
-    panic_if(regVec.size() <= 0, "Illegal VGPR vector size=%d\n",
-             regVec.size());
-
-    for (int i = 0; i < regVec.size(); ++i) {
-        // mark the destination VGPR as free when the timestamp expires
-        computeUnit->registerEvent(w->simdId, regVec[i], operandSize,
-                                   computeUnit->shader->tick_cnt + timestamp +
-                                   computeUnit->shader->ticks(delay), 0);
+    uint64_t mask = w->execMask().to_ullong();
+    int srams = w->execMask().size() / 4;
+    for (int i = 0; i < srams; i++) {
+        if (mask & 0xF) {
+            sramReads += DWORDs;
+        }
+        mask = mask >> 4;
     }
 
-    return delay;
-}
+    if (!ii->isLoad()
+        && !(ii->isAtomic() || ii->isMemSync())) {
+        int opSize = 4;
+        for (int i = 0; i < ii->getNumOperands(); i++) {
+            if (ii->getOperandSize(i) > opSize) {
+                opSize = ii->getOperandSize(i);
+            }
+        }
+        Cycles delay(opSize <= 4 ? computeUnit->spBypassLength()
+            : computeUnit->dpBypassLength());
+        Tick tickDelay = computeUnit->cyclesToTicks(delay);
 
-void
-VectorRegisterFile::updateResources(Wavefront *w, GPUDynInstPtr ii)
-{
-    // iterate over all register destination operands
-    for (int i = 0; i < ii->getNumOperands(); ++i) {
-        if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-            uint32_t physReg = w->remap(ii->getRegisterIndex(i, ii),
-                                        ii->getOperandSize(i), 1);
-            // set the in-flight status of the destination vector register
-            preMarkReg(physReg, ii->getOperandSize(i), 1);
+        for (int i = 0; i < ii->getNumOperands(); i++) {
+            if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
+                int vgprIdx = ii->getRegisterIndex(i, ii);
+                int nRegs = ii->getOperandSize(i) <= 4 ? 1
+                    : ii->getOperandSize(i) / 4;
+                for (int j = 0; j < nRegs; j++) {
+                    int physReg = computeUnit->registerManager
+                        ->mapVgpr(w, vgprIdx + j);
+                    enqRegFreeEvent(physReg, tickDelay);
+                }
+            }
+        }
+
+        // increment count of number of DWORDs written to VRF
+        DWORDs = ii->numDstVecDWORDs();
+        registerWrites += (DWORDs * w->execMask().count());
+
+        mask = w->execMask().to_ullong();
+        srams = w->execMask().size() / 4;
+        for (int i = 0; i < srams; i++) {
+            if (mask & 0xF) {
+                sramWrites += DWORDs;
+            }
+            mask = mask >> 4;
         }
     }
 }
 
-bool
-VectorRegisterFile::vrfOperandAccessReady(uint64_t dynamic_id, Wavefront *w,
-                                          GPUDynInstPtr ii,
-                                          VrfAccessType accessType)
+void
+VectorRegisterFile::scheduleWriteOperandsFromLoad(
+    Wavefront *w, GPUDynInstPtr ii)
 {
-    bool ready = true;
+    assert(ii->isLoad() || ii->isAtomicRet());
+    for (int i = 0; i < ii->getNumOperands(); ++i) {
+        if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
+            int vgprIdx = ii->getRegisterIndex(i, ii);
+            int nRegs = ii->getOperandSize(i) <= 4 ? 1 :
+                ii->getOperandSize(i) / 4;
 
-    return ready;
-}
+            for (int j = 0; j < nRegs; ++j) {
+                int physReg = computeUnit->registerManager
+                    ->mapVgpr(w, vgprIdx + j);
+                enqRegFreeEvent(physReg, computeUnit->clockPeriod());
+            }
+        }
+    }
+    // increment count of number of DWORDs written to VRF
+    int DWORDs = ii->numDstVecDWORDs();
+    registerWrites += (DWORDs * ii->exec_mask.count());
 
-bool
-VectorRegisterFile::vrfOperandAccessReady(Wavefront *w, GPUDynInstPtr ii,
-                                          VrfAccessType accessType)
-{
-    bool ready = true;
-
-    return ready;
+    uint64_t mask = ii->exec_mask.to_ullong();
+    int srams = ii->exec_mask.size() / 4;
+    for (int i = 0; i < srams; i++) {
+        if (mask & 0xF) {
+            sramWrites += DWORDs;
+        }
+        mask = mask >> 4;
+    }
 }
 
 VectorRegisterFile*

@@ -38,11 +38,15 @@
 #include <cstdint>
 #include <string>
 
+#include "params/PoolManager.hh"
+#include "sim/sim_object.hh"
+
 // Pool Manager Logic
-class PoolManager
+class PoolManager : public SimObject
 {
   public:
-    PoolManager(uint32_t minAlloc, uint32_t poolSize);
+    PoolManager(const PoolManagerParams *p);
+    virtual ~PoolManager() { _poolSize = 0; }
     uint32_t minAllocation() { return _minAllocation; }
     virtual std::string printRegion() = 0;
     virtual uint32_t regionSize(std::pair<uint32_t,uint32_t> &region) = 0;

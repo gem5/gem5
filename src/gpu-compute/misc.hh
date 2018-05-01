@@ -39,34 +39,62 @@
 #include <memory>
 
 #include "base/logging.hh"
+#include "sim/clocked_object.hh"
 
 class GPUDynInst;
 
-typedef std::bitset<std::numeric_limits<unsigned long long>::digits> VectorMask;
+typedef std::bitset<std::numeric_limits<unsigned long long>::digits>
+    VectorMask;
 typedef std::shared_ptr<GPUDynInst> GPUDynInstPtr;
+
+enum InstMemoryHop : int {
+    Initiate = 0,
+    CoalsrSend = 1,
+    CoalsrRecv = 2,
+    GMEnqueue = 3,
+    Complete = 4,
+    InstMemoryHopMax = 5
+};
+
+enum BlockMemoryHop : int {
+    BlockSend = 0,
+    BlockRecv = 1
+};
 
 class WaitClass
 {
   public:
-    WaitClass() : nxtAvail(0), lookAheadAvail(0), tcnt(0) { }
-    void init(uint64_t *_tcnt, uint32_t _numStages=0)
+    WaitClass() : nxtAvail(0), lookAheadAvail(0), clockedObject(nullptr) { }
+
+    WaitClass(ClockedObject *_clockedObject, uint64_t _numStages=0)
+        : nxtAvail(0), lookAheadAvail(0), clockedObject(_clockedObject),
+          numStages(_numStages) { }
+
+    void init(ClockedObject *_clockedObject, uint64_t _numStages=0)
     {
-        tcnt = _tcnt;
+        clockedObject = _clockedObject;
         numStages = _numStages;
     }
 
-    void set(uint32_t i)
+    void set(uint64_t i)
     {
-        fatal_if(nxtAvail > *tcnt,
+        fatal_if(nxtAvail > clockedObject->clockEdge(),
                  "Can't allocate resource because it is busy!!!");
-        nxtAvail = *tcnt + i;
+        nxtAvail = clockedObject->clockEdge() + i;
     }
-    void preset(uint32_t delay)
+    void preset(uint64_t delay)
     {
-        lookAheadAvail = std::max(lookAheadAvail, delay + (*tcnt) - numStages);
+        lookAheadAvail = std::max(lookAheadAvail, delay +
+                (clockedObject->clockEdge()) - numStages);
     }
-    bool rdy() const { return *tcnt >= nxtAvail; }
-    bool prerdy() const { return *tcnt >= lookAheadAvail; }
+    bool rdy(Cycles cycles = Cycles(0)) const
+    {
+        return clockedObject->clockEdge(cycles) >= nxtAvail;
+    }
+    bool prerdy() const
+    {
+        return clockedObject->clockEdge() >= lookAheadAvail;
+    }
 
   private:
     // timestamp indicating when resource will be available
@@ -75,11 +103,11 @@ class WaitClass
     // pending uses of the resource (when there is a cycle gap between
     // rdy() and set()
     uint64_t lookAheadAvail;
-    // current timestamp
-    uint64_t *tcnt;
+    // clockedObject for current timestamp
+    ClockedObject *clockedObject;
     // number of stages between checking if a resource is ready and
     // setting the resource's utilization
-    uint32_t numStages;
+    uint64_t numStages;
 };
 
 class Float16
@@ -93,7 +121,7 @@ class Float16
 
     Float16(float x)
     {
-        uint32_t ai = *(uint32_t *)&x;
+        uint32_t ai = *(reinterpret_cast<uint32_t *>(&x));
 
         uint32_t s = (ai >> 31) & 0x1;
         uint32_t exp = (ai >> 23) & 0xff;
@@ -139,7 +167,7 @@ class Float16
         val1 |= (exp << 23);
         val1 |= (mant << 13);
 
-        return *(float*)&val1;
+        return *(reinterpret_cast<float *>(&val1));
     }
 };
 

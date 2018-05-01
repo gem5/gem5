@@ -35,8 +35,6 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/WriteMask.hh"
-#include "mem/ruby/protocol/HSAScope.hh"
-#include "mem/ruby/protocol/HSASegment.hh"
 #include "mem/ruby/protocol/Message.hh"
 #include "mem/ruby/protocol/PrefetchBit.hh"
 #include "mem/ruby/protocol/RubyAccessMode.hh"
