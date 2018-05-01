@@ -2111,15 +2111,20 @@ namespace Aarch64
                 return decodeNeonSc3Diff(machInst);
             } else if (bits(machInst, 20, 17) == 0x0) {
                 return decodeNeonSc2RegMisc(machInst);
+            } else if (bits(machInst, 20, 17) == 0x4) {
+                return decodeCryptoTwoRegSHA(machInst);
             } else if (bits(machInst, 20, 17) == 0x8) {
                 return decodeNeonScPwise(machInst);
             } else {
                 return new Unknown64(machInst);
             }
         } else if (bits(machInst, 23, 22) == 0 &&
-                   bits(machInst, 15) == 0 &&
-                   bits(machInst, 10) == 1) {
-            return decodeNeonScCopy(machInst);
+                   bits(machInst, 15) == 0) {
+            if (bits(machInst, 10) == 1) {
+                return decodeNeonScCopy(machInst);
+            } else {
+                return decodeCryptoThreeRegSHA(machInst);
+            }
         } else {
             return new Unknown64(machInst);
         }

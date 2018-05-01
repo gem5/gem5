@@ -105,3 +105,6 @@ split decoder;
 
 //Crypto
 ##include "crypto.isa"
+
+//Crypto
+##include "crypto64.isa"

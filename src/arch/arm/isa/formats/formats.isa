@@ -83,5 +83,8 @@
 //M5 Psuedo-ops
 ##include "m5ops.isa"
 
+//Crypto Ops
+##include "crypto64.isa"
+
 //gem5-internal pseudo instructions
 ##include "pseudo.isa"
