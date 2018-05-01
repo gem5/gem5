@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2017 ARM Limited
+ * Copyright (c) 2012-2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -368,6 +368,21 @@ class Cache : public BaseCache
      * make recvTimingResp less cluttered.
      */
     void handleUncacheableWriteResp(PacketPtr pkt);
+
+    /**
+     * Service non-deferred MSHR targets using the received response
+     *
+     * Iterates through the list of targets that can be serviced with
+     * the current response. Any writebacks that need to performed
+     * must be appended to the writebacks parameter.
+     *
+     * @param mshr The MSHR that corresponds to the reponse
+     * @param pkt The response packet
+     * @param blk The reference block
+     * @param writebacks List of writebacks that need to be performed
+     */
+    void serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk,
+                            PacketList& writebacks);
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.

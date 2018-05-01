@@ -1322,98 +1322,19 @@ Cache::handleUncacheableWriteResp(PacketPtr pkt)
 }
 
 void
-Cache::recvTimingResp(PacketPtr pkt)
+Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk,
+                          PacketList &writebacks)
 {
-    assert(pkt->isResponse());
-
-    // all header delay should be paid for by the crossbar, unless
-    // this is a prefetch response from above
-    panic_if(pkt->headerDelay != 0 && pkt->cmd != MemCmd::HardPFResp,
-             "%s saw a non-zero packet delay\n", name());
-
-    bool is_error = pkt->isError();
-
-    if (is_error) {
-        DPRINTF(Cache, "%s: Cache received %s with error\n", __func__,
-                pkt->print());
-    }
-
-    DPRINTF(Cache, "%s: Handling response %s\n", __func__,
-            pkt->print());
-
-    // if this is a write, we should be looking at an uncacheable
-    // write
-    if (pkt->isWrite()) {
-        assert(pkt->req->isUncacheable());
-        handleUncacheableWriteResp(pkt);
-        return;
-    }
-
-    // we have dealt with any (uncacheable) writes above, from here on
-    // we know we are dealing with an MSHR due to a miss or a prefetch
-    MSHR *mshr = dynamic_cast<MSHR*>(pkt->popSenderState());
-    assert(mshr);
-
-    if (mshr == noTargetMSHR) {
-        // we always clear at least one target
-        clearBlocked(Blocked_NoTargets);
-        noTargetMSHR = nullptr;
-    }
-
-    // Initial target is used just for stats
     MSHR::Target *initial_tgt = mshr->getTarget();
-    int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
-    Tick miss_latency = curTick() - initial_tgt->recvTime;
+    // First offset for critical word first calculations
+    const int initial_offset = initial_tgt->pkt->getOffset(blkSize);
 
-    if (pkt->req->isUncacheable()) {
-        assert(pkt->req->masterId() < system->maxMasters());
-        mshr_uncacheable_lat[stats_cmd_idx][pkt->req->masterId()] +=
-            miss_latency;
-    } else {
-        assert(pkt->req->masterId() < system->maxMasters());
-        mshr_miss_latency[stats_cmd_idx][pkt->req->masterId()] +=
-            miss_latency;
-    }
-
-    bool wasFull = mshrQueue.isFull();
-
-    PacketList writebacks;
-
-    Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
-
+    const bool is_error = pkt->isError();
     bool is_fill = !mshr->isForward &&
         (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp);
-
-    CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
-    const bool valid_blk = blk && blk->isValid();
-    // If the response indicates that there are no sharers and we
-    // either had the block already or the response is filling we can
-    // promote our copy to writable
-    if (!pkt->hasSharers() &&
-        (is_fill || (valid_blk && !pkt->req->isCacheInvalidate()))) {
-        mshr->promoteWritable();
-    }
-
-    if (is_fill && !is_error) {
-        DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
-                pkt->getAddr());
-
-        blk = handleFill(pkt, blk, writebacks, mshr->allocOnFill());
-        assert(blk != nullptr);
-    }
-
     // allow invalidation responses originating from write-line
     // requests to be discarded
     bool is_invalidate = pkt->isInvalidate();
-
-    // The block was marked as not readable while there was a pending
-    // cache maintenance operation, restore its flag.
-    if (pkt->isClean() && !is_invalidate && valid_blk) {
-        blk->status |= BlkReadable;
-    }
-
-    // First offset for critical word first calculations
-    int initial_offset = initial_tgt->pkt->getOffset(blkSize);
 
     MSHR::TargetList targets = mshr->extractServiceableTargets(pkt);
     for (auto &target: targets) {
@@ -1450,7 +1371,7 @@ Cache::recvTimingResp(PacketPtr pkt)
                 // NB: we use the original packet here and not the response!
                 blk = handleFill(tgt_pkt, blk, writebacks,
                                  targets.allocOnFill);
-                assert(blk != nullptr);
+                assert(blk);
 
                 // treat as a fill, and discard the invalidation
                 // response
@@ -1579,6 +1500,91 @@ Cache::recvTimingResp(PacketPtr pkt)
             blk->status &= ~BlkWritable;
         }
     }
+}
+
+void
+Cache::recvTimingResp(PacketPtr pkt)
+{
+    assert(pkt->isResponse());
+
+    // all header delay should be paid for by the crossbar, unless
+    // this is a prefetch response from above
+    panic_if(pkt->headerDelay != 0 && pkt->cmd != MemCmd::HardPFResp,
+             "%s saw a non-zero packet delay\n", name());
+
+    const bool is_error = pkt->isError();
+
+    if (is_error) {
+        DPRINTF(Cache, "%s: Cache received %s with error\n", __func__,
+                pkt->print());
+    }
+
+    DPRINTF(Cache, "%s: Handling response %s\n", __func__,
+            pkt->print());
+
+    // if this is a write, we should be looking at an uncacheable
+    // write
+    if (pkt->isWrite()) {
+        assert(pkt->req->isUncacheable());
+        handleUncacheableWriteResp(pkt);
+        return;
+    }
+
+    // we have dealt with any (uncacheable) writes above, from here on
+    // we know we are dealing with an MSHR due to a miss or a prefetch
+    MSHR *mshr = dynamic_cast<MSHR*>(pkt->popSenderState());
+    assert(mshr);
+
+    if (mshr == noTargetMSHR) {
+        // we always clear at least one target
+        clearBlocked(Blocked_NoTargets);
+        noTargetMSHR = nullptr;
+    }
+
+    // Initial target is used just for stats
+    MSHR::Target *initial_tgt = mshr->getTarget();
+    int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
+    Tick miss_latency = curTick() - initial_tgt->recvTime;
+
+    if (pkt->req->isUncacheable()) {
+        assert(pkt->req->masterId() < system->maxMasters());
+        mshr_uncacheable_lat[stats_cmd_idx][pkt->req->masterId()] +=
+            miss_latency;
+    } else {
+        assert(pkt->req->masterId() < system->maxMasters());
+        mshr_miss_latency[stats_cmd_idx][pkt->req->masterId()] +=
+            miss_latency;
+    }
+
+    PacketList writebacks;
+
+    bool is_fill = !mshr->isForward &&
+        (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp);
+
+    CacheBlk *blk = tags->findBlock(pkt->getAddr(), pkt->isSecure());
+
+    if (is_fill && !is_error) {
+        DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
+                pkt->getAddr());
+
+        blk = handleFill(pkt, blk, writebacks, mshr->allocOnFill());
+        assert(blk != nullptr);
+    }
+
+    if (blk && blk->isValid() && pkt->isClean() && !pkt->isInvalidate()) {
+        // The block was marked not readable while there was a pending
+        // cache maintenance operation, restore its flag.
+        blk->status |= BlkReadable;
+    }
+
+    if (blk && blk->isWritable() && !pkt->req->isCacheInvalidate()) {
+        // If at this point the referenced block is writable and the
+        // response is not a cache invalidate, we promote targets that
+        // were deferred as we couldn't guarrantee a writable copy
+        mshr->promoteWritable();
+    }
+
+    serviceMSHRTargets(mshr, pkt, blk, writebacks);
 
     if (mshr->promoteDeferredTargets()) {
         // avoid later read getting stale data while write miss is
@@ -1589,8 +1595,12 @@ Cache::recvTimingResp(PacketPtr pkt)
         mshrQueue.markPending(mshr);
         schedMemSideSendEvent(clockEdge() + pkt->payloadDelay);
     } else {
+        // while we deallocate an mshr from the queue we still have to
+        // check the isFull condition before and after as we might
+        // have been using the reserved entries already
+        const bool was_full = mshrQueue.isFull();
         mshrQueue.deallocate(mshr);
-        if (wasFull && !mshrQueue.isFull()) {
+        if (was_full && !mshrQueue.isFull()) {
             clearBlocked(Blocked_NoMSHRs);
         }
 
@@ -1603,8 +1613,6 @@ Cache::recvTimingResp(PacketPtr pkt)
                 schedMemSideSendEvent(next_pf_time);
         }
     }
-    // reset the xbar additional timinig  as it is now accounted for
-    pkt->headerDelay = pkt->payloadDelay = 0;
 
     // if we used temp block, check to see if its valid and then clear it out
     if (blk == tempBlock && tempBlock->isValid()) {
@@ -1614,6 +1622,7 @@ Cache::recvTimingResp(PacketPtr pkt)
         invalidateBlock(tempBlock);
     }
 
+    const Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
     // copy writebacks to write buffer
     doWritebacks(writebacks, forward_time);
 
