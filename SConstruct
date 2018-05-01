@@ -989,7 +989,7 @@ all_gpu_isa_list.sort()
 
 sticky_vars.AddVariables(
     EnumVariable('TARGET_ISA', 'Target ISA', 'null', all_isa_list),
-    EnumVariable('TARGET_GPU_ISA', 'Target GPU ISA', 'hsail', all_gpu_isa_list),
+    EnumVariable('TARGET_GPU_ISA', 'Target GPU ISA', 'gcn3', all_gpu_isa_list),
     ListVariable('CPU_MODELS', 'CPU models',
                  sorted(n for n,m in CpuModel.dict.items() if m.default),
                  sorted(CpuModel.dict.keys())),

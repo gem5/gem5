@@ -37,6 +37,9 @@ import sys
 
 Import('*')
 
+if not env['BUILD_GPU']:
+    Return()
+
 if env['TARGET_GPU_ISA'] == 'gcn3':
     Source('decoder.cc')
     Source('insts/gpu_static_inst.cc')

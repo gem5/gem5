@@ -49,7 +49,7 @@ add_option('--builds',
            'SPARC,' \
            'X86,X86_MESI_Two_Level,' \
            'RISCV,' \
-           'HSAIL_X86',
+           'GCN3_X86',
            help="comma-separated build targets to test (default: '%default')")
 add_option('--modes',
            default='se,fs',

@@ -88,7 +88,7 @@ def _validateTags(commit_header):
     # @todo this is error prone, and should be extracted automatically from
     #       a file
 
-    valid_tags = ["arch", "arch-arm", "arch-gcn3", "arch-hsail",
+    valid_tags = ["arch", "arch-arm", "arch-gcn3",
         "arch-mips", "arch-power", "arch-riscv", "arch-sparc", "arch-x86",
         "base", "configs", "cpu", "cpu-kvm", "cpu-minor", "cpu-o3",
         "cpu-simple", "dev", "dev-arm", "dev-virtio", "ext", "fastmodel",
