@@ -110,6 +110,8 @@ class MemCmd
         SwapResp,
         // MessageReq and MessageResp are deprecated.
         MemFenceReq = SwapResp + 3,
+        MemSyncReq,  // memory synchronization request (e.g., cache invalidate)
+        MemSyncResp, // memory synchronization response
         MemFenceResp,
         CleanSharedReq,
         CleanSharedResp,

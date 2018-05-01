@@ -110,7 +110,7 @@ class Request
          * STRICT_ORDER flag should be set if such reordering is
          * undesirable.
          */
-        UNCACHEABLE                = 0x00000400,
+        UNCACHEABLE                 = 0x00000400,
         /**
          * The request is required to be strictly ordered by <i>CPU
          * models</i> and is non-speculative.
@@ -216,35 +216,30 @@ class Request
     };
     /** @} */
 
-    typedef uint32_t MemSpaceConfigFlagsType;
-    typedef ::Flags<MemSpaceConfigFlagsType> MemSpaceConfigFlags;
+    typedef uint64_t CacheCoherenceFlagsType;
+    typedef ::Flags<CacheCoherenceFlagsType> CacheCoherenceFlags;
 
-    enum : MemSpaceConfigFlagsType {
-        /** Has a synchronization scope been set? */
-        SCOPE_VALID            = 0x00000001,
-        /** Access has Wavefront scope visibility */
-        WAVEFRONT_SCOPE        = 0x00000002,
-        /** Access has Workgroup scope visibility */
-        WORKGROUP_SCOPE        = 0x00000004,
-        /** Access has Device (e.g., GPU) scope visibility */
-        DEVICE_SCOPE           = 0x00000008,
-        /** Access has System (e.g., CPU + GPU) scope visibility */
-        SYSTEM_SCOPE           = 0x00000010,
-
-        /** Global Segment */
-        GLOBAL_SEGMENT         = 0x00000020,
-        /** Group Segment */
-        GROUP_SEGMENT          = 0x00000040,
-        /** Private Segment */
-        PRIVATE_SEGMENT        = 0x00000080,
-        /** Kergarg Segment */
-        KERNARG_SEGMENT        = 0x00000100,
-        /** Readonly Segment */
-        READONLY_SEGMENT       = 0x00000200,
-        /** Spill Segment */
-        SPILL_SEGMENT          = 0x00000400,
-        /** Arg Segment */
-        ARG_SEGMENT            = 0x00000800,
+    /**
+     * These bits are used to set the coherence policy
+     * for the GPU and are encoded in the GCN3 instructions.
+     * See the AMD GCN3 ISA Architecture Manual for more
+     * details.
+     *
+     * SLC: System Level Coherent. Accesses are forced to miss in
+     *      the L2 cache and are coherent with system memory.
+     *
+     * GLC: Globally Coherent. Controls how reads and writes are
+     *      handled by the L1 cache. Global here referes to the
+     *      data being visible globally on the GPU (i.e., visible
+     *      to all WGs).
+     *
+     * For atomics, the GLC bit is used to distinguish between
+     * between atomic return/no-return operations.
+     */
+    enum : CacheCoherenceFlagsType {
+        /** user-policy flags */
+        SLC_BIT                 = 0x00000080,
+        GLC_BIT                 = 0x00000100,
     };
 
     using LocalAccessor =
@@ -305,8 +300,8 @@ class Request
     /** Flag structure for the request. */
     Flags _flags;
 
-    /** Memory space configuraiton flag structure for the request. */
-    MemSpaceConfigFlags _memSpaceConfigFlags;
+    /** Flags that control how downstream cache system maintains coherence*/
+    CacheCoherenceFlags _cacheCoherenceFlags;
 
     /** Private flags for field validity checking. */
     PrivateFlags privateFlags;
@@ -394,7 +389,7 @@ class Request
           _byteEnable(other._byteEnable),
           _masterId(other._masterId),
           _flags(other._flags),
-          _memSpaceConfigFlags(other._memSpaceConfigFlags),
+          _cacheCoherenceFlags(other._cacheCoherenceFlags),
           privateFlags(other.privateFlags),
           _time(other._time),
           _taskId(other._taskId), _vaddr(other._vaddr),
@@ -629,10 +624,11 @@ class Request
     }
 
     void
-    setMemSpaceConfigFlags(MemSpaceConfigFlags extraFlags)
+    setCacheCoherenceFlags(CacheCoherenceFlags extraFlags)
     {
+        // TODO: do mem_sync_op requests have valid paddr/vaddr?
         assert(privateFlags.isSet(VALID_PADDR | VALID_VADDR));
-        _memSpaceConfigFlags.set(extraFlags);
+        _cacheCoherenceFlags.set(extraFlags);
     }
 
     /** Accessor function for vaddr.*/
@@ -840,82 +836,10 @@ class Request
      * Accessor functions for the memory space configuration flags and used by
      * GPU ISAs such as the Heterogeneous System Architecture (HSA). Note that
      * these are for testing only; setting extraFlags should be done via
-     * setMemSpaceConfigFlags().
+     * setCacheCoherenceFlags().
      */
-    bool isScoped() const { return _memSpaceConfigFlags.isSet(SCOPE_VALID); }
-
-    bool
-    isWavefrontScope() const
-    {
-        assert(isScoped());
-        return _memSpaceConfigFlags.isSet(WAVEFRONT_SCOPE);
-    }
-
-    bool
-    isWorkgroupScope() const
-    {
-        assert(isScoped());
-        return _memSpaceConfigFlags.isSet(WORKGROUP_SCOPE);
-    }
-
-    bool
-    isDeviceScope() const
-    {
-        assert(isScoped());
-        return _memSpaceConfigFlags.isSet(DEVICE_SCOPE);
-    }
-
-    bool
-    isSystemScope() const
-    {
-        assert(isScoped());
-        return _memSpaceConfigFlags.isSet(SYSTEM_SCOPE);
-    }
-
-    bool
-    isGlobalSegment() const
-    {
-        return _memSpaceConfigFlags.isSet(GLOBAL_SEGMENT) ||
-               (!isGroupSegment() && !isPrivateSegment() &&
-                !isKernargSegment() && !isReadonlySegment() &&
-                !isSpillSegment() && !isArgSegment());
-    }
-
-    bool
-    isGroupSegment() const
-    {
-        return _memSpaceConfigFlags.isSet(GROUP_SEGMENT);
-    }
-
-    bool
-    isPrivateSegment() const
-    {
-        return _memSpaceConfigFlags.isSet(PRIVATE_SEGMENT);
-    }
-
-    bool
-    isKernargSegment() const
-    {
-        return _memSpaceConfigFlags.isSet(KERNARG_SEGMENT);
-    }
-
-    bool
-    isReadonlySegment() const
-    {
-        return _memSpaceConfigFlags.isSet(READONLY_SEGMENT);
-    }
-
-    bool
-    isSpillSegment() const
-    {
-        return _memSpaceConfigFlags.isSet(SPILL_SEGMENT);
-    }
-
-    bool
-    isArgSegment() const
-    {
-        return _memSpaceConfigFlags.isSet(ARG_SEGMENT);
-    }
+    bool isSLC() const { return _cacheCoherenceFlags.isSet(SLC_BIT); }
+    bool isGLC() const { return _cacheCoherenceFlags.isSet(GLC_BIT); }
 
     /**
      * Accessor functions to determine whether this request is part of

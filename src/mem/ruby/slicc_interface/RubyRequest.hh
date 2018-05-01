@@ -58,16 +58,11 @@ class RubyRequest : public Message
     WriteMask m_writeMask;
     DataBlock m_WTData;
     int m_wfid;
-    HSAScope m_scope;
-    HSASegment m_segment;
-
 
     RubyRequest(Tick curTime, uint64_t _paddr, uint8_t* _data, int _len,
         uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
         PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
-        ContextID _proc_id = 100, ContextID _core_id = 99,
-        HSAScope _scope = HSAScope_UNSPECIFIED,
-        HSASegment _segment = HSASegment_GLOBAL)
+        ContextID _proc_id = 100, ContextID _core_id = 99)
         : Message(curTime),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
@@ -77,9 +72,7 @@ class RubyRequest : public Message
           m_Prefetch(_pb),
           data(_data),
           m_pkt(_pkt),
-          m_contextId(_core_id),
-          m_scope(_scope),
-          m_segment(_segment)
+          m_contextId(_core_id)
     {
         m_LineAddress = makeLineAddress(m_PhysicalAddress);
     }
@@ -89,9 +82,7 @@ class RubyRequest : public Message
         RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
         unsigned _proc_id, unsigned _core_id,
         int _wm_size, std::vector<bool> & _wm_mask,
-        DataBlock & _Data,
-        HSAScope _scope = HSAScope_UNSPECIFIED,
-        HSASegment _segment = HSASegment_GLOBAL)
+        DataBlock & _Data)
         : Message(curTime),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
@@ -104,9 +95,7 @@ class RubyRequest : public Message
           m_contextId(_core_id),
           m_writeMask(_wm_size,_wm_mask),
           m_WTData(_Data),
-          m_wfid(_proc_id),
-          m_scope(_scope),
-          m_segment(_segment)
+          m_wfid(_proc_id)
     {
         m_LineAddress = makeLineAddress(m_PhysicalAddress);
     }
@@ -117,9 +106,7 @@ class RubyRequest : public Message
         unsigned _proc_id, unsigned _core_id,
         int _wm_size, std::vector<bool> & _wm_mask,
         DataBlock & _Data,
-        std::vector< std::pair<int,AtomicOpFunctor*> > _atomicOps,
-        HSAScope _scope = HSAScope_UNSPECIFIED,
-        HSASegment _segment = HSASegment_GLOBAL)
+        std::vector< std::pair<int,AtomicOpFunctor*> > _atomicOps)
         : Message(curTime),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
@@ -132,13 +119,10 @@ class RubyRequest : public Message
           m_contextId(_core_id),
           m_writeMask(_wm_size,_wm_mask,_atomicOps),
           m_WTData(_Data),
-          m_wfid(_proc_id),
-          m_scope(_scope),
-          m_segment(_segment)
+          m_wfid(_proc_id)
     {
         m_LineAddress = makeLineAddress(m_PhysicalAddress);
     }
-
 
     RubyRequest(Tick curTime) : Message(curTime) {}
     MsgPtr clone() const

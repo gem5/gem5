@@ -181,6 +181,10 @@ MemCmd::commandInfo[] =
     { 0, InvalidCmd, "Deprecated_MessageResp" },
     /* MemFenceReq -- for synchronization requests */
     {SET2(IsRequest, NeedsResponse), MemFenceResp, "MemFenceReq"},
+    /* MemSyncReq */
+    {SET2(IsRequest, NeedsResponse), MemSyncResp, "MemSyncReq"},
+    /* MemSyncResp */
+    {SET1(IsResponse), InvalidCmd, "MemSyncResp"},
     /* MemFenceResp -- for synchronization responses */
     {SET1(IsResponse), InvalidCmd, "MemFenceResp"},
     /* Cache Clean Request -- Update with the latest data all existing
