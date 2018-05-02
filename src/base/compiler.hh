@@ -56,6 +56,8 @@
 #  define M5_DEPRECATED __attribute__((deprecated))
 #  define M5_DEPRECATED_MSG(MSG) __attribute__((deprecated(MSG)))
 #  define M5_UNREACHABLE __builtin_unreachable()
+#  define M5_PUBLIC __attribute__ ((visibility ("default")))
+#  define M5_LOCAL __attribute__ ((visibility ("hidden")))
 #endif
 
 #if defined(__clang__)
