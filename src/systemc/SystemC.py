@@ -27,6 +27,15 @@
 
 from m5.SimObject import SimObject
 
+# This class represents the systemc kernel. There should be exactly one in the
+# simulation. It receives gem5 SimObject lifecycle callbacks (init, regStats,
+# etc.) and manages the lifecycle of the systemc simulation accordingly.
+# It also acts as a collecting point for systemc related control functionality.
+class SystemC_Kernel(SimObject):
+    type = 'SystemC_Kernel'
+    cxx_class = 'SystemC::Kernel'
+    cxx_header = 'systemc/kernel.hh'
+
 # This class represents systemc sc_object instances in python config files. It
 # inherits from SimObject in python, but the c++ version, sc_core::sc_object,
 # doesn't inherit from gem5's c++ SimObject class.

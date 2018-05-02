@@ -30,4 +30,6 @@ Import('*')
 if env['USE_SYSTEMC']:
     SimObject('SystemC.py')
 
+    Source('kernel.cc')
+
     Source('sc_object.cc')
