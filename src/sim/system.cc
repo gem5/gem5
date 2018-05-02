@@ -538,10 +538,13 @@ System::_getMasterId(const SimObject* master, std::string master_name)
 std::string
 System::leafMasterName(const SimObject* master, const std::string& submaster)
 {
-    // Get the full master name by appending the submaster name to
-    // the root SimObject master name
-    auto master_name = master->name() + "." + submaster;
-    return master_name;
+    if (submaster.empty()) {
+        return master->name();
+    } else {
+        // Get the full master name by appending the submaster name to
+        // the root SimObject master name
+        return master->name() + "." + submaster;
+    }
 }
 
 std::string
