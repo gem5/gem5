@@ -898,7 +898,7 @@ def cxxMethod(*args, **kwargs):
 
         @wraps(func)
         def py_call(self, *args, **kwargs):
-            return self.func(*args, **kwargs)
+            return func(self, *args, **kwargs)
 
         f = py_call if override else cxx_call
         f.__pybind = PyBindMethod(name, cxx_name=cxx_name, args=args)
