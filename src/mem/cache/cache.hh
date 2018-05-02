@@ -347,6 +347,26 @@ class Cache : public BaseCache
             cmd.isLLSC();
     }
 
+    /*
+     * Handle a timing request that hit in the cache
+     *
+     * @param ptk The request packet
+     * @param blk The referenced block
+     * @param request_time The tick at which the block lookup is compete
+     */
+    void handleTimingReqHit(PacketPtr pkt, CacheBlk *blk, Tick request_time);
+
+    /*
+     * Handle a timing request that missed in the cache
+     *
+     * @param ptk The request packet
+     * @param blk The referenced block
+     * @param forward_time The tick at which we can process dependent requests
+     * @param request_time The tick at which the block lookup is compete
+     */
+    void handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
+                             Tick request_time);
+
     /**
      * Performs the access specified by the request.
      * @param pkt The request to perform.
