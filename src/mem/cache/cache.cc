@@ -1415,7 +1415,6 @@ Cache::recvTimingResp(PacketPtr pkt)
     // First offset for critical word first calculations
     int initial_offset = initial_tgt->pkt->getOffset(blkSize);
 
-    bool from_cache = false;
     MSHR::TargetList targets = mshr->extractServiceableTargets(pkt);
     for (auto &target: targets) {
         Packet *tgt_pkt = target.pkt;
@@ -1436,10 +1435,6 @@ Cache::recvTimingResp(PacketPtr pkt)
                 delete tgt_pkt;
                 break; // skip response
             }
-
-            // keep track of whether we have responded to another
-            // cache
-            from_cache = from_cache || tgt_pkt->fromCache();
 
             // unlike the other packet flows, where data is found in other
             // caches or memory and brought back, write-line requests always
@@ -1572,7 +1567,7 @@ Cache::recvTimingResp(PacketPtr pkt)
         }
     }
 
-    maintainClusivity(from_cache, blk);
+    maintainClusivity(targets.hasFromCache, blk);
 
     if (blk && blk->isValid()) {
         // an invalidate response stemming from a write line request

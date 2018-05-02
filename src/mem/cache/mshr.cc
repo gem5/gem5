@@ -68,7 +68,8 @@ MSHR::MSHR() : downstreamPending(false),
 }
 
 MSHR::TargetList::TargetList()
-    : needsWritable(false), hasUpgrade(false), allocOnFill(false)
+    : needsWritable(false), hasUpgrade(false), allocOnFill(false),
+      hasFromCache(false)
 {}
 
 
@@ -91,6 +92,10 @@ MSHR::TargetList::updateFlags(PacketPtr pkt, Target::Source source,
         // potentially re-evaluate whether we should allocate on a fill or
         // not
         allocOnFill = allocOnFill || alloc_on_fill;
+
+        if (source != Target::FromPrefetcher) {
+            hasFromCache = hasFromCache || pkt->fromCache();
+        }
     }
 }
 
@@ -590,7 +595,7 @@ MSHR::sendPacket(Cache &cache)
 void
 MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
 {
-    ccprintf(os, "%s[%#llx:%#llx](%s) %s %s %s state: %s %s %s %s %s\n",
+    ccprintf(os, "%s[%#llx:%#llx](%s) %s %s %s state: %s %s %s %s %s %s\n",
              prefix, blkAddr, blkAddr + blkSize - 1,
              isSecure ? "s" : "ns",
              isForward ? "Forward" : "",
@@ -600,7 +605,8 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
              inService ? "InSvc" : "",
              downstreamPending ? "DwnPend" : "",
              postInvalidate ? "PostInv" : "",
-             postDowngrade ? "PostDowngr" : "");
+             postDowngrade ? "PostDowngr" : "",
+             hasFromCache() ? "HasFromCache" : "");
 
     if (!targets.empty()) {
         ccprintf(os, "%s  Targets:\n", prefix);
