@@ -169,13 +169,13 @@ BaseTrafficGen::update()
 
         // suppress packets that are not destined for a memory, such as
         // device accesses that could be part of a trace
-        if (system->isMemAddr(pkt->getAddr())) {
+        if (pkt && system->isMemAddr(pkt->getAddr())) {
             numPackets++;
             if (!port.sendTimingReq(pkt)) {
                 retryPkt = pkt;
                 retryPktTick = curTick();
             }
-        } else {
+        } else if (pkt) {
             DPRINTF(TrafficGen, "Suppressed packet %s 0x%x\n",
                     pkt->cmdString(), pkt->getAddr());
 
@@ -229,11 +229,19 @@ BaseTrafficGen::transition()
 void
 BaseTrafficGen::scheduleUpdate()
 {
+    // Has the generator run out of work? In that case, force a
+    // transition if a transition period hasn't been configured.
+    while (activeGenerator &&
+           nextPacketTick == MaxTick && nextTransitionTick == MaxTick) {
+        transition();
+    }
+
+    if (!activeGenerator)
+        return;
+
     // schedule next update event based on either the next execute
     // tick or the next transition, which ever comes first
     const Tick nextEventTick = std::min(nextPacketTick, nextTransitionTick);
-    if (nextEventTick == MaxTick)
-        return;
 
     DPRINTF(TrafficGen, "Next event scheduled at %lld\n", nextEventTick);
 
