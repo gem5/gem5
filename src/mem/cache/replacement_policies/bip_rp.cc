@@ -33,6 +33,7 @@
 #include <memory>
 
 #include "base/random.hh"
+#include "params/BIPRP.hh"
 
 BIPRP::BIPRP(const Params *p)
     : LRURP(p), btp(p->btp)

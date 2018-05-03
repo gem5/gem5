@@ -45,7 +45,8 @@
 #define __MEM_CACHE_REPLACEMENT_POLICIES_BIP_RP_HH__
 
 #include "mem/cache/replacement_policies/lru_rp.hh"
-#include "params/BIPRP.hh"
+
+struct BIPRPParams;
 
 class BIPRP : public LRURP
 {

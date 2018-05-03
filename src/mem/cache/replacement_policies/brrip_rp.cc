@@ -30,10 +30,12 @@
 
 #include "mem/cache/replacement_policies/brrip_rp.hh"
 
+#include <cassert>
 #include <memory>
 
 #include "base/logging.hh" // For fatal_if
 #include "base/random.hh"
+#include "params/BRRIPRP.hh"
 
 BRRIPRP::BRRIPRP(const Params *p)
     : BaseReplacementPolicy(p),

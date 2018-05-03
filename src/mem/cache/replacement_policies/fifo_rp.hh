@@ -38,8 +38,10 @@
 #ifndef __MEM_CACHE_REPLACEMENT_POLICIES_FIFO_RP_HH__
 #define __MEM_CACHE_REPLACEMENT_POLICIES_FIFO_RP_HH__
 
+#include "base/types.hh"
 #include "mem/cache/replacement_policies/base.hh"
-#include "params/FIFORP.hh"
+
+struct FIFORPParams;
 
 class FIFORP : public BaseReplacementPolicy
 {

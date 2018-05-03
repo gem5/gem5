@@ -35,6 +35,8 @@
 
 #include "mem/cache/prefetch/tagged.hh"
 
+#include "params/TaggedPrefetcher.hh"
+
 TaggedPrefetcher::TaggedPrefetcher(const TaggedPrefetcherParams *p)
     : QueuedPrefetcher(p), degree(p->degree)
 {

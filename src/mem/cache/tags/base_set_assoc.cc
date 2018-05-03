@@ -47,9 +47,11 @@
 
 #include "mem/cache/tags/base_set_assoc.hh"
 
+#include <cassert>
 #include <string>
 
 #include "base/intmath.hh"
+#include "mem/request.hh"
 
 BaseSetAssoc::BaseSetAssoc(const Params *p)
     :BaseTags(p), assoc(p->assoc), allocAssoc(p->assoc),

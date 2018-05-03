@@ -40,10 +40,16 @@
 #ifndef __MEM_CACHE_PREFETCH_QUEUED_HH__
 #define __MEM_CACHE_PREFETCH_QUEUED_HH__
 
+#include <cstdint>
 #include <list>
+#include <utility>
 
+#include "base/statistics.hh"
+#include "base/types.hh"
 #include "mem/cache/prefetch/base.hh"
-#include "params/QueuedPrefetcher.hh"
+#include "mem/packet.hh"
+
+struct QueuedPrefetcherParams;
 
 class QueuedPrefetcher : public BasePrefetcher
 {

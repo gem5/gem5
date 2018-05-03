@@ -48,10 +48,11 @@
 
 #include "mem/cache/prefetch/base.hh"
 
-#include <list>
+#include <cassert>
 
 #include "base/intmath.hh"
 #include "mem/cache/base.hh"
+#include "params/BasePrefetcher.hh"
 #include "sim/system.hh"
 
 BasePrefetcher::BasePrefetcher(const BasePrefetcherParams *p)

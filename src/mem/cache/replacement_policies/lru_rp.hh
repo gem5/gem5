@@ -39,7 +39,8 @@
 #define __MEM_CACHE_REPLACEMENT_POLICIES_LRU_RP_HH__
 
 #include "mem/cache/replacement_policies/base.hh"
-#include "params/LRURP.hh"
+
+struct LRURPParams;
 
 class LRURP : public BaseReplacementPolicy
 {

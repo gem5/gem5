@@ -47,6 +47,10 @@
 
 #include "mem/cache/mshr_queue.hh"
 
+#include <cassert>
+
+#include "mem/cache/mshr.hh"
+
 MSHRQueue::MSHRQueue(const std::string &_label,
                      int num_entries, int reserve, int demand_reserve)
     : Queue<MSHR>(_label, num_entries, reserve),

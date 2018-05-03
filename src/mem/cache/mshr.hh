@@ -48,10 +48,16 @@
 #ifndef __MEM_CACHE_MSHR_HH__
 #define __MEM_CACHE_MSHR_HH__
 
+#include <cassert>
+#include <iosfwd>
 #include <list>
+#include <string>
 
 #include "base/printable.hh"
+#include "base/types.hh"
 #include "mem/cache/queue_entry.hh"
+#include "mem/packet.hh"
+#include "sim/core.hh"
 
 class BaseCache;
 

@@ -38,7 +38,8 @@
 #define __MEM_CACHE_REPLACEMENT_POLICIES_RANDOM_RP_HH__
 
 #include "mem/cache/replacement_policies/base.hh"
-#include "params/RandomRP.hh"
+
+struct RandomRPParams;
 
 class RandomRP : public BaseReplacementPolicy
 {

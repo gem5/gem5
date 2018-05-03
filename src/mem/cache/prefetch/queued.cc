@@ -39,8 +39,13 @@
 
 #include "mem/cache/prefetch/queued.hh"
 
+#include <cassert>
+
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "debug/HWPrefetch.hh"
-#include "mem/cache/base.hh"
+#include "mem/request.hh"
+#include "params/QueuedPrefetcher.hh"
 
 QueuedPrefetcher::QueuedPrefetcher(const QueuedPrefetcherParams *p)
     : BasePrefetcher(p), queueSize(p->queue_size), latency(p->latency),

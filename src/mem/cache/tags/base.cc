@@ -48,8 +48,15 @@
 
 #include "mem/cache/tags/base.hh"
 
+#include <cassert>
+
+#include "base/types.hh"
 #include "mem/cache/base.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
+#include "sim/core.hh"
 #include "sim/sim_exit.hh"
+#include "sim/system.hh"
 
 BaseTags::BaseTags(const Params *p)
     : ClockedObject(p), blkSize(p->block_size), blkMask(blkSize - 1),

@@ -30,7 +30,10 @@
 
 #include "mem/cache/replacement_policies/fifo_rp.hh"
 
+#include <cassert>
 #include <memory>
+
+#include "params/FIFORP.hh"
 
 FIFORP::FIFORP(const Params *p)
     : BaseReplacementPolicy(p)

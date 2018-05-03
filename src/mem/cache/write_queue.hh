@@ -45,10 +45,12 @@
 #ifndef __MEM_CACHE_WRITE_QUEUE_HH__
 #define __MEM_CACHE_WRITE_QUEUE_HH__
 
-#include <vector>
+#include <string>
 
+#include "base/types.hh"
 #include "mem/cache/queue.hh"
 #include "mem/cache/write_queue_entry.hh"
+#include "mem/packet.hh"
 
 /**
  * A write queue for all eviction packets, i.e. writebacks and clean

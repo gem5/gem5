@@ -49,12 +49,17 @@
 #ifndef __MEM_CACHE_PREFETCH_BASE_HH__
 #define __MEM_CACHE_PREFETCH_BASE_HH__
 
+#include <cstdint>
+
 #include "base/statistics.hh"
+#include "base/types.hh"
 #include "mem/packet.hh"
-#include "params/BasePrefetcher.hh"
+#include "mem/request.hh"
 #include "sim/clocked_object.hh"
 
 class BaseCache;
+struct BasePrefetcherParams;
+class System;
 
 class BasePrefetcher : public ClockedObject
 {

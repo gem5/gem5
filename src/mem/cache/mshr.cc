@@ -49,15 +49,15 @@
 
 #include "mem/cache/mshr.hh"
 
-#include <algorithm>
 #include <cassert>
 #include <string>
-#include <vector>
 
 #include "base/logging.hh"
+#include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/Cache.hh"
-#include "mem/cache/cache.hh"
+#include "mem/cache/base.hh"
+#include "mem/request.hh"
 #include "sim/core.hh"
 
 MSHR::MSHR() : downstreamPending(false),

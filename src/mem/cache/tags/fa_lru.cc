@@ -53,6 +53,7 @@
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
+#include "mem/cache/base.hh"
 
 FALRU::FALRU(const Params *p)
     : BaseTags(p),

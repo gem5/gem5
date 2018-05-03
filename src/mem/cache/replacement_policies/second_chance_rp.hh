@@ -40,8 +40,10 @@
 #ifndef __MEM_CACHE_REPLACEMENT_POLICIES_SECOND_CHANCE_RP_HH__
 #define __MEM_CACHE_REPLACEMENT_POLICIES_SECOND_CHANCE_RP_HH__
 
+#include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/replacement_policies/fifo_rp.hh"
-#include "params/SecondChanceRP.hh"
+
+struct SecondChanceRPParams;
 
 class SecondChanceRP : public FIFORP
 {

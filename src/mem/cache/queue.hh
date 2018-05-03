@@ -50,10 +50,14 @@
 #define __MEM_CACHE_QUEUE_HH__
 
 #include <cassert>
+#include <string>
 
 #include "base/trace.hh"
+#include "base/types.hh"
 #include "debug/Drain.hh"
 #include "mem/cache/queue_entry.hh"
+#include "mem/packet.hh"
+#include "sim/core.hh"
 #include "sim/drain.hh"
 
 /**

@@ -30,6 +30,10 @@
 
 #include "mem/cache/replacement_policies/second_chance_rp.hh"
 
+#include <cassert>
+
+#include "params/SecondChanceRP.hh"
+
 SecondChanceRP::SecondChanceRP(const Params *p)
     : FIFORP(p)
 {

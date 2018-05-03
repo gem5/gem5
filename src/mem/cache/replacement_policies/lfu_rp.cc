@@ -30,7 +30,10 @@
 
 #include "mem/cache/replacement_policies/lfu_rp.hh"
 
+#include <cassert>
 #include <memory>
+
+#include "params/LFURP.hh"
 
 LFURP::LFURP(const Params *p)
     : BaseReplacementPolicy(p)

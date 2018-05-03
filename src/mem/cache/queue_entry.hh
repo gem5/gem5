@@ -49,6 +49,7 @@
 #ifndef __MEM_CACHE_QUEUE_ENTRY_HH__
 #define __MEM_CACHE_QUEUE_ENTRY_HH__
 
+#include "base/types.hh"
 #include "mem/packet.hh"
 
 class BaseCache;

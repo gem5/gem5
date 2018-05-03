@@ -49,6 +49,9 @@
 #define __MEM_CACHE_TAGS_CACHESET_HH__
 
 #include <cassert>
+#include <vector>
+
+#include "base/types.hh"
 
 /**
  * An associative set of cache blocks.

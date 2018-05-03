@@ -55,7 +55,8 @@
 #define __MEM_CACHE_REPLACEMENT_POLICIES_BRRIP_RP_HH__
 
 #include "mem/cache/replacement_policies/base.hh"
-#include "params/BRRIPRP.hh"
+
+struct BRRIPRPParams;
 
 class BRRIPRP : public BaseReplacementPolicy
 {

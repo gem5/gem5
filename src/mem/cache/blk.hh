@@ -48,9 +48,14 @@
 #ifndef __MEM_CACHE_BLK_HH__
 #define __MEM_CACHE_BLK_HH__
 
+#include <cassert>
+#include <cstdint>
+#include <iosfwd>
 #include <list>
+#include <string>
 
 #include "base/printable.hh"
+#include "base/types.hh"
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"

@@ -37,8 +37,9 @@
 #define __MEM_CACHE_PREFETCH_TAGGED_HH__
 
 #include "mem/cache/prefetch/queued.hh"
-#include "params/TaggedPrefetcher.hh"
+#include "mem/packet.hh"
 
+struct TaggedPrefetcherParams;
 
 class TaggedPrefetcher : public QueuedPrefetcher
 {

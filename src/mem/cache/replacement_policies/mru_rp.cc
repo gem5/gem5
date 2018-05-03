@@ -30,7 +30,10 @@
 
 #include "mem/cache/replacement_policies/mru_rp.hh"
 
+#include <cassert>
 #include <memory>
+
+#include "params/MRURP.hh"
 
 MRURP::MRURP(const Params *p)
     : BaseReplacementPolicy(p)

@@ -48,10 +48,14 @@
 #ifndef __MEM_CACHE_PREFETCH_STRIDE_HH__
 #define __MEM_CACHE_PREFETCH_STRIDE_HH__
 
+#include <string>
 #include <unordered_map>
 
+#include "base/types.hh"
 #include "mem/cache/prefetch/queued.hh"
-#include "params/StridePrefetcher.hh"
+#include "mem/packet.hh"
+
+struct StridePrefetcherParams;
 
 class StridePrefetcher : public QueuedPrefetcher
 {

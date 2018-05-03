@@ -48,10 +48,11 @@
 #ifndef __MEM_CACHE_TAGS_BASE_SET_ASSOC_HH__
 #define __MEM_CACHE_TAGS_BASE_SET_ASSOC_HH__
 
-#include <cassert>
-#include <cstring>
+#include <string>
 #include <vector>
 
+#include "base/logging.hh"
+#include "base/types.hh"
 #include "debug/CacheRepl.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/blk.hh"

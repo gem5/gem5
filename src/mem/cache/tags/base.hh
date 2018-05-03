@@ -49,12 +49,15 @@
 #ifndef __MEM_CACHE_TAGS_BASE_HH__
 #define __MEM_CACHE_TAGS_BASE_HH__
 
+#include <cassert>
 #include <string>
 
 #include "base/callback.hh"
+#include "base/logging.hh"
 #include "base/statistics.hh"
+#include "base/types.hh"
 #include "mem/cache/blk.hh"
-#include "mem/cache/replacement_policies/base.hh"
+#include "mem/packet.hh"
 #include "params/BaseTags.hh"
 #include "sim/clocked_object.hh"
 

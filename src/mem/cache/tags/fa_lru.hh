@@ -49,11 +49,15 @@
 #ifndef __MEM_CACHE_TAGS_FA_LRU_HH__
 #define __MEM_CACHE_TAGS_FA_LRU_HH__
 
-#include <list>
+#include <cstdint>
+#include <string>
 #include <unordered_map>
 
+#include "base/bitfield.hh"
 #include "base/intmath.hh"
-#include "mem/cache/base.hh"
+#include "base/logging.hh"
+#include "base/statistics.hh"
+#include "base/types.hh"
 #include "mem/cache/blk.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/packet.hh"

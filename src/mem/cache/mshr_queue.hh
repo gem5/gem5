@@ -48,10 +48,12 @@
 #ifndef __MEM_CACHE_MSHR_QUEUE_HH__
 #define __MEM_CACHE_MSHR_QUEUE_HH__
 
-#include <vector>
+#include <string>
 
+#include "base/types.hh"
 #include "mem/cache/mshr.hh"
 #include "mem/cache/queue.hh"
+#include "mem/packet.hh"
 
 /**
  * A Class for maintaining a list of pending and allocated memory requests.

@@ -30,8 +30,11 @@
 
 #include "mem/cache/replacement_policies/random_rp.hh"
 
+#include <cassert>
+#include <memory>
+
 #include "base/random.hh"
-#include "mem/cache/blk.hh"
+#include "params/RandomRP.hh"
 
 RandomRP::RandomRP(const Params *p)
     : BaseReplacementPolicy(p)

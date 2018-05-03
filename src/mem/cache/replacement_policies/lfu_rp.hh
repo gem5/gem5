@@ -40,7 +40,8 @@
 #define __MEM_CACHE_REPLACEMENT_POLICIES_LFU_RP_HH__
 
 #include "mem/cache/replacement_policies/base.hh"
-#include "params/LFURP.hh"
+
+struct LFURPParams;
 
 class LFURP : public BaseReplacementPolicy
 {
