@@ -36,6 +36,11 @@ class SystemC_Kernel(SimObject):
     cxx_class = 'SystemC::Kernel'
     cxx_header = 'systemc/kernel.hh'
 
+    def sc_main(self, *args):
+        '''Call the systemc sc_main function with the given string args'''
+        from _m5.systemc import sc_main
+        sc_main(*args)
+
 # This class represents systemc sc_object instances in python config files. It
 # inherits from SimObject in python, but the c++ version, sc_core::sc_object,
 # doesn't inherit from gem5's c++ SimObject class.
