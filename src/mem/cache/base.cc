@@ -632,17 +632,6 @@ BaseCache::recvAtomic(PacketPtr pkt)
 void
 BaseCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
 {
-    if (system->bypassCaches()) {
-        // Packets from the memory side are snoop request and
-        // shouldn't happen in bypass mode.
-        assert(from_cpu_side);
-
-        // The cache should be flushed if we are in cache bypass mode,
-        // so we don't need to check if we need to update anything.
-        memSidePort.sendFunctional(pkt);
-        return;
-    }
-
     Addr blk_addr = pkt->getBlockAddr(blkSize);
     bool is_secure = pkt->isSecure();
     CacheBlk *blk = tags->findBlock(pkt->getAddr(), is_secure);
@@ -2147,6 +2136,11 @@ BaseCache::regStats()
 bool
 BaseCache::CpuSidePort::recvTimingSnoopResp(PacketPtr pkt)
 {
+    // Snoops shouldn't happen when bypassing caches
+    assert(!cache->system->bypassCaches());
+
+    assert(pkt->isResponse());
+
     // Express snoop responses from master to slave, e.g., from L1 to L2
     cache->recvTimingSnoopResp(pkt);
     return true;
@@ -2156,7 +2150,7 @@ BaseCache::CpuSidePort::recvTimingSnoopResp(PacketPtr pkt)
 bool
 BaseCache::CpuSidePort::tryTiming(PacketPtr pkt)
 {
-    if (pkt->isExpressSnoop()) {
+    if (cache->system->bypassCaches() || pkt->isExpressSnoop()) {
         // always let express snoop packets through even if blocked
         return true;
     } else if (blocked || mustSendRetry) {
@@ -2171,7 +2165,15 @@ BaseCache::CpuSidePort::tryTiming(PacketPtr pkt)
 bool
 BaseCache::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
-    if (tryTiming(pkt)) {
+    assert(pkt->isRequest());
+
+    if (cache->system->bypassCaches()) {
+        // Just forward the packet if caches are disabled.
+        // @todo This should really enqueue the packet rather
+        bool M5_VAR_USED success = cache->memSidePort.sendTimingReq(pkt);
+        assert(success);
+        return true;
+    } else if (tryTiming(pkt)) {
         cache->recvTimingReq(pkt);
         return true;
     }
@@ -2181,12 +2183,24 @@ BaseCache::CpuSidePort::recvTimingReq(PacketPtr pkt)
 Tick
 BaseCache::CpuSidePort::recvAtomic(PacketPtr pkt)
 {
-    return cache->recvAtomic(pkt);
+    if (cache->system->bypassCaches()) {
+        // Forward the request if the system is in cache bypass mode.
+        return cache->memSidePort.sendAtomic(pkt);
+    } else {
+        return cache->recvAtomic(pkt);
+    }
 }
 
 void
 BaseCache::CpuSidePort::recvFunctional(PacketPtr pkt)
 {
+    if (cache->system->bypassCaches()) {
+        // The cache should be flushed if we are in cache bypass mode,
+        // so we don't need to check if we need to update anything.
+        cache->memSidePort.sendFunctional(pkt);
+        return;
+    }
+
     // functional request
     cache->functionalAccess(pkt, true);
 }
@@ -2221,6 +2235,9 @@ BaseCache::MemSidePort::recvTimingResp(PacketPtr pkt)
 void
 BaseCache::MemSidePort::recvTimingSnoopReq(PacketPtr pkt)
 {
+    // Snoops shouldn't happen when bypassing caches
+    assert(!cache->system->bypassCaches());
+
     // handle snooping requests
     cache->recvTimingSnoopReq(pkt);
 }
@@ -2228,12 +2245,18 @@ BaseCache::MemSidePort::recvTimingSnoopReq(PacketPtr pkt)
 Tick
 BaseCache::MemSidePort::recvAtomicSnoop(PacketPtr pkt)
 {
+    // Snoops shouldn't happen when bypassing caches
+    assert(!cache->system->bypassCaches());
+
     return cache->recvAtomicSnoop(pkt);
 }
 
 void
 BaseCache::MemSidePort::recvFunctionalSnoop(PacketPtr pkt)
 {
+    // Snoops shouldn't happen when bypassing caches
+    assert(!cache->system->bypassCaches());
+
     // functional snoop (note that in contrast to atomic we don't have
     // a specific functionalSnoop method, as they have the same
     // behaviour regardless)

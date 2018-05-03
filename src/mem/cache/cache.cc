@@ -271,9 +271,6 @@ Cache::recvTimingSnoopResp(PacketPtr pkt)
 {
     DPRINTF(Cache, "%s for %s\n", __func__, pkt->print());
 
-    assert(pkt->isResponse());
-    assert(!system->bypassCaches());
-
     // determine if the response is from a snoop request we created
     // (in which case it should be in the outstandingSnoop), or if we
     // merely forwarded someone else's snoop request
@@ -408,16 +405,6 @@ void
 Cache::recvTimingReq(PacketPtr pkt)
 {
     DPRINTF(CacheTags, "%s tags:\n%s\n", __func__, tags->print());
-
-    assert(pkt->isRequest());
-
-    // Just forward the packet if caches are disabled.
-    if (system->bypassCaches()) {
-        // @todo This should really enqueue the packet rather
-        bool M5_VAR_USED success = memSidePort.sendTimingReq(pkt);
-        assert(success);
-        return;
-    }
 
     promoteWholeLineWrites(pkt);
 
@@ -665,10 +652,6 @@ Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *blk,
 Tick
 Cache::recvAtomic(PacketPtr pkt)
 {
-    // Forward the request if the system is in cache bypass mode.
-    if (system->bypassCaches())
-        return ticksToCycles(memSidePort.sendAtomic(pkt));
-
     promoteWholeLineWrites(pkt);
 
     return BaseCache::recvAtomic(pkt);
@@ -1183,9 +1166,6 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
 {
     DPRINTF(CacheVerbose, "%s: for %s\n", __func__, pkt->print());
 
-    // Snoops shouldn't happen when bypassing caches
-    assert(!system->bypassCaches());
-
     // no need to snoop requests that are not in range
     if (!inRange(pkt->getAddr())) {
         return;
@@ -1309,9 +1289,6 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
 Tick
 Cache::recvAtomicSnoop(PacketPtr pkt)
 {
-    // Snoops shouldn't happen when bypassing caches
-    assert(!system->bypassCaches());
-
     // no need to snoop requests that are not in range.
     if (!inRange(pkt->getAddr())) {
         return 0;
