@@ -299,15 +299,16 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
         // route the response
         pkt->pushSenderState(new SenderState(this));
 
-        DPRINTF(RubyPort, "Request %s 0x%x issued\n", pkt->cmdString(),
+        DPRINTF(RubyPort, "Request %s address %#x issued\n", pkt->cmdString(),
                 pkt->getAddr());
         return true;
     }
 
     if (pkt->cmd != MemCmd::MemFenceReq) {
         DPRINTF(RubyPort,
-                "Request for address %#x did not issued because %s\n",
-                pkt->getAddr(), RequestStatus_to_string(requestStatus));
+                "Request %s for address %#x did not issue because %s\n",
+                pkt->cmdString(), pkt->getAddr(),
+                RequestStatus_to_string(requestStatus));
     }
 
     addToRetryList();
