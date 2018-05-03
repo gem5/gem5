@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2014-2017 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,36 +30,47 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Sooraj Puthoor
+ * Authors: Sooraj Puthoor,
+ *          Anthony Gutierrez
  */
 
-#ifndef __RR_SCHEDULING_POLICY_HH__
-#define __RR_SCHEDULING_POLICY_HH__
+#ifndef __GPU_COMPUTE_RR_SCHEDULING_POLICY_HH__
+#define __GPU_COMPUTE_RR_SCHEDULING_POLICY_HH__
 
-#include <inttypes.h>
-
-#include <cstddef>
-#include <utility>
 #include <vector>
 
-#include "base/logging.hh"
+#include "gpu-compute/scheduling_policy.hh"
+#include "gpu-compute/wavefront.hh"
 
-class Wavefront;
-
-// Round-Robin pick among the list of ready waves
-class RRSchedulingPolicy
+// round-robin pick among the list of ready waves
+class RRSchedulingPolicy final : public __SchedulingPolicy<RRSchedulingPolicy>
 {
   public:
-    RRSchedulingPolicy() : scheduleList(nullptr) { }
+    RRSchedulingPolicy()
+    {
+    }
 
-    Wavefront* chooseWave();
-    void bindList(std::vector<Wavefront*> *list);
+    static Wavefront*
+    __chooseWave(std::vector<Wavefront*> *sched_list)
+    {
+        panic_if(!sched_list->size(), "RR scheduling policy sched list is "
+            "empty.\n");
+        Wavefront *selected_wave(nullptr);
 
-  private:
-    // List of waves which are participating in scheduling.
-    // This scheduler selects one wave from this list based on
-    // round robin policy
-    std::vector<Wavefront*> *scheduleList;
+        /**
+         * For RR policy, select the wave that is at the front of
+         * the list. The selected wave is popped out from the schedule
+         * list immediately after selection to avoid starvation. It
+         * is the responsibility of the module invoking the RR scheduler
+         * to make sure it is scheduling eligible waves are added to the
+         * back of the schedule list.
+         */
+        selected_wave = sched_list->front();
+        panic_if(!selected_wave, "No wave found by RR scheduling policy.\n");
+        sched_list->erase(sched_list->begin());
+
+        return selected_wave;
+    }
 };
 
-#endif // __RR_SCHEDULING_POLICY_HH__
+#endif // __GPU_COMPUTE_RR_SCHEDULING_POLICY_HH__

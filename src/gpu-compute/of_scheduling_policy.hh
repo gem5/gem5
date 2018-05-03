@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Advanced Micro Devices, Inc.
+ * Copyright (c) 2014-2017 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -14,9 +14,9 @@
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
  *
- * 3. Neither the name of the copyright holder nor the names of its contributors
- * may be used to endorse or promote products derived from this software
- * without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,32 +30,54 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Author: Sooraj Puthoor
+ * Authors: Sooraj Puthoor,
+ *          Anthony Gutierrez
  */
 
-#ifndef __OF_SCHEDULING_POLICY_HH__
-#define __OF_SCHEDULING_POLICY_HH__
+#ifndef __GPU_COMPUTE_OF_SCHEDULING_POLICY_HH__
+#define __GPU_COMPUTE_OF_SCHEDULING_POLICY_HH__
 
-#include <cstddef>
 #include <vector>
 
-#include "base/logging.hh"
+#include "gpu-compute/scheduling_policy.hh"
+#include "gpu-compute/wavefront.hh"
 
-class Wavefront;
-
-// Oldest First where age is marked by the wave id
-class OFSchedulingPolicy
+// oldest first where age is marked by the wave id
+class OFSchedulingPolicy final : public __SchedulingPolicy<OFSchedulingPolicy>
 {
   public:
-    OFSchedulingPolicy() : scheduleList(nullptr) { }
+    OFSchedulingPolicy()
+    {
+    }
 
-    Wavefront* chooseWave();
-    void bindList(std::vector<Wavefront*> *list);
+    static Wavefront*
+    __chooseWave(std::vector<Wavefront*> *sched_list)
+    {
+        panic_if(!sched_list->size(), "OF scheduling policy sched list is "
+            "empty.\n");
+        // set when policy choose a wave to schedule
+        Wavefront *selected_wave(nullptr);
+        int selected_wave_id = -1;
+        int selected_position = 0;
 
-  private:
-    // List of waves which are participating in scheduling.
-    // This scheduler selects the oldest wave from this list
-    std::vector<Wavefront*> *scheduleList;
+        for (int position = 0; position < sched_list->size(); ++position) {
+            Wavefront *cur_wave = sched_list->at(position);
+            int cur_wave_id = cur_wave->wfDynId;
+
+            // Choosed wave with the lowest wave ID
+            if (selected_wave_id == -1 || cur_wave_id < selected_wave_id) {
+                selected_wave_id = cur_wave_id;
+                selected_wave = cur_wave;
+                selected_position = position;
+            }
+        }
+
+        // Check to make sure ready list had at least one schedulable wave
+        panic_if(!selected_wave, "No wave found by OF scheduling policy.\n");
+        sched_list->erase(sched_list->begin() + selected_position);
+
+        return selected_wave;
+    }
 };
 
-#endif // __OF_SCHEDULING_POLICY_HH__
+#endif // __GPU_COMPUTE_OF_SCHEDULING_POLICY_HH__

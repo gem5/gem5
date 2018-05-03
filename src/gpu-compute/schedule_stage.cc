@@ -45,8 +45,7 @@ ScheduleStage::ScheduleStage(const ComputeUnitParams *p)
       numMemUnits(p->num_global_mem_pipes + p->num_shared_mem_pipes)
 {
     for (int j = 0; j < numSIMDs + numMemUnits; ++j) {
-        Scheduler newScheduler(p);
-        scheduler.push_back(newScheduler);
+        scheduler.emplace_back(p);
     }
 }
 
