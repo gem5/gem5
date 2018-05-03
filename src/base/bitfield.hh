@@ -71,6 +71,7 @@ T
 bits(T val, int first, int last)
 {
     int nbits = first - last + 1;
+    assert((first - last) >= 0);
     return (val >> last) & mask(nbits);
 }
 
@@ -131,6 +132,7 @@ T
 insertBits(T val, int first, int last, B bit_val)
 {
     T t_bit_val = bit_val;
+    assert((first - last) >= 0);
     T bmask = mask(first - last + 1) << last;
     return ((t_bit_val << last) & bmask) | (val & ~bmask);
 }

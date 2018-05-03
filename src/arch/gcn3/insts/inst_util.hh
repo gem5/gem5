@@ -551,7 +551,7 @@ namespace Gcn3ISA
                              const SDWASelVals sel, const bool signExt)
     {
         // local variables
-        int first_bit = 0, last_bit = 0;
+        int low_bit = 0, high_bit = 0;
         bool signExt_local = signExt;
         T retVal = 0;
 
@@ -566,17 +566,19 @@ namespace Gcn3ISA
               of byte 0, or makes the bits of the selected byte be byte 0 (and
               next either sign extends or zero's out upper bits).
             */
-            first_bit = (sel * Gcn3ISA::BITS_PER_BYTE);
-            last_bit = first_bit + Gcn3ISA::MSB_PER_BYTE;
-            retVal = bits(currOperVal, first_bit, last_bit);
+            low_bit = (sel * Gcn3ISA::BITS_PER_BYTE);
+            high_bit = low_bit + Gcn3ISA::MSB_PER_BYTE;
+            retVal = bits(currOperVal, high_bit, low_bit);
 
             // make sure update propagated, since used next
-            assert(bits(retVal, Gcn3ISA::MSB_PER_BYTE) ==
-                   bits(origOperVal, (sel * Gcn3ISA::BITS_PER_BYTE) +
-                        Gcn3ISA::MSB_PER_BYTE));
+            fatal_if(bits(retVal, Gcn3ISA::MSB_PER_BYTE) !=
+                     bits(origOperVal, high_bit),
+                     "ERROR: SDWA byte update not propagated: retVal: %d, "
+                     "orig: %d\n", bits(retVal, Gcn3ISA::MSB_PER_BYTE),
+                     bits(origOperVal, high_bit));
             // sign extended value depends on upper-most bit of the new byte 0
             signExt_local = (signExt &&
-                             (bits(retVal, 0, Gcn3ISA::MSB_PER_BYTE) & 0x80));
+                             (bits(retVal, Gcn3ISA::MSB_PER_BYTE, 0) & 0x80));
 
             // process all other bytes -- if sign extending, make them 1, else
             // all 0's so leave as is
@@ -589,17 +591,20 @@ namespace Gcn3ISA
               of word 0, or makes the bits of the selected word be word 0 (and
               next either sign extends or zero's out upper bits).
             */
-            first_bit = (sel & 1) * Gcn3ISA::BITS_PER_WORD;
-            last_bit = first_bit + Gcn3ISA::MSB_PER_WORD;
-            retVal = bits(currOperVal, first_bit, last_bit);
+            low_bit = (sel & 1) * Gcn3ISA::BITS_PER_WORD;
+            high_bit = low_bit + Gcn3ISA::MSB_PER_WORD;
+            retVal = bits(currOperVal, high_bit, low_bit);
 
             // make sure update propagated, since used next
-            assert(bits(retVal, Gcn3ISA::MSB_PER_WORD) ==
-                   bits(origOperVal, ((sel & 1) * Gcn3ISA::BITS_PER_WORD) +
-                        Gcn3ISA::MSB_PER_WORD));
+            fatal_if(bits(retVal, Gcn3ISA::MSB_PER_WORD) !=
+                     bits(origOperVal, high_bit),
+                     "ERROR: SDWA word update not propagated: retVal: %d, "
+                     "orig: %d\n",
+                     bits(retVal, Gcn3ISA::MSB_PER_WORD),
+                     bits(origOperVal, high_bit));
             // sign extended value depends on upper-most bit of the new word 0
             signExt_local = (signExt &&
-                             (bits(retVal, 0, Gcn3ISA::MSB_PER_WORD) &
+                             (bits(retVal, Gcn3ISA::MSB_PER_WORD, 0) &
                               0x8000));
 
             // process other word -- if sign extending, make them 1, else all
@@ -659,7 +664,7 @@ namespace Gcn3ISA
                              const SDWADstVals unusedBits_format)
     {
         // local variables
-        int first_bit = 0, last_bit = 0;
+        int low_bit = 0, high_bit = 0;
         bool signExt = (unusedBits_format == SDWA_UNUSED_SEXT);
         //bool pad = (unusedBits_format == SDWA_UNUSED_PAD);
         bool preserve = (unusedBits_format == SDWA_UNUSED_PRESERVE);
@@ -679,11 +684,11 @@ namespace Gcn3ISA
         if (sel < SDWA_WORD_0) { // we are selecting 1 byte
             // if we sign extended depends on upper-most bit of byte 0
             signExt = (signExt &&
-                       (bits(currDstVal, 0, Gcn3ISA::MSB_PER_WORD) & 0x80));
+                       (bits(currDstVal, Gcn3ISA::MSB_PER_WORD, 0) & 0x80));
 
             for (int byte = 0; byte < 4; ++byte) {
-                first_bit = byte * Gcn3ISA::BITS_PER_BYTE;
-                last_bit = first_bit + Gcn3ISA::MSB_PER_BYTE;
+                low_bit = byte * Gcn3ISA::BITS_PER_BYTE;
+                high_bit = low_bit + Gcn3ISA::MSB_PER_BYTE;
                 /*
                   Options:
                     1.  byte == sel: we are keeping all bits in this byte
@@ -692,23 +697,23 @@ namespace Gcn3ISA
                     3.  byte > sel && signExt: we're sign extending and
                     this byte is one of the bytes we need to sign extend
                 */
-                origBits_thisByte = bits(origDstVal, first_bit, last_bit);
-                currBits_thisByte = bits(currDstVal, first_bit, last_bit);
+                origBits_thisByte = bits(origDstVal, high_bit, low_bit);
+                currBits_thisByte = bits(currDstVal, high_bit, low_bit);
                 newBits = ((byte == sel) ? origBits_thisByte :
                            ((preserve) ? currBits_thisByte :
                             (((byte > sel) && signExt) ? 0xff : 0)));
-                retVal = insertBits(retVal, first_bit, last_bit, newBits);
+                retVal = insertBits(retVal, high_bit, low_bit, newBits);
             }
         } else if (sel < SDWA_DWORD) { // we are selecting 1 word
-            first_bit = 0;
-            last_bit = first_bit + Gcn3ISA::MSB_PER_WORD;
+            low_bit = 0;
+            high_bit = low_bit + Gcn3ISA::MSB_PER_WORD;
             // if we sign extended depends on upper-most bit of word 0
             signExt = (signExt &&
-                       (bits(currDstVal, first_bit, last_bit) & 0x8000));
+                       (bits(currDstVal, high_bit, low_bit) & 0x8000));
 
             for (int word = 0; word < 2; ++word) {
-                first_bit = word * Gcn3ISA::BITS_PER_WORD;
-                last_bit = first_bit + Gcn3ISA::MSB_PER_WORD;
+                low_bit = word * Gcn3ISA::BITS_PER_WORD;
+                high_bit = low_bit + Gcn3ISA::MSB_PER_WORD;
                 /*
                   Options:
                     1.  word == sel & 1: we are keeping all bits in this word
@@ -717,12 +722,12 @@ namespace Gcn3ISA
                     3.  word > (sel & 1) && signExt: we're sign extending and
                     this word is one of the words we need to sign extend
                 */
-                origBits_thisWord = bits(origDstVal, first_bit, last_bit);
-                currBits_thisWord = bits(currDstVal, first_bit, last_bit);
+                origBits_thisWord = bits(origDstVal, high_bit, low_bit);
+                currBits_thisWord = bits(currDstVal, high_bit, low_bit);
                 newBits = ((word == (sel & 0x1)) ? origBits_thisWord :
                            ((preserve) ? currBits_thisWord :
                             (((word > (sel & 0x1)) && signExt) ? 0xffff : 0)));
-                retVal = insertBits(retVal, first_bit, last_bit, newBits);
+                retVal = insertBits(retVal, high_bit, low_bit, newBits);
             }
         } else {
             assert(sel != SDWA_DWORD); // should have returned earlier
