@@ -422,6 +422,22 @@ class Cache : public BaseCache
      */
     void recvTimingSnoopResp(PacketPtr pkt);
 
+
+    /**
+     * Handle a request in atomic mode that missed in this cache
+     *
+     * Creates a downstream request, sends it to the memory below and
+     * handles the response. As we are in atomic mode all operations
+     * are performed immediately.
+     *
+     * @param pkt The packet with the requests
+     * @param blk The referenced block
+     * @parma writebacks A list with packets for any performed writebacks
+     * @return Cycles for handling the request
+     */
+    Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *blk,
+                               PacketList &writebacks);
+
     /**
      * Performs the access specified by the request.
      * @param pkt The request to perform.

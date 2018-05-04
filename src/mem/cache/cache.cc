@@ -1067,6 +1067,96 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
 }
 
 
+Cycles
+Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *blk,
+                           PacketList &writebacks)
+{
+    // deal with the packets that go through the write path of
+    // the cache, i.e. any evictions and writes
+    if (pkt->isEviction() || pkt->cmd == MemCmd::WriteClean ||
+        (pkt->req->isUncacheable() && pkt->isWrite())) {
+        Cycles latency = ticksToCycles(memSidePort->sendAtomic(pkt));
+
+        // at this point, if the request was an uncacheable write
+        // request, it has been satisfied by a memory below and the
+        // packet carries the response back
+        assert(!(pkt->req->isUncacheable() && pkt->isWrite()) ||
+               pkt->isResponse());
+
+        return latency;
+    }
+
+    // only misses left
+
+    PacketPtr bus_pkt = createMissPacket(pkt, blk, pkt->needsWritable());
+
+    bool is_forward = (bus_pkt == nullptr);
+
+    if (is_forward) {
+        // just forwarding the same request to the next level
+        // no local cache operation involved
+        bus_pkt = pkt;
+    }
+
+    DPRINTF(Cache, "%s: Sending an atomic %s\n", __func__,
+            bus_pkt->print());
+
+#if TRACING_ON
+    CacheBlk::State old_state = blk ? blk->status : 0;
+#endif
+
+    Cycles latency = ticksToCycles(memSidePort->sendAtomic(bus_pkt));
+
+    bool is_invalidate = bus_pkt->isInvalidate();
+
+    // We are now dealing with the response handling
+    DPRINTF(Cache, "%s: Receive response: %s in state %i\n", __func__,
+            bus_pkt->print(), old_state);
+
+    // If packet was a forward, the response (if any) is already
+    // in place in the bus_pkt == pkt structure, so we don't need
+    // to do anything.  Otherwise, use the separate bus_pkt to
+    // generate response to pkt and then delete it.
+    if (!is_forward) {
+        if (pkt->needsResponse()) {
+            assert(bus_pkt->isResponse());
+            if (bus_pkt->isError()) {
+                pkt->makeAtomicResponse();
+                pkt->copyError(bus_pkt);
+            } else if (pkt->cmd == MemCmd::WriteLineReq) {
+                // note the use of pkt, not bus_pkt here.
+
+                // write-line request to the cache that promoted
+                // the write to a whole line
+                blk = handleFill(pkt, blk, writebacks,
+                                 allocOnFill(pkt->cmd));
+                assert(blk != NULL);
+                is_invalidate = false;
+                satisfyRequest(pkt, blk);
+            } else if (bus_pkt->isRead() ||
+                       bus_pkt->cmd == MemCmd::UpgradeResp) {
+                // we're updating cache state to allow us to
+                // satisfy the upstream request from the cache
+                blk = handleFill(bus_pkt, blk, writebacks,
+                                 allocOnFill(pkt->cmd));
+                satisfyRequest(pkt, blk);
+                maintainClusivity(pkt->fromCache(), blk);
+            } else {
+                // we're satisfying the upstream request without
+                // modifying cache state, e.g., a write-through
+                pkt->makeAtomicResponse();
+            }
+        }
+        delete bus_pkt;
+    }
+
+    if (is_invalidate && blk && blk->isValid()) {
+        invalidateBlock(blk);
+    }
+
+    return latency;
+}
+
 Tick
 Cache::recvAtomic(PacketPtr pkt)
 {
@@ -1118,84 +1208,10 @@ Cache::recvAtomic(PacketPtr pkt)
     // handle writebacks resulting from the access here to ensure they
     // logically proceed anything happening below
     doWritebacksAtomic(writebacks);
+    assert(writebacks.empty());
 
     if (!satisfied) {
-        // MISS
-
-        // deal with the packets that go through the write path of
-        // the cache, i.e. any evictions and writes
-        if (pkt->isEviction() || pkt->cmd == MemCmd::WriteClean ||
-            (pkt->req->isUncacheable() && pkt->isWrite())) {
-            lat += ticksToCycles(memSidePort->sendAtomic(pkt));
-            return lat * clockPeriod();
-        }
-        // only misses left
-
-        PacketPtr bus_pkt = createMissPacket(pkt, blk, pkt->needsWritable());
-
-        bool is_forward = (bus_pkt == nullptr);
-
-        if (is_forward) {
-            // just forwarding the same request to the next level
-            // no local cache operation involved
-            bus_pkt = pkt;
-        }
-
-        DPRINTF(Cache, "%s: Sending an atomic %s\n", __func__,
-                bus_pkt->print());
-
-#if TRACING_ON
-        CacheBlk::State old_state = blk ? blk->status : 0;
-#endif
-
-        lat += ticksToCycles(memSidePort->sendAtomic(bus_pkt));
-
-        bool is_invalidate = bus_pkt->isInvalidate();
-
-        // We are now dealing with the response handling
-        DPRINTF(Cache, "%s: Receive response: %s in state %i\n", __func__,
-                bus_pkt->print(), old_state);
-
-        // If packet was a forward, the response (if any) is already
-        // in place in the bus_pkt == pkt structure, so we don't need
-        // to do anything.  Otherwise, use the separate bus_pkt to
-        // generate response to pkt and then delete it.
-        if (!is_forward) {
-            if (pkt->needsResponse()) {
-                assert(bus_pkt->isResponse());
-                if (bus_pkt->isError()) {
-                    pkt->makeAtomicResponse();
-                    pkt->copyError(bus_pkt);
-                } else if (pkt->cmd == MemCmd::WriteLineReq) {
-                    // note the use of pkt, not bus_pkt here.
-
-                    // write-line request to the cache that promoted
-                    // the write to a whole line
-                    blk = handleFill(pkt, blk, writebacks,
-                                     allocOnFill(pkt->cmd));
-                    assert(blk != NULL);
-                    is_invalidate = false;
-                    satisfyRequest(pkt, blk);
-                } else if (bus_pkt->isRead() ||
-                           bus_pkt->cmd == MemCmd::UpgradeResp) {
-                    // we're updating cache state to allow us to
-                    // satisfy the upstream request from the cache
-                    blk = handleFill(bus_pkt, blk, writebacks,
-                                     allocOnFill(pkt->cmd));
-                    satisfyRequest(pkt, blk);
-                    maintainClusivity(pkt->fromCache(), blk);
-                } else {
-                    // we're satisfying the upstream request without
-                    // modifying cache state, e.g., a write-through
-                    pkt->makeAtomicResponse();
-                }
-            }
-            delete bus_pkt;
-        }
-
-        if (is_invalidate && blk && blk->isValid()) {
-            invalidateBlock(blk);
-        }
+        lat += handleAtomicReqMiss(pkt, blk, writebacks);
     }
 
     // Note that we don't invoke the prefetcher at all in atomic mode.
