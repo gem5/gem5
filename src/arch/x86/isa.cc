@@ -145,7 +145,7 @@ ISA::readMiscReg(int miscReg, ThreadContext * tc)
     if (miscReg == MISCREG_FSW) {
         MiscReg fsw = regVal[MISCREG_FSW];
         MiscReg top = regVal[MISCREG_X87_TOP];
-        return insertBits(fsw, 11, 13, top);
+        return insertBits(fsw, 13, 11, top);
     }
 
     return readMiscRegNoEffect(miscReg);

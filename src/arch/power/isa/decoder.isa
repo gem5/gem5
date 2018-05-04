@@ -158,8 +158,8 @@ decode OPCODE default Unknown::unknown() {
             508: cmpb({{
                 uint32_t val = 0;
                 for (int n = 0; n < 32; n += 8) {
-                    if(bits(Rs, n, n+7) == bits(Rb, n, n+7)) {
-                        val = insertBits(val, n, n+7, 0xff);
+                    if(bits(Rs, n+7, n) == bits(Rb, n+7, n)) {
+                        val = insertBits(val, n+7, n, 0xff);
                     }
                 }
                 Ra = val;
@@ -580,8 +580,8 @@ decode OPCODE default Unknown::unknown() {
                         for (int i = 0; i < 8; ++i) {
                             if (bits(FLM, i) == 1) {
                                 int k = 4 * (i + (8 * (1 - W_FIELD)));
-                                FPSCR = insertBits(FPSCR, k, k + 3,
-                                                   bits(Fb_uq, k, k + 3));
+                                FPSCR = insertBits(FPSCR, k + 3, k,
+                                                   bits(Fb_uq, k + 3, k));
                             }
                         }
                     }
