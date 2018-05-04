@@ -28746,8 +28746,40 @@ namespace Gcn3ISA
     void
     Inst_VOP3__V_DIV_SCALE_F32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandF32 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandF32 src1(gpuDynInst, extData.SRC1);
+        ConstVecOperandF32 src2(gpuDynInst, extData.SRC2);
+        ScalarOperandU64 vcc(gpuDynInst, instData.SDST);
+        VecOperandF32 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.readSrc();
+        src2.readSrc();
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        if (extData.NEG & 0x4) {
+            src2.negModifier();
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = src0[lane];
+                vcc.setBit(lane, 0);
+            }
+        }
+
+        vcc.write();
+        vdst.write();
+    } // execute
+    // --- Inst_VOP3__V_DIV_SCALE_F64 class methods ---
 
     Inst_VOP3__V_DIV_SCALE_F64::Inst_VOP3__V_DIV_SCALE_F64(
           InFmt_VOP3_SDST_ENC *iFmt)
