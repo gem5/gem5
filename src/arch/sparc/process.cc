@@ -375,9 +375,9 @@ SparcProcess::argsInit(int pageSize)
     // Copy the aux stuff
     for (int x = 0; x < auxv.size(); x++) {
         initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
-                (uint8_t*)&(auxv[x].a_type), intSize);
+                (uint8_t*)&(auxv[x].getAuxType()), intSize);
         initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
-                (uint8_t*)&(auxv[x].a_val), intSize);
+                (uint8_t*)&(auxv[x].getAuxVal()), intSize);
     }
 
     // Write out the terminating zeroed auxilliary vector

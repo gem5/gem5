@@ -37,40 +37,51 @@
 #define __AUX_VECTOR_HH__
 
 template<class IntType>
-struct AuxVector
+class AuxVector
 {
-    IntType a_type;
-    IntType a_val;
-
-    AuxVector()
-    {}
-
+  public:
+    AuxVector() = default;
     AuxVector(IntType type, IntType val);
+
+    IntType const& getAuxType() const { return _auxType; }
+    IntType const& getAuxVal() const { return _auxVal; }
+    IntType const& getHostAuxType() const { return _auxHostType; }
+    IntType const& getHostAuxVal() const { return _auxHostVal; }
+
+    void setAuxType(IntType type);
+    void setAuxVal(IntType val);
+
+  private:
+    IntType _auxType = 0;
+    IntType _auxVal = 0;
+    IntType _auxHostType = 0;
+    IntType _auxHostVal = 0;
 };
 
 enum AuxiliaryVectorType {
-    M5_AT_NULL = 0,
-    M5_AT_IGNORE = 1,
-    M5_AT_EXECFD = 2,
-    M5_AT_PHDR = 3,
-    M5_AT_PHENT = 4,
-    M5_AT_PHNUM = 5,
-    M5_AT_PAGESZ = 6,
-    M5_AT_BASE = 7,
-    M5_AT_FLAGS = 8,
-    M5_AT_ENTRY = 9,
-    M5_AT_NOTELF = 10,
-    M5_AT_UID = 11,
-    M5_AT_EUID = 12,
-    M5_AT_GID = 13,
-    M5_AT_EGID = 14,
-    M5_AT_PLATFORM = 15,
-    M5_AT_HWCAP = 16,
-    M5_AT_CLKTCK = 17,
-    M5_AT_SECURE = 23,
-    M5_BASE_PLATFORM = 24,
-    M5_AT_RANDOM = 25,
-    M5_AT_EXECFN = 31,
+    M5_AT_NULL = 0,        // End of vector.
+    M5_AT_IGNORE = 1,      // Ignored.
+    M5_AT_EXECFD = 2,      // File descriptor of program if interpreter used.
+    M5_AT_PHDR = 3,        // Address of program header tables in memory.
+    M5_AT_PHENT = 4,       // Size in bytes of one program header entry.
+    M5_AT_PHNUM = 5,       // Number of entries in program header table.
+    M5_AT_PAGESZ = 6,      // System page size.
+    M5_AT_BASE = 7,        // Base address of interpreter program in memory.
+    M5_AT_FLAGS = 8,       // Unused.
+    M5_AT_ENTRY = 9,       // Entry point of program after interpreter setup.
+    M5_AT_NOTELF = 10,     // Non-zero if format is different than ELF.
+    M5_AT_UID = 11,        // Address of real user ID of thread.
+    M5_AT_EUID = 12,       // Address of effective user ID of thread.
+    M5_AT_GID = 13,        // Address of real group ID of thread.
+    M5_AT_EGID = 14,       // Address of effective group ID of thread.
+    M5_AT_PLATFORM = 15,   // Platform string for the architecture.
+    M5_AT_HWCAP = 16,      // Bits which describe the hardware capabilities.
+    M5_AT_CLKTCK = 17,     // Frequency at which times() syscall increments.
+    M5_AT_SECURE = 23,     // Whether to enable "secure mode" in executable.
+    M5_BASE_PLATFORM = 24, // Platform string (differs on PowerPC only).
+    M5_AT_RANDOM = 25,     // Pointer to 16 bytes of random data.
+    M5_AT_HWCAP2 = 26,     // Extension of AT_HWCAP.
+    M5_AT_EXECFN = 31,     // Filename of the program.
     M5_AT_VECTOR_SIZE = 44
 };
 

@@ -68,10 +68,25 @@
 
 template<class IntType>
 AuxVector<IntType>::AuxVector(IntType type, IntType val)
+    : _auxType(TheISA::htog(type)), _auxVal(TheISA::htog(val)),
+      _auxHostType(type), _auxHostVal(val)
+{ }
+
+template<class IntType>
+inline void
+AuxVector<IntType>::setAuxType(IntType type)
 {
-    a_type = TheISA::htog(type);
-    a_val = TheISA::htog(val);
+    _auxType = TheISA::htog(type);
+    _auxHostType = type;
 }
 
-template struct AuxVector<uint32_t>;
-template struct AuxVector<uint64_t>;
+template<class IntType>
+inline void
+AuxVector<IntType>::setAuxVal(IntType val)
+{
+    _auxVal = TheISA::htog(val);
+    _auxHostVal = val;
+}
+
+template class AuxVector<uint32_t>;
+template class AuxVector<uint64_t>;

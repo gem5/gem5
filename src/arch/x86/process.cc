@@ -1000,20 +1000,22 @@ X86Process::argsInit(int pageSize,
     initVirtMem.writeString(file_name_base, filename.c_str());
 
     // Fix up the aux vectors which point to data
-    assert(auxv[auxv.size() - 3].a_type == M5_AT_RANDOM);
-    auxv[auxv.size() - 3].a_val = aux_data_base;
-    assert(auxv[auxv.size() - 2].a_type == M5_AT_EXECFN);
-    auxv[auxv.size() - 2].a_val = argv_array_base;
-    assert(auxv[auxv.size() - 1].a_type == M5_AT_PLATFORM);
-    auxv[auxv.size() - 1].a_val = aux_data_base + numRandomBytes;
+    assert(auxv[auxv.size() - 3].getHostAuxType() == M5_AT_RANDOM);
+    auxv[auxv.size() - 3].setAuxVal(aux_data_base);
+    assert(auxv[auxv.size() - 2].getHostAuxType() == M5_AT_EXECFN);
+    auxv[auxv.size() - 2].setAuxVal(argv_array_base);
+    assert(auxv[auxv.size() - 1].getHostAuxType() == M5_AT_PLATFORM);
+    auxv[auxv.size() - 1].setAuxVal(aux_data_base + numRandomBytes);
 
 
     // Copy the aux stuff
     for (int x = 0; x < auxv.size(); x++) {
         initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
-                (uint8_t*)&(auxv[x].a_type), intSize);
+                              (uint8_t*)&(auxv[x].getAuxType()),
+                              intSize);
         initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
-                (uint8_t*)&(auxv[x].a_val), intSize);
+                              (uint8_t*)&(auxv[x].getAuxVal()),
+                              intSize);
     }
     // Write out the terminating zeroed auxiliary vector
     const uint64_t zero = 0;
