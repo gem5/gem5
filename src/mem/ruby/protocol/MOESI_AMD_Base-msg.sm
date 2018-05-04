@@ -136,6 +136,7 @@ structure(CPURequestMsg, desc="...", interface="Message") {
   WriteMask writeMask, desc="Write Through Data";
   MachineID WTRequestor,            desc="Node who initiated the write through";
   int wfid,                         default="0", desc="wavefront id";
+  uint64_t instSeqNum,              desc="instruction sequence number";
   bool NoWriteConflict,             default="true", desc="write collided with CAB entry";
   int ProgramCounter,               desc="PC that accesses to this block";
 
@@ -188,6 +189,7 @@ structure(TDProbeRequestMsg, desc="...", interface="Message") {
   MessageSizeType MessageSize, desc="size category of the message";
   int Phase,              desc="Synchronization Phase";
   int wfid,               desc="wavefront id for Release";
+  uint64_t instSeqNum,    desc="instruction sequence number";
   MachineID Requestor,    desc="Node who initiated the request";
 
   bool functionalRead(Packet *pkt) {
@@ -242,6 +244,7 @@ structure(ResponseMsg, desc="...", interface="Message") {
   bool NoAckNeeded, default="false", desc="For short circuting acks";
   bool isValid, default="false", desc="Is acked block valid";
   int wfid, default="0", desc="wavefront id";
+  uint64_t instSeqNum,    desc="instruction sequence number";
   int Phase,                   desc="Synchronization Phase";
 
   int ProgramCounter,       desc="PC that issues this request";
@@ -343,6 +346,7 @@ structure(FifoMsg, desc="...", interface="Message") {
   Addr addr,          desc="Address";
   FifoType Type,            desc="WriteThrough/WriteFlush";
   int wfid,                 default="0",desc="wavefront id";
+  uint64_t instSeqNum,      desc="instruction sequence number";
   MachineID Requestor,      desc="Flush Requestor";
   MachineID oRequestor,      desc="original Flush Requestor";
 

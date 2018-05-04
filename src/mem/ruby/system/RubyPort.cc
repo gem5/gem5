@@ -272,6 +272,10 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
                RubySystem::getBlockSizeBytes());
     }
 
+    // Save the port in the sender state object to be used later to
+    // route the response
+    pkt->pushSenderState(new SenderState(this));
+
     // Submit the ruby request
     RequestStatus requestStatus = ruby_port->makeRequest(pkt);
 
@@ -279,16 +283,16 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
     // Otherwise, we need to tell the port to retry at a later point
     // and return false.
     if (requestStatus == RequestStatus_Issued) {
-        // Save the port in the sender state object to be used later to
-        // route the response
-        pkt->pushSenderState(new SenderState(this));
-
-        DPRINTF(RubyPort, "Request %s address %#x issued\n", pkt->cmdString(),
+        DPRINTF(RubyPort, "Request %s 0x%x issued\n", pkt->cmdString(),
                 pkt->getAddr());
         return true;
     }
 
-    if (pkt->cmd != MemCmd::MemFenceReq) {
+    // pop off sender state as this request failed to issue
+    SenderState *ss = safe_cast<SenderState *>(pkt->popSenderState());
+    delete ss;
+
+    if (pkt->cmd != MemCmd::MemSyncReq) {
         DPRINTF(RubyPort,
                 "Request %s for address %#x did not issue because %s\n",
                 pkt->cmdString(), pkt->getAddr(),
@@ -558,7 +562,7 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
     }
 
     // turn packet around to go back to requester if response expected
-    if (needsResponse) {
+    if (needsResponse || pkt->isResponse()) {
         DPRINTF(RubyPort, "Sending packet back over port\n");
         // Send a response in the same cycle. There is no need to delay the
         // response because the response latency is already incurred in the

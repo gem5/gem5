@@ -56,9 +56,6 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   state_declaration(State, desc="TCP Cache States", default="TCP_State_I") {
     I, AccessPermission:Invalid, desc="Invalid";
     V, AccessPermission:Read_Only, desc="Valid";
-    W, AccessPermission:Read_Write, desc="Written";
-    M, AccessPermission:Read_Write, desc="Written and Valid";
-    L, AccessPermission:Read_Write, desc="Local access is modifable";
     A, AccessPermission:Invalid, desc="Waiting on Atomic";
   }
 
@@ -67,7 +64,6 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     Load,           desc="Load";
     Store,          desc="Store to L1 (L1 is dirty)";
     StoreThrough,   desc="Store directly to L2(L1 is clean)";
-    StoreLocal,     desc="Store to L1 but L1 is clean";
     Atomic,         desc="Atomic";
     Flush,          desc="Flush if dirty(wbL1 for Store Release)";
     Evict,          desc="Evict if clean(invL1 for Load Acquire)";
@@ -264,7 +260,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
         if (in_msg.Type == CoherenceResponseType:TDSysResp) {
           // disable L1 cache
           if (disableL1) {
-	    trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
+	          trigger(Event:Bypass, in_msg.addr, cache_entry, tbe);
           } else {
             if (is_valid(cache_entry) || L1cache.cacheAvail(in_msg.addr)) {
               trigger(Event:TCC_Ack, in_msg.addr, cache_entry, tbe);
@@ -291,18 +287,16 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
         DPRINTF(RubySlicc, "%s\n", in_msg);
         if (in_msg.Type == RubyRequestType:LD) {
           trigger(Event:Load, in_msg.LineAddress, cache_entry, tbe);
-        } else if (in_msg.Type == RubyRequestType:ATOMIC) {
+        } else if (in_msg.Type == RubyRequestType:ATOMIC ||
+                   in_msg.Type == RubyRequestType:ATOMIC_RETURN ||
+                   in_msg.Type == RubyRequestType:ATOMIC_NO_RETURN) {
           trigger(Event:Atomic, in_msg.LineAddress, cache_entry, tbe);
         } else if (in_msg.Type == RubyRequestType:ST) {
           if(disableL1) {
             trigger(Event:StoreThrough, in_msg.LineAddress, cache_entry, tbe);
           } else {
             if (is_valid(cache_entry) || L1cache.cacheAvail(in_msg.LineAddress)) {
-              if (WB) {
-                trigger(Event:Store, in_msg.LineAddress, cache_entry, tbe);
-              } else {
-                trigger(Event:StoreThrough, in_msg.LineAddress, cache_entry, tbe);
-              }
+              trigger(Event:StoreThrough, in_msg.LineAddress, cache_entry, tbe);
             } else {
               Addr victim := L1cache.cacheProbe(in_msg.LineAddress);
               trigger(Event:Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
@@ -314,16 +308,6 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
             trigger(Event:Evict, in_msg.LineAddress, cache_entry, tbe);
         } else {
           error("Unexpected Request Message from VIC");
-          if (is_valid(cache_entry) || L1cache.cacheAvail(in_msg.LineAddress)) {
-            if (WB) {
-                trigger(Event:Store, in_msg.LineAddress, cache_entry, tbe);
-            } else {
-                trigger(Event:StoreThrough, in_msg.LineAddress, cache_entry, tbe);
-            }
-          } else {
-            Addr victim := L1cache.cacheProbe(in_msg.LineAddress);
-            trigger(Event:Repl, victim, getCacheEntry(victim), TBEs.lookup(victim));
-          }
         }
       }
     }
@@ -415,6 +399,11 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
       out_msg.Type := CoherenceRequestType:WriteThrough;
       out_msg.InitialRequestTime := curCycle();
       out_msg.Shared := false;
+
+      // forward inst sequence number to lower TCC
+      peek(mandatoryQueue_in, RubyRequest) {
+        out_msg.instSeqNum := in_msg.instSeqNum;
+      }
     }
   }
 
@@ -475,6 +464,11 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     }
   }
 
+  action(ad_atomicDone, "ad", desc="atomic done") {
+    assert(is_valid(cache_entry));
+    coalescer.atomicCallback(address, MachineType:L1Cache, cache_entry.DataBlk);
+  }
+
   action(s_storeDone, "s", desc="local store done") {
     assert(is_valid(cache_entry));
 
@@ -491,37 +485,19 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
         DPRINTF(RubySlicc, "Sequencer does not define invCallback!\n");
         assert(false);
     } else {
-      coalescer.invCallback(address);
-    }
-  }
-
-  action(wb_wbDone, "wb", desc="local wb done") {
-    if (inFlush == true) {
-      Fcnt := Fcnt + 1;
-      if (Fcnt > WTcnt) {
-        if (use_seq_not_coal) {
-            DPRINTF(RubySlicc, "Sequencer does not define wbCallback!\n");
-            assert(false);
-        } else {
-          coalescer.wbCallback(address);
-        }
-        Fcnt := Fcnt - 1;
-      }
-      if (WTcnt == 0 && Fcnt == 0) {
-        inFlush := false;
-        APPEND_TRANSITION_COMMENT(" inFlush is false");
-      }
+      coalescer.invTCPCallback(address);
     }
   }
 
   action(wd_wtDone, "wd", desc="writethrough done") {
-    WTcnt := WTcnt - 1;
-    if (inFlush == true) {
-      Fcnt := Fcnt -1;
+    if (use_seq_not_coal) {
+      DPRINTF(RubySlicc, "Sequencer does not define writeCompleteCallback!\n");
+      assert(false);
+    } else {
+      peek(responseToTCP_in, ResponseMsg) {
+        coalescer.writeCompleteCallback(address, in_msg.instSeqNum);
+      }
     }
-    assert(WTcnt >= 0);
-    APPEND_TRANSITION_COMMENT("write-- = ");
-    APPEND_TRANSITION_COMMENT(WTcnt);
   }
 
   action(dw_dirtyWrite, "dw", desc="update write mask"){
@@ -562,18 +538,18 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   // Stalling transitions do NOT check the tag array...and if they do,
   // they can cause a resource stall deadlock!
 
-  transition({A}, {Load, Store, Atomic, StoreThrough}) { //TagArrayRead} {
+  transition({A}, {Load, Atomic, StoreThrough}) { //TagArrayRead} {
       z_stall;
-  }
-
-  transition({M, V, L}, Load) {TagArrayRead, DataArrayRead} {
-    l_loadDone;
-    mru_updateMRU;
-    p_popMandatoryQueue;
   }
 
   transition(I, Load) {TagArrayRead} {
     n_issueRdBlk;
+    p_popMandatoryQueue;
+  }
+
+  transition(V, Load) {TagArrayRead, DataArrayRead} {
+    l_loadDone;
+    mru_updateMRU;
     p_popMandatoryQueue;
   }
 
@@ -584,55 +560,6 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     p_popMandatoryQueue;
   }
 
-  transition({M, W}, Atomic, A) {TagArrayRead, TagArrayWrite} {
-    wt_writeThrough;
-    t_allocateTBE;
-    at_atomicThrough;
-    ic_invCache;
-  }
-
-  transition(W, Load, I) {TagArrayRead, DataArrayRead} {
-    wt_writeThrough;
-    norl_issueRdBlkOrloadDone;
-    p_popMandatoryQueue;
-  }
-
-  transition({I}, StoreLocal, L) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
-    a_allocate;
-    dw_dirtyWrite;
-    s_storeDone;
-    p_popMandatoryQueue;
-  }
-
-  transition({L, V}, StoreLocal, L) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
-    dw_dirtyWrite;
-    mru_updateMRU;
-    s_storeDone;
-    p_popMandatoryQueue;
-  }
-
-  transition(I, Store, W) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
-    a_allocate;
-    dw_dirtyWrite;
-    s_storeDone;
-    p_popMandatoryQueue;
-  }
-
-  transition(V, Store, M) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
-    dw_dirtyWrite;
-    mru_updateMRU;
-    s_storeDone;
-    p_popMandatoryQueue;
-  }
-
-  transition({M, W}, Store) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
-    dw_dirtyWrite;
-    mru_updateMRU;
-    s_storeDone;
-    p_popMandatoryQueue;
-  }
-
-  //M,W should not see storeThrough
   transition(I, StoreThrough) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     a_allocate;
     dw_dirtyWrite;
@@ -642,7 +569,7 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     p_popMandatoryQueue;
   }
 
-  transition({V,L}, StoreThrough, I) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
+  transition(V, StoreThrough, I) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     dw_dirtyWrite;
     s_storeDone;
     wt_writeThrough;
@@ -672,18 +599,12 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     d_deallocateTBE;
     a_allocate;
     w_writeCache;
-    s_storeDone;
+    ad_atomicDone;
     pr_popResponseQueue;
     ic_invCache;
   }
 
   transition(V, TCC_Ack, V) {TagArrayRead, DataArrayRead, DataArrayWrite} {
-    w_writeCache;
-    l_loadDone;
-    pr_popResponseQueue;
-  }
-
-  transition({W, M}, TCC_Ack, M) {TagArrayRead, TagArrayWrite, DataArrayRead, DataArrayWrite} {
     w_writeCache;
     l_loadDone;
     pr_popResponseQueue;
@@ -697,26 +618,8 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     ic_invCache;
   }
 
-  transition({W, M}, Repl, I) {TagArrayRead, TagArrayWrite, DataArrayRead} {
-    wt_writeThrough;
-    ic_invCache;
-  }
-
-  transition(L, Repl, I) {TagArrayRead, TagArrayWrite, DataArrayRead} {
-    wt_writeThrough;
-    ic_invCache;
-  }
-
-  transition({W, M}, Flush, I) {TagArrayRead, TagArrayWrite, DataArrayRead} {
+  transition({V, I, A},Flush) {TagArrayFlash} {
     sf_setFlush;
-    wt_writeThrough;
-    ic_invCache;
-    p_popMandatoryQueue;
-  }
-
-  transition({V, I, A, L},Flush) {TagArrayFlash} {
-    sf_setFlush;
-    wb_wbDone;
     p_popMandatoryQueue;
   }
 
@@ -726,20 +629,14 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     ic_invCache;
   }
 
-  transition({W, M}, Evict, W) {TagArrayFlash} {
-    inv_invDone;
-    p_popMandatoryQueue;
-  }
-
-  transition({A, L}, Evict) {TagArrayFlash} {
+  transition(A, Evict) {TagArrayFlash} {
     inv_invDone;
     p_popMandatoryQueue;
   }
 
   // TCC_AckWB only snoops TBE
-  transition({V, I, A, M, W, L}, TCC_AckWB) {
+  transition({V, I, A}, TCC_AckWB) {
     wd_wtDone;
-    wb_wbDone;
     pr_popResponseQueue;
   }
 }

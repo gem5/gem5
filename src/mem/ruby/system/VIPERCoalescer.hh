@@ -57,19 +57,31 @@ class VIPERCoalescer : public GPUCoalescer
     typedef VIPERCoalescerParams Params;
     VIPERCoalescer(const Params *);
     ~VIPERCoalescer();
-
-    void issueMemSyncRequest(PacketPtr pkt) override;
-    void issueRequest(CoalescedRequest* crequest) override;
-    void wbCallback(Addr address);
-    void invCallback(Addr address);
+    void writeCompleteCallback(Addr address, uint64_t instSeqNum);
+    void invTCPCallback(Addr address);
     RequestStatus makeRequest(PacketPtr pkt) override;
+    void issueRequest(CoalescedRequest* crequest) override;
+
   private:
-    void invL1();
-    void wbL1();
-    void invwbL1();
-    uint64_t m_outstanding_inv;
-    uint64_t m_outstanding_wb;
-    uint64_t m_max_inv_per_cycle;
-    uint64_t m_max_wb_per_cycle;
+    void invTCP();
+
+    // make write-complete response packets from original write request packets
+    void makeWriteCompletePkts(CoalescedRequest* crequest);
+
+    // current cache invalidation packet
+    // nullptr if there is no active cache invalidation request
+    PacketPtr m_cache_inv_pkt;
+
+    // number of remaining cache lines to be invalidated in TCP
+    int m_num_pending_invs;
+
+    // a map of instruction sequence number and corresponding pending
+    // write-complete response packets. Each write-complete response
+    // corresponds to a pending store request that is waiting for
+    // writeCompleteCallback. We may have multiple pending store requests per
+    // wavefront at a time. Each time writeCompleteCallback is called, an entry
+    // with a corresponding seqNum is popped off from map and returned to
+    // compute unit.
+    std::unordered_map<uint64_t, std::vector<PacketPtr>> m_writeCompletePktMap;
 };
 #endif //__MEM_RUBY_SYSTEM_VIPERCOALESCER_HH__

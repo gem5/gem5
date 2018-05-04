@@ -56,6 +56,7 @@ class RubyRequest : public Message
     WriteMask m_writeMask;
     DataBlock m_WTData;
     int m_wfid;
+    uint64_t m_instSeqNum;
 
     RubyRequest(Tick curTime, uint64_t _paddr, uint8_t* _data, int _len,
         uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
@@ -80,7 +81,8 @@ class RubyRequest : public Message
         RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
         unsigned _proc_id, unsigned _core_id,
         int _wm_size, std::vector<bool> & _wm_mask,
-        DataBlock & _Data)
+        DataBlock & _Data,
+        uint64_t _instSeqNum = 0)
         : Message(curTime),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
@@ -93,7 +95,8 @@ class RubyRequest : public Message
           m_contextId(_core_id),
           m_writeMask(_wm_size,_wm_mask),
           m_WTData(_Data),
-          m_wfid(_proc_id)
+          m_wfid(_proc_id),
+          m_instSeqNum(_instSeqNum)
     {
         m_LineAddress = makeLineAddress(m_PhysicalAddress);
     }
@@ -104,7 +107,8 @@ class RubyRequest : public Message
         unsigned _proc_id, unsigned _core_id,
         int _wm_size, std::vector<bool> & _wm_mask,
         DataBlock & _Data,
-        std::vector< std::pair<int,AtomicOpFunctor*> > _atomicOps)
+        std::vector< std::pair<int,AtomicOpFunctor*> > _atomicOps,
+        uint64_t _instSeqNum = 0)
         : Message(curTime),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
@@ -117,7 +121,8 @@ class RubyRequest : public Message
           m_contextId(_core_id),
           m_writeMask(_wm_size,_wm_mask,_atomicOps),
           m_WTData(_Data),
-          m_wfid(_proc_id)
+          m_wfid(_proc_id),
+          m_instSeqNum(_instSeqNum)
     {
         m_LineAddress = makeLineAddress(m_PhysicalAddress);
     }

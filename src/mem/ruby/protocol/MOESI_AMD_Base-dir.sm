@@ -514,6 +514,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
         out_msg.InitialRequestTime := in_msg.InitialRequestTime;
         out_msg.ForwardRequestTime := curCycle();
         out_msg.ProbeRequestStartTime := curCycle();
+        out_msg.instSeqNum := in_msg.instSeqNum;
       }
     }
   }

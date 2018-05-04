@@ -506,8 +506,6 @@ GPUCoalescer::hitCallback(CoalescedRequest* crequest,
         }
     }
 
-
-
     m_outstanding_count--;
     assert(m_outstanding_count >= 0);
 
@@ -555,25 +553,24 @@ GPUCoalescer::makeRequest(PacketPtr pkt)
     assert(pkt->req->hasInstSeqNum());
 
     if (pkt->cmd == MemCmd::MemSyncReq) {
-        // issue mem_sync requests immedidately to the cache system without
-        // going though uncoalescedTable like normal LD/ST/Atomic requests
-        issueMemSyncRequest(pkt);
-    } else {
-        // otherwise, this must be either read or write command
-        assert(pkt->isRead() || pkt->isWrite());
+        // let the child coalescer handle MemSyncReq because this is
+        // cache coherence protocol specific
+        return RequestStatus_Issued;
+    }
+    // otherwise, this must be either read or write command
+    assert(pkt->isRead() || pkt->isWrite());
 
-        // the pkt is temporarily stored in the uncoalesced table until
-        // it's picked for coalescing process later in this cycle or in a
-        // future cycle
-        uncoalescedTable.insertPacket(pkt);
-        DPRINTF(GPUCoalescer, "Put pkt with addr 0x%X to uncoalescedTable\n",
-                pkt->getAddr());
+    // the pkt is temporarily stored in the uncoalesced table until
+    // it's picked for coalescing process later in this cycle or in a
+    // future cycle
+    uncoalescedTable.insertPacket(pkt);
+    DPRINTF(GPUCoalescer, "Put pkt with addr 0x%X to uncoalescedTable\n",
+            pkt->getAddr());
 
-        // we schedule an issue event here to process the uncoalesced table
-        // and try to issue Ruby request to cache system
-        if (!issueEvent.scheduled()) {
-            schedule(issueEvent, curTick());
-        }
+    // we schedule an issue event here to process the uncoalesced table
+    // and try to issue Ruby request to cache system
+    if (!issueEvent.scheduled()) {
+        schedule(issueEvent, curTick());
     }
 
     // we always return RequestStatus_Issued in this coalescer
@@ -581,107 +578,6 @@ GPUCoalescer::makeRequest(PacketPtr pkt)
     // queueing up aliased requets in its coalesced table
     return RequestStatus_Issued;
 }
-
-/**
- * TODO: Figure out what do with this code. This code may go away
- *       and/or be merged into the VIPER coalescer once the VIPER
- *       protocol is re-integrated with GCN3 codes.
- */
-/*
-void
-GPUCoalescer::issueRequest(CoalescedRequest* crequest)
-{
-    PacketPtr pkt = crequest->getFirstPkt();
-
-    int proc_id = -1;
-    if (pkt != NULL && pkt->req->hasContextId()) {
-        proc_id = pkt->req->contextId();
-    }
-
-    // If valid, copy the pc to the ruby request
-    Addr pc = 0;
-    if (pkt->req->hasPC()) {
-        pc = pkt->req->getPC();
-    }
-
-    // At the moment setting scopes only counts
-    // for GPU spill space accesses
-    // which is pkt->req->isStack()
-    // this scope is REPLACE since it
-    // does not need to be flushed at the end
-    // of a kernel Private and local may need
-    // to be visible at the end of the kernel
-    HSASegment accessSegment = reqSegmentToHSASegment(pkt->req);
-    HSAScope accessScope = reqScopeToHSAScope(pkt->req);
-
-    Addr line_addr = makeLineAddress(pkt->getAddr());
-
-    // Creating WriteMask that records written bytes
-    // and atomic operations. This enables partial writes
-    // and partial reads of those writes
-    DataBlock dataBlock;
-    dataBlock.clear();
-    uint32_t blockSize = RubySystem::getBlockSizeBytes();
-    std::vector<bool> accessMask(blockSize,false);
-    std::vector< std::pair<int,AtomicOpFunctor*> > atomicOps;
-    uint32_t tableSize = crequest->getPackets().size();
-    for (int i = 0; i < tableSize; i++) {
-        PacketPtr tmpPkt = crequest->getPackets()[i];
-        uint32_t tmpOffset = (tmpPkt->getAddr()) - line_addr;
-        uint32_t tmpSize = tmpPkt->getSize();
-        if (tmpPkt->isAtomicOp()) {
-            std::pair<int,AtomicOpFunctor *> tmpAtomicOp(tmpOffset,
-                                                        tmpPkt->getAtomicOp());
-            atomicOps.push_back(tmpAtomicOp);
-        } else if (tmpPkt->isWrite()) {
-            dataBlock.setData(tmpPkt->getPtr<uint8_t>(),
-                              tmpOffset, tmpSize);
-        }
-        for (int j = 0; j < tmpSize; j++) {
-            accessMask[tmpOffset + j] = true;
-        }
-    }
-    std::shared_ptr<RubyRequest> msg;
-    if (pkt->isAtomicOp()) {
-        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                              pkt->getPtr<uint8_t>(),
-                              pkt->getSize(), pc, crequest->getRubyType(),
-                              RubyAccessMode_Supervisor, pkt,
-                              PrefetchBit_No, proc_id, 100,
-                              blockSize, accessMask,
-                              dataBlock, atomicOps,
-                              accessScope, accessSegment);
-    } else {
-        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
-                              pkt->getPtr<uint8_t>(),
-                              pkt->getSize(), pc, crequest->getRubyType(),
-                              RubyAccessMode_Supervisor, pkt,
-                              PrefetchBit_No, proc_id, 100,
-                              blockSize, accessMask,
-                              dataBlock,
-                              accessScope, accessSegment);
-    }
-    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\n",
-             curTick(), m_version, "Coal", "Begin", "", "",
-             printAddress(msg->getPhysicalAddress()),
-             RubyRequestType_to_string(crequest->getRubyType()));
-
-    fatal_if(crequest->getRubyType() == RubyRequestType_IFETCH,
-             "there should not be any I-Fetch requests in the GPU Coalescer");
-
-    Tick latency = cyclesToTicks(
-                m_controller->mandatoryQueueLatency(crequest->getRubyType()));
-    assert(latency > 0);
-
-    if (!deadlockCheckEvent.scheduled()) {
-        schedule(deadlockCheckEvent,
-                 m_deadlock_threshold * clockPeriod() +
-                 curTick());
-    }
-
-    assert(m_mandatory_q_ptr);
-    m_mandatory_q_ptr->enqueue(msg, clockEdge(), m_data_cache_hit_latency);
-}*/
 
 template <class KEY, class VALUE>
 std::ostream &
@@ -890,7 +786,13 @@ GPUCoalescer::completeHitCallback(std::vector<PacketPtr> & mylist)
         assert(port != NULL);
 
         pkt->senderState = ss->predecessor;
-        delete ss;
+
+        if (pkt->cmd != MemCmd::WriteReq) {
+            // for WriteReq, we keep the original senderState until
+            // writeCompleteCallback
+            delete ss;
+        }
+
         port->hitCallback(pkt);
         trySendRetries();
     }

@@ -392,14 +392,15 @@ machine(MachineType:TCC, "TCC Cache")
 
   action(w_sendResponseWBAck, "w", desc="send WB Ack") {
     peek(responseFromNB_in, ResponseMsg) {
-        enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
-          out_msg.addr := address;
-          out_msg.Type := CoherenceResponseType:TDSysWBAck;
-          out_msg.Destination.clear();
-          out_msg.Destination.add(in_msg.WTRequestor);
-          out_msg.Sender := machineID;
-          out_msg.MessageSize := MessageSizeType:Writeback_Control;
-        }
+      enqueue(responseToCore_out, ResponseMsg, l2_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:TDSysWBAck;
+        out_msg.Destination.clear();
+        out_msg.Destination.add(in_msg.WTRequestor);
+        out_msg.Sender := machineID;
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        out_msg.instSeqNum := in_msg.instSeqNum;
+      }
     }
   }
 
@@ -412,6 +413,7 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.Sender := machineID;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        out_msg.instSeqNum := in_msg.instSeqNum;
       }
     }
   }
@@ -486,6 +488,7 @@ machine(MachineType:TCC, "TCC Cache")
         out_msg.Dirty := true;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.writeMask.orMask(in_msg.writeMask);
+        out_msg.instSeqNum := in_msg.instSeqNum;
       }
     }
   }

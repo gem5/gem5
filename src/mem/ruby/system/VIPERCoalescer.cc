@@ -44,6 +44,7 @@
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/GPUCoalescer.hh"
 #include "debug/MemoryAccess.hh"
+#include "debug/ProtocolTrace.hh"
 #include "mem/packet.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
@@ -64,25 +65,13 @@ VIPERCoalescerParams::create()
 }
 
 VIPERCoalescer::VIPERCoalescer(const Params *p)
-    : GPUCoalescer(p)
+    : GPUCoalescer(p),
+      m_cache_inv_pkt(nullptr),
+      m_num_pending_invs(0)
 {
-    m_max_wb_per_cycle=p->max_wb_per_cycle;
-    m_max_inv_per_cycle=p->max_inv_per_cycle;
-    m_outstanding_inv = 0;
-    m_outstanding_wb = 0;
 }
 
 VIPERCoalescer::~VIPERCoalescer()
-{
-}
-
-void
-VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
-{
-}
-
-void
-VIPERCoalescer::issueMemSyncRequest(PacketPtr pkt)
 {
 }
 
@@ -91,121 +80,213 @@ VIPERCoalescer::issueMemSyncRequest(PacketPtr pkt)
 RequestStatus
 VIPERCoalescer::makeRequest(PacketPtr pkt)
 {
-    if (m_outstanding_wb | m_outstanding_inv) {
-        DPRINTF(GPUCoalescer,
-                "There are %d Writebacks and %d Invalidatons\n",
-                m_outstanding_wb, m_outstanding_inv);
-    }
-    // Are we in the middle of a release
-    if ((m_outstanding_wb) > 0) {
-        if (pkt->req->isKernel()) {
-            // Everythign is fine
-            // Barriers and Kernel End scan coalesce
-            // If it is a Kerenl Begin flush the cache
-            if (pkt->req->isAcquire() && (m_outstanding_inv == 0)) {
-                invL1();
-            }
+    // VIPER only supports following memory request types
+    //    MemSyncReq & Acquire: TCP cache invalidation
+    //    ReadReq             : cache read
+    //    WriteReq            : cache write
+    //    AtomicOp            : cache atomic
+    //
+    // VIPER does not expect MemSyncReq & Release since in GCN3, compute unit
+    // does not specify an equivalent type of memory request.
+    // TODO: future patches should rename Acquire and Release
+    assert((pkt->cmd == MemCmd::MemSyncReq && pkt->req->isAcquire()) ||
+            pkt->cmd == MemCmd::ReadReq ||
+            pkt->cmd == MemCmd::WriteReq ||
+            pkt->isAtomicOp());
 
-            if (pkt->req->isRelease()) {
-                insertKernel(pkt->req->contextId(), pkt);
-            }
-
-            return RequestStatus_Issued;
-        }
-    } else if (pkt->req->isKernel() && pkt->req->isRelease()) {
-        // Flush Dirty Data on Kernel End
-        // isKernel + isRelease
-        insertKernel(pkt->req->contextId(), pkt);
-        wbL1();
-        if (m_outstanding_wb == 0) {
-            for (auto it =  kernelEndList.begin(); it != kernelEndList.end(); it++) {
-                newKernelEnds.push_back(it->first);
-            }
-            completeIssue();
-        }
-        return RequestStatus_Issued;
+    if (pkt->req->isAcquire() && m_cache_inv_pkt) {
+        // In VIPER protocol, the coalescer is not able to handle two or
+        // more cache invalidation requests at a time. Cache invalidation
+        // requests must be serialized to ensure that all stale data in
+        // TCP are invalidated correctly. If there's already a pending
+        // cache invalidation request, we must retry this request later
+        return RequestStatus_Aliased;
     }
 
     GPUCoalescer::makeRequest(pkt);
 
-    if (pkt->req->isKernel() && pkt->req->isAcquire()) {
-        // Invalidate clean Data on Kernel Begin
-        // isKernel + isAcquire
-        invL1();
-    } else if (pkt->req->isAcquire() && pkt->req->isRelease()) {
-        // Deschedule the AtomicAcqRel and
-        // Flush and Invalidate the L1 cache
-        invwbL1();
-        if (m_outstanding_wb > 0 && issueEvent.scheduled()) {
-            DPRINTF(GPUCoalescer, "issueEvent Descheduled\n");
-            deschedule(issueEvent);
-        }
-    } else if (pkt->req->isRelease()) {
-        // Deschedule the StoreRel and
-        // Flush the L1 cache
-        wbL1();
-        if (m_outstanding_wb > 0 && issueEvent.scheduled()) {
-            DPRINTF(GPUCoalescer, "issueEvent Descheduled\n");
-            deschedule(issueEvent);
-        }
-    } else if (pkt->req->isAcquire()) {
-        // LoadAcq or AtomicAcq
-        // Invalidate the L1 cache
-        invL1();
+    if (pkt->req->isAcquire()) {
+        // In VIPER protocol, a compute unit sends a MemSyncReq with Acquire
+        // flag to invalidate TCP. Upon receiving a request of this type,
+        // VIPERCoalescer starts a cache walk to invalidate all valid entries
+        // in TCP. The request is completed once all entries are invalidated.
+        assert(!m_cache_inv_pkt);
+        m_cache_inv_pkt = pkt;
+        invTCP();
     }
-    // Request was successful
-    if (m_outstanding_wb == 0) {
-        if (!issueEvent.scheduled()) {
-            DPRINTF(GPUCoalescer, "issueEvent Rescheduled\n");
-            schedule(issueEvent, curTick());
-        }
-    }
+
     return RequestStatus_Issued;
 }
 
 void
-VIPERCoalescer::wbCallback(Addr addr)
+VIPERCoalescer::issueRequest(CoalescedRequest* crequest)
 {
-    m_outstanding_wb--;
-    // if L1 Flush Complete
-    // attemnpt to schedule issueEvent
-    assert(((int) m_outstanding_wb) >= 0);
-    if (m_outstanding_wb == 0) {
-        for (auto it =  kernelEndList.begin(); it != kernelEndList.end(); it++) {
-            newKernelEnds.push_back(it->first);
-        }
-        completeIssue();
+    PacketPtr pkt = crequest->getFirstPkt();
+
+    int proc_id = -1;
+    if (pkt != NULL && pkt->req->hasContextId()) {
+        proc_id = pkt->req->contextId();
     }
-    trySendRetries();
+
+    // If valid, copy the pc to the ruby request
+    Addr pc = 0;
+    if (pkt->req->hasPC()) {
+        pc = pkt->req->getPC();
+    }
+
+    Addr line_addr = makeLineAddress(pkt->getAddr());
+
+    // Creating WriteMask that records written bytes
+    // and atomic operations. This enables partial writes
+    // and partial reads of those writes
+    DataBlock dataBlock;
+    dataBlock.clear();
+    uint32_t blockSize = RubySystem::getBlockSizeBytes();
+    std::vector<bool> accessMask(blockSize,false);
+    std::vector< std::pair<int,AtomicOpFunctor*> > atomicOps;
+    uint32_t tableSize = crequest->getPackets().size();
+    for (int i = 0; i < tableSize; i++) {
+        PacketPtr tmpPkt = crequest->getPackets()[i];
+        uint32_t tmpOffset = (tmpPkt->getAddr()) - line_addr;
+        uint32_t tmpSize = tmpPkt->getSize();
+        if (tmpPkt->isAtomicOp()) {
+            std::pair<int,AtomicOpFunctor *> tmpAtomicOp(tmpOffset,
+                                                        tmpPkt->getAtomicOp());
+            atomicOps.push_back(tmpAtomicOp);
+        } else if (tmpPkt->isWrite()) {
+            dataBlock.setData(tmpPkt->getPtr<uint8_t>(),
+                              tmpOffset, tmpSize);
+        }
+        for (int j = 0; j < tmpSize; j++) {
+            accessMask[tmpOffset + j] = true;
+        }
+    }
+    std::shared_ptr<RubyRequest> msg;
+    if (pkt->isAtomicOp()) {
+        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
+                              pkt->getPtr<uint8_t>(),
+                              pkt->getSize(), pc, crequest->getRubyType(),
+                              RubyAccessMode_Supervisor, pkt,
+                              PrefetchBit_No, proc_id, 100,
+                              blockSize, accessMask,
+                              dataBlock, atomicOps, crequest->getSeqNum());
+    } else {
+        msg = std::make_shared<RubyRequest>(clockEdge(), pkt->getAddr(),
+                              pkt->getPtr<uint8_t>(),
+                              pkt->getSize(), pc, crequest->getRubyType(),
+                              RubyAccessMode_Supervisor, pkt,
+                              PrefetchBit_No, proc_id, 100,
+                              blockSize, accessMask,
+                              dataBlock, crequest->getSeqNum());
+    }
+
+    if (pkt->cmd == MemCmd::WriteReq) {
+        makeWriteCompletePkts(crequest);
+    }
+
+    DPRINTFR(ProtocolTrace, "%15s %3s %10s%20s %6s>%-6s %s %s\n",
+             curTick(), m_version, "Coal", "Begin", "", "",
+             printAddress(msg->getPhysicalAddress()),
+             RubyRequestType_to_string(crequest->getRubyType()));
+
+    fatal_if(crequest->getRubyType() == RubyRequestType_IFETCH,
+             "there should not be any I-Fetch requests in the GPU Coalescer");
+
+    if (!deadlockCheckEvent.scheduled()) {
+        schedule(deadlockCheckEvent,
+                 m_deadlock_threshold * clockPeriod() +
+                 curTick());
+    }
+
+    assert(m_mandatory_q_ptr);
+    Tick latency = cyclesToTicks(
+        m_controller->mandatoryQueueLatency(crequest->getRubyType()));
+    m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
 }
 
 void
-VIPERCoalescer::invCallback(Addr addr)
+VIPERCoalescer::makeWriteCompletePkts(CoalescedRequest* crequest)
 {
-    m_outstanding_inv--;
-    // if L1 Flush Complete
-    // attemnpt to schedule issueEvent
-    // This probably won't happen, since
-    // we dont wait on cache invalidations
-    if (m_outstanding_wb == 0) {
-        for (auto it =  kernelEndList.begin(); it != kernelEndList.end(); it++) {
-            newKernelEnds.push_back(it->first);
-        }
-        completeIssue();
+    // In VIPER protocol, for each write request, down-stream caches
+    // return two responses: writeCallback and writeCompleteCallback.
+    // We need to prepare a writeCompletePkt for each write request so
+    // that when writeCompleteCallback is called, we can respond
+    // requesting wavefront right away.
+    // writeCompletePkt inherits request and senderState of the original
+    // write request packet so that we can find the original requestor
+    // later. This assumes that request and senderState are not deleted
+    // before writeCompleteCallback is called.
+
+    auto key = crequest->getSeqNum();
+    std::vector<PacketPtr>& req_pkts = crequest->getPackets();
+
+    for (auto pkt : req_pkts) {
+        DPRINTF(GPUCoalescer, "makeWriteCompletePkts: instSeqNum %d\n",
+                key);
+        assert(pkt->cmd == MemCmd::WriteReq);
+
+        PacketPtr writeCompletePkt = new Packet(pkt->req,
+            MemCmd::WriteCompleteResp);
+        writeCompletePkt->setAddr(pkt->getAddr());
+        writeCompletePkt->senderState = pkt->senderState;
+        m_writeCompletePktMap[key].push_back(writeCompletePkt);
     }
+}
+
+void
+VIPERCoalescer::writeCompleteCallback(Addr addr, uint64_t instSeqNum)
+{
+    DPRINTF(GPUCoalescer, "writeCompleteCallback: instSeqNum %d addr 0x%x\n",
+            instSeqNum, addr);
+
+    auto key = instSeqNum;
+    assert(m_writeCompletePktMap.count(key) == 1 &&
+           !m_writeCompletePktMap[key].empty());
+
+    for (auto writeCompletePkt : m_writeCompletePktMap[key]) {
+        if (makeLineAddress(writeCompletePkt->getAddr()) == addr) {
+            RubyPort::SenderState *ss =
+                safe_cast<RubyPort::SenderState *>
+                    (writeCompletePkt->senderState);
+            MemSlavePort *port = ss->port;
+            assert(port != NULL);
+
+            writeCompletePkt->senderState = ss->predecessor;
+            delete ss;
+            port->hitCallback(writeCompletePkt);
+        }
+    }
+
     trySendRetries();
+
+    if (m_writeCompletePktMap[key].empty())
+        m_writeCompletePktMap.erase(key);
+}
+
+void
+VIPERCoalescer::invTCPCallback(Addr addr)
+{
+    assert(m_cache_inv_pkt && m_num_pending_invs > 0);
+
+    m_num_pending_invs--;
+
+    if (m_num_pending_invs == 0) {
+        std::vector<PacketPtr> pkt_list { m_cache_inv_pkt };
+        completeHitCallback(pkt_list);
+        m_cache_inv_pkt = nullptr;
+    }
 }
 
 /**
-  * Invalidate L1 cache (Acquire)
+  * Invalidate TCP (Acquire)
   */
 void
-VIPERCoalescer::invL1()
+VIPERCoalescer::invTCP()
 {
     int size = m_dataCache_ptr->getNumBlocks();
     DPRINTF(GPUCoalescer,
             "There are %d Invalidations outstanding before Cache Walk\n",
-            m_outstanding_inv);
+            m_num_pending_invs);
     // Walk the cache
     for (int i = 0; i < size; i++) {
         Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
@@ -215,86 +296,14 @@ VIPERCoalescer::invL1()
             clockEdge(), addr, (uint8_t*) 0, 0, 0,
             request_type, RubyAccessMode_Supervisor,
             nullptr);
+        DPRINTF(GPUCoalescer, "Evicting addr 0x%x\n", addr);
         assert(m_mandatory_q_ptr != NULL);
         Tick latency = cyclesToTicks(
-                            m_controller->mandatoryQueueLatency(request_type));
-        assert(latency > 0);
+            m_controller->mandatoryQueueLatency(request_type));
         m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
-        m_outstanding_inv++;
+        m_num_pending_invs++;
     }
     DPRINTF(GPUCoalescer,
             "There are %d Invalidatons outstanding after Cache Walk\n",
-            m_outstanding_inv);
-}
-
-/**
-  * Writeback L1 cache (Release)
-  */
-void
-VIPERCoalescer::wbL1()
-{
-    int size = m_dataCache_ptr->getNumBlocks();
-    DPRINTF(GPUCoalescer,
-            "There are %d Writebacks outstanding before Cache Walk\n",
-            m_outstanding_wb);
-    // Walk the cache
-    for (int i = 0; i < size; i++) {
-        Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
-        // Write dirty data back
-        RubyRequestType request_type = RubyRequestType_FLUSH;
-        std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
-            clockEdge(), addr, (uint8_t*) 0, 0, 0,
-            request_type, RubyAccessMode_Supervisor,
-            nullptr);
-        assert(m_mandatory_q_ptr != NULL);
-        Tick latency = cyclesToTicks(
-                            m_controller->mandatoryQueueLatency(request_type));
-        assert(latency > 0);
-        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
-        m_outstanding_wb++;
-    }
-    DPRINTF(GPUCoalescer,
-            "There are %d Writebacks outstanding after Cache Walk\n",
-            m_outstanding_wb);
-}
-
-/**
-  * Invalidate and Writeback L1 cache (Acquire&Release)
-  */
-void
-VIPERCoalescer::invwbL1()
-{
-    int size = m_dataCache_ptr->getNumBlocks();
-    // Walk the cache
-    for (int i = 0; i < size; i++) {
-        Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
-        // Evict Read-only data
-        RubyRequestType request_type = RubyRequestType_REPLACEMENT;
-        std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
-            clockEdge(), addr, (uint8_t*) 0, 0, 0,
-            request_type, RubyAccessMode_Supervisor,
-            nullptr);
-        assert(m_mandatory_q_ptr != NULL);
-        Tick latency = cyclesToTicks(
-                            m_controller->mandatoryQueueLatency(request_type));
-        assert(latency > 0);
-        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
-        m_outstanding_inv++;
-    }
-    // Walk the cache
-    for (int i = 0; i< size; i++) {
-        Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
-        // Write dirty data back
-        RubyRequestType request_type = RubyRequestType_FLUSH;
-        std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
-            clockEdge(), addr, (uint8_t*) 0, 0, 0,
-            request_type, RubyAccessMode_Supervisor,
-            nullptr);
-        assert(m_mandatory_q_ptr != NULL);
-        Tick latency = cyclesToTicks(
-                m_controller->mandatoryQueueLatency(request_type));
-        assert(latency > 0);
-        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
-        m_outstanding_wb++;
-    }
+            m_num_pending_invs);
 }

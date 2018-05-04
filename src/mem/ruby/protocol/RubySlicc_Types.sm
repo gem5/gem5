@@ -150,6 +150,7 @@ structure(RubyRequest, desc="...", interface="Message", external="yes") {
   WriteMask writeMask,       desc="Writethrough mask";
   DataBlock WTData,          desc="Writethrough data block";
   int wfid,                  desc="Writethrough wavefront";
+  uint64_t instSeqNum,       desc="Instruction sequence number";
   PacketPtr pkt,             desc="Packet associated with this request";
 }
 

@@ -294,9 +294,11 @@ class GPUCoalescer : public RubyPort
                       Cycles firstResponseTime,
                       bool isRegion);
 
-    void atomicCallback(Addr address,
-                        MachineType mach,
-                        const DataBlock& data);
+    /* atomics need their own callback because the data
+       might be const coming from SLICC */
+    virtual void atomicCallback(Addr address,
+                                MachineType mach,
+                                const DataBlock& data);
 
     RequestStatus makeRequest(PacketPtr pkt) override;
     int outstandingCount() const override { return m_outstanding_count; }
@@ -365,7 +367,7 @@ class GPUCoalescer : public RubyPort
     // since the two following issue functions are protocol-specific,
     // they must be implemented in a derived coalescer
     virtual void issueRequest(CoalescedRequest* crequest) = 0;
-    virtual void issueMemSyncRequest(PacketPtr pkt) = 0;
+//    virtual void issueMemSyncRequest(PacketPtr pkt) = 0;
 
     void kernelCallback(int wavefront_id);
 
