@@ -303,11 +303,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // flush and invalidate any existing block
         CacheBlk *old_blk(tags->findBlock(pkt->getAddr(), pkt->isSecure()));
         if (old_blk && old_blk->isValid()) {
-            if (old_blk->isDirty() || writebackClean)
-                writebacks.push_back(writebackBlk(old_blk));
-            else
-                writebacks.push_back(cleanEvictBlk(old_blk));
-            invalidateBlock(old_blk);
+            evictBlock(old_blk, writebacks);
         }
 
         blk = nullptr;
@@ -1248,9 +1244,7 @@ Cache::recvAtomic(PacketPtr pkt)
             schedule(writebackTempBlockAtomicEvent, curTick());
         }
 
-        tempBlockWriteback = (blk->isDirty() || writebackClean) ?
-            writebackBlk(blk) : cleanEvictBlk(blk);
-        invalidateBlock(blk);
+        tempBlockWriteback = evictBlock(blk);
     }
 
     if (pkt->needsResponse()) {
@@ -1643,10 +1637,7 @@ Cache::recvTimingResp(PacketPtr pkt)
 
     // if we used temp block, check to see if its valid and then clear it out
     if (blk == tempBlock && tempBlock->isValid()) {
-        PacketPtr wb_pkt = tempBlock->isDirty() || writebackClean ?
-            writebackBlk(blk) : cleanEvictBlk(blk);
-        writebacks.push_back(wb_pkt);
-        invalidateBlock(tempBlock);
+        evictBlock(blk, writebacks);
     }
 
     const Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
@@ -1655,6 +1646,26 @@ Cache::recvTimingResp(PacketPtr pkt)
 
     DPRINTF(CacheVerbose, "%s: Leaving with %s\n", __func__, pkt->print());
     delete pkt;
+}
+
+PacketPtr
+Cache::evictBlock(CacheBlk *blk)
+{
+    PacketPtr pkt = (blk->isDirty() || writebackClean) ?
+        writebackBlk(blk) : cleanEvictBlk(blk);
+
+    invalidateBlock(blk);
+
+    return pkt;
+}
+
+void
+Cache::evictBlock(CacheBlk *blk, PacketList &writebacks)
+{
+    PacketPtr pkt = evictBlock(blk);
+    if (pkt) {
+        writebacks.push_back(pkt);
+    }
 }
 
 PacketPtr
@@ -1850,15 +1861,7 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
             if (blk->wasPrefetched()) {
                 unusedPrefetches++;
             }
-            // Will send up Writeback/CleanEvict snoops via isCachedAbove
-            // when pushing this writeback list into the write buffer.
-            if (blk->isDirty() || writebackClean) {
-                // Save writeback packet for handling by caller
-                writebacks.push_back(writebackBlk(blk));
-            } else {
-                writebacks.push_back(cleanEvictBlk(blk));
-            }
-            invalidateBlock(blk);
+            evictBlock(blk, writebacks);
             replacements++;
         }
     }

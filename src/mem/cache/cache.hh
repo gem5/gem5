@@ -496,6 +496,26 @@ class Cache : public BaseCache
                          bool is_timing, bool is_deferred, bool pending_inval);
 
     /**
+     * Evict a cache block.
+     *
+     * Performs a writeback if necesssary and invalidates the block
+     *
+     * @param blk Block to invalidate
+     * @return A packet with the writeback, can be nullptr
+     */
+    M5_NODISCARD virtual PacketPtr evictBlock(CacheBlk *blk);
+
+    /**
+     * Evict a cache block.
+     *
+     * Performs a writeback if necesssary and invalidates the block
+     *
+     * @param blk Block to invalidate
+     * @param writebacks Return a list of packets with writebacks
+     */
+    virtual void evictBlock(CacheBlk *blk, PacketList &writebacks);
+
+    /**
      * Create a writeback request for the given block.
      * @param blk The block to writeback.
      * @return The writeback request for the block.
