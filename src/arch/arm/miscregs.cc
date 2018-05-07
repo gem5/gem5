@@ -2453,6 +2453,26 @@ ISA::initializeMiscRegMetadata()
     // is running in aarch64 (aarch32EL3 = false)
     bool aarch32EL3 = haveSecurity && !highestELIs64;
 
+    // Set Privileged Access Never on taking an exception to EL1 (Arm 8.1+),
+    // unsupported
+    bool SPAN = false;
+
+    // Implicit error synchronization event enable (Arm 8.2+), unsupported
+    bool IESB = false;
+
+    // Load Multiple and Store Multiple Atomicity and Ordering (Arm 8.2+),
+    // unsupported
+    bool LSMAOE = false;
+
+    // No Trap Load Multiple and Store Multiple (Arm 8.2+), unsupported
+    bool nTLSMD = false;
+
+    // Pointer authentication (Arm 8.3+), unsupported
+    bool EnDA = false; // using APDAKey_EL1 key of instr addrs in ELs 0,1
+    bool EnDB = false; // using APDBKey_EL1 key of instr addrs in ELs 0,1
+    bool EnIA = false; // using APIAKey_EL1 key of instr addrs in ELs 0,1
+    bool EnIB = false; // using APIBKey_EL1 key of instr addrs in ELs 0,1
+
     /**
      * Some registers alias with others, and therefore need to be translated.
      * When two mapping registers are given, they are the 32b lower and
@@ -2747,7 +2767,13 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_VMPIDR)
       .hyp().monNonSecure();
     InitReg(MISCREG_SCTLR)
-      .banked();
+      .banked()
+      // readMiscRegNoEffect() uses this metadata
+      // despite using children (below) as backing store
+      .res0(0x8d22c600)
+      .res1(0x00400800 | (SPAN   ? 0 : 0x800000)
+                       | (LSMAOE ? 0 :     0x10)
+                       | (nTLSMD ? 0 :      0x8));
     InitReg(MISCREG_SCTLR_NS)
       .bankedChild()
       .privSecure(!aarch32EL3)
@@ -2775,7 +2801,13 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_NSACR)
       .allPrivileges().hypWrite(0).privNonSecureWrite(0).exceptUserMode();
     InitReg(MISCREG_HSCTLR)
-      .hyp().monNonSecure();
+      .hyp().monNonSecure()
+      .res0(0x0512c7c0 | (EnDB   ? 0 :     0x2000)
+                       | (IESB   ? 0 :   0x200000)
+                       | (EnDA   ? 0 :  0x8000000)
+                       | (EnIB   ? 0 : 0x40000000)
+                       | (EnIA   ? 0 : 0x80000000))
+      .res1(0x30c50830);
     InitReg(MISCREG_HACTLR)
       .hyp().monNonSecure();
     InitReg(MISCREG_HCR)
@@ -3175,7 +3207,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ISR)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_HVBAR)
-      .hyp().monNonSecure();
+      .hyp().monNonSecure()
+      .res0(0x1f);
     InitReg(MISCREG_FCSEIDR)
       .unimplemented()
       .warnNotFail()
@@ -3537,6 +3570,14 @@ ISA::initializeMiscRegMetadata()
       .mapsTo(MISCREG_VMPIDR);
     InitReg(MISCREG_SCTLR_EL1)
       .allPrivileges().exceptUserMode()
+      .res0( 0x20440 | (EnDB   ? 0 :     0x2000)
+                     | (IESB   ? 0 :   0x200000)
+                     | (EnDA   ? 0 :  0x8000000)
+                     | (EnIB   ? 0 : 0x40000000)
+                     | (EnIA   ? 0 : 0x80000000))
+      .res1(0x500800 | (SPAN   ? 0 :   0x800000)
+                     | (nTLSMD ? 0 :  0x8000000)
+                     | (LSMAOE ? 0 : 0x10000000))
       .mapsTo(MISCREG_SCTLR_NS);
     InitReg(MISCREG_ACTLR_EL1)
       .allPrivileges().exceptUserMode()
@@ -3546,6 +3587,12 @@ ISA::initializeMiscRegMetadata()
       .mapsTo(MISCREG_CPACR);
     InitReg(MISCREG_SCTLR_EL2)
       .hyp().mon()
+      .res0(0x0512c7c0 | (EnDB   ? 0 :     0x2000)
+                       | (IESB   ? 0 :   0x200000)
+                       | (EnDA   ? 0 :  0x8000000)
+                       | (EnIB   ? 0 : 0x40000000)
+                       | (EnIA   ? 0 : 0x80000000))
+      .res1(0x30c50830)
       .mapsTo(MISCREG_HSCTLR);
     InitReg(MISCREG_ACTLR_EL2)
       .hyp().mon()
@@ -3566,7 +3613,13 @@ ISA::initializeMiscRegMetadata()
       .hyp().mon()
       .mapsTo(MISCREG_HACR);
     InitReg(MISCREG_SCTLR_EL3)
-      .mon();
+      .mon()
+      .res0(0x0512c7c0 | (EnDB   ? 0 :     0x2000)
+                       | (IESB   ? 0 :   0x200000)
+                       | (EnDA   ? 0 :  0x8000000)
+                       | (EnIB   ? 0 : 0x40000000)
+                       | (EnIA   ? 0 : 0x80000000))
+      .res1(0x30c50830);
     InitReg(MISCREG_ACTLR_EL3)
       .mon();
     InitReg(MISCREG_SCR_EL3)
@@ -3892,6 +3945,7 @@ ISA::initializeMiscRegMetadata()
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_VBAR_EL2)
       .hyp().mon()
+      .res0(0x7ff)
       .mapsTo(MISCREG_HVBAR);
     InitReg(MISCREG_RVBAR_EL2)
       .mon().hyp().writes(0);
