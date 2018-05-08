@@ -32,6 +32,7 @@ if env['USE_SYSTEMC']:
 
     Source('kernel.cc')
 
+    Source('sc_attr.cc')
     Source('sc_event.cc')
     Source('sc_export.cc')
     Source('sc_interface.cc')
