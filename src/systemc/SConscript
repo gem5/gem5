@@ -36,3 +36,4 @@ if env['USE_SYSTEMC']:
     Source('sc_main.cc')
     Source('sc_module_name.cc')
     Source('sc_object.cc')
+    Source('sc_time.cc')
