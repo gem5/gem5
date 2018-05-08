@@ -43,6 +43,23 @@ class sc_event_or_expr;
 class sc_object;
 class sc_port_base;
 
+class sc_event_finder
+{
+  protected:
+    void warn_unimpl(const char *func) const;
+};
+
+template <class IF>
+class sc_event_finder_t : public sc_event_finder
+{
+  public:
+    sc_event_finder_t(const sc_port_base &,
+                      const sc_event & (IF::*event_method)() const)
+    {
+        warn_unimpl(__PRETTY_FUNCTION__);
+    }
+};
+
 class sc_event_and_list
 {
   public:

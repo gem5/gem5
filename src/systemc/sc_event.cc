@@ -34,6 +34,12 @@
 namespace sc_core
 {
 
+void
+sc_event_finder::warn_unimpl(const char *func) const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
 sc_event_and_list::sc_event_and_list()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
