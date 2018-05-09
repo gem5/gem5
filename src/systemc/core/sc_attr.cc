@@ -27,17 +27,66 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/sc_port.hh"
-
 #include "base/logging.hh"
+#include "systemc/ext/core/sc_attr.hh"
 
 namespace sc_core
 {
 
+sc_attr_base::sc_attr_base(const std::string &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+sc_attr_base::sc_attr_base(const sc_attr_base &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+sc_attr_base::~sc_attr_base()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+const std::string &
+sc_attr_base::name() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *(const std::string *)nullptr;
+}
+
 void
-sc_port_base::warn_unimpl(const char *func)
+sc_attr_base::warn_unimpl(const char *func)
 {
     warn("%s not implemented.\n", func);
+}
+
+sc_attr_cltn::iterator
+sc_attr_cltn::begin()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return (iterator)nullptr;
+}
+
+sc_attr_cltn::const_iterator
+sc_attr_cltn::begin() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return (const_iterator)nullptr;
+}
+
+sc_attr_cltn::iterator
+sc_attr_cltn::end()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return (iterator)nullptr;
+}
+
+sc_attr_cltn::const_iterator
+sc_attr_cltn::end() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return (const_iterator)nullptr;
 }
 
 } // namespace sc_core

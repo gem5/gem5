@@ -27,8 +27,8 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_SC_PORT_HH__
-#define __SYSTEMC_SC_PORT_HH__
+#ifndef __SYSTEMC_EXT_CORE_SC_PORT_HH__
+#define __SYSTEMC_EXT_CORE_SC_PORT_HH__
 
 #include "sc_object.hh"
 
@@ -189,4 +189,4 @@ class sc_port : public sc_port_b<IF>
 
 } // namespace sc_core
 
-#endif  //__SYSTEMC_SC_PORT_HH__
+#endif  //__SYSTEMC_EXT_CORE_SC_PORT_HH__

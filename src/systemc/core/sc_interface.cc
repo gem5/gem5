@@ -27,18 +27,33 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_SC_MAIN_HH__
-#define __SYSTEMC_SC_MAIN_HH__
-
-extern "C" int sc_main(int argc, char *argv[]);
+#include "base/logging.hh"
+#include "systemc/ext/core/sc_interface.hh"
 
 namespace sc_core
 {
-    extern "C" int sc_argc();
 
-    // The standard version of this function doesn't have these "const"
-    // qualifiers, but the canonical SystemC implementation does.
-    extern "C" const char *const *sc_argv();
+void
+sc_interface::register_port(sc_port_base &, const char *)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+const sc_event &
+sc_interface::default_event() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *(sc_event *)nullptr;
+}
+
+sc_interface::~sc_interface()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+sc_interface::sc_interface()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
 } // namespace sc_core
-
-#endif  //__SYSTEMC_SC_MAIN_HH__

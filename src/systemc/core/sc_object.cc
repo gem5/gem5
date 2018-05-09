@@ -27,207 +27,151 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/sc_time.hh"
-
 #include "base/logging.hh"
+#include "systemc/ext/core/sc_object.hh"
 
 namespace sc_core
 {
 
-sc_time::sc_time()
+const char *
+sc_object::name() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return "sc_object";
+}
+
+const char *
+sc_object::basename() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return "sc_object";
+}
+
+const char *
+sc_object::kind() const
+{
+    return "sc_object";
+}
+
+void
+sc_object::print(std::ostream &out) const
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-sc_time::sc_time(double, sc_time_unit)
+void
+sc_object::dump(std::ostream &out) const
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-sc_time::sc_time(const sc_time &)
+const std::vector<sc_object *> &
+sc_object::get_child_objects() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *(const std::vector<sc_object *> *)nullptr;
+}
+
+const std::vector<sc_event *> &
+sc_object::get_child_events() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *(const std::vector<sc_event *> *)nullptr;
+}
+
+sc_object *
+sc_object::get_parent_object() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return NULL;
+}
+
+bool
+sc_object::add_attribute(sc_attr_base &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
+}
+
+sc_attr_base *
+sc_object::get_attribute(const std::string &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return NULL;
+}
+
+sc_attr_base *
+sc_object::remove_attribute(const std::string &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return NULL;
+}
+
+void
+sc_object::remove_all_attributes()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-sc_time &
-sc_time::operator = (const sc_time &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *this;
-}
-
-sc_dt::uint64
-sc_time::value() const
+int
+sc_object::num_attributes() const
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
     return 0;
 }
 
-double
-sc_time::to_double() const
+sc_attr_cltn &
+sc_object::attr_cltn()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0.0;
-}
-double
-sc_time::to_seconds() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0.0;
+    return *(sc_attr_cltn *)NULL;
 }
 
-const std::string
-sc_time::to_string() const
+const sc_attr_cltn &
+sc_object::attr_cltn() const
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
+    return *(sc_attr_cltn *)NULL;
 }
 
-bool
-sc_time::operator == (const sc_time &) const
+sc_object::sc_object()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return true;
 }
 
-bool
-sc_time::operator != (const sc_time &) const
+sc_object::sc_object(const char *name)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
 }
 
-bool
-sc_time::operator < (const sc_time &) const
+sc_object::sc_object(const sc_object &arg)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
 }
 
-bool
-sc_time::operator <= (const sc_time &) const
+sc_object &
+sc_object::operator = (const sc_object &)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return true;
-}
-
-bool
-sc_time::operator > (const sc_time &) const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
-}
-
-bool
-sc_time::operator >= (const sc_time &) const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return true;
-}
-
-sc_time &
-sc_time::operator += (const sc_time &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
     return *this;
 }
 
-sc_time &
-sc_time::operator -= (const sc_time &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *this;
-}
-
-sc_time &
-sc_time::operator *= (double)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *this;
-}
-
-sc_time &
-sc_time::operator /= (double)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *this;
-}
-
-void
-sc_time::print(std::ostream &) const
+sc_object::~sc_object()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-const sc_time
-operator + (const sc_time &, const sc_time &)
+const std::vector<sc_object *> &
+sc_get_top_level_objects()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
+    return *(const std::vector<sc_object *> *)nullptr;
 }
 
-const sc_time
-operator - (const sc_time &, const sc_time &)
+sc_object *
+sc_find_object(const char *)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
-}
-
-const sc_time
-operator * (const sc_time &, double)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
-}
-
-const sc_time
-operator * (double, const sc_time &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
-}
-
-const sc_time
-operator / (const sc_time &, double)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
-}
-
-double
-operator / (const sc_time &, const sc_time &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0.0;
-}
-
-std::ostream &
-operator << (std::ostream &os, const sc_time &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return os;
-}
-
-const sc_time SC_ZERO_TIME;
-
-void
-sc_set_time_resolution(double, sc_time_unit)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-sc_time
-sc_get_time_resolution()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
-}
-
-const sc_time &
-sc_max_time()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const sc_time *)nullptr;
+    return NULL;
 }
 
 } // namespace sc_core

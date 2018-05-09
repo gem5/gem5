@@ -27,30 +27,19 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_SC_MODULE_NAME_HH__
-#define __SYSTEMC_SC_MODULE_NAME_HH__
+#include "systemc/core/kernel.hh"
 
-namespace sc_core
+namespace SystemC
 {
 
-class sc_module_name
+Kernel::Kernel(Params *params) : SimObject(params)
 {
-  public:
-    sc_module_name(const char *);
-    sc_module_name(const sc_module_name &);
-    ~sc_module_name();
+}
 
-    operator const char *() const;
+} // namespace SystemC
 
-  private:
-    const char *_name;
-    bool _on_the_stack;
-
-    // Disabled
-    sc_module_name() {}
-    sc_module_name &operator = (const sc_module_name &) { return *this; }
-};
-
-} // namespace sc_core
-
-#endif  //__SYSTEMC_SC_MODULE_NAME_HH__
+SystemC::Kernel *
+SystemC_KernelParams::create()
+{
+    return new SystemC::Kernel(this);
+}

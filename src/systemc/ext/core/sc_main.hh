@@ -27,72 +27,18 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_SC_ATTR_HH__
-#define __SYSTEMC_SC_ATTR_HH__
+#ifndef __SYSTEMC_EXT_CORE_SC_MAIN_HH__
+#define __SYSTEMC_EXT_CORE_SC_MAIN_HH__
 
-#include <string>
+extern "C" int sc_main(int argc, char *argv[]);
 
 namespace sc_core
 {
+    extern "C" int sc_argc();
 
-class sc_attr_base
-{
-  public:
-    sc_attr_base(const std::string &);
-    sc_attr_base(const sc_attr_base &);
-    virtual ~sc_attr_base();
-
-    const std::string &name() const;
-
-  protected:
-    void warn_unimpl(const char *func);
-
-  private:
-    // Disabled
-    sc_attr_base();
-    sc_attr_base &operator = (const sc_attr_base &);
-};
-
-template <class T>
-class sc_attribute : public sc_attr_base
-{
-  public:
-    sc_attribute(const std::string &_name) : sc_attr_base(_name)
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    sc_attribute(const std::string &_name, const T &t) :
-        sc_attr_base(_name), value(t)
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    sc_attribute(const sc_attribute<T> &other) :
-        sc_attr_base(other.name()), value(other.value)
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    virtual ~sc_attribute() { warn_unimpl(__PRETTY_FUNCTION__); }
-    T value;
-
-  private:
-    // Disabled
-    sc_attribute() {}
-    sc_attribute<T> &operator = (const sc_attribute<T> &) { return *this; }
-};
-
-class sc_attr_cltn
-{
-  public:
-    typedef sc_attr_base *elem_type;
-    typedef elem_type *iterator;
-    typedef const elem_type *const_iterator;
-
-    iterator begin();
-    const_iterator begin() const;
-    iterator end();
-    const_iterator end() const;
-};
-
+    // The standard version of this function doesn't have these "const"
+    // qualifiers, but the canonical SystemC implementation does.
+    extern "C" const char *const *sc_argv();
 } // namespace sc_core
 
-#endif  //__SYSTEMC_SC_ATTR_HH__
+#endif  //__SYSTEMC_EXT_CORE_SC_MAIN_HH__

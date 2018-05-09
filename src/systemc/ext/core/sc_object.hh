@@ -27,34 +27,54 @@
  * Authors: Gabe Black
  */
 
+#ifndef __SYSTEMC_EXT_CORE_SC_OBJECT_HH__
+#define __SYSTEMC_EXT_CORE_SC_OBJECT_HH__
 
-#include "systemc/sc_module_name.hh"
-
-#include "base/logging.hh"
+#include <iostream>
+#include <string>
+#include <vector>
 
 namespace sc_core
 {
 
-sc_module_name::sc_module_name(const char *name) :
-    _name(name), _on_the_stack(true)
-{
-    warn("%s: Module name not added to stack.\n", __PRETTY_FUNCTION__);
-}
+class sc_event;
+class sc_attr_base;
+class sc_attr_cltn;
 
-sc_module_name::sc_module_name(const sc_module_name &other) :
-    _name(other._name), _on_the_stack(false)
-{}
-
-sc_module_name::~sc_module_name()
+class sc_object
 {
-    if (_on_the_stack) {
-        warn("%s: Module name not removed from stack.\n", __PRETTY_FUNCTION__);
-    }
-}
+  public:
+    const char *name() const;
+    const char *basename() const;
 
-sc_module_name::operator const char *() const
-{
-    return _name;
-}
+    virtual const char *kind() const;
+
+    virtual void print(std::ostream & =std::cout) const;
+    virtual void dump(std::ostream & =std::cout) const;
+
+    virtual const std::vector<sc_object *> &get_child_objects() const;
+    virtual const std::vector<sc_event *> &get_child_events() const;
+    sc_object *get_parent_object() const;
+
+    bool add_attribute(sc_attr_base &);
+    sc_attr_base *get_attribute(const std::string &);
+    sc_attr_base *remove_attribute(const std::string &);
+    void remove_all_attributes();
+    int num_attributes() const;
+    sc_attr_cltn &attr_cltn();
+    const sc_attr_cltn &attr_cltn() const;
+
+  protected:
+    sc_object();
+    sc_object(const char *);
+    sc_object(const sc_object &);
+    sc_object &operator = (const sc_object &);
+    virtual ~sc_object();
+};
+
+const std::vector<sc_object *> &sc_get_top_level_objects();
+sc_object *sc_find_object(const char *);
 
 } // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_CORE_SC_OBJECT_HH__

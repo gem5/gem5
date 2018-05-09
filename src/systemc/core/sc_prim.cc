@@ -27,152 +27,189 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/sc_object.hh"
-
 #include "base/logging.hh"
+#include "systemc/ext/core/sc_prim.hh"
 
 namespace sc_core
 {
 
 const char *
-sc_object::name() const
+sc_prim_channel::kind() const
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "sc_object";
+    return "";
 }
 
-const char *
-sc_object::basename() const
+sc_prim_channel::sc_prim_channel()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "sc_object";
 }
 
-const char *
-sc_object::kind() const
-{
-    return "sc_object";
-}
-
-void
-sc_object::print(std::ostream &out) const
+sc_prim_channel::sc_prim_channel(const char *)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
 void
-sc_object::dump(std::ostream &out) const
+sc_prim_channel::request_update()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-const std::vector<sc_object *> &
-sc_object::get_child_objects() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const std::vector<sc_object *> *)nullptr;
-}
-
-const std::vector<sc_event *> &
-sc_object::get_child_events() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const std::vector<sc_event *> *)nullptr;
-}
-
-sc_object *
-sc_object::get_parent_object() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return NULL;
-}
-
-bool
-sc_object::add_attribute(sc_attr_base &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
-}
-
-sc_attr_base *
-sc_object::get_attribute(const std::string &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return NULL;
-}
-
-sc_attr_base *
-sc_object::remove_attribute(const std::string &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return NULL;
 }
 
 void
-sc_object::remove_all_attributes()
+sc_prim_channel::async_request_update()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-int
-sc_object::num_attributes() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
-}
-
-sc_attr_cltn &
-sc_object::attr_cltn()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(sc_attr_cltn *)NULL;
-}
-
-const sc_attr_cltn &
-sc_object::attr_cltn() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(sc_attr_cltn *)NULL;
-}
-
-sc_object::sc_object()
+void
+sc_prim_channel::next_trigger()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-sc_object::sc_object(const char *name)
+void
+sc_prim_channel::next_trigger(const sc_event &)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-sc_object::sc_object(const sc_object &arg)
+void
+sc_prim_channel::next_trigger(const sc_event_or_list &)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-sc_object &
-sc_object::operator = (const sc_object &)
-{
-    return *this;
-}
-
-sc_object::~sc_object()
+void
+sc_prim_channel::next_trigger(const sc_event_and_list &)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-const std::vector<sc_object *> &
-sc_get_top_level_objects()
+void
+sc_prim_channel::next_trigger(const sc_time &)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const std::vector<sc_object *> *)nullptr;
 }
 
-sc_object *
-sc_find_object(const char *)
+void
+sc_prim_channel::next_trigger(double, sc_time_unit)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return NULL;
+}
+
+void
+sc_prim_channel::next_trigger(const sc_time &, const sc_event &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::next_trigger(double, sc_time_unit, const sc_event &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::next_trigger(const sc_time &, const sc_event_or_list &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::next_trigger(double, sc_time_unit, const sc_event_or_list &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::next_trigger(const sc_time &, const sc_event_and_list &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::next_trigger(double, sc_time_unit, const sc_event_and_list &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(int)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(const sc_event &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(const sc_event_or_list &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(const sc_event_and_list &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(const sc_time &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(double, sc_time_unit)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(const sc_time &, const sc_event &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(double, sc_time_unit, const sc_event &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(const sc_time &, const sc_event_or_list &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(double, sc_time_unit, const sc_event_or_list &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(const sc_time &, const sc_event_and_list &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_prim_channel::wait(double, sc_time_unit, const sc_event_and_list &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
 } // namespace sc_core

@@ -27,8 +27,8 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_SC_MODULE_HH__
-#define __SYSTEMC_SC_MODULE_HH__
+#ifndef __SYSTEMC_CORE_EXT_SC_MODULE_HH__
+#define __SYSTEMC_CORE_EXT_SC_MODULE_HH__
 
 #include <vector>
 
@@ -243,4 +243,4 @@ bool sc_end_of_simulation_invoked();
 
 } // namespace sc_core
 
-#endif  //__SYSTEMC_SC_MODULE_HH__
+#endif  //__SYSTEMC_EXT_CORE_SC_MODULE_HH__

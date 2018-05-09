@@ -27,34 +27,31 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/sc_interface.hh"
-
-#include "base/logging.hh"
+#ifndef __SYSTEMC_EXT_CORE_SC_INTERFACE_HH__
+#define __SYSTEMC_EXT_CORE_SC_INTERFACE_HH__
 
 namespace sc_core
 {
 
-void
-sc_interface::register_port(sc_port_base &, const char *)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+class sc_port_base;
+class sc_event;
 
-const sc_event &
-sc_interface::default_event() const
+class sc_interface
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(sc_event *)nullptr;
-}
+  public:
+    virtual void register_port(sc_port_base &, const char *);
+    virtual const sc_event &default_event() const;
+    virtual ~sc_interface();
 
-sc_interface::~sc_interface()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+  protected:
+    sc_interface();
 
-sc_interface::sc_interface()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+  private:
+    // Disabled
+    sc_interface(const sc_interface &) {}
+    sc_interface &operator = (const sc_interface &) { return *this; }
+};
 
 } // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_CORE_SC_INTERFACE_HH__

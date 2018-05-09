@@ -27,9 +27,8 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/sc_sensitive.hh"
-
 #include "base/logging.hh"
+#include "systemc/ext/core/sc_sensitive.hh"
 
 namespace sc_core
 {

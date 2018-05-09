@@ -27,19 +27,16 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/kernel.hh"
+#include "base/logging.hh"
+#include "systemc/ext/core/sc_port.hh"
 
-namespace SystemC
+namespace sc_core
 {
 
-Kernel::Kernel(Params *params) : SimObject(params)
+void
+sc_port_base::warn_unimpl(const char *func)
 {
+    warn("%s not implemented.\n", func);
 }
 
-} // namespace SystemC
-
-SystemC::Kernel *
-SystemC_KernelParams::create()
-{
-    return new SystemC::Kernel(this);
-}
+} // namespace sc_core

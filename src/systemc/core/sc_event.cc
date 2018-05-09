@@ -27,9 +27,8 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/sc_event.hh"
-
 #include "base/logging.hh"
+#include "systemc/ext/core/sc_event.hh"
 
 namespace sc_core
 {

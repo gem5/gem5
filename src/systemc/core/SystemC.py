@@ -34,7 +34,7 @@ from m5.SimObject import SimObject
 class SystemC_Kernel(SimObject):
     type = 'SystemC_Kernel'
     cxx_class = 'SystemC::Kernel'
-    cxx_header = 'systemc/kernel.hh'
+    cxx_header = 'systemc/core/kernel.hh'
 
     def sc_main(self, *args):
         '''Call the systemc sc_main function with the given string args'''
@@ -48,7 +48,7 @@ class SystemC_ScObject(SimObject):
     type = 'SystemC_ScObject'
     abstract = True
     cxx_class = 'sc_core::sc_object'
-    cxx_header = 'systemc/sc_object.hh'
+    cxx_header = 'systemc/ext/core/sc_object.hh'
 
     # Clear cxx_base to stop the c++ binding code from assuming
     # sc_core::sc_object inherits from SimObject, even though SystemC_ScObject

@@ -27,67 +27,30 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/sc_attr.hh"
-
-#include "base/logging.hh"
+#ifndef __SYSTEMC_EXT_CORE_SC_MODULE_NAME_HH__
+#define __SYSTEMC_EXT_CORE_SC_MODULE_NAME_HH__
 
 namespace sc_core
 {
 
-sc_attr_base::sc_attr_base(const std::string &)
+class sc_module_name
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+  public:
+    sc_module_name(const char *);
+    sc_module_name(const sc_module_name &);
+    ~sc_module_name();
 
-sc_attr_base::sc_attr_base(const sc_attr_base &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+    operator const char *() const;
 
-sc_attr_base::~sc_attr_base()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+  private:
+    const char *_name;
+    bool _on_the_stack;
 
-const std::string &
-sc_attr_base::name() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const std::string *)nullptr;
-}
-
-void
-sc_attr_base::warn_unimpl(const char *func)
-{
-    warn("%s not implemented.\n", func);
-}
-
-sc_attr_cltn::iterator
-sc_attr_cltn::begin()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (iterator)nullptr;
-}
-
-sc_attr_cltn::const_iterator
-sc_attr_cltn::begin() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (const_iterator)nullptr;
-}
-
-sc_attr_cltn::iterator
-sc_attr_cltn::end()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (iterator)nullptr;
-}
-
-sc_attr_cltn::const_iterator
-sc_attr_cltn::end() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (const_iterator)nullptr;
-}
+    // Disabled
+    sc_module_name() {}
+    sc_module_name &operator = (const sc_module_name &) { return *this; }
+};
 
 } // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_CORE_SC_MODULE_NAME_HH__

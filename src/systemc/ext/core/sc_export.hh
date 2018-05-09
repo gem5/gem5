@@ -27,26 +27,75 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_SC_SENSITIVE_HH__
-#define __SYSTEMC_SC_SENSITIVE_HH__
+#ifndef __SYSTEMC_EXT_CORE_SC_EXPORT_HH__
+#define __SYSTEMC_EXT_CORE_SC_EXPORT_HH__
+
+#include "sc_object.hh"
 
 namespace sc_core
 {
 
-class sc_event;
-class sc_event_finder;
 class sc_interface;
-class sc_port_base;
 
-class sc_sensitive
+class sc_export_base : public sc_object
 {
   public:
-    sc_sensitive &operator << (const sc_event &);
-    sc_sensitive &operator << (const sc_interface &);
-    sc_sensitive &operator << (const sc_port_base &);
-    sc_sensitive &operator << (sc_event_finder &);
+    void warn_unimpl(const char *func) const;
+};
+
+template <class IF>
+class sc_export : public sc_export_base
+{
+  public:
+    sc_export() { warn_unimpl(__PRETTY_FUNCTION__); }
+    explicit sc_export(const char *) { warn_unimpl(__PRETTY_FUNCTION__); }
+    virtual ~sc_export() { warn_unimpl(__PRETTY_FUNCTION__); };
+
+    virtual const char *kind() const { return "sc_export"; }
+
+    void operator () (IF &) { warn_unimpl(__PRETTY_FUNCTION__); };
+    virtual void bind(IF &) { warn_unimpl(__PRETTY_FUNCTION__); };
+    operator IF & () { warn_unimpl(__PRETTY_FUNCTION__); };
+    operator const IF & () const { warn_unimpl(__PRETTY_FUNCTION__); };
+
+    IF *
+    operator -> ()
+    {
+        warn_unimpl(__PRETTY_FUNCTION__);
+        return nullptr;
+    }
+    const IF *
+    operator -> () const
+    {
+        warn_unimpl(__PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    virtual sc_interface *
+    get_iterface()
+    {
+        warn_unimpl(__PRETTY_FUNCTION__);
+        return nullptr;
+    }
+    virtual const sc_interface *
+    get_interface() const
+    {
+        warn_unimpl(__PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+  protected:
+    virtual void before_end_of_elaboration() {}
+    virtual void end_of_elaboration() {}
+    virtual void start_of_simulation() {}
+    virtual void end_of_simulation() {}
+
+  private:
+    // Disabled
+    sc_export(const sc_export<IF> &);
+    sc_export<IF> &operator = (const sc_export<IF> &);
 };
 
 } // namespace sc_core
 
-#endif  //__SYSTEMC_SC_SENSITIVE_HH__
+#endif  //__SYSTEMC_EXT_CORE_SC_EXPORT_HH__

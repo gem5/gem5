@@ -27,8 +27,8 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_SC_PRIM_HH__
-#define __SYSTEMC_SC_PRIM_HH__
+#ifndef __SYSTEMC_EXT_CORE_SC_PRIM_HH__
+#define __SYSTEMC_EXT_CORE_SC_PRIM_HH__
 
 #include "sc_object.hh"
 #include "sc_time.hh"
@@ -94,4 +94,4 @@ class sc_prim_channel : public sc_object
 
 } // namespace sc_core
 
-#endif  //__SYSTEMC_SC_PRIM_HH__
+#endif  //__SYSTEMC_EXT_CORE_SC_PRIM_HH__

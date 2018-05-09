@@ -27,8 +27,8 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_SC_EVENT_HH__
-#define __SYSTEMC_SC_EVENT_HH__
+#ifndef __SYSTEMC_EXT_CORE_SC_EVENT_HH__
+#define __SYSTEMC_EXT_CORE_SC_EVENT_HH__
 
 #include <vector>
 
@@ -148,4 +148,4 @@ sc_event *sc_find_event(const char *);
 
 } // namespace sc_core
 
-#endif  //__SYSTEMC_SC_INTERFACE_HH__
+#endif  //__SYSTEMC_EXT_CORE_SC_INTERFACE_HH__

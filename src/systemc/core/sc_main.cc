@@ -27,13 +27,12 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/sc_main.hh"
-
 #include <cstring>
 
 #include "base/logging.hh"
 #include "python/pybind11/pybind.hh"
 #include "sim/init.hh"
+#include "systemc/ext/core/sc_main.hh"
 
 // A default version of this function in case one isn't otherwise defined.
 // This ensures everything will link properly whether or not the user defined

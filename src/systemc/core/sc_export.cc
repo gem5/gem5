@@ -27,31 +27,16 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_SC_INTERFACE_HH__
-#define __SYSTEMC_SC_INTERFACE_HH__
+#include "base/logging.hh"
+#include "systemc/ext/core/sc_export.hh"
 
 namespace sc_core
 {
 
-class sc_port_base;
-class sc_event;
-
-class sc_interface
+void
+sc_export_base::warn_unimpl(const char *func) const
 {
-  public:
-    virtual void register_port(sc_port_base &, const char *);
-    virtual const sc_event &default_event() const;
-    virtual ~sc_interface();
-
-  protected:
-    sc_interface();
-
-  private:
-    // Disabled
-    sc_interface(const sc_interface &) {}
-    sc_interface &operator = (const sc_interface &) { return *this; }
-};
+    warn("%s not implemented.\n", func);
+}
 
 } // namespace sc_core
-
-#endif  //__SYSTEMC_SC_INTERFACE_HH__
