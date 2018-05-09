@@ -27446,8 +27446,8 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                vdst[lane] = bits(src0[lane], 23, 0) * bits(src1[lane], 23, 0)
-                    + src2[lane];
+                vdst[lane] = sext<24>(bits(src0[lane], 23, 0))
+                    * sext<24>(bits(src1[lane], 23, 0)) + src2[lane];
             }
         }
 
