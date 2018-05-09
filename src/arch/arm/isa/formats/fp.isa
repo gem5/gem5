@@ -1476,6 +1476,18 @@ let {{
               case 0x5:
                 return decodeNeonUTwoMiscSReg<NVpaddlD, NVpaddlQ>(
                         q, size, machInst, vd, vm);
+              case 0x6:
+                if (q == 0) {
+                    return new AESE(machInst, vd, vd, vm);
+                } else {
+                    return new AESD(machInst, vd, vd, vm);
+                }
+              case 0x7:
+                if (q == 0) {
+                    return new AESMC(machInst, vd, vm);
+                } else {
+                    return new AESIMC(machInst, vd, vm);
+                }
               case 0x8:
                 return decodeNeonSTwoMiscReg<NVclsD, NVclsQ>(
                         q, size, machInst, vd, vm);

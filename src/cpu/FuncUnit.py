@@ -50,9 +50,10 @@ class OpClass(Enum):
             'SimdSqrt', 'SimdFloatAdd', 'SimdFloatAlu', 'SimdFloatCmp',
             'SimdFloatCvt', 'SimdFloatDiv', 'SimdFloatMisc', 'SimdFloatMult',
             'SimdFloatMultAcc', 'SimdFloatSqrt',
-            'SimdSha1Hash', 'SimdSha1Hash2', 'SimdSha256Hash',
-            'SimdSha256Hash2', 'SimdShaSigma2', 'SimdShaSigma3',
-            'MemRead', 'MemWrite', 'FloatMemRead', 'FloatMemWrite',
+            'SimdAes', 'SimdAesMix', 'SimdSha1Hash', 'SimdSha1Hash2',
+            'SimdSha256Hash', 'SimdSha256Hash2', 'SimdShaSigma2',
+            'SimdShaSigma3', 'MemRead', 'MemWrite',
+            'FloatMemRead', 'FloatMemWrite',
             'IprAccess', 'InstPrefetch']
 
 class OpDesc(SimObject):

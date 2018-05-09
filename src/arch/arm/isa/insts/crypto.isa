@@ -136,6 +136,11 @@ let {{
         decoder_output += RegRegImmOpConstructor.subst(cryptoiop)
         exec_output += CryptoPredOpExecute.subst(cryptoiop)
 
+    aeseCode = "crypto.aesEncrypt(output, input, input2);"
+    aesdCode = "crypto.aesDecrypt(output, input, input2);"
+    aesmcCode = "crypto.aesMixColumns(output, input);"
+    aesimcCode = "crypto.aesInvMixColumns(output, input);"
+
     sha1_cCode = "crypto.sha1C(output, input, input2);"
     sha1_pCode = "crypto.sha1P(output, input, input2);"
     sha1_mCode = "crypto.sha1M(output, input, input2);"
@@ -147,6 +152,16 @@ let {{
     sha256_h2Code = "crypto.sha256H2(output, input, input2);"
     sha256_su0Code = "crypto.sha256Su0(output, input);"
     sha256_su1Code = "crypto.sha256Su1(output, input, input2);"
+
+    aes_enabled = cryptoEnabledCheckCode % { "mask" : 0xF0 }
+    cryptoRegRegRegInst("aese", "AESE", "SimdAesOp",
+                        aes_enabled, aeseCode)
+    cryptoRegRegRegInst("aesd", "AESD", "SimdAesOp",
+                        aes_enabled, aesdCode)
+    cryptoRegRegInst("aesmc", "AESMC", "SimdAesMixOp",
+                     aes_enabled, aesmcCode)
+    cryptoRegRegInst("aesimc", "AESIMC", "SimdAesMixOp",
+                     aes_enabled, aesimcCode)
 
     sha1_enabled = cryptoEnabledCheckCode % { "mask" : 0xF00 }
     cryptoRegRegRegInst("sha1c", "SHA1C", "SimdSha1HashOp",

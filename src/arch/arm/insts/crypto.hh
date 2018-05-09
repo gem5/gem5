@@ -52,6 +52,41 @@ class Crypto
         MAJORITY
     };
 
+    /** Look up table for subByttes transformation */
+    static const uint8_t aesSBOX[256];
+
+    /** Look up table for inverse subBytes transformation */
+    static const uint8_t aesInvSBOX[256];
+
+    static const uint8_t aesSHIFT[16];
+    static const uint8_t aesINVSHIFT[16];
+
+    /**
+     * Look up table for Finite Field logarithm where the base
+     * is the element {03} in the field G(256)
+     */
+    static const uint8_t aesFFLOG[256];
+
+    /**
+     * Look up table for {03}^X where {03} and X are elements
+     * in the filed G(256)
+     */
+    static const uint8_t aesFFEXP[256];
+
+    /** Finite field multiplication of two elements in the field G(256) */
+    uint8_t aesFFMul(uint8_t a, uint8_t b);
+
+    uint8_t aesFFMul2(uint8_t a)
+    {
+        return ((a & 0x80) ? ((a << 1) ^ 0x1b) : (a << 1));
+    }
+
+    void aesSubBytes(uint8_t *output, uint8_t *input);
+    void aesInvSubBytes(uint8_t *output, uint8_t *input);
+    void aesShiftRows(uint8_t *output, uint8_t *input);
+    void aesInvShiftRows(uint8_t *output, uint8_t *input);
+    void aesAddRoundKey(uint8_t *output, uint8_t *input, uint8_t *key);
+
     uint32_t ror(uint32_t x, uint8_t shift)
     {
         return (x >> shift) | (x << (32 - shift));
@@ -92,6 +127,10 @@ class Crypto
     void store1Reg(uint8_t *output, uint32_t *X);
 
   public:
+    void aesMixColumns(uint8_t *output, uint8_t *input);
+    void aesInvMixColumns(uint8_t *output, uint8_t *input);
+    void aesEncrypt(uint8_t *output, uint8_t *input, uint8_t *key);
+    void aesDecrypt(uint8_t *output, uint8_t *input, uint8_t *key);
     void sha256H(uint8_t *output, uint8_t *input, uint8_t *input2);
     void sha256H2(uint8_t *output, uint8_t *input, uint8_t *input2);
     void sha256Su0(uint8_t *output, uint8_t *input);
