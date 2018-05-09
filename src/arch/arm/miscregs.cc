@@ -4007,9 +4007,6 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_CP15_UNIMPL)
       .unimplemented()
       .warnNotFail();
-    InitReg(MISCREG_A64_UNIMPL)
-      .unimplemented()
-      .warnNotFail();
     InitReg(MISCREG_UNKNOWN);
 
     // Register mappings for some unimplemented registers:

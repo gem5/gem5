@@ -689,7 +689,6 @@ namespace ArmISA
         MISCREG_RAZ,
         MISCREG_CP14_UNIMPL,
         MISCREG_CP15_UNIMPL,
-        MISCREG_A64_UNIMPL,
         MISCREG_UNKNOWN,
 
         // Implementation defined register: this represent
@@ -1386,7 +1385,6 @@ namespace ArmISA
         "raz",
         "cp14_unimpl",
         "cp15_unimpl",
-        "a64_unimpl",
         "unknown",
         "impl_defined"
     };
