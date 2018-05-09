@@ -40,6 +40,9 @@
 let {{
     header_output = '''
     StaticInstPtr
+    decodeCryptoAES(ExtMachInst machInst);
+
+    StaticInstPtr
     decodeCryptoThreeRegSHA(ExtMachInst machInst);
 
     StaticInstPtr
@@ -47,6 +50,29 @@ let {{
     '''
 
     decoder_output = '''
+
+    StaticInstPtr
+    decodeCryptoAES(ExtMachInst machInst)
+    {
+        const auto opcode = bits(machInst, 16, 12);
+        const auto size = bits(machInst, 23, 22);
+
+        IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        if (size) {
+            // UNALLOCATED
+            return new Unknown64(machInst);
+        } else {
+            switch (opcode) {
+              case 0x4: return new AESE64(machInst, rd, rd, rn);
+              case 0x5: return new AESD64(machInst, rd, rd, rn);
+              case 0x6: return new AESMC64(machInst, rd, rn);
+              case 0x7: return new AESIMC64(machInst, rd, rn);
+              default: return new Unknown64(machInst);
+            }
+        }
+    }
 
     StaticInstPtr
     decodeCryptoTwoRegSHA(ExtMachInst machInst)
