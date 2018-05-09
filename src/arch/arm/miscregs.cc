@@ -2082,9 +2082,12 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                     }
                     break;
                 }
-                break;
+                M5_FALLTHROUGH;
+              default:
+                // S3_<op1>_11_<Cm>_<op2>
+                return MISCREG_IMPDEF_UNIMPL;
             }
-            break;
+            M5_UNREACHABLE;
           case 12:
             switch (op1) {
               case 0:
@@ -2370,7 +2373,8 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                 }
                 break;
             }
-            break;
+            // S3_<op1>_15_<Cm>_<op2>
+            return MISCREG_IMPDEF_UNIMPL;
         }
         break;
     }
