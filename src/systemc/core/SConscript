@@ -41,6 +41,7 @@ if env['USE_SYSTEMC']:
     Source('sc_module_name.cc')
     Source('sc_object.cc')
     Source('sc_port.cc')
+    Source('sc_process_handle.cc')
     Source('sc_prim.cc')
     Source('sc_sensitive.cc')
     Source('sc_time.cc')
