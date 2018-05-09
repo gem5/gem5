@@ -377,6 +377,20 @@ namespace Aarch64
                         return new FailUnimplemented(read ? "mrs" : "msr",
                             machInst, full_mnemonic);
 
+                    } else if (miscReg == MISCREG_IMPDEF_UNIMPL) {
+                        auto full_mnemonic =
+                            csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
+                                     read ? "mrs" : "msr",
+                                     op0, op1, crn, crm, op2);
+
+                        if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
+                            return new WarnUnimplemented(read ? "mrs" : "msr",
+                                machInst, full_mnemonic + " treated as NOP");
+                        } else {
+                            return new FailUnimplemented(read ? "mrs" : "msr",
+                                machInst, full_mnemonic);
+                        }
+
                     } else if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
                         if (miscReg == MISCREG_NZCV) {
                             if (read)

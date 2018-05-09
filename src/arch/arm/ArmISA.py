@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015-2016 ARM Limited
+# Copyright (c) 2012-2013, 2015-2016, 2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -111,3 +111,9 @@ class ArmISA(SimObject):
     # Reserved for future expansion
     id_aa64mmfr1_el1 = Param.UInt64(0x0000000000000000,
         "AArch64 Memory Model Feature Register 1")
+
+    # Any access (read/write) to an unimplemented
+    # Implementation Defined registers is not causing an Undefined Instruction.
+    # It is rather executed as a NOP.
+    impdef_nop = Param.Bool(False,
+        "Any access to a MISCREG_IMPDEF_UNIMPL register is executed as NOP")

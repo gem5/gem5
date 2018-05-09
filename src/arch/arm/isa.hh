@@ -90,6 +90,12 @@ namespace ArmISA
         bool haveLargeAsid64;
         uint8_t physAddrRange64;
 
+        /**
+         * If true, accesses to IMPLEMENTATION DEFINED registers are treated
+         * as NOP hence not causing UNDEFINED INSTRUCTION.
+         */
+        bool impdefAsNop;
+
         /** MiscReg metadata **/
         struct MiscRegLUTEntry {
             uint32_t lower;  // Lower half mapped to this register

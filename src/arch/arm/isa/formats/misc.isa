@@ -220,10 +220,22 @@ let {{
                     csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s unknown",
                     crn, opc1, crm, opc2, isRead ? "read" : "write"));
           case MISCREG_IMPDEF_UNIMPL:
-            return new McrMrcImplDefined(
-                isRead ? "mrc implementation defined" :
-                         "mcr implementation defined",
-                machInst, iss, MISCREG_IMPDEF_UNIMPL);
+
+            if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
+                auto mnemonic =
+                    csprintf("miscreg crn:%d opc1:%d crm:%d opc2:%d %s",
+                             crn, opc1, crm, opc2, isRead ? "read" : "write");
+
+                return new WarnUnimplemented(
+                    isRead ? "mrc implementation defined" :
+                             "mcr implementation defined",
+                    machInst, mnemonic + " treated as NOP");
+            } else {
+                return new McrMrcImplDefined(
+                    isRead ? "mrc implementation defined" :
+                             "mcr implementation defined",
+                    machInst, iss, MISCREG_IMPDEF_UNIMPL);
+            }
           case MISCREG_CP15ISB:
             return new Isb(machInst, iss);
           case MISCREG_CP15DSB:

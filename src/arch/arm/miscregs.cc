@@ -4008,6 +4008,9 @@ ISA::initializeMiscRegMetadata()
       .unimplemented()
       .warnNotFail();
     InitReg(MISCREG_UNKNOWN);
+    InitReg(MISCREG_IMPDEF_UNIMPL)
+      .unimplemented()
+      .warnNotFail(impdefAsNop);
 
     // Register mappings for some unimplemented registers:
     // ESR_EL1 -> DFSR

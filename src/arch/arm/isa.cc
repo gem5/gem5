@@ -61,7 +61,8 @@ ISA::ISA(Params *p)
       system(NULL),
       _decoderFlavour(p->decoderFlavour),
       _vecRegRenameMode(p->vecRegRenameMode),
-      pmu(p->pmu)
+      pmu(p->pmu),
+      impdefAsNop(p->impdef_nop)
 {
     miscRegs[MISCREG_SCTLR_RST] = 0;
 
