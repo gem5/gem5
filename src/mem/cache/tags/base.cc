@@ -75,12 +75,10 @@ BaseTags::setCache(BaseCache *_cache)
 void
 BaseTags::insertBlock(PacketPtr pkt, CacheBlk *blk)
 {
+    assert(!blk->isValid());
+
     // Get address
     Addr addr = pkt->getAddr();
-
-    if (blk->isValid()) {
-        invalidate(blk);
-    }
 
     // Previous block, if existed, has been removed, and now we have
     // to insert the new one

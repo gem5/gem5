@@ -1858,6 +1858,7 @@ Cache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
             } else {
                 writebacks.push_back(cleanEvictBlk(blk));
             }
+            invalidateBlock(blk);
             replacements++;
         }
     }
