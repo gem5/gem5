@@ -109,12 +109,6 @@ class CacheBlk : public ReplaceableEntry
      */
     int set, way;
 
-    /**
-     * Whether this block has been touched since simulation started.
-     * Used to calculate number of used tags.
-     */
-    bool isTouched;
-
     /** Number of references to this block since it was brought in. */
     unsigned refCount;
 
@@ -217,7 +211,6 @@ class CacheBlk : public ReplaceableEntry
         task_id = ContextSwitchTaskId::Unknown;
         status = 0;
         whenReady = MaxTick;
-        isTouched = false;
         refCount = 0;
         srcMasterId = Request::invldMasterId;
         tickInserted = MaxTick;

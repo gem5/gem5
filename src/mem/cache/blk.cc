@@ -46,9 +46,6 @@ void
 CacheBlk::insert(const Addr tag, const State is_secure,
                  const int src_master_ID, const uint32_t task_ID)
 {
-    // Touch block
-    isTouched = true;
-
     // Set block tag
     this->tag = tag;
 
