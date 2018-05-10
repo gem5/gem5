@@ -453,6 +453,9 @@ class BaseCache : public MemObject
     /** The average overall latency of an MSHR miss. */
     Stats::Formula overallAvgMshrUncacheableLatency;
 
+    /** Number of replacements of valid blocks. */
+    Stats::Scalar replacements;
+
     /**
      * @}
      */

@@ -48,7 +48,6 @@
 
 #include "mem/cache/tags/base.hh"
 
-#include "cpu/smt.hh" //maxThreadsPerCPU
 #include "mem/cache/base.hh"
 #include "sim/sim_exit.hh"
 
@@ -92,7 +91,6 @@ BaseTags::insertBlock(PacketPtr pkt, CacheBlk *blk)
     // found block might not actually be replaced there if the
     // coherence protocol says it can't be.
     if (blk->isValid()) {
-        replacements[0]++;
         totalRefs += blk->refCount;
         ++sampledRefs;
 
@@ -124,13 +122,6 @@ BaseTags::regStats()
     ClockedObject::regStats();
 
     using namespace Stats;
-
-    replacements
-        .init(maxThreadsPerCPU)
-        .name(name() + ".replacements")
-        .desc("number of replacements")
-        .flags(total)
-        ;
 
     tagsInUse
         .name(name() + ".tagsinuse")

@@ -104,8 +104,6 @@ class BaseTags : public ClockedObject
      * @{
      */
 
-    /** Number of replacements of valid blocks per thread. */
-    Stats::Vector replacements;
     /** Per cycle average of the number of tags that hold valid data. */
     Stats::Average tagsInUse;
 

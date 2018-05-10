@@ -758,4 +758,8 @@ BaseCache::regStats()
         overallAvgMshrUncacheableLatency.subname(i, system->getMasterName(i));
     }
 
+    replacements
+        .name(name() + ".replacements")
+        .desc("number of replacements")
+        ;
 }
