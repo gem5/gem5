@@ -78,16 +78,8 @@ BaseTags::insertBlock(PacketPtr pkt, CacheBlk *blk)
     // Get address
     Addr addr = pkt->getAddr();
 
-    // If we're replacing a block that was previously valid update
-    // stats for it. This can't be done in findBlock() because a
-    // found block might not actually be replaced there if the
-    // coherence protocol says it can't be.
     if (blk->isValid()) {
-        totalRefs += blk->refCount;
-        ++sampledRefs;
-
         invalidate(blk);
-        blk->invalidate();
     }
 
     // Previous block, if existed, has been removed, and now we have

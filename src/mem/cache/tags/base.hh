@@ -239,16 +239,21 @@ class BaseTags : public ClockedObject
     }
 
     /**
-     * This function updates the tags when a block is invalidated but
-     * does not invalidate the block itself.
-     * @param blk The block to invalidate.
+     * This function updates the tags when a block is invalidated
+     *
+     * @param blk A valid block to invalidate.
      */
     virtual void invalidate(CacheBlk *blk)
     {
         assert(blk);
         assert(blk->isValid());
+
         tagsInUse--;
         occupancies[blk->srcMasterId]--;
+        totalRefs += blk->refCount;
+        sampledRefs++;
+
+        blk->invalidate();
     }
 
     /**
