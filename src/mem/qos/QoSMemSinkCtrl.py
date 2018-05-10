@@ -1,5 +1,5 @@
 # Copyright (c) 2018 ARM Limited
-# All rights reserved
+# All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
@@ -33,16 +33,31 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Giacomo Travaglini
+# Author: Matteo Andreozzi
 
-Import('*')
+from m5.params import *
+from QoSMemCtrl import *
 
-SimObject('QoSMemCtrl.py')
-SimObject('QoSMemSinkCtrl.py')
-SimObject('QoSPolicy.py')
-SimObject('QoSTurnaround.py')
+class QoSMemSinkCtrl(QoSMemCtrl):
+    type = 'QoSMemSinkCtrl'
+    cxx_header = "mem/qos/mem_sink.hh"
+    cxx_class = "QoS::MemSinkCtrl"
+    port = SlavePort("Slave ports")
 
-Source('policy.cc')
-Source('q_policy.cc')
-Source('mem_ctrl.cc')
-Source('mem_sink.cc')
+    # the basic configuration of the controller architecture, note
+    # that each entry corresponds to a burst for the specific DRAM
+    # configuration (e.g. x32 with burst length 8 is 32 bytes) and not
+    # the cacheline size or request/packet size
+    write_buffer_size = Param.Unsigned(64, "Number of write queue entries")
+    read_buffer_size = Param.Unsigned(32, "Number of read queue entries")
+
+    # memory packet size
+    memory_packet_size = Param.MemorySize("32B", "Memory packet size")
+
+    # request latency - minimum timing between requests
+    request_latency = Param.Latency("20ns", "Memory latency between requests")
+
+    # response latency - time to issue a response once a request is serviced
+    response_latency = Param.Latency("20ns", "Memory response latency")
+
+
