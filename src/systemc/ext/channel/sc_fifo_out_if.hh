@@ -27,70 +27,50 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC_H__
-#define __SYSTEMC_EXT_SYSTEMC_H__
+#ifndef __SYSTEMC_EXT_CHANNEL_SC_FIFO_OUT_IF_HH__
+#define __SYSTEMC_EXT_CHANNEL_SC_FIFO_OUT_IF_HH__
 
-#include "systemc"
+#include "../core/sc_interface.hh"
 
-// Collect "using" declarations for the various namespaces.
-#include "channel/_using.hh"
-#include "core/_using.hh"
-#include "dt/_using.hh"
+namespace sc_core
+{
 
-// Include some system header files, and import some symbols from std into
-// the base namespace.
-#include <stdint.h>
+class sc_event;
 
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+template <class T>
+class sc_fifo_nonblocking_out_if : virtual public sc_interface
+{
+  public:
+    virtual bool ab_write(const T &) = 0;
+    virtual const sc_event &data_read_event() const = 0;
+};
 
-using std::ios;
-using std::streambuf;
-using std::streampos;
-using std::streamsize;
-using std::iostream;
-using std::istream;
-using std::ostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::flush;
-using std::dec;
-using std::hex;
-using std::oct;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::size_t;
-using std::memchr;
-using std::memcmp;
-using std::memcpy;
-using std::memmove;
-using std::memset;
-using std::strcat;
-using std::strchr;
-using std::strcmp;
-using std::strncmp;
-using std::strcpy;
-using std::strncpy;
-using std::strcspn;
-using std::strspn;
-using std::strlen;
-using std::strpbrk;
-using std::strstr;
-using std::strtok;
+template <class T>
+class sc_fifo_blocking_out_if : virtual public sc_interface
+{
+  public:
+    virtual void write(const T &) = 0;
+};
 
-#endif  //__SYSTEMC_EXT_SYSTEMC_H__
+template <class T>
+class sc_fifo_out_if : public sc_fifo_nonblocking_out_if<T>,
+                       public sc_fifo_blocking_out_if<T>
+{
+  public:
+    virtual int num_free() const = 0;
+
+  protected:
+    sc_fifo_out_if() : sc_interface(), sc_fifo_nonblocking_out_if<T>(),
+            sc_fifo_blocking_out_if<T>()
+    {}
+
+  private:
+    sc_fifo_out_if(const sc_fifo_out_if<T> &) : sc_interface(),
+            sc_fifo_nonblocking_out_if<T>(), sc_fifo_blocking_out_if<T>()
+    {}
+    sc_fifo_out_if<T> &operator = (const sc_fifo_out_if<T> &) { return *this; }
+};
+
+} // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_CHANNEL_SC_FIFO_OUT_IF_HH__

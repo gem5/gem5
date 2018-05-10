@@ -27,70 +27,33 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC_H__
-#define __SYSTEMC_EXT_SYSTEMC_H__
+#ifndef __SYSTEMC_EXT_CHANNEL_SC_MUTEX_HH__
+#define __SYSTEMC_EXT_CHANNEL_SC_MUTEX_HH__
 
-#include "systemc"
+#include "../core/sc_object.hh"
+#include "sc_mutex_if.hh"
 
-// Collect "using" declarations for the various namespaces.
-#include "channel/_using.hh"
-#include "core/_using.hh"
-#include "dt/_using.hh"
+namespace sc_core
+{
 
-// Include some system header files, and import some symbols from std into
-// the base namespace.
-#include <stdint.h>
+class sc_mutex : public sc_mutex_if, public sc_object
+{
+  public:
+    sc_mutex();
+    explicit sc_mutex(const char *name);
 
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+    virtual int lock();
+    virtual int trylock();
+    virtual int unlock();
 
-using std::ios;
-using std::streambuf;
-using std::streampos;
-using std::streamsize;
-using std::iostream;
-using std::istream;
-using std::ostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::flush;
-using std::dec;
-using std::hex;
-using std::oct;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::size_t;
-using std::memchr;
-using std::memcmp;
-using std::memcpy;
-using std::memmove;
-using std::memset;
-using std::strcat;
-using std::strchr;
-using std::strcmp;
-using std::strncmp;
-using std::strcpy;
-using std::strncpy;
-using std::strcspn;
-using std::strspn;
-using std::strlen;
-using std::strpbrk;
-using std::strstr;
-using std::strtok;
+    virtual const char *kind() const;
 
-#endif  //__SYSTEMC_EXT_SYSTEMC_H__
+  private:
+    // Disabled
+    sc_mutex(const sc_mutex &) : sc_interface(), sc_mutex_if(), sc_object() {}
+    sc_mutex &operator = (const sc_mutex &) { return *this; }
+};
+
+} // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_CHANNEL_SC_MUTEX_HH__

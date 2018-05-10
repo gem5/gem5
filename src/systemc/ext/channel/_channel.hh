@@ -27,70 +27,34 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC_H__
-#define __SYSTEMC_EXT_SYSTEMC_H__
+#ifndef __SYSTEMC_EXT_CHANNEL__CHANNEL_HH__
+#define __SYSTEMC_EXT_CHANNEL__CHANNEL_HH__
 
-#include "systemc"
+#include "sc_buffer.hh"
+#include "sc_clock.hh"
+#include "sc_event_queue.hh"
+#include "sc_fifo.hh"
+#include "sc_fifo_in.hh"
+#include "sc_fifo_in_if.hh"
+#include "sc_fifo_out.hh"
+#include "sc_fifo_out_if.hh"
+#include "sc_in.hh"
+#include "sc_in_resolved.hh"
+#include "sc_in_rv.hh"
+#include "sc_inout.hh"
+#include "sc_inout_resolved.hh"
+#include "sc_inout_rv.hh"
+#include "sc_mutex.hh"
+#include "sc_mutex_if.hh"
+#include "sc_out.hh"
+#include "sc_out_resolved.hh"
+#include "sc_out_rv.hh"
+#include "sc_semaphore.hh"
+#include "sc_semaphore_if.hh"
+#include "sc_signal.hh"
+#include "sc_signal_in_if.hh"
+#include "sc_signal_inout_if.hh"
+#include "sc_signal_resolved.hh"
+#include "sc_signal_rv.hh"
 
-// Collect "using" declarations for the various namespaces.
-#include "channel/_using.hh"
-#include "core/_using.hh"
-#include "dt/_using.hh"
-
-// Include some system header files, and import some symbols from std into
-// the base namespace.
-#include <stdint.h>
-
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
-
-using std::ios;
-using std::streambuf;
-using std::streampos;
-using std::streamsize;
-using std::iostream;
-using std::istream;
-using std::ostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::flush;
-using std::dec;
-using std::hex;
-using std::oct;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::size_t;
-using std::memchr;
-using std::memcmp;
-using std::memcpy;
-using std::memmove;
-using std::memset;
-using std::strcat;
-using std::strchr;
-using std::strcmp;
-using std::strncmp;
-using std::strcpy;
-using std::strncpy;
-using std::strcspn;
-using std::strspn;
-using std::strlen;
-using std::strpbrk;
-using std::strstr;
-using std::strtok;
-
-#endif  //__SYSTEMC_EXT_SYSTEMC_H__
+#endif  //__SYSTEMC_EXT_CHANNEL__CHANNEL_HH__

@@ -27,70 +27,59 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC_H__
-#define __SYSTEMC_EXT_SYSTEMC_H__
+#ifndef __SYSTEMC_EXT_CHANNEL_SC_CLOCK_HH__
+#define __SYSTEMC_EXT_CHANNEL_SC_CLOCK_HH__
 
-#include "systemc"
+#include "../core/sc_time.hh"
+#include "sc_signal.hh"
 
-// Collect "using" declarations for the various namespaces.
-#include "channel/_using.hh"
-#include "core/_using.hh"
-#include "dt/_using.hh"
+namespace sc_core
+{
 
-// Include some system header files, and import some symbols from std into
-// the base namespace.
-#include <stdint.h>
+template <class T>
+class sc_in;
 
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+class sc_time;
 
-using std::ios;
-using std::streambuf;
-using std::streampos;
-using std::streamsize;
-using std::iostream;
-using std::istream;
-using std::ostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::flush;
-using std::dec;
-using std::hex;
-using std::oct;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::size_t;
-using std::memchr;
-using std::memcmp;
-using std::memcpy;
-using std::memmove;
-using std::memset;
-using std::strcat;
-using std::strchr;
-using std::strcmp;
-using std::strncmp;
-using std::strcpy;
-using std::strncpy;
-using std::strcspn;
-using std::strspn;
-using std::strlen;
-using std::strpbrk;
-using std::strstr;
-using std::strtok;
+class sc_clock : public sc_signal<bool>
+{
+  public:
+    sc_clock();
+    explicit sc_clock(const char *name);
 
-#endif  //__SYSTEMC_EXT_SYSTEMC_H__
+    sc_clock(const char *name, const sc_time &period,
+             double duty_cycle=0.5, const sc_time &start_time=SC_ZERO_TIME,
+             bool posedge_first=true);
+
+    sc_clock(const char *name, double period_v, sc_time_unit period_tu,
+             double duty_cycle=0.5);
+
+    sc_clock(const char *name, double period_v, sc_time_unit period_tu,
+             double duty_cycle, double start_time_v,
+             sc_time_unit start_time_tu, bool posedge_first=true);
+
+    virtual ~sc_clock();
+
+    virtual void write(const bool &);
+
+    const sc_time &period() const;
+    double duty_cycle() const;
+    const sc_time &start_time() const;
+    bool posedge_first() const;
+
+    virtual const char *kind() const;
+
+  protected:
+    virtual void before_end_of_elaboration();
+
+  private:
+    // Disabled
+    sc_clock(const sc_clock &) : sc_interface(), sc_signal<bool>() {}
+    sc_clock &operator = (const sc_clock &) { return *this; }
+};
+
+typedef sc_in<bool> sc_in_clk;
+
+} // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_CHANNEL_SC_CLOCK_HH__

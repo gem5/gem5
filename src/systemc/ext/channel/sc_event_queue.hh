@@ -27,70 +27,44 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC_H__
-#define __SYSTEMC_EXT_SYSTEMC_H__
+#ifndef __SYSTEMC_EXT_CHANNEL_SC_EVENT_QUEUE_HH__
+#define __SYSTEMC_EXT_CHANNEL_SC_EVENT_QUEUE_HH__
 
-#include "systemc"
+#include "../core/sc_interface.hh"
+#include "../core/sc_module.hh" // for sc_gen_unique_name
+#include "../core/sc_module_name.hh"
+#include "../core/sc_time.hh"
+#include "warn_unimpl.hh"
 
-// Collect "using" declarations for the various namespaces.
-#include "channel/_using.hh"
-#include "core/_using.hh"
-#include "dt/_using.hh"
+namespace sc_core
+{
 
-// Include some system header files, and import some symbols from std into
-// the base namespace.
-#include <stdint.h>
+class sc_event;
 
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+class sc_event_queue_if : public virtual sc_interface
+{
+  public:
+    virtual void notify(double, sc_time_unit) = 0;
+    virtual void notify(const sc_time &) = 0;
+    virtual void cancel_all() = 0;
+};
 
-using std::ios;
-using std::streambuf;
-using std::streampos;
-using std::streamsize;
-using std::iostream;
-using std::istream;
-using std::ostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::flush;
-using std::dec;
-using std::hex;
-using std::oct;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::size_t;
-using std::memchr;
-using std::memcmp;
-using std::memcpy;
-using std::memmove;
-using std::memset;
-using std::strcat;
-using std::strchr;
-using std::strcmp;
-using std::strncmp;
-using std::strcpy;
-using std::strncpy;
-using std::strcspn;
-using std::strspn;
-using std::strlen;
-using std::strpbrk;
-using std::strstr;
-using std::strtok;
+class sc_event_queue : public sc_event_queue_if, public sc_module
+{
+  public:
+    sc_event_queue(sc_module_name name=
+                   sc_module_name(sc_gen_unique_name("event_queue")));
+    ~sc_event_queue();
 
-#endif  //__SYSTEMC_EXT_SYSTEMC_H__
+    virtual const char *kind() const;
+
+    virtual void notify(double, sc_time_unit);
+    virtual void notify(const sc_time &);
+    virtual void cancel_all();
+
+    virtual const sc_event &default_event() const;
+};
+
+} // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_CHANNEL_SC_EVENT_QUEUE_HH__

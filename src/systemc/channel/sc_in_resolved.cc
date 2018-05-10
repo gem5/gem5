@@ -27,70 +27,22 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC_H__
-#define __SYSTEMC_EXT_SYSTEMC_H__
+#include "base/logging.hh"
+#include "systemc/ext/channel/sc_in_resolved.hh"
 
-#include "systemc"
+namespace sc_core
+{
 
-// Collect "using" declarations for the various namespaces.
-#include "channel/_using.hh"
-#include "core/_using.hh"
-#include "dt/_using.hh"
+sc_in_resolved::sc_in_resolved() : sc_in<sc_dt::sc_logic>() {}
 
-// Include some system header files, and import some symbols from std into
-// the base namespace.
-#include <stdint.h>
+sc_in_resolved::sc_in_resolved(const char *name) :
+        sc_in<sc_dt::sc_logic>(name)
+{}
 
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+sc_in_resolved::~sc_in_resolved() {}
 
-using std::ios;
-using std::streambuf;
-using std::streampos;
-using std::streamsize;
-using std::iostream;
-using std::istream;
-using std::ostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::flush;
-using std::dec;
-using std::hex;
-using std::oct;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::size_t;
-using std::memchr;
-using std::memcmp;
-using std::memcpy;
-using std::memmove;
-using std::memset;
-using std::strcat;
-using std::strchr;
-using std::strcmp;
-using std::strncmp;
-using std::strcpy;
-using std::strncpy;
-using std::strcspn;
-using std::strspn;
-using std::strlen;
-using std::strpbrk;
-using std::strstr;
-using std::strtok;
+void sc_in_resolved::end_of_elaboration() {}
 
-#endif  //__SYSTEMC_EXT_SYSTEMC_H__
+const char *sc_in_resolved::kind() const { return "sc_in_resolved"; }
+
+} // namespace sc_core

@@ -27,70 +27,64 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC_H__
-#define __SYSTEMC_EXT_SYSTEMC_H__
+#ifndef __SYSTEMC_EXT_CHANNEL_SC_SIGNAL_INOUT_IF_HH__
+#define __SYSTEMC_EXT_CHANNEL_SC_SIGNAL_INOUT_IF_HH__
 
-#include "systemc"
+#include "../core/sc_interface.hh"
+#include "sc_signal_in_if.hh"
 
-// Collect "using" declarations for the various namespaces.
-#include "channel/_using.hh"
-#include "core/_using.hh"
-#include "dt/_using.hh"
+namespace sc_core
+{
 
-// Include some system header files, and import some symbols from std into
-// the base namespace.
-#include <stdint.h>
+enum sc_writer_policy
+{
+    SC_ONE_WRITER,
+    SC_MANY_WRITERS
+};
 
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+template <class T>
+class sc_signal_write_if : virtual public sc_interface
+{
+  public:
+    virtual sc_writer_policy
+    get_writer_policy() const
+    {
+        return SC_ONE_WRITER;
+    }
+    virtual void write(const T &) = 0;
 
-using std::ios;
-using std::streambuf;
-using std::streampos;
-using std::streamsize;
-using std::iostream;
-using std::istream;
-using std::ostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::flush;
-using std::dec;
-using std::hex;
-using std::oct;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::size_t;
-using std::memchr;
-using std::memcmp;
-using std::memcpy;
-using std::memmove;
-using std::memset;
-using std::strcat;
-using std::strchr;
-using std::strcmp;
-using std::strncmp;
-using std::strcpy;
-using std::strncpy;
-using std::strcspn;
-using std::strspn;
-using std::strlen;
-using std::strpbrk;
-using std::strstr;
-using std::strtok;
+  protected:
+    sc_signal_write_if() : sc_interface() {}
 
-#endif  //__SYSTEMC_EXT_SYSTEMC_H__
+  private:
+    // Disabled
+    sc_signal_write_if(const sc_signal_write_if<T> &) : sc_interface() {}
+    sc_signal_write_if<T> &
+    operator = (const sc_signal_write_if<T> &)
+    {
+        return *this;
+    }
+};
+
+template <class T>
+class sc_signal_inout_if : public sc_signal_in_if<T>,
+                           public sc_signal_write_if<T>
+{
+  protected:
+    sc_signal_inout_if() : sc_signal_in_if<T>(), sc_signal_write_if<T>() {}
+
+  private:
+    // Disabled
+    sc_signal_inout_if(const sc_signal_inout_if<T> &) :
+        sc_signal_in_if<T>(), sc_signal_write_if<T>()
+    {}
+    sc_signal_inout_if<T> &
+    operator = (const sc_signal_inout_if<T> &)
+    {
+        return *this;
+    }
+};
+
+} // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_CHANNEL_SC_SIGNAL_INOUT_IF_HH__

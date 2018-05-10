@@ -27,70 +27,40 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC_H__
-#define __SYSTEMC_EXT_SYSTEMC_H__
+#ifndef __SYSTEMC_EXT_CHANNEL_SC_IN_RV_HH__
+#define __SYSTEMC_EXT_CHANNEL_SC_IN_RV_HH__
 
-#include "systemc"
+#include "sc_in.hh"
 
-// Collect "using" declarations for the various namespaces.
-#include "channel/_using.hh"
-#include "core/_using.hh"
-#include "dt/_using.hh"
+namespace sc_dt
+{
 
-// Include some system header files, and import some symbols from std into
-// the base namespace.
-#include <stdint.h>
+template <int W>
+class sc_lv;
 
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+} // namespace sc_dt
 
-using std::ios;
-using std::streambuf;
-using std::streampos;
-using std::streamsize;
-using std::iostream;
-using std::istream;
-using std::ostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::flush;
-using std::dec;
-using std::hex;
-using std::oct;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::size_t;
-using std::memchr;
-using std::memcmp;
-using std::memcpy;
-using std::memmove;
-using std::memset;
-using std::strcat;
-using std::strchr;
-using std::strcmp;
-using std::strncmp;
-using std::strcpy;
-using std::strncpy;
-using std::strcspn;
-using std::strspn;
-using std::strlen;
-using std::strpbrk;
-using std::strstr;
-using std::strtok;
+namespace sc_core
+{
 
-#endif  //__SYSTEMC_EXT_SYSTEMC_H__
+template <int W>
+class sc_in_rv : public sc_in<sc_dt::sc_lv<W>>
+{
+  public:
+    sc_in_rv() : sc_in<sc_dt::sc_lv<W>>() {}
+    explicit sc_in_rv(const char *name) : sc_in<sc_dt::sc_lv<W>>(name) {}
+    virtual ~sc_in_rv() {};
+
+    virtual void end_of_elaboration() {}
+
+    virtual const char *kind() const { return "sc_in_rv"; }
+
+  private:
+    // Disabled
+    sc_in_rv(const sc_in_rv<W> &) : sc_in<sc_dt::sc_lv<W>>() {}
+    sc_in_rv<W> &operator = (const sc_in_rv<W> &) { *this; }
+};
+
+} // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_CHANNEL_SC_IN_RV_HH__

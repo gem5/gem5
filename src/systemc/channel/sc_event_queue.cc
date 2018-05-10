@@ -27,70 +27,43 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC_H__
-#define __SYSTEMC_EXT_SYSTEMC_H__
+#include "base/logging.hh"
+#include "systemc/ext/channel/sc_event_queue.hh"
 
-#include "systemc"
+namespace sc_core
+{
 
-// Collect "using" declarations for the various namespaces.
-#include "channel/_using.hh"
-#include "core/_using.hh"
-#include "dt/_using.hh"
+sc_event_queue::sc_event_queue(sc_module_name name) :
+        sc_interface(), sc_event_queue_if(), sc_module(name)
+{}
 
-// Include some system header files, and import some symbols from std into
-// the base namespace.
-#include <stdint.h>
+sc_event_queue::~sc_event_queue() {}
 
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+const char *sc_event_queue::kind() const { return "sc_event_queue"; }
 
-using std::ios;
-using std::streambuf;
-using std::streampos;
-using std::streamsize;
-using std::iostream;
-using std::istream;
-using std::ostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::flush;
-using std::dec;
-using std::hex;
-using std::oct;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::size_t;
-using std::memchr;
-using std::memcmp;
-using std::memcpy;
-using std::memmove;
-using std::memset;
-using std::strcat;
-using std::strchr;
-using std::strcmp;
-using std::strncmp;
-using std::strcpy;
-using std::strncpy;
-using std::strcspn;
-using std::strspn;
-using std::strlen;
-using std::strpbrk;
-using std::strstr;
-using std::strtok;
+void
+sc_event_queue::notify(double, sc_time_unit)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
 
-#endif  //__SYSTEMC_EXT_SYSTEMC_H__
+void
+sc_event_queue::notify(const sc_time &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_event_queue::cancel_all()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+const sc_event &
+sc_event_queue::default_event() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *(const sc_event *)nullptr;
+}
+
+} // namespace sc_core

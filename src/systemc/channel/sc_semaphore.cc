@@ -27,70 +27,50 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC_H__
-#define __SYSTEMC_EXT_SYSTEMC_H__
+#include "base/logging.hh"
+#include "systemc/ext/channel/sc_semaphore.hh"
+#include "systemc/ext/core/sc_module.hh" // for sc_gen_unique_name
 
-#include "systemc"
+namespace sc_core
+{
 
-// Collect "using" declarations for the various namespaces.
-#include "channel/_using.hh"
-#include "core/_using.hh"
-#include "dt/_using.hh"
+sc_semaphore::sc_semaphore(int) :
+        sc_interface(), sc_semaphore_if(),
+        sc_object(sc_gen_unique_name("semaphore"))
+{}
 
-// Include some system header files, and import some symbols from std into
-// the base namespace.
-#include <stdint.h>
+sc_semaphore::sc_semaphore(const char *name, int) :
+        sc_interface(), sc_semaphore_if(), sc_object(name)
+{}
 
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+int
+sc_semaphore::wait()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return 0;
+}
 
-using std::ios;
-using std::streambuf;
-using std::streampos;
-using std::streamsize;
-using std::iostream;
-using std::istream;
-using std::ostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::flush;
-using std::dec;
-using std::hex;
-using std::oct;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::size_t;
-using std::memchr;
-using std::memcmp;
-using std::memcpy;
-using std::memmove;
-using std::memset;
-using std::strcat;
-using std::strchr;
-using std::strcmp;
-using std::strncmp;
-using std::strcpy;
-using std::strncpy;
-using std::strcspn;
-using std::strspn;
-using std::strlen;
-using std::strpbrk;
-using std::strstr;
-using std::strtok;
+int
+sc_semaphore::trywait()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return 0;
+}
 
-#endif  //__SYSTEMC_EXT_SYSTEMC_H__
+int
+sc_semaphore::post()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return 0;
+}
+
+int
+sc_semaphore::get_value() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return 0;
+}
+
+const char *sc_semaphore::kind() const { return "sc_semaphore"; }
+
+} // namespace sc_core

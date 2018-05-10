@@ -27,11 +27,71 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC__
-#define __SYSTEMC_EXT_SYSTEMC__
+#ifndef __SYSTEMC_EXT_CHANNEL_SC_FIFO_IN_HH__
+#define __SYSTEMC_EXT_CHANNEL_SC_FIFO_IN_HH__
 
-#include "channel/_channel.hh"
-#include "core/_core.hh"
-#include "dt/_dt.hh"
+#include "../core/sc_port.hh"
+#include "sc_fifo_in_if.hh"
+#include "warn_unimpl.hh"
 
-#endif  //__SYSTEMC_EXT_SYSTEMC__
+namespace sc_core
+{
+
+class sc_event;
+class sc_event_finder;
+
+template <class T>
+class sc_fifo_in : public sc_port<sc_fifo_in_if<T>, 0>
+{
+  public:
+    sc_fifo_in() : sc_port<sc_fifo_in_if<T>, 0>() {}
+    explicit sc_fifo_in(const char *name) : sc_port<sc_fifo_in_if<T>, 0>(name)
+    {}
+    virtual ~sc_fifo_in() {}
+
+    void
+    read(T &)
+    {
+        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+    }
+    T
+    read()
+    {
+        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        return *(T *)nullptr;
+    }
+    bool
+    nb_read(T &)
+    {
+        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        return false;
+    }
+    const sc_event &
+    data_written_event() const
+    {
+        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        return *(const sc_event *)nullptr;
+    }
+    sc_event_finder &
+    data_written() const
+    {
+        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        return *(sc_event_finder *)nullptr;
+    }
+    int
+    num_available() const
+    {
+        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        return 0;
+    }
+    virtual const char *kind() const { return "sc_fifo_in"; }
+
+  private:
+    // Disabled
+    sc_fifo_in(const sc_fifo_in<T> &) : sc_port<sc_fifo_in_if<T>, 0>() {}
+    sc_fifo_in<T> &operator = (const sc_fifo_in<T> &) { return *this; }
+};
+
+} // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_CHANNEL_SC_FIFO_IN_HH__

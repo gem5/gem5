@@ -27,70 +27,59 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC_H__
-#define __SYSTEMC_EXT_SYSTEMC_H__
+#include "base/logging.hh"
+#include "systemc/ext/channel/sc_inout_resolved.hh"
 
-#include "systemc"
+namespace sc_core
+{
 
-// Collect "using" declarations for the various namespaces.
-#include "channel/_using.hh"
-#include "core/_using.hh"
-#include "dt/_using.hh"
+sc_inout_resolved::sc_inout_resolved() : sc_inout<sc_dt::sc_logic>() {}
 
-// Include some system header files, and import some symbols from std into
-// the base namespace.
-#include <stdint.h>
+sc_inout_resolved::sc_inout_resolved(const char *name) :
+        sc_inout<sc_dt::sc_logic>(name)
+{}
 
-#include <cassert>
-#include <climits>
-#include <cmath>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
-#include <exception>
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <utility>
-#include <vector>
+sc_inout_resolved::~sc_inout_resolved() {}
 
-using std::ios;
-using std::streambuf;
-using std::streampos;
-using std::streamsize;
-using std::iostream;
-using std::istream;
-using std::ostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::flush;
-using std::dec;
-using std::hex;
-using std::oct;
-using std::fstream;
-using std::ifstream;
-using std::ofstream;
-using std::size_t;
-using std::memchr;
-using std::memcmp;
-using std::memcpy;
-using std::memmove;
-using std::memset;
-using std::strcat;
-using std::strchr;
-using std::strcmp;
-using std::strncmp;
-using std::strcpy;
-using std::strncpy;
-using std::strcspn;
-using std::strspn;
-using std::strlen;
-using std::strpbrk;
-using std::strstr;
-using std::strtok;
+void sc_inout_resolved::end_of_elaboration() {}
 
-#endif  //__SYSTEMC_EXT_SYSTEMC_H__
+sc_inout_resolved &
+sc_inout_resolved::operator = (const sc_dt::sc_logic &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *this;
+}
+
+sc_inout_resolved &
+sc_inout_resolved::operator = (const sc_signal_in_if<sc_dt::sc_logic> &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *this;
+}
+
+sc_inout_resolved &
+sc_inout_resolved::operator = (
+        const sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *this;
+}
+
+sc_inout_resolved &
+sc_inout_resolved::operator = (
+        const sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *this;
+}
+
+sc_inout_resolved &
+sc_inout_resolved::operator = (const sc_inout_resolved &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *this;
+}
+
+const char *sc_inout_resolved::kind() const { return "sc_inout_resolved"; }
+
+} // namespace sc_core
