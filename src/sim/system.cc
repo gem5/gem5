@@ -491,8 +491,55 @@ printSystems()
     System::printSystems();
 }
 
+std::string
+System::stripSystemName(const std::string& master_name) const
+{
+    if (startswith(master_name, name())) {
+        return master_name.substr(name().size());
+    } else {
+        return master_name;
+    }
+}
+
 MasterID
-System::getGlobalMasterId(std::string master_name)
+System::lookupMasterId(const SimObject* obj) const
+{
+    MasterID id = Request::invldMasterId;
+
+    // number of occurrences of the SimObject pointer
+    // in the master list.
+    auto obj_number = 0;
+
+    for (int i = 0; i < masters.size(); i++) {
+        if (masters[i].obj == obj) {
+            id = i;
+            obj_number++;
+        }
+    }
+
+    fatal_if(obj_number > 1,
+        "Cannot lookup MasterID by SimObject pointer: "
+        "More than one master is sharing the same SimObject\n");
+
+    return id;
+}
+
+MasterID
+System::lookupMasterId(const std::string& master_name) const
+{
+    std::string name = stripSystemName(master_name);
+
+    for (int i = 0; i < masters.size(); i++) {
+        if (masters[i].masterName == name) {
+            return i;
+        }
+    }
+
+    return Request::invldMasterId;
+}
+
+MasterID
+System::getGlobalMasterId(const std::string& master_name)
 {
     return _getMasterId(nullptr, master_name);
 }
@@ -505,14 +552,13 @@ System::getMasterId(const SimObject* master, std::string submaster)
 }
 
 MasterID
-System::_getMasterId(const SimObject* master, std::string master_name)
+System::_getMasterId(const SimObject* master, const std::string& master_name)
 {
-    if (startswith(master_name, name()))
-        master_name = master_name.erase(0, name().size() + 1);
+    std::string name = stripSystemName(master_name);
 
     // CPUs in switch_cpus ask for ids again after switching
     for (int i = 0; i < masters.size(); i++) {
-        if (masters[i].masterName == master_name) {
+        if (masters[i].masterName == name) {
             return i;
         }
     }
@@ -530,7 +576,7 @@ System::_getMasterId(const SimObject* master, std::string master_name)
     MasterID master_id = masters.size();
 
     // Append the new Master metadata to the group of system Masters.
-    masters.emplace_back(master, master_name, master_id);
+    masters.emplace_back(master, name, master_id);
 
     return masters.back().masterId;
 }
