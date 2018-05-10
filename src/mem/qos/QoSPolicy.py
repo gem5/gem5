@@ -36,6 +36,7 @@
 # Authors: Giacomo Travaglini
 
 from m5.SimObject import *
+from m5.params import *
 
 # QoS scheduler policy used to serve incoming transaction
 class QoSPolicy(SimObject):
@@ -43,3 +44,40 @@ class QoSPolicy(SimObject):
     abstract = True
     cxx_header = "mem/qos/policy.hh"
     cxx_class = 'QoS::Policy'
+
+class QoSFixedPriorityPolicy(QoSPolicy):
+    type = 'QoSFixedPriorityPolicy'
+    cxx_header = "mem/qos/policy_fixed_prio.hh"
+    cxx_class = 'QoS::FixedPriorityPolicy'
+
+    cxx_exports = [
+        PyBindMethod('initMasterName'),
+        PyBindMethod('initMasterObj'),
+    ]
+
+    _mpriorities = None
+
+    def setMasterPriority(self, master, priority):
+        if not self._mpriorities:
+            self._mpriorities = []
+
+        self._mpriorities.append([master, priority])
+
+    def init(self):
+        if not self._mpriorities:
+            print("Error, use setMasterPriority to init masters/priorities\n");
+            exit(1)
+        else:
+            for mprio in self._mpriorities:
+                master = mprio[0]
+                priority = mprio[1]
+                if isinstance(master, basestring):
+                    self.getCCObject().initMasterName(
+                        master, int(priority))
+                else:
+                    self.getCCObject().initMasterObj(
+                        master.getCCObject(), priority)
+
+    # default fixed priority value for non-listed Masters
+    qos_fixed_prio_default_prio = Param.UInt8(0,
+        "Default priority for non-listed Masters")

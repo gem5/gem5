@@ -43,6 +43,8 @@ SimObject('QoSPolicy.py')
 SimObject('QoSTurnaround.py')
 
 Source('policy.cc')
+Source('policy_fixed_prio.cc')
+Source('turnaround_policy_ideal.cc')
 Source('q_policy.cc')
 Source('mem_ctrl.cc')
 Source('mem_sink.cc')

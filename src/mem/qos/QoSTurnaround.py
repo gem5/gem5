@@ -43,3 +43,8 @@ class QoSTurnaroundPolicy(SimObject):
     cxx_header = "mem/qos/turnaround_policy.hh"
     cxx_class = 'QoS::TurnaroundPolicy'
     abstract = True
+
+class QoSTurnaroundPolicyIdeal(QoSTurnaroundPolicy):
+    type = 'QoSTurnaroundPolicyIdeal'
+    cxx_header = "mem/qos/turnaround_policy_ideal.hh"
+    cxx_class = 'QoS::TurnaroundPolicyIdeal'
