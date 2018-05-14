@@ -1857,6 +1857,34 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_ESR_EL1;
                     }
                     break;
+                  case 3:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_ERRIDR_EL1;
+                      case 1:
+                        return MISCREG_ERRSELR_EL1;
+                    }
+                    break;
+                  case 4:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_ERXFR_EL1;
+                      case 1:
+                        return MISCREG_ERXCTLR_EL1;
+                      case 2:
+                        return MISCREG_ERXSTATUS_EL1;
+                      case 3:
+                        return MISCREG_ERXADDR_EL1;
+                    }
+                    break;
+                  case 5:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_ERXMISC0_EL1;
+                      case 1:
+                        return MISCREG_ERXMISC1_EL1;
+                    }
+                    break;
                 }
                 break;
               case 4:
@@ -1879,6 +1907,8 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                     switch (op2) {
                       case 0:
                         return MISCREG_ESR_EL2;
+                      case 3:
+                        return MISCREG_VSESR_EL2;
                     }
                     break;
                   case 3:
@@ -2104,6 +2134,8 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                     switch (op2) {
                       case 0:
                         return MISCREG_ISR_EL1;
+                      case 1:
+                        return MISCREG_DISR_EL1;
                     }
                     break;
                 }
@@ -2116,6 +2148,12 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_VBAR_EL2;
                       case 1:
                         return MISCREG_RVBAR_EL2;
+                    }
+                    break;
+                  case 1:
+                    switch (op2) {
+                      case 1:
+                        return MISCREG_VDISR_EL2;
                     }
                     break;
                 }
@@ -3996,6 +4034,41 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_IMPDEF_UNIMPL)
       .unimplemented()
       .warnNotFail(impdefAsNop);
+
+    // RAS extension (unimplemented)
+    InitReg(MISCREG_ERRIDR_EL1)
+      .unimplemented()
+      .warnNotFail();
+    InitReg(MISCREG_ERRSELR_EL1)
+      .unimplemented()
+      .warnNotFail();
+    InitReg(MISCREG_ERXFR_EL1)
+      .unimplemented()
+      .warnNotFail();
+    InitReg(MISCREG_ERXCTLR_EL1)
+      .unimplemented()
+      .warnNotFail();
+    InitReg(MISCREG_ERXSTATUS_EL1)
+      .unimplemented()
+      .warnNotFail();
+    InitReg(MISCREG_ERXADDR_EL1)
+      .unimplemented()
+      .warnNotFail();
+    InitReg(MISCREG_ERXMISC0_EL1)
+      .unimplemented()
+      .warnNotFail();
+    InitReg(MISCREG_ERXMISC1_EL1)
+      .unimplemented()
+      .warnNotFail();
+    InitReg(MISCREG_DISR_EL1)
+      .unimplemented()
+      .warnNotFail();
+    InitReg(MISCREG_VSESR_EL2)
+      .unimplemented()
+      .warnNotFail();
+    InitReg(MISCREG_VDISR_EL2)
+      .unimplemented()
+      .warnNotFail();
 
     // Register mappings for some unimplemented registers:
     // ESR_EL1 -> DFSR
