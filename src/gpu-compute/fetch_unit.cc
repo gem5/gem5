@@ -235,6 +235,16 @@ FetchUnit::fetch(PacketPtr pkt, Wavefront *wavefront)
     delete oldPkt;
 
     /**
+     * if we have not reserved an entry in the fetch buffer,
+     * stop fetching. this can happen due to a branch instruction
+     * flushing the fetch buffer while an ITLB or I-cache request is still
+     * pending, in the same cycle another instruction is trying to fetch.
+     */
+    if (!fetchBuf.at(wavefront->wfSlotId).isReserved(pkt->req->getVaddr())) {
+        return;
+    }
+
+    /**
      * we should have reserved an entry in the fetch buffer
      * for this cache line. here we get the pointer to the
      * entry used to buffer this request's line data.

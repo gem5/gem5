@@ -120,6 +120,18 @@ class FetchUnit
             return reserved_pc->second;
         }
 
+        /**
+         * returns true if there is an entry reserved for this address,
+         * and false otherwise
+         */
+        bool
+        isReserved(Addr vaddr) const
+        {
+            auto reserved_pc = reservedPCs.find(vaddr);
+            bool is_reserved = (reserved_pc != reservedPCs.end());
+            return is_reserved;
+        }
+
         void fetchDone(Addr vaddr);
 
         /**
