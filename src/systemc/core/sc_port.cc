@@ -34,7 +34,7 @@ namespace sc_core
 {
 
 void
-sc_port_base::warn_unimpl(const char *func)
+sc_port_base::warn_unimpl(const char *func) const
 {
     warn("%s not implemented.\n", func);
 }

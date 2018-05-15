@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_EXT_CORE_SC_PORT_HH__
 #define __SYSTEMC_EXT_CORE_SC_PORT_HH__
 
+#include "sc_module.hh" // for sc_gen_unique_name
 #include "sc_object.hh"
 
 namespace sc_core
@@ -47,7 +48,10 @@ enum sc_port_policy
 class sc_port_base : public sc_object
 {
   public:
-    void warn_unimpl(const char *func);
+    sc_port_base(const char *name, int n, sc_port_policy p) : sc_object(name)
+    {}
+
+    void warn_unimpl(const char *func) const;
 };
 
 template <class IF>
@@ -133,20 +137,13 @@ class sc_port_b : public sc_port_base
     virtual void start_of_elaboration() {}
     virtual void end_of_simulation() {}
 
-    explicit sc_port_b(int, sc_port_policy)
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
-
-    sc_port_b(const char *, int, sc_port_policy)
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
-
-    virtual ~sc_port_b()
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    explicit sc_port_b(int n, sc_port_policy p) :
+            sc_port_base(sc_gen_unique_name("sc_port"), n, p)
+    {}
+    sc_port_b(const char *name, int n, sc_port_policy p) :
+            sc_port_base(name, n, p)
+    {}
+    virtual ~sc_port_b() {}
 
   private:
     // Disabled
@@ -159,27 +156,11 @@ template <class IF, int N=1, sc_port_policy P=SC_ONE_OR_MORE_BOUND>
 class sc_port : public sc_port_b<IF>
 {
   public:
-    sc_port()
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    sc_port() : sc_port_b<IF>(sc_gen_unique_name("sc_port"), N, P) {}
+    explicit sc_port(const char *name) : sc_port_b<IF>(name, N, P) {}
+    virtual ~sc_port() {}
 
-    explicit sc_port(const char *)
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
-
-    virtual ~sc_port()
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
-
-    virtual const char *
-    kind() const
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-        return "";
-    }
+    virtual const char *kind() const { return "sc_port"; }
 
   private:
     // Disabled
