@@ -66,7 +66,7 @@ Stage2LookUp::getTe(ThreadContext *tc, TlbEntry *destTe)
         // checking. So call translate on stage 2 to do the checking. As the
         // entry is now in the TLB this should always hit the cache.
         if (fault == NoFault) {
-            if (inAArch64(tc))
+            if (ELIs64(tc, EL2))
                 fault = stage2Tlb->checkPermissions64(stage2Te, &req, mode, tc);
             else
                 fault = stage2Tlb->checkPermissions(stage2Te, &req, mode);
