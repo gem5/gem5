@@ -230,9 +230,15 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
     // ARM DDI 0487A.f (ARMv8 ARM) pg J8-5672
     // aarch32/translation/translation/AArch32.TranslateAddress dictates
     // even AArch32 EL0 will use AArch64 translation if EL1 is in AArch64.
-    currState->aarch64 = isStage2 || opModeIs64(currOpMode(_tc)) ||
-                         ((currEL(_tc) == EL0) && ELIs64(_tc, EL1));
-    currState->el = currEL(_tc);
+    if (isStage2) {
+        currState->el = EL1;
+        currState->aarch64 = ELIs64(_tc, EL2);
+    } else {
+        currState->el =
+            TLB::tranTypeEL(_tc->readMiscReg(MISCREG_CPSR), tranType);
+        currState->aarch64 =
+            ELIs64(_tc, currState->el == EL0 ? EL1 : currState->el);
+    }
     currState->transState = _trans;
     currState->req = _req;
     currState->fault = NoFault;
@@ -363,17 +369,11 @@ TableWalker::processWalkWrapper()
     pendingChange();
     currState = pendingQueue.front();
 
-    ExceptionLevel target_el = EL0;
-    if (currState->aarch64)
-        target_el = currEL(currState->tc);
-    else
-        target_el = EL1;
-
     // Check if a previous walk filled this request already
     // @TODO Should this always be the TLB or should we look in the stage2 TLB?
     TlbEntry* te = tlb->lookup(currState->vaddr, currState->asid,
             currState->vmid, currState->isHyp, currState->isSecure, true, false,
-            target_el);
+            currState->el);
 
     // Check if we still need to have a walk for this request. If the requesting
     // instruction has been squashed, or a previous walk has filled the TLB with
@@ -439,7 +439,7 @@ TableWalker::processWalkWrapper()
             currState = pendingQueue.front();
             te = tlb->lookup(currState->vaddr, currState->asid,
                 currState->vmid, currState->isHyp, currState->isSecure, true,
-                false, target_el);
+                false, currState->el);
         } else {
             // Terminate the loop, nothing more to do
             currState = NULL;

@@ -1268,35 +1268,13 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
     isSecure = inSecureState(tc) &&
         !(tranType & HypMode) && !(tranType & S1S2NsTran);
 
-    const OperatingMode op_mode = (OperatingMode) (uint8_t)cpsr.mode;
-    aarch64 = opModeIs64(op_mode) ||
-        (opModeToEL(op_mode) == EL0 && ELIs64(tc, EL1));
+    aarch64EL = tranTypeEL(cpsr, tranType);
+    aarch64 = isStage2 ?
+        ELIs64(tc, EL2) :
+        ELIs64(tc, aarch64EL == EL0 ? EL1 : aarch64EL);
 
     if (aarch64) {  // AArch64
         // determine EL we need to translate in
-        switch (tranType) {
-            case S1E0Tran:
-            case S12E0Tran:
-                aarch64EL = EL0;
-                break;
-            case S1E1Tran:
-            case S12E1Tran:
-                aarch64EL = EL1;
-                break;
-            case S1E2Tran:
-                aarch64EL = EL2;
-                break;
-            case S1E3Tran:
-                aarch64EL = EL3;
-                break;
-            case NormalTran:
-            case S1CTran:
-            case S1S2NsTran:
-            case HypMode:
-                aarch64EL = (ExceptionLevel) (uint8_t) cpsr.el;
-                break;
-        }
-
         switch (aarch64EL) {
           case EL0:
           case EL1:
@@ -1394,6 +1372,35 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
     miscRegValid = true;
     miscRegContext = tc->contextId();
     curTranType  = tranType;
+}
+
+ExceptionLevel
+TLB::tranTypeEL(CPSR cpsr, ArmTranslationType type)
+{
+    switch (type) {
+      case S1E0Tran:
+      case S12E0Tran:
+        return EL0;
+
+      case S1E1Tran:
+      case S12E1Tran:
+        return EL1;
+
+      case S1E2Tran:
+        return EL2;
+
+      case S1E3Tran:
+        return EL3;
+
+      case NormalTran:
+      case S1CTran:
+      case S1S2NsTran:
+      case HypMode:
+        return opModeToEL((OperatingMode)(uint8_t)cpsr.mode);
+
+      default:
+        panic("Unknown translation mode!\n");
+    }
 }
 
 Fault

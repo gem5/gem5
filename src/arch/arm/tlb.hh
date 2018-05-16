@@ -139,6 +139,14 @@ class TLB : public BaseTLB
         S12E0Tran = 0x80,
         S12E1Tran = 0x100
     };
+
+    /**
+     * Determine the EL to use for the purpose of a translation given
+     * a specific translation type. If the translation type doesn't
+     * specify an EL, we use the current EL.
+     */
+    static ExceptionLevel tranTypeEL(CPSR cpsr, ArmTranslationType type);
+
   protected:
     TlbEntry* table;     // the Page Table
     int size;            // TLB Size
