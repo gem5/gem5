@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013,2017 ARM Limited
+ * Copyright (c) 2012-2013,2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -257,7 +257,7 @@ class Request
     };
 
   private:
-    typedef uint8_t PrivateFlagsType;
+    typedef uint16_t PrivateFlagsType;
     typedef ::Flags<PrivateFlagsType> PrivateFlags;
 
     enum : PrivateFlagsType {
@@ -275,6 +275,9 @@ class Request
         VALID_CONTEXT_ID     = 0x00000020,
         /** Whether or not the sc result is valid. */
         VALID_EXTRA_DATA     = 0x00000080,
+        /** Whether or not the stream ID and substream ID is valid. */
+        VALID_STREAM_ID      = 0x00000100,
+        VALID_SUBSTREAM_ID   = 0x00000200,
         /**
          * These flags are *not* cleared when a Request object is reused
          * (assigned a new address).
@@ -343,8 +346,27 @@ class Request
      */
     uint32_t _taskId;
 
-    /** The address space ID. */
-    int _asid;
+    union {
+        struct {
+            /**
+             * The stream ID uniquely identifies a device behind the
+             * SMMU/IOMMU Each transaction arriving at the SMMU/IOMMU is
+             * associated with exactly one stream ID.
+             */
+            uint32_t  _streamId;
+
+            /**
+             * The substream ID identifies an "execution context" within a
+             * device behind an SMMU/IOMMU. It's intended to map 1-to-1 to
+             * PCIe PASID (Process Address Space ID). The presence of a
+             * substream ID is optional.
+             */
+            uint32_t _substreamId;
+        };
+
+        /** The address space ID. */
+        uint64_t _asid;
+    };
 
     /** The virtual address of the request. */
     Addr _vaddr;
@@ -431,8 +453,8 @@ class Request
         privateFlags.set(VALID_PC);
     }
 
-    Request(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
-            Addr pc, ContextID cid)
+    Request(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
+            MasterID mid, Addr pc, ContextID cid)
         : _paddr(0), _size(0), _masterId(invldMasterId), _time(0),
           _taskId(ContextSwitchTaskId::Unknown), _asid(0), _vaddr(0),
           _extraData(0), _contextId(0), _pc(0),
@@ -443,8 +465,9 @@ class Request
         setContext(cid);
     }
 
-    Request(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
-            Addr pc, ContextID cid, AtomicOpFunctor *atomic_op)
+    Request(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
+            MasterID mid, Addr pc, ContextID cid,
+            AtomicOpFunctor *atomic_op)
     {
         setVirt(asid, vaddr, size, flags, mid, pc, atomic_op);
         setContext(cid);
@@ -486,13 +509,28 @@ class Request
         privateFlags.set(VALID_CONTEXT_ID);
     }
 
+    void
+    setStreamId(uint32_t sid)
+    {
+        _streamId = sid;
+        privateFlags.set(VALID_STREAM_ID);
+    }
+
+    void
+    setSubStreamId(uint32_t ssid)
+    {
+        assert(privateFlags.isSet(VALID_STREAM_ID));
+        _substreamId = ssid;
+        privateFlags.set(VALID_SUBSTREAM_ID);
+    }
+
     /**
      * Set up a virtual (e.g., CPU) request in a previously
      * allocated Request object.
      */
     void
-    setVirt(int asid, Addr vaddr, unsigned size, Flags flags, MasterID mid,
-            Addr pc, AtomicOpFunctor *amo_op = nullptr)
+    setVirt(uint64_t asid, Addr vaddr, unsigned size, Flags flags,
+            MasterID mid, Addr pc, AtomicOpFunctor *amo_op = nullptr)
     {
         _asid = asid;
         _vaddr = vaddr;
@@ -673,7 +711,7 @@ class Request
     }
 
     /** Accessor function for asid.*/
-    int
+    uint64_t
     getAsid() const
     {
         assert(privateFlags.isSet(VALID_VADDR));
@@ -682,7 +720,7 @@ class Request
 
     /** Accessor function for asid.*/
     void
-    setAsid(int asid)
+    setAsid(uint64_t asid)
     {
         _asid = asid;
     }
@@ -730,6 +768,26 @@ class Request
     {
         assert(privateFlags.isSet(VALID_CONTEXT_ID));
         return _contextId;
+    }
+
+    uint32_t
+    streamId() const
+    {
+        assert(privateFlags.isSet(VALID_STREAM_ID));
+        return _streamId;
+    }
+
+    bool
+    hasSubstreamId() const
+    {
+        return privateFlags.isSet(VALID_SUBSTREAM_ID);
+    }
+
+    uint32_t
+    substreamId() const
+    {
+        assert(privateFlags.isSet(VALID_SUBSTREAM_ID));
+        return _substreamId;
     }
 
     void
