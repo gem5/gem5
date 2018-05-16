@@ -88,23 +88,24 @@ Stage2LookUp::mergeTe(RequestPtr req, BaseTLB::Mode mode)
         // Now we have the table entries for both stages of translation
         // merge them and insert the result into the stage 1 TLB. See
         // CombineS1S2Desc() in pseudocode
-        stage1Te.N             = stage2Te->N;
         stage1Te.nonCacheable |= stage2Te->nonCacheable;
         stage1Te.xn           |= stage2Te->xn;
 
         if (stage1Te.size > stage2Te->size) {
             // Size mismatch also implies vpn mismatch (this is shifted by
             // sizebits!).
-            stage1Te.vpn  = s1Req->getVaddr() / (stage2Te->size+1);
+            stage1Te.vpn  = s1Req->getVaddr() >> stage2Te->N;
             stage1Te.pfn  = stage2Te->pfn;
             stage1Te.size = stage2Te->size;
+            stage1Te.N    = stage2Te->N;
         } else if (stage1Te.size < stage2Te->size) {
             // Guest 4K could well be section-backed by host hugepage!  In this
             // case a 4K entry is added but pfn needs to be adjusted.  New PFN =
             // offset into section PFN given by stage2 IPA treated as a stage1
             // page size.
-            stage1Te.pfn = (stage2Te->pfn * ((stage2Te->size+1) / (stage1Te.size+1))) +
-                           (stage2Te->vpn / (stage1Te.size+1));
+            const Addr pa = (stage2Te->pfn << stage2Te->N);
+            const Addr ipa = (stage1Te.pfn << stage1Te.N);
+            stage1Te.pfn = (pa | (ipa & mask(stage2Te->N))) >> stage1Te.N;
             // Size remains smaller of the two.
         } else {
             // Matching sizes
