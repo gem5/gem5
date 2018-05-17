@@ -2331,6 +2331,16 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_CNTHP_CVAL_EL2;
                     }
                     break;
+                  case 3:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_CNTHV_TVAL_EL2;
+                      case 1:
+                        return MISCREG_CNTHV_CTL_EL2;
+                      case 2:
+                        return MISCREG_CNTHV_CVAL_EL2;
+                    }
+                    break;
                 }
                 break;
               case 7:
@@ -4017,6 +4027,12 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_CBAR_EL1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_CONTEXTIDR_EL2)
+      .mon().hyp();
+    InitReg(MISCREG_CNTHV_CTL_EL2)
+      .mon().hyp();
+    InitReg(MISCREG_CNTHV_CVAL_EL2)
+      .mon().hyp();
+    InitReg(MISCREG_CNTHV_TVAL_EL2)
       .mon().hyp();
 
     // Dummy registers

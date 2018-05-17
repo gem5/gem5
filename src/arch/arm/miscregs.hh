@@ -668,14 +668,14 @@ namespace ArmISA
 
         // Introduced in ARMv8.1
         MISCREG_TTBR1_EL2,              // 600
+        MISCREG_CNTHV_CTL_EL2,          // 601
+        MISCREG_CNTHV_CVAL_EL2,         // 602
+        MISCREG_CNTHV_TVAL_EL2,         // 603
 
         // These MISCREG_FREESLOT are available Misc Register
         // slots for future registers to be implemented.
-        MISCREG_FREESLOT_1,             // 601
-        MISCREG_FREESLOT_2,             // 602
-        MISCREG_FREESLOT_3,             // 603
-        MISCREG_FREESLOT_4,             // 604
-        MISCREG_FREESLOT_5,             // 605
+        MISCREG_FREESLOT_1,             // 604
+        MISCREG_FREESLOT_2,             // 605
 
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
@@ -1385,11 +1385,11 @@ namespace ArmISA
         "contextidr_el2",
 
         "ttbr1_el2",
+        "cnthv_ctl_el2",
+        "cnthv_cval_el2",
+        "cnthv_tval_el2",
         "freeslot1",
         "freeslot2",
-        "freeslot3",
-        "freeslot4",
-        "freeslot5",
 
         "num_phys_regs",
 
