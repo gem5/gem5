@@ -30181,7 +30181,7 @@ namespace Gcn3ISA
         assert(!(extData.NEG & 0x2));
         assert(!(extData.NEG & 0x4));
 
-        vdst[src1.rawData() & 0x3f] = src1.rawData();
+        vdst[src1.rawData() & 0x3f] = src0.rawData();
 
         vdst.write();
     }
