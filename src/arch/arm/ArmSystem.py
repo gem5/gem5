@@ -65,6 +65,8 @@ class ArmSystem(System):
         "True if Security Extensions are implemented")
     have_virtualization = Param.Bool(False,
         "True if Virtualization Extensions are implemented")
+    have_crypto = Param.Bool(False,
+        "True if Crypto Extensions is implemented")
     have_lpae = Param.Bool(True, "True if LPAE is implemented")
     highest_el_is_64 = Param.Bool(False,
         "True if the register width of the highest implemented exception level "

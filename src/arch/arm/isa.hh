@@ -87,6 +87,7 @@ namespace ArmISA
         bool haveSecurity;
         bool haveLPAE;
         bool haveVirtualization;
+        bool haveCrypto;
         bool haveLargeAsid64;
         uint8_t physAddrRange;
 

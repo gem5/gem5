@@ -61,6 +61,7 @@ ArmSystem::ArmSystem(Params *p)
       _haveSecurity(p->have_security),
       _haveLPAE(p->have_lpae),
       _haveVirtualization(p->have_virtualization),
+      _haveCrypto(p->have_crypto),
       _genericTimer(nullptr),
       _highestELIs64(p->highest_el_is_64),
       _resetAddr64(p->auto_reset_addr_64 ?

@@ -82,12 +82,14 @@ ISA::ISA(Params *p)
         highestELIs64 = system->highestELIs64();
         haveSecurity = system->haveSecurity();
         haveLPAE = system->haveLPAE();
+        haveCrypto = system->haveCrypto();
         haveVirtualization = system->haveVirtualization();
         haveLargeAsid64 = system->haveLargeAsid64();
         physAddrRange = system->physAddrRange();
     } else {
         highestELIs64 = true; // ArmSystem::highestELIs64 does the same
         haveSecurity = haveLPAE = haveVirtualization = false;
+        haveCrypto = false;
         haveLargeAsid64 = false;
         physAddrRange = 32;  // dummy value
     }
@@ -121,6 +123,10 @@ ISA::clear()
     // are in SE mode we don't know if our ArmProcess is
     // AArch32 or AArch64
     initID64(p);
+
+    miscRegs[MISCREG_ID_ISAR5] = insertBits(
+        miscRegs[MISCREG_ID_ISAR5], 19, 4,
+        haveCrypto ? 0x1112 : 0x0);
 
     if (FullSystem && system->highestELIs64()) {
         // Initialize AArch64 state
@@ -344,6 +350,10 @@ ISA::initID64(const ArmISAParams *p)
     miscRegs[MISCREG_ID_AA64MMFR0_EL1] = insertBits(
         miscRegs[MISCREG_ID_AA64MMFR0_EL1], 3, 0,
         encodePhysAddrRange64(physAddrRange));
+    // Crypto
+    miscRegs[MISCREG_ID_AA64ISAR0_EL1] = insertBits(
+        miscRegs[MISCREG_ID_AA64ISAR0_EL1], 19, 4,
+        haveCrypto ? 0x1112 : 0x0);
 }
 
 void
