@@ -320,9 +320,6 @@ class Pl390 : public BaseGic, public BaseGicRegisters
     uint32_t cpuPpiPending[CPU_MAX];
     uint32_t cpuPpiActive[CPU_MAX];
 
-    /** IRQ Enable Used for debug */
-    bool irqEnable;
-
     /** software generated interrupt
      * @param data data to decode that indicates which cpus to interrupt
      */
@@ -391,15 +388,6 @@ class Pl390 : public BaseGic, public BaseGicRegisters
 
     void sendPPInt(uint32_t num, uint32_t cpu) override;
     void clearPPInt(uint32_t num, uint32_t cpu) override;
-
-  public: // Test & debug intefaces
-    /** @{ */
-    /* Various functions fer testing and debugging */
-    void driveSPI(uint32_t spi);
-    void driveLegIRQ(bool state);
-    void driveLegFIQ(bool state);
-    void driveIrqEn(bool state);
-    /** @} */
 
   protected:
     /** Handle a read to the distributor portion of the GIC

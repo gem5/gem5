@@ -76,7 +76,6 @@ Pl390::Pl390(const Params *p)
       cpuSgiPending {}, cpuSgiActive {},
       cpuSgiPendingExt {}, cpuSgiActiveExt {},
       cpuPpiPending {}, cpuPpiActive {},
-      irqEnable(false),
       pendingDelayedInterrupts(0)
 {
     for (int x = 0; x < CPU_MAX; x++) {
@@ -916,7 +915,6 @@ Pl390::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(cpuSgiPendingExt, CPU_MAX);
     SERIALIZE_ARRAY(cpuPpiActive, CPU_MAX);
     SERIALIZE_ARRAY(cpuPpiPending, CPU_MAX);
-    SERIALIZE_SCALAR(irqEnable);
     SERIALIZE_SCALAR(gem5ExtensionsEnabled);
 
     for (uint32_t i=0; i < bankedRegs.size(); ++i) {
@@ -959,7 +957,6 @@ Pl390::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ARRAY(cpuSgiPendingExt, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuPpiActive, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuPpiPending, CPU_MAX);
-    UNSERIALIZE_SCALAR(irqEnable);
 
     // Handle checkpoints from before we drained the GIC to prevent
     // in-flight interrupts.
@@ -997,43 +994,4 @@ Pl390 *
 Pl390Params::create()
 {
     return new Pl390(this);
-}
-
-/* Functions for debugging and testing */
-void
-Pl390::driveSPI(uint32_t spiVect)
-{
-    DPRINTF(GIC, "Received SPI Vector:%x Enable: %d\n", spiVect, irqEnable);
-    getPendingInt(0, 1) |= spiVect;
-    if (irqEnable && enabled) {
-        updateIntState(-1);
-    }
-}
-
-void
-Pl390::driveIrqEn( bool state)
-{
-    irqEnable = state;
-    DPRINTF(GIC, " Enabling Irq\n");
-    updateIntState(-1);
-}
-
-void
-Pl390::driveLegIRQ(bool state)
-{
-    if (irqEnable && !(!enabled && cpuEnabled[0])) {
-        if (state) {
-            DPRINTF(GIC, "Driving Legacy Irq\n");
-            platform->intrctrl->post(0, ArmISA::INT_IRQ, 0);
-        }
-        else platform->intrctrl->clear(0, ArmISA::INT_IRQ, 0);
-    }
-}
-
-void
-Pl390::driveLegFIQ(bool state)
-{
-    if (state)
-        platform->intrctrl->post(0, ArmISA::INT_FIQ, 0);
-    else platform->intrctrl->clear(0, ArmISA::INT_FIQ, 0);
 }
