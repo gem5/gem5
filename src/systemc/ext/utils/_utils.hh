@@ -27,12 +27,14 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC__
-#define __SYSTEMC_EXT_SYSTEMC__
+#ifndef __SYSTEMC_EXT_UTIL__UTIL_HH__
+#define __SYSTEMC_EXT_UTIL__UTIL_HH__
 
-#include "channel/_channel.hh"
-#include "core/_core.hh"
-#include "dt/_dt.hh"
-#include "utils/_utils.hh"
+#include "functions.hh"
+#include "sc_exception.hh"
+#include "sc_report.hh"
+#include "sc_report_handler.hh"
+#include "sc_trace_file.hh"
+#include "sc_vector.hh"
 
-#endif  //__SYSTEMC_EXT_SYSTEMC__
+#endif  //__SYSTEMC_EXT_UTIL__UTIL_HH__

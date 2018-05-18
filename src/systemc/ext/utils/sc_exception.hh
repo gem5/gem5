@@ -27,12 +27,16 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC__
-#define __SYSTEMC_EXT_SYSTEMC__
+#ifndef __SYSTEMC_EXT_UTIL_SC_EXCEPTION_HH__
+#define __SYSTEMC_EXT_UTIL_SC_EXCEPTION_HH__
 
-#include "channel/_channel.hh"
-#include "core/_core.hh"
-#include "dt/_dt.hh"
-#include "utils/_utils.hh"
+#include <exception>
 
-#endif  //__SYSTEMC_EXT_SYSTEMC__
+namespace sc_core
+{
+
+typedef std::exception sc_exception;
+
+} // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_UTIL_SC_EXCEPTION_HH__

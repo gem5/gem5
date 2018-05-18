@@ -27,12 +27,14 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC__
-#define __SYSTEMC_EXT_SYSTEMC__
+#ifndef __SYSTEMC_EXT_UTILS_WARN_UNIMPL_HH__
+#define __SYSTEMC_EXT_UTILS_WARN_UNIMPL_HH__
 
-#include "channel/_channel.hh"
-#include "core/_core.hh"
-#include "dt/_dt.hh"
-#include "utils/_utils.hh"
+namespace sc_core
+{
 
-#endif  //__SYSTEMC_EXT_SYSTEMC__
+void sc_utils_warn_unimpl(const char *func);
+
+} // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_UTILS_WARN_UNIMPL_HH__

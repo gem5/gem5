@@ -27,12 +27,23 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC__
-#define __SYSTEMC_EXT_SYSTEMC__
+#include "systemc/ext/utils/sc_vector.hh"
 
-#include "channel/_channel.hh"
-#include "core/_core.hh"
-#include "dt/_dt.hh"
-#include "utils/_utils.hh"
+namespace sc_core
+{
 
-#endif  //__SYSTEMC_EXT_SYSTEMC__
+sc_vector_base::size_type
+sc_vector_base::size() const
+{
+    sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
+    return 0;
+}
+
+const std::vector<sc_object *> &
+sc_vector_base::get_elements() const
+{
+    sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
+    return *(const std::vector<sc_object *> *)nullptr;
+}
+
+} // namespace sc_core

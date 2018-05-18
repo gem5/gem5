@@ -27,12 +27,16 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC__
-#define __SYSTEMC_EXT_SYSTEMC__
+#include "base/logging.hh"
+#include "systemc/ext/utils/warn_unimpl.hh"
 
-#include "channel/_channel.hh"
-#include "core/_core.hh"
-#include "dt/_dt.hh"
-#include "utils/_utils.hh"
+namespace sc_core
+{
 
-#endif  //__SYSTEMC_EXT_SYSTEMC__
+void
+sc_utils_warn_unimpl(const char *func)
+{
+    warn("%s not implemented.\n", func);
+}
+
+} // namespace sc_core

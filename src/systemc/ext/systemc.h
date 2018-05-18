@@ -36,6 +36,7 @@
 #include "channel/_using.hh"
 #include "core/_using.hh"
 #include "dt/_using.hh"
+#include "utils/_using.hh"
 
 // Include some system header files, and import some symbols from std into
 // the base namespace.

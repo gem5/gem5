@@ -27,12 +27,58 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC__
-#define __SYSTEMC_EXT_SYSTEMC__
+#ifndef __SYSTEMC_EXT_UTIL_SC_REPORT_HH__
+#define __SYSTEMC_EXT_UTIL_SC_REPORT_HH__
 
-#include "channel/_channel.hh"
-#include "core/_core.hh"
-#include "dt/_dt.hh"
-#include "utils/_utils.hh"
+#include <exception>
 
-#endif  //__SYSTEMC_EXT_SYSTEMC__
+namespace sc_core
+{
+
+class sc_time;
+
+enum sc_severity
+{
+    SC_INFO = 0,
+    SC_WARNING,
+    SC_ERROR,
+    SC_FATAL,
+    SC_MAX_SEVERITY
+};
+
+enum sc_verbosity
+{
+    SC_NONE = 0,
+    SC_LOW = 100,
+    SC_MEDIUM = 200,
+    SC_HIGH = 300,
+    SC_FULL = 400,
+    SC_DEBUG = 500
+};
+
+class sc_report : public std::exception
+{
+  public:
+    sc_report(const sc_report &);
+    sc_report &operator = (const sc_report &);
+    virtual ~sc_report() throw();
+
+    sc_severity get_severity() const;
+    const char *get_msg_type() const;
+    const char *get_msg() const;
+    int get_verbosity() const;
+    const char *get_file_name() const;
+    int get_line_number() const;
+
+    const sc_time &get_time() const;
+    const char *get_process_name() const;
+
+    virtual const char *what() const throw();
+};
+
+// A non-standard function the Accellera datatypes rely on.
+[[noreturn]] void sc_abort();
+
+} // namespace sc_core
+
+#endif  //__SYSTEMC_EXT_UTIL_SC_REPORT_HH__

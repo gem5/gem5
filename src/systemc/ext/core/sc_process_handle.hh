@@ -33,6 +33,13 @@
 #include <exception>
 #include <vector>
 
+namespace sc_gem5
+{
+
+class Process;
+
+} // namespace sc_gem5
+
 namespace sc_core
 {
 
@@ -67,11 +74,25 @@ class sc_unwind_exception : public std::exception
 
 class sc_process_handle
 {
+  private:
+    ::sc_gem5::Process *_gem5_process;
+
   public:
     sc_process_handle();
     sc_process_handle(const sc_process_handle &);
     explicit sc_process_handle(sc_object *);
     ~sc_process_handle();
+
+    // These non-standard operators provide access to the data structure which
+    // actually tracks the process within gem5. By making them operators, we
+    // can minimize the symbols added to the class namespace.
+    operator ::sc_gem5::Process * () const { return _gem5_process; }
+    sc_process_handle &
+    operator = (::sc_gem5::Process *p)
+    {
+        _gem5_process = p;
+        return *this;
+    }
 
     bool valid() const;
 

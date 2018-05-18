@@ -27,12 +27,27 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_SYSTEMC__
-#define __SYSTEMC_EXT_SYSTEMC__
+#include "systemc/ext/utils/functions.hh"
 
-#include "channel/_channel.hh"
-#include "core/_core.hh"
-#include "dt/_dt.hh"
-#include "utils/_utils.hh"
+namespace sc_core
+{
 
-#endif  //__SYSTEMC_EXT_SYSTEMC__
+const unsigned int sc_version_major = SC_VERSION_MAJOR;
+const unsigned int sc_version_minor = SC_VERSION_MINOR;
+const unsigned int sc_version_patch = SC_VERSION_PATCH;
+const std::string sc_version_originator = SC_VERSION_ORIGINATOR;
+const std::string sc_version_release_date = SC_VERSION_RELEASE_DATE;
+const std::string sc_version_prerelease = SC_VERSION_PRERELEASE;
+const bool sc_is_prerelease = SC_IS_PRERELEASE;
+const std::string sc_version_string = SC_VERSION;
+const std::string sc_copyright_string = SC_COPYRIGHT;
+
+const char *
+sc_version()
+{
+    static const char systemc_version[] =
+        "SystemC " SC_VERSION " --- " __DATE__ " " __TIME__;
+    return systemc_version;
+}
+
+} // namespace sc_core
