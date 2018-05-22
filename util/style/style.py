@@ -115,6 +115,11 @@ style_ignores = [
     _re_ignore("^ext/"),
     # Ignore test data, as they are not code
     _re_ignore("^tests/(?:quick|long)/"),
+    # Ignore RISC-V assembly tests as they are maintained in an external
+    # project that does not follow the gem5 coding convention
+    _re_ignore("tests/test-progs/asmtest/src/riscv/"),
+    # Ignore RISC-V assembly dump files
+    _re_ignore("tests/test-progs/asmtest/dump/riscv/")
 ]
 
 def check_ignores(fname):

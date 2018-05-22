@@ -1,0 +1,19 @@
+#=======================================================================
+# Makefrag for rv64mi tests
+#-----------------------------------------------------------------------
+
+rv64mi_sc_tests = \
+	access \
+	breakpoint \
+	csr \
+	mcsr \
+	illegal \
+	ma_fetch \
+	ma_addr \
+	scall \
+	sbreak \
+
+rv32ud_p_tests = $(addprefix rv32ud-p-, $(rv32ud_sc_tests))
+#rv32ud_ps_tests = $(addprefix rv32ud-ps-, $(rv32ud_sc_tests))
+
+spike_tests += $(rv64mi_p_tests)
