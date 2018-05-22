@@ -27,46 +27,27 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_CHANNEL_SC_OUT_RESOLVED_HH__
-#define __SYSTEMC_EXT_CHANNEL_SC_OUT_RESOLVED_HH__
+#ifndef __SYSTEMC_EXT_CORE_DT_FX__FX_HH__
+#define __SYSTEMC_EXT_CORE_DT_FX__FX_HH__
 
-#include "sc_out.hh"
-#include "sc_signal_in_if.hh"
-#include "sc_signal_inout_if.hh"
-#include "warn_unimpl.hh"
+#include "sc_context.hh"
+#include "sc_fix.hh"
+#include "sc_fixed.hh"
+#include "sc_fxcast_switch.hh"
+#include "sc_fxdefs.hh"
+#include "sc_fxnum.hh"
+#include "sc_fxnum_observer.hh"
+#include "sc_fxtype_params.hh"
+#include "sc_fxval.hh"
+#include "sc_fxval_observer.hh"
+#include "sc_ufix.hh"
+#include "sc_ufixed.hh"
+#include "scfx_ieee.hh"
+#include "scfx_mant.hh"
+#include "scfx_other_defs.hh"
+#include "scfx_params.hh"
+#include "scfx_pow10.hh"
+#include "scfx_rep.hh"
+#include "scfx_utils.hh"
 
-namespace sc_dt
-{
-
-class sc_logic;
-
-} // namespace sc_dt
-
-namespace sc_core
-{
-
-class sc_out_resolved : public sc_out<sc_dt::sc_logic>
-{
-  public:
-    sc_out_resolved();
-    explicit sc_out_resolved(const char *name);
-    virtual ~sc_out_resolved();
-
-    sc_out_resolved &operator = (const sc_dt::sc_logic &);
-    sc_out_resolved &operator = (const sc_signal_in_if<sc_dt::sc_logic> &);
-    sc_out_resolved &operator = (
-            const sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &);
-    sc_out_resolved &operator = (
-            const sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &);
-    sc_out_resolved &operator = (const sc_out_resolved &);
-
-    virtual const char *kind() const;
-
-  private:
-    // Disabled
-    sc_out_resolved(const sc_out_resolved &) : sc_out<sc_dt::sc_logic>() {}
-};
-
-} // namespace sc_core
-
-#endif  //__SYSTEMC_EXT_CHANNEL_SC_OUT_RESOLVED_HH__
+#endif  //__SYSTEMC_EXT_CORE_DT_FX__FX_HH__

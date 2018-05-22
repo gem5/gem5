@@ -41,7 +41,7 @@ template <class T>
 class sc_fifo_nonblocking_in_if : virtual public sc_interface
 {
   public:
-    virtual bool ab_read(T &) = 0;
+    virtual bool nb_read(T &) = 0;
     virtual const sc_event &data_written_event() const = 0;
 };
 
@@ -58,7 +58,7 @@ class sc_fifo_in_if : public sc_fifo_nonblocking_in_if<T>,
                       public sc_fifo_blocking_in_if<T>
 {
   public:
-    virtual int num_avaialble() const = 0;
+    virtual int num_available() const = 0;
 
   protected:
     sc_fifo_in_if() : sc_interface() {}

@@ -41,7 +41,7 @@ template <class T>
 class sc_fifo_nonblocking_out_if : virtual public sc_interface
 {
   public:
-    virtual bool ab_write(const T &) = 0;
+    virtual bool nb_write(const T &) = 0;
     virtual const sc_event &data_read_event() const = 0;
 };
 

@@ -27,9 +27,12 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_CORE__USING_HH__
-#define __SYSTEMC_EXT_CORE__USING_HH__
+#ifndef __SYSTEMC_EXT_DT__USING_HH__
+#define __SYSTEMC_EXT_DT__USING_HH__
 
+#include "bit/_using.hh"
+#include "fx/_using.hh"
 #include "int/_using.hh"
+#include "misc/_using.hh"
 
-#endif  //__SYSTEMC_EXT_CORE__USING_HH__
+#endif  //__SYSTEMC_EXT_DT__USING_HH__

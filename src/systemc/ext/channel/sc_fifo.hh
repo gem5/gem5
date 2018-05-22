@@ -106,7 +106,7 @@ class sc_fifo : public sc_fifo_in_if<T>,
     }
 
     virtual const sc_event &
-    data_Written_event() const
+    data_written_event() const
     {
         sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
         return *(const sc_event *)nullptr;

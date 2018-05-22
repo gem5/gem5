@@ -18,12 +18,52 @@
  *****************************************************************************/
 
 /*****************************************************************************
+
   sc_nbdefs.h -- Top level header file for arbitrary precision signed/unsigned
                  arithmetic. This file defines all the constants needed.
+
+  Original Author: Ali Dasdan, Synopsys, Inc.
+
  *****************************************************************************/
 
-#ifndef __SYSTEMC_DT_SC_NBDEFS_H__
-#define __SYSTEMC_DT_SC_NBDEFS_H__
+/*****************************************************************************
+
+  MODIFICATION LOG - modifiers, enter your name, affiliation, date and
+  changes you are making here.
+
+      Name, Affiliation, Date: Torsten Maehne, Berner Fachhochschule,
+                               2016-09-24
+  Description of Modification: Move constant definitions to the header so that
+                               that their value is known at compile time.
+
+ *****************************************************************************/
+
+// $Log: sc_nbdefs.h,v $
+// Revision 1.7  2011/02/18 20:19:15  acg
+//  Andy Goodrich: updating Copyright notice.
+//
+// Revision 1.6  2011/02/18 20:09:34  acg
+//  Philipp A. Hartmann: added alternative #define for Windows to guard.
+//
+// Revision 1.5  2011/01/20 16:52:20  acg
+//  Andy Goodrich: changes for IEEE 1666 2011.
+//
+// Revision 1.4  2010/02/08 18:35:55  acg
+//  Andy Goodrich: Philipp Hartmann's changes for Solaris and Linux 64.
+//
+// Revision 1.2  2009/05/22 16:06:29  acg
+//  Andy Goodrich: process control updates.
+//
+// Revision 1.1.1.1  2006/12/15 20:20:05  acg
+// SystemC 2.3
+//
+// Revision 1.3  2006/01/13 18:49:32  acg
+// Added $Log command so that CVS check in comments are reproduced in the
+// source.
+//
+
+#ifndef __SYSTEMC_EXT_DT_INT_SC_NBDEFS_HH__
+#define __SYSTEMC_EXT_DT_INT_SC_NBDEFS_HH__
 
 #include <stdint.h>
 
@@ -77,8 +117,8 @@ typedef int small_type;
 #define LOG2_BITS_PER_BYTE 3
 
 // Attributes of the unsigned long. These definitions are used mainly in
-// the functions that are aware of the internal representation of digits,
-// e.g., get/set_packed_rep().
+// the functions that are aware of the internal representation of
+// digits, e.g., get/set_packed_rep().
 #define BYTES_PER_DIGIT_TYPE 4
 #define BITS_PER_DIGIT_TYPE 32
 
@@ -120,35 +160,41 @@ static const int MAX_NDIGITS = DIV_CEIL(SC_MAX_NBITS) + 2;
 // since the unsigned long data type varies in size between 32-bit and 64-bit
 // machines.
 
-typedef unsigned int sc_digit;	// 32-bit unsigned integer
+typedef unsigned int sc_digit; // 32-bit unsigned integer
 
 // Support for the long long type. This type is not in the standard
 // but is usually supported by compilers.
+#if defined(__x86_64__) || defined(__aarch64__)
+typedef long long int64;
+typedef unsigned long long uint64;
+#else
 typedef int64_t int64;
 typedef uint64_t uint64;
+#endif
 
-static const uint64 UINT64_ZERO   = 0ULL;
-static const uint64 UINT64_ONE    = 1ULL;
+static const uint64 UINT64_ZERO = 0ULL;
+static const uint64 UINT64_ONE = 1ULL;
 static const uint64 UINT64_32ONES = 0x00000000ffffffffULL;
+
 
 // Bits per ...
 // will be deleted in the future. Use numeric_limits instead
-#define BITS_PER_CHAR    8
-#define BITS_PER_INT    (sizeof(int) * BITS_PER_CHAR)
-#define BITS_PER_LONG   (sizeof(long) * BITS_PER_CHAR)
-#define BITS_PER_INT64  (sizeof(::sc_dt::int64) * BITS_PER_CHAR)
-#define BITS_PER_UINT   (sizeof(unsigned int) * BITS_PER_CHAR)
-#define BITS_PER_ULONG  (sizeof(unsigned long) * BITS_PER_CHAR)
+#define BITS_PER_CHAR 8
+#define BITS_PER_INT (sizeof(int) * BITS_PER_CHAR)
+#define BITS_PER_LONG (sizeof(long) * BITS_PER_CHAR)
+#define BITS_PER_INT64 (sizeof(::sc_dt::int64) * BITS_PER_CHAR)
+#define BITS_PER_UINT (sizeof(unsigned int) * BITS_PER_CHAR)
+#define BITS_PER_ULONG (sizeof(unsigned long) * BITS_PER_CHAR)
 #define BITS_PER_UINT64 (sizeof(::sc_dt::uint64) * BITS_PER_CHAR)
 
 // Digits per ...
-#define DIGITS_PER_CHAR   1
-#define DIGITS_PER_INT    ((BITS_PER_INT+29)/30)
-#define DIGITS_PER_LONG   ((BITS_PER_LONG+29)/30)
-#define DIGITS_PER_INT64  ((BITS_PER_INT64+29)/30)
-#define DIGITS_PER_UINT   ((BITS_PER_UINT+29)/30)
-#define DIGITS_PER_ULONG  ((BITS_PER_ULONG+29)/30)
-#define DIGITS_PER_UINT64 ((BITS_PER_UINT64+29)/30)
+#define DIGITS_PER_CHAR 1
+#define DIGITS_PER_INT ((BITS_PER_INT + 29) / 30)
+#define DIGITS_PER_LONG ((BITS_PER_LONG + 29) / 30)
+#define DIGITS_PER_INT64 ((BITS_PER_INT64 + 29) / 30)
+#define DIGITS_PER_UINT ((BITS_PER_UINT + 29) / 30)
+#define DIGITS_PER_ULONG ((BITS_PER_ULONG + 29) / 30)
+#define DIGITS_PER_UINT64 ((BITS_PER_UINT64 + 29) / 30)
 
 // Above, BITS_PER_X is mainly used for sc_signed, and BITS_PER_UX is
 // mainly used for sc_unsigned.
@@ -165,4 +211,4 @@ static const uint64 UINT_ONE = UINT64_ONE;
 
 } // namespace sc_dt
 
-#endif
+#endif // __SYSTEMC_EXT_DT_INT_SC_NBDEFS_HH__

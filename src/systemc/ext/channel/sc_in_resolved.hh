@@ -32,12 +32,12 @@
 
 #include "sc_in.hh"
 
-namespace
+namespace sc_dt
 {
 
 class sc_logic;
 
-}
+} // namespace sc_dt
 
 namespace sc_core
 {

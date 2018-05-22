@@ -27,46 +27,10 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_CHANNEL_SC_OUT_RESOLVED_HH__
-#define __SYSTEMC_EXT_CHANNEL_SC_OUT_RESOLVED_HH__
+#ifndef __SYSTEMC_EXT_CORE_DT_MISC__MISC_HH__
+#define __SYSTEMC_EXT_CORE_DT_MISC__MISC_HH__
 
-#include "sc_out.hh"
-#include "sc_signal_in_if.hh"
-#include "sc_signal_inout_if.hh"
-#include "warn_unimpl.hh"
+#include "sc_concatref.hh"
+#include "sc_value_base.hh"
 
-namespace sc_dt
-{
-
-class sc_logic;
-
-} // namespace sc_dt
-
-namespace sc_core
-{
-
-class sc_out_resolved : public sc_out<sc_dt::sc_logic>
-{
-  public:
-    sc_out_resolved();
-    explicit sc_out_resolved(const char *name);
-    virtual ~sc_out_resolved();
-
-    sc_out_resolved &operator = (const sc_dt::sc_logic &);
-    sc_out_resolved &operator = (const sc_signal_in_if<sc_dt::sc_logic> &);
-    sc_out_resolved &operator = (
-            const sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &);
-    sc_out_resolved &operator = (
-            const sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &);
-    sc_out_resolved &operator = (const sc_out_resolved &);
-
-    virtual const char *kind() const;
-
-  private:
-    // Disabled
-    sc_out_resolved(const sc_out_resolved &) : sc_out<sc_dt::sc_logic>() {}
-};
-
-} // namespace sc_core
-
-#endif  //__SYSTEMC_EXT_CHANNEL_SC_OUT_RESOLVED_HH__
+#endif  //__SYSTEMC_EXT_CORE_DT_MISC__MISC_HH__

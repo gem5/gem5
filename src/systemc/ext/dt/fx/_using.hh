@@ -27,46 +27,50 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_CHANNEL_SC_OUT_RESOLVED_HH__
-#define __SYSTEMC_EXT_CHANNEL_SC_OUT_RESOLVED_HH__
+#ifndef __SYSTEMC_EXT_DT_FX__USING_HH__
+#define __SYSTEMC_EXT_DT_FX__USING_HH__
 
-#include "sc_out.hh"
-#include "sc_signal_in_if.hh"
-#include "sc_signal_inout_if.hh"
-#include "warn_unimpl.hh"
+#include "_fx.hh"
 
-namespace sc_dt
-{
+using sc_dt::sc_fxnum;
+using sc_dt::sc_fxnum_bitref;
+using sc_dt::sc_fxnum_fast;
+using sc_dt::sc_fix;
+using sc_dt::sc_fix_fast;
+using sc_dt::sc_ufix;
+using sc_dt::sc_ufix_fast;
+using sc_dt::sc_fixed;
+using sc_dt::sc_fixed_fast;
+using sc_dt::sc_ufixed;
+using sc_dt::sc_ufixed_fast;
+using sc_dt::sc_fxval;
+using sc_dt::sc_fxval_fast;
+using sc_dt::sc_fxcast_switch;
+using sc_dt::sc_fxcast_context;
+using sc_dt::sc_fxtype_params;
+using sc_dt::sc_fxtype_context;
+using sc_dt::sc_q_mode;
+using sc_dt::SC_RND;
+using sc_dt::SC_RND_ZERO;
+using sc_dt::SC_RND_MIN_INF;
+using sc_dt::SC_RND_INF;
+using sc_dt::SC_RND_CONV;
+using sc_dt::SC_TRN;
+using sc_dt::SC_TRN_ZERO;
+using sc_dt::sc_o_mode;
+using sc_dt::SC_SAT;
+using sc_dt::SC_SAT_ZERO;
+using sc_dt::SC_SAT_SYM;
+using sc_dt::SC_WRAP;
+using sc_dt::SC_WRAP_SM;
+using sc_dt::sc_switch;
+using sc_dt::SC_OFF;
+using sc_dt::SC_ON;
+using sc_dt::sc_fmt;
+using sc_dt::SC_F;
+using sc_dt::SC_E;
+using sc_dt::sc_context_begin;
+using sc_dt::SC_NOW;
+using sc_dt::SC_LATER;
 
-class sc_logic;
-
-} // namespace sc_dt
-
-namespace sc_core
-{
-
-class sc_out_resolved : public sc_out<sc_dt::sc_logic>
-{
-  public:
-    sc_out_resolved();
-    explicit sc_out_resolved(const char *name);
-    virtual ~sc_out_resolved();
-
-    sc_out_resolved &operator = (const sc_dt::sc_logic &);
-    sc_out_resolved &operator = (const sc_signal_in_if<sc_dt::sc_logic> &);
-    sc_out_resolved &operator = (
-            const sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &);
-    sc_out_resolved &operator = (
-            const sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &);
-    sc_out_resolved &operator = (const sc_out_resolved &);
-
-    virtual const char *kind() const;
-
-  private:
-    // Disabled
-    sc_out_resolved(const sc_out_resolved &) : sc_out<sc_dt::sc_logic>() {}
-};
-
-} // namespace sc_core
-
-#endif  //__SYSTEMC_EXT_CHANNEL_SC_OUT_RESOLVED_HH__
+#endif  //__SYSTEMC_EXT_DT_FX__USING_HH__

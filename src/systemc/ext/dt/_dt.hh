@@ -27,9 +27,12 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_CORE__DT_HH__
-#define __SYSTEMC_EXT_CORE__DT_HH__
+#ifndef __SYSTEMC_EXT_DT__DT_HH__
+#define __SYSTEMC_EXT_DT__DT_HH__
 
+#include "bit/_bit.hh"
+#include "fx/_fx.hh"
 #include "int/_int.hh"
+#include "misc/_misc.hh"
 
-#endif  //__SYSTEMC_EXT_CORE__DT_HH__
+#endif  //__SYSTEMC_EXT_DT__DT_HH__

@@ -27,9 +27,20 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_CORE_DT__INT_HH__
-#define __SYSTEMC_EXT_CORE_DT__INT_HH__
+#ifndef __SYSTEMC_EXT_CORE_DT_INT__INT_HH__
+#define __SYSTEMC_EXT_CORE_DT_INT__INT_HH__
 
+#include "sc_bigint.hh"
+#include "sc_biguint.hh"
+#include "sc_int.hh"
+#include "sc_int_base.hh"
+#include "sc_length_param.hh"
 #include "sc_nbdefs.hh"
+#include "sc_nbexterns.hh"
+#include "sc_nbutils.hh"
+#include "sc_signed.hh"
+#include "sc_uint.hh"
+#include "sc_uint_base.hh"
+#include "sc_unsigned.hh"
 
-#endif  //__SYSTEMC_EXT_CORE_DT__INT_HH__
+#endif  //__SYSTEMC_EXT_CORE_DT_INT__INT_HH__

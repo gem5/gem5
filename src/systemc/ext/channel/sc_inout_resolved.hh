@@ -35,12 +35,12 @@
 #include "sc_signal_inout_if.hh"
 #include "warn_unimpl.hh"
 
-namespace
+namespace sc_dt
 {
 
 class sc_logic;
 
-}
+} // namespace sc_dt
 
 namespace sc_core
 {
