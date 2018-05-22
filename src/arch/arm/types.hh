@@ -623,6 +623,7 @@ namespace ArmISA
         EC_FP_EXCEPTION_64         = 0x2C,
         EC_SERROR                  = 0x2F,
         EC_SOFTWARE_BREAKPOINT     = 0x38,
+        EC_SOFTWARE_BREAKPOINT_64  = 0x3C,
     };
 
     /**

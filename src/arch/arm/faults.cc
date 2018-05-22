@@ -1543,6 +1543,12 @@ SoftwareBreakpoint::routeToHyp(ThreadContext *tc) const
         (hcr.tge || mdcr.tde);
 }
 
+ExceptionClass
+SoftwareBreakpoint::ec(ThreadContext *tc) const
+{
+    return from64 ? EC_SOFTWARE_BREAKPOINT_64 : vals.ec;
+}
+
 void
 ArmSev::invoke(ThreadContext *tc, const StaticInstPtr &inst) {
     DPRINTF(Faults, "Invoking ArmSev Fault\n");
