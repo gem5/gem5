@@ -317,6 +317,9 @@ ScheduleStage::addToSchList(int exeType, const GPUDynInstPtr &gpu_dyn_inst)
         if (wf->isOldestInstWaitcnt()) {
             wf->setStatus(Wavefront::S_WAITCNT);
         }
+        if (wf->isOldestInstSleep()) {
+            wf->setStatus(Wavefront::S_STALLED_SLEEP);
+        }
         if (!gpu_dyn_inst->isScalar()) {
             computeUnit.vrf[wf->simdId]
                 ->scheduleReadOperands(wf, gpu_dyn_inst);

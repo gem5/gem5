@@ -180,6 +180,7 @@ class GPUDynInst : public GPUExecContext
     bool isUnconditionalJump() const;
     bool isSpecialOp() const;
     bool isWaitcnt() const;
+    bool isSleep() const;
 
     bool isBarrier() const;
     bool isMemSync() const;

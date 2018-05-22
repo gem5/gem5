@@ -48,6 +48,7 @@ class GPUStaticInstFlags(Enum):
         'UnconditionalJump', #
         'SpecialOp',         # Special op
         'Waitcnt',           # Is a waitcnt instruction
+        'Sleep',             # Is a sleep instruction
 
         # Memory ops
         'MemBarrier',        # Barrier instruction

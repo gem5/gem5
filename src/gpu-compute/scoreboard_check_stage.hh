@@ -65,6 +65,7 @@ class ScoreboardCheckStage
         NRDY_WF_STOP,
         NRDY_IB_EMPTY,
         NRDY_WAIT_CNT,
+        NRDY_SLEEP,
         NRDY_BARRIER_WAIT,
         NRDY_VGPR_NRDY,
         NRDY_SGPR_NRDY,

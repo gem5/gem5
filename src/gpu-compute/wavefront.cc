@@ -49,7 +49,7 @@ Wavefront::Wavefront(const Params &p)
     maxIbSize(p.max_ib_size), _gpuISA(*this),
     vmWaitCnt(-1), expWaitCnt(-1), lgkmWaitCnt(-1),
     vmemInstsIssued(0), expInstsIssued(0), lgkmInstsIssued(0),
-    barId(WFBarrier::InvalidID), stats(this)
+    sleepCnt(0), barId(WFBarrier::InvalidID), stats(this)
 {
     lastTrace = 0;
     execUnitId = -1;
@@ -580,6 +580,20 @@ Wavefront::isLmInstruction(GPUDynInstPtr ii)
         return true;
     }
 
+    return false;
+}
+
+bool
+Wavefront::isOldestInstSleep()
+{
+    if (instructionBuffer.empty())
+        return false;
+
+    GPUDynInstPtr ii = instructionBuffer.front();
+
+    if (ii->isSleep()) {
+        return true;
+    }
     return false;
 }
 
@@ -1224,6 +1238,32 @@ Wavefront::waitCntsSatisfied()
     clearWaitCnts();
 
     return true;
+}
+
+bool
+Wavefront::sleepDone()
+{
+    assert(status == S_STALLED_SLEEP);
+
+    // if the sleep count has not been set, then the sleep instruction has not
+    // been executed yet, so we will return true without setting the wavefront
+    // status
+    if (sleepCnt == 0)
+        return false;
+
+    sleepCnt--;
+    if (sleepCnt != 0)
+        return false;
+
+    status = S_RUNNING;
+    return true;
+}
+
+void
+Wavefront::setSleepTime(int sleep_time)
+{
+    assert(sleepCnt == 0);
+    sleepCnt = sleep_time;
 }
 
 void

@@ -92,6 +92,15 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
         }
     }
 
+    // sleep instruction has been dispatched or executed: next
+    // instruction should be blocked until the sleep period expires.
+    if (w->getStatus() == Wavefront::S_STALLED_SLEEP) {
+        if (!w->sleepDone()) {
+            *rdyStatus = NRDY_SLEEP;
+            return false;
+        }
+    }
+
     // Is the wave waiting at a barrier. Check this condition BEFORE checking
     // for instruction buffer occupancy to avoid a deadlock when the barrier is
     // the last instruction in the instruction buffer.
@@ -143,7 +152,8 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
     // through this logic and always return not ready.
     if (!(ii->isBarrier() || ii->isNop() || ii->isReturn() || ii->isBranch() ||
          ii->isALU() || ii->isLoad() || ii->isStore() || ii->isAtomic() ||
-         ii->isEndOfKernel() || ii->isMemSync() || ii->isFlat())) {
+         ii->isEndOfKernel() || ii->isMemSync() || ii->isFlat() ||
+         ii->isSleep())) {
         panic("next instruction: %s is of unknown type\n", ii->disassemble());
     }
 

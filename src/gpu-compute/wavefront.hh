@@ -68,6 +68,9 @@ class Wavefront : public SimObject
         S_RUNNING,
         // wavefront is stalled
         S_STALLED,
+
+        S_STALLED_SLEEP,
+
         /**
          * wavefront has unsatisfied wait counts
          *
@@ -134,6 +137,7 @@ class Wavefront : public SimObject
     bool isGmInstruction(GPUDynInstPtr ii);
     bool isLmInstruction(GPUDynInstPtr ii);
     bool isOldestInstWaitcnt();
+    bool isOldestInstSleep();
     bool isOldestInstGMem();
     bool isOldestInstLMem();
     bool isOldestInstPrivMem();
@@ -276,6 +280,9 @@ class Wavefront : public SimObject
     /** Freeing VRF space */
     void freeRegisterFile();
 
+    bool sleepDone();
+    void setSleepTime(int sleep_time);
+
     TheGpuISA::GPUISA&
     gpuISA()
     {
@@ -315,6 +322,7 @@ class Wavefront : public SimObject
     int vmemInstsIssued;
     int expInstsIssued;
     int lgkmInstsIssued;
+    int sleepCnt;
     status_e status;
     Addr _pc;
     VectorMask _execMask;

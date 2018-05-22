@@ -4187,6 +4187,8 @@ namespace Gcn3ISA
     Inst_SOPP__S_SLEEP::Inst_SOPP__S_SLEEP(InFmt_SOPP *iFmt)
         : Inst_SOPP(iFmt, "s_sleep")
     {
+        setFlag(ALU);
+        setFlag(Sleep);
     } // Inst_SOPP__S_SLEEP
 
     Inst_SOPP__S_SLEEP::~Inst_SOPP__S_SLEEP()
@@ -4197,8 +4199,12 @@ namespace Gcn3ISA
     void
     Inst_SOPP__S_SLEEP::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        ScalarRegI32 simm16 = (ScalarRegI32)instData.SIMM16;
+        gpuDynInst->wavefront()->setStatus(Wavefront::S_STALLED_SLEEP);
+        // sleep duration is specified in multiples of 64 cycles
+        gpuDynInst->wavefront()->setSleepTime(64 * simm16);
+    } // execute
+    // --- Inst_SOPP__S_SETPRIO class methods ---
 
     Inst_SOPP__S_SETPRIO::Inst_SOPP__S_SETPRIO(InFmt_SOPP *iFmt)
         : Inst_SOPP(iFmt, "s_setprio")

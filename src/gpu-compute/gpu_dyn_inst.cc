@@ -399,6 +399,12 @@ GPUDynInst::isWaitcnt() const
 }
 
 bool
+GPUDynInst::isSleep() const
+{
+    return _staticInst->isSleep();
+}
+
+bool
 GPUDynInst::isBarrier() const
 {
     return _staticInst->isBarrier();

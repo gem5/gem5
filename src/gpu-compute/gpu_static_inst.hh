@@ -119,6 +119,7 @@ class GPUStaticInst : public GPUStaticInstFlags
 
     bool isSpecialOp() const { return _flags[SpecialOp]; }
     bool isWaitcnt() const { return _flags[Waitcnt]; }
+    bool isSleep() const { return _flags[Sleep]; }
 
     bool isBarrier() const { return _flags[MemBarrier]; }
     bool isMemSync() const { return _flags[MemSync]; }
