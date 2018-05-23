@@ -154,7 +154,11 @@ let {{
                 templates = regTemplates
 
             # Get everything ready for the substitution
-            iop = InstObjParams(name, Name + suffix, base, {"code" : code})
+            opt_args = []
+            if self.op_class:
+                opt_args.append(self.op_class)
+            iop = InstObjParams(name, Name + suffix, base, {"code" : code},
+                                opt_args)
 
             # Generate the actual code (finally!)
             header_output += templates[0].subst(iop)
@@ -168,6 +172,8 @@ let {{
             if "abstract" in dict:
                 abstract = dict['abstract']
                 del dict['abstract']
+            if not "op_class" in dict:
+                dict["op_class"] = None
 
             cls = super(MediaOpMeta, mcls).__new__(mcls, Name, bases, dict)
             if not abstract:
@@ -237,6 +243,7 @@ let {{
                 size = None, destSize = None, srcSize = None, ext = None):
             super(Mov2int, self).__init__(dest, src1,\
                     src2, size, destSize, srcSize, ext)
+        op_class = 'SimdMiscOp'
         code = '''
             int items = sizeof(FloatRegBits) / srcSize;
             int offset = imm8;
@@ -258,6 +265,7 @@ let {{
                 size = None, destSize = None, srcSize = None, ext = None):
             super(Mov2fp, self).__init__(dest, src1,\
                     src2, size, destSize, srcSize, ext)
+        op_class = 'SimdMiscOp'
         code = '''
             int items = sizeof(FloatRegBits) / destSize;
             int offset = imm8;
@@ -279,6 +287,7 @@ let {{
                 size = None, destSize = None, srcSize = None, ext = None):
             super(Movsign, self).__init__(dest, src,\
                     "InstRegIndex(0)", size, destSize, srcSize, ext)
+        op_class = 'SimdMiscOp'
         code = '''
             int items = sizeof(FloatRegBits) / srcSize;
             uint64_t result = 0;
@@ -292,6 +301,7 @@ let {{
         '''
 
     class Maskmov(MediaOp):
+        op_class = 'SimdMiscOp'
         code = '''
             assert(srcSize == destSize);
             int size = srcSize;
@@ -310,6 +320,7 @@ let {{
         '''
 
     class shuffle(MediaOp):
+        op_class = 'SimdMiscOp'
         code = '''
             assert(srcSize == destSize);
             int size = srcSize;
@@ -352,6 +363,7 @@ let {{
         '''
 
     class Unpack(MediaOp):
+        op_class = 'SimdMiscOp'
         code = '''
             assert(srcSize == destSize);
             int size = destSize;
@@ -378,6 +390,7 @@ let {{
         '''
 
     class Pack(MediaOp):
+        op_class = 'SimdMiscOp'
         code = '''
             assert(srcSize == destSize * 2);
             int items = (sizeof(FloatRegBits) / destSize);
@@ -447,6 +460,7 @@ let {{
     class Mxor(MediaOp):
         def __init__(self, dest, src1, src2):
             super(Mxor, self).__init__(dest, src1, src2, 1)
+        op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = FpSrcReg1_uqw ^ FpSrcReg2_uqw;
         '''
@@ -454,6 +468,7 @@ let {{
     class Mor(MediaOp):
         def __init__(self, dest, src1, src2):
             super(Mor, self).__init__(dest, src1, src2, 1)
+        op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = FpSrcReg1_uqw | FpSrcReg2_uqw;
         '''
@@ -461,6 +476,7 @@ let {{
     class Mand(MediaOp):
         def __init__(self, dest, src1, src2):
             super(Mand, self).__init__(dest, src1, src2, 1)
+        op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = FpSrcReg1_uqw & FpSrcReg2_uqw;
         '''
@@ -468,11 +484,13 @@ let {{
     class Mandn(MediaOp):
         def __init__(self, dest, src1, src2):
             super(Mandn, self).__init__(dest, src1, src2, 1)
+        op_class = 'SimdAluOp'
         code = '''
             FpDestReg_uqw = ~FpSrcReg1_uqw & FpSrcReg2_uqw;
         '''
 
     class Mminf(MediaOp):
+        op_class = 'SimdFloatCmpOp'
         code = '''
             union floatInt
             {
@@ -523,6 +541,7 @@ let {{
         '''
 
     class Mmaxf(MediaOp):
+        op_class = 'SimdFloatCmpOp'
         code = '''
             union floatInt
             {
@@ -573,6 +592,7 @@ let {{
         '''
 
     class Mmini(MediaOp):
+        op_class = 'SimdCmpOp'
         code = '''
 
             assert(srcSize == destSize);
@@ -611,6 +631,7 @@ let {{
         '''
 
     class Mmaxi(MediaOp):
+        op_class = 'SimdCmpOp'
         code = '''
 
             assert(srcSize == destSize);
@@ -649,6 +670,7 @@ let {{
         '''
 
     class Msqrt(MediaOp):
+        op_class = 'SimdFloatSqrtOp'
         def __init__(self, dest, src, \
                 size = None, destSize = None, srcSize = None, ext = None):
             super(Msqrt, self).__init__(dest, src,\
@@ -699,6 +721,7 @@ let {{
                 size = None, destSize = None, srcSize = None, ext = None):
             super(Mrcp, self).__init__(dest, src,\
                     "InstRegIndex(0)", size, destSize, srcSize, ext)
+        op_class = 'SimdFloatAluOp'
         code = '''
             union floatInt
             {
@@ -729,6 +752,7 @@ let {{
         '''
 
     class Maddf(MediaOp):
+        op_class = 'SimdFloatAddOp'
         code = '''
             union floatInt
             {
@@ -775,6 +799,7 @@ let {{
         '''
 
     class Msubf(MediaOp):
+        op_class = 'SimdFloatAddOp'
         code = '''
             union floatInt
             {
@@ -821,6 +846,7 @@ let {{
         '''
 
     class Mmulf(MediaOp):
+        op_class = 'SimdFloatMultOp'
         code = '''
             union floatInt
             {
@@ -867,6 +893,7 @@ let {{
         '''
 
     class Mdivf(MediaOp):
+        op_class = 'SimdFloatDivOp'
         code = '''
             union floatInt
             {
@@ -913,6 +940,7 @@ let {{
         '''
 
     class Maddi(MediaOp):
+        op_class = 'SimdAddOp'
         code = '''
             assert(srcSize == destSize);
             int size = srcSize;
@@ -950,6 +978,7 @@ let {{
         '''
 
     class Msubi(MediaOp):
+        op_class = 'SimdAddOp'
         code = '''
             assert(srcSize == destSize);
             int size = srcSize;
@@ -991,6 +1020,7 @@ let {{
         '''
 
     class Mmuli(MediaOp):
+        op_class = 'SimdMultOp'
         code = '''
             int srcBits = srcSize * 8;
             int destBits = destSize * 8;
@@ -1037,6 +1067,7 @@ let {{
         '''
 
     class Mavg(MediaOp):
+        op_class = 'SimdAddOp'
         code = '''
             assert(srcSize == destSize);
             int size = srcSize;
@@ -1057,6 +1088,7 @@ let {{
         '''
 
     class Msad(MediaOp):
+        op_class = 'SimdAddOp'
         code = '''
             int srcBits = srcSize * 8;
             int items = sizeof(FloatRegBits) / srcSize;
@@ -1076,6 +1108,7 @@ let {{
         '''
 
     class Msrl(MediaOp):
+        op_class = 'SimdShiftOp'
         code = '''
 
             assert(srcSize == destSize);
@@ -1103,6 +1136,7 @@ let {{
         '''
 
     class Msra(MediaOp):
+        op_class = 'SimdShiftOp'
         code = '''
 
             assert(srcSize == destSize);
@@ -1134,6 +1168,7 @@ let {{
         '''
 
     class Msll(MediaOp):
+        op_class = 'SimdShiftOp'
         code = '''
 
             assert(srcSize == destSize);
@@ -1164,6 +1199,7 @@ let {{
                 size = None, destSize = None, srcSize = None, ext = None):
             super(Cvtf2i, self).__init__(dest, src,\
                     "InstRegIndex(0)", size, destSize, srcSize, ext)
+        op_class = 'SimdFloatCvtOp'
         code = '''
             union floatInt
             {
@@ -1238,6 +1274,7 @@ let {{
                 size = None, destSize = None, srcSize = None, ext = None):
             super(Cvti2f, self).__init__(dest, src,\
                     "InstRegIndex(0)", size, destSize, srcSize, ext)
+        op_class = 'SimdFloatCvtOp'
         code = '''
             union floatInt
             {
@@ -1300,6 +1337,7 @@ let {{
                 size = None, destSize = None, srcSize = None, ext = None):
             super(Cvtf2f, self).__init__(dest, src,\
                     "InstRegIndex(0)", size, destSize, srcSize, ext)
+        op_class = 'SimdFloatCvtOp'
         code = '''
             union floatInt
             {
@@ -1364,6 +1402,7 @@ let {{
         '''
 
     class Mcmpi2r(MediaOp):
+        op_class = 'SimdCvtOp'
         code = '''
             union floatInt
             {
@@ -1403,6 +1442,7 @@ let {{
         '''
 
     class Mcmpf2r(MediaOp):
+        op_class = 'SimdFloatCvtOp'
         code = '''
             union floatInt
             {
@@ -1489,6 +1529,7 @@ let {{
                 size = None, destSize = None, srcSize = None, ext = None):
             super(Mcmpf2rf, self).__init__("InstRegIndex(0)", src1,\
                     src2, size, destSize, srcSize, ext)
+        op_class = 'SimdFloatCvtOp'
         code = '''
             union floatInt
             {
@@ -1543,6 +1584,7 @@ let {{
         '''
 
     class Emms(MediaOp):
+        op_class = 'FloatMiscOp'
         def __init__(self):
             super(Emms, self).__init__('InstRegIndex(MISCREG_FTW)',
                     'InstRegIndex(0)', 'InstRegIndex(0)', 2)
