@@ -28879,8 +28879,49 @@ namespace Gcn3ISA
     void
     Inst_VOP3__V_DIV_FMAS_F32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandF32 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandF32 src1(gpuDynInst, extData.SRC1);
+        ConstVecOperandF32 src2(gpuDynInst, extData.SRC2);
+        VecOperandF64 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.readSrc();
+        src2.readSrc();
+
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (instData.ABS & 0x4) {
+            src2.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        if (extData.NEG & 0x4) {
+            src2.negModifier();
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = std::fma(src0[lane], src1[lane], src2[lane]);
+            }
+        }
+
+        //vdst.write();
+    } // execute
+    // --- Inst_VOP3__V_DIV_FMAS_F64 class methods ---
 
     Inst_VOP3__V_DIV_FMAS_F64::Inst_VOP3__V_DIV_FMAS_F64(InFmt_VOP3 *iFmt)
         : Inst_VOP3(iFmt, "v_div_fmas_f64", false)
