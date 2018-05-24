@@ -60,6 +60,11 @@
 #define PKT_TYPE(PKT) ((hsa_packet_type_t)(((PKT->header) >> \
             HSA_PACKET_HEADER_TYPE) & (HSA_PACKET_HEADER_WIDTH_TYPE - 1)))
 
+// checks if the barrier bit is set in the header -- shift the barrier bit
+// to LSB, then bitwise "and" to mask off all other bits
+#define IS_BARRIER(PKT) ((hsa_packet_header_t)(((PKT->header) >> \
+            HSA_PACKET_HEADER_BARRIER) & HSA_PACKET_HEADER_WIDTH_BARRIER))
+
 HSAPP_EVENT_DESCRIPTION_GENERATOR(UpdateReadDispIdDmaEvent)
 HSAPP_EVENT_DESCRIPTION_GENERATOR(CmdQueueCmdDmaEvent)
 HSAPP_EVENT_DESCRIPTION_GENERATOR(QueueProcessEvent)
@@ -280,7 +285,7 @@ void
 HSAPacketProcessor::schedAQLProcessing(uint32_t rl_idx)
 {
     RQLEntry *queue = regdQList[rl_idx];
-    if (!queue->aqlProcessEvent.scheduled()) {
+    if (!queue->aqlProcessEvent.scheduled() && !queue->getBarrierBit()) {
         Tick processingTick = curTick() + pktProcessDelay;
         schedule(queue->aqlProcessEvent, processingTick);
         DPRINTF(HSAPacketProcessor, "AQL processing scheduled at tick: %d\n",
@@ -316,6 +321,16 @@ HSAPacketProcessor::processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr)
         // Submit packet to HSA device (dispatcher)
         hsa_device->submitDispatchPkt((void *)disp_pkt, rl_idx, host_pkt_addr);
         is_submitted = true;
+        /*
+          If this packet is using the "barrier bit" to enforce ordering with
+          subsequent kernels, set the bit for this queue now, after
+          dispatching.
+        */
+        if (IS_BARRIER(disp_pkt)) {
+            DPRINTF(HSAPacketProcessor, "%s: setting barrier bit for active" \
+                    " list ID = %d\n", __FUNCTION__, rl_idx);
+            regdQList[rl_idx]->setBarrierBit(true);
+        }
     } else if (pkt_type == HSA_PACKET_TYPE_BARRIER_AND) {
         DPRINTF(HSAPacketProcessor, "%s: Processing barrier packet" \
                 " active list ID = %d\n", __FUNCTION__, rl_idx);
@@ -631,6 +646,23 @@ void
 HSAPacketProcessor::finishPkt(void *pvPkt, uint32_t rl_idx)
 {
     HSAQueueDescriptor* qDesc = regdQList[rl_idx]->qCntxt.qDesc;
+
+    // if barrier bit was set, unset it here -- we assume that finishPkt is
+    // only called after the completion of a kernel
+    if (regdQList[rl_idx]->getBarrierBit()) {
+        DPRINTF(HSAPacketProcessor,
+                "Unset barrier bit for active list ID %d\n", rl_idx);
+        regdQList[rl_idx]->setBarrierBit(false);
+        // if pending kernels in the queue after this kernel, reschedule
+        if (regdQList[rl_idx]->dispPending()) {
+            DPRINTF(HSAPacketProcessor,
+                    "Rescheduling active list ID %d after unsetting barrier "
+                    "bit\n", rl_idx);
+            schedAQLProcessing(rl_idx);
+        }
+    }
+
+    // If set, then blocked schedule, so need to reschedule
     if (regdQList[rl_idx]->qCntxt.aqlBuf->freeEntry(pvPkt))
         updateReadIndex(0, rl_idx);
     DPRINTF(HSAPacketProcessor,

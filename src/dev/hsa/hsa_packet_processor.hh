@@ -168,11 +168,13 @@ class AQLRingBuffer
 typedef struct QueueContext {
     HSAQueueDescriptor* qDesc;
     AQLRingBuffer* aqlBuf;
+    // used for HSA packets that enforce synchronization with barrier bit
+    bool barrierBit;
     QueueContext(HSAQueueDescriptor* q_desc,
                  AQLRingBuffer* aql_buf)
-                 : qDesc(q_desc), aqlBuf(aql_buf)
+                 : qDesc(q_desc), aqlBuf(aql_buf), barrierBit(false)
     {}
-    QueueContext() : qDesc(NULL), aqlBuf(NULL) {}
+    QueueContext() : qDesc(NULL), aqlBuf(NULL), barrierBit(false) {}
 } QCntxt;
 
 class HSAPacketProcessor: public DmaDevice
@@ -233,6 +235,8 @@ class HSAPacketProcessor: public DmaDevice
         bool dispPending() { return qCntxt.aqlBuf->dispPending() > 0; }
         SignalState depSignalRdState;
         QueueProcessEvent aqlProcessEvent;
+        void setBarrierBit(bool set_val) { qCntxt.barrierBit = set_val; }
+        bool getBarrierBit() const { return qCntxt.barrierBit; }
     };
     // Keeps track of queueDescriptors of registered queues
     std::vector<class RQLEntry *> regdQList;
