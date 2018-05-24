@@ -1,0 +1,19 @@
+SystemC Simulation
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W211) sc_logic value 'Z' cannot be converted to bool
+In file: <removed by verify.pl>
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>

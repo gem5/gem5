@@ -1,0 +1,19 @@
+SystemC Simulation
+time 0.000000 => thread1 : took semaphore 1 times
+time 0.000000 => thread1 : took semaphore 2 times
+time 0.000000 => thread1 : took semaphore 3 times
+time 0.000000 => thread1 : took semaphore 4 times
+time 0.000000 => thread1 : took semaphore 5 times
+time 10.000000 => thread2 : posted semaphore 1
+time 10.000000 => thread1 : took semaphore 6 times
+time 30.000000 => thread2 : posted semaphore 1
+time 30.000000 => thread1 : took semaphore 7 times
+time 50.000000 => thread2 : posted semaphore 1
+time 50.000000 => thread1 : took semaphore 8 times
+time 70.000000 => thread2 : posted semaphore 1
+time 70.000000 => thread1 : took semaphore 9 times
+time 90.000000 => thread2 : posted semaphore 1
+time 90.000000 => thread1 : took semaphore 10 times
+time 90.000000 => thread1 : value of semaphore = 0
+
+Info: /OSCI/SystemC: Simulation stopped by user.

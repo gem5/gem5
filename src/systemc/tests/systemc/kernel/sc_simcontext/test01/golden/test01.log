@@ -1,0 +1,4 @@
+SystemC Simulation
+0 main_action_method called
+0 main_action_thread called
+1 main_action_cthread called

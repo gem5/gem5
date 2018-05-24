@@ -1,0 +1,154 @@
+
+type scalar "BIT" enum '0', '1' ;
+type scalar "MVL" enum '0', '1', 'X', 'Z', '?' ;
+
+declare  O0   "Clock"  BIT  variable ;
+start_trace O0 ;
+declare  O1   "Int"  BIT  0 31 variable ;
+start_trace O1 ;
+declare  O2   "Char"  BIT  0 7 variable ;
+start_trace O2 ;
+declare  O3   "Float"  real  variable ;
+start_trace O3 ;
+declare  O4   "Logic"  MVL  variable ;
+start_trace O4 ;
+comment "All initial values are dumped below at time 0 sec = 0 timescale units." ;
+assign O0 '1' ;
+assign O1 "00000000000000000000001111111111" ;
+assign O2 "00001111" ;
+assign  O3 -4.000000 ; 
+assign O4 'X' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+assign O1 "00000000000000000000000000001010" ;
+assign O2 "00001000" ;
+assign  O3 1000.234558 ; 
+assign O4 'Z' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+assign O1 "00000000000000000000001111111111" ;
+assign O2 "00001111" ;
+assign  O3 -4.000000 ; 
+assign O4 'X' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+assign O1 "00000000000000000000000000001010" ;
+assign O2 "00001000" ;
+assign  O3 1000.234558 ; 
+assign O4 'Z' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+assign O1 "00000000000000000000001111111111" ;
+assign O2 "00001111" ;
+assign  O3 -4.000000 ; 
+assign O4 'X' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+assign O1 "00000000000000000000000000001010" ;
+assign O2 "00001000" ;
+assign  O3 1000.234558 ; 
+assign O4 'Z' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+assign O1 "00000000000000000000001111111111" ;
+assign O2 "00001111" ;
+assign  O3 -4.000000 ; 
+assign O4 'X' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+assign O1 "00000000000000000000000000001010" ;
+assign O2 "00001000" ;
+assign  O3 1000.234558 ; 
+assign O4 'Z' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+assign O1 "00000000000000000000001111111111" ;
+assign O2 "00001111" ;
+assign  O3 -4.000000 ; 
+assign O4 'X' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+assign O1 "00000000000000000000000000001010" ;
+assign O2 "00001000" ;
+assign  O3 1000.234558 ; 
+assign O4 'Z' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+assign O1 "00000000000000000000001111111111" ;
+assign O2 "00001111" ;
+assign  O3 -4.000000 ; 
+assign O4 'X' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+assign O1 "00000000000000000000000000001010" ;
+assign O2 "00001000" ;
+assign  O3 1000.234558 ; 
+assign O4 'Z' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+assign O1 "00000000000000000000001111111111" ;
+assign O2 "00001111" ;
+assign  O3 -4.000000 ; 
+assign O4 'X' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+assign O1 "00000000000000000000000000001010" ;
+assign O2 "00001000" ;
+assign  O3 1000.234558 ; 
+assign O4 'Z' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+assign O1 "00000000000000000000001111111111" ;
+assign O2 "00001111" ;
+assign  O3 -4.000000 ; 
+assign O4 'X' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+assign O1 "00000000000000000000000000001010" ;
+assign O2 "00001000" ;
+assign  O3 1000.234558 ; 
+assign O4 'Z' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+assign O1 "00000000000000000000001111111111" ;
+assign O2 "00001111" ;
+assign  O3 -4.000000 ; 
+assign O4 'X' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+assign O1 "00000000000000000000000000001010" ;
+assign O2 "00001000" ;
+assign  O3 1000.234558 ; 
+assign O4 'Z' ;
+
+delta_time 10000 ;
+assign O0 '1' ;
+assign O1 "00000000000000000000001111111111" ;
+assign O2 "00001111" ;
+assign  O3 -4.000000 ; 
+assign O4 'X' ;
+
+delta_time 10000 ;
+assign O0 '0' ;
+assign O1 "00000000000000000000000000001010" ;
+assign O2 "00001000" ;
+assign  O3 1000.234558 ; 
+assign O4 'Z' ;
+

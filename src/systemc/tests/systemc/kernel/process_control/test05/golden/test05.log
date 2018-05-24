@@ -1,0 +1,10 @@
+SystemC Simulation
+3 ns throwing my exception 
+3 ns caught my exception 
+4 ns throwing my exception 
+4 ns caught my exception 
+4 ns throwing your exception 
+4 ns caught your exception 
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+Program completed

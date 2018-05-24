@@ -1,0 +1,23 @@
+SystemC Simulation
+peripheral: receive 10
+peripheral: send 10
+peripheral: receive 9
+peripheral: send 9
+peripheral: receive 8
+peripheral: send 8
+peripheral: receive 7
+peripheral: send 7
+peripheral: receive 6
+peripheral: send 6
+peripheral: receive 5
+peripheral: send 5
+peripheral: receive 4
+peripheral: send 4
+peripheral: receive 3
+peripheral: send 3
+peripheral: receive 2
+peripheral: send 2
+peripheral: receive 1
+peripheral: send 1
+
+Info: /OSCI/SystemC: Simulation stopped by user.

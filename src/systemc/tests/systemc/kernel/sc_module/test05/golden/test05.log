@@ -1,0 +1,34 @@
+SystemC Simulation
+1
+1
+2
+2
+500 ps
+***
+sc_module  a
+sc_module  b
+sc_clock  clock_0
+sc_signal  signal_0
+sc_module  c
+sc_method_process  clock_0_posedge_action_0
+sc_method_process  clock_0_negedge_action_0
+***
+sc_in  a.port_0
+sc_out  a.port_1
+sc_method_process  a.main_action
+***
+sc_in  b.port_0
+sc_thread_process  b.main_action
+***
+sc_in  c.port_0
+sc_module  c.a
+sc_module  c.b
+sc_signal  c.signal_0
+sc_cthread_process  c.main_action
+***
+sc_in  c.a.port_0
+sc_out  c.a.port_1
+sc_method_process  c.a.main_action
+***
+sc_in  c.b.port_0
+sc_thread_process  c.b.main_action

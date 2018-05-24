@@ -1,0 +1,62 @@
+/* Common interface file for test bench
+   Author: PRP 
+   */
+
+SC_MODULE( tb )
+{
+    SC_HAS_PROCESS( tb );
+
+    sc_in_clk clk;
+
+        // Output Reset Port
+        sc_signal<bool>& reset_sig;
+
+        // Output Data Ports
+	sc_signal<int>& i1;
+	sc_signal<int>& i2;
+	sc_signal<int>& i3;
+	sc_signal<int>& i4;
+	sc_signal<int>& i5;
+
+        // Output Control Ports
+	sc_signal<bool>& cont1;
+	sc_signal<bool>& cont2;
+	sc_signal<bool>& cont3;
+
+        // Input Data Ports
+	const sc_signal<int>& o1;
+	const sc_signal<int>& o2;
+	const sc_signal<int>& o3;
+	const sc_signal<int>& o4;
+	const sc_signal<int>& o5;
+
+	// Constructor
+	tb (	
+        const char* NAME, 
+	sc_clock_edge& CLK,
+
+        sc_signal<bool>& RESET_SIG,
+
+	sc_signal<int>& I1,
+	sc_signal<int>& I2,
+	sc_signal<int>& I3,
+	sc_signal<int>& I4,
+	sc_signal<int>& I5,
+
+	sc_signal<bool>& CONT1,
+	sc_signal<bool>& CONT2,
+	sc_signal<bool>& CONT3,
+
+	const sc_signal<int>& O1,
+	const sc_signal<int>& O2,
+	const sc_signal<int>& O3,
+	const sc_signal<int>& O4,
+	const sc_signal<int>& O5)
+	  : sc_sync (NAME, CLK), reset_sig(RESET_SIG), i1(I1),  i2(I2),  
+	    i3(I3),  i4(I4), i5(I5), cont1 (CONT1), cont2 (CONT2), 
+	    cont3 (CONT3), o1(O1),  o2(O2),  o3(O3),  o4(O4),  o5(O5) 
+        {
+	}
+
+  void entry();
+};

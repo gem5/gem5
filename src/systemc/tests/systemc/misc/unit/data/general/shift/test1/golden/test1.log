@@ -1,0 +1,45 @@
+SystemC Simulation
+-34
+width = 7
+value = -34
+bits  = 101 1110 
+-34
+width = 7
+value = -34
+bits  = 101 1110 
+-17
+width = 7
+value = -17
+bits  = 110 1111 
+-9
+width = 7
+value = -9
+bits  = 111 0111 
+-5
+width = 7
+value = -5
+bits  = 111 1011 
+-3
+width = 7
+value = -3
+bits  = 111 1101 
+-17
+width = 7
+value = -17
+bits  = 110 1111 
+-9
+width = 7
+value = -9
+bits  = 111 0111 
+-5
+width = 7
+value = -5
+bits  = 111 1011 
+-3
+width = 7
+value = -3
+bits  = 111 1101 
+-2
+width = 7
+value = -2
+bits  = 111 1110 

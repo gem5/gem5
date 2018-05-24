@@ -1,0 +1,5 @@
+SystemC Simulation
+
+Warning: (W569) sc_module(const char*), sc_module(const std::string&) have been deprecated, use sc_module(const sc_module_name&): module_a
+In file: <removed by verify.pl>
+module_a

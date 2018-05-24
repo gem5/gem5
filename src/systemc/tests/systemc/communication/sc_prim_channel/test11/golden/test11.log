@@ -1,0 +1,22 @@
+SystemC Simulation
+simulation time:0 s    writting 0 to channel
+simulation time:0 s    reading 0 from channel
+simulation time:5 ns    reading 0 from channel
+simulation time:20 ns    writting 1 to channel
+simulation time:25 ns    reading 1 from channel
+simulation time:40 ns    writting 2 to channel
+simulation time:45 ns    reading 2 from channel
+simulation time:60 ns    writting 3 to channel
+simulation time:70 ns    reading 3 from channel
+simulation time:80 ns    writting 4 to channel
+simulation time:90 ns    reading 4 from channel
+simulation time:100 ns    writting 5 to channel
+simulation time:110 ns    reading 5 from channel
+simulation time:120 ns    writting 6 to channel
+simulation time:135 ns    reading 6 from channel
+simulation time:140 ns    writting 7 to channel
+simulation time:155 ns    reading 7 from channel
+simulation time:160 ns    writting 8 to channel
+simulation time:175 ns    reading 8 from channel
+simulation time:180 ns    writting 9 to channel
+simulation time:195 ns    reading 9 from channel

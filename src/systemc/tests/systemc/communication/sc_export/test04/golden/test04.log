@@ -1,0 +1,4 @@
+SystemC Simulation
+
+Error: (E109) complete binding failed: export not bound: export 'x.a' (sc_export)
+In file: <removed by verify.pl>

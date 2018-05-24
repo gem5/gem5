@@ -1,0 +1,33 @@
+SystemC Simulation
+
+START OF SIM -- CLOCK AT NEGEDGE (10,30,50,...) 
+10 ns :  ready[S] = 0 a[V] = 0
+			 a =    0 
+10 ns :  ready[S] = 0 a[V] = 0
+      ready =    0 
+10 ns :  ready[S] = 0 a[V] = 0
+
+CLK 
+30 ns :  ready[S] = 0 a[V] = 0
+		   a =    1 
+30 ns :  ready[S] = 0 a[V] = 1
+      ready =    1 
+30 ns :  ready[S] = 0 a[V] = 1
+
+CLK 
+50 ns :  ready[S] = 1 a[V] = 1
+		   a =    0 
+50 ns :  ready[S] = 1 a[V] = 0
+      ready =    0 
+50 ns :  ready[S] = 1 a[V] = 0
+
+CLK 
+70 ns :  ready[S] = 0 a[V] = 0
+		   a =    1 
+70 ns :  ready[S] = 0 a[V] = 1
+      ready =    1 
+70 ns :  ready[S] = 0 a[V] = 1
+
+CLK 
+90 ns :  ready[S] = 1 a[V] = 1
+Terminating process TB1.RD1.entry

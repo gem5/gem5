@@ -1,0 +1,21 @@
+SystemC Simulation
+bv2a = 01
+lv2b = 10
+bv4a = 0110
+bv4a = 1001
+bv4a = 1011
+bv2a = 10
+bv4a = 1101
+bv2a = 01
+bv2a = 00
+lv2b = 11
+bv4a = 0011
+bv4a = 1100
+bv2a = 11
+lv2b = 00
+bv2a = 00
+lv2b = 11
+bv4a = 1110
+bv4a = 1000
+bv2a = 11
+lv2b = 00

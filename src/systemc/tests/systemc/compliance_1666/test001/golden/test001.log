@@ -1,0 +1,19 @@
+SystemC Simulation
+Should be silent except for some renaming warnings...
+
+Warning: (W505) object already exists: top.mod0.thread. Latter declaration will be renamed to top.mod0.thread_0
+In file: <removed by verify.pl>
+
+Warning: (W505) object already exists: top.mod0.thread. Latter declaration will be renamed to top.mod0.thread_1
+In file: <removed by verify.pl>
+
+Warning: (W505) object already exists: top.mod0.thread. Latter declaration will be renamed to top.mod0.thread_2
+In file: <removed by verify.pl>
+
+Warning: (W505) object already exists: top.mod0.thread. Latter declaration will be renamed to top.mod0.thread_3
+In file: <removed by verify.pl>
+
+Warning: (W558) disable() or dont_initialize() called on process with no static sensitivity, it will be orphaned: top.mod0.method
+In file: <removed by verify.pl>
+
+Success

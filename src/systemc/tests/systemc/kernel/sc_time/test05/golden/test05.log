@@ -1,0 +1,5 @@
+SystemC Simulation
+
+Error: (E514) set time resolution failed: simulation running
+In file: <removed by verify.pl>
+In process: src.main_action @ 0 s

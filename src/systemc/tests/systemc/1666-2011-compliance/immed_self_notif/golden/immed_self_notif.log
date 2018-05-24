@@ -1,0 +1,7 @@
+SystemC Simulation
+
+Warning: (W536) immediate self-notification ignored as of IEEE 1666-2011: top.M1
+In file: <removed by verify.pl>
+In process: top.M1 @ 0 s
+
+Success

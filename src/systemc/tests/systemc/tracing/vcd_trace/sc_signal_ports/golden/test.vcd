@@ -1,0 +1,202 @@
+
+$timescale
+     1 ps
+$end
+
+$scope module SystemC $end
+$var wire   32  aaaaa  sig_int [31:0]  $end
+$var wire    1  aaaab  sig_bool       $end
+$var wire    1  aaaac  sig_logic       $end
+$var wire    1  aaaad  sig_resolved       $end
+$var wire    1  aaaae  sig_rv1       $end
+$scope module a $end
+$var wire    1  aaaaf  out_rv1       $end
+$var wire    1  aaaag  out_resolved       $end
+$var wire    1  aaaah  out_logic       $end
+$var wire    1  aaaai  out_bool       $end
+$var wire   32  aaaaj  out_int [31:0]  $end
+$var wire    1  aaaak  in_rv1       $end
+$var wire    1  aaaal  in_resolved       $end
+$var wire    1  aaaam  in_logic       $end
+$var wire    1  aaaan  in_bool       $end
+$var wire   32  aaaao  in_int [31:0]  $end
+$upscope $end
+$upscope $end
+$enddefinitions  $end
+
+$comment
+All initial values are dumped below at time 0 sec = 0 timescale units.
+$end
+
+$dumpvars
+b0 aaaaa
+0aaaab
+xaaaac
+xaaaad
+Xaaaae
+Xaaaaf
+xaaaag
+xaaaah
+0aaaai
+b0 aaaaj
+Xaaaak
+xaaaal
+xaaaam
+0aaaan
+b0 aaaao
+$end
+
+#1000
+b1 aaaaa
+1aaaab
+1aaaac
+1aaaad
+1aaaae
+1aaaaf
+1aaaag
+1aaaah
+1aaaai
+b1 aaaaj
+1aaaak
+1aaaal
+1aaaam
+1aaaan
+b1 aaaao
+
+#2000
+b10 aaaaa
+0aaaab
+zaaaac
+zaaaad
+Zaaaae
+Zaaaaf
+zaaaag
+zaaaah
+0aaaai
+b10 aaaaj
+Zaaaak
+zaaaal
+zaaaam
+0aaaan
+b10 aaaao
+
+#3000
+b11 aaaaa
+1aaaab
+xaaaac
+xaaaad
+Xaaaae
+Xaaaaf
+xaaaag
+xaaaah
+1aaaai
+b11 aaaaj
+Xaaaak
+xaaaal
+xaaaam
+1aaaan
+b11 aaaao
+
+#4000
+b100 aaaaa
+0aaaab
+0aaaac
+0aaaad
+0aaaae
+0aaaaf
+0aaaag
+0aaaah
+0aaaai
+b100 aaaaj
+0aaaak
+0aaaal
+0aaaam
+0aaaan
+b100 aaaao
+
+#5000
+b101 aaaaa
+1aaaab
+1aaaac
+1aaaad
+1aaaae
+1aaaaf
+1aaaag
+1aaaah
+1aaaai
+b101 aaaaj
+1aaaak
+1aaaal
+1aaaam
+1aaaan
+b101 aaaao
+
+#6000
+b110 aaaaa
+0aaaab
+zaaaac
+zaaaad
+Zaaaae
+Zaaaaf
+zaaaag
+zaaaah
+0aaaai
+b110 aaaaj
+Zaaaak
+zaaaal
+zaaaam
+0aaaan
+b110 aaaao
+
+#7000
+b111 aaaaa
+1aaaab
+xaaaac
+xaaaad
+Xaaaae
+Xaaaaf
+xaaaag
+xaaaah
+1aaaai
+b111 aaaaj
+Xaaaak
+xaaaal
+xaaaam
+1aaaan
+b111 aaaao
+
+#8000
+b1000 aaaaa
+0aaaab
+0aaaac
+0aaaad
+0aaaae
+0aaaaf
+0aaaag
+0aaaah
+0aaaai
+b1000 aaaaj
+0aaaak
+0aaaal
+0aaaam
+0aaaan
+b1000 aaaao
+
+#9000
+b1001 aaaaa
+1aaaab
+1aaaac
+1aaaad
+1aaaae
+1aaaaf
+1aaaag
+1aaaah
+1aaaai
+b1001 aaaaj
+1aaaak
+1aaaal
+1aaaam
+1aaaan
+b1001 aaaao
+
+#10000

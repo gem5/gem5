@@ -1,0 +1,198 @@
+
+R aligned: addr=0 len=16 bus=8 word=4 dptr=0 be=x s=16
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=0
+
+R aligned: addr=0 len=16 bus=8 word=4 dptr=0 be=x s=16
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=1
+
+R aligned: addr=16 len=16 bus=8 word=4 dptr=0 be=x s=16
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=2
+
+W aligned: addr=16 len=16 bus=8 word=4 dptr=4 be=x s=16
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=0
+
+W aligned: addr=16 len=16 bus=8 word=4 dptr=4 be=x s=16
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=1
+
+W aligned: addr=0 len=16 bus=8 word=4 dptr=0 be=x s=16
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=2
+
+R aligned: addr=0 len=16 bus=8 word=4 dptr=0 be=1111000011110000 s=16
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=0
+
+R aligned: addr=0 len=16 bus=8 word=4 dptr=0 be=1111000011110000 s=16
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=1
+
+R aligned: addr=16 len=16 bus=8 word=4 dptr=0 be=1111000011110000 s=16
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=2
+
+W aligned: addr=16 len=16 bus=8 word=4 dptr=4 be=1111000000001111 s=16
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=0
+
+W aligned: addr=16 len=16 bus=8 word=4 dptr=4 be=1111000000001111 s=16
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=1
+
+W aligned: addr=0 len=16 bus=8 word=4 dptr=0 be=1111000000001111 s=16
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=2
+
+
+R single: addr=20 len=4 bus=8 word=4 dptr=0 be=x s=4
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=0
+
+R single: addr=20 len=4 bus=8 word=4 dptr=0 be=x s=4
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=1
+
+R single: addr=20 len=4 bus=8 word=4 dptr=0 be=x s=4
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=3
+
+W single: addr=28 len=4 bus=8 word=4 dptr=4 be=x s=4
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=0
+
+W single: addr=28 len=4 bus=8 word=4 dptr=4 be=x s=4
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=1
+
+W single: addr=28 len=4 bus=8 word=4 dptr=4 be=x s=4
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=3
+
+R single: addr=21 len=2 bus=8 word=2 dptr=0 be=11 s=2
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=0
+
+R single: addr=21 len=2 bus=8 word=2 dptr=0 be=11 s=2
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=1
+
+R single: addr=21 len=2 bus=8 word=2 dptr=0 be=11 s=2
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=3
+
+W single: addr=0 len=4 bus=4 word=4 dptr=25 be=1111 s=4
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=0
+
+W single: addr=0 len=4 bus=4 word=4 dptr=25 be=1111 s=4
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=1
+
+W single: addr=0 len=4 bus=4 word=4 dptr=25 be=1111 s=4
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=3
+
+
+R awkward: addr=13 len=14 bus=8 word=2 dptr=0 be=x s=14
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=0
+
+W awkward: addr=5 len=4 bus=4 word=1 dptr=25 be=x s=4
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=0
+
+R awkward: addr=10 len=12 bus=4 word=4 dptr=0 be=111100001111 s=12
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=0
+
+W awkward: addr=15 len=8 bus=8 word=4 dptr=25 be=00001111 s=8
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=0
+
+
+R awkward: addr=13 len=14 bus=8 word=2 dptr=0 be=x s=14
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=1
+
+W awkward: addr=5 len=4 bus=4 word=1 dptr=25 be=x s=4
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=1
+
+R awkward: addr=10 len=12 bus=4 word=4 dptr=0 be=111100001111 s=12
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=1
+
+W awkward: addr=15 len=8 bus=8 word=4 dptr=25 be=00001111 s=8
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=1
+
+
+R stream: addr=13 len=14 bus=8 word=2 dptr=0 be=x s=2
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=0
+
+W stream: addr=5 len=4 bus=4 word=1 dptr=25 be=1101 s=2
+i=0123456789abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=0
+
+
+R byte-en-len: addr=10 len=12 bus=4 word=4 dptr=0 be=11110000 s=12
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=0
+
+W byte-en-len: addr=15 len=16 bus=8 word=4 dptr=25 be=00001111 s=30
+i=0123456789abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=0
+
+
+R stream-byte-en-len: addr=10 len=12 bus=4 word=4 dptr=0 be=11110000 s=15
+i=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+t=0123456789abcdefghijklmnopqrstuvwxyz
+c=0
+
+W stream-byte-en-len: addr=15 len=16 bus=8 word=4 dptr=25 be=00001111 s=16
+i=0123456789abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz
+t=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+c=0
+
+

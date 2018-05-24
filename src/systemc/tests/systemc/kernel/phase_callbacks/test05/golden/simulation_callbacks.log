@@ -1,0 +1,109 @@
+SystemC Simulation
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 0 s -> pending activity: MAX
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 0 s -> pending activity: 0 s
+top.timed: 0 s: 0/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 0 s -> pending activity: 0 s
+top.delta: 0 s: 1/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 0 s -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 0 s -> pending activity: 1 ns
+top.timed: 1 ns: 1/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 1 ns -> pending activity: 0 s
+top.delta: 1 ns: 2/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 1 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 1 ns -> pending activity: 1 ns
+top.timed: 2 ns: 2/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 2 ns -> pending activity: 0 s
+top.delta: 2 ns: 3/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 2 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 2 ns -> pending activity: 1 ns
+top.timed: 3 ns: 3/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 3 ns -> pending activity: 0 s
+top.delta: 3 ns: 4/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 3 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 3 ns -> pending activity: 1 ns
+top.timed: 4 ns: 4/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 4 ns -> pending activity: 0 s
+top.delta: 4 ns: 5/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 4 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 4 ns -> pending activity: 1 ns
+top.timed: 5 ns: 5/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 5 ns -> pending activity: 0 s
+top.delta: 5 ns: 6/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 5 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 5 ns -> pending activity: 1 ns
+top.timed: 6 ns: 6/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 6 ns -> pending activity: 0 s
+top.delta: 6 ns: 7/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 6 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 6 ns -> pending activity: 1 ns
+top.timed: 7 ns: 7/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 7 ns -> pending activity: 0 s
+top.delta: 7 ns: 8/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 7 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 7 ns -> pending activity: 1 ns
+top.timed: 8 ns: 8/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 8 ns -> pending activity: 0 s
+top.delta: 8 ns: 9/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 8 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 8 ns -> pending activity: 1 ns
+top.timed: 9 ns: 9/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 9 ns -> pending activity: 0 s
+top.delta: 9 ns: 10/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 9 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 9 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 10 ns -> pending activity: MAX
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 10 ns -> pending activity: 0 s
+top.timed: 10 ns: 0/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 10 ns -> pending activity: 0 s
+top.delta: 10 ns: 1/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 10 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 10 ns -> pending activity: 1 ns
+top.timed: 11 ns: 1/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 11 ns -> pending activity: 0 s
+top.delta: 11 ns: 2/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 11 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 11 ns -> pending activity: 1 ns
+top.timed: 12 ns: 2/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 12 ns -> pending activity: 0 s
+top.delta: 12 ns: 3/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 12 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 12 ns -> pending activity: 1 ns
+top.timed: 13 ns: 3/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 13 ns -> pending activity: 0 s
+top.delta: 13 ns: 4/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 13 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 13 ns -> pending activity: 1 ns
+top.timed: 14 ns: 4/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 14 ns -> pending activity: 0 s
+top.delta: 14 ns: 5/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 14 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 14 ns -> pending activity: 1 ns
+top.timed: 15 ns: 5/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 15 ns -> pending activity: 0 s
+top.delta: 15 ns: 6/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 15 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 15 ns -> pending activity: 1 ns
+top.timed: 16 ns: 6/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 16 ns -> pending activity: 0 s
+top.delta: 16 ns: 7/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 16 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 16 ns -> pending activity: 1 ns
+top.timed: 17 ns: 7/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 17 ns -> pending activity: 0 s
+top.delta: 17 ns: 8/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 17 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 17 ns -> pending activity: 1 ns
+top.timed: 18 ns: 8/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 18 ns -> pending activity: 0 s
+top.delta: 18 ns: 9/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 18 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 18 ns -> pending activity: 1 ns
+top.timed: 19 ns: 9/0
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 19 ns -> pending activity: 0 s
+top.delta: 19 ns: 10/1
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 19 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 19 ns -> pending activity: 1 ns
+top.phase_tracer_0: phase callback SC_END_OF_UPDATE: 20 ns -> pending activity: MAX
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+top.phase_tracer_0: [destructor]: 65 callbacks called.

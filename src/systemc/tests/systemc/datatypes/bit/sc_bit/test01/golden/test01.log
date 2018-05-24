@@ -1,0 +1,59 @@
+SystemC Simulation
+
+Info: (I804) /IEEE_Std_1666/deprecated: sc_bit is deprecated, use bool instead
+Caught exception for sc_bit(2)
+Caught exception for sc_bit('2')
+
+Warning: (W212) sc_logic value 'X' cannot be converted to bool
+In file: <removed by verify.pl>
+00101010111
+0111
+0001
+0110
+0111
+0001
+0110
+0111
+0001
+0110
+1011
+0010
+1001
+0111
+0001
+0110
+0111
+0001
+0110
+0111
+0001
+0110
+0111
+0001
+0110
+0111
+0001
+0110
+0111
+0001
+0110
+0111
+0001
+0110
+0111
+0001
+0110
+0111
+0001
+0110
+0111
+0001
+0110
+
+Info: (I804) /IEEE_Std_1666/deprecated: You can turn off warnings about
+             IEEE 1666 deprecated features by placing this method call
+             as the first statement in your sc_main() function:
+
+  sc_core::sc_report_handler::set_actions( "/IEEE_Std_1666/deprecated",
+                                           sc_core::SC_DO_NOTHING );
+

@@ -1,0 +1,23 @@
+SystemC Simulation
+Value on Bus = XXXXX
+P1: Set to 1
+P2: Set to Z
+Value on Bus = 11001
+P1: Set to Z
+P2: Set to 0
+Value on Bus = 00110
+P1: Set to 1
+P2: Set to Z
+Value on Bus = 11001
+P1: Set to Z
+P2: Set to 0
+Value on Bus = 00110
+P1: Set to 1
+P2: Set to Z
+Value on Bus = 11001
+P1: Set to Z
+P2: Set to 0
+Value on Bus = 00110
+P1: Set to 1
+P2: Set to Z
+Value on Bus = 11001

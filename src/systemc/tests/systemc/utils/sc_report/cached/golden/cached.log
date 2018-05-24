@@ -1,0 +1,62 @@
+SystemC Simulation
+Initial status:
+1 ns from context 'global' <no cached report>
+1 ns from context 'm1' <no cached report>
+1 ns from context 'm2' <no cached report>
+1 ns from context 't1' <no cached report>
+1 ns from context 't2' <no cached report>
+
+
+Emit ID1
+
+Warning: ID1: bb
+In file: <removed by verify.pl>
+In process: M.method1 @ 3 ns
+
+Info: ID1: aa
+
+Info: ID1: cc
+
+Info: ID1: ee
+
+Warning: ID1: dd
+In file: <removed by verify.pl>
+In process: M.thread2 @ 4 ns
+
+
+Emit ID2
+
+Warning: ID2: b
+In file: <removed by verify.pl>
+In process: M.method1 @ 6 ns
+
+Info: ID2: a
+
+Info: ID2: c
+
+Info: ID2: e
+
+Warning: ID2: d
+In file: <removed by verify.pl>
+In process: M.thread2 @ 7 ns
+
+
+Status:
+9 ns from context 'global' ID1 INFO
+ msg=cc file=file_g line 300 time=4 ns process=<none>
+9 ns from context 'm1' ID1 WARNING
+ msg=bb file=file_m1 line 210 time=3 ns process=M.method1
+9 ns from context 'm2' ID1 INFO
+ msg=ee file=file_m2 line 220 time=4 ns process=M.method2
+9 ns from context 't1' ID1 INFO
+ msg=aa file=file_t1 line 110 time=3 ns process=M.thread1
+9 ns from context 't2' ID1 WARNING
+ msg=dd file=file_t2 line 120 time=4 ns process=M.thread2
+
+
+Status:
+10 ns from context 'global' <no cached report>
+10 ns from context 'm1' <no cached report>
+10 ns from context 'm2' <no cached report>
+10 ns from context 't1' <no cached report>
+10 ns from context 't2' <no cached report>

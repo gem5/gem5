@@ -1,0 +1,86 @@
+SystemC Simulation
+Time  Spawn Start Stop 
+----- ----- ----- ----
+0 s 0
+0 s        0
+1 ns 1
+1 ns        1
+3 ns 2
+3 ns        2
+5 ns              0
+5 ns 3
+5 ns        3
+7 ns              1
+7 ns 4
+7 ns        4
+9 ns              2
+9 ns 5
+9 ns        5
+11 ns              3
+11 ns 6
+11 ns        6
+13 ns              4
+13 ns 7
+13 ns        7
+15 ns              5
+15 ns waiting for termination of 2 processes
+17 ns              6
+19 ns              7
+19 ns back from termination wait 
+Time  Spawn Start Stop 
+----- ----- ----- ----
+19 ns 8
+19 ns        8
+21 ns 9
+21 ns        9
+23 ns 10
+23 ns        10
+25 ns              8
+25 ns 11
+25 ns        11
+27 ns              9
+27 ns 12
+27 ns        12
+29 ns              10
+29 ns 13
+29 ns        13
+31 ns              11
+31 ns 14
+31 ns        14
+33 ns              12
+33 ns 15
+33 ns        15
+35 ns              13
+35 ns waiting for termination of 2 processes
+37 ns              14
+39 ns              15
+39 ns back from termination wait 
+Time  Spawn Start Stop 
+----- ----- ----- ----
+39 ns 16
+39 ns        16
+41 ns 17
+41 ns        17
+43 ns 18
+43 ns        18
+45 ns              16
+45 ns 19
+45 ns        19
+47 ns              17
+47 ns 20
+47 ns        20
+49 ns              18
+49 ns 21
+49 ns        21
+51 ns              19
+51 ns 22
+51 ns        22
+53 ns              20
+53 ns 23
+53 ns        23
+55 ns              21
+55 ns waiting for termination of 2 processes
+57 ns              22
+59 ns              23
+59 ns back from termination wait 
+Program completed.

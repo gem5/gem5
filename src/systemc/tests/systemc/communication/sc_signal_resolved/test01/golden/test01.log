@@ -1,0 +1,17 @@
+SystemC Simulation
+0 0 -> 0
+0 1 -> X
+0 Z -> 0
+0 X -> X
+1 0 -> X
+1 1 -> 1
+1 Z -> 1
+1 X -> X
+Z 0 -> 0
+Z 1 -> 1
+Z Z -> Z
+Z X -> X
+X 0 -> X
+X 1 -> X
+X Z -> X
+X X -> X

@@ -1,0 +1,185 @@
+SystemC Simulation
+10 ns,1: writer: blocking write
+10 ns,1: reader: blocking read 1
+10 ns,2: reader: 0
+10 ns,2: reader: 1
+10 ns,2: reader: 2
+10 ns,2: reader: 3
+10 ns,2: reader: 4
+10 ns,2: reader: 5
+10 ns,2: reader: 6
+10 ns,2: reader: 7
+10 ns,2: reader: 8
+10 ns,2: reader: 9
+10 ns,4: reader: 10
+10 ns,4: reader: 11
+10 ns,4: reader: 12
+10 ns,4: reader: 13
+10 ns,4: reader: 14
+20 ns,5: writer: 5 free spaces
+20 ns,5: writer: non-blocking write
+20 ns,5: writer: waiting
+20 ns,5: reader: 5 available samples
+20 ns,5: reader: blocking read 2
+20 ns,5: reader: 15
+20 ns,5: reader: 16
+20 ns,5: reader: 17
+20 ns,5: reader: 18
+20 ns,5: reader: 19
+20 ns,6: reader: 20
+20 ns,6: reader: 21
+20 ns,6: reader: 22
+20 ns,6: reader: 23
+20 ns,6: reader: 24
+20 ns,6: writer: data read event
+20 ns,6: writer: waiting
+20 ns,7: reader: 26
+20 ns,7: reader: 27
+20 ns,7: reader: 28
+20 ns,7: reader: 29
+20 ns,7: reader: 30
+20 ns,7: writer: data read event
+20 ns,7: writer: waiting
+20 ns,8: writer: data read event
+30 ns,9: reader: 10 available samples
+30 ns,9: reader: non-blocking read
+30 ns,9: reader: 32
+30 ns,9: reader: 33
+30 ns,9: reader: 34
+30 ns,9: reader: 35
+30 ns,9: reader: 36
+30 ns,9: reader: 38
+30 ns,9: reader: 39
+30 ns,9: reader: 40
+30 ns,9: reader: 41
+30 ns,9: reader: 42
+30 ns,9: reader: waiting
+30 ns,9: writer: blocking write
+30 ns,11: reader: data written event
+30 ns,11: reader: 43
+30 ns,11: reader: 44
+30 ns,11: reader: 45
+30 ns,11: reader: 46
+30 ns,11: reader: 47
+40 ns,13: reader: blocking read 1
+40 ns,13: reader: 48
+40 ns,13: reader: 49
+40 ns,13: reader: 50
+40 ns,13: reader: 51
+40 ns,13: reader: 52
+40 ns,13: reader: 53
+40 ns,13: reader: 54
+40 ns,13: reader: 55
+40 ns,13: reader: 56
+40 ns,13: reader: 57
+40 ns,15: reader: 58
+40 ns,15: reader: 59
+40 ns,15: reader: 60
+40 ns,15: reader: 61
+40 ns,15: reader: 62
+50 ns,16: writer: 10 free spaces
+50 ns,16: writer: non-blocking write
+50 ns,16: writer: waiting
+50 ns,16: reader: 0 available samples
+50 ns,16: reader: blocking read 2
+50 ns,17: reader: 63
+50 ns,17: reader: 64
+50 ns,17: reader: 65
+50 ns,17: reader: 66
+50 ns,17: reader: 67
+50 ns,17: reader: 68
+50 ns,17: reader: 69
+50 ns,17: reader: 70
+50 ns,17: reader: 71
+50 ns,17: reader: 72
+50 ns,18: writer: data read event
+50 ns,19: reader: 74
+50 ns,19: reader: 75
+50 ns,19: reader: 76
+50 ns,19: reader: 77
+50 ns,19: reader: 78
+60 ns,20: writer: blocking write
+60 ns,20: reader: 5 available samples
+60 ns,20: reader: non-blocking read
+60 ns,20: reader: 79
+60 ns,20: reader: 80
+60 ns,20: reader: 81
+60 ns,20: reader: 82
+60 ns,20: reader: 83
+60 ns,20: reader: waiting
+60 ns,21: reader: data written event
+60 ns,21: reader: 84
+60 ns,21: reader: 85
+60 ns,21: reader: 86
+60 ns,21: reader: 87
+60 ns,21: reader: 88
+60 ns,21: reader: waiting
+60 ns,22: reader: data written event
+60 ns,22: reader: 89
+60 ns,22: reader: 90
+60 ns,22: reader: 91
+60 ns,22: reader: 92
+60 ns,22: reader: 93
+70 ns,24: reader: blocking read 1
+70 ns,24: reader: 94
+70 ns,24: reader: 95
+70 ns,24: reader: 96
+70 ns,24: reader: 97
+70 ns,24: reader: 98
+70 ns,24: reader: 99
+70 ns,24: reader: 100
+70 ns,24: reader: 101
+70 ns,24: reader: 102
+70 ns,24: reader: 103
+70 ns,24: writer: 0 free spaces
+70 ns,24: writer: non-blocking write
+70 ns,24: writer: waiting
+70 ns,25: writer: data read event
+70 ns,25: writer: waiting
+70 ns,26: reader: 105
+70 ns,26: reader: 106
+70 ns,26: reader: 107
+70 ns,26: reader: 108
+70 ns,26: reader: 109
+70 ns,27: writer: data read event
+70 ns,27: writer: waiting
+80 ns,28: reader: 10 available samples
+80 ns,28: reader: blocking read 2
+80 ns,28: reader: 110
+80 ns,28: reader: 111
+80 ns,28: reader: 112
+80 ns,28: reader: 113
+80 ns,28: reader: 114
+80 ns,28: reader: 116
+80 ns,28: reader: 117
+80 ns,28: reader: 118
+80 ns,28: reader: 119
+80 ns,28: reader: 120
+80 ns,29: writer: data read event
+80 ns,30: reader: 122
+80 ns,30: reader: 123
+80 ns,30: reader: 124
+80 ns,30: reader: 125
+80 ns,30: reader: 126
+90 ns,31: writer: blocking write
+90 ns,31: reader: 0 available samples
+90 ns,31: reader: non-blocking read
+90 ns,31: reader: waiting
+90 ns,32: reader: data written event
+90 ns,32: reader: 127
+90 ns,32: reader: 128
+90 ns,32: reader: 129
+90 ns,32: reader: 130
+90 ns,32: reader: 131
+90 ns,32: reader: 132
+90 ns,32: reader: 133
+90 ns,32: reader: 134
+90 ns,32: reader: 135
+90 ns,32: reader: 136
+90 ns,32: reader: waiting
+90 ns,34: reader: data written event
+90 ns,34: reader: 137
+90 ns,34: reader: 138
+90 ns,34: reader: 139
+90 ns,34: reader: 140
+90 ns,34: reader: 141

@@ -1,0 +1,67 @@
+SystemC Simulation
+Stimuli: stim1= 0 stim2= 0 stim3= 0 stim4= 0  2 ns
+tmp1 my print 1
+tmp2 my print 0
+Display : 0001 0000  at 5 ns
+Stimuli: stim1= 1 stim2= 1 stim3= 1 stim4= 1  13 ns
+tmp1 my print 2
+tmp2 my print 1
+Display : 0010 0001  at 16 ns
+Stimuli: stim1= 2 stim2= 2 stim3= 2 stim4= 2  24 ns
+tmp1 my print 3
+tmp2 my print 2
+Display : 0011 0010  at 27 ns
+Stimuli: stim1= 3 stim2= 3 stim3= 3 stim4= 3  35 ns
+tmp1 my print 4
+tmp2 my print 3
+Display : 0100 0011  at 38 ns
+Stimuli: stim1= 4 stim2= 4 stim3= 4 stim4= 4  46 ns
+tmp1 my print 5
+tmp2 my print 4
+Display : 0101 0100  at 49 ns
+Stimuli: stim1= 5 stim2= 5 stim3= 5 stim4= 5  57 ns
+tmp1 my print 6
+tmp2 my print 5
+Display : 0110 0101  at 60 ns
+Stimuli: stim1= 6 stim2= 6 stim3= 6 stim4= 6  68 ns
+tmp1 my print 7
+tmp2 my print 6
+Display : 0111 0110  at 71 ns
+Stimuli: stim1= 7 stim2= 7 stim3= 7 stim4= 7  79 ns
+tmp1 my print 8
+tmp2 my print 7
+Display : 1000 0111  at 82 ns
+Stimuli: stim1= 8 stim2= 8 stim3= 8 stim4= 8  90 ns
+tmp1 my print 9
+tmp2 my print 8
+Display : 1001 1000  at 93 ns
+Stimuli: stim1= 9 stim2= 9 stim3= 9 stim4= 9  101 ns
+tmp1 my print 10
+tmp2 my print 9
+Display : 1010 1001  at 104 ns
+Stimuli: stim1= 10 stim2= 10 stim3= 10 stim4= 10  112 ns
+tmp1 my print 11
+tmp2 my print 10
+Display : 1011 1010  at 115 ns
+Stimuli: stim1= 11 stim2= 11 stim3= 11 stim4= 11  123 ns
+tmp1 my print 12
+tmp2 my print 11
+Display : 1100 1011  at 126 ns
+Stimuli: stim1= 12 stim2= 12 stim3= 12 stim4= 12  134 ns
+tmp1 my print 13
+tmp2 my print 12
+Display : 1101 1100  at 137 ns
+Stimuli: stim1= 13 stim2= 13 stim3= 13 stim4= 13  145 ns
+tmp1 my print 14
+tmp2 my print 13
+Display : 1110 1101  at 148 ns
+Stimuli: stim1= 14 stim2= 14 stim3= 14 stim4= 14  156 ns
+tmp1 my print 15
+tmp2 my print 14
+Display : 1111 1110  at 159 ns
+Stimuli: stim1= 15 stim2= 15 stim3= 15 stim4= 15  167 ns
+tmp1 my print 0
+tmp2 my print 15
+Display : 1111 1111  at 170 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.

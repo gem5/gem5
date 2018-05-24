@@ -1,0 +1,1301 @@
+SystemC Simulation
+************** default_constructor for fx_float
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_char
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 5721547 : 0x574dcb
+e : -9.04232905262011e-113 : 0x.f21524151e-92
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_int
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x8e+7
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_uint
+a : 0 : 0x0
+b : 1 : 0x1
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x08e+7
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_short
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 32767 : 0x7fff
+e : -32768 : 0x8e+3
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_ushort
+a : 0 : 0x0
+b : 1 : 0x1
+c : 65535 : 0x0ffff
+d : 65535 : 0x0ffff
+e : 32768 : 0x08e+3
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_long
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x8e+7
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_ulong
+a : 0 : 0x0
+b : 1 : 0x1
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x08e+7
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_float
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 3.40282346638529e+38 : 0x0ffffffe+26
+e : 1.17549435082229e-38 : 0x.4e-31
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_double
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 1.79769313486232e+308 : 0x0fffffffffffff8e+242
+e : 2.2250738585072e-308 : 0x.4e-255
+************** default_constructor for fx_ufix
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_char
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 0 : 0x000000000
+e : 4294967295 : 0x0ffffffff
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_int
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 2147483647 : 0x07fffffff
+e : 2147483648 : 0x080000000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_uint
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x080000000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_short
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 32767 : 0x000007fff
+e : 4294934528 : 0x0ffff8000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_ushort
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 65535 : 0x00000ffff
+d : 65535 : 0x00000ffff
+e : 32768 : 0x000008000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_long
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 2147483647 : 0x07fffffff
+e : 2147483648 : 0x080000000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_ulong
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x080000000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_float
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 0 : 0x000000000
+e : 0 : 0x000000000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_double
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 0 : 0x000000000
+e : 0 : 0x000000000
+************** default_constructor for fx_fix
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_char
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 5721547 : 0x00574dcb
+e : -1 : 0xffffffff
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 5721547 : 0x00574dcb
+e : -1 : 0xffffffff
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_int
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x80000000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_uint
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : -1 : 0xffffffff
+e : -2147483648 : 0x80000000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_short
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 32767 : 0x00007fff
+e : -32768 : 0xffff8000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_ushort
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : 65535 : 0x0000ffff
+d : 65535 : 0x0000ffff
+e : 32768 : 0x00008000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_long
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x80000000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_ulong
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : -1 : 0xffffffff
+e : -2147483648 : 0x80000000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_float
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 0 : 0x00000000
+e : 0 : 0x00000000
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_double
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 0 : 0x00000000
+e : 0 : 0x00000000
+************** default_constructor for <wl,iwl>fx_fixed
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_char
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : 11 : 0x0b.0
+e : -0.125 : 0xff.e
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_int
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_sc_fixed_uint
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_short
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_sc_fixed_ushort
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_sc_fixeded_long
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_ulong
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_float
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_double
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+************** default_constructor for <wl,iwl>fx_ufixed
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_char
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 0 : 0x00.0
+e : 31.875 : 0x1f.e
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_int
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_uint
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_short
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_ushort
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixeded_long
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_ulong
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_float
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+--default_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_double
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+************** assign_constructor test_fx_float_
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_int
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x8e+7
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_uint
+a : 0 : 0x0
+b : 1 : 0x1
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x08e+7
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_short
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 32767 : 0x7fff
+e : -32768 : 0x8e+3
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_ushort
+a : 0 : 0x0
+b : 1 : 0x1
+c : 65535 : 0x0ffff
+d : 65535 : 0x0ffff
+e : 32768 : 0x08e+3
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_long
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x8e+7
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_ulong
+a : 0 : 0x0
+b : 1 : 0x1
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x08e+7
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_float
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 3.40282346638529e+38 : 0x0ffffffe+26
+e : 1.17549435082229e-38 : 0x.4e-31
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_float_double
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 1.79769313486232e+308 : 0x0fffffffffffff8e+242
+e : 2.2250738585072e-308 : 0x.4e-255
+************** assign_constructor test_fx_ufix_
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_int
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 2147483647 : 0x07fffffff
+e : 2147483648 : 0x080000000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_uint
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x080000000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_short
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 32767 : 0x000007fff
+e : 4294934528 : 0x0ffff8000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_ushort
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 65535 : 0x00000ffff
+d : 65535 : 0x00000ffff
+e : 32768 : 0x000008000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_long
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 2147483647 : 0x07fffffff
+e : 2147483648 : 0x080000000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_ulong
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x080000000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_float
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 0 : 0x000000000
+e : 0 : 0x000000000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_double
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 0 : 0x000000000
+e : 0 : 0x000000000
+************** assign_constructor test_fx_fix_
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_int
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x80000000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_uint
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : -1 : 0xffffffff
+e : -2147483648 : 0x80000000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_short
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 32767 : 0x00007fff
+e : -32768 : 0xffff8000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_ushort
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : 65535 : 0x0000ffff
+d : 65535 : 0x0000ffff
+e : 32768 : 0x00008000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_long
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x80000000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_ulong
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : -1 : 0xffffffff
+e : -2147483648 : 0x80000000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_float
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 0 : 0x00000000
+e : 0 : 0x00000000
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fix_double
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 0 : 0x00000000
+e : 0 : 0x00000000
+************** assign_constructor test_fx_fixed_
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_int
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_uint
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_short
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_ushort
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_long
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_ulong
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_float
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_double
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+************** assign_constructor test_fx_ufixed_
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_int
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_uint
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_short
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_ushort
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_long
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_ulong
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_float
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+--assign_constructor-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_double
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+************** default_assign fx_float
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_int
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x8e+7
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_uint
+a : 0 : 0x0
+b : 1 : 0x1
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x08e+7
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_short
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 32767 : 0x7fff
+e : -32768 : 0x8e+3
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_ushort
+a : 0 : 0x0
+b : 1 : 0x1
+c : 65535 : 0x0ffff
+d : 65535 : 0x0ffff
+e : 32768 : 0x08e+3
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_long
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x8e+7
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_ulong
+a : 0 : 0x0
+b : 1 : 0x1
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x08e+7
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_float
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 3.40282346638529e+38 : 0x0ffffffe+26
+e : 1.17549435082229e-38 : 0x.4e-31
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_double
+a : 0 : 0x0
+b : 1 : 0x1
+c : -1 : 0xf
+d : 1.79769313486232e+308 : 0x0fffffffffffff8e+242
+e : 2.2250738585072e-308 : 0x.4e-255
+************** default_assign fx_ufix
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_int
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 2147483647 : 0x07fffffff
+e : 2147483648 : 0x080000000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_uint
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x080000000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_short
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 32767 : 0x000007fff
+e : 4294934528 : 0x0ffff8000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_ushort
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 65535 : 0x00000ffff
+d : 65535 : 0x00000ffff
+e : 32768 : 0x000008000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_long
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 2147483647 : 0x07fffffff
+e : 2147483648 : 0x080000000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_ulong
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 4294967295 : 0x0ffffffff
+e : 2147483648 : 0x080000000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_float
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 0 : 0x000000000
+e : 0 : 0x000000000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_double
+a : 0 : 0x000000000
+b : 1 : 0x000000001
+c : 4294967295 : 0x0ffffffff
+d : 0 : 0x000000000
+e : 0 : 0x000000000
+************** default_assign fx_fix
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_int
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x80000000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_uint
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : -1 : 0xffffffff
+e : -2147483648 : 0x80000000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_short
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 32767 : 0x00007fff
+e : -32768 : 0xffff8000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_ushort
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : 65535 : 0x0000ffff
+d : 65535 : 0x0000ffff
+e : 32768 : 0x00008000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_long
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 2147483647 : 0x7fffffff
+e : -2147483648 : 0x80000000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_ulong
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : -1 : 0xffffffff
+e : -2147483648 : 0x80000000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_float
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 0 : 0x00000000
+e : 0 : 0x00000000
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_double
+a : 0 : 0x00000000
+b : 1 : 0x00000001
+c : -1 : 0xffffffff
+d : 0 : 0x00000000
+e : 0 : 0x00000000
+************** default_assign fx_fixed
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_int
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_uint
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_short
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_ushort
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_long
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_ulong
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : -1 : 0xff.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_float
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_double
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : -1 : 0xff.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+************** default_assign fx_ufixed
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_int
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_uint
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_short
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_ushort
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_long
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_ulong
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 31 : 0x1f.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_float
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+--default_assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_double
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 31 : 0x1f.0
+d : 0 : 0x00.0
+e : 0 : 0x00.0
+************** assign test_fx_float_
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_int
+a : 0 : 0x0
+b : -1 : 0xf
+c : -1 : 0xf
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_uint
+a : 0 : 0x0
+b : 4294967295 : 0x0ffffffff
+c : 4294967295 : 0x0ffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_short
+a : 0 : 0x0
+b : -1 : 0xf
+c : -1 : 0xf
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_ushort
+a : 0 : 0x0
+b : 65535 : 0x0ffff
+c : 65535 : 0x0ffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_long
+a : 0 : 0x0
+b : -1 : 0xf
+c : -1 : 0xf
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_ulong
+a : 0 : 0x0
+b : 4294967295 : 0x0ffffffff
+c : 4294967295 : 0x0ffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_float
+a : 0 : 0x0
+b : -1 : 0xf
+c : -1 : 0xf
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_float_double
+a : 0 : 0x0
+b : -1 : 0xf
+c : -1 : 0xf
+************** assign test_fx_ufix_
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_int
+a : 0 : 0x000000000
+b : 4294967295 : 0x0ffffffff
+c : 4294967295 : 0x0ffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_uint
+a : 0 : 0x000000000
+b : 4294967295 : 0x0ffffffff
+c : 4294967295 : 0x0ffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_short
+a : 0 : 0x000000000
+b : 4294967295 : 0x0ffffffff
+c : 4294967295 : 0x0ffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_ushort
+a : 0 : 0x000000000
+b : 65535 : 0x00000ffff
+c : 65535 : 0x00000ffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_long
+a : 0 : 0x000000000
+b : 4294967295 : 0x0ffffffff
+c : 4294967295 : 0x0ffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_ulong
+a : 0 : 0x000000000
+b : 4294967295 : 0x0ffffffff
+c : 4294967295 : 0x0ffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_float
+a : 0 : 0x000000000
+b : 4294967295 : 0x0ffffffff
+c : 4294967295 : 0x0ffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_double
+a : 0 : 0x000000000
+b : 4294967295 : 0x0ffffffff
+c : 4294967295 : 0x0ffffffff
+************** assign test_fx_fix_
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_int
+a : 0 : 0x00000000
+b : -1 : 0xffffffff
+c : -1 : 0xffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_uint
+a : 0 : 0x00000000
+b : -1 : 0xffffffff
+c : -1 : 0xffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_short
+a : 0 : 0x00000000
+b : -1 : 0xffffffff
+c : -1 : 0xffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_ushort
+a : 0 : 0x00000000
+b : 65535 : 0x0000ffff
+c : 65535 : 0x0000ffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_long
+a : 0 : 0x00000000
+b : -1 : 0xffffffff
+c : -1 : 0xffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_ulong
+a : 0 : 0x00000000
+b : -1 : 0xffffffff
+c : -1 : 0xffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_float
+a : 0 : 0x00000000
+b : -1 : 0xffffffff
+c : -1 : 0xffffffff
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fix_double
+a : 0 : 0x00000000
+b : -1 : 0xffffffff
+c : -1 : 0xffffffff
+************** assign test_fx_fixed_
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_int
+a : 0 : 0x00.0
+b : -1 : 0xff.0
+c : -1 : 0xff.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_uint
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 1 : 0x01.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_short
+a : 0 : 0x00.0
+b : -1 : 0xff.0
+c : -1 : 0xff.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_ushort
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 1 : 0x01.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_long
+a : 0 : 0x00.0
+b : -1 : 0xff.0
+c : -1 : 0xff.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_ulong
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 1 : 0x01.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_float
+a : 0 : 0x00.0
+b : -1 : 0xff.0
+c : -1 : 0xff.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_double
+a : 0 : 0x00.0
+b : -1 : 0xff.0
+c : -1 : 0xff.0
+************** assign test_fx_ufixed_
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_int
+a : 0 : 0x00.0
+b : 31 : 0x1f.0
+c : 31 : 0x1f.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_uint
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 1 : 0x01.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_short
+a : 0 : 0x00.0
+b : 31 : 0x1f.0
+c : 31 : 0x1f.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_ushort
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 1 : 0x01.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_long
+a : 0 : 0x00.0
+b : 31 : 0x1f.0
+c : 31 : 0x1f.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_ulong
+a : 0 : 0x00.0
+b : 1 : 0x01.0
+c : 1 : 0x01.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_float
+a : 0 : 0x00.0
+b : 31 : 0x1f.0
+c : 31 : 0x1f.0
+--assign-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_double
+a : 0 : 0x00.0
+b : 31 : 0x1f.0
+c : 31 : 0x1f.0
+************** array test_fx_float_
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_float_int
+a[0] : 0 : 0x0
+b[0] : -1 : 0xf
+a[1] : 1 : 0x1
+b[1] : 1 : 0x1
+a[2] : 4 : 0x4
+b[2] : -2 : 0xe
+a[3] : 9 : 0x09
+b[3] : 6 : 0x6
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_float_uint
+a[0] : 0 : 0x0
+b[0] : 4294967295 : 0x0ffffffff
+a[1] : 1 : 0x1
+b[1] : 1 : 0x1
+a[2] : 4 : 0x4
+b[2] : 4294967294 : 0x0fffffffe
+a[3] : 9 : 0x09
+b[3] : 6 : 0x6
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_float_short
+a[0] : 0 : 0x0
+b[0] : -1 : 0xf
+a[1] : 1 : 0x1
+b[1] : 1 : 0x1
+a[2] : 4 : 0x4
+b[2] : -2 : 0xe
+a[3] : 9 : 0x09
+b[3] : 6 : 0x6
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_float_ushort
+a[0] : 0 : 0x0
+b[0] : 65535 : 0x0ffff
+a[1] : 1 : 0x1
+b[1] : 1 : 0x1
+a[2] : 4 : 0x4
+b[2] : 65534 : 0x0fffe
+a[3] : 9 : 0x09
+b[3] : 6 : 0x6
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_float_long
+a[0] : 0 : 0x0
+b[0] : -1 : 0xf
+a[1] : 1 : 0x1
+b[1] : 1 : 0x1
+a[2] : 4 : 0x4
+b[2] : -2 : 0xe
+a[3] : 9 : 0x09
+b[3] : 6 : 0x6
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_float_ulong
+a[0] : 0 : 0x0
+b[0] : 4294967295 : 0x0ffffffff
+a[1] : 1 : 0x1
+b[1] : 1 : 0x1
+a[2] : 4 : 0x4
+b[2] : 4294967294 : 0x0fffffffe
+a[3] : 9 : 0x09
+b[3] : 6 : 0x6
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_float_float
+a[0] : 0 : 0x0
+b[0] : -1.98765432834625 : 0xe.032916
+a[1] : 1.12345683574677 : 0x1.1f9ade
+b[1] : 3.55721378326416 : 0x3.8ea59
+a[2] : 4.49382734298706 : 0x4.7e6b78
+b[2] : -12.732364654541 : 0xf3.4483c
+a[3] : 10.1111116409302 : 0x0a.1c71d
+b[3] : 68.3595886230469 : 0x44.5c0e
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_float_double
+a[0] : 0 : 0x0
+b[0] : -1.987654321 : 0xe.0329161f8d4a4
+a[1] : 1.123456789 : 0x1.1f9add3739636
+b[1] : 3.55721375067642 : 0x3.8ea58f7409656
+a[2] : 4.493827156 : 0x4.7e6b74dce58d8
+b[2] : -12.7323645105807 : 0xf3.4483c26a4e0f8
+a[3] : 10.111111101 : 0x0a.1c71c6f1047e8
+b[3] : 68.3595859256988 : 0x44.5c0dd2befa68
+************** array test_fx_ufix_
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_int
+a[0] : 0 : 0x000000000
+b[0] : 4294967295 : 0x0ffffffff
+a[1] : 1 : 0x000000001
+b[1] : 1 : 0x000000001
+a[2] : 4 : 0x000000004
+b[2] : 4294967294 : 0x0fffffffe
+a[3] : 9 : 0x000000009
+b[3] : 6 : 0x000000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_uint
+a[0] : 0 : 0x000000000
+b[0] : 4294967295 : 0x0ffffffff
+a[1] : 1 : 0x000000001
+b[1] : 1 : 0x000000001
+a[2] : 4 : 0x000000004
+b[2] : 4294967294 : 0x0fffffffe
+a[3] : 9 : 0x000000009
+b[3] : 6 : 0x000000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_short
+a[0] : 0 : 0x000000000
+b[0] : 4294967295 : 0x0ffffffff
+a[1] : 1 : 0x000000001
+b[1] : 1 : 0x000000001
+a[2] : 4 : 0x000000004
+b[2] : 4294967294 : 0x0fffffffe
+a[3] : 9 : 0x000000009
+b[3] : 6 : 0x000000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_ushort
+a[0] : 0 : 0x000000000
+b[0] : 65535 : 0x00000ffff
+a[1] : 1 : 0x000000001
+b[1] : 1 : 0x000000001
+a[2] : 4 : 0x000000004
+b[2] : 65534 : 0x00000fffe
+a[3] : 9 : 0x000000009
+b[3] : 6 : 0x000000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_long
+a[0] : 0 : 0x000000000
+b[0] : 4294967295 : 0x0ffffffff
+a[1] : 1 : 0x000000001
+b[1] : 1 : 0x000000001
+a[2] : 4 : 0x000000004
+b[2] : 4294967294 : 0x0fffffffe
+a[3] : 9 : 0x000000009
+b[3] : 6 : 0x000000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_ulong
+a[0] : 0 : 0x000000000
+b[0] : 4294967295 : 0x0ffffffff
+a[1] : 1 : 0x000000001
+b[1] : 1 : 0x000000001
+a[2] : 4 : 0x000000004
+b[2] : 4294967294 : 0x0fffffffe
+a[3] : 9 : 0x000000009
+b[3] : 6 : 0x000000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_float
+a[0] : 0 : 0x000000000
+b[0] : 4294967294 : 0x0fffffffe
+a[1] : 1 : 0x000000001
+b[1] : 903428608 : 0x035d93a00
+a[2] : 4 : 0x000000004
+b[2] : 1061317888 : 0x03f426d00
+a[3] : 10 : 0x00000000a
+b[3] : 2891758592 : 0x0ac5cbc00
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufix_double
+a[0] : 0 : 0x000000000
+b[0] : 4294967294 : 0x0fffffffe
+a[1] : 1 : 0x000000001
+b[1] : 903428666 : 0x035d93a3a
+a[2] : 4 : 0x000000004
+b[2] : 1061317622 : 0x03f426bf6
+a[3] : 10 : 0x00000000a
+b[3] : 2891760217 : 0x0ac5cc259
+************** array test_fx_fix_
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fix_int
+a[0] : 0 : 0x00000000
+b[0] : -1 : 0xffffffff
+a[1] : 1 : 0x00000001
+b[1] : 1 : 0x00000001
+a[2] : 4 : 0x00000004
+b[2] : -2 : 0xfffffffe
+a[3] : 9 : 0x00000009
+b[3] : 6 : 0x00000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fix_uint
+a[0] : 0 : 0x00000000
+b[0] : -1 : 0xffffffff
+a[1] : 1 : 0x00000001
+b[1] : 1 : 0x00000001
+a[2] : 4 : 0x00000004
+b[2] : -2 : 0xfffffffe
+a[3] : 9 : 0x00000009
+b[3] : 6 : 0x00000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fix_short
+a[0] : 0 : 0x00000000
+b[0] : -1 : 0xffffffff
+a[1] : 1 : 0x00000001
+b[1] : 1 : 0x00000001
+a[2] : 4 : 0x00000004
+b[2] : -2 : 0xfffffffe
+a[3] : 9 : 0x00000009
+b[3] : 6 : 0x00000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fix_ushort
+a[0] : 0 : 0x00000000
+b[0] : 65535 : 0x0000ffff
+a[1] : 1 : 0x00000001
+b[1] : 1 : 0x00000001
+a[2] : 4 : 0x00000004
+b[2] : 65534 : 0x0000fffe
+a[3] : 9 : 0x00000009
+b[3] : 6 : 0x00000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fix_long
+a[0] : 0 : 0x00000000
+b[0] : -1 : 0xffffffff
+a[1] : 1 : 0x00000001
+b[1] : 1 : 0x00000001
+a[2] : 4 : 0x00000004
+b[2] : -2 : 0xfffffffe
+a[3] : 9 : 0x00000009
+b[3] : 6 : 0x00000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fix_ulong
+a[0] : 0 : 0x00000000
+b[0] : -1 : 0xffffffff
+a[1] : 1 : 0x00000001
+b[1] : 1 : 0x00000001
+a[2] : 4 : 0x00000004
+b[2] : -2 : 0xfffffffe
+a[3] : 9 : 0x00000009
+b[3] : 6 : 0x00000006
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fix_float
+a[0] : 0 : 0x00000000
+b[0] : -2 : 0xfffffffe
+a[1] : 1 : 0x00000001
+b[1] : 3 : 0x00000003
+a[2] : 4 : 0x00000004
+b[2] : -11 : 0xfffffff5
+a[3] : 10 : 0x0000000a
+b[3] : 59 : 0x0000003b
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fix_double
+a[0] : 0 : 0x00000000
+b[0] : -2 : 0xfffffffe
+a[1] : 1 : 0x00000001
+b[1] : 3 : 0x00000003
+a[2] : 4 : 0x00000004
+b[2] : -11 : 0xfffffff5
+a[3] : 10 : 0x0000000a
+b[3] : 59 : 0x0000003b
+************** array test_fx_fixed_
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_int
+a[0] : 0 : 0x00.0
+b[0] : -1 : 0xff.0
+a[1] : 1 : 0x01.0
+b[1] : 1 : 0x01.0
+a[2] : 4 : 0x04.0
+b[2] : -2 : 0xfe.0
+a[3] : 9 : 0x09.0
+b[3] : 6 : 0x06.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_uint
+a[0] : 0 : 0x00.0
+b[0] : 1 : 0x01.0
+a[1] : 1 : 0x01.0
+b[1] : -1 : 0xff.0
+a[2] : 4 : 0x04.0
+b[2] : 2 : 0x02.0
+a[3] : 9 : 0x09.0
+b[3] : -6 : 0xfa.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_short
+a[0] : 0 : 0x00.0
+b[0] : -1 : 0xff.0
+a[1] : 1 : 0x01.0
+b[1] : 1 : 0x01.0
+a[2] : 4 : 0x04.0
+b[2] : -2 : 0xfe.0
+a[3] : 9 : 0x09.0
+b[3] : 6 : 0x06.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_ushort
+a[0] : 0 : 0x00.0
+b[0] : 1 : 0x01.0
+a[1] : 1 : 0x01.0
+b[1] : -1 : 0xff.0
+a[2] : 4 : 0x04.0
+b[2] : 2 : 0x02.0
+a[3] : 9 : 0x09.0
+b[3] : -6 : 0xfa.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_long
+a[0] : 0 : 0x00.0
+b[0] : -1 : 0xff.0
+a[1] : 1 : 0x01.0
+b[1] : 1 : 0x01.0
+a[2] : 4 : 0x04.0
+b[2] : -2 : 0xfe.0
+a[3] : 9 : 0x09.0
+b[3] : 6 : 0x06.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_ulong
+a[0] : 0 : 0x00.0
+b[0] : 1 : 0x01.0
+a[1] : 1 : 0x01.0
+b[1] : -1 : 0xff.0
+a[2] : 4 : 0x04.0
+b[2] : 2 : 0x02.0
+a[3] : 9 : 0x09.0
+b[3] : -6 : 0xfa.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_float
+a[0] : 0 : 0x00.0
+b[0] : -2 : 0xfe.0
+a[1] : 1 : 0x01.0
+b[1] : 3.5 : 0x03.8
+a[2] : 4.375 : 0x04.6
+b[2] : -12.625 : 0xf3.6
+a[3] : 10 : 0x0a.0
+b[3] : 3.75 : 0x03.c
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_fixed_double
+a[0] : 0 : 0x00.0
+b[0] : -2 : 0xfe.0
+a[1] : 1 : 0x01.0
+b[1] : 3.5 : 0x03.8
+a[2] : 4.375 : 0x04.6
+b[2] : -12.625 : 0xf3.6
+a[3] : 10 : 0x0a.0
+b[3] : 3.75 : 0x03.c
+************** array test_fx_ufixed_
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_int
+a[0] : 0 : 0x00.0
+b[0] : 31 : 0x1f.0
+a[1] : 1 : 0x01.0
+b[1] : 1 : 0x01.0
+a[2] : 4 : 0x04.0
+b[2] : 30 : 0x1e.0
+a[3] : 9 : 0x09.0
+b[3] : 6 : 0x06.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_uint
+a[0] : 0 : 0x00.0
+b[0] : 1 : 0x01.0
+a[1] : 1 : 0x01.0
+b[1] : 31 : 0x1f.0
+a[2] : 4 : 0x04.0
+b[2] : 2 : 0x02.0
+a[3] : 9 : 0x09.0
+b[3] : 26 : 0x1a.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_short
+a[0] : 0 : 0x00.0
+b[0] : 31 : 0x1f.0
+a[1] : 1 : 0x01.0
+b[1] : 1 : 0x01.0
+a[2] : 4 : 0x04.0
+b[2] : 30 : 0x1e.0
+a[3] : 9 : 0x09.0
+b[3] : 6 : 0x06.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_ushort
+a[0] : 0 : 0x00.0
+b[0] : 1 : 0x01.0
+a[1] : 1 : 0x01.0
+b[1] : 31 : 0x1f.0
+a[2] : 4 : 0x04.0
+b[2] : 2 : 0x02.0
+a[3] : 9 : 0x09.0
+b[3] : 26 : 0x1a.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_long
+a[0] : 0 : 0x00.0
+b[0] : 31 : 0x1f.0
+a[1] : 1 : 0x01.0
+b[1] : 1 : 0x01.0
+a[2] : 4 : 0x04.0
+b[2] : 30 : 0x1e.0
+a[3] : 9 : 0x09.0
+b[3] : 6 : 0x06.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_ulong
+a[0] : 0 : 0x00.0
+b[0] : 1 : 0x01.0
+a[1] : 1 : 0x01.0
+b[1] : 31 : 0x1f.0
+a[2] : 4 : 0x04.0
+b[2] : 2 : 0x02.0
+a[3] : 9 : 0x09.0
+b[3] : 26 : 0x1a.0
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_float
+a[0] : 0 : 0x00.0
+b[0] : 30 : 0x1e.0
+a[1] : 1 : 0x01.0
+b[1] : 10.25 : 0x0a.4
+a[2] : 4.375 : 0x04.6
+b[2] : 27.25 : 0x1b.4
+a[3] : 10 : 0x0a.0
+b[3] : 13.625 : 0x0d.a
+--array-Inf-Inf-Inf-Inf-Inf- test_fx_ufixed_double
+a[0] : 0 : 0x00.0
+b[0] : 30 : 0x1e.0
+a[1] : 1 : 0x01.0
+b[1] : 10.25 : 0x0a.4
+a[2] : 4.375 : 0x04.6
+b[2] : 27.25 : 0x1b.4
+a[3] : 10 : 0x0a.0
+b[3] : 13.625 : 0x0d.a

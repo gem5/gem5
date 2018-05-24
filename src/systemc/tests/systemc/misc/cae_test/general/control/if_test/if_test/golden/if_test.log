@@ -1,0 +1,35 @@
+SystemC Simulation
+Stimuli: stim1= 0 stim2= 0 stim3= 0 stim4= 0 stim5= 0  2 ns
+Display : 0000 0000 0001 0000 0  at 10 ns
+Stimuli: stim1= 1 stim2= 1 stim3= 1 stim4= 1 stim5= 1  13 ns
+Display : 0001 0000 0001 0000 1  at 20 ns
+Stimuli: stim1= 2 stim2= 2 stim3= 2 stim4= 2 stim5= 2  24 ns
+Display : 0001 0000 0010 0010 2  at 31 ns
+Stimuli: stim1= 3 stim2= 3 stim3= 3 stim4= 3 stim5= 3  35 ns
+Display : 0010 0000 0011 0011 3  at 42 ns
+Stimuli: stim1= 4 stim2= 4 stim3= 4 stim4= 4 stim5= 4  46 ns
+Display : 0011 0000 0100 0100 4  at 53 ns
+Stimuli: stim1= 5 stim2= 5 stim3= 5 stim4= 5 stim5= 5  57 ns
+Display : 0101 0000 0101 0101 5  at 64 ns
+Stimuli: stim1= 6 stim2= 6 stim3= 6 stim4= 6 stim5= 6  68 ns
+Display : 0110 0110 0110 0110 0  at 75 ns
+Stimuli: stim1= 7 stim2= 7 stim3= 7 stim4= 7 stim5= 7  79 ns
+Display : 0111 0111 0111 0111 0  at 86 ns
+Stimuli: stim1= 8 stim2= 8 stim3= 8 stim4= 8 stim5= 8  90 ns
+Display : 1000 0000 1000 1000 0  at 97 ns
+Stimuli: stim1= 9 stim2= 9 stim3= 9 stim4= 9 stim5= 9  101 ns
+Display : 1001 0000 1001 1001 0  at 108 ns
+Stimuli: stim1= 10 stim2= 10 stim3= 10 stim4= 10 stim5= 10  112 ns
+Display : 1010 0000 1010 1010 0  at 119 ns
+Stimuli: stim1= 11 stim2= 11 stim3= 11 stim4= 11 stim5= 11  123 ns
+Display : 1011 0000 1011 1011 0  at 130 ns
+Stimuli: stim1= 12 stim2= 12 stim3= 12 stim4= 12 stim5= 12  134 ns
+Display : 1100 0000 1100 1100 0  at 141 ns
+Stimuli: stim1= 13 stim2= 13 stim3= 13 stim4= 13 stim5= 13  145 ns
+Display : 1101 0000 1101 1101 0  at 152 ns
+Stimuli: stim1= 14 stim2= 14 stim3= 14 stim4= 14 stim5= 14  156 ns
+Display : 1110 0000 1110 1110 0  at 163 ns
+Stimuli: stim1= 15 stim2= 15 stim3= 15 stim4= 15 stim5= 15  167 ns
+Display : 1111 0000 1111 1111 0  at 174 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.

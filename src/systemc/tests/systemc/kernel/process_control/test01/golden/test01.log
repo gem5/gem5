@@ -1,0 +1,76 @@
+SystemC Simulation
+0 s:      dynamic method (75,0) initialization call 
+0 s:      static method (136)
+0 s:      dynamic thread (114) initialization call 
+0 s:      static method (136)
+0 s:      dynamic method (80,1) after wait on m_clk.posedge_event() 
+0 s:      static thread (145)
+0 s:      dynamic thread (119) after wait on m_clk.posedge_event() 
+1 ns:      static method (136)
+1 ns:      dynamic method (86,2) after wait on m_clk.posedge_event() 
+1 ns:      static thread (145)
+1 ns:      cthread (63)
+1 ns:      dynamic thread (122) after wait on m_clk.posedge_event() 
+1500 ps:      dynamic method (92,3) after wait on m_clk.negedge() 
+1500 ps:      dynamic thread (125) after wait on m_clk.negedge_event() 
+2 ns:      static method (136)
+2 ns: stimulus (156) - suspending all processes
+
+5 ns: stimulus (171) - resuming all processes
+5 ns:      static method (136)
+5 ns:      cthread (63)
+5 ns:      static thread (145)
+6 ns:      static method (136)
+6 ns: stimulus (174) - suspending all processes
+7 ns: stimulus (183) - firing event1 
+
+8 ns: stimulus (191) - resuming all processes
+8 ns:      static method (136)
+8 ns:      cthread (63)
+8 ns:      static thread (145)
+9 ns:      static method (136)
+9 ns: stimulus (195) - firing event2 
+9 ns:      static thread (145)
+9 ns:      cthread (63)
+9 ns:      dynamic method (97,4) after wait on m_event1 & m_event2 
+9 ns:      dynamic thread (128) after wait on m_event1 & m_event2 
+10 ns:      static method (136)
+10 ns:      dynamic method (80,1) after wait on m_clk.posedge_event() 
+10 ns:      static thread (145)
+10 ns:      cthread (63)
+10 ns:      dynamic thread (119) after wait on m_clk.posedge_event() 
+11 ns:      static method (136)
+11 ns:      dynamic method (86,2) after wait on m_clk.posedge_event() 
+11 ns:      static thread (145)
+11 ns:      cthread (63)
+11 ns:      dynamic thread (122) after wait on m_clk.posedge_event() 
+11500 ps:      dynamic method (92,3) after wait on m_clk.negedge() 
+11500 ps:      dynamic thread (125) after wait on m_clk.negedge_event() 
+12 ns:      static method (136)
+12 ns:      static thread (145)
+12 ns:      cthread (63)
+13 ns:      static method (136)
+13 ns:      static thread (145)
+13 ns:      cthread (63)
+14 ns:      static method (136)
+14 ns: stimulus (156) - suspending all processes
+
+17 ns: stimulus (171) - resuming all processes
+17 ns:      static method (136)
+17 ns:      cthread (63)
+17 ns:      static thread (145)
+18 ns:      static method (136)
+18 ns: stimulus (174) - suspending all processes
+19 ns: stimulus (183) - firing event1 
+
+20 ns: stimulus (191) - resuming all processes
+20 ns:      static method (136)
+20 ns:      cthread (63)
+20 ns:      static thread (145)
+21 ns:      static method (136)
+21 ns: stimulus (195) - firing event2 
+21 ns:      static thread (145)
+21 ns:      cthread (63)
+21 ns:      dynamic method (97,4) after wait on m_event1 & m_event2 
+21 ns:      dynamic thread (128) after wait on m_event1 & m_event2 
+Program completed

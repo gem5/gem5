@@ -1,0 +1,7 @@
+SystemC Simulation
+
+Warning: (W540) kill/reset ignored during unwinding: top.target
+In file: <removed by verify.pl>
+In process: top.target @ 10 ns
+
+Success

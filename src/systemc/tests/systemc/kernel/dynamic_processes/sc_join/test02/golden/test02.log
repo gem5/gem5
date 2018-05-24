@@ -1,0 +1,10 @@
+SystemC Simulation
+2 ns: sync(3) terminating
+3 ns: sync(4) terminating
+4 ns: sync(5) terminating
+4 ns: sync(5) terminating
+6 ns: sync(7) terminating
+10 ns: sync(11) terminating
+20 ns: sync(21) terminating
+20 ns: waiting waking
+Program completed

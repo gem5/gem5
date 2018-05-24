@@ -1,0 +1,7 @@
+SystemC Simulation
+prim_channel: before end of elaboration
+prim_channel: start of simulation
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+prim_channel: end of simulation
+Program completed

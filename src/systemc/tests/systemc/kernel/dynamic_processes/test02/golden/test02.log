@@ -1,0 +1,25 @@
+SystemC Simulation
+
+0 s: CTOR, Before spawning function_method 
+
+0 s, mod1.main: main thread, Before spawning round robin methods 
+
+
+0 s, mod1.main: main thread, Issuing wait(60, SC_NS)
+0 s, mod1.main.method1: In Round robin method 1. Issued next_trigger. 
+0 s, mod1.main.method2: In Round robin method 2. Issued next_trigger. 
+0 s, mod1.main.method3: In Round robin method 3. Issued next_trigger. 
+0 s, mod1.main.method4: In Round robin method 4. Issued next_trigger. 
+15 ns, mod1.main.method1: In Round robin method 1. Notified. Ending Round robin method 1
+25 ns, mod1.main.method2: In Round robin method 2. Notified. Ending Round robin method 2
+35 ns, mod1.main.method3: In Round robin method 3. Notified. Ending Round robin method 3
+45 ns, mod1.main.method4: In Round robin method 4. Notified. Ending Round robin method 4
+
+55 ns, mod1.event_sensitive_method: function_method sees 1.2345
+
+60 ns, mod1.main: Done main thread.
+
+100 ns: sc_main, Before spawning function_thread 
+
+100 ns, thread_p_0: function_thread sees 6.789
+110 ns, thread_p_0: ending thread

@@ -1,0 +1,4 @@
+SystemC Simulation
+
+Error: (E107) bind interface to port failed: interface already bound to port: port 'tb.port_0' (sc_port)
+In file: <removed by verify.pl>

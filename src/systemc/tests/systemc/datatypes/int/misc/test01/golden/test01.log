@@ -1,0 +1,45 @@
+SystemC Simulation
+
+*** sc_int ***
+sc_int_concref = sc_signed
+0
+1
+sc_int_concref = sc_unsigned
+0
+-2
+sc_int_concref = sc_bv_base
+0
+-1
+sc_int_concref = sc_lv_base
+1
+0
+sc_int_subref = sc_signed
+16
+sc_int_subref = sc_unsigned
+32
+sc_int_subref = sc_bv_base
+48
+sc_int_subref = sc_lv_base
+64
+
+*** sc_uint ***
+sc_uint_concref = sc_signed
+0
+1
+sc_uint_concref = sc_unsigned
+0
+2
+sc_uint_concref = sc_bv_base
+0
+3
+sc_uint_concref = sc_lv_base
+1
+0
+sc_uint_subref = sc_signed
+16
+sc_uint_subref = sc_unsigned
+32
+sc_uint_subref = sc_bv_base
+48
+sc_uint_subref = sc_lv_base
+64

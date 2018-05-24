@@ -1,0 +1,66 @@
+SystemC Simulation
+
+*** test_sc_length_param ***
+(32)
+(5)
+
+Exception caught
+Error: (E300) total wordlength <= 0 is not valid
+In file: <removed by verify.pl>
+(5)
+(32)
+(5)
+1
+0
+5
+42
+(42)
+(42)
+sc_length_param
+(
+len = 42
+)
+
+*** test_default_ctors ***
+
+sc_bv_base
+32
+5
+42
+5
+32
+
+sc_lv_base
+32
+5
+42
+5
+32
+
+sc_int_base
+32
+5
+42
+5
+32
+
+sc_uint_base
+32
+5
+42
+5
+32
+
+sc_signed
+32
+5
+42
+5
+32
+
+sc_unsigned
+32
+5
+42
+5
+32

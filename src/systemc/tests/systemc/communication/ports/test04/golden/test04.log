@@ -1,0 +1,13 @@
+SystemC Simulation
+d.c.a.port_0 (sc_port)
+d.c.a.port_1 (sc_port)
+d.c.a.port_2 (sc_port)
+d.c.a.port_3 (sc_port)
+d.c.b.port_0 (sc_port)
+d.c.b.port_1 (sc_port)
+d.c.b.port_2 (sc_port)
+d.c.b.port_3 (sc_port)
+d.c.port_0 (sc_port)
+d.c.port_1 (sc_port)
+d.c.port_4 (sc_port)
+d.c.port_5 (sc_port)

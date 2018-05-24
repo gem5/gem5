@@ -1,0 +1,13 @@
+SystemC Simulation
+A = 206, B = 69, C = 91, D = 137, SUM = 366
+A = 92, B = 157, C = 173, D = -65, SUM = 422
+A = 69, B = 108, C = 53, D = -39, SUM = 230
+A = 179, B = 109, C = 39, D = 70, SUM = 327
+A = 108, B = 176, C = 132, D = -68, SUM = 416
+A = 150, B = 15, C = 133, D = 135, SUM = 298
+A = 147, B = 21, C = 193, D = 126, SUM = 361
+A = 86, B = 217, C = 207, D = -131, SUM = 510
+A = 83, B = 120, C = 240, D = -37, SUM = 443
+A = 242, B = 85, C = 213, D = 157, SUM = 540
+
+Info: /OSCI/SystemC: Simulation stopped by user.

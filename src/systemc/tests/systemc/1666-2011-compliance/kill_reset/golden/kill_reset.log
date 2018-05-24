@@ -1,0 +1,17 @@
+SystemC Simulation
+Target called/reset at 0 s
+Target awoke at 10 ns
+Target awoke at 20 ns
+sc_unwind_exception caught by target
+Target called/reset at 25 ns
+Target awoke at 30 ns
+sc_unwind_exception caught by target
+sc_unwind_exception caught by ticker
+sc_unwind_exception caught by victim
+sc_unwind_exception caught by bystander
+sc_unwind_exception caught by second_bystander
+sc_unwind_exception caught by third_bystander
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+
+Success

@@ -1,0 +1,9 @@
+SystemC Simulation
+10 ns:entering p0, spawning p1
+10 ns:exiting p0
+10 ns:entering p1, spawning p2
+10 ns:entering p2, spawning p3
+10 ns:entering p3
+20 ns:exiting p1
+30 ns:exiting p2
+40 ns:exiting p3

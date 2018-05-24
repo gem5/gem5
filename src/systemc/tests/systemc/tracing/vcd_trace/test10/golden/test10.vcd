@@ -1,0 +1,97 @@
+
+$timescale
+     1 ps
+$end
+
+$scope module SystemC $end
+$var wire    2  aaaaa  Enum [1:0]  $end
+$var wire    1  aaaab  Clock       $end
+$upscope $end
+$enddefinitions  $end
+
+$comment
+All initial values are dumped below at time 0 sec = 0 timescale units.
+$end
+
+$dumpvars
+b0 aaaaa
+1aaaab
+$end
+
+#10000
+b1 aaaaa
+0aaaab
+
+#20000
+b10 aaaaa
+1aaaab
+
+#30000
+b0 aaaaa
+0aaaab
+
+#40000
+b1 aaaaa
+1aaaab
+
+#50000
+b10 aaaaa
+0aaaab
+
+#60000
+b0 aaaaa
+1aaaab
+
+#70000
+b1 aaaaa
+0aaaab
+
+#80000
+b10 aaaaa
+1aaaab
+
+#90000
+b0 aaaaa
+0aaaab
+
+#100000
+b1 aaaaa
+1aaaab
+
+#110000
+b10 aaaaa
+0aaaab
+
+#120000
+b0 aaaaa
+1aaaab
+
+#130000
+b1 aaaaa
+0aaaab
+
+#140000
+b10 aaaaa
+1aaaab
+
+#150000
+b0 aaaaa
+0aaaab
+
+#160000
+b1 aaaaa
+1aaaab
+
+#170000
+b10 aaaaa
+0aaaab
+
+#180000
+b0 aaaaa
+1aaaab
+
+#190000
+b1 aaaaa
+0aaaab
+
+#200000

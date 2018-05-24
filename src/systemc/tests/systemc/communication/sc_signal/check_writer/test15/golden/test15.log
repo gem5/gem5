@@ -1,0 +1,167 @@
+SystemC Simulation
+
+*** trigger each driver in individual delta cycles
+  dut.p1:  1 ns @  1: writing dut.sig = 1
+ dut.run:  1 ns @  2: reading dut.sig = 1
+  dut.p2:  1 ns @  2: writing dut.sig = 2
+ dut.run:  1 ns @  3: reading dut.sig = 2
+  dut.p3:  1 ns @  3: writing dut.sig = 3
+ dut.run:  1 ns @  4: reading dut.sig = 3
+  dut.p4:  1 ns @  4: writing dut.sig = 1
+ dut.run:  1 ns @  5: reading dut.sig = 1
+
+*** trigger 1-2-3 in the same delta cycle
+  dut.p1:  2 ns @  6: writing dut.sig = 1
+  dut.p2:  2 ns @  6: writing dut.sig = 2
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p1' (sc_method_process)
+ second driver `dut.p2' (sc_method_process)
+ conflicting write in delta cycle 6
+In file: <removed by verify.pl>
+In process: dut.p2 @ 2 ns
+
+  dut.p3:  2 ns @  6: writing dut.sig = 3
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p1' (sc_method_process)
+ second driver `dut.p3' (sc_method_process)
+ conflicting write in delta cycle 6
+In file: <removed by verify.pl>
+In process: dut.p3 @ 2 ns
+
+ dut.run:  2 ns @  7: reading dut.sig = 1
+
+*** trigger 2-3-1 in the same delta cycle
+  dut.p2:  3 ns @  8: writing dut.sig = 2
+  dut.p3:  3 ns @  8: writing dut.sig = 3
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p2' (sc_method_process)
+ second driver `dut.p3' (sc_method_process)
+ conflicting write in delta cycle 8
+In file: <removed by verify.pl>
+In process: dut.p3 @ 3 ns
+
+  dut.p1:  3 ns @  8: writing dut.sig = 1
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p2' (sc_method_process)
+ second driver `dut.p1' (sc_method_process)
+ conflicting write in delta cycle 8
+In file: <removed by verify.pl>
+In process: dut.p1 @ 3 ns
+
+ dut.run:  3 ns @  9: reading dut.sig = 2
+
+*** trigger 3-1-2 in the same delta cycle
+  dut.p3:  4 ns @ 10: writing dut.sig = 3
+  dut.p1:  4 ns @ 10: writing dut.sig = 1
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p3' (sc_method_process)
+ second driver `dut.p1' (sc_method_process)
+ conflicting write in delta cycle 10
+In file: <removed by verify.pl>
+In process: dut.p1 @ 4 ns
+
+  dut.p2:  4 ns @ 10: writing dut.sig = 2
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p3' (sc_method_process)
+ second driver `dut.p2' (sc_method_process)
+ conflicting write in delta cycle 10
+In file: <removed by verify.pl>
+In process: dut.p2 @ 4 ns
+
+ dut.run:  4 ns @ 11: reading dut.sig = 3
+
+*** trigger 1-2-1-2 in the same delta cycle
+  dut.p1:  5 ns @ 12: writing dut.sig = 1
+  dut.p2:  5 ns @ 12: writing dut.sig = 2
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p1' (sc_method_process)
+ second driver `dut.p2' (sc_method_process)
+ conflicting write in delta cycle 12
+In file: <removed by verify.pl>
+In process: dut.p2 @ 5 ns
+
+  dut.p1:  5 ns @ 12: writing dut.sig = 1
+  dut.p2:  5 ns @ 12: writing dut.sig = 2
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p1' (sc_method_process)
+ second driver `dut.p2' (sc_method_process)
+ conflicting write in delta cycle 12
+In file: <removed by verify.pl>
+In process: dut.p2 @ 5 ns
+
+ dut.run:  5 ns @ 13: reading dut.sig = 1
+
+*** trigger 2-1 in the same delta cycle
+  dut.p2:  6 ns @ 14: writing dut.sig = 2
+  dut.p1:  6 ns @ 14: writing dut.sig = 1
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p2' (sc_method_process)
+ second driver `dut.p1' (sc_method_process)
+ conflicting write in delta cycle 14
+In file: <removed by verify.pl>
+In process: dut.p1 @ 6 ns
+
+ dut.run:  6 ns @ 15: reading dut.sig = 2
+
+*** trigger 1-3 in the same delta cycle
+  dut.p1:  7 ns @ 16: writing dut.sig = 1
+  dut.p3:  7 ns @ 16: writing dut.sig = 3
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p1' (sc_method_process)
+ second driver `dut.p3' (sc_method_process)
+ conflicting write in delta cycle 16
+In file: <removed by verify.pl>
+In process: dut.p3 @ 7 ns
+
+ dut.run:  7 ns @ 17: reading dut.sig = 1
+
+*** trigger 1-4-1 in the same delta cycle
+  dut.p1:  8 ns @ 18: writing dut.sig = 1
+  dut.p4:  8 ns @ 18: writing dut.sig = 1
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p1' (sc_method_process)
+ second driver `dut.p4' (sc_method_process)
+ conflicting write in delta cycle 18
+In file: <removed by verify.pl>
+In process: dut.p4 @ 8 ns
+
+  dut.p1:  8 ns @ 18: writing dut.sig = 1
+ dut.run:  8 ns @ 19: reading dut.sig = 1
+
+*** trigger 4-1 in the same delta cycle
+  dut.p4:  9 ns @ 20: writing dut.sig = 1
+  dut.p1:  9 ns @ 20: writing dut.sig = 1
+
+Error: (E115) sc_signal<T> cannot have more than one driver: 
+ signal `dut.sig' (sc_signal)
+ first driver `dut.p4' (sc_method_process)
+ second driver `dut.p1' (sc_method_process)
+ conflicting write in delta cycle 20
+In file: <removed by verify.pl>
+In process: dut.p1 @ 9 ns
+
+ dut.run:  9 ns @ 21: reading dut.sig = 1
+
+Program completed

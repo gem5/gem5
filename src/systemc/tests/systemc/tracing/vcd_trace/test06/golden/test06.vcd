@@ -1,0 +1,97 @@
+
+$timescale
+     1 ps
+$end
+
+$scope module SystemC $end
+$var real    1  aaaaa  Float       $end
+$var real    1  aaaab  Double       $end
+$upscope $end
+$enddefinitions  $end
+
+$comment
+All initial values are dumped below at time 0 sec = 0 timescale units.
+$end
+
+$dumpvars
+r12.34500026702881 aaaaa
+r-13.5678923 aaaab
+$end
+
+#10000
+r-182634880 aaaaa
+r1672357.298346 aaaab
+
+#20000
+r12.34500026702881 aaaaa
+r-13.5678923 aaaab
+
+#30000
+r-182634880 aaaaa
+r1672357.298346 aaaab
+
+#40000
+r12.34500026702881 aaaaa
+r-13.5678923 aaaab
+
+#50000
+r-182634880 aaaaa
+r1672357.298346 aaaab
+
+#60000
+r12.34500026702881 aaaaa
+r-13.5678923 aaaab
+
+#70000
+r-182634880 aaaaa
+r1672357.298346 aaaab
+
+#80000
+r12.34500026702881 aaaaa
+r-13.5678923 aaaab
+
+#90000
+r-182634880 aaaaa
+r1672357.298346 aaaab
+
+#100000
+r12.34500026702881 aaaaa
+r-13.5678923 aaaab
+
+#110000
+r-182634880 aaaaa
+r1672357.298346 aaaab
+
+#120000
+r12.34500026702881 aaaaa
+r-13.5678923 aaaab
+
+#130000
+r-182634880 aaaaa
+r1672357.298346 aaaab
+
+#140000
+r12.34500026702881 aaaaa
+r-13.5678923 aaaab
+
+#150000
+r-182634880 aaaaa
+r1672357.298346 aaaab
+
+#160000
+r12.34500026702881 aaaaa
+r-13.5678923 aaaab
+
+#170000
+r-182634880 aaaaa
+r1672357.298346 aaaab
+
+#180000
+r12.34500026702881 aaaaa
+r-13.5678923 aaaab
+
+#190000
+r-182634880 aaaaa
+r1672357.298346 aaaab
+
+#200000

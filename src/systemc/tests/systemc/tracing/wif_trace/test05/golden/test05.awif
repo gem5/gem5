@@ -1,0 +1,176 @@
+
+type scalar "BIT" enum '0', '1' ;
+type scalar "MVL" enum '0', '1', 'X', 'Z', '?' ;
+
+declare  O0   "Char"  BIT  0 3 variable ;
+start_trace O0 ;
+declare  O1   "Short"  BIT  0 11 variable ;
+start_trace O1 ;
+declare  O2   "Int"  BIT  0 13 variable ;
+start_trace O2 ;
+declare  O3   "Long"  BIT  0 13 variable ;
+start_trace O3 ;
+declare  O4   "Int64"  BIT  0 43 variable ;
+start_trace O4 ;
+declare  O5   "Clock"  BIT  variable ;
+start_trace O5 ;
+comment "All initial values are dumped below at time 0 sec = 0 timescale units." ;
+assign O0 "0111" ;
+assign O1 "000000011111" ;
+assign O2 "00000000000000" ;
+assign O3 "00011111111111" ;
+assign O4 "00000000000000000000000000000000000000000000" ;
+assign O5 '1' ;
+
+delta_time 10000 ;
+assign O0 "0001" ;
+assign O1 "000000000000" ;
+assign O2 "00010000000000" ;
+assign O3 "00000000000000" ;
+assign O4 "01110000000000000000000000000000000000000000" ;
+assign O5 '0' ;
+
+delta_time 10000 ;
+assign O0 "0111" ;
+assign O1 "000000011111" ;
+assign O2 "00000000000000" ;
+assign O3 "00011111111111" ;
+assign O4 "00000000000000000000000000000000000000000000" ;
+assign O5 '1' ;
+
+delta_time 10000 ;
+assign O0 "0001" ;
+assign O1 "000000000000" ;
+assign O2 "00010000000000" ;
+assign O3 "00000000000000" ;
+assign O4 "01110000000000000000000000000000000000000000" ;
+assign O5 '0' ;
+
+delta_time 10000 ;
+assign O0 "0111" ;
+assign O1 "000000011111" ;
+assign O2 "00000000000000" ;
+assign O3 "00011111111111" ;
+assign O4 "00000000000000000000000000000000000000000000" ;
+assign O5 '1' ;
+
+delta_time 10000 ;
+assign O0 "0001" ;
+assign O1 "000000000000" ;
+assign O2 "00010000000000" ;
+assign O3 "00000000000000" ;
+assign O4 "01110000000000000000000000000000000000000000" ;
+assign O5 '0' ;
+
+delta_time 10000 ;
+assign O0 "0111" ;
+assign O1 "000000011111" ;
+assign O2 "00000000000000" ;
+assign O3 "00011111111111" ;
+assign O4 "00000000000000000000000000000000000000000000" ;
+assign O5 '1' ;
+
+delta_time 10000 ;
+assign O0 "0001" ;
+assign O1 "000000000000" ;
+assign O2 "00010000000000" ;
+assign O3 "00000000000000" ;
+assign O4 "01110000000000000000000000000000000000000000" ;
+assign O5 '0' ;
+
+delta_time 10000 ;
+assign O0 "0111" ;
+assign O1 "000000011111" ;
+assign O2 "00000000000000" ;
+assign O3 "00011111111111" ;
+assign O4 "00000000000000000000000000000000000000000000" ;
+assign O5 '1' ;
+
+delta_time 10000 ;
+assign O0 "0001" ;
+assign O1 "000000000000" ;
+assign O2 "00010000000000" ;
+assign O3 "00000000000000" ;
+assign O4 "01110000000000000000000000000000000000000000" ;
+assign O5 '0' ;
+
+delta_time 10000 ;
+assign O0 "0111" ;
+assign O1 "000000011111" ;
+assign O2 "00000000000000" ;
+assign O3 "00011111111111" ;
+assign O4 "00000000000000000000000000000000000000000000" ;
+assign O5 '1' ;
+
+delta_time 10000 ;
+assign O0 "0001" ;
+assign O1 "000000000000" ;
+assign O2 "00010000000000" ;
+assign O3 "00000000000000" ;
+assign O4 "01110000000000000000000000000000000000000000" ;
+assign O5 '0' ;
+
+delta_time 10000 ;
+assign O0 "0111" ;
+assign O1 "000000011111" ;
+assign O2 "00000000000000" ;
+assign O3 "00011111111111" ;
+assign O4 "00000000000000000000000000000000000000000000" ;
+assign O5 '1' ;
+
+delta_time 10000 ;
+assign O0 "0001" ;
+assign O1 "000000000000" ;
+assign O2 "00010000000000" ;
+assign O3 "00000000000000" ;
+assign O4 "01110000000000000000000000000000000000000000" ;
+assign O5 '0' ;
+
+delta_time 10000 ;
+assign O0 "0111" ;
+assign O1 "000000011111" ;
+assign O2 "00000000000000" ;
+assign O3 "00011111111111" ;
+assign O4 "00000000000000000000000000000000000000000000" ;
+assign O5 '1' ;
+
+delta_time 10000 ;
+assign O0 "0001" ;
+assign O1 "000000000000" ;
+assign O2 "00010000000000" ;
+assign O3 "00000000000000" ;
+assign O4 "01110000000000000000000000000000000000000000" ;
+assign O5 '0' ;
+
+delta_time 10000 ;
+assign O0 "0111" ;
+assign O1 "000000011111" ;
+assign O2 "00000000000000" ;
+assign O3 "00011111111111" ;
+assign O4 "00000000000000000000000000000000000000000000" ;
+assign O5 '1' ;
+
+delta_time 10000 ;
+assign O0 "0001" ;
+assign O1 "000000000000" ;
+assign O2 "00010000000000" ;
+assign O3 "00000000000000" ;
+assign O4 "01110000000000000000000000000000000000000000" ;
+assign O5 '0' ;
+
+delta_time 10000 ;
+assign O0 "0111" ;
+assign O1 "000000011111" ;
+assign O2 "00000000000000" ;
+assign O3 "00011111111111" ;
+assign O4 "00000000000000000000000000000000000000000000" ;
+assign O5 '1' ;
+
+delta_time 10000 ;
+assign O0 "0001" ;
+assign O1 "000000000000" ;
+assign O2 "00010000000000" ;
+assign O3 "00000000000000" ;
+assign O4 "01110000000000000000000000000000000000000000" ;
+assign O5 '0' ;
+

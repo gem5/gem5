@@ -1,0 +1,4 @@
+SystemC Simulation
+
+Error: (E120) sc_export instance has no interface: x.export_1
+In file: <removed by verify.pl>

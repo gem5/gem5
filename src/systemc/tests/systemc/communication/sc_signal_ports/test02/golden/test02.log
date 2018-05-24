@@ -1,0 +1,13 @@
+SystemC Simulation
+in_int       default_event()
+in_int       value_changed_event()
+in_bool      default_event()
+in_bool      value_changed_event()
+in_bool      posedge_event()
+in_bool      negedge_event()
+in_logic     default_event()
+in_logic     value_changed_event()
+in_logic     posedge_event()
+in_logic     negedge_event()
+
+Info: /OSCI/SystemC: Simulation stopped by user.

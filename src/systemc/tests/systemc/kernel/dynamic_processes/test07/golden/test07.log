@@ -1,0 +1,100 @@
+SystemC Simulation
+1 ns setting m_a 
+1 ns callback
+2 ns setting m_b 
+2 ns callback
+3 ns setting m_c 
+3 ns callback
+4 ns setting m_a 
+4 ns callback
+5 ns setting m_b 
+5 ns callback
+6 ns setting m_c 
+6 ns callback
+7 ns setting m_a 
+7 ns callback
+8 ns setting m_b 
+8 ns callback
+9 ns setting m_c 
+9 ns callback
+10 ns setting m_a 
+10 ns callback
+11 ns setting m_b 
+11 ns callback
+12 ns setting m_c 
+12 ns callback
+13 ns setting m_a 
+13 ns callback
+14 ns setting m_b 
+14 ns callback
+15 ns setting m_c 
+15 ns callback
+16 ns setting m_a 
+16 ns callback
+17 ns setting m_b 
+17 ns callback
+18 ns setting m_c 
+18 ns callback
+19 ns setting m_a 
+19 ns callback
+20 ns setting m_b 
+20 ns callback
+21 ns setting m_c 
+21 ns callback
+22 ns setting m_a 
+22 ns callback
+23 ns setting m_b 
+23 ns callback
+24 ns setting m_c 
+24 ns callback
+25 ns setting m_a 
+25 ns callback
+26 ns setting m_b 
+26 ns callback
+27 ns setting m_c 
+27 ns callback
+28 ns setting m_a 
+28 ns callback
+29 ns setting m_b 
+29 ns callback
+30 ns setting m_c 
+30 ns callback
+31 ns setting m_a 
+31 ns callback
+32 ns setting m_b 
+32 ns callback
+33 ns setting m_c 
+33 ns callback
+34 ns setting m_a 
+34 ns callback
+35 ns setting m_b 
+35 ns callback
+36 ns setting m_c 
+36 ns callback
+37 ns setting m_a 
+37 ns callback
+38 ns setting m_b 
+38 ns callback
+39 ns setting m_c 
+39 ns callback
+40 ns setting m_a 
+40 ns callback
+41 ns setting m_b 
+41 ns callback
+42 ns setting m_c 
+42 ns callback
+43 ns setting m_a 
+43 ns callback
+44 ns setting m_b 
+44 ns callback
+45 ns setting m_c 
+45 ns callback
+46 ns setting m_a 
+46 ns callback
+47 ns setting m_b 
+47 ns callback
+48 ns setting m_c 
+48 ns callback
+49 ns setting m_a 
+49 ns callback
+Program completed

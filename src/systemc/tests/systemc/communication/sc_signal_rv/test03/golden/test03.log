@@ -1,0 +1,4 @@
+SystemC Simulation
+
+Error: (E117) resolved port not bound to resolved signal: port 'a.port_1' (sc_out_rv)
+In file: <removed by verify.pl>

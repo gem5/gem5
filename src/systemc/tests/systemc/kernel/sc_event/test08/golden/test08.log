@@ -1,0 +1,76 @@
+SystemC Simulation
+*** cancel()
+1:0 s sender - immediate
+1:0 s receiver_static_method
+1:0 s receiver_dynamic_method
+1:0 s receiver_static_thread
+1:0 s receiver_dynamic_thread
+2:0 s sender - immediate
+2:0 s sender - canceled
+2:0 s receiver_static_method
+2:0 s receiver_dynamic_method
+2:0 s receiver_static_thread
+2:0 s receiver_dynamic_thread
+3:0 s sender - delta
+4:0 s receiver_static_method
+4:0 s receiver_dynamic_method
+4:0 s receiver_static_thread
+4:0 s receiver_dynamic_thread
+5:0 s sender - delta
+5:0 s sender - canceled
+7:0 s sender - timed 1 ns
+8:1 ns receiver_static_method
+8:1 ns receiver_dynamic_method
+8:1 ns receiver_static_thread
+8:1 ns receiver_dynamic_thread
+9:1 ns sender - timed 1 ns
+9:1 ns sender - canceled
+11:2 ns sender - timed 2 ns
+12:3 ns sender - canceled
+*** notify()
+14:4 ns sender - delta
+14:4 ns sender - immediate
+14:4 ns receiver_static_method
+14:4 ns receiver_dynamic_method
+14:4 ns receiver_static_thread
+14:4 ns receiver_dynamic_thread
+16:4 ns sender - timed 1 ns
+16:4 ns sender - immediate
+16:4 ns receiver_static_method
+16:4 ns receiver_dynamic_method
+16:4 ns receiver_static_thread
+16:4 ns receiver_dynamic_thread
+18:5 ns sender - timed 2 ns
+19:6 ns sender - immediate
+19:6 ns receiver_static_method
+19:6 ns receiver_dynamic_method
+19:6 ns receiver_static_thread
+19:6 ns receiver_dynamic_thread
+*** notify(t)
+21:7 ns sender - delta
+21:7 ns sender - timed 1 ns
+22:7 ns receiver_static_method
+22:7 ns receiver_dynamic_method
+22:7 ns receiver_static_thread
+22:7 ns receiver_dynamic_thread
+24:8 ns sender - timed 1 ns
+24:8 ns sender - delta
+25:8 ns receiver_static_method
+25:8 ns receiver_dynamic_method
+25:8 ns receiver_static_thread
+25:8 ns receiver_dynamic_thread
+27:9 ns sender - timed 2 ns
+27:9 ns sender - timed 1 ns
+28:10 ns receiver_static_method
+28:10 ns receiver_dynamic_method
+28:10 ns receiver_static_thread
+28:10 ns receiver_dynamic_thread
+30:11 ns sender - timed 1 ns
+30:11 ns sender - timed 2 ns
+31:12 ns receiver_static_method
+31:12 ns receiver_dynamic_method
+31:12 ns receiver_static_thread
+31:12 ns receiver_dynamic_thread
+33:13 ns sender - stop
+
+Info: /OSCI/SystemC: Simulation stopped by user.

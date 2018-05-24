@@ -1,0 +1,83 @@
+SystemC Simulation
+
+Resolution = 1 ps
+10 ns, value=10000
+  t.value=10, t.unit=ns
+100 ns, value=100000
+  t.value=100, t.unit=ns
+1 us, value=1000000
+  t.value=1, t.unit=us
+100 ns, value=100000
+  t.value=100, t.unit=ns
+1 us, value=1000000
+  t.value=1, t.unit=us
+10 us, value=10000000
+  t.value=10, t.unit=us
+100 us, value=100000000
+  t.value=100, t.unit=us
+1 ms, value=1000000000
+  t.value=1, t.unit=ms
+100 s, value=100000000000000
+  t.value=100, t.unit=s
+
+Resolution = 100 fs
+10 ns, value=100000
+  t.value=10, t.unit=ns
+100 ns, value=1000000
+  t.value=100, t.unit=ns
+1 us, value=10000000
+  t.value=1, t.unit=us
+100 ns, value=1000000
+  t.value=100, t.unit=ns
+1 us, value=10000000
+  t.value=1, t.unit=us
+10 us, value=100000000
+  t.value=10, t.unit=us
+100 us, value=1000000000
+  t.value=100, t.unit=us
+1 ms, value=10000000000
+  t.value=1, t.unit=ms
+100 s, value=1000000000000000
+  t.value=100, t.unit=s
+
+Resolution = 10 fs
+10 ns, value=1000000
+  t.value=10, t.unit=ns
+100 ns, value=10000000
+  t.value=100, t.unit=ns
+1 us, value=100000000
+  t.value=1, t.unit=us
+100 ns, value=10000000
+  t.value=100, t.unit=ns
+1 us, value=100000000
+  t.value=1, t.unit=us
+10 us, value=1000000000
+  t.value=10, t.unit=us
+100 us, value=10000000000
+  t.value=100, t.unit=us
+1 ms, value=100000000000
+  t.value=1, t.unit=ms
+100 s, value=10000000000000000
+  t.value=100, t.unit=s
+
+Resolution = 1 fs
+10 ns, value=10000000
+  t.value=10, t.unit=ns
+100 ns, value=100000000
+  t.value=100, t.unit=ns
+1 us, value=1000000000
+  t.value=1, t.unit=us
+100 ns, value=100000000
+  t.value=100, t.unit=ns
+1 us, value=1000000000
+  t.value=1, t.unit=us
+10 us, value=10000000000
+  t.value=10, t.unit=us
+100 us, value=100000000000
+  t.value=100, t.unit=us
+1 ms, value=1000000000000
+  t.value=1, t.unit=ms
+100 s, value=100000000000000000
+  t.value=100, t.unit=s
+
+Program completed

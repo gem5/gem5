@@ -1,0 +1,7 @@
+SystemC Simulation
+
+ a = 0 (!1)
+ b = 1 (!0)
+ c = 0 (~1)
+ d = 1 (~0)
+ e = 0 (~1)

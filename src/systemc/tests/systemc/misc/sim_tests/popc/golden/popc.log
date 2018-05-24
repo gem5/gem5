@@ -1,0 +1,19 @@
+SystemC Simulation
+Input:       1   Population Count:   1
+Input:       3   Population Count:   2
+Input:       7   Population Count:   3
+Input:      15   Population Count:   4
+Input:      31   Population Count:   5
+Input:      63   Population Count:   6
+Input:     127   Population Count:   7
+Input:     255   Population Count:   8
+Input:     511   Population Count:   9
+Input:    1023   Population Count:  10
+Input:    2047   Population Count:  11
+Input:    4095   Population Count:  12
+Input:    8191   Population Count:  13
+Input:   16383   Population Count:  14
+Input:   32767   Population Count:  15
+Input:   65535   Population Count:  16
+
+Info: /OSCI/SystemC: Simulation stopped by user.

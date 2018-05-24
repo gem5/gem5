@@ -1,0 +1,47 @@
+SystemC Simulation
+
+100 ns: Top1.main.t1: Round robin thread 1
+110 ns: Top1.main.t2: Round robin thread 2
+120 ns: Top1.main.t3: Round robin thread 3
+130 ns: Top1.main.t4: Round robin thread 4
+140 ns: Top1.main.t1: Round robin thread 1
+150 ns: Top1.main.t2: Round robin thread 2
+160 ns: Top1.main.t3: Round robin thread 3
+170 ns: Top1.main.t4: Round robin thread 4
+180 ns: Top1.main.t1: Round robin thread 1
+190 ns: Top1.main.t2: Round robin thread 2
+200 ns: Top1.main.t3: Round robin thread 3
+210 ns: Top1.main.t4: Round robin thread 4
+Returned int is 0
+
+
+221 ns: Top1.main.thread_p_0: Thread 0 ending.
+222 ns: Top1.main.thread_p_1: Thread 1 ending.
+223 ns: Top1.main.thread_p_2: Thread 2 ending.
+224 ns: Top1.main.thread_p_3: Thread 3 ending.
+225 ns: Top1.main.thread_p_4: Thread 4 ending.
+226 ns: Top1.main.thread_p_5: Thread 5 ending.
+227 ns: Top1.main.thread_p_6: Thread 6 ending.
+228 ns: Top1.main.thread_p_7: Thread 7 ending.
+229 ns: Top1.main.thread_p_8: Thread 8 ending.
+230 ns: Top1.main.thread_p_9: Thread 9 ending.
+241 ns: Top1.main.thread_p_10: Thread 0 ending.
+242 ns: Top1.main.thread_p_11: Thread 1 ending.
+243 ns: Top1.main.thread_p_12: Thread 2 ending.
+244 ns: Top1.main.thread_p_13: Thread 3 ending.
+245 ns: Top1.main.thread_p_14: Thread 4 ending.
+246 ns: Top1.main.thread_p_15: Thread 5 ending.
+247 ns: Top1.main.thread_p_16: Thread 6 ending.
+248 ns: Top1.main.thread_p_17: Thread 7 ending.
+249 ns: Top1.main.thread_p_18: Thread 8 ending.
+250 ns: Top1.main.thread_p_19: Thread 9 ending.
+
+260 ns: Top1.main.thread_p_20: Test_function sees 3.14159
+Returned int is 3
+
+260 ns: Top1.main.void_function: void_function sees 1.2345
+
+260 ns: Top1.main.thread_p_21: ref_function sees 9.8765
+Returned int is 9
+
+Done.

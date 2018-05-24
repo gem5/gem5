@@ -1,0 +1,26 @@
+SystemC Simulation
+sc_method_process
+sc_method_process
+sc_thread_process
+sc_thread_process
+sc_cthread_process
+sc_cthread_process
+sc_module
+sc_module
+sc_clock
+sc_clock
+sc_fifo
+sc_fifo
+sc_mutex
+sc_mutex
+sc_signal
+sc_signal
+sc_signal
+sc_signal
+sc_signal
+sc_signal
+sc_signal_resolved
+sc_signal_resolved
+sc_signal_rv
+sc_signal_rv
+kind() the same

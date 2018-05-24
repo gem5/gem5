@@ -1,0 +1,15 @@
+SystemC Simulation
+
+Warning: (W571) no activity or clock movement for sc_start() invocation
+In file: <removed by verify.pl>
+sc_time_stamp() = 150 ns
+sc_pending_activity_at_future_time() = 1
+sc_time_to_pending_activity() = 100 ns
+
+Warning: (W571) no activity or clock movement for sc_start() invocation
+In file: <removed by verify.pl>
+
+Warning: (W571) no activity or clock movement for sc_start() invocation
+In file: <removed by verify.pl>
+
+Success

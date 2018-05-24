@@ -1,0 +1,10 @@
+SystemC Simulation
+
+Warning: (W558) disable() or dont_initialize() called on process with no static sensitivity, it will be orphaned: top.target
+In file: <removed by verify.pl>
+
+Warning: (W558) disable() or dont_initialize() called on process with no static sensitivity, it will be orphaned: top.control.dyn_target
+In file: <removed by verify.pl>
+In process: top.control @ 0 s
+
+Success

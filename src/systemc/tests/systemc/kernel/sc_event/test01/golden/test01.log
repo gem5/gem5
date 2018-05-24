@@ -1,0 +1,43 @@
+SystemC Simulation
+1 1
+Triggered by event e_b
+1 2
+Triggered by event e_b
+1 3
+Triggered by event e_b
+1 4
+Triggered by event e_b
+1 5
+Triggered by event e_b
+1 6
+Triggered by event e_b
+1 7
+Triggered by event e_b
+1 8
+Triggered by event e_b
+1 9
+Triggered by event e_b
+1 10
+Triggered by event e_b
+1 11
+Triggered by event e_b
+1 12
+Triggered by event e_b
+1 13
+Triggered by event e_b
+1 14
+Triggered by event e_b
+1 15
+Triggered by event e_b
+1 16
+Triggered by event e_b
+1 17
+Triggered by event e_b
+1 18
+Triggered by event e_b
+1 19
+Triggered by event e_b
+1 20
+Issuing sc_stop() 
+
+Info: /OSCI/SystemC: Simulation stopped by user.

@@ -1,0 +1,8 @@
+SystemC Simulation
+
+0 s: static_method, Before spawning function_method 
+
+Error: (E519) wait() is only allowed in SC_THREADs and SC_CTHREADs: 
+        in SC_METHODs use next_trigger() instead
+In file: <removed by verify.pl>
+In process: mod1.static_method @ 0 s

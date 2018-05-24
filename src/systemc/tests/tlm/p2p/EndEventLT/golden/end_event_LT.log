@@ -1,0 +1,33 @@
+SystemC Simulation
+initiator: Send write request: A = 0x0, D = 0x0 @ 0 s
+target: Received write request: A = 0x0, D = 0x0 @ 0 s
+initiator: Received ok response @ 10 ns
+initiator: Send write request: A = 0x4, D = 0x1 @ 10 ns
+target: Received write request: A = 0x4, D = 0x1 @ 10 ns
+initiator: Received ok response @ 20 ns
+initiator: Send write request: A = 0x8, D = 0x2 @ 20 ns
+target: Received write request: A = 0x8, D = 0x2 @ 20 ns
+initiator: Received ok response @ 30 ns
+initiator: Send write request: A = 0xc, D = 0x3 @ 30 ns
+target: Received write request: A = 0xc, D = 0x3 @ 30 ns
+initiator: Received ok response @ 40 ns
+initiator: Send write request: A = 0x10, D = 0x4 @ 40 ns
+target: Received write request: A = 0x10, D = 0x4 @ 40 ns
+initiator: Received ok response @ 50 ns
+initiator: Send read request: A = 0x0 @ 50 ns
+target: Received read request: A = 0x0 @ 50 ns
+initiator: Received ok response: D = 0x0 @ 150 ns
+initiator: Send read request: A = 0x4 @ 150 ns
+target: Received read request: A = 0x4 @ 150 ns
+initiator: Received ok response: D = 0x1 @ 250 ns
+initiator: Send read request: A = 0x8 @ 250 ns
+target: Received read request: A = 0x8 @ 250 ns
+initiator: Received ok response: D = 0x2 @ 350 ns
+initiator: Send read request: A = 0xc @ 350 ns
+target: Received read request: A = 0xc @ 350 ns
+initiator: Received ok response: D = 0x3 @ 450 ns
+initiator: Send read request: A = 0x10 @ 450 ns
+target: Received read request: A = 0x10 @ 450 ns
+initiator: Received ok response: D = 0x4 @ 550 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.

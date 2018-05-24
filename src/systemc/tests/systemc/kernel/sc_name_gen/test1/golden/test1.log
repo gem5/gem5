@@ -1,0 +1,20 @@
+SystemC Simulation
+
+Warning: (W505) object already exists: a.abc. Latter declaration will be renamed to a.abc_0
+In file: <removed by verify.pl>
+
+Warning: (W505) object already exists: a.def. Latter declaration will be renamed to a.def_0
+In file: <removed by verify.pl>
+
+Warning: (W505) object already exists: a.def. Latter declaration will be renamed to a.def_1
+In file: <removed by verify.pl>
+
+Warning: (W505) object already exists: a.ghi. Latter declaration will be renamed to a.ghi_0
+In file: <removed by verify.pl>
+a.def
+a.def_0
+a.def_1
+a.ghi
+a.ghi_0
+a.abc_0
+a.abc

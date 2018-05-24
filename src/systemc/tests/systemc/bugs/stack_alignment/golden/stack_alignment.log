@@ -1,0 +1,6 @@
+SystemC Simulation
+Inside sc_main() 
+Inside C::run() 
+Between C::run() 
+Out of C::run() 
+Out of sc_main() 

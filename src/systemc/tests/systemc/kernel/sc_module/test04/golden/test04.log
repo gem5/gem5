@@ -1,0 +1,18 @@
+SystemC Simulation
+signal_0
+signal_1
+a
+b
+c
+a.port_0
+a.port_1
+b.port_0
+b.port_1
+c.a
+c.b
+c.signal_0
+c.signal_1
+c.a.port_0
+c.a.port_1
+c.b.port_0
+c.b.port_1

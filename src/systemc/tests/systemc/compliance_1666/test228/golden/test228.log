@@ -1,0 +1,6 @@
+SystemC Simulation
+Should be silent except for some renaming warnings...
+
+Info: (I703) tracing timescale unit set: 1 ns (vcd.vcd)
+
+Success

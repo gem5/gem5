@@ -1,0 +1,48 @@
+SystemC Simulation
+  1 ns (1): m.driver: ev_0.notify()
+  1 ns (1): m.driver: ev_6.notify()
+  1 ns (1): m.consumer_dynamic: ev_0 ev_6 
+  1 ns (1): m.driver: ev_1.notify(0 s)
+  1 ns (1): m.driver: ev_15.notify(0 s)
+  1 ns (2): m.consumer_static: ev_1 ev_15 
+  1 ns (2): m.driver: ev_8.notify(1 ns)
+  1 ns (2): m.driver: ev_7.notify(1 ns)
+  2 ns (3): m.consumer_dynamic: ev_7 ev_8 
+  2 ns (3): m.consumer_static: ev_7 ev_8 
+  4 ns (4): m.driver: ev_5.notify()
+  4 ns (4): m.driver: ev_9.notify()
+  4 ns (4): m.driver: ev_13.notify()
+  4 ns (4): m.driver: ev_2.notify()
+  4 ns (4): m.consumer_static: ev_2 ev_5 ev_9 ev_13 
+  4 ns (4): m.consumer_dynamic: ev_2 ev_5 ev_9 ev_13 
+  4 ns (4): m.driver: ev_9.notify(0 s)
+  4 ns (4): m.driver: ev_5.notify(0 s)
+  4 ns (4): m.driver: ev_12.notify(0 s)
+  4 ns (4): m.driver: ev_8.notify(0 s)
+  4 ns (5): m.consumer_dynamic: ev_5 ev_8 ev_9 ev_12 
+  4 ns (5): m.consumer_static: ev_5 ev_8 ev_9 ev_12 
+  4 ns (5): m.driver: ev_14.notify(1 ns)
+  4 ns (5): m.driver: ev_2.notify(1 ns)
+  4 ns (5): m.driver: ev_5.notify(1 ns)
+  4 ns (5): m.driver: ev_0.notify(1 ns)
+  5 ns (6): m.consumer_dynamic: ev_0 ev_2 ev_5 ev_14 
+  5 ns (6): m.consumer_static: ev_0 ev_2 ev_5 ev_14 
+  5 ns (6): m.driver: ev_11.notify(1 ns)
+  5 ns (6): m.driver: ev_14.notify(1 ns)
+  5 ns (6): m.driver: ev_12.notify(1 ns)
+  5 ns (6): m.driver: ev_5.notify(1 ns)
+  6 ns (7): m.consumer_static: ev_5 ev_11 ev_12 ev_14 
+  6 ns (7): m.consumer_dynamic: ev_5 ev_11 ev_12 ev_14 
+  6 ns (7): m.driver: ev_0.notify(1 ns)
+  6 ns (7): m.driver: ev_4.notify(1 ns)
+  6 ns (7): m.driver: ev_8.notify(1 ns)
+  6 ns (7): m.driver: ev_12.notify(1 ns)
+  7 ns (8): m.consumer_dynamic: ev_0 ev_4 ev_8 ev_12 
+  7 ns (8): m.driver: ev_12.notify(1 ns)
+  7 ns (8): m.driver: ev_6.notify(1 ns)
+  7 ns (8): m.driver: ev_11.notify(1 ns)
+  7 ns (8): m.driver: ev_13.notify(1 ns)
+  8 ns (9): m.consumer_dynamic: ev_6 ev_11 ev_12 ev_13 
+  8 ns (9): m.consumer_static: ev_6 ev_11 ev_12 ev_13 
+
+Info: /OSCI/SystemC: Simulation stopped by user.

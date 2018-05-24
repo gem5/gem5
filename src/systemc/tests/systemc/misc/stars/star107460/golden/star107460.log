@@ -1,0 +1,9 @@
+SystemC Simulation
+
+bv = 00000000
+lv = 000X0100
+Warning: (W207) sc_bv cannot contain values X and Z
+In file: <removed by verify.pl>
+
+bv = 00010100
+lv = 000X0100

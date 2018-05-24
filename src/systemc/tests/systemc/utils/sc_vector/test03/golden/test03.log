@@ -1,0 +1,12 @@
+SystemC Simulation
+dut.sub_modules_0 - sc_module
+dut.sub_modules_1 - sc_module
+dut.sub_modules_2 - sc_module
+dut.sub_modules_3 - sc_module
+dut.sub_modules_4 - sc_module
+sub_modules_0 - dut
+sub_modules_1 - dut
+sub_modules_2 - dut
+sub_modules_3 - dut
+sub_modules_4 - dut
+Program completed

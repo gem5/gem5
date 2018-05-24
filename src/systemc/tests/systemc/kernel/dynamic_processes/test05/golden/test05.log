@@ -1,0 +1,5 @@
+SystemC Simulation
+spawn thetest
+in thetest()
+
+Info: /OSCI/SystemC: Simulation stopped by user.

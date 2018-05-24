@@ -1,0 +1,37 @@
+SystemC Simulation
+
+-->-- m.get_child_objects() -->--
+ - size: 10
+ - dut.sub_modules - sc_vector
+ - dut.in_vec - sc_vector
+ - dut.sub_modules_0 - sc_module
+ - dut.sub_modules_1 - sc_module
+ - dut.sub_modules_2 - sc_module
+ - dut.sub_modules_3 - sc_module
+ - dut.in_vec_0 - sc_in
+ - dut.in_vec_1 - sc_in
+ - dut.in_vec_2 - sc_in
+ - dut.in_vec_3 - sc_in
+--<-- m.get_child_objects() --<--
+
+-->-- m.sub_vec.get_child_objects() -->--
+ - size: 0
+--<-- m.sub_vec.get_child_objects() --<--
+
+-->-- m.sub_vec.get_elements() -->--
+ - size: 4
+ - dut.sub_modules_0 - sc_module
+ - dut.sub_modules_1 - sc_module
+ - dut.sub_modules_2 - sc_module
+ - dut.sub_modules_3 - sc_module
+--<-- m.sub_vec.get_elements() --<--
+
+-->-- sc_assemble_vector( m.sub_vec, &sub_module::in ).get_elements() -->--
+ - size: 4
+ - dut.sub_modules_0.port_0 - sc_in
+ - dut.sub_modules_1.port_0 - sc_in
+ - dut.sub_modules_2.port_0 - sc_in
+ - dut.sub_modules_3.port_0 - sc_in
+--<-- sc_assemble_vector( m.sub_vec, &sub_module::in ).get_elements() --<--
+
+Program completed

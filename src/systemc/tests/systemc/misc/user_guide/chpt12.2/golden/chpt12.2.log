@@ -1,0 +1,18 @@
+SystemC Simulation
+Accessor: Data Written = deadbeef at address a
+Accessor: Data Read = deadbeef from address a
+Accessor: Data Written = deadbef0 at address b
+Accessor: Data Read = deadbef0 from address b
+Accessor: Data Written = deadbef1 at address c
+Accessor: Data Read = deadbef1 from address c
+Accessor: Data Written = deadbef2 at address d
+Accessor: Data Read = deadbef2 from address d
+Accessor: Data Written = deadbef3 at address e
+Accessor: Data Read = deadbef3 from address e
+Accessor: Data Written = deadbef4 at address f
+Accessor: Data Read = deadbef4 from address f
+Accessor: Data Written = deadbef5 at address 10
+Accessor: Data Read = deadbef5 from address 10
+Accessor: Data Written = deadbef6 at address 11
+Accessor: Data Read = deadbef6 from address 11
+Accessor: Data Written = deadbef7 at address 12

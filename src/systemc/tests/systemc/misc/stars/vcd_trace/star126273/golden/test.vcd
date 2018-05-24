@@ -1,0 +1,49 @@
+
+$timescale
+     1 ps
+$end
+
+$scope module SystemC $end
+$var wire    1  aaaaa  clk1       $end
+$var wire    1  aaaab  clk2       $end
+$upscope $end
+$enddefinitions  $end
+
+$comment
+All initial values are dumped below at time 0 sec = 0 timescale units.
+$end
+
+$dumpvars
+0aaaaa
+0aaaab
+$end
+
+#3000
+1aaaab
+
+#5000
+1aaaaa
+
+#9000
+0aaaab
+
+#10000
+0aaaaa
+
+#15000
+1aaaaa
+1aaaab
+
+#20000
+0aaaaa
+
+#21000
+0aaaab
+
+#25000
+1aaaaa
+
+#27000
+1aaaab
+
+#30000

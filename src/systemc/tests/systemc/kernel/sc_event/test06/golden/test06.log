@@ -1,0 +1,43 @@
+SystemC Simulation
+*** cancel()
+1:0 s sender - immediate
+1:0 s receiver
+2:0 s sender - immediate
+2:0 s sender - canceled
+2:0 s receiver
+3:0 s sender - delta
+4:0 s receiver
+5:0 s sender - delta
+5:0 s sender - canceled
+7:0 s sender - timed 1 ns
+8:1 ns receiver
+9:1 ns sender - timed 1 ns
+9:1 ns sender - canceled
+11:2 ns sender - timed 2 ns
+12:3 ns sender - canceled
+*** notify()
+14:4 ns sender - delta
+14:4 ns sender - immediate
+14:4 ns receiver
+16:4 ns sender - timed 1 ns
+16:4 ns sender - immediate
+16:4 ns receiver
+18:5 ns sender - timed 2 ns
+19:6 ns sender - immediate
+19:6 ns receiver
+*** notify(t)
+21:7 ns sender - delta
+21:7 ns sender - timed 1 ns
+22:7 ns receiver
+24:8 ns sender - timed 1 ns
+24:8 ns sender - delta
+25:8 ns receiver
+27:9 ns sender - timed 2 ns
+27:9 ns sender - timed 1 ns
+28:10 ns receiver
+30:11 ns sender - timed 1 ns
+30:11 ns sender - timed 2 ns
+31:12 ns receiver
+33:13 ns sender - stop
+
+Info: /OSCI/SystemC: Simulation stopped by user.

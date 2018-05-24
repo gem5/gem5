@@ -1,0 +1,15 @@
+SystemC Simulation
+0 s thread 0: initialization
+0 s thread 1: initialization
+0 s thread 2: initialization
+4 ns stimulus setting kill
+5 ns killer: killing thread0 
+5 ns thread0: received kill
+5 ns thread1: received kill
+5 ns thread0: after killing thread1
+5 ns killer: after killing thread0
+5 ns thread2: received kill
+5 ns killer: after killing thread2
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+Program completed

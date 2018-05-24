@@ -1,0 +1,181 @@
+SystemC Simulation
+writer: blocking write
+reader: blocking read 1
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+writer: 5 free spaces
+writer: non-blocking write
+writer: waiting
+reader: 5 available samples
+reader: blocking read 2
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+writer: waiting
+26
+27
+28
+29
+30
+reader: 10 available samples
+reader: non-blocking read
+31
+32
+33
+34
+35
+37
+38
+39
+40
+41
+reader: waiting
+writer: blocking write
+reader: waiting
+42
+43
+44
+45
+46
+reader: blocking read 1
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+writer: 10 free spaces
+writer: non-blocking write
+writer: waiting
+reader: 0 available samples
+reader: blocking read 2
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+73
+74
+75
+76
+77
+writer: blocking write
+reader: 5 available samples
+reader: non-blocking read
+78
+79
+80
+81
+82
+reader: waiting
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+reader: blocking read 1
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+writer: 0 free spaces
+writer: non-blocking write
+writer: waiting
+writer: waiting
+104
+105
+106
+107
+108
+writer: waiting
+writer: waiting
+writer: waiting
+writer: waiting
+writer: waiting
+writer: waiting
+writer: waiting
+writer: waiting
+writer: waiting
+reader: 10 available samples
+reader: blocking read 2
+109
+110
+111
+112
+113
+115
+116
+117
+118
+119
+writer: waiting
+130
+131
+132
+133
+134
+writer: blocking write
+reader: 0 available samples
+reader: non-blocking read
+reader: waiting
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+reader: waiting
+145
+146
+147
+148
+149

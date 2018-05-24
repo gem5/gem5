@@ -1,0 +1,21 @@
+SystemC Simulation
+BI(3,0).to_int() = 15
+BI(3,0).to_uint() = 15
+BI(3,0).to_int64() = 15
+BI(3,0).to_uint64() = 15
+BI(3,0).to_double() = 15
+I(3,0).to_int() = 15
+I(3,0).to_uint() = 15
+I(3,0).to_int64() = 15
+I(3,0).to_uint64() = 15
+I(3,0).to_double() = 15
+UI(3,0).to_int() = 15
+UI(3,0).to_uint() = 15
+UI(3,0).to_int64() = 15
+UI(3,0).to_uint64() = 15
+UI(3,0).to_double() = 15
+UBI(3,0).to_int() = 15
+UBI(3,0).to_uint() = 15
+UBI(3,0).to_int64() = 15
+UBI(3,0).to_uint64() = 15
+UBI(3,0).to_double() = 15

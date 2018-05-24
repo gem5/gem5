@@ -1,0 +1,102 @@
+SystemC Simulation
+0 s dut.grand_parent initialization
+
+0 s dut.grand_parent.parent1 initialization
+0 s dut.grand_parent.parent2 initialization
+0 s dut.grand_parent.parent1.child1 initialization
+0 s dut.grand_parent.parent1.child2 initialization
+0 s dut.grand_parent.parent1.child3 initialization
+0 s dut.grand_parent.parent2.child1 initialization
+0 s dut.grand_parent.parent2.child2 initialization
+0 s dut.grand_parent.parent2.child3 initialization
+4 ns stimulus issuing reset
+4 ns dut.grand_parent.parent1.child1 initialization
+4 ns dut.grand_parent.parent1.child2 initialization
+4 ns dut.grand_parent.parent1.child3 initialization
+4 ns dut.grand_parent.parent1 initialization
+4 ns dut.grand_parent.parent2.child1 initialization
+4 ns dut.grand_parent.parent2.child2 initialization
+4 ns dut.grand_parent.parent2.child3 initialization
+4 ns dut.grand_parent.parent2 removing children
+4 ns dut.grand_parent.parent2.child1 got kill
+4 ns dut.grand_parent.parent2.child2 got kill
+4 ns dut.grand_parent.parent2.child3 got kill
+4 ns dut.grand_parent.parent2 initialization
+4 ns dut.grand_parent initialization
+
+4 ns dut.grand_parent.parent2.child1 initialization
+4 ns dut.grand_parent.parent2.child2 initialization
+4 ns dut.grand_parent.parent2.child3 initialization
+8 ns stimulus issuing reset
+8 ns dut.grand_parent.parent1.child1 initialization
+8 ns dut.grand_parent.parent1.child2 initialization
+8 ns dut.grand_parent.parent1.child3 initialization
+8 ns dut.grand_parent.parent1 initialization
+8 ns dut.grand_parent.parent2.child1 initialization
+8 ns dut.grand_parent.parent2.child2 initialization
+8 ns dut.grand_parent.parent2.child3 initialization
+8 ns dut.grand_parent.parent2 removing children
+8 ns dut.grand_parent.parent2.child1 got kill
+8 ns dut.grand_parent.parent2.child2 got kill
+8 ns dut.grand_parent.parent2.child3 got kill
+8 ns dut.grand_parent.parent2 initialization
+8 ns dut.grand_parent initialization
+
+8 ns dut.grand_parent.parent2.child1 initialization
+8 ns dut.grand_parent.parent2.child2 initialization
+8 ns dut.grand_parent.parent2.child3 initialization
+12 ns stimulus issuing reset
+12 ns dut.grand_parent.parent1.child1 initialization
+12 ns dut.grand_parent.parent1.child2 initialization
+12 ns dut.grand_parent.parent1.child3 initialization
+12 ns dut.grand_parent.parent1 initialization
+12 ns dut.grand_parent.parent2.child1 initialization
+12 ns dut.grand_parent.parent2.child2 initialization
+12 ns dut.grand_parent.parent2.child3 initialization
+12 ns dut.grand_parent.parent2 removing children
+12 ns dut.grand_parent.parent2.child1 got kill
+12 ns dut.grand_parent.parent2.child2 got kill
+12 ns dut.grand_parent.parent2.child3 got kill
+12 ns dut.grand_parent.parent2 initialization
+12 ns dut.grand_parent initialization
+
+12 ns dut.grand_parent.parent2.child1 initialization
+12 ns dut.grand_parent.parent2.child2 initialization
+12 ns dut.grand_parent.parent2.child3 initialization
+16 ns stimulus issuing reset
+16 ns dut.grand_parent.parent1.child1 initialization
+16 ns dut.grand_parent.parent1.child2 initialization
+16 ns dut.grand_parent.parent1.child3 initialization
+16 ns dut.grand_parent.parent1 initialization
+16 ns dut.grand_parent.parent2.child1 initialization
+16 ns dut.grand_parent.parent2.child2 initialization
+16 ns dut.grand_parent.parent2.child3 initialization
+16 ns dut.grand_parent.parent2 removing children
+16 ns dut.grand_parent.parent2.child1 got kill
+16 ns dut.grand_parent.parent2.child2 got kill
+16 ns dut.grand_parent.parent2.child3 got kill
+16 ns dut.grand_parent.parent2 initialization
+16 ns dut.grand_parent initialization
+
+16 ns dut.grand_parent.parent2.child1 initialization
+16 ns dut.grand_parent.parent2.child2 initialization
+16 ns dut.grand_parent.parent2.child3 initialization
+20 ns stimulus issuing reset
+20 ns dut.grand_parent.parent1.child1 initialization
+20 ns dut.grand_parent.parent1.child2 initialization
+20 ns dut.grand_parent.parent1.child3 initialization
+20 ns dut.grand_parent.parent1 initialization
+20 ns dut.grand_parent.parent2.child1 initialization
+20 ns dut.grand_parent.parent2.child2 initialization
+20 ns dut.grand_parent.parent2.child3 initialization
+20 ns dut.grand_parent.parent2 removing children
+20 ns dut.grand_parent.parent2.child1 got kill
+20 ns dut.grand_parent.parent2.child2 got kill
+20 ns dut.grand_parent.parent2.child3 got kill
+20 ns dut.grand_parent.parent2 initialization
+20 ns dut.grand_parent initialization
+
+20 ns dut.grand_parent.parent2.child1 initialization
+20 ns dut.grand_parent.parent2.child2 initialization
+20 ns dut.grand_parent.parent2.child3 initialization
+Program completed

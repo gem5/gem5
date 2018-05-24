@@ -1,0 +1,10 @@
+SystemC Simulation
+sc_signed 1 3ffffffe
+sc_unsigned 1 3ffffffe
+sc_signed -1 3ff00000
+sc_unsigned -1 3ff00000
+sc_signed 0x800000 3ff7ffff
+sc_unsigned 0x800000 3ff7ffff
+sc_signed 0 3fffffff
+sc_unsigned 0 3fffffff
+Program completed

@@ -1,0 +1,16 @@
+SystemC Simulation
+T2: time = 10 ns
+T2: time = 20 ns
+suspend: time = 25 ns
+resume: time = 45 ns
+T2: time = 45 ns
+T2: time = 50 ns
+T2: time = 60 ns
+disable: time = 65 ns
+enable: time = 85 ns
+T2: time = 90 ns
+T2: time = 100 ns
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+
+End Of Test

@@ -1,0 +1,16 @@
+SystemC Simulation
+Should be silent except for 3 fatal errors...
+
+Fatal: /JA: A bad thing has happened
+In file: <removed by verify.pl>
+In process: top.m.T @ 0 s
+
+Fatal: /JA: A bad thing has happened
+In file: <removed by verify.pl>
+In process: top.m.T @ 1 ns
+
+Fatal: /JA: A bad thing has happened
+In file: <removed by verify.pl>
+In process: top.m.T @ 2 ns
+
+Success

@@ -1,0 +1,24 @@
+SystemC Simulation
+0 s:      dynamic method (83,0) initialization call 
+0 s:      static method (115) initialization call 
+0 s:      dynamic thread (97) initialization call 
+0 s:      static thread (126) initialization call 
+0 s:      dynamic method (90,1) after wait on m_clk.posedge() 
+0 s:      dynamic thread (100) after wait on m_clk.posedge_event() 
+1 ns:      clocked thread (72) after wait on m_clk.pos() 
+2 ns: stimulus (143) - suspending all processes
+3 ns: stimulus (153) - firing event1 
+4 ns: stimulus (157) - firing event2 
+
+6 ns: stimulus (167) - resuming all processes
+6 ns:      dynamic method (90,1) after wait on m_clk.posedge() 
+6 ns:      static method (120) after wait on m_event1 | m_event2 
+6 ns:      clocked thread (72) after wait on m_clk.pos() 
+6 ns:      dynamic thread (105) after wait on m_event1 & m_event2 
+6 ns:      static thread (131) after wait on m_event1 | m_event2 
+7 ns:      clocked thread (72) after wait on m_clk.pos() 
+8 ns:      clocked thread (72) after wait on m_clk.pos() 
+9 ns:      clocked thread (72) after wait on m_clk.pos() 
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+Program completed

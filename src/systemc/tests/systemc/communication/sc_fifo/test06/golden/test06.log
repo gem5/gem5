@@ -1,0 +1,130 @@
+SystemC Simulation
+10 ns,1: writer0: blocking write
+10 ns,1: reader0: blocking read 1
+10 ns,2: reader0: 0
+10 ns,2: reader0: 1
+10 ns,2: reader0: 2
+10 ns,2: reader0: 3
+10 ns,2: reader0: 4
+10 ns,2: reader0: 5
+10 ns,2: reader0: 6
+10 ns,2: reader0: 7
+10 ns,2: reader0: 8
+10 ns,2: reader0: 9
+10 ns,3: writer1: blocking write
+10 ns,4: reader0: 10
+10 ns,4: reader0: 11
+10 ns,4: reader0: 12
+10 ns,4: reader0: 13
+10 ns,4: reader0: 14
+10 ns,4: reader1: blocking read 1
+10 ns,4: reader1: 20
+10 ns,4: reader1: 21
+10 ns,4: reader1: 22
+10 ns,4: reader1: 23
+10 ns,4: reader1: 24
+10 ns,4: reader1: 25
+10 ns,4: reader1: 26
+10 ns,4: reader1: 27
+10 ns,4: reader1: 28
+10 ns,4: reader1: 29
+10 ns,5: writer2: blocking write
+10 ns,6: reader1: 30
+10 ns,6: reader1: 31
+10 ns,6: reader1: 32
+10 ns,6: reader1: 33
+10 ns,6: reader1: 34
+10 ns,6: reader2: blocking read 1
+10 ns,6: reader2: 40
+10 ns,6: reader2: 41
+10 ns,6: reader2: 42
+10 ns,6: reader2: 43
+10 ns,6: reader2: 44
+10 ns,6: reader2: 45
+10 ns,6: reader2: 46
+10 ns,6: reader2: 47
+10 ns,6: reader2: 48
+10 ns,6: reader2: 49
+10 ns,8: reader2: 50
+10 ns,8: reader2: 51
+10 ns,8: reader2: 52
+10 ns,8: reader2: 53
+10 ns,8: reader2: 54
+20 ns,9: writer0: blocking write
+20 ns,9: reader3: 5 available samples
+20 ns,9: reader3: blocking read 2
+20 ns,9: reader0: 15
+20 ns,9: reader0: 16
+20 ns,9: reader0: 17
+20 ns,9: reader0: 18
+20 ns,9: reader0: 19
+20 ns,10: reader0: 60
+20 ns,10: reader0: 61
+20 ns,10: reader0: 62
+20 ns,10: reader0: 63
+20 ns,10: reader0: 64
+20 ns,11: reader0: 65
+20 ns,11: reader0: 66
+20 ns,11: reader0: 67
+20 ns,11: reader0: 68
+20 ns,11: reader0: 69
+20 ns,11: reader1: 35
+20 ns,11: reader1: 36
+20 ns,11: reader1: 37
+20 ns,11: reader1: 38
+20 ns,11: reader1: 39
+20 ns,12: writer1: blocking write
+20 ns,13: reader1: 80
+20 ns,13: reader1: 81
+20 ns,13: reader1: 82
+20 ns,13: reader1: 83
+20 ns,13: reader1: 84
+20 ns,13: reader1: 85
+20 ns,13: reader1: 86
+20 ns,13: reader1: 87
+20 ns,13: reader1: 88
+20 ns,13: reader1: 89
+20 ns,13: reader2: 55
+20 ns,13: reader2: 56
+20 ns,13: reader2: 57
+20 ns,13: reader2: 58
+20 ns,13: reader2: 59
+20 ns,14: writer2: blocking write
+20 ns,15: reader2: 100
+20 ns,15: reader2: 101
+20 ns,15: reader2: 102
+20 ns,15: reader2: 103
+20 ns,15: reader2: 104
+20 ns,15: reader2: 105
+20 ns,15: reader2: 106
+20 ns,15: reader2: 107
+20 ns,15: reader2: 108
+20 ns,15: reader2: 109
+30 ns,17: reader0: blocking read 1
+30 ns,17: reader0: 70
+30 ns,17: reader0: 71
+30 ns,17: reader0: 72
+30 ns,17: reader0: 73
+30 ns,17: reader0: 74
+30 ns,17: reader0: 75
+30 ns,17: reader0: 76
+30 ns,17: reader0: 77
+30 ns,17: reader0: 78
+30 ns,17: reader0: 79
+30 ns,17: writer0: blocking write
+30 ns,19: reader0: 120
+30 ns,19: reader0: 121
+30 ns,19: reader0: 122
+30 ns,19: reader0: 123
+30 ns,19: reader0: 124
+30 ns,19: reader1: blocking read 1
+30 ns,19: reader1: 90
+30 ns,19: reader1: 91
+30 ns,19: reader1: 92
+30 ns,19: reader1: 93
+30 ns,19: reader1: 94
+30 ns,19: reader1: 95
+30 ns,19: reader1: 96
+30 ns,19: reader1: 97
+30 ns,19: reader1: 98
+30 ns,19: reader1: 99

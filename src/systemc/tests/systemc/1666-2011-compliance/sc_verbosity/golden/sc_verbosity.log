@@ -1,0 +1,51 @@
+SystemC Simulation
+
+Info: DEFAULT: verbosity=SC_NONE
+
+Info: DEFAULT: verbosity=SC_LOW
+
+Info: DEFAULT: verbosity=SC_MEDIUM
+
+Info: SC_NONE: verbosity=SC_NONE
+
+Info: SC_MEDIUM: verbosity=SC_NONE
+
+Info: SC_MEDIUM: verbosity=SC_LOW
+
+Info: SC_MEDIUM: verbosity=SC_MEDIUM
+
+Info: SC_FULL: verbosity=SC_NONE
+
+Info: SC_FULL: verbosity=SC_LOW
+
+Info: SC_FULL: verbosity=SC_MEDIUM
+
+Info: SC_FULL: verbosity=SC_HIGH
+
+Info: SC_FULL: verbosity=SC_FULL
+
+Info: SC_LOW: verbosity=SC_NONE
+
+Info: SC_LOW: verbosity=SC_LOW
+
+Info: SC_HIGH: verbosity=SC_NONE
+
+Info: SC_HIGH: verbosity=SC_LOW
+
+Info: SC_HIGH: verbosity=SC_MEDIUM
+
+Info: SC_HIGH: verbosity=SC_HIGH
+
+Info: SC_DEBUG: verbosity=SC_NONE
+
+Info: SC_DEBUG: verbosity=SC_LOW
+
+Info: SC_DEBUG: verbosity=SC_MEDIUM
+
+Info: SC_DEBUG: verbosity=SC_HIGH
+
+Info: SC_DEBUG: verbosity=SC_FULL
+
+Info: SC_DEBUG: verbosity=SC_DEBUG
+
+Success

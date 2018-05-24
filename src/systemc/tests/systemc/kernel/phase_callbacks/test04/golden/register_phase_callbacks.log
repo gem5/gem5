@@ -1,0 +1,80 @@
+SystemC Simulation
+
+Warning: (W552) register simulation phase callback: phase_tracer_0: SC_ELABORATION:
+	 substituted by (SC_BEFORE_END_OF_ELABORATION|SC_END_OF_ELABORATION)
+In file: <removed by verify.pl>
+
+Warning: (W552) register simulation phase callback: phase_tracer_0: SC_RUNNING:
+	 substituted by (SC_END_OF_INITIALIZATION|SC_END_OF_UPDATE|SC_BEFORE_TIMESTEP)
+In file: <removed by verify.pl>
+
+Warning: (W552) register simulation phase callback: phase_tracer_0: SC_RUNNING:
+	 substituted by (SC_END_OF_INITIALIZATION|SC_END_OF_UPDATE|SC_BEFORE_TIMESTEP)
+In file: <removed by verify.pl>
+
+Warning: (W552) register simulation phase callback: phase_tracer_0: SC_ELABORATION:
+	 substituted by (SC_BEFORE_END_OF_ELABORATION|SC_END_OF_ELABORATION)
+In file: <removed by verify.pl>
+
+Warning: (W552) register simulation phase callback: phase_tracer_0: SC_RUNNING:
+	 substituted by (SC_END_OF_INITIALIZATION|SC_END_OF_UPDATE|SC_BEFORE_TIMESTEP)
+In file: <removed by verify.pl>
+phase_tracer_0: before_end_of_elaboration: 0 callbacks called.
+phase_tracer_0: phase callback SC_BEFORE_END_OF_ELABORATION: 0 s -> pending activity: MAX
+phase_tracer_0: end_of_elaboration: 1 callbacks called.
+phase_tracer_0: phase callback SC_END_OF_ELABORATION: 0 s -> pending activity: MAX
+phase_tracer_0: start_of_simulation: 2 callbacks called.
+
+Warning: (W552) register simulation phase callback: phase_tracer_0: elaboration done
+	 SC_ELABORATION callback(s) ignored
+In file: <removed by verify.pl>
+phase_tracer_0: phase callback SC_START_OF_SIMULATION: 0 s -> pending activity: MAX
+phase_tracer_0: phase callback SC_END_OF_INITIALIZATION: 0 s -> pending activity: 0 s
+phase_tracer_0.timed: 0 s: 0
+phase_tracer_0.delta: 0 s: 0
+phase_tracer_0: phase callback SC_END_OF_UPDATE: 0 s -> pending activity: 0 s
+phase_tracer_0.delta: 0 s: 1
+phase_tracer_0: phase callback SC_END_OF_UPDATE: 0 s -> pending activity: 100 ns
+
+Warning: (W553) forbidden action in simulation phase callback: SC_END_OF_UPDATE:
+	 delta notification of `phase_tracer_0.event_0' ignored
+In file: <removed by verify.pl>
+phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 0 s -> pending activity: 100 ns
+
+Warning: (W553) forbidden action in simulation phase callback: SC_BEFORE_TIMESTEP:
+	 delta notification of `phase_tracer_0.event_0' ignored
+In file: <removed by verify.pl>
+phase_tracer_0.timed: 100 ns: 1
+phase_tracer_0: phase callback SC_END_OF_UPDATE: 100 ns -> pending activity: 0 s
+phase_tracer_0.delta: 100 ns: 2
+phase_tracer_0: phase callback SC_END_OF_UPDATE: 100 ns -> pending activity: 100 ns
+
+Warning: (W553) forbidden action in simulation phase callback: SC_END_OF_UPDATE:
+	 timed notification of `phase_tracer_0.event_0' ignored
+In file: <removed by verify.pl>
+phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 100 ns -> pending activity: 100 ns
+
+Warning: (W553) forbidden action in simulation phase callback: SC_BEFORE_TIMESTEP:
+	 timed notification of `phase_tracer_0.event_0' ignored
+In file: <removed by verify.pl>
+phase_tracer_0.timed: 200 ns: 2
+phase_tracer_0: phase callback SC_END_OF_UPDATE: 200 ns -> pending activity: 0 s
+phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 200 ns -> pending activity: 100 ns
+phase_tracer_0.timed: 300 ns: 3
+phase_tracer_0: phase callback SC_END_OF_UPDATE: 300 ns -> pending activity: 0 s
+phase_tracer_0.delta: 300 ns: 3
+phase_tracer_0: phase callback SC_END_OF_UPDATE: 300 ns -> pending activity: 100 ns
+phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 300 ns -> pending activity: 100 ns
+phase_tracer_0.timed: 400 ns: 4
+phase_tracer_0: phase callback SC_END_OF_UPDATE: 400 ns -> pending activity: 0 s
+phase_tracer_0.delta: 400 ns: 4
+phase_tracer_0: phase callback SC_END_OF_UPDATE: 400 ns -> pending activity: 100 ns
+phase_tracer_0: phase callback SC_BEFORE_TIMESTEP: 400 ns -> pending activity: 100 ns
+phase_tracer_0.timed: 500 ns: 5
+phase_tracer_0: phase callback SC_END_OF_UPDATE: 500 ns -> pending activity: MAX
+
+Info: /OSCI/SystemC: Simulation stopped by user.
+phase_tracer_0: end_of_simulation: 19 callbacks called.
+phase_tracer_0: phase callback SC_END_OF_SIMULATION: 500 ns -> pending activity: MAX
+phase_tracer_0: phase callback SC_STOPPED: 500 ns -> pending activity: MAX
+phase_tracer_0: [destructor]: 21 callbacks called.
