@@ -87,6 +87,12 @@ namespace Gcn3ISA
       protected:
         // first instruction DWORD
         InFmt_SOPK instData;
+        // possible second DWORD
+        InstFormat extData;
+        uint32_t varSize;
+
+      private:
+        bool hasSecondDword(InFmt_SOPK *);
     }; // Inst_SOPK
 
     class Inst_SOP1 : public GCN3GPUStaticInst
