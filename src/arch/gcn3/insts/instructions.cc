@@ -28671,9 +28671,65 @@ namespace Gcn3ISA
     void
     Inst_VOP3__V_DIV_FIXUP_F32::execute(GPUDynInstPtr gpuDynInst)
     {
-        // Could not parse sq_uc.arch desc field
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandF32 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandF32 src1(gpuDynInst, extData.SRC1);
+        ConstVecOperandF32 src2(gpuDynInst, extData.SRC2);
+        VecOperandF32 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.readSrc();
+        src2.readSrc();
+
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (instData.ABS & 0x4) {
+            src2.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        if (extData.NEG & 0x4) {
+            src2.negModifier();
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                if (std::fpclassify(src1[lane]) == FP_ZERO) {
+                    if (std::signbit(src1[lane])) {
+                        vdst[lane] = -INFINITY;
+                    } else {
+                        vdst[lane] = +INFINITY;
+                    }
+                } else if (std::isnan(src2[lane]) || std::isnan(src1[lane])) {
+                    vdst[lane] = NAN;
+                } else if (std::isinf(src1[lane])) {
+                    if (std::signbit(src1[lane])) {
+                        vdst[lane] = -INFINITY;
+                    } else {
+                        vdst[lane] = +INFINITY;
+                    }
+                } else {
+                    vdst[lane] = src2[lane] / src1[lane];
+                }
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP3__V_DIV_FIXUP_F64 class methods ---
 
     Inst_VOP3__V_DIV_FIXUP_F64::Inst_VOP3__V_DIV_FIXUP_F64(InFmt_VOP3 *iFmt)
         : Inst_VOP3(iFmt, "v_div_fixup_f64", false)
