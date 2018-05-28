@@ -32,13 +32,19 @@ import sys
 
 from slicc.parser import SLICC
 
-usage="%prog [options] <files> ... "
+usage="%prog [options] <slicc file> ... "
 version="%prog v0.4"
 brief_copyright='''
 Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 Copyright (c) 2009 The Hewlett-Packard Development Company
 All Rights Reserved.
 '''
+help_details = '''This is intended to be used to process slicc files as a
+standalone script. This script assumes that it is running in a directory under
+gem5/ (e.g., gem5/temp). It takes a single argument: The path to a *.slicc
+file. By default it generates the C++ code in the directory generated/. This
+script can also generate the html SLICC output. See src/mem/slicc/main.py for
+more details.'''
 
 def nprint(format, *args):
     pass
@@ -53,6 +59,7 @@ def main(args=None):
     import optparse
 
     parser = optparse.OptionParser(usage=usage, version=version,
+                                   epilog=help_details,
                                    description=brief_copyright)
     parser.add_option("-d", "--debug", default=False, action="store_true",
                       help="Turn on PLY debugging")
@@ -60,7 +67,7 @@ def main(args=None):
                       help="Path where C++ code output code goes")
     parser.add_option("-H", "--html-path",
                       help="Path where html output goes")
-    parser.add_option("-F", "--print-files",
+    parser.add_option("-F", "--print-files", action='store_true',
                       help="Print files that SLICC will generate")
     parser.add_option("--tb", "--traceback", action='store_true',
                       help="print traceback on error")
@@ -72,12 +79,21 @@ def main(args=None):
         parser.print_help()
         sys.exit(2)
 
+    slicc_file = files[0]
+    if not slicc_file.endswith('.slicc'):
+        print("Must specify a .slicc file with a list of state machine files")
+        parser.print_help()
+        sys.exit(2)
+
     output = nprint if opts.quiet else eprint
 
     output("SLICC v0.4")
     output("Parsing...")
 
-    slicc = SLICC(files[0], verbose=True, debug=opts.debug, traceback=opts.tb)
+    protocol_base = os.path.join(os.path.dirname(__file__), '..', 'protocol')
+    slicc = SLICC(slicc_file, protocol_base, verbose=True, debug=opts.debug,
+                  traceback=opts.tb)
+
 
     if opts.print_files:
         for i in sorted(slicc.files()):
@@ -86,12 +102,13 @@ def main(args=None):
         output("Processing AST...")
         slicc.process()
 
-        output("Writing C++ files...")
-        slicc.writeCodeFiles(opts.code_path)
-
         if opts.html_path:
             output("Writing HTML files...")
             slicc.writeHTMLFiles(opts.html_path)
+
+        output("Writing C++ files...")
+        slicc.writeCodeFiles(opts.code_path, [])
+
 
     output("SLICC is Done.")
 
