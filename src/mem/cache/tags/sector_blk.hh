@@ -49,7 +49,7 @@ class SectorBlk;
  */
 class SectorSubBlk : public CacheBlk
 {
-  private:
+  protected:
     /**
      * Sector block associated to this block.
      */
@@ -144,7 +144,7 @@ class SectorSubBlk : public CacheBlk
  */
 class SectorBlk : public ReplaceableEntry
 {
-  private:
+  protected:
     /**
      * Sector tag value. A sector's tag is the tag of all its sub-blocks.
      */

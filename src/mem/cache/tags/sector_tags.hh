@@ -57,6 +57,12 @@ class ReplaceableEntry;
  */
 class SectorTags : public BaseTags
 {
+  private:
+    /** The cache blocks. */
+    std::vector<SectorSubBlk> blks;
+    /** The cache sector blocks. */
+    std::vector<SectorBlk> secBlks;
+
   protected:
     /** The allocatable associativity of the cache (alloc mask). */
     unsigned allocAssoc;
@@ -72,11 +78,6 @@ class SectorTags : public BaseTags
 
     /** The number of sectors in the cache. */
     const unsigned numSectors;
-
-    /** The cache blocks. */
-    std::vector<SectorSubBlk> blks;
-    /** The cache sector blocks. */
-    std::vector<SectorBlk> secBlks;
 
     // Organization of an address:
     // Tag | Placement Location | Sector Offset # | Offset #
