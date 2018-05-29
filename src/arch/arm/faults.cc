@@ -601,6 +601,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     pc.nextJazelle(pc.jazelle());
     pc.aarch64(!cpsr.width);
     pc.nextAArch64(!cpsr.width);
+    pc.illegalExec(false);
     tc->pcState(pc);
 }
 
@@ -684,6 +685,7 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     PCState pc(new_pc);
     pc.aarch64(!cpsr.width);
     pc.nextAArch64(!cpsr.width);
+    pc.illegalExec(false);
     tc->pcState(pc);
 
     // If we have a valid instruction then use it to annotate this fault with

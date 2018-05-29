@@ -249,3 +249,13 @@ McrMrcImplDefined::generateDisassembly(Addr pc,
 {
     return csprintf("%-10s (implementation defined)", mnemonic);
 }
+
+IllegalExecInst::IllegalExecInst(ExtMachInst _machInst)
+    : ArmStaticInst("Illegal Execution", _machInst, No_OpClass)
+{}
+
+Fault
+IllegalExecInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
+{
+    return std::make_shared<IllegalInstSetStateFault>();
+}

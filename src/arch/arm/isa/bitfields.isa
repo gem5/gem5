@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010, 2011 ARM Limited
+// Copyright (c) 2010, 2011, 2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -47,6 +47,7 @@
 
 // Opcode fields
 def bitfield DECODERFAULT  decoderFault;
+def bitfield ILLEGALEXEC   illegalExecution;
 
 def bitfield ENCODING      encoding;
 def bitfield OPCODE        opcode;

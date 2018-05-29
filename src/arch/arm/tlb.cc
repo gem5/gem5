@@ -1145,11 +1145,6 @@ TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
     }
 
     if (fault == NoFault) {
-        // Generate Illegal Inst Set State fault if IL bit is set in CPSR
-        if (aarch64 && is_fetch && cpsr.il == 1) {
-            return std::make_shared<IllegalInstSetStateFault>();
-        }
-
         // Don't try to finalize a physical address unless the
         // translation has completed (i.e., there is a table entry).
         return te ? finalizePhysical(req, tc, mode) : NoFault;

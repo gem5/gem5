@@ -704,6 +704,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
         PCState pc = tc->pcState();
         pc.nextThumb(cpsr.t);
         pc.nextJazelle(cpsr.j);
+        pc.illegalExec(cpsr.il == 1);
 
         // Follow slightly different semantics if a CheckerCPU object
         // is connected

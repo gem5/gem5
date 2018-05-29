@@ -161,4 +161,19 @@ class McrMrcImplDefined : public McrMrcMiscInst
 
 };
 
+/**
+ * This class is modelling instructions which are not going to be
+ * executed since they are flagged as Illegal Execution Instructions
+ * (PSTATE.IL = 1 or CPSR.IL = 1).
+ * The sole purpose of this instruction is to generate an appropriate
+ * fault when executed.
+ */
+class IllegalExecInst : public ArmStaticInst
+{
+  public:
+    IllegalExecInst(ExtMachInst _machInst);
+
+    Fault execute(ExecContext *xc, Trace::InstRecord *traceData) const;
+};
+
 #endif

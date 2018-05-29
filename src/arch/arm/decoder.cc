@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 ARM Limited
+ * Copyright (c) 2012-2014,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -179,6 +179,8 @@ Decoder::decode(ArmISA::PCState &pc)
     if (foundIt)
         pc.nextItstate(itBits);
     this_emi.itstate = pc.itstate();
+    this_emi.illegalExecution = pc.illegalExec() ? 1 : 0;
+
     pc.size(inst_size);
 
     emi = 0;
