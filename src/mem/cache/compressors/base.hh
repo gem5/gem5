@@ -40,6 +40,7 @@
 
 #include <cstdint>
 
+#include "base/statistics.hh"
 #include "base/types.hh"
 #include "sim/sim_object.hh"
 
@@ -62,6 +63,18 @@ class BaseCacheCompressor : public SimObject {
      * Uncompressed cache line size (in bytes).
      */
     const std::size_t blkSize;
+
+    /**
+     * @defgroup CompressionStats Compression specific statistics.
+     * @{
+     */
+
+    /** Number of blocks that were compressed to this power of two size. */
+    Stats::Vector compressionSize;
+
+    /**
+     * @}
+     */
 
     /**
      * Apply the compression process to the cache line.
@@ -136,6 +149,11 @@ class BaseCacheCompressor : public SimObject {
      * @param size_bits The block size.
      */
     static void setSizeBits(CacheBlk* blk, const std::size_t size_bits);
+
+    /**
+     * Register local statistics.
+     */
+    void regStats() override;
 };
 
 class BaseCacheCompressor::CompressionData {

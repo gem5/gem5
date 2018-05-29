@@ -36,6 +36,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <string>
 
 #include "debug/CacheComp.hh"
 #include "mem/cache/tags/super_blk.hh"
@@ -100,6 +101,9 @@ BaseCacheCompressor::compress(const uint64_t* data, Cycles& comp_lat,
     // Get compression size
     comp_size_bits = comp_data->getSizeBits();
 
+    // Update stats
+    compressionSize[std::ceil(std::log2(comp_size_bits))]++;
+
     // Print debug information
     DPRINTF(CacheComp, "Compressed cache line from %d to %d bits. " \
             "Compression latency: %llu, decompression latency: %llu\n",
@@ -138,5 +142,25 @@ BaseCacheCompressor::setSizeBits(CacheBlk* blk, const std::size_t size_bits)
 
     // Assign size
     static_cast<CompressionBlk*>(blk)->setSizeBits(size_bits);
+}
+
+void
+BaseCacheCompressor::regStats()
+{
+    SimObject::regStats();
+
+    // We also store when compression is bigger than original block size
+    compressionSize
+        .init(std::log2(blkSize*8) + 2)
+        .name(name() + ".compression_size")
+        .desc("Number of blocks that were compressed to this power of" \
+              "two size.")
+        ;
+
+    for (unsigned i = 0; i <= std::log2(blkSize*8) + 1; ++i) {
+        compressionSize.subname(i, std::to_string(1 << i));
+        compressionSize.subdesc(i, "Number of blocks that compressed to fit " \
+                                   "in " + std::to_string(1 << i) + " bits");
+    }
 }
 
