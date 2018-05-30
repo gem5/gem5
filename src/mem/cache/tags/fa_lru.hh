@@ -50,6 +50,7 @@
 #define __MEM_CACHE_TAGS_FA_LRU_HH__
 
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <unordered_map>
 
@@ -240,28 +241,19 @@ class FALRU : public BaseTags
         return blk->tag;
     }
 
-    /**
-     * @todo Implement as in lru. Currently not used
-     */
-    virtual std::string print() const override { return ""; }
-
-    /**
-     * Visit each block in the tag store and apply a visitor to the
-     * block.
-     *
-     * The visitor should be a function (or object that behaves like a
-     * function) that takes a cache block reference as its parameter
-     * and returns a bool. A visitor can request the traversal to be
-     * stopped by returning false, returning true causes it to be
-     * called for the next block in the tag store.
-     *
-     * \param visitor Visitor to call on each block.
-     */
-    void forEachBlk(CacheBlkVisitor &visitor) override {
+    void forEachBlk(std::function<void(CacheBlk &)> visitor) override {
         for (int i = 0; i < numBlocks; i++) {
-            if (!visitor(blks[i]))
-                return;
+            visitor(blks[i]);
         }
+    }
+
+    bool anyBlk(std::function<bool(CacheBlk &)> visitor) override {
+        for (int i = 0; i < numBlocks; i++) {
+            if (visitor(blks[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 
   private:

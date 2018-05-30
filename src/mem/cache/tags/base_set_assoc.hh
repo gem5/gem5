@@ -48,6 +48,7 @@
 #ifndef __MEM_CACHE_TAGS_BASE_SET_ASSOC_HH__
 #define __MEM_CACHE_TAGS_BASE_SET_ASSOC_HH__
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -298,38 +299,19 @@ class BaseSetAssoc : public BaseTags
         return ((blk->tag << tagShift) | ((Addr)blk->set << setShift));
     }
 
-    /**
-     * Called at end of simulation to complete average block reference stats.
-     */
-    void cleanupRefs() override;
-
-    /**
-     * Print all tags used
-     */
-    std::string print() const override;
-
-    /**
-     * Called prior to dumping stats to compute task occupancy
-     */
-    void computeStats() override;
-
-    /**
-     * Visit each block in the tag store and apply a visitor to the
-     * block.
-     *
-     * The visitor should be a function (or object that behaves like a
-     * function) that takes a cache block reference as its parameter
-     * and returns a bool. A visitor can request the traversal to be
-     * stopped by returning false, returning true causes it to be
-     * called for the next block in the tag store.
-     *
-     * \param visitor Visitor to call on each block.
-     */
-    void forEachBlk(CacheBlkVisitor &visitor) override {
+    void forEachBlk(std::function<void(CacheBlk &)> visitor) override {
         for (CacheBlk& blk : blks) {
-            if (!visitor(blk))
-                return;
+            visitor(blk);
         }
+    }
+
+    bool anyBlk(std::function<bool(CacheBlk &)> visitor) override {
+        for (CacheBlk& blk : blks) {
+            if (visitor(blk)) {
+                return true;
+            }
+        }
+        return false;
     }
 };
 

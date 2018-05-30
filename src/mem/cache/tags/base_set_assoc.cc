@@ -47,11 +47,9 @@
 
 #include "mem/cache/tags/base_set_assoc.hh"
 
-#include <cassert>
 #include <string>
 
 #include "base/intmath.hh"
-#include "mem/request.hh"
 
 BaseSetAssoc::BaseSetAssoc(const Params *p)
     :BaseTags(p), assoc(p->assoc), allocAssoc(p->assoc),
@@ -132,64 +130,6 @@ CacheBlk*
 BaseSetAssoc::findBlockBySetAndWay(int set, int way) const
 {
     return sets[set].blks[way];
-}
-
-std::string
-BaseSetAssoc::print() const {
-    std::string cache_state;
-    for (const CacheBlk& blk : blks) {
-        if (blk.isValid())
-            cache_state += csprintf("\tset: %d way: %d %s\n", blk.set,
-                                    blk.way, blk.print());
-    }
-    if (cache_state.empty())
-        cache_state = "no valid tags\n";
-    return cache_state;
-}
-
-void
-BaseSetAssoc::cleanupRefs()
-{
-    for (const CacheBlk& blk : blks) {
-        if (blk.isValid()) {
-            totalRefs += blk.refCount;
-            ++sampledRefs;
-        }
-    }
-}
-
-void
-BaseSetAssoc::computeStats()
-{
-    for (unsigned i = 0; i < ContextSwitchTaskId::NumTaskId; ++i) {
-        occupanciesTaskId[i] = 0;
-        for (unsigned j = 0; j < 5; ++j) {
-            ageTaskId[i][j] = 0;
-        }
-    }
-
-    for (const CacheBlk& blk : blks) {
-        if (blk.isValid()) {
-            assert(blk.task_id < ContextSwitchTaskId::NumTaskId);
-            occupanciesTaskId[blk.task_id]++;
-            assert(blk.tickInserted <= curTick());
-            Tick age = curTick() - blk.tickInserted;
-
-            int age_index;
-            if (age / SimClock::Int::us < 10) { // <10us
-                age_index = 0;
-            } else if (age / SimClock::Int::us < 100) { // <100us
-                age_index = 1;
-            } else if (age / SimClock::Int::ms < 1) { // <1ms
-                age_index = 2;
-            } else if (age / SimClock::Int::ms < 10) { // <10ms
-                age_index = 3;
-            } else
-                age_index = 4; // >10ms
-
-            ageTaskId[blk.task_id][age_index]++;
-        }
-    }
 }
 
 BaseSetAssoc *

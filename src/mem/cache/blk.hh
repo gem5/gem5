@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2017 ARM Limited
+ * Copyright (c) 2012-2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -407,22 +407,6 @@ class CacheBlkPrintWrapper : public Printable
     virtual ~CacheBlkPrintWrapper() {}
     void print(std::ostream &o, int verbosity = 0,
                const std::string &prefix = "") const;
-};
-
-/**
- * Base class for cache block visitor, operating on the cache block
- * base class (later subclassed for the various tag classes). This
- * visitor class is used as part of the forEachBlk interface in the
- * tag classes.
- */
-class CacheBlkVisitor
-{
-  public:
-
-    CacheBlkVisitor() {}
-    virtual ~CacheBlkVisitor() {}
-
-    virtual bool operator()(CacheBlk &blk) = 0;
 };
 
 #endif //__MEM_CACHE_BLK_HH__

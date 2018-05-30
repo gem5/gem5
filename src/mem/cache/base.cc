@@ -1326,27 +1326,22 @@ BaseCache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
 void
 BaseCache::memWriteback()
 {
-    CacheBlkVisitorWrapper visitor(*this, &BaseCache::writebackVisitor);
-    tags->forEachBlk(visitor);
+    tags->forEachBlk([this](CacheBlk &blk) { writebackVisitor(blk); });
 }
 
 void
 BaseCache::memInvalidate()
 {
-    CacheBlkVisitorWrapper visitor(*this, &BaseCache::invalidateVisitor);
-    tags->forEachBlk(visitor);
+    tags->forEachBlk([this](CacheBlk &blk) { invalidateVisitor(blk); });
 }
 
 bool
 BaseCache::isDirty() const
 {
-    CacheBlkIsDirtyVisitor visitor;
-    tags->forEachBlk(visitor);
-
-    return visitor.isDirty();
+    return tags->anyBlk([](CacheBlk &blk) { return blk.isDirty(); });
 }
 
-bool
+void
 BaseCache::writebackVisitor(CacheBlk &blk)
 {
     if (blk.isDirty()) {
@@ -1366,11 +1361,9 @@ BaseCache::writebackVisitor(CacheBlk &blk)
 
         blk.status &= ~BlkDirty;
     }
-
-    return true;
 }
 
-bool
+void
 BaseCache::invalidateVisitor(CacheBlk &blk)
 {
     if (blk.isDirty())
@@ -1381,8 +1374,6 @@ BaseCache::invalidateVisitor(CacheBlk &blk)
         assert(!blk.isDirty());
         invalidateBlock(&blk);
     }
-
-    return true;
 }
 
 Tick

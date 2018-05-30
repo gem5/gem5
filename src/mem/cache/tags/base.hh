@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014,2016-2017 ARM Limited
+ * Copyright (c) 2012-2014,2016-2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -50,6 +50,7 @@
 #define __MEM_CACHE_TAGS_BASE_HH__
 
 #include <cassert>
+#include <functional>
 #include <string>
 
 #include "base/callback.hh"
@@ -177,17 +178,17 @@ class BaseTags : public ClockedObject
      * Average in the reference count for valid blocks when the simulation
      * exits.
      */
-    virtual void cleanupRefs() {}
+    void cleanupRefs();
 
     /**
      * Computes stats just prior to dump event
      */
-    virtual void computeStats() {}
+    void computeStats();
 
     /**
      * Print all tags used
      */
-    virtual std::string print() const = 0;
+    std::string print();
 
     /**
      * Find a block using the memory address
@@ -289,7 +290,42 @@ class BaseTags : public ClockedObject
 
     virtual int extractSet(Addr addr) const = 0;
 
-    virtual void forEachBlk(CacheBlkVisitor &visitor) = 0;
+
+    /**
+     * Visit each block in the tags and apply a visitor
+     *
+     * The visitor should be a std::function that takes a cache block
+     * reference as its parameter.
+     *
+     * @param visitor Visitor to call on each block.
+     */
+    virtual void forEachBlk(std::function<void(CacheBlk &)> visitor) = 0;
+
+    /**
+     * Find if any of the blocks satisfies a condition
+     *
+     * The visitor should be a std::function that takes a cache block
+     * reference as its parameter. The visitor will terminate the
+     * traversal early if the condition is satisfied.
+     *
+     * @param visitor Visitor to call on each block.
+     */
+    virtual bool anyBlk(std::function<bool(CacheBlk &)> visitor) = 0;
+
+  private:
+    /**
+     * Update the reference stats using data from the input block
+     *
+     * @param blk The input block
+     */
+    void cleanupRefsVisitor(CacheBlk &blk);
+
+    /**
+     * Update the occupancy and age stats using data from the input block
+     *
+     * @param blk The input block
+     */
+    void computeStatsVisitor(CacheBlk &blk);
 };
 
 class BaseTagsCallback : public Callback
