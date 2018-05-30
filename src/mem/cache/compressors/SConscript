@@ -34,3 +34,4 @@ SimObject('Compressors.py')
 
 Source('base.cc')
 Source('bdi.cc')
+Source('cpack.cc')

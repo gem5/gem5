@@ -45,3 +45,8 @@ class BDI(BaseCacheCompressor):
     use_more_compressors = Param.Bool(True, "True if should use all possible" \
         "combinations of base and delta for the compressors. False if using" \
         "only the lowest possible delta size for each base size.");
+
+class CPack(BaseCacheCompressor):
+    type = 'CPack'
+    cxx_class = 'CPack'
+    cxx_header = "mem/cache/compressors/cpack.hh"
