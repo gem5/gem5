@@ -33,6 +33,7 @@
 #include "python/pybind11/pybind.hh"
 #include "sim/init.hh"
 #include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 // A default version of this function in case one isn't otherwise defined.
 // This ensures everything will link properly whether or not the user defined
@@ -107,6 +108,11 @@ systemc_pybind(pybind11::module &m_internal)
 }
 EmbeddedPyBind embed_("systemc", &systemc_pybind);
 
+sc_stop_mode _stop_mode = SC_STOP_FINISH_DELTA;
+sc_status _status = SC_ELABORATION;
+
+uint64_t _deltaCycles = 0;
+
 } // anonymous namespace
 
 int
@@ -142,14 +148,18 @@ sc_start(const sc_time &time, sc_starvation_policy p)
 void
 sc_set_stop_mode(sc_stop_mode mode)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (sc_is_running()) {
+        SC_REPORT_ERROR("attempt to set sc_stop mode "
+                        "after start will be ignored", "");
+        return;
+    }
+    _stop_mode = mode;
 }
 
 sc_stop_mode
 sc_get_stop_mode()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return SC_STOP_FINISH_DELTA;
+    return _stop_mode;
 }
 
 void
@@ -168,15 +178,13 @@ sc_time_stamp()
 sc_dt::uint64
 sc_delta_count()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
+    return _deltaCycles;
 }
 
 bool
 sc_is_running()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return _status & (SC_RUNNING | SC_PAUSED);
 }
 
 bool
@@ -196,8 +204,8 @@ sc_pending_activity_at_future_time()
 bool
 sc_pending_activity()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return sc_pending_activity_at_current_time() ||
+           sc_pending_activity_at_future_time();
 }
 
 sc_time
@@ -210,8 +218,7 @@ sc_time_to_pending_activity()
 sc_status
 sc_get_status()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return SC_ELABORATION;
+    return _status;
 }
 
 } // namespace sc_core
