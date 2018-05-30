@@ -121,4 +121,97 @@ sc_argv()
     return _argv;
 }
 
+void
+sc_start()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_pause()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_start(const sc_time &time, sc_starvation_policy p)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_set_stop_mode(sc_stop_mode mode)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+sc_stop_mode
+sc_get_stop_mode()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return SC_STOP_FINISH_DELTA;
+}
+
+void
+sc_stop()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+const sc_time &
+sc_time_stamp()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *(sc_time *)nullptr;
+}
+
+sc_dt::uint64
+sc_delta_count()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return 0;
+}
+
+bool
+sc_is_running()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
+}
+
+bool
+sc_pending_activity_at_current_time()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
+}
+
+bool
+sc_pending_activity_at_future_time()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
+}
+
+bool
+sc_pending_activity()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
+}
+
+sc_time
+sc_time_to_pending_activity()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return sc_time();
+}
+
+sc_status
+sc_get_status()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return SC_ELABORATION;
+}
+
 } // namespace sc_core
