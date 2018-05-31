@@ -1136,14 +1136,13 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
     } else {
         // existing block... probably an upgrade
         assert(blk->tag == tags->extractTag(addr));
+        assert(blk->isSecure() == is_secure);
         // either we're getting new data or the block should already be valid
         assert(pkt->hasData() || blk->isValid());
         // don't clear block status... if block is already dirty we
         // don't want to lose that
     }
 
-    if (is_secure)
-        blk->status |= BlkSecure;
     blk->status |= BlkValid | BlkReadable;
 
     // sanity check for whole-line writes, which should always be

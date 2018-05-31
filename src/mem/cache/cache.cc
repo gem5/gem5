@@ -887,7 +887,6 @@ Cache::cleanEvictBlk(CacheBlk *blk)
     return pkt;
 }
 
-
 /////////////////////////////////////////////////////
 //
 // Snoop path: requests coming in from the memory side
