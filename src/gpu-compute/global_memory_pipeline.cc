@@ -206,6 +206,20 @@ GlobalMemPipeline::exec()
                 std::make_pair(mp, false)));
         }
 
+        if (!mp->isMemSync() && !mp->isEndOfKernel() && mp->allLanesZero()) {
+            /**
+            * Memory accesses instructions that do not generate any memory
+            * requests (such as out-of-bounds buffer acceses where all lanes
+            * are out of bounds) will not trigger a callback to complete the
+            * request, so we need to mark it as completed as soon as it is
+            * issued.  Note this this will still insert an entry in the
+            * ordered return FIFO such that waitcnt is still resolved
+            * correctly.
+            */
+            handleResponse(mp);
+            computeUnit->getTokenManager()->recvTokens(1);
+        }
+
         gmIssuedRequests.pop();
 
         DPRINTF(GPUMem, "CU%d: WF[%d][%d] Popping 0 mem_op = \n",

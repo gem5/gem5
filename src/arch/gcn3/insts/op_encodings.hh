@@ -40,6 +40,7 @@
 #include "arch/gcn3/gpu_mem_helpers.hh"
 #include "arch/gcn3/insts/gpu_static_inst.hh"
 #include "arch/gcn3/operand.hh"
+#include "debug/GCN3.hh"
 #include "debug/GPUExec.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
@@ -489,14 +490,26 @@ namespace Gcn3ISA
         void
         initMemRead(GPUDynInstPtr gpuDynInst)
         {
+            // temporarily modify exec_mask to supress memory accesses to oob
+            // regions.  Only issue memory requests for lanes that have their
+            // exec_mask set and are not out of bounds.
+            VectorMask old_exec_mask = gpuDynInst->exec_mask;
+            gpuDynInst->exec_mask &= ~oobMask;
             initMemReqHelper<T, 1>(gpuDynInst, MemCmd::ReadReq);
+            gpuDynInst->exec_mask = old_exec_mask;
         }
 
         template<typename T>
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
         {
+            // temporarily modify exec_mask to supress memory accesses to oob
+            // regions.  Only issue memory requests for lanes that have their
+            // exec_mask set and are not out of bounds.
+            VectorMask old_exec_mask = gpuDynInst->exec_mask;
+            gpuDynInst->exec_mask &= ~oobMask;
             initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
+            gpuDynInst->exec_mask = old_exec_mask;
         }
 
         void
@@ -566,6 +579,42 @@ namespace Gcn3ISA
 
                     buf_off = v_off[lane] + inst_offset;
 
+
+                    /**
+                     * Range check behavior causes out of range accesses to
+                     * to be treated differently. Out of range accesses return
+                     * 0 for loads and are ignored for stores. For
+                     * non-formatted accesses, this is done on a per-lane
+                     * basis.
+                     */
+                    if (rsrc_desc.stride == 0 || !rsrc_desc.swizzleEn) {
+                        if (buf_off + stride * buf_idx >=
+                            rsrc_desc.numRecords - s_offset.rawData()) {
+                            DPRINTF(GCN3, "mubuf out-of-bounds condition 1: "
+                                    "lane = %d, buffer_offset = %llx, "
+                                    "const_stride = %llx, "
+                                    "const_num_records = %llx\n",
+                                    lane, buf_off + stride * buf_idx,
+                                    rsrc_desc.stride, rsrc_desc.numRecords);
+                            oobMask.set(lane);
+                            continue;
+                        }
+                    }
+
+                    if (rsrc_desc.stride != 0 && rsrc_desc.swizzleEn) {
+                        if (buf_idx >= rsrc_desc.numRecords ||
+                            buf_off >= stride) {
+                            DPRINTF(GCN3, "mubuf out-of-bounds condition 2: "
+                                    "lane = %d, offset = %llx, "
+                                    "index = %llx, "
+                                    "const_num_records = %llx\n",
+                                    lane, buf_off, buf_idx,
+                                    rsrc_desc.numRecords);
+                            oobMask.set(lane);
+                            continue;
+                        }
+                    }
+
                     if (rsrc_desc.swizzleEn) {
                         Addr idx_stride = 8 << rsrc_desc.idxStride;
                         Addr elem_size = 2 << rsrc_desc.elemSize;
@@ -573,6 +622,12 @@ namespace Gcn3ISA
                         Addr idx_lsb = buf_idx % idx_stride;
                         Addr off_msb = buf_off / elem_size;
                         Addr off_lsb = buf_off % elem_size;
+                        DPRINTF(GCN3, "mubuf swizzled lane %d: "
+                                "idx_stride = %llx, elem_size = %llx, "
+                                "idx_msb = %llx, idx_lsb = %llx, "
+                                "off_msb = %llx, off_lsb = %llx\n",
+                                lane, idx_stride, elem_size, idx_msb, idx_lsb,
+                                off_msb, off_lsb);
 
                         vaddr += ((idx_msb * stride + off_msb * elem_size)
                             * idx_stride + idx_lsb * elem_size + off_lsb);
@@ -580,6 +635,11 @@ namespace Gcn3ISA
                         vaddr += buf_off + stride * buf_idx;
                     }
 
+                    DPRINTF(GCN3, "Calculating mubuf address for lane %d: "
+                            "vaddr = %llx, base_addr = %llx, "
+                            "stride = %llx, buf_idx = %llx, buf_off = %llx\n",
+                            lane, vaddr, base_addr, stride,
+                            buf_idx, buf_off);
                     gpuDynInst->addr.at(lane) = vaddr;
                 }
             }
@@ -589,6 +649,10 @@ namespace Gcn3ISA
         InFmt_MUBUF instData;
         // second instruction DWORD
         InFmt_MUBUF_1 extData;
+        // Mask of lanes with out-of-bounds accesses.  Needs to be tracked
+        // seperately from the exec_mask so that we remember to write zero
+        // to the registers associated with out of bounds lanes.
+        VectorMask oobMask;
     }; // Inst_MUBUF
 
     class Inst_MTBUF : public GCN3GPUStaticInst

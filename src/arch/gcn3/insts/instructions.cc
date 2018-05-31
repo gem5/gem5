@@ -34453,8 +34453,12 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
-                vdst[lane] = (VecElemU32)((reinterpret_cast<VecElemU8*>(
-                    gpuDynInst->d_data))[lane]);
+                if (!oobMask[lane]) {
+                    vdst[lane] = (VecElemU32)((reinterpret_cast<VecElemU8*>(
+                        gpuDynInst->d_data))[lane]);
+                } else {
+                    vdst[lane] = 0;
+                }
             }
         }
 
@@ -34580,8 +34584,12 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
-                vdst[lane] = (VecElemU32)((reinterpret_cast<VecElemU16*>(
-                    gpuDynInst->d_data))[lane]);
+                if (!oobMask[lane]) {
+                    vdst[lane] = (VecElemU32)((reinterpret_cast<VecElemU16*>(
+                        gpuDynInst->d_data))[lane]);
+                } else {
+                    vdst[lane] = 0;
+                }
             }
         }
 
@@ -34707,8 +34715,12 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
-                vdst[lane] = (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane];
+                if (!oobMask[lane]) {
+                    vdst[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane];
+                } else {
+                    vdst[lane] = 0;
+                }
             }
         }
 
