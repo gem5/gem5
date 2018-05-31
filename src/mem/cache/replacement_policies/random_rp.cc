@@ -86,7 +86,7 @@ RandomRP::getVictim(const ReplacementCandidates& candidates) const
 std::shared_ptr<ReplacementData>
 RandomRP::instantiateEntry()
 {
-    return std::shared_ptr<ReplacementData>(new ReplacementData());
+    return std::shared_ptr<ReplacementData>(new RandomReplData());
 }
 
 RandomRP*
