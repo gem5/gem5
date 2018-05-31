@@ -378,11 +378,12 @@ class SortedIncludes(Verifier):
     @safefix
     def fix(self, filename, regions=all_regions):
         f = self.open(filename, 'r+')
+        norm_fname = self.normalize_filename(filename)
 
         old = f.readlines()
         lines = [ l.rstrip('\n') for l in old ]
         language = lang_type(filename, lines[0])
-        sort_lines = list(self.sort_includes(lines, filename, language))
+        sort_lines = list(self.sort_includes(lines, norm_fname, language))
         new = ''.join(line + '\n' for line in sort_lines)
 
         f.seek(0)
