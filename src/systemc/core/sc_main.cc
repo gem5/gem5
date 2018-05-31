@@ -29,8 +29,11 @@
 
 #include <cstring>
 
+#include "base/fiber.hh"
 #include "base/logging.hh"
+#include "base/types.hh"
 #include "python/pybind11/pybind.hh"
+#include "sim/eventq.hh"
 #include "sim/init.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -56,6 +59,17 @@ bool scMainCalled = false;
 
 int _argc = 0;
 char **_argv = NULL;
+
+class ScMainFiber : public Fiber
+{
+    void
+    main()
+    {
+        ::sc_main(_argc, _argv);
+    }
+};
+
+ScMainFiber scMainFiber;
 
 // This wrapper adapts the python version of sc_main to the c++ version.
 void
@@ -94,8 +108,7 @@ sc_main(pybind11::args args)
     // again later.
     scMainCalled = true;
 
-    //TODO Start a new fiber to call sc_main from.
-    ::sc_main(_argc, _argv);
+    scMainFiber.run();
 }
 
 // Make our sc_main wrapper available in the internal _m5 python module under
@@ -110,6 +123,9 @@ EmbeddedPyBind embed_("systemc", &systemc_pybind);
 
 sc_stop_mode _stop_mode = SC_STOP_FINISH_DELTA;
 sc_status _status = SC_ELABORATION;
+
+Tick _max_tick = MaxTick;
+sc_starvation_policy _starvation = SC_EXIT_ON_STARVATION;
 
 uint64_t _deltaCycles = 0;
 
@@ -130,7 +146,11 @@ sc_argv()
 void
 sc_start()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _max_tick = MaxTick;
+    _starvation = SC_EXIT_ON_STARVATION;
+
+    // Switch back gem5.
+    Fiber::primaryFiber()->run();
 }
 
 void
@@ -142,7 +162,12 @@ sc_pause()
 void
 sc_start(const sc_time &time, sc_starvation_policy p)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    Tick now = curEventQueue() ? curEventQueue()->getCurTick() : 0;
+    _max_tick = now + time.value();
+    _starvation = p;
+
+    // Switch back to gem5.
+    Fiber::primaryFiber()->run();
 }
 
 void
