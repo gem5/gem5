@@ -27,38 +27,44 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_CORE_SC_MODULE_NAME_HH__
-#define __SYSTEMC_EXT_CORE_SC_MODULE_NAME_HH__
+#include "systemc/core/module.hh"
 
-namespace sc_gem5
+#include <list>
+
+#include "base/logging.hh"
+
+namespace SystemC
 {
 
-class Module;
-
-} // namespace sc_gem5
-
-namespace sc_core
+namespace
 {
 
-class sc_module_name
+std::list<Module *> _modules;
+
+Module *_top_module = nullptr;
+
+} // anonymous namespace
+
+void
+Module::push()
 {
-  public:
-    sc_module_name(const char *);
-    sc_module_name(const sc_module_name &);
-    ~sc_module_name();
+    if (!_top_module)
+        _top_module = this;
+    _modules.push_back(this);
+}
 
-    operator const char *() const;
+void
+Module::pop()
+{
+    panic_if(_modules.size(), "Popping from empty module list.\n");
+    panic_if(_modules.back() != this,
+            "Popping module which isn't at the end of the module list.\n");
+}
 
-  private:
-    const char *_name;
-    sc_gem5::Module *_gem5_module;
-    bool _on_the_stack;
+Module *
+topModule()
+{
+    return _top_module;
+}
 
-    // Disabled
-    sc_module_name() {}
-    sc_module_name &operator = (const sc_module_name &) { return *this; }
-};
-
-} // namespace sc_core
-
-#endif  //__SYSTEMC_EXT_CORE_SC_MODULE_NAME_HH__
+} // namespace SystemC

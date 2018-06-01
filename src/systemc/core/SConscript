@@ -31,6 +31,7 @@ if env['USE_SYSTEMC']:
     SimObject('SystemC.py')
 
     Source('kernel.cc')
+    Source('module.cc')
 
     Source('sc_attr.cc')
     Source('sc_event.cc')

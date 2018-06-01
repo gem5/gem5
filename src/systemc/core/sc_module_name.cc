@@ -29,25 +29,26 @@
 
 
 #include "base/logging.hh"
+#include "systemc/core/module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
 
 namespace sc_core
 {
 
 sc_module_name::sc_module_name(const char *name) :
-    _name(name), _on_the_stack(true)
+    _name(name), _gem5_module(new SystemC::Module(name)), _on_the_stack(true)
 {
-    warn("%s: Module name not added to stack.\n", __PRETTY_FUNCTION__);
+    _gem5_module->push();
 }
 
 sc_module_name::sc_module_name(const sc_module_name &other) :
-    _name(other._name), _on_the_stack(false)
+    _name(other._name), _gem5_module(other._gem5_module), _on_the_stack(false)
 {}
 
 sc_module_name::~sc_module_name()
 {
     if (_on_the_stack) {
-        warn("%s: Module name not removed from stack.\n", __PRETTY_FUNCTION__);
+        _gem5_module->pop();
     }
 }
 

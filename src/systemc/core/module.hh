@@ -27,38 +27,35 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_CORE_SC_MODULE_NAME_HH__
-#define __SYSTEMC_EXT_CORE_SC_MODULE_NAME_HH__
+#ifndef __SYSTEMC_CORE_MODULE_HH__
+#define __SYSTEMC_CORE_MODULE_HH__
+
+namespace SystemC
+{
+
+class Module
+{
+  private:
+    const char *_name;
+
+  public:
+    Module(const char *name) : _name(name) {}
+
+    const char *name() { return _name; }
+
+    void push();
+    void pop();
+};
+
+extern Module *topModule();
+
+} // namespace SystemC
 
 namespace sc_gem5
 {
 
-class Module;
+using SystemC::Module;
 
 } // namespace sc_gem5
 
-namespace sc_core
-{
-
-class sc_module_name
-{
-  public:
-    sc_module_name(const char *);
-    sc_module_name(const sc_module_name &);
-    ~sc_module_name();
-
-    operator const char *() const;
-
-  private:
-    const char *_name;
-    sc_gem5::Module *_gem5_module;
-    bool _on_the_stack;
-
-    // Disabled
-    sc_module_name() {}
-    sc_module_name &operator = (const sc_module_name &) { return *this; }
-};
-
-} // namespace sc_core
-
-#endif  //__SYSTEMC_EXT_CORE_SC_MODULE_NAME_HH__
+#endif  //__SYSTEMC_CORE_MODULE_HH__
