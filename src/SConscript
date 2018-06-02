@@ -315,31 +315,31 @@ class UnitTest(object):
     '''Create a UnitTest'''
 
     all = []
-    def __init__(self, target, *sources, **kwargs):
-        '''Specify the target name and any sources.  Sources that are
-        not SourceFiles are evalued with Source().  All files are
-        tagged with the name of the UnitTest target.'''
+    def __init__(self, target, *srcs_and_filts, **kwargs):
+        '''Specify the target name and any sources. Sources that are
+        not SourceFiles are evalued with Source().'''
+
+        isFilter = lambda arg: isinstance(arg, SourceFilter)
+        self.filters = filter(isFilter, srcs_and_filts)
+        sources = filter(lambda a: not isFilter(a), srcs_and_filts)
 
         srcs = SourceList()
         for src in sources:
             if not isinstance(src, SourceFile):
-                src = Source(src, tags=str(target))
+                src = Source(src, tags=[])
             srcs.append(src)
 
         self.sources = srcs
         self.target = target
         self.main = kwargs.get('main', False)
         self.all.append(self)
+        self.dir = Dir('.')
 
 class GTest(UnitTest):
     '''Create a unit test based on the google test framework.'''
     all = []
     def __init__(self, *args, **kwargs):
-        isFilter = lambda arg: isinstance(arg, SourceFilter)
-        self.filters = filter(isFilter, args)
-        args = filter(lambda a: not isFilter(a), args)
         super(GTest, self).__init__(*args, **kwargs)
-        self.dir = Dir('.')
         self.skip_lib = kwargs.pop('skip_lib', False)
 
 # Children should have access
@@ -1081,12 +1081,14 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     main_objs = [ s.static(new_env) for s in Source.all.with_tag('main') ]
 
     for test in UnitTest.all:
-        test_sources = Source.all.with_tag(str(test.target))
+        test_sources = list(test.sources)
+        for f in test.filters:
+            test_sources += Source.all.apply_filter(f)
         test_objs = [ s.static(new_env) for s in test_sources ]
         if test.main:
             test_objs += main_objs
-        path = 'unittest/%s.%s' % (test.target, label)
-        new_env.Program(path, test_objs + static_objs)
+        new_env.Program(test.dir.File('%s.%s' % (test.target, label)),
+                        test_objs + static_objs)
 
     gtest_env = new_env.Clone()
     gtest_env.Append(LIBS=gtest_env['GTEST_LIBS'])

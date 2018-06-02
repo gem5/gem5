@@ -41,7 +41,7 @@ UnitTest('refcnttest', 'refcnttest.cc')
 UnitTest('strnumtest', 'strnumtest.cc')
 
 stattest_py = PySource('m5', 'stattestmain.py', tags='stattest')
-UnitTest('stattest', 'stattest.cc', stattest_py, main=True)
+UnitTest('stattest', 'stattest.cc', with_tag('stattest'), main=True)
 
 UnitTest('symtest', 'symtest.cc')
 UnitTest('tokentest', 'tokentest.cc')
