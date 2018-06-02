@@ -99,7 +99,6 @@ BaseTags::insertBlock(PacketPtr pkt, CacheBlk *blk)
     blk->insert(extractTag(addr), pkt->isSecure(), master_id,
                 pkt->req->taskId());
 
-    tagsInUse++;
     if (!warmedUp && tagsInUse.value() >= warmupBound) {
         warmedUp = true;
         warmupCycle = curTick();

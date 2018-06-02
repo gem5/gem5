@@ -122,8 +122,8 @@ class BaseSetAssoc : public BaseTags
     virtual ~BaseSetAssoc() {};
 
     /**
-     * This function updates the tags when a block is invalidated but does
-     * not invalidate the block itself. It also updates the replacement data.
+     * This function updates the tags when a block is invalidated. It also
+     * updates the replacement data.
      *
      * @param blk The block to invalidate.
      */
@@ -251,6 +251,9 @@ class BaseSetAssoc : public BaseTags
     {
         // Insert block
         BaseTags::insertBlock(pkt, blk);
+
+        // Increment tag counter
+        tagsInUse++;
 
         // Update replacement policy
         replacementPolicy->reset(blk->replacementData);

@@ -122,6 +122,9 @@ FALRU::invalidate(CacheBlk *blk)
 {
     BaseTags::invalidate(blk);
 
+    // Decrease the number of tags in use
+    tagsInUse--;
+
     // Move the block to the tail to make it the next victim
     moveToTail((FALRUBlk*)blk);
 
@@ -169,7 +172,6 @@ FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat,
     return blk;
 }
 
-
 CacheBlk*
 FALRU::findBlock(Addr addr, bool is_secure) const
 {
@@ -214,6 +216,9 @@ FALRU::insertBlock(PacketPtr pkt, CacheBlk *blk)
 
     // Do common block insertion functionality
     BaseTags::insertBlock(pkt, blk);
+
+    // Increment tag counter
+    tagsInUse++;
 
     // New block is the MRU
     moveToHead(falruBlk);
