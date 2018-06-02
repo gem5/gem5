@@ -1144,7 +1144,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         assert(!blk->isValid());
     } else {
         // existing block... probably an upgrade
-        assert(blk->tag == tags->extractTag(addr));
+        assert(regenerateBlkAddr(blk) == addr);
         assert(blk->isSecure() == is_secure);
         // either we're getting new data or the block should already be valid
         assert(pkt->hasData() || blk->isValid());
