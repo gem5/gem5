@@ -270,11 +270,12 @@ class BaseTags : public ClockedObject
      * @sa insertBlock
      *
      * @param addr Address to find a victim for.
+     * @param is_secure True if the target memory space is secure.
      * @param evict_blks Cache blocks to be evicted.
      * @return Cache block to be replaced.
      */
-    virtual CacheBlk* findVictim(Addr addr, std::vector<CacheBlk*>& evict_blks)
-                                                                     const = 0;
+    virtual CacheBlk* findVictim(Addr addr, const bool is_secure,
+                                 std::vector<CacheBlk*>& evict_blks) const = 0;
 
     virtual CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) = 0;
 

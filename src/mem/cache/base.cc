@@ -1210,7 +1210,7 @@ BaseCache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
 {
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
-    CacheBlk *victim = tags->findVictim(addr, evict_blks);
+    CacheBlk *victim = tags->findVictim(addr, is_secure, evict_blks);
 
     // It is valid to return nullptr if there is no victim
     if (!victim)

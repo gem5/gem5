@@ -195,7 +195,8 @@ FALRU::findBlockBySetAndWay(int set, int way) const
 }
 
 CacheBlk*
-FALRU::findVictim(Addr addr, std::vector<CacheBlk*>& evict_blks) const
+FALRU::findVictim(Addr addr, const bool is_secure,
+                  std::vector<CacheBlk*>& evict_blks) const
 {
     // The victim is always stored on the tail for the FALRU
     FALRUBlk* victim = tail;
