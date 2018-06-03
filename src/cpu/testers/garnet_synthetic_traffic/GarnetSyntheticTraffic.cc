@@ -129,7 +129,7 @@ GarnetSyntheticTraffic::init()
 void
 GarnetSyntheticTraffic::completeRequest(PacketPtr pkt)
 {
-    Request *req = pkt->req;
+    RequestPtr req = pkt->req;
 
     DPRINTF(GarnetSyntheticTraffic,
             "Completed injection of %s packet for address %x\n",
@@ -279,7 +279,7 @@ GarnetSyntheticTraffic::generatePkt()
     //
     MemCmd::Command requestType;
 
-    Request *req = nullptr;
+    RequestPtr req = nullptr;
     Request::Flags flags;
 
     // Inject in specific Vnet

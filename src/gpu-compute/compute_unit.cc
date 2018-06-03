@@ -1178,7 +1178,7 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
             if (!stride)
                 break;
 
-            Request *prefetch_req = new Request(0, vaddr + stride * pf *
+            RequestPtr prefetch_req = new Request(0, vaddr + stride * pf *
                                                 TheISA::PageBytes,
                                                 sizeof(uint8_t), 0,
                                                 computeUnit->masterId(),
@@ -1801,7 +1801,7 @@ ComputeUnit::sendToLds(GPUDynInstPtr gpuDynInst)
 {
     // this is just a request to carry the GPUDynInstPtr
     // back and forth
-    Request *newRequest = new Request();
+    RequestPtr newRequest = new Request();
     newRequest->setPaddr(0x0);
 
     // ReadReq is not evaluted by the LDS but the Packet ctor requires this

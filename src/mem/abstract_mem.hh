@@ -79,12 +79,12 @@ class LockedAddr {
     static Addr mask(Addr paddr) { return (paddr & ~Addr_Mask); }
 
     // check for matching execution context
-    bool matchesContext(Request *req) const
+    bool matchesContext(RequestPtr req) const
     {
         return (contextId == req->contextId());
     }
 
-    LockedAddr(Request *req) : addr(mask(req->getPaddr())),
+    LockedAddr(RequestPtr req) : addr(mask(req->getPaddr())),
                                contextId(req->contextId())
     {}
 
@@ -140,7 +140,7 @@ class AbstractMemory : public MemObject
     // this method must be called on *all* stores since even
     // non-conditional stores must clear any matching lock addresses.
     bool writeOK(PacketPtr pkt) {
-        Request *req = pkt->req;
+        RequestPtr req = pkt->req;
         if (lockedAddrList.empty()) {
             // no locked addrs: nothing to check, store_conditional fails
             bool isLLSC = pkt->isLLSC();

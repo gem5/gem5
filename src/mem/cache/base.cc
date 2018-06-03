@@ -1278,7 +1278,7 @@ BaseCache::writebackBlk(CacheBlk *blk)
 
     writebacks[Request::wbMasterId]++;
 
-    Request *req = new Request(regenerateBlkAddr(blk), blkSize, 0,
+    RequestPtr req = new Request(regenerateBlkAddr(blk), blkSize, 0,
                                Request::wbMasterId);
     if (blk->isSecure())
         req->setFlags(Request::SECURE);
@@ -1313,7 +1313,7 @@ BaseCache::writebackBlk(CacheBlk *blk)
 PacketPtr
 BaseCache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
 {
-    Request *req = new Request(regenerateBlkAddr(blk), blkSize, 0,
+    RequestPtr req = new Request(regenerateBlkAddr(blk), blkSize, 0,
                                Request::wbMasterId);
     if (blk->isSecure()) {
         req->setFlags(Request::SECURE);

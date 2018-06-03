@@ -63,7 +63,7 @@ handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
 
 template <class XC>
 inline void
-handleLockedRead(XC *xc, Request *req)
+handleLockedRead(XC *xc, RequestPtr req)
 {
 }
 
@@ -76,7 +76,7 @@ handleLockedSnoopHit(XC *xc)
 
 template <class XC>
 inline bool
-handleLockedWrite(XC *xc, Request *req, Addr cacheBlockMask)
+handleLockedWrite(XC *xc, RequestPtr req, Addr cacheBlockMask)
 {
     return true;
 }

@@ -60,7 +60,7 @@ InvalidateGenerator::initiate()
     Packet::Command cmd;
 
     // For simplicity, requests are assumed to be 1 byte-sized
-    Request *req = new Request(m_address, 1, flags, masterId);
+    RequestPtr req = new Request(m_address, 1, flags, masterId);
 
     //
     // Based on the current state, issue a load or a store

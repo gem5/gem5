@@ -531,7 +531,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
             dumpAndExit();
     }
 
-    bool checkFlags(Request *unverified_req, Addr vAddr,
+    bool checkFlags(RequestPtr unverified_req, Addr vAddr,
                     Addr pAddr, int flags);
 
     void dumpAndExit();
@@ -540,7 +540,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     SimpleThread *threadBase() { return thread; }
 
     InstResult unverifiedResult;
-    Request *unverifiedReq;
+    RequestPtr unverifiedReq;
     uint8_t *unverifiedMemData;
 
     bool changedPC;

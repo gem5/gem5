@@ -331,7 +331,7 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data, unsigned size,
     SimpleThread* thread = t_info.thread;
 
     // use the CPU's statically allocated read request and packet objects
-    Request *req = &data_read_req;
+    RequestPtr req = &data_read_req;
 
     if (traceData)
         traceData->setMem(addr, size, flags);
@@ -435,7 +435,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
     }
 
     // use the CPU's statically allocated write request and packet objects
-    Request *req = &data_write_req;
+    RequestPtr req = &data_write_req;
 
     if (traceData)
         traceData->setMem(addr, size, flags);

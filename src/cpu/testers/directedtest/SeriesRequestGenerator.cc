@@ -60,7 +60,7 @@ SeriesRequestGenerator::initiate()
     Request::Flags flags;
 
     // For simplicity, requests are assumed to be 1 byte-sized
-    Request *req = new Request(m_address, 1, flags, masterId);
+    RequestPtr req = new Request(m_address, 1, flags, masterId);
 
     Packet::Command cmd;
     bool do_write = (random_mt.random(0, 100) < m_percent_writes);

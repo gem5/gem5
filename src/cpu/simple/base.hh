@@ -129,7 +129,7 @@ class BaseSimpleCPU : public BaseCPU
 
 
     void checkForInterrupts();
-    void setupFetchRequest(Request *req);
+    void setupFetchRequest(RequestPtr req);
     void preExecute();
     void postExecute();
     void advancePC(const Fault &fault);

@@ -872,7 +872,8 @@ Cache::cleanEvictBlk(CacheBlk *blk)
     assert(!writebackClean);
     assert(blk && blk->isValid() && !blk->isDirty());
     // Creating a zero sized write, a message to the snoop filter
-    Request *req =
+
+    RequestPtr req =
         new Request(regenerateBlkAddr(blk), blkSize, 0,
                     Request::wbMasterId);
     if (blk->isSecure())

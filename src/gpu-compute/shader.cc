@@ -338,7 +338,7 @@ Shader::AccessMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
 
     for (ChunkGenerator gen(address, size, cuList.at(cu_id)->cacheLineSize());
          !gen.done(); gen.next()) {
-        Request *req = new Request(0, gen.addr(), gen.size(), 0,
+        RequestPtr req = new Request(0, gen.addr(), gen.size(), 0,
                                    cuList[0]->masterId(), 0, 0, 0);
 
         doFunctionalAccess(req, cmd, data_buf, suppress_func_errors, cu_id);

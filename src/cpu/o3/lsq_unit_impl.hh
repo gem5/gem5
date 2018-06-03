@@ -831,7 +831,7 @@ LSQUnit<Impl>::writebackStores()
 
         DynInstPtr inst = storeQueue[storeWBIdx].inst;
 
-        Request *req = storeQueue[storeWBIdx].req;
+        RequestPtr req = storeQueue[storeWBIdx].req;
         RequestPtr sreqLow = storeQueue[storeWBIdx].sreqLow;
         RequestPtr sreqHigh = storeQueue[storeWBIdx].sreqHigh;
 

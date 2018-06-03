@@ -223,7 +223,7 @@ QueuedPrefetcher::insert(AddrPriority &pf_info, bool is_secure)
     }
 
     /* Create a prefetch memory request */
-    Request *pf_req =
+    RequestPtr pf_req =
         new Request(pf_info.first, blkSize, 0, masterId);
 
     if (is_secure) {

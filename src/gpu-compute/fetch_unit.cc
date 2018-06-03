@@ -145,7 +145,7 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
     }
 
     // set up virtual request
-    Request *req = new Request(0, vaddr, size, Request::INST_FETCH,
+    RequestPtr req = new Request(0, vaddr, size, Request::INST_FETCH,
                                computeUnit->masterId(), 0, 0, 0);
 
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);

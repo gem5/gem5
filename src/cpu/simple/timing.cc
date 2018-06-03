@@ -620,7 +620,7 @@ TimingSimpleCPU::fetch()
 
     if (needToFetch) {
         _status = BaseSimpleCPU::Running;
-        Request *ifetch_req = new Request();
+        RequestPtr ifetch_req = new Request();
         ifetch_req->taskId(taskId());
         ifetch_req->setContext(thread->contextId());
         setupFetchRequest(ifetch_req);

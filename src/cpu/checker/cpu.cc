@@ -337,7 +337,7 @@ CheckerCPU::dbg_vtophys(Addr addr)
  * Checks if the flags set by the Checker and Checkee match.
  */
 bool
-CheckerCPU::checkFlags(Request *unverified_req, Addr vAddr,
+CheckerCPU::checkFlags(RequestPtr unverified_req, Addr vAddr,
                        Addr pAddr, int flags)
 {
     Addr unverifiedVAddr = unverified_req->getVaddr();

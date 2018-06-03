@@ -423,7 +423,7 @@ LSQ::SplitDataRequest::makeFragmentRequests()
             }
         }
 
-        Request *fragment = new Request();
+        RequestPtr fragment = new Request();
 
         fragment->setContext(request.contextId());
         fragment->setVirt(0 /* asid */,
@@ -452,7 +452,7 @@ LSQ::SplitDataRequest::makeFragmentPackets()
     for (unsigned int fragment_index = 0; fragment_index < numFragments;
          fragment_index++)
     {
-        Request *fragment = fragmentRequests[fragment_index];
+        RequestPtr fragment = fragmentRequests[fragment_index];
 
         DPRINTFS(MinorMem, (&port), "Making packet %d for request: %s"
             " (%d, 0x%x)\n",

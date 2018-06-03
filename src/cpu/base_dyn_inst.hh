@@ -893,9 +893,9 @@ BaseDynInst<Impl>::initiateMemRead(Addr addr, unsigned size,
                                    Request::Flags flags)
 {
     instFlags[ReqMade] = true;
-    Request *req = NULL;
-    Request *sreqLow = NULL;
-    Request *sreqHigh = NULL;
+    RequestPtr req = NULL;
+    RequestPtr sreqLow = NULL;
+    RequestPtr sreqHigh = NULL;
 
     if (instFlags[ReqMade] && translationStarted()) {
         req = savedReq;
@@ -949,9 +949,9 @@ BaseDynInst<Impl>::writeMem(uint8_t *data, unsigned size, Addr addr,
         traceData->setMem(addr, size, flags);
 
     instFlags[ReqMade] = true;
-    Request *req = NULL;
-    Request *sreqLow = NULL;
-    Request *sreqHigh = NULL;
+    RequestPtr req = NULL;
+    RequestPtr sreqLow = NULL;
+    RequestPtr sreqHigh = NULL;
 
     if (instFlags[ReqMade] && translationStarted()) {
         req = savedReq;

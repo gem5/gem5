@@ -399,7 +399,7 @@ class LSQ : public Named
 
         /** Fragment Requests corresponding to the address ranges of
          *  each fragment */
-        std::vector<Request *> fragmentRequests;
+        std::vector<RequestPtr> fragmentRequests;
 
         /** Packets matching fragmentRequests to issue fragments to memory */
         std::vector<Packet *> fragmentPackets;

@@ -136,7 +136,7 @@ MemTest::getMasterPort(const std::string &if_name, PortID idx)
 void
 MemTest::completeRequest(PacketPtr pkt, bool functional)
 {
-    Request *req = pkt->req;
+    RequestPtr req = pkt->req;
     assert(req->getSize() == 1);
 
     // this address is no longer outstanding
@@ -246,7 +246,7 @@ MemTest::tick()
 
     bool do_functional = (random_mt.random(0, 100) < percentFunctional) &&
         !uncacheable;
-    Request *req = new Request(paddr, 1, flags, masterId);
+    RequestPtr req = new Request(paddr, 1, flags, masterId);
     req->setContext(id);
 
     outstandingAddrs.insert(paddr);

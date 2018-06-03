@@ -510,11 +510,11 @@ class LSQUnit {
 
   public:
     /** Executes the load at the given index. */
-    Fault read(Request *req, Request *sreqLow, Request *sreqHigh,
+    Fault read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
                int load_idx);
 
     /** Executes the store at the given index. */
-    Fault write(Request *req, Request *sreqLow, Request *sreqHigh,
+    Fault write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
                 uint8_t *data, int store_idx);
 
     /** Returns the index of the head load instruction. */
@@ -549,7 +549,7 @@ class LSQUnit {
 
 template <class Impl>
 Fault
-LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
+LSQUnit<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
                     int load_idx)
 {
     DynInstPtr load_inst = loadQueue[load_idx];
@@ -883,7 +883,7 @@ LSQUnit<Impl>::read(Request *req, Request *sreqLow, Request *sreqHigh,
 
 template <class Impl>
 Fault
-LSQUnit<Impl>::write(Request *req, Request *sreqLow, Request *sreqHigh,
+LSQUnit<Impl>::write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
                      uint8_t *data, int store_idx)
 {
     assert(storeQueue[store_idx].inst);

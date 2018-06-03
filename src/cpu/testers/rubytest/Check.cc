@@ -107,7 +107,7 @@ Check::initiatePrefetch()
     }
 
     // Prefetches are assumed to be 0 sized
-    Request *req = new Request(m_address, 0, flags,
+    RequestPtr req = new Request(m_address, 0, flags,
             m_tester_ptr->masterId(), curTick(), m_pc);
     req->setContext(index);
 
@@ -146,7 +146,7 @@ Check::initiateFlush()
 
     Request::Flags flags;
 
-    Request *req = new Request(m_address, CHECK_SIZE, flags,
+    RequestPtr req = new Request(m_address, CHECK_SIZE, flags,
             m_tester_ptr->masterId(), curTick(), m_pc);
 
     Packet::Command cmd;
@@ -179,7 +179,7 @@ Check::initiateAction()
     Addr writeAddr(m_address + m_store_count);
 
     // Stores are assumed to be 1 byte-sized
-    Request *req = new Request(writeAddr, 1, flags, m_tester_ptr->masterId(),
+    RequestPtr req = new Request(writeAddr, 1, flags, m_tester_ptr->masterId(),
                                curTick(), m_pc);
 
     req->setContext(index);
@@ -244,7 +244,7 @@ Check::initiateCheck()
     }
 
     // Checks are sized depending on the number of bytes written
-    Request *req = new Request(m_address, CHECK_SIZE, flags,
+    RequestPtr req = new Request(m_address, CHECK_SIZE, flags,
                                m_tester_ptr->masterId(), curTick(), m_pc);
 
     req->setContext(index);
