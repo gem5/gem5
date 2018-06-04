@@ -48,7 +48,7 @@
 #include "mem/packet_access.hh"
 
 Sp804::Sp804(Params *p)
-    : AmbaPioDevice(p, 0xfff), gic(p->gic),
+    : AmbaPioDevice(p, 0x1000), gic(p->gic),
       timer0(name() + ".timer0", this, p->int_num0, p->clock0),
       timer1(name() + ".timer1", this, p->int_num1, p->clock1)
 {

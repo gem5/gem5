@@ -48,7 +48,7 @@
 #include "mem/packet_access.hh"
 
 AmbaFake::AmbaFake(const Params *p)
-    : AmbaPioDevice(p, 0xfff)
+    : AmbaPioDevice(p, 0x1000)
 {
 }
 

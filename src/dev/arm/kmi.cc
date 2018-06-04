@@ -52,7 +52,7 @@
 #include "mem/packet_access.hh"
 
 Pl050::Pl050(const Pl050Params *p)
-    : AmbaIntDevice(p, 0xfff), control(0), status(0x43), clkdiv(0),
+    : AmbaIntDevice(p, 0x1000), control(0), status(0x43), clkdiv(0),
       rawInterrupts(0),
       ps2(p->ps2)
 {
