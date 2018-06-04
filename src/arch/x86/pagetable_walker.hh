@@ -113,12 +113,12 @@ namespace X86ISA
             bool started;
           public:
             WalkerState(Walker * _walker, BaseTLB::Translation *_translation,
-                    RequestPtr _req, bool _isFunctional = false) :
-                        walker(_walker), req(_req), state(Ready),
-                        nextState(Ready), inflight(0),
-                        translation(_translation),
-                        functional(_isFunctional), timing(false),
-                        retrying(false), started(false)
+                        const RequestPtr &_req, bool _isFunctional = false) :
+                walker(_walker), req(_req), state(Ready),
+                nextState(Ready), inflight(0),
+                translation(_translation),
+                functional(_isFunctional), timing(false),
+                retrying(false), started(false)
             {
             }
             void initState(ThreadContext * _tc, BaseTLB::Mode _mode,
@@ -157,7 +157,7 @@ namespace X86ISA
       public:
         // Kick off the state machine.
         Fault start(ThreadContext * _tc, BaseTLB::Translation *translation,
-                RequestPtr req, BaseTLB::Mode mode);
+                const RequestPtr &req, BaseTLB::Mode mode);
         Fault startFunctional(ThreadContext * _tc, Addr &addr,
                 unsigned &logBytes, BaseTLB::Mode mode);
         BaseMasterPort &getMasterPort(const std::string &if_name,

@@ -151,7 +151,7 @@ class EmulationPageTable : public Serializable
      * field of req.
      * @param req The memory request.
      */
-    Fault translate(RequestPtr req);
+    Fault translate(const RequestPtr &req);
 
     void getMappings(std::vector<std::pair<Addr, Addr>> *addr_mappings);
 

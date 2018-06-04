@@ -131,7 +131,6 @@ BaseDynInst<Impl>::initVars()
     cpu->snList.insert(seqNum);
 #endif
 
-    reqToVerify = NULL;
 }
 
 template <class Impl>
@@ -158,8 +157,6 @@ BaseDynInst<Impl>::~BaseDynInst()
     cpu->snList.erase(seqNum);
 #endif
 
-    if (reqToVerify)
-        delete reqToVerify;
 }
 
 #ifdef DEBUG

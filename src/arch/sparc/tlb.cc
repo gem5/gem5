@@ -415,7 +415,7 @@ TLB::writeSfsr(Addr a, bool write, ContextType ct,
 }
 
 Fault
-TLB::translateInst(RequestPtr req, ThreadContext *tc)
+TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
 {
     uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
 
@@ -529,7 +529,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
 }
 
 Fault
-TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
+TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
 {
     /*
      * @todo this could really use some profiling and fixing to make
@@ -833,7 +833,7 @@ handleMmuRegAccess:
 };
 
 Fault
-TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
 {
     if (mode == Execute)
         return translateInst(req, tc);
@@ -842,7 +842,7 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 }
 
 void
-TLB::translateTiming(RequestPtr req, ThreadContext *tc,
+TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
         Translation *translation, Mode mode)
 {
     assert(translation);
@@ -850,7 +850,8 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
 }
 
 Fault
-TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
+TLB::finalizePhysical(const RequestPtr &req,
+                      ThreadContext *tc, Mode mode) const
 {
     return NoFault;
 }

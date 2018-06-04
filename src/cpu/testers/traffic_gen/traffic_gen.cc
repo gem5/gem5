@@ -213,7 +213,6 @@ TrafficGen::update()
                 warn("%s suppressed %d packets with non-memory addresses\n",
                      name(), numSuppressed);
 
-            delete pkt->req;
             delete pkt;
             pkt = nullptr;
         }
@@ -575,7 +574,6 @@ TrafficGen::regStats()
 bool
 TrafficGen::TrafficGenPort::recvTimingResp(PacketPtr pkt)
 {
-    delete pkt->req;
     delete pkt;
 
     return true;

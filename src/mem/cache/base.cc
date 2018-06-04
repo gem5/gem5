@@ -810,7 +810,6 @@ BaseCache::getNextQueueEntry()
                 return allocateMissBuffer(pkt, curTick(), false);
             } else {
                 // free the request and packet
-                delete pkt->req;
                 delete pkt;
             }
         }
@@ -1278,8 +1277,9 @@ BaseCache::writebackBlk(CacheBlk *blk)
 
     writebacks[Request::wbMasterId]++;
 
-    RequestPtr req = new Request(regenerateBlkAddr(blk), blkSize, 0,
-                               Request::wbMasterId);
+    RequestPtr req = std::make_shared<Request>(
+        regenerateBlkAddr(blk), blkSize, 0, Request::wbMasterId);
+
     if (blk->isSecure())
         req->setFlags(Request::SECURE);
 
@@ -1313,8 +1313,9 @@ BaseCache::writebackBlk(CacheBlk *blk)
 PacketPtr
 BaseCache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
 {
-    RequestPtr req = new Request(regenerateBlkAddr(blk), blkSize, 0,
-                               Request::wbMasterId);
+    RequestPtr req = std::make_shared<Request>(
+        regenerateBlkAddr(blk), blkSize, 0, Request::wbMasterId);
+
     if (blk->isSecure()) {
         req->setFlags(Request::SECURE);
     }
@@ -1373,14 +1374,15 @@ BaseCache::writebackVisitor(CacheBlk &blk)
     if (blk.isDirty()) {
         assert(blk.isValid());
 
-        Request request(regenerateBlkAddr(&blk),
-                        blkSize, 0, Request::funcMasterId);
-        request.taskId(blk.task_id);
+        RequestPtr request = std::make_shared<Request>(
+            regenerateBlkAddr(&blk), blkSize, 0, Request::funcMasterId);
+
+        request->taskId(blk.task_id);
         if (blk.isSecure()) {
-            request.setFlags(Request::SECURE);
+            request->setFlags(Request::SECURE);
         }
 
-        Packet packet(&request, MemCmd::WriteReq);
+        Packet packet(request, MemCmd::WriteReq);
         packet.dataStatic(blk.data);
 
         memSidePort.sendFunctional(&packet);

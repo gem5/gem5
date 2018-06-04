@@ -274,13 +274,15 @@ class LSQ {
     /** Executes a read operation, using the load specified at the load
      * index.
      */
-    Fault read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+    Fault read(const RequestPtr &req,
+               RequestPtr &sreqLow, RequestPtr &sreqHigh,
                int load_idx);
 
     /** Executes a store operation, using the store specified at the store
      * index.
      */
-    Fault write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+    Fault write(const RequestPtr &req,
+                const RequestPtr &sreqLow, const RequestPtr &sreqHigh,
                 uint8_t *data, int store_idx);
 
     /**
@@ -331,7 +333,8 @@ class LSQ {
 
 template <class Impl>
 Fault
-LSQ<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+LSQ<Impl>::read(const RequestPtr &req,
+                RequestPtr &sreqLow, RequestPtr &sreqHigh,
                 int load_idx)
 {
     ThreadID tid = cpu->contextToThread(req->contextId());
@@ -341,7 +344,8 @@ LSQ<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
 
 template <class Impl>
 Fault
-LSQ<Impl>::write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+LSQ<Impl>::write(const RequestPtr &req,
+                 const RequestPtr &sreqLow, const RequestPtr &sreqHigh,
                  uint8_t *data, int store_idx)
 {
     ThreadID tid = cpu->contextToThread(req->contextId());

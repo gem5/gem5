@@ -130,7 +130,7 @@ class Fetch1 : public Named
         PacketPtr packet;
 
         /** The underlying request that this fetch represents */
-        Request request;
+        RequestPtr request;
 
         /** PC to fixup with line address */
         TheISA::PCState pc;
@@ -163,7 +163,7 @@ class Fetch1 : public Named
         /** Interface for ITLB responses.  Populates self and then passes
          *  the request on to the ports' handleTLBResponse member
          *  function */
-        void finish(const Fault &fault_, RequestPtr request_,
+        void finish(const Fault &fault_, const RequestPtr &request_,
                     ThreadContext *tc, BaseTLB::Mode mode);
 
       public:
@@ -176,7 +176,9 @@ class Fetch1 : public Named
             request(),
             pc(pc_),
             fault(NoFault)
-        { }
+        {
+            request = std::make_shared<Request>();
+        }
 
         ~FetchRequest();
     };

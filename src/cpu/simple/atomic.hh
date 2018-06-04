@@ -159,9 +159,9 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     AtomicCPUDPort dcachePort;
 
     bool fastmem;
-    Request ifetch_req;
-    Request data_read_req;
-    Request data_write_req;
+    RequestPtr ifetch_req;
+    RequestPtr data_read_req;
+    RequestPtr data_write_req;
 
     bool dcache_access;
     Tick dcache_latency;

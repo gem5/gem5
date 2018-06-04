@@ -133,7 +133,8 @@ TLB::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
 }
 
 Fault
-TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
+TLB::finalizePhysical(const RequestPtr &req,
+                      ThreadContext *tc, Mode mode) const
 {
     const Addr paddr = req->getPaddr();
 
@@ -561,7 +562,7 @@ TLB::regProbePoints()
 }
 
 Fault
-TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
+TLB::translateSe(const RequestPtr &req, ThreadContext *tc, Mode mode,
                  Translation *translation, bool &delay, bool timing)
 {
     updateMiscReg(tc);
@@ -601,7 +602,7 @@ TLB::translateSe(RequestPtr req, ThreadContext *tc, Mode mode,
 }
 
 Fault
-TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
+TLB::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode)
 {
     // a data cache maintenance instruction that operates by MVA does
     // not generate a Data Abort exeception due to a Permission fault
@@ -779,7 +780,7 @@ TLB::checkPermissions(TlbEntry *te, RequestPtr req, Mode mode)
 
 
 Fault
-TLB::checkPermissions64(TlbEntry *te, RequestPtr req, Mode mode,
+TLB::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
                         ThreadContext *tc)
 {
     assert(aarch64);
@@ -989,7 +990,7 @@ TLB::checkPermissions64(TlbEntry *te, RequestPtr req, Mode mode,
 }
 
 Fault
-TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
+TLB::translateFs(const RequestPtr &req, ThreadContext *tc, Mode mode,
         Translation *translation, bool &delay, bool timing,
         TLB::ArmTranslationType tranType, bool functional)
 {
@@ -1158,7 +1159,7 @@ TLB::translateFs(RequestPtr req, ThreadContext *tc, Mode mode,
 }
 
 Fault
-TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode,
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode,
     TLB::ArmTranslationType tranType)
 {
     updateMiscReg(tc, tranType);
@@ -1179,7 +1180,7 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode,
 }
 
 Fault
-TLB::translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode,
+TLB::translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode,
     TLB::ArmTranslationType tranType)
 {
     updateMiscReg(tc, tranType);
@@ -1200,7 +1201,7 @@ TLB::translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode,
 }
 
 void
-TLB::translateTiming(RequestPtr req, ThreadContext *tc,
+TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
     Translation *translation, Mode mode, TLB::ArmTranslationType tranType)
 {
     updateMiscReg(tc, tranType);
@@ -1217,7 +1218,7 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
 }
 
 Fault
-TLB::translateComplete(RequestPtr req, ThreadContext *tc,
+TLB::translateComplete(const RequestPtr &req, ThreadContext *tc,
         Translation *translation, Mode mode, TLB::ArmTranslationType tranType,
         bool callFromS2)
 {
@@ -1404,7 +1405,7 @@ TLB::tranTypeEL(CPSR cpsr, ArmTranslationType type)
 }
 
 Fault
-TLB::getTE(TlbEntry **te, RequestPtr req, ThreadContext *tc, Mode mode,
+TLB::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         Translation *translation, bool timing, bool functional,
         bool is_secure, TLB::ArmTranslationType tranType)
 {
@@ -1466,7 +1467,8 @@ TLB::getTE(TlbEntry **te, RequestPtr req, ThreadContext *tc, Mode mode,
 }
 
 Fault
-TLB::getResultTe(TlbEntry **te, RequestPtr req, ThreadContext *tc, Mode mode,
+TLB::getResultTe(TlbEntry **te, const RequestPtr &req,
+        ThreadContext *tc, Mode mode,
         Translation *translation, bool timing, bool functional,
         TlbEntry *mergeTe)
 {
@@ -1549,7 +1551,8 @@ TLB::setTestInterface(SimObject *_ti)
 }
 
 Fault
-TLB::testTranslation(RequestPtr req, Mode mode, TlbEntry::DomainType domain)
+TLB::testTranslation(const RequestPtr &req, Mode mode,
+                     TlbEntry::DomainType domain)
 {
     if (!test || !req->hasSize() || req->getSize() == 0 ||
         req->isCacheMaintenance()) {

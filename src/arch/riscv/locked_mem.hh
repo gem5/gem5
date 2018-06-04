@@ -82,7 +82,7 @@ handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
 
 
 template <class XC> inline void
-handleLockedRead(XC *xc, RequestPtr req)
+handleLockedRead(XC *xc, const RequestPtr &req)
 {
     locked_addrs.push(req->getPaddr() & ~0xF);
     DPRINTF(LLSC, "[cid:%d]: Reserved address %x.\n",
@@ -94,7 +94,7 @@ handleLockedSnoopHit(XC *xc)
 {}
 
 template <class XC> inline bool
-handleLockedWrite(XC *xc, RequestPtr req, Addr cacheBlockMask)
+handleLockedWrite(XC *xc, const RequestPtr &req, Addr cacheBlockMask)
 {
     // Normally RISC-V uses zero to indicate success and nonzero to indicate
     // failure (right now only 1 is reserved), but in gem5 zero indicates

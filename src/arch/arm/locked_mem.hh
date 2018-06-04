@@ -91,7 +91,7 @@ handleLockedSnoop(XC *xc, PacketPtr pkt, Addr cacheBlockMask)
 
 template <class XC>
 inline void
-handleLockedRead(XC *xc, RequestPtr req)
+handleLockedRead(XC *xc, const RequestPtr &req)
 {
     xc->setMiscReg(MISCREG_LOCKADDR, req->getPaddr());
     xc->setMiscReg(MISCREG_LOCKFLAG, true);
@@ -111,7 +111,7 @@ handleLockedSnoopHit(XC *xc)
 
 template <class XC>
 inline bool
-handleLockedWrite(XC *xc, RequestPtr req, Addr cacheBlockMask)
+handleLockedWrite(XC *xc, const RequestPtr &req, Addr cacheBlockMask)
 {
     if (req->isSwap())
         return true;

@@ -662,9 +662,11 @@ TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
     }
 
     // Create a request and the packet containing request
-    Request* req = new Request(node_ptr->physAddr, node_ptr->size,
-                               node_ptr->flags, masterID, node_ptr->seqNum,
-                               ContextID(0));
+    auto req = std::make_shared<Request>(
+        node_ptr->physAddr, node_ptr->size,
+        node_ptr->flags, masterID, node_ptr->seqNum,
+        ContextID(0));
+
     req->setPC(node_ptr->pc);
     // If virtual address is valid, set the asid and virtual address fields
     // of the request.
@@ -1158,7 +1160,7 @@ TraceCPU::FixedRetryGen::send(Addr addr, unsigned size, const MemCmd& cmd,
 {
 
     // Create new request
-    Request* req = new Request(addr, size, flags, masterID);
+    auto req = std::make_shared<Request>(addr, size, flags, masterID);
     req->setPC(pc);
 
     // If this is not done it triggers assert in L1 cache for invalid contextId
@@ -1224,8 +1226,7 @@ bool
 TraceCPU::IcachePort::recvTimingResp(PacketPtr pkt)
 {
     // All responses on the instruction fetch side are ignored. Simply delete
-    // the request and packet to free allocated memory
-    delete pkt->req;
+    // the packet to free allocated memory
     delete pkt;
 
     return true;
@@ -1250,9 +1251,8 @@ TraceCPU::DcachePort::recvTimingResp(PacketPtr pkt)
     // Handle the responses for data memory requests which is done inside the
     // elastic data generator
     owner->dcacheRecvTimingResp(pkt);
-    // After processing the response delete the request and packet to free
+    // After processing the response delete the packet to free
     // memory
-    delete pkt->req;
     delete pkt;
 
     return true;

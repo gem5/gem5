@@ -184,7 +184,7 @@ TableWalker::drainResume()
 }
 
 Fault
-TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
+TableWalker::walk(const RequestPtr &_req, ThreadContext *_tc, uint16_t _asid,
                   uint8_t _vmid, bool _isHyp, TLB::Mode _mode,
                   TLB::Translation *_trans, bool _timing, bool _functional,
                   bool secure, TLB::ArmTranslationType tranType,
@@ -2021,13 +2021,14 @@ TableWalker::fetchDescriptor(Addr descAddr, uint8_t *data, int numBytes,
                            currState->tc->getCpuPtr()->clockPeriod(), flags);
             (this->*doDescriptor)();
         } else {
-            RequestPtr req = new Request(descAddr, numBytes, flags, masterId);
+            RequestPtr req = std::make_shared<Request>(
+                descAddr, numBytes, flags, masterId);
+
             req->taskId(ContextSwitchTaskId::DMA);
             PacketPtr  pkt = new Packet(req, MemCmd::ReadReq);
             pkt->dataStatic(data);
             port->sendFunctional(pkt);
             (this->*doDescriptor)();
-            delete req;
             delete pkt;
         }
     }

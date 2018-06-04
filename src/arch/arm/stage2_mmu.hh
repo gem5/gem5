@@ -70,12 +70,12 @@ class Stage2MMU : public SimObject
     class Stage2Translation : public BaseTLB::Translation
     {
       private:
-        uint8_t   *data;
-        int       numBytes;
-        Request   req;
-        Event     *event;
-        Stage2MMU &parent;
-        Addr      oVAddr;
+        uint8_t      *data;
+        int          numBytes;
+        RequestPtr   req;
+        Event        *event;
+        Stage2MMU    &parent;
+        Addr         oVAddr;
 
       public:
         Fault fault;
@@ -87,18 +87,18 @@ class Stage2MMU : public SimObject
         markDelayed() {}
 
         void
-        finish(const Fault &fault, RequestPtr req, ThreadContext *tc,
+        finish(const Fault &fault, const RequestPtr &req, ThreadContext *tc,
                BaseTLB::Mode mode);
 
         void setVirt(Addr vaddr, int size, Request::Flags flags, int masterId)
         {
             numBytes = size;
-            req.setVirt(0, vaddr, size, flags, masterId, 0);
+            req->setVirt(0, vaddr, size, flags, masterId, 0);
         }
 
         void translateTiming(ThreadContext *tc)
         {
-            parent.stage2Tlb()->translateTiming(&req, tc, this, BaseTLB::Read);
+            parent.stage2Tlb()->translateTiming(req, tc, this, BaseTLB::Read);
         }
     };
 

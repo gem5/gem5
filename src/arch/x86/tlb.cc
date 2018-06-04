@@ -170,7 +170,7 @@ TLB::demapPage(Addr va, uint64_t asn)
 }
 
 Fault
-TLB::translateInt(RequestPtr req, ThreadContext *tc)
+TLB::translateInt(const RequestPtr &req, ThreadContext *tc)
 {
     DPRINTF(TLB, "Addresses references internal memory.\n");
     Addr vaddr = req->getVaddr();
@@ -224,7 +224,8 @@ TLB::translateInt(RequestPtr req, ThreadContext *tc)
 }
 
 Fault
-TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
+TLB::finalizePhysical(const RequestPtr &req,
+                      ThreadContext *tc, Mode mode) const
 {
     Addr paddr = req->getPaddr();
 
@@ -265,7 +266,8 @@ TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
 }
 
 Fault
-TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
+TLB::translate(const RequestPtr &req,
+        ThreadContext *tc, Translation *translation,
         Mode mode, bool &delayedResponse, bool timing)
 {
     Request::Flags flags = req->getFlags();
@@ -425,14 +427,14 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
 }
 
 Fault
-TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
 {
     bool delayedResponse;
     return TLB::translate(req, tc, NULL, mode, delayedResponse, false);
 }
 
 void
-TLB::translateTiming(RequestPtr req, ThreadContext *tc,
+TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
         Translation *translation, Mode mode)
 {
     bool delayedResponse;

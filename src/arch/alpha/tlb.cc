@@ -203,7 +203,7 @@ TLB::lookup(Addr vpn, uint8_t asn)
 }
 
 Fault
-TLB::checkCacheability(RequestPtr &req, bool itb)
+TLB::checkCacheability(const RequestPtr &req, bool itb)
 {
     // in Alpha, cacheability is controlled by upper-level bits of the
     // physical address
@@ -372,7 +372,7 @@ TLB::unserialize(CheckpointIn &cp)
 }
 
 Fault
-TLB::translateInst(RequestPtr req, ThreadContext *tc)
+TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
 {
     //If this is a pal pc, then set PHYSICAL
     if (FullSystem && PcPAL(req->getPC()))
@@ -449,7 +449,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
 }
 
 Fault
-TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
+TLB::translateData(const RequestPtr &req, ThreadContext *tc, bool write)
 {
     mode_type mode =
         (mode_type)DTB_CM_CM(tc->readMiscRegNoEffect(IPR_DTB_CM));
@@ -599,7 +599,7 @@ TLB::index(bool advance)
 }
 
 Fault
-TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
+TLB::translateAtomic(const RequestPtr &req, ThreadContext *tc, Mode mode)
 {
     if (mode == Execute)
         return translateInst(req, tc);
@@ -608,7 +608,7 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 }
 
 void
-TLB::translateTiming(RequestPtr req, ThreadContext *tc,
+TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
         Translation *translation, Mode mode)
 {
     assert(translation);
@@ -616,7 +616,8 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
 }
 
 Fault
-TLB::finalizePhysical(RequestPtr req, ThreadContext *tc, Mode mode) const
+TLB::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
+                      Mode mode) const
 {
     return NoFault;
 }

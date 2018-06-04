@@ -101,7 +101,6 @@ RubyDirectedTester::CpuPort::recvTimingResp(PacketPtr pkt)
     //
     // Now that the tester has completed, delete the packet, then return
     //
-    delete pkt->req;
     delete pkt;
     return true;
 }

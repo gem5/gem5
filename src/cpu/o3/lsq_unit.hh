@@ -510,11 +510,13 @@ class LSQUnit {
 
   public:
     /** Executes the load at the given index. */
-    Fault read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+    Fault read(const RequestPtr &req,
+               RequestPtr &sreqLow, RequestPtr &sreqHigh,
                int load_idx);
 
     /** Executes the store at the given index. */
-    Fault write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+    Fault write(const RequestPtr &req,
+                const RequestPtr &sreqLow, const RequestPtr &sreqHigh,
                 uint8_t *data, int store_idx);
 
     /** Returns the index of the head load instruction. */
@@ -549,7 +551,8 @@ class LSQUnit {
 
 template <class Impl>
 Fault
-LSQUnit<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+LSQUnit<Impl>::read(const RequestPtr &req,
+                    RequestPtr &sreqLow, RequestPtr &sreqHigh,
                     int load_idx)
 {
     DynInstPtr load_inst = loadQueue[load_idx];
@@ -569,14 +572,6 @@ LSQUnit<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
         DPRINTF(LSQUnit, "Strictly ordered load [sn:%lli] PC %s\n",
                 load_inst->seqNum, load_inst->pcState());
 
-        // Must delete request now that it wasn't handed off to
-        // memory.  This is quite ugly.  @todo: Figure out the proper
-        // place to really handle request deletes.
-        delete req;
-        if (TheISA::HasUnalignedMemAcc && sreqLow) {
-            delete sreqLow;
-            delete sreqHigh;
-        }
         return std::make_shared<GenericISA::M5PanicFault>(
             "Strictly ordered load [sn:%llx] PC %s\n",
             load_inst->seqNum, load_inst->pcState());
@@ -626,8 +621,6 @@ LSQUnit<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
             if (delay2 > delay)
                 delay = delay2;
 
-            delete sreqLow;
-            delete sreqHigh;
             delete fst_data_pkt;
             delete snd_data_pkt;
         }
@@ -704,12 +697,6 @@ LSQUnit<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
             // @todo: Need to make this a parameter.
             cpu->schedule(wb, curTick());
 
-            // Don't need to do anything special for split loads.
-            if (TheISA::HasUnalignedMemAcc && sreqLow) {
-                delete sreqLow;
-                delete sreqHigh;
-            }
-
             ++lsqForwLoads;
             return NoFault;
         } else if (
@@ -754,15 +741,6 @@ LSQUnit<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
             DPRINTF(LSQUnit, "Load-store forwarding mis-match. "
                     "Store idx %i to load addr %#x\n",
                     store_idx, req->getVaddr());
-
-            // Must delete request now that it wasn't handed off to
-            // memory.  This is quite ugly.  @todo: Figure out the
-            // proper place to really handle request deletes.
-            delete req;
-            if (TheISA::HasUnalignedMemAcc && sreqLow) {
-                delete sreqLow;
-                delete sreqHigh;
-            }
 
             return NoFault;
         }
@@ -843,7 +821,6 @@ LSQUnit<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
         if (!sreqLow) {
             // Packet wasn't split, just delete main packet info
             delete state;
-            delete req;
             delete data_pkt;
         }
 
@@ -851,22 +828,17 @@ LSQUnit<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
             if (!completedFirst) {
                 // Split packet, but first failed.  Delete all state.
                 delete state;
-                delete req;
                 delete data_pkt;
                 delete fst_data_pkt;
                 delete snd_data_pkt;
-                delete sreqLow;
-                delete sreqHigh;
-                sreqLow = NULL;
-                sreqHigh = NULL;
+                sreqLow.reset();
+                sreqHigh.reset();
             } else {
                 // Can't delete main packet data or state because first packet
                 // was sent to the memory system
                 delete data_pkt;
-                delete req;
-                delete sreqHigh;
                 delete snd_data_pkt;
-                sreqHigh = NULL;
+                sreqHigh.reset();
             }
         }
 
@@ -883,7 +855,8 @@ LSQUnit<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
 
 template <class Impl>
 Fault
-LSQUnit<Impl>::write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+LSQUnit<Impl>::write(const RequestPtr &req,
+                     const RequestPtr &sreqLow, const RequestPtr &sreqHigh,
                      uint8_t *data, int store_idx)
 {
     assert(storeQueue[store_idx].inst);

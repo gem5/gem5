@@ -79,13 +79,13 @@ class LockedAddr {
     static Addr mask(Addr paddr) { return (paddr & ~Addr_Mask); }
 
     // check for matching execution context
-    bool matchesContext(RequestPtr req) const
+    bool matchesContext(const RequestPtr &req) const
     {
         return (contextId == req->contextId());
     }
 
-    LockedAddr(RequestPtr req) : addr(mask(req->getPaddr())),
-                               contextId(req->contextId())
+    LockedAddr(const RequestPtr &req) : addr(mask(req->getPaddr())),
+                                        contextId(req->contextId())
     {}
 
     // constructor for unserialization use
@@ -140,7 +140,7 @@ class AbstractMemory : public MemObject
     // this method must be called on *all* stores since even
     // non-conditional stores must clear any matching lock addresses.
     bool writeOK(PacketPtr pkt) {
-        RequestPtr req = pkt->req;
+        const RequestPtr &req = pkt->req;
         if (lockedAddrList.empty()) {
             // no locked addrs: nothing to check, store_conditional fails
             bool isLLSC = pkt->isLLSC();

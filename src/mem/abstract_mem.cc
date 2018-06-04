@@ -199,7 +199,7 @@ AbstractMemory::getAddrRange() const
 void
 AbstractMemory::trackLoadLocked(PacketPtr pkt)
 {
-    RequestPtr req = pkt->req;
+    const RequestPtr &req = pkt->req;
     Addr paddr = LockedAddr::mask(req->getPaddr());
 
     // first we check if we already have a locked addr for this
@@ -230,7 +230,7 @@ AbstractMemory::trackLoadLocked(PacketPtr pkt)
 bool
 AbstractMemory::checkLockedAddrList(PacketPtr pkt)
 {
-    RequestPtr req = pkt->req;
+    const RequestPtr &req = pkt->req;
     Addr paddr = LockedAddr::mask(req->getPaddr());
     bool isLLSC = pkt->isLLSC();
 

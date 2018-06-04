@@ -764,6 +764,7 @@ TarmacParserRecord::TarmacParserRecord(Tick _when, ThreadContext *_thread,
       parsingStarted(false), mismatch(false),
       mismatchOnPcOrOpcode(false), parent(_parent)
 {
+    memReq = std::make_shared<Request>();
 }
 
 void
@@ -1048,7 +1049,7 @@ bool
 TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
                                     unsigned flags)
 {
-    Request* req = &memReq;
+    const RequestPtr &req = memReq;
     TheISA::TLB* dtb = static_cast<TLB*>(thread->getDTBPtr());
 
     req->setVirt(0, addr, size, flags, thread->pcState().instAddr(),

@@ -113,8 +113,8 @@ namespace X86ISA
              * may be responsible for cleaning itslef up which will happen in
              * this function. Once it's called the object is no longer valid.
              */
-            virtual void finish(Fault fault, RequestPtr req, ThreadContext *tc,
-                    Mode mode) = 0;
+            virtual void finish(Fault fault, const RequestPtr &req,
+                                ThreadContext *tc, Mode mode) = 0;
         };
 
         void dumpAll();
@@ -177,9 +177,9 @@ namespace X86ISA
          */
         std::vector<EntryList> entryList;
 
-        Fault translateInt(RequestPtr req, ThreadContext *tc);
+        Fault translateInt(const RequestPtr &req, ThreadContext *tc);
 
-        Fault translate(RequestPtr req, ThreadContext *tc,
+        Fault translate(const RequestPtr &req, ThreadContext *tc,
                 Translation *translation, Mode mode, bool &delayedResponse,
                 bool timing, int &latency);
 
@@ -222,10 +222,10 @@ namespace X86ISA
         void printAccessPattern();
 
 
-        Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode,
-                              int &latency);
+        Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                              Mode mode, int &latency);
 
-        void translateTiming(RequestPtr req, ThreadContext *tc,
+        void translateTiming(const RequestPtr &req, ThreadContext *tc,
                              Translation *translation, Mode mode,
                              int &latency);
 
@@ -239,7 +239,8 @@ namespace X86ISA
         virtual void unserialize(CheckpointIn& cp);
         void issueTranslation();
         enum tlbOutcome {TLB_HIT, TLB_MISS, PAGE_WALK, MISS_RETURN};
-        bool tlbLookup(RequestPtr req, ThreadContext *tc, bool update_stats);
+        bool tlbLookup(const RequestPtr &req,
+                       ThreadContext *tc, bool update_stats);
 
         void handleTranslationReturn(Addr addr, tlbOutcome outcome,
                                      PacketPtr pkt);

@@ -95,8 +95,7 @@ DmaPort::handleResp(PacketPtr pkt, Tick delay)
         delete state;
     }
 
-    // delete the request that we created and also the packet
-    delete pkt->req;
+    // delete the packet
     delete pkt;
 
     // we might be drained at this point, if so signal the drain event
@@ -165,7 +164,10 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
             event ? event->scheduled() : -1);
     for (ChunkGenerator gen(addr, size, sys->cacheLineSize());
          !gen.done(); gen.next()) {
-        req = new Request(gen.addr(), gen.size(), flag, masterId);
+
+        req = std::make_shared<Request>(
+            gen.addr(), gen.size(), flag, masterId);
+
         req->taskId(ContextSwitchTaskId::DMA);
         PacketPtr pkt = new Packet(req, cmd);
 

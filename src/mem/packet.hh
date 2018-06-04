@@ -320,7 +320,7 @@ class Packet : public Printable
     const PacketId id;
 
     /// A pointer to the original request.
-    const RequestPtr req;
+    RequestPtr req;
 
   private:
    /**
@@ -745,9 +745,9 @@ class Packet : public Printable
      * first, but the Requests's physical address and size fields need
      * not be valid. The command must be supplied.
      */
-    Packet(const RequestPtr _req, MemCmd _cmd)
-        :  cmd(_cmd), id((PacketId)_req), req(_req), data(nullptr), addr(0),
-           _isSecure(false), size(0), headerDelay(0), snoopDelay(0),
+    Packet(const RequestPtr &_req, MemCmd _cmd)
+        :  cmd(_cmd), id((PacketId)_req.get()), req(_req), data(nullptr),
+           addr(0), _isSecure(false), size(0), headerDelay(0), snoopDelay(0),
            payloadDelay(0), senderState(NULL)
     {
         if (req->hasPaddr()) {
@@ -766,10 +766,10 @@ class Packet : public Printable
      * a request that is for a whole block, not the address from the
      * req.  this allows for overriding the size/addr of the req.
      */
-    Packet(const RequestPtr _req, MemCmd _cmd, int _blkSize, PacketId _id = 0)
-        :  cmd(_cmd), id(_id ? _id : (PacketId)_req), req(_req), data(nullptr),
-           addr(0), _isSecure(false), headerDelay(0), snoopDelay(0),
-           payloadDelay(0), senderState(NULL)
+    Packet(const RequestPtr &_req, MemCmd _cmd, int _blkSize, PacketId _id = 0)
+        :  cmd(_cmd), id(_id ? _id : (PacketId)_req.get()), req(_req),
+           data(nullptr), addr(0), _isSecure(false), headerDelay(0),
+           snoopDelay(0), payloadDelay(0), senderState(NULL)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr() & ~(_blkSize - 1);
@@ -823,7 +823,7 @@ class Packet : public Printable
      * Generate the appropriate read MemCmd based on the Request flags.
      */
     static MemCmd
-    makeReadCmd(const RequestPtr req)
+    makeReadCmd(const RequestPtr &req)
     {
         if (req->isLLSC())
             return MemCmd::LoadLockedReq;
@@ -837,7 +837,7 @@ class Packet : public Printable
      * Generate the appropriate write MemCmd based on the Request flags.
      */
     static MemCmd
-    makeWriteCmd(const RequestPtr req)
+    makeWriteCmd(const RequestPtr &req)
     {
         if (req->isLLSC())
             return MemCmd::StoreCondReq;
@@ -857,13 +857,13 @@ class Packet : public Printable
      * Fine-tune the MemCmd type if it's not a vanilla read or write.
      */
     static PacketPtr
-    createRead(const RequestPtr req)
+    createRead(const RequestPtr &req)
     {
         return new Packet(req, makeReadCmd(req));
     }
 
     static PacketPtr
-    createWrite(const RequestPtr req)
+    createWrite(const RequestPtr &req)
     {
         return new Packet(req, makeWriteCmd(req));
     }
@@ -873,18 +873,6 @@ class Packet : public Printable
      */
     ~Packet()
     {
-        // Delete the request object if this is a request packet which
-        // does not need a response, because the requester will not get
-        // a chance. If the request packet needs a response then the
-        // request will be deleted on receipt of the response
-        // packet. We also make sure to never delete the request for
-        // express snoops, even for cases when responses are not
-        // needed (CleanEvict and Writeback), since the snoop packet
-        // re-uses the same request.
-        if (req && isRequest() && !needsResponse() &&
-            !isExpressSnoop()) {
-            delete req;
-        }
         deleteData();
     }
 

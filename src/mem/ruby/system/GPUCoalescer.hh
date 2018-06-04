@@ -58,8 +58,8 @@ class CacheMemory;
 
 class RubyGPUCoalescerParams;
 
-HSAScope reqScopeToHSAScope(Request* req);
-HSASegment reqSegmentToHSASegment(Request* req);
+HSAScope reqScopeToHSAScope(const RequestPtr &req);
+HSASegment reqSegmentToHSASegment(const RequestPtr &req);
 
 struct GPUCoalescerRequest
 {

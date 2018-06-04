@@ -894,7 +894,8 @@ class TableWalker : public MemObject
 
     void regStats() override;
 
-    Fault walk(RequestPtr req, ThreadContext *tc, uint16_t asid, uint8_t _vmid,
+    Fault walk(const RequestPtr &req, ThreadContext *tc,
+               uint16_t asid, uint8_t _vmid,
                bool _isHyp, TLB::Mode mode, TLB::Translation *_trans,
                bool timing, bool functional, bool secure,
                TLB::ArmTranslationType tranType, bool _stage2Req);

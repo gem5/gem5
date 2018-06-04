@@ -390,7 +390,9 @@ SimpleCache::insert(PacketPtr pkt)
 
         // Write back the data.
         // Create a new request-packet pair
-        RequestPtr req = new Request(block->first, blockSize, 0, 0);
+        RequestPtr req = std::make_shared<Request>(
+            block->first, blockSize, 0, 0);
+
         PacketPtr new_pkt = new Packet(req, MemCmd::WritebackDirty, blockSize);
         new_pkt->dataDynamic(block->second); // This will be deleted later
 

@@ -59,7 +59,7 @@ BaseGen::getPacket(Addr addr, unsigned size, const MemCmd& cmd,
                    Request::FlagsType flags)
 {
     // Create new request
-    RequestPtr req = new Request(addr, size, flags, masterID);
+    RequestPtr req = std::make_shared<Request>(addr, size, flags, masterID);
     // Dummy PC to have PC-based prefetchers latch on; get entropy into higher
     // bits
     req->setPC(((Addr)masterID) << 2);

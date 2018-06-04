@@ -299,7 +299,6 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
 
             // We have filled the block and the prefetcher does not
             // require responses.
-            delete tgt_pkt->req;
             delete tgt_pkt;
             break;
 

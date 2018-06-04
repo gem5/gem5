@@ -318,7 +318,7 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb)
     assert(tid < numThreads);
     AddressMonitor &monitor = addressMonitor[tid];
 
-    Request req;
+    RequestPtr req;
     Addr addr = monitor.vAddr;
     int block_size = cacheLineSize();
     uint64_t mask = ~((uint64_t)(block_size - 1));
@@ -330,13 +330,13 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb)
     if (secondAddr > addr)
         size = secondAddr - addr;
 
-    req.setVirt(0, addr, size, 0x0, dataMasterId(), tc->instAddr());
+    req->setVirt(0, addr, size, 0x0, dataMasterId(), tc->instAddr());
 
     // translate to physical address
-    Fault fault = dtb->translateAtomic(&req, tc, BaseTLB::Read);
+    Fault fault = dtb->translateAtomic(req, tc, BaseTLB::Read);
     assert(fault == NoFault);
 
-    monitor.pAddr = req.getPaddr() & mask;
+    monitor.pAddr = req->getPaddr() & mask;
     monitor.waiting = true;
 
     DPRINTF(Mwait,"[tid:%d] mwait called (vAddr=0x%lx, line's paddr=0x%lx)\n",

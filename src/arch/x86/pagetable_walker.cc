@@ -68,7 +68,7 @@ namespace X86ISA {
 
 Fault
 Walker::start(ThreadContext * _tc, BaseTLB::Translation *_translation,
-              RequestPtr _req, BaseTLB::Mode _mode)
+              const RequestPtr &_req, BaseTLB::Mode _mode)
 {
     // TODO: in timing mode, instead of blocking when there are other
     // outstanding requests, see if this request can be coalesced with
@@ -514,8 +514,8 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         //If we didn't return, we're setting up another read.
         Request::Flags flags = oldRead->req->getFlags();
         flags.set(Request::UNCACHEABLE, uncacheable);
-        RequestPtr request =
-            new Request(nextRead, oldRead->getSize(), flags, walker->masterId);
+        RequestPtr request = std::make_shared<Request>(
+            nextRead, oldRead->getSize(), flags, walker->masterId);
         read = new Packet(request, MemCmd::ReadReq);
         read->allocate();
         // If we need to write, adjust the read packet to write the modified
@@ -526,7 +526,6 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             write->cmd = MemCmd::WriteReq;
         } else {
             write = NULL;
-            delete oldRead->req;
             delete oldRead;
         }
     }
@@ -537,7 +536,6 @@ void
 Walker::WalkerState::endWalk()
 {
     nextState = Ready;
-    delete read->req;
     delete read;
     read = NULL;
 }
@@ -584,8 +582,10 @@ Walker::WalkerState::setupWalk(Addr vaddr)
     Request::Flags flags = Request::PHYSICAL;
     if (cr3.pcd)
         flags.set(Request::UNCACHEABLE);
-    RequestPtr request = new Request(topAddr, dataSize, flags,
-                                     walker->masterId);
+
+    RequestPtr request = std::make_shared<Request>(
+        topAddr, dataSize, flags, walker->masterId);
+
     read = new Packet(request, MemCmd::ReadReq);
     read->allocate();
 }

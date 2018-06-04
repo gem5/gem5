@@ -145,8 +145,9 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
     }
 
     // set up virtual request
-    RequestPtr req = new Request(0, vaddr, size, Request::INST_FETCH,
-                               computeUnit->masterId(), 0, 0, 0);
+    RequestPtr req = std::make_shared<Request>(
+        0, vaddr, size, Request::INST_FETCH,
+        computeUnit->masterId(), 0, 0, nullptr);
 
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
     // This fetchBlock is kind of faux right now - because the translations so
@@ -306,7 +307,6 @@ FetchUnit::processFetchReturn(PacketPtr pkt)
     wavefront->pendingFetch = false;
 
     delete pkt->senderState;
-    delete pkt->req;
     delete pkt;
 }
 

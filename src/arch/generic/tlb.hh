@@ -77,7 +77,7 @@ class BaseTLB : public SimObject
          * be responsible for cleaning itself up which will happen in this
          * function. Once it's called, the object is no longer valid.
          */
-        virtual void finish(const Fault &fault, RequestPtr req,
+        virtual void finish(const Fault &fault, const RequestPtr &req,
                             ThreadContext *tc, Mode mode) = 0;
 
         /** This function is used by the page table walker to determine if it
@@ -92,12 +92,12 @@ class BaseTLB : public SimObject
     virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
 
     virtual Fault translateAtomic(
-            RequestPtr req, ThreadContext *tc, Mode mode) = 0;
+            const RequestPtr &req, ThreadContext *tc, Mode mode) = 0;
     virtual void translateTiming(
-            RequestPtr req, ThreadContext *tc,
+            const RequestPtr &req, ThreadContext *tc,
             Translation *translation, Mode mode) = 0;
     virtual Fault
-    translateFunctional(RequestPtr req, ThreadContext *tc, Mode mode)
+    translateFunctional(const RequestPtr &req, ThreadContext *tc, Mode mode)
     {
         panic("Not implemented.\n");
     }
@@ -117,7 +117,7 @@ class BaseTLB : public SimObject
      * @return A fault on failure, NoFault otherwise.
      */
     virtual Fault finalizePhysical(
-            RequestPtr req, ThreadContext *tc, Mode mode) const = 0;
+            const RequestPtr &req, ThreadContext *tc, Mode mode) const = 0;
 
     /**
      * Remove all entries from the TLB
@@ -154,13 +154,13 @@ class GenericTLB : public BaseTLB
     void demapPage(Addr vaddr, uint64_t asn) override;
 
     Fault translateAtomic(
-        RequestPtr req, ThreadContext *tc, Mode mode) override;
+        const RequestPtr &req, ThreadContext *tc, Mode mode) override;
     void translateTiming(
-        RequestPtr req, ThreadContext *tc,
+        const RequestPtr &req, ThreadContext *tc,
         Translation *translation, Mode mode) override;
 
     Fault finalizePhysical(
-        RequestPtr req, ThreadContext *tc, Mode mode) const override;
+        const RequestPtr &req, ThreadContext *tc, Mode mode) const override;
 };
 
 #endif // __ARCH_GENERIC_TLB_HH__

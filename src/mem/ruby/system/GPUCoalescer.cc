@@ -70,7 +70,7 @@ RubyGPUCoalescerParams::create()
 }
 
 HSAScope
-reqScopeToHSAScope(Request* req)
+reqScopeToHSAScope(const RequestPtr &req)
 {
     HSAScope accessScope = HSAScope_UNSPECIFIED;
     if (req->isScoped()) {
@@ -90,7 +90,7 @@ reqScopeToHSAScope(Request* req)
 }
 
 HSASegment
-reqSegmentToHSASegment(Request* req)
+reqSegmentToHSASegment(const RequestPtr &req)
 {
     HSASegment accessSegment = HSASegment_GLOBAL;
 

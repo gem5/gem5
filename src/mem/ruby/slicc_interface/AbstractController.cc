@@ -240,8 +240,8 @@ void
 AbstractController::queueMemoryRead(const MachineID &id, Addr addr,
                                     Cycles latency)
 {
-    RequestPtr req = new Request(addr, RubySystem::getBlockSizeBytes(), 0,
-                                 m_masterId);
+    RequestPtr req = std::make_shared<Request>(
+        addr, RubySystem::getBlockSizeBytes(), 0, m_masterId);
 
     PacketPtr pkt = Packet::createRead(req);
     uint8_t *newData = new uint8_t[RubySystem::getBlockSizeBytes()];
@@ -264,8 +264,8 @@ void
 AbstractController::queueMemoryWrite(const MachineID &id, Addr addr,
                                      Cycles latency, const DataBlock &block)
 {
-    RequestPtr req = new Request(addr, RubySystem::getBlockSizeBytes(), 0,
-                                 m_masterId);
+    RequestPtr req = std::make_shared<Request>(
+        addr, RubySystem::getBlockSizeBytes(), 0, m_masterId);
 
     PacketPtr pkt = Packet::createWrite(req);
     uint8_t *newData = new uint8_t[RubySystem::getBlockSizeBytes()];
@@ -292,7 +292,7 @@ AbstractController::queueMemoryWritePartial(const MachineID &id, Addr addr,
                                             Cycles latency,
                                             const DataBlock &block, int size)
 {
-    RequestPtr req = new Request(addr, size, 0, m_masterId);
+    RequestPtr req = std::make_shared<Request>(addr, size, 0, m_masterId);
 
     PacketPtr pkt = Packet::createWrite(req);
     uint8_t *newData = new uint8_t[size];
@@ -356,7 +356,6 @@ AbstractController::recvTimingResp(PacketPtr pkt)
     }
 
     getMemoryQueue()->enqueue(msg, clockEdge(), cyclesToTicks(Cycles(1)));
-    delete pkt->req;
     delete pkt;
 }
 

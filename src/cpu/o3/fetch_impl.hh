@@ -388,7 +388,6 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     if (fetchStatus[tid] != IcacheWaitResponse ||
         pkt->req != memReq[tid]) {
         ++fetchIcacheSquashes;
-        delete pkt->req;
         delete pkt;
         return;
     }
@@ -415,7 +414,6 @@ DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
     pkt->req->setAccessLatency();
     cpu->ppInstAccessComplete->notify(pkt);
     // Reset the mem req to NULL.
-    delete pkt->req;
     delete pkt;
     memReq[tid] = NULL;
 }
@@ -621,10 +619,10 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
     // Build request here.
-    RequestPtr mem_req =
-        new Request(tid, fetchBufferBlockPC, fetchBufferSize,
-                    Request::INST_FETCH, cpu->instMasterId(), pc,
-                    cpu->thread[tid]->contextId());
+    RequestPtr mem_req = std::make_shared<Request>(
+        tid, fetchBufferBlockPC, fetchBufferSize,
+        Request::INST_FETCH, cpu->instMasterId(), pc,
+        cpu->thread[tid]->contextId());
 
     mem_req->taskId(cpu->taskId());
 
@@ -640,7 +638,8 @@ DefaultFetch<Impl>::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
 
 template <class Impl>
 void
-DefaultFetch<Impl>::finishTranslation(const Fault &fault, RequestPtr mem_req)
+DefaultFetch<Impl>::finishTranslation(const Fault &fault,
+                                      const RequestPtr &mem_req)
 {
     ThreadID tid = cpu->contextToThread(mem_req->contextId());
     Addr fetchBufferBlockPC = mem_req->getVaddr();
@@ -655,7 +654,6 @@ DefaultFetch<Impl>::finishTranslation(const Fault &fault, RequestPtr mem_req)
         DPRINTF(Fetch, "[tid:%i] Ignoring itlb completed after squash\n",
                 tid);
         ++fetchTlbSquashes;
-        delete mem_req;
         return;
     }
 
@@ -669,7 +667,6 @@ DefaultFetch<Impl>::finishTranslation(const Fault &fault, RequestPtr mem_req)
             warn("Address %#x is outside of physical memory, stopping fetch\n",
                     mem_req->getPaddr());
             fetchStatus[tid] = NoGoodAddr;
-            delete mem_req;
             memReq[tid] = NULL;
             return;
         }
@@ -717,7 +714,6 @@ DefaultFetch<Impl>::finishTranslation(const Fault &fault, RequestPtr mem_req)
         DPRINTF(Fetch, "[tid:%i] Got back req with addr %#x but expected %#x\n",
                 tid, mem_req->getVaddr(), memReq[tid]->getVaddr());
         // Translation faulted, icache request won't be sent.
-        delete mem_req;
         memReq[tid] = NULL;
 
         // Send the fault to commit.  This thread will not do anything
@@ -778,7 +774,6 @@ DefaultFetch<Impl>::doSquash(const TheISA::PCState &newPC,
     if (retryTid == tid) {
         assert(cacheBlocked);
         if (retryPkt) {
-            delete retryPkt->req;
             delete retryPkt;
         }
         retryPkt = NULL;

@@ -60,7 +60,7 @@ SeriesRequestGenerator::initiate()
     Request::Flags flags;
 
     // For simplicity, requests are assumed to be 1 byte-sized
-    RequestPtr req = new Request(m_address, 1, flags, masterId);
+    RequestPtr req = std::make_shared<Request>(m_address, 1, flags, masterId);
 
     Packet::Command cmd;
     bool do_write = (random_mt.random(0, 100) < m_percent_writes);
@@ -81,7 +81,6 @@ SeriesRequestGenerator::initiate()
         // If the packet did not issue, must delete
         // Note: No need to delete the data, the packet destructor
         // will delete it
-        delete pkt->req;
         delete pkt;
 
         DPRINTF(DirectedTest, "failed to initiate request - sequencer not ready\n");

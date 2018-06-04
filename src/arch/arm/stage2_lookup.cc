@@ -57,7 +57,7 @@ Fault
 Stage2LookUp::getTe(ThreadContext *tc, TlbEntry *destTe)
 
 {
-    fault = stage2Tlb->getTE(&stage2Te, &req, tc, mode, this, timing,
+    fault = stage2Tlb->getTE(&stage2Te, req, tc, mode, this, timing,
                                    functional, false, tranType);
     // Call finish if we're done already
     if ((fault != NoFault) || (stage2Te != NULL)) {
@@ -67,19 +67,19 @@ Stage2LookUp::getTe(ThreadContext *tc, TlbEntry *destTe)
         // entry is now in the TLB this should always hit the cache.
         if (fault == NoFault) {
             if (ELIs64(tc, EL2))
-                fault = stage2Tlb->checkPermissions64(stage2Te, &req, mode, tc);
+                fault = stage2Tlb->checkPermissions64(stage2Te, req, mode, tc);
             else
-                fault = stage2Tlb->checkPermissions(stage2Te, &req, mode);
+                fault = stage2Tlb->checkPermissions(stage2Te, req, mode);
         }
 
-        mergeTe(&req, mode);
+        mergeTe(req, mode);
         *destTe = stage1Te;
     }
     return fault;
 }
 
 void
-Stage2LookUp::mergeTe(RequestPtr req, BaseTLB::Mode mode)
+Stage2LookUp::mergeTe(const RequestPtr &req, BaseTLB::Mode mode)
 {
     // Check again that we haven't got a fault
     if (fault == NoFault) {
@@ -176,7 +176,7 @@ Stage2LookUp::mergeTe(RequestPtr req, BaseTLB::Mode mode)
 }
 
 void
-Stage2LookUp::finish(const Fault &_fault, RequestPtr req,
+Stage2LookUp::finish(const Fault &_fault, const RequestPtr &req,
     ThreadContext *tc, BaseTLB::Mode mode)
 {
     fault = _fault;

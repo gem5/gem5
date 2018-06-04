@@ -461,7 +461,7 @@ namespace HsailISA
                             *d = gpuDynInst->wavefront()->ldsChunk->
                                 read<c0>(vaddr);
                         } else {
-                            RequestPtr req = new Request(0,
+                            RequestPtr req = std::make_shared<Request>(0,
                                 vaddr, sizeof(c0), 0,
                                 gpuDynInst->computeUnit()->masterId(),
                                 0, gpuDynInst->wfDynId);
@@ -589,7 +589,7 @@ namespace HsailISA
                     gpuDynInst->statusBitVector = VectorMask(1);
                     gpuDynInst->useContinuation = false;
                     // create request
-                    RequestPtr req = new Request(0, 0, 0, 0,
+                    RequestPtr req = std::make_shared<Request>(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
                                   0, gpuDynInst->wfDynId);
                     req->setFlags(Request::ACQUIRE);
@@ -1015,7 +1015,7 @@ namespace HsailISA
                     gpuDynInst->execContinuation = &GPUStaticInst::execSt;
                     gpuDynInst->useContinuation = true;
                     // create request
-                    RequestPtr req = new Request(0, 0, 0, 0,
+                    RequestPtr req = std::make_shared<Request>(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
                                   0, gpuDynInst->wfDynId);
                     req->setFlags(Request::RELEASE);
@@ -1066,10 +1066,10 @@ namespace HsailISA
                             gpuDynInst->wavefront()->ldsChunk->write<c0>(vaddr,
                                                                          *d);
                         } else {
-                            RequestPtr req =
-                              new Request(0, vaddr, sizeof(c0), 0,
-                                          gpuDynInst->computeUnit()->masterId(),
-                                          0, gpuDynInst->wfDynId);
+                            RequestPtr req = std::make_shared<Request>(
+                                0, vaddr, sizeof(c0), 0,
+                                gpuDynInst->computeUnit()->masterId(),
+                                0, gpuDynInst->wfDynId);
 
                             gpuDynInst->setRequestFlags(req);
                             PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
@@ -1489,7 +1489,7 @@ namespace HsailISA
                     gpuDynInst->useContinuation = true;
 
                     // create request
-                    RequestPtr req = new Request(0, 0, 0, 0,
+                    RequestPtr req = std::make_shared<Request>(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
                                   0, gpuDynInst->wfDynId);
                     req->setFlags(Request::RELEASE);
@@ -1622,7 +1622,7 @@ namespace HsailISA
                         }
                     } else {
                         RequestPtr req =
-                            new Request(0, vaddr, sizeof(c0), 0,
+                            std::make_shared<Request>(0, vaddr, sizeof(c0), 0,
                                         gpuDynInst->computeUnit()->masterId(),
                                         0, gpuDynInst->wfDynId,
                                         gpuDynInst->makeAtomicOpFunctor<c0>(e,
@@ -1676,7 +1676,7 @@ namespace HsailISA
                     // the acquire completes
                     gpuDynInst->useContinuation = false;
                     // create request
-                    RequestPtr req = new Request(0, 0, 0, 0,
+                    RequestPtr req = std::make_shared<Request>(0, 0, 0, 0,
                                   gpuDynInst->computeUnit()->masterId(),
                                   0, gpuDynInst->wfDynId);
                     req->setFlags(Request::ACQUIRE);

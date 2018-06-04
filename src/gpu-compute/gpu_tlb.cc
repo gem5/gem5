@@ -287,7 +287,7 @@ namespace X86ISA
     }
 
     Fault
-    GpuTLB::translateInt(RequestPtr req, ThreadContext *tc)
+    GpuTLB::translateInt(const RequestPtr &req, ThreadContext *tc)
     {
         DPRINTF(GPUTLB, "Addresses references internal memory.\n");
         Addr vaddr = req->getVaddr();
@@ -662,7 +662,8 @@ namespace X86ISA
      * On a hit it will update the LRU stack.
      */
     bool
-    GpuTLB::tlbLookup(RequestPtr req, ThreadContext *tc, bool update_stats)
+    GpuTLB::tlbLookup(const RequestPtr &req,
+                      ThreadContext *tc, bool update_stats)
     {
         bool tlb_hit = false;
     #ifndef NDEBUG
@@ -710,7 +711,7 @@ namespace X86ISA
     }
 
     Fault
-    GpuTLB::translate(RequestPtr req, ThreadContext *tc,
+    GpuTLB::translate(const RequestPtr &req, ThreadContext *tc,
                       Translation *translation, Mode mode,
                       bool &delayedResponse, bool timing, int &latency)
     {
@@ -913,8 +914,8 @@ namespace X86ISA
     };
 
     Fault
-    GpuTLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode,
-                            int &latency)
+    GpuTLB::translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                            Mode mode, int &latency)
     {
         bool delayedResponse;
 
@@ -923,7 +924,7 @@ namespace X86ISA
     }
 
     void
-    GpuTLB::translateTiming(RequestPtr req, ThreadContext *tc,
+    GpuTLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
             Translation *translation, Mode mode, int &latency)
     {
         bool delayedResponse;
@@ -1069,7 +1070,7 @@ namespace X86ISA
         }
 
         tlbOutcome lookup_outcome = TLB_MISS;
-        RequestPtr tmp_req = pkt->req;
+        const RequestPtr &tmp_req = pkt->req;
 
         // Access the TLB and figure out if it's a hit or a miss.
         bool success = tlbLookup(tmp_req, tmp_tc, update_stats);

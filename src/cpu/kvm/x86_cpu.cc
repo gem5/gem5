@@ -1354,8 +1354,10 @@ X86KvmCPU::handleKvmExitIO()
     // prevent races in multi-core mode.
     EventQueue::ScopedMigration migrate(deviceEventQueue());
     for (int i = 0; i < count; ++i) {
-        RequestPtr io_req = new Request(pAddr, kvm_run.io.size,
-                                        Request::UNCACHEABLE, dataMasterId());
+        RequestPtr io_req = std::make_shared<Request>(
+            pAddr, kvm_run.io.size,
+            Request::UNCACHEABLE, dataMasterId());
+
         io_req->setContext(tc->contextId());
 
         PacketPtr pkt = new Packet(io_req, cmd);

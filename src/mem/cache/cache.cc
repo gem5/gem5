@@ -377,10 +377,10 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
 
         if (!mshr) {
             // copy the request and create a new SoftPFReq packet
-            RequestPtr req = new Request(pkt->req->getPaddr(),
-                                         pkt->req->getSize(),
-                                         pkt->req->getFlags(),
-                                         pkt->req->masterId());
+            RequestPtr req = std::make_shared<Request>(pkt->req->getPaddr(),
+                                                       pkt->req->getSize(),
+                                                       pkt->req->getFlags(),
+                                                       pkt->req->masterId());
             pf = new Packet(req, pkt->cmd);
             pf->allocate();
             assert(pf->getAddr() == pkt->getAddr());
@@ -696,7 +696,6 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk,
                 // immediately with dummy data so the core would be able to
                 // retire it. This request completes right here, so we
                 // deallocate it.
-                delete tgt_pkt->req;
                 delete tgt_pkt;
                 break; // skip response
             }
@@ -803,7 +802,6 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk,
             assert(tgt_pkt->cmd == MemCmd::HardPFReq);
             if (blk)
                 blk->status |= BlkHWPrefetched;
-            delete tgt_pkt->req;
             delete tgt_pkt;
             break;
 
@@ -871,11 +869,11 @@ Cache::cleanEvictBlk(CacheBlk *blk)
 {
     assert(!writebackClean);
     assert(blk && blk->isValid() && !blk->isDirty());
-    // Creating a zero sized write, a message to the snoop filter
 
-    RequestPtr req =
-        new Request(regenerateBlkAddr(blk), blkSize, 0,
-                    Request::wbMasterId);
+    // Creating a zero sized write, a message to the snoop filter
+    RequestPtr req = std::make_shared<Request>(
+        regenerateBlkAddr(blk), blkSize, 0, Request::wbMasterId);
+
     if (blk->isSecure())
         req->setFlags(Request::SECURE);
 
@@ -1138,15 +1136,6 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
 
     if (!respond && is_deferred) {
         assert(pkt->needsResponse());
-
-        // if we copied the deferred packet with the intention to
-        // respond, but are not responding, then a cache above us must
-        // be, and we can use this as the indication of whether this
-        // is a packet where we created a copy of the request or not
-        if (!pkt->cacheResponding()) {
-            delete pkt->req;
-        }
-
         delete pkt;
     }
 
@@ -1396,7 +1385,6 @@ Cache::sendMSHRQueuePacket(MSHR* mshr)
             }
 
             // given that no response is expected, delete Request and Packet
-            delete tgt_pkt->req;
             delete tgt_pkt;
 
             return false;

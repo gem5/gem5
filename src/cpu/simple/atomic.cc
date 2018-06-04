@@ -69,9 +69,9 @@ AtomicSimpleCPU::init()
     BaseSimpleCPU::init();
 
     int cid = threadContexts[0]->contextId();
-    ifetch_req.setContext(cid);
-    data_read_req.setContext(cid);
-    data_write_req.setContext(cid);
+    ifetch_req->setContext(cid);
+    data_read_req->setContext(cid);
+    data_write_req->setContext(cid);
 }
 
 AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
@@ -87,6 +87,9 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       ppCommit(nullptr)
 {
     _status = Idle;
+    ifetch_req = std::make_shared<Request>();
+    data_read_req = std::make_shared<Request>();
+    data_write_req = std::make_shared<Request>();
 }
 
 
@@ -331,7 +334,7 @@ AtomicSimpleCPU::readMem(Addr addr, uint8_t * data, unsigned size,
     SimpleThread* thread = t_info.thread;
 
     // use the CPU's statically allocated read request and packet objects
-    RequestPtr req = &data_read_req;
+    const RequestPtr &req = data_read_req;
 
     if (traceData)
         traceData->setMem(addr, size, flags);
@@ -435,7 +438,7 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
     }
 
     // use the CPU's statically allocated write request and packet objects
-    RequestPtr req = &data_write_req;
+    const RequestPtr &req = data_write_req;
 
     if (traceData)
         traceData->setMem(addr, size, flags);
@@ -545,9 +548,9 @@ AtomicSimpleCPU::tick()
     if (numThreads > 1) {
         ContextID cid = threadContexts[curThread]->contextId();
 
-        ifetch_req.setContext(cid);
-        data_read_req.setContext(cid);
-        data_write_req.setContext(cid);
+        ifetch_req->setContext(cid);
+        data_read_req->setContext(cid);
+        data_write_req->setContext(cid);
     }
 
     SimpleExecContext& t_info = *threadInfo[curThread];
@@ -577,9 +580,9 @@ AtomicSimpleCPU::tick()
         bool needToFetch = !isRomMicroPC(pcState.microPC()) &&
                            !curMacroStaticInst;
         if (needToFetch) {
-            ifetch_req.taskId(taskId());
-            setupFetchRequest(&ifetch_req);
-            fault = thread->itb->translateAtomic(&ifetch_req, thread->getTC(),
+            ifetch_req->taskId(taskId());
+            setupFetchRequest(ifetch_req);
+            fault = thread->itb->translateAtomic(ifetch_req, thread->getTC(),
                                                  BaseTLB::Execute);
         }
 
@@ -597,7 +600,7 @@ AtomicSimpleCPU::tick()
                 //if (decoder.needMoreBytes())
                 //{
                     icache_access = true;
-                    Packet ifetch_pkt = Packet(&ifetch_req, MemCmd::ReadReq);
+                    Packet ifetch_pkt = Packet(ifetch_req, MemCmd::ReadReq);
                     ifetch_pkt.dataStatic(&inst);
 
                     if (fastmem && system->isMemAddr(ifetch_pkt.getAddr()))

@@ -106,9 +106,9 @@ namespace X86ISA
         Stats::Scalar rdMisses;
         Stats::Scalar wrMisses;
 
-        Fault translateInt(RequestPtr req, ThreadContext *tc);
+        Fault translateInt(const RequestPtr &req, ThreadContext *tc);
 
-        Fault translate(RequestPtr req, ThreadContext *tc,
+        Fault translate(const RequestPtr &req, ThreadContext *tc,
                 Translation *translation, Mode mode,
                 bool &delayedResponse, bool timing);
 
@@ -123,9 +123,9 @@ namespace X86ISA
         }
 
         Fault translateAtomic(
-            RequestPtr req, ThreadContext *tc, Mode mode) override;
+            const RequestPtr &req, ThreadContext *tc, Mode mode) override;
         void translateTiming(
-            RequestPtr req, ThreadContext *tc,
+            const RequestPtr &req, ThreadContext *tc,
             Translation *translation, Mode mode) override;
 
         /**
@@ -141,7 +141,7 @@ namespace X86ISA
          * @param mode Request type (read/write/execute).
          * @return A fault on failure, NoFault otherwise.
          */
-        Fault finalizePhysical(RequestPtr req, ThreadContext *tc,
+        Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
                                Mode mode) const override;
 
         TlbEntry *insert(Addr vpn, const TlbEntry &entry);

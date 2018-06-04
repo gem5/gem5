@@ -171,7 +171,7 @@ ExtMaster::handleEvent(SST::Event* event)
         cmdO = MemCmd::StoreCondReq;
     }
 
-    auto req = new Request(ev->getAddr(), ev->getSize(), flags, 0);
+    auto req = std::make_shared<Request>(ev->getAddr(), ev->getSize(), flags, 0);
     req->setContext(ev->getGroupId());
 
     auto pkt = new Packet(req, cmdO);
@@ -205,7 +205,6 @@ ExtMaster::recvTimingResp(PacketPtr pkt) {
 
     // copy the payload and then destroy gem5 packet
     resp->setPayload(pkt->getSize(), pkt->getPtr<uint8_t>());
-    delete pkt->req;
     delete pkt;
 
     nic->send(resp);

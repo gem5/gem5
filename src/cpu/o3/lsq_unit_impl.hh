@@ -79,7 +79,6 @@ LSQUnit<Impl>::WritebackEvent::process()
     if (pkt->senderState)
         delete pkt->senderState;
 
-    delete pkt->req;
     delete pkt;
 }
 
@@ -133,7 +132,6 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
     }
 
     if (TheISA::HasUnalignedMemAcc && state->isSplit && state->isLoad) {
-        delete state->mainPkt->req;
         delete state->mainPkt;
     }
 
@@ -831,9 +829,9 @@ LSQUnit<Impl>::writebackStores()
 
         DynInstPtr inst = storeQueue[storeWBIdx].inst;
 
-        RequestPtr req = storeQueue[storeWBIdx].req;
-        RequestPtr sreqLow = storeQueue[storeWBIdx].sreqLow;
-        RequestPtr sreqHigh = storeQueue[storeWBIdx].sreqHigh;
+        RequestPtr &req = storeQueue[storeWBIdx].req;
+        const RequestPtr &sreqLow = storeQueue[storeWBIdx].sreqLow;
+        const RequestPtr &sreqHigh = storeQueue[storeWBIdx].sreqHigh;
 
         storeQueue[storeWBIdx].committed = true;
 
@@ -874,7 +872,6 @@ LSQUnit<Impl>::writebackStores()
             state->outstanding = 2;
 
             // Can delete the main request now.
-            delete req;
             req = sreqLow;
         }
 
@@ -923,11 +920,8 @@ LSQUnit<Impl>::writebackStores()
                 assert(snd_data_pkt->req->isMmappedIpr());
                 TheISA::handleIprWrite(thread, snd_data_pkt);
                 delete snd_data_pkt;
-                delete sreqLow;
-                delete sreqHigh;
             }
             delete state;
-            delete req;
             completeStore(storeWBIdx);
             incrStIdx(storeWBIdx);
         } else if (!sendStore(data_pkt)) {
@@ -1061,16 +1055,12 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         // Must delete request now that it wasn't handed off to
         // memory.  This is quite ugly.  @todo: Figure out the proper
         // place to really handle request deletes.
-        delete storeQueue[store_idx].req;
+        storeQueue[store_idx].req.reset();
         if (TheISA::HasUnalignedMemAcc && storeQueue[store_idx].isSplit) {
-            delete storeQueue[store_idx].sreqLow;
-            delete storeQueue[store_idx].sreqHigh;
-
-            storeQueue[store_idx].sreqLow = NULL;
-            storeQueue[store_idx].sreqHigh = NULL;
+            storeQueue[store_idx].sreqLow.reset();
+            storeQueue[store_idx].sreqHigh.reset();
         }
 
-        storeQueue[store_idx].req = NULL;
         --stores;
 
         // Inefficient!

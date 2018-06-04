@@ -181,7 +181,7 @@ class Shader : public ClockedObject
     void WriteMem(uint64_t address, void *ptr, uint32_t sz, int cu_id,
                   bool suppress_func_errors);
 
-    void doFunctionalAccess(RequestPtr req, MemCmd cmd, void *data,
+    void doFunctionalAccess(const RequestPtr &req, MemCmd cmd, void *data,
                             bool suppress_func_errors, int cu_id);
 
     void

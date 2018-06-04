@@ -226,7 +226,7 @@ Shader::handshake(GpuDispatcher *_dispatcher)
 }
 
 void
-Shader::doFunctionalAccess(RequestPtr req, MemCmd cmd, void *data,
+Shader::doFunctionalAccess(const RequestPtr &req, MemCmd cmd, void *data,
                            bool suppress_func_errors, int cu_id)
 {
     int block_size = cuList.at(cu_id)->cacheLineSize();
@@ -338,12 +338,13 @@ Shader::AccessMem(uint64_t address, void *ptr, uint32_t size, int cu_id,
 
     for (ChunkGenerator gen(address, size, cuList.at(cu_id)->cacheLineSize());
          !gen.done(); gen.next()) {
-        RequestPtr req = new Request(0, gen.addr(), gen.size(), 0,
-                                   cuList[0]->masterId(), 0, 0, 0);
+
+        RequestPtr req = std::make_shared<Request>(
+            0, gen.addr(), gen.size(), 0,
+            cuList[0]->masterId(), 0, 0, nullptr);
 
         doFunctionalAccess(req, cmd, data_buf, suppress_func_errors, cu_id);
         data_buf += gen.size();
-        delete req;
     }
 }
 

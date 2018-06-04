@@ -81,7 +81,7 @@ namespace ContextSwitchTaskId {
 
 class Request;
 
-typedef Request* RequestPtr;
+typedef std::shared_ptr<Request> RequestPtr;
 typedef uint16_t MasterID;
 
 class Request
@@ -515,8 +515,8 @@ class Request
         assert(privateFlags.isSet(VALID_VADDR));
         assert(privateFlags.noneSet(VALID_PADDR));
         assert(split_addr > _vaddr && split_addr < _vaddr + _size);
-        req1 = new Request(*this);
-        req2 = new Request(*this);
+        req1 = std::make_shared<Request>(*this);
+        req2 = std::make_shared<Request>(*this);
         req1->_size = split_addr - _vaddr;
         req2->_vaddr = split_addr;
         req2->_size = _size - req1->_size;
