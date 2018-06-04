@@ -321,34 +321,34 @@ BaseXBar::Layer<SrcType,DstType>::recvRetry()
 }
 
 PortID
-BaseXBar::findPort(Addr addr)
+BaseXBar::findPort(AddrRange addr_range)
 {
     // we should never see any address lookups before we've got the
     // ranges of all connected slave modules
     assert(gotAllAddrRanges);
 
     // Check the address map interval tree
-    auto i = portMap.contains(addr);
+    auto i = portMap.contains(addr_range);
     if (i != portMap.end()) {
         return i->second;
     }
 
     // Check if this matches the default range
     if (useDefaultRange) {
-        if (defaultRange.contains(addr)) {
-            DPRINTF(AddrRanges, "  found addr %#llx on default\n",
-                    addr);
+        if (addr_range.isSubset(defaultRange)) {
+            DPRINTF(AddrRanges, "  found addr %s on default\n",
+                    addr_range.to_string());
             return defaultPortID;
         }
     } else if (defaultPortID != InvalidPortID) {
-        DPRINTF(AddrRanges, "Unable to find destination for addr %#llx, "
-                "will use default port\n", addr);
+        DPRINTF(AddrRanges, "Unable to find destination for %s, "
+                "will use default port\n", addr_range.to_string());
         return defaultPortID;
     }
 
     // we should use the range for the default port and it did not
     // match, or the default port is not set
-    fatal("Unable to find destination for addr %#llx on %s\n", addr,
+    fatal("Unable to find destination for %s on %s\n", addr_range.to_string(),
           name());
 }
 

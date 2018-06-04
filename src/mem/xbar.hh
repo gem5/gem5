@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 ARM Limited
+ * Copyright (c) 2011-2015, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -342,13 +342,14 @@ class BaseXBar : public MemObject
      */
     virtual void recvRangeChange(PortID master_port_id);
 
-    /** Find which port connected to this crossbar (if any) should be
-     * given a packet with this address.
+    /**
+     * Find which port connected to this crossbar (if any) should be
+     * given a packet with this address range.
      *
-     * @param addr Address to find port for.
+     * @param addr_range Address range to find port for.
      * @return id of port that the packet should be sent out of.
      */
-    PortID findPort(Addr addr);
+    PortID findPort(AddrRange addr_range);
 
     /**
      * Return the address ranges the crossbar is responsible for.
