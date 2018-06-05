@@ -371,6 +371,14 @@ class ArmStaticInst : public StaticInst
                        ExceptionLevel targetEL, bool isWfe) const;
 
     /**
+     * Trigger a Software Breakpoint.
+     *
+     * See aarch32/exceptions/debug/AArch32.SoftwareBreakpoint in the
+     * ARM ARM psueodcode library.
+     */
+    Fault softwareBreakpoint32(ExecContext *xc, uint16_t imm) const;
+
+    /**
      * Trap an access to Advanced SIMD or FP registers due to access
      * control bits.
      *

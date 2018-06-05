@@ -1533,8 +1533,6 @@ SoftwareBreakpoint::SoftwareBreakpoint(ExtMachInst _mach_inst, uint32_t _iss)
 bool
 SoftwareBreakpoint::routeToHyp(ThreadContext *tc) const
 {
-    assert(from64);
-
     const bool have_el2 = ArmSystem::haveVirtualization(tc);
 
     const HCR hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);

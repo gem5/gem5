@@ -688,7 +688,15 @@ let {{
     decoder_output += RegRegRegRegOpConstructor.subst(usada8Iop)
     exec_output += PredOpExecute.subst(usada8Iop)
 
-    bkptCode = 'return std::make_shared<PrefetchAbort>(PC, ArmFault::DebugEvent);\n'
+    bkptCode = '''
+        uint16_t imm16;
+        if (!machInst.thumb)
+            imm16 = ((bits(machInst, 19, 8) << 4) | bits(machInst, 3, 0));
+        else
+            imm16 = bits(machInst, 7, 0);
+
+        return softwareBreakpoint32(xc, imm16);
+    '''
     bkptIop = InstObjParams("bkpt", "BkptInst", "PredOp", bkptCode)
     header_output += BasicDeclare.subst(bkptIop)
     decoder_output += BasicConstructor.subst(bkptIop)

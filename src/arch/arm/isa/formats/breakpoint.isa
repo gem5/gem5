@@ -45,53 +45,11 @@
 // Breakpoint instructions
 //
 
-output header {{
-    /**
-     * Static instruction class for Breakpoint (illegal) instructions.
-     * These cause simulator termination if they are executed in a
-     * non-speculative mode.  This is a leaf class.
-     */
-    class Breakpoint : public ArmStaticInst
-    {
-      public:
-        /// Constructor
-        Breakpoint(ExtMachInst _machInst)
-            : ArmStaticInst("Breakpoint", _machInst, No_OpClass)
-        {
-            // don't call execute() (which panics) if we're on a
-            // speculative path
-            flags[IsNonSpeculative] = true;
-        }
-
-        Fault execute(ExecContext *, Trace::InstRecord *) const override;
-
-        std::string
-        generateDisassembly(Addr pc, const SymbolTable *symtab) const override;
-    };
-}};
-
-output decoder {{
-    std::string
-    Breakpoint::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-    {
-        return csprintf("%-10s (inst 0x%x)", "Breakpoint", machInst);
-    }
-}};
-
-output exec {{
-    Fault
-    Breakpoint::execute(ExecContext *xc, Trace::InstRecord *traceData) const
-    {
-        return std::make_shared<PrefetchAbort>(xc->pcState().pc(),
-                                               ArmFault::DebugEvent);
-    }
-}};
-
 def format ArmBkptHlt() {{
     decode_block = '''
     {
         if (bits(machInst, 21)) {
-            return new Breakpoint(machInst);
+            return new BkptInst(machInst);
         } else {
             uint32_t imm16 = (bits(machInst, 19, 8) << 4) |
                              (bits(machInst,  3, 0) << 0);

@@ -605,6 +605,23 @@ ArmStaticInst::generateDisassembly(Addr pc,
     return ss.str();
 }
 
+Fault
+ArmStaticInst::softwareBreakpoint32(ExecContext *xc, uint16_t imm) const
+{
+    const auto tc = xc->tcBase();
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    const HDCR mdcr = tc->readMiscRegNoEffect(MISCREG_MDCR_EL2);
+    if ((ArmSystem::haveEL(tc, EL2) && !inSecureState(tc) &&
+         !ELIs32(tc, EL2) && (hcr.tge == 1 || mdcr.tde == 1)) ||
+         !ELIs32(tc, EL1)) {
+        // Route to AArch64 Software Breakpoint
+        return std::make_shared<SoftwareBreakpoint>(machInst, imm);
+    } else {
+        // Execute AArch32 Software Breakpoint
+        return std::make_shared<PrefetchAbort>(readPC(xc),
+                                               ArmFault::DebugEvent);
+    }
+}
 
 Fault
 ArmStaticInst::advSIMDFPAccessTrap64(ExceptionLevel el) const
