@@ -761,11 +761,6 @@ class TableWalker : public MemObject
         /** Flag indicating if a second stage of lookup is required */
         bool stage2Req;
 
-        /** Indicates whether the translation has been passed onto the second
-         *  stage mmu, and no more work is required from the first stage.
-         */
-        bool doingStage2;
-
         /** A pointer to the stage 2 translation that's in progress */
         TLB::Translation *stage2Tran;
 

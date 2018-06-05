@@ -132,7 +132,7 @@ TableWalker::WalkerState::WalkerState() :
     asid(0), vmid(0), isHyp(false), transState(nullptr),
     vaddr(0), vaddr_tainted(0), isWrite(false), isFetch(false), isSecure(false),
     secureLookup(false), rwTable(false), userTable(false), xnTable(false),
-    pxnTable(false), stage2Req(false), doingStage2(false),
+    pxnTable(false), stage2Req(false),
     stage2Tran(nullptr), timing(false), functional(false),
     mode(BaseTLB::Read), tranType(TLB::NormalTran), l2Desc(l1Desc),
     delayed(false), tableWalker(nullptr)
@@ -302,11 +302,6 @@ TableWalker::walk(RequestPtr _req, ThreadContext *_tc, uint16_t _asid,
 
     statRequestOrigin[REQUESTED][currState->isFetch]++;
 
-    // We only do a second stage of translation if we're not secure, or in
-    // hyp mode, the second stage MMU is enabled, and this table walker
-    // instance is the first stage.
-    // TODO: fix setting of doingStage2 for timing mode
-    currState->doingStage2 = false;
     currState->stage2Req = _stage2Req && !isStage2;
 
     bool long_desc_format = currState->aarch64 || _isHyp || isStage2 ||
@@ -1817,13 +1812,11 @@ TableWalker::doL1DescriptorWrapper()
     else if (!currState->delayed) {
         // delay is not set so there is no L2 to do
         // Don't finish the translation if a stage 2 look up is underway
-        if (!currState->doingStage2) {
-            statWalkServiceTime.sample(curTick() - currState->startTime);
-            DPRINTF(TLBVerbose, "calling translateTiming again\n");
-            tlb->translateTiming(currState->req, currState->tc,
-                                 currState->transState, currState->mode);
-            statWalksShortTerminatedAtLevel[0]++;
-        }
+        statWalkServiceTime.sample(curTick() - currState->startTime);
+        DPRINTF(TLBVerbose, "calling translateTiming again\n");
+        tlb->translateTiming(currState->req, currState->tc,
+                             currState->transState, currState->mode);
+        statWalksShortTerminatedAtLevel[0]++;
 
         pending = false;
         nextWalk(currState->tc);
@@ -1859,16 +1852,12 @@ TableWalker::doL2DescriptorWrapper()
         currState->transState->finish(currState->fault, currState->req,
                                       currState->tc, currState->mode);
         statWalksShortTerminatedAtLevel[1]++;
-    }
-    else {
-        // Don't finish the translation if a stage 2 look up is underway
-        if (!currState->doingStage2) {
-            statWalkServiceTime.sample(curTick() - currState->startTime);
-            DPRINTF(TLBVerbose, "calling translateTiming again\n");
-            tlb->translateTiming(currState->req, currState->tc,
-                                 currState->transState, currState->mode);
-            statWalksShortTerminatedAtLevel[1]++;
-        }
+    } else {
+        statWalkServiceTime.sample(curTick() - currState->startTime);
+        DPRINTF(TLBVerbose, "calling translateTiming again\n");
+        tlb->translateTiming(currState->req, currState->tc,
+                             currState->transState, currState->mode);
+        statWalksShortTerminatedAtLevel[1]++;
     }
 
 
@@ -1941,14 +1930,11 @@ TableWalker::doLongDescriptorWrapper(LookupLevel curr_lookup_level)
         delete currState;
     } else if (!currState->delayed) {
         // No additional lookups required
-        // Don't finish the translation if a stage 2 look up is underway
-        if (!currState->doingStage2) {
-            DPRINTF(TLBVerbose, "calling translateTiming again\n");
-            statWalkServiceTime.sample(curTick() - currState->startTime);
-            tlb->translateTiming(currState->req, currState->tc,
-                                 currState->transState, currState->mode);
-            statWalksLongTerminatedAtLevel[(unsigned) curr_lookup_level]++;
-        }
+        DPRINTF(TLBVerbose, "calling translateTiming again\n");
+        statWalkServiceTime.sample(curTick() - currState->startTime);
+        tlb->translateTiming(currState->req, currState->tc,
+                             currState->transState, currState->mode);
+        statWalksLongTerminatedAtLevel[(unsigned) curr_lookup_level]++;
 
         pending = false;
         nextWalk(currState->tc);
