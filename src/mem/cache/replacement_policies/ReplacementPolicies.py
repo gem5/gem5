@@ -90,3 +90,9 @@ class RRIPRP(BRRIPRP):
 class NRURP(BRRIPRP):
     btp = 0
     max_RRPV = 1
+
+class TreePLRURP(BaseReplacementPolicy):
+    type = 'TreePLRURP'
+    cxx_class = 'TreePLRURP'
+    cxx_header = "mem/cache/replacement_policies/tree_plru_rp.hh"
+    num_leaves = Param.Int(Parent.assoc, "Number of leaves in each tree")

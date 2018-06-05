@@ -31,8 +31,7 @@
 /**
  * @file
  * Declaration of a Least Recently Used replacement policy.
- * The victim is chosen using the timestamp. The timestamp may be true or
- * pseudo, depending on the quantity of bits allocated for that.
+ * The victim is chosen using the last touch timestamp.
  */
 
 #ifndef __MEM_CACHE_REPLACEMENT_POLICIES_LRU_RP_HH__
