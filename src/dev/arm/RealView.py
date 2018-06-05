@@ -598,10 +598,8 @@ class RealView(Platform):
         node.append(FdtPropertyWords("interrupt-parent",
                                      state.phandle(self.gic)))
 
-        for device in [getattr(self, c) for c in self._children]:
-            if issubclass(type(device), SimObject):
-                subnode = device.generateDeviceTree(state)
-                node.append(subnode)
+        for subnode in self.recurseDeviceTree(state):
+            node.append(subnode)
 
         yield node
 
