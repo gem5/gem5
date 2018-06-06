@@ -92,7 +92,7 @@ WeightedLRUPolicy::getVictim(int64_t set) const
 
     smallest_index = 0;
     smallest_time = m_last_ref_ptr[set][0];
-    int smallest_weight = m_last_ref_ptr[set][0];
+    int smallest_weight = m_last_occ_ptr[set][0];
 
     for (unsigned i = 1; i < m_assoc; i++) {
 
