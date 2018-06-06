@@ -108,8 +108,8 @@
 	virt-encoder {
 		compatible = "drm,virtual-encoder";
 		port {
-			hdlcd0_virt_input: endpoint@0 {
-				remote-endpoint = <&hdlcd0_output>;
+			dp0_virt_input: endpoint@0 {
+				remote-endpoint = <&dp0_output>;
 			};
 		};
 
@@ -132,12 +132,12 @@
 	};
 };
 
-&hdlcd0 {
+&dp0 {
 	status = "ok";
 
 	port {
-		hdlcd0_output: endpoint@0 {
-			remote-endpoint = <&hdlcd0_virt_input>;
+		dp0_output: endpoint@0 {
+			remote-endpoint = <&dp0_virt_input>;
 		};
 	};
 };

@@ -50,6 +50,8 @@ GEN_DTS=mkdir -p .gen; \
 
 all: $(TARGETS)
 
+platforms/vexpress_gem5_v1.dtsi: platforms/vexpress_gem5_v1_base.dtsi
+
 .gen/armv7_gem5_v1_%cpu.dts: armv7.dts platforms/vexpress_gem5_v1.dtsi
 	$(call GEN_DTS,vexpress_gem5_v1.dtsi,$*)
 
