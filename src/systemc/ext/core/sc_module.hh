@@ -141,6 +141,9 @@ class sc_module : public sc_object
     sc_module(const sc_module_name &);
     sc_module();
 
+    /* Deprecated, but used in the regression tests. */
+    void end_module() {}
+
     void reset_signal_is(const sc_in<bool> &, bool);
     void reset_signal_is(const sc_inout<bool> &, bool);
     void reset_signal_is(const sc_out<bool> &, bool);
