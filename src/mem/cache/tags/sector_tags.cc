@@ -194,7 +194,7 @@ SectorTags::getPossibleLocations(Addr addr) const
 }
 
 void
-SectorTags::insertBlock(PacketPtr pkt, CacheBlk *blk)
+SectorTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
 {
     // Insert block
     BaseTags::insertBlock(pkt, blk);

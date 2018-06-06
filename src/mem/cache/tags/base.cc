@@ -80,7 +80,7 @@ BaseTags::setCache(BaseCache *_cache)
 }
 
 void
-BaseTags::insertBlock(PacketPtr pkt, CacheBlk *blk)
+BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
 {
     assert(!blk->isValid());
 

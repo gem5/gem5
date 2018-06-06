@@ -248,7 +248,7 @@ class BaseSetAssoc : public BaseTags
      * @param pkt Packet holding the address to update
      * @param blk The block to update.
      */
-    void insertBlock(PacketPtr pkt, CacheBlk *blk) override
+    void insertBlock(const PacketPtr pkt, CacheBlk *blk) override
     {
         // Insert block
         BaseTags::insertBlock(pkt, blk);

@@ -287,7 +287,7 @@ class BaseTags : public ClockedObject
      * @param pkt Packet holding the address to update
      * @param blk The block to update.
      */
-    virtual void insertBlock(PacketPtr pkt, CacheBlk *blk);
+    virtual void insertBlock(const PacketPtr pkt, CacheBlk *blk);
 
     /**
      * Regenerate the block address.
