@@ -659,14 +659,14 @@ class BaseCache : public MemObject
      *
      * Find a victim block and if necessary prepare writebacks for any
      * existing data. May return nullptr if there are no replaceable
-     * blocks.
+     * blocks. If a replaceable block is found, it inserts the new block in
+     * its place. The new block, however, is not set as valid yet.
      *
-     * @param addr Physical address of the new block
-     * @param is_secure Set if the block should be secure
+     * @param pkt Packet holding the address to update
      * @param writebacks A list of writeback packets for the evicted blocks
      * @return the allocated block
      */
-    CacheBlk *allocateBlock(Addr addr, bool is_secure, PacketList &writebacks);
+    CacheBlk *allocateBlock(const PacketPtr pkt, PacketList &writebacks);
     /**
      * Evict a cache block.
      *

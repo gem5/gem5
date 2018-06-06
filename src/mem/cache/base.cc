@@ -970,13 +970,12 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         if (!blk) {
             // need to do a replacement
-            blk = allocateBlock(pkt->getAddr(), pkt->isSecure(), writebacks);
+            blk = allocateBlock(pkt, writebacks);
             if (!blk) {
                 // no replaceable block available: give up, fwd to next level.
                 incMissCount(pkt);
                 return false;
             }
-            tags->insertBlock(pkt, blk);
 
             blk->status |= (BlkValid | BlkReadable);
         }
@@ -1028,15 +1027,13 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 return false;
             } else {
                 // a writeback that misses needs to allocate a new block
-                blk = allocateBlock(pkt->getAddr(), pkt->isSecure(),
-                                    writebacks);
+                blk = allocateBlock(pkt, writebacks);
                 if (!blk) {
                     // no replaceable block available: give up, fwd to
                     // next level.
                     incMissCount(pkt);
                     return false;
                 }
-                tags->insertBlock(pkt, blk);
 
                 blk->status |= (BlkValid | BlkReadable);
             }
@@ -1124,7 +1121,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
         // need to do a replacement if allocating, otherwise we stick
         // with the temporary storage
-        blk = allocate ? allocateBlock(addr, is_secure, writebacks) : nullptr;
+        blk = allocate ? allocateBlock(pkt, writebacks) : nullptr;
 
         if (!blk) {
             // No replaceable block or a mostly exclusive
@@ -1135,8 +1132,6 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
             tempBlock->insert(addr, is_secure);
             DPRINTF(Cache, "using temp block for %#llx (%s)\n", addr,
                     is_secure ? "s" : "ns");
-        } else {
-            tags->insertBlock(pkt, blk);
         }
 
         // we should never be overwriting a valid block
@@ -1205,8 +1200,14 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 }
 
 CacheBlk*
-BaseCache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
+BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 {
+    // Get address
+    const Addr addr = pkt->getAddr();
+
+    // Get secure bit
+    const bool is_secure = pkt->isSecure();
+
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
     CacheBlk *victim = tags->findVictim(addr, is_secure, evict_blks);
@@ -1256,6 +1257,9 @@ BaseCache::allocateBlock(Addr addr, bool is_secure, PacketList &writebacks)
             evictBlock(blk, writebacks);
         }
     }
+
+    // Insert new block at victimized entry
+    tags->insertBlock(pkt, victim);
 
     return victim;
 }
