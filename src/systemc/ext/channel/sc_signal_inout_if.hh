@@ -85,6 +85,10 @@ class sc_signal_inout_if : public sc_signal_in_if<T>,
     }
 };
 
+// Deprecated.
+template <class T>
+using sc_signal_out_if = sc_signal_inout_if<T>;
+
 } // namespace sc_core
 
 #endif  //__SYSTEMC_EXT_CHANNEL_SC_SIGNAL_INOUT_IF_HH__
