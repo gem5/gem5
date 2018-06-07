@@ -37,7 +37,9 @@
 namespace sc_core
 {
 
-template <class T, sc_writer_policy WRITER_POLICY>
+// Having a default value for the WRITER_POLICY parameter is non-standard, but
+// matches the Accellera implementation to enable the regression tests.
+template <class T, sc_writer_policy WRITER_POLICY=SC_ONE_WRITER>
 class sc_buffer : public sc_signal<T, WRITER_POLICY>
 {
   public:
