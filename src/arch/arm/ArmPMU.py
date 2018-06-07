@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2009-2014, 2017, 2020, 2022 Arm Limited
+# Copyright (c) 2009-2014, 2017-2018, 2020, 2022-2023 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -215,11 +215,14 @@ class ArmPMU(SimObject):
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     eventCounters = Param.Int(31, "Number of supported PMU counters")
     interrupt = Param.ArmInterruptPin("PMU interrupt")
+    exitOnPMUControl = Param.Bool(
+        False, "Exit on PMU enable, disable, or reset"
+    )
 
     # 64-bit PMU event counters are officially supported when
     # Armv8.5-A FEAT_PMUv3p5 is implemented. This parameter is not a
     # full implementation of FEAT_PMUv3p5.
     use64bitCounters = Param.Bool(
         False,
-        "Choose whether to use 64-bit or " "32-bit PMEVCNTR<n>_EL0 registers.",
+        "Choose whether to use 64-bit or 32-bit PMEVCNTR<n>_EL0 registers.",
     )

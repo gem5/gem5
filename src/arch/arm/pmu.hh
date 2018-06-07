@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, 2017-2018, 2022 Arm Limited
+ * Copyright (c) 2011-2014, 2017-2018, 2022-2023 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -632,6 +632,12 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
      * List of event types supported by this PMU.
      */
     std::map<EventTypeId, std::shared_ptr<PMUEvent>> eventMap;
+
+    /**
+     * Exit simloop on PMU reset or disable
+     */
+    const bool exitOnPMUControl;
+
 };
 
 } // namespace ArmISA
