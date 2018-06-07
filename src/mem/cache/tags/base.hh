@@ -63,6 +63,7 @@
 #include "sim/clocked_object.hh"
 
 class BaseCache;
+class ReplaceableEntry;
 
 /**
  * A common base class of Cache tagstore objects.

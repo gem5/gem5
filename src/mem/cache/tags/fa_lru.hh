@@ -68,6 +68,8 @@
 // TrackedCaches class
 //#define FALRU_DEBUG
 
+class ReplaceableEntry;
+
 // A bitmask of the caches we are keeping track of. Currently the
 // lowest bit is the smallest cache we are tracking, as it is
 // specified by the corresponding parameter. The rest of the bits are

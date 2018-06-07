@@ -45,6 +45,7 @@
 #include "params/SectorTags.hh"
 
 class BaseReplacementPolicy;
+class ReplaceableEntry;
 
 /**
  * A SectorTags cache tag store.
