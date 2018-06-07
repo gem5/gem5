@@ -763,7 +763,8 @@ namespace Gcn3ISA
                        << extData.imm_u32 << ", ";
         }
 
-        dis_stream << "v" << instData.VSRC1;
+        dis_stream << std::resetiosflags(std::ios_base::basefield) << "v"
+            << instData.VSRC1;
 
         if (readsVCC())
             dis_stream << ", vcc";
