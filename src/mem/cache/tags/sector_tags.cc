@@ -194,10 +194,12 @@ SectorTags::getPossibleLocations(Addr addr) const
 }
 
 void
-SectorTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
+SectorTags::insertBlock(const Addr addr, const bool is_secure,
+                        const int src_master_ID, const uint32_t task_ID,
+                        CacheBlk *blk)
 {
-    // Insert block
-    BaseTags::insertBlock(pkt, blk);
+    // Do common block insertion functionality
+    BaseTags::insertBlock(addr, is_secure, src_master_ID, task_ID, blk);
 
     // Get block's sector
     SectorSubBlk* sub_blk = static_cast<SectorSubBlk*>(blk);

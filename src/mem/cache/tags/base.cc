@@ -52,7 +52,6 @@
 
 #include "base/types.hh"
 #include "mem/cache/base.hh"
-#include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/core.hh"
 #include "sim/sim_exit.hh"
@@ -80,25 +79,22 @@ BaseTags::setCache(BaseCache *_cache)
 }
 
 void
-BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
+BaseTags::insertBlock(const Addr addr, const bool is_secure,
+                      const int src_master_ID, const uint32_t task_ID,
+                      CacheBlk *blk)
 {
     assert(!blk->isValid());
 
-    // Get address
-    Addr addr = pkt->getAddr();
-
     // Previous block, if existed, has been removed, and now we have
     // to insert the new one
-
     // Deal with what we are bringing in
-    MasterID master_id = pkt->req->masterId();
-    assert(master_id < cache->system->maxMasters());
-    occupancies[master_id]++;
+    assert(src_master_ID < cache->system->maxMasters());
+    occupancies[src_master_ID]++;
 
     // Insert block with tag, src master id and task id
-    blk->insert(extractTag(addr), pkt->isSecure(), master_id,
-                pkt->req->taskId());
+    blk->insert(extractTag(addr), is_secure, src_master_ID, task_ID);
 
+    // Check if cache warm up is done
     if (!warmedUp && tagsInUse.value() >= warmupBound) {
         warmedUp = true;
         warmupCycle = curTick();
