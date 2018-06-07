@@ -311,13 +311,31 @@ class ProtoBuf(SourceFile):
         self.cc_file = File(modname + '.pb.cc')
         self.hh_file = File(modname + '.pb.h')
 
-class UnitTest(object):
-    '''Create a UnitTest'''
 
+exectuable_classes = []
+class ExecutableMeta(type):
+    '''Meta class for Executables.'''
     all = []
-    def __init__(self, target, *srcs_and_filts, **kwargs):
+
+    def __init__(cls, name, bases, d):
+        if not d.pop('abstract', False):
+            ExecutableMeta.all.append(cls)
+        super(ExecutableMeta, cls).__init__(name, bases, d)
+
+        cls.all = []
+
+class Executable(object):
+    '''Base class for creating an executable from sources.'''
+    __metaclass__ = ExecutableMeta
+
+    abstract = True
+
+    def __init__(self, target, *srcs_and_filts):
         '''Specify the target name and any sources. Sources that are
         not SourceFiles are evalued with Source().'''
+        super(Executable, self).__init__()
+        self.all.append(self)
+        self.target = target
 
         isFilter = lambda arg: isinstance(arg, SourceFilter)
         self.filters = filter(isFilter, srcs_and_filts)
@@ -330,23 +348,103 @@ class UnitTest(object):
             srcs.append(src)
 
         self.sources = srcs
-        self.target = target
-        self.main = kwargs.get('main', False)
-        self.all.append(self)
         self.dir = Dir('.')
 
-class GTest(UnitTest):
+    def path(self, env):
+        return self.dir.File(self.target + '.' + env['EXE_SUFFIX'])
+
+    def srcs_to_objs(self, env, sources):
+        return list([ s.static(env) for s in sources ])
+
+    @classmethod
+    def declare_all(cls, env):
+        return list([ instance.declare(env) for instance in cls.all ])
+
+    def declare(self, env, objs=None):
+        if objs is None:
+            objs = self.srcs_to_objs(env, self.sources)
+
+        if env['STRIP_EXES']:
+            stripped = self.path(env)
+            unstripped = env.File(str(stripped) + '.unstripped')
+            if sys.platform == 'sunos5':
+                cmd = 'cp $SOURCE $TARGET; strip $TARGET'
+            else:
+                cmd = 'strip $SOURCE -o $TARGET'
+            env.Program(unstripped, objs)
+            return env.Command(stripped, unstripped,
+                               MakeAction(cmd, Transform("STRIP")))
+        else:
+            return env.Program(self.path(env), objs)
+
+class UnitTest(Executable):
+    '''Create a UnitTest'''
+    def __init__(self, target, *srcs_and_filts, **kwargs):
+        super(UnitTest, self).__init__(target, *srcs_and_filts)
+
+        self.main = kwargs.get('main', False)
+
+    def declare(self, env):
+        sources = list(self.sources)
+        for f in self.filters:
+            sources = Source.all.apply_filter(f)
+        objs = self.srcs_to_objs(env, sources) + env['STATIC_OBJS']
+        if self.main:
+            objs += env['MAIN_OBJS']
+        return super(UnitTest, self).declare(env, objs)
+
+class GTest(Executable):
     '''Create a unit test based on the google test framework.'''
     all = []
-    def __init__(self, *args, **kwargs):
-        super(GTest, self).__init__(*args, **kwargs)
+    def __init__(self, *srcs_and_filts, **kwargs):
+        super(GTest, self).__init__(*srcs_and_filts)
+
         self.skip_lib = kwargs.pop('skip_lib', False)
+
+    @classmethod
+    def declare_all(cls, env):
+        env = env.Clone()
+        env.Append(LIBS=env['GTEST_LIBS'])
+        env.Append(CPPFLAGS=env['GTEST_CPPFLAGS'])
+        env['GTEST_LIB_SOURCES'] = Source.all.with_tag('gtest lib')
+        env['GTEST_OUT_DIR'] = \
+            Dir(env['BUILDDIR']).Dir('unittests.' + env['EXE_SUFFIX'])
+        return super(GTest, cls).declare_all(env)
+
+    def declare(self, env):
+        sources = list(self.sources)
+        if not self.skip_lib:
+            sources += env['GTEST_LIB_SOURCES']
+        for f in self.filters:
+            sources += Source.all.apply_filter(f)
+        objs = self.srcs_to_objs(env, sources)
+
+        binary = super(GTest, self).declare(env, objs)
+
+        out_dir = env['GTEST_OUT_DIR']
+        xml_file = out_dir.Dir(str(self.dir)).File(self.target + '.xml')
+        AlwaysBuild(env.Command(xml_file, binary,
+            "${SOURCES[0]} --gtest_output=xml:${TARGETS[0]}"))
+
+        return binary
+
+class Gem5(Executable):
+    '''Create a gem5 executable.'''
+
+    def __init__(self, target):
+        super(Gem5, self).__init__(target)
+
+    def declare(self, env):
+        objs = env['MAIN_OBJS'] + env['STATIC_OBJS']
+        return super(Gem5, self).declare(env, objs)
+
 
 # Children should have access
 Export('Source')
 Export('PySource')
 Export('SimObject')
 Export('ProtoBuf')
+Export('Executable')
 Export('UnitTest')
 Export('GTest')
 
@@ -1008,6 +1106,8 @@ for source in PySource.all:
 # List of constructed environments to pass back to SConstruct
 date_source = Source('base/date.cc', tags=[])
 
+gem5_binary = Gem5('gem5')
+
 # Function to create a new build environment as clone of current
 # environment 'env' with modified object suffix and optional stripped
 # binary.  Additional keyword arguments are appended to corresponding
@@ -1016,7 +1116,6 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     # SCons doesn't know to append a library suffix when there is a '.' in the
     # name.  Use '_' instead.
     libname = 'gem5_' + label
-    exename = 'gem5.' + label
     secondary_exename = 'm5.' + label
 
     new_env = env.Clone(OBJSUFFIX=objsfx, SHOBJSUFFIX=objsfx + 's')
@@ -1072,61 +1171,33 @@ def makeEnv(env, label, objsfx, strip=False, disable_partial=False, **kwargs):
     new_env.Depends(shared_date, shared_objs)
     shared_objs.extend(shared_date)
 
+    main_objs = [ s.static(new_env) for s in Source.all.with_tag('main') ]
+
     # First make a library of everything but main() so other programs can
     # link against m5.
     static_lib = new_env.StaticLibrary(libname, static_objs)
     shared_lib = new_env.SharedLibrary(libname, shared_objs)
 
-    # Now link a stub with main() and the static library.
-    main_objs = [ s.static(new_env) for s in Source.all.with_tag('main') ]
+    # Keep track of the object files generated so far so Executables can
+    # include them.
+    new_env['STATIC_OBJS'] = static_objs
+    new_env['SHARED_OBJS'] = shared_objs
+    new_env['MAIN_OBJS'] = main_objs
 
-    for test in UnitTest.all:
-        test_sources = list(test.sources)
-        for f in test.filters:
-            test_sources += Source.all.apply_filter(f)
-        test_objs = [ s.static(new_env) for s in test_sources ]
-        if test.main:
-            test_objs += main_objs
-        new_env.Program(test.dir.File('%s.%s' % (test.target, label)),
-                        test_objs + static_objs)
+    new_env['STATIC_LIB'] = static_lib
+    new_env['SHARED_LIB'] = shared_lib
 
-    gtest_env = new_env.Clone()
-    gtest_env.Append(LIBS=gtest_env['GTEST_LIBS'])
-    gtest_env.Append(CPPFLAGS=gtest_env['GTEST_CPPFLAGS'])
-    gtestlib_sources = Source.all.with_tag('gtest lib')
-    gtest_out_dir = Dir(new_env['BUILDDIR']).Dir('unittests.%s' % label)
-    for test in GTest.all:
-        test_sources = list(test.sources)
-        if not test.skip_lib:
-            test_sources += gtestlib_sources
-        for f in test.filters:
-            test_sources += Source.all.apply_filter(f)
-        test_objs = [ s.static(gtest_env) for s in test_sources ]
-        test_binary = gtest_env.Program(
-            test.dir.File('%s.%s' % (test.target, label)), test_objs)
+    # Record some settings for building Executables.
+    new_env['EXE_SUFFIX'] = label
+    new_env['STRIP_EXES'] = strip
 
-        AlwaysBuild(gtest_env.Command(
-            gtest_out_dir.File("%s/%s.xml" % (test.dir, test.target)),
-            test_binary, "${SOURCES[0]} --gtest_output=xml:${TARGETS[0]}"))
+    for cls in ExecutableMeta.all:
+        cls.declare_all(new_env)
 
-    progname = exename
-    if strip:
-        progname += '.unstripped'
+    new_env.M5Binary = File(gem5_binary.path(new_env))
 
-    targets = new_env.Program(progname, main_objs + static_objs)
-
-    if strip:
-        if sys.platform == 'sunos5':
-            cmd = 'cp $SOURCE $TARGET; strip $TARGET'
-        else:
-            cmd = 'strip $SOURCE -o $TARGET'
-        targets = new_env.Command(exename, progname,
-                    MakeAction(cmd, Transform("STRIP")))
-
-    new_env.Command(secondary_exename, exename,
+    new_env.Command(secondary_exename, new_env.M5Binary,
             MakeAction('ln $SOURCE $TARGET', Transform("HARDLINK")))
-
-    new_env.M5Binary = targets[0]
 
     # Set up regression tests.
     SConscript(os.path.join(env.root.abspath, 'tests', 'SConscript'),
