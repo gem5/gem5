@@ -961,7 +961,7 @@ static bool
 illegalExceptionReturn(ThreadContext *tc, CPSR cpsr, CPSR spsr)
 {
     const OperatingMode mode = (OperatingMode) (uint8_t)spsr.mode;
-    if (badMode(mode))
+    if (unknownMode(mode))
         return true;
 
     const OperatingMode cur_mode = (OperatingMode) (uint8_t)cpsr.mode;
@@ -1000,7 +1000,7 @@ illegalExceptionReturn(ThreadContext *tc, CPSR cpsr, CPSR spsr)
             return true;
     } else {
         // aarch32
-        return badMode32(mode);
+        return unknownMode32(mode);
     }
 
     return false;
@@ -1029,7 +1029,7 @@ ArmStaticInst::getPSTATEFromPSR(ThreadContext *tc, CPSR cpsr, CPSR spsr) const
         }
     } else {
         new_cpsr.il = spsr.il;
-        if (spsr.width && badMode32((OperatingMode)(uint8_t)spsr.mode)) {
+        if (spsr.width && unknownMode32((OperatingMode)(uint8_t)spsr.mode)) {
             new_cpsr.il = 1;
         } else if (spsr.width) {
             new_cpsr.mode = spsr.mode;

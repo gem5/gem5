@@ -313,6 +313,18 @@ isBigEndian64(ThreadContext *tc)
     }
 }
 
+bool
+badMode32(ThreadContext *tc, OperatingMode mode)
+{
+    return unknownMode32(mode) || !ArmSystem::haveEL(tc, opModeToEL(mode));
+}
+
+bool
+badMode(ThreadContext *tc, OperatingMode mode)
+{
+    return unknownMode(mode) || !ArmSystem::haveEL(tc, opModeToEL(mode));
+}
+
 Addr
 purifyTaggedAddr(Addr addr, ThreadContext *tc, ExceptionLevel el,
                  TTBCR tcr)

@@ -181,6 +181,26 @@ bool ELIs64(ThreadContext *tc, ExceptionLevel el);
 
 bool isBigEndian64(ThreadContext *tc);
 
+/**
+ * badMode is checking if the execution mode provided as an argument is
+ * valid and implemented for AArch32
+ *
+ * @param tc ThreadContext
+ * @param mode OperatingMode to check
+ * @return false if mode is valid and implemented, true otherwise
+ */
+bool badMode32(ThreadContext *tc, OperatingMode mode);
+
+/**
+ * badMode is checking if the execution mode provided as an argument is
+ * valid and implemented.
+ *
+ * @param tc ThreadContext
+ * @param mode OperatingMode to check
+ * @return false if mode is valid and implemented, true otherwise
+ */
+bool badMode(ThreadContext *tc, OperatingMode mode);
+
 static inline uint8_t
 itState(CPSR psr)
 {

@@ -166,7 +166,12 @@ def format ArmUnconditional() {{
                     const uint32_t val = ((machInst >> 20) & 0x5);
                     if (val == 0x4) {
                         const uint32_t mode = bits(machInst, 4, 0);
-                        if (badMode32((OperatingMode)mode))
+                        // We check at decode stage if the mode exists even
+                        // if the checking is re-done by Srs::execute.
+                        // This is done because we will otherwise panic if
+                        // trying to read the banked stack pointer of an
+                        // unrecognized mode.
+                        if (unknownMode32((OperatingMode)mode))
                             return new Unknown(machInst);
                         switch (bits(machInst, 24, 21)) {
                           case 0x2:

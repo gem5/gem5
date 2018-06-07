@@ -710,7 +710,7 @@ namespace ArmISA
     }
 
     static inline bool
-    badMode(OperatingMode mode)
+    unknownMode(OperatingMode mode)
     {
         switch (mode) {
           case MODE_EL0T:
@@ -735,9 +735,8 @@ namespace ArmISA
         }
     }
 
-
     static inline bool
-    badMode32(OperatingMode mode)
+    unknownMode32(OperatingMode mode)
     {
         switch (mode) {
           case MODE_USER:

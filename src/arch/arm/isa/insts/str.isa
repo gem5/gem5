@@ -112,6 +112,12 @@ let {{
             if self.add:
                 wbDiff = 8
             accCode = '''
+
+            auto tc = xc->tcBase();
+            if (badMode32(tc, static_cast<OperatingMode>(regMode))) {
+                return undefinedFault32(tc, opModeToEL(currOpMode(tc)));
+            }
+
             CPSR cpsr = Cpsr;
             Mem_ud = (uint64_t)cSwap(LR_uw, cpsr.e) |
                      ((uint64_t)cSwap(Spsr_uw, cpsr.e) << 32);

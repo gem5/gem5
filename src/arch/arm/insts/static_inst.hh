@@ -230,7 +230,7 @@ class ArmStaticInst : public StaticInst
                 // Now check the new mode is allowed
                 OperatingMode newMode = (OperatingMode) (val & mask(5));
                 OperatingMode oldMode = (OperatingMode)(uint32_t)cpsr.mode;
-                if (!badMode(newMode)) {
+                if (!badMode(tc, newMode)) {
                     bool validModeChange = true;
                     // Check for attempts to enter modes only permitted in
                     // Secure state from Non-secure state. These are Monitor
