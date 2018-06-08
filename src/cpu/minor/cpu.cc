@@ -183,9 +183,6 @@ MinorCPU::startup()
 
     BaseCPU::startup();
 
-    for (auto i = threads.begin(); i != threads.end(); i ++)
-        (*i)->startup();
-
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         threads[tid]->startup();
         pipeline->wakeupFetch(tid);
