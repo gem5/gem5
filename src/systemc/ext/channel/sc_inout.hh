@@ -60,6 +60,26 @@ class sc_inout : public sc_port<sc_signal_inout_if<T>, 1>
     {}
     virtual ~sc_inout() {}
 
+    // Deprecated binding constructors.
+    explicit sc_inout(const sc_signal_inout_if<T> &interface) :
+        sc_port<sc_signal_inout_if<T>, 1>(interface)
+    {}
+    sc_inout(const char *name, const sc_signal_inout_if<T> &interface) :
+        sc_port<sc_signal_inout_if<T>, 1>(name, interface)
+    {}
+    explicit sc_inout(sc_port_b<sc_signal_inout_if<T> > &parent) :
+        sc_port<sc_signal_inout_if<T>, 1>(parent)
+    {}
+    sc_inout(const char *name, sc_port_b<sc_signal_inout_if<T> > &parent) :
+        sc_port<sc_signal_inout_if<T>, 1>(name, parent)
+    {}
+    explicit sc_inout(sc_port<sc_signal_inout_if<T>, 1> &parent) :
+        sc_port<sc_signal_inout_if<T>, 1>(parent)
+    {}
+    sc_inout(const char *name, sc_port<sc_signal_inout_if<T>, 1> &parent) :
+        sc_port<sc_signal_inout_if<T>, 1>(name, parent)
+    {}
+
     void
     initialize(const T &)
     {
@@ -169,6 +189,26 @@ class sc_inout<bool> : public sc_port<sc_signal_inout_if<bool>, 1>
             sc_port<sc_signal_inout_if<bool>, 1>(name)
     {}
     virtual ~sc_inout() {}
+
+    // Deprecated binding constructors.
+    explicit sc_inout(const sc_signal_inout_if<bool> &interface) :
+        sc_port<sc_signal_inout_if<bool>, 1>(interface)
+    {}
+    sc_inout(const char *name, const sc_signal_inout_if<bool> &interface) :
+        sc_port<sc_signal_inout_if<bool>, 1>(name, interface)
+    {}
+    explicit sc_inout(sc_port_b<sc_signal_inout_if<bool> > &parent) :
+        sc_port<sc_signal_inout_if<bool>, 1>(parent)
+    {}
+    sc_inout(const char *name, sc_port_b<sc_signal_inout_if<bool> > &parent) :
+        sc_port<sc_signal_inout_if<bool>, 1>(name, parent)
+    {}
+    explicit sc_inout(sc_port<sc_signal_inout_if<bool>, 1> &parent) :
+        sc_port<sc_signal_inout_if<bool>, 1>(parent)
+    {}
+    sc_inout(const char *name, sc_port<sc_signal_inout_if<bool>, 1> &parent) :
+        sc_port<sc_signal_inout_if<bool>, 1>(name, parent)
+    {}
 
     void
     initialize(const bool &)
@@ -319,6 +359,31 @@ class sc_inout<sc_dt::sc_logic> :
             sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1>(name)
     {}
     virtual ~sc_inout() {}
+
+    // Deprecated binding constructors.
+    explicit sc_inout(const sc_signal_inout_if<sc_dt::sc_logic> &interface) :
+        sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1>(interface)
+    {}
+    sc_inout(const char *name,
+            const sc_signal_inout_if<sc_dt::sc_logic> &interface) :
+        sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1>(name, interface)
+    {}
+    explicit sc_inout(
+            sc_port_b<sc_signal_inout_if<sc_dt::sc_logic> > &parent) :
+        sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1>(parent)
+    {}
+    sc_inout(const char *name,
+            sc_port_b<sc_signal_inout_if<sc_dt::sc_logic> > &parent) :
+        sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1>(name, parent)
+    {}
+    explicit sc_inout(
+            sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &parent) :
+        sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1>(parent)
+    {}
+    sc_inout(const char *name,
+            sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &parent) :
+        sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1>(name, parent)
+    {}
 
     void
     initialize(const sc_dt::sc_logic &)

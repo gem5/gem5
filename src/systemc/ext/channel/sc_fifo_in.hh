@@ -49,6 +49,26 @@ class sc_fifo_in : public sc_port<sc_fifo_in_if<T>, 0>
     {}
     virtual ~sc_fifo_in() {}
 
+    // Deprecated binding constructors.
+    explicit sc_fifo_in(const sc_fifo_in_if<T> &interface) :
+        sc_port<sc_fifo_in_if<T>, 0>(interface)
+    {}
+    sc_fifo_in(const char *name, const sc_fifo_in_if<T> &interface) :
+        sc_port<sc_fifo_in_if<T>, 0>(name, interface)
+    {}
+    explicit sc_fifo_in(sc_port_b<sc_fifo_in_if<T> > &parent) :
+        sc_port<sc_fifo_in_if<T>, 0>(parent)
+    {}
+    sc_fifo_in(const char *name, sc_port_b<sc_fifo_in_if<T> > &parent) :
+        sc_port<sc_fifo_in_if<T>, 0>(name, parent)
+    {}
+    explicit sc_fifo_in(sc_port<sc_fifo_in_if<T>, 0> &parent) :
+        sc_port<sc_fifo_in_if<T>, 0>(parent)
+    {}
+    sc_fifo_in(const char *name, sc_port<sc_fifo_in_if<T>, 0> &parent) :
+        sc_port<sc_fifo_in_if<T>, 0>(name, parent)
+    {}
+
     void
     read(T &)
     {

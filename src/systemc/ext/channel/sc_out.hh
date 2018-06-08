@@ -45,6 +45,22 @@ class sc_out : public sc_inout<T>
     explicit sc_out(const char *name) : sc_inout<T>(name) {}
     virtual ~sc_out() {}
 
+    // Deprecated binding constructors.
+    explicit sc_out(const sc_signal_inout_if<T> &interface) :
+        sc_inout<T>(interface)
+    {}
+    sc_out(const char *name, const sc_signal_inout_if<T> &interface) :
+        sc_inout<T>(name, interface)
+    {}
+    explicit sc_out(sc_port_b<sc_signal_inout_if<T> > &parent) :
+        sc_inout<T>(parent)
+    {}
+    sc_out(const char *name, sc_port_b<sc_signal_inout_if<T> > &parent) :
+        sc_inout<T>(name, parent)
+    {}
+    explicit sc_out(sc_out<T> &parent) : sc_inout<T>(parent) {}
+    sc_out(const char *name, sc_out<T> &parent) : sc_inout<T>(name, parent) {}
+
     sc_out<T> &
     operator = (const T &)
     {

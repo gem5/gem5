@@ -52,6 +52,26 @@ class sc_in : public sc_port<sc_signal_in_if<T>, 1>
     explicit sc_in(const char *name) : sc_port<sc_signal_in_if<T>, 1>(name) {}
     virtual ~sc_in() {}
 
+    // Deprecated binding constructors.
+    explicit sc_in(const sc_signal_in_if<T> &interface) :
+        sc_port<sc_signal_in_if<T>, 1>(interface)
+    {}
+    sc_in(const char *name, const sc_signal_in_if<T> &interface) :
+        sc_port<sc_signal_in_if<T>, 1>(name, interface)
+    {}
+    explicit sc_in(sc_port_b<sc_signal_in_if<T> > &parent) :
+        sc_port<sc_signal_in_if<T>, 1>(parent)
+    {}
+    sc_in(const char *name, sc_port_b<sc_signal_in_if<T> > &parent) :
+        sc_port<sc_signal_in_if<T>, 1>(name, parent)
+    {}
+    explicit sc_in(sc_port<sc_signal_in_if<T>, 1> &parent) :
+        sc_port<sc_signal_in_if<T>, 1>(parent)
+    {}
+    sc_in(const char *name, sc_port<sc_signal_in_if<T>, 1> &parent) :
+        sc_port<sc_signal_in_if<T>, 1>(name, parent)
+    {}
+
     virtual void
     bind(const sc_signal_in_if<T> &)
     {
@@ -151,6 +171,26 @@ class sc_in<bool> : public sc_port<sc_signal_in_if<bool>, 1>
     explicit sc_in(const char *name) :
         sc_port<sc_signal_in_if<bool>, 1>(name) {}
     virtual ~sc_in() {}
+
+    // Deprecated binding constructors.
+    explicit sc_in(const sc_signal_in_if<bool> &interface) :
+        sc_port<sc_signal_in_if<bool>, 1>(interface)
+    {}
+    sc_in(const char *name, const sc_signal_in_if<bool> &interface) :
+        sc_port<sc_signal_in_if<bool>, 1>(name, interface)
+    {}
+    explicit sc_in(sc_port_b<sc_signal_in_if<bool> > &parent) :
+        sc_port<sc_signal_in_if<bool>, 1>(parent)
+    {}
+    sc_in(const char *name, sc_port_b<sc_signal_in_if<bool> > &parent) :
+        sc_port<sc_signal_in_if<bool>, 1>(name, parent)
+    {}
+    explicit sc_in(sc_port<sc_signal_in_if<bool>, 1> &parent) :
+        sc_port<sc_signal_in_if<bool>, 1>(parent)
+    {}
+    sc_in(const char *name, sc_port<sc_signal_in_if<bool>, 1> &parent) :
+        sc_port<sc_signal_in_if<bool>, 1>(name, parent)
+    {}
 
     virtual void
     bind(const sc_signal_in_if<bool> &)
@@ -291,6 +331,29 @@ class sc_in<sc_dt::sc_logic> :
         sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name)
     {}
     virtual ~sc_in() {}
+
+    // Deprecated binding constructors.
+    explicit sc_in(const sc_signal_in_if<sc_dt::sc_logic> &interface) :
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(interface)
+    {}
+    sc_in(const char *name,
+            const sc_signal_in_if<sc_dt::sc_logic> &interface) :
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name, interface)
+    {}
+    explicit sc_in(sc_port_b<sc_signal_in_if<sc_dt::sc_logic> > &parent) :
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(parent)
+    {}
+    sc_in(const char *name,
+            sc_port_b<sc_signal_in_if<sc_dt::sc_logic> > &parent) :
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name, parent)
+    {}
+    explicit sc_in(sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &parent) :
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(parent)
+    {}
+    sc_in(const char *name,
+            sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &parent) :
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name, parent)
+    {}
 
     virtual void
     bind(const sc_signal_in_if<sc_dt::sc_logic> &)

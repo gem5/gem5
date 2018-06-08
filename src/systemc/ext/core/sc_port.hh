@@ -61,73 +61,73 @@ class sc_port_b : public sc_port_base
     void
     operator () (IF &)
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        this->warn_unimpl(__PRETTY_FUNCTION__);
     }
 
     void
     operator () (sc_port_b<IF> &)
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        this->warn_unimpl(__PRETTY_FUNCTION__);
     }
 
     virtual void
     bind(IF &)
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        this->warn_unimpl(__PRETTY_FUNCTION__);
     }
 
     virtual void
     bind(sc_port_b<IF> &)
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        this->warn_unimpl(__PRETTY_FUNCTION__);
     }
 
     int
     size() const
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        this->warn_unimpl(__PRETTY_FUNCTION__);
         return 0;
     }
 
     IF *
     operator -> ()
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        this->warn_unimpl(__PRETTY_FUNCTION__);
         return (IF *)nullptr;
     }
 
     const IF *
     operator -> () const
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        this->warn_unimpl(__PRETTY_FUNCTION__);
         return (IF *)nullptr;
     }
 
     IF *
     operator [] (int)
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        this->warn_unimpl(__PRETTY_FUNCTION__);
         return (IF *)nullptr;
     }
 
     const IF *
     operator [] (int) const
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        this->warn_unimpl(__PRETTY_FUNCTION__);
         return (IF *)nullptr;
     }
 
     virtual sc_interface *
     get_interface()
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        this->warn_unimpl(__PRETTY_FUNCTION__);
         return (sc_interface *)nullptr;
     }
 
     virtual const sc_interface *
     get_interface() const
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        this->warn_unimpl(__PRETTY_FUNCTION__);
         return (sc_interface *)nullptr;
     }
 
@@ -156,9 +156,49 @@ template <class IF, int N=1, sc_port_policy P=SC_ONE_OR_MORE_BOUND>
 class sc_port : public sc_port_b<IF>
 {
   public:
-    sc_port() : sc_port_b<IF>(sc_gen_unique_name("sc_port"), N, P) {}
+    sc_port() : sc_port_b<IF>(N, P) {}
     explicit sc_port(const char *name) : sc_port_b<IF>(name, N, P) {}
     virtual ~sc_port() {}
+
+    // Deprecated binding constructors.
+    explicit sc_port(const IF &interface) : sc_port_b<IF>(N, P)
+    {
+        this->warn_unimpl(__PRETTY_FUNCTION__);
+        // Should warn that these are deprecated. See Accellera sc_port.h.
+        sc_port_b<IF>::bind(const_cast<IF &>(interface));
+    }
+    sc_port(const char *name, const IF &interface) : sc_port_b<IF>(name, N, P)
+    {
+        this->warn_unimpl(__PRETTY_FUNCTION__);
+        // Should warn that these are deprecated. See Accellera sc_port.h.
+        sc_port_b<IF>::bind(const_cast<IF &>(interface));
+    }
+    explicit sc_port(sc_port_b<IF> &parent) : sc_port_b<IF>(N, P)
+    {
+        this->warn_unimpl(__PRETTY_FUNCTION__);
+        // Should warn that these are deprecated. See Accellera sc_port.h.
+        sc_port_b<IF>::bind(parent);
+    }
+    sc_port(const char *name, sc_port_b<IF> &parent) :
+        sc_port_b<IF>(name, N, P)
+    {
+        this->warn_unimpl(__PRETTY_FUNCTION__);
+        // Should warn that these are deprecated. See Accellera sc_port.h.
+        sc_port_b<IF>::bind(parent);
+    }
+    explicit sc_port(sc_port<IF, N, P> &parent) : sc_port_b<IF>(N, P)
+    {
+        this->warn_unimpl(__PRETTY_FUNCTION__);
+        // Should warn that these are deprecated. See Accellera sc_port.h.
+        sc_port_b<IF>::bind(parent);
+    }
+    sc_port(const char *name, sc_port<IF, N, P> &parent) :
+        sc_port_b<IF>(name, N, P)
+    {
+        this->warn_unimpl(__PRETTY_FUNCTION__);
+        // Should warn that these are deprecated. See Accellera sc_port.h.
+        sc_port_b<IF>::bind(parent);
+    }
 
     virtual const char *kind() const { return "sc_port"; }
 
