@@ -37,7 +37,6 @@
 
 #include "systemc.h"
 
-#include "sysc/utils/sc_vector.h"
 using sc_core::sc_vector;
 
 SC_MODULE( sub_module )

@@ -37,8 +37,6 @@
 
 #include "systemc"
 
-#include "sysc/utils/sc_vector.h"
-
 using sc_core::sc_object;
 using sc_core::sc_vector;
 using sc_core::sc_mutex;

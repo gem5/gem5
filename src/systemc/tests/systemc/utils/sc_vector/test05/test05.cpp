@@ -37,7 +37,6 @@
 
 #include <systemc.h>
 
-#include "sysc/utils/sc_vector.h"
 using sc_core::sc_vector;
 
 typedef sc_vector< sc_fifo_out<int> > port_vec;
