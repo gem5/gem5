@@ -62,10 +62,9 @@ if env['USE_SYSTEMC']:
             }
 
     ext_dir = Dir('..').Dir('ext')
-    class SystemCTestBin(UnitTest):
+    class SystemCTestBin(Executable):
         def __init__(self, test):
-            super(SystemCTestBin, self).__init__(
-                    test.target, *test.sources, main=True)
+            super(SystemCTestBin, self).__init__(test.target, *test.sources)
 
         @classmethod
         def declare_all(cls, env):
@@ -79,6 +78,14 @@ if env['USE_SYSTEMC']:
             env.Append(CPPPATH=ext_dir)
 
             super(SystemCTestBin, cls).declare_all(env)
+
+        def declare(self, env):
+            sources = list(self.sources)
+            for f in self.filters:
+                sources = Source.all.apply_filter(f)
+            objs = self.srcs_to_objs(env, sources)
+            objs = objs + env['SHARED_LIB'] + env['MAIN_OBJS']
+            return super(SystemCTestBin, self).declare(env, objs)
 
     tests = []
     def new_test(dirname, name):
