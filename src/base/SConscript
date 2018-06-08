@@ -46,6 +46,8 @@ if env['USE_FENV']:
     Source('fenv.c')
 if env['USE_PNG']:
     Source('pngwriter.cc')
+Source('fiber.cc')
+GTest('fibertest', 'fibertest.cc', 'fiber.cc')
 Source('framebuffer.cc')
 Source('hostinfo.cc')
 Source('inet.cc')
