@@ -1708,16 +1708,50 @@ decode QUADRANT default Unknown::unknown() {
             format SystemOp {
                 0x0: decode FUNCT12 {
                     0x0: ecall({{
-                        fault = make_shared<SyscallFault>();
+                        fault = make_shared<SyscallFault>(
+                                (PrivilegeMode)xc->readMiscReg(MISCREG_PRV));
                     }}, IsSerializeAfter, IsNonSpeculative, IsSyscall,
                         No_OpClass);
                     0x1: ebreak({{
                         fault = make_shared<BreakpointFault>(xc->pcState());
                     }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
-                    0x100: eret({{
-                        fault = make_shared<UnimplementedFault>("eret",
-                                                                machInst);
-                    }}, No_OpClass);
+                    0x2: uret({{
+                        STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                        status.uie = status.upie;
+                        status.upie = 1;
+                        xc->setMiscReg(MISCREG_STATUS, status);
+                        NPC = xc->readMiscReg(MISCREG_UEPC);
+                    }}, IsReturn);
+                    0x102: sret({{
+                        if (xc->readMiscReg(MISCREG_PRV) == PRV_U) {
+                            fault = make_shared<IllegalInstFault>(
+                                        "sret in user mode", machInst);
+                            NPC = NPC;
+                        } else {
+                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            xc->setMiscReg(MISCREG_PRV, status.spp);
+                            status.sie = status.spie;
+                            status.spie = 1;
+                            status.spp = PRV_U;
+                            xc->setMiscReg(MISCREG_STATUS, status);
+                            NPC = xc->readMiscReg(MISCREG_SEPC);
+                        }
+                    }}, IsReturn);
+                    0x302: mret({{
+                        if (xc->readMiscReg(MISCREG_PRV) != PRV_M) {
+                            fault = make_shared<IllegalInstFault>(
+                                        "mret at lower privilege", machInst);
+                            NPC = NPC;
+                        } else {
+                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            xc->setMiscReg(MISCREG_PRV, status.mpp);
+                            status.mie = status.mpie;
+                            status.mpie = 1;
+                            status.mpp = PRV_U;
+                            xc->setMiscReg(MISCREG_STATUS, status);
+                            NPC = xc->readMiscReg(MISCREG_MEPC);
+                        }
+                    }}, IsReturn);
                 }
             }
             format CSROp {

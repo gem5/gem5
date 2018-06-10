@@ -583,6 +583,53 @@ const std::map<int, CSRMetadata> CSRData = {
     {CSR_DSCRATCH, {"dscratch", MISCREG_DSCRATCH}}
 };
 
+/**
+ * These fields are specified in the RISC-V Instruction Set Manual, Volume II,
+ * v1.10, accessible at www.riscv.org. in Figure 3.7. The main register that
+ * uses these fields is the MSTATUS register, which is shadowed by two others
+ * accessible at lower privilege levels (SSTATUS and USTATUS) that can't see
+ * the fields for higher privileges.
+ */
+BitUnion64(STATUS)
+    Bitfield<63> sd;
+    Bitfield<35, 34> sxl;
+    Bitfield<33, 32> uxl;
+    Bitfield<22> tsr;
+    Bitfield<21> tw;
+    Bitfield<20> tvm;
+    Bitfield<19> mxr;
+    Bitfield<18> sum;
+    Bitfield<17> mprv;
+    Bitfield<16, 15> xs;
+    Bitfield<14, 13> fs;
+    Bitfield<12, 11> mpp;
+    Bitfield<8> spp;
+    Bitfield<7> mpie;
+    Bitfield<5> spie;
+    Bitfield<4> upie;
+    Bitfield<3> mie;
+    Bitfield<1> sie;
+    Bitfield<0> uie;
+EndBitUnion(STATUS)
+
+/**
+ * These fields are specified in the RISC-V Instruction Set Manual, Volume II,
+ * v1.10 in Figures 3.11 and 3.12, accessible at www.riscv.org. Both the MIP
+ * and MIE registers have the same fields, so accesses to either should use
+ * this bit union.
+ */
+BitUnion64(INTERRUPT)
+    Bitfield<11> mei;
+    Bitfield<9> sei;
+    Bitfield<8> uei;
+    Bitfield<7> mti;
+    Bitfield<5> sti;
+    Bitfield<4> uti;
+    Bitfield<3> msi;
+    Bitfield<1> ssi;
+    Bitfield<0> usi;
+EndBitUnion(INTERRUPT)
+
 const off_t MXL_OFFSET = (sizeof(MiscReg) * 8 - 2);
 const off_t SXL_OFFSET = 34;
 const off_t UXL_OFFSET = 32;
