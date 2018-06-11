@@ -476,6 +476,15 @@ def create_system(options, full_system, system, dma_devices, bootmem,
         dir_cntrl.requestToMemory = MessageBuffer()
         dir_cntrl.responseFromMemory = MessageBuffer()
 
+        dir_cntrl.requestFromDMA = MessageBuffer(ordered=True)
+        dir_cntrl.requestFromDMA.slave = ruby_system.network.master
+
+        dir_cntrl.responseToDMA = MessageBuffer()
+        dir_cntrl.responseToDMA.master = ruby_system.network.slave
+
+        dir_cntrl.requestToMemory = MessageBuffer()
+        dir_cntrl.responseFromMemory = MessageBuffer()
+
         exec("ruby_system.dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)
 
@@ -640,7 +649,29 @@ def create_system(options, full_system, system, dma_devices, bootmem,
         # SQC also in GPU cluster
         gpuCluster.add(sqc_cntrl)
 
-    for i in range(options.num_cp):
+    for i in xrange(options.num_scalar_cache):
+        scalar_cntrl = SQCCntrl(TCC_select_num_bits = TCC_bits)
+        scalar_cntrl.create(options, ruby_system, system)
+
+        exec('ruby_system.scalar_cntrl%d = scalar_cntrl' % i)
+
+        cpu_sequencers.append(scalar_cntrl.sequencer)
+
+        scalar_cntrl.requestFromSQC = MessageBuffer(ordered = True)
+        scalar_cntrl.requestFromSQC.master = ruby_system.network.slave
+
+        scalar_cntrl.probeToSQC = MessageBuffer(ordered = True)
+        scalar_cntrl.probeToSQC.slave = ruby_system.network.master
+
+        scalar_cntrl.responseToSQC = MessageBuffer(ordered = True)
+        scalar_cntrl.responseToSQC.slave = ruby_system.network.master
+
+        scalar_cntrl.mandatoryQueue = \
+            MessageBuffer(buffer_size=options.buffers_size)
+
+        gpuCluster.add(scalar_cntrl)
+
+    for i in xrange(options.num_cp):
 
         tcp_ID = options.num_compute_units + i
         sqc_ID = options.num_sqc + i
@@ -735,13 +766,27 @@ def create_system(options, full_system, system, dma_devices, bootmem,
         # TCC cntrls added to the GPU cluster
         gpuCluster.add(tcc_cntrl)
 
-    # Assuming no DMA devices
-    assert(len(dma_devices) == 0)
+    for i, dma_device in enumerate(dma_devices):
+        dma_seq = DMASequencer(version=i, ruby_system=ruby_system)
+        dma_cntrl = DMA_Controller(version=i, dma_sequencer=dma_seq,
+                                   ruby_system=ruby_system)
+        exec('system.dma_cntrl%d = dma_cntrl' % i)
+        if dma_device.type == 'MemTest':
+            exec('system.dma_cntrl%d.dma_sequencer.slave = dma_devices.test'
+                 % i)
+        else:
+            exec('system.dma_cntrl%d.dma_sequencer.slave = dma_device.dma' % i)
+        dma_cntrl.requestToDir = MessageBuffer(buffer_size=0)
+        dma_cntrl.requestToDir.master = ruby_system.network.slave
+        dma_cntrl.responseFromDir = MessageBuffer(buffer_size=0)
+        dma_cntrl.responseFromDir.slave = ruby_system.network.master
+        dma_cntrl.mandatoryQueue = MessageBuffer(buffer_size = 0)
+        gpuCluster.add(dma_cntrl)
 
     # Add cpu/gpu clusters to main cluster
     mainCluster.add(cpuCluster)
     mainCluster.add(gpuCluster)
 
-    ruby_system.network.number_of_virtual_networks = 10
+    ruby_system.network.number_of_virtual_networks = 11
 
     return (cpu_sequencers, dir_cntrl_nodes, mainCluster)

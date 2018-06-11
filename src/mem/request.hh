@@ -815,7 +815,6 @@ class Request
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
     bool isSecure() const { return _flags.isSet(SECURE); }
     bool isPTWalk() const { return _flags.isSet(PT_WALK); }
-    bool isAcquire() const { return _flags.isSet(ACQUIRE); }
     bool isRelease() const { return _flags.isSet(RELEASE); }
     bool isKernel() const { return _flags.isSet(KERNEL); }
     bool isAtomicReturn() const { return _flags.isSet(ATOMIC_RETURN_OP); }
@@ -838,6 +837,8 @@ class Request
     bool isToPOU() const { return _flags.isSet(DST_POU); }
     bool isToPOC() const { return _flags.isSet(DST_POC); }
     Flags getDest() const { return _flags & DST_BITS; }
+
+    bool isAcquire() const { return _cacheCoherenceFlags.isSet(ACQUIRE); }
 
     /**
      * Accessor functions for the memory space configuration flags and used by

@@ -32,7 +32,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
-import optparse, os, re
+import optparse, os, re, getpass
 import math
 import glob
 import inspect
@@ -48,6 +48,9 @@ from ruby import Ruby
 from common import Options
 from common import Simulation
 from common import GPUTLBOptions, GPUTLBConfig
+
+import hsaTopology
+from common import FileSystemConfig
 
 ########################## Script Options ########################
 def setOption(parser, opt_str, value = 1):
@@ -77,9 +80,7 @@ Options.addSEOptions(parser)
 parser.add_option("--cpu-only-mode", action="store_true", default=False,
                   help="APU mode. Used to take care of problems in "\
                        "Ruby.py while running APU protocols")
-parser.add_option("-k", "--kernel-files",
-                  help="file(s) containing GPU kernel code (colon separated)")
-parser.add_option("-u", "--num-compute-units", type="int", default=1,
+parser.add_option("-u", "--num-compute-units", type="int", default=4,
                   help="number of GPU compute units"),
 parser.add_option("--num-cp", type="int", default=0,
                   help="Number of GPU Command Processors (CP)")
@@ -89,21 +90,34 @@ parser.add_option("--benchmark-root", help="Root of benchmark directory tree")
 # it an option/knob
 parser.add_option("--cu-per-sqc", type="int", default=4, help="number of CUs" \
                   "sharing an SQC (icache, and thus icache TLB)")
+parser.add_option('--cu-per-scalar-cache', type='int', default=4,
+                  help='Number of CUs sharing a scalar cache')
 parser.add_option("--simds-per-cu", type="int", default=4, help="SIMD units" \
                   "per CU")
+parser.add_option('--cu-per-sa', type='int', default=4,
+                  help='Number of CUs per shader array. This must be a '
+                  'multiple of options.cu-per-sqc and options.cu-per-scalar')
+parser.add_option('--sa-per-complex', type='int', default=1,
+                  help='Number of shader arrays per complex')
+parser.add_option('--num-gpu-complexes', type='int', default=1,
+                  help='Number of GPU complexes')
 parser.add_option("--wf-size", type="int", default=64,
                   help="Wavefront size(in workitems)")
 parser.add_option("--sp-bypass-path-length", type="int", default=4, \
-                  help="Number of stages of bypass path in vector ALU for Single Precision ops")
+                  help="Number of stages of bypass path in vector ALU for "
+                  "Single Precision ops")
 parser.add_option("--dp-bypass-path-length", type="int", default=4, \
-                  help="Number of stages of bypass path in vector ALU for Double Precision ops")
+                  help="Number of stages of bypass path in vector ALU for "
+                  "Double Precision ops")
 # issue period per SIMD unit: number of cycles before issuing another vector
 parser.add_option("--issue-period", type="int", default=4, \
                   help="Number of cycles per vector instruction issue period")
 parser.add_option("--glbmem-wr-bus-width", type="int", default=32, \
-                  help="VGPR to Coalescer (Global Memory) data bus width in bytes")
+                  help="VGPR to Coalescer (Global Memory) data bus width "
+                  "in bytes")
 parser.add_option("--glbmem-rd-bus-width", type="int", default=32, \
-                  help="Coalescer to VGPR (Global Memory) data bus width in bytes")
+                  help="Coalescer to VGPR (Global Memory) data bus width in "
+                  "bytes")
 # Currently we only support 1 local memory pipe
 parser.add_option("--shr-mem-pipes-per-cu", type="int", default=1, \
                   help="Number of Shared Memory pipelines per CU")
@@ -113,13 +127,27 @@ parser.add_option("--glb-mem-pipes-per-cu", type="int", default=1, \
 parser.add_option("--wfs-per-simd", type="int", default=10, help="Number of " \
                   "WF slots per SIMD")
 
+parser.add_option("--registerManagerPolicy", type="string", default="static",
+                  help="Register manager policy")
 parser.add_option("--vreg-file-size", type="int", default=2048,
                   help="number of physical vector registers per SIMD")
+parser.add_option("--vreg-min-alloc", type="int", default=4,
+                  help="Minimum number of registers that can be allocated "
+                  "from the VRF. The total number of registers will be "
+                  "aligned to this value.")
+
+parser.add_option("--sreg-file-size", type="int", default=2048,
+                  help="number of physical vector registers per SIMD")
+parser.add_option("--sreg-min-alloc", type="int", default=4,
+                  help="Minimum number of registers that can be allocated "
+                  "from the SRF. The total number of registers will be "
+                  "aligned to this value.")
+
 parser.add_option("--bw-scalor", type="int", default=0,
                   help="bandwidth scalor for scalability analysis")
 parser.add_option("--CPUClock", type="string", default="2GHz",
                   help="CPU clock")
-parser.add_option("--GPUClock", type="string", default="1GHz",
+parser.add_option("--gpu-clock", type="string", default="1GHz",
                   help="GPU clock")
 parser.add_option("--cpu-voltage", action="store", type="string",
                   default='1.0V',
@@ -129,8 +157,6 @@ parser.add_option("--gpu-voltage", action="store", type="string",
                   help = """CPU  voltage domain""")
 parser.add_option("--CUExecPolicy", type="string", default="OLDEST-FIRST",
                   help="WF exec policy (OLDEST-FIRST, ROUND-ROBIN)")
-parser.add_option("--xact-cas-mode", action="store_true",
-                  help="enable load_compare mode (transactional CAS)")
 parser.add_option("--SegFaultDebug",action="store_true",
                  help="checks for GPU seg fault before TLB access")
 parser.add_option("--FunctionalTLB",action="store_true",
@@ -152,9 +178,8 @@ parser.add_option('--fast-forward-pseudo-op', action='store_true',
                   help = 'fast forward using kvm until the m5_switchcpu'
                   ' pseudo-op is encountered, then switch cpus. subsequent'
                   ' m5_switchcpu pseudo-ops will toggle back and forth')
-parser.add_option('--outOfOrderDataDelivery', action='store_true',
-                  default=False, help='enable OoO data delivery in the GM'
-                  ' pipeline')
+parser.add_option("--num-hw-queues", type="int", default=10,
+                  help="number of hw queues in packet processor")
 
 Ruby.define_options(parser)
 
@@ -195,12 +220,17 @@ assert(options.num_compute_units >= 1)
 n_cu = options.num_compute_units
 num_sqc = int(math.ceil(float(n_cu) / options.cu_per_sqc))
 options.num_sqc = num_sqc # pass this to Ruby
+num_scalar_cache = int(math.ceil(float(n_cu) / options.cu_per_scalar_cache))
+options.num_scalar_cache = num_scalar_cache
+
+print('Num SQC = ', num_sqc, 'Num scalar caches = ', num_scalar_cache,
+      'Num CU = ', n_cu)
 
 ########################## Creating the GPU system ########################
 # shader is the GPU
 shader = Shader(n_wf = options.wfs_per_simd,
                 clk_domain = SrcClockDomain(
-                    clock = options.GPUClock,
+                    clock = options.gpu_clock,
                     voltage_domain = VoltageDomain(
                         voltage = options.gpu_voltage)))
 
@@ -237,9 +267,11 @@ compute_units = []
 for i in range(n_cu):
     compute_units.append(ComputeUnit(cu_id = i, perLaneTLB = per_lane,
                                      num_SIMDs = options.simds_per_cu,
-                                     wfSize = options.wf_size,
-                                     spbypass_pipe_length = options.sp_bypass_path_length,
-                                     dpbypass_pipe_length = options.dp_bypass_path_length,
+                                     wf_size = options.wf_size,
+                                     spbypass_pipe_length = \
+                                     options.sp_bypass_path_length,
+                                     dpbypass_pipe_length = \
+                                     options.dp_bypass_path_length,
                                      issue_period = options.issue_period,
                                      coalescer_to_vrf_bus_width = \
                                      options.glbmem_rd_bus_width,
@@ -251,7 +283,6 @@ for i in range(n_cu):
                                      options.shr_mem_pipes_per_cu,
                                      n_wf = options.wfs_per_simd,
                                      execPolicy = options.CUExecPolicy,
-                                     xactCasMode = options.xact_cas_mode,
                                      debugSegFault = options.SegFaultDebug,
                                      functionalTLB = options.FunctionalTLB,
                                      localMemBarrier = options.LocalMemBarrier,
@@ -259,19 +290,38 @@ for i in range(n_cu):
                                      localDataStore = \
                                      LdsState(banks = options.numLdsBanks,
                                               bankConflictPenalty = \
-                                              options.ldsBankConflictPenalty),
-                                     out_of_order_data_delivery =
-                                             options.outOfOrderDataDelivery))
+                                              options.ldsBankConflictPenalty)))
     wavefronts = []
     vrfs = []
-    for j in range(options.simds_per_cu):
-        for k in range(shader.n_wf):
+    vrf_pool_mgrs = []
+    srfs = []
+    srf_pool_mgrs = []
+    for j in xrange(options.simds_per_cu):
+        for k in xrange(shader.n_wf):
             wavefronts.append(Wavefront(simdId = j, wf_slot_id = k,
-                                        wfSize = options.wf_size))
-        vrfs.append(VectorRegisterFile(simd_id=j,
-                              num_regs_per_simd=options.vreg_file_size))
+                                        wf_size = options.wf_size))
+        vrf_pool_mgrs.append(SimplePoolManager(pool_size = \
+                                               options.vreg_file_size,
+                                               min_alloc = \
+                                               options.vreg_min_alloc))
+
+        vrfs.append(VectorRegisterFile(simd_id=j, wf_size=options.wf_size,
+                                       num_regs=options.vreg_file_size))
+
+        srf_pool_mgrs.append(SimplePoolManager(pool_size = \
+                                               options.sreg_file_size,
+                                               min_alloc = \
+                                               options.vreg_min_alloc))
+        srfs.append(ScalarRegisterFile(simd_id=j, wf_size=options.wf_size,
+                                       num_regs=options.sreg_file_size))
+
     compute_units[-1].wavefronts = wavefronts
     compute_units[-1].vector_register_file = vrfs
+    compute_units[-1].scalar_register_file = srfs
+    compute_units[-1].register_manager = \
+        RegisterManager(policy=options.registerManagerPolicy,
+                        vrf_pool_managers=vrf_pool_mgrs,
+                        srf_pool_managers=srf_pool_mgrs)
     if options.TLB_prefetch:
         compute_units[-1].prefetch_depth = options.TLB_prefetch
         compute_units[-1].prefetch_prev_type = options.pf_type
@@ -358,14 +408,29 @@ for i in range(options.num_cpus):
     else:
         cpu_list.append(cpu)
 
-########################## Creating the GPU dispatcher ########################
-# Dispatcher dispatches work from host CPU to GPU
 host_cpu = cpu_list[0]
-dispatcher = GpuDispatcher()
 
-########################## Create and assign the workload ########################
-# Check for rel_path in elements of base_list using test, returning
-# the first full path that satisfies test
+hsapp_gpu_map_vaddr = 0x200000000
+hsapp_gpu_map_size = 0x1000
+hsapp_gpu_map_paddr = int(Addr(options.mem_size))
+
+# HSA kernel mode driver
+gpu_driver = GPUComputeDriver(filename="kfd")
+
+# Creating the GPU kernel launching components: that is the HSA
+# packet processor (HSAPP), GPU command processor (CP), and the
+# dispatcher.
+gpu_hsapp = HSAPacketProcessor(pioAddr=hsapp_gpu_map_paddr,
+                               numHWQueues=options.num_hw_queues)
+dispatcher = GPUDispatcher()
+gpu_cmd_proc = GPUCommandProcessor(hsapp=gpu_hsapp,
+                                   dispatcher=dispatcher)
+gpu_driver.device = gpu_cmd_proc
+shader.dispatcher = dispatcher
+shader.gpu_cmd_proc = gpu_cmd_proc
+
+# Create and assign the workload Check for rel_path in elements of
+# base_list using test, returning the first full path that satisfies test
 def find_path(base_list, rel_path, test):
     for base in base_list:
         if not base:
@@ -380,31 +445,31 @@ def find_file(base_list, rel_path):
     return find_path(base_list, rel_path, os.path.isfile)
 
 executable = find_path(benchmark_path, options.cmd, os.path.exists)
-# it's common for a benchmark to be in a directory with the same
+# It's common for a benchmark to be in a directory with the same
 # name as the executable, so we handle that automatically
 if os.path.isdir(executable):
     benchmark_path = [executable]
     executable = find_file(benchmark_path, options.cmd)
-if options.kernel_files:
-    kernel_files = [find_file(benchmark_path, f)
-                    for f in options.kernel_files.split(':')]
-else:
-    # if kernel_files is not set, see if there's a unique .asm file
-    # in the same directory as the executable
-    kernel_path = os.path.dirname(executable)
-    kernel_files = glob.glob(os.path.join(kernel_path, '*.asm'))
-    if kernel_files:
-        print("Using GPU kernel code file(s)", ",".join(kernel_files))
-    else:
-        fatal("Can't locate kernel code (.asm) in " + kernel_path)
 
-# OpenCL driver
-driver = ClDriver(filename="hsa", codefile=kernel_files)
+if options.env:
+    with open(options.env, 'r') as f:
+        env = [line.rstrip() for line in f]
+else:
+    env = ['LD_LIBRARY_PATH=%s' % ':'.join([
+               "/proj/radl_tools/rocm-1.6/lib",
+               "/proj/radl_tools/rocm-1.6/hcc/lib64",
+               "/tool/pandora64/.package/libunwind-1.1/lib",
+               "/tool/pandora64/.package/gcc-6.4.0/lib64"
+           ]),
+           "HSA_ENABLE_INTERRUPT=0"]
+
+process = Process(executable = executable, cmd = [options.cmd]
+                  + options.options.split(), drivers = [gpu_driver], env = env)
+
 for cpu in cpu_list:
     cpu.createThreads()
-    cpu.workload = Process(executable = executable,
-                           cmd = [options.cmd] + options.options.split(),
-                           drivers = [driver])
+    cpu.workload = process
+
 for cp in cp_list:
     cp.workload = host_cpu.workload
 
@@ -419,10 +484,8 @@ if fast_forward:
     switch_cpu_list = \
         [(cpu_list[i], future_cpu_list[i]) for i in range(options.num_cpus)]
 
-# Full list of processing cores in the system. Note that
-# dispatcher is also added to cpu_list although it is
-# not a processing element
-cpu_list = cpu_list + [shader] + cp_list + [dispatcher]
+# Full list of processing cores in the system.
+cpu_list = cpu_list + [shader] + cp_list
 
 # creating the overall system
 # notice the cpu list is explicitly added as a parameter to System
@@ -452,9 +515,15 @@ GPUTLBConfig.config_tlb_hierarchy(options, system, shader_idx)
 # create Ruby system
 system.piobus = IOXBar(width=32, response_latency=0,
                        frontend_latency=0, forward_latency=0)
-Ruby.create_system(options, None, system)
+dma_list = [gpu_hsapp, gpu_cmd_proc]
+Ruby.create_system(options, None, system, None, dma_list, None)
 system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
                                     voltage_domain = system.voltage_domain)
+gpu_cmd_proc.pio = system.piobus.master
+gpu_hsapp.pio = system.piobus.master
+
+for i, dma_device in enumerate(dma_list):
+    exec('system.dma_cntrl%d.clk_domain = system.ruby.clk_domain' % i)
 
 # attach the CPU ports to Ruby
 for i in range(options.num_cpus):
@@ -484,7 +553,8 @@ for i in range(options.num_cpus):
 # per compute unit and one sequencer per SQC for the math to work out
 # correctly.
 gpu_port_idx = len(system.ruby._cpu_ports) \
-               - options.num_compute_units - options.num_sqc
+               - options.num_compute_units - options.num_sqc \
+               - options.num_scalar_cache
 gpu_port_idx = gpu_port_idx - options.num_cp * 2
 
 wavefront_size = options.wf_size
@@ -504,6 +574,14 @@ for i in range(n_cu):
             system.ruby._cpu_ports[gpu_port_idx].slave
 gpu_port_idx = gpu_port_idx + 1
 
+for i in xrange(n_cu):
+    if i > 0 and not i % options.cu_per_scalar_cache:
+        print("incrementing idx on ", i)
+        gpu_port_idx += 1
+    system.cpu[shader_idx].CUs[i].scalar_port = \
+        system.ruby._cpu_ports[gpu_port_idx].slave
+gpu_port_idx = gpu_port_idx + 1
+
 # attach CP ports to Ruby
 for i in range(options.num_cp):
     system.cpu[cp_idx].createInterruptController()
@@ -516,11 +594,7 @@ for i in range(options.num_cp):
     system.cpu[cp_idx].interrupts[0].int_slave = system.piobus.master
     cp_idx = cp_idx + 1
 
-# connect dispatcher to the system.piobus
-dispatcher.pio = system.piobus.master
-dispatcher.dma = system.piobus.slave
-
-################# Connect the CPU and GPU via GPU Dispatcher ###################
+################# Connect the CPU and GPU via GPU Dispatcher ##################
 # CPU rings the GPU doorbell to notify a pending task
 # using this interface.
 # And GPU uses this interface to notify the CPU of task completion
@@ -530,16 +604,28 @@ dispatcher.dma = system.piobus.slave
 # parameters must be after the explicit setting of the System cpu list
 if fast_forward:
     shader.cpu_pointer = future_cpu_list[0]
-    dispatcher.cpu = future_cpu_list[0]
 else:
     shader.cpu_pointer = host_cpu
-    dispatcher.cpu = host_cpu
-dispatcher.shader_pointer = shader
-dispatcher.cl_driver = driver
 
 ########################## Start simulation ########################
 
+chroot = os.path.expanduser(options.chroot)
+redirect_paths = [RedirectPath(src = "/proc",
+                               dests = ["%s/fs/proc" % m5.options.outdir]),
+                  RedirectPath(src = "/sys",
+                               dests = ["%s/fs/sys"  % m5.options.outdir]),
+                  RedirectPath(src = "/tmp",
+                               dests = ["%s/fs/tmp"  % m5.options.outdir]),
+                  RedirectPath(src = "/dev/shm",
+                               dests = ["/dev/shm/%s/gem5_%s"  %
+                                   (getpass.getuser(), os.getpid())])]
+
+system.redirect_paths = redirect_paths
+
 root = Root(system=system, full_system=False)
+
+hsaTopology.createHsaTopology(options)
+
 m5.ticks.setGlobalFrequency('1THz')
 if options.abs_max_tick:
     maxtick = options.abs_max_tick
@@ -587,4 +673,7 @@ elif options.fast_forward_pseudo_op:
 
 print("Ticks:", m5.curTick())
 print('Exiting because ', exit_event.getCause())
+
+FileSystemConfig.cleanup_filesystem(options)
+
 sys.exit(exit_event.getCode())

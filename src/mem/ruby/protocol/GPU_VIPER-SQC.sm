@@ -239,8 +239,6 @@ machine(MachineType:SQC, "GPU SQC (L1 I Cache)")
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
         Entry cache_entry := getCacheEntry(in_msg.LineAddress);
         TBE tbe := TBEs.lookup(in_msg.LineAddress);
-
-        assert(in_msg.Type == RubyRequestType:IFETCH);
         trigger(Event:Fetch, in_msg.LineAddress, cache_entry, tbe);
       }
     }
