@@ -37,7 +37,6 @@
  *****************************************************************************/
 
 #include "systemc.h"
-#include "sysc/kernel/sc_dynamic_processes.h"
 
 SC_MODULE(X)
 {
