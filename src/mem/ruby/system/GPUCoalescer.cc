@@ -587,7 +587,15 @@ GPUCoalescer::makeRequest(PacketPtr pkt)
         assert(pkt->isRead() || pkt->isWrite());
 
         InstSeqNum seq_num = pkt->req->getReqInstSeqNum();
-        int num_packets = getDynInst(pkt)->exec_mask.count();
+
+        // in the case of protocol tester, there is one packet per sequence
+        // number. The number of packets during simulation depends on the
+        // number of lanes actives for that vmem request (i.e., the popcnt
+        // of the exec_mask.
+        int num_packets = 1;
+        if (!m_usingRubyTester) {
+            num_packets = getDynInst(pkt)->exec_mask.count();
+        }
 
         // the pkt is temporarily stored in the uncoalesced table until
         // it's picked for coalescing process later in this cycle or in a

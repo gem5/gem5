@@ -306,7 +306,7 @@ class GPUDynInst : public GPUExecContext
             assert(!isEndOfKernel());
 
             // must be wbinv inst if not kernel launch/end
-            req->setCacheCoherenceFlags(Request::ACQUIRE);
+            req->setCacheCoherenceFlags(Request::INV_L1);
         }
     }
 

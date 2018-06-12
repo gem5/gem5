@@ -805,9 +805,9 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
         // here (simdId=-1, wfSlotId=-1)
         if (gpuDynInst->isKernelLaunch()) {
             // for kernel launch, the original request must be both kernel-type
-            // and acquire
+            // and INV_L1
             assert(pkt->req->isKernel());
-            assert(pkt->req->isAcquire());
+            assert(pkt->req->isInvL1());
 
             // one D-Cache inv is done, decrement counter
             dispatcher.updateInvCounter(gpuDynInst->kern_id);
@@ -820,16 +820,19 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
         // retrieve wavefront from inst
         Wavefront *w = gpuDynInst->wavefront();
 
-        // Check if we are waiting on Kernel End Release
+        // Check if we are waiting on Kernel End Flush
         if (w->getStatus() == Wavefront::S_RETURNING
             && gpuDynInst->isEndOfKernel()) {
             // for kernel end, the original request must be both kernel-type
-            // and release
+            // and last-level GPU cache should be flushed if it contains
+            // dirty data.  This request may have been quiesced and
+            // immediately responded to if the GL2 is a write-through /
+            // read-only cache.
             assert(pkt->req->isKernel());
-            assert(pkt->req->isRelease());
+            assert(pkt->req->isGL2CacheFlush());
 
-            // one wb done, decrement counter, and return whether all wbs are
-            // done for the kernel
+            // once flush done, decrement counter, and return whether all
+            // dirty writeback operations are done for the kernel
             bool isWbDone = dispatcher.updateWbCounter(gpuDynInst->kern_id);
 
             // not all wbs are done for the kernel, just release pkt
@@ -1218,7 +1221,7 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
 
     if (kernelMemSync) {
         if (gpuDynInst->isKernelLaunch()) {
-            req->setCacheCoherenceFlags(Request::ACQUIRE);
+            req->setCacheCoherenceFlags(Request::INV_L1);
             req->setReqInstSeqNum(gpuDynInst->seqNum());
             req->setFlags(Request::KERNEL);
             pkt = new Packet(req, MemCmd::MemSyncReq);
@@ -1234,11 +1237,12 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
 
             schedule(mem_req_event, curTick() + req_tick_latency);
         } else {
-          // kernel end release must be enabled
+          // kernel end flush of GL2 cache may be quiesced by Ruby if the
+          // GL2 is a read-only cache
           assert(shader->impl_kern_end_rel);
           assert(gpuDynInst->isEndOfKernel());
 
-          req->setCacheCoherenceFlags(Request::WB_L2);
+          req->setCacheCoherenceFlags(Request::FLUSH_L2);
           req->setReqInstSeqNum(gpuDynInst->seqNum());
           req->setFlags(Request::KERNEL);
           pkt = new Packet(req, MemCmd::MemSyncReq);

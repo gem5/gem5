@@ -70,20 +70,19 @@ RequestStatus
 VIPERCoalescer::makeRequest(PacketPtr pkt)
 {
     // VIPER only supports following memory request types
-    //    MemSyncReq & Acquire: TCP cache invalidation
+    //    MemSyncReq & INV_L1 : TCP cache invalidation
     //    ReadReq             : cache read
     //    WriteReq            : cache write
     //    AtomicOp            : cache atomic
     //
     // VIPER does not expect MemSyncReq & Release since in GCN3, compute unit
     // does not specify an equivalent type of memory request.
-    // TODO: future patches should rename Acquire and Release
-    assert((pkt->cmd == MemCmd::MemSyncReq && pkt->req->isAcquire()) ||
+    assert((pkt->cmd == MemCmd::MemSyncReq && pkt->req->isInvL1()) ||
             pkt->cmd == MemCmd::ReadReq ||
             pkt->cmd == MemCmd::WriteReq ||
             pkt->isAtomicOp());
 
-    if (pkt->req->isAcquire() && m_cache_inv_pkt) {
+    if (pkt->req->isInvL1() && m_cache_inv_pkt) {
         // In VIPER protocol, the coalescer is not able to handle two or
         // more cache invalidation requests at a time. Cache invalidation
         // requests must be serialized to ensure that all stale data in
@@ -94,8 +93,8 @@ VIPERCoalescer::makeRequest(PacketPtr pkt)
 
     GPUCoalescer::makeRequest(pkt);
 
-    if (pkt->req->isAcquire()) {
-        // In VIPER protocol, a compute unit sends a MemSyncReq with Acquire
+    if (pkt->req->isInvL1()) {
+        // In VIPER protocol, a compute unit sends a MemSyncReq with INV_L1
         // flag to invalidate TCP. Upon receiving a request of this type,
         // VIPERCoalescer starts a cache walk to invalidate all valid entries
         // in TCP. The request is completed once all entries are invalidated.
@@ -276,7 +275,7 @@ VIPERCoalescer::invTCPCallback(Addr addr)
 }
 
 /**
-  * Invalidate TCP (Acquire)
+  * Invalidate TCP
   */
 void
 VIPERCoalescer::invTCP()

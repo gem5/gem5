@@ -232,7 +232,7 @@ GpuWavefront::issueAcquireOp()
                                              threadId, nullptr);
     acq_req->setPaddr(0);
     acq_req->setReqInstSeqNum(tester->getActionSeqNum());
-    acq_req->setFlags(Request::ACQUIRE);
+    acq_req->setCacheCoherenceFlags(Request::INV_L1);
     // set protocol-specific flags
     setExtraRequestFlags(acq_req);
 
