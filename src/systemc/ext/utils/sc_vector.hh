@@ -33,10 +33,101 @@
 #include <stdint.h>
 
 #include <exception>
+#include <iterator>
 #include <vector>
 
 #include "../core/sc_object.hh"
 #include "warn_unimpl.hh"
+
+namespace sc_gem5
+{
+
+// Goop for supporting sc_vector_iter, simplified from the Accellera version.
+
+#if __cplusplus >= 201103L
+
+using std::enable_if;
+using std::remove_const;
+using std::is_same;
+using std::is_const;
+
+#else
+
+template<bool Cond, typename T=void>
+struct enable_if
+{};
+
+template<typename T>
+struct enable_if<true, T>
+{
+    typedef T type;
+};
+
+template <typename T>
+struct remove_const
+{
+    typedef T type;
+};
+template <typename T>
+struct remove_const<const T>
+{
+    typedef T type;
+};
+
+template <typename T, typename U>
+struct is_same
+{
+    static const bool value = false;
+};
+template <typename T>
+struct is_same<T, T>
+{
+    static const bool value = true;
+};
+
+template <typename T>
+struct is_const
+{
+    static const bool value = false;
+};
+template <typename T>
+struct is_const<const T>
+{
+    static const bool value = true;
+};
+
+#endif
+
+template <typename CT, typename T>
+struct is_more_const
+{
+    static const bool value =
+        is_same<typename remove_const<CT>::type,
+                typename remove_const<T>::type>::value &&
+        is_const<CT>::value >= is_const<T>::value;
+};
+
+struct special_result
+{};
+
+template <typename T>
+struct remove_special_fptr
+{};
+
+template <typename T>
+struct remove_special_fptr<special_result & (*)(T)>
+{
+    typedef T type;
+};
+
+#define SC_RPTYPE_(Type) \
+    ::sc_gem5::remove_special_fptr< \
+        ::sc_gem5::special_result & (*) Type>::type::value
+
+#define SC_ENABLE_IF_(Cond) \
+    typename ::sc_gem5::enable_if<SC_RPTYPE_(Cond)>::type * = NULL
+
+} // namespace sc_gem5
 
 namespace sc_core
 {
@@ -61,14 +152,247 @@ class sc_vector_base : public sc_object
     const std::vector<sc_object *> &get_elements() const;
 };
 
-template <typename T>
-class sc_vector_iter :
-        public std::iterator<std::random_access_iterator_tag, T>
+
+/*
+ * Non-standard iterator access adapters. Without using these, the classes as
+ * defined in the standard won't compile because of redundant bind() overloads.
+ */
+
+template <typename Element>
+class sc_direct_access
 {
+  public:
+    typedef Element ElementType;
+    typedef ElementType Type;
+    typedef typename sc_gem5::remove_const<ElementType>::type PlainType;
+
+    typedef sc_direct_access<ElementType> Policy;
+    typedef sc_direct_access<PlainType> NonConstPolicy;
+    typedef sc_direct_access<const PlainType> ConstPolicy;
+
+    sc_direct_access() {}
+    sc_direct_access(const NonConstPolicy &) {}
+
+    template <typename U>
+    sc_direct_access(const U &,
+        SC_ENABLE_IF_((
+            sc_gem5::is_more_const<
+                    ElementType, typename U::Policy::ElementType>
+        ))
+    )
+    {}
+
+    ElementType *
+    get(ElementType *this_) const
+    {
+        return this_;
+    }
+};
+
+template <typename Element, typename Access>
+class sc_member_access
+{
+  public:
+    template <typename, typename>
+    friend class sc_member_access;
+
+    typedef Element ElementType;
+    typedef Access AccessType;
+    typedef AccessType (ElementType::*MemberType);
+    typedef AccessType Type;
+    typedef typename sc_gem5::remove_const<AccessType>::type PlainType;
+    typedef typename sc_gem5::remove_const<ElementType>::type PlainElemType;
+
+    typedef sc_member_access<ElementType, AccessType> Policy;
+    typedef sc_member_access<PlainElemType, PlainType> NonConstPolicy;
+    typedef sc_member_access<const PlainElemType, const PlainType> ConstPolicy;
+
+    sc_member_access(MemberType ptr) : ptr_(ptr) {}
+    sc_member_access(const NonConstPolicy &other) : ptr_(other.ptr_) {}
+
+    AccessType *get(ElementType *this_) const { return &(this_->*ptr_); }
+
+  private:
+    MemberType ptr_;
+};
+
+template <typename Element,
+          typename AccessPolicy=sc_direct_access<Element> >
+class sc_vector_iter :
+        public std::iterator<std::random_access_iterator_tag,
+                             typename AccessPolicy::Type>,
+        private AccessPolicy
+{
+  private:
+    typedef Element ElementType;
+    typedef typename AccessPolicy::Policy Policy;
+    typedef typename AccessPolicy::NonConstPolicy NonConstPolicy;
+    typedef typename AccessPolicy::ConstPolicy ConstPolicy;
+    typedef typename Policy::Type AccessType;
+
+    typedef typename sc_gem5::remove_const<ElementType>::type PlainType;
+    typedef const PlainType ConstPlainType;
+    typedef typename sc_direct_access<PlainType>::ConstPolicy
+        ConstDirectPolicy;
+
+    friend class sc_vector<PlainType>;
+    template <typename, typename>
+    friend class sc_vector_assembly;
+    template <typename, typename>
+    friend class sc_vector_iter;
+
+    typedef std::iterator<std::random_access_iterator_tag, AccessType>
+        BaseType;
+    typedef sc_vector_iter ThisType;
+    typedef sc_vector<PlainType> VectorType;
+    typedef std::vector<void *> StorageType;
+
+    template <typename U>
+    struct SelectIter
+    {
+        typedef typename std::vector<void *>::iterator type;
+    };
+    template <typename U>
+    struct SelectIter<const U>
+    {
+        typedef typename std::vector<void *>::const_iterator type;
+    };
+    typedef typename SelectIter<ElementType>::type RawIterator;
+    typedef sc_vector_iter<ConstPlainType, ConstPolicy> ConstIterator;
+    typedef sc_vector_iter<ConstPlainType, ConstDirectPolicy>
+        ConstDirectIterator;
+
+    RawIterator it_;
+
+    sc_vector_iter(RawIterator it, Policy acc=Policy()) :
+        Policy(acc), it_(it)
+    {}
+
+    Policy const &get_policy() const { return *this; }
+
+  public:
     // Conforms to Random Access Iterator category.
     // See ISO/IEC 14882:2003(E), 24.1 [lib.iterator.requirements]
 
-    // Implementation-defined
+    typedef typename BaseType::difference_type difference_type;
+    typedef typename BaseType::reference reference;
+    typedef typename BaseType::pointer pointer;
+
+    sc_vector_iter() : Policy(), it_() {}
+
+    template <typename It>
+    sc_vector_iter(const It &it,
+        SC_ENABLE_IF_((
+            sc_gem5::is_more_const<
+                ElementType, typename It::Policy::ElementType>
+        ))
+    ) : Policy(it.get_policy()), it_(it.it_)
+    {}
+
+    ThisType &
+    operator ++ ()
+    {
+        ++it_;
+        return *this;
+    }
+    ThisType &
+    operator -- ()
+    {
+        --it_;
+        return *this;
+    }
+    ThisType
+    operator ++ (int)
+    {
+        ThisType old(*this);
+        ++it_;
+        return old;
+    }
+    ThisType
+    operator -- (int)
+    {
+        ThisType old(*this);
+        --it_;
+        return old;
+    }
+
+    ThisType
+    operator + (difference_type n) const
+    {
+        return ThisType(it_ + n, get_policy());
+    }
+    ThisType
+    operator - (difference_type n) const
+    {
+        return ThisType(it_ - n, get_policy());
+    }
+
+    ThisType &
+    operator += (difference_type n)
+    {
+        it_ += n;
+        return *this;
+    }
+
+    ThisType &
+    operator -= (difference_type n)
+    {
+        it_ -= n;
+        return *this;
+    }
+
+    bool
+    operator == (const ConstDirectIterator &other) const
+    {
+        return it_ == other.it_;
+    }
+    bool
+    operator != (const ConstDirectIterator &other) const
+    {
+        return it_ != other.it_;
+    }
+    bool
+    operator <= (const ConstDirectIterator &other) const
+    {
+        return it_ <= other.it_;
+    }
+    bool
+    operator >= (const ConstDirectIterator &other) const
+    {
+        return it_ >= other.it_;
+    }
+    bool
+    operator < (const ConstDirectIterator &other) const
+    {
+        return it_ < other.it_;
+    }
+    bool
+    operator > (const ConstDirectIterator &other) const
+    {
+        return it_ > other.it_;
+    }
+
+    reference
+    operator * () const
+    {
+        return *Policy::get(static_cast<ElementType *>((void *)*it_));
+    }
+    pointer
+    operator -> () const
+    {
+        return Policy::get(static_cast<ElementType *>((void *)*it_));
+    }
+    reference
+    operator [] (difference_type n) const
+    {
+        return *Policy::get(static_cast<ElementType *>((void *)it_[n]));
+    }
+
+    difference_type
+    operator - (ConstDirectIterator const &other) const
+    {
+        return it_ - other.it_;
+    }
 };
 
 template <typename T>
@@ -257,53 +581,46 @@ class sc_vector_assembly
 {
   public:
     friend sc_vector_assembly<T, MT> sc_assemble_vector<>(
-            sc_vector<T> &, MT(T::* member_ptr));
+            sc_vector<T> &, MT (T::*));
 
     typedef size_t size_type;
-    // These next two types are supposed to be implementation defined. We'll
-    // just stick in a substitute for now, but these should probably not just
-    // be STL vector iterators.
-    typedef typename std::vector<T>::iterator iterator;
-    typedef typename std::vector<T>::const_iterator const_iterator;
-    typedef MT (T::* member_type);
+    typedef sc_vector_iter<T, sc_member_access<T, MT> > iterator;
+    typedef sc_vector_iter<
+        const T, sc_member_access<const T, const MT> > const_iterator;
+    typedef MT (T::*MemberType);
 
     sc_vector_assembly(const sc_vector_assembly &)
     {
         sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
     }
 
-    iterator
-    begin()
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
-    }
-    iterator
-    end()
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
-    }
+    iterator begin() { return iterator(vec_->begin().it_, ptr_); }
+    iterator end() { return iterator(vec_->end().it_, ptr_); }
 
     const_iterator
     cbegin() const
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return const_iterator();
+        return const_iterator(vec_->begin().it_, ptr_);
     }
     const_iterator
     cend() const
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return const_iterator();
+        return const_iterator(vec_->end().it_, ptr_);
     }
 
-    size_type
-    size() const
+    const_iterator
+    begin() const
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return 0;
+        return const_iterator(vec_->begin().it_, ptr_);
     }
+    const_iterator
+    end() const
+    {
+        return const_iterator(vec_->end().it_, ptr_);
+    }
+
+    size_type size() const { return vec_->size(); }
+
     std::vector<sc_object *>
     get_elements() const
     {
@@ -312,29 +629,25 @@ class sc_vector_assembly
     }
 
     typename iterator::reference
-    operator [] (size_type)
+    operator [] (size_type i)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return typename iterator::reference();
+        return (*vec_)[i].*ptr_;
     }
     typename const_iterator::reference
-    operator [] (size_type) const
+    operator [] (size_type i) const
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return typename iterator::reference();
+        return (*vec_)[i].*ptr_;
     }
 
     typename iterator::reference
-    at(size_type)
+    at(size_type i)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return typename iterator::reference();
+        return vec_->at(i).*ptr_;
     }
     typename const_iterator::reference
-    at(size_type) const
+    at(size_type i) const
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return typename iterator::reference();
+        return vec_->at(i).*ptr_;
     }
 
     template <typename ContainerType, typename ArgumentType>
@@ -342,7 +655,7 @@ class sc_vector_assembly
     bind(sc_vector_assembly<ContainerType, ArgumentType>)
     {
         sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return begin();
     }
 
     template <typename BindableContainer>
@@ -350,7 +663,7 @@ class sc_vector_assembly
     bind(BindableContainer &)
     {
         sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return begin();
     }
 
     template <typename BindableIterator>
@@ -358,7 +671,7 @@ class sc_vector_assembly
     bind(BindableIterator, BindableIterator)
     {
         sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return begin();
     }
 
     template <typename BindableIterator>
@@ -366,7 +679,7 @@ class sc_vector_assembly
     bind(BindableIterator, BindableIterator, iterator)
     {
         sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return begin();
     }
 
     template <typename BindableIterator>
@@ -374,7 +687,7 @@ class sc_vector_assembly
     bind(BindableIterator, BindableIterator, typename sc_vector<T>::iterator)
     {
         sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return begin();
     }
 
     template <typename ContainerType, typename ArgumentType>
@@ -382,7 +695,7 @@ class sc_vector_assembly
     operator () (sc_vector_assembly<ContainerType, ArgumentType>)
     {
         sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return begin();
     }
 
     template <typename ArgumentContainer>
@@ -390,7 +703,7 @@ class sc_vector_assembly
     operator () (ArgumentContainer &)
     {
         sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return begin();
     }
 
     template <typename ArgumentIterator>
@@ -398,7 +711,7 @@ class sc_vector_assembly
     operator () (ArgumentIterator, ArgumentIterator)
     {
         sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return begin();
     }
 
     template <typename ArgumentIterator>
@@ -406,7 +719,7 @@ class sc_vector_assembly
     operator () (ArgumentIterator, ArgumentIterator, iterator)
     {
         sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return begin();
     }
 
     template <typename ArgumentIterator>
@@ -415,24 +728,23 @@ class sc_vector_assembly
                  typename sc_vector<T>::iterator)
     {
         sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return begin();
     }
 
   private:
-    // Temporary constructor which will (eventually) actually bind an
-    // sc_vector_assembly instance to an sc_vector.
-    sc_vector_assembly<T, MT>()
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    sc_vector_assembly(sc_vector<T> &v, MemberType ptr) :
+        vec_(&v), ptr_(ptr)
+    {}
+
+    sc_vector<T> *vec_;
+    MemberType ptr_;
 };
 
 template <typename T, typename MT>
 sc_vector_assembly<T, MT>
-sc_assemble_vector(sc_vector<T> &, MT(T::* member_ptr))
+sc_assemble_vector(sc_vector<T> &v, MT (T::*ptr))
 {
-    sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-    return sc_vector_assembly<T, MT>();
+    return sc_vector_assembly<T, MT>(v, ptr);
 }
 
 } // namespace sc_core
