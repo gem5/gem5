@@ -166,7 +166,7 @@ class CacheBlk : public ReplaceableEntry
     std::list<Lock> lockList;
 
   public:
-    CacheBlk()
+    CacheBlk() : data(nullptr)
     {
         invalidate();
     }
