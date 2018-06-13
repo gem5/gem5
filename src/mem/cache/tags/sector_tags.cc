@@ -278,7 +278,7 @@ SectorTags::findVictim(Addr addr, const bool is_secure,
     }
 
     // Get the location of the victim block within the sector
-    CacheBlk* victim = victim_sector->blks[extractSectorOffset(addr)];
+    SectorSubBlk* victim = victim_sector->blks[extractSectorOffset(addr)];
 
     // Get evicted blocks. Blocks are only evicted if the sectors mismatch and
     // the currently existing sector is valid.
@@ -294,10 +294,9 @@ SectorTags::findVictim(Addr addr, const bool is_secure,
         }
     }
 
-    SectorSubBlk* victim_cast = static_cast<SectorSubBlk*>(victim);
     DPRINTF(CacheRepl, "set %x, way %x, sector offset %x: %s\n",
             "selecting blk for replacement\n", victim->set, victim->way,
-            victim_cast->getSectorOffset());
+            victim->getSectorOffset());
 
     return victim;
 }
