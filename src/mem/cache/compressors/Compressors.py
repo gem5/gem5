@@ -36,3 +36,12 @@ class BaseCacheCompressor(SimObject):
     cxx_header = "mem/cache/compressors/base.hh"
 
     block_size = Param.Int(Parent.cache_line_size, "Block size in bytes")
+
+class BDI(BaseCacheCompressor):
+    type = 'BDI'
+    cxx_class = 'BDI'
+    cxx_header = "mem/cache/compressors/bdi.hh"
+
+    use_more_compressors = Param.Bool(True, "True if should use all possible" \
+        "combinations of base and delta for the compressors. False if using" \
+        "only the lowest possible delta size for each base size.");
