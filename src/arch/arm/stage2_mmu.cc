@@ -113,6 +113,7 @@ Stage2MMU::Stage2Translation::Stage2Translation(Stage2MMU &_parent,
     : data(_data), numBytes(0), event(_event), parent(_parent), oVAddr(_oVAddr),
     fault(NoFault)
 {
+    req = std::make_shared<Request>();
 }
 
 void
