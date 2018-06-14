@@ -47,18 +47,16 @@ enum
     SC_CACHE_REPORT = 0x0010,
     SC_INTERRUPT = 0x0020,
     SC_STOP = 0x0040,
-    SC_ABORT = 0x0080
-};
+    SC_ABORT = 0x0080,
 
-#define SC_DEFAULT_INFO_ACTIONS \
-        (::sc_core::SC_LOG | ::sc_core::SC_DISPLAY)
-#define SC_DEFAULT_WARNING_ACTIONS \
-        (::sc_core::SC_LOG | ::sc_core::SC_DISPLAY)
-#define SC_DEFAULT_ERROR_ACTIONS \
-        (::sc_core::SC_LOG | ::sc_core::SC_CACHE_REPORT | ::sc_core::SC_THROW)
-#define SC_DEFAULT_FATAL_ACTIONS \
-        (::sc_core::SC_LOG | ::sc_core::SC_DISPLAY | \
-         ::sc_core::SC_CACHE_REPORT | ::sc_core::SC_ABORT)
+    // The spec says these should be macros, but that breaks the build for the
+    // regression tests since they refer to, for instance,
+    // sc_core::SC_DEFAULT_INFO_ACTIONS.
+    SC_DEFAULT_INFO_ACTIONS = SC_LOG | SC_DISPLAY,
+    SC_DEFAULT_WARNING_ACTIONS = SC_LOG | SC_DISPLAY,
+    SC_DEFAULT_ERROR_ACTIONS = SC_LOG | SC_CACHE_REPORT | SC_THROW,
+    SC_DEFAULT_FATAL_ACTIONS = SC_LOG | SC_DISPLAY | SC_CACHE_REPORT | SC_ABORT
+};
 
 typedef void (*sc_report_handler_proc)(const sc_report &, const sc_actions &);
 
