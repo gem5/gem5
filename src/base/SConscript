@@ -48,6 +48,7 @@ if env['USE_PNG']:
     Source('pngwriter.cc')
 Source('fiber.cc')
 GTest('fibertest', 'fibertest.cc', 'fiber.cc')
+GTest('coroutinetest', 'coroutinetest.cc', 'fiber.cc')
 Source('framebuffer.cc')
 Source('hostinfo.cc')
 Source('inet.cc')
