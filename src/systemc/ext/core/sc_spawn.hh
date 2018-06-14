@@ -105,8 +105,16 @@ sc_spawn(typename T::result_type *r_p, T object, const char *name_p=nullptr,
 #define sc_ref(r) boost::ref(r)
 #define sc_cref(r) boost::cref(r)
 
-#define SC_FORK /* Implementation defined */
-#define SC_JOIN /* Implementation defined */
+#define SC_FORK \
+{ \
+    ::sc_core::sc_process_handle forkees[] = {
+
+#define SC_JOIN \
+    }; /* TODO wait for the forkees. */ \
+}
+
+// Non-standard
+#define SC_CJOIN SC_JOIN
 
 } // namespace sc_core
 
