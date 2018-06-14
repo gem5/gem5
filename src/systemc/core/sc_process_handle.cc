@@ -278,4 +278,6 @@ sc_is_unwinding()
     return false;
 }
 
+bool sc_allow_process_control_corners;
+
 } // namespace sc_core

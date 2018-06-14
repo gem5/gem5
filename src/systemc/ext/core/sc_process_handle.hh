@@ -150,6 +150,12 @@ class sc_process_handle
 sc_process_handle sc_get_current_process_handle();
 bool sc_is_unwinding();
 
+// Nonstandard
+// See Accellera's kernel/sim_context.cpp for an explanation of what this is
+// supposed to do. It essentially selects what happens during certain
+// undefined situations.
+extern bool sc_allow_process_control_corners;
+
 } // namespace sc_core
 
 #endif  //__SYSTEMC_EXT_CORE_SC_PROCESS_HANDLE_HH__
