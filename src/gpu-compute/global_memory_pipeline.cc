@@ -190,12 +190,6 @@ GlobalMemPipeline::exec()
 
         DPRINTF(GPUCoalescer, "initiateAcc for %s seqNum %d\n",
                 mp->disassemble(), mp->seqNum());
-        // Memfences will not return tokens and must be issued so we should
-        // not request one as this will deplete the token count until deadlock
-        if (!mp->isMemSync()) {
-            assert(mp->computeUnit()->getTokenManager()->haveTokens(1));
-            mp->computeUnit()->getTokenManager()->acquireTokens(1);
-        }
         mp->initiateAcc(mp);
 
         if (((mp->isMemSync() && !mp->isEndOfKernel()) || !mp->isMemSync())) {
