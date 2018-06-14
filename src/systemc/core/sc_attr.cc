@@ -89,4 +89,53 @@ sc_attr_cltn::end() const
     return (const_iterator)nullptr;
 }
 
+sc_attr_cltn::sc_attr_cltn()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+sc_attr_cltn::sc_attr_cltn(const sc_attr_cltn &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+sc_attr_cltn::~sc_attr_cltn()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+bool
+sc_attr_cltn::push_back(sc_attr_base *)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
+}
+
+sc_attr_base *
+sc_attr_cltn::operator [] (const std::string &name)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return nullptr;
+}
+
+const sc_attr_base *
+sc_attr_cltn::operator [] (const std::string &name) const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return nullptr;
+}
+
+sc_attr_base *
+sc_attr_cltn::remove(const std::string &name)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return nullptr;
+}
+
+void
+sc_attr_cltn::remove_all()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
 } // namespace sc_core

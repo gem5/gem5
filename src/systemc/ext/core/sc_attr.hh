@@ -31,6 +31,7 @@
 #define __SYSTEMC_EXT_CORE_SC_ATTR_HH__
 
 #include <string>
+#include <vector>
 
 namespace sc_core
 {
@@ -91,6 +92,33 @@ class sc_attr_cltn
     const_iterator begin() const;
     iterator end();
     const_iterator end() const;
+
+  private:
+    // Disabled
+    sc_attr_cltn &operator = (const sc_attr_cltn &);
+
+    // "Impelemtation defined" members required by the regression tests.
+  public:
+    sc_attr_cltn();
+
+    // It's non-standard for this not to be disabled.
+    sc_attr_cltn(const sc_attr_cltn &);
+
+    ~sc_attr_cltn();
+
+    bool push_back(sc_attr_base *);
+
+    sc_attr_base *operator [] (const std::string &name);
+    const sc_attr_base *operator [] (const std::string &name) const;
+
+    sc_attr_base *remove(const std::string &name);
+
+    void remove_all();
+
+    int size() const { return cltn.size(); }
+
+  private:
+    std::vector<sc_attr_base *> cltn;
 };
 
 } // namespace sc_core
