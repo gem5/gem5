@@ -132,6 +132,10 @@ class sc_event
     void notify(double, sc_time_unit);
     void cancel();
 
+    // Nonstandard
+    // Returns whether this event is currently triggered.
+    bool triggered() const;
+
     sc_event_and_expr operator & (const sc_event &) const;
     sc_event_and_expr operator & (const sc_event_and_list &) const;
     sc_event_or_expr operator | (const sc_event &) const;
