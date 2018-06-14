@@ -65,6 +65,12 @@ sc_clock::sc_clock(const char *name, double period_v, sc_time_unit period_tu,
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
+sc_clock::sc_clock(const char *name, double period, double duty_cycle,
+                   double start_time, bool posedge_first)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
 sc_clock::~sc_clock() {}
 
 void

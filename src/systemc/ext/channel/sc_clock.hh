@@ -58,6 +58,10 @@ class sc_clock : public sc_signal<bool>
              double duty_cycle, double start_time_v,
              sc_time_unit start_time_tu, bool posedge_first=true);
 
+    // Deprecated.
+    sc_clock(const char *name, double period, double duty_cycle=0.5,
+             double start_time=0.0, bool posedge_first=true);
+
     virtual ~sc_clock();
 
     virtual void write(const bool &);
@@ -79,6 +83,10 @@ class sc_clock : public sc_signal<bool>
 };
 
 typedef sc_in<bool> sc_in_clk;
+
+// Deprecated
+typedef sc_inout<bool> sc_inout_clk;
+typedef sc_out<bool> sc_out_clk;
 
 } // namespace sc_core
 
