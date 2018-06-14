@@ -212,7 +212,7 @@ private:
 int sc_main(int, char*[])
 {
   // don't run without callbacks enabled
-  sc_report_handler::set_actions( SC_ID_PHASE_CALLBACKS_UNSUPPORTED_
+  sc_report_handler::set_actions( "simulation phase callbacks not enabled"
                                 , SC_DEFAULT_ERROR_ACTIONS );
 
   phase_tracer pt;

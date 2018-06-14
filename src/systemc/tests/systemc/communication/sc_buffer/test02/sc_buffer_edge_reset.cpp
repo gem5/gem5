@@ -73,8 +73,9 @@ SC_MODULE(print_edge)
 
 int sc_main(int, char*[])
 {
-  sc_report_handler::set_actions( SC_ID_DISABLE_WILL_ORPHAN_PROCESS_
-                                , SC_DO_NOTHING );
+  sc_report_handler::set_actions( "disable() or dont_initialize() "
+            "called on process with no static sensitivity, it will be "
+            "orphaned", SC_DO_NOTHING );
 
   sc_signal<int>  sig_int;
 

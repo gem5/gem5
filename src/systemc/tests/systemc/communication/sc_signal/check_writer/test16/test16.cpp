@@ -147,7 +147,7 @@ int sc_main( int, char*[] )
 
     // report multiple writer errors as warnings
     sc_core::sc_report_handler::set_actions(
-        sc_core::SC_ID_MORE_THAN_ONE_SIGNAL_DRIVER_
+        "sc_signal<T> cannot have more than one driver"
       , sc_core::SC_DEFAULT_WARNING_ACTIONS
     );
 
