@@ -107,6 +107,26 @@ void sc_trace(sc_trace_file *, const sc_dt::sc_fxnum_fast &,
 void sc_trace(sc_trace_file *, const sc_dt::sc_fxnum_fast *,
               const std::string &);
 
+
+// Nonstandard - unsigned versions necessary to avoid ambiguous overload
+// resolution.
+void sc_trace(sc_trace_file *, const unsigned char &,
+              const std::string &, int width=(8 * sizeof(char)));
+void sc_trace(sc_trace_file *, const unsigned char *,
+              const std::string &, int width=(8 * sizeof(char)));
+void sc_trace(sc_trace_file *, const unsigned short &,
+              const std::string &, int width=(8 * sizeof(char)));
+void sc_trace(sc_trace_file *, const unsigned short *,
+              const std::string &, int width=(8 * sizeof(char)));
+void sc_trace(sc_trace_file *, const unsigned int &,
+              const std::string &, int width=(8 * sizeof(char)));
+void sc_trace(sc_trace_file *, const unsigned int *,
+              const std::string &, int width=(8 * sizeof(char)));
+void sc_trace(sc_trace_file *, const unsigned long &,
+              const std::string &, int width=(8 * sizeof(char)));
+void sc_trace(sc_trace_file *, const unsigned long *,
+              const std::string &, int width=(8 * sizeof(char)));
+
 void sc_trace(sc_trace_file *, const char &,
               const std::string &, int width=(8 * sizeof(char)));
 void sc_trace(sc_trace_file *, const char *,
@@ -131,6 +151,10 @@ void sc_trace(sc_trace_file *, const sc_dt::uint64 &,
               const std::string &, int width=(8 * sizeof(char)));
 void sc_trace(sc_trace_file *, const sc_dt::uint64 *,
               const std::string &, int width=(8 * sizeof(char)));
+
+// Nonstandard function for enums
+void sc_trace(sc_trace_file *, const unsigned int &,
+              const std::string &, const char **enum_literals);
 
 template <class T>
 void

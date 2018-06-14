@@ -221,6 +221,60 @@ sc_trace(sc_trace_file *, const sc_dt::sc_fxnum_fast *, const std::string &)
 }
 
 void
+sc_trace(sc_trace_file *, const unsigned char &,
+         const std::string &, int width)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_trace(sc_trace_file *, const unsigned char *,
+         const std::string &, int width)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_trace(sc_trace_file *, const unsigned short &,
+         const std::string &, int width)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_trace(sc_trace_file *, const unsigned short *,
+         const std::string &, int width)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_trace(sc_trace_file *, const unsigned int &, const std::string &, int width)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_trace(sc_trace_file *, const unsigned int *, const std::string &, int width)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_trace(sc_trace_file *, const unsigned long &,
+         const std::string &, int width)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_trace(sc_trace_file *, const unsigned long *,
+         const std::string &, int width)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
 sc_trace(sc_trace_file *, const char &, const std::string &, int width)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
@@ -318,6 +372,13 @@ sc_trace(sc_trace_file *, const sc_signal_in_if<int> &,
 void
 sc_trace(sc_trace_file *, const sc_signal_in_if<long> &,
          const std::string &, int width)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_trace(sc_trace_file *, const unsigned int &,
+         const std::string &, const char **enum_literals)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
