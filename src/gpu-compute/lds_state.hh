@@ -69,9 +69,14 @@ class LdsChunk
     T
     read(const uint32_t index)
     {
-        fatal_if(!chunk.size(), "cannot read from an LDS chunk of size 0");
-        fatal_if(index >= chunk.size(), "out-of-bounds access to an LDS "
-            "chunk");
+        /**
+         * For reads that are outside the bounds of the LDS
+         * chunk allocated to this WG we return 0.
+         */
+        if (index >= chunk.size()) {
+            return (T)0;
+        }
+
         T *p0 = (T *) (&(chunk.at(index)));
         return *p0;
     }
@@ -83,9 +88,14 @@ class LdsChunk
     void
     write(const uint32_t index, const T value)
     {
-        fatal_if(!chunk.size(), "cannot write to an LDS chunk of size 0");
-        fatal_if(index >= chunk.size(), "out-of-bounds access to an LDS "
-            "chunk");
+        /**
+         * Writes that are outside the bounds of the LDS
+         * chunk allocated to this WG are dropped.
+         */
+        if (index >= chunk.size()) {
+            return;
+        }
+
         T *p0 = (T *) (&(chunk.at(index)));
         *p0 = value;
     }
