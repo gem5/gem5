@@ -244,6 +244,12 @@ typedef sc_module sc_channel;
 bool sc_start_of_simulation_invoked();
 bool sc_end_of_simulation_invoked();
 
+// Nonstandard
+// Allocates a module of type x and records a pointer to it so that it gets
+// destructed automatically at the end of the simulation.
+sc_module *sc_module_sc_new(sc_module *);
+#define SC_NEW(x) ::sc_core::sc_module_sc_new(new x);
+
 } // namespace sc_core
 
 #endif  //__SYSTEMC_EXT_CORE_SC_MODULE_HH__

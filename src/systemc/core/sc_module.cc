@@ -27,6 +27,9 @@
  * Authors: Gabe Black
  */
 
+#include <memory>
+#include <vector>
+
 #include "base/logging.hh"
 #include "systemc/ext/core/sc_module.hh"
 
@@ -537,6 +540,14 @@ sc_end_of_simulation_invoked()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
     return false;
+}
+
+sc_module *
+sc_module_sc_new(sc_module *mod)
+{
+    static std::vector<std::unique_ptr<sc_module> > modules;
+    modules.emplace_back(mod);
+    return mod;
 }
 
 } // namespace sc_core
