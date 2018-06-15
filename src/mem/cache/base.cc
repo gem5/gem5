@@ -1319,9 +1319,13 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // Get secure bit
     const bool is_secure = pkt->isSecure();
 
+    // @todo Compress and get compression related data
+    std::size_t blk_size_bits = blkSize*8;
+
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
-    CacheBlk *victim = tags->findVictim(addr, is_secure, evict_blks);
+    CacheBlk *victim = tags->findVictim(addr, is_secure, blk_size_bits,
+                                        evict_blks);
 
     // It is valid to return nullptr if there is no victim
     if (!victim)

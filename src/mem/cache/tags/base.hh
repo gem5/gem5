@@ -50,6 +50,7 @@
 #define __MEM_CACHE_TAGS_BASE_HH__
 
 #include <cassert>
+#include <cstdint>
 #include <functional>
 #include <string>
 
@@ -276,10 +277,12 @@ class BaseTags : public ClockedObject
      *
      * @param addr Address to find a victim for.
      * @param is_secure True if the target memory space is secure.
+     * @param size Size, in bits, of new block to allocate.
      * @param evict_blks Cache blocks to be evicted.
      * @return Cache block to be replaced.
      */
     virtual CacheBlk* findVictim(Addr addr, const bool is_secure,
+                                 const std::size_t size,
                                  std::vector<CacheBlk*>& evict_blks) const = 0;
 
     /**
