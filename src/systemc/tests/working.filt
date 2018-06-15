@@ -22,7 +22,11 @@ path in (
     "systemc/kernel/sc_main_main",
 
     # Tests the deprecated sc_string type which we aren't supporting.
-    "systemc/bugs/sc_string_bracket_assign"
+    "systemc/bugs/sc_string_bracket_assign",
+
+    # This test declares a constructor it never defines, so it's not clear how
+    # it would ever work?
+    "systemc/misc/stars/star104726",
 ),
 
 ])
