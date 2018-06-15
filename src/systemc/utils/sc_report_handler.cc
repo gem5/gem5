@@ -47,6 +47,13 @@ sc_report_handler::report(sc_severity, const char *msg_type, const char *msg,
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
+void
+sc_report_handler::report(sc_severity, int id, const char *msg,
+                          const char *file, int line)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
 sc_actions
 sc_report_handler::set_actions(sc_severity, sc_actions)
 {

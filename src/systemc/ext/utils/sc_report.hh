@@ -74,6 +74,16 @@ class sc_report : public std::exception
     const char *get_process_name() const;
 
     virtual const char *what() const throw();
+
+    // Deprecated
+    static const char *get_message(int id);
+    static bool is_suppressed(int id);
+    static void make_warnings_errors(bool);
+    static void register_id(int id, const char *msg);
+    static void suppress_id(int id, bool); // Only for info or warning.
+    static void suppress_infos(bool);
+    static void suppress_warnings(bool);
+    int get_id() const;
 };
 
 // A non-standard function the Accellera datatypes rely on.

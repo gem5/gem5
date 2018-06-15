@@ -110,6 +110,57 @@ sc_report::what() const throw()
     return "";
 }
 
+const char *
+sc_report::get_message(int id)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return "";
+}
+
+bool
+sc_report::is_suppressed(int id)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
+}
+
+void
+sc_report::make_warnings_errors(bool)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_report::register_id(int id, const char *msg)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_report::suppress_id(int id, bool)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_report::suppress_infos(bool)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_report::suppress_warnings(bool)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+int
+sc_report::get_id() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return 0;
+}
+
 void
 sc_abort()
 {
