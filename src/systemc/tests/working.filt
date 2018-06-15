@@ -1,0 +1,28 @@
+not any([
+
+# The sc_elab_and_sim mechanism is purposefully not supported.
+name == "sc_elab_and_sim",
+
+# The wif trace format is deprecated, and probably would take a non-trivial
+# amount of work to support.
+path.startswith("systemc/tracing/wif_trace"),
+path.startswith("systemc/misc/stars/wif_trace"),
+
+# These tests refers to sc_get_current_process_b which is a deprecated type and
+# something we're not currently planning to support.
+path.startswith("systemc/kernel/sc_process_b"),
+
+
+path in (
+    # Uses sc_get_curr_simcontext.
+    "systemc/kernel/sc_object_manager/test01",
+    "systemc/kernel/sc_name_gen/test1",
+
+    # Uses sc_elab_and_sim.
+    "systemc/kernel/sc_main_main",
+
+    # Tests the deprecated sc_string type which we aren't supporting.
+    "systemc/bugs/sc_string_bracket_assign"
+),
+
+])
