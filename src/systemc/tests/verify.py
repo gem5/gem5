@@ -158,9 +158,13 @@ parser.add_argument('--flavor', choices=['debug', 'opt', 'fast'],
 parser.add_argument('--list', action='store_true',
                     help='List the available tests')
 
-parser.add_argument('--filter', default='True',
-                    help='Python expression which filters tests based on '
-                    'their properties')
+filter_opts = parser.add_mutually_exclusive_group()
+filter_opts.add_argument('--filter', default='True',
+                         help='Python expression which filters tests based '
+                         'on their properties')
+filter_opts.add_argument('--filter-file', default=None,
+                         type=argparse.FileType('r'),
+                         help='Same as --filter, but read from a file')
 
 def collect_phases(args):
     phase_groups = [list(g) for k, g in
@@ -196,20 +200,27 @@ if main_args.update_json:
 with open(json_path) as f:
     test_data = json.load(f)
 
+    if main_args.filter_file:
+        f = main_args.filter_file
+        filt = compile(f.read(), f.name, 'eval')
+    else:
+        filt = compile(main_args.filter, '<string>', 'eval')
+
+    filtered_tests = {
+        target: props for (target, props) in
+                    test_data.iteritems() if eval(filt, dict(props))
+    }
+
     if main_args.list:
-        for target, props in test_data.iteritems():
-            if not eval(main_args.filter, dict(props)):
-                continue
+        for target, props in sorted(filtered_tests.iteritems()):
             print('%s.%s' % (target, main_args.flavor))
             for key, val in props.iteritems():
                 print('    %s: %s' % (key, val))
     else:
-        tests_to_run = []
-        for target, props in test_data.iteritems():
-            if not eval(main_args.filter, props):
-                continue
-            tests_to_run.append(Test(target, main_args.flavor,
-                                     main_args.build_dir, props))
+        tests_to_run = list([
+            Test(target, main_args.flavor, main_args.build_dir, props) for
+                target, props in sorted(filtered_tests.iteritems())
+        ])
 
         for phase in phases:
             phase.run(tests_to_run)
