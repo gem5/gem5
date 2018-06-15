@@ -39,6 +39,7 @@
 
 #include "arch/gcn3/insts/inst_util.hh"
 #include "debug/GCN3.hh"
+#include "debug/GPUSync.hh"
 #include "gpu-compute/shader.hh"
 
 namespace Gcn3ISA
@@ -3709,6 +3710,7 @@ namespace Gcn3ISA
     Inst_SOPP__S_ENDPGM::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
+        ComputeUnit *cu = gpuDynInst->computeUnit();
 
         // delete extra instructions fetched for completed work-items
         wf->instructionBuffer.erase(wf->instructionBuffer.begin() + 1,
@@ -3724,6 +3726,25 @@ namespace Gcn3ISA
 
         int refCount = wf->computeUnit->getLds()
             .decreaseRefCounter(wf->dispatchId, wf->wgId);
+
+        /**
+         * The parent WF of this instruction is exiting, therefore
+         * it should not participate in this barrier any longer. This
+         * prevents possible deadlock issues if WFs exit early.
+         */
+        int bar_id = WFBarrier::InvalidID;
+        if (wf->hasBarrier()) {
+            assert(wf->getStatus() != Wavefront::S_BARRIER);
+            bar_id = wf->barrierId();
+            assert(bar_id != WFBarrier::InvalidID);
+            wf->releaseBarrier();
+            cu->decMaxBarrierCnt(bar_id);
+            DPRINTF(GPUSync, "CU[%d] WF[%d][%d] Wave[%d] - Exiting the "
+                    "program and decrementing max barrier count for "
+                    "barrier Id%d. New max count: %d.\n", cu->cu_id,
+                    wf->simdId, wf->wfSlotId, wf->wfDynId, bar_id,
+                    cu->maxBarrierCnt(bar_id));
+        }
 
         DPRINTF(GPUExec, "CU%d: decrease ref ctr WG[%d] to [%d]\n",
             wf->computeUnit->cu_id, wf->wgId, refCount);
@@ -3748,6 +3769,20 @@ namespace Gcn3ISA
         wf->lastInstExec = 0;
 
         if (!refCount) {
+            /**
+             * If all WFs have finished, and hence the WG has finished,
+             * then we can free up the barrier belonging to the parent
+             * WG, but only if we actually used a barrier (i.e., more
+             * than one WF in the WG).
+             */
+            if (bar_id != WFBarrier::InvalidID) {
+                DPRINTF(GPUSync, "CU[%d] WF[%d][%d] Wave[%d] - All waves are "
+                        "now complete. Releasing barrier Id%d.\n", cu->cu_id,
+                        wf->simdId, wf->wfSlotId, wf->wfDynId,
+                        wf->barrierId());
+                cu->releaseBarrier(bar_id);
+            }
+
            /**
              * Last wavefront of the workgroup has executed return. If the
              * workgroup is not the final one in the kernel, then simply
@@ -4027,12 +4062,21 @@ namespace Gcn3ISA
     Inst_SOPP__S_BARRIER::execute(GPUDynInstPtr gpuDynInst)
     {
         Wavefront *wf = gpuDynInst->wavefront();
+        ComputeUnit *cu = gpuDynInst->computeUnit();
 
-        assert(wf->barrierCnt == wf->oldBarrierCnt);
-
-        wf->barrierCnt = wf->oldBarrierCnt + 1;
-        wf->stalledAtBarrier = true;
-    }
+        if (wf->hasBarrier()) {
+            int bar_id = wf->barrierId();
+            assert(wf->getStatus() != Wavefront::S_BARRIER);
+            wf->setStatus(Wavefront::S_BARRIER);
+            cu->incNumAtBarrier(bar_id);
+            DPRINTF(GPUSync, "CU[%d] WF[%d][%d] Wave[%d] - Stalling at "
+                    "barrier Id%d. %d waves now at barrier, %d waves "
+                    "remain.\n", cu->cu_id, wf->simdId, wf->wfSlotId,
+                    wf->wfDynId, bar_id, cu->numAtBarrier(bar_id),
+                    cu->numYetToReachBarrier(bar_id));
+        }
+    } // execute
+    // --- Inst_SOPP__S_SETKILL class methods ---
 
     Inst_SOPP__S_SETKILL::Inst_SOPP__S_SETKILL(InFmt_SOPP *iFmt)
         : Inst_SOPP(iFmt, "s_setkill")

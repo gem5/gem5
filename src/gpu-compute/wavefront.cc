@@ -52,7 +52,8 @@ WavefrontParams::create()
 Wavefront::Wavefront(const Params *p)
   : SimObject(p), wfSlotId(p->wf_slot_id), simdId(p->simdId),
     maxIbSize(p->max_ib_size), _gpuISA(*this),
-    vmWaitCnt(-1), expWaitCnt(-1), lgkmWaitCnt(-1)
+    vmWaitCnt(-1), expWaitCnt(-1), lgkmWaitCnt(-1),
+    barId(WFBarrier::InvalidID)
 {
     lastTrace = 0;
     execUnitId = -1;
@@ -75,9 +76,6 @@ Wavefront::Wavefront(const Params *p)
     scalarOutstandingReqsRdGm = 0;
     scalarOutstandingReqsWrGm = 0;
     lastNonIdleTick = 0;
-    barrierCnt = 0;
-    oldBarrierCnt = 0;
-    stalledAtBarrier = false;
     ldsChunk = nullptr;
 
     memTraceBusy = 0;
@@ -93,7 +91,6 @@ Wavefront::Wavefront(const Params *p)
     lastAddr.resize(p->wf_size);
     workItemFlatId.resize(p->wf_size);
     oldDgpr.resize(p->wf_size);
-    barCnt.resize(p->wf_size);
     for (int i = 0; i < 3; ++i) {
         workItemId[i].resize(p->wf_size);
     }
@@ -595,7 +592,7 @@ Wavefront::setStatus(status_e newStatus)
     if (computeUnit->idleCUTimeout > 0) {
         // Wavefront's status transitions to stalled or stopped
         if ((newStatus == S_STOPPED || newStatus == S_STALLED ||
-             newStatus == S_WAITCNT) &&
+             newStatus == S_WAITCNT || newStatus == S_BARRIER) &&
             (status != newStatus)) {
             computeUnit->idleWfs++;
             assert(computeUnit->idleWfs <=
@@ -607,7 +604,7 @@ Wavefront::setStatus(status_e newStatus)
             // Wavefront's status transitions to an active state (from
             // a stopped or stalled state)
         } else if ((status == S_STOPPED || status == S_STALLED ||
-                    status == S_WAITCNT) &&
+                    status == S_WAITCNT || status == S_BARRIER) &&
                    (status != newStatus)) {
             // if all WFs in the CU were idle then check if the idleness
             // period exceeded the timeout threshold
@@ -1214,12 +1211,6 @@ Wavefront::exec()
     }
 }
 
-bool
-Wavefront::waitingAtBarrier(int lane)
-{
-    return barCnt[lane] < maxBarCnt;
-}
-
 GPUDynInstPtr
 Wavefront::nextInstr()
 {
@@ -1413,4 +1404,30 @@ Wavefront::computeActualWgSz(HSAQueueEntry *task)
                                  - task->wgId(d) * workGroupSz[d]);
         actualWgSzTotal *= actualWgSz[d];
     }
+}
+
+void
+Wavefront::barrierId(int bar_id)
+{
+    assert(bar_id >= WFBarrier::InvalidID);
+    assert(bar_id < computeUnit->numBarrierSlots());
+    barId = bar_id;
+}
+
+int
+Wavefront::barrierId() const
+{
+    return barId;
+}
+
+bool
+Wavefront::hasBarrier() const
+{
+    return barId > WFBarrier::InvalidID;
+}
+
+void
+Wavefront::releaseBarrier()
+{
+    barId = WFBarrier::InvalidID;
 }

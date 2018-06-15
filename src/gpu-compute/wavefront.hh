@@ -78,13 +78,13 @@ class Wavefront : public SimObject
          * and once they are satisfied, it will resume normal
          * operation.
          */
-        S_WAITCNT
+        S_WAITCNT,
+        /**
+         * WF is stalled at a barrier.
+         */
+        S_BARRIER
     };
 
-    uint32_t oldBarrierCnt;
-    uint32_t barrierCnt;
-    uint32_t barrierId;
-    uint32_t barrierSlots;
     // HW slot id where the WF is mapped to inside a SIMD unit
     const int wfSlotId;
     int kernId;
@@ -210,12 +210,6 @@ class Wavefront : public SimObject
     // Execution mask at wavefront start
     VectorMask initMask;
 
-    // number of barriers this WF has joined
-    std::vector<int> barCnt;
-    int maxBarCnt;
-    // Flag to stall a wave on barrier
-    bool stalledAtBarrier;
-
     // a pointer to the fraction of the LDS allocated
     // to this workgroup (thus this wavefront)
     LdsChunk *ldsChunk;
@@ -297,8 +291,6 @@ class Wavefront : public SimObject
     bool stopFetch();
     void regStats();
 
-    bool waitingAtBarrier(int lane);
-
     Addr pc() const;
     void pc(Addr new_pc);
 
@@ -320,6 +312,11 @@ class Wavefront : public SimObject
     {
         return _gpuISA;
     }
+
+    void barrierId(int bar_id);
+    int barrierId() const;
+    bool hasBarrier() const;
+    void releaseBarrier();
 
   private:
     TheGpuISA::GPUISA _gpuISA;
@@ -349,6 +346,7 @@ class Wavefront : public SimObject
     status_e status;
     Addr _pc;
     VectorMask _execMask;
+    int barId;
 };
 
 #endif // __GPU_COMPUTE_WAVEFRONT_HH__

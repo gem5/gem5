@@ -86,13 +86,14 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
     prefetchStride(p->prefetch_stride), prefetchType(p->prefetch_prev_type),
     debugSegFault(p->debugSegFault),
     functionalTLB(p->functionalTLB), localMemBarrier(p->localMemBarrier),
-    countPages(p->countPages), barrier_id(0),
+    countPages(p->countPages),
     req_tick_latency(p->mem_req_latency * p->clk_domain->clockPeriod()),
     resp_tick_latency(p->mem_resp_latency * p->clk_domain->clockPeriod()),
     _masterId(p->system->getMasterId(this, "ComputeUnit")),
     lds(*p->localDataStore), gmTokenPort(name() + ".gmTokenPort", this),
-    _cacheLineSize(p->system->cacheLineSize()), globalSeqNum(0),
-    wavefrontSize(p->wf_size)
+    _cacheLineSize(p->system->cacheLineSize()),
+    _numBarrierSlots(p->num_barrier_slots),
+    globalSeqNum(0), wavefrontSize(p->wf_size)
 {
     /**
      * This check is necessary because std::bitset only provides conversion
@@ -121,6 +122,12 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
     idleWfs = p->n_wf * numVectorALUs;
     lastVaddrWF.resize(numVectorALUs);
     wfList.resize(numVectorALUs);
+
+    wfBarrierSlots.resize(p->num_barrier_slots, WFBarrier());
+
+    for (int i = 0; i < p->num_barrier_slots; ++i) {
+        freeBarrierIds.insert(i);
+    }
 
     for (int j = 0; j < numVectorALUs; ++j) {
         lastVaddrWF[j].resize(p->n_wf);
@@ -305,7 +312,7 @@ ComputeUnit::updateReadyList(int unitId)
 
 void
 ComputeUnit::startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
-                            HSAQueueEntry *task, bool fetchContext)
+                            HSAQueueEntry *task, int bar_id, bool fetchContext)
 {
     static int _n_wave = 0;
 
@@ -323,6 +330,12 @@ ComputeUnit::startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
     w->wfId = waveId;
     w->initMask = init_mask.to_ullong();
 
+    if (bar_id > WFBarrier::InvalidID) {
+        w->barrierId(bar_id);
+    } else {
+        assert(!w->hasBarrier());
+    }
+
     for (int k = 0; k < wfSize(); ++k) {
         w->workItemId[0][k] = (k + waveId * wfSize()) % w->actualWgSz[0];
         w->workItemId[1][k] = ((k + waveId * wfSize()) / w->actualWgSz[0]) %
@@ -335,23 +348,12 @@ ComputeUnit::startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
             w->workItemId[0][k];
     }
 
-    w->barrierSlots = divCeil(w->actualWgSzTotal, wfSize());
-
-    w->barCnt.resize(wfSize(), 0);
-
-    w->maxBarCnt = 0;
-    w->oldBarrierCnt = 0;
-    w->barrierCnt = 0;
-
     // WG state
     w->wgId = task->globalWgId();
     w->dispatchId = task->dispatchId();
     w->workGroupId[0] = w->wgId % task->numWg(0);
     w->workGroupId[1] = (w->wgId / task->numWg(0)) % task->numWg(1);
     w->workGroupId[2] = w->wgId / (task->numWg(0) * task->numWg(1));
-
-    w->barrierId = barrier_id;
-    w->stalledAtBarrier = (w->oldBarrierCnt == w->barrierCnt) ? false : true;
 
     // set the wavefront context to have a pointer to this section of the LDS
     w->ldsChunk = ldsChunk;
@@ -367,8 +369,8 @@ ComputeUnit::startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
         w->dropFetch = true;
 
     DPRINTF(GPUDisp, "Scheduling wfDynId/barrier_id %d/%d on CU%d: "
-            "WF[%d][%d]\n", _n_wave, w->barrierId, cu_id, w->simdId,
-            w->wfSlotId);
+            "WF[%d][%d]. Ref cnt:%d\n", _n_wave, w->barrierId(), cu_id,
+            w->simdId, w->wfSlotId, refCount);
 
     w->initRegState(task, w->actualWgSzTotal);
     w->start(_n_wave++, task->codeAddr());
@@ -407,7 +409,7 @@ ComputeUnit::doFlush(GPUDynInstPtr gpuDynInst) {
 }
 
 void
-ComputeUnit::dispWorkgroup(HSAQueueEntry *task, bool startFromScheduler)
+ComputeUnit::dispWorkgroup(HSAQueueEntry *task, int num_wfs_in_wg)
 {
     // If we aren't ticking, start it up!
     if (!tickEvent.scheduled()) {
@@ -433,6 +435,28 @@ ComputeUnit::dispWorkgroup(HSAQueueEntry *task, bool startFromScheduler)
     int sregDemand = task->numScalarRegs();
     int wave_id = 0;
 
+    int barrier_id = WFBarrier::InvalidID;
+
+    /**
+     * If this WG only has one WF it will not consume any barrier
+     * resources because it has no need of them.
+     */
+    if (num_wfs_in_wg > 1) {
+        /**
+         * Find a free barrier slot for this WG. Each WF in the WG will
+         * receive the same barrier ID.
+         */
+        barrier_id = getFreeBarrierId();
+        auto &wf_barrier = barrierSlot(barrier_id);
+        assert(!wf_barrier.maxBarrierCnt());
+        assert(!wf_barrier.numAtBarrier());
+        wf_barrier.setMaxBarrierCnt(num_wfs_in_wg);
+
+        DPRINTF(GPUSync, "CU[%d] - Dispatching WG with barrier Id%d. "
+                "%d waves using this barrier.\n", cu_id, barrier_id,
+                num_wfs_in_wg);
+    }
+
     // Assign WFs according to numWfsToSched vector, which is computed by
     // hasDispResources()
     for (int j = 0; j < shader->n_wf; ++j) {
@@ -455,12 +479,11 @@ ComputeUnit::dispWorkgroup(HSAQueueEntry *task, bool startFromScheduler)
 
                 registerManager->allocateRegisters(w, vregDemand, sregDemand);
 
-                startWavefront(w, wave_id, ldsChunk, task);
+                startWavefront(w, wave_id, ldsChunk, task, barrier_id);
                 ++wave_id;
             }
         }
     }
-    ++barrier_id;
 }
 
 void
@@ -485,7 +508,7 @@ ComputeUnit::deleteFromPipeMap(Wavefront *w)
 }
 
 bool
-ComputeUnit::hasDispResources(HSAQueueEntry *task)
+ComputeUnit::hasDispResources(HSAQueueEntry *task, int &num_wfs_in_wg)
 {
     // compute true size of workgroup (after clamping to grid size)
     int trueWgSize[HSAQueueEntry::MAX_DIM];
@@ -503,6 +526,13 @@ ComputeUnit::hasDispResources(HSAQueueEntry *task)
 
     // calculate the number of WFs in this WG
     int numWfs = (trueWgSizeTotal + wfSize() - 1) / wfSize();
+    num_wfs_in_wg = numWfs;
+
+    bool barrier_avail = true;
+
+    if (numWfs > 1 && !freeBarrierIds.size()) {
+        barrier_avail = false;
+    }
 
     // calculate the number of 32-bit vector registers required by each
     // work item of the work group
@@ -591,54 +621,89 @@ ComputeUnit::hasDispResources(HSAQueueEntry *task)
         wgBlockedDueLdsAllocation++;
     }
 
+    if (!barrier_avail) {
+        wgBlockedDueBarrierAllocation++;
+    }
+
     // Return true if the following are all true:
     // (a) all WFs of the WG were mapped to free WF slots
     // (b) there are enough VGPRs to schedule all WFs to their SIMD units
     // (c) there are enough SGPRs on the CU to schedule all WFs
     // (d) there is enough space in LDS to allocate for all WFs
     bool can_dispatch = numMappedWfs == numWfs && vregAvail && sregAvail
-                        && ldsAvail;
+                        && ldsAvail && barrier_avail;
     return can_dispatch;
 }
 
 int
-ComputeUnit::AllAtBarrier(uint32_t _barrier_id, uint32_t bcnt, uint32_t bslots)
+ComputeUnit::numYetToReachBarrier(int bar_id)
 {
-    DPRINTF(GPUSync, "CU%d: Checking for All At Barrier\n", cu_id);
-    int ccnt = 0;
+    auto &wf_barrier = barrierSlot(bar_id);
+    return wf_barrier.numYetToReachBarrier();
+}
 
-    for (int i_simd = 0; i_simd < numVectorALUs; ++i_simd) {
-        for (int i_wf = 0; i_wf < shader->n_wf; ++i_wf) {
-            Wavefront *w = wfList[i_simd][i_wf];
+bool
+ComputeUnit::allAtBarrier(int bar_id)
+{
+    auto &wf_barrier = barrierSlot(bar_id);
+    return wf_barrier.allAtBarrier();
+}
 
-            if (w->getStatus() == Wavefront::S_RUNNING) {
-                DPRINTF(GPUSync, "Checking WF[%d][%d]\n", i_simd, i_wf);
+void
+ComputeUnit::incNumAtBarrier(int bar_id)
+{
+    auto &wf_barrier = barrierSlot(bar_id);
+    wf_barrier.incNumAtBarrier();
+}
 
-                DPRINTF(GPUSync, "wf->barrier_id = %d, _barrier_id = %d\n",
-                        w->barrierId, _barrier_id);
+int
+ComputeUnit::numAtBarrier(int bar_id)
+{
+    auto &wf_barrier = barrierSlot(bar_id);
+    return wf_barrier.numAtBarrier();
+}
 
-                DPRINTF(GPUSync, "wf->barrierCnt %d, bcnt = %d\n",
-                        w->barrierCnt, bcnt);
+int
+ComputeUnit::maxBarrierCnt(int bar_id)
+{
+    auto &wf_barrier = barrierSlot(bar_id);
+    return wf_barrier.maxBarrierCnt();
+}
 
-                DPRINTF(GPUSync, "outstanding Reqs = %d\n",
-                         w->outstandingReqs);
-            }
+void
+ComputeUnit::resetBarrier(int bar_id)
+{
+    auto &wf_barrier = barrierSlot(bar_id);
+    wf_barrier.reset();
+}
 
-            if (w->getStatus() == Wavefront::S_RUNNING &&
-                w->barrierId == _barrier_id && w->barrierCnt == bcnt &&
-                !w->outstandingReqs) {
-                ++ccnt;
+void
+ComputeUnit::decMaxBarrierCnt(int bar_id)
+{
+    auto &wf_barrier = barrierSlot(bar_id);
+    wf_barrier.decMaxBarrierCnt();
+}
 
-                DPRINTF(GPUSync, "WF[%d][%d] at barrier, increment ccnt to "
-                        "%d\n", i_simd, i_wf, ccnt);
+void
+ComputeUnit::releaseBarrier(int bar_id)
+{
+    auto &wf_barrier = barrierSlot(bar_id);
+    wf_barrier.release();
+    freeBarrierIds.insert(bar_id);
+}
+
+void
+ComputeUnit::releaseWFsFromBarrier(int bar_id)
+{
+    for (int i = 0; i < numVectorALUs; ++i) {
+        for (int j = 0; j < shader->n_wf; ++j) {
+            Wavefront *wf = wfList[i][j];
+            if (wf->barrierId() == bar_id) {
+                assert(wf->getStatus() == Wavefront::S_BARRIER);
+                wf->setStatus(Wavefront::S_RUNNING);
             }
         }
     }
-
-    DPRINTF(GPUSync, "CU%d: returning allAtBarrier ccnt = %d, bslots = %d\n",
-            cu_id, ccnt, bslots);
-
-    return ccnt == bslots;
 }
 
 // Execute one clock worth of work on the ComputeUnit.
@@ -812,10 +877,6 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
                             w->outstandingReqs - 1);
             computeUnit->globalMemoryPipe.handleResponse(gpuDynInst);
         }
-
-        DPRINTF(GPUSync, "CU%d: WF[%d][%d]: barrierCnt = %d\n",
-                computeUnit->cu_id, gpuDynInst->simdId,
-                gpuDynInst->wfSlotId, w->barrierCnt);
 
         delete pkt->senderState;
         delete pkt;
@@ -2202,6 +2263,11 @@ ComputeUnit::regStats()
     numALUInstsExecuted
         .name(name() + ".num_alu_insts_executed")
         .desc("Number of dynamic non-GM memory insts executed")
+        ;
+
+    wgBlockedDueBarrierAllocation
+        .name(name() + ".wg_blocked_due_barrier_alloc")
+        .desc("WG dispatch was blocked due to lack of barrier resources")
         ;
 
     wgBlockedDueLdsAllocation

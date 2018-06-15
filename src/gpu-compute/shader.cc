@@ -244,7 +244,9 @@ Shader::dispatchWorkgroups(HSAQueueEntry *task)
         // dispatch workgroup iff the following two conditions are met:
         // (a) wg_rem is true - there are unassigned workgroups in the grid
         // (b) there are enough free slots in cu cuList[i] for this wg
-        if (!task->dispComplete() && cuList[curCu]->hasDispResources(task)) {
+        int num_wfs_in_wg = 0;
+        bool can_disp = cuList[curCu]->hasDispResources(task, num_wfs_in_wg);
+        if (!task->dispComplete() && can_disp) {
             scheduledSomething = true;
             DPRINTF(GPUDisp, "Dispatching a workgroup to CU %d: WG %d\n",
                             curCu, task->globalWgId());
@@ -259,7 +261,7 @@ Shader::dispatchWorkgroups(HSAQueueEntry *task)
 
             panic_if(_activeCus <= 0 || _activeCus > cuList.size(),
                      "Invalid activeCu size\n");
-            cuList[curCu]->dispWorkgroup(task);
+            cuList[curCu]->dispWorkgroup(task, num_wfs_in_wg);
 
             task->markWgDispatch();
         }

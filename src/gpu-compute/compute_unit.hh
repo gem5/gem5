@@ -79,6 +79,121 @@ enum TLB_CACHE
     TLB_HIT_CACHE_HIT
 };
 
+/**
+ * WF barrier slots. This represents the barrier resource for
+ * WF-level barriers (i.e., barriers to sync WFs within a WG).
+ */
+class WFBarrier
+{
+  public:
+    WFBarrier() : _numAtBarrier(0), _maxBarrierCnt(0)
+    {
+    }
+
+    static const int InvalidID = -1;
+
+    int
+    numAtBarrier() const
+    {
+        return _numAtBarrier;
+    }
+
+    /**
+     * Number of WFs that have not yet reached the barrier.
+     */
+    int
+    numYetToReachBarrier() const
+    {
+        return _maxBarrierCnt - _numAtBarrier;
+    }
+
+    int
+    maxBarrierCnt() const
+    {
+        return _maxBarrierCnt;
+    }
+
+    /**
+     * Set the maximum barrier count (i.e., the number of WFs that are
+     * participating in the barrier).
+     */
+    void
+    setMaxBarrierCnt(int max_barrier_cnt)
+    {
+        _maxBarrierCnt = max_barrier_cnt;
+    }
+
+    /**
+     * Mark that a WF has reached the barrier.
+     */
+    void
+    incNumAtBarrier()
+    {
+        assert(_numAtBarrier < _maxBarrierCnt);
+        ++_numAtBarrier;
+    }
+
+    /**
+     * Have all WFs participating in this barrier reached the barrier?
+     * If so, then the barrier is satisfied and WFs may proceed past
+     * the barrier.
+     */
+    bool
+    allAtBarrier() const
+    {
+        return _numAtBarrier == _maxBarrierCnt;
+    }
+
+    /**
+     * Decrement the number of WFs that are participating in this barrier.
+     * This should be called when a WF exits.
+     */
+    void
+    decMaxBarrierCnt()
+    {
+        assert(_maxBarrierCnt > 0);
+        --_maxBarrierCnt;
+    }
+
+    /**
+     * Release this barrier resource so it can be used by other WGs. This
+     * is generally called when a WG has finished.
+     */
+    void
+    release()
+    {
+        _numAtBarrier = 0;
+        _maxBarrierCnt = 0;
+    }
+
+    /**
+     * Reset the barrier. This is used to reset the barrier, usually when
+     * a dynamic instance of a barrier has been satisfied.
+     */
+    void
+    reset()
+    {
+        _numAtBarrier = 0;
+    }
+
+  private:
+    /**
+     * The number of WFs in the WG that have reached the barrier. Once
+     * the number of WFs that reach a barrier matches the number of WFs
+     * in the WG, the barrier is satisfied.
+     */
+    int _numAtBarrier;
+
+    /**
+     * The maximum number of WFs that can reach this barrier. This is
+     * essentially the number of WFs in the WG, and a barrier is satisfied
+     * when the number of WFs that reach the barrier equal this value. If
+     * a WF exits early it must decrement this value so that it is no
+     * longer considered for this barrier.
+     */
+    int _maxBarrierCnt;
+};
+
 class ComputeUnit : public ClockedObject
 {
   public:
@@ -277,7 +392,6 @@ class ComputeUnit : public ClockedObject
     bool countPages;
 
     Shader *shader;
-    uint32_t barrier_id;
 
     Tick req_tick_latency;
     Tick resp_tick_latency;
@@ -328,24 +442,47 @@ class ComputeUnit : public ClockedObject
     void fillKernelState(Wavefront *w, HSAQueueEntry *task);
 
     void startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
-                        HSAQueueEntry *task, bool fetchContext=false);
+                        HSAQueueEntry *task, int bar_id,
+                        bool fetchContext=false);
 
     void doInvalidate(RequestPtr req, int kernId);
     void doFlush(GPUDynInstPtr gpuDynInst);
 
-    void dispWorkgroup(HSAQueueEntry *task, bool startFromScheduler=false);
-    bool hasDispResources(HSAQueueEntry *task);
+    void dispWorkgroup(HSAQueueEntry *task, int num_wfs_in_wg);
+    bool hasDispResources(HSAQueueEntry *task, int &num_wfs_in_wg);
 
     int cacheLineSize() const { return _cacheLineSize; }
     int getCacheLineBits() const { return cacheLineBits; }
 
-    /* This function cycles through all the wavefronts in all the phases to see
-     * if all of the wavefronts which should be associated with one barrier
-     * (denoted with _barrier_id), are all at the same barrier in the program
-     * (denoted by bcnt). When the number at the barrier matches bslots, then
-     * return true.
-     */
-    int AllAtBarrier(uint32_t _barrier_id, uint32_t bcnt, uint32_t bslots);
+  private:
+    WFBarrier&
+    barrierSlot(int bar_id)
+    {
+        assert(bar_id > WFBarrier::InvalidID);
+        return wfBarrierSlots.at(bar_id);
+    }
+
+    int
+    getFreeBarrierId()
+    {
+        assert(freeBarrierIds.size());
+        auto free_bar_id = freeBarrierIds.begin();
+        int bar_id = *free_bar_id;
+        freeBarrierIds.erase(free_bar_id);
+        return bar_id;
+    }
+
+  public:
+    int numYetToReachBarrier(int bar_id);
+    bool allAtBarrier(int bar_id);
+    void incNumAtBarrier(int bar_id);
+    int numAtBarrier(int bar_id);
+    int maxBarrierCnt(int bar_id);
+    void resetBarrier(int bar_id);
+    void decMaxBarrierCnt(int bar_id);
+    void releaseBarrier(int bar_id);
+    void releaseWFsFromBarrier(int bar_id);
+    int numBarrierSlots() const { return _numBarrierSlots; }
 
     template<typename c0, typename c1>
     void doSmReturn(GPUDynInstPtr gpuDynInst);
@@ -455,6 +592,7 @@ class ComputeUnit : public ClockedObject
     Stats::Scalar dynamicFlatMemInstrCnt;
     Stats::Scalar dynamicLMemInstrCnt;
 
+    Stats::Scalar wgBlockedDueBarrierAllocation;
     Stats::Scalar wgBlockedDueLdsAllocation;
     // Number of instructions executed, i.e. if 64 (or 32 or 7) lanes are
     // active when the instruction is committed, this number is still
@@ -974,9 +1112,19 @@ class ComputeUnit : public ClockedObject
 
   private:
     const int _cacheLineSize;
+    const int _numBarrierSlots;
     int cacheLineBits;
     InstSeqNum globalSeqNum;
     int wavefrontSize;
+
+    /**
+     * The barrier slots for this CU.
+     */
+    std::vector<WFBarrier> wfBarrierSlots;
+    /**
+     * A set used to easily retrieve a free barrier ID.
+     */
+    std::unordered_set<int> freeBarrierIds;
 
     // hold the time of the arrival of the first cache block related to
     // a particular GPUDynInst. This is used to calculate the difference

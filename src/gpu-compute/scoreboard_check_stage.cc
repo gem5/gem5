@@ -35,6 +35,7 @@
 
 #include "debug/GPUExec.hh"
 #include "debug/GPUSched.hh"
+#include "debug/GPUSync.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_static_inst.hh"
 #include "gpu-compute/scalar_register_file.hh"
@@ -101,15 +102,23 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
     // Is the wave waiting at a barrier. Check this condition BEFORE checking
     // for instruction buffer occupancy to avoid a deadlock when the barrier is
     // the last instruction in the instruction buffer.
-    if (w->stalledAtBarrier) {
-        if (!computeUnit->AllAtBarrier(w->barrierId,w->barrierCnt,
-                        computeUnit->getRefCounter(w->dispatchId, w->wgId))) {
+    if (w->getStatus() == Wavefront::S_BARRIER) {
+        assert(w->hasBarrier());
+        int bar_id = w->barrierId();
+        if (!computeUnit->allAtBarrier(bar_id)) {
+            DPRINTF(GPUSync, "CU[%d] WF[%d][%d] Wave[%d] - Stalled at "
+                    "barrier Id%d. %d waves remain.\n", w->computeUnit->cu_id,
+                    w->simdId, w->wfSlotId, w->wfDynId, bar_id,
+                    w->computeUnit->numYetToReachBarrier(bar_id));
             // Are all threads at barrier?
             *rdyStatus = NRDY_BARRIER_WAIT;
             return false;
         }
-        w->oldBarrierCnt = w->barrierCnt;
-        w->stalledAtBarrier = false;
+        DPRINTF(GPUSync, "CU[%d] WF[%d][%d] Wave[%d] - All waves at barrier "
+                "Id%d. Resetting barrier resources.\n", w->computeUnit->cu_id,
+                w->simdId, w->wfSlotId, w->wfDynId, bar_id);
+        computeUnit->resetBarrier(bar_id);
+        computeUnit->releaseWFsFromBarrier(bar_id);
     }
 
     // Check WF status: it has to be running
