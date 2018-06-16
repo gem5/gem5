@@ -37,6 +37,14 @@ namespace sc_core
 
 typedef std::exception sc_exception;
 
+// Nonstandard
+class sc_user
+{
+  public:
+    sc_user() {}
+    sc_user(const sc_user &) {}
+};
+
 } // namespace sc_core
 
 #endif  //__SYSTEMC_EXT_UTIL_SC_EXCEPTION_HH__
