@@ -75,6 +75,11 @@ class sc_time
     sc_time &operator /= (double);
 
     void print(std::ostream & =std::cout) const;
+
+    // Deprecated
+    static sc_time from_value(sc_dt::uint64);
+    static sc_time from_seconds(double);
+    static sc_time from_string(const char *str);
 };
 
 const sc_time operator + (const sc_time &, const sc_time &);

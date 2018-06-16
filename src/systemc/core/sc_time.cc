@@ -158,6 +158,27 @@ sc_time::print(std::ostream &) const
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
+sc_time
+sc_time::from_value(sc_dt::uint64)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return sc_time();
+}
+
+sc_time
+sc_time::from_seconds(double)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return sc_time();
+}
+
+sc_time
+sc_time::from_string(const char *str)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return sc_time();
+}
+
 const sc_time
 operator + (const sc_time &, const sc_time &)
 {
