@@ -140,6 +140,7 @@ using sc_core::SC_US;
 using sc_core::SC_MS;
 using sc_core::SC_SEC;
 using sc_core::sc_time;
+using sc_core::sc_time_tuple;
 using sc_core::SC_ZERO_TIME;
 using sc_core::sc_set_time_resolution;
 using sc_core::sc_get_time_resolution;

@@ -106,6 +106,31 @@ const sc_time &sc_max_time();
 void sc_set_default_time_unit(double, sc_time_unit);
 sc_time sc_get_default_time_unit();
 
+// Nonstandard
+class sc_time_tuple
+{
+  public:
+    sc_time_tuple() : _value(), _unit(SC_SEC), _offset(1) {}
+    sc_time_tuple(const sc_time &);
+
+    bool has_value() const;
+    sc_dt::uint64 value() const;
+    // Normalized unit.
+    sc_time_unit unit() const { return _unit; }
+    // Normalized unit symbol.
+    const char *unit_symbol() const;
+
+    operator sc_time() const { return sc_time(to_double(), _unit); }
+
+    double to_double() const; // Relative to the normalized unit.
+    std::string to_string() const;
+
+  private:
+    sc_dt::uint64 _value;
+    sc_time_unit _unit;
+    unsigned _offset;
+};
+
 } // namespace sc_core
 
 #endif  //__SYSTEMC_EXT_CORE_SC_TIME_HH__
