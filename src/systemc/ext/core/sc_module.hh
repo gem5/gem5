@@ -186,6 +186,8 @@ class sc_module : public sc_object
     void wait(const sc_time &, const sc_event_and_list &);
     void wait(double, sc_time_unit, const sc_event_and_list &);
 
+    void halt();
+
     virtual void before_end_of_elaboration() {}
     virtual void end_of_elaboration() {}
     virtual void start_of_simulation() {}
@@ -235,6 +237,12 @@ void wait(double, sc_time_unit, const sc_event_and_list &);
 #define SC_METHOD(name) /* Implementation defined */
 #define SC_THREAD(name) /* Implementation defined */
 #define SC_CTHREAD(name, clk) /* Implementation defined */
+
+// Nonstandard
+// Documentation for this is very scarce, but it looks like it's supposed to
+// stop the currently executing cthread, or if a cthread isn't running report
+// an error.
+void halt();
 
 const char *sc_gen_unique_name(const char *);
 

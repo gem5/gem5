@@ -87,6 +87,7 @@ using sc_core::SC_BIND_PROXY_NIL;
 using sc_core::sc_module;
 using sc_core::next_trigger;
 using sc_core::wait;
+using sc_core::halt;
 using sc_core::sc_gen_unique_name;
 using sc_core::sc_behavior;
 using sc_core::sc_channel;

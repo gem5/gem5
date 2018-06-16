@@ -371,6 +371,13 @@ sc_module::wait(double, sc_time_unit, const sc_event_and_list &)
 
 
 void
+sc_module::halt()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+
+void
 next_trigger()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
@@ -517,6 +524,12 @@ wait(const sc_time &, const sc_event_and_list &)
 
 void
 wait(double, sc_time_unit, const sc_event_and_list &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+halt()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
