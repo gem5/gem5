@@ -107,6 +107,13 @@ sc_clock::posedge_first() const
     return false;
 }
 
+const sc_time &
+sc_clock::time_stamp()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *(const sc_time *)nullptr;
+}
+
 const char *sc_clock::kind() const { return "sc_clock"; }
 
 void sc_clock::before_end_of_elaboration() {}

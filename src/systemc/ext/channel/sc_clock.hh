@@ -71,6 +71,9 @@ class sc_clock : public sc_signal<bool>
     const sc_time &start_time() const;
     bool posedge_first() const;
 
+    // Nonstandard
+    static const sc_time &time_stamp();
+
     virtual const char *kind() const;
 
   protected:
