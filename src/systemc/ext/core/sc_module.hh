@@ -183,6 +183,9 @@ class sc_module : public sc_object
     void next_trigger(const sc_time &, const sc_event_and_list &);
     void next_trigger(double, sc_time_unit, const sc_event_and_list &);
 
+    // Nonstandard
+    bool timed_out();
+
     void wait();
     void wait(int);
     void wait(const sc_event &);
@@ -241,6 +244,9 @@ void wait(const sc_time &, const sc_event_or_list &);
 void wait(double, sc_time_unit, const sc_event_or_list &);
 void wait(const sc_time &, const sc_event_and_list &);
 void wait(double, sc_time_unit, const sc_event_and_list &);
+
+// Nonstandard
+bool timed_out();
 
 #define SC_MODULE(name) struct name : ::sc_core::sc_module
 

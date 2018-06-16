@@ -67,6 +67,9 @@ class sc_prim_channel : public sc_object
     void next_trigger(const sc_time &, const sc_event_and_list &);
     void next_trigger(double, sc_time_unit, const sc_event_and_list &);
 
+    // Nonstandard.
+    bool timed_out();
+
     void wait();
     void wait(int);
     void wait(const sc_event &);

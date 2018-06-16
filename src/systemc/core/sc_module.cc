@@ -301,6 +301,14 @@ sc_module::next_trigger(double, sc_time_unit, const sc_event_and_list &)
 }
 
 
+bool
+sc_module::timed_out()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
+}
+
+
 void
 sc_module::wait()
 {
@@ -481,6 +489,13 @@ void
 next_trigger(double, sc_time_unit, const sc_event_and_list &)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+bool
+timed_out()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
 }
 
 

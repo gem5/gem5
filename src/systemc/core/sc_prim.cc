@@ -134,6 +134,13 @@ sc_prim_channel::next_trigger(double, sc_time_unit, const sc_event_and_list &)
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
+bool
+sc_prim_channel::timed_out()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
+}
+
 void
 sc_prim_channel::wait()
 {
