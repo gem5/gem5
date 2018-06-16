@@ -148,6 +148,10 @@ class sc_module : public sc_object
     sc_module(const sc_module_name &);
     sc_module();
 
+    // Deprecated
+    sc_module(const char *);
+    sc_module(const std::string &);
+
     /* Deprecated, but used in the regression tests. */
     void end_module() {}
 

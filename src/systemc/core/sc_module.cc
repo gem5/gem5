@@ -155,6 +155,16 @@ sc_module::sc_module()
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
+sc_module::sc_module(const char *)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+sc_module::sc_module(const std::string &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
 void
 sc_module::reset_signal_is(const sc_in<bool> &, bool)
 {
