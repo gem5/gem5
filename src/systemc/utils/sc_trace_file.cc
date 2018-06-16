@@ -407,4 +407,10 @@ sc_trace(sc_trace_file *, const unsigned int &,
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
+void
+sc_trace_delta_cycles(sc_trace_file *, bool on)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
 } // namespace sc_core

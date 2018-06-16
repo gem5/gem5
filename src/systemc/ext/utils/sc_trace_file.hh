@@ -167,6 +167,9 @@ void sc_trace(sc_trace_file *, const sc_dt::uint64 *,
 void sc_trace(sc_trace_file *, const unsigned int &,
               const std::string &, const char **enum_literals);
 
+// Deprecated
+void sc_trace_delta_cycles(sc_trace_file *, bool on=true);
+
 template <class T>
 void
 sc_trace(sc_trace_file *, const sc_signal_in_if<T> &, const std::string &)

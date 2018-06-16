@@ -71,6 +71,7 @@ using sc_core::sc_create_vcd_trace_file;
 using sc_core::sc_close_vcd_trace_file;
 using sc_core::sc_write_comment;
 using sc_core::sc_trace;
+using sc_core::sc_trace_delta_cycles;
 
 using sc_core::sc_exception;
 
