@@ -250,6 +250,19 @@ bool sc_end_of_simulation_invoked();
 sc_module *sc_module_sc_new(sc_module *);
 #define SC_NEW(x) ::sc_core::sc_module_sc_new(new x);
 
+// Nonstandard
+// In the Accellera implementation, this macro calls sc_set_location to record
+// the current file and line, calls wait, and then calls it again to clear the
+// file and line. We'll ignore the sc_set_location calls for now.
+#define SC_WAIT() ::sc_core::wait();
+
+// Nonstandard
+// Same as above, but passes through an argument.
+#define SC_WAITN(n) ::sc_core::wait(n);
+
+// Nonstandard
+#define SC_WAIT_UNTIL(expr) do { SC_WAIT(); } while (!(expr))
+
 } // namespace sc_core
 
 #endif  //__SYSTEMC_EXT_CORE_SC_MODULE_HH__
