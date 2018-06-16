@@ -161,6 +161,21 @@ sc_report_handler::force()
 }
 
 
+sc_actions
+sc_report_handler::set_catch_actions(sc_actions)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return SC_UNSPECIFIED;
+}
+
+sc_actions
+sc_report_handler::get_catch_actions()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return SC_UNSPECIFIED;
+}
+
+
 void
 sc_report_handler::set_handler(sc_report_handler_proc)
 {

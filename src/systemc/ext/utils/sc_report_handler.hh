@@ -95,6 +95,9 @@ class sc_report_handler
     static sc_actions force(sc_actions);
     static sc_actions force();
 
+    static sc_actions set_catch_actions(sc_actions);
+    static sc_actions get_catch_actions();
+
     static void set_handler(sc_report_handler_proc);
     static void default_handler(const sc_report &, const sc_actions &);
     static sc_actions get_new_action_id();
