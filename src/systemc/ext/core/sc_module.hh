@@ -36,6 +36,13 @@
 #include "sc_sensitive.hh"
 #include "sc_time.hh"
 
+namespace sc_dt
+{
+
+class sc_logic;
+
+} // namespace sc_dt
+
 namespace sc_core
 {
 
@@ -186,7 +193,12 @@ class sc_module : public sc_object
     void wait(const sc_time &, const sc_event_and_list &);
     void wait(double, sc_time_unit, const sc_event_and_list &);
 
+    // Nonstandard
     void halt();
+    void at_posedge(const sc_signal_in_if<bool> &);
+    void at_posedge(const sc_signal_in_if<sc_dt::sc_logic> &);
+    void at_negedge(const sc_signal_in_if<bool> &);
+    void at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &);
 
     virtual void before_end_of_elaboration() {}
     virtual void end_of_elaboration() {}
@@ -243,6 +255,10 @@ void wait(double, sc_time_unit, const sc_event_and_list &);
 // stop the currently executing cthread, or if a cthread isn't running report
 // an error.
 void halt();
+void at_posedge(const sc_signal_in_if<bool> &);
+void at_posedge(const sc_signal_in_if<sc_dt::sc_logic> &);
+void at_negedge(const sc_signal_in_if<bool> &);
+void at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &);
 
 const char *sc_gen_unique_name(const char *);
 

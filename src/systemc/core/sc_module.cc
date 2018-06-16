@@ -376,6 +376,30 @@ sc_module::halt()
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
+void
+sc_module::at_posedge(const sc_signal_in_if<bool> &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_module::at_posedge(const sc_signal_in_if<sc_dt::sc_logic> &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_module::at_negedge(const sc_signal_in_if<bool> &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_module::at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
 
 void
 next_trigger()
@@ -530,6 +554,30 @@ wait(double, sc_time_unit, const sc_event_and_list &)
 
 void
 halt()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+at_posedge(const sc_signal_in_if<bool> &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+at_posedge(const sc_signal_in_if<sc_dt::sc_logic> &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+at_negedge(const sc_signal_in_if<bool> &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
