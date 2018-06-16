@@ -39,7 +39,9 @@ using sc_core::sc_in_clk;
 using sc_core::sc_inout_clk;
 using sc_core::sc_out_clk;
 
+using sc_core::sc_event_queue_if;
 using sc_core::sc_event_queue;
+using sc_core::sc_event_queue_port;
 
 using sc_core::sc_fifo;
 

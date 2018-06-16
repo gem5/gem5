@@ -33,6 +33,7 @@
 #include "../core/sc_interface.hh"
 #include "../core/sc_module.hh" // for sc_gen_unique_name
 #include "../core/sc_module_name.hh"
+#include "../core/sc_port.hh"
 #include "../core/sc_time.hh"
 #include "warn_unimpl.hh"
 
@@ -64,6 +65,10 @@ class sc_event_queue : public sc_event_queue_if, public sc_module
 
     virtual const sc_event &default_event() const;
 };
+
+// Nonstandard
+typedef sc_port<sc_event_queue_if, 1, SC_ONE_OR_MORE_BOUND>
+        sc_event_queue_port;
 
 } // namespace sc_core
 
