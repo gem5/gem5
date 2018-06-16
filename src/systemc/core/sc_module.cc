@@ -615,6 +615,13 @@ sc_gen_unique_name(const char *)
 }
 
 bool
+sc_hierarchical_name_exists(const char *name)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
+}
+
+bool
 sc_start_of_simulation_invoked()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);

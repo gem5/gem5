@@ -93,6 +93,7 @@ using sc_core::next_trigger;
 using sc_core::wait;
 using sc_core::halt;
 using sc_core::sc_gen_unique_name;
+using sc_core::sc_hierarchical_name_exists;
 using sc_core::sc_behavior;
 using sc_core::sc_channel;
 using sc_core::sc_start_of_simulation_invoked;

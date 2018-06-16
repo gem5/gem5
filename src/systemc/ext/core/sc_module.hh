@@ -272,6 +272,9 @@ void at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &);
 
 const char *sc_gen_unique_name(const char *);
 
+// Nonstandard
+bool sc_hierarchical_name_exists(const char *name);
+
 typedef sc_module sc_behavior;
 typedef sc_module sc_channel;
 
