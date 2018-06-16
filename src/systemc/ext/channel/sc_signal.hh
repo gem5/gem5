@@ -31,6 +31,8 @@
 #define __SYSTEMC_EXT_CHANNEL_SC_SIGNAL_HH__
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include "../core/sc_module.hh" // for sc_gen_unique_name
 #include "../core/sc_prim.hh"
@@ -41,6 +43,22 @@ namespace sc_core
 {
 
 class sc_port_base;
+class sc_trace_file;
+
+// Nonstandard
+// Despite having a warning "FOR INTERNAL USE ONLY!" in all caps above this
+// class definition in the Accellera implementation, it appears in their
+// examples and test programs, and so we need to have it here as well.
+struct sc_trace_params
+{
+    sc_trace_file *tf;
+    std::string name;
+
+    sc_trace_params(sc_trace_file *tf, const std::string &name) :
+        tf(tf), name(name)
+    {}
+};
+typedef std::vector<sc_trace_params *> sc_trace_params_vec;
 
 template <class T, sc_writer_policy WRITER_POLICY=SC_ONE_WRITER>
 class sc_signal : public sc_signal_inout_if<T>,
