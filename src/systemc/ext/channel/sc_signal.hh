@@ -53,6 +53,12 @@ class sc_signal : public sc_signal_inout_if<T>,
     explicit sc_signal(const char *name) : sc_signal_inout_if<T>(),
                                            sc_prim_channel(name)
     {}
+    explicit sc_signal(const char *name, const T &initial_value) :
+        sc_signal_inout_if<T>(), sc_prim_channel(name)
+    {
+        // Need to consume initial_value.
+        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+    }
     virtual ~sc_signal() {}
 
     virtual void
@@ -160,6 +166,12 @@ class sc_signal<bool, WRITER_POLICY> :
     }
     explicit sc_signal(const char *)
     {
+        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+    }
+    explicit sc_signal(const char *name, const bool &initial_value) :
+        sc_signal_inout_if<bool>(), sc_prim_channel(name)
+    {
+        // Need to consume initial_value.
         sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
     }
     virtual ~sc_signal()
@@ -290,6 +302,13 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
     }
     explicit sc_signal(const char *)
     {
+        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+    }
+    explicit sc_signal(const char *name,
+            const sc_dt::sc_logic &initial_value) :
+        sc_signal_inout_if<sc_dt::sc_logic>(), sc_prim_channel(name)
+    {
+        // Need to consume initial_value.
         sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
     }
     virtual ~sc_signal()
