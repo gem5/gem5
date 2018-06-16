@@ -140,5 +140,7 @@ using sc_core::SC_ZERO_TIME;
 using sc_core::sc_set_time_resolution;
 using sc_core::sc_get_time_resolution;
 using sc_core::sc_max_time;
+using sc_core::sc_get_default_time_unit;
+using sc_core::sc_set_default_time_unit;
 
 #endif  //__SYSTEMC_EXT_CORE__USING_HH__

@@ -229,4 +229,17 @@ sc_max_time()
     return *(const sc_time *)nullptr;
 }
 
+void
+sc_set_default_time_unit(double, sc_time_unit)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+sc_time
+sc_get_default_time_unit()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *(sc_time *)nullptr;
+}
+
 } // namespace sc_core

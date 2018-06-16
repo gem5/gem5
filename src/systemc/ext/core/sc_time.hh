@@ -93,6 +93,10 @@ void sc_set_time_resolution(double, sc_time_unit);
 sc_time sc_get_time_resolution();
 const sc_time &sc_max_time();
 
+// Deprecated
+void sc_set_default_time_unit(double, sc_time_unit);
+sc_time sc_get_default_time_unit();
+
 } // namespace sc_core
 
 #endif  //__SYSTEMC_EXT_CORE_SC_TIME_HH__
