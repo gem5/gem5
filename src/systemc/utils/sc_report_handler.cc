@@ -234,4 +234,18 @@ sc_stop_here(const char *msg_type, sc_severity)
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
+const std::string
+sc_report_compose_message(const sc_report &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return "";
+}
+
+bool
+sc_report_close_default_log()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return false;
+}
+
 } // namespace sc_core

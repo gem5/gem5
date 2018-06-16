@@ -61,6 +61,8 @@ using sc_core::sc_report_handler_proc;
 using sc_core::sc_report_handler;
 using sc_core::sc_interrupt_here;
 using sc_core::sc_stop_here;
+using sc_core::sc_report_compose_message;
+using sc_core::sc_report_close_default_log;
 using sc_core::SC_DEFAULT_INFO_ACTIONS;
 using sc_core::SC_DEFAULT_WARNING_ACTIONS;
 using sc_core::SC_DEFAULT_ERROR_ACTIONS;

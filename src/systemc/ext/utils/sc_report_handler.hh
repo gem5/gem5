@@ -30,6 +30,8 @@
 #ifndef __SYSTEMC_EXT_UTIL_SC_REPORT_HANDLER_HH__
 #define __SYSTEMC_EXT_UTIL_SC_REPORT_HANDLER_HH__
 
+#include <string>
+
 #include "sc_report.hh" // for sc_severity
 
 namespace sc_core
@@ -134,6 +136,11 @@ class sc_report_handler
 
 void sc_interrupt_here(const char *msg_type, sc_severity);
 void sc_stop_here(const char *msg_type, sc_severity);
+
+// Nonstandard
+// From Accellera, "not documented, but available".
+const std::string sc_report_compose_message(const sc_report &);
+bool sc_report_close_default_log();
 
 } // namespace sc_core
 
