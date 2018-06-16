@@ -12,6 +12,11 @@ path.startswith("systemc/misc/stars/wif_trace"),
 # something we're not currently planning to support.
 path.startswith("systemc/kernel/sc_process_b"),
 
+# Phase callbacks are an experimental feature. Also calling all the interested
+# sc_objects whenever time advances would add a non-trivial amount of
+# complexity and is probably not worth implementing in general.
+path.startswith("systemc/kernel/phase_callbacks/"),
+
 
 path in (
     # Uses sc_get_curr_simcontext.
