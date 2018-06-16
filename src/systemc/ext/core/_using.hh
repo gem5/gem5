@@ -80,6 +80,10 @@ using sc_core::SC_RUNNING;
 using sc_core::SC_PAUSED;
 using sc_core::SC_STOPPED;
 using sc_core::SC_END_OF_SIMULATION;
+using sc_core::SC_END_OF_INITIALIZATION;
+using sc_core::SC_END_OF_UPDATE;
+using sc_core::SC_BEFORE_TIMESTEP;
+using sc_core::SC_STATUS_ANY;
 using sc_core::sc_status;
 
 using sc_core::sc_bind_proxy;
