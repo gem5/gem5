@@ -23,6 +23,7 @@ path in (
 
     # Tests the deprecated sc_string type which we aren't supporting.
     "systemc/bugs/sc_string_bracket_assign",
+    "systemc/misc/stars/star124010",
 
     # This test declares a constructor it never defines, so it's not clear how
     # it would ever work?
