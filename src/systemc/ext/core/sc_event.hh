@@ -136,6 +136,10 @@ class sc_event
     // Returns whether this event is currently triggered.
     bool triggered() const;
 
+    // Deprecated
+    void notify_delayed();
+    void notify_delayed(const sc_time &);
+
     sc_event_and_expr operator & (const sc_event &) const;
     sc_event_and_expr operator & (const sc_event_and_list &) const;
     sc_event_or_expr operator | (const sc_event &) const;
