@@ -62,6 +62,7 @@ if env['USE_SYSTEMC']:
             }
 
     ext_dir = Dir('..').Dir('ext')
+    test_dir = Dir('.')
     class SystemCTestBin(Executable):
         def __init__(self, test):
             super(SystemCTestBin, self).__init__(test.target, *test.sources)
@@ -75,6 +76,7 @@ if env['USE_SYSTEMC']:
             env['CCFLAGS'] = \
                 filter(lambda f: f not in to_remove, env['CCFLAGS'])
 
+            env.Append(CPPPATH=test_dir.Dir('include'))
             env.Append(CPPPATH=ext_dir)
 
             super(SystemCTestBin, cls).declare_all(env)
