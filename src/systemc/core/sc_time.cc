@@ -48,6 +48,16 @@ sc_time::sc_time(const sc_time &)
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
+sc_time::sc_time(double, bool)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+sc_time::sc_time(sc_dt::uint64, bool)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
 sc_time &
 sc_time::operator = (const sc_time &)
 {

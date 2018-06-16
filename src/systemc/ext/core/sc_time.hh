@@ -55,6 +55,10 @@ class sc_time
     sc_time(double, sc_time_unit);
     sc_time(const sc_time &);
 
+    // Deprecated
+    sc_time(double, bool);
+    sc_time(sc_dt::uint64, bool);
+
     sc_time &operator = (const sc_time &);
 
     sc_dt::uint64 value() const;
