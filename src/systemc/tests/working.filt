@@ -33,6 +33,16 @@ path in (
     # This test declares a constructor it never defines, so it's not clear how
     # it would ever work?
     "systemc/misc/stars/star104726",
+
+    # Another test which calls an undefined function.
+    "systemc/misc/gnats/pr-480",
+
+    # These tests rely on implicit FXVAL constructors based on primitive types,
+    # but enabling that makes other operator overloads ambiguous so things
+    # don't compile. It also seems dangerous to change what the headers look
+    # like between the backing implementation and the consuming application.
+    "systemc/datatypes/fx/fast_constructors",
+    "systemc/datatypes/fx/constructors",
 ),
 
 ])
