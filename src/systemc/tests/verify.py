@@ -216,6 +216,7 @@ with open(json_path) as f:
             print('%s.%s' % (target, main_args.flavor))
             for key, val in props.iteritems():
                 print('    %s: %s' % (key, val))
+        print('Total tests: %d' % len(filtered_tests))
     else:
         tests_to_run = list([
             Test(target, main_args.flavor, main_args.build_dir, props) for
