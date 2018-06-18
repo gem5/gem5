@@ -216,7 +216,9 @@ class Shader : public ClockedObject
     hsail_mode_e hsail_mode;
 
     // If set, issue acq packet @ kernel launch
-    int impl_kern_boundary_sync;
+    int impl_kern_launch_acq;
+    // If set, issue rel packet @ kernel end
+    int impl_kern_end_rel;
     // If set, fetch returns may be coissued with instructions
     int coissue_return;
     // If set, always dump all 64 gprs to trace

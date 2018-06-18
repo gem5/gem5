@@ -213,8 +213,10 @@ class Shader(ClockedObject):
     gpu_cmd_proc = Param.GPUCommandProcessor('Command processor for GPU')
     dispatcher = Param.GPUDispatcher('GPU workgroup dispatcher')
     n_wf = Param.Int(10, 'Number of wavefront slots per SIMD')
-    impl_kern_boundary_sync = Param.Bool(True, """Insert acq/rel packets into
-                                         ruby at kernel boundaries""")
+    impl_kern_launch_acq = Param.Bool(True, """Insert acq packet into
+                                         ruby at kernel launch""")
+    impl_kern_end_rel = Param.Bool(False, """Insert rel packet into
+                                         ruby at kernel end""")
     globalmem = Param.MemorySize('64kB', 'Memory size')
     timing = Param.Bool(False, 'timing memory accesses')
 

@@ -3759,9 +3759,13 @@ namespace Gcn3ISA
             // the last workgroup in the kernel).
             bool kernelEnd =
                 wf->computeUnit->shader->dispatcher().isReachingKernelEnd(wf);
+            // further check whether 'release @ kernel end' is needed
+            bool relNeeded =
+                wf->computeUnit->shader->impl_kern_end_rel;
 
-            // if it is not a kernel end, then retire the workgroup directly
-            if (!kernelEnd) {
+            // if not a kernel end or no release needed, retire the workgroup
+            // directly
+            if (!kernelEnd || !relNeeded) {
                 wf->computeUnit->shader->dispatcher().notifyWgCompl(wf);
                 wf->setStatus(Wavefront::S_STOPPED);
                 wf->computeUnit->completedWGs++;
@@ -3770,8 +3774,8 @@ namespace Gcn3ISA
             }
 
             /**
-             * If it is a kernel end, inject a memory sync and retire the
-             * workgroup after receving response.
+             * If a kernel end and release needed, inject a memory sync and
+             * retire the workgroup after receving all acks.
              */
             setFlag(MemSync);
             setFlag(GlobalSegment);

@@ -166,12 +166,12 @@ GPUDispatcher::exec()
         auto task = hsaQueueEntries[exec_id];
         bool launched(false);
 
-        // invalidate is needed before starting dispatch
-        if (shader->impl_kern_boundary_sync) {
+        // acq is needed before starting dispatch
+        if (shader->impl_kern_launch_acq) {
             // try to invalidate cache
             shader->prepareInvalidate(task);
         } else {
-            // kern boundary sync is not set, skip invalidate
+            // kern launch acquire is not set, skip invalidate
             task->markInvDone();
         }
 
