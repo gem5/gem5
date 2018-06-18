@@ -39,4 +39,16 @@ sc_port_base::warn_unimpl(const char *func) const
     warn("%s not implemented.\n", func);
 }
 
+void
+sc_port_base::bind(sc_interface &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_port_base::bind(sc_port_base &)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
 } // namespace sc_core

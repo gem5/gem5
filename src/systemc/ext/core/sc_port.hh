@@ -52,6 +52,11 @@ class sc_port_base : public sc_object
     {}
 
     void warn_unimpl(const char *func) const;
+
+  protected:
+    // Implementation defined, but depended on by the tests.
+    void bind(sc_interface &);
+    void bind(sc_port_base &);
 };
 
 template <class IF>
