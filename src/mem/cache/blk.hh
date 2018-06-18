@@ -420,15 +420,8 @@ class TempCacheBlk final : public CacheBlk
         _addr = MaxAddr;
     }
 
-    /**
-     * Set member variables when a block insertion occurs. A TempCacheBlk does
-     * not have all the information required to regenerate the block's address,
-     * so it is provided the address itself for easy regeneration.
-     *
-     * @param addr Block address.
-     * @param is_secure Whether the block is in secure space or not.
-     */
-    void insert(const Addr addr, const bool is_secure)
+    void insert(const Addr addr, const bool is_secure,
+                const int src_master_ID=0, const uint32_t task_ID=0) override
     {
         // Set block address
         _addr = addr;
