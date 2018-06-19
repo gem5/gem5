@@ -35,6 +35,12 @@ path in (
     # like between the backing implementation and the consuming application.
     "systemc/datatypes/fx/fast_constructors",
     "systemc/datatypes/fx/constructors",
+
+    # These tests uses sensitive_neg and sensitive_pos and overloads which are
+    # deprecated and not worth supporting. The non-deprecated version,
+    # sensitive, is exercised elsewhere.
+    "systemc/kernel/sc_sensitive/test02",
+    "systemc/kernel/sc_sensitive/test03",
 ),
 
 ])
