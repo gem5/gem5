@@ -63,6 +63,29 @@ sc_unwind_exception::~sc_unwind_exception() throw()
 }
 
 
+const char *
+sc_process_b::name()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return "";
+}
+
+const char *
+sc_process_b::kind()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return "";
+}
+
+
+sc_process_b *
+sc_get_curr_process_handle()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return nullptr;
+}
+
+
 sc_process_handle::sc_process_handle()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);

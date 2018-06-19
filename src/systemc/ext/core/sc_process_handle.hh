@@ -77,6 +77,34 @@ class sc_unwind_exception : public std::exception
     sc_unwind_exception();
 };
 
+// Deprecated
+// An incomplete version of sc_process_b to satisfy the tests.
+class sc_process_b
+{
+  public:
+    const char *file;
+    int lineno;
+    const char *name();
+    const char *kind();
+};
+
+// Deprecated
+sc_process_b *sc_get_curr_process_handle();
+static inline sc_process_b *
+sc_get_current_process_b()
+{
+    return sc_get_curr_process_handle();
+}
+
+// Deprecated/nonstandard
+struct sc_curr_proc_info
+{
+    sc_process_b *process_handle;
+    sc_curr_proc_kind kind;
+    sc_curr_proc_info() : process_handle(NULL), kind(SC_NO_PROC_) {}
+};
+typedef const sc_curr_proc_info *sc_curr_proc_handle;
+
 class sc_process_handle
 {
   private:

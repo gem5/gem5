@@ -8,10 +8,6 @@ name == "sc_elab_and_sim",
 path.startswith("systemc/tracing/wif_trace"),
 path.startswith("systemc/misc/stars/wif_trace"),
 
-# These tests refers to sc_get_current_process_b which is a deprecated type and
-# something we're not currently planning to support.
-path.startswith("systemc/kernel/sc_process_b"),
-
 # Phase callbacks are an experimental feature. Also calling all the interested
 # sc_objects whenever time advances would add a non-trivial amount of
 # complexity and is probably not worth implementing in general.
@@ -22,6 +18,7 @@ path in (
     # Uses sc_get_curr_simcontext.
     "systemc/kernel/sc_object_manager/test01",
     "systemc/kernel/sc_name_gen/test1",
+    "systemc/kernel/sc_process_b/test2",
 
     # Uses sc_elab_and_sim.
     "systemc/kernel/sc_main_main",
