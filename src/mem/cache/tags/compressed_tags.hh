@@ -42,6 +42,7 @@
 #include "mem/cache/tags/super_blk.hh"
 
 class BaseCache;
+class CacheBlk;
 struct CompressedTagsParams;
 
 /**
@@ -95,6 +96,30 @@ class CompressedTags : public SectorTags
      * Initialize blocks as SuperBlk and CompressionBlk instances.
      */
     void tagsInit() override;
+
+    /**
+     * Checks whether a superblock can co-allocate given compressed data block.
+     *
+     * @param superblock Superblock to check.
+     * @param compressed_size Size, in bits, of new block to allocate.
+     * @return True if block can be co-allocated in superblock.
+     */
+    bool canCoAllocate(const SuperBlk* superblock,
+                       const std::size_t compressed_size) const;
+
+    /**
+     * Find replacement victim based on address. Checks if data can be co-
+     * allocated before choosing blocks to be evicted.
+     *
+     * @param addr Address to find a victim for.
+     * @param is_secure True if the target memory space is secure.
+     * @param compressed_size Size, in bits, of new block to allocate.
+     * @param evict_blks Cache blocks to be evicted.
+     * @return Cache block to be replaced.
+     */
+    CacheBlk* findVictim(Addr addr, const bool is_secure,
+                         const std::size_t compressed_size,
+                         std::vector<CacheBlk*>& evict_blks) const override;
 
     /**
      * Insert the new block into the cache and update replacement data.

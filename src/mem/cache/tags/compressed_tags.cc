@@ -35,7 +35,10 @@
 
 #include "mem/cache/tags/compressed_tags.hh"
 
+#include "base/trace.hh"
+#include "debug/CacheComp.hh"
 #include "mem/cache/replacement_policies/base.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
 #include "mem/packet.hh"
 #include "params/CompressedTags.hh"
@@ -91,6 +94,78 @@ CompressedTags::tagsInit()
             ++blk_index;
         }
     }
+}
+
+bool
+CompressedTags::canCoAllocate(const SuperBlk* superblock,
+                              const std::size_t compressed_size) const
+{
+    // Simple co-allocation function: at most numBlocksPerSector blocks that
+    // compress at least to (100/numBlocksPerSector)% of their original size
+    // can share a superblock
+    return superblock->isCompressed() &&
+           (compressed_size <= (blkSize * 8) / numBlocksPerSector);
+}
+
+CacheBlk*
+CompressedTags::findVictim(Addr addr, const bool is_secure,
+                           const std::size_t compressed_size,
+                           std::vector<CacheBlk*>& evict_blks) const
+{
+    // Get all possible locations of this superblock
+    const std::vector<ReplaceableEntry*> superblock_entries =
+        indexingPolicy->getPossibleEntries(addr);
+
+    // Check if the superblock this address belongs to has been allocated. If
+    // so, try co-allocating
+    Addr tag = extractTag(addr);
+    SuperBlk* victim_superblock = nullptr;
+    bool is_co_allocation = false;
+    const uint64_t offset = extractSectorOffset(addr);
+    for (const auto& entry : superblock_entries){
+        SuperBlk* superblock = static_cast<SuperBlk*>(entry);
+        if ((tag == superblock->getTag()) && superblock->isValid() &&
+            (is_secure == superblock->isSecure()) &&
+            !superblock->blks[offset]->isValid() &&
+            canCoAllocate(superblock, compressed_size))
+        {
+            victim_superblock = superblock;
+            is_co_allocation = true;
+            break;
+        }
+    }
+
+    // If the superblock is not present or cannot be co-allocated a
+    // superblock must be replaced
+    if (victim_superblock == nullptr){
+        // Choose replacement victim from replacement candidates
+        victim_superblock = static_cast<SuperBlk*>(
+            replacementPolicy->getVictim(superblock_entries));
+
+        // The whole superblock must be evicted to make room for the new one
+        for (const auto& blk : victim_superblock->blks){
+            evict_blks.push_back(blk);
+        }
+    }
+
+    // Get the location of the victim block within the superblock
+    SectorSubBlk* victim = victim_superblock->blks[offset];
+
+    // It would be a hit if victim was valid in a co-allocation, and upgrades
+    // do not call findVictim, so it cannot happen
+    if (is_co_allocation){
+        assert(!victim->isValid());
+
+        // Print all co-allocated blocks
+        DPRINTF(CacheComp, "Co-Allocation: offset %d with blocks\n", offset);
+        for (const auto& blk : victim_superblock->blks){
+            if (blk->isValid()) {
+                DPRINTFR(CacheComp, "\t[%s]\n", blk->print());
+            }
+        }
+    }
+
+    return victim;
 }
 
 void
