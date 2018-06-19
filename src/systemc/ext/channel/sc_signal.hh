@@ -158,6 +158,12 @@ class sc_signal : public sc_signal_inout_if<T>,
         sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
     }
 
+    // These members which store the current and future value of the signal
+    // are not specified in the standard but are referred to directly by one
+    // of the tests.
+    T m_cur_val;
+    T m_new_val;
+
   private:
     // Disabled
     sc_signal(const sc_signal<T, WRITER_POLICY> &) :
