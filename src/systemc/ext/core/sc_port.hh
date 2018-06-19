@@ -57,6 +57,10 @@ class sc_port_base : public sc_object
     // Implementation defined, but depended on by the tests.
     void bind(sc_interface &);
     void bind(sc_port_base &);
+
+    // Implementation defined, but depended on by the tests.
+    virtual int vbind(sc_interface &) = 0;
+    virtual int vbind(sc_port_base &) = 0;
 };
 
 template <class IF>
@@ -149,6 +153,20 @@ class sc_port_b : public sc_port_base
             sc_port_base(name, n, p)
     {}
     virtual ~sc_port_b() {}
+
+    // Implementation defined, but depended on by the tests.
+    int
+    vbind(sc_interface &)
+    {
+        this->warn_unimpl(__PRETTY_FUNCTION__);
+        return 0;
+    }
+    int
+    vbind(sc_port_base &)
+    {
+        this->warn_unimpl(__PRETTY_FUNCTION__);
+        return 0;
+    }
 
   private:
     // Disabled
