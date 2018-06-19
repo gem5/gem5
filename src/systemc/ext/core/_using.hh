@@ -135,6 +135,9 @@ using sc_core::sc_is_unwinding;
 
 using sc_core::sc_sensitive;
 
+using sc_core::sc_simcontext;
+using sc_core::sc_get_curr_simcontext;
+
 using sc_core::sc_spawn_options;
 using sc_core::sc_spawn;
 

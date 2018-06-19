@@ -42,6 +42,7 @@
 #include "sc_prim.hh"
 #include "sc_process_handle.hh"
 #include "sc_sensitive.hh"
+#include "sc_simcontext.hh"
 #include "sc_spawn.hh"
 #include "sc_time.hh"
 

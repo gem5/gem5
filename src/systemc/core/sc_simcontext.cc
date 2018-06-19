@@ -27,59 +27,37 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_CORE_SC_OBJECT_HH__
-#define __SYSTEMC_EXT_CORE_SC_OBJECT_HH__
-
-#include <iostream>
-#include <string>
-#include <vector>
+#include "base/logging.hh"
+#include "systemc/ext/core/sc_simcontext.hh"
 
 namespace sc_core
 {
 
-class sc_event;
-class sc_attr_base;
-class sc_attr_cltn;
-class sc_simcontext;
-
-class sc_object
+sc_dt::uint64
+sc_simcontext::delta_count() const
 {
-  public:
-    const char *name() const;
-    const char *basename() const;
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return 0;
+}
 
-    virtual const char *kind() const;
+void
+sc_simcontext::reset()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
 
-    virtual void print(std::ostream & =std::cout) const;
-    virtual void dump(std::ostream & =std::cout) const;
+sc_curr_proc_handle
+sc_simcontext::get_curr_proc_info()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return nullptr;
+}
 
-    virtual const std::vector<sc_object *> &get_child_objects() const;
-    virtual const std::vector<sc_event *> &get_child_events() const;
-    sc_object *get_parent_object() const;
-
-    bool add_attribute(sc_attr_base &);
-    sc_attr_base *get_attribute(const std::string &);
-    sc_attr_base *remove_attribute(const std::string &);
-    void remove_all_attributes();
-    int num_attributes() const;
-    sc_attr_cltn &attr_cltn();
-    const sc_attr_cltn &attr_cltn() const;
-
-    // Deprecated
-    sc_simcontext *
-    simcontext() const;
-
-  protected:
-    sc_object();
-    sc_object(const char *);
-    sc_object(const sc_object &);
-    sc_object &operator = (const sc_object &);
-    virtual ~sc_object();
-};
-
-const std::vector<sc_object *> &sc_get_top_level_objects();
-sc_object *sc_find_object(const char *);
+sc_simcontext *
+sc_get_curr_simcontext()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return nullptr;
+}
 
 } // namespace sc_core
-
-#endif  //__SYSTEMC_EXT_CORE_SC_OBJECT_HH__

@@ -45,5 +45,6 @@ if env['USE_SYSTEMC']:
     Source('sc_process_handle.cc')
     Source('sc_prim.cc')
     Source('sc_sensitive.cc')
+    Source('sc_simcontext.cc')
     Source('sc_spawn.cc')
     Source('sc_time.cc')

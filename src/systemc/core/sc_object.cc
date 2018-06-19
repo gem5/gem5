@@ -134,6 +134,13 @@ sc_object::attr_cltn() const
     return *(sc_attr_cltn *)NULL;
 }
 
+sc_simcontext *
+sc_object::simcontext() const
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return nullptr;
+}
+
 sc_object::sc_object()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
