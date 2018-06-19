@@ -53,6 +53,20 @@ sc_simcontext::get_curr_proc_info()
     return nullptr;
 }
 
+sc_object *
+sc_simcontext::first_object()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return nullptr;
+}
+
+sc_object *
+sc_simcontext::next_object()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return nullptr;
+}
+
 sc_simcontext *
 sc_get_curr_simcontext()
 {

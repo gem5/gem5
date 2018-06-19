@@ -42,6 +42,8 @@ class sc_simcontext
     sc_dt::uint64 delta_count() const;
     void reset();
     sc_curr_proc_handle get_curr_proc_info();
+    sc_object *first_object();
+    sc_object *next_object();
 };
 
 sc_simcontext *sc_get_curr_simcontext();

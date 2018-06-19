@@ -15,11 +15,6 @@ path.startswith("systemc/kernel/phase_callbacks/"),
 
 
 path in (
-    # Uses sc_get_curr_simcontext.
-    "systemc/kernel/sc_object_manager/test01",
-    "systemc/kernel/sc_name_gen/test1",
-    "systemc/kernel/sc_process_b/test2",
-
     # Uses sc_elab_and_sim.
     "systemc/kernel/sc_main_main",
 
