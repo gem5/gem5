@@ -111,13 +111,16 @@ BaseCacheCompressor::compress(const uint64_t* data, Cycles& comp_lat,
 }
 
 Cycles
-BaseCacheCompressor::getDecompressionLatency(const CacheBlk* blk)
+BaseCacheCompressor::getDecompressionLatency(const CacheBlk* blk) const
 {
     const CompressionBlk* comp_blk = static_cast<const CompressionBlk*>(blk);
 
     // If block is compressed, return its decompression latency
     if (comp_blk && comp_blk->isCompressed()){
-        return comp_blk->getDecompressionLatency();
+        const Cycles decomp_lat = comp_blk->getDecompressionLatency();
+        DPRINTF(CacheComp, "Decompressing block: %s (%d cycles)\n",
+                comp_blk->print(), decomp_lat);
+        return decomp_lat;
     }
 
     // Block is not compressed, so there is no decompression latency

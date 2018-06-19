@@ -54,6 +54,7 @@
 #include "debug/CachePort.hh"
 #include "debug/CacheRepl.hh"
 #include "debug/CacheVerbose.hh"
+#include "mem/cache/compressors/base.hh"
 #include "mem/cache/mshr.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/queue_entry.hh"
@@ -83,6 +84,7 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
       mshrQueue("MSHRs", p->mshrs, 0, p->demand_mshr_reserve), // see below
       writeBuffer("write buffer", p->write_buffers, p->mshrs), // see below
       tags(p->tags),
+      compressor(p->compressor),
       prefetcher(p->prefetcher),
       writeAllocator(p->write_allocator),
       writebackClean(p->writeback_clean),
@@ -1034,7 +1036,16 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             }
 
             blk->status |= BlkReadable;
+        } else {
+            if (compressor) {
+                // This is an overwrite to an existing block, therefore we need
+                // to check for data expansion (i.e., block was compressed with
+                // a smaller size, and now it doesn't fit the entry anymore).
+                // If that is the case we might need to evict blocks.
+                // @todo Update compression data
+            }
         }
+
         // only mark the block dirty if we got a writeback command,
         // and leave it as is for a clean writeback
         if (pkt->cmd == MemCmd::WritebackDirty) {
@@ -1114,6 +1125,10 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
                 blk->status |= BlkReadable;
             }
+        } else {
+            if (compressor) {
+                // @todo Update compression data
+            }
         }
 
         // at this point either this is a writeback or a write-through
@@ -1151,6 +1166,12 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // Calculate access latency based on the need to access the data array
         if (pkt->isRead() || pkt->isWrite()) {
             lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
+
+            // When a block is compressed, it must first be decompressed
+            // before being read. This adds to the access latency.
+            if (compressor && pkt->isRead()) {
+                lat += compressor->getDecompressionLatency(blk);
+            }
         } else {
             lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
         }
@@ -1319,8 +1340,22 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // Get secure bit
     const bool is_secure = pkt->isSecure();
 
-    // @todo Compress and get compression related data
+    // Block size and compression related access latency. Only relevant if
+    // using a compressor, otherwise there is no extra delay, and the block
+    // is fully sized
     std::size_t blk_size_bits = blkSize*8;
+    Cycles compression_lat = Cycles(0);
+    Cycles decompression_lat = Cycles(0);
+
+    // If a compressor is being used, it is called to compress data before
+    // insertion. Although in Gem5 the data is stored uncompressed, even if a
+    // compressor is used, the compression/decompression methods are called to
+    // calculate the amount of extra cycles needed to read or write compressed
+    // blocks.
+    if (compressor) {
+        compressor->compress(pkt->getConstPtr<uint64_t>(), compression_lat,
+                             decompression_lat, blk_size_bits);
+    }
 
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
@@ -1375,6 +1410,13 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
         }
 
         replacements++;
+    }
+
+    // If using a compressor, set compression data. This must be done before
+    // block insertion, as compressed tags use this information.
+    if (compressor) {
+        compressor->setSizeBits(victim, blk_size_bits);
+        compressor->setDecompressionLatency(victim, decompression_lat);
     }
 
     // Insert new block at victimized entry
@@ -1443,6 +1485,12 @@ BaseCache::writebackBlk(CacheBlk *blk)
     pkt->allocate();
     pkt->setDataFromBlock(blk->data, blkSize);
 
+    // When a block is compressed, it must first be decompressed before being
+    // sent for writeback.
+    if (compressor) {
+        pkt->payloadDelay = compressor->getDecompressionLatency(blk);
+    }
+
     return pkt;
 }
 
@@ -1481,6 +1529,12 @@ BaseCache::writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id)
 
     pkt->allocate();
     pkt->setDataFromBlock(blk->data, blkSize);
+
+    // When a block is compressed, it must first be decompressed before being
+    // sent for writeback.
+    if (compressor) {
+        pkt->payloadDelay = compressor->getDecompressionLatency(blk);
+    }
 
     return pkt;
 }

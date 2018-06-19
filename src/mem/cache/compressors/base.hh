@@ -132,7 +132,7 @@ class BaseCacheCompressor : public SimObject {
      *
      * @param blk The compressed block.
      */
-    static Cycles getDecompressionLatency(const CacheBlk* blk);
+    Cycles getDecompressionLatency(const CacheBlk* blk) const;
 
     /**
      * Set the decompression latency of compressed block.

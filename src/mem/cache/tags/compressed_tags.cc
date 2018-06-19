@@ -37,6 +37,7 @@
 
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
+#include "mem/packet.hh"
 #include "params/CompressedTags.hh"
 
 CompressedTags::CompressedTags(const Params *p)
@@ -90,6 +91,17 @@ CompressedTags::tagsInit()
             ++blk_index;
         }
     }
+}
+
+void
+CompressedTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
+{
+    // Insert block
+    SectorTags::insertBlock(pkt, blk);
+
+    // @todo We always store compressed blocks when possible
+    CompressionBlk* compression_blk = static_cast<CompressionBlk*>(blk);
+    compression_blk->setUncompressed();
 }
 
 void

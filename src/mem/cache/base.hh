@@ -64,6 +64,7 @@
 #include "debug/CachePort.hh"
 #include "enums/Clusivity.hh"
 #include "mem/cache/cache_blk.hh"
+#include "mem/cache/compressors/base.hh"
 #include "mem/cache/mshr_queue.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/write_queue.hh"
@@ -323,6 +324,9 @@ class BaseCache : public ClockedObject
 
     /** Tag and data Storage */
     BaseTags *tags;
+
+    /** Compression method being used. */
+    BaseCacheCompressor* compressor;
 
     /** Prefetcher */
     BasePrefetcher *prefetcher;
@@ -1069,6 +1073,15 @@ class BaseCache : public ClockedObject
         assert(pkt->isWrite() || pkt->cmd == MemCmd::CleanEvict);
 
         Addr blk_addr = pkt->getBlockAddr(blkSize);
+
+        // If using compression, on evictions the block is decompressed and
+        // the operation's latency is added to the payload delay. Consume
+        // that payload delay here, meaning that the data is always stored
+        // uncompressed in the writebuffer
+        if (compressor) {
+            time += pkt->payloadDelay;
+            pkt->payloadDelay = 0;
+        }
 
         WriteQueueEntry *wq_entry =
             writeBuffer.findMatch(blk_addr, pkt->isSecure());
