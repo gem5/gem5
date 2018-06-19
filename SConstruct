@@ -746,9 +746,13 @@ if main['USE_PYTHON']:
 
     # verify that this stuff works
     if not conf.CheckHeader('Python.h', '<>'):
-        print("Error: can't find Python.h header in", py_includes)
-        print("Install Python headers (package python-dev on " +
-              "Ubuntu and RedHat)")
+        print("Error: Check failed for Python.h header in", py_includes)
+        print("Two possible reasons:")
+        print("1. Python headers are not installed (You can install the "
+              "package python-dev on Ubuntu and RedHat)")
+        print("2. SCons is using a wrong C compiler. This can happen if "
+              "CC has the wrong value.")
+        print("CC = %s" % main['CC'])
         Exit(1)
 
     for lib in py_libs:
