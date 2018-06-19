@@ -51,6 +51,9 @@ using sc_core::sc_export;
 
 using sc_core::sc_interface;
 
+using sc_core::sc_thread_handle;
+using sc_core::sc_join;
+
 using sc_core::sc_argc;
 using sc_core::sc_argv;
 using sc_core::sc_starvation_policy;

@@ -27,24 +27,46 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_CORE__CORE_HH__
-#define __SYSTEMC_EXT_CORE__CORE_HH__
+#include "base/logging.hh"
+#include "systemc/ext/core/sc_join.hh"
 
-#include "sc_attr.hh"
-#include "sc_event.hh"
-#include "sc_export.hh"
-#include "sc_interface.hh"
-#include "sc_join.hh"
-#include "sc_main.hh"
-#include "sc_module.hh"
-#include "sc_module_name.hh"
-#include "sc_object.hh"
-#include "sc_port.hh"
-#include "sc_prim.hh"
-#include "sc_process_handle.hh"
-#include "sc_sensitive.hh"
-#include "sc_simcontext.hh"
-#include "sc_spawn.hh"
-#include "sc_time.hh"
+namespace sc_core
+{
 
-#endif  //__SYSTEMC_EXT_CORE__CORE_HH__
+sc_join::sc_join()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_join::add_process(sc_process_handle)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+int
+sc_join::process_count()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return 0;
+}
+
+void
+sc_join::signal(sc_thread_handle thread_p, int type)
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_join::wait()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+void
+sc_join::wait_clocked()
+{
+    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+}
+
+} // namespace sc_core
