@@ -44,10 +44,14 @@
 #ifndef __BASE_ADDR_RANGE_MAP_HH__
 #define __BASE_ADDR_RANGE_MAP_HH__
 
+#include <cstddef>
+#include <functional>
+#include <list>
 #include <map>
 #include <utility>
 
 #include "base/addr_range.hh"
+#include "base/types.hh"
 
 /**
  * The AddrRangeMap uses an STL map to implement an interval tree for
