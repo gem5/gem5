@@ -115,8 +115,9 @@ class ArmPMU(SimObject):
         sharing the PMU (e.g., when switching between CPU models).
         """
 
-        bpred = cpu.branchPred if cpu and not isNullPointer(cpu.branchPred) \
-            else None
+        bpred = getattr(cpu, "branchPred", None) if cpu else None
+        if bpred is not None and isNullPointer(bpred):
+            bpred = None
 
         self.addEvent(SoftwareIncrement(self,0x00))
         # 0x01: L1I_CACHE_REFILL
