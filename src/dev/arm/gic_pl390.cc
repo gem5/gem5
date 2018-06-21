@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015-2017 ARM Limited
+ * Copyright (c) 2010, 2013, 2015-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -602,6 +602,12 @@ Pl390::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
                 ctx, iar.ack_id, iar.cpu_id);
         break;
       }
+      case GICC_APR0:
+      case GICC_APR1:
+      case GICC_APR2:
+      case GICC_APR3:
+        warn("GIC APRn write ignored because not implemented: %#x\n", daddr);
+        break;
       default:
         panic("Tried to write Gic cpu at offset %#x\n", daddr);
         break;
