@@ -306,7 +306,7 @@ static SyscallDesc syscallDescs64[] = {
     /*  83 */ SyscallDesc("mkdir", unimplementedFunc),
     /*  84 */ SyscallDesc("rmdir", unimplementedFunc),
     /*  85 */ SyscallDesc("creat", unimplementedFunc),
-    /*  86 */ SyscallDesc("link", unimplementedFunc),
+    /*  86 */ SyscallDesc("link", linkFunc),
     /*  87 */ SyscallDesc("unlink", unlinkFunc),
     /*  88 */ SyscallDesc("symlink", unimplementedFunc),
     /*  89 */ SyscallDesc("readlink", readlinkFunc),

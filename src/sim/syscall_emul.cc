@@ -519,6 +519,25 @@ unlinkHelper(SyscallDesc *desc, int num, Process *p, ThreadContext *tc,
     return (result == -1) ? -errno : result;
 }
 
+SyscallReturn
+linkFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
+{
+    string path;
+    string new_path;
+
+    int index = 0;
+    auto &virt_mem = tc->getMemProxy();
+    if (!virt_mem.tryReadString(path, p->getSyscallArg(tc, index)))
+        return -EFAULT;
+    if (!virt_mem.tryReadString(new_path, p->getSyscallArg(tc, index)))
+        return -EFAULT;
+
+    path = p->fullPath(path);
+    new_path = p->fullPath(new_path);
+
+    int result = link(path.c_str(), new_path.c_str());
+    return (result == -1) ? -errno : result;
+}
 
 SyscallReturn
 mkdirFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)

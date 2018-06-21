@@ -203,6 +203,10 @@ SyscallReturn unlinkHelper(SyscallDesc *desc, int num,
 SyscallReturn unlinkFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc);
 
+/// Target link() handler
+SyscallReturn linkFunc(SyscallDesc *desc, int num, Process *p,
+                       ThreadContext *tc);
+
 /// Target mkdir() handler.
 SyscallReturn mkdirFunc(SyscallDesc *desc, int num,
                         Process *p, ThreadContext *tc);
