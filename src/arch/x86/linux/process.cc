@@ -308,7 +308,7 @@ static SyscallDesc syscallDescs64[] = {
     /*  85 */ SyscallDesc("creat", unimplementedFunc),
     /*  86 */ SyscallDesc("link", linkFunc),
     /*  87 */ SyscallDesc("unlink", unlinkFunc),
-    /*  88 */ SyscallDesc("symlink", unimplementedFunc),
+    /*  88 */ SyscallDesc("symlink", symlinkFunc),
     /*  89 */ SyscallDesc("readlink", readlinkFunc),
     /*  90 */ SyscallDesc("chmod", unimplementedFunc),
     /*  91 */ SyscallDesc("fchmod", unimplementedFunc),

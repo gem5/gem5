@@ -207,6 +207,10 @@ SyscallReturn unlinkFunc(SyscallDesc *desc, int num,
 SyscallReturn linkFunc(SyscallDesc *desc, int num, Process *p,
                        ThreadContext *tc);
 
+/// Target symlink() handler.
+SyscallReturn symlinkFunc(SyscallDesc *desc, int num, Process *p,
+                          ThreadContext *tc);
+
 /// Target mkdir() handler.
 SyscallReturn mkdirFunc(SyscallDesc *desc, int num,
                         Process *p, ThreadContext *tc);
