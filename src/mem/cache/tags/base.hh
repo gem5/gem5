@@ -154,6 +154,13 @@ class BaseTags : public ClockedObject
      * @}
      */
 
+    /**
+     * Set the parent cache back pointer.
+     *
+     * @param _cache Pointer to parent cache.
+     */
+    void setCache(BaseCache *_cache);
+
   public:
     typedef BaseTagsParams Params;
     BaseTags(const Params *p);
@@ -164,10 +171,11 @@ class BaseTags : public ClockedObject
     virtual ~BaseTags() {}
 
     /**
-     * Set the parent cache back pointer.
+     * Initialize blocks and set the parent cache back pointer.
+     *
      * @param _cache Pointer to parent cache.
      */
-    void setCache(BaseCache *_cache);
+    virtual void init(BaseCache *_cache) = 0;
 
     /**
      * Register local statistics.

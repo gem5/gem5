@@ -67,6 +67,13 @@ SectorTags::SectorTags(const SectorTagsParams *p)
     fatal_if(!isPowerOf2(numBlocksPerSector),
              "# of blocks per sector must be non-zero and a power of 2");
     fatal_if(assoc <= 0, "associativity must be greater than zero");
+}
+
+void
+SectorTags::init(BaseCache* cache)
+{
+    // Set parent cache
+    setCache(cache);
 
     // Initialize all sets
     unsigned sec_blk_index = 0;   // index into sector blks array

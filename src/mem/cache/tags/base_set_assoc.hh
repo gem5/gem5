@@ -121,6 +121,13 @@ class BaseSetAssoc : public BaseTags
     virtual ~BaseSetAssoc() {};
 
     /**
+     * Initialize blocks and set the parent cache back pointer.
+     *
+     * @param _cache Pointer to parent cache.
+     */
+    void init(BaseCache *_cache) override;
+
+    /**
      * This function updates the tags when a block is invalidated. It also
      * updates the replacement data.
      *

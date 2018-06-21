@@ -73,7 +73,15 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
     setShift = floorLog2(blkSize);
     setMask = numSets - 1;
     tagShift = setShift + floorLog2(numSets);
+}
 
+void
+BaseSetAssoc::init(BaseCache* cache)
+{
+    // Set parent cache
+    setCache(cache);
+
+    // Initialize blocks
     unsigned blkIndex = 0;       // index into blks array
     for (unsigned i = 0; i < numSets; ++i) {
         sets[i].assoc = assoc;

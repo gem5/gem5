@@ -69,6 +69,18 @@ FALRU::FALRU(const Params *p)
         fatal("Cache Size must be power of 2 for now");
 
     blks = new FALRUBlk[numBlocks];
+}
+
+FALRU::~FALRU()
+{
+    delete[] blks;
+}
+
+void
+FALRU::init(BaseCache* cache)
+{
+    // Set parent cache
+    setCache(cache);
 
     head = &(blks[0]);
     head->prev = nullptr;
@@ -95,11 +107,6 @@ FALRU::FALRU(const Params *p)
     tail->data = &dataBlks[(numBlocks - 1) * blkSize];
 
     cacheTracking.init(head, tail);
-}
-
-FALRU::~FALRU()
-{
-    delete[] blks;
 }
 
 void

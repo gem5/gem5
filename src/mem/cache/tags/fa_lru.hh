@@ -68,6 +68,7 @@
 // TrackedCaches class
 //#define FALRU_DEBUG
 
+class BaseCache;
 class ReplaceableEntry;
 
 // A bitmask of the caches we are keeping track of. Currently the
@@ -149,6 +150,13 @@ class FALRU : public BaseTags
      */
     FALRU(const Params *p);
     ~FALRU();
+
+    /**
+     * Initialize blocks and set the parent cache back pointer.
+     *
+     * @param _cache Pointer to parent cache.
+     */
+    void init(BaseCache *_cache) override;
 
     /**
      * Register the stats for this object.
