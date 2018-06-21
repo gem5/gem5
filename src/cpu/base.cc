@@ -318,7 +318,8 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseTLB *dtb)
     assert(tid < numThreads);
     AddressMonitor &monitor = addressMonitor[tid];
 
-    RequestPtr req;
+    RequestPtr req = std::make_shared<Request>();
+
     Addr addr = monitor.vAddr;
     int block_size = cacheLineSize();
     uint64_t mask = ~((uint64_t)(block_size - 1));
