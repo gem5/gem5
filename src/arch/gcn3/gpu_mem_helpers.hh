@@ -80,6 +80,12 @@ initMemReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type,
             misaligned_acc = split_addr > vaddr;
 
             if (is_atomic) {
+                // make sure request is word aligned
+                assert((vaddr & 0x3) == 0);
+
+                // a given lane's atomic can't cross cache lines
+                assert(!misaligned_acc);
+
                 req = std::make_shared<Request>(vaddr, sizeof(T), 0,
                     gpuDynInst->computeUnit()->masterId(), 0,
                     gpuDynInst->wfDynId,
