@@ -1,3 +1,15 @@
+# Copyright (c) 2018 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2004-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -35,11 +47,13 @@
 
 import copy
 
+import params
+
 class BaseProxy(object):
     def __init__(self, search_self, search_up):
         self._search_self = search_self
         self._search_up = search_up
-        self._multiplier = None
+        self._multipliers = []
 
     def __str__(self):
         if self._search_self and not self._search_up:
@@ -56,23 +70,29 @@ class BaseProxy(object):
                   "cannot set attribute '%s' on proxy object" % attr
         super(BaseProxy, self).__setattr__(attr, value)
 
-    # support multiplying proxies by constants
+    # support for multiplying proxies by constants or other proxies to
+    # other params
     def __mul__(self, other):
-        if not isinstance(other, (int, long, float)):
-            raise TypeError, "Proxy multiplier must be integer"
-        if self._multiplier == None:
-            self._multiplier = other
-        else:
-            # support chained multipliers
-            self._multiplier *= other
+        if not (isinstance(other, (int, long, float)) or isproxy(other)):
+            raise TypeError, \
+                "Proxy multiplier must be a constant or a proxy to a param"
+        self._multipliers.append(other)
         return self
 
     __rmul__ = __mul__
 
-    def _mulcheck(self, result):
-        if self._multiplier == None:
-            return result
-        return result * self._multiplier
+    def _mulcheck(self, result, base):
+        for multiplier in self._multipliers:
+            if isproxy(multiplier):
+                multiplier = multiplier.unproxy(base)
+                # assert that we are multiplying with a compatible
+                # param
+                if not isinstance(multiplier, params.NumericParamValue):
+                    raise TypeError, \
+                        "Proxy multiplier must be a numerical param"
+                multiplier = multiplier.getValue()
+            result *= multiplier
+        return result
 
     def unproxy(self, base):
         obj = base
@@ -105,7 +125,7 @@ class BaseProxy(object):
                 raise RuntimeError, "Cycle in unproxy"
             result = result.unproxy(obj)
 
-        return self._mulcheck(result)
+        return self._mulcheck(result, base)
 
     def getindex(obj, index):
         if index == None:
