@@ -38,16 +38,8 @@
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
-// A default version of this function in case one isn't otherwise defined.
-// This ensures everything will link properly whether or not the user defined
-// a custom sc_main function. If they didn't but still try to call it, throw
-// an error and die.
-[[gnu::weak]] int
-sc_main(int argc, char *argv[])
-{
-    // If python attempts to call sc_main but no sc_main was defined...
-    fatal("sc_main called but not defined.\n");
-}
+// A weak symbol to detect if sc_main has been defined, and if so where it is.
+[[gnu::weak]] int sc_main(int argc, char *argv[]);
 
 namespace sc_core
 {
@@ -65,7 +57,12 @@ class ScMainFiber : public Fiber
     void
     main()
     {
-        ::sc_main(_argc, _argv);
+        if (::sc_main) {
+            ::sc_main(_argc, _argv);
+        } else {
+            // If python tries to call sc_main but no sc_main was defined...
+            fatal("sc_main called but not defined.\n");
+        }
     }
 };
 
