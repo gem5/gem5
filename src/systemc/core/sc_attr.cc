@@ -27,115 +27,92 @@
  * Authors: Gabe Black
  */
 
+#include <utility>
+
 #include "base/logging.hh"
 #include "systemc/ext/core/sc_attr.hh"
 
 namespace sc_core
 {
 
-sc_attr_base::sc_attr_base(const std::string &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+sc_attr_base::sc_attr_base(const std::string &_name) : _name(_name) {}
+sc_attr_base::sc_attr_base(const sc_attr_base &other) : _name(other._name) {}
+sc_attr_base::~sc_attr_base() {}
 
-sc_attr_base::sc_attr_base(const sc_attr_base &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-sc_attr_base::~sc_attr_base()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-const std::string &
-sc_attr_base::name() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const std::string *)nullptr;
-}
-
-void
-sc_attr_base::warn_unimpl(const char *func)
-{
-    warn("%s not implemented.\n", func);
-}
+const std::string &sc_attr_base::name() const { return _name; }
 
 sc_attr_cltn::iterator
 sc_attr_cltn::begin()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (iterator)nullptr;
+    return cltn.begin();
 }
 
 sc_attr_cltn::const_iterator
 sc_attr_cltn::begin() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (const_iterator)nullptr;
+    return cltn.begin();
 }
 
 sc_attr_cltn::iterator
 sc_attr_cltn::end()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (iterator)nullptr;
+    return cltn.end();
 }
 
 sc_attr_cltn::const_iterator
 sc_attr_cltn::end() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (const_iterator)nullptr;
+    return cltn.end();
 }
 
-sc_attr_cltn::sc_attr_cltn()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-sc_attr_cltn::sc_attr_cltn(const sc_attr_cltn &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-sc_attr_cltn::~sc_attr_cltn()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+sc_attr_cltn::sc_attr_cltn() {}
+sc_attr_cltn::sc_attr_cltn(const sc_attr_cltn &other) : cltn(other.cltn) {}
+sc_attr_cltn::~sc_attr_cltn() {}
 
 bool
-sc_attr_cltn::push_back(sc_attr_base *)
+sc_attr_cltn::push_back(sc_attr_base *attr)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    if (!attr || (*this)[attr->name()])
+        return false;
+
+    cltn.push_back(attr);
+    return true;
 }
 
 sc_attr_base *
 sc_attr_cltn::operator [] (const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    for (auto &attr: cltn)
+        if (attr->name() == name)
+            return attr;
     return nullptr;
 }
 
 const sc_attr_base *
 sc_attr_cltn::operator [] (const std::string &name) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    for (auto &attr: cltn)
+        if (attr->name() == name)
+            return attr;
     return nullptr;
 }
 
 sc_attr_base *
 sc_attr_cltn::remove(const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    for (auto &attr: cltn) {
+        if (attr->name() == name) {
+            sc_attr_base *ret = attr;
+            std::swap(attr, cltn.back());
+            cltn.pop_back();
+            return ret;
+        }
+    }
     return nullptr;
 }
 
-void
-sc_attr_cltn::remove_all()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+void sc_attr_cltn::remove_all() { cltn.clear(); }
+
+int sc_attr_cltn::size() const { return cltn.size(); }
 
 } // namespace sc_core

@@ -39,40 +39,32 @@ namespace sc_core
 class sc_attr_base
 {
   public:
-    sc_attr_base(const std::string &);
-    sc_attr_base(const sc_attr_base &);
+    sc_attr_base(const std::string &_name);
+    sc_attr_base(const sc_attr_base &other);
     virtual ~sc_attr_base();
 
     const std::string &name() const;
-
-  protected:
-    void warn_unimpl(const char *func);
 
   private:
     // Disabled
     sc_attr_base();
     sc_attr_base &operator = (const sc_attr_base &);
+
+    const std::string _name;
 };
 
 template <class T>
 class sc_attribute : public sc_attr_base
 {
   public:
-    sc_attribute(const std::string &_name) : sc_attr_base(_name)
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    sc_attribute(const std::string &_name) : sc_attr_base(_name) {}
     sc_attribute(const std::string &_name, const T &t) :
         sc_attr_base(_name), value(t)
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    {}
     sc_attribute(const sc_attribute<T> &other) :
         sc_attr_base(other.name()), value(other.value)
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    virtual ~sc_attribute() { warn_unimpl(__PRETTY_FUNCTION__); }
+    {}
+    virtual ~sc_attribute() {}
     T value;
 
   private:
@@ -85,8 +77,8 @@ class sc_attr_cltn
 {
   public:
     typedef sc_attr_base *elem_type;
-    typedef elem_type *iterator;
-    typedef const elem_type *const_iterator;
+    typedef std::vector<elem_type>::iterator iterator;
+    typedef std::vector<elem_type>::const_iterator const_iterator;
 
     iterator begin();
     const_iterator begin() const;
@@ -114,8 +106,7 @@ class sc_attr_cltn
     sc_attr_base *remove(const std::string &name);
 
     void remove_all();
-
-    int size() const { return cltn.size(); }
+    int size() const;
 
   private:
     std::vector<sc_attr_base *> cltn;
