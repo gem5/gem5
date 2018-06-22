@@ -27,69 +27,77 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_CORE_SC_OBJECT_HH__
-#define __SYSTEMC_EXT_CORE_SC_OBJECT_HH__
+#ifndef __SYSTEMC_CORE_OBJECT_HH__
+#define __SYSTEMC_CORE_OBJECT_HH__
 
-#include <iostream>
 #include <string>
 #include <vector>
+
+#include "systemc/ext/core/sc_attr.hh"
+#include "systemc/ext/core/sc_object.hh"
 
 namespace sc_gem5
 {
 
 class Object;
 
-} // namespace sc_gem5
+typedef std::vector<sc_core::sc_object *> Objects;
+typedef std::vector<sc_core::sc_event *> Events;
+typedef Objects::iterator ObjectsIt;
 
-namespace sc_core
-{
-
-class sc_event;
-class sc_attr_base;
-class sc_attr_cltn;
-class sc_simcontext;
-
-class sc_object
+class Object
 {
   public:
+    Object(sc_core::sc_object *sc_obj);
+    Object(sc_core::sc_object *sc_obj, const char *);
+    Object(sc_core::sc_object *sc_obj, const Object &);
+    Object &operator = (const Object &);
+
+    virtual ~Object();
+
+    /*
+     * sc_object methods.
+     */
     const char *name() const;
     const char *basename() const;
 
-    virtual const char *kind() const { return "sc_object"; }
+    void print(std::ostream & =std::cout) const;
+    void dump(std::ostream & =std::cout) const;
 
-    virtual void print(std::ostream & =std::cout) const;
-    virtual void dump(std::ostream & =std::cout) const;
+    const std::vector<sc_core::sc_object *> &get_child_objects() const;
+    const std::vector<sc_core::sc_event *> &get_child_events() const;
+    sc_core::sc_object *get_parent_object() const;
 
-    virtual const std::vector<sc_object *> &get_child_objects() const;
-    virtual const std::vector<sc_event *> &get_child_events() const;
-    sc_object *get_parent_object() const;
-
-    bool add_attribute(sc_attr_base &);
-    sc_attr_base *get_attribute(const std::string &);
-    sc_attr_base *remove_attribute(const std::string &);
+    bool add_attribute(sc_core::sc_attr_base &);
+    sc_core::sc_attr_base *get_attribute(const std::string &);
+    sc_core::sc_attr_base *remove_attribute(const std::string &);
     void remove_all_attributes();
     int num_attributes() const;
-    sc_attr_cltn &attr_cltn();
-    const sc_attr_cltn &attr_cltn() const;
+    sc_core::sc_attr_cltn &attr_cltn();
+    const sc_core::sc_attr_cltn &attr_cltn() const;
 
-    // Deprecated
-    sc_simcontext *simcontext() const;
-
-  protected:
-    sc_object();
-    sc_object(const char *);
-    sc_object(const sc_object &);
-    sc_object &operator = (const sc_object &);
-    virtual ~sc_object();
+    sc_core::sc_simcontext *simcontext() const;
 
   private:
-    friend class sc_gem5::Object;
-    sc_gem5::Object *_gem5_object;
+    sc_core::sc_object *sc_obj;
+
+    std::string _basename;
+    std::string _name;
+
+    Objects children;
+    Events events;
+    sc_core::sc_object *parent;
+    ObjectsIt parentIt;
+
+    sc_core::sc_attr_cltn cltn;
 };
 
-const std::vector<sc_object *> &sc_get_top_level_objects();
-sc_object *sc_find_object(const char *);
+extern Objects topLevelObjects;
+extern Objects allObjects;
 
-} // namespace sc_core
+sc_core::sc_object *findObject(
+        const char *name, const Objects &objects=topLevelObjects);
 
-#endif  //__SYSTEMC_EXT_CORE_SC_OBJECT_HH__
+} // namespace sc_gem5
+
+#endif  //__SYSTEMC_CORE_OBJECT_HH__

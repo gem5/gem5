@@ -36,10 +36,8 @@ namespace sc_core
 {
 
 sc_module_name::sc_module_name(const char *name) :
-    _name(name), _gem5_module(new SystemC::Module(name)), _on_the_stack(true)
-{
-    _gem5_module->push();
-}
+    _name(name), _gem5_module(new sc_gem5::Module(name)), _on_the_stack(true)
+{}
 
 sc_module_name::sc_module_name(const sc_module_name &other) :
     _name(other._name), _gem5_module(other._gem5_module), _on_the_stack(false)

@@ -27,158 +27,149 @@
  * Authors: Gabe Black
  */
 
+#include <vector>
+
 #include "base/logging.hh"
+#include "systemc/core/object.hh"
 #include "systemc/ext/core/sc_object.hh"
 
 namespace sc_core
 {
 
+namespace
+{
+
+std::vector<sc_object *> top_level_objects;
+
+} // anonymous namespace
+
 const char *
 sc_object::name() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "sc_object";
+    return _gem5_object->name();
 }
 
 const char *
 sc_object::basename() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "sc_object";
-}
-
-const char *
-sc_object::kind() const
-{
-    return "sc_object";
+    return _gem5_object->basename();
 }
 
 void
 sc_object::print(std::ostream &out) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _gem5_object->print(out);
 }
 
 void
 sc_object::dump(std::ostream &out) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _gem5_object->dump(out);
 }
 
 const std::vector<sc_object *> &
 sc_object::get_child_objects() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const std::vector<sc_object *> *)nullptr;
+    return _gem5_object->get_child_objects();
 }
 
 const std::vector<sc_event *> &
 sc_object::get_child_events() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const std::vector<sc_event *> *)nullptr;
+    return _gem5_object->get_child_events();
 }
 
 sc_object *
 sc_object::get_parent_object() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return NULL;
+    return _gem5_object->get_parent_object();
 }
 
 bool
-sc_object::add_attribute(sc_attr_base &)
+sc_object::add_attribute(sc_attr_base &attr)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return _gem5_object->add_attribute(attr);
 }
 
 sc_attr_base *
-sc_object::get_attribute(const std::string &)
+sc_object::get_attribute(const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return NULL;
+    return _gem5_object->get_attribute(name);
 }
 
 sc_attr_base *
-sc_object::remove_attribute(const std::string &)
+sc_object::remove_attribute(const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return NULL;
+    return _gem5_object->remove_attribute(name);
 }
 
 void
 sc_object::remove_all_attributes()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return _gem5_object->remove_all_attributes();
 }
 
 int
 sc_object::num_attributes() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
+    return _gem5_object->num_attributes();
 }
 
 sc_attr_cltn &
 sc_object::attr_cltn()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(sc_attr_cltn *)NULL;
+    return _gem5_object->attr_cltn();
 }
 
 const sc_attr_cltn &
 sc_object::attr_cltn() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(sc_attr_cltn *)NULL;
+    return _gem5_object->attr_cltn();
 }
 
 sc_simcontext *
 sc_object::simcontext() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return nullptr;
+    return _gem5_object->simcontext();
 }
 
 sc_object::sc_object()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _gem5_object = new sc_gem5::Object(this);
 }
 
 sc_object::sc_object(const char *name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _gem5_object = new sc_gem5::Object(this, name);
 }
 
-sc_object::sc_object(const sc_object &arg)
+sc_object::sc_object(const sc_object &other)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _gem5_object = new sc_gem5::Object(this, *other._gem5_object);
 }
 
 sc_object &
-sc_object::operator = (const sc_object &)
+sc_object::operator = (const sc_object &other)
 {
+    *_gem5_object = *other._gem5_object;
     return *this;
 }
 
 sc_object::~sc_object()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    delete _gem5_object;
 }
 
 const std::vector<sc_object *> &
 sc_get_top_level_objects()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const std::vector<sc_object *> *)nullptr;
+    return sc_gem5::topLevelObjects;
 }
 
 sc_object *
-sc_find_object(const char *)
+sc_find_object(const char *name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return NULL;
+    return sc_gem5::findObject(name);
 }
 
 } // namespace sc_core

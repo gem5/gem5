@@ -30,31 +30,54 @@
 #ifndef __SYSTEMC_CORE_MODULE_HH__
 #define __SYSTEMC_CORE_MODULE_HH__
 
-namespace SystemC
+#include <cassert>
+
+#include "systemc/core/object.hh"
+#include "systemc/ext/core/sc_module.hh"
+
+namespace sc_gem5
 {
 
 class Module
 {
   private:
     const char *_name;
+    sc_core::sc_module *_sc_mod;
+    Object *_obj;
 
   public:
-    Module(const char *name) : _name(name) {}
 
-    const char *name() { return _name; }
+    Module(const char *name);
+    void finish(Object *this_obj);
 
-    void push();
+    const char *name() const { return _name; }
+
+    sc_core::sc_module *
+    sc_mod() const
+    {
+        assert(_sc_mod);
+        return _sc_mod;
+    }
+
+    void
+    sc_mod(sc_core::sc_module *sc_mod)
+    {
+        assert(!_sc_mod);
+        _sc_mod = sc_mod;
+    }
+
+    Object *
+    obj()
+    {
+        assert(_obj);
+        return _obj;
+    }
+
     void pop();
 };
 
-extern Module *topModule();
-
-} // namespace SystemC
-
-namespace sc_gem5
-{
-
-using SystemC::Module;
+Module *currentModule();
+Module *newModule();
 
 } // namespace sc_gem5
 

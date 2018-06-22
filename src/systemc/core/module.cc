@@ -29,42 +29,59 @@
 
 #include "systemc/core/module.hh"
 
+#include <cassert>
 #include <list>
 
 #include "base/logging.hh"
 
-namespace SystemC
+namespace sc_gem5
 {
 
 namespace
 {
 
 std::list<Module *> _modules;
-
-Module *_top_module = nullptr;
+Module *_new_module;
 
 } // anonymous namespace
 
-void
-Module::push()
+Module::Module(const char *name) : _name(name), _sc_mod(nullptr), _obj(nullptr)
 {
-    if (!_top_module)
-        _top_module = this;
+    panic_if(_new_module, "Previous module not finished.\n");
+    _new_module = this;
+}
+
+void
+Module::finish(Object *this_obj)
+{
+    assert(!_obj);
+    _obj = this_obj;
     _modules.push_back(this);
+    _new_module = nullptr;
 }
 
 void
 Module::pop()
 {
-    panic_if(_modules.size(), "Popping from empty module list.\n");
+    panic_if(!_modules.size(), "Popping from empty module list.\n");
     panic_if(_modules.back() != this,
             "Popping module which isn't at the end of the module list.\n");
+    panic_if(_new_module, "Pop with unfinished module.\n");
+    _modules.pop_back();
 }
 
 Module *
-topModule()
+currentModule()
 {
-    return _top_module;
+    if (_modules.empty())
+        return nullptr;
+    return _modules.back();
 }
 
-} // namespace SystemC
+Module *
+newModule()
+{
+    return _new_module;
+}
+
+} // namespace sc_gem5
