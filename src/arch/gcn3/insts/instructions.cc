@@ -5543,12 +5543,20 @@ namespace Gcn3ISA
         VecOperandU32 src1(gpuDynInst, instData.VSRC1);
         VecOperandU32 vdst(gpuDynInst, instData.VDST);
 
+        src0.readSrc();
+        src1.read();
+
         if (isSDWAInst()) {
             VecOperandU32 src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
-            // use copies of original src0 and src1 during selecting
+            // use copies of original src0, src1, and dest during selecting
             VecOperandU32 origSrc0_sdwa(gpuDynInst,
                                         extData.iFmt_VOP_SDWA.SRC0);
             VecOperandU32 origSrc1(gpuDynInst, instData.VSRC1);
+            VecOperandU32 origVdst(gpuDynInst, instData.VDST);
+
+            src0_sdwa.read();
+            origSrc0_sdwa.read();
+            origSrc1.read();
 
             DPRINTF(GCN3, "Handling V_MUL_U32_U24 SRC SDWA. SRC0: register "
                     "v[%d], DST_SEL: %d, DST_UNUSED: %d, CLAMP: %d, SRC0_SEL: "
@@ -5566,27 +5574,27 @@ namespace Gcn3ISA
                     extData.iFmt_VOP_SDWA.SRC1_NEG,
                     extData.iFmt_VOP_SDWA.SRC1_ABS);
 
-            processSDWA_src(gpuDynInst, extData.iFmt_VOP_SDWA, src0_sdwa,
-                            origSrc0_sdwa, src1, origSrc1);
-        }
+            processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa,
+                            src1, origSrc1);
 
-        src0.readSrc();
-        src1.read();
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = bits(src0_sdwa[lane], 23, 0) *
+                                 bits(src1[lane], 23, 0);
+                    origVdst[lane] = vdst[lane]; // keep copy consistent
+                }
+            }
 
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (wf->execMask(lane)) {
-                vdst[lane] = bits(src0[lane], 23, 0) * bits(src1[lane], 23, 0);
+            processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = bits(src0[lane], 23, 0) *
+                                 bits(src1[lane], 23, 0);
+                }
             }
         }
 
-        // SDWA instructions also may select bytes/words of dest register
-        // (vdst)
-        if (isSDWAInst()) {
-            // use extra copy of dest to retain original values
-            VecOperandU32 vdst_orig(gpuDynInst, instData.VDST);
-            processSDWA_dst(gpuDynInst, extData.iFmt_VOP_SDWA, vdst,
-                            vdst_orig);
-        }
 
         vdst.write();
     }
@@ -5895,12 +5903,20 @@ namespace Gcn3ISA
         VecOperandU32 src1(gpuDynInst, instData.VSRC1);
         VecOperandU32 vdst(gpuDynInst, instData.VDST);
 
+        src0.readSrc();
+        src1.read();
+
         if (isSDWAInst()) {
             VecOperandU32 src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
-            // use copies of original src0 and src1 during selecting
+            // use copies of original src0, src1, and vdst during selecting
             VecOperandU32 origSrc0_sdwa(gpuDynInst,
                                         extData.iFmt_VOP_SDWA.SRC0);
             VecOperandU32 origSrc1(gpuDynInst, instData.VSRC1);
+            VecOperandU32 origVdst(gpuDynInst, instData.VDST);
+
+            src0_sdwa.read();
+            origSrc0_sdwa.read();
+            origSrc1.read();
 
             DPRINTF(GCN3, "Handling V_LSHLREV_B32 SRC SDWA. SRC0: register "
                     "v[%d], DST_SEL: %d, DST_UNUSED: %d, CLAMP: %d, SRC0_SEL: "
@@ -5918,26 +5934,23 @@ namespace Gcn3ISA
                     extData.iFmt_VOP_SDWA.SRC1_NEG,
                     extData.iFmt_VOP_SDWA.SRC1_ABS);
 
-            processSDWA_src(gpuDynInst, extData.iFmt_VOP_SDWA, src0_sdwa,
-                            origSrc0_sdwa, src1, origSrc1);
-        }
+            processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa,
+                            src1, origSrc1);
 
-        src0.readSrc();
-        src1.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (wf->execMask(lane)) {
-                vdst[lane] = src1[lane] << bits(src0[lane], 4, 0);
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src1[lane] << bits(src0_sdwa[lane], 4, 0);
+                    origVdst[lane] = vdst[lane]; // keep copy consistent
+                }
             }
-        }
 
-        // SDWA instructions also may select bytes/words of dest register
-        // (vdst)
-        if (isSDWAInst()) {
-            // use extra copy of dest to retain original values
-            VecOperandU32 vdst_orig(gpuDynInst, instData.VDST);
-            processSDWA_dst(gpuDynInst, extData.iFmt_VOP_SDWA, vdst,
-                            vdst_orig);
+            processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src1[lane] << bits(src0[lane], 4, 0);
+                }
+            }
         }
 
         vdst.write();
@@ -5995,12 +6008,20 @@ namespace Gcn3ISA
         VecOperandU32 src1(gpuDynInst, instData.VSRC1);
         VecOperandU32 vdst(gpuDynInst, instData.VDST);
 
+        src0.readSrc();
+        src1.read();
+
         if (isSDWAInst()) {
             VecOperandU32 src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
-            // use copies of original src0 and src1 during selecting
+            // use copies of original src0, src1, and dest during selecting
             VecOperandU32 origSrc0_sdwa(gpuDynInst,
                                         extData.iFmt_VOP_SDWA.SRC0);
             VecOperandU32 origSrc1(gpuDynInst, instData.VSRC1);
+            VecOperandU32 origVdst(gpuDynInst, instData.VDST);
+
+            src0_sdwa.read();
+            origSrc0_sdwa.read();
+            origSrc1.read();
 
             DPRINTF(GCN3, "Handling V_OR_B32 SRC SDWA. SRC0: register v[%d], "
                     "DST_SEL: %d, DST_UNUSED: %d, CLAMP: %d, SRC0_SEL: %d, "
@@ -6018,26 +6039,23 @@ namespace Gcn3ISA
                     extData.iFmt_VOP_SDWA.SRC1_NEG,
                     extData.iFmt_VOP_SDWA.SRC1_ABS);
 
-            processSDWA_src(gpuDynInst, extData.iFmt_VOP_SDWA, src0_sdwa,
-                            origSrc0_sdwa, src1, origSrc1);
-        }
+            processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa,
+                            src1, origSrc1);
 
-        src0.readSrc();
-        src1.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (wf->execMask(lane)) {
-                vdst[lane] = src0[lane] | src1[lane];
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src0_sdwa[lane] | src1[lane];
+                    origVdst[lane] = vdst[lane]; // keep copy consistent
+                }
             }
-        }
 
-        // SDWA instructions also may select bytes/words of dest register
-        // (vdst)
-        if (isSDWAInst()) {
-            // use extra copy of dest to retain original values
-            VecOperandU32 vdst_orig(gpuDynInst, instData.VDST);
-            processSDWA_dst(gpuDynInst, extData.iFmt_VOP_SDWA, vdst,
-                            vdst_orig);
+            processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src0[lane] | src1[lane];
+                }
+            }
         }
 
         vdst.write();
@@ -6222,12 +6240,20 @@ namespace Gcn3ISA
         VecOperandU32 vdst(gpuDynInst, instData.VDST);
         ScalarOperandU64 vcc(gpuDynInst, REG_VCC_LO);
 
+        src0.readSrc();
+        src1.read();
+
         if (isSDWAInst()) {
             VecOperandU32 src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
-            // use copies of original src0 and src1 during selecting
+            // use copies of original src0, src1, and dest during selecting
             VecOperandU32 origSrc0_sdwa(gpuDynInst,
                                         extData.iFmt_VOP_SDWA.SRC0);
             VecOperandU32 origSrc1(gpuDynInst, instData.VSRC1);
+            VecOperandU32 origVdst(gpuDynInst, instData.VDST);
+
+            src0_sdwa.read();
+            origSrc0_sdwa.read();
+            origSrc1.read();
 
             DPRINTF(GCN3, "Handling V_ADD_U32 SRC SDWA. SRC0: register v[%d], "
                     "DST_SEL: %d, DST_UNUSED: %d, CLAMP: %d, SRC0_SEL: %d, "
@@ -6245,28 +6271,27 @@ namespace Gcn3ISA
                     extData.iFmt_VOP_SDWA.SRC1_NEG,
                     extData.iFmt_VOP_SDWA.SRC1_ABS);
 
-            processSDWA_src(gpuDynInst, extData.iFmt_VOP_SDWA, src0_sdwa,
-                            origSrc0_sdwa, src1, origSrc1);
-        }
+            processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa,
+                            src1, origSrc1);
 
-        src0.readSrc();
-        src1.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (wf->execMask(lane)) {
-                vdst[lane] = src0[lane] + src1[lane];
-                vcc.setBit(lane, ((VecElemU64)src0[lane]
-                    + (VecElemU64)src1[lane] >= 0x100000000ULL) ? 1 : 0);
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src0_sdwa[lane] + src1[lane];
+                    origVdst[lane] = vdst[lane]; // keep copy consistent
+                    vcc.setBit(lane, ((VecElemU64)src0_sdwa[lane]
+                        + (VecElemU64)src1[lane] >= 0x100000000ULL) ? 1 : 0);
+                }
             }
-        }
 
-        // SDWA instructions also may select bytes/words of dest register
-        // (vdst)
-        if (isSDWAInst()) {
-            // use extra copy of dest to retain original values
-            VecOperandU32 vdst_orig(gpuDynInst, instData.VDST);
-            processSDWA_dst(gpuDynInst, extData.iFmt_VOP_SDWA, vdst,
-                            vdst_orig);
+            processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src0[lane] + src1[lane];
+                    vcc.setBit(lane, ((VecElemU64)src0[lane]
+                        + (VecElemU64)src1[lane] >= 0x100000000ULL) ? 1 : 0);
+                }
+            }
         }
 
         vcc.write();

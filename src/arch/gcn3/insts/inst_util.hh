@@ -547,8 +547,8 @@ namespace Gcn3ISA
      * operations are done on it.
      */
     template<typename T>
-    T sdwaInstSrcImpl_helper(T currOperVal, T origOperVal, SDWASelVals sel,
-                             bool signExt)
+    T sdwaInstSrcImpl_helper(T currOperVal, const T origOperVal,
+                             const SDWASelVals sel, const bool signExt)
     {
         // local variables
         int first_bit = 0, last_bit = 0;
@@ -635,16 +635,14 @@ namespace Gcn3ISA
      *   2.  if sign extend is set, then sign extend the value
      */
     template<typename T>
-    void sdwaInstSrcImpl(T & currOper, T & origCurrOper, SDWASelVals sel,
-                         bool signExt)
+    void sdwaInstSrcImpl(T & currOper, T & origCurrOper,
+                         const SDWASelVals sel, const bool signExt)
     {
         // iterate over all lanes, setting appropriate, selected value
-        currOper.read();
-        origCurrOper.read();
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             currOper[lane] = sdwaInstSrcImpl_helper(currOper[lane],
-                                                   origCurrOper[lane], sel,
-                                                   signExt);
+                                                    origCurrOper[lane], sel,
+                                                    signExt);
         }
     }
 
@@ -656,8 +654,9 @@ namespace Gcn3ISA
      * operations are done on it.
      */
     template<typename T>
-    T sdwaInstDstImpl_helper(T currDstVal, T origDstVal, bool clamp,
-                             SDWASelVals sel, SDWADstVals unusedBits_format)
+    T sdwaInstDstImpl_helper(T currDstVal, const T origDstVal,
+                             const bool clamp, const SDWASelVals sel,
+                             const SDWADstVals unusedBits_format)
     {
         // local variables
         int first_bit = 0, last_bit = 0;
@@ -756,12 +755,11 @@ namespace Gcn3ISA
      *       2 (SDWA_UNUSED_PRESERVE): select data[31:0]
      */
     template<typename T>
-    void sdwaInstDstImpl(T & dstOper, T & origDstOper, bool clamp,
-                         SDWASelVals sel, SDWADstVals unusedBits_format)
+    void sdwaInstDstImpl(T & dstOper, T & origDstOper, const bool clamp,
+                         const SDWASelVals sel,
+                         const SDWADstVals unusedBits_format)
     {
         // iterate over all lanes, setting appropriate, selected value
-        dstOper.read();
-        origDstOper.read();
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             dstOper[lane] = sdwaInstDstImpl_helper(dstOper[lane],
                                                    origDstOper[lane], clamp,
@@ -779,8 +777,9 @@ namespace Gcn3ISA
      */
     template<typename T>
     void processSDWA_src_helper(T & currSrc, T & origCurrSrc,
-                                SDWASelVals src_sel, bool src_signExt,
-                                bool src_abs, bool src_neg)
+                                const SDWASelVals src_sel,
+                                const bool src_signExt, const bool src_abs,
+                                const bool src_neg)
     {
         /**
          * STEP 1: check if the absolute value (ABS) or negation (NEG) tags
@@ -812,14 +811,13 @@ namespace Gcn3ISA
      * processSDWA_src is called before the math.
      */
     template<typename T>
-    void processSDWA_src(GPUDynInstPtr gpuDynInst, InFmt_VOP_SDWA sdwaInst,
-                         T & src0, T & origSrc0)
+    void processSDWA_src(InFmt_VOP_SDWA sdwaInst, T & src0, T & origSrc0)
     {
         // local variables
-        SDWASelVals src0_sel = (SDWASelVals)sdwaInst.SRC0_SEL;
-        bool src0_signExt = sdwaInst.SRC0_SEXT;
-        bool src0_neg = sdwaInst.SRC0_NEG;
-        bool src0_abs = sdwaInst.SRC0_ABS;
+        const SDWASelVals src0_sel = (SDWASelVals)sdwaInst.SRC0_SEL;
+        const bool src0_signExt = sdwaInst.SRC0_SEXT;
+        const bool src0_neg = sdwaInst.SRC0_NEG;
+        const bool src0_abs = sdwaInst.SRC0_ABS;
 
         // NOTE: difference between VOP1 and VOP2/VOPC is that there is no src1
         // operand.  So ensure that SRC1 fields are not set, then call helper
@@ -841,18 +839,18 @@ namespace Gcn3ISA
      * called before the math.
      */
     template<typename T>
-    void processSDWA_src(GPUDynInstPtr gpuDynInst, InFmt_VOP_SDWA sdwaInst,
-                         T & src0, T & origSrc0, T & src1, T & origSrc1)
+    void processSDWA_src(InFmt_VOP_SDWA sdwaInst, T & src0, T & origSrc0,
+                         T & src1, T & origSrc1)
     {
         // local variables
-        SDWASelVals src0_sel = (SDWASelVals)sdwaInst.SRC0_SEL;
-        bool src0_signExt = sdwaInst.SRC0_SEXT;
-        bool src0_neg = sdwaInst.SRC0_NEG;
-        bool src0_abs = sdwaInst.SRC0_ABS;
-        SDWASelVals src1_sel = (SDWASelVals)sdwaInst.SRC1_SEL;
-        bool src1_signExt = sdwaInst.SRC1_SEXT;
-        bool src1_neg = sdwaInst.SRC1_NEG;
-        bool src1_abs = sdwaInst.SRC1_ABS;
+        const SDWASelVals src0_sel = (SDWASelVals)sdwaInst.SRC0_SEL;
+        const bool src0_signExt = sdwaInst.SRC0_SEXT;
+        const bool src0_neg = sdwaInst.SRC0_NEG;
+        const bool src0_abs = sdwaInst.SRC0_ABS;
+        const SDWASelVals src1_sel = (SDWASelVals)sdwaInst.SRC1_SEL;
+        const bool src1_signExt = sdwaInst.SRC1_SEXT;
+        const bool src1_neg = sdwaInst.SRC1_NEG;
+        const bool src1_abs = sdwaInst.SRC1_ABS;
 
         processSDWA_src_helper(src0, origSrc0, src0_sel, src0_signExt,
                                src0_abs, src0_neg);
@@ -869,13 +867,13 @@ namespace Gcn3ISA
      * processSDWA_src is called before the math.
      */
     template<typename T>
-    void processSDWA_dst(GPUDynInstPtr gpuDynInst, InFmt_VOP_SDWA sdwaInst,
-                         T & dst, T & origDst)
+    void processSDWA_dst(InFmt_VOP_SDWA sdwaInst, T & dst, T & origDst)
     {
         // local variables
-        SDWADstVals dst_unusedBits_format = (SDWADstVals)sdwaInst.DST_UNUSED;
-        SDWASelVals dst_sel = (SDWASelVals)sdwaInst.DST_SEL;
-        bool clamp = sdwaInst.CLAMP;
+        const SDWADstVals dst_unusedBits_format =
+            (SDWADstVals)sdwaInst.DST_UNUSED;
+        const SDWASelVals dst_sel = (SDWASelVals)sdwaInst.DST_SEL;
+        const bool clamp = sdwaInst.CLAMP;
 
         /**
          * STEP 1: select the appropriate bits for dst and pad/sign-extend as
