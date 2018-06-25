@@ -747,9 +747,10 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
 
     updatePageDivergenceDist(tmp_vaddr);
 
-    pkt->req->setVirt(pkt->req->getAsid(), tmp_vaddr, pkt->req->getSize(),
-                      pkt->req->getFlags(), pkt->req->masterId(),
-                      pkt->req->getPC());
+    // set PC in request
+    pkt->req->setPC(gpuDynInst->wavefront()->pc());
+
+    pkt->req->setReqInstSeqNum(gpuDynInst->seqNum());
 
     // figure out the type of the request to set read/write
     BaseTLB::Mode TLB_mode;
