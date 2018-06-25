@@ -708,7 +708,7 @@ LSQUnit<Impl>::writebackStores()
            storeWBIt->valid() &&
            storeWBIt->canWB() &&
            ((!needsTSO) || (!storeInFlight)) &&
-           lsq->storePortAvailable()) {
+           lsq->cachePortAvailable(false)) {
 
         if (isStoreBlocked) {
             DPRINTF(LSQUnit, "Unable to write back any more stores, cache"
@@ -1040,7 +1040,8 @@ LSQUnit<Impl>::trySendPacket(bool isLoad, PacketPtr data_pkt)
 
     auto state = dynamic_cast<LSQSenderState*>(data_pkt->senderState);
 
-    if (!lsq->cacheBlocked() && (isLoad || lsq->storePortAvailable())) {
+    if (!lsq->cacheBlocked() &&
+        lsq->cachePortAvailable(isLoad)) {
         if (!dcachePort->sendTimingReq(data_pkt)) {
             ret = false;
             cache_got_blocked = true;
@@ -1051,9 +1052,9 @@ LSQUnit<Impl>::trySendPacket(bool isLoad, PacketPtr data_pkt)
 
     if (ret) {
         if (!isLoad) {
-            lsq->storePortBusy();
             isStoreBlocked = false;
         }
+        lsq->cachePortBusy(isLoad);
         state->outstanding++;
         state->request()->packetSent();
     } else {
@@ -1067,7 +1068,6 @@ LSQUnit<Impl>::trySendPacket(bool isLoad, PacketPtr data_pkt)
         }
         state->request()->packetNotSent();
     }
-
     return ret;
 }
 

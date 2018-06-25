@@ -755,7 +755,7 @@ class LSQ
     int entryAmount(ThreadID num_threads);
 
     /** Ticks the LSQ. */
-    void tick() { usedStorePorts = 0; }
+    void tick();
 
     /** Inserts a load into the LSQ. */
     void insertLoad(const DynInstPtr &load_inst);
@@ -962,9 +962,9 @@ class LSQ
     /** Set D-cache blocked status */
     void cacheBlocked(bool v);
     /** Is any store port available to use? */
-    bool storePortAvailable() const;
+    bool cachePortAvailable(bool is_load) const;
     /** Another store port is in use */
-    void storePortBusy();
+    void cachePortBusy(bool is_load);
 
   protected:
     /** D-cache is blocked */
@@ -973,6 +973,10 @@ class LSQ
     int cacheStorePorts;
     /** The number of used cache ports in this cycle by stores. */
     int usedStorePorts;
+    /** The number of cache ports available each cycle (loads only). */
+    int cacheLoadPorts;
+    /** The number of used cache ports in this cycle by loads. */
+    int usedLoadPorts;
 
 
     /** The LSQ policy for SMT mode. */

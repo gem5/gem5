@@ -63,6 +63,7 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
     : cpu(cpu_ptr), iewStage(iew_ptr),
       _cacheBlocked(false),
       cacheStorePorts(params->cacheStorePorts), usedStorePorts(0),
+      cacheLoadPorts(params->cacheLoadPorts), usedLoadPorts(0),
       lsqPolicy(params->smtLSQPolicy),
       LQEntries(params->LQEntries),
       SQEntries(params->SQEntries),
@@ -173,6 +174,18 @@ LSQ<Impl>::takeOverFrom()
     }
 }
 
+template <class Impl>
+void
+LSQ<Impl>::tick()
+{
+    // Re-issue loads which got blocked on the per-cycle load ports limit.
+    if (usedLoadPorts == cacheLoadPorts && !_cacheBlocked)
+        iewStage->cacheUnblocked();
+
+    usedLoadPorts = 0;
+    usedStorePorts = 0;
+}
+
 template<class Impl>
 bool
 LSQ<Impl>::cacheBlocked() const
@@ -189,17 +202,27 @@ LSQ<Impl>::cacheBlocked(bool v)
 
 template<class Impl>
 bool
-LSQ<Impl>::storePortAvailable() const
+LSQ<Impl>::cachePortAvailable(bool is_load) const
 {
-    return usedStorePorts < cacheStorePorts;
+    bool ret;
+    if (is_load) {
+        ret  = usedLoadPorts < cacheLoadPorts;
+    } else {
+        ret  = usedStorePorts < cacheStorePorts;
+    }
+    return ret;
 }
 
 template<class Impl>
 void
-LSQ<Impl>::storePortBusy()
+LSQ<Impl>::cachePortBusy(bool is_load)
 {
-    usedStorePorts++;
-    assert(usedStorePorts <= cacheStorePorts);
+    assert(cachePortAvailable(is_load));
+    if (is_load) {
+        usedLoadPorts++;
+    } else {
+        usedStorePorts++;
+    }
 }
 
 template<class Impl>
