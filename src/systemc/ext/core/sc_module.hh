@@ -43,6 +43,13 @@ class sc_logic;
 
 } // namespace sc_dt
 
+namespace sc_gem5
+{
+
+class Module;
+
+} // namespace sc_gem5
+
 namespace sc_core
 {
 
@@ -62,9 +69,15 @@ class sc_module_name;
 
 class sc_bind_proxy
 {
+  private:
+    const sc_interface *_interface;
+    const sc_port_base *_port;
+
+    friend class sc_module;
+
   public:
-    sc_bind_proxy(const sc_interface &interface);
-    sc_bind_proxy(const sc_port_base &port);
+    sc_bind_proxy(const sc_interface &_interface);
+    sc_bind_proxy(const sc_port_base &_port);
 };
 
 extern const sc_bind_proxy SC_BIND_PROXY_NIL;
@@ -74,7 +87,7 @@ class sc_module : public sc_object
   public:
     virtual ~sc_module();
 
-    virtual const char *kind() const;
+    virtual const char *kind() const { return "sc_module"; }
 
     void operator () (const sc_bind_proxy &p001,
                       const sc_bind_proxy &p002 = SC_BIND_PROXY_NIL,
@@ -213,6 +226,8 @@ class sc_module : public sc_object
     virtual void end_of_simulation() {}
 
   private:
+    sc_gem5::Module *_gem5_module;
+
     // Disabled
     sc_module(const sc_module &) : sc_object() {};
     sc_module &operator = (const sc_module &) { return *this; }
