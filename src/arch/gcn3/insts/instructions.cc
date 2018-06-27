@@ -5296,8 +5296,12 @@ namespace Gcn3ISA
         VecOperandF32 src1(gpuDynInst, instData.VSRC1);
         VecOperandF32 vdst(gpuDynInst, instData.VDST);
 
+        src0.readSrc();
+        src1.read();
+
         if (isDPPInst()) {
             VecOperandF32 src0_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
+            src0_dpp.read();
 
             DPRINTF(GCN3, "Handling V_ADD_F32 SRC DPP. SRC0: register v[%d], "
                     "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
@@ -5313,14 +5317,17 @@ namespace Gcn3ISA
                     extData.iFmt_VOP_DPP.ROW_MASK);
 
             processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
-        }
 
-        src0.readSrc();
-        src1.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (wf->execMask(lane)) {
-                vdst[lane] = src0[lane] + src1[lane];
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src0_dpp[lane] + src1[lane];
+                }
+            }
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src0[lane] + src1[lane];
+                }
             }
         }
 
@@ -6164,6 +6171,7 @@ namespace Gcn3ISA
 
         if (isDPPInst()) {
             VecOperandF32 src0_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
+            src0_dpp.read();
 
             DPRINTF(GCN3, "Handling V_MAC_F32 SRC DPP. SRC0: register v[%d], "
                     "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
@@ -6179,11 +6187,18 @@ namespace Gcn3ISA
                     extData.iFmt_VOP_DPP.ROW_MASK);
 
             processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
-        }
 
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (wf->execMask(lane)) {
-                vdst[lane] = std::fma(src0[lane], src1[lane], vdst[lane]);
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = std::fma(src0_dpp[lane], src1[lane],
+                                          vdst[lane]);
+                }
+            }
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = std::fma(src0[lane], src1[lane], vdst[lane]);
+                }
             }
         }
 
@@ -7117,8 +7132,11 @@ namespace Gcn3ISA
         ConstVecOperandU32 src(gpuDynInst, instData.SRC0);
         VecOperandU32 vdst(gpuDynInst, instData.VDST);
 
+        src.readSrc();
+
         if (isDPPInst()) {
-            VecOperandU32 src0_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
+            VecOperandU32 src_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
+            src_dpp.read();
 
             DPRINTF(GCN3, "Handling V_MOV_B32 SRC DPP. SRC0: register v[%d], "
                     "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
@@ -7137,14 +7155,18 @@ namespace Gcn3ISA
             // to negate it or take the absolute value of it
             assert(!extData.iFmt_VOP_DPP.SRC1_ABS);
             assert(!extData.iFmt_VOP_DPP.SRC1_NEG);
-            processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp);
-        }
+            processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src_dpp);
 
-        src.readSrc();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (wf->execMask(lane)) {
-                vdst[lane] = src[lane];
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src_dpp[lane];
+                }
+            }
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src[lane];
+                }
             }
         }
 

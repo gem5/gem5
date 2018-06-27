@@ -505,7 +505,6 @@ namespace Gcn3ISA
                 src0[lane] = 0;
             }
 
-            src0.write();
             // reset for next iteration
             laneDisabled = false;
         }
