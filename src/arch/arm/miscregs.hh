@@ -1722,13 +1722,13 @@ namespace ArmISA
         Bitfield<4> pd0;
         Bitfield<5> pd1;
         // Long-descriptor translation table format
-        Bitfield<5, 0> t0sz;
+        Bitfield<2, 0> t0sz;
         Bitfield<7> epd0;
         Bitfield<9, 8> irgn0;
         Bitfield<11, 10> orgn0;
         Bitfield<13, 12> sh0;
         Bitfield<14> tg0;
-        Bitfield<21, 16> t1sz;
+        Bitfield<18, 16> t1sz;
         Bitfield<22> a1;
         Bitfield<23> epd1;
         Bitfield<25, 24> irgn1;
