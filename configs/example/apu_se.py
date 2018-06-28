@@ -209,13 +209,23 @@ shader = Shader(n_wf = options.wfs_per_simd,
 # So, all GPU protocols other than GPU_RfO should make their writes
 # visible to the global memory and should read from global memory
 # during kernal boundary. The pipeline initiates(or do not initiate)
-# the acquire/release operation depending on this impl_kern_boundary_sync
-# flag. This flag=true means pipeline initiates a acquire/release operation
-# at kernel boundary.
+# the acquire/release operation depending on these impl_kern_launch_rel
+# and impl_kern_end_rel flags.  The flag=true means pipeline initiates
+# a acquire/release operation at kernel launch/end.
+# VIPER protocols (GPU_VIPER, GPU_VIPER_Region and GPU_VIPER_Baseline)
+# are write-through based, and thus only imple_kern_launch_acq needs to
+# set.
 if buildEnv['PROTOCOL'] == 'GPU_RfO':
-    shader.impl_kern_boundary_sync = False
+    shader.impl_kern_launch_acq = False
+    shader.impl_kern_end_rel = False
+elif (buildEnv['PROTOCOL'] != 'GPU_VIPER' or
+        buildEnv['PROTOCOL'] != 'GPU_VIPER_Region' or
+        buildEnv['PROTOCOL'] != 'GPU_VIPER_Baseline'):
+    shader.impl_kern_launch_acq = True
+    shader.impl_kern_end_rel = False
 else:
-    shader.impl_kern_boundary_sync = True
+    shader.impl_kern_launch_acq = True
+    shader.impl_kern_end_rel = True
 
 # Switching off per-lane TLB by default
 per_lane = False
