@@ -1218,23 +1218,25 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
 
             schedule(mem_req_event, curTick() + req_tick_latency);
         } else {
-            assert(gpuDynInst->isEndOfKernel());
+          // kernel end release must be enabled
+          assert(shader->impl_kern_end_rel);
+          assert(gpuDynInst->isEndOfKernel());
 
-            req->setCacheCoherenceFlags(Request::RELEASE);
-            req->setReqInstSeqNum(gpuDynInst->seqNum());
-            req->setFlags(Request::KERNEL);
-            pkt = new Packet(req, MemCmd::MemSyncReq);
-            pkt->pushSenderState(
-               new ComputeUnit::DataPort::SenderState(gpuDynInst, 0, nullptr));
+          req->setCacheCoherenceFlags(Request::WB_L2);
+          req->setReqInstSeqNum(gpuDynInst->seqNum());
+          req->setFlags(Request::KERNEL);
+          pkt = new Packet(req, MemCmd::MemSyncReq);
+          pkt->pushSenderState(
+             new ComputeUnit::DataPort::SenderState(gpuDynInst, 0, nullptr));
 
-            EventFunctionWrapper *mem_req_event =
-              memPort[0]->createMemReqEvent(pkt);
+          EventFunctionWrapper *mem_req_event =
+            memPort[0]->createMemReqEvent(pkt);
 
-            DPRINTF(GPUPort, "CU%d: WF[%d][%d]: index %d, addr %#x scheduling "
-                    "a release\n", cu_id, gpuDynInst->simdId,
-                    gpuDynInst->wfSlotId, 0, pkt->req->getPaddr());
+          DPRINTF(GPUPort, "CU%d: WF[%d][%d]: index %d, addr %#x scheduling "
+                  "a release\n", cu_id, gpuDynInst->simdId,
+                  gpuDynInst->wfSlotId, 0, pkt->req->getPaddr());
 
-            schedule(mem_req_event, curTick() + req_tick_latency);
+          schedule(mem_req_event, curTick() + req_tick_latency);
         }
     } else {
         gpuDynInst->setRequestFlags(req);

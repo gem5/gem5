@@ -223,11 +223,11 @@ Shader::prepareFlush(GPUDynInstPtr gpuDynInst){
     // flush has never been started, performed only once at kernel end
     assert(_dispatcher.getOutstandingWbs(kernId) == 0);
 
-    // iterate all cus, managed by the shader, to perform flush.
-    for (int i_cu = 0; i_cu < n_cu; ++i_cu) {
-        _dispatcher.updateWbCounter(kernId, +1);
-        cuList[i_cu]->doFlush(gpuDynInst);
-    }
+    // the first cu, managed by the shader, performs flush operation,
+    // assuming that L2 cache is shared by all cus in the shader
+    int i_cu = 0;
+    _dispatcher.updateWbCounter(kernId, +1);
+    cuList[i_cu]->doFlush(gpuDynInst);
 }
 
 bool

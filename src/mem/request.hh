@@ -225,6 +225,9 @@ class Request
      * See the AMD GCN3 ISA Architecture Manual for more
      * details.
      *
+     * INV_L1: L1 cache invalidation
+     * WB_L2: L2 cache writeback
+     *
      * SLC: System Level Coherent. Accesses are forced to miss in
      *      the L2 cache and are coherent with system memory.
      *
@@ -237,6 +240,10 @@ class Request
      * between atomic return/no-return operations.
      */
     enum : CacheCoherenceFlagsType {
+        /** mem_sync_op flags */
+        INV_L1                  = 0x00000001,
+        WB_L2                   = 0x00000020,
+        /** user-policy flags */
         /** user-policy flags */
         SLC_BIT                 = 0x00000080,
         GLC_BIT                 = 0x00000100,
