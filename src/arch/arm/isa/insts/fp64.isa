@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2012-2013, 2016 ARM Limited
+// Copyright (c) 2012-2013, 2016-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -172,6 +172,34 @@ let {{
     decoder_output = ""
     exec_output = ""
 
+    halfIntConvCode = vfp64EnabledCheckCode + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint16_t cOp1  = AA64FpOp1P0_uw;
+        uint16_t cDest = %(op)s;
+        AA64FpDestP0_uw = cDest;
+        AA64FpDestP1_uw = 0;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+        FpscrExc = fpscr;
+    '''
+
+    halfIntConvCode2 = vfp64EnabledCheckCode + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint16_t cOp1  = AA64FpOp1P0_uw;
+        uint16_t cOp2  = AA64FpOp2P0_uw;
+        uint16_t cDest = %(op)s;
+        AA64FpDestP0_uw = cDest;
+        AA64FpDestP1_uw = 0;
+        AA64FpDestP2_uw = 0;
+        AA64FpDestP3_uw = 0;
+        FpscrExc = fpscr;
+    '''
+
+    halfBinOp = "binaryOp(fpscr, AA64FpOp1P0, AA64FpOp2P0," + \
+                "%(func)s, fpscr.fz, fpscr.dn, fpscr.rMode)"
+    halfUnaryOp = "unaryOp(fpscr, AA64FpOp1P0," + \
+                  "%(func)s, fpscr.fz, fpscr.rMode)"
+
     singleIntConvCode = vfp64EnabledCheckCode + '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         uint32_t cOp1  = AA64FpOp1P0_uw;
@@ -232,23 +260,23 @@ let {{
                 fpscr.fz, fpscr.rMode)
     '''
 
-    def buildTernaryFpOp(name, opClass, sOp, dOp):
+    def buildTernaryFpOp(name, opClass, hOp, sOp, dOp):
         global header_output, decoder_output, exec_output
-        for isDouble in True, False:
+        for suffix in "D", "S", "H":
             code = vfp64EnabledCheckCode + '''
                 FPSCR fpscr = (FPSCR) FpscrExc;
             '''
-            if isDouble:
+            if suffix == "H":
                 code += '''
-                    uint64_t cOp1 = AA64FpOp1P0_uw | (uint64_t)AA64FpOp1P1_uw << 32;
-                    uint64_t cOp2 = AA64FpOp2P0_uw | (uint64_t)AA64FpOp2P1_uw << 32;
-                    uint64_t cOp3 = AA64FpOp3P0_uw | (uint64_t)AA64FpOp3P1_uw << 32;
-                    uint64_t cDest;
-                ''' "cDest = " + dOp + ";" + '''
+                    uint16_t cOp1 = AA64FpOp1P0_uw;
+                    uint16_t cOp2 = AA64FpOp2P0_uw;
+                    uint16_t cOp3 = AA64FpOp3P0_uw;
+                    uint16_t cDest;
+                ''' "cDest = " + hOp + ";" + '''
                     AA64FpDestP0_uw = cDest;
-                    AA64FpDestP1_uw = cDest >> 32;
+                    AA64FpDestP1_uw = 0;
                 '''
-            else:
+            elif suffix == "S":
                 code += '''
                     uint32_t cOp1 = AA64FpOp1P0_uw;
                     uint32_t cOp2 = AA64FpOp2P0_uw;
@@ -258,13 +286,23 @@ let {{
                     AA64FpDestP0_uw = cDest;
                     AA64FpDestP1_uw = 0;
                 '''
+            elif suffix == "D":
+                code += '''
+                    uint64_t cOp1 = AA64FpOp1P0_uw | (uint64_t)AA64FpOp1P1_uw << 32;
+                    uint64_t cOp2 = AA64FpOp2P0_uw | (uint64_t)AA64FpOp2P1_uw << 32;
+                    uint64_t cOp3 = AA64FpOp3P0_uw | (uint64_t)AA64FpOp3P1_uw << 32;
+                    uint64_t cDest;
+                ''' "cDest = " + dOp + ";" + '''
+                    AA64FpDestP0_uw = cDest;
+                    AA64FpDestP1_uw = cDest >> 32;
+                '''
             code += '''
                 AA64FpDestP2_uw = 0;
                 AA64FpDestP3_uw = 0;
                 FpscrExc = fpscr;
             '''
 
-            iop = InstObjParams(name.lower(), name + ("D" if isDouble else "S"),
+            iop = InstObjParams(name.lower(), name + suffix,
                                 "FpRegRegRegRegOp",
                                 { "code": code, "op_class": opClass }, [])
 
@@ -273,20 +311,32 @@ let {{
             exec_output    += BasicExecute.subst(iop)
 
     buildTernaryFpOp("FMAdd", "FloatMultAccOp",
+                     "fplibMulAdd<uint16_t>(cOp3, cOp1, cOp2, fpscr)",
                      "fplibMulAdd<uint32_t>(cOp3, cOp1, cOp2, fpscr)",
                      "fplibMulAdd<uint64_t>(cOp3, cOp1, cOp2, fpscr)" )
     buildTernaryFpOp("FMSub", "FloatMultAccOp",
-                     "fplibMulAdd<uint32_t>(cOp3, fplibNeg<uint32_t>(cOp1), cOp2, fpscr)",
-                     "fplibMulAdd<uint64_t>(cOp3, fplibNeg<uint64_t>(cOp1), cOp2, fpscr)" )
+        "fplibMulAdd<uint16_t>(cOp3, fplibNeg<uint32_t>(cOp1), cOp2, fpscr)",
+        "fplibMulAdd<uint32_t>(cOp3, fplibNeg<uint32_t>(cOp1), cOp2, fpscr)",
+        "fplibMulAdd<uint64_t>(cOp3, fplibNeg<uint64_t>(cOp1), cOp2, fpscr)" )
     buildTernaryFpOp("FNMAdd", "FloatMultAccOp",
-                     "fplibMulAdd<uint32_t>(fplibNeg<uint32_t>(cOp3), fplibNeg<uint32_t>(cOp1), cOp2, fpscr)",
-                     "fplibMulAdd<uint64_t>(fplibNeg<uint64_t>(cOp3), fplibNeg<uint64_t>(cOp1), cOp2, fpscr)" )
+                     "fplibMulAdd<uint16_t>(fplibNeg<uint16_t>(cOp3), " +
+                     "fplibNeg<uint16_t>(cOp1), cOp2, fpscr)",
+                     "fplibMulAdd<uint32_t>(fplibNeg<uint32_t>(cOp3), " +
+                     "fplibNeg<uint32_t>(cOp1), cOp2, fpscr)",
+                     "fplibMulAdd<uint64_t>(fplibNeg<uint64_t>(cOp3), " +
+                     "fplibNeg<uint64_t>(cOp1), cOp2, fpscr)" )
     buildTernaryFpOp("FNMSub", "FloatMultAccOp",
-                     "fplibMulAdd<uint32_t>(fplibNeg<uint32_t>(cOp3), cOp1, cOp2, fpscr)",
-                     "fplibMulAdd<uint64_t>(fplibNeg<uint64_t>(cOp3), cOp1, cOp2, fpscr)" )
+        "fplibMulAdd<uint16_t>(fplibNeg<uint32_t>(cOp3), cOp1, cOp2, fpscr)",
+        "fplibMulAdd<uint32_t>(fplibNeg<uint32_t>(cOp3), cOp1, cOp2, fpscr)",
+        "fplibMulAdd<uint64_t>(fplibNeg<uint64_t>(cOp3), cOp1, cOp2, fpscr)" )
 
-    def buildBinFpOp(name, Name, base, opClass, singleOp, doubleOp):
+    def buildBinFpOp(name, Name, base, opClass, halfOp, singleOp, doubleOp):
         global header_output, decoder_output, exec_output
+
+        code = halfIntConvCode2 % { "op": halfOp }
+        hIop = InstObjParams(name, Name + "H", base,
+                { "code": code,
+                  "op_class": opClass }, [])
 
         code = singleIntConvCode2 % { "op": singleOp }
         sIop = InstObjParams(name, Name + "S", base,
@@ -301,44 +351,58 @@ let {{
         declareTempl     = eval(         base + "Declare");
         constructorTempl = eval("AA64" + base + "Constructor");
 
-        for iop in sIop, dIop:
+        for iop in hIop, sIop, dIop:
             header_output  += declareTempl.subst(iop)
             decoder_output += constructorTempl.subst(iop)
             exec_output    += BasicExecute.subst(iop)
 
     buildBinFpOp("fadd", "FAdd", "FpRegRegRegOp", "FloatAddOp",
+                 "fplibAdd<uint16_t>(cOp1, cOp2, fpscr)",
                  "fplibAdd<uint32_t>(cOp1, cOp2, fpscr)",
                  "fplibAdd<uint64_t>(cOp1, cOp2, fpscr)")
     buildBinFpOp("fsub", "FSub", "FpRegRegRegOp", "FloatAddOp",
+                 "fplibSub<uint16_t>(cOp1, cOp2, fpscr)",
                  "fplibSub<uint32_t>(cOp1, cOp2, fpscr)",
                  "fplibSub<uint64_t>(cOp1, cOp2, fpscr)")
     buildBinFpOp("fdiv", "FDiv", "FpRegRegRegOp", "FloatDivOp",
+                 "fplibDiv<uint16_t>(cOp1, cOp2, fpscr)",
                  "fplibDiv<uint32_t>(cOp1, cOp2, fpscr)",
                  "fplibDiv<uint64_t>(cOp1, cOp2, fpscr)")
     buildBinFpOp("fmul", "FMul", "FpRegRegRegOp", "FloatMultOp",
+                 "fplibMul<uint16_t>(cOp1, cOp2, fpscr)",
                  "fplibMul<uint32_t>(cOp1, cOp2, fpscr)",
                  "fplibMul<uint64_t>(cOp1, cOp2, fpscr)")
     buildBinFpOp("fnmul", "FNMul", "FpRegRegRegOp", "FloatMultOp",
+                 "fplibNeg<uint16_t>(fplibMul<uint32_t>(cOp1, cOp2, fpscr))",
                  "fplibNeg<uint32_t>(fplibMul<uint32_t>(cOp1, cOp2, fpscr))",
                  "fplibNeg<uint64_t>(fplibMul<uint64_t>(cOp1, cOp2, fpscr))")
     buildBinFpOp("fmin", "FMin", "FpRegRegRegOp", "FloatCmpOp",
+                 "fplibMin<uint16_t>(cOp1, cOp2, fpscr)",
                  "fplibMin<uint32_t>(cOp1, cOp2, fpscr)",
                  "fplibMin<uint64_t>(cOp1, cOp2, fpscr)")
     buildBinFpOp("fmax", "FMax", "FpRegRegRegOp", "FloatCmpOp",
+                 "fplibMax<uint16_t>(cOp1, cOp2, fpscr)",
                  "fplibMax<uint32_t>(cOp1, cOp2, fpscr)",
                  "fplibMax<uint64_t>(cOp1, cOp2, fpscr)")
     buildBinFpOp("fminnm", "FMinNM", "FpRegRegRegOp", "FloatCmpOp",
+                 "fplibMinNum<uint16_t>(cOp1, cOp2, fpscr)",
                  "fplibMinNum<uint32_t>(cOp1, cOp2, fpscr)",
                  "fplibMinNum<uint64_t>(cOp1, cOp2, fpscr)")
     buildBinFpOp("fmaxnm", "FMaxNM", "FpRegRegRegOp", "FloatCmpOp",
+                 "fplibMaxNum<uint16_t>(cOp1, cOp2, fpscr)",
                  "fplibMaxNum<uint32_t>(cOp1, cOp2, fpscr)",
                  "fplibMaxNum<uint64_t>(cOp1, cOp2, fpscr)")
 
-    def buildUnaryFpOp(name, Name, base, opClass, singleOp, doubleOp = None):
+    def buildUnaryFpOp(name, Name, base, opClass,
+                       halfOp, singleOp, doubleOp = None):
         if doubleOp is None:
             doubleOp = singleOp
         global header_output, decoder_output, exec_output
 
+        code = halfIntConvCode % { "op": halfOp }
+        hIop = InstObjParams(name, Name + "H", base,
+                { "code": code,
+                  "op_class": opClass }, [])
         code = singleIntConvCode % { "op": singleOp }
         sIop = InstObjParams(name, Name + "S", base,
                 { "code": code,
@@ -351,28 +415,33 @@ let {{
         declareTempl     = eval(         base + "Declare");
         constructorTempl = eval("AA64" + base + "Constructor");
 
-        for iop in sIop, dIop:
+        for iop in hIop, sIop, dIop:
             header_output  += declareTempl.subst(iop)
             decoder_output += constructorTempl.subst(iop)
             exec_output    += BasicExecute.subst(iop)
 
     buildUnaryFpOp("fsqrt", "FSqrt", "FpRegRegOp", "FloatSqrtOp",
-                   "fplibSqrt<uint32_t>(cOp1, fpscr)", "fplibSqrt<uint64_t>(cOp1, fpscr)")
+                   "fplibSqrt<uint16_t>(cOp1, fpscr)",
+                   "fplibSqrt<uint32_t>(cOp1, fpscr)",
+                   "fplibSqrt<uint64_t>(cOp1, fpscr)")
 
-    def buildSimpleUnaryFpOp(name, Name, base, opClass, singleOp,
+    def buildSimpleUnaryFpOp(name, Name, base, opClass, halfOp, singleOp,
                              doubleOp = None, isIntConv = True):
         if doubleOp is None:
             doubleOp = singleOp
         global header_output, decoder_output, exec_output
 
         if isIntConv:
+            hCode = halfIntConvCode
             sCode = singleIntConvCode
             dCode = doubleIntConvCode
         else:
+            hCode = halfCode
             sCode = singleCode
             dCode = doubleCode
 
-        for code, op, suffix in [[sCode, singleOp, "S"],
+        for code, op, suffix in [[hCode, halfOp, "H"],
+                                 [sCode, singleOp, "S"],
                                  [dCode, doubleOp, "D"]]:
             iop = InstObjParams(name, Name + suffix, base,
                 { "code": code % { "op": op },
@@ -386,30 +455,41 @@ let {{
             exec_output    += BasicExecute.subst(iop)
 
     buildSimpleUnaryFpOp("fneg", "FNeg", "FpRegRegOp", "FloatMiscOp",
-                         "fplibNeg<uint32_t>(cOp1)", "fplibNeg<uint64_t>(cOp1)")
+                         "fplibNeg<uint16_t>(cOp1)",
+                         "fplibNeg<uint32_t>(cOp1)",
+                         "fplibNeg<uint64_t>(cOp1)")
     buildSimpleUnaryFpOp("fabs", "FAbs", "FpRegRegOp", "FloatMiscOp",
-                         "fplibAbs<uint32_t>(cOp1)", "fplibAbs<uint64_t>(cOp1)")
+                         "fplibAbs<uint16_t>(cOp1)",
+                         "fplibAbs<uint32_t>(cOp1)",
+                         "fplibAbs<uint64_t>(cOp1)")
     buildSimpleUnaryFpOp("frintn", "FRIntN", "FpRegRegOp", "FloatMiscOp",
-                         "fplibRoundInt<uint32_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)",
-                         "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)")
+        "fplibRoundInt<uint16_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)",
+        "fplibRoundInt<uint32_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)",
+        "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)")
     buildSimpleUnaryFpOp("frintp", "FRIntP", "FpRegRegOp", "FloatMiscOp",
-                         "fplibRoundInt<uint32_t>(cOp1, FPRounding_POSINF, false, fpscr)",
-                         "fplibRoundInt<uint64_t>(cOp1, FPRounding_POSINF, false, fpscr)")
+        "fplibRoundInt<uint16_t>(cOp1, FPRounding_POSINF, false, fpscr)",
+        "fplibRoundInt<uint32_t>(cOp1, FPRounding_POSINF, false, fpscr)",
+        "fplibRoundInt<uint64_t>(cOp1, FPRounding_POSINF, false, fpscr)")
     buildSimpleUnaryFpOp("frintm", "FRIntM", "FpRegRegOp", "FloatMiscOp",
-                         "fplibRoundInt<uint32_t>(cOp1, FPRounding_NEGINF, false, fpscr)",
-                         "fplibRoundInt<uint64_t>(cOp1, FPRounding_NEGINF, false, fpscr)")
+        "fplibRoundInt<uint16_t>(cOp1, FPRounding_NEGINF, false, fpscr)",
+        "fplibRoundInt<uint32_t>(cOp1, FPRounding_NEGINF, false, fpscr)",
+        "fplibRoundInt<uint64_t>(cOp1, FPRounding_NEGINF, false, fpscr)")
     buildSimpleUnaryFpOp("frintz", "FRIntZ", "FpRegRegOp", "FloatMiscOp",
-                         "fplibRoundInt<uint32_t>(cOp1, FPRounding_ZERO, false, fpscr)",
-                         "fplibRoundInt<uint64_t>(cOp1, FPRounding_ZERO, false, fpscr)")
+        "fplibRoundInt<uint16_t>(cOp1, FPRounding_ZERO, false, fpscr)",
+        "fplibRoundInt<uint32_t>(cOp1, FPRounding_ZERO, false, fpscr)",
+        "fplibRoundInt<uint64_t>(cOp1, FPRounding_ZERO, false, fpscr)")
     buildSimpleUnaryFpOp("frinta", "FRIntA", "FpRegRegOp", "FloatMiscOp",
-                         "fplibRoundInt<uint32_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)",
-                         "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)")
+        "fplibRoundInt<uint16_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)",
+        "fplibRoundInt<uint32_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)",
+        "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)")
     buildSimpleUnaryFpOp("frinti", "FRIntI", "FpRegRegOp", "FloatMiscOp",
-                         "fplibRoundInt<uint32_t>(cOp1, FPCRRounding(fpscr), false, fpscr)",
-                         "fplibRoundInt<uint64_t>(cOp1, FPCRRounding(fpscr), false, fpscr)")
+        "fplibRoundInt<uint16_t>(cOp1, FPCRRounding(fpscr), false, fpscr)",
+        "fplibRoundInt<uint32_t>(cOp1, FPCRRounding(fpscr), false, fpscr)",
+        "fplibRoundInt<uint64_t>(cOp1, FPCRRounding(fpscr), false, fpscr)")
     buildSimpleUnaryFpOp("frintx", "FRIntX", "FpRegRegOp", "FloatMiscOp",
-                         "fplibRoundInt<uint32_t>(cOp1, FPCRRounding(fpscr), true, fpscr)",
-                         "fplibRoundInt<uint64_t>(cOp1, FPCRRounding(fpscr), true, fpscr)")
+        "fplibRoundInt<uint16_t>(cOp1, FPCRRounding(fpscr), true, fpscr)",
+        "fplibRoundInt<uint32_t>(cOp1, FPCRRounding(fpscr), true, fpscr)",
+        "fplibRoundInt<uint64_t>(cOp1, FPCRRounding(fpscr), true, fpscr)")
 }};
 
 let {{

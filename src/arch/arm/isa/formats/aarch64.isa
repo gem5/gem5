@@ -1637,12 +1637,14 @@ namespace Aarch64
                     if (type == 0) {
                         // FMOV S[d] = imm8<7>:NOT(imm8<6>):Replicate(imm8<6>,5)
                         //             :imm8<5:0>:Zeros(19)
-                        uint32_t imm = vfp_modified_imm(imm8, false);
+                        uint32_t imm = vfp_modified_imm(imm8,
+                                                        FpDataType::Fp32);
                         return new FmovImmS(machInst, rd, imm);
                     } else if (type == 1) {
                         // FMOV D[d] = imm8<7>:NOT(imm8<6>):Replicate(imm8<6>,8)
                         //             :imm8<5:0>:Zeros(48)
-                        uint64_t imm = vfp_modified_imm(imm8, true);
+                        uint64_t imm = vfp_modified_imm(imm8,
+                                                        FpDataType::Fp64);
                         return new FmovImmD(machInst, rd, imm);
                     } else {
                         return new Unknown64(machInst);
