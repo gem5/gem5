@@ -28,6 +28,7 @@
  */
 
 #include "base/logging.hh"
+#include "systemc/core/process.hh"
 #include "systemc/ext/core/sc_process_handle.hh"
 
 namespace sc_core
@@ -36,31 +37,18 @@ namespace sc_core
 const char *
 sc_unwind_exception::what() const throw()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
+    panic("%s for base class called.\n", __PRETTY_FUNCTION__);
 }
 
 bool
 sc_unwind_exception::is_reset() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    panic("%s for base class called.\n", __PRETTY_FUNCTION__);
 }
 
-sc_unwind_exception::sc_unwind_exception()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-sc_unwind_exception::sc_unwind_exception(const sc_unwind_exception &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-sc_unwind_exception::~sc_unwind_exception() throw()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+sc_unwind_exception::sc_unwind_exception() {}
+sc_unwind_exception::sc_unwind_exception(const sc_unwind_exception &) {}
+sc_unwind_exception::~sc_unwind_exception() throw() {}
 
 
 const char *
@@ -86,183 +74,198 @@ sc_get_curr_process_handle()
 }
 
 
-sc_process_handle::sc_process_handle()
+sc_process_handle::sc_process_handle() : _gem5_process(nullptr) {}
+
+sc_process_handle::sc_process_handle(const sc_process_handle &handle) :
+    _gem5_process(handle._gem5_process)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (_gem5_process)
+        _gem5_process->incref();
 }
 
-sc_process_handle::sc_process_handle(const sc_process_handle &)
+sc_process_handle::sc_process_handle(sc_object *obj) :
+    _gem5_process(dynamic_cast<::sc_gem5::Process *>(obj))
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-sc_process_handle::sc_process_handle(sc_object *)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (_gem5_process)
+        _gem5_process->incref();
 }
 
 sc_process_handle::~sc_process_handle()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (_gem5_process)
+        _gem5_process->decref();
 }
 
 
 bool
 sc_process_handle::valid() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return _gem5_process != nullptr;
 }
 
 
 sc_process_handle &
-sc_process_handle::operator = (const sc_process_handle &)
+sc_process_handle::operator = (const sc_process_handle &handle)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (_gem5_process)
+        _gem5_process->decref();
+    _gem5_process = handle._gem5_process;
+    if (_gem5_process)
+        _gem5_process->incref();
     return *this;
 }
 
 bool
-sc_process_handle::operator == (const sc_process_handle &) const
+sc_process_handle::operator == (const sc_process_handle &handle) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return true;
+    return _gem5_process && handle._gem5_process &&
+        (_gem5_process == handle._gem5_process);
 }
 
 bool
-sc_process_handle::operator != (const sc_process_handle &) const
+sc_process_handle::operator != (const sc_process_handle &handle) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return !(handle == *this);
 }
 
 bool
-sc_process_handle::operator < (const sc_process_handle &) const
+sc_process_handle::operator < (const sc_process_handle &other) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return _gem5_process < other._gem5_process;
 }
 
-bool
-sc_process_handle::swap(sc_process_handle &)
+void
+sc_process_handle::swap(sc_process_handle &handle)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    ::sc_gem5::Process *temp = handle._gem5_process;
+    handle._gem5_process = _gem5_process;
+    _gem5_process = temp;
 }
 
 
 const char *
 sc_process_handle::name() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
+    return _gem5_process ? _gem5_process->name() : "";
 }
 
 sc_curr_proc_kind
 sc_process_handle::proc_kind() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return SC_NO_PROC_;
+    return _gem5_process ? _gem5_process->procKind() : SC_NO_PROC_;
 }
 
 const std::vector<sc_object *> &
 sc_process_handle::get_child_objects() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const std::vector<sc_object *> *)nullptr;
+    static const std::vector<sc_object *> empty;
+    return _gem5_process ? _gem5_process->get_child_objects() : empty;
 }
 
 const std::vector<sc_event *> &
 sc_process_handle::get_child_events() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const std::vector<sc_event *> *)nullptr;
+    static const std::vector<sc_event *> empty;
+    return _gem5_process ? _gem5_process->get_child_events() : empty;
 }
 
 sc_object *
 sc_process_handle::get_parent_object() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (sc_object *)nullptr;
+    return _gem5_process ? _gem5_process->get_parent_object() : nullptr;
 }
 
 sc_object *
 sc_process_handle::get_process_object() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (sc_object *)nullptr;
+    return _gem5_process;
 }
 
 bool
 sc_process_handle::dynamic() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return _gem5_process ? _gem5_process->dynamic() : false;
 }
 
 bool
 sc_process_handle::terminated() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return _gem5_process ? _gem5_process->terminated() : false;
 }
 
 const sc_event &
 sc_process_handle::terminated_event() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(sc_event *)nullptr;
+    static sc_event non_event;
+    return _gem5_process ? _gem5_process->terminatedEvent() : non_event;
 }
 
 
 void
 sc_process_handle::suspend(sc_descendent_inclusion_info include_descendants)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (!_gem5_process)
+        return;
+    _gem5_process->suspend(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 void
 sc_process_handle::resume(sc_descendent_inclusion_info include_descendants)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (!_gem5_process)
+        return;
+    _gem5_process->resume(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 void
 sc_process_handle::disable(sc_descendent_inclusion_info include_descendants)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (!_gem5_process)
+        return;
+    _gem5_process->disable(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 void
 sc_process_handle::enable(sc_descendent_inclusion_info include_descendants)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (!_gem5_process)
+        return;
+    _gem5_process->enable(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 void
 sc_process_handle::kill(sc_descendent_inclusion_info include_descendants)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (!_gem5_process)
+        return;
+    _gem5_process->kill(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 void
 sc_process_handle::reset(sc_descendent_inclusion_info include_descendants)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (!_gem5_process)
+        return;
+    _gem5_process->reset(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 bool
 sc_process_handle::is_unwinding()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    if (!_gem5_process) {
+        //TODO This should generate a systemc style warning if the handle is
+        //invalid.
+        return false;
+    } else {
+        return _gem5_process->isUnwinding();
+    }
 }
 
 const sc_event &
 sc_process_handle::reset_event() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(sc_event *)nullptr;
+    static sc_event non_event;
+    return _gem5_process ? _gem5_process->resetEvent() : non_event;
 }
 
 
@@ -270,20 +273,18 @@ void
 sc_process_handle::sync_reset_on(
         sc_descendent_inclusion_info include_descendants)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (!_gem5_process)
+        return;
+    _gem5_process->syncResetOn(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 void
 sc_process_handle::sync_reset_off(
         sc_descendent_inclusion_info include_descendants)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-void
-sc_process_handle::warn_unimpl(const char *func)
-{
-    warn("%s not implemented.\n", func);
+    if (!_gem5_process)
+        return;
+    _gem5_process->syncResetOff(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 
@@ -291,14 +292,13 @@ sc_process_handle
 sc_get_current_process_handle()
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_process_handle();
+    return sc_process_handle(nullptr /* Current process pointer */);
 }
 
 bool
 sc_is_unwinding()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return sc_get_current_process_handle().is_unwinding();
 }
 
 bool sc_allow_process_control_corners;

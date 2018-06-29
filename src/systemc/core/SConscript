@@ -33,6 +33,7 @@ if env['USE_SYSTEMC']:
     Source('kernel.cc')
     Source('module.cc')
     Source('object.cc')
+    Source('process.cc')
 
     Source('sc_attr.cc')
     Source('sc_event.cc')

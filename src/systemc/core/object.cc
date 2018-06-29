@@ -100,7 +100,7 @@ Object::Object(sc_core::sc_object *sc_obj, const char *obj_name) :
     sc_core::sc_object *sc_p = parent;
     while (sc_p) {
         _name = std::string(sc_p->basename()) + std::string(".") + _name;
-        sc_p = get_parent_object();
+        sc_p = sc_p->get_parent_object();
     }
 }
 

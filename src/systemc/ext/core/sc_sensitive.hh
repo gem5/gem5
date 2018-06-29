@@ -30,12 +30,20 @@
 #ifndef __SYSTEMC_EXT_CORE_SC_SENSITIVE_HH__
 #define __SYSTEMC_EXT_CORE_SC_SENSITIVE_HH__
 
+namespace sc_gem5
+{
+
+class Process;
+
+} // namespace sc_gem5
+
 namespace sc_core
 {
 
 class sc_event;
 class sc_event_finder;
 class sc_interface;
+class sc_module;
 class sc_port_base;
 
 class sc_sensitive
@@ -45,6 +53,20 @@ class sc_sensitive
     sc_sensitive &operator << (const sc_interface &);
     sc_sensitive &operator << (const sc_port_base &);
     sc_sensitive &operator << (sc_event_finder &);
+
+    sc_sensitive &operator << (::sc_gem5::Process *p);
+
+  private:
+    friend class sc_module;
+
+    // Install all the static events which may not have been ready at
+    // construction time, like the default_event of the peer of an unbound
+    // port.
+    void finalize();
+
+    sc_sensitive();
+
+    ::sc_gem5::Process *currentProcess;
 };
 
 } // namespace sc_core

@@ -38,6 +38,40 @@ namespace sc_gem5
 
 class Process;
 
+struct ProcessFuncWrapper
+{
+    virtual void call() = 0;
+    virtual ~ProcessFuncWrapper() {}
+};
+
+template <typename T>
+struct ProcessMemberFuncWrapper : public ProcessFuncWrapper
+{
+    typedef void (T::*TFunc)();
+    T *t;
+    TFunc func;
+
+    ProcessMemberFuncWrapper(T *t, TFunc func) : t(t), func(func) {}
+
+    void call() override { (t->*func)(); }
+};
+
+struct ExceptionWrapperBase
+{
+    virtual void throw_it() = 0;
+};
+
+template <typename T>
+struct ExceptionWrapper : public ExceptionWrapperBase
+{
+    const T &t;
+    ExceptionWrapper(const T &t) : t(t) {}
+
+    void throw_it() { throw t; }
+};
+
+void throw_it_wrapper(Process *p, ExceptionWrapperBase &exc, bool inc_kids);
+
 } // namespace sc_gem5
 
 namespace sc_core
@@ -133,7 +167,7 @@ class sc_process_handle
     bool operator == (const sc_process_handle &) const;
     bool operator != (const sc_process_handle &) const;
     bool operator < (const sc_process_handle &) const;
-    bool swap(sc_process_handle &);
+    void swap(sc_process_handle &);
 
     const char *name() const;
     sc_curr_proc_kind proc_kind() const;
@@ -165,13 +199,15 @@ class sc_process_handle
     void sync_reset_off(sc_descendent_inclusion_info include_descendants=
                         SC_NO_DESCENDANTS);
 
-    void warn_unimpl(const char *func);
     template <typename T>
-    void throw_it(const T &user_defined_exception,
-                  sc_descendent_inclusion_info include_descendants=
-                  SC_NO_DESCENDANTS)
+    void
+    throw_it(const T &user_defined_exception,
+             sc_descendent_inclusion_info include_descendants=
+             SC_NO_DESCENDANTS)
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        ::sc_gem5::ExceptionWrapper<T> exc(user_defined_exception);
+        ::sc_gem5::throw_it_wrapper(_gem5_process, exc,
+                include_descendants == SC_INCLUDE_DESCENDANTS);
     }
 };
 

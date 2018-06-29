@@ -33,6 +33,8 @@
 namespace sc_core
 {
 
+sc_sensitive::sc_sensitive() : currentProcess(nullptr) {}
+
 sc_sensitive &
 sc_sensitive::operator << (const sc_event &)
 {
@@ -58,6 +60,13 @@ sc_sensitive &
 sc_sensitive::operator << (sc_event_finder &)
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    return *this;
+}
+
+sc_sensitive &
+sc_sensitive::operator << (::sc_gem5::Process *p)
+{
+    currentProcess = p;
     return *this;
 }
 

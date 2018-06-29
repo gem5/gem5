@@ -47,6 +47,12 @@ namespace sc_gem5
 {
 
 class Module;
+class Process;
+struct ProcessFuncWrapper;
+
+Process *newMethodProcess(const char *name, ProcessFuncWrapper *func);
+Process *newThreadProcess(const char *name, ProcessFuncWrapper *func);
+Process *newCThreadProcess(const char *name, ProcessFuncWrapper *func);
 
 } // namespace sc_gem5
 
@@ -271,9 +277,34 @@ bool timed_out();
 
 #define SC_HAS_PROCESS(name) typedef name SC_CURRENT_USER_MODULE
 
-#define SC_METHOD(name) /* Implementation defined */
-#define SC_THREAD(name) /* Implementation defined */
-#define SC_CTHREAD(name, clk) /* Implementation defined */
+#define SC_METHOD(name) \
+    { \
+        ::sc_gem5::Process *p = \
+            ::sc_gem5::newMethodProcess( \
+                #name, new ::sc_gem5::ProcessMemberFuncWrapper< \
+                    SC_CURRENT_USER_MODULE>(this, \
+                        &SC_CURRENT_USER_MODULE::name)); \
+        this->sensitive << p; \
+    }
+#define SC_THREAD(name) \
+    { \
+        ::sc_gem5::Process *p = \
+            ::sc_gem5::newThreadProcess( \
+                #name, new ::sc_gem5::ProcessMemberFuncWrapper< \
+                    SC_CURRENT_USER_MODULE>(this, \
+                        &SC_CURRENT_USER_MODULE::name)); \
+        this->sensitive << p; \
+    }
+#define SC_CTHREAD(name, clk) \
+    { \
+        ::sc_gem5::Process *p = \
+            ::sc_gem5::newCThreadProcess( \
+                #name, new ::sc_gem5::ProcessMemberFuncWrapper< \
+                    SC_CURRENT_USER_MODULE>(this, \
+                        &SC_CURRENT_USER_MODULE::name)); \
+        this->sensitive << p; \
+        this->sensitive << clk; \
+    }
 
 // Nonstandard
 // Documentation for this is very scarce, but it looks like it's supposed to

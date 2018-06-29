@@ -32,8 +32,32 @@
 
 #include "base/logging.hh"
 #include "systemc/core/module.hh"
+#include "systemc/core/process.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
+
+namespace sc_gem5
+{
+
+Process *
+newMethodProcess(const char *name, ProcessFuncWrapper *func)
+{
+    return new Method(name, func);
+}
+
+Process *
+newThreadProcess(const char *name, ProcessFuncWrapper *func)
+{
+    return new Thread(name, func);
+}
+
+Process *
+newCThreadProcess(const char *name, ProcessFuncWrapper *func)
+{
+    return new CThread(name, func);
+}
+
+} // namespace sc_gem5
 
 namespace sc_core
 {
@@ -134,7 +158,7 @@ sc_module::get_child_events() const
 }
 
 sc_module::sc_module() :
-    sc_object(sc_gem5::currentModule()->name()),
+    sc_object(sc_gem5::newModule()->name()),
     _gem5_module(sc_gem5::currentModule())
 {}
 
