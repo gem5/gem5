@@ -36,9 +36,9 @@
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/wavefront.hh"
 
-FetchStage::FetchStage(const ComputeUnitParams* p, ComputeUnit *cu)
+FetchStage::FetchStage(const ComputeUnitParams* p, ComputeUnit &cu)
     : numVectorALUs(p->num_SIMDs), computeUnit(cu),
-      _name(cu->name() + ".FetchStage")
+      _name(cu.name() + ".FetchStage")
 {
     for (int j = 0; j < numVectorALUs; ++j) {
         FetchUnit newFetchUnit(p, cu);
@@ -55,7 +55,7 @@ void
 FetchStage::init()
 {
     for (int j = 0; j < numVectorALUs; ++j) {
-        _fetchUnit[j].bindWaveList(&computeUnit->wfList[j]);
+        _fetchUnit[j].bindWaveList(&computeUnit.wfList[j]);
         _fetchUnit[j].init();
     }
 }

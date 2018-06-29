@@ -45,8 +45,8 @@
 #include "params/ComputeUnit.hh"
 
 ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams *p,
-                                           ComputeUnit *cu)
-    : computeUnit(cu), _name(cu->name() + ".ScoreboardCheckStage")
+                                           ComputeUnit &cu)
+    : computeUnit(cu), _name(cu.name() + ".ScoreboardCheckStage")
 {
 }
 
@@ -58,8 +58,8 @@ ScoreboardCheckStage::~ScoreboardCheckStage()
 void
 ScoreboardCheckStage::init()
 {
-    for (int unitId = 0; unitId < computeUnit->numExeUnits(); ++unitId) {
-        readyList.push_back(&computeUnit->readyList[unitId]);
+    for (int unitId = 0; unitId < computeUnit.numExeUnits(); ++unitId) {
+        readyList.push_back(&computeUnit.readyList[unitId]);
     }
 }
 
@@ -104,7 +104,7 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
     if (w->getStatus() == Wavefront::S_BARRIER) {
         assert(w->hasBarrier());
         int bar_id = w->barrierId();
-        if (!computeUnit->allAtBarrier(bar_id)) {
+        if (!computeUnit.allAtBarrier(bar_id)) {
             DPRINTF(GPUSync, "CU[%d] WF[%d][%d] Wave[%d] - Stalled at "
                     "barrier Id%d. %d waves remain.\n", w->computeUnit->cu_id,
                     w->simdId, w->wfSlotId, w->wfDynId, bar_id,
@@ -116,8 +116,8 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
         DPRINTF(GPUSync, "CU[%d] WF[%d][%d] Wave[%d] - All waves at barrier "
                 "Id%d. Resetting barrier resources.\n", w->computeUnit->cu_id,
                 w->simdId, w->wfSlotId, w->wfDynId, bar_id);
-        computeUnit->resetBarrier(bar_id);
-        computeUnit->releaseWFsFromBarrier(bar_id);
+        computeUnit.resetBarrier(bar_id);
+        computeUnit.releaseWFsFromBarrier(bar_id);
     }
 
     // Check WF status: it has to be running
@@ -154,17 +154,17 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
     }
 
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Checking Ready for Inst : %s\n",
-            computeUnit->cu_id, w->simdId, w->wfSlotId, ii->disassemble());
+            computeUnit.cu_id, w->simdId, w->wfSlotId, ii->disassemble());
 
     // Non-scalar (i.e., vector) instructions may use VGPRs
     if (!ii->isScalar()) {
-        if (!computeUnit->vrf[w->simdId]->operandsReady(w, ii)) {
+        if (!computeUnit.vrf[w->simdId]->operandsReady(w, ii)) {
             *rdyStatus = NRDY_VGPR_NRDY;
             return false;
         }
     }
     // Scalar and non-scalar instructions may use SGPR
-    if (!computeUnit->srf[w->simdId]->operandsReady(w, ii)) {
+    if (!computeUnit.srf[w->simdId]->operandsReady(w, ii)) {
         *rdyStatus = NRDY_SGPR_NRDY;
         return false;
     }
@@ -190,7 +190,7 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
             return false;
         }
     }
-    DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Ready Inst : %s\n", computeUnit->cu_id,
+    DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Ready Inst : %s\n", computeUnit.cu_id,
             w->simdId, w->wfSlotId, ii->disassemble());
     *exeResType = mapWaveToExeUnit(w);
     *rdyStatus = INST_RDY;
@@ -236,7 +236,7 @@ ScoreboardCheckStage::mapWaveToExeUnit(Wavefront *w)
         }
     }
     panic("%s: unmapped to an execution resource", ii->disassemble());
-    return computeUnit->numExeUnits();
+    return computeUnit.numExeUnits();
 }
 
 void
@@ -244,7 +244,7 @@ ScoreboardCheckStage::exec()
 {
     // reset the ready list for all execution units; it will be
     // constructed every cycle since resource availability may change
-    for (int unitId = 0; unitId < computeUnit->numExeUnits(); ++unitId) {
+    for (int unitId = 0; unitId < computeUnit.numExeUnits(); ++unitId) {
         // Reset wavefront pointers to nullptr so clear() on the vector
         // does not accidentally destruct the wavefront object
         for (int i = 0; i < readyList[unitId]->size(); i++) {
@@ -253,10 +253,10 @@ ScoreboardCheckStage::exec()
         readyList[unitId]->clear();
     }
     // iterate over all WF slots across all vector ALUs
-    for (int simdId = 0; simdId < computeUnit->numVectorALUs; ++simdId) {
-        for (int wfSlot = 0; wfSlot < computeUnit->shader->n_wf; ++wfSlot) {
+    for (int simdId = 0; simdId < computeUnit.numVectorALUs; ++simdId) {
+        for (int wfSlot = 0; wfSlot < computeUnit.shader->n_wf; ++wfSlot) {
             // reset the ready status of each wavefront
-            Wavefront *curWave = computeUnit->wfList[simdId][wfSlot];
+            Wavefront *curWave = computeUnit.wfList[simdId][wfSlot];
             nonrdytype_e rdyStatus = NRDY_ILLEGAL;
             int exeResType = -1;
             // check WF readiness: If the WF's oldest

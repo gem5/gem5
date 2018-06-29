@@ -49,7 +49,7 @@ class Wavefront;
 class FetchUnit
 {
   public:
-    FetchUnit(const ComputeUnitParams* p, ComputeUnit *cu);
+    FetchUnit(const ComputeUnitParams* p, ComputeUnit &cu);
     ~FetchUnit();
     void init();
     void exec();
@@ -234,7 +234,7 @@ class FetchUnit
     };
 
     bool timingSim;
-    ComputeUnit *computeUnit;
+    ComputeUnit &computeUnit;
     TheGpuISA::Decoder decoder;
 
     // Fetch scheduler; Selects one wave from

@@ -70,7 +70,7 @@ class ScoreboardCheckStage
         NRDY_CONDITIONS
     };
 
-    ScoreboardCheckStage(const ComputeUnitParams* p, ComputeUnit *cu);
+    ScoreboardCheckStage(const ComputeUnitParams* p, ComputeUnit &cu);
     ~ScoreboardCheckStage();
     void init();
     void exec();
@@ -84,7 +84,7 @@ class ScoreboardCheckStage
     int mapWaveToExeUnit(Wavefront *w);
     bool ready(Wavefront *w, nonrdytype_e *rdyStatus,
                int *exeResType, int wfSlot);
-    ComputeUnit *computeUnit;
+    ComputeUnit &computeUnit;
 
     // List of waves which are ready to be scheduled.
     // Each execution resource has a ready list
@@ -93,7 +93,7 @@ class ScoreboardCheckStage
     // Stats
     Stats::Vector stallCycles;
 
-    std::string _name;
+    const std::string _name;
 };
 
 #endif // __SCOREBOARD_CHECK_STAGE_HH__

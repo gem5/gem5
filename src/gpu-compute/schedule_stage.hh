@@ -57,13 +57,13 @@ struct ComputeUnitParams;
 class ScheduleStage
 {
   public:
-    ScheduleStage(const ComputeUnitParams *p, ComputeUnit *cu);
+    ScheduleStage(const ComputeUnitParams *p, ComputeUnit &cu);
     ~ScheduleStage();
     void init();
     void exec();
 
     // Stats related variables and methods
-    std::string name() { return _name; }
+    const std::string& name() const { return _name; }
     enum SchNonRdyType {
         SCH_SCALAR_ALU_NRDY,
         SCH_VECTOR_ALU_NRDY,
@@ -114,7 +114,7 @@ class ScheduleStage
     };
 
   private:
-    ComputeUnit *computeUnit;
+    ComputeUnit &computeUnit;
     // Each execution resource will have its own
     // scheduler and a dispatch list
     std::vector<Scheduler> scheduler;
@@ -168,7 +168,7 @@ class ScheduleStage
     // to dispatchList
     Stats::Vector dispNrdyStalls;
 
-    std::string _name;
+    const std::string _name;
 
     // called by exec() to add a wave to schList if the RFs can support it
     bool addToSchList(int exeType, Wavefront *w);

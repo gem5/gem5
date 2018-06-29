@@ -41,10 +41,10 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
-ExecStage::ExecStage(const ComputeUnitParams *p, ComputeUnit *cu)
+ExecStage::ExecStage(const ComputeUnitParams *p, ComputeUnit &cu)
     : computeUnit(cu), lastTimeInstExecuted(false),
       thisTimeInstExecuted(false), instrExecuted (false),
-      executionResourcesUsed(0), _name(cu->name() + ".ExecStage")
+      executionResourcesUsed(0), _name(cu.name() + ".ExecStage")
 
 {
     numTransActiveIdle = 0;
@@ -54,7 +54,7 @@ ExecStage::ExecStage(const ComputeUnitParams *p, ComputeUnit *cu)
 void
 ExecStage::init()
 {
-    dispatchList = &computeUnit->dispatchList;
+    dispatchList = &computeUnit.dispatchList;
     idle_dur = 0;
 }
 
@@ -127,7 +127,7 @@ ExecStage::dumpDispList()
 {
     std::stringstream ss;
     bool empty = true;
-    for (int i = 0; i < computeUnit->numExeUnits(); i++) {
+    for (int i = 0; i < computeUnit.numExeUnits(); i++) {
         DISPATCH_STATUS s = dispatchList->at(i).second;
         ss << i << ": " << dispStatusToStr(s);
         if (s != EMPTY) {
@@ -151,7 +151,7 @@ ExecStage::exec()
     if (Debug::GPUSched) {
         dumpDispList();
     }
-    for (int unitId = 0; unitId < computeUnit->numExeUnits(); ++unitId) {
+    for (int unitId = 0; unitId < computeUnit.numExeUnits(); ++unitId) {
         DISPATCH_STATUS s = dispatchList->at(unitId).second;
         switch (s) {
         case EMPTY:
@@ -168,7 +168,7 @@ ExecStage::exec()
                     (w->instructionBuffer.front())->disassemble());
             DPRINTF(GPUSched, "dispatchList[%d] EXREADY->EMPTY\n", unitId);
             dispatchList->at(unitId).first->exec();
-            (computeUnit->scheduleStage).deleteFromSch(w);
+            (computeUnit.scheduleStage).deleteFromSch(w);
             dispatchList->at(unitId).second = EMPTY;
             dispatchList->at(unitId).first->freeResources();
             dispatchList->at(unitId).first = nullptr;
@@ -208,7 +208,7 @@ ExecStage::regStats()
         ;
 
     spc
-        .init(0, computeUnit->numExeUnits(), 1)
+        .init(0, computeUnit.numExeUnits(), 1)
         .name(name() + ".spc")
         .desc("Execution units active per cycle (Exec unit=SIMD,MemPipe)")
         ;
@@ -220,26 +220,26 @@ ExecStage::regStats()
         ;
 
     numCyclesWithInstrTypeIssued
-        .init(computeUnit->numExeUnits())
+        .init(computeUnit.numExeUnits())
         .name(name() + ".num_cycles_issue_exec_rsrc")
         .desc("Number of cycles at least one instruction issued to "
               "execution resource type")
         ;
 
     numCyclesWithNoInstrTypeIssued
-        .init(computeUnit->numExeUnits())
+        .init(computeUnit.numExeUnits())
        .name(name() + ".num_cycles_no_issue_exec_rsrc")
        .desc("Number of clks no instructions issued to execution "
              "resource type")
        ;
 
     int c = 0;
-    for (int i = 0; i < computeUnit->numVectorALUs; i++,c++) {
+    for (int i = 0; i < computeUnit.numVectorALUs; i++,c++) {
         std::string s = "VectorALU" + std::to_string(i);
         numCyclesWithNoInstrTypeIssued.subname(c, s);
         numCyclesWithInstrTypeIssued.subname(c, s);
     }
-    for (int i = 0; i < computeUnit->numScalarALUs; i++,c++) {
+    for (int i = 0; i < computeUnit.numScalarALUs; i++,c++) {
         std::string s = "ScalarALU" + std::to_string(i);
         numCyclesWithNoInstrTypeIssued.subname(c, s);
         numCyclesWithInstrTypeIssued.subname(c, s);

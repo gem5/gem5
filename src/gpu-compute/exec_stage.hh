@@ -69,7 +69,7 @@ enum DISPATCH_STATUS
 class ExecStage
 {
   public:
-    ExecStage(const ComputeUnitParams* p, ComputeUnit *cu);
+    ExecStage(const ComputeUnitParams* p, ComputeUnit &cu);
     ~ExecStage() { }
     void init();
     void exec();
@@ -77,7 +77,7 @@ class ExecStage
     std::string dispStatusToStr(int j);
     void dumpDispList();
 
-    std::string name() { return _name; }
+    const std::string& name() const { return _name; }
     void regStats();
     // number of idle cycles
     Stats::Scalar numCyclesWithNoIssue;
@@ -96,7 +96,7 @@ class ExecStage
   private:
     void collectStatistics(enum STAT_STATUS stage, int unitId);
     void initStatistics();
-    ComputeUnit *computeUnit;
+    ComputeUnit &computeUnit;
 
     // List of waves which will be dispatched to
     // each execution resource. A FILLED implies
@@ -115,7 +115,7 @@ class ExecStage
     Stats::Distribution idleDur;
     int executionResourcesUsed;
     uint64_t idle_dur;
-    std::string _name;
+    const std::string _name;
 };
 
 #endif // __EXEC_STAGE_HH__

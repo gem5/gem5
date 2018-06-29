@@ -45,7 +45,7 @@
 
 uint32_t FetchUnit::globalFetchUnitID;
 
-FetchUnit::FetchUnit(const ComputeUnitParams *p, ComputeUnit *cu)
+FetchUnit::FetchUnit(const ComputeUnitParams *p, ComputeUnit &cu)
     : timingSim(true), computeUnit(cu), fetchScheduler(p),
       waveList(nullptr), fetchDepth(p->fetch_depth)
 {
@@ -60,16 +60,16 @@ FetchUnit::~FetchUnit()
 void
 FetchUnit::init()
 {
-    timingSim = computeUnit->shader->timingSim;
+    timingSim = computeUnit.shader->timingSim;
     fetchQueue.clear();
-    fetchStatusQueue.resize(computeUnit->shader->n_wf);
-    fetchBuf.resize(computeUnit->shader->n_wf, FetchBufDesc());
+    fetchStatusQueue.resize(computeUnit.shader->n_wf);
+    fetchBuf.resize(computeUnit.shader->n_wf, FetchBufDesc());
 
-    for (int i = 0; i < computeUnit->shader->n_wf; ++i) {
+    for (int i = 0; i < computeUnit.shader->n_wf; ++i) {
         Wavefront *wf = waveList->at(i);
         assert(wf->wfSlotId == i);
         fetchStatusQueue[i] = std::make_pair(wf, false);
-        fetchBuf[i].allocateBuf(fetchDepth, computeUnit->cacheLineSize(), wf);
+        fetchBuf[i].allocateBuf(fetchDepth, computeUnit.cacheLineSize(), wf);
         fetchBuf[i].decoder(&decoder);
     }
 
@@ -97,7 +97,7 @@ FetchUnit::exec()
     }
 
     // re-evaluate waves which are marked as not ready for fetch
-    for (int j = 0; j < computeUnit->shader->n_wf; ++j) {
+    for (int j = 0; j < computeUnit.shader->n_wf; ++j) {
         // Following code assumes 64-bit opertaion and all insts are
         // represented by 64-bit pointers to inst objects.
         Wavefront *curWave = fetchStatusQueue[j].first;
@@ -143,7 +143,7 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
 
     // this should already be aligned to a cache line
     assert(vaddr == makeLineAddress(vaddr,
-           computeUnit->getCacheLineBits()));
+           computeUnit.getCacheLineBits()));
 
     // shouldn't be fetching a line that is already buffered
     assert(!fetchBuf.at(wavefront->wfSlotId).pcBuffered(vaddr));
@@ -151,16 +151,16 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
     fetchBuf.at(wavefront->wfSlotId).reserveBuf(vaddr);
 
     DPRINTF(GPUFetch, "CU%d: WF[%d][%d]: Id%d: Initiate fetch "
-            "from pc: %d %#x\n", computeUnit->cu_id, wavefront->simdId,
+            "from pc: %d %#x\n", computeUnit.cu_id, wavefront->simdId,
             wavefront->wfSlotId, wavefront->wfDynId, wavefront->pc(), vaddr);
 
     DPRINTF(GPUTLB, "CU%d: WF[%d][%d]: Initiating fetch translation: %#x\n",
-            computeUnit->cu_id, wavefront->simdId, wavefront->wfSlotId, vaddr);
+            computeUnit.cu_id, wavefront->simdId, wavefront->wfSlotId, vaddr);
 
     // set up virtual request
     RequestPtr req = std::make_shared<Request>(
-        vaddr, computeUnit->cacheLineSize(), Request::INST_FETCH,
-        computeUnit->masterId(), 0, 0, nullptr);
+        vaddr, computeUnit.cacheLineSize(), Request::INST_FETCH,
+        computeUnit.masterId(), 0, 0, nullptr);
 
     PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
 
@@ -171,36 +171,36 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
         // Sender State needed by TLB hierarchy
         pkt->senderState =
             new TheISA::GpuTLB::TranslationState(BaseTLB::Execute,
-                                                 computeUnit->shader->gpuTc,
+                                                 computeUnit.shader->gpuTc,
                                                  false, pkt->senderState);
 
-        if (computeUnit->sqcTLBPort->isStalled()) {
-            assert(computeUnit->sqcTLBPort->retries.size() > 0);
+        if (computeUnit.sqcTLBPort->isStalled()) {
+            assert(computeUnit.sqcTLBPort->retries.size() > 0);
 
             DPRINTF(GPUTLB, "Failed to send TLB req for FETCH addr %#x\n",
                     vaddr);
 
-            computeUnit->sqcTLBPort->retries.push_back(pkt);
-        } else if (!computeUnit->sqcTLBPort->sendTimingReq(pkt)) {
+            computeUnit.sqcTLBPort->retries.push_back(pkt);
+        } else if (!computeUnit.sqcTLBPort->sendTimingReq(pkt)) {
             // Stall the data port;
             // No more packet is issued till
             // ruby indicates resources are freed by
             // a recvReqRetry() call back on this port.
-            computeUnit->sqcTLBPort->stallPort();
+            computeUnit.sqcTLBPort->stallPort();
 
             DPRINTF(GPUTLB, "Failed to send TLB req for FETCH addr %#x\n",
                     vaddr);
 
-            computeUnit->sqcTLBPort->retries.push_back(pkt);
+            computeUnit.sqcTLBPort->retries.push_back(pkt);
         } else {
             DPRINTF(GPUTLB, "sent FETCH translation request for %#x\n", vaddr);
         }
     } else {
         pkt->senderState =
             new TheISA::GpuTLB::TranslationState(BaseTLB::Execute,
-                                                 computeUnit->shader->gpuTc);
+                                                 computeUnit.shader->gpuTc);
 
-        computeUnit->sqcTLBPort->sendFunctional(pkt);
+        computeUnit.sqcTLBPort->sendFunctional(pkt);
 
         TheISA::GpuTLB::TranslationState *sender_state =
              safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
@@ -220,7 +220,7 @@ FetchUnit::fetch(PacketPtr pkt, Wavefront *wavefront)
     assert(pkt->req->hasSize());
 
     DPRINTF(GPUFetch, "CU%d: WF[%d][%d]: Fetch Access: %#x\n",
-            computeUnit->cu_id, wavefront->simdId, wavefront->wfSlotId,
+            computeUnit.cu_id, wavefront->simdId, wavefront->wfSlotId,
             pkt->req->getPaddr());
 
     /**
@@ -257,20 +257,20 @@ FetchUnit::fetch(PacketPtr pkt, Wavefront *wavefront)
     if (timingSim) {
         // translation is done. Send the appropriate timing memory request.
 
-        if (!computeUnit->sqcPort->sendTimingReq(pkt)) {
-            computeUnit->sqcPort->retries.push_back(std::make_pair(pkt,
+        if (!computeUnit.sqcPort->sendTimingReq(pkt)) {
+            computeUnit.sqcPort->retries.push_back(std::make_pair(pkt,
                                                                    wavefront));
 
             DPRINTF(GPUPort, "CU%d: WF[%d][%d]: Fetch addr %#x failed!\n",
-                    computeUnit->cu_id, wavefront->simdId, wavefront->wfSlotId,
+                    computeUnit.cu_id, wavefront->simdId, wavefront->wfSlotId,
                     pkt->req->getPaddr());
         } else {
             DPRINTF(GPUPort, "CU%d: WF[%d][%d]: Fetch addr %#x sent!\n",
-                    computeUnit->cu_id, wavefront->simdId, wavefront->wfSlotId,
+                    computeUnit.cu_id, wavefront->simdId, wavefront->wfSlotId,
                     pkt->req->getPaddr());
         }
     } else {
-        computeUnit->sqcPort->sendFunctional(pkt);
+        computeUnit.sqcPort->sendFunctional(pkt);
         processFetchReturn(pkt);
     }
 }
@@ -284,7 +284,7 @@ FetchUnit::processFetchReturn(PacketPtr pkt)
     Wavefront *wavefront = sender_state->wavefront;
 
     DPRINTF(GPUFetch, "CU%d: WF[%d][%d]: Fetch addr %#x returned "
-            "%d bytes!\n", computeUnit->cu_id, wavefront->simdId,
+            "%d bytes!\n", computeUnit.cu_id, wavefront->simdId,
             wavefront->wfSlotId, pkt->req->getPaddr(), pkt->req->getSize());
 
     if (wavefront->dropFetch) {
@@ -553,7 +553,7 @@ FetchUnit::FetchBufDesc::decodeInsts()
                 = std::make_shared<GPUDynInst>(wavefront->computeUnit,
                                                wavefront, gpu_static_inst,
                                                wavefront->computeUnit->
-                                                   getAndIncSeqNum());
+                                                getAndIncSeqNum());
             wavefront->instructionBuffer.push_back(gpu_dyn_inst);
 
             DPRINTF(GPUFetch, "WF[%d][%d]: Id%ld decoded %s (%d bytes). "

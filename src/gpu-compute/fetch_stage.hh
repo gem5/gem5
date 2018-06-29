@@ -51,7 +51,7 @@ class Wavefront;
 class FetchStage
 {
   public:
-    FetchStage(const ComputeUnitParams* p, ComputeUnit *cu);
+    FetchStage(const ComputeUnitParams* p, ComputeUnit &cu);
     ~FetchStage();
     void init();
     void exec();
@@ -59,19 +59,19 @@ class FetchStage
     void fetch(PacketPtr pkt, Wavefront *wave);
 
     // Stats related variables and methods
-    std::string name() { return _name; }
+    const std::string& name() const { return _name; }
     void regStats();
     Stats::Distribution instFetchInstReturned;
     FetchUnit &fetchUnit(int simdId) { return _fetchUnit.at(simdId); }
 
   private:
     int numVectorALUs;
-    ComputeUnit *computeUnit;
+    ComputeUnit &computeUnit;
 
     // List of fetch units. A fetch unit is
     // instantiated per VALU/SIMD
     std::vector<FetchUnit> _fetchUnit;
-    std::string _name;
+    const std::string _name;
 };
 
 #endif // __FETCH_STAGE_HH__

@@ -56,7 +56,7 @@ class ComputeUnit;
 class GlobalMemPipeline
 {
   public:
-    GlobalMemPipeline(const ComputeUnitParams *p, ComputeUnit *cu);
+    GlobalMemPipeline(const ComputeUnitParams *p, ComputeUnit &cu);
     void init();
     void exec();
 
@@ -108,8 +108,8 @@ class GlobalMemPipeline
     void acqCoalescerToken(GPUDynInstPtr mp);
 
   private:
-    ComputeUnit *computeUnit;
-    std::string _name;
+    ComputeUnit &computeUnit;
+    const std::string _name;
     int gmQueueSize;
     int maxWaveRequests;
 

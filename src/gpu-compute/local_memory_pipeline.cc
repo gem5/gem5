@@ -41,8 +41,8 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
-LocalMemPipeline::LocalMemPipeline(const ComputeUnitParams* p, ComputeUnit *cu)
-    : computeUnit(cu), _name(cu->name() + ".LocalMemPipeline"),
+LocalMemPipeline::LocalMemPipeline(const ComputeUnitParams* p, ComputeUnit &cu)
+    : computeUnit(cu), _name(cu.name() + ".LocalMemPipeline"),
       lmQueueSize(p->local_mem_queue_size)
 {
 }
@@ -66,9 +66,9 @@ LocalMemPipeline::exec()
     }
 
     if (!lmReturnedRequests.empty() && m->latency.rdy() && accessVrf &&
-        computeUnit->locMemToVrfBus.rdy()
-        && (computeUnit->shader->coissue_return
-        || computeUnit->vectorSharedMemUnit.rdy())) {
+        computeUnit.locMemToVrfBus.rdy()
+        && (computeUnit.shader->coissue_return
+        || computeUnit.vectorSharedMemUnit.rdy())) {
 
         lmReturnedRequests.pop();
         w = m->wavefront();
@@ -83,21 +83,21 @@ LocalMemPipeline::exec()
         }
 
         // Decrement outstanding request count
-        computeUnit->shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
+        computeUnit.shader->ScheduleAdd(&w->outstandingReqs, m->time, -1);
 
         if (m->isStore() || m->isAtomic()) {
-            computeUnit->shader->ScheduleAdd(&w->outstandingReqsWrLm,
+            computeUnit.shader->ScheduleAdd(&w->outstandingReqsWrLm,
                                              m->time, -1);
         }
 
         if (m->isLoad() || m->isAtomic()) {
-            computeUnit->shader->ScheduleAdd(&w->outstandingReqsRdLm,
+            computeUnit.shader->ScheduleAdd(&w->outstandingReqsRdLm,
                                              m->time, -1);
         }
 
         // Mark write bus busy for appropriate amount of time
-        computeUnit->locMemToVrfBus.set(m->time);
-        if (computeUnit->shader->coissue_return == 0)
+        computeUnit.locMemToVrfBus.set(m->time);
+        if (computeUnit.shader->coissue_return == 0)
             w->computeUnit->vectorSharedMemUnit.set(m->time);
     }
 
@@ -108,7 +108,7 @@ LocalMemPipeline::exec()
 
         GPUDynInstPtr m = lmIssuedRequests.front();
 
-        bool returnVal = computeUnit->sendToLds(m);
+        bool returnVal = computeUnit.sendToLds(m);
         if (!returnVal) {
             DPRINTF(GPUPort, "packet was nack'd and put in retry queue");
         }

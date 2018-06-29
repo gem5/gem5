@@ -43,17 +43,17 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
-ScheduleStage::ScheduleStage(const ComputeUnitParams *p, ComputeUnit *cu)
-    : computeUnit(cu), _name(cu->name() + ".ScheduleStage"),
+ScheduleStage::ScheduleStage(const ComputeUnitParams *p, ComputeUnit &cu)
+    : computeUnit(cu), _name(cu.name() + ".ScheduleStage"),
       vectorAluRdy(false), scalarAluRdy(false), scalarMemBusRdy(false),
       scalarMemIssueRdy(false), glbMemBusRdy(false), glbMemIssueRdy(false),
       locMemBusRdy(false), locMemIssueRdy(false)
 {
-    for (int j = 0; j < cu->numExeUnits(); ++j) {
+    for (int j = 0; j < cu.numExeUnits(); ++j) {
         scheduler.emplace_back(p);
     }
     wavesInSch.clear();
-    schList.resize(cu->numExeUnits());
+    schList.resize(cu.numExeUnits());
     for (auto &dq : schList) {
         dq.clear();
     }
@@ -70,36 +70,36 @@ void
 ScheduleStage::init()
 {
 
-    fatal_if(scheduler.size() != computeUnit->readyList.size(),
+    fatal_if(scheduler.size() != computeUnit.readyList.size(),
              "Scheduler should have same number of entries as CU's readyList");
-    for (int j = 0; j < computeUnit->numExeUnits(); ++j) {
-        scheduler[j].bindList(&computeUnit->readyList[j]);
+    for (int j = 0; j < computeUnit.numExeUnits(); ++j) {
+        scheduler[j].bindList(&computeUnit.readyList[j]);
     }
 
-    dispatchList = &computeUnit->dispatchList;
+    dispatchList = &computeUnit.dispatchList;
 
-    assert(computeUnit->numVectorGlobalMemUnits == 1);
-    assert(computeUnit->numVectorSharedMemUnits == 1);
+    assert(computeUnit.numVectorGlobalMemUnits == 1);
+    assert(computeUnit.numVectorSharedMemUnits == 1);
 }
 
 void
 ScheduleStage::exec()
 {
     // Update readyList
-    for (int j = 0; j < computeUnit->numExeUnits(); ++j) {
+    for (int j = 0; j < computeUnit.numExeUnits(); ++j) {
         // delete all ready wavefronts whose instruction buffers are now
         // empty because the last instruction was executed
-        computeUnit->updateReadyList(j);
+        computeUnit.updateReadyList(j);
         /**
          * Remove any wave that already has an instruction present in SCH
          * waiting for RF reads to complete. This prevents out of order
          * execution within a wave.
          */
-        for (auto wIt = computeUnit->readyList.at(j).begin();
-             wIt != computeUnit->readyList.at(j).end();) {
+        for (auto wIt = computeUnit.readyList.at(j).begin();
+             wIt != computeUnit.readyList.at(j).end();) {
             if (wavesInSch.find((*wIt)->wfDynId) != wavesInSch.end()) {
                 *wIt = nullptr;
-                wIt = computeUnit->readyList.at(j).erase(wIt);
+                wIt = computeUnit.readyList.at(j).erase(wIt);
             } else {
                 wIt++;
             }
@@ -112,10 +112,10 @@ ScheduleStage::exec()
     // Scalar Memory are iterated after VMEM
 
     // Iterate VMEM and SMEM
-    int firstMemUnit = computeUnit->firstMemUnit();
-    int lastMemUnit = computeUnit->lastMemUnit();
+    int firstMemUnit = computeUnit.firstMemUnit();
+    int lastMemUnit = computeUnit.lastMemUnit();
     for (int j = firstMemUnit; j <= lastMemUnit; j++) {
-        int readyListSize = computeUnit->readyList[j].size();
+        int readyListSize = computeUnit.readyList[j].size();
         // If no wave is ready to be scheduled on the execution resource
         // then skip scheduling for this execution resource
         if (!readyListSize) {
@@ -135,12 +135,12 @@ ScheduleStage::exec()
     }
 
     // Iterate everything else
-    for (int j = 0; j < computeUnit->numExeUnits(); ++j) {
+    for (int j = 0; j < computeUnit.numExeUnits(); ++j) {
         // skip the VMEM resources
         if (j >= firstMemUnit && j <= lastMemUnit) {
             continue;
         }
-        int readyListSize = computeUnit->readyList[j].size();
+        int readyListSize = computeUnit.readyList[j].size();
         // If no wave is ready to be scheduled on the execution resource
         // then skip scheduling for this execution resource
         if (!readyListSize) {
@@ -205,16 +205,16 @@ ScheduleStage::schedRfWrites(int exeType, Wavefront *w)
     bool accessVrfWr = true;
     if (!ii->isScalar()) {
         accessVrfWr =
-            computeUnit->vrf[w->simdId]->canScheduleWriteOperands(w, ii);
+            computeUnit.vrf[w->simdId]->canScheduleWriteOperands(w, ii);
     }
     bool accessSrfWr =
-        computeUnit->srf[w->simdId]->canScheduleWriteOperands(w, ii);
+        computeUnit.srf[w->simdId]->canScheduleWriteOperands(w, ii);
     bool accessRf = accessVrfWr && accessSrfWr;
     if (accessRf) {
         if (!ii->isScalar()) {
-            computeUnit->vrf[w->simdId]->scheduleWriteOperands(w, ii);
+            computeUnit.vrf[w->simdId]->scheduleWriteOperands(w, ii);
         }
-        computeUnit->srf[w->simdId]->scheduleWriteOperands(w, ii);
+        computeUnit.srf[w->simdId]->scheduleWriteOperands(w, ii);
         return true;
     } else {
         rfAccessStalls[SCH_RF_ACCESS_NRDY]++;
@@ -235,7 +235,7 @@ ScheduleStage::schedRfWrites(int exeType, Wavefront *w)
 void
 ScheduleStage::scheduleRfDestOperands()
 {
-    for (int j = 0; j < computeUnit->numExeUnits(); ++j) {
+    for (int j = 0; j < computeUnit.numExeUnits(); ++j) {
         if (!dispatchList->at(j).first) {
             continue;
         }
@@ -269,10 +269,10 @@ ScheduleStage::addToSchList(int exeType, Wavefront *w)
     bool accessVrf = true;
     if (!ii->isScalar()) {
         accessVrf =
-            computeUnit->vrf[w->simdId]->canScheduleReadOperands(w, ii);
+            computeUnit.vrf[w->simdId]->canScheduleReadOperands(w, ii);
     }
     bool accessSrf =
-        computeUnit->srf[w->simdId]->canScheduleReadOperands(w, ii);
+        computeUnit.srf[w->simdId]->canScheduleReadOperands(w, ii);
     // If RFs can support instruction, add to schList in RFBUSY state,
     // place wave in wavesInSch and pipeMap, and schedule Rd/Wr operands
     // to the VRF
@@ -282,16 +282,16 @@ ScheduleStage::addToSchList(int exeType, Wavefront *w)
                 exeType, w->simdId, w->wfDynId,
                 ii->seqNum(), ii->disassemble());
 
-        computeUnit->insertInPipeMap(w);
+        computeUnit.insertInPipeMap(w);
         wavesInSch.emplace(w->wfDynId);
         schList.at(exeType).push_back(std::make_pair(w, RFBUSY));
         if (w->isOldestInstWaitcnt()) {
             w->setStatus(Wavefront::S_WAITCNT);
         }
         if (!ii->isScalar()) {
-            computeUnit->vrf[w->simdId]->scheduleReadOperands(w, ii);
+            computeUnit.vrf[w->simdId]->scheduleReadOperands(w, ii);
         }
-        computeUnit->srf[w->simdId]->scheduleReadOperands(w, ii);
+        computeUnit.srf[w->simdId]->scheduleReadOperands(w, ii);
 
         DPRINTF(GPUSched, "schList[%d]: Added: SIMD[%d] WV[%d]: %d: %s\n",
                 exeType, w->simdId, w->wfDynId,
@@ -341,33 +341,33 @@ ScheduleStage::checkMemResources()
     scalarMemBusRdy = false;
     scalarMemIssueRdy = false;
     // check if there is a SRF->Global Memory bus available and
-    if (computeUnit->srfToScalarMemPipeBus.rdy(Cycles(1))) {
+    if (computeUnit.srfToScalarMemPipeBus.rdy(Cycles(1))) {
         scalarMemBusRdy = true;
     }
     // check if we can issue a scalar memory instruction
-    if (computeUnit->scalarMemUnit.rdy(Cycles(1))) {
+    if (computeUnit.scalarMemUnit.rdy(Cycles(1))) {
         scalarMemIssueRdy = true;
     }
 
     glbMemBusRdy = false;
     glbMemIssueRdy = false;
     // check if there is a VRF->Global Memory bus available
-    if (computeUnit->vrfToGlobalMemPipeBus.rdy(Cycles(1))) {
+    if (computeUnit.vrfToGlobalMemPipeBus.rdy(Cycles(1))) {
         glbMemBusRdy = true;
     }
     // check if we can issue a Global memory instruction
-    if (computeUnit->vectorGlobalMemUnit.rdy(Cycles(1))) {
+    if (computeUnit.vectorGlobalMemUnit.rdy(Cycles(1))) {
         glbMemIssueRdy = true;
     }
 
     locMemBusRdy = false;
     locMemIssueRdy = false;
     // check if there is a VRF->LDS bus available
-    if (computeUnit->vrfToLocalMemPipeBus.rdy(Cycles(1))) {
+    if (computeUnit.vrfToLocalMemPipeBus.rdy(Cycles(1))) {
         locMemBusRdy = true;
     }
     // check if we can issue a LDS instruction
-    if (computeUnit->vectorSharedMemUnit.rdy(Cycles(1))) {
+    if (computeUnit.vectorSharedMemUnit.rdy(Cycles(1))) {
         locMemIssueRdy = true;
     }
 }
@@ -378,10 +378,10 @@ ScheduleStage::dispatchReady(Wavefront *w)
     vectorAluRdy = false;
     scalarAluRdy = false;
     // check for available vector/scalar ALUs in the next cycle
-    if (computeUnit->vectorALUs[w->simdId].rdy(Cycles(1))) {
+    if (computeUnit.vectorALUs[w->simdId].rdy(Cycles(1))) {
         vectorAluRdy = true;
     }
-    if (computeUnit->scalarALUs[w->scalarAlu].rdy(Cycles(1))) {
+    if (computeUnit.scalarALUs[w->scalarAlu].rdy(Cycles(1))) {
         scalarAluRdy = true;
     }
     GPUDynInstPtr ii = w->instructionBuffer.front();
@@ -423,11 +423,11 @@ ScheduleStage::dispatchReady(Wavefront *w)
             rdy = false;
             dispNrdyStalls[SCH_VECTOR_MEM_BUS_BUSY_NRDY]++;
         }
-        if (!computeUnit->globalMemoryPipe.coalescerReady(ii)) {
+        if (!computeUnit.globalMemoryPipe.coalescerReady(ii)) {
             rdy = false;
             dispNrdyStalls[SCH_VECTOR_MEM_COALESCER_NRDY]++;
         }
-        if (!computeUnit->globalMemoryPipe.outstandingReqsCheck(ii)) {
+        if (!computeUnit.globalMemoryPipe.outstandingReqsCheck(ii)) {
             rdy = false;
             dispNrdyStalls[SCH_VECTOR_MEM_REQS_NRDY]++;
         }
@@ -445,7 +445,7 @@ ScheduleStage::dispatchReady(Wavefront *w)
             rdy = false;
             dispNrdyStalls[SCH_SCALAR_MEM_BUS_BUSY_NRDY]++;
         }
-        if (!computeUnit->scalarMemoryPipe.
+        if (!computeUnit.scalarMemoryPipe.
                 isGMReqFIFOWrRdy(w->scalarRdGmReqsInPipe +
                                  w->scalarWrGmReqsInPipe)) {
             rdy = false;
@@ -465,7 +465,7 @@ ScheduleStage::dispatchReady(Wavefront *w)
             rdy = false;
             dispNrdyStalls[SCH_LOCAL_MEM_BUS_BUSY_NRDY]++;
         }
-        if (!computeUnit->localMemoryPipe.
+        if (!computeUnit.localMemoryPipe.
                 isLMReqFIFOWrRdy(w->rdLmReqsInPipe + w->wrLmReqsInPipe)) {
             rdy = false;
             dispNrdyStalls[SCH_LOCAL_MEM_FIFO_NRDY]++;
@@ -484,15 +484,15 @@ ScheduleStage::dispatchReady(Wavefront *w)
             rdy = false;
             dispNrdyStalls[SCH_FLAT_MEM_BUS_BUSY_NRDY]++;
         }
-        if (!computeUnit->globalMemoryPipe.coalescerReady(ii)) {
+        if (!computeUnit.globalMemoryPipe.coalescerReady(ii)) {
             rdy = false;
             dispNrdyStalls[SCH_FLAT_MEM_COALESCER_NRDY]++;
         }
-        if (!computeUnit->globalMemoryPipe.outstandingReqsCheck(ii)) {
+        if (!computeUnit.globalMemoryPipe.outstandingReqsCheck(ii)) {
             rdy = false;
             dispNrdyStalls[SCH_FLAT_MEM_REQS_NRDY]++;
         }
-        if (!computeUnit->localMemoryPipe.
+        if (!computeUnit.localMemoryPipe.
                 isLMReqFIFOWrRdy(w->rdLmReqsInPipe + w->wrLmReqsInPipe)) {
             rdy = false;
             dispNrdyStalls[SCH_FLAT_MEM_FIFO_NRDY]++;
@@ -514,7 +514,7 @@ ScheduleStage::fillDispatchList()
     // update execution resource status
     checkMemResources();
     // iterate execution resources
-    for (int j = 0; j < computeUnit->numExeUnits(); j++) {
+    for (int j = 0; j < computeUnit.numExeUnits(); j++) {
         assert(dispatchList->at(j).second == EMPTY);
 
         // iterate waves in schList to pick one for dispatch
@@ -537,7 +537,7 @@ ScheduleStage::fillDispatchList()
                                        instructionBuffer.front();
                     if (!mp->isMemSync() && !mp->isScalar() &&
                         (mp->isGlobalMem() || mp->isFlat())) {
-                        computeUnit->globalMemoryPipe.acqCoalescerToken(mp);
+                        computeUnit.globalMemoryPipe.acqCoalescerToken(mp);
                     }
 
                     doDispatchListTransition(j, EXREADY, schIter->first);
@@ -581,9 +581,9 @@ ScheduleStage::arbitrateVrfToLdsBus()
     // and a VRF->LDS bus. In GFx9, this is not the case.
 
     // iterate the GM pipelines
-    for (int i = 0; i < computeUnit->numVectorGlobalMemUnits; i++) {
+    for (int i = 0; i < computeUnit.numVectorGlobalMemUnits; i++) {
         // get the GM pipe index in the dispatchList
-        int gm_exe_unit = computeUnit->firstMemUnit() + i;
+        int gm_exe_unit = computeUnit.firstMemUnit() + i;
         // get the wave in the dispatchList
         Wavefront *w = dispatchList->at(gm_exe_unit).first;
         // If the WF is valid, ready to execute, and the instruction
@@ -617,7 +617,7 @@ ScheduleStage::checkRfOperandReadComplete()
     // Iterate the schList queues and check if operand reads
     // have completed in the RFs. If so, mark the wave as ready for
     // selection for dispatchList
-    for (int j = 0; j < computeUnit->numExeUnits(); ++j) {
+    for (int j = 0; j < computeUnit.numExeUnits(); ++j) {
         for (auto &p : schList.at(j)) {
             Wavefront *w = p.first;
             assert(w);
@@ -630,10 +630,10 @@ ScheduleStage::checkRfOperandReadComplete()
             bool vrfRdy = true;
             if (!ii->isScalar()) {
                 vrfRdy =
-                    computeUnit->vrf[w->simdId]->operandReadComplete(w, ii);
+                    computeUnit.vrf[w->simdId]->operandReadComplete(w, ii);
             }
             bool srfRdy =
-                computeUnit->srf[w->simdId]->operandReadComplete(w, ii);
+                computeUnit.srf[w->simdId]->operandReadComplete(w, ii);
             bool operandsReady = vrfRdy && srfRdy;
             if (operandsReady) {
                 DPRINTF(GPUSched,
@@ -671,9 +671,9 @@ void
 ScheduleStage::reserveResources()
 {
     std::vector<bool> exeUnitReservations;
-    exeUnitReservations.resize(computeUnit->numExeUnits(), false);
+    exeUnitReservations.resize(computeUnit.numExeUnits(), false);
 
-    for (int j = 0; j < computeUnit->numExeUnits(); ++j) {
+    for (int j = 0; j < computeUnit.numExeUnits(); ++j) {
         Wavefront *dispatchedWave = dispatchList->at(j).first;
         if (dispatchedWave) {
             DISPATCH_STATUS s = dispatchList->at(j).second;
@@ -686,10 +686,10 @@ ScheduleStage::reserveResources()
                 GPUDynInstPtr ii = dispatchedWave->instructionBuffer.front();
 
                 if (!ii->isScalar()) {
-                    computeUnit->vrf[dispatchedWave->simdId]->
+                    computeUnit.vrf[dispatchedWave->simdId]->
                         dispatchInstruction(ii);
                 }
-                computeUnit->srf[dispatchedWave->simdId]->
+                computeUnit.srf[dispatchedWave->simdId]->
                     dispatchInstruction(ii);
 
                 std::stringstream ss;
@@ -743,35 +743,35 @@ void
 ScheduleStage::regStats()
 {
     rdyListNotEmpty
-        .init(computeUnit->numExeUnits())
+        .init(computeUnit.numExeUnits())
         .name(name() + ".rdy_list_not_empty")
         .desc("number of cycles one or more wave on ready list per "
               "execution resource")
         ;
 
     rdyListEmpty
-        .init(computeUnit->numExeUnits())
+        .init(computeUnit.numExeUnits())
         .name(name() + ".rdy_list_empty")
         .desc("number of cycles no wave on ready list per "
               "execution resource")
         ;
 
     addToSchListStalls
-        .init(computeUnit->numExeUnits())
+        .init(computeUnit.numExeUnits())
         .name(name() + ".sch_list_add_stalls")
         .desc("number of cycles a wave is not added to schList per "
               "execution resource when ready list is not empty")
         ;
 
     schListToDispList
-        .init(computeUnit->numExeUnits())
+        .init(computeUnit.numExeUnits())
         .name(name() + ".sch_list_to_disp_list")
         .desc("number of cycles a wave is added to dispatchList per "
               "execution resource")
         ;
 
     schListToDispListStalls
-        .init(computeUnit->numExeUnits())
+        .init(computeUnit.numExeUnits())
         .name(name() + ".sch_list_to_disp_list_stalls")
         .desc("number of cycles no wave is added to dispatchList per "
               "execution resource")

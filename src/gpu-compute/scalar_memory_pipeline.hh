@@ -59,7 +59,7 @@ class ComputeUnit;
 class ScalarMemPipeline
 {
   public:
-    ScalarMemPipeline(const ComputeUnitParams *p, ComputeUnit *cu);
+    ScalarMemPipeline(const ComputeUnitParams *p, ComputeUnit &cu);
     void exec();
 
     std::queue<GPUDynInstPtr> &getGMReqFIFO() { return issuedRequests; }
@@ -84,12 +84,12 @@ class ScalarMemPipeline
         return (issuedRequests.size() + pendReqs) < queueSize;
     }
 
-    const std::string &name() const { return _name; }
+    const std::string& name() const { return _name; }
     void regStats();
 
   private:
-    ComputeUnit *computeUnit;
-    std::string _name;
+    ComputeUnit &computeUnit;
+    const std::string _name;
     int queueSize;
 
     // Counters to track and limit the inflight scalar loads and stores
