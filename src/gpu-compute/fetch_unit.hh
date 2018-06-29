@@ -49,9 +49,9 @@ class Wavefront;
 class FetchUnit
 {
   public:
-    FetchUnit(const ComputeUnitParams* params);
+    FetchUnit(const ComputeUnitParams* p, ComputeUnit *cu);
     ~FetchUnit();
-    void init(ComputeUnit *cu);
+    void init();
     void exec();
     void bindWaveList(std::vector<Wavefront*> *list);
     void initiateFetch(Wavefront *wavefront);

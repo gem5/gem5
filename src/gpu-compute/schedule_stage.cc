@@ -44,7 +44,8 @@
 #include "gpu-compute/wavefront.hh"
 
 ScheduleStage::ScheduleStage(const ComputeUnitParams *p, ComputeUnit *cu)
-    : vectorAluRdy(false), scalarAluRdy(false), scalarMemBusRdy(false),
+    : computeUnit(cu), _name(cu->name() + ".ScheduleStage"),
+      vectorAluRdy(false), scalarAluRdy(false), scalarMemBusRdy(false),
       scalarMemIssueRdy(false), glbMemBusRdy(false), glbMemIssueRdy(false),
       locMemBusRdy(false), locMemIssueRdy(false)
 {
@@ -66,10 +67,8 @@ ScheduleStage::~ScheduleStage()
 }
 
 void
-ScheduleStage::init(ComputeUnit *cu)
+ScheduleStage::init()
 {
-    computeUnit = cu;
-    _name = computeUnit->name() + ".ScheduleStage";
 
     fatal_if(scheduler.size() != computeUnit->readyList.size(),
              "Scheduler should have same number of entries as CU's readyList");

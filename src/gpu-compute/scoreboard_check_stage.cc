@@ -44,7 +44,9 @@
 #include "gpu-compute/wavefront.hh"
 #include "params/ComputeUnit.hh"
 
-ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams *p)
+ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams *p,
+                                           ComputeUnit *cu)
+    : computeUnit(cu), _name(cu->name() + ".ScoreboardCheckStage")
 {
 }
 
@@ -54,11 +56,8 @@ ScoreboardCheckStage::~ScoreboardCheckStage()
 }
 
 void
-ScoreboardCheckStage::init(ComputeUnit *cu)
+ScoreboardCheckStage::init()
 {
-    computeUnit = cu;
-    _name = computeUnit->name() + ".ScoreboardCheckStage";
-
     for (int unitId = 0; unitId < computeUnit->numExeUnits(); ++unitId) {
         readyList.push_back(&computeUnit->readyList[unitId]);
     }

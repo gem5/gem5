@@ -57,9 +57,9 @@ struct ComputeUnitParams;
 class ScheduleStage
 {
   public:
-    ScheduleStage(const ComputeUnitParams *params, ComputeUnit *cu);
+    ScheduleStage(const ComputeUnitParams *p, ComputeUnit *cu);
     ~ScheduleStage();
-    void init(ComputeUnit *cu);
+    void init();
     void exec();
 
     // Stats related variables and methods

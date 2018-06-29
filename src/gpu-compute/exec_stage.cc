@@ -41,19 +41,19 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
-ExecStage::ExecStage(const ComputeUnitParams *p) : lastTimeInstExecuted(false),
-    thisTimeInstExecuted(false), instrExecuted (false),
-    executionResourcesUsed(0)
+ExecStage::ExecStage(const ComputeUnitParams *p, ComputeUnit *cu)
+    : computeUnit(cu), lastTimeInstExecuted(false),
+      thisTimeInstExecuted(false), instrExecuted (false),
+      executionResourcesUsed(0), _name(cu->name() + ".ExecStage")
+
 {
     numTransActiveIdle = 0;
     idle_dur = 0;
 }
 
 void
-ExecStage::init(ComputeUnit *cu)
+ExecStage::init()
 {
-    computeUnit = cu;
-    _name = computeUnit->name() + ".ExecStage";
     dispatchList = &computeUnit->dispatchList;
     idle_dur = 0;
 }

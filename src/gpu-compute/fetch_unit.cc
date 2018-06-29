@@ -45,9 +45,9 @@
 
 uint32_t FetchUnit::globalFetchUnitID;
 
-FetchUnit::FetchUnit(const ComputeUnitParams* params)
-    : timingSim(true), computeUnit(nullptr), fetchScheduler(params),
-      waveList(nullptr), fetchDepth(params->fetch_depth)
+FetchUnit::FetchUnit(const ComputeUnitParams *p, ComputeUnit *cu)
+    : timingSim(true), computeUnit(cu), fetchScheduler(p),
+      waveList(nullptr), fetchDepth(p->fetch_depth)
 {
 }
 
@@ -58,9 +58,8 @@ FetchUnit::~FetchUnit()
 }
 
 void
-FetchUnit::init(ComputeUnit *cu)
+FetchUnit::init()
 {
-    computeUnit = cu;
     timingSim = computeUnit->shader->timingSim;
     fetchQueue.clear();
     fetchStatusQueue.resize(computeUnit->shader->n_wf);

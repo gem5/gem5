@@ -70,9 +70,9 @@ class ScoreboardCheckStage
         NRDY_CONDITIONS
     };
 
-    ScoreboardCheckStage(const ComputeUnitParams* params);
+    ScoreboardCheckStage(const ComputeUnitParams* p, ComputeUnit *cu);
     ~ScoreboardCheckStage();
-    void init(ComputeUnit *cu);
+    void init();
     void exec();
 
     // Stats related variables and methods

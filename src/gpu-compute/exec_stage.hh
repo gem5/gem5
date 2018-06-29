@@ -69,9 +69,9 @@ enum DISPATCH_STATUS
 class ExecStage
 {
   public:
-    ExecStage(const ComputeUnitParams* params);
+    ExecStage(const ComputeUnitParams* p, ComputeUnit *cu);
     ~ExecStage() { }
-    void init(ComputeUnit *cu);
+    void init();
     void exec();
 
     std::string dispStatusToStr(int j);

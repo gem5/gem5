@@ -43,19 +43,19 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
-GlobalMemPipeline::GlobalMemPipeline(const ComputeUnitParams* p) :
-    computeUnit(nullptr), gmQueueSize(p->global_mem_queue_size),
-    maxWaveRequests(p->max_wave_requests), inflightStores(0),
-    inflightLoads(0)
+GlobalMemPipeline::GlobalMemPipeline(const ComputeUnitParams* p,
+                                     ComputeUnit *cu)
+    : computeUnit(cu), _name(cu->name() + ".GlobalMemPipeline"),
+      gmQueueSize(p->global_mem_queue_size),
+      maxWaveRequests(p->max_wave_requests), inflightStores(0),
+      inflightLoads(0)
 {
 }
 
 void
-GlobalMemPipeline::init(ComputeUnit *cu)
+GlobalMemPipeline::init()
 {
-    computeUnit = cu;
     globalMemSize = computeUnit->shader->globalMemSize;
-    _name = computeUnit->name() + ".GlobalMemPipeline";
 }
 
 bool

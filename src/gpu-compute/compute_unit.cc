@@ -66,9 +66,14 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
     numScalarALUs(p->num_scalar_cores),
     vrfToCoalescerBusWidth(p->vrf_to_coalescer_bus_width),
     coalescerToVrfBusWidth(p->coalescer_to_vrf_bus_width),
-    registerManager(p->register_manager), fetchStage(p),
-    scoreboardCheckStage(p), scheduleStage(p, this), execStage(p),
-    globalMemoryPipe(p), localMemoryPipe(p), scalarMemoryPipe(p),
+    registerManager(p->register_manager),
+    fetchStage(p, this),
+    scoreboardCheckStage(p, this),
+    scheduleStage(p, this),
+    execStage(p, this),
+    globalMemoryPipe(p, this),
+    localMemoryPipe(p, this),
+    scalarMemoryPipe(p, this),
     tickEvent([this]{ exec(); }, "Compute unit tick event",
           false, Event::CPU_Tick_Pri),
     cu_id(p->cu_id),
@@ -788,13 +793,11 @@ ComputeUnit::init()
         dispatchList.push_back(std::make_pair(nullptr, EMPTY));
     }
 
-    fetchStage.init(this);
-    scoreboardCheckStage.init(this);
-    scheduleStage.init(this);
-    execStage.init(this);
-    globalMemoryPipe.init(this);
-    localMemoryPipe.init(this);
-    scalarMemoryPipe.init(this);
+    fetchStage.init();
+    scoreboardCheckStage.init();
+    scheduleStage.init();
+    execStage.init();
+    globalMemoryPipe.init();
 
     gmTokenPort.setTokenManager(memPortTokens);
 }
