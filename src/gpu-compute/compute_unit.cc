@@ -68,9 +68,9 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
     coalescerToVrfBusWidth(p->coalescer_to_vrf_bus_width),
     registerManager(p->register_manager),
     fetchStage(p, *this),
-    scoreboardCheckStage(p, *this),
-    scheduleStage(p, *this),
-    execStage(p, *this),
+    scoreboardCheckStage(p, *this, scoreboardCheckToSchedule),
+    scheduleStage(p, *this, scoreboardCheckToSchedule, scheduleToExecute),
+    execStage(p, *this, scheduleToExecute),
     globalMemoryPipe(p, *this),
     localMemoryPipe(p, *this),
     scalarMemoryPipe(p, *this),
@@ -98,7 +98,9 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
     lds(*p->localDataStore), gmTokenPort(name() + ".gmTokenPort", this),
     _cacheLineSize(p->system->cacheLineSize()),
     _numBarrierSlots(p->num_barrier_slots),
-    globalSeqNum(0), wavefrontSize(p->wf_size)
+    globalSeqNum(0), wavefrontSize(p->wf_size),
+    scoreboardCheckToSchedule(p),
+    scheduleToExecute(p)
 {
     /**
      * This check is necessary because std::bitset only provides conversion
@@ -213,8 +215,6 @@ ComputeUnit::~ComputeUnit()
         lastVaddrSimd[j].clear();
     }
     lastVaddrCU.clear();
-    readyList.clear();
-    dispatchList.clear();
     delete cuExitCallback;
     delete ldsPort;
 }
@@ -295,24 +295,6 @@ ComputeUnit::fillKernelState(Wavefront *w, HSAQueueEntry *task)
     w->gridSz[1] = task->gridSize(1);
     w->gridSz[2] = task->gridSize(2);
     w->computeActualWgSz(task);
-}
-
-// delete all wavefronts that have been marked as ready at SCB stage
-// but are found to have empty instruction buffers at SCH stage
-void
-ComputeUnit::updateReadyList(int unitId)
-{
-    if (!readyList[unitId].empty()) {
-        for (std::vector<Wavefront *>::iterator it = readyList[unitId].begin();
-             it != readyList[unitId].end();) {
-            if ((*it)->instructionBuffer.empty()) {
-                it = readyList[unitId].erase(it);
-            }
-            else {
-                ++it;
-            }
-        }
-    }
 }
 
 void
@@ -786,15 +768,7 @@ ComputeUnit::init()
     vectorRegsReserved.resize(numVectorALUs, 0);
     scalarRegsReserved.resize(numVectorALUs, 0);
 
-    // Initializing pipeline resources
-    readyList.resize(numExeUnits());
-
-    for (int j = 0; j < numExeUnits(); ++j) {
-        dispatchList.push_back(std::make_pair(nullptr, EMPTY));
-    }
-
     fetchStage.init();
-    scoreboardCheckStage.init();
     scheduleStage.init();
     execStage.init();
     globalMemoryPipe.init();

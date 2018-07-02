@@ -43,6 +43,7 @@
 #include "sim/stats.hh"
 
 class ComputeUnit;
+class ScoreboardCheckToSchedule;
 class Wavefront;
 
 struct ComputeUnitParams;
@@ -70,9 +71,9 @@ class ScoreboardCheckStage
         NRDY_CONDITIONS
     };
 
-    ScoreboardCheckStage(const ComputeUnitParams* p, ComputeUnit &cu);
+    ScoreboardCheckStage(const ComputeUnitParams* p, ComputeUnit &cu,
+                         ScoreboardCheckToSchedule &to_schedule);
     ~ScoreboardCheckStage();
-    void init();
     void exec();
 
     // Stats related variables and methods
@@ -86,9 +87,12 @@ class ScoreboardCheckStage
                int *exeResType, int wfSlot);
     ComputeUnit &computeUnit;
 
-    // List of waves which are ready to be scheduled.
-    // Each execution resource has a ready list
-    std::vector<std::vector<Wavefront*>*> readyList;
+    /**
+     * Interface between scoreboard check and schedule stages. Each
+     * cycle the scoreboard check stage populates this interface with
+     * information needed by the schedule stage.
+     */
+    ScoreboardCheckToSchedule &toSchedule;
 
     // Stats
     Stats::Vector stallCycles;

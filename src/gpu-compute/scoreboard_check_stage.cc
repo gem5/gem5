@@ -45,22 +45,16 @@
 #include "params/ComputeUnit.hh"
 
 ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams *p,
-                                           ComputeUnit &cu)
-    : computeUnit(cu), _name(cu.name() + ".ScoreboardCheckStage")
+                                           ComputeUnit &cu,
+                                           ScoreboardCheckToSchedule
+                                           &to_schedule)
+    : computeUnit(cu), toSchedule(to_schedule),
+      _name(cu.name() + ".ScoreboardCheckStage")
 {
 }
 
 ScoreboardCheckStage::~ScoreboardCheckStage()
 {
-    readyList.clear();
-}
-
-void
-ScoreboardCheckStage::init()
-{
-    for (int unitId = 0; unitId < computeUnit.numExeUnits(); ++unitId) {
-        readyList.push_back(&computeUnit.readyList[unitId]);
-    }
 }
 
 void
@@ -242,17 +236,13 @@ ScoreboardCheckStage::mapWaveToExeUnit(Wavefront *w)
 void
 ScoreboardCheckStage::exec()
 {
-    // reset the ready list for all execution units; it will be
-    // constructed every cycle since resource availability may change
-    for (int unitId = 0; unitId < computeUnit.numExeUnits(); ++unitId) {
-        // Reset wavefront pointers to nullptr so clear() on the vector
-        // does not accidentally destruct the wavefront object
-        for (int i = 0; i < readyList[unitId]->size(); i++) {
-            readyList[unitId]->at(i) = nullptr;
-        }
-        readyList[unitId]->clear();
-    }
-    // iterate over all WF slots across all vector ALUs
+    /**
+     * Reset the ready list for all execution units; ready list will be
+     * constructed every cycle because resource availability may change.
+     */
+    toSchedule.reset();
+
+    // Iterate over all WF slots across all SIMDs.
     for (int simdId = 0; simdId < computeUnit.numVectorALUs; ++simdId) {
         for (int wfSlot = 0; wfSlot < computeUnit.shader->n_wf; ++wfSlot) {
             // reset the ready status of each wavefront
@@ -269,7 +259,7 @@ ScoreboardCheckStage::exec()
                         curWave->simdId, curWave->wfDynId,
                         curWave->nextInstr()->seqNum(),
                         curWave->nextInstr()->disassemble());
-                readyList.at(exeResType)->push_back(curWave);
+                toSchedule.markWFReady(curWave, exeResType);
             }
             collectStatistics(rdyStatus);
         }

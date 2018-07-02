@@ -42,7 +42,9 @@
 #include "sim/stats.hh"
 
 class ComputeUnit;
+class ScheduleToExecute;
 class Wavefront;
+
 struct ComputeUnitParams;
 
 enum STAT_STATUS
@@ -69,7 +71,8 @@ enum DISPATCH_STATUS
 class ExecStage
 {
   public:
-    ExecStage(const ComputeUnitParams* p, ComputeUnit &cu);
+    ExecStage(const ComputeUnitParams* p, ComputeUnit &cu,
+              ScheduleToExecute &from_schedule);
     ~ExecStage() { }
     void init();
     void exec();
@@ -97,17 +100,8 @@ class ExecStage
     void collectStatistics(enum STAT_STATUS stage, int unitId);
     void initStatistics();
     ComputeUnit &computeUnit;
+    ScheduleToExecute &fromSchedule;
 
-    // List of waves which will be dispatched to
-    // each execution resource. A FILLED implies
-    // dispatch list is non-empty and
-    // execution unit has something to execute
-    // this cycle. Currently, the dispatch list of
-    // an execution resource can hold only one wave because
-    // an execution resource can execute only one wave in a cycle.
-    // dispatchList is used to communicate between schedule
-    // and exec stage
-    std::vector<std::pair<Wavefront*, DISPATCH_STATUS>> *dispatchList;
     bool lastTimeInstExecuted;
     bool thisTimeInstExecuted;
     bool instrExecuted;

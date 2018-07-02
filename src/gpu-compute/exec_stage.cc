@@ -41,8 +41,10 @@
 #include "gpu-compute/vector_register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
-ExecStage::ExecStage(const ComputeUnitParams *p, ComputeUnit &cu)
-    : computeUnit(cu), lastTimeInstExecuted(false),
+ExecStage::ExecStage(const ComputeUnitParams *p, ComputeUnit &cu,
+                     ScheduleToExecute &from_schedule)
+    : computeUnit(cu), fromSchedule(from_schedule),
+      lastTimeInstExecuted(false),
       thisTimeInstExecuted(false), instrExecuted (false),
       executionResourcesUsed(0), _name(cu.name() + ".ExecStage")
 
@@ -54,7 +56,6 @@ ExecStage::ExecStage(const ComputeUnitParams *p, ComputeUnit &cu)
 void
 ExecStage::init()
 {
-    dispatchList = &computeUnit.dispatchList;
     idle_dur = 0;
 }
 
@@ -128,14 +129,15 @@ ExecStage::dumpDispList()
     std::stringstream ss;
     bool empty = true;
     for (int i = 0; i < computeUnit.numExeUnits(); i++) {
-        DISPATCH_STATUS s = dispatchList->at(i).second;
+        DISPATCH_STATUS s = fromSchedule.dispatchStatus(i);
         ss << i << ": " << dispStatusToStr(s);
         if (s != EMPTY) {
             empty = false;
-            Wavefront *w = dispatchList->at(i).first;
-            ss << " SIMD[" << w->simdId << "] WV[" << w->wfDynId << "]: ";
-            ss << (w->instructionBuffer.front())->seqNum() << ": ";
-            ss << (w->instructionBuffer.front())->disassemble();
+            GPUDynInstPtr &gpu_dyn_inst = fromSchedule.readyInst(i);
+            Wavefront *wf = gpu_dyn_inst->wavefront();
+            ss << " SIMD[" << wf->simdId << "] WV[" << wf->wfDynId << "]: ";
+            ss << (wf->instructionBuffer.front())->seqNum() << ": ";
+            ss << (wf->instructionBuffer.front())->disassemble();
         }
         ss << "\n";
     }
@@ -152,36 +154,41 @@ ExecStage::exec()
         dumpDispList();
     }
     for (int unitId = 0; unitId < computeUnit.numExeUnits(); ++unitId) {
-        DISPATCH_STATUS s = dispatchList->at(unitId).second;
+        DISPATCH_STATUS s = fromSchedule.dispatchStatus(unitId);
         switch (s) {
-        case EMPTY:
+          case EMPTY:
             // Do not execute if empty, waiting for VRF reads,
             // or LM tied to GM waiting for VRF reads
             collectStatistics(IdleExec, unitId);
             break;
-        case EXREADY:
-        {
-            collectStatistics(BusyExec, unitId);
-            Wavefront *w = dispatchList->at(unitId).first;
-            DPRINTF(GPUSched, "Exec[%d]: SIMD[%d] WV[%d]: %s\n",
-                    unitId, w->simdId, w->wfDynId,
-                    (w->instructionBuffer.front())->disassemble());
-            DPRINTF(GPUSched, "dispatchList[%d] EXREADY->EMPTY\n", unitId);
-            dispatchList->at(unitId).first->exec();
-            (computeUnit.scheduleStage).deleteFromSch(w);
-            dispatchList->at(unitId).second = EMPTY;
-            dispatchList->at(unitId).first->freeResources();
-            dispatchList->at(unitId).first = nullptr;
-            break;
-        }
-        case SKIP:
-            collectStatistics(BusyExec, unitId);
-            DPRINTF(GPUSched, "dispatchList[%d] SKIP->EMPTY\n", unitId);
-            dispatchList->at(unitId).second = EMPTY;
-            dispatchList->at(unitId).first->freeResources();
-            dispatchList->at(unitId).first = nullptr;
-            break;
-        default:
+          case EXREADY:
+            {
+                collectStatistics(BusyExec, unitId);
+                GPUDynInstPtr &gpu_dyn_inst = fromSchedule.readyInst(unitId);
+                assert(gpu_dyn_inst);
+                Wavefront *wf = gpu_dyn_inst->wavefront();
+                DPRINTF(GPUSched, "Exec[%d]: SIMD[%d] WV[%d]: %s\n",
+                        unitId, wf->simdId, wf->wfDynId,
+                        gpu_dyn_inst->disassemble());
+                DPRINTF(GPUSched, "dispatchList[%d] EXREADY->EMPTY\n", unitId);
+                wf->exec();
+                (computeUnit.scheduleStage).deleteFromSch(wf);
+                fromSchedule.dispatchTransition(unitId, EMPTY);
+                wf->freeResources();
+                break;
+            }
+          case SKIP:
+            {
+                collectStatistics(BusyExec, unitId);
+                GPUDynInstPtr &gpu_dyn_inst = fromSchedule.readyInst(unitId);
+                assert(gpu_dyn_inst);
+                Wavefront *wf = gpu_dyn_inst->wavefront();
+                DPRINTF(GPUSched, "dispatchList[%d] SKIP->EMPTY\n", unitId);
+                fromSchedule.dispatchTransition(unitId, EMPTY);
+                wf->freeResources();
+                break;
+            }
+          default:
             panic("Unknown dispatch status in exec()\n");
         }
     }

@@ -41,6 +41,7 @@ SimObject('GPUStaticInstFlags.py')
 SimObject('LdsState.py')
 SimObject('X86GPUTLB.py')
 
+Source('comm.cc')
 Source('compute_unit.cc')
 Source('dispatcher.cc')
 Source('exec_stage.cc')

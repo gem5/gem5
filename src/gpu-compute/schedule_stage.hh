@@ -41,8 +41,8 @@
 #include <vector>
 
 #include "gpu-compute/exec_stage.hh"
+#include "gpu-compute/misc.hh"
 #include "gpu-compute/scheduler.hh"
-#include "gpu-compute/scoreboard_check_stage.hh"
 
 // Schedule or execution arbitration stage.
 // From the pool of ready waves in the ready list,
@@ -50,6 +50,8 @@
 // The selection is made based on a scheduling policy
 
 class ComputeUnit;
+class ScheduleToExecute;
+class ScoreboardCheckToSchedule;
 class Wavefront;
 
 struct ComputeUnitParams;
@@ -57,7 +59,9 @@ struct ComputeUnitParams;
 class ScheduleStage
 {
   public:
-    ScheduleStage(const ComputeUnitParams *p, ComputeUnit &cu);
+    ScheduleStage(const ComputeUnitParams *p, ComputeUnit &cu,
+                  ScoreboardCheckToSchedule &from_scoreboard_check,
+                  ScheduleToExecute &to_execute);
     ~ScheduleStage();
     void init();
     void exec();
@@ -115,16 +119,12 @@ class ScheduleStage
 
   private:
     ComputeUnit &computeUnit;
+    ScoreboardCheckToSchedule &fromScoreboardCheck;
+    ScheduleToExecute &toExecute;
+
     // Each execution resource will have its own
     // scheduler and a dispatch list
     std::vector<Scheduler> scheduler;
-
-    // List of waves which will be dispatched to
-    // each execution resource.
-    // Currently, the dispatch list of
-    // an execution resource can hold only one wave because
-    // an execution resource can execute only one wave in a cycle.
-    std::vector<std::pair<Wavefront*, DISPATCH_STATUS>> *dispatchList;
 
     // Stats
 
@@ -171,10 +171,10 @@ class ScheduleStage
     const std::string _name;
 
     // called by exec() to add a wave to schList if the RFs can support it
-    bool addToSchList(int exeType, Wavefront *w);
+    bool addToSchList(int exeType, const GPUDynInstPtr &gpu_dyn_inst);
     // re-insert a wave to schList if wave lost arbitration
     // wave is inserted such that age order (oldest to youngest) is preserved
-    void reinsertToSchList(int exeType, Wavefront *w);
+    void reinsertToSchList(int exeType, const GPUDynInstPtr &gpu_dyn_inst);
     // check waves in schList to see if RF reads complete
     void checkRfOperandReadComplete();
     // check execution resources for readiness
@@ -189,7 +189,7 @@ class ScheduleStage
     // check status of memory pipes and RF to Mem buses
     void checkMemResources();
     // resource ready check called by fillDispatchList
-    bool dispatchReady(Wavefront *w);
+    bool dispatchReady(const GPUDynInstPtr &gpu_dyn_inst);
     // pick waves from schList and populate dispatchList with one wave
     // per EXE resource type
     void fillDispatchList();
@@ -199,12 +199,13 @@ class ScheduleStage
     // dispatchList
     void scheduleRfDestOperands();
     // invoked by scheduleRfDestOperands to schedule RF writes for a wave
-    bool schedRfWrites(int exeType, Wavefront *w);
+    bool schedRfWrites(int exeType, const GPUDynInstPtr &gpu_dyn_inst);
     // reserve resources for waves surviving arbitration in dispatchList
     void reserveResources();
 
     void doDispatchListTransition(int unitId, DISPATCH_STATUS s,
-                                  Wavefront *w = nullptr);
+                                  const GPUDynInstPtr &gpu_dyn_inst);
+    void doDispatchListTransition(int unitId, DISPATCH_STATUS s);
 
     // Set tracking wfDynId for each wave present in schedule stage
     // Used to allow only one instruction per wave in schedule
@@ -219,7 +220,7 @@ class ScheduleStage
     // The maximum number of waves per resource can be determined by either
     // the VRF/SRF availability or limits imposed by paremeters (to be added)
     // of the SCH stage or CU.
-    std::vector<std::deque<std::pair<Wavefront*, SCH_STATUS>>> schList;
+    std::vector<std::deque<std::pair<GPUDynInstPtr, SCH_STATUS>>> schList;
 };
 
 #endif // __SCHEDULE_STAGE_HH__

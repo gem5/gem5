@@ -44,6 +44,7 @@
 #include "base/types.hh"
 #include "config/the_gpu_isa.hh"
 #include "enums/PrefetchType.hh"
+#include "gpu-compute/comm.hh"
 #include "gpu-compute/exec_stage.hh"
 #include "gpu-compute/fetch_stage.hh"
 #include "gpu-compute/global_memory_pipeline.hh"
@@ -266,40 +267,6 @@ class ComputeUnit : public ClockedObject
     int numCyclesPerStoreTransfer;  // number of cycles per vector store
     int numCyclesPerLoadTransfer;  // number of cycles per vector load
 
-    // Buffers used to communicate between various pipeline stages
-
-    // At a high level, the following intra-/inter-stage communication occurs:
-    // SCB to SCH: readyList provides per exec resource list of waves that
-    //             passed dependency and readiness checks. If selected by
-    //             scheduler, attempt to add wave to schList conditional on
-    //             RF support.
-    // SCH: schList holds waves that are gathering operands or waiting
-    //      for execution resource availability. Once ready, waves are
-    //      placed on the dispatchList as candidates for execution. A wave
-    //      may spend multiple cycles in SCH stage, on the schList due to
-    //      RF access conflicts or execution resource contention.
-    // SCH to EX: dispatchList holds waves that are ready to be executed.
-    //            LM/FLAT arbitration may remove an LM wave and place it
-    //            back on the schList. RF model may also force a wave back
-    //            to the schList if using the detailed model.
-
-    // List of waves which are ready to be scheduled.
-    // Each execution resource has a ready list. readyList is
-    // used to communicate between scoreboardCheck stage and
-    // schedule stage
-    std::vector<std::vector<Wavefront*>> readyList;
-
-    // List of waves which will be dispatched to
-    // each execution resource. An EXREADY implies
-    // dispatch list is non-empty and
-    // execution unit has something to execute
-    // this cycle. Currently, the dispatch list of
-    // an execution resource can hold only one wave because
-    // an execution resource can execute only one wave in a cycle.
-    // dispatchList is used to communicate between schedule
-    // and exec stage
-    // TODO: convert std::pair to a class to increase readability
-    std::vector<std::pair<Wavefront*, DISPATCH_STATUS>> dispatchList;
     // track presence of dynamic instructions in the Schedule pipeline
     // stage. This is used to check the readiness of the oldest,
     // non-dispatched instruction of every WF in the Scoreboard stage.
@@ -412,8 +379,6 @@ class ComputeUnit : public ClockedObject
     int numVecRegsPerSimd;
     // number of available scalar registers per SIMD unit
     int numScalarRegsPerSimd;
-
-    void updateReadyList(int unitId);
 
     // this hash map will keep track of page divergence
     // per memory instruction per wavefront. The hash map
@@ -1116,6 +1081,41 @@ class ComputeUnit : public ClockedObject
     int cacheLineBits;
     InstSeqNum globalSeqNum;
     int wavefrontSize;
+
+    /**
+     * TODO: Update these comments once the pipe stage interface has
+     *       been fully refactored.
+     *
+     * Pipeline stage interfaces.
+     *
+     * Buffers used to communicate between various pipeline stages
+     * List of waves which will be dispatched to
+     * each execution resource. An EXREADY implies
+     * dispatch list is non-empty and
+     * execution unit has something to execute
+     * this cycle. Currently, the dispatch list of
+     * an execution resource can hold only one wave because
+     * an execution resource can execute only one wave in a cycle.
+     * dispatchList is used to communicate between schedule
+     * and exec stage
+     *
+     * At a high level, the following intra-/inter-stage communication occurs:
+     * SCB to SCH: readyList provides per exec resource list of waves that
+     *             passed dependency and readiness checks. If selected by
+     *             scheduler, attempt to add wave to schList conditional on
+     *             RF support.
+     * SCH: schList holds waves that are gathering operands or waiting
+     *      for execution resource availability. Once ready, waves are
+     *      placed on the dispatchList as candidates for execution. A wave
+     *      may spend multiple cycles in SCH stage, on the schList due to
+     *      RF access conflicts or execution resource contention.
+     * SCH to EX: dispatchList holds waves that are ready to be executed.
+     *            LM/FLAT arbitration may remove an LM wave and place it
+     *            back on the schList. RF model may also force a wave back
+     *            to the schList if using the detailed model.
+     */
+    ScoreboardCheckToSchedule scoreboardCheckToSchedule;
+    ScheduleToExecute scheduleToExecute;
 
     /**
      * The barrier slots for this CU.
