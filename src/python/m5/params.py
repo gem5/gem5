@@ -1883,12 +1883,9 @@ class PortRef(object):
     def ccConnect(self):
         from _m5.pyobject import connectPorts
 
-        if self.role == 'SLAVE':
-            # do nothing and let the master take care of it
-            return
-
         if self.ccConnected: # already done this
             return
+
         peer = self.peer
         if not self.peer: # nothing to connect to
             return
@@ -1898,6 +1895,10 @@ class PortRef(object):
             raise TypeError, \
                 "cannot connect '%s' and '%s' due to identical role '%s'" \
                 % (peer, self, self.role)
+
+        if self.role == 'SLAVE':
+            # do nothing and let the master take care of it
+            return
 
         try:
             # self is always the master and peer the slave
