@@ -27,30 +27,75 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/core/kernel.hh"
-#include "systemc/core/scheduler.hh"
+#ifndef __SYSTEMC_CORE_SCHEDULER_HH__
+#define __SYSTEMC_CORE_SCHEDULER_HH__
 
-namespace SystemC
+#include "systemc/core/list.hh"
+#include "systemc/core/process.hh"
+
+namespace sc_gem5
 {
 
-Kernel::Kernel(Params *params) : SimObject(params), t0Event(this) {}
+typedef NodeList<Process> ProcessList;
 
-void
-Kernel::startup()
+class Scheduler
 {
-    schedule(t0Event, curTick());
-}
+  public:
+    Scheduler();
 
-void
-Kernel::t0Handler()
-{
-    ::sc_gem5::scheduler.initialize();
-}
+    uint64_t numCycles() { return _numCycles; }
+    Process *current() { return _current; }
 
-} // namespace SystemC
+    // Run the initialization phase.
+    void initialize();
 
-SystemC::Kernel *
-SystemC_KernelParams::create()
-{
-    return new SystemC::Kernel(this);
-}
+    // Run delta cycles until time needs to advance.
+    void runCycles();
+
+    // Put a process on the list of processes to be initialized.
+    void init(Process *p) { initList.pushLast(p); }
+
+    // Run the next process, if there is one.
+    void yield();
+
+    // Put a process on the ready list.
+    void
+    ready(Process *p)
+    {
+        // Clump methods together to minimize context switching.
+        if (p->procKind() == ::sc_core::SC_METHOD_PROC_)
+            readyList.pushFirst(p);
+        else
+            readyList.pushLast(p);
+    }
+
+    // Run the given process immediately, preempting whatever may be running.
+    void
+    runNow(Process *p)
+    {
+        // If a process is running, schedule it/us to run again.
+        if (_current)
+            readyList.pushFirst(_current);
+        // Schedule p to run first.
+        readyList.pushFirst(p);
+        yield();
+    }
+
+  private:
+    uint64_t _numCycles;
+
+    Process *_current;
+
+    ProcessList initList;
+    ProcessList readyList;
+
+    void evaluate();
+    void update();
+    void delta();
+};
+
+extern Scheduler scheduler;
+
+} // namespace sc_gem5
+
+#endif // __SYSTEMC_CORE_SCHEDULER_H__

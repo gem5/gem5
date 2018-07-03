@@ -31,6 +31,7 @@
 
 #include "base/logging.hh"
 #include "systemc/core/module.hh"
+#include "systemc/core/scheduler.hh"
 
 namespace sc_gem5
 {
@@ -87,8 +88,9 @@ Object::Object(sc_core::sc_object *sc_obj, const char *obj_name) :
         // constructor is running.
         parent = p->obj()->sc_obj;
         addObject(&parent->_gem5_object->children, sc_obj);
-    } else if (false /* TODO Check if a process is running */) {
-        // The process is our parent.
+    } else if (scheduler.current()) {
+        // Our parent is the currently running process.
+        parent = scheduler.current();
     } else {
         // We're a top level object.
         addObject(&topLevelObjects, sc_obj);

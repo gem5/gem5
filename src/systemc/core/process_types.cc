@@ -27,30 +27,20 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/core/kernel.hh"
-#include "systemc/core/scheduler.hh"
+#include "systemc/core/process_types.hh"
 
-namespace SystemC
+namespace sc_gem5
 {
-
-Kernel::Kernel(Params *params) : SimObject(params), t0Event(this) {}
 
 void
-Kernel::startup()
+Thread::throw_it(ExceptionWrapperBase &exc, bool inc_kids)
 {
-    schedule(t0Event, curTick());
+    Process::throw_it(exc, inc_kids);
+
+    if (_terminated)
+        return;
+
+    injectException(exc);
 }
 
-void
-Kernel::t0Handler()
-{
-    ::sc_gem5::scheduler.initialize();
-}
-
-} // namespace SystemC
-
-SystemC::Kernel *
-SystemC_KernelParams::create()
-{
-    return new SystemC::Kernel(this);
-}
+} // namespace sc_gem5

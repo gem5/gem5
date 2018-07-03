@@ -32,7 +32,7 @@
 
 #include "base/logging.hh"
 #include "systemc/core/module.hh"
-#include "systemc/core/process.hh"
+#include "systemc/core/process_types.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
 
@@ -221,13 +221,13 @@ sc_module::async_reset_signal_is(const sc_signal_in_if<bool> &, bool)
 void
 sc_module::dont_initialize()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_gem5::Process::newest()->dontInitialize();
 }
 
 void
-sc_module::set_stack_size(size_t)
+sc_module::set_stack_size(size_t size)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_gem5::Process::newest()->setStackSize(size);
 }
 
 

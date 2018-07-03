@@ -29,6 +29,7 @@
 
 #include "base/logging.hh"
 #include "systemc/core/process.hh"
+#include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_process_handle.hh"
 
 namespace sc_core
@@ -291,8 +292,7 @@ sc_process_handle::sync_reset_off(
 sc_process_handle
 sc_get_current_process_handle()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_process_handle(nullptr /* Current process pointer */);
+    return sc_process_handle(::sc_gem5::scheduler.current());
 }
 
 bool

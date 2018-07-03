@@ -48,6 +48,13 @@ class Kernel : public SimObject
   public:
     typedef SystemC_KernelParams Params;
     Kernel(Params *params);
+
+    void startup() override;
+
+    void t0Handler();
+
+  private:
+    EventWrapper<Kernel, &Kernel::t0Handler> t0Event;
 };
 
 } // namespace SystemC

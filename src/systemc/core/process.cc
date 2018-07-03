@@ -28,6 +28,7 @@
  */
 
 #include "systemc/core/process.hh"
+#include "systemc/core/scheduler.hh"
 
 namespace sc_gem5
 {
@@ -79,8 +80,9 @@ Process::suspend(bool inc_kids)
         //TODO Suspend this process.
     }
 
-    if (procKind() != ::sc_core::SC_METHOD_PROC_ /* && we're running */) {
-        // We suspended this thread or cthread. Stop running.
+    if (procKind() != ::sc_core::SC_METHOD_PROC_ &&
+            scheduler.current() == this) {
+        scheduler.yield();
     }
 }
 
@@ -189,15 +191,33 @@ Process::syncResetOff(bool inc_kids)
 }
 
 void
-Thread::throw_it(ExceptionWrapperBase &exc, bool inc_kids)
+Process::run()
 {
-    Process::throw_it(exc, inc_kids);
-
-    if (_terminated)
-        return;
-
-    injectException(exc);
+    _running = true;
+    bool reset;
+    do {
+        reset = false;
+        try {
+            func->call();
+        } catch(::sc_core::sc_unwind_exception exc) {
+            reset = exc.is_reset();
+        }
+    } while (reset);
+    _running = false;
 }
+
+Process::Process(const char *name, ProcessFuncWrapper *func, bool _dynamic) :
+    ::sc_core::sc_object(name), excWrapper(nullptr), func(func),
+    _running(false), _dynamic(_dynamic), _isUnwinding(false),
+    _terminated(false), _suspended(false), _disabled(false),
+    _syncReset(false), refCount(0), stackSize(::Fiber::DefaultStackSize)
+{
+    _newest = this;
+    if (!_dynamic)
+        scheduler.init(this);
+}
+
+Process *Process::_newest;
 
 void
 throw_it_wrapper(Process *p, ExceptionWrapperBase &exc, bool inc_kids)

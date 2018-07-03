@@ -33,6 +33,7 @@
 #include <functional>
 
 #include "base/fiber.hh"
+#include "systemc/core/list.hh"
 #include "systemc/core/object.hh"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_module.hh"
@@ -41,10 +42,11 @@
 namespace sc_gem5
 {
 
-class Process : public ::sc_core::sc_object
+class Process : public ::sc_core::sc_object, public ListNode
 {
   public:
     virtual ::sc_core::sc_curr_proc_kind procKind() const = 0;
+    bool running() const { return _running; }
     bool dynamic() const { return _dynamic; }
     bool isUnwinding() const { return _isUnwinding; }
     bool terminated() const { return _terminated; }
@@ -75,12 +77,21 @@ class Process : public ::sc_core::sc_object
     const ::sc_core::sc_event &resetEvent() { return _resetEvent; }
     const ::sc_core::sc_event &terminatedEvent() { return _terminatedEvent; }
 
+    // This should only be called before initialization.
+    void dontInitialize() { popListNode(); }
+
+    void setStackSize(size_t size) { stackSize = size; }
+
+    void run();
+
+    virtual Fiber *fiber() { return Fiber::primaryFiber(); }
+
+    static Process *newest() { return _newest; }
+
   protected:
-    Process(const char *name, ProcessFuncWrapper *func, bool _dynamic) :
-        ::sc_core::sc_object(name), func(func), _dynamic(_dynamic),
-        _isUnwinding(false), _terminated(false), _suspended(false),
-        _disabled(false), _syncReset(false), refCount(0)
-    {}
+    Process(const char *name, ProcessFuncWrapper *func, bool _dynamic);
+
+    static Process *_newest;
 
     virtual ~Process() { delete func; }
 
@@ -89,6 +100,7 @@ class Process : public ::sc_core::sc_object
 
     ProcessFuncWrapper *func;
     sc_core::sc_curr_proc_kind _procKind;
+    bool _running;
     bool _dynamic;
     bool _isUnwinding;
     bool _terminated;
@@ -99,56 +111,8 @@ class Process : public ::sc_core::sc_object
     bool _syncReset;
 
     int refCount;
-};
 
-class Method : public Process
-{
-  public:
-    Method(const char *name, ProcessFuncWrapper *func, bool _dynamic=false) :
-        Process(name, func, _dynamic)
-    {}
-
-    const char *kind() const override { return "sc_method_process"; }
-
-    sc_core::sc_curr_proc_kind
-    procKind() const override
-    {
-        return sc_core::SC_METHOD_PROC_;
-    }
-};
-
-class Thread : public Process
-{
-  public:
-    Thread(const char *name, ProcessFuncWrapper *func, bool _dynamic=false) :
-        Process(name, func, _dynamic)
-    {}
-
-    const char *kind() const override { return "sc_thread_process"; }
-
-    void throw_it(ExceptionWrapperBase &exc, bool inc_kids) override;
-
-    sc_core::sc_curr_proc_kind
-    procKind() const override
-    {
-        return sc_core::SC_THREAD_PROC_;
-    }
-};
-
-class CThread : public Thread
-{
-  public:
-    CThread(const char *name, ProcessFuncWrapper *func, bool _dynamic=false) :
-        Thread(name, func, _dynamic)
-    {}
-
-    const char *kind() const override { return "sc_cthread_process"; }
-
-    sc_core::sc_curr_proc_kind
-    procKind() const override
-    {
-        return sc_core::SC_CTHREAD_PROC_;
-    }
+    size_t stackSize;
 };
 
 } // namespace sc_gem5

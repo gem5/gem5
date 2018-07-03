@@ -27,30 +27,76 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/core/kernel.hh"
 #include "systemc/core/scheduler.hh"
 
-namespace SystemC
+#include "base/fiber.hh"
+
+namespace sc_gem5
 {
 
-Kernel::Kernel(Params *params) : SimObject(params), t0Event(this) {}
+Scheduler::Scheduler() : _numCycles(0), _current(nullptr) {}
 
 void
-Kernel::startup()
+Scheduler::initialize()
 {
-    schedule(t0Event, curTick());
+    update();
+
+    while (!initList.empty())
+        ready(initList.getNext());
+
+    delta();
 }
 
 void
-Kernel::t0Handler()
+Scheduler::runCycles()
 {
-    ::sc_gem5::scheduler.initialize();
+    while (!readyList.empty()) {
+        evaluate();
+        update();
+        delta();
+    }
 }
 
-} // namespace SystemC
-
-SystemC::Kernel *
-SystemC_KernelParams::create()
+void
+Scheduler::yield()
 {
-    return new SystemC::Kernel(this);
+    _current = readyList.getNext();
+    if (!_current) {
+        // There are no more processes, so return control to evaluate.
+        Fiber::primaryFiber()->run();
+    } else {
+        _current->popListNode();
+        // Switch to whatever Fiber is supposed to run this process. All
+        // Fibers which aren't running should be parked at this line.
+        _current->fiber()->run();
+        // If the current process hasn't been started yet, start it. This
+        // should always be true for methods, but may not be true for threads.
+        if (_current && !_current->running())
+            _current->run();
+    }
 }
+
+void
+Scheduler::evaluate()
+{
+    if (!readyList.empty())
+        _numCycles++;
+
+    do {
+        yield();
+    } while (!readyList.empty());
+}
+
+void
+Scheduler::update()
+{
+}
+
+void
+Scheduler::delta()
+{
+}
+
+Scheduler scheduler;
+
+} // namespace sc_gem5

@@ -34,6 +34,8 @@ if env['USE_SYSTEMC']:
     Source('module.cc')
     Source('object.cc')
     Source('process.cc')
+    Source('process_types.cc')
+    Source('scheduler.cc')
 
     Source('sc_attr.cc')
     Source('sc_event.cc')
