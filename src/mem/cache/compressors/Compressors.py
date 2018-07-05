@@ -148,6 +148,21 @@ class CPack(BaseDictionaryCompressor):
     decomp_chunks_per_cycle = 2
     decomp_extra_latency = 1
 
+class FPC(BaseDictionaryCompressor):
+    type = 'FPC'
+    cxx_class = 'Compressor::FPC'
+    cxx_header = "mem/cache/compressors/fpc.hh"
+
+    comp_chunks_per_cycle = 8
+    comp_extra_latency = 1
+    decomp_chunks_per_cycle = 4
+    decomp_extra_latency = 1
+
+    # Dummy dictionary size, since FPC has no dictionary
+    dictionary_size = 1
+
+    zero_run_bits = Param.Int(3, "Number of bits of the zero run bit field")
+
 class FPCD(BaseDictionaryCompressor):
     type = 'FPCD'
     cxx_class = 'Compressor::FPCD'
