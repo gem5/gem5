@@ -435,9 +435,26 @@ namespace Gcn3ISA
 
             if (!isScalarReg(_opIdx)) {
                 if (_opIdx == REG_EXEC_LO) {
-                    uint64_t new_exec_mask_val(0);
+                    ScalarRegU64 new_exec_mask_val(0);
                     std::memcpy((void*)&new_exec_mask_val,
                         (void*)srfData.data(), sizeof(new_exec_mask_val));
+                    VectorMask new_exec_mask(new_exec_mask_val);
+                    wf->execMask() = new_exec_mask;
+                    DPRINTF(GPUSRF, "Write EXEC\n");
+                    DPRINTF(GPUSRF, "EXEC = %#x\n", new_exec_mask_val);
+                } else if (_opIdx == REG_EXEC_HI) {
+                    /**
+                     * If we're writing only the upper half of the EXEC mask
+                     * this ought to be a single dword operand.
+                     */
+                    assert(NumDwords == 1);
+                    ScalarRegU32 new_exec_mask_hi_val(0);
+                    ScalarRegU64 new_exec_mask_val
+                        = wf->execMask().to_ullong();
+                    std::memcpy((void*)&new_exec_mask_hi_val,
+                        (void*)srfData.data(), sizeof(new_exec_mask_hi_val));
+                    replaceBits(new_exec_mask_val, 63, 32,
+                                new_exec_mask_hi_val);
                     VectorMask new_exec_mask(new_exec_mask_val);
                     wf->execMask() = new_exec_mask;
                     DPRINTF(GPUSRF, "Write EXEC\n");
@@ -503,6 +520,23 @@ namespace Gcn3ISA
                         sizeof(srfData));
                     DPRINTF(GPUSRF, "Read EXEC\n");
                     DPRINTF(GPUSRF, "EXEC = %#x\n", exec_mask);
+                }
+                break;
+              case REG_EXEC_HI:
+                {
+                    /**
+                     * If we're reading only the upper half of the EXEC mask
+                     * this ought to be a single dword operand.
+                     */
+                    assert(NumDwords == 1);
+                    ScalarRegU64 exec_mask = _gpuDynInst->wavefront()
+                        ->execMask().to_ullong();
+
+                    ScalarRegU32 exec_mask_hi = bits(exec_mask, 63, 32);
+                    std::memcpy((void*)srfData.data(), (void*)&exec_mask_hi,
+                                sizeof(srfData));
+                    DPRINTF(GPUSRF, "Read EXEC_HI\n");
+                    DPRINTF(GPUSRF, "EXEC_HI = %#x\n", exec_mask_hi);
                 }
                 break;
               case REG_SRC_SWDA:
