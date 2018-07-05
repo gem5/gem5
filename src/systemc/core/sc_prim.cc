@@ -28,110 +28,106 @@
  */
 
 #include "base/logging.hh"
+#include "systemc/core/channel.hh"
 #include "systemc/ext/core/sc_prim.hh"
 
 namespace sc_core
 {
 
-const char *
-sc_prim_channel::kind() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
-}
+sc_prim_channel::sc_prim_channel() :
+    _gem5_channel(new sc_gem5::Channel(this))
+{}
 
-sc_prim_channel::sc_prim_channel()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+sc_prim_channel::sc_prim_channel(const char *_name) :
+    sc_object(_name), _gem5_channel(new sc_gem5::Channel(this))
+{}
 
-sc_prim_channel::sc_prim_channel(const char *)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+sc_prim_channel::~sc_prim_channel() { delete _gem5_channel; }
 
 void
 sc_prim_channel::request_update()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _gem5_channel->requestUpdate();
 }
 
 void
 sc_prim_channel::async_request_update()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _gem5_channel->asyncRequestUpdate();
 }
 
 void
 sc_prim_channel::next_trigger()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger();
 }
 
 void
-sc_prim_channel::next_trigger(const sc_event &)
+sc_prim_channel::next_trigger(const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger(e);
 }
 
 void
-sc_prim_channel::next_trigger(const sc_event_or_list &)
+sc_prim_channel::next_trigger(const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger(eol);
 }
 
 void
-sc_prim_channel::next_trigger(const sc_event_and_list &)
+sc_prim_channel::next_trigger(const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger(eal);
 }
 
 void
-sc_prim_channel::next_trigger(const sc_time &)
+sc_prim_channel::next_trigger(const sc_time &t)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger(t);
 }
 
 void
-sc_prim_channel::next_trigger(double, sc_time_unit)
+sc_prim_channel::next_trigger(double d, sc_time_unit u)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger(d, u);
 }
 
 void
-sc_prim_channel::next_trigger(const sc_time &, const sc_event &)
+sc_prim_channel::next_trigger(const sc_time &t, const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger(t, e);
 }
 
 void
-sc_prim_channel::next_trigger(double, sc_time_unit, const sc_event &)
+sc_prim_channel::next_trigger(double d, sc_time_unit u, const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger(d, u, e);
 }
 
 void
-sc_prim_channel::next_trigger(const sc_time &, const sc_event_or_list &)
+sc_prim_channel::next_trigger(const sc_time &t, const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger(t, eol);
 }
 
 void
-sc_prim_channel::next_trigger(double, sc_time_unit, const sc_event_or_list &)
+sc_prim_channel::next_trigger(
+        double d, sc_time_unit u, const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger(d, u, eol);
 }
 
 void
-sc_prim_channel::next_trigger(const sc_time &, const sc_event_and_list &)
+sc_prim_channel::next_trigger(const sc_time &t, const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger(t, eal);
 }
 
 void
-sc_prim_channel::next_trigger(double, sc_time_unit, const sc_event_and_list &)
+sc_prim_channel::next_trigger(
+        double d, sc_time_unit u, const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::next_trigger(d, u, eal);
 }
 
 bool
@@ -144,79 +140,79 @@ sc_prim_channel::timed_out()
 void
 sc_prim_channel::wait()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait();
 }
 
 void
-sc_prim_channel::wait(int)
+sc_prim_channel::wait(int i)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(i);
 }
 
 void
-sc_prim_channel::wait(const sc_event &)
+sc_prim_channel::wait(const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(e);
 }
 
 void
-sc_prim_channel::wait(const sc_event_or_list &)
+sc_prim_channel::wait(const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(eol);
 }
 
 void
-sc_prim_channel::wait(const sc_event_and_list &)
+sc_prim_channel::wait(const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(eal);
 }
 
 void
-sc_prim_channel::wait(const sc_time &)
+sc_prim_channel::wait(const sc_time &t)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(t);
 }
 
 void
-sc_prim_channel::wait(double, sc_time_unit)
+sc_prim_channel::wait(double d, sc_time_unit u)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(d, u);
 }
 
 void
-sc_prim_channel::wait(const sc_time &, const sc_event &)
+sc_prim_channel::wait(const sc_time &t, const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(t, e);
 }
 
 void
-sc_prim_channel::wait(double, sc_time_unit, const sc_event &)
+sc_prim_channel::wait(double d, sc_time_unit u, const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(d, u, e);
 }
 
 void
-sc_prim_channel::wait(const sc_time &, const sc_event_or_list &)
+sc_prim_channel::wait(const sc_time &t, const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(t, eol);
 }
 
 void
-sc_prim_channel::wait(double, sc_time_unit, const sc_event_or_list &)
+sc_prim_channel::wait(double d, sc_time_unit u, const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(d, u, eol);
 }
 
 void
-sc_prim_channel::wait(const sc_time &, const sc_event_and_list &)
+sc_prim_channel::wait(const sc_time &t, const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(t, eal);
 }
 
 void
-sc_prim_channel::wait(double, sc_time_unit, const sc_event_and_list &)
+sc_prim_channel::wait(double d, sc_time_unit u, const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait(d, u, eal);
 }
 
 } // namespace sc_core

@@ -27,42 +27,24 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/core/kernel.hh"
+#include "systemc/core/channel.hh"
+
 #include "systemc/core/scheduler.hh"
 
-namespace SystemC
+namespace sc_gem5
 {
-
-Kernel::Kernel(Params *params) :
-    SimObject(params), t0Event(this, false, EventBase::Default_Pri - 1) {}
 
 void
-Kernel::startup()
+Channel::requestUpdate()
 {
-    schedule(t0Event, curTick());
-    // Install ourselves as the scheduler's event manager.
-    ::sc_gem5::scheduler.setEventQueue(eventQueue());
-    // Run update once before the event queue starts.
-    ::sc_gem5::scheduler.update();
+    scheduler.requestUpdate(this);
 }
 
 void
-Kernel::t0Handler()
+Channel::asyncRequestUpdate()
 {
-    // Now that the event queue has started, mark all the processes that
-    // need to be initialized as ready to run.
-    //
-    // This event has greater priority than delta notifications and so will
-    // happen before them, honoring the ordering for the initialization phase
-    // in the spec. The delta phase will happen at normal priority, and then
-    // the event which runs the processes which is at a lower priority.
-    ::sc_gem5::scheduler.initToReady();
+    //TODO This should probably not request an update directly.
+    scheduler.requestUpdate(this);
 }
 
-} // namespace SystemC
-
-SystemC::Kernel *
-SystemC_KernelParams::create()
-{
-    return new SystemC::Kernel(this);
-}
+} // namespace sc_gem5

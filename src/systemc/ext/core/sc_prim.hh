@@ -33,6 +33,13 @@
 #include "sc_object.hh"
 #include "sc_time.hh"
 
+namespace sc_gem5
+{
+
+class Channel;
+
+} // namespace sc_gem5
+
 namespace sc_core
 {
 
@@ -43,12 +50,12 @@ class sc_event_or_list;
 class sc_prim_channel : public sc_object
 {
   public:
-    virtual const char *kind() const;
+    virtual const char *kind() const { return "sc_prim_channel"; }
 
   protected:
     sc_prim_channel();
     explicit sc_prim_channel(const char *);
-    virtual ~sc_prim_channel() {}
+    virtual ~sc_prim_channel();
 
     void request_update();
     void async_request_update();
@@ -93,6 +100,9 @@ class sc_prim_channel : public sc_object
     // Disabled
     sc_prim_channel(const sc_prim_channel &);
     sc_prim_channel &operator = (const sc_prim_channel &);
+
+    friend class sc_gem5::Channel;
+    sc_gem5::Channel *_gem5_channel;
 };
 
 } // namespace sc_core

@@ -30,31 +30,22 @@
 #include "systemc/core/scheduler.hh"
 
 #include "base/fiber.hh"
+#include "base/logging.hh"
+#include "sim/eventq.hh"
 
 namespace sc_gem5
 {
 
-Scheduler::Scheduler() : _numCycles(0), _current(nullptr) {}
+Scheduler::Scheduler() :
+    eq(nullptr), readyEvent(this, false, EventBase::Default_Pri + 1),
+    _numCycles(0), _current(nullptr)
+{}
 
 void
-Scheduler::initialize()
+Scheduler::initToReady()
 {
-    update();
-
     while (!initList.empty())
         ready(initList.getNext());
-
-    delta();
-}
-
-void
-Scheduler::runCycles()
-{
-    while (!readyList.empty()) {
-        evaluate();
-        update();
-        delta();
-    }
 }
 
 void
@@ -77,24 +68,62 @@ Scheduler::yield()
 }
 
 void
-Scheduler::evaluate()
+Scheduler::ready(Process *p)
 {
-    if (!readyList.empty())
-        _numCycles++;
+    // Clump methods together to minimize context switching.
+    if (p->procKind() == ::sc_core::SC_METHOD_PROC_)
+        readyList.pushFirst(p);
+    else
+        readyList.pushLast(p);
 
+    scheduleReadyEvent();
+}
+
+void
+Scheduler::requestUpdate(Channel *c)
+{
+    updateList.pushLast(c);
+    scheduleReadyEvent();
+}
+
+void
+Scheduler::scheduleReadyEvent()
+{
+    // Schedule the evaluate and update phases.
+    if (!readyEvent.scheduled()) {
+        panic_if(!eq, "Need to schedule ready, but no event manager.\n");
+        eq->schedule(&readyEvent, eq->getCurTick());
+    }
+}
+
+void
+Scheduler::runReady()
+{
+    bool empty = readyList.empty();
+
+    // The evaluation phase.
     do {
         yield();
     } while (!readyList.empty());
+
+    if (!empty)
+        _numCycles++;
+
+    // The update phase.
+    update();
+
+    // The delta phase will happen naturally through the event queue.
 }
 
 void
 Scheduler::update()
 {
-}
-
-void
-Scheduler::delta()
-{
+    Channel *channel = updateList.getNext();
+    while (channel) {
+        channel->popListNode();
+        channel->update();
+        channel = updateList.getNext();
+    }
 }
 
 Scheduler scheduler;
