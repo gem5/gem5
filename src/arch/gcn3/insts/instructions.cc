@@ -34777,7 +34777,11 @@ namespace Gcn3ISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        setFlag(GlobalSegment);
+        if (instData.LDS) {
+            setFlag(GroupSegment);
+        } else {
+            setFlag(GlobalSegment);
+        }
     } // Inst_MUBUF__BUFFER_LOAD_DWORDX2
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX2::~Inst_MUBUF__BUFFER_LOAD_DWORDX2()
@@ -34788,17 +34792,88 @@ namespace Gcn3ISA
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 addr0(gpuDynInst, extData.VADDR);
+        ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
+        ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+
+        rsrcDesc.read();
+        offset.read();
+
+        int inst_offset = instData.OFFSET;
+
+        if (!instData.IDXEN && !instData.OFFEN) {
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (!instData.IDXEN && instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (instData.IDXEN && !instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        } else {
+            addr0.read();
+            addr1.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        }
+
+        if (isLocalMem()) {
+            gpuDynInst->computeUnit()->localMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->rdLmReqsInPipe--;
+            wf->outstandingReqsRdLm++;
+        } else {
+            gpuDynInst->computeUnit()->globalMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->rdGmReqsInPipe--;
+            wf->outstandingReqsRdGm++;
+        }
+
+        wf->outstandingReqs++;
+        wf->validateRequestCounters();
+    } // execute
 
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX2::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
+        initMemRead<2>(gpuDynInst);
     } // initiateAcc
 
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX2::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        VecOperandU32 vdst0(gpuDynInst, extData.VDATA);
+        VecOperandU32 vdst1(gpuDynInst, extData.VDATA + 1);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                if (!oobMask[lane]) {
+                    vdst0[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane * 2];
+                    vdst1[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane * 2 + 1];
+                } else {
+                    vdst0[lane] = 0;
+                    vdst1[lane] = 0;
+                }
+            }
+        }
+
+        vdst0.write();
+        vdst1.write();
     } // completeAcc
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX3
@@ -34807,7 +34882,11 @@ namespace Gcn3ISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        setFlag(GlobalSegment);
+        if (instData.LDS) {
+            setFlag(GroupSegment);
+        } else {
+            setFlag(GlobalSegment);
+        }
     } // Inst_MUBUF__BUFFER_LOAD_DWORDX3
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX3::~Inst_MUBUF__BUFFER_LOAD_DWORDX3()
@@ -34818,17 +34897,93 @@ namespace Gcn3ISA
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX3::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 addr0(gpuDynInst, extData.VADDR);
+        ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
+        ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+
+        rsrcDesc.read();
+        offset.read();
+
+        int inst_offset = instData.OFFSET;
+
+        if (!instData.IDXEN && !instData.OFFEN) {
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (!instData.IDXEN && instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (instData.IDXEN && !instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        } else {
+            addr0.read();
+            addr1.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        }
+
+        if (isLocalMem()) {
+            gpuDynInst->computeUnit()->localMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->rdLmReqsInPipe--;
+            wf->outstandingReqsRdLm++;
+        } else {
+            gpuDynInst->computeUnit()->globalMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->rdGmReqsInPipe--;
+            wf->outstandingReqsRdGm++;
+        }
+
+        wf->outstandingReqs++;
+        wf->validateRequestCounters();
+    } // execute
 
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX3::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
+        initMemRead<3>(gpuDynInst);
     } // initiateAcc
 
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX3::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        VecOperandU32 vdst0(gpuDynInst, extData.VDATA);
+        VecOperandU32 vdst1(gpuDynInst, extData.VDATA + 1);
+        VecOperandU32 vdst2(gpuDynInst, extData.VDATA + 2);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                if (!oobMask[lane]) {
+                    vdst0[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane * 3];
+                    vdst1[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane * 3 + 1];
+                    vdst2[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane * 3 + 2];
+                } else {
+                    vdst0[lane] = 0;
+                    vdst1[lane] = 0;
+                    vdst2[lane] = 0;
+                }
+            }
+        }
+
+        vdst0.write();
+        vdst1.write();
+        vdst2.write();
     } // completeAcc
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX4
@@ -34837,7 +34992,11 @@ namespace Gcn3ISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        setFlag(GlobalSegment);
+        if (instData.LDS) {
+            setFlag(GroupSegment);
+        } else {
+            setFlag(GlobalSegment);
+        }
     } // Inst_MUBUF__BUFFER_LOAD_DWORDX4
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX4::~Inst_MUBUF__BUFFER_LOAD_DWORDX4()
@@ -34848,17 +35007,98 @@ namespace Gcn3ISA
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX4::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 addr0(gpuDynInst, extData.VADDR);
+        ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
+        ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+
+        rsrcDesc.read();
+        offset.read();
+
+        int inst_offset = instData.OFFSET;
+
+        if (!instData.IDXEN && !instData.OFFEN) {
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (!instData.IDXEN && instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (instData.IDXEN && !instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        } else {
+            addr0.read();
+            addr1.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        }
+
+        if (isLocalMem()) {
+            gpuDynInst->computeUnit()->localMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->rdLmReqsInPipe--;
+            wf->outstandingReqsRdLm++;
+        } else {
+            gpuDynInst->computeUnit()->globalMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->rdGmReqsInPipe--;
+            wf->outstandingReqsRdGm++;
+        }
+
+        wf->outstandingReqs++;
+        wf->validateRequestCounters();
+    } // execute
 
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX4::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
+        initMemRead<4>(gpuDynInst);
     } // initiateAcc
 
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        VecOperandU32 vdst0(gpuDynInst, extData.VDATA);
+        VecOperandU32 vdst1(gpuDynInst, extData.VDATA + 1);
+        VecOperandU32 vdst2(gpuDynInst, extData.VDATA + 2);
+        VecOperandU32 vdst3(gpuDynInst, extData.VDATA + 3);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                if (!oobMask[lane]) {
+                    vdst0[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane * 4];
+                    vdst1[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane * 4 + 1];
+                    vdst2[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane * 4 + 2];
+                    vdst3[lane] = (reinterpret_cast<VecElemU32*>(
+                        gpuDynInst->d_data))[lane * 4 + 3];
+                } else {
+                    vdst0[lane] = 0;
+                    vdst1[lane] = 0;
+                    vdst2[lane] = 0;
+                    vdst3[lane] = 0;
+                }
+            }
+        }
+
+        vdst0.write();
+        vdst1.write();
+        vdst2.write();
+        vdst3.write();
     } // completeAcc
 
     Inst_MUBUF__BUFFER_STORE_BYTE
@@ -35155,7 +35395,11 @@ namespace Gcn3ISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        setFlag(GlobalSegment);
+        if (instData.LDS) {
+            setFlag(GroupSegment);
+        } else {
+            setFlag(GlobalSegment);
+        }
     } // Inst_MUBUF__BUFFER_STORE_DWORDX2
 
     Inst_MUBUF__BUFFER_STORE_DWORDX2::~Inst_MUBUF__BUFFER_STORE_DWORDX2()
@@ -35166,12 +35410,77 @@ namespace Gcn3ISA
     void
     Inst_MUBUF__BUFFER_STORE_DWORDX2::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 addr0(gpuDynInst, extData.VADDR);
+        ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
+        ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+        ConstVecOperandU32 data0(gpuDynInst, extData.VDATA);
+        ConstVecOperandU32 data1(gpuDynInst, extData.VDATA + 1);
+
+        rsrcDesc.read();
+        offset.read();
+        data0.read();
+        data1.read();
+
+        int inst_offset = instData.OFFSET;
+
+        if (!instData.IDXEN && !instData.OFFEN) {
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (!instData.IDXEN && instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (instData.IDXEN && !instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        } else {
+            addr0.read();
+            addr1.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        }
+
+        if (isLocalMem()) {
+            gpuDynInst->computeUnit()->localMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->wrLmReqsInPipe--;
+            wf->outstandingReqsWrLm++;
+        } else {
+            gpuDynInst->computeUnit()->globalMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->wrGmReqsInPipe--;
+            wf->outstandingReqsWrGm++;
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane * 4]
+                    = data0[lane];
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane*4 + 1]
+                    = data1[lane];
+            }
+        }
+
+        wf->outstandingReqs++;
+        wf->validateRequestCounters();
+    } // execute
 
     void
     Inst_MUBUF__BUFFER_STORE_DWORDX2::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
+        initMemWrite<2>(gpuDynInst);
     } // initiateAcc
 
     void
@@ -35185,7 +35494,11 @@ namespace Gcn3ISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        setFlag(GlobalSegment);
+        if (instData.LDS) {
+            setFlag(GroupSegment);
+        } else {
+            setFlag(GlobalSegment);
+        }
     } // Inst_MUBUF__BUFFER_STORE_DWORDX3
 
     Inst_MUBUF__BUFFER_STORE_DWORDX3::~Inst_MUBUF__BUFFER_STORE_DWORDX3()
@@ -35196,12 +35509,81 @@ namespace Gcn3ISA
     void
     Inst_MUBUF__BUFFER_STORE_DWORDX3::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 addr0(gpuDynInst, extData.VADDR);
+        ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
+        ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+        ConstVecOperandU32 data0(gpuDynInst, extData.VDATA);
+        ConstVecOperandU32 data1(gpuDynInst, extData.VDATA + 1);
+        ConstVecOperandU32 data2(gpuDynInst, extData.VDATA + 2);
+
+        rsrcDesc.read();
+        offset.read();
+        data0.read();
+        data1.read();
+        data2.read();
+
+        int inst_offset = instData.OFFSET;
+
+        if (!instData.IDXEN && !instData.OFFEN) {
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (!instData.IDXEN && instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (instData.IDXEN && !instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        } else {
+            addr0.read();
+            addr1.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        }
+
+        if (isLocalMem()) {
+            gpuDynInst->computeUnit()->localMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->wrLmReqsInPipe--;
+            wf->outstandingReqsWrLm++;
+        } else {
+            gpuDynInst->computeUnit()->globalMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->wrGmReqsInPipe--;
+            wf->outstandingReqsWrGm++;
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane * 4]
+                    = data0[lane];
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane*4 + 1]
+                    = data1[lane];
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane*4 + 2]
+                    = data2[lane];
+            }
+        }
+
+        wf->outstandingReqs++;
+        wf->validateRequestCounters();
+    } // execute
 
     void
     Inst_MUBUF__BUFFER_STORE_DWORDX3::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
+        initMemWrite<3>(gpuDynInst);
     } // initiateAcc
 
     void
@@ -35215,7 +35597,11 @@ namespace Gcn3ISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        setFlag(GlobalSegment);
+        if (instData.LDS) {
+            setFlag(GroupSegment);
+        } else {
+            setFlag(GlobalSegment);
+        }
     } // Inst_MUBUF__BUFFER_STORE_DWORDX4
 
     Inst_MUBUF__BUFFER_STORE_DWORDX4::~Inst_MUBUF__BUFFER_STORE_DWORDX4()
@@ -35226,12 +35612,85 @@ namespace Gcn3ISA
     void
     Inst_MUBUF__BUFFER_STORE_DWORDX4::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->exec_mask = wf->execMask();
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 addr0(gpuDynInst, extData.VADDR);
+        ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
+        ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+        ConstVecOperandU32 data0(gpuDynInst, extData.VDATA);
+        ConstVecOperandU32 data1(gpuDynInst, extData.VDATA + 1);
+        ConstVecOperandU32 data2(gpuDynInst, extData.VDATA + 2);
+        ConstVecOperandU32 data3(gpuDynInst, extData.VDATA + 3);
+
+        rsrcDesc.read();
+        offset.read();
+        data0.read();
+        data1.read();
+        data2.read();
+        data3.read();
+
+        int inst_offset = instData.OFFSET;
+
+        if (!instData.IDXEN && !instData.OFFEN) {
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (!instData.IDXEN && instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (instData.IDXEN && !instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        } else {
+            addr0.read();
+            addr1.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        }
+
+        if (isLocalMem()) {
+            gpuDynInst->computeUnit()->localMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->wrLmReqsInPipe--;
+            wf->outstandingReqsWrLm++;
+        } else {
+            gpuDynInst->computeUnit()->globalMemoryPipe
+                .issueRequest(gpuDynInst);
+            wf->wrGmReqsInPipe--;
+            wf->outstandingReqsWrGm++;
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane * 4]
+                    = data0[lane];
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane*4 + 1]
+                    = data1[lane];
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane*4 + 2]
+                    = data2[lane];
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->d_data))[lane*4 + 3]
+                    = data3[lane];
+            }
+        }
+
+        wf->outstandingReqs++;
+        wf->validateRequestCounters();
+    } // execute
 
     void
     Inst_MUBUF__BUFFER_STORE_DWORDX4::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
+        initMemWrite<4>(gpuDynInst);
     } // initiateAcc
 
     void

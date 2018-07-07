@@ -505,6 +505,20 @@ namespace Gcn3ISA
             gpuDynInst->exec_mask = old_exec_mask;
         }
 
+
+        template<int N>
+        void
+        initMemRead(GPUDynInstPtr gpuDynInst)
+        {
+            // temporarily modify exec_mask to supress memory accesses to oob
+            // regions.  Only issue memory requests for lanes that have their
+            // exec_mask set and are not out of bounds.
+            VectorMask old_exec_mask = gpuDynInst->exec_mask;
+            gpuDynInst->exec_mask &= ~oobMask;
+            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::ReadReq);
+            gpuDynInst->exec_mask = old_exec_mask;
+        }
+
         template<typename T>
         void
         initMemWrite(GPUDynInstPtr gpuDynInst)
@@ -515,6 +529,19 @@ namespace Gcn3ISA
             VectorMask old_exec_mask = gpuDynInst->exec_mask;
             gpuDynInst->exec_mask &= ~oobMask;
             initMemReqHelper<T, 1>(gpuDynInst, MemCmd::WriteReq);
+            gpuDynInst->exec_mask = old_exec_mask;
+        }
+
+        template<int N>
+        void
+        initMemWrite(GPUDynInstPtr gpuDynInst)
+        {
+            // temporarily modify exec_mask to supress memory accesses to oob
+            // regions.  Only issue memory requests for lanes that have their
+            // exec_mask set and are not out of bounds.
+            VectorMask old_exec_mask = gpuDynInst->exec_mask;
+            gpuDynInst->exec_mask &= ~oobMask;
+            initMemReqHelper<VecElemU32, N>(gpuDynInst, MemCmd::WriteReq);
             gpuDynInst->exec_mask = old_exec_mask;
         }
 
