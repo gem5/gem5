@@ -447,7 +447,7 @@ decode QUADRANT default Unknown::unknown() {
                 }});
                 0x5: decode SRTYPE {
                     0x0: srliw({{
-                        Rd = Rs1_uw >> SHAMT5;
+                        Rd_sd = (int32_t)(Rs1_uw >> SHAMT5);
                     }});
                     0x1: sraiw({{
                         Rd_sd = Rs1_sw >> SHAMT5;
@@ -759,7 +759,7 @@ decode QUADRANT default Unknown::unknown() {
                 }}, IntDivOp);
                 0x5: decode FUNCT7 {
                     0x0: srlw({{
-                        Rd_uw = Rs1_uw >> Rs2<4:0>;
+                        Rd_sd = (int32_t)(Rs1_uw >> Rs2<4:0>);
                     }});
                     0x1: divuw({{
                         if (Rs2_uw == 0) {
