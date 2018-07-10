@@ -30309,8 +30309,36 @@ namespace Gcn3ISA
     void
     Inst_VOP3__V_MBCNT_LO_U32_B32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+        uint64_t threadMask = 0;
+
+        src0.readSrc();
+        src1.readSrc();
+
+        /**
+         * input modifiers are supported by FP operations only
+         */
+        assert(!(instData.ABS & 0x1));
+        assert(!(instData.ABS & 0x2));
+        assert(!(instData.ABS & 0x4));
+        assert(!(extData.NEG & 0x1));
+        assert(!(extData.NEG & 0x2));
+        assert(!(extData.NEG & 0x4));
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                threadMask = ((1LL << lane) - 1LL);
+                vdst[lane] = popCount(src0[lane] & bits(threadMask, 31, 0)) +
+                             src1[lane];
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP3__V_MBCNT_HI_U32_B32 class methods ---
 
     Inst_VOP3__V_MBCNT_HI_U32_B32::Inst_VOP3__V_MBCNT_HI_U32_B32(
           InFmt_VOP3 *iFmt)
@@ -30330,8 +30358,36 @@ namespace Gcn3ISA
     void
     Inst_VOP3__V_MBCNT_HI_U32_B32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
+        ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+        uint64_t threadMask = 0;
+
+        src0.readSrc();
+        src1.readSrc();
+
+        /**
+         * input modifiers are supported by FP operations only
+         */
+        assert(!(instData.ABS & 0x1));
+        assert(!(instData.ABS & 0x2));
+        assert(!(instData.ABS & 0x4));
+        assert(!(extData.NEG & 0x1));
+        assert(!(extData.NEG & 0x2));
+        assert(!(extData.NEG & 0x4));
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                threadMask = ((1LL << lane) - 1LL);
+                vdst[lane] = popCount(src0[lane] & bits(threadMask, 63, 32)) +
+                             src1[lane];
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP3__V_LSHLREV_B64 class methods ---
 
     Inst_VOP3__V_LSHLREV_B64::Inst_VOP3__V_LSHLREV_B64(InFmt_VOP3 *iFmt)
         : Inst_VOP3(iFmt, "v_lshlrev_b64", false)
