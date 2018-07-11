@@ -236,9 +236,13 @@ void
 ScheduleStage::scheduleRfDestOperands()
 {
     for (int j = 0; j < computeUnit.numExeUnits(); ++j) {
-        if (!dispatchList->at(j).first) {
+        if (dispatchList->at(j).second == EMPTY ||
+            dispatchList->at(j).second == SKIP) {
             continue;
         }
+
+        assert(dispatchList->at(j).first);
+
         // get the wave on dispatch list and attempt to allocate write
         // resources in the RFs
         Wavefront *w = dispatchList->at(j).first;
