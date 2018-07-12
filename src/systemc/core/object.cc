@@ -67,10 +67,10 @@ popObject(Objects *objects, const std::string &name)
 
 } // anonymous namespace
 
-Object::Object(sc_core::sc_object *sc_obj) : Object(sc_obj, "object") {}
+Object::Object(sc_core::sc_object *_sc_obj) : Object(_sc_obj, "object") {}
 
-Object::Object(sc_core::sc_object *sc_obj, const char *obj_name) :
-    sc_obj(sc_obj), _basename(obj_name), parent(nullptr)
+Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
+    _sc_obj(_sc_obj), _basename(obj_name), parent(nullptr)
 {
     if (_basename == "")
         _basename = "object";
@@ -86,17 +86,17 @@ Object::Object(sc_core::sc_object *sc_obj, const char *obj_name) :
     if (p) {
         // We're "within" a parent module, ie we're being created while its
         // constructor is running.
-        parent = p->obj()->sc_obj;
-        addObject(&parent->_gem5_object->children, sc_obj);
+        parent = p->obj()->_sc_obj;
+        addObject(&parent->_gem5_object->children, _sc_obj);
     } else if (scheduler.current()) {
         // Our parent is the currently running process.
         parent = scheduler.current();
     } else {
         // We're a top level object.
-        addObject(&topLevelObjects, sc_obj);
+        addObject(&topLevelObjects, _sc_obj);
     }
 
-    addObject(&allObjects, sc_obj);
+    addObject(&allObjects, _sc_obj);
 
     _name = _basename;
     sc_core::sc_object *sc_p = parent;
@@ -106,8 +106,8 @@ Object::Object(sc_core::sc_object *sc_obj, const char *obj_name) :
     }
 }
 
-Object::Object(sc_core::sc_object *sc_obj, const Object &arg) :
-    Object(sc_obj, arg._basename.c_str())
+Object::Object(sc_core::sc_object *_sc_obj, const Object &arg) :
+    Object(_sc_obj, arg._basename.c_str())
 {}
 
 Object &
@@ -149,7 +149,7 @@ void
 Object::dump(std::ostream &out) const
 {
     out << "name = " << name() << "\n";
-    out << "kind = " << sc_obj->kind() << "\n";
+    out << "kind = " << _sc_obj->kind() << "\n";
 }
 
 const std::vector<sc_core::sc_object *> &
@@ -216,6 +216,19 @@ Object::simcontext() const
 {
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
     return nullptr;
+}
+
+EventsIt
+Object::addChildEvent(sc_core::sc_event *e)
+{
+    return events.emplace(events.end(), e);
+}
+
+void
+Object::delChildEvent(EventsIt it)
+{
+    std::swap(*it, events.back());
+    events.pop_back();
 }
 
 

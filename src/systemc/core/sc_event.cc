@@ -28,10 +28,16 @@
  */
 
 #include "base/logging.hh"
+#include "systemc/core/event.hh"
 #include "systemc/ext/core/sc_event.hh"
 
 namespace sc_core
 {
+
+
+/*
+ * sc_event_finder
+ */
 
 void
 sc_event_finder::warn_unimpl(const char *func) const
@@ -39,303 +45,361 @@ sc_event_finder::warn_unimpl(const char *func) const
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-sc_event_and_list::sc_event_and_list()
+
+/*
+ * sc_event_and_list
+ */
+
+sc_event_and_list::sc_event_and_list() : autoDelete(false), busy(0) {}
+
+sc_event_and_list::sc_event_and_list(const sc_event_and_list &eal) :
+    events(eal.events), autoDelete(false), busy(0)
+{}
+
+sc_event_and_list::sc_event_and_list(const sc_event &e) : sc_event_and_list()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    insert(e);
 }
 
-sc_event_and_list::sc_event_and_list(const sc_event_and_list &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+sc_event_and_list::sc_event_and_list(bool auto_delete) :
+    autoDelete(auto_delete), busy(0)
+{}
 
-sc_event_and_list::sc_event_and_list(const sc_event &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+sc_event_and_list::~sc_event_and_list() {}
 
 sc_event_and_list &
-sc_event_and_list::operator = (const sc_event_and_list &)
+sc_event_and_list::operator = (const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    events = eal.events;
     return *this;
 }
 
 int
 sc_event_and_list::size() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
+    return events.size();
 }
 
 void
-sc_event_and_list::swap(sc_event_and_list &)
+sc_event_and_list::swap(sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    events.swap(eal.events);
 }
 
 sc_event_and_list &
-sc_event_and_list::operator &= (const sc_event &)
+sc_event_and_list::operator &= (const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    insert(e);
     return *this;
 }
 
 sc_event_and_list &
-sc_event_and_list::operator &= (const sc_event_and_list &)
+sc_event_and_list::operator &= (const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    insert(eal);
     return *this;
 }
 
 sc_event_and_expr
-sc_event_and_list::operator & (const sc_event &) const
+sc_event_and_list::operator & (const sc_event &e) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_event_and_expr();
+    sc_event_and_expr expr;
+    expr.insert(*this);
+    expr.insert(e);
+    return expr;
 }
 
 sc_event_and_expr
-sc_event_and_list::operator & (const sc_event_and_list &)
+sc_event_and_list::operator & (const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_event_and_expr();
+    sc_event_and_expr expr;
+    expr.insert(*this);
+    expr.insert(eal);
+    return expr;
 }
 
-sc_event_or_list::sc_event_or_list()
+void
+sc_event_and_list::insert(sc_event const &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    events.insert(&e);
 }
 
-sc_event_or_list::sc_event_or_list(const sc_event_or_list &)
+void
+sc_event_and_list::insert(sc_event_and_list const &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    events.insert(eal.events.begin(), eal.events.end());
 }
 
-sc_event_or_list::sc_event_or_list(const sc_event &)
+
+/*
+ * sc_event_or_list
+ */
+
+sc_event_or_list::sc_event_or_list() : autoDelete(false), busy(0) {}
+
+sc_event_or_list::sc_event_or_list(const sc_event_or_list &eol) :
+    events(eol.events), autoDelete(false), busy(0)
+{}
+
+sc_event_or_list::sc_event_or_list(const sc_event &e) : sc_event_or_list()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    insert(e);
 }
 
-sc_event_or_list&
-sc_event_or_list::operator = (const sc_event_or_list &)
+sc_event_or_list::sc_event_or_list(bool auto_delete) :
+    autoDelete(auto_delete), busy(0)
+{}
+
+sc_event_or_list &
+sc_event_or_list::operator = (const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    events = eol.events;
     return *this;
 }
 
-sc_event_or_list::~sc_event_or_list()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+sc_event_or_list::~sc_event_or_list() {}
 
 int
 sc_event_or_list::size() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
+    return events.size();
 }
 
 void
-sc_event_or_list::swap(sc_event_or_list &)
+sc_event_or_list::swap(sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    events.swap(eol.events);
 }
 
 sc_event_or_list &
-sc_event_or_list::operator |= (const sc_event &)
+sc_event_or_list::operator |= (const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    insert(e);
     return *this;
 }
 
 sc_event_or_list &
-sc_event_or_list::operator |= (const sc_event_or_list &)
+sc_event_or_list::operator |= (const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    insert(eol);
     return *this;
 }
 
 sc_event_or_expr
-sc_event_or_list::operator | (const sc_event &) const
+sc_event_or_list::operator | (const sc_event &e) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_event_or_expr();
+    sc_event_or_expr expr;
+    expr.insert(*this);
+    expr.insert(e);
+    return expr;
 }
 
 sc_event_or_expr
-sc_event_or_list::operator | (const sc_event_or_list &) const
+sc_event_or_list::operator | (const sc_event_or_list &eol) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_event_or_expr();
+    sc_event_or_expr expr;
+    expr.insert(*this);
+    expr.insert(eol);
+    return expr;
+}
+
+void
+sc_event_or_list::insert(sc_event const &e)
+{
+    events.insert(&e);
+}
+
+void
+sc_event_or_list::insert(sc_event_or_list const &eol)
+{
+    events.insert(eol.events.begin(), eol.events.end());
+}
+
+
+/*
+ * sc_event_and_expr
+ */
+
+// Move semantics
+sc_event_and_expr::sc_event_and_expr(sc_event_and_expr const &e) :
+    list(e.list)
+{
+    e.list = nullptr;
 }
 
 sc_event_and_expr::operator const sc_event_and_list &() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const sc_event_and_list *)nullptr;
+    sc_event_and_list *temp = list;
+    list = nullptr;
+    return *temp;
 }
 
-sc_event_and_expr
-operator & (sc_event_and_expr expr, sc_event const &)
+void
+sc_event_and_expr::insert(sc_event const &e) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    assert(list);
+    list->insert(e);
+}
+
+void
+sc_event_and_expr::insert(sc_event_and_list const &eal) const
+{
+    assert(list);
+    list->insert(eal);
+}
+
+sc_event_and_expr::~sc_event_and_expr() { delete list; }
+
+sc_event_and_expr::sc_event_and_expr() : list(new sc_event_and_list(true)) {}
+
+sc_event_and_expr
+operator & (sc_event_and_expr expr, sc_event const &e)
+{
+    expr.insert(e);
     return expr;
 }
 
 sc_event_and_expr
-operator & (sc_event_and_expr expr, sc_event_and_list const &)
+operator & (sc_event_and_expr expr, sc_event_and_list const &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    expr.insert(eal);
     return expr;
+}
+
+
+/*
+ * sc_event_or_expr
+ */
+
+// Move semantics
+sc_event_or_expr::sc_event_or_expr(sc_event_or_expr const &e) :
+    list(e.list)
+{
+    e.list = nullptr;
 }
 
 sc_event_or_expr::operator const sc_event_or_list &() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const sc_event_or_list *)nullptr;
+    sc_event_or_list *temp = list;
+    list = NULL;
+    return *temp;
 }
 
-sc_event_or_expr
-operator | (sc_event_or_expr expr, sc_event const &)
+void
+sc_event_or_expr::insert(sc_event const &e) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    assert(list);
+    list->insert(e);
+}
+
+void
+sc_event_or_expr::insert(sc_event_or_list const &eol) const
+{
+    assert(list);
+    list->insert(eol);
+}
+
+sc_event_or_expr::~sc_event_or_expr() { delete list; }
+
+sc_event_or_expr::sc_event_or_expr() : list(new sc_event_or_list(true)) {}
+
+sc_event_or_expr
+operator | (sc_event_or_expr expr, sc_event const &e)
+{
+    expr.insert(e);
     return expr;
 }
 
 sc_event_or_expr
-operator | (sc_event_or_expr expr, sc_event_or_list const &)
+operator | (sc_event_or_expr expr, sc_event_or_list const &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    expr.insert(eol);
     return expr;
 }
 
-sc_event::sc_event()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
 
-sc_event::sc_event(const char *)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+/*
+ * sc_event
+ */
 
-sc_event::~sc_event()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+sc_event::sc_event() : _gem5_event(new ::sc_gem5::Event(this)) {}
 
-const char *
-sc_event::name() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
-}
+sc_event::sc_event(const char *_name) :
+    _gem5_event(new ::sc_gem5::Event(this, _name))
+{}
 
+sc_event::~sc_event() { delete _gem5_event; }
+
+const char *sc_event::name() const { return _gem5_event->name().c_str(); }
 const char *
 sc_event::basename() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
+    return _gem5_event->basename().c_str();
 }
-
-bool
-sc_event::in_hierarchy() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
-}
+bool sc_event::in_hierarchy() const { return _gem5_event->inHierarchy(); }
 
 sc_object *
 sc_event::get_parent_object() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (sc_object *)nullptr;
+    return _gem5_event->getParentObject();
 }
 
-void
-sc_event::notify()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+void sc_event::notify() { _gem5_event->notify(); }
+void sc_event::notify(const sc_time &t) { _gem5_event->notify(t); }
+void sc_event::notify(double d, sc_time_unit u) { _gem5_event->notify(d, u); }
+void sc_event::cancel() { _gem5_event->cancel(); }
+bool sc_event::triggered() const { return _gem5_event->triggered(); }
+void sc_event::notify_delayed() { _gem5_event->notify(SC_ZERO_TIME); }
+void sc_event::notify_delayed(const sc_time &t) { _gem5_event->notify(t); }
 
-void
-sc_event::notify(const sc_time &)
+sc_event_and_expr
+sc_event::operator & (const sc_event &e) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-void
-sc_event::notify(double, sc_time_unit)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-void
-sc_event::cancel()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-bool
-sc_event::triggered() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
-}
-
-void
-sc_event::notify_delayed()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-void
-sc_event::notify_delayed(const sc_time &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_event_and_expr expr;
+    expr.insert(*this);
+    expr.insert(e);
+    return expr;
 }
 
 sc_event_and_expr
-sc_event::operator & (const sc_event &) const
+sc_event::operator & (const sc_event_and_list &eal) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_event_and_expr();
-}
-
-sc_event_and_expr
-sc_event::operator & (const sc_event_and_list &) const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_event_and_expr();
+    sc_event_and_expr expr;
+    expr.insert(*this);
+    expr.insert(eal);
+    return expr;
 }
 
 sc_event_or_expr
-sc_event::operator | (const sc_event &) const
+sc_event::operator | (const sc_event &e) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_event_or_expr();
+    sc_event_or_expr expr;
+    expr.insert(*this);
+    expr.insert(e);
+    return expr;
 }
 
 sc_event_or_expr
-sc_event::operator | (const sc_event_or_list &) const
+sc_event::operator | (const sc_event_or_list &eol) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_event_or_expr();
+    sc_event_or_expr expr;
+    expr.insert(*this);
+    expr.insert(eol);
+    return expr;
 }
 
 const std::vector<sc_event *> &
 sc_get_top_level_events()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const std::vector<sc_event *> *)nullptr;
+    return ::sc_gem5::topLevelEvents;
 }
 
 sc_event *
-sc_find_event(const char *)
+sc_find_event(const char *name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return (sc_event *)nullptr;
+    std::string str(name);
+    ::sc_gem5::EventsIt it = ::sc_gem5::findEvent(str);
+    return it == ::sc_gem5::allEvents.end() ? nullptr : *it;
 }
 
 } // namespace sc_core

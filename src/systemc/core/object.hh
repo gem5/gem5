@@ -44,13 +44,14 @@ class Object;
 typedef std::vector<sc_core::sc_object *> Objects;
 typedef std::vector<sc_core::sc_event *> Events;
 typedef Objects::iterator ObjectsIt;
+typedef Events::iterator EventsIt;
 
 class Object
 {
   public:
-    Object(sc_core::sc_object *sc_obj);
-    Object(sc_core::sc_object *sc_obj, const char *);
-    Object(sc_core::sc_object *sc_obj, const Object &);
+    Object(sc_core::sc_object *_sc_obj);
+    Object(sc_core::sc_object *_sc_obj, const char *);
+    Object(sc_core::sc_object *_sc_obj, const Object &);
     Object &operator = (const Object &);
 
     virtual ~Object();
@@ -78,8 +79,19 @@ class Object
 
     sc_core::sc_simcontext *simcontext() const;
 
+    static Object *
+    getFromScObject(sc_core::sc_object *sc_obj)
+    {
+        return sc_obj->_gem5_object;
+    }
+
+    sc_core::sc_object *sc_obj() { return _sc_obj; }
+
+    EventsIt addChildEvent(sc_core::sc_event *e);
+    void delChildEvent(EventsIt it);
+
   private:
-    sc_core::sc_object *sc_obj;
+    sc_core::sc_object *_sc_obj;
 
     std::string _basename;
     std::string _name;
