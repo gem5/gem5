@@ -348,7 +348,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         satisfied = access(pkt, blk, lat, writebacks);
 
         // copy writebacks to write buffer here to ensure they logically
-        // proceed anything happening below
+        // precede anything happening below
         doWritebacks(writebacks, forward_time);
     }
 
@@ -593,7 +593,7 @@ BaseCache::recvAtomic(PacketPtr pkt)
     }
 
     // handle writebacks resulting from the access here to ensure they
-    // logically proceed anything happening below
+    // logically precede anything happening below
     doWritebacksAtomic(writebacks);
     assert(writebacks.empty());
 
