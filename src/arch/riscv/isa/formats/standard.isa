@@ -256,10 +256,24 @@ def template CSRExecute {{
                     } else {
                         DPRINTF(RiscvMisc, "Writing %#x to CSR %s.\n", data,
                                 CSRData.at(csr).name);
+                        INTERRUPT oldinterrupt = olddata;
+                        INTERRUPT newinterrupt = data;
                         switch (csr) {
                           case CSR_FCSR:
                             xc->setMiscReg(MISCREG_FFLAGS, bits(data, 4, 0));
                             xc->setMiscReg(MISCREG_FRM, bits(data, 7, 5));
+                            break;
+                          case CSR_MIP: case CSR_MIE:
+                            if (oldinterrupt.mei == newinterrupt.mei &&
+                                oldinterrupt.mti == newinterrupt.mti &&
+                                oldinterrupt.msi == newinterrupt.msi) {
+                                xc->setMiscReg(CSRData.at(csr).physIndex,data);
+                            } else {
+                                std::string error = "Interrupt m bits are "
+                                                    "read-only\n";
+                                fault = make_shared<IllegalInstFault>(error,
+                                                                     machInst);
+                            }
                             break;
                           default:
                             xc->setMiscReg(CSRData.at(csr).physIndex, data);

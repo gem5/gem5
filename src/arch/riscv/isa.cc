@@ -139,6 +139,12 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
             warn("Instruction counter disabled.\n");
             return 0;
         }
+      case MISCREG_IP:
+        return tc->getCpuPtr()->getInterruptController(tc->threadId())
+                              ->readIP();
+      case MISCREG_IE:
+        return tc->getCpuPtr()->getInterruptController(tc->threadId())
+                              ->readIE();
       default:
         // Try reading HPM counters
         // As a placeholder, all HPM counters are just cycle counters
@@ -175,7 +181,16 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
         // Ignore writes to HPM counters for now
         warn("Ignoring write to %s.\n", CSRData.at(misc_reg).name);
     } else {
-        setMiscRegNoEffect(misc_reg, val);
+        switch (misc_reg) {
+          case MISCREG_IP:
+            return tc->getCpuPtr()->getInterruptController(tc->threadId())
+                                  ->setIP(val);
+          case MISCREG_IE:
+            return tc->getCpuPtr()->getInterruptController(tc->threadId())
+                                  ->setIE(val);
+          default:
+            setMiscRegNoEffect(misc_reg, val);
+        }
     }
 }
 
