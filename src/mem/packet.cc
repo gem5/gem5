@@ -50,6 +50,7 @@
 
 #include "mem/packet.hh"
 
+#include <algorithm>
 #include <cstring>
 #include <iostream>
 
@@ -227,10 +228,10 @@ bool
 Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
                         uint8_t *_data)
 {
-    Addr func_start = getAddr();
-    Addr func_end   = getAddr() + getSize() - 1;
-    Addr val_start  = addr;
-    Addr val_end    = val_start + size - 1;
+    const Addr func_start = getAddr();
+    const Addr func_end   = getAddr() + getSize() - 1;
+    const Addr val_start  = addr;
+    const Addr val_end    = val_start + size - 1;
 
     if (is_secure != _isSecure || func_start > val_end ||
         val_start > func_end) {
@@ -251,94 +252,45 @@ Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
         return false;
     }
 
-    // offset of functional request into supplied value (could be
-    // negative if partial overlap)
-    int offset = func_start - val_start;
+    const Addr val_offset = func_start > val_start ?
+        func_start - val_start : 0;
+    const Addr func_offset = func_start < val_start ?
+        val_start - func_start : 0;
+    const Addr overlap_size = std::min(val_end, func_end)+1 -
+        std::max(val_start, func_start);
 
     if (isRead()) {
-        if (func_start >= val_start && func_end <= val_end) {
-            memcpy(getPtr<uint8_t>(), _data + offset, getSize());
-            if (bytesValid.empty())
-                bytesValid.resize(getSize(), true);
-            // complete overlap, and as the current packet is a read
-            // we are done
-            return true;
-        } else {
-            // Offsets and sizes to copy in case of partial overlap
-            int func_offset;
-            int val_offset;
-            int overlap_size;
+        memcpy(getPtr<uint8_t>() + func_offset,
+               _data + val_offset,
+               overlap_size);
 
-            // calculate offsets and copy sizes for the two byte arrays
-            if (val_start < func_start && val_end <= func_end) {
-                // the one we are checking against starts before and
-                // ends before or the same
-                val_offset = func_start - val_start;
-                func_offset = 0;
-                overlap_size = val_end - func_start;
-            } else if (val_start >= func_start && val_end > func_end) {
-                // the one we are checking against starts after or the
-                // same, and ends after
-                val_offset = 0;
-                func_offset = val_start - func_start;
-                overlap_size = func_end - val_start;
-            } else if (val_start >= func_start && val_end <= func_end) {
-                // the one we are checking against is completely
-                // subsumed in the current packet, possibly starting
-                // and ending at the same address
-                val_offset = 0;
-                func_offset = val_start - func_start;
-                overlap_size = size;
-            } else if (val_start < func_start && val_end > func_end) {
-                // the current packet is completely subsumed in the
-                // one we are checking against
-                val_offset = func_start - val_start;
-                func_offset = 0;
-                overlap_size = func_end - func_start;
-            } else {
-                panic("Missed a case for checkFunctional with "
-                      " %s 0x%x size %d, against 0x%x size %d\n",
-                      cmdString(), getAddr(), getSize(), addr, size);
-            }
+        // initialise the tracking of valid bytes if we have not
+        // used it already
+        if (bytesValid.empty())
+            bytesValid.resize(getSize(), false);
 
-            // copy partial data into the packet's data array
-            uint8_t *dest = getPtr<uint8_t>() + func_offset;
-            uint8_t *src = _data + val_offset;
-            memcpy(dest, src, overlap_size);
+        // track if we are done filling the functional access
+        bool all_bytes_valid = true;
 
-            // initialise the tracking of valid bytes if we have not
-            // used it already
-            if (bytesValid.empty())
-                bytesValid.resize(getSize(), false);
+        int i = 0;
 
-            // track if we are done filling the functional access
-            bool all_bytes_valid = true;
+        // check up to func_offset
+        for (; all_bytes_valid && i < func_offset; ++i)
+            all_bytes_valid &= bytesValid[i];
 
-            int i = 0;
+        // update the valid bytes
+        for (i = func_offset; i < func_offset + overlap_size; ++i)
+            bytesValid[i] = true;
 
-            // check up to func_offset
-            for (; all_bytes_valid && i < func_offset; ++i)
-                all_bytes_valid &= bytesValid[i];
+        // check the bit after the update we just made
+        for (; all_bytes_valid && i < getSize(); ++i)
+            all_bytes_valid &= bytesValid[i];
 
-            // update the valid bytes
-            for (i = func_offset; i < func_offset + overlap_size; ++i)
-                bytesValid[i] = true;
-
-            // check the bit after the update we just made
-            for (; all_bytes_valid && i < getSize(); ++i)
-                all_bytes_valid &= bytesValid[i];
-
-            return all_bytes_valid;
-        }
+        return all_bytes_valid;
     } else if (isWrite()) {
-        if (offset >= 0) {
-            memcpy(_data + offset, getConstPtr<uint8_t>(),
-                   (min(func_end, val_end) - func_start) + 1);
-        } else {
-            // val_start > func_start
-            memcpy(_data, getConstPtr<uint8_t>() - offset,
-                   (min(func_end, val_end) - val_start) + 1);
-        }
+        memcpy(_data + val_offset,
+               getConstPtr<uint8_t>() + func_offset,
+               overlap_size);
     } else {
         panic("Don't know how to handle command %s\n", cmdString());
     }
