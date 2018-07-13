@@ -113,8 +113,7 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
     // forward snoops is overridden in init() once we can query
     // whether the connected master is actually snooping or not
 
-    tempBlock = new TempCacheBlk();
-    tempBlock->data = new uint8_t[blkSize];
+    tempBlock = new TempCacheBlk(blkSize);
 
     tags->setCache(this);
     if (prefetcher)
@@ -123,7 +122,6 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
 
 BaseCache::~BaseCache()
 {
-    delete [] tempBlock->data;
     delete tempBlock;
 }
 

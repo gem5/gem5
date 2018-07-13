@@ -406,10 +406,17 @@ class TempCacheBlk final : public CacheBlk
     Addr _addr;
 
   public:
-    TempCacheBlk() : CacheBlk() {}
+    /**
+     * Creates a temporary cache block, with its own storage.
+     * @param size The size (in bytes) of this cache block.
+     */
+    TempCacheBlk(unsigned size) : CacheBlk()
+    {
+        data = new uint8_t[size];
+    }
     TempCacheBlk(const TempCacheBlk&) = delete;
     TempCacheBlk& operator=(const TempCacheBlk&) = delete;
-    ~TempCacheBlk() {};
+    ~TempCacheBlk() { delete [] data; };
 
     /**
      * Invalidate the block and clear all state.
