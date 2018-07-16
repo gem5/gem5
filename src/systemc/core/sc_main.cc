@@ -33,8 +33,10 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 #include "python/pybind11/pybind.hh"
+#include "sim/core.hh"
 #include "sim/eventq.hh"
 #include "sim/init.hh"
+#include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
@@ -124,8 +126,6 @@ sc_status _status = SC_ELABORATION;
 Tick _max_tick = MaxTick;
 sc_starvation_policy _starvation = SC_EXIT_ON_STARVATION;
 
-uint64_t _deltaCycles = 0;
-
 } // anonymous namespace
 
 int
@@ -193,14 +193,17 @@ sc_stop()
 const sc_time &
 sc_time_stamp()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(sc_time *)nullptr;
+    static sc_time tstamp;
+    Tick tick = sc_gem5::scheduler.eventQueue().getCurTick();
+    //XXX We're assuming the systemc time resolution is in ps.
+    tstamp = sc_time::from_value(tick / SimClock::Int::ps);
+    return tstamp;
 }
 
 sc_dt::uint64
 sc_delta_count()
 {
-    return _deltaCycles;
+    return sc_gem5::scheduler.numCycles();
 }
 
 bool
