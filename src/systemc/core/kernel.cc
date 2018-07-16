@@ -56,7 +56,7 @@ Kernel::t0Handler()
     // happen before them, honoring the ordering for the initialization phase
     // in the spec. The delta phase will happen at normal priority, and then
     // the event which runs the processes which is at a lower priority.
-    ::sc_gem5::scheduler.initToReady();
+    ::sc_gem5::scheduler.prepareForInit();
 }
 
 } // namespace SystemC

@@ -32,6 +32,8 @@
 #include <cstring>
 #include <utility>
 
+#include "base/logging.hh"
+#include "sim/core.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
 
@@ -41,7 +43,7 @@ namespace sc_gem5
 Event::Event(sc_core::sc_event *_sc_event) : Event(_sc_event, "") {}
 
 Event::Event(sc_core::sc_event *_sc_event, const char *_basename) :
-    _sc_event(_sc_event), _basename(_basename)
+    _sc_event(_sc_event), _basename(_basename), delayedNotify(this)
 {
     Module *p = currentModule();
 
@@ -81,6 +83,9 @@ Event::~Event()
     EventsIt it = findEvent(_name);
     std::swap(*it, allEvents.back());
     allEvents.pop_back();
+
+    if (delayedNotifyEvent.scheduled())
+        scheduler.deschedule(&delayedNotifyEvent);
 }
 
 const std::string &
@@ -110,16 +115,34 @@ Event::getParentObject() const
 void
 Event::notify()
 {
+    auto local_sensitivities = sensitivities;
+    for (auto s: local_sensitivities)
+        s->notify(this);
 }
 
 void
 Event::notify(const sc_core::sc_time &t)
 {
+    //XXX We're assuming the systemc time resolution is in ps.
+    Tick new_tick = t.value() * SimClock::Int::ps +
+        scheduler.eventQueue().getCurTick();
+    if (delayedNotify.scheduled()) {
+        Tick old_tick = delayedNotify.when();
+
+        if (new_tick >= old_tick)
+            return;
+
+        scheduler.eventQueue().deschedule(&delayedNotify);
+    }
+
+    scheduler.eventQueue().schedule(&delayedNotify, new_tick);
 }
 
 void
 Event::cancel()
 {
+    if (delayedNotify.scheduled())
+        scheduler.eventQueue().deschedule(&delayedNotify);
 }
 
 bool

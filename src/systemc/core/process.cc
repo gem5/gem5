@@ -28,10 +28,83 @@
  */
 
 #include "systemc/core/process.hh"
+
+#include "base/logging.hh"
+#include "systemc/core/event.hh"
 #include "systemc/core/scheduler.hh"
 
 namespace sc_gem5
 {
+
+void
+Sensitivity::satisfy()
+{
+    warn_once("Ignoring suspended status for now.\n");
+    process->setDynamic(nullptr);
+    scheduler.ready(process);
+}
+
+SensitivityTimeout::SensitivityTimeout(Process *p, ::sc_core::sc_time t) :
+    Sensitivity(p), timeoutEvent(this), timeout(t)
+{
+    Tick when = scheduler.eventQueue().getCurTick() + timeout.value();
+    scheduler.eventQueue().schedule(&timeoutEvent, when);
+}
+
+SensitivityTimeout::~SensitivityTimeout()
+{
+    if (timeoutEvent.scheduled())
+        scheduler.eventQueue().deschedule(&timeoutEvent);
+}
+
+SensitivityEvent::SensitivityEvent(
+        Process *p, const ::sc_core::sc_event *e) : Sensitivity(p), event(e)
+{
+    Event::getFromScEvent(event)->addSensitivity(this);
+}
+
+SensitivityEvent::~SensitivityEvent()
+{
+    Event::getFromScEvent(event)->delSensitivity(this);
+}
+
+SensitivityEventAndList::SensitivityEventAndList(
+        Process *p, const ::sc_core::sc_event_and_list *list) :
+    Sensitivity(p), list(list), count(0)
+{
+    for (auto e: list->events)
+        Event::getFromScEvent(e)->addSensitivity(this);
+}
+
+SensitivityEventAndList::~SensitivityEventAndList()
+{
+    for (auto e: list->events)
+        Event::getFromScEvent(e)->delSensitivity(this);
+}
+
+void
+SensitivityEventAndList::notifyWork(Event *e)
+{
+    e->delSensitivity(this);
+    count++;
+    if (count == list->events.size())
+        satisfy();
+}
+
+SensitivityEventOrList::SensitivityEventOrList(
+        Process *p, const ::sc_core::sc_event_or_list *list) :
+    Sensitivity(p), list(list)
+{
+    for (auto e: list->events)
+        Event::getFromScEvent(e)->addSensitivity(this);
+}
+
+SensitivityEventOrList::~SensitivityEventOrList()
+{
+    for (auto e: list->events)
+        Event::getFromScEvent(e)->delSensitivity(this);
+}
+
 
 class UnwindExceptionReset : public ::sc_core::sc_unwind_exception
 {
@@ -191,6 +264,23 @@ Process::syncResetOff(bool inc_kids)
 }
 
 void
+Process::dontInitialize()
+{
+    scheduler.dontInitialize(this);
+}
+
+void
+Process::finalize()
+{
+    for (auto &s: pendingStaticSensitivities) {
+        s->finalize(staticSensitivities);
+        delete s;
+        s = nullptr;
+    }
+    pendingStaticSensitivities.clear();
+};
+
+void
 Process::run()
 {
     _running = true;
@@ -206,15 +296,31 @@ Process::run()
     _running = false;
 }
 
+void
+Process::addStatic(PendingSensitivity *s)
+{
+    pendingStaticSensitivities.push_back(s);
+}
+
+void
+Process::setDynamic(Sensitivity *s)
+{
+    delete dynamicSensitivity;
+    dynamicSensitivity = s;
+}
+
 Process::Process(const char *name, ProcessFuncWrapper *func, bool _dynamic) :
     ::sc_core::sc_object(name), excWrapper(nullptr), func(func),
     _running(false), _dynamic(_dynamic), _isUnwinding(false),
     _terminated(false), _suspended(false), _disabled(false),
-    _syncReset(false), refCount(0), stackSize(::Fiber::DefaultStackSize)
+    _syncReset(false), refCount(0), stackSize(::Fiber::DefaultStackSize),
+    dynamicSensitivity(nullptr)
 {
     _newest = this;
-    if (!_dynamic)
-        scheduler.init(this);
+    if (_dynamic)
+        finalize();
+    else
+        scheduler.reg(this);
 }
 
 Process *Process::_newest;

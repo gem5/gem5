@@ -30,9 +30,11 @@
 #ifndef __SYSTEMC_CORE_EVENT_HH__
 #define __SYSTEMC_CORE_EVENT_HH__
 
+#include <set>
 #include <string>
 #include <vector>
 
+#include "sim/eventq.hh"
 #include "systemc/core/list.hh"
 #include "systemc/core/object.hh"
 #include "systemc/ext/core/sc_prim.hh"
@@ -49,6 +51,8 @@ namespace sc_gem5
 {
 
 typedef std::vector<sc_core::sc_event *> Events;
+
+class Sensitivity;
 
 class Event
 {
@@ -88,6 +92,9 @@ class Event
         return e->_gem5_event;
     }
 
+    void addSensitivity(Sensitivity *s) const { sensitivities.insert(s); }
+    void delSensitivity(Sensitivity *s) const { sensitivities.erase(s); }
+
   private:
     sc_core::sc_event *_sc_event;
 
@@ -97,6 +104,10 @@ class Event
 
     sc_core::sc_object *parent;
     EventsIt parentIt;
+
+    EventWrapper<Event, &Event::notify> delayedNotify;
+
+    mutable std::set<Sensitivity *> sensitivities;
 };
 
 extern Events topLevelEvents;

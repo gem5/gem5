@@ -30,6 +30,8 @@
 #ifndef __SYSTEMC_CORE_SCHEDULER_HH__
 #define __SYSTEMC_CORE_SCHEDULER_HH__
 
+#include <vector>
+
 #include "sim/eventq.hh"
 #include "systemc/core/channel.hh"
 #include "systemc/core/list.hh"
@@ -58,7 +60,7 @@ typedef NodeList<Channel> ChannelList;
  * schedules an event to be run at time 0 with a slightly elevated priority
  * so that it happens before any "normal" event.
  *
- * When that t0 event happens, it calls the schedulers initToReady method
+ * When that t0 event happens, it calls the schedulers prepareForInit method
  * which performs step 2 above. That indirectly causes the scheduler's
  * readyEvent to be scheduled with slightly lowered priority, ensuring it
  * happens after any "normal" event.
@@ -115,11 +117,14 @@ class Scheduler
     uint64_t numCycles() { return _numCycles; }
     Process *current() { return _current; }
 
-    // Mark processes that need to be initialized as ready.
-    void initToReady();
+    // Prepare for initialization.
+    void prepareForInit();
 
-    // Put a process on the list of processes to be initialized.
-    void init(Process *p) { initList.pushLast(p); }
+    // Register a process with the scheduler.
+    void reg(Process *p);
+
+    // Tell the scheduler not to initialize a process.
+    void dontInitialize(Process *p);
 
     // Run the next process, if there is one.
     void yield();
@@ -162,7 +167,10 @@ class Scheduler
 
     Process *_current;
 
+    bool initReady;
+
     ProcessList initList;
+    ProcessList toFinalize;
     ProcessList readyList;
 
     ChannelList updateList;

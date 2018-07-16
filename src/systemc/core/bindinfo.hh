@@ -27,53 +27,20 @@
  * Authors: Gabe Black
  */
 
-#include "base/logging.hh"
-#include "systemc/core/process.hh"
+#ifndef __SYSTEMC_CORE_BINDINFO_HH__
+#define __SYSTEMC_CORE_BINDINFO_HH__
+
 #include "systemc/ext/core/sc_interface.hh"
-#include "systemc/ext/core/sc_sensitive.hh"
 
-namespace sc_core
+namespace sc_gem5
 {
 
-sc_sensitive::sc_sensitive() : currentProcess(nullptr) {}
-
-sc_sensitive &
-sc_sensitive::operator << (const sc_event &e)
+class BindInfo
 {
-    currentProcess->addStatic(
-            new sc_gem5::PendingSensitivityEvent(currentProcess, &e));
-    return *this;
-}
+  public:
+    ::sc_core::sc_interface *interface;
+};
 
-sc_sensitive &
-sc_sensitive::operator << (const sc_interface &i)
-{
-    currentProcess->addStatic(
-            new sc_gem5::PendingSensitivityInterface(currentProcess, &i));
-    return *this;
-}
+} // namespace sc_gem5
 
-sc_sensitive &
-sc_sensitive::operator << (const sc_port_base &b)
-{
-    currentProcess->addStatic(
-            new sc_gem5::PendingSensitivityPort(currentProcess, &b));
-    return *this;
-}
-
-sc_sensitive &
-sc_sensitive::operator << (sc_event_finder &f)
-{
-    currentProcess->addStatic(
-            new sc_gem5::PendingSensitivityFinder(currentProcess, &f));
-    return *this;
-}
-
-sc_sensitive &
-sc_sensitive::operator << (::sc_gem5::Process *p)
-{
-    currentProcess = p;
-    return *this;
-}
-
-} // namespace sc_core
+#endif // __SYSTEMC_CORE_BINDINFO_HH__

@@ -38,14 +38,52 @@ namespace sc_gem5
 
 Scheduler::Scheduler() :
     eq(nullptr), readyEvent(this, false, EventBase::Default_Pri + 1),
-    _numCycles(0), _current(nullptr)
+    _numCycles(0), _current(nullptr), initReady(false)
 {}
 
 void
-Scheduler::initToReady()
+Scheduler::prepareForInit()
 {
-    while (!initList.empty())
-        ready(initList.getNext());
+    for (Process *p = toFinalize.getNext(); p; p = toFinalize.getNext()) {
+        p->finalize();
+        p->popListNode();
+    }
+
+    for (Process *p = initList.getNext(); p; p = initList.getNext()) {
+        p->finalize();
+        ready(p);
+    }
+
+    initReady = true;
+}
+
+void
+Scheduler::reg(Process *p)
+{
+    if (initReady) {
+        // If we're past initialization, finalize static sensitivity.
+        p->finalize();
+        // Mark the process as ready.
+        ready(p);
+    } else {
+        // Otherwise, record that this process should be initialized once we
+        // get there.
+        initList.pushLast(p);
+    }
+}
+
+void
+Scheduler::dontInitialize(Process *p)
+{
+    if (initReady) {
+        // Pop this process off of the ready list.
+        p->popListNode();
+    } else {
+        // Push this process onto the list of processes which still need
+        // their static sensitivity to be finalized. That implicitly pops it
+        // off the list of processes to be initialized/marked ready.
+        toFinalize.pushLast(p);
+    }
 }
 
 void
