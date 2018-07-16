@@ -421,31 +421,36 @@ sc_module::at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &s)
 void
 next_trigger()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(nullptr);
 }
 
 void
-next_trigger(const sc_event &)
+next_trigger(const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(new ::sc_gem5::SensitivityEvent(p, &e));
 }
 
 void
-next_trigger(const sc_event_or_list &)
+next_trigger(const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(new ::sc_gem5::SensitivityEventOrList(p, &eol));
 }
 
 void
-next_trigger(const sc_event_and_list &)
+next_trigger(const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(new ::sc_gem5::SensitivityEventAndList(p, &eal));
 }
 
 void
-next_trigger(const sc_time &)
+next_trigger(const sc_time &t)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(new ::sc_gem5::SensitivityTimeout(p, t));
 }
 
 void
@@ -455,9 +460,10 @@ next_trigger(double d, sc_time_unit u)
 }
 
 void
-next_trigger(const sc_time &, const sc_event &)
+next_trigger(const sc_time &t, const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(new ::sc_gem5::SensitivityTimeoutAndEvent(p, t, &e));
 }
 
 void
@@ -467,9 +473,11 @@ next_trigger(double d, sc_time_unit u, const sc_event &e)
 }
 
 void
-next_trigger(const sc_time &, const sc_event_or_list &)
+next_trigger(const sc_time &t, const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(
+            new ::sc_gem5::SensitivityTimeoutAndEventOrList(p, t, &eol));
 }
 
 void
@@ -479,9 +487,11 @@ next_trigger(double d, sc_time_unit u, const sc_event_or_list &eol)
 }
 
 void
-next_trigger(const sc_time &, const sc_event_and_list &)
+next_trigger(const sc_time &t, const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(
+            new ::sc_gem5::SensitivityTimeoutAndEventAndList(p, t, &eal));
 }
 
 void
@@ -501,37 +511,48 @@ timed_out()
 void
 wait()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(nullptr);
+    sc_gem5::scheduler.yield();
 }
 
 void
-wait(int)
+wait(int n)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    for (int i = 0; i < n; i++)
+        wait();
 }
 
 void
-wait(const sc_event &)
+wait(const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(new ::sc_gem5::SensitivityEvent(p, &e));
+    sc_gem5::scheduler.yield();
 }
 
 void
-wait(const sc_event_or_list &)
+wait(const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(new ::sc_gem5::SensitivityEventOrList(p, &eol));
+    sc_gem5::scheduler.yield();
 }
 
 void
-wait(const sc_event_and_list &)
+wait(const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(new ::sc_gem5::SensitivityEventAndList(p, &eal));
+    sc_gem5::scheduler.yield();
 }
 
 void
-wait(const sc_time &)
+wait(const sc_time &t)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(new ::sc_gem5::SensitivityTimeout(p, t));
+    sc_gem5::scheduler.yield();
 }
 
 void
@@ -541,9 +562,11 @@ wait(double d, sc_time_unit u)
 }
 
 void
-wait(const sc_time &, const sc_event &)
+wait(const sc_time &t, const sc_event &e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(new ::sc_gem5::SensitivityTimeoutAndEvent(p, t, &e));
+    sc_gem5::scheduler.yield();
 }
 
 void
@@ -553,9 +576,12 @@ wait(double d, sc_time_unit u, const sc_event &e)
 }
 
 void
-wait(const sc_time &, const sc_event_or_list &)
+wait(const sc_time &t, const sc_event_or_list &eol)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(
+            new ::sc_gem5::SensitivityTimeoutAndEventOrList(p, t, &eol));
+    sc_gem5::scheduler.yield();
 }
 
 void
@@ -565,9 +591,12 @@ wait(double d, sc_time_unit u, const sc_event_or_list &eol)
 }
 
 void
-wait(const sc_time &, const sc_event_and_list &)
+wait(const sc_time &t, const sc_event_and_list &eal)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->setDynamic(
+            new ::sc_gem5::SensitivityTimeoutAndEventAndList(p, t, &eal));
+    sc_gem5::scheduler.yield();
 }
 
 void
