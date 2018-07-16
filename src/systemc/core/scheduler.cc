@@ -51,7 +51,7 @@ Scheduler::prepareForInit()
 
     for (Process *p = initList.getNext(); p; p = initList.getNext()) {
         p->finalize();
-        ready(p);
+        p->ready();
     }
 
     initReady = true;
@@ -64,7 +64,7 @@ Scheduler::reg(Process *p)
         // If we're past initialization, finalize static sensitivity.
         p->finalize();
         // Mark the process as ready.
-        ready(p);
+        p->ready();
     } else {
         // Otherwise, record that this process should be initialized once we
         // get there.

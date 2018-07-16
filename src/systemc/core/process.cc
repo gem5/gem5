@@ -36,14 +36,6 @@
 namespace sc_gem5
 {
 
-void
-Sensitivity::satisfy()
-{
-    warn_once("Ignoring suspended status for now.\n");
-    process->setDynamic(nullptr);
-    scheduler.ready(process);
-}
-
 SensitivityTimeout::SensitivityTimeout(Process *p, ::sc_core::sc_time t) :
     Sensitivity(p), timeoutEvent(this), timeout(t)
 {
@@ -88,7 +80,7 @@ SensitivityEventAndList::notifyWork(Event *e)
     e->delSensitivity(this);
     count++;
     if (count == list->events.size())
-        satisfy();
+        process->satisfySensitivity(this);
 }
 
 SensitivityEventOrList::SensitivityEventOrList(
@@ -150,7 +142,7 @@ Process::suspend(bool inc_kids)
 
     if (!_suspended) {
         _suspended = true;
-        //TODO Suspend this process.
+        _suspendedReady = false;
     }
 
     if (procKind() != ::sc_core::SC_METHOD_PROC_ &&
@@ -167,7 +159,9 @@ Process::resume(bool inc_kids)
 
     if (_suspended) {
         _suspended = false;
-        //TODO Resume this process.
+        if (_suspendedReady)
+            ready();
+        _suspendedReady = false;
     }
 }
 
@@ -307,6 +301,26 @@ Process::setDynamic(Sensitivity *s)
 {
     delete dynamicSensitivity;
     dynamicSensitivity = s;
+}
+
+void
+Process::satisfySensitivity(Sensitivity *s)
+{
+    // If there's a dynamic sensitivity and this wasn't it, ignore.
+    if (dynamicSensitivity && dynamicSensitivity != s)
+        return;
+
+    setDynamic(nullptr);
+    ready();
+}
+
+void
+Process::ready()
+{
+    if (suspended())
+        _suspendedReady = true;
+    else
+        scheduler.ready(this);
 }
 
 Process::Process(const char *name, ProcessFuncWrapper *func, bool _dynamic) :

@@ -51,13 +51,12 @@ class Sensitivity
 {
   protected:
     Process *process;
-    void satisfy();
 
   public:
     Sensitivity(Process *p) : process(p) {}
     virtual ~Sensitivity() {}
 
-    virtual void notifyWork(Event *e) { satisfy(); }
+    virtual void notifyWork(Event *e);
     void notify(Event *e);
     void notify() { notify(nullptr); }
 
@@ -290,6 +289,10 @@ class Process : public ::sc_core::sc_object, public ListNode
     void addStatic(PendingSensitivity *);
     void setDynamic(Sensitivity *);
 
+    void satisfySensitivity(Sensitivity *);
+
+    void ready();
+
     virtual Fiber *fiber() { return Fiber::primaryFiber(); }
 
     static Process *newest() { return _newest; }
@@ -317,6 +320,7 @@ class Process : public ::sc_core::sc_object, public ListNode
     bool _terminated;
 
     bool _suspended;
+    bool _suspendedReady;
     bool _disabled;
 
     bool _syncReset;
@@ -330,6 +334,12 @@ class Process : public ::sc_core::sc_object, public ListNode
 
     Sensitivity *dynamicSensitivity;
 };
+
+inline void
+Sensitivity::notifyWork(Event *e)
+{
+    process->satisfySensitivity(this);
+}
 
 inline void
 Sensitivity::notify(Event *e)
