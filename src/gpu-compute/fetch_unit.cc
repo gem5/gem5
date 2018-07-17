@@ -557,6 +557,7 @@ FetchUnit::FetchBufDesc::decodeInsts()
                                                wavefront, gpu_static_inst,
                                                wavefront->computeUnit->
                                                 getAndIncSeqNum());
+            gpu_dyn_inst->initOperandInfo(gpu_dyn_inst);
             wavefront->instructionBuffer.push_back(gpu_dyn_inst);
 
             DPRINTF(GPUFetch, "WF[%d][%d]: Id%ld decoded %s (%d bytes). "
@@ -597,6 +598,7 @@ FetchUnit::FetchBufDesc::decodeSplitInst()
                                        wavefront, gpu_static_inst,
                                        wavefront->computeUnit->
                                            getAndIncSeqNum());
+    gpu_dyn_inst->initOperandInfo(gpu_dyn_inst);
     wavefront->instructionBuffer.push_back(gpu_dyn_inst);
 
     DPRINTF(GPUFetch, "WF[%d][%d]: Id%d decoded split inst %s (%#x) "

@@ -74,17 +74,85 @@ class AtomicOpCAS : public TypedAtomicOpFunctor<T>
     AtomicOpFunctor* clone () { return new AtomicOpCAS(c, s, computeUnit); }
 };
 
+class RegisterOperandInfo
+{
+  public:
+    RegisterOperandInfo() = delete;
+    RegisterOperandInfo(int op_idx, int num_dwords,
+                        const std::vector<int> &virt_indices,
+                        const std::vector<int> &phys_indices)
+        : opIdx(op_idx), numDWORDs(num_dwords), virtIndices(virt_indices),
+          physIndices(phys_indices)
+    {
+    }
+
+    /**
+     * The number of registers required to store this operand.
+     */
+    int numRegisters() const { return numDWORDs / TheGpuISA::RegSizeDWORDs; }
+    int operandIdx() const { return opIdx; }
+    /**
+     * We typically only need the first virtual register for the operand
+     * regardless of its size.
+     */
+    int virtIdx(int reg_num=0) const { return virtIndices.at(reg_num); }
+
+  private:
+    /**
+     * Index of this operand within the set of its parent instruction's
+     * operand list.
+     */
+    const int opIdx;
+    /**
+     * Size of this operand in DWORDs.
+     */
+    const int numDWORDs;
+    const std::vector<int> virtIndices;
+    const std::vector<int> physIndices;
+};
+
 class GPUDynInst : public GPUExecContext
 {
   public:
     GPUDynInst(ComputeUnit *_cu, Wavefront *_wf, GPUStaticInst *static_inst,
                uint64_t instSeqNum);
     ~GPUDynInst();
+    void initOperandInfo(GPUDynInstPtr &gpu_dyn_inst);
     void execute(GPUDynInstPtr gpuDynInst);
+
+    const std::vector<RegisterOperandInfo>&
+    srcVecRegOperands() const
+    {
+        return srcVecRegOps;
+    }
+
+    const std::vector<RegisterOperandInfo>&
+    dstVecRegOperands() const
+    {
+        return dstVecRegOps;
+    }
+
+    const std::vector<RegisterOperandInfo>&
+    srcScalarRegOperands() const
+    {
+        return srcScalarRegOps;
+    }
+
+    const std::vector<RegisterOperandInfo>&
+    dstScalarRegOperands() const
+    {
+        return dstScalarRegOps;
+    }
+
+    int numSrcVecRegOperands() const;
+    int numDstVecRegOperands() const;
+    int maxSrcVecRegOperandSize() const;
+    int numSrcScalarRegOperands() const;
+    int numDstScalarRegOperands() const;
+    int maxSrcScalarRegOperandSize() const;
+
     int numSrcRegOperands();
     int numDstRegOperands();
-    int numDstVecOperands();
-    int numSrcVecOperands();
     int numSrcVecDWORDs();
     int numDstVecDWORDs();
     int numOpdDWORDs(int operandIdx);
@@ -428,6 +496,8 @@ class GPUDynInst : public GPUExecContext
   private:
     GPUStaticInst *_staticInst;
     const InstSeqNum _seqNum;
+    int maxSrcVecRegOpSize;
+    int maxSrcScalarRegOpSize;
 
     // the time the request was started
     Tick accessTime = -1;
@@ -439,6 +509,12 @@ class GPUDynInst : public GPUExecContext
     // hold each cache block address for the instruction and a vector
     // to hold the tick when the block arrives at certain hop points
     std::map<Addr, std::vector<Tick>> lineAddressTime;
+
+    // Operand info.
+    std::vector<RegisterOperandInfo> srcVecRegOps;
+    std::vector<RegisterOperandInfo> dstVecRegOps;
+    std::vector<RegisterOperandInfo> srcScalarRegOps;
+    std::vector<RegisterOperandInfo> dstScalarRegOps;
 };
 
 #endif // __GPU_DYN_INST_HH__

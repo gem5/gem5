@@ -168,6 +168,12 @@ namespace Gcn3ISA
     typedef int64_t VecElemI64;
     typedef double VecElemF64;
 
+    const int DWORDSize = sizeof(VecElemU32);
+    /**
+     * Size of a single-precision register in DWORDs.
+     */
+    const int RegSizeDWORDs = sizeof(VecElemU32) / DWORDSize;
+
     // typedefs for the various sizes/types of vector regs
     using VecRegU8 = ::VecRegT<VecElemU8, NumVecElemPerVecReg, false>;
     using VecRegI8 = ::VecRegT<VecElemI8, NumVecElemPerVecReg, false>;

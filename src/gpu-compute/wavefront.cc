@@ -904,8 +904,8 @@ Wavefront::exec()
     }
     computeUnit->srf[simdId]->waveExecuteInst(this, ii);
 
-    computeUnit->shader->incVectorInstSrcOperand(ii->numSrcVecOperands());
-    computeUnit->shader->incVectorInstDstOperand(ii->numDstVecOperands());
+    computeUnit->shader->incVectorInstSrcOperand(ii->numSrcVecRegOperands());
+    computeUnit->shader->incVectorInstDstOperand(ii->numDstVecRegOperands());
     computeUnit->stats.numInstrExecuted++;
     stats.numInstrExecuted++;
     computeUnit->instExecPerSimd[simdId]++;
