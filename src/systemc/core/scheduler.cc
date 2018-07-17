@@ -37,7 +37,12 @@ namespace sc_gem5
 {
 
 Scheduler::Scheduler() :
-    eq(nullptr), readyEvent(this, false, EventBase::Default_Pri + 1),
+    eq(nullptr), _pendingCurr(0), _pendingFuture(0),
+    readyEvent(this, false, ReadyPriority),
+    pauseEvent(this, false, PausePriority),
+    stopEvent(this, false, StopPriority),
+    scMain(nullptr), _started(false), _paused(false), _stopped(false),
+    maxTickEvent(this, false, MaxTickPriority),
     _numCycles(0), _current(nullptr), initReady(false)
 {}
 
@@ -53,6 +58,9 @@ Scheduler::prepareForInit()
         p->finalize();
         p->ready();
     }
+
+    if (_started)
+        eq->schedule(&maxTickEvent, maxTick);
 
     initReady = true;
 }
@@ -98,9 +106,8 @@ Scheduler::yield()
         // Switch to whatever Fiber is supposed to run this process. All
         // Fibers which aren't running should be parked at this line.
         _current->fiber()->run();
-        // If the current process hasn't been started yet, start it. This
-        // should always be true for methods, but may not be true for threads.
-        if (_current && !_current->running())
+        // If the current process needs to be manually started, start it.
+        if (_current && _current->needsStart())
             _current->run();
     }
 }
@@ -162,6 +169,75 @@ Scheduler::update()
         channel->update();
         channel = updateList.getNext();
     }
+}
+
+void
+Scheduler::pause()
+{
+    _paused = true;
+    scMain->run();
+}
+
+void
+Scheduler::stop()
+{
+    _stopped = true;
+    scMain->run();
+}
+
+void
+Scheduler::start(Tick max_tick, bool run_to_time)
+{
+    // We should be running from sc_main. Keep track of that Fiber to return
+    // to later.
+    scMain = Fiber::currentFiber();
+
+    _started = true;
+    _paused = false;
+    _stopped = false;
+
+    maxTick = max_tick;
+
+    if (initReady)
+        eq->schedule(&maxTickEvent, maxTick);
+
+    // Return to gem5 to let it run events, etc.
+    Fiber::primaryFiber()->run();
+
+    if (pauseEvent.scheduled())
+        eq->deschedule(&pauseEvent);
+    if (stopEvent.scheduled())
+        eq->deschedule(&stopEvent);
+    if (maxTickEvent.scheduled())
+        eq->deschedule(&maxTickEvent);
+}
+
+void
+Scheduler::schedulePause()
+{
+    if (pauseEvent.scheduled())
+        return;
+
+    eq->schedule(&pauseEvent, eq->getCurTick());
+}
+
+void
+Scheduler::scheduleStop(bool finish_delta)
+{
+    if (stopEvent.scheduled())
+        return;
+
+    if (!finish_delta) {
+        // If we're not supposed to finish the delta cycle, flush the list
+        // of ready processes and scheduled updates.
+        Process *p;
+        while ((p = readyList.getNext()))
+            p->popListNode();
+        Channel *c;
+        while ((c = updateList.getNext()))
+            c->popListNode();
+    }
+    eq->schedule(&stopEvent, eq->getCurTick());
 }
 
 Scheduler scheduler;

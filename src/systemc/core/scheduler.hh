@@ -32,10 +32,13 @@
 
 #include <vector>
 
+#include "base/logging.hh"
 #include "sim/eventq.hh"
 #include "systemc/core/channel.hh"
 #include "systemc/core/list.hh"
 #include "systemc/core/process.hh"
+
+class Fiber;
 
 namespace sc_gem5
 {
@@ -105,6 +108,32 @@ typedef NodeList<Channel> ChannelList;
  * will all happen together since the readyEvent priority is lower,
  * potentially marking new processes as ready. Once these events finish, the
  * readyEvent may run, starting the next delta cycle.
+ *
+ * PAUSE/STOP
+ *
+ * To inject a pause from sc_pause which should happen after the current delta
+ * cycle's delta notification phase, an event is scheduled with a lower than
+ * normal priority, but higher than the readyEvent. That ensures that any
+ * delta notifications which are scheduled with normal priority will happen
+ * first, since those are part of the current delta cycle. Then the pause
+ * event will happen before the next readyEvent which would start the next
+ * delta cycle. All of these events are scheduled for the current time, and so
+ * would happen before any timed notifications went off.
+ *
+ * To inject a stop from sc_stop, the delta cycles should stop before even the
+ * delta notifications have happened, but after the evaluate and update phases.
+ * For that, a stop event with slightly higher than normal priority will be
+ * scheduled so that it happens before any of the delta notification events
+ * which are at normal priority.
+ *
+ * MAX RUN TIME
+ *
+ * When sc_start is called, it's possible to pass in a maximum time the
+ * simulation should run to, at which point sc_pause is implicitly called.
+ * That's implemented by scheduling an event at the max time with a priority
+ * which is lower than all the others so that it happens only if time would
+ * advance. When that event triggers, it calls the same function as the pause
+ * event.
  */
 
 class Scheduler
@@ -156,12 +185,43 @@ class Scheduler
     // Run scheduled channel updates.
     void update();
 
+    void setScMainFiber(Fiber *sc_main) { scMain = sc_main; }
+
+    void start(Tick max_tick, bool run_to_time);
+
+    void schedulePause();
+    void scheduleStop(bool finish_delta);
+
+    bool paused() { return _paused; }
+    bool stopped() { return _stopped; }
+
   private:
+    typedef const EventBase::Priority Priority;
+    static Priority DefaultPriority = EventBase::Default_Pri;
+
+    static Priority StopPriority = DefaultPriority - 1;
+    static Priority PausePriority = DefaultPriority + 1;
+    static Priority ReadyPriority = DefaultPriority + 2;
+    static Priority MaxTickPriority = DefaultPriority + 3;
+
     EventQueue *eq;
 
     void runReady();
     EventWrapper<Scheduler, &Scheduler::runReady> readyEvent;
     void scheduleReadyEvent();
+
+    void pause();
+    void stop();
+    EventWrapper<Scheduler, &Scheduler::pause> pauseEvent;
+    EventWrapper<Scheduler, &Scheduler::stop> stopEvent;
+    Fiber *scMain;
+
+    bool _started;
+    bool _paused;
+    bool _stopped;
+
+    Tick maxTick;
+    EventWrapper<Scheduler, &Scheduler::pause> maxTickEvent;
 
     uint64_t _numCycles;
 

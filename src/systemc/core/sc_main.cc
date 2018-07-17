@@ -123,9 +123,6 @@ EmbeddedPyBind embed_("systemc", &systemc_pybind);
 sc_stop_mode _stop_mode = SC_STOP_FINISH_DELTA;
 sc_status _status = SC_ELABORATION;
 
-Tick _max_tick = MaxTick;
-sc_starvation_policy _starvation = SC_EXIT_ON_STARVATION;
-
 } // anonymous namespace
 
 int
@@ -143,28 +140,29 @@ sc_argv()
 void
 sc_start()
 {
-    _max_tick = MaxTick;
-    _starvation = SC_EXIT_ON_STARVATION;
-
-    // Switch back gem5.
-    Fiber::primaryFiber()->run();
+    Tick now = curEventQueue() ? curEventQueue()->getCurTick() : 0;
+    sc_start(sc_time::from_value(MaxTick - now), SC_EXIT_ON_STARVATION);
 }
 
 void
 sc_pause()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (_status == SC_RUNNING)
+        ::sc_gem5::scheduler.schedulePause();
 }
 
 void
 sc_start(const sc_time &time, sc_starvation_policy p)
 {
-    Tick now = curEventQueue() ? curEventQueue()->getCurTick() : 0;
-    _max_tick = now + time.value();
-    _starvation = p;
+    _status = SC_RUNNING;
 
-    // Switch back to gem5.
-    Fiber::primaryFiber()->run();
+    Tick now = curEventQueue() ? curEventQueue()->getCurTick() : 0;
+    ::sc_gem5::scheduler.start(now + time.value(), p == SC_RUN_TO_TIME);
+
+    if (::sc_gem5::scheduler.paused())
+        _status = SC_PAUSED;
+    else if (::sc_gem5::scheduler.stopped())
+        _status = SC_STOPPED;
 }
 
 void
@@ -187,7 +185,15 @@ sc_get_stop_mode()
 void
 sc_stop()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (_status == SC_STOPPED)
+        return;
+
+    if (sc_is_running()) {
+        bool finish_delta = (_stop_mode == SC_STOP_FINISH_DELTA);
+        ::sc_gem5::scheduler.scheduleStop(finish_delta);
+    } else {
+        //XXX Should stop if in one of the various elaboration callbacks.
+    }
 }
 
 const sc_time &

@@ -246,7 +246,7 @@ class Process : public ::sc_core::sc_object, public ListNode
 {
   public:
     virtual ::sc_core::sc_curr_proc_kind procKind() const = 0;
-    bool running() const { return _running; }
+    bool needsStart() const { return _needsStart; }
     bool dynamic() const { return _dynamic; }
     bool isUnwinding() const { return _isUnwinding; }
     bool terminated() const { return _terminated; }
@@ -298,7 +298,8 @@ class Process : public ::sc_core::sc_object, public ListNode
     static Process *newest() { return _newest; }
 
   protected:
-    Process(const char *name, ProcessFuncWrapper *func, bool _dynamic);
+    Process(const char *name, ProcessFuncWrapper *func, bool _dynamic,
+            bool needs_start);
 
     static Process *_newest;
 
@@ -314,7 +315,7 @@ class Process : public ::sc_core::sc_object, public ListNode
 
     ProcessFuncWrapper *func;
     sc_core::sc_curr_proc_kind _procKind;
-    bool _running;
+    bool _needsStart;
     bool _dynamic;
     bool _isUnwinding;
     bool _terminated;

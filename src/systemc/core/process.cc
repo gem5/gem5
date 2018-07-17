@@ -277,7 +277,6 @@ Process::finalize()
 void
 Process::run()
 {
-    _running = true;
     bool reset;
     do {
         reset = false;
@@ -287,7 +286,7 @@ Process::run()
             reset = exc.is_reset();
         }
     } while (reset);
-    _running = false;
+    _terminated = true;
 }
 
 void
@@ -323,9 +322,10 @@ Process::ready()
         scheduler.ready(this);
 }
 
-Process::Process(const char *name, ProcessFuncWrapper *func, bool _dynamic) :
+Process::Process(const char *name, ProcessFuncWrapper *func,
+        bool _dynamic, bool needs_start) :
     ::sc_core::sc_object(name), excWrapper(nullptr), func(func),
-    _running(false), _dynamic(_dynamic), _isUnwinding(false),
+    _needsStart(needs_start), _dynamic(_dynamic), _isUnwinding(false),
     _terminated(false), _suspended(false), _disabled(false),
     _syncReset(false), refCount(0), stackSize(::Fiber::DefaultStackSize),
     dynamicSensitivity(nullptr)
