@@ -30,7 +30,16 @@
 #ifndef __BASE_FIBER_HH__
 #define __BASE_FIBER_HH__
 
+// ucontext functions (like getcontext, setcontext etc) have been marked
+// as deprecated and are hence hidden in latest macOS releases.
+// By defining _XOPEN_SOURCE we make them available at compilation time.
+#if defined(__APPLE__) && defined(__MACH__)
+#define _XOPEN_SOURCE 600
 #include <ucontext.h>
+#undef _XOPEN_SOURCE
+#else
+#include <ucontext.h>
+#endif
 
 #include <cstddef>
 #include <cstdint>
