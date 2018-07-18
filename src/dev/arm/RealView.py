@@ -1052,7 +1052,7 @@ Memory map:
        0x2b000000-0x2b00ffff: HDLCD
 
        0x2c001000-0x2c001fff: GIC (distributor)
-       0x2c002000-0x2c0020ff: GIC (CPU interface)
+       0x2c002000-0x2c003fff: GIC (CPU interface)
        0x2c004000-0x2c005fff: vGIC (HV)
        0x2c006000-0x2c007fff: vGIC (VCPU)
        0x2c1c0000-0x2c1cffff: GICv2m MSI frame 0

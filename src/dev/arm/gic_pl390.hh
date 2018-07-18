@@ -72,7 +72,7 @@ class Pl390 : public BaseGic, public BaseGicRegisters
         GICD_PIDR2         = 0xfe8, // distributor peripheral ID2
         GICD_PIDR3         = 0xfec, // distributor peripheral ID3
 
-        DIST_SIZE          = 0xfff
+        DIST_SIZE          = 0x1000,
     };
 
     /**
@@ -111,7 +111,7 @@ class Pl390 : public BaseGic, public BaseGicRegisters
         GICC_APR3  = 0xdc, // active priority register 3
         GICC_IIDR  = 0xfc, // cpu interface id register
 
-        CPU_SIZE   = 0xff
+        CPU_SIZE   = 0x2000,
     };
 
     static const int SGI_MAX = 16;  // Number of Software Gen Interrupts
