@@ -67,11 +67,13 @@ class DramGen : public RandomGen
     /**
      * Create a DRAM address sequence generator.
      *
-     * @param gen Traffic generator owning this sequence generator
+     * @param obj SimObject owning this sequence generator
+     * @param master_id MasterID related to the memory requests
      * @param _duration duration of this state before transitioning
      * @param start_addr Start address
      * @param end_addr End address
      * @param _blocksize Size used for transactions injected
+     * @param cacheline_size cache line size in the system
      * @param min_period Lower limit of random inter-transaction time
      * @param max_period Upper limit of random inter-transaction time
      * @param read_percent Percent of transactions that are reads
@@ -85,8 +87,10 @@ class DramGen : public RandomGen
      *                     0: RoCoRaBaCh, 1: RoRaBaCoCh/RoRaBaChCo
      *                     assumes single channel system
      */
-    DramGen(BaseTrafficGen &gen, Tick _duration,
-            Addr start_addr, Addr end_addr, Addr _blocksize,
+    DramGen(SimObject &obj,
+            MasterID master_id, Tick _duration,
+            Addr start_addr, Addr end_addr,
+            Addr _blocksize, Addr cacheline_size,
             Tick min_period, Tick max_period,
             uint8_t read_percent, Addr data_limit,
             unsigned int num_seq_pkts, unsigned int page_size,

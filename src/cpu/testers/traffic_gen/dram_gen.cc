@@ -49,8 +49,10 @@
 #include "debug/TrafficGen.hh"
 
 
-DramGen::DramGen(BaseTrafficGen &gen, Tick _duration,
-                 Addr start_addr, Addr end_addr, Addr _blocksize,
+DramGen::DramGen(SimObject &obj,
+                 MasterID master_id, Tick _duration,
+                 Addr start_addr, Addr end_addr,
+                 Addr _blocksize, Addr cacheline_size,
                  Tick min_period, Tick max_period,
                  uint8_t read_percent, Addr data_limit,
                  unsigned int num_seq_pkts, unsigned int page_size,
@@ -58,8 +60,9 @@ DramGen::DramGen(BaseTrafficGen &gen, Tick _duration,
                  unsigned int nbr_of_banks_util,
                  unsigned int addr_mapping,
                  unsigned int nbr_of_ranks)
-        : RandomGen(gen, _duration, start_addr, end_addr,
-          _blocksize, min_period, max_period, read_percent, data_limit),
+        : RandomGen(obj, master_id, _duration, start_addr, end_addr,
+          _blocksize, cacheline_size, min_period, max_period,
+          read_percent, data_limit),
           numSeqPkts(num_seq_pkts), countNumSeqPkts(0), addr(0),
           isRead(true), pageSize(page_size),
           pageBits(floorLog2(page_size / _blocksize)),

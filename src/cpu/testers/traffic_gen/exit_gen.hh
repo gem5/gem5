@@ -56,8 +56,8 @@ class ExitGen : public BaseGen
 
   public:
 
-    ExitGen(BaseTrafficGen &gen, Tick _duration)
-        : BaseGen(gen, _duration)
+    ExitGen(SimObject &obj, MasterID master_id, Tick _duration)
+        : BaseGen(obj, master_id, _duration)
     { }
 
     void enter();

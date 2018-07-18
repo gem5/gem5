@@ -51,9 +51,8 @@
 #include "debug/TrafficGen.hh"
 #include "sim/system.hh"
 
-BaseGen::BaseGen(BaseTrafficGen &gen, Tick _duration)
-    : _name(gen.name()), masterID(gen.masterID),
-      cacheLineSize(gen.system->cacheLineSize()),
+BaseGen::BaseGen(SimObject &obj, MasterID master_id, Tick _duration)
+    : _name(obj.name()), masterID(master_id),
       duration(_duration)
 {
 }
@@ -81,16 +80,17 @@ BaseGen::getPacket(Addr addr, unsigned size, const MemCmd& cmd,
     return pkt;
 }
 
-StochasticGen::StochasticGen(BaseTrafficGen &gen,
-                             Tick _duration,
-                             Addr start_addr, Addr end_addr, Addr _blocksize,
+StochasticGen::StochasticGen(SimObject &obj,
+                             MasterID master_id, Tick _duration,
+                             Addr start_addr, Addr end_addr,
+                             Addr _blocksize, Addr cacheline_size,
                              Tick min_period, Tick max_period,
                              uint8_t read_percent, Addr data_limit)
-        : BaseGen(gen, _duration),
+        : BaseGen(obj, master_id, _duration),
           startAddr(start_addr), endAddr(end_addr),
-          blocksize(_blocksize), minPeriod(min_period),
-          maxPeriod(max_period), readPercent(read_percent),
-          dataLimit(data_limit)
+          blocksize(_blocksize), cacheLineSize(cacheline_size),
+          minPeriod(min_period), maxPeriod(max_period),
+          readPercent(read_percent), dataLimit(data_limit)
 {
     if (blocksize > cacheLineSize)
         fatal("TrafficGen %s block size (%d) is larger than "

@@ -70,9 +70,6 @@ class BaseGen
     /** The MasterID used for generating requests */
     const MasterID masterID;
 
-    /** Cache line size in the simulated system */
-    const Addr cacheLineSize;
-
     /**
      * Generate a new request and associated packet
      *
@@ -92,11 +89,11 @@ class BaseGen
     /**
      * Create a base generator.
      *
-     * @param _name Name to use for status and debug
+     * @param obj simobject owning the generator
      * @param master_id MasterID set on each request
      * @param _duration duration of this state before transitioning
      */
-    BaseGen(BaseTrafficGen &gen, Tick _duration);
+    BaseGen(SimObject &obj, MasterID master_id, Tick _duration);
 
     virtual ~BaseGen() { }
 
@@ -140,8 +137,10 @@ class BaseGen
 class StochasticGen : public BaseGen
 {
   public:
-    StochasticGen(BaseTrafficGen &gen, Tick _duration,
-                  Addr start_addr, Addr end_addr, Addr _blocksize,
+    StochasticGen(SimObject &obj,
+                  MasterID master_id, Tick _duration,
+                  Addr start_addr, Addr end_addr,
+                  Addr _blocksize, Addr cacheline_size,
                   Tick min_period, Tick max_period,
                   uint8_t read_percent, Addr data_limit);
 
@@ -154,6 +153,9 @@ class StochasticGen : public BaseGen
 
     /** Blocksize and address increment */
     const Addr blocksize;
+
+    /** Cache line size in the simulated system */
+    const Addr cacheLineSize;
 
     /** Request generation period */
     const Tick minPeriod;

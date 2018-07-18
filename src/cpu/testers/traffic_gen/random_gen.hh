@@ -79,12 +79,15 @@ class RandomGen : public StochasticGen
      * @param read_percent Percent of transactions that are reads
      * @param data_limit Upper limit on how much data to read/write
      */
-    RandomGen(BaseTrafficGen &gen, Tick _duration,
-              Addr start_addr, Addr end_addr, Addr _blocksize,
+    RandomGen(SimObject &obj,
+              MasterID master_id, Tick _duration,
+              Addr start_addr, Addr end_addr,
+              Addr _blocksize, Addr cacheline_size,
               Tick min_period, Tick max_period,
               uint8_t read_percent, Addr data_limit)
-        : StochasticGen(gen, _duration, start_addr, end_addr, _blocksize,
-                        min_period, max_period, read_percent, data_limit),
+        : StochasticGen(obj, master_id, _duration, start_addr, end_addr,
+                        _blocksize, cacheline_size, min_period, max_period,
+                        read_percent, data_limit),
           dataManipulated(0)
     { }
 
