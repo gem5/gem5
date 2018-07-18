@@ -51,7 +51,7 @@
 #include <algorithm>
 
 #include "arch/arm/utility.hh"
-#include "arch/generic/vec_reg.hh"
+#include "base/compiler.hh"
 #include "base/remote_gdb.hh"
 
 class System;
@@ -74,7 +74,7 @@ class RemoteGDB : public BaseRemoteGDB
           uint32_t fpr[8*3];
           uint32_t fpscr;
           uint32_t cpsr;
-        } r;
+        } M5_ATTR_PACKED r;
       public:
         char *data() const { return (char *)&r; }
         size_t size() const { return sizeof(r); }
@@ -95,10 +95,9 @@ class RemoteGDB : public BaseRemoteGDB
           uint64_t x[31];
           uint64_t spx;
           uint64_t pc;
-          uint64_t cpsr;
+          uint32_t cpsr;
           uint32_t v[32*4];
-          ArmISA::VecRegContainer vec[32];
-        } r;
+        } M5_ATTR_PACKED r;
       public:
         char *data() const { return (char *)&r; }
         size_t size() const { return sizeof(r); }

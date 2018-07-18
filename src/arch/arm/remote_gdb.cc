@@ -209,10 +209,6 @@ RemoteGDB::AArch64GdbRegCache::getRegs(ThreadContext *context)
         r.v[i + 2] = context->readFloatRegBits(i + 0);
         r.v[i + 3] = context->readFloatRegBits(i + 1);
     }
-
-    for (int i = 0; i < 32; i ++) {
-        r.vec[i] = context->readVecReg(RegId(VecRegClass,i));
-    }
 }
 
 void
@@ -234,10 +230,6 @@ RemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
         context->setFloatRegBits(i + 3, r.v[i + 1]);
         context->setFloatRegBits(i + 0, r.v[i + 2]);
         context->setFloatRegBits(i + 1, r.v[i + 3]);
-    }
-
-    for (int i = 0; i < 32; i ++) {
-        context->setVecReg(RegId(VecRegClass, i), r.vec[i]);
     }
 }
 
