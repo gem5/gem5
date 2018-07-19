@@ -53,13 +53,13 @@
 #include <algorithm>
 #include <cstring>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #include "base/cprintf.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "mem/packet_access.hh"
-
-using namespace std;
 
 // The one downside to bitsets is that static initializers can get ugly.
 #define SET1(a1)                     (1 << (a1))
@@ -260,7 +260,7 @@ Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
         std::max(val_start, func_start);
 
     if (isRead()) {
-        memcpy(getPtr<uint8_t>() + func_offset,
+        std::memcpy(getPtr<uint8_t>() + func_offset,
                _data + val_offset,
                overlap_size);
 
@@ -288,7 +288,7 @@ Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
 
         return all_bytes_valid;
     } else if (isWrite()) {
-        memcpy(_data + val_offset,
+        std::memcpy(_data + val_offset,
                getConstPtr<uint8_t>() + func_offset,
                overlap_size);
     } else {
@@ -357,7 +357,8 @@ Packet::setUintX(uint64_t w, ByteOrder endian)
 }
 
 void
-Packet::print(ostream &o, const int verbosity, const string &prefix) const
+Packet::print(std::ostream &o, const int verbosity,
+              const std::string &prefix) const
 {
     ccprintf(o, "%s%s [%x:%x]%s%s%s%s%s%s", prefix, cmdString(),
              getAddr(), getAddr() + getSize() - 1,
@@ -371,13 +372,13 @@ Packet::print(ostream &o, const int verbosity, const string &prefix) const
 
 std::string
 Packet::print() const {
-    ostringstream str;
+    std::ostringstream str;
     print(str);
     return str.str();
 }
 
-Packet::PrintReqState::PrintReqState(ostream &_os, int _verbosity)
-    : curPrefixPtr(new string("")), os(_os), verbosity(_verbosity)
+Packet::PrintReqState::PrintReqState(std::ostream &_os, int _verbosity)
+    : curPrefixPtr(new std::string("")), os(_os), verbosity(_verbosity)
 {
     labelStack.push_back(LabelStackEntry("", curPrefixPtr));
 }
@@ -390,16 +391,18 @@ Packet::PrintReqState::~PrintReqState()
 }
 
 Packet::PrintReqState::
-LabelStackEntry::LabelStackEntry(const string &_label, string *_prefix)
+LabelStackEntry::LabelStackEntry(const std::string &_label,
+                                 std::string *_prefix)
     : label(_label), prefix(_prefix), labelPrinted(false)
 {
 }
 
 void
-Packet::PrintReqState::pushLabel(const string &lbl, const string &prefix)
+Packet::PrintReqState::pushLabel(const std::string &lbl,
+                                 const std::string &prefix)
 {
     labelStack.push_back(LabelStackEntry(lbl, curPrefixPtr));
-    curPrefixPtr = new string(*curPrefixPtr);
+    curPrefixPtr = new std::string(*curPrefixPtr);
     *curPrefixPtr += prefix;
 }
 
