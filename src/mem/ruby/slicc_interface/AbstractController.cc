@@ -318,7 +318,7 @@ AbstractController::functionalMemoryWrite(PacketPtr pkt)
     int num_functional_writes = 0;
 
     // Check the buffer from the controller to the memory.
-    if (memoryPort.checkFunctional(pkt)) {
+    if (memoryPort.trySatisfyFunctional(pkt)) {
         num_functional_writes++;
     }
 

@@ -1002,7 +1002,7 @@ CoherentXBar::recvFunctional(PacketPtr pkt, PortID slave_port_id)
             // if we find a response that has the data, then the
             // downstream caches/memories may be out of date, so simply stop
             // here
-            if (p->checkFunctional(pkt)) {
+            if (p->trySatisfyFunctional(pkt)) {
                 if (pkt->needsResponse())
                     pkt->makeResponse();
                 return;
@@ -1025,7 +1025,7 @@ CoherentXBar::recvFunctionalSnoop(PacketPtr pkt, PortID master_port_id)
     }
 
     for (const auto& p : slavePorts) {
-        if (p->checkFunctional(pkt)) {
+        if (p->trySatisfyFunctional(pkt)) {
             if (pkt->needsResponse())
                 pkt->makeResponse();
             return;

@@ -169,7 +169,7 @@ DRAMSim2::recvFunctional(PacketPtr pkt)
 
     // potentially update the packets in our response queue as well
     for (auto i = responseQueue.begin(); i != responseQueue.end(); ++i)
-        pkt->checkFunctional(*i);
+        pkt->trySatisfyFunctional(*i);
 
     pkt->popLabel();
 }

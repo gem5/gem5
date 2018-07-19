@@ -97,7 +97,7 @@ class WriteQueueEntry : public QueueEntry, public Printable
 
         TargetList() {}
         void add(PacketPtr pkt, Tick readyTime, Counter order);
-        bool checkFunctional(PacketPtr pkt);
+        bool trySatisfyFunctional(PacketPtr pkt);
         void print(std::ostream &os, int verbosity,
                    const std::string &prefix) const;
     };
@@ -179,7 +179,7 @@ class WriteQueueEntry : public QueueEntry, public Printable
         targets.pop_front();
     }
 
-    bool checkFunctional(PacketPtr pkt);
+    bool trySatisfyFunctional(PacketPtr pkt);
 
     /**
      * Prints the contents of this MSHR for debugging.

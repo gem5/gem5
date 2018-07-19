@@ -1168,14 +1168,14 @@ class Packet : public Printable
      * accordingly.
      */
     bool
-    checkFunctional(PacketPtr other)
+    trySatisfyFunctional(PacketPtr other)
     {
         // all packets that are carrying a payload should have a valid
         // data pointer
-        return checkFunctional(other, other->getAddr(), other->isSecure(),
-                               other->getSize(),
-                               other->hasData() ?
-                               other->getPtr<uint8_t>() : NULL);
+        return trySatisfyFunctional(other, other->getAddr(), other->isSecure(),
+                                    other->getSize(),
+                                    other->hasData() ?
+                                    other->getPtr<uint8_t>() : NULL);
     }
 
     /**
@@ -1206,8 +1206,8 @@ class Packet : public Printable
      * memory value.
      */
     bool
-    checkFunctional(Printable *obj, Addr base, bool is_secure, int size,
-                    uint8_t *_data);
+    trySatisfyFunctional(Printable *obj, Addr base, bool is_secure, int size,
+                         uint8_t *_data);
 
     /**
      * Push label for PrintReq (safe to call unconditionally).

@@ -82,7 +82,7 @@ PacketQueue::hasAddr(Addr addr) const
 }
 
 bool
-PacketQueue::checkFunctional(PacketPtr pkt)
+PacketQueue::trySatisfyFunctional(PacketPtr pkt)
 {
     pkt->pushLabel(label);
 
@@ -92,7 +92,7 @@ PacketQueue::checkFunctional(PacketPtr pkt)
     while (!found && i != transmitList.end()) {
         // If the buffered packet contains data, and it overlaps the
         // current packet, then update data
-        found = pkt->checkFunctional(i->pkt);
+        found = pkt->trySatisfyFunctional(i->pkt);
         ++i;
     }
 

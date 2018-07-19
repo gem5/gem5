@@ -225,7 +225,7 @@ MemCmd::commandInfo[] =
 };
 
 bool
-Packet::checkFunctional(Printable *obj, Addr addr, bool is_secure, int size,
+Packet::trySatisfyFunctional(Printable *obj, Addr addr, bool is_secure, int size,
                         uint8_t *_data)
 {
     const Addr func_start = getAddr();

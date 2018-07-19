@@ -81,10 +81,10 @@ MemDelay::getSlavePort(const std::string& if_name, PortID idx)
 }
 
 bool
-MemDelay::checkFunctional(PacketPtr pkt)
+MemDelay::trySatisfyFunctional(PacketPtr pkt)
 {
-    return slavePort.checkFunctional(pkt) ||
-        masterPort.checkFunctional(pkt);
+    return slavePort.trySatisfyFunctional(pkt) ||
+        masterPort.trySatisfyFunctional(pkt);
 }
 
 MemDelay::MasterPort::MasterPort(const std::string &_name, MemDelay &_parent)
@@ -107,7 +107,7 @@ MemDelay::MasterPort::recvTimingResp(PacketPtr pkt)
 void
 MemDelay::MasterPort::recvFunctionalSnoop(PacketPtr pkt)
 {
-    if (parent.checkFunctional(pkt)) {
+    if (parent.trySatisfyFunctional(pkt)) {
         pkt->makeResponse();
     } else {
         parent.slavePort.sendFunctionalSnoop(pkt);
@@ -156,7 +156,7 @@ MemDelay::SlavePort::recvTimingReq(PacketPtr pkt)
 void
 MemDelay::SlavePort::recvFunctional(PacketPtr pkt)
 {
-    if (parent.checkFunctional(pkt)) {
+    if (parent.trySatisfyFunctional(pkt)) {
         pkt->makeResponse();
     } else {
         parent.masterPort.sendFunctional(pkt);

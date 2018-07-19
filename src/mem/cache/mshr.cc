@@ -207,10 +207,10 @@ MSHR::TargetList::clearDownstreamPending()
 
 
 bool
-MSHR::TargetList::checkFunctional(PacketPtr pkt)
+MSHR::TargetList::trySatisfyFunctional(PacketPtr pkt)
 {
     for (auto& t : *this) {
-        if (pkt->checkFunctional(t.pkt)) {
+        if (pkt->trySatisfyFunctional(t.pkt)) {
             return true;
         }
     }
@@ -618,17 +618,17 @@ MSHR::promoteWritable()
 
 
 bool
-MSHR::checkFunctional(PacketPtr pkt)
+MSHR::trySatisfyFunctional(PacketPtr pkt)
 {
     // For printing, we treat the MSHR as a whole as single entity.
     // For other requests, we iterate over the individual targets
     // since that's where the actual data lies.
     if (pkt->isPrint()) {
-        pkt->checkFunctional(this, blkAddr, isSecure, blkSize, nullptr);
+        pkt->trySatisfyFunctional(this, blkAddr, isSecure, blkSize, nullptr);
         return false;
     } else {
-        return (targets.checkFunctional(pkt) ||
-                deferredTargets.checkFunctional(pkt));
+        return (targets.trySatisfyFunctional(pkt) ||
+                deferredTargets.trySatisfyFunctional(pkt));
     }
 }
 

@@ -235,7 +235,7 @@ class MSHR : public QueueEntry, public Printable
 
         void clearDownstreamPending();
         void clearDownstreamPending(iterator begin, iterator end);
-        bool checkFunctional(PacketPtr pkt);
+        bool trySatisfyFunctional(PacketPtr pkt);
         void print(std::ostream &os, int verbosity,
                    const std::string &prefix) const;
     };
@@ -414,7 +414,7 @@ class MSHR : public QueueEntry, public Printable
      */
     void promoteWritable();
 
-    bool checkFunctional(PacketPtr pkt);
+    bool trySatisfyFunctional(PacketPtr pkt);
 
     /**
      * Prints the contents of this MSHR for debugging.

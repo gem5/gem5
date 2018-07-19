@@ -125,7 +125,7 @@ class MemDelay : public MemObject
 
     };
 
-    bool checkFunctional(PacketPtr pkt);
+    bool trySatisfyFunctional(PacketPtr pkt);
 
     MasterPort masterPort;
     SlavePort slavePort;

@@ -169,7 +169,7 @@ class PacketQueue : public Drainable
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    bool checkFunctional(PacketPtr pkt);
+    bool trySatisfyFunctional(PacketPtr pkt);
 
     /**
      * Schedule a send event if we are not already waiting for a

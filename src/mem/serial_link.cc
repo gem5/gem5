@@ -393,14 +393,14 @@ SerialLink::SerialLinkSlavePort::recvFunctional(PacketPtr pkt)
 
     // check the response queue
     for (auto i = transmitList.begin();  i != transmitList.end(); ++i) {
-        if (pkt->checkFunctional((*i).pkt)) {
+        if (pkt->trySatisfyFunctional((*i).pkt)) {
             pkt->makeResponse();
             return;
         }
     }
 
     // also check the master port's request queue
-    if (masterPort.checkFunctional(pkt)) {
+    if (masterPort.trySatisfyFunctional(pkt)) {
         return;
     }
 
@@ -411,13 +411,13 @@ SerialLink::SerialLinkSlavePort::recvFunctional(PacketPtr pkt)
 }
 
 bool
-SerialLink::SerialLinkMasterPort::checkFunctional(PacketPtr pkt)
+SerialLink::SerialLinkMasterPort::trySatisfyFunctional(PacketPtr pkt)
 {
     bool found = false;
     auto i = transmitList.begin();
 
     while (i != transmitList.end() && !found) {
-        if (pkt->checkFunctional((*i).pkt)) {
+        if (pkt->trySatisfyFunctional((*i).pkt)) {
             pkt->makeResponse();
             found = true;
         }

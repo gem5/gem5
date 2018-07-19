@@ -295,7 +295,7 @@ class Bridge : public MemObject
          *
          * @return true if we find a match
          */
-        bool checkFunctional(PacketPtr pkt);
+        bool trySatisfyFunctional(PacketPtr pkt);
 
       protected:
 

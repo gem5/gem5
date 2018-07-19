@@ -664,8 +664,8 @@ BaseCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
 
     // see if we have data at all (owned or otherwise)
     bool have_data = blk && blk->isValid()
-        && pkt->checkFunctional(&cbpw, blk_addr, is_secure, blkSize,
-                                blk->data);
+        && pkt->trySatisfyFunctional(&cbpw, blk_addr, is_secure, blkSize,
+                                     blk->data);
 
     // data we have is dirty if marked as such or if we have an
     // in-service MSHR that is pending a modified line
@@ -674,10 +674,10 @@ BaseCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
                       (mshr && mshr->inService && mshr->isPendingModified()));
 
     bool done = have_dirty ||
-        cpuSidePort.checkFunctional(pkt) ||
-        mshrQueue.checkFunctional(pkt, blk_addr) ||
-        writeBuffer.checkFunctional(pkt, blk_addr) ||
-        memSidePort.checkFunctional(pkt);
+        cpuSidePort.trySatisfyFunctional(pkt) ||
+        mshrQueue.trySatisfyFunctional(pkt, blk_addr) ||
+        writeBuffer.trySatisfyFunctional(pkt, blk_addr) ||
+        memSidePort.trySatisfyFunctional(pkt);
 
     DPRINTF(CacheVerbose, "%s: %s %s%s%s\n", __func__,  pkt->print(),
             (blk && blk->isValid()) ? "valid " : "",

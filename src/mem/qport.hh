@@ -93,8 +93,8 @@ class QueuedSlavePort : public SlavePort
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    bool checkFunctional(PacketPtr pkt)
-    { return respQueue.checkFunctional(pkt); }
+    bool trySatisfyFunctional(PacketPtr pkt)
+    { return respQueue.trySatisfyFunctional(pkt); }
 };
 
 /**
@@ -159,10 +159,10 @@ class QueuedMasterPort : public MasterPort
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
-    bool checkFunctional(PacketPtr pkt)
+    bool trySatisfyFunctional(PacketPtr pkt)
     {
-        return reqQueue.checkFunctional(pkt) ||
-            snoopRespQueue.checkFunctional(pkt);
+        return reqQueue.trySatisfyFunctional(pkt) ||
+            snoopRespQueue.trySatisfyFunctional(pkt);
     }
 };
 

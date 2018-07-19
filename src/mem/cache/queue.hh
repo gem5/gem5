@@ -177,11 +177,11 @@ class Queue : public Drainable
         return nullptr;
     }
 
-    bool checkFunctional(PacketPtr pkt, Addr blk_addr)
+    bool trySatisfyFunctional(PacketPtr pkt, Addr blk_addr)
     {
         pkt->pushLabel(label);
         for (const auto& entry : allocatedList) {
-            if (entry->blkAddr == blk_addr && entry->checkFunctional(pkt)) {
+            if (entry->blkAddr == blk_addr && entry->trySatisfyFunctional(pkt)) {
                 pkt->popLabel();
                 return true;
             }

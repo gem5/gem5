@@ -54,7 +54,7 @@ SimpleTimingPort::SimpleTimingPort(const std::string& _name,
 void
 SimpleTimingPort::recvFunctional(PacketPtr pkt)
 {
-    if (!respQueue.checkFunctional(pkt)) {
+    if (!respQueue.trySatisfyFunctional(pkt)) {
         // do an atomic access and throw away the returned latency
         recvAtomic(pkt);
     }
