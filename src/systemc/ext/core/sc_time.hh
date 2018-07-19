@@ -84,6 +84,9 @@ class sc_time
     static sc_time from_value(sc_dt::uint64);
     static sc_time from_seconds(double);
     static sc_time from_string(const char *str);
+
+  private:
+    uint64_t val;
 };
 
 const sc_time operator + (const sc_time &, const sc_time &);

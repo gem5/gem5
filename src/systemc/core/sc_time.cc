@@ -33,19 +33,47 @@
 namespace sc_core
 {
 
-sc_time::sc_time()
+namespace
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+
+const char *TimeUnitNames[] = {
+    [SC_FS] = "fs",
+    [SC_PS] = "ps",
+    [SC_NS] = "ns",
+    [SC_US] = "us",
+    [SC_MS] = "ms",
+    [SC_SEC] = "s"
+};
+
+double TimeUnitScale[] = {
+    [SC_FS] = 1.0e-15,
+    [SC_PS] = 1.0e-12,
+    [SC_NS] = 1.0e-9,
+    [SC_US] = 1.0e-6,
+    [SC_MS] = 1.0e-3,
+    [SC_SEC] = 1.0
+};
+
+} // anonymous namespace
+
+sc_time::sc_time() : val(0) {}
+
+sc_time::sc_time(double d, sc_time_unit tu)
+{
+    val = 0;
+    if (d != 0) {
+        //XXX Assuming the time resolution is 1ps.
+        double scale = TimeUnitScale[tu] / TimeUnitScale[SC_PS];
+        // Accellera claims there is a linux bug, and that these next two
+        // lines work around them.
+        volatile double tmp = d * scale + 0.5;
+        val = static_cast<uint64_t>(tmp);
+    }
 }
 
-sc_time::sc_time(double, sc_time_unit)
+sc_time::sc_time(const sc_time &t)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-sc_time::sc_time(const sc_time &)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    val = t.val;
 }
 
 sc_time::sc_time(double, bool)
@@ -59,17 +87,16 @@ sc_time::sc_time(sc_dt::uint64, bool)
 }
 
 sc_time &
-sc_time::operator = (const sc_time &)
+sc_time::operator = (const sc_time &t)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    val = t.val;
     return *this;
 }
 
 sc_dt::uint64
 sc_time::value() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
+    return val;
 }
 
 double
@@ -93,58 +120,52 @@ sc_time::to_string() const
 }
 
 bool
-sc_time::operator == (const sc_time &) const
+sc_time::operator == (const sc_time &t) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return true;
+    return val == t.val;
 }
 
 bool
-sc_time::operator != (const sc_time &) const
+sc_time::operator != (const sc_time &t) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return val != t.val;
 }
 
 bool
-sc_time::operator < (const sc_time &) const
+sc_time::operator < (const sc_time &t) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return val < t.val;
 }
 
 bool
-sc_time::operator <= (const sc_time &) const
+sc_time::operator <= (const sc_time &t) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return true;
+    return val <= t.val;
 }
 
 bool
-sc_time::operator > (const sc_time &) const
+sc_time::operator > (const sc_time &t) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return val > t.val;
 }
 
 bool
-sc_time::operator >= (const sc_time &) const
+sc_time::operator >= (const sc_time &t) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return true;
+    return val >= t.val;
 }
 
 sc_time &
-sc_time::operator += (const sc_time &)
+sc_time::operator += (const sc_time &t)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    val += t.val;
     return *this;
 }
 
 sc_time &
-sc_time::operator -= (const sc_time &)
+sc_time::operator -= (const sc_time &t)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    val -= t.val;
     return *this;
 }
 
@@ -163,16 +184,29 @@ sc_time::operator /= (double)
 }
 
 void
-sc_time::print(std::ostream &) const
+sc_time::print(std::ostream &os) const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (val == 0) {
+        os << "0 s";
+    } else {
+        //XXX Assuming the time resolution is 1ps.
+        sc_time_unit tu = SC_PS;
+        uint64_t scaled = val;
+        while (tu < SC_SEC && (scaled % 1000) == 0) {
+            tu = (sc_time_unit)((int)tu + 1);
+            scaled /= 1000;
+        }
+
+        os << scaled << ' ' << TimeUnitNames[tu];
+    }
 }
 
 sc_time
-sc_time::from_value(sc_dt::uint64)
+sc_time::from_value(sc_dt::uint64 u)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
+    sc_time t;
+    t.val = u;
+    return t;
 }
 
 sc_time
@@ -232,9 +266,9 @@ operator / (const sc_time &, const sc_time &)
 }
 
 std::ostream &
-operator << (std::ostream &os, const sc_time &)
+operator << (std::ostream &os, const sc_time &t)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    t.print(os);
     return os;
 }
 
