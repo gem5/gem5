@@ -124,6 +124,9 @@ BaseTrafficGen::drain()
 void
 BaseTrafficGen::serialize(CheckpointOut &cp) const
 {
+    warn("%s serialization does not keep all traffic generator"
+         " internal state\n", name());
+
     DPRINTF(Checkpoint, "Serializing BaseTrafficGen\n");
 
     // save ticks of the graph event if it is scheduled
@@ -141,6 +144,9 @@ BaseTrafficGen::serialize(CheckpointOut &cp) const
 void
 BaseTrafficGen::unserialize(CheckpointIn &cp)
 {
+    warn("%s serialization does not restore all traffic generator"
+         " internal state\n", name());
+
     // restore scheduled events
     Tick nextEvent;
     UNSERIALIZE_SCALAR(nextEvent);
