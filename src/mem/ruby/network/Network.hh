@@ -99,11 +99,11 @@ class Network : public ClockedObject
                                        int network_num, std::string vnet_type);
 
     virtual void makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                             const NetDest& routing_table_entry) = 0;
+                             std::vector<NetDest>& routing_table_entry) = 0;
     virtual void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
-                            const NetDest& routing_table_entry) = 0;
+                            std::vector<NetDest>& routing_table_entry) = 0;
     virtual void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                  const NetDest& routing_table_entry,
+                                  std::vector<NetDest>& routing_table_entry,
                                   PortDirection src_outport,
                                   PortDirection dst_inport) = 0;
 

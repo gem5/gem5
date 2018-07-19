@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  * Copyright (c) 2020 Inria
  * Copyright (c) 2016 Georgia Institute of Technology
  * Copyright (c) 2008 Princeton University
@@ -43,8 +44,9 @@ using namespace std;
 Router::Router(const Params *p)
   : BasicRouter(p), Consumer(this), m_latency(p->latency),
     m_virtual_networks(p->virt_nets), m_vc_per_vnet(p->vcs_per_vnet),
-    m_num_vcs(m_virtual_networks * m_vc_per_vnet), m_network_ptr(nullptr),
-    routingUnit(this), switchAllocator(this), crossbarSwitch(this)
+    m_num_vcs(m_virtual_networks * m_vc_per_vnet), m_bit_width(p->width),
+    m_network_ptr(nullptr), routingUnit(this), switchAllocator(this),
+    crossbarSwitch(this)
 {
     m_input_unit.clear();
     m_output_unit.clear();
@@ -63,6 +65,7 @@ void
 Router::wakeup()
 {
     DPRINTF(RubyNetwork, "Router %d woke up\n", m_id);
+    assert(clockEdge() == curTick());
 
     // check for incoming flits
     for (int inport = 0; inport < m_input_unit.size(); inport++) {
@@ -90,13 +93,17 @@ void
 Router::addInPort(PortDirection inport_dirn,
                   NetworkLink *in_link, CreditLink *credit_link)
 {
+    fatal_if(in_link->bitWidth != m_bit_width, "Widths of link %s(%d)does"
+            " not match that of Router%d(%d). Consider inserting SerDes "
+            "Units.", in_link->name(), in_link->bitWidth, m_id, m_bit_width);
+
     int port_num = m_input_unit.size();
     InputUnit *input_unit = new InputUnit(port_num, inport_dirn, this);
 
     input_unit->set_in_link(in_link);
     input_unit->set_credit_link(credit_link);
     in_link->setLinkConsumer(this);
-    credit_link->setSourceQueue(input_unit->getCreditQueue());
+    credit_link->setSourceQueue(input_unit->getCreditQueue(), this);
 
     m_input_unit.push_back(std::shared_ptr<InputUnit>(input_unit));
 
@@ -106,16 +113,19 @@ Router::addInPort(PortDirection inport_dirn,
 void
 Router::addOutPort(PortDirection outport_dirn,
                    NetworkLink *out_link,
-                   const NetDest& routing_table_entry, int link_weight,
+                   std::vector<NetDest>& routing_table_entry, int link_weight,
                    CreditLink *credit_link)
 {
+    fatal_if(out_link->bitWidth != m_bit_width, "Widths of units do not match."
+            " Consider inserting SerDes Units");
+
     int port_num = m_output_unit.size();
     OutputUnit *output_unit = new OutputUnit(port_num, outport_dirn, this);
 
     output_unit->set_out_link(out_link);
     output_unit->set_credit_link(credit_link);
     credit_link->setLinkConsumer(this);
-    out_link->setSourceQueue(output_unit->getOutQueue());
+    out_link->setSourceQueue(output_unit->getOutQueue(), this);
 
     m_output_unit.push_back(std::shared_ptr<OutputUnit>(output_unit));
 

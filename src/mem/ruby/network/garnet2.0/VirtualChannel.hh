@@ -43,20 +43,20 @@ class VirtualChannel
     VirtualChannel();
     ~VirtualChannel() = default;
 
-    bool need_stage(flit_stage stage, Cycles time);
-    void set_idle(Cycles curTime);
-    void set_active(Cycles curTime);
+    bool need_stage(flit_stage stage, Tick time);
+    void set_idle(Tick curTime);
+    void set_active(Tick curTime);
     void set_outvc(int outvc)               { m_output_vc = outvc; }
     inline int get_outvc()                  { return m_output_vc; }
     void set_outport(int outport)           { m_output_port = outport; };
     inline int get_outport()                  { return m_output_port; }
 
-    inline Cycles get_enqueue_time()          { return m_enqueue_time; }
-    inline void set_enqueue_time(Cycles time) { m_enqueue_time = time; }
+    inline Tick get_enqueue_time()          { return m_enqueue_time; }
+    inline void set_enqueue_time(Tick time) { m_enqueue_time = time; }
     inline VC_state_type get_state()        { return m_vc_state.first; }
 
     inline bool
-    isReady(Cycles curTime)
+    isReady(Tick curTime)
     {
         return inputBuffer.isReady(curTime);
     }
@@ -68,7 +68,7 @@ class VirtualChannel
     }
 
     inline void
-    set_state(VC_state_type m_state, Cycles curTime)
+    set_state(VC_state_type m_state, Tick curTime)
     {
         m_vc_state.first = m_state;
         m_vc_state.second = curTime;
@@ -90,9 +90,9 @@ class VirtualChannel
 
   private:
     flitBuffer inputBuffer;
-    std::pair<VC_state_type, Cycles> m_vc_state;
+    std::pair<VC_state_type, Tick> m_vc_state;
     int m_output_port;
-    Cycles m_enqueue_time;
+    Tick m_enqueue_time;
     int m_output_vc;
 };
 

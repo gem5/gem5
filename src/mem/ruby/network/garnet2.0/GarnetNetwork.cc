@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  * Copyright (c) 2008 Princeton University
  * Copyright (c) 2016 Georgia Institute of Technology
  * All rights reserved.
@@ -33,6 +34,7 @@
 #include <cassert>
 
 #include "base/cast.hh"
+#include "debug/RubyNetwork.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/garnet2.0/CommonTypes.hh"
@@ -147,7 +149,7 @@ GarnetNetwork::init()
 
 void
 GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
-                            const NetDest& routing_table_entry)
+                             std::vector<NetDest>& routing_table_entry)
 {
     NodeID local_src = getLocalNodeID(global_src);
     assert(local_src < m_nodes);
@@ -163,8 +165,42 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
     m_creditlinks.push_back(credit_link);
 
     PortDirection dst_inport_dirn = "Local";
-    m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
-    m_nis[local_src]->addOutPort(net_link, credit_link, dest);
+
+    /*
+     * We check if a bridge was enabled at any end of the link.
+     * The bridge is enabled if either of clock domain
+     * crossing (CDC) or Serializer-Deserializer(SerDes) unit is
+     * enabled for the link at each end. The bridge encapsulates
+     * the functionality for both CDC and SerDes and is a Consumer
+     * object similiar to a NetworkLink.
+     *
+     * If a bridge was enabled we connect the NI and Routers to
+     * bridge before connecting the link. Example, if an external
+     * bridge is enabled, we would connect:
+     * NI--->NetworkBridge--->GarnetExtLink---->Router
+     */
+    if (garnet_link->extBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
+            garnet_link->name());
+        m_nis[local_src]->
+        addOutPort(garnet_link->extNetBridge[LinkDirection_In],
+                   garnet_link->extCredBridge[LinkDirection_In],
+                   dest);
+    } else {
+        m_nis[local_src]->addOutPort(net_link, credit_link, dest);
+    }
+
+    if (garnet_link->intBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
+            garnet_link->name());
+        m_routers[dest]->
+            addInPort(dst_inport_dirn,
+                      garnet_link->intNetBridge[LinkDirection_In],
+                      garnet_link->intCredBridge[LinkDirection_In]);
+    } else {
+        m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
+    }
+
 }
 
 /*
@@ -176,7 +212,7 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
 void
 GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
                               BasicLink* link,
-                              const NetDest& routing_table_entry)
+                              std::vector<NetDest>& routing_table_entry)
 {
     NodeID local_dest = getLocalNodeID(global_dest);
     assert(local_dest < m_nodes);
@@ -194,10 +230,44 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     m_creditlinks.push_back(credit_link);
 
     PortDirection src_outport_dirn = "Local";
-    m_routers[src]->addOutPort(src_outport_dirn, net_link,
-                               routing_table_entry,
-                               link->m_weight, credit_link);
-    m_nis[local_dest]->addInPort(net_link, credit_link);
+
+    /*
+     * We check if a bridge was enabled at any end of the link.
+     * The bridge is enabled if either of clock domain
+     * crossing (CDC) or Serializer-Deserializer(SerDes) unit is
+     * enabled for the link at each end. The bridge encapsulates
+     * the functionality for both CDC and SerDes and is a Consumer
+     * object similiar to a NetworkLink.
+     *
+     * If a bridge was enabled we connect the NI and Routers to
+     * bridge before connecting the link. Example, if an external
+     * bridge is enabled, we would connect:
+     * NI<---NetworkBridge<---GarnetExtLink<----Router
+     */
+    if (garnet_link->extBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable external bridge for %s\n",
+            garnet_link->name());
+        m_nis[local_dest]->
+            addInPort(garnet_link->extNetBridge[LinkDirection_Out],
+                      garnet_link->extCredBridge[LinkDirection_Out]);
+    } else {
+        m_nis[local_dest]->addInPort(net_link, credit_link);
+    }
+
+    if (garnet_link->intBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable internal bridge for %s\n",
+            garnet_link->name());
+        m_routers[src]->
+            addOutPort(src_outport_dirn,
+                       garnet_link->intNetBridge[LinkDirection_Out],
+                       routing_table_entry, link->m_weight,
+                       garnet_link->intCredBridge[LinkDirection_Out]);
+    } else {
+        m_routers[src]->
+            addOutPort(src_outport_dirn, net_link,
+                       routing_table_entry,
+                       link->m_weight, credit_link);
+    }
 }
 
 /*
@@ -207,7 +277,7 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
 
 void
 GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                                const NetDest& routing_table_entry,
+                                std::vector<NetDest>& routing_table_entry,
                                 PortDirection src_outport_dirn,
                                 PortDirection dst_inport_dirn)
 {
@@ -221,10 +291,40 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     m_networklinks.push_back(net_link);
     m_creditlinks.push_back(credit_link);
 
-    m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
-    m_routers[src]->addOutPort(src_outport_dirn, net_link,
-                               routing_table_entry,
-                               link->m_weight, credit_link);
+    /*
+     * We check if a bridge was enabled at any end of the link.
+     * The bridge is enabled if either of clock domain
+     * crossing (CDC) or Serializer-Deserializer(SerDes) unit is
+     * enabled for the link at each end. The bridge encapsulates
+     * the functionality for both CDC and SerDes and is a Consumer
+     * object similiar to a NetworkLink.
+     *
+     * If a bridge was enabled we connect the NI and Routers to
+     * bridge before connecting the link. Example, if a source
+     * bridge is enabled, we would connect:
+     * Router--->NetworkBridge--->GarnetIntLink---->Router
+     */
+    if (garnet_link->dstBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable destination bridge for %s\n",
+            garnet_link->name());
+        m_routers[dest]->addInPort(dst_inport_dirn,
+            garnet_link->dstNetBridge, garnet_link->dstCredBridge);
+    } else {
+        m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
+    }
+
+    if (garnet_link->srcBridgeEn) {
+        DPRINTF(RubyNetwork, "Enable source bridge for %s\n",
+            garnet_link->name());
+        m_routers[src]->
+            addOutPort(src_outport_dirn, garnet_link->srcNetBridge,
+                       routing_table_entry,
+                       link->m_weight, garnet_link->srcCredBridge);
+    } else {
+        m_routers[src]->addOutPort(src_outport_dirn, net_link,
+                        routing_table_entry,
+                        link->m_weight, credit_link);
+    }
 }
 
 // Total routers in the network
@@ -236,11 +336,11 @@ GarnetNetwork::getNumRouters()
 
 // Get ID of router connected to a NI.
 int
-GarnetNetwork::get_router_id(int global_ni)
+GarnetNetwork::get_router_id(int global_ni, int vnet)
 {
     NodeID local_ni = getLocalNodeID(global_ni);
 
-    return m_nis[local_ni]->get_router_id();
+    return m_nis[local_ni]->get_router_id(vnet);
 }
 
 void

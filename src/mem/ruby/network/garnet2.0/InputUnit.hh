@@ -55,13 +55,13 @@ class InputUnit : public Consumer
     inline PortDirection get_direction() { return m_direction; }
 
     inline void
-    set_vc_idle(int vc, Cycles curTime)
+    set_vc_idle(int vc, Tick curTime)
     {
         virtualChannels[vc].set_idle(curTime);
     }
 
     inline void
-    set_vc_active(int vc, Cycles curTime)
+    set_vc_active(int vc, Tick curTime)
     {
         virtualChannels[vc].set_active(curTime);
     }
@@ -90,13 +90,13 @@ class InputUnit : public Consumer
         return virtualChannels[invc].get_outvc();
     }
 
-    inline Cycles
+    inline Tick
     get_enqueue_time(int invc)
     {
         return virtualChannels[invc].get_enqueue_time();
     }
 
-    void increment_credit(int in_vc, bool free_signal, Cycles curTime);
+    void increment_credit(int in_vc, bool free_signal, Tick curTime);
 
     inline flit*
     peekTopFlit(int vc)
@@ -111,13 +111,13 @@ class InputUnit : public Consumer
     }
 
     inline bool
-    need_stage(int vc, flit_stage stage, Cycles time)
+    need_stage(int vc, flit_stage stage, Tick time)
     {
         return virtualChannels[vc].need_stage(stage, time);
     }
 
     inline bool
-    isReady(int invc, Cycles curTime)
+    isReady(int invc, Tick curTime)
     {
         return virtualChannels[invc].isReady(curTime);
     }

@@ -70,3 +70,5 @@ class GarnetRouter(BasicRouter):
                               "virtual channels per virtual network")
     virt_nets = Param.UInt32(Parent.number_of_virtual_networks,
                           "number of virtual networks")
+    width = Param.UInt32(Parent.ni_flit_size,
+                          "bit width supported by the router")

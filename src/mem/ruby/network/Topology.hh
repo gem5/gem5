@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -51,7 +52,13 @@
 class NetDest;
 class Network;
 
-typedef std::vector<std::vector<int> > Matrix;
+/*
+ * We use a three-dimensional vector matrix for calculating
+ * the shortest paths for each pair of source and destination
+ * and for each type of virtual network. The three dimensions
+ * represent the source ID, destination ID, and vnet number.
+ */
+typedef std::vector<std::vector<std::vector<int>>> Matrix;
 typedef std::string PortDirection;
 
 struct LinkEntry
@@ -61,12 +68,14 @@ struct LinkEntry
     PortDirection dst_inport_dirn;
 };
 
-typedef std::map<std::pair<SwitchID, SwitchID>, LinkEntry> LinkMap;
+typedef std::map<std::pair<SwitchID, SwitchID>,
+             std::vector<LinkEntry>> LinkMap;
 
 class Topology
 {
   public:
-    Topology(uint32_t num_routers, const std::vector<BasicExtLink *> &ext_links,
+    Topology(uint32_t num_nodes, uint32_t num_routers, uint32_t num_vnets,
+             const std::vector<BasicExtLink *> &ext_links,
              const std::vector<BasicIntLink *> &int_links);
 
     uint32_t numSwitches() const { return m_number_of_switches; }
@@ -78,23 +87,26 @@ class Topology
                  PortDirection src_outport_dirn = "",
                  PortDirection dest_inport_dirn = "");
     void makeLink(Network *net, SwitchID src, SwitchID dest,
-                  const NetDest& routing_table_entry);
+                  std::vector<NetDest>& routing_table_entry);
 
     // Helper functions based on chapter 29 of Cormen et al.
     void extend_shortest_path(Matrix &current_dist, Matrix &latencies,
                               Matrix &inter_switches);
 
-    std::vector<std::vector<int>> shortest_path(const Matrix &weights,
+    Matrix shortest_path(const Matrix &weights,
             Matrix &latencies, Matrix &inter_switches);
 
     bool link_is_shortest_path_to_node(SwitchID src, SwitchID next,
-            SwitchID final, const Matrix &weights, const Matrix &dist);
+            SwitchID final, const Matrix &weights, const Matrix &dist,
+            int vnet);
 
     NetDest shortest_path_to_node(SwitchID src, SwitchID next,
-                                  const Matrix &weights, const Matrix &dist);
+                                  const Matrix &weights, const Matrix &dist,
+                                  int vnet);
 
     const uint32_t m_nodes;
     const uint32_t m_number_of_switches;
+    int m_vnets;
 
     std::vector<BasicExtLink*> m_ext_link_vector;
     std::vector<BasicIntLink*> m_int_link_vector;

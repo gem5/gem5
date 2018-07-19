@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  * Copyright (c) 2020 Inria
  * Copyright (c) 2016 Georgia Institute of Technology
  * Copyright (c) 2008 Princeton University
@@ -51,17 +52,21 @@ class NetworkLink : public ClockedObject, public Consumer
     ~NetworkLink() = default;
 
     void setLinkConsumer(Consumer *consumer);
-    void setSourceQueue(flitBuffer *src_queue);
+    void setSourceQueue(flitBuffer *src_queue, ClockedObject *srcClockObject);
     void setType(link_type type) { m_type = type; }
     link_type getType() { return m_type; }
     void print(std::ostream& out) const {}
     int get_id() const { return m_id; }
-    void wakeup();
+    flitBuffer *getBuffer() { return &linkBuffer;}
+    virtual void wakeup();
 
     unsigned int getLinkUtilization() const { return m_link_utilized; }
     const std::vector<unsigned int> & getVcLoad() const { return m_vc_load; }
 
-    inline bool isReady(Cycles curTime) { return linkBuffer.isReady(curTime); }
+    inline bool isReady(Tick curTime)
+    {
+        return linkBuffer.isReady(curTime);
+    }
 
     inline flit* peekLink() { return linkBuffer.peekTopFlit(); }
     inline flit* consumeLink() { return linkBuffer.getTopFlit(); }
@@ -69,18 +74,25 @@ class NetworkLink : public ClockedObject, public Consumer
     uint32_t functionalWrite(Packet *);
     void resetStats();
 
+    std::vector<int> mVnets;
+    uint32_t bitWidth;
+
   private:
     const int m_id;
     link_type m_type;
     const Cycles m_latency;
 
-    flitBuffer linkBuffer;
-    Consumer *link_consumer;
-    flitBuffer *link_srcQueue;
+    ClockedObject *src_object;
 
     // Statistical variables
     unsigned int m_link_utilized;
     std::vector<unsigned int> m_vc_load;
+
+  protected:
+    flitBuffer linkBuffer;
+    Consumer *link_consumer;
+    flitBuffer *link_srcQueue;
+
 };
 
 #endif // __MEM_RUBY_NETWORK_GARNET2_0_NETWORKLINK_HH__

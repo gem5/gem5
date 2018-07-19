@@ -31,7 +31,7 @@
 #include "mem/ruby/network/garnet2.0/RoutingUnit.hh"
 
 #include "base/cast.hh"
-#include "base/logging.hh"
+#include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet2.0/InputUnit.hh"
 #include "mem/ruby/network/garnet2.0/Router.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
@@ -44,9 +44,14 @@ RoutingUnit::RoutingUnit(Router *router)
 }
 
 void
-RoutingUnit::addRoute(const NetDest& routing_table_entry)
+RoutingUnit::addRoute(std::vector<NetDest>& routing_table_entry)
 {
-    m_routing_table.push_back(routing_table_entry);
+    if (routing_table_entry.size() > m_routing_table.size()) {
+        m_routing_table.resize(routing_table_entry.size());
+    }
+    for (int v = 0; v < routing_table_entry.size(); v++) {
+        m_routing_table[v].push_back(routing_table_entry[v]);
+    }
 }
 
 void
@@ -55,13 +60,29 @@ RoutingUnit::addWeight(int link_weight)
     m_weight_table.push_back(link_weight);
 }
 
+bool
+RoutingUnit::supportsVnet(int vnet, std::vector<int> sVnets)
+{
+    // If all vnets are supported, return true
+    if (sVnets.size() == 0) {
+        return true;
+    }
+
+    // Find the vnet in the vector, return true
+    if (std::find(sVnets.begin(), sVnets.end(), vnet) != sVnets.end()) {
+        return true;
+    }
+
+    // Not supported vnet
+    return false;
+}
+
 /*
  * This is the default routing algorithm in garnet.
  * The routing table is populated during topology creation.
  * Routes can be biased via weight assignments in the topology file.
  * Correct weight assignments are critical to provide deadlock avoidance.
  */
-
 int
 RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
 {
@@ -78,8 +99,9 @@ RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
     int num_candidates = 0;
 
     // Identify the minimum weight among the candidate output links
-    for (int link = 0; link < m_routing_table.size(); link++) {
-        if (msg_destination.intersectionIsNotEmpty(m_routing_table[link])) {
+    for (int link = 0; link < m_routing_table[vnet].size(); link++) {
+        if (msg_destination.intersectionIsNotEmpty(
+            m_routing_table[vnet][link])) {
 
         if (m_weight_table[link] <= min_weight)
             min_weight = m_weight_table[link];
@@ -87,11 +109,11 @@ RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
     }
 
     // Collect all candidate output links with this minimum weight
-    for (int link = 0; link < m_routing_table.size(); link++) {
-        if (msg_destination.intersectionIsNotEmpty(m_routing_table[link])) {
+    for (int link = 0; link < m_routing_table[vnet].size(); link++) {
+        if (msg_destination.intersectionIsNotEmpty(
+            m_routing_table[vnet][link])) {
 
             if (m_weight_table[link] == min_weight) {
-
                 num_candidates++;
                 output_link_candidates.push_back(link);
             }

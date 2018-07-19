@@ -75,13 +75,13 @@ class OutputUnit : public Consumer
     }
 
     inline void
-    set_vc_state(VC_state_type state, int vc, Cycles curTime)
+    set_vc_state(VC_state_type state, int vc, Tick curTime)
     {
       outVcState[vc].setState(state, curTime);
     }
 
     inline bool
-    is_vc_idle(int vc, Cycles curTime)
+    is_vc_idle(int vc, Tick curTime)
     {
         return (outVcState[vc].isInState(IDLE_, curTime));
     }

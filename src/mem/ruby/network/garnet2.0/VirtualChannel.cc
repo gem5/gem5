@@ -32,23 +32,23 @@
 #include "mem/ruby/network/garnet2.0/VirtualChannel.hh"
 
 VirtualChannel::VirtualChannel()
-  : inputBuffer(), m_vc_state(IDLE_, Cycles(0)), m_output_port(-1),
+  : inputBuffer(), m_vc_state(IDLE_, Tick(0)), m_output_port(-1),
     m_enqueue_time(INFINITE_), m_output_vc(-1)
 {
 }
 
 void
-VirtualChannel::set_idle(Cycles curTime)
+VirtualChannel::set_idle(Tick curTime)
 {
     m_vc_state.first = IDLE_;
     m_vc_state.second = curTime;
-    m_enqueue_time = Cycles(INFINITE_);
+    m_enqueue_time = Tick(INFINITE_);
     m_output_port = -1;
     m_output_vc = -1;
 }
 
 void
-VirtualChannel::set_active(Cycles curTime)
+VirtualChannel::set_active(Tick curTime)
 {
     m_vc_state.first = ACTIVE_;
     m_vc_state.second = curTime;
@@ -56,7 +56,7 @@ VirtualChannel::set_active(Cycles curTime)
 }
 
 bool
-VirtualChannel::need_stage(flit_stage stage, Cycles time)
+VirtualChannel::need_stage(flit_stage stage, Tick time)
 {
     if (inputBuffer.isReady(time)) {
         assert(m_vc_state.first == ACTIVE_ && m_vc_state.second <= time);

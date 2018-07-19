@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  * Copyright (c) 2008 Princeton University
  * Copyright (c) 2016 Georgia Institute of Technology
  * All rights reserved.
@@ -47,7 +48,7 @@ flitBuffer::isEmpty()
 }
 
 bool
-flitBuffer::isReady(Cycles curTime)
+flitBuffer::isReady(Tick curTime)
 {
     if (m_buffer.size() != 0 ) {
         flit *t_flit = peekTopFlit();

@@ -70,9 +70,13 @@ void
 InputUnit::wakeup()
 {
     flit *t_flit;
-    if (m_in_link->isReady(m_router->curCycle())) {
+    if (m_in_link->isReady(curTick())) {
 
         t_flit = m_in_link->consumeLink();
+        DPRINTF(RubyNetwork, "Router[%d] Consuming:%s Width: %d Flit:%s\n",
+        m_router->get_id(), m_in_link->name(),
+        m_router->getBitWidth(), *t_flit);
+        assert(t_flit->m_width == m_router->getBitWidth());
         int vc = t_flit->get_vc();
         t_flit->increment_hops(); // for stats
 
@@ -80,7 +84,7 @@ InputUnit::wakeup()
             (t_flit->get_type() == HEAD_TAIL_)) {
 
             assert(virtualChannels[vc].get_state() == IDLE_);
-            set_vc_active(vc, m_router->curCycle());
+            set_vc_active(vc, curTick());
 
             // Route computation for this vc
             int outport = m_router->route_compute(t_flit->get_route(),
@@ -109,17 +113,21 @@ InputUnit::wakeup()
         if (pipe_stages == 1) {
             // 1-cycle router
             // Flit goes for SA directly
-            t_flit->advance_stage(SA_, m_router->curCycle());
+            t_flit->advance_stage(SA_, curTick());
         } else {
             assert(pipe_stages > 1);
             // Router delay is modeled by making flit wait in buffer for
             // (pipe_stages cycles - 1) cycles before going for SA
 
             Cycles wait_time = pipe_stages - Cycles(1);
-            t_flit->advance_stage(SA_, m_router->curCycle() + wait_time);
+            t_flit->advance_stage(SA_, m_router->clockEdge(wait_time));
 
             // Wakeup the router in that cycle to perform SA
             m_router->schedule_wakeup(Cycles(wait_time));
+        }
+
+        if (m_in_link->isReady(curTick())) {
+            m_router->schedule_wakeup(Cycles(1));
         }
     }
 }
@@ -127,8 +135,10 @@ InputUnit::wakeup()
 // Send a credit back to upstream router for this VC.
 // Called by SwitchAllocator when the flit in this VC wins the Switch.
 void
-InputUnit::increment_credit(int in_vc, bool free_signal, Cycles curTime)
+InputUnit::increment_credit(int in_vc, bool free_signal, Tick curTime)
 {
+    DPRINTF(RubyNetwork, "Router[%d]: Sending a credit vc:%d free:%d to %s\n",
+    m_router->get_id(), in_vc, free_signal, m_credit_link->name());
     Credit *t_credit = new Credit(in_vc, free_signal, curTime);
     creditQueue.insert(t_credit);
     m_credit_link->scheduleEventAbsolute(m_router->clockEdge(Cycles(1)));

@@ -68,9 +68,14 @@ class Consumer
         m_scheduled_wakeups.insert(time);
     }
 
-    void scheduleEventAbsolute(Tick timeAbs);
+    ClockedObject *
+    getObject()
+    {
+        return em;
+    }
 
-  protected:
+
+    void scheduleEventAbsolute(Tick timeAbs);
     void scheduleEvent(Cycles timeDelta);
 
   private:

@@ -114,7 +114,7 @@ SwitchAllocator::arbitrate_inports()
         for (int invc_iter = 0; invc_iter < m_num_vcs; invc_iter++) {
             auto input_unit = m_router->getInputUnit(inport);
 
-            if (input_unit->need_stage(invc, SA_, m_router->curCycle())) {
+            if (input_unit->need_stage(invc, SA_, curTick())) {
                 // This flit is in SA stage
 
                 int outport = input_unit->get_outport(invc);
@@ -192,7 +192,7 @@ SwitchAllocator::arbitrate_outports()
                 DPRINTF(RubyNetwork, "SwitchAllocator at Router %d "
                                      "granted outvc %d at outport %d "
                                      "to invc %d at inport %d to flit %s at "
-                                     "time: %lld\n",
+                                     "cycle: %lld\n",
                         m_router->get_id(), outvc,
                         m_router->getPortDirectionName(
                             output_unit->get_direction()),
@@ -218,7 +218,7 @@ SwitchAllocator::arbitrate_outports()
                 output_unit->decrement_credit(outvc);
 
                 // flit ready for Switch Traversal
-                t_flit->advance_stage(ST_, m_router->curCycle());
+                t_flit->advance_stage(ST_, curTick());
                 m_router->grant_switch(inport, t_flit);
                 m_output_arbiter_activity++;
 
@@ -226,20 +226,18 @@ SwitchAllocator::arbitrate_outports()
                     t_flit->get_type() == HEAD_TAIL_) {
 
                     // This Input VC should now be empty
-                    assert(!(input_unit->isReady(invc, m_router->curCycle())));
+                    assert(!(input_unit->isReady(invc, curTick())));
 
                     // Free this VC
-                    input_unit->set_vc_idle(invc, m_router->curCycle());
+                    input_unit->set_vc_idle(invc, curTick());
 
                     // Send a credit back
                     // along with the information that this VC is now idle
-                    input_unit->increment_credit(invc, true,
-                        m_router->curCycle());
+                    input_unit->increment_credit(invc, true, curTick());
                 } else {
                     // Send a credit back
                     // but do not indicate that the VC is idle
-                    input_unit->increment_credit(invc, false,
-                        m_router->curCycle());
+                    input_unit->increment_credit(invc, false, curTick());
                 }
 
                 // remove this request
@@ -313,14 +311,14 @@ SwitchAllocator::send_allowed(int inport, int invc, int outport, int outvc)
         auto input_unit = m_router->getInputUnit(inport);
 
         // enqueue time of this flit
-        Cycles t_enqueue_time = input_unit->get_enqueue_time(invc);
+        Tick t_enqueue_time = input_unit->get_enqueue_time(invc);
 
         // check if any other flit is ready for SA and for same output port
         // and was enqueued before this flit
         int vc_base = vnet*m_vc_per_vnet;
         for (int vc_offset = 0; vc_offset < m_vc_per_vnet; vc_offset++) {
             int temp_vc = vc_base + vc_offset;
-            if (input_unit->need_stage(temp_vc, SA_, m_router->curCycle()) &&
+            if (input_unit->need_stage(temp_vc, SA_, curTick()) &&
                (input_unit->get_outport(temp_vc) == outport) &&
                (input_unit->get_enqueue_time(temp_vc) < t_enqueue_time)) {
                 return false;
@@ -350,7 +348,7 @@ SwitchAllocator::vc_allocate(int outport, int inport, int invc)
 void
 SwitchAllocator::check_for_wakeup()
 {
-    Cycles nextCycle = m_router->curCycle() + Cycles(1);
+    Tick nextCycle = m_router->clockEdge(Cycles(1));
 
     for (int i = 0; i < m_num_inports; i++) {
         for (int j = 0; j < m_num_vcs; j++) {

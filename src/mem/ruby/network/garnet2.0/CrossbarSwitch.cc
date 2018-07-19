@@ -61,17 +61,17 @@ CrossbarSwitch::wakeup()
             m_router->get_id(), m_router->curCycle());
 
     for (auto& switch_buffer : switchBuffers) {
-        if (!switch_buffer.isReady(m_router->curCycle())) {
+        if (!switch_buffer.isReady(curTick())) {
             continue;
         }
 
         flit *t_flit = switch_buffer.peekTopFlit();
-        if (t_flit->is_stage(ST_, m_router->curCycle())) {
+        if (t_flit->is_stage(ST_, curTick())) {
             int outport = t_flit->get_outport();
 
             // flit performs LT_ in the next cycle
-            t_flit->advance_stage(LT_, m_router->curCycle() + Cycles(1));
-            t_flit->set_time(m_router->curCycle() + Cycles(1));
+            t_flit->advance_stage(LT_, m_router->clockEdge(Cycles(1)));
+            t_flit->set_time(m_router->clockEdge(Cycles(1)));
 
             // This will take care of waking up the Network Link
             // in the next cycle

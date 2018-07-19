@@ -43,41 +43,44 @@ class flit
   public:
     flit() {}
     flit(int id, int vc, int vnet, RouteInfo route, int size,
-         MsgPtr msg_ptr, Cycles curTime);
+         MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime);
+
+    virtual ~flit(){};
 
     int get_outport() {return m_outport; }
     int get_size() { return m_size; }
-    Cycles get_enqueue_time() { return m_enqueue_time; }
-    Cycles get_dequeue_time() { return m_dequeue_time; }
+    Tick get_enqueue_time() { return m_enqueue_time; }
+    Tick get_dequeue_time() { return m_dequeue_time; }
     int get_id() { return m_id; }
-    Cycles get_time() { return m_time; }
+    Tick get_time() { return m_time; }
     int get_vnet() { return m_vnet; }
     int get_vc() { return m_vc; }
     RouteInfo get_route() { return m_route; }
     MsgPtr& get_msg_ptr() { return m_msg_ptr; }
     flit_type get_type() { return m_type; }
-    std::pair<flit_stage, Cycles> get_stage() { return m_stage; }
-    Cycles get_src_delay() { return src_delay; }
+    std::pair<flit_stage, Tick> get_stage() { return m_stage; }
+    Tick get_src_delay() { return src_delay; }
 
     void set_outport(int port) { m_outport = port; }
-    void set_time(Cycles time) { m_time = time; }
+    void set_time(Tick time) { m_time = time; }
     void set_vc(int vc) { m_vc = vc; }
     void set_route(RouteInfo route) { m_route = route; }
-    void set_src_delay(Cycles delay) { src_delay = delay; }
-    void set_dequeue_time(Cycles time) { m_dequeue_time = time; }
+    void set_src_delay(Tick delay) { src_delay = delay; }
+    void set_dequeue_time(Tick time) { m_dequeue_time = time; }
+    void set_enqueue_time(Tick time) { m_enqueue_time = time; }
 
     void increment_hops() { m_route.hops_traversed++; }
-    void print(std::ostream& out) const;
+    virtual void print(std::ostream& out) const;
 
     bool
-    is_stage(flit_stage stage, Cycles time)
+    is_stage(flit_stage stage, Tick time)
     {
         return (stage == m_stage.first &&
                 time >= m_stage.second);
     }
 
     void
-    advance_stage(flit_stage t_stage, Cycles newTime)
+    advance_stage(flit_stage t_stage, Tick newTime)
     {
         m_stage.first = t_stage;
         m_stage.second = newTime;
@@ -96,18 +99,24 @@ class flit
 
     bool functionalWrite(Packet *pkt);
 
+    virtual flit* serialize(int ser_id, int parts, uint32_t bWidth);
+    virtual flit* deserialize(int des_id, int num_flits, uint32_t bWidth);
+
+    uint32_t m_width;
+    int msgSize;
   protected:
     int m_id;
     int m_vnet;
     int m_vc;
     RouteInfo m_route;
     int m_size;
-    Cycles m_enqueue_time, m_dequeue_time, m_time;
+    Tick m_enqueue_time, m_dequeue_time;
+    Tick m_time;
     flit_type m_type;
     MsgPtr m_msg_ptr;
     int m_outport;
-    Cycles src_delay;
-    std::pair<flit_stage, Cycles> m_stage;
+    Tick src_delay;
+    std::pair<flit_stage, Tick> m_stage;
 };
 
 inline std::ostream&

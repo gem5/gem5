@@ -27,17 +27,60 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "mem/ruby/network/garnet2.0/Credit.hh"
+
+#include "base/trace.hh"
+#include "debug/RubyNetwork.hh"
 
 // Credit Signal for buffers inside VC
 // Carries m_vc (inherits from flit.hh)
 // and m_is_free_signal (whether VC is free or not)
 
-Credit::Credit(int vc, bool is_free_signal, Cycles curTime)
+Credit::Credit(int vc, bool is_free_signal, Tick curTime)
 {
     m_id = 0;
     m_vc = vc;
     m_is_free_signal = is_free_signal;
     m_time = curTime;
+    m_type = CREDIT_;
 }
+
+flit *
+Credit::serialize(int ser_id, int parts, uint32_t bWidth)
+{
+    DPRINTF(RubyNetwork, "Serializing a credit\n");
+    bool new_free = false;
+    if ((ser_id+1 == parts) && m_is_free_signal) {
+        new_free = true;
+    }
+    Credit *new_credit_flit = new Credit(m_vc, new_free, m_time);
+    return new_credit_flit;
+}
+
+flit *
+Credit::deserialize(int des_id, int num_flits, uint32_t bWidth)
+{
+    DPRINTF(RubyNetwork, "DeSerializing a credit vc:%d free:%d\n",
+    m_vc, m_is_free_signal);
+    if (m_is_free_signal) {
+        // We are not going to get anymore credits for this vc
+        // So send a credit in any case
+        return new Credit(m_vc, true, m_time);
+    }
+
+    return new Credit(m_vc, false, m_time);
+}
+
+void
+Credit::print(std::ostream& out) const
+{
+    out << "[Credit:: ";
+    out << "Type=" << m_type << " ";
+    out << "VC=" << m_vc << " ";
+    out << "FreeVC=" << m_is_free_signal << " ";
+    out << "Set Time=" << m_time << " ";
+    out << "]";
+}
+
+
+

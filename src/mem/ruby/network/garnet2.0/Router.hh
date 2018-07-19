@@ -68,7 +68,7 @@ class Router : public BasicRouter, public Consumer
     void addInPort(PortDirection inport_dirn, NetworkLink *link,
                    CreditLink *credit_link);
     void addOutPort(PortDirection outport_dirn, NetworkLink *link,
-                    const NetDest& routing_table_entry,
+                    std::vector<NetDest>& routing_table_entry,
                     int link_weight, CreditLink *credit_link);
 
     Cycles get_pipe_stages(){ return m_latency; }
@@ -99,6 +99,8 @@ class Router : public BasicRouter, public Consumer
         assert(port < m_output_unit.size());
         return m_output_unit[port].get();
     }
+
+    int getBitWidth() { return m_bit_width; }
 
     PortDirection getOutportDirection(int outport);
     PortDirection getInportDirection(int inport);
@@ -131,6 +133,7 @@ class Router : public BasicRouter, public Consumer
   private:
     Cycles m_latency;
     int m_virtual_networks, m_vc_per_vnet, m_num_vcs;
+    uint32_t m_bit_width;
     GarnetNetwork *m_network_ptr;
 
     RoutingUnit routingUnit;

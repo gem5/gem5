@@ -30,9 +30,12 @@
 
 #include "mem/ruby/network/garnet2.0/flit.hh"
 
+#include "base/intmath.hh"
+#include "debug/RubyNetwork.hh"
+
 // Constructor for the flit
 flit::flit(int id, int  vc, int vnet, RouteInfo route, int size,
-    MsgPtr msg_ptr, Cycles curTime)
+    MsgPtr msg_ptr, int MsgSize, uint32_t bWidth, Tick curTime)
 {
     m_size = size;
     m_msg_ptr = msg_ptr;
@@ -44,7 +47,9 @@ flit::flit(int id, int  vc, int vnet, RouteInfo route, int size,
     m_vc = vc;
     m_route = route;
     m_stage.first = I_;
-    m_stage.second = m_time;
+    m_stage.second = curTime;
+    m_width = bWidth;
+    msgSize = MsgSize;
 
     if (size == 1) {
         m_type = HEAD_TAIL_;
@@ -58,6 +63,38 @@ flit::flit(int id, int  vc, int vnet, RouteInfo route, int size,
         m_type = BODY_;
 }
 
+flit *
+flit::serialize(int ser_id, int parts, uint32_t bWidth)
+{
+    assert(m_width > bWidth);
+
+    int ratio = (int)divCeil(m_width, bWidth);
+    int new_id = (m_id*ratio) + ser_id;
+    int new_size = (int)divCeil((float)msgSize, (float)bWidth);
+    assert(new_id < new_size);
+
+    flit *fl = new flit(new_id, m_vc, m_vnet, m_route,
+                    new_size, m_msg_ptr, msgSize, bWidth, m_time);
+    fl->set_enqueue_time(m_enqueue_time);
+    fl->set_src_delay(src_delay);
+    return fl;
+}
+
+flit *
+flit::deserialize(int des_id, int num_flits, uint32_t bWidth)
+{
+    int ratio = (int)divCeil((float)bWidth, (float)m_width);
+    int new_id = ((int)divCeil((float)(m_id+1), (float)ratio)) - 1;
+    int new_size = (int)divCeil((float)msgSize, (float)bWidth);
+    assert(new_id < new_size);
+
+    flit *fl = new flit(new_id, m_vc, m_vnet, m_route,
+                    new_size, m_msg_ptr, msgSize, bWidth, m_time);
+    fl->set_enqueue_time(m_enqueue_time);
+    fl->set_src_delay(src_delay);
+    return fl;
+}
+
 // Flit can be printed out for debugging purposes
 void
 flit::print(std::ostream& out) const
@@ -65,13 +102,15 @@ flit::print(std::ostream& out) const
     out << "[flit:: ";
     out << "Id=" << m_id << " ";
     out << "Type=" << m_type << " ";
+    out << "Size=" << m_size << " ";
     out << "Vnet=" << m_vnet << " ";
     out << "VC=" << m_vc << " ";
     out << "Src NI=" << m_route.src_ni << " ";
     out << "Src Router=" << m_route.src_router << " ";
     out << "Dest NI=" << m_route.dest_ni << " ";
     out << "Dest Router=" << m_route.dest_router << " ";
-    out << "Enqueue Time=" << m_enqueue_time << " ";
+    out << "Set Time=" << m_time << " ";
+    out << "Width=" << m_width<< " ";
     out << "]";
 }
 

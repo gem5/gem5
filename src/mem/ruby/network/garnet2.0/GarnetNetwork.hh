@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2020 Advanced Micro Devices, Inc.
  * Copyright (c) 2008 Princeton University
  * Copyright (c) 2016 Georgia Institute of Technology
  * All rights reserved.
@@ -81,16 +82,16 @@ class GarnetNetwork : public Network
         return m_vnet_type[vnet];
     }
     int getNumRouters();
-    int get_router_id(int ni);
+    int get_router_id(int ni, int vnet);
 
 
     // Methods used by Topology to setup the network
     void makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                     const NetDest& routing_table_entry);
+                     std::vector<NetDest>& routing_table_entry);
     void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
-                    const NetDest& routing_table_entry);
+                    std::vector<NetDest>& routing_table_entry);
     void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                          const NetDest& routing_table_entry,
+                          std::vector<NetDest>& routing_table_entry,
                           PortDirection src_outport_dirn,
                           PortDirection dest_inport_dirn);
 
@@ -109,13 +110,13 @@ class GarnetNetwork : public Network
     void increment_received_packets(int vnet) { m_packets_received[vnet]++; }
 
     void
-    increment_packet_network_latency(Cycles latency, int vnet)
+    increment_packet_network_latency(Tick latency, int vnet)
     {
         m_packet_network_latency[vnet] += latency;
     }
 
     void
-    increment_packet_queueing_latency(Cycles latency, int vnet)
+    increment_packet_queueing_latency(Tick latency, int vnet)
     {
         m_packet_queueing_latency[vnet] += latency;
     }
@@ -124,13 +125,13 @@ class GarnetNetwork : public Network
     void increment_received_flits(int vnet) { m_flits_received[vnet]++; }
 
     void
-    increment_flit_network_latency(Cycles latency, int vnet)
+    increment_flit_network_latency(Tick latency, int vnet)
     {
         m_flit_network_latency[vnet] += latency;
     }
 
     void
-    increment_flit_queueing_latency(Cycles latency, int vnet)
+    increment_flit_queueing_latency(Tick latency, int vnet)
     {
         m_flit_queueing_latency[vnet] += latency;
     }

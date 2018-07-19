@@ -34,6 +34,7 @@ BasicLink::BasicLink(const Params *p)
     m_latency = p->latency;
     m_bandwidth_factor = p->bandwidth_factor;
     m_weight = p->weight;
+    mVnets = p->supported_vnets;
 }
 
 void

@@ -45,12 +45,12 @@ class OutVcState
     void decrement_credit();
 
     inline bool
-    isInState(VC_state_type state, Cycles request_time)
+    isInState(VC_state_type state, Tick request_time)
     {
         return ((m_vc_state == state) && (request_time >= m_time) );
     }
     inline void
-    setState(VC_state_type state, Cycles time)
+    setState(VC_state_type state, Tick time)
     {
         m_vc_state = state;
         m_time = time;
@@ -58,7 +58,7 @@ class OutVcState
 
   private:
     int m_id ;
-    Cycles m_time;
+    Tick m_time;
     VC_state_type m_vc_state;
     int m_credit_count;
     int m_max_credit_count;

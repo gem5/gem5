@@ -37,6 +37,7 @@
 
 #include "mem/ruby/network/BasicLink.hh"
 #include "mem/ruby/network/garnet2.0/CreditLink.hh"
+#include "mem/ruby/network/garnet2.0/NetworkBridge.hh"
 #include "mem/ruby/network/garnet2.0/NetworkLink.hh"
 #include "params/GarnetExtLink.hh"
 #include "params/GarnetIntLink.hh"
@@ -56,6 +57,21 @@ class GarnetIntLink : public BasicIntLink
   protected:
     NetworkLink* m_network_link;
     CreditLink* m_credit_link;
+
+    bool srcBridgeEn;
+    bool dstBridgeEn;
+
+    bool srcSerdesEn;
+    bool dstSerdesEn;
+
+    bool srcCdcEn;
+    bool dstCdcEn;
+
+    NetworkBridge* srcNetBridge;
+    NetworkBridge* dstNetBridge;
+
+    NetworkBridge* srcCredBridge;
+    NetworkBridge* dstCredBridge;
 };
 
 inline std::ostream&
@@ -79,8 +95,24 @@ class GarnetExtLink : public BasicExtLink
     friend class GarnetNetwork;
 
   protected:
+    bool extBridgeEn;
+    bool intBridgeEn;
+
+    bool extSerdesEn;
+    bool intSerdesEn;
+
+    bool extCdcEn;
+    bool intCdcEn;
+
     NetworkLink* m_network_links[2];
     CreditLink* m_credit_links[2];
+
+    NetworkBridge* extNetBridge[2];
+    NetworkBridge* intNetBridge[2];
+
+    NetworkBridge* extCredBridge[2];
+    NetworkBridge* intCredBridge[2];
+
 };
 
 inline std::ostream&
