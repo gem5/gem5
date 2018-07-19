@@ -37,8 +37,7 @@ namespace sc_gem5
 {
 
 Scheduler::Scheduler() :
-    eq(nullptr), _pendingCurr(0), _pendingFuture(0),
-    readyEvent(this, false, ReadyPriority),
+    eq(nullptr), readyEvent(this, false, ReadyPriority),
     pauseEvent(this, false, PausePriority),
     stopEvent(this, false, StopPriority),
     scMain(nullptr), _started(false), _paused(false), _stopped(false),

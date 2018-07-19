@@ -179,8 +179,75 @@ class Scheduler
     // Set an event queue for scheduling events.
     void setEventQueue(EventQueue *_eq) { eq = _eq; }
 
-    // Retrieve the event queue.
-    EventQueue &eventQueue() const { return *eq; }
+    // Get the current time according to gem5.
+    Tick getCurTick() { return eq ? eq->getCurTick() : 0; }
+
+    // For scheduling delayed/timed notifications/timeouts.
+    void
+    schedule(::Event *event, Tick tick)
+    {
+        pendingTicks[tick]++;
+        eq->schedule(event, tick);
+    }
+
+    // For descheduling delayed/timed notifications/timeouts.
+    void
+    deschedule(::Event *event)
+    {
+        auto it = pendingTicks.find(event->when());
+        if (--it->second == 0)
+            pendingTicks.erase(it);
+        eq->deschedule(event);
+    }
+
+    // Tell the scheduler than an event fired for bookkeeping purposes.
+    void
+    eventHappened()
+    {
+        auto it = pendingTicks.begin();
+        if (--it->second == 0)
+            pendingTicks.erase(it);
+    }
+
+    // Pending activity ignores gem5 activity, much like how a systemc
+    // simulation wouldn't know about asynchronous external events (socket IO
+    // for instance) that might happen before time advances in a pure
+    // systemc simulation. Also the spec lists what specific types of pending
+    // activity needs to be counted, which obviously doesn't include gem5
+    // events.
+
+    // Return whether there's pending systemc activity at this time.
+    bool
+    pendingCurr()
+    {
+        if (!readyList.empty() || !updateList.empty())
+            return true;
+        return pendingTicks.size() &&
+            pendingTicks.begin()->first == getCurTick();
+    }
+
+    // Return whether there are pending timed notifications or timeouts.
+    bool
+    pendingFuture()
+    {
+        switch (pendingTicks.size()) {
+          case 0: return false;
+          case 1: return pendingTicks.begin()->first > getCurTick();
+          default: return true;
+        }
+    }
+
+    // Return how many ticks there are until the first pending event, if any.
+    Tick
+    timeToPending()
+    {
+        if (!readyList.empty() || !updateList.empty())
+            return 0;
+        else if (pendingTicks.size())
+            return pendingTicks.begin()->first - getCurTick();
+        else
+            return MaxTick - getCurTick();
+    }
 
     // Run scheduled channel updates.
     void update();
@@ -205,6 +272,7 @@ class Scheduler
     static Priority MaxTickPriority = DefaultPriority + 3;
 
     EventQueue *eq;
+    std::map<Tick, int> pendingTicks;
 
     void runReady();
     EventWrapper<Scheduler, &Scheduler::runReady> readyEvent;

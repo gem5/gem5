@@ -105,7 +105,8 @@ class Event
     sc_core::sc_object *parent;
     EventsIt parentIt;
 
-    EventWrapper<Event, &Event::notify> delayedNotify;
+    void delayedNotify();
+    EventWrapper<Event, &Event::delayedNotify> delayedNotifyEvent;
 
     mutable std::set<Sensitivity *> sensitivities;
 };

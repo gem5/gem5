@@ -66,8 +66,10 @@ class Sensitivity
 class SensitivityTimeout : virtual public Sensitivity
 {
   private:
-    EventWrapper<Sensitivity, &Sensitivity::notify> timeoutEvent;
-    ::sc_core::sc_time timeout;
+    void timeout();
+    EventWrapper<SensitivityTimeout,
+        &SensitivityTimeout::timeout> timeoutEvent;
+    ::sc_core::sc_time time;
 
   public:
     SensitivityTimeout(Process *p, ::sc_core::sc_time t);
@@ -98,7 +100,7 @@ class SensitivityEventAndList : virtual public Sensitivity
             Process *p, const ::sc_core::sc_event_and_list *list);
     ~SensitivityEventAndList();
 
-    virtual void notifyWork(Event *e) override;
+    void notifyWork(Event *e) override;
 };
 
 class SensitivityEventOrList : virtual public Sensitivity

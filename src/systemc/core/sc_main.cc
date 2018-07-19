@@ -140,7 +140,7 @@ sc_argv()
 void
 sc_start()
 {
-    Tick now = curEventQueue() ? curEventQueue()->getCurTick() : 0;
+    Tick now = ::sc_gem5::scheduler.getCurTick();
     sc_start(sc_time::from_value(MaxTick - now), SC_EXIT_ON_STARVATION);
 }
 
@@ -156,7 +156,7 @@ sc_start(const sc_time &time, sc_starvation_policy p)
 {
     _status = SC_RUNNING;
 
-    Tick now = curEventQueue() ? curEventQueue()->getCurTick() : 0;
+    Tick now = ::sc_gem5::scheduler.getCurTick();
     ::sc_gem5::scheduler.start(now + time.value(), p == SC_RUN_TO_TIME);
 
     if (::sc_gem5::scheduler.paused())
@@ -200,7 +200,7 @@ const sc_time &
 sc_time_stamp()
 {
     static sc_time tstamp;
-    Tick tick = sc_gem5::scheduler.eventQueue().getCurTick();
+    Tick tick = ::sc_gem5::scheduler.getCurTick();
     //XXX We're assuming the systemc time resolution is in ps.
     tstamp = sc_time::from_value(tick / SimClock::Int::ps);
     return tstamp;
@@ -221,15 +221,13 @@ sc_is_running()
 bool
 sc_pending_activity_at_current_time()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return ::sc_gem5::scheduler.pendingCurr();
 }
 
 bool
 sc_pending_activity_at_future_time()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return ::sc_gem5::scheduler.pendingFuture();
 }
 
 bool
@@ -242,8 +240,7 @@ sc_pending_activity()
 sc_time
 sc_time_to_pending_activity()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
+    return sc_time::from_value(::sc_gem5::scheduler.timeToPending());
 }
 
 sc_status
