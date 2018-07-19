@@ -46,6 +46,7 @@ class sc_logic;
 namespace sc_gem5
 {
 
+class Kernel;
 class Module;
 class Process;
 struct ProcessFuncWrapper;
@@ -91,6 +92,8 @@ extern const sc_bind_proxy SC_BIND_PROXY_NIL;
 class sc_module : public sc_object
 {
   public:
+    friend class ::sc_gem5::Kernel;
+
     virtual ~sc_module();
 
     virtual const char *kind() const { return "sc_module"; }

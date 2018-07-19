@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "base/logging.hh"
+#include "systemc/core/kernel.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/process_types.hh"
 #include "systemc/ext/core/sc_module.hh"
@@ -72,7 +73,7 @@ sc_bind_proxy::sc_bind_proxy(const sc_port_base &_port) :
 
 const sc_bind_proxy SC_BIND_PROXY_NUL(*(const sc_port_base *)nullptr);
 
-sc_module::~sc_module() {}
+sc_module::~sc_module() { delete _gem5_module; }
 
 const sc_bind_proxy SC_BIND_PROXY_NIL(*(const sc_port_base *)nullptr);
 
@@ -652,15 +653,13 @@ sc_hierarchical_name_exists(const char *name)
 bool
 sc_start_of_simulation_invoked()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return ::sc_gem5::kernel->startOfSimulationComplete();
 }
 
 bool
 sc_end_of_simulation_invoked()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return ::sc_gem5::kernel->endOfSimulationComplete();
 }
 
 sc_module *

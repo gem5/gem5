@@ -31,6 +31,7 @@
 #define __SYSTEMC_CORE_MODULE_HH__
 
 #include <cassert>
+#include <set>
 
 #include "systemc/core/object.hh"
 #include "systemc/ext/core/sc_module.hh"
@@ -48,6 +49,8 @@ class Module
   public:
 
     Module(const char *name);
+    ~Module();
+
     void finish(Object *this_obj);
 
     const char *name() const { return _name; }
@@ -78,6 +81,8 @@ class Module
 
 Module *currentModule();
 Module *newModule();
+
+extern std::set<Module *> allModules;
 
 } // namespace sc_gem5
 

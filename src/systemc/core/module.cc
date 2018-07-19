@@ -51,6 +51,8 @@ Module::Module(const char *name) : _name(name), _sc_mod(nullptr), _obj(nullptr)
     _new_module = this;
 }
 
+Module::~Module() { allModules.erase(this); }
+
 void
 Module::finish(Object *this_obj)
 {
@@ -58,6 +60,10 @@ Module::finish(Object *this_obj)
     _obj = this_obj;
     _modules.push_back(this);
     _new_module = nullptr;
+    // This is called from the constructor of this_obj, so it can't use
+    // dynamic cast.
+    sc_mod(static_cast<::sc_core::sc_module *>(this_obj->sc_obj()));
+    allModules.insert(this);
 }
 
 void
@@ -83,5 +89,7 @@ newModule()
 {
     return _new_module;
 }
+
+std::set<Module *> allModules;
 
 } // namespace sc_gem5

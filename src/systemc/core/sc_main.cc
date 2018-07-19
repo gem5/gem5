@@ -36,6 +36,7 @@
 #include "sim/core.hh"
 #include "sim/eventq.hh"
 #include "sim/init.hh"
+#include "systemc/core/kernel.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -121,7 +122,6 @@ systemc_pybind(pybind11::module &m_internal)
 EmbeddedPyBind embed_("systemc", &systemc_pybind);
 
 sc_stop_mode _stop_mode = SC_STOP_FINISH_DELTA;
-sc_status _status = SC_ELABORATION;
 
 } // anonymous namespace
 
@@ -147,22 +147,15 @@ sc_start()
 void
 sc_pause()
 {
-    if (_status == SC_RUNNING)
+    if (::sc_gem5::kernel->status() == SC_RUNNING)
         ::sc_gem5::scheduler.schedulePause();
 }
 
 void
 sc_start(const sc_time &time, sc_starvation_policy p)
 {
-    _status = SC_RUNNING;
-
     Tick now = ::sc_gem5::scheduler.getCurTick();
     ::sc_gem5::scheduler.start(now + time.value(), p == SC_RUN_TO_TIME);
-
-    if (::sc_gem5::scheduler.paused())
-        _status = SC_PAUSED;
-    else if (::sc_gem5::scheduler.stopped())
-        _status = SC_STOPPED;
 }
 
 void
@@ -185,14 +178,14 @@ sc_get_stop_mode()
 void
 sc_stop()
 {
-    if (_status == SC_STOPPED)
+    if (::sc_gem5::kernel->status() == SC_STOPPED)
         return;
 
     if (sc_is_running()) {
         bool finish_delta = (_stop_mode == SC_STOP_FINISH_DELTA);
         ::sc_gem5::scheduler.scheduleStop(finish_delta);
     } else {
-        //XXX Should stop if in one of the various elaboration callbacks.
+        ::sc_gem5::kernel->stop();
     }
 }
 
@@ -215,7 +208,7 @@ sc_delta_count()
 bool
 sc_is_running()
 {
-    return _status & (SC_RUNNING | SC_PAUSED);
+    return sc_get_status() & (SC_RUNNING | SC_PAUSED);
 }
 
 bool
@@ -246,7 +239,7 @@ sc_time_to_pending_activity()
 sc_status
 sc_get_status()
 {
-    return _status;
+    return ::sc_gem5::kernel ? ::sc_gem5::kernel->status() : SC_ELABORATION;
 }
 
 } // namespace sc_core

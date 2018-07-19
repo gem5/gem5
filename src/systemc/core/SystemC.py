@@ -33,7 +33,7 @@ from m5.SimObject import SimObject
 # It also acts as a collecting point for systemc related control functionality.
 class SystemC_Kernel(SimObject):
     type = 'SystemC_Kernel'
-    cxx_class = 'SystemC::Kernel'
+    cxx_class = 'sc_gem5::Kernel'
     cxx_header = 'systemc/core/kernel.hh'
 
     def sc_main(self, *args):

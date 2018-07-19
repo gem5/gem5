@@ -32,6 +32,8 @@
 #include "base/fiber.hh"
 #include "base/logging.hh"
 #include "sim/eventq.hh"
+#include "systemc/core/kernel.hh"
+#include "systemc/ext/core/sc_main.hh"
 
 namespace sc_gem5
 {
@@ -174,6 +176,7 @@ void
 Scheduler::pause()
 {
     _paused = true;
+    kernel->status(::sc_core::SC_PAUSED);
     scMain->run();
 }
 
@@ -181,6 +184,7 @@ void
 Scheduler::stop()
 {
     _stopped = true;
+    kernel->stop();
     scMain->run();
 }
 
@@ -197,8 +201,10 @@ Scheduler::start(Tick max_tick, bool run_to_time)
 
     maxTick = max_tick;
 
-    if (initReady)
+    if (initReady) {
+        kernel->status(::sc_core::SC_RUNNING);
         eq->schedule(&maxTickEvent, maxTick);
+    }
 
     // Return to gem5 to let it run events, etc.
     Fiber::primaryFiber()->run();

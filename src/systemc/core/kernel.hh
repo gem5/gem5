@@ -32,8 +32,9 @@
 
 #include "params/SystemC_Kernel.hh"
 #include "sim/sim_object.hh"
+#include "systemc/ext/core/sc_main.hh"
 
-namespace SystemC
+namespace sc_gem5
 {
 
 /*
@@ -49,14 +50,33 @@ class Kernel : public SimObject
     typedef SystemC_KernelParams Params;
     Kernel(Params *params);
 
+    void init() override;
+    void regStats() override;
     void startup() override;
 
     void t0Handler();
 
+    sc_core::sc_status status() { return _status; }
+    void status(sc_core::sc_status s) { _status = s; }
+
+    void stop();
+
+    bool startOfSimulationComplete() { return _startComplete; }
+    bool endOfSimulationComplete() { return _endComplete; }
+
   private:
+    bool _stopAfterCallbacks;
+    void stopWork();
+
+    bool _startComplete;
+    bool _endComplete;
+    sc_core::sc_status _status;
+
     EventWrapper<Kernel, &Kernel::t0Handler> t0Event;
 };
 
-} // namespace SystemC
+extern Kernel *kernel;
+
+} // namespace sc_gem5
 
 #endif // __SYSTEMC_KERNEL_H__

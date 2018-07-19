@@ -28,22 +28,85 @@
  */
 
 #include "systemc/core/kernel.hh"
+
+#include "base/logging.hh"
+#include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
 
-namespace SystemC
+namespace sc_gem5
 {
 
 Kernel::Kernel(Params *params) :
-    SimObject(params), t0Event(this, false, EventBase::Default_Pri - 1) {}
+    SimObject(params), _stopAfterCallbacks(false),
+    _startComplete(false), _endComplete(false),
+    _status(sc_core::SC_ELABORATION),
+    t0Event(this, false, EventBase::Default_Pri - 1) {}
+
+void
+Kernel::init()
+{
+    kernel->status(::sc_core::SC_BEFORE_END_OF_ELABORATION);
+    for (auto m: sc_gem5::allModules)
+        m->sc_mod()->before_end_of_elaboration();
+
+    if (_stopAfterCallbacks)
+        stopWork();
+}
+
+void
+Kernel::regStats()
+{
+    kernel->status(::sc_core::SC_END_OF_ELABORATION);
+    for (auto m: sc_gem5::allModules)
+        m->sc_mod()->end_of_elaboration();
+
+    if (_stopAfterCallbacks)
+        stopWork();
+}
 
 void
 Kernel::startup()
 {
+    kernel->status(::sc_core::SC_START_OF_SIMULATION);
+    for (auto m: sc_gem5::allModules)
+        m->sc_mod()->start_of_simulation();
+
+    _startComplete = true;
+
+    if (_stopAfterCallbacks)
+        stopWork();
+
+    kernel->status(::sc_core::SC_RUNNING);
+
     schedule(t0Event, curTick());
     // Install ourselves as the scheduler's event manager.
     ::sc_gem5::scheduler.setEventQueue(eventQueue());
     // Run update once before the event queue starts.
     ::sc_gem5::scheduler.update();
+}
+
+void
+Kernel::stop()
+{
+    if (status() < ::sc_core::SC_RUNNING)
+        _stopAfterCallbacks = true;
+    else
+        stopWork();
+}
+
+void
+Kernel::stopWork()
+{
+    kernel->status(::sc_core::SC_END_OF_SIMULATION);
+    for (auto m: sc_gem5::allModules)
+        m->sc_mod()->end_of_simulation();
+
+    _endComplete = true;
+
+    kernel->status(::sc_core::SC_STOPPED);
+
+    if (_stopAfterCallbacks)
+        fatal("Simulation called sc_stop during elaboration.\n");
 }
 
 void
@@ -57,12 +120,19 @@ Kernel::t0Handler()
     // in the spec. The delta phase will happen at normal priority, and then
     // the event which runs the processes which is at a lower priority.
     ::sc_gem5::scheduler.prepareForInit();
+
+    status(::sc_core::SC_RUNNING);
 }
 
-} // namespace SystemC
+Kernel *kernel;
 
-SystemC::Kernel *
+} // namespace sc_gem5
+
+sc_gem5::Kernel *
 SystemC_KernelParams::create()
 {
-    return new SystemC::Kernel(this);
+    panic_if(sc_gem5::kernel,
+            "Only one systemc kernel object may be defined.\n");
+    sc_gem5::kernel = new sc_gem5::Kernel(this);
+    return sc_gem5::kernel;
 }
