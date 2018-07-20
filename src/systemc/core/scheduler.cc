@@ -60,6 +60,10 @@ Scheduler::prepareForInit()
         p->ready();
     }
 
+    for (auto ets: eventsToSchedule)
+        eq->schedule(ets.first, ets.second);
+    eventsToSchedule.clear();
+
     if (_started)
         eq->schedule(&maxTickEvent, maxTick);
 

@@ -187,7 +187,11 @@ class Scheduler
     schedule(::Event *event, Tick tick)
     {
         pendingTicks[tick]++;
-        eq->schedule(event, tick);
+
+        if (initReady)
+            eq->schedule(event, tick);
+        else
+            eventsToSchedule[event] = tick;
     }
 
     // For descheduling delayed/timed notifications/timeouts.
@@ -197,7 +201,11 @@ class Scheduler
         auto it = pendingTicks.find(event->when());
         if (--it->second == 0)
             pendingTicks.erase(it);
-        eq->deschedule(event);
+
+        if (initReady)
+            eq->deschedule(event);
+        else
+            eventsToSchedule.erase(event);
     }
 
     // Tell the scheduler than an event fired for bookkeeping purposes.
@@ -302,6 +310,8 @@ class Scheduler
     ProcessList readyList;
 
     ChannelList updateList;
+
+    std::map<::Event *, Tick> eventsToSchedule;
 };
 
 extern Scheduler scheduler;
