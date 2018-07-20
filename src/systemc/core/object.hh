@@ -99,7 +99,6 @@ class Object
     Objects children;
     Events events;
     sc_core::sc_object *parent;
-    ObjectsIt parentIt;
 
     sc_core::sc_attr_cltn cltn;
 };

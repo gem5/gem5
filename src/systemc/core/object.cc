@@ -118,7 +118,12 @@ Object::operator = (const Object &)
 
 Object::~Object()
 {
-    panic_if(!children.empty(), "Parent object still has children.\n");
+    // Promote all children to be top level objects.
+    for (auto child: children) {
+        addObject(&topLevelObjects, child);
+        child->_gem5_object->parent = nullptr;
+    }
+    children.clear();
 
     if (parent)
         popObject(&parent->_gem5_object->children, _name);
