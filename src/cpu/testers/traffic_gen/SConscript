@@ -48,6 +48,7 @@ Source('exit_gen.cc')
 Source('idle_gen.cc')
 Source('linear_gen.cc')
 Source('random_gen.cc')
+Source('stream_gen.cc')
 
 DebugFlag('TrafficGen')
 SimObject('BaseTrafficGen.py')

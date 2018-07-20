@@ -41,6 +41,13 @@ from m5.params import *
 from m5.proxy import *
 from MemObject import MemObject
 
+# Types of Stream Generators.
+# Those are orthogonal to the other generators in the TrafficGen
+# and are meant to initialize the stream and substream IDs for
+# every memory request, regardless of how the packet has been
+# generated (Random, Linear, Trace etc)
+class StreamGenType(Enum): vals = [ 'none', 'fixed', 'random' ]
+
 # The traffic generator is a master module that generates stimuli for
 # the memory system, based on a collection of simple behaviours that
 # are either probabilistic or based on traces. It can be used stand
@@ -70,3 +77,11 @@ class BaseTrafficGen(MemObject):
     # somewhat arbitrary and may well have to be tuned.
     progress_check = Param.Latency('1ms', "Time before exiting " \
                                    "due to lack of progress")
+
+    # Generator type used for applying Stream and/or Substream IDs to requests
+    stream_gen = Param.StreamGenType('none',
+        "Generator for adding Stream and/or Substream ID's to requests")
+
+    # Sources for Stream/Substream IDs to apply to requests
+    sids = VectorParam.Unsigned([], "StreamIDs to use")
+    ssids = VectorParam.Unsigned([], "SubstreamIDs to use")

@@ -50,6 +50,7 @@
 #include "mem/qport.hh"
 
 class BaseGen;
+class StreamGen;
 class System;
 struct BaseTrafficGenParams;
 
@@ -179,7 +180,7 @@ class BaseTrafficGen : public MemObject
   public:
     BaseTrafficGen(const BaseTrafficGenParams* p);
 
-    ~BaseTrafficGen() {}
+    ~BaseTrafficGen();
 
     BaseMasterPort& getMasterPort(const std::string &if_name,
                                   PortID idx = InvalidPortID) override;
@@ -247,6 +248,9 @@ class BaseTrafficGen : public MemObject
 
     /** Currently active generator */
     std::shared_ptr<BaseGen> activeGenerator;
+
+    /** Stream/SubStreamID Generator */
+    std::unique_ptr<StreamGen> streamGenerator;
 };
 
 #endif //__CPU_TRAFFIC_GEN_BASE_HH__
