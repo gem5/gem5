@@ -42,7 +42,9 @@ Scheduler::Scheduler() :
     eq(nullptr), readyEvent(this, false, ReadyPriority),
     pauseEvent(this, false, PausePriority),
     stopEvent(this, false, StopPriority),
-    scMain(nullptr), _started(false), _paused(false), _stopped(false),
+    scMain(nullptr),
+    starvationEvent(this, false, StarvationPriority),
+    _started(false), _paused(false), _stopped(false),
     maxTickEvent(this, false, MaxTickPriority),
     _numCycles(0), _current(nullptr), initReady(false)
 {}
@@ -143,6 +145,20 @@ Scheduler::scheduleReadyEvent()
     if (!readyEvent.scheduled()) {
         panic_if(!eq, "Need to schedule ready, but no event manager.\n");
         eq->schedule(&readyEvent, eq->getCurTick());
+        if (starvationEvent.scheduled())
+            eq->deschedule(&starvationEvent);
+    }
+}
+
+void
+Scheduler::scheduleStarvationEvent()
+{
+    if (!starvationEvent.scheduled()) {
+        panic_if(!eq, "Need to schedule starvation event, "
+                "but no event manager.\n");
+        eq->schedule(&starvationEvent, eq->getCurTick());
+        if (readyEvent.scheduled())
+            eq->deschedule(&readyEvent);
     }
 }
 
@@ -161,6 +177,9 @@ Scheduler::runReady()
 
     // The update phase.
     update();
+
+    if (starved() && !runToTime)
+        scheduleStarvationEvent();
 
     // The delta phase will happen naturally through the event queue.
 }
@@ -202,8 +221,12 @@ Scheduler::start(Tick max_tick, bool run_to_time)
     _started = true;
     _paused = false;
     _stopped = false;
+    runToTime = run_to_time;
 
     maxTick = max_tick;
+
+    if (starved() && !runToTime)
+        return;
 
     if (initReady) {
         kernel->status(::sc_core::SC_RUNNING);
@@ -219,6 +242,8 @@ Scheduler::start(Tick max_tick, bool run_to_time)
         eq->deschedule(&stopEvent);
     if (maxTickEvent.scheduled())
         eq->deschedule(&maxTickEvent);
+    if (starvationEvent.scheduled())
+        eq->deschedule(&starvationEvent);
 }
 
 void

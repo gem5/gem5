@@ -215,6 +215,9 @@ class Scheduler
         auto it = pendingTicks.begin();
         if (--it->second == 0)
             pendingTicks.erase(it);
+
+        if (starved() && !runToTime)
+            scheduleStarvationEvent();
     }
 
     // Pending activity ignores gem5 activity, much like how a systemc
@@ -277,6 +280,7 @@ class Scheduler
     static Priority StopPriority = DefaultPriority - 1;
     static Priority PausePriority = DefaultPriority + 1;
     static Priority ReadyPriority = DefaultPriority + 2;
+    static Priority StarvationPriority = ReadyPriority;
     static Priority MaxTickPriority = DefaultPriority + 3;
 
     EventQueue *eq;
@@ -292,6 +296,17 @@ class Scheduler
     EventWrapper<Scheduler, &Scheduler::stop> stopEvent;
     Fiber *scMain;
 
+    bool
+    starved()
+    {
+        return (readyList.empty() && updateList.empty() &&
+                (pendingTicks.empty() ||
+                 pendingTicks.begin()->first > maxTick) &&
+                initList.empty());
+    }
+    EventWrapper<Scheduler, &Scheduler::pause> starvationEvent;
+    void scheduleStarvationEvent();
+
     bool _started;
     bool _paused;
     bool _stopped;
@@ -304,6 +319,7 @@ class Scheduler
     Process *_current;
 
     bool initReady;
+    bool runToTime;
 
     ProcessList initList;
     ProcessList toFinalize;
