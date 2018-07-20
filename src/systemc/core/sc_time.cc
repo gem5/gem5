@@ -28,6 +28,7 @@
  */
 
 #include "base/logging.hh"
+#include "python/pybind11/pybind.hh"
 #include "systemc/ext/core/sc_time.hh"
 
 namespace sc_core
@@ -54,6 +55,19 @@ double TimeUnitScale[] = {
     [SC_SEC] = 1.0
 };
 
+void
+fixTimeResolution()
+{
+    static bool fixed = false;
+    if (fixed)
+        return;
+
+    auto ticks = pybind11::module::import("m5.ticks");
+    auto fix_global_frequency = ticks.attr("fixGlobalFrequency");
+    fix_global_frequency();
+    fixed = true;
+}
+
 } // anonymous namespace
 
 sc_time::sc_time() : val(0) {}
@@ -62,6 +76,7 @@ sc_time::sc_time(double d, sc_time_unit tu)
 {
     val = 0;
     if (d != 0) {
+        fixTimeResolution();
         //XXX Assuming the time resolution is 1ps.
         double scale = TimeUnitScale[tu] / TimeUnitScale[SC_PS];
         // Accellera claims there is a linux bug, and that these next two
