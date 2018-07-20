@@ -45,7 +45,7 @@
 
 #include <vector>
 
-#include "cpu/reg_class_impl.hh"
+#include "cpu/reg_class.hh"
 #include "debug/Rename.hh"
 
 using namespace std;
@@ -193,4 +193,3 @@ UnifiedRenameMap::switchMode(VecMode newVecMode, UnifiedFreeList* freeList)
         vecMode = Enums::Full;
     }
 }
-

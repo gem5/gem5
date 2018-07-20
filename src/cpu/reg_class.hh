@@ -131,7 +131,12 @@ class RegId {
      * constant zero value throughout the execution).
      */
 
-    inline bool isZeroReg() const;
+    inline bool isZeroReg() const
+    {
+        return ((regClass == IntRegClass && regIdx == TheISA::ZeroReg) ||
+               (THE_ISA == ALPHA_ISA && regClass == FloatRegClass &&
+                regIdx == TheISA::ZeroReg));
+    }
 
     /** @return true if it is an integer physical register. */
     bool isIntReg() const { return regClass == IntRegClass; }
@@ -167,7 +172,21 @@ class RegId {
     /** Index flattening.
      * Required to be able to use a vector for the register mapping.
      */
-    inline RegIndex flatIndex() const;
+    inline RegIndex flatIndex() const
+    {
+        switch (regClass) {
+          case IntRegClass:
+          case FloatRegClass:
+          case VecRegClass:
+          case CCRegClass:
+          case MiscRegClass:
+            return regIdx;
+          case VecElemClass:
+            return Scale*regIdx + elemIdx;
+        }
+        panic("Trying to flatten a register without class!");
+        return -1;
+    }
     /** @} */
 
     /** Elem accessor */
