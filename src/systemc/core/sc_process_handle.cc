@@ -39,17 +39,19 @@ namespace sc_core
 const char *
 sc_unwind_exception::what() const throw()
 {
-    panic("%s for base class called.\n", __PRETTY_FUNCTION__);
+    return _isReset ? "RESET" : "KILL";
 }
 
 bool
 sc_unwind_exception::is_reset() const
 {
-    panic("%s for base class called.\n", __PRETTY_FUNCTION__);
+    return _isReset;
 }
 
-sc_unwind_exception::sc_unwind_exception() {}
-sc_unwind_exception::sc_unwind_exception(const sc_unwind_exception &) {}
+sc_unwind_exception::sc_unwind_exception() : _isReset(false) {}
+sc_unwind_exception::sc_unwind_exception(const sc_unwind_exception &e) :
+    _isReset(e._isReset)
+{}
 sc_unwind_exception::~sc_unwind_exception() throw() {}
 
 

@@ -108,6 +108,7 @@ class sc_unwind_exception : public std::exception
     virtual ~sc_unwind_exception() throw();
 
   protected:
+    bool _isReset;
     sc_unwind_exception();
 };
 
