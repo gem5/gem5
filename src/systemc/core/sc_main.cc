@@ -147,7 +147,7 @@ sc_start()
 void
 sc_pause()
 {
-    if (::sc_gem5::kernel->status() == SC_RUNNING)
+    if (::sc_gem5::Kernel::status() == SC_RUNNING)
         ::sc_gem5::scheduler.schedulePause();
 }
 
@@ -178,14 +178,14 @@ sc_get_stop_mode()
 void
 sc_stop()
 {
-    if (::sc_gem5::kernel->status() == SC_STOPPED)
+    if (::sc_gem5::Kernel::status() == SC_STOPPED)
         return;
 
     if (sc_is_running()) {
         bool finish_delta = (_stop_mode == SC_STOP_FINISH_DELTA);
         ::sc_gem5::scheduler.scheduleStop(finish_delta);
     } else {
-        ::sc_gem5::kernel->stop();
+        ::sc_gem5::Kernel::stop();
     }
 }
 

@@ -56,21 +56,16 @@ class Kernel : public SimObject
 
     void t0Handler();
 
-    sc_core::sc_status status() { return _status; }
-    void status(sc_core::sc_status s) { _status = s; }
+    static sc_core::sc_status status();
+    static void status(sc_core::sc_status s);
 
-    void stop();
+    static void stop();
 
-    bool startOfSimulationComplete() { return _startComplete; }
-    bool endOfSimulationComplete() { return _endComplete; }
+    static bool startOfSimulationComplete();
+    static bool endOfSimulationComplete();
 
   private:
-    bool _stopAfterCallbacks;
-    void stopWork();
-
-    bool _startComplete;
-    bool _endComplete;
-    sc_core::sc_status _status;
+    static void stopWork();
 
     EventWrapper<Kernel, &Kernel::t0Handler> t0Event;
 };
