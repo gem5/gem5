@@ -29,6 +29,7 @@
 
 #include "systemc/core/event.hh"
 
+#include <algorithm>
 #include <cstring>
 #include <utility>
 
@@ -51,12 +52,14 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename) :
         parent = p->obj()->sc_obj();
     else if (scheduler.current())
         parent = scheduler.current();
+    else
+        parent = nullptr;
 
     if (parent) {
         Object *obj = Object::getFromScObject(parent);
-        parentIt = obj->addChildEvent(_sc_event);
+        obj->addChildEvent(_sc_event);
     } else {
-        parentIt = topLevelEvents.emplace(topLevelEvents.end(), _sc_event);
+        topLevelEvents.emplace(topLevelEvents.end(), _sc_event);
     }
 
     if (parent)
@@ -74,9 +77,12 @@ Event::~Event()
 {
     if (parent) {
         Object *obj = Object::getFromScObject(parent);
-        obj->delChildEvent(parentIt);
+        obj->delChildEvent(_sc_event);
     } else {
-        std::swap(*parentIt, topLevelEvents.back());
+        EventsIt it = find(topLevelEvents.begin(), topLevelEvents.end(),
+                           _sc_event);
+        assert(it != topLevelEvents.end());
+        std::swap(*it, topLevelEvents.back());
         topLevelEvents.pop_back();
     }
 

@@ -88,7 +88,7 @@ class Object
     sc_core::sc_object *sc_obj() { return _sc_obj; }
 
     EventsIt addChildEvent(sc_core::sc_event *e);
-    void delChildEvent(EventsIt it);
+    void delChildEvent(sc_core::sc_event *e);
 
   private:
     sc_core::sc_object *_sc_obj;

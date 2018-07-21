@@ -29,6 +29,8 @@
 
 #include "systemc/core/object.hh"
 
+#include <algorithm>
+
 #include "base/logging.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
@@ -230,8 +232,10 @@ Object::addChildEvent(sc_core::sc_event *e)
 }
 
 void
-Object::delChildEvent(EventsIt it)
+Object::delChildEvent(sc_core::sc_event *e)
 {
+    EventsIt it = std::find(events.begin(), events.end(), e);
+    assert(it != events.end());
     std::swap(*it, events.back());
     events.pop_back();
 }

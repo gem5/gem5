@@ -103,7 +103,6 @@ class Event
     bool _inHierarchy;
 
     sc_core::sc_object *parent;
-    EventsIt parentIt;
 
     void delayedNotify();
     EventWrapper<Event, &Event::delayedNotify> delayedNotifyEvent;
