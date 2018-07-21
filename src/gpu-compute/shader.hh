@@ -258,8 +258,8 @@ class Shader : public ClockedObject
     Stats::Vector vectorInstDstOperand;
     void regStats();
 
-    int max_valu_insts;
-    int total_valu_insts;
+    int64_t max_valu_insts;
+    int64_t total_valu_insts;
 
     Shader(const Params *p);
     ~Shader();
