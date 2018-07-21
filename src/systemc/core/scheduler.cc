@@ -117,6 +117,13 @@ Scheduler::yield()
         if (_current && _current->needsStart())
             _current->run();
     }
+    if (_current && _current->excWrapper) {
+        // Make sure this isn't a method process.
+        assert(!_current->needsStart());
+        auto ew = _current->excWrapper;
+        _current->excWrapper = nullptr;
+        ew->throw_it();
+    }
 }
 
 void

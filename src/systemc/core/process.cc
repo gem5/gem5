@@ -108,15 +108,13 @@ SensitivityEventOrList::~SensitivityEventOrList()
 class UnwindExceptionReset : public ::sc_core::sc_unwind_exception
 {
   public:
-    const char *what() const throw() override { return "RESET"; }
-    bool is_reset() const override { return true; }
+    UnwindExceptionReset() { _isReset = true; }
 };
 
 class UnwindExceptionKill : public ::sc_core::sc_unwind_exception
 {
   public:
-    const char *what() const throw() override { return "KILL"; }
-    bool is_reset() const override { return false; }
+    UnwindExceptionKill() {}
 };
 
 template <typename T>
@@ -194,10 +192,6 @@ Process::enable(bool inc_kids)
 void
 Process::kill(bool inc_kids)
 {
-    // Update our state.
-    _terminated = true;
-    _isUnwinding = true;
-
     // Propogate the kill to our children no matter what happens to us.
     if (inc_kids)
         forEachKid([](Process *p) { p->kill(true); });
@@ -205,6 +199,13 @@ Process::kill(bool inc_kids)
     // If we're in the middle of unwinding, ignore the kill request.
     if (_isUnwinding)
         return;
+
+    // Update our state.
+    _terminated = true;
+    _isUnwinding = true;
+    _suspendedReady = false;
+    _suspended = false;
+    _syncReset = false;
 
     // Inject the kill exception into this process.
     injectException(killException);
@@ -215,9 +216,6 @@ Process::kill(bool inc_kids)
 void
 Process::reset(bool inc_kids)
 {
-    // Update our state.
-    _isUnwinding = true;
-
     // Propogate the reset to our children no matter what happens to us.
     if (inc_kids)
         forEachKid([](Process *p) { p->reset(true); });
@@ -225,6 +223,9 @@ Process::reset(bool inc_kids)
     // If we're in the middle of unwinding, ignore the reset request.
     if (_isUnwinding)
         return;
+
+    // Update our state.
+    _isUnwinding = true;
 
     // Inject the reset exception into this process.
     injectException(resetException);
@@ -243,7 +244,7 @@ void
 Process::injectException(ExceptionWrapperBase &exc)
 {
     excWrapper = &exc;
-    // Let this process preempt us.
+    scheduler.runNow(this);
 };
 
 void
@@ -289,8 +290,9 @@ Process::run()
         reset = false;
         try {
             func->call();
-        } catch(::sc_core::sc_unwind_exception exc) {
+        } catch(const ::sc_core::sc_unwind_exception &exc) {
             reset = exc.is_reset();
+            _isUnwinding = false;
         }
     } while (reset);
     _terminated = true;
