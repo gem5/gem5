@@ -39,6 +39,7 @@
 #include "systemc/core/list.hh"
 #include "systemc/core/object.hh"
 #include "systemc/ext/core/sc_event.hh"
+#include "systemc/ext/core/sc_export.hh"
 #include "systemc/ext/core/sc_interface.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_port.hh"
@@ -221,6 +222,24 @@ class PendingSensitivityPort : public PendingSensitivity
                 &port->_gem5BindInfo[i]->interface->default_event();
             s.push_back(new SensitivityEvent(process, e));
         }
+    }
+};
+
+class PendingSensitivityExport : public PendingSensitivity
+{
+  private:
+    const sc_core::sc_export_base *exp;
+
+  public:
+    PendingSensitivityExport(Process *p, const sc_core::sc_export_base *exp) :
+        PendingSensitivity(p), exp(exp)
+    {}
+
+    void
+    finalize(Sensitivities &s) override
+    {
+        s.push_back(new SensitivityEvent(process,
+                    &exp->get_interface()->default_event()));
     }
 };
 
