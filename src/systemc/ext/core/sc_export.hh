@@ -41,6 +41,9 @@ class sc_export_base : public sc_object
 {
   public:
     void warn_unimpl(const char *func) const;
+
+    virtual sc_interface *get_iterface() = 0;
+    virtual const sc_interface *get_interface() const = 0;
 };
 
 template <class IF>
@@ -71,14 +74,14 @@ class sc_export : public sc_export_base
         return nullptr;
     }
 
-    virtual sc_interface *
-    get_iterface()
+    sc_interface *
+    get_iterface() override
     {
         warn_unimpl(__PRETTY_FUNCTION__);
         return nullptr;
     }
-    virtual const sc_interface *
-    get_interface() const
+    const sc_interface *
+    get_interface() const override
     {
         warn_unimpl(__PRETTY_FUNCTION__);
         return nullptr;
