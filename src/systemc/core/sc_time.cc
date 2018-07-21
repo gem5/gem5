@@ -28,6 +28,7 @@
  */
 
 #include "base/logging.hh"
+#include "base/types.hh"
 #include "python/pybind11/pybind.hh"
 #include "systemc/ext/core/sc_time.hh"
 
@@ -239,17 +240,15 @@ sc_time::from_string(const char *str)
 }
 
 const sc_time
-operator + (const sc_time &, const sc_time &)
+operator + (const sc_time &a, const sc_time &b)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
+    return sc_time::from_value(a.value() + b.value());
 }
 
 const sc_time
-operator - (const sc_time &, const sc_time &)
+operator - (const sc_time &a, const sc_time &b)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
+    return sc_time::from_value(a.value() - b.value());
 }
 
 const sc_time
@@ -305,8 +304,8 @@ sc_get_time_resolution()
 const sc_time &
 sc_max_time()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const sc_time *)nullptr;
+    static const sc_time MaxScTime = sc_time::from_value(MaxTick);
+    return MaxScTime;
 }
 
 void
