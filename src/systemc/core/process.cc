@@ -338,10 +338,6 @@ Process::Process(const char *name, ProcessFuncWrapper *func,
     dynamicSensitivity(nullptr)
 {
     _newest = this;
-    if (_dynamic)
-        finalize();
-    else
-        scheduler.reg(this);
 }
 
 Process *Process::_newest;

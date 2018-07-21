@@ -30,7 +30,47 @@
 #ifndef __SYSTEMC_EXT_CORE_SC_SPAWN_HH__
 #define __SYSTEMC_EXT_CORE_SC_SPAWN_HH__
 
+#include <vector>
+
 #include "sc_process_handle.hh"
+
+namespace sc_core
+{
+
+class sc_spawn_options;
+
+} // namespace sc_core
+
+namespace sc_gem5
+{
+
+class Process;
+
+template <typename T>
+struct ProcessObjFuncWrapper : public ProcessFuncWrapper
+{
+    T t;
+
+    ProcessObjFuncWrapper(T t) : t(t) {}
+
+    void call() override { t(); }
+};
+
+template <typename T, typename R>
+struct ProcessObjRetFuncWrapper : public ProcessFuncWrapper
+{
+    T t;
+    R *r;
+
+    ProcessObjRetFuncWrapper(T t, R *r) : t(t), r(r) {}
+
+    void call() override { *r = t(); }
+};
+
+Process *spawnWork(ProcessFuncWrapper *func, const char *name,
+                   const ::sc_core::sc_spawn_options *);
+
+} // namespace sc_gem5
 
 namespace sc_core
 {
@@ -53,6 +93,10 @@ class sc_port_base;
 class sc_spawn_options
 {
   public:
+    friend ::sc_gem5::Process *::sc_gem5::spawnWork(
+            ::sc_gem5::ProcessFuncWrapper *, const char *,
+            const sc_spawn_options *);
+
     sc_spawn_options();
 
     void spawn_method();
@@ -76,6 +120,15 @@ class sc_spawn_options
     void async_reset_signal_is(const sc_signal_in_if<bool> &, bool);
 
   private:
+    bool _spawnMethod;
+    bool _dontInitialize;
+    int _stackSize;
+    std::vector<const sc_event *> _events;
+    std::vector<sc_port_base *> _ports;
+    std::vector<sc_export_base *> _exports;
+    std::vector<sc_interface *> _interfaces;
+    std::vector<sc_event_finder *> _finders;
+
     // Disabled
     sc_spawn_options(const sc_spawn_options &) {}
     sc_spawn_options &operator = (const sc_spawn_options &) { return *this; }
@@ -88,8 +141,9 @@ sc_process_handle
 sc_spawn(T object, const char *name_p=nullptr,
          const sc_spawn_options *opt_p=nullptr)
 {
-    sc_spawn_warn_unimpl(__PRETTY_FUNCTION__);
-    return sc_process_handle();
+    auto func = new ::sc_gem5::ProcessObjFuncWrapper<T>(object);
+    ::sc_gem5::Process *p = spawnWork(func, name_p, opt_p);
+    return sc_process_handle() = p;
 }
 
 template <typename T>
@@ -97,8 +151,10 @@ sc_process_handle
 sc_spawn(typename T::result_type *r_p, T object, const char *name_p=nullptr,
          const sc_spawn_options *opt_p=nullptr)
 {
-    sc_spawn_warn_unimpl(__PRETTY_FUNCTION__);
-    return sc_process_handle();
+    auto func = new ::sc_gem5::ProcessObjRetFuncWrapper<
+        T, typename T::result_type>(object, r_p);
+    ::sc_gem5::Process *p = spawnWork(func, name_p, opt_p);
+    return sc_process_handle() = p;
 }
 
 #define sc_bind boost::bind

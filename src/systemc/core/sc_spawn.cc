@@ -28,64 +28,125 @@
  */
 
 #include "base/logging.hh"
+#include "systemc/core/process.hh"
+#include "systemc/core/process_types.hh"
+#include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_spawn.hh"
+
+namespace sc_gem5
+{
+
+Process *
+spawnWork(ProcessFuncWrapper *func, const char *name,
+          const ::sc_core::sc_spawn_options *opts)
+{
+    bool method = false;
+    bool dontInitialize = false;
+    if (opts) {
+        if (opts->_spawnMethod)
+            method = true;
+        if (opts->_dontInitialize)
+            dontInitialize = true;
+        if (opts->_stackSize != -1)
+            warn("Ignoring request to set stack size.\n");
+    }
+
+    if (!name || name[0] == '\0') {
+        if (method)
+            name = ::sc_core::sc_gen_unique_name("method_p");
+        else
+            name = ::sc_core::sc_gen_unique_name("thread_p");
+    }
+
+    Process *proc;
+    if (method)
+        proc = new Method(name, func, true);
+    else
+        proc = new Thread(name, func, true);
+
+    if (opts) {
+        for (auto e: opts->_events)
+            proc->addStatic(new PendingSensitivityEvent(proc, e));
+
+        for (auto p: opts->_ports)
+            proc->addStatic(new PendingSensitivityPort(proc, p));
+
+        for (auto e: opts->_exports)
+            proc->addStatic(new PendingSensitivityExport(proc, e));
+
+        for (auto i: opts->_interfaces)
+            proc->addStatic(new PendingSensitivityInterface(proc, i));
+
+        for (auto f: opts->_finders)
+            proc->addStatic(new PendingSensitivityFinder(proc, f));
+    }
+
+    scheduler.reg(proc);
+
+    if (dontInitialize)
+        scheduler.dontInitialize(proc);
+
+    return proc;
+}
+
+} // namespace sc_gem5
 
 namespace sc_core
 {
 
-sc_spawn_options::sc_spawn_options()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+sc_spawn_options::sc_spawn_options() :
+    _spawnMethod(false), _dontInitialize(false), _stackSize(-1)
+{}
 
 
 void
 sc_spawn_options::spawn_method()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _spawnMethod = true;
 }
 
 void
 sc_spawn_options::dont_initialize()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _dontInitialize = true;
 }
 
 void
-sc_spawn_options::set_stack_size(int)
+sc_spawn_options::set_stack_size(int ss)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _stackSize = ss;
 }
 
 
 void
-sc_spawn_options::set_sensitivity(const sc_event *)
+sc_spawn_options::set_sensitivity(const sc_event *e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _events.push_back(e);
 }
 
 void
-sc_spawn_options::set_sensitivity(sc_port_base *)
+sc_spawn_options::set_sensitivity(sc_port_base *p)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _ports.push_back(p);
 }
 
 void
-sc_spawn_options::set_sensitivity(sc_export_base *)
+sc_spawn_options::set_sensitivity(sc_export_base *e)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _exports.push_back(e);
 }
 
 void
-sc_spawn_options::set_sensitivity(sc_interface *)
+sc_spawn_options::set_sensitivity(sc_interface *i)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _interfaces.push_back(i);
 }
 
 void
-sc_spawn_options::set_sensitivity(sc_event_finder *)
+sc_spawn_options::set_sensitivity(sc_event_finder *f)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _finders.push_back(f);
 }
 
 

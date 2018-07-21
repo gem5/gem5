@@ -43,19 +43,25 @@ namespace sc_gem5
 Process *
 newMethodProcess(const char *name, ProcessFuncWrapper *func)
 {
-    return new Method(name, func);
+    Process *p = new Method(name, func);
+    scheduler.reg(p);
+    return p;
 }
 
 Process *
 newThreadProcess(const char *name, ProcessFuncWrapper *func)
 {
-    return new Thread(name, func);
+    Process *p = new Thread(name, func);
+    scheduler.reg(p);
+    return p;
 }
 
 Process *
 newCThreadProcess(const char *name, ProcessFuncWrapper *func)
 {
-    return new CThread(name, func);
+    Process *p = new CThread(name, func);
+    scheduler.reg(p);
+    return p;
 }
 
 } // namespace sc_gem5
