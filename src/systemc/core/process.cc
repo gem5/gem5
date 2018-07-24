@@ -325,6 +325,8 @@ Process::satisfySensitivity(Sensitivity *s)
 void
 Process::ready()
 {
+    if (disabled())
+        return;
     if (suspended())
         _suspendedReady = true;
     else

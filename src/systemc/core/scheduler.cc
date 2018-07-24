@@ -59,6 +59,7 @@ Scheduler::prepareForInit()
 
     for (Process *p = initList.getNext(); p; p = initList.getNext()) {
         p->finalize();
+        p->popListNode();
         p->ready();
     }
 
