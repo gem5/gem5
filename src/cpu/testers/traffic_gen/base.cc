@@ -78,7 +78,6 @@ BaseTrafficGen::BaseTrafficGen(const BaseTrafficGenParams* p)
       retryPkt(NULL),
       retryPktTick(0),
       updateEvent([this]{ update(); }, name()),
-      numSuppressed(0),
       masterID(system->getMasterId(this))
 {
 }
@@ -186,9 +185,9 @@ BaseTrafficGen::update()
                     pkt->cmdString(), pkt->getAddr());
 
             ++numSuppressed;
-            if (numSuppressed % 10000)
+            if (!(static_cast<int>(numSuppressed.value()) % 10000))
                 warn("%s suppressed %d packets with non-memory addresses\n",
-                     name(), numSuppressed);
+                     name(), numSuppressed.value());
 
             delete pkt;
             pkt = nullptr;
@@ -313,6 +312,10 @@ BaseTrafficGen::regStats()
     numPackets
         .name(name() + ".numPackets")
         .desc("Number of packets generated");
+
+    numSuppressed
+        .name(name() + ".numSuppressed")
+        .desc("Number of suppressed packets to non-memory space");
 
     numRetries
         .name(name() + ".numRetries")

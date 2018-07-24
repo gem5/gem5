@@ -163,7 +163,8 @@ class BaseTrafficGen : public MemObject
     /** Event for scheduling updates */
     EventFunctionWrapper updateEvent;
 
-    uint64_t numSuppressed;
+    /** Count the number of dropped requests. */
+    Stats::Scalar numSuppressed;
 
   private: // Stats
     /** Count the number of generated packets. */
