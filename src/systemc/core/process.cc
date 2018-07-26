@@ -178,6 +178,14 @@ Process::disable(bool inc_kids)
     if (inc_kids)
         forEachKid([](Process *p) { p->disable(true); });
 
+    if (!::sc_core::sc_allow_process_control_corners &&
+            dynamic_cast<SensitivityTimeout *>(dynamicSensitivity)) {
+        std::string message("attempt to disable a thread with timeout wait: ");
+        message += name();
+        SC_REPORT_ERROR("Undefined process control interaction",
+                message.c_str());
+    }
+
     _disabled = true;
 }
 
