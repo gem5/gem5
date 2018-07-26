@@ -144,7 +144,14 @@ class RunPhase(TestPhaseBase):
                 '--listener-mode=off',
                 config_path
             ])
-            subprocess.check_call(cmd)
+            try:
+                subprocess.check_call(cmd)
+            except subprocess.CalledProcessError, error:
+                returncode = error.returncode
+            else:
+                returncode = 0
+            with open(os.path.join(test.m5out_dir(), 'returncode'), 'w') as rc:
+                rc.write('%d\n' % returncode)
 
         runnable = filter(lambda t: not t.compile_only, tests)
         if args.j == 1:
