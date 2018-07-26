@@ -92,7 +92,7 @@
 namespace m5
 {
 
-#if __cplusplus == 201402L // C++14
+#if __cplusplus >= 201402L // C++14
 
 using std::make_unique;
 
@@ -108,7 +108,7 @@ make_unique( Args&&... constructor_args )
            );
 }
 
-#endif // __cplusplus == 201402L
+#endif // __cplusplus >= 201402L
 
 } //namespace m5
 
