@@ -125,6 +125,9 @@ def build_test_system(np):
 
     if options.kernel is not None:
         test_sys.kernel = binary(options.kernel)
+    else:
+        print("Error: a kernel must be provided to run in full system mode")
+        sys.exit(1)
 
     if options.script is not None:
         test_sys.readfile = options.script
@@ -231,7 +234,8 @@ def build_drive_system(np):
 
     cmdline = cmd_line_template()
     if buildEnv['TARGET_ISA'] == 'alpha':
-        drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1], cmdline=cmdline)
+        drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1],
+                                         cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'mips':
         drive_sys = makeLinuxMipsSystem(drive_mem_mode, bm[1], cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'sparc':
@@ -265,6 +269,9 @@ def build_drive_system(np):
     drive_sys.cpu.connectAllPorts(drive_sys.membus)
     if options.kernel is not None:
         drive_sys.kernel = binary(options.kernel)
+    else:
+        print("Error: a kernel must be provided to run in full system mode")
+        sys.exit(1)
 
     if CpuConfig.is_kvm_cpu(DriveCPUClass):
         drive_sys.kvm_vm = KvmVM()
