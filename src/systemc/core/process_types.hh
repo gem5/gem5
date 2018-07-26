@@ -40,7 +40,7 @@ class Method : public Process
 {
   public:
     Method(const char *name, ProcessFuncWrapper *func, bool _dynamic=false) :
-        Process(name, func, _dynamic, true)
+        Process(name, func, _dynamic)
     {}
 
     const char *kind() const override { return "sc_method_process"; }
@@ -56,7 +56,7 @@ class Thread : public Process
 {
   public:
     Thread(const char *name, ProcessFuncWrapper *func, bool _dynamic=false) :
-        Process(name, func, _dynamic, false), ctx(nullptr)
+        Process(name, func, _dynamic), ctx(nullptr)
     {}
 
     ~Thread() { delete ctx; }
@@ -88,8 +88,15 @@ class Thread : public Process
       private:
         Thread *thread;
 
-        void main() override { thread->run(); }
+        void
+        main() override
+        {
+            thread->_needsStart = false;
+            thread->run();
+            thread->terminate();
+        }
     };
+    friend class Context;
 
     Context *ctx;
 };

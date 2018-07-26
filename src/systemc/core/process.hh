@@ -325,8 +325,7 @@ class Process : public ::sc_core::sc_object, public ListNode
     ::sc_core::sc_report *lastReport() const;
 
   protected:
-    Process(const char *name, ProcessFuncWrapper *func, bool _dynamic,
-            bool needs_start);
+    Process(const char *name, ProcessFuncWrapper *func, bool _dynamic);
 
     static Process *_newest;
 
@@ -346,6 +345,8 @@ class Process : public ::sc_core::sc_object, public ListNode
     bool _dynamic;
     bool _isUnwinding;
     bool _terminated;
+
+    void terminate();
 
     bool _suspended;
     bool _suspendedReady;

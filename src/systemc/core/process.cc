@@ -32,6 +32,8 @@
 #include "base/logging.hh"
 #include "systemc/core/event.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/sc_process_handle.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_gem5
 {
@@ -201,14 +203,15 @@ Process::kill(bool inc_kids)
         return;
 
     // Update our state.
-    _terminated = true;
+    terminate();
     _isUnwinding = true;
-    _suspendedReady = false;
-    _suspended = false;
-    _syncReset = false;
 
-    // Inject the kill exception into this process.
-    injectException(killException);
+    // Make sure this process isn't marked ready
+    popListNode();
+
+    // Inject the kill exception into this process if it's started.
+    if (!_needsStart)
+        injectException(killException);
 
     _terminatedEvent.notify();
 }
@@ -224,11 +227,13 @@ Process::reset(bool inc_kids)
     if (_isUnwinding)
         return;
 
-    // Update our state.
-    _isUnwinding = true;
 
-    // Inject the reset exception into this process.
-    injectException(resetException);
+    if (_needsStart) {
+        scheduler.runNow(this);
+    } else {
+        _isUnwinding = true;
+        injectException(resetException);
+    }
 
     _resetEvent.notify();
 }
@@ -238,6 +243,10 @@ Process::throw_it(ExceptionWrapperBase &exc, bool inc_kids)
 {
     if (inc_kids)
         forEachKid([&exc](Process *p) { p->throw_it(exc, true); });
+
+    // Only inject an exception into threads that have started.
+    if (!_needsStart)
+        injectException(exc);
 }
 
 void
@@ -295,7 +304,6 @@ Process::run()
             _isUnwinding = false;
         }
     } while (reset);
-    _terminated = true;
 }
 
 void
@@ -346,15 +354,28 @@ Process::lastReport(::sc_core::sc_report *report)
 
 ::sc_core::sc_report *Process::lastReport() const { return _lastReport.get(); }
 
-Process::Process(const char *name, ProcessFuncWrapper *func,
-        bool _dynamic, bool needs_start) :
+Process::Process(const char *name, ProcessFuncWrapper *func, bool _dynamic) :
     ::sc_core::sc_object(name), excWrapper(nullptr), func(func),
-    _needsStart(needs_start), _dynamic(_dynamic), _isUnwinding(false),
+    _needsStart(true), _dynamic(_dynamic), _isUnwinding(false),
     _terminated(false), _suspended(false), _disabled(false),
     _syncReset(false), refCount(0), stackSize(::Fiber::DefaultStackSize),
     dynamicSensitivity(nullptr)
 {
     _newest = this;
+}
+
+void
+Process::terminate()
+{
+    _terminated = true;
+    _suspendedReady = false;
+    _suspended = false;
+    _syncReset = false;
+    delete dynamicSensitivity;
+    dynamicSensitivity = nullptr;
+    for (auto s: staticSensitivities)
+        delete s;
+    staticSensitivities.clear();
 }
 
 Process *Process::_newest;
