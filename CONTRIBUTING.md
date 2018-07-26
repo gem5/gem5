@@ -244,12 +244,20 @@ changeset.
  git commit --amend
 ```
 
-Push change to gerrit as a draft
---------------------------------
+Push change to gerrit as a draft/private
+----------------------------------------
+
+See https://gerrit-review.googlesource.com/Documentation/intro-user.html#private-changes
+for details on private gerrit changes.
 
 ```
- git push origin HEAD:refs/drafts/master
+ git push origin HEAD:refs/for/master%private
 ```
+
+Once you have pushed your change as "private", you can log onto [gerrit]
+(https://gem5-review.googlesource.com) and once you're happy with the commit
+click the "unmark private" which may be hidden in the "more options" dropdown
+in the upper right corner.
 
 Push change bypassing gerrit
 -----------------------------
