@@ -35,6 +35,7 @@ import inspect
 import itertools
 import json
 import logging
+import multiprocessing.pool
 import os
 import subprocess
 import sys
@@ -120,16 +121,39 @@ class RunPhase(TestPhaseBase):
     number = 2
 
     def run(self, tests):
-        for test in tests:
-            if test.compile_only:
-                continue
-            args = [
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--timeout', type=int, metavar='SECONDS',
+                            help='Time limit for each run in seconds.',
+                            default=0)
+        parser.add_argument('-j', type=int, default=1,
+                help='How many tests to run in parallel.')
+        args = parser.parse_args(self.args)
+
+        timeout_cmd = [
+            'timeout',
+            '--kill-after', str(args.timeout * 2),
+            str(args.timeout)
+        ]
+        def run_test(test):
+            cmd = []
+            if args.timeout:
+                cmd.extend(timeout_cmd)
+            cmd.extend([
                 test.full_path(),
                 '-red', test.m5out_dir(),
                 '--listener-mode=off',
                 config_path
-            ]
-            subprocess.check_call(args)
+            ])
+            subprocess.check_call(cmd)
+
+        runnable = filter(lambda t: not t.compile_only, tests)
+        if args.j == 1:
+            map(run_test, runnable)
+        else:
+            tp = multiprocessing.pool.ThreadPool(args.j)
+            map(lambda t: tp.apply_async(run_test, (t,)), runnable)
+            tp.close()
+            tp.join()
 
 class VerifyPhase(TestPhaseBase):
     name = 'verify'
