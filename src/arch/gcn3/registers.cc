@@ -163,6 +163,31 @@ namespace Gcn3ISA
     }
 
     bool
+    isPosConstVal(int opIdx)
+    {
+        bool is_pos_const_val = (opIdx >= REG_INT_CONST_POS_MIN
+            && opIdx <= REG_INT_CONST_POS_MAX);
+
+        return is_pos_const_val;
+    }
+
+    bool
+    isNegConstVal(int opIdx)
+    {
+        bool is_neg_const_val = (opIdx >= REG_INT_CONST_NEG_MIN
+            && opIdx <= REG_INT_CONST_NEG_MAX);
+
+        return is_neg_const_val;
+    }
+
+    bool
+    isConstVal(int opIdx)
+    {
+        bool is_const_val = isPosConstVal(opIdx) || isNegConstVal(opIdx);
+        return is_const_val;
+    }
+
+    bool
     isLiteral(int opIdx)
     {
         return opIdx == REG_SRC_LITERAL;

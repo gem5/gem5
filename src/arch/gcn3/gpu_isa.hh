@@ -37,6 +37,7 @@
 #define __ARCH_GCN3_GPU_ISA_HH__
 
 #include <array>
+#include <type_traits>
 
 #include "arch/gcn3/registers.hh"
 #include "gpu-compute/dispatcher.hh"
@@ -52,6 +53,24 @@ namespace Gcn3ISA
       public:
         GPUISA(Wavefront &wf);
 
+        template<typename T> T
+        readConstVal(int opIdx) const
+        {
+            panic_if(!std::is_integral<T>::value, "Constant values must "
+                     "be an integer.\n");
+            T val(0);
+
+            if (isPosConstVal(opIdx)) {
+                val = (T)readPosConstReg(opIdx);
+            }
+
+            if (isNegConstVal(opIdx)) {
+                val = (T)readNegConstReg(opIdx);
+            }
+
+            return val;
+        }
+
         ScalarRegU32 readMiscReg(int opIdx) const;
         void writeMiscReg(int opIdx, ScalarRegU32 operandVal);
         bool hasScalarUnit() const { return true; }
@@ -63,10 +82,9 @@ namespace Gcn3ISA
             return posConstRegs[opIdx - REG_INT_CONST_POS_MIN];
         }
 
-        ScalarRegU32 readNegConstReg(int opIdx) const
+        ScalarRegI32 readNegConstReg(int opIdx) const
         {
-            return *((ScalarRegU32*)
-                &negConstRegs[opIdx - REG_INT_CONST_NEG_MIN]);
+            return negConstRegs[opIdx - REG_INT_CONST_NEG_MIN];
         }
 
         static const std::array<const ScalarRegU32, NumPosConstRegs>

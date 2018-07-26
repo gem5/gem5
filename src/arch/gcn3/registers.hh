@@ -238,6 +238,9 @@ namespace Gcn3ISA
 
     std::string opSelectorToRegSym(int opIdx, int numRegs=0);
     int opSelectorToRegIdx(int opIdx, int numScalarRegs);
+    bool isPosConstVal(int opIdx);
+    bool isNegConstVal(int opIdx);
+    bool isConstVal(int opIdx);
     bool isLiteral(int opIdx);
     bool isScalarReg(int opIdx);
     bool isVectorReg(int opIdx);
