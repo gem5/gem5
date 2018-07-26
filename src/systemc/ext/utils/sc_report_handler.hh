@@ -82,8 +82,7 @@ class sc_report_handler
 
     static int stop_after(sc_severity, int limit=-1);
     static int stop_after(const char *msg_type, int limit=-1);
-    static int stop_after(const char *msg_type, sc_severity,
-                          sc_actions=SC_UNSPECIFIED);
+    static int stop_after(const char *msg_type, sc_severity, int limit=-1);
 
     static int get_count(sc_severity);
     static int get_count(const char *msg_type);

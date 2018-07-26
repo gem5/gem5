@@ -31,6 +31,7 @@
 #define __SYSTEMC_CORE_PROCESS_HH__
 
 #include <functional>
+#include <memory>
 #include <vector>
 
 #include "base/fiber.hh"
@@ -44,6 +45,7 @@
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_port.hh"
 #include "systemc/ext/core/sc_process_handle.hh"
+#include "systemc/ext/utils/sc_report.hh"
 
 namespace sc_gem5
 {
@@ -270,6 +272,7 @@ class Process : public ::sc_core::sc_object, public ListNode
     bool needsStart() const { return _needsStart; }
     bool dynamic() const { return _dynamic; }
     bool isUnwinding() const { return _isUnwinding; }
+    void isUnwinding(bool v) { _isUnwinding = v; }
     bool terminated() const { return _terminated; }
 
     void forEachKid(const std::function<void(Process *)> &work);
@@ -318,6 +321,9 @@ class Process : public ::sc_core::sc_object, public ListNode
 
     static Process *newest() { return _newest; }
 
+    void lastReport(::sc_core::sc_report *report);
+    ::sc_core::sc_report *lastReport() const;
+
   protected:
     Process(const char *name, ProcessFuncWrapper *func, bool _dynamic,
             bool needs_start);
@@ -355,6 +361,8 @@ class Process : public ::sc_core::sc_object, public ListNode
     PendingSensitivities pendingStaticSensitivities;
 
     Sensitivity *dynamicSensitivity;
+
+    std::unique_ptr<::sc_core::sc_report> _lastReport;
 };
 
 inline void

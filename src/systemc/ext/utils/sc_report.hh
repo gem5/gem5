@@ -31,11 +31,12 @@
 #define __SYSTEMC_EXT_UTIL_SC_REPORT_HH__
 
 #include <exception>
+#include <string>
+
+#include "systemc/ext/core/sc_time.hh"
 
 namespace sc_core
 {
-
-class sc_time;
 
 enum sc_severity
 {
@@ -56,6 +57,8 @@ enum sc_verbosity
     SC_DEBUG = 500
 };
 
+class sc_report_handler;
+
 class sc_report : public std::exception
 {
   public:
@@ -63,15 +66,15 @@ class sc_report : public std::exception
     sc_report &operator = (const sc_report &);
     virtual ~sc_report() throw();
 
-    sc_severity get_severity() const;
-    const char *get_msg_type() const;
-    const char *get_msg() const;
-    int get_verbosity() const;
-    const char *get_file_name() const;
-    int get_line_number() const;
+    sc_severity get_severity() const { return _severity; }
+    const char *get_msg_type() const { return _msgType; }
+    const char *get_msg() const { return _msg; }
+    int get_verbosity() const { return _verbosity; }
+    const char *get_file_name() const { return _fileName; }
+    int get_line_number() const { return _lineNumber; }
 
-    const sc_time &get_time() const;
-    const char *get_process_name() const;
+    const sc_time &get_time() const { return _time; }
+    const char *get_process_name() const { return _processName; }
 
     virtual const char *what() const throw();
 
@@ -83,7 +86,31 @@ class sc_report : public std::exception
     static void suppress_id(int id, bool); // Only for info or warning.
     static void suppress_infos(bool);
     static void suppress_warnings(bool);
-    int get_id() const;
+    int get_id() const { return _id; }
+
+  private:
+    friend class sc_report_handler;
+
+    sc_report(sc_severity _severity,
+            const char *_msgType,
+            const char *_msg,
+            int _verbosity,
+            const char *_fileName,
+            int _lineNumber,
+            sc_time _time,
+            const char *_processName,
+            int _id);
+
+    sc_severity _severity;
+    const char *_msgType;
+    const char *_msg;
+    int _verbosity;
+    const char *_fileName;
+    int _lineNumber;
+    sc_time _time;
+    const char *_processName;
+    int _id;
+    std::string _what;
 };
 
 // A non-standard function the Accellera datatypes rely on.

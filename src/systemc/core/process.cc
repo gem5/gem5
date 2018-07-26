@@ -333,6 +333,19 @@ Process::ready()
         scheduler.ready(this);
 }
 
+void
+Process::lastReport(::sc_core::sc_report *report)
+{
+    if (report) {
+        _lastReport = std::unique_ptr<::sc_core::sc_report>(
+                new ::sc_core::sc_report(*report));
+    } else {
+        _lastReport = nullptr;
+    }
+}
+
+::sc_core::sc_report *Process::lastReport() const { return _lastReport.get(); }
+
 Process::Process(const char *name, ProcessFuncWrapper *func,
         bool _dynamic, bool needs_start) :
     ::sc_core::sc_object(name), excWrapper(nullptr), func(func),

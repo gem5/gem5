@@ -29,85 +29,47 @@
 
 #include "base/logging.hh"
 #include "systemc/ext/utils/sc_report.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_core
 {
 
-sc_report::sc_report(const sc_report &)
+sc_report::sc_report(sc_severity _severity, const char *_msgType,
+        const char *_msg, int _verbosity, const char *_fileName,
+        int _lineNumber, sc_time _time, const char *_processName, int _id) :
+    _severity(_severity), _msgType(_msgType), _msg(_msg),
+    _verbosity(_verbosity), _fileName(_fileName), _lineNumber(_lineNumber),
+    _time(_time), _processName(_processName), _id(_id)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _what = sc_report_compose_message(*this);
 }
 
+sc_report::sc_report(const sc_report &r) :
+    sc_report(r._severity, r._msgType, r._msg, r._verbosity, r._fileName,
+            r._lineNumber, r._time, r._processName, r._id)
+{}
+
 sc_report &
-sc_report::operator = (const sc_report &)
+sc_report::operator = (const sc_report &r)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _severity = r._severity;
+    _msgType = r._msgType;
+    _msg = r._msg;
+    _verbosity = r._verbosity;
+    _fileName = r._fileName;
+    _lineNumber = r._lineNumber;
+    _time = r._time;
+    _processName = r._processName;
+    _id = r._id;
     return *this;
 }
 
 sc_report::~sc_report() throw() {}
 
-sc_severity
-sc_report::get_severity() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return SC_FATAL;
-}
-
-const char *
-sc_report::get_msg_type() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
-}
-
-const char *
-sc_report::get_msg() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
-}
-
-int
-sc_report::get_verbosity() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return SC_NONE;
-}
-
-const char *
-sc_report::get_file_name() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
-}
-
-int
-sc_report::get_line_number() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
-}
-
-const sc_time &
-sc_report::get_time() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const sc_time *)nullptr;
-}
-
-const char *
-sc_report::get_process_name() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
-}
-
 const char *
 sc_report::what() const throw()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
+    return _what.c_str();
 }
 
 const char *
@@ -154,17 +116,10 @@ sc_report::suppress_warnings(bool)
     warn("%s not implemented.\n", __PRETTY_FUNCTION__);
 }
 
-int
-sc_report::get_id() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
-}
-
 void
 sc_abort()
 {
-    panic("%s not implemented.\n", __PRETTY_FUNCTION__);
+    panic("simulation aborted");
 }
 
 } // namespace sc_core
