@@ -30,12 +30,15 @@
 from __future__ import print_function
 
 import argparse
+import collections
+import difflib
 import functools
 import inspect
 import itertools
 import json
 import multiprocessing.pool
 import os
+import re
 import subprocess
 import sys
 
@@ -60,9 +63,14 @@ class Test(object):
         self.target = target
         self.suffix = suffix
         self.build_dir = build_dir
+        self.props = {}
 
         for key, val in props.iteritems():
-            setattr(self, key, val)
+            self.set_prop(key, val)
+
+    def set_prop(self, key, val):
+        setattr(self, key, val)
+        self.props[key] = val
 
     def dir(self):
         return os.path.join(self.build_dir, tests_rel_path, self.path)
@@ -142,6 +150,7 @@ class RunPhase(TestPhaseBase):
                 test.full_path(),
                 '-red', test.m5out_dir(),
                 '--listener-mode=off',
+                '--quiet',
                 config_path
             ])
             # Ensure the output directory exists.
@@ -165,6 +174,55 @@ class RunPhase(TestPhaseBase):
             tp.close()
             tp.join()
 
+class Checker(object):
+    def __init__(self, ref, test, tag):
+        self.ref = ref
+        self.test = test
+        self.tag = tag
+
+    def check(self):
+        with open(self.text) as test_f, open(self.ref) as ref_f:
+            return test_f.read() == ref_f.read()
+
+class LogChecker(Checker):
+    def merge_filts(*filts):
+        filts = map(lambda f: '(' + f + ')', filts)
+        filts = '|'.join(filts)
+        return re.compile(filts, flags=re.MULTILINE)
+
+    ref_filt = merge_filts(
+        r'^\nInfo: /OSCI/SystemC: Simulation stopped by user.\n',
+        r'^SystemC Simulation\n'
+    )
+    test_filt = merge_filts(
+        r'^Global frequency set at \d* ticks per second\n'
+    )
+
+    def __init__(self, ref, test, tag, out_dir):
+        super(LogChecker, self).__init__(ref, test, tag)
+        self.out_dir = out_dir
+
+    def apply_filters(self, data, filts):
+        re.sub(filt, '', data)
+
+    def check(self):
+        test_file = os.path.basename(self.test)
+        ref_file = os.path.basename(self.ref)
+        with open(self.test) as test_f, open(self.ref) as ref_f:
+            test = re.sub(self.test_filt, '', test_f.read())
+            ref = re.sub(self.ref_filt, '', ref_f.read())
+            if test != ref:
+                diff_file = '.'.join([ref_file, 'diff'])
+                diff_path = os.path.join(self.out_dir, diff_file)
+                with open(diff_path, 'w') as diff_f:
+                    for line in difflib.unified_diff(
+                            ref.splitlines(True), test.splitlines(True),
+                            fromfile=ref_file,
+                            tofile=test_file):
+                        diff_f.write(line)
+                return False
+        return True
+
 class VerifyPhase(TestPhaseBase):
     name = 'verify'
     number = 3
@@ -176,7 +234,8 @@ class VerifyPhase(TestPhaseBase):
     def passed(self, test):
         self._passed.append(test)
 
-    def failed(self, test, cause):
+    def failed(self, test, cause, note=''):
+        test.set_prop('note', note)
         self._failed.setdefault(cause, []).append(test)
 
     def print_status(self):
@@ -187,44 +246,36 @@ class VerifyPhase(TestPhaseBase):
                   passed=total_passed, failed=total_failed))
 
     def write_result_file(self, path):
-        passed = map(lambda t: t.path, self._passed)
-        passed.sort()
-        failed = {
-            cause: map(lambda t: t.path, tests) for
+        results = {
+            'passed': map(lambda t: t.props, self._passed),
+            'failed': {
+                cause: map(lambda t: t.props, tests) for
                        cause, tests in self._failed.iteritems()
+            }
         }
-        for tests in failed.values():
-            tests.sort()
-        results = { 'passed': passed, 'failed': failed }
         with open(path, 'w') as rf:
             json.dump(results, rf)
 
     def print_results(self):
-        passed = map(lambda t: t.path, self._passed)
-        passed.sort()
-        failed = {
-            cause: map(lambda t: t.path, tests) for
-                       cause, tests in self._failed.iteritems()
-        }
-        for tests in failed.values():
-            tests.sort()
-
         print()
         print('Passed:')
-        map(lambda t: print('    ', t), passed)
+        for path in sorted(list([ t.path for t in self._passed ])):
+            print('    ', path)
 
         print()
         print('Failed:')
-        categories = failed.items()
-        categories.sort()
 
-        def cat_str((cause, tests)):
-            heading = '  ' + cause.capitalize() + ':\n'
-            test_lines = ['    ' + test + '\n'for test in tests]
-            return heading + ''.join(test_lines)
-        blocks = map(cat_str, categories)
+        causes = []
+        for cause, tests in sorted(self._failed.items()):
+            block = '  ' + cause.capitalize() + ':\n'
+            for test in sorted(tests, key=lambda t: t.path):
+                block += '    ' + test.path
+                if test.note:
+                    block += ' - ' + test.note
+                block += '\n'
+            causes.append(block)
 
-        print('\n'.join(blocks))
+        print('\n'.join(causes))
 
     def run(self, tests):
         parser = argparse.ArgumentParser()
@@ -252,12 +303,36 @@ class VerifyPhase(TestPhaseBase):
             with open(test.returncode_file()) as rc:
                 returncode = int(rc.read())
 
-            if returncode == 0:
-                self.passed(test)
-            elif returncode == 124:
+            if returncode == 124:
                 self.failed(test, 'time out')
-            else:
+                continue
+            elif returncode != 0:
                 self.failed(test, 'abort')
+                continue
+
+            out_dir = test.m5out_dir()
+
+            Diff = collections.namedtuple(
+                    'Diff', 'ref, test, tag, ref_filter')
+
+            diffs = []
+
+            log_file = '.'.join([test.name, 'log'])
+            log_path = os.path.join(test.golden_dir(), log_file)
+            simout_path = os.path.join(out_dir, 'simout')
+            if not os.path.exists(simout_path):
+                self.failed(test, 'no log output')
+            if os.path.exists(log_path):
+                diffs.append(LogChecker(
+                            log_path, simout_path, log_file, out_dir))
+
+            failed_diffs = filter(lambda d: not d.check(), diffs)
+            if failed_diffs:
+                tags = map(lambda d: d.tag, failed_diffs)
+                self.failed(test, 'failed diffs', ' '.join(tags))
+                continue
+
+            self.passed(test)
 
         if args.print_results:
             self.print_results()
