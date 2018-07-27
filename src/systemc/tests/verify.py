@@ -212,9 +212,9 @@ class LogChecker(Checker):
         with open(self.test) as test_f, open(self.ref) as ref_f:
             test = re.sub(self.test_filt, '', test_f.read())
             ref = re.sub(self.ref_filt, '', ref_f.read())
+            diff_file = '.'.join([ref_file, 'diff'])
+            diff_path = os.path.join(self.out_dir, diff_file)
             if test != ref:
-                diff_file = '.'.join([ref_file, 'diff'])
-                diff_path = os.path.join(self.out_dir, diff_file)
                 with open(diff_path, 'w') as diff_f:
                     for line in difflib.unified_diff(
                             ref.splitlines(True), test.splitlines(True),
@@ -222,6 +222,9 @@ class LogChecker(Checker):
                             tofile=test_file):
                         diff_f.write(line)
                 return False
+            else:
+                if os.path.exists(diff_path):
+                    os.unlink(diff_path)
         return True
 
 class VerifyPhase(TestPhaseBase):
