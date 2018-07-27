@@ -34,7 +34,6 @@ import functools
 import inspect
 import itertools
 import json
-import logging
 import multiprocessing.pool
 import os
 import subprocess
@@ -49,8 +48,6 @@ tests_rel_path = os.path.join(systemc_rel_path, 'tests')
 json_rel_path = os.path.join(tests_rel_path, 'tests.json')
 
 
-
-logging.basicConfig(level=logging.INFO)
 
 def scons(*args):
     args = ['scons'] + list(args)
@@ -84,6 +81,9 @@ class Test(object):
 
     def m5out_dir(self):
         return os.path.join(self.dir(), 'm5out.' + self.suffix)
+
+    def returncode_file(self):
+        return os.path.join(self.m5out_dir(), 'returncode')
 
 
 
@@ -144,13 +144,16 @@ class RunPhase(TestPhaseBase):
                 '--listener-mode=off',
                 config_path
             ])
+            # Ensure the output directory exists.
+            if not os.path.exists(test.m5out_dir()):
+                os.makedirs(test.m5out_dir())
             try:
                 subprocess.check_call(cmd)
             except subprocess.CalledProcessError, error:
                 returncode = error.returncode
             else:
                 returncode = 0
-            with open(os.path.join(test.m5out_dir(), 'returncode'), 'w') as rc:
+            with open(test.returncode_file(), 'w') as rc:
                 rc.write('%d\n' % returncode)
 
         runnable = filter(lambda t: not t.compile_only, tests)
@@ -166,12 +169,109 @@ class VerifyPhase(TestPhaseBase):
     name = 'verify'
     number = 3
 
-    def run(self, tests):
-        for test in tests:
-            if test.compile_only:
-                continue
-            logging.info("Would verify %s", test.m5out_dir())
+    def reset_status(self):
+        self._passed = []
+        self._failed = {}
 
+    def passed(self, test):
+        self._passed.append(test)
+
+    def failed(self, test, cause):
+        self._failed.setdefault(cause, []).append(test)
+
+    def print_status(self):
+        total_passed = len(self._passed)
+        total_failed = sum(map(len, self._failed.values()))
+        print()
+        print('Passed: {passed:4} - Failed: {failed:4}'.format(
+                  passed=total_passed, failed=total_failed))
+
+    def write_result_file(self, path):
+        passed = map(lambda t: t.path, self._passed)
+        passed.sort()
+        failed = {
+            cause: map(lambda t: t.path, tests) for
+                       cause, tests in self._failed.iteritems()
+        }
+        for tests in failed.values():
+            tests.sort()
+        results = { 'passed': passed, 'failed': failed }
+        with open(path, 'w') as rf:
+            json.dump(results, rf)
+
+    def print_results(self):
+        passed = map(lambda t: t.path, self._passed)
+        passed.sort()
+        failed = {
+            cause: map(lambda t: t.path, tests) for
+                       cause, tests in self._failed.iteritems()
+        }
+        for tests in failed.values():
+            tests.sort()
+
+        print()
+        print('Passed:')
+        map(lambda t: print('    ', t), passed)
+
+        print()
+        print('Failed:')
+        categories = failed.items()
+        categories.sort()
+
+        def cat_str((cause, tests)):
+            heading = '  ' + cause.capitalize() + ':\n'
+            test_lines = ['    ' + test + '\n'for test in tests]
+            return heading + ''.join(test_lines)
+        blocks = map(cat_str, categories)
+
+        print('\n'.join(blocks))
+
+    def run(self, tests):
+        parser = argparse.ArgumentParser()
+        result_opts = parser.add_mutually_exclusive_group()
+        result_opts.add_argument('--result-file', action='store_true',
+                help='Create a results.json file in the current directory.')
+        result_opts.add_argument('--result-file-at', metavar='PATH',
+                help='Create a results json file at the given path.')
+        parser.add_argument('--print-results', action='store_true',
+                help='Print a list of tests that passed or failed')
+        args = parser.parse_args(self.args)
+
+        self.reset_status()
+
+        runnable = filter(lambda t: not t.compile_only, tests)
+        compile_only = filter(lambda t: t.compile_only, tests)
+
+        for test in compile_only:
+            if os.path.exists(test.full_path()):
+                self.passed(test)
+            else:
+                self.failed(test, 'compile failed')
+
+        for test in runnable:
+            with open(test.returncode_file()) as rc:
+                returncode = int(rc.read())
+
+            if returncode == 0:
+                self.passed(test)
+            elif returncode == 124:
+                self.failed(test, 'time out')
+            else:
+                self.failed(test, 'abort')
+
+        if args.print_results:
+            self.print_results()
+
+        self.print_status()
+
+        result_path = None
+        if args.result_file:
+            result_path = os.path.join(os.getcwd(), 'results.json')
+        elif args.result_file_at:
+            result_path = args.result_file_at
+
+        if result_path:
+            self.write_result_file(result_path)
 
 
 parser = argparse.ArgumentParser(description='SystemC test utility')
