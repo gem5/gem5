@@ -220,8 +220,6 @@ Process::kill(bool inc_kids)
     // Inject the kill exception into this process if it's started.
     if (!_needsStart)
         injectException(killException);
-
-    _terminatedEvent.notify();
 }
 
 void
@@ -384,6 +382,8 @@ Process::terminate()
     for (auto s: staticSensitivities)
         delete s;
     staticSensitivities.clear();
+
+    _terminatedEvent.notify();
 }
 
 Process *Process::_newest;
