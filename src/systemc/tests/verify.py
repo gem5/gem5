@@ -192,7 +192,8 @@ class LogChecker(Checker):
 
     ref_filt = merge_filts(
         r'^\nInfo: /OSCI/SystemC: Simulation stopped by user.\n',
-        r'^SystemC Simulation\n'
+        r'^SystemC Simulation\n',
+        r'^\nWarning: .*\nIn file: .*\n'
     )
     test_filt = merge_filts(
         r'^Global frequency set at \d* ticks per second\n'
