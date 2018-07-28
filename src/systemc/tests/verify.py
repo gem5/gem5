@@ -198,7 +198,9 @@ class LogChecker(Checker):
         r'^\nInfo: /OSCI/SystemC: Simulation stopped by user.\n',
         r'^SystemC Simulation\n',
         warning_filt(571),
-        warning_filt(540)
+        warning_filt(540),
+        r'^\nInfo: \(I804\) /IEEE_Std_1666/deprecated: ' +
+        r'You can turn off(.*\n){7}'
     )
     test_filt = merge_filts(
         r'^Global frequency set at \d* ticks per second\n'
