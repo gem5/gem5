@@ -2580,7 +2580,7 @@ CLASS_TYPE::dump(::std::ostream &os) const
 
     os << "width = " << length() << ::std::endl;
     os << "value = " << *this << ::std::endl;
-    os << "bits = ";
+    os << "bits  = ";
 
     int len = length();
 
