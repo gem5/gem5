@@ -121,7 +121,7 @@ class CompilePhase(TestPhaseBase):
 
     def run(self, tests):
         targets = list([test.full_path() for test in tests])
-        scons_args = list(self.args) + targets
+        scons_args = [ 'USE_SYSTEMC=1' ] + list(self.args) + targets
         scons(*scons_args)
 
 class RunPhase(TestPhaseBase):
