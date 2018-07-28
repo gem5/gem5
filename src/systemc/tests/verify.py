@@ -190,10 +190,15 @@ class LogChecker(Checker):
         filts = '|'.join(filts)
         return re.compile(filts, flags=re.MULTILINE)
 
+    def warning_filt(num):
+        return (r'^\nWarning: \(W{}\) .*\n(In file: .*\n)?'
+                r'(In process: [\w.]* @ .*\n)?').format(num)
+
     ref_filt = merge_filts(
         r'^\nInfo: /OSCI/SystemC: Simulation stopped by user.\n',
         r'^SystemC Simulation\n',
-        r'^\nWarning: .*\nIn file: .*\n'
+        warning_filt(571),
+        warning_filt(540)
     )
     test_filt = merge_filts(
         r'^Global frequency set at \d* ticks per second\n'
