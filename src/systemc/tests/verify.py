@@ -227,6 +227,60 @@ class LogChecker(Checker):
                     os.unlink(diff_path)
         return True
 
+class GoldenDir(object):
+    def __init__(self, path, platform):
+        self.path = path
+        self.platform = platform
+
+        contents = os.listdir(path)
+        suffix = '.' + platform
+        suffixed = filter(lambda c: c.endswith(suffix), contents)
+        bases = map(lambda t: t[:-len(platform)], suffixed)
+        common = filter(lambda t: not t.startswith(tuple(bases)), contents)
+
+        self.entries = {}
+        class Entry(object):
+            def __init__(self, e_path):
+                self.used = False
+                self.path = os.path.join(path, e_path)
+
+            def use(self):
+                self.used = True
+
+        for entry in contents:
+            self.entries[entry] = Entry(entry)
+
+    def entry(self, name):
+        def match(n):
+            return (n == name) or n.startswith(name + '.')
+        matches = { n: e for n, e in self.entries.items() if match(n) }
+
+        for match in matches.values():
+            match.use()
+
+        platform_name = '.'.join([ name, self.platform ])
+        if platform_name in matches:
+            return matches[platform_name].path
+        if name in matches:
+            return matches[name].path
+        else:
+            return None
+
+    def unused(self):
+        items = self.entries.items()
+        items = filter(lambda i: not i[1].used, items)
+
+        items.sort()
+        sources = []
+        i = 0
+        while i < len(items):
+            root = items[i][0]
+            sources.append(root)
+            i += 1
+            while i < len(items) and items[i][0].startswith(root):
+                i += 1
+        return sources
+
 class VerifyPhase(TestPhaseBase):
     name = 'verify'
     number = 3
@@ -321,14 +375,29 @@ class VerifyPhase(TestPhaseBase):
 
             diffs = []
 
+            gd = GoldenDir(test.golden_dir(), 'linux64')
+
+            missing = []
             log_file = '.'.join([test.name, 'log'])
-            log_path = os.path.join(test.golden_dir(), log_file)
+            log_path = gd.entry(log_file)
             simout_path = os.path.join(out_dir, 'simout')
             if not os.path.exists(simout_path):
-                self.failed(test, 'no log output')
-            if os.path.exists(log_path):
-                diffs.append(LogChecker(
-                            log_path, simout_path, log_file, out_dir))
+                missing.append('log output')
+            elif log_path:
+                diffs.append(LogChecker(log_path, simout_path,
+                                        log_file, out_dir))
+
+            for name in gd.unused():
+                test_path = os.path.join(out_dir, name)
+                ref_path = gd.entry(name)
+                if not os.path.exists(test_path):
+                    missing.append(name)
+                else:
+                    diffs.append(Checker(ref_path, test_path, name))
+
+            if missing:
+                self.failed(test, 'missing output', ' '.join(missing))
+                continue
 
             failed_diffs = filter(lambda d: not d.check(), diffs)
             if failed_diffs:
