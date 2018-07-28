@@ -119,7 +119,7 @@ sc_deprecated_sc_bit()
     static bool warn_sc_bit_deprecated = true;
     if (warn_sc_bit_deprecated) {
         warn_sc_bit_deprecated = false;
-        SC_REPORT_INFO("/IEEE_Std_1666/deprecated",
+        SC_REPORT_INFO("(I804) /IEEE_Std_1666/deprecated",
             "sc_bit is deprecated, use bool instead");
     }
 }
