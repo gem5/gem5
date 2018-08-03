@@ -239,7 +239,7 @@ class Decoder
         outOfBytes(true), instDone(false),
         state(ResetState)
     {
-        memset(&emi, 0, sizeof(emi));
+        emi.reset();
         mode = LongMode;
         submode = SixtyFourBitMode;
         emi.mode.mode = mode;

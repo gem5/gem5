@@ -74,7 +74,7 @@ PyTrafficGen::nextGenerator()
             metaGenerator->cast<std::shared_ptr<BaseGen>>();
         metaGenerator++;
         return gen;
-    } catch (py::cast_error) {
+    } catch (py::cast_error&) {
         fatal("Meta generator didn't return a valid trace generator\n");
     }
 }

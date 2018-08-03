@@ -435,7 +435,7 @@ namespace BitfieldBackend
     inline std::ostream &
     bitfieldBackendPrinter(std::ostream &os, const char &t)
     {
-        os << (const int)t;
+        os << (int)t;
         return os;
     }
 
@@ -443,7 +443,7 @@ namespace BitfieldBackend
     inline std::ostream &
     bitfieldBackendPrinter(std::ostream &os, const unsigned char &t)
     {
-        os << (const unsigned int)t;
+        os << (unsigned int)t;
         return os;
     }
 }

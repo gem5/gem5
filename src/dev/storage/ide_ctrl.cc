@@ -83,7 +83,7 @@ IdeController::Channel::Channel(
     cmdAddr(0), cmdSize(_cmdSize), ctrlAddr(0), ctrlSize(_ctrlSize),
     master(NULL), slave(NULL), selected(NULL)
 {
-    memset(&bmiRegs, 0, sizeof(bmiRegs));
+    bmiRegs.reset();
     bmiRegs.status.dmaCap0 = 1;
     bmiRegs.status.dmaCap1 = 1;
 }
