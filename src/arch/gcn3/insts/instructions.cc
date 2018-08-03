@@ -32016,11 +32016,11 @@ namespace Gcn3ISA
     void
     Inst_DS__DS_READ_U8::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        VecOperandU8 vdst(gpuDynInst, extData.VDST);
+        VecOperandU32 vdst(gpuDynInst, extData.VDST);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
-                vdst[lane] = (reinterpret_cast<VecElemU8*>(
+                vdst[lane] = (VecElemU32)(reinterpret_cast<VecElemU8*>(
                     gpuDynInst->d_data))[lane];
             }
         }
@@ -32096,11 +32096,11 @@ namespace Gcn3ISA
     void
     Inst_DS__DS_READ_U16::completeAcc(GPUDynInstPtr gpuDynInst)
     {
-        VecOperandU16 vdst(gpuDynInst, extData.VDST);
+        VecOperandU32 vdst(gpuDynInst, extData.VDST);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
-                vdst[lane] = (reinterpret_cast<VecElemU16*>(
+                vdst[lane] = (VecElemU32)(reinterpret_cast<VecElemU16*>(
                     gpuDynInst->d_data))[lane];
             }
         }
