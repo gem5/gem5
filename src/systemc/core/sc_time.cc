@@ -176,8 +176,7 @@ sc_time::value() const
 double
 sc_time::to_double() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0.0;
+    return static_cast<double>(val);
 }
 double
 sc_time::to_seconds() const
@@ -244,16 +243,16 @@ sc_time::operator -= (const sc_time &t)
 }
 
 sc_time &
-sc_time::operator *= (double)
+sc_time::operator *= (double d)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    val = static_cast<int64_t>(static_cast<double>(val) * d + 0.5);
     return *this;
 }
 
 sc_time &
-sc_time::operator /= (double)
+sc_time::operator /= (double d)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    val = static_cast<int64_t>(static_cast<double>(val) / d + 0.5);
     return *this;
 }
 
@@ -310,31 +309,30 @@ operator - (const sc_time &a, const sc_time &b)
 }
 
 const sc_time
-operator * (const sc_time &, double)
+operator * (const sc_time &t, double d)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
+    volatile double tmp = static_cast<double>(t.value()) * d + 0.5;
+    return sc_time::from_value(static_cast<int64_t>(tmp));
 }
 
 const sc_time
-operator * (double, const sc_time &)
+operator * (double d, const sc_time &t)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
+    volatile double tmp = d * static_cast<double>(t.value()) + 0.5;
+    return sc_time::from_value(static_cast<int64_t>(tmp));
 }
 
 const sc_time
-operator / (const sc_time &, double)
+operator / (const sc_time &t, double d)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
+    volatile double tmp = static_cast<double>(t.value()) / d + 0.5;
+    return sc_time::from_value(static_cast<int64_t>(tmp));
 }
 
 double
-operator / (const sc_time &, const sc_time &)
+operator / (const sc_time &t1, const sc_time &t2)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0.0;
+    return t1.to_double() / t2.to_double();
 }
 
 std::ostream &
