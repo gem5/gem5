@@ -61,3 +61,11 @@ class SystemC_ScObject(SimObject):
     locals().update({
         method.name: (lambda *a, **k: None) for method in SimObject.cxx_exports
     })
+
+try:
+    import _m5
+except:
+    pass
+else:
+    import _m5.systemc
+    _m5.systemc.python_ready()

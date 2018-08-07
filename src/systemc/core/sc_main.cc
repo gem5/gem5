@@ -32,11 +32,11 @@
 #include "base/fiber.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
-#include "python/pybind11/pybind.hh"
 #include "sim/core.hh"
 #include "sim/eventq.hh"
 #include "sim/init.hh"
 #include "systemc/core/kernel.hh"
+#include "systemc/core/python.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -113,13 +113,15 @@ sc_main(pybind11::args args)
 
 // Make our sc_main wrapper available in the internal _m5 python module under
 // the systemc submodule.
-void
-systemc_pybind(pybind11::module &m_internal)
+
+struct InstallScMain : public ::sc_gem5::PythonInitFunc
 {
-    pybind11::module m = m_internal.def_submodule("systemc");
-    m.def("sc_main", &sc_main);
-}
-EmbeddedPyBind embed_("systemc", &systemc_pybind);
+    void
+    run(pybind11::module &systemc) override
+    {
+        systemc.def("sc_main", &sc_main);
+    }
+} installScMain;
 
 sc_stop_mode _stop_mode = SC_STOP_FINISH_DELTA;
 
