@@ -31,7 +31,10 @@
 #define __SYSTEMC_CORE_MODULE_HH__
 
 #include <cassert>
+#include <map>
 #include <set>
+#include <sstream>
+#include <string>
 
 #include "systemc/core/object.hh"
 #include "systemc/ext/core/sc_module.hh"
@@ -39,12 +42,31 @@
 namespace sc_gem5
 {
 
+class UniqueNameGen
+{
+  private:
+    std::map<std::string, int> counts;
+    std::string buf;
+
+  public:
+    const char *
+    gen(std::string seed)
+    {
+        std::ostringstream os;
+        os << seed << "_" << counts[seed]++;
+        buf = os.str();
+        return buf.c_str();
+    }
+};
+
 class Module
 {
   private:
     const char *_name;
     sc_core::sc_module *_sc_mod;
     Object *_obj;
+
+    UniqueNameGen nameGen;
 
   public:
 
@@ -77,6 +99,8 @@ class Module
     }
 
     void pop();
+
+    const char *uniqueName(const char *seed) { return nameGen.gen(seed); }
 };
 
 Module *currentModule();

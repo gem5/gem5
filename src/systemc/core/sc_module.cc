@@ -64,6 +64,8 @@ newCThreadProcess(const char *name, ProcessFuncWrapper *func)
     return p;
 }
 
+UniqueNameGen nameGen;
+
 } // namespace sc_gem5
 
 namespace sc_core
@@ -643,10 +645,11 @@ at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &)
 }
 
 const char *
-sc_gen_unique_name(const char *)
+sc_gen_unique_name(const char *seed)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
+    ::sc_gem5::Module *mod = ::sc_gem5::currentModule();
+    return mod ? mod->uniqueName(seed) :
+        ::sc_gem5::nameGen.gen(seed);
 }
 
 bool
