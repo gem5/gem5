@@ -165,7 +165,7 @@ class sc_port_b : public sc_port_base
     virtual void end_of_simulation() {}
 
     explicit sc_port_b(int n, sc_port_policy p) :
-            sc_port_base(sc_gen_unique_name("sc_port"), n, p)
+            sc_port_base(sc_gen_unique_name("port"), n, p)
     {}
     sc_port_b(const char *name, int n, sc_port_policy p) :
             sc_port_base(name, n, p)
