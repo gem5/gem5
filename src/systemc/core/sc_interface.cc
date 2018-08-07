@@ -28,32 +28,17 @@
  */
 
 #include "base/logging.hh"
+#include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_interface.hh"
 
 namespace sc_core
 {
 
-void
-sc_interface::register_port(sc_port_base &, const char *)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
 const sc_event &
 sc_interface::default_event() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(sc_event *)nullptr;
-}
-
-sc_interface::~sc_interface()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-sc_interface::sc_interface()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static sc_event dummy;
+    return dummy;
 }
 
 } // namespace sc_core
