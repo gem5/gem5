@@ -27,9 +27,12 @@
  * Authors: Gabe Black
  */
 
+#include <vector>
+
 #include "base/logging.hh"
 #include "base/types.hh"
 #include "python/pybind11/pybind.hh"
+#include "systemc/core/python.hh"
 #include "systemc/ext/core/sc_time.hh"
 
 namespace sc_core
@@ -56,18 +59,80 @@ double TimeUnitScale[] = {
     [SC_SEC] = 1.0
 };
 
-void
-fixTimeResolution()
-{
-    static bool fixed = false;
-    if (fixed)
-        return;
+bool timeFixed = false;
+bool pythonReady = false;
 
+struct SetInfo
+{
+    SetInfo(::sc_core::sc_time *time, double d, ::sc_core::sc_time_unit tu) :
+        time(time), d(d), tu(tu)
+    {}
+
+    ::sc_core::sc_time *time;
+    double d;
+    ::sc_core::sc_time_unit tu;
+};
+std::vector<SetInfo> toSet;
+
+void
+setWork(sc_time *time, double d, ::sc_core::sc_time_unit tu)
+{
+    //XXX Assuming the time resolution is 1ps.
+    double scale = TimeUnitScale[tu] / TimeUnitScale[SC_PS];
+    // Accellera claims there is a linux bug, and that these next two
+    // lines work around them.
+    volatile double tmp = d * scale + 0.5;
+    *time = sc_time::from_value(static_cast<uint64_t>(tmp));
+}
+
+void
+fixTime()
+{
     auto ticks = pybind11::module::import("m5.ticks");
     auto fix_global_frequency = ticks.attr("fixGlobalFrequency");
     fix_global_frequency();
-    fixed = true;
+
+    for (auto &t: toSet)
+        setWork(t.time, t.d, t.tu);
+    toSet.clear();
 }
+
+void
+set(::sc_core::sc_time *time, double d, ::sc_core::sc_time_unit tu)
+{
+    // Only fix time once.
+    if (!timeFixed) {
+        timeFixed = true;
+
+        // If we've run, python is working and we haven't fixed time yet.
+        if (pythonReady)
+            fixTime();
+    }
+    if (pythonReady) {
+        // Time should be working. Set up this sc_time.
+        setWork(time, d, tu);
+    } else {
+        // Time isn't set up yet. Defer setting up this sc_time.
+        toSet.emplace_back(time, d, tu);
+    }
+}
+
+class TimeSetter : public ::sc_gem5::PythonReadyFunc
+{
+  public:
+    TimeSetter() : ::sc_gem5::PythonReadyFunc() {}
+
+    void
+    run() override
+    {
+        // Record that we've run and python/pybind should be usable.
+        pythonReady = true;
+
+        // If time is already fixed, let python know.
+        if (timeFixed)
+            fixTime();
+    }
+} timeSetter;
 
 } // anonymous namespace
 
@@ -76,15 +141,8 @@ sc_time::sc_time() : val(0) {}
 sc_time::sc_time(double d, sc_time_unit tu)
 {
     val = 0;
-    if (d != 0) {
-        fixTimeResolution();
-        //XXX Assuming the time resolution is 1ps.
-        double scale = TimeUnitScale[tu] / TimeUnitScale[SC_PS];
-        // Accellera claims there is a linux bug, and that these next two
-        // lines work around them.
-        volatile double tmp = d * scale + 0.5;
-        val = static_cast<uint64_t>(tmp);
-    }
+    if (d != 0)
+        set(this, d, tu);
 }
 
 sc_time::sc_time(const sc_time &t)
