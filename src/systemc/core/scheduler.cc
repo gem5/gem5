@@ -143,7 +143,8 @@ void
 Scheduler::requestUpdate(Channel *c)
 {
     updateList.pushLast(c);
-    scheduleReadyEvent();
+    if (eq)
+        scheduleReadyEvent();
 }
 
 void
