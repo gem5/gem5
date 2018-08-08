@@ -31,8 +31,8 @@
 #define __SYSTEMC_CORE_MODULE_HH__
 
 #include <cassert>
+#include <list>
 #include <map>
-#include <set>
 #include <sstream>
 #include <string>
 
@@ -109,7 +109,7 @@ Module *newModule();
 void callbackModule(Module *m);
 Module *callbackModule();
 
-extern std::set<Module *> allModules;
+extern std::list<Module *> allModules;
 
 } // namespace sc_gem5
 

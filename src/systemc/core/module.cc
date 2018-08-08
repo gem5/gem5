@@ -30,7 +30,6 @@
 #include "systemc/core/module.hh"
 
 #include <cassert>
-#include <list>
 
 #include "base/logging.hh"
 
@@ -53,7 +52,7 @@ Module::Module(const char *name) : _name(name), _sc_mod(nullptr), _obj(nullptr)
     _new_module = this;
 }
 
-Module::~Module() { allModules.erase(this); }
+Module::~Module() { allModules.remove(this); }
 
 void
 Module::finish(Object *this_obj)
@@ -65,7 +64,7 @@ Module::finish(Object *this_obj)
     // This is called from the constructor of this_obj, so it can't use
     // dynamic cast.
     sc_mod(static_cast<::sc_core::sc_module *>(this_obj->sc_obj()));
-    allModules.insert(this);
+    allModules.emplace_back(this);
 }
 
 void
@@ -95,6 +94,6 @@ newModule()
 void callbackModule(Module *m) { _callbackModule = m; }
 Module *callbackModule() { return _callbackModule; }
 
-std::set<Module *> allModules;
+std::list<Module *> allModules;
 
 } // namespace sc_gem5
