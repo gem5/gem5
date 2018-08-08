@@ -34,8 +34,10 @@
 #include <string>
 #include <vector>
 
+#include "../core/sc_event.hh"
 #include "../core/sc_module.hh" // for sc_gen_unique_name
 #include "../core/sc_prim.hh"
+#include "../dt/bit/sc_logic.hh"
 #include "sc_signal_inout_if.hh"
 #include "warn_unimpl.hh" // for warn_unimpl
 
@@ -66,17 +68,17 @@ class sc_signal : public sc_signal_inout_if<T>,
 {
   public:
     sc_signal() : sc_signal_inout_if<T>(),
-                  sc_prim_channel(sc_gen_unique_name("signal"))
+                  sc_prim_channel(sc_gen_unique_name("signal")),
+                  m_cur_val(T()), m_new_val(T())
     {}
-    explicit sc_signal(const char *name) : sc_signal_inout_if<T>(),
-                                           sc_prim_channel(name)
+    explicit sc_signal(const char *name) :
+        sc_signal_inout_if<T>(), sc_prim_channel(name),
+        m_cur_val(T()), m_new_val(T())
     {}
     explicit sc_signal(const char *name, const T &initial_value) :
-        sc_signal_inout_if<T>(), sc_prim_channel(name)
-    {
-        // Need to consume initial_value.
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+        sc_signal_inout_if<T>(), sc_prim_channel(name),
+        m_cur_val(initial_value), m_new_val(initial_value)
+    {}
     virtual ~sc_signal() {}
 
     virtual void
@@ -85,17 +87,8 @@ class sc_signal : public sc_signal_inout_if<T>,
         sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
     }
 
-    virtual const T&
-    read() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const T *)nullptr;
-    }
-    operator const T&() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const T *)nullptr;
-    }
+    virtual const T &read() const { return m_cur_val; }
+    operator const T&() const { return read(); }
 
     virtual sc_writer_policy
     get_writer_policy() const
@@ -103,34 +96,36 @@ class sc_signal : public sc_signal_inout_if<T>,
         return WRITER_POLICY;
     }
     virtual void
-    write(const T&)
+    write(const T &t)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        m_new_val = t;
+        bool changed = !(m_cur_val == m_new_val);
+        //TODO check whether this write follows the write policy.
+        if (changed)
+            request_update();
     }
     sc_signal<T, WRITER_POLICY> &
-    operator = (const T&)
+    operator = (const T &t)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        write(t);
         return *this;
     }
     sc_signal<T, WRITER_POLICY> &
-    operator = (const sc_signal<T, WRITER_POLICY> &)
+    operator = (const sc_signal<T, WRITER_POLICY> &s)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        write(s.read());
         return *this;
     }
 
     virtual const sc_event &
     default_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event *)nullptr;
+        return value_changed_event();
     }
     virtual const sc_event &
     value_changed_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event *)nullptr;
+        return _valueChangedEvent;
     }
     virtual bool
     event() const
@@ -139,15 +134,13 @@ class sc_signal : public sc_signal_inout_if<T>,
         return false;
     }
 
+    virtual void print(std::ostream &os=std::cout) const { os << m_cur_val; }
     virtual void
-    print(std::ostream & =std::cout) const
+    dump(std::ostream &os=std::cout) const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    virtual void
-    dump(std::ostream & =std::cout) const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        os << "     name = " << name() << ::std::endl;
+        os << "    value = " << m_cur_val << ::std::endl;
+        os << "new value = " << m_new_val << ::std::endl;
     }
     virtual const char *kind() const { return "sc_signal"; }
 
@@ -155,7 +148,11 @@ class sc_signal : public sc_signal_inout_if<T>,
     virtual void
     update()
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        if (m_new_val == m_cur_val)
+            return;
+
+        m_cur_val = m_new_val;
+        _valueChangedEvent.notify(SC_ZERO_TIME);
     }
 
     // These members which store the current and future value of the signal
@@ -165,6 +162,8 @@ class sc_signal : public sc_signal_inout_if<T>,
     T m_new_val;
 
   private:
+    sc_event _valueChangedEvent;
+
     // Disabled
     sc_signal(const sc_signal<T, WRITER_POLICY> &) :
             sc_signal_inout_if<T>(), sc_prim_channel("")
@@ -184,24 +183,19 @@ class sc_signal<bool, WRITER_POLICY> :
     public sc_signal_inout_if<bool>, public sc_prim_channel
 {
   public:
-    sc_signal()
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    explicit sc_signal(const char *)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    sc_signal() : sc_signal_inout_if<bool>(),
+                  sc_prim_channel(sc_gen_unique_name("signal")),
+                  m_cur_val(bool()), m_new_val(bool())
+    {}
+    explicit sc_signal(const char *name) :
+        sc_signal_inout_if<bool>(), sc_prim_channel(name),
+        m_cur_val(bool()), m_new_val(bool())
+    {}
     explicit sc_signal(const char *name, const bool &initial_value) :
-        sc_signal_inout_if<bool>(), sc_prim_channel(name)
-    {
-        // Need to consume initial_value.
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    virtual ~sc_signal()
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+        sc_signal_inout_if<bool>(), sc_prim_channel(name),
+        m_cur_val(initial_value), m_new_val(initial_value)
+    {}
+    virtual ~sc_signal() {}
 
     virtual void
     register_port(sc_port_base &, const char *)
@@ -209,17 +203,8 @@ class sc_signal<bool, WRITER_POLICY> :
         sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
     }
 
-    virtual const bool &
-    read() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const bool *)nullptr;
-    }
-    operator const bool &() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const bool *)nullptr;
-    }
+    virtual const bool &read() const { return m_cur_val; }
+    operator const bool &() const { return read(); }
 
     virtual sc_writer_policy
     get_writer_policy() const
@@ -227,47 +212,47 @@ class sc_signal<bool, WRITER_POLICY> :
         return WRITER_POLICY;
     }
     virtual void
-    write(const bool &)
+    write(const bool &b)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        m_new_val = b;
+        bool changed = !(m_cur_val == m_new_val);
+        //TODO check whether this write follows the write policy.
+        if (changed)
+            request_update();
     }
     sc_signal<bool, WRITER_POLICY> &
-    operator = (const bool &)
+    operator = (const bool &b)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        write(b);
         return *this;
     }
     sc_signal<bool, WRITER_POLICY> &
-    operator = (const sc_signal<bool, WRITER_POLICY> &)
+    operator = (const sc_signal<bool, WRITER_POLICY> &s)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        write(s.read());
         return *this;
     }
 
     virtual const sc_event &
     default_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event *)nullptr;
+        return value_changed_event();
     }
 
     virtual const sc_event &
     value_changed_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event *)nullptr;
+        return _valueChangedEvent;
     }
     virtual const sc_event &
     posedge_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event *)nullptr;
+        return _posedgeEvent;
     }
     virtual const sc_event &
     negedge_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event *)nullptr;
+        return _negedgeEvent;
     }
 
     virtual bool
@@ -289,15 +274,13 @@ class sc_signal<bool, WRITER_POLICY> :
         return false;
     }
 
+    virtual void print(std::ostream &os=std::cout) const { os << m_cur_val; }
     virtual void
-    print(std::ostream & =std::cout) const
+    dump(std::ostream &os=std::cout) const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    virtual void
-    dump(std::ostream & =std::cout) const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        os << "     name = " << name() << ::std::endl;
+        os << "    value = " << m_cur_val << ::std::endl;
+        os << "new value = " << m_new_val << ::std::endl;
     }
     virtual const char *kind() const { return "sc_signal"; }
 
@@ -305,10 +288,25 @@ class sc_signal<bool, WRITER_POLICY> :
     virtual void
     update()
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        if (m_new_val == m_cur_val)
+            return;
+
+        m_cur_val = m_new_val;
+        _valueChangedEvent.notify(SC_ZERO_TIME);
+        if (m_cur_val)
+            _posedgeEvent.notify(SC_ZERO_TIME);
+        else
+            _negedgeEvent.notify(SC_ZERO_TIME);
     }
 
+    bool m_cur_val;
+    bool m_new_val;
+
   private:
+    sc_event _valueChangedEvent;
+    sc_event _posedgeEvent;
+    sc_event _negedgeEvent;
+
     // Disabled
     sc_signal(const sc_signal<bool, WRITER_POLICY> &) :
             sc_signal_inout_if<bool>(), sc_prim_channel("")
@@ -320,25 +318,20 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
     public sc_signal_inout_if<sc_dt::sc_logic>, public sc_prim_channel
 {
   public:
-    sc_signal()
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    explicit sc_signal(const char *)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    sc_signal() : sc_signal_inout_if<sc_dt::sc_logic>(),
+                  sc_prim_channel(sc_gen_unique_name("signal")),
+                  m_cur_val(sc_dt::sc_logic()), m_new_val(sc_dt::sc_logic())
+    {}
+    explicit sc_signal(const char *name) :
+        sc_signal_inout_if<sc_dt::sc_logic>(), sc_prim_channel(name),
+        m_cur_val(sc_dt::sc_logic()), m_new_val(sc_dt::sc_logic())
+    {}
     explicit sc_signal(const char *name,
             const sc_dt::sc_logic &initial_value) :
-        sc_signal_inout_if<sc_dt::sc_logic>(), sc_prim_channel(name)
-    {
-        // Need to consume initial_value.
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    virtual ~sc_signal()
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+        sc_signal_inout_if<sc_dt::sc_logic>(), sc_prim_channel(name),
+        m_cur_val(initial_value), m_new_val(initial_value)
+    {}
+    virtual ~sc_signal() {}
 
     virtual void
     register_port(sc_port_base &, const char *)
@@ -346,17 +339,8 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
         sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
     }
 
-    virtual const sc_dt::sc_logic &
-    read() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_dt::sc_logic *)nullptr;
-    }
-    operator const sc_dt::sc_logic &() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_dt::sc_logic *)nullptr;
-    }
+    virtual const sc_dt::sc_logic &read() const { return m_cur_val; }
+    operator const sc_dt::sc_logic &() const { return read(); }
 
     virtual sc_writer_policy
     get_writer_policy() const
@@ -364,47 +348,47 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
         return WRITER_POLICY;
     }
     virtual void
-    write(const sc_dt::sc_logic &)
+    write(const sc_dt::sc_logic &l)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        m_new_val = l;
+        bool changed = !(m_cur_val == m_new_val);
+        //TODO check whether this write follows the write policy.
+        if (changed)
+            request_update();
     }
     sc_signal<sc_dt::sc_logic, WRITER_POLICY> &
-    operator = (const sc_dt::sc_logic &)
+    operator = (const sc_dt::sc_logic &l)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        write(l);
         return *this;
     }
     sc_signal<sc_dt::sc_logic, WRITER_POLICY> &
-    operator = (const sc_signal<sc_dt::sc_logic, WRITER_POLICY> &)
+    operator = (const sc_signal<sc_dt::sc_logic, WRITER_POLICY> &s)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        write(s.read());
         return *this;
     }
 
     virtual const sc_event &
     default_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event *)nullptr;
+        return value_changed_event();
     }
 
     virtual const sc_event &
     value_changed_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event *)nullptr;
+        return _valueChangedEvent;
     }
     virtual const sc_event &
     posedge_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event *)nullptr;
+        return _posedgeEvent;
     }
     virtual const sc_event &
     negedge_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event *)nullptr;
+        return _negedgeEvent;
     }
 
     virtual bool
@@ -426,15 +410,13 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
         return false;
     }
 
+    virtual void print(std::ostream &os=std::cout) const { os << m_cur_val; }
     virtual void
-    print(std::ostream & =std::cout) const
+    dump(std::ostream &os=std::cout) const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    virtual void
-    dump(std::ostream & =std::cout) const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        os << "     name = " << name() << ::std::endl;
+        os << "    value = " << m_cur_val << ::std::endl;
+        os << "new value = " << m_new_val << ::std::endl;
     }
     virtual const char *kind() const { return "sc_signal"; }
 
@@ -442,10 +424,25 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
     virtual void
     update()
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        if (m_new_val == m_cur_val)
+            return;
+
+        m_cur_val = m_new_val;
+        _valueChangedEvent.notify(SC_ZERO_TIME);
+        if (m_cur_val == sc_dt::SC_LOGIC_1)
+            _posedgeEvent.notify(SC_ZERO_TIME);
+        else if (m_cur_val == sc_dt::SC_LOGIC_0)
+            _negedgeEvent.notify(SC_ZERO_TIME);
     }
 
+    sc_dt::sc_logic m_cur_val;
+    sc_dt::sc_logic m_new_val;
+
   private:
+    sc_event _valueChangedEvent;
+    sc_event _posedgeEvent;
+    sc_event _negedgeEvent;
+
     // Disabled
     sc_signal(const sc_signal<sc_dt::sc_logic, WRITER_POLICY> &) :
             sc_signal_inout_if<sc_dt::sc_logic>(), sc_prim_channel("")
