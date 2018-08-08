@@ -64,8 +64,11 @@ void
 Kernel::init()
 {
     status(::sc_core::SC_BEFORE_END_OF_ELABORATION);
-    for (auto m: sc_gem5::allModules)
+    for (auto m: sc_gem5::allModules) {
+        callbackModule(m);
         m->sc_mod()->before_end_of_elaboration();
+    }
+    callbackModule(nullptr);
 
     if (stopAfterCallbacks)
         stopWork();

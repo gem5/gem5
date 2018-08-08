@@ -106,6 +106,9 @@ class Module
 Module *currentModule();
 Module *newModule();
 
+void callbackModule(Module *m);
+Module *callbackModule();
+
 extern std::set<Module *> allModules;
 
 } // namespace sc_gem5

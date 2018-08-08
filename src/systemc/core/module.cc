@@ -43,6 +43,8 @@ namespace
 std::list<Module *> _modules;
 Module *_new_module;
 
+Module *_callbackModule = nullptr;
+
 } // anonymous namespace
 
 Module::Module(const char *name) : _name(name), _sc_mod(nullptr), _obj(nullptr)
@@ -89,6 +91,9 @@ newModule()
 {
     return _new_module;
 }
+
+void callbackModule(Module *m) { _callbackModule = m; }
+Module *callbackModule() { return _callbackModule; }
 
 std::set<Module *> allModules;
 

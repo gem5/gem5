@@ -78,6 +78,8 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
         _basename = "object";
 
     Module *p = currentModule();
+    if (!p)
+        p = callbackModule();
 
     Module *n = newModule();
     if (n) {
@@ -87,7 +89,7 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
 
     if (p) {
         // We're "within" a parent module, ie we're being created while its
-        // constructor is running.
+        // constructor or end_of_elaboration callback is running.
         parent = p->obj()->_sc_obj;
         addObject(&parent->_gem5_object->children, _sc_obj);
     } else if (scheduler.current()) {
