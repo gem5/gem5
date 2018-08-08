@@ -30,6 +30,8 @@
 #ifndef __SYSTEMC_EXT_CORE_SC_MAIN_HH__
 #define __SYSTEMC_EXT_CORE_SC_MAIN_HH__
 
+#include <iostream>
+
 #include "../dt/int/sc_nbdefs.hh"
 #include "sc_time.hh"
 
@@ -97,6 +99,8 @@ namespace sc_core
     };
 
     sc_status sc_get_status();
+
+    std::ostream &operator << (std::ostream &os, sc_status s);
 } // namespace sc_core
 
 #endif  //__SYSTEMC_EXT_CORE_SC_MAIN_HH__

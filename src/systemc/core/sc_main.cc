@@ -244,4 +244,64 @@ sc_get_status()
     return ::sc_gem5::kernel ? ::sc_gem5::kernel->status() : SC_ELABORATION;
 }
 
+std::ostream &
+operator << (std::ostream &os, sc_status s)
+{
+    switch (s) {
+      case SC_ELABORATION:
+        os << "SC_ELABORATION";
+        break;
+      case SC_BEFORE_END_OF_ELABORATION:
+        os << "SC_BEFORE_END_OF_ELABORATION";
+        break;
+      case SC_END_OF_ELABORATION:
+        os << "SC_END_OF_ELABORATION";
+        break;
+      case SC_START_OF_SIMULATION:
+        os << "SC_START_OF_SIMULATION";
+        break;
+      case SC_RUNNING:
+        os << "SC_RUNNING";
+        break;
+      case SC_PAUSED:
+        os << "SC_PAUSED";
+        break;
+      case SC_STOPPED:
+        os << "SC_STOPPED";
+        break;
+      case SC_END_OF_SIMULATION:
+        os << "SC_END_OF_SIMULATION";
+        break;
+
+        // Nonstandard
+      case SC_END_OF_INITIALIZATION:
+        os << "SC_END_OF_INITIALIZATION";
+        break;
+      case SC_END_OF_UPDATE:
+        os << "SC_END_OF_UPDATE";
+        break;
+      case SC_BEFORE_TIMESTEP:
+        os << "SC_BEFORE_TIMESTEP";
+        break;
+
+      default:
+        if (s & SC_STATUS_ANY) {
+            const char *prefix = "(";
+            for (sc_status m = (sc_status)0x1;
+                    m < SC_STATUS_ANY; m = (sc_status)(m << 1)) {
+                if (m & s) {
+                    os << prefix;
+                    prefix = "|";
+                    os << m;
+                }
+            }
+            os << ")";
+        } else {
+            ccprintf(os, "%#x", s);
+        }
+    }
+
+    return os;
+}
+
 } // namespace sc_core
