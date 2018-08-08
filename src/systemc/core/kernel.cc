@@ -54,7 +54,11 @@ sc_core::sc_status Kernel::status() { return _status; }
 void Kernel::status(sc_core::sc_status s) { _status = s; }
 
 Kernel::Kernel(Params *params) :
-    SimObject(params), t0Event(this, false, EventBase::Default_Pri - 1) {}
+    SimObject(params), t0Event(this, false, EventBase::Default_Pri - 1)
+{
+    // Install ourselves as the scheduler's event manager.
+    ::sc_gem5::scheduler.setEventQueue(eventQueue());
+}
 
 void
 Kernel::init()
@@ -93,8 +97,6 @@ Kernel::startup()
     kernel->status(::sc_core::SC_RUNNING);
 
     schedule(t0Event, curTick());
-    // Install ourselves as the scheduler's event manager.
-    ::sc_gem5::scheduler.setEventQueue(eventQueue());
     // Run update once before the event queue starts.
     ::sc_gem5::scheduler.update();
 }
