@@ -660,6 +660,33 @@ class BaseCache : public ClockedObject
     EventFunctionWrapper writebackTempBlockAtomicEvent;
 
     /**
+     * When a block is overwriten, its compression information must be updated,
+     * and it may need to be recompressed. If the compression size changes, the
+     * block may either become smaller, in which case there is no side effect,
+     * or bigger (data expansion; fat write), in which case the block might not
+     * fit in its current location anymore. If that happens, there are usually
+     * two options to be taken:
+     *
+     * - The co-allocated blocks must be evicted to make room for this block.
+     *   Simpler, but ignores replacement data.
+     * - The block itself is moved elsewhere (used in policies where the CF
+     *   determines the location of the block).
+     *
+     * This implementation uses the first approach.
+     *
+     * Notice that this is only called for writebacks, which means that L1
+     * caches (which see regular Writes), do not support compression.
+     * @sa CompressedTags
+     *
+     * @param blk The block to be overwriten.
+     * @param data A pointer to the data to be compressed (blk's new data).
+     * @param writebacks List for any writebacks that need to be performed.
+     * @return Whether operation is successful or not.
+     */
+    bool updateCompressionData(CacheBlk *blk, const uint64_t* data,
+                               PacketList &writebacks);
+
+    /**
      * Perform any necessary updates to the block and perform any data
      * exchange between the packet and the block. The flags of the
      * packet are also set accordingly.
@@ -1015,6 +1042,9 @@ class BaseCache : public ClockedObject
 
     /** Number of replacements of valid blocks. */
     Stats::Scalar replacements;
+
+    /** Number of data expansions. */
+    Stats::Scalar dataExpansions;
 
     /**
      * @}

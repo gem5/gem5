@@ -94,14 +94,30 @@ CompressionBlk::print() const
 }
 
 bool
-SuperBlk::isCompressed() const
+SuperBlk::isCompressed(const CompressionBlk* ignored_blk) const
 {
     for (const auto& blk : blks) {
-        if (blk->isValid()) {
+        if (blk->isValid() && (blk != ignored_blk)) {
             return static_cast<CompressionBlk*>(blk)->isCompressed();
         }
     }
 
     // An invalid block is seen as compressed
     return true;
+}
+
+bool
+SuperBlk::canCoAllocate(const std::size_t compressed_size) const
+{
+    // Simple co-allocation function: at most numBlocksPerSector blocks that
+    // compress at least to (100/numBlocksPerSector)% of their original size
+    // can share a superblock
+    return (compressed_size <= (blkSize * 8) / blks.size());
+}
+
+void
+SuperBlk::setBlkSize(const std::size_t blk_size)
+{
+    assert(blkSize == 0);
+    blkSize = blk_size;
 }

@@ -51,6 +51,7 @@
 #include "base/compiler.hh"
 #include "base/logging.hh"
 #include "debug/Cache.hh"
+#include "debug/CacheComp.hh"
 #include "debug/CachePort.hh"
 #include "debug/CacheRepl.hh"
 #include "debug/CacheVerbose.hh"
@@ -58,6 +59,7 @@
 #include "mem/cache/mshr.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/queue_entry.hh"
+#include "mem/cache/tags/super_blk.hh"
 #include "params/BaseCache.hh"
 #include "params/WriteAllocator.hh"
 #include "sim/core.hh"
@@ -796,6 +798,105 @@ BaseCache::getNextQueueEntry()
     return nullptr;
 }
 
+bool
+BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
+                                 PacketList &writebacks)
+{
+    // tempBlock does not exist in the tags, so don't do anything for it.
+    if (blk == tempBlock) {
+        return true;
+    }
+
+    // Get superblock of the given block
+    CompressionBlk* compression_blk = static_cast<CompressionBlk*>(blk);
+    const SuperBlk* superblock = static_cast<const SuperBlk*>(
+        compression_blk->getSectorBlock());
+
+    // The compressor is called to compress the updated data, so that its
+    // metadata can be updated.
+    std::size_t compression_size = 0;
+    Cycles compression_lat = Cycles(0);
+    Cycles decompression_lat = Cycles(0);
+    compressor->compress(data, compression_lat, decompression_lat,
+                         compression_size);
+
+    // If block's compression factor increased, it may not be co-allocatable
+    // anymore. If so, some blocks might need to be evicted to make room for
+    // the bigger block
+
+    // Get previous compressed size
+    const std::size_t M5_VAR_USED prev_size = compression_blk->getSizeBits();
+
+    // Check if new data is co-allocatable
+    const bool is_co_allocatable = superblock->isCompressed(compression_blk) &&
+        superblock->canCoAllocate(compression_size);
+
+    // If block was compressed, possibly co-allocated with other blocks, and
+    // cannot be co-allocated anymore, one or more blocks must be evicted to
+    // make room for the expanded block. As of now we decide to evict the co-
+    // allocated blocks to make room for the expansion, but other approaches
+    // that take the replacement data of the superblock into account may
+    // generate better results
+    std::vector<CacheBlk*> evict_blks;
+    const bool was_compressed = compression_blk->isCompressed();
+    if (was_compressed && !is_co_allocatable) {
+        // Get all co-allocated blocks
+        for (const auto& sub_blk : superblock->blks) {
+            if (sub_blk->isValid() && (compression_blk != sub_blk)) {
+                // Check for transient state allocations. If any of the
+                // entries listed for eviction has a transient state, the
+                // allocation fails
+                const Addr repl_addr = regenerateBlkAddr(sub_blk);
+                const MSHR *repl_mshr =
+                    mshrQueue.findMatch(repl_addr, sub_blk->isSecure());
+                if (repl_mshr) {
+                    DPRINTF(CacheRepl, "Aborting data expansion of %s due " \
+                            "to replacement of block in transient state: %s\n",
+                            compression_blk->print(), sub_blk->print());
+                    // Too hard to replace block with transient state, so it
+                    // cannot be evicted. Mark the update as failed and expect
+                    // the caller to evict this block. Since this is called
+                    // only when writebacks arrive, and packets do not contain
+                    // compressed data, there is no need to decompress
+                    compression_blk->setSizeBits(blkSize * 8);
+                    compression_blk->setDecompressionLatency(Cycles(0));
+                    compression_blk->setUncompressed();
+                    return false;
+                }
+
+                evict_blks.push_back(sub_blk);
+            }
+        }
+
+        // Update the number of data expansions
+        dataExpansions++;
+
+        DPRINTF(CacheComp, "Data expansion: expanding [%s] from %d to %d bits"
+                "\n", blk->print(), prev_size, compression_size);
+    }
+
+    // We always store compressed blocks when possible
+    if (is_co_allocatable) {
+        compression_blk->setCompressed();
+    } else {
+        compression_blk->setUncompressed();
+    }
+    compression_blk->setSizeBits(compression_size);
+    compression_blk->setDecompressionLatency(decompression_lat);
+
+    // Evict valid blocks
+    for (const auto& evict_blk : evict_blks) {
+        if (evict_blk->isValid()) {
+            if (evict_blk->wasPrefetched()) {
+                unusedPrefetches++;
+            }
+            evictBlock(evict_blk, writebacks);
+        }
+    }
+
+    return true;
+}
+
 void
 BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
 {
@@ -1036,13 +1137,23 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             }
 
             blk->status |= BlkReadable;
-        } else {
-            if (compressor) {
-                // This is an overwrite to an existing block, therefore we need
-                // to check for data expansion (i.e., block was compressed with
-                // a smaller size, and now it doesn't fit the entry anymore).
-                // If that is the case we might need to evict blocks.
-                // @todo Update compression data
+        } else if (compressor) {
+            // This is an overwrite to an existing block, therefore we need
+            // to check for data expansion (i.e., block was compressed with
+            // a smaller size, and now it doesn't fit the entry anymore).
+            // If that is the case we might need to evict blocks.
+            if (!updateCompressionData(blk, pkt->getConstPtr<uint64_t>(),
+                writebacks)) {
+                // This is a failed data expansion (write), which happened
+                // after finding the replacement entries and accessing the
+                // block's data. There were no replaceable entries available
+                // to make room for the expanded block, and since it does not
+                // fit anymore and it has been properly updated to contain
+                // the new data, forward it to the next level
+                lat = calculateAccessLatency(blk, pkt->headerDelay,
+                                             tag_latency);
+                invalidateBlock(blk);
+                return false;
             }
         }
 
@@ -1125,9 +1236,23 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
                 blk->status |= BlkReadable;
             }
-        } else {
-            if (compressor) {
-                // @todo Update compression data
+        } else if (compressor) {
+            // This is an overwrite to an existing block, therefore we need
+            // to check for data expansion (i.e., block was compressed with
+            // a smaller size, and now it doesn't fit the entry anymore).
+            // If that is the case we might need to evict blocks.
+            if (!updateCompressionData(blk, pkt->getConstPtr<uint64_t>(),
+                writebacks)) {
+                // This is a failed data expansion (write), which happened
+                // after finding the replacement entries and accessing the
+                // block's data. There were no replaceable entries available
+                // to make room for the expanded block, and since it does not
+                // fit anymore and it has been properly updated to contain
+                // the new data, forward it to the next level
+                lat = calculateAccessLatency(blk, pkt->headerDelay,
+                                             tag_latency);
+                invalidateBlock(blk);
+                return false;
             }
         }
 
@@ -1155,8 +1280,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
             std::max(cyclesToTicks(tag_latency), (uint64_t)pkt->payloadDelay));
 
-        // if this a write-through packet it will be sent to cache
-        // below
+        // If this a write-through packet it will be sent to cache below
         return !pkt->writeThrough();
     } else if (blk && (pkt->needsWritable() ? blk->isWritable() :
                        blk->isReadable())) {
@@ -2364,6 +2488,12 @@ BaseCache::regStats()
     replacements
         .name(name() + ".replacements")
         .desc("number of replacements")
+        ;
+
+    dataExpansions
+        .name(name() + ".data_expansions")
+        .desc("number of data expansions")
+        .flags(nozero | nonan)
         ;
 }
 

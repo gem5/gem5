@@ -98,16 +98,6 @@ class CompressedTags : public SectorTags
     void tagsInit() override;
 
     /**
-     * Checks whether a superblock can co-allocate given compressed data block.
-     *
-     * @param superblock Superblock to check.
-     * @param compressed_size Size, in bits, of new block to allocate.
-     * @return True if block can be co-allocated in superblock.
-     */
-    bool canCoAllocate(const SuperBlk* superblock,
-                       const std::size_t compressed_size) const;
-
-    /**
      * Find replacement victim based on address. Checks if data can be co-
      * allocated before choosing blocks to be evicted.
      *

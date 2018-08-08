@@ -63,6 +63,10 @@ CompressedTags::tagsInit()
         // Locate next cache superblock
         SuperBlk* superblock = &superBlks[superblock_index];
 
+        // Superblocks must be aware of the block size due to their co-
+        // allocation conditions
+        superblock->setBlkSize(blkSize);
+
         // Link block to indexing policy
         indexingPolicy->setEntry(superblock, superblock_index);
 
@@ -96,17 +100,6 @@ CompressedTags::tagsInit()
     }
 }
 
-bool
-CompressedTags::canCoAllocate(const SuperBlk* superblock,
-                              const std::size_t compressed_size) const
-{
-    // Simple co-allocation function: at most numBlocksPerSector blocks that
-    // compress at least to (100/numBlocksPerSector)% of their original size
-    // can share a superblock
-    return superblock->isCompressed() &&
-           (compressed_size <= (blkSize * 8) / numBlocksPerSector);
-}
-
 CacheBlk*
 CompressedTags::findVictim(Addr addr, const bool is_secure,
                            const std::size_t compressed_size,
@@ -127,7 +120,8 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
         if ((tag == superblock->getTag()) && superblock->isValid() &&
             (is_secure == superblock->isSecure()) &&
             !superblock->blks[offset]->isValid() &&
-            canCoAllocate(superblock, compressed_size))
+            superblock->isCompressed() &&
+            superblock->canCoAllocate(compressed_size))
         {
             victim_superblock = superblock;
             is_co_allocation = true;
@@ -171,12 +165,23 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
 void
 CompressedTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
 {
+    // We check if block can co-allocate before inserting, because this check
+    // assumes the block is still invalid
+    CompressionBlk* compression_blk = static_cast<CompressionBlk*>(blk);
+    const SuperBlk* superblock = static_cast<const SuperBlk*>(
+        compression_blk->getSectorBlock());
+    const bool is_co_allocatable = superblock->isCompressed() &&
+        superblock->canCoAllocate(compression_blk->getSizeBits());
+
     // Insert block
     SectorTags::insertBlock(pkt, blk);
 
-    // @todo We always store compressed blocks when possible
-    CompressionBlk* compression_blk = static_cast<CompressionBlk*>(blk);
-    compression_blk->setUncompressed();
+    // We always store compressed blocks when possible
+    if (is_co_allocatable) {
+        compression_blk->setCompressed();
+    } else {
+        compression_blk->setUncompressed();
+    }
 }
 
 void

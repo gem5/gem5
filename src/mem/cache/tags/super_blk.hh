@@ -126,8 +126,12 @@ class CompressionBlk : public SectorSubBlk
  */
 class SuperBlk : public SectorBlk
 {
+  protected:
+    /** Block size, in bytes. */
+    std::size_t blkSize;
+
   public:
-    SuperBlk() : SectorBlk() {}
+    SuperBlk() : SectorBlk(), blkSize(0) {}
     SuperBlk(const SuperBlk&) = delete;
     SuperBlk& operator=(const SuperBlk&) = delete;
     ~SuperBlk() {};
@@ -136,9 +140,25 @@ class SuperBlk : public SectorBlk
      * Returns whether the superblock contains compressed blocks or not. By
      * default, if not blocks are valid, the superblock is compressible.
      *
+     * @param ignored_blk If provided don't consider the given block.
      * @return The compressibility state of the superblock.
      */
-    bool isCompressed() const;
+    bool isCompressed(const CompressionBlk* ignored_blk = nullptr) const;
+
+    /**
+     * Checks whether a superblock can co-allocate given compressed data block.
+     *
+     * @param compressed_size Size, in bits, of new block to allocate.
+     * @return True if block can be co-allocated in superblock.
+     */
+    bool canCoAllocate(const std::size_t compressed_size) const;
+
+    /**
+     * Set block size. Should be called only once, when initializing blocks.
+     *
+     * @param blk_size The uncompressed block size.
+     */
+    void setBlkSize(const std::size_t blk_size);
 };
 
 #endif //__MEM_CACHE_TAGS_SUPER_BLK_HH__
