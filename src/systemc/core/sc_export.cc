@@ -33,10 +33,7 @@
 namespace sc_core
 {
 
-void
-sc_export_base::warn_unimpl(const char *func) const
-{
-    warn("%s not implemented.\n", func);
-}
+sc_export_base::sc_export_base(const char *n) : sc_object(n) {}
+sc_export_base::~sc_export_base() {}
 
 } // namespace sc_core

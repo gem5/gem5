@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_EXT_CORE_SC_EXPORT_HH__
 #define __SYSTEMC_EXT_CORE_SC_EXPORT_HH__
 
+#include "sc_module.hh" // for sc_gen_unique_name
 #include "sc_object.hh"
 
 namespace sc_core
@@ -40,7 +41,8 @@ class sc_interface;
 class sc_export_base : public sc_object
 {
   public:
-    void warn_unimpl(const char *func) const;
+    sc_export_base(const char *n);
+    ~sc_export_base();
 
     virtual sc_interface *get_iterface() = 0;
     virtual const sc_interface *get_interface() const = 0;
@@ -50,42 +52,26 @@ template <class IF>
 class sc_export : public sc_export_base
 {
   public:
-    sc_export() { warn_unimpl(__PRETTY_FUNCTION__); }
-    explicit sc_export(const char *) { warn_unimpl(__PRETTY_FUNCTION__); }
-    virtual ~sc_export() { warn_unimpl(__PRETTY_FUNCTION__); };
+    sc_export() :
+        sc_export_base(sc_gen_unique_name("export")), interface(nullptr)
+    {}
+    explicit sc_export(const char *n) :
+        sc_export_base(n), interface(nullptr)
+    {}
+    virtual ~sc_export() {}
 
     virtual const char *kind() const { return "sc_export"; }
 
-    void operator () (IF &) { warn_unimpl(__PRETTY_FUNCTION__); };
-    virtual void bind(IF &) { warn_unimpl(__PRETTY_FUNCTION__); };
-    operator IF & () { warn_unimpl(__PRETTY_FUNCTION__); };
-    operator const IF & () const { warn_unimpl(__PRETTY_FUNCTION__); };
+    void operator () (IF &i) { bind(i); }
+    virtual void bind(IF &i) { interface = &i; }
+    operator IF & () { return *interface; }
+    operator const IF & () const { return *interface; }
 
-    IF *
-    operator -> ()
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-        return nullptr;
-    }
-    const IF *
-    operator -> () const
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-        return nullptr;
-    }
+    IF *operator -> () { return interface; }
+    const IF *operator -> () const { return interface; }
 
-    sc_interface *
-    get_iterface() override
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-        return nullptr;
-    }
-    const sc_interface *
-    get_interface() const override
-    {
-        warn_unimpl(__PRETTY_FUNCTION__);
-        return nullptr;
-    }
+    sc_interface *get_iterface() override { return interface; }
+    const sc_interface *get_interface() const override { return interface; }
 
   protected:
     virtual void before_end_of_elaboration() {}
@@ -94,6 +80,8 @@ class sc_export : public sc_export_base
     virtual void end_of_simulation() {}
 
   private:
+    IF *interface;
+
     // Disabled
     sc_export(const sc_export<IF> &);
     sc_export<IF> &operator = (const sc_export<IF> &);
