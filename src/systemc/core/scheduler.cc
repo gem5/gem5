@@ -210,6 +210,14 @@ Scheduler::pause()
     _paused = true;
     kernel->status(::sc_core::SC_PAUSED);
     scMain->run();
+
+    // If the ready event is supposed to run now, run it inline so that it
+    // preempts any delta notifications which were scheduled while we were
+    // paused.
+    if (readyEvent.scheduled()) {
+        eq->deschedule(&readyEvent);
+        runReady();
+    }
 }
 
 void
