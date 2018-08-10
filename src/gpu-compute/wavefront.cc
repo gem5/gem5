@@ -53,6 +53,7 @@ Wavefront::Wavefront(const Params *p)
   : SimObject(p), wfSlotId(p->wf_slot_id), simdId(p->simdId),
     maxIbSize(p->max_ib_size), _gpuISA(*this),
     vmWaitCnt(-1), expWaitCnt(-1), lgkmWaitCnt(-1),
+    vmemInstsIssued(0), expInstsIssued(0), lgkmInstsIssued(0),
     barId(WFBarrier::InvalidID)
 {
     lastTrace = 0;
@@ -1253,37 +1254,27 @@ Wavefront::waitCntsSatisfied()
         return false;
     }
 
-    // If we reach here, that means waitCnt instruction is executed and
-    // the waitcnts are set by the execute method. Check if waitcnts are
-    // satisfied.
-
-    // current number of vector memory ops in flight
-    int vm_cnt = outstandingReqsWrGm + outstandingReqsRdGm;
-
-    // current number of export insts or vector memory writes in flight
-    int exp_cnt = outstandingReqsWrGm;
-
-    // current number of scalar/LDS memory ops in flight
-    // we do not consider GDS/message ops
-    int lgkm_cnt = outstandingReqsWrLm + outstandingReqsRdLm +
-        scalarOutstandingReqsRdGm + scalarOutstandingReqsWrGm;
-
+    /**
+     * If we reach here, that means an s_waitcnt instruction was executed
+     * and the waitcnts are set by the execute method. Check if waitcnts
+     * are satisfied.
+     */
     if (vmWaitCnt != -1) {
-        if (vm_cnt > vmWaitCnt) {
+        if (vmemInstsIssued > vmWaitCnt) {
             // vmWaitCnt not satisfied
             return false;
         }
     }
 
     if (expWaitCnt != -1) {
-        if (exp_cnt > expWaitCnt) {
+        if (expInstsIssued > expWaitCnt) {
             // expWaitCnt not satisfied
             return false;
         }
     }
 
     if (lgkmWaitCnt != -1) {
-        if (lgkm_cnt > lgkmWaitCnt) {
+        if (lgkmInstsIssued > lgkmWaitCnt) {
             // lgkmWaitCnt not satisfied
             return false;
         }
@@ -1353,6 +1344,42 @@ Wavefront::clearWaitCnts()
 
     // resume running normally
     status = S_RUNNING;
+}
+
+void
+Wavefront::incVMemInstsIssued()
+{
+    ++vmemInstsIssued;
+}
+
+void
+Wavefront::incExpInstsIssued()
+{
+    ++expInstsIssued;
+}
+
+void
+Wavefront::incLGKMInstsIssued()
+{
+    ++lgkmInstsIssued;
+}
+
+void
+Wavefront::decVMemInstsIssued()
+{
+    --vmemInstsIssued;
+}
+
+void
+Wavefront::decExpInstsIssued()
+{
+    --expInstsIssued;
+}
+
+void
+Wavefront::decLGKMInstsIssued()
+{
+    --lgkmInstsIssued;
 }
 
 Addr

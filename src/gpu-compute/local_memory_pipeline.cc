@@ -76,6 +76,7 @@ LocalMemPipeline::exec()
         DPRINTF(GPUMem, "CU%d: WF[%d][%d]: Completing local mem instr %s\n",
                 m->cu_id, m->simdId, m->wfSlotId, m->disassemble());
         m->completeAcc(m);
+        w->decLGKMInstsIssued();
 
         if (m->isLoad() || m->isAtomicRet()) {
             w->computeUnit->vrf[w->simdId]->

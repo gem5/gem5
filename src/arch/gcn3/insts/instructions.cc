@@ -32565,6 +32565,7 @@ namespace Gcn3ISA
 
         vdst.write();
 
+        wf->decLGKMInstsIssued();
         wf->rdLmReqsInPipe--;
         wf->validateRequestCounters();
     } // execute
@@ -32635,6 +32636,7 @@ namespace Gcn3ISA
 
         vdst.write();
 
+        wf->decLGKMInstsIssued();
         wf->rdLmReqsInPipe--;
         wf->validateRequestCounters();
     } // execute
@@ -39400,6 +39402,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
             return;
@@ -39496,6 +39500,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
             return;
@@ -39592,6 +39598,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
             return;
@@ -39660,6 +39668,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
             return;
@@ -39728,6 +39738,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
             return;
@@ -39805,6 +39817,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->rdGmReqsInPipe--;
             wf->rdLmReqsInPipe--;
         }
@@ -39884,6 +39898,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             return;
@@ -39952,6 +39968,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             return;
@@ -40021,6 +40039,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             return;
@@ -40090,6 +40110,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             return;
@@ -40159,6 +40181,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             return;
@@ -40237,6 +40261,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->wrLmReqsInPipe--;
             return;
@@ -40325,6 +40351,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             return;
@@ -40425,6 +40453,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             return;
@@ -40526,6 +40556,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             return;
@@ -40893,6 +40925,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             return;
@@ -40995,6 +41029,8 @@ namespace Gcn3ISA
         Wavefront *wf = gpuDynInst->wavefront();
 
         if (wf->execMask().none()) {
+            wf->decVMemInstsIssued();
+            wf->decLGKMInstsIssued();
             wf->wrGmReqsInPipe--;
             wf->rdGmReqsInPipe--;
             return;

@@ -304,6 +304,13 @@ class Wavefront : public SimObject
     void setWaitCnts(int vm_wait_cnt, int exp_wait_cnt, int lgkm_wait_cnt);
     void clearWaitCnts();
 
+    void incVMemInstsIssued();
+    void incExpInstsIssued();
+    void incLGKMInstsIssued();
+    void decVMemInstsIssued();
+    void decExpInstsIssued();
+    void decLGKMInstsIssued();
+
     /** Freeing VRF space */
     void freeRegisterFile();
 
@@ -343,6 +350,9 @@ class Wavefront : public SimObject
     int vmWaitCnt;
     int expWaitCnt;
     int lgkmWaitCnt;
+    int vmemInstsIssued;
+    int expInstsIssued;
+    int lgkmInstsIssued;
     status_e status;
     Addr _pc;
     VectorMask _execMask;

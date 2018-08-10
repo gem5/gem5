@@ -85,6 +85,7 @@ ScalarMemPipeline::exec()
         }
 
         m->completeAcc(m);
+        w->decLGKMInstsIssued();
 
         if (m->isLoad() || m->isAtomic()) {
             returnedLoads.pop();

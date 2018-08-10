@@ -135,6 +135,15 @@ ScheduleStage::exec()
             // this wave spends in SCH stage.
             wf->schCycles++;
             addToSchListStalls[j]++;
+        } else {
+            if (gpu_dyn_inst->isScalar() || gpu_dyn_inst->isGroupSeg()) {
+                wf->incLGKMInstsIssued();
+            } else {
+                wf->incVMemInstsIssued();
+                if (gpu_dyn_inst->isFlat()) {
+                    wf->incLGKMInstsIssued();
+                }
+            }
         }
     }
 
