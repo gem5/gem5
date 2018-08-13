@@ -1373,13 +1373,19 @@ IGbE::RxDescCache::pktComplete()
         status |= RXDS_EOP;
 
     IpPtr ip(pktPtr);
+    Ip6Ptr ip6(pktPtr);
 
-    if (ip) {
-        DPRINTF(EthernetDesc, "Proccesing Ip packet with Id=%d\n", ip->id());
-        ptype |= RXDP_IPV4;
-        ip_id = ip->id();
+    if (ip || ip6) {
+        if (ip) {
+            DPRINTF(EthernetDesc, "Proccesing Ip packet with Id=%d\n",
+                    ip->id());
+            ptype |= RXDP_IPV4;
+            ip_id = ip->id();
+        }
+        if (ip6)
+            ptype |= RXDP_IPV6;
 
-        if (igbe->regs.rxcsum.ipofld()) {
+        if (ip && igbe->regs.rxcsum.ipofld()) {
             DPRINTF(EthernetDesc, "Checking IP checksum\n");
             status |= RXDS_IPCS;
             csum = htole(cksum(ip));
@@ -1390,7 +1396,7 @@ IGbE::RxDescCache::pktComplete()
                 DPRINTF(EthernetDesc, "Checksum is bad!!\n");
             }
         }
-        TcpPtr tcp(ip);
+        TcpPtr tcp = ip ? TcpPtr(ip) : TcpPtr(ip6);
         if (tcp && igbe->regs.rxcsum.tuofld()) {
             DPRINTF(EthernetDesc, "Checking TCP checksum\n");
             status |= RXDS_TCPCS;
@@ -1404,7 +1410,7 @@ IGbE::RxDescCache::pktComplete()
             }
         }
 
-        UdpPtr udp(ip);
+        UdpPtr udp = ip ? UdpPtr(ip) : UdpPtr(ip6);
         if (udp && igbe->regs.rxcsum.tuofld()) {
             DPRINTF(EthernetDesc, "Checking UDP checksum\n");
             status |= RXDS_UDPCS;
@@ -1838,26 +1844,28 @@ IGbE::TxDescCache::pktComplete()
 
     if (useTso) {
         IpPtr ip(pktPtr);
+        Ip6Ptr ip6(pktPtr);
         if (ip) {
             DPRINTF(EthernetDesc, "TSO: Modifying IP header. Id + %d\n",
                     tsoPkts);
             ip->id(ip->id() + tsoPkts++);
             ip->len(pktPtr->length - EthPtr(pktPtr)->size());
-
-            TcpPtr tcp(ip);
-            if (tcp) {
-                DPRINTF(EthernetDesc,
-                        "TSO: Modifying TCP header. old seq %d + %d\n",
-                        tcp->seq(), tsoPrevSeq);
-                tcp->seq(tcp->seq() + tsoPrevSeq);
-                if (tsoUsedLen != tsoTotalLen)
-                    tcp->flags(tcp->flags() & ~9); // clear fin & psh
-            }
-            UdpPtr udp(ip);
-            if (udp) {
-                DPRINTF(EthernetDesc, "TSO: Modifying UDP header.\n");
-                udp->len(pktPtr->length - EthPtr(pktPtr)->size());
-            }
+        }
+        if (ip6)
+            ip6->plen(pktPtr->length - EthPtr(pktPtr)->size());
+        TcpPtr tcp = ip ? TcpPtr(ip) : TcpPtr(ip6);
+        if (tcp) {
+            DPRINTF(EthernetDesc,
+                    "TSO: Modifying TCP header. old seq %d + %d\n",
+                    tcp->seq(), tsoPrevSeq);
+            tcp->seq(tcp->seq() + tsoPrevSeq);
+            if (tsoUsedLen != tsoTotalLen)
+                tcp->flags(tcp->flags() & ~9); // clear fin & psh
+        }
+        UdpPtr udp = ip ? UdpPtr(ip) : UdpPtr(ip6);
+        if (udp) {
+            DPRINTF(EthernetDesc, "TSO: Modifying UDP header.\n");
+            udp->len(pktPtr->length - EthPtr(pktPtr)->size());
         }
         tsoPrevSeq = tsoUsedLen;
     }
@@ -1872,19 +1880,20 @@ IGbE::TxDescCache::pktComplete()
     }
 
     // Checksums are only ofloaded for new descriptor types
-    if (TxdOp::isData(desc) && ( TxdOp::ixsm(desc) || TxdOp::txsm(desc)) ) {
+    if (TxdOp::isData(desc) && (TxdOp::ixsm(desc) || TxdOp::txsm(desc))) {
         DPRINTF(EthernetDesc, "Calculating checksums for packet\n");
         IpPtr ip(pktPtr);
-        assert(ip);
-        if (TxdOp::ixsm(desc)) {
+        Ip6Ptr ip6(pktPtr);
+        assert(ip || ip6);
+        if (ip && TxdOp::ixsm(desc)) {
             ip->sum(0);
             ip->sum(cksum(ip));
             igbe->txIpChecksums++;
             DPRINTF(EthernetDesc, "Calculated IP checksum\n");
         }
         if (TxdOp::txsm(desc)) {
-            TcpPtr tcp(ip);
-            UdpPtr udp(ip);
+            TcpPtr tcp = ip ? TcpPtr(ip) : TcpPtr(ip6);
+            UdpPtr udp = ip ? UdpPtr(ip) : UdpPtr(ip6);
             if (tcp) {
                 tcp->sum(0);
                 tcp->sum(cksum(tcp));
