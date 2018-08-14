@@ -32,6 +32,7 @@
 
 #include <string>
 
+#include "../core/sc_event.hh"
 #include "../core/sc_port.hh"
 #include "sc_signal_in_if.hh"
 #include "sc_signal_inout_if.hh"
@@ -41,119 +42,98 @@ namespace sc_core
 {
 
 class sc_event;
-class sc_event_finder;
 class sc_trace_file;
 
 template <class T>
 class sc_in : public sc_port<sc_signal_in_if<T>, 1>
 {
   public:
-    sc_in() : sc_port<sc_signal_in_if<T>, 1>() {}
-    explicit sc_in(const char *name) : sc_port<sc_signal_in_if<T>, 1>(name) {}
+    sc_in() : sc_port<sc_signal_in_if<T>, 1>(),
+        _valueChangedFinder(*this, &sc_signal_in_if<T>::value_changed_event)
+    {}
+    explicit sc_in(const char *name) : sc_port<sc_signal_in_if<T>, 1>(name),
+        _valueChangedFinder(*this, &sc_signal_in_if<T>::value_changed_event)
+    {}
     virtual ~sc_in() {}
 
     // Deprecated binding constructors.
     explicit sc_in(const sc_signal_in_if<T> &interface) :
-        sc_port<sc_signal_in_if<T>, 1>(interface)
+        sc_port<sc_signal_in_if<T>, 1>(interface),
+        _valueChangedFinder(*this, &sc_signal_in_if<T>::value_changed_event)
     {}
     sc_in(const char *name, const sc_signal_in_if<T> &interface) :
-        sc_port<sc_signal_in_if<T>, 1>(name, interface)
+        sc_port<sc_signal_in_if<T>, 1>(name, interface),
+        _valueChangedFinder(*this, &sc_signal_in_if<T>::value_changed_event)
     {}
     explicit sc_in(sc_port_b<sc_signal_in_if<T> > &parent) :
-        sc_port<sc_signal_in_if<T>, 1>(parent)
+        sc_port<sc_signal_in_if<T>, 1>(parent),
+        _valueChangedFinder(*this, &sc_signal_in_if<T>::value_changed_event)
     {}
     sc_in(const char *name, sc_port_b<sc_signal_in_if<T> > &parent) :
-        sc_port<sc_signal_in_if<T>, 1>(name, parent)
+        sc_port<sc_signal_in_if<T>, 1>(name, parent),
+        _valueChangedFinder(*this, &sc_signal_in_if<T>::value_changed_event)
     {}
     explicit sc_in(sc_port<sc_signal_in_if<T>, 1> &parent) :
-        sc_port<sc_signal_in_if<T>, 1>(parent)
+        sc_port<sc_signal_in_if<T>, 1>(parent),
+        _valueChangedFinder(*this, &sc_signal_in_if<T>::value_changed_event)
     {}
     sc_in(const char *name, sc_port<sc_signal_in_if<T>, 1> &parent) :
-        sc_port<sc_signal_in_if<T>, 1>(name, parent)
+        sc_port<sc_signal_in_if<T>, 1>(name, parent),
+        _valueChangedFinder(*this, &sc_signal_in_if<T>::value_changed_event)
     {}
 
     virtual void
-    bind(const sc_signal_in_if<T> &)
+    bind(const sc_signal_in_if<T> &i)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        sc_port<sc_signal_in_if<T>, 1>::bind(
+                const_cast<sc_signal_in_if<T> &>(i));
+    }
+    void operator () (const sc_signal_in_if<T> &i) { bind(i); }
+
+    virtual void
+    bind(sc_port<sc_signal_in_if<T>, 1> &i)
+    {
+        sc_port<sc_signal_in_if<T>, 1>::bind(i);
     }
     void
-    operator () (const sc_signal_in_if<T> &)
+    operator () (sc_port<sc_signal_in_if<T>, 1> &p)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        bind(p);
     }
 
     virtual void
-    bind(sc_port<sc_signal_in_if<T>, 1> &)
+    bind(sc_port<sc_signal_inout_if<T>, 1> &p)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        sc_port_base::bind(p);
     }
     void
-    operator () (sc_port<sc_signal_in_if<T>, 1> &)
+    operator () (sc_port<sc_signal_inout_if<T>, 1> &p)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        bind(p);
     }
 
-    virtual void
-    bind(sc_port<sc_signal_inout_if<T>, 1> &)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    void
-    operator () (sc_port<sc_signal_inout_if<T>, 1> &)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    virtual void end_of_elaboration() { /* Implementation defined. */ }
 
-    virtual void
-    end_of_elaboration()
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    const T &read() const { return (*this)->read(); }
+    operator const T& () const { return (*this)->read(); }
 
-    const T &
-    read() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const T *)nullptr;
-    }
-    operator const T& () const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const T *)nullptr;
-    }
-
-    const sc_event &
-    default_event() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
-    }
+    const sc_event &default_event() const { return (*this)->default_event(); }
     const sc_event &
     value_changed_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
+        return (*this)->value_changed_event();
     }
-    bool
-    event() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
-    }
-    sc_event_finder &
-    value_changed() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event_finder *)nullptr;
-    }
+    bool event() const { return (*this)->event(); }
+    sc_event_finder &value_changed() const { return _valueChangedFinder; }
 
     virtual const char *kind() const { return "sc_in"; }
 
   private:
+    mutable sc_event_finder_t<sc_signal_in_if<T> > _valueChangedFinder;
+
     // Disabled
-    sc_in(const sc_in<T> &) : sc_port<sc_signal_in_if<T>, 1>() {}
-    sc_in<T> &operator = (const sc_in<T> &) { return *this; }
+    sc_in(const sc_in<T> &);
+    sc_in<T> &operator = (const sc_in<T> &);
 };
 
 template <class T>
@@ -167,151 +147,135 @@ template <>
 class sc_in<bool> : public sc_port<sc_signal_in_if<bool>, 1>
 {
   public:
-    sc_in() : sc_port<sc_signal_in_if<bool>, 1>() {}
+    sc_in() : sc_port<sc_signal_in_if<bool>, 1>(),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<bool>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<bool>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<bool>::negedge_event)
+    {}
     explicit sc_in(const char *name) :
-        sc_port<sc_signal_in_if<bool>, 1>(name) {}
+        sc_port<sc_signal_in_if<bool>, 1>(name),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<bool>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<bool>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<bool>::negedge_event)
+    {}
     virtual ~sc_in() {}
 
     // Deprecated binding constructors.
     explicit sc_in(const sc_signal_in_if<bool> &interface) :
-        sc_port<sc_signal_in_if<bool>, 1>(interface)
+        sc_port<sc_signal_in_if<bool>, 1>(interface),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<bool>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<bool>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<bool>::negedge_event)
     {}
     sc_in(const char *name, const sc_signal_in_if<bool> &interface) :
-        sc_port<sc_signal_in_if<bool>, 1>(name, interface)
+        sc_port<sc_signal_in_if<bool>, 1>(name, interface),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<bool>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<bool>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<bool>::negedge_event)
     {}
     explicit sc_in(sc_port_b<sc_signal_in_if<bool> > &parent) :
-        sc_port<sc_signal_in_if<bool>, 1>(parent)
+        sc_port<sc_signal_in_if<bool>, 1>(parent),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<bool>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<bool>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<bool>::negedge_event)
     {}
     sc_in(const char *name, sc_port_b<sc_signal_in_if<bool> > &parent) :
-        sc_port<sc_signal_in_if<bool>, 1>(name, parent)
+        sc_port<sc_signal_in_if<bool>, 1>(name, parent),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<bool>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<bool>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<bool>::negedge_event)
     {}
     explicit sc_in(sc_port<sc_signal_in_if<bool>, 1> &parent) :
-        sc_port<sc_signal_in_if<bool>, 1>(parent)
+        sc_port<sc_signal_in_if<bool>, 1>(parent),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<bool>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<bool>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<bool>::negedge_event)
     {}
     sc_in(const char *name, sc_port<sc_signal_in_if<bool>, 1> &parent) :
-        sc_port<sc_signal_in_if<bool>, 1>(name, parent)
+        sc_port<sc_signal_in_if<bool>, 1>(name, parent),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<bool>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<bool>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<bool>::negedge_event)
     {}
 
     virtual void
-    bind(const sc_signal_in_if<bool> &)
+    bind(const sc_signal_in_if<bool> &i)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        sc_port<sc_signal_in_if<bool>, 1>::bind(
+                const_cast<sc_signal_in_if<bool> &>(i));
+    }
+    void operator () (const sc_signal_in_if<bool> &i) { bind(i); }
+
+    virtual void
+    bind(sc_port<sc_signal_in_if<bool>, 1> &p)
+    {
+        sc_port<sc_signal_in_if<bool>, 1>::bind(p);
     }
     void
-    operator () (const sc_signal_in_if<bool> &)
+    operator () (sc_port<sc_signal_in_if<bool>, 1> &p)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        bind(p);
     }
 
     virtual void
-    bind(sc_port<sc_signal_in_if<bool>, 1> &)
+    bind(sc_port<sc_signal_inout_if<bool>, 1> &p)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        sc_port_base::bind(p);
     }
     void
-    operator () (sc_port<sc_signal_in_if<bool>, 1> &)
+    operator () (sc_port<sc_signal_inout_if<bool>, 1> &p)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        bind(p);
     }
 
-    virtual void
-    bind(sc_port<sc_signal_inout_if<bool>, 1> &)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    void
-    operator () (sc_port<sc_signal_inout_if<bool>, 1> &)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    virtual void end_of_elaboration() { /* Implementation defined. */ }
 
-    virtual void
-    end_of_elaboration()
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    const bool &read() const { return (*this)->read(); }
+    operator const bool& () const { return (*this)->read(); }
 
-    const bool &
-    read() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const bool *)nullptr;
-    }
-    operator const bool& () const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const bool *)nullptr;
-    }
-
-    const sc_event &
-    default_event() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
-    }
+    const sc_event &default_event() const { return (*this)->default_event(); }
     const sc_event &
     value_changed_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
+        return (*this)->value_changed_event();
     }
     const sc_event &
     posedge_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
+        return (*this)->posedge_event();
     }
     const sc_event &
     negedge_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
+        return (*this)->negedge_event();
     }
 
-    bool
-    event() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
-    }
-    bool
-    posedge() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
-    }
-    bool
-    negedge() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
-    }
+    bool event() const { return (*this)->event(); }
+    bool posedge() const { return (*this)->posedge(); }
+    bool negedge() const { return (*this)->negedge(); }
 
-    sc_event_finder &
-    value_changed() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event_finder *)nullptr;
-    }
-    sc_event_finder &
-    pos() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event_finder *)nullptr;
-    }
-    sc_event_finder &
-    neg() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event_finder *)nullptr;
-    }
+    sc_event_finder &value_changed() const { return _valueChangedFinder; }
+    sc_event_finder &pos() const { return _posFinder; }
+    sc_event_finder &neg() const { return _negFinder; }
 
     virtual const char *kind() const { return "sc_in"; }
 
   private:
+    mutable sc_event_finder_t<sc_signal_in_if<bool> > _valueChangedFinder;
+    mutable sc_event_finder_t<sc_signal_in_if<bool> > _posFinder;
+    mutable sc_event_finder_t<sc_signal_in_if<bool> > _negFinder;
+
     // Disabled
-    sc_in(const sc_in<bool> &) : sc_port<sc_signal_in_if<bool>, 1>() {}
-    sc_in<bool> &operator = (const sc_in<bool> &) { return *this; }
+    sc_in(const sc_in<bool> &);
+    sc_in<bool> &operator = (const sc_in<bool> &);
 };
 
 template <>
@@ -326,161 +290,132 @@ class sc_in<sc_dt::sc_logic> :
     public sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>
 {
   public:
-    sc_in() : sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>() {}
+    sc_in() : sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<sc_dt::sc_logic>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::negedge_event)
+    {}
     explicit sc_in(const char *name) :
-        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name)
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<sc_dt::sc_logic>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::negedge_event)
     {}
     virtual ~sc_in() {}
 
     // Deprecated binding constructors.
     explicit sc_in(const sc_signal_in_if<sc_dt::sc_logic> &interface) :
-        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(interface)
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(interface),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<sc_dt::sc_logic>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::negedge_event)
     {}
     sc_in(const char *name,
             const sc_signal_in_if<sc_dt::sc_logic> &interface) :
-        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name, interface)
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name, interface),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<sc_dt::sc_logic>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::negedge_event)
     {}
     explicit sc_in(sc_port_b<sc_signal_in_if<sc_dt::sc_logic> > &parent) :
-        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(parent)
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(parent),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<sc_dt::sc_logic>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::negedge_event)
     {}
     sc_in(const char *name,
             sc_port_b<sc_signal_in_if<sc_dt::sc_logic> > &parent) :
-        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name, parent)
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name, parent),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<sc_dt::sc_logic>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::negedge_event)
     {}
     explicit sc_in(sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &parent) :
-        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(parent)
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(parent),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<sc_dt::sc_logic>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::negedge_event)
     {}
     sc_in(const char *name,
             sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &parent) :
-        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name, parent)
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>(name, parent),
+        _valueChangedFinder(*this,
+                &sc_signal_in_if<sc_dt::sc_logic>::value_changed_event),
+        _posFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::posedge_event),
+        _negFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::negedge_event)
     {}
 
     virtual void
-    bind(const sc_signal_in_if<sc_dt::sc_logic> &)
+    bind(const sc_signal_in_if<sc_dt::sc_logic> &i)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>::bind(
+                const_cast<sc_signal_in_if<sc_dt::sc_logic> &>(i));
     }
     void
-    operator () (const sc_signal_in_if<sc_dt::sc_logic> &)
+    operator () (const sc_signal_in_if<sc_dt::sc_logic> &i) { bind(i); }
+
+    virtual void
+    bind(sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &i)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>::bind(i);
+    }
+    void
+    operator () (sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &p)
+    {
+        bind(p);
     }
 
     virtual void
-    bind(sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &)
+    bind(sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &p)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        sc_port_base::bind(p);
     }
     void
-    operator () (sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &)
+    operator () (sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &p)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        bind(p);
     }
 
-    virtual void
-    bind(sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    void
-    operator () (sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    virtual void end_of_elaboration() { /* Implementation defined. */ }
 
-    virtual void
-    end_of_elaboration()
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    const sc_dt::sc_logic &read() const { return (*this)->read(); }
+    operator const sc_dt::sc_logic& () const { return (*this)->read(); }
 
-    const sc_dt::sc_logic &
-    read() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_dt::sc_logic *)nullptr;
-    }
-    operator const sc_dt::sc_logic& () const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_dt::sc_logic *)nullptr;
-    }
-
-    const sc_event &
-    default_event() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
-    }
+    const sc_event &default_event() const { return (*this)->default_event(); }
     const sc_event &
     value_changed_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
+        return (*this)->value_changed_event();
     }
-    const sc_event &
-    posedge_event() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
-    }
-    const sc_event &
-    negedge_event() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
-    }
+    const sc_event &posedge_event() const { return (*this)->posedge_event(); }
+    const sc_event &negedge_event() const { return (*this)->negedge_event(); }
 
-    bool
-    event() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
-    }
-    bool
-    posedge() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
-    }
-    bool
-    negedge() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
-    }
+    bool event() const { return (*this)->event(); }
+    bool posedge() const { return (*this)->posedge(); }
+    bool negedge() const { return (*this)->negedge(); }
 
-    sc_event_finder &
-    value_changed() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event_finder *)nullptr;
-    }
-    sc_event_finder &
-    pos() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event_finder *)nullptr;
-    }
-    sc_event_finder &
-    neg() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event_finder *)nullptr;
-    }
+    sc_event_finder &value_changed() const { return _valueChangedFinder; }
+    sc_event_finder &pos() const { return _posFinder; }
+    sc_event_finder &neg() const { return _negFinder; }
 
     virtual const char *kind() const { return "sc_in"; }
 
   private:
+    mutable sc_event_finder_t<sc_signal_in_if<sc_dt::sc_logic> >
+        _valueChangedFinder;
+    mutable sc_event_finder_t<sc_signal_in_if<sc_dt::sc_logic> > _posFinder;
+    mutable sc_event_finder_t<sc_signal_in_if<sc_dt::sc_logic> > _negFinder;
+
     // Disabled
-    sc_in(const sc_in<sc_dt::sc_logic> &) :
-        sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>()
-    {}
-    sc_in<sc_dt::sc_logic> &
-    operator = (const sc_in<sc_dt::sc_logic> &)
-    {
-        return *this;
-    }
+    sc_in(const sc_in<sc_dt::sc_logic> &);
+    sc_in<sc_dt::sc_logic> &operator = (const sc_in<sc_dt::sc_logic> &);
 };
 
 template <>
