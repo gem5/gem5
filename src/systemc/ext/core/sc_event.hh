@@ -30,9 +30,11 @@
 #ifndef __SYSTEMC_EXT_CORE_SC_EVENT_HH__
 #define __SYSTEMC_EXT_CORE_SC_EVENT_HH__
 
+#include <cassert>
 #include <set>
 #include <vector>
 
+#include "sc_port.hh"
 #include "sc_time.hh"
 
 namespace sc_gem5
@@ -58,6 +60,7 @@ class sc_event_finder
 {
   protected:
     void warn_unimpl(const char *func) const;
+    virtual ~sc_event_finder() {}
 
   public:
     // Should be "implementation defined" but used in the tests.
@@ -68,18 +71,27 @@ template <class IF>
 class sc_event_finder_t : public sc_event_finder
 {
   public:
-    sc_event_finder_t(const sc_port_base &,
-                      const sc_event & (IF::*event_method)() const)
+    sc_event_finder_t(const sc_port_base &p,
+                      const sc_event & (IF::*_method)() const) :
+        _method(_method)
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
+        _port = dynamic_cast<const sc_port_b<IF> *>(&p);
+        assert(_port);
     }
+
+    virtual ~sc_event_finder_t() {}
 
     const sc_event &
     find_event(sc_interface *if_p=NULL) const override
     {
-        warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
+        const IF *iface = if_p ? dynamic_cast<const IF *>(if_p) :
+            dynamic_cast<const IF *>(_port->get_interface());
+        return (const_cast<IF *>(iface)->*_method)();
     }
+
+  private:
+    const sc_port_b<IF> *_port;
+    const sc_event &(IF::*_method)() const;
 };
 
 class sc_event_and_list
