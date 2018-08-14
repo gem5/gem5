@@ -221,7 +221,7 @@ class PendingSensitivityPort : public PendingSensitivity
     {
         for (int i = 0; i < port->size(); i++) {
             const ::sc_core::sc_event *e =
-                &port->_gem5BindInfo[i]->interface->default_event();
+                &port->_gem5Interface(i)->default_event();
             s.push_back(new SensitivityEvent(process, e));
         }
     }

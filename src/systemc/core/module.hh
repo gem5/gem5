@@ -35,9 +35,17 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "systemc/core/object.hh"
 #include "systemc/ext/core/sc_module.hh"
+
+namespace sc_core
+{
+
+class sc_port_base;
+
+} // namespace sc_core
 
 namespace sc_gem5
 {
@@ -101,6 +109,8 @@ class Module
     void pop();
 
     const char *uniqueName(const char *seed) { return nameGen.gen(seed); }
+
+    std::vector<::sc_core::sc_port_base *> ports;
 };
 
 Module *currentModule();

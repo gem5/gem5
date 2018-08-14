@@ -77,6 +77,10 @@ Kernel::init()
 void
 Kernel::regStats()
 {
+    for (auto m: sc_gem5::allModules)
+        for (auto p: m->ports)
+            p->_gem5Finalize();
+
     status(::sc_core::SC_END_OF_ELABORATION);
     for (auto m: sc_gem5::allModules)
         m->sc_mod()->end_of_elaboration();
