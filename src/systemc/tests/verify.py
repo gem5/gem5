@@ -184,27 +184,35 @@ class Checker(object):
         with open(self.text) as test_f, open(self.ref) as ref_f:
             return test_f.read() == ref_f.read()
 
+def tagged_filt(tag, num):
+    return (r'^\n{}: \({}{}\) .*\n(In file: .*\n)?'
+            r'(In process: [\w.]* @ .*\n)?').format(tag, tag[0], num)
+
+def warning_filt(num):
+    return tagged_filt('Warning', num)
+
+def info_filt(num):
+    return tagged_filt('Info', num)
+
 class LogChecker(Checker):
     def merge_filts(*filts):
         filts = map(lambda f: '(' + f + ')', filts)
         filts = '|'.join(filts)
         return re.compile(filts, flags=re.MULTILINE)
 
-    def warning_filt(num):
-        return (r'^\nWarning: \(W{}\) .*\n(In file: .*\n)?'
-                r'(In process: [\w.]* @ .*\n)?').format(num)
-
     ref_filt = merge_filts(
         r'^\nInfo: /OSCI/SystemC: Simulation stopped by user.\n',
         r'^SystemC Simulation\n',
+        r'^\nInfo: \(I804\) /IEEE_Std_1666/deprecated: ' +
+        r'You can turn off(.*\n){7}',
         warning_filt(540),
         warning_filt(569),
         warning_filt(571),
-        r'^\nInfo: \(I804\) /IEEE_Std_1666/deprecated: ' +
-        r'You can turn off(.*\n){7}'
+        info_filt(804),
     )
     test_filt = merge_filts(
-        r'^Global frequency set at \d* ticks per second\n'
+        r'^Global frequency set at \d* ticks per second\n',
+        info_filt(804),
     )
 
     def __init__(self, ref, test, tag, out_dir):
