@@ -38,7 +38,16 @@ namespace sc_gem5
 class BindInfo
 {
   public:
+    BindInfo(::sc_core::sc_interface *interface) :
+        interface(interface), port(nullptr)
+    {}
+
+    BindInfo(::sc_core::sc_port_base *port) :
+        interface(nullptr), port(port)
+    {}
+
     ::sc_core::sc_interface *interface;
+    ::sc_core::sc_port_base *port;
 };
 
 } // namespace sc_gem5
