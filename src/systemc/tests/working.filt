@@ -29,6 +29,10 @@ path in (
     # Another test which calls an undefined function.
     "systemc/misc/gnats/pr-480",
 
+    # Two more tests with undefined functions.
+    "systemc/misc/unit/extern",
+    "systemc/misc/unit/extern2",
+
     # These tests rely on implicit FXVAL constructors based on primitive types,
     # but enabling that makes other operator overloads ambiguous so things
     # don't compile. It also seems dangerous to change what the headers look
