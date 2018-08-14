@@ -406,7 +406,7 @@ EtherTapStub::sendReal(const void *data, size_t len)
 
 EtherTap::EtherTap(const Params *p) : EtherTapBase(p)
 {
-    int fd = open(p->tun_clone_device.c_str(), O_RDWR);
+    int fd = open(p->tun_clone_device.c_str(), O_RDWR | O_NONBLOCK);
     if (fd < 0)
         panic("Couldn't open %s.\n", p->tun_clone_device);
 
@@ -438,18 +438,39 @@ EtherTap::recvReal(int revent)
     if (!(revent & POLLIN))
         return;
 
-    ssize_t ret = read(tap, buffer, buflen);
-    if (ret < 0)
-        panic("Failed to read from tap device.\n");
+    ssize_t ret;
+    while ((ret = read(tap, buffer, buflen))) {
+        if (ret < 0) {
+            if (errno == EAGAIN)
+                break;
+            panic("Failed to read from tap device.\n");
+        }
 
-    sendSimulated(buffer, ret);
+        sendSimulated(buffer, ret);
+    }
 }
 
 bool
 EtherTap::sendReal(const void *data, size_t len)
 {
-    if (write(tap, data, len) != len)
-        panic("Failed to write data to tap device.\n");
+    int n;
+    pollfd pfd[1];
+    pfd->fd = tap;
+    pfd->events = POLLOUT;
+
+    // `tap` is a nonblock fd. Here we try to write until success, and use
+    // poll to make a blocking wait.
+    while ((n = write(tap, data, len)) != len) {
+        if (errno != EAGAIN)
+            panic("Failed to write data to tap device.\n");
+        pfd->revents = 0;
+        int ret = poll(pfd, 1, -1);
+        // timeout is set to inf, we shouldn't get 0 in any case.
+        assert(ret != 0);
+        if (ret == -1 || (ret == 1 && (pfd->revents & POLLERR))) {
+            panic("Failed when polling to write data to tap device.\n");
+        }
+    }
     return true;
 }
 
