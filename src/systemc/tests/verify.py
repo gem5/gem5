@@ -70,7 +70,7 @@ class Test(object):
         return os.path.join(self.build_dir, tests_rel_path, self.path)
 
     def src_dir(self):
-        return os.path.join(script_path, self.path)
+        return os.path.join(script_dir, self.path)
 
     def golden_dir(self):
         return os.path.join(self.src_dir(), 'golden')
