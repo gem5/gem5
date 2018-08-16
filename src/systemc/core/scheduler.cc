@@ -46,7 +46,8 @@ Scheduler::Scheduler() :
     starvationEvent(this, false, StarvationPriority),
     _started(false), _paused(false), _stopped(false),
     maxTickEvent(this, false, MaxTickPriority),
-    _numCycles(0), _current(nullptr), initReady(false)
+    _numCycles(0), _current(nullptr), initReady(false),
+    runOnce(false)
 {}
 
 void
@@ -191,6 +192,11 @@ Scheduler::runReady()
         scheduleStarvationEvent();
 
     // The delta phase will happen naturally through the event queue.
+
+    if (runOnce) {
+        eq->reschedule(&maxTickEvent, eq->getCurTick());
+        runOnce = false;
+    }
 }
 
 void
@@ -209,6 +215,7 @@ Scheduler::pause()
 {
     _paused = true;
     kernel->status(::sc_core::SC_PAUSED);
+    runOnce = false;
     scMain->run();
 
     // If the ready event is supposed to run now, run it inline so that it
@@ -225,6 +232,7 @@ Scheduler::stop()
 {
     _stopped = true;
     kernel->stop();
+    runOnce = false;
     scMain->run();
 }
 
@@ -261,6 +269,13 @@ Scheduler::start(Tick max_tick, bool run_to_time)
         eq->deschedule(&maxTickEvent);
     if (starvationEvent.scheduled())
         eq->deschedule(&starvationEvent);
+}
+
+void
+Scheduler::oneCycle()
+{
+    runOnce = true;
+    start(::MaxTick, false);
 }
 
 void

@@ -156,8 +156,12 @@ sc_pause()
 void
 sc_start(const sc_time &time, sc_starvation_policy p)
 {
-    Tick now = ::sc_gem5::scheduler.getCurTick();
-    ::sc_gem5::scheduler.start(now + time.value(), p == SC_RUN_TO_TIME);
+    if (time.value() == 0) {
+        ::sc_gem5::scheduler.oneCycle();
+    } else {
+        Tick now = ::sc_gem5::scheduler.getCurTick();
+        ::sc_gem5::scheduler.start(now + time.value(), p == SC_RUN_TO_TIME);
+    }
 }
 
 void

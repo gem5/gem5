@@ -269,6 +269,7 @@ class Scheduler
     void setScMainFiber(Fiber *sc_main) { scMain = sc_main; }
 
     void start(Tick max_tick, bool run_to_time);
+    void oneCycle();
 
     void schedulePause();
     void scheduleStop(bool finish_delta);
@@ -323,6 +324,7 @@ class Scheduler
 
     bool initReady;
     bool runToTime;
+    bool runOnce;
 
     ProcessList initList;
     ProcessList toFinalize;
