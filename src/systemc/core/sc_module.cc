@@ -61,6 +61,7 @@ newCThreadProcess(const char *name, ProcessFuncWrapper *func)
 {
     Process *p = new CThread(name, func);
     scheduler.reg(p);
+    p->dontInitialize();
     return p;
 }
 
