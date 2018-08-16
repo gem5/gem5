@@ -205,6 +205,8 @@ class LogChecker(Checker):
         r'^SystemC Simulation\n',
         r'^\nInfo: \(I804\) /IEEE_Std_1666/deprecated: ' +
         r'You can turn off(.*\n){7}',
+        r'^\nInfo: \(I804\) /IEEE_Std_1666/deprecated: \n' +
+        r'    sc_clock\(const char(.*\n){3}',
         warning_filt(540),
         warning_filt(569),
         warning_filt(571),
