@@ -150,14 +150,16 @@ sc_time::sc_time(const sc_time &t)
     val = t.val;
 }
 
-sc_time::sc_time(double, bool)
+sc_time::sc_time(double d, bool scale)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    //XXX Assuming the time resolution is 1ps, and the default unit is 1ns.
+    set(this, d, scale ? SC_NS : SC_PS);
 }
 
-sc_time::sc_time(sc_dt::uint64, bool)
+sc_time::sc_time(sc_dt::uint64 v, bool scale)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    //XXX Assuming the time resolution is 1ps, and the default unit is 1ns.
+    set(this, static_cast<double>(v), scale ? SC_NS : SC_PS);
 }
 
 sc_time &
@@ -181,8 +183,10 @@ sc_time::to_double() const
 double
 sc_time::to_seconds() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0.0;
+    double d = to_double();
+    //XXX Assuming the time resolution is 1ps.
+    double scale = TimeUnitScale[SC_PS] / TimeUnitScale[SC_SEC];
+    return d * scale;
 }
 
 const std::string
@@ -283,10 +287,11 @@ sc_time::from_value(sc_dt::uint64 u)
 }
 
 sc_time
-sc_time::from_seconds(double)
+sc_time::from_seconds(double d)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
+    sc_time t;
+    set(&t, d, SC_SEC);
+    return t;
 }
 
 sc_time
