@@ -129,11 +129,14 @@ typedef NodeList<Channel> ChannelList;
  * MAX RUN TIME
  *
  * When sc_start is called, it's possible to pass in a maximum time the
- * simulation should run to, at which point sc_pause is implicitly called.
- * That's implemented by scheduling an event at the max time with a priority
- * which is lower than all the others so that it happens only if time would
- * advance. When that event triggers, it calls the same function as the pause
- * event.
+ * simulation should run to, at which point sc_pause is implicitly called. The
+ * simulation is supposed to run up to the latest timed notification phase
+ * which is less than or equal to the maximum time. In other words it should
+ * run timed notifications at the maximum time, but not the subsequent evaluate
+ * phase. That's implemented by scheduling an event at the max time with a
+ * priority which is lower than all the others except the ready event. Timed
+ * notifications will happen before it fires, but it will override any ready
+ * event and prevent the evaluate phase from starting.
  */
 
 class Scheduler
@@ -279,9 +282,9 @@ class Scheduler
 
     static Priority StopPriority = DefaultPriority - 1;
     static Priority PausePriority = DefaultPriority + 1;
-    static Priority ReadyPriority = DefaultPriority + 2;
+    static Priority MaxTickPriority = DefaultPriority + 2;
+    static Priority ReadyPriority = DefaultPriority + 3;
     static Priority StarvationPriority = ReadyPriority;
-    static Priority MaxTickPriority = DefaultPriority + 3;
 
     EventQueue *eq;
     std::map<Tick, int> pendingTicks;
