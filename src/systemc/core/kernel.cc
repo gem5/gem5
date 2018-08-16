@@ -30,6 +30,7 @@
 #include "systemc/core/kernel.hh"
 
 #include "base/logging.hh"
+#include "systemc/core/channel.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
 
@@ -67,8 +68,14 @@ Kernel::init()
     for (auto m: sc_gem5::allModules) {
         callbackModule(m);
         m->sc_mod()->before_end_of_elaboration();
+        for (auto p: m->ports)
+            p->before_end_of_elaboration();
+        for (auto e: m->exports)
+            e->before_end_of_elaboration();
     }
     callbackModule(nullptr);
+    for (auto c: sc_gem5::allChannels)
+        c->sc_chan()->before_end_of_elaboration();
 
     if (stopAfterCallbacks)
         stopWork();
@@ -82,8 +89,15 @@ Kernel::regStats()
             p->_gem5Finalize();
 
     status(::sc_core::SC_END_OF_ELABORATION);
-    for (auto m: sc_gem5::allModules)
+    for (auto m: sc_gem5::allModules) {
         m->sc_mod()->end_of_elaboration();
+        for (auto p: m->ports)
+            p->end_of_elaboration();
+        for (auto e: m->exports)
+            e->end_of_elaboration();
+    }
+    for (auto c: sc_gem5::allChannels)
+        c->sc_chan()->end_of_elaboration();
 
     if (stopAfterCallbacks)
         stopWork();
@@ -93,8 +107,15 @@ void
 Kernel::startup()
 {
     status(::sc_core::SC_START_OF_SIMULATION);
-    for (auto m: sc_gem5::allModules)
+    for (auto m: sc_gem5::allModules) {
         m->sc_mod()->start_of_simulation();
+        for (auto p: m->ports)
+            p->start_of_simulation();
+        for (auto e: m->exports)
+            e->start_of_simulation();
+    }
+    for (auto c: sc_gem5::allChannels)
+        c->sc_chan()->start_of_simulation();
 
     startComplete = true;
 
@@ -121,8 +142,15 @@ void
 Kernel::stopWork()
 {
     status(::sc_core::SC_END_OF_SIMULATION);
-    for (auto m: sc_gem5::allModules)
+    for (auto m: sc_gem5::allModules) {
         m->sc_mod()->end_of_simulation();
+        for (auto p: m->ports)
+            p->end_of_simulation();
+        for (auto e: m->exports)
+            e->end_of_simulation();
+    }
+    for (auto c: sc_gem5::allChannels)
+        c->sc_chan()->end_of_simulation();
 
     endComplete = true;
 

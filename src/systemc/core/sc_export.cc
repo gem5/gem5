@@ -28,12 +28,17 @@
  */
 
 #include "base/logging.hh"
+#include "systemc/core/module.hh"
 #include "systemc/ext/core/sc_export.hh"
 
 namespace sc_core
 {
 
-sc_export_base::sc_export_base(const char *n) : sc_object(n) {}
+sc_export_base::sc_export_base(const char *n) : sc_object(n)
+{
+    ::sc_gem5::Module *m = ::sc_gem5::currentModule();
+    m->exports.push_back(this);
+}
 sc_export_base::~sc_export_base() {}
 
 } // namespace sc_core

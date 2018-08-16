@@ -44,6 +44,7 @@ namespace sc_core
 {
 
 class sc_port_base;
+class sc_export_base;
 
 } // namespace sc_core
 
@@ -111,6 +112,7 @@ class Module
     const char *uniqueName(const char *seed) { return nameGen.gen(seed); }
 
     std::vector<::sc_core::sc_port_base *> ports;
+    std::vector<::sc_core::sc_export_base *> exports;
 };
 
 Module *currentModule();

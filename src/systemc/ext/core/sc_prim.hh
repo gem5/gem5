@@ -91,6 +91,8 @@ class sc_prim_channel : public sc_object
     void wait(const sc_time &, const sc_event_and_list &);
     void wait(double, sc_time_unit, const sc_event_and_list &);
 
+    friend class sc_gem5::Kernel;
+
     virtual void before_end_of_elaboration() {}
     virtual void end_of_elaboration() {}
     virtual void start_of_simulation() {}

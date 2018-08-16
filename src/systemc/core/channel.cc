@@ -34,6 +34,16 @@
 namespace sc_gem5
 {
 
+Channel::Channel(sc_core::sc_prim_channel *_sc_chan) : _sc_chan(_sc_chan)
+{
+    allChannels.insert(this);
+}
+
+Channel::~Channel()
+{
+    allChannels.erase(this);
+}
+
 void
 Channel::requestUpdate()
 {
@@ -46,5 +56,7 @@ Channel::asyncRequestUpdate()
     //TODO This should probably not request an update directly.
     scheduler.requestUpdate(this);
 }
+
+std::set<Channel *> allChannels;
 
 } // namespace sc_gem5

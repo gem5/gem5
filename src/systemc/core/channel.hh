@@ -30,6 +30,8 @@
 #ifndef __SYSTEMC_CORE_CHANNEL_HH__
 #define __SYSTEMC_CORE_CHANNEL_HH__
 
+#include <set>
+
 #include "systemc/core/list.hh"
 #include "systemc/ext/core/sc_prim.hh"
 
@@ -39,9 +41,9 @@ namespace sc_gem5
 class Channel : public ListNode
 {
   public:
-    Channel(sc_core::sc_prim_channel *_sc_chan) : _sc_chan(_sc_chan) {}
+    Channel(sc_core::sc_prim_channel *_sc_chan);
 
-    virtual ~Channel() {}
+    virtual ~Channel();
 
     void requestUpdate();
     void asyncRequestUpdate();
@@ -52,6 +54,8 @@ class Channel : public ListNode
   private:
     sc_core::sc_prim_channel *_sc_chan;
 };
+
+extern std::set<Channel *> allChannels;
 
 } // namespace sc_gem5
 

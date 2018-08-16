@@ -75,6 +75,11 @@ class sc_port_base : public sc_object
     virtual int vbind(sc_interface &) = 0;
     virtual int vbind(sc_port_base &) = 0;
 
+    virtual void before_end_of_elaboration() = 0;
+    virtual void end_of_elaboration() = 0;
+    virtual void start_of_simulation() = 0;
+    virtual void end_of_simulation() = 0;
+
   private:
     friend class ::sc_gem5::PendingSensitivityPort;
     friend class ::sc_gem5::Kernel;
@@ -110,10 +115,10 @@ class sc_port_b : public sc_port_base
     const sc_interface *get_interface() const { return _interfaces.at(0); }
 
   protected:
-    virtual void before_end_of_elaboration() {}
-    virtual void end_of_elaboration() {}
-    virtual void start_of_elaboration() {}
-    virtual void end_of_simulation() {}
+    void before_end_of_elaboration() {}
+    void end_of_elaboration() {}
+    void start_of_simulation() {}
+    void end_of_simulation() {}
 
     explicit sc_port_b(int n, sc_port_policy p) :
             sc_port_base(sc_gen_unique_name("port"), n, p)

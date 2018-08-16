@@ -46,6 +46,14 @@ class sc_export_base : public sc_object
 
     virtual sc_interface *get_iterface() = 0;
     virtual const sc_interface *get_interface() const = 0;
+
+  protected:
+    friend class sc_gem5::Kernel;
+
+    virtual void before_end_of_elaboration() = 0;
+    virtual void end_of_elaboration() = 0;
+    virtual void start_of_simulation() = 0;
+    virtual void end_of_simulation() = 0;
 };
 
 template <class IF>
@@ -74,10 +82,10 @@ class sc_export : public sc_export_base
     const sc_interface *get_interface() const override { return interface; }
 
   protected:
-    virtual void before_end_of_elaboration() {}
-    virtual void end_of_elaboration() {}
-    virtual void start_of_simulation() {}
-    virtual void end_of_simulation() {}
+    void before_end_of_elaboration() {}
+    void end_of_elaboration() {}
+    void start_of_simulation() {}
+    void end_of_simulation() {}
 
   private:
     IF *interface;
