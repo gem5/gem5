@@ -33,6 +33,13 @@
 #include "../core/sc_time.hh"
 #include "sc_signal.hh"
 
+namespace sc_gem5
+{
+
+class ClockTick;
+
+} // namespace sc_gem5
+
 namespace sc_core
 {
 
@@ -74,15 +81,28 @@ class sc_clock : public sc_signal<bool>
     // Nonstandard
     static const sc_time &time_stamp();
 
-    virtual const char *kind() const;
+    virtual const char *kind() const { return "sc_clock"; }
 
   protected:
     virtual void before_end_of_elaboration();
 
   private:
+    friend class ::sc_gem5::ClockTick;
+
     // Disabled
     sc_clock(const sc_clock &) : sc_interface(), sc_signal<bool>() {}
     sc_clock &operator = (const sc_clock &) { return *this; }
+
+    sc_time _period;
+    double _dutyCycle;
+    sc_time _startTime;
+    bool _posedgeFirst;
+
+    ::sc_gem5::ClockTick *_gem5UpEdge;
+    ::sc_gem5::ClockTick *_gem5DownEdge;
+
+    void tickUp() { sc_signal<bool>::write(true); }
+    void tickDown() { sc_signal<bool>::write(false); }
 };
 
 typedef sc_in<bool> sc_in_clk;
