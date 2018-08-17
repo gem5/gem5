@@ -191,7 +191,10 @@ Scheduler::runReady()
     if (starved() && !runToTime)
         scheduleStarvationEvent();
 
-    // The delta phase will happen naturally through the event queue.
+    // The delta phase.
+    for (auto &e: deltas)
+        e->run();
+    deltas.clear();
 
     if (runOnce) {
         eq->reschedule(&maxTickEvent, eq->getCurTick());

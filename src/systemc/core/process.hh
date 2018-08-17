@@ -39,6 +39,7 @@
 #include "systemc/core/bindinfo.hh"
 #include "systemc/core/list.hh"
 #include "systemc/core/object.hh"
+#include "systemc/core/sched_event.hh"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_export.hh"
 #include "systemc/ext/core/sc_interface.hh"
@@ -70,9 +71,7 @@ class SensitivityTimeout : virtual public Sensitivity
 {
   private:
     void timeout();
-    EventWrapper<SensitivityTimeout,
-        &SensitivityTimeout::timeout> timeoutEvent;
-    ::sc_core::sc_time time;
+    ScEvent timeoutEvent;
 
   public:
     SensitivityTimeout(Process *p, ::sc_core::sc_time t);

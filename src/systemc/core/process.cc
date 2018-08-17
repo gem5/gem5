@@ -39,10 +39,9 @@ namespace sc_gem5
 {
 
 SensitivityTimeout::SensitivityTimeout(Process *p, ::sc_core::sc_time t) :
-    Sensitivity(p), timeoutEvent(this), time(t)
+    Sensitivity(p), timeoutEvent([this]() { this->timeout(); })
 {
-    Tick when = scheduler.getCurTick() + time.value();
-    scheduler.schedule(&timeoutEvent, when);
+    scheduler.schedule(&timeoutEvent, t);
 }
 
 SensitivityTimeout::~SensitivityTimeout()
@@ -54,7 +53,6 @@ SensitivityTimeout::~SensitivityTimeout()
 void
 SensitivityTimeout::timeout()
 {
-    scheduler.eventHappened();
     notify();
 }
 

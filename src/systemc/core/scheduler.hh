@@ -30,13 +30,18 @@
 #ifndef __SYSTEMC_CORE_SCHEDULER_HH__
 #define __SYSTEMC_CORE_SCHEDULER_HH__
 
+#include <functional>
+#include <map>
+#include <set>
 #include <vector>
 
 #include "base/logging.hh"
+#include "sim/core.hh"
 #include "sim/eventq.hh"
 #include "systemc/core/channel.hh"
 #include "systemc/core/list.hh"
 #include "systemc/core/process.hh"
+#include "systemc/core/sched_event.hh"
 
 class Fiber;
 
@@ -81,7 +86,7 @@ typedef NodeList<Channel> ChannelList;
  * 2. The update phase where requested channel updates hapen.
  * 3. The delta notification phase where delta notifications happen.
  *
- * The readyEvent runs the first two steps of the delta cycle. It first goes
+ * The readyEvent runs all three steps of the delta cycle. It first goes
  * through the list of runnable processes and executes them until the set is
  * empty, and then immediately runs the update phase. Since these are all part
  * of the same event, there's no chance for other events to intervene and
@@ -91,23 +96,21 @@ typedef NodeList<Channel> ChannelList;
  * a process runnable. That means that once the update phase finishes, the set
  * of runnable processes will be empty. There may, however, have been some
  * delta notifications/timeouts which will have been scheduled during either
- * the evaluate or update phase above. Because those are scheduled at the
- * normal priority, they will now happen together until there aren't any
- * delta events left.
+ * the evaluate or update phase above. Those will have been accumulated in the
+ * scheduler, and are now all executed.
  *
  * If any processes became runnable during the delta notification phase, the
- * readyEvent will have been scheduled and will have been waiting patiently
- * behind the delta notification events. That will now run, effectively
- * starting the next delta cycle.
+ * readyEvent will have been scheduled and will be waiting and ready to run
+ * again, effectively starting the next delta cycle.
  *
  * TIMED NOTIFICATION PHASE
  *
  * If no processes became runnable, the event queue will continue to process
- * events until it comes across a timed notification, aka a notification
- * scheduled to happen in the future. Like delta notification events, those
- * will all happen together since the readyEvent priority is lower,
- * potentially marking new processes as ready. Once these events finish, the
- * readyEvent may run, starting the next delta cycle.
+ * events until it comes across an event which represents all the timed
+ * notifications which are supposed to happen at a particular time. The object
+ * which tracks them will execute all those notifications, and then destroy
+ * itself. If the readyEvent is now ready to run, the next delta cycle will
+ * start.
  *
  * PAUSE/STOP
  *
@@ -142,6 +145,19 @@ typedef NodeList<Channel> ChannelList;
 class Scheduler
 {
   public:
+    typedef std::set<ScEvent *> ScEvents;
+
+    class TimeSlot : public ::Event
+    {
+      public:
+        TimeSlot() : ::Event(Default_Pri, AutoDelete) {}
+
+        ScEvents events;
+        void process();
+    };
+
+    typedef std::map<Tick, TimeSlot *> TimeSlots;
+
     Scheduler();
 
     const std::string name() const { return "systemc_scheduler"; }
@@ -185,42 +201,74 @@ class Scheduler
     // Get the current time according to gem5.
     Tick getCurTick() { return eq ? eq->getCurTick() : 0; }
 
+    Tick
+    delayed(const ::sc_core::sc_time &delay)
+    {
+        //XXX We're assuming the systemc time resolution is in ps.
+        return getCurTick() + delay.value() * SimClock::Int::ps;
+    }
+
     // For scheduling delayed/timed notifications/timeouts.
     void
-    schedule(::Event *event, Tick tick)
+    schedule(ScEvent *event, const ::sc_core::sc_time &delay)
     {
-        pendingTicks[tick]++;
+        Tick tick = delayed(delay);
+        event->schedule(tick);
 
-        if (initReady)
-            eq->schedule(event, tick);
-        else
-            eventsToSchedule[event] = tick;
+        // Delta notification/timeout.
+        if (delay.value() == 0) {
+            deltas.insert(event);
+            scheduleReadyEvent();
+            return;
+        }
+
+        // Timed notification/timeout.
+        TimeSlot *&ts = timeSlots[tick];
+        if (!ts) {
+            ts = new TimeSlot;
+            if (initReady)
+                eq->schedule(ts, tick);
+            else
+                eventsToSchedule[ts] = tick;
+        }
+        ts->events.insert(event);
     }
 
     // For descheduling delayed/timed notifications/timeouts.
     void
-    deschedule(::Event *event)
+    deschedule(ScEvent *event)
     {
-        auto it = pendingTicks.find(event->when());
-        if (--it->second == 0)
-            pendingTicks.erase(it);
+        if (event->when() == getCurTick()) {
+            // Remove from delta notifications.
+            deltas.erase(event);
+            event->deschedule();
+            return;
+        }
 
-        if (initReady)
-            eq->deschedule(event);
-        else
-            eventsToSchedule.erase(event);
+        // Timed notification/timeout.
+        auto tsit = timeSlots.find(event->when());
+        panic_if(tsit == timeSlots.end(),
+                "Descheduling event at time with no events.");
+        TimeSlot *ts = tsit->second;
+        ScEvents &events = ts->events;
+        events.erase(event);
+        event->deschedule();
+
+        // If no more events are happening at this time slot, get rid of it.
+        if (events.empty()) {
+            if (initReady)
+                eq->deschedule(ts);
+            else
+                eventsToSchedule.erase(ts);
+            timeSlots.erase(tsit);
+        }
     }
 
-    // Tell the scheduler than an event fired for bookkeeping purposes.
     void
-    eventHappened()
+    completeTimeSlot(TimeSlot *ts)
     {
-        auto it = pendingTicks.begin();
-        if (--it->second == 0)
-            pendingTicks.erase(it);
-
-        if (starved() && !runToTime)
-            scheduleStarvationEvent();
+        assert(ts == timeSlots.begin()->second);
+        timeSlots.erase(timeSlots.begin());
     }
 
     // Pending activity ignores gem5 activity, much like how a systemc
@@ -234,33 +282,25 @@ class Scheduler
     bool
     pendingCurr()
     {
-        if (!readyList.empty() || !updateList.empty())
-            return true;
-        return pendingTicks.size() &&
-            pendingTicks.begin()->first == getCurTick();
+        return !readyList.empty() || !updateList.empty() || !deltas.empty();
     }
 
     // Return whether there are pending timed notifications or timeouts.
     bool
     pendingFuture()
     {
-        switch (pendingTicks.size()) {
-          case 0: return false;
-          case 1: return pendingTicks.begin()->first > getCurTick();
-          default: return true;
-        }
+        return !timeSlots.empty();
     }
 
     // Return how many ticks there are until the first pending event, if any.
     Tick
     timeToPending()
     {
-        if (!readyList.empty() || !updateList.empty())
+        if (pendingCurr())
             return 0;
-        else if (pendingTicks.size())
-            return pendingTicks.begin()->first - getCurTick();
-        else
-            return MaxTick - getCurTick();
+        if (pendingFuture())
+            return timeSlots.begin()->first - getCurTick();
+        return MaxTick - getCurTick();
     }
 
     // Run scheduled channel updates.
@@ -288,7 +328,9 @@ class Scheduler
     static Priority StarvationPriority = ReadyPriority;
 
     EventQueue *eq;
-    std::map<Tick, int> pendingTicks;
+
+    ScEvents deltas;
+    TimeSlots timeSlots;
 
     void runReady();
     EventWrapper<Scheduler, &Scheduler::runReady> readyEvent;
@@ -303,9 +345,8 @@ class Scheduler
     bool
     starved()
     {
-        return (readyList.empty() && updateList.empty() &&
-                (pendingTicks.empty() ||
-                 pendingTicks.begin()->first > maxTick) &&
+        return (readyList.empty() && updateList.empty() && deltas.empty() &&
+                (timeSlots.empty() || timeSlots.begin()->first > maxTick) &&
                 initList.empty());
     }
     EventWrapper<Scheduler, &Scheduler::pause> starvationEvent;
@@ -336,6 +377,14 @@ class Scheduler
 };
 
 extern Scheduler scheduler;
+
+inline void
+Scheduler::TimeSlot::process()
+{
+    for (auto &e: events)
+        e->run();
+    scheduler.completeTimeSlot(this);
+}
 
 } // namespace sc_gem5
 

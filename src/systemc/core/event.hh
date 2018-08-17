@@ -37,6 +37,7 @@
 #include "sim/eventq.hh"
 #include "systemc/core/list.hh"
 #include "systemc/core/object.hh"
+#include "systemc/core/sched_event.hh"
 #include "systemc/ext/core/sc_prim.hh"
 #include "systemc/ext/core/sc_time.hh"
 
@@ -104,8 +105,7 @@ class Event
 
     sc_core::sc_object *parent;
 
-    void delayedNotify();
-    EventWrapper<Event, &Event::delayedNotify> delayedNotifyEvent;
+    ScEvent delayedNotify;
 
     mutable std::set<Sensitivity *> sensitivities;
 };
