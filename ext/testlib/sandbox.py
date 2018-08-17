@@ -133,18 +133,16 @@ class IoManager(object):
 
 
 class SubprocessException(Exception):
-    def __init__(self, exception, trace):
+    def __init__(self, trace):
         super(SubprocessException, self).__init__(trace)
 
 class ExceptionProcess(multiprocessing.Process):
-    class Status():
+    class Status(object):
         def __init__(self, exitcode, exception_tuple):
             self.exitcode = exitcode
             if exception_tuple is not None:
-                self.trace = exception_tuple[1]
-                self.exception = exception_tuple[0]
+                self.trace = exception_tuple[0]
             else:
-                self.exception = None
                 self.trace = None
 
     def __init__(self, *args, **kwargs):
@@ -156,9 +154,9 @@ class ExceptionProcess(multiprocessing.Process):
         try:
             super(ExceptionProcess, self).run()
             self._cconn.send(None)
-        except Exception as e:
+        except Exception:
             tb = traceback.format_exc()
-            self._cconn.send((e, tb))
+            self._cconn.send((tb, ))
             raise
 
     @property
@@ -186,7 +184,7 @@ class Sandbox(object):
 
         status = self.p.status
         if status.exitcode:
-            raise SubprocessException(status.exception, status.trace)
+            raise SubprocessException(status.trace)
 
     def entrypoint(self):
         self.io_manager.setup()
