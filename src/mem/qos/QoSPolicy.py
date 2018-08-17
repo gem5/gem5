@@ -81,3 +81,38 @@ class QoSFixedPriorityPolicy(QoSPolicy):
     # default fixed priority value for non-listed Masters
     qos_fixed_prio_default_prio = Param.UInt8(0,
         "Default priority for non-listed Masters")
+
+class QoSPropFairPolicy(QoSPolicy):
+    type = 'QoSPropFairPolicy'
+    cxx_header = "mem/qos/policy_pf.hh"
+    cxx_class = 'QoS::PropFairPolicy'
+
+    cxx_exports = [
+        PyBindMethod('initMasterName'),
+        PyBindMethod('initMasterObj'),
+    ]
+
+    _mscores = None
+
+    def setInitialScore(self, master, score):
+        if not self._mscores:
+            self._mscores = []
+
+        self._mscores.append([master, score])
+
+    def init(self):
+        if not self._mscores:
+            print("Error, use setInitialScore to init masters/scores\n");
+            exit(1)
+        else:
+            for mprio in self._mscores:
+                master = mprio[0]
+                score = mprio[1]
+                if isinstance(master, basestring):
+                    self.getCCObject().initMasterName(
+                        master, float(score))
+                else:
+                    self.getCCObject().initMasterObj(
+                        master.getCCObject(), float(score))
+
+    weight = Param.Float(0.5, "Pf score weight")

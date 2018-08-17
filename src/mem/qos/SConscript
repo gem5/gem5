@@ -44,6 +44,7 @@ SimObject('QoSTurnaround.py')
 
 Source('policy.cc')
 Source('policy_fixed_prio.cc')
+Source('policy_pf.cc')
 Source('turnaround_policy_ideal.cc')
 Source('q_policy.cc')
 Source('mem_ctrl.cc')
