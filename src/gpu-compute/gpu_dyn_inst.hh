@@ -54,6 +54,7 @@ class AtomicOpAnd : public TypedAtomicOpFunctor<T>
 
     AtomicOpAnd(T _a) : a(_a) { }
     void execute(T *b) { *b &= a; }
+    AtomicOpFunctor* clone () { return new AtomicOpAnd(a); }
 };
 
 template<typename T>
@@ -63,6 +64,7 @@ class AtomicOpOr : public TypedAtomicOpFunctor<T>
     T a;
     AtomicOpOr(T _a) : a(_a) { }
     void execute(T *b) { *b |= a; }
+    AtomicOpFunctor* clone () { return new AtomicOpOr(a); }
 };
 
 template<typename T>
@@ -72,6 +74,7 @@ class AtomicOpXor : public TypedAtomicOpFunctor<T>
     T a;
     AtomicOpXor(T _a) : a(_a) {}
     void execute(T *b) { *b ^= a; }
+    AtomicOpFunctor* clone () { return new AtomicOpXor(a); }
 };
 
 template<typename T>
@@ -101,6 +104,7 @@ class AtomicOpCAS : public TypedAtomicOpFunctor<T>
             computeUnit->xactCasLoadMap.clear();
         }
     }
+    AtomicOpFunctor* clone () { return new AtomicOpCAS(c, s, computeUnit); }
 };
 
 template<typename T>
@@ -110,6 +114,7 @@ class AtomicOpExch : public TypedAtomicOpFunctor<T>
     T a;
     AtomicOpExch(T _a) : a(_a) { }
     void execute(T *b) { *b = a; }
+    AtomicOpFunctor* clone () { return new AtomicOpExch(a); }
 };
 
 template<typename T>
@@ -119,6 +124,7 @@ class AtomicOpAdd : public TypedAtomicOpFunctor<T>
     T a;
     AtomicOpAdd(T _a) : a(_a) { }
     void execute(T *b) { *b += a; }
+    AtomicOpFunctor* clone () { return new AtomicOpAdd(a); }
 };
 
 template<typename T>
@@ -128,6 +134,7 @@ class AtomicOpSub : public TypedAtomicOpFunctor<T>
     T a;
     AtomicOpSub(T _a) : a(_a) { }
     void execute(T *b) { *b -= a; }
+    AtomicOpFunctor* clone () { return new AtomicOpSub(a); }
 };
 
 template<typename T>
@@ -136,6 +143,7 @@ class AtomicOpInc : public TypedAtomicOpFunctor<T>
   public:
     AtomicOpInc() { }
     void execute(T *b) { *b += 1; }
+    AtomicOpFunctor* clone () { return new AtomicOpInc(); }
 };
 
 template<typename T>
@@ -144,6 +152,7 @@ class AtomicOpDec : public TypedAtomicOpFunctor<T>
   public:
     AtomicOpDec() {}
     void execute(T *b) { *b -= 1; }
+    AtomicOpFunctor* clone () { return new AtomicOpDec(); }
 };
 
 template<typename T>
@@ -159,6 +168,7 @@ class AtomicOpMax : public TypedAtomicOpFunctor<T>
         if (a > *b)
             *b = a;
     }
+    AtomicOpFunctor* clone () { return new AtomicOpMax(a); }
 };
 
 template<typename T>
@@ -174,6 +184,7 @@ class AtomicOpMin : public TypedAtomicOpFunctor<T>
         if (a < *b)
             *b = a;
     }
+    AtomicOpFunctor* clone () { return new AtomicOpMin(a); }
 };
 
 typedef enum
