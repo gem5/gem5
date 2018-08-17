@@ -111,7 +111,7 @@ int sc_main(int argc, char* argv[])
 	ACTION(sc_start(0, SC_NS),"sc_start(0, SC_NS)")
 	ACTION(sc_start(0, SC_NS),"sc_start(0, SC_NS)")
 
-    cerr << "Program completed" << endl;
+    cout << "Program completed" << endl;
     return 0;
 }
 
