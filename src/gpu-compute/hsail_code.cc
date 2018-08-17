@@ -333,7 +333,7 @@ StorageSpace::findSymbol(uint64_t addr)
 {
     assert(elements_by_addr.size() > 0);
 
-    auto se = elements_by_addr.find(addr);
+    auto se = elements_by_addr.contains(addr);
 
     if (se == elements_by_addr.end()) {
         return nullptr;
