@@ -46,12 +46,12 @@ Scheduler::Scheduler() :
     starvationEvent(this, false, StarvationPriority),
     _started(false), _paused(false), _stopped(false),
     maxTickEvent(this, false, MaxTickPriority),
-    _numCycles(0), _current(nullptr), initReady(false),
+    _numCycles(0), _current(nullptr), initDone(false),
     runOnce(false)
 {}
 
 void
-Scheduler::prepareForInit()
+Scheduler::initPhase()
 {
     for (Process *p = toFinalize.getNext(); p; p = toFinalize.getNext()) {
         p->finalize();
@@ -64,6 +64,12 @@ Scheduler::prepareForInit()
         p->ready();
     }
 
+    update();
+
+    for (auto &e: deltas)
+        e->run();
+    deltas.clear();
+
     for (auto ets: eventsToSchedule)
         eq->schedule(ets.first, ets.second);
     eventsToSchedule.clear();
@@ -71,13 +77,13 @@ Scheduler::prepareForInit()
     if (_started)
         eq->schedule(&maxTickEvent, maxTick);
 
-    initReady = true;
+    initDone = true;
 }
 
 void
 Scheduler::reg(Process *p)
 {
-    if (initReady) {
+    if (initDone) {
         // If we're past initialization, finalize static sensitivity.
         p->finalize();
         // Mark the process as ready.
@@ -92,7 +98,7 @@ Scheduler::reg(Process *p)
 void
 Scheduler::dontInitialize(Process *p)
 {
-    if (initReady) {
+    if (initDone) {
         // Pop this process off of the ready list.
         p->popListNode();
     } else {
@@ -246,7 +252,7 @@ Scheduler::start(Tick max_tick, bool run_to_time)
     if (starved() && !runToTime)
         return;
 
-    if (initReady) {
+    if (initDone) {
         kernel->status(::sc_core::SC_RUNNING);
         eq->schedule(&maxTickEvent, maxTick);
     }

@@ -165,8 +165,7 @@ class Scheduler
     uint64_t numCycles() { return _numCycles; }
     Process *current() { return _current; }
 
-    // Prepare for initialization.
-    void prepareForInit();
+    void initPhase();
 
     // Register a process with the scheduler.
     void reg(Process *p);
@@ -226,7 +225,7 @@ class Scheduler
         TimeSlot *&ts = timeSlots[tick];
         if (!ts) {
             ts = new TimeSlot;
-            if (initReady)
+            if (initDone)
                 eq->schedule(ts, tick);
             else
                 eventsToSchedule[ts] = tick;
@@ -256,7 +255,7 @@ class Scheduler
 
         // If no more events are happening at this time slot, get rid of it.
         if (events.empty()) {
-            if (initReady)
+            if (initDone)
                 eq->deschedule(ts);
             else
                 eventsToSchedule.erase(ts);
@@ -363,7 +362,7 @@ class Scheduler
 
     Process *_current;
 
-    bool initReady;
+    bool initDone;
     bool runToTime;
     bool runOnce;
 

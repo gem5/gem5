@@ -163,14 +163,7 @@ Kernel::stopWork()
 void
 Kernel::t0Handler()
 {
-    // Now that the event queue has started, mark all the processes that
-    // need to be initialized as ready to run.
-    //
-    // This event has greater priority than delta notifications and so will
-    // happen before them, honoring the ordering for the initialization phase
-    // in the spec. The delta phase will happen at normal priority, and then
-    // the event which runs the processes which is at a lower priority.
-    ::sc_gem5::scheduler.prepareForInit();
+    ::sc_gem5::scheduler.initPhase();
 
     status(::sc_core::SC_RUNNING);
 }
