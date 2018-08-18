@@ -225,10 +225,7 @@ class Scheduler
         TimeSlot *&ts = timeSlots[tick];
         if (!ts) {
             ts = new TimeSlot;
-            if (initDone)
-                eq->schedule(ts, tick);
-            else
-                eventsToSchedule[ts] = tick;
+            schedule(ts, tick);
         }
         ts->events.insert(event);
     }
@@ -255,10 +252,7 @@ class Scheduler
 
         // If no more events are happening at this time slot, get rid of it.
         if (events.empty()) {
-            if (initDone)
-                eq->deschedule(ts);
-            else
-                eventsToSchedule.erase(ts);
+            deschedule(ts);
             timeSlots.erase(tsit);
         }
     }
@@ -327,6 +321,27 @@ class Scheduler
     static Priority StarvationPriority = ReadyPriority;
 
     EventQueue *eq;
+
+    // For gem5 style events.
+    void
+    schedule(::Event *event, Tick tick)
+    {
+        if (initDone)
+            eq->schedule(event, tick);
+        else
+            eventsToSchedule[event] = tick;
+    }
+
+    void schedule(::Event *event) { schedule(event, getCurTick()); }
+
+    void
+    deschedule(::Event *event)
+    {
+        if (initDone)
+            eq->deschedule(event);
+        else
+            eventsToSchedule.erase(event);
+    }
 
     ScEvents deltas;
     TimeSlots timeSlots;

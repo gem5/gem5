@@ -77,7 +77,7 @@ Scheduler::initPhase()
     if (_started) {
         if (starved() && !runToTime)
             scheduleStarvationEvent();
-        eq->schedule(&maxTickEvent, maxTick);
+        kernel->status(::sc_core::SC_RUNNING);
     }
 
     initDone = true;
@@ -153,8 +153,7 @@ void
 Scheduler::requestUpdate(Channel *c)
 {
     updateList.pushLast(c);
-    if (eq)
-        scheduleReadyEvent();
+    scheduleReadyEvent();
 }
 
 void
@@ -162,10 +161,9 @@ Scheduler::scheduleReadyEvent()
 {
     // Schedule the evaluate and update phases.
     if (!readyEvent.scheduled()) {
-        panic_if(!eq, "Need to schedule ready, but no event manager.\n");
-        eq->schedule(&readyEvent, eq->getCurTick());
+        schedule(&readyEvent);
         if (starvationEvent.scheduled())
-            eq->deschedule(&starvationEvent);
+            deschedule(&starvationEvent);
     }
 }
 
@@ -173,13 +171,9 @@ void
 Scheduler::scheduleStarvationEvent()
 {
     if (!starvationEvent.scheduled()) {
-        Tick now = getCurTick();
-        if (initDone)
-            eq->schedule(&starvationEvent, now);
-        else
-            eventsToSchedule[&starvationEvent] = now;
+        schedule(&starvationEvent);
         if (readyEvent.scheduled())
-            eq->deschedule(&readyEvent);
+            deschedule(&readyEvent);
     }
 }
 
@@ -258,8 +252,9 @@ Scheduler::start(Tick max_tick, bool run_to_time)
         if (starved() && !runToTime)
             scheduleStarvationEvent();
         kernel->status(::sc_core::SC_RUNNING);
-        eq->schedule(&maxTickEvent, maxTick);
     }
+
+    schedule(&maxTickEvent, maxTick);
 
     // Return to gem5 to let it run events, etc.
     Fiber::primaryFiber()->run();
