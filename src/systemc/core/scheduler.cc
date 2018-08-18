@@ -74,8 +74,11 @@ Scheduler::initPhase()
         eq->schedule(ets.first, ets.second);
     eventsToSchedule.clear();
 
-    if (_started)
+    if (_started) {
+        if (starved() && !runToTime)
+            scheduleStarvationEvent();
         eq->schedule(&maxTickEvent, maxTick);
+    }
 
     initDone = true;
 }
@@ -170,9 +173,11 @@ void
 Scheduler::scheduleStarvationEvent()
 {
     if (!starvationEvent.scheduled()) {
-        panic_if(!eq, "Need to schedule starvation event, "
-                "but no event manager.\n");
-        eq->schedule(&starvationEvent, eq->getCurTick());
+        Tick now = getCurTick();
+        if (initDone)
+            eq->schedule(&starvationEvent, now);
+        else
+            eventsToSchedule[&starvationEvent] = now;
         if (readyEvent.scheduled())
             eq->deschedule(&readyEvent);
     }
@@ -249,10 +254,9 @@ Scheduler::start(Tick max_tick, bool run_to_time)
 
     maxTick = max_tick;
 
-    if (starved() && !runToTime)
-        return;
-
     if (initDone) {
+        if (starved() && !runToTime)
+            scheduleStarvationEvent();
         kernel->status(::sc_core::SC_RUNNING);
         eq->schedule(&maxTickEvent, maxTick);
     }
