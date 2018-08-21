@@ -159,6 +159,7 @@ class Scheduler
     typedef std::map<Tick, TimeSlot *> TimeSlots;
 
     Scheduler();
+    ~Scheduler();
 
     const std::string name() const { return "systemc_scheduler"; }
 

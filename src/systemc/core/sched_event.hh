@@ -59,6 +59,8 @@ class ScEvent
         work(work), _when(MaxTick), _scheduled(false)
     {}
 
+    ~ScEvent();
+
     bool scheduled() { return _scheduled; }
 
     void when(Tick w) { _when = w; }

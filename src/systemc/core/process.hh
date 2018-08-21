@@ -330,6 +330,7 @@ class Process : public ::sc_core::sc_object, public ListNode
 
     virtual ~Process()
     {
+        popListNode();
         delete func;
         for (auto s: staticSensitivities)
             delete s;

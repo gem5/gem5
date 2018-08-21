@@ -50,6 +50,48 @@ Scheduler::Scheduler() :
     runOnce(false)
 {}
 
+Scheduler::~Scheduler()
+{
+    // Clear out everything that belongs to us to make sure nobody tries to
+    // clear themselves out after the scheduler goes away.
+
+    // Delta notifications.
+    for (auto &e: deltas)
+        e->deschedule();
+
+    // Timed notifications.
+    for (auto &ts: timeSlots) {
+        for (auto &e: ts.second->events)
+            e->deschedule();
+        delete ts.second;
+        ts.second = nullptr;
+    }
+
+    // gem5 events.
+    if (readyEvent.scheduled())
+        eq->deschedule(&readyEvent);
+    if (pauseEvent.scheduled())
+        eq->deschedule(&pauseEvent);
+    if (stopEvent.scheduled())
+        eq->deschedule(&stopEvent);
+    if (starvationEvent.scheduled())
+        eq->deschedule(&starvationEvent);
+    if (maxTickEvent.scheduled())
+        eq->deschedule(&maxTickEvent);
+
+    Process *p;
+    while ((p = toFinalize.getNext()))
+        p->popListNode();
+    while ((p = initList.getNext()))
+        p->popListNode();
+    while ((p = readyList.getNext()))
+        p->popListNode();
+
+    Channel *c;
+    while ((c = updateList.getNext()))
+        c->popListNode();
+}
+
 void
 Scheduler::initPhase()
 {

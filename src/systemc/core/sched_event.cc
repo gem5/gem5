@@ -27,37 +27,17 @@
  * Authors: Gabe Black
  */
 
-#include "systemc/core/channel.hh"
+#include "systemc/core/sched_event.hh"
 
 #include "systemc/core/scheduler.hh"
 
 namespace sc_gem5
 {
 
-Channel::Channel(sc_core::sc_prim_channel *_sc_chan) : _sc_chan(_sc_chan)
+ScEvent::~ScEvent()
 {
-    allChannels.insert(this);
+    if (scheduled())
+        scheduler.deschedule(this);
 }
-
-Channel::~Channel()
-{
-    popListNode();
-    allChannels.erase(this);
-}
-
-void
-Channel::requestUpdate()
-{
-    scheduler.requestUpdate(this);
-}
-
-void
-Channel::asyncRequestUpdate()
-{
-    //TODO This should probably not request an update directly.
-    scheduler.requestUpdate(this);
-}
-
-std::set<Channel *> allChannels;
 
 } // namespace sc_gem5
