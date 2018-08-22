@@ -122,6 +122,10 @@ Event::getParentObject() const
 void
 Event::notify()
 {
+    // An immediate notification overrides any pending delayed notification.
+    if (delayedNotify.scheduled())
+        scheduler.deschedule(&delayedNotify);
+
     auto local_sensitivities = sensitivities;
     for (auto s: local_sensitivities)
         s->notify(this);
