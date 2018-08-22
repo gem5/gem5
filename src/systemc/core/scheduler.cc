@@ -272,6 +272,10 @@ Scheduler::stop()
 {
     _stopped = true;
     kernel->stop();
+
+    if (readyEvent.scheduled())
+        eq->deschedule(&readyEvent);
+
     runOnce = false;
     scMain->run();
 }
