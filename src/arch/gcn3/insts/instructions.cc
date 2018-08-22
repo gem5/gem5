@@ -32129,6 +32129,13 @@ namespace Gcn3ISA
     Inst_DS__DS_PERMUTE_B32::Inst_DS__DS_PERMUTE_B32(InFmt_DS *iFmt)
         : Inst_DS(iFmt, "ds_permute_b32")
     {
+        setFlag(MemoryRef);
+        /**
+         * While this operation doesn't actually use DS storage we classify
+         * it as a load here because it does a writeback to a VGPR, which
+         * fits in better with the LDS pipeline logic.
+         */
+         setFlag(Load);
     } // Inst_DS__DS_PERMUTE_B32
 
     Inst_DS__DS_PERMUTE_B32::~Inst_DS__DS_PERMUTE_B32()
@@ -32139,12 +32146,66 @@ namespace Gcn3ISA
     void
     Inst_DS__DS_PERMUTE_B32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()
+                                ->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA0);
+        VecOperandU32 vdst(gpuDynInst, extData.VDST);
+
+        addr.read();
+        data.read();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                /**
+                 * One of the offset fields can be used for the index.
+                 * It is assumed OFFSET0 would be used, as OFFSET1 is
+                 * typically only used for DS ops that operate on two
+                 * disparate pieces of data.
+                 */
+                assert(!instData.OFFSET1);
+                /**
+                 * The address provided is a byte address, but VGPRs are
+                 * 4 bytes, so we must divide by 4 to get the actual VGPR
+                 * index. Additionally, the index is calculated modulo the
+                 * WF size, 64 in this case, so we simply extract bits 7-2.
+                 */
+                int index = bits(addr[lane] + instData.OFFSET0, 7, 2);
+                panic_if(index >= NumVecElemPerVecReg, "%s: index (%d) is out "
+                         "of bounds.\n", gpuDynInst->disassemble(), index);
+                /**
+                 * If the shuffled index corresponds to a lane that is
+                 * inactive then this instruction writes a 0 to the active
+                 * lane in VDST.
+                 */
+                if (wf->execMask(index)) {
+                    vdst[index] = data[lane];
+                } else {
+                    vdst[index] = 0;
+                }
+            }
+        }
+
+        vdst.write();
+
+        wf->rdLmReqsInPipe--;
+        wf->validateRequestCounters();
+    } // execute
+    // --- Inst_DS__DS_BPERMUTE_B32 class methods ---
 
     Inst_DS__DS_BPERMUTE_B32::Inst_DS__DS_BPERMUTE_B32(InFmt_DS *iFmt)
         : Inst_DS(iFmt, "ds_bpermute_b32")
     {
+        setFlag(MemoryRef);
+        /**
+         * While this operation doesn't actually use DS storage we classify
+         * it as a load here because it does a writeback to a VGPR, which
+         * fits in better with the LDS pipeline logic.
+         */
+        setFlag(Load);
     } // Inst_DS__DS_BPERMUTE_B32
 
     Inst_DS__DS_BPERMUTE_B32::~Inst_DS__DS_BPERMUTE_B32()
@@ -32155,8 +32216,56 @@ namespace Gcn3ISA
     void
     Inst_DS__DS_BPERMUTE_B32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()
+                                ->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA0);
+        VecOperandU32 vdst(gpuDynInst, extData.VDST);
+
+        addr.read();
+        data.read();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                /**
+                 * One of the offset fields can be used for the index.
+                 * It is assumed OFFSET0 would be used, as OFFSET1 is
+                 * typically only used for DS ops that operate on two
+                 * disparate pieces of data.
+                 */
+                assert(!instData.OFFSET1);
+                /**
+                 * The address provided is a byte address, but VGPRs are
+                 * 4 bytes, so we must divide by 4 to get the actual VGPR
+                 * index. Additionally, the index is calculated modulo the
+                 * WF size, 64 in this case, so we simply extract bits 7-2.
+                 */
+                int index = bits(addr[lane] + instData.OFFSET0, 7, 2);
+                panic_if(index >= NumVecElemPerVecReg, "%s: index (%d) is out "
+                         "of bounds.\n", gpuDynInst->disassemble(), index);
+                /**
+                 * If the shuffled index corresponds to a lane that is
+                 * inactive then this instruction writes a 0 to the active
+                 * lane in VDST.
+                 */
+                if (wf->execMask(index)) {
+                    vdst[lane] = data[index];
+                } else {
+                    vdst[lane] = 0;
+                }
+            }
+        }
+
+        vdst.write();
+
+        wf->rdLmReqsInPipe--;
+        wf->validateRequestCounters();
+    } // execute
+
+    // --- Inst_DS__DS_ADD_U64 class methods ---
 
     Inst_DS__DS_ADD_U64::Inst_DS__DS_ADD_U64(InFmt_DS *iFmt)
         : Inst_DS(iFmt, "ds_add_u64")
