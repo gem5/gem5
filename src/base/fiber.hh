@@ -44,6 +44,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "config/have_valgrind.hh"
+
 /**
  * This class represents a fiber, which is a light weight sort of thread which
  * is cooperatively scheduled and runs sequentially with other fibers, swapping
@@ -106,6 +108,9 @@ class Fiber
     // The stack for this context, or a nullptr if allocated elsewhere.
     uint8_t *stack;
     size_t stackSize;
+#if HAVE_VALGRIND
+    unsigned valgrindStackId;
+#endif
 
     bool started;
     bool _finished;

@@ -29,6 +29,10 @@
 
 #include "base/fiber.hh"
 
+#if HAVE_VALGRIND
+#include <valgrind/valgrind.h>
+#endif
+
 #include <cerrno>
 #include <cstring>
 
@@ -71,7 +75,11 @@ Fiber::Fiber(size_t stack_size) :
     link(primaryFiber()),
     stack(stack_size ? new uint8_t[stack_size] : nullptr),
     stackSize(stack_size), started(false), _finished(false)
-{}
+{
+#if HAVE_VALGRIND
+    valgrindStackId = VALGRIND_STACK_REGISTER(stack, stack + stack_size);
+#endif
+}
 
 Fiber::Fiber(Fiber *link, size_t stack_size) :
     link(link), stack(stack_size ? new uint8_t[stack_size] : nullptr),
@@ -81,6 +89,9 @@ Fiber::Fiber(Fiber *link, size_t stack_size) :
 Fiber::~Fiber()
 {
     panic_if(stack && _currentFiber == this, "Fiber stack is in use.");
+#if HAVE_VALGRIND
+    VALGRIND_STACK_DEREGISTER(valgrindStackId);
+#endif
     delete [] stack;
 }
 

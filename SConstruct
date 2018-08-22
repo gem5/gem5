@@ -783,6 +783,10 @@ main['HAVE_PROTOBUF'] = main['PROTOC'] and \
     conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
                             'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;')
 
+# Valgrind gets much less confused if you tell it when you're using
+# alternative stacks.
+main['HAVE_VALGRIND'] = conf.CheckCHeader('valgrind/valgrind.h')
+
 # If we have the compiler but not the library, print another warning.
 if main['PROTOC'] and not main['HAVE_PROTOBUF']:
     print(termcap.Yellow + termcap.Bold +
@@ -1012,8 +1016,8 @@ sticky_vars.AddVariables(
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
 export_vars += ['USE_FENV', 'SS_COMPATIBLE_FP', 'TARGET_ISA', 'TARGET_GPU_ISA',
                 'CP_ANNOTATE', 'USE_POSIX_CLOCK', 'USE_KVM', 'USE_TUNTAP',
-                'PROTOCOL', 'HAVE_PROTOBUF', 'HAVE_PERF_ATTR_EXCLUDE_HOST',
-                'USE_PNG']
+                'PROTOCOL', 'HAVE_PROTOBUF', 'HAVE_VALGRIND',
+                'HAVE_PERF_ATTR_EXCLUDE_HOST', 'USE_PNG']
 
 ###################################################
 #
