@@ -138,6 +138,8 @@ class SensitivityTimeoutAndEventAndList :
         Sensitivity(p), SensitivityTimeout(p, t),
         SensitivityEventAndList(p, eal)
     {}
+
+    void notifyWork(Event *e) override;
 };
 
 class SensitivityTimeoutAndEventOrList :

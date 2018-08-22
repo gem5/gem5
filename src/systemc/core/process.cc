@@ -104,6 +104,18 @@ SensitivityEventOrList::~SensitivityEventOrList()
         Event::getFromScEvent(e)->delSensitivity(this);
 }
 
+void
+SensitivityTimeoutAndEventAndList::notifyWork(Event *e)
+{
+    if (e) {
+        // An event went off which must be part of the sc_event_and_list.
+        SensitivityEventAndList::notifyWork(e);
+    } else {
+        // There's no inciting event, so this must be a timeout.
+        SensitivityTimeout::notifyWork(e);
+    }
+}
+
 
 class UnwindExceptionReset : public ::sc_core::sc_unwind_exception
 {
