@@ -161,6 +161,8 @@ class Scheduler
     Scheduler();
     ~Scheduler();
 
+    void clear();
+
     const std::string name() const { return "systemc_scheduler"; }
 
     uint64_t numCycles() { return _numCycles; }

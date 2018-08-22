@@ -54,18 +54,25 @@ Scheduler::~Scheduler()
 {
     // Clear out everything that belongs to us to make sure nobody tries to
     // clear themselves out after the scheduler goes away.
+    clear();
+}
 
+void
+Scheduler::clear()
+{
     // Delta notifications.
     for (auto &e: deltas)
         e->deschedule();
+    deltas.clear();
 
     // Timed notifications.
-    for (auto &ts: timeSlots) {
-        for (auto &e: ts.second->events)
+    for (auto &tsp: timeSlots) {
+        TimeSlot *&ts = tsp.second;
+        for (auto &e: ts->events)
             e->deschedule();
-        delete ts.second;
-        ts.second = nullptr;
+        eq->deschedule(ts);
     }
+    timeSlots.clear();
 
     // gem5 events.
     if (readyEvent.scheduled())
@@ -273,8 +280,7 @@ Scheduler::stop()
     _stopped = true;
     kernel->stop();
 
-    if (readyEvent.scheduled())
-        eq->deschedule(&readyEvent);
+    clear();
 
     runOnce = false;
     scMain->run();
@@ -338,17 +344,9 @@ Scheduler::scheduleStop(bool finish_delta)
         return;
 
     if (!finish_delta) {
-        // If we're not supposed to finish the delta cycle, flush the list
-        // of ready processes, scheduled updates, and delta notifications.
-        Process *p;
-        while ((p = readyList.getNext()))
-            p->popListNode();
-        Channel *c;
-        while ((c = updateList.getNext()))
-            c->popListNode();
-        for (auto &e: deltas)
-            e->deschedule();
-        deltas.clear();
+        // If we're not supposed to finish the delta cycle, flush all
+        // pending activity.
+        clear();
     }
     eq->schedule(&stopEvent, eq->getCurTick());
 }
