@@ -28,6 +28,7 @@
  */
 
 #include <cstring>
+#include <string>
 
 #include "base/fiber.hh"
 #include "base/logging.hh"
@@ -57,13 +58,28 @@ char **_argv = NULL;
 
 class ScMainFiber : public Fiber
 {
+  public:
+    std::string resultStr;
+    int resultInt;
+
+    ScMainFiber() : resultInt(1) {}
+
     void
     main()
     {
         if (::sc_main) {
-            ::sc_main(_argc, _argv);
-            // Make sure no systemc events/notifications are scheduled
-            // after sc_main returns.
+            try {
+                resultInt = ::sc_main(_argc, _argv);
+                if (resultInt)
+                    resultStr = "sc_main returned non-zero";
+                else
+                    resultStr = "sc_main finished";
+                // Make sure no systemc events/notifications are scheduled
+                // after sc_main returns.
+            } catch (const sc_report &r) {
+                // There was an exception nobody caught.
+                resultStr = r.what();
+            }
             ::sc_gem5::Kernel::scMainFinished(true);
             ::sc_gem5::scheduler.clear();
         } else {
@@ -115,6 +131,18 @@ sc_main(pybind11::args args)
     scMainFiber.run();
 }
 
+int
+sc_main_result_code()
+{
+    return scMainFiber.resultInt;
+}
+
+std::string
+sc_main_result_str()
+{
+    return scMainFiber.resultStr;
+}
+
 // Make our sc_main wrapper available in the internal _m5 python module under
 // the systemc submodule.
 
@@ -124,6 +152,8 @@ struct InstallScMain : public ::sc_gem5::PythonInitFunc
     run(pybind11::module &systemc) override
     {
         systemc.def("sc_main", &sc_main);
+        systemc.def("sc_main_result_code", &sc_main_result_code);
+        systemc.def("sc_main_result_str", &sc_main_result_str);
     }
 } installScMain;
 
