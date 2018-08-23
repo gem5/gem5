@@ -72,7 +72,7 @@ popObject(Objects *objects, const std::string &name)
 Object::Object(sc_core::sc_object *_sc_obj) : Object(_sc_obj, "object") {}
 
 Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
-    _sc_obj(_sc_obj), _basename(obj_name), parent(nullptr)
+    _sc_obj(_sc_obj), _basename(obj_name ? obj_name : ""), parent(nullptr)
 {
     if (_basename == "")
         _basename = "object";
