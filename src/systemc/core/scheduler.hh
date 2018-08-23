@@ -238,10 +238,11 @@ class Scheduler
     deschedule(ScEvent *event)
     {
         if (event->when() == getCurTick()) {
-            // Remove from delta notifications.
-            deltas.erase(event);
-            event->deschedule();
-            return;
+            // Attempt to remove from delta notifications.
+            if (deltas.erase(event) == 1) {
+                event->deschedule();
+                return;
+            }
         }
 
         // Timed notification/timeout.
@@ -250,7 +251,7 @@ class Scheduler
                 "Descheduling event at time with no events.");
         TimeSlot *ts = tsit->second;
         ScEvents &events = ts->events;
-        events.erase(event);
+        assert(events.erase(event));
         event->deschedule();
 
         // If no more events are happening at this time slot, get rid of it.
