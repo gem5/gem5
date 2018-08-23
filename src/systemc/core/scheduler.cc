@@ -70,21 +70,21 @@ Scheduler::clear()
         TimeSlot *&ts = tsp.second;
         for (auto &e: ts->events)
             e->deschedule();
-        eq->deschedule(ts);
+        deschedule(ts);
     }
     timeSlots.clear();
 
     // gem5 events.
     if (readyEvent.scheduled())
-        eq->deschedule(&readyEvent);
+        deschedule(&readyEvent);
     if (pauseEvent.scheduled())
-        eq->deschedule(&pauseEvent);
+        deschedule(&pauseEvent);
     if (stopEvent.scheduled())
-        eq->deschedule(&stopEvent);
+        deschedule(&stopEvent);
     if (starvationEvent.scheduled())
-        eq->deschedule(&starvationEvent);
+        deschedule(&starvationEvent);
     if (maxTickEvent.scheduled())
-        eq->deschedule(&maxTickEvent);
+        deschedule(&maxTickEvent);
 
     Process *p;
     while ((p = toFinalize.getNext()))
@@ -312,13 +312,13 @@ Scheduler::start(Tick max_tick, bool run_to_time)
     Fiber::primaryFiber()->run();
 
     if (pauseEvent.scheduled())
-        eq->deschedule(&pauseEvent);
+        deschedule(&pauseEvent);
     if (stopEvent.scheduled())
-        eq->deschedule(&stopEvent);
+        deschedule(&stopEvent);
     if (maxTickEvent.scheduled())
-        eq->deschedule(&maxTickEvent);
+        deschedule(&maxTickEvent);
     if (starvationEvent.scheduled())
-        eq->deschedule(&starvationEvent);
+        deschedule(&starvationEvent);
 }
 
 void
@@ -334,7 +334,7 @@ Scheduler::schedulePause()
     if (pauseEvent.scheduled())
         return;
 
-    eq->schedule(&pauseEvent, eq->getCurTick());
+    schedule(&pauseEvent);
 }
 
 void
@@ -348,7 +348,7 @@ Scheduler::scheduleStop(bool finish_delta)
         // pending activity.
         clear();
     }
-    eq->schedule(&stopEvent, eq->getCurTick());
+    schedule(&stopEvent);
 }
 
 Scheduler scheduler;
