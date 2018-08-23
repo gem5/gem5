@@ -59,7 +59,6 @@ class sc_port_base;
 class sc_event_finder
 {
   protected:
-    void warn_unimpl(const char *func) const;
     virtual ~sc_event_finder() {}
 
   public:
