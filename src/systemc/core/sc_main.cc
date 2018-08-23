@@ -62,6 +62,10 @@ class ScMainFiber : public Fiber
     {
         if (::sc_main) {
             ::sc_main(_argc, _argv);
+            // Make sure no systemc events/notifications are scheduled
+            // after sc_main returns.
+            ::sc_gem5::Kernel::scMainFinished(true);
+            ::sc_gem5::scheduler.clear();
         } else {
             // If python tries to call sc_main but no sc_main was defined...
             fatal("sc_main called but not defined.\n");

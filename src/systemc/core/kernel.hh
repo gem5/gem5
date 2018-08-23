@@ -64,6 +64,9 @@ class Kernel : public SimObject
     static bool startOfSimulationComplete();
     static bool endOfSimulationComplete();
 
+    static bool scMainFinished();
+    static void scMainFinished(bool);
+
   private:
     static void stopWork();
 

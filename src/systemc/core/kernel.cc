@@ -40,6 +40,7 @@ namespace sc_gem5
 namespace
 {
 
+bool scMainDone = false;
 bool stopAfterCallbacks = false;
 bool startComplete = false;
 bool endComplete = false;
@@ -50,6 +51,9 @@ sc_core::sc_status _status = sc_core::SC_ELABORATION;
 
 bool Kernel::startOfSimulationComplete() { return startComplete; }
 bool Kernel::endOfSimulationComplete() { return endComplete; }
+
+bool Kernel::scMainFinished() { return scMainDone; }
+void Kernel::scMainFinished(bool finished) { scMainDone = finished; }
 
 sc_core::sc_status Kernel::status() { return _status; }
 void Kernel::status(sc_core::sc_status s) { _status = s; }
@@ -64,6 +68,9 @@ Kernel::Kernel(Params *params) :
 void
 Kernel::init()
 {
+    if (scMainDone)
+        return;
+
     status(::sc_core::SC_BEFORE_END_OF_ELABORATION);
     for (auto m: sc_gem5::allModules) {
         callbackModule(m);
@@ -84,6 +91,9 @@ Kernel::init()
 void
 Kernel::regStats()
 {
+    if (scMainDone)
+        return;
+
     for (auto m: sc_gem5::allModules)
         for (auto p: m->ports)
             p->_gem5Finalize();
@@ -106,6 +116,9 @@ Kernel::regStats()
 void
 Kernel::startup()
 {
+    if (scMainDone)
+        return;
+
     status(::sc_core::SC_START_OF_SIMULATION);
     for (auto m: sc_gem5::allModules) {
         m->sc_mod()->start_of_simulation();
