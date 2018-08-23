@@ -413,7 +413,7 @@ sc_report_compose_message(const sc_report &report)
     str << report.get_msg_type();
 
     const char *msg = report.get_msg();
-    if (msg[0])
+    if (msg && msg[0])
         str << ": " << msg;
 
     if (report.get_severity() > SC_INFO) {
