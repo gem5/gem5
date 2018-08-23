@@ -235,7 +235,9 @@ sc_time_stamp()
     static sc_time tstamp;
     Tick tick = ::sc_gem5::scheduler.getCurTick();
     //XXX We're assuming the systemc time resolution is in ps.
-    tstamp = sc_time::from_value(tick / SimClock::Int::ps);
+    // If tick is zero, the time scale may not be fixed yet, and
+    // SimClock::Int::ps may be zero.
+    tstamp = sc_time::from_value(tick ? tick / SimClock::Int::ps : 0);
     return tstamp;
 }
 
