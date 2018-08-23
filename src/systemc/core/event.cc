@@ -37,17 +37,22 @@
 #include "sim/core.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/core/sc_module.hh"
 
 namespace sc_gem5
 {
 
-Event::Event(sc_core::sc_event *_sc_event) : Event(_sc_event, "") {}
+Event::Event(sc_core::sc_event *_sc_event) : Event(_sc_event, nullptr) {}
 
-Event::Event(sc_core::sc_event *_sc_event, const char *_basename) :
-    _sc_event(_sc_event), _basename(_basename),
+Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr) :
+    _sc_event(_sc_event), _basename(_basename_cstr ? _basename_cstr : ""),
     delayedNotify([this]() { this->notify(); })
 {
     Module *p = currentModule();
+
+    if (_basename == "" && ::sc_core::sc_is_running())
+        _basename = ::sc_core::sc_gen_unique_name("event");
 
     if (p)
         parent = p->obj()->sc_obj();
