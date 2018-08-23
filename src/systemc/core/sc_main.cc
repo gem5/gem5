@@ -194,6 +194,10 @@ sc_start(const sc_time &time, sc_starvation_policy p)
         ::sc_gem5::scheduler.oneCycle();
     } else {
         Tick now = ::sc_gem5::scheduler.getCurTick();
+        if (MaxTick - now < time.value()) {
+            SC_REPORT_ERROR("(E544) simulation time value overflow, "
+                    "simulation aborted", "");
+        }
         ::sc_gem5::scheduler.start(now + time.value(), p == SC_RUN_TO_TIME);
     }
 }
