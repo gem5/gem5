@@ -32,6 +32,7 @@
 #include <cassert>
 
 #include "base/logging.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_gem5
 {
@@ -52,7 +53,14 @@ Module::Module(const char *name) : _name(name), _sc_mod(nullptr), _obj(nullptr)
     _new_module = this;
 }
 
-Module::~Module() { allModules.remove(this); }
+Module::~Module()
+{
+    if (_new_module == this) {
+        // Aborted module construction?
+        _new_module = nullptr;
+    }
+    allModules.remove(this);
+}
 
 void
 Module::finish(Object *this_obj)
@@ -83,6 +91,17 @@ currentModule()
     if (_modules.empty())
         return nullptr;
     return _modules.back();
+}
+
+Module *
+newModuleChecked()
+{
+    if (!_new_module) {
+        SC_REPORT_ERROR("(E533) module name stack is empty: "
+                "did you forget to add a sc_module_name parameter to "
+                "your module constructor?", nullptr);
+    }
+    return _new_module;
 }
 
 Module *

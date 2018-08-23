@@ -168,7 +168,7 @@ sc_module::get_child_events() const
 }
 
 sc_module::sc_module() :
-    sc_object(sc_gem5::newModule()->name()),
+    sc_object(sc_gem5::newModuleChecked()->name()),
     _gem5_module(sc_gem5::currentModule())
 {}
 

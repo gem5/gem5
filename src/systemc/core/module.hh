@@ -116,6 +116,7 @@ class Module
 };
 
 Module *currentModule();
+Module *newModuleChecked();
 Module *newModule();
 
 void callbackModule(Module *m);
