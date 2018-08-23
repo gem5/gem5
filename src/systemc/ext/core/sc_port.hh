@@ -105,14 +105,44 @@ class sc_port_b : public sc_port_base
     virtual void bind(IF &i) { sc_port_base::bind(i); }
     virtual void bind(sc_port_b<IF> &p) { sc_port_base::bind(p); }
 
-    IF *operator -> () { return _interfaces.at(0); }
-    const IF *operator -> () const { return _interfaces.at(0); }
+    IF *
+    operator -> ()
+    {
+        sc_assert(!_interfaces.empty());
+        return _interfaces[0];
+    }
+    const IF *
+    operator -> () const
+    {
+        sc_assert(!_interfaces.empty());
+        return _interfaces[0];
+    }
 
-    IF *operator [] (int n) { return _interfaces.at(n); }
-    const IF *operator [] (int n) const { return _interfaces.at(n); }
+    IF *
+    operator [] (int n)
+    {
+        sc_assert(_interfaces.size() > n);
+        return _interfaces[n];
+    }
+    const IF *
+    operator [] (int n) const
+    {
+        sc_assert(_interfaces.size() > n);
+        return _interfaces[n];
+    }
 
-    sc_interface *get_interface() { return _interfaces.at(0); }
-    const sc_interface *get_interface() const { return _interfaces.at(0); }
+    sc_interface *
+    get_interface()
+    {
+        sc_assert(!_interfaces.empty());
+        return _interfaces[0];
+    }
+    const sc_interface *
+    get_interface() const
+    {
+        sc_assert(!_interfaces.empty());
+        return _interfaces[0];
+    }
 
   protected:
     void before_end_of_elaboration() {}
@@ -151,7 +181,12 @@ class sc_port_b : public sc_port_base
   private:
     std::vector<IF *> _interfaces;
 
-    sc_interface *_gem5Interface(int n) const { return _interfaces.at(n); }
+    sc_interface *
+    _gem5Interface(int n) const
+    {
+        sc_assert(_interfaces.size() > n);
+        return _interfaces[n];
+    }
     void
     _gem5AddInterface(sc_interface *i)
     {
