@@ -33,6 +33,7 @@
 #include <vector>
 
 #include "sc_object.hh"
+#include "sc_process_handle.hh"
 #include "sc_sensitive.hh"
 #include "sc_time.hh"
 
@@ -337,17 +338,20 @@ sc_module *sc_module_sc_new(sc_module *);
 #define SC_NEW(x) ::sc_core::sc_module_sc_new(new x);
 
 // Nonstandard
-// In the Accellera implementation, this macro calls sc_set_location to record
-// the current file and line, calls wait, and then calls it again to clear the
-// file and line. We'll ignore the sc_set_location calls for now.
-#define SC_WAIT() ::sc_core::wait();
+#define SC_WAIT() \
+    ::sc_core::sc_set_location(__FILE__, __LINE__); \
+    ::sc_core::wait(); \
+    ::sc_core::sc_set_location(NULL, 0)
 
 // Nonstandard
-// Same as above, but passes through an argument.
-#define SC_WAITN(n) ::sc_core::wait(n);
+#define SC_WAITN(n) \
+    ::sc_core::sc_set_location(__FILE__, __LINE__); \
+    ::sc_core::wait(n); \
+    ::sc_core::sc_set_location(NULL, 0)
 
 // Nonstandard
-#define SC_WAIT_UNTIL(expr) do { SC_WAIT(); } while (!(expr))
+#define SC_WAIT_UNTIL(expr) \
+    do { SC_WAIT(); } while (!(expr))
 
 } // namespace sc_core
 

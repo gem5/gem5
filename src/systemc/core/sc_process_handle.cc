@@ -55,18 +55,14 @@ sc_unwind_exception::sc_unwind_exception(const sc_unwind_exception &e) :
 sc_unwind_exception::~sc_unwind_exception() throw() {}
 
 
-const char *
-sc_process_b::name()
+void
+sc_set_location(const char *file, int lineno)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
-}
-
-const char *
-sc_process_b::kind()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
+    sc_process_b *current = ::sc_gem5::scheduler.current();
+    if (!current)
+        return;
+    current->file = file;
+    current->lineno = lineno;
 }
 
 

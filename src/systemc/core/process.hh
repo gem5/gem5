@@ -266,7 +266,7 @@ class PendingSensitivityFinder : public PendingSensitivity
 typedef std::vector<PendingSensitivity *> PendingSensitivities;
 
 
-class Process : public ::sc_core::sc_object, public ListNode
+class Process : public ::sc_core::sc_process_b, public ListNode
 {
   public:
     virtual ::sc_core::sc_curr_proc_kind procKind() const = 0;

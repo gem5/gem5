@@ -33,6 +33,8 @@
 #include <exception>
 #include <vector>
 
+#include "systemc/ext/core/sc_object.hh"
+
 namespace sc_gem5
 {
 
@@ -78,7 +80,6 @@ namespace sc_core
 {
 
 class sc_event;
-class sc_object;
 
 enum sc_curr_proc_kind
 {
@@ -114,14 +115,19 @@ class sc_unwind_exception : public std::exception
 
 // Deprecated
 // An incomplete version of sc_process_b to satisfy the tests.
-class sc_process_b
+class sc_process_b : public sc_object
 {
   public:
+    sc_process_b(const char *name) : sc_object(name), file(nullptr), lineno(0)
+    {}
+    sc_process_b() : sc_object(), file(nullptr), lineno(0) {}
+
     const char *file;
     int lineno;
-    const char *name();
-    const char *kind();
 };
+
+// Nonstandard
+void sc_set_location(const char *file, int lineno);
 
 // Deprecated
 sc_process_b *sc_get_curr_process_handle();
