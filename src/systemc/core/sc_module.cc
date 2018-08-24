@@ -72,19 +72,19 @@ UniqueNameGen nameGen;
 namespace sc_core
 {
 
-sc_bind_proxy::sc_bind_proxy(const sc_interface &_interface) :
+sc_bind_proxy::sc_bind_proxy(sc_interface &_interface) :
     _interface(&_interface), _port(nullptr)
 {}
 
-sc_bind_proxy::sc_bind_proxy(const sc_port_base &_port) :
+sc_bind_proxy::sc_bind_proxy(sc_port_base &_port) :
     _interface(nullptr), _port(&_port)
 {}
 
-const sc_bind_proxy SC_BIND_PROXY_NUL(*(const sc_port_base *)nullptr);
+const sc_bind_proxy SC_BIND_PROXY_NUL(*(sc_port_base *)nullptr);
 
 sc_module::~sc_module() { delete _gem5_module; }
 
-const sc_bind_proxy SC_BIND_PROXY_NIL(*(const sc_port_base *)nullptr);
+const sc_bind_proxy SC_BIND_PROXY_NIL(*(sc_port_base *)nullptr);
 
 void
 sc_module::operator () (const sc_bind_proxy &p001,
@@ -152,7 +152,30 @@ sc_module::operator () (const sc_bind_proxy &p001,
                         const sc_bind_proxy &p063,
                         const sc_bind_proxy &p064)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    std::vector<const ::sc_core::sc_bind_proxy *> proxies;
+    auto insert = [&proxies](const ::sc_core::sc_bind_proxy &p) -> bool {
+        if (!p.port() && !p.interface())
+            return false;
+        proxies.push_back(&p);
+        return true;
+    };
+    insert(p001) && insert(p002) && insert(p003) && insert(p004) &&
+    insert(p005) && insert(p006) && insert(p007) && insert(p008) &&
+    insert(p009) && insert(p010) && insert(p011) && insert(p012) &&
+    insert(p013) && insert(p014) && insert(p015) && insert(p016) &&
+    insert(p017) && insert(p018) && insert(p019) && insert(p020) &&
+    insert(p021) && insert(p022) && insert(p023) && insert(p024) &&
+    insert(p025) && insert(p026) && insert(p027) && insert(p028) &&
+    insert(p029) && insert(p030) && insert(p031) && insert(p032) &&
+    insert(p033) && insert(p034) && insert(p035) && insert(p036) &&
+    insert(p037) && insert(p038) && insert(p039) && insert(p040) &&
+    insert(p041) && insert(p042) && insert(p043) && insert(p044) &&
+    insert(p045) && insert(p046) && insert(p047) && insert(p048) &&
+    insert(p049) && insert(p050) && insert(p051) && insert(p052) &&
+    insert(p053) && insert(p054) && insert(p055) && insert(p056) &&
+    insert(p057) && insert(p058) && insert(p059) && insert(p060) &&
+    insert(p061) && insert(p062) && insert(p063) && insert(p064);
+    _gem5_module->bindPorts(proxies);
 }
 
 const std::vector<sc_object *> &

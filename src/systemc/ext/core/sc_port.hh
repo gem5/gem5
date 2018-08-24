@@ -40,6 +40,7 @@ namespace sc_gem5
 {
 
 class BindInfo;
+class Module;
 class PendingSensitivityPort;
 
 };
@@ -70,6 +71,8 @@ class sc_port_base : public sc_object
     // Implementation defined, but depended on by the tests.
     void bind(sc_interface &);
     void bind(sc_port_base &);
+
+    friend class ::sc_gem5::Module;
 
     // Implementation defined, but depended on by the tests.
     virtual int vbind(sc_interface &) = 0;

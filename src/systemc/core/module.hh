@@ -111,6 +111,8 @@ class Module
 
     const char *uniqueName(const char *seed) { return nameGen.gen(seed); }
 
+    void bindPorts(std::vector<const ::sc_core::sc_bind_proxy *> &proxies);
+
     std::vector<::sc_core::sc_port_base *> ports;
     std::vector<::sc_core::sc_export_base *> exports;
 };

@@ -32,6 +32,7 @@
 #include <cassert>
 
 #include "base/logging.hh"
+#include "systemc/ext/core/sc_port.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_gem5
@@ -83,6 +84,25 @@ Module::pop()
             "Popping module which isn't at the end of the module list.\n");
     panic_if(_new_module, "Pop with unfinished module.\n");
     _modules.pop_back();
+}
+
+void
+Module::bindPorts(std::vector<const ::sc_core::sc_bind_proxy *> &proxies)
+{
+    panic_if(proxies.size() > ports.size(),
+            "Trying to bind %d interfaces/ports to %d ports.\n",
+            proxies.size(), ports.size());
+
+    auto proxyIt = proxies.begin();
+    auto portIt = ports.begin();
+    for (; proxyIt != proxies.end(); proxyIt++, portIt++) {
+        auto proxy = *proxyIt;
+        auto port = *portIt;
+        if (proxy->interface())
+            port->vbind(*proxy->interface());
+        else
+            port->vbind(*proxy->port());
+    }
 }
 
 Module *

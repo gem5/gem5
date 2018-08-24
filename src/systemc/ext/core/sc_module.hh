@@ -78,14 +78,15 @@ class sc_module_name;
 class sc_bind_proxy
 {
   private:
-    const sc_interface *_interface;
-    const sc_port_base *_port;
-
-    friend class sc_module;
+    sc_interface *_interface;
+    sc_port_base *_port;
 
   public:
-    sc_bind_proxy(const sc_interface &_interface);
-    sc_bind_proxy(const sc_port_base &_port);
+    sc_bind_proxy(sc_interface &_interface);
+    sc_bind_proxy(sc_port_base &_port);
+
+    sc_interface *interface() const { return _interface; }
+    sc_port_base *port() const { return _port; }
 };
 
 extern const sc_bind_proxy SC_BIND_PROXY_NIL;
