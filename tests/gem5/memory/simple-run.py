@@ -47,17 +47,14 @@ parser.add_argument('--latency_var', default=None)
 
 args = parser.parse_args()
 
-# both traffic generator and communication monitor are only available
-# if we have protobuf support, so potentially skip this test
-# require_sim_object("TrafficGen")
-# require_sim_object("CommMonitor")
-# This needs to be fixed in the new infrastructure
-
 # even if this is only a traffic generator, call it cpu to make sure
 # the scripts are happy
-cpu = TrafficGen(
-    config_file=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+try:
+    cpu = TrafficGen(
+        config_file=os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              "tgen-simple-mem.cfg"))
+except NameError:
+    m5.fatal("protobuf required for simple memory test")
 
 class MyMem(SimpleMemory):
     if args.bandwidth:
@@ -99,5 +96,5 @@ root.system.mem_mode = 'timing'
 
 m5.instantiate()
 exit_event = m5.simulate(100000000000)
-
-print(exit_event.getCause())
+if exit_event.getCause() != "simulate() limit reached":
+    exit(1)

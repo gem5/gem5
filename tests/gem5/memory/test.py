@@ -58,5 +58,12 @@ for name, params in simple_mem_params:
         config=joinpath(getcwd(), 'simple-run.py'),
         config_args = args,
         valid_isas=(constants.null_tag,),
-    )
+        ) # This tests for validity as well as performance
 
+gem5_verify_config(
+    name='memtest',
+    verifiers=(), # No need for verfiers this will return non-zero on fail
+    config=joinpath(getcwd(), 'memtest-run.py'),
+    config_args = [],
+    valid_isas=(constants.null_tag,),
+)
