@@ -320,6 +320,7 @@ Process::run()
             _isUnwinding = false;
         }
     } while (reset);
+    needsStart(true);
 }
 
 void

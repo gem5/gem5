@@ -271,6 +271,7 @@ class Process : public ::sc_core::sc_process_b, public ListNode
   public:
     virtual ::sc_core::sc_curr_proc_kind procKind() const = 0;
     bool needsStart() const { return _needsStart; }
+    void needsStart(bool ns) { _needsStart = ns; }
     bool dynamic() const { return _dynamic; }
     bool isUnwinding() const { return _isUnwinding; }
     void isUnwinding(bool v) { _isUnwinding = v; }

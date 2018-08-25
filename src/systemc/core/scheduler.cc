@@ -174,8 +174,10 @@ Scheduler::yield()
         // Fibers which aren't running should be parked at this line.
         _current->fiber()->run();
         // If the current process needs to be manually started, start it.
-        if (_current && _current->needsStart())
+        if (_current && _current->needsStart()) {
+            _current->needsStart(false);
             _current->run();
+        }
     }
     if (_current && _current->excWrapper) {
         // Make sure this isn't a method process.
