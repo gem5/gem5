@@ -94,6 +94,7 @@ class Thread : public Process
             thread->_needsStart = false;
             thread->run();
             thread->terminate();
+            scheduler.yield();
         }
     };
     friend class Context;
