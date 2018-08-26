@@ -327,6 +327,7 @@ void
 Scheduler::oneCycle()
 {
     runOnce = true;
+    scheduleReadyEvent();
     start(::MaxTick, false);
 }
 
