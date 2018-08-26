@@ -71,6 +71,9 @@ Kernel::init()
     if (scMainDone)
         return;
 
+    if (stopAfterCallbacks)
+        fatal("Simulation called sc_stop during elaboration.\n");
+
     status(::sc_core::SC_BEFORE_END_OF_ELABORATION);
     for (auto m: sc_gem5::allModules) {
         callbackModule(m);
@@ -168,9 +171,6 @@ Kernel::stopWork()
     endComplete = true;
 
     status(::sc_core::SC_STOPPED);
-
-    if (stopAfterCallbacks)
-        fatal("Simulation called sc_stop during elaboration.\n");
 }
 
 void
