@@ -266,6 +266,8 @@ class Scheduler
     {
         assert(ts == timeSlots.begin()->second);
         timeSlots.erase(timeSlots.begin());
+        if (!runToTime && starved())
+            scheduleStarvationEvent();
     }
 
     // Pending activity ignores gem5 activity, much like how a systemc

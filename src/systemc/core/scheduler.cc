@@ -124,7 +124,7 @@ Scheduler::initPhase()
     eventsToSchedule.clear();
 
     if (_started) {
-        if (starved() && !runToTime)
+        if (!runToTime && starved())
             scheduleStarvationEvent();
         kernel->status(::sc_core::SC_RUNNING);
     }
@@ -244,13 +244,13 @@ Scheduler::runReady()
     // The update phase.
     update();
 
-    if (starved() && !runToTime)
-        scheduleStarvationEvent();
-
     // The delta phase.
     for (auto &e: deltas)
         e->run();
     deltas.clear();
+
+    if (!runToTime && starved())
+        scheduleStarvationEvent();
 
     if (runOnce)
         schedulePause();
@@ -303,7 +303,7 @@ Scheduler::start(Tick max_tick, bool run_to_time)
     maxTick = max_tick;
 
     if (initDone) {
-        if (starved() && !runToTime)
+        if (!runToTime && starved())
             scheduleStarvationEvent();
         kernel->status(::sc_core::SC_RUNNING);
     }
