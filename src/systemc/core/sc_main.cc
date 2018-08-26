@@ -225,7 +225,7 @@ sc_stop()
     if (::sc_gem5::Kernel::status() == SC_STOPPED)
         return;
 
-    if (sc_is_running()) {
+    if ((sc_get_status() & SC_RUNNING)) {
         bool finish_delta = (_stop_mode == SC_STOP_FINISH_DELTA);
         ::sc_gem5::scheduler.scheduleStop(finish_delta);
     } else {
