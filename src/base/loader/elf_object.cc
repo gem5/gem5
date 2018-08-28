@@ -498,7 +498,8 @@ ElfObject::loadWeakSymbols(SymbolTable *symtab, Addr base, Addr offset,
 }
 
 bool
-ElfObject::loadSections(PortProxy& mem_proxy, Addr addr_mask, Addr offset)
+ElfObject::loadSections(const PortProxy& mem_proxy, Addr addr_mask,
+                        Addr offset)
 {
     if (!ObjectFile::loadSections(mem_proxy, addr_mask, offset))
         return false;

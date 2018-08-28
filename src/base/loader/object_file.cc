@@ -73,8 +73,8 @@ ObjectFile::~ObjectFile()
 
 
 bool
-ObjectFile::loadSection(Section *sec, PortProxy& mem_proxy, Addr addr_mask,
-                        Addr offset)
+ObjectFile::loadSection(Section *sec, const PortProxy& mem_proxy,
+                        Addr addr_mask, Addr offset)
 {
     if (sec->size != 0) {
         Addr addr = (sec->baseAddr & addr_mask) + offset;
@@ -91,7 +91,8 @@ ObjectFile::loadSection(Section *sec, PortProxy& mem_proxy, Addr addr_mask,
 
 
 bool
-ObjectFile::loadSections(PortProxy& mem_proxy, Addr addr_mask, Addr offset)
+ObjectFile::loadSections(const PortProxy& mem_proxy, Addr addr_mask,
+                         Addr offset)
 {
     return (loadSection(&text, mem_proxy, addr_mask, offset)
             && loadSection(&data, mem_proxy, addr_mask, offset)

@@ -94,7 +94,7 @@ class ElfObject : public ObjectFile
   public:
     virtual ~ElfObject() {}
 
-    bool loadSections(PortProxy& mem_proxy, Addr addr_mask = maxAddr,
+    bool loadSections(const PortProxy& mem_proxy, Addr addr_mask = maxAddr,
                       Addr offset = 0) override;
 
     virtual bool loadAllSymbols(SymbolTable *symtab, Addr base = 0,
