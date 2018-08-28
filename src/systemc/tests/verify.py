@@ -512,6 +512,10 @@ with open(json_path) as f:
                     test_data.iteritems() if eval(filt, dict(props))
     }
 
+    if len(filtered_tests) == 0:
+        print('All tests were filtered out.')
+        exit()
+
     if main_args.list:
         for target, props in sorted(filtered_tests.iteritems()):
             print('%s.%s' % (target, main_args.flavor))
