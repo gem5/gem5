@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2017 ARM Limited
+# Copyright (c) 2012, 2017-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -58,6 +58,17 @@ def is_cpu_class(cls):
             not issubclass(cls, m5.objects.CheckerCPU)
     except (TypeError, AttributeError):
         return False
+
+def _cpu_subclass_tester(name):
+    cpu_class = getattr(m5.objects, name, None)
+
+    def tester(cls):
+        return cpu_class is not None and cls is not None and \
+            issubclass(cls, cpu_class)
+
+    return tester
+
+is_kvm_cpu = _cpu_subclass_tester("BaseKvmCPU")
 
 def get(name):
     """Get a CPU class from a user provided class name or alias."""

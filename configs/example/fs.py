@@ -66,14 +66,6 @@ from common import CpuConfig
 from common.Caches import *
 from common import Options
 
-
-# Check if KVM support has been enabled, we might need to do VM
-# configuration if that's the case.
-have_kvm_support = 'BaseKvmCPU' in globals()
-def is_kvm_cpu(cpu_class):
-    return have_kvm_support and cpu_class != None and \
-        issubclass(cpu_class, BaseKvmCPU)
-
 def cmd_line_template():
     if options.command_line and options.command_line_file:
         print("Error: --command-line and --command-line-file are "
@@ -148,7 +140,7 @@ def build_test_system(np):
     test_sys.cpu = [TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i)
                     for i in xrange(np)]
 
-    if is_kvm_cpu(TestCPUClass) or is_kvm_cpu(FutureClass):
+    if CpuConfig.is_kvm_cpu(TestCPUClass) or CpuConfig.is_kvm_cpu(FutureClass):
         test_sys.kvm_vm = KvmVM()
 
     if options.ruby:
@@ -282,7 +274,7 @@ def build_drive_system(np):
     if options.kernel is not None:
         drive_sys.kernel = binary(options.kernel)
 
-    if is_kvm_cpu(DriveCPUClass):
+    if CpuConfig.is_kvm_cpu(DriveCPUClass):
         drive_sys.kvm_vm = KvmVM()
 
     drive_sys.iobridge = Bridge(delay='50ns',
