@@ -442,10 +442,10 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
                               (uint8_t*)&(auxv[x].getAuxVal()),
                               intSize);
     }
-    //Write out the terminating zeroed auxilliary vector
-    const uint64_t zero = 0;
+    //Write out the terminating zeroed auxillary vector
+    const IntType zero[2] = {0, 0};
     initVirtMem.writeBlob(auxv_array_base + 2 * intSize * auxv.size(),
-            (uint8_t*)&zero, 2 * intSize);
+            (uint8_t*)zero, 2 * intSize);
 
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
