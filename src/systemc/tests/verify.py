@@ -142,16 +142,19 @@ class RunPhase(TestPhaseBase):
             '--kill-after', str(args.timeout * 2),
             str(args.timeout)
         ]
+        curdir = os.getcwd()
         def run_test(test):
             cmd = []
             if args.timeout:
                 cmd.extend(timeout_cmd)
             cmd.extend([
                 test.full_path(),
-                '-red', test.m5out_dir(),
+                '-red', os.path.abspath(test.m5out_dir()),
                 '--listener-mode=off',
                 '--quiet',
-                config_path
+                config_path,
+                '--working-dir',
+                os.path.dirname(test.src_dir())
             ])
             # Ensure the output directory exists.
             if not os.path.exists(test.m5out_dir()):
@@ -162,6 +165,7 @@ class RunPhase(TestPhaseBase):
                 returncode = error.returncode
             else:
                 returncode = 0
+            os.chdir(curdir)
             with open(test.returncode_file(), 'w') as rc:
                 rc.write('%d\n' % returncode)
 
