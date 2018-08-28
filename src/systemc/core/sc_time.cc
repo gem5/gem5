@@ -134,6 +134,8 @@ class TimeSetter : public ::sc_gem5::PythonReadyFunc
     }
 } timeSetter;
 
+double defaultUnit = 1.0e-9;
+
 } // anonymous namespace
 
 sc_time::sc_time() : val(0) {}
@@ -152,14 +154,20 @@ sc_time::sc_time(const sc_time &t)
 
 sc_time::sc_time(double d, bool scale)
 {
-    //XXX Assuming the time resolution is 1ps, and the default unit is 1ns.
-    set(this, d, scale ? SC_NS : SC_PS);
+    //XXX Assuming the time resolution is 1ps.
+    if (scale)
+        set(this, d * defaultUnit, SC_SEC);
+    else
+        set(this, d, SC_PS);
 }
 
 sc_time::sc_time(sc_dt::uint64 v, bool scale)
 {
-    //XXX Assuming the time resolution is 1ps, and the default unit is 1ns.
-    set(this, static_cast<double>(v), scale ? SC_NS : SC_PS);
+    //XXX Assuming the time resolution is 1ps.
+    if (scale)
+        set(this, static_cast<double>(v) * defaultUnit, SC_SEC);
+    else
+        set(this, static_cast<double>(v), SC_PS);
 }
 
 sc_time &
@@ -370,16 +378,15 @@ sc_max_time()
 }
 
 void
-sc_set_default_time_unit(double, sc_time_unit)
+sc_set_default_time_unit(double d, sc_time_unit tu)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    defaultUnit = d * TimeUnitScale[tu];
 }
 
 sc_time
 sc_get_default_time_unit()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(sc_time *)nullptr;
+    return sc_time(defaultUnit, SC_SEC);
 }
 
 sc_time_tuple::sc_time_tuple(const sc_time &)
