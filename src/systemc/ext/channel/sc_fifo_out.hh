@@ -44,67 +44,58 @@ template <class T>
 class sc_fifo_out : public sc_port<sc_fifo_out_if<T>, 0>
 {
   public:
-    sc_fifo_out() : sc_port<sc_fifo_out_if<T>, 0>() {}
+    sc_fifo_out() : sc_port<sc_fifo_out_if<T>, 0>(),
+        _dataReadFinder(*this, &sc_fifo_out_if<T>::data_read_event)
+    {}
     explicit sc_fifo_out(const char *name) :
-            sc_port<sc_fifo_out_if<T>, 0>(name)
+            sc_port<sc_fifo_out_if<T>, 0>(name),
+        _dataReadFinder(*this, &sc_fifo_out_if<T>::data_read_event)
     {}
     virtual ~sc_fifo_out() {}
 
     // Deprecated binding constructors.
     explicit sc_fifo_out(const sc_fifo_out_if<T> &interface) :
-        sc_port<sc_fifo_out_if<T>, 0>(interface)
+        sc_port<sc_fifo_out_if<T>, 0>(interface),
+        _dataReadFinder(*this, &sc_fifo_out_if<T>::data_read_event)
     {}
     sc_fifo_out(const char *name, const sc_fifo_out_if<T> &interface) :
-        sc_port<sc_fifo_out_if<T>, 0>(name, interface)
+        sc_port<sc_fifo_out_if<T>, 0>(name, interface),
+        _dataReadFinder(*this, &sc_fifo_out_if<T>::data_read_event)
     {}
     explicit sc_fifo_out(sc_port_b<sc_fifo_out_if<T> > &parent) :
-        sc_port<sc_fifo_out_if<T>, 0>(parent)
+        sc_port<sc_fifo_out_if<T>, 0>(parent),
+        _dataReadFinder(*this, &sc_fifo_out_if<T>::data_read_event)
     {}
     sc_fifo_out(const char *name, sc_port_b<sc_fifo_out_if<T> > &parent) :
-        sc_port<sc_fifo_out_if<T>, 0>(name, parent)
+        sc_port<sc_fifo_out_if<T>, 0>(name, parent),
+        _dataReadFinder(*this, &sc_fifo_out_if<T>::data_read_event)
     {}
     explicit sc_fifo_out(sc_port<sc_fifo_out_if<T>, 0> &parent) :
-        sc_port<sc_fifo_out_if<T>, 0>(parent)
+        sc_port<sc_fifo_out_if<T>, 0>(parent),
+        _dataReadFinder(*this, &sc_fifo_out_if<T>::data_read_event)
     {}
     sc_fifo_out(const char *name, sc_port<sc_fifo_out_if<T>, 0> &parent) :
-        sc_port<sc_fifo_out_if<T>, 0>(name, parent)
+        sc_port<sc_fifo_out_if<T>, 0>(name, parent),
+        _dataReadFinder(*this, &sc_fifo_out_if<T>::data_read_event)
     {}
 
-    void
-    write(const T &)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    bool
-    nb_write(const T &)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
-    }
+    void write(const T &t) { (*this)->write(t); }
+    bool nb_write(const T &t) { return (*this)->nb_write(t); }
     const sc_event &
     data_read_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
+        return (*this)->data_read_event();
     }
-    sc_event_finder &
-    data_read() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event_finder *)nullptr;
-    }
-    int
-    num_free() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return 0;
-    }
+    sc_event_finder &data_read() const { return _dataReadFinder; }
+    int num_free() const { return (*this)->num_free(); }
     virtual const char *kind() const { return "sc_fifo_out"; }
 
   private:
     // Disabled
     sc_fifo_out(const sc_fifo_out<T> &) : sc_port<sc_fifo_out_if<T>, 0>() {}
     sc_fifo_out<T> &operator = (const sc_fifo_out<T> &) { return *this; }
+
+    mutable sc_event_finder_t<sc_fifo_out_if<T> > _dataReadFinder;
 };
 
 } // namespace sc_core

@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_EXT_CHANNEL_SC_FIFO_IN_HH__
 #define __SYSTEMC_EXT_CHANNEL_SC_FIFO_IN_HH__
 
+#include "../core/sc_event.hh"
 #include "../core/sc_port.hh"
 #include "sc_fifo_in_if.hh"
 #include "warn_unimpl.hh"
@@ -44,72 +45,59 @@ template <class T>
 class sc_fifo_in : public sc_port<sc_fifo_in_if<T>, 0>
 {
   public:
-    sc_fifo_in() : sc_port<sc_fifo_in_if<T>, 0>() {}
-    explicit sc_fifo_in(const char *name) : sc_port<sc_fifo_in_if<T>, 0>(name)
+    sc_fifo_in() : sc_port<sc_fifo_in_if<T>, 0>(),
+        _dataWrittenFinder(*this, &sc_fifo_in_if<T>::data_written_event)
+    {}
+    explicit sc_fifo_in(const char *name) :
+        sc_port<sc_fifo_in_if<T>, 0>(name),
+        _dataWrittenFinder(*this, &sc_fifo_in_if<T>::data_written_event)
     {}
     virtual ~sc_fifo_in() {}
 
     // Deprecated binding constructors.
     explicit sc_fifo_in(const sc_fifo_in_if<T> &interface) :
-        sc_port<sc_fifo_in_if<T>, 0>(interface)
+        sc_port<sc_fifo_in_if<T>, 0>(interface),
+        _dataWrittenFinder(*this, &sc_fifo_in_if<T>::data_written_event)
     {}
     sc_fifo_in(const char *name, const sc_fifo_in_if<T> &interface) :
-        sc_port<sc_fifo_in_if<T>, 0>(name, interface)
+        sc_port<sc_fifo_in_if<T>, 0>(name, interface),
+        _dataWrittenFinder(*this, &sc_fifo_in_if<T>::data_written_event)
     {}
     explicit sc_fifo_in(sc_port_b<sc_fifo_in_if<T> > &parent) :
-        sc_port<sc_fifo_in_if<T>, 0>(parent)
+        sc_port<sc_fifo_in_if<T>, 0>(parent),
+        _dataWrittenFinder(*this, &sc_fifo_in_if<T>::data_written_event)
     {}
     sc_fifo_in(const char *name, sc_port_b<sc_fifo_in_if<T> > &parent) :
-        sc_port<sc_fifo_in_if<T>, 0>(name, parent)
+        sc_port<sc_fifo_in_if<T>, 0>(name, parent),
+        _dataWrittenFinder(*this, &sc_fifo_in_if<T>::data_written_event)
     {}
     explicit sc_fifo_in(sc_port<sc_fifo_in_if<T>, 0> &parent) :
-        sc_port<sc_fifo_in_if<T>, 0>(parent)
+        sc_port<sc_fifo_in_if<T>, 0>(parent),
+        _dataWrittenFinder(*this, &sc_fifo_in_if<T>::data_written_event)
     {}
     sc_fifo_in(const char *name, sc_port<sc_fifo_in_if<T>, 0> &parent) :
-        sc_port<sc_fifo_in_if<T>, 0>(name, parent)
+        sc_port<sc_fifo_in_if<T>, 0>(name, parent),
+        _dataWrittenFinder(*this, &sc_fifo_in_if<T>::data_written_event)
     {}
 
-    void
-    read(T &)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    T
-    read()
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(T *)nullptr;
-    }
-    bool
-    nb_read(T &)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
-    }
+    void read(T &t) { (*this)->read(t); }
+    T read() { return (*this)->read(); }
+    bool nb_read(T &t) { return (*this)->nb_read(t); }
     const sc_event &
     data_written_event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const sc_event *)nullptr;
+        return (*this)->data_written_event();
     }
-    sc_event_finder &
-    data_written() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(sc_event_finder *)nullptr;
-    }
-    int
-    num_available() const
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return 0;
-    }
+    sc_event_finder &data_written() const { return _dataWrittenFinder; }
+    int num_available() const { return (*this)->num_available(); }
     virtual const char *kind() const { return "sc_fifo_in"; }
 
   private:
     // Disabled
     sc_fifo_in(const sc_fifo_in<T> &) : sc_port<sc_fifo_in_if<T>, 0>() {}
     sc_fifo_in<T> &operator = (const sc_fifo_in<T> &) { return *this; }
+
+    mutable sc_event_finder_t<sc_fifo_in_if<T> > _dataWrittenFinder;
 };
 
 } // namespace sc_core
