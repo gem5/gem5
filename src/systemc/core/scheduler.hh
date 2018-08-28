@@ -215,6 +215,9 @@ class Scheduler
     schedule(ScEvent *event, const ::sc_core::sc_time &delay)
     {
         Tick tick = delayed(delay);
+        if (tick < getCurTick())
+            tick = getCurTick();
+
         event->schedule(tick);
 
         // Delta notification/timeout.
