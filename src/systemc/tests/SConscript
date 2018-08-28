@@ -79,14 +79,24 @@ if env['USE_SYSTEMC']:
             env.Append(CPPPATH=test_dir.Dir('include'))
             env.Append(CPPPATH=ext_dir)
 
+            shared_lib_path = env['SHARED_LIB'][0].abspath
+            sl_dir, sl_base = os.path.split(shared_lib_path)
+            env.Append(LIBPATH=[sl_dir], LIBS=[sl_base])
+
             super(SystemCTestBin, cls).declare_all(env)
 
         def declare(self, env):
+            env = env.Clone()
             sources = list(self.sources)
             for f in self.filters:
                 sources = Source.all.apply_filter(f)
             objs = self.srcs_to_objs(env, sources)
-            objs = objs + env['SHARED_LIB'] + env['MAIN_OBJS']
+            objs = objs + env['MAIN_OBJS']
+            relpath = os.path.relpath(
+                    env['SHARED_LIB'][0].dir.abspath,
+                    self.path(env).dir.abspath)
+            env.Append(LINKFLAGS=Split('-z origin'))
+            env.Append(RPATH=env.Literal(os.path.join('\\$$ORIGIN', relpath)))
             return super(SystemCTestBin, self).declare(env, objs)
 
     tests = []
