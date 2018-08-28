@@ -27,7 +27,9 @@
 
 from __future__ import print_function
 
+import argparse
 import m5
+import os
 import re
 
 from m5.objects import SystemC_Kernel, Root
@@ -36,6 +38,13 @@ from m5.objects import SystemC_Kernel, Root
 
 kernel = SystemC_Kernel()
 root = Root(full_system=True, systemc_kernel=kernel)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--working-dir')
+
+args = parser.parse_args()
+if args.working_dir:
+    os.chdir(args.working_dir)
 
 kernel.sc_main("Hello", "World");
 
