@@ -128,6 +128,9 @@ class ArmInterruptPin : public SimObject
      */
     void setThreadContext(ThreadContext *tc);
 
+    /** Get interrupt number */
+    uint32_t num() const { return intNum; }
+
     /** Signal an interrupt */
     virtual void raise() = 0;
     /** Clear a signalled interrupt */
