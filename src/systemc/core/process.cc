@@ -32,6 +32,7 @@
 #include "base/logging.hh"
 #include "systemc/core/event.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_process_handle.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
@@ -212,6 +213,12 @@ Process::enable(bool inc_kids)
 void
 Process::kill(bool inc_kids)
 {
+    if (::sc_core::sc_get_status() != ::sc_core::SC_RUNNING) {
+        SC_REPORT_ERROR(
+                "(E572) a process may not be killed before it is initialized",
+                name());
+    }
+
     // Propogate the kill to our children no matter what happens to us.
     if (inc_kids)
         forEachKid([](Process *p) { p->kill(true); });
@@ -235,6 +242,12 @@ Process::kill(bool inc_kids)
 void
 Process::reset(bool inc_kids)
 {
+    if (::sc_core::sc_get_status() != ::sc_core::SC_RUNNING) {
+        SC_REPORT_ERROR(
+                "(E573) a process may not be asynchronously reset while"
+                "the simulation is not running", name());
+    }
+
     // Propogate the reset to our children no matter what happens to us.
     if (inc_kids)
         forEachKid([](Process *p) { p->reset(true); });
@@ -257,6 +270,12 @@ Process::reset(bool inc_kids)
 void
 Process::throw_it(ExceptionWrapperBase &exc, bool inc_kids)
 {
+    if (::sc_core::sc_get_status() != ::sc_core::SC_RUNNING) {
+        SC_REPORT_ERROR(
+                "(E574) throw_it not allowed unless simulation is running ",
+                name());
+    }
+
     if (inc_kids)
         forEachKid([&exc](Process *p) { p->throw_it(exc, true); });
 
