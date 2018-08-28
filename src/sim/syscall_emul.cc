@@ -868,8 +868,14 @@ fcntl64Func(SyscallDesc *desc, int num, ThreadContext *tc)
 SyscallReturn
 pipeImpl(SyscallDesc *desc, int callnum, ThreadContext *tc, bool pseudoPipe)
 {
-    int sim_fds[2], tgt_fds[2];
+    Addr tgt_addr = 0;
     auto p = tc->getProcessPtr();
+    if (!pseudoPipe) {
+        int index = 0;
+        tgt_addr = p->getSyscallArg(tc, index);
+    }
+
+    int sim_fds[2], tgt_fds[2];
 
     int pipe_retval = pipe(sim_fds);
     if (pipe_retval == -1)
@@ -897,9 +903,6 @@ pipeImpl(SyscallDesc *desc, int callnum, ThreadContext *tc, bool pseudoPipe)
         tc->setIntReg(SyscallPseudoReturnReg, tgt_fds[1]);
         return tgt_fds[0];
     }
-
-    int index = 0;
-    Addr tgt_addr = p->getSyscallArg(tc, index);
 
     /**
      * Copy the target file descriptors into buffer space and then copy
