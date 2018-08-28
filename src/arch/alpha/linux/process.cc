@@ -77,10 +77,10 @@ AlphaLinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, Process *process,
-          ThreadContext *tc)
+unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
@@ -97,10 +97,10 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
 /// borrowed from Tru64, the subcases that get used appear to be
 /// different in practice from those used by Tru64 processes.
 static SyscallReturn
-osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ThreadContext *tc)
+osf_getsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     unsigned op = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
     // unsigned nbytes = process->getSyscallArg(tc, 2);
@@ -126,10 +126,10 @@ osf_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 
 /// Target osf_setsysinfo() handler.
 static SyscallReturn
-osf_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ThreadContext *tc)
+osf_setsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     unsigned op = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
     // unsigned nbytes = process->getSyscallArg(tc, 2);

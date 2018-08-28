@@ -85,20 +85,18 @@ ArmFreebsdObjectFileLoader loader;
 } // anonymous namespace
 
 static SyscallReturn
-issetugidFunc(SyscallDesc *desc, int callnum, Process *process,
-              ThreadContext *tc)
+issetugidFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
-
     return 0;
 }
 
 static SyscallReturn
-sysctlFunc(SyscallDesc *desc, int callnum, Process *process,
-           ThreadContext *tc)
+sysctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
     uint64_t ret;
 
+    auto process = tc->getProcessPtr();
     Addr namep = process->getSyscallArg(tc, index);
     size_t namelen = process->getSyscallArg(tc, index);
     Addr oldp = process->getSyscallArg(tc, index);

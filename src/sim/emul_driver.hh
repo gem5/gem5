@@ -74,8 +74,7 @@ class EmulatedDriver : public SimObject
      * to openFunc() (q.v.).
      * @return A newly allocated target fd, or -1 on error.
      */
-    virtual int open(Process *p, ThreadContext *tc,
-                     int mode, int flags) = 0;
+    virtual int open(ThreadContext *tc, int mode, int flags) = 0;
 
     /**
      * Abstract method, invoked when the user program calls ioctl() on
@@ -84,7 +83,7 @@ class EmulatedDriver : public SimObject
      * @return The return code for the ioctl, or the negation of the errno
      * (see the SyscallReturn class).
      */
-    virtual int ioctl(Process *p, ThreadContext *tc, unsigned req) = 0;
+    virtual int ioctl(ThreadContext *tc, unsigned req) = 0;
 
     /**
      * Virtual method, invoked when the user program calls mmap() on
@@ -93,9 +92,9 @@ class EmulatedDriver : public SimObject
      * @return The return ptr for the mmap, or the negation of the errno
      * (see the SyscallReturn class).
      */
-    virtual Addr mmap(Process *p, ThreadContext *tc, Addr start,
-                      uint64_t length, int prot, int tgtFlags, int tgtFd,
-                      int offset) { return -EBADF; }
+    virtual Addr mmap(ThreadContext *tc, Addr start, uint64_t length,
+                      int prot, int tgtFlags, int tgtFd, int offset)
+                      { return -EBADF; }
 };
 
 #endif // __SIM_EMUL_DRIVER_HH

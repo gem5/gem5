@@ -72,10 +72,10 @@ SparcSolarisObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, Process *process,
-          ThreadContext *tc)
+unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     TypedBufferArg<Solaris::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "SunOS");

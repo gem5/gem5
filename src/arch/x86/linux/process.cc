@@ -91,10 +91,10 @@ X86LinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, Process *process,
-          ThreadContext *tc)
+unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
@@ -109,8 +109,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 static SyscallReturn
-archPrctlFunc(SyscallDesc *desc, int callnum, Process *process,
-              ThreadContext *tc)
+archPrctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     enum ArchPrctlCodes
     {
@@ -122,6 +121,7 @@ archPrctlFunc(SyscallDesc *desc, int callnum, Process *process,
 
     // First argument is the code, second is the address
     int index = 0;
+    auto process = tc->getProcessPtr();
     int code = process->getSyscallArg(tc, index);
     uint64_t addr = process->getSyscallArg(tc, index);
     uint64_t fsBase, gsBase;
@@ -175,12 +175,13 @@ struct UserDesc64 {
 };
 
 static SyscallReturn
-setThreadArea32Func(SyscallDesc *desc, int callnum,
-                    Process *process, ThreadContext *tc)
+setThreadArea32Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     const int minTLSEntry = 6;
     const int numTLSEntries = 3;
     const int maxTLSEntry = minTLSEntry + numTLSEntries - 1;
+
+    auto process = tc->getProcessPtr();
 
     X86Process *x86p = dynamic_cast<X86Process *>(process);
     assert(x86p);

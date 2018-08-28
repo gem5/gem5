@@ -105,10 +105,10 @@ ArmLinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc32(SyscallDesc *desc, int callnum, Process *process,
-            ThreadContext *tc)
+unameFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
@@ -123,10 +123,10 @@ unameFunc32(SyscallDesc *desc, int callnum, Process *process,
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc64(SyscallDesc *desc, int callnum, Process *process,
-            ThreadContext *tc)
+unameFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
@@ -141,10 +141,10 @@ unameFunc64(SyscallDesc *desc, int callnum, Process *process,
 
 /// Target set_tls() handler.
 static SyscallReturn
-setTLSFunc32(SyscallDesc *desc, int callnum, Process *process,
-             ThreadContext *tc)
+setTLSFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     uint32_t tlsPtr = process->getSyscallArg(tc, index);
 
     tc->getMemProxy().writeBlob(ArmLinuxProcess32::commPage + 0x0ff0,
@@ -154,10 +154,10 @@ setTLSFunc32(SyscallDesc *desc, int callnum, Process *process,
 }
 
 static SyscallReturn
-setTLSFunc64(SyscallDesc *desc, int callnum, Process *process,
-             ThreadContext *tc)
+setTLSFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     uint32_t tlsPtr = process->getSyscallArg(tc, index);
 
     tc->setMiscReg(MISCREG_TPIDRRO_EL0, tlsPtr);

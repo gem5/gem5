@@ -80,10 +80,10 @@ MipsLinuxObjectFileLoader loader;
 
 /// Target uname() handler.
 static SyscallReturn
-unameFunc(SyscallDesc *desc, int callnum, Process *process,
-          ThreadContext *tc)
+unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
@@ -100,10 +100,10 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
 /// borrowed from Tru64, the subcases that get used appear to be
 /// different in practice from those used by Tru64 processes.
 static SyscallReturn
-sys_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ThreadContext *tc)
+sys_getsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     unsigned op = process->getSyscallArg(tc, index);
     unsigned bufPtr = process->getSyscallArg(tc, index);
     // unsigned nbytes = process->getSyscallArg(tc, index);
@@ -129,10 +129,10 @@ sys_getsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 
 /// Target sys_setsysinfo() handler.
 static SyscallReturn
-sys_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
-                   ThreadContext *tc)
+sys_setsysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     unsigned op = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
     // unsigned nbytes = process->getSyscallArg(tc, index);
@@ -159,10 +159,10 @@ sys_setsysinfoFunc(SyscallDesc *desc, int callnum, Process *process,
 }
 
 static SyscallReturn
-setThreadAreaFunc(SyscallDesc *desc, int callnum, Process *process,
-                  ThreadContext *tc)
+setThreadAreaFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;
+    auto process = tc->getProcessPtr();
     Addr addr = process->getSyscallArg(tc, index);
     tc->setMiscRegNoEffect(MISCREG_TP_VALUE, addr);
     return 0;

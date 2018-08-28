@@ -46,10 +46,10 @@
 #include "sim/syscall_return.hh"
 
 void
-SyscallDesc::doSyscall(int callnum, Process *process, ThreadContext *tc,
-                       Fault *fault)
+SyscallDesc::doSyscall(int callnum, ThreadContext *tc, Fault *fault)
 {
     RegVal arg[6] M5_VAR_USED;
+    auto process = tc->getProcessPtr();
 
     /**
      * Step through the first six parameters for the system call and
@@ -69,7 +69,7 @@ SyscallDesc::doSyscall(int callnum, Process *process, ThreadContext *tc,
                     _name, arg[0], arg[1], arg[2], arg[3], arg[4], arg[5]);
 
     /** Invoke the system call */
-    SyscallReturn retval = (*executor)(this, callnum, process, tc);
+    SyscallReturn retval = (*executor)(this, callnum, tc);
 
     /**
      * If the system call needs to be restarted, most likely due to

@@ -93,8 +93,9 @@ ClDriver::handshake(GpuDispatcher *_dispatcher)
 }
 
 int
-ClDriver::open(Process *p, ThreadContext *tc, int mode, int flags)
+ClDriver::open(ThreadContext *tc, int mode, int flags)
 {
+    auto p = tc->getProcessPtr();
     std::shared_ptr<DeviceFDEntry> fdp;
     fdp = std::make_shared<DeviceFDEntry>(this, filename);
     int tgt_fd = p->fds->allocFD(fdp);
@@ -102,9 +103,10 @@ ClDriver::open(Process *p, ThreadContext *tc, int mode, int flags)
 }
 
 int
-ClDriver::ioctl(Process *process, ThreadContext *tc, unsigned req)
+ClDriver::ioctl(ThreadContext *tc, unsigned req)
 {
     int index = 2;
+    auto process = tc->getProcessPtr();
     Addr buf_addr = process->getSyscallArg(tc, index);
 
     switch (req) {
