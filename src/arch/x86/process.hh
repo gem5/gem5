@@ -60,13 +60,6 @@ namespace X86ISA
     class X86Process : public Process
     {
       protected:
-        /**
-         * Declaration of architectural page table for x86.
-         *
-         * These page tables are stored in system memory and respect x86
-         * specification.
-         */
-
         Addr _gdtStart;
         Addr _gdtSize;
 
