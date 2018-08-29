@@ -103,12 +103,14 @@ Kernel::regStats()
 
     status(::sc_core::SC_END_OF_ELABORATION);
     for (auto m: sc_gem5::allModules) {
+        callbackModule(m);
         m->sc_mod()->end_of_elaboration();
         for (auto p: m->ports)
             p->end_of_elaboration();
         for (auto e: m->exports)
             e->end_of_elaboration();
     }
+    callbackModule(nullptr);
     for (auto c: sc_gem5::allChannels)
         c->sc_chan()->end_of_elaboration();
 
