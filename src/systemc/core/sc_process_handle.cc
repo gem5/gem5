@@ -32,6 +32,7 @@
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_process_handle.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_core
 {
@@ -196,56 +197,79 @@ sc_process_handle::terminated() const
 const sc_event &
 sc_process_handle::terminated_event() const
 {
-    static sc_event non_event;
-    return _gem5_process ? _gem5_process->terminatedEvent() : non_event;
+    if (!_gem5_process) {
+        SC_REPORT_WARNING("(W570) attempt to use an empty "
+                "process handle ignored", "terminated_event()");
+        static sc_event non_event;
+        return non_event;
+    }
+    return _gem5_process->terminatedEvent();
 }
 
 
 void
 sc_process_handle::suspend(sc_descendent_inclusion_info include_descendants)
 {
-    if (!_gem5_process)
+    if (!_gem5_process) {
+        SC_REPORT_WARNING("(W570) attempt to use an empty "
+                "process handle ignored", "suspend()");
         return;
+    }
     _gem5_process->suspend(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 void
 sc_process_handle::resume(sc_descendent_inclusion_info include_descendants)
 {
-    if (!_gem5_process)
+    if (!_gem5_process) {
+        SC_REPORT_WARNING("(W570) attempt to use an empty "
+                "process handle ignored", "resume()");
         return;
+    }
     _gem5_process->resume(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 void
 sc_process_handle::disable(sc_descendent_inclusion_info include_descendants)
 {
-    if (!_gem5_process)
+    if (!_gem5_process) {
+        SC_REPORT_WARNING("(W570) attempt to use an empty "
+                "process handle ignored", "disable()");
         return;
+    }
     _gem5_process->disable(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 void
 sc_process_handle::enable(sc_descendent_inclusion_info include_descendants)
 {
-    if (!_gem5_process)
+    if (!_gem5_process) {
+        SC_REPORT_WARNING("(W570) attempt to use an empty "
+                "process handle ignored", "enable()");
         return;
+    }
     _gem5_process->enable(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 void
 sc_process_handle::kill(sc_descendent_inclusion_info include_descendants)
 {
-    if (!_gem5_process)
+    if (!_gem5_process) {
+        SC_REPORT_WARNING("(W570) attempt to use an empty "
+                "process handle ignored", "kill()");
         return;
+    }
     _gem5_process->kill(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
 void
 sc_process_handle::reset(sc_descendent_inclusion_info include_descendants)
 {
-    if (!_gem5_process)
+    if (!_gem5_process) {
+        SC_REPORT_WARNING("(W570) attempt to use an empty "
+                "process handle ignored", "reset()");
         return;
+    }
     _gem5_process->reset(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
@@ -253,19 +277,23 @@ bool
 sc_process_handle::is_unwinding()
 {
     if (!_gem5_process) {
-        //TODO This should generate a systemc style warning if the handle is
-        //invalid.
+        SC_REPORT_WARNING("(W570) attempt to use an empty "
+                "process handle ignored", "is_unwinding()");
         return false;
-    } else {
-        return _gem5_process->isUnwinding();
     }
+    return _gem5_process->isUnwinding();
 }
 
 const sc_event &
 sc_process_handle::reset_event() const
 {
-    static sc_event non_event;
-    return _gem5_process ? _gem5_process->resetEvent() : non_event;
+    if (!_gem5_process) {
+        SC_REPORT_WARNING("(W570) attempt to use an empty "
+                "process handle ignored", "reset()");
+        static sc_event non_event;
+        return non_event;
+    }
+    return _gem5_process->resetEvent();
 }
 
 
@@ -273,8 +301,11 @@ void
 sc_process_handle::sync_reset_on(
         sc_descendent_inclusion_info include_descendants)
 {
-    if (!_gem5_process)
+    if (!_gem5_process) {
+        SC_REPORT_WARNING("(W570) attempt to use an empty "
+                "process handle ignored", "sync_reset_on()");
         return;
+    }
     _gem5_process->syncResetOn(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 
@@ -282,8 +313,11 @@ void
 sc_process_handle::sync_reset_off(
         sc_descendent_inclusion_info include_descendants)
 {
-    if (!_gem5_process)
+    if (!_gem5_process) {
+        SC_REPORT_WARNING("(W570) attempt to use an empty "
+                "process handle ignored", "sync_reset_off()");
         return;
+    }
     _gem5_process->syncResetOff(include_descendants == SC_INCLUDE_DESCENDANTS);
 }
 

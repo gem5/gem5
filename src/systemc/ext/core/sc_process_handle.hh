@@ -33,7 +33,8 @@
 #include <exception>
 #include <vector>
 
-#include "systemc/ext/core/sc_object.hh"
+#include "../utils/sc_report_handler.hh"
+#include "sc_object.hh"
 
 namespace sc_gem5
 {
@@ -212,6 +213,11 @@ class sc_process_handle
              sc_descendent_inclusion_info include_descendants=
              SC_NO_DESCENDANTS)
     {
+        if (!_gem5_process) {
+            SC_REPORT_WARNING("(W570) attempt to use an empty "
+                    "process handle ignored", "throw_it()");
+            return;
+        }
         ::sc_gem5::ExceptionWrapper<T> exc(user_defined_exception);
         ::sc_gem5::throw_it_wrapper(_gem5_process, exc,
                 include_descendants == SC_INCLUDE_DESCENDANTS);

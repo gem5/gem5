@@ -33,7 +33,7 @@
 #include <exception>
 #include <string>
 
-#include "systemc/ext/core/sc_time.hh"
+#include "../core/sc_time.hh"
 
 namespace sc_core
 {
