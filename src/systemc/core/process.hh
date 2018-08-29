@@ -327,7 +327,7 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     ::sc_core::sc_report *lastReport() const;
 
   protected:
-    Process(const char *name, ProcessFuncWrapper *func, bool _dynamic);
+    Process(const char *name, ProcessFuncWrapper *func);
 
     static Process *_newest;
 
