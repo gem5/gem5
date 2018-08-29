@@ -82,6 +82,7 @@ Source('loader/symtab.cc')
 
 Source('stats/text.cc')
 
+GTest('addr_range_test', 'addr_range_test.cc')
 GTest('bituniontest', 'bituniontest.cc')
 
 DebugFlag('Annotate', "State machine annotation debugging")
