@@ -91,10 +91,12 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
         // We're "within" a parent module, ie we're being created while its
         // constructor or end_of_elaboration callback is running.
         parent = p->obj()->_sc_obj;
-        addObject(&parent->_gem5_object->children, _sc_obj);
     } else if (scheduler.current()) {
         // Our parent is the currently running process.
         parent = scheduler.current();
+    }
+    if (parent) {
+        addObject(&parent->_gem5_object->children, _sc_obj);
     } else {
         // We're a top level object.
         addObject(&topLevelObjects, _sc_obj);
