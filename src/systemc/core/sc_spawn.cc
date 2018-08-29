@@ -31,6 +31,7 @@
 #include "systemc/core/process.hh"
 #include "systemc/core/process_types.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_spawn.hh"
 
@@ -59,11 +60,15 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
             name = ::sc_core::sc_gen_unique_name("thread_p");
     }
 
+    bool dynamic =
+        (::sc_core::sc_get_status() >
+         ::sc_core::SC_BEFORE_END_OF_ELABORATION);
+
     Process *proc;
     if (method)
-        proc = new Method(name, func, true);
+        proc = new Method(name, func, dynamic);
     else
-        proc = new Thread(name, func, true);
+        proc = new Thread(name, func, dynamic);
 
     if (opts) {
         for (auto e: opts->_events)
