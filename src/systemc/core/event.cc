@@ -61,6 +61,8 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr) :
     else
         parent = nullptr;
 
+    pickUniqueName(parent, _basename);
+
     if (parent) {
         Object *obj = Object::getFromScObject(parent);
         obj->addChildEvent(_sc_event);

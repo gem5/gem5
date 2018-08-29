@@ -32,6 +32,7 @@
 #include <algorithm>
 
 #include "base/logging.hh"
+#include "systemc/core/event.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
 
@@ -67,6 +68,18 @@ popObject(Objects *objects, const std::string &name)
     objects->pop_back();
 }
 
+bool
+nameIsUnique(Objects *objects, Events *events, const std::string &name)
+{
+    for (auto obj: *objects)
+        if (!strcmp(obj->basename(), name.c_str()))
+            return false;
+    for (auto event: *events)
+        if (!strcmp(event->basename(), name.c_str()))
+            return false;
+    return true;
+}
+
 } // anonymous namespace
 
 Object::Object(sc_core::sc_object *_sc_obj) : Object(_sc_obj, "object") {}
@@ -95,12 +108,13 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
         // Our parent is the currently running process.
         parent = scheduler.current();
     }
-    if (parent) {
+
+    sc_gem5::pickUniqueName(parent, _basename);
+
+    if (parent)
         addObject(&parent->_gem5_object->children, _sc_obj);
-    } else {
-        // We're a top level object.
+    else
         addObject(&topLevelObjects, _sc_obj);
-    }
 
     addObject(&allObjects, _sc_obj);
 
@@ -242,6 +256,27 @@ Object::delChildEvent(sc_core::sc_event *e)
     assert(it != events.end());
     std::swap(*it, events.back());
     events.pop_back();
+}
+
+void
+Object::pickUniqueName(std::string &base)
+{
+    std::string seed = base;
+    while (!nameIsUnique(&children, &events, base))
+        base = ::sc_core::sc_gen_unique_name(seed.c_str());
+}
+
+void
+pickUniqueName(::sc_core::sc_object *parent, std::string &base)
+{
+    if (parent) {
+        Object::getFromScObject(parent)->pickUniqueName(base);
+        return;
+    }
+
+    std::string seed = base;
+    while (!nameIsUnique(&topLevelObjects, &topLevelEvents, base))
+        base = ::sc_core::sc_gen_unique_name(seed.c_str());
 }
 
 
