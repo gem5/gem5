@@ -52,6 +52,7 @@ class BaseGic(PioDevice):
 class ArmInterruptPin(SimObject):
     type = 'ArmInterruptPin'
     cxx_header = "dev/arm/base_gic.hh"
+    cxx_class = "ArmInterruptPinGen"
     abstract = True
 
     platform = Param.Platform(Parent.any, "Platform with interrupt controller")
@@ -60,11 +61,12 @@ class ArmInterruptPin(SimObject):
 class ArmSPI(ArmInterruptPin):
     type = 'ArmSPI'
     cxx_header = "dev/arm/base_gic.hh"
+    cxx_class = "ArmSPIGen"
 
 class ArmPPI(ArmInterruptPin):
     type = 'ArmPPI'
     cxx_header = "dev/arm/base_gic.hh"
-
+    cxx_class = "ArmPPIGen"
 
 class Pl390(BaseGic):
     type = 'Pl390'

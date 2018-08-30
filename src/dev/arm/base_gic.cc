@@ -70,12 +70,53 @@ BaseGic::params() const
     return dynamic_cast<const Params *>(_params);
 }
 
+ArmInterruptPinGen::ArmInterruptPinGen(const ArmInterruptPinParams *p)
+  : SimObject(p)
+{
+}
 
-ArmInterruptPin::ArmInterruptPin(const ArmInterruptPinParams *p)
-    : SimObject(p),
-      threadContext(nullptr),
-      platform(dynamic_cast<RealView*>(p->platform)),
-      intNum(p->num)
+ArmSPIGen::ArmSPIGen(const ArmSPIParams *p)
+    : ArmInterruptPinGen(p), pin(new ArmSPI(p->platform, p->num))
+{
+}
+
+ArmInterruptPin*
+ArmSPIGen::get(ThreadContext* tc)
+{
+    return pin;
+}
+
+ArmPPIGen::ArmPPIGen(const ArmPPIParams *p)
+    : ArmInterruptPinGen(p)
+{
+}
+
+ArmInterruptPin*
+ArmPPIGen::get(ThreadContext* tc)
+{
+    panic_if(!tc, "Invalid Thread Context\n");
+    ContextID cid = tc->contextId();
+
+    auto pin_it = pins.find(cid);
+
+    if (pin_it != pins.end()) {
+        // PPI Pin Already generated
+        return pin_it->second;
+    } else {
+        // Generate PPI Pin
+        auto p = static_cast<const ArmPPIParams *>(_params);
+        ArmPPI *pin = new ArmPPI(p->platform, tc, p->num);
+
+        pins.insert({cid, pin});
+
+        return pin;
+    }
+}
+
+ArmInterruptPin::ArmInterruptPin(
+    Platform  *_platform, ThreadContext *tc, uint32_t int_num)
+      : threadContext(tc), platform(dynamic_cast<RealView*>(_platform)),
+        intNum(int_num)
 {
     fatal_if(!platform, "Interrupt not connected to a RealView platform");
 }
@@ -97,10 +138,9 @@ ArmInterruptPin::targetContext() const
     return threadContext->contextId();
 }
 
-
-
-ArmSPI::ArmSPI(const ArmSPIParams *p)
-    : ArmInterruptPin(p)
+ArmSPI::ArmSPI(
+    Platform  *_platform, uint32_t int_num)
+      : ArmInterruptPin(_platform, nullptr, int_num)
 {
 }
 
@@ -116,8 +156,9 @@ ArmSPI::clear()
     platform->gic->clearInt(intNum);
 }
 
-ArmPPI::ArmPPI(const ArmPPIParams *p)
-    : ArmInterruptPin(p)
+ArmPPI::ArmPPI(
+    Platform  *_platform, ThreadContext *tc, uint32_t int_num)
+      : ArmInterruptPin(_platform, tc, int_num)
 {
 }
 
@@ -133,15 +174,14 @@ ArmPPI::clear()
     platform->gic->clearPPInt(intNum, targetContext());
 }
 
-
-ArmSPI *
+ArmSPIGen *
 ArmSPIParams::create()
 {
-    return new ArmSPI(this);
+    return new ArmSPIGen(this);
 }
 
-ArmPPI *
+ArmPPIGen *
 ArmPPIParams::create()
 {
-    return new ArmPPI(this);
+    return new ArmPPIGen(this);
 }
