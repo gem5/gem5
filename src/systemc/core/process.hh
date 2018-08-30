@@ -37,6 +37,7 @@
 #include "base/fiber.hh"
 #include "sim/eventq.hh"
 #include "systemc/core/bindinfo.hh"
+#include "systemc/core/event.hh"
 #include "systemc/core/list.hh"
 #include "systemc/core/object.hh"
 #include "systemc/core/sched_event.hh"
@@ -259,7 +260,13 @@ class PendingSensitivityFinder : public PendingSensitivity
     void
     finalize(Sensitivities &s) override
     {
-        s.push_back(new SensitivityEvent(process, &finder->find_event()));
+        const ::sc_core::sc_port_base *port = finder->port();
+        int size = port->size();
+        for (int i = 0; i < size; i++) {
+            ::sc_core::sc_interface *interface = port->_gem5Interface(i);
+            const ::sc_core::sc_event *event = &finder->find_event(interface);
+            s.push_back(new SensitivityEvent(process, event));
+        }
     }
 };
 

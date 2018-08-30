@@ -42,6 +42,7 @@ namespace sc_gem5
 class BindInfo;
 class Module;
 class PendingSensitivityPort;
+class PendingSensitivityFinder;
 
 };
 
@@ -85,6 +86,7 @@ class sc_port_base : public sc_object
 
   private:
     friend class ::sc_gem5::PendingSensitivityPort;
+    friend class ::sc_gem5::PendingSensitivityFinder;
     friend class ::sc_gem5::Kernel;
 
     void _gem5Finalize();
