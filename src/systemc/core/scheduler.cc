@@ -46,7 +46,7 @@ Scheduler::Scheduler() :
     starvationEvent(this, false, StarvationPriority),
     _started(false), _paused(false), _stopped(false),
     maxTickEvent(this, false, MaxTickPriority),
-    _numCycles(0), _current(nullptr), initDone(false),
+    _numCycles(0), _changeStamp(0), _current(nullptr), initDone(false),
     runOnce(false)
 {}
 
@@ -265,14 +265,17 @@ void
 Scheduler::runReady()
 {
     bool empty = readyList.empty();
+    lastReadyTick = getCurTick();
 
     // The evaluation phase.
     do {
         yield();
     } while (!readyList.empty());
 
-    if (!empty)
+    if (!empty) {
         _numCycles++;
+        _changeStamp++;
+    }
 
     // The update phase.
     update();
@@ -334,6 +337,7 @@ Scheduler::start(Tick max_tick, bool run_to_time)
     runToTime = run_to_time;
 
     maxTick = max_tick;
+    lastReadyTick = getCurTick();
 
     if (initDone) {
         if (!runToTime && starved())

@@ -38,6 +38,8 @@ namespace sc_gem5
 
 class Channel;
 
+uint64_t getChangeStamp();
+
 } // namespace sc_gem5
 
 namespace sc_core

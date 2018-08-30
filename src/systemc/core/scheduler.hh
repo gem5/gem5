@@ -275,6 +275,7 @@ class Scheduler
     void
     completeTimeSlot(TimeSlot *ts)
     {
+        _changeStamp++;
         assert(ts == timeSlots.begin()->second);
         timeSlots.erase(timeSlots.begin());
         if (!runToTime && starved())
@@ -326,6 +327,8 @@ class Scheduler
 
     bool paused() { return _paused; }
     bool stopped() { return _stopped; }
+
+    uint64_t changeStamp() { return _changeStamp; }
 
   private:
     typedef const EventBase::Priority Priority;
@@ -388,9 +391,18 @@ class Scheduler
     bool _stopped;
 
     Tick maxTick;
-    EventWrapper<Scheduler, &Scheduler::pause> maxTickEvent;
+    Tick lastReadyTick;
+    void
+    maxTickFunc()
+    {
+        if (lastReadyTick != getCurTick())
+            _changeStamp++;
+        pause();
+    }
+    EventWrapper<Scheduler, &Scheduler::maxTickFunc> maxTickEvent;
 
     uint64_t _numCycles;
+    uint64_t _changeStamp;
 
     Process *_current;
 

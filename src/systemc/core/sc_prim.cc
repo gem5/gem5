@@ -29,7 +29,15 @@
 
 #include "base/logging.hh"
 #include "systemc/core/channel.hh"
+#include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_prim.hh"
+
+namespace sc_gem5
+{
+
+uint64_t getChangeStamp() { return scheduler.changeStamp(); }
+
+} // namespace sc_gem5
 
 namespace sc_core
 {
