@@ -173,9 +173,9 @@ class sc_signal : public sc_signal_inout_if<T>,
 
 template <class T, sc_writer_policy WRITER_POLICY>
 inline std::ostream &
-operator << (std::ostream &os, const sc_signal<T, WRITER_POLICY> &)
+operator << (std::ostream &os, const sc_signal<T, WRITER_POLICY> &s)
 {
-    sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+    os << s.read();
     return os;
 }
 
