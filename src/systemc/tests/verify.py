@@ -195,6 +195,9 @@ def tagged_filt(tag, num):
     return (r'^\n{}: \({}{}\) .*\n(In file: .*\n)?'
             r'(In process: [\w.]* @ .*\n)?').format(tag, tag[0], num)
 
+def error_filt(num):
+    return tagged_filt('Error', num)
+
 def warning_filt(num):
     return tagged_filt('Warning', num)
 
@@ -217,6 +220,9 @@ class LogChecker(Checker):
         warning_filt(540),
         warning_filt(569),
         warning_filt(571),
+        error_filt(541),
+        error_filt(542),
+        error_filt(543),
         info_filt(804),
     )
     test_filt = merge_filts(
