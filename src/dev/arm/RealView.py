@@ -74,7 +74,7 @@ try:
 except ImportError:
     # KVM support wasn't compiled into gem5. Fallback to a
     # software-only GIC.
-    kvm_gicv2_class = Pl390
+    kvm_gicv2_class = GicV2
     pass
 
 class AmbaPioDevice(BasicPioDevice):
@@ -614,7 +614,7 @@ class RealViewPBX(RealView):
     realview_io = RealViewCtrl(pio_addr=0x10000000)
     mcc = VExpressMCC()
     dcc = CoreTile2A15DCC()
-    gic = Pl390(cpu_addr=0x1f000100, dist_addr=0x1f001000, cpu_size=0x100)
+    gic = GicV2(cpu_addr=0x1f000100, dist_addr=0x1f001000, cpu_size=0x100)
     pci_host = GenericPciHost(
         conf_base=0x30000000, conf_size='256MB', conf_device_bits=16,
         pci_pio_base=0)
@@ -874,7 +874,7 @@ class VExpress_EMM(RealView):
     dcc = CoreTile2A15DCC()
 
     ### On-chip devices ###
-    gic = Pl390(dist_addr=0x2C001000, cpu_addr=0x2C002000)
+    gic = GicV2(dist_addr=0x2C001000, cpu_addr=0x2C002000)
     vgic   = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
 
     local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30,
@@ -972,7 +972,7 @@ class VExpress_EMM(RealView):
                                  InterruptLine=2, InterruptPin=2)
 
     def enableMSIX(self):
-        self.gic = Pl390(dist_addr=0x2C001000, cpu_addr=0x2C002000, it_lines=512)
+        self.gic = GicV2(dist_addr=0x2C001000, cpu_addr=0x2C002000, it_lines=512)
         self.gicv2m = Gicv2m()
         self.gicv2m.frames = [Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2C1C0000)]
 

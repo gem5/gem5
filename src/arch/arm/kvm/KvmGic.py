@@ -38,8 +38,8 @@
 from m5.params import *
 from m5.proxy import *
 
-from Gic import Pl390
+from Gic import GicV2
 
-class MuxingKvmGic(Pl390):
+class MuxingKvmGic(GicV2):
     type = 'MuxingKvmGic'
     cxx_header = "arch/arm/kvm/gic.hh"

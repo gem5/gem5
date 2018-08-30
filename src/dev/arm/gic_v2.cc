@@ -41,7 +41,7 @@
  *          Prakash Ramrakhyani
  */
 
-#include "dev/arm/gic_pl390.hh"
+#include "dev/arm/gic_v2.hh"
 
 #include "base/trace.hh"
 #include "debug/Checkpoint.hh"
@@ -51,18 +51,18 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
-const AddrRange Pl390::GICD_IGROUPR   (0x080, 0x0ff);
-const AddrRange Pl390::GICD_ISENABLER (0x100, 0x17f);
-const AddrRange Pl390::GICD_ICENABLER (0x180, 0x1ff);
-const AddrRange Pl390::GICD_ISPENDR   (0x200, 0x27f);
-const AddrRange Pl390::GICD_ICPENDR   (0x280, 0x2ff);
-const AddrRange Pl390::GICD_ISACTIVER (0x300, 0x37f);
-const AddrRange Pl390::GICD_ICACTIVER (0x380, 0x3ff);
-const AddrRange Pl390::GICD_IPRIORITYR(0x400, 0x7ff);
-const AddrRange Pl390::GICD_ITARGETSR (0x800, 0xbff);
-const AddrRange Pl390::GICD_ICFGR     (0xc00, 0xcff);
+const AddrRange GicV2::GICD_IGROUPR   (0x080, 0x0ff);
+const AddrRange GicV2::GICD_ISENABLER (0x100, 0x17f);
+const AddrRange GicV2::GICD_ICENABLER (0x180, 0x1ff);
+const AddrRange GicV2::GICD_ISPENDR   (0x200, 0x27f);
+const AddrRange GicV2::GICD_ICPENDR   (0x280, 0x2ff);
+const AddrRange GicV2::GICD_ISACTIVER (0x300, 0x37f);
+const AddrRange GicV2::GICD_ICACTIVER (0x380, 0x3ff);
+const AddrRange GicV2::GICD_IPRIORITYR(0x400, 0x7ff);
+const AddrRange GicV2::GICD_ITARGETSR (0x800, 0xbff);
+const AddrRange GicV2::GICD_ICFGR     (0xc00, 0xcff);
 
-Pl390::Pl390(const Params *p)
+GicV2::GicV2(const Params *p)
     : BaseGic(p),
       distRange(RangeSize(p->dist_addr, DIST_SIZE)),
       cpuRange(RangeSize(p->cpu_addr, p->cpu_size)),
@@ -95,14 +95,14 @@ Pl390::Pl390(const Params *p)
     gem5ExtensionsEnabled = false;
 }
 
-Pl390::~Pl390()
+GicV2::~GicV2()
 {
     for (int x = 0; x < CPU_MAX; x++)
         delete postIntEvent[x];
 }
 
 Tick
-Pl390::read(PacketPtr pkt)
+GicV2::read(PacketPtr pkt)
 {
     const Addr addr = pkt->getAddr();
 
@@ -116,7 +116,7 @@ Pl390::read(PacketPtr pkt)
 
 
 Tick
-Pl390::write(PacketPtr pkt)
+GicV2::write(PacketPtr pkt)
 {
     const Addr addr = pkt->getAddr();
 
@@ -129,7 +129,7 @@ Pl390::write(PacketPtr pkt)
 }
 
 Tick
-Pl390::readDistributor(PacketPtr pkt)
+GicV2::readDistributor(PacketPtr pkt)
 {
     const Addr daddr = pkt->getAddr() - distRange.start();
     const ContextID ctx = pkt->req->contextId();
@@ -158,7 +158,7 @@ Pl390::readDistributor(PacketPtr pkt)
 }
 
 uint32_t
-Pl390::readDistributor(ContextID ctx, Addr daddr, size_t resp_sz)
+GicV2::readDistributor(ContextID ctx, Addr daddr, size_t resp_sz)
 {
     if (GICD_IGROUPR.contains(daddr)) {
         return 0; // unimplemented; RAZ (read as zero)
@@ -203,7 +203,8 @@ Pl390::readDistributor(ContextID ctx, Addr daddr, size_t resp_sz)
     if (GICD_IPRIORITYR.contains(daddr)) {
         Addr int_num = daddr - GICD_IPRIORITYR.start();
         assert(int_num < INT_LINES_MAX);
-        DPRINTF(Interrupt, "Reading interrupt priority at int# %#x \n",int_num);
+        DPRINTF(Interrupt, "Reading interrupt priority at int# %#x \n",
+                int_num);
 
         switch (resp_sz) {
           default: // will panic() after return to caller anyway
@@ -277,7 +278,7 @@ Pl390::readDistributor(ContextID ctx, Addr daddr, size_t resp_sz)
 }
 
 Tick
-Pl390::readCpu(PacketPtr pkt)
+GicV2::readCpu(PacketPtr pkt)
 {
     const Addr daddr = pkt->getAddr() - cpuRange.start();
 
@@ -295,7 +296,7 @@ Pl390::readCpu(PacketPtr pkt)
 }
 
 uint32_t
-Pl390::readCpu(ContextID ctx, Addr daddr)
+GicV2::readCpu(ContextID ctx, Addr daddr)
 {
     switch(daddr) {
       case GICC_IIDR:
@@ -349,7 +350,8 @@ Pl390::readCpu(ContextID ctx, Addr daddr)
                   &= ~int_num;
             }
 
-            DPRINTF(Interrupt,"CPU %d reading IAR.id=%d IAR.cpu=%d, iar=0x%x\n",
+            DPRINTF(Interrupt,
+                    "CPU %d reading IAR.id=%d IAR.cpu=%d, iar=0x%x\n",
                     ctx, iar.ack_id, iar.cpu_id, iar);
             cpuHighestInt[ctx] = SPURIOUS_INT;
             updateIntState(-1);
@@ -372,7 +374,7 @@ Pl390::readCpu(ContextID ctx, Addr daddr)
 }
 
 Tick
-Pl390::writeDistributor(PacketPtr pkt)
+GicV2::writeDistributor(PacketPtr pkt)
 {
     const Addr daddr = pkt->getAddr() - distRange.start();
 
@@ -407,7 +409,7 @@ Pl390::writeDistributor(PacketPtr pkt)
 }
 
 void
-Pl390::writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
+GicV2::writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
                         size_t data_sz)
 {
     if (GICD_IGROUPR.contains(daddr)) {
@@ -538,7 +540,7 @@ Pl390::writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
 }
 
 Tick
-Pl390::writeCpu(PacketPtr pkt)
+GicV2::writeCpu(PacketPtr pkt)
 {
     const Addr daddr = pkt->getAddr() - cpuRange.start();
 
@@ -556,7 +558,7 @@ Pl390::writeCpu(PacketPtr pkt)
 }
 
 void
-Pl390::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
+GicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
 {
     switch(daddr) {
       case GICC_CTLR:
@@ -615,8 +617,8 @@ Pl390::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
     if (cpuEnabled[ctx]) updateIntState(-1);
 }
 
-Pl390::BankedRegs&
-Pl390::getBankedRegs(ContextID ctx) {
+GicV2::BankedRegs&
+GicV2::getBankedRegs(ContextID ctx) {
     if (bankedRegs.size() <= ctx)
         bankedRegs.resize(ctx + 1);
 
@@ -626,7 +628,7 @@ Pl390::getBankedRegs(ContextID ctx) {
 }
 
 void
-Pl390::softInt(ContextID ctx, SWI swi)
+GicV2::softInt(ContextID ctx, SWI swi)
 {
     if (gem5ExtensionsEnabled) {
         switch (swi.list_type) {
@@ -696,7 +698,7 @@ Pl390::softInt(ContextID ctx, SWI swi)
 }
 
 uint64_t
-Pl390::genSwiMask(int cpu)
+GicV2::genSwiMask(int cpu)
 {
     if (cpu > sys->numContexts())
         panic("Invalid CPU ID\n");
@@ -704,7 +706,7 @@ Pl390::genSwiMask(int cpu)
 }
 
 uint8_t
-Pl390::getCpuPriority(unsigned cpu)
+GicV2::getCpuPriority(unsigned cpu)
 {
     // see Table 3-2 in IHI0048B.b (GICv2)
     // mask some low-order priority bits per BPR value
@@ -715,7 +717,7 @@ Pl390::getCpuPriority(unsigned cpu)
 }
 
 void
-Pl390::updateIntState(int hint)
+GicV2::updateIntState(int hint)
 {
     for (int cpu = 0; cpu < sys->numContexts(); cpu++) {
         if (!cpuEnabled[cpu])
@@ -794,7 +796,7 @@ Pl390::updateIntState(int hint)
 }
 
 void
-Pl390::updateRunPri()
+GicV2::updateRunPri()
 {
     for (int cpu = 0; cpu < sys->numContexts(); cpu++) {
         if (!cpuEnabled[cpu])
@@ -823,7 +825,7 @@ Pl390::updateRunPri()
 }
 
 void
-Pl390::sendInt(uint32_t num)
+GicV2::sendInt(uint32_t num)
 {
     uint8_t target = getCpuTarget(0, num);
     DPRINTF(Interrupt, "Received Interrupt number %d,  cpuTarget %#x: \n",
@@ -837,7 +839,7 @@ Pl390::sendInt(uint32_t num)
 }
 
 void
-Pl390::sendPPInt(uint32_t num, uint32_t cpu)
+GicV2::sendPPInt(uint32_t num, uint32_t cpu)
 {
     DPRINTF(Interrupt, "Received PPI %d, cpuTarget %#x: \n",
             num, cpu);
@@ -846,13 +848,13 @@ Pl390::sendPPInt(uint32_t num, uint32_t cpu)
 }
 
 void
-Pl390::clearInt(uint32_t number)
+GicV2::clearInt(uint32_t number)
 {
     /* @todo assume edge triggered only at the moment. Nothing to do. */
 }
 
 void
-Pl390::clearPPInt(uint32_t num, uint32_t cpu)
+GicV2::clearPPInt(uint32_t num, uint32_t cpu)
 {
     DPRINTF(Interrupt, "Clearing PPI %d, cpuTarget %#x: \n",
             num, cpu);
@@ -861,7 +863,7 @@ Pl390::clearPPInt(uint32_t num, uint32_t cpu)
 }
 
 void
-Pl390::postInt(uint32_t cpu, Tick when)
+GicV2::postInt(uint32_t cpu, Tick when)
 {
     if (!(postIntEvent[cpu]->scheduled())) {
         ++pendingDelayedInterrupts;
@@ -870,7 +872,7 @@ Pl390::postInt(uint32_t cpu, Tick when)
 }
 
 void
-Pl390::postDelayedInt(uint32_t cpu)
+GicV2::postDelayedInt(uint32_t cpu)
 {
     platform->intrctrl->post(cpu, ArmISA::INT_IRQ, 0);
     --pendingDelayedInterrupts;
@@ -880,7 +882,7 @@ Pl390::postDelayedInt(uint32_t cpu)
 }
 
 DrainState
-Pl390::drain()
+GicV2::drain()
 {
     if (pendingDelayedInterrupts == 0) {
         return DrainState::Drained;
@@ -891,14 +893,14 @@ Pl390::drain()
 
 
 void
-Pl390::drainResume()
+GicV2::drainResume()
 {
     // There may be pending interrupts if checkpointed from Kvm; post them.
     updateIntState(-1);
 }
 
 void
-Pl390::serialize(CheckpointOut &cp) const
+GicV2::serialize(CheckpointOut &cp) const
 {
     DPRINTF(Checkpoint, "Serializing Arm GIC\n");
 
@@ -931,7 +933,7 @@ Pl390::serialize(CheckpointOut &cp) const
 }
 
 void
-Pl390::BankedRegs::serialize(CheckpointOut &cp) const
+GicV2::BankedRegs::serialize(CheckpointOut &cp) const
 {
     SERIALIZE_SCALAR(intEnabled);
     SERIALIZE_SCALAR(pendingInt);
@@ -940,7 +942,7 @@ Pl390::BankedRegs::serialize(CheckpointOut &cp) const
 }
 
 void
-Pl390::unserialize(CheckpointIn &cp)
+GicV2::unserialize(CheckpointIn &cp)
 {
     DPRINTF(Checkpoint, "Unserializing Arm GIC\n");
 
@@ -988,7 +990,7 @@ Pl390::unserialize(CheckpointIn &cp)
 }
 
 void
-Pl390::BankedRegs::unserialize(CheckpointIn &cp)
+GicV2::BankedRegs::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_SCALAR(intEnabled);
     UNSERIALIZE_SCALAR(pendingInt);
@@ -996,8 +998,8 @@ Pl390::BankedRegs::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ARRAY(intPriority, SGI_MAX + PPI_MAX);
 }
 
-Pl390 *
-Pl390Params::create()
+GicV2 *
+GicV2Params::create()
 {
-    return new Pl390(this);
+    return new GicV2(this);
 }

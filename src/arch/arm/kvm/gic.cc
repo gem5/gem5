@@ -168,7 +168,7 @@ KvmKernelGicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
 
 
 MuxingKvmGic::MuxingKvmGic(const MuxingKvmGicParams *p)
-    : Pl390(p),
+    : GicV2(p),
       system(*p->system),
       kernelGic(nullptr),
       usingKvm(false)
@@ -186,30 +186,30 @@ MuxingKvmGic::~MuxingKvmGic()
 void
 MuxingKvmGic::startup()
 {
-    Pl390::startup();
+    GicV2::startup();
     usingKvm = (kernelGic != nullptr) && system.validKvmEnvironment();
     if (usingKvm)
-        fromPl390ToKvm();
+        fromGicV2ToKvm();
 }
 
 DrainState
 MuxingKvmGic::drain()
 {
     if (usingKvm)
-        fromKvmToPl390();
-    return Pl390::drain();
+        fromKvmToGicV2();
+    return GicV2::drain();
 }
 
 void
 MuxingKvmGic::drainResume()
 {
-    Pl390::drainResume();
+    GicV2::drainResume();
     bool use_kvm = (kernelGic != nullptr) && system.validKvmEnvironment();
     if (use_kvm != usingKvm) {
         // Should only occur due to CPU switches
         if (use_kvm) // from simulation to KVM emulation
-            fromPl390ToKvm();
-        // otherwise, drain() already sync'd the state back to the Pl390
+            fromGicV2ToKvm();
+        // otherwise, drain() already sync'd the state back to the GicV2
 
         usingKvm = use_kvm;
     }
@@ -219,7 +219,7 @@ Tick
 MuxingKvmGic::read(PacketPtr pkt)
 {
     if (!usingKvm)
-        return Pl390::read(pkt);
+        return GicV2::read(pkt);
 
     panic("MuxingKvmGic: PIO from gem5 is currently unsupported\n");
 }
@@ -228,7 +228,7 @@ Tick
 MuxingKvmGic::write(PacketPtr pkt)
 {
     if (!usingKvm)
-        return Pl390::write(pkt);
+        return GicV2::write(pkt);
 
     panic("MuxingKvmGic: PIO from gem5 is currently unsupported\n");
 }
@@ -237,7 +237,7 @@ void
 MuxingKvmGic::sendInt(uint32_t num)
 {
     if (!usingKvm)
-        return Pl390::sendInt(num);
+        return GicV2::sendInt(num);
 
     DPRINTF(Interrupt, "Set SPI %d\n", num);
     kernelGic->setSPI(num);
@@ -247,7 +247,7 @@ void
 MuxingKvmGic::clearInt(uint32_t num)
 {
     if (!usingKvm)
-        return Pl390::clearInt(num);
+        return GicV2::clearInt(num);
 
     DPRINTF(Interrupt, "Clear SPI %d\n", num);
     kernelGic->clearSPI(num);
@@ -257,7 +257,7 @@ void
 MuxingKvmGic::sendPPInt(uint32_t num, uint32_t cpu)
 {
     if (!usingKvm)
-        return Pl390::sendPPInt(num, cpu);
+        return GicV2::sendPPInt(num, cpu);
     DPRINTF(Interrupt, "Set PPI %d:%d\n", cpu, num);
     kernelGic->setPPI(cpu, num);
 }
@@ -266,7 +266,7 @@ void
 MuxingKvmGic::clearPPInt(uint32_t num, uint32_t cpu)
 {
     if (!usingKvm)
-        return Pl390::clearPPInt(num, cpu);
+        return GicV2::clearPPInt(num, cpu);
 
     DPRINTF(Interrupt, "Clear PPI %d:%d\n", cpu, num);
     kernelGic->clearPPI(cpu, num);
@@ -275,12 +275,12 @@ MuxingKvmGic::clearPPInt(uint32_t num, uint32_t cpu)
 void
 MuxingKvmGic::updateIntState(int hint)
 {
-    // During Kvm->Pl390 state transfer, writes to the Pl390 will call
+    // During Kvm->GicV2 state transfer, writes to the GicV2 will call
     // updateIntState() which can post an interrupt.  Since we're only
-    // using the Pl390 model for holding state in this circumstance, we
-    // short-circuit this behavior, as the Pl390 is not actually active.
+    // using the GicV2 model for holding state in this circumstance, we
+    // short-circuit this behavior, as the GicV2 is not actually active.
     if (!usingKvm)
-        return Pl390::updateIntState(hint);
+        return GicV2::updateIntState(hint);
 }
 
 void
@@ -357,9 +357,9 @@ MuxingKvmGic::copyGicState(BaseGicRegisters* from, BaseGicRegisters* to)
     copyDistRegister(from, to, 0, GICD_CTLR);
 
     // Copy interrupt-enabled statuses (I[CS]ENABLERn; R0 is per-CPU banked)
-    set   = Pl390::GICD_ISENABLER.start();
-    clear = Pl390::GICD_ICENABLER.start();
-    size  = Pl390::itLines / 8;
+    set   = GicV2::GICD_ISENABLER.start();
+    clear = GicV2::GICD_ICENABLER.start();
+    size  = GicV2::itLines / 8;
     clearBankedDistRange(to, clear, 4);
     copyBankedDistRange(from, to, set, 4);
 
@@ -368,9 +368,9 @@ MuxingKvmGic::copyGicState(BaseGicRegisters* from, BaseGicRegisters* to)
     copyDistRange(from, to, set, size);
 
     // Copy pending interrupts (I[CS]PENDRn; R0 is per-CPU banked)
-    set   = Pl390::GICD_ISPENDR.start();
-    clear = Pl390::GICD_ICPENDR.start();
-    size  = Pl390::itLines / 8;
+    set   = GicV2::GICD_ISPENDR.start();
+    clear = GicV2::GICD_ICPENDR.start();
+    size  = GicV2::itLines / 8;
     clearBankedDistRange(to, clear, 4);
     copyBankedDistRange(from, to, set, 4);
 
@@ -379,9 +379,9 @@ MuxingKvmGic::copyGicState(BaseGicRegisters* from, BaseGicRegisters* to)
     copyDistRange(from, to, set, size);
 
     // Copy active interrupts (I[CS]ACTIVERn; R0 is per-CPU banked)
-    set   = Pl390::GICD_ISACTIVER.start();
-    clear = Pl390::GICD_ICACTIVER.start();
-    size  = Pl390::itLines / 8;
+    set   = GicV2::GICD_ISACTIVER.start();
+    clear = GicV2::GICD_ICACTIVER.start();
+    size  = GicV2::itLines / 8;
     clearBankedDistRange(to, clear, 4);
     copyBankedDistRange(from, to, set, 4);
 
@@ -390,34 +390,34 @@ MuxingKvmGic::copyGicState(BaseGicRegisters* from, BaseGicRegisters* to)
     copyDistRange(from, to, set, size);
 
     // Copy interrupt priorities (IPRIORITYRn; R0-7 are per-CPU banked)
-    set   = Pl390::GICD_IPRIORITYR.start();
+    set   = GicV2::GICD_IPRIORITYR.start();
     copyBankedDistRange(from, to, set, 32);
 
     set += 32;
-    size = Pl390::itLines - 32;
+    size = GicV2::itLines - 32;
     copyDistRange(from, to, set, size);
 
     // Copy interrupt processor target regs (ITARGETRn; R0-7 are read-only)
-    set = Pl390::GICD_ITARGETSR.start() + 32;
-    size = Pl390::itLines - 32;
+    set = GicV2::GICD_ITARGETSR.start() + 32;
+    size = GicV2::itLines - 32;
     copyDistRange(from, to, set, size);
 
     // Copy interrupt configuration registers (ICFGRn)
-    set = Pl390::GICD_ICFGR.start();
-    size = Pl390::itLines / 4;
+    set = GicV2::GICD_ICFGR.start();
+    size = GicV2::itLines / 4;
     copyDistRange(from, to, set, size);
 }
 
 void
-MuxingKvmGic::fromPl390ToKvm()
+MuxingKvmGic::fromGicV2ToKvm()
 {
-    copyGicState(static_cast<Pl390*>(this), kernelGic);
+    copyGicState(static_cast<GicV2*>(this), kernelGic);
 }
 
 void
-MuxingKvmGic::fromKvmToPl390()
+MuxingKvmGic::fromKvmToGicV2()
 {
-    copyGicState(kernelGic, static_cast<Pl390*>(this));
+    copyGicState(kernelGic, static_cast<GicV2*>(this));
 
     // the values read for the Interrupt Priority Mask Register (PMR)
     // have been shifted by three bits due to its having been emulated by

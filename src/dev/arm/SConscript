@@ -55,7 +55,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('base_gic.cc')
     Source('flash_device.cc')
     Source('generic_timer.cc')
-    Source('gic_pl390.cc')
+    Source('gic_v2.cc')
     Source('gic_v2m.cc')
     Source('pl011.cc')
     Source('pl111.cc')

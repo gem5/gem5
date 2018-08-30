@@ -42,11 +42,11 @@
 
 
 /** @file
- * Implementation of a PL390 GIC
+ * Implementation of a GICv2
  */
 
-#ifndef __DEV_ARM_GIC_PL390_H__
-#define __DEV_ARM_GIC_PL390_H__
+#ifndef __DEV_ARM_GICV2_H__
+#define __DEV_ARM_GICV2_H__
 
 #include <vector>
 
@@ -56,9 +56,9 @@
 #include "dev/arm/base_gic.hh"
 #include "dev/io_device.hh"
 #include "dev/platform.hh"
-#include "params/Pl390.hh"
+#include "params/GicV2.hh"
 
-class Pl390 : public BaseGic, public BaseGicRegisters
+class GicV2 : public BaseGic, public BaseGicRegisters
 {
   protected:
     // distributor memory addresses
@@ -304,10 +304,10 @@ class Pl390 : public BaseGic, public BaseGicRegisters
     /** highest interrupt that is interrupting CPU */
     uint32_t cpuHighestInt[CPU_MAX];
 
-    /** One bit per cpu per software interrupt that is pending for each possible
-     * sgi source. Indexed by SGI number. Each byte in generating cpu id and
-     * bits in position is destination id. e.g. 0x4 = CPU 0 generated interrupt
-     * for CPU 2. */
+    /** One bit per cpu per software interrupt that is pending for each
+     * possible sgi source. Indexed by SGI number. Each byte in generating cpu
+     * id and bits in position is destination id. e.g. 0x4 = CPU 0 generated
+     * interrupt for CPU 2. */
     uint64_t cpuSgiPending[SGI_MAX];
     uint64_t cpuSgiActive[SGI_MAX];
 
@@ -356,14 +356,14 @@ class Pl390 : public BaseGic, public BaseGicRegisters
     int pendingDelayedInterrupts;
 
   public:
-    typedef Pl390Params Params;
+    typedef GicV2Params Params;
     const Params *
     params() const
     {
         return dynamic_cast<const Params *>(_params);
     }
-    Pl390(const Params *p);
-    ~Pl390();
+    GicV2(const Params *p);
+    ~GicV2();
 
     DrainState drain() override;
     void drainResume() override;

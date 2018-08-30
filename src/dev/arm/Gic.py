@@ -68,9 +68,9 @@ class ArmPPI(ArmInterruptPin):
     cxx_header = "dev/arm/base_gic.hh"
     cxx_class = "ArmPPIGen"
 
-class Pl390(BaseGic):
-    type = 'Pl390'
-    cxx_header = "dev/arm/gic_pl390.hh"
+class GicV2(BaseGic):
+    type = 'GicV2'
+    cxx_header = "dev/arm/gic_v2.hh"
 
     dist_addr = Param.Addr("Address for distributor")
     cpu_addr = Param.Addr("Address for cpu")
