@@ -210,6 +210,11 @@ class LogChecker(Checker):
         filts = '|'.join(filts)
         return re.compile(filts, flags=re.MULTILINE)
 
+    # The reporting mechanism will print the actual filename when running in
+    # gem5, and the "golden" output will say "<removed by verify.py>". We want
+    # to strip out both versions to make comparing the output sensible.
+    in_file_filt = r'^In file: ((<removed by verify\.pl>)|([a-zA-Z0-9.:_/]*))$'
+
     ref_filt = merge_filts(
         r'^\nInfo: /OSCI/SystemC: Simulation stopped by user.\n',
         r'^SystemC Simulation\n',
@@ -224,10 +229,12 @@ class LogChecker(Checker):
         error_filt(542),
         error_filt(543),
         info_filt(804),
+        in_file_filt,
     )
     test_filt = merge_filts(
         r'^Global frequency set at \d* ticks per second\n',
         info_filt(804),
+        in_file_filt,
     )
 
     def __init__(self, ref, test, tag, out_dir):
