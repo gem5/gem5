@@ -160,12 +160,16 @@ Process::suspend(bool inc_kids)
 
     if (!_suspended) {
         _suspended = true;
-        _suspendedReady = false;
-    }
+        _suspendedReady = scheduler.suspend(this);
 
-    if (procKind() != ::sc_core::SC_METHOD_PROC_ &&
-            scheduler.current() == this) {
-        scheduler.yield();
+        if (procKind() != ::sc_core::SC_METHOD_PROC_ &&
+                scheduler.current() == this) {
+            // This isn't in the spec, but Accellera says that a thread that
+            // self suspends should be marked ready immediately when it's
+            // resumed.
+            _suspendedReady = true;
+            scheduler.yield();
+        }
     }
 }
 
@@ -178,7 +182,7 @@ Process::resume(bool inc_kids)
     if (_suspended) {
         _suspended = false;
         if (_suspendedReady)
-            ready();
+            scheduler.resume(this);
         _suspendedReady = false;
     }
 }

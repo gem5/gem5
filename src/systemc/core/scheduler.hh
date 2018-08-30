@@ -182,6 +182,14 @@ class Scheduler
     // Put a process on the ready list.
     void ready(Process *p);
 
+    // Mark a process as ready if init is finished, or put it on the list of
+    // processes to be initialized.
+    void resume(Process *p);
+
+    // Remove a process from the ready/init list if it was on one of them, and
+    // return if it was.
+    bool suspend(Process *p);
+
     // Schedule an update for a given channel.
     void requestUpdate(Channel *c);
 

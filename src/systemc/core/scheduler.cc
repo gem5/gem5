@@ -201,6 +201,39 @@ Scheduler::ready(Process *p)
 }
 
 void
+Scheduler::resume(Process *p)
+{
+    if (initDone)
+        ready(p);
+    else
+        initList.pushLast(p);
+}
+
+bool
+Scheduler::suspend(Process *p)
+{
+    if (initDone) {
+        // After initialization, the only list we can be on is the ready list.
+        bool was_ready = (p->nextListNode != nullptr);
+        p->popListNode();
+        return was_ready;
+    } else {
+        bool was_ready = false;
+        // Check the ready list to see if we find this process.
+        ListNode *n = readyList.nextListNode;
+        while (n != &readyList) {
+            if (n == p) {
+                was_ready = true;
+                break;
+            }
+        }
+        if (was_ready)
+            toFinalize.pushLast(p);
+        return was_ready;
+    }
+}
+
+void
 Scheduler::requestUpdate(Channel *c)
 {
     updateList.pushLast(c);
