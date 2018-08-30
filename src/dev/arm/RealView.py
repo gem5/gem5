@@ -418,11 +418,10 @@ class GenericTimer(ClockedObject):
     type = 'GenericTimer'
     cxx_header = "dev/arm/generic_timer.hh"
     system = Param.ArmSystem(Parent.any, "system")
-    gic = Param.BaseGic(Parent.any, "GIC to use for interrupting")
-    int_phys_s = Param.UInt32("Physical (S) timer interrupt number")
-    int_phys_ns = Param.UInt32("Physical (NS) timer interrupt number")
-    int_virt = Param.UInt32("Virtual timer interrupt number")
-    int_hyp = Param.UInt32("Hypervisor timer interrupt number")
+    int_phys_s = Param.ArmPPI("Physical (S) timer interrupt")
+    int_phys_ns = Param.ArmPPI("Physical (NS) timer interrupt")
+    int_virt = Param.ArmPPI("Virtual timer interrupt")
+    int_hyp = Param.ArmPPI("Hypervisor timer interrupt")
 
     def generateDeviceTree(self, state):
         node = FdtNode("timer")
@@ -431,10 +430,10 @@ class GenericTimer(ClockedObject):
                                "arm,armv7-timer",
                                "arm,armv8-timer"])
         node.append(FdtPropertyWords("interrupts", [
-            1, int(self.int_phys_s) - 16, 0xf08,
-            1, int(self.int_phys_ns) - 16, 0xf08,
-            1, int(self.int_virt) - 16, 0xf08,
-            1, int(self.int_hyp) - 16, 0xf08,
+            1, int(self.int_phys_s.num) - 16, 0xf08,
+            1, int(self.int_phys_ns.num) - 16, 0xf08,
+            1, int(self.int_virt.num) - 16, 0xf08,
+            1, int(self.int_hyp.num) - 16, 0xf08,
         ]))
         clock = state.phandle(self.clk_domain.unproxy(self))
         node.append(FdtPropertyWords("clocks", clock))
@@ -444,12 +443,11 @@ class GenericTimer(ClockedObject):
 class GenericTimerMem(PioDevice):
     type = 'GenericTimerMem'
     cxx_header = "dev/arm/generic_timer.hh"
-    gic = Param.BaseGic(Parent.any, "GIC to use for interrupting")
 
     base = Param.Addr(0, "Base address")
 
-    int_phys = Param.UInt32("Interrupt number")
-    int_virt = Param.UInt32("Interrupt number")
+    int_phys = Param.ArmSPI("Physical Interrupt")
+    int_virt = Param.ArmSPI("Virtual Interrupt")
 
 class PL031(AmbaIntDevice):
     type = 'PL031'
@@ -902,8 +900,11 @@ class VExpress_EMM(RealView):
         conf_base=0x30000000, conf_size='256MB', conf_device_bits=16,
         pci_pio_base=0)
 
-    generic_timer = GenericTimer(int_phys_s=29, int_phys_ns=30,
-                                 int_virt=27, int_hyp=26)
+    generic_timer = GenericTimer(int_phys_s=ArmPPI(num=29),
+                                 int_phys_ns=ArmPPI(num=30),
+                                 int_virt=ArmPPI(num=27),
+                                 int_hyp=ArmPPI(num=26))
+
     timer0 = Sp804(int_num0=34, int_num1=34, pio_addr=0x1C110000, clock0='1MHz', clock1='1MHz')
     timer1 = Sp804(int_num0=35, int_num1=35, pio_addr=0x1C120000, clock0='1MHz', clock1='1MHz')
     clcd   = Pl111(pio_addr=0x1c1f0000, int_num=46)
@@ -1125,8 +1126,10 @@ Interrupts:
         Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2c1c0000),
     ]
 
-    generic_timer = GenericTimer(int_phys_s=29, int_phys_ns=30,
-                                 int_virt=27, int_hyp=26)
+    generic_timer = GenericTimer(int_phys_s=ArmPPI(num=29),
+                                 int_phys_ns=ArmPPI(num=30),
+                                 int_virt=ArmPPI(num=27),
+                                 int_hyp=ArmPPI(num=26))
 
     def _on_chip_devices(self):
         return [

@@ -111,26 +111,6 @@ class SystemCounter : public Serializable
 /// Per-CPU architected timer.
 class ArchTimer : public Serializable, public Drainable
 {
-  public:
-    class Interrupt
-    {
-      public:
-        Interrupt(BaseGic &gic, unsigned irq)
-            : _gic(gic), _ppi(false), _irq(irq), _cpu(0) {}
-
-        Interrupt(BaseGic &gic, unsigned irq, unsigned cpu)
-            : _gic(gic), _ppi(true), _irq(irq), _cpu(cpu) {}
-
-        void send();
-        void clear();
-
-      private:
-        BaseGic &_gic;
-        const bool _ppi;
-        const unsigned _irq;
-        const unsigned _cpu;
-    };
-
   protected:
     /// Control register.
     BitUnion32(ArchTimerCtrl)
@@ -147,7 +127,7 @@ class ArchTimer : public Serializable, public Drainable
 
     SystemCounter &_systemCounter;
 
-    Interrupt _interrupt;
+    ArmInterruptPin * const _interrupt;
 
     /// Value of the control register ({CNTP/CNTHP/CNTV}_CTL).
     ArchTimerCtrl _control;
@@ -172,7 +152,7 @@ class ArchTimer : public Serializable, public Drainable
     ArchTimer(const std::string &name,
               SimObject &parent,
               SystemCounter &sysctr,
-              const Interrupt &interrupt);
+              ArmInterruptPin *interrupt);
 
     /// Returns the timer name.
     std::string name() const { return _name; }
@@ -220,7 +200,7 @@ class ArchTimerKvm : public ArchTimer
                  ArmSystem &system,
                  SimObject &parent,
                  SystemCounter &sysctr,
-                 const Interrupt &interrupt)
+                 ArmInterruptPin *interrupt)
       : ArchTimer(name, parent, sysctr, interrupt), system(system) {}
 
   protected:
@@ -235,6 +215,8 @@ class ArchTimerKvm : public ArchTimer
 class GenericTimer : public ClockedObject
 {
   public:
+    const GenericTimerParams * params() const;
+
     GenericTimer(GenericTimerParams *p);
 
     void serialize(CheckpointOut &cp) const override;
@@ -247,32 +229,32 @@ class GenericTimer : public ClockedObject
   protected:
     struct CoreTimers {
         CoreTimers(GenericTimer &parent, ArmSystem &system, unsigned cpu,
-                   unsigned _irqPhysS, unsigned _irqPhysNS,
-                   unsigned _irqVirt, unsigned _irqHyp)
-            : irqPhysS(*parent.gic, _irqPhysS, cpu),
-              irqPhysNS(*parent.gic, _irqPhysNS, cpu),
-              irqVirt(*parent.gic, _irqVirt, cpu),
-              irqHyp(*parent.gic, _irqHyp, cpu),
+                   ArmInterruptPin *_irqPhysS, ArmInterruptPin *_irqPhysNS,
+                   ArmInterruptPin *_irqVirt, ArmInterruptPin *_irqHyp)
+            : irqPhysS(_irqPhysS),
+              irqPhysNS(_irqPhysNS),
+              irqVirt(_irqVirt),
+              irqHyp(_irqHyp),
               physS(csprintf("%s.phys_s_timer%d", parent.name(), cpu),
                      system, parent, parent.systemCounter,
-                     irqPhysS),
+                     _irqPhysS),
               // This should really be phys_timerN, but we are stuck with
               // arch_timer for backwards compatibility.
               physNS(csprintf("%s.arch_timer%d", parent.name(), cpu),
                      system, parent, parent.systemCounter,
-                     irqPhysNS),
+                     _irqPhysNS),
               virt(csprintf("%s.virt_timer%d", parent.name(), cpu),
                    system, parent, parent.systemCounter,
-                   irqVirt),
+                   _irqVirt),
               hyp(csprintf("%s.hyp_timer%d", parent.name(), cpu),
                    system, parent, parent.systemCounter,
-                   irqHyp)
+                   _irqHyp)
         {}
 
-        ArchTimer::Interrupt irqPhysS;
-        ArchTimer::Interrupt irqPhysNS;
-        ArchTimer::Interrupt irqVirt;
-        ArchTimer::Interrupt irqHyp;
+        ArmInterruptPin const *irqPhysS;
+        ArmInterruptPin const *irqPhysNS;
+        ArmInterruptPin const *irqVirt;
+        ArmInterruptPin const *irqHyp;
 
         ArchTimerKvm physS;
         ArchTimerKvm physNS;
@@ -296,20 +278,6 @@ class GenericTimer : public ClockedObject
   protected: // Configuration
     /// ARM system containing this timer
     ArmSystem &system;
-
-    /// Pointer to the GIC, needed to trigger timer interrupts.
-    BaseGic *const gic;
-
-    /// Physical timer interrupt (S)
-    const unsigned irqPhysS;
-    /// Physical timer interrupt (NS)
-    const unsigned irqPhysNS;
-
-    /// Virtual timer interrupt
-    const unsigned irqVirt;
-
-    /// Hypervisor timer interrupt
-    const unsigned irqHyp;
 };
 
 class GenericTimerISA : public ArmISA::BaseISADevice

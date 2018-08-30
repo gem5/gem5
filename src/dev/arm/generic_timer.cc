@@ -94,7 +94,7 @@ SystemCounter::unserialize(CheckpointIn &cp)
 ArchTimer::ArchTimer(const std::string &name,
                      SimObject &parent,
                      SystemCounter &sysctr,
-                     const Interrupt &interrupt)
+                     ArmInterruptPin *interrupt)
     : _name(name), _parent(parent), _systemCounter(sysctr),
       _interrupt(interrupt),
       _control(0), _counterLimit(0), _offset(0),
@@ -114,7 +114,7 @@ ArchTimer::counterLimitReached()
     if (!_control.imask) {
         if (scheduleEvents()) {
             DPRINTF(Timer, "Causing interrupt\n");
-            _interrupt.send();
+            _interrupt->raise();
         } else {
             DPRINTF(Timer, "Kvm mode; skipping simulated interrupt\n");
         }
@@ -219,39 +219,18 @@ ArchTimer::drainResume()
     updateCounter();
 }
 
-void
-ArchTimer::Interrupt::send()
-{
-    if (_ppi) {
-        _gic.sendPPInt(_irq, _cpu);
-    } else {
-        _gic.sendInt(_irq);
-    }
-}
-
-
-void
-ArchTimer::Interrupt::clear()
-{
-    if (_ppi) {
-        _gic.clearPPInt(_irq, _cpu);
-    } else {
-        _gic.clearInt(_irq);
-    }
-}
-
-
 GenericTimer::GenericTimer(GenericTimerParams *p)
     : ClockedObject(p),
-      system(*p->system),
-      gic(p->gic),
-      irqPhysS(p->int_phys_s),
-      irqPhysNS(p->int_phys_ns),
-      irqVirt(p->int_virt),
-      irqHyp(p->int_hyp)
+      system(*p->system)
 {
     fatal_if(!p->system, "No system specified, can't instantiate timer.\n");
     system.setGenericTimer(this);
+}
+
+const GenericTimerParams *
+GenericTimer::params() const
+{
+    return dynamic_cast<const GenericTimerParams *>(_params);
 }
 
 void
@@ -314,13 +293,20 @@ void
 GenericTimer::createTimers(unsigned cpus)
 {
     assert(timers.size() < cpus);
+    auto p = static_cast<const GenericTimerParams *>(_params);
 
     const unsigned old_cpu_count(timers.size());
     timers.resize(cpus);
     for (unsigned i = old_cpu_count; i < cpus; ++i) {
+
+        ThreadContext *tc = system.getThreadContext(i);
+
         timers[i].reset(
             new CoreTimers(*this, system, i,
-                           irqPhysS, irqPhysNS, irqVirt, irqHyp));
+                           p->int_phys_s->get(tc),
+                           p->int_phys_ns->get(tc),
+                           p->int_virt->get(tc),
+                           p->int_hyp->get(tc)));
     }
 }
 
@@ -544,10 +530,10 @@ GenericTimerMem::GenericTimerMem(GenericTimerMemParams *p)
       systemCounter(),
       physTimer(csprintf("%s.phys_timer0", name()),
                 *this, systemCounter,
-                ArchTimer::Interrupt(*p->gic, p->int_phys)),
+                p->int_phys->get()),
       virtTimer(csprintf("%s.virt_timer0", name()),
                 *this, systemCounter,
-                ArchTimer::Interrupt(*p->gic, p->int_virt))
+                p->int_virt->get())
 {
 }
 
