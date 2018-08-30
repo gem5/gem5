@@ -69,15 +69,15 @@ class sc_signal : public sc_signal_inout_if<T>,
   public:
     sc_signal() : sc_signal_inout_if<T>(),
                   sc_prim_channel(sc_gen_unique_name("signal")),
-                  m_cur_val(T()), m_new_val(T())
+                  m_cur_val(T()), m_new_val(T()), _changeStamp(~0ULL)
     {}
     explicit sc_signal(const char *name) :
         sc_signal_inout_if<T>(), sc_prim_channel(name),
-        m_cur_val(T()), m_new_val(T())
+        m_cur_val(T()), m_new_val(T()), _changeStamp(~0ULL)
     {}
     explicit sc_signal(const char *name, const T &initial_value) :
         sc_signal_inout_if<T>(), sc_prim_channel(name),
-        m_cur_val(initial_value), m_new_val(initial_value)
+        m_cur_val(initial_value), m_new_val(initial_value), _changeStamp(~0ULL)
     {}
     virtual ~sc_signal() {}
 
@@ -130,8 +130,7 @@ class sc_signal : public sc_signal_inout_if<T>,
     virtual bool
     event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
+        return _changeStamp == ::sc_gem5::getChangeStamp();
     }
 
     virtual void print(std::ostream &os=std::cout) const { os << m_cur_val; }
@@ -152,6 +151,7 @@ class sc_signal : public sc_signal_inout_if<T>,
             return;
 
         m_cur_val = m_new_val;
+        _changeStamp = ::sc_gem5::getChangeStamp();
         _valueChangedEvent.notify(SC_ZERO_TIME);
     }
 
@@ -163,6 +163,7 @@ class sc_signal : public sc_signal_inout_if<T>,
 
   private:
     sc_event _valueChangedEvent;
+    uint64_t _changeStamp;
 
     // Disabled
     sc_signal(const sc_signal<T, WRITER_POLICY> &) :
@@ -185,15 +186,18 @@ class sc_signal<bool, WRITER_POLICY> :
   public:
     sc_signal() : sc_signal_inout_if<bool>(),
                   sc_prim_channel(sc_gen_unique_name("signal")),
-                  m_cur_val(bool()), m_new_val(bool())
+                  m_cur_val(bool()), m_new_val(bool()),
+                  _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
     {}
     explicit sc_signal(const char *name) :
         sc_signal_inout_if<bool>(), sc_prim_channel(name),
-        m_cur_val(bool()), m_new_val(bool())
+        m_cur_val(bool()), m_new_val(bool()),
+        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
     {}
     explicit sc_signal(const char *name, const bool &initial_value) :
         sc_signal_inout_if<bool>(), sc_prim_channel(name),
-        m_cur_val(initial_value), m_new_val(initial_value)
+        m_cur_val(initial_value), m_new_val(initial_value),
+        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
     {}
     virtual ~sc_signal() {}
 
@@ -258,20 +262,17 @@ class sc_signal<bool, WRITER_POLICY> :
     virtual bool
     event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
+        return _changeStamp == ::sc_gem5::getChangeStamp();
     }
     virtual bool
     posedge() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
+        return _posStamp == ::sc_gem5::getChangeStamp();
     }
     virtual bool
     negedge() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
+        return _negStamp == ::sc_gem5::getChangeStamp();
     }
 
     virtual void print(std::ostream &os=std::cout) const { os << m_cur_val; }
@@ -292,11 +293,16 @@ class sc_signal<bool, WRITER_POLICY> :
             return;
 
         m_cur_val = m_new_val;
+        uint64_t change_stamp = ::sc_gem5::getChangeStamp();
+        _changeStamp = change_stamp;
         _valueChangedEvent.notify(SC_ZERO_TIME);
-        if (m_cur_val)
+        if (m_cur_val) {
+            _posStamp = change_stamp;
             _posedgeEvent.notify(SC_ZERO_TIME);
-        else
+        } else {
+            _negStamp = change_stamp;
             _negedgeEvent.notify(SC_ZERO_TIME);
+        }
     }
 
     bool m_cur_val;
@@ -306,6 +312,10 @@ class sc_signal<bool, WRITER_POLICY> :
     sc_event _valueChangedEvent;
     sc_event _posedgeEvent;
     sc_event _negedgeEvent;
+
+    uint64_t _changeStamp;
+    uint64_t _posStamp;
+    uint64_t _negStamp;
 
     // Disabled
     sc_signal(const sc_signal<bool, WRITER_POLICY> &) :
@@ -320,16 +330,19 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
   public:
     sc_signal() : sc_signal_inout_if<sc_dt::sc_logic>(),
                   sc_prim_channel(sc_gen_unique_name("signal")),
-                  m_cur_val(sc_dt::sc_logic()), m_new_val(sc_dt::sc_logic())
+                  m_cur_val(sc_dt::sc_logic()), m_new_val(sc_dt::sc_logic()),
+                  _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
     {}
     explicit sc_signal(const char *name) :
         sc_signal_inout_if<sc_dt::sc_logic>(), sc_prim_channel(name),
-        m_cur_val(sc_dt::sc_logic()), m_new_val(sc_dt::sc_logic())
+        m_cur_val(sc_dt::sc_logic()), m_new_val(sc_dt::sc_logic()),
+        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
     {}
     explicit sc_signal(const char *name,
             const sc_dt::sc_logic &initial_value) :
         sc_signal_inout_if<sc_dt::sc_logic>(), sc_prim_channel(name),
-        m_cur_val(initial_value), m_new_val(initial_value)
+        m_cur_val(initial_value), m_new_val(initial_value),
+        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
     {}
     virtual ~sc_signal() {}
 
@@ -394,20 +407,17 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
     virtual bool
     event() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
+        return _changeStamp == ::sc_gem5::getChangeStamp();
     }
     virtual bool
     posedge() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
+        return _posStamp == ::sc_gem5::getChangeStamp();
     }
     virtual bool
     negedge() const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-        return false;
+        return _negStamp == ::sc_gem5::getChangeStamp();
     }
 
     virtual void print(std::ostream &os=std::cout) const { os << m_cur_val; }
@@ -442,6 +452,10 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
     sc_event _valueChangedEvent;
     sc_event _posedgeEvent;
     sc_event _negedgeEvent;
+
+    uint64_t _changeStamp;
+    uint64_t _posStamp;
+    uint64_t _negStamp;
 
     // Disabled
     sc_signal(const sc_signal<sc_dt::sc_logic, WRITER_POLICY> &) :
