@@ -192,7 +192,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
                                           clk_divider=3)
 
     mem_dir_cntrl_nodes, rom_dir_cntrl_node = create_directories(
-        options, system.mem_ranges, bootmem, ruby_system, system)
+        options, bootmem, ruby_system, system)
     dir_cntrl_nodes = mem_dir_cntrl_nodes[:]
     if rom_dir_cntrl_node is not None:
         dir_cntrl_nodes.append(rom_dir_cntrl_node)
