@@ -614,7 +614,7 @@ class RealViewPBX(RealView):
     realview_io = RealViewCtrl(pio_addr=0x10000000)
     mcc = VExpressMCC()
     dcc = CoreTile2A15DCC()
-    gic = Pl390()
+    gic = Pl390(cpu_addr=0x1f000100, dist_addr=0x1f001000, cpu_size=0x100)
     pci_host = GenericPciHost(
         conf_base=0x30000000, conf_size='256MB', conf_device_bits=16,
         pci_pio_base=0)

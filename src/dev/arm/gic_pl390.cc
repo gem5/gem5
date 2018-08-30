@@ -65,7 +65,7 @@ const AddrRange Pl390::GICD_ICFGR     (0xc00, 0xcff);
 Pl390::Pl390(const Params *p)
     : BaseGic(p),
       distRange(RangeSize(p->dist_addr, DIST_SIZE)),
-      cpuRange(RangeSize(p->cpu_addr, CPU_SIZE)),
+      cpuRange(RangeSize(p->cpu_addr, p->cpu_size)),
       addrRanges{distRange, cpuRange},
       distPioDelay(p->dist_pio_delay),
       cpuPioDelay(p->cpu_pio_delay), intLatency(p->int_latency),

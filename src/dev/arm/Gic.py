@@ -72,8 +72,9 @@ class Pl390(BaseGic):
     type = 'Pl390'
     cxx_header = "dev/arm/gic_pl390.hh"
 
-    dist_addr = Param.Addr(0x1f001000, "Address for distributor")
-    cpu_addr = Param.Addr(0x1f000100, "Address for cpu")
+    dist_addr = Param.Addr("Address for distributor")
+    cpu_addr = Param.Addr("Address for cpu")
+    cpu_size = Param.Addr(0x2000, "Size of cpu register bank")
     dist_pio_delay = Param.Latency('10ns', "Delay for PIO r/w to distributor")
     cpu_pio_delay = Param.Latency('10ns', "Delay for PIO r/w to cpu interface")
     int_latency = Param.Latency('10ns', "Delay for interrupt to get to CPU")
