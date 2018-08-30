@@ -91,7 +91,7 @@ sc_uint_concref_invalid_length(int length)
     std::stringstream msg;
     msg << "sc_uint_concref<T1,T2> initialization: length = " << length <<
            "violates 1 <= length <= " << SC_INTWIDTH;
-    SC_REPORT_ERROR("out of bounds", msg.str().c_str());
+    SC_REPORT_ERROR("(E5) out of bounds", msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
 
@@ -347,7 +347,7 @@ sc_uint_base::invalid_length() const
     std::stringstream msg;
     msg << "sc_uint[_base] initialization: length = " << m_len <<
            " violates 1 <= length <= " << SC_INTWIDTH;
-    SC_REPORT_ERROR("out of bounds", msg.str().c_str());
+    SC_REPORT_ERROR("(E5) out of bounds", msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here}
 }
 
@@ -357,7 +357,7 @@ sc_uint_base::invalid_index(int i) const
     std::stringstream msg;
     msg << "sc_uint[_base] bit selection: index = " << i <<
            " violates 0 <= index <= " << (m_len - 1);
-    SC_REPORT_ERROR("out of bounds", msg.str().c_str());
+    SC_REPORT_ERROR("(E5) out of bounds", msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
 
@@ -368,7 +368,7 @@ sc_uint_base::invalid_range(int l, int r) const
     msg << "sc_uint[_base] part selection: " <<
            "left = " << l << ", right = " << r << " violates " <<
            (m_len - 1) << " >= left >= right >= 0";
-    SC_REPORT_ERROR("out of bounds", msg.str().c_str());
+    SC_REPORT_ERROR("(E5) out of bounds", msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
 
@@ -380,7 +380,7 @@ sc_uint_base::check_value() const
     if (m_val > limit) {
         std::stringstream msg;
         msg << "sc_uint[_base]: value does not fit into a length of " << m_len;
-        SC_REPORT_WARNING("out of bounds", msg.str().c_str());
+        SC_REPORT_WARNING("(E5) out of bounds", msg.str().c_str());
     }
 }
 

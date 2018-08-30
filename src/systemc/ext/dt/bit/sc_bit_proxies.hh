@@ -1735,7 +1735,7 @@ sc_bitref_r<T>::get_bit(int n) const
     if (n == 0) {
         return m_obj.get_bit(m_index);
     } else {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
         return Log_0;
     }
 }
@@ -1747,7 +1747,7 @@ sc_bitref_r<T>::get_word(int n) const
     if (n == 0) {
         return (get_bit(n) & SC_DIGIT_ONE);
     } else {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
         return 0;
     }
 }
@@ -1759,7 +1759,7 @@ sc_bitref_r<T>::get_cword(int n) const
     if (n == 0) {
         return ((get_bit(n) & SC_DIGIT_TWO) >> 1);
     } else {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
         return 0;
     }
 }
@@ -2068,7 +2068,7 @@ sc_bitref<X>::set_bit(int n, value_type value)
     if (n == 0) {
         this->m_obj.set_bit(this->m_index, value);
     } else {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
     }
 }
 
@@ -2084,7 +2084,7 @@ sc_bitref<X>::set_word(int n, sc_digit w)
         temp = (temp & ~(1 << bi)) | ((w & 1) << bi);
         this->m_obj.set_word(wi, temp);
     } else {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
     }
 }
 
@@ -2100,7 +2100,7 @@ sc_bitref<X>::set_cword(int n, sc_digit w)
         temp = (temp & ~(1 << bi)) | ((w & 1) << bi);
         this->m_obj.set_cword(wi, temp);
     } else {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
     }
 }
 
@@ -2199,7 +2199,7 @@ sc_subref_r<X>::check_bounds()
 {
     int len = m_obj.length();
     if (m_hi < 0 || m_hi >= len || m_lo < 0 || m_lo >= len) {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
         sc_core::sc_abort(); // can't recover from here
     }
     if (reversed()) {
@@ -2668,7 +2668,7 @@ sc_concref_r<X, Y>::get_bit(int n) const
     } else if (n < r_len + m_left.length()) {
         return value_type(m_left.get_bit(n - r_len));
     } else {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
         return Log_0;
     }
 }
@@ -2683,7 +2683,7 @@ sc_concref_r<X, Y>::set_bit(int n, value_type v)
     } else if (n < r_len + m_left.length()) {
         m_left.set_bit(n - r_len, typename X::value_type(v));
     } else {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
     }
 }
 
@@ -2692,7 +2692,7 @@ inline sc_digit
 sc_concref_r<X, Y>::get_word(int i) const
 {
     if (i < 0 || i >= size()) {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
     }
     // 0 <= i < size()
     Y &r = m_right;
@@ -2726,7 +2726,7 @@ inline void
 sc_concref_r<X, Y>::set_word(int i, sc_digit w)
 {
     if (i < 0 || i >= size()) {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
     }
     // 0 <= i < size()
     Y &r = m_right;
@@ -2765,7 +2765,7 @@ inline sc_digit
 sc_concref_r<X, Y>::get_cword(int i) const
 {
     if (i < 0 || i >= size()) {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
     }
     // 0 <= i < size()
     Y &r = m_right;
@@ -2799,7 +2799,7 @@ inline void
 sc_concref_r<X, Y>::set_cword(int i, sc_digit w)
 {
     if (i < 0 || i >= size()) {
-        SC_REPORT_ERROR("out of bounds", 0);
+        SC_REPORT_ERROR("(E5) out of bounds", 0);
     }
     // 0 <= i < size()
     Y &r = m_right;

@@ -131,7 +131,7 @@ sc_unsigned::invalid_index(int i) const
     std::stringstream msg;
     msg << "sc_biguint bit selection: index = " << i << " violates "
            "0 <= index <= " << (nbits-2);
-    SC_REPORT_ERROR("out of bounds", msg.str().c_str());
+    SC_REPORT_ERROR("(E5) out of bounds", msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
 
@@ -143,7 +143,7 @@ sc_unsigned::invalid_range(int l, int r) const
            l << ", right = " << r << "\n"
            "  violates either (" << (nbits - 2) << " >= left >= 0) or "
            "(" << (nbits-2) << " >= right >= 0)";
-    SC_REPORT_ERROR("out of bounds", msg.str().c_str());
+    SC_REPORT_ERROR("(E5) out of bounds", msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
 
