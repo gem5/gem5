@@ -1141,7 +1141,9 @@ Interrupts:
     clock24MHz = SrcClockDomain(clock="24MHz",
         voltage_domain=VoltageDomain(voltage="3.3V"))
 
-    uart0 = Pl011(pio_addr=0x1c090000, int_num=37)
+    uart = [
+        Pl011(pio_addr=0x1c090000, int_num=37),
+    ]
 
     kmi0 = Pl050(pio_addr=0x1c060000, int_num=44, ps2=PS2Keyboard())
     kmi1 = Pl050(pio_addr=0x1c070000, int_num=45, ps2=PS2TouchKit())
@@ -1166,7 +1168,7 @@ Interrupts:
     def _off_chip_devices(self):
         return [
             self.realview_io,
-            self.uart0,
+            self.uart[0],
             self.kmi0,
             self.kmi1,
             self.rtc,

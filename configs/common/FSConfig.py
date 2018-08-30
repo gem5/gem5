@@ -304,7 +304,7 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
 
     if bare_metal:
         # EOT character on UART will end the simulation
-        self.realview.uart.end_on_eot = True
+        self.realview.uart[0].end_on_eot = True
     else:
         if machine_type in default_kernels:
             self.kernel = binary(default_kernels[machine_type])
