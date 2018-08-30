@@ -289,7 +289,8 @@ bool timed_out();
                 #name, new ::sc_gem5::ProcessMemberFuncWrapper< \
                     SC_CURRENT_USER_MODULE>(this, \
                         &SC_CURRENT_USER_MODULE::name)); \
-        this->sensitive << p; \
+        if (p) \
+            this->sensitive << p; \
     }
 #define SC_THREAD(name) \
     { \
@@ -298,7 +299,8 @@ bool timed_out();
                 #name, new ::sc_gem5::ProcessMemberFuncWrapper< \
                     SC_CURRENT_USER_MODULE>(this, \
                         &SC_CURRENT_USER_MODULE::name)); \
-        this->sensitive << p; \
+        if (p) \
+            this->sensitive << p; \
     }
 #define SC_CTHREAD(name, clk) \
     { \
@@ -307,8 +309,10 @@ bool timed_out();
                 #name, new ::sc_gem5::ProcessMemberFuncWrapper< \
                     SC_CURRENT_USER_MODULE>(this, \
                         &SC_CURRENT_USER_MODULE::name)); \
-        this->sensitive << p; \
-        this->sensitive << clk; \
+        if (p) { \
+            this->sensitive << p; \
+            this->sensitive << clk; \
+        } \
     }
 
 // Nonstandard

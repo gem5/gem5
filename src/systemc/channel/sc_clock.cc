@@ -32,6 +32,7 @@
 #include "sim/core.hh"
 #include "sim/eventq.hh"
 #include "systemc/core/kernel.hh"
+#include "systemc/core/process_types.hh"
 #include "systemc/core/sched_event.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/sc_clock.hh"
@@ -60,7 +61,8 @@ class ClockTick : public ScEvent
     {
         _name += (to ? ".up_tick" : ".down_tick");
         _procName = _name + ".p";
-        p = newMethodProcess(_procName.c_str(), &funcWrapper);
+        p = new Method(_procName.c_str(), &funcWrapper);
+        scheduler.reg(p);
         scheduler.dontInitialize(p);
     }
 

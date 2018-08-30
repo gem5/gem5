@@ -28,6 +28,7 @@
  */
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "base/logging.hh"
@@ -36,6 +37,7 @@
 #include "systemc/core/process_types.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_gem5
 {
@@ -43,7 +45,14 @@ namespace sc_gem5
 Process *
 newMethodProcess(const char *name, ProcessFuncWrapper *func)
 {
-    Process *p = new Method(name, func);
+    Method *p = new Method(name, func);
+    if (::sc_core::sc_is_running()) {
+        std::string name = p->name();
+        delete p;
+        SC_REPORT_ERROR("(E541) call to SC_METHOD in sc_module while "
+                "simulation running", name.c_str());
+        return nullptr;
+    }
     scheduler.reg(p);
     return p;
 }
@@ -51,7 +60,14 @@ newMethodProcess(const char *name, ProcessFuncWrapper *func)
 Process *
 newThreadProcess(const char *name, ProcessFuncWrapper *func)
 {
-    Process *p = new Thread(name, func);
+    Thread *p = new Thread(name, func);
+    if (::sc_core::sc_is_running()) {
+        std::string name = p->name();
+        delete p;
+        SC_REPORT_ERROR("(E542) call to SC_THREAD in sc_module while "
+                "simulation running", name.c_str());
+        return nullptr;
+    }
     scheduler.reg(p);
     return p;
 }
@@ -59,7 +75,14 @@ newThreadProcess(const char *name, ProcessFuncWrapper *func)
 Process *
 newCThreadProcess(const char *name, ProcessFuncWrapper *func)
 {
-    Process *p = new CThread(name, func);
+    CThread *p = new CThread(name, func);
+    if (::sc_core::sc_is_running()) {
+        std::string name = p->name();
+        delete p;
+        SC_REPORT_ERROR("(E543) call to SC_CTHREAD in sc_module while "
+                "simulation running", name.c_str());
+        return nullptr;
+    }
     scheduler.reg(p);
     p->dontInitialize();
     return p;
