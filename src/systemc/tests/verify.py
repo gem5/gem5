@@ -78,6 +78,9 @@ class Test(object):
     def src_dir(self):
         return os.path.join(script_dir, self.path)
 
+    def expected_returncode_file(self):
+        return os.path.join(self.src_dir(), 'expected_returncode')
+
     def golden_dir(self):
         return os.path.join(self.src_dir(), 'golden')
 
@@ -383,11 +386,19 @@ class VerifyPhase(TestPhaseBase):
             with open(test.returncode_file()) as rc:
                 returncode = int(rc.read())
 
+            expected_returncode = 0
+            if os.path.exists(test.expected_returncode_file()):
+                with open(test.expected_returncode_file()) as erc:
+                    expected_returncode = int(erc.read())
+
             if returncode == 124:
                 self.failed(test, 'time out')
                 continue
-            elif returncode != 0:
-                self.failed(test, 'abort')
+            elif returncode != expected_returncode:
+                if expected_returncode == 0:
+                    self.failed(test, 'abort')
+                else:
+                    self.failed(test, 'missed abort')
                 continue
 
             out_dir = test.m5out_dir()
