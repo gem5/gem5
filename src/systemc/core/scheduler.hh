@@ -145,7 +145,7 @@ typedef NodeList<Channel> ChannelList;
 class Scheduler
 {
   public:
-    typedef std::set<ScEvent *> ScEvents;
+    typedef std::list<ScEvent *> ScEvents;
 
     class TimeSlot : public ::Event
     {
@@ -226,11 +226,9 @@ class Scheduler
         if (tick < getCurTick())
             tick = getCurTick();
 
-        event->schedule(tick);
-
         // Delta notification/timeout.
         if (delay.value() == 0) {
-            deltas.insert(event);
+            event->schedule(deltas, tick);
             scheduleReadyEvent();
             return;
         }
@@ -241,19 +239,18 @@ class Scheduler
             ts = new TimeSlot;
             schedule(ts, tick);
         }
-        ts->events.insert(event);
+        event->schedule(ts->events, tick);
     }
 
     // For descheduling delayed/timed notifications/timeouts.
     void
     deschedule(ScEvent *event)
     {
-        if (event->when() == getCurTick()) {
-            // Attempt to remove from delta notifications.
-            if (deltas.erase(event) == 1) {
-                event->deschedule();
-                return;
-            }
+        ScEvents *on = event->scheduledOn();
+
+        if (on == &deltas) {
+            event->deschedule();
+            return;
         }
 
         // Timed notification/timeout.
@@ -262,7 +259,7 @@ class Scheduler
                 "Descheduling event at time with no events.");
         TimeSlot *ts = tsit->second;
         ScEvents &events = ts->events;
-        assert(events.erase(event));
+        assert(on == &events);
         event->deschedule();
 
         // If no more events are happening at this time slot, get rid of it.
@@ -424,8 +421,8 @@ extern Scheduler scheduler;
 inline void
 Scheduler::TimeSlot::process()
 {
-    for (auto &e: events)
-        e->run();
+    while (!events.empty())
+        events.front()->run();
     scheduler.completeTimeSlot(this);
 }
 

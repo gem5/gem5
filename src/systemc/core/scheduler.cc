@@ -61,15 +61,14 @@ void
 Scheduler::clear()
 {
     // Delta notifications.
-    for (auto &e: deltas)
-        e->deschedule();
-    deltas.clear();
+    while (!deltas.empty())
+        deltas.front()->deschedule();
 
     // Timed notifications.
     for (auto &tsp: timeSlots) {
         TimeSlot *&ts = tsp.second;
-        for (auto &e: ts->events)
-            e->deschedule();
+        while (!ts->events.empty())
+            ts->events.front()->deschedule();
         deschedule(ts);
     }
     timeSlots.clear();
@@ -115,9 +114,8 @@ Scheduler::initPhase()
 
     update();
 
-    for (auto &e: deltas)
-        e->run();
-    deltas.clear();
+    while (!deltas.empty())
+        deltas.front()->run();
 
     for (auto ets: eventsToSchedule)
         eq->schedule(ets.first, ets.second);
@@ -281,9 +279,8 @@ Scheduler::runReady()
     update();
 
     // The delta phase.
-    for (auto &e: deltas)
-        e->run();
-    deltas.clear();
+    while (!deltas.empty())
+        deltas.front()->run();
 
     if (!runToTime && starved())
         scheduleStarvationEvent();
