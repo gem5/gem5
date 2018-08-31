@@ -142,15 +142,28 @@ class sc_fifo : public sc_fifo_in_if<T>,
     virtual void
     print(std::ostream &os=std::cout) const
     {
+        for (typename ::std::list<T>::iterator pos = _pending.begin();
+                pos != _pending.end(); pos++) {
+            os << *pos << ::std::endl;
+        }
         for (typename ::std::list<T>::iterator pos = _entries.begin();
                 pos != _entries.end(); pos++) {
             os << *pos << ::std::endl;
         }
     }
     virtual void
-    dump(std::ostream & =std::cout) const
+    dump(std::ostream &os=std::cout) const
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        os << "name = " << name() << std::endl;
+        int idx = 0;
+        for (typename ::std::list<T>::iterator pos = _pending.begin();
+                pos != _pending.end(); pos++) {
+            os << "value[" << idx++ << "] = " << *pos << ::std::endl;
+        }
+        for (typename ::std::list<T>::iterator pos = _entries.begin();
+                pos != _entries.end(); pos++) {
+            os << "value[" << idx++ << "] = " << *pos << ::std::endl;
+        }
     }
     virtual const char *kind() const { return "sc_fifo"; }
 
@@ -187,9 +200,9 @@ class sc_fifo : public sc_fifo_in_if<T>,
 
 template <class T>
 inline std::ostream &
-operator << (std::ostream &os, const sc_fifo<T> &)
+operator << (std::ostream &os, const sc_fifo<T> &f)
 {
-    sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+    f.print(os);
     return os;
 }
 
