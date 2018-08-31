@@ -161,14 +161,21 @@ class Coroutine : public Fiber
      * it needs to run. The first argument of the function should be a
      * reference to the Coroutine<Arg,Ret>::caller_type which the
      * routine will use as a way for yielding to the caller.
+     * The optional second boolean argument controls if the Coroutine
+     * should be run on creation, which mimics Boost's Coroutine
+     * semantics by default. This can be disabled as an optimization to
+     * avoid unnecessary context switches on Coroutine creation.
      *
      * @param f task run by the coroutine
+     * @param run_coroutine set to false to disable running the coroutine
+     *                      immediately after it is created
      */
-    Coroutine(std::function<void(CallerType&)> f)
+    Coroutine(std::function<void(CallerType&)> f, bool run_coroutine = true)
       : Fiber(), task(f), caller(*this)
     {
-        // Create and Run the Coroutine
-        this->call();
+        // When desired, run the Coroutine after it is created
+        if (run_coroutine)
+            this->call();
     }
 
     virtual ~Coroutine() {}

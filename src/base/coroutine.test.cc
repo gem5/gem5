@@ -44,6 +44,25 @@
 using namespace m5;
 
 /**
+ * This test is checking if the Coroutine, once it's created
+ * it doesn't start since the second argument of the constructor
+ * (run_coroutine) is set to false
+ */
+TEST(Coroutine, Unstarted)
+{
+    auto yielding_task =
+    [] (Coroutine<void, void>::CallerType& yield)
+    {
+        yield();
+    };
+
+    const bool start_upon_creation = false;
+    Coroutine<void, void> coro(yielding_task, start_upon_creation);
+
+    ASSERT_FALSE(coro.started());
+}
+
+/**
  * This test is checking if the Coroutine, once it yields
  * back to the caller, it is still marked as not finished.
  */
