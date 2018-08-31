@@ -421,27 +421,6 @@ if main['GCC']:
             main.Append(PSHLINKFLAGS='-flinker-output=rel')
             main.Append(PLINKFLAGS='-flinker-output=rel')
 
-    # gcc from version 4.8 and above generates "rep; ret" instructions
-    # to avoid performance penalties on certain AMD chips. Older
-    # assemblers detect this as an error, "Error: expecting string
-    # instruction after `rep'"
-    as_version_raw = readCommand([main['AS'], '-v', '/dev/null',
-                                  '-o', '/dev/null'],
-                                 exception=False).split()
-
-    # version strings may contain extra distro-specific
-    # qualifiers, so play it safe and keep only what comes before
-    # the first hyphen
-    as_version = as_version_raw[-1].split('-')[0] if as_version_raw else None
-
-    if not as_version or compareVersions(as_version, "2.23") < 0:
-        print(termcap.Yellow + termcap.Bold +
-            'Warning: This combination of gcc and binutils have' +
-            ' known incompatibilities.\n' +
-            '         If you encounter build problems, please update ' +
-            'binutils to 2.23.' +
-            termcap.Normal)
-
     # Make sure we warn if the user has requested to compile with the
     # Undefined Benahvior Sanitizer and this version of gcc does not
     # support it.
