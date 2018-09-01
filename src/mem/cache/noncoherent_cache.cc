@@ -170,7 +170,7 @@ NoncoherentCache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
 
 
 Cycles
-NoncoherentCache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *blk,
+NoncoherentCache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
                                       PacketList &writebacks)
 {
     PacketPtr bus_pkt = createMissPacket(pkt, blk, true);

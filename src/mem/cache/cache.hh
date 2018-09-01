@@ -110,7 +110,7 @@ class Cache : public BaseCache
 
     void recvTimingSnoopResp(PacketPtr pkt) override;
 
-    Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *blk,
+    Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
                                PacketList &writebacks) override;
 
     Tick recvAtomic(PacketPtr pkt) override;

@@ -98,7 +98,7 @@ class NoncoherentCache : public BaseCache
         panic("Unexpected timing snoop response %s", pkt->print());
     }
 
-    Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *blk,
+    Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
                                PacketList &writebacks) override;
 
     Tick recvAtomic(PacketPtr pkt) override;

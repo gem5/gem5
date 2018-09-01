@@ -506,7 +506,7 @@ class BaseCache : public MemObject
      * @param writebacks A list with packets for any performed writebacks
      * @return Cycles for handling the request
      */
-    virtual Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *blk,
+    virtual Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
                                        PacketList &writebacks) = 0;
 
     /**

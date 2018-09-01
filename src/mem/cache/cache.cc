@@ -560,7 +560,7 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
 
 
 Cycles
-Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *blk,
+Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
                            PacketList &writebacks)
 {
     // deal with the packets that go through the write path of
