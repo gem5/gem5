@@ -190,7 +190,9 @@ void
 Scheduler::ready(Process *p)
 {
     // Clump methods together to minimize context switching.
-    if (p->procKind() == ::sc_core::SC_METHOD_PROC_)
+    static bool cluster_methods = false;
+
+    if (cluster_methods && p->procKind() == ::sc_core::SC_METHOD_PROC_)
         readyList.pushFirst(p);
     else
         readyList.pushLast(p);
