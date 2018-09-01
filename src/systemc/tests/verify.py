@@ -225,6 +225,7 @@ class LogChecker(Checker):
         warning_filt(540),
         warning_filt(569),
         warning_filt(571),
+        error_filt(525),
         error_filt(541),
         error_filt(542),
         error_filt(543),
