@@ -575,6 +575,10 @@ wait()
 void
 wait(int n)
 {
+    if (n <= 0) {
+        std::string msg = csprintf("n = %d", n);
+        SC_REPORT_ERROR("(E525) wait(n) is only valid for n > 0", msg.c_str());
+    }
     for (int i = 0; i < n; i++)
         wait();
 }
