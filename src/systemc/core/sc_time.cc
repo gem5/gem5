@@ -33,7 +33,9 @@
 #include "base/types.hh"
 #include "python/pybind11/pybind.hh"
 #include "systemc/core/python.hh"
+#include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_time.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_core
 {
@@ -95,6 +97,15 @@ fixTime()
     for (auto &t: toSet)
         setWork(t.time, t.d, t.tu);
     toSet.clear();
+}
+
+void
+setGlobalFrequency(Tick ticks_per_second)
+{
+    auto ticks = pybind11::module::import("m5.ticks");
+    auto set_global_frequency = ticks.attr("setGlobalFrequency");
+    set_global_frequency(ticks_per_second);
+    fixTime();
 }
 
 void
@@ -358,16 +369,51 @@ operator << (std::ostream &os, const sc_time &t)
 const sc_time SC_ZERO_TIME;
 
 void
-sc_set_time_resolution(double, sc_time_unit)
+sc_set_time_resolution(double d, sc_time_unit tu)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (d < 0.0) {
+        SC_REPORT_ERROR("(E514) set time resolution failed",
+                "value not positive");
+    }
+    double dummy;
+    if (modf(log10(d), &dummy) != 0.0) {
+        SC_REPORT_ERROR("(E514) set time resolution failed",
+                "value not a power of ten");
+    }
+    if (sc_is_running()) {
+        SC_REPORT_ERROR("(E514) set time resolution failed",
+                "simulation running");
+    }
+    static bool specified = false;
+    if (specified) {
+        SC_REPORT_ERROR("(E514) set time resolution failed",
+                "already specified");
+    }
+    // This won't detect the timescale being fixed outside of systemc, but
+    // it's at least some protection.
+    if (timeFixed) {
+        SC_REPORT_ERROR("(E514) set time resolution failed",
+                "sc_time object(s) constructed");
+    }
+
+    // Normalize d to seconds.
+    d *= TimeUnitScale[tu];
+    if (d < TimeUnitScale[SC_FS]) {
+        SC_REPORT_ERROR("(E514) set time resolution failed",
+                "value smaller than 1 fs");
+    }
+    // Change d from a period to a frequency.
+    d = 1 / d;
+    // Convert to integer ticks.
+    Tick ticks_per_second = static_cast<Tick>(d);
+    setGlobalFrequency(ticks_per_second);
+    specified = true;
 }
 
 sc_time
 sc_get_time_resolution()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
+    return sc_time::from_value(1);
 }
 
 const sc_time &
