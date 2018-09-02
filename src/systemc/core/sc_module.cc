@@ -35,8 +35,10 @@
 #include "systemc/core/kernel.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/process_types.hh"
+#include "systemc/ext/channel/sc_signal_in_if.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
+#include "systemc/ext/dt/bit/sc_logic.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_gem5
@@ -672,27 +674,39 @@ halt()
 }
 
 void
-at_posedge(const sc_signal_in_if<bool> &)
+at_posedge(const sc_signal_in_if<bool> &s)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    while (s.read())
+        wait();
+    while (!s.read())
+        wait();
 }
 
 void
-at_posedge(const sc_signal_in_if<sc_dt::sc_logic> &)
+at_posedge(const sc_signal_in_if<sc_dt::sc_logic> &s)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    while (s.read() == sc_dt::Log_1)
+        wait();
+    while (s.read() == sc_dt::Log_0)
+        wait();
 }
 
 void
-at_negedge(const sc_signal_in_if<bool> &)
+at_negedge(const sc_signal_in_if<bool> &s)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    while (!s.read())
+        wait();
+    while (s.read())
+        wait();
 }
 
 void
-at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &)
+at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &s)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    while (s.read() == sc_dt::Log_0)
+        wait();
+    while (s.read() == sc_dt::Log_1)
+        wait();
 }
 
 const char *
