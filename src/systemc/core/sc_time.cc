@@ -371,7 +371,7 @@ const sc_time SC_ZERO_TIME;
 void
 sc_set_time_resolution(double d, sc_time_unit tu)
 {
-    if (d < 0.0) {
+    if (d <= 0.0) {
         SC_REPORT_ERROR("(E514) set time resolution failed",
                 "value not positive");
     }
@@ -426,7 +426,34 @@ sc_max_time()
 void
 sc_set_default_time_unit(double d, sc_time_unit tu)
 {
+    if (d < 0.0) {
+        SC_REPORT_ERROR("(E515) set default time unit failed",
+                "value not positive");
+    }
+    double dummy;
+    if (modf(log10(d), &dummy) != 0.0) {
+        SC_REPORT_ERROR("(E515) set default time unit failed",
+                "value not a power of ten");
+    }
+    if (sc_is_running()) {
+        SC_REPORT_ERROR("(E515) set default time unit failed",
+                "simulation running");
+    }
+    static bool specified = false;
+    if (specified) {
+        SC_REPORT_ERROR("(E515) set default time unit failed",
+                "already specified");
+    }
+    // This won't detect the timescale being fixed outside of systemc, but
+    // it's at least some protection.
+    if (timeFixed) {
+        SC_REPORT_ERROR("(E515) set default time unit failed",
+                "sc_time object(s) constructed");
+    }
+
+    // Normalize d to seconds.
     defaultUnit = d * TimeUnitScale[tu];
+    specified = true;
 }
 
 sc_time
