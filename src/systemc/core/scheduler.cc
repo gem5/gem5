@@ -44,7 +44,7 @@ Scheduler::Scheduler() :
     stopEvent(this, false, StopPriority),
     scMain(nullptr),
     starvationEvent(this, false, StarvationPriority),
-    _started(false), _paused(false), _stopped(false),
+    _started(false), _paused(false), _stopped(false), _stopNow(false),
     maxTickEvent(this, false, MaxTickPriority),
     _numCycles(0), _changeStamp(0), _current(nullptr), initDone(false),
     runOnce(false)
@@ -189,6 +189,9 @@ Scheduler::yield()
 void
 Scheduler::ready(Process *p)
 {
+    if (_stopNow)
+        return;
+
     // Clump methods together to minimize context switching.
     static bool cluster_methods = false;
 
@@ -276,6 +279,9 @@ Scheduler::runReady()
         _numCycles++;
         _changeStamp++;
     }
+
+    if (_stopNow)
+        return;
 
     // The update phase.
     update();
@@ -383,6 +389,7 @@ Scheduler::scheduleStop(bool finish_delta)
         return;
 
     if (!finish_delta) {
+        _stopNow = true;
         // If we're not supposed to finish the delta cycle, flush all
         // pending activity.
         clear();

@@ -386,6 +386,7 @@ class Scheduler
     bool _started;
     bool _paused;
     bool _stopped;
+    bool _stopNow;
 
     Tick maxTick;
     Tick lastReadyTick;
