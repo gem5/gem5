@@ -819,7 +819,7 @@ TableWalker::processWalkAArch64()
               // invalid addr if top two bytes are not all 0s
               fault = true;
         }
-        ps = currState->tcr.ips;
+        ps = currState->tcr.ps;
         break;
       case EL3:
         switch(bits(currState->vaddr, 63,48)) {
@@ -833,7 +833,7 @@ TableWalker::processWalkAArch64()
                 // invalid addr if top two bytes are not all 0s
                 fault = true;
         }
-        ps = currState->tcr.ips;
+        ps = currState->tcr.ps;
         break;
     }
 
