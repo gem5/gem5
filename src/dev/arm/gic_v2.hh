@@ -262,6 +262,16 @@ class GicV2 : public BaseGic, public BaseGicRegisters
         }
     }
 
+    /** GICD_ICFGRn
+     * get 2 bit config associated to an interrupt.
+     */
+    uint8_t getIntConfig(ContextID ctx, uint32_t ix) {
+        assert(ix < INT_LINES_MAX);
+        const uint8_t cfg_low = intNumToBit(ix * 2);
+        const uint8_t cfg_hi = cfg_low + 1;
+        return bits(intConfig[intNumToWord(ix * 2)], cfg_hi, cfg_low);
+    }
+
     /** GICD_ITARGETSR{8..255}
      * an 8 bit cpu target id for each global interrupt.
      */
@@ -290,6 +300,14 @@ class GicV2 : public BaseGic, public BaseGicRegisters
     /** 2 bit per interrupt signaling if it's level or edge sensitive
      * and if it is 1:N or N:N */
     uint32_t intConfig[INT_BITS_MAX*2];
+
+    bool isLevelSensitive(ContextID ctx, uint32_t ix) {
+        if (ix == SPURIOUS_INT) {
+            return false;
+        } else {
+            return bits(getIntConfig(ctx, ix), 1) == 0;
+        }
+    }
 
     /** CPU enabled */
     bool cpuEnabled[CPU_MAX];

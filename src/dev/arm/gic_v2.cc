@@ -346,8 +346,10 @@ GicV2::readCpu(ContextID ctx, Addr daddr)
                 uint32_t int_num = 1 << intNumToBit(cpuHighestInt[ctx]);
                 getActiveInt(ctx, intNumToWord(cpuHighestInt[ctx])) |= int_num;
                 updateRunPri();
-                getPendingInt(ctx, intNumToWord(cpuHighestInt[ctx]))
-                  &= ~int_num;
+                if (!isLevelSensitive(ctx, active_int)) {
+                    getPendingInt(ctx, intNumToWord(cpuHighestInt[ctx]))
+                      &= ~int_num;
+                }
             }
 
             DPRINTF(Interrupt,
@@ -783,10 +785,17 @@ GicV2::updateIntState(int hint)
             }
         }
 
+        uint32_t prev_highest = cpuHighestInt[cpu];
         cpuHighestInt[cpu] = highest_int;
 
-        if (highest_int == SPURIOUS_INT)
+        if (highest_int == SPURIOUS_INT) {
+            if (isLevelSensitive(cpu, prev_highest)) {
+
+                DPRINTF(Interrupt, "Clear IRQ for cpu%d\n", cpu);
+                platform->intrctrl->clear(cpu, ArmISA::INT_IRQ, 0);
+            }
             continue;
+        }
 
         /* @todo make this work for more than one cpu, need to handle 1:N, N:N
          * models */
@@ -855,9 +864,22 @@ GicV2::sendPPInt(uint32_t num, uint32_t cpu)
 }
 
 void
-GicV2::clearInt(uint32_t number)
+GicV2::clearInt(uint32_t num)
 {
-    /* @todo assume edge triggered only at the moment. Nothing to do. */
+    if (isLevelSensitive(0, num)) {
+        uint8_t target = getCpuTarget(0, num);
+
+        DPRINTF(Interrupt,
+                "Received Clear interrupt number %d, cpuTarget %#x:\n",
+                num, target);
+
+        getPendingInt(target, intNumToWord(num)) &= ~(1 << intNumToBit(num));
+        updateIntState(intNumToWord(num));
+    } else {
+        /* Nothing to do :
+         * Edge-triggered interrupt remain pending until software
+         * writes GICD_ICPENDR or reads GICC_IAR */
+    }
 }
 
 void
