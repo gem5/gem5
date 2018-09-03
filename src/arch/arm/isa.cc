@@ -1338,9 +1338,17 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
                 tlbiOp.broadcast(tc);
                 return;
             }
-          // @todo: uncomment this to enable Virtualization
-          // case MISCREG_TLBI_ALLE2IS:
-          // case MISCREG_TLBI_ALLE2:
+          // AArch64 TLB Invalidate All, EL2, Inner Shareable
+          case MISCREG_TLBI_ALLE2:
+          case MISCREG_TLBI_ALLE2IS:
+            {
+                assert64(tc);
+                scr = readMiscReg(MISCREG_SCR, tc);
+
+                TLBIALL tlbiOp(EL2, haveSecurity && !scr.ns);
+                tlbiOp(tc);
+                return;
+            }
           // AArch64 TLB Invalidate All, EL1
           case MISCREG_TLBI_ALLE1:
           case MISCREG_TLBI_VMALLE1:
