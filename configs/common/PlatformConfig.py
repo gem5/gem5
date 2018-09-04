@@ -52,7 +52,6 @@ _platform_classes = {}
 # Platform aliases. The platforms listed here might not be compiled,
 # we make sure they exist before we add them to the platform list.
 _platform_aliases_all = [
-    ("RealView_EB", "RealViewEB"),
     ("RealView_PBX", "RealViewPBX"),
     ("VExpress_GEM5", "VExpress_GEM5_V1"),
     ]
