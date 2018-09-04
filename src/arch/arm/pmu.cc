@@ -214,7 +214,7 @@ PMU::setMiscReg(int misc_reg, MiscReg val)
 
       case MISCREG_PMOVSCLR_EL0:
       case MISCREG_PMOVSR:
-        reg_pmovsr &= ~val;
+        setOverflowStatus(reg_pmovsr & ~val);
         return;
 
       case MISCREG_PMSWINC_EL0:
@@ -286,7 +286,7 @@ PMU::setMiscReg(int misc_reg, MiscReg val)
 
       case MISCREG_PMOVSSET_EL0:
       case MISCREG_PMOVSSET:
-        reg_pmovsr |= val;
+        setOverflowStatus(reg_pmovsr | val);
         return;
 
       default:
@@ -645,11 +645,37 @@ PMU::setCounterTypeRegister(CounterId id, PMEVTYPER_t val)
 }
 
 void
+PMU::setOverflowStatus(MiscReg new_val)
+{
+    const bool int_old = reg_pmovsr != 0;
+    const bool int_new = new_val != 0;
+
+    reg_pmovsr = new_val;
+    if (int_old && !int_new) {
+        clearInterrupt();
+    } else if (!int_old && int_new && (reg_pminten & reg_pmovsr)) {
+        raiseInterrupt();
+    }
+}
+
+void
 PMU::raiseInterrupt()
 {
     if (interrupt) {
         DPRINTF(PMUVerbose, "Delivering PMU interrupt.\n");
         interrupt->raise();
+    } else {
+        warn_once("Dropping PMU interrupt as no interrupt has "
+                  "been specified\n");
+    }
+}
+
+void
+PMU::clearInterrupt()
+{
+    if (interrupt) {
+        DPRINTF(PMUVerbose, "Clearing PMU interrupt.\n");
+        interrupt->clear();
     } else {
         warn_once("Dropping PMU interrupt as no interrupt has "
                   "been specified\n");
