@@ -1810,6 +1810,7 @@ namespace ArmISA
         Bitfield<11, 10> orgn0;
         Bitfield<13, 12> sh0;
         Bitfield<15, 14> tg0;
+        Bitfield<18, 16> ps; // Only defined for VTCR_EL2
     EndBitUnion(VTCR_t)
 
     BitUnion32(PRRR)
