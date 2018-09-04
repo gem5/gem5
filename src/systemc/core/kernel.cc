@@ -86,15 +86,12 @@ Kernel::init()
     callbackModule(nullptr);
     for (auto c: sc_gem5::allChannels)
         c->sc_chan()->before_end_of_elaboration();
-
-    if (stopAfterCallbacks)
-        stopWork();
 }
 
 void
 Kernel::regStats()
 {
-    if (scMainDone)
+    if (scMainDone || stopAfterCallbacks)
         return;
 
     for (auto m: sc_gem5::allModules)
@@ -113,15 +110,17 @@ Kernel::regStats()
     callbackModule(nullptr);
     for (auto c: sc_gem5::allChannels)
         c->sc_chan()->end_of_elaboration();
-
-    if (stopAfterCallbacks)
-        stopWork();
 }
 
 void
 Kernel::startup()
 {
     if (scMainDone)
+        return;
+
+    schedule(t0Event, curTick());
+
+    if (stopAfterCallbacks)
         return;
 
     status(::sc_core::SC_START_OF_SIMULATION);
@@ -142,7 +141,6 @@ Kernel::startup()
 
     kernel->status(::sc_core::SC_RUNNING);
 
-    schedule(t0Event, curTick());
     // Run update once before the event queue starts.
     ::sc_gem5::scheduler.update();
 }
@@ -178,9 +176,14 @@ Kernel::stopWork()
 void
 Kernel::t0Handler()
 {
-    ::sc_gem5::scheduler.initPhase();
-
-    status(::sc_core::SC_RUNNING);
+    if (stopAfterCallbacks) {
+        scheduler.clear();
+        ::sc_gem5::scheduler.initPhase();
+        scheduler.scheduleStop(false);
+    } else {
+        ::sc_gem5::scheduler.initPhase();
+        status(::sc_core::SC_RUNNING);
+    }
 }
 
 Kernel *kernel;
