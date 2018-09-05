@@ -35,6 +35,7 @@
 #include "systemc/core/event.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/sc_module.hh"
 
 namespace sc_gem5
 {
@@ -82,13 +83,13 @@ nameIsUnique(Objects *objects, Events *events, const std::string &name)
 
 } // anonymous namespace
 
-Object::Object(sc_core::sc_object *_sc_obj) : Object(_sc_obj, "object") {}
+Object::Object(sc_core::sc_object *_sc_obj) : Object(_sc_obj, nullptr) {}
 
 Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
     _sc_obj(_sc_obj), _basename(obj_name ? obj_name : ""), parent(nullptr)
 {
     if (_basename == "")
-        _basename = "object";
+        _basename = ::sc_core::sc_gen_unique_name("object");
 
     Module *p = currentModule();
     if (!p)
