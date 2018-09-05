@@ -670,7 +670,8 @@ wait(double d, sc_time_unit u, const sc_event_and_list &eal)
 void
 halt()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_core::wait();
+    throw ::sc_gem5::ScHalt();
 }
 
 void

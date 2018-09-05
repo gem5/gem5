@@ -338,6 +338,8 @@ Process::run()
         reset = false;
         try {
             func->call();
+        } catch(ScHalt) {
+            std::cout << "Terminating process " << name() << std::endl;
         } catch(const ::sc_core::sc_unwind_exception &exc) {
             reset = exc.is_reset();
             _isUnwinding = false;

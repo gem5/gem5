@@ -52,6 +52,9 @@
 namespace sc_gem5
 {
 
+class ScHalt
+{};
+
 class Sensitivity
 {
   protected:
