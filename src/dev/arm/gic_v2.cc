@@ -742,11 +742,18 @@ GicV2::updateIntState(int hint)
 
         // Check PPIs
         if (cpuPpiPending[cpu]) {
-        for (int ppi = 0; ppi < PPI_MAX; ppi++) {
-            if (cpuPpiPending[cpu] & (1 << ppi))
-                if (highest_pri > getIntPriority(cpu, SGI_MAX + ppi)) {
-                    highest_pri = getIntPriority(cpu, SGI_MAX + ppi);
-                    highest_int = SGI_MAX + ppi;
+            for (int ppi_idx = 0, int_num = SGI_MAX;
+                 int_num < PPI_MAX + SGI_MAX;
+                 ppi_idx++, int_num++) {
+
+                const bool ppi_pending = bits(cpuPpiPending[cpu], ppi_idx);
+                const bool ppi_enabled = bits(getIntEnabled(cpu, 0), int_num);
+                const bool higher_priority =
+                    highest_pri > getIntPriority(cpu, int_num);
+
+                if (ppi_pending && ppi_enabled && higher_priority) {
+                    highest_pri = getIntPriority(cpu, int_num);
+                    highest_int = int_num;
                 }
             }
         }
