@@ -341,9 +341,9 @@ class sc_int_subref_r : public sc_value_base
     bool and_reduce() const;
     bool nand_reduce() const { return !and_reduce(); }
     bool or_reduce() const;
-    bool nor_reduce() const { return or_reduce(); }
+    bool nor_reduce() const { return !or_reduce(); }
     bool xor_reduce() const;
-    bool xnor_reduce() const { return xor_reduce(); }
+    bool xnor_reduce() const { return !xor_reduce(); }
 
     // implicit conversion to uint_type
     operator uint_type () const;
