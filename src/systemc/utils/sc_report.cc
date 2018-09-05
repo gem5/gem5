@@ -27,6 +27,8 @@
  * Authors: Gabe Black
  */
 
+#include <cstring>
+
 #include "base/logging.hh"
 #include "systemc/ext/utils/sc_report.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -34,13 +36,17 @@
 namespace sc_core
 {
 
-sc_report::sc_report(sc_severity _severity, const char *_msgType,
-        const char *_msg, int _verbosity, const char *_fileName,
+sc_report::sc_report(sc_severity _severity, const char *msg_type,
+        const char *msg, int _verbosity, const char *_fileName,
         int _lineNumber, sc_time _time, const char *_processName, int _id) :
-    _severity(_severity), _msgType(_msgType), _msg(_msg),
+    _severity(_severity), _msgType(msg_type), _msg(msg),
     _verbosity(_verbosity), _fileName(_fileName), _lineNumber(_lineNumber),
     _time(_time), _processName(_processName), _id(_id)
 {
+    if (_msgType)
+        _msgType = strdup(_msgType);
+    if (_msg)
+        _msg = strdup(_msg);
     _what = sc_report_compose_message(*this);
 }
 
@@ -53,8 +59,10 @@ sc_report &
 sc_report::operator = (const sc_report &r)
 {
     _severity = r._severity;
-    _msgType = r._msgType;
-    _msg = r._msg;
+    free((void *)_msgType);
+    _msgType = r._msgType ? strdup(r._msgType) : nullptr;
+    free((void *)_msg);
+    _msg = r._msg ? strdup(r._msg) : nullptr;
     _verbosity = r._verbosity;
     _fileName = r._fileName;
     _lineNumber = r._lineNumber;
@@ -64,7 +72,11 @@ sc_report::operator = (const sc_report &r)
     return *this;
 }
 
-sc_report::~sc_report() throw() {}
+sc_report::~sc_report() throw()
+{
+    free((void *)_msgType);
+    free((void *)_msg);
+}
 
 const char *
 sc_report::what() const throw()
