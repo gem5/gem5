@@ -123,6 +123,6 @@ int sc_main(int, char**)
 	TEST("0bus1111111011011100101110101001100001110110010101000011001000010000",
 		  0xfedcba9876543210ll);
 
-	cerr << "Program completed" << endl;
+	cout << "Program completed" << endl;
 	return 0;
 }

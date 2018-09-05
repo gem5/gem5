@@ -37,7 +37,7 @@ int sc_main(int argc, char* argv[])
 	TEST(sc_uint<8>)
 	TEST(sc_lv<8>)
 	TEST(sc_bv<8>)
-	cerr << "Program completed" << endl;
+	cout << "Program completed" << endl;
 
 	return 0;
 }

@@ -33,7 +33,7 @@ int sc_main(int argc, char* arg[])
 
 
 	sc_start(10, SC_NS);
-	cerr << "Program completed" << endl;
+	cout << "Program completed" << endl;
 
     return 0;
 }

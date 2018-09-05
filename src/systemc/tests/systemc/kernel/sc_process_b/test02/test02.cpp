@@ -26,6 +26,6 @@ int sc_main(int argc,char **argv)
 	tb.m_clk(clock);
 	sc_start(2, SC_NS);
 
-	cerr << "Program completed" << endl;
+	cout << "Program completed" << endl;
     return (0); 
 } 

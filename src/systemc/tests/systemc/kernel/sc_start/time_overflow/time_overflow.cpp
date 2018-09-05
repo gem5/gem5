@@ -45,7 +45,7 @@ int sc_main(int argc, char* argv[])
     sc_start();
     cout << sc_time_stamp() << ": Issuing sc_start(10, SC_NS)" << endl;
     sc_start(10, SC_NS);
-    cerr << sc_time_stamp() << ": Program completed" << endl;
+    cout << sc_time_stamp() << ": Program completed" << endl;
     return 0;
 }
 

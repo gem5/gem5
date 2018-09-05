@@ -193,6 +193,6 @@ int sc_main( int argc, char* argv[] )
 	x.clk(clock);
 	sc_start(1000, SC_NS);
 
-	cerr << "Program completed\n";
+	cout << "Program completed\n";
 	return 0;
 }

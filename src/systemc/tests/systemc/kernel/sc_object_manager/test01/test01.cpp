@@ -99,6 +99,6 @@ int sc_main(int argc, char* argv[])
 	sc_start(1, SC_NS);
 
 
-	cerr << "Program completed" << endl;
+	cout << "Program completed" << endl;
 	return 0;
 }

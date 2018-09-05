@@ -23,7 +23,7 @@ int sc_main(int argc, char* argv[])
 		}
 	}
 
-	cerr << "Program completed" << endl;
+	cout << "Program completed" << endl;
 
     return 0;
 }

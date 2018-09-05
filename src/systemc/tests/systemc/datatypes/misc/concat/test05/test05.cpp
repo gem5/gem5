@@ -89,6 +89,6 @@ int sc_main( int argc, char* argv[] )
 	COMPARE( 97, sig_sc_int_b )
 	COMPARE( 72, sig_sc_uint_b )
 
-	cerr << "Program completed" << endl;
+	cout << "Program completed" << endl;
 	return 0;
 }

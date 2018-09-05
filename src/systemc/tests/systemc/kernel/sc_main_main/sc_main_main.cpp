@@ -36,7 +36,7 @@ int sc_main(int argc, char* argv[])
     sc_assert(strcmp(sc_argv()[2], "2") == 0);
     sc_assert(strcmp(sc_argv()[1], "1") == 0);
 
-    cerr << "Program completed" << endl;
+    cout << "Program completed" << endl;
 
     return 0;
 }

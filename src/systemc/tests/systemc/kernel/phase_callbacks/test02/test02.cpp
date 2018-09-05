@@ -50,7 +50,7 @@ int sc_main(int argc, char* argv[])
 	if ( !sc_end_of_simulation_invoked() ) 
 		 cout << __FILE__ << "(" << __LINE__ << "): bad end flag should be true" << endl;
 
-	 cerr << "Program completed" << endl;
+	 cout << "Program completed" << endl;
 
     return 0;
 }

@@ -21,6 +21,6 @@ int sc_main(int argc, char* argv[])
 	cout << "e = " << e << endl;
 	cout << "f = " << f << endl;
 
-	cerr << "Program completed" << endl;
+	cout << "Program completed" << endl;
 	return 0;
 }
