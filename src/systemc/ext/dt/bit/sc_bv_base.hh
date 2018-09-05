@@ -264,7 +264,7 @@ inline void
 sc_bv_base::set_cword(int /*i*/, sc_digit w)
 {
     if (w) {
-        SC_REPORT_WARNING("sc_bv cannot contain values X and Z", 0);
+        SC_REPORT_WARNING("(W207) sc_bv cannot contain values X and Z", 0);
     }
 }
 

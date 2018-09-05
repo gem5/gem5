@@ -132,7 +132,7 @@ sc_signed::invalid_range(int l, int r) const
 {
     std::stringstream msg;
     msg << "sc_bigint part selection: left = " <<
-           l << ", right = " << r << "\n"
+           l << ", right = " << r << " \n"
            "  violates either (" << (nbits-1) << " >= left >= 0) or "
            "(" << (nbits-1) << " >= right >= 0)";
     SC_REPORT_ERROR("(E5) out of bounds", msg.str().c_str());

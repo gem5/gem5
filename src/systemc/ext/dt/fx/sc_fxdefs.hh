@@ -243,7 +243,7 @@ const int SC_DEFAULT_MAX_WL_ = SC_BUILTIN_MAX_WL_;
 #define SC_ERROR_IF_(cnd,id) SC_ERROR_IF_IMPL_(cnd, id, 0)
 
 #define SC_CHECK_WL_(wl) SC_ERROR_IF_((wl) <= 0, \
-        "total wordlength <= 0 is not valid")
+        "(E300) total wordlength <= 0 is not valid")
 
 #define SC_CHECK_N_BITS_(n_bits) \
     SC_ERROR_IF_((n_bits) < 0, "number of bits < 0 is not valid")

@@ -77,8 +77,8 @@ void
 sc_bit::invalid_value(char c)
 {
     std::stringstream msg;
-    msg << "sc_bit('" << c << "')";
-    SC_REPORT_ERROR("value is not valid", msg.str().c_str());
+    msg << "sc_bit( '" << c << "' )";
+    SC_REPORT_ERROR("(E204) value is not valid", msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
 
@@ -86,8 +86,8 @@ void
 sc_bit::invalid_value(int i)
 {
     std::stringstream msg;
-    msg << "sc_bit(" << i << ")";
-    SC_REPORT_ERROR("value is not valid", msg.str().c_str());
+    msg << "sc_bit( " << i << " )";
+    SC_REPORT_ERROR("(E204) value is not valid", msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
 

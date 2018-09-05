@@ -72,7 +72,7 @@ sc_logic::invalid_value(char c)
 {
     std::stringstream msg;
     msg << "sc_logic('" << c << "')";
-    SC_REPORT_ERROR("value is not valid", msg.str().c_str());
+    SC_REPORT_ERROR("(E204) value is not valid", msg.str().c_str());
 }
 
 void
@@ -80,7 +80,7 @@ sc_logic::invalid_value(int i)
 {
     std::stringstream msg;
     msg << "sc_logic(" << i << ")";
-    SC_REPORT_ERROR("value is not valid", msg.str().c_str());
+    SC_REPORT_ERROR("(E204) value is not valid", msg.str().c_str());
 }
 
 
@@ -88,9 +88,11 @@ void
 sc_logic::invalid_01() const
 {
     if ((int)m_val == Log_Z) {
-        SC_REPORT_WARNING("sc_logic value 'Z' cannot be converted to bool", 0);
+        SC_REPORT_WARNING(
+                "(W211) sc_logic value 'Z' cannot be converted to bool", 0);
     } else {
-        SC_REPORT_WARNING("sc_logic value 'X' cannot be converted to bool", 0);
+        SC_REPORT_WARNING(
+                "(W212) sc_logic value 'X' cannot be converted to bool", 0);
     }
 }
 

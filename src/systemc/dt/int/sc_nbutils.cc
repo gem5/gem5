@@ -89,7 +89,7 @@ is_valid_base(sc_numrep base)
         std::stringstream msg;
         msg << "is_valid_base( sc_numrep base ) : base = " << base <<
                " is not valid";
-        SC_REPORT_ERROR("value is not valid", msg.str().c_str() );
+        SC_REPORT_ERROR("(E204) value is not valid", msg.str().c_str() );
     }
 }
 

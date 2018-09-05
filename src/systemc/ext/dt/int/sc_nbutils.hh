@@ -822,7 +822,7 @@ is_bad_double(double v)
 {
     // Windows throws exception.
     if (is_nan(v) || is_inf(v))
-        SC_REPORT_ERROR("value is not valid",
+        SC_REPORT_ERROR("(E204) value is not valid",
                         "is_bad_double(double v) : "
                         "v is not finite - NaN or Inf");
 }
