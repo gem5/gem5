@@ -192,7 +192,7 @@ class Checker(object):
             return test_f.read() == ref_f.read()
 
 def tagged_filt(tag, num):
-    return (r'^\n{}: \({}{}\) .*\n(In file: .*\n)?'
+    return (r'\n{}: \({}{}\) .*\n(In file: .*\n)?'
             r'(In process: [\w.]* @ .*\n)?').format(tag, tag[0], num)
 
 def error_filt(num):
