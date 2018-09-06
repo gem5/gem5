@@ -197,11 +197,16 @@ class Scheduler
     void
     runNow(Process *p)
     {
+        // This function may put a process on the wrong list, ie a method on
+        // the process list or vice versa. That's fine since that's just a
+        // performance optimization, and the important thing here is how the
+        // processes are ordered.
+
         // If a process is running, schedule it/us to run again.
         if (_current)
-            readyList.pushFirst(_current);
+            readyList->pushFirst(_current);
         // Schedule p to run first.
-        readyList.pushFirst(p);
+        readyList->pushFirst(p);
         yield();
     }
 
@@ -290,7 +295,8 @@ class Scheduler
     bool
     pendingCurr()
     {
-        return !readyList.empty() || !updateList.empty() || !deltas.empty();
+        return !readyListMethods.empty() || !readyListThreads.empty() ||
+            !updateList.empty() || !deltas.empty();
     }
 
     // Return whether there are pending timed notifications or timeouts.
@@ -376,7 +382,8 @@ class Scheduler
     bool
     starved()
     {
-        return (readyList.empty() && updateList.empty() && deltas.empty() &&
+        return (readyListMethods.empty() && readyListThreads.empty() &&
+                updateList.empty() && deltas.empty() &&
                 (timeSlots.empty() || timeSlots.begin()->first > maxTick) &&
                 initList.empty());
     }
@@ -410,7 +417,10 @@ class Scheduler
 
     ProcessList initList;
     ProcessList toFinalize;
-    ProcessList readyList;
+
+    ProcessList *readyList;
+    ProcessList readyListMethods;
+    ProcessList readyListThreads;
 
     ChannelList updateList;
 

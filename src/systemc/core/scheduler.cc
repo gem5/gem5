@@ -47,7 +47,7 @@ Scheduler::Scheduler() :
     _started(false), _paused(false), _stopped(false), _stopNow(false),
     maxTickEvent(this, false, MaxTickPriority),
     _numCycles(0), _changeStamp(0), _current(nullptr), initDone(false),
-    runOnce(false)
+    runOnce(false), readyList(nullptr)
 {}
 
 Scheduler::~Scheduler()
@@ -90,7 +90,9 @@ Scheduler::clear()
         p->popListNode();
     while ((p = initList.getNext()))
         p->popListNode();
-    while ((p = readyList.getNext()))
+    while ((p = readyListMethods.getNext()))
+        p->popListNode();
+    while ((p = readyListThreads.getNext()))
         p->popListNode();
 
     Channel *c;
@@ -162,7 +164,8 @@ Scheduler::dontInitialize(Process *p)
 void
 Scheduler::yield()
 {
-    _current = readyList.getNext();
+    // Pull a process from the active list.
+    _current = readyList->getNext();
     if (!_current) {
         // There are no more processes, so return control to evaluate.
         Fiber::primaryFiber()->run();
@@ -192,13 +195,10 @@ Scheduler::ready(Process *p)
     if (_stopNow)
         return;
 
-    // Clump methods together to minimize context switching.
-    static bool cluster_methods = false;
-
-    if (cluster_methods && p->procKind() == ::sc_core::SC_METHOD_PROC_)
-        readyList.pushFirst(p);
+    if (p->procKind() == ::sc_core::SC_METHOD_PROC_)
+        readyListMethods.pushLast(p);
     else
-        readyList.pushLast(p);
+        readyListThreads.pushLast(p);
 
     scheduleReadyEvent();
 }
@@ -213,27 +213,31 @@ Scheduler::resume(Process *p)
 }
 
 bool
+listContains(ListNode *list, ListNode *target)
+{
+    ListNode *n = list->nextListNode;
+    while (n != list)
+        if (n == target)
+            return true;
+    return false;
+}
+
+bool
 Scheduler::suspend(Process *p)
 {
+    bool was_ready;
     if (initDone) {
         // After initialization, the only list we can be on is the ready list.
-        bool was_ready = (p->nextListNode != nullptr);
+        was_ready = (p->nextListNode != nullptr);
         p->popListNode();
-        return was_ready;
     } else {
-        bool was_ready = false;
-        // Check the ready list to see if we find this process.
-        ListNode *n = readyList.nextListNode;
-        while (n != &readyList) {
-            if (n == p) {
-                was_ready = true;
-                break;
-            }
-        }
+        // Check the ready lists to see if we find this process.
+        was_ready = listContains(&readyListMethods, p) ||
+            listContains(&readyListThreads, p);
         if (was_ready)
             toFinalize.pushLast(p);
-        return was_ready;
     }
+    return was_ready;
 }
 
 void
@@ -267,13 +271,24 @@ Scheduler::scheduleStarvationEvent()
 void
 Scheduler::runReady()
 {
-    bool empty = readyList.empty();
+    bool empty = readyListMethods.empty() && readyListThreads.empty();
     lastReadyTick = getCurTick();
 
     // The evaluation phase.
     do {
-        yield();
-    } while (!readyList.empty());
+        // We run methods and threads in two seperate passes to emulate how
+        // Accellera orders things, but without having to scan through a
+        // unified list to find the next process of the correct type.
+        readyList = &readyListMethods;
+        while (!readyListMethods.empty())
+            yield();
+
+        readyList = &readyListThreads;
+        while (!readyListThreads.empty())
+            yield();
+
+        // We already know that readyListThreads is empty at this point.
+    } while (!readyListMethods.empty());
 
     if (!empty) {
         _numCycles++;
