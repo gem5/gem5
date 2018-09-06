@@ -27,6 +27,7 @@
  * Authors: Gabe Black
  */
 
+#include <sstream>
 #include <vector>
 
 #include "base/logging.hh"
@@ -211,8 +212,9 @@ sc_time::to_seconds() const
 const std::string
 sc_time::to_string() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
+    std::ostringstream ss;
+    print(ss);
+    return ss.str();
 }
 
 bool
