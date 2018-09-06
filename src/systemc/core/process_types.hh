@@ -39,7 +39,9 @@ namespace sc_gem5
 class Method : public Process
 {
   public:
-    Method(const char *name, ProcessFuncWrapper *func) : Process(name, func) {}
+    Method(const char *name, ProcessFuncWrapper *func, bool internal=false) :
+        Process(name, func, internal)
+    {}
 
     const char *kind() const override { return "sc_method_process"; }
 
@@ -53,8 +55,8 @@ class Method : public Process
 class Thread : public Process
 {
   public:
-    Thread(const char *name, ProcessFuncWrapper *func) :
-        Process(name, func), ctx(nullptr)
+    Thread(const char *name, ProcessFuncWrapper *func, bool internal=false) :
+        Process(name, func, internal), ctx(nullptr)
     {}
 
     ~Thread() { delete ctx; }
@@ -103,7 +105,8 @@ class Thread : public Process
 class CThread : public Thread
 {
   public:
-    CThread(const char *name, ProcessFuncWrapper *func) : Thread(name, func)
+    CThread(const char *name, ProcessFuncWrapper *func, bool internal=false) :
+        Thread(name, func, internal)
     {
         // We'll be in the initialization list now, but we shouldn't be.
         popListNode();

@@ -336,8 +336,11 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     void lastReport(::sc_core::sc_report *report);
     ::sc_core::sc_report *lastReport() const;
 
+    bool hasStaticSensitivities() { return !staticSensitivities.empty(); }
+    bool internal() { return _internal; }
+
   protected:
-    Process(const char *name, ProcessFuncWrapper *func);
+    Process(const char *name, ProcessFuncWrapper *func, bool internal=false);
 
     static Process *_newest;
 
@@ -354,6 +357,9 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 
     ProcessFuncWrapper *func;
     sc_core::sc_curr_proc_kind _procKind;
+
+    bool _internal;
+
     bool _needsStart;
     bool _dynamic;
     bool _isUnwinding;

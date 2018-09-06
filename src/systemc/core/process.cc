@@ -396,11 +396,12 @@ Process::lastReport(::sc_core::sc_report *report)
 
 ::sc_core::sc_report *Process::lastReport() const { return _lastReport.get(); }
 
-Process::Process(const char *name, ProcessFuncWrapper *func) :
+Process::Process(const char *name, ProcessFuncWrapper *func, bool internal) :
     ::sc_core::sc_process_b(name), excWrapper(nullptr), func(func),
-    _needsStart(true), _isUnwinding(false), _terminated(false),
-    _suspended(false), _disabled(false), _syncReset(false), refCount(0),
-    stackSize(::Fiber::DefaultStackSize), dynamicSensitivity(nullptr)
+    _internal(internal), _needsStart(true), _isUnwinding(false),
+    _terminated(false), _suspended(false), _disabled(false), _syncReset(false),
+    refCount(0), stackSize(::Fiber::DefaultStackSize),
+    dynamicSensitivity(nullptr)
 {
     _dynamic =
             (::sc_core::sc_get_status() >

@@ -83,6 +83,16 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
             proc->addStatic(new PendingSensitivityFinder(proc, f));
     }
 
+    if (opts && opts->_dontInitialize &&
+            opts->_events.empty() && opts->_ports.empty() &&
+            opts->_exports.empty() && opts->_interfaces.empty() &&
+            opts->_finders.empty()) {
+        SC_REPORT_WARNING(
+                "(W558) disable() or dont_initialize() called on process "
+                "with no static sensitivity, it will be orphaned",
+                proc->name());
+    }
+
     scheduler.reg(proc);
 
     if (dontInitialize)

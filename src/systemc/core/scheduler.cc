@@ -106,6 +106,13 @@ Scheduler::initPhase()
     for (Process *p = toFinalize.getNext(); p; p = toFinalize.getNext()) {
         p->finalize();
         p->popListNode();
+
+        if (!p->hasStaticSensitivities() && !p->internal()) {
+            SC_REPORT_WARNING(
+                    "(W558) disable() or dont_initialize() called on process "
+                    "with no static sensitivity, it will be orphaned",
+                    p->name());
+        }
     }
 
     for (Process *p = initList.getNext(); p; p = initList.getNext()) {

@@ -61,7 +61,7 @@ class ClockTick : public ScEvent
     {
         _name += (to ? ".up_tick" : ".down_tick");
         _procName = _name + ".p";
-        p = new Method(_procName.c_str(), &funcWrapper);
+        p = new Method(_procName.c_str(), &funcWrapper, true);
         scheduler.reg(p);
         scheduler.dontInitialize(p);
     }
