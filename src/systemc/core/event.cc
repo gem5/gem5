@@ -61,7 +61,8 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr) :
     else
         parent = nullptr;
 
-    pickUniqueName(parent, _basename);
+    std::string original_name = _basename;
+    _basename = pickUniqueName(parent, _basename);
 
     if (parent) {
         Object *obj = Object::getFromScObject(parent);
@@ -70,10 +71,16 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr) :
         topLevelEvents.emplace(topLevelEvents.end(), _sc_event);
     }
 
-    if (parent)
-        _name = std::string(parent->name()) + "." + _basename;
-    else
-        _name = _basename;
+    std::string path = parent ? (std::string(parent->name()) + ".") : "";
+
+    if (original_name != "" && _basename != original_name) {
+        std::string message = path + original_name +
+            ". Latter declaration will be renamed to " +
+            path + _basename;
+        SC_REPORT_WARNING("(W505) object already exists", message.c_str());
+    }
+
+    _name = path + _basename;
 
     allEvents.emplace(allEvents.end(), _sc_event);
 

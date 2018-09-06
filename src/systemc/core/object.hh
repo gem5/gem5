@@ -90,7 +90,7 @@ class Object
     EventsIt addChildEvent(sc_core::sc_event *e);
     void delChildEvent(sc_core::sc_event *e);
 
-    void pickUniqueName(std::string &name);
+    std::string pickUniqueName(std::string name);
 
   private:
     sc_core::sc_object *_sc_obj;
@@ -105,7 +105,7 @@ class Object
     sc_core::sc_attr_cltn cltn;
 };
 
-void pickUniqueName(::sc_core::sc_object *parent, std::string &name);
+std::string pickUniqueName(::sc_core::sc_object *parent, std::string name);
 
 extern Objects topLevelObjects;
 extern Objects allObjects;

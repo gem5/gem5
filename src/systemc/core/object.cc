@@ -110,7 +110,8 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
         parent = scheduler.current();
     }
 
-    sc_gem5::pickUniqueName(parent, _basename);
+    std::string original_name = _basename;
+    _basename = sc_gem5::pickUniqueName(parent, original_name);
 
     if (parent)
         addObject(&parent->_gem5_object->children, _sc_obj);
@@ -119,12 +120,20 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
 
     addObject(&allObjects, _sc_obj);
 
-    _name = _basename;
     sc_core::sc_object *sc_p = parent;
+    std::string path = "";
     while (sc_p) {
-        _name = std::string(sc_p->basename()) + std::string(".") + _name;
+        path = std::string(sc_p->basename()) + std::string(".") + path;
         sc_p = sc_p->get_parent_object();
     }
+
+    if (_basename != original_name) {
+        std::string message = path + original_name +
+            ". Latter declaration will be renamed to " +
+            path + _basename;
+        SC_REPORT_WARNING("(W505) object already exists", message.c_str());
+    }
+    _name = path + _basename;
 }
 
 Object::Object(sc_core::sc_object *_sc_obj, const Object &arg) :
@@ -259,25 +268,27 @@ Object::delChildEvent(sc_core::sc_event *e)
     events.pop_back();
 }
 
-void
-Object::pickUniqueName(std::string &base)
+std::string
+Object::pickUniqueName(std::string base)
 {
     std::string seed = base;
     while (!nameIsUnique(&children, &events, base))
         base = ::sc_core::sc_gen_unique_name(seed.c_str());
+
+    return base;
 }
 
-void
-pickUniqueName(::sc_core::sc_object *parent, std::string &base)
+std::string
+pickUniqueName(::sc_core::sc_object *parent, std::string base)
 {
-    if (parent) {
-        Object::getFromScObject(parent)->pickUniqueName(base);
-        return;
-    }
+    if (parent)
+        return Object::getFromScObject(parent)->pickUniqueName(base);
 
     std::string seed = base;
     while (!nameIsUnique(&topLevelObjects, &topLevelEvents, base))
         base = ::sc_core::sc_gen_unique_name(seed.c_str());
+
+    return base;
 }
 
 
