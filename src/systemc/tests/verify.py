@@ -152,7 +152,7 @@ class RunPhase(TestPhaseBase):
                 cmd.extend(timeout_cmd)
             cmd.extend([
                 test.full_path(),
-                '-red', os.path.abspath(test.m5out_dir()),
+                '-rd', os.path.abspath(test.m5out_dir()),
                 '--listener-mode=off',
                 '--quiet',
                 config_path,
@@ -225,17 +225,13 @@ class LogChecker(Checker):
         warning_filt(540),
         warning_filt(569),
         warning_filt(571),
-        error_filt(514),
-        error_filt(515),
-        error_filt(525),
-        error_filt(541),
-        error_filt(542),
-        error_filt(543),
         info_filt(804),
         in_file_filt,
     )
     test_filt = merge_filts(
         r'^Global frequency set at \d* ticks per second\n',
+        r'^info: Entering event queue @ \d*\.  Starting simulation\.\.\.\n',
+        r'warn: [^(]+\([^)]*\)( \[with [^]]*\])? not implemented\.\n',
         info_filt(804),
         in_file_filt,
     )
