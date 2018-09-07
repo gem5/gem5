@@ -124,6 +124,13 @@ class CompilePhase(TestPhaseBase):
 
     def run(self, tests):
         targets = list([test.full_path() for test in tests])
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-j', type=int, default=0)
+        args, leftovers = parser.parse_known_args(self.args)
+        if args.j == 0:
+            self.args = ('-j', str(self.main_args.j)) + self.args
+
         scons_args = [ 'USE_SYSTEMC=1' ] + list(self.args) + targets
         scons(*scons_args)
 
@@ -134,9 +141,10 @@ class RunPhase(TestPhaseBase):
     def run(self, tests):
         parser = argparse.ArgumentParser()
         parser.add_argument('--timeout', type=int, metavar='SECONDS',
-                            help='Time limit for each run in seconds.',
-                            default=0)
-        parser.add_argument('-j', type=int, default=1,
+                            help='Time limit for each run in seconds, '
+                            '0 to disable.',
+                            default=60)
+        parser.add_argument('-j', type=int, default=0,
                 help='How many tests to run in parallel.')
         args = parser.parse_args(self.args)
 
@@ -172,11 +180,13 @@ class RunPhase(TestPhaseBase):
             with open(test.returncode_file(), 'w') as rc:
                 rc.write('%d\n' % returncode)
 
+        j = self.main_args.j if args.j == 0 else args.j
+
         runnable = filter(lambda t: not t.compile_only, tests)
-        if args.j == 1:
+        if j == 1:
             map(run_test, runnable)
         else:
-            tp = multiprocessing.pool.ThreadPool(args.j)
+            tp = multiprocessing.pool.ThreadPool(j)
             map(lambda t: tp.apply_async(run_test, (t,)), runnable)
             tp.close()
             tp.join()
@@ -379,8 +389,8 @@ class VerifyPhase(TestPhaseBase):
                 help='Create a results.json file in the current directory.')
         result_opts.add_argument('--result-file-at', metavar='PATH',
                 help='Create a results json file at the given path.')
-        parser.add_argument('--print-results', action='store_true',
-                help='Print a list of tests that passed or failed')
+        parser.add_argument('--no-print-results', action='store_true',
+                help='Don\'t print a list of tests that passed or failed')
         args = parser.parse_args(self.args)
 
         self.reset_status()
@@ -452,7 +462,7 @@ class VerifyPhase(TestPhaseBase):
 
             self.passed(test)
 
-        if args.print_results:
+        if not args.no_print_results:
             self.print_results()
 
         self.print_status()
@@ -481,6 +491,10 @@ parser.add_argument('--flavor', choices=['debug', 'opt', 'fast'],
 
 parser.add_argument('--list', action='store_true',
                     help='List the available tests')
+
+parser.add_argument('-j', type=int, default=1,
+                    help='Default level of parallelism, can be overriden '
+                    'for individual stages')
 
 filter_opts = parser.add_mutually_exclusive_group()
 filter_opts.add_argument('--filter', default='True',
