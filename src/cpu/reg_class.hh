@@ -84,7 +84,7 @@ class RegId {
     static constexpr size_t Scale = TheISA::NumVecElemPerVecReg;
     friend struct std::hash<RegId>;
   public:
-    RegId() {};
+    RegId() : regClass(IntRegClass), regIdx(0), elemIdx(-1) {}
     RegId(RegClass reg_class, RegIndex reg_idx)
         : regClass(reg_class), regIdx(reg_idx), elemIdx(-1)
     {

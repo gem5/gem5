@@ -461,7 +461,7 @@ namespace ArmISA
                     return INTREG_SP0;
                   default:
                     panic("Invalid exception level");
-                    break;
+                    return 0;  // Never happens.
                 }
             } else {
                 return flattenIntRegModeIndex(reg);

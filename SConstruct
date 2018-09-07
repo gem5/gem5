@@ -484,11 +484,11 @@ if main['GCC']:
                 compareVersions(main['GCC_VERSION'], '4.9') >= 0:
             main.Append(CCFLAGS=['-fsanitize=address,undefined',
                                  '-fno-omit-frame-pointer'],
-                       LINKFLAGS='-fsanitize=address,undefined')
+                        LINKFLAGS='-fsanitize=address,undefined')
         else:
             main.Append(CCFLAGS=['-fsanitize=address',
                                  '-fno-omit-frame-pointer'],
-                       LINKFLAGS='-fsanitize=address')
+                        LINKFLAGS='-fsanitize=address')
     # Only gcc >= 4.9 supports UBSan, so check both the version
     # and the command-line option before adding the compiler and
     # linker flags.
@@ -541,16 +541,16 @@ elif main['CLANG']:
     # versions here.
     if GetOption('with_ubsan'):
         if GetOption('with_asan'):
-            env.Append(CCFLAGS=['-fsanitize=address,undefined',
-                                '-fno-omit-frame-pointer'],
+            main.Append(CCFLAGS=['-fsanitize=address,undefined',
+                                 '-fno-omit-frame-pointer'],
                        LINKFLAGS='-fsanitize=address,undefined')
         else:
-            env.Append(CCFLAGS='-fsanitize=undefined',
-                       LINKFLAGS='-fsanitize=undefined')
+            main.Append(CCFLAGS='-fsanitize=undefined',
+                        LINKFLAGS='-fsanitize=undefined')
 
     elif GetOption('with_asan'):
-        env.Append(CCFLAGS=['-fsanitize=address',
-                            '-fno-omit-frame-pointer'],
+        main.Append(CCFLAGS=['-fsanitize=address',
+                             '-fno-omit-frame-pointer'],
                    LINKFLAGS='-fsanitize=address')
 
 else:
