@@ -88,7 +88,7 @@ SensitivityEventAndList::notifyWork(Event *e)
     e->delSensitivity(this);
     count++;
     if (count == list->events.size())
-        process->satisfySensitivity(this);
+        satisfy();
 }
 
 SensitivityEventOrList::SensitivityEventOrList(
@@ -113,7 +113,7 @@ SensitivityTimeoutAndEventAndList::notifyWork(Event *e)
         SensitivityEventAndList::notifyWork(e);
     } else {
         // There's no inciting event, so this must be a timeout.
-        SensitivityTimeout::notifyWork(e);
+        satisfy(true);
     }
 }
 
@@ -400,10 +400,10 @@ Process::lastReport(::sc_core::sc_report *report)
 
 Process::Process(const char *name, ProcessFuncWrapper *func, bool internal) :
     ::sc_core::sc_process_b(name), excWrapper(nullptr), func(func),
-    _internal(internal), _needsStart(true), _isUnwinding(false),
-    _terminated(false), _suspended(false), _disabled(false), _syncReset(false),
-    refCount(0), stackSize(::Fiber::DefaultStackSize),
-    dynamicSensitivity(nullptr)
+    _internal(internal), _timedOut(false), _needsStart(true),
+    _isUnwinding(false), _terminated(false), _suspended(false),
+    _disabled(false), _syncReset(false), refCount(0),
+    stackSize(::Fiber::DefaultStackSize), dynamicSensitivity(nullptr)
 {
     _dynamic =
             (::sc_core::sc_get_status() >

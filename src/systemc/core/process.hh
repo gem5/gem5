@@ -64,7 +64,9 @@ class Sensitivity
     Sensitivity(Process *p) : process(p) {}
     virtual ~Sensitivity() {}
 
-    virtual void notifyWork(Event *e);
+    void satisfy(bool timedOut=false);
+
+    virtual void notifyWork(Event *e) { satisfy(); }
     void notify(Event *e);
     void notify() { notify(nullptr); }
 
@@ -130,6 +132,8 @@ class SensitivityTimeoutAndEvent :
             Process *p, ::sc_core::sc_time t, const ::sc_core::sc_event *e) :
         Sensitivity(p), SensitivityTimeout(p, t), SensitivityEvent(p, e)
     {}
+
+    void notifyWork(Event *e) override { satisfy(e == nullptr); }
 };
 
 class SensitivityTimeoutAndEventAndList :
@@ -156,6 +160,8 @@ class SensitivityTimeoutAndEventOrList :
         Sensitivity(p), SensitivityTimeout(p, t),
         SensitivityEventOrList(p, eol)
     {}
+
+    void notifyWork(Event *e) override { satisfy(e == nullptr); }
 };
 
 typedef std::vector<Sensitivity *> Sensitivities;
@@ -338,6 +344,8 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 
     bool hasStaticSensitivities() { return !staticSensitivities.empty(); }
     bool internal() { return _internal; }
+    bool timedOut() { return _timedOut; }
+    void timedOut(bool to) { _timedOut = to; }
 
   protected:
     Process(const char *name, ProcessFuncWrapper *func, bool internal=false);
@@ -359,6 +367,9 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     sc_core::sc_curr_proc_kind _procKind;
 
     bool _internal;
+
+    // Needed to support the deprecated "timed_out" function.
+    bool _timedOut;
 
     bool _needsStart;
     bool _dynamic;
@@ -386,8 +397,9 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 };
 
 inline void
-Sensitivity::notifyWork(Event *e)
+Sensitivity::satisfy(bool timedOut)
 {
+    process->timedOut(timedOut);
     process->satisfySensitivity(this);
 }
 

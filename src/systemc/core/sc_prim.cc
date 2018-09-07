@@ -141,8 +141,7 @@ sc_prim_channel::next_trigger(
 bool
 sc_prim_channel::timed_out()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return ::sc_core::timed_out();
 }
 
 void

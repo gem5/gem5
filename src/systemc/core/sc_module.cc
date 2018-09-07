@@ -361,8 +361,7 @@ sc_module::next_trigger(double d, sc_time_unit u, const sc_event_and_list &eal)
 bool
 sc_module::timed_out()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return ::sc_core::timed_out();
 }
 
 
@@ -561,8 +560,11 @@ next_trigger(double d, sc_time_unit u, const sc_event_and_list &eal)
 bool
 timed_out()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    ::sc_gem5::Process *p = sc_gem5::scheduler.current();
+    if (!p)
+        return false;
+    else
+        return p->timedOut();
 }
 
 
