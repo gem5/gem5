@@ -328,11 +328,15 @@ Scheduler::runUpdate()
 {
     status(StatusUpdate);
 
-    Channel *channel = updateList.getNext();
-    while (channel) {
-        channel->popListNode();
-        channel->update();
-        channel = updateList.getNext();
+    try {
+        Channel *channel = updateList.getNext();
+        while (channel) {
+            channel->popListNode();
+            channel->update();
+            channel = updateList.getNext();
+        }
+    } catch (...) {
+        throwToScMain();
     }
 }
 
@@ -340,8 +344,13 @@ void
 Scheduler::runDelta()
 {
     status(StatusDelta);
-    while (!deltas.empty())
-        deltas.front()->run();
+
+    try {
+        while (!deltas.empty())
+            deltas.front()->run();
+    } catch (...) {
+        throwToScMain();
+    }
 }
 
 void
@@ -431,6 +440,7 @@ Scheduler::throwToScMain(const ::sc_core::sc_report *r)
     if (!r)
         r = reportifyException();
     _throwToScMain = r;
+    status(StatusOther);
     scMain->run();
 }
 

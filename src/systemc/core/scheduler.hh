@@ -457,8 +457,16 @@ Scheduler::TimeSlot::process()
 {
     scheduler.status(StatusTiming);
 
-    while (!events.empty())
-        events.front()->run();
+    try {
+        while (!events.empty())
+            events.front()->run();
+    } catch (...) {
+        if (events.empty())
+            scheduler.completeTimeSlot(this);
+        else
+            scheduler.schedule(this);
+        scheduler.throwToScMain();
+    }
 
     scheduler.status(StatusOther);
     scheduler.completeTimeSlot(this);
