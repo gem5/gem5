@@ -140,9 +140,6 @@ Kernel::startup()
         stopWork();
 
     kernel->status(::sc_core::SC_RUNNING);
-
-    // Run update once before the event queue starts.
-    ::sc_gem5::scheduler.update();
 }
 
 void
