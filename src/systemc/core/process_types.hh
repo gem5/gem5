@@ -92,7 +92,13 @@ class Thread : public Process
         main() override
         {
             thread->_needsStart = false;
-            thread->run();
+            try {
+                thread->run();
+            } catch (...) {
+                thread->terminate();
+                scheduler.throwToScMain();
+                return;
+            }
             thread->terminate();
             scheduler.yield();
         }

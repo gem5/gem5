@@ -105,6 +105,10 @@ class sc_report_handler
     static void set_handler(sc_report_handler_proc);
     static void default_handler(const sc_report &, const sc_actions &);
     static sc_actions get_new_action_id();
+    // Nonstandard
+    // Returns the current handler so it can be restored if it needs to be
+    // changed temporarily.
+    static sc_report_handler_proc get_handler();
 
     static sc_report *get_cached_report();
     static void clear_cached_report();

@@ -343,6 +343,8 @@ Process::run()
         } catch(const ::sc_core::sc_unwind_exception &exc) {
             reset = exc.is_reset();
             _isUnwinding = false;
+        } catch (...) {
+            throw;
         }
     } while (reset);
     needsStart(true);

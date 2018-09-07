@@ -333,6 +333,8 @@ class Scheduler
 
     uint64_t changeStamp() { return _changeStamp; }
 
+    void throwToScMain(const ::sc_core::sc_report *r=nullptr);
+
   private:
     typedef const EventBase::Priority Priority;
     static Priority DefaultPriority = EventBase::Default_Pri;
@@ -377,7 +379,9 @@ class Scheduler
     void stop();
     EventWrapper<Scheduler, &Scheduler::pause> pauseEvent;
     EventWrapper<Scheduler, &Scheduler::stop> stopEvent;
+
     Fiber *scMain;
+    const ::sc_core::sc_report *_throwToScMain;
 
     bool
     starved()
@@ -436,6 +440,8 @@ Scheduler::TimeSlot::process()
         events.front()->run();
     scheduler.completeTimeSlot(this);
 }
+
+const ::sc_core::sc_report *reportifyException();
 
 } // namespace sc_gem5
 

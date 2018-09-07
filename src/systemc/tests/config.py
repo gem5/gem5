@@ -31,6 +31,7 @@ import argparse
 import m5
 import os
 import re
+import sys
 
 from m5.objects import SystemC_Kernel, Root
 
@@ -58,7 +59,5 @@ if result.code != 0:
     # generate errors, and as long as their output matches that's still
     # considered correct. A "real" systemc config should expect sc_main
     # (if present) not to fail.
-    scrubbed = re.sub(r'In file: .*$',
-            'In file: <removed by verify.pl>',
-            result.message)
-    print('\n' + scrubbed)
+    print('\n' + result.message)
+    sys.exit(int(result.code))

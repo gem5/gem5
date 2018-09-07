@@ -34,6 +34,8 @@
 #include "sim/eventq.hh"
 #include "systemc/core/kernel.hh"
 #include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/utils/sc_report.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_gem5
 {
@@ -42,7 +44,7 @@ Scheduler::Scheduler() :
     eq(nullptr), readyEvent(this, false, ReadyPriority),
     pauseEvent(this, false, PausePriority),
     stopEvent(this, false, StopPriority),
-    scMain(nullptr),
+    scMain(nullptr), _throwToScMain(nullptr),
     starvationEvent(this, false, StarvationPriority),
     _started(false), _paused(false), _stopped(false), _stopNow(false),
     maxTickEvent(this, false, MaxTickPriority),
@@ -184,7 +186,11 @@ Scheduler::yield()
         // If the current process needs to be manually started, start it.
         if (_current && _current->needsStart()) {
             _current->needsStart(false);
-            _current->run();
+            try {
+                _current->run();
+            } catch (...) {
+                throwToScMain();
+            }
         }
     }
     if (_current && _current->excWrapper) {
@@ -336,7 +342,8 @@ Scheduler::pause()
     _paused = true;
     kernel->status(::sc_core::SC_PAUSED);
     runOnce = false;
-    scMain->run();
+    if (scMain && !scMain->finished())
+        scMain->run();
 }
 
 void
@@ -348,7 +355,8 @@ Scheduler::stop()
     clear();
 
     runOnce = false;
-    scMain->run();
+    if (scMain && !scMain->finished())
+        scMain->run();
 }
 
 void
@@ -385,6 +393,12 @@ Scheduler::start(Tick max_tick, bool run_to_time)
         deschedule(&maxTickEvent);
     if (starvationEvent.scheduled())
         deschedule(&starvationEvent);
+
+    if (_throwToScMain) {
+        const ::sc_core::sc_report *to_throw = _throwToScMain;
+        _throwToScMain = nullptr;
+        throw *to_throw;
+    }
 }
 
 void
@@ -405,6 +419,15 @@ Scheduler::schedulePause()
 }
 
 void
+Scheduler::throwToScMain(const ::sc_core::sc_report *r)
+{
+    if (!r)
+        r = reportifyException();
+    _throwToScMain = r;
+    scMain->run();
+}
+
+void
 Scheduler::scheduleStop(bool finish_delta)
 {
     if (stopEvent.scheduled())
@@ -420,5 +443,47 @@ Scheduler::scheduleStop(bool finish_delta)
 }
 
 Scheduler scheduler;
+
+namespace {
+
+void
+throwingReportHandler(const ::sc_core::sc_report &r,
+                      const ::sc_core::sc_actions &)
+{
+    throw r;
+}
+
+} // anonymous namespace
+
+const ::sc_core::sc_report *
+reportifyException()
+{
+    ::sc_core::sc_report_handler_proc old_handler =
+        ::sc_core::sc_report_handler::get_handler();
+    ::sc_core::sc_report_handler::set_handler(&throwingReportHandler);
+
+    try {
+        try {
+            // Rethrow the current exception so we can catch it and throw an
+            // sc_report instead if it's not a type we recognize/can handle.
+            throw;
+        } catch (const ::sc_core::sc_report &) {
+            // It's already a sc_report, so nothing to do.
+            throw;
+        } catch (const ::sc_core::sc_unwind_exception &) {
+            panic("Kill/reset exception escaped a Process::run()");
+        } catch (const std::exception &e) {
+            SC_REPORT_ERROR("uncaught exception", e.what());
+        } catch (const char *msg) {
+            SC_REPORT_ERROR("uncaught exception", msg);
+        } catch (...) {
+            SC_REPORT_ERROR("uncaught exception", "UNKNOWN EXCEPTION");
+        }
+    } catch (const ::sc_core::sc_report &r) {
+        ::sc_core::sc_report_handler::set_handler(old_handler);
+        return &r;
+    }
+    panic("No exception thrown in reportifyException.");
+}
 
 } // namespace sc_gem5

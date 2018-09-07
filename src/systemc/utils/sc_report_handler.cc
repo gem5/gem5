@@ -341,6 +341,12 @@ sc_report_handler::get_new_action_id()
     return maxAction;
 }
 
+sc_report_handler_proc
+sc_report_handler::get_handler()
+{
+    return reportHandlerProc;
+}
+
 sc_report *
 sc_report_handler::get_cached_report()
 {
