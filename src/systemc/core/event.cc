@@ -136,6 +136,11 @@ Event::getParentObject() const
 void
 Event::notify()
 {
+    if (scheduler.inUpdate()) {
+        SC_REPORT_ERROR("(E521) immediate notification is not allowed "
+                "during update phase or elaboration", "");
+    }
+
     // An immediate notification overrides any pending delayed notification.
     if (delayedNotify.scheduled())
         scheduler.deschedule(&delayedNotify);
