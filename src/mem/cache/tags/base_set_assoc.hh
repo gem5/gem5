@@ -237,7 +237,7 @@ class BaseSetAssoc : public BaseTags
         evict_blks.push_back(victim);
 
         DPRINTF(CacheRepl, "set %x, way %x: selecting blk for replacement\n",
-            victim->set, victim->way);
+                victim->getSet(), victim->getWay());
 
         return victim;
     }
@@ -302,7 +302,8 @@ class BaseSetAssoc : public BaseTags
      */
     Addr regenerateBlkAddr(const CacheBlk* blk) const override
     {
-        return ((blk->tag << tagShift) | ((Addr)blk->set << setShift));
+        const Addr set = blk->getSet() << setShift;
+        return ((blk->tag << tagShift) | set);
     }
 
     void forEachBlk(std::function<void(CacheBlk &)> visitor) override {

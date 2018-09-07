@@ -108,12 +108,6 @@ class CacheBlk : public ReplaceableEntry
     /** Which curTick() will this block be accessible */
     Tick whenReady;
 
-    /**
-     * The set and way this block belongs to.
-     * @todo Move this into subclasses when we fix CacheTags to use them.
-     */
-    int set, way;
-
     /** Number of references to this block since it was brought in. */
     unsigned refCount;
 

@@ -104,9 +104,8 @@ BaseSetAssoc::init(BaseCache* cache)
             // hash table; won't matter because the block is invalid
             blk->tag = j;
 
-            // Set its set and way
-            blk->set = i;
-            blk->way = j;
+            // Set its index
+            blk->setPosition(i, j);
 
             // Update block index
             ++blkIndex;

@@ -92,6 +92,9 @@ SectorTags::init(BaseCache* cache)
             // Associate a replacement data entry to the sector
             sec_blk->replacementData = replacementPolicy->instantiateEntry();
 
+            // Set its index
+            sec_blk->setPosition(i, j);
+
             // Initialize all blocks in this sector
             sec_blk->blks.resize(numBlocksPerSector);
             for (unsigned k = 0; k < numBlocksPerSector; ++k){
@@ -110,9 +113,8 @@ SectorTags::init(BaseCache* cache)
                 // Associate the sector replacement data to this block
                 blk->replacementData = sec_blk->replacementData;
 
-                // Set its set, way and sector offset
-                blk->set = i;
-                blk->way = j;
+                // Set its index and sector offset
+                blk->setPosition(i, j);
                 blk->setSectorOffset(k);
 
                 // Update block index
@@ -308,8 +310,8 @@ SectorTags::findVictim(Addr addr, const bool is_secure,
         }
     }
 
-    DPRINTF(CacheRepl, "set %x, way %x, sector offset %x: %s\n",
-            "selecting blk for replacement\n", victim->set, victim->way,
+    DPRINTF(CacheRepl, "set %x, way %x, sector offset %x: selecting blk " \
+            "for replacement\n", victim->getSet(), victim->getWay(),
             victim->getSectorOffset());
 
     return victim;
@@ -337,7 +339,8 @@ Addr
 SectorTags::regenerateBlkAddr(const CacheBlk* blk) const
 {
     const SectorSubBlk* blk_cast = static_cast<const SectorSubBlk*>(blk);
-    return ((blk_cast->getTag() << tagShift) | ((Addr)blk->set << setShift) |
+    const Addr set = blk_cast->getSectorBlock()->getSet() << setShift;
+    return ((blk_cast->getTag() << tagShift) | set |
             ((Addr)blk_cast->getSectorOffset() << sectorShift));
 }
 

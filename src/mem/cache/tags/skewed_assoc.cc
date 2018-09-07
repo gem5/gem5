@@ -199,8 +199,8 @@ SkewedAssoc::extractSet(Addr addr, unsigned way) const
 Addr
 SkewedAssoc::regenerateBlkAddr(const CacheBlk* blk) const
 {
-    const Addr addr = (blk->tag << (msbShift + 1)) | blk->set;
-    const Addr set = deskew(addr, blk->way) & setMask;
+    const Addr addr = (blk->tag << (msbShift + 1)) | blk->getSet();
+    const Addr set = deskew(addr, blk->getWay()) & setMask;
     return (blk->tag << tagShift) | (set << setShift);
 }
 

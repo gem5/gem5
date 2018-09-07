@@ -85,15 +85,13 @@ FALRU::init(BaseCache* cache)
     head = &(blks[0]);
     head->prev = nullptr;
     head->next = &(blks[1]);
-    head->set = 0;
-    head->way = 0;
+    head->setPosition(0, 0);
     head->data = &dataBlks[0];
 
     for (unsigned i = 1; i < numBlocks - 1; i++) {
         blks[i].prev = &(blks[i-1]);
         blks[i].next = &(blks[i+1]);
-        blks[i].set = 0;
-        blks[i].way = i;
+        blks[i].setPosition(0, i);
 
         // Associate a data chunk to the block
         blks[i].data = &dataBlks[blkSize*i];
@@ -102,8 +100,7 @@ FALRU::init(BaseCache* cache)
     tail = &(blks[numBlocks - 1]);
     tail->prev = &(blks[numBlocks - 2]);
     tail->next = nullptr;
-    tail->set = 0;
-    tail->way = numBlocks - 1;
+    tail->setPosition(0, numBlocks - 1);
     tail->data = &dataBlks[(numBlocks - 1) * blkSize];
 
     cacheTracking.init(head, tail);
