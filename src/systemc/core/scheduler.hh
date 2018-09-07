@@ -318,7 +318,10 @@ class Scheduler
     }
 
     // Run scheduled channel updates.
-    void update();
+    void runUpdate();
+
+    // Run delta events.
+    void runDelta();
 
     void setScMainFiber(Fiber *sc_main) { scMain = sc_main; }
 
@@ -328,12 +331,28 @@ class Scheduler
     void schedulePause();
     void scheduleStop(bool finish_delta);
 
-    bool paused() { return _paused; }
-    bool stopped() { return _stopped; }
+    enum Status
+    {
+        StatusOther = 0,
+        StatusDelta,
+        StatusUpdate,
+        StatusTiming,
+        StatusPaused,
+        StatusStopped
+    };
+
+    bool paused() { return status() == StatusPaused; }
+    bool stopped() { return status() == StatusStopped; }
+    bool inDelta() { return status() == StatusDelta; }
+    bool inUpdate() { return status() == StatusUpdate; }
+    bool inTiming() { return status() == StatusTiming; }
 
     uint64_t changeStamp() { return _changeStamp; }
 
     void throwToScMain(const ::sc_core::sc_report *r=nullptr);
+
+    Status status() { return _status; }
+    void status(Status s) { _status = s; }
 
   private:
     typedef const EventBase::Priority Priority;
@@ -395,9 +414,9 @@ class Scheduler
     void scheduleStarvationEvent();
 
     bool _started;
-    bool _paused;
-    bool _stopped;
     bool _stopNow;
+
+    Status _status;
 
     Tick maxTick;
     Tick lastReadyTick;
@@ -436,8 +455,12 @@ extern Scheduler scheduler;
 inline void
 Scheduler::TimeSlot::process()
 {
+    scheduler.status(StatusTiming);
+
     while (!events.empty())
         events.front()->run();
+
+    scheduler.status(StatusOther);
     scheduler.completeTimeSlot(this);
 }
 

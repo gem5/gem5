@@ -46,7 +46,7 @@ Scheduler::Scheduler() :
     stopEvent(this, false, StopPriority),
     scMain(nullptr), _throwToScMain(nullptr),
     starvationEvent(this, false, StarvationPriority),
-    _started(false), _paused(false), _stopped(false), _stopNow(false),
+    _started(false), _stopNow(false), _status(StatusOther),
     maxTickEvent(this, false, MaxTickPriority),
     _numCycles(0), _changeStamp(0), _current(nullptr), initDone(false),
     runOnce(false), readyList(nullptr)
@@ -123,10 +123,8 @@ Scheduler::initPhase()
         p->ready();
     }
 
-    update();
-
-    while (!deltas.empty())
-        deltas.front()->run();
+    runUpdate();
+    runDelta();
 
     for (auto ets: eventsToSchedule)
         eq->schedule(ets.first, ets.second);
@@ -139,6 +137,8 @@ Scheduler::initPhase()
     }
 
     initDone = true;
+
+    status(StatusOther);
 }
 
 void
@@ -311,23 +311,23 @@ Scheduler::runReady()
     if (_stopNow)
         return;
 
-    // The update phase.
-    update();
-
-    // The delta phase.
-    while (!deltas.empty())
-        deltas.front()->run();
+    runUpdate();
+    runDelta();
 
     if (!runToTime && starved())
         scheduleStarvationEvent();
 
     if (runOnce)
         schedulePause();
+
+    status(StatusOther);
 }
 
 void
-Scheduler::update()
+Scheduler::runUpdate()
 {
+    status(StatusUpdate);
+
     Channel *channel = updateList.getNext();
     while (channel) {
         channel->popListNode();
@@ -337,9 +337,17 @@ Scheduler::update()
 }
 
 void
+Scheduler::runDelta()
+{
+    status(StatusDelta);
+    while (!deltas.empty())
+        deltas.front()->run();
+}
+
+void
 Scheduler::pause()
 {
-    _paused = true;
+    status(StatusPaused);
     kernel->status(::sc_core::SC_PAUSED);
     runOnce = false;
     if (scMain && !scMain->finished())
@@ -349,7 +357,7 @@ Scheduler::pause()
 void
 Scheduler::stop()
 {
-    _stopped = true;
+    status(StatusStopped);
     kernel->stop();
 
     clear();
@@ -367,8 +375,7 @@ Scheduler::start(Tick max_tick, bool run_to_time)
     scMain = Fiber::currentFiber();
 
     _started = true;
-    _paused = false;
-    _stopped = false;
+    status(StatusOther);
     runToTime = run_to_time;
 
     maxTick = max_tick;
