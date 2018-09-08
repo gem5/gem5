@@ -48,7 +48,7 @@ class sc_export_base : public sc_object
     virtual const sc_interface *get_interface() const = 0;
 
   protected:
-    friend class sc_gem5::Kernel;
+    friend class sc_gem5::Module;
 
     virtual void before_end_of_elaboration() = 0;
     virtual void end_of_elaboration() = 0;

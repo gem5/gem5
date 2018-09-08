@@ -221,10 +221,27 @@ sc_module::sc_module() :
 {}
 
 sc_module::sc_module(const sc_module_name &) : sc_module() {}
-sc_module::sc_module(const char *_name) : sc_module(sc_module_name(_name)) {}
+sc_module::sc_module(const char *_name) : sc_module(sc_module_name(_name))
+{
+    _gem5_module->deprecatedConstructor();
+    SC_REPORT_WARNING("(W569) sc_module(const char*), "
+            "sc_module(const std::string&) have been deprecated, use "
+            "sc_module(const sc_module_name&)", _name);
+}
 sc_module::sc_module(const std::string &_name) :
     sc_module(sc_module_name(_name.c_str()))
-{}
+{
+    _gem5_module->deprecatedConstructor();
+    SC_REPORT_WARNING("(W569) sc_module(const char*), "
+            "sc_module(const std::string&) have been deprecated, use "
+            "sc_module(const sc_module_name&)", _name.c_str());
+}
+
+void
+sc_module::end_module()
+{
+    _gem5_module->endModule();
+}
 
 void
 sc_module::reset_signal_is(const sc_in<bool> &, bool)

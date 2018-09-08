@@ -233,7 +233,6 @@ class LogChecker(Checker):
         r'^\nInfo: \(I804\) /IEEE_Std_1666/deprecated: \n' +
         r'    sc_clock\(const char(.*\n){3}',
         warning_filt(540),
-        warning_filt(569),
         warning_filt(571),
         info_filt(804),
         in_file_filt,

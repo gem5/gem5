@@ -32,6 +32,7 @@
 #include <cassert>
 
 #include "base/logging.hh"
+#include "systemc/ext/core/sc_export.hh"
 #include "systemc/ext/core/sc_port.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
@@ -48,7 +49,9 @@ Module *_callbackModule = nullptr;
 
 } // anonymous namespace
 
-Module::Module(const char *name) : _name(name), _sc_mod(nullptr), _obj(nullptr)
+Module::Module(const char *name) :
+    _name(name), _sc_mod(nullptr), _obj(nullptr), _ended(false),
+    _deprecatedConstructor(false)
 {
     panic_if(_new_module, "Previous module not finished.\n");
     _new_module = this;
@@ -103,6 +106,60 @@ Module::bindPorts(std::vector<const ::sc_core::sc_bind_proxy *> &proxies)
         else
             port->vbind(*proxy->port());
     }
+}
+
+void
+Module::beforeEndOfElaboration()
+{
+    callbackModule(this);
+    _sc_mod->before_end_of_elaboration();
+    for (auto p: ports)
+        p->before_end_of_elaboration();
+    for (auto e: exports)
+        e->before_end_of_elaboration();
+    callbackModule(nullptr);
+}
+
+void
+Module::endOfElaboration()
+{
+    if (_deprecatedConstructor && !_ended) {
+        std::string msg = csprintf("module '%s'", name());
+        SC_REPORT_WARNING("(W509) module construction not properly completed: "
+                "did you forget to add a sc_module_name parameter to "
+                "your module constructor?", msg.c_str());
+    }
+    callbackModule(this);
+    _sc_mod->end_of_elaboration();
+    for (auto p: ports)
+        p->end_of_elaboration();
+    for (auto e: exports)
+        e->end_of_elaboration();
+    callbackModule(nullptr);
+}
+
+void
+Module::startOfSimulation()
+{
+    callbackModule(this);
+    _sc_mod->start_of_simulation();
+    for (auto p: ports)
+        p->start_of_simulation();
+    for (auto e: exports)
+        e->start_of_simulation();
+    callbackModule(nullptr);
+}
+
+void
+Module::endOfSimulation()
+{
+    callbackModule(this);
+    _sc_mod->end_of_simulation();
+    for (auto p: ports)
+        p->end_of_simulation();
+    for (auto e: exports)
+        e->end_of_simulation();
+    callbackModule(nullptr);
 }
 
 Module *

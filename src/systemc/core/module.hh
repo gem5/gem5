@@ -74,6 +74,8 @@ class Module
     const char *_name;
     sc_core::sc_module *_sc_mod;
     Object *_obj;
+    bool _ended;
+    bool _deprecatedConstructor;
 
     UniqueNameGen nameGen;
 
@@ -85,6 +87,8 @@ class Module
     void finish(Object *this_obj);
 
     const char *name() const { return _name; }
+    void endModule() { _ended = true; }
+    void deprecatedConstructor() { _deprecatedConstructor = true; }
 
     sc_core::sc_module *
     sc_mod() const
@@ -115,6 +119,11 @@ class Module
 
     std::vector<::sc_core::sc_port_base *> ports;
     std::vector<::sc_core::sc_export_base *> exports;
+
+    void beforeEndOfElaboration();
+    void endOfElaboration();
+    void startOfSimulation();
+    void endOfSimulation();
 };
 
 Module *currentModule();
