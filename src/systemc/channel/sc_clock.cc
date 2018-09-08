@@ -46,22 +46,26 @@ class ClockTick : public ScEvent
   private:
     ::sc_core::sc_clock *clock;
     ::sc_core::sc_time _period;
-    std::string _name;
+    std::string name;
     Process *p;
     ProcessMemberFuncWrapper<::sc_core::sc_clock> funcWrapper;
-    std::string _procName;
 
   public:
     ClockTick(::sc_core::sc_clock *clock, bool to,
             ::sc_core::sc_time _period) :
         ScEvent([this]() { tick(); }),
-        clock(clock), _period(_period), _name(clock->name()),
+        clock(clock), _period(_period), name(clock->basename()), p(nullptr),
         funcWrapper(clock, to ? &::sc_core::sc_clock::tickUp :
                                 &::sc_core::sc_clock::tickDown)
     {
-        _name += (to ? ".up_tick" : ".down_tick");
-        _procName = _name + ".p";
-        p = new Method(_procName.c_str(), &funcWrapper, true);
+        name += std::string(to ? "_posedge_action" : "_negedge_action");
+        name = ::sc_core::sc_gen_unique_name(name.c_str());
+    }
+
+    void
+    createProcess()
+    {
+        p = new Method(name.c_str(), &funcWrapper, true);
         scheduler.reg(p);
         scheduler.dontInitialize(p);
     }
@@ -70,7 +74,8 @@ class ClockTick : public ScEvent
     {
         if (scheduled())
             scheduler.deschedule(this);
-        p->popListNode();
+        if (p)
+            p->popListNode();
     }
 
     void
@@ -156,6 +161,8 @@ sc_clock::time_stamp()
 void
 sc_clock::before_end_of_elaboration()
 {
+    _gem5UpEdge->createProcess();
+    _gem5DownEdge->createProcess();
     if (_posedgeFirst) {
         ::sc_gem5::scheduler.schedule(_gem5UpEdge, _startTime);
         ::sc_gem5::scheduler.schedule(_gem5DownEdge,
