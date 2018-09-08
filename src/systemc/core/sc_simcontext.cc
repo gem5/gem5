@@ -28,50 +28,60 @@
  */
 
 #include "base/logging.hh"
+#include "systemc/core/object.hh"
+#include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_simcontext.hh"
 
 namespace sc_core
 {
 
-sc_dt::uint64
-sc_simcontext::delta_count() const
+namespace
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
-}
 
-void
-sc_simcontext::reset()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+size_t objIndex = 0;
+sc_simcontext currContext;
+
+sc_curr_proc_info currProcInfo;
+
+} // anonymous namespace
+
+sc_dt::uint64 sc_simcontext::delta_count() const { return sc_delta_count(); }
+void sc_simcontext::reset() { objIndex = 0; }
 
 sc_curr_proc_handle
 sc_simcontext::get_curr_proc_info()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return nullptr;
+    ::sc_gem5::Process *p = ::sc_gem5::scheduler.current();
+    currProcInfo.process_handle = p;
+    currProcInfo.kind = p ? p->procKind() : SC_NO_PROC_;
+    return &currProcInfo;
 }
 
 sc_object *
 sc_simcontext::first_object()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return nullptr;
+    objIndex = 0;
+    if (!::sc_gem5::allObjects.empty())
+        return ::sc_gem5::allObjects[0];
+    else
+        return nullptr;
 }
 
 sc_object *
 sc_simcontext::next_object()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return nullptr;
+    objIndex++;
+    if (::sc_gem5::allObjects.size() > objIndex)
+        return ::sc_gem5::allObjects[objIndex];
+    else
+        return nullptr;
 }
 
 sc_simcontext *
 sc_get_curr_simcontext()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return nullptr;
+    return &currContext;
 }
 
 } // namespace sc_core
