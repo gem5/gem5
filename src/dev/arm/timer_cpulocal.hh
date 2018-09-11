@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011 ARM Limited
+ * Copyright (c) 2010-2011,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,6 +51,7 @@
  */
 
 class BaseGic;
+class ArmInterruptPin;
 
 class CpuLocalTimer : public BasicPioDevice
 {
@@ -96,12 +97,9 @@ class CpuLocalTimer : public BasicPioDevice
         /** Pointer to parent class */
         CpuLocalTimer *parent;
 
-        /** Number of interrupt to cause/clear */
-        uint32_t intNumTimer;
-        uint32_t intNumWatchdog;
-
-        /** Cpu this timer is attached to */
-        uint32_t cpuNum;
+        /** Interrupt to cause/clear */
+        ArmInterruptPin *intTimer;
+        ArmInterruptPin *intWatchdog;
 
         /** Control register as specified above */
         TimerCtrl timerControl;
@@ -135,7 +133,10 @@ class CpuLocalTimer : public BasicPioDevice
         void restartTimerCounter(uint32_t val);
         void restartWatchdogCounter(uint32_t val);
 
-        Timer();
+        Timer(const std::string &name,
+              CpuLocalTimer* _parent,
+              ArmInterruptPin* int_timer,
+              ArmInterruptPin* int_watchdog);
 
         std::string name() const { return _name; }
 
@@ -151,13 +152,11 @@ class CpuLocalTimer : public BasicPioDevice
         friend class CpuLocalTimer;
     };
 
-    static const int CPU_MAX = 8;
-
     /** Pointer to the GIC for causing an interrupt */
     BaseGic *gic;
 
     /** Timers that do the actual work */
-    Timer localTimer[CPU_MAX];
+    std::vector<std::unique_ptr<Timer>> localTimer;
 
   public:
     typedef CpuLocalTimerParams Params;
@@ -171,6 +170,9 @@ class CpuLocalTimer : public BasicPioDevice
       * @param p params structure
       */
     CpuLocalTimer(Params *p);
+
+    /** Inits the local timers */
+    void init() override;
 
     /**
      * Handle a read to the device

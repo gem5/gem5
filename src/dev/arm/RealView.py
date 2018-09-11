@@ -410,9 +410,8 @@ class A9GlobalTimer(BasicPioDevice):
 class CpuLocalTimer(BasicPioDevice):
     type = 'CpuLocalTimer'
     cxx_header = "dev/arm/timer_cpulocal.hh"
-    gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
-    int_num_timer = Param.UInt32("Interrrupt number used per-cpu to GIC")
-    int_num_watchdog = Param.UInt32("Interrupt number for per-cpu watchdog to GIC")
+    int_timer = Param.ArmPPI("Interrrupt used per-cpu to GIC")
+    int_watchdog = Param.ArmPPI("Interrupt for per-cpu watchdog to GIC")
 
 class GenericTimer(ClockedObject):
     type = 'GenericTimer'
@@ -621,7 +620,8 @@ class RealViewPBX(RealView):
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
     global_timer = A9GlobalTimer(int_num=27, pio_addr=0x1f000200)
-    local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30,
+    local_cpu_timer = CpuLocalTimer(int_timer=ArmPPI(num=29),
+                                    int_watchdog=ArmPPI(num=30),
                                     pio_addr=0x1f000600)
     clcd = Pl111(pio_addr=0x10020000, int_num=55)
     kmi0   = Pl050(pio_addr=0x10006000, int_num=52, ps2=PS2Keyboard())
@@ -877,7 +877,8 @@ class VExpress_EMM(RealView):
     gic = GicV2(dist_addr=0x2C001000, cpu_addr=0x2C002000)
     vgic   = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
 
-    local_cpu_timer = CpuLocalTimer(int_num_timer=29, int_num_watchdog=30,
+    local_cpu_timer = CpuLocalTimer(int_timer=ArmPPI(num=29),
+                                    int_watchdog=ArmPPI(num=30),
                                     pio_addr=0x2C080000)
 
     hdlcd  = HDLcd(pxl_clk=dcc.osc_pxl,
