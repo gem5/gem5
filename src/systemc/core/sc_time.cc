@@ -33,6 +33,7 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 #include "python/pybind11/pybind.hh"
+#include "sim/core.hh"
 #include "systemc/core/python.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_time.hh"
@@ -62,6 +63,15 @@ double TimeUnitScale[] = {
     [SC_SEC] = 1.0
 };
 
+Tick TimeUnitFrequency[] = {
+    [SC_FS] = 1ULL * 1000 * 1000 * 1000 * 1000 * 1000,
+    [SC_PS] = 1ULL * 1000 * 1000 * 1000 * 1000,
+    [SC_NS] = 1ULL * 1000 * 1000 * 1000,
+    [SC_US] = 1ULL * 1000 * 1000,
+    [SC_MS] = 1ULL * 1000,
+    [SC_SEC] = 1ULL
+};
+
 bool timeFixed = false;
 bool pythonReady = false;
 
@@ -80,8 +90,7 @@ std::vector<SetInfo> toSet;
 void
 setWork(sc_time *time, double d, ::sc_core::sc_time_unit tu)
 {
-    //XXX Assuming the time resolution is 1ps.
-    double scale = TimeUnitScale[tu] / TimeUnitScale[SC_PS];
+    double scale = TimeUnitScale[tu] * SimClock::Float::s;
     // Accellera claims there is a linux bug, and that these next two
     // lines work around them.
     volatile double tmp = d * scale + 0.5;
@@ -101,6 +110,19 @@ fixTime()
 }
 
 void
+attemptToFixTime()
+{
+    // Only fix time once.
+    if (!timeFixed) {
+        timeFixed = true;
+
+        // If we've run, python is working and we haven't fixed time yet.
+        if (pythonReady)
+            fixTime();
+    }
+}
+
+void
 setGlobalFrequency(Tick ticks_per_second)
 {
     auto ticks = pybind11::module::import("m5.ticks");
@@ -112,14 +134,8 @@ setGlobalFrequency(Tick ticks_per_second)
 void
 set(::sc_core::sc_time *time, double d, ::sc_core::sc_time_unit tu)
 {
-    // Only fix time once.
-    if (!timeFixed) {
-        timeFixed = true;
-
-        // If we've run, python is working and we haven't fixed time yet.
-        if (pythonReady)
-            fixTime();
-    }
+    if (d != 0)
+        attemptToFixTime();
     if (pythonReady) {
         // Time should be working. Set up this sc_time.
         setWork(time, d, tu);
@@ -155,8 +171,7 @@ sc_time::sc_time() : val(0) {}
 sc_time::sc_time(double d, sc_time_unit tu)
 {
     val = 0;
-    if (d != 0)
-        set(this, d, tu);
+    set(this, d, tu);
 }
 
 sc_time::sc_time(const sc_time &t)
@@ -166,20 +181,14 @@ sc_time::sc_time(const sc_time &t)
 
 sc_time::sc_time(double d, bool scale)
 {
-    //XXX Assuming the time resolution is 1ps.
-    if (scale)
-        set(this, d * defaultUnit, SC_SEC);
-    else
-        set(this, d, SC_PS);
+    double scaler = scale ? defaultUnit : SimClock::Float::Hz;
+    set(this, d * scaler, SC_SEC);
 }
 
 sc_time::sc_time(sc_dt::uint64 v, bool scale)
 {
-    //XXX Assuming the time resolution is 1ps.
-    if (scale)
-        set(this, static_cast<double>(v) * defaultUnit, SC_SEC);
-    else
-        set(this, static_cast<double>(v), SC_PS);
+    double scaler = scale ? defaultUnit : SimClock::Float::Hz;
+    set(this, static_cast<double>(v) * scaler, SC_SEC);
 }
 
 sc_time &
@@ -203,10 +212,7 @@ sc_time::to_double() const
 double
 sc_time::to_seconds() const
 {
-    double d = to_double();
-    //XXX Assuming the time resolution is 1ps.
-    double scale = TimeUnitScale[SC_PS] / TimeUnitScale[SC_SEC];
-    return d * scale;
+    return to_double() * SimClock::Float::Hz;
 }
 
 const std::string
@@ -287,9 +293,30 @@ sc_time::print(std::ostream &os) const
     if (val == 0) {
         os << "0 s";
     } else {
-        //XXX Assuming the time resolution is 1ps.
-        sc_time_unit tu = SC_PS;
-        uint64_t scaled = val;
+        Tick frequency = SimClock::Frequency;
+
+        // Shrink the frequency by scaling down the time period, ie converting
+        // it from cycles per second to cycles per millisecond, etc.
+        sc_time_unit tu = SC_SEC;
+        while (tu > 1 && (frequency % 1000 == 0)) {
+            tu = (sc_time_unit)((int)tu - 1);
+            frequency /= 1000;
+        }
+
+        // Convert the frequency into a period.
+        Tick period;
+        if (frequency > 1) {
+            tu = (sc_time_unit)((int)tu - 1);
+            period = 1000 / frequency;
+        } else {
+            period = frequency;
+        }
+
+        // Scale our integer value by the period.
+        uint64_t scaled = val * period;
+
+        // Shrink the scaled time value by increasing the size of the units
+        // it's measured by, avoiding fractional parts.
         while (tu < SC_SEC && (scaled % 1000) == 0) {
             tu = (sc_time_unit)((int)tu + 1);
             scaled /= 1000;
@@ -302,6 +329,8 @@ sc_time::print(std::ostream &os) const
 sc_time
 sc_time::from_value(sc_dt::uint64 u)
 {
+    if (u)
+        attemptToFixTime();
     sc_time t;
     t.val = u;
     return t;
@@ -398,16 +427,25 @@ sc_set_time_resolution(double d, sc_time_unit tu)
                 "sc_time object(s) constructed");
     }
 
-    // Normalize d to seconds.
-    d *= TimeUnitScale[tu];
-    if (d < TimeUnitScale[SC_FS]) {
+    double seconds = d * TimeUnitScale[tu];
+    if (seconds < TimeUnitScale[SC_FS]) {
         SC_REPORT_ERROR("(E514) set time resolution failed",
                 "value smaller than 1 fs");
     }
-    // Change d from a period to a frequency.
-    d = 1 / d;
-    // Convert to integer ticks.
-    Tick ticks_per_second = static_cast<Tick>(d);
+
+    if (seconds > defaultUnit) {
+        SC_REPORT_WARNING(
+                "(W516) default time unit changed to time resolution", "");
+        defaultUnit = seconds;
+    }
+
+    // Get rid of fractional parts of d.
+    while (d < 1.0 && tu > SC_FS) {
+        d *= 1000;
+        tu = (sc_time_unit)(tu - 1);
+    }
+
+    Tick ticks_per_second = TimeUnitFrequency[tu] / static_cast<Tick>(d);
     setGlobalFrequency(ticks_per_second);
     specified = true;
 }
