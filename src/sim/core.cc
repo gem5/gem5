@@ -56,7 +56,7 @@ double ps;
 double Hz;
 double kHz;
 double MHz;
-double GHZ;
+double GHz;
 } // namespace Float
 
 namespace Int {
@@ -83,7 +83,7 @@ setClockFrequency(Tick ticksPerSecond)
     Float::Hz  = 1.0 / Float::s;
     Float::kHz = 1.0 / Float::ms;
     Float::MHz = 1.0 / Float::us;
-    Float::GHZ = 1.0 / Float::ns;
+    Float::GHz = 1.0 / Float::ns;
 
     Int::s  = Frequency;
     Int::ms = Int::s / 1000;
