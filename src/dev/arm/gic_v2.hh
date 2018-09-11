@@ -142,6 +142,12 @@ class GicV2 : public BaseGic, public BaseGicRegisters
         Bitfield<12,10> cpu_id;
     EndBitUnion(IAR)
 
+    BitUnion32(CTLR)
+        Bitfield<3> fiqEn;
+        Bitfield<1> enableGrp1;
+        Bitfield<0> enableGrp0;
+    EndBitUnion(CTLR)
+
   protected: /* Params */
     /** Address range for the distributor interface */
     const AddrRange distRange;
@@ -310,7 +316,15 @@ class GicV2 : public BaseGic, public BaseGicRegisters
     }
 
     /** CPU enabled */
-    bool cpuEnabled[CPU_MAX];
+    bool cpuEnabled(ContextID ctx) const {
+        return cpuControl[ctx].enableGrp0 ||
+               cpuControl[ctx].enableGrp1;
+    }
+
+    /** GICC_CTLR:
+     * CPU interface control register
+     */
+    CTLR cpuControl[CPU_MAX];
 
     /** CPU priority */
     uint8_t cpuPriority[CPU_MAX];

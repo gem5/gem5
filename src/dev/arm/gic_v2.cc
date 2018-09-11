@@ -80,7 +80,7 @@ GicV2::GicV2(const Params *p)
 {
     for (int x = 0; x < CPU_MAX; x++) {
         iccrpr[x] = 0xff;
-        cpuEnabled[x] = false;
+        cpuControl[x] = 0;
         cpuPriority[x] = 0xff;
         cpuBpr[x] = GICC_BPR_MINIMUM;
         // Initialize cpu highest int
@@ -89,8 +89,8 @@ GicV2::GicV2(const Params *p)
             new EventFunctionWrapper([this, x]{ postDelayedInt(x); },
                                      "Post Interrupt to CPU");
     }
-    DPRINTF(Interrupt, "cpuEnabled[0]=%d cpuEnabled[1]=%d\n", cpuEnabled[0],
-            cpuEnabled[1]);
+    DPRINTF(Interrupt, "cpuEnabled[0]=%d cpuEnabled[1]=%d\n", cpuEnabled(0),
+            cpuEnabled(1));
 
     gem5ExtensionsEnabled = false;
 }
@@ -302,13 +302,13 @@ GicV2::readCpu(ContextID ctx, Addr daddr)
       case GICC_IIDR:
         return GICC_400_IIDR_VALUE;
       case GICC_CTLR:
-        return cpuEnabled[ctx];
+        return cpuControl[ctx];
       case GICC_PMR:
         return cpuPriority[ctx];
       case GICC_BPR:
         return cpuBpr[ctx];
       case GICC_IAR:
-        if (enabled && cpuEnabled[ctx]) {
+        if (enabled && cpuEnabled(ctx)) {
             int active_int = cpuHighestInt[ctx];
             IAR iar = 0;
             iar.ack_id = active_int;
@@ -564,7 +564,7 @@ GicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
 {
     switch(daddr) {
       case GICC_CTLR:
-        cpuEnabled[ctx] = data;
+        cpuControl[ctx] = data;
         break;
       case GICC_PMR:
         cpuPriority[ctx] = data;
@@ -616,7 +616,7 @@ GicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
         panic("Tried to write Gic cpu at offset %#x\n", daddr);
         break;
     }
-    if (cpuEnabled[ctx]) updateIntState(-1);
+    if (cpuEnabled(ctx)) updateIntState(-1);
 }
 
 GicV2::BankedRegs&
@@ -639,7 +639,7 @@ GicV2::softInt(ContextID ctx, SWI swi)
              int dest = swi.cpu_list;
              DPRINTF(IPI, "Generating softIRQ from CPU %d for CPU %d\n",
                     ctx, dest);
-             if (cpuEnabled[dest]) {
+             if (cpuEnabled(dest)) {
                  cpuSgiPendingExt[dest] |= (1 << swi.sgi_id);
                  DPRINTF(IPI, "SGI[%d]=%#x\n", dest,
                          cpuSgiPendingExt[dest]);
@@ -649,7 +649,7 @@ GicV2::softInt(ContextID ctx, SWI swi)
              // interrupt all
              for (int i = 0; i < sys->numContexts(); i++) {
                  DPRINTF(IPI, "Processing CPU %d\n", i);
-                 if (!cpuEnabled[i])
+                 if (!cpuEnabled(i))
                      continue;
                  cpuSgiPendingExt[i] |= 1 << swi.sgi_id;
                  DPRINTF(IPI, "SGI[%d]=%#x\n", swi.sgi_id,
@@ -660,7 +660,7 @@ GicV2::softInt(ContextID ctx, SWI swi)
             // Interrupt requesting cpu only
             DPRINTF(IPI, "Generating softIRQ from CPU %d for CPU %d\n",
                     ctx, ctx);
-            if (cpuEnabled[ctx]) {
+            if (cpuEnabled(ctx)) {
                 cpuSgiPendingExt[ctx] |= (1 << swi.sgi_id);
                 DPRINTF(IPI, "SGI[%d]=%#x\n", ctx,
                         cpuSgiPendingExt[ctx]);
@@ -674,7 +674,7 @@ GicV2::softInt(ContextID ctx, SWI swi)
             uint8_t cpu_list;
             cpu_list = 0;
             for (int x = 0; x < sys->numContexts(); x++)
-                cpu_list |= cpuEnabled[x] ? 1 << x : 0;
+                cpu_list |= cpuEnabled(x) ? 1 << x : 0;
             swi.cpu_list = cpu_list;
             break;
           case 2:
@@ -688,7 +688,7 @@ GicV2::softInt(ContextID ctx, SWI swi)
                 swi.cpu_list);
         for (int i = 0; i < sys->numContexts(); i++) {
             DPRINTF(IPI, "Processing CPU %d\n", i);
-            if (!cpuEnabled[i])
+            if (!cpuEnabled(i))
                 continue;
             if (swi.cpu_list & (1 << i))
                 cpuSgiPending[swi.sgi_id] |= (1 << i) << (8 * ctx);
@@ -722,7 +722,7 @@ void
 GicV2::updateIntState(int hint)
 {
     for (int cpu = 0; cpu < sys->numContexts(); cpu++) {
-        if (!cpuEnabled[cpu])
+        if (!cpuEnabled(cpu))
             continue;
 
         /*@todo use hint to do less work. */
@@ -799,7 +799,7 @@ GicV2::updateIntState(int hint)
 
         /* @todo make this work for more than one cpu, need to handle 1:N, N:N
          * models */
-        if (enabled && cpuEnabled[cpu] &&
+        if (enabled && cpuEnabled(cpu) &&
             (highest_pri < getCpuPriority(cpu)) &&
             !(getActiveInt(cpu, intNumToWord(highest_int))
               & (1 << intNumToBit(highest_int)))) {
@@ -815,7 +815,7 @@ void
 GicV2::updateRunPri()
 {
     for (int cpu = 0; cpu < sys->numContexts(); cpu++) {
-        if (!cpuEnabled[cpu])
+        if (!cpuEnabled(cpu))
             continue;
         uint8_t maxPriority = 0xff;
         for (int i = 0; i < itLines; i++) {
@@ -942,7 +942,7 @@ GicV2::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(intPriority, GLOBAL_INT_LINES);
     SERIALIZE_ARRAY(cpuTarget, GLOBAL_INT_LINES);
     SERIALIZE_ARRAY(intConfig, INT_BITS_MAX * 2);
-    SERIALIZE_ARRAY(cpuEnabled, CPU_MAX);
+    SERIALIZE_ARRAY(cpuControl, CPU_MAX);
     SERIALIZE_ARRAY(cpuPriority, CPU_MAX);
     SERIALIZE_ARRAY(cpuBpr, CPU_MAX);
     SERIALIZE_ARRAY(cpuHighestInt, CPU_MAX);
@@ -984,7 +984,7 @@ GicV2::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ARRAY(intPriority, GLOBAL_INT_LINES);
     UNSERIALIZE_ARRAY(cpuTarget, GLOBAL_INT_LINES);
     UNSERIALIZE_ARRAY(intConfig, INT_BITS_MAX * 2);
-    UNSERIALIZE_ARRAY(cpuEnabled, CPU_MAX);
+    UNSERIALIZE_ARRAY(cpuControl, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuPriority, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuBpr, CPU_MAX);
     UNSERIALIZE_ARRAY(cpuHighestInt, CPU_MAX);
