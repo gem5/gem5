@@ -161,7 +161,9 @@ uint32_t
 GicV2::readDistributor(ContextID ctx, Addr daddr, size_t resp_sz)
 {
     if (GICD_IGROUPR.contains(daddr)) {
-        return 0; // unimplemented; RAZ (read as zero)
+        uint32_t ix = (daddr - GICD_IGROUPR.start()) >> 2;
+        assert(ix < 32);
+        return getIntGroup(ctx, ix);
     }
 
     if (GICD_ISENABLER.contains(daddr)) {
@@ -415,7 +417,10 @@ GicV2::writeDistributor(ContextID ctx, Addr daddr, uint32_t data,
                         size_t data_sz)
 {
     if (GICD_IGROUPR.contains(daddr)) {
-        return; // unimplemented; WI (writes ignored)
+        uint32_t ix = (daddr - GICD_IGROUPR.start()) >> 2;
+        assert(ix < 32);
+        getIntGroup(ctx, ix) |= data;
+        return;
     }
 
     if (GICD_ISENABLER.contains(daddr)) {
@@ -938,6 +943,7 @@ GicV2::serialize(CheckpointOut &cp) const
     SERIALIZE_ARRAY(intEnabled, INT_BITS_MAX-1);
     SERIALIZE_ARRAY(pendingInt, INT_BITS_MAX-1);
     SERIALIZE_ARRAY(activeInt, INT_BITS_MAX-1);
+    SERIALIZE_ARRAY(intGroup, INT_BITS_MAX-1);
     SERIALIZE_ARRAY(iccrpr, CPU_MAX);
     SERIALIZE_ARRAY(intPriority, GLOBAL_INT_LINES);
     SERIALIZE_ARRAY(cpuTarget, GLOBAL_INT_LINES);
@@ -967,6 +973,7 @@ GicV2::BankedRegs::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(intEnabled);
     SERIALIZE_SCALAR(pendingInt);
     SERIALIZE_SCALAR(activeInt);
+    SERIALIZE_SCALAR(intGroup);
     SERIALIZE_ARRAY(intPriority, SGI_MAX + PPI_MAX);
 }
 
@@ -980,6 +987,7 @@ GicV2::unserialize(CheckpointIn &cp)
     UNSERIALIZE_ARRAY(intEnabled, INT_BITS_MAX-1);
     UNSERIALIZE_ARRAY(pendingInt, INT_BITS_MAX-1);
     UNSERIALIZE_ARRAY(activeInt, INT_BITS_MAX-1);
+    UNSERIALIZE_ARRAY(intGroup, INT_BITS_MAX-1);
     UNSERIALIZE_ARRAY(iccrpr, CPU_MAX);
     UNSERIALIZE_ARRAY(intPriority, GLOBAL_INT_LINES);
     UNSERIALIZE_ARRAY(cpuTarget, GLOBAL_INT_LINES);
@@ -1024,6 +1032,7 @@ GicV2::BankedRegs::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(intEnabled);
     UNSERIALIZE_SCALAR(pendingInt);
     UNSERIALIZE_SCALAR(activeInt);
+    UNSERIALIZE_SCALAR(intGroup);
     UNSERIALIZE_ARRAY(intPriority, SGI_MAX + PPI_MAX);
 }
 

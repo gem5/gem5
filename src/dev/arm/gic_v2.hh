@@ -194,6 +194,10 @@ class GicV2 : public BaseGic, public BaseGicRegisters
          * interrupt active bits for first 32 interrupts, 1b per interrupt */
         uint32_t activeInt;
 
+        /** GICD_IGROUPR0
+         * interrupt group bits for first 32 interrupts, 1b per interrupt */
+        uint32_t intGroup;
+
         /** GICD_IPRIORITYR{0..7}
          * interrupt priority for SGIs and PPIs */
         uint8_t intPriority[SGI_MAX + PPI_MAX];
@@ -202,7 +206,8 @@ class GicV2 : public BaseGic, public BaseGicRegisters
         void unserialize(CheckpointIn &cp) override;
 
         BankedRegs() :
-            intEnabled(0), pendingInt(0), activeInt(0), intPriority {0}
+            intEnabled(0), pendingInt(0), activeInt(0),
+            intGroup(0), intPriority {0}
           {}
     };
     std::vector<BankedRegs*> bankedRegs;
@@ -247,6 +252,20 @@ class GicV2 : public BaseGic, public BaseGicRegisters
             return getBankedRegs(ctx).activeInt;
         } else {
             return activeInt[ix - 1];
+        }
+    }
+
+    /** GICD_IGROUPR{1..31}
+     * interrupt group bits for global interrupts
+     * 1b per interrupt, 32 bits per word, 31 words */
+    uint32_t intGroup[INT_BITS_MAX-1];
+
+    uint32_t& getIntGroup(ContextID ctx, uint32_t ix) {
+        assert(ix < INT_BITS_MAX);
+        if (ix == 0) {
+            return getBankedRegs(ctx).intGroup;
+        } else {
+            return intGroup[ix - 1];
         }
     }
 
