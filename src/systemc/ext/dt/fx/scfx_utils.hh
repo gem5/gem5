@@ -67,9 +67,9 @@ inline int
 scfx_find_msb(unsigned long x)
 {
     int i = 0;
-#   if defined(SC_LONG_64)
+#   if SC_LONG_64
         MSB_STATEMENT(32);
-#   endif // defined(SC_LONG_64)
+#   endif // SC_LONG_64
     MSB_STATEMENT(16);
     MSB_STATEMENT(8);
     MSB_STATEMENT(4);
@@ -86,12 +86,12 @@ inline int
 scfx_find_lsb(unsigned long x)
 {
     int i;
-#   if defined(SC_LONG_64)
+#   if SC_LONG_64
         i = 63;
         LSB_STATEMENT(32);
 #   else
         i = 31;
-#   endif // defined(SC_LONG_64)
+#   endif // SC_LONG_64
     LSB_STATEMENT(16);
     LSB_STATEMENT(8);
     LSB_STATEMENT(4);

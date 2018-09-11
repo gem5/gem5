@@ -50,6 +50,12 @@
 #include "../../utils/sc_report_handler.hh"
 #include "../int/sc_nbutils.hh"
 
+#if ULONG_MAX > 0xffffffffUL
+#   define SC_LONG_64 1
+#else
+#   define SC_LONG_64 0
+#endif
+
 namespace sc_dt
 {
 

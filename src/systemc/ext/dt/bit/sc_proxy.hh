@@ -816,7 +816,7 @@ sc_proxy<X>::assign_(int a)
     return x;
 }
 
-#if defined(SC_LONG_64)
+#if SC_LONG_64
 template <class X>
 inline X &
 sc_proxy<X>::assign_(unsigned long a)
