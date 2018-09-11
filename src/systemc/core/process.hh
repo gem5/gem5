@@ -319,9 +319,6 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     const ::sc_core::sc_event &resetEvent() { return _resetEvent; }
     const ::sc_core::sc_event &terminatedEvent() { return _terminatedEvent; }
 
-    // This should only be called before initialization.
-    void dontInitialize();
-
     void setStackSize(size_t size) { stackSize = size; }
 
     void finalize();
@@ -347,6 +344,9 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     bool timedOut() { return _timedOut; }
     void timedOut(bool to) { _timedOut = to; }
 
+    bool dontInitialize() { return _dontInitialize; }
+    void dontInitialize(bool di) { _dontInitialize = di; }
+
   protected:
     Process(const char *name, ProcessFuncWrapper *func, bool internal=false);
 
@@ -370,6 +370,8 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 
     // Needed to support the deprecated "timed_out" function.
     bool _timedOut;
+
+    bool _dontInitialize;
 
     bool _needsStart;
     bool _dynamic;

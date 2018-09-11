@@ -66,8 +66,8 @@ class ClockTick : public ScEvent
     createProcess()
     {
         p = new Method(name.c_str(), &funcWrapper, true);
+        p->dontInitialize(true);
         scheduler.reg(p);
-        scheduler.dontInitialize(p);
     }
 
     ~ClockTick()

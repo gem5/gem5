@@ -66,6 +66,8 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
     else
         proc = new Thread(name, func);
 
+    proc->dontInitialize(dontInitialize);
+
     if (opts) {
         for (auto e: opts->_events)
             proc->addStatic(new PendingSensitivityEvent(proc, e));
@@ -94,9 +96,6 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
     }
 
     scheduler.reg(proc);
-
-    if (dontInitialize)
-        scheduler.dontInitialize(proc);
 
     return proc;
 }

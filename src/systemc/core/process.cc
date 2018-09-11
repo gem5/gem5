@@ -314,12 +314,6 @@ Process::syncResetOff(bool inc_kids)
 }
 
 void
-Process::dontInitialize()
-{
-    scheduler.dontInitialize(this);
-}
-
-void
 Process::finalize()
 {
     for (auto &s: pendingStaticSensitivities) {
@@ -400,9 +394,9 @@ Process::lastReport(::sc_core::sc_report *report)
 
 Process::Process(const char *name, ProcessFuncWrapper *func, bool internal) :
     ::sc_core::sc_process_b(name), excWrapper(nullptr), func(func),
-    _internal(internal), _timedOut(false), _needsStart(true),
-    _isUnwinding(false), _terminated(false), _suspended(false),
-    _disabled(false), _syncReset(false), refCount(0),
+    _internal(internal), _timedOut(false), _dontInitialize(false),
+    _needsStart(true), _isUnwinding(false), _terminated(false),
+    _suspended(false), _disabled(false), _syncReset(false), refCount(0),
     stackSize(::Fiber::DefaultStackSize), dynamicSensitivity(nullptr)
 {
     _dynamic =

@@ -86,7 +86,7 @@ newCThreadProcess(const char *name, ProcessFuncWrapper *func)
         return nullptr;
     }
     scheduler.reg(p);
-    p->dontInitialize();
+    p->dontInitialize(true);
     return p;
 }
 
@@ -296,7 +296,7 @@ sc_module::async_reset_signal_is(const sc_signal_in_if<bool> &, bool)
 void
 sc_module::dont_initialize()
 {
-    ::sc_gem5::Process::newest()->dontInitialize();
+    ::sc_gem5::Process::newest()->dontInitialize(true);
 }
 
 void

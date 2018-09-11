@@ -88,8 +88,6 @@ Scheduler::clear()
         deschedule(&maxTickEvent);
 
     Process *p;
-    while ((p = toFinalize.getNext()))
-        p->popListNode();
     while ((p = initList.getNext()))
         p->popListNode();
     while ((p = readyListMethods.getNext()))
@@ -105,22 +103,20 @@ Scheduler::clear()
 void
 Scheduler::initPhase()
 {
-    for (Process *p = toFinalize.getNext(); p; p = toFinalize.getNext()) {
-        p->finalize();
-        p->popListNode();
-
-        if (!p->hasStaticSensitivities() && !p->internal()) {
-            SC_REPORT_WARNING(
-                    "(W558) disable() or dont_initialize() called on process "
-                    "with no static sensitivity, it will be orphaned",
-                    p->name());
-        }
-    }
-
     for (Process *p = initList.getNext(); p; p = initList.getNext()) {
         p->finalize();
         p->popListNode();
-        p->ready();
+
+        if (p->dontInitialize()) {
+            if (!p->hasStaticSensitivities() && !p->internal()) {
+                SC_REPORT_WARNING(
+                        "(W558) disable() or dont_initialize() called on "
+                        "process with no static sensitivity, it will be "
+                        "orphaned", p->name());
+            }
+        } else {
+            p->ready();
+        }
     }
 
     runUpdate();
@@ -147,26 +143,13 @@ Scheduler::reg(Process *p)
     if (initDone) {
         // If we're past initialization, finalize static sensitivity.
         p->finalize();
-        // Mark the process as ready.
-        p->ready();
+        // If not marked as dontInitialize, mark as ready.
+        if (!p->dontInitialize())
+            p->ready();
     } else {
         // Otherwise, record that this process should be initialized once we
         // get there.
         initList.pushLast(p);
-    }
-}
-
-void
-Scheduler::dontInitialize(Process *p)
-{
-    if (initDone) {
-        // Pop this process off of the ready list.
-        p->popListNode();
-    } else {
-        // Push this process onto the list of processes which still need
-        // their static sensitivity to be finalized. That implicitly pops it
-        // off the list of processes to be initialized/marked ready.
-        toFinalize.pushLast(p);
     }
 }
 
@@ -240,15 +223,12 @@ Scheduler::suspend(Process *p)
 {
     bool was_ready;
     if (initDone) {
-        // After initialization, the only list we can be on is the ready list.
+        // After initialization, check if we're on a ready list.
         was_ready = (p->nextListNode != nullptr);
         p->popListNode();
     } else {
-        // Check the ready lists to see if we find this process.
-        was_ready = listContains(&readyListMethods, p) ||
-            listContains(&readyListThreads, p);
-        if (was_ready)
-            toFinalize.pushLast(p);
+        // Nothing is ready before init.
+        was_ready = false;
     }
     return was_ready;
 }

@@ -173,9 +173,6 @@ class Scheduler
     // Register a process with the scheduler.
     void reg(Process *p);
 
-    // Tell the scheduler not to initialize a process.
-    void dontInitialize(Process *p);
-
     // Run the next process, if there is one.
     void yield();
 
@@ -439,7 +436,6 @@ class Scheduler
     bool runOnce;
 
     ProcessList initList;
-    ProcessList toFinalize;
 
     ProcessList *readyList;
     ProcessList readyListMethods;
