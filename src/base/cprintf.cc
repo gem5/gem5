@@ -47,6 +47,7 @@ Print::Print(std::ostream &stream, const std::string &format)
     saved_flags = stream.flags();
     saved_fill = stream.fill();
     saved_precision = stream.precision();
+    saved_width = stream.width();
 }
 
 Print::Print(std::ostream &stream, const char *format)
@@ -55,6 +56,7 @@ Print::Print(std::ostream &stream, const char *format)
     saved_flags = stream.flags();
     saved_fill = stream.fill();
     saved_precision = stream.precision();
+    saved_width = stream.width();
 }
 
 Print::~Print()
@@ -310,6 +312,7 @@ Print::end_args()
     stream.flags(saved_flags);
     stream.fill(saved_fill);
     stream.precision(saved_precision);
+    stream.width(saved_width);
 }
 
 } // namespace cp
