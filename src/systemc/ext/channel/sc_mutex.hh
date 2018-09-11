@@ -30,7 +30,9 @@
 #ifndef __SYSTEMC_EXT_CHANNEL_SC_MUTEX_HH__
 #define __SYSTEMC_EXT_CHANNEL_SC_MUTEX_HH__
 
+#include "../core/sc_event.hh"
 #include "../core/sc_object.hh"
+#include "../core/sc_process_handle.hh"
 #include "sc_mutex_if.hh"
 
 namespace sc_core
@@ -46,12 +48,15 @@ class sc_mutex : public sc_mutex_if, public sc_object
     virtual int trylock();
     virtual int unlock();
 
-    virtual const char *kind() const;
+    virtual const char *kind() const { return "sc_mutex"; }
 
   private:
     // Disabled
     sc_mutex(const sc_mutex &) : sc_interface(), sc_mutex_if(), sc_object() {}
     sc_mutex &operator = (const sc_mutex &) { return *this; }
+
+    sc_process_handle holder;
+    sc_event unlockEvent;
 };
 
 } // namespace sc_core

@@ -28,6 +28,7 @@
  */
 
 #include "base/logging.hh"
+#include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/sc_mutex.hh"
 #include "systemc/ext/core/sc_module.hh" // for sc_gen_unique_name
 
@@ -45,24 +46,29 @@ sc_mutex::sc_mutex(const char *name) :
 int
 sc_mutex::lock()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    while (trylock() == -1)
+        wait(unlockEvent);
     return 0;
 }
 
 int
 sc_mutex::trylock()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (holder.valid())
+        return -1;
+    holder = ::sc_gem5::scheduler.current();
     return 0;
 }
 
 int
 sc_mutex::unlock()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (holder != ::sc_gem5::scheduler.current())
+        return -1;
+
+    holder = nullptr;
+    unlockEvent.notify();
     return 0;
 }
-
-const char *sc_mutex::kind() const { return "sc_mutex"; }
 
 } // namespace sc_core
