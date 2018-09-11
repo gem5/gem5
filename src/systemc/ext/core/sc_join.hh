@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_EXT_CORE_SC_JOIN_HH__
 #define __SYSTEMC_EXT_CORE_SC_JOIN_HH__
 
+#include "sc_event.hh"
 #include "sc_process_handle.hh"
 
 namespace sc_core
@@ -43,11 +44,16 @@ class sc_join
 {
   public:
     sc_join();
+
     void add_process(sc_process_handle);
     int process_count();
-    virtual void signal(sc_thread_handle thread_p, int type);
+    void signal();
     void wait();
     void wait_clocked();
+
+  private:
+    sc_event joinEvent;
+    int remaining;
 };
 
 } // namespace sc_core

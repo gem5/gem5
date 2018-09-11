@@ -32,6 +32,7 @@
 
 #include <vector>
 
+#include "sc_join.hh"
 #include "sc_process_handle.hh"
 
 namespace sc_core
@@ -166,11 +167,22 @@ sc_spawn(typename T::result_type *r_p, T object, const char *name_p=nullptr,
     ::sc_core::sc_process_handle forkees[] = {
 
 #define SC_JOIN \
-    }; /* TODO wait for the forkees. */ \
+    }; \
+    ::sc_core::sc_join join; \
+    for (int i = 0; i < sizeof(forkees) / sizeof(forkees[0]); i++) \
+        join.add_process(forkees[i]); \
+    join.wait(); \
 }
 
 // Non-standard
-#define SC_CJOIN SC_JOIN
+#define SC_CJOIN \
+    }; \
+    ::sc_core::sc_join join; \
+    for (int i = 0; i < sizeof(forkees) / sizeof(forkees[0]); i++) \
+        join.add_process(forkees[i]); \
+    join.wait_clocked(); \
+}
+
 
 } // namespace sc_core
 

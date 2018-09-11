@@ -32,6 +32,7 @@
 #include "base/logging.hh"
 #include "systemc/core/event.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/sc_join.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_process_handle.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -419,6 +420,10 @@ Process::terminate()
     staticSensitivities.clear();
 
     _terminatedEvent.notify();
+
+    for (auto jw: joinWaiters)
+        jw->signal();
+    joinWaiters.clear();
 }
 
 Process *Process::_newest;

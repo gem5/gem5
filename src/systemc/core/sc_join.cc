@@ -28,45 +28,29 @@
  */
 
 #include "base/logging.hh"
+#include "systemc/core/process.hh"
+#include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_join.hh"
+#include "systemc/ext/core/sc_module.hh"
 
 namespace sc_core
 {
 
-sc_join::sc_join()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+sc_join::sc_join() : remaining(0) {}
 
 void
-sc_join::add_process(sc_process_handle)
+sc_join::add_process(sc_process_handle h)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    auto p = (::sc_gem5::Process *)h;
+    assert(p);
+
+    remaining++;
+    p->joinWait(this);
 }
 
-int
-sc_join::process_count()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
-}
-
-void
-sc_join::signal(sc_thread_handle thread_p, int type)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-void
-sc_join::wait()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-void
-sc_join::wait_clocked()
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
+int sc_join::process_count() { return remaining; }
+void sc_join::signal() { if (!--remaining) joinEvent.notify(); }
+void sc_join::wait() { ::sc_core::wait(joinEvent); }
+void sc_join::wait_clocked() { do { ::sc_core::wait(); } while (remaining); }
 
 } // namespace sc_core

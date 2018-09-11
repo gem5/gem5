@@ -49,6 +49,13 @@
 #include "systemc/ext/core/sc_process_handle.hh"
 #include "systemc/ext/utils/sc_report.hh"
 
+namespace sc_core
+{
+
+class sc_join;
+
+} // namespace sc_core
+
 namespace sc_gem5
 {
 
@@ -347,6 +354,8 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     bool dontInitialize() { return _dontInitialize; }
     void dontInitialize(bool di) { _dontInitialize = di; }
 
+    void joinWait(::sc_core::sc_join *join) { joinWaiters.push_back(join); }
+
   protected:
     Process(const char *name, ProcessFuncWrapper *func, bool internal=false);
 
@@ -396,6 +405,8 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     Sensitivity *dynamicSensitivity;
 
     std::unique_ptr<::sc_core::sc_report> _lastReport;
+
+    std::vector<::sc_core::sc_join *> joinWaiters;
 };
 
 inline void
