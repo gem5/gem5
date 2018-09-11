@@ -46,8 +46,8 @@ Scheduler::Scheduler() :
     stopEvent(this, false, StopPriority),
     scMain(nullptr), _throwToScMain(nullptr),
     starvationEvent(this, false, StarvationPriority),
-    _started(false), _stopNow(false), _status(StatusOther),
-    maxTickEvent(this, false, MaxTickPriority),
+    _elaborationDone(false), _started(false), _stopNow(false),
+    _status(StatusOther), maxTickEvent(this, false, MaxTickPriority),
     _numCycles(0), _changeStamp(0), _current(nullptr), initDone(false),
     runOnce(false), readyList(nullptr)
 {}

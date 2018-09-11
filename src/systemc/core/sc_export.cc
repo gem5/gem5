@@ -29,15 +29,49 @@
 
 #include "base/logging.hh"
 #include "systemc/core/module.hh"
+#include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_export.hh"
+#include "systemc/ext/core/sc_main.hh"
 
 namespace sc_core
 {
 
+namespace
+{
+
+void
+reportError(const char *id, const char *add_msg,
+        const char *name, const char *kind)
+{
+    std::string msg;
+    if (add_msg)
+        msg = csprintf("%s: export '%s' (%s)", add_msg, name, kind);
+    else
+        msg = csprintf("export '%s' (%s)", name, kind);
+
+    SC_REPORT_ERROR(id, msg.c_str());
+}
+
+}
+
 sc_export_base::sc_export_base(const char *n) : sc_object(n)
 {
+    if (sc_is_running()) {
+        reportError("(E121) insert sc_export failed", "simulation running",
+                n, kind());
+    }
+    if (::sc_gem5::scheduler.elaborationDone()) {
+        reportError("(E121) insert sc_export failed", "elaboration done",
+                n, kind());
+    }
+
     ::sc_gem5::Module *m = ::sc_gem5::currentModule();
-    m->exports.push_back(this);
+    if (!m) {
+        reportError("(E122) sc_export specified outside of module",
+                nullptr, n, kind());
+    } else {
+        m->exports.push_back(this);
+    }
 }
 sc_export_base::~sc_export_base() {}
 

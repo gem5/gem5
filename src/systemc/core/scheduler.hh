@@ -338,6 +338,9 @@ class Scheduler
         StatusStopped
     };
 
+    bool elaborationDone() { return _elaborationDone; }
+    void elaborationDone(bool b) { _elaborationDone = b; }
+
     bool paused() { return status() == StatusPaused; }
     bool stopped() { return status() == StatusStopped; }
     bool inDelta() { return status() == StatusDelta; }
@@ -410,6 +413,7 @@ class Scheduler
     EventWrapper<Scheduler, &Scheduler::pause> starvationEvent;
     void scheduleStarvationEvent();
 
+    bool _elaborationDone;
     bool _started;
     bool _stopNow;
 

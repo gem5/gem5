@@ -30,16 +30,50 @@
 #include "base/logging.hh"
 #include "systemc/core/bindinfo.hh"
 #include "systemc/core/module.hh"
+#include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_port.hh"
 
 namespace sc_core
 {
 
+namespace
+{
+
+void
+reportError(const char *id, const char *add_msg,
+        const char *name, const char *kind)
+{
+    std::string msg;
+    if (add_msg)
+        msg = csprintf("%s: port '%s' (%s)", add_msg, name, kind);
+    else
+        msg = csprintf("port '%s' (%s)", name, kind);
+
+    SC_REPORT_ERROR(id, msg.c_str());
+}
+
+}
+
 sc_port_base::sc_port_base(const char *name, int n, sc_port_policy p) :
     sc_object(name), _maxSize(n), _size(0), finalized(false)
 {
+    if (sc_is_running()) {
+        reportError("(E110) insert port failed", "simulation running",
+                name, kind());
+    }
+    if (::sc_gem5::scheduler.elaborationDone()) {
+        reportError("(E110) insert port failed", "elaboration done",
+                name, kind());
+    }
+
     ::sc_gem5::Module *m = ::sc_gem5::currentModule();
-    m->ports.push_back(this);
+    if (!m) {
+        reportError("(E100) port specified outside of module",
+                nullptr, name, kind());
+    } else {
+        m->ports.push_back(this);
+    }
 }
 
 void
