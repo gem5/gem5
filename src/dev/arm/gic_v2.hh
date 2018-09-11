@@ -397,13 +397,16 @@ class GicV2 : public BaseGic, public BaseGicRegisters
      * Post an interrupt to a CPU with a delay
      */
     void postInt(uint32_t cpu, Tick when);
+    void postFiq(uint32_t cpu, Tick when);
 
     /**
      * Deliver a delayed interrupt to the target CPU
      */
     void postDelayedInt(uint32_t cpu);
+    void postDelayedFiq(uint32_t cpu);
 
     EventFunctionWrapper *postIntEvent[CPU_MAX];
+    EventFunctionWrapper *postFiqEvent[CPU_MAX];
     int pendingDelayedInterrupts;
 
   public:

@@ -88,6 +88,9 @@ GicV2::GicV2(const Params *p)
         postIntEvent[x] =
             new EventFunctionWrapper([this, x]{ postDelayedInt(x); },
                                      "Post Interrupt to CPU");
+        postFiqEvent[x] =
+            new EventFunctionWrapper([this, x]{ postDelayedFiq(x); },
+                                     "Post FIQ to CPU");
     }
     DPRINTF(Interrupt, "cpuEnabled[0]=%d cpuEnabled[1]=%d\n", cpuEnabled(0),
             cpuEnabled(1));
@@ -97,8 +100,10 @@ GicV2::GicV2(const Params *p)
 
 GicV2::~GicV2()
 {
-    for (int x = 0; x < CPU_MAX; x++)
+    for (int x = 0; x < CPU_MAX; x++) {
         delete postIntEvent[x];
+        delete postFiqEvent[x];
+    }
 }
 
 Tick
@@ -909,6 +914,25 @@ void
 GicV2::postDelayedInt(uint32_t cpu)
 {
     platform->intrctrl->post(cpu, ArmISA::INT_IRQ, 0);
+    --pendingDelayedInterrupts;
+    assert(pendingDelayedInterrupts >= 0);
+    if (pendingDelayedInterrupts == 0)
+        signalDrainDone();
+}
+
+void
+GicV2::postFiq(uint32_t cpu, Tick when)
+{
+    if (!(postFiqEvent[cpu]->scheduled())) {
+        ++pendingDelayedInterrupts;
+        eventq->schedule(postFiqEvent[cpu], when);
+    }
+}
+
+void
+GicV2::postDelayedFiq(uint32_t cpu)
+{
+    platform->intrctrl->post(cpu, ArmISA::INT_FIQ, 0);
     --pendingDelayedInterrupts;
     assert(pendingDelayedInterrupts >= 0);
     if (pendingDelayedInterrupts == 0)
