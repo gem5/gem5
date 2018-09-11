@@ -34,43 +34,41 @@
 namespace sc_core
 {
 
-sc_semaphore::sc_semaphore(int) :
+sc_semaphore::sc_semaphore(int value) :
         sc_interface(), sc_semaphore_if(),
-        sc_object(sc_gen_unique_name("semaphore"))
+        sc_object(sc_gen_unique_name("semaphore")), _value(value)
 {}
 
-sc_semaphore::sc_semaphore(const char *name, int) :
-        sc_interface(), sc_semaphore_if(), sc_object(name)
+sc_semaphore::sc_semaphore(const char *name, int value) :
+        sc_interface(), sc_semaphore_if(), sc_object(name), _value(value)
 {}
 
 int
 sc_semaphore::wait()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    while (trywait() == -1)
+        ::sc_core::wait(posted);
     return 0;
 }
 
 int
 sc_semaphore::trywait()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (!_value)
+        return -1;
+
+    _value--;
     return 0;
 }
 
 int
 sc_semaphore::post()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (_value++ == 0)
+        posted.notify();
     return 0;
 }
 
-int
-sc_semaphore::get_value() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
-}
-
-const char *sc_semaphore::kind() const { return "sc_semaphore"; }
+int sc_semaphore::get_value() const { return _value; }
 
 } // namespace sc_core

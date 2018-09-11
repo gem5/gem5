@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_EXT_CHANNEL_SC_SEMAPHORE_HH__
 #define __SYSTEMC_EXT_CHANNEL_SC_SEMAPHORE_HH__
 
+#include "../core/sc_event.hh"
 #include "../core/sc_object.hh"
 #include "sc_semaphore_if.hh"
 
@@ -47,7 +48,7 @@ class sc_semaphore : public sc_semaphore_if, public sc_object
     virtual int post();
     virtual int get_value() const;
 
-    virtual const char *kind() const;
+    virtual const char *kind() const { return "sc_semaphore"; }
 
   private:
     // Disabled
@@ -56,6 +57,9 @@ class sc_semaphore : public sc_semaphore_if, public sc_object
     {}
 
     sc_semaphore &operator = (const sc_semaphore &) { return *this; }
+
+    int _value;
+    sc_event posted;
 };
 
 } // namespace sc_core
