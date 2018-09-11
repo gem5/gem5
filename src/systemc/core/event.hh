@@ -30,7 +30,7 @@
 #ifndef __SYSTEMC_CORE_EVENT_HH__
 #define __SYSTEMC_CORE_EVENT_HH__
 
-#include <set>
+#include <list>
 #include <string>
 #include <vector>
 
@@ -93,8 +93,8 @@ class Event
         return e->_gem5_event;
     }
 
-    void addSensitivity(Sensitivity *s) const { sensitivities.insert(s); }
-    void delSensitivity(Sensitivity *s) const { sensitivities.erase(s); }
+    void addSensitivity(Sensitivity *s) const { sensitivities.push_back(s); }
+    void delSensitivity(Sensitivity *s) const { sensitivities.remove(s); }
 
   private:
     sc_core::sc_event *_sc_event;
@@ -107,7 +107,7 @@ class Event
 
     ScEvent delayedNotify;
 
-    mutable std::set<Sensitivity *> sensitivities;
+    mutable std::list<Sensitivity *> sensitivities;
 };
 
 extern Events topLevelEvents;
