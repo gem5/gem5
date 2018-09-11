@@ -364,7 +364,7 @@ GicV2::readCpu(ContextID ctx, Addr daddr)
                     ctx, iar.ack_id, iar.cpu_id, iar);
             cpuHighestInt[ctx] = SPURIOUS_INT;
             updateIntState(-1);
-            platform->intrctrl->clear(ctx, ArmISA::INT_IRQ, 0);
+            clearInt(ctx, active_int);
             return iar;
         } else {
              return SPURIOUS_INT;
@@ -802,7 +802,7 @@ GicV2::updateIntState(int hint)
             if (isLevelSensitive(cpu, prev_highest)) {
 
                 DPRINTF(Interrupt, "Clear IRQ for cpu%d\n", cpu);
-                platform->intrctrl->clear(cpu, ArmISA::INT_IRQ, 0);
+                clearInt(cpu, prev_highest);
             }
             continue;
         }
@@ -816,7 +816,12 @@ GicV2::updateIntState(int hint)
 
             DPRINTF(Interrupt, "Posting interrupt %d to cpu%d\n", highest_int,
                     cpu);
-            postInt(cpu, curTick() + intLatency);
+
+            if (isFiq(cpu, highest_int)) {
+                postFiq(cpu, curTick() + intLatency);
+            } else {
+                postInt(cpu, curTick() + intLatency);
+            }
         }
     }
 }
@@ -899,6 +904,16 @@ GicV2::clearPPInt(uint32_t num, uint32_t cpu)
             num, cpu);
     cpuPpiPending[cpu] &= ~(1 << (num - SGI_MAX));
     updateIntState(intNumToWord(num));
+}
+
+void
+GicV2::clearInt(ContextID ctx, uint32_t int_num)
+{
+    if (isFiq(ctx, int_num)) {
+        platform->intrctrl->clear(ctx, ArmISA::INT_FIQ, 0);
+    } else {
+        platform->intrctrl->clear(ctx, ArmISA::INT_IRQ, 0);
+    }
 }
 
 void

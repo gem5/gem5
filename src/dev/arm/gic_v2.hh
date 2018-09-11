@@ -334,7 +334,35 @@ class GicV2 : public BaseGic, public BaseGicRegisters
         }
     }
 
-    /** CPU enabled */
+    bool isGroup0(ContextID ctx, uint32_t int_num) {
+        const uint32_t group_reg = getIntGroup(ctx, intNumToWord(int_num));
+        return bits(group_reg, intNumToBit(int_num));
+    }
+
+    /**
+     * This method checks if an interrupt ID must be signaled or has been
+     * signaled as a FIQ to the cpu. It does that by reading:
+     *
+     * 1) GICD_IGROUPR: controls if the interrupt is part of group0 or
+     * group1. Only group0 interrupts can be signaled as FIQs.
+     *
+     * 2) GICC_CTLR.FIQEn: controls whether the CPU interface signals Group 0
+     * interrupts to a target processor using the FIQ or the IRQ signal
+     */
+    bool isFiq(ContextID ctx, uint32_t int_num) {
+        const bool is_group0 = isGroup0(ctx, int_num);
+        const bool use_fiq = cpuControl[ctx].fiqEn;
+
+        if (is_group0 && use_fiq) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /** CPU enabled:
+     * Checks if GICC_CTLR.EnableGrp0 or EnableGrp1 are set
+     */
     bool cpuEnabled(ContextID ctx) const {
         return cpuControl[ctx].enableGrp0 ||
                cpuControl[ctx].enableGrp1;
@@ -392,6 +420,9 @@ class GicV2 : public BaseGic, public BaseGicRegisters
 
     int intNumToWord(int num) const { return num >> 5; }
     int intNumToBit(int num) const { return num % 32; }
+
+    /** Clears a cpu IRQ or FIQ signal */
+    void clearInt(ContextID ctx, uint32_t int_num);
 
     /**
      * Post an interrupt to a CPU with a delay
