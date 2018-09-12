@@ -32,7 +32,6 @@
 
 #include "../core/sc_module.hh" // for sc_gen_unique_name
 #include "sc_signal.hh"
-#include "warn_unimpl.hh" // for warn_unimpl
 
 namespace sc_core
 {
@@ -49,27 +48,28 @@ class sc_buffer : public sc_signal<T, WRITER_POLICY>
     {}
 
     virtual void
-    write(const T&)
+    write(const T &t)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        this->m_new_val = t;
+        this->request_update();
     }
 
     sc_buffer<T, WRITER_POLICY> &
-    operator = (const T &)
+    operator = (const T &arg)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        write(arg);
         return *this;
     }
     sc_buffer<T, WRITER_POLICY> &
-    operator = (const sc_signal<T, WRITER_POLICY> &)
+    operator = (const sc_signal<T, WRITER_POLICY> &arg)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        write(arg.read());
         return *this;
     }
     sc_buffer<T, WRITER_POLICY> &
-    operator = (const sc_buffer<T, WRITER_POLICY> &)
+    operator = (const sc_buffer<T, WRITER_POLICY> &arg)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        write(arg.read());
         return *this;
     }
 
@@ -79,7 +79,8 @@ class sc_buffer : public sc_signal<T, WRITER_POLICY>
     virtual void
     update()
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        this->m_cur_val = this->m_new_val;
+        this->_signalChange();
     }
 
   private:

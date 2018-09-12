@@ -151,6 +151,14 @@ class sc_signal : public sc_signal_inout_if<T>,
             return;
 
         m_cur_val = m_new_val;
+        _signalChange();
+        _changeStamp = ::sc_gem5::getChangeStamp();
+        _valueChangedEvent.notify(SC_ZERO_TIME);
+    }
+
+    void
+    _signalChange()
+    {
         _changeStamp = ::sc_gem5::getChangeStamp();
         _valueChangedEvent.notify(SC_ZERO_TIME);
     }
@@ -293,16 +301,21 @@ class sc_signal<bool, WRITER_POLICY> :
             return;
 
         m_cur_val = m_new_val;
-        uint64_t change_stamp = ::sc_gem5::getChangeStamp();
-        _changeStamp = change_stamp;
-        _valueChangedEvent.notify(SC_ZERO_TIME);
+        _signalChange();
         if (m_cur_val) {
-            _posStamp = change_stamp;
+            _posStamp = ::sc_gem5::getChangeStamp();
             _posedgeEvent.notify(SC_ZERO_TIME);
         } else {
-            _negStamp = change_stamp;
+            _negStamp = ::sc_gem5::getChangeStamp();
             _negedgeEvent.notify(SC_ZERO_TIME);
         }
+    }
+
+    void
+    _signalChange()
+    {
+        _changeStamp = ::sc_gem5::getChangeStamp();
+        _valueChangedEvent.notify(SC_ZERO_TIME);
     }
 
     bool m_cur_val;
@@ -438,11 +451,21 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
             return;
 
         m_cur_val = m_new_val;
-        _valueChangedEvent.notify(SC_ZERO_TIME);
-        if (m_cur_val == sc_dt::SC_LOGIC_1)
+        _signalChange();
+        if (m_cur_val == sc_dt::SC_LOGIC_1) {
+            _posStamp = ::sc_gem5::getChangeStamp();
             _posedgeEvent.notify(SC_ZERO_TIME);
-        else if (m_cur_val == sc_dt::SC_LOGIC_0)
+        } else if (m_cur_val == sc_dt::SC_LOGIC_0) {
+            _negStamp = ::sc_gem5::getChangeStamp();
             _negedgeEvent.notify(SC_ZERO_TIME);
+        }
+    }
+
+    void
+    _signalChange()
+    {
+        _changeStamp = ::sc_gem5::getChangeStamp();
+        _valueChangedEvent.notify(SC_ZERO_TIME);
     }
 
     sc_dt::sc_logic m_cur_val;
