@@ -68,6 +68,8 @@ class sc_port_base : public sc_object
     int maxSize() const;
     int size() const;
 
+    const char *kind() const { return "sc_port_base"; }
+
   protected:
     // Implementation defined, but depended on by the tests.
     void bind(sc_interface &);
