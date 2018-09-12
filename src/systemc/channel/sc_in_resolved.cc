@@ -29,6 +29,7 @@
 
 #include "base/logging.hh"
 #include "systemc/ext/channel/sc_in_resolved.hh"
+#include "systemc/ext/channel/sc_signal_resolved.hh"
 
 namespace sc_core
 {
@@ -41,8 +42,15 @@ sc_in_resolved::sc_in_resolved(const char *name) :
 
 sc_in_resolved::~sc_in_resolved() {}
 
-void sc_in_resolved::end_of_elaboration() {}
-
-const char *sc_in_resolved::kind() const { return "sc_in_resolved"; }
+void
+sc_in_resolved::end_of_elaboration()
+{
+    sc_in<sc_dt::sc_logic>::end_of_elaboration();
+    if (!dynamic_cast<sc_signal_resolved *>(get_interface())) {
+        std::string msg = csprintf("%s (%s)", name(), kind());
+        SC_REPORT_ERROR("(E117) resolved port not bound to resolved signal",
+                msg.c_str());
+    }
+}
 
 } // namespace sc_core

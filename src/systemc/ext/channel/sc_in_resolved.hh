@@ -51,7 +51,7 @@ class sc_in_resolved : public sc_in<sc_dt::sc_logic>
 
     virtual void end_of_elaboration();
 
-    virtual const char *kind() const;
+    virtual const char *kind() const { return "sc_in_resolved"; }
 
   private:
     // Disabled

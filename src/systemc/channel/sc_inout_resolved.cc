@@ -29,6 +29,8 @@
 
 #include "base/logging.hh"
 #include "systemc/ext/channel/sc_inout_resolved.hh"
+#include "systemc/ext/channel/sc_signal_resolved.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_core
 {
@@ -41,45 +43,52 @@ sc_inout_resolved::sc_inout_resolved(const char *name) :
 
 sc_inout_resolved::~sc_inout_resolved() {}
 
-void sc_inout_resolved::end_of_elaboration() {}
+void
+sc_inout_resolved::end_of_elaboration()
+{
+    sc_inout<sc_dt::sc_logic>::end_of_elaboration();
+    if (!dynamic_cast<sc_signal_resolved *>(get_interface())) {
+        std::string msg = csprintf("%s (%s)", name(), kind());
+        SC_REPORT_ERROR("(E117) resolved port not bound to resolved signal",
+                msg.c_str());
+    }
+}
 
 sc_inout_resolved &
-sc_inout_resolved::operator = (const sc_dt::sc_logic &)
+sc_inout_resolved::operator = (const sc_dt::sc_logic &l)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    (*this)->write(l);
     return *this;
 }
 
 sc_inout_resolved &
-sc_inout_resolved::operator = (const sc_signal_in_if<sc_dt::sc_logic> &)
+sc_inout_resolved::operator = (const sc_signal_in_if<sc_dt::sc_logic> &i)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    (*this)->write(i.read());
     return *this;
 }
 
 sc_inout_resolved &
 sc_inout_resolved::operator = (
-        const sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &)
+        const sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1> &p)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    (*this)->write(p->read());
     return *this;
 }
 
 sc_inout_resolved &
 sc_inout_resolved::operator = (
-        const sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &)
+        const sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &p)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    (*this)->write(p->read());
     return *this;
 }
 
 sc_inout_resolved &
-sc_inout_resolved::operator = (const sc_inout_resolved &)
+sc_inout_resolved::operator = (const sc_inout_resolved &p)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    (*this)->write(p->read());
     return *this;
 }
-
-const char *sc_inout_resolved::kind() const { return "sc_inout_resolved"; }
 
 } // namespace sc_core

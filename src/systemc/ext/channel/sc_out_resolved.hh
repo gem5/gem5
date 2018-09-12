@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_EXT_CHANNEL_SC_OUT_RESOLVED_HH__
 #define __SYSTEMC_EXT_CHANNEL_SC_OUT_RESOLVED_HH__
 
+#include "sc_inout_resolved.hh"
 #include "sc_out.hh"
 #include "sc_signal_in_if.hh"
 #include "sc_signal_inout_if.hh"
@@ -45,7 +46,7 @@ class sc_logic;
 namespace sc_core
 {
 
-class sc_out_resolved : public sc_out<sc_dt::sc_logic>
+class sc_out_resolved : public sc_inout_resolved
 {
   public:
     sc_out_resolved();
@@ -60,11 +61,11 @@ class sc_out_resolved : public sc_out<sc_dt::sc_logic>
             const sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &);
     sc_out_resolved &operator = (const sc_out_resolved &);
 
-    virtual const char *kind() const;
+    virtual const char *kind() const { return "sc_out_resolved"; }
 
   private:
     // Disabled
-    sc_out_resolved(const sc_out_resolved &) : sc_out<sc_dt::sc_logic>() {}
+    sc_out_resolved(const sc_out_resolved &) : sc_inout_resolved() {}
 };
 
 } // namespace sc_core

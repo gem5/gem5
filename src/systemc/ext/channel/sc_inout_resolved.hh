@@ -62,7 +62,7 @@ class sc_inout_resolved : public sc_inout<sc_dt::sc_logic>
             const sc_port<sc_signal_inout_if<sc_dt::sc_logic>, 1> &);
     sc_inout_resolved &operator = (const sc_inout_resolved &);
 
-    virtual const char *kind() const;
+    virtual const char *kind() const { return "sc_inout_resolved"; }
 
   private:
     // Disabled
