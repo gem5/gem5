@@ -749,7 +749,7 @@ class RealViewEB(RealView):
     realview_io = RealViewCtrl(pio_addr=0x10000000, idreg=0x01400500)
     mcc = VExpressMCC()
     dcc = CoreTile2A15DCC()
-    gic = Pl390(dist_addr=0x10041000, cpu_addr=0x10040000)
+    gic = GicV2(dist_addr=0x10041000, cpu_addr=0x10040000)
     timer0 = Sp804(int_num0=36, int_num1=36, pio_addr=0x10011000)
     timer1 = Sp804(int_num0=37, int_num1=37, pio_addr=0x10012000)
     clcd   = Pl111(pio_addr=0x10020000, int_num=23)
