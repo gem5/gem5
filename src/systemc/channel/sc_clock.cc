@@ -36,6 +36,7 @@
 #include "systemc/core/sched_event.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/sc_clock.hh"
+#include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_module.hh" // for sc_gen_unique_name
 
 namespace sc_gem5
@@ -154,8 +155,7 @@ bool sc_clock::posedge_first() const { return _posedgeFirst; }
 const sc_time &
 sc_clock::time_stamp()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const sc_time *)nullptr;
+    return sc_time_stamp();
 }
 
 void
