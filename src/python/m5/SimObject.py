@@ -1,4 +1,4 @@
-# Copyright (c) 2017 ARM Limited
+# Copyright (c) 2017-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -934,6 +934,63 @@ class ParamInfo(object):
     if not "created" in self.__dict__:
       self.__dict__[name] = value
 
+class SimObjectCliWrapperException(Exception):
+    def __init__(self, message):
+        super(Exception, self).__init__(message)
+
+class SimObjectCliWrapper(object):
+    """
+    Wrapper class to restrict operations that may be done
+    from the command line on SimObjects.
+
+    Only parameters may be set, and only children may be accessed.
+
+    Slicing allows for multiple simultaneous assignment of items in
+    one statement.
+    """
+
+    def __init__(self, sim_objects):
+        self.__dict__['_sim_objects'] = list(sim_objects)
+
+    def __getattr__(self, key):
+        return SimObjectCliWrapper(sim_object._children[key]
+                for sim_object in self._sim_objects)
+
+    def __setattr__(self, key, val):
+        for sim_object in self._sim_objects:
+            if key in sim_object._params:
+                if sim_object._params[key].isCmdLineSettable():
+                    setattr(sim_object, key, val)
+                else:
+                    raise SimObjectCliWrapperException(
+                            'tried to set or unsettable' \
+                            'object parameter: ' + key)
+            else:
+                raise SimObjectCliWrapperException(
+                            'tried to set or access non-existent' \
+                            'object parameter: ' + key)
+
+    def __getitem__(self, idx):
+        """
+        Extends the list() semantics to also allow tuples,
+        for example object[1, 3] selects items 1 and 3.
+        """
+        out = []
+        if isinstance(idx, tuple):
+            for t in idx:
+                out.extend(self[t]._sim_objects)
+        else:
+            if isinstance(idx, int):
+                _range = range(idx, idx + 1)
+            elif not isinstance(idx, slice):
+                raise SimObjectCliWrapperException( \
+                        'invalid index type: ' + repr(idx))
+            for sim_object in self._sim_objects:
+                if isinstance(idx, slice):
+                    _range = range(*idx.indices(len(sim_object)))
+                out.extend(sim_object[i] for i in _range)
+        return SimObjectCliWrapper(out)
+
 # The SimObject class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
@@ -1524,6 +1581,30 @@ class SimObject(object):
             for item in child: # For looping over SimObjectVectors
                 for dt in item.generateDeviceTree(state):
                     yield dt
+
+    # On a separate method otherwise certain buggy Python versions
+    # would fail with: SyntaxError: unqualified exec is not allowed
+    # in function 'apply_config'
+    def _apply_config_get_dict(self):
+        return {
+            child_name: SimObjectCliWrapper(
+                iter(self._children[child_name]))
+            for child_name in self._children
+        }
+
+    def apply_config(self, params):
+        """
+        exec a list of Python code strings contained in params.
+
+        The only exposed globals to those strings are the child
+        SimObjects of this node.
+
+        This function is intended to allow users to modify SimObject
+        parameters from the command line with Python statements.
+        """
+        d = self._apply_config_get_dict()
+        for param in params:
+            exec(param, d)
 
 # Function to provide to C++ so it can look up instances based on paths
 def resolveSimObject(name):
