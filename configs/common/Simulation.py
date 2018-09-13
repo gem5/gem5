@@ -597,6 +597,7 @@ def run(options, root, testsys, cpu_class):
     checkpoint_dir = None
     if options.checkpoint_restore:
         cpt_starttick, checkpoint_dir = findCptDir(options, cptdir, testsys)
+    root.apply_config(options.param)
     m5.instantiate(checkpoint_dir)
 
     # Initialization is complete.  If we're not in control of simulation
