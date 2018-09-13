@@ -127,7 +127,9 @@ MathExprPowerModel::getStatValue(const std::string &name) const
         return _temp;
     } else if (name == "voltage") {
         return clocked_object->voltage();
-    }
+    } else if (name=="clock_period") {
+        return clocked_object->clockPeriod();
+    } 
 
     // Try to cast the stat, only these are supported right now
     const auto it = stats_map.find(name);
