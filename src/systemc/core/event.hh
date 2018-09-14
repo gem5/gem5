@@ -37,7 +37,9 @@
 #include "sim/eventq.hh"
 #include "systemc/core/list.hh"
 #include "systemc/core/object.hh"
+#include "systemc/core/process.hh"
 #include "systemc/core/sched_event.hh"
+#include "systemc/core/sensitivity.hh"
 #include "systemc/ext/core/sc_prim.hh"
 #include "systemc/ext/core/sc_time.hh"
 
@@ -93,8 +95,40 @@ class Event
         return e->_gem5_event;
     }
 
-    void addSensitivity(Sensitivity *s) const { sensitivities.push_back(s); }
-    void delSensitivity(Sensitivity *s) const { sensitivities.remove(s); }
+    void
+    addSensitivity(StaticSensitivity *s) const
+    {
+        // Insert static sensitivities in reverse order to match Accellera's
+        // implementation.
+        staticSensitivities.insert(staticSensitivities.begin(), s);
+    }
+    void
+    delSensitivity(StaticSensitivity *s) const
+    {
+        for (auto &t: staticSensitivities) {
+            if (t == s) {
+                t = staticSensitivities.back();
+                staticSensitivities.pop_back();
+                break;
+            }
+        }
+    }
+    void
+    addSensitivity(DynamicSensitivity *s) const
+    {
+        dynamicSensitivities.push_back(s);
+    }
+    void
+    delSensitivity(DynamicSensitivity *s) const
+    {
+        for (auto &t: dynamicSensitivities) {
+            if (t == s) {
+                t = dynamicSensitivities.back();
+                dynamicSensitivities.pop_back();
+                break;
+            }
+        }
+    }
 
   private:
     sc_core::sc_event *_sc_event;
@@ -107,7 +141,8 @@ class Event
 
     ScEvent delayedNotify;
 
-    mutable std::list<Sensitivity *> sensitivities;
+    mutable StaticSensitivities staticSensitivities;
+    mutable DynamicSensitivities dynamicSensitivities;
 };
 
 extern Events topLevelEvents;

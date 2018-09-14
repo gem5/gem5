@@ -41,8 +41,8 @@ namespace sc_gem5
 
 class BindInfo;
 class Module;
-class PendingSensitivityPort;
-class PendingSensitivityFinder;
+class StaticSensitivityPort;
+class StaticSensitivityFinder;
 
 };
 
@@ -87,8 +87,8 @@ class sc_port_base : public sc_object
     virtual void end_of_simulation() = 0;
 
   private:
-    friend class ::sc_gem5::PendingSensitivityPort;
-    friend class ::sc_gem5::PendingSensitivityFinder;
+    friend class ::sc_gem5::StaticSensitivityPort;
+    friend class ::sc_gem5::StaticSensitivityFinder;
     friend class ::sc_gem5::Kernel;
 
     void _gem5Finalize();

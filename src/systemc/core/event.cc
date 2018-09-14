@@ -145,9 +145,18 @@ Event::notify()
     if (delayedNotify.scheduled())
         scheduler.deschedule(&delayedNotify);
 
-    auto local_sensitivities = sensitivities;
-    for (auto s: local_sensitivities)
+    for (auto s: staticSensitivities)
         s->notify(this);
+    DynamicSensitivities &ds = dynamicSensitivities;
+    int size = ds.size();
+    int pos = 0;
+    while (pos < size) {
+        if (ds[pos]->notify(this))
+            ds[pos] = ds[--size];
+        else
+            pos++;
+    }
+    ds.resize(size);
 }
 
 void

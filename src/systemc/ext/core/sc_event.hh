@@ -41,8 +41,8 @@ namespace sc_gem5
 {
 
 class Event;
-class SensitivityEventAndList;
-class SensitivityEventOrList;
+class DynamicSensitivityEventAndList;
+class DynamicSensitivityEventOrList;
 
 }
 
@@ -116,7 +116,7 @@ class sc_event_and_list
 
   private:
     friend class sc_event_and_expr;
-    friend class sc_gem5::SensitivityEventAndList;
+    friend class sc_gem5::DynamicSensitivityEventAndList;
 
     explicit sc_event_and_list(bool auto_delete);
 
@@ -148,7 +148,7 @@ class sc_event_or_list
 
   private:
     friend class sc_event_or_expr;
-    friend class sc_gem5::SensitivityEventOrList;
+    friend class sc_gem5::DynamicSensitivityEventOrList;
 
     explicit sc_event_or_list(bool auto_delete);
 

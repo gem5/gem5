@@ -41,7 +41,7 @@ sc_sensitive &
 sc_sensitive::operator << (const sc_event &e)
 {
     currentProcess->addStatic(
-            new sc_gem5::PendingSensitivityEvent(currentProcess, &e));
+            new sc_gem5::StaticSensitivityEvent(currentProcess, &e));
     return *this;
 }
 
@@ -49,7 +49,7 @@ sc_sensitive &
 sc_sensitive::operator << (const sc_interface &i)
 {
     currentProcess->addStatic(
-            new sc_gem5::PendingSensitivityInterface(currentProcess, &i));
+            new sc_gem5::StaticSensitivityInterface(currentProcess, &i));
     return *this;
 }
 
@@ -57,7 +57,7 @@ sc_sensitive &
 sc_sensitive::operator << (const sc_port_base &b)
 {
     currentProcess->addStatic(
-            new sc_gem5::PendingSensitivityPort(currentProcess, &b));
+            new sc_gem5::StaticSensitivityPort(currentProcess, &b));
     return *this;
 }
 
@@ -65,7 +65,7 @@ sc_sensitive &
 sc_sensitive::operator << (sc_event_finder &f)
 {
     currentProcess->addStatic(
-            new sc_gem5::PendingSensitivityFinder(currentProcess, &f));
+            new sc_gem5::StaticSensitivityFinder(currentProcess, &f));
     return *this;
 }
 

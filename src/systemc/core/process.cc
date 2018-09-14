@@ -40,85 +40,6 @@
 namespace sc_gem5
 {
 
-SensitivityTimeout::SensitivityTimeout(Process *p, ::sc_core::sc_time t) :
-    Sensitivity(p), timeoutEvent([this]() { this->timeout(); })
-{
-    scheduler.schedule(&timeoutEvent, t);
-}
-
-SensitivityTimeout::~SensitivityTimeout()
-{
-    if (timeoutEvent.scheduled())
-        scheduler.deschedule(&timeoutEvent);
-}
-
-void
-SensitivityTimeout::timeout()
-{
-    notify();
-}
-
-SensitivityEvent::SensitivityEvent(
-        Process *p, const ::sc_core::sc_event *e) : Sensitivity(p), event(e)
-{
-    Event::getFromScEvent(event)->addSensitivity(this);
-}
-
-SensitivityEvent::~SensitivityEvent()
-{
-    Event::getFromScEvent(event)->delSensitivity(this);
-}
-
-SensitivityEventAndList::SensitivityEventAndList(
-        Process *p, const ::sc_core::sc_event_and_list *list) :
-    Sensitivity(p), list(list), count(0)
-{
-    for (auto e: list->events)
-        Event::getFromScEvent(e)->addSensitivity(this);
-}
-
-SensitivityEventAndList::~SensitivityEventAndList()
-{
-    for (auto e: list->events)
-        Event::getFromScEvent(e)->delSensitivity(this);
-}
-
-void
-SensitivityEventAndList::notifyWork(Event *e)
-{
-    e->delSensitivity(this);
-    count++;
-    if (count == list->events.size())
-        satisfy();
-}
-
-SensitivityEventOrList::SensitivityEventOrList(
-        Process *p, const ::sc_core::sc_event_or_list *list) :
-    Sensitivity(p), list(list)
-{
-    for (auto e: list->events)
-        Event::getFromScEvent(e)->addSensitivity(this);
-}
-
-SensitivityEventOrList::~SensitivityEventOrList()
-{
-    for (auto e: list->events)
-        Event::getFromScEvent(e)->delSensitivity(this);
-}
-
-void
-SensitivityTimeoutAndEventAndList::notifyWork(Event *e)
-{
-    if (e) {
-        // An event went off which must be part of the sc_event_and_list.
-        SensitivityEventAndList::notifyWork(e);
-    } else {
-        // There's no inciting event, so this must be a timeout.
-        satisfy(true);
-    }
-}
-
-
 class UnwindExceptionReset : public ::sc_core::sc_unwind_exception
 {
   public:
@@ -195,7 +116,7 @@ Process::disable(bool inc_kids)
         forEachKid([](Process *p) { p->disable(true); });
 
     if (!::sc_core::sc_allow_process_control_corners &&
-            dynamic_cast<SensitivityTimeout *>(dynamicSensitivity)) {
+            timeoutEvent.scheduled()) {
         std::string message("attempt to disable a thread with timeout wait: ");
         message += name();
         SC_REPORT_ERROR("Undefined process control interaction",
@@ -317,12 +238,8 @@ Process::syncResetOff(bool inc_kids)
 void
 Process::finalize()
 {
-    for (auto &s: pendingStaticSensitivities) {
-        s->finalize(staticSensitivities);
-        delete s;
-        s = nullptr;
-    }
-    pendingStaticSensitivities.clear();
+    for (auto s: staticSensitivities)
+        s->finalize();
 };
 
 void
@@ -346,26 +263,66 @@ Process::run()
 }
 
 void
-Process::addStatic(PendingSensitivity *s)
+Process::addStatic(StaticSensitivity *s)
 {
-    pendingStaticSensitivities.push_back(s);
+    staticSensitivities.push_back(s);
 }
 
 void
-Process::setDynamic(Sensitivity *s)
+Process::setDynamic(DynamicSensitivity *s)
 {
-    delete dynamicSensitivity;
+    if (dynamicSensitivity) {
+        dynamicSensitivity->clear();
+        delete dynamicSensitivity;
+    }
     dynamicSensitivity = s;
+    if (dynamicSensitivity)
+        dynamicSensitivity->finalize();
+}
+
+void
+Process::cancelTimeout()
+{
+    if (timeoutEvent.scheduled())
+        scheduler.deschedule(&timeoutEvent);
+}
+
+void
+Process::setTimeout(::sc_core::sc_time t)
+{
+    cancelTimeout();
+    scheduler.schedule(&timeoutEvent, t);
+}
+
+void
+Process::timeout()
+{
+    // A process is considered timed_out only if it was also waiting for an
+    // event but got a timeout instead.
+    _timedOut = (dynamicSensitivity != nullptr);
+
+    setDynamic(nullptr);
+    if (disabled())
+        return;
+
+    ready();
 }
 
 void
 Process::satisfySensitivity(Sensitivity *s)
 {
     // If there's a dynamic sensitivity and this wasn't it, ignore.
-    if (dynamicSensitivity && dynamicSensitivity != s)
+    if ((dynamicSensitivity || timeoutEvent.scheduled()) &&
+            dynamicSensitivity != s) {
         return;
+    }
 
-    setDynamic(nullptr);
+    _timedOut = false;
+    // This sensitivity should already be cleared by this point, or the event
+    // which triggered it will take care of it.
+    delete dynamicSensitivity;
+    dynamicSensitivity = nullptr;
+    cancelTimeout();
     ready();
 }
 
@@ -394,8 +351,9 @@ Process::lastReport(::sc_core::sc_report *report)
 ::sc_core::sc_report *Process::lastReport() const { return _lastReport.get(); }
 
 Process::Process(const char *name, ProcessFuncWrapper *func, bool internal) :
-    ::sc_core::sc_process_b(name), excWrapper(nullptr), func(func),
-    _internal(internal), _timedOut(false), _dontInitialize(false),
+    ::sc_core::sc_process_b(name), excWrapper(nullptr),
+    timeoutEvent([this]() { this->timeout(); }),
+    func(func), _internal(internal), _timedOut(false), _dontInitialize(false),
     _needsStart(true), _isUnwinding(false), _terminated(false),
     _suspended(false), _disabled(false), _syncReset(false), refCount(0),
     stackSize(::Fiber::DefaultStackSize), dynamicSensitivity(nullptr)
@@ -413,10 +371,12 @@ Process::terminate()
     _suspendedReady = false;
     _suspended = false;
     _syncReset = false;
-    delete dynamicSensitivity;
-    dynamicSensitivity = nullptr;
-    for (auto s: staticSensitivities)
+    clearDynamic();
+    cancelTimeout();
+    for (auto s: staticSensitivities) {
+        s->clear();
         delete s;
+    }
     staticSensitivities.clear();
 
     _terminatedEvent.notify();
