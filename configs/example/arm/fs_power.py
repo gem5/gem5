@@ -69,6 +69,25 @@ class CpuPowerModel(PowerModel):
         CpuPowerOff(), # OFF
     ]
 
+class L2PowerOn(MathExprPowerModel):
+    # Example to report l2 Cache overall_accesses
+    # The estimated power is converted to Watt and will vary based on the size of the cache
+    dyn = "overall_accesses*0.000018000"
+    st = "(voltage * 3)/10"
+
+class L2PowerOff(MathExprPowerModel):
+    dyn = "0"
+    st = "0"
+
+class L2PowerModel(PowerModel):
+    # Choose a power model for every power state
+    pm = [
+        L2PowerOn(), # ON
+        L2PowerOff(), # CLK_GATED
+        L2PowerOff(), # SRAM_RETENTION
+        L2PowerOff(), # OFF
+    ]
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -89,6 +108,14 @@ def main():
 
         cpu.default_p_state = "ON"
         cpu.power_model = CpuPowerModel()
+
+    # Example power model for the L2 Cache of the bigCluster
+    for l2 in root.system.bigCluster.l2.descendants():
+        if not isinstance(l2, m5.objects.Cache):
+            continue
+
+        l2.default_p_state = "ON"
+        l2.power_model = L2PowerModel()
 
     bL.instantiate(options)
 
