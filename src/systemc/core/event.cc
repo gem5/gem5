@@ -134,6 +134,27 @@ Event::getParentObject() const
 }
 
 void
+Event::notify(StaticSensitivities &senses)
+{
+    for (auto s: senses)
+        s->notify(this);
+}
+
+void
+Event::notify(DynamicSensitivities &senses)
+{
+    int size = senses.size();
+    int pos = 0;
+    while (pos < size) {
+        if (senses[pos]->notify(this))
+            senses[pos] = senses[--size];
+        else
+            pos++;
+    }
+    senses.resize(size);
+}
+
+void
 Event::notify()
 {
     if (scheduler.inUpdate()) {
@@ -145,18 +166,10 @@ Event::notify()
     if (delayedNotify.scheduled())
         scheduler.deschedule(&delayedNotify);
 
-    for (auto s: staticSensitivities)
-        s->notify(this);
-    DynamicSensitivities &ds = dynamicSensitivities;
-    int size = ds.size();
-    int pos = 0;
-    while (pos < size) {
-        if (ds[pos]->notify(this))
-            ds[pos] = ds[--size];
-        else
-            pos++;
-    }
-    ds.resize(size);
+    notify(staticSenseMethod);
+    notify(dynamicSenseMethod);
+    notify(staticSenseThread);
+    notify(dynamicSenseThread);
 }
 
 void

@@ -31,6 +31,7 @@
 
 #include "systemc/core/event.hh"
 #include "systemc/core/port.hh"
+#include "systemc/core/process.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_export.hh"
 #include "systemc/ext/core/sc_interface.hh"
@@ -55,6 +56,12 @@ Sensitivity::notify(Event *e)
     if (process->disabled())
         return false;
     return notifyWork(e);
+}
+
+bool
+Sensitivity::ofMethod()
+{
+    return process->procKind() == sc_core::SC_METHOD_PROC_;
 }
 
 

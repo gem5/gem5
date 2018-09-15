@@ -72,6 +72,9 @@ class Event
     bool inHierarchy() const;
     sc_core::sc_object *getParentObject() const;
 
+    void notify(StaticSensitivities &senses);
+    void notify(DynamicSensitivities &senses);
+
     void notify();
     void notify(const sc_core::sc_time &t);
     void
@@ -100,15 +103,17 @@ class Event
     {
         // Insert static sensitivities in reverse order to match Accellera's
         // implementation.
-        staticSensitivities.insert(staticSensitivities.begin(), s);
+        auto &senses = s->ofMethod() ? staticSenseMethod : staticSenseThread;
+        senses.insert(senses.begin(), s);
     }
     void
     delSensitivity(StaticSensitivity *s) const
     {
-        for (auto &t: staticSensitivities) {
+        auto &senses = s->ofMethod() ? staticSenseMethod : staticSenseThread;
+        for (auto &t: senses) {
             if (t == s) {
-                t = staticSensitivities.back();
-                staticSensitivities.pop_back();
+                t = senses.back();
+                senses.pop_back();
                 break;
             }
         }
@@ -116,15 +121,17 @@ class Event
     void
     addSensitivity(DynamicSensitivity *s) const
     {
-        dynamicSensitivities.push_back(s);
+        auto &senses = s->ofMethod() ? dynamicSenseMethod : dynamicSenseThread;
+        senses.push_back(s);
     }
     void
     delSensitivity(DynamicSensitivity *s) const
     {
-        for (auto &t: dynamicSensitivities) {
+        auto &senses = s->ofMethod() ? dynamicSenseMethod : dynamicSenseThread;
+        for (auto &t: senses) {
             if (t == s) {
-                t = dynamicSensitivities.back();
-                dynamicSensitivities.pop_back();
+                t = senses.back();
+                senses.pop_back();
                 break;
             }
         }
@@ -141,8 +148,10 @@ class Event
 
     ScEvent delayedNotify;
 
-    mutable StaticSensitivities staticSensitivities;
-    mutable DynamicSensitivities dynamicSensitivities;
+    mutable StaticSensitivities staticSenseMethod;
+    mutable StaticSensitivities staticSenseThread;
+    mutable DynamicSensitivities dynamicSenseMethod;
+    mutable DynamicSensitivities dynamicSenseThread;
 };
 
 extern Events topLevelEvents;

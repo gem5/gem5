@@ -85,6 +85,8 @@ class Sensitivity
     bool notify(Event *e);
 
     virtual bool dynamic() = 0;
+
+    bool ofMethod();
 };
 
 
