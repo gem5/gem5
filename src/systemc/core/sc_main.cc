@@ -226,6 +226,16 @@ sc_get_stop_mode()
 void
 sc_stop()
 {
+    static bool stop_called = false;
+    if (stop_called) {
+        static bool stop_warned = false;
+        if (!stop_warned)
+            SC_REPORT_WARNING("(W545) sc_stop has already been called", "");
+        stop_warned = true;
+        return;
+    }
+    stop_called = true;
+
     if (::sc_gem5::Kernel::status() == SC_STOPPED)
         return;
 
