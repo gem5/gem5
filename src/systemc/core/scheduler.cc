@@ -49,7 +49,7 @@ Scheduler::Scheduler() :
     _elaborationDone(false), _started(false), _stopNow(false),
     _status(StatusOther), maxTickEvent(this, false, MaxTickPriority),
     _numCycles(0), _changeStamp(0), _current(nullptr), initDone(false),
-    runOnce(false), readyList(nullptr)
+    runOnce(false)
 {}
 
 Scheduler::~Scheduler()
@@ -154,7 +154,7 @@ void
 Scheduler::yield()
 {
     // Pull a process from the active list.
-    _current = readyList->getNext();
+    _current = getNextReady();
     if (!_current) {
         // There are no more processes, so return control to evaluate.
         Fiber::primaryFiber()->run();
@@ -266,19 +266,8 @@ Scheduler::runReady()
 
     // The evaluation phase.
     do {
-        // We run methods and threads in two seperate passes to emulate how
-        // Accellera orders things, but without having to scan through a
-        // unified list to find the next process of the correct type.
-        readyList = &readyListMethods;
-        while (!readyListMethods.empty())
-            yield();
-
-        readyList = &readyListThreads;
-        while (!readyListThreads.empty())
-            yield();
-
-        // We already know that readyListThreads is empty at this point.
-    } while (!readyListMethods.empty());
+        yield();
+    } while (getNextReady());
 
     if (!empty) {
         _numCycles++;

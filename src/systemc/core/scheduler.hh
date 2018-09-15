@@ -194,16 +194,16 @@ class Scheduler
     void
     runNow(Process *p)
     {
-        // This function may put a process on the wrong list, ie a method on
-        // the process list or vice versa. That's fine since that's just a
-        // performance optimization, and the important thing here is how the
-        // processes are ordered.
+        // This function may put a process on the wrong list, ie a thread
+        // the method list. That's fine since that's just a performance
+        // optimization, and the important thing here is how the processes are
+        // ordered.
 
         // If a process is running, schedule it/us to run again.
         if (_current)
-            readyList->pushFirst(_current);
+            readyListMethods.pushFirst(_current);
         // Schedule p to run first.
-        readyList->pushFirst(p);
+        readyListMethods.pushFirst(p);
         yield();
     }
 
@@ -390,6 +390,13 @@ class Scheduler
     ScEvents deltas;
     TimeSlots timeSlots;
 
+    Process *
+    getNextReady()
+    {
+        Process *p = readyListMethods.getNext();
+        return p ? p : readyListThreads.getNext();
+    }
+
     void runReady();
     EventWrapper<Scheduler, &Scheduler::runReady> readyEvent;
     void scheduleReadyEvent();
@@ -441,7 +448,6 @@ class Scheduler
 
     ProcessList initList;
 
-    ProcessList *readyList;
     ProcessList readyListMethods;
     ProcessList readyListThreads;
 
