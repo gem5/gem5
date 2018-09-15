@@ -37,6 +37,13 @@ class Process;
 
 } // namespace sc_gem5
 
+namespace sc_dt
+{
+
+class sc_logic;
+
+} // namespace sc_dt
+
 namespace sc_core
 {
 
@@ -45,6 +52,15 @@ class sc_event_finder;
 class sc_interface;
 class sc_module;
 class sc_port_base;
+
+template <class T>
+class sc_signal_in_if;
+
+template <class T>
+class sc_in;
+
+template <class T>
+class sc_inout;
 
 class sc_sensitive
 {
@@ -55,6 +71,17 @@ class sc_sensitive
     sc_sensitive &operator << (sc_event_finder &);
 
     sc_sensitive &operator << (::sc_gem5::Process *p);
+
+    // Nonstandard.
+    void operator () (::sc_gem5::Process *p, const sc_signal_in_if<bool> &);
+    void operator () (::sc_gem5::Process *p,
+                      const sc_signal_in_if<sc_dt::sc_logic> &);
+    void operator () (::sc_gem5::Process *p, const sc_in<bool> &);
+    void operator () (::sc_gem5::Process *p, const sc_in<sc_dt::sc_logic> &);
+    void operator () (::sc_gem5::Process *p, const sc_inout<bool> &);
+    void operator () (::sc_gem5::Process *p,
+                      const sc_inout<sc_dt::sc_logic> &);
+    void operator () (::sc_gem5::Process *p, sc_event_finder &);
 
   private:
     friend class sc_module;

@@ -29,6 +29,9 @@
 
 #include "base/logging.hh"
 #include "systemc/core/process.hh"
+#include "systemc/ext/channel/sc_in.hh"
+#include "systemc/ext/channel/sc_inout.hh"
+#include "systemc/ext/channel/sc_signal_in_if.hh"
 #include "systemc/ext/core/sc_interface.hh"
 #include "systemc/ext/core/sc_sensitive.hh"
 
@@ -70,6 +73,53 @@ sc_sensitive::operator << (::sc_gem5::Process *p)
 {
     currentProcess = p;
     return *this;
+}
+
+
+void
+sc_sensitive::operator () (::sc_gem5::Process *p,
+                           const sc_signal_in_if<bool> &i)
+{
+    sc_gem5::newStaticSensitivityEvent(p, &i.posedge_event());
+}
+
+void
+sc_sensitive::operator () (::sc_gem5::Process *p,
+                           const sc_signal_in_if<sc_dt::sc_logic> &i)
+{
+    sc_gem5::newStaticSensitivityEvent(p, &i.posedge_event());
+}
+
+void
+sc_sensitive::operator () (::sc_gem5::Process *p, const sc_in<bool> &port)
+{
+    sc_gem5::newStaticSensitivityFinder(p, &port.pos());
+}
+
+void
+sc_sensitive::operator () (::sc_gem5::Process *p,
+                           const sc_in<sc_dt::sc_logic> &port)
+{
+    sc_gem5::newStaticSensitivityFinder(p, &port.pos());
+}
+
+void
+sc_sensitive::operator () (::sc_gem5::Process *p, const sc_inout<bool> &port)
+{
+    sc_gem5::newStaticSensitivityFinder(p, &port.pos());
+}
+
+void
+sc_sensitive::operator () (::sc_gem5::Process *p,
+                           const sc_inout<sc_dt::sc_logic> &port)
+{
+    sc_gem5::newStaticSensitivityFinder(p, &port.pos());
+}
+
+void
+sc_sensitive::operator () (::sc_gem5::Process *p, sc_event_finder &f)
+{
+    sc_gem5::newStaticSensitivityFinder(p, &f);
 }
 
 } // namespace sc_core
