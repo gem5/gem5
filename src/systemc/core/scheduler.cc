@@ -104,7 +104,6 @@ void
 Scheduler::initPhase()
 {
     for (Process *p = initList.getNext(); p; p = initList.getNext()) {
-        p->finalize();
         p->popListNode();
 
         if (p->dontInitialize()) {
@@ -141,8 +140,6 @@ void
 Scheduler::reg(Process *p)
 {
     if (initDone) {
-        // If we're past initialization, finalize static sensitivity.
-        p->finalize();
         // If not marked as dontInitialize, mark as ready.
         if (!p->dontInitialize())
             p->ready();

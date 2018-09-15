@@ -79,7 +79,6 @@ class Sensitivity
     }
 
   public:
-    virtual void finalize() = 0;
     virtual void clear() = 0;
 
     void satisfy();
@@ -124,7 +123,7 @@ typedef std::vector<StaticSensitivity *> StaticSensitivities;
 
 
 /*
- * Sensitivity to events, which can be static or dynamic.
+ * Sensitivity to an event or events, which can be static or dynamic.
  */
 
 class SensitivityEvent : virtual public Sensitivity
@@ -137,8 +136,34 @@ class SensitivityEvent : virtual public Sensitivity
     {}
 
   public:
-    void finalize() override { addToEvent(event); }
     void clear() override { delFromEvent(event); }
+};
+
+class SensitivityEvents : virtual public Sensitivity
+{
+  protected:
+    std::set<const ::sc_core::sc_event *> events;
+
+    SensitivityEvents(Process *p) : Sensitivity(p) {}
+    SensitivityEvents(
+            Process *p, const std::set<const ::sc_core::sc_event *> &s) :
+        Sensitivity(p), events(s)
+    {}
+
+  public:
+    void
+    clear() override
+    {
+        for (auto event: events)
+            delFromEvent(event);
+    }
+
+    void
+    addEvent(const ::sc_core::sc_event *event)
+    {
+        events.insert(event);
+        addToEvent(event);
+    }
 };
 
 
@@ -146,10 +171,22 @@ class SensitivityEvent : virtual public Sensitivity
  * Static sensitivities.
  */
 
+void newStaticSensitivityEvent(Process *p, const sc_core::sc_event *e);
+void newStaticSensitivityInterface(Process *p, const sc_core::sc_interface *i);
+void newStaticSensitivityPort(Process *p, const sc_core::sc_port_base *pb);
+void newStaticSensitivityExport(
+        Process *p, const sc_core::sc_export_base *exp);
+void newStaticSensitivityFinder(
+        Process *p, const sc_core::sc_event_finder *f);
+
+
 class StaticSensitivityEvent :
     public StaticSensitivity, public SensitivityEvent
 {
-  public:
+    friend void newStaticSensitivityEvent(
+            Process *p, const sc_core::sc_event *e);
+
+  protected:
     StaticSensitivityEvent(Process *p, const sc_core::sc_event *e) :
         Sensitivity(p), StaticSensitivity(p), SensitivityEvent(p, e)
     {}
@@ -158,71 +195,50 @@ class StaticSensitivityEvent :
 class StaticSensitivityInterface :
     public StaticSensitivity, public SensitivityEvent
 {
-  private:
-    const sc_core::sc_interface *interface;
-
-  public:
-    StaticSensitivityInterface(Process *p, const sc_core::sc_interface *i) :
-        Sensitivity(p), StaticSensitivity(p), SensitivityEvent(p), interface(i)
-    {}
-
-    void finalize() override;
+    friend void newStaticSensitivityInterface(
+            Process *p, const sc_core::sc_interface *i);
+  protected:
+    StaticSensitivityInterface(Process *p, const sc_core::sc_interface *i);
 };
 
-class StaticSensitivityPort : public StaticSensitivity
+class StaticSensitivityPort :
+    public StaticSensitivity, public SensitivityEvents
 {
-  private:
-    const ::sc_core::sc_port_base *port;
-    std::set<const ::sc_core::sc_event *> events;
+    friend void newStaticSensitivityPort(
+            Process *p, const sc_core::sc_port_base *pb);
 
-  public:
-    StaticSensitivityPort(Process *p, const sc_core::sc_port_base *pb) :
-        Sensitivity(p), StaticSensitivity(p), port(pb)
+  protected:
+    StaticSensitivityPort(Process *p) :
+        Sensitivity(p), StaticSensitivity(p), SensitivityEvents(p)
     {}
-
-    void finalize() override;
-
-    void
-    clear() override
-    {
-        for (auto event: events)
-            delFromEvent(event);
-    }
 };
 
 class StaticSensitivityExport :
     public StaticSensitivity, public SensitivityEvent
 {
   private:
-    const sc_core::sc_export_base *exp;
+    friend void newStaticSensitivityExport(
+            Process *p, const sc_core::sc_export_base *exp);
 
-  public:
-    StaticSensitivityExport(Process *p, const sc_core::sc_export_base *exp) :
-        Sensitivity(p), StaticSensitivity(p), SensitivityEvent(p), exp(exp)
-    {}
-
-    void finalize() override;
+    StaticSensitivityExport(Process *p, const sc_core::sc_export_base *exp);
 };
 
-class StaticSensitivityFinder : public StaticSensitivity
+
+class StaticSensitivityFinder :
+    public StaticSensitivity, public SensitivityEvents
 {
   private:
-    const ::sc_core::sc_event_finder *finder;
-    std::set<const ::sc_core::sc_event *> events;
+    const sc_core::sc_event_finder *finder;
 
-  public:
+    friend void newStaticSensitivityFinder(
+            Process *p, const sc_core::sc_event_finder *f);
+
     StaticSensitivityFinder(Process *p, const sc_core::sc_event_finder *f) :
-        Sensitivity(p), StaticSensitivity(p), finder(f)
+        Sensitivity(p), StaticSensitivity(p), SensitivityEvents(p), finder(f)
     {}
 
-    void finalize() override;
-
-    void
-    clear() override
-    {
-        for (auto event: events)
-            delFromEvent(event);
-    }
+  public:
+    const ::sc_core::sc_event &find(::sc_core::sc_interface *i);
 };
 
 
@@ -230,48 +246,51 @@ class StaticSensitivityFinder : public StaticSensitivity
  * Dynamic sensitivities.
  */
 
+void newDynamicSensitivityEvent(Process *p, const sc_core::sc_event *e);
+void newDynamicSensitivityEventOrList(
+        Process *p, const sc_core::sc_event_or_list *eol);
+void newDynamicSensitivityEventAndList(
+        Process *p, const sc_core::sc_event_and_list *eal);
+
 class DynamicSensitivityEvent :
     public DynamicSensitivity, public SensitivityEvent
 {
-  public:
+  private:
+    friend void newDynamicSensitivityEvent(
+            Process *p, const sc_core::sc_event *e);
+
     DynamicSensitivityEvent(Process *p, const sc_core::sc_event *e) :
         Sensitivity(p), DynamicSensitivity(p), SensitivityEvent(p, e)
     {}
 };
 
-class DynamicSensitivityEventOrList : public DynamicSensitivity
+class DynamicSensitivityEventOrList :
+    public DynamicSensitivity, public SensitivityEvents
 {
   private:
-    std::set<const ::sc_core::sc_event *> events;
+    friend void newDynamicSensitivityEventOrList(
+            Process *p, const sc_core::sc_event_or_list *eol);
 
-  protected:
-    bool notifyWork(Event *e) override;
-
-  public:
     DynamicSensitivityEventOrList(
             Process *p, const sc_core::sc_event_or_list *eol);
 
-    void finalize() override;
-    void clear() override;
+    bool notifyWork(Event *e) override;
 };
 
 //XXX This sensitivity can't be reused. To reset it, it has to be deleted and
 //recreated. That works for dynamic sensitivities, but not for static.
 //Fortunately processes can't be statically sensitive to sc_event_and_lists.
-class DynamicSensitivityEventAndList : public DynamicSensitivity
+class DynamicSensitivityEventAndList :
+    public DynamicSensitivity, public SensitivityEvents
 {
   private:
-    std::set<const ::sc_core::sc_event *> events;
+    friend void newDynamicSensitivityEventAndList(
+            Process *p, const sc_core::sc_event_and_list *eal);
 
-  protected:
-    bool notifyWork(Event *e) override;
-
-  public:
     DynamicSensitivityEventAndList(
             Process *p, const sc_core::sc_event_and_list *eal);
 
-    void finalize() override;
-    void clear() override;
+    bool notifyWork(Event *e) override;
 };
 
 } // namespace sc_gem5

@@ -236,13 +236,6 @@ Process::syncResetOff(bool inc_kids)
 }
 
 void
-Process::finalize()
-{
-    for (auto s: staticSensitivities)
-        s->finalize();
-};
-
-void
 Process::run()
 {
     bool reset;
@@ -276,8 +269,6 @@ Process::setDynamic(DynamicSensitivity *s)
         delete dynamicSensitivity;
     }
     dynamicSensitivity = s;
-    if (dynamicSensitivity)
-        dynamicSensitivity->finalize();
 }
 
 void

@@ -32,6 +32,7 @@
 #include "base/logging.hh"
 #include "systemc/core/channel.hh"
 #include "systemc/core/module.hh"
+#include "systemc/core/port.hh"
 #include "systemc/core/scheduler.hh"
 
 namespace sc_gem5
@@ -75,6 +76,8 @@ Kernel::init()
         fatal("Simulation called sc_stop during elaboration.\n");
 
     status(::sc_core::SC_BEFORE_END_OF_ELABORATION);
+    for (auto p: allPorts)
+        p->sc_port_base()->before_end_of_elaboration();
     for (auto m: sc_gem5::allModules)
         m->beforeEndOfElaboration();
     for (auto c: sc_gem5::allChannels)
@@ -88,11 +91,12 @@ Kernel::regStats()
         return;
 
     try {
-        for (auto m: sc_gem5::allModules)
-            for (auto p: m->ports)
-                p->_gem5Finalize();
+        for (auto p: allPorts)
+            p->finalize();
 
         status(::sc_core::SC_END_OF_ELABORATION);
+        for (auto p: allPorts)
+            p->sc_port_base()->end_of_elaboration();
         for (auto m: sc_gem5::allModules)
             m->endOfElaboration();
         for (auto c: sc_gem5::allChannels)
@@ -117,6 +121,8 @@ Kernel::startup()
 
     try {
         status(::sc_core::SC_START_OF_SIMULATION);
+        for (auto p: allPorts)
+            p->sc_port_base()->start_of_simulation();
         for (auto m: sc_gem5::allModules)
             m->startOfSimulation();
         for (auto c: sc_gem5::allChannels)
@@ -147,6 +153,8 @@ Kernel::stopWork()
 {
     status(::sc_core::SC_END_OF_SIMULATION);
     try {
+        for (auto p: allPorts)
+            p->sc_port_base()->end_of_simulation();
         for (auto m: sc_gem5::allModules)
             m->endOfSimulation();
         for (auto c: sc_gem5::allChannels)

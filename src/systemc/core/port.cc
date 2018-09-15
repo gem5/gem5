@@ -27,29 +27,75 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_CORE_BINDINFO_HH__
-#define __SYSTEMC_CORE_BINDINFO_HH__
+#include "systemc/core/port.hh"
 
-#include "systemc/ext/core/sc_interface.hh"
+#include "systemc/core/sensitivity.hh"
 
 namespace sc_gem5
 {
 
-class BindInfo
+void
+Port::finalizePort(StaticSensitivityPort *port)
 {
-  public:
-    BindInfo(::sc_core::sc_interface *interface) :
-        interface(interface), port(nullptr)
-    {}
+    for (int i = 0; i < size(); i++)
+        port->addEvent(&getInterface(i)->default_event());
+}
 
-    BindInfo(::sc_core::sc_port_base *port) :
-        interface(nullptr), port(port)
-    {}
+void
+Port::finalizeFinder(StaticSensitivityFinder *finder)
+{
+    for (int i = 0; i < size(); i++)
+        finder->addEvent(&finder->find(getInterface(i)));
+}
 
-    ::sc_core::sc_interface *interface;
-    ::sc_core::sc_port_base *port;
-};
+void
+Port::sensitive(StaticSensitivityPort *port)
+{
+    if (finalized)
+        finalizePort(port);
+    else
+        sensitivities.push_back(new Sensitivity(port));
+}
+
+void
+Port::sensitive(StaticSensitivityFinder *finder)
+{
+    if (finalized)
+        finalizeFinder(finder);
+    else
+        sensitivities.push_back(new Sensitivity(finder));
+}
+
+void
+Port::finalize()
+{
+    if (finalized)
+        return;
+    finalized = true;
+
+    for (auto &b: bindings) {
+        if (b->interface) {
+            addInterface(b->interface);
+        } else {
+            b->port->_gem5Port->finalize();
+            addInterfaces(b->port);
+        }
+        delete b;
+    }
+
+    bindings.clear();
+
+    for (auto &s: sensitivities) {
+        if (s->port)
+            finalizePort(s->port);
+        else
+            finalizeFinder(s->finder);
+        delete s;
+    }
+
+    sensitivities.clear();
+}
+
+std::list<Port *> allPorts;
 
 } // namespace sc_gem5
-
-#endif // __SYSTEMC_CORE_BINDINFO_HH__

@@ -70,19 +70,19 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
 
     if (opts) {
         for (auto e: opts->_events)
-            proc->addStatic(new StaticSensitivityEvent(proc, e));
+            newStaticSensitivityEvent(proc, e);
 
         for (auto p: opts->_ports)
-            proc->addStatic(new StaticSensitivityPort(proc, p));
+            newStaticSensitivityPort(proc, p);
 
         for (auto e: opts->_exports)
-            proc->addStatic(new StaticSensitivityExport(proc, e));
+            newStaticSensitivityExport(proc, e);
 
         for (auto i: opts->_interfaces)
-            proc->addStatic(new StaticSensitivityInterface(proc, i));
+            newStaticSensitivityInterface(proc, i);
 
         for (auto f: opts->_finders)
-            proc->addStatic(new StaticSensitivityFinder(proc, f));
+            newStaticSensitivityFinder(proc, f);
     }
 
     if (opts && opts->_dontInitialize &&

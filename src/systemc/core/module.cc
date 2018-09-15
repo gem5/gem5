@@ -113,8 +113,6 @@ Module::beforeEndOfElaboration()
 {
     callbackModule(this);
     _sc_mod->before_end_of_elaboration();
-    for (auto p: ports)
-        p->before_end_of_elaboration();
     for (auto e: exports)
         e->before_end_of_elaboration();
     callbackModule(nullptr);
@@ -131,8 +129,6 @@ Module::endOfElaboration()
     }
     callbackModule(this);
     _sc_mod->end_of_elaboration();
-    for (auto p: ports)
-        p->end_of_elaboration();
     for (auto e: exports)
         e->end_of_elaboration();
     callbackModule(nullptr);
@@ -143,8 +139,6 @@ Module::startOfSimulation()
 {
     callbackModule(this);
     _sc_mod->start_of_simulation();
-    for (auto p: ports)
-        p->start_of_simulation();
     for (auto e: exports)
         e->start_of_simulation();
     callbackModule(nullptr);
@@ -155,8 +149,6 @@ Module::endOfSimulation()
 {
     callbackModule(this);
     _sc_mod->end_of_simulation();
-    for (auto p: ports)
-        p->end_of_simulation();
     for (auto e: exports)
         e->end_of_simulation();
     callbackModule(nullptr);

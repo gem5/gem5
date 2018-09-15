@@ -35,6 +35,7 @@ if env['USE_SYSTEMC']:
     Source('kernel.cc')
     Source('module.cc')
     Source('object.cc')
+    Source('port.cc')
     Source('process.cc')
     Source('process_types.cc')
     Source('python.cc')

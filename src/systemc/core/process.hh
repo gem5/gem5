@@ -35,7 +35,6 @@
 #include <vector>
 
 #include "base/fiber.hh"
-#include "systemc/core/bindinfo.hh"
 #include "systemc/core/list.hh"
 #include "systemc/core/object.hh"
 #include "systemc/core/sched_event.hh"
@@ -95,8 +94,6 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     const ::sc_core::sc_event &terminatedEvent() { return _terminatedEvent; }
 
     void setStackSize(size_t size) { stackSize = size; }
-
-    void finalize();
 
     void run();
 

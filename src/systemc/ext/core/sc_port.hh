@@ -39,10 +39,7 @@
 namespace sc_gem5
 {
 
-class BindInfo;
-class Module;
-class StaticSensitivityPort;
-class StaticSensitivityFinder;
+class Port;
 
 };
 
@@ -62,6 +59,7 @@ class sc_port_base : public sc_object
 {
   public:
     sc_port_base(const char *name, int n, sc_port_policy p);
+    virtual ~sc_port_base();
 
     void warn_unimpl(const char *func) const;
 
@@ -87,19 +85,13 @@ class sc_port_base : public sc_object
     virtual void end_of_simulation() = 0;
 
   private:
-    friend class ::sc_gem5::StaticSensitivityPort;
-    friend class ::sc_gem5::StaticSensitivityFinder;
+    friend class ::sc_gem5::Port;
     friend class ::sc_gem5::Kernel;
-
-    void _gem5Finalize();
 
     virtual sc_interface *_gem5Interface(int n) const = 0;
     virtual void _gem5AddInterface(sc_interface *i) = 0;
 
-    std::vector<::sc_gem5::BindInfo *> _gem5BindInfo;
-    int _maxSize;
-    int _size;
-    bool finalized;
+    ::sc_gem5::Port *_gem5Port;
 };
 
 template <class IF>

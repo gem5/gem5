@@ -30,6 +30,7 @@
 #include "systemc/core/sensitivity.hh"
 
 #include "systemc/core/event.hh"
+#include "systemc/core/port.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_export.hh"
 #include "systemc/ext/core/sc_interface.hh"
@@ -37,6 +38,10 @@
 
 namespace sc_gem5
 {
+
+/*
+ * Common sensitivity interface.
+ */
 
 void
 Sensitivity::satisfy()
@@ -52,6 +57,10 @@ Sensitivity::notify(Event *e)
     return notifyWork(e);
 }
 
+
+/*
+ * Dynamic vs. static sensitivity.
+ */
 
 void
 DynamicSensitivity::addToEvent(const ::sc_core::sc_event *e)
@@ -77,43 +86,109 @@ StaticSensitivity::delFromEvent(const ::sc_core::sc_event *e)
     Event::getFromScEvent(e)->delSensitivity(this);
 }
 
+
+/*
+ * Static sensitivities.
+ */
+
 void
-StaticSensitivityInterface::finalize()
+newStaticSensitivityEvent(Process *p, const sc_core::sc_event *e)
 {
-    event = &interface->default_event();
-    SensitivityEvent::finalize();
+    auto s = new StaticSensitivityEvent(p, e);
+    s->addToEvent(s->event);
+    p->addStatic(s);
 }
 
 void
-StaticSensitivityPort::finalize()
+newStaticSensitivityInterface(Process *p, const sc_core::sc_interface *i)
 {
-    for (int i = 0; i < port->size(); i++) {
-        const ::sc_core::sc_event *event =
-            &port->_gem5Interface(i)->default_event();
-        events.insert(event);
-        addToEvent(event);
-    }
+    auto s = new StaticSensitivityInterface(p, i);
+    s->addToEvent(s->event);
+    p->addStatic(s);
 }
 
 void
-StaticSensitivityExport::finalize()
+newStaticSensitivityPort(Process *p, const sc_core::sc_port_base *pb)
 {
-    event = &exp->get_interface()->default_event();
-    SensitivityEvent::finalize();
+    auto s = new StaticSensitivityPort(p);
+    Port *port = Port::fromPort(pb);
+    port->sensitive(s);
+    p->addStatic(s);
 }
 
 void
-StaticSensitivityFinder::finalize()
+newStaticSensitivityExport(Process *p, const sc_core::sc_export_base *exp)
 {
-    const ::sc_core::sc_port_base *port = finder->port();
-    int size = port->size();
-    for (int i = 0; i < size; i++) {
-        ::sc_core::sc_interface *interface = port->_gem5Interface(i);
-        const ::sc_core::sc_event *event = &finder->find_event(interface);
-        events.insert(event);
-        addToEvent(event);
-    }
+    auto s = new StaticSensitivityExport(p, exp);
+    s->addToEvent(s->event);
+    p->addStatic(s);
 }
+
+void
+newStaticSensitivityFinder(Process *p, const sc_core::sc_event_finder *f)
+{
+    auto s = new StaticSensitivityFinder(p, f);
+    Port *port = Port::fromPort(f->port());
+    port->sensitive(s);
+    p->addStatic(s);
+}
+
+
+StaticSensitivityInterface::StaticSensitivityInterface(
+        Process *p, const sc_core::sc_interface *i) :
+    Sensitivity(p), StaticSensitivity(p),
+    SensitivityEvent(p, &i->default_event())
+{}
+
+StaticSensitivityExport::StaticSensitivityExport(
+        Process *p, const sc_core::sc_export_base *exp) :
+    Sensitivity(p), StaticSensitivity(p),
+    SensitivityEvent(p, &exp->get_interface()->default_event())
+{}
+
+const ::sc_core::sc_event &
+StaticSensitivityFinder::find(::sc_core::sc_interface *i)
+{
+    return finder->find_event(i);
+}
+
+
+/*
+ * Dynamic sensitivities.
+ */
+
+void
+newDynamicSensitivityEvent(Process *p, const sc_core::sc_event *e)
+{
+    auto s = new DynamicSensitivityEvent(p, e);
+    s->addToEvent(s->event);
+    p->setDynamic(s);
+}
+
+void
+newDynamicSensitivityEventOrList(
+        Process *p, const sc_core::sc_event_or_list *eol)
+{
+    auto s = new DynamicSensitivityEventOrList(p, eol);
+    for (auto event: s->events)
+        s->addToEvent(event);
+    p->setDynamic(s);
+}
+
+void newDynamicSensitivityEventAndList(
+        Process *p, const sc_core::sc_event_and_list *eal)
+{
+    auto s = new DynamicSensitivityEventAndList(p, eal);
+    for (auto event: s->events)
+        s->addToEvent(event);
+    p->setDynamic(s);
+}
+
+
+DynamicSensitivityEventOrList::DynamicSensitivityEventOrList(
+        Process *p, const sc_core::sc_event_or_list *eol) :
+    Sensitivity(p), DynamicSensitivity(p), SensitivityEvents(p, eol->events)
+{}
 
 bool
 DynamicSensitivityEventOrList::notifyWork(Event *e)
@@ -129,24 +204,10 @@ DynamicSensitivityEventOrList::notifyWork(Event *e)
     return true;
 }
 
-DynamicSensitivityEventOrList::DynamicSensitivityEventOrList(
-        Process *p, const sc_core::sc_event_or_list *eol) :
-    Sensitivity(p), DynamicSensitivity(p), events(eol->events)
+DynamicSensitivityEventAndList::DynamicSensitivityEventAndList(
+        Process *p, const sc_core::sc_event_and_list *eal) :
+    Sensitivity(p), DynamicSensitivity(p), SensitivityEvents(p, eal->events)
 {}
-
-void
-DynamicSensitivityEventOrList::finalize()
-{
-    for (auto e: events)
-        addToEvent(e);
-}
-
-void
-DynamicSensitivityEventOrList::clear()
-{
-    for (auto e: events)
-        delFromEvent(e);
-}
 
 bool
 DynamicSensitivityEventAndList::notifyWork(Event *e)
@@ -158,25 +219,6 @@ DynamicSensitivityEventAndList::notifyWork(Event *e)
         satisfy();
 
     return true;
-}
-
-DynamicSensitivityEventAndList::DynamicSensitivityEventAndList(
-        Process *p, const sc_core::sc_event_and_list *eal) :
-    Sensitivity(p), DynamicSensitivity(p), events(eal->events)
-{}
-
-void
-DynamicSensitivityEventAndList::finalize()
-{
-    for (auto e: events)
-        addToEvent(e);
-}
-
-void
-DynamicSensitivityEventAndList::clear()
-{
-    for (auto e: events)
-        delFromEvent(e);
 }
 
 } // namespace sc_gem5
