@@ -55,22 +55,22 @@ reportError(const char *id, const char *add_msg,
 
 }
 
-sc_port_base::sc_port_base(const char *name, int n, sc_port_policy p) :
-    sc_object(name), _gem5Port(new ::sc_gem5::Port(this, n))
+sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p) :
+    sc_object(n), _gem5Port(new ::sc_gem5::Port(this, max_size))
 {
     if (sc_is_running()) {
         reportError("(E110) insert port failed", "simulation running",
-                name, kind());
+                name(), kind());
     }
     if (::sc_gem5::scheduler.elaborationDone()) {
         reportError("(E110) insert port failed", "elaboration done",
-                name, kind());
+                name(), kind());
     }
 
     ::sc_gem5::Module *m = ::sc_gem5::currentModule();
     if (!m) {
         reportError("(E100) port specified outside of module",
-                nullptr, name, kind());
+                nullptr, name(), kind());
     } else {
         m->ports.push_back(this);
     }

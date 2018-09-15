@@ -58,17 +58,17 @@ sc_export_base::sc_export_base(const char *n) : sc_object(n)
 {
     if (sc_is_running()) {
         reportError("(E121) insert sc_export failed", "simulation running",
-                n, kind());
+                name(), kind());
     }
     if (::sc_gem5::scheduler.elaborationDone()) {
         reportError("(E121) insert sc_export failed", "elaboration done",
-                n, kind());
+                name(), kind());
     }
 
     ::sc_gem5::Module *m = ::sc_gem5::currentModule();
     if (!m) {
         reportError("(E122) sc_export specified outside of module",
-                nullptr, n, kind());
+                nullptr, name(), kind());
     } else {
         m->exports.push_back(this);
     }
