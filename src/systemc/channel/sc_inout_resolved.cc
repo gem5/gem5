@@ -48,7 +48,7 @@ sc_inout_resolved::end_of_elaboration()
 {
     sc_inout<sc_dt::sc_logic>::end_of_elaboration();
     if (!dynamic_cast<sc_signal_resolved *>(get_interface())) {
-        std::string msg = csprintf("%s (%s)", name(), kind());
+        std::string msg = csprintf("port '%s' (%s)", name(), kind());
         SC_REPORT_ERROR("(E117) resolved port not bound to resolved signal",
                 msg.c_str());
     }

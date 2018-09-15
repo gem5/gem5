@@ -94,7 +94,7 @@ class sc_inout_rv : public sc_inout<sc_dt::sc_lv<W>>
         sc_inout<sc_dt::sc_lv<W> >::end_of_elaboration();
         if (!dynamic_cast<sc_signal_rv<W> *>(this->get_interface())) {
             std::ostringstream ss;
-            ss << this->name() << " (" << this->kind() << ")";
+            ss << "port '" << this->name() << "' (" << this->kind() << ")";
             SC_REPORT_ERROR(
                     "(E117) resolved port not bound to resolved signal",
                     ss.str().c_str());
