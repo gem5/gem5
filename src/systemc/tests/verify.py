@@ -198,7 +198,7 @@ class Checker(object):
         self.tag = tag
 
     def check(self):
-        with open(self.text) as test_f, open(self.ref) as ref_f:
+        with open(self.test) as test_f, open(self.ref) as ref_f:
             return test_f.read() == ref_f.read()
 
 def tagged_filt(tag, num):
