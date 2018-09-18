@@ -92,6 +92,9 @@ Pl011::read(PacketPtr pkt)
             }
         }
         break;
+      case UART_RSR:
+        data = 0x0; // We never have errors
+        break;
       case UART_FR:
         data =
             UART_FR_CTS | // Clear To Send
@@ -204,6 +207,8 @@ Pl011::write(PacketPtr pkt)
         // need to immediately raise it again.
         clearInterrupts(UART_TXINTR);
         raiseInterrupts(UART_TXINTR);
+        break;
+      case UART_ECR: // clears errors, ignore
         break;
       case UART_CR:
         control = data;
