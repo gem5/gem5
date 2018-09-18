@@ -161,7 +161,7 @@ struct UFSHostDevice::SCSIReply
 UFSHostDevice::UFSSCSIDevice::SCSICMDHandle(uint32_t* SCSI_msg)
 {
     struct SCSIReply scsi_out;
-    memset(&scsi_out, 0, sizeof(struct SCSIReply));
+    scsi_out.reset();
 
     /**
      * Create the standard SCSI reponse information

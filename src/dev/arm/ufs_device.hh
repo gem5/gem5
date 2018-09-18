@@ -373,6 +373,10 @@ class UFSHostDevice : public DmaDevice
      * build a SCSI reply.
      */
     struct SCSIReply {
+        void reset() {
+            memset(static_cast<void*>(this), 0, sizeof(*this));
+        }
+
         uint8_t status;
         uint32_t msgSize;
         uint8_t LUN;
