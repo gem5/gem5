@@ -37,6 +37,7 @@
 
 #include <vector>
 
+#include "base/bitfield.hh"
 #include "base/logging.hh"
 
 SkewedAssoc::SkewedAssoc(const Params *p)
@@ -51,6 +52,10 @@ SkewedAssoc::SkewedAssoc(const Params *p)
     // skewing functions accordingly to make good use of the hashing function
     panic_if(setShift + 2 * (msbShift + 1) > 64, "Unsuported number of bits " \
              "for the skewing functions.");
+
+    // We must have more than two sets, otherwise the MSB and LSB are the same
+    // bit, and the xor of them will always be 0
+    fatal_if(numSets <= 2, "The number of sets must be greater than 2");
 }
 
 Addr

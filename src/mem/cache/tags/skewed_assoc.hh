@@ -73,6 +73,9 @@ class SkewedAssoc : public BaseSetAssoc
      * applies an XOR to the MSB and LSB, shifts all bits one bit to the right,
      * and set the result of the XOR as the new MSB.
      *
+     * This function is not bijective if the address has only 1 bit, as the MSB
+     * and LSB will be the same, and therefore the xor will always be 0.
+     *
      * @param addr The address to be hashed.
      * @param The hashed address.
      */
