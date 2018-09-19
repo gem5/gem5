@@ -156,7 +156,9 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
     assert(delta > 0);
     Tick arrival_time = 0;
 
-    if (!RubySystem::getRandomization() || !m_randomization) {
+    // random delays are inserted if either RubySystem level randomization flag
+    // is turned on, or the buffer level randomization is set
+    if (!RubySystem::getRandomization() && !m_randomization) {
         // No randomization
         arrival_time = current_time + delta;
     } else {

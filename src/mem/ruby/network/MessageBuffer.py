@@ -37,7 +37,10 @@ class MessageBuffer(SimObject):
     ordered = Param.Bool(False, "Whether the buffer is ordered")
     buffer_size = Param.Unsigned(0, "Maximum number of entries to buffer \
                                      (0 allows infinite entries)")
-    randomization = Param.Bool(False, "")
+    randomization = Param.Bool(False, "Insert random delays on message \
+                                       enqueue times (enforced to have \
+                                       random delays if RubySystem \
+                                       randomization flag is True)")
 
     master = MasterPort("Master port to MessageBuffer receiver")
     slave = SlavePort("Slave port from MessageBuffer sender")
