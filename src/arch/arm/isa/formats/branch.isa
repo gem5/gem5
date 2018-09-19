@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010,2012-2013,2017 ARM Limited
+// Copyright (c) 2010,2012-2013,2017-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -165,31 +165,51 @@ def format Thumb32BranchesAndMiscCtrl() {{
                   case 0x3a:
                     {
                         const uint32_t op1 = bits(machInst, 10, 8);
-                        const uint32_t op2 = bits(machInst, 7, 0);
+                        const uint32_t hint = bits(machInst, 7, 4);
+                        const uint32_t option = bits(machInst, 3, 0);
                         if (op1 != 0) {
                             const bool enable = bits(machInst, 10, 9) == 0x2;
                             const uint32_t mods = bits(machInst, 8, 0) |
                                                   ((enable ? 1 : 0) << 9);
                             return new Cps(machInst, mods);
-                        } else if ((op2 & 0xf0) == 0xf0) {
+                        } else if (hint == 0xf) {
                             return new Dbg(machInst);
                         } else {
-                            switch (op2) {
+                            switch (hint) {
                               case 0x0:
-                                return new NopInst(machInst);
+                                switch (option) {
+                                  case 0x0:
+                                    return new NopInst(machInst);
+                                  case 0x1:
+                                    return new YieldInst(machInst);
+                                  case 0x2:
+                                    return new WfeInst(machInst);
+                                  case 0x3:
+                                    return new WfiInst(machInst);
+                                  case 0x4:
+                                    return new SevInst(machInst);
+                                  case 0x5:
+                                    return new WarnUnimplemented(
+                                            "sevl", machInst);
+                                }
+                                break;
                               case 0x1:
-                                return new YieldInst(machInst);
-                              case 0x2:
-                                return new WfeInst(machInst);
-                              case 0x3:
-                                return new WfiInst(machInst);
-                              case 0x4:
-                                return new SevInst(machInst);
-                              default:
+                                switch (option) {
+                                  case 0x0:
+                                    return new WarnUnimplemented(
+                                            "esb", machInst);
+                                  case 0x2:
+                                    return new WarnUnimplemented(
+                                            "tsb csync", machInst);
+                                  case 0x4:
+                                    return new WarnUnimplemented(
+                                            "csdb", machInst);
+                                }
                                 break;
                             }
                         }
-                        break;
+                        return new WarnUnimplemented(
+                                "unallocated_hint", machInst);
                     }
                   case 0x3b:
                     {

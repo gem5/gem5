@@ -1114,19 +1114,36 @@ def format ArmMisc() {{
                     false);
           case 0x9:
             if (RN == 0) {
-                switch (IMM) {
-                  case 0x0:
-                    return new NopInst(machInst);
-                  case 0x1:
-                    return new YieldInst(machInst);
-                  case 0x2:
-                    return new WfeInst(machInst);
-                  case 0x3:
-                    return new WfiInst(machInst);
-                  case 0x4:
-                    return new SevInst(machInst);
-                  default:
-                    return new Unknown(machInst);
+                if ((IMM & 0xf0) == 0xf0) {
+                    return new Dbg(machInst);
+                } else {
+                    switch (IMM) {
+                      case 0x0:
+                        return new NopInst(machInst);
+                      case 0x1:
+                        return new YieldInst(machInst);
+                      case 0x2:
+                        return new WfeInst(machInst);
+                      case 0x3:
+                        return new WfiInst(machInst);
+                      case 0x4:
+                        return new SevInst(machInst);
+                      case 0x5:
+                        return new WarnUnimplemented(
+                                "sevl", machInst);
+                      case 0x10:
+                        return new WarnUnimplemented(
+                                "esb", machInst);
+                      case 0x12:
+                        return new WarnUnimplemented(
+                                "tsb csync", machInst);
+                      case 0x14:
+                        return new WarnUnimplemented(
+                                "csdb", machInst);
+                      default:
+                        return new WarnUnimplemented(
+                                "unallocated_hint", machInst);
+                    }
                 }
             } else {
                 return new MsrCpsrImm(machInst, imm, byteMask);

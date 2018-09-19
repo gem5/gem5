@@ -292,22 +292,84 @@ namespace Aarch64
                     if (rt != 0x1f || l)
                         return new Unknown64(machInst);
                     if (crn == 0x2 && op1 == 0x3) {
-                        switch (op2) {
+                        switch (crm) {
                           case 0x0:
-                            return new NopInst(machInst);
+                            switch (op2) {
+                              case 0x0:
+                                return new NopInst(machInst);
+                              case 0x1:
+                                return new YieldInst(machInst);
+                              case 0x2:
+                                return new WfeInst(machInst);
+                              case 0x3:
+                                return new WfiInst(machInst);
+                              case 0x4:
+                                return new SevInst(machInst);
+                              case 0x5:
+                                return new SevlInst(machInst);
+                            }
+                            break;
                           case 0x1:
-                            return new YieldInst(machInst);
+                            switch (op2) {
+                              case 0x0:
+                                return new WarnUnimplemented(
+                                        "pacia", machInst);
+                              case 0x2:
+                                return new WarnUnimplemented(
+                                        "pacib", machInst);
+                              case 0x4:
+                                return new WarnUnimplemented(
+                                        "autia", machInst);
+                              case 0x6:
+                                return new WarnUnimplemented(
+                                        "autib", machInst);
+                            }
+                            break;
                           case 0x2:
-                            return new WfeInst(machInst);
+                            switch (op2) {
+                              case 0x0:
+                                return new WarnUnimplemented(
+                                        "esb", machInst);
+                              case 0x1:
+                                return new WarnUnimplemented(
+                                        "psb csync", machInst);
+                              case 0x2:
+                                return new WarnUnimplemented(
+                                        "tsb csync", machInst);
+                              case 0x4:
+                                return new WarnUnimplemented(
+                                        "csdb", machInst);
+                            }
+                            break;
                           case 0x3:
-                            return new WfiInst(machInst);
+                            switch (op2) {
+                              case 0x0:
+                              case 0x1:
+                                return new WarnUnimplemented(
+                                        "pacia", machInst);
+                              case 0x2:
+                              case 0x3:
+                                return new WarnUnimplemented(
+                                        "pacib", machInst);
+                              case 0x4:
+                              case 0x5:
+                                return new WarnUnimplemented(
+                                        "autia", machInst);
+                              case 0x6:
+                              case 0x7:
+                                return new WarnUnimplemented(
+                                        "autib", machInst);
+                            }
+                            break;
                           case 0x4:
-                            return new SevInst(machInst);
-                          case 0x5:
-                            return new SevlInst(machInst);
-                          default:
-                            return new Unknown64(machInst);
+                            switch (op2 & 0x1) {
+                              case 0x0:
+                                return new WarnUnimplemented(
+                                        "bti", machInst);
+                            }
+                            break;
                         }
+                        return new Unknown64(machInst);
                     } else if (crn == 0x3 && op1 == 0x3) {
                         switch (op2) {
                           case 0x2:
