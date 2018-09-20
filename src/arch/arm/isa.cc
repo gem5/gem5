@@ -89,7 +89,7 @@ ISA::ISA(Params *p)
     } else {
         highestELIs64 = true; // ArmSystem::highestELIs64 does the same
         haveSecurity = haveLPAE = haveVirtualization = false;
-        haveCrypto = false;
+        haveCrypto = true;
         haveLargeAsid64 = false;
         physAddrRange = 32;  // dummy value
     }
@@ -315,6 +315,10 @@ ISA::initID32(const ArmISAParams *p)
     miscRegs[MISCREG_ID_MMFR1] = p->id_mmfr1;
     miscRegs[MISCREG_ID_MMFR2] = p->id_mmfr2;
     miscRegs[MISCREG_ID_MMFR3] = p->id_mmfr3;
+
+    miscRegs[MISCREG_ID_ISAR5] = insertBits(
+        miscRegs[MISCREG_ID_ISAR5], 19, 4,
+        haveCrypto ? 0x1112 : 0x0);
 }
 
 void
