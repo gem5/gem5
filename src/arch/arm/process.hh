@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2012 ARM Limited
+* Copyright (c) 2012, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -61,6 +61,17 @@ class ArmProcess : public Process
                ObjectFile::Arch _arch);
     template<class IntType>
     void argsInit(int pageSize, ArmISA::IntRegIndex spIndex);
+
+    template<class IntType>
+    IntType armHwcap() const
+    {
+        return static_cast<IntType>(armHwcapImpl());
+    }
+
+    /**
+     * AT_HWCAP is 32-bit wide on AArch64 as well so we can
+     * safely return an uint32_t */
+    virtual uint32_t armHwcapImpl() const = 0;
 };
 
 class ArmProcess32 : public ArmProcess
@@ -70,6 +81,9 @@ class ArmProcess32 : public ArmProcess
                  ObjectFile::Arch _arch);
 
     void initState();
+
+    /** AArch32 AT_HWCAP */
+    uint32_t armHwcapImpl() const override;
 
   public:
 
@@ -86,6 +100,9 @@ class ArmProcess64 : public ArmProcess
                  ObjectFile::Arch _arch);
 
     void initState();
+
+    /** AArch64 AT_HWCAP */
+    uint32_t armHwcapImpl() const override;
 
   public:
 

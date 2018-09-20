@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012 ARM Limited
+ * Copyright (c) 2010, 2012, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -142,6 +142,71 @@ ArmProcess64::initState()
     }
 }
 
+uint32_t
+ArmProcess32::armHwcapImpl() const
+{
+    enum ArmCpuFeature {
+        Arm_Swp = 1 << 0,
+        Arm_Half = 1 << 1,
+        Arm_Thumb = 1 << 2,
+        Arm_26Bit = 1 << 3,
+        Arm_FastMult = 1 << 4,
+        Arm_Fpa = 1 << 5,
+        Arm_Vfp = 1 << 6,
+        Arm_Edsp = 1 << 7,
+        Arm_Java = 1 << 8,
+        Arm_Iwmmxt = 1 << 9,
+        Arm_Crunch = 1 << 10,
+        Arm_ThumbEE = 1 << 11,
+        Arm_Neon = 1 << 12,
+        Arm_Vfpv3 = 1 << 13,
+        Arm_Vfpv3d16 = 1 << 14
+    };
+
+    return Arm_Swp | Arm_Half | Arm_Thumb | Arm_FastMult |
+           Arm_Vfp | Arm_Edsp | Arm_ThumbEE | Arm_Neon |
+           Arm_Vfpv3 | Arm_Vfpv3d16;
+}
+
+uint32_t
+ArmProcess64::armHwcapImpl() const
+{
+    // In order to know what these flags mean, please refer to Linux
+    // /Documentation/arm64/elf_hwcaps.txt text file.
+    enum ArmCpuFeature {
+        Arm_Fp = 1 << 0,
+        Arm_Asimd = 1 << 1,
+        Arm_Evtstrm = 1 << 2,
+        Arm_Aes = 1 << 3,
+        Arm_Pmull = 1 << 4,
+        Arm_Sha1 = 1 << 5,
+        Arm_Sha2 = 1 << 6,
+        Arm_Crc32 = 1 << 7,
+        Arm_Atomics = 1 << 8,
+        Arm_Fphp = 1 << 9,
+        Arm_Asimdhp = 1 << 10,
+        Arm_Cpuid = 1 << 11,
+        Arm_Asimdrdm = 1 << 12,
+        Arm_Jscvt = 1 << 13,
+        Arm_Fcma = 1 << 14,
+        Arm_Lrcpc = 1 << 15,
+        Arm_Dcpop = 1 << 16,
+        Arm_Sha3 = 1 << 17,
+        Arm_Sm3 = 1 << 18,
+        Arm_Sm4 = 1 << 19,
+        Arm_Asimddp = 1 << 20,
+        Arm_Sha512 = 1 << 21,
+        Arm_Sve = 1 << 22,
+        Arm_Asimdfhm = 1 << 23,
+        Arm_Dit = 1 << 24,
+        Arm_Uscat = 1 << 25,
+        Arm_Ilrcpc = 1 << 26,
+        Arm_Flagm = 1 << 27
+    };
+
+    return Arm_Fp | Arm_Asimd | Arm_Evtstrm | Arm_Crc32;
+}
+
 template <class IntType>
 void
 ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
@@ -166,47 +231,13 @@ ArmProcess::argsInit(int pageSize, IntRegIndex spIndex)
     // load object file into target memory
     objFile->loadSections(initVirtMem);
 
-    enum ArmCpuFeature {
-        Arm_Swp = 1 << 0,
-        Arm_Half = 1 << 1,
-        Arm_Thumb = 1 << 2,
-        Arm_26Bit = 1 << 3,
-        Arm_FastMult = 1 << 4,
-        Arm_Fpa = 1 << 5,
-        Arm_Vfp = 1 << 6,
-        Arm_Edsp = 1 << 7,
-        Arm_Java = 1 << 8,
-        Arm_Iwmmxt = 1 << 9,
-        Arm_Crunch = 1 << 10,
-        Arm_ThumbEE = 1 << 11,
-        Arm_Neon = 1 << 12,
-        Arm_Vfpv3 = 1 << 13,
-        Arm_Vfpv3d16 = 1 << 14
-    };
-
     //Setup the auxilliary vectors. These will already have endian conversion.
     //Auxilliary vectors are loaded only for elf formatted executables.
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
     if (elfObject) {
 
         if (objFile->getOpSys() == ObjectFile::Linux) {
-            IntType features =
-                Arm_Swp |
-                Arm_Half |
-                Arm_Thumb |
-//                Arm_26Bit |
-                Arm_FastMult |
-//                Arm_Fpa |
-                Arm_Vfp |
-                Arm_Edsp |
-//                Arm_Java |
-//                Arm_Iwmmxt |
-//                Arm_Crunch |
-                Arm_ThumbEE |
-                Arm_Neon |
-                Arm_Vfpv3 |
-                Arm_Vfpv3d16 |
-                0;
+            IntType features = armHwcap<IntType>();
 
             //Bits which describe the system hardware capabilities
             //XXX Figure out what these should be
