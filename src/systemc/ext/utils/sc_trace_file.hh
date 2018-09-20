@@ -63,7 +63,12 @@ class sc_time;
 
 class sc_trace_file
 {
+  protected:
+    sc_trace_file();
+
   public:
+    virtual ~sc_trace_file();
+
     virtual void set_time_unit(double, sc_time_unit) = 0;
 };
 

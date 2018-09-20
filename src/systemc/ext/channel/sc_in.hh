@@ -34,9 +34,9 @@
 
 #include "../core/sc_event.hh"
 #include "../core/sc_port.hh"
+#include "../utils/sc_trace_file.hh"
 #include "sc_signal_in_if.hh"
 #include "sc_signal_inout_if.hh"
-#include "warn_unimpl.hh"
 
 namespace sc_core
 {
@@ -112,7 +112,14 @@ class sc_in : public sc_port<sc_signal_in_if<T>, 1>
         bind(p);
     }
 
-    virtual void end_of_elaboration() { /* Implementation defined. */ }
+    virtual void
+    end_of_elaboration()
+    {
+        for (auto params: traceParamsVec)
+            sc_trace(params->tf, (*this)->read(), params->name);
+
+        traceParamsVec.clear();
+    }
 
     const T &read() const { return (*this)->read(); }
     operator const T& () const { return (*this)->read(); }
@@ -128,8 +135,16 @@ class sc_in : public sc_port<sc_signal_in_if<T>, 1>
 
     virtual const char *kind() const { return "sc_in"; }
 
+    void
+    add_trace(sc_trace_file *tf, const std::string &name) const
+    {
+        traceParamsVec.push_back(new sc_trace_params(tf, name));
+    }
+
   private:
     mutable sc_event_finder_t<sc_signal_in_if<T> > _valueChangedFinder;
+
+    mutable sc_trace_params_vec traceParamsVec;
 
     // Disabled
     sc_in(const sc_in<T> &);
@@ -138,9 +153,12 @@ class sc_in : public sc_port<sc_signal_in_if<T>, 1>
 
 template <class T>
 inline void
-sc_trace(sc_trace_file *, const sc_in<T> &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_in<T> &i, const std::string &name)
 {
-    sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+    if (i.size())
+        sc_trace(tf, i->read(), name);
+    else
+        i.add_trace(tf, name);
 }
 
 template <>
@@ -236,7 +254,14 @@ class sc_in<bool> : public sc_port<sc_signal_in_if<bool>, 1>
         bind(p);
     }
 
-    virtual void end_of_elaboration() { /* Implementation defined. */ }
+    virtual void
+    end_of_elaboration()
+    {
+        for (auto params: traceParamsVec)
+            sc_trace(params->tf, (*this)->read(), params->name);
+
+        traceParamsVec.clear();
+    }
 
     const bool &read() const { return (*this)->read(); }
     operator const bool& () const { return (*this)->read(); }
@@ -268,10 +293,18 @@ class sc_in<bool> : public sc_port<sc_signal_in_if<bool>, 1>
 
     virtual const char *kind() const { return "sc_in"; }
 
+    void
+    add_trace(sc_trace_file *tf, const std::string &name) const
+    {
+        traceParamsVec.push_back(new sc_trace_params(tf, name));
+    }
+
   private:
     mutable sc_event_finder_t<sc_signal_in_if<bool> > _valueChangedFinder;
     mutable sc_event_finder_t<sc_signal_in_if<bool> > _posFinder;
     mutable sc_event_finder_t<sc_signal_in_if<bool> > _negFinder;
+
+    mutable sc_trace_params_vec traceParamsVec;
 
     // Disabled
     sc_in(const sc_in<bool> &);
@@ -280,9 +313,13 @@ class sc_in<bool> : public sc_port<sc_signal_in_if<bool>, 1>
 
 template <>
 inline void
-sc_trace<bool>(sc_trace_file *, const sc_in<bool> &, const std::string &)
+sc_trace<bool>(sc_trace_file *tf, const sc_in<bool> &i,
+        const std::string &name)
 {
-    sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+    if (i.size())
+        sc_trace(tf, i->read(), name);
+    else
+        i.add_trace(tf, name);
 }
 
 template <>
@@ -383,7 +420,14 @@ class sc_in<sc_dt::sc_logic> :
         bind(p);
     }
 
-    virtual void end_of_elaboration() { /* Implementation defined. */ }
+    virtual void
+    end_of_elaboration()
+    {
+        for (auto params: traceParamsVec)
+            sc_trace(params->tf, (*this)->read(), params->name);
+
+        traceParamsVec.clear();
+    }
 
     const sc_dt::sc_logic &read() const { return (*this)->read(); }
     operator const sc_dt::sc_logic& () const { return (*this)->read(); }
@@ -407,11 +451,19 @@ class sc_in<sc_dt::sc_logic> :
 
     virtual const char *kind() const { return "sc_in"; }
 
+    void
+    add_trace(sc_trace_file *tf, const std::string &name) const
+    {
+        traceParamsVec.push_back(new sc_trace_params(tf, name));
+    }
+
   private:
     mutable sc_event_finder_t<sc_signal_in_if<sc_dt::sc_logic> >
         _valueChangedFinder;
     mutable sc_event_finder_t<sc_signal_in_if<sc_dt::sc_logic> > _posFinder;
     mutable sc_event_finder_t<sc_signal_in_if<sc_dt::sc_logic> > _negFinder;
+
+    mutable sc_trace_params_vec traceParamsVec;
 
     // Disabled
     sc_in(const sc_in<sc_dt::sc_logic> &);
@@ -420,10 +472,13 @@ class sc_in<sc_dt::sc_logic> :
 
 template <>
 inline void
-sc_trace<sc_dt::sc_logic>(
-        sc_trace_file *, const sc_in<sc_dt::sc_logic> &, const std::string &)
+sc_trace<sc_dt::sc_logic>(sc_trace_file *tf, const sc_in<sc_dt::sc_logic> &i,
+        const std::string &name)
 {
-    sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+    if (i.size())
+        sc_trace(tf, i->read(), name);
+    else
+        i.add_trace(tf, name);
 }
 
 } // namespace sc_core

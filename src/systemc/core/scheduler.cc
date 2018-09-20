@@ -36,6 +36,7 @@
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
+#include "systemc/utils/tracefile.hh"
 
 namespace sc_gem5
 {
@@ -48,8 +49,8 @@ Scheduler::Scheduler() :
     starvationEvent(this, false, StarvationPriority),
     _elaborationDone(false), _started(false), _stopNow(false),
     _status(StatusOther), maxTickEvent(this, false, MaxTickPriority),
-    _numCycles(0), _changeStamp(0), _current(nullptr), initDone(false),
-    runOnce(false)
+    timeAdvancesEvent(this, false, TimeAdvancesPriority), _numCycles(0),
+    _changeStamp(0), _current(nullptr), initDone(false), runOnce(false)
 {}
 
 Scheduler::~Scheduler()
@@ -86,6 +87,8 @@ Scheduler::clear()
         deschedule(&starvationEvent);
     if (maxTickEvent.scheduled())
         deschedule(&maxTickEvent);
+    if (timeAdvancesEvent.scheduled())
+        deschedule(&timeAdvancesEvent);
 
     Process *p;
     while ((p = initList.getNext()))
@@ -134,6 +137,8 @@ Scheduler::initPhase()
     initDone = true;
 
     status(StatusOther);
+
+    scheduleTimeAdvancesEvent();
 }
 
 void
@@ -263,10 +268,13 @@ Scheduler::scheduleStarvationEvent()
 void
 Scheduler::runReady()
 {
+    scheduleTimeAdvancesEvent();
+
     bool empty = readyListMethods.empty() && readyListThreads.empty();
     lastReadyTick = getCurTick();
 
     // The evaluation phase.
+    status(StatusEvaluate);
     do {
         yield();
     } while (getNextReady());
@@ -282,6 +290,8 @@ Scheduler::runReady()
     }
 
     runUpdate();
+    if (!traceFiles.empty())
+        trace(true);
     runDelta();
 
     if (!runToTime && starved())
@@ -367,6 +377,7 @@ Scheduler::start(Tick max_tick, bool run_to_time)
     }
 
     schedule(&maxTickEvent, maxTick);
+    scheduleTimeAdvancesEvent();
 
     // Return to gem5 to let it run events, etc.
     Fiber::primaryFiber()->run();
@@ -427,6 +438,13 @@ Scheduler::scheduleStop(bool finish_delta)
         clear();
     }
     schedule(&stopEvent);
+}
+
+void
+Scheduler::trace(bool delta)
+{
+    for (auto tf: traceFiles)
+        tf->trace(delta);
 }
 
 Scheduler scheduler;

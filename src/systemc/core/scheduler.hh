@@ -48,6 +48,8 @@ class Fiber;
 namespace sc_gem5
 {
 
+class TraceFile;
+
 typedef NodeList<Process> ProcessList;
 typedef NodeList<Channel> ChannelList;
 
@@ -280,6 +282,7 @@ class Scheduler
         timeSlots.erase(timeSlots.begin());
         if (!runToTime && starved())
             scheduleStarvationEvent();
+        scheduleTimeAdvancesEvent();
     }
 
     // Pending activity ignores gem5 activity, much like how a systemc
@@ -357,6 +360,9 @@ class Scheduler
     Status status() { return _status; }
     void status(Status s) { _status = s; }
 
+    void registerTraceFile(TraceFile *tf) { traceFiles.insert(tf); }
+    void unregisterTraceFile(TraceFile *tf) { traceFiles.erase(tf); }
+
   private:
     typedef const EventBase::Priority Priority;
     static Priority DefaultPriority = EventBase::Default_Pri;
@@ -366,6 +372,7 @@ class Scheduler
     static Priority MaxTickPriority = DefaultPriority + 2;
     static Priority ReadyPriority = DefaultPriority + 3;
     static Priority StarvationPriority = ReadyPriority;
+    static Priority TimeAdvancesPriority = EventBase::Maximum_Pri;
 
     EventQueue *eq;
 
@@ -440,6 +447,15 @@ class Scheduler
     }
     EventWrapper<Scheduler, &Scheduler::maxTickFunc> maxTickEvent;
 
+    void timeAdvances() { trace(false); }
+    EventWrapper<Scheduler, &Scheduler::timeAdvances> timeAdvancesEvent;
+    void
+    scheduleTimeAdvancesEvent()
+    {
+        if (!traceFiles.empty() && !timeAdvancesEvent.scheduled())
+            schedule(&timeAdvancesEvent);
+    }
+
     uint64_t _numCycles;
     uint64_t _changeStamp;
 
@@ -457,6 +473,10 @@ class Scheduler
     ChannelList updateList;
 
     std::map<::Event *, Tick> eventsToSchedule;
+
+    std::set<TraceFile *> traceFiles;
+
+    void trace(bool delta);
 };
 
 extern Scheduler scheduler;

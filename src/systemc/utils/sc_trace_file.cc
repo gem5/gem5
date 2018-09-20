@@ -27,390 +27,439 @@
  * Authors: Gabe Black
  */
 
+#include <vector>
+
 #include "base/logging.hh"
+#include "systemc/core/scheduler.hh"
+#include "systemc/ext/channel/sc_signal_in_if.hh"
+#include "systemc/ext/core/sc_event.hh"
+#include "systemc/ext/core/sc_time.hh"
+#include "systemc/ext/dt/bit/sc_bv_base.hh"
+#include "systemc/ext/dt/bit/sc_logic.hh"
+#include "systemc/ext/dt/bit/sc_lv_base.hh"
+#include "systemc/ext/dt/fx/sc_fxnum.hh"
+#include "systemc/ext/dt/fx/sc_fxval.hh"
+#include "systemc/ext/dt/int/sc_int_base.hh"
+#include "systemc/ext/dt/int/sc_signed.hh"
+#include "systemc/ext/dt/int/sc_uint_base.hh"
+#include "systemc/ext/dt/int/sc_unsigned.hh"
 #include "systemc/ext/utils/sc_trace_file.hh"
+#include "systemc/utils/vcd.hh"
 
 namespace sc_core
 {
 
+sc_trace_file::sc_trace_file() {}
+sc_trace_file::~sc_trace_file() {}
+
 sc_trace_file *
 sc_create_vcd_trace_file(const char *name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return nullptr;
+    auto tf = new ::sc_gem5::VcdTraceFile(name);
+    ::sc_gem5::scheduler.registerTraceFile(tf);
+    return tf;
 }
 
 void
 sc_close_vcd_trace_file(sc_trace_file *tf)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    ::sc_gem5::scheduler.unregisterTraceFile(
+            static_cast<::sc_gem5::TraceFile *>(tf));
+    delete tf;
 }
 
 void
 sc_write_comment(sc_trace_file *tf, const std::string &comment)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->writeComment(comment);
 }
 
 void
-sc_trace(sc_trace_file *, const bool &, const std::string &)
+sc_trace(sc_trace_file *tf, const bool &v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const bool *, const std::string &)
+sc_trace(sc_trace_file *tf, const bool *v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const float &, const std::string &)
+sc_trace(sc_trace_file *tf, const float &v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const float *, const std::string &)
+sc_trace(sc_trace_file *tf, const float *v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const double &, const std::string &)
+sc_trace(sc_trace_file *tf, const double &v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const double *, const std::string &)
+sc_trace(sc_trace_file *tf, const double *v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_logic &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_logic &v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_logic *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_logic *v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_int_base &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_int_base &v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_int_base *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_int_base *v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_uint_base &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_uint_base &v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_uint_base *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_uint_base *v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_signed &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_signed &v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_signed *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_signed *v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_unsigned &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_unsigned &v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_unsigned *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_unsigned *v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_bv_base &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_bv_base &v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_bv_base *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_bv_base *v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_lv_base &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_lv_base &v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_lv_base *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_lv_base *v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_fxval &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_fxval &v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_fxval *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_fxval *v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_fxval_fast &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_fxval_fast &v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_fxval_fast *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_fxval_fast *v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_fxnum &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_fxnum &v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_fxnum *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_fxnum *v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_fxnum_fast &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_fxnum_fast &v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::sc_fxnum_fast *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_dt::sc_fxnum_fast *v,
+        const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_event &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_event &v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_event *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_event *v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_time &, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_time &v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_time *, const std::string &)
+sc_trace(sc_trace_file *tf, const sc_time *v, const std::string &name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name);
 }
 
 void
-sc_trace(sc_trace_file *, const unsigned char &,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const unsigned char &v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const unsigned char *,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const unsigned char *v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const unsigned short &,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const unsigned short &v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const unsigned short *,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const unsigned short *v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const unsigned int &, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const unsigned int &v,
+        const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const unsigned int *, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const unsigned int *v,
+        const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const unsigned long &,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const unsigned long &v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const unsigned long *,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const unsigned long *v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const char &, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const char &v, const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const char *, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const char *v, const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const short &, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const short &v,
+        const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const short *, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const short *v,
+        const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const int &, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const int &v, const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const int *, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const int *v, const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const long &, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const long &v, const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const long *, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const long *v, const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::int64 &, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const sc_dt::int64 &v,
+        const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::int64 *, const std::string &, int width)
+sc_trace(sc_trace_file *tf, const sc_dt::int64 *v,
+        const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::uint64 &,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const sc_dt::uint64 &v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(&v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_dt::uint64 *,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const sc_dt::uint64 *v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->addTraceVal(v, name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_signal_in_if<char> &,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const sc_signal_in_if<char> &v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->
+        addTraceVal(&v.read(), name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_signal_in_if<short> &,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const sc_signal_in_if<short> &v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->
+        addTraceVal(&v.read(), name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_signal_in_if<int> &,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const sc_signal_in_if<int> &v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->
+        addTraceVal(&v.read(), name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const sc_signal_in_if<long> &,
-         const std::string &, int width)
+sc_trace(sc_trace_file *tf, const sc_signal_in_if<long> &v,
+         const std::string &name, int width)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->
+        addTraceVal(&v.read(), name, width);
 }
 
 void
-sc_trace(sc_trace_file *, const unsigned int &,
-         const std::string &, const char **enum_literals)
+sc_trace(sc_trace_file *tf, const unsigned int &v,
+         const std::string &name, const char **enum_literals)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->
+        addTraceVal(&v, name, enum_literals);
 }
 
 void
-sc_trace_delta_cycles(sc_trace_file *, bool on)
+sc_trace_delta_cycles(sc_trace_file *tf, bool on)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    static_cast<::sc_gem5::TraceFile *>(tf)->traceDeltas(on);
 }
 
 } // namespace sc_core

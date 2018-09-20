@@ -66,13 +66,11 @@
 #include "sc_fxval.hh"
 #include "scfx_params.hh"
 
-namespace sc_core
+namespace sc_gem5
 {
 
-class vcd_sc_fxnum_trace;
-class vcd_sc_fxnum_fast_trace;
-class wif_sc_fxnum_trace;
-class wif_sc_fxnum_fast_trace;
+template <typename T, typename B>
+class TraceValFxnumBase;
 
 } // namespace sc_core
 
@@ -490,8 +488,8 @@ class sc_fxnum
     friend class sc_fxnum_fast_bitref;
     friend class sc_fxnum_fast_subref;
 
-    friend class sc_core::vcd_sc_fxnum_trace;
-    friend class sc_core::wif_sc_fxnum_trace;
+    template <typename T, typename B>
+    friend class sc_gem5::TraceValFxnumBase;
 
   protected:
     sc_fxnum_observer *observer() const;
@@ -851,8 +849,8 @@ class sc_fxnum_fast
     friend class sc_fxnum_fast_bitref;
     friend class sc_fxnum_fast_subref;
 
-    friend class sc_core::vcd_sc_fxnum_fast_trace;
-    friend class sc_core::wif_sc_fxnum_fast_trace;
+    template <typename T, typename B>
+    friend class sc_gem5::TraceValFxnumBase;
 
   protected:
     sc_fxnum_fast_observer *observer() const;
