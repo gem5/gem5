@@ -214,7 +214,31 @@ def warning_filt(num):
 def info_filt(num):
     return tagged_filt('Info', num)
 
-class LogChecker(Checker):
+class DiffingChecker(Checker):
+    def __init__(self, ref, test, tag, out_dir):
+        super(DiffingChecker, self).__init__(ref, test, tag)
+        self.out_dir = out_dir
+
+    def diffing_check(self, ref_lines, test_lines):
+        test_file = os.path.basename(self.test)
+        ref_file = os.path.basename(self.ref)
+
+        diff_file = '.'.join([ref_file, 'diff'])
+        diff_path = os.path.join(self.out_dir, diff_file)
+        if test_lines != ref_lines:
+            with open(diff_path, 'w') as diff_f:
+                for line in difflib.unified_diff(
+                        ref_lines, test_lines,
+                        fromfile=ref_file,
+                        tofile=test_file):
+                    diff_f.write(line)
+            return False
+        else:
+            if os.path.exists(diff_path):
+                os.unlink(diff_path)
+            return True
+
+class LogChecker(DiffingChecker):
     def merge_filts(*filts):
         filts = map(lambda f: '(' + f + ')', filts)
         filts = '|'.join(filts)
@@ -246,33 +270,26 @@ class LogChecker(Checker):
         in_file_filt,
     )
 
-    def __init__(self, ref, test, tag, out_dir):
-        super(LogChecker, self).__init__(ref, test, tag)
-        self.out_dir = out_dir
-
     def apply_filters(self, data, filts):
         re.sub(filt, '', data)
 
     def check(self):
-        test_file = os.path.basename(self.test)
-        ref_file = os.path.basename(self.ref)
         with open(self.test) as test_f, open(self.ref) as ref_f:
             test = re.sub(self.test_filt, '', test_f.read())
             ref = re.sub(self.ref_filt, '', ref_f.read())
-            diff_file = '.'.join([ref_file, 'diff'])
-            diff_path = os.path.join(self.out_dir, diff_file)
-            if test != ref:
-                with open(diff_path, 'w') as diff_f:
-                    for line in difflib.unified_diff(
-                            ref.splitlines(True), test.splitlines(True),
-                            fromfile=ref_file,
-                            tofile=test_file):
-                        diff_f.write(line)
-                return False
-            else:
-                if os.path.exists(diff_path):
-                    os.unlink(diff_path)
-        return True
+            return self.diffing_check(ref.splitlines(True),
+                                      test.splitlines(True))
+
+class VcdChecker(DiffingChecker):
+    def check(self):
+        with open (self.test) as test_f, open(self.ref) as ref_f:
+            ref = ref_f.read().splitlines(True)
+            test = test_f.read().splitlines(True)
+            # Strip off the first seven lines of the test output which are
+            # date and version information.
+            test = test[7:]
+
+            return self.diffing_check(ref, test)
 
 class GoldenDir(object):
     def __init__(self, path, platform):
@@ -447,6 +464,9 @@ class VerifyPhase(TestPhaseBase):
                 ref_path = gd.entry(name)
                 if not os.path.exists(test_path):
                     missing.append(name)
+                elif name.endswith('.vcd'):
+                    diffs.append(VcdChecker(ref_path, test_path,
+                                            name, out_dir))
                 else:
                     diffs.append(Checker(ref_path, test_path, name))
 
