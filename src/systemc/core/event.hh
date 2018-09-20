@@ -85,6 +85,7 @@ class Event
     void cancel();
 
     bool triggered() const;
+    uint64_t triggeredStamp() const { return _triggeredStamp; }
 
     static Event *
     getFromScEvent(sc_core::sc_event *e)
@@ -147,6 +148,7 @@ class Event
     sc_core::sc_object *parent;
 
     ScEvent delayedNotify;
+    mutable uint64_t _triggeredStamp;
 
     mutable StaticSensitivities staticSenseMethod;
     mutable StaticSensitivities staticSenseThread;

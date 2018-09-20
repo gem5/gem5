@@ -47,7 +47,7 @@ Event::Event(sc_core::sc_event *_sc_event) : Event(_sc_event, nullptr) {}
 
 Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr) :
     _sc_event(_sc_event), _basename(_basename_cstr ? _basename_cstr : ""),
-    delayedNotify([this]() { this->notify(); })
+    delayedNotify([this]() { this->notify(); }), _triggeredStamp(~0ULL)
 {
     Module *p = currentModule();
 
@@ -166,6 +166,8 @@ Event::notify()
     if (delayedNotify.scheduled())
         scheduler.deschedule(&delayedNotify);
 
+    _triggeredStamp = scheduler.changeStamp();
+
     notify(staticSenseMethod);
     notify(dynamicSenseMethod);
     notify(staticSenseThread);
@@ -194,7 +196,7 @@ Event::cancel()
 bool
 Event::triggered() const
 {
-    return false;
+    return _triggeredStamp == scheduler.changeStamp();
 }
 
 Events topLevelEvents;
