@@ -30,6 +30,7 @@
 #include "base/logging.hh"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_interface.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_core
 {
@@ -37,6 +38,7 @@ namespace sc_core
 const sc_event &
 sc_interface::default_event() const
 {
+    SC_REPORT_WARNING("(W116) channel doesn't have a default event", "");
     static sc_event dummy;
     return dummy;
 }
