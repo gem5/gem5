@@ -35,6 +35,7 @@
 #include "python/pybind11/pybind.hh"
 #include "sim/core.hh"
 #include "systemc/core/python.hh"
+#include "systemc/core/time.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_time.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -44,33 +45,6 @@ namespace sc_core
 
 namespace
 {
-
-const char *TimeUnitNames[] = {
-    [SC_FS] = "fs",
-    [SC_PS] = "ps",
-    [SC_NS] = "ns",
-    [SC_US] = "us",
-    [SC_MS] = "ms",
-    [SC_SEC] = "s"
-};
-
-double TimeUnitScale[] = {
-    [SC_FS] = 1.0e-15,
-    [SC_PS] = 1.0e-12,
-    [SC_NS] = 1.0e-9,
-    [SC_US] = 1.0e-6,
-    [SC_MS] = 1.0e-3,
-    [SC_SEC] = 1.0
-};
-
-Tick TimeUnitFrequency[] = {
-    [SC_FS] = 1ULL * 1000 * 1000 * 1000 * 1000 * 1000,
-    [SC_PS] = 1ULL * 1000 * 1000 * 1000 * 1000,
-    [SC_NS] = 1ULL * 1000 * 1000 * 1000,
-    [SC_US] = 1ULL * 1000 * 1000,
-    [SC_MS] = 1ULL * 1000,
-    [SC_SEC] = 1ULL
-};
 
 bool timeFixed = false;
 bool pythonReady = false;
@@ -90,7 +64,7 @@ std::vector<SetInfo> toSet;
 void
 setWork(sc_time *time, double d, ::sc_core::sc_time_unit tu)
 {
-    double scale = TimeUnitScale[tu] * SimClock::Float::s;
+    double scale = sc_gem5::TimeUnitScale[tu] * SimClock::Float::s;
     // Accellera claims there is a linux bug, and that these next two
     // lines work around them.
     volatile double tmp = d * scale + 0.5;
@@ -322,7 +296,7 @@ sc_time::print(std::ostream &os) const
             scaled /= 1000;
         }
 
-        os << scaled << ' ' << TimeUnitNames[tu];
+        os << scaled << ' ' << sc_gem5::TimeUnitNames[tu];
     }
 }
 
@@ -427,8 +401,8 @@ sc_set_time_resolution(double d, sc_time_unit tu)
                 "sc_time object(s) constructed");
     }
 
-    double seconds = d * TimeUnitScale[tu];
-    if (seconds < TimeUnitScale[SC_FS]) {
+    double seconds = d * sc_gem5::TimeUnitScale[tu];
+    if (seconds < sc_gem5::TimeUnitScale[SC_FS]) {
         SC_REPORT_ERROR("(E514) set time resolution failed",
                 "value smaller than 1 fs");
     }
@@ -445,7 +419,8 @@ sc_set_time_resolution(double d, sc_time_unit tu)
         tu = (sc_time_unit)(tu - 1);
     }
 
-    Tick ticks_per_second = TimeUnitFrequency[tu] / static_cast<Tick>(d);
+    Tick ticks_per_second =
+        sc_gem5::TimeUnitFrequency[tu] / static_cast<Tick>(d);
     setGlobalFrequency(ticks_per_second);
     specified = true;
 }
@@ -492,12 +467,12 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
     }
 
     // Normalize d to seconds.
-    defaultUnit = d * TimeUnitScale[tu];
+    defaultUnit = d * sc_gem5::TimeUnitScale[tu];
     specified = true;
 
     double resolution = SimClock::Float::Hz;
     if (resolution == 0.0)
-        resolution = TimeUnitScale[SC_PS];
+        resolution = sc_gem5::TimeUnitScale[SC_PS];
     if (defaultUnit < resolution) {
         SC_REPORT_ERROR("(E515) set default time unit failed",
                 "value smaller than time resolution");

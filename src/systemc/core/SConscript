@@ -42,6 +42,7 @@ if env['USE_SYSTEMC']:
     Source('scheduler.cc')
     Source('sched_event.cc')
     Source('sensitivity.cc')
+    Source('time.cc')
 
     Source('sc_attr.cc')
     Source('sc_event.cc')
