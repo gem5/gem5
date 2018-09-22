@@ -259,6 +259,7 @@ class LogChecker(DiffingChecker):
         warning_filt(540),
         warning_filt(571),
         info_filt(804),
+        info_filt(704),
         in_file_filt,
     )
     test_filt = merge_filts(
