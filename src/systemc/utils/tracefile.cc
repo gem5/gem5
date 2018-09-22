@@ -35,6 +35,7 @@
 #include "base/logging.hh"
 #include "base/output.hh"
 #include "sim/core.hh"
+#include "systemc/core/time.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/functions.hh"
 
@@ -58,6 +59,18 @@ TraceFile::set_time_unit(double d, ::sc_core::sc_time_unit tu)
 {
     timeUnitValue = d;
     timeUnitUnit = tu;
+
+    double secs = d * TimeUnitScale[tu];
+    for (tu = ::sc_core::SC_SEC; tu > ::sc_core::SC_FS;
+            tu = (::sc_core::sc_time_unit)(tu - 1)) {
+        if (TimeUnitScale[tu] <= secs)
+            break;
+    }
+
+    uint64_t i = static_cast<uint64_t>(secs / TimeUnitScale[tu]);
+    std::ostringstream ss;
+    ss << i << " " << TimeUnitNames[tu] << " (" << _os->name() << ")";
+    SC_REPORT_INFO("(I703) tracing timescale unit set", ss.str().c_str());
 }
 
 void
