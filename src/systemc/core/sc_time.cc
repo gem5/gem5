@@ -494,6 +494,14 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
     // Normalize d to seconds.
     defaultUnit = d * TimeUnitScale[tu];
     specified = true;
+
+    double resolution = SimClock::Float::Hz;
+    if (resolution == 0.0)
+        resolution = TimeUnitScale[SC_PS];
+    if (defaultUnit < resolution) {
+        SC_REPORT_ERROR("(E515) set default time unit failed",
+                "value smaller than time resolution");
+    }
 }
 
 sc_time
