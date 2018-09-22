@@ -37,6 +37,7 @@
 #include "sim/core.hh"
 #include "systemc/core/time.hh"
 #include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/core/sc_time.hh"
 #include "systemc/ext/utils/functions.hh"
 
 namespace sc_gem5
@@ -44,7 +45,7 @@ namespace sc_gem5
 
 TraceFile::TraceFile(const std::string &name) :
     _os(simout.create(name, true, true)), timeUnitTicks(0),
-    timeUnitValue(1.0), timeUnitUnit(::sc_core::SC_PS), _traceDeltas(false)
+    timeUnitValue(0.0), timeUnitUnit(::sc_core::SC_PS), _traceDeltas(false)
 {}
 
 TraceFile::~TraceFile()
@@ -76,7 +77,14 @@ TraceFile::set_time_unit(double d, ::sc_core::sc_time_unit tu)
 void
 TraceFile::finalizeTime()
 {
-    timeUnitTicks = ::sc_core::sc_time(timeUnitValue, timeUnitUnit).value();
+    ::sc_core::sc_time time;
+    if (timeUnitValue == 0.0) {
+        // The time scale was never set. Use the global time resolution.
+        time = ::sc_core::sc_get_time_resolution();
+    } else {
+        time = ::sc_core::sc_time(timeUnitValue, timeUnitUnit);
+    }
+    timeUnitTicks = time.value();
 }
 
 } // namespace sc_gem5
