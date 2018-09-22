@@ -70,8 +70,7 @@ sc_set_location(const char *file, int lineno)
 sc_process_b *
 sc_get_curr_process_handle()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return nullptr;
+    return ::sc_gem5::scheduler.current();
 }
 
 
