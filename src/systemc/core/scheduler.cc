@@ -193,7 +193,8 @@ Scheduler::ready(Process *p)
     else
         readyListThreads.pushLast(p);
 
-    scheduleReadyEvent();
+    if (!inEvaluate())
+        scheduleReadyEvent();
 }
 
 void
@@ -234,7 +235,8 @@ void
 Scheduler::requestUpdate(Channel *c)
 {
     updateList.pushLast(c);
-    scheduleReadyEvent();
+    if (!inEvaluate())
+        scheduleReadyEvent();
 }
 
 void
@@ -274,8 +276,10 @@ Scheduler::runReady()
         _changeStamp++;
     }
 
-    if (_stopNow)
+    if (_stopNow) {
+        status(StatusOther);
         return;
+    }
 
     runUpdate();
     runDelta();

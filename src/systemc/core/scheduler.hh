@@ -231,7 +231,8 @@ class Scheduler
         // Delta notification/timeout.
         if (delay.value() == 0) {
             event->schedule(deltas, tick);
-            scheduleReadyEvent();
+            if (!inEvaluate() && !inUpdate())
+                scheduleReadyEvent();
             return;
         }
 
@@ -331,8 +332,9 @@ class Scheduler
     enum Status
     {
         StatusOther = 0,
-        StatusDelta,
+        StatusEvaluate,
         StatusUpdate,
+        StatusDelta,
         StatusTiming,
         StatusPaused,
         StatusStopped
@@ -343,8 +345,9 @@ class Scheduler
 
     bool paused() { return status() == StatusPaused; }
     bool stopped() { return status() == StatusStopped; }
-    bool inDelta() { return status() == StatusDelta; }
+    bool inEvaluate() { return status() == StatusEvaluate; }
     bool inUpdate() { return status() == StatusUpdate; }
+    bool inDelta() { return status() == StatusDelta; }
     bool inTiming() { return status() == StatusTiming; }
 
     uint64_t changeStamp() { return _changeStamp; }
