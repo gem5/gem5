@@ -218,8 +218,7 @@ class Scheduler
     Tick
     delayed(const ::sc_core::sc_time &delay)
     {
-        //XXX We're assuming the systemc time resolution is in ps.
-        return getCurTick() + delay.value() * SimClock::Int::ps;
+        return getCurTick() + delay.value();
     }
 
     // For scheduling delayed/timed notifications/timeouts.
