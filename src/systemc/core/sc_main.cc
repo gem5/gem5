@@ -250,12 +250,8 @@ sc_stop()
 const sc_time &
 sc_time_stamp()
 {
-    static sc_time tstamp;
-    Tick tick = ::sc_gem5::scheduler.getCurTick();
-    //XXX We're assuming the systemc time resolution is in ps.
-    // If tick is zero, the time scale may not be fixed yet, and
-    // SimClock::Int::ps may be zero.
-    tstamp = sc_time::from_value(tick ? tick / SimClock::Int::ps : 0);
+    static sc_time tstamp(1.0, SC_SEC);
+    tstamp = sc_time::from_value(::sc_gem5::scheduler.getCurTick());
     return tstamp;
 }
 
