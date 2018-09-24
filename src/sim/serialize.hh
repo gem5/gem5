@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -51,6 +51,7 @@
 #define __SERIALIZE_HH__
 
 
+#include <algorithm>
 #include <iostream>
 #include <list>
 #include <map>
@@ -143,6 +144,31 @@ void arrayParamIn(CheckpointIn &cp, const std::string &name,
 
 void
 objParamIn(CheckpointIn &cp, const std::string &name, SimObject * &param);
+
+template <class T>
+static void
+arrayParamOut(CheckpointOut &cp, const std::string &name,
+              const BitUnionType<T> *param, unsigned size)
+{
+    // We copy the array into a vector. This is needed since we cannot
+    // directly typecast a pointer to BitUnionType<T> into a pointer
+    // of BitUnionBaseType<T> but we can typecast BitUnionType<T>
+    // to BitUnionBaseType<T> since we overloaded the typecast operator
+    std::vector<BitUnionBaseType<T>> bitunion_vec(param, param + size);
+
+    arrayParamOut(cp, name, bitunion_vec);
+}
+
+template <class T>
+static void
+arrayParamIn(CheckpointIn &cp, const std::string &name,
+             BitUnionType<T> *param, unsigned size)
+{
+    std::vector<BitUnionBaseType<T>> bitunion_vec(size);
+
+    arrayParamIn(cp, name, bitunion_vec);
+    std::copy(bitunion_vec.begin(), bitunion_vec.end(), param);
+}
 
 //
 // These macros are streamlined to use in serialize/unserialize
