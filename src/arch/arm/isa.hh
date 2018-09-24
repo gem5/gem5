@@ -88,7 +88,7 @@ namespace ArmISA
         bool haveLPAE;
         bool haveVirtualization;
         bool haveLargeAsid64;
-        uint8_t physAddrRange64;
+        uint8_t physAddrRange;
 
         /**
          * If true, accesses to IMPLEMENTATION DEFINED registers are treated
@@ -409,8 +409,13 @@ namespace ArmISA
 
       public:
         void clear();
-        void clear64(const ArmISAParams *p);
 
+      protected:
+        void clear64(const ArmISAParams *p);
+        void initID32(const ArmISAParams *p);
+        void initID64(const ArmISAParams *p);
+
+      public:
         MiscReg readMiscRegNoEffect(int misc_reg) const;
         MiscReg readMiscReg(int misc_reg, ThreadContext *tc);
         void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
@@ -642,7 +647,7 @@ namespace ArmISA
             SERIALIZE_SCALAR(haveLPAE);
             SERIALIZE_SCALAR(haveVirtualization);
             SERIALIZE_SCALAR(haveLargeAsid64);
-            SERIALIZE_SCALAR(physAddrRange64);
+            SERIALIZE_SCALAR(physAddrRange);
         }
         void unserialize(CheckpointIn &cp)
         {
@@ -656,7 +661,7 @@ namespace ArmISA
             UNSERIALIZE_SCALAR(haveLPAE);
             UNSERIALIZE_SCALAR(haveVirtualization);
             UNSERIALIZE_SCALAR(haveLargeAsid64);
-            UNSERIALIZE_SCALAR(physAddrRange64);
+            UNSERIALIZE_SCALAR(physAddrRange);
         }
 
         void startup(ThreadContext *tc);
