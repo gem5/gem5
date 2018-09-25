@@ -204,7 +204,49 @@ ArmProcess64::armHwcapImpl() const
         Arm_Flagm = 1 << 27
     };
 
-    return Arm_Fp | Arm_Asimd | Arm_Evtstrm | Arm_Crc32;
+    uint32_t hwcap = 0;
+
+    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+
+    const AA64PFR0 pf_r0 = tc->readMiscReg(MISCREG_ID_AA64PFR0_EL1);
+
+    hwcap |= (pf_r0.fp == 0) ? Arm_Fp : 0;
+    hwcap |= (pf_r0.fp == 1) ? Arm_Fphp | Arm_Fp : 0;
+    hwcap |= (pf_r0.advsimd == 0) ? Arm_Asimd : 0;
+    hwcap |= (pf_r0.advsimd == 1) ? Arm_Asimdhp | Arm_Asimd : 0;
+    hwcap |= (pf_r0.sve >= 1) ? Arm_Sve : 0;
+    hwcap |= (pf_r0.dit >= 1) ? Arm_Dit : 0;
+
+    const AA64ISAR0 isa_r0 = tc->readMiscReg(MISCREG_ID_AA64ISAR0_EL1);
+
+    hwcap |= (isa_r0.aes >= 1) ? Arm_Aes : 0;
+    hwcap |= (isa_r0.aes >= 2) ? Arm_Pmull : 0;
+    hwcap |= (isa_r0.sha1 >= 1) ? Arm_Sha1 : 0;
+    hwcap |= (isa_r0.sha2 >= 1) ? Arm_Sha2 : 0;
+    hwcap |= (isa_r0.sha2 >= 2) ? Arm_Sha512 : 0;
+    hwcap |= (isa_r0.crc32 >= 1) ? Arm_Crc32 : 0;
+    hwcap |= (isa_r0.atomic >= 1) ? Arm_Atomics : 0;
+    hwcap |= (isa_r0.rdm >= 1) ? Arm_Asimdrdm : 0;
+    hwcap |= (isa_r0.sha3 >= 1) ? Arm_Sha3 : 0;
+    hwcap |= (isa_r0.sm3 >= 1) ? Arm_Sm3 : 0;
+    hwcap |= (isa_r0.sm4 >= 1) ? Arm_Sm4 : 0;
+    hwcap |= (isa_r0.dp >= 1) ? Arm_Asimddp : 0;
+    hwcap |= (isa_r0.fhm >= 1) ? Arm_Asimdfhm : 0;
+    hwcap |= (isa_r0.ts >= 1) ? Arm_Flagm : 0;
+
+    const AA64ISAR1 isa_r1 = tc->readMiscReg(MISCREG_ID_AA64ISAR1_EL1);
+
+    hwcap |= (isa_r1.dpb >= 1) ? Arm_Dcpop : 0;
+    hwcap |= (isa_r1.jscvt >= 1) ? Arm_Jscvt : 0;
+    hwcap |= (isa_r1.fcma >= 1) ? Arm_Fcma : 0;
+    hwcap |= (isa_r1.lrcpc >= 1) ? Arm_Lrcpc : 0;
+    hwcap |= (isa_r1.lrcpc >= 2) ? Arm_Ilrcpc : 0;
+
+    const AA64MMFR2 mm_fr2 = tc->readMiscReg(MISCREG_ID_AA64MMFR2_EL1);
+
+    hwcap |= (mm_fr2.at >= 1) ? Arm_Uscat : 0;
+
+    return hwcap;
 }
 
 template <class IntType>
