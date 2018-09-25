@@ -74,6 +74,111 @@ namespace ArmISA
         Bitfield<0> sp;         // AArch64
     EndBitUnion(CPSR)
 
+    BitUnion64(AA64DFR0)
+        Bitfield<43, 40> tracefilt;
+        Bitfield<39, 36> doublelock;
+        Bitfield<35, 32> pmsver;
+        Bitfield<31, 28> ctx_cmps;
+        Bitfield<23, 20> wrps;
+        Bitfield<15, 12> brps;
+        Bitfield<11, 8> pmuver;
+        Bitfield<7, 4> tracever;
+        Bitfield<3, 0> debugver;
+    EndBitUnion(AA64DFR0)
+
+    BitUnion64(AA64ISAR0)
+        Bitfield<63, 60> rndr;
+        Bitfield<59, 56> tlb;
+        Bitfield<55, 52> ts;
+        Bitfield<51, 48> fhm;
+        Bitfield<47, 44> dp;
+        Bitfield<43, 40> sm4;
+        Bitfield<39, 36> sm3;
+        Bitfield<35, 32> sha3;
+        Bitfield<31, 28> rdm;
+        Bitfield<23, 20> atomic;
+        Bitfield<19, 16> crc32;
+        Bitfield<15, 12> sha2;
+        Bitfield<11, 8> sha1;
+        Bitfield<3, 0> aes;
+    EndBitUnion(AA64ISAR0)
+
+    BitUnion64(AA64ISAR1)
+        Bitfield<43, 40> specres;
+        Bitfield<39, 36> sb;
+        Bitfield<35, 32> frintts;
+        Bitfield<31, 28> gpi;
+        Bitfield<27, 24> gpa;
+        Bitfield<23, 20> lrcpc;
+        Bitfield<19, 16> fcma;
+        Bitfield<15, 12> jscvt;
+        Bitfield<11, 8> api;
+        Bitfield<7, 4> apa;
+        Bitfield<3, 0> dpb;
+    EndBitUnion(AA64ISAR1)
+
+    BitUnion64(AA64MMFR0)
+        Bitfield<47, 44> exs;
+        Bitfield<43, 40> tgran4_2;
+        Bitfield<39, 36> tgran64_2;
+        Bitfield<35, 32> tgran16_2;
+        Bitfield<31, 28> tgran4;
+        Bitfield<27, 24> tgran64;
+        Bitfield<23, 20> tgran16;
+        Bitfield<19, 16> bigendEL0;
+        Bitfield<15, 12> snsmem;
+        Bitfield<11, 8> bigend;
+        Bitfield<7, 4> asidbits;
+        Bitfield<3, 0> parange;
+    EndBitUnion(AA64MMFR0)
+
+    BitUnion64(AA64MMFR1)
+        Bitfield<31, 28> xnx;
+        Bitfield<27, 24> specsei;
+        Bitfield<23, 20> pan;
+        Bitfield<19, 16> lo;
+        Bitfield<15, 12> hpds;
+        Bitfield<11, 8> vh;
+        Bitfield<7, 4> vmidbits;
+        Bitfield<3, 0> hafdbs;
+    EndBitUnion(AA64MMFR1)
+
+    BitUnion64(AA64MMFR2)
+        Bitfield<63, 60> e0pd;
+        Bitfield<59, 56> evt;
+        Bitfield<55, 52> bbm;
+        Bitfield<51, 48> ttl;
+        Bitfield<43, 40> fwb;
+        Bitfield<39, 36> ids;
+        Bitfield<35, 32> at;
+        Bitfield<31, 28> st;
+        Bitfield<27, 24> nv;
+        Bitfield<23, 20> ccidx;
+        Bitfield<19, 16> varange;
+        Bitfield<15, 12> iesb;
+        Bitfield<11, 8> lsm;
+        Bitfield<7, 4> uao;
+        Bitfield<3, 0> cnp;
+    EndBitUnion(AA64MMFR2)
+
+    BitUnion64(AA64PFR0)
+        Bitfield<63, 60> csv3;
+        Bitfield<59, 56> csv2;
+        Bitfield<51, 48> dit;
+        Bitfield<47, 44> amu;
+        Bitfield<43, 40> mpam;
+        Bitfield<39, 36> sel2;
+        Bitfield<35, 32> sve;
+        Bitfield<31, 28> ras;
+        Bitfield<27, 24> gic;
+        Bitfield<23, 20> advsimd;
+        Bitfield<19, 16> fp;
+        Bitfield<15, 12> el3;
+        Bitfield<11, 8> el2;
+        Bitfield<7, 4> el1;
+        Bitfield<3, 0> el0;
+    EndBitUnion(AA64PFR0)
+
     BitUnion32(HDCR)
         Bitfield<11>   tdra;
         Bitfield<10>   tdosa;
