@@ -750,6 +750,7 @@ msrMrs64TrapToHyp(const MiscRegIndex miscReg,
       case MISCREG_ID_AA64ISAR1_EL1:
       case MISCREG_ID_AA64MMFR0_EL1:
       case MISCREG_ID_AA64MMFR1_EL1:
+      case MISCREG_ID_AA64MMFR2_EL1:
       case MISCREG_ID_AA64AFR0_EL1:
       case MISCREG_ID_AA64AFR1_EL1:
         assert(isRead);

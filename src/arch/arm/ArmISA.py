@@ -111,6 +111,8 @@ class ArmISA(SimObject):
     # Reserved for future expansion
     id_aa64mmfr1_el1 = Param.UInt64(0x0000000000000000,
         "AArch64 Memory Model Feature Register 1")
+    id_aa64mmfr2_el1 = Param.UInt64(0x0000000000000000,
+        "AArch64 Memory Model Feature Register 2")
 
     # Any access (read/write) to an unimplemented
     # Implementation Defined registers is not causing an Undefined Instruction.

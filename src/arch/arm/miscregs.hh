@@ -672,10 +672,10 @@ namespace ArmISA
         MISCREG_CNTHV_CVAL_EL2,         // 602
         MISCREG_CNTHV_TVAL_EL2,         // 603
 
+        MISCREG_ID_AA64MMFR2_EL1,       // 604
         // These MISCREG_FREESLOT are available Misc Register
         // slots for future registers to be implemented.
-        MISCREG_FREESLOT_1,             // 604
-        MISCREG_FREESLOT_2,             // 605
+        MISCREG_FREESLOT_1,             // 605
 
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
@@ -1388,7 +1388,7 @@ namespace ArmISA
         "cnthv_ctl_el2",
         "cnthv_cval_el2",
         "cnthv_tval_el2",
-        "freeslot1",
+        "id_aa64mmfr2_el1",
         "freeslot2",
 
         "num_phys_regs",

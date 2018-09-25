@@ -415,6 +415,7 @@ TarmacParserRecord::MiscRegMap TarmacParserRecord::miscRegMap = {
     { "id_aa64isar1_el1", MISCREG_ID_AA64ISAR1_EL1 },
     { "id_aa64mmfr0_el1", MISCREG_ID_AA64MMFR0_EL1 },
     { "id_aa64mmfr1_el1", MISCREG_ID_AA64MMFR1_EL1 },
+    { "id_aa64mmfr2_el1", MISCREG_ID_AA64MMFR2_EL1 },
     { "ccsidr_el1", MISCREG_CCSIDR_EL1 },
     { "clidr_el1", MISCREG_CLIDR_EL1 },
     { "aidr_el1", MISCREG_AIDR_EL1 },

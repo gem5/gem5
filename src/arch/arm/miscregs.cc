@@ -1539,7 +1539,9 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_ID_AA64MMFR0_EL1;
                       case 1:
                         return MISCREG_ID_AA64MMFR1_EL1;
-                      case 2 ... 7:
+                      case 2:
+                        return MISCREG_ID_AA64MMFR2_EL1;
+                      case 3 ... 7:
                         return MISCREG_RAZ;
                     }
                     break;
@@ -3503,6 +3505,8 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_AA64MMFR0_EL1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_ID_AA64MMFR1_EL1)
+      .allPrivileges().exceptUserMode().writes(0);
+    InitReg(MISCREG_ID_AA64MMFR2_EL1)
       .allPrivileges().exceptUserMode().writes(0);
     InitReg(MISCREG_CCSIDR_EL1)
       .allPrivileges().exceptUserMode().writes(0);
