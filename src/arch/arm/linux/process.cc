@@ -443,7 +443,7 @@ static SyscallDesc syscallDescs32[] = {
     /* 319 */ SyscallDesc("mbind", unimplementedFunc),
     /* 320 */ SyscallDesc("get_mempolicy", unimplementedFunc),
     /* 321 */ SyscallDesc("set_mempolicy", unimplementedFunc),
-    /* 322 */ SyscallDesc("openat", unimplementedFunc),
+    /* 322 */ SyscallDesc("openat", openatFunc<ArmLinux32>),
     /* 323 */ SyscallDesc("mkdirat", unimplementedFunc),
     /* 324 */ SyscallDesc("mknodat", unimplementedFunc),
     /* 325 */ SyscallDesc("fchownat", unimplementedFunc),
