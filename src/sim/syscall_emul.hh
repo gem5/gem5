@@ -695,7 +695,7 @@ openImpl(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc,
         auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
         if (!ffdp)
             return -EBADF;
-        path.insert(0, ffdp->getFileName());
+        path.insert(0, ffdp->getFileName() + "/");
     }
 
     /**
