@@ -178,12 +178,14 @@ Scheduler::yield()
             }
         }
     }
-    if (_current && _current->excWrapper) {
-        // Make sure this isn't a method process.
-        assert(!_current->needsStart());
-        auto ew = _current->excWrapper;
-        _current->excWrapper = nullptr;
-        ew->throw_it();
+    if (_current && !_current->needsStart()) {
+        if (_current->excWrapper) {
+            auto ew = _current->excWrapper;
+            _current->excWrapper = nullptr;
+            ew->throw_it();
+        } else if (_current->syncReset()) {
+            _current->reset(false);
+        }
     }
 }
 

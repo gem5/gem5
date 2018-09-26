@@ -119,6 +119,7 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     bool hasStaticSensitivities() { return !staticSensitivities.empty(); }
     bool internal() { return _internal; }
     bool timedOut() { return _timedOut; }
+    bool syncReset() { return _syncReset; }
 
     bool dontInitialize() { return _dontInitialize; }
     void dontInitialize(bool di) { _dontInitialize = di; }
