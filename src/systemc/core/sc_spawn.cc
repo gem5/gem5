@@ -83,6 +83,18 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
 
         for (auto f: opts->_finders)
             newStaticSensitivityFinder(proc, f);
+
+        for (auto p: opts->_in_resets)
+            newResetSensitivityPort(proc, p.target, p.value, p.sync);
+
+        for (auto p: opts->_inout_resets)
+            newResetSensitivityPort(proc, p.target, p.value, p.sync);
+
+        for (auto p: opts->_out_resets)
+            newResetSensitivityPort(proc, p.target, p.value, p.sync);
+
+        for (auto i: opts->_if_resets)
+            newResetSensitivitySignal(proc, i.target, i.value, i.sync);
     }
 
     if (opts && opts->_dontInitialize &&
@@ -161,59 +173,54 @@ sc_spawn_options::set_sensitivity(sc_event_finder *f)
 
 
 void
-sc_spawn_options::reset_signal_is(const sc_in<bool> &, bool)
+sc_spawn_options::reset_signal_is(const sc_in<bool> &port, bool value)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _in_resets.emplace_back(&port, value, true);
 }
 
 void
-sc_spawn_options::reset_signal_is(const sc_inout<bool> &, bool)
+sc_spawn_options::reset_signal_is(const sc_inout<bool> &port, bool value)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _inout_resets.emplace_back(&port, value, true);
 }
 
 void
-sc_spawn_options::reset_signal_is(const sc_out<bool> &, bool)
+sc_spawn_options::reset_signal_is(const sc_out<bool> &port, bool value)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _out_resets.emplace_back(&port, value, true);
 }
 
 void
-sc_spawn_options::reset_signal_is(const sc_signal_in_if<bool> &, bool)
+sc_spawn_options::reset_signal_is(
+        const sc_signal_in_if<bool> &iface, bool value)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-
-void
-sc_spawn_options::async_reset_signal_is(const sc_in<bool> &, bool)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-void
-sc_spawn_options::async_reset_signal_is(const sc_inout<bool> &, bool)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-void
-sc_spawn_options::async_reset_signal_is(const sc_out<bool> &, bool)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-}
-
-void
-sc_spawn_options::async_reset_signal_is(const sc_signal_in_if<bool> &, bool)
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _if_resets.emplace_back(&iface, value, true);
 }
 
 
 void
-sc_spawn_warn_unimpl(const char *func)
+sc_spawn_options::async_reset_signal_is(const sc_in<bool> &port, bool value)
 {
-    warn("%s not implemented.\n", func);
+    _in_resets.emplace_back(&port, value, false);
+}
+
+void
+sc_spawn_options::async_reset_signal_is(const sc_inout<bool> &port, bool value)
+{
+    _inout_resets.emplace_back(&port, value, false);
+}
+
+void
+sc_spawn_options::async_reset_signal_is(const sc_out<bool> &port, bool value)
+{
+    _out_resets.emplace_back(&port, value, false);
+}
+
+void
+sc_spawn_options::async_reset_signal_is(
+        const sc_signal_in_if<bool> &iface, bool value)
+{
+    _if_resets.emplace_back(&iface, value, false);
 }
 
 } // namespace sc_core

@@ -33,6 +33,9 @@
 #include "systemc/core/port.hh"
 #include "systemc/core/process.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/channel/sc_in.hh"
+#include "systemc/ext/channel/sc_inout.hh"
+#include "systemc/ext/channel/sc_out.hh"
 #include "systemc/ext/core/sc_export.hh"
 #include "systemc/ext/core/sc_interface.hh"
 #include "systemc/ext/core/sc_port.hh"
@@ -89,6 +92,18 @@ StaticSensitivity::addToEvent(const ::sc_core::sc_event *e)
 
 void
 StaticSensitivity::delFromEvent(const ::sc_core::sc_event *e)
+{
+    Event::getFromScEvent(e)->delSensitivity(this);
+}
+
+void
+ResetSensitivity::addToEvent(const ::sc_core::sc_event *e)
+{
+    Event::getFromScEvent(e)->addSensitivity(this);
+}
+
+void
+ResetSensitivity::delFromEvent(const ::sc_core::sc_event *e)
 {
     Event::getFromScEvent(e)->delSensitivity(this);
 }
@@ -226,6 +241,73 @@ DynamicSensitivityEventAndList::notifyWork(Event *e)
         satisfy();
 
     return true;
+}
+
+/*
+ * Reset sensitivities.
+ */
+
+void
+newResetSensitivitySignal(
+        Process *p, const sc_core::sc_signal_in_if<bool> *signal,
+        bool val, bool sync)
+{
+    auto s = new ResetSensitivitySignal(p, signal, val, sync);
+    s->addToEvent(s->event);
+    p->addReset(s);
+}
+
+void
+newResetSensitivityPort(Process *p, const sc_core::sc_in<bool> *port,
+        bool val, bool sync)
+{
+    auto s = new ResetSensitivityPort(p, port, val, sync);
+    Port::fromPort(port)->sensitive(s);
+    p->addReset(s);
+}
+void
+newResetSensitivityPort(Process *p, const sc_core::sc_inout<bool> *port,
+        bool val, bool sync)
+{
+    auto s = new ResetSensitivityPort(p, port, val, sync);
+    Port::fromPort(port)->sensitive(s);
+    p->addReset(s);
+}
+void
+newResetSensitivityPort(Process *p, const sc_core::sc_out<bool> *port,
+        bool val, bool sync)
+{
+    auto s = new ResetSensitivityPort(p, port, val, sync);
+    Port::fromPort(port)->sensitive(s);
+    p->addReset(s);
+}
+
+ResetSensitivitySignal::ResetSensitivitySignal(
+        Process *p, const sc_core::sc_signal_in_if<bool> *signal,
+        bool _val, bool _sync) :
+    Sensitivity(p), ResetSensitivity(p, _val, _sync),
+    SensitivityEvent(p, signal ? &signal->value_changed_event() : nullptr),
+    _signal(signal)
+{
+    if (signal && signal->read() == val())
+        process->signalReset(true, sync());
+}
+
+bool
+ResetSensitivitySignal::notifyWork(Event *e)
+{
+    process->signalReset(_signal->read() == val(), sync());
+    return true;
+}
+
+void
+ResetSensitivityPort::setSignal(const ::sc_core::sc_signal_in_if<bool> *signal)
+{
+    _signal = signal;
+    event = &_signal->value_changed_event();
+    addToEvent(event);
+    if (signal->read() == val())
+        process->signalReset(true, sync());
 }
 
 } // namespace sc_gem5

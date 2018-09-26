@@ -209,6 +209,17 @@ class Scheduler
         yield();
     }
 
+    // Run this process at the next opportunity.
+    void
+    runNext(Process *p)
+    {
+        // Like above, it's ok if this isn't a method. Putting it on this list
+        // just gives it priority.
+        readyListMethods.pushFirst(p);
+        if (!inEvaluate())
+            scheduleReadyEvent();
+    }
+
     // Set an event queue for scheduling events.
     void setEventQueue(EventQueue *_eq) { eq = _eq; }
 

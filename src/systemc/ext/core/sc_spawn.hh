@@ -130,6 +130,21 @@ class sc_spawn_options
     std::vector<sc_interface *> _interfaces;
     std::vector<sc_event_finder *> _finders;
 
+    template <typename T>
+    struct Reset
+    {
+        Reset(T *t, bool v, bool s) : target(t), value(v), sync(s) {}
+
+        T *target;
+        bool value;
+        bool sync;
+    };
+
+    std::vector<Reset<const sc_in<bool> > > _in_resets;
+    std::vector<Reset<const sc_inout<bool> > > _inout_resets;
+    std::vector<Reset<const sc_out<bool> > > _out_resets;
+    std::vector<Reset<const sc_signal_in_if<bool> > > _if_resets;
+
     // Disabled
     sc_spawn_options(const sc_spawn_options &) {}
     sc_spawn_options &operator = (const sc_spawn_options &) { return *this; }

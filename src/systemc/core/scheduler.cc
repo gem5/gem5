@@ -183,7 +183,7 @@ Scheduler::yield()
             auto ew = _current->excWrapper;
             _current->excWrapper = nullptr;
             ew->throw_it();
-        } else if (_current->syncReset()) {
+        } else if (_current->inReset()) {
             _current->reset(false);
         }
     }

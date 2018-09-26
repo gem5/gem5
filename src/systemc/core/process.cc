@@ -236,6 +236,27 @@ Process::syncResetOff(bool inc_kids)
 }
 
 void
+Process::signalReset(bool set, bool sync)
+{
+    if (set) {
+        waitCount(0);
+        if (sync) {
+            syncResetCount++;
+        } else {
+            asyncResetCount++;
+            cancelTimeout();
+            clearDynamic();
+            scheduler.runNext(this);
+        }
+    } else {
+        if (sync)
+            syncResetCount--;
+        else
+            asyncResetCount--;
+    }
+}
+
+void
 Process::run()
 {
     bool reset;
@@ -272,6 +293,12 @@ Process::setDynamic(DynamicSensitivity *s)
 }
 
 void
+Process::addReset(ResetSensitivity *s)
+{
+    resetSensitivities.push_back(s);
+}
+
+void
 Process::cancelTimeout()
 {
     if (timeoutEvent.scheduled())
@@ -302,6 +329,11 @@ Process::timeout()
 void
 Process::satisfySensitivity(Sensitivity *s)
 {
+    if (_waitCount) {
+        _waitCount--;
+        return;
+    }
+
     // If there's a dynamic sensitivity and this wasn't it, ignore.
     if ((dynamicSensitivity || timeoutEvent.scheduled()) &&
             dynamicSensitivity != s) {
@@ -346,7 +378,8 @@ Process::Process(const char *name, ProcessFuncWrapper *func, bool internal) :
     timeoutEvent([this]() { this->timeout(); }),
     func(func), _internal(internal), _timedOut(false), _dontInitialize(false),
     _needsStart(true), _isUnwinding(false), _terminated(false),
-    _suspended(false), _disabled(false), _syncReset(false), refCount(0),
+    _suspended(false), _disabled(false), _syncReset(false), syncResetCount(0),
+    asyncResetCount(0), _waitCount(0), refCount(0),
     stackSize(::Fiber::DefaultStackSize), dynamicSensitivity(nullptr)
 {
     _dynamic =

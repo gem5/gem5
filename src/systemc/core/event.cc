@@ -155,6 +155,13 @@ Event::notify(DynamicSensitivities &senses)
 }
 
 void
+Event::notify(ResetSensitivities &senses)
+{
+    for (auto s: senses)
+        s->notify(this);
+}
+
+void
 Event::notify()
 {
     if (scheduler.inUpdate()) {
@@ -167,7 +174,7 @@ Event::notify()
         scheduler.deschedule(&delayedNotify);
 
     _triggeredStamp = scheduler.changeStamp();
-
+    notify(resetSense);
     notify(staticSenseMethod);
     notify(dynamicSenseMethod);
     notify(staticSenseThread);

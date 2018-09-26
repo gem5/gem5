@@ -87,6 +87,8 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     void syncResetOn(bool inc_kids);
     void syncResetOff(bool inc_kids);
 
+    void signalReset(bool set, bool sync);
+
     void incref() { refCount++; }
     void decref() { refCount--; }
 
@@ -100,6 +102,7 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     void addStatic(StaticSensitivity *);
     void setDynamic(DynamicSensitivity *);
     void clearDynamic() { setDynamic(nullptr); }
+    void addReset(ResetSensitivity *);
 
     ScEvent timeoutEvent;
     void setTimeout(::sc_core::sc_time t);
@@ -119,12 +122,14 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     bool hasStaticSensitivities() { return !staticSensitivities.empty(); }
     bool internal() { return _internal; }
     bool timedOut() { return _timedOut; }
-    bool syncReset() { return _syncReset; }
+    bool inReset() { return _syncReset || syncResetCount || asyncResetCount; }
 
     bool dontInitialize() { return _dontInitialize; }
     void dontInitialize(bool di) { _dontInitialize = di; }
 
     void joinWait(::sc_core::sc_join *join) { joinWaiters.push_back(join); }
+
+    void waitCount(int count) { _waitCount = count; }
 
   protected:
     void timeout();
@@ -170,12 +175,18 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 
     bool _syncReset;
 
+    int syncResetCount;
+    int asyncResetCount;
+
+    int _waitCount;
+
     int refCount;
 
     size_t stackSize;
 
     StaticSensitivities staticSensitivities;
     DynamicSensitivity *dynamicSensitivity;
+    ResetSensitivities resetSensitivities;
 
     std::unique_ptr<::sc_core::sc_report> _lastReport;
 

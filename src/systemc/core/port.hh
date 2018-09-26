@@ -42,6 +42,7 @@ namespace sc_gem5
 
 class StaticSensitivityPort;
 class StaticSensitivityFinder;
+class ResetSensitivityPort;
 
 class Port;
 
@@ -58,6 +59,7 @@ class Port
 
     void finalizePort(StaticSensitivityPort *port);
     void finalizeFinder(StaticSensitivityFinder *finder);
+    void finalizeReset(ResetSensitivityPort *reset);
 
     void
     addInterface(::sc_core::sc_interface *iface)
@@ -105,15 +107,20 @@ class Port
     struct Sensitivity
     {
         Sensitivity(StaticSensitivityPort *port) :
-            port(port), finder(nullptr)
+            port(port), finder(nullptr), reset(nullptr)
         {}
 
         Sensitivity(StaticSensitivityFinder *finder) :
-            port(nullptr), finder(finder)
+            port(nullptr), finder(finder), reset(nullptr)
+        {}
+
+        Sensitivity(ResetSensitivityPort *reset) :
+            port(nullptr), finder(nullptr), reset(reset)
         {}
 
         StaticSensitivityPort *port;
         StaticSensitivityFinder *finder;
+        ResetSensitivityPort *reset;
     };
 
     std::vector<Binding *> bindings;
@@ -148,6 +155,7 @@ class Port
 
     void sensitive(StaticSensitivityPort *port);
     void sensitive(StaticSensitivityFinder *finder);
+    void sensitive(ResetSensitivityPort *reset);
 
     void finalize();
 

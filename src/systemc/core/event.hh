@@ -74,6 +74,7 @@ class Event
 
     void notify(StaticSensitivities &senses);
     void notify(DynamicSensitivities &senses);
+    void notify(ResetSensitivities &senses);
 
     void notify();
     void notify(const sc_core::sc_time &t);
@@ -137,6 +138,22 @@ class Event
             }
         }
     }
+    void
+    addSensitivity(ResetSensitivity *s) const
+    {
+        resetSense.push_back(s);
+    }
+    void
+    delSensitivity(ResetSensitivity *s) const
+    {
+        for (auto &t: resetSense) {
+            if (t == s) {
+                t = resetSense.back();
+                resetSense.pop_back();
+                break;
+            }
+        }
+    }
 
   private:
     sc_core::sc_event *_sc_event;
@@ -154,6 +171,7 @@ class Event
     mutable StaticSensitivities staticSenseThread;
     mutable DynamicSensitivities dynamicSenseMethod;
     mutable DynamicSensitivities dynamicSenseThread;
+    mutable ResetSensitivities resetSense;
 };
 
 extern Events topLevelEvents;

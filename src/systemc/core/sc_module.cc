@@ -35,6 +35,7 @@
 #include "systemc/core/kernel.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/process_types.hh"
+#include "systemc/core/sensitivity.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
@@ -244,52 +245,60 @@ sc_module::end_module()
 }
 
 void
-sc_module::reset_signal_is(const sc_in<bool> &, bool)
+sc_module::reset_signal_is(const sc_in<bool> &port, bool val)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::newResetSensitivityPort(
+            ::sc_gem5::Process::newest(), &port, val, true);
 }
 
 void
-sc_module::reset_signal_is(const sc_inout<bool> &, bool)
+sc_module::reset_signal_is(const sc_inout<bool> &port, bool val)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::newResetSensitivityPort(
+            ::sc_gem5::Process::newest(), &port, val, true);
 }
 
 void
-sc_module::reset_signal_is(const sc_out<bool> &, bool)
+sc_module::reset_signal_is(const sc_out<bool> &port, bool val)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::newResetSensitivityPort(
+            ::sc_gem5::Process::newest(), &port, val, true);
 }
 
 void
-sc_module::reset_signal_is(const sc_signal_in_if<bool> &, bool)
+sc_module::reset_signal_is(const sc_signal_in_if<bool> &signal, bool val)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::newResetSensitivitySignal(
+            ::sc_gem5::Process::newest(), &signal, val, true);
 }
 
 
 void
-sc_module::async_reset_signal_is(const sc_in<bool> &, bool)
+sc_module::async_reset_signal_is(const sc_in<bool> &port, bool val)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::newResetSensitivityPort(
+            ::sc_gem5::Process::newest(), &port, val, false);
 }
 
 void
-sc_module::async_reset_signal_is(const sc_inout<bool> &, bool)
+sc_module::async_reset_signal_is(const sc_inout<bool> &port, bool val)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::newResetSensitivityPort(
+            ::sc_gem5::Process::newest(), &port, val, false);
 }
 
 void
-sc_module::async_reset_signal_is(const sc_out<bool> &, bool)
+sc_module::async_reset_signal_is(const sc_out<bool> &port, bool val)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::newResetSensitivityPort(
+            ::sc_gem5::Process::newest(), &port, val, false);
 }
 
 void
-sc_module::async_reset_signal_is(const sc_signal_in_if<bool> &, bool)
+sc_module::async_reset_signal_is(const sc_signal_in_if<bool> &signal, bool val)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::newResetSensitivitySignal(
+            ::sc_gem5::Process::newest(), &signal, val, false);
 }
 
 
@@ -626,8 +635,9 @@ wait(int n)
         std::string msg = csprintf("n = %d", n);
         SC_REPORT_ERROR("(E525) wait(n) is only valid for n > 0", msg.c_str());
     }
-    for (int i = 0; i < n; i++)
-        wait();
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    p->waitCount(n - 1);
+    wait();
 }
 
 void
