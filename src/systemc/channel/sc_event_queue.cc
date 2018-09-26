@@ -29,41 +29,55 @@
 
 #include "base/logging.hh"
 #include "systemc/ext/channel/sc_event_queue.hh"
+#include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/core/sc_time.hh"
 
 namespace sc_core
 {
 
 sc_event_queue::sc_event_queue(sc_module_name name) :
         sc_interface(), sc_event_queue_if(), sc_module(name)
-{}
+{
+    SC_METHOD(_trigger);
+    dont_initialize();
+    sensitive << _defaultEvent;
+}
 
 sc_event_queue::~sc_event_queue() {}
 
-const char *sc_event_queue::kind() const { return "sc_event_queue"; }
-
 void
-sc_event_queue::notify(double, sc_time_unit)
+sc_event_queue::notify(double d, sc_time_unit tu)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    notify(sc_time(d, tu));
 }
 
 void
-sc_event_queue::notify(const sc_time &)
+sc_event_queue::notify(const sc_time &t)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _times.push(sc_time_stamp() + t);
+    _defaultEvent.notify(_times.top() - sc_time_stamp());
 }
 
 void
 sc_event_queue::cancel_all()
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    _defaultEvent.cancel();
+    _times = std::priority_queue<
+        sc_time, std::vector<sc_time>, std::greater<sc_time> >();
 }
 
 const sc_event &
 sc_event_queue::default_event() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return *(const sc_event *)nullptr;
+    return _defaultEvent;
+}
+
+void
+sc_event_queue::_trigger()
+{
+    _times.pop();
+    if (!_times.empty())
+        _defaultEvent.notify(_times.top() - sc_time_stamp());
 }
 
 } // namespace sc_core

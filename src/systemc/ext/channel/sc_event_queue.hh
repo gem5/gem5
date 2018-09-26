@@ -30,6 +30,9 @@
 #ifndef __SYSTEMC_EXT_CHANNEL_SC_EVENT_QUEUE_HH__
 #define __SYSTEMC_EXT_CHANNEL_SC_EVENT_QUEUE_HH__
 
+#include <queue>
+
+#include "../core/sc_event.hh"
 #include "../core/sc_interface.hh"
 #include "../core/sc_module.hh" // for sc_gen_unique_name
 #include "../core/sc_module_name.hh"
@@ -53,17 +56,26 @@ class sc_event_queue_if : public virtual sc_interface
 class sc_event_queue : public sc_event_queue_if, public sc_module
 {
   public:
+    SC_HAS_PROCESS(sc_event_queue);
+
     sc_event_queue(sc_module_name name=
                    sc_module_name(sc_gen_unique_name("event_queue")));
     ~sc_event_queue();
 
-    virtual const char *kind() const;
+    virtual const char *kind() const { return "sc_event_queue"; }
 
     virtual void notify(double, sc_time_unit);
     virtual void notify(const sc_time &);
     virtual void cancel_all();
 
     virtual const sc_event &default_event() const;
+
+  private:
+    void _trigger();
+
+    sc_event _defaultEvent;
+    std::priority_queue<
+        sc_time, std::vector<sc_time>, std::greater<sc_time> > _times;
 };
 
 // Nonstandard
