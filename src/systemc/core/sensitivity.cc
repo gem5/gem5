@@ -58,7 +58,8 @@ Sensitivity::notify(Event *e)
 {
     if (process->disabled())
         return false;
-    return notifyWork(e);
+    satisfy();
+    return true;
 }
 
 bool
@@ -213,8 +214,11 @@ DynamicSensitivityEventOrList::DynamicSensitivityEventOrList(
 {}
 
 bool
-DynamicSensitivityEventOrList::notifyWork(Event *e)
+DynamicSensitivityEventOrList::notify(Event *e)
 {
+    if (process->disabled())
+        return false;
+
     events.erase(e->sc_event());
 
     // All the other events need this deleted from their lists since this
@@ -232,8 +236,11 @@ DynamicSensitivityEventAndList::DynamicSensitivityEventAndList(
 {}
 
 bool
-DynamicSensitivityEventAndList::notifyWork(Event *e)
+DynamicSensitivityEventAndList::notify(Event *e)
 {
+    if (process->disabled())
+        return false;
+
     events.erase(e->sc_event());
 
     // This sensitivity is satisfied if all events have triggered.
@@ -294,7 +301,7 @@ ResetSensitivitySignal::ResetSensitivitySignal(
 }
 
 bool
-ResetSensitivitySignal::notifyWork(Event *e)
+ResetSensitivitySignal::notify(Event *e)
 {
     process->signalReset(_signal->read() == val(), sync());
     return true;

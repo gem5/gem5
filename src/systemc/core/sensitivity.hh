@@ -72,18 +72,11 @@ class Sensitivity
     virtual void addToEvent(const ::sc_core::sc_event *e) = 0;
     virtual void delFromEvent(const ::sc_core::sc_event *e) = 0;
 
-    virtual bool
-    notifyWork(Event *e)
-    {
-        satisfy();
-        return true;
-    }
-
   public:
     virtual void clear() = 0;
 
     void satisfy();
-    bool notify(Event *e);
+    virtual bool notify(Event *e);
 
     enum Category
     {
@@ -307,7 +300,7 @@ class DynamicSensitivityEventOrList :
     DynamicSensitivityEventOrList(
             Process *p, const sc_core::sc_event_or_list *eol);
 
-    bool notifyWork(Event *e) override;
+    bool notify(Event *e) override;
 };
 
 //XXX This sensitivity can't be reused. To reset it, it has to be deleted and
@@ -323,7 +316,7 @@ class DynamicSensitivityEventAndList :
     DynamicSensitivityEventAndList(
             Process *p, const sc_core::sc_event_and_list *eal);
 
-    bool notifyWork(Event *e) override;
+    bool notify(Event *e) override;
 };
 
 /*
@@ -355,7 +348,7 @@ class ResetSensitivitySignal :
             Process *p, const sc_core::sc_signal_in_if<bool> *signal,
             bool _val, bool _sync);
 
-    bool notifyWork(Event *e) override;
+    bool notify(Event *e) override;
 };
 
 class ResetSensitivityPort : public ResetSensitivitySignal
