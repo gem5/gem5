@@ -113,7 +113,7 @@ sc_time sc_get_default_time_unit();
 class sc_time_tuple
 {
   public:
-    sc_time_tuple() : _value(), _unit(SC_SEC), _offset(1) {}
+    sc_time_tuple() : _value(), _unit(SC_SEC), _set(false) {}
     sc_time_tuple(const sc_time &);
 
     bool has_value() const;
@@ -131,7 +131,7 @@ class sc_time_tuple
   private:
     sc_dt::uint64 _value;
     sc_time_unit _unit;
-    unsigned _offset;
+    bool _set;
 };
 
 } // namespace sc_core

@@ -264,40 +264,7 @@ sc_time::operator /= (double d)
 void
 sc_time::print(std::ostream &os) const
 {
-    if (val == 0) {
-        os << "0 s";
-    } else {
-        Tick frequency = SimClock::Frequency;
-
-        // Shrink the frequency by scaling down the time period, ie converting
-        // it from cycles per second to cycles per millisecond, etc.
-        sc_time_unit tu = SC_SEC;
-        while (tu > 1 && (frequency % 1000 == 0)) {
-            tu = (sc_time_unit)((int)tu - 1);
-            frequency /= 1000;
-        }
-
-        // Convert the frequency into a period.
-        Tick period;
-        if (frequency > 1) {
-            tu = (sc_time_unit)((int)tu - 1);
-            period = 1000 / frequency;
-        } else {
-            period = frequency;
-        }
-
-        // Scale our integer value by the period.
-        uint64_t scaled = val * period;
-
-        // Shrink the scaled time value by increasing the size of the units
-        // it's measured by, avoiding fractional parts.
-        while (tu < SC_SEC && (scaled % 1000) == 0) {
-            tu = (sc_time_unit)((int)tu + 1);
-            scaled /= 1000;
-        }
-
-        os << scaled << ' ' << sc_gem5::TimeUnitNames[tu];
-    }
+    os << sc_time_tuple(*this).to_string();
 }
 
 sc_time
@@ -485,44 +452,63 @@ sc_get_default_time_unit()
     return sc_time(defaultUnit, SC_SEC);
 }
 
-sc_time_tuple::sc_time_tuple(const sc_time &)
+sc_time_tuple::sc_time_tuple(const sc_time &t) :
+    _value(), _unit(SC_SEC), _set(true)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (!t.value())
+        return;
+
+    Tick frequency = SimClock::Frequency;
+
+    // Shrink the frequency by scaling down the time period, ie converting
+    // it from cycles per second to cycles per millisecond, etc.
+    while (_unit > 1 && (frequency % 1000 == 0)) {
+        _unit = (sc_time_unit)((int)_unit - 1);
+        frequency /= 1000;
+    }
+
+    // Convert the frequency into a period.
+    Tick period;
+    if (frequency > 1) {
+        _unit = (sc_time_unit)((int)_unit - 1);
+        period = 1000 / frequency;
+    } else {
+        period = frequency;
+    }
+
+    // Scale our integer value by the period.
+    _value = t.value() * period;
+
+    // Shrink the scaled time value by increasing the size of the units
+    // it's measured by, avoiding fractional parts.
+    while (_unit < SC_SEC && (_value % 1000) == 0) {
+        _unit = (sc_time_unit)((int)_unit + 1);
+        _value /= 1000;
+    }
 }
 
 bool
 sc_time_tuple::has_value() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return _set;
 }
 
-sc_dt::uint64
-sc_time_tuple::value() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0;
-}
+sc_dt::uint64 sc_time_tuple::value() const { return _value; }
 
 const char *
 sc_time_tuple::unit_symbol() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
+    return sc_gem5::TimeUnitNames[_unit];
 }
 
-double
-sc_time_tuple::to_double() const
-{
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return 0.0;
-}
+double sc_time_tuple::to_double() const { return static_cast<double>(_value); }
 
 std::string
 sc_time_tuple::to_string() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
+    std::ostringstream ss;
+    ss << _value << ' ' << unit_symbol();
+    return ss.str();
 }
 
 } // namespace sc_core
