@@ -43,6 +43,15 @@ const char *TimeUnitNames[] = {
     [::sc_core::SC_SEC] = "s"
 };
 
+const char *TimeUnitConstantNames[] = {
+    [::sc_core::SC_FS] = "SC_FS",
+    [::sc_core::SC_PS] = "SC_PS",
+    [::sc_core::SC_NS] = "SC_NS",
+    [::sc_core::SC_US] = "SC_US",
+    [::sc_core::SC_MS] = "SC_MS",
+    [::sc_core::SC_SEC] = "SC_SEC"
+};
+
 double TimeUnitScale[] = {
     [::sc_core::SC_FS] = 1.0e-15,
     [::sc_core::SC_PS] = 1.0e-12,

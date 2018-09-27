@@ -153,6 +153,25 @@ sc_time::sc_time(const sc_time &t)
     val = t.val;
 }
 
+sc_time::sc_time(double d, const char *unit)
+{
+    sc_time_unit tu;
+    for (tu = SC_FS; tu <= SC_SEC; tu = (sc_time_unit)(tu + 1)) {
+        if (strcmp(unit, sc_gem5::TimeUnitNames[tu]) == 0 ||
+            strcmp(unit, sc_gem5::TimeUnitConstantNames[tu]) == 0) {
+            break;
+        }
+    }
+
+    if (tu > SC_SEC) {
+        SC_REPORT_ERROR("(E567) sc_time conversion failed",
+                "invalid unit given");
+        val = 0;
+        return;
+    }
+    set(this, d, tu);
+}
+
 sc_time::sc_time(double d, bool scale)
 {
     double scaler = scale ? defaultUnit : SimClock::Float::Hz;
@@ -288,8 +307,19 @@ sc_time::from_seconds(double d)
 sc_time
 sc_time::from_string(const char *str)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return sc_time();
+    char *end = nullptr;
+
+    double d = str ? std::strtod(str, &end) : 0.0;
+    if (str == end || d < 0.0) {
+        SC_REPORT_ERROR("(E567) sc_time conversion failed",
+                "invalid value given");
+        return SC_ZERO_TIME;
+    }
+
+    while (*end && std::isspace(*end))
+        end++;
+
+    return sc_time(d, end);
 }
 
 const sc_time
