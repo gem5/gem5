@@ -365,7 +365,7 @@ class Scheduler
 
     uint64_t changeStamp() { return _changeStamp; }
 
-    void throwToScMain(const ::sc_core::sc_report *r=nullptr);
+    void throwToScMain();
 
     Status status() { return _status; }
     void status(Status s) { _status = s; }
@@ -511,7 +511,7 @@ Scheduler::TimeSlot::process()
     scheduler.completeTimeSlot(this);
 }
 
-const ::sc_core::sc_report *reportifyException();
+const ::sc_core::sc_report reportifyException();
 
 } // namespace sc_gem5
 

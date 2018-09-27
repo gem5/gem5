@@ -418,11 +418,10 @@ Scheduler::schedulePause()
 }
 
 void
-Scheduler::throwToScMain(const ::sc_core::sc_report *r)
+Scheduler::throwToScMain()
 {
-    if (!r)
-        r = reportifyException();
-    _throwToScMain = r;
+    ::sc_core::sc_report report = reportifyException();
+    _throwToScMain = &report;
     status(StatusOther);
     scMain->run();
 }
@@ -462,7 +461,7 @@ throwingReportHandler(const ::sc_core::sc_report &r,
 
 } // anonymous namespace
 
-const ::sc_core::sc_report *
+const ::sc_core::sc_report
 reportifyException()
 {
     ::sc_core::sc_report_handler_proc old_handler =
@@ -488,7 +487,7 @@ reportifyException()
         }
     } catch (const ::sc_core::sc_report &r) {
         ::sc_core::sc_report_handler::set_handler(old_handler);
-        return &r;
+        return r;
     }
     panic("No exception thrown in reportifyException.");
 }
