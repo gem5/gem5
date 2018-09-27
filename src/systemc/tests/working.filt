@@ -45,6 +45,12 @@ path in (
     # sensitive, is exercised elsewhere.
     "systemc/kernel/sc_sensitive/test02",
     "systemc/kernel/sc_sensitive/test03",
+
+    # This test relies on being able to set the time resolution even after it's
+    # been fixed by telling systemc to ignore the error message. gem5 has no
+    # facility to ignore the error it raises for the same reason, and it
+    # wouldn't make sense to add one.
+    "systemc/kernel/sc_time/test19",
 ),
 
 ])
