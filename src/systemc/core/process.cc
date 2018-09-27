@@ -183,14 +183,14 @@ Process::reset(bool inc_kids)
         return;
 
 
+    _resetEvent.notify();
+
     if (_needsStart) {
         scheduler.runNow(this);
     } else {
         _isUnwinding = true;
         injectException(resetException);
     }
-
-    _resetEvent.notify();
 }
 
 void
