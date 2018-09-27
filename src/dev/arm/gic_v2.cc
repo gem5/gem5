@@ -622,6 +622,9 @@ GicV2::writeCpu(ContextID ctx, Addr daddr, uint32_t data)
       case GICC_APR3:
         warn("GIC APRn write ignored because not implemented: %#x\n", daddr);
         break;
+      case GICC_DIR:
+        warn("GIC DIR write ignored because not implemented: %#x\n", daddr);
+        break;
       default:
         panic("Tried to write Gic cpu at offset %#x\n", daddr);
         break;

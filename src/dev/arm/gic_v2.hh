@@ -110,6 +110,7 @@ class GicV2 : public BaseGic, public BaseGicRegisters
         GICC_APR2  = 0xd8, // active priority register 2
         GICC_APR3  = 0xdc, // active priority register 3
         GICC_IIDR  = 0xfc, // cpu interface id register
+        GICC_DIR   = 0x1000, // deactive interrupt register
     };
 
     static const int SGI_MAX = 16;  // Number of Software Gen Interrupts
