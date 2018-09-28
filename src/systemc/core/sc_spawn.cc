@@ -224,18 +224,3 @@ sc_spawn_options::async_reset_signal_is(
 }
 
 } // namespace sc_core
-
-namespace sc_unnamed
-{
-
-ImplementationDefined _1;
-ImplementationDefined _2;
-ImplementationDefined _3;
-ImplementationDefined _4;
-ImplementationDefined _5;
-ImplementationDefined _6;
-ImplementationDefined _7;
-ImplementationDefined _8;
-ImplementationDefined _9;
-
-} // namespace sc_unnamed
