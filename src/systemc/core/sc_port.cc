@@ -67,7 +67,7 @@ sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p) :
                 name(), kind());
     }
 
-    ::sc_gem5::Module *m = ::sc_gem5::currentModule();
+    auto m = sc_gem5::pickParentModule();
     if (!m) {
         reportError("(E100) port specified outside of module",
                 nullptr, name(), kind());

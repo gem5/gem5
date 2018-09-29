@@ -30,6 +30,7 @@
 #include "systemc/core/object.hh"
 
 #include <algorithm>
+#include <stack>
 
 #include "base/logging.hh"
 #include "systemc/core/event.hh"
@@ -91,23 +92,12 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
     if (_basename == "")
         _basename = ::sc_core::sc_gen_unique_name("object");
 
-    Module *p = currentModule();
-    if (!p)
-        p = callbackModule();
+    parent = pickParentObj();
 
     Module *n = newModule();
     if (n) {
         // We are a module in the process of being constructed.
         n->finish(this);
-    }
-
-    if (p) {
-        // We're "within" a parent module, ie we're being created while its
-        // constructor or end_of_elaboration callback is running.
-        parent = p->obj()->_sc_obj;
-    } else if (scheduler.current()) {
-        // Our parent is the currently running process.
-        parent = scheduler.current();
     }
 
     std::string original_name = _basename;
@@ -307,5 +297,28 @@ findObject(const char *name, const Objects &objects)
     ObjectsIt it = findObjectIn(allObjects, name);
     return it == allObjects.end() ? nullptr : *it;
 }
+
+namespace
+{
+
+std::stack<sc_core::sc_object *> objParentStack;
+
+} // anonymous namespace
+
+sc_core::sc_object *
+pickParentObj()
+{
+    if (!objParentStack.empty())
+        return objParentStack.top();
+
+    Process *p = scheduler.current();
+    if (p)
+        return p;
+
+    return nullptr;
+}
+
+void pushParentObj(sc_core::sc_object *obj) { objParentStack.push(obj); }
+void popParentObj() { objParentStack.pop(); }
 
 } // namespace sc_gem5

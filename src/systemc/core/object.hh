@@ -113,6 +113,10 @@ extern Objects allObjects;
 sc_core::sc_object *findObject(
         const char *name, const Objects &objects=topLevelObjects);
 
+sc_core::sc_object *pickParentObj();
+void pushParentObj(sc_core::sc_object *obj);
+void popParentObj();
+
 } // namespace sc_gem5
 
 #endif  //__SYSTEMC_CORE_OBJECT_HH__

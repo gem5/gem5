@@ -787,7 +787,7 @@ at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &s)
 const char *
 sc_gen_unique_name(const char *seed)
 {
-    ::sc_gem5::Module *mod = ::sc_gem5::currentModule();
+    auto mod = sc_gem5::pickParentModule();
     return mod ? mod->uniqueName(seed) :
         ::sc_gem5::nameGen.gen(seed);
 }

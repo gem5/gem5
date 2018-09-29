@@ -45,8 +45,6 @@ namespace
 std::list<Module *> _modules;
 Module *_new_module;
 
-Module *_callbackModule = nullptr;
-
 } // anonymous namespace
 
 Module::Module(const char *name) :
@@ -59,10 +57,15 @@ Module::Module(const char *name) :
 
 Module::~Module()
 {
-    if (_new_module == this) {
-        // Aborted module construction?
+    // Aborted module construction?
+    if (_new_module == this)
         _new_module = nullptr;
-    }
+
+    // Attempt to pop now in case we're at the top of the stack, so that
+    // a stale pointer to us isn't left floating around for somebody to trip
+    // on.
+    pop();
+
     allModules.remove(this);
 }
 
@@ -72,21 +75,29 @@ Module::finish(Object *this_obj)
     assert(!_obj);
     _obj = this_obj;
     _modules.push_back(this);
-    _new_module = nullptr;
-    // This is called from the constructor of this_obj, so it can't use
-    // dynamic cast.
-    sc_mod(static_cast<::sc_core::sc_module *>(this_obj->sc_obj()));
-    allModules.emplace_back(this);
+    pushParentModule(this);
+    try {
+        _new_module = nullptr;
+        // This is called from the constructor of this_obj, so it can't use
+        // dynamic cast.
+        sc_mod(static_cast<::sc_core::sc_module *>(this_obj->sc_obj()));
+        allModules.emplace_back(this);
+    } catch (...) {
+        popParentModule();
+        throw;
+    }
 }
 
 void
 Module::pop()
 {
-    panic_if(!_modules.size(), "Popping from empty module list.\n");
-    panic_if(_modules.back() != this,
-            "Popping module which isn't at the end of the module list.\n");
+    if (_modules.empty() || _modules.back() != this)
+        return;
+
     panic_if(_new_module, "Pop with unfinished module.\n");
+
     _modules.pop_back();
+    popParentModule();
 }
 
 void
@@ -111,11 +122,16 @@ Module::bindPorts(std::vector<const ::sc_core::sc_bind_proxy *> &proxies)
 void
 Module::beforeEndOfElaboration()
 {
-    callbackModule(this);
-    _sc_mod->before_end_of_elaboration();
-    for (auto e: exports)
-        e->before_end_of_elaboration();
-    callbackModule(nullptr);
+    pushParentModule(this);
+    try {
+        _sc_mod->before_end_of_elaboration();
+        for (auto e: exports)
+            e->before_end_of_elaboration();
+    } catch (...) {
+        popParentModule();
+        throw;
+    }
+    popParentModule();
 }
 
 void
@@ -127,31 +143,46 @@ Module::endOfElaboration()
                 "did you forget to add a sc_module_name parameter to "
                 "your module constructor?", msg.c_str());
     }
-    callbackModule(this);
-    _sc_mod->end_of_elaboration();
-    for (auto e: exports)
-        e->end_of_elaboration();
-    callbackModule(nullptr);
+    pushParentModule(this);
+    try {
+        _sc_mod->end_of_elaboration();
+        for (auto e: exports)
+            e->end_of_elaboration();
+    } catch (...) {
+        popParentModule();
+        throw;
+    }
+    popParentModule();
 }
 
 void
 Module::startOfSimulation()
 {
-    callbackModule(this);
-    _sc_mod->start_of_simulation();
-    for (auto e: exports)
-        e->start_of_simulation();
-    callbackModule(nullptr);
+    pushParentModule(this);
+    try {
+        _sc_mod->start_of_simulation();
+        for (auto e: exports)
+            e->start_of_simulation();
+    } catch (...) {
+        popParentModule();
+        throw;
+    }
+    popParentModule();
 }
 
 void
 Module::endOfSimulation()
 {
-    callbackModule(this);
-    _sc_mod->end_of_simulation();
-    for (auto e: exports)
-        e->end_of_simulation();
-    callbackModule(nullptr);
+    pushParentModule(this);
+    try {
+        _sc_mod->end_of_simulation();
+        for (auto e: exports)
+            e->end_of_simulation();
+    } catch(...) {
+        popParentModule();
+        throw;
+    }
+    popParentModule();
 }
 
 Module *
@@ -178,9 +209,6 @@ newModule()
 {
     return _new_module;
 }
-
-void callbackModule(Module *m) { _callbackModule = m; }
-Module *callbackModule() { return _callbackModule; }
 
 std::list<Module *> allModules;
 

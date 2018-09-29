@@ -65,7 +65,7 @@ sc_export_base::sc_export_base(const char *n) : sc_object(n)
                 name(), kind());
     }
 
-    ::sc_gem5::Module *m = ::sc_gem5::currentModule();
+    auto m = sc_gem5::pickParentModule();
     if (!m) {
         reportError("(E122) sc_export specified outside of module",
                 nullptr, name(), kind());
