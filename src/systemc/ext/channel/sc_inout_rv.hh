@@ -36,7 +36,6 @@
 #include "sc_signal_in_if.hh"
 #include "sc_signal_inout_if.hh"
 #include "sc_signal_rv.hh"
-#include "warn_unimpl.hh"
 
 namespace sc_dt
 {

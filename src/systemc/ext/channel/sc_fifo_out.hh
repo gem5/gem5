@@ -32,7 +32,6 @@
 
 #include "../core/sc_port.hh"
 #include "sc_fifo_out_if.hh"
-#include "warn_unimpl.hh"
 
 namespace sc_core
 {

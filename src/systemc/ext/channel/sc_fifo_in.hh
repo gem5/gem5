@@ -33,7 +33,6 @@
 #include "../core/sc_event.hh"
 #include "../core/sc_port.hh"
 #include "sc_fifo_in_if.hh"
-#include "warn_unimpl.hh"
 
 namespace sc_core
 {

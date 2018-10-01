@@ -38,7 +38,6 @@
 #include "../core/sc_module_name.hh"
 #include "../core/sc_port.hh"
 #include "../core/sc_time.hh"
-#include "warn_unimpl.hh"
 
 namespace sc_core
 {

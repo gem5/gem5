@@ -32,7 +32,6 @@
 
 #include "../core/sc_port.hh"
 #include "sc_inout.hh"
-#include "warn_unimpl.hh"
 
 namespace sc_core
 {
