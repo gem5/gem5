@@ -144,7 +144,10 @@ class Port
     void
     bind(::sc_core::sc_interface *interface)
     {
-        bindings.push_back(new Binding(interface));
+        if (bindings.empty())
+            addInterface(interface);
+        else
+            bindings.push_back(new Binding(interface));
     }
 
     void
