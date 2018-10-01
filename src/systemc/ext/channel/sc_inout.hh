@@ -33,6 +33,7 @@
 #include <string>
 
 #include "../core/sc_event.hh"
+#include "../core/sc_main.hh"
 #include "../core/sc_port.hh"
 #include "../dt/bit/sc_logic.hh"
 #include "../utils/sc_trace_file.hh"
@@ -184,10 +185,10 @@ template <class T>
 inline void
 sc_trace(sc_trace_file *tf, const sc_inout<T> &i, const std::string &name)
 {
-    if (i.size())
-        sc_trace(tf, i->read(), name);
-    else
+    if (::sc_core::sc_get_status() < ::sc_core::SC_START_OF_SIMULATION)
         i.add_trace(tf, name);
+    else
+        sc_trace(tf, i->read(), name);
 }
 
 template <>
@@ -357,10 +358,10 @@ template <>
 inline void sc_trace<bool>(
         sc_trace_file *tf, const sc_inout<bool> &i, const std::string &name)
 {
-    if (i.size())
-        sc_trace(tf, i->read(), name);
-    else
+    if (::sc_core::sc_get_status() < ::sc_core::SC_START_OF_SIMULATION)
         i.add_trace(tf, name);
+    else
+        sc_trace(tf, i->read(), name);
 }
 
 template <>
@@ -549,10 +550,10 @@ inline void
 sc_trace<sc_dt::sc_logic>(sc_trace_file *tf,
         const sc_inout<sc_dt::sc_logic> &i, const std::string &name)
 {
-    if (i.size())
-        sc_trace(tf, i->read(), name);
-    else
+    if (::sc_core::sc_get_status() < ::sc_core::SC_START_OF_SIMULATION)
         i.add_trace(tf, name);
+    else
+        sc_trace(tf, i->read(), name);
 }
 
 } // namespace sc_core
