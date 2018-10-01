@@ -120,6 +120,16 @@ Port::finalize()
     sensitivities.clear();
 }
 
+void
+Port::regPort()
+{
+    if (!regPortNeeded)
+        return;
+
+    for (int i = 0; i < size(); i++)
+        getInterface(i)->register_port(*portBase, portBase->_ifTypeName());
+}
+
 std::list<Port *> allPorts;
 
 } // namespace sc_gem5

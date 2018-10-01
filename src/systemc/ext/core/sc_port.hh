@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_EXT_CORE_SC_PORT_HH__
 #define __SYSTEMC_EXT_CORE_SC_PORT_HH__
 
+#include <typeinfo>
 #include <vector>
 
 #include "../utils/sc_report_handler.hh"
@@ -108,6 +109,7 @@ class sc_port_base : public sc_object
     virtual void _gem5AddInterface(sc_interface *i) = 0;
 
     ::sc_gem5::Port *_gem5Port;
+    virtual const char *_ifTypeName() const = 0;
 };
 
 template <class IF>
@@ -209,6 +211,8 @@ class sc_port_b : public sc_port_base
         sc_assert(interface);
         _interfaces.push_back(interface);
     }
+
+    const char *_ifTypeName() const { return typeid(IF).name(); }
 
     // Disabled
     sc_port_b() {}

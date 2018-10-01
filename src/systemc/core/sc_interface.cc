@@ -35,6 +35,8 @@
 namespace sc_core
 {
 
+void sc_interface::register_port(sc_port_base &, const char *) {}
+
 const sc_event &
 sc_interface::default_event() const
 {

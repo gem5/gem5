@@ -39,6 +39,7 @@ class sc_event;
 class sc_interface
 {
   public:
+    virtual void register_port(sc_port_base &, const char *);
     virtual const sc_event &default_event() const;
     virtual ~sc_interface() {};
 

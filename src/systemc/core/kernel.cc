@@ -93,6 +93,8 @@ Kernel::regStats()
     try {
         for (auto p: allPorts)
             p->finalize();
+        for (auto p: allPorts)
+            p->regPort();
 
         status(::sc_core::SC_END_OF_ELABORATION);
         for (auto p: allPorts)

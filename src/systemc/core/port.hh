@@ -31,6 +31,7 @@
 #define __SYSTEMC_CORE_PORT_HH__
 
 #include <list>
+#include <typeinfo>
 #include <vector>
 
 #include "base/cprintf.hh"
@@ -57,6 +58,8 @@ class Port
     int _maxSize;
     int _size;
 
+    bool regPortNeeded;
+
     void finalizePort(StaticSensitivityPort *port);
     void finalizeFinder(StaticSensitivityFinder *finder);
     void finalizeReset(ResetSensitivityPort *reset);
@@ -80,6 +83,8 @@ class Port
     void
     addInterfaces(::sc_core::sc_port_base *pb)
     {
+        // Only the ports farthest from the interfaces call register_port.
+        pb->_gem5Port->regPortNeeded = false;
         for (int i = 0; i < pb->size(); i++)
             addInterface(pb->_gem5Interface(i));
     }
@@ -136,7 +141,8 @@ class Port
     ::sc_core::sc_port_base *sc_port_base() { return portBase; }
 
     Port(::sc_core::sc_port_base *port_base, int max) :
-        portBase(port_base), finalized(false), _maxSize(max), _size(0)
+        portBase(port_base), finalized(false), _maxSize(max), _size(0),
+        regPortNeeded(true)
     {
         allPorts.push_front(this);
     }
@@ -161,6 +167,7 @@ class Port
     void sensitive(ResetSensitivityPort *reset);
 
     void finalize();
+    void regPort();
 
     int size() { return _size; }
     int maxSize() { return _maxSize; }
