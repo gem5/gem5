@@ -38,7 +38,7 @@
  */
 
 #ifndef __CPU_SIMPLE_NONCACHING_HH__
-#define __CPU_SIMPLE_NONCACHING_HH___
+#define __CPU_SIMPLE_NONCACHING_HH__
 
 #include "cpu/simple/atomic.hh"
 #include "params/NonCachingSimpleCPU.hh"
