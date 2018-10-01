@@ -35,7 +35,6 @@
 #include "../dt/bit/sc_logic.hh"
 #include "../dt/bit/sc_lv.hh"
 #include "sc_signal.hh"
-#include "warn_unimpl.hh"
 
 namespace sc_dt
 {
@@ -62,11 +61,7 @@ class sc_signal_rv : public sc_signal<sc_dt::sc_lv<W>, SC_MANY_WRITERS>
     {}
     virtual ~sc_signal_rv() {}
 
-    virtual void
-    register_port(sc_port_base &, const char *)
-    {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    virtual void register_port(sc_port_base &, const char *) {}
 
     virtual void
     write(const sc_dt::sc_lv<W> &l)

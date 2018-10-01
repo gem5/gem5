@@ -31,6 +31,7 @@
 #define __SYSTEMC_EXT_CHANNEL_SC_SIGNAL_HH__
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -39,7 +40,6 @@
 #include "../core/sc_prim.hh"
 #include "../dt/bit/sc_logic.hh"
 #include "sc_signal_inout_if.hh"
-#include "warn_unimpl.hh" // for warn_unimpl
 
 namespace sc_core
 {
@@ -53,22 +53,41 @@ class sc_signal : public sc_signal_inout_if<T>,
   public:
     sc_signal() : sc_signal_inout_if<T>(),
                   sc_prim_channel(sc_gen_unique_name("signal")),
-                  m_cur_val(T()), m_new_val(T()), _changeStamp(~0ULL)
+                  m_cur_val(T()), m_new_val(T()), _changeStamp(~0ULL),
+                  _gem5Writer(NULL)
     {}
     explicit sc_signal(const char *name) :
         sc_signal_inout_if<T>(), sc_prim_channel(name),
-        m_cur_val(T()), m_new_val(T()), _changeStamp(~0ULL)
+        m_cur_val(T()), m_new_val(T()), _changeStamp(~0ULL),
+        _gem5Writer(NULL)
     {}
     explicit sc_signal(const char *name, const T &initial_value) :
         sc_signal_inout_if<T>(), sc_prim_channel(name),
-        m_cur_val(initial_value), m_new_val(initial_value), _changeStamp(~0ULL)
+        m_cur_val(initial_value), m_new_val(initial_value),
+        _changeStamp(~0ULL), _gem5Writer(NULL)
     {}
     virtual ~sc_signal() {}
 
     virtual void
-    register_port(sc_port_base &, const char *)
+    register_port(sc_port_base &port, const char *iface_type_name)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        if (WRITER_POLICY == SC_ONE_WRITER &&
+                std::string(iface_type_name) ==
+                typeid(sc_signal_inout_if<T>).name()) {
+            if (_gem5Writer) {
+                std::ostringstream ss;
+                ss << "\n signal " << "`" << name() << "' (" <<
+                    kind() << ")";
+                ss << "\n first driver `" << _gem5Writer->name() << "'  (" <<
+                    _gem5Writer->kind() << ")";
+                ss << "\n second driver `" << port.name() << "' (" <<
+                    port.kind() << ")";
+                SC_REPORT_ERROR(
+                        "(E115) sc_signal<T> cannot have more than one driver",
+                        ss.str().c_str());
+            }
+            _gem5Writer = &port;
+        }
     }
 
     virtual const T &read() const { return m_cur_val; }
@@ -156,6 +175,7 @@ class sc_signal : public sc_signal_inout_if<T>,
   private:
     sc_event _valueChangedEvent;
     uint64_t _changeStamp;
+    sc_port_base *_gem5Writer;
 
     // Disabled
     sc_signal(const sc_signal<T, WRITER_POLICY> &) :
@@ -179,24 +199,43 @@ class sc_signal<bool, WRITER_POLICY> :
     sc_signal() : sc_signal_inout_if<bool>(),
                   sc_prim_channel(sc_gen_unique_name("signal")),
                   m_cur_val(bool()), m_new_val(bool()),
-                  _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
+                  _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL),
+                  _gem5Writer(NULL)
     {}
     explicit sc_signal(const char *name) :
         sc_signal_inout_if<bool>(), sc_prim_channel(name),
         m_cur_val(bool()), m_new_val(bool()),
-        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
+        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL),
+        _gem5Writer(NULL)
     {}
     explicit sc_signal(const char *name, const bool &initial_value) :
         sc_signal_inout_if<bool>(), sc_prim_channel(name),
         m_cur_val(initial_value), m_new_val(initial_value),
-        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
+        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL),
+        _gem5Writer(NULL)
     {}
     virtual ~sc_signal() {}
 
     virtual void
-    register_port(sc_port_base &, const char *)
+    register_port(sc_port_base &port, const char *iface_type_name)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        if (WRITER_POLICY == SC_ONE_WRITER &&
+                std::string(iface_type_name) ==
+                typeid(sc_signal_inout_if<bool>).name()) {
+            if (_gem5Writer) {
+                std::ostringstream ss;
+                ss << "\n signal " << "`" << name() << "' (" <<
+                    kind() << ")";
+                ss << "\n first driver `" << _gem5Writer->name() << "'  (" <<
+                    _gem5Writer->kind() << ")";
+                ss << "\n second driver `" << port.name() << "' (" <<
+                    port.kind() << ")";
+                SC_REPORT_ERROR(
+                        "(E115) sc_signal<T> cannot have more than one driver",
+                        ss.str().c_str());
+            }
+            _gem5Writer = &port;
+        }
     }
 
     virtual const bool &read() const { return m_cur_val; }
@@ -314,6 +353,8 @@ class sc_signal<bool, WRITER_POLICY> :
     uint64_t _posStamp;
     uint64_t _negStamp;
 
+    sc_port_base *_gem5Writer;
+
     // Disabled
     sc_signal(const sc_signal<bool, WRITER_POLICY> &) :
             sc_signal_inout_if<bool>(), sc_prim_channel("")
@@ -328,25 +369,44 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
     sc_signal() : sc_signal_inout_if<sc_dt::sc_logic>(),
                   sc_prim_channel(sc_gen_unique_name("signal")),
                   m_cur_val(sc_dt::sc_logic()), m_new_val(sc_dt::sc_logic()),
-                  _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
+                  _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL),
+                  _gem5Writer(NULL)
     {}
     explicit sc_signal(const char *name) :
         sc_signal_inout_if<sc_dt::sc_logic>(), sc_prim_channel(name),
         m_cur_val(sc_dt::sc_logic()), m_new_val(sc_dt::sc_logic()),
-        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
+        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL),
+        _gem5Writer(NULL)
     {}
     explicit sc_signal(const char *name,
             const sc_dt::sc_logic &initial_value) :
         sc_signal_inout_if<sc_dt::sc_logic>(), sc_prim_channel(name),
         m_cur_val(initial_value), m_new_val(initial_value),
-        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL)
+        _changeStamp(~0ULL), _posStamp(~0ULL), _negStamp(~0ULL),
+        _gem5Writer(NULL)
     {}
     virtual ~sc_signal() {}
 
     virtual void
-    register_port(sc_port_base &, const char *)
+    register_port(sc_port_base &port, const char *iface_type_name)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        if (WRITER_POLICY == SC_ONE_WRITER &&
+                std::string(iface_type_name) ==
+                typeid(sc_signal_inout_if<sc_dt::sc_logic>).name()) {
+            if (_gem5Writer) {
+                std::ostringstream ss;
+                ss << "\n signal " << "`" << name() << "' (" <<
+                    kind() << ")";
+                ss << "\n first driver `" << _gem5Writer->name() << "'  (" <<
+                    _gem5Writer->kind() << ")";
+                ss << "\n second driver `" << port.name() << "' (" <<
+                    port.kind() << ")";
+                SC_REPORT_ERROR(
+                        "(E115) sc_signal<T> cannot have more than one driver",
+                        ss.str().c_str());
+            }
+            _gem5Writer = &port;
+        }
     }
 
     virtual const sc_dt::sc_logic &read() const { return m_cur_val; }
@@ -463,6 +523,8 @@ class sc_signal<sc_dt::sc_logic, WRITER_POLICY> :
     uint64_t _changeStamp;
     uint64_t _posStamp;
     uint64_t _negStamp;
+
+    sc_port_base *_gem5Writer;
 
     // Disabled
     sc_signal(const sc_signal<sc_dt::sc_logic, WRITER_POLICY> &) :

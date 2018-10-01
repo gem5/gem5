@@ -31,12 +31,13 @@
 #define __SYSTEMC_EXT_CHANNEL_SC_FIFO_HH__
 
 #include <list>
+#include <string>
 
 #include "../core/sc_module.hh" // for sc_gen_unique_name
 #include "../core/sc_prim.hh"
+#include "../utils/sc_report_handler.hh"
 #include "sc_fifo_in_if.hh"
 #include "sc_fifo_out_if.hh"
-#include "warn_unimpl.hh"
 
 namespace sc_core
 {
@@ -53,18 +54,39 @@ class sc_fifo : public sc_fifo_in_if<T>,
     explicit sc_fifo(int size=16) :
             sc_fifo_in_if<T>(), sc_fifo_out_if<T>(),
             sc_prim_channel(sc_gen_unique_name("fifo")),
-            _size(size), _readsHappened(false)
+            _size(size), _readsHappened(false), _reader(NULL), _writer(NULL)
     {}
     explicit sc_fifo(const char *name, int size=16) :
             sc_fifo_in_if<T>(), sc_fifo_out_if<T>(),
-            sc_prim_channel(name), _size(size), _readsHappened(false)
+            sc_prim_channel(name), _size(size), _readsHappened(false),
+            _reader(NULL), _writer(NULL)
     {}
     virtual ~sc_fifo() {}
 
     virtual void
-    register_port(sc_port_base &, const char *)
+    register_port(sc_port_base &port, const char *iface_type_name)
     {
-        sc_channel_warn_unimpl(__PRETTY_FUNCTION__);
+        std::string tn(iface_type_name);
+        if (tn == typeid(sc_fifo_in_if<T>).name() ||
+                tn == typeid(sc_fifo_blocking_in_if<T>).name()) {
+            if (_reader) {
+                SC_REPORT_ERROR(
+                        "(E104) sc_fifo<T> cannot have more than one reader",
+                        "");
+            }
+            _reader = &port;
+        } else if (tn == typeid(sc_fifo_out_if<T>).name() ||
+                tn == typeid(sc_fifo_blocking_out_if<T>).name()) {
+            if (_writer) {
+                SC_REPORT_ERROR(
+                        "(E105) sc_fifo<T> cannot have more than one writer",
+                        "");
+            }
+            _writer = &port;
+        } else {
+            SC_REPORT_ERROR("(E107) bind interface to port failed",
+                    "sc_fifo<T> port not recognized");
+        }
     }
 
     virtual void
@@ -191,6 +213,9 @@ class sc_fifo : public sc_fifo_in_if<T>,
 
     sc_event _dataReadEvent;
     sc_event _dataWriteEvent;
+
+    sc_port_base *_reader;
+    sc_port_base *_writer;
 
     int _size;
     mutable std::list<T> _entries;
