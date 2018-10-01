@@ -1,3 +1,22 @@
+/*****************************************************************************
+
+  Licensed to Accellera Systems Initiative Inc. (Accellera) under one or
+  more contributor license agreements.  See the NOTICE file distributed
+  with this work for additional information regarding copyright ownership.
+  Accellera licenses this file to you under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with the
+  License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+  implied.  See the License for the specific language governing
+  permissions and limitations under the License.
+
+ *****************************************************************************/
+
 /*
  * Copyright 2018 Google, Inc.
  *
@@ -36,8 +55,8 @@
 #include <iterator>
 #include <vector>
 
+#include "../core/sc_module.hh"
 #include "../core/sc_object.hh"
-#include "warn_unimpl.hh"
 
 namespace sc_gem5
 {
@@ -147,9 +166,34 @@ class sc_vector_base : public sc_object
   public:
     typedef size_t size_type;
 
+    sc_vector_base(const char *_name) : sc_object(_name) {}
+
     virtual const char *kind() const { return "sc_vector"; }
     size_type size() const;
     const std::vector<sc_object *> &get_elements() const;
+
+  protected:
+    std::vector<void *> objs;
+
+    // What's returned by get_elements, which really returns the elemenets
+    // which are also objects.
+    mutable std::vector<sc_object *> elements;
+
+    sc_object *implicitCast(sc_object *p) const { return p; }
+    sc_object *implicitCast(...) const
+    {
+        SC_REPORT_ERROR(
+                "(E808) sc_vector::get_elements called for element type "
+                "not derived from sc_object", name());
+        return nullptr;
+    }
+    virtual sc_object *objectCast(void *) const = 0;
+
+    void checkIndex(size_type index) const;
+    void forceParent() const;
+    void unforceParent() const;
+
+    void reportEmpty(const char *kind_, bool empty_dest) const;
 };
 
 
@@ -403,177 +447,164 @@ class sc_vector : public sc_vector_base
     typedef sc_vector_iter<T> iterator;
     typedef sc_vector_iter<const T> const_iterator;
 
-    sc_vector() : sc_vector_base()
+    sc_vector() : sc_vector_base(::sc_core::sc_gen_unique_name("vector")) {}
+    explicit sc_vector(const char *_name) : sc_vector_base(_name) {}
+    sc_vector(const char *_name, size_type _size) : sc_vector_base(_name)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    explicit sc_vector(const char *) : sc_vector_base()
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-    }
-    sc_vector(const char *, size_type) : sc_vector_base()
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
+        init(_size);
     }
     template <typename Creator>
-    sc_vector(const char *, size_type, Creator) : sc_vector_base()
+    sc_vector(const char *_name, size_type _size, Creator creator) :
+        sc_vector_base(_name)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
+        init(_size, creator);
     }
-    virtual ~sc_vector() {}
+    virtual ~sc_vector() { clear(); }
 
     void
-    init(size_type)
+    init(size_type _size)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
+        init(_size, &sc_vector<T>::create_element);
     }
     static T *
-    create_element(const char *, size_type)
+    create_element(const char *_name, size_type index)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return nullptr;
+        return new T(_name);
     }
 
     template <typename Creator>
     void
-    init(size_type, Creator)
+    init(size_type _size, Creator creator)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
+        forceParent();
+        try {
+            for (size_type i = 0; i < _size; i++) {
+                // XXX The name and scope of these objects needs to be handled
+                // specially.
+                T *p = creator(sc_gen_unique_name(basename()), i);
+                objs.push_back(p);
+            }
+        } catch (...) {
+            unforceParent();
+            clear();
+            throw;
+        }
+        unforceParent();
+    }
+
+    T &operator [] (size_type index) { return *static_cast<T *>(objs[index]); }
+    const T &
+    operator [] (size_type index) const
+    {
+        return *static_cast<const T *>(objs[index]);
     }
 
     T &
-    operator [] (size_type)
+    at(size_type index)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(T *)nullptr;
+        this->checkIndex(index);
+        return *static_cast<T *>(objs[index]);
     }
     const T &
-    operator [] (size_type) const
+    at(size_type index) const
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const T *)nullptr;
+        this->checkIndex(index);
+        return *static_cast<const T *>(objs[index]);
     }
 
-    T &
-    at(size_type)
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(T *)nullptr;
-    }
-    const T &
-    at(size_type) const
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(const T *)nullptr;
-    }
-
-    iterator
-    begin()
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
-    }
-    iterator
-    end()
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
-    }
-
-    const_iterator
-    begin() const
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return const_iterator();
-    }
-    const_iterator
-    end() const
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return const_iterator();
-    }
-
-    const_iterator
-    cbegin() const
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return const_iterator();
-    }
-    const_iterator
-    cend() const
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return const_iterator();
-    }
+    iterator begin() { return objs.begin(); }
+    iterator end() { return objs.end(); }
+    const_iterator begin() const { return objs.begin(); }
+    const_iterator end() const { return objs.end(); }
+    const_iterator cbegin() const { return objs.begin(); }
+    const_iterator cend() const { return objs.end(); }
 
     template <typename ContainerType, typename ArgumentType>
     iterator
-    bind(sc_vector_assembly<ContainerType, ArgumentType>)
+    bind(sc_vector_assembly<ContainerType, ArgumentType> c)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return bind(c.begin(), c.end());
     }
 
     template <typename BindableContainer>
     iterator
-    bind(BindableContainer &)
+    bind(BindableContainer &c)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return bind(c.begin(), c.end());
     }
 
     template <typename BindableIterator>
     iterator
-    bind(BindableIterator, BindableIterator)
+    bind(BindableIterator first, BindableIterator last)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return bind(first, last, this->begin());
     }
 
     template <typename BindableIterator>
     iterator
-    bind(BindableIterator, BindableIterator, iterator)
+    bind(BindableIterator first, BindableIterator last, iterator from)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        if (!size() || from == end() || first == last)
+            reportEmpty(kind(), from == end());
+
+        while (from != end() && first != last)
+            (*from++).bind(*first++);
+        return from;
     }
 
     template <typename ContainerType, typename ArgumentType>
     iterator
     operator () (sc_vector_assembly<ContainerType, ArgumentType> c)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return (*this)(c.begin(), c.end());
     }
 
     template <typename ArgumentContainer>
     iterator
-    operator () (ArgumentContainer &)
+    operator () (ArgumentContainer &c)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return (*this)(c.begin(), c.end());
     }
 
     template <typename ArgumentIterator>
     iterator
-    operator () (ArgumentIterator, ArgumentIterator)
+    operator () (ArgumentIterator first, ArgumentIterator last)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        return (*this)(first, last, this->begin());
     }
 
     template <typename ArgumentIterator>
     iterator
-    operator () (ArgumentIterator, ArgumentIterator, iterator)
+    operator () (ArgumentIterator first, ArgumentIterator last, iterator from)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return iterator();
+        if (!size() || from == end() || first == last)
+            reportEmpty(kind(), from == end());
+
+        while (from != end() && first != last)
+            (*from++)(*first++);
+        return from;
     }
 
   private:
     // Disabled
     sc_vector(const sc_vector &) : sc_vector_base() {}
     sc_vector &operator = (const sc_vector &) { return *this; }
+
+    void
+    clear()
+    {
+        for (auto obj: objs)
+            delete static_cast<T *>(obj);
+    }
+
+    template <typename, typename>
+    friend class sc_vector_assembly;
+
+    sc_object *
+    objectCast(void *ptr) const
+    {
+        return implicitCast(static_cast<T *>(ptr));
+    }
 };
 
 template <typename T, typename MT>
@@ -589,10 +620,9 @@ class sc_vector_assembly
         const T, sc_member_access<const T, const MT> > const_iterator;
     typedef MT (T::*MemberType);
 
-    sc_vector_assembly(const sc_vector_assembly &)
-    {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-    }
+    sc_vector_assembly(const sc_vector_assembly &other) :
+        vec_(other.vec_), ptr_(other.ptr_)
+    {}
 
     iterator begin() { return iterator(vec_->begin().it_, ptr_); }
     iterator end() { return iterator(vec_->end().it_, ptr_); }
@@ -624,8 +654,14 @@ class sc_vector_assembly
     std::vector<sc_object *>
     get_elements() const
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return *(std::vector<sc_object *> *)nullptr;
+        std::vector<sc_object *> ret;
+        for (const_iterator it = begin(); it != end(); it++) {
+            sc_object *obj_ptr = vec_->objectCast(const_cast<MT *>(&*it));
+
+            if (obj_ptr)
+                ret.push_back(obj_ptr);
+        }
+        return ret;
     }
 
     typename iterator::reference
@@ -652,83 +688,84 @@ class sc_vector_assembly
 
     template <typename ContainerType, typename ArgumentType>
     iterator
-    bind(sc_vector_assembly<ContainerType, ArgumentType>)
+    bind(sc_vector_assembly<ContainerType, ArgumentType> c)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return begin();
+        return bind(c.begin(), c.end());
     }
 
     template <typename BindableContainer>
     iterator
-    bind(BindableContainer &)
+    bind(BindableContainer &c)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return begin();
+        return bind(c.begin(), c.end());
     }
 
     template <typename BindableIterator>
     iterator
-    bind(BindableIterator, BindableIterator)
+    bind(BindableIterator first, BindableIterator last)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return begin();
+        return bind(first, last, this->begin());
     }
 
     template <typename BindableIterator>
     iterator
-    bind(BindableIterator, BindableIterator, iterator)
+    bind(BindableIterator first, BindableIterator last, iterator from)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return begin();
+        if (!size() || from == end() || first == last)
+            vec_->reportEmpty("sc_vector_assembly", from == end());
+
+        while (from != end() && first != last)
+            (*from++).bind(*first++);
+        return from;
     }
 
     template <typename BindableIterator>
     iterator
-    bind(BindableIterator, BindableIterator, typename sc_vector<T>::iterator)
+    bind(BindableIterator first, BindableIterator last,
+            typename sc_vector<T>::iterator from)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return begin();
+        return bind(first, last, iterator(from.it_, ptr_));
     }
 
     template <typename ContainerType, typename ArgumentType>
     iterator
-    operator () (sc_vector_assembly<ContainerType, ArgumentType>)
+    operator () (sc_vector_assembly<ContainerType, ArgumentType> c)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return begin();
+        return (*this)(c.begin(), c.end());
     }
 
     template <typename ArgumentContainer>
     iterator
-    operator () (ArgumentContainer &)
+    operator () (ArgumentContainer &c)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return begin();
+        return (*this)(c.begin(), c.end());
     }
 
     template <typename ArgumentIterator>
     iterator
-    operator () (ArgumentIterator, ArgumentIterator)
+    operator () (ArgumentIterator first, ArgumentIterator last)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return begin();
+        return (*this)(first, last, this->begin());
     }
 
     template <typename ArgumentIterator>
     iterator
-    operator () (ArgumentIterator, ArgumentIterator, iterator)
+    operator () (ArgumentIterator first, ArgumentIterator last, iterator from)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return begin();
+        if (!size() || from == end() || first == last)
+            vec_->reportEmpty("sc_vector_assembly", from == end());
+
+        while (from != end() && first != last)
+            (*from++)(*first++);
+        return from;
     }
 
     template <typename ArgumentIterator>
     iterator
-    operator () (ArgumentIterator, ArgumentIterator,
-                 typename sc_vector<T>::iterator)
+    operator () (ArgumentIterator first, ArgumentIterator last,
+                 typename sc_vector<T>::iterator from)
     {
-        sc_utils_warn_unimpl(__PRETTY_FUNCTION__);
-        return begin();
+        return (*this)(first, last, iterator(from.it_, ptr_));
     }
 
   private:
