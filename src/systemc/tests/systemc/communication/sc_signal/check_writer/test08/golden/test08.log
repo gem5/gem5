@@ -2,6 +2,6 @@ SystemC Simulation
 
 Error: (E115) sc_signal<T> cannot have more than one driver: 
  signal `signal_0' (sc_signal)
- first driver `a.port_2'  (sc_out)
+ first driver `a.port_2' (sc_out)
  second driver `a.port_1' (sc_out)
 In file: <removed by verify.pl>

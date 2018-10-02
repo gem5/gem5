@@ -77,7 +77,7 @@ reportSignalError(ScSignalBase *sig, sc_core::sc_object *first,
 {
     std::ostringstream ss;
     ss << "\n signal " << "`" << sig->name() << "' (" << sig->kind() << ")";
-    ss << "\n first driver `" << first->name() << "'  (" <<
+    ss << "\n first driver `" << first->name() << "' (" <<
         first->kind() << ")";
     ss << "\n second driver `" << second->name() << "' (" <<
         second->kind() << ")";

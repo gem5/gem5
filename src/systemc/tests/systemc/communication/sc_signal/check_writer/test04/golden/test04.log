@@ -2,7 +2,7 @@ SystemC Simulation
 
 Error: (E115) sc_signal<T> cannot have more than one driver: 
  signal `signal_2' (sc_signal)
- first driver `a.main_action1'  (sc_method_process)
+ first driver `a.main_action1' (sc_method_process)
  second driver `a.main_action2' (sc_method_process)
 In file: <removed by verify.pl>
 In process: a.main_action2 @ 500 ps
