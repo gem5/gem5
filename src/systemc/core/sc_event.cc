@@ -30,6 +30,7 @@
 #include "base/logging.hh"
 #include "systemc/core/event.hh"
 #include "systemc/ext/core/sc_event.hh"
+#include "systemc/ext/core/sc_module.hh"
 
 namespace sc_core
 {
@@ -311,7 +312,10 @@ operator | (sc_event_or_expr expr, sc_event_or_list const &eol)
  * sc_event
  */
 
-sc_event::sc_event() : _gem5_event(new ::sc_gem5::Event(this)) {}
+sc_event::sc_event() :
+    _gem5_event(new ::sc_gem5::Event(
+                this, sc_core::sc_gen_unique_name("event")))
+{}
 
 sc_event::sc_event(const char *_name) :
     _gem5_event(new ::sc_gem5::Event(this, _name))
