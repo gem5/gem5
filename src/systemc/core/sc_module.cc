@@ -32,8 +32,10 @@
 #include <vector>
 
 #include "base/logging.hh"
+#include "systemc/core/event.hh"
 #include "systemc/core/kernel.hh"
 #include "systemc/core/module.hh"
+#include "systemc/core/object.hh"
 #include "systemc/core/process_types.hh"
 #include "systemc/core/sensitivity.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
@@ -795,8 +797,8 @@ sc_gen_unique_name(const char *seed)
 bool
 sc_hierarchical_name_exists(const char *name)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    return sc_gem5::findEvent(name) != sc_gem5::allEvents.end() ||
+        ::sc_gem5::findObject(name, sc_gem5::allObjects);
 }
 
 bool
