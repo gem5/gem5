@@ -82,7 +82,6 @@ class libDRAMPower {
   Data::CommandAnalysis counters;
  private:
   bool includeIoAndTermination;
-  bool bankwiseMode;
   Data:: MemBankWiseParams bwPowerParams;
   // Object of MemoryPowerModel which contains the results
   // Energies(pJ) stored in energy, Powers(mW) stored in power. Number of
