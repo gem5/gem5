@@ -101,8 +101,18 @@ class sc_clock : public sc_signal<bool>
     ::sc_gem5::ClockTick *_gem5UpEdge;
     ::sc_gem5::ClockTick *_gem5DownEdge;
 
-    void tickUp() { sc_signal<bool>::write(true); }
-    void tickDown() { sc_signal<bool>::write(false); }
+    void
+    tickUp()
+    {
+        m_new_val = true;
+        request_update();
+    }
+    void
+    tickDown()
+    {
+        m_new_val = false;
+        request_update();
+    }
 };
 
 typedef sc_in<bool> sc_in_clk;
