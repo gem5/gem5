@@ -280,6 +280,7 @@ Scheduler::runReady()
     do {
         yield();
     } while (getNextReady());
+    _current = nullptr;
 
     if (!empty) {
         _numCycles++;
