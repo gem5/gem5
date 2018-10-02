@@ -80,17 +80,17 @@ class ArmProcess32 : public ArmProcess
     ArmProcess32(ProcessParams * params, ObjectFile *objFile,
                  ObjectFile::Arch _arch);
 
-    void initState();
+    void initState() override;
 
     /** AArch32 AT_HWCAP */
     uint32_t armHwcapImpl() const override;
 
   public:
 
-    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
-    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
-    void setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val);
-    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
+    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width) override;
+    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i) override;
+    void setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val) override;
+    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value) override;
 };
 
 class ArmProcess64 : public ArmProcess
@@ -99,17 +99,17 @@ class ArmProcess64 : public ArmProcess
     ArmProcess64(ProcessParams * params, ObjectFile *objFile,
                  ObjectFile::Arch _arch);
 
-    void initState();
+    void initState() override;
 
     /** AArch64 AT_HWCAP */
     uint32_t armHwcapImpl() const override;
 
   public:
 
-    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
-    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
-    void setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val);
-    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
+    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width) override;
+    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int &i) override;
+    void setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val) override;
+    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value) override;
 };
 
 #endif // __ARM_PROCESS_HH__
