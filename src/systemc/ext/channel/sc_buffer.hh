@@ -50,6 +50,11 @@ class sc_buffer : public sc_signal<T, WRITER_POLICY>
     virtual void
     write(const T &t)
     {
+#       if !defined(SC_NO_WRITE_CHECK)
+        {
+            this->_checker.checkWriter();
+        }
+#       endif
         this->m_new_val = t;
         this->request_update();
     }

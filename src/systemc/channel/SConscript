@@ -35,4 +35,5 @@ if env['USE_SYSTEMC']:
     Source('sc_out_resolved.cc')
     Source('sc_mutex.cc')
     Source('sc_semaphore.cc')
+    Source('sc_signal.cc')
     Source('sc_signal_resolved.cc')
