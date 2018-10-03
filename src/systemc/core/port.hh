@@ -147,6 +147,8 @@ class Port
         allPorts.push_front(this);
     }
 
+    ~Port() { allPorts.remove(this); }
+
     void
     bind(::sc_core::sc_interface *interface)
     {
