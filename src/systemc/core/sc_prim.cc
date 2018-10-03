@@ -48,12 +48,12 @@ sc_prim_channel::sc_prim_channel() : _gem5_channel(nullptr)
     if (sc_is_running()) {
         SC_REPORT_ERROR("(E113) insert primitive channel failed",
                 "simulation running");
-    } else if (::sc_gem5::scheduler.elaborationDone()) {
+    }
+    if (::sc_gem5::scheduler.elaborationDone()) {
         SC_REPORT_ERROR("(E113) insert primitive channel failed",
                 "elaboration done");
-    } else {
-        _gem5_channel = new sc_gem5::Channel(this);
     }
+    _gem5_channel = new sc_gem5::Channel(this);
 }
 
 sc_prim_channel::sc_prim_channel(const char *_name) :
@@ -62,12 +62,12 @@ sc_prim_channel::sc_prim_channel(const char *_name) :
     if (sc_is_running()) {
         SC_REPORT_ERROR("(E113) insert primitive channel failed",
                 "simulation running");
-    } else if (::sc_gem5::scheduler.elaborationDone()) {
+    }
+    if (::sc_gem5::scheduler.elaborationDone()) {
         SC_REPORT_ERROR("(E113) insert primitive channel failed",
                 "elaboration done");
-    } else {
-        _gem5_channel = new sc_gem5::Channel(this);
     }
+    _gem5_channel = new sc_gem5::Channel(this);
 }
 
 sc_prim_channel::~sc_prim_channel() { delete _gem5_channel; }

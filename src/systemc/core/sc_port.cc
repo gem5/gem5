@@ -56,7 +56,7 @@ reportError(const char *id, const char *add_msg,
 }
 
 sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p) :
-    sc_object(n), _gem5Port(new ::sc_gem5::Port(this, max_size))
+    sc_object(n), _gem5Port(nullptr)
 {
     if (sc_is_running()) {
         reportError("(E110) insert port failed", "simulation running",
@@ -74,6 +74,7 @@ sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p) :
     } else {
         m->ports.push_back(this);
     }
+    _gem5Port = new ::sc_gem5::Port(this, max_size);
 }
 
 sc_port_base::~sc_port_base()
