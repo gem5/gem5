@@ -53,6 +53,7 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
@@ -272,17 +273,12 @@ class FALRU : public BaseTags
               numTrackedCaches(max_size > min_size ?
                                floorLog2(max_size) - floorLog2(min_size) : 0),
               inAllCachesMask(mask(numTrackedCaches)),
-              boundaries(new FALRUBlk *[numTrackedCaches])
+              boundaries(numTrackedCaches)
         {
             fatal_if(numTrackedCaches > sizeof(CachesMask) * 8,
                      "Not enough bits (%s) in type CachesMask type to keep "
                      "track of %d caches\n", sizeof(CachesMask),
                      numTrackedCaches);
-        }
-
-        ~CacheTracking()
-        {
-            delete[] boundaries;
         }
 
         /**
@@ -356,7 +352,7 @@ class FALRU : public BaseTags
         /** A mask for all cache being tracked. */
         const CachesMask inAllCachesMask;
         /** Array of pointers to blocks at the cache boundaries. */
-        FALRUBlk** boundaries;
+        std::vector<FALRUBlk*> boundaries;
 
       protected:
         /**
