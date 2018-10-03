@@ -221,7 +221,16 @@ sc_module::get_child_events() const
 sc_module::sc_module() :
     sc_object(sc_gem5::newModuleChecked()->name()),
     _gem5_module(sc_gem5::currentModule())
-{}
+{
+    if (sc_is_running()) {
+        SC_REPORT_ERROR("(E529) insert module failed", "simulation running");
+        std::cout << "Running!\n";
+    }
+    if (::sc_gem5::scheduler.elaborationDone()) {
+        SC_REPORT_ERROR("(E529) insert module failed", "elaboration done");
+        std::cout << "Elaboration done!\n";
+    }
+}
 
 sc_module::sc_module(const sc_module_name &) : sc_module() {}
 sc_module::sc_module(const char *_name) : sc_module(sc_module_name(_name))
