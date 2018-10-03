@@ -82,6 +82,8 @@ Kernel::init()
         m->beforeEndOfElaboration();
     for (auto c: sc_gem5::allChannels)
         c->sc_chan()->before_end_of_elaboration();
+
+    ::sc_gem5::scheduler.elaborationDone(true);
 }
 
 void
@@ -106,8 +108,6 @@ Kernel::regStats()
     } catch (...) {
         ::sc_gem5::scheduler.throwToScMain();
     }
-
-    ::sc_gem5::scheduler.elaborationDone(true);
 }
 
 void
