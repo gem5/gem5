@@ -82,6 +82,8 @@ typedef uint32_t CachesMask;
 class FALRUBlk : public CacheBlk
 {
   public:
+    FALRUBlk() : CacheBlk(), prev(nullptr), next(nullptr), inCachesMask(0) {}
+
     /** The previous block in LRU order. */
     FALRUBlk *prev;
     /** The next block in LRU order. */
