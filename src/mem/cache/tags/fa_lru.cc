@@ -283,10 +283,10 @@ FALRUParams::create()
 }
 
 void
-FALRU::CacheTracking::check(FALRUBlk *head, FALRUBlk *tail)
+FALRU::CacheTracking::check(const FALRUBlk *head, const FALRUBlk *tail) const
 {
 #ifdef FALRU_DEBUG
-    FALRUBlk* blk = head;
+    const FALRUBlk* blk = head;
     unsigned curr_size = 0;
     unsigned tracked_cache_size = minTrackedSize;
     CachesMask in_caches_mask = inAllCachesMask;

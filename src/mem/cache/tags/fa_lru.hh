@@ -335,7 +335,7 @@ class FALRU : public BaseTags
          * @param head the MRU block of the actual cache
          * @param head the LRU block of the actual cache
          */
-        void check(FALRUBlk *head, FALRUBlk *tail);
+        void check(const FALRUBlk *head, const FALRUBlk *tail) const;
 
         /**
          * Register the stats for this object.
