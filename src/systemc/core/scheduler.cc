@@ -330,7 +330,7 @@ Scheduler::runDelta()
 
     try {
         while (!deltas.empty())
-            deltas.front()->run();
+            deltas.back()->run();
     } catch (...) {
         throwToScMain();
     }
