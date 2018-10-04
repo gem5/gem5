@@ -101,6 +101,8 @@ class sc_port_base : public sc_object
     virtual void start_of_simulation() = 0;
     virtual void end_of_simulation() = 0;
 
+    void report_error(const char *id, const char *add_msg) const;
+
   private:
     friend class ::sc_gem5::Port;
     friend class ::sc_gem5::Kernel;
@@ -125,39 +127,53 @@ class sc_port_b : public sc_port_base
     IF *
     operator -> ()
     {
-        sc_assert(!_interfaces.empty());
+        if (_interfaces.empty()) {
+            report_error("(E112) get interface failed", "port is not bound");
+            sc_abort();
+        }
         return _interfaces[0];
     }
     const IF *
     operator -> () const
     {
-        sc_assert(!_interfaces.empty());
+        if (_interfaces.empty()) {
+            report_error("(E112) get interface failed", "port is not bound");
+            sc_abort();
+        }
         return _interfaces[0];
     }
 
     IF *
     operator [] (int n)
     {
-        sc_assert(_interfaces.size() > n);
+        if (n < 0 || n >= size()) {
+            report_error("(E112) get interface failed", "index out of range");
+            return NULL;
+        }
         return _interfaces[n];
     }
     const IF *
     operator [] (int n) const
     {
-        sc_assert(_interfaces.size() > n);
+        if (n < 0 || n >= size()) {
+            report_error("(E112) get interface failed", "index out of range");
+            return NULL;
+        }
         return _interfaces[n];
     }
 
     sc_interface *
     get_interface()
     {
-        sc_assert(!_interfaces.empty());
+        if (_interfaces.empty())
+            return NULL;
         return _interfaces[0];
     }
     const sc_interface *
     get_interface() const
     {
-        sc_assert(!_interfaces.empty());
+        if (_interfaces.empty())
+            return NULL;
         return _interfaces[0];
     }
 
@@ -201,14 +217,23 @@ class sc_port_b : public sc_port_base
     sc_interface *
     _gem5Interface(int n) const
     {
-        sc_assert(_interfaces.size() > n);
+        if (n < 0 || n >= size()) {
+            report_error("(E112) get interface failed", "index out of range");
+            return NULL;
+        }
         return _interfaces[n];
     }
     void
-    _gem5AddInterface(sc_interface *i)
+    _gem5AddInterface(sc_interface *iface)
     {
-        IF *interface = dynamic_cast<IF *>(i);
+        IF *interface = dynamic_cast<IF *>(iface);
         sc_assert(interface);
+        for (int i = 0; i < _interfaces.size(); i++) {
+            if (interface == _interfaces[i]) {
+                report_error("(E107) bind interface to port failed",
+                        "interface already bound to port");
+            }
+        }
         _interfaces.push_back(interface);
     }
 

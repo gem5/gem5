@@ -27,6 +27,8 @@
  * Authors: Gabe Black
  */
 
+#include <sstream>
+
 #include "base/logging.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/port.hh"
@@ -86,6 +88,16 @@ void
 sc_port_base::warn_unimpl(const char *func) const
 {
     warn("%s not implemented.\n", func);
+}
+
+void
+sc_port_base::report_error(const char *id, const char *add_msg) const
+{
+    std::ostringstream ss;
+    if (add_msg)
+        ss << add_msg << ": ";
+    ss << "port '" << name() << "' (" << kind() << ")";
+    SC_REPORT_ERROR(id, ss.str().c_str());
 }
 
 int sc_port_base::maxSize() const { return _gem5Port->maxSize(); }
