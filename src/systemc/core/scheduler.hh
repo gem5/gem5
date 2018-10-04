@@ -287,7 +287,6 @@ class Scheduler
     void
     completeTimeSlot(TimeSlot *ts)
     {
-        _changeStamp++;
         assert(ts == timeSlots.begin()->second);
         timeSlots.erase(timeSlots.begin());
         if (!runToTime && starved())
@@ -364,6 +363,7 @@ class Scheduler
     bool inTiming() { return status() == StatusTiming; }
 
     uint64_t changeStamp() { return _changeStamp; }
+    void stepChangeStamp() { _changeStamp++; }
 
     void throwToScMain();
 
@@ -494,6 +494,7 @@ extern Scheduler scheduler;
 inline void
 Scheduler::TimeSlot::process()
 {
+    scheduler.stepChangeStamp();
     scheduler.status(StatusTiming);
 
     try {
