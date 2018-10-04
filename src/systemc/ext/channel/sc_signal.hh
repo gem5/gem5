@@ -51,6 +51,7 @@ namespace sc_gem5
 {
 
 class Process;
+class Reset;
 
 class ScSignalBase : public sc_core::sc_prim_channel
 {
@@ -79,6 +80,10 @@ class ScSignalBaseBinary : public ScSignalBase
 {
   protected:
     ScSignalBaseBinary(const char *_name);
+
+    mutable std::vector<sc_gem5::Reset *> _resets;
+    void _signalReset(sc_gem5::Reset *reset);
+    void _signalReset();
 
     const sc_core::sc_event &posedgeEvent() const;
     const sc_core::sc_event &negedgeEvent() const;
@@ -352,6 +357,7 @@ class sc_signal<bool, WRITER_POLICY> :
             return;
 
         this->m_cur_val = this->m_new_val;
+        this->_signalReset();
         this->_signalChange();
         if (this->m_cur_val) {
             this->_posStamp = ::sc_gem5::getChangeStamp();
@@ -363,6 +369,13 @@ class sc_signal<bool, WRITER_POLICY> :
     }
 
   private:
+    bool
+    _addReset(sc_gem5::Reset *reset) const
+    {
+        this->_resets.push_back(reset);
+        return true;
+    }
+
     // Disabled
     sc_signal(const sc_signal<bool, WRITER_POLICY> &);
 };

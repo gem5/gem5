@@ -165,11 +165,24 @@ ScSignalBaseBinary::posedge() const
 {
     return _posStamp == getChangeStamp();
 }
-bool
 
+bool
 ScSignalBaseBinary::negedge() const
 {
     return _negStamp == getChangeStamp();
+}
+
+void
+ScSignalBaseBinary::_signalReset(sc_gem5::Reset *r)
+{
+    r->update();
+}
+
+void
+ScSignalBaseBinary::_signalReset()
+{
+    for (auto r: _resets)
+        _signalReset(r);
 }
 
 } // namespace sc_gem5

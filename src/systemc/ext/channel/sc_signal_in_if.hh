@@ -39,6 +39,13 @@ class sc_logic;
 
 };
 
+namespace sc_gem5
+{
+
+class Reset;
+
+} // namespace sc_gem5
+
 namespace sc_core
 {
 
@@ -83,6 +90,13 @@ class sc_signal_in_if<bool> : virtual public sc_interface
     sc_signal_in_if() : sc_interface() {}
 
   private:
+    friend class sc_gem5::Reset;
+    virtual bool
+    _addReset(sc_gem5::Reset *reset) const
+    {
+        return false;
+    }
+
     // Disabled
     sc_signal_in_if(const sc_signal_in_if<bool> &) : sc_interface() {}
     sc_signal_in_if<bool> &

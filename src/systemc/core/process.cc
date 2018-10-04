@@ -31,6 +31,7 @@
 
 #include "base/logging.hh"
 #include "systemc/core/event.hh"
+#include "systemc/core/port.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_join.hh"
 #include "systemc/ext/core/sc_main.hh"
@@ -293,9 +294,9 @@ Process::setDynamic(DynamicSensitivity *s)
 }
 
 void
-Process::addReset(ResetSensitivity *s)
+Process::addReset(Reset *reset)
 {
-    resetSensitivities.push_back(s);
+    resets.push_back(reset);
 }
 
 void
@@ -416,6 +417,21 @@ void
 throw_it_wrapper(Process *p, ExceptionWrapperBase &exc, bool inc_kids)
 {
     p->throw_it(exc, inc_kids);
+}
+
+void
+newReset(const sc_core::sc_port_base *pb, Process *p, bool s, bool v)
+{
+    Port *port = Port::fromPort(pb);
+    port->addReset(new Reset(p, s, v));
+}
+
+void
+newReset(const sc_core::sc_signal_in_if<bool> *sig, Process *p, bool s, bool v)
+{
+    Reset *reset = new Reset(p, s, v);
+    if (!reset->install(sig))
+        delete reset;
 }
 
 } // namespace sc_gem5

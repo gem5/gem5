@@ -81,8 +81,7 @@ class Sensitivity
     enum Category
     {
         Static,
-        Dynamic,
-        Reset
+        Dynamic
     };
 
     virtual Category category() = 0;
@@ -92,7 +91,7 @@ class Sensitivity
 
 
 /*
- * Dynamic vs. static vs. reset sensitivity.
+ * Dynamic vs. static sensitivity.
  */
 
 class DynamicSensitivity : virtual public Sensitivity
@@ -123,29 +122,6 @@ class StaticSensitivity : virtual public Sensitivity
 };
 
 typedef std::vector<StaticSensitivity *> StaticSensitivities;
-
-class ResetSensitivity : virtual public Sensitivity
-{
-  private:
-    bool _val;
-    bool _sync;
-
-  protected:
-    ResetSensitivity(Process *p, bool _val, bool _sync) :
-        Sensitivity(p), _val(_val), _sync(_sync)
-    {}
-
-    void addToEvent(const ::sc_core::sc_event *e) override;
-    void delFromEvent(const ::sc_core::sc_event *e) override;
-
-    bool val() { return _val; }
-    bool sync() { return _sync; }
-
-  public:
-    Category category() override { return Reset; }
-};
-
-typedef std::vector<ResetSensitivity *> ResetSensitivities;
 
 
 /*
@@ -317,60 +293,6 @@ class DynamicSensitivityEventAndList :
             Process *p, const sc_core::sc_event_and_list *eal);
 
     bool notify(Event *e) override;
-};
-
-/*
- * Reset sensitivities.
- */
-
-void newResetSensitivitySignal(
-        Process *p, const sc_core::sc_signal_in_if<bool> *signal,
-        bool val, bool sync);
-
-void newResetSensitivityPort(
-        Process *p, const sc_core::sc_in<bool> *port, bool val, bool sync);
-void newResetSensitivityPort(
-        Process *p, const sc_core::sc_inout<bool> *port, bool val, bool sync);
-void newResetSensitivityPort(
-        Process *p, const sc_core::sc_out<bool> *port, bool val, bool sync);
-
-class ResetSensitivitySignal :
-    public ResetSensitivity, public SensitivityEvent
-{
-  protected:
-    const sc_core::sc_signal_in_if<bool> *_signal;
-
-    friend void newResetSensitivitySignal(
-            Process *p, const sc_core::sc_signal_in_if<bool> *signal,
-            bool val, bool sync);
-
-    ResetSensitivitySignal(
-            Process *p, const sc_core::sc_signal_in_if<bool> *signal,
-            bool _val, bool _sync);
-
-    bool notify(Event *e) override;
-};
-
-class ResetSensitivityPort : public ResetSensitivitySignal
-{
-  private:
-    friend void newResetSensitivityPort(
-            Process *p, const sc_core::sc_in<bool> *port, bool val, bool sync);
-    friend void newResetSensitivityPort(
-            Process *p, const sc_core::sc_inout<bool> *port,
-            bool val, bool sync);
-    friend void newResetSensitivityPort(
-            Process *p, const sc_core::sc_out<bool> *port,
-            bool val, bool sync);
-
-    ResetSensitivityPort(
-            Process *p, const sc_core::sc_port_base *port,
-            bool _val, bool _sync) :
-        Sensitivity(p), ResetSensitivitySignal(p, nullptr, _val, _sync)
-    {}
-
-  public:
-    void setSignal(const ::sc_core::sc_signal_in_if<bool> *signal);
 };
 
 } // namespace sc_gem5

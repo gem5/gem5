@@ -36,8 +36,12 @@
 #include "systemc/core/kernel.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/object.hh"
+#include "systemc/core/port.hh"
 #include "systemc/core/process_types.hh"
 #include "systemc/core/sensitivity.hh"
+#include "systemc/ext/channel/sc_in.hh"
+#include "systemc/ext/channel/sc_inout.hh"
+#include "systemc/ext/channel/sc_out.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
@@ -258,58 +262,50 @@ sc_module::end_module()
 void
 sc_module::reset_signal_is(const sc_in<bool> &port, bool val)
 {
-    sc_gem5::newResetSensitivityPort(
-            ::sc_gem5::Process::newest(), &port, val, true);
+    ::sc_gem5::newReset(&port, ::sc_gem5::Process::newest(), true, val);
 }
 
 void
 sc_module::reset_signal_is(const sc_inout<bool> &port, bool val)
 {
-    sc_gem5::newResetSensitivityPort(
-            ::sc_gem5::Process::newest(), &port, val, true);
+    ::sc_gem5::newReset(&port, ::sc_gem5::Process::newest(), true, val);
 }
 
 void
 sc_module::reset_signal_is(const sc_out<bool> &port, bool val)
 {
-    sc_gem5::newResetSensitivityPort(
-            ::sc_gem5::Process::newest(), &port, val, true);
+    ::sc_gem5::newReset(&port, ::sc_gem5::Process::newest(), true, val);
 }
 
 void
 sc_module::reset_signal_is(const sc_signal_in_if<bool> &signal, bool val)
 {
-    sc_gem5::newResetSensitivitySignal(
-            ::sc_gem5::Process::newest(), &signal, val, true);
+    ::sc_gem5::newReset(&signal, ::sc_gem5::Process::newest(), true, val);
 }
 
 
 void
 sc_module::async_reset_signal_is(const sc_in<bool> &port, bool val)
 {
-    sc_gem5::newResetSensitivityPort(
-            ::sc_gem5::Process::newest(), &port, val, false);
+    ::sc_gem5::newReset(&port, ::sc_gem5::Process::newest(), false, val);
 }
 
 void
 sc_module::async_reset_signal_is(const sc_inout<bool> &port, bool val)
 {
-    sc_gem5::newResetSensitivityPort(
-            ::sc_gem5::Process::newest(), &port, val, false);
+    ::sc_gem5::newReset(&port, ::sc_gem5::Process::newest(), false, val);
 }
 
 void
 sc_module::async_reset_signal_is(const sc_out<bool> &port, bool val)
 {
-    sc_gem5::newResetSensitivityPort(
-            ::sc_gem5::Process::newest(), &port, val, false);
+    ::sc_gem5::newReset(&port, ::sc_gem5::Process::newest(), false, val);
 }
 
 void
 sc_module::async_reset_signal_is(const sc_signal_in_if<bool> &signal, bool val)
 {
-    sc_gem5::newResetSensitivitySignal(
-            ::sc_gem5::Process::newest(), &signal, val, false);
+    ::sc_gem5::newReset(&signal, ::sc_gem5::Process::newest(), false, val);
 }
 
 

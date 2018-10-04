@@ -29,6 +29,7 @@
 
 #include "systemc/core/port.hh"
 
+#include "systemc/core/process.hh"
 #include "systemc/core/sensitivity.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
 
@@ -50,14 +51,15 @@ Port::finalizeFinder(StaticSensitivityFinder *finder)
 }
 
 void
-Port::finalizeReset(ResetSensitivityPort *reset)
+Port::finalizeReset(Reset *reset)
 {
     assert(size() <= 1);
     if (size()) {
         auto iface =
             dynamic_cast<sc_core::sc_signal_in_if<bool> *>(getInterface(0));
         assert(iface);
-        reset->setSignal(iface);
+        if (!reset->install(iface))
+            delete reset;
     }
 }
 
@@ -80,12 +82,12 @@ Port::sensitive(StaticSensitivityFinder *finder)
 }
 
 void
-Port::sensitive(ResetSensitivityPort *reset)
+Port::addReset(Reset *reset)
 {
     if (finalized)
         finalizeReset(reset);
     else
-        sensitivities.push_back(new Sensitivity(reset));
+        resets.push_back(reset);
 }
 
 void
@@ -110,14 +112,17 @@ Port::finalize()
     for (auto &s: sensitivities) {
         if (s->port)
             finalizePort(s->port);
-        else if (s->finder)
-            finalizeFinder(s->finder);
         else
-            finalizeReset(s->reset);
+            finalizeFinder(s->finder);
         delete s;
     }
 
     sensitivities.clear();
+
+    for (auto &r: resets)
+        finalizeReset(r);
+
+    resets.clear();
 }
 
 void

@@ -40,6 +40,7 @@
 #include "systemc/core/object.hh"
 #include "systemc/core/sched_event.hh"
 #include "systemc/core/sensitivity.hh"
+#include "systemc/ext/channel/sc_signal_in_if.hh"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_process_handle.hh"
@@ -56,6 +57,9 @@ namespace sc_gem5
 
 class ScHalt
 {};
+
+class Process;
+class Reset;
 
 class Process : public ::sc_core::sc_process_b, public ListNode
 {
@@ -103,7 +107,7 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     void addStatic(StaticSensitivity *);
     void setDynamic(DynamicSensitivity *);
     void clearDynamic() { setDynamic(nullptr); }
-    void addReset(ResetSensitivity *);
+    void addReset(Reset *);
 
     ScEvent timeoutEvent;
     void setTimeout(::sc_core::sc_time t);
@@ -189,7 +193,7 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 
     StaticSensitivities staticSensitivities;
     DynamicSensitivity *dynamicSensitivity;
-    ResetSensitivities resetSensitivities;
+    std::vector<Reset *> resets;
 
     std::unique_ptr<::sc_core::sc_report> _lastReport;
 
@@ -197,6 +201,44 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 
     UniqueNameGen nameGen;
 };
+
+class Reset
+{
+  public:
+    Reset(Process *p, bool s, bool v) :
+        _process(p), _signal(nullptr), _sync(s), _value(v)
+    {}
+
+    bool
+    install(const sc_core::sc_signal_in_if<bool> *s)
+    {
+        _signal = s;
+
+        if (_signal->_addReset(this)) {
+            _process->addReset(this);
+            if (_signal->read() == _value)
+                update();
+            return true;
+        }
+        return false;
+    }
+    void update() { _process->signalReset(_signal->read() == _value, _sync); }
+
+    Process *process() { return _process; }
+    const sc_core::sc_signal_in_if<bool> *signal() { return _signal; }
+    bool sync() { return _sync; }
+    bool value() { return _value; }
+
+  private:
+    Process *_process;
+    const sc_core::sc_signal_in_if<bool> *_signal;
+    bool _sync;
+    bool _value;
+};
+
+void newReset(const sc_core::sc_port_base *pb, Process *p, bool s, bool v);
+void newReset(const sc_core::sc_signal_in_if<bool> *sig, Process *p,
+        bool s, bool v);
 
 } // namespace sc_gem5
 

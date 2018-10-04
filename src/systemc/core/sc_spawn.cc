@@ -31,6 +31,10 @@
 #include "systemc/core/process.hh"
 #include "systemc/core/process_types.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/channel/sc_in.hh"
+#include "systemc/ext/channel/sc_inout.hh"
+#include "systemc/ext/channel/sc_out.hh"
+#include "systemc/ext/channel/sc_signal_in_if.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_spawn.hh"
@@ -85,16 +89,16 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
             newStaticSensitivityFinder(proc, f);
 
         for (auto p: opts->_in_resets)
-            newResetSensitivityPort(proc, p.target, p.value, p.sync);
+            newReset(p.target, proc, p.sync, p.value);
 
         for (auto p: opts->_inout_resets)
-            newResetSensitivityPort(proc, p.target, p.value, p.sync);
+            newReset(p.target, proc, p.sync, p.value);
 
         for (auto p: opts->_out_resets)
-            newResetSensitivityPort(proc, p.target, p.value, p.sync);
+            newReset(p.target, proc, p.sync, p.value);
 
         for (auto i: opts->_if_resets)
-            newResetSensitivitySignal(proc, i.target, i.value, i.sync);
+            newReset(i.target, proc, i.sync, i.value);
     }
 
     if (opts && opts->_dontInitialize &&
