@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2018 Inria
  * Copyright (c) 2013,2016-2018 ARM Limited
  * All rights reserved.
  *
@@ -39,6 +40,7 @@
  *
  * Authors: Erik Hallnor
  *          Nikos Nikoleris
+ *          Daniel Carvalho
  */
 
 /**
@@ -110,6 +112,13 @@ FALRU::regStats()
 void
 FALRU::invalidate(CacheBlk *blk)
 {
+    // Erase block entry reference in the hash table
+    auto num_erased = tagHash.erase(std::make_pair(blk->tag, blk->isSecure()));
+
+    // Sanity check; only one block reference should be erased
+    assert(num_erased == 1);
+
+    // Invalidate block entry. Must be done after the hash is erased
     BaseTags::invalidate(blk);
 
     // Decrease the number of tags in use
@@ -117,9 +126,6 @@ FALRU::invalidate(CacheBlk *blk)
 
     // Move the block to the tail to make it the next victim
     moveToTail((FALRUBlk*)blk);
-
-    // Erase block entry in the hash table
-    tagHash.erase(std::make_pair(blk->tag, blk->isSecure()));
 }
 
 CacheBlk*
