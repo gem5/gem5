@@ -799,8 +799,12 @@ const char *
 sc_gen_unique_name(const char *seed)
 {
     auto mod = sc_gem5::pickParentModule();
-    return mod ? mod->uniqueName(seed) :
-        ::sc_gem5::nameGen.gen(seed);
+    if (mod)
+        return mod->uniqueName(seed);
+    sc_gem5::Process *p = sc_gem5::scheduler.current();
+    if (p)
+        return p->uniqueName(seed);
+    return ::sc_gem5::nameGen.gen(seed);
 }
 
 bool

@@ -36,6 +36,7 @@
 
 #include "base/fiber.hh"
 #include "systemc/core/list.hh"
+#include "systemc/core/module.hh"
 #include "systemc/core/object.hh"
 #include "systemc/core/sched_event.hh"
 #include "systemc/core/sensitivity.hh"
@@ -131,6 +132,8 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 
     void waitCount(int count) { _waitCount = count; }
 
+    const char *uniqueName(const char *seed) { return nameGen.gen(seed); }
+
   protected:
     void timeout();
 
@@ -191,6 +194,8 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     std::unique_ptr<::sc_core::sc_report> _lastReport;
 
     std::vector<::sc_core::sc_join *> joinWaiters;
+
+    UniqueNameGen nameGen;
 };
 
 } // namespace sc_gem5
