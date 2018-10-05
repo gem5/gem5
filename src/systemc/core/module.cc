@@ -49,7 +49,7 @@ Module *_new_module;
 
 Module::Module(const char *name) :
     _name(name), _sc_mod(nullptr), _obj(nullptr), _ended(false),
-    _deprecatedConstructor(false)
+    _deprecatedConstructor(false), bindingIndex(0)
 {
     panic_if(_new_module, "Previous module not finished.\n");
     _new_module = this;
@@ -109,6 +109,7 @@ Module::bindPorts(std::vector<const ::sc_core::sc_bind_proxy *> &proxies)
 
     auto proxyIt = proxies.begin();
     auto portIt = ports.begin();
+    portIt += bindingIndex;
     for (; proxyIt != proxies.end(); proxyIt++, portIt++) {
         auto proxy = *proxyIt;
         auto port = *portIt;
@@ -117,6 +118,7 @@ Module::bindPorts(std::vector<const ::sc_core::sc_bind_proxy *> &proxies)
         else
             port->vbind(*proxy->port());
     }
+    bindingIndex += proxies.size();
 }
 
 void

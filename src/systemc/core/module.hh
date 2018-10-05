@@ -125,6 +125,8 @@ class Module
     std::vector<::sc_core::sc_port_base *> ports;
     std::vector<::sc_core::sc_export_base *> exports;
 
+    int bindingIndex;
+
     void beforeEndOfElaboration();
     void endOfElaboration();
     void startOfSimulation();
