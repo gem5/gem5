@@ -32,8 +32,10 @@
 
 #include <cassert>
 #include <set>
+#include <sstream>
 #include <vector>
 
+#include "../utils/sc_report_handler.hh"
 #include "sc_port.hh"
 #include "sc_time.hh"
 
@@ -55,46 +57,6 @@ class sc_event_or_expr;
 class sc_interface;
 class sc_object;
 class sc_port_base;
-
-class sc_event_finder
-{
-  protected:
-    virtual ~sc_event_finder() {}
-
-  public:
-    // Should be "implementation defined" but used in the tests.
-    virtual const sc_event &find_event(sc_interface *if_p=NULL) const = 0;
-    virtual const sc_port_base *port() const = 0;
-};
-
-template <class IF>
-class sc_event_finder_t : public sc_event_finder
-{
-  public:
-    sc_event_finder_t(const sc_port_base &p,
-                      const sc_event & (IF::*_method)() const) :
-        _method(_method)
-    {
-        _port = dynamic_cast<const sc_port_b<IF> *>(&p);
-        assert(_port);
-    }
-
-    virtual ~sc_event_finder_t() {}
-
-    const sc_port_base *port() const { return _port; }
-
-    const sc_event &
-    find_event(sc_interface *if_p=NULL) const override
-    {
-        const IF *iface = if_p ? dynamic_cast<const IF *>(if_p) :
-            dynamic_cast<const IF *>(_port->get_interface());
-        return (const_cast<IF *>(iface)->*_method)();
-    }
-
-  private:
-    const sc_port_b<IF> *_port;
-    const sc_event &(IF::*_method)() const;
-};
 
 class sc_event_and_list
 {
@@ -241,6 +203,54 @@ class sc_event
 
     friend class ::sc_gem5::Event;
     ::sc_gem5::Event *_gem5_event;
+};
+
+class sc_event_finder
+{
+  protected:
+    virtual ~sc_event_finder() {}
+
+  public:
+    // Should be "implementation defined" but used in the tests.
+    virtual const sc_event &find_event(sc_interface *if_p=NULL) const = 0;
+    virtual const sc_port_base *port() const = 0;
+};
+
+template <class IF>
+class sc_event_finder_t : public sc_event_finder
+{
+  public:
+    sc_event_finder_t(const sc_port_base &p,
+                      const sc_event & (IF::*_method)() const) :
+        _method(_method)
+    {
+        _port = dynamic_cast<const sc_port_b<IF> *>(&p);
+        assert(_port);
+    }
+
+    virtual ~sc_event_finder_t() {}
+
+    const sc_port_base *port() const { return _port; }
+
+    const sc_event &
+    find_event(sc_interface *if_p=NULL) const override
+    {
+        static const sc_event none;
+        const IF *iface = if_p ? dynamic_cast<const IF *>(if_p) :
+            dynamic_cast<const IF *>(_port->get_interface());
+        if (!iface) {
+            std::ostringstream ss;
+            ss << "port is not bound: port '" << _port->name() << "' (" <<
+                _port->kind() << ")";
+            SC_REPORT_ERROR("(E118) find event failed", ss.str().c_str());
+            return none;
+        }
+        return (const_cast<IF *>(iface)->*_method)();
+    }
+
+  private:
+    const sc_port_b<IF> *_port;
+    const sc_event &(IF::*_method)() const;
 };
 
 const std::vector<sc_event *> &sc_get_top_level_events();
