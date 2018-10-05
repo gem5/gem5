@@ -179,6 +179,16 @@ Event::notify(const sc_core::sc_time &t)
 }
 
 void
+Event::notifyDelayed(const sc_core::sc_time &t)
+{
+    if (delayedNotify.scheduled()) {
+        SC_REPORT_ERROR("(E531) notify_delayed() cannot be called on events "
+                "that have pending notifications", "");
+    }
+    notify(t);
+}
+
+void
 Event::cancel()
 {
     if (delayedNotify.scheduled())

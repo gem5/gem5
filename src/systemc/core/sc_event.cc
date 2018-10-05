@@ -342,8 +342,16 @@ void sc_event::notify(const sc_time &t) { _gem5_event->notify(t); }
 void sc_event::notify(double d, sc_time_unit u) { _gem5_event->notify(d, u); }
 void sc_event::cancel() { _gem5_event->cancel(); }
 bool sc_event::triggered() const { return _gem5_event->triggered(); }
-void sc_event::notify_delayed() { _gem5_event->notify(SC_ZERO_TIME); }
-void sc_event::notify_delayed(const sc_time &t) { _gem5_event->notify(t); }
+void
+sc_event::notify_delayed()
+{
+    _gem5_event->notifyDelayed(SC_ZERO_TIME);
+}
+void
+sc_event::notify_delayed(const sc_time &t)
+{
+    _gem5_event->notifyDelayed(t);
+}
 
 sc_event_and_expr
 sc_event::operator & (const sc_event &e) const

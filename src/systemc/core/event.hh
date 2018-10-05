@@ -82,6 +82,7 @@ class Event
     {
         notify(sc_core::sc_time(d, u));
     }
+    void notifyDelayed(const sc_core::sc_time &t);
     void cancel();
 
     bool triggered() const;
