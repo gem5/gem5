@@ -191,6 +191,16 @@ Event::triggered() const
     return _triggeredStamp == scheduler.changeStamp();
 }
 
+void
+Event::clearParent()
+{
+    if (!parent)
+        return;
+    Object::getFromScObject(parent)->delChildEvent(sc_event());
+    parent = nullptr;
+    topLevelEvents.emplace(topLevelEvents.end(), sc_event());
+}
+
 Events topLevelEvents;
 Events allEvents;
 

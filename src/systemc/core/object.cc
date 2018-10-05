@@ -145,6 +145,9 @@ Object::~Object()
     }
     children.clear();
 
+    for (auto event: events)
+        Event::getFromScEvent(event)->clearParent();
+
     if (parent)
         popObject(&parent->_gem5_object->children, _name);
     else

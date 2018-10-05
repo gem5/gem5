@@ -138,6 +138,8 @@ class Event
         }
     }
 
+    void clearParent();
+
   private:
     sc_core::sc_event *_sc_event;
 
