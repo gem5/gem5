@@ -166,6 +166,12 @@ class sc_module : public sc_object
                       const sc_bind_proxy &p063 = SC_BIND_PROXY_NIL,
                       const sc_bind_proxy &p064 = SC_BIND_PROXY_NIL);
 
+    // Deprecated
+    sc_module &operator << (sc_interface &);
+    sc_module &operator << (sc_port_base &);
+    sc_module &operator , (sc_interface &);
+    sc_module &operator , (sc_port_base &);
+
     virtual const std::vector<sc_object *> &get_child_objects() const;
     virtual const std::vector<sc_event *> &get_child_events() const;
 

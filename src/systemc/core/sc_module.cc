@@ -210,6 +210,34 @@ sc_module::operator () (const sc_bind_proxy &p001,
     _gem5_module->bindPorts(proxies);
 }
 
+sc_module &
+sc_module::operator << (sc_interface &iface)
+{
+    (*this)(iface);
+    return *this;
+}
+
+sc_module &
+sc_module::operator << (sc_port_base &pb)
+{
+    (*this)(pb);
+    return *this;
+}
+
+sc_module &
+sc_module::operator , (sc_interface &iface)
+{
+    (*this)(iface);
+    return *this;
+}
+
+sc_module &
+sc_module::operator , (sc_port_base &pb)
+{
+    (*this)(pb);
+    return *this;
+}
+
 const std::vector<sc_object *> &
 sc_module::get_child_objects() const
 {
