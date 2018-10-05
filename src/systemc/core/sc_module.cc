@@ -822,12 +822,20 @@ at_negedge(const sc_signal_in_if<sc_dt::sc_logic> &s)
 const char *
 sc_gen_unique_name(const char *seed)
 {
+    if (!seed || seed[0] == '\0') {
+        SC_REPORT_ERROR(
+                "(E532) cannot generate unique name from null string", "");
+        seed = "unnamed";
+    }
+
     auto mod = sc_gem5::pickParentModule();
     if (mod)
         return mod->uniqueName(seed);
+
     sc_gem5::Process *p = sc_gem5::scheduler.current();
     if (p)
         return p->uniqueName(seed);
+
     return ::sc_gem5::nameGen.gen(seed);
 }
 
