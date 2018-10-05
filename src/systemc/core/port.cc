@@ -29,6 +29,7 @@
 
 #include "systemc/core/port.hh"
 
+#include "base/logging.hh"
 #include "systemc/core/process.hh"
 #include "systemc/core/sensitivity.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
@@ -123,6 +124,27 @@ Port::finalize()
         finalizeReset(r);
 
     resets.clear();
+
+    switch (portBase->_portPolicy()) {
+      case sc_core::SC_ONE_OR_MORE_BOUND:
+        if (size() == 0)
+            portBase->report_error(
+                    "(E109) complete binding failed", "port not bound");
+        break;
+      case sc_core::SC_ALL_BOUND:
+        if (size() < maxSize() || size() < 1) {
+            std::stringstream ss;
+            ss << size() << " actual binds is less than required " <<
+                maxSize();
+            portBase->report_error(
+                    "(E109) complete binding failed", ss.str().c_str());
+        }
+        break;
+      case sc_core::SC_ZERO_OR_MORE_BOUND:
+        break;
+      default:
+        panic("Unrecognized port policy %d.", portBase->_portPolicy());
+    }
 }
 
 void

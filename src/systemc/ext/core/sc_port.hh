@@ -112,6 +112,7 @@ class sc_port_base : public sc_object
 
     ::sc_gem5::Port *_gem5Port;
     virtual const char *_ifTypeName() const = 0;
+    virtual sc_port_policy _portPolicy() const = 0;
 };
 
 template <class IF>
@@ -299,6 +300,8 @@ class sc_port : public sc_port_b<IF>
     // Disabled
     sc_port(const sc_port<IF, N, P> &) {}
     sc_port<IF, N, P> &operator = (const sc_port<IF, N, P> &) { return *this; }
+
+    virtual sc_port_policy _portPolicy() const { return P; }
 };
 
 } // namespace sc_core
