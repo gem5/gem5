@@ -59,5 +59,4 @@ if result.code != 0:
     # generate errors, and as long as their output matches that's still
     # considered correct. A "real" systemc config should expect sc_main
     # (if present) not to fail.
-    print('\n' + result.message)
     sys.exit(int(result.code))

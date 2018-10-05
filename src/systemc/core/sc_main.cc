@@ -78,10 +78,15 @@ class ScMainFiber : public Fiber
                 // after sc_main returns.
             } catch (const sc_report &r) {
                 // There was an exception nobody caught.
-                resultStr = r.what();
+                resultStr = "uncaught sc_report";
+                sc_report_handler::get_handler()(
+                        r, sc_report_handler::get_catch_actions());
             } catch (...) {
                 // There was some other type of exception we need to wrap.
-                resultStr = ::sc_gem5::reportifyException().what();
+                resultStr = "uncaught exception";
+                sc_report_handler::get_handler()(
+                        ::sc_gem5::reportifyException(),
+                        sc_report_handler::get_catch_actions());
             }
             ::sc_gem5::Kernel::scMainFinished(true);
             ::sc_gem5::scheduler.clear();
