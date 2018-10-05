@@ -92,7 +92,7 @@ int verbosityLevel = SC_MEDIUM;
 
 sc_actions suppressedActions = SC_UNSPECIFIED;
 sc_actions forcedActions = SC_UNSPECIFIED;
-sc_actions catchActions = SC_UNSPECIFIED;
+sc_actions catchActions = SC_DISPLAY;
 
 sc_report_handler_proc reportHandlerProc = &sc_report_handler::default_handler;
 
