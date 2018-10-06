@@ -76,7 +76,8 @@ class Sensitivity
     virtual void clear() = 0;
 
     void satisfy();
-    virtual bool notify(Event *e);
+    virtual bool notifyWork(Event *e);
+    bool notify(Event *e);
 
     enum Category
     {
@@ -276,7 +277,7 @@ class DynamicSensitivityEventOrList :
     DynamicSensitivityEventOrList(
             Process *p, const sc_core::sc_event_or_list *eol);
 
-    bool notify(Event *e) override;
+    bool notifyWork(Event *e) override;
 };
 
 //XXX This sensitivity can't be reused. To reset it, it has to be deleted and
@@ -292,7 +293,7 @@ class DynamicSensitivityEventAndList :
     DynamicSensitivityEventAndList(
             Process *p, const sc_core::sc_event_and_list *eal);
 
-    bool notify(Event *e) override;
+    bool notifyWork(Event *e) override;
 };
 
 } // namespace sc_gem5

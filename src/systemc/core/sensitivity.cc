@@ -55,12 +55,29 @@ Sensitivity::satisfy()
 }
 
 bool
-Sensitivity::notify(Event *e)
+Sensitivity::notifyWork(Event *e)
 {
-    if (process->disabled())
-        return false;
     satisfy();
     return true;
+}
+
+bool
+Sensitivity::notify(Event *e)
+{
+    if (scheduler.current() == process) {
+        static bool warned = false;
+        if (!warned) {
+            SC_REPORT_WARNING("(W536) immediate self-notification ignored "
+                    "as of IEEE 1666-2011", process->name());
+            warned = true;
+        }
+        return false;
+    }
+
+    if (process->disabled())
+        return false;
+
+    return notifyWork(e);
 }
 
 bool
@@ -203,11 +220,8 @@ DynamicSensitivityEventOrList::DynamicSensitivityEventOrList(
 {}
 
 bool
-DynamicSensitivityEventOrList::notify(Event *e)
+DynamicSensitivityEventOrList::notifyWork(Event *e)
 {
-    if (process->disabled())
-        return false;
-
     events.erase(e->sc_event());
 
     // All the other events need this deleted from their lists since this
@@ -225,11 +239,8 @@ DynamicSensitivityEventAndList::DynamicSensitivityEventAndList(
 {}
 
 bool
-DynamicSensitivityEventAndList::notify(Event *e)
+DynamicSensitivityEventAndList::notifyWork(Event *e)
 {
-    if (process->disabled())
-        return false;
-
     events.erase(e->sc_event());
 
     // This sensitivity is satisfied if all events have triggered.
