@@ -84,7 +84,7 @@ class Process : public ::sc_core::sc_process_b, public ListNode
 
     void kill(bool inc_kids);
     void reset(bool inc_kids);
-    virtual void throw_it(ExceptionWrapperBase &exc, bool inc_kids);
+    void throw_it(ExceptionWrapperBase &exc, bool inc_kids);
 
     void injectException(ExceptionWrapperBase &exc);
     ExceptionWrapperBase *excWrapper;

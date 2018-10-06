@@ -37,7 +37,6 @@ if env['USE_SYSTEMC']:
     Source('object.cc')
     Source('port.cc')
     Source('process.cc')
-    Source('process_types.cc')
     Source('python.cc')
     Source('scheduler.cc')
     Source('sched_event.cc')

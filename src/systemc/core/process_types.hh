@@ -63,8 +63,6 @@ class Thread : public Process
 
     const char *kind() const override { return "sc_thread_process"; }
 
-    void throw_it(ExceptionWrapperBase &exc, bool inc_kids) override;
-
     sc_core::sc_curr_proc_kind
     procKind() const override
     {

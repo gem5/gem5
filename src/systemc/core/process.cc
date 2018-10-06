@@ -206,9 +206,10 @@ Process::throw_it(ExceptionWrapperBase &exc, bool inc_kids)
     if (inc_kids)
         forEachKid([&exc](Process *p) { p->throw_it(exc, true); });
 
-    // Only inject an exception into threads that have started.
-    if (!_needsStart)
-        injectException(exc);
+    if (_needsStart || _terminated)
+        return;
+
+    injectException(exc);
 }
 
 void
