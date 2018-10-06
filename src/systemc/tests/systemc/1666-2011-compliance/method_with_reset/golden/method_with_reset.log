@@ -1,5 +1,3 @@
 SystemC Simulation
 
-Error: (E521) immediate notification is not allowed during update phase or elaboration
-In file: <removed by verify.pl>
-In process: top.ctrl.m3 @ 520 ns
+Success
