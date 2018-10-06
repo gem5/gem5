@@ -183,6 +183,8 @@ Process::reset(bool inc_kids)
     if (_isUnwinding)
         return;
 
+    // Clear suspended ready since we're about to run regardless.
+    _suspendedReady = false;
 
     _resetEvent.notify();
 
