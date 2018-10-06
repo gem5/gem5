@@ -45,6 +45,7 @@ namespace sc_gem5
 class Event;
 class DynamicSensitivityEventAndList;
 class DynamicSensitivityEventOrList;
+class InternalScEvent;
 
 }
 
@@ -196,6 +197,10 @@ class sc_event
     sc_event_or_expr operator | (const sc_event &) const;
     sc_event_or_expr operator | (const sc_event_or_list &) const;
 
+  protected:
+    explicit sc_event(bool);
+    explicit sc_event(bool, const char *);
+
   private:
     // Disabled
     sc_event(const sc_event &) {}
@@ -235,7 +240,7 @@ class sc_event_finder_t : public sc_event_finder
     const sc_event &
     find_event(sc_interface *if_p=NULL) const override
     {
-        static const sc_event none;
+        static const sc_gem5::InternalScEvent none;
         const IF *iface = if_p ? dynamic_cast<const IF *>(if_p) :
             dynamic_cast<const IF *>(_port->get_interface());
         if (!iface) {
@@ -257,5 +262,17 @@ const std::vector<sc_event *> &sc_get_top_level_events();
 sc_event *sc_find_event(const char *);
 
 } // namespace sc_core
+
+namespace sc_gem5
+{
+
+class InternalScEvent : public ::sc_core::sc_event
+{
+  public:
+    InternalScEvent();
+    InternalScEvent(const char *);
+};
+
+} // namespace sc_gem5
 
 #endif  //__SYSTEMC_EXT_CORE_SC_INTERFACE_HH__

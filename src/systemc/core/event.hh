@@ -60,8 +60,9 @@ class Sensitivity;
 class Event
 {
   public:
-    Event(sc_core::sc_event *_sc_event);
-    Event(sc_core::sc_event *_sc_event, const char *_basename);
+    Event(sc_core::sc_event *_sc_event, bool internal=false);
+    Event(sc_core::sc_event *_sc_event, const char *_basename,
+            bool internal=false);
 
     ~Event();
 

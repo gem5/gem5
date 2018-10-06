@@ -56,7 +56,7 @@ class sc_mutex : public sc_mutex_if, public sc_object
     sc_mutex &operator = (const sc_mutex &) { return *this; }
 
     sc_process_handle holder;
-    sc_event unlockEvent;
+    sc_gem5::InternalScEvent unlockEvent;
 };
 
 } // namespace sc_core

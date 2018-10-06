@@ -199,7 +199,7 @@ sc_process_handle::terminated_event() const
     if (!_gem5_process) {
         SC_REPORT_WARNING("(W570) attempt to use an empty "
                 "process handle ignored", "terminated_event()");
-        static sc_event non_event;
+        static sc_gem5::InternalScEvent non_event;
         return non_event;
     }
     return _gem5_process->terminatedEvent();
@@ -289,7 +289,7 @@ sc_process_handle::reset_event() const
     if (!_gem5_process) {
         SC_REPORT_WARNING("(W570) attempt to use an empty "
                 "process handle ignored", "reset()");
-        static sc_event non_event;
+        static sc_gem5::InternalScEvent non_event;
         return non_event;
     }
     return _gem5_process->resetEvent();

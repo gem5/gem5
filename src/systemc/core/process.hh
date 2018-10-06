@@ -156,8 +156,8 @@ class Process : public ::sc_core::sc_process_b, public ListNode
         clearDynamic();
     }
 
-    ::sc_core::sc_event _resetEvent;
-    ::sc_core::sc_event _terminatedEvent;
+    InternalScEvent _resetEvent;
+    InternalScEvent _terminatedEvent;
 
     ProcessFuncWrapper *func;
     sc_core::sc_curr_proc_kind _procKind;

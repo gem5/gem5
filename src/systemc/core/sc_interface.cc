@@ -41,7 +41,7 @@ const sc_event &
 sc_interface::default_event() const
 {
     SC_REPORT_WARNING("(W116) channel doesn't have a default event", "");
-    static sc_event dummy;
+    static sc_gem5::InternalScEvent dummy;
     return dummy;
 }
 

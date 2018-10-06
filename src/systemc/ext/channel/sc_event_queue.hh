@@ -72,7 +72,7 @@ class sc_event_queue : public sc_event_queue_if, public sc_module
   private:
     void _trigger();
 
-    sc_event _defaultEvent;
+    sc_gem5::InternalScEvent _defaultEvent;
     std::priority_queue<
         sc_time, std::vector<sc_time>, std::greater<sc_time> > _times;
 };

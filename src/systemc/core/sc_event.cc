@@ -389,6 +389,19 @@ sc_event::operator | (const sc_event_or_list &eol) const
     return expr;
 }
 
+sc_event::sc_event(bool) :
+    _gem5_event(new ::sc_gem5::Event(
+                this, sc_core::sc_gen_unique_name(
+                    "$$$internal kernel event$$$"), true))
+{}
+
+sc_event::sc_event(bool, const char *_name) :
+    _gem5_event(new ::sc_gem5::Event(
+                this,
+                (std::string("$$$internal kernel event$$$") + _name).c_str(),
+                true))
+{}
+
 const std::vector<sc_event *> &
 sc_get_top_level_events()
 {
@@ -404,3 +417,11 @@ sc_find_event(const char *name)
 }
 
 } // namespace sc_core
+
+namespace sc_gem5
+{
+
+InternalScEvent::InternalScEvent() : sc_event(true) {}
+InternalScEvent::InternalScEvent(const char *_name) : sc_event(true, _name) {}
+
+} // namespace sc_gem5

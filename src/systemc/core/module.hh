@@ -68,6 +68,8 @@ class UniqueNameGen
     }
 };
 
+extern UniqueNameGen globalNameGen;
+
 class Module
 {
   private:

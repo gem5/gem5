@@ -52,7 +52,7 @@ class sc_join
     void wait_clocked();
 
   private:
-    sc_event joinEvent;
+    sc_gem5::InternalScEvent joinEvent;
     int remaining;
 };
 

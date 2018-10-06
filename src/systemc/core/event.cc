@@ -43,37 +43,46 @@
 namespace sc_gem5
 {
 
-Event::Event(sc_core::sc_event *_sc_event) : Event(_sc_event, nullptr) {}
+Event::Event(sc_core::sc_event *_sc_event, bool internal) :
+    Event(_sc_event, nullptr, internal)
+{}
 
-Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr) :
+Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
+        bool internal) :
     _sc_event(_sc_event), _basename(_basename_cstr ? _basename_cstr : ""),
-    delayedNotify([this]() { this->notify(); }), _triggeredStamp(~0ULL)
+    _inHierarchy(!internal), delayedNotify([this]() { this->notify(); }),
+    _triggeredStamp(~0ULL)
 {
     if (_basename == "" && ::sc_core::sc_is_running())
         _basename = ::sc_core::sc_gen_unique_name("event");
 
-    parent = pickParentObj();
+    parent = internal ? nullptr : pickParentObj();
 
-    std::string original_name = _basename;
-    _basename = pickUniqueName(parent, _basename);
-
-    if (parent) {
-        Object *obj = Object::getFromScObject(parent);
-        obj->addChildEvent(_sc_event);
+    if (internal) {
+        _basename = globalNameGen.gen(_basename);
+        _name = _basename;
     } else {
-        topLevelEvents.emplace(topLevelEvents.end(), _sc_event);
+        std::string original_name = _basename;
+        _basename = pickUniqueName(parent, _basename);
+
+        if (parent) {
+            Object *obj = Object::getFromScObject(parent);
+            obj->addChildEvent(_sc_event);
+        } else {
+            topLevelEvents.emplace(topLevelEvents.end(), _sc_event);
+        }
+
+        std::string path = parent ? (std::string(parent->name()) + ".") : "";
+
+        if (original_name != "" && _basename != original_name) {
+            std::string message = path + original_name +
+                ". Latter declaration will be renamed to " +
+                path + _basename;
+            SC_REPORT_WARNING("(W505) object already exists", message.c_str());
+        }
+
+        _name = path + _basename;
     }
-
-    std::string path = parent ? (std::string(parent->name()) + ".") : "";
-
-    if (original_name != "" && _basename != original_name) {
-        std::string message = path + original_name +
-            ". Latter declaration will be renamed to " +
-            path + _basename;
-        SC_REPORT_WARNING("(W505) object already exists", message.c_str());
-    }
-
-    _name = path + _basename;
 
     allEvents.emplace(allEvents.end(), _sc_event);
 
@@ -86,7 +95,7 @@ Event::~Event()
     if (parent) {
         Object *obj = Object::getFromScObject(parent);
         obj->delChildEvent(_sc_event);
-    } else {
+    } else if (inHierarchy()) {
         EventsIt it = find(topLevelEvents.begin(), topLevelEvents.end(),
                            _sc_event);
         assert(it != topLevelEvents.end());
@@ -117,7 +126,7 @@ Event::basename() const
 bool
 Event::inHierarchy() const
 {
-    return _name.length() != 0;
+    return _inHierarchy;
 }
 
 sc_core::sc_object *

@@ -47,6 +47,8 @@ Module *_new_module;
 
 } // anonymous namespace
 
+UniqueNameGen globalNameGen;
+
 Module::Module(const char *name) :
     _name(name), _sc_mod(nullptr), _obj(nullptr), _ended(false),
     _deprecatedConstructor(false), bindingIndex(0)

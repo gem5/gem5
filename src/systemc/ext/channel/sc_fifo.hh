@@ -211,8 +211,8 @@ class sc_fifo : public sc_fifo_in_if<T>,
     {}
     sc_fifo &operator = (const sc_fifo<T> &) { return *this; }
 
-    sc_event _dataReadEvent;
-    sc_event _dataWriteEvent;
+    sc_gem5::InternalScEvent _dataReadEvent;
+    sc_gem5::InternalScEvent _dataWriteEvent;
 
     sc_port_base *_reader;
     sc_port_base *_writer;

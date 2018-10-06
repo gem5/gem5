@@ -71,7 +71,7 @@ class ScSignalBase : public sc_core::sc_prim_channel
 
     virtual sc_core::sc_writer_policy get_writer_policy() const = 0;
 
-    sc_core::sc_event _valueChangedEvent;
+    InternalScEvent _valueChangedEvent;
     uint64_t _changeStamp;
     sc_core::sc_port_base *_gem5WriterPort;
 };
@@ -91,8 +91,8 @@ class ScSignalBaseBinary : public ScSignalBase
     bool posedge() const;
     bool negedge() const;
 
-    sc_core::sc_event _posedgeEvent;
-    sc_core::sc_event _negedgeEvent;
+    InternalScEvent _posedgeEvent;
+    InternalScEvent _negedgeEvent;
 
     uint64_t _posStamp;
     uint64_t _negStamp;

@@ -59,7 +59,7 @@ class sc_semaphore : public sc_semaphore_if, public sc_object
     sc_semaphore &operator = (const sc_semaphore &) { return *this; }
 
     int _value;
-    sc_event posted;
+    sc_gem5::InternalScEvent posted;
 };
 
 } // namespace sc_core

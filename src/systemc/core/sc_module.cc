@@ -97,8 +97,6 @@ newCThreadProcess(const char *name, ProcessFuncWrapper *func)
     return p;
 }
 
-UniqueNameGen nameGen;
-
 } // namespace sc_gem5
 
 namespace sc_core
@@ -836,7 +834,7 @@ sc_gen_unique_name(const char *seed)
     if (p)
         return p->uniqueName(seed);
 
-    return ::sc_gem5::nameGen.gen(seed);
+    return ::sc_gem5::globalNameGen.gen(seed);
 }
 
 bool
