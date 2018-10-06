@@ -160,7 +160,6 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     InternalScEvent _terminatedEvent;
 
     ProcessFuncWrapper *func;
-    sc_core::sc_curr_proc_kind _procKind;
 
     bool _internal;
 
