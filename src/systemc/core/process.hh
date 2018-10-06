@@ -97,8 +97,8 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     void incref() { refCount++; }
     void decref() { refCount--; }
 
-    const ::sc_core::sc_event &resetEvent() { return _resetEvent; }
-    const ::sc_core::sc_event &terminatedEvent() { return _terminatedEvent; }
+    ::sc_core::sc_event &resetEvent() { return _resetEvent; }
+    ::sc_core::sc_event &terminatedEvent() { return _terminatedEvent; }
 
     void setStackSize(size_t size) { stackSize = size; }
 

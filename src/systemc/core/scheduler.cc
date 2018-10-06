@@ -171,6 +171,10 @@ Scheduler::yield()
         // If the current process needs to be manually started, start it.
         if (_current && _current->needsStart()) {
             _current->needsStart(false);
+            // If a process hasn't started yet, "resetting" it just starts it
+            // and signals its reset event.
+            if (_current->inReset())
+                _current->resetEvent().notify();
             try {
                 _current->run();
             } catch (...) {
