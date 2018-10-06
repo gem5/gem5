@@ -206,8 +206,12 @@ Process::throw_it(ExceptionWrapperBase &exc, bool inc_kids)
     if (inc_kids)
         forEachKid([&exc](Process *p) { p->throw_it(exc, true); });
 
-    if (_needsStart || _terminated)
+    if (_needsStart || _terminated ||
+            procKind() == ::sc_core::SC_METHOD_PROC_) {
+        SC_REPORT_WARNING("(W556) throw_it on method/non-running process "
+                "is being ignored ", name());
         return;
+    }
 
     injectException(exc);
 }
