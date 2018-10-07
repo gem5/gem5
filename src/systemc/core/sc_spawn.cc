@@ -35,6 +35,7 @@
 #include "systemc/ext/channel/sc_inout.hh"
 #include "systemc/ext/channel/sc_out.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_spawn.hh"
@@ -105,9 +106,7 @@ spawnWork(ProcessFuncWrapper *func, const char *name,
             opts->_events.empty() && opts->_ports.empty() &&
             opts->_exports.empty() && opts->_interfaces.empty() &&
             opts->_finders.empty()) {
-        SC_REPORT_WARNING(
-                "(W558) disable() or dont_initialize() called on process "
-                "with no static sensitivity, it will be orphaned",
+        SC_REPORT_WARNING(sc_core::SC_ID_DISABLE_WILL_ORPHAN_PROCESS_,
                 proc->name());
     }
 

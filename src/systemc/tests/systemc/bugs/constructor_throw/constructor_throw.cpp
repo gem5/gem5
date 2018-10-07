@@ -72,7 +72,7 @@ SC_MODULE(X)
 {
     SC_CTOR(X)
     {
-        SC_REPORT_ERROR("set time resolution failed","");
+        SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_,"");
     }
 };
 

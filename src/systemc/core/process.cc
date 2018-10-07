@@ -33,6 +33,7 @@
 #include "systemc/core/event.hh"
 #include "systemc/core/port.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_join.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_process_handle.hh"
@@ -120,7 +121,7 @@ Process::disable(bool inc_kids)
             timeoutEvent.scheduled()) {
         std::string message("attempt to disable a thread with timeout wait: ");
         message += name();
-        SC_REPORT_ERROR("Undefined process control interaction",
+        SC_REPORT_ERROR(sc_core::SC_ID_PROCESS_CONTROL_CORNER_CASE_,
                 message.c_str());
     }
 
@@ -141,8 +142,7 @@ void
 Process::kill(bool inc_kids)
 {
     if (::sc_core::sc_get_status() != ::sc_core::SC_RUNNING) {
-        SC_REPORT_ERROR(
-                "(E572) a process may not be killed before it is initialized",
+        SC_REPORT_ERROR(sc_core::SC_ID_KILL_PROCESS_WHILE_UNITIALIZED_,
                 name());
     }
 
@@ -170,9 +170,8 @@ void
 Process::reset(bool inc_kids)
 {
     if (::sc_core::sc_get_status() != ::sc_core::SC_RUNNING) {
-        SC_REPORT_ERROR(
-                "(E573) a process may not be asynchronously reset while"
-                "the simulation is not running", name());
+        SC_REPORT_ERROR(sc_core::SC_ID_RESET_PROCESS_WHILE_NOT_RUNNING_,
+                name());
     }
 
     // Propogate the reset to our children no matter what happens to us.
@@ -199,19 +198,15 @@ Process::reset(bool inc_kids)
 void
 Process::throw_it(ExceptionWrapperBase &exc, bool inc_kids)
 {
-    if (::sc_core::sc_get_status() != ::sc_core::SC_RUNNING) {
-        SC_REPORT_ERROR(
-                "(E574) throw_it not allowed unless simulation is running ",
-                name());
-    }
+    if (::sc_core::sc_get_status() != ::sc_core::SC_RUNNING)
+        SC_REPORT_ERROR(sc_core::SC_ID_THROW_IT_WHILE_NOT_RUNNING_, name());
 
     if (inc_kids)
         forEachKid([&exc](Process *p) { p->throw_it(exc, true); });
 
     if (_needsStart || _terminated ||
             procKind() == ::sc_core::SC_METHOD_PROC_) {
-        SC_REPORT_WARNING("(W556) throw_it on method/non-running process "
-                "is being ignored ", name());
+        SC_REPORT_WARNING(sc_core::SC_ID_THROW_IT_IGNORED_, name());
         return;
     }
 

@@ -29,6 +29,7 @@
 
 #include "base/logging.hh"
 #include "systemc/core/process.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_join.hh"
 #include "systemc/ext/core/sc_module.hh"
@@ -46,8 +47,7 @@ sc_join::add_process(sc_process_handle h)
     assert(p);
 
     if (p->procKind() == SC_METHOD_PROC_) {
-        SC_REPORT_ERROR("(E561) Attempt to register method process "
-                "with sc_join object", "");
+        SC_REPORT_ERROR(SC_ID_JOIN_ON_METHOD_HANDLE_, "");
         return;
     }
 

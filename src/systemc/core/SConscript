@@ -33,6 +33,7 @@ if env['USE_SYSTEMC']:
     Source('channel.cc')
     Source('event.cc')
     Source('kernel.cc')
+    Source('messages.cc')
     Source('module.cc')
     Source('object.cc')
     Source('port.cc')

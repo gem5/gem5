@@ -37,6 +37,7 @@
 #include "sim/core.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_module.hh"
 
@@ -78,7 +79,8 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
             std::string message = path + original_name +
                 ". Latter declaration will be renamed to " +
                 path + _basename;
-            SC_REPORT_WARNING("(W505) object already exists", message.c_str());
+            SC_REPORT_WARNING(sc_core::SC_ID_INSTANCE_EXISTS_,
+                    message.c_str());
         }
 
         _name = path + _basename;
@@ -159,10 +161,8 @@ Event::notify(DynamicSensitivities &senses)
 void
 Event::notify()
 {
-    if (scheduler.inUpdate()) {
-        SC_REPORT_ERROR("(E521) immediate notification is not allowed "
-                "during update phase or elaboration", "");
-    }
+    if (scheduler.inUpdate())
+        SC_REPORT_ERROR(sc_core::SC_ID_IMMEDIATE_NOTIFICATION_, "");
 
     // An immediate notification overrides any pending delayed notification.
     if (delayedNotify.scheduled())
@@ -190,10 +190,8 @@ Event::notify(const sc_core::sc_time &t)
 void
 Event::notifyDelayed(const sc_core::sc_time &t)
 {
-    if (delayedNotify.scheduled()) {
-        SC_REPORT_ERROR("(E531) notify_delayed() cannot be called on events "
-                "that have pending notifications", "");
-    }
+    if (delayedNotify.scheduled())
+        SC_REPORT_ERROR(sc_core::SC_ID_NOTIFY_DELAYED_, "");
     notify(t);
 }
 

@@ -32,6 +32,7 @@
 #include <cassert>
 
 #include "base/logging.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_export.hh"
 #include "systemc/ext/core/sc_port.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -143,9 +144,7 @@ Module::endOfElaboration()
 {
     if (_deprecatedConstructor && !_ended) {
         std::string msg = csprintf("module '%s'", name());
-        SC_REPORT_WARNING("(W509) module construction not properly completed: "
-                "did you forget to add a sc_module_name parameter to "
-                "your module constructor?", msg.c_str());
+        SC_REPORT_WARNING(sc_core::SC_ID_END_MODULE_NOT_CALLED_, msg.c_str());
     }
     pushParentModule(this);
     try {
@@ -200,11 +199,8 @@ currentModule()
 Module *
 newModuleChecked()
 {
-    if (!_new_module) {
-        SC_REPORT_ERROR("(E533) module name stack is empty: "
-                "did you forget to add a sc_module_name parameter to "
-                "your module constructor?", nullptr);
-    }
+    if (!_new_module)
+        SC_REPORT_ERROR(sc_core::SC_ID_MODULE_NAME_STACK_EMPTY_, "");
     return _new_module;
 }
 

@@ -32,6 +32,7 @@
 #include "systemc/ext/channel/sc_in.hh"
 #include "systemc/ext/channel/sc_inout.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_interface.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_sensitive.hh"
@@ -47,7 +48,7 @@ void
 checkIfRunning()
 {
     if (sc_is_running())
-        SC_REPORT_ERROR("(E526) make sensitive failed", "simulation running");
+        SC_REPORT_ERROR(SC_ID_MAKE_SENSITIVE_, "simulation running");
 }
 
 } // anonymous namespace

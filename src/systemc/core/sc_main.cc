@@ -39,6 +39,7 @@
 #include "systemc/core/kernel.hh"
 #include "systemc/core/python.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 #include "systemc/utils/report.hh"
@@ -203,10 +204,8 @@ sc_start(const sc_time &time, sc_starvation_policy p)
         ::sc_gem5::scheduler.oneCycle();
     } else {
         Tick now = ::sc_gem5::scheduler.getCurTick();
-        if (MaxTick - now < time.value()) {
-            SC_REPORT_ERROR("(E544) simulation time value overflow, "
-                    "simulation aborted", "");
-        }
+        if (MaxTick - now < time.value())
+            SC_REPORT_ERROR(SC_ID_SIMULATION_TIME_OVERFLOW_, "");
         ::sc_gem5::scheduler.start(now + time.value(), p == SC_RUN_TO_TIME);
     }
 }
@@ -215,8 +214,7 @@ void
 sc_set_stop_mode(sc_stop_mode mode)
 {
     if (sc_is_running()) {
-        SC_REPORT_ERROR("attempt to set sc_stop mode "
-                        "after start will be ignored", "");
+        SC_REPORT_ERROR(SC_ID_STOP_MODE_AFTER_START_, "");
         return;
     }
     _stop_mode = mode;
@@ -235,7 +233,7 @@ sc_stop()
     if (stop_called) {
         static bool stop_warned = false;
         if (!stop_warned)
-            SC_REPORT_WARNING("(W545) sc_stop has already been called", "");
+            SC_REPORT_WARNING(SC_ID_SIMULATION_STOP_CALLED_TWICE_, "");
         stop_warned = true;
         return;
     }

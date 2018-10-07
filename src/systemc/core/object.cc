@@ -36,6 +36,7 @@
 #include "systemc/core/event.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_module.hh"
 
 namespace sc_gem5
@@ -121,7 +122,7 @@ Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
         std::string message = path + original_name +
             ". Latter declaration will be renamed to " +
             path + _basename;
-        SC_REPORT_WARNING("(W505) object already exists", message.c_str());
+        SC_REPORT_WARNING(sc_core::SC_ID_INSTANCE_EXISTS_, message.c_str());
     }
     _name = path + _basename;
 }

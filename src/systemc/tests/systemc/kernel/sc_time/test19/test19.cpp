@@ -59,8 +59,8 @@ void check_time( const sc_time& t, sc_time_unit tu, const std::string & str )
 
 int sc_main( int, char*[] )
 {
-    sc_report_handler::set_actions( "set time resolution failed", SC_DO_NOTHING );
-    sc_report_handler::set_actions( "sc_time conversion failed", SC_DISPLAY );
+    sc_report_handler::set_actions( SC_ID_SET_TIME_RESOLUTION_, SC_DO_NOTHING );
+    sc_report_handler::set_actions( SC_ID_TIME_CONVERSION_FAILED_, SC_DISPLAY );
 
     unsigned resolutions[] = { 100, 10, 1 };
     sc_time_unit resunit   = SC_FS;

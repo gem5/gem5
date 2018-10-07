@@ -33,6 +33,7 @@
 #include "base/logging.hh"
 #include "sim/eventq.hh"
 #include "systemc/core/kernel.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -112,10 +113,8 @@ Scheduler::initPhase()
 
         if (p->dontInitialize()) {
             if (!p->hasStaticSensitivities() && !p->internal()) {
-                SC_REPORT_WARNING(
-                        "(W558) disable() or dont_initialize() called on "
-                        "process with no static sensitivity, it will be "
-                        "orphaned", p->name());
+                SC_REPORT_WARNING(sc_core::SC_ID_DISABLE_WILL_ORPHAN_PROCESS_,
+                        p->name());
             }
         } else {
             p->ready();
@@ -484,11 +483,15 @@ reportifyException()
         } catch (const ::sc_core::sc_unwind_exception &) {
             panic("Kill/reset exception escaped a Process::run()");
         } catch (const std::exception &e) {
-            SC_REPORT_ERROR("uncaught exception", e.what());
+            SC_REPORT_ERROR(
+                    sc_core::SC_ID_SIMULATION_UNCAUGHT_EXCEPTION_, e.what());
         } catch (const char *msg) {
-            SC_REPORT_ERROR("uncaught exception", msg);
+            SC_REPORT_ERROR(
+                    sc_core::SC_ID_SIMULATION_UNCAUGHT_EXCEPTION_, msg);
         } catch (...) {
-            SC_REPORT_ERROR("uncaught exception", "UNKNOWN EXCEPTION");
+            SC_REPORT_ERROR(
+                    sc_core::SC_ID_SIMULATION_UNCAUGHT_EXCEPTION_,
+                    "UNKNOWN EXCEPTION");
         }
     } catch (const ::sc_core::sc_report &r) {
         ::sc_core::sc_report_handler::set_handler(old_handler);

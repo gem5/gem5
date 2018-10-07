@@ -36,6 +36,7 @@
 #include "sim/core.hh"
 #include "systemc/core/python.hh"
 #include "systemc/core/time.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_time.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -164,8 +165,7 @@ sc_time::sc_time(double d, const char *unit)
     }
 
     if (tu > SC_SEC) {
-        SC_REPORT_ERROR("(E567) sc_time conversion failed",
-                "invalid unit given");
+        SC_REPORT_ERROR(SC_ID_TIME_CONVERSION_FAILED_,"invalid unit given");
         val = 0;
         return;
     }
@@ -311,8 +311,7 @@ sc_time::from_string(const char *str)
 
     double d = str ? std::strtod(str, &end) : 0.0;
     if (str == end || d < 0.0) {
-        SC_REPORT_ERROR("(E567) sc_time conversion failed",
-                "invalid value given");
+        SC_REPORT_ERROR(SC_ID_TIME_CONVERSION_FAILED_, "invalid value given");
         return SC_ZERO_TIME;
     }
 
@@ -373,40 +372,34 @@ const sc_time SC_ZERO_TIME;
 void
 sc_set_time_resolution(double d, sc_time_unit tu)
 {
-    if (d <= 0.0) {
-        SC_REPORT_ERROR("(E514) set time resolution failed",
-                "value not positive");
-    }
+    if (d <= 0.0)
+        SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_, "value not positive");
+
     double dummy;
     if (modf(log10(d), &dummy) != 0.0) {
-        SC_REPORT_ERROR("(E514) set time resolution failed",
+        SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_,
                 "value not a power of ten");
     }
-    if (sc_is_running()) {
-        SC_REPORT_ERROR("(E514) set time resolution failed",
-                "simulation running");
-    }
+    if (sc_is_running())
+        SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_, "simulation running");
+
     static bool specified = false;
-    if (specified) {
-        SC_REPORT_ERROR("(E514) set time resolution failed",
-                "already specified");
-    }
+    if (specified)
+        SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_, "already specified");
+
     // This won't detect the timescale being fixed outside of systemc, but
     // it's at least some protection.
     if (timeFixed) {
-        SC_REPORT_ERROR("(E514) set time resolution failed",
+        SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_,
                 "sc_time object(s) constructed");
     }
 
     double seconds = d * sc_gem5::TimeUnitScale[tu];
-    if (seconds < sc_gem5::TimeUnitScale[SC_FS]) {
-        SC_REPORT_ERROR("(E514) set time resolution failed",
-                "value smaller than 1 fs");
-    }
+    if (seconds < sc_gem5::TimeUnitScale[SC_FS])
+        SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_, "value smaller than 1 fs");
 
     if (seconds > defaultUnit) {
-        SC_REPORT_WARNING(
-                "(W516) default time unit changed to time resolution", "");
+        SC_REPORT_WARNING(SC_ID_DEFAULT_TIME_UNIT_CHANGED_, "");
         defaultUnit = seconds;
     }
 
@@ -438,28 +431,25 @@ sc_max_time()
 void
 sc_set_default_time_unit(double d, sc_time_unit tu)
 {
-    if (d < 0.0) {
-        SC_REPORT_ERROR("(E515) set default time unit failed",
-                "value not positive");
-    }
+    if (d < 0.0)
+        SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_, "value not positive");
+
     double dummy;
     if (modf(log10(d), &dummy) != 0.0) {
-        SC_REPORT_ERROR("(E515) set default time unit failed",
+        SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_,
                 "value not a power of ten");
     }
-    if (sc_is_running()) {
-        SC_REPORT_ERROR("(E515) set default time unit failed",
-                "simulation running");
-    }
+    if (sc_is_running())
+        SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_, "simulation running");
+
     static bool specified = false;
     if (specified) {
-        SC_REPORT_ERROR("(E515) set default time unit failed",
-                "already specified");
+        SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_, "already specified");
     }
     // This won't detect the timescale being fixed outside of systemc, but
     // it's at least some protection.
     if (timeFixed) {
-        SC_REPORT_ERROR("(E515) set default time unit failed",
+        SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_,
                 "sc_time object(s) constructed");
     }
 
@@ -471,7 +461,7 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
     if (resolution == 0.0)
         resolution = sc_gem5::TimeUnitScale[SC_PS];
     if (defaultUnit < resolution) {
-        SC_REPORT_ERROR("(E515) set default time unit failed",
+        SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_,
                 "value smaller than time resolution");
     }
 }

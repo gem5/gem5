@@ -37,6 +37,7 @@
 #include "systemc/ext/channel/sc_in.hh"
 #include "systemc/ext/channel/sc_inout.hh"
 #include "systemc/ext/channel/sc_out.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_export.hh"
 #include "systemc/ext/core/sc_interface.hh"
 #include "systemc/ext/core/sc_port.hh"
@@ -67,8 +68,8 @@ Sensitivity::notify(Event *e)
     if (scheduler.current() == process) {
         static bool warned = false;
         if (!warned) {
-            SC_REPORT_WARNING("(W536) immediate self-notification ignored "
-                    "as of IEEE 1666-2011", process->name());
+            SC_REPORT_WARNING(sc_core::SC_ID_IMMEDIATE_SELF_NOTIFICATION_,
+                    process->name());
             warned = true;
         }
         return false;

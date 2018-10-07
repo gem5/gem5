@@ -43,6 +43,7 @@
 #include "systemc/ext/channel/sc_inout.hh"
 #include "systemc/ext/channel/sc_out.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/ext/dt/bit/sc_logic.hh"
@@ -58,8 +59,8 @@ newMethodProcess(const char *name, ProcessFuncWrapper *func)
     if (::sc_core::sc_is_running()) {
         std::string name = p->name();
         delete p;
-        SC_REPORT_ERROR("(E541) call to SC_METHOD in sc_module while "
-                "simulation running", name.c_str());
+        SC_REPORT_ERROR(sc_core::SC_ID_MODULE_METHOD_AFTER_START_,
+                name.c_str());
         return nullptr;
     }
     scheduler.reg(p);
@@ -73,8 +74,8 @@ newThreadProcess(const char *name, ProcessFuncWrapper *func)
     if (::sc_core::sc_is_running()) {
         std::string name = p->name();
         delete p;
-        SC_REPORT_ERROR("(E542) call to SC_THREAD in sc_module while "
-                "simulation running", name.c_str());
+        SC_REPORT_ERROR(sc_core::SC_ID_MODULE_THREAD_AFTER_START_,
+                name.c_str());
         return nullptr;
     }
     scheduler.reg(p);
@@ -88,8 +89,8 @@ newCThreadProcess(const char *name, ProcessFuncWrapper *func)
     if (::sc_core::sc_is_running()) {
         std::string name = p->name();
         delete p;
-        SC_REPORT_ERROR("(E543) call to SC_CTHREAD in sc_module while "
-                "simulation running", name.c_str());
+        SC_REPORT_ERROR(sc_core::SC_ID_MODULE_CTHREAD_AFTER_START_,
+                name.c_str());
         return nullptr;
     }
     scheduler.reg(p);
@@ -252,31 +253,23 @@ sc_module::sc_module() :
     sc_object(sc_gem5::newModuleChecked()->name()),
     _gem5_module(sc_gem5::currentModule())
 {
-    if (sc_is_running()) {
-        SC_REPORT_ERROR("(E529) insert module failed", "simulation running");
-        std::cout << "Running!\n";
-    }
-    if (::sc_gem5::scheduler.elaborationDone()) {
-        SC_REPORT_ERROR("(E529) insert module failed", "elaboration done");
-        std::cout << "Elaboration done!\n";
-    }
+    if (sc_is_running())
+        SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "simulation running");
+    if (::sc_gem5::scheduler.elaborationDone())
+        SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "elaboration done");
 }
 
 sc_module::sc_module(const sc_module_name &) : sc_module() {}
 sc_module::sc_module(const char *_name) : sc_module(sc_module_name(_name))
 {
     _gem5_module->deprecatedConstructor();
-    SC_REPORT_WARNING("(W569) sc_module(const char*), "
-            "sc_module(const std::string&) have been deprecated, use "
-            "sc_module(const sc_module_name&)", _name);
+    SC_REPORT_WARNING(SC_ID_BAD_SC_MODULE_CONSTRUCTOR_, _name);
 }
 sc_module::sc_module(const std::string &_name) :
     sc_module(sc_module_name(_name.c_str()))
 {
     _gem5_module->deprecatedConstructor();
-    SC_REPORT_WARNING("(W569) sc_module(const char*), "
-            "sc_module(const std::string&) have been deprecated, use "
-            "sc_module(const sc_module_name&)", _name.c_str());
+    SC_REPORT_WARNING(SC_ID_BAD_SC_MODULE_CONSTRUCTOR_, _name.c_str());
 }
 
 void
@@ -339,10 +332,8 @@ void
 sc_module::dont_initialize()
 {
     ::sc_gem5::Process *p = ::sc_gem5::Process::newest();
-    if (p->procKind() == SC_CTHREAD_PROC_) {
-        SC_REPORT_WARNING("(W524) dont_initialize() has no effect for "
-                "SC_CTHREADs", "");
-    }
+    if (p->procKind() == SC_CTHREAD_PROC_)
+        SC_REPORT_WARNING(SC_ID_DONT_INITIALIZE_, "");
     p->dontInitialize(true);
 }
 
@@ -645,8 +636,7 @@ bool
 waitErrorCheck(sc_gem5::Process *p)
 {
     if (p->procKind() == SC_METHOD_PROC_) {
-        SC_REPORT_ERROR(
-                "(E519) wait() is only allowed in SC_THREADs and SC_CTHREADs",
+        SC_REPORT_ERROR(SC_ID_WAIT_NOT_ALLOWED_,
                 "\n        in SC_METHODs use next_trigger() instead");
         return true;
     }
@@ -671,7 +661,7 @@ wait(int n)
 {
     if (n <= 0) {
         std::string msg = csprintf("n = %d", n);
-        SC_REPORT_ERROR("(E525) wait(n) is only valid for n > 0", msg.c_str());
+        SC_REPORT_ERROR(SC_ID_WAIT_N_INVALID_, msg.c_str());
     }
     sc_gem5::Process *p = sc_gem5::scheduler.current();
     p->waitCount(n - 1);
@@ -826,8 +816,7 @@ const char *
 sc_gen_unique_name(const char *seed)
 {
     if (!seed || seed[0] == '\0') {
-        SC_REPORT_ERROR(
-                "(E532) cannot generate unique name from null string", "");
+        SC_REPORT_ERROR(SC_ID_GEN_UNIQUE_NAME_, "");
         seed = "unnamed";
     }
 

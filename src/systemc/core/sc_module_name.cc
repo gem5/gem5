@@ -31,6 +31,7 @@
 #include "base/logging.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -42,9 +43,9 @@ sc_module_name::sc_module_name(const char *name) :
     _name(name), _gem5_module(nullptr), _on_the_stack(true)
 {
     if (sc_is_running())
-        SC_REPORT_ERROR("(E529) insert module failed", "simulation running");
+        SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "simulation running");
     else if (::sc_gem5::scheduler.elaborationDone())
-        SC_REPORT_ERROR("(E529) insert module failed", "elaboration done");
+        SC_REPORT_ERROR(SC_ID_INSERT_MODULE_, "elaboration done");
     else
         _gem5_module = new sc_gem5::Module(name);
 }

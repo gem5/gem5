@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "../utils/sc_report_handler.hh"
+#include "messages.hh"
 #include "sc_object.hh"
 
 namespace sc_gem5
@@ -214,8 +215,7 @@ class sc_process_handle
              SC_NO_DESCENDANTS)
     {
         if (!_gem5_process) {
-            SC_REPORT_WARNING("(W570) attempt to use an empty "
-                    "process handle ignored", "throw_it()");
+            SC_REPORT_WARNING(SC_ID_EMPTY_PROCESS_HANDLE_, "throw_it()");
             return;
         }
         ::sc_gem5::ExceptionWrapper<T> exc(user_defined_exception);
