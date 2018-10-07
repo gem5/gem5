@@ -125,6 +125,14 @@ Port::finalize()
 
     resets.clear();
 
+    if (size() > maxSize()) {
+        std::ostringstream ss;
+        ss << size() << " binds exceeds maximum of " << maxSize() <<
+            " allowed";
+        portBase->report_error(
+                "(E109) complete binding failed", ss.str().c_str());
+    }
+
     switch (portBase->_portPolicy()) {
       case sc_core::SC_ONE_OR_MORE_BOUND:
         if (size() == 0)
