@@ -67,17 +67,8 @@ class Port
     void
     addInterface(::sc_core::sc_interface *iface)
     {
-        for (int i = 0; i < _size; i++) {
-            if (getInterface(i) == iface) {
-                std::string msg =
-                    csprintf("interface already bound to port: port '%s' (%s)",
-                        portBase->name(), portBase->kind());
-                SC_REPORT_ERROR("(E107) bind interface to port failed",
-                        msg.c_str());
-            }
-        }
-        _size++;
         portBase->_gem5AddInterface(iface);
+        _size++;
     }
 
     void
