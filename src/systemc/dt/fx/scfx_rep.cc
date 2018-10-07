@@ -71,6 +71,7 @@
 #include "systemc/ext/dt/fx/scfx_rep.hh"
 #include "systemc/ext/dt/fx/scfx_utils.hh"
 #include "systemc/ext/utils/endian.hh"
+#include "systemc/ext/utils/messages.hh"
 
 namespace sc_dt
 {
@@ -1078,7 +1079,8 @@ print_other(scfx_string &s, const scfx_rep &a, sc_numrep numrep, int w_prefix,
         step = 4;
         break;
       default:
-        SC_REPORT_FATAL("assertion failed", "unexpected sc_numrep");
+        SC_REPORT_FATAL(sc_core::SC_ID_ASSERTION_FAILED_,
+                "unexpected sc_numrep");
         sc_core::sc_abort();
     }
 

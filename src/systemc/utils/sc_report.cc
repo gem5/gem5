@@ -30,6 +30,7 @@
 #include <cstring>
 
 #include "base/logging.hh"
+#include "systemc/ext/utils/messages.hh"
 #include "systemc/ext/utils/sc_report.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 #include "systemc/utils/report.hh"
@@ -119,18 +120,17 @@ void
 sc_report::register_id(int id, const char *msg)
 {
     if (id < 0) {
-        SC_REPORT_ERROR("(E800) register_id failed", "invalid report id");
+        SC_REPORT_ERROR(SC_ID_REGISTER_ID_FAILED_, "invalid report id");
         return;
     }
     if (!msg) {
-        SC_REPORT_ERROR("(E800) register_id failed", "invalid report message");
+        SC_REPORT_ERROR(SC_ID_REGISTER_ID_FAILED_, "invalid report message");
         return;
     }
     auto p = sc_gem5::reportIdToMsgMap.insert(
             std::pair<int, std::string>(id, msg));
     if (!p.second) {
-        SC_REPORT_ERROR("(E800) register_id failed",
-                "report id already exists");
+        SC_REPORT_ERROR(SC_ID_REGISTER_ID_FAILED_, "report id already exists");
     } else {
         sc_gem5::reportMsgInfoMap[msg].id = id;
     }

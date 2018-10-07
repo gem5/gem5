@@ -57,6 +57,7 @@
 
 #include "../core/sc_module.hh"
 #include "../core/sc_object.hh"
+#include "messages.hh"
 
 namespace sc_gem5
 {
@@ -182,9 +183,7 @@ class sc_vector_base : public sc_object
     sc_object *implicitCast(sc_object *p) const { return p; }
     sc_object *implicitCast(...) const
     {
-        SC_REPORT_ERROR(
-                "(E808) sc_vector::get_elements called for element type "
-                "not derived from sc_object", name());
+        SC_REPORT_ERROR(SC_ID_VECTOR_NONOBJECT_ELEMENTS_, name());
         return nullptr;
     }
     virtual sc_object *objectCast(void *) const = 0;

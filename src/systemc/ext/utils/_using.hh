@@ -98,4 +98,21 @@ using sc_core::sc_release;
 using sc_core::sc_copyright;
 using sc_core::sc_version;
 
+using sc_core::SC_ID_UNKNOWN_ERROR_;
+using sc_core::SC_ID_WITHOUT_MESSAGE_;
+using sc_core::SC_ID_NOT_IMPLEMENTED_;
+using sc_core::SC_ID_INTERNAL_ERROR_;
+using sc_core::SC_ID_ASSERTION_FAILED_;
+using sc_core::SC_ID_OUT_OF_BOUNDS_;
+using sc_core::SC_ID_ABORT_;
+
+using sc_core::SC_ID_REGISTER_ID_FAILED_;
+using sc_core::SC_ID_STRING_TOO_LONG_;
+using sc_core::SC_ID_FRONT_ON_EMPTY_LIST_;
+using sc_core::SC_ID_BACK_ON_EMPTY_LIST_;
+using sc_core::SC_ID_IEEE_1666_DEPRECATION_;
+using sc_core::SC_ID_VECTOR_INIT_CALLED_TWICE_;
+using sc_core::SC_ID_VECTOR_BIND_EMPTY_;
+using sc_core::SC_ID_VECTOR_NONOBJECT_ELEMENTS_;
+
 #endif  //__SYSTEMC_EXT_UTILS__USING_HH__

@@ -50,6 +50,7 @@
 
 #include "base/cprintf.hh"
 #include "systemc/core/object.hh"
+#include "systemc/ext/utils/messages.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 #include "systemc/ext/utils/sc_vector.hh"
 
@@ -76,7 +77,7 @@ sc_vector_base::checkIndex(size_type index) const
     if (index >= size()) {
         std::ostringstream ss;
         ccprintf(ss, "%s[%d] >= size() = %d", name(), index, size());
-        SC_REPORT_ERROR("(E5) out of bounds", ss.str().c_str());
+        SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, ss.str().c_str());
         sc_abort();
     }
 }
@@ -107,8 +108,7 @@ sc_vector_base::reportEmpty(const char *kind_, bool empty_dest) const
     else
         ss << "empty destination range given";
 
-    SC_REPORT_WARNING("(W807) sc_vector::bind called with empty range",
-            ss.str().c_str());
+    SC_REPORT_WARNING(SC_ID_VECTOR_BIND_EMPTY_, ss.str().c_str());
 }
 
 } // namespace sc_core

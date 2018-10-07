@@ -60,6 +60,7 @@
 
 #include "systemc/ext/dt/bit/sc_bit.hh"
 #include "systemc/ext/dt/bit/sc_logic.hh"
+#include "systemc/ext/utils/messages.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace sc_dt
@@ -119,7 +120,7 @@ sc_deprecated_sc_bit()
     static bool warn_sc_bit_deprecated = true;
     if (warn_sc_bit_deprecated) {
         warn_sc_bit_deprecated = false;
-        SC_REPORT_INFO("(I804) /IEEE_Std_1666/deprecated",
+        SC_REPORT_INFO(sc_core::SC_ID_IEEE_1666_DEPRECATION_,
             "sc_bit is deprecated, use bool instead");
     }
 }

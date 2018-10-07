@@ -32,6 +32,7 @@
 
 #include <string>
 
+#include "messages.hh"
 #include "sc_report.hh" // for sc_severity
 
 namespace sc_core
@@ -134,7 +135,8 @@ class sc_report_handler
             ::sc_core::SC_FATAL, msg_type, msg, __FILE__, __LINE__)
 
 #define sc_assert(expr) \
-        ((void)((expr) ? 0 : (SC_REPORT_FATAL("assertion failed", #expr), 0)))
+        ((void)((expr) ? 0 : (SC_REPORT_FATAL( \
+            ::sc_core::SC_ID_ASSERTION_FAILED_, #expr), 0)))
 
 void sc_interrupt_here(const char *msg_type, sc_severity);
 void sc_stop_here(const char *msg_type, sc_severity);

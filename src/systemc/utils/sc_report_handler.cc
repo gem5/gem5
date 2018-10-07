@@ -108,8 +108,6 @@ sc_report_handler::report(sc_severity severity, int id, const char *msg,
                           const char *file, int line)
 {
     std::string &msg_type = sc_gem5::reportIdToMsgMap[id];
-    if (msg_type == "")
-        msg_type = "unknown id";
 
     if (sc_gem5::reportWarningsAsErrors && severity == SC_WARNING)
         severity = SC_ERROR;

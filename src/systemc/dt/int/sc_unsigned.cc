@@ -89,6 +89,7 @@
 #include "systemc/ext/dt/int/sc_uint_base.hh"
 #include "systemc/ext/dt/int/sc_unsigned.hh"
 #include "systemc/ext/dt/misc/sc_concatref.hh"
+#include "systemc/ext/utils/messages.hh"
 
 // explicit template instantiations
 namespace sc_core
@@ -131,7 +132,7 @@ sc_unsigned::invalid_index(int i) const
     std::stringstream msg;
     msg << "sc_biguint bit selection: index = " << i << " violates "
            "0 <= index <= " << (nbits-2);
-    SC_REPORT_ERROR("(E5) out of bounds", msg.str().c_str());
+    SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
 
@@ -143,7 +144,7 @@ sc_unsigned::invalid_range(int l, int r) const
            l << ", right = " << r << " \n"
            "  violates either (" << (nbits - 2) << " >= left >= 0) or "
            "(" << (nbits-2) << " >= right >= 0)";
-    SC_REPORT_ERROR("(E5) out of bounds", msg.str().c_str());
+    SC_REPORT_ERROR(sc_core::SC_ID_OUT_OF_BOUNDS_, msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
 

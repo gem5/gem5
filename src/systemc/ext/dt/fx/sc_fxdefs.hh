@@ -47,6 +47,7 @@
 #ifndef __SYSTEMC_EXT_DT_FX_SC_FXDEFS_HH__
 #define __SYSTEMC_EXT_DT_FX_SC_FXDEFS_HH__
 
+#include "../../utils/messages.hh"
 #include "../../utils/sc_report_handler.hh"
 #include "../int/sc_nbutils.hh"
 
@@ -241,7 +242,7 @@ const int SC_DEFAULT_MAX_WL_ = SC_BUILTIN_MAX_WL_;
 
 #ifdef DEBUG_SYSTEMC
 #   define SC_ASSERT_(cnd, msg) \
-    SC_ERROR_IF_IMPL_(!(cnd), "internal error", msg)
+    SC_ERROR_IF_IMPL_(!(cnd), sc_core::SC_ID_INTERNAL_ERROR_, msg)
 #else
 #   define SC_ASSERT_(cnd, msg) (void(0))
 #endif

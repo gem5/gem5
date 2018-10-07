@@ -27,15 +27,29 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_UTIL__UTIL_HH__
-#define __SYSTEMC_EXT_UTIL__UTIL_HH__
+#ifndef __SYSTEMC_EXT_UTILS_MESSAGES_HH__
+#define __SYSTEMC_EXT_UTILS_MESSAGES_HH__
 
-#include "functions.hh"
-#include "messages.hh"
-#include "sc_exception.hh"
-#include "sc_report.hh"
-#include "sc_report_handler.hh"
-#include "sc_trace_file.hh"
-#include "sc_vector.hh"
+namespace sc_core
+{
 
-#endif  //__SYSTEMC_EXT_UTIL__UTIL_HH__
+extern const char SC_ID_UNKNOWN_ERROR_[];
+extern const char SC_ID_WITHOUT_MESSAGE_[];
+extern const char SC_ID_NOT_IMPLEMENTED_[];
+extern const char SC_ID_INTERNAL_ERROR_[];
+extern const char SC_ID_ASSERTION_FAILED_[];
+extern const char SC_ID_OUT_OF_BOUNDS_[];
+extern const char SC_ID_ABORT_[];
+
+extern const char SC_ID_REGISTER_ID_FAILED_[];
+extern const char SC_ID_STRING_TOO_LONG_[];
+extern const char SC_ID_FRONT_ON_EMPTY_LIST_[];
+extern const char SC_ID_BACK_ON_EMPTY_LIST_[];
+extern const char SC_ID_IEEE_1666_DEPRECATION_[];
+extern const char SC_ID_VECTOR_INIT_CALLED_TWICE_[];
+extern const char SC_ID_VECTOR_BIND_EMPTY_[];
+extern const char SC_ID_VECTOR_NONOBJECT_ELEMENTS_[];
+
+} // namespace sc_core
+
+#endif // __SYSTEMC_EXT_UTILS_MESSAGES_HH__
