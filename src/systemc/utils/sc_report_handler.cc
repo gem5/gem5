@@ -89,7 +89,7 @@ sc_report_handler::report(sc_severity severity, const char *msg_type,
     ::sc_gem5::Process *current = ::sc_gem5::scheduler.current();
     sc_report report(severity, msg_type, msg, verbosity, file, line,
             sc_time::from_value(::sc_gem5::scheduler.getCurTick()),
-            current ? current->name() : nullptr, -1);
+            current ? current->name() : nullptr, msgInfo.id);
 
     if (actions & SC_CACHE_REPORT) {
         if (current) {
@@ -104,11 +104,17 @@ sc_report_handler::report(sc_severity severity, const char *msg_type,
 }
 
 void
-sc_report_handler::report(sc_severity, int id, const char *msg,
+sc_report_handler::report(sc_severity severity, int id, const char *msg,
                           const char *file, int line)
 {
-    warn("%s:%d %s\n", file, line, msg);
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    std::string &msg_type = sc_gem5::reportIdToMsgMap[id];
+    if (msg_type == "")
+        msg_type = "unknown id";
+
+    if (sc_gem5::reportWarningsAsErrors && severity == SC_WARNING)
+        severity = SC_ERROR;
+
+    report(severity, msg_type.c_str(), msg, file, line);
 }
 
 sc_actions

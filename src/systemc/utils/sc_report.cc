@@ -32,6 +32,7 @@
 #include "base/logging.hh"
 #include "systemc/ext/utils/sc_report.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
+#include "systemc/utils/report.hh"
 
 namespace sc_core
 {
@@ -87,45 +88,81 @@ sc_report::what() const throw()
 const char *
 sc_report::get_message(int id)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return "";
+    auto it = sc_gem5::reportIdToMsgMap.find(id);
+    if (it == sc_gem5::reportIdToMsgMap.end())
+        return "unknown id";
+    else
+        return it->second.c_str();
 }
 
 bool
 sc_report::is_suppressed(int id)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return false;
+    auto it = sc_gem5::reportIdToMsgMap.find(id);
+    if (it == sc_gem5::reportIdToMsgMap.end())
+        return false;
+
+    return sc_gem5::reportMsgInfoMap[it->second].actions == SC_DO_NOTHING;
 }
 
 void
-sc_report::make_warnings_errors(bool)
+sc_report::make_warnings_errors(bool val)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    sc_gem5::reportWarningsAsErrors = val;
 }
 
 void
 sc_report::register_id(int id, const char *msg)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (id < 0) {
+        SC_REPORT_ERROR("(E800) register_id failed", "invalid report id");
+        return;
+    }
+    if (!msg) {
+        SC_REPORT_ERROR("(E800) register_id failed", "invalid report message");
+        return;
+    }
+    auto p = sc_gem5::reportIdToMsgMap.insert(
+            std::pair<int, std::string>(id, msg));
+    if (!p.second) {
+        SC_REPORT_ERROR("(E800) register_id failed",
+                "report id already exists");
+    } else {
+        sc_gem5::reportMsgInfoMap[msg].id = id;
+    }
 }
 
 void
-sc_report::suppress_id(int id, bool)
+sc_report::suppress_id(int id, bool suppress)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    auto it = sc_gem5::reportIdToMsgMap.find(id);
+    if (it == sc_gem5::reportIdToMsgMap.end())
+        return;
+
+    if (suppress)
+        sc_gem5::reportMsgInfoMap[it->second].actions = SC_DO_NOTHING;
+    else
+        sc_gem5::reportMsgInfoMap[it->second].actions = SC_UNSPECIFIED;
 }
 
 void
-sc_report::suppress_infos(bool)
+sc_report::suppress_infos(bool suppress)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (suppress)
+        sc_gem5::reportSevInfos[SC_INFO].actions = SC_DO_NOTHING;
+    else
+        sc_gem5::reportSevInfos[SC_INFO].actions = SC_DEFAULT_INFO_ACTIONS;
 }
 
 void
-sc_report::suppress_warnings(bool)
+sc_report::suppress_warnings(bool suppress)
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
+    if (suppress) {
+        sc_gem5::reportSevInfos[SC_WARNING].actions = SC_DO_NOTHING;
+    } else {
+        sc_gem5::reportSevInfos[SC_WARNING].actions =
+            SC_DEFAULT_WARNING_ACTIONS;
+    }
 }
 
 void

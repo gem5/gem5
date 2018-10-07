@@ -48,6 +48,7 @@ ReportSevInfo reportSevInfos[sc_core::SC_MAX_SEVERITY] =
 };
 
 std::map<std::string, ReportMsgInfo> reportMsgInfoMap;
+std::map<int, std::string> reportIdToMsgMap;
 
 int reportVerbosityLevel = sc_core::SC_MEDIUM;
 
@@ -59,5 +60,7 @@ sc_core::sc_report_handler_proc reportHandlerProc =
     &sc_core::sc_report_handler::default_handler;
 
 std::unique_ptr<sc_core::sc_report> globalReportCache;
+
+bool reportWarningsAsErrors = false;
 
 } // namespace sc_gem5

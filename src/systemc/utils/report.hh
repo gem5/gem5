@@ -92,6 +92,7 @@ struct ReportSevInfo
 extern const char *reportSeverityNames[sc_core::SC_MAX_SEVERITY];
 extern ReportSevInfo reportSevInfos[sc_core::SC_MAX_SEVERITY];
 extern std::map<std::string, ReportMsgInfo> reportMsgInfoMap;
+extern std::map<int, std::string> reportIdToMsgMap;
 
 extern int reportVerbosityLevel;
 
@@ -102,6 +103,8 @@ extern sc_core::sc_actions reportCatchActions;
 extern sc_core::sc_report_handler_proc reportHandlerProc;
 
 extern std::unique_ptr<sc_core::sc_report> globalReportCache;
+
+extern bool reportWarningsAsErrors;
 
 } // namespace sc_gem5
 
