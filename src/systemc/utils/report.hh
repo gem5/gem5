@@ -30,9 +30,11 @@
 #ifndef __SYSTEMC_UTILS_REPORT_HH__
 #define __SYSTEMC_UTILS_REPORT_HH__
 
+#include <initializer_list>
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "systemc/ext/utils/sc_report.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -105,6 +107,12 @@ extern sc_core::sc_report_handler_proc reportHandlerProc;
 extern std::unique_ptr<sc_core::sc_report> globalReportCache;
 
 extern bool reportWarningsAsErrors;
+
+struct DefaultReportMessages
+{
+  public:
+    DefaultReportMessages(std::initializer_list<std::pair<int, const char *>>);
+};
 
 } // namespace sc_gem5
 

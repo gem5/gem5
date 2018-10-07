@@ -63,4 +63,11 @@ std::unique_ptr<sc_core::sc_report> globalReportCache;
 
 bool reportWarningsAsErrors = false;
 
+DefaultReportMessages::DefaultReportMessages(
+        std::initializer_list<std::pair<int, const char *>> msgs)
+{
+    for (auto &p: msgs)
+        sc_core::sc_report::register_id(p.first, p.second);
+}
+
 } // namespace sc_gem5
