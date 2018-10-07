@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_EXT_CORE_SC_EXPORT_HH__
 #define __SYSTEMC_EXT_CORE_SC_EXPORT_HH__
 
+#include "../channel/messages.hh"
 #include "../utils/sc_report_handler.hh"
 #include "sc_module.hh" // for sc_gen_unique_name
 #include "sc_object.hh"
@@ -76,17 +77,15 @@ class sc_export : public sc_export_base
     bind(IF &i)
     {
         if (interface) {
-            SC_REPORT_ERROR("(E126) sc_export instance already bound", name());
+            SC_REPORT_ERROR(SC_ID_SC_EXPORT_ALREADY_BOUND_, name());
             return;
         }
         interface = &i;
     }
     operator IF & ()
     {
-        if (!interface) {
-            SC_REPORT_ERROR("(E120) sc_export instance has no interface",
-                    name());
-        }
+        if (!interface)
+            SC_REPORT_ERROR(SC_ID_SC_EXPORT_HAS_NO_INTERFACE_, name());
         return *interface;
     }
     operator const IF & () const { return *interface; }
@@ -94,19 +93,15 @@ class sc_export : public sc_export_base
     IF *
     operator -> ()
     {
-        if (!interface) {
-            SC_REPORT_ERROR("(E120) sc_export instance has no interface",
-                    name());
-        }
+        if (!interface)
+            SC_REPORT_ERROR(SC_ID_SC_EXPORT_HAS_NO_INTERFACE_, name());
         return interface;
     }
     const IF *
     operator -> () const
     {
-        if (!interface) {
-            SC_REPORT_ERROR("(E120) sc_export instance has no interface",
-                    name());
-        }
+        if (!interface)
+            SC_REPORT_ERROR(SC_ID_SC_EXPORT_HAS_NO_INTERFACE_, name());
         return interface;
     }
 

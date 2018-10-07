@@ -28,6 +28,7 @@
  */
 
 #include "base/logging.hh"
+#include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_interface.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -40,7 +41,7 @@ void sc_interface::register_port(sc_port_base &, const char *) {}
 const sc_event &
 sc_interface::default_event() const
 {
-    SC_REPORT_WARNING("(W116) channel doesn't have a default event", "");
+    SC_REPORT_WARNING(SC_ID_NO_DEFAULT_EVENT_, "");
     static sc_gem5::InternalScEvent dummy;
     return dummy;
 }

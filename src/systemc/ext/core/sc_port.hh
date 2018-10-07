@@ -33,6 +33,7 @@
 #include <typeinfo>
 #include <vector>
 
+#include "../channel/messages.hh"
 #include "../utils/sc_report_handler.hh"
 #include "sc_module.hh" // for sc_gen_unique_name
 #include "sc_object.hh"
@@ -129,7 +130,7 @@ class sc_port_b : public sc_port_base
     operator -> ()
     {
         if (_interfaces.empty()) {
-            report_error("(E112) get interface failed", "port is not bound");
+            report_error(SC_ID_GET_IF_, "port is not bound");
             sc_abort();
         }
         return _interfaces[0];
@@ -138,7 +139,7 @@ class sc_port_b : public sc_port_base
     operator -> () const
     {
         if (_interfaces.empty()) {
-            report_error("(E112) get interface failed", "port is not bound");
+            report_error(SC_ID_GET_IF_, "port is not bound");
             sc_abort();
         }
         return _interfaces[0];
@@ -148,7 +149,7 @@ class sc_port_b : public sc_port_base
     operator [] (int n)
     {
         if (n < 0 || n >= size()) {
-            report_error("(E112) get interface failed", "index out of range");
+            report_error(SC_ID_GET_IF_, "index out of range");
             return NULL;
         }
         return _interfaces[n];
@@ -157,7 +158,7 @@ class sc_port_b : public sc_port_base
     operator [] (int n) const
     {
         if (n < 0 || n >= size()) {
-            report_error("(E112) get interface failed", "index out of range");
+            report_error(SC_ID_GET_IF_, "index out of range");
             return NULL;
         }
         return _interfaces[n];
@@ -219,7 +220,7 @@ class sc_port_b : public sc_port_base
     _gem5Interface(int n) const
     {
         if (n < 0 || n >= size()) {
-            report_error("(E112) get interface failed", "index out of range");
+            report_error(SC_ID_GET_IF_, "index out of range");
             return NULL;
         }
         return _interfaces[n];
@@ -231,7 +232,7 @@ class sc_port_b : public sc_port_base
         sc_assert(interface);
         for (int i = 0; i < _interfaces.size(); i++) {
             if (interface == _interfaces[i]) {
-                report_error("(E107) bind interface to port failed",
+                report_error(SC_ID_BIND_IF_TO_PORT_,
                         "interface already bound to port");
             }
         }

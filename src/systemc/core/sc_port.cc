@@ -33,6 +33,7 @@
 #include "systemc/core/module.hh"
 #include "systemc/core/port.hh"
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_port.hh"
 
@@ -61,21 +62,19 @@ sc_port_base::sc_port_base(const char *n, int max_size, sc_port_policy p) :
     sc_object(n), _gem5Port(nullptr)
 {
     if (sc_is_running()) {
-        reportError("(E110) insert port failed", "simulation running",
+        reportError(SC_ID_INSERT_PORT_, "simulation running",
                 name(), kind());
     }
     if (::sc_gem5::scheduler.elaborationDone()) {
-        reportError("(E110) insert port failed", "elaboration done",
+        reportError(SC_ID_INSERT_PORT_, "elaboration done",
                 name(), kind());
     }
 
     auto m = sc_gem5::pickParentModule();
-    if (!m) {
-        reportError("(E100) port specified outside of module",
-                nullptr, name(), kind());
-    } else {
+    if (!m)
+        reportError(SC_ID_PORT_OUTSIDE_MODULE_, nullptr, name(), kind());
+    else
         m->ports.push_back(this);
-    }
     _gem5Port = new ::sc_gem5::Port(this, max_size);
 }
 

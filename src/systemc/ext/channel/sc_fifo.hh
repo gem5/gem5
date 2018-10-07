@@ -36,6 +36,7 @@
 #include "../core/sc_module.hh" // for sc_gen_unique_name
 #include "../core/sc_prim.hh"
 #include "../utils/sc_report_handler.hh"
+#include "messages.hh"
 #include "sc_fifo_in_if.hh"
 #include "sc_fifo_out_if.hh"
 
@@ -69,22 +70,16 @@ class sc_fifo : public sc_fifo_in_if<T>,
         std::string tn(iface_type_name);
         if (tn == typeid(sc_fifo_in_if<T>).name() ||
                 tn == typeid(sc_fifo_blocking_in_if<T>).name()) {
-            if (_reader) {
-                SC_REPORT_ERROR(
-                        "(E104) sc_fifo<T> cannot have more than one reader",
-                        "");
-            }
+            if (_reader)
+                SC_REPORT_ERROR(SC_ID_MORE_THAN_ONE_FIFO_READER_, "");
             _reader = &port;
         } else if (tn == typeid(sc_fifo_out_if<T>).name() ||
                 tn == typeid(sc_fifo_blocking_out_if<T>).name()) {
-            if (_writer) {
-                SC_REPORT_ERROR(
-                        "(E105) sc_fifo<T> cannot have more than one writer",
-                        "");
-            }
+            if (_writer)
+                SC_REPORT_ERROR(SC_ID_MORE_THAN_ONE_FIFO_WRITER_, "");
             _writer = &port;
         } else {
-            SC_REPORT_ERROR("(E107) bind interface to port failed",
+            SC_REPORT_ERROR(SC_ID_BIND_IF_TO_PORT_,
                     "sc_fifo<T> port not recognized");
         }
     }

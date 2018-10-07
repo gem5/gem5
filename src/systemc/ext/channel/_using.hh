@@ -97,4 +97,35 @@ using sc_core::sc_signal_resolved;
 
 using sc_core::sc_signal_rv;
 
+using sc_core::SC_ID_PORT_OUTSIDE_MODULE_;
+using sc_core::SC_ID_CLOCK_PERIOD_ZERO_;
+using sc_core::SC_ID_CLOCK_HIGH_TIME_ZERO_;
+using sc_core::SC_ID_CLOCK_LOW_TIME_ZERO_;
+using sc_core::SC_ID_MORE_THAN_ONE_FIFO_READER_;
+using sc_core::SC_ID_MORE_THAN_ONE_FIFO_WRITER_;
+using sc_core::SC_ID_INVALID_FIFO_SIZE_;
+using sc_core::SC_ID_BIND_IF_TO_PORT_;
+using sc_core::SC_ID_BIND_PORT_TO_PORT_;
+using sc_core::SC_ID_COMPLETE_BINDING_;
+using sc_core::SC_ID_INSERT_PORT_;
+using sc_core::SC_ID_REMOVE_PORT_;
+using sc_core::SC_ID_GET_IF_;
+using sc_core::SC_ID_INSERT_PRIM_CHANNEL_;
+using sc_core::SC_ID_REMOVE_PRIM_CHANNEL_;
+using sc_core::SC_ID_MORE_THAN_ONE_SIGNAL_DRIVER_;
+using sc_core::SC_ID_NO_DEFAULT_EVENT_;
+using sc_core::SC_ID_RESOLVED_PORT_NOT_BOUND_;
+using sc_core::SC_ID_FIND_EVENT_;
+using sc_core::SC_ID_INVALID_SEMAPHORE_VALUE_;
+using sc_core::SC_ID_SC_EXPORT_HAS_NO_INTERFACE_;
+using sc_core::SC_ID_INSERT_EXPORT_;
+using sc_core::SC_ID_EXPORT_OUTSIDE_MODULE_;
+using sc_core::SC_ID_SC_EXPORT_NOT_REGISTERED_;
+using sc_core::SC_ID_SC_EXPORT_NOT_BOUND_AFTER_CONSTRUCTION_;
+using sc_core::SC_ID_ATTEMPT_TO_WRITE_TO_CLOCK_;
+using sc_core::SC_ID_SC_EXPORT_ALREADY_BOUND_;
+using sc_core::SC_ID_OPERATION_ON_NON_SPECIALIZED_SIGNAL_;
+using sc_core::SC_ID_ATTEMPT_TO_BIND_CLOCK_TO_OUTPUT_;
+using sc_core::SC_ID_NO_ASYNC_UPDATE_;
+
 #endif  //__SYSTEMC_EXT_CHANNEL__USING_HH__

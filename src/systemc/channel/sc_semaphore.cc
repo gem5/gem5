@@ -30,6 +30,7 @@
 #include <string>
 
 #include "base/logging.hh"
+#include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/channel/sc_semaphore.hh"
 #include "systemc/ext/core/sc_module.hh" // for sc_gen_unique_name
 #include "systemc/ext/utils/sc_report_handler.hh"
@@ -46,8 +47,7 @@ sc_semaphore::sc_semaphore(const char *_name, int value) :
 {
     if (value < 0) {
         std::string msg = "semaphore '" + std::string(name()) + "'";
-        SC_REPORT_ERROR("(E119) sc_semaphore requires an initial value >= 0",
-                msg.c_str());
+        SC_REPORT_ERROR(SC_ID_INVALID_SEMAPHORE_VALUE_, msg.c_str());
     }
 }
 

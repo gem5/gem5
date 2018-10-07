@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_EXT_CHANNEL__CHANNEL_HH__
 #define __SYSTEMC_EXT_CHANNEL__CHANNEL_HH__
 
+#include "messages.hh"
 #include "sc_buffer.hh"
 #include "sc_clock.hh"
 #include "sc_event_queue.hh"

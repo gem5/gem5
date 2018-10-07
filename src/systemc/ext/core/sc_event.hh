@@ -35,6 +35,7 @@
 #include <sstream>
 #include <vector>
 
+#include "../channel/messages.hh"
 #include "../utils/sc_report_handler.hh"
 #include "sc_port.hh"
 #include "sc_time.hh"
@@ -247,7 +248,7 @@ class sc_event_finder_t : public sc_event_finder
             std::ostringstream ss;
             ss << "port is not bound: port '" << _port->name() << "' (" <<
                 _port->kind() << ")";
-            SC_REPORT_ERROR("(E118) find event failed", ss.str().c_str());
+            SC_REPORT_ERROR(SC_ID_FIND_EVENT_, ss.str().c_str());
             return none;
         }
         return (const_cast<IF *>(iface)->*_method)();

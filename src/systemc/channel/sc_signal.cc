@@ -30,6 +30,7 @@
 #include <sstream>
 
 #include "systemc/core/scheduler.hh"
+#include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/channel/sc_signal.hh"
 #include "systemc/ext/core/sc_main.hh"
 
@@ -85,8 +86,7 @@ reportSignalError(ScSignalBase *sig, sc_core::sc_object *first,
         ss << "\n conflicting write in delta cycle " <<
             sc_core::sc_delta_count();
     }
-    SC_REPORT_ERROR(
-            "(E115) sc_signal<T> cannot have more than one driver",
+    SC_REPORT_ERROR(sc_core::SC_ID_MORE_THAN_ONE_SIGNAL_DRIVER_,
             ss.str().c_str());
 }
 

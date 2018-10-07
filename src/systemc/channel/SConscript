@@ -28,6 +28,7 @@
 Import('*')
 
 if env['USE_SYSTEMC']:
+    Source('messages.cc')
     Source('sc_clock.cc')
     Source('sc_event_queue.cc')
     Source('sc_in_resolved.cc')

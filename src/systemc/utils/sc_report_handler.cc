@@ -36,6 +36,7 @@
 #include "systemc/core/process.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/utils/messages.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 #include "systemc/utils/report.hh"
 
@@ -62,6 +63,9 @@ sc_report_handler::report(sc_severity severity, const char *msg_type,
                           const char *msg, int verbosity, const char *file,
                           int line)
 {
+    if (!msg_type)
+        msg_type = SC_ID_UNKNOWN_ERROR_;
+
     if (severity == SC_INFO && verbosity > sc_gem5::reportVerbosityLevel)
         return;
 
@@ -127,6 +131,9 @@ sc_report_handler::set_actions(sc_severity severity, sc_actions actions)
 sc_actions
 sc_report_handler::set_actions(const char *msg_type, sc_actions actions)
 {
+    if (!msg_type)
+        msg_type = SC_ID_UNKNOWN_ERROR_;
+
     sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
     sc_actions previous = info.actions;
     info.actions = actions;
@@ -137,6 +144,9 @@ sc_actions
 sc_report_handler::set_actions(
         const char *msg_type, sc_severity severity, sc_actions actions)
 {
+    if (!msg_type)
+        msg_type = SC_ID_UNKNOWN_ERROR_;
+
     sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
     sc_actions previous = info.sevActions[severity];
     info.sevActions[severity] = actions;
@@ -155,6 +165,9 @@ sc_report_handler::stop_after(sc_severity severity, int limit)
 int
 sc_report_handler::stop_after(const char *msg_type, int limit)
 {
+    if (!msg_type)
+        msg_type = SC_ID_UNKNOWN_ERROR_;
+
     sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
     int previous = info.limit;
     info.limit = limit;
@@ -165,6 +178,9 @@ int
 sc_report_handler::stop_after(
         const char *msg_type, sc_severity severity, int limit)
 {
+    if (!msg_type)
+        msg_type = SC_ID_UNKNOWN_ERROR_;
+
     sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
     int previous = info.sevLimits[severity];
     info.sevLimits[severity] = limit;
@@ -180,12 +196,18 @@ sc_report_handler::get_count(sc_severity severity)
 int
 sc_report_handler::get_count(const char *msg_type)
 {
+    if (!msg_type)
+        msg_type = SC_ID_UNKNOWN_ERROR_;
+
     return sc_gem5::reportMsgInfoMap[msg_type].count;
 }
 
 int
 sc_report_handler::get_count(const char *msg_type, sc_severity severity)
 {
+    if (!msg_type)
+        msg_type = SC_ID_UNKNOWN_ERROR_;
+
     return sc_gem5::reportMsgInfoMap[msg_type].sevCounts[severity];
 }
 
