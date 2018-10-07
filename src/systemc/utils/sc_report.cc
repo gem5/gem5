@@ -102,7 +102,11 @@ sc_report::is_suppressed(int id)
     if (it == sc_gem5::reportIdToMsgMap.end())
         return false;
 
-    return sc_gem5::reportMsgInfoMap[it->second].actions == SC_DO_NOTHING;
+    auto &msgInfo = sc_gem5::reportMsgInfoMap[it->second];
+
+    return (msgInfo.actions == SC_DO_NOTHING ||
+            (msgInfo.sevActions[SC_INFO] == SC_DO_NOTHING &&
+             msgInfo.sevActions[SC_WARNING] == SC_DO_NOTHING));
 }
 
 void
@@ -139,10 +143,17 @@ sc_report::suppress_id(int id, bool suppress)
     if (it == sc_gem5::reportIdToMsgMap.end())
         return;
 
-    if (suppress)
-        sc_gem5::reportMsgInfoMap[it->second].actions = SC_DO_NOTHING;
-    else
-        sc_gem5::reportMsgInfoMap[it->second].actions = SC_UNSPECIFIED;
+    if (suppress) {
+        sc_gem5::reportMsgInfoMap[it->second].
+            sevActions[SC_INFO] = SC_DO_NOTHING;
+        sc_gem5::reportMsgInfoMap[it->second].
+            sevActions[SC_WARNING] = SC_DO_NOTHING;
+    } else {
+        sc_gem5::reportMsgInfoMap[it->second].
+            sevActions[SC_INFO] = SC_UNSPECIFIED;
+        sc_gem5::reportMsgInfoMap[it->second].
+            sevActions[SC_WARNING] = SC_UNSPECIFIED;
+    }
 }
 
 void
