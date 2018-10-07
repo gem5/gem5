@@ -41,6 +41,7 @@
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
+#include "systemc/utils/report.hh"
 
 // A weak symbol to detect if sc_main has been defined, and if so where it is.
 [[gnu::weak]] int sc_main(int argc, char *argv[]);
@@ -79,12 +80,12 @@ class ScMainFiber : public Fiber
             } catch (const sc_report &r) {
                 // There was an exception nobody caught.
                 resultStr = "uncaught sc_report";
-                sc_report_handler::get_handler()(
+                sc_gem5::reportHandlerProc(
                         r, sc_report_handler::get_catch_actions());
             } catch (...) {
                 // There was some other type of exception we need to wrap.
                 resultStr = "uncaught exception";
-                sc_report_handler::get_handler()(
+                sc_gem5::reportHandlerProc(
                         ::sc_gem5::reportifyException(),
                         sc_report_handler::get_catch_actions());
             }

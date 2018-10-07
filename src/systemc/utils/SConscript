@@ -29,6 +29,7 @@ Import('*')
 
 if env['USE_SYSTEMC']:
     Source('functions.cc')
+    Source('report.cc')
     Source('sc_report.cc')
     Source('sc_report_handler.cc')
     Source('sc_trace_file.cc')

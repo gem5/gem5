@@ -37,6 +37,7 @@
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
+#include "systemc/utils/report.hh"
 
 namespace sc_core
 {
@@ -46,59 +47,6 @@ namespace
 
 std::unique_ptr<std::string> logFileName;
 std::unique_ptr<std::ofstream> logFile;
-
-struct ReportCatInfo
-{
-    explicit ReportCatInfo(sc_actions actions) :
-        actions(actions), count(0), limit(-1)
-    {}
-    ReportCatInfo() : ReportCatInfo(SC_UNSPECIFIED) {}
-
-    bool
-    checkLimit(sc_actions &actions)
-    {
-        if (limit == 0 || count < limit)
-            return false;
-        if (limit != -1)
-            actions |= SC_STOP;
-        return true;
-    }
-
-    sc_actions actions;
-    int count;
-    int limit;
-};
-
-const char *severityNames[] = {
-    [SC_INFO] = "Info",
-    [SC_WARNING] = "Warning",
-    [SC_ERROR] = "Error",
-    [SC_FATAL] = "Fatal"
-};
-
-ReportCatInfo catForSeverity[SC_MAX_SEVERITY] =
-{
-    [SC_INFO] = ReportCatInfo(SC_DEFAULT_INFO_ACTIONS),
-    [SC_WARNING] = ReportCatInfo(SC_DEFAULT_WARNING_ACTIONS),
-    [SC_ERROR] = ReportCatInfo(SC_DEFAULT_ERROR_ACTIONS),
-    [SC_FATAL] = ReportCatInfo(SC_DEFAULT_FATAL_ACTIONS)
-};
-
-std::map<std::string, ReportCatInfo> catForMsgType;
-std::map<std::pair<std::string, sc_severity>, ReportCatInfo>
-    catForSeverityAndMsgType;
-
-int verbosityLevel = SC_MEDIUM;
-
-sc_actions suppressedActions = SC_UNSPECIFIED;
-sc_actions forcedActions = SC_UNSPECIFIED;
-sc_actions catchActions = SC_DISPLAY;
-
-sc_report_handler_proc reportHandlerProc = &sc_report_handler::default_handler;
-
-sc_actions maxAction = SC_ABORT;
-
-std::unique_ptr<sc_report> globalReportCache;
 
 } // anonymous namespace
 
@@ -114,31 +62,29 @@ sc_report_handler::report(sc_severity severity, const char *msg_type,
                           const char *msg, int verbosity, const char *file,
                           int line)
 {
-    if (severity == SC_INFO && verbosity > verbosityLevel)
+    if (severity == SC_INFO && verbosity > sc_gem5::reportVerbosityLevel)
         return;
 
-    ReportCatInfo &sevInfo = catForSeverity[severity];
-    ReportCatInfo &msgInfo = catForMsgType[msg_type];
-    ReportCatInfo &sevMsgInfo = catForSeverityAndMsgType[
-        std::make_pair(std::string(msg_type), severity)];
+    sc_gem5::ReportSevInfo &sevInfo = sc_gem5::reportSevInfos[severity];
+    sc_gem5::ReportMsgInfo &msgInfo = sc_gem5::reportMsgInfoMap[msg_type];
 
     sevInfo.count++;
     msgInfo.count++;
-    sevMsgInfo.count++;
+    msgInfo.sevCounts[severity]++;
 
     sc_actions actions = SC_UNSPECIFIED;
-    if (sevMsgInfo.actions != SC_UNSPECIFIED)
-        actions = sevMsgInfo.actions;
+    if (msgInfo.sevActions[severity] != SC_UNSPECIFIED)
+        actions = msgInfo.sevActions[severity];
     else if (msgInfo.actions != SC_UNSPECIFIED)
         actions = msgInfo.actions;
     else if (sevInfo.actions != SC_UNSPECIFIED)
         actions = sevInfo.actions;
 
-    actions &= ~suppressedActions;
-    actions |= forcedActions;
+    actions &= ~sc_gem5::reportSuppressedActions;
+    actions |= sc_gem5::reportForcedActions;
 
-    if (sevMsgInfo.checkLimit(actions) && msgInfo.checkLimit(actions))
-        sevInfo.checkLimit(actions);
+    msgInfo.checkLimits(severity, actions);
+    sevInfo.checkLimit(actions);
 
     ::sc_gem5::Process *current = ::sc_gem5::scheduler.current();
     sc_report report(severity, msg_type, msg, verbosity, file, line,
@@ -149,12 +95,12 @@ sc_report_handler::report(sc_severity severity, const char *msg_type,
         if (current) {
             current->lastReport(&report);
         } else {
-            globalReportCache =
+            sc_gem5::globalReportCache =
                 std::unique_ptr<sc_report>(new sc_report(report));
         }
     }
 
-    reportHandlerProc(report, actions);
+    sc_gem5::reportHandlerProc(report, actions);
 }
 
 void
@@ -168,7 +114,7 @@ sc_report_handler::report(sc_severity, int id, const char *msg,
 sc_actions
 sc_report_handler::set_actions(sc_severity severity, sc_actions actions)
 {
-    ReportCatInfo &info = catForSeverity[severity];
+    sc_gem5::ReportSevInfo &info = sc_gem5::reportSevInfos[severity];
     sc_actions previous = info.actions;
     info.actions = actions;
     return previous;
@@ -177,7 +123,7 @@ sc_report_handler::set_actions(sc_severity severity, sc_actions actions)
 sc_actions
 sc_report_handler::set_actions(const char *msg_type, sc_actions actions)
 {
-    ReportCatInfo &info = catForMsgType[msg_type];
+    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
     sc_actions previous = info.actions;
     info.actions = actions;
     return previous;
@@ -187,17 +133,16 @@ sc_actions
 sc_report_handler::set_actions(
         const char *msg_type, sc_severity severity, sc_actions actions)
 {
-    ReportCatInfo &info = catForSeverityAndMsgType[
-        std::make_pair(std::string(msg_type), severity)];
-    sc_actions previous = info.actions;
-    info.actions = actions;
+    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
+    sc_actions previous = info.sevActions[severity];
+    info.sevActions[severity] = actions;
     return previous;
 }
 
 int
 sc_report_handler::stop_after(sc_severity severity, int limit)
 {
-    ReportCatInfo &info = catForSeverity[severity];
+    sc_gem5::ReportSevInfo &info = sc_gem5::reportSevInfos[severity];
     int previous = info.limit;
     info.limit = limit;
     return previous;
@@ -206,7 +151,7 @@ sc_report_handler::stop_after(sc_severity severity, int limit)
 int
 sc_report_handler::stop_after(const char *msg_type, int limit)
 {
-    ReportCatInfo &info = catForMsgType[msg_type];
+    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
     int previous = info.limit;
     info.limit = limit;
     return previous;
@@ -216,52 +161,50 @@ int
 sc_report_handler::stop_after(
         const char *msg_type, sc_severity severity, int limit)
 {
-    ReportCatInfo &info = catForSeverityAndMsgType[
-        std::make_pair(std::string(msg_type), severity)];
-    int previous = info.limit;
-    info.limit = limit;
+    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
+    int previous = info.sevLimits[severity];
+    info.sevLimits[severity] = limit;
     return previous;
 }
 
 int
 sc_report_handler::get_count(sc_severity severity)
 {
-    return catForSeverity[severity].count;
+    return sc_gem5::reportSevInfos[severity].count;
 }
 
 int
 sc_report_handler::get_count(const char *msg_type)
 {
-    return catForMsgType[msg_type].count;
+    return sc_gem5::reportMsgInfoMap[msg_type].count;
 }
 
 int
 sc_report_handler::get_count(const char *msg_type, sc_severity severity)
 {
-    return catForSeverityAndMsgType[
-        std::make_pair(std::string(msg_type), severity)].count;
+    return sc_gem5::reportMsgInfoMap[msg_type].sevCounts[severity];
 }
 
 int
 sc_report_handler::set_verbosity_level(int vl)
 {
-    int previous = verbosityLevel;
-    verbosityLevel = vl;
+    int previous = sc_gem5::reportVerbosityLevel;
+    sc_gem5::reportVerbosityLevel = vl;
     return previous;
 }
 
 int
 sc_report_handler::get_verbosity_level()
 {
-    return verbosityLevel;
+    return sc_gem5::reportVerbosityLevel;
 }
 
 
 sc_actions
 sc_report_handler::suppress(sc_actions actions)
 {
-    sc_actions previous = suppressedActions;
-    suppressedActions = actions;
+    sc_actions previous = sc_gem5::reportSuppressedActions;
+    sc_gem5::reportSuppressedActions = actions;
     return previous;
 }
 
@@ -274,8 +217,8 @@ sc_report_handler::suppress()
 sc_actions
 sc_report_handler::force(sc_actions actions)
 {
-    sc_actions previous = forcedActions;
-    forcedActions = actions;
+    sc_actions previous = sc_gem5::reportForcedActions;
+    sc_gem5::reportForcedActions = actions;
     return previous;
 }
 
@@ -289,22 +232,22 @@ sc_report_handler::force()
 sc_actions
 sc_report_handler::set_catch_actions(sc_actions actions)
 {
-    sc_actions previous = catchActions;
-    catchActions = actions;
+    sc_actions previous = sc_gem5::reportCatchActions;
+    sc_gem5::reportCatchActions = actions;
     return previous;
 }
 
 sc_actions
 sc_report_handler::get_catch_actions()
 {
-    return catchActions;
+    return sc_gem5::reportCatchActions;
 }
 
 
 void
 sc_report_handler::set_handler(sc_report_handler_proc proc)
 {
-    reportHandlerProc = proc;
+    sc_gem5::reportHandlerProc = proc;
 }
 
 void
@@ -337,14 +280,9 @@ sc_report_handler::default_handler(
 sc_actions
 sc_report_handler::get_new_action_id()
 {
+    static sc_actions maxAction = SC_ABORT;
     maxAction = maxAction << 1;
     return maxAction;
-}
-
-sc_report_handler_proc
-sc_report_handler::get_handler()
-{
-    return reportHandlerProc;
 }
 
 sc_report *
@@ -353,7 +291,7 @@ sc_report_handler::get_cached_report()
     ::sc_gem5::Process *current = ::sc_gem5::scheduler.current();
     if (current)
         return current->lastReport();
-    return globalReportCache.get();
+    return ::sc_gem5::globalReportCache.get();
 }
 
 void
@@ -363,7 +301,7 @@ sc_report_handler::clear_cached_report()
     if (current) {
         current->lastReport(nullptr);
     } else {
-        globalReportCache = nullptr;
+        ::sc_gem5::globalReportCache = nullptr;
     }
 }
 
@@ -409,7 +347,7 @@ sc_report_compose_message(const sc_report &report)
 {
     std::ostringstream str;
 
-    const char *sevName = severityNames[report.get_severity()];
+    const char *sevName = sc_gem5::reportSeverityNames[report.get_severity()];
     int id = report.get_id();
 
     str << sevName << ": ";

@@ -36,6 +36,7 @@
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
+#include "systemc/utils/report.hh"
 #include "systemc/utils/tracefile.hh"
 
 namespace sc_gem5
@@ -469,8 +470,7 @@ throwingReportHandler(const ::sc_core::sc_report &r,
 const ::sc_core::sc_report
 reportifyException()
 {
-    ::sc_core::sc_report_handler_proc old_handler =
-        ::sc_core::sc_report_handler::get_handler();
+    ::sc_core::sc_report_handler_proc old_handler = reportHandlerProc;
     ::sc_core::sc_report_handler::set_handler(&throwingReportHandler);
 
     try {
