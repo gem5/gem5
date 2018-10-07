@@ -37,6 +37,8 @@ namespace sc_gem5
 
 struct PythonReadyFunc
 {
+    PythonReadyFunc *next;
+
     PythonReadyFunc();
     ~PythonReadyFunc() {}
     virtual void run() = 0;
@@ -44,6 +46,8 @@ struct PythonReadyFunc
 
 struct PythonInitFunc
 {
+    PythonInitFunc *next;
+
     PythonInitFunc();
     ~PythonInitFunc() {}
     virtual void run(pybind11::module &systemc) = 0;

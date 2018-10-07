@@ -29,6 +29,8 @@
 
 #include "systemc/utils/report.hh"
 
+#include "systemc/core/python.hh"
+
 namespace sc_gem5
 {
 
@@ -63,11 +65,42 @@ std::unique_ptr<sc_core::sc_report> globalReportCache;
 
 bool reportWarningsAsErrors = false;
 
-DefaultReportMessages::DefaultReportMessages(
-        std::initializer_list<std::pair<int, const char *>> msgs)
+DefaultReportMessages *&
+DefaultReportMessages::top()
+{
+    static DefaultReportMessages *top_ptr = nullptr;
+    return top_ptr;
+}
+
+void
+DefaultReportMessages::install()
 {
     for (auto &p: msgs)
         sc_core::sc_report::register_id(p.first, p.second);
 }
+
+DefaultReportMessages::DefaultReportMessages(
+        std::initializer_list<std::pair<int, const char *>> msgs) :
+    next(top()), msgs(msgs)
+{
+    top() = this;
+}
+
+void
+DefaultReportMessages::installAll()
+{
+    for (DefaultReportMessages *ptr = top(); ptr; ptr = ptr->next)
+        ptr->install();
+}
+
+namespace
+{
+
+struct InstallDefaultReportMessages : public PythonReadyFunc
+{
+    void run() override { DefaultReportMessages::installAll(); }
+} messageInstaller;
+
+} // anonymous namespace
 
 } // namespace sc_gem5

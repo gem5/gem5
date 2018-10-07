@@ -40,14 +40,25 @@ namespace sc_gem5
 namespace
 {
 
-std::vector<PythonReadyFunc *> pythonReadyFuncs;
-std::vector<PythonInitFunc *> pythonInitFuncs;
+PythonReadyFunc *&
+firstReadyFunc()
+{
+    static PythonReadyFunc *first = nullptr;
+    return first;
+}
+
+PythonInitFunc *&
+firstInitFunc()
+{
+    static PythonInitFunc *first = nullptr;
+    return first;
+}
 
 void
 python_ready(pybind11::args args)
 {
-    for (auto &func: pythonReadyFuncs)
-        func->run();
+    for (auto ptr = firstReadyFunc(); ptr; ptr = ptr->next)
+        ptr->run();
 }
 
 void
@@ -55,21 +66,21 @@ systemc_pybind(pybind11::module &m_internal)
 {
     pybind11::module m = m_internal.def_submodule("systemc");
     m.def("python_ready", &python_ready);
-    for (auto &func: pythonInitFuncs)
-        func->run(m);
+    for (auto ptr = firstInitFunc(); ptr; ptr = ptr->next)
+        ptr->run(m);
 }
 EmbeddedPyBind embed_("systemc", &systemc_pybind);
 
 } // anonymous namespace
 
-PythonReadyFunc::PythonReadyFunc()
+PythonReadyFunc::PythonReadyFunc() : next(firstReadyFunc())
 {
-    pythonReadyFuncs.push_back(this);
+    firstReadyFunc() = this;
 }
 
-PythonInitFunc::PythonInitFunc()
+PythonInitFunc::PythonInitFunc() : next(firstInitFunc())
 {
-    pythonInitFuncs.push_back(this);
+    firstInitFunc() = this;
 }
 
 } // namespace sc_gem5
