@@ -168,7 +168,7 @@ class Port
     void regPort();
 
     int size() { return _size; }
-    int maxSize() { return _maxSize; }
+    int maxSize() { return _maxSize ? _maxSize : _size; }
 };
 
 } // namespace sc_gem5
