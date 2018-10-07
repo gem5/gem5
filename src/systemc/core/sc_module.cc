@@ -338,7 +338,12 @@ sc_module::async_reset_signal_is(const sc_signal_in_if<bool> &signal, bool val)
 void
 sc_module::dont_initialize()
 {
-    ::sc_gem5::Process::newest()->dontInitialize(true);
+    ::sc_gem5::Process *p = ::sc_gem5::Process::newest();
+    if (p->procKind() == SC_CTHREAD_PROC_) {
+        SC_REPORT_WARNING("(W524) dont_initialize() has no effect for "
+                "SC_CTHREADs", "");
+    }
+    p->dontInitialize(true);
 }
 
 void
