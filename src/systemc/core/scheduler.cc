@@ -165,6 +165,7 @@ Scheduler::yield()
         Fiber::primaryFiber()->run();
     } else {
         _current->popListNode();
+        _current->scheduled(false);
         // Switch to whatever Fiber is supposed to run this process. All
         // Fibers which aren't running should be parked at this line.
         _current->fiber()->run();
@@ -198,6 +199,8 @@ Scheduler::ready(Process *p)
 {
     if (_stopNow)
         return;
+
+    p->scheduled(true);
 
     if (p->procKind() == ::sc_core::SC_METHOD_PROC_)
         readyListMethods.pushLast(p);

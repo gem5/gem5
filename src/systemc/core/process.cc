@@ -359,7 +359,7 @@ Process::ready()
         return;
     if (suspended())
         _suspendedReady = true;
-    else
+    else if (!scheduled())
         scheduler.ready(this);
 }
 
@@ -381,9 +381,10 @@ Process::Process(const char *name, ProcessFuncWrapper *func, bool internal) :
     timeoutEvent([this]() { this->timeout(); }),
     func(func), _internal(internal), _timedOut(false), _dontInitialize(false),
     _needsStart(true), _isUnwinding(false), _terminated(false),
-    _suspended(false), _disabled(false), _syncReset(false), syncResetCount(0),
-    asyncResetCount(0), _waitCount(0), refCount(0),
-    stackSize(::Fiber::DefaultStackSize), dynamicSensitivity(nullptr)
+    _scheduled(false), _suspended(false), _disabled(false),
+    _syncReset(false), syncResetCount(0), asyncResetCount(0), _waitCount(0),
+    refCount(0), stackSize(::Fiber::DefaultStackSize),
+    dynamicSensitivity(nullptr)
 {
     _dynamic =
             (::sc_core::sc_get_status() >

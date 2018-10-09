@@ -72,6 +72,9 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     void isUnwinding(bool v) { _isUnwinding = v; }
     bool terminated() const { return _terminated; }
 
+    bool scheduled() const { return _scheduled; }
+    void scheduled(bool new_val) { _scheduled = new_val; }
+
     void forEachKid(const std::function<void(Process *)> &work);
 
     bool suspended() const { return _suspended; }
@@ -172,6 +175,7 @@ class Process : public ::sc_core::sc_process_b, public ListNode
     bool _dynamic;
     bool _isUnwinding;
     bool _terminated;
+    bool _scheduled;
 
     void terminate();
 
