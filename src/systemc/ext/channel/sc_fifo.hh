@@ -55,11 +55,14 @@ class sc_fifo : public sc_fifo_in_if<T>,
     explicit sc_fifo(int size=16) :
             sc_fifo_in_if<T>(), sc_fifo_out_if<T>(),
             sc_prim_channel(sc_gen_unique_name("fifo")),
-            _size(size), _readsHappened(false), _reader(NULL), _writer(NULL)
+            _size(size), _num_free(size), _num_available(0),
+            _readsHappened(false), _writesHappened(false),
+            _reader(NULL), _writer(NULL)
     {}
     explicit sc_fifo(const char *name, int size=16) :
             sc_fifo_in_if<T>(), sc_fifo_out_if<T>(),
-            sc_prim_channel(name), _size(size), _readsHappened(false),
+            sc_prim_channel(name), _size(size), _num_free(size),
+            _num_available(0), _readsHappened(false), _writesHappened(false),
             _reader(NULL), _writer(NULL)
     {}
     virtual ~sc_fifo() {}
@@ -92,6 +95,7 @@ class sc_fifo : public sc_fifo_in_if<T>,
         _readsHappened = true;
         t = _entries.front();
         _entries.pop_front();
+        _num_available--;
         request_update();
     }
     virtual T
@@ -118,7 +122,9 @@ class sc_fifo : public sc_fifo_in_if<T>,
     {
         while (num_free() == 0)
             sc_core::wait(_dataReadEvent);
-        _pending.emplace_back(t);
+        _writesHappened = true;
+        _entries.emplace_back(t);
+        _num_free--;
         request_update();
     }
     virtual bool
@@ -149,20 +155,12 @@ class sc_fifo : public sc_fifo_in_if<T>,
         return _dataReadEvent;
     }
 
-    virtual int num_available() const { return _entries.size(); }
-    virtual int
-    num_free() const
-    {
-        return _size - _entries.size() - _pending.size();
-    }
+    virtual int num_available() const { return _num_available; }
+    virtual int num_free() const { return _num_free; }
 
     virtual void
     print(std::ostream &os=std::cout) const
     {
-        for (typename ::std::list<T>::iterator pos = _pending.begin();
-                pos != _pending.end(); pos++) {
-            os << *pos << ::std::endl;
-        }
         for (typename ::std::list<T>::iterator pos = _entries.begin();
                 pos != _entries.end(); pos++) {
             os << *pos << ::std::endl;
@@ -173,10 +171,6 @@ class sc_fifo : public sc_fifo_in_if<T>,
     {
         os << "name = " << name() << std::endl;
         int idx = 0;
-        for (typename ::std::list<T>::iterator pos = _pending.begin();
-                pos != _pending.end(); pos++) {
-            os << "value[" << idx++ << "] = " << *pos << ::std::endl;
-        }
         for (typename ::std::list<T>::iterator pos = _entries.begin();
                 pos != _entries.end(); pos++) {
             os << "value[" << idx++ << "] = " << *pos << ::std::endl;
@@ -188,10 +182,11 @@ class sc_fifo : public sc_fifo_in_if<T>,
     virtual void
     update()
     {
-        if (!_pending.empty()) {
+        _num_available = _entries.size();
+        _num_free = _size - _num_available;
+        if (_writesHappened) {
+            _writesHappened = false;
             _dataWriteEvent.notify(SC_ZERO_TIME);
-            _entries.insert(_entries.end(), _pending.begin(), _pending.end());
-            _pending.clear();
         }
         if (_readsHappened) {
             _readsHappened = false;
@@ -213,9 +208,11 @@ class sc_fifo : public sc_fifo_in_if<T>,
     sc_port_base *_writer;
 
     int _size;
+    int _num_free;
+    int _num_available;
     mutable std::list<T> _entries;
-    mutable std::list<T> _pending;
     bool _readsHappened;
+    bool _writesHappened;
 };
 
 template <class T>
