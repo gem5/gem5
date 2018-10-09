@@ -31,10 +31,17 @@
 #define __SYSTEMC_EXT_CHANNEL_SC_SIGNAL_RV_HH__
 
 #include "../core/sc_module.hh" // for sc_gen_unique_name
-#include "../core/scheduler.hh"
 #include "../dt/bit/sc_logic.hh"
 #include "../dt/bit/sc_lv.hh"
 #include "sc_signal.hh"
+
+namespace sc_gem5
+{
+
+class Process;
+Process *getCurrentProcess();
+
+} // namespace sc_gem5
 
 namespace sc_dt
 {
@@ -66,7 +73,7 @@ class sc_signal_rv : public sc_signal<sc_dt::sc_lv<W>, SC_MANY_WRITERS>
     virtual void
     write(const sc_dt::sc_lv<W> &l)
     {
-        ::sc_gem5::Process *p = ::sc_gem5::scheduler.current();
+        ::sc_gem5::Process *p = ::sc_gem5::getCurrentProcess();
 
         auto it = inputs.find(p);
         if (it == inputs.end()) {
