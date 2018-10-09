@@ -214,7 +214,7 @@ if CpuConfig.is_kvm_cpu(CPUClass) or CpuConfig.is_kvm_cpu(FutureClass):
 
 # Sanity check
 if options.simpoint_profile:
-    if not CpuConfig.is_atomic_cpu(TestCPUClass):
+    if not CpuConfig.is_atomic_cpu(CPUClass):
         fatal("SimPoint/BPProbe should be done with an atomic cpu")
     if np > 1:
         fatal("SimPoint generation not supported with more than one CPUs")
