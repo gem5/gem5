@@ -457,6 +457,7 @@ Scheduler::trace(bool delta)
 }
 
 Scheduler scheduler;
+Process *getCurrentProcess() { return scheduler.current(); }
 
 namespace {
 
