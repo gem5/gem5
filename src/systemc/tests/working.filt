@@ -51,6 +51,11 @@ path in (
     # facility to ignore the error it raises for the same reason, and it
     # wouldn't make sense to add one.
     "systemc/kernel/sc_time/test19",
+
+    # This test is for a mechanism to change to a non-standard signal write
+    # checking behavior using an environment variable which we don't intent to
+    # support at this time.
+    "systemc/communication/sc_signal/check_writer/test16",
 ),
 
 ])
