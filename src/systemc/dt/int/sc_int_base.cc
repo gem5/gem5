@@ -517,10 +517,10 @@ sc_int_base &
 sc_int_base::operator = (const char *a)
 {
     if (a == 0) {
-        SC_REPORT_ERROR("conversion failed",
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                         "character string is zero");
     } else if (*a == 0) {
-        SC_REPORT_ERROR("conversion failed",
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                         "character string is empty");
     } else try {
         int len = m_len;
@@ -529,7 +529,7 @@ sc_int_base::operator = (const char *a)
     } catch(const sc_core::sc_report &) {
         std::stringstream msg;
         msg << "character string '" << a << "' is not valid";
-        SC_REPORT_ERROR("conversion failed", msg.str().c_str());
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
     }
     return *this;
 }

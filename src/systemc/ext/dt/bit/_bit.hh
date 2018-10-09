@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_EXT_DT_BIT__BIT_HH__
 #define __SYSTEMC_EXT_DT_BIT__BIT_HH__
 
+#include "messages.hh"
 #include "sc_bit.hh"
 #include "sc_bit_proxies.hh"
 #include "sc_bv.hh"

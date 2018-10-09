@@ -27,43 +27,26 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_DT_INT__USING_HH__
-#define __SYSTEMC_EXT_DT_INT__USING_HH__
+#ifndef __SYSTEMC_EXT_DT_BIT_MESSAGES_HH__
+#define __SYSTEMC_EXT_DT_BIT_MESSAGES_HH__
 
-#include "_int.hh"
+namespace sc_core
+{
 
-using sc_dt::SC_BIN;
-using sc_dt::SC_BIN_SM;
-using sc_dt::SC_BIN_US;
-using sc_dt::SC_CSD;
-using sc_dt::SC_DEC;
-using sc_dt::SC_HEX;
-using sc_dt::SC_HEX_SM;
-using sc_dt::SC_HEX_US;
-using sc_dt::SC_NOBASE;
-using sc_dt::SC_OCT;
-using sc_dt::SC_OCT_SM;
-using sc_dt::SC_OCT_US;
-using sc_dt::int64;
-using sc_dt::sc_bigint;
-using sc_dt::sc_biguint;
-using sc_dt::sc_digit;
-using sc_dt::sc_int;
-using sc_dt::sc_int_base;
-using sc_dt::sc_io_show_base;
-using sc_dt::sc_length_context;
-using sc_dt::sc_length_param;
-using sc_dt::sc_logic;
-using sc_dt::sc_numrep;
-using sc_dt::sc_signed;
-using sc_dt::sc_uint;
-using sc_dt::sc_uint_base;
-using sc_dt::sc_unsigned;
-using sc_dt::uint64;
+extern const char SC_ID_LENGTH_MISMATCH_[];
+extern const char SC_ID_INCOMPATIBLE_TYPES_[];
+extern const char SC_ID_CANNOT_CONVERT_[];
+extern const char SC_ID_INCOMPATIBLE_VECTORS_[];
+extern const char SC_ID_VALUE_NOT_VALID_[];
+extern const char SC_ID_ZERO_LENGTH_[];
+extern const char SC_ID_VECTOR_CONTAINS_LOGIC_VALUE_[];
+extern const char SC_ID_SC_BV_CANNOT_CONTAIN_X_AND_Z_[];
+extern const char SC_ID_VECTOR_TOO_LONG_[];
+extern const char SC_ID_VECTOR_TOO_SHORT_[];
+extern const char SC_ID_WRONG_VALUE_[];
+extern const char SC_ID_LOGIC_Z_TO_BOOL_[];
+extern const char SC_ID_LOGIC_X_TO_BOOL_[];
 
-using sc_core::SC_ID_INIT_FAILED_;
-using sc_core::SC_ID_ASSIGNMENT_FAILED_;
-using sc_core::SC_ID_OPERATION_FAILED_;
-using sc_core::SC_ID_CONVERSION_FAILED_;
+} // namespace sc_core
 
-#endif  //__SYSTEMC_EXT_DT_INT__USING_HH__
+#endif // __SYSTEMC_EXT_DT_BIT_MESSAGES_HH__

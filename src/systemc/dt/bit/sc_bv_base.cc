@@ -55,6 +55,7 @@
 #include <cstring>
 #include <sstream>
 
+#include "systemc/ext/dt/bit/messages.hh"
 #include "systemc/ext/dt/bit/sc_bv_base.hh"
 #include "systemc/ext/dt/fx/sc_fix.hh"
 #include "systemc/ext/dt/fx/sc_ufix.hh"
@@ -74,7 +75,7 @@ sc_bv_base::init(int length_, bool init_value)
 {
     // check the length
     if (length_ <= 0) {
-        SC_REPORT_ERROR("zero length", 0);
+        SC_REPORT_ERROR(sc_core::SC_ID_ZERO_LENGTH_, 0);
         sc_core::sc_abort(); // can't recover from here
     }
     // allocate memory for the data and control words
@@ -101,7 +102,7 @@ sc_bv_base::assign_from_string(const std::string &s)
     for (; i < min_len; ++i) {
         char c = s[s_len - i - 1];
         if (c != '0' && c != '1') {
-            SC_REPORT_ERROR("cannot perform conversion",
+            SC_REPORT_ERROR(sc_core::SC_ID_CANNOT_CONVERT_,
                 "string can contain only '0' and '1' characters");
             // may continue, if suppressed
             c = '0';
@@ -161,12 +162,12 @@ convert_to_bin(const char *s)
     //         because this is seen as a hexadecimal encoding prefix!
 
     if (s == 0) {
-        SC_REPORT_ERROR("cannot perform conversion",
-            "character string is zero");
+        SC_REPORT_ERROR(sc_core::SC_ID_CANNOT_CONVERT_,
+                "character string is zero");
         return std::string();
     }
     if (*s == 0) {
-        SC_REPORT_ERROR("cannot perform conversion",
+        SC_REPORT_ERROR(sc_core::SC_ID_CANNOT_CONVERT_,
             "character string is empty");
         return std::string();
     }
@@ -203,7 +204,7 @@ convert_to_bin(const char *s)
             } catch (const sc_core::sc_report &) {
                 std::stringstream msg;
                 msg << "character string '" << s << "' is not valid";
-                SC_REPORT_ERROR("cannot perform conversion",
+                SC_REPORT_ERROR(sc_core::SC_ID_CANNOT_CONVERT_,
                         msg.str().c_str());
                 return std::string();
             }

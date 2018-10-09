@@ -52,6 +52,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "systemc/ext/dt/int/messages.hh"
 #include "systemc/ext/dt/misc/sc_value_base.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
@@ -63,7 +64,7 @@ sc_value_base::concat_clear_data(bool /* to_ones */)
 {
     static const char error_message[] =
         "concat_clear_data method not supported by this type";
-    SC_REPORT_ERROR("operation failed", error_message);
+    SC_REPORT_ERROR(sc_core::SC_ID_OPERATION_FAILED_, error_message);
 }
 
 bool
@@ -71,7 +72,7 @@ sc_value_base::concat_get_ctrl(sc_digit * /*dst_p*/, int /*low_i*/) const
 {
     static const char error_message[] =
         "concat_get_ctrl method not supported by this type";
-    SC_REPORT_ERROR("operation failed", error_message);
+    SC_REPORT_ERROR(sc_core::SC_ID_OPERATION_FAILED_, error_message);
     return false;
 }
 
@@ -80,7 +81,7 @@ sc_value_base::concat_get_data(sc_digit * /*dst_p*/, int /*low_i*/) const
 {
     static const char error_message[] =
         "concat_get_data method not supported by this type";
-    SC_REPORT_ERROR("operation failed", error_message);
+    SC_REPORT_ERROR(sc_core::SC_ID_OPERATION_FAILED_, error_message);
     return false;
 }
 
@@ -89,7 +90,7 @@ sc_value_base::concat_get_uint64() const
 {
     static const char error_message[] =
         "concat_get_uint64 method not supported by this type";
-    SC_REPORT_ERROR("operation failed", error_message);
+    SC_REPORT_ERROR(sc_core::SC_ID_OPERATION_FAILED_, error_message);
     return 0;
 }
 
@@ -98,7 +99,7 @@ sc_value_base::concat_length(bool * /*xz_present_p*/) const
 {
     static const char error_message[] =
         "concat_length method not supported by this type";
-    SC_REPORT_ERROR("operation failed", error_message);
+    SC_REPORT_ERROR(sc_core::SC_ID_OPERATION_FAILED_, error_message);
     return 0;
 }
 
@@ -107,7 +108,7 @@ sc_value_base::concat_set(int64 /*src*/, int /*low_i*/)
 {
     static const char error_message[] =
         "concat_set(int64) method not supported by this type";
-    SC_REPORT_ERROR("operation failed", error_message);
+    SC_REPORT_ERROR(sc_core::SC_ID_OPERATION_FAILED_, error_message);
 }
 
 void
@@ -115,7 +116,7 @@ sc_value_base::concat_set(const sc_signed &/*src*/, int /*low_i*/)
 {
     static const char error_message[] =
         "concat_set(sc_signed) method not supported by this type";
-    SC_REPORT_ERROR("operation failed", error_message);
+    SC_REPORT_ERROR(sc_core::SC_ID_OPERATION_FAILED_, error_message);
 }
 
 void
@@ -123,7 +124,7 @@ sc_value_base::concat_set(const sc_unsigned &/*src*/, int /*low_i*/)
 {
     static const char error_message[] =
         "concat_set(sc_unsigned) method not supported by this type";
-    SC_REPORT_ERROR("operation failed", error_message);
+    SC_REPORT_ERROR(sc_core::SC_ID_OPERATION_FAILED_, error_message);
 }
 
 void
@@ -131,7 +132,7 @@ sc_value_base::concat_set(uint64 /*src*/, int /*low_i*/)
 {
     static const char error_message[] =
         "concat_set(uint64) method not supported by this type";
-    SC_REPORT_ERROR("operation failed", error_message);
+    SC_REPORT_ERROR(sc_core::SC_ID_OPERATION_FAILED_, error_message);
 }
 
 } // namespace sc_dt

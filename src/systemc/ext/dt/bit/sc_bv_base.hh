@@ -54,6 +54,7 @@
 #define __SYSTEMC_EXT_DT_BIT_SC_BV_BASE_HH__
 
 #include "../int/sc_length_param.hh"
+#include "messages.hh"
 #include "sc_bit_proxies.hh"
 #include "sc_proxy.hh"
 
@@ -264,7 +265,7 @@ inline void
 sc_bv_base::set_cword(int /*i*/, sc_digit w)
 {
     if (w) {
-        SC_REPORT_WARNING("(W207) sc_bv cannot contain values X and Z", 0);
+        SC_REPORT_WARNING(sc_core::SC_ID_SC_BV_CANNOT_CONTAIN_X_AND_Z_, 0);
     }
 }
 

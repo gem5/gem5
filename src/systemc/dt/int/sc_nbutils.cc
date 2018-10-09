@@ -61,6 +61,8 @@
 #include <cstring>
 #include <sstream>
 
+#include "systemc/ext/dt/bit/messages.hh"
+#include "systemc/ext/dt/int/messages.hh"
 #include "systemc/ext/dt/int/sc_nbutils.hh"
 #include "systemc/ext/utils/functions.hh"
 
@@ -89,7 +91,7 @@ is_valid_base(sc_numrep base)
         std::stringstream msg;
         msg << "is_valid_base( sc_numrep base ) : base = " << base <<
                " is not valid";
-        SC_REPORT_ERROR("(E204) value is not valid", msg.str().c_str() );
+        SC_REPORT_ERROR(sc_core::SC_ID_VALUE_NOT_VALID_, msg.str().c_str());
     }
 }
 
@@ -233,7 +235,7 @@ get_base_and_sign(const char *v, small_type &b, small_type &s)
         static const char msg[] =
             "get_base_and_sign( const char* v, small_type&, small_type& ) : "
             "v = \"\" is not valid";
-        SC_REPORT_ERROR("conversion failed", msg);
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_, msg);
     }
     return v;
 }
@@ -264,12 +266,12 @@ parse_binary_bits(const char *src_p, int dst_n,
 
     // MAKE SURE WE HAVE A STRING TO PARSE:
     if (src_p == 0) {
-        SC_REPORT_ERROR("conversion failed",
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                         "character string is zero");
         return;
     }
     if (*src_p == 0) {
-        SC_REPORT_ERROR("conversion failed",
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                         "character string is empty");
         return;
     }
@@ -321,7 +323,7 @@ parse_binary_bits(const char *src_p, int dst_n,
                         std::stringstream msg;
                         msg << "character string '" << src_p <<
                                "' is not valid";
-                        SC_REPORT_ERROR("conversion failed",
+                        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                                         msg.str().c_str());
                         return;
                     }
@@ -352,7 +354,7 @@ parse_binary_bits(const char *src_p, int dst_n,
                     std::stringstream msg;
                     msg << "character string '" << src_p <<
                            "' is not valid";
-                    SC_REPORT_ERROR("conversion failed",
+                    SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                                     msg.str().c_str());
                     return;
                 }
@@ -393,12 +395,12 @@ parse_hex_bits(const char *src_p, int dst_n,
 
     // MAKE SURE WE HAVE A STRING TO PARSE:
     if (src_p == 0) {
-        SC_REPORT_ERROR("conversion failed",
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                         "character string is zero");
         return;
     }
     if (*src_p == 0) {
-        SC_REPORT_ERROR("conversion failed",
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                         "character string is empty");
         return;
     }
@@ -468,7 +470,7 @@ parse_hex_bits(const char *src_p, int dst_n,
                         std::stringstream msg;
                         msg << "character string '" << src_p <<
                                "' is not valid";
-                        SC_REPORT_ERROR("conversion failed",
+                        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                                         msg.str().c_str());
                         return;
                     }
@@ -518,7 +520,7 @@ parse_hex_bits(const char *src_p, int dst_n,
                 {
                     std::stringstream msg;
                     msg << "character string '" << src_p << "' is not valid";
-                    SC_REPORT_ERROR("conversion failed",
+                    SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                                     msg.str().c_str() );
                     return;
                 }
@@ -561,7 +563,7 @@ vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
             msg << "vec_from_str( int, int, sc_digit*, const char*, " <<
                    "sc_numrep base ) : base = " << base <<
                    " does not match the default base";
-            SC_REPORT_ERROR("conversion failed",
+            SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                             msg.str().c_str());
             return 0;
         }
@@ -584,7 +586,7 @@ vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
                 msg << "vec_from_str( int, int, sc_digit*, const char*, " <<
                        "sc_numrep base ) : '" << *v << "' is not a valid " <<
                        "digit in base " << b;
-                SC_REPORT_ERROR("conversion failed",
+                SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                                 msg.str().c_str());
                 return 0;
             }
@@ -599,7 +601,7 @@ vec_from_str(int unb, int und, sc_digit *u, const char *v, sc_numrep base)
             msg << "vec_from_str( int, int, sc_digit*, const char*, " <<
                    "sc_numrep base ) : '" << *v << "' is not a valid " <<
                    "digit in base " << b;
-            SC_REPORT_ERROR("conversion failed",
+            SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                             msg.str().c_str());
             return 0;
         }
@@ -1703,7 +1705,7 @@ vec_reverse(int unb, int und, sc_digit *ud, int l, int r)
         std::stringstream msg;
         msg << "vec_reverse( int, int, sc_digit*, int l, int r ) : " <<
                "l = " << l << " < r = " << r << " is not valid",
-        SC_REPORT_ERROR("conversion failed", msg.str().c_str());
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
         return;
     }
 

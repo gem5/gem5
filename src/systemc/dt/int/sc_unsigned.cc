@@ -84,6 +84,7 @@
 #include "systemc/ext/dt/bit/sc_lv_base.hh"
 #include "systemc/ext/dt/fx/sc_ufix.hh"
 #include "systemc/ext/dt/fx/scfx_other_defs.hh"
+#include "systemc/ext/dt/int/messages.hh"
 #include "systemc/ext/dt/int/sc_int_base.hh"
 #include "systemc/ext/dt/int/sc_signed.hh"
 #include "systemc/ext/dt/int/sc_uint_base.hh"
@@ -118,7 +119,7 @@ sc_unsigned::invalid_init(const char *type_name, int nb) const
 {
     std::stringstream msg;
     msg << "sc_unsigned("<< type_name << ") : nb = " << nb << " is not valid";
-    SC_REPORT_ERROR("initialization failed", msg.str().c_str());
+    SC_REPORT_ERROR(sc_core::SC_ID_INIT_FAILED_, msg.str().c_str());
 }
 
 
@@ -438,10 +439,10 @@ const sc_unsigned &
 sc_unsigned::operator = (const char *a)
 {
     if (a == 0) {
-        SC_REPORT_ERROR("conversion failed",
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                         "character string is zero");
     } else if (*a == 0) {
-        SC_REPORT_ERROR("conversion failed",
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_,
                         "character string is empty");
     } else try {
         int len = length();
@@ -450,7 +451,7 @@ sc_unsigned::operator = (const char *a)
     } catch(const sc_core::sc_report &) {
         std::stringstream msg;
         msg << "character string '" << a << "' is not valid";
-        SC_REPORT_ERROR("conversion failed", msg.str().c_str());
+        SC_REPORT_ERROR(sc_core::SC_ID_CONVERSION_FAILED_, msg.str().c_str());
     }
     return *this;
 }

@@ -47,6 +47,7 @@
 #ifndef __SYSTEMC_EXT_DT_FX_SCFX_PARAMS_HH__
 #define __SYSTEMC_EXT_DT_FX_SCFX_PARAMS_HH__
 
+#include "messages.hh"
 #include "sc_fxcast_switch.hh"
 #include "sc_fxtype_params.hh"
 
@@ -101,8 +102,8 @@ inline scfx_params::scfx_params(const sc_fxtype_params &type_params_,
     m_type_params(type_params_), m_enc(enc_), m_cast_switch(cast_sw)
 {
     if (m_enc == SC_US_ && m_type_params.o_mode() == SC_WRAP_SM) {
-        SC_REPORT_ERROR("invalid overflow mode",
-                        "SC_WRAP_SM not defined for unsigned numbers");
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_O_MODE_,
+                        sc_core::SC_ID_WRAP_SM_NOT_DEFINED_);
         // may continue, if suppressed
     }
 }

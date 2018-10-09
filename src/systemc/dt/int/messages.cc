@@ -27,43 +27,27 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_DT_INT__USING_HH__
-#define __SYSTEMC_EXT_DT_INT__USING_HH__
+#include "systemc/ext/dt/int/messages.hh"
+#include "systemc/utils/report.hh"
 
-#include "_int.hh"
+namespace sc_core
+{
 
-using sc_dt::SC_BIN;
-using sc_dt::SC_BIN_SM;
-using sc_dt::SC_BIN_US;
-using sc_dt::SC_CSD;
-using sc_dt::SC_DEC;
-using sc_dt::SC_HEX;
-using sc_dt::SC_HEX_SM;
-using sc_dt::SC_HEX_US;
-using sc_dt::SC_NOBASE;
-using sc_dt::SC_OCT;
-using sc_dt::SC_OCT_SM;
-using sc_dt::SC_OCT_US;
-using sc_dt::int64;
-using sc_dt::sc_bigint;
-using sc_dt::sc_biguint;
-using sc_dt::sc_digit;
-using sc_dt::sc_int;
-using sc_dt::sc_int_base;
-using sc_dt::sc_io_show_base;
-using sc_dt::sc_length_context;
-using sc_dt::sc_length_param;
-using sc_dt::sc_logic;
-using sc_dt::sc_numrep;
-using sc_dt::sc_signed;
-using sc_dt::sc_uint;
-using sc_dt::sc_uint_base;
-using sc_dt::sc_unsigned;
-using sc_dt::uint64;
+const char SC_ID_INIT_FAILED_[] = "initialization failed";
+const char SC_ID_ASSIGNMENT_FAILED_[] = "assignment failed";
+const char SC_ID_OPERATION_FAILED_[] = "operation failed";
+const char SC_ID_CONVERSION_FAILED_[] = "conversion failed";
 
-using sc_core::SC_ID_INIT_FAILED_;
-using sc_core::SC_ID_ASSIGNMENT_FAILED_;
-using sc_core::SC_ID_OPERATION_FAILED_;
-using sc_core::SC_ID_CONVERSION_FAILED_;
+namespace
+{
 
-#endif  //__SYSTEMC_EXT_DT_INT__USING_HH__
+sc_gem5::DefaultReportMessages predefinedMessages{
+    {400, SC_ID_INIT_FAILED_},
+    {401, SC_ID_ASSIGNMENT_FAILED_},
+    {402, SC_ID_OPERATION_FAILED_},
+    {403, SC_ID_CONVERSION_FAILED_}
+};
+
+} // anonymous namespace
+
+} // namespace sc_core

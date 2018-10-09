@@ -51,6 +51,7 @@
 #include "../int/sc_signed.hh"
 #include "../int/sc_uint_base.hh"
 #include "../int/sc_unsigned.hh"
+#include "messages.hh"
 
 namespace sc_dt
 {
@@ -64,7 +65,7 @@ inline const sc_signed &
 sc_signed::operator = (const sc_fxval &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_signed::operator = ( const sc_fxval& )");
         return *this;
     }
@@ -78,7 +79,7 @@ inline const sc_signed &
 sc_signed::operator = (const sc_fxval_fast &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_signed::operator = ( const sc_fxval_fast& )");
         return *this;
     }
@@ -93,7 +94,7 @@ inline const sc_signed &
 sc_signed::operator = (const sc_fxnum &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_signed::operator = ( const sc_fxnum& )");
         return *this;
     }
@@ -108,7 +109,7 @@ inline const sc_signed &
 sc_signed::operator = (const sc_fxnum_fast &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_signed::operator = ( const sc_fxnum_fast& )");
         return *this;
     }
@@ -130,7 +131,7 @@ inline const sc_unsigned &
 sc_unsigned::operator = (const sc_fxval &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_unsigned::operator = ( const sc_fxval& )");
         return *this;
     }
@@ -145,7 +146,7 @@ inline const sc_unsigned &
 sc_unsigned::operator = (const sc_fxval_fast &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_unsigned::operator = ( const sc_fxval_fast& )");
         return *this;
     }
@@ -160,7 +161,7 @@ inline const sc_unsigned &
 sc_unsigned::operator = (const sc_fxnum &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_unsigned::operator = ( const sc_fxnum& )" );
         return *this;
     }
@@ -175,7 +176,7 @@ inline const sc_unsigned &
 sc_unsigned::operator = (const sc_fxnum_fast &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_unsigned::operator = ( const sc_fxnum_fast& )" );
         return *this;
     }
@@ -197,7 +198,7 @@ inline sc_int_base &
 sc_int_base::operator = (const sc_fxval &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_int_base::operator = ( const sc_fxval& )");
         return *this;
     }
@@ -212,7 +213,7 @@ inline sc_int_base &
 sc_int_base::operator = (const sc_fxval_fast &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_int_base::operator = ( const sc_fxval_fast& )");
         return *this;
     }
@@ -227,7 +228,7 @@ inline sc_int_base &
 sc_int_base::operator = (const sc_fxnum &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_int_base::operator = ( const sc_fxnum& )");
         return *this;
     }
@@ -242,7 +243,7 @@ inline sc_int_base &
 sc_int_base::operator = (const sc_fxnum_fast &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_int_base::operator = ( const sc_fxnum_fast& )");
         return *this;
     }
@@ -263,7 +264,7 @@ inline sc_uint_base &
 sc_uint_base::operator = (const sc_fxval &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_uint_base::operator = ( const sc_fxval& )");
         return *this;
     }
@@ -278,7 +279,7 @@ inline sc_uint_base &
 sc_uint_base::operator = (const sc_fxval_fast &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_uint_base::operator = ( const sc_fxval_fast& )");
         return *this;
     }
@@ -293,7 +294,7 @@ inline sc_uint_base &
 sc_uint_base::operator = (const sc_fxnum &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_uint_base::operator = ( const sc_fxnum& )");
         return *this;
     }
@@ -308,7 +309,7 @@ inline sc_uint_base &
 sc_uint_base::operator = (const sc_fxnum_fast &v)
 {
     if (!v.is_normal()) { /* also triggers OBSERVER_READ call */
-        SC_REPORT_ERROR("invalid fixed-point value",
+        SC_REPORT_ERROR(sc_core::SC_ID_INVALID_FX_VALUE_,
                         "sc_uint_base::operator = ( const sc_fxnum_fast& )");
         return *this;
     }

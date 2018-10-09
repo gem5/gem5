@@ -62,6 +62,7 @@
 
 #include "../../core/sc_process_handle.hh"
 #include "../../utils/sc_report_handler.hh"
+#include "messages.hh"
 
 namespace sc_dt
 {
@@ -245,7 +246,7 @@ sc_context<T>::begin()
         m_old_value_ptr = m_def_value_ptr;
         m_def_value_ptr = &m_value;
     } else {
-        SC_REPORT_ERROR("context begin failed", 0);
+        SC_REPORT_ERROR(sc_core::SC_ID_CONTEXT_BEGIN_FAILED_, 0);
     }
 }
 
@@ -257,7 +258,7 @@ sc_context<T>::end()
         m_def_value_ptr = m_old_value_ptr;
         m_old_value_ptr = 0;
     } else {
-        SC_REPORT_ERROR("context end failed", 0);
+        SC_REPORT_ERROR(sc_core::SC_ID_CONTEXT_END_FAILED_, 0);
     }
 }
 

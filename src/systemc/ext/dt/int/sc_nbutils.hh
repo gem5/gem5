@@ -69,6 +69,8 @@
 #include <ostream>
 
 #include "../../utils/sc_report_handler.hh"
+#include "../bit/messages.hh"
+#include "messages.hh"
 #include "sc_nbdefs.hh"
 
 namespace sc_dt
@@ -520,7 +522,7 @@ inline void
 div_by_zero(Type s)
 {
     if (s == 0) {
-        SC_REPORT_ERROR("operation failed",
+        SC_REPORT_ERROR(sc_core::SC_ID_OPERATION_FAILED_,
                         "div_by_zero<Type>(Type) : division by zero");
         sc_core::sc_abort(); // can't recover from here
     }
@@ -822,7 +824,7 @@ is_bad_double(double v)
 {
     // Windows throws exception.
     if (is_nan(v) || is_inf(v))
-        SC_REPORT_ERROR("(E204) value is not valid",
+        SC_REPORT_ERROR(sc_core::SC_ID_VALUE_NOT_VALID_,
                         "is_bad_double(double v) : "
                         "v is not finite - NaN or Inf");
 }

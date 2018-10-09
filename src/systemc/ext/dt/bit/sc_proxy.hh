@@ -68,6 +68,7 @@
 #include "../int/sc_signed.hh"
 #include "../int/sc_uint_base.hh"
 #include "../int/sc_unsigned.hh"
+#include "messages.hh"
 #include "sc_bit.hh"
 #include "sc_logic.hh"
 
@@ -1261,7 +1262,7 @@ sc_proxy<X>::to_anything_unsigned() const
     const X &x = back_cast();
     int len = x.length();
     if (x.get_cword(0) != SC_DIGIT_ZERO) {
-        SC_REPORT_WARNING("vector contains 4-value logic", 0);
+        SC_REPORT_WARNING(sc_core::SC_ID_VECTOR_CONTAINS_LOGIC_VALUE_, 0);
     }
     sc_digit w = x.get_word(0);
     if (len >= SC_DIGIT_SIZE) {
@@ -1279,12 +1280,12 @@ sc_proxy<X>::to_uint64() const
     const X &x = back_cast();
     int len = x.length();
     if (x.get_cword(0) != SC_DIGIT_ZERO) {
-        SC_REPORT_WARNING("vector contains 4-value logic", 0);
+        SC_REPORT_WARNING(sc_core::SC_ID_VECTOR_CONTAINS_LOGIC_VALUE_, 0);
     }
     uint64 w = x.get_word(0);
     if (len > SC_DIGIT_SIZE) {
         if (x.get_cword(1) != SC_DIGIT_ZERO) {
-            SC_REPORT_WARNING("vector contains 4-value logic", 0);
+            SC_REPORT_WARNING(sc_core::SC_ID_VECTOR_CONTAINS_LOGIC_VALUE_, 0);
         }
         uint64 w1 = x.get_word(1);
         w = w | (w1 << SC_DIGIT_SIZE);
@@ -1306,11 +1307,11 @@ sc_proxy<X>::to_anything_signed() const
 
     if (len > SC_DIGIT_SIZE) {
         if (x.get_cword(1) != SC_DIGIT_ZERO)
-            SC_REPORT_WARNING("vector contains 4-value logic", 0);
+            SC_REPORT_WARNING(sc_core::SC_ID_VECTOR_CONTAINS_LOGIC_VALUE_, 0);
         w = x.get_word(1);
     }
     if (x.get_cword(0) != SC_DIGIT_ZERO)
-        SC_REPORT_WARNING("vector contains 4-value logic", 0);
+        SC_REPORT_WARNING(sc_core::SC_ID_VECTOR_CONTAINS_LOGIC_VALUE_, 0);
     w = (w << SC_DIGIT_SIZE) | x.get_word(0);
     if (len >= 64) {
         return w;

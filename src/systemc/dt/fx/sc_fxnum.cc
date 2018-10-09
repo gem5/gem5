@@ -53,6 +53,7 @@
 
 #include <cmath>
 
+#include "systemc/ext/dt/fx/messages.hh"
 #include "systemc/ext/dt/fx/sc_fxnum.hh"
 
 namespace sc_dt
@@ -503,7 +504,7 @@ overflow(double &c, const scfx_params &params, bool &o_flag)
           case SC_WRAP_SM: // sign magnitude wrap-around
             {
                 SC_ERROR_IF_(params.enc() == SC_US_,
-                             "SC_WRAP_SM not defined for unsigned numbers");
+                             sc_core::SC_ID_WRAP_SM_NOT_DEFINED_);
 
                 int n_bits = params.n_bits();
 
@@ -564,7 +565,7 @@ void
 sc_fxnum_fast::cast()
 {
     scfx_ieee_double id(m_val);
-    SC_ERROR_IF_(id.is_nan() || id.is_inf(), "invalid fixed-point value");
+    SC_ERROR_IF_(id.is_nan() || id.is_inf(), sc_core::SC_ID_INVALID_FX_VALUE_);
 
     if (m_params.cast_switch() == SC_ON) {
         m_q_flag = false;

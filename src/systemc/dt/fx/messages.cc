@@ -27,43 +27,43 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_EXT_DT_INT__USING_HH__
-#define __SYSTEMC_EXT_DT_INT__USING_HH__
+#include "systemc/ext/dt/fx/messages.hh"
+#include "systemc/utils/report.hh"
 
-#include "_int.hh"
+namespace sc_core
+{
 
-using sc_dt::SC_BIN;
-using sc_dt::SC_BIN_SM;
-using sc_dt::SC_BIN_US;
-using sc_dt::SC_CSD;
-using sc_dt::SC_DEC;
-using sc_dt::SC_HEX;
-using sc_dt::SC_HEX_SM;
-using sc_dt::SC_HEX_US;
-using sc_dt::SC_NOBASE;
-using sc_dt::SC_OCT;
-using sc_dt::SC_OCT_SM;
-using sc_dt::SC_OCT_US;
-using sc_dt::int64;
-using sc_dt::sc_bigint;
-using sc_dt::sc_biguint;
-using sc_dt::sc_digit;
-using sc_dt::sc_int;
-using sc_dt::sc_int_base;
-using sc_dt::sc_io_show_base;
-using sc_dt::sc_length_context;
-using sc_dt::sc_length_param;
-using sc_dt::sc_logic;
-using sc_dt::sc_numrep;
-using sc_dt::sc_signed;
-using sc_dt::sc_uint;
-using sc_dt::sc_uint_base;
-using sc_dt::sc_unsigned;
-using sc_dt::uint64;
+const char SC_ID_INVALID_WL_[] = "total wordlength <= 0 is not valid";
+const char SC_ID_INVALID_N_BITS_[] = "number of bits < 0 is not valid";
+const char SC_ID_INVALID_DIV_WL_[] = "division wordlength <= 0 is not valid";
+const char SC_ID_INVALID_CTE_WL_[] = "constant wordlength <= 0 is not valid";
+const char SC_ID_INVALID_MAX_WL_[] =
+    "maximum wordlength <= 0 and != -1 is not valid";
+const char SC_ID_INVALID_FX_VALUE_[] = "invalid fixed-point value";
+const char SC_ID_INVALID_O_MODE_[] = "invalid overflow mode";
+const char SC_ID_OUT_OF_RANGE_[] = "index out of range";
+const char SC_ID_CONTEXT_BEGIN_FAILED_[] = "context begin failed";
+const char SC_ID_CONTEXT_END_FAILED_[] = "context end failed";
+const char SC_ID_WRAP_SM_NOT_DEFINED_[] =
+    "SC_WRAP_SM not defined for unsigned numbers";
 
-using sc_core::SC_ID_INIT_FAILED_;
-using sc_core::SC_ID_ASSIGNMENT_FAILED_;
-using sc_core::SC_ID_OPERATION_FAILED_;
-using sc_core::SC_ID_CONVERSION_FAILED_;
+namespace
+{
 
-#endif  //__SYSTEMC_EXT_DT_INT__USING_HH__
+sc_gem5::DefaultReportMessages predefinedMessages{
+    {300, SC_ID_INVALID_WL_},
+    {301, SC_ID_INVALID_N_BITS_},
+    {302, SC_ID_INVALID_DIV_WL_},
+    {303, SC_ID_INVALID_CTE_WL_},
+    {304, SC_ID_INVALID_MAX_WL_},
+    {305, SC_ID_INVALID_FX_VALUE_},
+    {306, SC_ID_INVALID_O_MODE_},
+    {307, SC_ID_OUT_OF_RANGE_},
+    {308, SC_ID_CONTEXT_BEGIN_FAILED_},
+    {309, SC_ID_CONTEXT_END_FAILED_},
+    {310, SC_ID_WRAP_SM_NOT_DEFINED_}
+};
+
+} // anonymous namespace
+
+} // namespace sc_core

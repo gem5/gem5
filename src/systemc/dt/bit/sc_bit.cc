@@ -58,6 +58,7 @@
 
 #include <sstream>
 
+#include "systemc/ext/dt/bit/messages.hh"
 #include "systemc/ext/dt/bit/sc_bit.hh"
 #include "systemc/ext/dt/bit/sc_logic.hh"
 #include "systemc/ext/utils/messages.hh"
@@ -79,7 +80,7 @@ sc_bit::invalid_value(char c)
 {
     std::stringstream msg;
     msg << "sc_bit( '" << c << "' )";
-    SC_REPORT_ERROR("(E204) value is not valid", msg.str().c_str());
+    SC_REPORT_ERROR(sc_core::SC_ID_VALUE_NOT_VALID_, msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
 
@@ -88,7 +89,7 @@ sc_bit::invalid_value(int i)
 {
     std::stringstream msg;
     msg << "sc_bit( " << i << " )";
-    SC_REPORT_ERROR("(E204) value is not valid", msg.str().c_str());
+    SC_REPORT_ERROR(sc_core::SC_ID_VALUE_NOT_VALID_, msg.str().c_str());
     sc_core::sc_abort(); // can't recover from here
 }
 

@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_EXT_CORE_DT_INT__INT_HH__
 #define __SYSTEMC_EXT_CORE_DT_INT__INT_HH__
 
+#include "messages.hh"
 #include "sc_bigint.hh"
 #include "sc_biguint.hh"
 #include "sc_int.hh"

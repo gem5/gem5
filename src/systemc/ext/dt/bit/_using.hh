@@ -42,4 +42,18 @@ using sc_dt::sc_bv_base;
 using sc_dt::sc_lv;
 using sc_dt::sc_lv_base;
 
+using sc_core::SC_ID_LENGTH_MISMATCH_;
+using sc_core::SC_ID_INCOMPATIBLE_TYPES_;
+using sc_core::SC_ID_CANNOT_CONVERT_;
+using sc_core::SC_ID_INCOMPATIBLE_VECTORS_;
+using sc_core::SC_ID_VALUE_NOT_VALID_;
+using sc_core::SC_ID_ZERO_LENGTH_;
+using sc_core::SC_ID_VECTOR_CONTAINS_LOGIC_VALUE_;
+using sc_core::SC_ID_SC_BV_CANNOT_CONTAIN_X_AND_Z_;
+using sc_core::SC_ID_VECTOR_TOO_LONG_;
+using sc_core::SC_ID_VECTOR_TOO_SHORT_;
+using sc_core::SC_ID_WRONG_VALUE_;
+using sc_core::SC_ID_LOGIC_Z_TO_BOOL_;
+using sc_core::SC_ID_LOGIC_X_TO_BOOL_;
+
 #endif  //__SYSTEMC_EXT_DT_BIT__USING_HH__

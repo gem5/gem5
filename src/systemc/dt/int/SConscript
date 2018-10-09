@@ -28,6 +28,7 @@
 Import('*')
 
 if env['USE_SYSTEMC']:
+    Source('messages.cc')
     Source('sc_int_base.cc')
     Source('sc_int_mask.cc')
     Source('sc_length_param.cc')

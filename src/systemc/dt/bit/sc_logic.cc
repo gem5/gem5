@@ -48,6 +48,7 @@
 
 #include <sstream>
 
+#include "systemc/ext/dt/bit/messages.hh"
 #include "systemc/ext/dt/bit/sc_logic.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 
@@ -72,7 +73,7 @@ sc_logic::invalid_value(char c)
 {
     std::stringstream msg;
     msg << "sc_logic('" << c << "')";
-    SC_REPORT_ERROR("(E204) value is not valid", msg.str().c_str());
+    SC_REPORT_ERROR(sc_core::SC_ID_VALUE_NOT_VALID_, msg.str().c_str());
 }
 
 void
@@ -80,20 +81,17 @@ sc_logic::invalid_value(int i)
 {
     std::stringstream msg;
     msg << "sc_logic(" << i << ")";
-    SC_REPORT_ERROR("(E204) value is not valid", msg.str().c_str());
+    SC_REPORT_ERROR(sc_core::SC_ID_VALUE_NOT_VALID_, msg.str().c_str());
 }
 
 
 void
 sc_logic::invalid_01() const
 {
-    if ((int)m_val == Log_Z) {
-        SC_REPORT_WARNING(
-                "(W211) sc_logic value 'Z' cannot be converted to bool", 0);
-    } else {
-        SC_REPORT_WARNING(
-                "(W212) sc_logic value 'X' cannot be converted to bool", 0);
-    }
+    if ((int)m_val == Log_Z)
+        SC_REPORT_WARNING(sc_core::SC_ID_LOGIC_Z_TO_BOOL_, 0);
+    else
+        SC_REPORT_WARNING(sc_core::SC_ID_LOGIC_X_TO_BOOL_, 0);
 }
 
 
