@@ -52,6 +52,7 @@
 #include "base/logging.hh"
 #include "debug/Cache.hh"
 #include "debug/CachePort.hh"
+#include "debug/CacheRepl.hh"
 #include "debug/CacheVerbose.hh"
 #include "mem/cache/mshr.hh"
 #include "mem/cache/prefetch/base.hh"
@@ -1236,6 +1237,9 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // It is valid to return nullptr if there is no victim
     if (!victim)
         return nullptr;
+
+    // Print victim block's information
+    DPRINTF(CacheRepl, "Replacement victim: %s\n", victim->print());
 
     // Check for transient state allocations. If any of the entries listed
     // for eviction has a transient state, the allocation fails

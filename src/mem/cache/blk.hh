@@ -292,12 +292,12 @@ class CacheBlk : public ReplaceableEntry
     }
 
     /**
-     * Pretty-print a tag, and interpret state bits to readable form
+     * Pretty-print tag, set and way, and interpret state bits to readable form
      * including mapping to a MOESI state.
      *
      * @return string with basic state information
      */
-    std::string print() const
+    virtual std::string print() const
     {
         /**
          *  state       M   O   E   S   I
@@ -334,8 +334,9 @@ class CacheBlk : public ReplaceableEntry
           default:    s = 'T'; break; // @TODO add other types
         }
         return csprintf("state: %x (%c) valid: %d writable: %d readable: %d "
-                        "dirty: %d tag: %x", status, s, isValid(),
-                        isWritable(), isReadable(), isDirty(), tag);
+                        "dirty: %d | tag: %#x set: %#x way: %#x", status, s,
+                        isValid(), isWritable(), isReadable(), isDirty(), tag,
+                        getSet(), getWay());
     }
 
     /**

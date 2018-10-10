@@ -42,7 +42,6 @@
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
-#include "debug/CacheRepl.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
@@ -276,10 +275,6 @@ SectorTags::findVictim(Addr addr, const bool is_secure,
             evict_blks.push_back(blk);
         }
     }
-
-    DPRINTF(CacheRepl, "set %x, way %x, sector offset %x: selecting blk " \
-            "for replacement\n", victim->getSet(), victim->getWay(),
-            victim->getSectorOffset());
 
     return victim;
 }

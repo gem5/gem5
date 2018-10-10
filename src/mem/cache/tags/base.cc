@@ -201,8 +201,7 @@ BaseTags::print()
 
     auto print_blk = [&str](CacheBlk &blk) {
         if (blk.isValid())
-            str += csprintf("\tset: %x, way: %x %s\n", blk.getSet(),
-                            blk.getWay(), blk.print());
+            str += csprintf("\tBlock: %s\n", blk.print());
     };
     forEachBlk(print_blk);
 

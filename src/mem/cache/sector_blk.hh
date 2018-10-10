@@ -114,6 +114,13 @@ class SectorSubBlk : public CacheBlk
      */
     void insert(const Addr tag, const bool is_secure, const int src_master_ID,
                 const uint32_t task_ID) override;
+
+    /**
+     * Pretty-print sector offset and other CacheBlk information.
+     *
+     * @return string with basic state information
+     */
+    std::string print() const override;
 };
 
 /**

@@ -57,6 +57,12 @@
 #include "base/logging.hh"
 #include "mem/cache/base.hh"
 
+std::string
+FALRUBlk::print() const
+{
+    return csprintf("%s inCachesMask: %#x", CacheBlk::print(), inCachesMask);
+}
+
 FALRU::FALRU(const Params *p)
     : BaseTags(p),
 

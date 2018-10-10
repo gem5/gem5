@@ -92,6 +92,13 @@ class FALRUBlk : public CacheBlk
 
     /** A bit mask of the caches that fit this block. */
     CachesMask inCachesMask;
+
+    /**
+     * Pretty-print inCachesMask and other CacheBlk information.
+     *
+     * @return string with basic state information
+     */
+    std::string print() const override;
 };
 
 /**

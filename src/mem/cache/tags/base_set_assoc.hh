@@ -54,7 +54,6 @@
 
 #include "base/logging.hh"
 #include "base/types.hh"
-#include "debug/CacheRepl.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/blk.hh"
 #include "mem/cache/replacement_policies/base.hh"
@@ -186,9 +185,6 @@ class BaseSetAssoc : public BaseTags
 
         // There is only one eviction for this replacement
         evict_blks.push_back(victim);
-
-        DPRINTF(CacheRepl, "set %x, way %x: selecting blk for replacement\n",
-                victim->getSet(), victim->getWay());
 
         return victim;
     }
