@@ -73,6 +73,12 @@ class SystemC_ScObject(SimObject):
         method.name: (lambda *a, **k: None) for method in SimObject.cxx_exports
     })
 
+class SystemC_ScModule(SystemC_ScObject):
+    type = 'SystemC_ScModule'
+    abstract = True
+    cxx_class = 'sc_core::sc_module'
+    cxx_header = 'systemc/ext/core/sc_module.hh'
+
 try:
     import _m5
 except:
