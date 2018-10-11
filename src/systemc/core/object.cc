@@ -38,6 +38,7 @@
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_module.hh"
+#include "systemc/ext/core/sc_simcontext.hh"
 
 namespace sc_gem5
 {
@@ -243,8 +244,7 @@ Object::attr_cltn() const
 sc_core::sc_simcontext *
 Object::simcontext() const
 {
-    warn("%s not implemented.\n", __PRETTY_FUNCTION__);
-    return nullptr;
+    return sc_core::sc_get_curr_simcontext();
 }
 
 EventsIt
