@@ -63,6 +63,8 @@
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
+#include "sc_logger.hh"
+#include "sc_module.hh"
 #include "sim/cxx_config_ini.hh"
 #include "sim/cxx_manager.hh"
 #include "sim/init_signals.hh"
@@ -70,8 +72,6 @@
 #include "sim/simulate.hh"
 #include "sim/stat_control.hh"
 #include "sim/system.hh"
-#include "sc_logger.hh"
-#include "sc_module.hh"
 #include "stats.hh"
 
 // Defining global string variable decalred in stats.hh

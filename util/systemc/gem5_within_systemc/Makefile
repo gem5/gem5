@@ -41,7 +41,7 @@ VARIANT = opt
 SYSTEMC_INC = ./systemc/include
 SYSTEMC_LIB = ./systemc/lib-linux64
 
-CXXFLAGS = -I../../build/$(ARCH) -L../../build/$(ARCH)
+CXXFLAGS = -I../../../build/$(ARCH) -L../../../build/$(ARCH)
 CXXFLAGS += -I$(SYSTEMC_INC) -L$(SYSTEMC_LIB)
 CXXFLAGS += -std=c++0x
 CXXFLAGS += -g

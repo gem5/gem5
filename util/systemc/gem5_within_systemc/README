@@ -29,7 +29,7 @@ First build gem5 as a library with cxx-config support and (optionally)
 without python.  Also build a normal gem5 (cxx-config not needed, Python
 needed):
 
-> cd ../..
+> cd ../../..
 > scons build/ARM/gem5.opt
 > scons --with-cxx-config --without-python build/ARM/libgem5_opt.so
 > cd util/systemc
@@ -60,8 +60,8 @@ Then run make:
 
 Make a config file for the C++-configured gem5 using normal gem5
 
-> ../../build/ARM/gem5.opt ../../configs/example/se.py -c \
->       ../../tests/test-progs/hello/bin/arm/linux/hello
+> ../../../build/ARM/gem5.opt ../../../configs/example/se.py -c \
+>       ../../../tests/test-progs/hello/bin/arm/linux/hello
 
 The binary 'gem5.opt.cxx' can now be used to load in the generated config
 file from the previous normal gem5 run.
@@ -76,7 +76,8 @@ This should print:
 
 The .ini file can also be read by the Python .ini file reader example:
 
-> ../../build/ARM/gem5.opt ../../configs/example/read_ini.py m5out/config.ini
+> ../../../build/ARM/gem5.opt ../../../configs/example/read_ini.py \
+>       m5out/config.ini
 
 If you are interested in SystemC Transaction Level Modeling (TLM2) please have
 a look into /util/tlm.

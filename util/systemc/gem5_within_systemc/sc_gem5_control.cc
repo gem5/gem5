@@ -42,14 +42,14 @@
 #include <list>
 
 #include "base/statistics.hh"
+#include "sc_gem5_control.hh"
+#include "sc_logger.hh"
+#include "sc_module.hh"
 #include "sim/cxx_config_ini.hh"
 #include "sim/cxx_manager.hh"
 #include "sim/debug.hh"
 #include "sim/init_signals.hh"
 #include "sim/stat_control.hh"
-#include "sc_gem5_control.hh"
-#include "sc_logger.hh"
-#include "sc_module.hh"
 #include "stats.hh"
 
 namespace Gem5SystemC
