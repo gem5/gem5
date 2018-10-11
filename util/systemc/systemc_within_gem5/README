@@ -1,0 +1,33 @@
+This directory holds several examples which show how to build and run systemc
+code and models within gem5. To build a particular example, set the EXTRAS
+variable when running scons so that it gets picked up as part of gem5's build.
+For example:
+
+scons build/ARM/gem5.opt \
+          EXTRAS=util/systemc/systemc_within_gem5/systemc_sc_main
+
+Then when running gem5, you can use the config.py in the corresponding
+directory.
+
+build/ARM/gem5.opt util/systemc/systemc_within_gem5/systemc_sc_main/config.py \
+        --word Hello --word World
+
+
+To rebuild gem5 excluding the example code, be sure to clear the EXTRAS
+variable:
+
+scons build/ARM/gem5.opt EXTRAS=
+
+When building your own models, you don't have to use the EXTRAS mechanism and
+can instead put your source files alongside regular gem5 sources.
+
+
+Existing examples:
+
+systemc_sc_main - Run code based on an sc_main function.
+systemc_simple_object - Build systemc objects into a gem5 object hierarchy.
+
+
+Note that these directories all have a systemc_ prefix so that when EXTRAS
+pastes them into the build directory, they won't conflict with any existing
+top level directory.
