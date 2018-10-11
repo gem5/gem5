@@ -24,3 +24,4 @@ m5out
 /system/arm/simple_bootloader/boot.arm
 /system/arm/simple_bootloader/boot_emm.arm
 /system/arm/aarch64_bootloader/boot_emm.arm64
+/system/arm/aarch64_bootloader/boot_emm_v2.arm64

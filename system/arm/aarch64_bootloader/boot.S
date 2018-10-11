@@ -67,6 +67,34 @@ _start:
         // Test the the MPIDR_EL1 register against 0xff00ffffff to
         // extract the primary CPU.
         ldr x1, =0xff00ffffff
+#ifdef GICV3
+        and	x2, x0, #0xff // use Aff0 as cpuid for now...
+        tst	x0, x1 // check for cpuid==zero
+        b.ne	1f // secondary CPU
+
+        ldr	x1, =GIC_DIST_BASE // GICD_CTLR
+        mov	w0, #7 // EnableGrp0 | EnableGrp1NS | EnableGrp1S
+        str	w0, [x1]
+
+
+1:      ldr	x1, =GIC_REDIST_BASE + 0x10000 + 0x80 // GICR_IGROUPR0
+        // 128K for each redistributor, 256K strided...
+        mov	x3, #1 << 18 // GICv4
+        mul	x3, x3, x2
+        add	x1, x1, x3
+        mov	w0, #~0 // Grp1 interrupts
+        str	w0, [x1], #4
+        b.ne	2f // Only local interrupts for secondary CPUs
+        ldr	x1, =GIC_DIST_BASE + 0x84 // GICD_IGROUPR
+        str	w0, [x1], #4
+        str	w0, [x1], #4
+        str	w0, [x1], #4
+
+
+2:      mov	x0, #1
+        msr	S3_0_c12_c12_6, x0 // ICC_IGRPEN0_EL1 Enable
+        msr	S3_0_C12_C12_7, x0 // ICC_IGRPEN1_EL1 Enable
+#else
         tst x0, x1                    // check for cpuid==zero
         b.ne	1f				      // secondary CPU
 
@@ -88,6 +116,7 @@ _start:
 
         mov	w0, #1 << 7			// allow NS access to GICC_PMR
         str	w0, [x1, #4]			// GICC_PMR
+#endif
 
         msr	sctlr_el2, xzr
 
