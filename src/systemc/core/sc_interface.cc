@@ -27,7 +27,6 @@
  * Authors: Gabe Black
  */
 
-#include "base/logging.hh"
 #include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/core/sc_event.hh"
 #include "systemc/ext/core/sc_interface.hh"

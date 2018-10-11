@@ -27,7 +27,6 @@
  * Authors: Gabe Black
  */
 
-#include "base/logging.hh"
 #include "systemc/core/channel.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/messages.hh"

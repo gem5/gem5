@@ -27,7 +27,6 @@
  * Authors: Gabe Black
  */
 
-#include "base/logging.hh"
 #include "systemc/ext/channel/sc_event_queue.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/core/sc_time.hh"

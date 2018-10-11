@@ -27,7 +27,6 @@
  * Authors: Gabe Black
  */
 
-#include "base/logging.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/sc_mutex.hh"
 #include "systemc/ext/core/sc_module.hh" // for sc_gen_unique_name

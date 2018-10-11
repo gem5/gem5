@@ -29,7 +29,6 @@
 
 #include <utility>
 
-#include "base/logging.hh"
 #include "systemc/ext/core/sc_attr.hh"
 
 namespace sc_core

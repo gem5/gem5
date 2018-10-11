@@ -27,7 +27,6 @@
  * Authors: Gabe Black
  */
 
-#include "base/logging.hh"
 #include "systemc/core/process.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/sc_signal_resolved.hh"

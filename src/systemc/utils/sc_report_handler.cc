@@ -32,7 +32,7 @@
 #include <sstream>
 #include <string>
 
-#include "base/logging.hh"
+#include "base/cprintf.hh"
 #include "systemc/core/process.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_main.hh"

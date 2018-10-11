@@ -29,7 +29,6 @@
 
 #include <vector>
 
-#include "base/logging.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/channel/sc_signal_in_if.hh"
 #include "systemc/ext/core/sc_event.hh"

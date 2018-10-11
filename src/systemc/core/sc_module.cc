@@ -31,7 +31,6 @@
 #include <string>
 #include <vector>
 
-#include "base/logging.hh"
 #include "systemc/core/event.hh"
 #include "systemc/core/kernel.hh"
 #include "systemc/core/module.hh"

@@ -30,7 +30,6 @@
 #include <sstream>
 #include <vector>
 
-#include "base/logging.hh"
 #include "base/types.hh"
 #include "python/pybind11/pybind.hh"
 #include "sim/core.hh"

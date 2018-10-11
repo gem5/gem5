@@ -32,7 +32,6 @@
 #include <ctime>
 #include <iomanip>
 
-#include "base/logging.hh"
 #include "base/output.hh"
 #include "sim/core.hh"
 #include "systemc/core/time.hh"

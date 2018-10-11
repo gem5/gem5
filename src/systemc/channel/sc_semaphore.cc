@@ -29,7 +29,6 @@
 
 #include <string>
 
-#include "base/logging.hh"
 #include "systemc/ext/channel/messages.hh"
 #include "systemc/ext/channel/sc_semaphore.hh"
 #include "systemc/ext/core/sc_module.hh" // for sc_gen_unique_name

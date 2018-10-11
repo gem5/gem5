@@ -29,7 +29,6 @@
 
 #include "systemc/core/process.hh"
 
-#include "base/logging.hh"
 #include "systemc/core/event.hh"
 #include "systemc/core/port.hh"
 #include "systemc/core/scheduler.hh"

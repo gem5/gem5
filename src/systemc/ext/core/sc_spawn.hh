@@ -151,8 +151,6 @@ class sc_spawn_options
     sc_spawn_options &operator = (const sc_spawn_options &) { return *this; }
 };
 
-void sc_spawn_warn_unimpl(const char *func);
-
 template <typename T>
 sc_process_handle
 sc_spawn(T object, const char *name_p=nullptr,

@@ -33,7 +33,6 @@
 #include <exception>
 
 #include "../core/sc_time.hh"
-#include "warn_unimpl.hh"
 
 namespace sc_dt
 {

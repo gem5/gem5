@@ -33,7 +33,6 @@
 #include <cstring>
 #include <utility>
 
-#include "base/logging.hh"
 #include "sim/core.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"

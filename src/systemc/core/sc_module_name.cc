@@ -28,7 +28,6 @@
  */
 
 
-#include "base/logging.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/messages.hh"

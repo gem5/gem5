@@ -27,7 +27,6 @@
  * Authors: Gabe Black
  */
 
-#include "base/logging.hh"
 #include "systemc/core/object.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/sc_main.hh"

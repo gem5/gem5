@@ -27,7 +27,7 @@
  * Authors: Gabe Black
  */
 
-#include "base/logging.hh"
+#include "base/cprintf.hh"
 #include "systemc/ext/channel/sc_in_resolved.hh"
 #include "systemc/ext/channel/sc_signal_resolved.hh"
 

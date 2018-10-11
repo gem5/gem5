@@ -27,7 +27,6 @@
  * Authors: Gabe Black
  */
 
-#include "base/logging.hh"
 #include "systemc/ext/channel/sc_out_resolved.hh"
 
 namespace sc_core
