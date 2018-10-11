@@ -79,7 +79,7 @@ class sc_port_base : public sc_object
     sc_port_base(const char *name, int n, sc_port_policy p);
     virtual ~sc_port_base();
 
-    void warn_unimpl(const char *func) const;
+    void warn_port_constructor() const;
 
     int maxSize() const;
     int size() const;
@@ -258,40 +258,34 @@ class sc_port : public sc_port_b<IF>
     // Deprecated binding constructors.
     explicit sc_port(const IF &interface) : sc_port_b<IF>(N, P)
     {
-        this->warn_unimpl(__PRETTY_FUNCTION__);
-        // Should warn that these are deprecated. See Accellera sc_port.h.
+        this->warn_port_constructor();
         sc_port_b<IF>::bind(const_cast<IF &>(interface));
     }
     sc_port(const char *name, const IF &interface) : sc_port_b<IF>(name, N, P)
     {
-        this->warn_unimpl(__PRETTY_FUNCTION__);
-        // Should warn that these are deprecated. See Accellera sc_port.h.
+        this->warn_port_constructor();
         sc_port_b<IF>::bind(const_cast<IF &>(interface));
     }
     explicit sc_port(sc_port_b<IF> &parent) : sc_port_b<IF>(N, P)
     {
-        this->warn_unimpl(__PRETTY_FUNCTION__);
-        // Should warn that these are deprecated. See Accellera sc_port.h.
+        this->warn_port_constructor();
         sc_port_b<IF>::bind(parent);
     }
     sc_port(const char *name, sc_port_b<IF> &parent) :
         sc_port_b<IF>(name, N, P)
     {
-        this->warn_unimpl(__PRETTY_FUNCTION__);
-        // Should warn that these are deprecated. See Accellera sc_port.h.
+        this->warn_port_constructor();
         sc_port_b<IF>::bind(parent);
     }
     explicit sc_port(sc_port<IF, N, P> &parent) : sc_port_b<IF>(N, P)
     {
-        this->warn_unimpl(__PRETTY_FUNCTION__);
-        // Should warn that these are deprecated. See Accellera sc_port.h.
+        this->warn_port_constructor();
         sc_port_b<IF>::bind(parent);
     }
     sc_port(const char *name, sc_port<IF, N, P> &parent) :
         sc_port_b<IF>(name, N, P)
     {
-        this->warn_unimpl(__PRETTY_FUNCTION__);
-        // Should warn that these are deprecated. See Accellera sc_port.h.
+        this->warn_port_constructor();
         sc_port_b<IF>::bind(parent);
     }
 

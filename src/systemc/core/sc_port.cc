@@ -29,7 +29,7 @@
 
 #include <sstream>
 
-#include "base/logging.hh"
+#include "base/cprintf.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/port.hh"
 #include "systemc/core/scheduler.hh"
@@ -84,9 +84,15 @@ sc_port_base::~sc_port_base()
 }
 
 void
-sc_port_base::warn_unimpl(const char *func) const
+sc_port_base::warn_port_constructor() const
 {
-    warn("%s not implemented.\n", func);
+    static bool warned = false;
+    if (!warned) {
+        SC_REPORT_INFO(SC_ID_IEEE_1666_DEPRECATION_,
+                "interface and/or port binding in port constructors "
+                "is deprecated");
+        warned = true;
+    }
 }
 
 void
