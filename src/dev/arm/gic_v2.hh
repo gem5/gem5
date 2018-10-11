@@ -336,7 +336,7 @@ class GicV2 : public BaseGic, public BaseGicRegisters
 
     bool isGroup0(ContextID ctx, uint32_t int_num) {
         const uint32_t group_reg = getIntGroup(ctx, intNumToWord(int_num));
-        return bits(group_reg, intNumToBit(int_num));
+        return !bits(group_reg, intNumToBit(int_num));
     }
 
     /**
