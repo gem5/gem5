@@ -265,7 +265,6 @@ class LogChecker(DiffingChecker):
     test_filt = merge_filts(
         r'^Global frequency set at \d* ticks per second\n',
         r'^info: Entering event queue @ \d*\.  Starting simulation\.\.\.\n',
-        r'warn: [^(]+\([^)]*\)( \[with [^]]*\])? not implemented\.\n',
         r'warn: Ignoring request to set stack size\.\n',
         info_filt(804),
         in_file_filt,
