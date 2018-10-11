@@ -369,7 +369,8 @@ namespace Aarch64
                             }
                             break;
                         }
-                        return new Unknown64(machInst);
+                        return new WarnUnimplemented(
+                                "unallocated_hint", machInst);
                     } else if (crn == 0x3 && op1 == 0x3) {
                         switch (op2) {
                           case 0x2:
