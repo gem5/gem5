@@ -55,6 +55,7 @@ class GPUComputeDriver final : public HSADriver
     void sleepCPU(ThreadContext *tc, uint32_t milliSecTimeout);
 
   private:
+    bool isdGPU;
     /**
      * The aperture (APE) base/limit pairs are set
      * statically at startup by the real KFD. AMD

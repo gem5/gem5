@@ -40,10 +40,11 @@
 #include "dev/hsa/kfd_event_defines.h"
 #include "dev/hsa/kfd_ioctl.h"
 #include "params/GPUComputeDriver.hh"
+#include "sim/process.hh"
 #include "sim/syscall_emul_buf.hh"
 
 GPUComputeDriver::GPUComputeDriver(const Params &p)
-    : HSADriver(p)
+    : HSADriver(p), isdGPU(p.isdGPU)
 {
     device->attachDriver(this);
     DPRINTF(GPUDriver, "Constructing KFD: device\n");
@@ -86,6 +87,19 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
           break;
         case AMDKFD_IOC_SET_MEMORY_POLICY:
           {
+            /**
+             * This is where the runtime requests MTYPE from an aperture.
+             * Basically, the globally memory aperture is divided up into
+             * a default aperture and an alternate aperture each of which have
+             * their own MTYPE policies.  This is done to mark a small piece
+             * of the global memory as uncacheable.  Host memory mappings will
+             * be carved out of this uncacheable aperture, which is how they
+             * implement 'coherent' host/device memory on dGPUs.
+             *
+             * TODO: Need to reflect per-aperture MTYPE policies based on this
+             * call.
+             *
+             */
             warn("unimplemented ioctl: AMDKFD_IOC_SET_MEMORY_POLICY\n");
           }
           break;
@@ -145,7 +159,10 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     gpuVmApeLimit(args->process_apertures[i].gpuvm_base);
 
                 // NOTE: Must match ID populated by hsaTopology.py
-                args->process_apertures[i].gpu_id = 2765;
+                if (isdGPU)
+                    args->process_apertures[i].gpu_id = 50156;
+                else
+                    args->process_apertures[i].gpu_id = 2765;
 
                 DPRINTF(GPUDriver, "GPUVM base for node[%i] = %#x\n", i,
                         args->process_apertures[i].gpuvm_base);
@@ -351,9 +368,91 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             warn("unimplemented ioctl: AMDKFD_IOC_DBG_WAVE_CONTROL\n");
           }
           break;
+        /**
+         * In real hardware, this IOCTL maps host memory, dGPU memory, or dGPU
+         * doorbells into GPUVM space. Essentially, ROCm implements SVM by
+         * carving out a region of free VA space that both the host and GPUVM
+         * can agree upon.  The entire GPU VA space is reserved on the host
+         * using a fixed mmap at a low VA range that is also directly
+         * accessable by the GPU's limited number of VA bits.  When we actually
+         * call memory allocation later in the program, this IOCTL is invoked
+         * to create BOs/VMAs in the driver and bind them to physical
+         * memory/doorbells.
+         *
+         * For gem5, we don't need to carve out any GPUVM space here (we don't
+         * support GPUVM and use host page tables on the GPU directly). We can
+         * can just use the existing host SVM region. We comment on each memory
+         * type seperately.
+         */
         case AMDKFD_IOC_ALLOC_MEMORY_OF_GPU:
           {
-            warn("unimplemented ioctl: AMDKFD_IOC_ALLOC_MEMORY_OF_GPU\n");
+            DPRINTF(GPUDriver, "ioctl: AMDKFD_IOC_ALLOC_MEMORY_OF_GPU\n");
+            TypedBufferArg<kfd_ioctl_alloc_memory_of_gpu_args> args(ioc_buf);
+            args.copyIn(virt_proxy);
+
+            assert(isdGPU);
+            assert((args->va_addr % TheISA::PageBytes) == 0);
+            Addr mmap_offset = 0;
+
+            if (KFD_IOC_ALLOC_MEM_FLAGS_VRAM & args->flags) {
+                DPRINTF(GPUDriver, "amdkfd allocation type: VRAM\n");
+                args->mmap_offset = args->va_addr;
+                // VRAM allocations are device memory mapped into GPUVM
+                // space.
+                //
+                // We can't rely on the lazy host allocator (fixupFault) to
+                // handle this mapping since it needs to be placed in dGPU
+                // framebuffer memory.  The lazy allocator will try to place
+                // this in host memory.
+                //
+                // TODO: We don't have the appropriate bifurcation of the
+                // physical address space with different memory controllers
+                // yet.  This is where we will explicitly add the PT maps to
+                // dGPU memory in the future.
+            } else if (KFD_IOC_ALLOC_MEM_FLAGS_USERPTR & args->flags) {
+                DPRINTF(GPUDriver, "amdkfd allocation type: USERPTR\n");
+                mmap_offset = args->mmap_offset;
+                // USERPTR allocations are system memory mapped into GPUVM
+                // space.  The user provides the driver with the pointer.
+                //
+                // No action needs to be taken for this memory type.  We will
+                // lazily map it into host memory on first touch.
+            } else if (KFD_IOC_ALLOC_MEM_FLAGS_GTT & args->flags) {
+                DPRINTF(GPUDriver, "amdkfd allocation type: GTT\n");
+                args->mmap_offset = args->va_addr;
+                // GTT allocations are system memory mapped into GPUVM space.
+                // It's different than a USERPTR allocation since the driver
+                // itself allocates the physical memory on the host.
+                //
+                // No action needs to be taken for this memory type.  We will
+                // lazily map it into host memory on first touch.  The
+                // fixupFault will find the original SVM aperture mapped to the
+                // host.
+                //
+                // Note that for GTT the thunk layer needs to call mmap on the
+                // driver FD later if it wants the host to have access to this
+                // memory (which it probably does).
+            } else if (KFD_IOC_ALLOC_MEM_FLAGS_DOORBELL & args->flags) {
+                DPRINTF(GPUDriver, "amdkfd allocation type: DOORBELL\n");
+                // DOORBELL allocations are the queue doorbells that are
+                // memory mapped into GPUVM space.
+                //
+                // Explicitly map this virtual address to our PIO doorbell
+                // interface in the page tables (non-cacheable)
+                tc->getProcessPtr()->pTable->map(args->va_addr,
+                            device->hsaPacketProc().pioAddr,
+                            args->size, false);
+                break;
+            }
+
+            DPRINTF(GPUDriver, "amdkfd allocation arguments: va_addr %p "
+                    "size %lu, mmap_offset %p, gpu_id %d\n",
+                    args->va_addr, args->size, mmap_offset, args->gpu_id);
+
+            // TODO: Not sure where the handle is used yet.  Set it to an
+            // easily trackable value.
+            args->handle= 0xdeadbeef;
+            args.copyOut(virt_proxy);
           }
           break;
         case AMDKFD_IOC_FREE_MEMORY_OF_GPU:
@@ -361,6 +460,13 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             warn("unimplemented ioctl: AMDKFD_IOC_FREE_MEMORY_OF_GPU\n");
           }
           break;
+        /**
+         * Called to map an already allocated region of memory to this GPU's
+         * GPUVM VA space.  We don't need to implement this in the simulator
+         * since we only have a single VM system.  If the region has already
+         * been allocated somewhere like the CPU, then it's already visible
+         * to the device.
+         */
         case AMDKFD_IOC_MAP_MEMORY_TO_GPU:
           {
             warn("unimplemented ioctl: AMDKFD_IOC_MAP_MEMORY_TO_GPU\n");
@@ -415,7 +521,11 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 ape_args->gpuvm_base = gpuVmApeBase(i + 1);
                 ape_args->gpuvm_limit = gpuVmApeLimit(ape_args->gpuvm_base);
 
-                ape_args->gpu_id = 2765;
+                // NOTE: Must match ID populated by hsaTopology.py
+                if (isdGPU)
+                    ape_args->gpu_id = 50156;
+                else
+                    ape_args->gpu_id = 2765;
 
                 assert(bits<Addr>(ape_args->scratch_base, 63, 47) != 0x1ffff);
                 assert(bits<Addr>(ape_args->scratch_base, 63, 47) != 0);

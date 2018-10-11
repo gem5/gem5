@@ -236,6 +236,7 @@ class Shader(ClockedObject):
 class GPUComputeDriver(HSADriver):
     type = 'GPUComputeDriver'
     cxx_header = 'gpu-compute/gpu_compute_driver.hh'
+    isdGPU = Param.Bool(False, 'Driver is for a dGPU')
 
 class GPUDispatcher(SimObject):
     type = 'GPUDispatcher'

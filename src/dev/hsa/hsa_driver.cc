@@ -70,25 +70,25 @@ Addr
 HSADriver::mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
                 int tgt_flags, int tgt_fd, off_t offset)
 {
-     // Is this a signal event mmap
-     bool is_event_mmap = false;
-     // If addr == 0, then we may need to do mmap.
-     bool should_mmap = (start == 0);
-     auto process = tc->getProcessPtr();
-     auto mem_state = process->memState;
-     // Check if mmap is for signal events first
-     if (((offset >> PAGE_SHIFT) & KFD_MMAP_TYPE_MASK) ==
-         KFD_MMAP_TYPE_EVENTS) {
-         is_event_mmap = true;
-         DPRINTF(HSADriver, "amdkfd mmap for events(start: %p, length: 0x%x,"
-                 "offset: 0x%x,  )\n", start, length, offset);
-         panic_if(start != 0,
-                  "Start address should be provided by KFD\n");
-         panic_if(length != 8 * KFD_SIGNAL_EVENT_LIMIT,
-                  "Requested length %d, expected length %d; length mismatch\n",
-                   length, 8 * KFD_SIGNAL_EVENT_LIMIT);
-         // For signal event, do mmap only is eventPage is uninitialized
-         should_mmap = (!eventPage);
+    // Is this a signal event mmap
+    bool is_event_mmap = false;
+    // If addr == 0, then we may need to do mmap.
+    bool should_mmap = (start == 0);
+    auto process = tc->getProcessPtr();
+    auto mem_state = process->memState;
+    // Check if mmap is for signal events first
+    if (((offset >> PAGE_SHIFT) & KFD_MMAP_TYPE_MASK) ==
+        KFD_MMAP_TYPE_EVENTS) {
+        is_event_mmap = true;
+        DPRINTF(HSADriver, "amdkfd mmap for events(start: %p, length: 0x%x,"
+                "offset: 0x%x,  )\n", start, length, offset);
+        panic_if(start != 0,
+                 "Start address should be provided by KFD\n");
+        panic_if(length != 8 * KFD_SIGNAL_EVENT_LIMIT,
+                 "Requested length %d, expected length %d; length mismatch\n",
+                  length, 8 * KFD_SIGNAL_EVENT_LIMIT);
+        // For signal event, do mmap only is eventPage is uninitialized
+        should_mmap = (!eventPage);
     } else {
         DPRINTF(HSADriver, "amdkfd doorbell mmap (start: %p, length: 0x%x,"
                 "offset: 0x%x)\n", start, length, offset);

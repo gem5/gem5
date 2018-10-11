@@ -182,6 +182,13 @@ parser.add_option("--num-hw-queues", type="int", default=10,
 parser.add_option("--reg-alloc-policy",type="string", default="simple",
                   help="register allocation policy (simple/dynamic)")
 
+parser.add_option("--dgpu", action="store_true", default=False,
+                  help="Configure the system as a dGPU instead of an APU. "
+                  "The dGPU config has its own local memory pool and is not "
+                  "coherent with the host through hardware.  Data is "
+                  "transfered from host to device memory using runtime calls "
+                  "that copy data over a PCIe-like IO bus.")
+
 Ruby.define_options(parser)
 
 #add TLB options to the parser
@@ -417,7 +424,7 @@ hsapp_gpu_map_size = 0x1000
 hsapp_gpu_map_paddr = int(Addr(options.mem_size))
 
 # HSA kernel mode driver
-gpu_driver = GPUComputeDriver(filename="kfd")
+gpu_driver = GPUComputeDriver(filename = "kfd", isdGPU = options.dgpu)
 
 # Creating the GPU kernel launching components: that is the HSA
 # packet processor (HSAPP), GPU command processor (CP), and the
@@ -470,7 +477,15 @@ else:
                "/usr/lib/x86_64-linux-gnu"
            ]),
            'HOME=%s' % os.getenv('HOME','/'),
-           "HSA_ENABLE_INTERRUPT=1"]
+           # Disable the VM fault handler signal creation for dGPUs also
+           # forces the use of DefaultSignals instead of driver-controlled
+           # InteruptSignals throughout the runtime.  DefaultSignals poll
+           # on memory in the runtime, while InteruptSignals call into the
+           # driver.
+           "HSA_ENABLE_INTERRUPT=1",
+           # We don't have an SDMA hardware model, so need to fallback to
+           # vector copy kernels for dGPU memcopies to/from host and device.
+           "HSA_ENABLE_SDMA=0"]
 
 process = Process(executable = executable, cmd = [options.cmd]
                   + options.options.split(), drivers = [gpu_driver], env = env)
@@ -643,7 +658,12 @@ system.redirect_paths = redirect_paths
 
 root = Root(system=system, full_system=False)
 
-hsaTopology.createHsaTopology(options)
+# Create the /sys/devices filesystem for the simulator so that the HSA Runtime
+# knows what type of GPU hardware we are simulating
+if options.dgpu:
+    hsaTopology.createFijiTopology(options)
+else:
+    hsaTopology.createCarrizoTopology(options)
 
 m5.ticks.setGlobalFrequency('1THz')
 if options.abs_max_tick:
