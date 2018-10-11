@@ -39,8 +39,8 @@
 #include <string>
 #include <vector>
 
-#include "mem/cache/sector_blk.hh"
 #include "mem/cache/tags/base.hh"
+#include "mem/cache/tags/sector_blk.hh"
 #include "params/SectorTags.hh"
 
 class BaseCache;

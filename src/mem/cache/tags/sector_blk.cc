@@ -33,7 +33,7 @@
  * sequence of cache blocks that may or may not be present in the cache.
  */
 
-#include "mem/cache/sector_blk.hh"
+#include "mem/cache/tags/sector_blk.hh"
 
 #include <cassert>
 
