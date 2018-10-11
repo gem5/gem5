@@ -45,8 +45,8 @@
  * Definitions of a simple cache block class.
  */
 
-#ifndef __MEM_CACHE_BLK_HH__
-#define __MEM_CACHE_BLK_HH__
+#ifndef __MEM_CACHE_CACHE_BLK_HH__
+#define __MEM_CACHE_CACHE_BLK_HH__
 
 #include <cassert>
 #include <cstdint>
@@ -463,4 +463,4 @@ class CacheBlkPrintWrapper : public Printable
                const std::string &prefix = "") const;
 };
 
-#endif //__MEM_CACHE_BLK_HH__
+#endif //__MEM_CACHE_CACHE_BLK_HH__

@@ -63,7 +63,7 @@
 #include "debug/Cache.hh"
 #include "debug/CachePort.hh"
 #include "enums/Clusivity.hh"
-#include "mem/cache/blk.hh"
+#include "mem/cache/cache_blk.hh"
 #include "mem/cache/mshr_queue.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/write_queue.hh"

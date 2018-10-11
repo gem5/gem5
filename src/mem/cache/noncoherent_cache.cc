@@ -60,7 +60,7 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/Cache.hh"
-#include "mem/cache/blk.hh"
+#include "mem/cache/cache_blk.hh"
 #include "mem/cache/mshr.hh"
 #include "params/NoncoherentCache.hh"
 

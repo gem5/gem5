@@ -55,7 +55,7 @@
 #include "base/logging.hh"
 #include "base/types.hh"
 #include "mem/cache/base.hh"
-#include "mem/cache/blk.hh"
+#include "mem/cache/cache_blk.hh"
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"

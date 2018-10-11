@@ -38,7 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/cache/blk.hh"
+#include "mem/cache/cache_blk.hh"
 
 #include "base/cprintf.hh"
 

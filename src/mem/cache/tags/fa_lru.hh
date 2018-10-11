@@ -60,7 +60,7 @@
 #include "base/logging.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
-#include "mem/cache/blk.hh"
+#include "mem/cache/cache_blk.hh"
 #include "mem/cache/tags/base.hh"
 #include "params/FALRU.hh"
 
