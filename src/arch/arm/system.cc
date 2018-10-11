@@ -48,6 +48,7 @@
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
+#include "dev/arm/gic_v3.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
 #include "sim/full_system.hh"
@@ -63,6 +64,7 @@ ArmSystem::ArmSystem(Params *p)
       _haveVirtualization(p->have_virtualization),
       _haveCrypto(p->have_crypto),
       _genericTimer(nullptr),
+      _gic(nullptr),
       _resetAddr(p->auto_reset_addr ?
                  (kernelEntry & loadAddrMask) + loadAddrOffset :
                  p->reset_addr),
@@ -136,6 +138,7 @@ ArmSystem::initState()
     const Params* p = params();
 
     if (bootldr) {
+        bool isGICv3System = dynamic_cast<Gicv3 *>(getGIC()) != nullptr;
         bootldr->loadSections(physProxy);
 
         inform("Using bootloader at address %#x\n", bootldr->entryPoint());
@@ -143,15 +146,18 @@ ArmSystem::initState()
         // Put the address of the boot loader into r7 so we know
         // where to branch to after the reset fault
         // All other values needed by the boot loader to know what to do
-        if (!p->gic_cpu_addr || !p->flags_addr)
-            fatal("gic_cpu_addr && flags_addr must be set with bootloader\n");
+        if (!p->flags_addr)
+           fatal("flags_addr must be set with bootloader\n");
+
+        if (!p->gic_cpu_addr && !isGICv3System)
+            fatal("gic_cpu_addr must be set with bootloader\n");
 
         for (int i = 0; i < threadContexts.size(); i++) {
             if (!_highestELIs64)
                 threadContexts[i]->setIntReg(3, (kernelEntry & loadAddrMask) +
                         loadAddrOffset);
-
-            threadContexts[i]->setIntReg(4, params()->gic_cpu_addr);
+            if (!isGICv3System)
+                threadContexts[i]->setIntReg(4, params()->gic_cpu_addr);
             threadContexts[i]->setIntReg(5, params()->flags_addr);
         }
         inform("Using kernel entry physical address at %#x\n",

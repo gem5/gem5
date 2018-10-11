@@ -82,6 +82,9 @@ namespace ArmISA
         // Generic timer interface belonging to this ISA
         std::unique_ptr<BaseISADevice> timer;
 
+        // GICv3 CPU interface belonging to this ISA
+        std::unique_ptr<BaseISADevice> gicv3CpuInterface;
+
         // Cached copies of system-level properties
         bool highestELIs64;
         bool haveSecurity;
@@ -89,6 +92,7 @@ namespace ArmISA
         bool haveVirtualization;
         bool haveCrypto;
         bool haveLargeAsid64;
+        bool haveGICv3CPUInterface;
         uint8_t physAddrRange;
 
         /**
@@ -400,6 +404,7 @@ namespace ArmISA
         }
 
         BaseISADevice &getGenericTimer(ThreadContext *tc);
+        BaseISADevice &getGICv3CPUInterface(ThreadContext *tc);
 
 
       private:

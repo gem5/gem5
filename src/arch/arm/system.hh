@@ -54,6 +54,7 @@
 #include "sim/system.hh"
 
 class GenericTimer;
+class BaseGic;
 class ThreadContext;
 
 class ArmSystem : public System
@@ -97,6 +98,7 @@ class ArmSystem : public System
      * Pointer to the Generic Timer wrapper.
      */
     GenericTimer *_genericTimer;
+    BaseGic *_gic;
 
     /**
      * Reset address (ARMv8)
@@ -192,8 +194,17 @@ class ArmSystem : public System
         _genericTimer = generic_timer;
     }
 
+    /** Sets the pointer to the GIC. */
+    void setGIC(BaseGic *gic)
+    {
+        _gic = gic;
+    }
+
     /** Get a pointer to the system's generic timer model */
     GenericTimer *getGenericTimer() const { return _genericTimer; }
+
+    /** Get a pointer to the system's GIC */
+    BaseGic *getGIC() const { return _gic; }
 
     /** Returns true if the register width of the highest implemented exception
      * level is 64 bits (ARMv8) */

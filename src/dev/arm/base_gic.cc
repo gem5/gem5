@@ -64,6 +64,13 @@ BaseGic::~BaseGic()
 {
 }
 
+void
+BaseGic::init()
+{
+    PioDevice::init();
+    getSystem()->setGIC(this);
+}
+
 const BaseGic::Params *
 BaseGic::params() const
 {
