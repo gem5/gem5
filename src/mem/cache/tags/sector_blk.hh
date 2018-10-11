@@ -39,7 +39,7 @@
 #include <vector>
 
 #include "mem/cache/cache_blk.hh"
-#include "mem/cache/replacement_policies/base.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
 
 class SectorBlk;
 

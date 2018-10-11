@@ -53,7 +53,7 @@
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
-#include "mem/cache/replacement_policies/base.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
 
 BaseIndexingPolicy::BaseIndexingPolicy(const Params *p)
     : SimObject(p), assoc(p->assoc),

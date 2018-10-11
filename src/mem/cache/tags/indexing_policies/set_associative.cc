@@ -49,7 +49,7 @@
 
 #include "mem/cache/tags/indexing_policies/set_associative.hh"
 
-#include "mem/cache/replacement_policies/base.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
 
 SetAssociative::SetAssociative(const Params *p)
     : BaseIndexingPolicy(p)

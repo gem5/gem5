@@ -38,7 +38,7 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 #include "base/logging.hh"
-#include "mem/cache/replacement_policies/base.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
 
 SkewedAssociative::SkewedAssociative(const Params *p)
     : BaseIndexingPolicy(p), msbShift(floorLog2(numSets) - 1)

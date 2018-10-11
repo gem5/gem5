@@ -33,66 +33,9 @@
 
 #include <memory>
 
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "params/BaseReplacementPolicy.hh"
 #include "sim/sim_object.hh"
-
-/**
- * The replacement data needed by the replacement policy.
- * Each replacement policy should have its own replacement data.
- */
-struct ReplacementData {};
-
-/**
- * A replaceable entry is used by any table-like structure that needs to
- * implement replacement functionality. It provides the replacement data
- * pointer instantiated and needed by the replacement policy used.
- * @sa Replacement Policies
- */
-class ReplaceableEntry
-{
-  private:
-    /**
-     * Set to which this entry belongs.
-     */
-    uint32_t _set;
-
-    /**
-     * Way (relative position within the set) to which this entry belongs.
-     */
-    uint32_t _way;
-
-   public:
-     /**
-      * Replacement data associated to this entry.
-      * It is instantiated by the replacement policy.
-      */
-     std::shared_ptr<ReplacementData> replacementData;
-
-    /**
-     * Set both the set and way. Should be called only once.
-     *
-     * @param set The set of this entry.
-     * @param way The way of this entry.
-     */
-    void setPosition(const uint32_t set, const uint32_t way) {
-        _set = set;
-        _way = way;
-    }
-
-    /**
-     * Get set number.
-     *
-     * @return The set to which this entry belongs.
-     */
-    uint32_t getSet() const { return _set; }
-
-    /**
-     * Get way number.
-     *
-     * @return The way to which this entry belongs.
-     */
-    uint32_t getWay() const { return _way; }
-};
 
 /**
  * Replacement candidates as chosen by the indexing policy.
