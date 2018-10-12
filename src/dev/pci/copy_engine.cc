@@ -193,20 +193,20 @@ CopyEngine::read(PacketPtr pkt)
         switch (daddr) {
           case GEN_CHANCOUNT:
             assert(size == sizeof(regs.chanCount));
-            pkt->set<uint8_t>(regs.chanCount);
+            pkt->setLE<uint8_t>(regs.chanCount);
             break;
           case GEN_XFERCAP:
             assert(size == sizeof(regs.xferCap));
-            pkt->set<uint8_t>(regs.xferCap);
+            pkt->setLE<uint8_t>(regs.xferCap);
             break;
           case GEN_INTRCTRL:
             assert(size == sizeof(uint8_t));
-            pkt->set<uint8_t>(regs.intrctrl());
+            pkt->setLE<uint8_t>(regs.intrctrl());
             regs.intrctrl.master_int_enable(0);
             break;
           case GEN_ATTNSTATUS:
             assert(size == sizeof(regs.attnStatus));
-            pkt->set<uint32_t>(regs.attnStatus);
+            pkt->setLE<uint32_t>(regs.attnStatus);
             regs.attnStatus = 0;
             break;
           default:
@@ -244,42 +244,42 @@ CopyEngine::CopyEngineChannel::channelRead(Packet *pkt, Addr daddr, int size)
     switch (daddr) {
       case CHAN_CONTROL:
         assert(size == sizeof(uint16_t));
-        pkt->set<uint16_t>(cr.ctrl());
+        pkt->setLE<uint16_t>(cr.ctrl());
         cr.ctrl.in_use(1);
         break;
       case CHAN_STATUS:
         assert(size == sizeof(uint64_t));
-        pkt->set<uint64_t>(cr.status() | (busy ? 0 : 1));
+        pkt->setLE<uint64_t>(cr.status() | (busy ? 0 : 1));
         break;
       case CHAN_CHAINADDR:
         assert(size == sizeof(uint64_t) || size == sizeof(uint32_t));
         if (size == sizeof(uint64_t))
-            pkt->set<uint64_t>(cr.descChainAddr);
+            pkt->setLE<uint64_t>(cr.descChainAddr);
         else
-            pkt->set<uint32_t>(bits(cr.descChainAddr,0,31));
+            pkt->setLE<uint32_t>(bits(cr.descChainAddr,0,31));
         break;
       case CHAN_CHAINADDR_HIGH:
         assert(size == sizeof(uint32_t));
-        pkt->set<uint32_t>(bits(cr.descChainAddr,32,63));
+        pkt->setLE<uint32_t>(bits(cr.descChainAddr,32,63));
         break;
       case CHAN_COMMAND:
         assert(size == sizeof(uint8_t));
-        pkt->set<uint32_t>(cr.command());
+        pkt->setLE<uint32_t>(cr.command());
         break;
       case CHAN_CMPLNADDR:
         assert(size == sizeof(uint64_t) || size == sizeof(uint32_t));
         if (size == sizeof(uint64_t))
-            pkt->set<uint64_t>(cr.completionAddr);
+            pkt->setLE<uint64_t>(cr.completionAddr);
         else
-            pkt->set<uint32_t>(bits(cr.completionAddr,0,31));
+            pkt->setLE<uint32_t>(bits(cr.completionAddr,0,31));
         break;
       case CHAN_CMPLNADDR_HIGH:
         assert(size == sizeof(uint32_t));
-        pkt->set<uint32_t>(bits(cr.completionAddr,32,63));
+        pkt->setLE<uint32_t>(bits(cr.completionAddr,32,63));
         break;
       case CHAN_ERROR:
         assert(size == sizeof(uint32_t));
-        pkt->set<uint32_t>(cr.error());
+        pkt->setLE<uint32_t>(cr.error());
         break;
       default:
         panic("Read request to unknown channel register number: (%d)%#x\n",
@@ -308,17 +308,21 @@ CopyEngine::write(PacketPtr pkt)
     ///
 
     if (size == sizeof(uint64_t)) {
-        uint64_t val M5_VAR_USED = pkt->get<uint64_t>();
-        DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n", daddr, val);
+        uint64_t val M5_VAR_USED = pkt->getLE<uint64_t>();
+        DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n",
+                daddr, val);
     } else if (size == sizeof(uint32_t)) {
-        uint32_t val M5_VAR_USED = pkt->get<uint32_t>();
-        DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n", daddr, val);
+        uint32_t val M5_VAR_USED = pkt->getLE<uint32_t>();
+        DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n",
+                daddr, val);
     } else if (size == sizeof(uint16_t)) {
-        uint16_t val M5_VAR_USED = pkt->get<uint16_t>();
-        DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n", daddr, val);
+        uint16_t val M5_VAR_USED = pkt->getLE<uint16_t>();
+        DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n",
+                daddr, val);
     } else if (size == sizeof(uint8_t)) {
-        uint8_t val M5_VAR_USED = pkt->get<uint8_t>();
-        DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n", daddr, val);
+        uint8_t val M5_VAR_USED = pkt->getLE<uint8_t>();
+        DPRINTF(DMACopyEngine, "Wrote device register %#X value %#X\n",
+                daddr, val);
     } else {
         panic("Unknown size for MMIO access: %d\n", size);
     }
@@ -332,7 +336,7 @@ CopyEngine::write(PacketPtr pkt)
                     daddr);
             break;
           case GEN_INTRCTRL:
-            regs.intrctrl.master_int_enable(bits(pkt->get<uint8_t>(),0,1));
+            regs.intrctrl.master_int_enable(bits(pkt->getLE<uint8_t>(), 0, 1));
             break;
           default:
             panic("Read request to unknown register number: %#x\n", daddr);
@@ -370,7 +374,7 @@ CopyEngine::CopyEngineChannel::channelWrite(Packet *pkt, Addr daddr, int size)
         assert(size == sizeof(uint16_t));
         int old_int_disable;
         old_int_disable = cr.ctrl.interrupt_disable();
-        cr.ctrl(pkt->get<uint16_t>());
+        cr.ctrl(pkt->getLE<uint16_t>());
         if (cr.ctrl.interrupt_disable())
             cr.ctrl.interrupt_disable(0);
         else
@@ -384,39 +388,39 @@ CopyEngine::CopyEngineChannel::channelWrite(Packet *pkt, Addr daddr, int size)
       case CHAN_CHAINADDR:
         assert(size == sizeof(uint64_t) || size == sizeof(uint32_t));
         if (size == sizeof(uint64_t))
-            cr.descChainAddr = pkt->get<uint64_t>();
+            cr.descChainAddr = pkt->getLE<uint64_t>();
         else
-            cr.descChainAddr =  (uint64_t)pkt->get<uint32_t>() |
+            cr.descChainAddr =  (uint64_t)pkt->getLE<uint32_t>() |
                 (cr.descChainAddr & ~mask(32));
         DPRINTF(DMACopyEngine, "Chain Address %x\n", cr.descChainAddr);
         break;
       case CHAN_CHAINADDR_HIGH:
         assert(size == sizeof(uint32_t));
-        cr.descChainAddr =  ((uint64_t)pkt->get<uint32_t>() <<32) |
+        cr.descChainAddr =  ((uint64_t)pkt->getLE<uint32_t>() << 32) |
             (cr.descChainAddr & mask(32));
         DPRINTF(DMACopyEngine, "Chain Address %x\n", cr.descChainAddr);
         break;
       case CHAN_COMMAND:
         assert(size == sizeof(uint8_t));
-        cr.command(pkt->get<uint8_t>());
+        cr.command(pkt->getLE<uint8_t>());
         recvCommand();
         break;
       case CHAN_CMPLNADDR:
         assert(size == sizeof(uint64_t) || size == sizeof(uint32_t));
         if (size == sizeof(uint64_t))
-            cr.completionAddr = pkt->get<uint64_t>();
+            cr.completionAddr = pkt->getLE<uint64_t>();
         else
-            cr.completionAddr =  pkt->get<uint32_t>() |
+            cr.completionAddr =  pkt->getLE<uint32_t>() |
                 (cr.completionAddr & ~mask(32));
         break;
       case CHAN_CMPLNADDR_HIGH:
         assert(size == sizeof(uint32_t));
-        cr.completionAddr =  ((uint64_t)pkt->get<uint32_t>() <<32) |
+        cr.completionAddr =  ((uint64_t)pkt->getLE<uint32_t>() <<32) |
             (cr.completionAddr & mask(32));
         break;
       case CHAN_ERROR:
         assert(size == sizeof(uint32_t));
-        cr.error(~pkt->get<uint32_t>() & cr.error());
+        cr.error(~pkt->getLE<uint32_t>() & cr.error());
         break;
       default:
         panic("Read request to unknown channel register number: (%d)%#x\n",

@@ -209,7 +209,7 @@ NSGigE::read(PacketPtr pkt)
         // don't implement all the MIB's.  hopefully the kernel
         // doesn't actually DEPEND upon their values
         // MIB are just hardware stats keepers
-        pkt->set<uint32_t>(0);
+        pkt->setLE<uint32_t>(0);
         pkt->makeAtomicResponse();
         return pioDelay;
     } else if (daddr > 0x3FC)
@@ -427,7 +427,7 @@ NSGigE::write(PacketPtr pkt)
         panic("Something is messed up!\n");
 
     if (pkt->getSize() == sizeof(uint32_t)) {
-        uint32_t reg = pkt->get<uint32_t>();
+        uint32_t reg = pkt->getLE<uint32_t>();
         uint16_t rfaddr;
 
         DPRINTF(EthernetPIO, "write data=%d data=%#x\n", reg, reg);

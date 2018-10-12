@@ -69,16 +69,16 @@ IsaFake::read(PacketPtr pkt)
                 pkt->getAddr(), pkt->getSize());
         switch (pkt->getSize()) {
           case sizeof(uint64_t):
-             pkt->set(retData64);
+             pkt->setLE(retData64);
              break;
           case sizeof(uint32_t):
-             pkt->set(retData32);
+             pkt->setLE(retData32);
              break;
           case sizeof(uint16_t):
-             pkt->set(retData16);
+             pkt->setLE(retData16);
              break;
           case sizeof(uint8_t):
-             pkt->set(retData8);
+             pkt->setLE(retData8);
              break;
           default:
              if (params()->fake_mem)
@@ -98,16 +98,16 @@ IsaFake::write(PacketPtr pkt)
         uint64_t data;
         switch (pkt->getSize()) {
           case sizeof(uint64_t):
-            data = pkt->get<uint64_t>();
+            data = pkt->getLE<uint64_t>();
             break;
           case sizeof(uint32_t):
-            data = pkt->get<uint32_t>();
+            data = pkt->getLE<uint32_t>();
             break;
           case sizeof(uint16_t):
-            data = pkt->get<uint16_t>();
+            data = pkt->getLE<uint16_t>();
             break;
           case sizeof(uint8_t):
-            data = pkt->get<uint8_t>();
+            data = pkt->getLE<uint8_t>();
             break;
           default:
             panic("invalid access size: %u\n", pkt->getSize());
@@ -126,16 +126,16 @@ IsaFake::write(PacketPtr pkt)
         if (params()->update_data) {
             switch (pkt->getSize()) {
               case sizeof(uint64_t):
-                retData64 = pkt->get<uint64_t>();
+                retData64 = pkt->getLE<uint64_t>();
                 break;
               case sizeof(uint32_t):
-                retData32 = pkt->get<uint32_t>();
+                retData32 = pkt->getLE<uint32_t>();
                 break;
               case sizeof(uint16_t):
-                retData16 = pkt->get<uint16_t>();
+                retData16 = pkt->getLE<uint16_t>();
                 break;
               case sizeof(uint8_t):
-                retData8 = pkt->get<uint8_t>();
+                retData8 = pkt->getLE<uint8_t>();
                 break;
               default:
                 panic("invalid access size!\n");
