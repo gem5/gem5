@@ -42,12 +42,11 @@
  *          Andreas Sandberg
  */
 
-#include "arch/isa_traits.hh"
-#include "mem/packet.hh"
-#include "sim/byteswap.hh"
-
 #ifndef __MEM_PACKET_ACCESS_HH__
 #define __MEM_PACKET_ACCESS_HH__
+
+#include "mem/packet.hh"
+#include "sim/byteswap.hh"
 
 template <typename T>
 inline T
@@ -98,15 +97,6 @@ Packet::get(ByteOrder endian) const
     };
 }
 
-#if THE_ISA != NULL_ISA
-template <typename T>
-inline T
-Packet::get() const
-{
-    return TheISA::gtoh(getRaw<T>());
-}
-#endif
-
 template <typename T>
 inline void
 Packet::setBE(T v)
@@ -136,14 +126,5 @@ Packet::set(T v, ByteOrder endian)
         panic("Illegal byte order in Packet::set()\n");
     };
 }
-
-#if THE_ISA != NULL_ISA
-template <typename T>
-inline void
-Packet::set(T v)
-{
-    setRaw(TheISA::htog(v));
-}
-#endif
 
 #endif //__MEM_PACKET_ACCESS_HH__
