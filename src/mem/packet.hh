@@ -1077,9 +1077,11 @@ class Packet : public Printable
     template <typename T>
     void set(T v, ByteOrder endian);
 
+#if THE_ISA != NULL_ISA
     /** Set the value in the data pointer to v as guest endian. */
     template <typename T>
     void set(T v);
+#endif
 
 
     /**
@@ -1173,7 +1175,6 @@ class Packet : public Printable
 
     /** @} */
 
-  private: // Private data accessor methods
     /** Get the data in the packet without byte swapping. */
     template <typename T>
     T getRaw() const;
