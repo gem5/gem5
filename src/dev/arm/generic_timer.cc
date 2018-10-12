@@ -583,9 +583,9 @@ GenericTimerMem::read(PacketPtr pkt)
     DPRINTF(Timer, "Read 0x%x <- 0x%x(%i)\n", value, addr, size);
 
     if (size == 8) {
-        pkt->set<uint64_t>(value);
+        pkt->setLE<uint64_t>(value);
     } else if (size == 4) {
-        pkt->set<uint32_t>(value);
+        pkt->setLE<uint32_t>(value);
     } else {
         panic("Unexpected access size: %i\n", size);
     }
@@ -602,7 +602,7 @@ GenericTimerMem::write(PacketPtr pkt)
 
     const Addr addr(pkt->getAddr());
     const uint64_t value(size == 8 ?
-                         pkt->get<uint64_t>() : pkt->get<uint32_t>());
+                         pkt->getLE<uint64_t>() : pkt->getLE<uint32_t>());
 
     DPRINTF(Timer, "Write 0x%x -> 0x%x(%i)\n", value, addr, size);
     if (ctrlRange.contains(addr)) {

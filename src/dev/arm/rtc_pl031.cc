@@ -92,7 +92,7 @@ PL031::read(PacketPtr pkt)
       default:
         if (readId(pkt, ambaId, pioAddr)) {
             // Hack for variable sized access
-            data = pkt->get<uint32_t>();
+            data = pkt->getLE<uint32_t>();
             break;
         }
         panic("Tried to read PL031 at offset %#x that doesn't exist\n", daddr);
@@ -101,13 +101,13 @@ PL031::read(PacketPtr pkt)
 
     switch(pkt->getSize()) {
       case 1:
-        pkt->set<uint8_t>(data);
+        pkt->setLE<uint8_t>(data);
         break;
       case 2:
-        pkt->set<uint16_t>(data);
+        pkt->setLE<uint16_t>(data);
         break;
       case 4:
-        pkt->set<uint32_t>(data);
+        pkt->setLE<uint32_t>(data);
         break;
       default:
         panic("Uart read size too big?\n");
@@ -131,22 +131,22 @@ PL031::write(PacketPtr pkt)
       case DataReg:
         break;
       case MatchReg:
-        matchVal = pkt->get<uint32_t>();
+        matchVal = pkt->getLE<uint32_t>();
         resyncMatch();
         break;
       case LoadReg:
         lastWrittenTick = curTick();
-        timeVal = pkt->get<uint32_t>();
+        timeVal = pkt->getLE<uint32_t>();
         loadVal = timeVal;
         resyncMatch();
         break;
       case ControlReg:
         break; // Can't stop when started
       case IntMask:
-        maskInt = pkt->get<uint32_t>();
+        maskInt = pkt->getLE<uint32_t>();
         break;
       case IntClear:
-        if (pkt->get<uint32_t>()) {
+        if (pkt->getLE<uint32_t>()) {
             rawInt = false;
             pendingInt = false;
         }

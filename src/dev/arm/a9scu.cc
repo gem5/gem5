@@ -59,7 +59,7 @@ A9SCU::read(PacketPtr pkt)
 
     switch(daddr) {
       case Control:
-        pkt->set(1); // SCU already enabled
+        pkt->setLE(1); // SCU already enabled
         break;
       case Config:
         /* Without making a completely new SCU, we can use the core count field
@@ -75,7 +75,7 @@ A9SCU::read(PacketPtr pkt)
         int smp_bits, core_cnt;
         smp_bits = power(2,sys->numContexts()) - 1;
         core_cnt = sys->numContexts() - 1;
-        pkt->set(smp_bits << 4 | core_cnt);
+        pkt->setLE(smp_bits << 4 | core_cnt);
         break;
       default:
         // Only configuration register is implemented

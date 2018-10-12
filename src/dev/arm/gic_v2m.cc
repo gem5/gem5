@@ -114,18 +114,18 @@ Gicv2m::read(PacketPtr pkt)
 
     switch (offset) {
       case MSI_TYPER:
-        pkt->set<uint32_t>((frames[frame]->spi_base << 16) |
+        pkt->setLE<uint32_t>((frames[frame]->spi_base << 16) |
                            frames[frame]->spi_len);
         break;
 
       case PER_ID4:
-        pkt->set<uint32_t>(0x4 | ((4+log2framenum) << 4));
+        pkt->setLE<uint32_t>(0x4 | ((4+log2framenum) << 4));
         // Nr of 4KB blocks used by component.  This is messy as frames are 64K
         // (16, ie 2^4) and we should assert we're given a Po2 number of frames.
         break;
       default:
         DPRINTF(GICV2M, "GICv2m: Read of unk reg %#x\n", offset);
-        pkt->set<uint32_t>(0);
+        pkt->setLE<uint32_t>(0);
     };
 
     pkt->makeAtomicResponse();
@@ -144,7 +144,7 @@ Gicv2m::write(PacketPtr pkt)
 
     if (offset == MSI_SETSPI_NSR) {
         /* Is payload SPI number within range? */
-        uint32_t m = pkt->get<uint32_t>();
+        uint32_t m = pkt->getLE<uint32_t>();
         if (m >= frames[frame]->spi_base &&
             m < (frames[frame]->spi_base + frames[frame]->spi_len)) {
             DPRINTF(GICV2M, "GICv2m: Frame %d raising MSI %d\n", frame, m);

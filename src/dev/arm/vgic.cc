@@ -106,16 +106,16 @@ VGic::readVCpu(PacketPtr pkt)
 
     switch (daddr) {
       case GICV_CTLR:
-        pkt->set<uint32_t>(vid->vctrl);
+        pkt->setLE<uint32_t>(vid->vctrl);
         break;
       case GICV_IAR: {
           int i = findHighestPendingLR(vid);
           if (i < 0 || !vid->vctrl.En) {
-              pkt->set<uint32_t>(1023); // "No int" marker
+              pkt->setLE<uint32_t>(1023); // "No int" marker
           } else {
               ListReg *lr = &vid->LR[i];
 
-              pkt->set<uint32_t>(lr->VirtualID |
+              pkt->setLE<uint32_t>(lr->VirtualID |
                                  (((int)lr->CpuID) << 10));
               // We don't support auto-EOI of HW interrupts via real GIC!
               // Fortunately, KVM doesn't use this.  How about Xen...? Ulp!
@@ -160,15 +160,15 @@ VGic::readCtrl(PacketPtr pkt)
 
     switch (daddr) {
       case GICH_HCR:
-        pkt->set<uint32_t>(vid->hcr);
+        pkt->setLE<uint32_t>(vid->hcr);
         break;
 
       case GICH_VTR:
-        pkt->set<uint32_t>(0x44000000 | (NUM_LR - 1));
+        pkt->setLE<uint32_t>(0x44000000 | (NUM_LR - 1));
         break;
 
       case GICH_VMCR:
-        pkt->set<uint32_t>(
+        pkt->setLE<uint32_t>(
             ((uint32_t)vid->VMPriMask << 27) |
             ((uint32_t)vid->VMBP << 21) |
             ((uint32_t)vid->VMABP << 18) |
@@ -182,15 +182,15 @@ VGic::readCtrl(PacketPtr pkt)
         break;
 
       case GICH_MISR:
-        pkt->set<uint32_t>(getMISR(vid));
+        pkt->setLE<uint32_t>(getMISR(vid));
         break;
 
       case GICH_EISR0:
-        pkt->set<uint32_t>(vid->eisr & 0xffffffff);
+        pkt->setLE<uint32_t>(vid->eisr & 0xffffffff);
         break;
 
       case GICH_EISR1:
-        pkt->set<uint32_t>(vid->eisr >> 32);
+        pkt->setLE<uint32_t>(vid->eisr >> 32);
         break;
 
       case GICH_ELSR0: {
@@ -199,7 +199,7 @@ VGic::readCtrl(PacketPtr pkt)
               if (!vid->LR[i].State)
                   bm |= 1 << i;
           }
-          pkt->set<uint32_t>(bm);
+          pkt->setLE<uint32_t>(bm);
       } break;
 
       case GICH_ELSR1: {
@@ -208,19 +208,19 @@ VGic::readCtrl(PacketPtr pkt)
               if (!vid->LR[i].State)
                   bm |= 1 << (i-32);
           }
-          pkt->set<uint32_t>(bm);
+          pkt->setLE<uint32_t>(bm);
       } break;
 
       case GICH_APR0:
         warn_once("VGIC GICH_APR read!\n");
-        pkt->set<uint32_t>(0);
+        pkt->setLE<uint32_t>(0);
         break;
 
       case GICH_LR0:
       case GICH_LR1:
       case GICH_LR2:
       case GICH_LR3:
-        pkt->set<uint32_t>(vid->LR[(daddr - GICH_LR0) >> 2]);
+        pkt->setLE<uint32_t>(vid->LR[(daddr - GICH_LR0) >> 2]);
         break;
 
       default:
@@ -240,20 +240,21 @@ VGic::writeVCpu(PacketPtr pkt)
     assert(ctx_id < VGIC_CPU_MAX);
     struct vcpuIntData *vid = &vcpuData[ctx_id];
 
-    DPRINTF(VGIC, "VGIC VCPU write register %#x <= %#x\n", daddr, pkt->get<uint32_t>());
+    DPRINTF(VGIC, "VGIC VCPU write register %#x <= %#x\n",
+            daddr, pkt->getLE<uint32_t>());
 
     switch (daddr) {
       case GICV_CTLR:
-        vid->vctrl = pkt->get<uint32_t>();
+        vid->vctrl = pkt->getLE<uint32_t>();
         break;
       case GICV_PMR:
-        vid->VMPriMask = pkt->get<uint32_t>();
+        vid->VMPriMask = pkt->getLE<uint32_t>();
         break;
       case GICV_EOIR: {
           // We don't handle the split EOI-then-DIR mode.  Linux (guest)
           // doesn't need it though.
           assert(!vid->vctrl.EOImode);
-          uint32_t w = pkt->get<uint32_t>();
+          uint32_t w = pkt->getLE<uint32_t>();
           unsigned int virq = w & 0x3ff;
           unsigned int vcpu = (w >> 10) & 7;
           int i = findLRForVIRQ(vid, virq, vcpu);
@@ -268,7 +269,8 @@ VGic::writeVCpu(PacketPtr pkt)
           }
       } break;
       default:
-        panic("VGIC VCPU write %#x to unk address %#x\n", pkt->get<uint32_t>(), daddr);
+        panic("VGIC VCPU write %#x to unk address %#x\n",
+                pkt->getLE<uint32_t>(), daddr);
     }
 
     // This updates the EISRs and flags IRQs:
@@ -285,7 +287,8 @@ VGic::writeCtrl(PacketPtr pkt)
 
     ContextID ctx_id = pkt->req->contextId();
 
-    DPRINTF(VGIC, "VGIC HVCtrl write register %#x <= %#x\n", daddr, pkt->get<uint32_t>());
+    DPRINTF(VGIC, "VGIC HVCtrl write register %#x <= %#x\n",
+            daddr, pkt->getLE<uint32_t>());
 
     /* Munge the address: 0-0xfff is the usual space banked by requester CPU.
      * Anything > that is 0x200-sized slices of 'per CPU' regs.
@@ -301,12 +304,12 @@ VGic::writeCtrl(PacketPtr pkt)
 
     switch (daddr) {
       case GICH_HCR:
-        vid->hcr = pkt->get<uint32_t>();
+        vid->hcr = pkt->getLE<uint32_t>();
         // update int state
         break;
 
       case GICH_VMCR: {
-          uint32_t d = pkt->get<uint32_t>();
+          uint32_t d = pkt->getLE<uint32_t>();
           vid->VMPriMask = d >> 27;
           vid->VMBP = (d >> 21) & 7;
           vid->VMABP = (d >> 18) & 7;
@@ -326,7 +329,7 @@ VGic::writeCtrl(PacketPtr pkt)
       case GICH_LR1:
       case GICH_LR2:
       case GICH_LR3:
-        vid->LR[(daddr - GICH_LR0) >> 2] = pkt->get<uint32_t>();
+        vid->LR[(daddr - GICH_LR0) >> 2] = pkt->getLE<uint32_t>();
         // update int state
         break;
 

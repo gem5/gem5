@@ -72,7 +72,7 @@ EnergyCtrl::read(PacketPtr pkt)
 
     if (!dvfsHandler->isEnabled()) {
         // NB: Zero is a good response if the handler is disabled
-        pkt->set<uint32_t>(0);
+        pkt->setLE<uint32_t>(0);
         warn_once("EnergyCtrl: Disabled handler, ignoring read from reg %i\n",
                   reg);
         DPRINTF(EnergyCtrl, "dvfs handler disabled, return 0 for read from "\
@@ -141,7 +141,7 @@ EnergyCtrl::read(PacketPtr pkt)
         panic("Tried to read EnergyCtrl at offset %#x / reg %i\n", daddr,
               reg);
     }
-    pkt->set<uint32_t>(result);
+    pkt->setLE<uint32_t>(result);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -153,7 +153,7 @@ EnergyCtrl::write(PacketPtr pkt)
     assert(pkt->getSize() == 4);
 
     uint32_t data;
-    data = pkt->get<uint32_t>();
+    data = pkt->getLE<uint32_t>();
 
     Addr daddr = pkt->getAddr() - pioAddr;
     assert((daddr & 3) == 0);

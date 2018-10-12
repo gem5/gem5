@@ -145,13 +145,13 @@ GicV2::readDistributor(PacketPtr pkt)
 
     switch (pkt->getSize()) {
       case 1:
-        pkt->set<uint8_t>(resp);
+        pkt->setLE<uint8_t>(resp);
         break;
       case 2:
-        pkt->set<uint16_t>(resp);
+        pkt->setLE<uint16_t>(resp);
         break;
       case 4:
-        pkt->set<uint32_t>(resp);
+        pkt->setLE<uint32_t>(resp);
         break;
       default:
         panic("Invalid size while reading Distributor regs in GIC: %d\n",
@@ -296,7 +296,7 @@ GicV2::readCpu(PacketPtr pkt)
     DPRINTF(GIC, "gic cpu read register %#x cpu context: %d\n", daddr,
             ctx);
 
-    pkt->set<uint32_t>(readCpu(ctx, daddr));
+    pkt->setLE<uint32_t>(readCpu(ctx, daddr));
 
     pkt->makeAtomicResponse();
     return cpuPioDelay;
@@ -395,13 +395,13 @@ GicV2::writeDistributor(PacketPtr pkt)
     switch (data_sz)
     {
       case 1:
-        pkt_data = pkt->get<uint8_t>();
+        pkt_data = pkt->getLE<uint8_t>();
         break;
       case 2:
-        pkt_data = pkt->get<uint16_t>();
+        pkt_data = pkt->getLE<uint16_t>();
         break;
       case 4:
-        pkt_data = pkt->get<uint32_t>();
+        pkt_data = pkt->getLE<uint32_t>();
         break;
       default:
         panic("Invalid size when writing to priority regs in Gic: %d\n",
@@ -558,7 +558,7 @@ GicV2::writeCpu(PacketPtr pkt)
 
     assert(pkt->req->hasContextId());
     const ContextID ctx = pkt->req->contextId();
-    const uint32_t data = pkt->get<uint32_t>();
+    const uint32_t data = pkt->getLE<uint32_t>();
 
     DPRINTF(GIC, "gic cpu write register cpu:%d %#x val: %#x\n",
             ctx, daddr, data);

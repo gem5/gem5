@@ -1053,7 +1053,7 @@ UFSHostDevice::read(PacketPtr pkt)
         break;
     }
 
-    pkt->set<uint32_t>(data);
+    pkt->setLE<uint32_t>(data);
     pkt->makeResponse();
     return pioDelay;
 }
@@ -1071,15 +1071,15 @@ UFSHostDevice::write(PacketPtr pkt)
     switch (pkt->getSize()) {
 
       case 1:
-        data = pkt->get<uint8_t>();
+        data = pkt->getLE<uint8_t>();
         break;
 
       case 2:
-        data = pkt->get<uint16_t>();
+        data = pkt->getLE<uint16_t>();
         break;
 
       case 4:
-        data = pkt->get<uint32_t>();
+        data = pkt->getLE<uint32_t>();
         break;
 
       default:

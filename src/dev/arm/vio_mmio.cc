@@ -79,7 +79,7 @@ MmioVirtIO::read(PacketPtr pkt)
     const uint32_t value = read(offset);
     DPRINTF(VIOIface, "    value: 0x%x\n", value);
     pkt->makeResponse();
-    pkt->set<uint32_t>(value);
+    pkt->setLE<uint32_t>(value);
 
     return 0;
 }
@@ -173,9 +173,9 @@ MmioVirtIO::write(PacketPtr pkt)
     }
 
     panic_if(size != 4, "Unexpected write size @ 0x%x: %u\n", offset, size);
-    DPRINTF(VIOIface, "    value: 0x%x\n", pkt->get<uint32_t>());
+    DPRINTF(VIOIface, "    value: 0x%x\n", pkt->getLE<uint32_t>());
     pkt->makeResponse();
-    write(offset, pkt->get<uint32_t>());
+    write(offset, pkt->getLE<uint32_t>());
     return 0;
 }
 

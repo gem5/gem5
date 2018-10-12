@@ -160,7 +160,7 @@ NoMaliGpu::read(PacketPtr pkt)
     else if (addr & 0x3)
         panic("Unaligned GPU read: %i\n", size);
 
-    pkt->set<uint32_t>(readReg(addr));
+    pkt->setLE<uint32_t>(readReg(addr));
     pkt->makeResponse();
 
     return 0;
@@ -181,7 +181,7 @@ NoMaliGpu::write(PacketPtr pkt)
     else if (addr & 0x3)
         panic("Unaligned GPU write: %i\n", size);
 
-    writeReg(addr, pkt->get<uint32_t>());
+    writeReg(addr, pkt->getLE<uint32_t>());
     pkt->makeAtomicResponse();
 
     return 0;

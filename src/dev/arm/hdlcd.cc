@@ -248,7 +248,7 @@ HDLcd::read(PacketPtr pkt)
     const uint32_t data(readReg(daddr));
     DPRINTF(HDLcd, "read register 0x%04x: 0x%x\n", daddr, data);
 
-    pkt->set<uint32_t>(data);
+    pkt->setLE<uint32_t>(data);
     pkt->makeAtomicResponse();
     return pioDelay;
 }
@@ -264,7 +264,7 @@ HDLcd::write(PacketPtr pkt)
     panic_if(pkt->getSize() != 4,
              "Unhandled read size (address: 0x.4x, size: %u)",
              daddr, pkt->getSize());
-    const uint32_t data(pkt->get<uint32_t>());
+    const uint32_t data(pkt->getLE<uint32_t>());
     DPRINTF(HDLcd, "write register 0x%04x: 0x%x\n", daddr, data);
 
     writeReg(daddr, data);

@@ -61,66 +61,66 @@ RealViewCtrl::read(PacketPtr pkt)
 
     switch(daddr) {
       case ProcId0:
-        pkt->set(params()->proc_id0);
+        pkt->setLE(params()->proc_id0);
         break;
       case ProcId1:
-        pkt->set(params()->proc_id1);
+        pkt->setLE(params()->proc_id1);
         break;
       case Clock24:
         Tick clk;
         clk = SimClock::Float::MHz * curTick() * 24;
-        pkt->set((uint32_t)(clk));
+        pkt->setLE((uint32_t)(clk));
         break;
       case Clock100:
         Tick clk100;
         clk100 = SimClock::Float::MHz * curTick() * 100;
-        pkt->set((uint32_t)(clk100));
+        pkt->setLE((uint32_t)(clk100));
         break;
       case Flash:
-        pkt->set<uint32_t>(0);
+        pkt->setLE<uint32_t>(0);
         break;
       case Clcd:
-        pkt->set<uint32_t>(0x00001F00);
+        pkt->setLE<uint32_t>(0x00001F00);
         break;
       case Osc0:
-        pkt->set<uint32_t>(0x00012C5C);
+        pkt->setLE<uint32_t>(0x00012C5C);
         break;
       case Osc1:
-        pkt->set<uint32_t>(0x00002CC0);
+        pkt->setLE<uint32_t>(0x00002CC0);
         break;
       case Osc2:
-        pkt->set<uint32_t>(0x00002C75);
+        pkt->setLE<uint32_t>(0x00002C75);
         break;
       case Osc3:
-        pkt->set<uint32_t>(0x00020211);
+        pkt->setLE<uint32_t>(0x00020211);
         break;
       case Osc4:
-        pkt->set<uint32_t>(0x00002C75);
+        pkt->setLE<uint32_t>(0x00002C75);
         break;
       case Lock:
-        pkt->set<uint32_t>(sysLock);
+        pkt->setLE<uint32_t>(sysLock);
         break;
       case Flags:
-        pkt->set<uint32_t>(flags);
+        pkt->setLE<uint32_t>(flags);
         break;
       case IdReg:
-        pkt->set<uint32_t>(params()->idreg);
+        pkt->setLE<uint32_t>(params()->idreg);
         break;
       case CfgStat:
-        pkt->set<uint32_t>(1);
+        pkt->setLE<uint32_t>(1);
         break;
       case CfgData:
-        pkt->set<uint32_t>(scData);
+        pkt->setLE<uint32_t>(scData);
         DPRINTF(RVCTRL, "Read %#x from SCReg\n", scData);
         break;
       case CfgCtrl:
-        pkt->set<uint32_t>(0); // not busy
+        pkt->setLE<uint32_t>(0); // not busy
         DPRINTF(RVCTRL, "Read 0 from CfgCtrl\n");
         break;
       default:
         warn("Tried to read RealView I/O at offset %#x that doesn't exist\n",
              daddr);
-        pkt->set<uint32_t>(0);
+        pkt->setLE<uint32_t>(0);
         break;
     }
     pkt->makeAtomicResponse();
@@ -144,26 +144,26 @@ RealViewCtrl::write(PacketPtr pkt)
       case Osc4:
         break;
       case Lock:
-        sysLock.lockVal = pkt->get<uint16_t>();
+        sysLock.lockVal = pkt->getLE<uint16_t>();
         break;
       case ResetCtl:
         // Ignore writes to reset control
         warn_once("Ignoring write to reset control\n");
         break;
       case Flags:
-        flags = pkt->get<uint32_t>();
+        flags = pkt->getLE<uint32_t>();
         break;
       case FlagsClr:
         flags = 0;
         break;
       case CfgData:
-        scData = pkt->get<uint32_t>();
+        scData = pkt->getLE<uint32_t>();
         break;
       case CfgCtrl: {
           // A request is being submitted to read/write the system control
           // registers.  See
           // http://infocenter.arm.com/help/topic/com.arm.doc.dui0447h/CACDEFGH.html
-          CfgCtrlReg req = pkt->get<uint32_t>();
+          CfgCtrlReg req = pkt->getLE<uint32_t>();
           if (!req.start) {
               DPRINTF(RVCTRL, "SCReg: write %#x to ctrl but not starting\n",
                       req);
@@ -195,7 +195,7 @@ RealViewCtrl::write(PacketPtr pkt)
       case CfgStat:     // Weird to write this
       default:
         warn("Tried to write RVIO at offset %#x (data %#x) that doesn't exist\n",
-             daddr, pkt->get<uint32_t>());
+             daddr, pkt->getLE<uint32_t>());
         break;
     }
     pkt->makeAtomicResponse();

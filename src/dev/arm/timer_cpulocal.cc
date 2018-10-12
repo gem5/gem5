@@ -116,7 +116,7 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
 
     switch(daddr) {
       case TimerLoadReg:
-        pkt->set<uint32_t>(timerLoadValue);
+        pkt->setLE<uint32_t>(timerLoadValue);
         break;
       case TimerCounterReg:
         DPRINTF(Timer, "Event schedule for timer %d, clock=%d, prescale=%d\n",
@@ -126,16 +126,16 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
         time = time / parent->clockPeriod() /
             power(16, timerControl.prescalar);
         DPRINTF(Timer, "-- returning counter at %d\n", time);
-        pkt->set<uint32_t>(time);
+        pkt->setLE<uint32_t>(time);
         break;
       case TimerControlReg:
-        pkt->set<uint32_t>(timerControl);
+        pkt->setLE<uint32_t>(timerControl);
         break;
       case TimerIntStatusReg:
-        pkt->set<uint32_t>(rawIntTimer);
+        pkt->setLE<uint32_t>(rawIntTimer);
         break;
       case WatchdogLoadReg:
-        pkt->set<uint32_t>(watchdogLoadValue);
+        pkt->setLE<uint32_t>(watchdogLoadValue);
         break;
       case WatchdogCounterReg:
         DPRINTF(Timer,
@@ -146,16 +146,16 @@ CpuLocalTimer::Timer::read(PacketPtr pkt, Addr daddr)
         time = time / parent->clockPeriod() /
             power(16, watchdogControl.prescalar);
         DPRINTF(Timer, "-- returning counter at %d\n", time);
-        pkt->set<uint32_t>(time);
+        pkt->setLE<uint32_t>(time);
         break;
       case WatchdogControlReg:
-        pkt->set<uint32_t>(watchdogControl);
+        pkt->setLE<uint32_t>(watchdogControl);
         break;
       case WatchdogIntStatusReg:
-        pkt->set<uint32_t>(rawIntWatchdog);
+        pkt->setLE<uint32_t>(rawIntWatchdog);
         break;
       case WatchdogResetStatusReg:
-        pkt->set<uint32_t>(rawResetWatchdog);
+        pkt->setLE<uint32_t>(rawResetWatchdog);
         break;
       case WatchdogDisableReg:
         panic("Tried to read from WatchdogDisableRegister\n");
@@ -197,16 +197,16 @@ CpuLocalTimer::Timer::write(PacketPtr pkt, Addr daddr)
       case TimerLoadReg:
         // Writing to this register also resets the counter register and
         // starts decrementing if the counter is enabled.
-        timerLoadValue = pkt->get<uint32_t>();
+        timerLoadValue = pkt->getLE<uint32_t>();
         restartTimerCounter(timerLoadValue);
         break;
       case TimerCounterReg:
         // Can be written, doesn't start counting unless the timer is enabled
-        restartTimerCounter(pkt->get<uint32_t>());
+        restartTimerCounter(pkt->getLE<uint32_t>());
         break;
       case TimerControlReg:
         old_enable = timerControl.enable;
-        timerControl = pkt->get<uint32_t>();
+        timerControl = pkt->getLE<uint32_t>();
         if ((old_enable == 0) && timerControl.enable)
             restartTimerCounter(timerLoadValue);
         break;
@@ -218,19 +218,19 @@ CpuLocalTimer::Timer::write(PacketPtr pkt, Addr daddr)
         }
         break;
       case WatchdogLoadReg:
-        watchdogLoadValue = pkt->get<uint32_t>();
+        watchdogLoadValue = pkt->getLE<uint32_t>();
         restartWatchdogCounter(watchdogLoadValue);
         break;
       case WatchdogCounterReg:
         // Can't be written when in watchdog mode, but can in timer mode
         if (!watchdogControl.watchdogMode) {
-            restartWatchdogCounter(pkt->get<uint32_t>());
+            restartWatchdogCounter(pkt->getLE<uint32_t>());
         }
         break;
       case WatchdogControlReg:
         old_enable = watchdogControl.enable;
         old_wd_mode = watchdogControl.watchdogMode;
-        watchdogControl = pkt->get<uint32_t>();
+        watchdogControl = pkt->getLE<uint32_t>();
         if ((old_enable == 0) && watchdogControl.enable)
             restartWatchdogCounter(watchdogLoadValue);
         // cannot disable watchdog using control register
@@ -250,7 +250,7 @@ CpuLocalTimer::Timer::write(PacketPtr pkt, Addr daddr)
         break;
       case WatchdogDisableReg:
         old_val = watchdogDisableReg;
-        watchdogDisableReg = pkt->get<uint32_t>();
+        watchdogDisableReg = pkt->getLE<uint32_t>();
         // if this sequence is observed, turn off watchdog mode
         if (old_val == 0x12345678 && watchdogDisableReg == 0x87654321)
             watchdogControl.watchdogMode = 0;

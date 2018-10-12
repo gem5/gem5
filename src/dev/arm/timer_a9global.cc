@@ -94,19 +94,19 @@ A9GlobalTimer::Timer::read(PacketPtr pkt, Addr daddr)
       case CounterRegLow32:
         time = getTimeCounterFromTicks(curTick());
         DPRINTF(Timer, "-- returning lower 32-bits of counter: %u\n", time);
-        pkt->set<uint32_t>(time);
+        pkt->setLE<uint32_t>(time);
         break;
       case CounterRegHigh32:
         time = getTimeCounterFromTicks(curTick());
         time >>= 32;
         DPRINTF(Timer, "-- returning upper 32-bits of counter: %u\n", time);
-        pkt->set<uint32_t>(time);
+        pkt->setLE<uint32_t>(time);
         break;
       case ControlReg:
-        pkt->set<uint32_t>(control);
+        pkt->setLE<uint32_t>(control);
         break;
       case IntStatusReg:
-        pkt->set<uint32_t>(rawInt);
+        pkt->setLE<uint32_t>(rawInt);
         break;
       case CmpValRegLow32:
         DPRINTF(Timer, "Event schedule for %d, clock=%d, prescale=%d\n",
@@ -117,7 +117,7 @@ A9GlobalTimer::Timer::read(PacketPtr pkt, Addr daddr)
           time = 0;
         }
         DPRINTF(Timer, "-- returning lower 32-bits of comparator: %u\n", time);
-        pkt->set<uint32_t>(time);
+        pkt->setLE<uint32_t>(time);
         break;
       case CmpValRegHigh32:
         DPRINTF(Timer, "Event schedule for %d, clock=%d, prescale=%d\n",
@@ -129,17 +129,17 @@ A9GlobalTimer::Timer::read(PacketPtr pkt, Addr daddr)
           time = 0;
         }
         DPRINTF(Timer, "-- returning upper 32-bits of comparator: %u\n", time);
-        pkt->set<uint32_t>(time);
+        pkt->setLE<uint32_t>(time);
         break;
       case AutoIncrementReg:
-        pkt->set<uint32_t>(autoIncValue);
+        pkt->setLE<uint32_t>(autoIncValue);
         break;
       default:
         panic("Tried to read A9GlobalTimer at offset %#x\n", daddr);
         break;
     }
     DPRINTF(Timer, "Reading %#x from A9GlobalTimer at offset: %#x\n",
-             pkt->get<uint32_t>(), daddr);
+             pkt->getLE<uint32_t>(), daddr);
 }
 
 Tick
@@ -165,7 +165,7 @@ void
 A9GlobalTimer::Timer::write(PacketPtr pkt, Addr daddr)
 {
     DPRINTF(Timer, "Writing %#x to A9GlobalTimer at offset: %#x\n",
-            pkt->get<uint32_t>(), daddr);
+            pkt->getLE<uint32_t>(), daddr);
     switch (daddr) {
      case CounterRegLow32:
      case CounterRegHigh32:
@@ -176,7 +176,7 @@ A9GlobalTimer::Timer::write(PacketPtr pkt, Addr daddr)
         bool old_cmpEnable;
         old_enable = control.enable;
         old_cmpEnable = control.cmpEnable;
-        control = pkt->get<uint32_t>();
+        control = pkt->getLE<uint32_t>();
         if ((old_enable == 0) && control.enable)
             restartCounter();
         if ((old_cmpEnable == 0) && control.cmpEnable)
@@ -193,14 +193,14 @@ A9GlobalTimer::Timer::write(PacketPtr pkt, Addr daddr)
         break;
       case CmpValRegLow32:
         cmpVal &= 0xFFFFFFFF00000000ULL;
-        cmpVal |= (uint64_t)pkt->get<uint32_t>();
+        cmpVal |= (uint64_t)pkt->getLE<uint32_t>();
         break;
       case CmpValRegHigh32:
         cmpVal &= 0x00000000FFFFFFFFULL;
-        cmpVal |= ((uint64_t)pkt->get<uint32_t>() << 32);
+        cmpVal |= ((uint64_t)pkt->getLE<uint32_t>() << 32);
         break;
       case AutoIncrementReg:
-        autoIncValue = pkt->get<uint32_t>();
+        autoIncValue = pkt->getLE<uint32_t>();
         break;
       default:
         panic("Tried to write A9GlobalTimer at offset %#x\n", daddr);
