@@ -103,10 +103,10 @@ X86ISA::I82094AA::read(PacketPtr pkt)
     Addr offset = pkt->getAddr() - pioAddr;
     switch(offset) {
       case 0:
-        pkt->set<uint32_t>(regSel);
+        pkt->setLE<uint32_t>(regSel);
         break;
       case 16:
-        pkt->set<uint32_t>(readReg(regSel));
+        pkt->setLE<uint32_t>(readReg(regSel));
         break;
       default:
         panic("Illegal read from I/O APIC.\n");
@@ -122,10 +122,10 @@ X86ISA::I82094AA::write(PacketPtr pkt)
     Addr offset = pkt->getAddr() - pioAddr;
     switch(offset) {
       case 0:
-        regSel = pkt->get<uint32_t>();
+        regSel = pkt->getLE<uint32_t>();
         break;
       case 16:
-        writeReg(regSel, pkt->get<uint32_t>());
+        writeReg(regSel, pkt->getLE<uint32_t>());
         break;
       default:
         panic("Illegal write to I/O APIC.\n");

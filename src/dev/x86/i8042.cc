@@ -118,10 +118,10 @@ X86ISA::I8042::read(PacketPtr pkt)
     if (addr == dataPort) {
         uint8_t data = readDataOut();
         //DPRINTF(I8042, "Read from data port got %#02x.\n", data);
-        pkt->set<uint8_t>(data);
+        pkt->setLE<uint8_t>(data);
     } else if (addr == commandPort) {
         //DPRINTF(I8042, "Read status as %#02x.\n", (uint8_t)statusReg);
-        pkt->set<uint8_t>((uint8_t)statusReg);
+        pkt->setLE<uint8_t>((uint8_t)statusReg);
     } else {
         panic("Read from unrecognized port %#x.\n", addr);
     }
@@ -134,7 +134,7 @@ X86ISA::I8042::write(PacketPtr pkt)
 {
     assert(pkt->getSize() == 1);
     Addr addr = pkt->getAddr();
-    uint8_t data = pkt->get<uint8_t>();
+    uint8_t data = pkt->getLE<uint8_t>();
     if (addr == dataPort) {
         statusReg.commandLast = 0;
         switch (lastCommand) {

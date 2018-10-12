@@ -56,16 +56,16 @@ getMem(PacketPtr pkt, uint64_t &mem, unsigned dataSize,
 {
     switch (dataSize) {
       case 1:
-        mem = pkt->get<uint8_t>();
+        mem = pkt->getLE<uint8_t>();
         break;
       case 2:
-        mem = pkt->get<uint16_t>();
+        mem = pkt->getLE<uint16_t>();
         break;
       case 4:
-        mem = pkt->get<uint32_t>();
+        mem = pkt->getLE<uint32_t>();
         break;
       case 8:
-        mem = pkt->get<uint64_t>();
+        mem = pkt->getLE<uint64_t>();
         break;
       default:
         panic("Unhandled size in getMem.\n");
@@ -78,7 +78,7 @@ template <typename T, size_t N>
 static void
 getPackedMem(PacketPtr pkt, std::array<uint64_t, N> &mem, unsigned dataSize)
 {
-    std::array<T, N> real_mem = pkt->get<std::array<T, N> >();
+    std::array<T, N> real_mem = pkt->getLE<std::array<T, N> >();
     for (int i = 0; i < N; i++)
         mem[i] = real_mem[i];
 }

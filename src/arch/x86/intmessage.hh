@@ -94,7 +94,7 @@ namespace X86ISA
     buildIntRequest(const uint8_t id, T payload, Addr offset, Addr size)
     {
         PacketPtr pkt = prepIntRequest(id, offset, size);
-        pkt->set<T>(payload);
+        pkt->setRaw<T>(payload);
         return pkt;
     }
 

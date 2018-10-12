@@ -48,7 +48,7 @@ X86ISA::Speaker::read(PacketPtr pkt)
             controlVal.gate ? "on" : "off",
             controlVal.speaker ? "on" : "off",
             controlVal.timer ? "on" : "off");
-    pkt->set((uint8_t)controlVal);
+    pkt->setLE((uint8_t)controlVal);
     pkt->makeAtomicResponse();
     return latency;
 }
@@ -58,7 +58,7 @@ X86ISA::Speaker::write(PacketPtr pkt)
 {
     assert(pkt->getAddr() == pioAddr);
     assert(pkt->getSize() == 1);
-    SpeakerControl val = pkt->get<uint8_t>();
+    SpeakerControl val = pkt->getLE<uint8_t>();
     controlVal.gate = val.gate;
     //Change the gate value in the timer.
     if (!val.gate)

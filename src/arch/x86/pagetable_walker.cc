@@ -279,9 +279,9 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     write = NULL;
     PageTableEntry pte;
     if (dataSize == 8)
-        pte = read->get<uint64_t>();
+        pte = read->getLE<uint64_t>();
     else
-        pte = read->get<uint32_t>();
+        pte = read->getLE<uint32_t>();
     VAddr vaddr = entry.vaddr;
     bool uncacheable = pte.pcd;
     Addr nextRead = 0;
@@ -522,7 +522,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         // value back to memory.
         if (doWrite) {
             write = oldRead;
-            write->set<uint64_t>(pte);
+            write->setLE<uint64_t>(pte);
             write->cmd = MemCmd::WriteReq;
         } else {
             write = NULL;

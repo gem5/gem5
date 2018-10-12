@@ -312,7 +312,7 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
     {
       case 0:
         {
-            TriggerIntMessage message = pkt->get<TriggerIntMessage>();
+            TriggerIntMessage message = pkt->getRaw<TriggerIntMessage>();
             DPRINTF(LocalApic,
                     "Got Trigger Interrupt message with vector %#x.\n",
                     message.vector);

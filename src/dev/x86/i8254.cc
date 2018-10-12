@@ -52,9 +52,9 @@ X86ISA::I8254::read(PacketPtr pkt)
     assert(pkt->getSize() == 1);
     Addr offset = pkt->getAddr() - pioAddr;
     if (offset < 3) {
-        pkt->set(pit.readCounter(offset));
+        pkt->setLE(pit.readCounter(offset));
     } else if (offset == 3) {
-        pkt->set(uint8_t(-1));
+        pkt->setLE(uint8_t(-1));
     } else {
         panic("Read from undefined i8254 register.\n");
     }
@@ -68,9 +68,9 @@ X86ISA::I8254::write(PacketPtr pkt)
     assert(pkt->getSize() == 1);
     Addr offset = pkt->getAddr() - pioAddr;
     if (offset < 3) {
-        pit.writeCounter(offset, pkt->get<uint8_t>());
+        pit.writeCounter(offset, pkt->getLE<uint8_t>());
     } else if (offset == 3) {
-        pit.writeControl(pkt->get<uint8_t>());
+        pit.writeControl(pkt->getLE<uint8_t>());
     } else {
         panic("Write to undefined i8254 register.\n");
     }
