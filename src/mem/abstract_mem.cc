@@ -289,38 +289,29 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
     return allowStore;
 }
 
+static inline void
+tracePacket(System *sys, const char *label, PacketPtr pkt)
+{
+    int size = pkt->getSize();
+#if THE_ISA != NULL_ISA
+    if (size == 1 || size == 2 || size == 4 || size == 8) {
+        DPRINTF(MemoryAccess,"%s from %s of size %i on address %#x data "
+                "%#x %c\n", label, sys->getMasterName(pkt->req->masterId()),
+                size, pkt->getAddr(), pkt->getUintX(TheISA::GuestByteOrder),
+                pkt->req->isUncacheable() ? 'U' : 'C');
+        return;
+    }
+#endif
+    DPRINTF(MemoryAccess, "%s from %s of size %i on address %#x %c\n",
+            label, sys->getMasterName(pkt->req->masterId()),
+            size, pkt->getAddr(), pkt->req->isUncacheable() ? 'U' : 'C');
+    DDUMP(MemoryAccess, pkt->getConstPtr<uint8_t>(), pkt->getSize());
+}
 
 #if TRACING_ON
-
-#define CASE(A, T)                                                        \
-  case sizeof(T):                                                         \
-    DPRINTF(MemoryAccess,"%s from %s of size %i on address 0x%x data " \
-            "0x%x %c\n", A, system()->getMasterName(pkt->req->masterId()),\
-            pkt->getSize(), pkt->getAddr(), pkt->get<T>(),                \
-            pkt->req->isUncacheable() ? 'U' : 'C');                       \
-  break
-
-
-#define TRACE_PACKET(A)                                                 \
-    do {                                                                \
-        switch (pkt->getSize()) {                                       \
-          CASE(A, uint64_t);                                            \
-          CASE(A, uint32_t);                                            \
-          CASE(A, uint16_t);                                            \
-          CASE(A, uint8_t);                                             \
-          default:                                                      \
-            DPRINTF(MemoryAccess, "%s from %s of size %i on address 0x%x %c\n",\
-                    A, system()->getMasterName(pkt->req->masterId()),          \
-                    pkt->getSize(), pkt->getAddr(),                            \
-                    pkt->req->isUncacheable() ? 'U' : 'C');                    \
-            DDUMP(MemoryAccess, pkt->getConstPtr<uint8_t>(), pkt->getSize());  \
-        }                                                                      \
-    } while (0)
-
+#   define TRACE_PACKET(A) tracePacket(system(), A, pkt)
 #else
-
-#define TRACE_PACKET(A)
-
+#   define TRACE_PACKET(A)
 #endif
 
 void
