@@ -46,20 +46,15 @@
 
 #include "config/the_isa.hh"
 
-#if THE_ISA != NULL_ISA
 #include "dev/net/etherdevice.hh"
 #include "dev/net/etherint.hh"
 #include "dev/net/etherobject.hh"
-
-#endif
-
 #include "mem/mem_object.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "sim/full_system.hh"
 
 namespace py = pybind11;
 
-#if THE_ISA != NULL_ISA
 static EtherInt *
 lookupEthPort(SimObject *so, const std::string &name, int i)
 {
@@ -77,7 +72,6 @@ lookupEthPort(SimObject *so, const std::string &name, int i)
         p = ed->getEthPort(name, i);
     return p;
 }
-#endif
 
 /**
  * Connect the described MemObject ports.  Called from Python.
@@ -88,7 +82,6 @@ static int
 connectPorts(SimObject *o1, const std::string &name1, int i1,
              SimObject *o2, const std::string &name2, int i2)
 {
-#if THE_ISA != NULL_ISA
     EtherObject *eo1, *eo2;
     EtherDevice *ed1, *ed2;
     eo1 = dynamic_cast<EtherObject*>(o1);
@@ -108,7 +101,6 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
             return 1;
         }
     }
-#endif
 
     // These could be MessageBuffers from the ruby memory system. If so, they
     // need not be connected to anything currently.
