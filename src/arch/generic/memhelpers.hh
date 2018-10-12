@@ -66,7 +66,7 @@ template <class MemT>
 void
 getMem(PacketPtr pkt, MemT &mem, Trace::InstRecord *traceData)
 {
-    mem = pkt->get<MemT>();
+    mem = pkt->get<MemT>(TheISA::GuestByteOrder);
     if (traceData)
         traceData->setData(mem);
 }

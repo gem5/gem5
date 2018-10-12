@@ -47,7 +47,7 @@ handlePseudoInst(ThreadContext *xc, Packet *pkt)
     assert((offset >> 16) == 0);
     ret = PseudoInst::pseudoInst(xc, func, subfunc);
     if (pkt->isRead())
-        pkt->set(ret);
+        pkt->set(ret, TheISA::GuestByteOrder);
 }
 
 Cycles
