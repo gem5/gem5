@@ -63,6 +63,7 @@
 #include "base/logging.hh"
 #include "base/printable.hh"
 #include "base/types.hh"
+#include "config/the_isa.hh"
 #include "mem/request.hh"
 #include "sim/core.hh"
 
@@ -1055,12 +1056,14 @@ class Packet : public Printable
     template <typename T>
     T get(ByteOrder endian) const;
 
+#if THE_ISA != NULL_ISA
     /**
      * Get the data in the packet byte swapped from guest to host
      * endian.
      */
     template <typename T>
     T get() const;
+#endif
 
     /** Set the value in the data pointer to v as big endian. */
     template <typename T>
@@ -1077,9 +1080,11 @@ class Packet : public Printable
     template <typename T>
     void set(T v, ByteOrder endian);
 
+#if THE_ISA != NULL_ISA
     /** Set the value in the data pointer to v as guest endian. */
     template <typename T>
     void set(T v);
+#endif
 
 
     /**
