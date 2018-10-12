@@ -36,9 +36,10 @@
 
 #include "mem/cache/replacement_policies/tree_plru_rp.hh"
 
-#include <memory>
+#include <cmath>
 
 #include "base/intmath.hh"
+#include "base/logging.hh"
 #include "params/TreePLRURP.hh"
 
 /**

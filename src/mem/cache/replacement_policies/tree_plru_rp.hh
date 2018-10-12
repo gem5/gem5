@@ -71,6 +71,10 @@
 #ifndef __MEM_CACHE_REPLACEMENT_POLICIES_TREE_PLRU_RP_HH__
 #define __MEM_CACHE_REPLACEMENT_POLICIES_TREE_PLRU_RP_HH__
 
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 #include "mem/cache/replacement_policies/base.hh"
 
 struct TreePLRURPParams;
