@@ -44,9 +44,6 @@
 
 Import('*')
 
-if env['TARGET_ISA'] == 'null':
-    Return()
-
 SimObject('PciDevice.py')
 Source('device.cc')
 DebugFlag('PciDevice')
