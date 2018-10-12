@@ -109,16 +109,16 @@ output exec {{
         switch (packet->getSize())
         {
           case 1:
-            return packet->get<uint8_t>();
+            return packet->getLE<uint8_t>();
 
           case 2:
-            return packet->get<uint16_t>();
+            return packet->getLE<uint16_t>();
 
           case 4:
-            return packet->get<uint32_t>();
+            return packet->getLE<uint32_t>();
 
           case 8:
-            return packet->get<uint64_t>();
+            return packet->getLE<uint64_t>();
 
           default:
             std::cerr << "bad store data size = " << packet->getSize() << std::endl;
