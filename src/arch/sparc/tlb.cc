@@ -871,90 +871,90 @@ TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
     switch (asi) {
       case ASI_LSU_CONTROL_REG:
         assert(va == 0);
-        pkt->set(tc->readMiscReg(MISCREG_MMU_LSU_CTRL));
+        pkt->setBE(tc->readMiscReg(MISCREG_MMU_LSU_CTRL));
         break;
       case ASI_MMU:
         switch (va) {
           case 0x8:
-            pkt->set(tc->readMiscReg(MISCREG_MMU_P_CONTEXT));
+            pkt->setBE(tc->readMiscReg(MISCREG_MMU_P_CONTEXT));
             break;
           case 0x10:
-            pkt->set(tc->readMiscReg(MISCREG_MMU_S_CONTEXT));
+            pkt->setBE(tc->readMiscReg(MISCREG_MMU_S_CONTEXT));
             break;
           default:
             goto doMmuReadError;
         }
         break;
       case ASI_QUEUE:
-        pkt->set(tc->readMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD +
+        pkt->setBE(tc->readMiscReg(MISCREG_QUEUE_CPU_MONDO_HEAD +
                     (va >> 4) - 0x3c));
         break;
       case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);
-        pkt->set(c0_tsb_ps0);
+        pkt->setBE(c0_tsb_ps0);
         break;
       case ASI_DMMU_CTXT_ZERO_TSB_BASE_PS1:
         assert(va == 0);
-        pkt->set(c0_tsb_ps1);
+        pkt->setBE(c0_tsb_ps1);
         break;
       case ASI_DMMU_CTXT_ZERO_CONFIG:
         assert(va == 0);
-        pkt->set(c0_config);
+        pkt->setBE(c0_config);
         break;
       case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS0:
         assert(va == 0);
-        pkt->set(itb->c0_tsb_ps0);
+        pkt->setBE(itb->c0_tsb_ps0);
         break;
       case ASI_IMMU_CTXT_ZERO_TSB_BASE_PS1:
         assert(va == 0);
-        pkt->set(itb->c0_tsb_ps1);
+        pkt->setBE(itb->c0_tsb_ps1);
         break;
       case ASI_IMMU_CTXT_ZERO_CONFIG:
         assert(va == 0);
-        pkt->set(itb->c0_config);
+        pkt->setBE(itb->c0_config);
         break;
       case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS0:
         assert(va == 0);
-        pkt->set(cx_tsb_ps0);
+        pkt->setBE(cx_tsb_ps0);
         break;
       case ASI_DMMU_CTXT_NONZERO_TSB_BASE_PS1:
         assert(va == 0);
-        pkt->set(cx_tsb_ps1);
+        pkt->setBE(cx_tsb_ps1);
         break;
       case ASI_DMMU_CTXT_NONZERO_CONFIG:
         assert(va == 0);
-        pkt->set(cx_config);
+        pkt->setBE(cx_config);
         break;
       case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS0:
         assert(va == 0);
-        pkt->set(itb->cx_tsb_ps0);
+        pkt->setBE(itb->cx_tsb_ps0);
         break;
       case ASI_IMMU_CTXT_NONZERO_TSB_BASE_PS1:
         assert(va == 0);
-        pkt->set(itb->cx_tsb_ps1);
+        pkt->setBE(itb->cx_tsb_ps1);
         break;
       case ASI_IMMU_CTXT_NONZERO_CONFIG:
         assert(va == 0);
-        pkt->set(itb->cx_config);
+        pkt->setBE(itb->cx_config);
         break;
       case ASI_SPARC_ERROR_STATUS_REG:
-        pkt->set((uint64_t)0);
+        pkt->setBE((uint64_t)0);
         break;
       case ASI_HYP_SCRATCHPAD:
       case ASI_SCRATCHPAD:
-        pkt->set(tc->readMiscReg(MISCREG_SCRATCHPAD_R0 + (va >> 3)));
+        pkt->setBE(tc->readMiscReg(MISCREG_SCRATCHPAD_R0 + (va >> 3)));
         break;
       case ASI_IMMU:
         switch (va) {
           case 0x0:
             temp = itb->tag_access;
-            pkt->set(bits(temp,63,22) | bits(temp,12,0) << 48);
+            pkt->setBE(bits(temp,63,22) | bits(temp,12,0) << 48);
             break;
           case 0x18:
-            pkt->set(itb->sfsr);
+            pkt->setBE(itb->sfsr);
             break;
           case 0x30:
-            pkt->set(itb->tag_access);
+            pkt->setBE(itb->tag_access);
             break;
           default:
             goto doMmuReadError;
@@ -964,26 +964,26 @@ TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
         switch (va) {
           case 0x0:
             temp = tag_access;
-            pkt->set(bits(temp,63,22) | bits(temp,12,0) << 48);
+            pkt->setBE(bits(temp,63,22) | bits(temp,12,0) << 48);
             break;
           case 0x18:
-            pkt->set(sfsr);
+            pkt->setBE(sfsr);
             break;
           case 0x20:
-            pkt->set(sfar);
+            pkt->setBE(sfar);
             break;
           case 0x30:
-            pkt->set(tag_access);
+            pkt->setBE(tag_access);
             break;
           case 0x80:
-            pkt->set(tc->readMiscReg(MISCREG_MMU_PART_ID));
+            pkt->setBE(tc->readMiscReg(MISCREG_MMU_PART_ID));
             break;
           default:
                 goto doMmuReadError;
         }
         break;
       case ASI_DMMU_TSB_PS0_PTR_REG:
-        pkt->set(MakeTsbPtr(Ps0,
+        pkt->setBE(MakeTsbPtr(Ps0,
             tag_access,
             c0_tsb_ps0,
             c0_config,
@@ -991,7 +991,7 @@ TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
             cx_config));
         break;
       case ASI_DMMU_TSB_PS1_PTR_REG:
-        pkt->set(MakeTsbPtr(Ps1,
+        pkt->setBE(MakeTsbPtr(Ps1,
                 tag_access,
                 c0_tsb_ps1,
                 c0_config,
@@ -999,7 +999,7 @@ TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
                 cx_config));
         break;
       case ASI_IMMU_TSB_PS0_PTR_REG:
-          pkt->set(MakeTsbPtr(Ps0,
+          pkt->setBE(MakeTsbPtr(Ps0,
                 itb->tag_access,
                 itb->c0_tsb_ps0,
                 itb->c0_config,
@@ -1007,7 +1007,7 @@ TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
                 itb->cx_config));
         break;
       case ASI_IMMU_TSB_PS1_PTR_REG:
-          pkt->set(MakeTsbPtr(Ps1,
+          pkt->setBE(MakeTsbPtr(Ps1,
                 itb->tag_access,
                 itb->c0_tsb_ps1,
                 itb->c0_config,
@@ -1019,7 +1019,7 @@ TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
             SparcISA::Interrupts * interrupts =
                 dynamic_cast<SparcISA::Interrupts *>(
                         tc->getCpuPtr()->getInterruptController(0));
-            pkt->set(interrupts->get_vec(IT_INT_VEC));
+            pkt->setBE(interrupts->get_vec(IT_INT_VEC));
         }
         break;
       case ASI_SWVR_UDB_INTR_R:
@@ -1029,7 +1029,7 @@ TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
                         tc->getCpuPtr()->getInterruptController(0));
             temp = findMsbSet(interrupts->get_vec(IT_INT_VEC));
             tc->getCpuPtr()->clearInterrupt(0, IT_INT_VEC, temp);
-            pkt->set(temp);
+            pkt->setBE(temp);
         }
         break;
       default:
@@ -1044,7 +1044,7 @@ doMmuReadError:
 Cycles
 TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
 {
-    uint64_t data = pkt->get<uint64_t>();
+    uint64_t data = pkt->getBE<uint64_t>();
     Addr va = pkt->getAddr();
     ASI asi = (ASI)pkt->req->getArchFlags();
 

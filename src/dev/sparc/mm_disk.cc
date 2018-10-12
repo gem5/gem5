@@ -83,23 +83,23 @@ MmDisk::read(PacketPtr pkt)
     }
     switch (pkt->getSize()) {
       case sizeof(uint8_t):
-        pkt->set(diskData[accessAddr % SectorSize]);
-        DPRINTF(IdeDisk, "reading byte %#x value= %#x\n", accessAddr, diskData[accessAddr %
-                SectorSize]);
+        pkt->setRaw(diskData[accessAddr % SectorSize]);
+        DPRINTF(IdeDisk, "reading byte %#x value= %#x\n",
+                accessAddr, diskData[accessAddr % SectorSize]);
         break;
       case sizeof(uint16_t):
         memcpy(&d16, diskData + (accessAddr % SectorSize), 2);
-        pkt->set(htobe(d16));
+        pkt->setRaw(d16);
         DPRINTF(IdeDisk, "reading word %#x value= %#x\n", accessAddr, d16);
         break;
       case sizeof(uint32_t):
         memcpy(&d32, diskData + (accessAddr % SectorSize), 4);
-        pkt->set(htobe(d32));
+        pkt->setRaw(d32);
         DPRINTF(IdeDisk, "reading dword %#x value= %#x\n", accessAddr, d32);
         break;
       case sizeof(uint64_t):
         memcpy(&d64, diskData + (accessAddr % SectorSize), 8);
-        pkt->set(htobe(d64));
+        pkt->setRaw(d64);
         DPRINTF(IdeDisk, "reading qword %#x value= %#x\n", accessAddr, d64);
         break;
       default:
@@ -143,22 +143,22 @@ MmDisk::write(PacketPtr pkt)
 
     switch (pkt->getSize()) {
       case sizeof(uint8_t):
-        diskData[accessAddr % SectorSize] = htobe(pkt->get<uint8_t>());
-        DPRINTF(IdeDisk, "writing byte %#x value= %#x\n", accessAddr, diskData[accessAddr %
-                SectorSize]);
+        diskData[accessAddr % SectorSize] = htobe(pkt->getRaw<uint8_t>());
+        DPRINTF(IdeDisk, "writing byte %#x value= %#x\n",
+                accessAddr, diskData[accessAddr % SectorSize]);
         break;
       case sizeof(uint16_t):
-        d16 = htobe(pkt->get<uint16_t>());
+        d16 = pkt->getRaw<uint16_t>();
         memcpy(diskData + (accessAddr % SectorSize), &d16, 2);
         DPRINTF(IdeDisk, "writing word %#x value= %#x\n", accessAddr, d16);
         break;
       case sizeof(uint32_t):
-        d32 = htobe(pkt->get<uint32_t>());
+        d32 = pkt->getRaw<uint32_t>();
         memcpy(diskData + (accessAddr % SectorSize), &d32, 4);
         DPRINTF(IdeDisk, "writing dword %#x value= %#x\n", accessAddr, d32);
         break;
       case sizeof(uint64_t):
-        d64 = htobe(pkt->get<uint64_t>());
+        d64 = pkt->getRaw<uint64_t>();
         memcpy(diskData + (accessAddr % SectorSize), &d64, 8);
         DPRINTF(IdeDisk, "writing qword %#x value= %#x\n", accessAddr, d64);
         break;

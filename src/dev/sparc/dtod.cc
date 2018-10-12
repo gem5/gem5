@@ -64,7 +64,7 @@ DumbTOD::read(PacketPtr pkt)
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     assert(pkt->getSize() == 8);
 
-    pkt->set(todTime);
+    pkt->setBE(todTime);
     todTime += 1000;
 
     pkt->makeAtomicResponse();
