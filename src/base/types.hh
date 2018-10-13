@@ -165,6 +165,9 @@ isRomMicroPC(MicroPC upc)
 
 const Addr MaxAddr = (Addr)-1;
 
+typedef uint64_t RegVal;
+typedef double FloatRegVal;
+
 /**
  * Thread index/ID type
  */
