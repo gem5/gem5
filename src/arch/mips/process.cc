@@ -224,7 +224,7 @@ MipsProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
         tc->setIntReg(ReturnValueReg, sysret.returnValue());
     } else {
         // got an error, return details
-        tc->setIntReg(SyscallSuccessReg, (IntReg) -1);
+        tc->setIntReg(SyscallSuccessReg, (uint32_t)(-1));
         tc->setIntReg(ReturnValueReg, sysret.errnoValue());
     }
 }
