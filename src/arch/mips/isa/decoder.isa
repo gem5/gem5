@@ -65,18 +65,18 @@ decode OPCODE_HI default Unknown::unknown() {
                                  0x1: ssnop({{;}});
                                  0x3: ehb({{;}});
                             }
-                            default: sll({{ Rd = Rt_uw << SA; }});
+                            default: sll({{ Rd = Rt << SA; }});
                         }
                     }
 
                     0x2: decode RS_SRL {
                         0x0:decode SRL {
-                            0: srl({{ Rd = Rt_uw >> SA; }});
+                            0: srl({{ Rd = Rt >> SA; }});
 
                             //Hardcoded assuming 32-bit ISA,
                             //probably need parameter here
                             1: rotr({{
-                                Rd = (Rt_uw << (32 - SA)) | (Rt_uw >> SA);
+                                Rd = (Rt << (32 - SA)) | (Rt >> SA);
                             }});
                         }
                     }
@@ -95,16 +95,15 @@ decode OPCODE_HI default Unknown::unknown() {
                         }});
                     }
 
-                    0x4: sllv({{ Rd = Rt_uw << Rs<4:0>; }});
+                    0x4: sllv({{ Rd = Rt << Rs<4:0>; }});
 
                     0x6: decode SRLV {
-                        0: srlv({{ Rd = Rt_uw >> Rs<4:0>; }});
+                        0: srlv({{ Rd = Rt >> Rs<4:0>; }});
 
                         //Hardcoded assuming 32-bit ISA,
                         //probably need parameter here
                         1: rotrv({{
-                            Rd = (Rt_uw << (32 - Rs<4:0>)) |
-                                 (Rt_uw >> Rs<4:0>);
+                            Rd = (Rt << (32 - Rs<4:0>)) | (Rt >> Rs<4:0>);
                         }});
                     }
 
@@ -210,23 +209,23 @@ decode OPCODE_HI default Unknown::unknown() {
                 0x0: decode FUNCTION_LO {
                     format IntOp {
                         0x0: add({{
-                            IntReg result;
+                            uint32_t result;
                             Rd = result = Rs + Rt;
                             if (FullSystem &&
                                     findOverflow(32, result, Rs, Rt)) {
                                 fault = std::make_shared<IntegerOverflowFault>();
                             }
                         }});
-                        0x1: addu({{ Rd_sw = Rs_sw + Rt_sw;}});
+                        0x1: addu({{ Rd = Rs_sw + Rt_sw;}});
                         0x2: sub({{
-                            IntReg result;
+                            uint32_t result;
                             Rd = result = Rs - Rt;
                             if (FullSystem &&
                                     findOverflow(32, result, Rs, ~Rt)) {
                                 fault = std::make_shared<IntegerOverflowFault>();
                             }
                         }});
-                        0x3: subu({{ Rd_sw = Rs_sw - Rt_sw; }});
+                        0x3: subu({{ Rd = Rs_sw - Rt_sw; }});
                         0x4: and({{ Rd = Rs & Rt; }});
                         0x5: or({{ Rd = Rs | Rt; }});
                         0x6: xor({{ Rd = Rs ^ Rt; }});
@@ -238,18 +237,18 @@ decode OPCODE_HI default Unknown::unknown() {
             0x5: decode HINT {
                 0x0: decode FUNCTION_LO {
                     format IntOp{
-                        0x2: slt({{  Rd_sw = (Rs_sw < Rt_sw) ? 1 : 0 }});
-                        0x3: sltu({{ Rd_uw = (Rs_uw < Rt_uw) ? 1 : 0 }});
+                        0x2: slt({{  Rd = (Rs_sw < Rt_sw) ? 1 : 0 }});
+                        0x3: sltu({{ Rd = (Rs < Rt) ? 1 : 0 }});
                     }
                 }
             }
 
             0x6: decode FUNCTION_LO {
                 format Trap {
-                    0x0: tge({{  cond = (Rs_sw >= Rt_sw); }});
-                    0x1: tgeu({{ cond = (Rs_uw >= Rt_uw); }});
+                    0x0: tge({{ cond = (Rs_sw >= Rt_sw); }});
+                    0x1: tgeu({{ cond = (Rs >= Rt); }});
                     0x2: tlt({{ cond = (Rs_sw < Rt_sw); }});
-                    0x3: tltu({{ cond = (Rs_uw < Rt_uw); }});
+                    0x3: tltu({{ cond = (Rs < Rt); }});
                     0x4: teq({{ cond = (Rs_sw == Rt_sw); }});
                     0x6: tne({{ cond = (Rs_sw != Rt_sw); }});
                 }
@@ -270,11 +269,11 @@ decode OPCODE_HI default Unknown::unknown() {
                 format TrapImm {
                     0x0: tgei( {{ cond = (Rs_sw >= (int16_t)INTIMM); }});
                     0x1: tgeiu({{
-                        cond = (Rs_uw >= (uint32_t)(int32_t)(int16_t)INTIMM);
+                        cond = (Rs >= (uint32_t)(int32_t)(int16_t)INTIMM);
                     }});
                     0x2: tlti( {{ cond = (Rs_sw < (int16_t)INTIMM); }});
                     0x3: tltiu({{
-                        cond = (Rs_uw < (uint32_t)(int32_t)(int16_t)INTIMM);
+                        cond = (Rs < (uint32_t)(int32_t)(int16_t)INTIMM);
                     }});
                     0x4: teqi( {{ cond = (Rs_sw == (int16_t)INTIMM); }});
                     0x6: tnei( {{ cond = (Rs_sw != (int16_t)INTIMM); }});
@@ -323,19 +322,19 @@ decode OPCODE_HI default Unknown::unknown() {
     0x1: decode OPCODE_LO {
         format IntImmOp {
             0x0: addi({{
-                IntReg result;
+                uint32_t result;
                 Rt = result = Rs + imm;
                 if (FullSystem &&
                         findOverflow(32, result, Rs, imm)) {
                     fault = std::make_shared<IntegerOverflowFault>();
                 }
             }});
-            0x1: addiu({{ Rt_sw = Rs_sw + imm; }});
-            0x2: slti({{ Rt_sw = (Rs_sw < imm) ? 1 : 0 }});
-            0x3: sltiu({{ Rt_uw = (Rs_uw < (uint32_t)sextImm) ? 1 : 0;}});
-            0x4: andi({{ Rt_sw = Rs_sw & zextImm; }});
-            0x5: ori({{ Rt_sw = Rs_sw | zextImm; }});
-            0x6: xori({{ Rt_sw = Rs_sw ^ zextImm; }});
+            0x1: addiu({{ Rt = Rs_sw + imm; }});
+            0x2: slti({{ Rt = (Rs_sw < imm) ? 1 : 0 }});
+            0x3: sltiu({{ Rt = (Rs < (uint32_t)sextImm) ? 1 : 0;}});
+            0x4: andi({{ Rt = Rs_sw & zextImm; }});
+            0x5: ori({{ Rt = Rs_sw | zextImm; }});
+            0x6: xori({{ Rt = Rs_sw ^ zextImm; }});
 
             0x7: decode RS {
                 0x0: lui({{ Rt = imm << 16; }});
@@ -554,27 +553,29 @@ decode OPCODE_HI default Unknown::unknown() {
                                 uint32_t data;
                                 switch (RD) {
                                   case 25:
-                                    data = (Rt_uw<7:1> << 25) |  // move 31-25
+                                    data = (Rt<7:1> << 25) |  // move 31-25
                                            (FCSR & 0x01000000) | // bit 24
                                            (FCSR & 0x004FFFFF);  // bit 22-0
                                     break;
                                   case 26:
                                     data = (FCSR & 0xFFFC0000) | // move 31-18
-                                           Rt_uw<17:12> << 12 |  // bit 17-12
-                                           (FCSR & 0x00000F80) << 7 | // bit 11-7
-                                           Rt_uw<6:2> << 2 |     // bit 6-2
+                                           Rt<17:12> << 12 |  // bit 17-12
+                                           // bit 11-7
+                                           (FCSR & 0x00000F80) << 7 |
+                                           Rt<6:2> << 2 |     // bit 6-2
                                            (FCSR & 0x00000002);  // bit 1...0
                                     break;
                                   case 28:
                                     data = (FCSR & 0xFE000000) | // move 31-25
-                                           Rt_uw<2:2> << 24 |    // bit 24
-                                           (FCSR & 0x00FFF000) << 23 | // bit 23-12
-                                           Rt_uw<11:7> << 7 |    // bit 24
+                                           Rt<2:2> << 24 |    // bit 24
+                                           // bit 23-12
+                                           (FCSR & 0x00FFF000) << 23 |
+                                           Rt<11:7> << 7 |    // bit 24
                                            (FCSR & 0x000007E) |
-                                           Rt_uw<1:0>;           // bit 22-0
+                                           Rt<1:0>;           // bit 22-0
                                     break;
                                   case 31:
-                                    data = Rt_uw;
+                                    data = Rt;
                                     break;
                                   default:
                                     panic("FP Control Value (%d) "
@@ -932,7 +933,7 @@ decode OPCODE_HI default Unknown::unknown() {
             0x0: decode RS_HI {
                 0x0: decode RS_LO {
                     format CP1Control {
-                        0x0: mfc1 ({{ Rt_uw = Fs_uw; }});
+                        0x0: mfc1 ({{ Rt = Fs_uw; }});
 
                         0x2: cfc1({{
                             switch (FS) {
@@ -959,34 +960,34 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
                         }});
 
-                        0x3: mfhc1({{ Rt_uw = Fs_ud<63:32>; }});
+                        0x3: mfhc1({{ Rt = Fs_ud<63:32>; }});
 
-                        0x4: mtc1({{ Fs_uw = Rt_uw; }});
+                        0x4: mtc1({{ Fs_uw = Rt; }});
 
                         0x6: ctc1({{
                             switch (FS) {
                               case 25:
-                                FCSR = (Rt_uw<7:1> << 25) |  // move 31-25
+                                FCSR = (Rt<7:1> << 25) |  // move 31-25
                                        (FCSR & 0x01000000) | // bit 24
                                        (FCSR & 0x004FFFFF);  // bit 22-0
                                 break;
                               case 26:
                                 FCSR = (FCSR & 0xFFFC0000) | // move 31-18
-                                       Rt_uw<17:12> << 12 |  // bit 17-12
+                                       Rt<17:12> << 12 |  // bit 17-12
                                        (FCSR & 0x00000F80) << 7 | // bit 11-7
-                                       Rt_uw<6:2> << 2 |     // bit 6-2
+                                       Rt<6:2> << 2 |     // bit 6-2
                                        (FCSR & 0x00000002);  // bit 1-0
                                 break;
                               case 28:
                                 FCSR = (FCSR & 0xFE000000) | // move 31-25
-                                       Rt_uw<2:2> << 24 |    // bit 24
+                                       Rt<2:2> << 24 |    // bit 24
                                        (FCSR & 0x00FFF000) << 23 | // bit 23-12
-                                       Rt_uw<11:7> << 7 |    // bit 24
+                                       Rt<11:7> << 7 |    // bit 24
                                        (FCSR & 0x000007E) |
-                                       Rt_uw<1:0>;           // bit 22-0
+                                       Rt<1:0>;           // bit 22-0
                                 break;
                               case 31:
-                                FCSR = Rt_uw;
+                                FCSR = Rt;
                                 break;
 
                               default:
@@ -998,7 +999,7 @@ decode OPCODE_HI default Unknown::unknown() {
                         }});
 
                         0x7: mthc1({{
-                             uint64_t fs_hi = Rt_uw;
+                             uint64_t fs_hi = Rt;
                              uint64_t fs_lo = Fs_ud & 0x0FFFFFFFF;
                              Fs_ud = (fs_hi << 32) | fs_lo;
                         }});
@@ -1114,8 +1115,8 @@ decode OPCODE_HI default Unknown::unknown() {
                             }
 
                             0x6: FloatOp::cvt_ps_s({{
-                                Fd_ud = (uint64_t) Fs_uw << 32 |
-                                        (uint64_t) Ft_uw;
+                                Fd_ud = (uint64_t)Fs_uw << 32 |
+                                        (uint64_t)Ft_uw;
                             }});
                             format CP1Unimpl {
                                 default: unknown();
@@ -1510,7 +1511,7 @@ decode OPCODE_HI default Unknown::unknown() {
         0x3: decode FUNCTION_HI {
             0x0: decode FUNCTION_LO {
                 format LoadIndexedMemory {
-                    0x0: lwxc1({{ Fd_uw = Mem_uw; }});
+                    0x0: lwxc1({{ Fd_uw = Mem; }});
                     0x1: ldxc1({{ Fd_ud = Mem_ud; }});
                     0x5: luxc1({{ Fd_ud = Mem_ud; }},
                                {{ EA = (Rs + Rt) & ~7; }});
@@ -1519,7 +1520,7 @@ decode OPCODE_HI default Unknown::unknown() {
 
             0x1: decode FUNCTION_LO {
                 format StoreIndexedMemory {
-                    0x0: swxc1({{ Mem_uw = Fs_uw; }});
+                    0x0: swxc1({{ Mem = Fs_uw; }});
                     0x1: sdxc1({{ Mem_ud = Fs_ud; }});
                     0x5: suxc1({{ Mem_ud = Fs_ud; }},
                                {{ EA = (Rs + Rt) & ~7; }});
@@ -1595,7 +1596,7 @@ decode OPCODE_HI default Unknown::unknown() {
             0x0: decode FUNCTION_LO {
                 0x2: IntOp::mul({{
                     int64_t temp1 = Rs_sd * Rt_sd;
-                    Rd_sw = temp1<31:0>;
+                    Rd = temp1<31:0>;
                 }}, IntMultOp);
 
                 format HiLoRdSelValOp {
@@ -1628,7 +1629,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                 break;
                             }
                         }
-                        Rd_uw = cnt;
+                        Rd = cnt;
                     }});
                     0x1: clo({{
                         int cnt = 32;
@@ -1638,7 +1639,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                 break;
                             }
                         }
-                        Rd_uw = cnt;
+                        Rd = cnt;
                     }});
                 }
             }
@@ -1653,11 +1654,11 @@ decode OPCODE_HI default Unknown::unknown() {
         0x7: decode FUNCTION_HI {
             0x0: decode FUNCTION_LO {
                 format BasicOp {
-                    0x0: ext({{ Rt_uw = bits(Rs_uw, MSB+LSB, LSB); }});
+                    0x0: ext({{ Rt = bits(Rs, MSB + LSB, LSB); }});
                     0x4: ins({{
-                        Rt_uw = bits(Rt_uw, 31, MSB+1) << (MSB+1) |
-                                bits(Rs_uw, MSB-LSB, 0) << LSB |
-                                bits(Rt_uw, LSB-1, 0);
+                        Rt = bits(Rt, 31, MSB + 1) << (MSB + 1) |
+                             bits(Rs, MSB - LSB, 0) << LSB |
+                             bits(Rt, LSB - 1, 0);
                     }});
                 }
             }
@@ -1668,7 +1669,7 @@ decode OPCODE_HI default Unknown::unknown() {
                         forkThread(xc->tcBase(), fault, RD, Rs, Rt);
                     }}, UserMode);
                     0x1: yield({{
-                        Rd_sw = yieldThread(xc->tcBase(), fault, Rs_sw,
+                        Rd = yieldThread(xc->tcBase(), fault, Rs_sw,
                                             YQMask);
                     }}, UserMode);
                 }
@@ -1677,17 +1678,16 @@ decode OPCODE_HI default Unknown::unknown() {
                 0x2: decode OP_HI {
                     0x0: decode OP_LO {
                         format LoadIndexedMemory {
-                            0x0: lwx({{ Rd_sw = Mem_sw; }});
-                            0x4: lhx({{ Rd_sw = Mem_sh; }});
-                            0x6: lbux({{ Rd_uw = Mem_ub; }});
+                            0x0: lwx({{ Rd = Mem; }});
+                            0x4: lhx({{ Rd = Mem_sh; }});
+                            0x6: lbux({{ Rd = Mem_ub; }});
                         }
                     }
                 }
                 0x4: DspIntOp::insv({{
                     int pos = dspctl<5:0>;
                     int size = dspctl<12:7> - 1;
-                    Rt_uw = insertBits(Rt_uw, pos+size,
-                                       pos, Rs_uw<size:0>);
+                    Rt = insertBits(Rt, pos + size, pos, Rs<size:0>);
                 }});
             }
 
@@ -1699,64 +1699,62 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: decode OP_LO {
                         format DspIntOp {
                             0x0: addu_qb({{
-                                Rd_uw = dspAdd(Rs_uw, Rt_uw, SIMD_FMT_QB,
-                                               NOSATURATE, UNSIGNED, &dspctl);
+                                Rd = dspAdd(Rs, Rt, SIMD_FMT_QB,
+                                            NOSATURATE, UNSIGNED, &dspctl);
                             }});
                             0x1: subu_qb({{
-                                Rd_uw = dspSub(Rs_uw, Rt_uw, SIMD_FMT_QB,
-                                               NOSATURATE, UNSIGNED, &dspctl);
+                                Rd = dspSub(Rs, Rt, SIMD_FMT_QB,
+                                            NOSATURATE, UNSIGNED, &dspctl);
                             }});
                             0x4: addu_s_qb({{
-                                Rd_uw = dspAdd(Rs_uw, Rt_uw, SIMD_FMT_QB,
-                                               SATURATE, UNSIGNED, &dspctl);
+                                Rd = dspAdd(Rs, Rt, SIMD_FMT_QB,
+                                            SATURATE, UNSIGNED, &dspctl);
                             }});
                             0x5: subu_s_qb({{
-                                Rd_uw = dspSub(Rs_uw, Rt_uw, SIMD_FMT_QB,
-                                               SATURATE, UNSIGNED, &dspctl);
+                                Rd = dspSub(Rs, Rt, SIMD_FMT_QB,
+                                            SATURATE, UNSIGNED, &dspctl);
                             }});
                             0x6: muleu_s_ph_qbl({{
-                                Rd_uw = dspMuleu(Rs_uw, Rt_uw,
-                                                 MODE_L, &dspctl);
+                                Rd = dspMuleu(Rs, Rt, MODE_L, &dspctl);
                             }}, IntMultOp);
                             0x7: muleu_s_ph_qbr({{
-                                Rd_uw = dspMuleu(Rs_uw, Rt_uw,
-                                                 MODE_R, &dspctl);
+                                Rd = dspMuleu(Rs, Rt, MODE_R, &dspctl);
                             }}, IntMultOp);
                         }
                     }
                     0x1: decode OP_LO {
                         format DspIntOp {
                             0x0: addu_ph({{
-                                Rd_uw = dspAdd(Rs_uw, Rt_uw, SIMD_FMT_PH,
-                                               NOSATURATE, UNSIGNED, &dspctl);
+                                Rd = dspAdd(Rs, Rt, SIMD_FMT_PH,
+                                            NOSATURATE, UNSIGNED, &dspctl);
                             }});
                             0x1: subu_ph({{
-                                Rd_uw = dspSub(Rs_uw, Rt_uw, SIMD_FMT_PH,
-                                               NOSATURATE, UNSIGNED, &dspctl);
+                                Rd = dspSub(Rs, Rt, SIMD_FMT_PH,
+                                            NOSATURATE, UNSIGNED, &dspctl);
                             }});
                             0x2: addq_ph({{
-                                Rd_uw = dspAdd(Rs_uw, Rt_uw, SIMD_FMT_PH,
-                                               NOSATURATE, SIGNED, &dspctl);
+                                Rd = dspAdd(Rs, Rt, SIMD_FMT_PH,
+                                            NOSATURATE, SIGNED, &dspctl);
                             }});
                             0x3: subq_ph({{
-                                Rd_uw = dspSub(Rs_uw, Rt_uw, SIMD_FMT_PH,
-                                               NOSATURATE, SIGNED, &dspctl);
+                                Rd = dspSub(Rs, Rt, SIMD_FMT_PH,
+                                            NOSATURATE, SIGNED, &dspctl);
                             }});
                             0x4: addu_s_ph({{
-                                Rd_uw = dspAdd(Rs_uw, Rt_uw, SIMD_FMT_PH,
-                                               SATURATE, UNSIGNED, &dspctl);
+                                Rd = dspAdd(Rs, Rt, SIMD_FMT_PH,
+                                            SATURATE, UNSIGNED, &dspctl);
                             }});
                             0x5: subu_s_ph({{
-                                Rd_uw = dspSub(Rs_uw, Rt_uw, SIMD_FMT_PH,
-                                               SATURATE, UNSIGNED, &dspctl);
+                                Rd = dspSub(Rs, Rt, SIMD_FMT_PH,
+                                            SATURATE, UNSIGNED, &dspctl);
                             }});
                             0x6: addq_s_ph({{
-                                Rd_uw = dspAdd(Rs_uw, Rt_uw, SIMD_FMT_PH,
-                                               SATURATE, SIGNED, &dspctl);
+                                Rd = dspAdd(Rs, Rt, SIMD_FMT_PH,
+                                            SATURATE, SIGNED, &dspctl);
                             }});
                             0x7: subq_s_ph({{
-                                Rd_uw = dspSub(Rs_uw, Rt_uw, SIMD_FMT_PH,
-                                               SATURATE, SIGNED, &dspctl);
+                                Rd = dspSub(Rs, Rt, SIMD_FMT_PH,
+                                            SATURATE, SIGNED, &dspctl);
                             }});
                         }
                     }
@@ -1765,31 +1763,31 @@ decode OPCODE_HI default Unknown::unknown() {
                             0x0: addsc({{
                                 int64_t dresult;
                                 dresult = Rs_ud + Rt_ud;
-                                Rd_sw = dresult<31:0>;
+                                Rd = dresult<31:0>;
                                 dspctl = insertBits(dspctl, 13, 13,
                                                     dresult<32:32>);
                             }});
                             0x1: addwc({{
                                 int64_t dresult;
                                 dresult = Rs_sd + Rt_sd + dspctl<13:13>;
-                                Rd_sw = dresult<31:0>;
+                                Rd = dresult<31:0>;
                                 if (dresult<32:32> != dresult<31:31>)
                                     dspctl = insertBits(dspctl, 20, 20, 1);
                             }});
                             0x2: modsub({{
-                                Rd_sw = (Rs_sw == 0) ? Rt_sw<23:8> :
+                                Rd = (Rs_sw == 0) ? Rt_sw<23:8> :
                                                        Rs_sw - Rt_sw<7:0>;
                             }});
                             0x4: raddu_w_qb({{
-                                Rd_uw = Rs_uw<31:24> + Rs_uw<23:16> +
-                                        Rs_uw<15:8> + Rs_uw<7:0>;
+                                Rd = Rs<31:24> + Rs<23:16> +
+                                     Rs<15:8> + Rs<7:0>;
                             }});
                             0x6: addq_s_w({{
-                                Rd_sw = dspAdd(Rs_sw, Rt_sw, SIMD_FMT_W,
+                                Rd = dspAdd(Rs_sw, Rt_sw, SIMD_FMT_W,
                                                SATURATE, SIGNED, &dspctl);
                             }});
                             0x7: subq_s_w({{
-                                Rd_sw = dspSub(Rs_sw, Rt_sw, SIMD_FMT_W,
+                                Rd = dspSub(Rs_sw, Rt_sw, SIMD_FMT_W,
                                                SATURATE, SIGNED, &dspctl);
                             }});
                         }
@@ -1797,19 +1795,19 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x3: decode OP_LO {
                         format DspIntOp {
                             0x4: muleq_s_w_phl({{
-                                Rd_sw = dspMuleq(Rs_sw, Rt_sw,
+                                Rd = dspMuleq(Rs_sw, Rt_sw,
                                                  MODE_L, &dspctl);
                             }}, IntMultOp);
                             0x5: muleq_s_w_phr({{
-                                Rd_sw = dspMuleq(Rs_sw, Rt_sw,
+                                Rd = dspMuleq(Rs_sw, Rt_sw,
                                                  MODE_R, &dspctl);
                             }}, IntMultOp);
                             0x6: mulq_s_ph({{
-                                Rd_sw = dspMulq(Rs_sw, Rt_sw, SIMD_FMT_PH,
+                                Rd = dspMulq(Rs_sw, Rt_sw, SIMD_FMT_PH,
                                                 SATURATE, NOROUND, &dspctl);
                             }}, IntMultOp);
                             0x7: mulq_rs_ph({{
-                                Rd_sw = dspMulq(Rs_sw, Rt_sw, SIMD_FMT_PH,
+                                Rd = dspMulq(Rs_sw, Rt_sw, SIMD_FMT_PH,
                                                 SATURATE, ROUND, &dspctl);
                             }}, IntMultOp);
                         }
@@ -1822,105 +1820,98 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: decode OP_LO {
                         format DspIntOp {
                             0x0: cmpu_eq_qb({{
-                                dspCmp(Rs_uw, Rt_uw, SIMD_FMT_QB,
+                                dspCmp(Rs, Rt, SIMD_FMT_QB,
                                        UNSIGNED, CMP_EQ, &dspctl);
                             }});
                             0x1: cmpu_lt_qb({{
-                                dspCmp(Rs_uw, Rt_uw, SIMD_FMT_QB,
+                                dspCmp(Rs, Rt, SIMD_FMT_QB,
                                        UNSIGNED, CMP_LT, &dspctl);
                             }});
                             0x2: cmpu_le_qb({{
-                                dspCmp(Rs_uw, Rt_uw, SIMD_FMT_QB,
+                                dspCmp(Rs, Rt, SIMD_FMT_QB,
                                        UNSIGNED, CMP_LE, &dspctl);
                             }});
                             0x3: pick_qb({{
-                                Rd_uw = dspPick(Rs_uw, Rt_uw,
-                                                SIMD_FMT_QB, &dspctl);
+                                Rd = dspPick(Rs, Rt, SIMD_FMT_QB, &dspctl);
                             }});
                             0x4: cmpgu_eq_qb({{
-                                Rd_uw = dspCmpg(Rs_uw, Rt_uw, SIMD_FMT_QB,
-                                                UNSIGNED, CMP_EQ );
+                                Rd = dspCmpg(Rs, Rt, SIMD_FMT_QB,
+                                             UNSIGNED, CMP_EQ );
                             }});
                             0x5: cmpgu_lt_qb({{
-                                Rd_uw = dspCmpg(Rs_uw, Rt_uw, SIMD_FMT_QB,
-                                                UNSIGNED, CMP_LT);
+                                Rd = dspCmpg(Rs, Rt, SIMD_FMT_QB,
+                                             UNSIGNED, CMP_LT);
                             }});
                             0x6: cmpgu_le_qb({{
-                                Rd_uw = dspCmpg(Rs_uw, Rt_uw, SIMD_FMT_QB,
-                                                UNSIGNED, CMP_LE);
+                                Rd = dspCmpg(Rs, Rt, SIMD_FMT_QB,
+                                             UNSIGNED, CMP_LE);
                             }});
                         }
                     }
                     0x1: decode OP_LO {
                         format DspIntOp {
                             0x0: cmp_eq_ph({{
-                                dspCmp(Rs_uw, Rt_uw, SIMD_FMT_PH,
+                                dspCmp(Rs, Rt, SIMD_FMT_PH,
                                        SIGNED, CMP_EQ, &dspctl);
                             }});
                             0x1: cmp_lt_ph({{
-                                dspCmp(Rs_uw, Rt_uw, SIMD_FMT_PH,
+                                dspCmp(Rs, Rt, SIMD_FMT_PH,
                                        SIGNED, CMP_LT, &dspctl);
                             }});
                             0x2: cmp_le_ph({{
-                                dspCmp(Rs_uw, Rt_uw, SIMD_FMT_PH,
+                                dspCmp(Rs, Rt, SIMD_FMT_PH,
                                        SIGNED, CMP_LE, &dspctl);
                             }});
                             0x3: pick_ph({{
-                                Rd_uw = dspPick(Rs_uw, Rt_uw,
-                                                SIMD_FMT_PH, &dspctl);
+                                Rd = dspPick(Rs, Rt, SIMD_FMT_PH, &dspctl);
                             }});
                             0x4: precrq_qb_ph({{
-                                Rd_uw = Rs_uw<31:24> << 24 |
-                                        Rs_uw<15:8> << 16 |
-                                        Rt_uw<31:24> << 8 |
-                                        Rt_uw<15:8>;
+                                Rd = Rs<31:24> << 24 | Rs<15:8> << 16 |
+                                     Rt<31:24> << 8 | Rt<15:8>;
                             }});
                             0x5: precr_qb_ph({{
-                                Rd_uw = Rs_uw<23:16> << 24 |
-                                        Rs_uw<7:0> << 16 |
-                                        Rt_uw<23:16> << 8 |
-                                        Rt_uw<7:0>;
+                                Rd = Rs<23:16> << 24 | Rs<7:0> << 16 |
+                                     Rt<23:16> << 8 | Rt<7:0>;
                             }});
                             0x6: packrl_ph({{
-                                Rd_uw = dspPack(Rs_uw, Rt_uw, SIMD_FMT_PH);
+                                Rd = dspPack(Rs, Rt, SIMD_FMT_PH);
                             }});
                             0x7: precrqu_s_qb_ph({{
-                                Rd_uw = dspPrecrqu(Rs_uw, Rt_uw, &dspctl);
+                                Rd = dspPrecrqu(Rs, Rt, &dspctl);
                             }});
                         }
                     }
                     0x2: decode OP_LO {
                         format DspIntOp {
                             0x4: precrq_ph_w({{
-                                Rd_uw = Rs_uw<31:16> << 16 | Rt_uw<31:16>;
+                                Rd = Rs<31:16> << 16 | Rt<31:16>;
                             }});
                             0x5: precrq_rs_ph_w({{
-                                Rd_uw = dspPrecrq(Rs_uw, Rt_uw,
-                                                  SIMD_FMT_W, &dspctl);
+                                Rd = dspPrecrq(Rs, Rt, SIMD_FMT_W, &dspctl);
                             }});
                         }
                     }
                     0x3: decode OP_LO {
                         format DspIntOp {
                             0x0: cmpgdu_eq_qb({{
-                                Rd_uw = dspCmpgd(Rs_uw, Rt_uw, SIMD_FMT_QB,
-                                                 UNSIGNED, CMP_EQ, &dspctl);
+                                Rd = dspCmpgd(Rs, Rt, SIMD_FMT_QB,
+                                              UNSIGNED, CMP_EQ, &dspctl);
                             }});
                             0x1: cmpgdu_lt_qb({{
-                                Rd_uw = dspCmpgd(Rs_uw, Rt_uw, SIMD_FMT_QB,
-                                                 UNSIGNED, CMP_LT, &dspctl);
+                                Rd = dspCmpgd(Rs, Rt, SIMD_FMT_QB,
+                                              UNSIGNED, CMP_LT, &dspctl);
                             }});
                             0x2: cmpgdu_le_qb({{
-                                Rd_uw = dspCmpgd(Rs_uw, Rt_uw, SIMD_FMT_QB,
-                                                 UNSIGNED, CMP_LE, &dspctl);
+                                Rd = dspCmpgd(Rs, Rt, SIMD_FMT_QB,
+                                              UNSIGNED, CMP_LE, &dspctl);
                             }});
                             0x6: precr_sra_ph_w({{
-                                Rt_uw = dspPrecrSra(Rt_uw, Rs_uw, RD,
-                                                    SIMD_FMT_W, NOROUND);
+                                Rt = dspPrecrSra(Rt, Rs, RD,
+                                                 SIMD_FMT_W, NOROUND);
                             }});
                             0x7: precr_sra_r_ph_w({{
-                                Rt_uw = dspPrecrSra(Rt_uw, Rs_uw, RD,
-                                                    SIMD_FMT_W, ROUND);
+                                Rt = dspPrecrSra(Rt, Rs, RD,
+                                                 SIMD_FMT_W, ROUND);
                             }});
                         }
                     }
@@ -1932,91 +1923,86 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: decode OP_LO {
                         format DspIntOp {
                             0x1: absq_s_qb({{
-                                Rd_sw = dspAbs(Rt_sw, SIMD_FMT_QB, &dspctl);
+                                Rd = dspAbs(Rt_sw, SIMD_FMT_QB, &dspctl);
                             }});
                             0x2: repl_qb({{
-                                Rd_uw = RS_RT<7:0> << 24 |
-                                        RS_RT<7:0> << 16 |
-                                        RS_RT<7:0> << 8 |
-                                        RS_RT<7:0>;
+                                Rd = RS_RT<7:0> << 24 | RS_RT<7:0> << 16 |
+                                     RS_RT<7:0> << 8 | RS_RT<7:0>;
                             }});
                             0x3: replv_qb({{
-                                Rd_sw = Rt_uw<7:0> << 24 |
-                                        Rt_uw<7:0> << 16 |
-                                        Rt_uw<7:0> << 8 |
-                                        Rt_uw<7:0>;
+                                Rd = Rt<7:0> << 24 | Rt<7:0> << 16 |
+                                     Rt<7:0> << 8 | Rt<7:0>;
                             }});
                             0x4: precequ_ph_qbl({{
-                                Rd_uw = dspPrece(Rt_uw, SIMD_FMT_QB, UNSIGNED,
-                                                 SIMD_FMT_PH, SIGNED, MODE_L);
+                                Rd = dspPrece(Rt, SIMD_FMT_QB, UNSIGNED,
+                                              SIMD_FMT_PH, SIGNED, MODE_L);
                             }});
                             0x5: precequ_ph_qbr({{
-                                Rd_uw = dspPrece(Rt_uw, SIMD_FMT_QB, UNSIGNED,
-                                                 SIMD_FMT_PH, SIGNED, MODE_R);
+                                Rd = dspPrece(Rt, SIMD_FMT_QB, UNSIGNED,
+                                              SIMD_FMT_PH, SIGNED, MODE_R);
                             }});
                             0x6: precequ_ph_qbla({{
-                                Rd_uw = dspPrece(Rt_uw, SIMD_FMT_QB, UNSIGNED,
-                                                 SIMD_FMT_PH, SIGNED, MODE_LA);
+                                Rd = dspPrece(Rt, SIMD_FMT_QB, UNSIGNED,
+                                              SIMD_FMT_PH, SIGNED, MODE_LA);
                             }});
                             0x7: precequ_ph_qbra({{
-                                Rd_uw = dspPrece(Rt_uw, SIMD_FMT_QB, UNSIGNED,
-                                                 SIMD_FMT_PH, SIGNED, MODE_RA);
+                                Rd = dspPrece(Rt, SIMD_FMT_QB, UNSIGNED,
+                                              SIMD_FMT_PH, SIGNED, MODE_RA);
                             }});
                         }
                     }
                     0x1: decode OP_LO {
                         format DspIntOp {
                             0x1: absq_s_ph({{
-                                Rd_sw = dspAbs(Rt_sw, SIMD_FMT_PH, &dspctl);
+                                Rd = dspAbs(Rt_sw, SIMD_FMT_PH, &dspctl);
                             }});
                             0x2: repl_ph({{
-                                Rd_uw = (sext<10>(RS_RT))<15:0> << 16 |
+                                Rd = (sext<10>(RS_RT))<15:0> << 16 |
                                         (sext<10>(RS_RT))<15:0>;
                             }});
                             0x3: replv_ph({{
-                                Rd_uw = Rt_uw<15:0> << 16 |
-                                        Rt_uw<15:0>;
+                                Rd = Rt<15:0> << 16 | Rt<15:0>;
                             }});
                             0x4: preceq_w_phl({{
-                                Rd_uw = dspPrece(Rt_uw, SIMD_FMT_PH, SIGNED,
-                                                 SIMD_FMT_W, SIGNED, MODE_L);
+                                Rd = dspPrece(Rt, SIMD_FMT_PH, SIGNED,
+                                              SIMD_FMT_W, SIGNED, MODE_L);
                             }});
                             0x5: preceq_w_phr({{
-                                Rd_uw = dspPrece(Rt_uw, SIMD_FMT_PH, SIGNED,
-                                                 SIMD_FMT_W, SIGNED, MODE_R);
+                                Rd = dspPrece(Rt, SIMD_FMT_PH, SIGNED,
+                                              SIMD_FMT_W, SIGNED, MODE_R);
                             }});
                         }
                     }
                     0x2: decode OP_LO {
                         format DspIntOp {
                             0x1: absq_s_w({{
-                                Rd_sw = dspAbs(Rt_sw, SIMD_FMT_W, &dspctl);
+                                Rd = dspAbs(Rt_sw, SIMD_FMT_W, &dspctl);
                             }});
                         }
                     }
                     0x3: decode OP_LO {
                         0x3: IntOp::bitrev({{
-                            Rd_uw = bitrev( Rt_uw<15:0> );
+                            Rd = bitrev(Rt<15:0>);
                         }});
                         format DspIntOp {
                             0x4: preceu_ph_qbl({{
-                                Rd_uw = dspPrece(Rt_uw, SIMD_FMT_QB,
-                                                 UNSIGNED, SIMD_FMT_PH,
+                                Rd = dspPrece(Rt, SIMD_FMT_QB,
+                                              UNSIGNED, SIMD_FMT_PH,
                                                  UNSIGNED, MODE_L);
                             }});
                             0x5: preceu_ph_qbr({{
-                                Rd_uw = dspPrece(Rt_uw, SIMD_FMT_QB,
-                                                 UNSIGNED, SIMD_FMT_PH,
+                                Rd = dspPrece(Rt, SIMD_FMT_QB,
+                                              UNSIGNED, SIMD_FMT_PH,
                                                  UNSIGNED, MODE_R );
                             }});
                             0x6: preceu_ph_qbla({{
-                                Rd_uw = dspPrece(Rt_uw, SIMD_FMT_QB,
-                                                 UNSIGNED, SIMD_FMT_PH,
-                                                 UNSIGNED, MODE_LA );
+                                Rd = dspPrece(Rt, SIMD_FMT_QB,
+                                              UNSIGNED, SIMD_FMT_PH,
+                                              UNSIGNED, MODE_LA );
                             }});
                             0x7: preceu_ph_qbra({{
-                                Rd_uw = dspPrece(Rt_uw, SIMD_FMT_QB,
-                                                 UNSIGNED, SIMD_FMT_PH,
+                                Rd = dspPrece(Rt, SIMD_FMT_QB,
+                                              UNSIGNED, SIMD_FMT_PH,
                                                  UNSIGNED, MODE_RA);
                             }});
                         }
@@ -2029,104 +2015,104 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: decode OP_LO {
                         format DspIntOp {
                             0x0: shll_qb({{
-                                Rd_sw = dspShll(Rt_sw, RS, SIMD_FMT_QB,
-                                                NOSATURATE, UNSIGNED, &dspctl);
+                                Rd = dspShll(Rt_sw, RS, SIMD_FMT_QB,
+                                             NOSATURATE, UNSIGNED, &dspctl);
                             }});
                             0x1: shrl_qb({{
-                                Rd_sw = dspShrl(Rt_sw, RS, SIMD_FMT_QB,
-                                                UNSIGNED);
+                                Rd = dspShrl(Rt_sw, RS, SIMD_FMT_QB,
+                                             UNSIGNED);
                             }});
                             0x2: shllv_qb({{
-                                Rd_sw = dspShll(Rt_sw, Rs_sw, SIMD_FMT_QB,
-                                                NOSATURATE, UNSIGNED, &dspctl);
+                                Rd = dspShll(Rt_sw, Rs_sw, SIMD_FMT_QB,
+                                             NOSATURATE, UNSIGNED, &dspctl);
                             }});
                             0x3: shrlv_qb({{
-                                Rd_sw = dspShrl(Rt_sw, Rs_sw, SIMD_FMT_QB,
-                                                UNSIGNED);
+                                Rd = dspShrl(Rt_sw, Rs_sw, SIMD_FMT_QB,
+                                             UNSIGNED);
                             }});
                             0x4: shra_qb({{
-                                Rd_sw = dspShra(Rt_sw, RS, SIMD_FMT_QB,
-                                                NOROUND, SIGNED, &dspctl);
+                                Rd = dspShra(Rt_sw, RS, SIMD_FMT_QB,
+                                             NOROUND, SIGNED, &dspctl);
                             }});
                             0x5: shra_r_qb({{
-                                Rd_sw = dspShra(Rt_sw, RS, SIMD_FMT_QB,
-                                                ROUND, SIGNED, &dspctl);
+                                Rd = dspShra(Rt_sw, RS, SIMD_FMT_QB,
+                                             ROUND, SIGNED, &dspctl);
                             }});
                             0x6: shrav_qb({{
-                                Rd_sw = dspShra(Rt_sw, Rs_sw, SIMD_FMT_QB,
-                                                NOROUND, SIGNED, &dspctl);
+                                Rd = dspShra(Rt_sw, Rs_sw, SIMD_FMT_QB,
+                                             NOROUND, SIGNED, &dspctl);
                             }});
                             0x7: shrav_r_qb({{
-                                Rd_sw = dspShra(Rt_sw, Rs_sw, SIMD_FMT_QB,
-                                                ROUND, SIGNED, &dspctl);
+                                Rd = dspShra(Rt_sw, Rs_sw, SIMD_FMT_QB,
+                                             ROUND, SIGNED, &dspctl);
                             }});
                         }
                     }
                     0x1: decode OP_LO {
                         format DspIntOp {
                             0x0: shll_ph({{
-                                Rd_uw = dspShll(Rt_uw, RS, SIMD_FMT_PH,
-                                                NOSATURATE, SIGNED, &dspctl);
+                                Rd = dspShll(Rt, RS, SIMD_FMT_PH,
+                                             NOSATURATE, SIGNED, &dspctl);
                             }});
                             0x1: shra_ph({{
-                                Rd_sw = dspShra(Rt_sw, RS, SIMD_FMT_PH,
-                                                NOROUND, SIGNED, &dspctl);
+                                Rd = dspShra(Rt_sw, RS, SIMD_FMT_PH,
+                                             NOROUND, SIGNED, &dspctl);
                             }});
                             0x2: shllv_ph({{
-                                Rd_sw = dspShll(Rt_sw, Rs_sw, SIMD_FMT_PH,
-                                                NOSATURATE, SIGNED, &dspctl);
+                                Rd = dspShll(Rt_sw, Rs_sw, SIMD_FMT_PH,
+                                             NOSATURATE, SIGNED, &dspctl);
                             }});
                             0x3: shrav_ph({{
-                                Rd_sw = dspShra(Rt_sw, Rs_sw, SIMD_FMT_PH,
-                                                NOROUND, SIGNED, &dspctl);
+                                Rd = dspShra(Rt_sw, Rs_sw, SIMD_FMT_PH,
+                                             NOROUND, SIGNED, &dspctl);
                             }});
                             0x4: shll_s_ph({{
-                                Rd_sw = dspShll(Rt_sw, RS, SIMD_FMT_PH,
-                                                SATURATE, SIGNED, &dspctl);
+                                Rd = dspShll(Rt_sw, RS, SIMD_FMT_PH,
+                                             SATURATE, SIGNED, &dspctl);
                             }});
                             0x5: shra_r_ph({{
-                                Rd_sw = dspShra(Rt_sw, RS, SIMD_FMT_PH,
-                                                ROUND, SIGNED, &dspctl);
+                                Rd = dspShra(Rt_sw, RS, SIMD_FMT_PH,
+                                             ROUND, SIGNED, &dspctl);
                             }});
                             0x6: shllv_s_ph({{
-                                Rd_sw = dspShll(Rt_sw, Rs_sw, SIMD_FMT_PH,
-                                                SATURATE, SIGNED, &dspctl);
+                                Rd = dspShll(Rt_sw, Rs_sw, SIMD_FMT_PH,
+                                             SATURATE, SIGNED, &dspctl);
                             }});
                             0x7: shrav_r_ph({{
-                                Rd_sw = dspShra(Rt_sw, Rs_sw, SIMD_FMT_PH,
-                                                ROUND, SIGNED, &dspctl);
+                                Rd = dspShra(Rt_sw, Rs_sw, SIMD_FMT_PH,
+                                             ROUND, SIGNED, &dspctl);
                             }});
                         }
                     }
                     0x2: decode OP_LO {
                         format DspIntOp {
                             0x4: shll_s_w({{
-                                Rd_sw = dspShll(Rt_sw, RS, SIMD_FMT_W,
-                                                SATURATE, SIGNED, &dspctl);
+                                Rd = dspShll(Rt_sw, RS, SIMD_FMT_W,
+                                             SATURATE, SIGNED, &dspctl);
                             }});
                             0x5: shra_r_w({{
-                                Rd_sw = dspShra(Rt_sw, RS, SIMD_FMT_W,
-                                                ROUND, SIGNED, &dspctl);
+                                Rd = dspShra(Rt_sw, RS, SIMD_FMT_W,
+                                             ROUND, SIGNED, &dspctl);
                             }});
                             0x6: shllv_s_w({{
-                                Rd_sw = dspShll(Rt_sw, Rs_sw, SIMD_FMT_W,
-                                                SATURATE, SIGNED, &dspctl);
+                                Rd = dspShll(Rt_sw, Rs_sw, SIMD_FMT_W,
+                                             SATURATE, SIGNED, &dspctl);
                             }});
                             0x7: shrav_r_w({{
-                                Rd_sw = dspShra(Rt_sw, Rs_sw, SIMD_FMT_W,
-                                                ROUND, SIGNED, &dspctl);
+                                Rd = dspShra(Rt_sw, Rs_sw, SIMD_FMT_W,
+                                             ROUND, SIGNED, &dspctl);
                             }});
                         }
                     }
                     0x3: decode OP_LO {
                         format DspIntOp {
                             0x1: shrl_ph({{
-                                Rd_sw = dspShrl(Rt_sw, RS, SIMD_FMT_PH,
-                                                UNSIGNED);
+                                Rd = dspShrl(Rt_sw, RS, SIMD_FMT_PH,
+                                             UNSIGNED);
                             }});
                             0x3: shrlv_ph({{
-                                Rd_sw = dspShrl(Rt_sw, Rs_sw, SIMD_FMT_PH,
-                                                UNSIGNED);
+                                Rd = dspShrl(Rt_sw, Rs_sw, SIMD_FMT_PH,
+                                             UNSIGNED);
                             }});
                         }
                     }
@@ -2141,76 +2127,76 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: decode OP_LO {
                         format DspIntOp {
                             0x0: adduh_qb({{
-                                Rd_uw = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_QB,
-                                                NOROUND, UNSIGNED);
+                                Rd = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_QB,
+                                             NOROUND, UNSIGNED);
                             }});
                             0x1: subuh_qb({{
-                                Rd_uw = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_QB,
-                                                NOROUND, UNSIGNED);
+                                Rd = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_QB,
+                                             NOROUND, UNSIGNED);
                             }});
                             0x2: adduh_r_qb({{
-                                Rd_uw = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_QB,
-                                                ROUND, UNSIGNED);
+                                Rd = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_QB,
+                                             ROUND, UNSIGNED);
                             }});
                             0x3: subuh_r_qb({{
-                                Rd_uw = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_QB,
-                                                ROUND, UNSIGNED);
+                                Rd = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_QB,
+                                             ROUND, UNSIGNED);
                             }});
                         }
                     }
                     0x1: decode OP_LO {
                         format DspIntOp {
                             0x0: addqh_ph({{
-                                Rd_uw = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_PH,
-                                                NOROUND, SIGNED);
+                                Rd = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_PH,
+                                             NOROUND, SIGNED);
                             }});
                             0x1: subqh_ph({{
-                                Rd_uw = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_PH,
-                                                NOROUND, SIGNED);
+                                Rd = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_PH,
+                                             NOROUND, SIGNED);
                             }});
                             0x2: addqh_r_ph({{
-                                Rd_uw = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_PH,
-                                                ROUND, SIGNED);
+                                Rd = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_PH,
+                                             ROUND, SIGNED);
                             }});
                             0x3: subqh_r_ph({{
-                                Rd_uw = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_PH,
-                                                ROUND, SIGNED);
+                                Rd = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_PH,
+                                             ROUND, SIGNED);
                             }});
                             0x4: mul_ph({{
-                                Rd_sw = dspMul(Rs_sw, Rt_sw, SIMD_FMT_PH,
-                                               NOSATURATE, &dspctl);
+                                Rd = dspMul(Rs_sw, Rt_sw, SIMD_FMT_PH,
+                                            NOSATURATE, &dspctl);
                             }}, IntMultOp);
                             0x6: mul_s_ph({{
-                                Rd_sw = dspMul(Rs_sw, Rt_sw, SIMD_FMT_PH,
-                                               SATURATE, &dspctl);
+                                Rd = dspMul(Rs_sw, Rt_sw, SIMD_FMT_PH,
+                                            SATURATE, &dspctl);
                             }}, IntMultOp);
                         }
                     }
                     0x2: decode OP_LO {
                         format DspIntOp {
                             0x0: addqh_w({{
-                                Rd_uw = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_W,
-                                                NOROUND, SIGNED);
+                                Rd = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_W,
+                                             NOROUND, SIGNED);
                             }});
                             0x1: subqh_w({{
-                                Rd_uw = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_W,
-                                                NOROUND, SIGNED);
+                                Rd = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_W,
+                                             NOROUND, SIGNED);
                             }});
                             0x2: addqh_r_w({{
-                                Rd_uw = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_W,
-                                                ROUND, SIGNED);
+                                Rd = dspAddh(Rs_sw, Rt_sw, SIMD_FMT_W,
+                                             ROUND, SIGNED);
                             }});
                             0x3: subqh_r_w({{
-                                Rd_uw = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_W,
-                                                ROUND, SIGNED);
+                                Rd = dspSubh(Rs_sw, Rt_sw, SIMD_FMT_W,
+                                             ROUND, SIGNED);
                             }});
                             0x6: mulq_s_w({{
-                                Rd_sw = dspMulq(Rs_sw, Rt_sw, SIMD_FMT_W,
-                                                SATURATE, NOROUND, &dspctl);
+                                Rd = dspMulq(Rs_sw, Rt_sw, SIMD_FMT_W,
+                                             SATURATE, NOROUND, &dspctl);
                             }}, IntMultOp);
                             0x7: mulq_rs_w({{
-                                Rd_sw = dspMulq(Rs_sw, Rt_sw, SIMD_FMT_W,
-                                                SATURATE, ROUND, &dspctl);
+                                Rd = dspMulq(Rs_sw, Rt_sw, SIMD_FMT_W,
+                                             SATURATE, ROUND, &dspctl);
                             }}, IntMultOp);
                         }
                     }
@@ -2221,13 +2207,11 @@ decode OPCODE_HI default Unknown::unknown() {
             0x4: decode SA {
                 format BasicOp {
                     0x02: wsbh({{
-                        Rd_uw = Rt_uw<23:16> << 24 |
-                                Rt_uw<31:24> << 16 |
-                                Rt_uw<7:0>   << 8  |
-                                Rt_uw<15:8>;
+                        Rd = Rt<23:16> << 24 | Rt<31:24> << 16 |
+                             Rt<7:0> << 8 | Rt<15:8>;
                     }});
-                    0x10: seb({{ Rd_sw = Rt_sb; }});
-                    0x18: seh({{ Rd_sw = Rt_sh; }});
+                    0x10: seb({{ Rd = Rt_sb; }});
+                    0x18: seh({{ Rd = Rt_sh; }});
                 }
             }
 
@@ -2312,22 +2296,22 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x2: decode OP_LO {
                         format DspHiLoOp {
                             0x0: maq_sa_w_phl({{
-                                dspac = dspMaq(dspac, Rs_uw, Rt_uw,
+                                dspac = dspMaq(dspac, Rs, Rt,
                                                ACDST, SIMD_FMT_PH,
                                                MODE_L, SATURATE, &dspctl);
                             }}, IntMultOp);
                             0x2: maq_sa_w_phr({{
-                                dspac = dspMaq(dspac, Rs_uw, Rt_uw,
+                                dspac = dspMaq(dspac, Rs, Rt,
                                                ACDST, SIMD_FMT_PH,
                                                MODE_R, SATURATE, &dspctl);
                             }}, IntMultOp);
                             0x4: maq_s_w_phl({{
-                                dspac = dspMaq(dspac, Rs_uw, Rt_uw,
+                                dspac = dspMaq(dspac, Rs, Rt,
                                                ACDST, SIMD_FMT_PH,
                                                MODE_L, NOSATURATE, &dspctl);
                             }}, IntMultOp);
                             0x6: maq_s_w_phr({{
-                                dspac = dspMaq(dspac, Rs_uw, Rt_uw,
+                                dspac = dspMaq(dspac, Rs, Rt,
                                                ACDST, SIMD_FMT_PH,
                                                MODE_R, NOSATURATE, &dspctl);
                             }}, IntMultOp);
@@ -2368,19 +2352,18 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: decode OP_LO {
                         format IntOp {
                             0x0: append({{
-                                Rt_uw = (Rt_uw << RD) | bits(Rs_uw, RD - 1, 0);
+                                Rt = (Rt << RD) | bits(Rs, RD - 1, 0);
                                 }});
                             0x1: prepend({{
-                                Rt_uw = (Rt_uw >> RD) |
-                                        (bits(Rs_uw, RD - 1, 0) << (32 - RD));
+                                Rt = (Rt >> RD) |
+                                        (bits(Rs, RD - 1, 0) << (32 - RD));
                             }});
                         }
                     }
                     0x2: decode OP_LO {
                         format IntOp {
                             0x0: balign({{
-                                Rt_uw = (Rt_uw << (8 * BP)) |
-                                        (Rs_uw >> (8 * (4 - BP)));
+                                Rt = (Rt << (8 * BP)) | (Rs >> (8 * (4 - BP)));
                             }});
                         }
                     }
@@ -2395,62 +2378,62 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: decode OP_LO {
                         format DspHiLoOp {
                             0x0: extr_w({{
-                                Rt_uw = dspExtr(dspac, SIMD_FMT_W, RS,
-                                                NOROUND, NOSATURATE, &dspctl);
+                                Rt = dspExtr(dspac, SIMD_FMT_W, RS,
+                                             NOROUND, NOSATURATE, &dspctl);
                             }});
                             0x1: extrv_w({{
-                                Rt_uw = dspExtr(dspac, SIMD_FMT_W, Rs_uw,
-                                                NOROUND, NOSATURATE, &dspctl);
+                                Rt = dspExtr(dspac, SIMD_FMT_W, Rs,
+                                             NOROUND, NOSATURATE, &dspctl);
                             }});
                             0x2: extp({{
-                                Rt_uw = dspExtp(dspac, RS, &dspctl);
+                                Rt = dspExtp(dspac, RS, &dspctl);
                             }});
                             0x3: extpv({{
-                                Rt_uw = dspExtp(dspac, Rs_uw, &dspctl);
+                                Rt = dspExtp(dspac, Rs, &dspctl);
                             }});
                             0x4: extr_r_w({{
-                                Rt_uw = dspExtr(dspac, SIMD_FMT_W, RS,
-                                                ROUND, NOSATURATE, &dspctl);
+                                Rt = dspExtr(dspac, SIMD_FMT_W, RS,
+                                             ROUND, NOSATURATE, &dspctl);
                             }});
                             0x5: extrv_r_w({{
-                                Rt_uw = dspExtr(dspac, SIMD_FMT_W, Rs_uw,
-                                                ROUND, NOSATURATE, &dspctl);
+                                Rt = dspExtr(dspac, SIMD_FMT_W, Rs,
+                                             ROUND, NOSATURATE, &dspctl);
                             }});
                             0x6: extr_rs_w({{
-                                Rt_uw = dspExtr(dspac, SIMD_FMT_W, RS,
-                                                ROUND, SATURATE, &dspctl);
+                                Rt = dspExtr(dspac, SIMD_FMT_W, RS,
+                                             ROUND, SATURATE, &dspctl);
                             }});
                             0x7: extrv_rs_w({{
-                                Rt_uw = dspExtr(dspac, SIMD_FMT_W, Rs_uw,
-                                                ROUND, SATURATE, &dspctl);
+                                Rt = dspExtr(dspac, SIMD_FMT_W, Rs,
+                                             ROUND, SATURATE, &dspctl);
                             }});
                         }
                     }
                     0x1: decode OP_LO {
                         format DspHiLoOp {
                             0x2: extpdp({{
-                                Rt_uw = dspExtpd(dspac, RS, &dspctl);
+                                Rt = dspExtpd(dspac, RS, &dspctl);
                             }});
                             0x3: extpdpv({{
-                                Rt_uw = dspExtpd(dspac, Rs_uw, &dspctl);
+                                Rt = dspExtpd(dspac, Rs, &dspctl);
                             }});
                             0x6: extr_s_h({{
-                                Rt_uw = dspExtr(dspac, SIMD_FMT_PH, RS,
-                                                NOROUND, SATURATE, &dspctl);
+                                Rt = dspExtr(dspac, SIMD_FMT_PH, RS,
+                                             NOROUND, SATURATE, &dspctl);
                             }});
                             0x7: extrv_s_h({{
-                                Rt_uw = dspExtr(dspac, SIMD_FMT_PH, Rs_uw,
-                                                NOROUND, SATURATE, &dspctl);
+                                Rt = dspExtr(dspac, SIMD_FMT_PH, Rs,
+                                             NOROUND, SATURATE, &dspctl);
                             }});
                         }
                     }
                     0x2: decode OP_LO {
                         format DspIntOp {
                             0x2: rddsp({{
-                                Rd_uw = readDSPControl(&dspctl, RDDSPMASK);
+                                Rd = readDSPControl(&dspctl, RDDSPMASK);
                             }});
                             0x3: wrdsp({{
-                                writeDSPControl(&dspctl, Rs_uw, WRDSPMASK);
+                                writeDSPControl(&dspctl, Rs, WRDSPMASK);
                             }});
                         }
                     }
@@ -2476,7 +2459,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             }});
                             0x7: mthlip({{
                                 dspac = dspac << 32;
-                                dspac |= Rs_uw;
+                                dspac |= Rs;
                                 dspctl = insertBits(dspctl, 5, 0,
                                                     dspctl<5:0> + 32);
                             }});
@@ -2496,21 +2479,21 @@ decode OPCODE_HI default Unknown::unknown() {
 
     0x4: decode OPCODE_LO {
         format LoadMemory {
-          0x0: lb({{ Rt_sw = Mem_sb; }});
-          0x1: lh({{ Rt_sw = Mem_sh; }});
-            0x3: lw({{ Rt_sw = Mem_sw; }});
-            0x4: lbu({{ Rt_uw = Mem_ub;}});
-            0x5: lhu({{ Rt_uw = Mem_uh; }});
+          0x0: lb({{ Rt = Mem_sb; }});
+          0x1: lh({{ Rt = Mem_sh; }});
+            0x3: lw({{ Rt = Mem_sw; }});
+            0x4: lbu({{ Rt = Mem_ub;}});
+            0x5: lhu({{ Rt = Mem_uh; }});
         }
 
         format LoadUnalignedMemory {
             0x2: lwl({{
                 uint32_t mem_shift = 24 - (8 * byte_offset);
-                Rt_uw = mem_word << mem_shift | (Rt_uw & mask(mem_shift));
+                Rt = mem_word << mem_shift | (Rt & mask(mem_shift));
             }});
             0x6: lwr({{
                 uint32_t mem_shift = 8 * byte_offset;
-                Rt_uw = (Rt_uw & (mask(mem_shift) << (32 - mem_shift))) |
+                Rt = (Rt & (mask(mem_shift) << (32 - mem_shift))) |
                         (mem_word >> mem_shift);
             }});
         }
@@ -2520,7 +2503,7 @@ decode OPCODE_HI default Unknown::unknown() {
         format StoreMemory {
             0x0: sb({{ Mem_ub = Rt<7:0>; }});
             0x1: sh({{ Mem_uh = Rt<15:0>; }});
-            0x3: sw({{ Mem_uw = Rt<31:0>; }});
+            0x3: sw({{ Mem = Rt<31:0>; }});
         }
 
         format StoreUnalignedMemory {
@@ -2528,17 +2511,17 @@ decode OPCODE_HI default Unknown::unknown() {
                 uint32_t reg_shift = 24 - (8 * byte_offset);
                 uint32_t mem_shift = 32 - reg_shift;
                 mem_word = (mem_word & (mask(reg_shift) << mem_shift)) |
-                           (Rt_uw >> reg_shift);
+                           (Rt >> reg_shift);
                 }});
             0x6: swr({{
                 uint32_t reg_shift = 8 * byte_offset;
-                mem_word = Rt_uw << reg_shift |
+                mem_word = Rt << reg_shift |
                            (mem_word & (mask(reg_shift)));
             }});
         }
         format CP0Control {
             0x7: cache({{
-                //Addr CacheEA = Rs_uw + OFFSET;
+                //Addr CacheEA = Rs + OFFSET;
                 //fault = xc->CacheOp((uint8_t)CACHE_OP,(Addr) CacheEA);
             }});
         }
@@ -2546,8 +2529,8 @@ decode OPCODE_HI default Unknown::unknown() {
 
     0x6: decode OPCODE_LO {
         format LoadMemory {
-            0x0: ll({{ Rt_uw = Mem_uw; }}, mem_flags=LLSC);
-            0x1: lwc1({{ Ft_uw = Mem_uw; }});
+            0x0: ll({{ Rt = Mem; }}, mem_flags=LLSC);
+            0x1: lwc1({{ Ft_uw = Mem; }});
             0x5: ldc1({{ Ft_ud = Mem_ud; }});
         }
         0x2: CP2Unimpl::lwc2();
@@ -2557,13 +2540,13 @@ decode OPCODE_HI default Unknown::unknown() {
 
 
     0x7: decode OPCODE_LO {
-        0x0: StoreCond::sc({{ Mem_uw = Rt_uw; }},
+        0x0: StoreCond::sc({{ Mem = Rt; }},
                            {{ uint64_t tmp = write_result;
-                              Rt_uw = (tmp == 0 || tmp == 1) ? tmp : Rt_uw;
+                              Rt = (tmp == 0 || tmp == 1) ? tmp : Rt;
                            }}, mem_flags=LLSC,
                                inst_flags = IsStoreConditional);
         format StoreMemory {
-            0x1: swc1({{ Mem_uw = Ft_uw; }});
+            0x1: swc1({{ Mem = Ft_uw; }});
             0x5: sdc1({{ Mem_ud = Ft_ud; }});
         }
         0x2: CP2Unimpl::swc2();
