@@ -62,8 +62,8 @@ using ArmISAInst::MaxMiscDestRegs;
 typedef uint64_t IntReg;
 
 // floating point register file entry type
-typedef uint32_t FloatRegBits;
-typedef float FloatReg;
+typedef uint64_t FloatRegBits;
+typedef double FloatReg;
 
 // Number of VecElem per Vector Register, computed based on the vector length
 constexpr unsigned NumVecElemPerVecReg = 4;
