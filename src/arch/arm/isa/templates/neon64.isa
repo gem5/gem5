@@ -180,16 +180,16 @@ def template NeonXEqualRegOpExecute {{
         %(op_rd)s;
 
         const unsigned rCount = %(r_count)d;
-        const unsigned eCount = rCount * sizeof(FloatRegBits) / sizeof(Element);
-        const unsigned eCountFull = 4 * sizeof(FloatRegBits) / sizeof(Element);
+        const unsigned eCount = rCount * sizeof(uint32_t) / sizeof(Element);
+        const unsigned eCountFull = 4 * sizeof(uint32_t) / sizeof(Element);
 
         union RegVect {
-            FloatRegBits regs[rCount];
+            uint32_t regs[rCount];
             Element elements[eCount];
         };
 
         union FullRegVect {
-            FloatRegBits regs[4];
+            uint32_t regs[4];
             Element elements[eCountFull];
         };
 
@@ -214,22 +214,22 @@ def template NeonXUnequalRegOpExecute {{
         %(op_rd)s;
 
         const unsigned rCount = %(r_count)d;
-        const unsigned eCount = rCount * sizeof(FloatRegBits) / sizeof(Element);
-        const unsigned eCountFull = 4 * sizeof(FloatRegBits) / sizeof(Element);
+        const unsigned eCount = rCount * sizeof(uint32_t) / sizeof(Element);
+        const unsigned eCountFull = 4 * sizeof(uint32_t) / sizeof(Element);
 
         union RegVect {
-            FloatRegBits regs[rCount];
+            uint32_t regs[rCount];
             Element elements[eCount];
             BigElement bigElements[eCount / 2];
         };
 
         union BigRegVect {
-            FloatRegBits regs[2 * rCount];
+            uint32_t regs[2 * rCount];
             BigElement elements[eCount];
         };
 
         union FullRegVect {
-            FloatRegBits regs[4];
+            uint32_t regs[4];
             Element elements[eCountFull];
         };
 

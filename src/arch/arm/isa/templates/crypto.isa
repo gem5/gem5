@@ -50,7 +50,7 @@ def template CryptoPredOpExecute {{
         const unsigned rCount = %(r_count)d;
 
         union RegVect {
-            FloatRegBits regs[rCount];
+            uint32_t regs[rCount];
         };
 
         if (%(predicate_test)s)

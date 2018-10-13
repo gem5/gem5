@@ -828,13 +828,13 @@ let {{
         union
         {
             uint8_t bytes[64];
-            FloatRegBits regs[16];
+            uint32_t regs[16];
         } table;
 
         union
         {
             uint8_t bytes[%(rCount)d * 4];
-            FloatRegBits regs[%(rCount)d];
+            uint32_t regs[%(rCount)d];
         } destReg, srcReg2;
 
         const unsigned length = %(length)d;

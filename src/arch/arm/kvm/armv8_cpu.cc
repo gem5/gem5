@@ -96,7 +96,6 @@ union KvmFPReg {
 };
 
 #define FP_REGS_PER_VFP_REG 4
-static_assert(sizeof(FloatRegBits) == 4, "Unexpected float reg size");
 
 const std::vector<ArmV8KvmCPU::IntRegInfo> ArmV8KvmCPU::intRegMap = {
     { INT_REG(regs.sp), INTREG_SP0, "SP(EL0)" },

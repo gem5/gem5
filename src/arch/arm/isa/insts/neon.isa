@@ -1196,7 +1196,7 @@ let {{
                             readDest=False, pairwise=False, toInt=False):
         global header_output, exec_output
         eWalkCode = simdEnabledCheckCode + '''
-        typedef FloatReg FloatVect[rCount];
+        typedef float FloatVect[rCount];
         FloatVect srcRegs1, srcRegs2;
         '''
         if toInt:
@@ -1220,17 +1220,17 @@ let {{
         readDestCode = ''
         if readDest:
             readDestCode = 'destReg = destRegs[r];'
-        destType = 'FloatReg'
+        destType = 'float'
         writeDest = 'destRegs[r] = destReg;'
         if toInt:
-            destType = 'FloatRegBits'
+            destType = 'uint32_t'
             writeDest = 'destRegs.regs[r] = destReg;'
         if pairwise:
             eWalkCode += '''
             for (unsigned r = 0; r < rCount; r++) {
-                FloatReg srcReg1 = (2 * r < rCount) ?
+                float srcReg1 = (2 * r < rCount) ?
                     srcRegs1[2 * r] : srcRegs2[2 * r - rCount];
-                FloatReg srcReg2 = (2 * r < rCount) ?
+                float srcReg2 = (2 * r < rCount) ?
                     srcRegs1[2 * r + 1] : srcRegs2[2 * r + 1 - rCount];
                 %(destType)s destReg;
                 %(readDest)s
@@ -1244,8 +1244,8 @@ let {{
         else:
             eWalkCode += '''
             for (unsigned r = 0; r < rCount; r++) {
-                FloatReg srcReg1 = srcRegs1[r];
-                FloatReg srcReg2 = srcRegs2[r];
+                float srcReg1 = srcRegs1[r];
+                float srcReg2 = srcRegs2[r];
                 %(destType)s destReg;
                 %(readDest)s
                 %(op)s
@@ -1457,7 +1457,7 @@ let {{
     def twoEqualRegInstFp(name, Name, opClass, types, rCount, op, readDest=False):
         global header_output, exec_output
         eWalkCode = simdEnabledCheckCode + '''
-        typedef FloatReg FloatVect[rCount];
+        typedef float FloatVect[rCount];
         FloatVect srcRegs1, srcRegs2, destRegs;
         '''
         for reg in range(rCount):
@@ -1478,9 +1478,9 @@ let {{
                                                            mnemonic);
         } else {
             for (unsigned i = 0; i < rCount; i++) {
-                FloatReg srcReg1 = srcRegs1[i];
-                FloatReg srcReg2 = srcRegs2[imm];
-                FloatReg destReg;
+                float srcReg1 = srcRegs1[i];
+                float srcReg2 = srcRegs2[imm];
+                float destReg;
                 %(readDest)s
                 %(op)s
                 destRegs[i] = destReg;
@@ -1525,11 +1525,11 @@ let {{
                 readDestCode = 'destReg = gtoh(destRegs.regs[i]);'
         readOpCode = 'Element srcElem1 = gtoh(srcRegs1.elements[i]);'
         if fromInt:
-            readOpCode = 'FloatRegBits srcReg1 = gtoh(srcRegs1.regs[i]);'
+            readOpCode = 'uint32_t srcReg1 = gtoh(srcRegs1.regs[i]);'
         declDest = 'Element destElem;'
         writeDestCode = 'destRegs.elements[i] = htog(destElem);'
         if toInt:
-            declDest = 'FloatRegBits destReg;'
+            declDest = 'uint32_t destReg;'
             writeDestCode = 'destRegs.regs[i] = htog(destReg);'
         eWalkCode += '''
         for (unsigned i = 0; i < eCount; i++) {
@@ -1773,7 +1773,7 @@ let {{
             readDest=False, toInt=False):
         global header_output, exec_output
         eWalkCode = simdEnabledCheckCode + '''
-        typedef FloatReg FloatVect[rCount];
+        typedef float FloatVect[rCount];
         FloatVect srcRegs1;
         '''
         if toInt:
@@ -1796,14 +1796,14 @@ let {{
         readDestCode = ''
         if readDest:
             readDestCode = 'destReg = destRegs[i];'
-        destType = 'FloatReg'
+        destType = 'float'
         writeDest = 'destRegs[r] = destReg;'
         if toInt:
-            destType = 'FloatRegBits'
+            destType = 'uint32_t'
             writeDest = 'destRegs.regs[r] = destReg;'
         eWalkCode += '''
         for (unsigned r = 0; r < rCount; r++) {
-            FloatReg srcReg1 = srcRegs1[r];
+            float srcReg1 = srcRegs1[r];
             %(destType)s destReg;
             %(readDest)s
             %(op)s
@@ -3558,7 +3558,7 @@ let {{
     twoRegMiscInst("vcgt", "NVcgtQ", "SimdCmpOp", signedTypes, 4, vcgtCode)
     vcgtfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
-        float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcgtFunc,
+        float res = binaryOp(fpscr, srcReg1, (float)0.0, vcgtFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
@@ -3575,7 +3575,7 @@ let {{
     twoRegMiscInst("vcge", "NVcgeQ", "SimdCmpOp", signedTypes, 4, vcgeCode)
     vcgefpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
-        float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcgeFunc,
+        float res = binaryOp(fpscr, srcReg1, (float)0.0, vcgeFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
@@ -3592,7 +3592,7 @@ let {{
     twoRegMiscInst("vceq", "NVceqQ", "SimdCmpOp", signedTypes, 4, vceqCode)
     vceqfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
-        float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vceqFunc,
+        float res = binaryOp(fpscr, srcReg1, (float)0.0, vceqFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
@@ -3609,7 +3609,7 @@ let {{
     twoRegMiscInst("vcle", "NVcleQ", "SimdCmpOp", signedTypes, 4, vcleCode)
     vclefpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
-        float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcleFunc,
+        float res = binaryOp(fpscr, srcReg1, (float)0.0, vcleFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
@@ -3626,7 +3626,7 @@ let {{
     twoRegMiscInst("vclt", "NVcltQ", "SimdCmpOp", signedTypes, 4, vcltCode)
     vcltfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
-        float res = binaryOp(fpscr, srcReg1, (FloatReg)0.0, vcltFunc,
+        float res = binaryOp(fpscr, srcReg1, (float)0.0, vcltFunc,
                              true, true, VfpRoundNearest);
         destReg = (res == 0) ? -1 : 0;
         if (res == 2.0)
@@ -3639,7 +3639,7 @@ let {{
             4, vcltfpCode, toInt = True)
 
     vswpCode = '''
-        FloatRegBits mid;
+        uint32_t mid;
         for (unsigned r = 0; r < rCount; r++) {
             mid = srcReg1.regs[r];
             srcReg1.regs[r] = destReg.regs[r];
@@ -3836,13 +3836,13 @@ let {{
             union
             {
                 uint8_t bytes[32];
-                FloatRegBits regs[8];
+                uint32_t regs[8];
             } table;
 
             union
             {
                 uint8_t bytes[8];
-                FloatRegBits regs[2];
+                uint32_t regs[2];
             } destReg, srcReg2;
 
             const unsigned length = %(length)d;

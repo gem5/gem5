@@ -323,10 +323,10 @@ let {{
         microDeintNeonCode = '''
             const unsigned dRegs = %(dRegs)d;
             const unsigned regs = 2 * dRegs;
-            const unsigned perDReg = (2 * sizeof(FloatRegBits)) /
-                                     sizeof(Element);
+            const unsigned perDReg =
+                (2 * sizeof(uint32_t)) / sizeof(Element);
             union convStruct {
-                FloatRegBits cRegs[regs];
+                uint32_t cRegs[regs];
                 Element elements[dRegs * perDReg];
             } conv1, conv2;
 
@@ -369,10 +369,10 @@ let {{
         microInterNeonCode = '''
             const unsigned dRegs = %(dRegs)d;
             const unsigned regs = 2 * dRegs;
-            const unsigned perDReg = (2 * sizeof(FloatRegBits)) /
-                                     sizeof(Element);
+            const unsigned perDReg =
+                (2 * sizeof(uint32_t)) / sizeof(Element);
             union convStruct {
-                FloatRegBits cRegs[regs];
+                uint32_t cRegs[regs];
                 Element elements[dRegs * perDReg];
             } conv1, conv2;
 
@@ -442,16 +442,15 @@ let {{
                     FpDestS%(reg)dP1_uw = gtoh(destRegs[%(reg)d].fRegs[1]);
                 ''' % { "reg" : reg }
             microUnpackNeonCode = '''
-            const unsigned perDReg = (2 * sizeof(FloatRegBits)) /
-                                     sizeof(Element);
+            const unsigned perDReg = (2 * sizeof(uint32_t)) / sizeof(Element);
 
             union SourceRegs {
-                FloatRegBits fRegs[2 * %(sRegs)d];
+                uint32_t fRegs[2 * %(sRegs)d];
                 Element elements[%(sRegs)d * perDReg];
             } sourceRegs;
 
             union DestReg {
-                FloatRegBits fRegs[2];
+                uint32_t fRegs[2];
                 Element elements[perDReg];
             } destRegs[%(dRegs)d];
 
@@ -492,16 +491,15 @@ let {{
                     FpDestS%(reg)dP1_uw = gtoh(destRegs[%(reg)d].fRegs[1]);
                 ''' % { "reg" : reg }
             microUnpackAllNeonCode = '''
-            const unsigned perDReg = (2 * sizeof(FloatRegBits)) /
-                                     sizeof(Element);
+            const unsigned perDReg = (2 * sizeof(uint32_t)) / sizeof(Element);
 
             union SourceRegs {
-                FloatRegBits fRegs[2 * %(sRegs)d];
+                uint32_t fRegs[2 * %(sRegs)d];
                 Element elements[%(sRegs)d * perDReg];
             } sourceRegs;
 
             union DestReg {
-                FloatRegBits fRegs[2];
+                uint32_t fRegs[2];
                 Element elements[perDReg];
             } destRegs[%(dRegs)d];
 
@@ -543,16 +541,16 @@ let {{
                     sourceRegs[%(reg)d].fRegs[1] = htog(FpOp1S%(reg)dP1_uw);
                 ''' % { "reg" : reg }
             microPackNeonCode = '''
-            const unsigned perDReg = (2 * sizeof(FloatRegBits)) /
-                                     sizeof(Element);
+            const unsigned perDReg =
+                (2 * sizeof(uint32_t)) / sizeof(Element);
 
             union SourceReg {
-                FloatRegBits fRegs[2];
+                uint32_t fRegs[2];
                 Element elements[perDReg];
             } sourceRegs[%(sRegs)d];
 
             union DestRegs {
-                FloatRegBits fRegs[2 * %(dRegs)d];
+                uint32_t fRegs[2 * %(dRegs)d];
                 Element elements[%(dRegs)d * perDReg];
             } destRegs;
 

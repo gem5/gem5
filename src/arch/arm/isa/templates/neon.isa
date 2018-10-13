@@ -216,10 +216,10 @@ def template NeonEqualRegExecute {{
         %(op_rd)s;
 
         const unsigned rCount = %(r_count)d;
-        const unsigned eCount = rCount * sizeof(FloatRegBits) / sizeof(Element);
+        const unsigned eCount = rCount * sizeof(uint32_t) / sizeof(Element);
 
         union RegVect {
-            FloatRegBits regs[rCount];
+            uint32_t regs[rCount];
             Element elements[eCount];
         };
 
@@ -262,16 +262,16 @@ def template NeonUnequalRegExecute {{
         %(op_rd)s;
 
         const unsigned rCount = %(r_count)d;
-        const unsigned eCount = rCount * sizeof(FloatRegBits) / sizeof(Element);
+        const unsigned eCount = rCount * sizeof(uint32_t) / sizeof(Element);
 
         union RegVect {
-            FloatRegBits regs[rCount];
+            uint32_t regs[rCount];
             Element elements[eCount];
             BigElement bigElements[eCount / 2];
         };
 
         union BigRegVect {
-            FloatRegBits regs[2 * rCount];
+            uint32_t regs[2 * rCount];
             BigElement elements[eCount];
         };
 

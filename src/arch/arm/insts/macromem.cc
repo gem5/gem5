@@ -563,8 +563,8 @@ VldSingleOp::VldSingleOp(const char *mnem, ExtMachInst machInst,
 
     unsigned eBytes = (1 << size);
     unsigned loadSize = eBytes * elems;
-    unsigned loadRegs M5_VAR_USED = (loadSize + sizeof(FloatRegBits) - 1) /
-                        sizeof(FloatRegBits);
+    unsigned loadRegs M5_VAR_USED =
+        (loadSize + sizeof(uint32_t) - 1) / sizeof(uint32_t);
 
     assert(loadRegs > 0 && loadRegs <= 4);
 
@@ -927,8 +927,8 @@ VstSingleOp::VstSingleOp(const char *mnem, ExtMachInst machInst,
 
     unsigned eBytes = (1 << size);
     unsigned storeSize = eBytes * elems;
-    unsigned storeRegs M5_VAR_USED = (storeSize + sizeof(FloatRegBits) - 1) /
-                         sizeof(FloatRegBits);
+    unsigned storeRegs M5_VAR_USED =
+        (storeSize + sizeof(uint32_t) - 1) / sizeof(uint32_t);
 
     assert(storeRegs > 0 && storeRegs <= 4);
 
