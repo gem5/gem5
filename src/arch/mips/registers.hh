@@ -278,14 +278,14 @@ const int NumMiscRegs = MISCREG_NUMREGS;
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
 
-typedef uint64_t IntReg;
+typedef RegVal IntReg;
 
 // floating point register file entry type
-typedef uint64_t FloatRegBits;
-typedef double FloatReg;
+typedef RegVal FloatRegBits;
+typedef FloatRegVal FloatReg;
 
 // cop-0/cop-1 system control register
-typedef uint64_t MiscReg;
+typedef RegVal MiscReg;
 
 // dummy typedef since we don't have CC regs
 typedef uint8_t CCReg;

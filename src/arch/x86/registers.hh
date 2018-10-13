@@ -90,9 +90,9 @@ const int FramePointerReg = INTREG_RBP;
 // value
 const int SyscallPseudoReturnReg = INTREG_RDX;
 
-typedef uint64_t IntReg;
+typedef RegVal IntReg;
 typedef uint64_t CCReg;
-typedef uint64_t MiscReg;
+typedef RegVal MiscReg;
 
 // dummy typedefs since we don't have vector regs
 constexpr unsigned NumVecElemPerVecReg = 2;
@@ -105,8 +105,8 @@ constexpr unsigned NumVecRegs = 1;
 
 //These floating point types are correct for mmx, but not
 //technically for x87 (80 bits) or at all for xmm (128 bits)
-typedef double FloatReg;
-typedef uint64_t FloatRegBits;
+typedef FloatRegVal FloatReg;
+typedef RegVal FloatRegBits;
 
 } // namespace X86ISA
 

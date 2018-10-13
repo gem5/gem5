@@ -34,6 +34,7 @@
 #include "arch/generic/vec_reg.hh"
 #include "arch/power/generated/max_inst_regs.hh"
 #include "arch/power/miscregs.hh"
+#include "base/types.hh"
 
 namespace PowerISA {
 
@@ -44,12 +45,12 @@ using PowerISAInst::MaxInstDestRegs;
 // be detected by it. Manually add it here.
 const int MaxMiscDestRegs = PowerISAInst::MaxMiscDestRegs + 1;
 
-typedef uint64_t IntReg;
+typedef RegVal IntReg;
 
 // Floating point register file entry type
-typedef uint64_t FloatRegBits;
-typedef double FloatReg;
-typedef uint64_t MiscReg;
+typedef RegVal FloatRegBits;
+typedef FloatRegVal FloatReg;
+typedef RegVal MiscReg;
 
 // dummy typedef since we don't have CC regs
 typedef uint8_t CCReg;

@@ -59,11 +59,11 @@ const int MaxInstSrcRegs = ArmISAInst::MaxInstDestRegs +
 using ArmISAInst::MaxInstDestRegs;
 using ArmISAInst::MaxMiscDestRegs;
 
-typedef uint64_t IntReg;
+typedef RegVal IntReg;
 
 // floating point register file entry type
-typedef uint64_t FloatRegBits;
-typedef double FloatReg;
+typedef RegVal FloatRegBits;
+typedef FloatRegVal FloatReg;
 
 // Number of VecElem per Vector Register, computed based on the vector length
 constexpr unsigned NumVecElemPerVecReg = 4;
@@ -73,7 +73,7 @@ using ConstVecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, true>;
 using VecRegContainer = VecReg::Container;
 
 // cop-0/cop-1 system control register
-typedef uint64_t MiscReg;
+typedef RegVal MiscReg;
 
 // condition code register; must be at least 32 bits for FpCondCodes
 typedef uint64_t CCReg;

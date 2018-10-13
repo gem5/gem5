@@ -46,11 +46,11 @@
 
 namespace NullISA {
 
-typedef uint64_t IntReg;
-typedef uint64_t FloatRegBits;
-typedef double FloatReg;
+typedef RegVal IntReg;
+typedef RegVal FloatRegBits;
+typedef FloatRegVal FloatReg;
 typedef uint8_t CCReg;
-typedef uint64_t MiscReg;
+typedef RegVal MiscReg;
 const RegIndex ZeroReg = 0;
 
 // dummy typedefs since we don't have vector regs

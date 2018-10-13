@@ -63,11 +63,11 @@ using RiscvISAInst::MaxInstSrcRegs;
 using RiscvISAInst::MaxInstDestRegs;
 const int MaxMiscDestRegs = 1;
 
-typedef uint64_t IntReg;
-typedef uint64_t FloatRegBits;
-typedef double FloatReg;
+typedef RegVal IntReg;
+typedef RegVal FloatRegBits;
+typedef FloatRegVal FloatReg;
 typedef uint8_t CCReg; // Not applicable to Riscv
-typedef uint64_t MiscReg;
+typedef RegVal MiscReg;
 
 // dummy typedefs since we don't have vector regs
 const unsigned NumVecElemPerVecReg = 2;
