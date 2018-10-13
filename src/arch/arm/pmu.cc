@@ -54,7 +54,7 @@
 
 namespace ArmISA {
 
-const MiscReg PMU::reg_pmcr_wr_mask = 0x39;
+const RegVal PMU::reg_pmcr_wr_mask = 0x39;
 
 PMU::PMU(const ArmPMUParams *p)
     : SimObject(p), BaseISADevice(),
@@ -189,7 +189,7 @@ PMU::regProbeListeners()
 }
 
 void
-PMU::setMiscReg(int misc_reg, MiscReg val)
+PMU::setMiscReg(int misc_reg, RegVal val)
 {
     DPRINTF(PMUVerbose, "setMiscReg(%s, 0x%x)\n",
             miscRegName[unflattenMiscReg(misc_reg)], val);
@@ -297,16 +297,16 @@ PMU::setMiscReg(int misc_reg, MiscReg val)
          miscRegName[misc_reg]);
 }
 
-MiscReg
+RegVal
 PMU::readMiscReg(int misc_reg)
 {
-    MiscReg val(readMiscRegInt(misc_reg));
+    RegVal val(readMiscRegInt(misc_reg));
     DPRINTF(PMUVerbose, "readMiscReg(%s): 0x%x\n",
             miscRegName[unflattenMiscReg(misc_reg)], val);
     return val;
 }
 
-MiscReg
+RegVal
 PMU::readMiscRegInt(int misc_reg)
 {
     misc_reg = unflattenMiscReg(misc_reg);
@@ -645,7 +645,7 @@ PMU::setCounterTypeRegister(CounterId id, PMEVTYPER_t val)
 }
 
 void
-PMU::setOverflowStatus(MiscReg new_val)
+PMU::setOverflowStatus(RegVal new_val)
 {
     const bool int_old = reg_pmovsr != 0;
     const bool int_new = new_val != 0;
