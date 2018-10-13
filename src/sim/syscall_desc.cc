@@ -49,7 +49,7 @@ void
 SyscallDesc::doSyscall(int callnum, Process *process, ThreadContext *tc,
                        Fault *fault)
 {
-    TheISA::IntReg arg[6] M5_VAR_USED;
+    RegVal arg[6] M5_VAR_USED;
 
     /**
      * Step through the first six parameters for the system call and

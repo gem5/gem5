@@ -53,7 +53,7 @@ GPUExecContext::wavefront()
     return wf;
 }
 
-TheGpuISA::MiscReg
+RegVal
 GPUExecContext::readMiscReg(int opIdx) const
 {
     assert(gpuISA);
@@ -61,7 +61,7 @@ GPUExecContext::readMiscReg(int opIdx) const
 }
 
 void
-GPUExecContext::writeMiscReg(int opIdx, TheGpuISA::MiscReg operandVal)
+GPUExecContext::writeMiscReg(int opIdx, RegVal operandVal)
 {
     assert(gpuISA);
     gpuISA->writeMiscReg(opIdx, operandVal);

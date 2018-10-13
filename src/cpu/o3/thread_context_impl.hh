@@ -193,14 +193,14 @@ O3ThreadContext<Impl>::clearArchRegs()
 }
 
 template <class Impl>
-uint64_t
+RegVal
 O3ThreadContext<Impl>::readIntRegFlat(int reg_idx)
 {
     return cpu->readArchIntReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
-TheISA::FloatRegBits
+RegVal
 O3ThreadContext<Impl>::readFloatRegBitsFlat(int reg_idx)
 {
     return cpu->readArchFloatRegBits(reg_idx, thread->threadId());
@@ -237,7 +237,7 @@ O3ThreadContext<Impl>::readCCRegFlat(int reg_idx)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setIntRegFlat(int reg_idx, uint64_t val)
+O3ThreadContext<Impl>::setIntRegFlat(int reg_idx, RegVal val)
 {
     cpu->setArchIntReg(reg_idx, val, thread->threadId());
 
@@ -246,7 +246,7 @@ O3ThreadContext<Impl>::setIntRegFlat(int reg_idx, uint64_t val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setFloatRegBitsFlat(int reg_idx, FloatRegBits val)
+O3ThreadContext<Impl>::setFloatRegBitsFlat(int reg_idx, RegVal val)
 {
     cpu->setArchFloatRegBits(reg_idx, val, thread->threadId());
 
@@ -307,7 +307,7 @@ O3ThreadContext<Impl>::flattenRegId(const RegId& regId) const
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+O3ThreadContext<Impl>::setMiscRegNoEffect(int misc_reg, const RegVal &val)
 {
     cpu->setMiscRegNoEffect(misc_reg, val, thread->threadId());
 
@@ -317,7 +317,7 @@ O3ThreadContext<Impl>::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 #endif//__CPU_O3_THREAD_CONTEXT_IMPL_HH__
 template <class Impl>
 void
-O3ThreadContext<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
+O3ThreadContext<Impl>::setMiscReg(int misc_reg, const RegVal &val)
 {
     cpu->setMiscReg(misc_reg, val, thread->threadId());
 

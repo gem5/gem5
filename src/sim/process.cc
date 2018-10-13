@@ -156,7 +156,7 @@ Process::Process(ProcessParams *params, EmulationPageTable *pTable,
 
 void
 Process::clone(ThreadContext *otc, ThreadContext *ntc,
-               Process *np, TheISA::IntReg flags)
+               Process *np, RegVal flags)
 {
 #ifndef CLONE_VM
 #define CLONE_VM 0
@@ -423,7 +423,7 @@ Process::syscall(int64_t callnum, ThreadContext *tc, Fault *fault)
     desc->doSyscall(callnum, this, tc, fault);
 }
 
-IntReg
+RegVal
 Process::getSyscallArg(ThreadContext *tc, int &i, int width)
 {
     return getSyscallArg(tc, i);

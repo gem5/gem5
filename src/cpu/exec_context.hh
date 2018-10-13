@@ -72,11 +72,7 @@
  */
 class ExecContext {
   public:
-    typedef TheISA::IntReg IntReg;
     typedef TheISA::PCState PCState;
-    typedef TheISA::FloatReg FloatReg;
-    typedef TheISA::FloatRegBits FloatRegBits;
-    typedef TheISA::MiscReg MiscReg;
 
     typedef TheISA::CCReg CCReg;
     using VecRegContainer = TheISA::VecRegContainer;
@@ -90,11 +86,11 @@ class ExecContext {
      */
 
     /** Reads an integer register. */
-    virtual IntReg readIntRegOperand(const StaticInst *si, int idx) = 0;
+    virtual RegVal readIntRegOperand(const StaticInst *si, int idx) = 0;
 
     /** Sets an integer register to a value. */
     virtual void setIntRegOperand(const StaticInst *si,
-                                  int idx, IntReg val) = 0;
+                                  int idx, RegVal val) = 0;
 
     /** @} */
 
@@ -106,13 +102,12 @@ class ExecContext {
 
     /** Reads a floating point register in its binary format, instead
      * of by value. */
-    virtual FloatRegBits readFloatRegOperandBits(const StaticInst *si,
-                                                 int idx) = 0;
+    virtual RegVal readFloatRegOperandBits(const StaticInst *si, int idx) = 0;
 
     /** Sets the bits of a floating point register of single width
      * to a binary value. */
     virtual void setFloatRegOperandBits(const StaticInst *si,
-                                        int idx, FloatRegBits val) = 0;
+                                        int idx, RegVal val) = 0;
 
     /** @} */
 
@@ -185,21 +180,21 @@ class ExecContext {
      * @{
      * @name Misc Register Interfaces
      */
-    virtual MiscReg readMiscRegOperand(const StaticInst *si, int idx) = 0;
+    virtual RegVal readMiscRegOperand(const StaticInst *si, int idx) = 0;
     virtual void setMiscRegOperand(const StaticInst *si,
-                                   int idx, const MiscReg &val) = 0;
+                                   int idx, const RegVal &val) = 0;
 
     /**
      * Reads a miscellaneous register, handling any architectural
      * side effects due to reading that register.
      */
-    virtual MiscReg readMiscReg(int misc_reg) = 0;
+    virtual RegVal readMiscReg(int misc_reg) = 0;
 
     /**
      * Sets a miscellaneous register, handling any architectural
      * side effects due to writing that register.
      */
-    virtual void setMiscReg(int misc_reg, const MiscReg &val) = 0;
+    virtual void setMiscReg(int misc_reg, const RegVal &val) = 0;
 
     /** @} */
 
@@ -326,10 +321,10 @@ class ExecContext {
      */
 
 #if THE_ISA == MIPS_ISA
-    virtual MiscReg readRegOtherThread(const RegId& reg,
-                                       ThreadID tid = InvalidThreadID) = 0;
-    virtual void setRegOtherThread(const RegId& reg, MiscReg val,
-                                   ThreadID tid = InvalidThreadID) = 0;
+    virtual RegVal readRegOtherThread(const RegId &reg,
+                                       ThreadID tid=InvalidThreadID) = 0;
+    virtual void setRegOtherThread(const RegId& reg, RegVal val,
+                                   ThreadID tid=InvalidThreadID) = 0;
 #endif
 
     /** @} */

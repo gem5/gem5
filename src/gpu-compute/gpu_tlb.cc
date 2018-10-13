@@ -617,7 +617,7 @@ namespace X86ISA
             //The index is multiplied by the size of a MiscReg so that
             //any memory dependence calculations will not see these as
             //overlapping.
-            req->setPaddr(regNum * sizeof(MiscReg));
+            req->setPaddr(regNum * sizeof(RegVal));
             return NoFault;
         } else if (prefix == IntAddrPrefixIO) {
             // TODO If CPL > IOPL or in virtual mode, check the I/O permission
@@ -630,7 +630,7 @@ namespace X86ISA
 
             if (IOPort == 0xCF8 && req->getSize() == 4) {
                 req->setFlags(Request::MMAPPED_IPR);
-                req->setPaddr(MISCREG_PCI_CONFIG_ADDRESS * sizeof(MiscReg));
+                req->setPaddr(MISCREG_PCI_CONFIG_ADDRESS * sizeof(RegVal));
             } else if ((IOPort & ~mask(2)) == 0xCFC) {
                 req->setFlags(Request::UNCACHEABLE);
 

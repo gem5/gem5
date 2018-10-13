@@ -65,9 +65,6 @@ class PhysRegFile
 {
   private:
 
-    typedef TheISA::IntReg IntReg;
-    typedef TheISA::FloatReg FloatReg;
-    typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg CCReg;
     using VecElem = TheISA::VecElem;
     using VecRegContainer = TheISA::VecRegContainer;
@@ -80,11 +77,11 @@ class PhysRegFile
     static constexpr auto NumVecElemPerVecReg = TheISA::NumVecElemPerVecReg;
 
     /** Integer register file. */
-    std::vector<IntReg> intRegFile;
+    std::vector<RegVal> intRegFile;
     std::vector<PhysRegId> intRegIds;
 
     /** Floating point register file. */
-    std::vector<FloatRegBits> floatRegFile;
+    std::vector<RegVal> floatRegFile;
     std::vector<PhysRegId> floatRegIds;
 
     /** Vector register file. */
@@ -173,7 +170,8 @@ class PhysRegFile
     }
 
     /** Reads an integer register. */
-    uint64_t readIntReg(PhysRegIdPtr phys_reg) const
+    RegVal
+    readIntReg(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->isIntPhysReg());
 
@@ -182,21 +180,22 @@ class PhysRegFile
         return intRegFile[phys_reg->index()];
     }
 
-    FloatRegBits readFloatRegBits(PhysRegIdPtr phys_reg) const
+    RegVal
+    readFloatRegBits(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->isFloatPhysReg());
 
-        FloatRegBits floatRegBits = floatRegFile[phys_reg->index()];
+        RegVal floatRegBits = floatRegFile[phys_reg->index()];
 
         DPRINTF(IEW, "RegFile: Access to float register %i as int, "
-                "has data %#x\n", phys_reg->index(),
-                (uint64_t)floatRegBits);
+                "has data %#x\n", phys_reg->index(), floatRegBits);
 
         return floatRegBits;
     }
 
     /** Reads a vector register. */
-    const VecRegContainer& readVecReg(PhysRegIdPtr phys_reg) const
+    const VecRegContainer &
+    readVecReg(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->isVectorPhysReg());
 
@@ -208,7 +207,8 @@ class PhysRegFile
     }
 
     /** Reads a vector register for modification. */
-    VecRegContainer& getWritableVecReg(PhysRegIdPtr phys_reg)
+    VecRegContainer &
+    getWritableVecReg(PhysRegIdPtr phys_reg)
     {
         /* const_cast for not duplicating code above. */
         return const_cast<VecRegContainer&>(readVecReg(phys_reg));
@@ -245,7 +245,8 @@ class PhysRegFile
     }
 
     /** Reads a vector element. */
-    const VecElem& readVecElem(PhysRegIdPtr phys_reg) const
+    const VecElem &
+    readVecElem(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->isVectorPhysElem());
         auto ret = vectorRegFile[phys_reg->index()].as<VecElem>();
@@ -258,7 +259,8 @@ class PhysRegFile
     }
 
     /** Reads a condition-code register. */
-    CCReg readCCReg(PhysRegIdPtr phys_reg)
+    CCReg
+    readCCReg(PhysRegIdPtr phys_reg)
     {
         assert(phys_reg->isCCPhysReg());
 
@@ -270,7 +272,8 @@ class PhysRegFile
     }
 
     /** Sets an integer register to the given value. */
-    void setIntReg(PhysRegIdPtr phys_reg, uint64_t val)
+    void
+    setIntReg(PhysRegIdPtr phys_reg, RegVal val)
     {
         assert(phys_reg->isIntPhysReg());
 
@@ -281,7 +284,8 @@ class PhysRegFile
             intRegFile[phys_reg->index()] = val;
     }
 
-    void setFloatRegBits(PhysRegIdPtr phys_reg, FloatRegBits val)
+    void
+    setFloatRegBits(PhysRegIdPtr phys_reg, RegVal val)
     {
         assert(phys_reg->isFloatPhysReg());
 
@@ -293,7 +297,8 @@ class PhysRegFile
     }
 
     /** Sets a vector register to the given value. */
-    void setVecReg(PhysRegIdPtr phys_reg, const VecRegContainer& val)
+    void
+    setVecReg(PhysRegIdPtr phys_reg, const VecRegContainer& val)
     {
         assert(phys_reg->isVectorPhysReg());
 
@@ -304,7 +309,8 @@ class PhysRegFile
     }
 
     /** Sets a vector register to the given value. */
-    void setVecElem(PhysRegIdPtr phys_reg, const VecElem val)
+    void
+    setVecElem(PhysRegIdPtr phys_reg, const VecElem val)
     {
         assert(phys_reg->isVectorPhysElem());
 
@@ -316,7 +322,8 @@ class PhysRegFile
     }
 
     /** Sets a condition-code register to the given value. */
-    void setCCReg(PhysRegIdPtr phys_reg, CCReg val)
+    void
+    setCCReg(PhysRegIdPtr phys_reg, CCReg val)
     {
         assert(phys_reg->isCCPhysReg());
 
@@ -338,12 +345,12 @@ class PhysRegFile
      */
     IdRange getRegIds(RegClass cls);
 
-     /**
-      * Get the true physical register id.
-      * As many parts work with PhysRegIdPtr, we need to be able to produce
-      * the pointer out of just class and register idx.
-      */
-     PhysRegIdPtr getTrueId(PhysRegIdPtr reg);
+    /**
+     * Get the true physical register id.
+     * As many parts work with PhysRegIdPtr, we need to be able to produce
+     * the pointer out of just class and register idx.
+     */
+    PhysRegIdPtr getTrueId(PhysRegIdPtr reg);
 };
 
 

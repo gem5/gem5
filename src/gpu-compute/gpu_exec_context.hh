@@ -37,6 +37,7 @@
 #define __GPU_EXEC_CONTEXT_HH__
 
 #include "arch/gpu_isa.hh"
+#include "base/types.hh"
 #include "config/the_gpu_isa.hh"
 
 class ComputeUnit;
@@ -49,8 +50,8 @@ class GPUExecContext
     Wavefront* wavefront();
     ComputeUnit* computeUnit();
 
-    TheGpuISA::MiscReg readMiscReg(int opIdx) const;
-    void writeMiscReg(int opIdx, TheGpuISA::MiscReg operandVal);
+    RegVal readMiscReg(int opIdx) const;
+    void writeMiscReg(int opIdx, RegVal operandVal);
 
   protected:
     ComputeUnit *cu;

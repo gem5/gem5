@@ -60,9 +60,6 @@ class BaseSimpleCPU;
 
 class SimpleExecContext : public ExecContext {
   protected:
-    typedef TheISA::MiscReg MiscReg;
-    typedef TheISA::FloatReg FloatReg;
-    typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg CCReg;
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
@@ -174,7 +171,8 @@ class SimpleExecContext : public ExecContext {
     { }
 
     /** Reads an integer register. */
-    IntReg readIntRegOperand(const StaticInst *si, int idx) override
+    RegVal
+    readIntRegOperand(const StaticInst *si, int idx) override
     {
         numIntRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
@@ -183,7 +181,8 @@ class SimpleExecContext : public ExecContext {
     }
 
     /** Sets an integer register to a value. */
-    void setIntRegOperand(const StaticInst *si, int idx, IntReg val) override
+    void
+    setIntRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         numIntRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
@@ -193,7 +192,8 @@ class SimpleExecContext : public ExecContext {
 
     /** Reads a floating point register in its binary format, instead
      * of by value. */
-    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx) override
+    RegVal
+    readFloatRegOperandBits(const StaticInst *si, int idx) override
     {
         numFpRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
@@ -203,8 +203,8 @@ class SimpleExecContext : public ExecContext {
 
     /** Sets the bits of a floating point register of single width
      * to a binary value. */
-    void setFloatRegOperandBits(const StaticInst *si, int idx,
-                                FloatRegBits val) override
+    void
+    setFloatRegOperandBits(const StaticInst *si, int idx, RegVal val) override
     {
         numFpRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
@@ -213,7 +213,7 @@ class SimpleExecContext : public ExecContext {
     }
 
     /** Reads a vector register. */
-    const VecRegContainer&
+    const VecRegContainer &
     readVecRegOperand(const StaticInst *si, int idx) const override
     {
         numVecRegReads++;
@@ -223,7 +223,7 @@ class SimpleExecContext : public ExecContext {
     }
 
     /** Reads a vector register for modification. */
-    VecRegContainer&
+    VecRegContainer &
     getWritableVecRegOperand(const StaticInst *si, int idx) override
     {
         numVecRegWrites++;
@@ -233,8 +233,9 @@ class SimpleExecContext : public ExecContext {
     }
 
     /** Sets a vector register to a value. */
-    void setVecRegOperand(const StaticInst *si, int idx,
-                          const VecRegContainer& val) override
+    void
+    setVecRegOperand(const StaticInst *si, int idx,
+                     const VecRegContainer& val) override
     {
         numVecRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
@@ -312,7 +313,8 @@ class SimpleExecContext : public ExecContext {
     /** @} */
 
     /** Reads an element of a vector register. */
-    VecElem readVecElemOperand(const StaticInst *si, int idx) const override
+    VecElem
+    readVecElemOperand(const StaticInst *si, int idx) const override
     {
         numVecRegReads++;
         const RegId& reg = si->destRegIdx(idx);
@@ -321,8 +323,9 @@ class SimpleExecContext : public ExecContext {
     }
 
     /** Sets an element of a vector register to a value. */
-    void setVecElemOperand(const StaticInst *si, int idx,
-                           const VecElem val) override
+    void
+    setVecElemOperand(const StaticInst *si, int idx,
+                      const VecElem val) override
     {
         numVecRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
@@ -330,7 +333,8 @@ class SimpleExecContext : public ExecContext {
         thread->setVecElem(reg, val);
     }
 
-    CCReg readCCRegOperand(const StaticInst *si, int idx) override
+    CCReg
+    readCCRegOperand(const StaticInst *si, int idx) override
     {
         numCCRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
@@ -338,7 +342,8 @@ class SimpleExecContext : public ExecContext {
         return thread->readCCReg(reg.index());
     }
 
-    void setCCRegOperand(const StaticInst *si, int idx, CCReg val) override
+    void
+    setCCRegOperand(const StaticInst *si, int idx, CCReg val) override
     {
         numCCRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
@@ -346,7 +351,8 @@ class SimpleExecContext : public ExecContext {
         thread->setCCReg(reg.index(), val);
     }
 
-    MiscReg readMiscRegOperand(const StaticInst *si, int idx) override
+    RegVal
+    readMiscRegOperand(const StaticInst *si, int idx) override
     {
         numIntRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
@@ -354,8 +360,9 @@ class SimpleExecContext : public ExecContext {
         return thread->readMiscReg(reg.index());
     }
 
-    void setMiscRegOperand(const StaticInst *si, int idx,
-                           const MiscReg &val) override
+    void
+    setMiscRegOperand(const StaticInst *si, int idx,
+                      const RegVal &val) override
     {
         numIntRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
@@ -367,7 +374,8 @@ class SimpleExecContext : public ExecContext {
      * Reads a miscellaneous register, handling any architectural
      * side effects due to reading that register.
      */
-    MiscReg readMiscReg(int misc_reg) override
+    RegVal
+    readMiscReg(int misc_reg) override
     {
         numIntRegReads++;
         return thread->readMiscReg(misc_reg);
@@ -377,37 +385,43 @@ class SimpleExecContext : public ExecContext {
      * Sets a miscellaneous register, handling any architectural
      * side effects due to writing that register.
      */
-    void setMiscReg(int misc_reg, const MiscReg &val) override
+    void
+    setMiscReg(int misc_reg, const RegVal &val) override
     {
         numIntRegWrites++;
         thread->setMiscReg(misc_reg, val);
     }
 
-    PCState pcState() const override
+    PCState
+    pcState() const override
     {
         return thread->pcState();
     }
 
-    void pcState(const PCState &val) override
+    void
+    pcState(const PCState &val) override
     {
         thread->pcState(val);
     }
 
 
-    Fault readMem(Addr addr, uint8_t *data, unsigned int size,
-                  Request::Flags flags) override
+    Fault
+    readMem(Addr addr, uint8_t *data, unsigned int size,
+            Request::Flags flags) override
     {
         return cpu->readMem(addr, data, size, flags);
     }
 
-    Fault initiateMemRead(Addr addr, unsigned int size,
-                          Request::Flags flags) override
+    Fault
+    initiateMemRead(Addr addr, unsigned int size,
+                    Request::Flags flags) override
     {
         return cpu->initiateMemRead(addr, size, flags);
     }
 
-    Fault writeMem(uint8_t *data, unsigned int size, Addr addr,
-                   Request::Flags flags, uint64_t *res) override
+    Fault
+    writeMem(uint8_t *data, unsigned int size, Addr addr,
+             Request::Flags flags, uint64_t *res) override
     {
         return cpu->writeMem(data, size, addr, flags, res);
     }
@@ -415,7 +429,8 @@ class SimpleExecContext : public ExecContext {
     /**
      * Sets the number of consecutive store conditional failures.
      */
-    void setStCondFailures(unsigned int sc_failures) override
+    void
+    setStCondFailures(unsigned int sc_failures) override
     {
         thread->setStCondFailures(sc_failures);
     }
@@ -423,7 +438,8 @@ class SimpleExecContext : public ExecContext {
     /**
      * Returns the number of consecutive store conditional failures.
      */
-    unsigned int readStCondFailures() const override
+    unsigned int
+    readStCondFailures() const override
     {
         return thread->readStCondFailures();
     }
@@ -431,7 +447,8 @@ class SimpleExecContext : public ExecContext {
     /**
      * Executes a syscall specified by the callnum.
      */
-    void syscall(int64_t callnum, Fault *fault) override
+    void
+    syscall(int64_t callnum, Fault *fault) override
     {
         if (FullSystem)
             panic("Syscall emulation isn't available in FS mode.");
@@ -440,35 +457,32 @@ class SimpleExecContext : public ExecContext {
     }
 
     /** Returns a pointer to the ThreadContext. */
-    ThreadContext *tcBase() override
-    {
-        return thread->getTC();
-    }
+    ThreadContext *tcBase() override { return thread->getTC(); }
 
     /**
      * Somewhat Alpha-specific function that handles returning from an
      * error or interrupt.
      */
-    Fault hwrei() override
-    {
-        return thread->hwrei();
-    }
+    Fault hwrei() override { return thread->hwrei(); }
 
     /**
      * Check for special simulator handling of specific PAL calls.  If
      * return value is false, actual PAL call will be suppressed.
      */
-    bool simPalCheck(int palFunc) override
+    bool
+    simPalCheck(int palFunc) override
     {
         return thread->simPalCheck(palFunc);
     }
 
-    bool readPredicate() const override
+    bool
+    readPredicate() const override
     {
         return thread->readPredicate();
     }
 
-    void setPredicate(bool val) override
+    void
+    setPredicate(bool val) override
     {
         thread->setPredicate(val);
 
@@ -480,47 +494,52 @@ class SimpleExecContext : public ExecContext {
     /**
      * Invalidate a page in the DTLB <i>and</i> ITLB.
      */
-    void demapPage(Addr vaddr, uint64_t asn) override
+    void
+    demapPage(Addr vaddr, uint64_t asn) override
     {
         thread->demapPage(vaddr, asn);
     }
 
-    void armMonitor(Addr address) override
+    void
+    armMonitor(Addr address) override
     {
         cpu->armMonitor(thread->threadId(), address);
     }
 
-    bool mwait(PacketPtr pkt) override
+    bool
+    mwait(PacketPtr pkt) override
     {
         return cpu->mwait(thread->threadId(), pkt);
     }
 
-    void mwaitAtomic(ThreadContext *tc) override
+    void
+    mwaitAtomic(ThreadContext *tc) override
     {
         cpu->mwaitAtomic(thread->threadId(), tc, thread->dtb);
     }
 
-    AddressMonitor *getAddrMonitor() override
+    AddressMonitor *
+    getAddrMonitor() override
     {
         return cpu->getCpuAddrMonitor(thread->threadId());
     }
 
 #if THE_ISA == MIPS_ISA
-    MiscReg readRegOtherThread(const RegId& reg,
-                               ThreadID tid = InvalidThreadID)
+    RegVal
+    readRegOtherThread(const RegId& reg, ThreadID tid=InvalidThreadID)
         override
     {
         panic("Simple CPU models do not support multithreaded "
               "register access.");
     }
 
-    void setRegOtherThread(const RegId& reg, MiscReg val,
-                           ThreadID tid = InvalidThreadID) override
+    void
+    setRegOtherThread(const RegId& reg, RegVal val,
+                      ThreadID tid=InvalidThreadID) override
     {
         panic("Simple CPU models do not support multithreaded "
               "register access.");
     }
-
 #endif
 
 };

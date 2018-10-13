@@ -823,9 +823,6 @@ template <typename T>
 static void
 updateKvmStateFPUCommon(ThreadContext *tc, T &fpu)
 {
-    static_assert(sizeof(X86ISA::FloatRegBits) == 8,
-                  "Unexpected size of X86ISA::FloatRegBits");
-
     fpu.mxcsr = tc->readMiscRegNoEffect(MISCREG_MXCSR);
     fpu.fcw = tc->readMiscRegNoEffect(MISCREG_FCW);
     // No need to rebuild from MISCREG_FSW and MISCREG_TOP if we read
@@ -850,9 +847,9 @@ updateKvmStateFPUCommon(ThreadContext *tc, T &fpu)
     // TODO: We should update the MMX state
 
     for (int i = 0; i < 16; ++i) {
-        *(X86ISA::FloatRegBits *)&fpu.xmm[i][0] =
+        *(uint64_t *)&fpu.xmm[i][0] =
             tc->readFloatRegBits(FLOATREG_XMM_LOW(i));
-        *(X86ISA::FloatRegBits *)&fpu.xmm[i][8] =
+        *(uint64_t *)&fpu.xmm[i][8] =
             tc->readFloatRegBits(FLOATREG_XMM_HIGH(i));
     }
 }
@@ -1048,9 +1045,6 @@ updateThreadContextFPUCommon(ThreadContext *tc, const T &fpu)
 {
     const unsigned top((fpu.fsw >> 11) & 0x7);
 
-    static_assert(sizeof(X86ISA::FloatRegBits) == 8,
-                  "Unexpected size of X86ISA::FloatRegBits");
-
     for (int i = 0; i < 8; ++i) {
         const unsigned reg_idx((i + top) & 0x7);
         const double value(X86ISA::loadFloat80(fpu.fpr[i]));
@@ -1075,9 +1069,9 @@ updateThreadContextFPUCommon(ThreadContext *tc, const T &fpu)
 
     for (int i = 0; i < 16; ++i) {
         tc->setFloatRegBits(FLOATREG_XMM_LOW(i),
-                            *(X86ISA::FloatRegBits *)&fpu.xmm[i][0]);
+                            *(uint64_t *)&fpu.xmm[i][0]);
         tc->setFloatRegBits(FLOATREG_XMM_HIGH(i),
-                            *(X86ISA::FloatRegBits *)&fpu.xmm[i][8]);
+                            *(uint64_t *)&fpu.xmm[i][8]);
     }
 }
 

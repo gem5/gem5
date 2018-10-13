@@ -206,11 +206,13 @@ class CheckerThreadContext : public ThreadContext
     //
     // New accessors for new decoder.
     //
-    uint64_t readIntReg(int reg_idx)
-    { return actualTC->readIntReg(reg_idx); }
+    RegVal readIntReg(int reg_idx) { return actualTC->readIntReg(reg_idx); }
 
-    FloatRegBits readFloatRegBits(int reg_idx)
-    { return actualTC->readFloatRegBits(reg_idx); }
+    RegVal
+    readFloatRegBits(int reg_idx)
+    {
+        return actualTC->readFloatRegBits(reg_idx);
+    }
 
     const VecRegContainer& readVecReg(const RegId& reg) const
     { return actualTC->readVecReg(reg); }
@@ -264,31 +266,36 @@ class CheckerThreadContext : public ThreadContext
     CCReg readCCReg(int reg_idx)
     { return actualTC->readCCReg(reg_idx); }
 
-    void setIntReg(int reg_idx, uint64_t val)
+    void
+    setIntReg(int reg_idx, RegVal val)
     {
         actualTC->setIntReg(reg_idx, val);
         checkerTC->setIntReg(reg_idx, val);
     }
 
-    void setFloatRegBits(int reg_idx, FloatRegBits val)
+    void
+    setFloatRegBits(int reg_idx, RegVal val)
     {
         actualTC->setFloatRegBits(reg_idx, val);
         checkerTC->setFloatRegBits(reg_idx, val);
     }
 
-    void setVecReg(const RegId& reg, const VecRegContainer& val)
+    void
+    setVecReg(const RegId& reg, const VecRegContainer& val)
     {
         actualTC->setVecReg(reg, val);
         checkerTC->setVecReg(reg, val);
     }
 
-    void setVecElem(const RegId& reg, const VecElem& val)
+    void
+    setVecElem(const RegId& reg, const VecElem& val)
     {
         actualTC->setVecElem(reg, val);
         checkerTC->setVecElem(reg, val);
     }
 
-    void setCCReg(int reg_idx, CCReg val)
+    void
+    setCCReg(int reg_idx, CCReg val)
     {
         actualTC->setCCReg(reg_idx, val);
         checkerTC->setCCReg(reg_idx, val);
@@ -299,7 +306,8 @@ class CheckerThreadContext : public ThreadContext
     { return actualTC->pcState(); }
 
     /** Sets this thread's PC state. */
-    void pcState(const TheISA::PCState &val)
+    void
+    pcState(const TheISA::PCState &val)
     {
         DPRINTF(Checker, "Changing PC to %s, old PC %s\n",
                          val, checkerTC->pcState());
@@ -308,13 +316,15 @@ class CheckerThreadContext : public ThreadContext
         return actualTC->pcState(val);
     }
 
-    void setNPC(Addr val)
+    void
+    setNPC(Addr val)
     {
         checkerTC->setNPC(val);
         actualTC->setNPC(val);
     }
 
-    void pcStateNoRecord(const TheISA::PCState &val)
+    void
+    pcStateNoRecord(const TheISA::PCState &val)
     {
         return actualTC->pcState(val);
     }
@@ -331,13 +341,14 @@ class CheckerThreadContext : public ThreadContext
     MicroPC microPC()
     { return actualTC->microPC(); }
 
-    MiscReg readMiscRegNoEffect(int misc_reg) const
+    RegVal readMiscRegNoEffect(int misc_reg) const
     { return actualTC->readMiscRegNoEffect(misc_reg); }
 
-    MiscReg readMiscReg(int misc_reg)
+    RegVal readMiscReg(int misc_reg)
     { return actualTC->readMiscReg(misc_reg); }
 
-    void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+    void
+    setMiscRegNoEffect(int misc_reg, const RegVal &val)
     {
         DPRINTF(Checker, "Setting misc reg with no effect: %d to both Checker"
                          " and O3..\n", misc_reg);
@@ -345,7 +356,8 @@ class CheckerThreadContext : public ThreadContext
         actualTC->setMiscRegNoEffect(misc_reg, val);
     }
 
-    void setMiscReg(int misc_reg, const MiscReg &val)
+    void
+    setMiscReg(int misc_reg, const RegVal &val)
     {
         DPRINTF(Checker, "Setting misc reg with effect: %d to both Checker"
                          " and O3..\n", misc_reg);
@@ -353,40 +365,57 @@ class CheckerThreadContext : public ThreadContext
         actualTC->setMiscReg(misc_reg, val);
     }
 
-    RegId flattenRegId(const RegId& regId) const {
+    RegId
+    flattenRegId(const RegId& regId) const
+    {
         return actualTC->flattenRegId(regId);
     }
 
     unsigned readStCondFailures()
     { return actualTC->readStCondFailures(); }
 
-    void setStCondFailures(unsigned sc_failures)
+    void
+    setStCondFailures(unsigned sc_failures)
     {
         actualTC->setStCondFailures(sc_failures);
     }
 
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 
-    uint64_t readIntRegFlat(int idx)
-    { return actualTC->readIntRegFlat(idx); }
+    RegVal readIntRegFlat(int idx) { return actualTC->readIntRegFlat(idx); }
 
-    void setIntRegFlat(int idx, uint64_t val)
-    { actualTC->setIntRegFlat(idx, val); }
+    void
+    setIntRegFlat(int idx, RegVal val)
+    {
+        actualTC->setIntRegFlat(idx, val);
+    }
 
-    FloatRegBits readFloatRegBitsFlat(int idx)
-    { return actualTC->readFloatRegBitsFlat(idx); }
+    RegVal
+    readFloatRegBitsFlat(int idx)
+    {
+        return actualTC->readFloatRegBitsFlat(idx);
+    }
 
-    void setFloatRegBitsFlat(int idx, FloatRegBits val)
-    { actualTC->setFloatRegBitsFlat(idx, val); }
+    void
+    setFloatRegBitsFlat(int idx, RegVal val)
+    {
+        actualTC->setFloatRegBitsFlat(idx, val);
+    }
 
-    const VecRegContainer& readVecRegFlat(int idx) const
-    { return actualTC->readVecRegFlat(idx); }
+    const VecRegContainer &
+    readVecRegFlat(int idx) const
+    {
+        return actualTC->readVecRegFlat(idx);
+    }
 
     /**
      * Read vector register for modification, flat indexing.
      */
-    VecRegContainer& getWritableVecRegFlat(int idx)
-    { return actualTC->getWritableVecRegFlat(idx); }
+    VecRegContainer &
+    getWritableVecRegFlat(int idx)
+    {
+        return actualTC->getWritableVecRegFlat(idx);
+    }
 
     void setVecRegFlat(int idx, const VecRegContainer& val)
     { actualTC->setVecRegFlat(idx, val); }

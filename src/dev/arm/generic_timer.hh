@@ -223,8 +223,8 @@ class GenericTimer : public ClockedObject
     void unserialize(CheckpointIn &cp) override;
 
   public:
-    void setMiscReg(int misc_reg, unsigned cpu, ArmISA::MiscReg val);
-    ArmISA::MiscReg readMiscReg(int misc_reg, unsigned cpu);
+    void setMiscReg(int misc_reg, unsigned cpu, RegVal val);
+    RegVal readMiscReg(int misc_reg, unsigned cpu);
 
   protected:
     struct CoreTimers {
@@ -286,8 +286,8 @@ class GenericTimerISA : public ArmISA::BaseISADevice
     GenericTimerISA(GenericTimer &_parent, unsigned _cpu)
         : parent(_parent), cpu(_cpu) {}
 
-    void setMiscReg(int misc_reg, ArmISA::MiscReg val) override;
-    ArmISA::MiscReg readMiscReg(int misc_reg) override;
+    void setMiscReg(int misc_reg, RegVal val) override;
+    RegVal readMiscReg(int misc_reg) override;
 
   protected:
     GenericTimer &parent;

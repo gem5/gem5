@@ -1275,8 +1275,8 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
     int index = 0;
 
-    TheISA::IntReg flags = p->getSyscallArg(tc, index);
-    TheISA::IntReg newStack = p->getSyscallArg(tc, index);
+    RegVal flags = p->getSyscallArg(tc, index);
+    RegVal newStack = p->getSyscallArg(tc, index);
     Addr ptidPtr = p->getSyscallArg(tc, index);
 
 #if THE_ISA == RISCV_ISA or THE_ISA == ARM_ISA

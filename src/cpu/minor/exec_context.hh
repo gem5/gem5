@@ -121,7 +121,7 @@ class ExecContext : public ::ExecContext
         return NoFault;
     }
 
-    IntReg
+    RegVal
     readIntRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->srcRegIdx(idx);
@@ -129,7 +129,7 @@ class ExecContext : public ::ExecContext
         return thread.readIntReg(reg.index());
     }
 
-    TheISA::FloatRegBits
+    RegVal
     readFloatRegOperandBits(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->srcRegIdx(idx);
@@ -137,7 +137,7 @@ class ExecContext : public ::ExecContext
         return thread.readFloatRegBits(reg.index());
     }
 
-    const TheISA::VecRegContainer&
+    const TheISA::VecRegContainer &
     readVecRegOperand(const StaticInst *si, int idx) const override
     {
         const RegId& reg = si->srcRegIdx(idx);
@@ -145,7 +145,7 @@ class ExecContext : public ::ExecContext
         return thread.readVecReg(reg);
     }
 
-    TheISA::VecRegContainer&
+    TheISA::VecRegContainer &
     getWritableVecRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->destRegIdx(idx);
@@ -162,7 +162,7 @@ class ExecContext : public ::ExecContext
     }
 
     void
-    setIntRegOperand(const StaticInst *si, int idx, IntReg val) override
+    setIntRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isIntReg());
@@ -170,8 +170,7 @@ class ExecContext : public ::ExecContext
     }
 
     void
-    setFloatRegOperandBits(const StaticInst *si, int idx,
-        TheISA::FloatRegBits val) override
+    setFloatRegOperandBits(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isFloatReg());
@@ -232,8 +231,7 @@ class ExecContext : public ::ExecContext
     /** Write a lane of the destination vector operand. */
     template <typename LD>
     void
-    setVecLaneOperandT(const StaticInst *si, int idx,
-            const LD& val)
+    setVecLaneOperandT(const StaticInst *si, int idx, const LD& val)
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isVecReg());
@@ -298,25 +296,25 @@ class ExecContext : public ::ExecContext
         thread.pcState(val);
     }
 
-    TheISA::MiscReg
+    RegVal
     readMiscRegNoEffect(int misc_reg) const
     {
         return thread.readMiscRegNoEffect(misc_reg);
     }
 
-    TheISA::MiscReg
+    RegVal
     readMiscReg(int misc_reg) override
     {
         return thread.readMiscReg(misc_reg);
     }
 
     void
-    setMiscReg(int misc_reg, const TheISA::MiscReg &val) override
+    setMiscReg(int misc_reg, const RegVal &val) override
     {
         thread.setMiscReg(misc_reg, val);
     }
 
-    TheISA::MiscReg
+    RegVal
     readMiscRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->srcRegIdx(idx);
@@ -326,7 +324,7 @@ class ExecContext : public ::ExecContext
 
     void
     setMiscRegOperand(const StaticInst *si, int idx,
-        const TheISA::MiscReg &val) override
+                      const RegVal &val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isMiscReg());
@@ -355,7 +353,7 @@ class ExecContext : public ::ExecContext
 
     void
     syscall(int64_t callnum, Fault *fault) override
-     {
+    {
         if (FullSystem)
             panic("Syscall emulation isn't available in FS mode.\n");
 
@@ -410,8 +408,8 @@ class ExecContext : public ::ExecContext
     BaseCPU *getCpuPtr() { return &cpu; }
 
     /* MIPS: other thread register reading/writing */
-    uint64_t
-    readRegOtherThread(const RegId& reg, ThreadID tid = InvalidThreadID)
+    RegVal
+    readRegOtherThread(const RegId &reg, ThreadID tid=InvalidThreadID)
     {
         SimpleThread *other_thread = (tid == InvalidThreadID
             ? &thread : cpu.threads[tid]);
@@ -433,8 +431,8 @@ class ExecContext : public ::ExecContext
     }
 
     void
-    setRegOtherThread(const RegId& reg, const TheISA::MiscReg &val,
-        ThreadID tid = InvalidThreadID)
+    setRegOtherThread(const RegId &reg, const RegVal &val,
+                      ThreadID tid=InvalidThreadID)
     {
         SimpleThread *other_thread = (tid == InvalidThreadID
             ? &thread : cpu.threads[tid]);

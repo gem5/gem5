@@ -175,28 +175,38 @@ class O3ThreadContext : public ThreadContext
     virtual void clearArchRegs();
 
     /** Reads an integer register. */
-    virtual uint64_t readReg(int reg_idx) {
+    virtual RegVal
+    readReg(int reg_idx)
+    {
         return readIntRegFlat(flattenRegId(RegId(IntRegClass,
                                                  reg_idx)).index());
     }
-    virtual uint64_t readIntReg(int reg_idx) {
+    virtual RegVal
+    readIntReg(int reg_idx)
+    {
         return readIntRegFlat(flattenRegId(RegId(IntRegClass,
                                                  reg_idx)).index());
     }
 
-    virtual FloatRegBits readFloatRegBits(int reg_idx) {
+    virtual RegVal
+    readFloatRegBits(int reg_idx)
+    {
         return readFloatRegBitsFlat(flattenRegId(RegId(FloatRegClass,
                                                  reg_idx)).index());
     }
 
-    virtual const VecRegContainer& readVecReg(const RegId& id) const {
+    virtual const VecRegContainer &
+    readVecReg(const RegId& id) const
+    {
         return readVecRegFlat(flattenRegId(id).index());
     }
 
     /**
      * Read vector register operand for modification, hierarchical indexing.
      */
-    virtual VecRegContainer& getWritableVecReg(const RegId& id) {
+    virtual VecRegContainer &
+    getWritableVecReg(const RegId& id)
+    {
         return getWritableVecRegFlat(flattenRegId(id).index());
     }
 
@@ -259,24 +269,34 @@ class O3ThreadContext : public ThreadContext
     }
 
     /** Sets an integer register to a value. */
-    virtual void setIntReg(int reg_idx, uint64_t val) {
+    virtual void
+    setIntReg(int reg_idx, RegVal val)
+    {
         setIntRegFlat(flattenRegId(RegId(IntRegClass, reg_idx)).index(), val);
     }
 
-    virtual void setFloatRegBits(int reg_idx, FloatRegBits val) {
+    virtual void
+    setFloatRegBits(int reg_idx, RegVal val)
+    {
         setFloatRegBitsFlat(flattenRegId(RegId(FloatRegClass,
                                                reg_idx)).index(), val);
     }
 
-    virtual void setVecReg(const RegId& reg, const VecRegContainer& val) {
+    virtual void
+    setVecReg(const RegId& reg, const VecRegContainer& val)
+    {
         setVecRegFlat(flattenRegId(reg).index(), val);
     }
 
-    virtual void setVecElem(const RegId& reg, const VecElem& val) {
+    virtual void
+    setVecElem(const RegId& reg, const VecElem& val)
+    {
         setVecElemFlat(flattenRegId(reg).index(), reg.elemIndex(), val);
     }
 
-    virtual void setCCReg(int reg_idx, CCReg val) {
+    virtual void
+    setCCReg(int reg_idx, CCReg val)
+    {
         setCCRegFlat(flattenRegId(RegId(CCRegClass, reg_idx)).index(), val);
     }
 
@@ -302,20 +322,20 @@ class O3ThreadContext : public ThreadContext
     { return cpu->microPC(thread->threadId()); }
 
     /** Reads a miscellaneous register. */
-    virtual MiscReg readMiscRegNoEffect(int misc_reg) const
+    virtual RegVal readMiscRegNoEffect(int misc_reg) const
     { return cpu->readMiscRegNoEffect(misc_reg, thread->threadId()); }
 
     /** Reads a misc. register, including any side-effects the
      * read might have as defined by the architecture. */
-    virtual MiscReg readMiscReg(int misc_reg)
+    virtual RegVal readMiscReg(int misc_reg)
     { return cpu->readMiscReg(misc_reg, thread->threadId()); }
 
     /** Sets a misc. register. */
-    virtual void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
+    virtual void setMiscRegNoEffect(int misc_reg, const RegVal &val);
 
     /** Sets a misc. register, including any side-effects the
      * write might have as defined by the architecture. */
-    virtual void setMiscReg(int misc_reg, const MiscReg &val);
+    virtual void setMiscReg(int misc_reg, const RegVal &val);
 
     virtual RegId flattenRegId(const RegId& regId) const;
 
@@ -336,7 +356,8 @@ class O3ThreadContext : public ThreadContext
     virtual Counter readFuncExeInst() { return thread->funcExeInst; }
 
     /** Returns pointer to the quiesce event. */
-    virtual EndQuiesceEvent *getQuiesceEvent()
+    virtual EndQuiesceEvent *
+    getQuiesceEvent()
     {
         return this->thread->quiesceEvent;
     }
@@ -345,17 +366,18 @@ class O3ThreadContext : public ThreadContext
      * similar is currently writing to the thread context and doesn't want
      * reset all the state (see noSquashFromTC).
      */
-    inline void conditionalSquash()
+    inline void
+    conditionalSquash()
     {
         if (!thread->trapPending && !thread->noSquashFromTC)
             cpu->squashFromTC(thread->threadId());
     }
 
-    virtual uint64_t readIntRegFlat(int idx);
-    virtual void setIntRegFlat(int idx, uint64_t val);
+    virtual RegVal readIntRegFlat(int idx);
+    virtual void setIntRegFlat(int idx, RegVal val);
 
-    virtual FloatRegBits readFloatRegBitsFlat(int idx);
-    virtual void setFloatRegBitsFlat(int idx, FloatRegBits val);
+    virtual RegVal readFloatRegBitsFlat(int idx);
+    virtual void setFloatRegBitsFlat(int idx, RegVal val);
 
     virtual const VecRegContainer& readVecRegFlat(int idx) const;
     /** Read vector register operand for modification, flat indexing. */
@@ -363,7 +385,8 @@ class O3ThreadContext : public ThreadContext
     virtual void setVecRegFlat(int idx, const VecRegContainer& val);
 
     template <typename VecElem>
-    VecLaneT<VecElem, true> readVecLaneFlat(int idx, int lId) const
+    VecLaneT<VecElem, true>
+    readVecLaneFlat(int idx, int lId) const
     {
         return cpu->template readArchVecLane<VecElem>(idx, lId,
                 thread->threadId());

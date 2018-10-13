@@ -66,16 +66,10 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Binary machine instruction type. */
     typedef TheISA::MachInst MachInst;
     /** Register types. */
-    typedef TheISA::IntReg   IntReg;
-    typedef TheISA::FloatReg FloatReg;
-    typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg   CCReg;
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
     static constexpr auto NumVecElemPerVecReg = TheISA::NumVecElemPerVecReg;
-
-    /** Misc register type. */
-    typedef TheISA::MiscReg  MiscReg;
 
     enum {
         MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
@@ -114,7 +108,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     using BaseDynInst<Impl>::_destRegIdx;
 
     /** Values to be written to the destination misc. registers. */
-    std::array<MiscReg, TheISA::MaxMiscDestRegs> _destMiscRegVal;
+    std::array<RegVal, TheISA::MaxMiscDestRegs> _destMiscRegVal;
 
     /** Indexes of the destination misc. registers. They are needed to defer
      * the write accesses to the misc. registers until the commit stage, when
@@ -142,7 +136,8 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */
-    MiscReg readMiscReg(int misc_reg)
+    RegVal
+    readMiscReg(int misc_reg)
     {
         return this->cpu->readMiscReg(misc_reg, this->threadNumber);
     }
@@ -150,7 +145,8 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Sets a misc. register, including any side-effects the write
      * might have as defined by the architecture.
      */
-    void setMiscReg(int misc_reg, const MiscReg &val)
+    void
+    setMiscReg(int misc_reg, const RegVal &val)
     {
         /** Writes to misc. registers are recorded and deferred until the
          * commit stage, when updateMiscRegs() is called. First, check if
@@ -174,7 +170,8 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Reads a misc. register, including any side-effects the read
      * might have as defined by the architecture.
      */
-    TheISA::MiscReg readMiscRegOperand(const StaticInst *si, int idx)
+    RegVal
+    readMiscRegOperand(const StaticInst *si, int idx)
     {
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.isMiscReg());
@@ -184,8 +181,8 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Sets a misc. register, including any side-effects the write
      * might have as defined by the architecture.
      */
-    void setMiscRegOperand(const StaticInst *si, int idx,
-                                     const MiscReg &val)
+    void
+    setMiscRegOperand(const StaticInst *si, int idx, const RegVal &val)
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isMiscReg());
@@ -193,7 +190,8 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     }
 
     /** Called at the commit stage to update the misc. registers. */
-    void updateMiscRegs()
+    void
+    updateMiscRegs()
     {
         // @todo: Pretty convoluted way to avoid squashing from happening when
         // using the TC during an instruction's execution (specifically for
@@ -268,12 +266,14 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     // storage (which is pretty hard to imagine they would have reason
     // to do).
 
-    IntReg readIntRegOperand(const StaticInst *si, int idx)
+    RegVal
+    readIntRegOperand(const StaticInst *si, int idx)
     {
         return this->cpu->readIntReg(this->_srcRegIdx[idx]);
     }
 
-    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx)
+    RegVal
+    readFloatRegOperandBits(const StaticInst *si, int idx)
     {
         return this->cpu->readFloatRegBits(this->_srcRegIdx[idx]);
     }
@@ -369,14 +369,15 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** @todo: Make results into arrays so they can handle multiple dest
      *  registers.
      */
-    void setIntRegOperand(const StaticInst *si, int idx, IntReg val)
+    void
+    setIntRegOperand(const StaticInst *si, int idx, RegVal val)
     {
         this->cpu->setIntReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setIntRegOperand(si, idx, val);
     }
 
-    void setFloatRegOperandBits(const StaticInst *si, int idx,
-                                FloatRegBits val)
+    void
+    setFloatRegOperandBits(const StaticInst *si, int idx, RegVal val)
     {
         this->cpu->setFloatRegBits(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setFloatRegOperandBits(si, idx, val);
@@ -405,13 +406,15 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     }
 
 #if THE_ISA == MIPS_ISA
-    MiscReg readRegOtherThread(const RegId& misc_reg, ThreadID tid)
+    RegVal
+    readRegOtherThread(const RegId& misc_reg, ThreadID tid)
     {
         panic("MIPS MT not defined for O3 CPU.\n");
         return 0;
     }
 
-    void setRegOtherThread(const RegId& misc_reg, MiscReg val, ThreadID tid)
+    void
+    setRegOtherThread(const RegId& misc_reg, RegVal val, ThreadID tid)
     {
         panic("MIPS MT not defined for O3 CPU.\n");
     }

@@ -95,11 +95,7 @@ class ThreadContext
 {
   protected:
     typedef TheISA::MachInst MachInst;
-    typedef TheISA::IntReg IntReg;
-    typedef TheISA::FloatReg FloatReg;
-    typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::CCReg CCReg;
-    typedef TheISA::MiscReg MiscReg;
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
   public:
@@ -208,9 +204,9 @@ class ThreadContext
     //
     // New accessors for new decoder.
     //
-    virtual uint64_t readIntReg(int reg_idx) = 0;
+    virtual RegVal readIntReg(int reg_idx) = 0;
 
-    virtual FloatRegBits readFloatRegBits(int reg_idx) = 0;
+    virtual RegVal readFloatRegBits(int reg_idx) = 0;
 
     virtual const VecRegContainer& readVecReg(const RegId& reg) const = 0;
     virtual VecRegContainer& getWritableVecReg(const RegId& reg) = 0;
@@ -248,9 +244,9 @@ class ThreadContext
 
     virtual CCReg readCCReg(int reg_idx) = 0;
 
-    virtual void setIntReg(int reg_idx, uint64_t val) = 0;
+    virtual void setIntReg(int reg_idx, RegVal val) = 0;
 
-    virtual void setFloatRegBits(int reg_idx, FloatRegBits val) = 0;
+    virtual void setFloatRegBits(int reg_idx, RegVal val) = 0;
 
     virtual void setVecReg(const RegId& reg, const VecRegContainer& val) = 0;
 
@@ -278,24 +274,24 @@ class ThreadContext
 
     virtual MicroPC microPC() = 0;
 
-    virtual MiscReg readMiscRegNoEffect(int misc_reg) const = 0;
+    virtual RegVal readMiscRegNoEffect(int misc_reg) const = 0;
 
-    virtual MiscReg readMiscReg(int misc_reg) = 0;
+    virtual RegVal readMiscReg(int misc_reg) = 0;
 
-    virtual void setMiscRegNoEffect(int misc_reg, const MiscReg &val) = 0;
+    virtual void setMiscRegNoEffect(int misc_reg, const RegVal &val) = 0;
 
-    virtual void setMiscReg(int misc_reg, const MiscReg &val) = 0;
+    virtual void setMiscReg(int misc_reg, const RegVal &val) = 0;
 
     virtual RegId flattenRegId(const RegId& regId) const = 0;
 
-    virtual uint64_t
+    virtual RegVal
     readRegOtherThread(const RegId& misc_reg, ThreadID tid)
     {
         return 0;
     }
 
     virtual void
-    setRegOtherThread(const RegId& misc_reg, const MiscReg &val, ThreadID tid)
+    setRegOtherThread(const RegId& misc_reg, const RegVal &val, ThreadID tid)
     {
     }
 
@@ -330,11 +326,11 @@ class ThreadContext
      * serialization code to access all registers.
      */
 
-    virtual uint64_t readIntRegFlat(int idx) = 0;
-    virtual void setIntRegFlat(int idx, uint64_t val) = 0;
+    virtual RegVal readIntRegFlat(int idx) = 0;
+    virtual void setIntRegFlat(int idx, RegVal val) = 0;
 
-    virtual FloatRegBits readFloatRegBitsFlat(int idx) = 0;
-    virtual void setFloatRegBitsFlat(int idx, FloatRegBits val) = 0;
+    virtual RegVal readFloatRegBitsFlat(int idx) = 0;
+    virtual void setFloatRegBitsFlat(int idx, RegVal val) = 0;
 
     virtual const VecRegContainer& readVecRegFlat(int idx) const = 0;
     virtual VecRegContainer& getWritableVecRegFlat(int idx) = 0;
@@ -454,10 +450,10 @@ class ProxyThreadContext : public ThreadContext
     //
     // New accessors for new decoder.
     //
-    uint64_t readIntReg(int reg_idx)
+    RegVal readIntReg(int reg_idx)
     { return actualTC->readIntReg(reg_idx); }
 
-    FloatRegBits readFloatRegBits(int reg_idx)
+    RegVal readFloatRegBits(int reg_idx)
     { return actualTC->readFloatRegBits(reg_idx); }
 
     const VecRegContainer& readVecReg(const RegId& reg) const
@@ -509,10 +505,10 @@ class ProxyThreadContext : public ThreadContext
     CCReg readCCReg(int reg_idx)
     { return actualTC->readCCReg(reg_idx); }
 
-    void setIntReg(int reg_idx, uint64_t val)
+    void setIntReg(int reg_idx, RegVal val)
     { actualTC->setIntReg(reg_idx, val); }
 
-    void setFloatRegBits(int reg_idx, FloatRegBits val)
+    void setFloatRegBits(int reg_idx, RegVal val)
     { actualTC->setFloatRegBits(reg_idx, val); }
 
     void setVecReg(const RegId& reg, const VecRegContainer& val)
@@ -539,16 +535,16 @@ class ProxyThreadContext : public ThreadContext
     void setPredicate(bool val)
     { actualTC->setPredicate(val); }
 
-    MiscReg readMiscRegNoEffect(int misc_reg) const
+    RegVal readMiscRegNoEffect(int misc_reg) const
     { return actualTC->readMiscRegNoEffect(misc_reg); }
 
-    MiscReg readMiscReg(int misc_reg)
+    RegVal readMiscReg(int misc_reg)
     { return actualTC->readMiscReg(misc_reg); }
 
-    void setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+    void setMiscRegNoEffect(int misc_reg, const RegVal &val)
     { return actualTC->setMiscRegNoEffect(misc_reg, val); }
 
-    void setMiscReg(int misc_reg, const MiscReg &val)
+    void setMiscReg(int misc_reg, const RegVal &val)
     { return actualTC->setMiscReg(misc_reg, val); }
 
     RegId flattenRegId(const RegId& regId) const
@@ -565,16 +561,16 @@ class ProxyThreadContext : public ThreadContext
 
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 
-    uint64_t readIntRegFlat(int idx)
+    RegVal readIntRegFlat(int idx)
     { return actualTC->readIntRegFlat(idx); }
 
-    void setIntRegFlat(int idx, uint64_t val)
+    void setIntRegFlat(int idx, RegVal val)
     { actualTC->setIntRegFlat(idx, val); }
 
-    FloatRegBits readFloatRegBitsFlat(int idx)
+    RegVal readFloatRegBitsFlat(int idx)
     { return actualTC->readFloatRegBitsFlat(idx); }
 
-    void setFloatRegBitsFlat(int idx, FloatRegBits val)
+    void setFloatRegBitsFlat(int idx, RegVal val)
     { actualTC->setFloatRegBitsFlat(idx, val); }
 
     const VecRegContainer& readVecRegFlat(int id) const

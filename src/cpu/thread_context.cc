@@ -61,8 +61,8 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 
     // First loop through the integer registers.
     for (int i = 0; i < TheISA::NumIntRegs; ++i) {
-        TheISA::IntReg t1 = one->readIntReg(i);
-        TheISA::IntReg t2 = two->readIntReg(i);
+        RegVal t1 = one->readIntReg(i);
+        RegVal t2 = two->readIntReg(i);
         if (t1 != t2)
             panic("Int reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
@@ -70,8 +70,8 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 
     // Then loop through the floating point registers.
     for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
-        TheISA::FloatRegBits t1 = one->readFloatRegBits(i);
-        TheISA::FloatRegBits t2 = two->readFloatRegBits(i);
+        RegVal t1 = one->readFloatRegBits(i);
+        RegVal t2 = two->readFloatRegBits(i);
         if (t1 != t2)
             panic("Float reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
@@ -87,8 +87,8 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
                   i, t1, t2);
     }
     for (int i = 0; i < TheISA::NumMiscRegs; ++i) {
-        TheISA::MiscReg t1 = one->readMiscRegNoEffect(i);
-        TheISA::MiscReg t2 = two->readMiscRegNoEffect(i);
+        RegVal t1 = one->readMiscRegNoEffect(i);
+        RegVal t2 = two->readMiscRegNoEffect(i);
         if (t1 != t2)
             panic("Misc reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
@@ -155,7 +155,7 @@ serialize(ThreadContext &tc, CheckpointOut &cp)
 {
     using namespace TheISA;
 
-    FloatRegBits floatRegs[NumFloatRegs];
+    RegVal floatRegs[NumFloatRegs];
     for (int i = 0; i < NumFloatRegs; ++i)
         floatRegs[i] = tc.readFloatRegBitsFlat(i);
     // This is a bit ugly, but needed to maintain backwards
@@ -168,7 +168,7 @@ serialize(ThreadContext &tc, CheckpointOut &cp)
     }
     SERIALIZE_CONTAINER(vecRegs);
 
-    IntReg intRegs[NumIntRegs];
+    RegVal intRegs[NumIntRegs];
     for (int i = 0; i < NumIntRegs; ++i)
         intRegs[i] = tc.readIntRegFlat(i);
     SERIALIZE_ARRAY(intRegs, NumIntRegs);
@@ -190,7 +190,7 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
 {
     using namespace TheISA;
 
-    FloatRegBits floatRegs[NumFloatRegs];
+    RegVal floatRegs[NumFloatRegs];
     // This is a bit ugly, but needed to maintain backwards
     // compatibility.
     arrayParamIn(cp, "floatRegs.i", floatRegs, NumFloatRegs);
@@ -203,7 +203,7 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
         tc.setVecRegFlat(i, vecRegs[i]);
     }
 
-    IntReg intRegs[NumIntRegs];
+    RegVal intRegs[NumIntRegs];
     UNSERIALIZE_ARRAY(intRegs, NumIntRegs);
     for (int i = 0; i < NumIntRegs; ++i)
         tc.setIntRegFlat(i, intRegs[i]);

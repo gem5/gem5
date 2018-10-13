@@ -312,7 +312,7 @@ GenericTimer::createTimers(unsigned cpus)
 
 
 void
-GenericTimer::setMiscReg(int reg, unsigned cpu, MiscReg val)
+GenericTimer::setMiscReg(int reg, unsigned cpu, RegVal val)
 {
     CoreTimers &core(getTimers(cpu));
 
@@ -417,7 +417,7 @@ GenericTimer::setMiscReg(int reg, unsigned cpu, MiscReg val)
 }
 
 
-MiscReg
+RegVal
 GenericTimer::readMiscReg(int reg, unsigned cpu)
 {
     CoreTimers &core(getTimers(cpu));
@@ -508,16 +508,16 @@ GenericTimer::readMiscReg(int reg, unsigned cpu)
 
 
 void
-GenericTimerISA::setMiscReg(int reg, MiscReg val)
+GenericTimerISA::setMiscReg(int reg, RegVal val)
 {
     DPRINTF(Timer, "Setting %s := 0x%x\n", miscRegName[reg], val);
     parent.setMiscReg(reg, cpu, val);
 }
 
-MiscReg
+RegVal
 GenericTimerISA::readMiscReg(int reg)
 {
-    MiscReg value = parent.readMiscReg(reg, cpu);
+    RegVal value = parent.readMiscReg(reg, cpu);
     DPRINTF(Timer, "Reading %s as 0x%x\n", miscRegName[reg], value);
     return value;
 }
