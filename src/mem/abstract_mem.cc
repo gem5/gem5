@@ -337,7 +337,7 @@ AbstractMemory::access(PacketPtr pkt)
     if (pkt->cmd == MemCmd::SwapReq) {
         if (pkt->isAtomicOp()) {
             if (pmemAddr) {
-                memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+                pkt->setData(hostAddr);
                 (*(pkt->getAtomicOp()))(hostAddr);
             }
         } else {
@@ -345,15 +345,14 @@ AbstractMemory::access(PacketPtr pkt)
             uint64_t condition_val64;
             uint32_t condition_val32;
 
-            if (!pmemAddr)
-                panic("Swap only works if there is real memory (i.e. null=False)");
+            panic_if(!pmemAddr, "Swap only works if there is real memory " \
+                     "(i.e. null=False)");
 
             bool overwrite_mem = true;
             // keep a copy of our possible write value, and copy what is at the
             // memory address into the packet
-            std::memcpy(&overwrite_val[0], pkt->getConstPtr<uint8_t>(),
-                        pkt->getSize());
-            std::memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+            pkt->writeData(&overwrite_val[0]);
+            pkt->setData(hostAddr);
 
             if (pkt->req->isCondSwap()) {
                 if (pkt->getSize() == sizeof(uint64_t)) {
@@ -383,8 +382,9 @@ AbstractMemory::access(PacketPtr pkt)
             // to do the LL/SC tracking here
             trackLoadLocked(pkt);
         }
-        if (pmemAddr)
-            memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+        if (pmemAddr) {
+            pkt->setData(hostAddr);
+        }
         TRACE_PACKET(pkt->req->isInstFetch() ? "IFetch" : "Read");
         numReads[pkt->req->masterId()]++;
         bytesRead[pkt->req->masterId()] += pkt->getSize();
@@ -399,7 +399,7 @@ AbstractMemory::access(PacketPtr pkt)
     } else if (pkt->isWrite()) {
         if (writeOK(pkt)) {
             if (pmemAddr) {
-                memcpy(hostAddr, pkt->getConstPtr<uint8_t>(), pkt->getSize());
+                pkt->writeData(hostAddr);
                 DPRINTF(MemoryAccess, "%s wrote %i bytes to address %x\n",
                         __func__, pkt->getSize(), pkt->getAddr());
             }
@@ -426,13 +426,15 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
     uint8_t *hostAddr = pmemAddr + pkt->getAddr() - range.start();
 
     if (pkt->isRead()) {
-        if (pmemAddr)
-            memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+        if (pmemAddr) {
+            pkt->setData(hostAddr);
+        }
         TRACE_PACKET("Read");
         pkt->makeResponse();
     } else if (pkt->isWrite()) {
-        if (pmemAddr)
-            memcpy(hostAddr, pkt->getConstPtr<uint8_t>(), pkt->getSize());
+        if (pmemAddr) {
+            pkt->writeData(hostAddr);
+        }
         TRACE_PACKET("Write");
         pkt->makeResponse();
     } else if (pkt->isPrint()) {

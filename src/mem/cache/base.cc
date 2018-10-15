@@ -861,10 +861,9 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
         if (pkt->isAtomicOp()) {
             // extract data from cache and save it into the data field in
             // the packet as a return value from this atomic op
-
             int offset = tags->extractBlkOffset(pkt->getAddr());
             uint8_t *blk_data = blk->data + offset;
-            std::memcpy(pkt->getPtr<uint8_t>(), blk_data, pkt->getSize());
+            pkt->setData(blk_data);
 
             // execute AMO operation
             (*(pkt->getAtomicOp()))(blk_data);
