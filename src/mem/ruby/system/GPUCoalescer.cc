@@ -640,10 +640,8 @@ GPUCoalescer::hitCallback(GPUCoalescerRequest* srequest,
                 (type == RubyRequestType_RMW_Read) ||
                 (type == RubyRequestType_Locked_RMW_Read) ||
                 (type == RubyRequestType_Load_Linked)) {
-                memcpy(pkt->getPtr<uint8_t>(),
-                       data.getData(getOffset(request_address),
-                                    pkt->getSize()),
-                       pkt->getSize());
+                pkt->setData(
+                    data.getData(getOffset(request_address), pkt->getSize()));
             } else {
                 data.setData(pkt->getPtr<uint8_t>(),
                              getOffset(request_address), pkt->getSize());
@@ -1097,10 +1095,8 @@ GPUCoalescer::atomicCallback(Addr address,
         if (pkt->getPtr<uint8_t>() &&
             srequest->m_type != RubyRequestType_ATOMIC_NO_RETURN) {
             /* atomics are done in memory, and return the data *before* the atomic op... */
-            memcpy(pkt->getPtr<uint8_t>(),
-                   data.getData(getOffset(request_address),
-                                pkt->getSize()),
-                   pkt->getSize());
+            pkt->setData(
+                data.getData(getOffset(request_address), pkt->getSize()));
         } else {
             DPRINTF(MemoryAccess,
                     "WARNING.  Data not transfered from Ruby to M5 for type " \

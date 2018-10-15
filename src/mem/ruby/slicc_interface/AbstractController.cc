@@ -268,10 +268,8 @@ AbstractController::queueMemoryWrite(const MachineID &id, Addr addr,
         addr, RubySystem::getBlockSizeBytes(), 0, m_masterId);
 
     PacketPtr pkt = Packet::createWrite(req);
-    uint8_t *newData = new uint8_t[RubySystem::getBlockSizeBytes()];
-    pkt->dataDynamic(newData);
-    memcpy(newData, block.getData(0, RubySystem::getBlockSizeBytes()),
-           RubySystem::getBlockSizeBytes());
+    pkt->allocate();
+    pkt->setData(block.getData(0, RubySystem::getBlockSizeBytes()));
 
     SenderState *s = new SenderState(id);
     pkt->pushSenderState(s);
@@ -295,9 +293,8 @@ AbstractController::queueMemoryWritePartial(const MachineID &id, Addr addr,
     RequestPtr req = std::make_shared<Request>(addr, size, 0, m_masterId);
 
     PacketPtr pkt = Packet::createWrite(req);
-    uint8_t *newData = new uint8_t[size];
-    pkt->dataDynamic(newData);
-    memcpy(newData, block.getData(getOffset(addr), size), size);
+    pkt->allocate();
+    pkt->setData(block.getData(getOffset(addr), size));
 
     SenderState *s = new SenderState(id);
     pkt->pushSenderState(s);
