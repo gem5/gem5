@@ -28,7 +28,7 @@
 Import('*')
 
 sticky_vars.AddVariables(
-    BoolVariable('USE_SYSTEMC', 'Enable SystemC API support', False)
+    BoolVariable('USE_SYSTEMC', 'Enable SystemC API support', True)
     )
 
 export_vars.append('USE_SYSTEMC')
