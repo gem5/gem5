@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 ARM Limited
+ * Copyright (c) 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -60,6 +60,7 @@ enum RegClass {
     VecRegClass,
     /** Vector Register Native Elem lane. */
     VecElemClass,
+    VecPredRegClass,
     CCRegClass,         ///< Condition-code register
     MiscRegClass        ///< Control (misc) register
 };
@@ -151,6 +152,9 @@ class RegId {
     /** @Return true if it is a  condition-code physical register. */
     bool isVecElem() const { return regClass == VecElemClass; }
 
+    /** @Return true if it is a predicate physical register. */
+    bool isVecPredReg() const { return regClass == VecPredRegClass; }
+
     /** @Return true if it is a  condition-code physical register. */
     bool isCCReg() const { return regClass == CCRegClass; }
 
@@ -179,6 +183,7 @@ class RegId {
           case IntRegClass:
           case FloatRegClass:
           case VecRegClass:
+          case VecPredRegClass:
           case CCRegClass:
           case MiscRegClass:
             return regIdx;

@@ -104,6 +104,7 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
     numPhysRegs = params->numPhysIntRegs + params->numPhysFloatRegs +
                     params->numPhysVecRegs +
                     params->numPhysVecRegs * TheISA::NumVecElemPerVecReg +
+                    params->numPhysVecPredRegs +
                     params->numPhysCCRegs;
 
     //Create an entry for each physical register within the

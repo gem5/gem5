@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2016 ARM Limited
+ * Copyright (c) 2011-2012, 2016-2018 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -263,6 +263,14 @@ class O3ThreadContext : public ThreadContext
         return readVecElemFlat(flattenRegId(reg).index(), reg.elemIndex());
     }
 
+    virtual const VecPredRegContainer& readVecPredReg(const RegId& id) const {
+        return readVecPredRegFlat(flattenRegId(id).index());
+    }
+
+    virtual VecPredRegContainer& getWritableVecPredReg(const RegId& id) {
+        return getWritableVecPredRegFlat(flattenRegId(id).index());
+    }
+
     virtual CCReg readCCReg(int reg_idx) {
         return readCCRegFlat(flattenRegId(RegId(CCRegClass,
                                                  reg_idx)).index());
@@ -292,6 +300,13 @@ class O3ThreadContext : public ThreadContext
     setVecElem(const RegId& reg, const VecElem& val)
     {
         setVecElemFlat(flattenRegId(reg).index(), reg.elemIndex(), val);
+    }
+
+    virtual void
+    setVecPredReg(const RegId& reg,
+                  const VecPredRegContainer& val)
+    {
+        setVecPredRegFlat(flattenRegId(reg).index(), val);
     }
 
     virtual void
@@ -402,6 +417,12 @@ class O3ThreadContext : public ThreadContext
                                            const ElemIndex& elemIndex) const;
     virtual void setVecElemFlat(const RegIndex& idx, const ElemIndex& elemIdx,
                                 const VecElem& val);
+
+    virtual const VecPredRegContainer& readVecPredRegFlat(int idx)
+        const override;
+    virtual VecPredRegContainer& getWritableVecPredRegFlat(int idx) override;
+    virtual void setVecPredRegFlat(int idx,
+                                   const VecPredRegContainer& val) override;
 
     virtual CCReg readCCRegFlat(int idx);
     virtual void setCCRegFlat(int idx, CCReg val);

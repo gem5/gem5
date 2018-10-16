@@ -107,6 +107,8 @@ class FullO3CPU : public BaseO3CPU
     using VecElem =  TheISA::VecElem;
     using VecRegContainer =  TheISA::VecRegContainer;
 
+    using VecPredRegContainer = TheISA::VecPredRegContainer;
+
     typedef O3ThreadState<Impl> ImplState;
     typedef O3ThreadState<Impl> Thread;
 
@@ -457,6 +459,10 @@ class FullO3CPU : public BaseO3CPU
 
     const VecElem& readVecElem(PhysRegIdPtr reg_idx) const;
 
+    const VecPredRegContainer& readVecPredReg(PhysRegIdPtr reg_idx) const;
+
+    VecPredRegContainer& getWritableVecPredReg(PhysRegIdPtr reg_idx);
+
     TheISA::CCReg readCCReg(PhysRegIdPtr phys_reg);
 
     void setIntReg(PhysRegIdPtr phys_reg, RegVal val);
@@ -466,6 +472,8 @@ class FullO3CPU : public BaseO3CPU
     void setVecReg(PhysRegIdPtr reg_idx, const VecRegContainer& val);
 
     void setVecElem(PhysRegIdPtr reg_idx, const VecElem& val);
+
+    void setVecPredReg(PhysRegIdPtr reg_idx, const VecPredRegContainer& val);
 
     void setCCReg(PhysRegIdPtr phys_reg, TheISA::CCReg val);
 
@@ -501,6 +509,11 @@ class FullO3CPU : public BaseO3CPU
     const VecElem& readArchVecElem(const RegIndex& reg_idx,
                                    const ElemIndex& ldx, ThreadID tid) const;
 
+    const VecPredRegContainer& readArchVecPredReg(int reg_idx,
+                                                  ThreadID tid) const;
+
+    VecPredRegContainer& getWritableArchVecPredReg(int reg_idx, ThreadID tid);
+
     TheISA::CCReg readArchCCReg(int reg_idx, ThreadID tid);
 
     /** Architectural register accessors.  Looks up in the commit
@@ -511,6 +524,9 @@ class FullO3CPU : public BaseO3CPU
     void setArchIntReg(int reg_idx, RegVal val, ThreadID tid);
 
     void setArchFloatRegBits(int reg_idx, RegVal val, ThreadID tid);
+
+    void setArchVecPredReg(int reg_idx, const VecPredRegContainer& val,
+                           ThreadID tid);
 
     void setArchVecReg(int reg_idx, const VecRegContainer& val, ThreadID tid);
 
@@ -805,6 +821,9 @@ class FullO3CPU : public BaseO3CPU
     //number of vector register file accesses
     mutable Stats::Scalar vecRegfileReads;
     Stats::Scalar vecRegfileWrites;
+    //number of predicate register file accesses
+    mutable Stats::Scalar vecPredRegfileReads;
+    Stats::Scalar vecPredRegfileWrites;
     //number of CC register file accesses
     Stats::Scalar ccRegfileReads;
     Stats::Scalar ccRegfileWrites;

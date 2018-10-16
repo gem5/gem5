@@ -117,6 +117,12 @@ namespace X86ISA
         }
 
         int
+        flattenVecPredIndex(int reg) const
+        {
+            return reg;
+        }
+
+        int
         flattenCCIndex(int reg) const
         {
             return reg;

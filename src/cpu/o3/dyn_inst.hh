@@ -70,6 +70,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
     static constexpr auto NumVecElemPerVecReg = TheISA::NumVecElemPerVecReg;
+    using VecPredRegContainer = TheISA::VecPredRegContainer;
 
     enum {
         MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
@@ -231,6 +232,10 @@ class BaseO3DynInst : public BaseDynInst<Impl>
                 this->setVecElemOperand(this->staticInst.get(), idx,
                                this->cpu->readVecElem(prev_phys_reg));
                 break;
+              case VecPredRegClass:
+                this->setVecPredRegOperand(this->staticInst.get(), idx,
+                               this->cpu->readVecPredReg(prev_phys_reg));
+                break;
               case CCRegClass:
                 this->setCCRegOperand(this->staticInst.get(), idx,
                                this->cpu->readCCReg(prev_phys_reg));
@@ -361,6 +366,18 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         return this->cpu->readVecElem(this->_srcRegIdx[idx]);
     }
 
+    const VecPredRegContainer&
+    readVecPredRegOperand(const StaticInst *si, int idx) const override
+    {
+        return this->cpu->readVecPredReg(this->_srcRegIdx[idx]);
+    }
+
+    VecPredRegContainer&
+    getWritableVecPredRegOperand(const StaticInst *si, int idx) override
+    {
+        return this->cpu->getWritableVecPredReg(this->_destRegIdx[idx]);
+    }
+
     CCReg readCCRegOperand(const StaticInst *si, int idx)
     {
         return this->cpu->readCCReg(this->_srcRegIdx[idx]);
@@ -397,6 +414,14 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         int reg_idx = idx;
         this->cpu->setVecElem(this->_destRegIdx[reg_idx], val);
         BaseDynInst<Impl>::setVecElemOperand(si, idx, val);
+    }
+
+    void
+    setVecPredRegOperand(const StaticInst *si, int idx,
+                         const VecPredRegContainer& val) override
+    {
+        this->cpu->setVecPredReg(this->_destRegIdx[idx], val);
+        BaseDynInst<Impl>::setVecPredRegOperand(si, idx, val);
     }
 
     void setCCRegOperand(const StaticInst *si, int idx, CCReg val)

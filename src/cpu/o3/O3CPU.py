@@ -150,6 +150,8 @@ class DerivO3CPU(BaseCPU):
         _defaultNumPhysCCRegs = Self.numPhysIntRegs * 5
     numPhysVecRegs = Param.Unsigned(256, "Number of physical vector "
                                       "registers")
+    numPhysVecPredRegs = Param.Unsigned(32, "Number of physical predicate "
+                                      "registers")
     numPhysCCRegs = Param.Unsigned(_defaultNumPhysCCRegs,
                                    "Number of physical cc registers")
     numIQEntries = Param.Unsigned(64, "Number of instruction queue entries")

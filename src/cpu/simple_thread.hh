@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2016 ARM Limited
+ * Copyright (c) 2011-2012, 2016-2018 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -58,6 +58,7 @@
 #include "debug/CCRegs.hh"
 #include "debug/FloatRegs.hh"
 #include "debug/IntRegs.hh"
+#include "debug/VecPredRegs.hh"
 #include "debug/VecRegs.hh"
 #include "mem/page_table.hh"
 #include "mem/request.hh"
@@ -102,6 +103,7 @@ class SimpleThread : public ThreadState
     typedef TheISA::CCReg CCReg;
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
+    using VecPredRegContainer = TheISA::VecPredRegContainer;
   public:
     typedef ThreadContext::Status Status;
 
@@ -109,6 +111,7 @@ class SimpleThread : public ThreadState
     RegVal floatRegs[TheISA::NumFloatRegs];
     RegVal intRegs[TheISA::NumIntRegs];
     VecRegContainer vecRegs[TheISA::NumVecRegs];
+    VecPredRegContainer vecPredRegs[TheISA::NumVecPredRegs];
 #ifdef ISA_HAS_CC_REGS
     TheISA::CCReg ccRegs[TheISA::NumCCRegs];
 #endif
@@ -228,6 +231,9 @@ class SimpleThread : public ThreadState
         for (int i = 0; i < TheISA::NumVecRegs; i++) {
             vecRegs[i].zero();
         }
+        for (int i = 0; i < TheISA::NumVecPredRegs; i++) {
+            vecPredRegs[i].reset();
+        }
 #ifdef ISA_HAS_CC_REGS
         memset(ccRegs, 0, sizeof(ccRegs));
 #endif
@@ -266,7 +272,7 @@ class SimpleThread : public ThreadState
         assert(flatIndex < TheISA::NumVecRegs);
         const VecRegContainer& regVal = readVecRegFlat(flatIndex);
         DPRINTF(VecRegs, "Reading vector reg %d (%d) as %s.\n",
-                reg.index(), flatIndex, regVal.as<TheISA::VecElem>().print());
+                reg.index(), flatIndex, regVal.print());
         return regVal;
     }
 
@@ -277,7 +283,7 @@ class SimpleThread : public ThreadState
         assert(flatIndex < TheISA::NumVecRegs);
         VecRegContainer& regVal = getWritableVecRegFlat(flatIndex);
         DPRINTF(VecRegs, "Reading vector reg %d (%d) as %s for modify.\n",
-                reg.index(), flatIndex, regVal.as<TheISA::VecElem>().print());
+                reg.index(), flatIndex, regVal.print());
         return regVal;
     }
 
@@ -350,6 +356,28 @@ class SimpleThread : public ThreadState
         return regVal;
     }
 
+    const VecPredRegContainer&
+    readVecPredReg(const RegId& reg) const
+    {
+        int flatIndex = isa->flattenVecPredIndex(reg.index());
+        assert(flatIndex < TheISA::NumVecPredRegs);
+        const VecPredRegContainer& regVal = readVecPredRegFlat(flatIndex);
+        DPRINTF(VecPredRegs, "Reading predicate reg %d (%d) as %s.\n",
+                reg.index(), flatIndex, regVal.print());
+        return regVal;
+    }
+
+    VecPredRegContainer&
+    getWritableVecPredReg(const RegId& reg)
+    {
+        int flatIndex = isa->flattenVecPredIndex(reg.index());
+        assert(flatIndex < TheISA::NumVecPredRegs);
+        VecPredRegContainer& regVal = getWritableVecPredRegFlat(flatIndex);
+        DPRINTF(VecPredRegs,
+                "Reading predicate reg %d (%d) as %s for modify.\n",
+                reg.index(), flatIndex, regVal.print());
+        return regVal;
+    }
 
     CCReg readCCReg(int reg_idx)
     {
@@ -408,6 +436,16 @@ class SimpleThread : public ThreadState
         setVecElemFlat(flatIndex, reg.elemIndex(), val);
         DPRINTF(VecRegs, "Setting element %d of vector reg %d (%d) to"
                 " %#x.\n", reg.elemIndex(), reg.index(), flatIndex, val);
+    }
+
+    void
+    setVecPredReg(const RegId& reg, const VecPredRegContainer& val)
+    {
+        int flatIndex = isa->flattenVecPredIndex(reg.index());
+        assert(flatIndex < TheISA::NumVecPredRegs);
+        setVecPredRegFlat(flatIndex, val);
+        DPRINTF(VecPredRegs, "Setting predicate reg %d (%d) to %s.\n",
+                reg.index(), flatIndex, val.print());
     }
 
     void
@@ -566,6 +604,21 @@ class SimpleThread : public ThreadState
                    const VecElem val)
     {
         vecRegs[reg].as<TheISA::VecElem>()[elemIndex] = val;
+    }
+
+    const VecPredRegContainer& readVecPredRegFlat(const RegIndex& reg) const
+    {
+        return vecPredRegs[reg];
+    }
+
+    VecPredRegContainer& getWritableVecPredRegFlat(const RegIndex& reg)
+    {
+        return vecPredRegs[reg];
+    }
+
+    void setVecPredRegFlat(const RegIndex& reg, const VecPredRegContainer& val)
+    {
+        vecPredRegs[reg] = val;
     }
 
 #ifdef ISA_HAS_CC_REGS

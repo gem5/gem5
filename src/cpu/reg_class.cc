@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 ARM Limited
+ * Copyright (c) 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,6 +47,7 @@ const char *RegId::regClassStrings[] = {
     "FloatRegClass",
     "VecRegClass",
     "VecElemClass",
+    "VecPredRegClass",
     "CCRegClass",
     "MiscRegClass"
 };

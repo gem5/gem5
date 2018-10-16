@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016 ARM Limited
+ * Copyright (c) 2011, 2016-2017 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -120,6 +120,9 @@ class PhysRegId : private RegId {
 
     /** @Return true if it is a vector element physical register. */
     bool isVectorPhysElem() const { return isVecElem(); }
+
+    /** @return true if it is a vector predicate physical register. */
+    bool isVecPredPhysReg() const { return isVecPredReg(); }
 
     /** @Return true if it is a  condition-code physical register. */
     bool isMiscPhysReg() const { return isMiscReg(); }

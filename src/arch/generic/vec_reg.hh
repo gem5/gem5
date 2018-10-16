@@ -648,4 +648,18 @@ to_number(const std::string& value, VecRegContainer<Sz>& v)
 }
 /** @} */
 
+/**
+ * Dummy type aliases and constants for architectures that do not implement
+ * vector registers.
+ */
+/** @{ */
+using DummyVecElem = uint32_t;
+constexpr unsigned DummyNumVecElemPerVecReg = 2;
+using DummyVecReg = VecRegT<DummyVecElem, DummyNumVecElemPerVecReg, false>;
+using DummyConstVecReg = VecRegT<DummyVecElem, DummyNumVecElemPerVecReg, true>;
+using DummyVecRegContainer = DummyVecReg::Container;
+constexpr size_t DummyVecRegSizeBytes = DummyNumVecElemPerVecReg *
+    sizeof(DummyVecElem);
+/** @} */
+
 #endif /* __ARCH_GENERIC_VEC_REG_HH__ */

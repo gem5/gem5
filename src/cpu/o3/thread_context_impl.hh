@@ -233,6 +233,20 @@ O3ThreadContext<Impl>::readVecElemFlat(const RegIndex& idx,
 }
 
 template <class Impl>
+const TheISA::VecPredRegContainer&
+O3ThreadContext<Impl>::readVecPredRegFlat(int reg_id) const
+{
+    return cpu->readArchVecPredReg(reg_id, thread->threadId());
+}
+
+template <class Impl>
+TheISA::VecPredRegContainer&
+O3ThreadContext<Impl>::getWritableVecPredRegFlat(int reg_id)
+{
+    return cpu->getWritableArchVecPredReg(reg_id, thread->threadId());
+}
+
+template <class Impl>
 TheISA::CCReg
 O3ThreadContext<Impl>::readCCRegFlat(int reg_idx)
 {
@@ -272,6 +286,16 @@ O3ThreadContext<Impl>::setVecElemFlat(const RegIndex& idx,
         const ElemIndex& elemIndex, const VecElem& val)
 {
     cpu->setArchVecElem(idx, elemIndex, val, thread->threadId());
+    conditionalSquash();
+}
+
+template <class Impl>
+void
+O3ThreadContext<Impl>::setVecPredRegFlat(int reg_idx,
+                                         const VecPredRegContainer& val)
+{
+    cpu->setArchVecPredReg(reg_idx, val, thread->threadId());
+
     conditionalSquash();
 }
 

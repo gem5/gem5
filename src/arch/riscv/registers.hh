@@ -52,6 +52,7 @@
 #include <vector>
 
 #include "arch/generic/types.hh"
+#include "arch/generic/vec_pred_reg.hh"
 #include "arch/generic/vec_reg.hh"
 #include "arch/isa_traits.hh"
 #include "arch/riscv/generated/max_inst_regs.hh"
@@ -68,19 +69,31 @@ typedef RegVal FloatRegBits;
 typedef uint8_t CCReg; // Not applicable to Riscv
 typedef RegVal MiscReg;
 
-// dummy typedefs since we don't have vector regs
-const unsigned NumVecElemPerVecReg = 2;
-using VecElem = uint32_t;
-using VecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, false>;
-using ConstVecReg = ::VecRegT<VecElem, NumVecElemPerVecReg, true>;
-using VecRegContainer = VecReg::Container;
+// Not applicable to RISC-V
+using VecElem = ::DummyVecElem;
+using VecReg = ::DummyVecReg;
+using ConstVecReg = ::DummyConstVecReg;
+using VecRegContainer = ::DummyVecRegContainer;
+constexpr unsigned NumVecElemPerVecReg = ::DummyNumVecElemPerVecReg;
+constexpr size_t VecRegSizeBytes = ::DummyVecRegSizeBytes;
+
+// Not applicable to RISC-V
+using VecPredReg = ::DummyVecPredReg;
+using ConstVecPredReg = ::DummyConstVecPredReg;
+using VecPredRegContainer = ::DummyVecPredRegContainer;
+constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
+constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
 const int NumIntArchRegs = 32;
 const int NumMicroIntRegs = 1;
 const int NumIntRegs = NumIntArchRegs + NumMicroIntRegs;
 const int NumFloatRegs = 32;
-// This has to be one to prevent warnings that are treated as errors
-const unsigned NumVecRegs = 1;
+
+const unsigned NumVecRegs = 1;  // Not applicable to RISC-V
+                                // (1 to prevent warnings)
+const int NumVecPredRegs = 1;  // Not applicable to RISC-V
+                               // (1 to prevent warnings)
+
 const int NumCCRegs = 0;
 
 // Semantically meaningful register indices

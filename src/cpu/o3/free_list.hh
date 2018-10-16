@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 ARM Limited
+ * Copyright (c) 2016-2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -138,6 +138,9 @@ class UnifiedFreeList
     SimpleFreeList vecElemList;
     /** @} */
 
+    /** The list of free predicate registers. */
+    SimpleFreeList predList;
+
     /** The list of free condition-code registers. */
     SimpleFreeList ccList;
 
@@ -183,6 +186,9 @@ class UnifiedFreeList
     /** Gets a free vector elemenet register. */
     PhysRegIdPtr getVecElem() { return vecElemList.getReg(); }
 
+    /** Gets a free predicate register. */
+    PhysRegIdPtr getVecPredReg() { return predList.getReg(); }
+
     /** Gets a free cc register. */
     PhysRegIdPtr getCCReg() { return ccList.getReg(); }
 
@@ -207,6 +213,9 @@ class UnifiedFreeList
         vecElemList.addReg(freed_reg);
     }
 
+    /** Adds a predicate register back to the free list. */
+    void addVecPredReg(PhysRegIdPtr freed_reg) { predList.addReg(freed_reg); }
+
     /** Adds a cc register back to the free list. */
     void addCCReg(PhysRegIdPtr freed_reg) { ccList.addReg(freed_reg); }
 
@@ -222,6 +231,9 @@ class UnifiedFreeList
     /** Checks if there are any free vector registers. */
     bool hasFreeVecElems() const { return vecElemList.hasFreeRegs(); }
 
+    /** Checks if there are any free predicate registers. */
+    bool hasFreeVecPredRegs() const { return predList.hasFreeRegs(); }
+
     /** Checks if there are any free cc registers. */
     bool hasFreeCCRegs() const { return ccList.hasFreeRegs(); }
 
@@ -236,6 +248,9 @@ class UnifiedFreeList
 
     /** Returns the number of free vector registers. */
     unsigned numFreeVecElems() const { return vecElemList.numFreeRegs(); }
+
+    /** Returns the number of free predicate registers. */
+    unsigned numFreeVecPredRegs() const { return predList.numFreeRegs(); }
 
     /** Returns the number of free cc registers. */
     unsigned numFreeCCRegs() const { return ccList.numFreeRegs(); }
@@ -267,6 +282,9 @@ UnifiedFreeList::addRegs(InputIt first, InputIt last)
         case VecElemClass:
             vecElemList.addRegs(first, last);
             break;
+        case VecPredRegClass:
+            predList.addRegs(first, last);
+            break;
         case CCRegClass:
             ccList.addRegs(first, last);
             break;
@@ -296,6 +314,9 @@ UnifiedFreeList::addReg(PhysRegIdPtr freed_reg)
             break;
         case VecElemClass:
             vecElemList.addReg(freed_reg);
+            break;
+        case VecPredRegClass:
+            predList.addReg(freed_reg);
             break;
         case CCRegClass:
             ccList.addReg(freed_reg);

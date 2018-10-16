@@ -84,6 +84,7 @@ class ISA : public SimObject
     int flattenFloatIndex(int reg) const { return reg; }
     int flattenVecIndex(int reg) const { return reg; }
     int flattenVecElemIndex(int reg) const { return reg; }
+    int flattenVecPredIndex(int reg) const { return reg; }
     int flattenCCIndex(int reg) const { return reg; }
     int flattenMiscIndex(int reg) const { return reg; }
 

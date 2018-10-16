@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016 ARM Limited
+ * Copyright (c) 2011, 2016-2017 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -304,6 +304,22 @@ class CheckerCPU : public BaseCPU, public ExecContext
         return thread->readVecElem(reg);
     }
 
+    const VecPredRegContainer&
+    readVecPredRegOperand(const StaticInst *si, int idx) const override
+    {
+        const RegId& reg = si->srcRegIdx(idx);
+        assert(reg.isVecPredReg());
+        return thread->readVecPredReg(reg);
+    }
+
+    VecPredRegContainer&
+    getWritableVecPredRegOperand(const StaticInst *si, int idx) override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecPredReg());
+        return thread->getWritableVecPredReg(reg);
+    }
+
     CCReg
     readCCRegOperand(const StaticInst *si, int idx) override
     {
@@ -334,6 +350,14 @@ class CheckerCPU : public BaseCPU, public ExecContext
     {
         result.push(InstResult(std::forward<T>(t),
                                InstResult::ResultType::VecElem));
+    }
+
+    template<typename T>
+    void
+    setVecPredResult(T&& t)
+    {
+        result.push(InstResult(std::forward<T>(t),
+                               InstResult::ResultType::VecPredReg));
     }
 
     void
@@ -381,6 +405,15 @@ class CheckerCPU : public BaseCPU, public ExecContext
         assert(reg.isVecElem());
         thread->setVecElem(reg, val);
         setVecElemResult(val);
+    }
+
+    void setVecPredRegOperand(const StaticInst *si, int idx,
+                              const VecPredRegContainer& val) override
+    {
+        const RegId& reg = si->destRegIdx(idx);
+        assert(reg.isVecPredReg());
+        thread->setVecPredReg(reg, val);
+        setVecPredResult(val);
     }
 
     bool readPredicate() const override { return thread->readPredicate(); }

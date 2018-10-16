@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2017 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -514,6 +514,7 @@ class DefaultRename
     Stats::Scalar intRenameLookups;
     Stats::Scalar fpRenameLookups;
     Stats::Scalar vecRenameLookups;
+    Stats::Scalar vecPredRenameLookups;
     /** Stat for total number of committed renaming mappings. */
     Stats::Scalar renameCommittedMaps;
     /** Stat for total number of mappings that were undone due to a squash. */

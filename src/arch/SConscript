@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2016 ARM Limited
+# Copyright (c) 2016-2017 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -226,6 +226,8 @@ Export('ISADesc')
 DebugFlag('IntRegs')
 DebugFlag('FloatRegs')
 DebugFlag('VecRegs')
+DebugFlag('VecPredRegs')
 DebugFlag('CCRegs')
 DebugFlag('MiscRegs')
-CompoundFlag('Registers', [ 'IntRegs', 'FloatRegs', 'CCRegs', 'MiscRegs' ])
+CompoundFlag('Registers', [ 'IntRegs', 'FloatRegs', 'VecRegs', 'VecPredRegs',
+                            'CCRegs', 'MiscRegs' ])

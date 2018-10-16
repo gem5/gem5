@@ -584,6 +584,11 @@ class BaseDynInst : public ExecContext, public RefCounted
     {
         return staticInst->numVecElemDestRegs();
     }
+    int8_t
+    numVecPredDestRegs() const
+    {
+        return staticInst->numVecPredDestRegs();
+    }
 
     /** Returns the logical register index of the i'th destination register. */
     const RegId& destRegIdx(int i) const { return staticInst->destRegIdx(i); }
@@ -638,6 +643,16 @@ class BaseDynInst : public ExecContext, public RefCounted
                         InstResult::ResultType::VecElem));
         }
     }
+
+    /** Predicate result. */
+    template<typename T>
+    void setVecPredResult(T&& t)
+    {
+        if (instFlags[RecordResult]) {
+            instResult.push(InstResult(std::forward<T>(t),
+                            InstResult::ResultType::VecPredReg));
+        }
+    }
     /** @} */
 
     /** Records an integer register being set to a value. */
@@ -670,6 +685,13 @@ class BaseDynInst : public ExecContext, public RefCounted
     void setVecElemOperand(const StaticInst *si, int idx, const VecElem val)
     {
         setVecElemResult(val);
+    }
+
+    /** Record a vector register being set to a value */
+    void setVecPredRegOperand(const StaticInst *si, int idx,
+                              const VecPredRegContainer& val)
+    {
+        setVecPredResult(val);
     }
 
     /** Records that one of the source registers is ready. */

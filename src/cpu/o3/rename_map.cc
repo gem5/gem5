@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016,2019 ARM Limited
+ * Copyright (c) 2016-2017,2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -119,6 +119,8 @@ UnifiedRenameMap::init(PhysRegFile *_regFile,
 
     vecElemMap.init(TheISA::NumVecRegs * NVecElems,
             &(freeList->vecElemList), (RegIndex)-1);
+
+    predMap.init(TheISA::NumVecPredRegs, &(freeList->predList), (RegIndex)-1);
 
     ccMap.init(TheISA::NumCCRegs, &(freeList->ccList), (RegIndex)-1);
 

@@ -196,6 +196,10 @@ DefaultRename<Impl>::regStats()
         .name(name() + ".vec_rename_lookups")
         .desc("Number of vector rename lookups")
         .prereq(vecRenameLookups);
+    vecPredRenameLookups
+        .name(name() + ".vec_pred_rename_lookups")
+        .desc("Number of vector predicate rename lookups")
+        .prereq(vecPredRenameLookups);
 }
 
 template <class Impl>
@@ -659,6 +663,7 @@ DefaultRename<Impl>::renameInsts(ThreadID tid)
                                        inst->numFPDestRegs(),
                                        inst->numVecDestRegs(),
                                        inst->numVecElemDestRegs(),
+                                       inst->numVecPredDestRegs(),
                                        inst->numCCDestRegs())) {
             DPRINTF(Rename, "Blocking due to lack of free "
                     "physical registers to rename to.\n");
@@ -1041,6 +1046,9 @@ DefaultRename<Impl>::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
           case VecElemClass:
             vecRenameLookups++;
             break;
+          case VecPredRegClass:
+            vecPredRenameLookups++;
+            break;
           case CCRegClass:
           case MiscRegClass:
             break;
@@ -1256,7 +1264,7 @@ DefaultRename<Impl>::readFreeEntries(ThreadID tid)
     }
 
     DPRINTF(Rename, "[tid:%i]: Free IQ: %i, Free ROB: %i, "
-                    "Free LQ: %i, Free SQ: %i, FreeRM %i(%i %i %i %i)\n",
+                    "Free LQ: %i, Free SQ: %i, FreeRM %i(%i %i %i %i %i)\n",
             tid,
             freeEntries[tid].iqEntries,
             freeEntries[tid].robEntries,
@@ -1266,6 +1274,7 @@ DefaultRename<Impl>::readFreeEntries(ThreadID tid)
             renameMap[tid]->numFreeIntEntries(),
             renameMap[tid]->numFreeFloatEntries(),
             renameMap[tid]->numFreeVecEntries(),
+            renameMap[tid]->numFreePredEntries(),
             renameMap[tid]->numFreeCCEntries());
 
     DPRINTF(Rename, "[tid:%i]: %i instructions not yet in ROB\n",
