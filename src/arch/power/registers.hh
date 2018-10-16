@@ -95,12 +95,6 @@ const int SyscallNumReg = 0;
 const int SyscallPseudoReturnReg = 3;
 const int SyscallSuccessReg = 3;
 
-typedef union {
-    IntReg   intreg;
-    FloatReg fpreg;
-    MiscReg  ctrlreg;
-} AnyReg;
-
 enum MiscIntRegNums {
     INTREG_CR = NumIntArchRegs,
     INTREG_XER,

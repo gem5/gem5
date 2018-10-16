@@ -62,13 +62,6 @@ using VecRegContainer = VecReg::Container;
 // This has to be one to prevent warnings that are treated as errors
 constexpr unsigned NumVecRegs = 1;
 
-typedef union
-{
-    IntReg intReg;
-    FloatReg fpreg;
-    MiscReg ctrlreg;
-} AnyReg;
-
 // semantically meaningful register indices
 const int ZeroReg = 0;      // architecturally meaningful
 // the rest of these depend on the ABI

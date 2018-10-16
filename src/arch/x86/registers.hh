@@ -107,13 +107,6 @@ constexpr unsigned NumVecRegs = 1;
 //technically for x87 (80 bits) or at all for xmm (128 bits)
 typedef double FloatReg;
 typedef uint64_t FloatRegBits;
-typedef union
-{
-    IntReg intReg;
-    FloatReg fpReg;
-    CCReg ccReg;
-    MiscReg ctrlReg;
-} AnyReg;
 
 } // namespace X86ISA
 

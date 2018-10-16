@@ -119,13 +119,6 @@ const int SyscallNumReg = ReturnValueReg;
 const int SyscallPseudoReturnReg = ReturnValueReg;
 const int SyscallSuccessReg = ReturnValueReg;
 
-typedef union {
-    IntReg   intreg;
-    FloatReg fpreg;
-    CCReg    ccreg;
-    MiscReg  ctrlreg;
-} AnyReg;
-
 } // namespace ArmISA
 
 #endif

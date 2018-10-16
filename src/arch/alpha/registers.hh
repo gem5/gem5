@@ -66,13 +66,6 @@ using VecRegContainer = VecReg::Container;
 // This has to be one to prevent warnings that are treated as errors
 constexpr unsigned NumVecRegs = 1;
 
-union AnyReg
-{
-    IntReg  intreg;
-    FloatReg   fpreg;
-    MiscReg ctrlreg;
-};
-
 enum MiscRegIndex
 {
     MISCREG_FPCR = NumInternalProcRegs,
