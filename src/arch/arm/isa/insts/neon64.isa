@@ -48,6 +48,11 @@ let {{
     floatTypes = ("uint16_t", "uint32_t", "uint64_t")
     smallFloatTypes = ("uint32_t",)
 
+    zeroSveVecRegUpperPartCode = '''
+        TheISA::ISA::zeroSveVecRegUpperPart(%s,
+            ArmStaticInst::getCurSveVecLen<uint64_t>(xc->tcBase()));
+    '''
+
     def threeEqualRegInstX(name, Name, opClass, types, rCount, op,
                            readDest=False, pairwise=False, scalar=False,
                            byElem=False, decoder='Generic'):
@@ -132,6 +137,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if byElem:
             header_output += NeonX2RegImmOpDeclare.subst(iop)
         else:
@@ -240,6 +246,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": 2,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if byElem:
             header_output += NeonX2RegImmOpDeclare.subst(iop)
         else:
@@ -327,6 +334,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if hasImm:
             header_output += NeonX1RegImmOpDeclare.subst(iop)
         else:
@@ -378,6 +386,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": 2,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if hasImm:
             header_output += NeonX1RegImmOpDeclare.subst(iop)
         else:
@@ -449,6 +458,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": 2,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if hasImm:
             header_output += NeonX1RegImmOpDeclare.subst(iop)
         else:
@@ -484,6 +494,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX2RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -519,6 +530,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1Reg2ImmOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -556,6 +568,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -602,6 +615,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         if long:
             exec_output += NeonXUnequalRegOpExecute.subst(iop)
@@ -654,6 +668,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         exec_output += NeonXUnequalRegOpExecute.subst(iop)
         for type in types:
@@ -696,6 +711,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegImmOnlyOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -725,6 +741,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -757,6 +774,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX2RegImmOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -785,6 +803,7 @@ let {{
                             { "code": eWalkCode,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX1RegImmOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:
@@ -880,6 +899,7 @@ let {{
                             { "code": code,
                               "r_count": rCount,
                               "op_class": opClass }, [])
+        iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output += NeonX2RegOpDeclare.subst(iop)
         exec_output += NeonXEqualRegOpExecute.subst(iop)
         for type in types:

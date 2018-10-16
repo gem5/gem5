@@ -94,6 +94,10 @@ namespace ArmISA
         bool haveLargeAsid64;
         bool haveGICv3CPUInterface;
         uint8_t physAddrRange;
+        bool haveSVE;
+
+        /** SVE vector length in quadwords */
+        unsigned sveVL;
 
         /**
          * If true, accesses to IMPLEMENTATION DEFINED registers are treated
@@ -660,6 +664,13 @@ namespace ArmISA
             return std::make_pair(lower, upper);
         }
 
+        unsigned getCurSveVecLenInBits(ThreadContext *tc) const;
+
+        unsigned getCurSveVecLenInBitsAtReset() const { return sveVL * 128; }
+
+        static void zeroSveVecRegUpperPart(VecRegContainer &vc,
+                                           unsigned eCount);
+
         void serialize(CheckpointOut &cp) const
         {
             DPRINTF(Checkpoint, "Serializing Arm Misc Registers\n");
@@ -671,6 +682,8 @@ namespace ArmISA
             SERIALIZE_SCALAR(haveVirtualization);
             SERIALIZE_SCALAR(haveLargeAsid64);
             SERIALIZE_SCALAR(physAddrRange);
+            SERIALIZE_SCALAR(haveSVE);
+            SERIALIZE_SCALAR(sveVL);
         }
         void unserialize(CheckpointIn &cp)
         {
@@ -685,6 +698,8 @@ namespace ArmISA
             UNSERIALIZE_SCALAR(haveVirtualization);
             UNSERIALIZE_SCALAR(haveLargeAsid64);
             UNSERIALIZE_SCALAR(physAddrRange);
+            UNSERIALIZE_SCALAR(haveSVE);
+            UNSERIALIZE_SCALAR(sveVL);
         }
 
         void startup(ThreadContext *tc);

@@ -297,6 +297,17 @@ ELIs32(ThreadContext *tc, ExceptionLevel el)
     return aarch32;
 }
 
+bool
+ELIsInHost(ThreadContext *tc, ExceptionLevel el)
+{
+    if (!ArmSystem::haveVirtualization(tc)) {
+        return false;
+    }
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    return (!isSecureBelowEL3(tc) && !ELIs32(tc, EL2) && hcr.e2h == 1 &&
+            (el == EL2 || (el == EL0 && hcr.tge == 1)));
+}
+
 std::pair<bool, bool>
 ELUsingAArch32K(ThreadContext *tc, ExceptionLevel el)
 {

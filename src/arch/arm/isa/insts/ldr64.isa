@@ -179,10 +179,16 @@ let {{
         def emit(self):
             self.buildEACode()
 
+            accEpilogCode = None
             # Code that actually handles the access
             if self.flavor in ("dprefetch", "iprefetch", "mprefetch"):
                 accCode = 'uint64_t temp M5_VAR_USED = Mem%s;'
             elif self.flavor == "fp":
+                accEpilogCode = '''
+                    TheISA::ISA::zeroSveVecRegUpperPart(AA64FpDest,
+                        ArmStaticInst::getCurSveVecLen<uint64_t>(
+                            xc->tcBase()));
+                '''
                 if self.size in (1, 2, 4):
                     accCode = '''
                         AA64FpDestP0_uw = cSwap(Mem%s,
@@ -216,6 +222,8 @@ let {{
             accCode = accCode % buildMemSuffix(self.sign, self.size)
 
             self.codeBlobs["memacc_code"] = accCode
+            if accEpilogCode:
+                self.codeBlobs["memacc_epilog_code"] = accEpilogCode
 
             # Push it out to the output files
             wbDecl = None
@@ -227,8 +235,17 @@ let {{
         def emit(self):
             self.buildEACode()
 
+            accEpilogCode = None
             # Code that actually handles the access
             if self.flavor == "fp":
+                accEpilogCode = '''
+                    TheISA::ISA::zeroSveVecRegUpperPart(AA64FpDest,
+                        ArmStaticInst::getCurSveVecLen<uint64_t>(
+                            xc->tcBase()));
+                    TheISA::ISA::zeroSveVecRegUpperPart(AA64FpDest2,
+                        ArmStaticInst::getCurSveVecLen<uint64_t>(
+                            xc->tcBase()));
+                '''
                 if self.size == 4:
                     accCode = '''
                         uint64_t data = cSwap(Mem_ud, isBigEndian64(xc->tcBase()));
@@ -300,6 +317,8 @@ let {{
                                            isBigEndian64(xc->tcBase()));
                         '''
             self.codeBlobs["memacc_code"] = accCode
+            if accEpilogCode:
+                self.codeBlobs["memacc_epilog_code"] = accEpilogCode
 
             # Push it out to the output files
             wbDecl = None

@@ -179,6 +179,12 @@ bool ELIs32(ThreadContext *tc, ExceptionLevel el);
 
 bool ELIs64(ThreadContext *tc, ExceptionLevel el);
 
+/**
+ * Returns true if the current exception level `el` is executing a Host OS or
+ * an application of a Host OS (Armv8.1 Virtualization Host Extensions).
+ */
+bool ELIsInHost(ThreadContext *tc, ExceptionLevel el);
+
 bool isBigEndian64(ThreadContext *tc);
 
 /**

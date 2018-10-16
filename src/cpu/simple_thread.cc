@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2018 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2001-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -66,7 +78,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            BaseTLB *_dtb, TheISA::ISA *_isa)
     : ThreadState(_cpu, _thread_num, _process), isa(_isa),
       predicate(false), system(_sys),
-      itb(_itb), dtb(_dtb)
+      itb(_itb), dtb(_dtb), decoder(TheISA::Decoder(_isa))
 {
     clearArchRegs();
     tc = new ProxyThreadContext<SimpleThread>(this);
@@ -77,7 +89,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            BaseTLB *_itb, BaseTLB *_dtb,
                            TheISA::ISA *_isa, bool use_kernel_stats)
     : ThreadState(_cpu, _thread_num, NULL), isa(_isa), system(_sys), itb(_itb),
-      dtb(_dtb)
+      dtb(_dtb), decoder(TheISA::Decoder(_isa))
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
 

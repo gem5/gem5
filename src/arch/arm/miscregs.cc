@@ -1695,7 +1695,11 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_ID_AA64PFR0_EL1;
                       case 1:
                         return MISCREG_ID_AA64PFR1_EL1;
-                      case 2 ... 7:
+                      case 2 ... 3:
+                        return MISCREG_RAZ;
+                      case 4:
+                        return MISCREG_ID_AA64ZFR0_EL1;
+                      case 5 ... 7:
                         return MISCREG_RAZ;
                     }
                     break;
@@ -1804,6 +1808,12 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_CPACR_EL1;
                     }
                     break;
+                  case 2:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_ZCR_EL1;
+                    }
+                    break;
                 }
                 break;
               case 4:
@@ -1830,6 +1840,22 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_HACR_EL2;
                     }
                     break;
+                  case 2:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_ZCR_EL2;
+                    }
+                    break;
+                }
+                break;
+              case 5:
+                switch (crm) {
+                  case 2:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_ZCR_EL12;
+                    }
+                    break;
                 }
                 break;
               case 6:
@@ -1850,6 +1876,12 @@ decodeAArch64SysReg(unsigned op0, unsigned op1,
                         return MISCREG_SDER32_EL3;
                       case 2:
                         return MISCREG_CPTR_EL3;
+                    }
+                    break;
+                  case 2:
+                    switch (op2) {
+                      case 0:
+                        return MISCREG_ZCR_EL3;
                     }
                     break;
                   case 3:
@@ -4922,6 +4954,18 @@ ISA::initializeMiscRegMetadata()
       .mon().hyp();
     InitReg(MISCREG_CNTHV_TVAL_EL2)
       .mon().hyp();
+
+    // SVE
+    InitReg(MISCREG_ID_AA64ZFR0_EL1)
+        .allPrivileges().exceptUserMode().writes(0);
+    InitReg(MISCREG_ZCR_EL3)
+        .mon();
+    InitReg(MISCREG_ZCR_EL2)
+        .hyp().mon();
+    InitReg(MISCREG_ZCR_EL12)
+        .unimplemented().warnNotFail();
+    InitReg(MISCREG_ZCR_EL1)
+        .allPrivileges().exceptUserMode();
 
     // Dummy registers
     InitReg(MISCREG_NOP)

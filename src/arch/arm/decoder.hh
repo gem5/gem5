@@ -72,6 +72,12 @@ class Decoder
     int fpscrLen;
     int fpscrStride;
 
+    /**
+     * SVE vector length, encoded in the same format as the ZCR_EL<x>.LEN
+     * bitfields.
+     */
+    int sveLen;
+
     Enums::DecoderFlavour decoderFlavour;
 
     /// A cache of decoded instruction objects.
@@ -196,6 +202,11 @@ class Decoder
     {
         fpscrLen = fpscr.len;
         fpscrStride = fpscr.stride;
+    }
+
+    void setSveLen(uint8_t len)
+    {
+        sveLen = len;
     }
 };
 

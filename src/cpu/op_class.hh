@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010,2018 ARM Limited
+ * Copyright (c) 2010, 2017-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -73,7 +73,11 @@ static const OpClass SimdMultOp = Enums::SimdMult;
 static const OpClass SimdMultAccOp = Enums::SimdMultAcc;
 static const OpClass SimdShiftOp = Enums::SimdShift;
 static const OpClass SimdShiftAccOp = Enums::SimdShiftAcc;
+static const OpClass SimdDivOp = Enums::SimdDiv;
 static const OpClass SimdSqrtOp = Enums::SimdSqrt;
+static const OpClass SimdReduceAddOp = Enums::SimdReduceAdd;
+static const OpClass SimdReduceAluOp = Enums::SimdReduceAlu;
+static const OpClass SimdReduceCmpOp = Enums::SimdReduceCmp;
 static const OpClass SimdFloatAddOp = Enums::SimdFloatAdd;
 static const OpClass SimdFloatAluOp = Enums::SimdFloatAlu;
 static const OpClass SimdFloatCmpOp = Enums::SimdFloatCmp;
@@ -83,6 +87,8 @@ static const OpClass SimdFloatMiscOp = Enums::SimdFloatMisc;
 static const OpClass SimdFloatMultOp = Enums::SimdFloatMult;
 static const OpClass SimdFloatMultAccOp = Enums::SimdFloatMultAcc;
 static const OpClass SimdFloatSqrtOp = Enums::SimdFloatSqrt;
+static const OpClass SimdFloatReduceCmpOp = Enums::SimdFloatReduceCmp;
+static const OpClass SimdFloatReduceAddOp = Enums::SimdFloatReduceAdd;
 static const OpClass SimdAesOp = Enums::SimdAes;
 static const OpClass SimdAesMixOp = Enums::SimdAesMix;
 static const OpClass SimdSha1HashOp = Enums::SimdSha1Hash;
@@ -91,6 +97,7 @@ static const OpClass SimdSha256HashOp = Enums::SimdSha256Hash;
 static const OpClass SimdSha256Hash2Op = Enums::SimdSha256Hash2;
 static const OpClass SimdShaSigma2Op = Enums::SimdShaSigma2;
 static const OpClass SimdShaSigma3Op = Enums::SimdShaSigma3;
+static const OpClass SimdPredAluOp = Enums::SimdPredAlu;
 static const OpClass MemReadOp = Enums::MemRead;
 static const OpClass MemWriteOp = Enums::MemWrite;
 static const OpClass FloatMemReadOp = Enums::FloatMemRead;

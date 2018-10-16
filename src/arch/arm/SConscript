@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009, 2012-2013, 2018 ARM Limited
+# Copyright (c) 2009, 2012-2013, 2017-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -60,6 +60,7 @@ if env['TARGET_ISA'] == 'arm':
     Source('insts/pred_inst.cc')
     Source('insts/pseudo.cc')
     Source('insts/static_inst.cc')
+    Source('insts/sve.cc')
     Source('insts/vfp.cc')
     Source('insts/fplib.cc')
     Source('insts/crypto.cc')

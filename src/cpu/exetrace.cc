@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2017 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -118,7 +130,38 @@ Trace::ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
         }
 
         if (Debug::ExecResult && data_status != DataInvalid) {
-            ccprintf(outs, " D=%#018x", data.as_int);
+            switch (data_status) {
+              case DataVec:
+                {
+                    ccprintf(outs, " D=0x[");
+                    auto dv = data.as_vec->as<uint32_t>();
+                    for (int i = TheISA::VecRegSizeBytes / 4 - 1; i >= 0;
+                         i--) {
+                        ccprintf(outs, "%08x", dv[i]);
+                        if (i != 0) {
+                            ccprintf(outs, "_");
+                        }
+                    }
+                    ccprintf(outs, "]");
+                }
+                break;
+              case DataVecPred:
+                {
+                    ccprintf(outs, " D=0b[");
+                    auto pv = data.as_pred->as<uint8_t>();
+                    for (int i = TheISA::VecPredRegSizeBits - 1; i >= 0; i--) {
+                        ccprintf(outs, pv[i] ? "1" : "0");
+                        if (i != 0 && i % 4 == 0) {
+                            ccprintf(outs, "_");
+                        }
+                    }
+                    ccprintf(outs, "]");
+                }
+                break;
+              default:
+                ccprintf(outs, " D=%#018x", data.as_int);
+                break;
+            }
         }
 
         if (Debug::ExecEffAddr && getMemValid())

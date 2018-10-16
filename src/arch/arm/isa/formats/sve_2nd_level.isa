@@ -1,0 +1,2917 @@
+// Copyright (c) 2017-2019 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Giacomo Gabrielli
+
+/// @file
+/// SVE 2nd-level decoder.
+
+output decoder {{
+namespace Aarch64
+{
+
+    StaticInstPtr
+    decodeSveIntArithBinPred(ExtMachInst machInst)
+    {
+        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        switch (bits(machInst, 20, 19)) {
+          case 0x0:
+            {
+                uint8_t size = bits(machInst, 23, 22);
+                uint8_t opc = bits(machInst, 18, 16);
+                switch (opc) {
+                  case 0x0:
+                    return decodeSveBinDestrPredU<SveAddPred>(
+                            size, machInst, zdn, zm, pg);
+                  case 0x1:
+                    return decodeSveBinDestrPredU<SveSubPred>(
+                            size, machInst, zdn, zm, pg);
+                  case 0x3:
+                    return decodeSveBinDestrPredU<SveSubr>(
+                            size, machInst, zdn, zm, pg);
+                  default:
+                    return new Unknown64(machInst);
+                }
+            }
+          case 0x1:
+            {
+                uint8_t size = bits(machInst, 23, 22);
+                uint8_t u = bits(machInst, 16);
+                uint8_t opc = bits(machInst, 18, 17);
+                switch (opc) {
+                  case 0x0:
+                    return decodeSveBinDestrPred<SveSmax, SveUmax>(
+                            size, u, machInst, zdn, zm, pg);
+                  case 0x1:
+                    return decodeSveBinDestrPred<SveSmin, SveUmin>(
+                            size, u, machInst, zdn, zm, pg);
+                  case 0x2:
+                    return decodeSveBinDestrPred<SveSabd, SveUabd>(
+                            size, u, machInst, zdn, zm, pg);
+                  default:
+                    return new Unknown64(machInst);
+                }
+            }
+          case 0x2:
+            {
+                uint8_t size = bits(machInst, 23, 22);
+                uint8_t u = bits(machInst, 16);
+                uint8_t opc = bits(machInst, 18, 17);
+                switch (opc) {
+                  case 0x0:
+                    if (u == 0) {
+                        return decodeSveBinDestrPredU<SveMul>(
+                                size, machInst, zdn, zm, pg);
+                    } else {
+                        return new Unknown64(machInst);
+                    }
+                  case 0x1:
+                    return decodeSveBinDestrPred<SveSmulh, SveUmulh>(
+                            size, u, machInst, zdn, zm, pg);
+                  case 0x2:
+                    if (size == 0x2 || size == 0x3) {
+                        return decodeSveBinDestrPred<SveSdiv, SveUdiv>(
+                                size, u, machInst, zdn, zm, pg);
+                    } else {
+                        return new Unknown64(machInst);
+                    }
+                  case 0x3:
+                    if (size == 0x2 || size == 0x3) {
+                        return decodeSveBinDestrPred<SveSdivr, SveUdivr>(
+                                size, u, machInst, zdn, zm, pg);
+                    } else {
+                        return new Unknown64(machInst);
+                    }
+                }
+            }
+          case 0x3:
+            {
+                uint8_t size = bits(machInst, 23, 22);
+                uint8_t opc = bits(machInst, 18, 16);
+
+                switch (opc) {
+                  case 0x0:
+                    return decodeSveBinDestrPredU<SveOrrPred>(
+                            size, machInst, zdn, zm, pg);
+                  case 0x1:
+                    return decodeSveBinDestrPredU<SveEorPred>(
+                            size, machInst, zdn, zm, pg);
+                  case 0x2:
+                    return decodeSveBinDestrPredU<SveAndPred>(
+                            size, machInst, zdn, zm, pg);
+                  case 0x3:
+                    return decodeSveBinDestrPredU<SveBicPred>(
+                            size, machInst, zdn, zm, pg);
+                  default:
+                    return new Unknown64(machInst);
+                }
+            }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveArithBinPred
+
+    StaticInstPtr
+    decodeSveIntReduc(ExtMachInst machInst)
+    {
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        uint8_t size = bits(machInst, 23, 22);
+
+        switch (bits(machInst, 20, 19)) {
+          case 0x0:
+            {
+                uint8_t u = bits(machInst, 16);
+                uint8_t opc = bits(machInst, 18, 17);
+                if (opc != 0x0 || (!u && size == 0x3)) {
+                    return new Unknown64(machInst);
+                } else {
+                    return decodeSveWideningReduc<SveSaddv, SveUaddv>(
+                            size, u, machInst, vd, zn, pg);
+                }
+            }
+          case 0x1:
+            {
+                uint8_t u = bits(machInst, 16);
+                uint8_t opc = bits(machInst, 18, 17);
+                switch (opc) {
+                  case 0x0:
+                    return decodeSveUnaryPred<SveSmaxv, SveUmaxv>(
+                            size, u, machInst, vd, zn, pg);
+                  case 0x1:
+                    return decodeSveUnaryPred<SveSminv, SveUminv>(
+                            size, u, machInst, vd, zn, pg);
+                  default:
+                    return new Unknown64(machInst);
+                }
+            }
+          case 0x2:
+            {
+                uint8_t opc = bits(machInst, 18, 17);
+                uint8_t merge = bits(machInst, 16);
+                switch (opc) {
+                  case 0x0:
+                    if (merge) {
+                        return decodeSveUnaryPredU<SveMovprfxPredM>(
+                                size, machInst, vd /* zd */, zn, pg);
+                    } else {
+                        return decodeSveUnaryPredU<SveMovprfxPredZ>(
+                                size, machInst, vd /* zd */, zn, pg);
+                    }
+                  default:
+                    return new Unknown64(machInst);
+                }
+            }
+          case 0x3:
+            {
+                uint8_t opc = bits(machInst, 18, 16);
+                switch (opc) {
+                  case 0x0:
+                    return decodeSveUnaryPredU<SveOrv>(
+                            size, machInst, vd, zn, pg);
+                  case 0x1:
+                    return decodeSveUnaryPredU<SveEorv>(
+                            size, machInst, vd, zn, pg);
+                  case 0x2:
+                    return decodeSveUnaryPredU<SveAndv>(
+                            size, machInst, vd, zn, pg);
+                  default:
+                    return new Unknown64(machInst);
+                }
+            }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveIntReduc
+
+    StaticInstPtr
+    decodeSveIntMulAdd(ExtMachInst machInst)
+    {
+        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opc = (bits(machInst, 15) << 1) | bits(machInst, 13);
+        switch (opc) {
+          case 0x0:
+            return decodeSveTerPredS<SveMla>(
+                    size, machInst, zda, zn, zm, pg);
+          case 0x1:
+            return decodeSveTerPredS<SveMls>(
+                    size, machInst, zda, zn, zm, pg);
+          case 0x2:
+            return decodeSveTerPredS<SveMad>(
+                    size, machInst, zda /* zdn */, zn /* za */, zm, pg);
+          case 0x3:
+            return decodeSveTerPredS<SveMsb>(
+                    size, machInst, zda /* zdn */, zn /* za */, zm, pg);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveIntMulAdd
+
+    StaticInstPtr
+    decodeSveShiftByImmPred0(ExtMachInst machInst)
+    {
+        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        uint8_t imm3 = (uint8_t) bits(machInst, 7, 5);
+
+        uint8_t tsize = (bits(machInst, 23, 22) << 2) | bits(machInst, 9, 8);
+        uint8_t esize = 0;
+        uint8_t size = 0;
+
+        if (tsize == 0x0) {
+            return new Unknown64(machInst);
+        } else if (tsize == 0x1) {
+            esize = 8;
+        } else if ((tsize & 0x0E) == 0x2) {
+            esize = 16;
+            size = 1;
+        } else if ((tsize & 0x0C) == 0x4) {
+            esize = 32;
+            size = 2;
+        } else if ((tsize & 0x08) == 0x8) {
+            esize = 64;
+            size = 3;
+        }
+
+        uint8_t opc = bits(machInst, 18, 16);
+        switch (opc) {
+            case 0x0:
+                {
+                    unsigned shiftAmt = 2 * esize - ((tsize << 3) | imm3);
+                    return decodeSveBinImmPredU<SveAsrImmPred>(
+                            size, machInst, zdn, shiftAmt, pg);
+                }
+            case 0x01:
+                {
+                    unsigned shiftAmt = 2 * esize - ((tsize << 3) | imm3);
+                    return decodeSveBinImmPredU<SveLsrImmPred>(
+                            size, machInst, zdn, shiftAmt, pg);
+                }
+            case 0x03:
+                {
+                    unsigned shiftAmt = ((tsize << 3) | imm3) - esize;
+                    return decodeSveBinImmPredU<SveLslImmPred>(
+                            size, machInst, zdn, shiftAmt, pg);
+                }
+            case 0x04:
+                {
+                    unsigned shiftAmt = 2 * esize - ((tsize << 3) | imm3);
+                    return decodeSveBinImmPredS<SveAsrd>(
+                            size, machInst, zdn, shiftAmt, pg);
+                }
+        }
+        return new Unknown64(machInst);
+    } // decodeSveShiftByImmPred0
+
+    StaticInstPtr
+    decodeSveShiftByVectorPred(ExtMachInst machInst)
+    {
+        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opc = bits(machInst, 18, 16);
+        switch (opc) {
+            case 0:
+                return decodeSveBinDestrPredU<SveAsrPred>(
+                        size, machInst, zdn, zm, pg);
+            case 1:
+                return decodeSveBinDestrPredU<SveLsrPred>(
+                        size, machInst, zdn, zm, pg);
+            case 3:
+                return decodeSveBinDestrPredU<SveLslPred>(
+                        size, machInst, zdn, zm, pg);
+            case 4:
+                return decodeSveBinDestrPredU<SveAsrr>(
+                        size, machInst, zdn, zm, pg);
+            case 5:
+                return decodeSveBinDestrPredU<SveLsrr>(
+                        size, machInst, zdn, zm, pg);
+            case 7:
+                return decodeSveBinDestrPredU<SveLslr>(
+                        size, machInst, zdn, zm, pg);
+        }
+        return new Unknown64(machInst);
+    } // decodeSveShiftByVectorPred
+
+    StaticInstPtr
+    decodeSveShiftByWideElemsPred(ExtMachInst machInst)
+    {
+        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opc = bits(machInst, 18, 16);
+        switch (opc) {
+            case 0x0:
+                return decodeSveBinDestrPredU<SveAsrWidePred>(
+                        size, machInst, zdn, zm, pg);
+            case 0x1:
+                return decodeSveBinDestrPredU<SveLsrWidePred>(
+                        size, machInst, zdn, zm, pg);
+            case 0x3:
+                return decodeSveBinDestrPredU<SveLslWidePred>(
+                        size, machInst, zdn, zm, pg);
+        }
+        return new Unknown64(machInst);
+    } // decodeSveShiftByWideElemsPred
+
+    StaticInstPtr
+    decodeSveShiftByImmPred(ExtMachInst machInst)
+    {
+        uint8_t b20_19 = bits(machInst, 20, 19);
+        uint8_t b23_22 = bits(machInst, 23, 22);
+
+        if (b20_19 == 0x0) {
+            return decodeSveShiftByImmPred0(machInst);
+        } else if (b20_19 == 0x2) {
+            return decodeSveShiftByVectorPred(machInst);
+        } else if (b20_19 == 0x3 && b23_22 != 0x3) {
+            return decodeSveShiftByWideElemsPred(machInst);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveShiftByImmPred
+
+    StaticInstPtr
+    decodeSveIntArithUnaryPred(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        unsigned esize = bits(machInst, 23, 22);
+        uint8_t opg = bits(machInst, 20, 19);
+        uint8_t opc = bits(machInst, 18, 16);
+        if (opg == 0x2) {
+            bool unsig = static_cast<bool>(opc & 1);
+            switch (opc) {
+                case 0:
+                case 1:
+                    if (esize == 0) break;
+                    if (unsig) {
+                        return decodeSveUnaryExtendFromBPredU<SveUxtb>(
+                                esize, machInst, zd, zn, pg);
+                    } else {
+                        return decodeSveUnaryExtendFromBPredU<SveSxtb>(
+                                esize, machInst, zd, zn, pg);
+                    }
+                case 2:
+                case 3:
+                    if (esize < 2) break;
+                    if (unsig) {
+                        return decodeSveUnaryExtendFromHPredU<SveUxth>(
+                                esize, machInst, zd, zn, pg);
+                    } else {
+                        return decodeSveUnaryExtendFromHPredU<SveSxth>(
+                                esize, machInst, zd, zn, pg);
+                    }
+                case 4:
+                case 5:
+                    if (esize != 3) break;
+                    if (unsig) {
+                        return new SveUxtw<uint32_t, uint64_t>(
+                                machInst, zd, zn, pg);
+                    } else {
+                        return new SveSxtw<uint32_t, uint64_t>(
+                                machInst, zd, zn, pg);
+                    }
+                case 6:
+                    return decodeSveUnaryPredS<SveAbs>(
+                            esize, machInst, zd, zn, pg);
+                case 7:
+                    return decodeSveUnaryPredS<SveNeg>(
+                            esize, machInst, zd, zn, pg);
+            }
+        } else if (opg == 0x3) {
+            switch (opc) {
+                case 0:
+                    return decodeSveUnaryPredS<SveCls>(
+                            esize, machInst, zd, zn, pg);
+                case 1:
+                    return decodeSveUnaryPredS<SveClz>(
+                            esize, machInst, zd, zn, pg);
+                case 2:
+                    return decodeSveUnaryPredU<SveCnt>(
+                            esize, machInst, zd, zn, pg);
+                case 3:
+                    return decodeSveUnaryPredU<SveCnot>(
+                            esize, machInst, zd, zn, pg);
+                case 4:
+                    return decodeSveUnaryPredF<SveFabs>(
+                            esize, machInst, zd, zn, pg);
+                case 5:
+                    return decodeSveUnaryPredF<SveFneg>(
+                            esize, machInst, zd, zn, pg);
+                case 6:
+                    return decodeSveUnaryPredU<SveNot>(
+                            esize, machInst, zd, zn, pg);
+                    break;
+            }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveIntArithUnaryPred
+
+    StaticInstPtr
+    decodeSveIntArithUnpred(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        uint8_t opc = (uint8_t) bits(machInst, 12, 10);
+        uint8_t size = (uint8_t) bits(machInst, 23, 22);
+
+        switch (opc) {
+            case 0x0:
+                return decodeSveBinUnpredU<SveAddUnpred>(size, machInst,
+                        zd, zn, zm);
+            case 0x1:
+                return decodeSveBinUnpredU<SveSubUnpred>(size, machInst,
+                        zd, zn, zm);
+            case 0x4:
+                return decodeSveBinUnpredS<SveSqadd>(size, machInst,
+                        zd, zn, zm);
+            case 0x5:
+                return decodeSveBinUnpredU<SveUqadd>(size, machInst,
+                        zd, zn, zm);
+            case 0x6:
+                return decodeSveBinUnpredS<SveSqsub>(size, machInst,
+                        zd, zn, zm);
+            case 0x7:
+                return decodeSveBinUnpredU<SveUqsub>(size, machInst,
+                        zd, zn, zm);
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveIntArithUnpred
+
+    StaticInstPtr
+    decodeSveIntLogUnpred(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        uint8_t opc = (uint8_t) (bits(machInst, 23, 22) << 3
+                | bits(machInst, 12, 10));
+
+        switch (opc) {
+            case 0x4:
+                return new SveAndUnpred<uint64_t>(machInst, zd, zn, zm);
+            case 0xc:
+                return new SveOrrUnpred<uint64_t>(machInst, zd, zn, zm);
+            case 0x14:
+                return new SveEorUnpred<uint64_t>(machInst, zd, zn, zm);
+            case 0x1c:
+                return new SveBicUnpred<uint64_t>(machInst, zd, zn, zm);
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveIntLogUnpred
+
+    StaticInstPtr
+    decodeSveIndexGen(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        uint8_t size = (uint8_t) bits(machInst, 23, 22);
+        uint8_t grp = (uint8_t) bits(machInst, 11, 10);
+
+        switch (grp) {
+            case 0:
+                { // INDEX (immediate)
+                    int8_t imm5 = sext<5>(bits(machInst, 9, 5));
+                    int8_t imm5b = sext<5>(bits(machInst, 20, 16));
+                    switch (size) {
+                        case 0:
+                            return new SveIndexII<int8_t>(machInst,
+                                    zd, imm5, imm5b);
+                        case 1:
+                            return new SveIndexII<int16_t>(machInst,
+                                    zd, imm5, imm5b);
+                        case 2:
+                            return new SveIndexII<int32_t>(machInst,
+                                    zd, imm5, imm5b);
+                        case 3:
+                            return new SveIndexII<int64_t>(machInst,
+                                    zd, imm5, imm5b);
+                    }
+                }
+            case 1:
+                { // INDEX (scalar, immediate)
+                    int8_t imm5 = sext<5>(bits(machInst, 20, 16));
+                    IntRegIndex zn = (IntRegIndex) (uint8_t) bits(
+                            machInst, 9, 5);
+                    switch (size) {
+                        case 0:
+                            return new SveIndexRI<int8_t>(machInst,
+                                    zd, zn, imm5);
+                        case 1:
+                            return new SveIndexRI<int16_t>(machInst,
+                                    zd, zn, imm5);
+                        case 2:
+                            return new SveIndexRI<int32_t>(machInst,
+                                    zd, zn, imm5);
+                        case 3:
+                            return new SveIndexRI<int64_t>(machInst,
+                                    zd, zn, imm5);
+                    }
+                }
+            case 2:
+                { // INDEX (immediate, scalar)
+                    int8_t imm5 = sext<5>(bits(machInst, 9, 5));
+                    IntRegIndex zm = (IntRegIndex) (uint8_t) bits(
+                            machInst, 20, 16);
+                    switch (size) {
+                        case 0:
+                            return new SveIndexIR<int8_t>(machInst,
+                                    zd, imm5, zm);
+                        case 1:
+                            return new SveIndexIR<int16_t>(machInst,
+                                    zd, imm5, zm);
+                        case 2:
+                            return new SveIndexIR<int32_t>(machInst,
+                                    zd, imm5, zm);
+                        case 3:
+                            return new SveIndexIR<int64_t>(machInst,
+                                    zd, imm5, zm);
+                    }
+                }
+            case 3:
+                { // INDEX (scalars)
+                    IntRegIndex zn = (IntRegIndex) (uint8_t) bits(
+                            machInst, 9, 5);
+                    IntRegIndex zm = (IntRegIndex) (uint8_t) bits(
+                            machInst, 20, 16);
+                    switch (size) {
+                        case 0:
+                            return new SveIndexRR<int8_t>(machInst,
+                                    zd, zn, zm);
+                        case 1:
+                            return new SveIndexRR<int16_t>(machInst,
+                                    zd, zn, zm);
+                        case 2:
+                            return new SveIndexRR<int32_t>(machInst,
+                                    zd, zn, zm);
+                        case 3:
+                            return new SveIndexRR<int64_t>(machInst,
+                                    zd, zn, zm);
+                    }
+                }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveIndexGen
+
+    StaticInstPtr
+    decodeSveStackAlloc(ExtMachInst machInst)
+    {
+        uint8_t b23_22 = bits(machInst, 23, 22);
+        uint8_t b11 = bits(machInst, 11);
+        if ((b23_22 & 0x2) == 0x0 && b11 == 0x0) {
+            IntRegIndex rd = makeSP(
+                (IntRegIndex) (uint8_t) bits(machInst, 4, 0));
+            IntRegIndex rn = makeSP(
+                (IntRegIndex) (uint8_t) bits(machInst, 20, 16));
+            uint64_t imm = sext<6>(bits(machInst, 10, 5));
+            if ((b23_22 & 0x1) == 0x0) {
+                return new AddvlXImm(machInst, rd, rn, imm);
+            } else {
+                return new AddplXImm(machInst, rd, rn, imm);
+            }
+        } else if (b23_22 == 0x2 && b11 == 0x0) {
+            IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            uint64_t imm = sext<6>(bits(machInst, 10, 5));
+            if (bits(machInst, 20, 16) == 0x1f) {
+                return new SveRdvl(machInst, rd, imm);
+            }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveStackAlloc
+
+    StaticInstPtr
+    decodeSveShiftByWideElemsUnpred(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opc = (uint8_t) bits(machInst, 11, 10);
+        switch (opc) {
+            case 0x0:
+                return decodeSveBinUnpredU<SveAsrWideUnpred>(
+                        size, machInst, zd, zn, zm);
+            case 0x1:
+                return decodeSveBinUnpredU<SveLsrWideUnpred>(
+                        size, machInst, zd, zn, zm);
+            case 0x3:
+                return decodeSveBinUnpredU<SveLslWideUnpred>(
+                        size, machInst, zd, zn, zm);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveShiftByWideElemsUnpred
+
+    StaticInstPtr
+    decodeSveShiftByImmUnpredB(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        uint8_t imm3 = (uint8_t) bits(machInst, 18, 16);
+
+        uint8_t tsize = (bits(machInst, 23, 22) << 2) | bits(machInst, 20, 19);
+        uint8_t esize = 0;
+        uint8_t size = 0;
+        if (tsize == 0x0) {
+            return new Unknown64(machInst);
+        } else if (tsize == 0x1) {
+            esize = 8;
+        } else if ((tsize & 0x0E) == 0x2) {
+            esize = 16;
+            size = 1;
+        } else if ((tsize & 0x0C) == 0x4) {
+            esize = 32;
+            size = 2;
+        } else if ((tsize & 0x08) == 0x8) {
+            esize = 64;
+            size = 3;
+        }
+
+        uint8_t opc = bits(machInst, 11, 10);
+        switch (opc) {
+            case 0x00:
+                {
+                    unsigned shiftAmt = 2 * esize - ((tsize << 3) | imm3);
+                    return decodeSveBinImmUnpredU<SveAsrImmUnpred>(
+                            size, machInst, zd, zn, shiftAmt);
+                }
+            case 0x01:
+                {
+                    unsigned shiftAmt = 2 * esize - ((tsize << 3) | imm3);
+                    return decodeSveBinImmUnpredU<SveLsrImmUnpred>(
+                            size, machInst, zd, zn, shiftAmt);
+                }
+            case 0x03:
+                {
+                    unsigned shiftAmt = ((tsize << 3) | imm3) - esize;
+                    return decodeSveBinImmUnpredU<SveLslImmUnpred>(
+                            size, machInst, zd, zn, shiftAmt);
+                }
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveShiftByImmUnpredB
+
+    StaticInstPtr
+    decodeSveShiftByImmUnpred(ExtMachInst machInst)
+    {
+        if (bits(machInst, 12)) {
+            return decodeSveShiftByImmUnpredB(machInst);
+        } else {
+            return decodeSveShiftByWideElemsUnpred(machInst);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveShiftByImmUnpred
+
+    StaticInstPtr
+    decodeSveCompVecAddr(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        uint8_t mult = 1 << bits(machInst, 11, 10);
+
+        uint8_t opc = bits(machInst, 23, 22);
+
+        switch (opc) {
+          case 0x0:
+            return new SveAdr<uint64_t>(machInst, zd, zn, zm, mult,
+                    SveAdr<uint64_t>::SveAdrOffsetUnpackedSigned);
+          case 0x1:
+            return new SveAdr<uint64_t>(machInst, zd, zn, zm, mult,
+                    SveAdr<uint64_t>::SveAdrOffsetUnpackedUnsigned);
+          case 0x2:
+            return new SveAdr<uint32_t>(machInst, zd, zn, zm, mult,
+                    SveAdr<uint32_t>::SveAdrOffsetPacked);
+          case 0x3:
+            return new SveAdr<uint64_t>(machInst, zd, zn, zm, mult,
+                    SveAdr<uint64_t>::SveAdrOffsetPacked);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveCompVecAddr
+
+    StaticInstPtr
+    decodeSveIntMiscUnpred(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opc = bits(machInst, 11, 10);
+        switch (opc) {
+          case 0x0:
+            // SVE floating-point trig select coefficient
+            {
+                if (size == 0) {
+                    break;
+                }
+                IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst,
+                                                              20, 16);
+                return decodeSveBinUnpredF<SveFtssel>(
+                    size, machInst, zd, zn, zm);
+            }
+          case 0x2:
+            // SVE floating-point exponential accelerator
+            if (size == 0) {
+                break;
+            }
+            return decodeSveUnaryUnpredF<SveFexpa>(size, machInst, zd, zn);
+          case 0x3:
+            // SVE constructive prefix (unpredicated)
+            if (size == 0x0 && bits(machInst, 20, 16) == 0x0) {
+                return new SveMovprfxUnpred<uint64_t>(machInst, zd, zn);
+            }
+            break;
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveIntMiscUnpred
+
+    StaticInstPtr
+    decodeSveElemCount(ExtMachInst machInst)
+    {
+        uint8_t opc20 = (uint8_t) bits(machInst, 20);
+        uint8_t b13_12 = (uint8_t) bits(machInst, 13, 12);
+        uint8_t opc11 = (uint8_t) bits(machInst, 11);
+        uint8_t opc10 = (uint8_t) bits(machInst, 10);
+        uint8_t opc11_10 = (uint8_t) bits(machInst, 11, 10);
+        if (b13_12 == 0) {
+            uint8_t pattern = (uint8_t) bits(machInst, 9, 5);
+            uint8_t imm4 = (uint8_t) bits(machInst, 19, 16) + 1;
+            IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            unsigned size = (unsigned) bits(machInst, 23, 22);
+            if (opc20) {
+                if (opc11 == 0) {
+                    if (opc10) {
+                        return decodeSveElemIntCountLU<SveDecv>(size,
+                                machInst, zdn, pattern, imm4);
+                    } else {
+                        return decodeSveElemIntCountLU<SveIncv>(size,
+                                machInst, zdn, pattern, imm4);
+                    }
+                }
+            } else {
+                if (opc11) {
+                    if (opc10) {
+                        return decodeSveElemIntCountLU<SveUqdecv>(size,
+                                machInst, zdn, pattern, imm4);
+                    } else {
+                        return decodeSveElemIntCountLS<SveSqdecv>(size,
+                                machInst, zdn, pattern, imm4);
+                    }
+                } else {
+                    if (opc10) {
+                        return decodeSveElemIntCountLU<SveUqincv>(size,
+                                machInst, zdn, pattern, imm4);
+                    } else {
+                        return decodeSveElemIntCountLS<SveSqincv>(size,
+                                machInst, zdn, pattern, imm4);
+                    }
+                }
+            }
+        } else if (b13_12 == 3) {
+            uint8_t pattern = (uint8_t) bits(machInst, 9, 5);
+            uint8_t imm4 = (uint8_t) bits(machInst, 19, 16) + 1;
+            IntRegIndex rdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            unsigned size = (unsigned) bits(machInst, 23, 22);
+            switch (opc11_10) {
+                case 0:
+                    if (opc20) {
+                        return decodeSveElemIntCountS<SveSqinc>(size,
+                                machInst, rdn, pattern, imm4);
+                    } else {
+                        return decodeSveElemIntCountS<SveSqinc32>(size,
+                                machInst, rdn, pattern, imm4);
+                    }
+                case 1:
+                    if (opc20) {
+                        return decodeSveElemIntCountU<SveUqinc>(size,
+                                machInst, rdn, pattern, imm4);
+                    } else {
+                        return decodeSveElemIntCountU<SveUqinc32>(size,
+                                machInst, rdn, pattern, imm4);
+                    }
+                case 2:
+                    if (opc20) {
+                        return decodeSveElemIntCountS<SveSqdec>(size,
+                                machInst, rdn, pattern, imm4);
+                    } else {
+                        return decodeSveElemIntCountS<SveSqdec32>(size,
+                                machInst, rdn, pattern, imm4);
+                    }
+                case 3:
+                    if (opc20) {
+                        return decodeSveElemIntCountU<SveUqdec>(size,
+                                machInst, rdn, pattern, imm4);
+                    } else {
+                        return decodeSveElemIntCountU<SveUqdec32>(size,
+                                machInst, rdn, pattern, imm4);
+                    }
+            }
+        } else if (opc20 && b13_12 == 2 && !(opc11_10 & 0x2)) {
+            uint8_t pattern = (uint8_t) bits(machInst, 9, 5);
+            uint8_t imm4 = (uint8_t) bits(machInst, 19, 16) + 1;
+            IntRegIndex rdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            unsigned size = (unsigned) bits(machInst, 23, 22);
+            if (opc11_10 & 0x1) {
+                return decodeSveElemIntCountU<SveDec>(size, machInst,
+                        rdn, pattern, imm4);
+            } else {
+                return decodeSveElemIntCountU<SveInc>(size, machInst,
+                        rdn, pattern, imm4);
+            }
+        } else if (!opc20 && b13_12 == 2 && opc11_10 == 0) {
+            uint8_t pattern = (uint8_t) bits(machInst, 9, 5);
+            uint8_t imm4 = (uint8_t) bits(machInst, 19, 16) + 1;
+            IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            unsigned size = (unsigned) bits(machInst, 23, 22);
+            return decodeSveElemIntCountU<SveCntx>(size, machInst,
+                    rd, pattern, imm4);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveElemCount
+
+    StaticInstPtr
+    decodeSveLogMaskImm(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        bool n = bits(machInst, 17);
+        uint8_t immr = bits(machInst, 16, 11);
+        uint8_t imms = bits(machInst, 10, 5);
+
+        // Decode bitmask
+        // len = MSB(n:NOT(imms)), len < 1 is undefined
+        uint8_t len = 0;
+        if (n) {
+            len = 6;
+        } else if (imms == 0x3f || imms == 0x3e) {
+            return new Unknown64(machInst);
+        } else {
+            len = findMsbSet(imms ^ 0x3f);
+        }
+        // Generate r, s, and size
+        uint64_t r = bits(immr, len - 1, 0);
+        uint64_t s = bits(imms, len - 1, 0);
+        uint8_t size = 1 << len;
+        if (s == size - 1)
+            return new Unknown64(machInst);
+        // Generate the pattern with s 1s, rotated by r, with size bits
+        uint64_t pattern = mask(s + 1);
+        if (r) {
+            pattern = (pattern >> r) | (pattern << (size - r));
+            pattern &= mask(size);
+        }
+        // Replicate that to fill up the immediate
+        for (unsigned i = 1; i < (64 / size); i *= 2)
+            pattern |= (pattern << (i * size));
+        uint64_t imm = pattern;
+
+        if (bits(machInst, 19, 18) == 0x0) {
+            if (bits(machInst, 23, 22) == 0x3) {
+                return new SveDupm<uint64_t>(machInst, zd, imm);
+            } else {
+                switch (bits(machInst, 23, 22)) {
+                  case 0x0:
+                    return new SveOrrImm<uint64_t>(machInst, zd, imm);
+                  case 0x1:
+                    return new SveEorImm<uint64_t>(machInst, zd, imm);
+                  case 0x2:
+                    return new SveAndImm<uint64_t>(machInst, zd, imm);
+                }
+            }
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveLogMaskImm
+
+    StaticInstPtr
+    decodeSveIntWideImmPred(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
+        uint8_t size = bits(machInst, 23, 22);
+
+        if (bits(machInst, 15) == 0x0) {
+            uint64_t imm = bits(machInst, 12, 5);
+            uint8_t sh = bits(machInst, 13);
+            uint8_t m = bits(machInst, 14);
+            if (sh) {
+                if (size == 0x0) {
+                    return new Unknown64(machInst);
+                }
+                imm <<= 8;
+            }
+            if (m) {
+                if (sh) {
+                    return decodeSveWideImmPredU<SveCpyImmMerge>(
+                        size, machInst, zd, sext<16>(imm), pg);
+                } else {
+                    return decodeSveWideImmPredU<SveCpyImmMerge>(
+                        size, machInst, zd, sext<8>(imm), pg);
+                }
+            } else {
+                if (sh) {
+                    return decodeSveWideImmPredU<SveCpyImmZero>(
+                        size, machInst, zd, sext<16>(imm), pg,
+                        false /* isMerging */);
+                } else {
+                    return decodeSveWideImmPredU<SveCpyImmZero>(
+                        size, machInst, zd, sext<8>(imm), pg,
+                        false /* isMerging */);
+                }
+            }
+        } else if (bits(machInst, 15, 13) == 0x6 && size != 0x0) {
+            uint64_t imm = vfp_modified_imm(bits(machInst, 12, 5),
+                decode_fp_data_type(size));
+            return decodeSveWideImmPredF<SveFcpy>(
+                        size, machInst, zd, imm, pg);
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveIntWideImmPred
+
+    StaticInstPtr
+    decodeSvePermExtract(ExtMachInst machInst)
+    {
+        uint8_t b23_22 = (unsigned) bits(machInst, 23, 22);
+        if (!b23_22) {
+            uint8_t position =
+                bits(machInst, 20, 16) << 3 | bits(machInst, 12, 10);
+            IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            return new SveExt<uint8_t>(machInst, zdn, zm, position);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePermExtract
+
+    StaticInstPtr
+    decodeSvePermUnpred(ExtMachInst machInst)
+    {
+        uint8_t b12_10 = bits(machInst, 12, 10);
+        if (b12_10 == 0x4) {
+            unsigned size = (unsigned) bits(machInst, 23, 22);
+            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+            return decodeSveBinUnpredU<SveTbl>(size, machInst, zd, zn, zm);
+        } else if (bits(machInst, 20, 16) == 0x0 && b12_10 == 0x6) {
+            uint8_t size = bits(machInst, 23, 22);
+            IntRegIndex rn = makeSP(
+                    (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
+            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            return decodeSveUnaryUnpredU<SveDupScalar>(size, machInst, zd, rn);
+        } else if (bits(machInst, 20, 16) == 0x4 && b12_10 == 0x6) {
+            uint8_t size = bits(machInst, 23, 22);
+            IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            return decodeSveUnaryUnpredU<SveInsr>(size, machInst, zdn, rm);
+        } else if (bits(machInst, 20, 16) == 0x14 && b12_10 == 0x6) {
+            uint8_t size = bits(machInst, 23, 22);
+            IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex vm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            return decodeSveUnaryUnpredU<SveInsrf>(size, machInst, zdn, vm);
+        } else if (bits(machInst, 20, 16) == 0x18 && b12_10 == 0x6) {
+            uint8_t size = bits(machInst, 23, 22);
+            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            return decodeSveUnaryUnpredU<SveRevv>(size, machInst, zd, zn);
+        } else if (b12_10 == 0x0 && bits(machInst, 20, 16) != 0x0) {
+            uint8_t imm =
+                bits(machInst, 23, 22) << 5 | // imm3h
+                bits(machInst, 20) << 4 |     // imm3l
+                bits(machInst, 19, 16);       // tsz
+            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            if (imm & 0x1) {
+                imm >>= 1;
+                return new SveDupIdx<uint8_t>(machInst, zd, zn, imm);
+            } else if (imm & 0x2) {
+                imm >>= 2;
+                return new SveDupIdx<uint16_t>(machInst, zd, zn, imm);
+            } else if (imm & 0x4) {
+                imm >>= 3;
+                return new SveDupIdx<uint32_t>(machInst, zd, zn, imm);
+            } else if (imm & 0x8) {
+                imm >>= 4;
+                return new SveDupIdx<uint64_t>(machInst, zd, zn, imm);
+            } else if (imm & 0x10) {
+                imm >>= 5;
+                return new SveDupIdx<__uint128_t>(machInst, zd, zn, imm);
+            }
+            return new Unknown64(machInst);
+        } else if (bits(machInst, 23, 22) != 0x0 &&
+                   bits(machInst, 20, 18) == 0x4 && b12_10 == 0x6) {
+            unsigned size = (unsigned) bits(machInst, 23, 22);
+            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            if (bits(machInst, 17)) {
+                if (bits(machInst, 16)) {
+                    return decodeSveUnpackU<SveUunpkhi>(size, machInst,
+                                                        zd, zn);
+                } else {
+                    return decodeSveUnpackU<SveUunpklo>(size, machInst,
+                                                        zd, zn);
+                }
+            } else {
+                if (bits(machInst, 16)) {
+                    return decodeSveUnpackS<SveSunpkhi>(size, machInst,
+                                                        zd, zn);
+                } else {
+                    return decodeSveUnpackS<SveSunpklo>(size, machInst,
+                                                        zd, zn);
+                }
+            }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePermUnpred
+
+    StaticInstPtr
+    decodeSvePermPredicates(ExtMachInst machInst)
+    {
+        if (bits(machInst, 20) == 0x0 && bits(machInst, 12, 11) != 0x3 &&
+                bits(machInst, 9) == 0x0 && bits(machInst, 4) == 0x0) {
+            IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+            IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+            IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+            uint8_t size = bits(machInst, 23, 22);
+
+            uint8_t opc = bits(machInst, 12, 10);
+
+            switch (opc) {
+              case 0x0:
+                return decodeSveBinUnpredU<SveZip1Pred>(size,
+                        machInst, zd, zn, zm);
+              case 0x1:
+                return decodeSveBinUnpredU<SveZip2Pred>(size,
+                        machInst, zd, zn, zm);
+              case 0x2:
+                return decodeSveBinUnpredU<SveUzp1Pred>(size,
+                        machInst, zd, zn, zm);
+              case 0x3:
+                return decodeSveBinUnpredU<SveUzp2Pred>(size,
+                        machInst, zd, zn, zm);
+              case 0x4:
+                return decodeSveBinUnpredU<SveTrn1Pred>(size,
+                        machInst, zd, zn, zm);
+              case 0x5:
+                return decodeSveBinUnpredU<SveTrn2Pred>(size,
+                        machInst, zd, zn, zm);
+            }
+        } else if (bits(machInst, 23, 22) == 0x0 &&
+                bits(machInst, 20, 17) == 0x8 && bits(machInst, 12, 9) == 0x0
+                && bits(machInst, 4) == 0x0) {
+            IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+            IntRegIndex pn = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
+            if (bits(machInst, 16)) {
+                return new SvePunpkhi<uint8_t, uint16_t>(machInst, pd, pn);
+            } else {
+                return new SvePunpklo<uint8_t, uint16_t>(machInst, pd, pn);
+            }
+        } else if (bits(machInst, 20, 16) == 0x14 &&
+                bits(machInst, 12, 9) == 0x00 && bits(machInst, 4) == 0) {
+            uint8_t size = bits(machInst, 23, 22);
+            IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+            IntRegIndex pn = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
+            return decodeSveUnaryUnpredU<SveRevp>(size, machInst, pd, pn);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePermPredicates
+
+    StaticInstPtr
+    decodeSvePermIntlv(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        uint8_t size = bits(machInst, 23, 22);
+
+        uint8_t opc = bits(machInst, 12, 10);
+
+        switch (opc) {
+          case 0x0:
+            return decodeSveBinUnpredU<SveZip1>(size, machInst, zd, zn, zm);
+          case 0x1:
+            return decodeSveBinUnpredU<SveZip2>(size, machInst, zd, zn, zm);
+          case 0x2:
+            return decodeSveBinUnpredU<SveUzp1>(size, machInst, zd, zn, zm);
+          case 0x3:
+            return decodeSveBinUnpredU<SveUzp2>(size, machInst, zd, zn, zm);
+          case 0x4:
+            return decodeSveBinUnpredU<SveTrn1>(size, machInst, zd, zn, zm);
+          case 0x5:
+            return decodeSveBinUnpredU<SveTrn2>(size, machInst, zd, zn, zm);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePermIntlv
+
+    StaticInstPtr
+    decodeSvePermPred(ExtMachInst machInst)
+    {
+        uint8_t b13 = bits(machInst, 13);
+        uint8_t b23 = bits(machInst, 23);
+        switch (bits(machInst, 20, 16)) {
+          case 0x0:
+            if (!b13) {
+                uint8_t size = bits(machInst, 23, 22);
+                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+                IntRegIndex vn = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
+                IntRegIndex zd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                return decodeSveUnaryPredU<SveCpySimdFpScalar>(size,
+                        machInst, zd, vn, pg);
+            }
+            break;
+          case 0x1:
+            if (!b13 && b23) {
+                // sve_int_perm_compact
+                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+                IntRegIndex zn = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
+                IntRegIndex zd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                if (bits(machInst, 22)) {
+                    return new SveCompact<uint64_t>(machInst, zd, zn, pg);
+                } else {
+                    return new SveCompact<uint32_t>(machInst, zd, zn, pg);
+                }
+            }
+            break;
+          case 0x8:
+            if (b13) {
+                uint8_t size = bits(machInst, 23, 22);
+                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+                IntRegIndex rn = makeSP(
+                        (IntRegIndex)(uint8_t) bits(machInst, 9, 5));
+                IntRegIndex zd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                return decodeSveUnaryPredU<SveCpyScalar>(size,
+                        machInst, zd, rn, pg);
+            }
+            break;
+          case 0xC:
+            if (!b13) {
+                uint8_t size = bits(machInst, 23, 22);
+                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+                IntRegIndex zdn = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                IntRegIndex zm = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
+                return decodeSveBinDestrPredU<SveSplice>(size, machInst,
+                        zdn, zm, pg);
+            }
+            break;
+        }
+        switch (bits(machInst, 20, 17)) {
+          case 0x0:
+            if (b13) {
+                uint8_t AB = bits(machInst, 16);
+                uint8_t size = bits(machInst, 23, 22);
+                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+                IntRegIndex zn = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
+                IntRegIndex rd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                if (!AB) {
+                    return decodeSveUnaryPredU<SveLasta>(size,
+                            machInst, rd, zn, pg);
+                } else {
+                    return decodeSveUnaryPredU<SveLastb>(size,
+                            machInst, rd, zn, pg);
+                }
+            }
+            break;
+          case 0x1:
+            if (!b13) {
+                uint8_t AB = bits(machInst, 16);
+                uint8_t size = bits(machInst, 23, 22);
+                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+                IntRegIndex zn = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
+                IntRegIndex vd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                if (!AB) {
+                    return decodeSveUnaryPredU<SveLastaf>(size,
+                            machInst, vd, zn, pg);
+                } else {
+                    return decodeSveUnaryPredU<SveLastbf>(size,
+                            machInst, vd, zn, pg);
+                }
+            }
+            break;
+          case 0x4:
+            if (!b13) {
+                uint8_t AB = bits(machInst, 16);
+                uint8_t size = bits(machInst, 23, 22);
+                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+                IntRegIndex zm = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
+                IntRegIndex zdn = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                if (!AB) {
+                    return decodeSveUnaryPredU<SveClastav>(size,
+                            machInst, zdn, zm, pg);
+                } else {
+                    return decodeSveUnaryPredU<SveClastbv>(size,
+                            machInst, zdn, zm, pg);
+                }
+            }
+            break;
+          case 0x5:
+            if (!b13) {
+                uint8_t AB = bits(machInst, 16);
+                uint8_t size = bits(machInst, 23, 22);
+                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+                IntRegIndex zm = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
+                IntRegIndex zdn = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                if (!AB) {
+                    return decodeSveUnaryPredU<SveClastaf>(size,
+                            machInst, zdn, zm, pg);
+                } else {
+                    return decodeSveUnaryPredU<SveClastbf>(size,
+                            machInst, zdn, zm, pg);
+                }
+            }
+            break;
+          case 0x8:
+            if (b13) {
+                uint8_t AB = bits(machInst, 16);
+                uint8_t size = bits(machInst, 23, 22);
+                IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+                IntRegIndex zm = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
+                IntRegIndex rdn = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+                if (!AB) {
+                    return decodeSveUnaryPredU<SveClasta>(size,
+                            machInst, rdn, zm, pg);
+                } else {
+                    return decodeSveUnaryPredU<SveClastb>(size,
+                            machInst, rdn, zm, pg);
+                }
+            }
+            break;
+        }
+        if (bits(machInst, 20, 18) == 0x1 && !b13) {
+            unsigned size = (unsigned) bits(machInst, 23, 22);
+            IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+            IntRegIndex zn = (IntRegIndex)(uint8_t) bits(machInst, 9, 5);
+            IntRegIndex zd = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+            uint8_t opc17_16 = bits(machInst, 17, 16);
+            switch (opc17_16) {
+                case 0x00:
+                    switch (size) {
+                        case 1:
+                            return new SveRevb<uint16_t>(machInst, zd, zn, pg);
+                        case 2:
+                            return new SveRevb<uint32_t>(machInst, zd, zn, pg);
+                        case 3:
+                            return new SveRevb<uint64_t>(machInst, zd, zn, pg);
+                    }
+                    break;
+                case 0x01:
+                    switch (size) {
+                        case 2:
+                            return new SveRevh<uint32_t>(machInst, zd, zn, pg);
+                        case 3:
+                            return new SveRevh<uint64_t>(machInst, zd, zn, pg);
+                    }
+                    break;
+                case 0x02:
+                    if (size == 3) {
+                        return new SveRevw<uint64_t>(machInst, zd, zn, pg);
+                    }
+                    break;
+                case 0x03:
+                    return decodeSveUnaryPredU<SveRbit>(
+                            size, machInst, zd, zn, pg);
+            }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePermPred
+
+    StaticInstPtr
+    decodeSveSelVec(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 13, 10);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        uint8_t size = bits(machInst, 23, 22);
+
+        return decodeSveBinConstrPredU<SveSel>(size,
+            machInst, zd, zn, zm, pg, SvePredType::SELECT);
+    }  // decodeSveSelVec
+
+    StaticInstPtr
+    decodeSveIntCmpVec(ExtMachInst machInst)
+    {
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t b14 = bits(machInst, 14);
+        uint8_t opc =
+            bits(machInst, 15) << 2 |
+            bits(machInst, 13) << 1 |
+            bits(machInst, 4);
+        IntRegIndex pd = (IntRegIndex) (uint8_t)bits(machInst, 3, 0);
+        IntRegIndex pg = (IntRegIndex) (uint8_t)bits(machInst, 12, 10);
+        IntRegIndex zn = (IntRegIndex) (uint8_t)bits(machInst, 9, 5);
+        IntRegIndex zm = (IntRegIndex) (uint8_t)bits(machInst, 20, 16);
+        if (b14 && size != 3) {
+            // sve_int_cmp_1
+            switch (opc) {
+                case 0:
+                    return decodeSveTerPredWS<SveCmpgew>(size,
+                            machInst, pd, zn, zm, pg);
+                case 1:
+                    return decodeSveTerPredWS<SveCmpgtw>(size,
+                            machInst, pd, zn, zm, pg);
+                case 2:
+                    return decodeSveTerPredWS<SveCmpltw>(size,
+                            machInst, pd, zn, zm, pg);
+                case 3:
+                    return decodeSveTerPredWS<SveCmplew>(size,
+                            machInst, pd, zn, zm, pg);
+                case 4:
+                    return decodeSveTerPredWU<SveCmphsw>(size,
+                            machInst, pd, zn, zm, pg);
+                case 5:
+                    return decodeSveTerPredWU<SveCmphiw>(size,
+                            machInst, pd, zn, zm, pg);
+                case 6:
+                    return decodeSveTerPredWU<SveCmplow>(size,
+                            machInst, pd, zn, zm, pg);
+                case 7:
+                    return decodeSveTerPredWU<SveCmplsw>(size,
+                            machInst, pd, zn, zm, pg);
+            }
+        } else if (!b14) {
+            switch (opc) {
+                case 0:
+                    return decodeSveTerPredU<SveCmphs>(size,
+                            machInst, pd, zn, zm, pg);
+                case 1:
+                    return decodeSveTerPredU<SveCmphi>(size,
+                            machInst, pd, zn, zm, pg);
+                case 2:
+                    if (size != 3) {
+                        return decodeSveTerPredWU<SveCmpeqw>(size,
+                                machInst, pd, zn, zm, pg);
+                    }
+                    break;
+                case 3:
+                    if (size != 3) {
+                        return decodeSveTerPredWU<SveCmpnew>(size,
+                                machInst, pd, zn, zm, pg);
+                    }
+                    break;
+                case 4:
+                    return decodeSveTerPredS<SveCmpge>(size,
+                            machInst, pd, zn, zm, pg);
+                case 5:
+                    return decodeSveTerPredS<SveCmpgt>(size,
+                            machInst, pd, zn, zm, pg);
+                case 6:
+                    return decodeSveTerPredU<SveCmpeq>(size,
+                            machInst, pd, zn, zm, pg);
+                case 7:
+                    return decodeSveTerPredU<SveCmpne>(size,
+                            machInst, pd, zn, zm, pg);
+            }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveIntCmpVec
+
+    StaticInstPtr
+    decodeSveIntCmpUImm(ExtMachInst machInst)
+    {
+        uint8_t cmp = bits(machInst, 13) << 1 | bits(machInst, 4);
+        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        int64_t imm = (int64_t) bits(machInst, 20, 14);
+        uint8_t size = bits(machInst, 23, 22);
+        switch (cmp) {
+            case 0:
+                return decodeSveTerImmPredU<SveCmphsi>(size,
+                        machInst, pd, zn, imm, pg);
+            case 1:
+                return decodeSveTerImmPredU<SveCmphii>(size,
+                        machInst, pd, zn, imm, pg);
+            case 2:
+                return decodeSveTerImmPredU<SveCmploi>(size,
+                        machInst, pd, zn, imm, pg);
+            case 3:
+                return decodeSveTerImmPredU<SveCmplsi>(size,
+                        machInst, pd, zn, imm, pg);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveIntCmpUImm
+
+    StaticInstPtr
+    decodeSveIntCmpSImm(ExtMachInst machInst)
+    {
+        uint8_t opc = bits(machInst, 15) << 2 | bits(machInst, 13) << 1 |
+            bits(machInst, 4);
+        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        int64_t imm = sext<5>(bits(machInst, 20, 16));
+        uint8_t size = bits(machInst, 23, 22);
+        switch (opc) {
+            case 0:
+                return decodeSveTerImmPredS<SveCmpgei>(size,
+                        machInst, pd, zn, imm, pg);
+            case 1:
+                return decodeSveTerImmPredS<SveCmpgti>(size,
+                        machInst, pd, zn, imm, pg);
+            case 2:
+                return decodeSveTerImmPredS<SveCmplti>(size,
+                        machInst, pd, zn, imm, pg);
+            case 3:
+                return decodeSveTerImmPredS<SveCmplei>(size,
+                        machInst, pd, zn, imm, pg);
+            case 4:
+                return decodeSveTerImmPredU<SveCmpeqi>(size,
+                        machInst, pd, zn, imm, pg);
+            case 5:
+                return decodeSveTerImmPredU<SveCmpnei>(size,
+                        machInst, pd, zn, imm, pg);
+            default:
+                return new Unknown64(machInst);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveIntCmpSImm
+
+    StaticInstPtr
+    decodeSvePredLogicalOps(ExtMachInst machInst)
+    {
+        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+        IntRegIndex pn = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
+        IntRegIndex pm = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 13, 10);
+        uint8_t opc = (bits(machInst, 23, 22) << 2) |
+                      (bits(machInst, 9) << 1) |
+                      bits(machInst, 4);
+        switch (opc) {
+          case 0x0:
+            return new SvePredAnd<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0x1:
+            return new SvePredBic<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0x2:
+            return new SvePredEor<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0x3:
+            return new SvePredSel<uint8_t>(machInst, pd, pn, pm, pg, true);
+          case 0x4:
+            return new SvePredAnds<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0x5:
+            return new SvePredBics<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0x6:
+            return new SvePredEors<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0x8:
+            return new SvePredOrr<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0x9:
+            return new SvePredOrn<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0xa:
+            return new SvePredNor<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0xb:
+            return new SvePredNand<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0xc:
+            return new SvePredOrrs<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0xd:
+            return new SvePredOrns<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0xe:
+            return new SvePredNors<uint8_t>(machInst, pd, pn, pm, pg);
+          case 0xf:
+            return new SvePredNands<uint8_t>(machInst, pd, pn, pm, pg);
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSvePredLogicalOps
+
+    StaticInstPtr
+    decodeSvePropBreakFromPrevPartition(ExtMachInst machInst)
+    {
+        if (bits(machInst, 23) == 0x0 && bits(machInst, 9) == 0x0) {
+            uint8_t opc = (bits(machInst, 22) << 1) | bits(machInst, 4);
+            IntRegIndex pm = (IntRegIndex)(uint8_t) bits(machInst, 19, 16);
+            IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 13, 10);
+            IntRegIndex pn = (IntRegIndex)(uint8_t) bits(machInst, 8, 5);
+            IntRegIndex pd = (IntRegIndex)(uint8_t) bits(machInst, 3, 0);
+            switch (opc) {
+              case 0x0:
+                // BRKPA
+                return new SveBrkpa(machInst, pd, pn, pm, pg);
+              case 0x1:
+                // BRKPB
+                return new SveBrkpb(machInst, pd, pn, pm, pg);
+              case 0x2:
+                // BRKPAS
+                return new SveBrkpas(machInst, pd, pn, pm, pg);
+              case 0x3:
+                // BRKPBS
+                return new SveBrkpbs(machInst, pd, pn, pm, pg);
+            }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePropBreakFromPrevPartition
+
+    StaticInstPtr
+    decodeSvePartitionBreakCond(ExtMachInst machInst)
+    {
+        if (bits(machInst, 18, 16) == 0x0 && bits(machInst, 9) == 0x0) {
+            bool flagset = bits(machInst, 22);
+            bool merging = bits(machInst, 4);
+            IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 13, 10);
+            IntRegIndex pn = (IntRegIndex)(uint8_t) bits(machInst, 8, 5);
+            IntRegIndex pd = (IntRegIndex)(uint8_t) bits(machInst, 3, 0);
+            if (bits(machInst, 23)) {
+                if (flagset) {
+                    if (!merging) {
+                        return new SveBrkbs(machInst, pd, pg, pn);
+                    }
+                } else {
+                    if (merging) {
+                        return new SveBrkbm(machInst, pd, pg, pn);
+                    } else {
+                        return new SveBrkbz(machInst, pd, pg, pn);
+                    }
+                }
+            } else {
+                if (flagset) {
+                    if (!merging) {
+                        return new SveBrkas(machInst, pd, pg, pn);
+                    }
+                } else {
+                    if (merging) {
+                        return new SveBrkam(machInst, pd, pg, pn);
+                    } else {
+                        return new SveBrkaz(machInst, pd, pg, pn);
+                    }
+                }
+            }
+            return new Unknown64(machInst);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePartitionBreakCond
+
+    StaticInstPtr
+    decodeSvePredTest(ExtMachInst machInst)
+    {
+        if (bits(machInst, 23, 22) == 0x1 &&
+                bits(machInst, 18, 16) == 0x0 &&
+                bits(machInst, 9) == 0x0) {
+            IntRegIndex pn = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
+            IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 13, 10);
+            return new SvePtest(machInst, pn, pg);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePredTest
+
+    StaticInstPtr
+    decodeSvePredIteration(ExtMachInst machInst)
+    {
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t opc18_16 = bits(machInst, 18, 16);
+        uint8_t opc10_9 = bits(machInst, 10, 9);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
+        IntRegIndex pdn = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+        if (opc18_16 == 0x1 && opc10_9 == 0x2) {
+            return decodeSveUnaryPredU<SvePnext>(size,
+                    machInst, pdn, pdn, pg);
+        } else if (size == 0x1 && opc18_16 == 0x0 && opc10_9 == 0) {
+            return new SvePfirst<uint8_t>(machInst, pdn, pdn, pg);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePredIteration
+
+    StaticInstPtr
+    decodeSveInitPred(ExtMachInst machInst)
+    {
+        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+        unsigned size = bits(machInst, 23, 22);
+        uint8_t imm = bits(machInst, 9, 5);
+
+        if (bits(machInst, 16) == 0x0) {
+            return decodeSvePtrue<SvePtrue>(size, machInst, pd, imm);
+        } else {
+            return decodeSvePtrue<SvePtrues>(size, machInst, pd, imm);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveInitPred
+
+    StaticInstPtr
+    decodeSveZeroPredReg(ExtMachInst machInst)
+    {
+        if (bits(machInst, 23, 22) == 0x0 && bits(machInst, 18, 16) == 0x0) {
+            IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+            return new SvePfalse(machInst, pd);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveZeroPredReg
+
+    StaticInstPtr
+    decodeSvePropBreakToNextPartition(ExtMachInst machInst)
+    {
+        if (bits(machInst, 23) == 0x0 &&
+                bits(machInst, 18, 16) == 0x0 &&
+                bits(machInst, 9) == 0x0 &&
+                bits(machInst, 4) == 0x0) {
+            IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 13, 10);
+            IntRegIndex pn = (IntRegIndex)(uint8_t) bits(machInst, 8, 5);
+            IntRegIndex pdm = (IntRegIndex)(uint8_t) bits(machInst, 3, 0);
+            if (bits(machInst, 22) == 0x0) {
+                return new SveBrkn(machInst, pdm, pn, pdm, pg);
+            } else {
+                return new SveBrkns(machInst, pdm, pn, pdm, pg);
+            }
+            return new Unknown64(machInst);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePropBreakToNextPartition
+
+    StaticInstPtr
+    decodeSveReadPredFromFFRPred(ExtMachInst machInst)
+    {
+        if (bits(machInst, 23)) {
+            return new Unknown64(machInst);
+        }
+        IntRegIndex pd = (IntRegIndex)(uint8_t) bits(machInst, 3, 0);
+        IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 8, 5);
+        if (bits(machInst, 22)) {
+            return new SveRdffrsPred(machInst, pd, pg);
+        } else {
+            return new SveRdffrPred(machInst, pd, pg);
+        }
+    }  // decodeSveReadPredFromFFRPred
+
+    StaticInstPtr
+    decodeSveReadPredFromFFRUnpred(ExtMachInst machInst)
+    {
+        if (bits(machInst, 23, 22) != 0) {
+            return new Unknown64(machInst);
+        }
+        IntRegIndex pd = (IntRegIndex)(uint8_t) bits(machInst, 3, 0);
+        return new SveRdffrUnpred(machInst, pd);
+    }  // decodeSveReadPredFromFFRUnpred
+
+    StaticInstPtr
+    decodeSvePredGen(ExtMachInst machInst)
+    {
+        uint8_t b_20_15 = (bits(machInst, 20) << 1) | bits(machInst, 15);
+        switch (b_20_15) {
+          case 0x0:
+            return decodeSvePredLogicalOps(machInst);
+          case 0x1:
+            return decodeSvePropBreakFromPrevPartition(machInst);
+          case 0x2:
+            if (bits(machInst, 19) == 0x0) {
+                return decodeSvePartitionBreakCond(machInst);
+            } else {
+                return decodeSvePropBreakToNextPartition(machInst);
+            }
+          case 0x3:
+            if (bits(machInst, 19) == 0x0) {
+                if (bits(machInst, 4, 0) == 0x0) {
+                    return decodeSvePredTest(machInst);
+                } else {
+                    break;
+                }
+            } else {
+                switch (bits(machInst, 13, 12)) {
+                  case 0x0:
+                    if (bits(machInst, 11) == 0x0 &&
+                            bits(machInst, 4) == 0x0) {
+                        return decodeSvePredIteration(machInst);
+                    } else {
+                        break;
+                    }
+                  case 0x1:
+                    break;
+                  case 0x2:
+                    if (bits(machInst, 11, 10) == 0x0 &&
+                            bits(machInst, 4) == 0x0) {
+                        return decodeSveInitPred(machInst);
+                    } else if (bits(machInst, 11, 4) == 0x40) {
+                        return decodeSveZeroPredReg(machInst);
+                    }
+                    break;
+                  case 0x3:
+                    if (bits(machInst, 11) == 0x0) {
+                        if (bits(machInst, 16) == 0x0) {
+                            return decodeSveReadPredFromFFRPred(machInst);
+                        } else if (bits(machInst, 8, 4) == 0x0) {
+                            return decodeSveReadPredFromFFRUnpred(machInst);
+                        }
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePredGen
+
+    StaticInstPtr
+    decodeSvePredCount(ExtMachInst machInst)
+    {
+        uint8_t b19 = bits(machInst, 19);
+        if (b19) {
+            uint8_t b13_11 = bits(machInst, 13, 11);
+            switch (b13_11) {
+              case 0x0:
+                {
+                    if (bits(machInst, 10, 9) != 0x0) {
+                        return new Unknown64(machInst);
+                    }
+                    IntRegIndex zdn = (IntRegIndex) (uint8_t)
+                        bits(machInst, 4, 0);
+                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                        bits(machInst, 8, 5);
+                    uint8_t esize = bits(machInst, 23, 22);
+                    if (esize == 0x0) {
+                        return new Unknown64(machInst);
+                    }
+                    uint8_t opc = bits(machInst, 18, 17);
+                    if (opc == 0x0) {
+                        uint8_t u = bits(machInst, 16);
+                        if (u) {
+                            return decodeSvePredCountVU<SveUqincpv>(esize,
+                                    machInst, zdn, pg);
+                        } else {
+                            return decodeSvePredCountVS<SveSqincpv>(esize,
+                                    machInst, zdn, pg);
+                        }
+                    } else if (opc == 0x1) {
+                        uint8_t u = bits(machInst, 16);
+                        if (u) {
+                            return decodeSvePredCountVU<SveUqdecpv>(esize,
+                                    machInst, zdn, pg);
+                        } else {
+                            return decodeSvePredCountVS<SveSqdecpv>(esize,
+                                    machInst, zdn, pg);
+                        }
+                    } else if (opc == 0x2) {
+                        uint8_t d = bits(machInst, 16);
+                        if (d) {
+                            return decodeSvePredCountVU<SveDecpv>(esize,
+                                    machInst, zdn, pg);
+                        } else {
+                            return decodeSvePredCountVU<SveIncpv>(esize,
+                                    machInst, zdn, pg);
+                        }
+                    }
+                }
+                break;
+              case 0x1:
+                {
+                    IntRegIndex rdn = (IntRegIndex) (uint8_t)
+                        bits(machInst, 4, 0);
+                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                        bits(machInst, 8, 5);
+                    uint8_t esize = bits(machInst, 23, 22);
+                    uint8_t opc = bits(machInst, 18, 17);
+                    uint8_t opc2 = bits(machInst, 10, 9);
+                    if (opc == 0x0) {
+                        uint8_t u = bits(machInst, 16);
+                        if (opc2 == 0x0) {
+                            if (u) {
+                                return decodeSvePredCountU<SveUqincp32>(esize,
+                                        machInst, rdn, pg);
+                            } else {
+                                return decodeSvePredCountS<SveSqincp32>(esize,
+                                        machInst, rdn, pg);
+                            }
+                        } else if (opc2 == 0x2) {
+                            if (u) {
+                                return decodeSvePredCountU<SveUqincp64>(esize,
+                                        machInst, rdn, pg);
+                            } else {
+                                return decodeSvePredCountS<SveSqincp64>(esize,
+                                        machInst, rdn, pg);
+                            }
+                        }
+                    } else if (opc == 0x1) {
+                        uint8_t u = bits(machInst, 16);
+                        if (opc2 == 0x0) {
+                            if (u) {
+                                return decodeSvePredCountU<SveUqdecp32>(esize,
+                                        machInst, rdn, pg);
+                            } else {
+                                return decodeSvePredCountS<SveSqdecp32>(esize,
+                                        machInst, rdn, pg);
+                            }
+                        } else if (opc2 == 0x2) {
+                            if (u) {
+                                return decodeSvePredCountU<SveUqdecp64>(esize,
+                                        machInst, rdn, pg);
+                            } else {
+                                return decodeSvePredCountS<SveSqdecp64>(esize,
+                                        machInst, rdn, pg);
+                            }
+                        }
+                    } else if (opc == 0x2) {
+                        if (opc2 == 0x0) {
+                            if (bits(machInst, 16)) {
+                                return decodeSvePredCountU<SveDecp>(esize,
+                                        machInst, rdn, pg);
+                            } else {
+                                return decodeSvePredCountU<SveIncp>(esize,
+                                        machInst, rdn, pg);
+                            }
+                        }
+                    }
+                }
+                break;
+              case 0x2:
+                if (bits(machInst, 23, 22) == 0x0 &&
+                        bits(machInst, 10, 9) == 0x0 &&
+                        bits(machInst, 4, 0) == 0x0) {
+                    uint8_t opc = bits(machInst, 18, 16);
+                    if (opc == 0x0) {
+                        IntRegIndex pn = (IntRegIndex)(uint8_t)
+                            bits(machInst, 8, 5);
+                        return new SveWrffr(machInst, pn);
+                    } else if (opc == 0x4 && bits(machInst, 8, 5) == 0x0) {
+                        return new SveSetffr(machInst);
+                    }
+                }
+                break;
+            }
+        } else {
+            uint8_t opc = bits(machInst, 18, 16);
+            if (opc == 0 && bits(machInst, 9) == 0) {
+                IntRegIndex rd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+                IntRegIndex pn = (IntRegIndex) (uint8_t) bits(machInst, 8, 5);
+                IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 13,
+                        10);
+                uint8_t esize = bits(machInst, 23, 22);
+                return decodeSveUnaryPredU<SveCntp>(esize,
+                        machInst, rd, pn, pg);
+            }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSvePredCount
+
+    StaticInstPtr
+    decodeSveIntCmpSca(ExtMachInst machInst)
+    {
+        uint16_t b23_13_12_11_10_3_2_1_0 = (uint16_t)
+            (bits(machInst, 23) << 8) | (bits(machInst, 13, 10) << 4) |
+            bits(machInst, 3, 0);
+        uint8_t b10 = (uint8_t) bits(machInst, 10);
+        IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex rm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        if (b23_13_12_11_10_3_2_1_0 == 0x180) {
+            uint8_t s64b = bits(machInst, 22);
+            uint8_t ne = bits(machInst, 4);
+            if (ne) {
+                if (s64b) {
+                    return new SveCtermne<uint64_t>(machInst, rn, rm);
+                } else {
+                    return new SveCtermne<uint32_t>(machInst, rn, rm);
+                }
+            } else {
+                if (s64b) {
+                    return new SveCtermeq<uint64_t>(machInst, rn, rm);
+                } else {
+                    return new SveCtermeq<uint32_t>(machInst, rn, rm);
+                }
+            }
+        } else if (b10) {
+            IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+            uint8_t size = (uint8_t) bits(machInst, 23, 22);
+            uint8_t s64b = (uint8_t) bits(machInst, 12);
+            uint8_t opc = (uint8_t) bits(machInst, 11) << 1 |
+                bits(machInst, 4);
+            if (s64b) {
+                switch (opc) {
+                    case 0:
+                        return decodeSveBinUnpredS<SveWhilelt64>(size,
+                                machInst, pd, rn, rm);
+                    case 1:
+                        return decodeSveBinUnpredS<SveWhilele64>(size,
+                                machInst, pd, rn, rm);
+                    case 2:
+                        return decodeSveBinUnpredU<SveWhilelo64>(size,
+                                machInst, pd, rn, rm);
+                    case 3:
+                        return decodeSveBinUnpredU<SveWhilels64>(size,
+                                machInst, pd, rn, rm);
+                }
+            } else {
+                switch (opc) {
+                    case 0:
+                        return decodeSveBinUnpredS<SveWhilelt32>(size,
+                                machInst, pd, rn, rm);
+                    case 1:
+                        return decodeSveBinUnpredS<SveWhilele32>(size,
+                                machInst, pd, rn, rm);
+                    case 2:
+                        return decodeSveBinUnpredU<SveWhilelo32>(size,
+                                machInst, pd, rn, rm);
+                    case 3:
+                        return decodeSveBinUnpredU<SveWhilels32>(size,
+                                machInst, pd, rn, rm);
+                }
+            }
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveIntCmpSca
+
+    StaticInstPtr
+    decodeSveIntWideImmUnpred0(ExtMachInst machInst)
+    {
+        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        uint64_t imm = bits(machInst, 12, 5);
+        uint8_t sh = bits(machInst, 13);
+        uint8_t size = bits(machInst, 23, 22);
+
+        if (sh) {
+            if (size == 0x0) {
+                return new Unknown64(machInst);
+            }
+            imm <<= 8;
+        }
+
+        switch (bits(machInst, 18, 16)) {
+          case 0x0:
+            return decodeSveWideImmUnpredU<SveAddImm>(
+                size, machInst, zdn, imm);
+          case 0x1:
+            return decodeSveWideImmUnpredU<SveSubImm>(
+                size, machInst, zdn, imm);
+          case 0x3:
+            return decodeSveWideImmUnpredU<SveSubrImm>(
+                size, machInst, zdn, imm);
+          case 0x4:
+            return decodeSveWideImmUnpredS<SveSqaddImm>(
+                size, machInst, zdn, imm);
+          case 0x5:
+            return decodeSveWideImmUnpredU<SveUqaddImm>(
+                size, machInst, zdn, imm);
+          case 0x6:
+            return decodeSveWideImmUnpredS<SveSqsubImm>(
+                size, machInst, zdn, imm);
+          case 0x7:
+            return decodeSveWideImmUnpredU<SveUqsubImm>(
+                size, machInst, zdn, imm);
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveIntWideImmUnpred0
+
+    StaticInstPtr
+    decodeSveIntWideImmUnpred1(ExtMachInst machInst)
+    {
+        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        uint64_t imm = bits(machInst, 12, 5);
+        uint8_t size = bits(machInst, 23, 22);
+
+        switch (bits(machInst, 18, 16)) {
+          case 0x0:
+            return decodeSveWideImmUnpredS<SveSmaxImm>(
+                size, machInst, zdn, sext<8>(imm));
+          case 0x1:
+            return decodeSveWideImmUnpredU<SveUmaxImm>(
+                size, machInst, zdn, imm);
+          case 0x2:
+            return decodeSveWideImmUnpredS<SveSminImm>(
+                size, machInst, zdn, sext<8>(imm));
+          case 0x3:
+            return decodeSveWideImmUnpredU<SveUminImm>(
+                size, machInst, zdn, imm);
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveIntWideImmUnpred1
+
+    StaticInstPtr
+    decodeSveIntWideImmUnpred2(ExtMachInst machInst)
+    {
+        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        uint64_t imm = bits(machInst, 12, 5);
+        uint8_t size = bits(machInst, 23, 22);
+
+        if (bits(machInst, 18, 16) == 0x0) {
+            return decodeSveWideImmUnpredU<SveMulImm>(
+                size, machInst, zdn, sext<8>(imm));
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveIntWideImmUnpred2
+
+    StaticInstPtr
+    decodeSveIntWideImmUnpred3(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        uint64_t imm = bits(machInst, 12, 5);
+        uint8_t sh = bits(machInst, 13);
+        uint8_t size = bits(machInst, 23, 22);
+
+        if (sh) {
+            if (size == 0x0) {
+                return new Unknown64(machInst);
+            }
+            imm <<= 8;
+        }
+
+        if (bits(machInst, 18, 17) == 0x0) {
+            if (sh) {
+                return decodeSveWideImmUnpredU<SveDupImm>(
+                    size, machInst, zd, sext<16>(imm));
+            } else {
+                return decodeSveWideImmUnpredU<SveDupImm>(
+                    size, machInst, zd, sext<8>(imm));
+            }
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveIntWideImmUnpred3
+
+    StaticInstPtr
+    decodeSveIntWideImmUnpred4(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        uint8_t size = bits(machInst, 23, 22);
+
+        if (bits(machInst, 18, 17) == 0x0 && size != 0x0) {
+            uint64_t imm = vfp_modified_imm(bits(machInst, 12, 5),
+                decode_fp_data_type(size));
+            return decodeSveWideImmUnpredF<SveFdup>(size, machInst, zd, imm);
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveIntWideImmUnpred4
+
+    StaticInstPtr
+    decodeSveIntWideImmUnpred(ExtMachInst machInst)
+    {
+        switch (bits(machInst, 20, 19)) {
+          case 0x0:
+            if (bits(machInst, 18, 16) != 0x2) {
+                return decodeSveIntWideImmUnpred0(machInst);
+            }
+            break;
+          case 0x1:
+            if (bits(machInst, 13) == 0x0) {
+                return decodeSveIntWideImmUnpred1(machInst);
+            }
+            break;
+          case 0x2:
+            if (bits(machInst, 13) == 0x0) {
+                return decodeSveIntWideImmUnpred2(machInst);
+            }
+            break;
+          case 0x3:
+            if (bits(machInst, 16) == 0x0) {
+                return decodeSveIntWideImmUnpred3(machInst);
+            } else if (bits(machInst, 13) == 0x0) {
+                return decodeSveIntWideImmUnpred4(machInst);
+            }
+            break;
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveIntWideImmUnpred
+
+    StaticInstPtr
+    decodeSveMultiplyAddUnpred(ExtMachInst machInst)
+    {
+        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        uint8_t size = (uint8_t) bits(machInst, 23, 22);
+
+        if (bits(machInst, 12, 11) != 0 || !(size & 0x2)) {
+            return new Unknown64(machInst);
+        }
+
+        uint8_t usig = (uint8_t) bits(machInst, 10);
+        if (size & 0x1) {
+            if (usig) {
+                return new SveUdotv<uint16_t, uint64_t>(machInst,
+                                                        zda, zn, zm);
+            } else {
+                return new SveSdotv<int16_t, int64_t>(machInst,
+                                                        zda, zn, zm);
+            }
+        } else {
+            if (usig) {
+                return new SveUdotv<uint8_t, uint32_t>(machInst,
+                                                        zda, zn, zm);
+            } else {
+                return new SveSdotv<int8_t, int32_t>(machInst,
+                                                        zda, zn, zm);
+            }
+        }
+
+        return new Unknown64(machInst);
+    } // decodeSveMultiplyAddUnpred
+
+    StaticInstPtr
+    decodeSveMultiplyIndexed(ExtMachInst machInst)
+    {
+        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        uint8_t size = (uint8_t) bits(machInst, 23, 22);
+
+        if (bits(machInst, 12, 11) != 0 || !(size & 0x2)) {
+            return new Unknown64(machInst);
+        }
+
+        uint8_t usig = (uint8_t) bits(machInst, 10);
+        if (size & 0x1) {
+            IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
+            uint8_t i1 = (uint8_t) bits(machInst, 20);
+            if (usig) {
+                return new SveUdoti<uint16_t, uint64_t>(machInst,
+                                                        zda, zn, zm, i1);
+            } else {
+                return new SveSdoti<int16_t, int64_t>(machInst,
+                                                        zda, zn, zm, i1);
+            }
+        } else {
+            IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 18, 16);
+            uint8_t i2 = (uint8_t) bits(machInst, 20, 19);
+            if (usig) {
+                return new SveUdoti<uint8_t, uint32_t>(machInst,
+                                                        zda, zn, zm, i2);
+            } else {
+                return new SveSdoti<int8_t, int32_t>(machInst,
+                                                        zda, zn, zm, i2);
+            }
+        }
+        return new Unknown64(machInst);
+    } // decodeSveMultiplyIndexed
+
+    StaticInstPtr
+    decodeSveFpFastReduc(ExtMachInst machInst)
+    {
+        IntRegIndex vd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        uint8_t size = bits(machInst, 23, 22);
+
+        if (size == 0x0) {
+            return new Unknown64(machInst);
+        }
+
+        switch (bits(machInst, 18, 16)) {
+          case 0x0:
+            return decodeSveUnaryPredF<SveFaddv>(size, machInst, vd, zn, pg);
+          case 0x4:
+            return decodeSveUnaryPredF<SveFmaxnmv>(size, machInst, vd, zn, pg);
+          case 0x5:
+            return decodeSveUnaryPredF<SveFminnmv>(size, machInst, vd, zn, pg);
+          case 0x6:
+            return decodeSveUnaryPredF<SveFmaxv>(size, machInst, vd, zn, pg);
+          case 0x7:
+            return decodeSveUnaryPredF<SveFminv>(size, machInst, vd, zn, pg);
+        }
+
+        return new Unknown64(machInst);
+    }  // decodeSveFpFastReduc
+
+    StaticInstPtr
+    decodeSveFpUnaryUnpred(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        uint8_t size = (uint8_t) bits(machInst, 23, 22);
+        if (size == 0) {
+            return new Unknown64(machInst);
+        }
+        uint8_t opc = (uint8_t) bits(machInst, 18, 16);
+
+        switch (opc) {
+          case 0x6:
+            return decodeSveUnaryUnpredF<SveFrecpe>(
+                    size, machInst, zd, zn);
+          case 0x7:
+            return decodeSveUnaryUnpredF<SveFrsqrte>(
+                    size, machInst, zd, zn);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveFpUnaryUnpred
+
+    StaticInstPtr
+    decodeSveFpCmpZero(ExtMachInst machInst)
+    {
+        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        uint8_t size = bits(machInst, 23, 22);
+        if (size == 0) {
+            return new Unknown64(machInst);
+        }
+        uint8_t opc = (bits(machInst, 17, 16) << 1) | bits(machInst, 4);
+
+        switch (opc) {
+          case 0x0:
+            return decodeSveCmpImmF<SveFcmgeZero>(
+                size, machInst, pd, zn, 0x0, pg);
+          case 0x1:
+            return decodeSveCmpImmF<SveFcmgtZero>(
+                size, machInst, pd, zn, 0x0, pg);
+          case 0x2:
+            return decodeSveCmpImmF<SveFcmltZero>(
+                size, machInst, pd, zn, 0x0, pg);
+          case 0x3:
+            return decodeSveCmpImmF<SveFcmleZero>(
+                size, machInst, pd, zn, 0x0, pg);
+          case 0x4:
+            return decodeSveCmpImmF<SveFcmeqZero>(
+                size, machInst, pd, zn, 0x0, pg);
+          case 0x6:
+            return decodeSveCmpImmF<SveFcmneZero>(
+                size, machInst, pd, zn, 0x0, pg);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveFpCmpZero
+
+    StaticInstPtr
+    decodeSveFpAccumReduc(ExtMachInst machInst)
+    {
+        uint8_t opc = bits(machInst, 18, 16);
+        uint8_t size = bits(machInst, 23, 22);
+        if (opc != 0 || size == 0) {
+            return new Unknown64(machInst);
+        }
+
+        IntRegIndex vdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        return decodeSveUnaryPredF<SveFadda>(size, machInst, vdn, zm, pg);
+    }  // decodeSveFpAccumReduc
+
+    StaticInstPtr
+    decodeSveFpArithUnpred(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        uint8_t size = bits(machInst, 23, 22);
+        if (size == 0) {
+            return new Unknown64(machInst);
+        }
+        uint8_t opc = (uint8_t) bits(machInst, 12, 10);
+
+        switch (opc) {
+          case 0x0:
+            return decodeSveBinUnpredF<SveFaddUnpred>(
+                    size, machInst, zd, zn, zm);
+          case 0x1:
+            return decodeSveBinUnpredF<SveFsubUnpred>(
+                    size, machInst, zd, zn, zm);
+          case 0x2:
+            return decodeSveBinUnpredF<SveFmulUnpred>(
+                    size, machInst, zd, zn, zm);
+          case 0x3:
+            return decodeSveBinUnpredF<SveFtsmul>(
+                    size, machInst, zd, zn, zm);
+          case 0x6:
+            return decodeSveBinUnpredF<SveFrecps>(
+                    size, machInst, zd, zn, zm);
+          case 0x7:
+            return decodeSveBinUnpredF<SveFrsqrts>(
+                    size, machInst, zd, zn, zm);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveFpArithUnpred
+
+    StaticInstPtr
+    decodeSveFpArithPred0(ExtMachInst machInst)
+    {
+        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        uint8_t size = (uint8_t) bits(machInst, 23, 22);
+        if (size == 0) {
+            return new Unknown64(machInst);
+        }
+        uint8_t opc = (uint8_t) bits(machInst, 19, 16);
+
+        switch (opc) {
+          case 0x0:
+            return decodeSveBinDestrPredF<SveFaddPred>(
+                    size, machInst, zdn, zm, pg);
+          case 0x1:
+            return decodeSveBinDestrPredF<SveFsubPred>(
+                    size, machInst, zdn, zm, pg);
+          case 0x2:
+            return decodeSveBinDestrPredF<SveFmulPred>(
+                    size, machInst, zdn, zm, pg);
+          case 0x3:
+            return decodeSveBinDestrPredF<SveFsubr>(
+                    size, machInst, zdn, zm, pg);
+          case 0x4:
+            return decodeSveBinDestrPredF<SveFmaxnm>(
+                    size, machInst, zdn, zm, pg);
+          case 0x5:
+            return decodeSveBinDestrPredF<SveFminnm>(
+                    size, machInst, zdn, zm, pg);
+          case 0x6:
+            return decodeSveBinDestrPredF<SveFmax>(
+                    size, machInst, zdn, zm, pg);
+          case 0x7:
+            return decodeSveBinDestrPredF<SveFmin>(
+                    size, machInst, zdn, zm, pg);
+          case 0x8:
+            return decodeSveBinDestrPredF<SveFabd>(
+                    size, machInst, zdn, zm, pg);
+          case 0x9:
+            return decodeSveBinDestrPredF<SveFscale>(
+                    size, machInst, zdn, zm, pg);
+          case 0xa:
+            return decodeSveBinDestrPredF<SveFmulx>(
+                    size, machInst, zdn, zm, pg);
+          case 0xc:
+            return decodeSveBinDestrPredF<SveFdivr>(
+                    size, machInst, zdn, zm, pg);
+          case 0xd:
+            return decodeSveBinDestrPredF<SveFdiv>(
+                    size, machInst, zdn, zm, pg);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveFpArithPred0
+
+    StaticInstPtr
+    decodeSveFpTrigMAddCoeff(ExtMachInst machInst)
+    {
+        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        uint8_t imm = (uint8_t) bits(machInst, 18, 16);
+
+        uint8_t size = (uint8_t) bits(machInst, 23, 22);
+        if (size == 0) {
+            return new Unknown64(machInst);
+        }
+
+        return decodeSveTerImmUnpredF<SveFtmad>(size, machInst, zdn, zm, imm);
+    }  // decodeSveFpTrigMAddCoeff
+
+    StaticInstPtr
+    decodeSveFpArithImmPred(ExtMachInst machInst)
+    {
+        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        uint64_t imm;
+
+        uint8_t size = (uint8_t) bits(machInst, 23, 22);
+        if (size == 0) {
+            return new Unknown64(machInst);
+        }
+
+        uint8_t opc = (uint8_t) bits(machInst, 18, 16);
+
+        switch (opc) {
+          case 0x0:
+            imm = sveExpandFpImmAddSub((uint8_t) bits(machInst, 5), size);
+            return decodeSveBinImmPredF<SveFaddImm>(
+                    size, machInst, zdn, imm, pg);
+          case 0x1:
+            imm = sveExpandFpImmAddSub((uint8_t) bits(machInst, 5), size);
+            return decodeSveBinImmPredF<SveFsubImm>(
+                    size, machInst, zdn, imm, pg);
+          case 0x2:
+            imm = sveExpandFpImmMul((uint8_t) bits(machInst, 5), size);
+            return decodeSveBinImmPredF<SveFmulImm>(
+                    size, machInst, zdn, imm, pg);
+          case 0x3:
+            imm = sveExpandFpImmAddSub((uint8_t) bits(machInst, 5), size);
+            return decodeSveBinImmPredF<SveFsubrImm>(
+                    size, machInst, zdn, imm, pg);
+          case 0x4:
+            imm = sveExpandFpImmMaxMin((uint8_t) bits(machInst, 5), size);
+            return decodeSveBinImmPredF<SveFmaxnmImm>(
+                    size, machInst, zdn, imm, pg);
+          case 0x5:
+            imm = sveExpandFpImmMaxMin((uint8_t) bits(machInst, 5), size);
+            return decodeSveBinImmPredF<SveFminnmImm>(
+                    size, machInst, zdn, imm, pg);
+          case 0x6:
+            imm = sveExpandFpImmMaxMin((uint8_t) bits(machInst, 5), size);
+            return decodeSveBinImmPredF<SveFmaxImm>(
+                    size, machInst, zdn, imm, pg);
+          case 0x7:
+            imm = sveExpandFpImmMaxMin((uint8_t) bits(machInst, 5), size);
+            return decodeSveBinImmPredF<SveFminImm>(
+                    size, machInst, zdn, imm, pg);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveFpArithImmPred
+
+    StaticInstPtr
+    decodeSveFpArithPred(ExtMachInst machInst)
+    {
+        if (bits(machInst, 20) == 0) {
+            return decodeSveFpArithPred0(machInst);
+        } else if (bits(machInst, 19) == 0) {
+            return decodeSveFpTrigMAddCoeff(machInst);
+        } else {
+            return decodeSveFpArithImmPred(machInst);
+        }
+    }  // decodeSveFpArithPred
+
+    StaticInstPtr
+    decodeSveFpUnaryPred(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        uint8_t size = (uint8_t) bits(machInst, 23, 22);
+        if (size == 0) {
+            return new Unknown64(machInst);
+        }
+
+        uint8_t b20_19 = bits(machInst, 20, 19);
+        switch (b20_19) {
+          case 0x0:
+            {
+                if (bits(machInst, 18, 16) == 0x5) {
+                    return new Unknown64(machInst);
+                }
+                // SVE floating-point round to integral value
+                uint8_t opc = (uint8_t) bits(machInst, 18, 16);
+                switch (opc) {
+                  case 0x0:
+                    return decodeSveUnaryPredF<SveFrintn>(
+                        size, machInst, zd, zn, pg);
+                  case 0x1:
+                    return decodeSveUnaryPredF<SveFrintp>(
+                        size, machInst, zd, zn, pg);
+                  case 0x2:
+                    return decodeSveUnaryPredF<SveFrintm>(
+                        size, machInst, zd, zn, pg);
+                  case 0x3:
+                    return decodeSveUnaryPredF<SveFrintz>(
+                        size, machInst, zd, zn, pg);
+                  case 0x4:
+                    return decodeSveUnaryPredF<SveFrinta>(
+                        size, machInst, zd, zn, pg);
+                  case 0x6:
+                    return decodeSveUnaryPredF<SveFrintx>(
+                        size, machInst, zd, zn, pg);
+                  case 0x7:
+                    return decodeSveUnaryPredF<SveFrinti>(
+                        size, machInst, zd, zn, pg);
+                }
+            }
+            break;
+          case 0x1:
+            {
+                // SVE floating-point unary operations (predicated)
+                uint8_t b18_16 = bits(machInst, 18, 16);
+                switch (b18_16) {
+                  case 0x0:
+                    if (size == 0x2) {
+                        return new SveFcvtNarrow<uint32_t, uint16_t>(
+                            machInst, zd, zn, pg);
+                    } else if (size == 0x3) {
+                        return new SveFcvtNarrow<uint64_t, uint16_t>(
+                            machInst, zd, zn, pg);
+                    }
+                    break;
+                  case 0x1:
+                    if (size == 0x2) {
+                        return new SveFcvtWiden<uint16_t, uint32_t>(
+                            machInst, zd, zn, pg);
+                    } else if (size == 0x3) {
+                        return new SveFcvtWiden<uint16_t, uint64_t>(
+                            machInst, zd, zn, pg);
+                    }
+                    break;
+                  case 0x2:
+                    if (size == 0x3) {
+                        return new SveFcvtNarrow<uint64_t, uint32_t>(
+                            machInst, zd, zn, pg);
+                    }
+                    break;
+                  case 0x3:
+                    if (size == 0x3) {
+                        return new SveFcvtWiden<uint32_t, uint64_t>(
+                            machInst, zd, zn, pg);
+                    }
+                    break;
+                  case 0x4:
+                    if (size != 0x0) {
+                        return decodeSveUnaryPredF<SveFrecpx>(
+                            size, machInst, zd, zn, pg);
+                    }
+                    break;
+                  case 0x5:
+                    if (size != 0x0) {
+                        return decodeSveUnaryPredF<SveFsqrt>(
+                            size, machInst, zd, zn, pg);
+                    }
+                    break;
+                }
+            }
+            break;
+          case 0x2:
+            {
+                // SVE integer convert to floating-point
+                uint8_t opc = (size << 3) | bits(machInst, 18, 16);
+                switch (opc) {
+                  case 0xa:
+                    return new SveScvtfNarrow<uint16_t, uint16_t>(
+                        machInst, zd, zn, pg);
+                  case 0xb:
+                    return new SveUcvtfNarrow<uint16_t, uint16_t>(
+                        machInst, zd, zn, pg);
+                  case 0xc:
+                    return new SveScvtfNarrow<uint32_t, uint16_t>(
+                        machInst, zd, zn, pg);
+                  case 0xd:
+                    return new SveUcvtfNarrow<uint32_t, uint16_t>(
+                        machInst, zd, zn, pg);
+                  case 0xe:
+                    return new SveScvtfNarrow<uint64_t, uint16_t>(
+                        machInst, zd, zn, pg);
+                  case 0xf:
+                    return new SveUcvtfNarrow<uint64_t, uint16_t>(
+                        machInst, zd, zn, pg);
+                  case 0x14:
+                    return new SveScvtfNarrow<uint32_t, uint32_t>(
+                        machInst, zd, zn, pg);
+                  case 0x15:
+                    return new SveUcvtfNarrow<uint32_t, uint32_t>(
+                        machInst, zd, zn, pg);
+                  case 0x18:
+                    return new SveScvtfWiden<uint32_t, uint64_t>(
+                        machInst, zd, zn, pg);
+                  case 0x19:
+                    return new SveUcvtfWiden<uint32_t, uint64_t>(
+                        machInst, zd, zn, pg);
+                  case 0x1c:
+                    return new SveScvtfNarrow<uint64_t, uint32_t>(
+                        machInst, zd, zn, pg);
+                  case 0x1d:
+                    return new SveUcvtfNarrow<uint64_t, uint32_t>(
+                        machInst, zd, zn, pg);
+                  case 0x1e:
+                    return new SveScvtfNarrow<uint64_t, uint64_t>(
+                        machInst, zd, zn, pg);
+                  case 0x1f:
+                    return new SveUcvtfNarrow<uint64_t, uint64_t>(
+                        machInst, zd, zn, pg);
+                }
+            }
+            break;
+          case 0x3:
+            {
+                // SVE floating-point convert to integer
+                uint8_t opc = (size << 3) | bits(machInst, 18, 16);
+                switch (opc) {
+                  case 0xa:
+                    return new SveFcvtzsNarrow<uint16_t, uint16_t>(
+                        machInst, zd, zn, pg);
+                  case 0xb:
+                    return new SveFcvtzuNarrow<uint16_t, uint16_t>(
+                        machInst, zd, zn, pg);
+                  case 0xc:
+                    return new SveFcvtzsWiden<uint16_t, uint32_t>(
+                        machInst, zd, zn, pg);
+                  case 0xd:
+                    return new SveFcvtzuWiden<uint16_t, uint32_t>(
+                        machInst, zd, zn, pg);
+                  case 0xe:
+                    return new SveFcvtzsWiden<uint16_t, uint64_t>(
+                        machInst, zd, zn, pg);
+                  case 0xf:
+                    return new SveFcvtzuWiden<uint16_t, uint64_t>(
+                        machInst, zd, zn, pg);
+                  case 0x14:
+                    return new SveFcvtzsNarrow<uint32_t, uint32_t>(
+                        machInst, zd, zn, pg);
+                  case 0x15:
+                    return new SveFcvtzuNarrow<uint32_t, uint32_t>(
+                        machInst, zd, zn, pg);
+                  case 0x18:
+                    return new SveFcvtzsNarrow<uint64_t, uint32_t>(
+                        machInst, zd, zn, pg);
+                  case 0x19:
+                    return new SveFcvtzuNarrow<uint64_t, uint32_t>(
+                        machInst, zd, zn, pg);
+                  case 0x1c:
+                    return new SveFcvtzsWiden<uint32_t, uint64_t>(
+                        machInst, zd, zn, pg);
+                  case 0x1d:
+                    return new SveFcvtzuWiden<uint32_t, uint64_t>(
+                        machInst, zd, zn, pg);
+                  case 0x1e:
+                    return new SveFcvtzsNarrow<uint64_t, uint64_t>(
+                        machInst, zd, zn, pg);
+                  case 0x1f:
+                    return new SveFcvtzuNarrow<uint64_t, uint64_t>(
+                        machInst, zd, zn, pg);
+                }
+            }
+            break;
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveFpUnaryPred
+
+    StaticInstPtr
+    decodeSveFpCmpVec(ExtMachInst machInst)
+    {
+        IntRegIndex pd = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        uint8_t size = bits(machInst, 23, 22);
+        if (size == 0) {
+            return new Unknown64(machInst);
+        }
+        uint8_t opc = (bits(machInst, 15) << 2) |
+                      (bits(machInst, 13) << 1) |
+                      bits(machInst, 4);
+
+        switch (opc) {
+          case 0x0:
+            return decodeSveCmpF<SveFcmge>(size, machInst, pd, zn, zm, pg);
+          case 0x1:
+            return decodeSveCmpF<SveFcmgt>(size, machInst, pd, zn, zm, pg);
+          case 0x2:
+            return decodeSveCmpF<SveFcmeq>(size, machInst, pd, zn, zm, pg);
+          case 0x3:
+            return decodeSveCmpF<SveFcmne>(size, machInst, pd, zn, zm, pg);
+          case 0x4:
+            return decodeSveCmpF<SveFcmuo>(size, machInst, pd, zn, zm, pg);
+          case 0x5:
+            return decodeSveCmpF<SveFacge>(size, machInst, pd, zn, zm, pg);
+          case 0x7:
+            return decodeSveCmpF<SveFacgt>(size, machInst, pd, zn, zm, pg);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveFpCmpVec
+
+    StaticInstPtr
+    decodeSveFpFusedMulAdd(ExtMachInst machInst)
+    {
+        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+
+        uint8_t size = bits(machInst, 23, 22);
+        if (size == 0) {
+            return new Unknown64(machInst);
+        }
+        uint8_t opc = bits(machInst, 15, 13);
+
+        switch (opc) {
+          case 0x0:
+            return decodeSveTerPredF<SveFmla>(
+                    size, machInst, zda, zn, zm, pg);
+          case 0x1:
+            return decodeSveTerPredF<SveFmls>(
+                    size, machInst, zda, zn, zm, pg);
+          case 0x2:
+            return decodeSveTerPredF<SveFnmla>(
+                    size, machInst, zda, zn, zm, pg);
+          case 0x3:
+            return decodeSveTerPredF<SveFnmls>(
+                    size, machInst, zda, zn, zm, pg);
+          case 0x4:
+            return decodeSveTerPredF<SveFmad>(
+                    size, machInst, zda /* zdn */, zm /* za */, zn, pg);
+          case 0x5:
+            return decodeSveTerPredF<SveFmsb>(
+                    size, machInst, zda /* zdn */, zm /* za */, zn, pg);
+          case 0x6:
+            return decodeSveTerPredF<SveFnmad>(
+                    size, machInst, zda /* zdn */, zm /* za */, zn, pg);
+          case 0x7:
+            return decodeSveTerPredF<SveFnmsb>(
+                    size, machInst, zda /* zdn */, zm /* za */, zn, pg);
+        }
+        return new Unknown64(machInst);
+    }  // decodeSveFpFusedMulAdd
+
+    StaticInstPtr
+    decodeSveFpCplxAdd(ExtMachInst machInst)
+    {
+        uint8_t size = bits(machInst, 23, 22);
+        uint8_t rot = bits(machInst, 16) << 1 | 0x01;
+        IntRegIndex zdn = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        switch (size) {
+            case 1:
+                return new SveFcadd<uint16_t>(machInst,
+                        zdn, zdn, zm, pg, rot);
+            case 2:
+                return new SveFcadd<uint32_t>(machInst,
+                        zdn, zdn, zm, pg, rot);
+            case 3:
+                return new SveFcadd<uint64_t>(machInst,
+                        zdn, zdn, zm, pg, rot);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSveFpCplxMulAddVec(ExtMachInst machInst)
+    {
+        uint8_t size = bits(machInst, 23, 22);
+        if (size == 0) {
+            return new Unknown64(machInst);
+        }
+
+        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
+        IntRegIndex zm = (IntRegIndex) (uint8_t) bits(machInst, 20, 16);
+        uint8_t rot = bits(machInst, 14, 13);
+        switch (size) {
+            case 1:
+                return new SveFcmlav<uint16_t>(machInst,
+                        zda, zn, zm, pg, rot);
+            case 2:
+                return new SveFcmlav<uint32_t>(machInst,
+                        zda, zn, zm, pg, rot);
+            case 3:
+                return new SveFcmlav<uint64_t>(machInst,
+                        zda, zn, zm, pg, rot);
+        }
+
+        return new Unknown64(machInst);
+    } // decodeSveFpCplxMulAddVec
+
+    StaticInstPtr
+    decodeSveFpCplxMulAddIndexed(ExtMachInst machInst)
+    {
+        uint8_t size = bits(machInst, 23, 22);
+        if (size < 2) {
+            return new Unknown64(machInst);
+        }
+
+        IntRegIndex zda = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        IntRegIndex zm;
+        uint8_t rot = bits(machInst, 11, 10);
+        uint8_t imm;
+
+        switch (size) {
+            case 2:
+                zm = (IntRegIndex) (uint8_t) bits(machInst, 18, 16);
+                imm = bits(machInst, 20, 19);
+                return new SveFcmlai<uint32_t>(machInst,
+                        zda, zn, zm, rot, imm);
+            case 3:
+                zm = (IntRegIndex) (uint8_t) bits(machInst, 19, 16);
+                imm = bits(machInst, 20);
+                return new SveFcmlai<uint64_t>(machInst,
+                        zda, zn, zm, rot, imm);
+        }
+        return new Unknown64(machInst);
+    } // decodeSveFpCplxMulAddIndexed
+
+    StaticInstPtr
+    decodeSveFpMulIndexed(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        uint8_t size = bits(machInst, 23, 22);
+        switch (size) {
+          case 0x0:
+          case 0x1:
+            return new SveFmulIdx<uint16_t>(
+                machInst, zd, zn,
+                (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                bits(machInst, 20, 19) | (bits(machInst, 22) << 2));
+          case 0x2:
+            return new SveFmulIdx<uint32_t>(
+                machInst, zd, zn,
+                (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                bits(machInst, 20, 19));
+          case 0x3:
+            return new SveFmulIdx<uint64_t>(
+                machInst, zd, zn,
+                (IntRegIndex) (uint8_t) bits(machInst, 19, 16),
+                bits(machInst, 20));
+          default:
+            return new Unknown64(machInst);
+        }
+
+    } // decodeSveFpMulIndexed
+
+    StaticInstPtr
+    decodeSveFpMulAddIndexed(ExtMachInst machInst)
+    {
+        IntRegIndex zd = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+        IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+        const uint8_t op = bits(machInst, 10);
+
+        uint8_t size = bits(machInst, 23, 22);
+        switch (size) {
+          case 0x0:
+          case 0x1:
+            if (op) {
+                return new SveFmlsIdx<uint16_t>(
+                    machInst, zd, zn,
+                    (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                    bits(machInst, 20, 19) | (bits(machInst, 22) << 2));
+            } else {
+                return new SveFmlaIdx<uint16_t>(
+                    machInst, zd, zn,
+                    (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                    bits(machInst, 20, 19) | (bits(machInst, 22) << 2));
+            }
+          case 0x2:
+            if (op) {
+                return new SveFmlsIdx<uint32_t>(
+                    machInst, zd, zn,
+                    (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                    bits(machInst, 20, 19));
+            } else {
+                return new SveFmlaIdx<uint32_t>(
+                    machInst, zd, zn,
+                    (IntRegIndex) (uint8_t) bits(machInst, 18, 16),
+                    bits(machInst, 20, 19));
+            }
+          case 0x3:
+            if (op) {
+                return new SveFmlsIdx<uint64_t>(
+                    machInst, zd, zn,
+                    (IntRegIndex) (uint8_t) bits(machInst, 19, 16),
+                    bits(machInst, 20));
+            } else {
+                return new SveFmlaIdx<uint64_t>(
+                    machInst, zd, zn,
+                    (IntRegIndex) (uint8_t) bits(machInst, 19, 16),
+                    bits(machInst, 20));
+            }
+          default:
+              return new Unknown64(machInst);
+        }
+    } // decodeSveFpMulAddIndexed
+
+    StaticInstPtr
+    decodeSveMemGather32(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveMemGather32
+
+    StaticInstPtr
+    decodeSveMemContigLoad(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveMemContigLoad
+
+    StaticInstPtr
+    decodeSveMemGather64(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveMemGather64
+
+    StaticInstPtr
+    decodeSveMemStore(ExtMachInst machInst)
+    {
+        return new Unknown64(machInst);
+    }  // decodeSveMemStore
+
+}  // namespace Aarch64
+}};

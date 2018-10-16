@@ -891,9 +891,12 @@ namespace ArmISA
         MISCREG_ICH_LRC14,
         MISCREG_ICH_LRC15,
 
-        // These MISCREG_FREESLOT are available Misc Register
-        // slots for future registers to be implemented.
-        MISCREG_FREESLOT_1,
+        // SVE
+        MISCREG_ID_AA64ZFR0_EL1,
+        MISCREG_ZCR_EL3,
+        MISCREG_ZCR_EL2,
+        MISCREG_ZCR_EL12,
+        MISCREG_ZCR_EL1,
 
         // NUM_PHYS_MISCREGS specifies the number of actual physical
         // registers, not considering the following pseudo-registers
@@ -1825,7 +1828,11 @@ namespace ArmISA
         "ich_lrc14",
         "ich_lrc15",
 
-        "freeslot2",
+        "id_aa64zfr0_el1",
+        "zcr_el3",
+        "zcr_el2",
+        "zcr_el12",
+        "zcr_el1",
 
         "num_phys_regs",
 

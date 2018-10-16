@@ -52,6 +52,8 @@ class ArmMachineType(Enum):
         'DTOnly' : -1,
     }
 
+class SveVectorLength(UInt8): min = 1; max = 16
+
 class ArmSystem(System):
     type = 'ArmSystem'
     cxx_header = "arch/arm/system.hh"
@@ -80,6 +82,10 @@ class ArmSystem(System):
         "Supported physical address range in bits when using AArch64 (ARMv8)")
     have_large_asid_64 = Param.Bool(False,
         "True if ASID is 16 bits in AArch64 (ARMv8)")
+    have_sve = Param.Bool(True,
+        "True if SVE is implemented (ARMv8)")
+    sve_vl = Param.SveVectorLength(1,
+        "SVE vector length in quadwords (128-bit)")
 
     semihosting = Param.ArmSemihosting(NULL,
         "Enable support for the Arm semihosting by settings this parameter")

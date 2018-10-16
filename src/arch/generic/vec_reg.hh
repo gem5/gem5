@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016, 2018 ARM Limited
+ * Copyright (c) 2015-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -154,6 +154,8 @@
 #include "base/cprintf.hh"
 #include "base/logging.hh"
 
+constexpr unsigned MaxVecRegLenInBytes = 256;
+
 template <size_t Sz>
 class VecRegContainer;
 
@@ -271,6 +273,8 @@ class VecRegContainer
 {
   static_assert(Sz > 0,
           "Cannot create Vector Register Container of zero size");
+  static_assert(Sz <= MaxVecRegLenInBytes,
+          "Vector Register size limit exceeded");
   public:
     static constexpr size_t SIZE = Sz;
     using Container = std::array<uint8_t,Sz>;
@@ -519,6 +523,7 @@ class VecLaneT
     friend class VecRegContainer<32>;
     friend class VecRegContainer<64>;
     friend class VecRegContainer<128>;
+    friend class VecRegContainer<MaxVecRegLenInBytes>;
 
     /** My type alias. */
     using MyClass = VecLaneT<VecElem, Const>;

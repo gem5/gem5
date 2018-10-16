@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2015-2016, 2018 ARM Limited
+# Copyright (c) 2012-2013, 2015-2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -41,6 +41,7 @@ from m5.proxy import *
 from m5.SimObject import SimObject
 
 from m5.objects.ArmPMU import ArmPMU
+from m5.objects.ArmSystem import SveVectorLength
 from m5.objects.ISACommon import VecRegRenameMode
 
 # Enum for DecoderFlavour
@@ -115,3 +116,8 @@ class ArmISA(SimObject):
     # It is rather executed as a NOP.
     impdef_nop = Param.Bool(False,
         "Any access to a MISCREG_IMPDEF_UNIMPL register is executed as NOP")
+
+    # This is required because in SE mode a generic System SimObject is
+    # allocated, instead of an ArmSystem
+    sve_vl_se = Param.SveVectorLength(1,
+        "SVE vector length in quadwords (128-bit), SE-mode only")

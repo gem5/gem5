@@ -201,6 +201,7 @@ namespace ArmISA
         Bitfield<10> tfp;  // AArch64
         Bitfield<9>  tcp9;
         Bitfield<8>  tcp8;
+        Bitfield<8>  tz;  // SVE
         Bitfield<7>  tcp7;
         Bitfield<6>  tcp6;
         Bitfield<5>  tcp5;
@@ -375,6 +376,7 @@ namespace ArmISA
         Bitfield<13, 12> cp6;
         Bitfield<15, 14> cp7;
         Bitfield<17, 16> cp8;
+        Bitfield<17, 16> zen;  // SVE
         Bitfield<19, 18> cp9;
         Bitfield<21, 20> cp10;
         Bitfield<21, 20> fpen;  // AArch64
@@ -636,8 +638,16 @@ namespace ArmISA
         Bitfield<20> tta;
         Bitfield<13, 12> res1_13_12_el2;
         Bitfield<10> tfp;
-        Bitfield<9, 0> res1_9_0_el2;
+        Bitfield<9> res1_9_el2;
+        Bitfield<8> res1_8_el2;
+        Bitfield<8> ez;  // SVE (CPTR_EL3)
+        Bitfield<8> tz;  // SVE (CPTR_EL2)
+        Bitfield<7, 0> res1_7_0_el2;
    EndBitUnion(CPTR)
+
+    BitUnion64(ZCR)
+        Bitfield<3, 0> len;
+    EndBitUnion(ZCR)
 
 }
 

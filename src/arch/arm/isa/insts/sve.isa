@@ -1,0 +1,4798 @@
+// Copyright (c) 2017-2019 ARM Limited
+// All rights reserved
+//
+// The license below extends only to copyright in the software and shall
+// not be construed as granting a license to any other intellectual
+// property including but not limited to intellectual property relating
+// to a hardware implementation of the functionality of the software
+// licensed hereunder.  You may use the software subject to the license
+// terms below provided that you ensure that this notice is replicated
+// unmodified and in its entirety in all distributions of the software,
+// modified or unmodified, in source code or in binary form.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Giacomo Gabrielli
+
+// @file Definition of SVE instructions.
+
+output header {{
+
+    // Decodes unary, constructive, predicated (merging) SVE instructions,
+    // handling signed and unsigned variants.
+    template <template <typename T> class BaseS,
+              template <typename T> class BaseU>
+    StaticInstPtr
+    decodeSveUnaryPred(unsigned size, unsigned u, ExtMachInst machInst,
+                       IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            if (u) {
+                return new BaseU<uint8_t>(machInst, dest, op1, gp);
+            } else {
+                return new BaseS<int8_t>(machInst, dest, op1, gp);
+            }
+          case 1:
+            if (u) {
+                return new BaseU<uint16_t>(machInst, dest, op1, gp);
+            } else {
+                return new BaseS<int16_t>(machInst, dest, op1, gp);
+            }
+          case 2:
+            if (u) {
+                return new BaseU<uint32_t>(machInst, dest, op1, gp);
+            } else {
+                return new BaseS<int32_t>(machInst, dest, op1, gp);
+            }
+          case 3:
+            if (u) {
+                return new BaseU<uint64_t>(machInst, dest, op1, gp);
+            } else {
+                return new BaseS<int64_t>(machInst, dest, op1, gp);
+            }
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes SVE widening reductions.
+    // handling signed and unsigned variants.
+    template <template <typename T1, typename T2> class BaseS,
+              template <typename T1, typename T2> class BaseU>
+    StaticInstPtr
+    decodeSveWideningReduc(unsigned size, unsigned u, ExtMachInst machInst,
+                           IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            if (u) {
+                return new BaseU<uint8_t, uint64_t>(machInst, dest, op1, gp);
+            } else {
+                return new BaseS<int8_t, int64_t>(machInst, dest, op1, gp);
+            }
+          case 1:
+            if (u) {
+                return new BaseU<uint16_t, uint64_t>(machInst, dest, op1, gp);
+            } else {
+                return new BaseS<int16_t, int64_t>(machInst, dest, op1, gp);
+            }
+          case 2:
+            if (u) {
+                return new BaseU<uint32_t, uint64_t>(machInst, dest, op1, gp);
+            } else {
+                return new BaseS<int32_t, int64_t>(machInst, dest, op1, gp);
+            }
+          case 3:
+            assert(u);
+            return new BaseU<uint64_t, uint64_t>(machInst, dest, op1, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes unary, constructive, predicated (merging) SVE instructions,
+    // handling signed variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveUnaryPredS(unsigned size, ExtMachInst machInst,
+                        IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1, gp);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, gp);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, gp);
+          case 3:
+            return new Base<int64_t>(machInst, dest, op1, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes unary, constructive, predicated (merging) SVE instructions,
+    // handling unsigned variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveUnaryPredU(unsigned size, ExtMachInst machInst,
+                        IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, gp);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes unary, constructive, predicated (merging) SVE instructions,
+    // handling signed and unsigned variants, for small element sizes (8- to
+    // 32-bit).
+    template <template <typename T> class BaseS,
+              template <typename T> class BaseU>
+    StaticInstPtr
+    decodeSveUnaryPredSmall(unsigned size, unsigned u, ExtMachInst machInst,
+                            IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            if (u) {
+                return new BaseU<uint8_t>(machInst, dest, op1, gp);
+            } else {
+                return new BaseS<int8_t>(machInst, dest, op1, gp);
+            }
+          case 1:
+            if (u) {
+                return new BaseU<uint16_t>(machInst, dest, op1, gp);
+            } else {
+                return new BaseS<int16_t>(machInst, dest, op1, gp);
+            }
+          case 2:
+            if (u) {
+                return new BaseU<uint32_t>(machInst, dest, op1, gp);
+            } else {
+                return new BaseS<int32_t>(machInst, dest, op1, gp);
+            }
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes unary, constructive, predicated (merging) SVE instructions,
+    // handling floating point variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveUnaryPredF(unsigned size, ExtMachInst machInst,
+                        IntRegIndex dest, IntRegIndex op1, IntRegIndex gp)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes unary, constructive, unpredicated SVE instructions, handling
+    // unsigned variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveUnaryUnpredU(unsigned size, ExtMachInst machInst,
+                          IntRegIndex dest, IntRegIndex op1)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes unary, constructive, unpredicated SVE instructions, handling
+    // floating-point variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveUnaryUnpredF(unsigned size, ExtMachInst machInst,
+                          IntRegIndex dest, IntRegIndex op1)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, destructive, predicated (merging) SVE instructions,
+    // handling signed and unsigned variants.
+    template <template <typename T> class BaseS,
+              template <typename T> class BaseU>
+    StaticInstPtr
+    decodeSveBinDestrPred(unsigned size, unsigned u, ExtMachInst machInst,
+                          IntRegIndex dest, IntRegIndex op2, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            if (u) {
+                return new BaseU<uint8_t>(machInst, dest, op2, gp);
+            } else {
+                return new BaseS<int8_t>(machInst, dest, op2, gp);
+            }
+          case 1:
+            if (u) {
+                return new BaseU<uint16_t>(machInst, dest, op2, gp);
+            } else {
+                return new BaseS<int16_t>(machInst, dest, op2, gp);
+            }
+          case 2:
+            if (u) {
+                return new BaseU<uint32_t>(machInst, dest, op2, gp);
+            } else {
+                return new BaseS<int32_t>(machInst, dest, op2, gp);
+            }
+          case 3:
+            if (u) {
+                return new BaseU<uint64_t>(machInst, dest, op2, gp);
+            } else {
+                return new BaseS<int64_t>(machInst, dest, op2, gp);
+            }
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary with immediate operand, constructive, unpredicated
+    // SVE instructions, handling signed variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinImmUnpredS(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, IntRegIndex op1, unsigned immediate)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1, immediate);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, immediate);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, immediate);
+          case 3:
+            return new Base<int64_t>(machInst, dest, op1, immediate);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+
+    // Decodes binary with immediate operand, constructive, unpredicated
+    // SVE instructions, handling unsigned variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinImmUnpredU(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, IntRegIndex op1, unsigned immediate)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, immediate);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, immediate);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, immediate);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, immediate);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary with immediate operand, destructive, predicated (merging)
+    // SVE instructions, handling unsigned variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinImmPredU(unsigned size, ExtMachInst machInst, IntRegIndex dest,
+            unsigned immediate, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, immediate, gp);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, immediate, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, immediate, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, immediate, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary with immediate operand, destructive, predicated (merging)
+    // SVE instructions, handling signed variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinImmPredS(unsigned size, ExtMachInst machInst, IntRegIndex dest,
+            unsigned immediate, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, immediate, gp);
+          case 1:
+            return new Base<int16_t>(machInst, dest, immediate, gp);
+          case 2:
+            return new Base<int32_t>(machInst, dest, immediate, gp);
+          case 3:
+            return new Base<int64_t>(machInst, dest, immediate, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary with immediate operand, destructive, predicated (merging)
+    // SVE instructions, handling floating-point variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinImmPredF(unsigned size, ExtMachInst machInst, IntRegIndex dest,
+            uint64_t immediate, IntRegIndex gp)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, immediate, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, immediate, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, immediate, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes unary/binary with wide immediate operand, destructive,
+    // unpredicated SVE instructions, handling unsigned variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveWideImmUnpredU(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, uint64_t immediate)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, immediate);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, immediate);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, immediate);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, immediate);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes unary/binary with wide immediate operand, destructive,
+    // unpredicated SVE instructions, handling signed variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveWideImmUnpredS(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, uint64_t immediate)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, immediate);
+          case 1:
+            return new Base<int16_t>(machInst, dest, immediate);
+          case 2:
+            return new Base<int32_t>(machInst, dest, immediate);
+          case 3:
+            return new Base<int64_t>(machInst, dest, immediate);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes unary/binary with wide immediate operand, destructive,
+    // unpredicated SVE instructions, handling floating-point variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveWideImmUnpredF(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, uint64_t immediate)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, immediate);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, immediate);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, immediate);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes unary/binary with wide immediate operand, destructive,
+    // predicated SVE instructions, handling unsigned variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveWideImmPredU(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, uint64_t immediate, IntRegIndex gp,
+            bool isMerging = true)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, immediate, gp,
+                isMerging);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, immediate, gp,
+                isMerging);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, immediate, gp,
+                isMerging);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, immediate, gp,
+                isMerging);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes unary/binary with wide immediate operand, destructive,
+    // predicated SVE instructions, handling floating-point variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveWideImmPredF(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, uint64_t immediate, IntRegIndex gp)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, immediate, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, immediate, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, immediate, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, destructive, predicated (merging) SVE instructions,
+    // handling unsigned variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinDestrPredU(unsigned size, ExtMachInst machInst,
+                           IntRegIndex dest, IntRegIndex op2, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op2, gp);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op2, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op2, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op2, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, destructive, predicated (merging) SVE instructions,
+    // handling signed variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinDestrPredS(unsigned size, ExtMachInst machInst,
+                           IntRegIndex dest, IntRegIndex op2, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op2, gp);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op2, gp);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op2, gp);
+          case 3:
+            return new Base<int64_t>(machInst, dest, op2, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, destructive, predicated (merging) SVE instructions,
+    // handling floating-point variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinDestrPredF(unsigned size, ExtMachInst machInst,
+                           IntRegIndex dest, IntRegIndex op2, IntRegIndex gp)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op2, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op2, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op2, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, constructive, predicated SVE instructions, handling
+    // unsigned variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinConstrPredU(unsigned size, ExtMachInst machInst,
+                            IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
+                            IntRegIndex gp, SvePredType predType)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, op2, gp, predType);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, op2, gp, predType);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, op2, gp, predType);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, op2, gp, predType);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, constructive, unpredicated SVE instructions.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinUnpred(unsigned size, unsigned u, ExtMachInst machInst,
+                       IntRegIndex dest, IntRegIndex op1, IntRegIndex op2)
+    {
+        switch (size) {
+          case 0:
+            if (u) {
+                return new Base<uint8_t>(machInst, dest, op1, op2);
+            } else {
+                return new Base<int8_t>(machInst, dest, op1, op2);
+            }
+          case 1:
+            if (u) {
+                return new Base<uint16_t>(machInst, dest, op1, op2);
+            } else {
+                return new Base<int16_t>(machInst, dest, op1, op2);
+            }
+          case 2:
+            if (u) {
+                return new Base<uint32_t>(machInst, dest, op1, op2);
+            } else {
+                return new Base<int32_t>(machInst, dest, op1, op2);
+            }
+          case 3:
+            if (u) {
+                return new Base<uint64_t>(machInst, dest, op1, op2);
+            } else {
+                return new Base<int64_t>(machInst, dest, op1, op2);
+            }
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, constructive, unpredicated SVE instructions.
+    // Unsigned instructions only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinUnpredU(unsigned size, ExtMachInst machInst, IntRegIndex dest,
+            IntRegIndex op1, IntRegIndex op2)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, op2);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, op2);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, constructive, unpredicated SVE instructions.
+    // Signed instructions only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinUnpredS(unsigned size, ExtMachInst machInst, IntRegIndex dest,
+            IntRegIndex op1, IntRegIndex op2)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1, op2);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, op2);
+          case 3:
+            return new Base<int64_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes binary, costructive, unpredicated SVE instructions, handling
+    // floating-point variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveBinUnpredF(unsigned size, ExtMachInst machInst, IntRegIndex dest,
+            IntRegIndex op1, IntRegIndex op2)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, op2);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, op2);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, op2);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes SVE compare instructions - binary, predicated (zeroing),
+    // generating a predicate - handling floating-point variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveCmpF(unsigned size, ExtMachInst machInst,
+                  IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
+                  IntRegIndex gp)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, op2, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, op2, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, op2, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes SVE compare-with-immediate instructions - binary, predicated
+    // (zeroing), generating a predicate - handling floating-point variants
+    // only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveCmpImmF(unsigned size, ExtMachInst machInst,
+                     IntRegIndex dest, IntRegIndex op1, uint64_t imm,
+                     IntRegIndex gp)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, imm, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, imm, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, imm, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes ternary, destructive, predicated (merging) SVE instructions.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveTerPred(unsigned size, unsigned u, ExtMachInst machInst,
+                     IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
+                     IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            if (u) {
+                return new Base<uint8_t>(machInst, dest, op1, op2, gp);
+            } else {
+                return new Base<int8_t>(machInst, dest, op1, op2, gp);
+            }
+          case 1:
+            if (u) {
+                return new Base<uint16_t>(machInst, dest, op1, op2, gp);
+            } else {
+                return new Base<int16_t>(machInst, dest, op1, op2, gp);
+            }
+          case 2:
+            if (u) {
+                return new Base<uint32_t>(machInst, dest, op1, op2, gp);
+            } else {
+                return new Base<int32_t>(machInst, dest, op1, op2, gp);
+            }
+          case 3:
+            if (u) {
+                return new Base<uint64_t>(machInst, dest, op1, op2, gp);
+            } else {
+                return new Base<int64_t>(machInst, dest, op1, op2, gp);
+            }
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes ternary, destructive, predicated (merging) SVE instructions,
+    // handling wide signed variants only. XXX: zeroing for CMP instructions.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveTerPredWS(unsigned size, ExtMachInst machInst,
+                      IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
+                      IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1, op2, gp);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, op2, gp);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, op2, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes ternary, destructive, predicated (merging) SVE instructions,
+    // handling wide unsigned variants only. XXX: zeroing for CMP instructions.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveTerPredWU(unsigned size, ExtMachInst machInst,
+                      IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
+                      IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, op2, gp);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, op2, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, op2, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes ternary, destructive, predicated (merging) SVE instructions,
+    // handling signed variants only. XXX: zeroing for CMP instructions.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveTerPredS(unsigned size, ExtMachInst machInst,
+                      IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
+                      IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1, op2, gp);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, op2, gp);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, op2, gp);
+          case 3:
+            return new Base<int64_t>(machInst, dest, op1, op2, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes ternary, destructive, predicated (merging) SVE instructions,
+    // handling unsigned variants only. XXX: zeroing for CMP instructions.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveTerPredU(unsigned size, ExtMachInst machInst,
+                      IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
+                      IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, op2, gp);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, op2, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, op2, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, op2, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes SVE signed unary extension instructions (8-bit source element
+    // size)
+    template <template <typename TS, typename TD> class Base>
+    StaticInstPtr
+    decodeSveUnaryExtendFromBPredS(unsigned dsize, ExtMachInst machInst,
+                                   IntRegIndex dest, IntRegIndex op1,
+                                   IntRegIndex gp)
+    {
+        switch (dsize) {
+          case 1:
+            return new Base<int8_t, int16_t>(machInst, dest, op1, gp);
+          case 2:
+            return new Base<int8_t, int32_t>(machInst, dest, op1, gp);
+          case 3:
+            return new Base<int8_t, int64_t>(machInst, dest, op1, gp);
+        }
+        return new Unknown64(machInst);
+    }
+
+    // Decodes SVE unsigned unary extension instructions (8-bit source element
+    // size)
+    template <template <typename TS, typename TD> class Base>
+    StaticInstPtr
+    decodeSveUnaryExtendFromBPredU(unsigned dsize, ExtMachInst machInst,
+                                   IntRegIndex dest, IntRegIndex op1,
+                                   IntRegIndex gp)
+    {
+        switch (dsize) {
+          case 1:
+            return new Base<uint8_t, uint16_t>(machInst, dest, op1, gp);
+          case 2:
+            return new Base<uint8_t, uint32_t>(machInst, dest, op1, gp);
+          case 3:
+            return new Base<uint8_t, uint64_t>(machInst, dest, op1, gp);
+        }
+        return new Unknown64(machInst);
+    }
+
+    // Decodes SVE signed unary extension instructions (16-bit source element
+    // size)
+    template <template <typename TS, typename TD> class Base>
+    StaticInstPtr
+    decodeSveUnaryExtendFromHPredS(unsigned dsize, ExtMachInst machInst,
+                                   IntRegIndex dest, IntRegIndex op1,
+                                   IntRegIndex gp)
+    {
+        switch (dsize) {
+          case 2:
+            return new Base<int16_t, int32_t>(machInst, dest, op1, gp);
+          case 3:
+            return new Base<int16_t, int64_t>(machInst, dest, op1, gp);
+        }
+        return new Unknown64(machInst);
+    }
+
+    // Decodes SVE unsigned unary extension instructions (16-bit source element
+    // size)
+    template <template <typename TS, typename TD> class Base>
+    StaticInstPtr
+    decodeSveUnaryExtendFromHPredU(unsigned dsize, ExtMachInst machInst,
+                                   IntRegIndex dest, IntRegIndex op1,
+                                   IntRegIndex gp)
+    {
+        switch (dsize) {
+          case 2:
+            return new Base<uint16_t, uint32_t>(machInst, dest, op1, gp);
+          case 3:
+            return new Base<uint16_t, uint64_t>(machInst, dest, op1, gp);
+        }
+        return new Unknown64(machInst);
+    }
+
+    // Decodes ternary, destructive, predicated (merging) SVE instructions,
+    // handling floating-point variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveTerPredF(unsigned size, ExtMachInst machInst,
+                      IntRegIndex dest, IntRegIndex op1, IntRegIndex op2,
+                      IntRegIndex gp)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, op2, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, op2, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, op2, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes ternary with immediate operand, destructive, unpredicated SVE
+    // instructions handling floating-point variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveTerImmUnpredF(unsigned size, ExtMachInst machInst,
+                           IntRegIndex dest, IntRegIndex op2, uint8_t imm)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op2, imm);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op2, imm);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op2, imm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes SVE PTRUE(S) instructions.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSvePtrue(unsigned size, ExtMachInst machInst,
+                   IntRegIndex dest, uint8_t imm)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, imm);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, imm);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, imm);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, imm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes SVE predicate count instructions, scalar signed variant only
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSvePredCountS(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, IntRegIndex op1)
+    {
+        switch (size) {
+            case 0:
+                return new Base<int8_t>(machInst, dest, op1);
+            case 1:
+                return new Base<int16_t>(machInst, dest, op1);
+            case 2:
+                return new Base<int32_t>(machInst, dest, op1);
+            case 3:
+                return new Base<int64_t>(machInst, dest, op1);
+            default:
+                return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes SVE predicate count instructions, scalar unsigned variant only
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSvePredCountU(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, IntRegIndex op1)
+    {
+        switch (size) {
+            case 0:
+                return new Base<uint8_t>(machInst, dest, op1);
+            case 1:
+                return new Base<uint16_t>(machInst, dest, op1);
+            case 2:
+                return new Base<uint32_t>(machInst, dest, op1);
+            case 3:
+                return new Base<uint64_t>(machInst, dest, op1);
+            default:
+                return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes SVE predicate count instructions, vector signed variant only
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSvePredCountVS(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, IntRegIndex op1)
+    {
+        switch (size) {
+            case 1:
+                return new Base<int16_t>(machInst, dest, op1);
+            case 2:
+                return new Base<int32_t>(machInst, dest, op1);
+            case 3:
+                return new Base<int64_t>(machInst, dest, op1);
+            default:
+                return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes SVE predicate count instructions, vector unsigned variant only
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSvePredCountVU(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, IntRegIndex op1)
+    {
+        switch (size) {
+            case 1:
+                return new Base<uint16_t>(machInst, dest, op1);
+            case 2:
+                return new Base<uint32_t>(machInst, dest, op1);
+            case 3:
+                return new Base<uint64_t>(machInst, dest, op1);
+            default:
+                return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes ternary with immediate operand, predicated SVE
+    // instructions handling unsigned variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveTerImmPredU(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, IntRegIndex op1, int64_t imm, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, op1, imm, gp);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, op1, imm, gp);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, op1, imm, gp);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, op1, imm, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes ternary with immediate operand, predicated SVE
+    // instructions handling signed variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveTerImmPredS(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, IntRegIndex op1, int64_t imm, IntRegIndex gp)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, op1, imm, gp);
+          case 1:
+            return new Base<int16_t>(machInst, dest, op1, imm, gp);
+          case 2:
+            return new Base<int32_t>(machInst, dest, op1, imm, gp);
+          case 3:
+            return new Base<int64_t>(machInst, dest, op1, imm, gp);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes integer element count SVE instructions, handling
+    // signed variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveElemIntCountS(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, uint8_t pattern, uint8_t imm4)
+    {
+        switch (size) {
+          case 0:
+            return new Base<int8_t>(machInst, dest, pattern, imm4);
+          case 1:
+            return new Base<int16_t>(machInst, dest, pattern, imm4);
+          case 2:
+            return new Base<int32_t>(machInst, dest, pattern, imm4);
+          case 3:
+            return new Base<int64_t>(machInst, dest, pattern, imm4);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes integer element count SVE instructions, handling
+    // unsigned variants only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveElemIntCountU(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, uint8_t pattern, uint8_t imm4)
+    {
+        switch (size) {
+          case 0:
+            return new Base<uint8_t>(machInst, dest, pattern, imm4);
+          case 1:
+            return new Base<uint16_t>(machInst, dest, pattern, imm4);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, pattern, imm4);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, pattern, imm4);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes integer element count SVE instructions, handling
+    // signed variants from 16 to 64 bits only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveElemIntCountLS(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, uint8_t pattern, uint8_t imm4)
+    {
+        switch (size) {
+          case 1:
+            return new Base<int16_t>(machInst, dest, pattern, imm4);
+          case 2:
+            return new Base<int32_t>(machInst, dest, pattern, imm4);
+          case 3:
+            return new Base<int64_t>(machInst, dest, pattern, imm4);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes integer element count SVE instructions, handling
+    // unsigned variants from 16 to 64 bits only.
+    template <template <typename T> class Base>
+    StaticInstPtr
+    decodeSveElemIntCountLU(unsigned size, ExtMachInst machInst,
+            IntRegIndex dest, uint8_t pattern, uint8_t imm4)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint16_t>(machInst, dest, pattern, imm4);
+          case 2:
+            return new Base<uint32_t>(machInst, dest, pattern, imm4);
+          case 3:
+            return new Base<uint64_t>(machInst, dest, pattern, imm4);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes SVE unpack instructions. Handling signed variants.
+    template <template <typename T1, typename T2> class Base>
+    StaticInstPtr
+    decodeSveUnpackS(unsigned size, ExtMachInst machInst,
+                    IntRegIndex dest, IntRegIndex op1)
+    {
+        switch (size) {
+          case 1:
+            return new Base<int8_t, int16_t>(machInst, dest, op1);
+          case 2:
+            return new Base<int16_t, int32_t>(machInst, dest, op1);
+          case 3:
+            return new Base<int32_t, int64_t>(machInst, dest, op1);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    // Decodes SVE unpack instructions. Handling unsigned variants.
+    template <template <typename T1, typename T2> class Base>
+    StaticInstPtr
+    decodeSveUnpackU(unsigned size, ExtMachInst machInst,
+                    IntRegIndex dest, IntRegIndex op1)
+    {
+        switch (size) {
+          case 1:
+            return new Base<uint8_t, uint16_t>(machInst, dest, op1);
+          case 2:
+            return new Base<uint16_t, uint32_t>(machInst, dest, op1);
+          case 3:
+            return new Base<uint32_t, uint64_t>(machInst, dest, op1);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+}};
+
+let {{
+
+    header_output = ''
+    exec_output = ''
+    decoders = { 'Generic': {} }
+
+    class PredType:
+        NONE = 0
+        MERGE = 1
+        ZERO = 2
+        SELECT = 3
+
+    class CvtDir:
+        Narrow = 0
+        Widen = 1
+
+    class IndexFormat(object):
+        ImmImm = 'II'
+        ImmReg = 'IR'
+        RegImm = 'RI'
+        RegReg = 'RR'
+
+    class SrcRegType(object):
+        Vector = 0
+        Scalar = 1
+        SimdFpScalar = 2
+        Predicate = 3
+
+    class DstRegType(object):
+        Vector = 0
+        Scalar = 1
+        SimdFpScalar = 2
+        Predicate = 3
+
+    class DestType(object):
+        Scalar = 'false'
+        Vector = 'true'
+
+    class SrcSize(object):
+        Src32bit = 'true'
+        Src64bit = 'false'
+
+    class Break(object):
+        Before = 0
+        After = 1
+
+    class Unpack(object):
+        High = 0
+        Low = 1
+
+    # Generates definitions for SVE ADR instructions
+    def sveAdrInst(name, Name, opClass, types, op):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        for (unsigned i = 0; i < eCount; i++) {
+            const Element& srcElem1 = AA64FpOp1_x[i];
+            Element srcElem2 = AA64FpOp2_x[i];
+            Element destElem = 0;
+            %(op)s
+            AA64FpDest_x[i] = destElem;
+        }''' % {'op': op}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveAdrOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveAdrOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definition for SVE while predicate generation instructions
+    def sveWhileInst(name, Name, opClass, types, op,
+        srcSize = SrcSize.Src64bit):
+        global header_output, exec_output, decoders
+        extraPrologCode = '''
+        auto& destPred = PDest;'''
+        if 'int32_t' in types:
+            srcType = 'int64_t' if srcSize == SrcSize.Src64bit else 'int32_t'
+        else:
+            srcType = 'uint64_t' if srcSize == SrcSize.Src64bit else 'uint32_t'
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        %(stype)s srcElem1 = static_cast<%(stype)s>(XOp1);
+        %(stype)s srcElem2 = static_cast<%(stype)s>(XOp2);
+        bool cond, first = false, none = true, last = true;
+        destPred.reset();
+        for (unsigned i = 0; i < eCount; i++) {
+            %(op)s;
+            last = last && cond;
+            none = none && !cond;
+            first = first || (i == 0 && cond);
+            PDest_x[i] = last;
+            srcElem1++;
+        }
+        CondCodesNZ = (first << 1) | none;
+        CondCodesC = !last;
+        CondCodesV = false;
+        '''%{'op': op, 'stype': srcType}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveWhileOp',
+                {'code': code, 'op_class': opClass, 'srcIs32b': srcSize}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SveWhileOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type, 'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict);
+
+    # Generate definition for SVE compare & terminate instructions
+    def sveCompTermInst(name, Name, opClass, types, op):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        bool destElem;
+        Element srcElem1 = static_cast<Element>(XOp1);
+        Element srcElem2 = static_cast<Element>(XOp2);
+        %(op)s;
+        if (destElem) {
+            CondCodesNZ = CondCodesNZ | 0x2;
+            CondCodesV = 0;
+        } else {
+            CondCodesNZ = CondCodesNZ & ~0x2;
+            CondCodesV = !CondCodesC;
+        }
+        ''' % {'op': op}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveCompTermOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SveCompTermOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type, 'class_name': 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict);
+
+    # Generates definition for SVE predicate count instructions
+    def svePredCountInst(name, Name, opClass, types, op,
+                         destType=DestType.Vector,
+                         srcSize=SrcSize.Src64bit):
+        global header_output, exec_output, decoders
+        assert not (destType == DestType.Vector and
+                srcSize != SrcSize.Src64bit)
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        int count = 0;
+        for (unsigned i = 0; i < eCount; i++) {
+            if (GpOp_x[i]) {
+                count++;
+            }
+        }'''
+        if destType == DestType.Vector:
+            code += '''
+        for (unsigned i = 0; i < eCount; i++) {
+            Element destElem = 0;
+            const Element& srcElem = AA64FpDestMerge_x[i];
+            %(op)s
+            AA64FpDest_x[i] = destElem;
+        }''' % {'op': op}
+        else:
+            code += '''
+        %(op)s''' % {'op': op}
+        iop = InstObjParams(name, 'Sve' + Name, 'SvePredCountOp',
+                {'code': code, 'op_class': opClass, 'srcIs32b': srcSize,
+                 'destIsVec': destType}, [])
+        header_output += SvePredCountOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type, 'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict);
+
+    # Generates definition for SVE predicate count instructions (predicated)
+    def svePredCountPredInst(name, Name, opClass, types):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        int count = 0;
+        for (unsigned i = 0; i < eCount; i++) {
+            if (POp1_x[i] && GpOp_x[i]) {
+                count++;
+            }
+        }
+        XDest = count;
+        '''
+        iop = InstObjParams(name, 'Sve' + Name, 'SvePredCountPredOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SvePredCountPredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type, 'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definition for SVE Index generation instructions
+    def sveIndex(fmt):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());'''
+        if fmt == IndexFormat.ImmReg or fmt == IndexFormat.ImmImm:
+            code += '''
+        const Element& srcElem1 = imm1;'''
+        if fmt == IndexFormat.RegImm or fmt == IndexFormat.RegReg:
+            code += '''
+        const Element& srcElem1 = XOp1;'''
+        if fmt == IndexFormat.RegImm or fmt == IndexFormat.ImmImm:
+            code += '''
+        const Element& srcElem2 = imm2;'''
+        if fmt == IndexFormat.ImmReg or fmt == IndexFormat.RegReg:
+            code += '''
+        const Element& srcElem2 = XOp2;'''
+        code +='''
+        for (unsigned i = 0; i < eCount; i++) {
+            AA64FpDest_x[i] = srcElem1 + i * srcElem2;
+        }'''
+        iop = InstObjParams('index', 'SveIndex'+fmt, 'SveIndex'+fmt+'Op',
+            {'code': code, 'op_class': 'SimdAluOp'})
+        if fmt == IndexFormat.ImmImm:
+            header_output += SveIndexIIOpDeclare.subst(iop)
+        elif fmt == IndexFormat.ImmReg:
+            header_output += SveIndexIROpDeclare.subst(iop)
+        elif fmt == IndexFormat.RegImm:
+            header_output += SveIndexRIOpDeclare.subst(iop)
+        elif fmt == IndexFormat.RegReg:
+            header_output += SveIndexRROpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in ['int8_t', 'int16_t', 'int32_t', 'int64_t']:
+            substDict = {'targs': type, 'class_name': 'SveIndex'+fmt}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for widening unary SVE instructions
+    # (always constructive)
+    def sveWidenUnaryInst(name, Name, opClass, types, op,
+                          predType=PredType.NONE, decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<DElement>(
+                xc->tcBase());
+        for (unsigned i = 0; i < eCount; i++) {
+            SElement srcElem1 = AA64FpOp1_xd[i];
+            DElement destElem = 0;'''
+        if predType != PredType.NONE:
+            code += '''
+            if (GpOp_xd[i]) {
+                %(op)s
+            } else {
+                destElem = %(dest_elem)s;
+            }''' % {'op': op,
+                    'dest_elem': 'AA64FpDestMerge_xd[i]'
+                                 if predType == PredType.MERGE
+                                 else '0'}
+        else:
+            code += '''
+            %(op)s''' % {'op': op}
+        code += '''
+            AA64FpDest_xd[i] = destElem;
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name,
+                            'SveUnaryPredOp' if predType != PredType.NONE
+                            else 'SveUnaryUnpredOp',
+                            {'code': code, 'op_class': opClass}, [])
+        if predType != PredType.NONE:
+            header_output += SveWideningUnaryPredOpDeclare.subst(iop)
+        else:
+            header_output += SveWideningUnaryUnpredOpDeclare.subst(iop)
+        exec_output += SveWideningOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for unary SVE instructions (always constructive)
+    def sveUnaryInst(name, Name, opClass, types, op, predType=PredType.NONE,
+                     srcRegType=SrcRegType.Vector, decoder='Generic'):
+        global header_output, exec_output, decoders
+        op1 = ('AA64FpOp1_x[i]' if srcRegType == SrcRegType.Vector
+               else 'XOp1' if srcRegType == SrcRegType.Scalar
+               else 'AA64FpOp1_x[0]')
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        for (unsigned i = 0; i < eCount; i++) {
+            Element srcElem1 = %s;
+            Element destElem = 0;''' % op1
+        if predType != PredType.NONE:
+            code += '''
+            if (GpOp_x[i]) {
+                %(op)s
+            } else {
+                destElem = %(dest_elem)s;
+            }''' % {'op': op,
+                    'dest_elem': 'AA64FpDestMerge_x[i]'
+                                 if predType == PredType.MERGE
+                                 else '0'}
+        else:
+            code += '''
+            %(op)s''' % {'op': op}
+        code += '''
+            AA64FpDest_x[i] = destElem;
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name,
+                            'SveUnaryPredOp' if predType != PredType.NONE
+                            else 'SveUnaryUnpredOp',
+                            {'code': code, 'op_class': opClass}, [])
+        if predType != PredType.NONE:
+            header_output += SveUnaryPredOpDeclare.subst(iop)
+        else:
+            header_output += SveUnaryUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for SVE floating-point conversions (always
+    # unary, constructive, merging
+    def sveCvtInst(name, Name, opClass, types, op, direction=CvtDir.Narrow,
+                   decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<%(bigElemType)s>(
+                xc->tcBase());
+        for (unsigned i = 0; i < eCount; i++) {
+            SElement srcElem1 = AA64FpOp1_x%(bigElemSuffix)s[i] &
+                    mask(sizeof(SElement) * 8);
+            DElement destElem = 0;
+            if (GpOp_x%(bigElemSuffix)s[i]) {
+                %(op)s
+                AA64FpDest_x%(bigElemSuffix)s[i] = destElem;
+            } else {
+                AA64FpDest_x%(bigElemSuffix)s[i] =
+                        AA64FpDestMerge_x%(bigElemSuffix)s[i];
+            }
+        }
+        ''' % {'op': op,
+               'bigElemType': 'SElement' if direction == CvtDir.Narrow
+                                         else 'DElement',
+               'bigElemSuffix': 's' if direction == CvtDir.Narrow else 'd'}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveUnaryPredOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveWideningUnaryPredOpDeclare.subst(iop)
+        exec_output += SveWideningOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for associative SVE reductions
+    def sveAssocReducInst(name, Name, opClass, types, op, identity,
+                          decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecRegContainer tmpVecC;
+        auto auxOp1 = tmpVecC.as<Element>();
+        for (unsigned i = 0; i < eCount; ++i) {
+            auxOp1[i] = AA64FpOp1_x[i];
+        }
+        Element destElem = %(identity)s;
+        for (unsigned i = 0; i < eCount; i++) {
+            AA64FpDest_x[i] = 0;  // zero upper part
+            if (GpOp_x[i]) {
+                const Element& srcElem1 = auxOp1[i];
+                %(op)s
+            }
+        }
+        AA64FpDest_x[0] = destElem;
+        ''' % {'op': op, 'identity': identity}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveReducOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveReducOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for widening associative SVE reductions
+    def sveWideningAssocReducInst(name, Name, opClass, types, op, identity,
+                                  decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<SElement>(
+                xc->tcBase());
+        unsigned eWideCount = ArmStaticInst::getCurSveVecLen<DElement>(
+                xc->tcBase());
+        DElement destElem = %(identity)s;
+        for (unsigned i = 0; i < eCount; i++) {
+            if (GpOp_xs[i]) {
+                DElement srcElem1 = AA64FpOp1_xs[i];
+                %(op)s
+            }
+        }
+        AA64FpDest_xd[0] = destElem;
+        for (int i = 1; i < eWideCount; i++) {
+            AA64FpDest_xd[i] = 0;
+        }
+        ''' % {'op': op, 'identity': identity}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveReducOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveWideningReducOpDeclare.subst(iop)
+        exec_output += SveWideningOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for non-associative SVE reductions
+    def sveNonAssocReducInst(name, Name, opClass, types, op, identity,
+                             decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecRegContainer tmpVecC;
+        auto tmpVec = tmpVecC.as<Element>();
+        int ePow2Count = 1;
+        while (ePow2Count < eCount) {
+            ePow2Count *= 2;
+        }
+
+        for (unsigned i = 0; i < ePow2Count; i++) {
+            if (i < eCount && GpOp_x[i]) {
+                tmpVec[i] = AA64FpOp1_x[i];
+            } else {
+                tmpVec[i] = %(identity)s;
+            }
+        }
+
+        unsigned n = ePow2Count;
+        while (n > 1) {
+            unsigned max = n;
+            n = 0;
+            for (unsigned i = 0; i < max; i += 2) {
+                Element srcElem1 = tmpVec[i];
+                Element srcElem2 = tmpVec[i + 1];
+                Element destElem = 0;
+                %(op)s
+                tmpVec[n] = destElem;
+                n++;
+            }
+        }
+        AA64FpDest_x[0] = tmpVec[0];
+        for (unsigned i = 1; i < eCount; i++) {
+            AA64FpDest_x[i] = 0;  // zero upper part
+        }
+        ''' % {'op': op, 'identity': identity}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveReducOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveReducOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for binary SVE instructions with immediate operand
+    def sveBinImmInst(name, Name, opClass, types, op, predType=PredType.NONE,
+                      decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        for (unsigned i = 0; i < eCount; i++) {'''
+        if predType != PredType.NONE:
+            code += '''
+            const Element& srcElem1 = %s;''' % (
+                'AA64FpDestMerge_x[i]' if predType == PredType.MERGE else '0')
+        else:
+            code += '''
+            const Element& srcElem1 = AA64FpOp1_x[i];'''
+        code += '''
+            Element srcElem2 = imm;
+            Element destElem = 0;'''
+        if predType != PredType.NONE:
+            code += '''
+            if (GpOp_x[i]) {
+                %(op)s
+            } else {
+                destElem = %(dest_elem)s;
+            }''' % {'op': op,
+                    'dest_elem': 'AA64FpDestMerge_x[i]'
+                                 if predType == PredType.MERGE else '0'}
+        else:
+            code += '''
+            %(op)s''' % {'op': op}
+        code += '''
+            AA64FpDest_x[i] = destElem;
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name,
+                'SveBinImmPredOp' if predType != PredType.NONE
+                else 'SveBinImmUnpredConstrOp',
+                {'code': code, 'op_class': opClass}, [])
+        if predType != PredType.NONE:
+            header_output += SveBinImmPredOpDeclare.subst(iop)
+        else:
+            header_output += SveBinImmUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for unary and binary SVE instructions with wide
+    # immediate operand
+    def sveWideImmInst(name, Name, opClass, types, op, predType=PredType.NONE,
+                       isUnary=False, decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        for (unsigned i = 0; i < eCount; i++) {'''
+        # TODO: handle unsigned-to-signed conversion properly...
+        if isUnary:
+            code += '''
+            Element srcElem1 = imm;'''
+        else:
+            code += '''
+            const Element& srcElem1 = AA64FpDestMerge_x[i];
+            Element srcElem2 = imm;'''
+        code += '''
+            Element destElem = 0;'''
+        if predType != PredType.NONE:
+            code += '''
+            if (GpOp_x[i]) {
+                %(op)s
+            } else {
+                destElem = %(dest_elem)s;
+            }''' % {'op': op,
+                    'dest_elem': 'AA64FpDestMerge_x[i]'
+                                 if predType == PredType.MERGE else '0'}
+        else:
+            code += '''
+            %(op)s''' % {'op': op}
+        code += '''
+            AA64FpDest_x[i] = destElem;
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name,
+                'Sve%sWideImm%sOp' % (
+                    'Unary' if isUnary else 'Bin',
+                    'Unpred' if predType == PredType.NONE else 'Pred'),
+                {'code': code, 'op_class': opClass}, [])
+        if predType == PredType.NONE:
+            header_output += SveWideImmUnpredOpDeclare.subst(iop)
+        else:
+            header_output += SveWideImmPredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for shift SVE instructions with wide elements
+    def sveShiftByWideElemsInst(name, Name, opClass, types, op,
+                                predType=PredType.NONE, decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecRegContainer tmpVecC;
+        auto auxOp2 = tmpVecC.as<Element>();
+        for (unsigned i = 0; i < eCount; i++) {
+            auxOp2[i] = AA64FpOp2_ud[i];
+        }
+        for (unsigned i = 0; i < eCount; i++) {'''
+        if predType != PredType.NONE:
+            code += '''
+            const Element& srcElem1 = AA64FpDestMerge_x[i];'''
+        else:
+            code += '''
+            const Element& srcElem1 = AA64FpOp1_x[i];'''
+        code += '''
+            const auto& srcElem2 = auxOp2[
+                    (i * sizeof(Element) * 8) / 64];
+            Element destElem = 0;'''
+        if predType != PredType.NONE:
+            code += '''
+            if (GpOp_x[i]) {
+                %(op)s
+            } else {
+                destElem = %(dest_elem)s;
+            }''' % {'op': op,
+                    'dest_elem': 'AA64FpDestMerge_x[i]'
+                                 if predType == PredType.MERGE else '0'}
+        else:
+            code += '''
+            %(op)s''' % {'op': op}
+        code += '''
+            AA64FpDest_x[i] = destElem;
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name,
+                            'SveBinDestrPredOp' if predType != PredType.NONE
+                            else 'SveBinUnpredOp',
+                            {'code': code, 'op_class': opClass}, [])
+        if predType != PredType.NONE:
+            header_output += SveBinDestrPredOpDeclare.subst(iop)
+        else:
+            header_output += SveBinUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for binary indexed SVE instructions
+    # (always unpredicated)
+    def sveBinIdxInst(name, Name, opClass, types, op, decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+
+        // Number of elements in a 128 bit segment
+        constexpr unsigned ePerSegment = 128 / sizeof(Element);
+
+        '''
+
+        code += '''
+        for (unsigned i = 0; i < eCount; i++) {
+                const auto segmentBase = i - i % ePerSegment;
+                const auto segmentIdx = segmentBase + index;
+
+                const Element& srcElem1 = AA64FpOp1_x[i];
+                const Element& srcElem2 = AA64FpOp2_x[segmentIdx];
+                Element destElem = 0;
+
+        '''
+
+        code += '''
+        %(op)s
+        AA64FpDest_x[i] = destElem;
+        }
+        ''' % {'op': op}
+
+        baseClass = 'SveBinIdxUnpredOp'
+
+        iop = InstObjParams(name, 'Sve' + Name, baseClass,
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveBinIdxUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for binary SVE instructions
+    def sveBinInst(name, Name, opClass, types, op, predType=PredType.NONE,
+                   isDestructive=False, customIterCode=None,
+                   decoder='Generic'):
+        assert not (predType in (PredType.NONE, PredType.SELECT) and
+                    isDestructive)
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());'''
+        if customIterCode is None:
+            code += '''
+        for (unsigned i = 0; i < eCount; i++) {'''
+            if predType == PredType.MERGE:
+                code += '''
+                const Element& srcElem1 = AA64FpDestMerge_x[i];'''
+            else:
+                code += '''
+                const Element& srcElem1 = AA64FpOp1_x[i];'''
+            code += '''
+                const Element& srcElem2 = AA64FpOp2_x[i];
+                Element destElem = 0;'''
+            if predType != PredType.NONE:
+                code += '''
+            if (GpOp_x[i]) {
+                %(op)s
+            } else {
+                destElem = %(dest_elem)s;
+            }''' % {'op': op,
+                    'dest_elem':
+                        'AA64FpDestMerge_x[i]' if predType == PredType.MERGE
+                        else '0' if predType == PredType.ZERO
+                        else 'srcElem2'}
+            else:
+                code += '''
+            %(op)s''' % {'op': op}
+            code += '''
+            AA64FpDest_x[i] = destElem;
+        }'''
+        else:
+            code += customIterCode
+        if predType == PredType.NONE:
+            baseClass = 'SveBinUnpredOp'
+        elif isDestructive:
+            baseClass = 'SveBinDestrPredOp'
+        else:
+            baseClass = 'SveBinConstrPredOp'
+        iop = InstObjParams(name, 'Sve' + Name, baseClass,
+                            {'code': code, 'op_class': opClass}, [])
+        if predType == PredType.NONE:
+            header_output += SveBinUnpredOpDeclare.subst(iop)
+        elif isDestructive:
+            header_output += SveBinDestrPredOpDeclare.subst(iop)
+        else:
+            header_output += SveBinConstrPredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for predicate logical instructions
+    def svePredLogicalInst(name, Name, opClass, types, op,
+                           predType=PredType.ZERO, isFlagSetting=False,
+                           decoder='Generic'):
+        global header_output, exec_output, decoders
+        assert predType in (PredType.ZERO, PredType.SELECT)
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecPredRegContainer tmpPredC;
+        auto auxGpOp = tmpPredC.as<Element>();
+        for (unsigned i = 0; i < eCount; i++) {
+            auxGpOp[i] = GpOp_x[i];
+        }
+        for (unsigned i = 0; i < eCount; i++) {
+            bool srcElem1 = POp1_x[i];
+            bool srcElem2 = POp2_x[i];
+            bool destElem = false;
+            if (auxGpOp[i]) {
+                %(op)s
+            } else {
+                destElem = %(dest_elem)s;
+            }
+            PDest_x[i] = destElem;
+        }''' % {'op': op,
+                'dest_elem': 'false' if predType == PredType.ZERO
+                              else 'srcElem2'}
+        extraPrologCode = ''
+        if isFlagSetting:
+            code += '''
+        CondCodesNZ = (destPred.firstActive(auxGpOp, eCount) << 1) |
+                      destPred.noneActive(auxGpOp, eCount);
+        CondCodesC = !destPred.lastActive(auxGpOp, eCount);
+        CondCodesV = 0;'''
+            extraPrologCode += '''
+        auto& destPred = PDest;'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SvePredLogicalOp',
+                            {'code': code, 'op_class': opClass}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SvePredLogicalOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for predicate permute instructions
+    def svePredBinPermInst(name, Name, opClass, types, iterCode,
+                           decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());'''
+        code += iterCode
+        iop = InstObjParams(name, 'Sve' + Name, 'SvePredBinPermOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveBinUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for SVE compare instructions
+    # NOTE: compares are all predicated zeroing
+    def sveCmpInst(name, Name, opClass, types, op, isImm=False,
+                   decoder='Generic'):
+        global header_output, exec_output, decoders
+        extraPrologCode = '''
+        auto& destPred = PDest;'''
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecPredRegContainer tmpPredC;
+        auto tmpPred = tmpPredC.as<Element>();
+        for (unsigned i = 0; i < eCount; ++i)
+            tmpPred[i] = GpOp_x[i];
+        destPred.reset();
+        for (unsigned i = 0; i < eCount; i++) {
+            const Element& srcElem1 = AA64FpOp1_x[i];
+            %(src_elem_2_ty)s srcElem2 __attribute__((unused)) =
+                                                            %(src_elem_2)s;
+            bool destElem = false;
+            if (tmpPred[i]) {
+                %(op)s
+            } else {
+                destElem = false;
+            }
+            PDest_x[i] = destElem;
+        }''' % {'op': op,
+                'src_elem_2_ty': 'Element' if isImm else 'const Element&',
+                'src_elem_2': 'imm' if isImm else 'AA64FpOp2_x[i]'}
+        iop = InstObjParams(name, 'Sve' + Name,
+                            'SveCmpImmOp' if isImm else 'SveCmpOp',
+                            {'code': code, 'op_class': opClass}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        if isImm:
+            header_output += SveCmpImmOpDeclare.subst(iop)
+        else:
+            header_output += SveCmpOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for ternary SVE intructions (always predicated -
+    # merging)
+    def sveTerInst(name, Name, opClass, types, op, decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        for (unsigned i = 0; i < eCount; i++) {
+            const Element& srcElem1 = AA64FpOp1_x[i];
+            const Element& srcElem2 = AA64FpOp2_x[i];
+            Element destElem = AA64FpDestMerge_x[i];
+            if (GpOp_x[i]) {
+                %(op)s
+            }
+            AA64FpDest_x[i] = destElem;
+        }''' % {'op': op}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveTerPredOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveTerPredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for ternary SVE instructions with indexed operand
+    def sveTerIdxInst(name, Name, opClass, types, op, decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+
+        // Number of elements in a 128 bit segment
+        constexpr unsigned ePerSegment = 128 / sizeof(Element);
+
+        for (unsigned i = 0; i < eCount; i++) {
+            const auto segmentBase = i - i % ePerSegment;
+            const auto segmentIdx = segmentBase + index;
+
+            const Element& srcElem1 = AA64FpOp1_x[i];
+            const Element& srcElem2 = AA64FpOp2_x[segmentIdx];
+            Element destElem = AA64FpDestMerge_x[i];
+        '''
+
+        code += '''
+            %(op)s
+            AA64FpDest_x[i] = destElem;
+        }''' % {'op': op}
+
+        iop = InstObjParams(name, 'Sve' + Name, 'SveBinIdxUnpredOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveBinIdxUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for ternary SVE intructions with immediate operand
+    # (always unpredicated)
+    def sveTerImmInst(name, Name, opClass, types, op, decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        for (unsigned i = 0; i < eCount; i++) {
+            const Element& srcElem2 = AA64FpOp2_x[i];
+            Element srcElem3 = imm;
+            Element destElem = AA64FpDestMerge_x[i];
+            %(op)s
+            AA64FpDest_x[i] = destElem;
+        }''' % {'op': op}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveTerImmUnpredOp',
+                            {'code': code, 'op_class': opClass}, [])
+        header_output += SveTerImmUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generates definitions for PTRUE and PTRUES instructions.
+    def svePtrueInst(name, Name, opClass, types, isFlagSetting=False,
+                     decoder='Generic'):
+        global header_output, exec_output, decoders
+        extraPrologCode = '''
+        auto& destPred = PDest;'''
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        unsigned predCount = sveDecodePredCount(imm, eCount);
+        destPred.reset();
+        for (unsigned i = 0; i < eCount; i++) {
+            PDest_x[i] = (i < predCount);
+        }'''
+        if isFlagSetting:
+            code += '''
+        CondCodesNZ = (destPred.firstActive(destPred, eCount) << 1) |
+                      destPred.noneActive(destPred, eCount);
+        CondCodesC = !destPred.lastActive(destPred, eCount);
+        CondCodesV = 0;'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SvePtrueOp',
+                            {'code': code, 'op_class': opClass}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SvePtrueOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definitions for integer CMP<cc> instructions
+    def sveIntCmpInst(name, Name, opClass, types, op, wideop = False,
+            decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        signed = 'int8_t' in types
+        srcType = 'Element'
+        op2Suffix = 'x'
+        if wideop:
+            srcType = 'int64_t' if signed else 'uint64_t'
+            op2Suffix = 'sd' if signed else 'ud'
+        extraPrologCode = '''
+        auto& destPred = PDest;'''
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecPredRegContainer tmpPredC;
+        auto tmpPred = tmpPredC.as<Element>();
+        for (unsigned i = 0; i < eCount; ++i)
+            tmpPred[i] = GpOp_x[i];
+        destPred.reset();
+        for (unsigned i = 0; i < eCount; ++i) {
+            %(srcType)s srcElem1 = (%(srcType)s) AA64FpOp1_x[i];
+            %(srcType)s srcElem2 = AA64FpOp2_%(op2Suffix)s[%(op2Index)s];
+            bool destElem = false;
+            if (tmpPred[i]) {
+                %(op)s
+            }
+            PDest_x[i] = destElem;
+        }
+        CondCodesNZ = (destPred.firstActive(tmpPred, eCount) << 1) |
+                      destPred.noneActive(tmpPred, eCount);
+        CondCodesC = !destPred.lastActive(tmpPred, eCount);
+        CondCodesV = 0;''' % {
+                'op': op,
+                'srcType': srcType,
+                'op2Suffix': op2Suffix,
+                'op2Index': '(i * sizeof(Element)) / 8' if wideop else 'i'
+                }
+        iop = InstObjParams(name, 'Sve' + Name, 'SveIntCmpOp',
+                            {
+                                'code': code,
+                                'op_class': opClass,
+                                'op2IsWide': 'true' if wideop else 'false',
+                                }, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SveIntCmpOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definitions for integer CMP<cc> instructions (with immediate)
+    def sveIntCmpImmInst(name, Name, opClass, types, op, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        extraPrologCode = '''
+        auto& destPred = PDest;'''
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecPredRegContainer tmpPredC;
+        auto tmpPred = tmpPredC.as<Element>();
+        for (unsigned i = 0; i < eCount; ++i)
+            tmpPred[i] = GpOp_x[i];
+        destPred.reset();
+        for (unsigned i = 0; i < eCount; ++i) {
+            Element srcElem1 = AA64FpOp1_x[i];
+            Element srcElem2 = static_cast<Element>(imm);
+            bool destElem = false;
+            if (tmpPred[i]) {
+                %(op)s
+            }
+            PDest_x[i] = destElem;
+        }
+        CondCodesNZ = (destPred.firstActive(tmpPred, eCount) << 1) |
+                      destPred.noneActive(tmpPred, eCount);
+        CondCodesC = !destPred.lastActive(tmpPred, eCount);
+        CondCodesV = 0;'''%{'op': op}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveIntCmpImmOp',
+                            {'code': code, 'op_class': opClass,}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SveIntCmpImmOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definitions for SVE element count instructions
+    def sveElemCountInst(name, Name, opClass, types, op,
+            destType = DestType.Scalar, dstIs32b = False,
+            dstAcc = True, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        unsigned count = sveDecodePredCount(pattern, eCount);
+        '''
+        if destType == DestType.Vector:
+            code += '''
+        for (unsigned i = 0; i < eCount; ++i) {
+            Element srcElem1 = AA64FpDestMerge_x[i];
+            Element destElem = 0;
+            %(op)s
+            AA64FpDest_x[i] = destElem;
+        }'''%{'op': op}
+        else:
+            if 'uint16_t' in types:
+                if dstIs32b:
+                    dstType = 'uint32_t'
+                else:
+                    dstType = 'uint64_t'
+            else:
+                if dstIs32b:
+                    dstType = 'int32_t'
+                else:
+                    dstType = 'int64_t'
+            if dstAcc:
+                code += '''
+        %(dstType)s srcElem1 = XDest;
+                '''%{'dstType': dstType}
+            code += '''
+        %(dstType)s destElem = 0;
+        %(op)s;
+        XDest = destElem;
+        '''%{'op': op, 'dstType': dstType}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveElemCountOp',
+                {'code': code, 'op_class': opClass, 'dstIsVec': destType,
+                 'dstIs32b': 'true' if dstIs32b else 'false'}, [])
+        header_output += SveElemCountOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                    'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict);
+
+    def svePartBrkInst(name, Name, opClass, isFlagSetting, predType, whenBrk,
+            decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<uint8_t>(
+                xc->tcBase());
+        bool dobreak = false;
+        TheISA::VecPredRegContainer tmpPredC;
+        auto auxGpOp = tmpPredC.as<uint8_t>();
+        for (unsigned i = 0; i < eCount; ++i) {
+            auxGpOp[i] = GpOp_ub[i];
+        }
+        for (unsigned i = 0; i < eCount; ++i) {
+            bool element = POp1_ub[i] == 1;
+            if (auxGpOp[i]) {'''
+        breakCode = '''
+                dobreak = dobreak || element;'''
+        if whenBrk == Break.Before:
+            code += breakCode
+        code += '''
+                PDest_ub[i] = !dobreak;'''
+        if whenBrk == Break.After:
+            code += breakCode
+        code += '''
+            }'''
+        if predType == PredType.ZERO:
+            code += ''' else {
+                PDest_ub[i] = 0;
+            }'''
+        elif predType == PredType.MERGE:
+            code += ''' else {
+                PDest_ub[i] = PDestMerge_ub[i];
+            }'''
+        code += '''
+        }'''
+        extraPrologCode = ''
+        if isFlagSetting:
+            code += '''
+        CondCodesNZ = (destPred.firstActive(auxGpOp, eCount) << 1) |
+                      destPred.noneActive(auxGpOp, eCount);
+        CondCodesC = !destPred.lastActive(auxGpOp, eCount);
+        CondCodesV = 0;'''
+            extraPrologCode += '''
+        auto& destPred = PDest;'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SvePartBrkOp',
+                            {'code': code, 'op_class': opClass,
+                            'isMerging': 'true' if predType == PredType.MERGE
+                                                else 'false'}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SvePartBrkOpDeclare.subst(iop)
+        exec_output += SveNonTemplatedOpExecute.subst(iop)
+
+    def svePartBrkPropPrevInst(name, Name, opClass, isFlagSetting, whenBrk,
+            decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<uint8_t>(
+                xc->tcBase());
+        bool last = POp1_ub.lastActive(GpOp_ub, eCount);
+        TheISA::VecPredRegContainer tmpPredC;
+        auto auxGpOp = tmpPredC.as<uint8_t>();
+        for (unsigned i = 0; i < eCount; ++i) {
+            auxGpOp[i] = GpOp_ub[i];
+        }
+        for (unsigned i = 0; i < eCount; ++i) {
+            if (auxGpOp[i]) {'''
+        breakCode = '''
+                last = last && (POp2_ub[i] == 0);'''
+        if whenBrk == Break.Before:
+            code += breakCode
+        code += '''
+                PDest_ub[i] = last;'''
+        if whenBrk == Break.After:
+            code += breakCode
+        code += '''
+            } else {
+                PDest_ub[i] = 0;
+            }
+        }'''
+        extraPrologCode = ''
+        if isFlagSetting:
+            code += '''
+        CondCodesNZ = (destPred.firstActive(auxGpOp, eCount) << 1) |
+                      destPred.noneActive(auxGpOp, eCount);
+        CondCodesC = !destPred.lastActive(auxGpOp, eCount);
+        CondCodesV = 0;'''
+            extraPrologCode += '''
+        auto& destPred = PDest;'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SvePartBrkPropOp',
+                            {'code': code, 'op_class': opClass}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SvePartBrkPropOpDeclare.subst(iop)
+        exec_output += SveNonTemplatedOpExecute.subst(iop)
+
+    def svePartBrkPropNextInst(name, Name, opClass, isFlagSetting,
+            decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<uint8_t>(
+                xc->tcBase());
+        bool last = POp1_ub.lastActive(GpOp_ub, eCount);
+        for (unsigned i = 0; i < eCount; i++) {
+            if (!last) {
+                PDest_ub[i] = 0;
+            } else {
+                PDest_ub[i] = PDestMerge_ub[i];
+            }
+        }'''
+        extraPrologCode = ''
+        if isFlagSetting:
+            code += '''
+        VecPredRegT<uint8_t, MaxSveVecLenInBytes, false, false>::Container c;
+        VecPredRegT<uint8_t, MaxSveVecLenInBytes, false, false> predOnes(c);
+        for (unsigned i = 0; i < eCount; i++) {
+            predOnes[i] = 1;
+        }
+        CondCodesNZ = (destPred.firstActive(predOnes, eCount) << 1) |
+                      destPred.noneActive(predOnes, eCount);
+        CondCodesC = !destPred.lastActive(predOnes, eCount);
+        CondCodesV = 0;'''
+            extraPrologCode += '''
+        auto& destPred = PDest;'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SvePartBrkPropOp',
+                            {'code': code, 'op_class': opClass}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SvePartBrkPropOpDeclare.subst(iop)
+        exec_output += SveNonTemplatedOpExecute.subst(iop)
+
+    # Generate definitions for scalar select instructions
+    def sveSelectInst(name, Name, opClass, types, op, isCond,
+            destType = DstRegType.Scalar, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        int last;
+        for (last = eCount - 1; last >= 0; --last) {
+            if (GpOp_x[last]) {
+                break;
+            }
+        }
+        '''
+        if isCond:
+            code += '''
+        if (last >= 0) {'''
+        code += '''
+            Element destElem;
+            %(op)s'''%{'op': op}
+        if destType == DstRegType.Vector:
+            code += '''
+            for (unsigned i = 0; i < eCount; ++i)
+                AA64FpDest_x[i] = destElem;'''
+        elif destType == DstRegType.Scalar:
+            code += '''
+            XDest = destElem;'''
+        elif destType == DstRegType.SimdFpScalar:
+            code += '''
+            AA64FpDest_x[0] = destElem;'''
+        if isCond:
+            code += '''
+        }'''
+            if destType == DstRegType.Scalar:
+                code += ''' else {
+            XDest = (Element) XDest;
+        }'''
+            elif destType == DstRegType.Vector:
+                code += ''' else {
+            for (unsigned i = 0; i < eCount; ++i)
+                AA64FpDest_x[i] = AA64FpDestMerge_x[i];
+        }'''
+            elif destType == DstRegType.SimdFpScalar:
+                code += ''' else {
+            AA64FpDest_x[0] = AA64FpDestMerge_x[0];
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveSelectOp',
+                            {'code': code, 'op_class': opClass,
+                             'isCond': 'true' if isCond else 'false',
+                             'isScalar': 'true'
+                             if destType == DstRegType.Scalar else 'false',
+                             'isSimdFp': 'true'
+                             if destType == DstRegType.SimdFpScalar
+                             else 'false'},
+                            [])
+        header_output += SveSelectOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definitions for PNEXT (find next active predicate)
+    # instructions
+    def svePNextInst(name, Name, opClass, types, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecPredRegContainer tmpPredC;
+        auto auxGpOp = tmpPredC.as<Element>();
+        for (unsigned i = 0; i < eCount; ++i) {
+            auxGpOp[i] = GpOp_x[i];
+        }
+        int last;
+        for (last = eCount - 1; last >= 0; --last) {
+            if (POp1_x[last]) {
+                break;
+            }
+        }
+        int next = last + 1;
+        while (next < eCount && GpOp_x[next] == 0) {
+            next++;
+        }
+        destPred.reset();
+        if (next < eCount) {
+            PDest_x[next] = 1;
+        }
+        CondCodesNZ = (destPred.firstActive(auxGpOp, eCount) << 1) |
+                       destPred.noneActive(auxGpOp, eCount);
+        CondCodesC = !destPred.lastActive(auxGpOp, eCount);
+        CondCodesV = 0;'''
+        extraPrologCode = '''
+        auto& destPred = PDest;'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveUnaryPredPredOp',
+                {'code': code, 'op_class': opClass}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SveUnaryPredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definitions for PFIRST (set first active predicate)
+    # instructions
+    def svePFirstInst(name, Name, opClass, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecPredRegContainer tmpPredC;
+        auto auxGpOp = tmpPredC.as<Element>();
+        for (unsigned i = 0; i < eCount; ++i)
+            auxGpOp[i] = GpOp_x[i];
+        int first = -1;
+        for (int i = 0; i < eCount; ++i) {
+            if (auxGpOp[i] && first == -1) {
+                first = i;
+            }
+        }
+        for (int i = 0; i < eCount; ++i) {
+            PDest_x[i] = PDestMerge_x[i];
+        }
+        if (first >= 0) {
+            PDest_x[first] = 1;
+        }
+        CondCodesNZ = (destPred.firstActive(auxGpOp, eCount) << 1) |
+                       destPred.noneActive(auxGpOp, eCount);
+        CondCodesC = !destPred.lastActive(auxGpOp, eCount);
+        CondCodesV = 0;'''
+        extraPrologCode = '''
+        auto& destPred = PDest;'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveUnaryPredPredOp',
+                {'code': code, 'op_class': opClass}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SveUnaryPredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        substDict = {'targs' : 'uint8_t',
+                     'class_name' : 'Sve' + Name}
+        exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definitions for SVE TBL instructions
+    def sveTblInst(name, Name, opClass, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        for (int i = 0; i < eCount; ++i) {
+            Element idx = AA64FpOp2_x[i];
+            Element val;
+            if (idx < eCount) {
+                val = AA64FpOp1_x[idx];
+            } else {
+                val = 0;
+            }
+            AA64FpDest_x[i] = val;
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveTblOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SveBinUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in unsignedTypes:
+            substDict = {'targs' : type,
+                         'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definitions for SVE Unpack instructions
+    def sveUnpackInst(name, Name, opClass, sdtypes, unpackHalf,
+                      regType, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        extraPrologCode = '''
+        auto& destPred = PDest;'''
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<DElement>(
+                xc->tcBase());'''
+        if unpackHalf == Unpack.Low:
+            if regType == SrcRegType.Predicate:
+                code += '''
+        TheISA::VecPredRegContainer tmpPredC;
+        auto auxPOp1 = tmpPredC.as<SElement>();
+        for (int i = 0; i < eCount; ++i) {
+            auxPOp1[i] = POp1_xs[i];
+        }'''
+            else:
+                code += '''
+        TheISA::VecRegContainer tmpVecC;
+        auto auxOp1 = tmpVecC.as<SElement>();
+        for (int i = 0; i < eCount; ++i) {
+            auxOp1[i] = AA64FpOp1_xs[i];
+        }'''
+        code += '''
+        for (int i = 0; i < eCount; ++i) {'''
+        if regType == SrcRegType.Predicate:
+            if unpackHalf == Unpack.High:
+                code +='''
+            const SElement& srcElem1 = POp1_xs[i + eCount];'''
+            else:
+                code +='''
+            const SElement& srcElem1 = auxPOp1[i];'''
+            code += '''
+            destPred.set_raw(i, 0);
+            PDest_xd[i] = srcElem1;'''
+        else:
+            if unpackHalf == Unpack.High:
+                code +='''
+            const SElement& srcElem1 = AA64FpOp1_xs[i + eCount];'''
+            else:
+                code +='''
+            const SElement& srcElem1 = auxOp1[i];'''
+            code += '''
+            AA64FpDest_xd[i] = static_cast<DElement>(srcElem1);'''
+        code += '''
+        }
+        '''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveUnpackOp',
+                {'code': code, 'op_class': opClass}, [])
+        if regType == SrcRegType.Predicate:
+            iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SveUnpackOpDeclare.subst(iop)
+        exec_output += SveWideningOpExecute.subst(iop)
+        for srcType, dstType in sdtypes:
+            substDict = {'targs': srcType + ', ' + dstType,
+                         'class_name': 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definition for SVE predicate test instructions
+    def svePredTestInst(name, Name, opClass, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<uint8_t>(
+                xc->tcBase());
+        CondCodesNZ = (POp1_ub.firstActive(GpOp_ub, eCount) << 1) |
+                       POp1_ub.noneActive(GpOp_ub, eCount);
+        CondCodesC = !POp1_ub.lastActive(GpOp_ub, eCount);
+        CondCodesV = 0;'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SvePredTestOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SvePredicateTestOpDeclare.subst(iop)
+        exec_output += SveNonTemplatedOpExecute.subst(iop)
+
+    # Generate definition for SVE predicate compact operations
+    def sveCompactInst(name, Name, opClass, types, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecRegContainer tmpVecC;
+        auto auxOp1 = tmpVecC.as<Element>();
+        for (unsigned i = 0; i < eCount; ++i) {
+            auxOp1[i] = AA64FpOp1_x[i];
+        }
+        unsigned x = 0;
+        for (unsigned i = 0; i < eCount; ++i) {
+            AA64FpDest_x[i] = 0;
+            if (GpOp_x[i]) {
+                AA64FpDest_x[x] = auxOp1[i];
+                x++;
+            }
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveUnaryPredOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SveUnaryPredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs': type, 'class_name': 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definition for unary SVE predicate instructions with implicit
+    # source operand (PFALSE, RDFFR(S))
+    def svePredUnaryWImplicitSrcInst(name, Name, opClass, op,
+            predType=PredType.NONE, isFlagSetting=False, decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + op
+        if isFlagSetting:
+            code += '''
+        CondCodesNZ = (destPred.firstActive(GpOp, eCount) << 1) |
+                      destPred.noneActive(GpOp, eCount);
+        CondCodesC = !destPred.lastActive(GpOp, eCount);
+        CondCodesV = 0;'''
+        extraPrologCode = '''
+        auto& destPred M5_VAR_USED = PDest;'''
+        baseClass = ('SvePredUnaryWImplicitSrcOp' if predType == PredType.NONE
+                     else 'SvePredUnaryWImplicitSrcPredOp')
+        iop = InstObjParams(name, 'Sve' + Name, baseClass,
+                {'code': code, 'op_class': opClass}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        if predType == PredType.NONE:
+            header_output += SvePredUnaryOpWImplicitSrcDeclare.subst(iop)
+        else:
+            header_output += SvePredUnaryPredOpWImplicitSrcDeclare.subst(iop)
+        exec_output += SveNonTemplatedOpExecute.subst(iop)
+
+    # Generate definition for SVE instructions writing to the FFR (SETFFR,
+    # WRFFR)
+    def svePredWriteFfrInst(name, Name, opClass, op, isSetFfr,
+            decoder='Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + op
+        extraPrologCode = '''
+        auto& destPred M5_VAR_USED = Ffr;'''
+        baseClass = ('SveWImplicitSrcDstOp' if isSetFfr
+                     else 'SvePredUnaryWImplicitDstOp')
+        iop = InstObjParams(name, 'Sve' + Name, baseClass,
+                {'code': code, 'op_class': opClass}, [])
+        iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        if isSetFfr:
+            header_output += SveOpWImplicitSrcDstDeclare.subst(iop)
+        else:
+            header_output += SvePredUnaryOpWImplicitDstDeclare.subst(iop)
+        exec_output += SveNonTemplatedOpExecute.subst(iop)
+
+    # Generate definition for SVE Ext instruction
+    def sveExtInst(name, Name, opClass, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecRegContainer tmpVecC;
+        auto auxOp1 = tmpVecC.as<Element>();
+        for (unsigned i = 0; i < eCount; ++i) {
+            auxOp1[i] = AA64FpOp1_x[i];
+        }
+        uint64_t pos = imm;
+        if (pos >= eCount)
+            pos = 0;
+        for (int i = 0; i < eCount; ++i, ++pos)
+        {
+            if (pos < eCount)
+                AA64FpDest_x[i] = AA64FpDestMerge_x[pos];
+            else
+                AA64FpDest_x[i] = auxOp1[pos-eCount];
+        }
+        '''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveBinImmUnpredDestrOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SveBinImmUnpredOpDeclare.subst(iop);
+        exec_output += SveOpExecute.subst(iop)
+        substDict = {'targs': 'uint8_t', 'class_name': 'Sve' + Name}
+        exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definition for SVE Slice instruction
+    def sveSpliceInst(name, Name, opClass, types, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        TheISA::VecRegContainer tmpVecC;
+        auto auxDest = tmpVecC.as<Element>();
+        int firstelem = -1, lastelem = -2;
+        for (int i = 0; i < eCount; ++i) {
+            if (GpOp_x[i]) {
+                lastelem = i;
+                if (firstelem < 0)
+                    firstelem = i;
+            }
+        }
+        int x = 0;
+        for (int i = firstelem; i <= lastelem; ++i, ++x) {
+            auxDest[x] = AA64FpDestMerge_x[i];
+        }
+        int remaining = eCount - x;
+        for (int i = 0; i < remaining; ++i, ++x) {
+            auxDest[x] = AA64FpOp2_x[i];
+        }
+        for (int i = 0; i < eCount; ++i) {
+            AA64FpDest_x[i] = auxDest[i];
+        }
+        '''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveBinDestrPredOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SveBinDestrPredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs': type, 'class_name': 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definition for SVE DUP (index) instruction
+    def sveDupIndexInst(name, Name, opClass, types, decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        Element srcElem1 = 0;
+        if (imm < eCount) {
+            srcElem1 = AA64FpOp1_x[imm];
+        }
+        for (int i = 0; i < eCount; ++i) {
+            AA64FpDest_x[i] = srcElem1;
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveBinImmIdxUnpredOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SveBinImmUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs': type, 'class_name': 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definition for SVE reverse elements instructions
+    def sveReverseElementsInst(name, Name, opClass, types,
+            srcType = SrcRegType.Vector, decoder = 'Generic'):
+        assert srcType in (SrcRegType.Vector, SrcRegType.Predicate)
+        global header_output, exec_output, decoders
+        extraPrologCode = '''
+        auto& destPred = PDest;'''
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());'''
+        if srcType == SrcRegType.Predicate:
+            code += '''
+        TheISA::VecPredRegContainer tmpPredC;
+        auto auxPOp1 = tmpPredC.as<Element>();
+        for (unsigned i = 0; i < eCount; ++i) {
+            uint8_t v = POp1_x.get_raw(i);
+            auxPOp1.set_raw(i, v);
+        }
+        PDest_x[0] = 0;'''
+        else:
+            code += '''
+        TheISA::VecRegContainer tmpRegC;
+        auto auxOp1 = tmpRegC.as<Element>();
+        for (unsigned i = 0; i < eCount; ++i) {
+            auxOp1[i] = AA64FpOp1_x[i];
+        }'''
+        code += '''
+        for (int i = 0; i < eCount; ++i) {'''
+        if srcType == SrcRegType.Vector:
+            code += '''
+            AA64FpDest_x[i] = auxOp1[eCount - i - 1];'''
+        else:
+            code += '''
+            destPred.set_raw(i, auxPOp1.get_raw(eCount - i - 1));'''
+        code += '''
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveUnaryUnpredOp',
+                {'code': code, 'op_class': opClass}, [])
+        if srcType == SrcRegType.Predicate:
+            iop.snippets['code'] = extraPrologCode + iop.snippets['code']
+        header_output += SveUnaryUnpredOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs': type, 'class_name': 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definition for shift & insert instructions
+    def sveShiftAndInsertInst(name, Name, opClass, types,
+            srcType = SrcRegType.Scalar, decoder = 'Generic'):
+        assert srcType in (SrcRegType.SimdFpScalar, SrcRegType.Scalar)
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());'''
+        if srcType == SrcRegType.Scalar:
+            code += '''
+            auto& srcElem1 = XOp1;'''
+        elif srcType == SrcRegType.SimdFpScalar:
+            code += '''
+            auto& srcElem1 = AA64FpOp1_x[0];'''
+        code += '''
+        for (int i = eCount - 1; i > 0; --i) {
+            AA64FpDest_x[i] = AA64FpDestMerge_x[i-1];
+        }
+        AA64FpDest_x[0] = srcElem1;'''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveUnarySca2VecUnpredOp',
+                {'code': code, 'op_class': opClass,
+                 'isSimdFp': 'true' if srcType == SrcRegType.SimdFpScalar
+                                  else 'false'}, [])
+        header_output += SveShiftAndInsertOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs': type, 'class_name': 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definition for DOT instructions
+    def sveDotInst(name, Name, opClass, types, isIndexed = True):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());
+        for (int i = 0; i < eCount; ++i) {'''
+        if isIndexed:
+            code += '''
+            int segbase = i - i % (16 / sizeof(Element));
+            int s = segbase + imm;'''
+        code += '''
+            DElement res = AA64FpDest_xd[i];
+            DElement srcElem1, srcElem2;
+            for (int j = 0; j <= 3; ++j) {
+                srcElem1 = static_cast<DElement>(AA64FpOp1_xs[4 * i + j]);'''
+        if isIndexed:
+            code += '''
+                srcElem2 = static_cast<DElement>(AA64FpOp2_xs[4 * s + j]);'''
+        else:
+            code += '''
+                srcElem2 = static_cast<DElement>(AA64FpOp2_xs[4 * i + j]);'''
+        code += '''
+                res += srcElem1 * srcElem2;
+            }
+            AA64FpDestMerge_xd[i] = res;
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name,
+                'SveDotProdIdxOp' if isIndexed else
+                'SveDotProdOp',
+                {'code': code, 'op_class': opClass}, [])
+        if isIndexed:
+            header_output += SveWideningTerImmOpDeclare.subst(iop)
+        else:
+            header_output += SveWideningTerOpDeclare.subst(iop)
+        exec_output += SveWideningOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs': type, 'class_name': 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definition for ordered reduction
+    def sveOrderedReduction(name, Name, opClass, types, op,
+                            decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());'''
+        code += '''
+        Element destElem = AA64FpDestMerge_x[0];
+        for (int i = 0; i < eCount; ++i) {
+            if (GpOp_x[i]) {
+                Element srcElem1 = AA64FpOp1_x[i];
+                %(op)s
+            }
+        }
+        for (int i = 1; i < eCount; ++i) {
+            AA64FpDest_x[i] = 0;
+        }
+        AA64FpDest_x[0] = destElem;'''%{'op': op}
+        iop = InstObjParams(name, 'Sve' + Name, 'SveOrdReducOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SveReducOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                    'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definitions for complex addition instructions
+    def sveComplexAddInst(name, Name, opClass, types,
+            decoder = 'Generic'):
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());'''
+        code += '''
+        bool sub_i = (rot == 1);
+        bool sub_r = (rot == 3);
+        for (int i = 0; i < eCount / 2; ++i) {
+            Element acc_r = AA64FpOp1_x[2 * i];
+            Element acc_i = AA64FpOp1_x[2 * i + 1];
+            Element elt2_r = AA64FpOp2_x[2 * i];
+            Element elt2_i = AA64FpOp2_x[2 * i + 1];
+
+            FPSCR fpscr;
+            if (GpOp_x[2 * i]) {
+                if (sub_i) {
+                    elt2_i = fplibNeg<Element>(elt2_i);
+                }
+                fpscr =  (FPSCR) FpscrExc;
+                acc_r = fplibAdd<Element>(acc_r, elt2_i, fpscr);
+                FpscrExc = fpscr;
+            }
+            if (GpOp_x[2 * i + 1]) {
+                if (sub_r) {
+                    elt2_r = fplibNeg<Element>(elt2_r);
+                }
+                fpscr =  (FPSCR) FpscrExc;
+                acc_i = fplibAdd<Element>(acc_i, elt2_r, fpscr);
+                FpscrExc = fpscr;
+            }
+
+            AA64FpDest_x[2 * i] = acc_r;
+            AA64FpDest_x[2 * i + 1] = acc_i;
+        }
+        '''
+        iop = InstObjParams(name, 'Sve' + Name, 'SveComplexOp',
+                {'code': code, 'op_class': opClass}, [])
+        header_output += SveComplexOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                    'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    # Generate definitions for complex multiply and accumulate instructions
+    def sveComplexMulAddInst(name, Name, opClass, types,
+            predType=PredType.NONE, decoder='Generic'):
+        assert predType in (PredType.NONE, PredType.MERGE)
+        global header_output, exec_output, decoders
+        code = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
+                xc->tcBase());'''
+        code += '''
+        uint32_t sel_a = rot & 0x1;
+        uint32_t sel_b = sel_a ? 0 : 1;
+        bool neg_i = (rot & 0x2) == 1;
+        bool neg_r = (rot & 0x1) != (rot & 0x2);'''
+        if predType == PredType.NONE:
+            code += '''
+        uint32_t eltspersegment = 16 / (2 * sizeof(Element));'''
+        code += '''
+        for (int i = 0; i < eCount / 2; ++i) {'''
+        if predType == PredType.NONE:
+            code += '''
+            uint32_t segmentbase = i - (i % eltspersegment);
+            uint32_t s = segmentbase + imm;'''
+        else:
+            code += '''
+            uint32_t s = i;'''
+        code += '''
+            Element addend_r = AA64FpDestMerge_x[2 * i];
+            Element addend_i = AA64FpDestMerge_x[2 * i + 1];
+            Element elt1_a = AA64FpOp1_x[2 * i + sel_a];
+            Element elt2_a = AA64FpOp2_x[2 * s + sel_a];
+            Element elt2_b = AA64FpOp2_x[2 * s + sel_b];
+            FPSCR fpscr;
+            '''
+        if predType != PredType.NONE:
+            code += '''
+            if (GpOp_x[2 * i]) {'''
+        code += '''
+            if (neg_r) {
+                elt2_a = fplibNeg<Element>(elt2_a);
+            }
+            fpscr =  (FPSCR) FpscrExc;
+            addend_r = fplibMulAdd<Element>(addend_r, elt1_a, elt2_a, fpscr);
+            FpscrExc = fpscr;'''
+        if predType != PredType.NONE:
+            code += '''
+            }'''
+        if predType != PredType.NONE:
+            code += '''
+            if (GpOp_x[2 * i + 1]) {'''
+        code += '''
+            if (neg_i) {
+                elt2_b = fplibNeg<Element>(elt2_b);
+            }
+            fpscr =  (FPSCR) FpscrExc;
+            addend_i = fplibMulAdd<Element>(addend_i, elt1_a, elt2_b, fpscr);
+            FpscrExc = fpscr;'''
+        if predType != PredType.NONE:
+            code += '''
+            }'''
+        code += '''
+            AA64FpDest_x[2 * i] = addend_r;
+            AA64FpDest_x[2 * i + 1] = addend_i;
+        }'''
+        iop = InstObjParams(name, 'Sve' + Name,
+                'SveComplexIdxOp' if predType == PredType.NONE
+                                  else 'SveComplexOp',
+                {'code': code, 'op_class': opClass}, [])
+        if predType == PredType.NONE:
+            header_output += SveComplexIndexOpDeclare.subst(iop)
+        else:
+            header_output += SveComplexOpDeclare.subst(iop)
+        exec_output += SveOpExecute.subst(iop)
+        for type in types:
+            substDict = {'targs' : type,
+                    'class_name' : 'Sve' + Name}
+            exec_output += SveOpExecDeclare.subst(substDict)
+
+    fpTypes = ('uint16_t', 'uint32_t', 'uint64_t')
+    signedTypes = ('int8_t', 'int16_t', 'int32_t', 'int64_t')
+    unsignedTypes = ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t')
+
+    smallSignedTypes = ('int8_t', 'int16_t', 'int32_t')
+    bigSignedTypes = ('int16_t', 'int32_t', 'int64_t')
+    smallUnsignedTypes = ('uint8_t', 'uint16_t', 'uint32_t')
+    bigUnsignedTypes = ('uint16_t', 'uint32_t', 'uint64_t')
+
+    unsignedWideSDTypes = (('uint8_t', 'uint16_t'),
+            ('uint16_t', 'uint32_t'), ('uint32_t', 'uint64_t'))
+    signedWideSDTypes = (('int8_t', 'int16_t'),
+            ('int16_t', 'int32_t'), ('int32_t', 'int64_t'))
+
+    # ABS
+    absCode = 'destElem = (Element) std::abs(srcElem1);'
+    sveUnaryInst('abs', 'Abs', 'SimdAluOp', signedTypes, absCode,
+                 PredType.MERGE)
+    # ADD (immediate)
+    sveWideImmInst('add', 'AddImm', 'SimdAddOp', unsignedTypes, addCode, False)
+    # ADD (vectors, predicated)
+    addCode = 'destElem = srcElem1 + srcElem2;'
+    sveBinInst('add', 'AddPred', 'SimdAddOp', unsignedTypes, addCode,
+               PredType.MERGE, True)
+    # ADD (vectors, unpredicated)
+    addCode = 'destElem = srcElem1 + srcElem2;'
+    sveBinInst('add', 'AddUnpred', 'SimdAddOp', unsignedTypes, addCode)
+    # ADDPL
+    addvlCode = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<uint%d_t>(
+                xc->tcBase());
+        XDest = XOp1 + eCount * (int64_t) imm;
+    '''
+    buildXImmDataInst('addpl', addvlCode % 64, buildCc=False)
+    # ADDVL
+    buildXImmDataInst('addvl', addvlCode % 8, buildCc=False)
+    # ADR
+    adrCode = '''
+            if (offsetFormat == SveAdrOffsetUnpackedSigned) {
+                srcElem2 = sext<32>(srcElem2 & mask(32));
+            } else if (offsetFormat == SveAdrOffsetUnpackedUnsigned) {
+                srcElem2 = srcElem2 & mask(32);
+            }
+            destElem = srcElem1 + srcElem2 * mult;
+    '''
+    sveAdrInst('adr', 'Adr', 'SimdAddOp', ('uint32_t', 'uint64_t'), adrCode)
+    # AND (immediate)
+    andCode = 'destElem = srcElem1 & srcElem2;'
+    sveWideImmInst('and', 'AndImm', 'SimdAluOp', ('uint64_t',), andCode)
+    # AND (vectors, predicated)
+    sveBinInst('and', 'AndPred', 'SimdAluOp', unsignedTypes, andCode,
+               PredType.MERGE, True)
+    # AND (vectors, unpredicated)
+    andCode = 'destElem = srcElem1 & srcElem2;'
+    sveBinInst('and', 'AndUnpred', 'SimdAluOp', ('uint64_t',), andCode)
+    # AND, ANDS (predicates)
+    svePredLogicalInst('and', 'PredAnd', 'SimdPredAluOp', ('uint8_t',),
+                       andCode)
+    svePredLogicalInst('ands', 'PredAnds', 'SimdPredAluOp', ('uint8_t',),
+                       andCode, isFlagSetting=True)
+    # ANDV
+    andvCode = 'destElem &= srcElem1;'
+    sveAssocReducInst('andv', 'Andv', 'SimdReduceAluOp', unsignedTypes,
+                      andvCode, 'std::numeric_limits<Element>::max()')
+    # ASR (immediate, predicated)
+    asrCode = '''
+            int sign_bit = bits(srcElem1, sizeof(Element) * 8 - 1);
+            if (srcElem2 == 0) {
+                destElem = srcElem1;
+            } else if (srcElem2 >= sizeof(Element) * 8) {
+                destElem = sign_bit ? std::numeric_limits<Element>::max() : 0;
+            } else {
+                destElem = srcElem1 >> srcElem2;
+                if (sign_bit) {
+                    destElem |= ~mask(sizeof(Element) * 8 - srcElem2);
+                }
+            }
+    '''
+    sveBinImmInst('asr', 'AsrImmPred', 'SimdAluOp', unsignedTypes, asrCode,
+                  PredType.MERGE)
+    # ASR (immediate, unpredicated)
+    sveBinImmInst('asr', 'AsrImmUnpred', 'SimdAluOp', unsignedTypes, asrCode)
+    # ASR (vectors)
+    sveBinInst('asr', 'AsrPred', 'SimdAluOp', unsignedTypes, asrCode,
+               PredType.MERGE, True)
+    # ASR (wide elements, predicated)
+    sveShiftByWideElemsInst('asr', 'AsrWidePred', 'SimdAluOp', unsignedTypes,
+                            asrCode, PredType.MERGE)
+    # ASR (wide elements, unpredicated)
+    sveShiftByWideElemsInst('asr', 'AsrWideUnpred', 'SimdAluOp', unsignedTypes,
+                            asrCode)
+    # ASRD
+    asrdCode = '''
+        Element element1 = srcElem1;
+        Element shift = srcElem2;
+        if (srcElem1 < 0) {
+            Element tmp = ((1L << shift) - 1L);
+            if (tmp == -1L) {
+                element1 = 0;
+            } else {
+                element1 = element1 + tmp;
+            }
+        }
+        destElem = (element1 >> shift);
+    '''
+    sveBinImmInst('asrd', 'Asrd', 'SimdAluOp', signedTypes, asrdCode,
+                  PredType.MERGE)
+    # ASRR
+    asrrCode = '''
+            int sign_bit = bits(srcElem2, sizeof(Element) * 8 - 1);
+            if (srcElem1 == 0) {
+                destElem = srcElem2;
+            } else if (srcElem1 >= sizeof(Element) * 8) {
+                destElem = sign_bit ? std::numeric_limits<Element>::max() : 0;
+            } else {
+                destElem = srcElem2 >> srcElem1;
+                if (sign_bit) {
+                    destElem |= ~mask(sizeof(Element) * 8 - srcElem1);
+                }
+            }
+    '''
+    sveBinInst('asrr', 'Asrr', 'SimdAluOp', unsignedTypes, asrrCode,
+               PredType.MERGE, True)
+    # BIC (vectors, predicated)
+    bicCode = 'destElem = srcElem1 & ~srcElem2;'
+    sveBinInst('bic', 'BicPred', 'SimdAluOp', unsignedTypes, bicCode,
+               PredType.MERGE, True)
+    # BIC (vectors, unpredicated)
+    bicCode = 'destElem = srcElem1 & ~srcElem2;'
+    sveBinInst('bic', 'BicUnpred', 'SimdAluOp', unsignedTypes, bicCode)
+    # BIC, BICS (predicates)
+    svePredLogicalInst('bic', 'PredBic', 'SimdPredAluOp', ('uint8_t',),
+                       bicCode)
+    svePredLogicalInst('bics', 'PredBics', 'SimdPredAluOp', ('uint8_t',),
+                       bicCode, isFlagSetting=True)
+    # BRKA (merging)
+    svePartBrkInst('brka', 'Brkam', 'SimdPredAluOp', isFlagSetting = False,
+            predType = PredType.MERGE, whenBrk = Break.After)
+    # BRKA (zeroing)
+    svePartBrkInst('brka', 'Brkaz', 'SimdPredAluOp', isFlagSetting = False,
+            predType = PredType.ZERO, whenBrk = Break.After)
+    # BRKAS
+    svePartBrkInst('brkas', 'Brkas', 'SimdPredAluOp', isFlagSetting = True,
+            predType = PredType.ZERO, whenBrk = Break.After)
+    # BRKB (merging)
+    svePartBrkInst('brkb', 'Brkbm', 'SimdPredAluOp', isFlagSetting = False,
+            predType = PredType.MERGE, whenBrk = Break.Before)
+    # BRKB (zeroging)
+    svePartBrkInst('brkb', 'Brkbz', 'SimdPredAluOp', isFlagSetting = False,
+            predType = PredType.ZERO, whenBrk = Break.Before)
+    # BRKBS
+    svePartBrkInst('brkbs', 'Brkbs', 'SimdPredAluOp', isFlagSetting = True,
+            predType = PredType.ZERO, whenBrk = Break.Before)
+    # BRKN
+    svePartBrkPropNextInst('brkn', 'Brkn', 'SimdPredAluOp',
+            isFlagSetting = False)
+    # BRKNS
+    svePartBrkPropNextInst('brkns', 'Brkns', 'SimdPredAluOp',
+            isFlagSetting = True)
+    # BRKPA
+    svePartBrkPropPrevInst('brkpa', 'Brkpa', 'SimdPredAluOp',
+            isFlagSetting = False, whenBrk = Break.After)
+    # BRKPAS
+    svePartBrkPropPrevInst('brkpas', 'Brkpas', 'SimdPredAluOp',
+            isFlagSetting = True, whenBrk = Break.After)
+    # BRKPB
+    svePartBrkPropPrevInst('brkpb', 'Brkpb', 'SimdPredAluOp',
+            isFlagSetting = False, whenBrk = Break.Before)
+    # BRKPBS
+    svePartBrkPropPrevInst('brkpbs', 'Brkpbs', 'SimdPredAluOp',
+            isFlagSetting = True, whenBrk = Break.Before)
+    # CLASTA (scalar)
+    clastaCode = '''
+        last++;
+        if (last >= eCount)
+            last = 0;
+        destElem = AA64FpOp1_x[last];'''
+    sveSelectInst('clasta', 'Clasta', 'SimdAluOp', unsignedTypes, clastaCode,
+            isCond = True, destType = DstRegType.Scalar)
+    # CLASTA (SIMD&FP scalar)
+    sveSelectInst('clasta', 'Clastaf', 'SimdAluOp', unsignedTypes, clastaCode,
+            isCond = True, destType = DstRegType.SimdFpScalar)
+    # CLASTA (vector)
+    sveSelectInst('clasta', 'Clastav', 'SimdAluOp', unsignedTypes, clastaCode,
+            isCond = True, destType = DstRegType.Vector)
+    # CLASTB (scalar)
+    clastbCode = '''
+        destElem = AA64FpOp1_x[last];'''
+    sveSelectInst('clastb', 'Clastb', 'SimdAluOp', unsignedTypes, clastbCode,
+            isCond = True, destType = DstRegType.Scalar)
+    # CLASTB (SIMD&FP scalar)
+    sveSelectInst('clastb', 'Clastbf', 'SimdAluOp', unsignedTypes, clastbCode,
+            isCond = True, destType = DstRegType.SimdFpScalar)
+    # CLASTB (vectors)
+    sveSelectInst('clastb', 'Clastbv', 'SimdAluOp', unsignedTypes, clastbCode,
+            isCond = True, destType = DstRegType.Vector)
+    # CLS
+    clsCode = '''
+        destElem = 0;
+        Element val = srcElem1;
+        if (val < 0) {
+            val <<= 1;
+            while (val < 0) {
+                destElem++;
+                val <<= 1;
+            }
+        } else {
+            val <<= 1;
+            while (val >= 0 && destElem < sizeof(Element) * 8 - 1) {
+                destElem++;
+                val <<= 1;
+            }
+        }
+    '''
+    sveUnaryInst('cls', 'Cls', 'SimdAluOp', signedTypes, clsCode,
+                 PredType.MERGE)
+    # CLZ
+    clzCode = '''
+        destElem = 0;
+        Element val = srcElem1;
+        while (val >= 0 && destElem < sizeof(Element) * 8) {
+            destElem++;
+            val <<= 1;
+        }
+    '''
+    sveUnaryInst('clz', 'Clz', 'SimdAluOp', signedTypes, clzCode,
+                 PredType.MERGE)
+    # CMPEQ (immediate)
+    cmpeqCode = '''
+        destElem = (srcElem1 == srcElem2);
+    '''
+    sveIntCmpImmInst('cmpeq', 'Cmpeqi', 'SimdCmpOp', unsignedTypes, cmpeqCode)
+    # CMPEQ (vectors)
+    sveIntCmpInst('cmpeq', 'Cmpeq', 'SimdCmpOp', unsignedTypes, cmpeqCode)
+    # CMPEQ (wide elements)
+    sveIntCmpInst('cmpeq', 'Cmpeqw', 'SimdCmpOp', smallUnsignedTypes,
+            cmpeqCode, True)
+    # CMPGE (immediate)
+    cmpgeCode = '''
+        destElem = (srcElem1 >= srcElem2);
+    '''
+    sveIntCmpImmInst('cmpge', 'Cmpgei', 'SimdCmpOp', signedTypes, cmpgeCode)
+    # CMPGE (vectors)
+    sveIntCmpInst('cmpge', 'Cmpge', 'SimdCmpOp', signedTypes, cmpgeCode)
+    # CMPGE (wide elements)
+    sveIntCmpInst('cmpge', 'Cmpgew', 'SimdCmpOp', smallSignedTypes,
+            cmpgeCode, True)
+    # CMPGT (immediate)
+    cmpgtCode = '''
+        destElem = (srcElem1 > srcElem2);
+    '''
+    sveIntCmpImmInst('cmpge', 'Cmpgti', 'SimdCmpOp', signedTypes, cmpgtCode)
+    # CMPGT (vectors)
+    sveIntCmpInst('cmpge', 'Cmpgt', 'SimdCmpOp', signedTypes, cmpgtCode)
+    # CMPGT (wide elements)
+    sveIntCmpInst('cmpge', 'Cmpgtw', 'SimdCmpOp', smallSignedTypes,
+            cmpgtCode, True)
+    # CMPHI (immediate)
+    sveIntCmpImmInst('cmphi', 'Cmphii', 'SimdCmpOp', unsignedTypes, cmpgtCode)
+    # CMPHI (vectors)
+    sveIntCmpInst('cmphi', 'Cmphi', 'SimdCmpOp', unsignedTypes, cmpgtCode)
+    # CMPHI (wide elements)
+    sveIntCmpInst('cmphi', 'Cmphiw', 'SimdCmpOp', smallUnsignedTypes,
+            cmpgtCode, True)
+    # CMPHS (immediate)
+    sveIntCmpImmInst('cmphs', 'Cmphsi', 'SimdCmpOp', unsignedTypes, cmpgeCode)
+    # CMPHS (vectors)
+    sveIntCmpInst('cmphs', 'Cmphs', 'SimdCmpOp', unsignedTypes, cmpgeCode)
+    # CMPHS (wide elements)
+    sveIntCmpInst('cmphs', 'Cmphsw', 'SimdCmpOp', smallUnsignedTypes,
+            cmpgeCode, True)
+    # CMPLE (immediate)
+    cmpleCode = '''
+        destElem = (srcElem1 <= srcElem2);
+    '''
+    sveIntCmpImmInst('cmple', 'Cmplei', 'SimdCmpOp', signedTypes, cmpleCode)
+    # CMPLE (wide elements)
+    sveIntCmpInst('cmple', 'Cmplew', 'SimdCmpOp', smallSignedTypes,
+            cmpleCode, True)
+    # CMPLO (immediate)
+    cmpltCode = '''
+        destElem = (srcElem1 < srcElem2);
+    '''
+    sveIntCmpImmInst('cmplo', 'Cmploi', 'SimdCmpOp', unsignedTypes, cmpltCode)
+    # CMPLO (wide elements)
+    sveIntCmpInst('cmplo', 'Cmplow', 'SimdCmpOp', smallUnsignedTypes,
+            cmpltCode, True)
+    # CMPLS (immediate)
+    sveIntCmpImmInst('cmpls', 'Cmplsi', 'SimdCmpOp', unsignedTypes, cmpleCode)
+    # CMPLS (wide elements)
+    sveIntCmpInst('cmpls', 'Cmplsw', 'SimdCmpOp', smallUnsignedTypes,
+            cmpleCode, True)
+    # CMPLT (immediate)
+    sveIntCmpImmInst('cmplt', 'Cmplti', 'SimdCmpOp', signedTypes, cmpltCode)
+    # CMPLT (wide elements)
+    sveIntCmpInst('cmplt', 'Cmpltw', 'SimdCmpOp', smallSignedTypes,
+            cmpltCode, True)
+    # CMPNE (immediate)
+    cmpneCode = '''
+        destElem = (srcElem1 != srcElem2);
+    '''
+    sveIntCmpImmInst('cmpeq', 'Cmpnei', 'SimdCmpOp', unsignedTypes, cmpneCode)
+    # CMPNE (vectors)
+    sveIntCmpInst('cmpeq', 'Cmpne', 'SimdCmpOp', unsignedTypes, cmpneCode)
+    # CMPNE (wide elements)
+    sveIntCmpInst('cmpeq', 'Cmpnew', 'SimdCmpOp', smallUnsignedTypes,
+            cmpneCode, True)
+    # CNOT
+    cnotCode = '''
+        destElem = srcElem1?0:1;
+    '''
+    sveUnaryInst('cnot', 'Cnot', 'SimdAluOp', unsignedTypes, cnotCode,
+                 PredType.MERGE)
+    # CNT
+    cntCode = '''
+        destElem = 0;
+        Element val = srcElem1;
+        while (val) {
+            destElem += val & 0x1;
+            val >>= 1;
+        }
+    '''
+    sveUnaryInst('cnt', 'Cnt', 'SimdAluOp', unsignedTypes, cntCode,
+                 PredType.MERGE)
+    # CNTB, CNTD, CNTH, CNTW
+    cntxCode = '''
+        destElem = (count * imm);
+    '''
+    sveElemCountInst('cnt', 'Cntx', 'SimdAluOp', unsignedTypes, cntxCode,
+            destType = DestType.Scalar, dstIs32b = False, dstAcc = False)
+    # COMPACT
+    sveCompactInst('compact', 'Compact', 'SimdPredAluOp',
+            ('uint32_t', 'uint64_t'))
+    # CPY (immediate)
+    dupCode = 'destElem = srcElem1;'
+    sveWideImmInst('cpy', 'CpyImmMerge', 'SimdAluOp', unsignedTypes, dupCode,
+                   predType=PredType.MERGE, isUnary=True)
+    sveWideImmInst('cpy', 'CpyImmZero', 'SimdAluOp', unsignedTypes, dupCode,
+                   predType=PredType.ZERO, isUnary=True)
+    # CPY (scalar)
+    sveUnaryInst('cpy', 'CpyScalar', 'SimdAluOp', unsignedTypes, dupCode,
+                 PredType.MERGE, srcRegType=SrcRegType.Scalar)
+    # CPY (SIMD&FP scalar)
+    sveUnaryInst('cpy', 'CpySimdFpScalar', 'SimdAluOp', unsignedTypes, dupCode,
+                 PredType.MERGE, srcRegType=SrcRegType.SimdFpScalar)
+    # CNTP
+    svePredCountPredInst('cntp', 'Cntp', 'SimdAluOp', unsignedTypes)
+    # CTERMEQ
+    cteqCode = '''
+        destElem = srcElem1 == srcElem2;
+    '''
+    sveCompTermInst('ctermeq', 'Ctermeq', 'IntAluOp',
+            ['uint32_t', 'uint64_t'], cteqCode)
+    # CTERMNE
+    ctneCode = '''
+        destElem = srcElem1 != srcElem2;
+    '''
+    sveCompTermInst('ctermne', 'Ctermne', 'IntAluOp',
+            ['uint32_t', 'uint64_t'], ctneCode)
+    # DECB, DECH, DECW, DECD (scalar)
+    decxCode = '''
+        destElem = srcElem1 - (count * imm);
+    '''
+    sveElemCountInst('dec', 'Dec', 'SimdAluOp', unsignedTypes, decxCode,
+            destType = DestType.Scalar, dstIs32b = False)
+    # DECH, DECW, DECD (vector)
+    sveElemCountInst('dec', 'Decv', 'SimdAluOp', bigUnsignedTypes, decxCode,
+            destType = DestType.Vector, dstIs32b = False)
+    # DECP (scalar)
+    decpCode = '''
+    XDest = XDest - count;
+    '''
+    svePredCountInst('decp', 'Decp', 'SimdAluOp', unsignedTypes, decpCode,
+                     DestType.Scalar, SrcSize.Src64bit)
+    # DECP (vector)
+    decpvCode = '''
+    destElem = srcElem - count;
+    '''
+    svePredCountInst('decp', 'Decpv', 'SimdAluOp', unsignedTypes, decpvCode,
+                     DestType.Vector)
+    # DUP (immediate)
+    sveWideImmInst('dup', 'DupImm', 'SimdAluOp', unsignedTypes, dupCode,
+                   isUnary=True)
+    # DUP (indexed)
+    sveDupIndexInst('mov', 'DupIdx', 'SimdAluOp',
+            list(unsignedTypes) + ['__uint128_t'])
+    # DUP (scalar)
+    sveUnaryInst('dup', 'DupScalar', 'SimdAluOp', unsignedTypes, dupCode,
+                 PredType.NONE, srcRegType=SrcRegType.Scalar)
+    # DUPM
+    sveWideImmInst('dupm', 'Dupm', 'SimdAluOp', unsignedTypes, dupCode,
+                   isUnary=True)
+    # EOR (immediate)
+    eorCode = 'destElem = srcElem1 ^ srcElem2;'
+    sveWideImmInst('eor', 'EorImm', 'SimdAluOp', ('uint64_t',), eorCode)
+    # EOR (vectors, predicated)
+    sveBinInst('eor', 'EorPred', 'SimdAluOp', unsignedTypes, eorCode,
+               PredType.MERGE, True)
+    # EOR (vectors, unpredicated)
+    eorCode = 'destElem = srcElem1 ^ srcElem2;'
+    sveBinInst('eor', 'EorUnpred', 'SimdAluOp', ('uint64_t',), eorCode)
+    # EOR, EORS (predicates)
+    svePredLogicalInst('eor', 'PredEor', 'SimdPredAluOp', ('uint8_t',),
+                       eorCode)
+    svePredLogicalInst('eors', 'PredEors', 'SimdPredAluOp', ('uint8_t',),
+                       eorCode, isFlagSetting=True)
+    # EORV
+    eorvCode = 'destElem ^= srcElem1;'
+    sveAssocReducInst('eorv', 'Eorv', 'SimdReduceAluOp', unsignedTypes,
+                      eorvCode, '0')
+    # EXT
+    sveExtInst('ext', 'Ext', 'SimdAluOp')
+    # FABD
+    fpOp = '''
+            FPSCR fpscr = (FPSCR) FpscrExc;
+            destElem = %s;
+            FpscrExc = fpscr;
+    '''
+    fabdCode = fpOp % 'fplibAbs<Element>(fplibSub(srcElem1, srcElem2, fpscr))'
+    sveBinInst('fabd', 'Fabd', 'SimdFloatAddOp', floatTypes, fabdCode,
+               PredType.MERGE, True)
+    # FABS
+    fabsCode = 'destElem = fplibAbs<Element>(srcElem1);'
+    sveUnaryInst('fabs', 'Fabs', 'SimdFloatAluOp', fpTypes, fabsCode,
+                 PredType.MERGE)
+    # FACGE
+    fpCmpAbsOp = fpOp % ('fplibCompare%s<Element>(fplibAbs<Element>(srcElem1),'
+                         ' fplibAbs<Element>(srcElem2), fpscr)')
+    facgeCode = fpCmpAbsOp % 'GE'
+    sveCmpInst('facge', 'Facge', 'SimdFloatCmpOp', fpTypes, facgeCode)
+    # FACGT
+    facgtCode = fpCmpAbsOp % 'GT'
+    sveCmpInst('facgt', 'Facgt', 'SimdFloatCmpOp', fpTypes, facgtCode)
+    # FADD (immediate)
+    fpBinOp = fpOp % 'fplib%s<Element>(srcElem1, srcElem2, fpscr)'
+    faddCode = fpBinOp % 'Add'
+    sveBinImmInst('fadd', 'FaddImm', 'SimdFloatAddOp', floatTypes, faddCode,
+                  PredType.MERGE)
+    # FADD (vectors, predicated)
+    sveBinInst('fadd', 'FaddPred', 'SimdFloatAddOp', floatTypes, faddCode,
+               PredType.MERGE, True)
+    # FADD (vectors, unpredicated)
+    sveBinInst('fadd', 'FaddUnpred', 'SimdFloatAddOp', floatTypes, faddCode)
+    # FADDA
+    fpAddaOp = '''
+            FPSCR fpscr = (FPSCR) FpscrExc;
+            destElem = fplibAdd<Element>(destElem, srcElem1, fpscr);
+            FpscrExc = FpscrExc | fpscr;
+    '''
+    sveOrderedReduction('fadda', 'Fadda', 'SimdFloatReduceAddOp', floatTypes,
+            fpAddaOp)
+    # FADDV
+    fpReduceOp = '''
+            FPSCR fpscr = (FPSCR) FpscrExc;
+            destElem = fplib%s<Element>(srcElem1, srcElem2, fpscr);
+            FpscrExc = FpscrExc | fpscr;
+    '''
+    faddvCode = fpReduceOp % 'Add'
+    sveNonAssocReducInst('faddv', 'Faddv', 'SimdFloatReduceAddOp', floatTypes,
+                         faddvCode, '0')
+    # FCADD
+    sveComplexAddInst('fcadd','Fcadd', 'SimdFloatAddOp', fpTypes)
+    # FCMEQ (vectors)
+    fpCmpOp = fpOp % ('fplibCompare%s<Element>(srcElem1, srcElem2, fpscr)')
+    fcmeqCode = fpCmpOp % 'EQ'
+    sveCmpInst('fcmeq', 'Fcmeq', 'SimdFloatCmpOp', fpTypes, fcmeqCode)
+    # FCMEQ (zero)
+    fpCmpZeroOp = fpOp % 'fplibCompare%s<Element>(srcElem1, 0, fpscr)'
+    fcmeqZeroCode = fpCmpZeroOp % 'EQ'
+    sveCmpInst('fcmeq', 'FcmeqZero', 'SimdFloatCmpOp', fpTypes, fcmeqZeroCode,
+               True)
+    # FCMGE (vectors)
+    fcmgeCode = fpCmpOp % 'GE'
+    sveCmpInst('fcmge', 'Fcmge', 'SimdFloatCmpOp', fpTypes, fcmgeCode)
+    # FCMGE (zero)
+    fcmgeZeroCode = fpCmpZeroOp % 'GE'
+    sveCmpInst('fcmge', 'FcmgeZero', 'SimdFloatCmpOp', fpTypes, fcmgeZeroCode,
+               True)
+    # FCMGT (vectors)
+    fcmgtCode = fpCmpOp % 'GT'
+    sveCmpInst('fcmgt', 'Fcmgt', 'SimdFloatCmpOp', fpTypes, fcmgtCode)
+    # FCMGT (zero)
+    fcmgtZeroCode = fpCmpZeroOp % 'GT'
+    sveCmpInst('fcmgt', 'FcmgtZero', 'SimdFloatCmpOp', fpTypes, fcmgtZeroCode,
+               True)
+    # FCMLE (zero)
+    fpCmpRevZeroOp = fpOp % ('fplibCompare%s<Element>(0, srcElem1, fpscr)')
+    fcmleZeroCode = fpCmpRevZeroOp % 'GE'
+    sveCmpInst('fcmle', 'FcmleZero', 'SimdFloatCmpOp', fpTypes, fcmleZeroCode,
+               True)
+    # FCMLT (zero)
+    fcmltZeroCode = fpCmpRevZeroOp % 'GT'
+    sveCmpInst('fcmlt', 'FcmltZero', 'SimdFloatCmpOp', fpTypes, fcmltZeroCode,
+               True)
+    # FCMNE (vectors)
+    fcmneCode = fpOp % ('!fplibCompareEQ<Element>(srcElem1, srcElem2, fpscr)')
+    sveCmpInst('fcmne', 'Fcmne', 'SimdFloatCmpOp', fpTypes, fcmneCode)
+    # FCMNE (zero)
+    fcmneZeroCode = fpOp % ('!fplibCompareEQ<Element>(srcElem1, 0, fpscr)')
+    sveCmpInst('fcmne', 'FcmneZero', 'SimdFloatCmpOp', fpTypes, fcmneZeroCode,
+               True)
+    # FCMUO (vectors)
+    fcmuoCode = fpCmpOp % 'UN'
+    sveCmpInst('fcmuo', 'Fcmuo', 'SimdFloatCmpOp', fpTypes, fcmuoCode)
+    # FCMLA (indexed)
+    sveComplexMulAddInst('fcmla', 'Fcmlai', 'SimdFloatMultAccOp',
+            fpTypes[1:], predType = PredType.NONE)
+    # FCMLA (vectors)
+    sveComplexMulAddInst('fcmla', 'Fcmlav', 'SimdFloatMultAccOp',
+            fpTypes, predType = PredType.MERGE)
+    # FCPY
+    sveWideImmInst('fcpy', 'Fcpy', 'SimdAluOp', unsignedTypes, dupCode,
+                   predType=PredType.MERGE, isUnary=True)
+    # FCVT
+    fcvtCode = fpOp % ('fplibConvert<SElement, DElement>('
+                       'srcElem1, FPCRRounding(fpscr), fpscr)')
+    sveCvtInst('fcvt', 'FcvtNarrow', 'SimdCvtOp',
+               ('uint32_t, uint16_t',
+                'uint64_t, uint16_t',
+                'uint64_t, uint32_t'),
+               fcvtCode, CvtDir.Narrow)
+    sveCvtInst('fcvt', 'FcvtWiden', 'SimdCvtOp',
+               ('uint16_t, uint32_t',
+                'uint16_t, uint64_t',
+                'uint32_t, uint64_t'),
+               fcvtCode, CvtDir.Widen)
+    # FCVTZS
+    fcvtIntCode = fpOp % ('fplibFPToFixed<SElement, DElement>('
+                          'srcElem1, %s, %s, %s, fpscr)')
+    fcvtzsCode = fcvtIntCode % ('0', 'false', 'FPRounding_ZERO')
+    sveCvtInst('fcvtzs', 'FcvtzsNarrow', 'SimdCvtOp',
+               ('uint16_t, uint16_t',
+                'uint32_t, uint32_t',
+                'uint64_t, uint32_t',
+                'uint64_t, uint64_t'),
+               fcvtzsCode, CvtDir.Narrow)
+    sveCvtInst('fcvtzs', 'FcvtzsWiden', 'SimdCvtOp',
+               ('uint16_t, uint32_t',
+                'uint16_t, uint64_t',
+                'uint32_t, uint64_t'),
+               fcvtzsCode, CvtDir.Widen)
+    # FCVTZU
+    fcvtzuCode = fcvtIntCode % ('0', 'true', 'FPRounding_ZERO')
+    sveCvtInst('fcvtzu', 'FcvtzuNarrow', 'SimdCvtOp',
+               ('uint16_t, uint16_t',
+                'uint32_t, uint32_t',
+                'uint64_t, uint32_t',
+                'uint64_t, uint64_t'),
+               fcvtzuCode, CvtDir.Narrow)
+    sveCvtInst('fcvtzu', 'FcvtzuWiden', 'SimdCvtOp',
+               ('uint16_t, uint32_t',
+                'uint16_t, uint64_t',
+                'uint32_t, uint64_t'),
+               fcvtzuCode, CvtDir.Widen)
+    # FDIV
+    fdivCode = fpBinOp % 'Div'
+    sveBinInst('fdiv', 'Fdiv', 'SimdFloatDivOp', floatTypes, fdivCode,
+               PredType.MERGE, True)
+    # FDIVR
+    fpBinRevOp = fpOp % 'fplib%s<Element>(srcElem2, srcElem1, fpscr)'
+    fdivrCode = fpBinRevOp % 'Div'
+    sveBinInst('fdivr', 'Fdivr', 'SimdFloatDivOp', floatTypes, fdivrCode,
+               PredType.MERGE, True)
+    # FDUP
+    sveWideImmInst('fdup', 'Fdup', 'SimdFloatAluOp', floatTypes, dupCode,
+                   isUnary=True)
+    # FEXPA
+    fexpaCode = 'destElem = fplibExpA<Element>(srcElem1);'
+    sveUnaryInst('fexpa', 'Fexpa', 'SimdFloatAluOp', fpTypes, fexpaCode)
+    # FMAD
+    fmadCode = fpOp % ('fplibMulAdd<Element>('
+                       'srcElem1, destElem, srcElem2, fpscr)')
+    sveTerInst('fmad', 'Fmad', 'SimdFloatMultAccOp', floatTypes, fmadCode,
+               PredType.MERGE)
+    # FMAX (immediate)
+    fmaxCode = fpBinOp % 'Max'
+    sveBinImmInst('fmax', 'FmaxImm', 'SimdFloatCmpOp', floatTypes, fmaxCode,
+                  PredType.MERGE)
+    # FMAX (vectors)
+    sveBinInst('fmax', 'Fmax', 'SimdFloatCmpOp', floatTypes, fmaxCode,
+               PredType.MERGE, True)
+    # FMAXNM (immediate)
+    fmaxnmCode = fpBinOp % 'MaxNum'
+    sveBinImmInst('fmaxnm', 'FmaxnmImm', 'SimdFloatCmpOp', floatTypes,
+                  fmaxnmCode, PredType.MERGE)
+    # FMAXNM (vectors)
+    sveBinInst('fmaxnm', 'Fmaxnm', 'SimdFloatCmpOp', floatTypes, fmaxnmCode,
+               PredType.MERGE, True)
+    # FMAXNMV
+    fmaxnmvCode = fpReduceOp % 'MaxNum'
+    sveNonAssocReducInst('fmaxnmv', 'Fmaxnmv', 'SimdFloatReduceCmpOp',
+                         floatTypes, fmaxnmvCode, 'fplibDefaultNaN<Element>()')
+    # FMAXV
+    fmaxvCode = fpReduceOp % 'Max'
+    sveNonAssocReducInst('fmaxv', 'Fmaxv', 'SimdFloatReduceCmpOp', floatTypes,
+                         fmaxvCode, 'fplibInfinity<Element>(1)')
+    # FMIN (immediate)
+    fminCode = fpBinOp % 'Min'
+    sveBinImmInst('fmin', 'FminImm', 'SimdFloatCmpOp', floatTypes, fminCode,
+                  PredType.MERGE)
+    # FMIN (vectors)
+    sveBinInst('fmin', 'Fmin', 'SimdFloatCmpOp', floatTypes, fminCode,
+               PredType.MERGE, True)
+    # FMINNM (immediate)
+    fminnmCode = fpBinOp % 'MinNum'
+    sveBinImmInst('fminnm', 'FminnmImm', 'SimdFloatCmpOp', floatTypes,
+                  fminnmCode, PredType.MERGE)
+    # FMINNM (vectors)
+    sveBinInst('fminnm', 'Fminnm', 'SimdFloatCmpOp', floatTypes, fminnmCode,
+               PredType.MERGE, True)
+    # FMINNMV
+    fminnmvCode = fpReduceOp % 'MinNum'
+    sveNonAssocReducInst('fminnmv', 'Fminnmv', 'SimdFloatReduceCmpOp',
+                         floatTypes, fminnmvCode, 'fplibDefaultNaN<Element>()')
+    # FMINV
+    fminvCode = fpReduceOp % 'Min'
+    sveNonAssocReducInst('fminv', 'Fminv', 'SimdFloatReduceCmpOp', floatTypes,
+                         fminvCode, 'fplibInfinity<Element>(0)')
+    fmlaCode = fpOp % ('fplibMulAdd<Element>('
+                       'destElem, srcElem1, srcElem2, fpscr)')
+    # FMLA (indexed)
+    sveTerIdxInst('fmla', 'FmlaIdx', 'SimdFloatMultAccOp', floatTypes,
+                  fmlaCode, PredType.MERGE)
+    # FMLA (vectors)
+    sveTerInst('fmla', 'Fmla', 'SimdFloatMultAccOp', floatTypes, fmlaCode,
+               PredType.MERGE)
+    fmlsCode = fpOp % ('fplibMulAdd<Element>(destElem, '
+                       'fplibNeg<Element>(srcElem1), srcElem2, fpscr)')
+    # FMLS (indexed)
+    sveTerIdxInst('fmls', 'FmlsIdx', 'SimdFloatMultAccOp', floatTypes,
+                  fmlsCode, PredType.MERGE)
+    # FMLS (vectors)
+    sveTerInst('fmls', 'Fmls', 'SimdFloatMultAccOp', floatTypes, fmlsCode,
+               PredType.MERGE)
+    # FMSB
+    fmsbCode = fpOp % ('fplibMulAdd<Element>(srcElem1, '
+                       'fplibNeg<Element>(destElem), srcElem2, fpscr)')
+    sveTerInst('fmsb', 'Fmsb', 'SimdFloatMultAccOp', floatTypes, fmsbCode,
+               PredType.MERGE)
+    # FMUL (immediate)
+    fpBinOp = fpOp % 'fplib%s<Element>(srcElem1, srcElem2, fpscr)'
+    fmulCode = fpBinOp % 'Mul'
+    sveBinImmInst('fmul', 'FmulImm', 'SimdFloatMultOp', floatTypes, fmulCode,
+                  PredType.MERGE)
+    # TODO: FMUL (indexed)
+    # FMUL (vectors, predicated)
+    fmulCode = fpBinOp % 'Mul'
+    sveBinInst('fmul', 'FmulPred', 'SimdFloatMultOp', floatTypes, fmulCode,
+               PredType.MERGE, True)
+    # FMUL (vectors, unpredicated)
+    sveBinInst('fmul', 'FmulUnpred', 'SimdFloatMultOp', floatTypes, fmulCode)
+    # FMUL (indexed)
+    sveBinIdxInst('fmul', 'FmulIdx', 'SimdFloatMultOp', floatTypes, fmulCode)
+
+    # FMULX
+    fmulxCode = fpBinOp % 'MulX'
+    sveBinInst('fmulx', 'Fmulx', 'SimdFloatMultOp', floatTypes, fmulxCode,
+               PredType.MERGE, True)
+    # FNEG
+    fnegCode = 'destElem = fplibNeg<Element>(srcElem1);'
+    sveUnaryInst('fneg', 'Fneg', 'SimdFloatAluOp', fpTypes, fnegCode,
+                 PredType.MERGE)
+    # FNMAD
+    fnmadCode = fpOp % ('fplibMulAdd<Element>('
+                        'fplibNeg<Element>(srcElem1), '
+                        'fplibNeg<Element>(destElem), srcElem2, fpscr)')
+    sveTerInst('fnmad', 'Fnmad', 'SimdFloatMultAccOp', floatTypes, fnmadCode,
+               PredType.MERGE)
+    # FNMLA
+    fnmlaCode = fpOp % ('fplibMulAdd<Element>('
+                        'fplibNeg<Element>(destElem), '
+                        'fplibNeg<Element>(srcElem1), srcElem2, fpscr)')
+    sveTerInst('fnmla', 'Fnmla', 'SimdFloatMultAccOp', floatTypes, fnmlaCode,
+               PredType.MERGE)
+    # FNMLS
+    fnmlsCode = fpOp % ('fplibMulAdd<Element>('
+                        'fplibNeg<Element>(destElem), srcElem1, srcElem2, '
+                        'fpscr)')
+    sveTerInst('fnmls', 'Fnmls', 'SimdFloatMultAccOp', floatTypes, fnmlsCode,
+               PredType.MERGE)
+    # FNMSB
+    fnmsbCode = fpOp % ('fplibMulAdd<Element>('
+                        'fplibNeg<Element>(srcElem1), destElem, srcElem2, '
+                        'fpscr)')
+    sveTerInst('fnmsb', 'Fnmsb', 'SimdFloatMultAccOp', floatTypes, fnmsbCode,
+               PredType.MERGE)
+    # FRECPE
+    frecpeCode = fpOp % 'fplibRecipEstimate<Element>(srcElem1, fpscr)'
+    sveUnaryInst('frecpe', 'Frecpe', 'SimdFloatMultAccOp', floatTypes,
+                 frecpeCode)
+    # FRECPS
+    frecpsCode = fpBinOp % 'RecipStepFused'
+    sveBinInst('frecps', 'Frecps', 'SimdFloatMultAccOp', floatTypes,
+               frecpsCode)
+    # FRECPX
+    frecpxCode = fpOp % "fplibRecpX<Element>(srcElem1, fpscr)"
+    sveUnaryInst('frecpx', 'Frecpx', 'SimdFloatMultAccOp', floatTypes,
+                 frecpxCode, PredType.MERGE)
+    # FRINTA
+    frintCode = fpOp % 'fplibRoundInt<Element>(srcElem1, %s, %s, fpscr)'
+    frintaCode = frintCode % ('FPRounding_TIEAWAY', 'false')
+    sveUnaryInst('frinta', 'Frinta', 'SimdCvtOp', floatTypes, frintaCode,
+                 PredType.MERGE)
+    # FRINTI
+    frintiCode = frintCode % ('FPCRRounding(fpscr)', 'false')
+    sveUnaryInst('frinti', 'Frinti', 'SimdCvtOp', floatTypes, frintiCode,
+                 PredType.MERGE)
+    # FRINTM
+    frintmCode = frintCode % ('FPRounding_NEGINF', 'false')
+    sveUnaryInst('frintm', 'Frintm', 'SimdCvtOp', floatTypes, frintmCode,
+                 PredType.MERGE)
+    # FRINTN
+    frintnCode = frintCode % ('FPRounding_TIEEVEN', 'false')
+    sveUnaryInst('frintn', 'Frintn', 'SimdCvtOp', floatTypes, frintnCode,
+                 PredType.MERGE)
+    # FRINTP
+    frintpCode = frintCode % ('FPRounding_POSINF', 'false')
+    sveUnaryInst('frintp', 'Frintp', 'SimdCvtOp', floatTypes, frintpCode,
+                 PredType.MERGE)
+    # FRINTX
+    frintxCode = frintCode % ('FPCRRounding(fpscr)', 'true')
+    sveUnaryInst('frintx', 'Frintx', 'SimdCvtOp', floatTypes, frintxCode,
+                 PredType.MERGE)
+    # FRINTZ
+    frintzCode = frintCode % ('FPRounding_ZERO', 'false')
+    sveUnaryInst('frintz', 'Frintz', 'SimdCvtOp', floatTypes, frintzCode,
+                 PredType.MERGE)
+    # FRSQRTE
+    frsqrteCode = fpOp % 'fplibRSqrtEstimate<Element>(srcElem1, fpscr)'
+    sveUnaryInst('frsqrte', 'Frsqrte', 'SimdFloatSqrtOp', floatTypes,
+                 frsqrteCode)
+    # FRSQRTS
+    frsqrtsCode = fpBinOp % 'RSqrtStepFused'
+    sveBinInst('frsqrts', 'Frsqrts', 'SimdFloatMiscOp', floatTypes,
+               frsqrtsCode)
+    # FSCALE
+    fscaleCode = fpBinOp % 'Scale'
+    sveBinInst('fscale', 'Fscale', 'SimdFloatMiscOp', floatTypes, fscaleCode,
+               PredType.MERGE, True)
+    # FSQRT
+    fsqrtCode = fpOp % "fplibSqrt<Element>(srcElem1, fpscr)"
+    sveUnaryInst('fsqrt', 'Fsqrt', 'SimdFloatSqrtOp', floatTypes, fsqrtCode,
+                 PredType.MERGE)
+    # FSUB (immediate)
+    fsubCode = fpBinOp % 'Sub'
+    sveBinImmInst('fsub', 'FsubImm', 'SimdFloatAddOp', floatTypes, fsubCode,
+                  PredType.MERGE)
+    # FSUB (vectors, predicated)
+    sveBinInst('fsub', 'FsubPred', 'SimdFloatAddOp', floatTypes, fsubCode,
+               PredType.MERGE, True)
+    # FSUB (vectors, unpredicated)
+    sveBinInst('fsub', 'FsubUnpred', 'SimdFloatAddOp', floatTypes, fsubCode)
+    # FSUBR (immediate)
+    fsubrCode = fpBinRevOp % 'Sub'
+    sveBinImmInst('fsubr', 'FsubrImm', 'SimdFloatAddOp', floatTypes, fsubrCode,
+                  PredType.MERGE)
+    # FSUBR (vectors)
+    sveBinInst('fsubr', 'Fsubr', 'SimdFloatAddOp', floatTypes, fsubrCode,
+               PredType.MERGE, True)
+    # FTMAD
+    ftmadCode = fpOp % ('fplibTrigMulAdd<Element>('
+                        'srcElem3, destElem, srcElem2, fpscr)')
+    sveTerImmInst('ftmad', 'Ftmad', 'SimdFloatMultAccOp', floatTypes,
+                  ftmadCode)
+    # FTSMUL
+    ftsmulCode = fpBinOp % 'TrigSMul'
+    sveBinInst('ftsmul', 'Ftsmul', 'SimdFloatMiscOp', floatTypes, ftsmulCode)
+    # FTSSEL
+    ftsselCode = fpBinOp % 'TrigSSel'
+    sveBinInst('ftssel', 'Ftssel', 'SimdFloatMultOp', floatTypes, ftsselCode)
+    # INCB, INCH, INCW, INCD (scalar)
+    incxCode = '''
+        destElem = srcElem1 + (count * imm);
+    '''
+    sveElemCountInst('inc', 'Inc', 'SimdAluOp', unsignedTypes, incxCode,
+            destType = DestType.Scalar, dstIs32b = False)
+    # INCH, INCW, INCD (vector)
+    sveElemCountInst('inc', 'Incv', 'SimdAluOp', bigUnsignedTypes, incxCode,
+            destType = DestType.Vector, dstIs32b = False)
+    # INCP (scalar)
+    incpCode = '''
+    XDest = XDest + count;
+    '''
+    svePredCountInst('incp', 'Incp', 'SimdAluOp', unsignedTypes, incpCode,
+                     DestType.Scalar, SrcSize.Src64bit)
+    # INCP (vector)
+    incpvCode = '''
+        destElem = srcElem + count;
+    '''
+    svePredCountInst('incp', 'Incpv', 'SimdAluOp', unsignedTypes, incpvCode,
+                     DestType.Vector)
+    # INDEX (immediate, scalar)
+    sveIndex(IndexFormat.ImmReg)
+    # INDEX (immediates)
+    sveIndex(IndexFormat.ImmImm)
+    # INDEX (scalar, immediate)
+    sveIndex(IndexFormat.RegImm)
+    # INDEX (scalars)
+    sveIndex(IndexFormat.RegReg)
+    # INSR (scalar)
+    sveShiftAndInsertInst('insr', 'Insr', 'SimdAluOp', unsignedTypes,
+            srcType = SrcRegType.Scalar)
+    # INSR (SIMD&FP scalar)
+    sveShiftAndInsertInst('insr', 'Insrf', 'SimdAluOp', unsignedTypes,
+            srcType = SrcRegType.SimdFpScalar)
+    # LASTA (scalar)
+    lastaCode = '''
+        last++;
+        if (last >= eCount) {
+            last = 0;
+        }
+        destElem = AA64FpOp1_x[last];'''
+    sveSelectInst('lasta', 'Lasta', 'SimdAluOp', unsignedTypes, lastaCode,
+            isCond = False)
+    # LASTA (SIMD&FP scalar)
+    sveSelectInst('lasta', 'Lastaf', 'SimdAluOp', unsignedTypes, lastaCode,
+            isCond = False, destType = DstRegType.SimdFpScalar)
+    # LASTB (scalar)
+    lastbCode = '''
+        if (last < 0) {
+            last = eCount - 1;
+        }
+        destElem = AA64FpOp1_x[last];'''
+    sveSelectInst('lastb', 'Lastb', 'SimdAluOp', unsignedTypes, lastbCode,
+            isCond = False)
+    # LASTB (SIMD&FP scalar)
+    sveSelectInst('lastb', 'Lastbf', 'SimdAluOp', unsignedTypes, lastbCode,
+            isCond = False, destType = DstRegType.SimdFpScalar)
+    # LSL (immediate, predicated)
+    lslCode = '''
+            if (srcElem2 == 0) {
+                destElem = srcElem1;
+            } else if (srcElem2 >= sizeof(Element) * 8) {
+                destElem = 0;
+            } else {
+                destElem = srcElem1 << srcElem2;
+            }
+    '''
+    sveBinImmInst('lsl', 'LslImmPred', 'SimdAluOp', unsignedTypes, lslCode,
+                  PredType.MERGE)
+    # LSL (immediate, unpredicated)
+    sveBinImmInst('lsl', 'LslImmUnpred', 'SimdAluOp', unsignedTypes, lslCode)
+    # LSL (vectors)
+    sveBinInst('lsl', 'LslPred', 'SimdAluOp', unsignedTypes, lslCode,
+               PredType.MERGE, True)
+    # LSL (wide elements, predicated)
+    sveShiftByWideElemsInst('lsl', 'LslWidePred', 'SimdAluOp', unsignedTypes,
+                            lslCode, PredType.MERGE)
+    # LSL (wide elements, unpredicated)
+    sveShiftByWideElemsInst('lsl', 'LslWideUnpred', 'SimdAluOp', unsignedTypes,
+                            lslCode)
+    # LSLR
+    lslrCode = '''
+            if (srcElem1 == 0) {
+                destElem = srcElem2;
+            } else if (srcElem1 >= sizeof(Element) * 8) {
+                destElem = 0;
+            } else {
+                destElem = srcElem2 << srcElem1;
+            }
+    '''
+    sveBinInst('lslr', 'Lslr', 'SimdAluOp', unsignedTypes, lslrCode,
+               PredType.MERGE, True)
+    # LSR (immediate, predicated)
+    lsrCode = '''
+            if (srcElem2 >= sizeof(Element) * 8) {
+                destElem = 0;
+            } else {
+                destElem = srcElem1 >> srcElem2;
+            }
+    '''
+    sveBinImmInst('lsr', 'LsrImmPred', 'SimdAluOp', unsignedTypes, lsrCode,
+                  PredType.MERGE)
+    # LSR (immediate, unpredicated)
+    sveBinImmInst('lsr', 'LsrImmUnpred', 'SimdAluOp', unsignedTypes, lsrCode)
+    # LSR (vectors)
+    sveBinInst('lsr', 'LsrPred', 'SimdAluOp', unsignedTypes, lsrCode,
+               PredType.MERGE, True)
+    # LSR (wide elements, predicated)
+    sveShiftByWideElemsInst('lsr', 'LsrWidePred', 'SimdAluOp', unsignedTypes,
+                            lsrCode, PredType.MERGE)
+    # LSR (wide elements, unpredicated)
+    sveShiftByWideElemsInst('lsr', 'LsrWideUnpred', 'SimdAluOp', unsignedTypes,
+                            lsrCode)
+    # LSRR
+    lsrrCode = '''
+            if (srcElem1 >= sizeof(Element) * 8) {
+                destElem = 0;
+            } else {
+                destElem = srcElem2 >> srcElem1;
+            }
+    '''
+    sveBinInst('lsrr', 'Lsrr', 'SimdAluOp', unsignedTypes, lsrrCode,
+               PredType.MERGE, True)
+    # MAD
+    madCode = 'destElem = srcElem1 + destElem * srcElem2;'
+    sveTerInst('mad', 'Mad', 'SimdMultAccOp', signedTypes, madCode)
+    # MLA
+    mlaCode = 'destElem += srcElem1 * srcElem2;'
+    sveTerInst('mla', 'Mla', 'SimdMultAccOp', signedTypes, mlaCode)
+    # MLS
+    mlsCode = 'destElem -= srcElem1 * srcElem2;'
+    sveTerInst('mls', 'Mls', 'SimdMultAccOp', signedTypes, mlsCode)
+    # MOVPRFX (predicated)
+    movCode = 'destElem = srcElem1;'
+    sveUnaryInst('movprfx', 'MovprfxPredM', 'SimdMiscOp', unsignedTypes,
+                 movCode, PredType.MERGE)
+    sveUnaryInst('movprfx', 'MovprfxPredZ', 'SimdMiscOp', unsignedTypes,
+                 movCode, PredType.ZERO)
+    # MOVPRFX (unpredicated)
+    sveUnaryInst('movprfx', 'MovprfxUnpred', 'SimdMiscOp', ('uint64_t',),
+                 movCode)
+    # MSB
+    msbCode = 'destElem = srcElem1 - destElem * srcElem2;'
+    sveTerInst('msb', 'Msb', 'SimdMultAccOp', signedTypes, msbCode)
+    # MUL (immediate)
+    mulCode = 'destElem = srcElem1 * srcElem2;'
+    sveWideImmInst('mul', 'MulImm', 'SimdMultOp', unsignedTypes, mulCode)
+    # MUL (vectors)
+    sveBinInst('mul', 'Mul', 'SimdMultOp', unsignedTypes, mulCode,
+               PredType.MERGE, True)
+    # NAND, NANDS
+    nandCode = 'destElem = !(srcElem1 & srcElem2);';
+    svePredLogicalInst('nand', 'PredNand', 'SimdPredAluOp', ('uint8_t',),
+                       nandCode)
+    svePredLogicalInst('nands', 'PredNands', 'SimdPredAluOp', ('uint8_t',),
+                       nandCode, isFlagSetting=True)
+    # NEG
+    negCode = 'destElem = -srcElem1;'
+    sveUnaryInst('neg', 'Neg', 'SimdAluOp', signedTypes, negCode,
+                 PredType.MERGE)
+    # NOR, NORS
+    norCode = 'destElem = !(srcElem1 | srcElem2);';
+    svePredLogicalInst('nor', 'PredNor', 'SimdPredAluOp', ('uint8_t',),
+                       norCode)
+    svePredLogicalInst('nors', 'PredNors', 'SimdPredAluOp', ('uint8_t',),
+                       norCode, isFlagSetting=True)
+    # NOT (vector)
+    notCode = 'destElem = ~srcElem1;'
+    sveUnaryInst('not', 'Not', 'SimdAluOp', unsignedTypes, notCode,
+                 PredType.MERGE)
+    # ORN, ORNS (predicates)
+    ornCode = 'destElem = srcElem1 | !srcElem2;';
+    svePredLogicalInst('orn', 'PredOrn', 'SimdPredAluOp', ('uint8_t',),
+                       ornCode)
+    svePredLogicalInst('orns', 'PredOrns', 'SimdPredAluOp', ('uint8_t',),
+                       ornCode, isFlagSetting=True)
+    # ORR (immediate)
+    orCode = 'destElem = srcElem1 | srcElem2;'
+    sveWideImmInst('orr', 'OrrImm', 'SimdAluOp', ('uint64_t',), orCode)
+    # ORR (vectors, predicated)
+    sveBinInst('orr', 'OrrPred', 'SimdAluOp', unsignedTypes, orCode,
+               PredType.MERGE, True)
+    # ORR (vectors, unpredicated)
+    orCode = 'destElem = srcElem1 | srcElem2;'
+    sveBinInst('orr', 'OrrUnpred', 'SimdAluOp', ('uint64_t',), orCode)
+    # ORR, ORRS (predicates)
+    svePredLogicalInst('orr', 'PredOrr', 'SimdPredAluOp', ('uint8_t',), orCode)
+    svePredLogicalInst('orrs', 'PredOrrs', 'SimdPredAluOp', ('uint8_t',),
+                       orCode, isFlagSetting=True)
+    # ORV
+    orvCode = 'destElem |= srcElem1;'
+    sveAssocReducInst('orv', 'Orv', 'SimdReduceAluOp', unsignedTypes,
+                      orvCode, '0')
+    # PFALSE
+    pfalseCode = '''
+        PDest_ub[0] = 0;
+        destPred.reset();
+    '''
+    svePredUnaryWImplicitSrcInst('pfalse', 'Pfalse', 'SimdPredAluOp',
+            pfalseCode)
+    # PFIRST
+    svePFirstInst('pfirst', 'Pfirst', 'SimdPredAluOp')
+    # PNEXT
+    svePNextInst('pnext', 'Pnext', 'SimdPredAluOp', unsignedTypes)
+    # PTEST
+    svePredTestInst('ptest', 'Ptest', 'SimdPredAluOp')
+    # PTRUE
+    svePtrueInst('ptrue', 'Ptrue', 'SimdPredAluOp', unsignedTypes, False)
+    # PTRUES
+    svePtrueInst('ptrues', 'Ptrues', 'SimdPredAluOp', unsignedTypes, True)
+    # PUNPKHI
+    sveUnpackInst('punpkhi', 'Punpkhi', 'SimdPredAluOp', unsignedWideSDTypes,
+            unpackHalf = Unpack.High, regType = SrcRegType.Predicate)
+    # PUNPKLO
+    sveUnpackInst('punpklo', 'Punpklo', 'SimdPredAluOp', unsignedWideSDTypes,
+            unpackHalf = Unpack.Low, regType = SrcRegType.Predicate)
+    # RBIT
+    rbitCode = '''
+        destElem = reverseBits(srcElem1);'''
+    sveUnaryInst('rbit', 'Rbit', 'SimdAluOp', unsignedTypes, rbitCode,
+            predType=PredType.MERGE, srcRegType=SrcRegType.Vector)
+    # RDFFR (unpredicated)
+    rdffrUnpredCode = '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<uint8_t>(
+                xc->tcBase());
+        for (unsigned i = 0; i < eCount; i++) {
+            PDest_ub[i] = Ffr_ub[i];
+        }'''
+    svePredUnaryWImplicitSrcInst('rdffr', 'RdffrUnpred', 'SimdPredAluOp',
+            rdffrUnpredCode)
+    # RDFFR, RDFFRS (predicated)
+    rdffrPredCode = '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<uint8_t>(
+                xc->tcBase());
+        for (unsigned i = 0; i < eCount; i++) {
+            if (GpOp_ub[i]) {
+                PDest_ub[i] = Ffr_ub[i];
+            } else {
+                PDest_ub[i] = false;
+            }
+        }'''
+    svePredUnaryWImplicitSrcInst('rdffr', 'RdffrPred', 'SimdPredAluOp',
+            rdffrPredCode, PredType.ZERO, False)
+    svePredUnaryWImplicitSrcInst('rdffrs', 'RdffrsPred', 'SimdPredAluOp',
+            rdffrPredCode, PredType.ZERO, True)
+    # RDVL
+    rdvlCode = sveEnabledCheckCode + '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<uint8_t>(
+                xc->tcBase());
+        XDest = eCount * (int64_t) imm;
+    '''
+    rdvlIop = InstObjParams('rdvl', 'SveRdvl', 'RegImmOp', rdvlCode, [])
+    header_output += RegImmOpDeclare.subst(rdvlIop)
+    decoder_output += RegImmOpConstructor.subst(rdvlIop)
+    exec_output += BasicExecute.subst(rdvlIop)
+    # REV (predicate)
+    sveReverseElementsInst('rev', 'Revp', 'SimdPredAluOp', unsignedTypes,
+            srcType = SrcRegType.Predicate)
+    # REV (vector)
+    sveReverseElementsInst('rev', 'Revv', 'SimdAluOp', unsignedTypes,
+            srcType = SrcRegType.Vector)
+    # REVB
+    revCode = '''
+        %(revtype)s* srcPtr = reinterpret_cast<%(revtype)s*>(&srcElem1);
+        %(revtype)s* dstPtr = reinterpret_cast<%(revtype)s*>(&destElem);
+        uint8_t subelements = sizeof(Element) / sizeof(%(revtype)s);
+        for(int i = 0; i < subelements; ++i) {
+            dstPtr[subelements - i - 1] = srcPtr[i];
+        }'''
+    sveUnaryInst('revb', 'Revb', 'SimdAluOp',
+            ['uint16_t', 'uint32_t', 'uint64_t'],
+            revCode % {'revtype' : 'uint8_t'}, predType=PredType.MERGE,
+            srcRegType=SrcRegType.Vector, decoder='Generic')
+    # REVH
+    sveUnaryInst('revh', 'Revh', 'SimdAluOp', ['uint32_t', 'uint64_t'],
+            revCode % {'revtype' : 'uint16_t'}, predType=PredType.MERGE,
+            srcRegType=SrcRegType.Vector, decoder='Generic')
+    # REVW
+    sveUnaryInst('revw', 'Revw', 'SimdAluOp', ['uint64_t'],
+            revCode % {'revtype' : 'uint32_t'}, predType=PredType.MERGE,
+            srcRegType=SrcRegType.Vector, decoder='Generic')
+    # SABD
+    abdCode = '''
+            destElem = (srcElem1 > srcElem2) ? (srcElem1 - srcElem2) :
+                                               (srcElem2 - srcElem1);
+    '''
+    sveBinInst('sabd', 'Sabd', 'SimdAddOp', signedTypes, abdCode,
+               PredType.MERGE, True)
+    # SADDV
+    addvCode = 'destElem += srcElem1;'
+    sveWideningAssocReducInst('saddv', 'Saddv', 'SimdReduceAddOp',
+            ['int8_t, int64_t', 'int16_t, int64_t', 'int32_t, int64_t'],
+            addvCode, '0')
+    # SCVTF
+    scvtfCode = fpOp % ('fplibFixedToFP<DElement>('
+                        'sext<sizeof(SElement) * 8>(srcElem1), 0,'
+                        ' false, FPCRRounding(fpscr), fpscr)')
+    sveCvtInst('scvtf', 'ScvtfNarrow', 'SimdCvtOp',
+               ('uint16_t, uint16_t',
+                'uint32_t, uint16_t',
+                'uint64_t, uint16_t',
+                'uint32_t, uint32_t',
+                'uint64_t, uint32_t',
+                'uint64_t, uint64_t'),
+               scvtfCode, CvtDir.Narrow)
+    sveCvtInst('scvtf', 'ScvtfWiden', 'SimdCvtOp', ('uint32_t, uint64_t',),
+               scvtfCode, CvtDir.Widen)
+    # SDIV
+    sdivCode = '''
+        constexpr Element ELEM_MIN = std::numeric_limits<Element>::min();
+        destElem = (srcElem2 == 0) ? 0 :
+            (srcElem2 == -1 && srcElem1 == ELEM_MIN) ? ELEM_MIN :
+                (srcElem1 / srcElem2);
+    '''
+    sveBinInst('sdiv', 'Sdiv', 'SimdDivOp', signedTypes, sdivCode,
+               PredType.MERGE, True)
+    # SDIVR
+    sdivrCode = '''
+        constexpr Element ELEM_MIN = std::numeric_limits<Element>::min();
+        destElem = (srcElem1 == 0) ? 0 :
+            (srcElem1 == -1 && srcElem2 == ELEM_MIN) ? ELEM_MIN :
+                (srcElem2 / srcElem1);
+    '''
+    sveBinInst('sdivr', 'Sdivr', 'SimdDivOp', signedTypes, sdivrCode,
+               PredType.MERGE, True)
+    # SDOT (indexed)
+    sveDotInst('sdot', 'Sdoti', 'SimdAluOp', ['int8_t, int32_t',
+        'int16_t, int64_t'], isIndexed = True)
+    # SDOT (vectors)
+    sveDotInst('sdot', 'Sdotv', 'SimdAluOp', ['int8_t, int32_t',
+        'int16_t, int64_t'], isIndexed = False)
+    # SEL (predicates)
+    selCode = 'destElem = srcElem1;'
+    svePredLogicalInst('sel', 'PredSel', 'SimdPredAluOp', ('uint8_t',),
+                       selCode, PredType.SELECT)
+    # SEL (vectors)
+    sveBinInst('sel', 'Sel', 'SimdAluOp', unsignedTypes, selCode,
+               PredType.SELECT, False)
+    # SETFFR
+    setffrCode = '''
+        Ffr_ub[0] = true;
+        destPred.set();'''
+    svePredWriteFfrInst('setffr', 'Setffr', 'SimdPredAluOp', setffrCode, True)
+    # SMAX (immediate)
+    maxCode = 'destElem = (srcElem1 > srcElem2) ? srcElem1 : srcElem2;'
+    sveWideImmInst('smax', 'SmaxImm', 'SimdCmpOp', signedTypes, maxCode)
+    # SMAX (vectors)
+    sveBinInst('smax', 'Smax', 'SimdCmpOp', signedTypes, maxCode,
+               PredType.MERGE, True)
+    # SMAXV
+    maxvCode = '''
+            if (srcElem1 > destElem)
+                destElem = srcElem1;
+    '''
+    sveAssocReducInst('smaxv', 'Smaxv', 'SimdReduceCmpOp', signedTypes,
+                      maxvCode, 'std::numeric_limits<Element>::min()')
+    # SMIN (immediate)
+    minCode = 'destElem = (srcElem1 < srcElem2) ? srcElem1 : srcElem2;'
+    sveWideImmInst('smin', 'SminImm', 'SimdCmpOp', signedTypes, minCode)
+    # SMIN (vectors)
+    sveBinInst('smin', 'Smin', 'SimdCmpOp', signedTypes, minCode,
+               PredType.MERGE, True)
+    # SMINV
+    minvCode = '''
+            if (srcElem1 < destElem)
+                destElem = srcElem1;
+    '''
+    sveAssocReducInst('sminv', 'Sminv', 'SimdReduceCmpOp', signedTypes,
+                      minvCode, 'std::numeric_limits<Element>::max()')
+    # SMULH
+    exec_output += '''
+    template <class T>
+    T do_mulh(T srcElem1, T srcElem2)
+    {
+        return ((int64_t)srcElem1 * (int64_t)srcElem2) >> sizeof(T) * 8;
+    }
+
+    int64_t do_mulh(int64_t srcElem1, int64_t srcElem2)
+    {
+        uint64_t x = (uint64_t) llabs(srcElem1);
+        uint64_t y = (uint64_t) llabs(srcElem2);
+
+        uint64_t a = x >> 32;
+        uint64_t b = x & 0xFFFFFFFF;
+        uint64_t c = y >> 32;
+        uint64_t d = y & 0xFFFFFFFF;
+
+        uint64_t hi = a * c;
+        uint64_t lo = b * d;
+
+        hi += (a * d) >> 32;
+        uint64_t tmp = lo;
+        lo += ((a * d) & 0xFFFFFFFF) << 32;
+        if (lo < tmp)
+            hi++;
+
+        hi += (b * c) >> 32;
+        tmp = lo;
+        lo += ((b * c) & 0xFFFFFFFF) << 32;
+        if (lo < tmp)
+            hi++;
+
+        uint64_t destElem = hi;
+        if ((srcElem1 < 0) ^ (srcElem2 < 0)) {
+            uint64_t tmp = lo = ~lo;
+            destElem = ~hi;
+            if (++lo < tmp)
+                destElem++;
+        }
+
+        return destElem;
+    }
+
+    uint64_t do_mulh(uint64_t srcElem1, uint64_t srcElem2)
+    {
+        uint64_t x = srcElem1;
+        uint64_t y = srcElem2;
+
+        uint64_t a = x >> 32;
+        uint64_t b = x & 0xFFFFFFFF;
+        uint64_t c = y >> 32;
+        uint64_t d = y & 0xFFFFFFFF;
+
+        uint64_t hi = a * c;
+        uint64_t lo = b * d;
+
+        hi += (a * d) >> 32;
+        uint64_t tmp = lo;
+        lo += ((a * d) & 0xFFFFFFFF) << 32;
+        if (lo < tmp)
+            hi++;
+
+        hi += (b * c) >> 32;
+        tmp = lo;
+        lo += ((b * c) & 0xFFFFFFFF) << 32;
+        if (lo < tmp)
+            hi++;
+
+        return hi;
+    }'''
+    mulhCode = '''
+    destElem = do_mulh(srcElem1, srcElem2);'''
+    sveBinInst('smulh', 'Smulh', 'SimdMultOp', signedTypes, mulhCode,
+               PredType.MERGE, True)
+    # SPLICE
+    sveSpliceInst('splice', 'Splice', 'SimdAluOp', unsignedTypes)
+    # SQADD (immediate)
+    sqaddCode = '''
+            destElem = srcElem1 + srcElem2;
+            bool negDest = (destElem < 0);
+            bool negSrc1 = (srcElem1 < 0);
+            bool negSrc2 = (srcElem2 < 0);
+            if ((negDest != negSrc1) && (negSrc1 == negSrc2)) {
+                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                if (negDest)
+                    destElem -= 1;
+            }
+    '''
+    sveWideImmInst('sqadd', 'SqaddImm', 'SimdAddOp', signedTypes, sqaddCode)
+    # SQADD (vectors)
+    sveBinInst('sqadd', 'Sqadd', 'SimdAddOp', signedTypes, sqaddCode)
+    # SQDECB, SQDECH, SQDECW, SQDECD (scalar, 32-bit)
+    sqdecCode = '''
+        destElem = srcElem1 - (count * imm);
+        bool negDest = (destElem < 0);
+        bool negSrc = (srcElem1 < 0);
+        bool posCount = ((count * imm) >= 0);
+        if ((negDest != negSrc) && (negSrc == posCount)) {
+            destElem = (%(dstType)s)1 << (sizeof(%(dstType)s) * 8 - 1);
+            if (negDest)
+                destElem -= 1;
+        }
+    '''
+    sveElemCountInst('sqdec', 'Sqdec32', 'SimdAluOp', signedTypes,
+            sqdecCode%{'dstType':'int32_t'}, destType = DestType.Scalar,
+            dstIs32b = True)
+    # SQDECB, SQDECH, SQDECW, SQDECD (scalar, 64-bit)
+    sveElemCountInst('sqdec', 'Sqdec', 'SimdAluOp', signedTypes,
+            sqdecCode%{'dstType':'int64_t'}, destType = DestType.Scalar,
+            dstIs32b = False)
+    # SQDECH, SQDECW, SQDECD (vector)
+    sveElemCountInst('sqdec', 'Sqdecv', 'SimdAluOp', bigSignedTypes,
+            sqdecCode%{'dstType':'Element'}, destType = DestType.Vector,
+            dstIs32b = False)
+    # SQDECP (scalar, 32-bit)
+    sqdecpCode = '''
+        destElem = srcElem - count;
+        bool negDest = (destElem < 0);
+        bool negSrc = (srcElem < 0);
+        bool posCount = (count >= 0);
+        if ((negDest != negSrc) && (negSrc == posCount)) {
+            destElem = std::numeric_limits<%s>::min();
+            if (negDest)
+                destElem -= 1;
+        }
+    '''
+    sqdecp32Code = '''
+        int32_t srcElem = WDest;
+        int32_t destElem;''' + (sqdecpCode % 'int32_t') + '''
+        if (destElem < 0) {
+            XDest = static_cast<uint32_t>(destElem) | ~mask(32);
+        } else {
+            XDest = destElem;
+        }
+    '''
+    svePredCountInst('sqdecp', 'Sqdecp32', 'SimdAluOp', signedTypes,
+                     sqdecp32Code, DestType.Scalar, SrcSize.Src32bit)
+    # SQDECP (scalar, 64-bit)
+    sqdecp64Code = '''
+        int64_t srcElem = XDest;
+        int64_t destElem;''' + (sqdecpCode % 'int64_t') + '''
+        XDest = destElem;
+    '''
+    svePredCountInst('sqdecp', 'Sqdecp64', 'SimdAluOp', signedTypes,
+                     sqdecp64Code, DestType.Scalar, SrcSize.Src64bit)
+    # SQDECP (vector)
+    svePredCountInst('sqdecp', 'Sqdecpv', 'SimdAluOp', signedTypes,
+                     sqdecpCode % 'Element', DestType.Vector)
+    # SQINCB, SQINCH, SQINCW, SQINCD (scalar, 32-bit)
+    sqincCode = '''
+        destElem = srcElem1 + (count * imm);
+        bool negDest = (destElem < 0);
+        bool negSrc = (srcElem1 < 0);
+        bool negCount = ((count * imm) < 0);
+        if ((negDest != negSrc) && (negSrc == negCount)) {
+            destElem = (%(dstType)s)1 << (sizeof(%(dstType)s) * 8 - 1);
+            if (negDest)
+                destElem -= 1;
+        }
+    '''
+    sveElemCountInst('sqinc', 'Sqinc32', 'SimdAluOp', signedTypes,
+            sqincCode%{'dstType':'int32_t'}, destType = DestType.Scalar,
+            dstIs32b = True)
+    # SQINCB, SQINCH, SQINCW, SQINCD (scalar, 64-bit)
+    sveElemCountInst('sqinc', 'Sqinc', 'SimdAluOp', signedTypes,
+            sqincCode%{'dstType':'int64_t'}, destType = DestType.Scalar,
+            dstIs32b = False)
+    # SQINCH, SQINCW, SQINCD (vector)
+    sveElemCountInst('sqinc', 'Sqincv', 'SimdAluOp', bigSignedTypes,
+            sqincCode%{'dstType':'Element'}, destType = DestType.Vector,
+            dstIs32b = False)
+    # SQINCP (scalar, 32-bit)
+    sqincpCode = '''
+        destElem = srcElem + count;
+        bool negDest = (destElem < 0);
+        bool negSrc = (srcElem < 0);
+        bool negCount = (count < 0);
+        if ((negDest != negSrc) && (negSrc == negCount)) {
+            destElem = std::numeric_limits<%s>::min();
+            if (negDest)
+                destElem -= 1;
+        }
+    '''
+    sqincp32Code = '''
+        int32_t srcElem = WDest;
+        int32_t destElem;''' + (sqincpCode % 'int32_t') + '''
+        if (destElem < 0) {
+            XDest = static_cast<uint32_t>(destElem) | ~mask(32);
+        } else {
+            XDest = destElem;
+        }
+    '''
+    svePredCountInst('sqincp', 'Sqincp32', 'SimdAluOp', signedTypes,
+                     sqincp32Code, DestType.Scalar, SrcSize.Src32bit)
+    # SQINCP (scalar, 64-bit)
+    sqincp64Code = '''
+        int64_t srcElem = XDest;
+        int64_t destElem;''' + (sqincpCode % 'int64_t') + '''
+        XDest = destElem;
+    '''
+    svePredCountInst('sqincp', 'Sqincp64', 'SimdAluOp', signedTypes,
+                     sqincp64Code, DestType.Scalar, SrcSize.Src64bit)
+    # SQINCP (vector)
+    svePredCountInst('sqincp', 'Sqincpv', 'SimdAluOp', signedTypes,
+                     sqincpCode % 'Element', DestType.Vector)
+    # SQSUB (immediate)
+    sqsubCode = '''
+        destElem = srcElem1 - srcElem2;
+        bool negDest = (destElem < 0);
+        bool negSrc1 = (srcElem1 < 0);
+        bool posSrc2 = (srcElem2 >= 0);
+        if ((negDest != negSrc1) && (negSrc1 == posSrc2)) {
+            destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+            if (negDest)
+                destElem -= 1;
+        }
+    '''
+    sveWideImmInst('sqsub', 'SqsubImm', 'SimdAddOp', signedTypes, sqsubCode)
+    # SQSUB (vectors)
+    sveBinInst('sqsub', 'Sqsub', 'SimdAddOp', signedTypes, sqsubCode)
+    # SUB (immediate)
+    subCode = 'destElem = srcElem1 - srcElem2;'
+    sveWideImmInst('sub', 'SubImm', 'SimdAddOp', unsignedTypes, subCode)
+    # SUB (vectors, predicated)
+    sveBinInst('sub', 'SubPred', 'SimdAddOp', unsignedTypes, subCode,
+               PredType.MERGE, True)
+    # SUB (vectors, unpredicated)
+    subCode = 'destElem = srcElem1 - srcElem2;'
+    sveBinInst('sub', 'SubUnpred', 'SimdAddOp', unsignedTypes, subCode)
+    # SUBR (immediate)
+    subrCode = 'destElem = srcElem2 - srcElem1;'
+    sveWideImmInst('subr', 'SubrImm', 'SimdAddOp', unsignedTypes, subrCode)
+    # SUBR (vectors)
+    sveBinInst('subr', 'Subr', 'SimdAddOp', unsignedTypes, subrCode,
+               PredType.MERGE, True)
+    # SUNPKHI
+    sveUnpackInst('sunpkhi', 'Sunpkhi', 'SimdAluOp', signedWideSDTypes,
+            unpackHalf = Unpack.High, regType = SrcRegType.Vector)
+    # SUNPKLO
+    sveUnpackInst('sunpklo', 'Sunpklo', 'SimdAluOp', signedWideSDTypes,
+            unpackHalf = Unpack.Low, regType = SrcRegType.Vector)
+    # SXTB
+    sxtCode = 'destElem = sext<8 * sizeof(SElement)>(srcElem1);'
+    sveWidenUnaryInst('sxtb', 'Sxtb', 'SimdAluOp',
+            ['uint8_t, uint16_t', 'uint8_t, uint32_t', 'uint8_t, uint64_t'],
+            sxtCode, PredType.MERGE)
+    # SXTH
+    sveWidenUnaryInst('sxth', 'Sxth', 'SimdAluOp',
+            ['uint16_t, uint32_t', 'uint16_t, uint64_t'],
+            sxtCode, PredType.MERGE)
+    # SXTW
+    sveWidenUnaryInst('sxtw', 'Sxtw', 'SimdAluOp',
+            ['uint32_t, uint64_t'],
+            sxtCode, PredType.MERGE)
+    # TBL
+    sveTblInst('tbl', 'Tbl', 'SimdAluOp')
+    # TRN1, TRN2 (predicates)
+    trnPredIterCode = '''
+        constexpr unsigned sz = sizeof(Element);
+        int s;
+        int part = %d;
+        TheISA::VecPredRegContainer tmpPredC;
+        auto auxPDest = tmpPredC.as<uint8_t>();
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            s = 2 * i + part;
+            for (unsigned j = 0; j < sz; j++) {
+                auxPDest[(2 * i) * sz + j] = POp1_pb[s * sz + j];
+                auxPDest[(2 * i + 1) * sz + j] = POp2_pb[s * sz + j];
+            }
+        }
+        for (unsigned i = 0; i < eCount * sz; i++) {
+            PDest_pb[i] = auxPDest[i];
+        }
+    '''
+    svePredBinPermInst('trn1', 'Trn1Pred', 'SimdPredAluOp', unsignedTypes,
+                       trnPredIterCode % 0)
+    svePredBinPermInst('trn2', 'Trn2Pred', 'SimdPredAluOp', unsignedTypes,
+                       trnPredIterCode % 1)
+    # TRN1, TRN2 (vectors)
+    trnIterCode = '''
+        int s;
+        int part = %d;
+        TheISA::VecRegContainer tmpVecC;
+        auto auxDest = tmpVecC.as<Element>();
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            s = 2 * i + part;
+            auxDest[2 * i] = AA64FpOp1_x[s];
+            auxDest[2 * i + 1] = AA64FpOp2_x[s];
+        }
+        for (unsigned i = 0; i < eCount; i++) {
+            AA64FpDest_x[i] = auxDest[i];
+        }
+    '''
+    sveBinInst('trn1', 'Trn1', 'SimdAluOp', unsignedTypes, '',
+               customIterCode=trnIterCode % 0)
+    sveBinInst('trn2', 'Trn2', 'SimdAluOp', unsignedTypes, '',
+               customIterCode=trnIterCode % 1)
+    # UABD
+    sveBinInst('uabd', 'Uabd', 'SimdAddOp', unsignedTypes, abdCode,
+               PredType.MERGE, True)
+    # UADDV
+    sveWideningAssocReducInst('uaddv', 'Uaddv', 'SimdReduceAddOp',
+            ['uint8_t, uint64_t', 'uint16_t, uint64_t', 'uint32_t, uint64_t',
+             'uint64_t, uint64_t'],
+            addvCode, '0')
+    # UCVTF
+    ucvtfCode = fpOp % ('fplibFixedToFP<DElement>(srcElem1, 0, true,'
+                        ' FPCRRounding(fpscr), fpscr)')
+    sveCvtInst('ucvtf', 'UcvtfNarrow', 'SimdCvtOp',
+               ('uint16_t, uint16_t',
+                'uint32_t, uint16_t',
+                'uint64_t, uint16_t',
+                'uint32_t, uint32_t',
+                'uint64_t, uint32_t',
+                'uint64_t, uint64_t'),
+               ucvtfCode, CvtDir.Narrow)
+    sveCvtInst('ucvtf', 'UcvtfWiden', 'SimdCvtOp', ('uint32_t, uint64_t',),
+               ucvtfCode, CvtDir.Widen)
+    # UDIV
+    udivCode = 'destElem = (srcElem2 == 0) ? 0 : (srcElem1 / srcElem2);'
+    sveBinInst('udiv', 'Udiv', 'SimdDivOp', unsignedTypes, udivCode,
+               PredType.MERGE, True)
+    # UDIVR
+    udivrCode = 'destElem = (srcElem1 == 0) ? 0 : (srcElem2 / srcElem1);'
+    sveBinInst('udivr', 'Udivr', 'SimdDivOp', unsignedTypes, udivrCode,
+               PredType.MERGE, True)
+    # UDOT (indexed)
+    sveDotInst('udot', 'Udoti', 'SimdAluOp', ['uint8_t, uint32_t',
+        'uint16_t, uint64_t'], isIndexed = True)
+    # UDOT (vectors)
+    sveDotInst('udot', 'Udotv', 'SimdAluOp', ['uint8_t, uint32_t',
+        'uint16_t, uint64_t'], isIndexed = False)
+    # UMAX (immediate)
+    sveWideImmInst('umax', 'UmaxImm', 'SimdCmpOp', unsignedTypes, maxCode)
+    # UMAX (vectors)
+    sveBinInst('umax', 'Umax', 'SimdCmpOp', unsignedTypes, maxCode,
+               PredType.MERGE, True)
+    # UMAXV
+    sveAssocReducInst('umaxv', 'Umaxv', 'SimdReduceCmpOp', unsignedTypes,
+                      maxvCode, 'std::numeric_limits<Element>::min()')
+    # UMIN (immediate)
+    sveWideImmInst('umin', 'UminImm', 'SimdCmpOp', unsignedTypes, minCode)
+    # UMIN (vectors)
+    sveBinInst('umin', 'Umin', 'SimdCmpOp', unsignedTypes, minCode,
+               PredType.MERGE, True)
+    # UMINV
+    sveAssocReducInst('uminv', 'Uminv', 'SimdReduceCmpOp', unsignedTypes,
+                      minvCode, 'std::numeric_limits<Element>::max()')
+    # UMULH
+    sveBinInst('umulh', 'Umulh', 'SimdMultOp', unsignedTypes, mulhCode,
+               PredType.MERGE, True)
+    # UQADD (immediate)
+    uqaddCode = '''
+            destElem = srcElem1 + srcElem2;
+            if (destElem < srcElem1 || destElem < srcElem2) {
+                destElem = (Element)(-1);
+            }
+    '''
+    sveWideImmInst('uqadd', 'UqaddImm', 'SimdAddOp', unsignedTypes, uqaddCode)
+    # UQADD (vectors)
+    sveBinInst('uqadd', 'Uqadd', 'SimdAddOp', unsignedTypes, uqaddCode)
+    # UQDECB, UQDECH, UQDECW, UQDECD (scalar, 32-bit)
+    uqdecCode = '''
+        destElem = srcElem1 - (imm * count);
+        if (destElem > srcElem1) {
+            destElem = 0;
+        }
+    '''
+    sveElemCountInst('uqdec', 'Uqdec32', 'SimdAluOp', unsignedTypes,
+            uqdecCode, destType = DestType.Scalar, dstIs32b = True)
+    # UQDECB, UQDECH, UQDECW, UQDECD (scalar, 64-bit)
+    sveElemCountInst('uqdec', 'Uqdec', 'SimdAluOp', unsignedTypes,
+            uqdecCode, destType = DestType.Scalar, dstIs32b = False)
+    # UQDECH, UQDECW, UQDECD (vector)
+    sveElemCountInst('uqdec', 'Uqdecv', 'SimdAluOp', bigUnsignedTypes,
+            uqdecCode, destType = DestType.Vector, dstIs32b = False)
+    # UQDECP (scalar, 32-bit)
+    uqdecpCode = '''
+        destElem = srcElem - count;
+        if (destElem > srcElem) {
+            destElem = 0;
+        }
+    '''
+    uqdecp32Code = '''
+        uint32_t srcElem = WDest;
+        uint32_t destElem;''' + uqdecpCode + '''
+        WDest = destElem;
+    '''
+    svePredCountInst('uqdecp', 'Uqdecp32', 'SimdAluOp', unsignedTypes,
+                     uqdecp32Code, DestType.Scalar, SrcSize.Src32bit)
+    # UQDECP (scalar, 64-bit)
+    uqdecp64Code = '''
+        uint64_t srcElem = XDest;
+        uint64_t destElem;''' + uqdecpCode + '''
+        XDest = destElem;
+    '''
+    svePredCountInst('uqdecp', 'Uqdecp64', 'SimdAluOp', unsignedTypes,
+                     uqdecp64Code, DestType.Scalar, SrcSize.Src64bit)
+    # UQDECP (vector)
+    svePredCountInst('uqdecp', 'Uqdecpv', 'SimdAluOp', unsignedTypes,
+                     uqdecpCode, DestType.Vector)
+    # UQDECB, UQDECH, UQDECW, UQDECD (scalar, 32-bit)
+    uqincCode = '''
+        destElem = srcElem1 + (imm * count);
+        if (destElem < srcElem1 || destElem < (imm * count)) {
+            destElem = static_cast<%(destType)s>(-1);
+        }
+    '''
+    sveElemCountInst('uqinc', 'Uqinc32', 'SimdAluOp', unsignedTypes,
+            uqincCode%{'destType': 'uint32_t'}, destType = DestType.Scalar,
+            dstIs32b = True)
+    # UQDECB, UQDECH, UQDECW, UQDECD (scalar, 64-bit)
+    sveElemCountInst('uqinc', 'Uqinc', 'SimdAluOp', unsignedTypes,
+            uqincCode%{'destType': 'uint64_t'}, destType = DestType.Scalar,
+            dstIs32b = False)
+    # UQDECH, UQDECW, UQDECD (vector)
+    sveElemCountInst('uqinc', 'Uqincv', 'SimdAluOp', bigUnsignedTypes,
+            uqincCode%{'destType': 'Element'}, destType = DestType.Vector,
+            dstIs32b = False)
+    # UQINCP (scalar, 32-bit)
+    uqincpCode = '''
+        destElem = srcElem + count;
+        if (destElem < srcElem || destElem < count) {
+            destElem = std::numeric_limits<%s>::max();
+        }
+    '''
+    uqincp32Code = '''
+        uint32_t srcElem = WDest;
+        uint32_t destElem;''' + (uqincpCode % 'uint32_t') + '''
+        XDest = destElem;
+    '''
+    svePredCountInst('uqincp', 'Uqincp32', 'SimdAluOp', unsignedTypes,
+                     uqincp32Code, DestType.Scalar, SrcSize.Src32bit)
+    # UQINCP (scalar, 64-bit)
+    uqincp64Code = '''
+        uint64_t srcElem = XDest;
+        uint64_t destElem;''' + (uqincpCode % 'uint64_t') + '''
+        XDest = destElem;
+    '''
+    svePredCountInst('uqincp', 'Uqincp64', 'SimdAluOp', unsignedTypes,
+                     uqincp64Code, DestType.Scalar, SrcSize.Src64bit)
+    # UQINCP (vector)
+    svePredCountInst('uqincp', 'Uqincpv', 'SimdAluOp', unsignedTypes,
+                     uqincpCode % 'Element', DestType.Vector)
+    # UQSUB (immediate)
+    uqsubCode = '''
+            destElem = srcElem1 - srcElem2;
+            if (destElem > srcElem1) {
+                destElem = 0;
+            }
+    '''
+    sveWideImmInst('uqsub', 'UqsubImm', 'SimdAddOp', unsignedTypes, uqsubCode)
+    # UQSUB (vectors)
+    sveBinInst('uqsub', 'Uqsub', 'SimdAddOp', unsignedTypes, uqsubCode)
+    # UUNPKHI
+    sveUnpackInst('uunpkhi', 'Uunpkhi', 'SimdAluOp', unsignedWideSDTypes,
+            unpackHalf = Unpack.High, regType = SrcRegType.Vector)
+    # UUNPKLO
+    sveUnpackInst('uunpklo', 'Uunpklo', 'SimdAluOp', unsignedWideSDTypes,
+            unpackHalf = Unpack.Low, regType = SrcRegType.Vector)
+    # UXTB
+    uxtCode = 'destElem = srcElem1;'
+    sveWidenUnaryInst('uxtb', 'Uxtb', 'SimdAluOp',
+            ['uint8_t, uint16_t', 'uint8_t, uint32_t', 'uint8_t, uint64_t'],
+            uxtCode, PredType.MERGE)
+    # UXTH
+    sveWidenUnaryInst('uxth', 'Uxth', 'SimdAluOp',
+            ['uint16_t, uint32_t', 'uint16_t, uint64_t'],
+            uxtCode, PredType.MERGE)
+    # UXTW
+    sveWidenUnaryInst('uxtw', 'Uxtw', 'SimdAluOp',
+            ['uint32_t, uint64_t'],
+            uxtCode, PredType.MERGE)
+    # UZP1, UZP2 (predicates)
+    uzpPredIterCode = '''
+        constexpr unsigned sz = sizeof(Element);
+        int s;
+        int part = %d;
+        TheISA::VecPredRegContainer tmpPredC;
+        auto auxPDest = tmpPredC.as<uint8_t>();
+        for (unsigned i = 0; i < eCount; i++) {
+            s = 2 * i + part;
+            for (unsigned j = 0; j < sz; j++) {
+                if (s < eCount) {
+                    auxPDest[i * sz + j] = POp1_pb[s * sz + j];
+                } else {
+                    auxPDest[i * sz + j] = POp2_pb[(s - eCount) * sz + j];
+                }
+            }
+        }
+        for (unsigned i = 0; i < eCount * sz; i++) {
+            PDest_pb[i] = auxPDest[i];
+        }
+    '''
+    svePredBinPermInst('uzp1', 'Uzp1Pred', 'SimdPredAluOp', unsignedTypes,
+                       uzpPredIterCode % 0)
+    svePredBinPermInst('uzp2', 'Uzp2Pred', 'SimdPredAluOp', unsignedTypes,
+                       uzpPredIterCode % 1)
+    # UZP1, UZP2 (vectors)
+    uzpIterCode = '''
+        int s;
+        int part = %d;
+        TheISA::VecRegContainer tmpVecC;
+        auto auxDest = tmpVecC.as<Element>();
+        for (unsigned i = 0; i < eCount; i++) {
+            s = 2 * i + part;
+            if (s < eCount) {
+                auxDest[i] = AA64FpOp1_x[s];
+            } else {
+                auxDest[i] = AA64FpOp2_x[s - eCount];
+            }
+        }
+        for (unsigned i = 0; i < eCount; i++) {
+            AA64FpDest_x[i] = auxDest[i];
+        }
+    '''
+    sveBinInst('uzp1', 'Uzp1', 'SimdAluOp', unsignedTypes, '',
+               customIterCode=uzpIterCode % 0)
+    sveBinInst('uzp2', 'Uzp2', 'SimdAluOp', unsignedTypes, '',
+               customIterCode=uzpIterCode % 1)
+    # WHILELE (32-bit)
+    whileLECode = '''
+            cond = srcElem1 <= srcElem2;
+    '''
+    sveWhileInst('whilele', 'Whilele32', 'SimdCmpOp', signedTypes, whileLECode,
+                 SrcSize.Src32bit)
+    # WHILELE (64-bit)
+    sveWhileInst('whilele', 'Whilele64', 'SimdCmpOp', signedTypes, whileLECode,
+                 SrcSize.Src64bit)
+    # WHILELO (32-bit)
+    whileLTCode = '''
+            cond = srcElem1 < srcElem2;
+    '''
+    sveWhileInst('whilelo', 'Whilelo32', 'SimdCmpOp', unsignedTypes,
+                 whileLTCode, SrcSize.Src32bit)
+    # WHILELO (64-bit)
+    sveWhileInst('whilelo', 'Whilelo64', 'SimdCmpOp', unsignedTypes,
+                 whileLTCode, SrcSize.Src64bit)
+    # WHILELS (32-bit)
+    sveWhileInst('whilels', 'Whilels32', 'SimdCmpOp', unsignedTypes,
+                 whileLECode, SrcSize.Src32bit)
+    # WHILELS (64-bit)
+    sveWhileInst('whilels', 'Whilels64', 'SimdCmpOp', unsignedTypes,
+                 whileLECode, SrcSize.Src64bit)
+    # WHILELT (32-bit)
+    sveWhileInst('whilelt', 'Whilelt32', 'SimdCmpOp', signedTypes,
+                 whileLTCode, SrcSize.Src32bit)
+    # WHILELT (64-bit)
+    sveWhileInst('whilelt', 'Whilelt64', 'SimdCmpOp', signedTypes,
+                 whileLTCode, SrcSize.Src64bit)
+    # WRFFR
+    wrffrCode = '''
+        unsigned eCount = ArmStaticInst::getCurSveVecLen<uint8_t>(
+                xc->tcBase());
+        for (unsigned i = 0; i < eCount; i++) {
+            Ffr_ub[i] = POp1_ub[i];
+        }'''
+    svePredWriteFfrInst('wrffr', 'Wrffr', 'SimdPredAluOp', wrffrCode, False)
+    # ZIP1, ZIP2 (predicates)
+    zipPredIterCode = '''
+        constexpr unsigned sz = sizeof(Element);
+        int s;
+        int part = %d;
+        TheISA::VecPredRegContainer tmpPredC;
+        auto auxPDest = tmpPredC.as<uint8_t>();
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            s = i + (part * (eCount / 2));
+            for (unsigned j = 0; j < sz; j++) {
+                auxPDest[(2 * i) * sz + j] = POp1_pb[s * sz + j];
+                auxPDest[(2 * i + 1) * sz + j] = POp2_pb[s * sz + j];
+            }
+        }
+        for (unsigned i = 0; i < eCount * sz; i++) {
+            PDest_pb[i] = auxPDest[i];
+        }
+    '''
+    svePredBinPermInst('zip1', 'Zip1Pred', 'SimdPredAluOp', unsignedTypes,
+                       zipPredIterCode % 0)
+    svePredBinPermInst('zip2', 'Zip2Pred', 'SimdPredAluOp', unsignedTypes,
+                       zipPredIterCode % 1)
+    # ZIP1, ZIP2 (vectors)
+    zipIterCode = '''
+        int s;
+        int part = %d;
+        TheISA::VecRegContainer tmpVecC;
+        auto auxDest = tmpVecC.as<Element>();
+        for (unsigned i = 0; i < eCount / 2; i++) {
+            s = i + (part * (eCount / 2));
+            auxDest[2 * i] = AA64FpOp1_x[s];
+            auxDest[2 * i + 1] = AA64FpOp2_x[s];
+        }
+        for (unsigned i = 0; i < eCount; i++) {
+            AA64FpDest_x[i] = auxDest[i];
+        }
+    '''
+    sveBinInst('zip1', 'Zip1', 'SimdAluOp', unsignedTypes, '',
+               customIterCode=zipIterCode % 0)
+    sveBinInst('zip2', 'Zip2', 'SimdAluOp', unsignedTypes, '',
+               customIterCode=zipIterCode % 1)
+
+}};
