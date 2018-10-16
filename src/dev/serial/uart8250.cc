@@ -46,7 +46,6 @@
 #include "mem/packet_access.hh"
 
 using namespace std;
-using namespace TheISA;
 
 void
 Uart8250::processIntrEvent(int intrBit)
