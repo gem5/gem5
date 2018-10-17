@@ -285,6 +285,29 @@ showParam(CheckpointOut &os, const T &value)
     os << value;
 }
 
+template <class T>
+bool
+parseParam(const std::string &s, BitUnionType<T> &value)
+{
+    auto storage = static_cast<BitUnionBaseType<T>>(value);
+    auto res = to_number(s, storage);
+    value = storage;
+    return res;
+}
+
+template <class T>
+void
+showParam(CheckpointOut &os, const BitUnionType<T> &value)
+{
+    auto storage = static_cast<BitUnionBaseType<T>>(value);
+
+    // For a BitUnion8, the storage type is an unsigned char.
+    // Since we want to serialize a number we need to cast to
+    // unsigned int
+    os << ((sizeof(storage) == 1) ?
+        static_cast<unsigned int>(storage) : storage);
+}
+
 // Treat 8-bit ints (chars) as ints on output, not as chars
 template <>
 inline void
@@ -354,13 +377,6 @@ paramOut(CheckpointOut &os, const std::string &name, const T &param)
     os << "\n";
 }
 
-template <typename T>
-void
-paramOut(CheckpointOut &cp, const std::string &name, const BitUnionType<T> &p)
-{
-    paramOut(cp, name, static_cast<BitUnionBaseType<T> >(p));
-}
-
 template <class T>
 void
 paramIn(CheckpointIn &cp, const std::string &name, T &param)
@@ -370,15 +386,6 @@ paramIn(CheckpointIn &cp, const std::string &name, T &param)
     if (!cp.find(section, name, str) || !parseParam(str, param)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
     }
-}
-
-template <typename T>
-void
-paramIn(CheckpointIn &cp, const std::string &name, BitUnionType<T> &p)
-{
-    BitUnionBaseType<T> b;
-    paramIn(cp, name, b);
-    p = b;
 }
 
 template <class T>
@@ -394,20 +401,6 @@ optParamIn(CheckpointIn &cp, const std::string &name,
         return false;
     } else {
         return true;
-    }
-}
-
-template <typename T>
-bool
-optParamIn(CheckpointIn &cp, const std::string &name,
-           BitUnionType<T> &p, bool warn = true)
-{
-    BitUnionBaseType<T> b;
-    if (optParamIn(cp, name, b, warn)) {
-        p = b;
-        return true;
-    } else {
-        return false;
     }
 }
 
@@ -626,31 +619,6 @@ arrayParamIn(CheckpointIn &cp, const std::string &name, std::set<T> &param)
         // assign parsed value to vector
         param.insert(scalar_value);
     }
-}
-
-template <class T>
-static void
-arrayParamOut(CheckpointOut &cp, const std::string &name,
-              const BitUnionType<T> *param, unsigned size)
-{
-    // We copy the array into a vector. This is needed since we cannot
-    // directly typecast a pointer to BitUnionType<T> into a pointer
-    // of BitUnionBaseType<T> but we can typecast BitUnionType<T>
-    // to BitUnionBaseType<T> since we overloaded the typecast operator
-    std::vector<BitUnionBaseType<T>> bitunion_vec(param, param + size);
-
-    arrayParamOut(cp, name, bitunion_vec);
-}
-
-template <class T>
-static void
-arrayParamIn(CheckpointIn &cp, const std::string &name,
-             BitUnionType<T> *param, unsigned size)
-{
-    std::vector<BitUnionBaseType<T>> bitunion_vec(size);
-
-    arrayParamIn(cp, name, bitunion_vec);
-    std::copy(bitunion_vec.begin(), bitunion_vec.end(), param);
 }
 
 void
