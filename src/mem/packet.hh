@@ -1062,7 +1062,8 @@ class Packet : public Printable
      * endian.
      */
     template <typename T>
-    T get() const;
+    T get() const
+        M5_DEPRECATED_MSG("The memory system should be ISA independent.");
 #endif
 
     /** Set the value in the data pointer to v as big endian. */
@@ -1083,9 +1084,9 @@ class Packet : public Printable
 #if THE_ISA != NULL_ISA
     /** Set the value in the data pointer to v as guest endian. */
     template <typename T>
-    void set(T v);
+    void set(T v)
+        M5_DEPRECATED_MSG("The memory system should be ISA independent.");
 #endif
-
 
     /**
      * Get the data in the packet byte swapped from the specified
