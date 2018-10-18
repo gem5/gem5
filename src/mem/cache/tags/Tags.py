@@ -54,10 +54,6 @@ class BaseTags(ClockedObject):
     tag_latency = Param.Cycles(Parent.tag_latency,
                                "The tag lookup latency for this cache")
 
-    # Get the RAM access latency from the parent (cache)
-    data_latency = Param.Cycles(Parent.data_latency,
-                               "The data access latency for this cache")
-
     # Get the warmup percentage from the parent (cache)
     warmup_percentage = Param.Percent(Parent.warmup_percentage,
         "Percentage of tags to be touched to warm up the cache")

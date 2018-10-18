@@ -149,18 +149,8 @@ SectorTags::accessBlock(Addr addr, bool is_secure, Cycles &lat)
         dataAccesses += allocAssoc*numBlocksPerSector;
     }
 
+    // If a cache hit
     if (blk != nullptr) {
-        // If a cache hit
-        lat = accessLatency;
-        // Check if the block to be accessed is available. If not,
-        // apply the accessLatency on top of block->whenReady.
-        if (blk->whenReady > curTick() &&
-            cache->ticksToCycles(blk->whenReady - curTick()) >
-            accessLatency) {
-            lat = cache->ticksToCycles(blk->whenReady - curTick()) +
-            accessLatency;
-        }
-
         // Update number of references to accessed block
         blk->refCount++;
 
@@ -171,10 +161,10 @@ SectorTags::accessBlock(Addr addr, bool is_secure, Cycles &lat)
         // Update replacement data of accessed block, which is shared with
         // the whole sector it belongs to
         replacementPolicy->touch(sector_blk->replacementData);
-    } else {
-        // If a cache miss
-        lat = lookupLatency;
     }
+
+    // The tag lookup latency is the same for a hit or a miss
+    lat = lookupLatency;
 
     return blk;
 }

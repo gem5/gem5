@@ -118,12 +118,12 @@ class SectorTags : public BaseTags
     /**
      * Access block and update replacement data. May not succeed, in which
      * case nullptr is returned. This has all the implications of a cache
-     * access and should only be used as such. Returns the access latency
+     * access and should only be used as such. Returns the tag lookup latency
      * as a side effect.
      *
      * @param addr The address to find.
      * @param is_secure True if the target memory space is secure.
-     * @param lat The access latency.
+     * @param lat The latency of the tag lookup.
      * @return Pointer to the cache block if found.
      */
     CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) override;

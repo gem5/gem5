@@ -419,6 +419,17 @@ class BaseCache : public MemObject
     Addr regenerateBlkAddr(CacheBlk* blk);
 
     /**
+     * Calculate access latency in ticks given a tag lookup latency, and
+     * whether access was a hit or miss.
+     *
+     * @param blk The cache block that was accessed.
+     * @param lookup_lat Latency of the respective tag lookup.
+     * @return The number of ticks that pass due to a block access.
+     */
+    Cycles calculateAccessLatency(const CacheBlk* blk,
+                                  const Cycles lookup_lat) const;
+
+    /**
      * Does all the processing necessary to perform the provided request.
      * @param pkt The memory request to perform.
      * @param blk The cache block to be updated.
@@ -804,6 +815,11 @@ class BaseCache : public MemObject
      * latency.
      */
     const Cycles responseLatency;
+
+    /**
+     * Whether tags and data are accessed sequentially.
+     */
+    const bool sequentialAccess;
 
     /** The number of targets for each MSHR. */
     const int numTarget;

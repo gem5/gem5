@@ -95,6 +95,7 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
       forwardLatency(p->tag_latency),
       fillLatency(p->data_latency),
       responseLatency(p->response_latency),
+      sequentialAccess(p->sequential_access),
       numTarget(p->tgts_per_mshr),
       forwardSnoops(true),
       clusivity(p->clusivity),
@@ -225,8 +226,8 @@ BaseCache::handleTimingReqHit(PacketPtr pkt, CacheBlk *blk, Tick request_time)
         // In this case we are considering request_time that takes
         // into account the delay of the xbar, if any, and just
         // lat, neglecting responseLatency, modelling hit latency
-        // just as lookupLatency or or the value of lat overriden
-        // by access(), that calls accessBlock() function.
+        // just as the value of lat overriden by access(), which calls
+        // the calculateAccessLatency() function.
         cpuSidePort.schedTimingResp(pkt, request_time, true);
     } else {
         DPRINTF(Cache, "%s satisfied %s, no response needed\n", __func__,
@@ -342,15 +343,13 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     // the delay provided by the crossbar
     Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
 
-    // We use lookupLatency here because it is used to specify the latency
-    // to access.
-    Cycles lat = lookupLatency;
+    Cycles lat;
     CacheBlk *blk = nullptr;
     bool satisfied = false;
     {
         PacketList writebacks;
         // Note that lat is passed by reference here. The function
-        // access() calls accessBlock() which can modify lat value.
+        // access() will set the lat value.
         satisfied = access(pkt, blk, lat, writebacks);
 
         // copy writebacks to write buffer here to ensure they logically
@@ -360,8 +359,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
 
     // Here we charge the headerDelay that takes into account the latencies
     // of the bus, if the packet comes from it.
-    // The latency charged it is just lat that is the value of lookupLatency
-    // modified by access() function, or if not just lookupLatency.
+    // The latency charged is just the value set by the access() function.
     // In case of a hit we are neglecting response latency.
     // In case of a miss we are neglecting forward latency.
     Tick request_time = clockEdge(lat) + pkt->headerDelay;
@@ -886,6 +884,31 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
 // Access path: requests coming in from the CPU side
 //
 /////////////////////////////////////////////////////
+Cycles
+BaseCache::calculateAccessLatency(const CacheBlk* blk,
+                                  const Cycles lookup_lat) const
+{
+    Cycles lat(lookup_lat);
+
+    if (blk != nullptr) {
+        // First access tags, then data
+        if (sequentialAccess) {
+            lat += dataLatency;
+        // Latency is dictated by the slowest of tag and data latencies
+        } else {
+            lat = std::max(lookup_lat, dataLatency);
+        }
+
+        // Check if the block to be accessed is available. If not, apply the
+        // access latency on top of block->whenReady.
+        if (blk->whenReady > curTick() &&
+            ticksToCycles(blk->whenReady - curTick()) > lat) {
+            lat += ticksToCycles(blk->whenReady - curTick());
+        }
+    }
+
+    return lat;
+}
 
 bool
 BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
@@ -898,9 +921,12 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                   "Should never see a write in a read-only cache %s\n",
                   name());
 
-    // Here lat is the value passed as parameter to accessBlock() function
-    // that can modify its value.
-    blk = tags->accessBlock(pkt->getAddr(), pkt->isSecure(), lat);
+    // Access block in the tags
+    Cycles tag_latency(0);
+    blk = tags->accessBlock(pkt->getAddr(), pkt->isSecure(), tag_latency);
+
+    // Calculate access latency
+    lat = calculateAccessLatency(blk, tag_latency);
 
     DPRINTF(Cache, "%s for %s %s\n", __func__, pkt->print(),
             blk ? "hit " + blk->print() : "miss");

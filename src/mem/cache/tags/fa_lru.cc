@@ -153,29 +153,21 @@ FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat,
     CachesMask mask = 0;
     FALRUBlk* blk = static_cast<FALRUBlk*>(findBlock(addr, is_secure));
 
+    // If a cache hit
     if (blk && blk->isValid()) {
-        // If a cache hit
-        lat = accessLatency;
-        // Check if the block to be accessed is available. If not,
-        // apply the accessLatency on top of block->whenReady.
-        if (blk->whenReady > curTick() &&
-            cache->ticksToCycles(blk->whenReady - curTick()) >
-            accessLatency) {
-            lat = cache->ticksToCycles(blk->whenReady - curTick()) +
-            accessLatency;
-        }
         mask = blk->inCachesMask;
 
         moveToHead(blk);
-    } else {
-        // If a cache miss
-        lat = lookupLatency;
     }
+
     if (in_caches_mask) {
         *in_caches_mask = mask;
     }
 
     cacheTracking.recordAccess(blk);
+
+    // The tag lookup latency is the same for a hit or a miss
+    lat = lookupLatency;
 
     return blk;
 }

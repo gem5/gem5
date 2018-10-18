@@ -61,11 +61,7 @@
 
 BaseTags::BaseTags(const Params *p)
     : ClockedObject(p), blkSize(p->block_size), blkMask(blkSize - 1),
-      size(p->size),
-      lookupLatency(p->tag_latency),
-      accessLatency(p->sequential_access ?
-                    p->tag_latency + p->data_latency :
-                    std::max(p->tag_latency, p->data_latency)),
+      size(p->size), lookupLatency(p->tag_latency),
       cache(nullptr), indexingPolicy(p->indexing_policy),
       warmupBound((p->warmup_percentage/100.0) * (p->size / p->block_size)),
       warmedUp(false), numBlocks(p->size / p->block_size),

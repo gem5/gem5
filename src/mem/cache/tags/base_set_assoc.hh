@@ -115,12 +115,13 @@ class BaseSetAssoc : public BaseTags
 
     /**
      * Access block and update replacement data. May not succeed, in which case
-     * nullptr is returned. This has all the implications of a cache
-     * access and should only be used as such. Returns the access latency as a
-     * side effect.
+     * nullptr is returned. This has all the implications of a cache access and
+     * should only be used as such. Returns the tag lookup latency as a side
+     * effect.
+     *
      * @param addr The address to find.
      * @param is_secure True if the target memory space is secure.
-     * @param lat The access latency.
+     * @param lat The latency of the tag lookup.
      * @return Pointer to the cache block if found.
      */
     CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) override
@@ -139,27 +140,17 @@ class BaseSetAssoc : public BaseTags
             dataAccesses += allocAssoc;
         }
 
+        // If a cache hit
         if (blk != nullptr) {
-            // If a cache hit
-            lat = accessLatency;
-            // Check if the block to be accessed is available. If not,
-            // apply the accessLatency on top of block->whenReady.
-            if (blk->whenReady > curTick() &&
-                cache->ticksToCycles(blk->whenReady - curTick()) >
-                accessLatency) {
-                lat = cache->ticksToCycles(blk->whenReady - curTick()) +
-                accessLatency;
-            }
-
             // Update number of references to accessed block
             blk->refCount++;
 
             // Update replacement data of accessed block
             replacementPolicy->touch(blk->replacementData);
-        } else {
-            // If a cache miss
-            lat = lookupLatency;
         }
+
+        // The tag lookup latency is the same for a hit or a miss
+        lat = lookupLatency;
 
         return blk;
     }
