@@ -88,6 +88,19 @@ class HSAQueueEntry
           _globalWgId(0), dispatchComplete(false)
 
     {
+        // Precompiled BLIT kernels actually violate the spec a bit
+        // and don't set many of the required akc fields.  For these kernels,
+        // we need to rip register usage from the resource registers.
+        //
+        // We can't get an exact number of registers from the resource
+        // registers because they round, but we can get an upper bound on it
+        if (!numVgprs)
+            numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 4;
+
+        // TODO: Granularity changes for GFX9!
+        if (!numSgprs)
+            numSgprs = (akc->granulated_wavefront_sgpr_count + 1) * 8;
+
         initialVgprState.reset();
         initialSgprState.reset();
 

@@ -100,11 +100,25 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
         machine_code_addr);
 
     Addr kern_name_addr(0);
-    virt_proxy.readBlob(akc.runtime_loader_kernel_symbol + 0x10,
-        (uint8_t*)&kern_name_addr, 0x8);
-
     std::string kernel_name;
-    virt_proxy.readString(kernel_name, kern_name_addr);
+
+    /**
+     * BLIT kernels don't have symbol names.  BLIT kernels are built-in compute
+     * kernels issued by ROCm to handle DMAs for dGPUs when the SDMA
+     * hardware engines are unavailable or explicitly disabled.  They can also
+     * be used to do copies that ROCm things would be better performed
+     * by the shader than the SDMA engines.  They are also sometimes used on
+     * APUs to implement asynchronous memcopy operations from 2 pointers in
+     * host memory.  I have no idea what BLIT stands for.
+     * */
+    if (akc.runtime_loader_kernel_symbol) {
+        virt_proxy.readBlob(akc.runtime_loader_kernel_symbol + 0x10,
+            (uint8_t*)&kern_name_addr, 0x8);
+
+        virt_proxy.readString(kernel_name, kern_name_addr);
+    } else {
+        kernel_name = "Blit kernel";
+    }
 
     DPRINTF(GPUKernelInfo, "Kernel name: %s\n", kernel_name.c_str());
 
