@@ -76,13 +76,13 @@ class ISA : public SimObject
     }
 
     void
-    setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+    setMiscRegNoEffect(int misc_reg, MiscReg val)
     {
         fatal("Power does not currently have any misc regs defined\n");
     }
 
     void
-    setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
+    setMiscReg(int misc_reg, MiscReg val, ThreadContext *tc)
     {
         fatal("Power does not currently have any misc regs defined\n");
     }

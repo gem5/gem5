@@ -182,7 +182,7 @@ class ExecContext {
      */
     virtual RegVal readMiscRegOperand(const StaticInst *si, int idx) = 0;
     virtual void setMiscRegOperand(const StaticInst *si,
-                                   int idx, const RegVal &val) = 0;
+                                   int idx, RegVal val) = 0;
 
     /**
      * Reads a miscellaneous register, handling any architectural
@@ -194,7 +194,7 @@ class ExecContext {
      * Sets a miscellaneous register, handling any architectural
      * side effects due to writing that register.
      */
-    virtual void setMiscReg(int misc_reg, const RegVal &val) = 0;
+    virtual void setMiscReg(int misc_reg, RegVal val) = 0;
 
     /** @} */
 

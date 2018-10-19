@@ -710,7 +710,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
 }
 
 void
-ISA::setMiscRegNoEffect(int misc_reg, const RegVal &val)
+ISA::setMiscRegNoEffect(int misc_reg, RegVal val)
 {
     assert(misc_reg < NumMiscRegs);
 
@@ -732,7 +732,7 @@ ISA::setMiscRegNoEffect(int misc_reg, const RegVal &val)
 }
 
 void
-ISA::setMiscReg(int misc_reg, const RegVal &val, ThreadContext *tc)
+ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
 {
 
     RegVal newVal = val;

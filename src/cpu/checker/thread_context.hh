@@ -348,7 +348,7 @@ class CheckerThreadContext : public ThreadContext
     { return actualTC->readMiscReg(misc_reg); }
 
     void
-    setMiscRegNoEffect(int misc_reg, const RegVal &val)
+    setMiscRegNoEffect(int misc_reg, RegVal val)
     {
         DPRINTF(Checker, "Setting misc reg with no effect: %d to both Checker"
                          " and O3..\n", misc_reg);
@@ -357,7 +357,7 @@ class CheckerThreadContext : public ThreadContext
     }
 
     void
-    setMiscReg(int misc_reg, const RegVal &val)
+    setMiscReg(int misc_reg, RegVal val)
     {
         DPRINTF(Checker, "Setting misc reg with effect: %d to both Checker"
                          " and O3..\n", misc_reg);

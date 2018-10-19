@@ -77,10 +77,9 @@ namespace AlphaISA
         MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0) const;
         MiscReg readMiscReg(int misc_reg, ThreadContext *tc, ThreadID tid = 0);
 
-        void setMiscRegNoEffect(int misc_reg, const MiscReg &val,
-                                ThreadID tid = 0);
-        void setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
-                        ThreadID tid = 0);
+        void setMiscRegNoEffect(int misc_reg, MiscReg val, ThreadID tid=0);
+        void setMiscReg(int misc_reg, MiscReg val, ThreadContext *tc,
+                        ThreadID tid=0);
 
         void
         clear()

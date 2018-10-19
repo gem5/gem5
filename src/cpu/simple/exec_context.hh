@@ -361,8 +361,7 @@ class SimpleExecContext : public ExecContext {
     }
 
     void
-    setMiscRegOperand(const StaticInst *si, int idx,
-                      const RegVal &val) override
+    setMiscRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         numIntRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
@@ -386,7 +385,7 @@ class SimpleExecContext : public ExecContext {
      * side effects due to writing that register.
      */
     void
-    setMiscReg(int misc_reg, const RegVal &val) override
+    setMiscReg(int misc_reg, RegVal val) override
     {
         numIntRegWrites++;
         thread->setMiscReg(misc_reg, val);

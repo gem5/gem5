@@ -430,8 +430,8 @@ namespace ArmISA
       public:
         RegVal readMiscRegNoEffect(int misc_reg) const;
         RegVal readMiscReg(int misc_reg, ThreadContext *tc);
-        void setMiscRegNoEffect(int misc_reg, const RegVal &val);
-        void setMiscReg(int misc_reg, const RegVal &val, ThreadContext *tc);
+        void setMiscRegNoEffect(int misc_reg, RegVal val);
+        void setMiscReg(int misc_reg, RegVal val, ThreadContext *tc);
 
         RegId
         flattenRegId(const RegId& regId) const

@@ -278,9 +278,9 @@ class ThreadContext
 
     virtual RegVal readMiscReg(int misc_reg) = 0;
 
-    virtual void setMiscRegNoEffect(int misc_reg, const RegVal &val) = 0;
+    virtual void setMiscRegNoEffect(int misc_reg, RegVal val) = 0;
 
-    virtual void setMiscReg(int misc_reg, const RegVal &val) = 0;
+    virtual void setMiscReg(int misc_reg, RegVal val) = 0;
 
     virtual RegId flattenRegId(const RegId& regId) const = 0;
 
@@ -291,7 +291,7 @@ class ThreadContext
     }
 
     virtual void
-    setRegOtherThread(const RegId& misc_reg, const RegVal &val, ThreadID tid)
+    setRegOtherThread(const RegId& misc_reg, RegVal val, ThreadID tid)
     {
     }
 
@@ -541,10 +541,10 @@ class ProxyThreadContext : public ThreadContext
     RegVal readMiscReg(int misc_reg)
     { return actualTC->readMiscReg(misc_reg); }
 
-    void setMiscRegNoEffect(int misc_reg, const RegVal &val)
+    void setMiscRegNoEffect(int misc_reg, RegVal val)
     { return actualTC->setMiscRegNoEffect(misc_reg, val); }
 
-    void setMiscReg(int misc_reg, const RegVal &val)
+    void setMiscReg(int misc_reg, RegVal val)
     { return actualTC->setMiscReg(misc_reg, val); }
 
     RegId flattenRegId(const RegId& regId) const

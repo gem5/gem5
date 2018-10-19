@@ -114,7 +114,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc, ThreadID tid)
 }
 
 void
-ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
+ISA::setMiscRegNoEffect(int misc_reg, MiscReg val, ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -140,8 +140,7 @@ ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
 }
 
 void
-ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
-                ThreadID tid)
+ISA::setMiscReg(int misc_reg, MiscReg val, ThreadContext *tc, ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:

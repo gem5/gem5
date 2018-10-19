@@ -390,12 +390,12 @@ class FullO3CPU : public BaseO3CPU
     RegVal readMiscReg(int misc_reg, ThreadID tid);
 
     /** Sets a miscellaneous register. */
-    void setMiscRegNoEffect(int misc_reg, const RegVal &val, ThreadID tid);
+    void setMiscRegNoEffect(int misc_reg, RegVal val, ThreadID tid);
 
     /** Sets a misc. register, including any side effects the write
      * might have as defined by the architecture.
      */
-    void setMiscReg(int misc_reg, const RegVal &val, ThreadID tid);
+    void setMiscReg(int misc_reg, RegVal val, ThreadID tid);
 
     RegVal readIntReg(PhysRegIdPtr phys_reg);
 

@@ -331,11 +331,11 @@ class O3ThreadContext : public ThreadContext
     { return cpu->readMiscReg(misc_reg, thread->threadId()); }
 
     /** Sets a misc. register. */
-    virtual void setMiscRegNoEffect(int misc_reg, const RegVal &val);
+    virtual void setMiscRegNoEffect(int misc_reg, RegVal val);
 
     /** Sets a misc. register, including any side-effects the
      * write might have as defined by the architecture. */
-    virtual void setMiscReg(int misc_reg, const RegVal &val);
+    virtual void setMiscReg(int misc_reg, RegVal val);
 
     virtual RegId flattenRegId(const RegId& regId) const;
 

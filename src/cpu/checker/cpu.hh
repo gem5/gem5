@@ -417,7 +417,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     }
 
     void
-    setMiscRegNoEffect(int misc_reg, const RegVal &val)
+    setMiscRegNoEffect(int misc_reg, RegVal val)
     {
         DPRINTF(Checker, "Setting misc reg %d with no effect to check later\n",
                 misc_reg);
@@ -426,7 +426,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     }
 
     void
-    setMiscReg(int misc_reg, const RegVal &val) override
+    setMiscReg(int misc_reg, RegVal val) override
     {
         DPRINTF(Checker, "Setting misc reg %d with effect to check later\n",
                 misc_reg);
@@ -443,8 +443,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     }
 
     void
-    setMiscRegOperand(const StaticInst *si, int idx,
-                      const RegVal &val) override
+    setMiscRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isMiscReg());

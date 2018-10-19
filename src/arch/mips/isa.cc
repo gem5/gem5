@@ -445,7 +445,7 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc,  ThreadID tid)
 }
 
 void
-ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
+ISA::setMiscRegNoEffect(int misc_reg, MiscReg val, ThreadID tid)
 {
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
@@ -458,7 +458,7 @@ ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
 }
 
 void
-ISA::setRegMask(int misc_reg, const MiscReg &val, ThreadID tid)
+ISA::setRegMask(int misc_reg, MiscReg val, ThreadID tid)
 {
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
@@ -473,8 +473,7 @@ ISA::setRegMask(int misc_reg, const MiscReg &val, ThreadID tid)
 // be overwritten. Make sure to handle those particular registers
 // with care!
 void
-ISA::setMiscReg(int misc_reg, const MiscReg &val,
-                    ThreadContext *tc, ThreadID tid)
+ISA::setMiscReg(int misc_reg, MiscReg val, ThreadContext *tc, ThreadID tid)
 {
     int reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
@@ -497,7 +496,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val,
  * (setRegWithEffect)
 */
 MiscReg
-ISA::filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val)
+ISA::filterCP0Write(int misc_reg, int reg_sel, MiscReg val)
 {
     MiscReg retVal = val;
 

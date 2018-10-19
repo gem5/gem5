@@ -76,8 +76,8 @@ class ISA : public SimObject
 
     MiscReg readMiscRegNoEffect(int misc_reg) const;
     MiscReg readMiscReg(int misc_reg, ThreadContext *tc);
-    void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
-    void setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc);
+    void setMiscRegNoEffect(int misc_reg, MiscReg val);
+    void setMiscReg(int misc_reg, MiscReg val, ThreadContext *tc);
 
     RegId flattenRegId(const RegId &regId) const { return regId; }
     int flattenIntIndex(int reg) const { return reg; }

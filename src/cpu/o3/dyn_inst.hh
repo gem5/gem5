@@ -146,7 +146,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
      * might have as defined by the architecture.
      */
     void
-    setMiscReg(int misc_reg, const RegVal &val)
+    setMiscReg(int misc_reg, RegVal val)
     {
         /** Writes to misc. registers are recorded and deferred until the
          * commit stage, when updateMiscRegs() is called. First, check if
@@ -182,7 +182,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
      * might have as defined by the architecture.
      */
     void
-    setMiscRegOperand(const StaticInst *si, int idx, const RegVal &val)
+    setMiscRegOperand(const StaticInst *si, int idx, RegVal val)
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isMiscReg());
