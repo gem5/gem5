@@ -40,6 +40,7 @@
 #include <string>
 #include <vector>
 
+#include "base/statistics.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/tags/sector_blk.hh"
 #include "mem/packet.hh"
@@ -87,6 +88,18 @@ class SectorTags : public BaseTags
 
     /** Mask out all bits that aren't part of the sector tag. */
     const unsigned sectorMask;
+
+    struct SectorTagsStats : public Stats::Group
+    {
+        const SectorTags& tags;
+
+        SectorTagsStats(BaseTagStats &base_group, SectorTags& _tags);
+
+        void regStats() override;
+
+        /** Number of sub-blocks evicted due to a replacement. */
+        Stats::Vector evictionsReplacement;
+    } sectorStats;
 
   public:
     /** Convenience typedef. */

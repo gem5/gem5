@@ -138,7 +138,9 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
 
         // The whole superblock must be evicted to make room for the new one
         for (const auto& blk : victim_superblock->blks){
-            evict_blks.push_back(blk);
+            if (blk->isValid()) {
+                evict_blks.push_back(blk);
+            }
         }
     }
 
@@ -158,6 +160,9 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
             }
         }
     }
+
+    // Update number of sub-blocks evicted due to a replacement
+    sectorStats.evictionsReplacement[evict_blks.size()]++;
 
     return victim;
 }

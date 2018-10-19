@@ -53,7 +53,8 @@ SectorTags::SectorTags(const SectorTagsParams *p)
       replacementPolicy(p->replacement_policy),
       numBlocksPerSector(p->num_blocks_per_sector),
       numSectors(numBlocks / numBlocksPerSector),
-      sectorShift(floorLog2(blkSize)), sectorMask(numBlocksPerSector - 1)
+      sectorShift(floorLog2(blkSize)), sectorMask(numBlocksPerSector - 1),
+      sectorStats(stats, *this)
 {
     // Check parameters
     fatal_if(blkSize < 4 || !isPowerOf2(blkSize),
@@ -260,9 +261,14 @@ SectorTags::findVictim(Addr addr, const bool is_secure, const std::size_t size,
     } else {
         // The whole sector must be evicted to make room for the new sector
         for (const auto& blk : victim_sector->blks){
-            evict_blks.push_back(blk);
+            if (blk->isValid()) {
+                evict_blks.push_back(blk);
+            }
         }
     }
+
+    // Update number of sub-blocks evicted due to a replacement
+    sectorStats.evictionsReplacement[evict_blks.size()]++;
 
     return victim;
 }
@@ -280,6 +286,27 @@ SectorTags::regenerateBlkAddr(const CacheBlk* blk) const
     const SectorBlk* sec_blk = blk_cast->getSectorBlock();
     const Addr sec_addr = indexingPolicy->regenerateAddr(blk->tag, sec_blk);
     return sec_addr | ((Addr)blk_cast->getSectorOffset() << sectorShift);
+}
+
+SectorTags::SectorTagsStats::SectorTagsStats(BaseTagStats &base_group,
+    SectorTags& _tags)
+  : Stats::Group(&base_group), tags(_tags),
+    evictionsReplacement(this, "evictions_replacement",
+        "Number of blocks evicted due to a replacement")
+{
+}
+
+void
+SectorTags::SectorTagsStats::regStats()
+{
+    Stats::Group::regStats();
+
+    evictionsReplacement.init(tags.numBlocksPerSector + 1);
+    for (unsigned i = 0; i <= tags.numBlocksPerSector; ++i) {
+        evictionsReplacement.subname(i, std::to_string(i));
+        evictionsReplacement.subdesc(i, "Number of replacements that caused " \
+            "the eviction of " + std::to_string(i) + " blocks");
+    }
 }
 
 void
