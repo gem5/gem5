@@ -109,7 +109,7 @@ class CompressedTags : public SectorTags
      */
     CacheBlk* findVictim(Addr addr, const bool is_secure,
                          const std::size_t compressed_size,
-                         std::vector<CacheBlk*>& evict_blks) const override;
+                         std::vector<CacheBlk*>& evict_blks) override;
 
     /**
      * Insert the new block into the cache and update replacement data.
