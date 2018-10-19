@@ -302,15 +302,15 @@ enterREDState(ThreadContext *tc)
 void
 doREDFault(ThreadContext *tc, TrapType tt)
 {
-    MiscReg TL = tc->readMiscRegNoEffect(MISCREG_TL);
-    MiscReg TSTATE = tc->readMiscRegNoEffect(MISCREG_TSTATE);
+    RegVal TL = tc->readMiscRegNoEffect(MISCREG_TL);
+    RegVal TSTATE = tc->readMiscRegNoEffect(MISCREG_TSTATE);
     PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
     HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-    MiscReg CCR = tc->readIntReg(NumIntArchRegs + 2);
-    MiscReg ASI = tc->readMiscRegNoEffect(MISCREG_ASI);
-    MiscReg CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
-    MiscReg CANSAVE = tc->readMiscRegNoEffect(NumIntArchRegs + 3);
-    MiscReg GL = tc->readMiscRegNoEffect(MISCREG_GL);
+    RegVal CCR = tc->readIntReg(NumIntArchRegs + 2);
+    RegVal ASI = tc->readMiscRegNoEffect(MISCREG_ASI);
+    RegVal CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
+    RegVal CANSAVE = tc->readMiscRegNoEffect(NumIntArchRegs + 3);
+    RegVal GL = tc->readMiscRegNoEffect(MISCREG_GL);
     PCState pc = tc->pcState();
 
     TL++;
@@ -381,15 +381,15 @@ doREDFault(ThreadContext *tc, TrapType tt)
 void
 doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
 {
-    MiscReg TL = tc->readMiscRegNoEffect(MISCREG_TL);
-    MiscReg TSTATE = tc->readMiscRegNoEffect(MISCREG_TSTATE);
+    RegVal TL = tc->readMiscRegNoEffect(MISCREG_TL);
+    RegVal TSTATE = tc->readMiscRegNoEffect(MISCREG_TSTATE);
     PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
     HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
-    MiscReg CCR = tc->readIntReg(NumIntArchRegs + 2);
-    MiscReg ASI = tc->readMiscRegNoEffect(MISCREG_ASI);
-    MiscReg CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
-    MiscReg CANSAVE = tc->readIntReg(NumIntArchRegs + 3);
-    MiscReg GL = tc->readMiscRegNoEffect(MISCREG_GL);
+    RegVal CCR = tc->readIntReg(NumIntArchRegs + 2);
+    RegVal ASI = tc->readMiscRegNoEffect(MISCREG_ASI);
+    RegVal CWP = tc->readMiscRegNoEffect(MISCREG_CWP);
+    RegVal CANSAVE = tc->readIntReg(NumIntArchRegs + 3);
+    RegVal GL = tc->readMiscRegNoEffect(MISCREG_GL);
     PCState pc = tc->pcState();
 
     // Increment the trap level
@@ -470,7 +470,7 @@ doNormalFault(ThreadContext *tc, TrapType tt, bool gotoHpriv)
 }
 
 void
-getREDVector(MiscReg TT, Addr &PC, Addr &NPC)
+getREDVector(RegVal TT, Addr &PC, Addr &NPC)
 {
     //XXX The following constant might belong in a header file.
     const Addr RSTVAddr = 0xFFF0000000ULL;
@@ -479,7 +479,7 @@ getREDVector(MiscReg TT, Addr &PC, Addr &NPC)
 }
 
 void
-getHyperVector(ThreadContext * tc, Addr &PC, Addr &NPC, MiscReg TT)
+getHyperVector(ThreadContext * tc, Addr &PC, Addr &NPC, RegVal TT)
 {
     Addr HTBA = tc->readMiscRegNoEffect(MISCREG_HTBA);
     PC = (HTBA & ~mask(14)) | ((TT << 5) & mask(14));
@@ -487,7 +487,7 @@ getHyperVector(ThreadContext * tc, Addr &PC, Addr &NPC, MiscReg TT)
 }
 
 void
-getPrivVector(ThreadContext *tc, Addr &PC, Addr &NPC, MiscReg TT, MiscReg TL)
+getPrivVector(ThreadContext *tc, Addr &PC, Addr &NPC, RegVal TT, RegVal TL)
 {
     Addr TBA = tc->readMiscRegNoEffect(MISCREG_TBA);
     PC = (TBA & ~mask(15)) |
@@ -507,8 +507,8 @@ SparcFaultBase::invoke(ThreadContext * tc, const StaticInstPtr &inst)
 
     // We can refer to this to see what the trap level -was-, but something
     // in the middle could change it in the regfile out from under us.
-    MiscReg tl = tc->readMiscRegNoEffect(MISCREG_TL);
-    MiscReg tt = tc->readMiscRegNoEffect(MISCREG_TT);
+    RegVal tl = tc->readMiscRegNoEffect(MISCREG_TL);
+    RegVal tt = tc->readMiscRegNoEffect(MISCREG_TT);
     PSTATE pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
     HPSTATE hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
 
@@ -731,7 +731,7 @@ FastDataAccessMMUMiss::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     // but does not directly affect the ASI register value in the
     // architectural state. The ASI values and the context field in the
     // request packet seem to have completely different uses.
-    MiscReg reg_asi = tc->readMiscRegNoEffect(MISCREG_ASI);
+    RegVal reg_asi = tc->readMiscRegNoEffect(MISCREG_ASI);
     ASI asi = static_cast<ASI>(reg_asi);
 
     // The SPARC DTLB code assumes that traps are executed in context

@@ -45,11 +45,6 @@ using SparcISAInst::MaxInstSrcRegs;
 using SparcISAInst::MaxInstDestRegs;
 using SparcISAInst::MaxMiscDestRegs;
 
-typedef RegVal IntReg;
-typedef RegVal MiscReg;
-typedef FloatRegVal FloatReg;
-typedef RegVal FloatRegBits;
-
 // dummy typedef since we don't have CC regs
 typedef uint8_t CCReg;
 

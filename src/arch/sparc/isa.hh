@@ -116,8 +116,8 @@ class ISA : public SimObject
 
     // These need to check the int_dis field and if 0 then
     // set appropriate bit in softint and checkinterrutps on the cpu
-    void  setFSReg(int miscReg, MiscReg val, ThreadContext *tc);
-    MiscReg readFSReg(int miscReg, ThreadContext * tc);
+    void  setFSReg(int miscReg, RegVal val, ThreadContext *tc);
+    RegVal readFSReg(int miscReg, ThreadContext * tc);
 
     // Update interrupt state on softint or pil change
     void checkSoftInt(ThreadContext *tc);
@@ -183,11 +183,11 @@ class ISA : public SimObject
 
   public:
 
-    MiscReg readMiscRegNoEffect(int miscReg) const;
-    MiscReg readMiscReg(int miscReg, ThreadContext *tc);
+    RegVal readMiscRegNoEffect(int miscReg) const;
+    RegVal readMiscReg(int miscReg, ThreadContext *tc);
 
-    void setMiscRegNoEffect(int miscReg, MiscReg val);
-    void setMiscReg(int miscReg, MiscReg val, ThreadContext *tc);
+    void setMiscRegNoEffect(int miscReg, RegVal val);
+    void setMiscReg(int miscReg, RegVal val, ThreadContext *tc);
 
     RegId
     flattenRegId(const RegId& regId) const

@@ -60,7 +60,7 @@ unameFunc(SyscallDesc *desc, int callnum, Process *process,
 SyscallReturn
 getresuidFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
-    const IntReg id = htog(100);
+    const uint64_t id = htog(100);
     int index = 0;
     Addr ruid = p->getSyscallArg(tc, index);
     Addr euid = p->getSyscallArg(tc, index);
@@ -68,20 +68,20 @@ getresuidFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     // Handle the EFAULT case
     // Set the ruid
     if (ruid) {
-        BufferArg ruidBuff(ruid, sizeof(IntReg));
-        memcpy(ruidBuff.bufferPtr(), &id, sizeof(IntReg));
+        BufferArg ruidBuff(ruid, sizeof(uint64_t));
+        memcpy(ruidBuff.bufferPtr(), &id, sizeof(uint64_t));
         ruidBuff.copyOut(tc->getMemProxy());
     }
     // Set the euid
     if (euid) {
-        BufferArg euidBuff(euid, sizeof(IntReg));
-        memcpy(euidBuff.bufferPtr(), &id, sizeof(IntReg));
+        BufferArg euidBuff(euid, sizeof(uint64_t));
+        memcpy(euidBuff.bufferPtr(), &id, sizeof(uint64_t));
         euidBuff.copyOut(tc->getMemProxy());
     }
     // Set the suid
     if (suid) {
-        BufferArg suidBuff(suid, sizeof(IntReg));
-        memcpy(suidBuff.bufferPtr(), &id, sizeof(IntReg));
+        BufferArg suidBuff(suid, sizeof(uint64_t));
+        memcpy(suidBuff.bufferPtr(), &id, sizeof(uint64_t));
         suidBuff.copyOut(tc->getMemProxy());
     }
     return 0;

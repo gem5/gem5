@@ -138,7 +138,7 @@ decode OP default Unknown::unknown()
         }
     }
     0x1: BranchN::call(30, {{
-            IntReg midVal;
+            RegVal midVal;
             R15 = midVal = (Pstate.am ? (PC)<31:0> : PC);
             NNPC = midVal + disp;
     }},None, None, IsIndirectControl, IsCall);
