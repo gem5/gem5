@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016 ARM Limited
+ * Copyright (c) 2010-2013, 2016, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -152,6 +152,10 @@ class TLB : public BaseTLB
     int size;            // TLB Size
     bool isStage2;       // Indicates this TLB is part of the second stage MMU
     bool stage2Req;      // Indicates whether a stage 2 lookup is also required
+    // Indicates whether a stage 2 lookup of the table descriptors is required.
+    // Certain address translation instructions will intercept the IPA but the
+    // table descriptors still need to be translated by the stage2.
+    bool stage2DescReq;
     uint64_t _attr;      // Memory attributes for last accessed TLB entry
     bool directToStage2; // Indicates whether all translation requests should
                          // be routed directly to the stage 2 TLB
