@@ -357,15 +357,6 @@ NoncoherentCache::evictBlock(CacheBlk *blk)
     return pkt;
 }
 
-void
-NoncoherentCache::evictBlock(CacheBlk *blk, PacketList &writebacks)
-{
-    PacketPtr pkt = evictBlock(blk);
-    if (pkt) {
-        writebacks.push_back(pkt);
-    }
-}
-
 NoncoherentCache*
 NoncoherentCacheParams::create()
 {

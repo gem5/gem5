@@ -177,7 +177,7 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // flush and invalidate any existing block
         CacheBlk *old_blk(tags->findBlock(pkt->getAddr(), pkt->isSecure()));
         if (old_blk && old_blk->isValid()) {
-            evictBlock(old_blk, writebacks);
+            BaseCache::evictBlock(old_blk, writebacks);
         }
 
         blk = nullptr;
@@ -846,15 +846,6 @@ Cache::evictBlock(CacheBlk *blk)
     invalidateBlock(blk);
 
     return pkt;
-}
-
-void
-Cache::evictBlock(CacheBlk *blk, PacketList &writebacks)
-{
-    PacketPtr pkt = evictBlock(blk);
-    if (pkt) {
-        writebacks.push_back(pkt);
-    }
 }
 
 PacketPtr

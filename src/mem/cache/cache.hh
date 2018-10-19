@@ -141,8 +141,6 @@ class Cache : public BaseCache
 
     M5_NODISCARD PacketPtr evictBlock(CacheBlk *blk) override;
 
-    void evictBlock(CacheBlk *blk, PacketList &writebacks) override;
-
     /**
      * Create a CleanEvict request for the given block.
      *

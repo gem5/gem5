@@ -705,7 +705,7 @@ class BaseCache : public MemObject
      * @param blk Block to invalidate
      * @param writebacks Return a list of packets with writebacks
      */
-    virtual void evictBlock(CacheBlk *blk, PacketList &writebacks) = 0;
+    void evictBlock(CacheBlk *blk, PacketList &writebacks);
 
     /**
      * Invalidate a cache block.

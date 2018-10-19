@@ -1310,6 +1310,15 @@ BaseCache::invalidateBlock(CacheBlk *blk)
     blk->invalidate();
 }
 
+void
+BaseCache::evictBlock(CacheBlk *blk, PacketList &writebacks)
+{
+    PacketPtr pkt = evictBlock(blk);
+    if (pkt) {
+        writebacks.push_back(pkt);
+    }
+}
+
 PacketPtr
 BaseCache::writebackBlk(CacheBlk *blk)
 {
