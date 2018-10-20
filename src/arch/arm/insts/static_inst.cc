@@ -324,6 +324,16 @@ ArmStaticInst::printIntReg(std::ostream &os, RegIndex reg_idx) const
     }
 }
 
+void ArmStaticInst::printPFflags(std::ostream &os, int flag) const
+{
+    const char *flagtoprfop[]= { "PLD", "PLI", "PST", "Reserved"};
+    const char *flagtotarget[] = { "L1", "L2", "L3", "Reserved"};
+    const char *flagtopolicy[] = { "KEEP", "STRM"};
+
+    ccprintf(os, "%s%s%s", flagtoprfop[(flag>>3)&3],
+             flagtotarget[(flag>>1)&3], flagtopolicy[flag&1]);
+}
+
 void
 ArmStaticInst::printFloatReg(std::ostream &os, RegIndex reg_idx) const
 {

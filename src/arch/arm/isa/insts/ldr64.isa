@@ -74,6 +74,10 @@ let {{
             elif self.flavor == "iprefetch":
                 self.memFlags.append("Request::PREFETCH")
                 self.instFlags = ['IsInstPrefetch']
+            elif self.flavor == "mprefetch":
+                self.memFlags.append("((((dest>>3)&3)==2)? \
+                     (Request::PF_EXCLUSIVE):(Request::PREFETCH))")
+                self.instFlags = ['IsDataPrefetch']
             if self.micro:
                 self.instFlags.append("IsMicroop")
 
@@ -176,7 +180,7 @@ let {{
             self.buildEACode()
 
             # Code that actually handles the access
-            if self.flavor in ("dprefetch", "iprefetch"):
+            if self.flavor in ("dprefetch", "iprefetch", "mprefetch"):
                 accCode = 'uint64_t temp M5_VAR_USED = Mem%s;'
             elif self.flavor == "fp":
                 if self.size in (1, 2, 4):
@@ -365,10 +369,11 @@ let {{
     buildLoads64("ldr", "LDRSFP64", 4, False, flavor="fp")
     buildLoads64("ldr", "LDRDFP64", 8, False, flavor="fp")
 
-    LoadImm64("prfm", "PRFM64_IMM", 8, flavor="dprefetch").emit()
-    LoadReg64("prfm", "PRFM64_REG", 8, flavor="dprefetch").emit()
-    LoadLit64("prfm", "PRFM64_LIT", 8, literal=True, flavor="dprefetch").emit()
-    LoadImm64("prfum", "PRFUM64_IMM", 8, flavor="dprefetch").emit()
+    LoadImm64("prfm", "PRFM64_IMM", 8, flavor="mprefetch").emit()
+    LoadReg64("prfm", "PRFM64_REG", 8, flavor="mprefetch").emit()
+    LoadLit64("prfm", "PRFM64_LIT", 8, literal=True,
+              flavor="mprefetch").emit()
+    LoadImm64("prfum", "PRFUM64_IMM", 8, flavor="mprefetch").emit()
 
     LoadImm64("ldurb", "LDURB64_IMM", 1, False).emit()
     LoadImm64("ldursb", "LDURSBW64_IMM", 1, True).emit()
