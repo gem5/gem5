@@ -2896,34 +2896,153 @@ namespace Aarch64
     StaticInstPtr
     decodeSveMemGather32(ExtMachInst machInst)
     {
-        // TODO: for now only LDR and LD1R are implemented
-        if (bits(machInst, 22) && bits(machInst, 15)) {
-            IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex rn = makeSP(
-                (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-            uint64_t imm = bits(machInst, 21, 16);
-            IntRegIndex pg = (IntRegIndex) (uint8_t) bits(machInst, 12, 10);
-            uint8_t dtype = (bits(machInst, 24, 23) << 2) |
-                            bits(machInst, 14, 13);
-            return decodeSveContigLoadSIInsts<SveLoadAndRepl>(
-                    dtype, machInst, zt, pg, rn, imm, false, true);
-        } else if (bits(machInst, 24, 22) == 0x6 &&
-                   bits(machInst, 15, 13) == 0x0 &&
-                   bits(machInst, 4) == 0x0) {
-            IntRegIndex pt = (IntRegIndex) (uint8_t) bits(machInst, 3, 0);
-            IntRegIndex rn = makeSP(
-                (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-            uint64_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
-                                   bits(machInst, 12, 10));
-            return new SveLdrPred(machInst, pt, rn, imm);
-        } else if (bits(machInst, 24, 22) == 0x6 &&
-                   bits(machInst, 15, 13) == 0x2) {
-            IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
-            IntRegIndex rn = makeSP(
-                (IntRegIndex) (uint8_t) bits(machInst, 9, 5));
-            uint64_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
-                                   bits(machInst, 12, 10));
-            return new SveLdrVec(machInst, zt, rn, imm);
+        if (bits(machInst, 15)) {
+            if (bits(machInst, 22)) {
+                // SVE load and broadcast element
+                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+                IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+                uint64_t imm = bits(machInst, 21, 16);
+                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                                 bits(machInst, 12, 10);
+                uint8_t dtype = (bits(machInst, 24, 23) << 2) |
+                                bits(machInst, 14, 13);
+                return decodeSveContigLoadSIInsts<SveLoadAndRepl>(
+                        dtype, machInst, zt, pg, rn, imm, false, true);
+            } else {
+                if (bits(machInst, 21)) {
+                    // SVE 32-bit gather load (vector plus immediate)
+                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                                     bits(machInst, 4, 0);
+                    IntRegIndex zn = (IntRegIndex) (uint8_t)
+                                     bits(machInst, 9, 5);
+                    uint64_t imm = bits(machInst, 20, 16);
+                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                                     bits(machInst, 12, 10);
+                    uint8_t dtype = (bits(machInst, 24, 23) << 1) |
+                                    bits(machInst, 14);
+                    uint8_t ff = bits(machInst, 13);
+                    if (ff) {
+                        return new Unknown64(machInst);
+                    }
+                    return decodeSveGatherLoadVIInsts(
+                        dtype, machInst, zt, pg, zn, imm, true, ff);
+                } else {
+                    uint8_t b14_13 = bits(machInst, 14, 13);
+                    if (b14_13 == 0x2 && bits(machInst, 4) == 0) {
+                        // TODO: SVE contiguous prefetch (scalar plus scalar)
+                        return new Unknown64(machInst);
+                    } else if (b14_13 == 0x3 && bits(machInst, 4) == 0) {
+                        // TODO: SVE 32-bit gather prefetch (vector plus
+                        // immediate)
+                        return new Unknown64(machInst);
+                    }
+                }
+            }
+        } else {
+            uint8_t b24_23 = bits(machInst, 24, 23);
+            if (b24_23 != 0x3 && bits(machInst, 21) == 0) {
+                // SVE 32-bit gather load (scalar plus 32-bit unscaled offsets)
+                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+                IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+                IntRegIndex zm = (IntRegIndex) (uint8_t)
+                         bits(machInst, 20, 16);
+                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                         bits(machInst, 12, 10);
+                uint8_t dtype = (bits(machInst, 24, 23) << 1) |
+                                bits(machInst, 14);
+                uint8_t xs = bits(machInst, 22);
+                uint8_t ff = bits(machInst, 13);
+                if (ff) {
+                    return new Unknown64(machInst);
+                }
+                return decodeSveGatherLoadSVInsts(
+                        dtype, machInst, zt, pg, rn, zm,
+                        true, true, xs, false, ff);
+            }
+            switch (b24_23) {
+              case 0x0:
+                if (bits(machInst, 21) && bits(machInst, 4) == 0) {
+                    // TODO: SVE 32-bit gather prefetch (vector plus immediate)
+                    break;
+                }
+                break;
+              case 0x1:
+                if (bits(machInst, 21)) {
+                    // SVE 32-bit gather load halfwords (scalar plus 32-bit
+                    // scaled offsets)
+                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                             bits(machInst, 4, 0);
+                    IntRegIndex rn = (IntRegIndex) (uint8_t)
+                             bits(machInst, 9, 5);
+                    IntRegIndex zm = (IntRegIndex) (uint8_t)
+                             bits(machInst, 20, 16);
+                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                             bits(machInst, 12, 10);
+                    uint8_t xs = bits(machInst, 22);
+                    uint8_t ff = bits(machInst, 13);
+                    if (ff) {
+                        return new Unknown64(machInst);
+                    }
+                    if (bits(machInst, 14)) {
+                        return new SveIndexedMemSV<uint32_t, uint16_t,
+                                                   SveGatherLoadSVMicroop>(
+                            "ld1", machInst, MemReadOp, zt, pg, rn, zm,
+                            true, xs, true);
+                    } else {
+                        return new SveIndexedMemSV<int32_t, int16_t,
+                                                   SveGatherLoadSVMicroop>(
+                            "ld1", machInst, MemReadOp, zt, pg, rn, zm,
+                            true, xs, true);
+                    }
+                }
+                break;
+              case 0x2:
+                if (bits(machInst, 21)) {
+                    // SVE 32-bit gather load words (scalar plus 32-bit scaled
+                    // offsets)
+                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                             bits(machInst, 4, 0);
+                    IntRegIndex rn = (IntRegIndex) (uint8_t)
+                             bits(machInst, 9, 5);
+                    IntRegIndex zm = (IntRegIndex) (uint8_t)
+                             bits(machInst, 20, 16);
+                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                             bits(machInst, 12, 10);
+                    uint8_t xs = bits(machInst, 22);
+                    uint8_t ff = bits(machInst, 13);
+                    if (ff) {
+                        return new Unknown64(machInst);
+                    }
+                    return new SveIndexedMemSV<uint32_t, uint32_t,
+                                               SveGatherLoadSVMicroop>(
+                        "ld1", machInst, MemReadOp, zt, pg, rn, zm,
+                        true, xs, true);
+                }
+                break;
+              case 0x3:
+                if (bits(machInst, 22) == 0 && bits(machInst, 14, 13) == 0x0 &&
+                        bits(machInst, 4) == 0) {
+                    // SVE load predicate register
+                    IntRegIndex pt = (IntRegIndex) (uint8_t)
+                        bits(machInst, 3, 0);
+                    IntRegIndex rn = (IntRegIndex) (uint8_t)
+                        bits(machInst, 9, 5);
+                    uint64_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
+                                           bits(machInst, 12, 10));
+                    return new SveLdrPred(machInst, pt, rn, imm);
+                } else if (bits(machInst, 22) == 0 &&
+                           bits(machInst, 14, 13) == 0x2) {
+                    // SVE load vector register
+                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                        bits(machInst, 4, 0);
+                    IntRegIndex rn = (IntRegIndex) (uint8_t)
+                        bits(machInst, 9, 5);
+                    uint64_t imm = sext<9>((bits(machInst, 21, 16) << 3) |
+                                           bits(machInst, 12, 10));
+                    return new SveLdrVec(machInst, zt, rn, imm);
+                }
+                break;
+            }
         }
         return new Unknown64(machInst);
     }  // decodeSveMemGather32
@@ -3048,6 +3167,124 @@ namespace Aarch64
     StaticInstPtr
     decodeSveMemGather64(ExtMachInst machInst)
     {
+        switch ((bits(machInst, 21) << 1) | bits(machInst, 15)) {
+          case 0x0:
+            {
+                // SVE 64-bit gather load (scalar plus unpacked 32-bit unscaled
+                // offsets)
+                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+                IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+                IntRegIndex zm = (IntRegIndex) (uint8_t)
+                         bits(machInst, 20, 16);
+                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                         bits(machInst, 12, 10);
+                uint8_t dtype = (bits(machInst, 24, 23) << 1) |
+                                bits(machInst, 14);
+                uint8_t xs = bits(machInst, 22);
+                uint8_t ff = bits(machInst, 13);
+                if (ff) {
+                    return new Unknown64(machInst);
+                }
+                return decodeSveGatherLoadSVInsts(
+                        dtype, machInst, zt, pg, rn, zm,
+                        false, true, xs, false, ff);
+            }
+          case 0x1:
+            if (bits(machInst, 22)) {
+                // SVE 64-bit gather load (scalar plus 64-bit unscaled offsets)
+                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+                IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+                IntRegIndex zm = (IntRegIndex) (uint8_t)
+                         bits(machInst, 20, 16);
+                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                         bits(machInst, 12, 10);
+                uint8_t dtype = (bits(machInst, 24, 23) << 1) |
+                                bits(machInst, 14);
+                uint8_t ff = bits(machInst, 13);
+                if (ff) {
+                    return new Unknown64(machInst);
+                }
+                return decodeSveGatherLoadSVInsts(
+                        dtype, machInst, zt, pg, rn, zm,
+                        false, false, false, false, ff);
+            } else {
+                if (bits(machInst, 14, 13) == 0x3 && bits(machInst, 4) == 0) {
+                    // TODO: SVE 64-bit gather prefetch (vector plus immediate)
+                    break;
+                }
+            }
+            break;
+          case 0x2:
+            if (bits(machInst, 24, 23) != 0x0) {
+                //  SVE 64-bit gather load (scalar plus unpacked 32-bit scaled
+                //  offsets)
+                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+                IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+                IntRegIndex zm = (IntRegIndex) (uint8_t)
+                         bits(machInst, 20, 16);
+                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                         bits(machInst, 12, 10);
+                uint8_t dtype = (bits(machInst, 24, 23) << 1) |
+                                bits(machInst, 14);
+                uint8_t xs = bits(machInst, 22);
+                uint8_t ff = bits(machInst, 13);
+                if (ff) {
+                    return new Unknown64(machInst);
+                }
+                return decodeSveGatherLoadSVInsts(
+                        dtype, machInst, zt, pg, rn, zm,
+                        false, true, xs, true, ff);
+            } else if (bits(machInst, 4) == 0) {
+                // TODO: SVE 64-bit gather prefetch (scalar plus unpacked
+                // 32-bit scaled offsets)
+                return new Unknown64(machInst);
+            }
+            break;
+          case 0x3:
+            if (bits(machInst, 22) == 0) {
+                // SVE 64-bit gather load (vector plus immediate)
+                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+                IntRegIndex zn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+                uint64_t imm = bits(machInst, 20, 16);
+                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                                 bits(machInst, 12, 10);
+                uint8_t dtype = (bits(machInst, 24, 23) << 1) |
+                                bits(machInst, 14);
+                uint8_t ff = bits(machInst, 13);
+                if (ff) {
+                    return new Unknown64(machInst);
+                }
+                return decodeSveGatherLoadVIInsts(
+                    dtype, machInst, zt, pg, zn, imm, false, ff);
+            } else {
+                if (bits(machInst, 24, 23) != 0x0) {
+                    // SVE 64-bit gather load (scalar plus 64-bit scaled
+                    // offsets)
+                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                             bits(machInst, 4, 0);
+                    IntRegIndex rn = (IntRegIndex) (uint8_t)
+                             bits(machInst, 9, 5);
+                    IntRegIndex zm = (IntRegIndex) (uint8_t)
+                             bits(machInst, 20, 16);
+                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                             bits(machInst, 12, 10);
+                    uint8_t dtype = (bits(machInst, 24, 23) << 1) |
+                                    bits(machInst, 14);
+                    uint8_t ff = bits(machInst, 13);
+                    if (ff) {
+                        return new Unknown64(machInst);
+                    }
+                    return decodeSveGatherLoadSVInsts(
+                            dtype, machInst, zt, pg, rn, zm,
+                            false, false, false, true, ff);
+                } else if (bits(machInst, 4) == 0) {
+                    // TODO: SVE 64-bit gather prefetch (scalar plus 64-bit
+                    // scaled offsets)
+                    break;
+                }
+            }
+            break;
+        }
         return new Unknown64(machInst);
     }  // decodeSveMemGather64
 
@@ -3087,34 +3324,10 @@ namespace Aarch64
     }  // decodeSveContigNTStoreSS
 
     StaticInstPtr
-    decodeSveScatterStore64SV32U(ExtMachInst machInst)
-    {
-        return new Unknown64(machInst);
-    }  // decodeSveScatterStore64SV32U
-
-    StaticInstPtr
-    decodeSveScatterStore64SV64U(ExtMachInst machInst)
-    {
-        return new Unknown64(machInst);
-    }  // decodeSveScatterStore64SV64U
-
-    StaticInstPtr
     decodeSveContigNTStoreSI(ExtMachInst machInst)
     {
         return new Unknown64(machInst);
     }  // decodeSveContigNTStoreSI
-
-    StaticInstPtr
-    decodeSveScatterStore64VI(ExtMachInst machInst)
-    {
-        return new Unknown64(machInst);
-    }  // decodeSveScatterStore64VI
-
-    StaticInstPtr
-    decodeSveScatterStore32SV32S(ExtMachInst machInst)
-    {
-        return new Unknown64(machInst);
-    }  // decodeSveScatterStore32SV32S
 
     StaticInstPtr
     decodeSveStoreStructsSS(ExtMachInst machInst)
@@ -3127,30 +3340,6 @@ namespace Aarch64
     {
         return new Unknown64(machInst);
     }  // decodeSveStoreStructsSI
-
-    StaticInstPtr
-    decodeSveScatterStore32SV32U(ExtMachInst machInst)
-    {
-        return new Unknown64(machInst);
-    }  // decodeSveScatterStore32SV32U
-
-    StaticInstPtr
-    decodeSveScatterStore32VI(ExtMachInst machInst)
-    {
-        return new Unknown64(machInst);
-    }  // decodeSveScatterStore32VI
-
-    StaticInstPtr
-    decodeSveScatterStore64SV32S(ExtMachInst machInst)
-    {
-        return new Unknown64(machInst);
-    }  // decodeSveScatterStore64SV32S
-
-    StaticInstPtr
-    decodeSveScatterStore64SV64S(ExtMachInst machInst)
-    {
-        return new Unknown64(machInst);
-    }  // decodeSveScatterStore64SV64S
 
     StaticInstPtr
     decodeSveMemStore(ExtMachInst machInst)
@@ -3186,37 +3375,118 @@ namespace Aarch64
             }
           case 0x4:
           case 0x6:
-            switch (bits(machInst, 22, 21)) {
-              case 0x0:
-                return decodeSveScatterStore64SV32U(machInst);
-              case 0x1:
-                if (bits(machInst, 24, 23) != 0x0) {
-                    return decodeSveScatterStore64SV32S(machInst);
+            {
+                IntRegIndex zt = (IntRegIndex) (uint8_t) bits(machInst, 4, 0);
+                IntRegIndex rn = (IntRegIndex) (uint8_t) bits(machInst, 9, 5);
+                IntRegIndex zm = (IntRegIndex) (uint8_t)
+                         bits(machInst, 20, 16);
+                IntRegIndex pg = (IntRegIndex) (uint8_t)
+                         bits(machInst, 12, 10);
+                uint8_t msz = bits(machInst, 24, 23);
+                uint8_t xs = bits(machInst, 22);
+
+                switch (bits(machInst, 22, 21)) {
+                  case 0x0:
+                    // SVE 64-bit scatter store (scalar plus unpacked 32-bit
+                    // unscaled offsets)
+                    return decodeSveScatterStoreSVInsts(
+                            msz, machInst, zt, pg, rn, zm,
+                            false, true, xs, false);
+                  case 0x1:
+                    if (bits(machInst, 24, 23) != 0x0) {
+                        // SVE 64-bit scatter store (scalar plus unpacked
+                        // 32-bit scaled offsets)
+                        return decodeSveScatterStoreSVInsts(
+                                msz, machInst, zt, pg, rn, zm,
+                                false, true, xs, true);
+                    }
+                    break;
+                  case 0x2:
+                    if (bits(machInst, 24, 23) != 0x3) {
+                        // SVE 32-bit scatter store (scalar plus 32-bit
+                        // unscaled offsets)
+                        return decodeSveScatterStoreSVInsts(
+                                msz, machInst, zt, pg, rn, zm,
+                                true, true, xs, false);
+                    }
+                    break;
+                  case 0x3:
+                    // SVE 32-bit scatter store (scalar plus 32-bit scaled
+                    // offsets)
+                    return decodeSveScatterStoreSVInsts(
+                            msz, machInst, zt, pg, rn, zm,
+                            true, true, xs, true);
                 }
-                break;
-              case 0x2:
-                if (bits(machInst, 24, 23) != 0x3) {
-                    return decodeSveScatterStore32SV32U(machInst);
-                }
-                break;
-              case 0x3:
-                return decodeSveScatterStore32SV32S(machInst);
             }
             break;
           case 0x5:
             switch (bits(machInst, 22, 21)) {
               case 0x0:
-                return decodeSveScatterStore64SV64U(machInst);
+                {
+                    // SVE 64-bit scatter store (scalar plus 64-bit unscaled
+                    // offsets)
+                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                            bits(machInst, 4, 0);
+                    IntRegIndex rn = (IntRegIndex) (uint8_t)
+                            bits(machInst, 9, 5);
+                    IntRegIndex zm = (IntRegIndex) (uint8_t)
+                            bits(machInst, 20, 16);
+                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                            bits(machInst, 12, 10);
+                    uint8_t msz = bits(machInst, 24, 23);
+
+                    return decodeSveScatterStoreSVInsts(
+                            msz, machInst, zt, pg, rn, zm,
+                            false, false, false, false);
+                }
               case 0x1:
                 if (bits(machInst, 24, 23) != 0x0) {
-                    return decodeSveScatterStore64SV64S(machInst);
+                    // SVE 64-bit scatter store (scalar plus 64-bit scaled
+                    // offsets)
+                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                            bits(machInst, 4, 0);
+                    IntRegIndex rn = (IntRegIndex) (uint8_t)
+                            bits(machInst, 9, 5);
+                    IntRegIndex zm = (IntRegIndex) (uint8_t)
+                            bits(machInst, 20, 16);
+                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                            bits(machInst, 12, 10);
+                    uint8_t msz = bits(machInst, 24, 23);
+
+                    return decodeSveScatterStoreSVInsts(
+                            msz, machInst, zt, pg, rn, zm,
+                            false, false, false, true);
                 }
                 break;
               case 0x2:
-                return decodeSveScatterStore64VI(machInst);
+                {
+                    // SVE 64-bit scatter store (vector plus immediate)
+                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                            bits(machInst, 4, 0);
+                    IntRegIndex zn = (IntRegIndex) (uint8_t)
+                            bits(machInst, 9, 5);
+                    uint64_t imm = bits(machInst, 20, 16);
+                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                            bits(machInst, 12, 10);
+                    uint8_t msz = bits(machInst, 24, 23);
+
+                    return decodeSveScatterStoreVIInsts(
+                        msz, machInst, zt, pg, zn, imm, false);
+                }
               case 0x3:
                 if (bits(machInst, 24, 23) != 0x3) {
-                    return decodeSveScatterStore64VI(machInst);
+                    // SVE 32-bit scatter store (vector plus immediate)
+                    IntRegIndex zt = (IntRegIndex) (uint8_t)
+                            bits(machInst, 4, 0);
+                    IntRegIndex zn = (IntRegIndex) (uint8_t)
+                            bits(machInst, 9, 5);
+                    uint64_t imm = bits(machInst, 20, 16);
+                    IntRegIndex pg = (IntRegIndex) (uint8_t)
+                            bits(machInst, 12, 10);
+                    uint8_t msz = bits(machInst, 24, 23);
+
+                    return decodeSveScatterStoreVIInsts(
+                        msz, machInst, zt, pg, zn, imm, true);
                 }
                 break;
             }

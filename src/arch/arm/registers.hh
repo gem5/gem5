@@ -88,6 +88,7 @@ const int NumVecSpecialRegs = 8;
 const int NumIntRegs = NUM_INTREGS;
 const int NumFloatRegs = NumFloatV8ArchRegs + NumFloatSpecialRegs;
 const int NumVecRegs = NumVecV8ArchRegs + NumVecSpecialRegs;
+const int VECREG_UREG0 = 32;
 const int NumVecPredRegs = 17;  // P0-P15, FFR
 const int PREDREG_FFR = 16;
 const int NumCCRegs = NUM_CCREGS;

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 ARM Limited
+// Copyright (c) 2017-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -384,3 +384,342 @@ def template SveLoadAndReplCompleteAcc {{
     }
 }};
 
+def template SveIndexedMemVIMicroopDeclare {{
+    %(tpl_header)s
+    class %(class_name)s : public %(base_class)s
+    {
+      protected:
+        typedef RegElemType TPElem;
+
+        IntRegIndex dest;
+        IntRegIndex gp;
+        IntRegIndex base;
+        uint64_t imm;
+
+        int elemIndex;
+        int numElems;
+
+        unsigned memAccessFlags;
+
+      public:
+        %(class_name)s(const char* mnem, ExtMachInst machInst,
+            OpClass __opClass, IntRegIndex _dest, IntRegIndex _gp,
+            IntRegIndex _base, uint64_t _imm, int _elemIndex, int _numElems)
+            : %(base_class)s(mnem, machInst, %(op_class)s),
+              dest(_dest), gp(_gp), base(_base), imm(_imm),
+              elemIndex(_elemIndex), numElems(_numElems),
+              memAccessFlags(ArmISA::TLB::AllowUnaligned |
+                             ArmISA::TLB::MustBeOne)
+        {
+            %(constructor)s;
+            if (_opClass == MemReadOp && elemIndex == 0) {
+                // The first micro-op is responsible for pinning the
+                // destination register
+                _destRegIdx[0].setNumPinnedWrites(numElems - 1);
+            }
+        }
+
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+
+        virtual void
+        annotateFault(ArmFault *fault)
+        {
+            %(fa_code)s
+        }
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+            // TODO: add suffix to transfer register
+            std::stringstream ss;
+            printMnemonic(ss, "", false);
+            ccprintf(ss, "{");
+            printVecReg(ss, dest, true);
+            ccprintf(ss, "}, ");
+            printVecPredReg(ss, gp);
+            if (_opClass == MemReadOp) {
+                ccprintf(ss, "/z");
+            }
+            ccprintf(ss, ", [");
+            printVecReg(ss, base, true);
+            if (imm != 0) {
+                ccprintf(ss, ", #%d", imm * sizeof(MemElemType));
+            }
+            ccprintf(ss, "] (uop elem %d tfer)", elemIndex);
+            return ss.str();
+        }
+    };
+}};
+
+def template SveIndexedMemSVMicroopDeclare {{
+    %(tpl_header)s
+    class %(class_name)s : public %(base_class)s
+    {
+      protected:
+        typedef RegElemType TPElem;
+
+        IntRegIndex dest;
+        IntRegIndex gp;
+        IntRegIndex base;
+        IntRegIndex offset;
+
+        bool offsetIs32;
+        bool offsetIsSigned;
+        bool offsetIsScaled;
+
+        int elemIndex;
+        int numElems;
+
+        unsigned memAccessFlags;
+
+      public:
+        %(class_name)s(const char* mnem, ExtMachInst machInst,
+            OpClass __opClass, IntRegIndex _dest, IntRegIndex _gp,
+            IntRegIndex _base, IntRegIndex _offset, bool _offsetIs32,
+            bool _offsetIsSigned, bool _offsetIsScaled, int _elemIndex,
+            int _numElems)
+            : %(base_class)s(mnem, machInst, %(op_class)s),
+              dest(_dest), gp(_gp), base(_base), offset(_offset),
+              offsetIs32(_offsetIs32), offsetIsSigned(_offsetIsSigned),
+              offsetIsScaled(_offsetIsScaled), elemIndex(_elemIndex),
+              numElems(_numElems),
+              memAccessFlags(ArmISA::TLB::AllowUnaligned |
+                             ArmISA::TLB::MustBeOne)
+        {
+            %(constructor)s;
+            if (_opClass == MemReadOp && elemIndex == 0) {
+                // The first micro-op is responsible for pinning the
+                // destination register
+                _destRegIdx[0].setNumPinnedWrites(numElems - 1);
+            }
+        }
+
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+        Fault initiateAcc(ExecContext *, Trace::InstRecord *) const;
+        Fault completeAcc(PacketPtr, ExecContext *, Trace::InstRecord *) const;
+
+        virtual void
+        annotateFault(ArmFault *fault)
+        {
+            %(fa_code)s
+        }
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+            // TODO: add suffix to transfer and base registers
+            std::stringstream ss;
+            printMnemonic(ss, "", false);
+            ccprintf(ss, "{");
+            printVecReg(ss, dest, true);
+            ccprintf(ss, "}, ");
+            printVecPredReg(ss, gp);
+            if (_opClass == MemReadOp) {
+                ccprintf(ss, "/z");
+            }
+            ccprintf(ss, ", [");
+            printIntReg(ss, base);
+            ccprintf(ss, ", ");
+            printVecReg(ss, offset, true);
+            ccprintf(ss, "] (uop elem %d tfer)", elemIndex);
+            return ss.str();
+        }
+    };
+}};
+
+def template SveGatherLoadMicroopExecute {{
+    %(tpl_header)s
+    Fault %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        bool aarch64 M5_VAR_USED = true;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        MemElemType memData;
+
+        if (%(pred_check_code)s) {
+            fault = readMemAtomic(xc, traceData, EA, memData,
+                this->memAccessFlags);
+        }
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SveGatherLoadMicroopInitiateAcc {{
+    %(tpl_header)s
+    Fault %(class_name)s%(tpl_args)s::initiateAcc(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        bool aarch64 M5_VAR_USED = true;
+
+        %(op_src_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        MemElemType memData;
+
+        if (%(pred_check_code)s) {
+            fault = initiateMemRead(xc, traceData, EA, memData,
+                this->memAccessFlags);
+        } else {
+            xc->setMemAccPredicate(false);
+        }
+
+        return fault;
+    }
+}};
+
+def template SveGatherLoadMicroopCompleteAcc {{
+    %(tpl_header)s
+    Fault %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        bool aarch64 M5_VAR_USED = true;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        MemElemType memData = 0;
+        if (%(pred_check_code)s) {
+            getMem(pkt, memData, traceData);
+        }
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SveScatterStoreMicroopExecute {{
+    %(tpl_header)s
+    Fault %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        bool aarch64 M5_VAR_USED = true;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        MemElemType memData;
+        %(memacc_code)s;
+
+        if (%(pred_check_code)s) {
+            fault = writeMemAtomic(xc, traceData, memData, EA,
+                                   this->memAccessFlags, NULL);
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SveScatterStoreMicroopInitiateAcc {{
+    %(tpl_header)s
+    Fault %(class_name)s%(tpl_args)s::initiateAcc(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        bool aarch64 M5_VAR_USED = true;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        MemElemType memData;
+        %(memacc_code)s;
+
+        if (%(pred_check_code)s) {
+            fault = writeMemTiming(xc, traceData, memData, EA,
+                                   this->memAccessFlags, NULL);
+        } else {
+            xc->setPredicate(false);
+        }
+
+        return fault;
+    }
+}};
+
+def template SveScatterStoreMicroopCompleteAcc {{
+    %(tpl_header)s
+    Fault %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
+        ExecContext *xc, Trace::InstRecord *traceData) const
+    {
+        return NoFault;
+    }
+}};
+
+def template SveGatherLoadCpySrcVecMicroopDeclare {{
+    class SveGatherLoadCpySrcVecMicroop : public MicroOp
+    {
+      protected:
+        IntRegIndex op1;
+
+        StaticInst *macroOp;
+
+      public:
+        SveGatherLoadCpySrcVecMicroop(const char* mnem, ExtMachInst machInst,
+            IntRegIndex _op1, StaticInst *_macroOp)
+            : MicroOp(mnem, machInst, SimdAluOp), op1(_op1), macroOp(_macroOp)
+        {
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+            std::stringstream ss;
+            ccprintf(ss, "%s", macroOp->disassemble(pc, symtab));
+            ccprintf(ss, " (uop src vec cpy)");
+            return ss.str();
+        }
+    };
+}};
+
+def template SveGatherLoadCpySrcVecMicroopExecute {{
+    Fault SveGatherLoadCpySrcVecMicroop::execute(ExecContext *xc,
+            Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+        %(op_decl)s;
+        %(op_rd)s;
+
+        %(code)s;
+        if (fault == NoFault)
+        {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};

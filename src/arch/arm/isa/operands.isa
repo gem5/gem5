@@ -1,5 +1,5 @@
 // -*- mode:c++ -*-
-// Copyright (c) 2010-2014, 2016 ARM Limited
+// Copyright (c) 2010-2014, 2016-2018 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -539,6 +539,39 @@ def operands {{
         'AA64FpDestMergeS':  vectorRegElem('0', 'sf', zeroing = True),
         'AA64FpDestMergeD':  vectorRegElem('0', 'df', zeroing = True),
         'AA64FpDestMergeQ':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpBase': vectorReg('base',
+    {
+        'AA64FpBaseP0': vectorRegElem('0'),
+        'AA64FpBaseP1': vectorRegElem('1'),
+        'AA64FpBaseP2': vectorRegElem('2'),
+        'AA64FpBaseP3': vectorRegElem('3'),
+        'AA64FpBaseS':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpBaseD':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpBaseQ':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpOffset': vectorReg('offset',
+    {
+        'AA64FpOffsetP0': vectorRegElem('0'),
+        'AA64FpOffsetP1': vectorRegElem('1'),
+        'AA64FpOffsetP2': vectorRegElem('2'),
+        'AA64FpOffsetP3': vectorRegElem('3'),
+        'AA64FpOffsetS':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpOffsetD':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpOffsetQ':  vectorRegElem('0', 'tud', zeroing = True)
+    }),
+
+    'AA64FpUreg0': vectorReg('VECREG_UREG0',
+    {
+        'AA64FpUreg0P0': vectorRegElem('0'),
+        'AA64FpUreg0P1': vectorRegElem('1'),
+        'AA64FpUreg0P2': vectorRegElem('2'),
+        'AA64FpUreg0P3': vectorRegElem('3'),
+        'AA64FpUreg0S':  vectorRegElem('0', 'sf', zeroing = True),
+        'AA64FpUreg0D':  vectorRegElem('0', 'df', zeroing = True),
+        'AA64FpUreg0Q':  vectorRegElem('0', 'tud', zeroing = True)
     }),
 
     # Predicate register operands
