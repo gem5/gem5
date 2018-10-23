@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2016, 2019 ARM Limited
+# Copyright (c) 2014, 2016, 2018-2019 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -1652,6 +1652,9 @@ class ISAParser(Grammar):
         # decoder header - everything depends on this
         file = 'decoder.hh'
         with self.open(file) as f:
+            f.write('#ifndef __ARCH_%(isa)s_GENERATED_DECODER_HH__\n'
+                    '#define __ARCH_%(isa)s_GENERATED_DECODER_HH__\n\n' %
+                    {'isa': self.isa_name.upper()})
             fn = 'decoder-g.hh.inc'
             assert(fn in self.files)
             f.write('#include "%s"\n' % fn)
@@ -1660,6 +1663,8 @@ class ISAParser(Grammar):
             assert(fn in self.files)
             f.write('namespace %s {\n#include "%s"\n}\n'
                     % (self.namespace, fn))
+            f.write('\n#endif  // __ARCH_%s_GENERATED_DECODER_HH__\n' %
+                    self.isa_name.upper())
 
         # decoder method - cannot be split
         file = 'decoder.cc'
