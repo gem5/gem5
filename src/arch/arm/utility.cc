@@ -792,7 +792,7 @@ msrMrs64TrapToMon(const MiscRegIndex miscReg, CPTR cptr /* CPTR_EL3 */,
         break;
       // CPACR, CPTR
       case MISCREG_CPACR_EL1:
-        if (el == EL1) {
+        if (el == EL1 || el == EL2) {
            trapToMon = cptr.tcpac;
         }
         break;
