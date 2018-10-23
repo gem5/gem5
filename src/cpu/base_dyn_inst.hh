@@ -135,6 +135,7 @@ class BaseDynInst : public ExecContext, public RefCounted
         EffAddrValid,
         RecordResult,
         Predicate,
+        MemAccPredicate,
         PredTaken,
         IsStrictlyOrdered,
         ReqMade,
@@ -849,6 +850,18 @@ class BaseDynInst : public ExecContext, public RefCounted
         if (traceData) {
             traceData->setPredicate(val);
         }
+    }
+
+    bool
+    readMemAccPredicate() const
+    {
+        return instFlags[MemAccPredicate];
+    }
+
+    void
+    setMemAccPredicate(bool val)
+    {
+        instFlags[MemAccPredicate] = val;
     }
 
     /** Sets the ASID. */

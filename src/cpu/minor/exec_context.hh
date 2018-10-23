@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, 2016-2017 ARM Limited
+ * Copyright (c) 2011-2014, 2016-2018 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -317,6 +317,18 @@ class ExecContext : public ::ExecContext
     setPredicate(bool val) override
     {
         thread.setPredicate(val);
+    }
+
+    bool
+    readMemAccPredicate() const override
+    {
+        return thread.readMemAccPredicate();
+    }
+
+    void
+    setMemAccPredicate(bool val) override
+    {
+        thread.setMemAccPredicate(val);
     }
 
     TheISA::PCState

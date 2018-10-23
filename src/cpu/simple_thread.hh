@@ -117,6 +117,9 @@ class SimpleThread : public ThreadState, public ThreadContext
     /** Did this instruction execute or is it predicated false */
     bool predicate;
 
+    /** True if the memory access should be skipped for this instruction */
+    bool memAccPredicate;
+
   public:
     std::string name() const
     {
@@ -575,6 +578,18 @@ class SimpleThread : public ThreadState, public ThreadContext
     }
 
     unsigned readStCondFailures() const override { return storeCondFailures; }
+
+    bool
+    readMemAccPredicate()
+    {
+        return memAccPredicate;
+    }
+
+    void
+    setMemAccPredicate(bool val)
+    {
+        memAccPredicate = val;
+    }
 
     void
     setStCondFailures(unsigned sc_failures) override

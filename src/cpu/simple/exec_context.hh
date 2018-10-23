@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017 ARM Limited
+ * Copyright (c) 2014-2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -516,6 +516,18 @@ class SimpleExecContext : public ExecContext {
         if (cpu->traceData) {
             cpu->traceData->setPredicate(val);
         }
+    }
+
+    bool
+    readMemAccPredicate() const override
+    {
+        return thread->readMemAccPredicate();
+    }
+
+    void
+    setMemAccPredicate(bool val) override
+    {
+        thread->setMemAccPredicate(val);
     }
 
     /**

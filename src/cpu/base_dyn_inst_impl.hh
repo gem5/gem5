@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 ARM Limited
+ * Copyright (c) 2011, 2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -103,6 +103,7 @@ BaseDynInst<Impl>::initVars()
     instFlags.reset();
     instFlags[RecordResult] = true;
     instFlags[Predicate] = true;
+    instFlags[MemAccPredicate] = true;
 
     lqIdx = -1;
     sqIdx = -1;
