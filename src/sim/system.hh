@@ -61,6 +61,7 @@
 #include "mem/port_proxy.hh"
 #include "params/System.hh"
 #include "sim/futex_map.hh"
+#include "sim/mem_pool.hh"
 #include "sim/redirect_path.hh"
 #include "sim/se_signal.hh"
 #include "sim/sim_object.hh"
@@ -320,7 +321,8 @@ class System : public SimObject, public PCEventScope
     bool schedule(PCEvent *event) override;
     bool remove(PCEvent *event) override;
 
-    Addr pagePtr = 0;
+    /** Memory allocation objects for all physical memories in the system. */
+    std::vector<MemPool> memPools;
 
     uint64_t init_param;
 
@@ -345,10 +347,10 @@ class System : public SimObject, public PCEventScope
     PhysicalMemory& getPhysMem() { return physmem; }
 
     /** Amount of physical memory that is still free */
-    Addr freeMemSize() const;
+    Addr freeMemSize(int poolID = 0) const;
 
     /** Amount of physical memory that exists */
-    Addr memSize() const;
+    Addr memSize(int poolID = 0) const;
 
     /**
      * Check if a physical address is within a range of a memory that
@@ -587,7 +589,7 @@ class System : public SimObject, public PCEventScope
 
     /// Allocate npages contiguous unused physical pages
     /// @return Starting address of first page
-    Addr allocPhysPages(int npages);
+    Addr allocPhysPages(int npages, int poolID = 0);
 
     void registerThreadContext(
             ThreadContext *tc, ContextID assigned=InvalidContextID);

@@ -84,6 +84,7 @@ Source('power_state.cc')
 Source('power_domain.cc')
 Source('stats.cc')
 Source('workload.cc')
+Source('mem_pool.cc')
 
 GTest('byteswap.test', 'byteswap.test.cc', '../base/types.cc')
 GTest('guest_abi.test', 'guest_abi.test.cc')

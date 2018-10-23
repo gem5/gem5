@@ -233,6 +233,19 @@ System::System(const Params &p)
     }
 #endif
 
+    AddrRangeList memories = physmem.getConfAddrRanges();
+    assert(!memories.empty());
+    for (const auto &memory : memories) {
+        assert(!memory.interleaved());
+        memPools.emplace_back(this, memory.start(), memory.end());
+    }
+
+    /*
+     * Set freePage to what it was before Gabe Black's page table changes
+     * so allocations don't trample the page table entries.
+     */
+    memPools[0].setFreePage(memPools[0].freePage() + 70);
+
     // check if the cache line size is a value known to work
     if (_cacheLineSize != 16 && _cacheLineSize != 32 &&
         _cacheLineSize != 64 && _cacheLineSize != 128) {
@@ -362,34 +375,21 @@ System::validKvmEnvironment() const
 }
 
 Addr
-System::allocPhysPages(int npages)
+System::allocPhysPages(int npages, int poolID)
 {
-    Addr return_addr = pagePtr << TheISA::PageShift;
-    pagePtr += npages;
-
-    Addr next_return_addr = pagePtr << TheISA::PageShift;
-
-    if (_m5opRange.contains(next_return_addr)) {
-        warn("Reached m5ops MMIO region\n");
-        return_addr = 0xffffffff;
-        pagePtr = 0xffffffff >> TheISA::PageShift;
-    }
-
-    if ((pagePtr << TheISA::PageShift) > physmem.totalSize())
-        fatal("Out of memory, please increase size of physical memory.");
-    return return_addr;
+    return memPools[poolID].allocate(npages);
 }
 
 Addr
-System::memSize() const
+System::memSize(int poolID) const
 {
-    return physmem.totalSize();
+    return memPools[poolID].totalBytes();
 }
 
 Addr
-System::freeMemSize() const
+System::freeMemSize(int poolID) const
 {
-   return physmem.totalSize() - (pagePtr << TheISA::PageShift);
+    return memPools[poolID].freeBytes();
 }
 
 bool
@@ -426,8 +426,6 @@ System::getDeviceMemory(RequestorID id) const
 void
 System::serialize(CheckpointOut &cp) const
 {
-    SERIALIZE_SCALAR(pagePtr);
-
     for (auto &t: threads.threads) {
         Tick when = 0;
         if (t.resumeEvent && t.resumeEvent->scheduled())
@@ -435,6 +433,17 @@ System::serialize(CheckpointOut &cp) const
         ContextID id = t.context->contextId();
         paramOut(cp, csprintf("quiesceEndTick_%d", id), when);
     }
+
+    std::vector<Addr> ptrs;
+    std::vector<Addr> limits;
+
+    for (const auto& memPool : memPools) {
+        ptrs.push_back(memPool.freePageAddr());
+        limits.push_back(memPool.totalBytes());
+    }
+
+    SERIALIZE_CONTAINER(ptrs);
+    SERIALIZE_CONTAINER(limits);
 
     // also serialize the memories in the system
     physmem.serializeSection(cp, "physmem");
@@ -444,8 +453,6 @@ System::serialize(CheckpointOut &cp) const
 void
 System::unserialize(CheckpointIn &cp)
 {
-    UNSERIALIZE_SCALAR(pagePtr);
-
     for (auto &t: threads.threads) {
         Tick when = 0;
         ContextID id = t.context->contextId();
@@ -457,6 +464,16 @@ System::unserialize(CheckpointIn &cp)
         t.context->getCpuPtr()->schedule(t.resumeEvent, when);
 #       endif
     }
+
+    std::vector<Addr> ptrs;
+    std::vector<Addr> limits;
+
+    UNSERIALIZE_CONTAINER(ptrs);
+    UNSERIALIZE_CONTAINER(limits);
+
+    assert(ptrs.size() == limits.size());
+    for (size_t i = 0; i < ptrs.size(); i++)
+        memPools.emplace_back(this, ptrs[i], limits[i]);
 
     // also unserialize the memories in the system
     physmem.unserializeSection(cp, "physmem");
