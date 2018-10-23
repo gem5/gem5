@@ -51,10 +51,20 @@ let {{
 
     hvcCode = '''
     SCR scr = Scr64;
+    HCR hcr = Hcr64;
+    CPSR cpsr = Cpsr;
 
-    if (!ArmSystem::haveVirtualization(xc->tcBase()) ||
-        (ArmSystem::haveSecurity(xc->tcBase()) && (!scr.ns || !scr.hce))) {
-        fault = disabledFault();
+    auto tc = xc->tcBase();
+    ExceptionLevel pstate_EL = (ExceptionLevel)(uint8_t)(cpsr.el);
+
+    bool unalloc_encod = !ArmSystem::haveEL(tc, EL2) || pstate_EL == EL0 ||
+                         (pstate_EL == EL1 && inSecureState(tc));
+
+    bool hvc_enable = ArmSystem::haveEL(tc, EL3) ?
+        scr.hce : !hcr.hcd;
+
+    if (unalloc_encod || !hvc_enable) {
+        fault = undefinedFault64(tc, pstate_EL);
     } else {
         fault = std::make_shared<HypervisorCall>(machInst, bits(machInst, 20, 5));
     }
