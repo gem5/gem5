@@ -335,7 +335,9 @@ let {{
 
         // Check for traps to hypervisor
         if ((ArmSystem::haveVirtualization(xc->tcBase()) && el <= EL2) &&
-            msrMrs64TrapToHyp(flat_idx, el, %s, CptrEl264, Hcr64, &is_vfp_neon)) {
+            msrMrs64TrapToHyp(flat_idx, el, %s, CptrEl264, Hcr64,
+                              Scr64, cpsr, &is_vfp_neon)) {
+
             return std::make_shared<HypervisorTrap>(
                 machInst, is_vfp_neon ? 0x1E00000 : imm,
                 is_vfp_neon ? EC_TRAPPED_SIMD_FP : EC_TRAPPED_MSR_MRS_64);

@@ -650,127 +650,132 @@ msrMrs64TrapToHyp(const MiscRegIndex miscReg,
                   bool isRead,
                   CPTR cptr /* CPTR_EL2 */,
                   HCR hcr /* HCR_EL2 */,
+                  SCR scr,
+                  CPSR cpsr,
                   bool * isVfpNeon)
 {
     bool trapToHyp = false;
     *isVfpNeon = false;
 
-    switch (miscReg) {
-      // FP/SIMD regs
-      case MISCREG_FPCR:
-      case MISCREG_FPSR:
-      case MISCREG_FPEXC32_EL2:
-        trapToHyp = cptr.tfp;
-        *isVfpNeon = true;
-        break;
-      // CPACR
-      case MISCREG_CPACR_EL1:
-        trapToHyp = cptr.tcpac && el == EL1;
-        break;
-      // Virtual memory control regs
-      case MISCREG_SCTLR_EL1:
-      case MISCREG_TTBR0_EL1:
-      case MISCREG_TTBR1_EL1:
-      case MISCREG_TCR_EL1:
-      case MISCREG_ESR_EL1:
-      case MISCREG_FAR_EL1:
-      case MISCREG_AFSR0_EL1:
-      case MISCREG_AFSR1_EL1:
-      case MISCREG_MAIR_EL1:
-      case MISCREG_AMAIR_EL1:
-      case MISCREG_CONTEXTIDR_EL1:
-        trapToHyp = ((hcr.trvm && isRead) || (hcr.tvm && !isRead))
-                    && el == EL1;
-        break;
-      // TLB maintenance instructions
-      case MISCREG_TLBI_VMALLE1:
-      case MISCREG_TLBI_VAE1_Xt:
-      case MISCREG_TLBI_ASIDE1_Xt:
-      case MISCREG_TLBI_VAAE1_Xt:
-      case MISCREG_TLBI_VALE1_Xt:
-      case MISCREG_TLBI_VAALE1_Xt:
-      case MISCREG_TLBI_VMALLE1IS:
-      case MISCREG_TLBI_VAE1IS_Xt:
-      case MISCREG_TLBI_ASIDE1IS_Xt:
-      case MISCREG_TLBI_VAAE1IS_Xt:
-      case MISCREG_TLBI_VALE1IS_Xt:
-      case MISCREG_TLBI_VAALE1IS_Xt:
-        trapToHyp = hcr.ttlb && el == EL1;
-        break;
-      // Cache maintenance instructions to the point of unification
-      case MISCREG_IC_IVAU_Xt:
-      case MISCREG_ICIALLU:
-      case MISCREG_ICIALLUIS:
-      case MISCREG_DC_CVAU_Xt:
-        trapToHyp = hcr.tpu && el <= EL1;
-        break;
-      // Data/Unified cache maintenance instructions to the point of coherency
-      case MISCREG_DC_IVAC_Xt:
-      case MISCREG_DC_CIVAC_Xt:
-      case MISCREG_DC_CVAC_Xt:
-        trapToHyp = hcr.tpc && el <= EL1;
-        break;
-      // Data/Unified cache maintenance instructions by set/way
-      case MISCREG_DC_ISW_Xt:
-      case MISCREG_DC_CSW_Xt:
-      case MISCREG_DC_CISW_Xt:
-        trapToHyp = hcr.tsw && el == EL1;
-        break;
-      // ACTLR
-      case MISCREG_ACTLR_EL1:
-        trapToHyp = hcr.tacr && el == EL1;
-        break;
+    if (!inSecureState(scr, cpsr) && (el != EL2)) {
+        switch (miscReg) {
+          // FP/SIMD regs
+          case MISCREG_FPCR:
+          case MISCREG_FPSR:
+          case MISCREG_FPEXC32_EL2:
+            trapToHyp = cptr.tfp;
+            *isVfpNeon = true;
+            break;
+          // CPACR
+          case MISCREG_CPACR_EL1:
+            trapToHyp = cptr.tcpac && el == EL1;
+            break;
+          // Virtual memory control regs
+          case MISCREG_SCTLR_EL1:
+          case MISCREG_TTBR0_EL1:
+          case MISCREG_TTBR1_EL1:
+          case MISCREG_TCR_EL1:
+          case MISCREG_ESR_EL1:
+          case MISCREG_FAR_EL1:
+          case MISCREG_AFSR0_EL1:
+          case MISCREG_AFSR1_EL1:
+          case MISCREG_MAIR_EL1:
+          case MISCREG_AMAIR_EL1:
+          case MISCREG_CONTEXTIDR_EL1:
+            trapToHyp = ((hcr.trvm && isRead) || (hcr.tvm && !isRead))
+                        && el == EL1;
+            break;
+          // TLB maintenance instructions
+          case MISCREG_TLBI_VMALLE1:
+          case MISCREG_TLBI_VAE1_Xt:
+          case MISCREG_TLBI_ASIDE1_Xt:
+          case MISCREG_TLBI_VAAE1_Xt:
+          case MISCREG_TLBI_VALE1_Xt:
+          case MISCREG_TLBI_VAALE1_Xt:
+          case MISCREG_TLBI_VMALLE1IS:
+          case MISCREG_TLBI_VAE1IS_Xt:
+          case MISCREG_TLBI_ASIDE1IS_Xt:
+          case MISCREG_TLBI_VAAE1IS_Xt:
+          case MISCREG_TLBI_VALE1IS_Xt:
+          case MISCREG_TLBI_VAALE1IS_Xt:
+            trapToHyp = hcr.ttlb && el == EL1;
+            break;
+          // Cache maintenance instructions to the point of unification
+          case MISCREG_IC_IVAU_Xt:
+          case MISCREG_ICIALLU:
+          case MISCREG_ICIALLUIS:
+          case MISCREG_DC_CVAU_Xt:
+            trapToHyp = hcr.tpu && el <= EL1;
+            break;
+          // Data/Unified cache maintenance instructions to the
+          // point of coherency
+          case MISCREG_DC_IVAC_Xt:
+          case MISCREG_DC_CIVAC_Xt:
+          case MISCREG_DC_CVAC_Xt:
+            trapToHyp = hcr.tpc && el <= EL1;
+            break;
+          // Data/Unified cache maintenance instructions by set/way
+          case MISCREG_DC_ISW_Xt:
+          case MISCREG_DC_CSW_Xt:
+          case MISCREG_DC_CISW_Xt:
+            trapToHyp = hcr.tsw && el == EL1;
+            break;
+          // ACTLR
+          case MISCREG_ACTLR_EL1:
+            trapToHyp = hcr.tacr && el == EL1;
+            break;
 
-      // @todo: Trap implementation-dependent functionality based on
-      // hcr.tidcp
+          // @todo: Trap implementation-dependent functionality based on
+          // hcr.tidcp
 
-      // ID regs, group 3
-      case MISCREG_ID_PFR0_EL1:
-      case MISCREG_ID_PFR1_EL1:
-      case MISCREG_ID_DFR0_EL1:
-      case MISCREG_ID_AFR0_EL1:
-      case MISCREG_ID_MMFR0_EL1:
-      case MISCREG_ID_MMFR1_EL1:
-      case MISCREG_ID_MMFR2_EL1:
-      case MISCREG_ID_MMFR3_EL1:
-      case MISCREG_ID_ISAR0_EL1:
-      case MISCREG_ID_ISAR1_EL1:
-      case MISCREG_ID_ISAR2_EL1:
-      case MISCREG_ID_ISAR3_EL1:
-      case MISCREG_ID_ISAR4_EL1:
-      case MISCREG_ID_ISAR5_EL1:
-      case MISCREG_MVFR0_EL1:
-      case MISCREG_MVFR1_EL1:
-      case MISCREG_MVFR2_EL1:
-      case MISCREG_ID_AA64PFR0_EL1:
-      case MISCREG_ID_AA64PFR1_EL1:
-      case MISCREG_ID_AA64DFR0_EL1:
-      case MISCREG_ID_AA64DFR1_EL1:
-      case MISCREG_ID_AA64ISAR0_EL1:
-      case MISCREG_ID_AA64ISAR1_EL1:
-      case MISCREG_ID_AA64MMFR0_EL1:
-      case MISCREG_ID_AA64MMFR1_EL1:
-      case MISCREG_ID_AA64MMFR2_EL1:
-      case MISCREG_ID_AA64AFR0_EL1:
-      case MISCREG_ID_AA64AFR1_EL1:
-        assert(isRead);
-        trapToHyp = hcr.tid3 && el == EL1;
-        break;
-      // ID regs, group 2
-      case MISCREG_CTR_EL0:
-      case MISCREG_CCSIDR_EL1:
-      case MISCREG_CLIDR_EL1:
-      case MISCREG_CSSELR_EL1:
-        trapToHyp = hcr.tid2 && el <= EL1;
-        break;
-      // ID regs, group 1
-      case MISCREG_AIDR_EL1:
-      case MISCREG_REVIDR_EL1:
-        assert(isRead);
-        trapToHyp = hcr.tid1 && el == EL1;
-        break;
-      default:
-        break;
+          // ID regs, group 3
+          case MISCREG_ID_PFR0_EL1:
+          case MISCREG_ID_PFR1_EL1:
+          case MISCREG_ID_DFR0_EL1:
+          case MISCREG_ID_AFR0_EL1:
+          case MISCREG_ID_MMFR0_EL1:
+          case MISCREG_ID_MMFR1_EL1:
+          case MISCREG_ID_MMFR2_EL1:
+          case MISCREG_ID_MMFR3_EL1:
+          case MISCREG_ID_ISAR0_EL1:
+          case MISCREG_ID_ISAR1_EL1:
+          case MISCREG_ID_ISAR2_EL1:
+          case MISCREG_ID_ISAR3_EL1:
+          case MISCREG_ID_ISAR4_EL1:
+          case MISCREG_ID_ISAR5_EL1:
+          case MISCREG_MVFR0_EL1:
+          case MISCREG_MVFR1_EL1:
+          case MISCREG_MVFR2_EL1:
+          case MISCREG_ID_AA64PFR0_EL1:
+          case MISCREG_ID_AA64PFR1_EL1:
+          case MISCREG_ID_AA64DFR0_EL1:
+          case MISCREG_ID_AA64DFR1_EL1:
+          case MISCREG_ID_AA64ISAR0_EL1:
+          case MISCREG_ID_AA64ISAR1_EL1:
+          case MISCREG_ID_AA64MMFR0_EL1:
+          case MISCREG_ID_AA64MMFR1_EL1:
+          case MISCREG_ID_AA64MMFR2_EL1:
+          case MISCREG_ID_AA64AFR0_EL1:
+          case MISCREG_ID_AA64AFR1_EL1:
+            assert(isRead);
+            trapToHyp = hcr.tid3 && el == EL1;
+            break;
+          // ID regs, group 2
+          case MISCREG_CTR_EL0:
+          case MISCREG_CCSIDR_EL1:
+          case MISCREG_CLIDR_EL1:
+          case MISCREG_CSSELR_EL1:
+            trapToHyp = hcr.tid2 && el <= EL1;
+            break;
+          // ID regs, group 1
+          case MISCREG_AIDR_EL1:
+          case MISCREG_REVIDR_EL1:
+            assert(isRead);
+            trapToHyp = hcr.tid1 && el == EL1;
+            break;
+          default:
+            break;
+        }
     }
     return trapToHyp;
 }
