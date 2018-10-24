@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016 ARM Limited
+ * Copyright (c) 2010-2013, 2016, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -191,7 +191,8 @@ Stage2LookUp::finish(const Fault &_fault, const RequestPtr &req,
     mergeTe(req, mode);
 
     if (fault != NoFault) {
-        transState->finish(fault, req, tc, mode);
+        // Returning with a fault requires the original request
+        transState->finish(fault, s1Req, tc, mode);
     } else if (timing) {
         // Now notify the original stage 1 translation that we finally have
         // a result
