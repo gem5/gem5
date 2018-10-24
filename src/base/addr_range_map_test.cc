@@ -40,44 +40,31 @@
  * Authors: Ali Saidi
  */
 
-#include <cassert>
-#include <iostream>
+#include <gtest/gtest.h>
 
 #include "base/addr_range_map.hh"
 
-using namespace std;
-
-int
-main()
+// Converted from legacy unit test framework
+TEST(AddrRangeMapTest, LegacyTests)
 {
     AddrRangeMap<int> r;
-
     AddrRangeMap<int>::const_iterator i;
 
     i = r.insert(RangeIn(10, 40), 5);
-    assert(i != r.end());
+    ASSERT_NE(i, r.end());
+
     i = r.insert(RangeIn(60, 90), 3);
-    assert(i != r.end());
+    ASSERT_NE(i, r.end());
 
-    i = r.intersects(RangeIn(20, 30));
-    assert(i != r.end());
-    cout << i->first.to_string() << " " << i->second << endl;
-
-    i = r.contains(RangeIn(55, 55));
-    assert(i == r.end());
-
-    i = r.intersects(RangeIn(55, 55));
-    assert(i == r.end());
+    EXPECT_NE(r.intersects(RangeIn(20, 30)), r.end());
+    EXPECT_EQ(r.contains(RangeIn(55, 55)), r.end());
+    EXPECT_EQ(r.intersects(RangeIn(55, 55)), r.end());
 
     i = r.insert(RangeIn(0, 12), 1);
-    assert(i == r.end());
+    EXPECT_EQ(i, r.end());
 
     i = r.insert(RangeIn(0, 9), 1);
-    assert(i != r.end());
+    ASSERT_NE(i, r.end());
 
-    i = r.contains(RangeIn(20, 30));
-    assert(i != r.end());
-    cout << i->first.to_string() << " " << i->second << endl;
-
-    return 0;
+    EXPECT_NE(r.contains(RangeIn(20, 30)), r.end());
 }
