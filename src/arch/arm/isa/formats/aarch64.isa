@@ -446,13 +446,13 @@ namespace Aarch64
                                      read ? "mrs" : "msr",
                                      op0, op1, crn, crm, op2);
 
-                        if (miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]) {
-                            return new WarnUnimplemented(read ? "mrs" : "msr",
-                                machInst, full_mnemonic + " treated as NOP");
-                        } else {
-                            return new FailUnimplemented(read ? "mrs" : "msr",
-                                machInst, full_mnemonic);
-                        }
+                        uint32_t iss = msrMrs64IssBuild(
+                            read, op0, op1, crn, crm, op2, rt);
+
+                        return new MiscRegImplDefined64(
+                            read ? "mrs" : "msr",
+                            machInst, miscReg, read, iss, full_mnemonic,
+                            miscRegInfo[miscReg][MISCREG_WARN_NOT_FAIL]);
 
                     } else if (miscRegInfo[miscReg][MISCREG_IMPLEMENTED]) {
                         if (miscReg == MISCREG_NZCV) {

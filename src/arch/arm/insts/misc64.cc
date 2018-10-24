@@ -266,6 +266,8 @@ MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
             assert(miscRead);
             trap_to_hyp = hcr.tid1 && el == EL1;
             break;
+          case MISCREG_IMPDEF_UNIMPL:
+            trap_to_hyp = hcr.tidcp && el == EL1;
           default:
             break;
         }
@@ -329,4 +331,34 @@ RegMiscRegImmOp64::generateDisassembly(
     ss << ", ";
     printMiscReg(ss, op1);
     return ss.str();
+}
+
+Fault
+MiscRegImplDefined64::execute(ExecContext *xc,
+                              Trace::InstRecord *traceData) const
+{
+    auto tc = xc->tcBase();
+    const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    const ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
+
+    Fault fault = trap(tc, miscReg, el, imm);
+
+    if (fault != NoFault) {
+        return fault;
+
+    } else if (warning) {
+        warn_once("\tinstruction '%s' unimplemented\n", fullMnemonic.c_str());
+        return NoFault;
+
+    } else {
+        return std::make_shared<UndefinedInstruction>(machInst, false,
+                                                      mnemonic);
+    }
+}
+
+std::string
+MiscRegImplDefined64::generateDisassembly(Addr pc,
+                                          const SymbolTable *symtab) const
+{
+    return csprintf("%-10s (implementation defined)", fullMnemonic.c_str());
 }

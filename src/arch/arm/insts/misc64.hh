@@ -178,4 +178,32 @@ class RegMiscRegImmOp64 : public MiscRegOp64
             Addr pc, const SymbolTable *symtab) const override;
 };
 
+class MiscRegImplDefined64 : public MiscRegOp64
+{
+  protected:
+    const std::string fullMnemonic;
+    const MiscRegIndex miscReg;
+    const uint32_t imm;
+    const bool warning;
+
+  public:
+    MiscRegImplDefined64(const char *mnem, ExtMachInst _machInst,
+                         MiscRegIndex misc_reg, bool misc_read,
+                         uint32_t _imm, const std::string full_mnem,
+                         bool _warning) :
+        MiscRegOp64(mnem, _machInst, No_OpClass, misc_read),
+        fullMnemonic(full_mnem), miscReg(misc_reg), imm(_imm),
+        warning(_warning)
+    {
+        assert(miscReg == MISCREG_IMPDEF_UNIMPL);
+    }
+
+  protected:
+    Fault execute(ExecContext *xc,
+                  Trace::InstRecord *traceData) const override;
+
+    std::string generateDisassembly(
+            Addr pc, const SymbolTable *symtab) const override;
+};
+
 #endif
