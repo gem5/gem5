@@ -39,12 +39,13 @@
 #ifndef __ARCH_ARM_MEM64_HH__
 #define __ARCH_ARM_MEM64_HH__
 
+#include "arch/arm/insts/misc64.hh"
 #include "arch/arm/insts/static_inst.hh"
 
 namespace ArmISA
 {
 
-class SysDC64 : public ArmStaticInst
+class SysDC64 : public MiscRegOp64
 {
   protected:
     IntRegIndex base;
@@ -53,9 +54,10 @@ class SysDC64 : public ArmStaticInst
 
     SysDC64(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
             IntRegIndex _base, MiscRegIndex miscReg, uint64_t _imm)
-        : ArmStaticInst(mnem, _machInst, __opClass), base(_base),
-          dest((IntRegIndex)miscReg), imm(_imm)
+        : MiscRegOp64(mnem, _machInst, __opClass, false),
+          base(_base), dest((IntRegIndex)miscReg), imm(_imm)
     {}
+
     std::string generateDisassembly(
             Addr pc, const SymbolTable *symtab) const override;
 };

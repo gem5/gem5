@@ -310,14 +310,6 @@ bool
 mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, CPSR cpsr, SCR scr, HSTR hstr,
                     HCR hcr, uint32_t iss);
 
-bool msrMrs64TrapToSup(const MiscRegIndex miscReg, ExceptionLevel el,
-                       CPACR cpacr);
-bool msrMrs64TrapToHyp(const MiscRegIndex miscReg, ExceptionLevel el,
-                       bool isRead, CPTR cptr, HCR hcr, SCR scr,
-                       CPSR cpsr, bool * isVfpNeon);
-bool msrMrs64TrapToMon(const MiscRegIndex miscReg, CPTR cptr,
-                       ExceptionLevel el, bool * isVfpNeon);
-
 bool SPAlignmentCheckEnabled(ThreadContext* tc);
 
 uint64_t getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp);

@@ -106,7 +106,43 @@ class UnknownOp64 : public ArmStaticInst
             Addr pc, const SymbolTable *symtab) const override;
 };
 
-class MiscRegRegImmOp64 : public ArmStaticInst
+/**
+ * This class is implementing the Base class for a generic AArch64
+ * instruction which is making use of system registers (MiscReg), like
+ * MSR,MRS,SYS.  The common denominator or those instruction is the
+ * chance that the system register access is trapped to an upper
+ * Exception level. MiscRegOp64 is providing that feature.  Other
+ * "pseudo" instructions, like access to implementation defined
+ * registers can inherit from this class to make use of the trapping
+ * functionalities even if there is no data movement between GPRs and
+ * system register.
+ */
+class MiscRegOp64 : public ArmStaticInst
+{
+  protected:
+    bool miscRead;
+
+    MiscRegOp64(const char *mnem, ExtMachInst _machInst,
+                OpClass __opClass, bool misc_read) :
+        ArmStaticInst(mnem, _machInst, __opClass),
+        miscRead(misc_read)
+    {}
+
+    Fault trap(ThreadContext *tc, MiscRegIndex misc_reg,
+               ExceptionLevel el, uint32_t immediate) const;
+  private:
+    bool checkEL1Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
+                      ExceptionLevel el) const;
+
+    bool checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
+                      ExceptionLevel el, bool *is_vfp_neon) const;
+
+    bool checkEL3Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
+                      ExceptionLevel el, bool *is_vfp_neon) const;
+
+};
+
+class MiscRegRegImmOp64 : public MiscRegOp64
 {
   protected:
     MiscRegIndex dest;
@@ -116,7 +152,7 @@ class MiscRegRegImmOp64 : public ArmStaticInst
     MiscRegRegImmOp64(const char *mnem, ExtMachInst _machInst,
                       OpClass __opClass, MiscRegIndex _dest,
                       IntRegIndex _op1, uint32_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
+        MiscRegOp64(mnem, _machInst, __opClass, false),
         dest(_dest), op1(_op1), imm(_imm)
     {}
 
@@ -124,7 +160,7 @@ class MiscRegRegImmOp64 : public ArmStaticInst
             Addr pc, const SymbolTable *symtab) const override;
 };
 
-class RegMiscRegImmOp64 : public ArmStaticInst
+class RegMiscRegImmOp64 : public MiscRegOp64
 {
   protected:
     IntRegIndex dest;
@@ -134,7 +170,7 @@ class RegMiscRegImmOp64 : public ArmStaticInst
     RegMiscRegImmOp64(const char *mnem, ExtMachInst _machInst,
                       OpClass __opClass, IntRegIndex _dest,
                       MiscRegIndex _op1, uint32_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
+        MiscRegOp64(mnem, _machInst, __opClass, true),
         dest(_dest), op1(_op1), imm(_imm)
     {}
 

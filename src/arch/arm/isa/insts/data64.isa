@@ -326,31 +326,8 @@ let {{
                                                           mnemonic);
         }
 
-        // Check for traps to supervisor (FP/SIMD regs)
-        if (el <= EL1 && msrMrs64TrapToSup(flat_idx, el, Cpacr64))
-            return std::make_shared<SupervisorTrap>(machInst, 0x1E00000,
-                                                    EC_TRAPPED_SIMD_FP);
-
-        bool is_vfp_neon = false;
-
-        // Check for traps to hypervisor
-        if ((ArmSystem::haveVirtualization(xc->tcBase()) && el <= EL2) &&
-            msrMrs64TrapToHyp(flat_idx, el, %s, CptrEl264, Hcr64,
-                              Scr64, cpsr, &is_vfp_neon)) {
-
-            return std::make_shared<HypervisorTrap>(
-                machInst, is_vfp_neon ? 0x1E00000 : imm,
-                is_vfp_neon ? EC_TRAPPED_SIMD_FP : EC_TRAPPED_MSR_MRS_64);
-        }
-
-        // Check for traps to secure monitor
-        if ((ArmSystem::haveSecurity(xc->tcBase()) && el <= EL3) &&
-            msrMrs64TrapToMon(flat_idx, CptrEl364, el, &is_vfp_neon)) {
-            return std::make_shared<SecureMonitorTrap>(
-                machInst,
-                is_vfp_neon ? 0x1E00000 : imm,
-                is_vfp_neon ? EC_TRAPPED_SIMD_FP : EC_TRAPPED_MSR_MRS_64);
-        }
+        fault = this->trap(xc->tcBase(), flat_idx, el, imm);
+        if (fault != NoFault) return fault;
     '''
 
     mrsCode = '''
@@ -360,7 +337,7 @@ let {{
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
         %s
         XDest = MiscOp1_ud;
-    ''' % (msrMrs64EnabledCheckCode % ('Read', 'true'),)
+    ''' % (msrMrs64EnabledCheckCode % ('Read'),)
 
     mrsIop = InstObjParams("mrs", "Mrs64", "RegMiscRegImmOp64",
                            mrsCode,
@@ -384,7 +361,7 @@ let {{
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
         %s
         MiscDest_ud = XOp1;
-    ''' % (msrMrs64EnabledCheckCode % ('Write', 'false'),)
+    ''' % (msrMrs64EnabledCheckCode % ('Write'),)
 
     msrIop = InstObjParams("msr", "Msr64", "MiscRegRegImmOp64",
                            msrCode,
@@ -407,7 +384,7 @@ let {{
         CPSR cpsr = Cpsr;
         ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
         %s
-    ''' % (msrMrs64EnabledCheckCode % ('Write', 'false'),)
+    ''' % (msrMrs64EnabledCheckCode % ('Write'),)
 
 
     msrdczva_ea_code = msr_check_code
