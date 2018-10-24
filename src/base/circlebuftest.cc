@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,85 +37,84 @@
  * Authors: Andreas Sandberg
  */
 
+#include <gtest/gtest.h>
+
 #include "base/circlebuf.hh"
-#include "unittest/unittest.hh"
 
 const char data[] = {
     0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
     0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf,
 };
 
-int
-main(int argc, char *argv[])
+// Basic non-overflow functionality
+TEST(CircleBufTest, BasicReadWriteNoOverflow)
 {
-    UnitTest::setCase("Basic non-overflow functionality");
-    {
-        CircleBuf<char> buf(8);
-        char foo[16];
+    CircleBuf<char> buf(8);
+    char foo[16];
 
-        // Write empty buffer, no overflow
-        buf.write(data, 8);
-        EXPECT_EQ(buf.size(), 8);
-        buf.peek(foo, 8);
-        EXPECT_EQ(memcmp(foo, data, 8), 0);
+    // Write empty buffer, no overflow
+    buf.write(data, 8);
+    EXPECT_EQ(buf.size(), 8);
+    buf.peek(foo, 8);
+    EXPECT_EQ(memcmp(foo, data, 8), 0);
 
-        // Read 2
-        buf.read(foo, 2);
-        EXPECT_EQ(memcmp(foo, data, 2), 0);
-        EXPECT_EQ(buf.size(), 6);
-        buf.read(foo, 6);
-        EXPECT_EQ(memcmp(foo, data + 2, 6), 0);
-        EXPECT_EQ(buf.size(), 0);
-    }
+    // Read 2
+    buf.read(foo, 2);
+    EXPECT_EQ(memcmp(foo, data, 2), 0);
+    EXPECT_EQ(buf.size(), 6);
+    buf.read(foo, 6);
+    EXPECT_EQ(memcmp(foo, data + 2, 6), 0);
+    EXPECT_EQ(buf.size(), 0);
+}
 
-    UnitTest::setCase("Basic single write overflow functionality");
-    {
-        CircleBuf<char> buf(8);
-        char foo[16];
+// Basic single write overflow functionality
+TEST(CircleBufTest, SingleWriteOverflow)
+{
+    CircleBuf<char> buf(8);
+    char foo[16];
 
-        buf.write(data, 16);
-        EXPECT_EQ(buf.size(), 8);
-        buf.peek(foo, 8);
-        EXPECT_EQ(memcmp(data + 8, foo, 8), 0);
-    }
+    buf.write(data, 16);
+    EXPECT_EQ(buf.size(), 8);
+    buf.peek(foo, 8);
+    EXPECT_EQ(memcmp(data + 8, foo, 8), 0);
+}
 
 
-    UnitTest::setCase("Multi-write overflow functionality");
-    {
-        CircleBuf<char> buf(8);
-        char foo[16];
+// Multi-write overflow functionality
+TEST(CircleBufTest, MultiWriteOverflow)
+{
+    CircleBuf<char> buf(8);
+    char foo[16];
 
-        // Write, no overflow, write overflow
-        buf.write(data, 6);
-        buf.write(data + 8, 6);
-        EXPECT_EQ(buf.size(), 8);
-        buf.peek(foo, 8);
-        EXPECT_EQ(memcmp(data + 4, foo, 2), 0);
-        EXPECT_EQ(memcmp(data + 8, foo + 2, 6), 0);
-    }
+    // Write, no overflow, write overflow
+    buf.write(data, 6);
+    buf.write(data + 8, 6);
+    EXPECT_EQ(buf.size(), 8);
+    buf.peek(foo, 8);
+    EXPECT_EQ(memcmp(data + 4, foo, 2), 0);
+    EXPECT_EQ(memcmp(data + 8, foo + 2, 6), 0);
+}
 
-    UnitTest::setCase("Pointer wrap around");
-    {
-        CircleBuf<char> buf(8);
-        char foo[16];
+// Pointer wrap around
+TEST(CircleBufTest, PointerWrapAround)
+{
+    CircleBuf<char> buf(8);
+    char foo[16];
 
-        // _start == 0, _stop = 8
-        buf.write(data, 8);
-        // _start == 4, _stop = 8
-        buf.read(foo, 4);
-        // _start == 4, _stop = 12
-        buf.write(data + 8, 4);
-        EXPECT_EQ(buf.size(), 8);
-        // _start == 10, _stop = 12
-        // Normalized: _start == 2, _stop = 4
-        buf.read(foo + 4, 6);
-        EXPECT_EQ(buf.size(), 2);
-        EXPECT_EQ(memcmp(data, foo, 10), 0);
-        // Normalized: _start == 4, _stop = 4
-        buf.read(foo + 10, 2);
-        EXPECT_EQ(buf.size(), 0);
-        EXPECT_EQ(memcmp(data, foo, 12), 0);
-    }
-
-    return UnitTest::printResults();
+    // _start == 0, _stop = 8
+    buf.write(data, 8);
+    // _start == 4, _stop = 8
+    buf.read(foo, 4);
+    // _start == 4, _stop = 12
+    buf.write(data + 8, 4);
+    EXPECT_EQ(buf.size(), 8);
+    // _start == 10, _stop = 12
+    // Normalized: _start == 2, _stop = 4
+    buf.read(foo + 4, 6);
+    EXPECT_EQ(buf.size(), 2);
+    EXPECT_EQ(memcmp(data, foo, 10), 0);
+    // Normalized: _start == 4, _stop = 4
+    buf.read(foo + 10, 2);
+    EXPECT_EQ(buf.size(), 0);
+    EXPECT_EQ(memcmp(data, foo, 12), 0);
 }

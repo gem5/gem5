@@ -84,6 +84,7 @@ Source('stats/text.cc')
 
 GTest('addr_range_test', 'addr_range_test.cc')
 GTest('bituniontest', 'bituniontest.cc')
+GTest('CircleBufTest', 'circlebuftest.cc')
 
 DebugFlag('Annotate', "State machine annotation debugging")
 DebugFlag('AnnotateQ', "State machine annotation queue debugging")
