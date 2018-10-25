@@ -72,6 +72,27 @@ SectorSubBlk::getTag() const
 }
 
 void
+SectorSubBlk::setValid()
+{
+    CacheBlk::setValid();
+    _sectorBlk->validateSubBlk();
+}
+
+void
+SectorSubBlk::setSecure()
+{
+    CacheBlk::setSecure();
+    _sectorBlk->setSecure();
+}
+
+void
+SectorSubBlk::invalidate()
+{
+    CacheBlk::invalidate();
+    _sectorBlk->invalidateSubBlk();
+}
+
+void
 SectorSubBlk::insert(const Addr tag, const bool is_secure,
                      const int src_master_ID, const uint32_t task_ID)
 {
@@ -94,28 +115,23 @@ SectorSubBlk::print() const
                     getSectorOffset());
 }
 
+SectorBlk::SectorBlk()
+    : ReplaceableEntry(), _tag(MaxAddr), _validCounter(0), _secureBit(false)
+{
+}
+
 bool
 SectorBlk::isValid() const
 {
     // If any of the blocks in the sector is valid, so is the sector
-    for (const auto& blk : blks) {
-        if (blk->isValid()) {
-            return true;
-        }
-    }
-    return false;
+    return _validCounter > 0;
 }
 
 bool
 SectorBlk::isSecure() const
 {
     // If any of the valid blocks in the sector is secure, so is the sector
-    for (const auto& blk : blks) {
-        if (blk->isValid()) {
-            return blk->isSecure();
-        }
-    }
-    return false;
+    return _secureBit;
 }
 
 void
@@ -128,4 +144,26 @@ Addr
 SectorBlk::getTag() const
 {
     return _tag;
+}
+
+void
+SectorBlk::validateSubBlk()
+{
+    _validCounter++;
+}
+
+void
+SectorBlk::invalidateSubBlk()
+{
+    // If all sub-blocks have been invalidated, the sector becomes invalid,
+    // so clear secure bit
+    if (--_validCounter == 0) {
+        _secureBit = false;
+    }
+}
+
+void
+SectorBlk::setSecure()
+{
+    _secureBit = true;
 }

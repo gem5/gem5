@@ -102,6 +102,21 @@ class SectorSubBlk : public CacheBlk
     Addr getTag() const;
 
     /**
+     * Set valid bit and inform sector block.
+     */
+    void setValid() override;
+
+    /**
+     * Set secure bit and inform sector block.
+     */
+    void setSecure() override;
+
+    /**
+     * Invalidate the block and inform sector block.
+     */
+    void invalidate() override;
+
+    /**
      * Set member variables when a block insertion occurs. Resets reference
      * count to 1 (the insertion counts as a reference), and touch block if
      * it hadn't been touched previously. Sets the insertion tick to the
@@ -135,8 +150,19 @@ class SectorBlk : public ReplaceableEntry
      */
     Addr _tag;
 
+    /**
+     * Counter of the number of valid sub-blocks. The sector is valid if any
+     * of its sub-blocks is valid.
+     */
+    uint8_t _validCounter;
+
+    /**
+     * Whether sector blk is in secure-space or not.
+     */
+    bool _secureBit;
+
   public:
-    SectorBlk() : ReplaceableEntry(), _tag(MaxAddr) {}
+    SectorBlk();
     SectorBlk(const SectorBlk&) = delete;
     SectorBlk& operator=(const SectorBlk&) = delete;
     ~SectorBlk() {};
@@ -173,6 +199,21 @@ class SectorBlk : public ReplaceableEntry
      * @return The tag value.
      */
     Addr getTag() const;
+
+    /**
+     * Increase the number of valid sub-blocks.
+     */
+    void validateSubBlk();
+
+    /**
+     * Decrease the number of valid sub-blocks.
+     */
+    void invalidateSubBlk();
+
+    /**
+     * Set secure bit.
+     */
+    void setSecure();
 };
 
 #endif //__MEM_CACHE_TAGS_SECTOR_BLK_HH__
