@@ -105,7 +105,7 @@ class SectorSubBlk : public CacheBlk
      * Set member variables when a block insertion occurs. Resets reference
      * count to 1 (the insertion counts as a reference), and touch block if
      * it hadn't been touched previously. Sets the insertion tick to the
-     * current tick. Does not make block valid.
+     * current tick. Marks the block valid.
      *
      * @param tag Block address tag.
      * @param is_secure Whether the block is in secure space or not.

@@ -171,16 +171,12 @@ SectorTags::insertBlock(const Addr addr, const bool is_secure,
                         const int src_master_ID, const uint32_t task_ID,
                         CacheBlk *blk)
 {
-    // Do common block insertion functionality
-    BaseTags::insertBlock(addr, is_secure, src_master_ID, task_ID, blk);
-
     // Get block's sector
     SectorSubBlk* sub_blk = static_cast<SectorSubBlk*>(blk);
     const SectorBlk* sector_blk = sub_blk->getSectorBlock();
 
     // When a block is inserted, the tag is only a newly used tag if the
     // sector was not previously present in the cache.
-    // This assumes BaseTags::insertBlock does not set the valid bit.
     if (sector_blk->isValid()) {
         // An existing entry's replacement data is just updated
         replacementPolicy->touch(sector_blk->replacementData);
@@ -191,6 +187,9 @@ SectorTags::insertBlock(const Addr addr, const bool is_secure,
         // A new entry resets the replacement data
         replacementPolicy->reset(sector_blk->replacementData);
     }
+
+    // Do common block insertion functionality
+    BaseTags::insertBlock(addr, is_secure, src_master_ID, task_ID, blk);
 }
 
 CacheBlk*

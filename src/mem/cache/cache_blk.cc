@@ -46,6 +46,9 @@ void
 CacheBlk::insert(const Addr tag, const bool is_secure,
                  const int src_master_ID, const uint32_t task_ID)
 {
+    // Make sure that the block has been properly invalidated
+    assert(status == 0);
+
     // Set block tag
     this->tag = tag;
 
@@ -63,10 +66,11 @@ CacheBlk::insert(const Addr tag, const bool is_secure,
 
     // Set secure state
     if (is_secure) {
-        status = BlkSecure;
-    } else {
-        status = 0;
+        setSecure();
     }
+
+    // Validate block
+    setValid();
 }
 
 void

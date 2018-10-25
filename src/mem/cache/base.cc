@@ -1004,7 +1004,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 return false;
             }
 
-            blk->status |= (BlkValid | BlkReadable);
+            blk->status |= BlkReadable;
         }
         // only mark the block dirty if we got a writeback command,
         // and leave it as is for a clean writeback
@@ -1062,7 +1062,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                     return false;
                 }
 
-                blk->status |= (BlkValid | BlkReadable);
+                blk->status |= BlkReadable;
             }
         }
 
@@ -1149,26 +1149,23 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
             // No replaceable block or a mostly exclusive
             // cache... just use temporary storage to complete the
             // current request and then get rid of it
-            assert(!tempBlock->isValid());
             blk = tempBlock;
             tempBlock->insert(addr, is_secure);
             DPRINTF(Cache, "using temp block for %#llx (%s)\n", addr,
                     is_secure ? "s" : "ns");
         }
-
-        // we should never be overwriting a valid block
-        assert(!blk->isValid());
     } else {
         // existing block... probably an upgrade
-        assert(regenerateBlkAddr(blk) == addr);
-        assert(blk->isSecure() == is_secure);
-        // either we're getting new data or the block should already be valid
-        assert(pkt->hasData() || blk->isValid());
         // don't clear block status... if block is already dirty we
         // don't want to lose that
     }
 
-    blk->status |= BlkValid | BlkReadable;
+    // Block is guaranteed to be valid at this point
+    assert(blk->isValid());
+    assert(blk->isSecure() == is_secure);
+    assert(regenerateBlkAddr(blk) == addr);
+
+    blk->status |= BlkReadable;
 
     // sanity check for whole-line writes, which should always be
     // marked as writable as part of the fill, and then later marked
