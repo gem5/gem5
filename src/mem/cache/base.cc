@@ -1305,9 +1305,13 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 void
 BaseCache::invalidateBlock(CacheBlk *blk)
 {
-    if (blk != tempBlock)
+    // If handling a block present in the Tags, let it do its invalidation
+    // process, which will update stats and invalidate the block itself
+    if (blk != tempBlock) {
         tags->invalidate(blk);
-    blk->invalidate();
+    } else {
+        tempBlock->invalidate();
+    }
 }
 
 void
