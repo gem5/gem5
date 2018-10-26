@@ -70,48 +70,41 @@ Addr
 HSADriver::mmap(ThreadContext *tc, Addr start, uint64_t length, int prot,
                 int tgt_flags, int tgt_fd, off_t offset)
 {
-    // Is this a signal event mmap
-    bool is_event_mmap = false;
-    // If addr == 0, then we may need to do mmap.
-    bool should_mmap = (start == 0);
     auto process = tc->getProcessPtr();
     auto mem_state = process->memState;
-    // Check if mmap is for signal events first
-    if (((offset >> PAGE_SHIFT) & KFD_MMAP_TYPE_MASK) ==
-        KFD_MMAP_TYPE_EVENTS) {
-        is_event_mmap = true;
-        DPRINTF(HSADriver, "amdkfd mmap for events(start: %p, length: 0x%x,"
-                "offset: 0x%x,  )\n", start, length, offset);
-        panic_if(start != 0,
-                 "Start address should be provided by KFD\n");
-        panic_if(length != 8 * KFD_SIGNAL_EVENT_LIMIT,
-                 "Requested length %d, expected length %d; length mismatch\n",
-                  length, 8 * KFD_SIGNAL_EVENT_LIMIT);
-        // For signal event, do mmap only is eventPage is uninitialized
-        should_mmap = (!eventPage);
-    } else {
-        DPRINTF(HSADriver, "amdkfd doorbell mmap (start: %p, length: 0x%x,"
-                "offset: 0x%x)\n", start, length, offset);
-    }
 
-    // Extend global mmap region if necessary.
-    if (should_mmap) {
-        // Assume mmap grows down, as in x86 Linux
-        start = mem_state->getMmapEnd() - length;
-        mem_state->setMmapEnd(start);
-    }
+    Addr pg_off = offset >> PAGE_SHIFT;
+    Addr mmap_type = pg_off & KFD_MMAP_TYPE_MASK;
+    DPRINTF(HSADriver, "amdkfd mmap (start: %p, length: 0x%x,"
+            "offset: 0x%x)\n", start, length, offset);
 
-    if (is_event_mmap) {
-         if (should_mmap) {
-             eventPage = start;
-         }
-    } else {
-        // Now map this virtual address to our PIO doorbell interface
-        // in the page tables (non-cacheable)
-        process->pTable->map(start, device->hsaPacketProc().pioAddr,
-                             length, false);
-
-        DPRINTF(HSADriver, "amdkfd doorbell mapped to %xp\n", start);
+    switch (mmap_type) {
+        case KFD_MMAP_TYPE_DOORBELL:
+            DPRINTF(HSADriver, "amdkfd mmap type DOORBELL offset\n");
+            start = mem_state->extendMmap(length);
+            process->pTable->map(start, device->hsaPacketProc().pioAddr,
+                    length, false);
+            break;
+        case KFD_MMAP_TYPE_EVENTS:
+            DPRINTF(HSADriver, "amdkfd mmap type EVENTS offset\n");
+            panic_if(start != 0,
+                     "Start address should be provided by KFD\n");
+            panic_if(length != 8 * KFD_SIGNAL_EVENT_LIMIT,
+                     "Requested length %d, expected length %d; length "
+                     "mismatch\n", length, 8 * KFD_SIGNAL_EVENT_LIMIT);
+            /**
+             * We don't actually access these pages.  We just need to reserve
+             * some VA space.  See commit id 5ce8abce for details on how
+             * events are currently implemented.
+             */
+             if (!eventPage) {
+                eventPage = mem_state->extendMmap(length);
+                start = eventPage;
+             }
+             break;
+        default:
+            warn_once("Unrecognized kfd mmap type %llx\n", mmap_type);
+            break;
     }
 
     return start;
@@ -132,6 +125,9 @@ HSADriver::allocateQueue(ThreadContext *tc, Addr ioc_buf)
     if (queueId >= 0x1000) {
         fatal("%s: Exceeded maximum number of HSA queues allowed\n", name());
     }
+
+    args->doorbell_offset = (KFD_MMAP_TYPE_DOORBELL |
+        KFD_MMAP_GPU_ID(args->gpu_id)) << PAGE_SHIFT;
 
     args->queue_id = queueId++;
     auto &hsa_pp = device->hsaPacketProc();
