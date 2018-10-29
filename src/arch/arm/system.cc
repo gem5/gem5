@@ -104,6 +104,12 @@ ArmSystem::ArmSystem(Params *p)
 
     if (bootldr) {
         bootldr->loadGlobalSymbols(debugSymbolTable);
+
+        warn_if(bootldr->entryPoint() != _resetAddr,
+                "Bootloader entry point %#x overriding reset address %#x",
+                bootldr->entryPoint(), _resetAddr);
+        const_cast<Addr&>(_resetAddr) = bootldr->entryPoint();
+
         if ((bootldr->getArch() == ObjectFile::Arm64) && !_highestELIs64) {
             warn("Highest ARM exception-level set to AArch32 but bootloader "
                   "is for AArch64. Assuming you wanted these to match.\n");
@@ -132,22 +138,6 @@ ArmSystem::initState()
     if (bootldr) {
         bootldr->loadSections(physProxy);
 
-        uint8_t jump_to_bl_32[] =
-        {
-            0x07, 0xf0, 0xa0, 0xe1  // branch to r7 in aarch32
-        };
-
-        uint8_t jump_to_bl_64[] =
-        {
-            0xe0, 0x00, 0x1f, 0xd6  // instruction "br x7" in aarch64
-        };
-
-        // write the jump to branch table into address 0
-        if (!_highestELIs64)
-            physProxy.writeBlob(0x0, jump_to_bl_32, sizeof(jump_to_bl_32));
-        else
-            physProxy.writeBlob(0x0, jump_to_bl_64, sizeof(jump_to_bl_64));
-
         inform("Using bootloader at address %#x\n", bootldr->entryPoint());
 
         // Put the address of the boot loader into r7 so we know
@@ -160,9 +150,9 @@ ArmSystem::initState()
             if (!_highestELIs64)
                 threadContexts[i]->setIntReg(3, (kernelEntry & loadAddrMask) +
                         loadAddrOffset);
+
             threadContexts[i]->setIntReg(4, params()->gic_cpu_addr);
             threadContexts[i]->setIntReg(5, params()->flags_addr);
-            threadContexts[i]->setIntReg(7, bootldr->entryPoint());
         }
         inform("Using kernel entry physical address at %#x\n",
                (kernelEntry & loadAddrMask) + loadAddrOffset);
