@@ -296,11 +296,23 @@ class Request
     enum : CacheCoherenceFlagsType
     {
         /** mem_sync_op flags */
-        INV_L1                  = 0x00000001,
+        I_CACHE_INV             = 0x00000001,
+        INV_L1                  = I_CACHE_INV,
+        V_CACHE_INV             = 0x00000002,
+        K_CACHE_INV             = 0x00000004,
+        GL1_CACHE_INV           = 0x00000008,
+        K_CACHE_WB              = 0x00000010,
         FLUSH_L2                = 0x00000020,
+        GL2_CACHE_INV           = 0x00000040,
         /** user-policy flags */
         SLC_BIT                 = 0x00000080,
-        GLC_BIT                 = 0x00000100,
+        DLC_BIT                 = 0x00000100,
+        GLC_BIT                 = 0x00000200,
+        /** mtype flags */
+        CACHED                  = 0x00000400,
+        READ_WRITE              = 0x00000800,
+        SHARED                  = 0x00001000,
+
     };
 
     using LocalAccessor =

@@ -42,7 +42,9 @@
 #ifndef __GPU_COMPUTE_GPU_COMPUTE_DRIVER_HH__
 #define __GPU_COMPUTE_GPU_COMPUTE_DRIVER_HH__
 
+#include "base/addr_range_map.hh"
 #include "dev/hsa/hsa_driver.hh"
+#include "mem/request.hh"
 
 struct GPUComputeDriverParams;
 
@@ -53,9 +55,44 @@ class GPUComputeDriver final : public HSADriver
     GPUComputeDriver(const Params &p);
     int ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf) override;
     void sleepCPU(ThreadContext *tc, uint32_t milliSecTimeout);
+    /**
+     * Called by the compute units right before a request is issued to ruby.
+     * This uses our VMAs to correctly set the MTYPE on a per-request basis.
+     * In real hardware, this is actually done through PTE bits in GPUVM.
+     * Since we are running a single VM (x86 PT) system, the MTYPE bits aren't
+     * available.  Adding GPUVM specific bits to x86 page tables probably
+     * isn't the best way to proceed.  For now we just have the driver set
+     * these until we implement a proper dual PT system.
+     */
+    void setMtype(RequestPtr req);
 
   private:
     bool isdGPU;
+    int dGPUPoolID;
+
+    /**
+     * VMA structures for GPUVM memory.
+     */
+    AddrRangeMap<Request::CacheCoherenceFlags, 1> gpuVmas;
+
+    /**
+     * Mtype bits {Cached, Read Write, Shared} for caches
+     */
+    enum MtypeFlags
+    {
+        SHARED                  = 0,
+        READ_WRITE              = 1,
+        CACHED                  = 2
+    };
+
+    Request::CacheCoherenceFlags defaultMtype;
+
+    /**
+     * Register a region of host memory as uncacheable from the perspective
+     * of the dGPU.
+     */
+    void registerUncacheableMemory(Addr start, Addr length);
+
     /**
      * The aperture (APE) base/limit pairs are set
      * statically at startup by the real KFD. AMD
@@ -77,6 +114,16 @@ class GPUComputeDriver final : public HSADriver
     Addr scratchApeLimit(Addr apeBase) const;
     Addr ldsApeBase(int gpuNum) const;
     Addr ldsApeLimit(Addr apeBase) const;
+
+    /**
+     * Allocate/deallocate GPUVM VMAs for tracking virtual address allocations
+     * and properties on DGPUs.  For now, we use these to track MTYPE and to
+     * be able to select which pages to unmap when the user provides us with
+     * a handle during the free ioctl.
+     */
+    void allocateGpuVma(Request::CacheCoherenceFlags mtype, Addr start,
+                        Addr length);
+    Addr deallocateGpuVma(Addr start);
 };
 
 #endif // __GPU_COMPUTE_GPU_COMPUTE_DRIVER_HH__

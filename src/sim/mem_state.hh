@@ -235,6 +235,17 @@ class MemState : public Serializable
 
   private:
     /**
+     * @param
+     */
+    void replicatePage(const MemState &in, Addr vaddr, Addr new_paddr,
+                       bool alloc_page);
+
+    /**
+     * @param
+     */
+    System * system() const;
+
+    /**
      * Owner process of MemState. Used to manipulate page tables.
      */
     Process * _ownerProcess;

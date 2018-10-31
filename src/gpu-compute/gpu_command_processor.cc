@@ -42,7 +42,7 @@
 #include "sim/syscall_emul_buf.hh"
 
 GPUCommandProcessor::GPUCommandProcessor(const Params &p)
-    : HSADevice(p), dispatcher(*p.dispatcher), driver(nullptr)
+    : HSADevice(p), dispatcher(*p.dispatcher), _driver(nullptr)
 {
     dispatcher.setCommandProcessor(this);
 }
@@ -194,8 +194,17 @@ GPUCommandProcessor::updateHsaSignal(Addr signal_handle, uint64_t signal_value,
 void
 GPUCommandProcessor::attachDriver(HSADriver *hsa_driver)
 {
-    fatal_if(driver, "Should not overwrite driver.");
-    driver = hsa_driver;
+    fatal_if(_driver, "Should not overwrite driver.");
+    // TODO: GPU Driver inheritance hierarchy doesn't really make sense.
+    // Should get rid of the base class.
+    _driver = dynamic_cast<GPUComputeDriver *>(hsa_driver);
+    assert(_driver);
+}
+
+GPUComputeDriver*
+GPUCommandProcessor::driver()
+{
+    return _driver;
 }
 
 /**
@@ -285,7 +294,7 @@ GPUCommandProcessor::dispatchPkt(HSAQueueEntry *task)
 void
 GPUCommandProcessor::signalWakeupEvent(uint32_t event_id)
 {
-    driver->signalWakeupEvent(event_id);
+    _driver->signalWakeupEvent(event_id);
 }
 
 /**

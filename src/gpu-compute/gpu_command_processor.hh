@@ -66,6 +66,7 @@ class GPUCommandProcessor : public HSADevice
 
     void setShader(Shader *shader);
     Shader* shader();
+    GPUComputeDriver* driver();
 
     enum AgentCmd
     {
@@ -112,7 +113,7 @@ class GPUCommandProcessor : public HSADevice
   private:
     Shader *_shader;
     GPUDispatcher &dispatcher;
-    HSADriver *driver;
+    GPUComputeDriver *_driver;
 
     void initABI(HSAQueueEntry *task);
 

@@ -48,6 +48,7 @@
 #include "debug/GPUSync.hh"
 #include "debug/GPUTLB.hh"
 #include "gpu-compute/dispatcher.hh"
+#include "gpu-compute/gpu_command_processor.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 #include "gpu-compute/gpu_static_inst.hh"
 #include "gpu-compute/scalar_register_file.hh"
@@ -1022,6 +1023,14 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
 
     // only do some things if actually accessing data
     bool isDataAccess = pkt->isWrite() || pkt->isRead();
+
+    // For dGPUs, real hardware will extract MTYPE from the PTE.  Our model
+    // uses x86 pagetables which don't have fields to track GPU MTYPEs.
+    // Rather than hacking up the pagetable to add these bits in, we just
+    // keep a structure local to our GPUs that are populated in our
+    // emulated driver whenever memory is allocated.  Consult that structure
+    // here in case we need a memtype override.
+    shader->gpuCmdProc.driver()->setMtype(pkt->req);
 
     // Check write before read for atomic operations
     // since atomic operations should use BaseTLB::Write

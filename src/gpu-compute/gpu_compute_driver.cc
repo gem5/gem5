@@ -35,10 +35,13 @@
 
 #include "cpu/thread_context.hh"
 #include "debug/GPUDriver.hh"
+#include "debug/GPUShader.hh"
 #include "dev/hsa/hsa_device.hh"
 #include "dev/hsa/hsa_packet_processor.hh"
 #include "dev/hsa/kfd_event_defines.h"
 #include "dev/hsa/kfd_ioctl.h"
+#include "gpu-compute/gpu_command_processor.hh"
+#include "gpu-compute/shader.hh"
 #include "params/GPUComputeDriver.hh"
 #include "sim/process.hh"
 #include "sim/syscall_emul_buf.hh"
@@ -48,12 +51,25 @@ GPUComputeDriver::GPUComputeDriver(const Params &p)
 {
     device->attachDriver(this);
     DPRINTF(GPUDriver, "Constructing KFD: device\n");
+
+    // Convert the 3 bit mtype specified in Shader.py to the proper type
+    // used for requests.
+    if (MtypeFlags::SHARED & p.m_type)
+        defaultMtype.set(Request::SHARED);
+
+    if (MtypeFlags::READ_WRITE & p.m_type)
+        defaultMtype.set(Request::READ_WRITE);
+
+    if (MtypeFlags::CACHED & p.m_type)
+        defaultMtype.set(Request::CACHED);
 }
 
 int
 GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
 {
     auto &virt_proxy = tc->getVirtProxy();
+    auto process = tc->getProcessPtr();
+    auto mem_state = process->memState;
 
     switch (req) {
         case AMDKFD_IOC_GET_VERSION:
@@ -394,6 +410,12 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             assert((args->va_addr % TheISA::PageBytes) == 0);
             Addr mmap_offset = 0;
 
+            Request::CacheCoherenceFlags mtype = defaultMtype;
+            Addr pa_addr = 0;
+
+            int npages = divCeil(args->size, (int64_t)TheISA::PageBytes);
+            bool cacheable = true;
+
             if (KFD_IOC_ALLOC_MEM_FLAGS_VRAM & args->flags) {
                 DPRINTF(GPUDriver, "amdkfd allocation type: VRAM\n");
                 args->mmap_offset = args->va_addr;
@@ -409,14 +431,39 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 // physical address space with different memory controllers
                 // yet.  This is where we will explicitly add the PT maps to
                 // dGPU memory in the future.
+                //
+                // Bind the VA space to the dGPU physical memory pool.  Mark
+                // this region as Uncacheable.  The Uncacheable flag is only
+                // really used by the CPU and is ignored by the GPU. We mark
+                // this as uncacheable from the CPU so that we can implement
+                // direct CPU framebuffer access similar to what we currently
+                // offer in real HW through the so-called Large BAR feature.
+                pa_addr = process->system->allocPhysPages(npages, dGPUPoolID);
+                //
+                // TODO: Uncacheable accesses need to be supported by the
+                // CPU-side protocol for this to work correctly.  I believe
+                // it only works right now if the physical memory is MMIO
+                cacheable = false;
+
+                DPRINTF(GPUDriver, "Mapping VA %p to framebuffer PA %p size "
+                        "%d\n", args->va_addr, pa_addr, args->size);
+
             } else if (KFD_IOC_ALLOC_MEM_FLAGS_USERPTR & args->flags) {
                 DPRINTF(GPUDriver, "amdkfd allocation type: USERPTR\n");
                 mmap_offset = args->mmap_offset;
                 // USERPTR allocations are system memory mapped into GPUVM
                 // space.  The user provides the driver with the pointer.
-                //
-                // No action needs to be taken for this memory type.  We will
-                // lazily map it into host memory on first touch.
+                pa_addr = process->system->allocPhysPages(npages);
+
+                DPRINTF(GPUDriver, "Mapping VA %p to framebuffer PA %p size "
+                        "%d\n", args->va_addr, pa_addr, args->size);
+
+                // If the HSA runtime requests system coherent memory, than we
+                // need to explicity mark this region as uncacheable from the
+                // perspective of the GPU.
+                if (args->flags & KFD_IOC_ALLOC_MEM_FLAGS_COHERENT)
+                    mtype.clear();
+
             } else if (KFD_IOC_ALLOC_MEM_FLAGS_GTT & args->flags) {
                 DPRINTF(GPUDriver, "amdkfd allocation type: GTT\n");
                 args->mmap_offset = args->va_addr;
@@ -424,14 +471,23 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 // It's different than a USERPTR allocation since the driver
                 // itself allocates the physical memory on the host.
                 //
-                // No action needs to be taken for this memory type.  We will
-                // lazily map it into host memory on first touch.  The
+                // We will lazily map it into host memory on first touch.  The
                 // fixupFault will find the original SVM aperture mapped to the
                 // host.
-                //
+                pa_addr = process->system->allocPhysPages(npages);
+
+                DPRINTF(GPUDriver, "Mapping VA %p to framebuffer PA %p size "
+                        "%d\n", args->va_addr, pa_addr, args->size);
+
+                // If the HSA runtime requests system coherent memory, than we
+                // need to explicity mark this region as uncacheable from the
+                // perspective of the GPU.
+                if (args->flags & KFD_IOC_ALLOC_MEM_FLAGS_COHERENT)
+                    mtype.clear();
+
                 // Note that for GTT the thunk layer needs to call mmap on the
                 // driver FD later if it wants the host to have access to this
-                // memory (which it probably does).
+                // memory (which it probably does).  This will be ignored.
             } else if (KFD_IOC_ALLOC_MEM_FLAGS_DOORBELL & args->flags) {
                 DPRINTF(GPUDriver, "amdkfd allocation type: DOORBELL\n");
                 // DOORBELL allocations are the queue doorbells that are
@@ -439,25 +495,57 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 //
                 // Explicitly map this virtual address to our PIO doorbell
                 // interface in the page tables (non-cacheable)
-                tc->getProcessPtr()->pTable->map(args->va_addr,
-                            device->hsaPacketProc().pioAddr,
-                            args->size, false);
-                break;
+                pa_addr = device->hsaPacketProc().pioAddr;
+                cacheable = false;
             }
 
             DPRINTF(GPUDriver, "amdkfd allocation arguments: va_addr %p "
                     "size %lu, mmap_offset %p, gpu_id %d\n",
                     args->va_addr, args->size, mmap_offset, args->gpu_id);
 
-            // TODO: Not sure where the handle is used yet.  Set it to an
-            // easily trackable value.
-            args->handle= 0xdeadbeef;
+            // Bind selected physical memory to provided virtual address range
+            // in X86 page tables.
+            process->pTable->map(args->va_addr, pa_addr, args->size,
+                cacheable);
+
+            // We keep track of allocated regions of GPU mapped memory,
+            // just like the driver would.  This allows us to provide the
+            // user with a unique handle for a given allocation.  The user
+            // will only provide us with a handle after allocation and expect
+            // us to be able to use said handle to extract all the properties
+            // of the region.
+            //
+            // This is a simplified version of regular system VMAs, but for
+            // GPUVM space (non of the clobber/remap nonsense we find in real
+            // OS managed memory).
+            allocateGpuVma(mtype, args->va_addr, args->size);
+
+            // Used by the runtime to uniquely identify this allocation.
+            // We can just use the starting address of the VMA region.
+            args->handle= args->va_addr;
             args.copyOut(virt_proxy);
           }
           break;
         case AMDKFD_IOC_FREE_MEMORY_OF_GPU:
           {
-            warn("unimplemented ioctl: AMDKFD_IOC_FREE_MEMORY_OF_GPU\n");
+            DPRINTF(GPUDriver, "ioctl: AMDKFD_IOC_FREE_MEMORY_OF_GPU\n");
+            TypedBufferArg<kfd_ioctl_free_memory_of_gpu_args> args(ioc_buf);
+            args.copyIn(virt_proxy);
+
+            assert(isdGPU);
+            DPRINTF(GPUDriver, "amdkfd free arguments: handle %p ",
+                    args->handle);
+
+            // We don't recycle physical pages in SE mode
+            Addr size = deallocateGpuVma(args->handle);
+            process->pTable->unmap(args->handle, size);
+
+            // TODO: IOMMU and GPUTLBs do not seem to correctly support
+            // shootdown.  This is also a potential issue for APU systems
+            // that perform unmap or remap with system memory.
+            tc->getMMUPtr()->flushAll();
+
+            args.copyOut(virt_proxy);
           }
           break;
         /**
@@ -634,4 +722,46 @@ Addr
 GPUComputeDriver::ldsApeLimit(Addr apeBase) const
 {
     return (apeBase & 0xFFFFFFFF00000000UL) | 0xFFFFFFFF;
+}
+
+void
+GPUComputeDriver::allocateGpuVma(Request::CacheCoherenceFlags mtype,
+                                 Addr start, Addr length)
+{
+    AddrRange range = AddrRange(start, start + length - 1);
+    DPRINTF(GPUDriver, "Registering [%p - %p] with MTYPE %d\n",
+            range.start(), range.end(), mtype);
+    fatal_if(gpuVmas.insert(range, mtype) == gpuVmas.end(),
+             "Attempted to double register Mtypes for [%p - %p]\n",
+             range.start(), range.end());
+}
+
+Addr
+GPUComputeDriver::deallocateGpuVma(Addr start)
+{
+    auto vma = gpuVmas.contains(start);
+    assert(vma != gpuVmas.end());
+    assert((vma->first.start() == start));
+    Addr size = vma->first.size();
+    DPRINTF(GPUDriver, "Unregistering [%p - %p]\n", vma->first.start(),
+            vma->first.end());
+    gpuVmas.erase(vma);
+    return size;
+}
+
+void
+GPUComputeDriver::setMtype(RequestPtr req)
+{
+    // If we are a dGPU then set the MTYPE from our VMAs.
+    if (isdGPU) {
+        AddrRange range = RangeSize(req->getVaddr(), req->getSize());
+        auto vma = gpuVmas.contains(range);
+        assert(vma != gpuVmas.end());
+        DPRINTF(GPUShader, "Setting req from [%p - %p] MTYPE %d\n"
+                "%d\n", range.start(), range.end(), vma->second);
+        req->setCacheCoherenceFlags(vma->second);
+    // APUs always get the default MTYPE
+    } else {
+        req->setCacheCoherenceFlags(defaultMtype);
+    }
 }

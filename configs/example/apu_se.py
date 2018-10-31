@@ -173,6 +173,21 @@ parser.add_argument("--dgpu", action="store_true", default=False,
                     "transfered from host to device memory using runtime calls "
                     "that copy data over a PCIe-like IO bus.")
 
+# Mtype option
+#--     1   1   1   C_RW_S  (Cached-ReadWrite-Shared)
+#--     1   1   0   C_RW_US (Cached-ReadWrite-Unshared)
+#--     1   0   1   C_RO_S  (Cached-ReadOnly-Shared)
+#--     1   0   0   C_RO_US (Cached-ReadOnly-Unshared)
+#--     0   1   x   UC_L2   (Uncached_GL2)
+#--     0   0   x   UC_All  (Uncached_All_Load)
+# default value: 5/C_RO_S (only allow caching in GL2 for read. Shared)
+parser.add_argument("--m-type", type='int', default=5,
+                    help="Default Mtype for GPU memory accesses.  This is the "
+                    "value used for all memory accesses on an APU and is the "
+                    "default mode for dGPU unless explicitly overwritten by "
+                    "the driver on a per-page basis.  Valid values are "
+                    "between 0-7")
+
 Ruby.define_options(parser)
 
 # add TLB options to the parser
@@ -407,8 +422,15 @@ hsapp_gpu_map_vaddr = 0x200000000
 hsapp_gpu_map_size = 0x1000
 hsapp_gpu_map_paddr = int(Addr(args.mem_size))
 
+if args.dgpu:
+    # Default --m-type for dGPU is write-back gl2 with system coherence
+    # (coherence at the level of the system directory between other dGPUs and
+    # CPUs) managed by kernel boundary flush operations targeting the gl2.
+    args.m_type = 6
+
 # HSA kernel mode driver
-gpu_driver = GPUComputeDriver(filename = "kfd", isdGPU = args.dgpu)
+gpu_driver = GPUComputeDriver(filename = "kfd", isdGPU = args.dgpu,
+                              dGPUPoolID = 1, m_type = args.m_type)
 
 # Creating the GPU kernel launching components: that is the HSA
 # packet processor (HSAPP), GPU command processor (CP), and the

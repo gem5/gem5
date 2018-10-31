@@ -237,6 +237,16 @@ class GPUComputeDriver(HSADriver):
     type = 'GPUComputeDriver'
     cxx_header = 'gpu-compute/gpu_compute_driver.hh'
     isdGPU = Param.Bool(False, 'Driver is for a dGPU')
+    dGPUPoolID = Param.Int(False, 'Pool ID for dGPU.')
+    # Default Mtype for caches
+    #--     1   1   1   C_RW_S  (Cached-ReadWrite-Shared)
+    #--     1   1   0   C_RW_US (Cached-ReadWrite-Unshared)
+    #--     1   0   1   C_RO_S  (Cached-ReadOnly-Shared)
+    #--     1   0   0   C_RO_US (Cached-ReadOnly-Unshared)
+    #--     0   1   x   UC_L2   (Uncached_GL2)
+    #--     0   0   x   UC_All  (Uncached_All_Load)
+    # default value: 5/C_RO_S (only allow caching in GL2 for read. Shared)
+    m_type = Param.Int("Default MTYPE for cache. Valid values between 0-7");
 
 class GPUDispatcher(SimObject):
     type = 'GPUDispatcher'
