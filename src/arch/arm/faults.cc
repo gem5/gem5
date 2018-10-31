@@ -297,12 +297,9 @@ ArmFault::getVector(ThreadContext *tc)
 {
     Addr base;
 
-    // ARM ARM issue C B1.8.1
-    bool haveSecurity = ArmSystem::haveSecurity(tc);
-
     // Check for invalid modes
     CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
-    assert(haveSecurity                      || cpsr.mode != MODE_MON);
+    assert(ArmSystem::haveSecurity(tc) || cpsr.mode != MODE_MON);
     assert(ArmSystem::haveVirtualization(tc) || cpsr.mode != MODE_HYP);
 
     switch (cpsr.mode)
@@ -318,10 +315,12 @@ ArmFault::getVector(ThreadContext *tc)
         if (sctlr.v) {
             base = HighVecs;
         } else {
-            base = haveSecurity ? tc->readMiscReg(MISCREG_VBAR) : 0;
+            base = ArmSystem::haveSecurity(tc) ?
+                tc->readMiscReg(MISCREG_VBAR) : 0;
         }
         break;
     }
+
     return base + offset(tc);
 }
 
@@ -694,6 +693,24 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
         setSyndrome(tc, getSyndromeReg64());
 }
 
+Addr
+Reset::getVector(ThreadContext *tc)
+{
+    Addr base;
+
+    // Check for invalid modes
+    CPSR M5_VAR_USED cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
+    assert(ArmSystem::haveSecurity(tc) || cpsr.mode != MODE_MON);
+    assert(ArmSystem::haveVirtualization(tc) || cpsr.mode != MODE_HYP);
+
+    // RVBAR is aliased (implemented as) MVBAR in gem5, since the two
+    // are mutually exclusive; there is no need to check here for
+    // which register to use since they hold the same value
+    base = tc->readMiscReg(MISCREG_MVBAR);
+
+    return base + offset(tc);
+}
+
 void
 Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 {
@@ -715,7 +732,7 @@ Reset::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         }
     } else {
         // Advance the PC to the IMPLEMENTATION DEFINED reset value
-        PCState pc = ArmSystem::resetAddr64(tc);
+        PCState pc = ArmSystem::resetAddr(tc);
         pc.aarch64(true);
         pc.nextAArch64(true);
         tc->pcState(pc);

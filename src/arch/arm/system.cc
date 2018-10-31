@@ -63,10 +63,10 @@ ArmSystem::ArmSystem(Params *p)
       _haveVirtualization(p->have_virtualization),
       _haveCrypto(p->have_crypto),
       _genericTimer(nullptr),
+      _resetAddr(p->auto_reset_addr ?
+                 (kernelEntry & loadAddrMask) + loadAddrOffset :
+                 p->reset_addr),
       _highestELIs64(p->highest_el_is_64),
-      _resetAddr64(p->auto_reset_addr_64 ?
-                   (kernelEntry & loadAddrMask) + loadAddrOffset :
-                   p->reset_addr_64),
       _physAddrRange64(p->phys_addr_range_64),
       _haveLargeAsid64(p->have_large_asid_64),
       _m5opRange(p->m5ops_base ?
@@ -248,9 +248,9 @@ ArmSystem::haveEL(ThreadContext *tc, ExceptionLevel el)
 }
 
 Addr
-ArmSystem::resetAddr64(ThreadContext *tc)
+ArmSystem::resetAddr(ThreadContext *tc)
 {
-    return getArmSystem(tc)->resetAddr64();
+    return getArmSystem(tc)->resetAddr();
 }
 
 uint8_t

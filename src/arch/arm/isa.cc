@@ -201,6 +201,10 @@ ISA::clear32(const ArmISAParams *p, const SCTLR &sctlr_rst)
     CPSR cpsr = 0;
     cpsr.mode = MODE_USER;
 
+    if (FullSystem) {
+        miscRegs[MISCREG_MVBAR] = system->resetAddr();
+    }
+
     miscRegs[MISCREG_CPSR] = cpsr;
     updateRegMap(cpsr);
 
@@ -247,7 +251,7 @@ void
 ISA::clear64(const ArmISAParams *p)
 {
     CPSR cpsr = 0;
-    Addr rvbar = system->resetAddr64();
+    Addr rvbar = system->resetAddr();
     switch (system->highestEL()) {
         // Set initial EL to highest implemented EL using associated stack
         // pointer (SP_ELx); set RVBAR_ELx to implementation defined reset
