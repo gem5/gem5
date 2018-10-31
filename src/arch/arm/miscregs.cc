@@ -3165,7 +3165,10 @@ ISA::initializeMiscRegMetadata()
       .bankedChild()
       .secure().exceptUserMode();
     InitReg(MISCREG_MVBAR)
-      .mon().secure().exceptUserMode();
+      .mon().secure()
+      .hypRead(FullSystem && system->highestEL() == EL2)
+      .privRead(FullSystem && system->highestEL() == EL1)
+      .exceptUserMode();
     InitReg(MISCREG_RMR)
       .unimplemented()
       .mon().secure().exceptUserMode();

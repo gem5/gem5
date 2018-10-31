@@ -229,6 +229,11 @@ namespace ArmISA
                 privNonSecure(v);
                 return *this;
             }
+            chain privRead(bool v = true) const {
+                privSecureRead(v);
+                privNonSecureRead(v);
+                return *this;
+            }
             chain hypRead(bool v = true) const {
                 info[MISCREG_HYP_RD] = v;
                 return *this;
