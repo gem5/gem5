@@ -412,6 +412,7 @@ namespace ArmISA
         void clear();
 
       protected:
+        void clear32(const ArmISAParams *p, const SCTLR &sctlr_rst);
         void clear64(const ArmISAParams *p);
         void initID32(const ArmISAParams *p);
         void initID64(const ArmISAParams *p);

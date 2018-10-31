@@ -124,38 +124,6 @@ ISA::clear()
     // AArch32 or AArch64
     initID64(p);
 
-    miscRegs[MISCREG_ID_ISAR5] = insertBits(
-        miscRegs[MISCREG_ID_ISAR5], 19, 4,
-        haveCrypto ? 0x1112 : 0x0);
-
-    if (FullSystem && system->highestELIs64()) {
-        // Initialize AArch64 state
-        clear64(p);
-        return;
-    }
-
-    // Initialize AArch32 state...
-
-    CPSR cpsr = 0;
-    cpsr.mode = MODE_USER;
-    miscRegs[MISCREG_CPSR] = cpsr;
-    updateRegMap(cpsr);
-
-    SCTLR sctlr = 0;
-    sctlr.te = (bool) sctlr_rst.te;
-    sctlr.nmfi = (bool) sctlr_rst.nmfi;
-    sctlr.v = (bool) sctlr_rst.v;
-    sctlr.u = 1;
-    sctlr.xp = 1;
-    sctlr.rao2 = 1;
-    sctlr.rao3 = 1;
-    sctlr.rao4 = 0xf;  // SCTLR[6:3]
-    sctlr.uci = 1;
-    sctlr.dze = 1;
-    miscRegs[MISCREG_SCTLR_NS] = sctlr;
-    miscRegs[MISCREG_SCTLR_RST] = sctlr_rst;
-    miscRegs[MISCREG_HCPTR] = 0;
-
     // Start with an event in the mailbox
     miscRegs[MISCREG_SEV_MAILBOX] = 1;
 
@@ -199,6 +167,7 @@ ISA::clear()
         (2 << 4)  | // 5:4
         (1 << 2)  | // 3:2
         0;          // 1:0
+
     miscRegs[MISCREG_NMRR_NS] =
         (1 << 30) | // 31:30
         (0 << 26) | // 27:26
@@ -215,6 +184,40 @@ ISA::clear()
         (2 << 4)  | // 5:4
         (0 << 2)  | // 3:2
         0;          // 1:0
+
+    if (FullSystem && system->highestELIs64()) {
+        // Initialize AArch64 state
+        clear64(p);
+        return;
+    }
+
+    // Initialize AArch32 state...
+    clear32(p, sctlr_rst);
+}
+
+void
+ISA::clear32(const ArmISAParams *p, const SCTLR &sctlr_rst)
+{
+    CPSR cpsr = 0;
+    cpsr.mode = MODE_USER;
+
+    miscRegs[MISCREG_CPSR] = cpsr;
+    updateRegMap(cpsr);
+
+    SCTLR sctlr = 0;
+    sctlr.te = (bool) sctlr_rst.te;
+    sctlr.nmfi = (bool) sctlr_rst.nmfi;
+    sctlr.v = (bool) sctlr_rst.v;
+    sctlr.u = 1;
+    sctlr.xp = 1;
+    sctlr.rao2 = 1;
+    sctlr.rao3 = 1;
+    sctlr.rao4 = 0xf;  // SCTLR[6:3]
+    sctlr.uci = 1;
+    sctlr.dze = 1;
+    miscRegs[MISCREG_SCTLR_NS] = sctlr;
+    miscRegs[MISCREG_SCTLR_RST] = sctlr_rst;
+    miscRegs[MISCREG_HCPTR] = 0;
 
     miscRegs[MISCREG_CPACR] = 0;
 
