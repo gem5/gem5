@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013 ARM Limited
+# Copyright (c) 2012-2013,2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -154,7 +154,7 @@ def dot_create_cluster(simNode, full_path, label):
             ini_strings.append(str(param) + "&#61;" +
                                simNode._values[param].ini_str())
     # join all the parameters with an HTML newline
-    tooltip = "&#10;".join(ini_strings)
+    tooltip = "&#10;\\".join(ini_strings)
 
     return pydot.Cluster( \
                          full_path, \
