@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012,2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -56,6 +56,7 @@ from . import SimObject
 from . import ticks
 from . import objects
 from m5.util.dot_writer import do_dot, do_dvfs_dot
+from m5.util.dot_writer_ruby import do_ruby_dot
 
 from .util import fatal
 from .util import attrdict
@@ -110,6 +111,7 @@ def instantiate(ckpt_dir=None):
             pass
 
     do_dot(root, options.outdir, options.dot_config)
+    do_ruby_dot(root, options.outdir, options.dot_config)
 
     # Initialize the global statistics
     stats.initSimStats()
