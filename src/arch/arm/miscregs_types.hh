@@ -319,7 +319,6 @@ namespace ArmISA
                                 // DC CVAC and IC IVAU instructions
                                 // (AArch64 SCTLR_EL1 only)
         Bitfield<25>   ee;      // Exception Endianness
-        Bitfield<24>   ve;      // Interrupt Vectors Enable (ARMv7 only)
         Bitfield<24>   e0e;     // Endianness of explicit data accesses at EL0
                                 // (AArch64 SCTLR_EL1 only)
         Bitfield<23>   xp;      // Extended page table enable (dropped in ARMv7)

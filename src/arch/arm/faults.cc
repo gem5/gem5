@@ -300,10 +300,6 @@ ArmFault::getVector(ThreadContext *tc)
     // ARM ARM issue C B1.8.1
     bool haveSecurity = ArmSystem::haveSecurity(tc);
 
-    // panic if SCTLR.VE because I have no idea what to do with vectored
-    // interrupts
-    SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
-    assert(!sctlr.ve);
     // Check for invalid modes
     CPSR cpsr = tc->readMiscRegNoEffect(MISCREG_CPSR);
     assert(haveSecurity                      || cpsr.mode != MODE_MON);
@@ -318,6 +314,7 @@ ArmFault::getVector(ThreadContext *tc)
         base = tc->readMiscReg(MISCREG_HVBAR);
         break;
       default:
+        SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
         if (sctlr.v) {
             base = HighVecs;
         } else {
