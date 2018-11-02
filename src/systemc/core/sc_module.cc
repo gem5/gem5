@@ -102,6 +102,8 @@ newCThreadProcess(const char *name, ProcessFuncWrapper *func)
 namespace sc_core
 {
 
+sc_bind_proxy::sc_bind_proxy() : _interface(nullptr), _port(nullptr) {}
+
 sc_bind_proxy::sc_bind_proxy(sc_interface &_interface) :
     _interface(&_interface), _port(nullptr)
 {}
@@ -110,11 +112,9 @@ sc_bind_proxy::sc_bind_proxy(sc_port_base &_port) :
     _interface(nullptr), _port(&_port)
 {}
 
-const sc_bind_proxy SC_BIND_PROXY_NUL(*(sc_port_base *)nullptr);
+const sc_bind_proxy SC_BIND_PROXY_NIL;
 
 sc_module::~sc_module() { delete _gem5_module; }
-
-const sc_bind_proxy SC_BIND_PROXY_NIL(*(sc_port_base *)nullptr);
 
 void
 sc_module::operator () (const sc_bind_proxy &p001,

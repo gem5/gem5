@@ -82,6 +82,7 @@ class sc_bind_proxy
     sc_port_base *_port;
 
   public:
+    sc_bind_proxy();
     sc_bind_proxy(sc_interface &_interface);
     sc_bind_proxy(sc_port_base &_port);
 
