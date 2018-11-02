@@ -586,8 +586,8 @@ class sc_vector : public sc_vector_base
 
   private:
     // Disabled
-    sc_vector(const sc_vector &) : sc_vector_base() {}
-    sc_vector &operator = (const sc_vector &) { return *this; }
+    sc_vector(const sc_vector &);
+    sc_vector &operator = (const sc_vector &);
 
     void
     clear()
