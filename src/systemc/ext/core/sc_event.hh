@@ -236,23 +236,9 @@ class sc_event_finder_t : public sc_event_finder
 
     virtual ~sc_event_finder_t() {}
 
-    const sc_port_base *port() const { return _port; }
+    const sc_port_base *port() const override { return _port; }
 
-    const sc_event &
-    find_event(sc_interface *if_p=NULL) const override
-    {
-        static const sc_gem5::InternalScEvent none;
-        const IF *iface = if_p ? dynamic_cast<const IF *>(if_p) :
-            dynamic_cast<const IF *>(_port->get_interface());
-        if (!iface) {
-            std::ostringstream ss;
-            ss << "port is not bound: port '" << _port->name() << "' (" <<
-                _port->kind() << ")";
-            SC_REPORT_ERROR(SC_ID_FIND_EVENT_, ss.str().c_str());
-            return none;
-        }
-        return (const_cast<IF *>(iface)->*_method)();
-    }
+    const sc_event &find_event(sc_interface *if_p=NULL) const override;
 
   private:
     const sc_port_b<IF> *_port;
@@ -275,5 +261,27 @@ class InternalScEvent : public ::sc_core::sc_event
 };
 
 } // namespace sc_gem5
+
+namespace sc_core
+{
+
+template <class IF>
+const sc_event &
+sc_event_finder_t<IF>::find_event(sc_interface *if_p) const
+{
+    static const sc_gem5::InternalScEvent none;
+    const IF *iface = if_p ? dynamic_cast<const IF *>(if_p) :
+        dynamic_cast<const IF *>(_port->get_interface());
+    if (!iface) {
+        std::ostringstream ss;
+        ss << "port is not bound: port '" << _port->name() << "' (" <<
+            _port->kind() << ")";
+        SC_REPORT_ERROR(SC_ID_FIND_EVENT_, ss.str().c_str());
+        return none;
+    }
+    return (const_cast<IF *>(iface)->*_method)();
+}
+
+} // namespace sc_core
 
 #endif  //__SYSTEMC_EXT_CORE_SC_INTERFACE_HH__
