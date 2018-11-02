@@ -63,7 +63,7 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
 }
 
 void
-BaseSetAssoc::init(BaseCache* cache)
+BaseSetAssoc::tagsInit(BaseCache* cache)
 {
     // Set parent cache
     setCache(cache);

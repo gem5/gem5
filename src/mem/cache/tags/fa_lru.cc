@@ -84,7 +84,7 @@ FALRU::~FALRU()
 }
 
 void
-FALRU::init(BaseCache* cache)
+FALRU::tagsInit(BaseCache* cache)
 {
     // Set parent cache
     setCache(cache);

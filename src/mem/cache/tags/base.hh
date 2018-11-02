@@ -179,7 +179,7 @@ class BaseTags : public ClockedObject
      *
      * @param _cache Pointer to parent cache.
      */
-    virtual void init(BaseCache *_cache) = 0;
+    virtual void tagsInit(BaseCache *_cache) = 0;
 
     /**
      * Register local statistics.

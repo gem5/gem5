@@ -163,7 +163,7 @@ class FALRU : public BaseTags
      *
      * @param _cache Pointer to parent cache.
      */
-    void init(BaseCache *_cache) override;
+    void tagsInit(BaseCache *_cache) override;
 
     /**
      * Register the stats for this object.

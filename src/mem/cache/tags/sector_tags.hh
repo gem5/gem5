@@ -105,7 +105,7 @@ class SectorTags : public BaseTags
      *
      * @param _cache Pointer to parent cache.
      */
-    void init(BaseCache *_cache) override;
+    void tagsInit(BaseCache *_cache) override;
 
     /**
      * This function updates the tags when a block is invalidated but does

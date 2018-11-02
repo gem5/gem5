@@ -64,7 +64,7 @@ SectorTags::SectorTags(const SectorTagsParams *p)
 }
 
 void
-SectorTags::init(BaseCache* cache)
+SectorTags::tagsInit(BaseCache* cache)
 {
     // Set parent cache
     setCache(cache);
