@@ -47,7 +47,6 @@ namespace sc_gem5
 class ClockTick : public ScEvent
 {
   private:
-    ::sc_core::sc_clock *clock;
     ::sc_core::sc_time _period;
     std::string name;
     Process *p;
@@ -57,7 +56,7 @@ class ClockTick : public ScEvent
     ClockTick(::sc_core::sc_clock *clock, bool to,
             ::sc_core::sc_time _period) :
         ScEvent([this]() { tick(); }),
-        clock(clock), _period(_period), name(clock->basename()), p(nullptr),
+        _period(_period), name(clock->basename()), p(nullptr),
         funcWrapper(clock, to ? &::sc_core::sc_clock::tickUp :
                                 &::sc_core::sc_clock::tickDown)
     {
