@@ -225,6 +225,8 @@ class sc_in<bool> : public sc_port<sc_signal_in_if<bool>, 1>
         _negFinder(*this, &sc_signal_in_if<bool>::negedge_event)
     {}
 
+    using sc_port<sc_signal_in_if<bool>, 1>::bind;
+
     virtual void
     bind(const sc_signal_in_if<bool> &i)
     {
@@ -389,6 +391,8 @@ class sc_in<sc_dt::sc_logic> :
         _posFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::posedge_event),
         _negFinder(*this, &sc_signal_in_if<sc_dt::sc_logic>::negedge_event)
     {}
+
+    using sc_port<sc_signal_in_if<sc_dt::sc_logic>, 1>::bind;
 
     virtual void
     bind(const sc_signal_in_if<sc_dt::sc_logic> &i)
