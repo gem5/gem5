@@ -658,6 +658,21 @@ Cache::recvAtomic(PacketPtr pkt)
 {
     promoteWholeLineWrites(pkt);
 
+    // follow the same flow as in recvTimingReq, and check if a cache
+    // above us is responding
+    if (pkt->cacheResponding()) {
+        assert(!pkt->req->isCacheInvalidate());
+        DPRINTF(Cache, "Cache above responding to %s: not responding\n",
+                pkt->print());
+
+        // if a cache is responding, and it had the line in Owned
+        // rather than Modified state, we need to invalidate any
+        // copies that are not on the same path to memory
+        assert(pkt->needsWritable() && !pkt->responderHadWritable());
+
+        return memSidePort.sendAtomic(pkt);
+    }
+
     return BaseCache::recvAtomic(pkt);
 }
 

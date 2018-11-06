@@ -569,28 +569,13 @@ BaseCache::recvTimingResp(PacketPtr pkt)
 Tick
 BaseCache::recvAtomic(PacketPtr pkt)
 {
-    // We are in atomic mode so we pay just for lookupLatency here.
-    Cycles lat = lookupLatency;
-
-    // follow the same flow as in recvTimingReq, and check if a cache
-    // above us is responding
-    if (pkt->cacheResponding() && !pkt->isClean()) {
-        assert(!pkt->req->isCacheInvalidate());
-        DPRINTF(Cache, "Cache above responding to %s: not responding\n",
-                pkt->print());
-
-        // if a cache is responding, and it had the line in Owned
-        // rather than Modified state, we need to invalidate any
-        // copies that are not on the same path to memory
-        assert(pkt->needsWritable() && !pkt->responderHadWritable());
-        lat += ticksToCycles(memSidePort.sendAtomic(pkt));
-
-        return lat * clockPeriod();
-    }
-
     // should assert here that there are no outstanding MSHRs or
     // writebacks... that would mean that someone used an atomic
     // access in timing mode
+
+    // We use lookupLatency here because it is used to specify the latency
+    // to access.
+    Cycles lat = lookupLatency;
 
     CacheBlk *blk = nullptr;
     PacketList writebacks;
