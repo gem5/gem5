@@ -33,6 +33,7 @@
 #include "systemc/core/channel.hh"
 #include "systemc/core/module.hh"
 #include "systemc/core/port.hh"
+#include "systemc/core/sc_main_fiber.hh"
 #include "systemc/core/scheduler.hh"
 
 namespace sc_gem5
@@ -41,7 +42,6 @@ namespace sc_gem5
 namespace
 {
 
-bool scMainDone = false;
 bool stopAfterCallbacks = false;
 bool startComplete = false;
 bool endComplete = false;
@@ -52,9 +52,6 @@ sc_core::sc_status _status = sc_core::SC_ELABORATION;
 
 bool Kernel::startOfSimulationComplete() { return startComplete; }
 bool Kernel::endOfSimulationComplete() { return endComplete; }
-
-bool Kernel::scMainFinished() { return scMainDone; }
-void Kernel::scMainFinished(bool finished) { scMainDone = finished; }
 
 sc_core::sc_status Kernel::status() { return _status; }
 void Kernel::status(sc_core::sc_status s) { _status = s; }
@@ -69,7 +66,7 @@ Kernel::Kernel(Params *params) :
 void
 Kernel::init()
 {
-    if (scMainDone)
+    if (scMainFiber.finished())
         return;
 
     if (stopAfterCallbacks)
@@ -89,7 +86,7 @@ Kernel::init()
 void
 Kernel::regStats()
 {
-    if (scMainDone || stopAfterCallbacks)
+    if (scMainFiber.finished() || stopAfterCallbacks)
         return;
 
     try {
@@ -113,7 +110,7 @@ Kernel::regStats()
 void
 Kernel::startup()
 {
-    if (scMainDone)
+    if (scMainFiber.finished())
         return;
 
     schedule(t0Event, curTick());

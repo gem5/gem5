@@ -38,14 +38,12 @@
 #include "sim/init.hh"
 #include "systemc/core/kernel.hh"
 #include "systemc/core/python.hh"
+#include "systemc/core/sc_main_fiber.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
 #include "systemc/utils/report.hh"
-
-// A weak symbol to detect if sc_main has been defined, and if so where it is.
-[[gnu::weak]] int sc_main(int argc, char *argv[]);
 
 namespace sc_core
 {
@@ -53,104 +51,54 @@ namespace sc_core
 namespace
 {
 
-bool scMainCalled = false;
-
-int _argc = 0;
-char **_argv = NULL;
-
-class ScMainFiber : public Fiber
-{
-  public:
-    std::string resultStr;
-    int resultInt;
-
-    ScMainFiber() : resultInt(1) {}
-
-    void
-    main()
-    {
-        if (::sc_main) {
-            try {
-                resultInt = ::sc_main(_argc, _argv);
-                if (resultInt)
-                    resultStr = "sc_main returned non-zero";
-                else
-                    resultStr = "sc_main finished";
-                // Make sure no systemc events/notifications are scheduled
-                // after sc_main returns.
-            } catch (const sc_report &r) {
-                // There was an exception nobody caught.
-                resultStr = "uncaught sc_report";
-                sc_gem5::reportHandlerProc(
-                        r, sc_report_handler::get_catch_actions());
-            } catch (...) {
-                // There was some other type of exception we need to wrap.
-                resultStr = "uncaught exception";
-                sc_gem5::reportHandlerProc(
-                        ::sc_gem5::reportifyException(),
-                        sc_report_handler::get_catch_actions());
-            }
-            ::sc_gem5::Kernel::scMainFinished(true);
-            ::sc_gem5::scheduler.clear();
-        } else {
-            // If python tries to call sc_main but no sc_main was defined...
-            fatal("sc_main called but not defined.\n");
-        }
-    }
-};
-
-ScMainFiber scMainFiber;
-
 // This wrapper adapts the python version of sc_main to the c++ version.
 void
 sc_main(pybind11::args args)
 {
-    panic_if(scMainCalled, "sc_main called more than once.");
+    panic_if(::sc_gem5::scMainFiber.called(),
+            "sc_main called more than once.");
 
-    _argc = args.size();
-    _argv = new char *[_argc];
+    int argc = args.size();
+    char **argv = new char *[argc];
 
-    // Initialize all the _argvs to NULL so we can delete [] them
+    // Initialize all the argvs to NULL so we can delete [] them
     // unconditionally.
-    for (int idx = 0; idx < _argc; idx++)
-        _argv[idx] = NULL;
+    for (int idx = 0; idx < argc; idx++)
+        argv[idx] = NULL;
 
     // Attempt to convert all the arguments to strings. If that fails, clean
     // up after ourselves. Also don't count this as a call to sc_main since
     // we never got to the c++ version of that function.
     try {
-        for (int idx = 0; idx < _argc; idx++) {
+        for (int idx = 0; idx < argc; idx++) {
             std::string arg = args[idx].cast<std::string>();
-            _argv[idx] = new char[arg.length() + 1];
-            strcpy(_argv[idx], arg.c_str());
+            argv[idx] = new char[arg.length() + 1];
+            strcpy(argv[idx], arg.c_str());
         }
     } catch (...) {
         // If that didn't work for some reason (probably a conversion error)
-        // blow away _argv and _argc and pass on the exception.
-        for (int idx = 0; idx < _argc; idx++)
-            delete [] _argv[idx];
-        delete [] _argv;
-        _argc = 0;
+        // blow away argv and argc and pass on the exception.
+        for (int idx = 0; idx < argc; idx++)
+            delete [] argv[idx];
+        delete [] argv;
+        argc = 0;
         throw;
     }
 
-    // At this point we're going to call the c++ sc_main, so we can't try
-    // again later.
-    scMainCalled = true;
-
-    scMainFiber.run();
+    ::sc_gem5::scMainFiber.setArgs(argc, argv);
+    ::sc_gem5::scMainFiber.run();
 }
 
 int
 sc_main_result_code()
 {
-    return scMainFiber.resultInt;
+    return ::sc_gem5::scMainFiber.resultInt();
 }
 
 std::string
 sc_main_result_str()
 {
-    return scMainFiber.resultStr;
+    return ::sc_gem5::scMainFiber.resultStr();
 }
 
 // Make our sc_main wrapper available in the internal _m5 python module under
@@ -174,13 +122,13 @@ sc_stop_mode _stop_mode = SC_STOP_FINISH_DELTA;
 int
 sc_argc()
 {
-    return _argc;
+    return ::sc_gem5::scMainFiber.argc();
 }
 
 const char *const *
 sc_argv()
 {
-    return _argv;
+    return ::sc_gem5::scMainFiber.argv();
 }
 
 void

@@ -50,6 +50,7 @@ if env['USE_SYSTEMC']:
     Source('sc_interface.cc')
     Source('sc_join.cc')
     Source('sc_main.cc')
+    Source('sc_main_fiber.cc')
     Source('sc_module.cc')
     Source('sc_module_name.cc')
     Source('sc_object.cc')

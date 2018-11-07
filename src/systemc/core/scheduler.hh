@@ -333,8 +333,6 @@ class Scheduler
     // Run delta events.
     void runDelta();
 
-    void setScMainFiber(Fiber *sc_main) { scMain = sc_main; }
-
     void start(Tick max_tick, bool run_to_time);
     void oneCycle();
 
@@ -426,7 +424,6 @@ class Scheduler
     EventWrapper<Scheduler, &Scheduler::pause> pauseEvent;
     EventWrapper<Scheduler, &Scheduler::stop> stopEvent;
 
-    Fiber *scMain;
     const ::sc_core::sc_report *_throwToScMain;
 
     bool

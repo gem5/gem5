@@ -27,51 +27,56 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_KERNEL_HH__
-#define __SYSTEMC_KERNEL_HH__
+#include "systemc/core/sc_main_fiber.hh"
 
-#include "params/SystemC_Kernel.hh"
-#include "sim/sim_object.hh"
+#include <cstring>
+#include <string>
+
+#include "systemc/core/kernel.hh"
+#include "systemc/core/scheduler.hh"
+#include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
+#include "systemc/utils/report.hh"
+
+// A weak symbol to detect if sc_main has been defined, and if so where it is.
+[[gnu::weak]] int sc_main(int argc, char *argv[]);
 
 namespace sc_gem5
 {
 
-/*
- * This class represents the systemc kernel. There should be exactly one in
- * the simulation. It receives gem5 SimObject lifecycle callbacks (init,
- * regStats, etc.) and manages the lifecycle of the systemc simulation
- * accordingly. It also acts as a collecting point for systemc related
- * control functionality.
- */
-class Kernel : public SimObject
+void
+ScMainFiber::main()
 {
-  public:
-    typedef SystemC_KernelParams Params;
-    Kernel(Params *params);
+    _called = true;
 
-    void init() override;
-    void regStats() override;
-    void startup() override;
+    if (::sc_main) {
+        try {
+            _resultInt = ::sc_main(_argc, _argv);
+            if (_resultInt)
+                _resultStr = "sc_main returned non-zero";
+            else
+                _resultStr = "sc_main finished";
+            // Make sure no systemc events/notifications are scheduled
+            // after sc_main returns.
+        } catch (const ::sc_core::sc_report &r) {
+            // There was an exception nobody caught.
+            _resultStr = "uncaught sc_report";
+            reportHandlerProc(
+                    r, ::sc_core::sc_report_handler::get_catch_actions());
+        } catch (...) {
+            // There was some other type of exception we need to wrap.
+            _resultStr = "uncaught exception";
+            reportHandlerProc(reportifyException(),
+                    ::sc_core::sc_report_handler::get_catch_actions());
+        }
+        scheduler.clear();
+    } else {
+        // If python tries to call sc_main but no sc_main was defined...
+        fatal("sc_main called but not defined.\n");
+    }
+}
 
-    void t0Handler();
-
-    static sc_core::sc_status status();
-    static void status(sc_core::sc_status s);
-
-    static void stop();
-
-    static bool startOfSimulationComplete();
-    static bool endOfSimulationComplete();
-
-  private:
-    static void stopWork();
-
-    EventWrapper<Kernel, &Kernel::t0Handler> t0Event;
-};
-
-extern Kernel *kernel;
+ScMainFiber scMainFiber;
 
 } // namespace sc_gem5
-
-#endif // __SYSTEMC_KERNEL_H__

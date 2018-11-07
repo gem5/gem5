@@ -27,51 +27,44 @@
  * Authors: Gabe Black
  */
 
-#ifndef __SYSTEMC_KERNEL_HH__
-#define __SYSTEMC_KERNEL_HH__
+#ifndef __SYSTEMC_CORE_SC_MAIN_FIBER_HH__
+#define __SYSTEMC_CORE_SC_MAIN_FIBER_HH__
 
-#include "params/SystemC_Kernel.hh"
-#include "sim/sim_object.hh"
-#include "systemc/ext/core/sc_main.hh"
+#include "base/fiber.hh"
+#include "base/logging.hh"
 
 namespace sc_gem5
 {
 
-/*
- * This class represents the systemc kernel. There should be exactly one in
- * the simulation. It receives gem5 SimObject lifecycle callbacks (init,
- * regStats, etc.) and manages the lifecycle of the systemc simulation
- * accordingly. It also acts as a collecting point for systemc related
- * control functionality.
- */
-class Kernel : public SimObject
+class ScMainFiber : public Fiber
 {
-  public:
-    typedef SystemC_KernelParams Params;
-    Kernel(Params *params);
-
-    void init() override;
-    void regStats() override;
-    void startup() override;
-
-    void t0Handler();
-
-    static sc_core::sc_status status();
-    static void status(sc_core::sc_status s);
-
-    static void stop();
-
-    static bool startOfSimulationComplete();
-    static bool endOfSimulationComplete();
-
   private:
-    static void stopWork();
+    int _argc = 0;
+    char **_argv = NULL;
+    std::string _resultStr;
+    int _resultInt = 1;
 
-    EventWrapper<Kernel, &Kernel::t0Handler> t0Event;
+    bool _called = false;
+
+  public:
+    int argc() { return _argc; }
+    const char *const *argv() { return _argv; }
+    std::string resultStr() { return _resultStr; }
+    int resultInt() { return _resultInt; }
+    bool called() { return _called; }
+
+    void
+    setArgs(int new_argc, char **new_argv)
+    {
+        _argc = new_argc;
+        _argv = new_argv;
+    }
+
+    void main() override;
 };
 
-extern Kernel *kernel;
+extern ScMainFiber scMainFiber;
 
 } // namespace sc_gem5
 
-#endif // __SYSTEMC_KERNEL_H__
+#endif // __SYSTEMC_CORE_SC_MAIN_FIBER_HH__
