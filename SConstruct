@@ -145,6 +145,8 @@ AddLocalOption('--default', dest='default', type='string', action='store',
                help='Override which build_opts file to use for defaults')
 AddLocalOption('--ignore-style', dest='ignore_style', action='store_true',
                help='Disable style checking hooks')
+AddLocalOption('--gold-linker', dest='gold_linker', action='store_true',
+               help='Use the gold linker')
 AddLocalOption('--no-lto', dest='no_lto', action='store_true',
                help='Disable Link-Time Optimization for fast')
 AddLocalOption('--force-lto', dest='force_lto', action='store_true',
@@ -357,6 +359,8 @@ if main['GCC'] or main['CLANG']:
 
     main['FILTER_PSHLINKFLAGS'] = lambda x: str(x).replace(' -shared', '')
     main['PSHLINKFLAGS'] = main.subst('${FILTER_PSHLINKFLAGS(SHLINKFLAGS)}')
+    if GetOption('gold_linker'):
+        main.Append(LINKFLAGS='-fuse-ld=gold')
     main['PLINKFLAGS'] = main.subst('${LINKFLAGS}')
     shared_partial_flags = ['-r', '-nostdlib']
     main.Append(PSHLINKFLAGS=shared_partial_flags)
