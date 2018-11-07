@@ -111,17 +111,8 @@ extern bool reportWarningsAsErrors;
 
 struct DefaultReportMessages
 {
-  protected:
-    static DefaultReportMessages *&top();
-    DefaultReportMessages *next;
-
-    std::initializer_list<std::pair<int, const char *>> msgs;
-    void install();
-
   public:
     DefaultReportMessages(std::initializer_list<std::pair<int, const char *>>);
-
-    static void installAll();
 };
 
 } // namespace sc_gem5
