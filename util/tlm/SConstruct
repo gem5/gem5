@@ -51,7 +51,7 @@ shlibsuffix = env['SHLIBSUFFIX']
 
 # add include dirs
 env.Append(CPPPATH=[gem5_root + '/build/' + gem5_arch,
-                    gem5_root + '/util/systemc',
+                    gem5_root + '/util/systemc/gem5_within_systemc',
                     gem5_root + '/ext/systemc/src',
                     '#src',
                     '#examples/common',

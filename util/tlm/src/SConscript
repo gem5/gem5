@@ -38,11 +38,13 @@ env = env.Clone()
 
 gem5_root = env['GEM5_ROOT']
 
+systemc_util_dir = gem5_root + '/util/systemc/gem5_within_systemc'
+
 systemc_src = []
-systemc_src += Install('.', gem5_root + '/util/systemc/sc_gem5_control.cc'),
-systemc_src += Install('.', gem5_root + '/util/systemc/sc_logger.cc'),
-systemc_src += Install('.', gem5_root + '/util/systemc/sc_module.cc'),
-systemc_src += Install('.', gem5_root + '/util/systemc/stats.cc'),
+systemc_src += Install('.', systemc_util_dir + '/sc_gem5_control.cc'),
+systemc_src += Install('.', systemc_util_dir + '/sc_logger.cc'),
+systemc_src += Install('.', systemc_util_dir + '/sc_module.cc'),
+systemc_src += Install('.', systemc_util_dir + '/stats.cc'),
 
 tlm_src = []
 tlm_src += [File('master_transactor.cc')]
