@@ -27,93 +27,21 @@
  * Authors: Gabe Black
  */
 
-#include <cstring>
-#include <string>
-
-#include "base/fiber.hh"
-#include "base/logging.hh"
 #include "base/types.hh"
 #include "sim/core.hh"
 #include "sim/eventq.hh"
-#include "sim/init.hh"
 #include "systemc/core/kernel.hh"
-#include "systemc/core/python.hh"
 #include "systemc/core/sc_main_fiber.hh"
 #include "systemc/core/scheduler.hh"
 #include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
 #include "systemc/ext/utils/sc_report_handler.hh"
-#include "systemc/utils/report.hh"
 
 namespace sc_core
 {
 
 namespace
 {
-
-// This wrapper adapts the python version of sc_main to the c++ version.
-void
-sc_main(pybind11::args args)
-{
-    panic_if(::sc_gem5::scMainFiber.called(),
-            "sc_main called more than once.");
-
-    int argc = args.size();
-    char **argv = new char *[argc];
-
-    // Initialize all the argvs to NULL so we can delete [] them
-    // unconditionally.
-    for (int idx = 0; idx < argc; idx++)
-        argv[idx] = NULL;
-
-    // Attempt to convert all the arguments to strings. If that fails, clean
-    // up after ourselves. Also don't count this as a call to sc_main since
-    // we never got to the c++ version of that function.
-    try {
-        for (int idx = 0; idx < argc; idx++) {
-            std::string arg = args[idx].cast<std::string>();
-            argv[idx] = new char[arg.length() + 1];
-            strcpy(argv[idx], arg.c_str());
-        }
-    } catch (...) {
-        // If that didn't work for some reason (probably a conversion error)
-        // blow away argv and argc and pass on the exception.
-        for (int idx = 0; idx < argc; idx++)
-            delete [] argv[idx];
-        delete [] argv;
-        argc = 0;
-        throw;
-    }
-
-    ::sc_gem5::scMainFiber.setArgs(argc, argv);
-    ::sc_gem5::scMainFiber.run();
-}
-
-int
-sc_main_result_code()
-{
-    return ::sc_gem5::scMainFiber.resultInt();
-}
-
-std::string
-sc_main_result_str()
-{
-    return ::sc_gem5::scMainFiber.resultStr();
-}
-
-// Make our sc_main wrapper available in the internal _m5 python module under
-// the systemc submodule.
-
-struct InstallScMain : public ::sc_gem5::PythonInitFunc
-{
-    void
-    run(pybind11::module &systemc) override
-    {
-        systemc.def("sc_main", &sc_main);
-        systemc.def("sc_main_result_code", &sc_main_result_code);
-        systemc.def("sc_main_result_str", &sc_main_result_str);
-    }
-} installScMain;
 
 sc_stop_mode _stop_mode = SC_STOP_FINISH_DELTA;
 
