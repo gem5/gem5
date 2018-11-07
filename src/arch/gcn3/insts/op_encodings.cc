@@ -326,7 +326,12 @@ namespace Gcn3ISA
 
         switch (opIdx) {
           case 0:
-              return isScalarReg(instData.SSRC0);
+            if (instData.OP == 0x1C) {
+                // Special case for s_getpc, which has no source reg.
+                // Instead, it implicitly reads the PC.
+                return isScalarReg(instData.SDST);
+            }
+            return isScalarReg(instData.SSRC0);
           case 1:
               return isScalarReg(instData.SDST);
           default:
@@ -353,6 +358,12 @@ namespace Gcn3ISA
 
         switch (opIdx) {
           case 0:
+            if (instData.OP == 0x1C) {
+                // Special case for s_getpc, which has no source reg.
+                // Instead, it implicitly reads the PC.
+                return opSelectorToRegIdx(instData.SDST,
+                        gpuDynInst->wavefront()->reservedScalarRegs);
+            }
             return opSelectorToRegIdx(instData.SSRC0,
                     gpuDynInst->wavefront()->reservedScalarRegs);
           case 1:

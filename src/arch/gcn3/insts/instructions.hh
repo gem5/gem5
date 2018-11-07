@@ -5846,9 +5846,7 @@ namespace Gcn3ISA
         getOperandSize(int opIdx) override
         {
             switch (opIdx) {
-              case 0: //ssrc
-                return 8;
-              case 1: //sdst
+              case 0: //sdst
                 return 8;
               default:
                 fatal("op idx %i out of bounds\n", opIdx);
@@ -5860,9 +5858,7 @@ namespace Gcn3ISA
         isSrcOperand(int opIdx) override
         {
             switch (opIdx) {
-              case 0: //ssrc
-                return true;
-              case 1: //sdst
+              case 0: //sdst
                 return false;
               default:
                 fatal("op idx %i out of bounds\n", opIdx);
@@ -5874,9 +5870,7 @@ namespace Gcn3ISA
         isDstOperand(int opIdx) override
         {
             switch (opIdx) {
-              case 0: //ssrc
-                return false;
-              case 1: //sdst
+              case 0: //sdst
                 return true;
               default:
                 fatal("op idx %i out of bounds\n", opIdx);
