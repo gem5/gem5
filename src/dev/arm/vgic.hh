@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2013,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -103,6 +103,7 @@ class VGic : public PioDevice
 
     static const uint32_t LR_PENDING    = 1;
     static const uint32_t LR_ACTIVE     = 2;
+    const uint32_t gicvIIDR;
 
     /** Post interrupt to CPU */
     void processPostVIntEvent(uint32_t cpu);

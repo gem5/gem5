@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 ARM Limited
+ * Copyright (c) 2013,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,9 +47,9 @@
 #include "mem/packet_access.hh"
 
 VGic::VGic(const Params *p)
-    : PioDevice(p), platform(p->platform), gic(p->gic), vcpuAddr(p->vcpu_addr),
-      hvAddr(p->hv_addr), pioDelay(p->pio_delay),
-      maintInt(p->ppint)
+    : PioDevice(p), gicvIIDR(p->gicv_iidr), platform(p->platform),
+      gic(p->gic), vcpuAddr(p->vcpu_addr), hvAddr(p->hv_addr),
+      pioDelay(p->pio_delay), maintInt(p->ppint)
 {
     for (int x = 0; x < VGIC_CPU_MAX; x++) {
         postVIntEvent[x] = new EventFunctionWrapper(
@@ -127,6 +127,9 @@ VGic::readVCpu(PacketPtr pkt)
                       lr->VirtualID, lr->CpuID, i, lr->EOI);
           }
       } break;
+      case GICV_IIDR:
+        pkt->setLE<uint32_t>(gicvIIDR);
+        break;
       default:
         panic("VGIC VCPU read of bad address %#x\n", daddr);
     }
