@@ -38,7 +38,6 @@ if env['USE_SYSTEMC']:
     Source('object.cc')
     Source('port.cc')
     Source('process.cc')
-    Source('python.cc')
     Source('scheduler.cc')
     Source('sched_event.cc')
     Source('sensitivity.cc')
@@ -63,4 +62,5 @@ if env['USE_SYSTEMC']:
     Source('sc_time.cc')
 
     if env['USE_PYTHON']:
+        Source('python.cc')
         Source('sc_main_python.cc')
