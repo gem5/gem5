@@ -138,13 +138,14 @@ LTAGE::LTAGE(const LTAGEParams *params)
 int
 LTAGE::bindex(Addr pc_in) const
 {
-    return ((pc_in) & ((ULL(1) << (logSizeBiMP)) - 1));
+    return ((pc_in >> instShiftAmt) & ((ULL(1) << (logSizeBiMP)) - 1));
 }
 
 int
 LTAGE::lindex(Addr pc_in) const
 {
-    return (((pc_in) & ((ULL(1) << (logSizeLoopPred - 2)) - 1)) << 2);
+    return (((pc_in >> instShiftAmt) &
+             ((ULL(1) << (logSizeLoopPred - 2)) - 1)) << 2);
 }
 
 int
@@ -171,7 +172,8 @@ LTAGE::gindex(ThreadID tid, Addr pc, int bank) const
     int index;
     int hlen = (histLengths[bank] > 16) ? 16 : histLengths[bank];
     index =
-        (pc) ^ ((pc) >> ((int) abs(tagTableSizes[bank] - bank) + 1)) ^
+        (pc >> instShiftAmt) ^
+        ((pc >> instShiftAmt) >> ((int) abs(tagTableSizes[bank] - bank) + 1)) ^
         threadHistory[tid].computeIndices[bank].comp ^
         F(threadHistory[tid].pathHist, hlen, bank);
 
@@ -183,8 +185,9 @@ LTAGE::gindex(ThreadID tid, Addr pc, int bank) const
 uint16_t
 LTAGE::gtag(ThreadID tid, Addr pc, int bank) const
 {
-    int tag = (pc) ^ threadHistory[tid].computeTags[0][bank].comp
-                   ^ (threadHistory[tid].computeTags[1][bank].comp << 1);
+    int tag = (pc >> instShiftAmt) ^
+              threadHistory[tid].computeTags[0][bank].comp ^
+              (threadHistory[tid].computeTags[1][bank].comp << 1);
 
     return (tag & ((ULL(1) << tagWidths[bank]) - 1));
 }
@@ -239,7 +242,7 @@ LTAGE::getLoop(Addr pc, BranchInfo* bi) const
     bi->loopHit = -1;
     bi->loopPredValid = false;
     bi->loopIndex = lindex(pc);
-    bi->loopTag = ((pc) >> (logSizeLoopPred - 2));
+    bi->loopTag = ((pc) >> (instShiftAmt + logSizeLoopPred - 2));
 
     for (int i = 0; i < 4; i++) {
         if (ltable[bi->loopIndex + i].tag == bi->loopTag) {
@@ -630,7 +633,7 @@ LTAGE::updateHistories(ThreadID tid, Addr branch_pc, bool taken, void* b)
     BranchInfo* bi = (BranchInfo*)(b);
     ThreadHistory& tHist = threadHistory[tid];
     //  UPDATE HISTORIES
-    bool pathbit = ((branch_pc) & 1);
+    bool pathbit = ((branch_pc >> instShiftAmt) & 1);
     //on a squash, return pointers to this and recompute indices.
     //update user history
     updateGHist(tHist.gHist, taken, tHist.globalHistory, tHist.ptGhist);
