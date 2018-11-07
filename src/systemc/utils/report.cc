@@ -49,8 +49,19 @@ ReportSevInfo reportSevInfos[sc_core::SC_MAX_SEVERITY] =
     [sc_core::SC_FATAL] = ReportSevInfo(sc_core::SC_DEFAULT_FATAL_ACTIONS)
 };
 
-std::map<std::string, ReportMsgInfo> reportMsgInfoMap;
-std::map<int, std::string> reportIdToMsgMap;
+std::map<std::string, ReportMsgInfo> &
+reportMsgInfoMap()
+{
+    static std::map<std::string, ReportMsgInfo> m;
+    return m;
+}
+
+std::map<int, std::string> &
+reportIdToMsgMap()
+{
+    static std::map<int, std::string> m;
+    return m;
+}
 
 int reportVerbosityLevel = sc_core::SC_MEDIUM;
 

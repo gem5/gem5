@@ -70,7 +70,7 @@ sc_report_handler::report(sc_severity severity, const char *msg_type,
         return;
 
     sc_gem5::ReportSevInfo &sevInfo = sc_gem5::reportSevInfos[severity];
-    sc_gem5::ReportMsgInfo &msgInfo = sc_gem5::reportMsgInfoMap[msg_type];
+    sc_gem5::ReportMsgInfo &msgInfo = sc_gem5::reportMsgInfoMap()[msg_type];
 
     sevInfo.count++;
     msgInfo.count++;
@@ -111,7 +111,7 @@ void
 sc_report_handler::report(sc_severity severity, int id, const char *msg,
                           const char *file, int line)
 {
-    std::string &msg_type = sc_gem5::reportIdToMsgMap[id];
+    std::string &msg_type = sc_gem5::reportIdToMsgMap()[id];
 
     if (sc_gem5::reportWarningsAsErrors && severity == SC_WARNING)
         severity = SC_ERROR;
@@ -134,7 +134,7 @@ sc_report_handler::set_actions(const char *msg_type, sc_actions actions)
     if (!msg_type)
         msg_type = SC_ID_UNKNOWN_ERROR_;
 
-    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
+    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap()[msg_type];
     sc_actions previous = info.actions;
     info.actions = actions;
     return previous;
@@ -147,7 +147,7 @@ sc_report_handler::set_actions(
     if (!msg_type)
         msg_type = SC_ID_UNKNOWN_ERROR_;
 
-    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
+    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap()[msg_type];
     sc_actions previous = info.sevActions[severity];
     info.sevActions[severity] = actions;
     return previous;
@@ -168,7 +168,7 @@ sc_report_handler::stop_after(const char *msg_type, int limit)
     if (!msg_type)
         msg_type = SC_ID_UNKNOWN_ERROR_;
 
-    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
+    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap()[msg_type];
     int previous = info.limit;
     info.limit = limit;
     return previous;
@@ -181,7 +181,7 @@ sc_report_handler::stop_after(
     if (!msg_type)
         msg_type = SC_ID_UNKNOWN_ERROR_;
 
-    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap[msg_type];
+    sc_gem5::ReportMsgInfo &info = sc_gem5::reportMsgInfoMap()[msg_type];
     int previous = info.sevLimits[severity];
     info.sevLimits[severity] = limit;
     return previous;
@@ -199,7 +199,7 @@ sc_report_handler::get_count(const char *msg_type)
     if (!msg_type)
         msg_type = SC_ID_UNKNOWN_ERROR_;
 
-    return sc_gem5::reportMsgInfoMap[msg_type].count;
+    return sc_gem5::reportMsgInfoMap()[msg_type].count;
 }
 
 int
@@ -208,7 +208,7 @@ sc_report_handler::get_count(const char *msg_type, sc_severity severity)
     if (!msg_type)
         msg_type = SC_ID_UNKNOWN_ERROR_;
 
-    return sc_gem5::reportMsgInfoMap[msg_type].sevCounts[severity];
+    return sc_gem5::reportMsgInfoMap()[msg_type].sevCounts[severity];
 }
 
 int

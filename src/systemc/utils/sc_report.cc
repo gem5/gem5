@@ -89,8 +89,8 @@ sc_report::what() const throw()
 const char *
 sc_report::get_message(int id)
 {
-    auto it = sc_gem5::reportIdToMsgMap.find(id);
-    if (it == sc_gem5::reportIdToMsgMap.end())
+    auto it = sc_gem5::reportIdToMsgMap().find(id);
+    if (it == sc_gem5::reportIdToMsgMap().end())
         return "unknown id";
     else
         return it->second.c_str();
@@ -99,11 +99,11 @@ sc_report::get_message(int id)
 bool
 sc_report::is_suppressed(int id)
 {
-    auto it = sc_gem5::reportIdToMsgMap.find(id);
-    if (it == sc_gem5::reportIdToMsgMap.end())
+    auto it = sc_gem5::reportIdToMsgMap().find(id);
+    if (it == sc_gem5::reportIdToMsgMap().end())
         return false;
 
-    auto &msgInfo = sc_gem5::reportMsgInfoMap[it->second];
+    auto &msgInfo = sc_gem5::reportMsgInfoMap()[it->second];
 
     return (msgInfo.actions == SC_DO_NOTHING ||
             (msgInfo.sevActions[SC_INFO] == SC_DO_NOTHING &&
@@ -127,31 +127,31 @@ sc_report::register_id(int id, const char *msg)
         SC_REPORT_ERROR(SC_ID_REGISTER_ID_FAILED_, "invalid report message");
         return;
     }
-    auto p = sc_gem5::reportIdToMsgMap.insert(
+    auto p = sc_gem5::reportIdToMsgMap().insert(
             std::pair<int, std::string>(id, msg));
     if (!p.second) {
         SC_REPORT_ERROR(SC_ID_REGISTER_ID_FAILED_, "report id already exists");
     } else {
-        sc_gem5::reportMsgInfoMap[msg].id = id;
+        sc_gem5::reportMsgInfoMap()[msg].id = id;
     }
 }
 
 void
 sc_report::suppress_id(int id, bool suppress)
 {
-    auto it = sc_gem5::reportIdToMsgMap.find(id);
-    if (it == sc_gem5::reportIdToMsgMap.end())
+    auto it = sc_gem5::reportIdToMsgMap().find(id);
+    if (it == sc_gem5::reportIdToMsgMap().end())
         return;
 
     if (suppress) {
-        sc_gem5::reportMsgInfoMap[it->second].
+        sc_gem5::reportMsgInfoMap()[it->second].
             sevActions[SC_INFO] = SC_DO_NOTHING;
-        sc_gem5::reportMsgInfoMap[it->second].
+        sc_gem5::reportMsgInfoMap()[it->second].
             sevActions[SC_WARNING] = SC_DO_NOTHING;
     } else {
-        sc_gem5::reportMsgInfoMap[it->second].
+        sc_gem5::reportMsgInfoMap()[it->second].
             sevActions[SC_INFO] = SC_UNSPECIFIED;
-        sc_gem5::reportMsgInfoMap[it->second].
+        sc_gem5::reportMsgInfoMap()[it->second].
             sevActions[SC_WARNING] = SC_UNSPECIFIED;
     }
 }
