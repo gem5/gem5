@@ -29,6 +29,7 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
+from m5.proxy import *
 
 class BranchPredictor(SimObject):
     type = 'BranchPredictor'
@@ -36,7 +37,7 @@ class BranchPredictor(SimObject):
     cxx_header = "cpu/pred/bpred_unit.hh"
     abstract = True
 
-    numThreads = Param.Unsigned(1, "Number of threads")
+    numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
     BTBEntries = Param.Unsigned(4096, "Number of BTB entries")
     BTBTagSize = Param.Unsigned(16, "Size of the BTB tags, in bits")
     RASSize = Param.Unsigned(16, "RAS size")

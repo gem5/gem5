@@ -63,6 +63,7 @@ from common import Simulation
 from common import CacheConfig
 from common import MemConfig
 from common import CpuConfig
+from common import BPConfig
 from common.Caches import *
 from common import Options
 
@@ -199,6 +200,9 @@ def build_test_system(np):
                 test_sys.cpu[i].addSimPointProbe(options.simpoint_interval)
             if options.checker:
                 test_sys.cpu[i].addCheckerCpu()
+            if options.bp_type:
+                bpClass = BPConfig.get(options.bp_type)
+                test_sys.cpu[i].branchPred = bpClass()
             test_sys.cpu[i].createThreads()
 
         # If elastic tracing is enabled when not restoring from checkpoint and

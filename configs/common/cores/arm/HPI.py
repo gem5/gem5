@@ -1443,7 +1443,7 @@ class HPI(MinorCPU):
 
     enableIdling = True
 
-    branchPred = HPI_BP(numThreads = Parent.numThreads)
+    branchPred = HPI_BP()
 
     itb = HPI_ITB()
     dtb = HPI_DTB()
