@@ -37,6 +37,8 @@
 #include <string>
 
 #include "base/callback.hh"
+#include "base/cprintf.hh"
+#include "base/logging.hh"
 #include "base/output.hh"
 #include "sim/eventq.hh"
 
@@ -69,11 +71,23 @@ Tick ps;
 
 } // namespace SimClock
 
+namespace {
+
+bool _clockFrequencyFixed = false;
+
+// Default to 1 THz (1 Tick == 1 ps)
+Tick _ticksPerSecond = 1e12;
+
+} // anonymous namespace
+
 void
-setClockFrequency(Tick ticksPerSecond)
+fixClockFrequency()
 {
+    if (_clockFrequencyFixed)
+        return;
+
     using namespace SimClock;
-    Frequency = ticksPerSecond;
+    Frequency = _ticksPerSecond;
     Float::s = static_cast<double>(Frequency);
     Float::ms = Float::s / 1.0e3;
     Float::us = Float::s / 1.0e6;
@@ -91,7 +105,20 @@ setClockFrequency(Tick ticksPerSecond)
     Int::ns = Int::us / 1000;
     Int::ps = Int::ns / 1000;
 
+    cprintf("Global frequency set at %d ticks per second\n", _ticksPerSecond);
+
+    _clockFrequencyFixed = true;
 }
+bool clockFrequencyFixed() { return _clockFrequencyFixed; }
+
+void
+setClockFrequency(Tick tps)
+{
+    panic_if(_clockFrequencyFixed,
+            "Global frequency already fixed at %f ticks/s.", _ticksPerSecond);
+    _ticksPerSecond = tps;
+}
+Tick getClockFrequency() { return _ticksPerSecond; }
 
 void
 setOutputDir(const string &dir)

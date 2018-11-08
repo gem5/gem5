@@ -245,7 +245,11 @@ pybind_init_core(py::module &m_native)
         .def("seedRandom", [](uint64_t seed) { random_mt.init(seed); })
 
 
+        .def("fixClockFrequency", &fixClockFrequency)
+        .def("clockFrequencyFixed", &clockFrequencyFixed)
+
         .def("setClockFrequency", &setClockFrequency)
+        .def("getClockFrequency", &getClockFrequency)
         .def("curTick", curTick)
         ;
 

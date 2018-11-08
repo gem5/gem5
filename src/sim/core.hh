@@ -91,7 +91,12 @@ extern Tick ps; ///< picosecond
 } // namespace Int
 } // namespace SimClock
 /** @} */
+
+void fixClockFrequency();
+bool clockFrequencyFixed();
+
 void setClockFrequency(Tick ticksPerSecond);
+Tick getClockFrequency(); // Ticks per second.
 
 void setOutputDir(const std::string &dir);
 
