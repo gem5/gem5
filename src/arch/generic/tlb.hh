@@ -44,17 +44,17 @@
 #define __ARCH_GENERIC_TLB_HH__
 
 #include "base/logging.hh"
+#include "mem/mem_object.hh"
 #include "mem/request.hh"
-#include "sim/sim_object.hh"
 
 class ThreadContext;
 class BaseMasterPort;
 
-class BaseTLB : public SimObject
+class BaseTLB : public MemObject
 {
   protected:
     BaseTLB(const Params *p)
-        : SimObject(p)
+        : MemObject(p)
     {}
 
   public:
