@@ -27,13 +27,13 @@
  * Authors: Gabe Black
  */
 
+#include <cmath>
+#include <cstring>
 #include <sstream>
 #include <vector>
 
 #include "base/types.hh"
-#include "python/pybind11/pybind.hh"
 #include "sim/core.hh"
-#include "systemc/core/python.hh"
 #include "systemc/core/time.hh"
 #include "systemc/ext/core/messages.hh"
 #include "systemc/ext/core/sc_main.hh"
@@ -46,95 +46,18 @@ namespace sc_core
 namespace
 {
 
-bool timeFixed = false;
-bool pythonReady = false;
-
-struct SetInfo
-{
-    SetInfo(::sc_core::sc_time *time, double d, ::sc_core::sc_time_unit tu) :
-        time(time), d(d), tu(tu)
-    {}
-
-    ::sc_core::sc_time *time;
-    double d;
-    ::sc_core::sc_time_unit tu;
-};
-std::vector<SetInfo> toSet;
-
 void
-setWork(sc_time *time, double d, ::sc_core::sc_time_unit tu)
+set(::sc_core::sc_time *time, double d, ::sc_core::sc_time_unit tu)
 {
+    if (d != 0)
+        fixClockFrequency();
+
     double scale = sc_gem5::TimeUnitScale[tu] * SimClock::Float::s;
     // Accellera claims there is a linux bug, and that these next two
     // lines work around them.
     volatile double tmp = d * scale + 0.5;
     *time = sc_time::from_value(static_cast<uint64_t>(tmp));
 }
-
-void
-fixTime()
-{
-    auto ticks = pybind11::module::import("m5.ticks");
-    auto fix_global_frequency = ticks.attr("fixGlobalFrequency");
-    fix_global_frequency();
-
-    for (auto &t: toSet)
-        setWork(t.time, t.d, t.tu);
-    toSet.clear();
-}
-
-void
-attemptToFixTime()
-{
-    // Only fix time once.
-    if (!timeFixed) {
-        timeFixed = true;
-
-        // If we've run, python is working and we haven't fixed time yet.
-        if (pythonReady)
-            fixTime();
-    }
-}
-
-void
-setGlobalFrequency(Tick ticks_per_second)
-{
-    auto ticks = pybind11::module::import("m5.ticks");
-    auto set_global_frequency = ticks.attr("setGlobalFrequency");
-    set_global_frequency(ticks_per_second);
-    fixTime();
-}
-
-void
-set(::sc_core::sc_time *time, double d, ::sc_core::sc_time_unit tu)
-{
-    if (d != 0)
-        attemptToFixTime();
-    if (pythonReady) {
-        // Time should be working. Set up this sc_time.
-        setWork(time, d, tu);
-    } else {
-        // Time isn't set up yet. Defer setting up this sc_time.
-        toSet.emplace_back(time, d, tu);
-    }
-}
-
-class TimeSetter : public ::sc_gem5::PythonReadyFunc
-{
-  public:
-    TimeSetter() : ::sc_gem5::PythonReadyFunc() {}
-
-    void
-    run() override
-    {
-        // Record that we've run and python/pybind should be usable.
-        pythonReady = true;
-
-        // If time is already fixed, let python know.
-        if (timeFixed)
-            fixTime();
-    }
-} timeSetter;
 
 double defaultUnit = 1.0e-9;
 
@@ -289,7 +212,7 @@ sc_time
 sc_time::from_value(sc_dt::uint64 u)
 {
     if (u)
-        attemptToFixTime();
+        fixClockFrequency();
     sc_time t;
     t.val = u;
     return t;
@@ -388,7 +311,7 @@ sc_set_time_resolution(double d, sc_time_unit tu)
 
     // This won't detect the timescale being fixed outside of systemc, but
     // it's at least some protection.
-    if (timeFixed) {
+    if (clockFrequencyFixed()) {
         SC_REPORT_ERROR(SC_ID_SET_TIME_RESOLUTION_,
                 "sc_time object(s) constructed");
     }
@@ -410,7 +333,7 @@ sc_set_time_resolution(double d, sc_time_unit tu)
 
     Tick ticks_per_second =
         sc_gem5::TimeUnitFrequency[tu] / static_cast<Tick>(d);
-    setGlobalFrequency(ticks_per_second);
+    setClockFrequency(ticks_per_second);
     specified = true;
 }
 
@@ -447,7 +370,7 @@ sc_set_default_time_unit(double d, sc_time_unit tu)
     }
     // This won't detect the timescale being fixed outside of systemc, but
     // it's at least some protection.
-    if (timeFixed) {
+    if (clockFrequencyFixed()) {
         SC_REPORT_ERROR(SC_ID_SET_DEFAULT_TIME_UNIT_,
                 "sc_time object(s) constructed");
     }
