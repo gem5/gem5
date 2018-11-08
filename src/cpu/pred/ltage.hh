@@ -89,15 +89,6 @@ class LTAGE: public BPredUnit
                       confidence(0), tag(0), age(0), dir(0) { }
     };
 
-    // Bimodal Predictor Entry
-    struct BimodalEntry
-    {
-        uint8_t pred;
-        uint8_t hyst;
-
-        BimodalEntry() : pred(0), hyst(1) { }
-    };
-
     // Tage Entry
     struct TageEntry
     {
@@ -355,6 +346,7 @@ class LTAGE: public BPredUnit
     void specLoopUpdate(Addr pc, bool taken, BranchInfo* bi);
 
     const unsigned logSizeBiMP;
+    const unsigned logRatioBiModalHystEntries;
     const unsigned logSizeTagTables;
     const unsigned logSizeLoopPred;
     const unsigned nHistoryTables;
@@ -364,7 +356,8 @@ class LTAGE: public BPredUnit
     const unsigned maxHist;
     const unsigned minTagWidth;
 
-    BimodalEntry *btable;
+    std::vector<bool> btablePrediction;
+    std::vector<bool> btableHysteresis;
     TageEntry **gtable;
     LoopEntry *ltable;
 

@@ -50,6 +50,7 @@
 LTAGE::LTAGE(const LTAGEParams *params)
   : BPredUnit(params),
     logSizeBiMP(params->logSizeBiMP),
+    logRatioBiModalHystEntries(params->logRatioBiModalHystEntries),
     logSizeTagTables(params->logSizeTagTables),
     logSizeLoopPred(params->logSizeLoopPred),
     nHistoryTables(params->nHistoryTables),
@@ -122,7 +123,11 @@ LTAGE::LTAGE(const LTAGEParams *params)
         }
     }
 
-    btable = new BimodalEntry[ULL(1) << logSizeBiMP];
+    const uint64_t bimodalTableSize = ULL(1) << logSizeBiMP;
+    btablePrediction.resize(bimodalTableSize, false);
+    btableHysteresis.resize(bimodalTableSize >> logRatioBiModalHystEntries,
+                            true);
+
     ltable = new LoopEntry[ULL(1) << logSizeLoopPred];
     gtable = new TageEntry*[nHistoryTables + 1];
     for (int i = 1; i <= nHistoryTables; i++) {
@@ -211,27 +216,28 @@ LTAGE::ctrUpdate(int8_t & ctr, bool taken, int nbits)
 bool
 LTAGE::getBimodePred(Addr pc, BranchInfo* bi) const
 {
-    return (btable[bi->bimodalIndex].pred > 0);
+    return btablePrediction[bi->bimodalIndex];
 }
 
 
-// Update the bimodal predictor: a hysteresis bit is shared among 4 prediction
-// bits
+// Update the bimodal predictor: a hysteresis bit is shared among N prediction
+// bits (N = 2 ^ logRatioBiModalHystEntries)
 void
 LTAGE::baseUpdate(Addr pc, bool taken, BranchInfo* bi)
 {
-    int inter = (btable[bi->bimodalIndex].pred << 1)
-              + btable[bi->bimodalIndex ].hyst;
+    int inter = (btablePrediction[bi->bimodalIndex] << 1)
+        + btableHysteresis[bi->bimodalIndex >> logRatioBiModalHystEntries];
     if (taken) {
         if (inter < 3)
             inter++;
     } else if (inter > 0) {
         inter--;
     }
-    btable[bi->bimodalIndex].pred = inter >> 1;
-    btable[bi->bimodalIndex].hyst = (inter & 1);
-    DPRINTF(LTage, "Updating branch %lx, pred:%d, hyst:%d\n",
-            pc, btable[bi->bimodalIndex].pred,btable[bi->bimodalIndex].hyst);
+    const bool pred = inter >> 1;
+    const bool hyst = inter & 1;
+    btablePrediction[bi->bimodalIndex] = pred;
+    btableHysteresis[bi->bimodalIndex >> logRatioBiModalHystEntries] = hyst;
+    DPRINTF(LTage, "Updating branch %lx, pred:%d, hyst:%d\n", pc, pred, hyst);
 }
 
 

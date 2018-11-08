@@ -92,6 +92,9 @@ class LTAGE(BranchPredictor):
     cxx_header = "cpu/pred/ltage.hh"
 
     logSizeBiMP = Param.Unsigned(14, "Log size of Bimodal predictor in bits")
+    logRatioBiModalHystEntries = Param.Unsigned(2,
+        "Log num of prediction entries for a shared hysteresis bit " \
+        "for the Bimodal")
     logSizeTagTables = Param.Unsigned(11, "Log size of tag table in LTAGE")
     logSizeLoopPred = Param.Unsigned(8, "Log size of the loop predictor")
     nHistoryTables = Param.Unsigned(12, "Number of history tables")
