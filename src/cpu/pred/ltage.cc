@@ -579,6 +579,7 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
                     gtable[i][bi->tableIndices[i]].tag = bi->tableTags[i];
                     gtable[i][bi->tableIndices[i]].ctr = (taken) ? 0 : -1;
                     gtable[i][bi->tableIndices[i]].u = 0; //?
+                    break;
                 }
             }
         }
