@@ -27,12 +27,14 @@
  * Authors: Gabe Black
  */
 
+// This should be on top since it is including python headers
+#include "systemc/core/python.hh"
+
 #include <cstring>
 #include <string>
 
 #include "base/fiber.hh"
 #include "base/logging.hh"
-#include "systemc/core/python.hh"
 #include "systemc/core/sc_main_fiber.hh"
 
 namespace
