@@ -76,7 +76,7 @@ class sc_event_and_list
     sc_event_and_list &operator &= (const sc_event_and_list &);
 
     sc_event_and_expr operator & (const sc_event &) const;
-    sc_event_and_expr operator & (const sc_event_and_list &);
+    sc_event_and_expr operator & (const sc_event_and_list &) const;
 
   private:
     friend class sc_event_and_expr;

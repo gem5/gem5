@@ -99,7 +99,7 @@ sc_event_and_list::operator & (const sc_event &e) const
 }
 
 sc_event_and_expr
-sc_event_and_list::operator & (const sc_event_and_list &eal)
+sc_event_and_list::operator & (const sc_event_and_list &eal) const
 {
     sc_event_and_expr expr;
     expr.insert(*this);
