@@ -40,13 +40,29 @@
 #          Mitch Hayenga
 
 from ClockedObject import ClockedObject
+from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
+
+class HWPProbeEvent(object):
+    def __init__(self, prefetcher, obj, *listOfNames):
+        self.obj = obj
+        self.prefetcher = prefetcher
+        self.names = listOfNames
+
+    def register(self):
+        if self.obj:
+            for name in self.names:
+                self.prefetcher.getCCObject().addEventProbe(
+                    self.obj.getCCObject(), name)
 
 class BasePrefetcher(ClockedObject):
     type = 'BasePrefetcher'
     abstract = True
     cxx_header = "mem/cache/prefetch/base.hh"
+    cxx_exports = [
+        PyBindMethod("addEventProbe"),
+    ]
     sys = Param.System(Parent.any, "System this prefetcher belongs to")
 
     on_miss = Param.Bool(False, "Only notify prefetcher on misses")
@@ -54,6 +70,26 @@ class BasePrefetcher(ClockedObject):
     on_write = Param.Bool(True, "Notify prefetcher on writes")
     on_data  = Param.Bool(True, "Notify prefetcher on data accesses")
     on_inst  = Param.Bool(True, "Notify prefetcher on instruction accesses")
+    prefetch_on_access = Param.Bool(Parent.prefetch_on_access,
+        "Notify the hardware prefetcher on every access (not just misses)")
+
+    _events = []
+    def addEvent(self, newObject):
+        self._events.append(newObject)
+
+    # Override the normal SimObject::regProbeListeners method and
+    # register deferred event handlers.
+    def regProbeListeners(self):
+        for event in self._events:
+           event.register()
+        self.getCCObject().regProbeListeners()
+
+    def listenFromProbe(self, simObj, *probeNames):
+        if not isinstance(simObj, SimObject):
+            raise TypeError("argument must be of SimObject type")
+        if len(probeNames) <= 0:
+            raise TypeError("probeNames must have at least one element")
+        self.addEvent(HWPProbeEvent(self, simObj, *probeNames))
 
 class QueuedPrefetcher(BasePrefetcher):
     type = "QueuedPrefetcher"

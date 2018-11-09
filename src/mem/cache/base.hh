@@ -75,6 +75,7 @@
 #include "mem/request.hh"
 #include "params/WriteAllocator.hh"
 #include "sim/eventq.hh"
+#include "sim/probe/probe.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
@@ -324,10 +325,11 @@ class BaseCache : public MemObject
     /** Prefetcher */
     BasePrefetcher *prefetcher;
 
-    /**
-     * Notify the prefetcher on every access, not just misses.
-     */
-    const bool prefetchOnAccess;
+    /** To probe when a cache hit occurs */
+    ProbePointArg<PacketPtr> *ppHit;
+
+    /** To probe when a cache miss occurs */
+    ProbePointArg<PacketPtr> *ppMiss;
 
     /**
      * The writeAllocator drive optimizations for streaming writes.
@@ -989,6 +991,9 @@ class BaseCache : public MemObject
      */
     void regStats() override;
 
+    /** Registers probes. */
+    void regProbePoints() override;
+
   public:
     BaseCache(const BaseCacheParams *p, unsigned blk_size);
     ~BaseCache();
@@ -1136,6 +1141,14 @@ class BaseCache : public MemObject
     }
 
     /**
+     * Checks if the cache is coalescing writes
+     *
+     * @return True if the cache is coalescing writes
+     */
+    bool coalesce() const;
+
+
+    /**
      * Cache block visitor that writes back dirty cache blocks using
      * functional writes.
      */
@@ -1175,7 +1188,6 @@ class BaseCache : public MemObject
      */
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
-
 };
 
 /**

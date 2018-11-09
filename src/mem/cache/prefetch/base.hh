@@ -56,6 +56,7 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/clocked_object.hh"
+#include "sim/probe/probe.hh"
 
 class BaseCache;
 struct BasePrefetcherParams;
@@ -63,6 +64,19 @@ class System;
 
 class BasePrefetcher : public ClockedObject
 {
+    class PrefetchListener : public ProbeListenerArgBase<PacketPtr>
+    {
+      public:
+        PrefetchListener(BasePrefetcher &_parent, ProbeManager *pm,
+                         const std::string &name)
+            : ProbeListenerArgBase(pm, name),
+              parent(_parent) {}
+        void notify(const PacketPtr &pkt) override;
+      protected:
+        BasePrefetcher &parent;
+    };
+
+    std::vector<PrefetchListener *> listeners;
   protected:
 
     // PARAMETERS
@@ -98,6 +112,9 @@ class BasePrefetcher : public ClockedObject
     MasterID masterId;
 
     const Addr pageBytes;
+
+    /** Prefetch on every access, not just misses */
+    const bool prefetchOnAccess;
 
     /** Determine if this access should be observed */
     bool observeAccess(const PacketPtr &pkt) const;
@@ -135,14 +152,31 @@ class BasePrefetcher : public ClockedObject
     /**
      * Notify prefetcher of cache access (may be any access or just
      * misses, depending on cache parameters.)
-     * @retval Time of next prefetch availability, or MaxTick if none.
      */
-    virtual Tick notify(const PacketPtr &pkt) = 0;
+    virtual void notify(const PacketPtr &pkt) = 0;
 
     virtual PacketPtr getPacket() = 0;
 
     virtual Tick nextPrefetchReadyTime() const = 0;
 
     virtual void regStats();
+
+    /**
+     * Register probe points for this object.
+     */
+    void regProbeListeners() override;
+
+    /**
+     * Process a notification event from the ProbeListener.
+     * @param pkt The memory request causing the event
+     */
+    void probeNotify(const PacketPtr &pkt);
+
+    /**
+     * Add a SimObject and a probe name to listen events from
+     * @param obj The SimObject pointer to listen from
+     * @param name The probe name
+     */
+    void addEventProbe(SimObject *obj, const char *name);
 };
 #endif //__MEM_CACHE_PREFETCH_BASE_HH__

@@ -83,7 +83,6 @@ BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
       writeBuffer("write buffer", p->write_buffers, p->mshrs), // see below
       tags(p->tags),
       prefetcher(p->prefetcher),
-      prefetchOnAccess(p->prefetch_on_access),
       writeAllocator(p->write_allocator),
       writebackClean(p->writeback_clean),
       tempBlockWriteback(nullptr),
@@ -368,50 +367,29 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     Tick request_time = clockEdge(lat) + pkt->headerDelay;
     // Here we reset the timing of the packet.
     pkt->headerDelay = pkt->payloadDelay = 0;
-    // track time of availability of next prefetch, if any
-    Tick next_pf_time = MaxTick;
 
     if (satisfied) {
-        // if need to notify the prefetcher we have to do it before
-        // anything else as later handleTimingReqHit might turn the
-        // packet in a response
-        if (prefetcher &&
-            (prefetchOnAccess || (blk && blk->wasPrefetched()))) {
-            if (blk)
-                blk->status &= ~BlkHWPrefetched;
+        // notify before anything else as later handleTimingReqHit might turn
+        // the packet in a response
+        ppHit->notify(pkt);
 
-            // Don't notify on SWPrefetch
-            if (!pkt->cmd.isSWPrefetch()) {
-                assert(!pkt->req->isCacheMaintenance());
-                next_pf_time = prefetcher->notify(pkt);
-            }
+        if (prefetcher && blk && blk->wasPrefetched()) {
+            blk->status &= ~BlkHWPrefetched;
         }
 
         handleTimingReqHit(pkt, blk, request_time);
     } else {
         handleTimingReqMiss(pkt, blk, forward_time, request_time);
 
-        // We should call the prefetcher reguardless if the request is
-        // satisfied or not, reguardless if the request is in the MSHR
-        // or not. The request could be a ReadReq hit, but still not
-        // satisfied (potentially because of a prior write to the same
-        // cache line. So, even when not satisfied, there is an MSHR
-        // already allocated for this, we need to let the prefetcher
-        // know about the request
-
-        // Don't notify prefetcher on SWPrefetch, cache maintenance
-        // operations or for writes that we are coaslescing.
-        if (prefetcher && pkt &&
-            !pkt->cmd.isSWPrefetch() &&
-            !pkt->req->isCacheMaintenance() &&
-            !(writeAllocator && writeAllocator->coalesce() &&
-              pkt->isWrite())) {
-            next_pf_time = prefetcher->notify(pkt);
-        }
+        ppMiss->notify(pkt);
     }
 
-    if (next_pf_time != MaxTick) {
-        schedMemSideSendEvent(next_pf_time);
+    if (prefetcher) {
+        // track time of availability of next prefetch, if any
+        Tick next_pf_time = prefetcher->nextPrefetchReadyTime();
+        if (next_pf_time != MaxTick) {
+            schedMemSideSendEvent(next_pf_time);
+        }
     }
 }
 
@@ -1407,6 +1385,12 @@ BaseCache::isDirty() const
     return tags->anyBlk([](CacheBlk &blk) { return blk.isDirty(); });
 }
 
+bool
+BaseCache::coalesce() const
+{
+    return writeAllocator && writeAllocator->coalesce();
+}
+
 void
 BaseCache::writebackVisitor(CacheBlk &blk)
 {
@@ -2208,6 +2192,13 @@ BaseCache::regStats()
         .name(name() + ".replacements")
         .desc("number of replacements")
         ;
+}
+
+void
+BaseCache::regProbePoints()
+{
+    ppHit = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Hit");
+    ppMiss = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Miss");
 }
 
 ///////////////

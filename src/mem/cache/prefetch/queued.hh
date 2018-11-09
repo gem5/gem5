@@ -115,7 +115,7 @@ class QueuedPrefetcher : public BasePrefetcher
     QueuedPrefetcher(const QueuedPrefetcherParams *p);
     virtual ~QueuedPrefetcher();
 
-    Tick notify(const PacketPtr &pkt);
+    void notify(const PacketPtr &pkt) override;
     PacketPtr insert(AddrPriority& info, bool is_secure);
 
     // Note: This should really be pure virtual, but doesnt go well with params

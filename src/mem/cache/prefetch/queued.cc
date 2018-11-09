@@ -63,7 +63,7 @@ QueuedPrefetcher::~QueuedPrefetcher()
     }
 }
 
-Tick
+void
 QueuedPrefetcher::notify(const PacketPtr &pkt)
 {
     // Verify this access type is observed by prefetcher
@@ -110,8 +110,6 @@ QueuedPrefetcher::notify(const PacketPtr &pkt)
             }
         }
     }
-
-    return pfq.empty() ? MaxTick : pfq.front().tick;
 }
 
 PacketPtr
