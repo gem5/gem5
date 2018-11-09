@@ -196,8 +196,7 @@ class sc_fifo : public sc_fifo_in_if<T>,
 
   private:
     // Disabled
-    sc_fifo(const sc_fifo<T> &) :
-            sc_fifo_in_if<T>(), sc_fifo_in_if<T>(), sc_prim_channel()
+    sc_fifo(const sc_fifo<T> &) : sc_fifo_in_if<T>(), sc_prim_channel()
     {}
     sc_fifo &operator = (const sc_fifo<T> &) { return *this; }
 
