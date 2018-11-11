@@ -89,44 +89,72 @@ class StridePrefetcher : public QueuedPrefetcher
     class PCTable
     {
       public:
-        PCTable(int assoc, int sets, const std::string name) :
-            pcTableAssoc(assoc), pcTableSets(sets), _name(name) {}
+        /**
+         * Default constructor. Create a table with given parameters.
+         *
+         * @param assoc Associativity of the table.
+         * @param sets Number of sets in the table.
+         * @param name Name of the prefetcher.
+         */
+        PCTable(int assoc, int sets, const std::string name);
 
-        std::vector<std::vector<StrideEntry>>& operator[] (int context) {
-            auto it = entries.find(context);
-            if (it != entries.end())
-                return it->second;
-
-            return allocateNewContext(context);
-        }
-
+        /**
+         * Default destructor.
+         */
         ~PCTable();
+
+        /**
+         * Search for an entry in the pc table.
+         *
+         * @param pc The PC to look for.
+         * @param is_secure True if the target memory space is secure.
+         * @return Pointer to the entry.
+         */
+        StrideEntry* findEntry(Addr pc, bool is_secure);
+
+        /**
+         * Find a replacement victim to make room for given PC.
+         *
+         * @param pc The PC value.
+         * @return The victimized entry.
+         */
+        StrideEntry* findVictim(Addr pc);
+
       private:
         const std::string name() {return _name; }
         const int pcTableAssoc;
         const int pcTableSets;
         const std::string _name;
-        std::unordered_map<int, std::vector<std::vector<StrideEntry>>> entries;
+        std::vector<std::vector<StrideEntry>> entries;
 
-        std::vector<std::vector<StrideEntry>>& allocateNewContext(int context);
+        /**
+         * PC hashing function to index sets in the table.
+         *
+         * @param pc The PC value.
+         * @return The set to which this PC maps.
+         */
+        Addr pcHash(Addr pc) const;
     };
-    PCTable pcTable;
+    std::unordered_map<int, PCTable> pcTables;
 
     /**
-     * Search for an entry in the pc table.
+     * Try to find a table of entries for the given context. If none is
+     * found, a new table is created.
      *
-     * @param pc The PC to look for.
-     * @param is_secure True if the target memory space is secure.
-     * @param master_id The context.
-     * @return Pointer to the entry.
+     * @param context The context to be searched for.
+     * @return The table corresponding to the given context.
      */
-    StrideEntry* findEntry(Addr pc, bool is_secure, int master_id);
+    PCTable* findTable(int context);
 
-    StrideEntry* pcTableVictim(Addr pc, int master_id);
+    /**
+     * Create a PC table for the given context.
+     *
+     * @param context The context of the new PC table.
+     * @return The new PC table
+     */
+    PCTable* allocateNewContext(int context);
 
-    Addr pcHash(Addr pc) const;
   public:
-
     StridePrefetcher(const StridePrefetcherParams *p);
 
     void calculatePrefetch(const PacketPtr &pkt,

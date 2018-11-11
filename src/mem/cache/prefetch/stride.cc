@@ -66,28 +66,42 @@ StridePrefetcher::StridePrefetcher(const StridePrefetcherParams *p)
       pcTableAssoc(p->table_assoc),
       pcTableSets(p->table_sets),
       useMasterId(p->use_master_id),
-      degree(p->degree),
-      pcTable(pcTableAssoc, pcTableSets, name())
+      degree(p->degree)
 {
     assert(isPowerOf2(pcTableSets));
 }
 
-std::vector<std::vector<StridePrefetcher::StrideEntry>>&
-StridePrefetcher::PCTable::allocateNewContext(int context)
+StridePrefetcher::PCTable*
+StridePrefetcher::findTable(int context)
 {
-    auto res = entries.insert(std::make_pair(context,
-        std::vector<std::vector<StrideEntry>>(pcTableSets)));
-    auto it = res.first;
-    chatty_assert(res.second, "Allocating an already created context\n");
-    assert(it->first == context);
+    // Check if table for given context exists
+    auto it = pcTables.find(context);
+    if (it != pcTables.end())
+        return &it->second;
+
+    // If table does not exist yet, create one
+    return allocateNewContext(context);
+}
+
+StridePrefetcher::PCTable*
+StridePrefetcher::allocateNewContext(int context)
+{
+    // Create new table
+    auto insertion_result = pcTables.insert(std::make_pair(context,
+        PCTable(pcTableAssoc, pcTableSets, name())));
 
     DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 
-    std::vector<std::vector<StrideEntry>>& table = it->second;
-    for (auto& set : table) {
+    // Get iterator to new pc table, and then return a pointer to the new table
+    return &(insertion_result.first->second);
+}
+
+StridePrefetcher::PCTable::PCTable(int assoc, int sets, const std::string name)
+    : pcTableAssoc(assoc), pcTableSets(sets), _name(name), entries(pcTableSets)
+{
+    for (auto& set : entries) {
         set.resize(pcTableAssoc);
     }
-    return table;
 }
 
 StridePrefetcher::PCTable::~PCTable()
@@ -109,8 +123,11 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
     bool is_secure = pkt->isSecure();
     MasterID master_id = useMasterId ? pkt->req->masterId() : 0;
 
+    // Get corresponding pc table
+    PCTable* pcTable = findTable(master_id);
+
     // Search for entry in the pc table
-    StrideEntry *entry = findEntry(pc, is_secure, master_id);
+    StrideEntry *entry = pcTable->findEntry(pc, is_secure);
 
     if (entry != nullptr) {
         // Hit in table
@@ -164,7 +181,7 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
         DPRINTF(HWPrefetch, "Miss: PC %x pkt_addr %x (%s)\n", pc, pkt_addr,
                 is_secure ? "s" : "ns");
 
-        StrideEntry* entry = pcTableVictim(pc, master_id);
+        StrideEntry* entry = pcTable->findVictim(pc);
         entry->instAddr = pc;
         entry->lastAddr = pkt_addr;
         entry->isSecure= is_secure;
@@ -174,7 +191,7 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
 }
 
 inline Addr
-StridePrefetcher::pcHash(Addr pc) const
+StridePrefetcher::PCTable::pcHash(Addr pc) const
 {
     Addr hash1 = pc >> 1;
     Addr hash2 = hash1 >> floorLog2(pcTableSets);
@@ -182,21 +199,21 @@ StridePrefetcher::pcHash(Addr pc) const
 }
 
 inline StridePrefetcher::StrideEntry*
-StridePrefetcher::pcTableVictim(Addr pc, int master_id)
+StridePrefetcher::PCTable::findVictim(Addr pc)
 {
     // Rand replacement for now
     int set = pcHash(pc);
     int way = random_mt.random<int>(0, pcTableAssoc - 1);
 
     DPRINTF(HWPrefetch, "Victimizing lookup table[%d][%d].\n", set, way);
-    return &pcTable[master_id][set][way];
+    return &entries[set][way];
 }
 
 inline StridePrefetcher::StrideEntry*
-StridePrefetcher::findEntry(Addr pc, bool is_secure, int master_id)
+StridePrefetcher::PCTable::findEntry(Addr pc, bool is_secure)
 {
     int set = pcHash(pc);
-    std::vector<StrideEntry>& set_entries = pcTable[master_id][set];
+    std::vector<StrideEntry>& set_entries = entries[set];
     for (int way = 0; way < pcTableAssoc; way++) {
         StrideEntry* entry = &set_entries[way];
         // Search ways for match
