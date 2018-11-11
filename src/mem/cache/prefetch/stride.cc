@@ -57,6 +57,21 @@
 #include "debug/HWPrefetch.hh"
 #include "params/StridePrefetcher.hh"
 
+StridePrefetcher::StrideEntry::StrideEntry()
+{
+    invalidate();
+}
+
+void
+StridePrefetcher::StrideEntry::invalidate()
+{
+    instAddr = 0;
+    lastAddr = 0;
+    isSecure = false;
+    stride = 0;
+    confidence = 0;
+}
+
 StridePrefetcher::StridePrefetcher(const StridePrefetcherParams *p)
     : QueuedPrefetcher(p),
       maxConf(p->max_conf),
@@ -182,10 +197,14 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
                 is_secure ? "s" : "ns");
 
         StrideEntry* entry = pcTable->findVictim(pc);
+
+        // Invalidate victim
+        entry->invalidate();
+
+        // Insert new entry's data
         entry->instAddr = pc;
         entry->lastAddr = pkt_addr;
         entry->isSecure= is_secure;
-        entry->stride = 0;
         entry->confidence = startConf;
     }
 }

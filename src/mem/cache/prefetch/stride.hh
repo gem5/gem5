@@ -75,9 +75,11 @@ class StridePrefetcher : public QueuedPrefetcher
 
     struct StrideEntry
     {
-        StrideEntry() : instAddr(0), lastAddr(0), isSecure(false), stride(0),
-                        confidence(0)
-        { }
+        /** Default constructor */
+        StrideEntry();
+
+        /** Invalidate the entry */
+        void invalidate();
 
         Addr instAddr;
         Addr lastAddr;
