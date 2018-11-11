@@ -60,7 +60,6 @@
 
 class BaseCache;
 struct BasePrefetcherParams;
-class System;
 
 class BasePrefetcher : public ClockedObject
 {
@@ -90,26 +89,23 @@ class BasePrefetcher : public ClockedObject
     /** log_2(block size of the parent cache). */
     unsigned lBlkSize;
 
-    /** System we belong to */
-    System* system;
-
     /** Only consult prefetcher on cache misses? */
-    bool onMiss;
+    const bool onMiss;
 
     /** Consult prefetcher on reads? */
-    bool onRead;
+    const bool onRead;
 
     /** Consult prefetcher on reads? */
-    bool onWrite;
+    const bool onWrite;
 
     /** Consult prefetcher on data accesses? */
-    bool onData;
+    const bool onData;
 
     /** Consult prefetcher on instruction accesses? */
-    bool onInst;
+    const bool onInst;
 
     /** Request id for prefetches */
-    MasterID masterId;
+    const MasterID masterId;
 
     const Addr pageBytes;
 
@@ -147,7 +143,7 @@ class BasePrefetcher : public ClockedObject
 
     virtual ~BasePrefetcher() {}
 
-    virtual void setCache(BaseCache *_cache);
+    void setCache(BaseCache *_cache);
 
     /**
      * Notify prefetcher of cache access (may be any access or just
@@ -159,7 +155,10 @@ class BasePrefetcher : public ClockedObject
 
     virtual Tick nextPrefetchReadyTime() const = 0;
 
-    virtual void regStats();
+    /**
+     * Register local statistics.
+     */
+    void regStats() override;
 
     /**
      * Register probe points for this object.

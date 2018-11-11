@@ -65,6 +65,9 @@ class BasePrefetcher(ClockedObject):
     ]
     sys = Param.System(Parent.any, "System this prefetcher belongs to")
 
+    # Get the block size from the parent (system)
+    block_size = Param.Int(Parent.cache_line_size, "Block size in bytes")
+
     on_miss = Param.Bool(False, "Only notify prefetcher on misses")
     on_read = Param.Bool(True, "Notify prefetcher on reads")
     on_write = Param.Bool(True, "Notify prefetcher on writes")
@@ -108,6 +111,9 @@ class StridePrefetcher(QueuedPrefetcher):
     type = 'StridePrefetcher'
     cxx_class = 'StridePrefetcher'
     cxx_header = "mem/cache/prefetch/stride.hh"
+
+    # Do not consult stride prefetcher on instruction accesses
+    on_inst = False
 
     max_conf = Param.Int(7, "Maximum confidence level")
     thresh_conf = Param.Int(4, "Threshold confidence level")

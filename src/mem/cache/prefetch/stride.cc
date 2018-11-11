@@ -69,9 +69,6 @@ StridePrefetcher::StridePrefetcher(const StridePrefetcherParams *p)
       degree(p->degree),
       pcTable(pcTableAssoc, pcTableSets, name())
 {
-    // Don't consult stride prefetcher on instruction accesses
-    onInst = false;
-
     assert(isPowerOf2(pcTableSets));
 }
 

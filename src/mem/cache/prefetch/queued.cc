@@ -91,9 +91,8 @@ QueuedPrefetcher::notify(const PacketPtr &pkt)
 
         // Queue up generated prefetches
         for (AddrPriority& pf_info : addresses) {
-
             // Block align prefetch address
-            pf_info.first &= ~(Addr)(blkSize - 1);
+            pf_info.first = blockAddress(pf_info.first);
 
             pfIdentified++;
             DPRINTF(HWPrefetch, "Found a pf candidate addr: %#x, "
@@ -131,7 +130,7 @@ QueuedPrefetcher::getPacket()
     return pkt;
 }
 
-std::list<QueuedPrefetcher::DeferredPacket>::const_iterator
+QueuedPrefetcher::const_iterator
 QueuedPrefetcher::inPrefetch(Addr address, bool is_secure) const
 {
     for (const_iterator dp = pfq.begin(); dp != pfq.end(); dp++) {

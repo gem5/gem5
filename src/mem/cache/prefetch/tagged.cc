@@ -47,7 +47,7 @@ void
 TaggedPrefetcher::calculatePrefetch(const PacketPtr &pkt,
         std::vector<AddrPriority> &addresses)
 {
-    Addr blkAddr = pkt->getAddr() & ~(Addr)(blkSize-1);
+    Addr blkAddr = pkt->getBlockAddr(blkSize);
 
     for (int d = 1; d <= degree; d++) {
         Addr newAddr = blkAddr + d*(blkSize);

@@ -63,11 +63,10 @@ BasePrefetcher::PrefetchListener::notify(const PacketPtr &pkt)
 }
 
 BasePrefetcher::BasePrefetcher(const BasePrefetcherParams *p)
-    : ClockedObject(p), listeners(), cache(nullptr), blkSize(0), lBlkSize(0),
-      system(p->sys), onMiss(p->on_miss), onRead(p->on_read),
+    : ClockedObject(p), listeners(), cache(nullptr), blkSize(p->block_size),
+      lBlkSize(floorLog2(blkSize)), onMiss(p->on_miss), onRead(p->on_read),
       onWrite(p->on_write), onData(p->on_data), onInst(p->on_inst),
-      masterId(system->getMasterId(this)),
-      pageBytes(system->getPageBytes()),
+      masterId(p->sys->getMasterId(this)), pageBytes(p->sys->getPageBytes()),
       prefetchOnAccess(p->prefetch_on_access)
 {
 }
@@ -77,6 +76,8 @@ BasePrefetcher::setCache(BaseCache *_cache)
 {
     assert(!cache);
     cache = _cache;
+
+    // If the cache has a different block size from the system's, save it
     blkSize = cache->getBlockSize();
     lBlkSize = floorLog2(blkSize);
 }
@@ -121,19 +122,13 @@ BasePrefetcher::observeAccess(const PacketPtr &pkt) const
 bool
 BasePrefetcher::inCache(Addr addr, bool is_secure) const
 {
-    if (cache->inCache(addr, is_secure)) {
-        return true;
-    }
-    return false;
+    return cache->inCache(addr, is_secure);
 }
 
 bool
 BasePrefetcher::inMissQueue(Addr addr, bool is_secure) const
 {
-    if (cache->inMissQueue(addr, is_secure)) {
-        return true;
-    }
-    return false;
+    return cache->inMissQueue(addr, is_secure);
 }
 
 bool
