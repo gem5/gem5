@@ -106,3 +106,9 @@ class LTAGE(BranchPredictor):
     maxHist = Param.Unsigned(640, "Maximum history size of LTAGE")
     minTagWidth = Param.Unsigned(7, "Minimum tag size in tag tables")
 
+    loopTableAgeBits = Param.Unsigned(8, "Number of age bits per loop entry")
+    loopTableConfidenceBits = Param.Unsigned(2,
+            "Number of confidence bits per loop entry")
+    loopTableTagBits = Param.Unsigned(14, "Number of tag bits per loop entry")
+    loopTableIterBits = Param.Unsigned(14, "Nuber of iteration bits per loop")
+

@@ -135,7 +135,7 @@ class LTAGE: public BPredUnit
         int altBank;
         int altBankIndex;
         int bimodalIndex;
-        int loopTag;
+        uint16_t loopTag;
         uint16_t currentIter;
 
         bool tagePred;
@@ -236,6 +236,15 @@ class LTAGE: public BPredUnit
      * @param nbits Counter width.
      */
     void ctrUpdate(int8_t & ctr, bool taken, int nbits);
+
+    /**
+     * Updates an unsigned counter based on up/down parameter
+     * @param ctr Reference to counter to update.
+     * @param up Boolean indicating if the counter is incremented/decremented
+     * If true it is incremented, if false it is decremented
+     * @param nbits Counter width.
+     */
+    void unsignedCtrUpdate(uint8_t & ctr, bool up, unsigned nbits);
 
     /**
      * Get a branch prediction from the bimodal
@@ -355,6 +364,14 @@ class LTAGE: public BPredUnit
     const unsigned minHist;
     const unsigned maxHist;
     const unsigned minTagWidth;
+    const unsigned loopTableAgeBits;
+    const unsigned loopTableConfidenceBits;
+    const unsigned loopTableTagBits;
+    const unsigned loopTableIterBits;
+
+    const uint8_t confidenceThreshold;
+    const uint16_t loopTagMask;
+    const uint16_t loopNumIterMask;
 
     std::vector<bool> btablePrediction;
     std::vector<bool> btableHysteresis;

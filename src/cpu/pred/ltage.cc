@@ -59,8 +59,20 @@ LTAGE::LTAGE(const LTAGEParams *params)
     minHist(params->minHist),
     maxHist(params->maxHist),
     minTagWidth(params->minTagWidth),
+    loopTableAgeBits(params->loopTableAgeBits),
+    loopTableConfidenceBits(params->loopTableConfidenceBits),
+    loopTableTagBits(params->loopTableTagBits),
+    loopTableIterBits(params->loopTableIterBits),
+    confidenceThreshold((1 << loopTableConfidenceBits) - 1),
+    loopTagMask((1 << loopTableTagBits) - 1),
+    loopNumIterMask((1 << loopTableIterBits) - 1),
     threadHistory(params->numThreads)
 {
+    // we use uint16_t type for these vales, so they cannot be more than
+    // 16 bits
+    assert(loopTableTagBits <= 16);
+    assert(loopTableIterBits <= 16);
+
     assert(params->histBufferSize > params->maxHist * 2);
     useAltPredForNewlyAllocated = 0;
     logTick = 19;
@@ -212,6 +224,20 @@ LTAGE::ctrUpdate(int8_t & ctr, bool taken, int nbits)
     }
 }
 
+// Up-down unsigned saturating counter
+void
+LTAGE::unsignedCtrUpdate(uint8_t & ctr, bool up, unsigned nbits)
+{
+    assert(nbits <= sizeof(uint8_t) << 3);
+    if (up) {
+        if (ctr < ((1 << nbits) - 1))
+            ctr++;
+    } else {
+        if (ctr)
+            ctr--;
+    }
+}
+
 // Bimodal prediction
 bool
 LTAGE::getBimodePred(Addr pc, BranchInfo* bi) const
@@ -248,12 +274,13 @@ LTAGE::getLoop(Addr pc, BranchInfo* bi) const
     bi->loopHit = -1;
     bi->loopPredValid = false;
     bi->loopIndex = lindex(pc);
-    bi->loopTag = ((pc) >> (instShiftAmt + logSizeLoopPred - 2));
+    bi->loopTag = ((pc) >> (instShiftAmt + logSizeLoopPred - 2)) & loopTagMask;
 
     for (int i = 0; i < 4; i++) {
         if (ltable[bi->loopIndex + i].tag == bi->loopTag) {
             bi->loopHit = i;
-            bi->loopPredValid = (ltable[bi->loopIndex + i].confidence >= 3);
+            bi->loopPredValid =
+                ltable[bi->loopIndex + i].confidence == confidenceThreshold;
             bi->currentIter = ltable[bi->loopIndex + i].currentIterSpec;
             if (ltable[bi->loopIndex + i].currentIterSpec + 1 ==
                 ltable[bi->loopIndex + i].numIter) {
@@ -274,7 +301,8 @@ LTAGE::specLoopUpdate(Addr pc, bool taken, BranchInfo* bi)
         if (taken != ltable[index].dir) {
             ltable[index].currentIterSpec = 0;
         } else {
-            ltable[index].currentIterSpec++;
+            ltable[index].currentIterSpec =
+                (ltable[index].currentIterSpec + 1) & loopNumIterMask;
         }
     }
 }
@@ -295,12 +323,12 @@ LTAGE::loopUpdate(Addr pc, bool taken, BranchInfo* bi)
                 return;
             } else if (bi->loopPred != bi->tagePred) {
                 DPRINTF(LTage, "Loop Prediction success:%lx\n",pc);
-                if (ltable[idx].age < 7)
-                    ltable[idx].age++;
+                unsignedCtrUpdate(ltable[idx].age, true, loopTableAgeBits);
             }
         }
 
-        ltable[idx].currentIter++;
+        ltable[idx].currentIter =
+            (ltable[idx].currentIter + 1) & loopNumIterMask;
         if (ltable[idx].currentIter > ltable[idx].numIter) {
             ltable[idx].confidence = 0;
             if (ltable[idx].numIter != 0) {
@@ -315,9 +343,8 @@ LTAGE::loopUpdate(Addr pc, bool taken, BranchInfo* bi)
             if (ltable[idx].currentIter == ltable[idx].numIter) {
                 DPRINTF(LTage, "Loop End predicted successfully:%lx\n", pc);
 
-                if (ltable[idx].confidence < 7) {
-                    ltable[idx].confidence++;
-                }
+                unsignedCtrUpdate(ltable[idx].confidence, true,
+                                  loopTableConfidenceBits);
                 //just do not predict when the loop count is 1 or 2
                 if (ltable[idx].numIter < 3) {
                     // free the entry
@@ -355,7 +382,7 @@ LTAGE::loopUpdate(Addr pc, bool taken, BranchInfo* bi)
                 ltable[idx].dir = !taken;
                 ltable[idx].tag = bi->loopTag;
                 ltable[idx].numIter = 0;
-                ltable[idx].age = 7;
+                ltable[idx].age = (1 << loopTableAgeBits) - 1;
                 ltable[idx].confidence = 0;
                 ltable[idx].currentIter = 1;
                 break;
