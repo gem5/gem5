@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2018 Inria
  * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved
  *
@@ -39,6 +40,7 @@
  *
  * Authors: Ron Dreslinski
  *          Steve Reinhardt
+ *          Daniel Carvalho
  */
 
 /**
@@ -55,6 +57,7 @@
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/HWPrefetch.hh"
+#include "mem/cache/replacement_policies/base.hh"
 #include "params/StridePrefetcher.hh"
 
 StridePrefetcher::StrideEntry::StrideEntry()
@@ -81,7 +84,8 @@ StridePrefetcher::StridePrefetcher(const StridePrefetcherParams *p)
       pcTableAssoc(p->table_assoc),
       pcTableSets(p->table_sets),
       useMasterId(p->use_master_id),
-      degree(p->degree)
+      degree(p->degree),
+      replacementPolicy(p->replacement_policy)
 {
     assert(isPowerOf2(pcTableSets));
 }
@@ -103,7 +107,7 @@ StridePrefetcher::allocateNewContext(int context)
 {
     // Create new table
     auto insertion_result = pcTables.insert(std::make_pair(context,
-        PCTable(pcTableAssoc, pcTableSets, name())));
+        PCTable(pcTableAssoc, pcTableSets, name(), replacementPolicy)));
 
     DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 
@@ -111,11 +115,21 @@ StridePrefetcher::allocateNewContext(int context)
     return &(insertion_result.first->second);
 }
 
-StridePrefetcher::PCTable::PCTable(int assoc, int sets, const std::string name)
-    : pcTableAssoc(assoc), pcTableSets(sets), _name(name), entries(pcTableSets)
+StridePrefetcher::PCTable::PCTable(int assoc, int sets, const std::string name,
+                                   BaseReplacementPolicy* replacementPolicy)
+    : pcTableSets(sets), _name(name), entries(pcTableSets),
+      replacementPolicy(replacementPolicy)
 {
-    for (auto& set : entries) {
-        set.resize(pcTableAssoc);
+    for (int set = 0; set < sets; set++) {
+        entries[set].resize(assoc);
+        for (int way = 0; way < assoc; way++) {
+            // Inform the entry its position
+            entries[set][way].setPosition(set, way);
+
+            // Initialize replacement policy data
+            entries[set][way].replacementData =
+                replacementPolicy->instantiateEntry();
+        }
     }
 }
 
@@ -200,12 +214,14 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
 
         // Invalidate victim
         entry->invalidate();
+        replacementPolicy->invalidate(entry->replacementData);
 
         // Insert new entry's data
         entry->instAddr = pc;
         entry->lastAddr = pkt_addr;
-        entry->isSecure= is_secure;
+        entry->isSecure = is_secure;
         entry->confidence = startConf;
+        replacementPolicy->reset(entry->replacementData);
     }
 }
 
@@ -222,23 +238,34 @@ StridePrefetcher::PCTable::findVictim(Addr pc)
 {
     // Rand replacement for now
     int set = pcHash(pc);
-    int way = random_mt.random<int>(0, pcTableAssoc - 1);
 
-    DPRINTF(HWPrefetch, "Victimizing lookup table[%d][%d].\n", set, way);
-    return &entries[set][way];
+    // Get possible entries to be victimized
+    std::vector<ReplaceableEntry*> possible_entries;
+    for (auto& entry : entries[set]) {
+        possible_entries.push_back(&entry);
+    }
+
+    // Choose victim based on replacement policy
+    StrideEntry* victim = static_cast<StrideEntry*>(
+        replacementPolicy->getVictim(possible_entries));
+
+    DPRINTF(HWPrefetch, "Victimizing lookup table[%d][%d].\n",
+            victim->getSet(), victim->getWay());
+
+    return victim;
 }
 
 inline StridePrefetcher::StrideEntry*
 StridePrefetcher::PCTable::findEntry(Addr pc, bool is_secure)
 {
     int set = pcHash(pc);
-    std::vector<StrideEntry>& set_entries = entries[set];
-    for (int way = 0; way < pcTableAssoc; way++) {
-        StrideEntry* entry = &set_entries[way];
+    for (auto& entry : entries[set]) {
         // Search ways for match
-        if ((entry->instAddr == pc) && (entry->isSecure == is_secure)) {
-            DPRINTF(HWPrefetch, "Lookup hit table[%d][%d].\n", set, way);
-            return entry;
+        if ((entry.instAddr == pc) && (entry.isSecure == is_secure)) {
+            DPRINTF(HWPrefetch, "Lookup hit table[%d][%d].\n", entry.getSet(),
+                    entry.getWay());
+            replacementPolicy->touch(entry.replacementData);
+            return &entry;
         }
     }
     return nullptr;

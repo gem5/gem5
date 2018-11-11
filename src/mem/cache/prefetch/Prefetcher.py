@@ -43,6 +43,7 @@ from ClockedObject import ClockedObject
 from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
+from ReplacementPolicies import *
 
 class HWPProbeEvent(object):
     def __init__(self, prefetcher, obj, *listOfNames):
@@ -125,6 +126,10 @@ class StridePrefetcher(QueuedPrefetcher):
     use_master_id = Param.Bool(True, "Use master id based history")
 
     degree = Param.Int(4, "Number of prefetches to generate")
+
+    # Get replacement policy
+    replacement_policy = Param.BaseReplacementPolicy(RandomRP(),
+        "Replacement policy")
 
 class TaggedPrefetcher(QueuedPrefetcher):
     type = 'TaggedPrefetcher'

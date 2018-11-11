@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2018 Inria
  * Copyright (c) 2012-2013, 2015 ARM Limited
  * All rights reserved
  *
@@ -38,6 +39,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ron Dreslinski
+ *          Daniel Carvalho
  */
 
 /**
@@ -54,8 +56,10 @@
 
 #include "base/types.hh"
 #include "mem/cache/prefetch/queued.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/packet.hh"
 
+class BaseReplacementPolicy;
 struct StridePrefetcherParams;
 
 class StridePrefetcher : public QueuedPrefetcher
@@ -73,7 +77,10 @@ class StridePrefetcher : public QueuedPrefetcher
 
     const int degree;
 
-    struct StrideEntry
+    /** Replacement policy used in the PC tables. */
+    BaseReplacementPolicy* replacementPolicy;
+
+    struct StrideEntry : public ReplaceableEntry
     {
         /** Default constructor */
         StrideEntry();
@@ -97,8 +104,10 @@ class StridePrefetcher : public QueuedPrefetcher
          * @param assoc Associativity of the table.
          * @param sets Number of sets in the table.
          * @param name Name of the prefetcher.
+         * @param replacementPolicy Replacement policy used by the table.
          */
-        PCTable(int assoc, int sets, const std::string name);
+        PCTable(int assoc, int sets, const std::string name,
+                BaseReplacementPolicy* replacementPolicy);
 
         /**
          * Default destructor.
@@ -124,10 +133,14 @@ class StridePrefetcher : public QueuedPrefetcher
 
       private:
         const std::string name() {return _name; }
-        const int pcTableAssoc;
         const int pcTableSets;
         const std::string _name;
         std::vector<std::vector<StrideEntry>> entries;
+
+        /**
+         * Replacement policy used by StridePrefetcher.
+         */
+        BaseReplacementPolicy* replacementPolicy;
 
         /**
          * PC hashing function to index sets in the table.
