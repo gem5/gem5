@@ -853,7 +853,7 @@ class VExpress_EMM64(VExpress_EMM):
         cur_sys.atags_addr = 0x8000000
         cur_sys.load_offset = 0x80000000
 
-class VExpress_GEM5_V1_Base(RealView):
+class VExpress_GEM5_Base(RealView):
     """
 The VExpress gem5 memory map is loosely based on a modified
 Versatile Express RS1 memory map.
@@ -967,14 +967,6 @@ Interrupts:
     dcc = CoreTile2A15DCC()
 
     ### On-chip devices ###
-    gic = kvm_gicv2_class(dist_addr=0x2c001000, cpu_addr=0x2c002000,
-                          it_lines=512)
-    vgic = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
-    gicv2m = Gicv2m()
-    gicv2m.frames = [
-        Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2c1c0000),
-    ]
-
     generic_timer = GenericTimer(int_phys_s=ArmPPI(num=29),
                                  int_phys_ns=ArmPPI(num=30),
                                  int_virt=ArmPPI(num=27),
@@ -982,7 +974,6 @@ Interrupts:
 
     def _on_chip_devices(self):
         return [
-            self.gic, self.vgic, self.gicv2m,
             self.generic_timer,
         ]
 
@@ -1049,7 +1040,7 @@ Interrupts:
 
     def generateDeviceTree(self, state):
         # Generate using standard RealView function
-        dt = list(super(VExpress_GEM5_V1_Base, self).generateDeviceTree(state))
+        dt = list(super(VExpress_GEM5_Base, self).generateDeviceTree(state))
         if len(dt) > 1:
             raise Exception("System returned too many DT nodes")
         node = dt[0]
@@ -1061,6 +1052,19 @@ Interrupts:
 
         yield node
 
+class VExpress_GEM5_V1_Base(VExpress_GEM5_Base):
+    gic = kvm_gicv2_class(dist_addr=0x2c001000, cpu_addr=0x2c002000,
+                          it_lines=512)
+    vgic = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
+    gicv2m = Gicv2m()
+    gicv2m.frames = [
+        Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2c1c0000),
+    ]
+
+    def _on_chip_devices(self):
+        return super(VExpress_GEM5_V1_Base,self)._on_chip_devices() + [
+                self.gic, self.vgic, self.gicv2m,
+            ]
 
 class VExpress_GEM5_V1(VExpress_GEM5_V1_Base):
     hdlcd  = HDLcd(pxl_clk=VExpress_GEM5_V1_Base.dcc.osc_pxl,
@@ -1068,5 +1072,27 @@ class VExpress_GEM5_V1(VExpress_GEM5_V1_Base):
 
     def _on_chip_devices(self):
         return super(VExpress_GEM5_V1,self)._on_chip_devices() + [
+                self.hdlcd,
+            ]
+
+class VExpress_GEM5_V2_Base(VExpress_GEM5_Base):
+    gic = Gicv3()
+
+    def _on_chip_devices(self):
+        return super(VExpress_GEM5_V2_Base,self)._on_chip_devices() + [
+                self.gic,
+            ]
+
+    def setupBootLoader(self, mem_bus, cur_sys, loc):
+        cur_sys.boot_loader = [ loc('boot_emm_v2.arm64') ]
+        super(VExpress_GEM5_V2_Base,self).setupBootLoader(mem_bus,
+                cur_sys, loc)
+
+class VExpress_GEM5_V2(VExpress_GEM5_V2_Base):
+    hdlcd  = HDLcd(pxl_clk=VExpress_GEM5_V2_Base.dcc.osc_pxl,
+                   pio_addr=0x2b000000, int_num=95)
+
+    def _on_chip_devices(self):
+        return super(VExpress_GEM5_V2,self)._on_chip_devices() + [
                 self.hdlcd,
             ]

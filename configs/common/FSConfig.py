@@ -330,7 +330,10 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
             self.realview.setupBootLoader(None, self, binary)
         else:
             self.realview.setupBootLoader(self.membus, self, binary)
-        self.gic_cpu_addr = self.realview.gic.cpu_addr
+
+        if hasattr(self.realview.gic, 'cpu_addr'):
+            self.gic_cpu_addr = self.realview.gic.cpu_addr
+
         self.flags_addr = self.realview.realview_io.pio_addr + 0x30
 
         # This check is for users who have previously put 'android' in
