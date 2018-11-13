@@ -50,6 +50,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "base/types.hh"
 #include "mem/cache/prefetch/queued.hh"
@@ -90,7 +91,8 @@ class StridePrefetcher : public QueuedPrefetcher
       public:
         PCTable(int assoc, int sets, const std::string name) :
             pcTableAssoc(assoc), pcTableSets(sets), _name(name) {}
-        StrideEntry** operator[] (int context) {
+
+        std::vector<std::vector<StrideEntry>>& operator[] (int context) {
             auto it = entries.find(context);
             if (it != entries.end())
                 return it->second;
@@ -104,9 +106,9 @@ class StridePrefetcher : public QueuedPrefetcher
         const int pcTableAssoc;
         const int pcTableSets;
         const std::string _name;
-        std::unordered_map<int, StrideEntry**> entries;
+        std::unordered_map<int, std::vector<std::vector<StrideEntry>>> entries;
 
-        StrideEntry** allocateNewContext(int context);
+        std::vector<std::vector<StrideEntry>>& allocateNewContext(int context);
     };
     PCTable pcTable;
 

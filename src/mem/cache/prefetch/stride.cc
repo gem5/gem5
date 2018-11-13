@@ -72,32 +72,26 @@ StridePrefetcher::StridePrefetcher(const StridePrefetcherParams *p)
     assert(isPowerOf2(pcTableSets));
 }
 
-StridePrefetcher::StrideEntry**
+std::vector<std::vector<StridePrefetcher::StrideEntry>>&
 StridePrefetcher::PCTable::allocateNewContext(int context)
 {
     auto res = entries.insert(std::make_pair(context,
-                              new StrideEntry*[pcTableSets]));
+        std::vector<std::vector<StrideEntry>>(pcTableSets)));
     auto it = res.first;
     chatty_assert(res.second, "Allocating an already created context\n");
     assert(it->first == context);
 
-    DPRINTF(HWPrefetch, "Adding context %i with stride entries at %p\n",
-            context, it->second);
+    DPRINTF(HWPrefetch, "Adding context %i with stride entries\n", context);
 
-    StrideEntry** entry = it->second;
-    for (int s = 0; s < pcTableSets; s++) {
-        entry[s] = new StrideEntry[pcTableAssoc];
+    std::vector<std::vector<StrideEntry>>& table = it->second;
+    for (auto& set : table) {
+        set.resize(pcTableAssoc);
     }
-    return entry;
+    return table;
 }
 
-StridePrefetcher::PCTable::~PCTable() {
-    for (auto entry : entries) {
-        for (int s = 0; s < pcTableSets; s++) {
-            delete[] entry.second[s];
-        }
-        delete[] entry.second;
-    }
+StridePrefetcher::PCTable::~PCTable()
+{
 }
 
 void
@@ -202,7 +196,7 @@ inline StridePrefetcher::StrideEntry*
 StridePrefetcher::findEntry(Addr pc, bool is_secure, int master_id)
 {
     int set = pcHash(pc);
-    StrideEntry* set_entries = pcTable[master_id][set];
+    std::vector<StrideEntry>& set_entries = pcTable[master_id][set];
     for (int way = 0; way < pcTableAssoc; way++) {
         StrideEntry* entry = &set_entries[way];
         // Search ways for match
