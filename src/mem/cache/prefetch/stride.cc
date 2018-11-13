@@ -115,10 +115,10 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
     bool is_secure = pkt->isSecure();
     MasterID master_id = useMasterId ? pkt->req->masterId() : 0;
 
-    // Lookup pc-based information
-    StrideEntry *entry;
+    // Search for entry in the pc table
+    StrideEntry *entry = findEntry(pc, is_secure, master_id);
 
-    if (pcTableHit(pc, is_secure, master_id, entry)) {
+    if (entry != nullptr) {
         // Hit in table
         int new_stride = pkt_addr - entry->lastAddr;
         bool stride_match = (new_stride == entry->stride);
@@ -198,22 +198,20 @@ StridePrefetcher::pcTableVictim(Addr pc, int master_id)
     return &pcTable[master_id][set][way];
 }
 
-inline bool
-StridePrefetcher::pcTableHit(Addr pc, bool is_secure, int master_id,
-                             StrideEntry* &entry)
+inline StridePrefetcher::StrideEntry*
+StridePrefetcher::findEntry(Addr pc, bool is_secure, int master_id)
 {
     int set = pcHash(pc);
     StrideEntry* set_entries = pcTable[master_id][set];
     for (int way = 0; way < pcTableAssoc; way++) {
+        StrideEntry* entry = &set_entries[way];
         // Search ways for match
-        if (set_entries[way].instAddr == pc &&
-            set_entries[way].isSecure == is_secure) {
+        if ((entry->instAddr == pc) && (entry->isSecure == is_secure)) {
             DPRINTF(HWPrefetch, "Lookup hit table[%d][%d].\n", set, way);
-            entry = &set_entries[way];
-            return true;
+            return entry;
         }
     }
-    return false;
+    return nullptr;
 }
 
 StridePrefetcher*

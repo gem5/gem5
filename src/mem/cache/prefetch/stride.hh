@@ -110,7 +110,16 @@ class StridePrefetcher : public QueuedPrefetcher
     };
     PCTable pcTable;
 
-    bool pcTableHit(Addr pc, bool is_secure, int master_id, StrideEntry* &entry);
+    /**
+     * Search for an entry in the pc table.
+     *
+     * @param pc The PC to look for.
+     * @param is_secure True if the target memory space is secure.
+     * @param master_id The context.
+     * @return Pointer to the entry.
+     */
+    StrideEntry* findEntry(Addr pc, bool is_secure, int master_id);
+
     StrideEntry* pcTableVictim(Addr pc, int master_id);
 
     Addr pcHash(Addr pc) const;
