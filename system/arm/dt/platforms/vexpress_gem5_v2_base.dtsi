@@ -1,0 +1,193 @@
+/*
+ * Copyright (c) 2015-2017 ARM Limited
+ * All rights reserved
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Andreas Sandberg
+ */
+
+/ {
+	arm,hbi = <0x0>;
+	arm,vexpress,site = <0xf>;
+	interrupt-parent = <&gic>;
+	#address-cells = <2>;
+	#size-cells = <2>;
+
+	gic: interrupt-controller@2c000000 {
+		compatible = "arm,gic-v3";
+		#interrupt-cells = <0x3>;
+		#address-cells = <0x2>;
+		interrupt-controller;
+		redistributor-stride = <0x0 0x40000>; // 256kB stride, needed for ARM AVS tests...
+		reg = <0x0 0x2c000000 0x0 0x10000
+		       0x0 0x2c010000 0x0 0x4000000 // room for 256 redistributors using 128K each (256K strided...)
+		       0x0 0x0 0x0 0x0>;
+		interrupts = <1 9 0xf04>;
+		#size-cells = <0x2>;
+		linux,phandle = <0x1>;
+		phandle = <0x1>;
+	};
+
+	timer {
+		compatible = "arm,cortex-a15-timer",
+			     "arm,armv7-timer";
+		interrupts = <1 13 0xf08>,
+		             <1 14 0xf08>,
+		             <1 11 0xf08>;
+		clocks = <&osc_sys>;
+		clock-names="apb_pclk";
+	};
+
+	pci {
+		compatible = "pci-host-ecam-generic";
+		device_type = "pci";
+		#address-cells = <0x3>;
+		#size-cells = <0x2>;
+		#interrupt-cells = <0x1>;
+
+		reg = <0x0 0x30000000 0x0 0x10000000>;
+
+		ranges = <0x01000000 0x0 0x00000000  0x0 0x2f000000  0x0 0x00010000>,
+		         <0x02000000 0x0 0x40000000  0x0 0x40000000  0x0 0x40000000>;
+
+	/*
+	  child unit address, #cells = #address-cells
+	  child interrupt specifier, #cells = #interrupt-cells (INTA = 1, INTB = 2, INTC = 3 and INTD = 4)
+	  interrupt-parent, phandle
+	  parent unit address, #cells = #address-cells@gic
+	  parent interrupt specifier, #cells = #interrupt-cells@gic
+	*/
+	interrupt-map = <0x0    0x0 0x0  0x1  &gic  0x0 0x0  0x0 0x44 0x1
+		         0x800  0x0 0x0  0x1  &gic  0x0 0x0  0x0 0x45 0x1
+		         0x1000 0x0 0x0  0x1  &gic  0x0 0x0  0x0 0x46 0x1
+		         0x1800 0x0 0x0  0x1  &gic  0x0 0x0  0x0 0x47 0x1>;
+
+	interrupt-map-mask = <0x001800 0x0 0x0 0x0>;
+	dma-coherent;
+	};
+
+	kmi@1c060000 {
+		compatible = "arm,pl050", "arm,primecell";
+		reg = <0x0 0x1c060000 0x0 0x1000>;
+		interrupts = <0 12 4>;
+		clocks = <&v2m_clk24mhz>, <&osc_smb>;
+		clock-names = "KMIREFCLK", "apb_pclk";
+	};
+
+	kmi@1c070000 {
+		compatible = "arm,pl050", "arm,primecell";
+		reg = <0x0 0x1c070000 0x0 0x1000>;
+		interrupts = <0 13 4>;
+		clocks = <&v2m_clk24mhz>, <&osc_smb>;
+		clock-names = "KMIREFCLK", "apb_pclk";
+	};
+
+	uart0: uart@1c090000 {
+		compatible = "arm,pl011", "arm,primecell";
+		reg = <0x0 0x1c090000 0x0 0x1000>;
+		interrupts = <0 5 4>;
+		clocks = <&osc_peripheral>, <&osc_smb>;
+		clock-names = "uartclk", "apb_pclk";
+	};
+
+	rtc@1c170000 {
+		compatible = "arm,pl031", "arm,primecell";
+		reg = <0x0 0x1c170000 0x0 0x1000>;
+		interrupts = <0 4 4>;
+		clocks = <&osc_smb>;
+		clock-names = "apb_pclk";
+	};
+
+	v2m_clk24mhz: clk24mhz {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <24000000>;
+		clock-output-names = "v2m:clk24mhz";
+	};
+
+
+	v2m_sysreg: sysreg@1c010000 {
+		compatible = "arm,vexpress-sysreg";
+		reg = <0 0x1c010000 0x0 0x1000>;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
+
+	vio@1c130000 {
+		compatible = "virtio,mmio";
+		reg = <0 0x1c130000 0x0 0x1000>;
+		interrupts = <0 42 4>;
+	};
+
+	vio@1c140000 {
+		compatible = "virtio,mmio";
+		reg = <0 0x1c140000 0x0 0x1000>;
+		interrupts = <0 43 4>;
+	};
+
+	dcc {
+		compatible = "arm,vexpress,config-bus";
+		arm,vexpress,config-bridge = <&v2m_sysreg>;
+
+		osc_pxl: osc@5 {
+			compatible = "arm,vexpress-osc";
+			arm,vexpress-sysreg,func = <1 5>;
+			freq-range = <23750000 1000000000>;
+			#clock-cells = <0>;
+			clock-output-names = "oscclk5";
+		};
+
+		osc_smb: osc@6 {
+			compatible = "arm,vexpress-osc";
+			arm,vexpress-sysreg,func = <1 6>;
+			freq-range = <20000000 50000000>;
+			#clock-cells = <0>;
+			clock-output-names = "oscclk6";
+		};
+
+		osc_sys: osc@7 {
+			compatible = "arm,vexpress-osc";
+			arm,vexpress-sysreg,func = <1 7>;
+			freq-range = <20000000 60000000>;
+			#clock-cells = <0>;
+			clock-output-names = "oscclk7";
+		};
+	};
+
+
+	mcc {
+		compatible = "arm,vexpress,config-bus";
+		arm,vexpress,config-bridge = <&v2m_sysreg>;
+		arm,vexpress,site = <0>;
+
+		osc_peripheral: osc@2 {
+			compatible = "arm,vexpress-osc";
+			arm,vexpress-sysreg,func = <1 2>;
+			freq-range = <24000000 24000000>;
+			#clock-cells = <0>;
+			clock-output-names = "v2m:oscclk2";
+		};
+	};
+};
