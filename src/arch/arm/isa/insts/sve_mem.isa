@@ -1475,6 +1475,70 @@ let {{
                                        else 'SveStoreRegRegMicroop')
             exec_output += SveStructMemExecDeclare.subst(substDict)
 
+    # Generates definitions for SVE load-and-replicate quadword instructions
+    def emitSveLoadAndReplQuad(offsetIsImm):
+        global header_output, exec_output, decoders
+        tplHeader = 'template <class RegElemType, class MemElemType>'
+        tplArgs = '<RegElemType, MemElemType>'
+        eaCode = SPAlignmentCheckCode + '''
+        int memAccessSize = 16;
+        EA = XBase + '''
+        if offsetIsImm:
+            eaCode += '(((int64_t) this->imm) * 16);'
+        else:
+            eaCode += '(XOffset * sizeof(MemElemType));'
+        loadRdEnableCode = '''
+        eCount = 16/sizeof(RegElemType);
+        auto rdEn = std::vector<bool>(16, true);
+        for (int i = 0; i < eCount; ++i) {
+            if (!GpOp_x[i]) {
+                for (int j = 0; j < sizeof(RegElemType); ++j) {
+                    rdEn[sizeof(RegElemType) * i + j] = false;
+                }
+            }
+        }
+        '''
+        memAccCode = '''
+        __uint128_t qword;
+        RegElemType* qp = reinterpret_cast<RegElemType*>(&qword);
+        for (int i = 0; i < 16/sizeof(RegElemType); ++i) {
+            if (GpOp_x[i]) {
+                qp[i] = memDataView[i];
+            } else {
+                qp[i] = 0;
+            }
+        }
+        eCount = ArmStaticInst::getCurSveVecLen<__uint128_t>(
+                xc->tcBase());
+        for (int i = 0; i < eCount; ++i) {
+            AA64FpDest_uq[i] = qword;
+        }
+        '''
+        iop = InstObjParams('ld1rq',
+                'SveLd1RqSI' if offsetIsImm else 'SveLd1RqSS',
+                'SveContigMemSI' if offsetIsImm else 'SveContigMemSS',
+                {'tpl_header': tplHeader,
+                 'tpl_args': tplArgs,
+                 'rden_code': loadRdEnableCode,
+                 'memacc_code': memAccCode,
+                 'ea_code': sveEnabledCheckCode + eaCode,
+                 'fault_code': '',
+                 'fa_code': ''},
+                ['IsMemRef', 'IsLoad'])
+        if offsetIsImm:
+            header_output += SveContigMemSIOpDeclare.subst(iop)
+        else:
+            header_output += SveContigMemSSOpDeclare.subst(iop)
+        exec_output += (
+                SveContigLoadExecute.subst(iop) +
+                SveContigLoadInitiateAcc.subst(iop) +
+                SveContigLoadCompleteAcc.subst(iop))
+        for ttype in ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t'):
+            substDict = {'tpl_args': '<%s, %s>' % (ttype, ttype),
+                    'class_name': 'SveLd1RqSI' if offsetIsImm
+                                  else 'SveLd1RqSS'}
+            exec_output += SveContigMemExecDeclare.subst(substDict)
+
     # LD1[S]{B,H,W,D} (scalar plus immediate)
     # ST1[S]{B,H,W,D} (scalar plus immediate)
     # LDNF1[S]{B,H,W,D} (scalar plus immediate)
@@ -1486,6 +1550,11 @@ let {{
 
     # LD1R[S]{B,H,W,D}
     emitSveLoadAndRepl()
+
+    # LD1RQ{B,H,W,D} (scalar plus immediate)
+    emitSveLoadAndReplQuad(offsetIsImm = True)
+    # LD1RQ{B,H,W,D} (scalar plus scalar)
+    emitSveLoadAndReplQuad(offsetIsImm = False)
 
     # LD{2,3,4}{B,H,W,D} (scalar plus immediate)
     # ST{2,3,4}{B,H,W,D} (scalar plus immediate)

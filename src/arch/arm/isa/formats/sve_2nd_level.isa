@@ -3049,12 +3049,62 @@ namespace Aarch64
     StaticInstPtr
     decodeSveLoadBcastQuadSS(ExtMachInst machInst)
     {
+        uint8_t num = bits(machInst, 22, 21);
+        if (num != 0x00) {
+            return new Unknown64(machInst);
+        }
+
+        IntRegIndex zt = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+        IntRegIndex rn = makeSP((IntRegIndex)(uint8_t) bits(machInst, 9, 5));
+        IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+        IntRegIndex rm = (IntRegIndex)(uint8_t) bits(machInst, 20, 16);
+        uint8_t msz = bits(machInst, 24, 23);
+        switch (msz) {
+            case 0:
+                return new SveLd1RqSS<uint8_t, uint8_t>("ld1rqb",
+                        machInst, zt, pg, rn, rm);
+            case 1:
+                return new SveLd1RqSS<uint16_t, uint16_t>("ld1rqh",
+                        machInst, zt, pg, rn, rm);
+            case 2:
+                return new SveLd1RqSS<uint32_t, uint32_t>("ld1rqw",
+                        machInst, zt, pg, rn, rm);
+            case 3:
+                return new SveLd1RqSS<uint64_t, uint64_t>("ld1rqd",
+                        machInst, zt, pg, rn, rm);
+        }
+
         return new Unknown64(machInst);
     }  // decodeSveLoadBcastQuadSS
 
     StaticInstPtr
     decodeSveLoadBcastQuadSI(ExtMachInst machInst)
     {
+        uint8_t num = bits(machInst, 22, 21);
+        if (num != 0x00) {
+            return new Unknown64(machInst);
+        }
+
+        IntRegIndex zt = (IntRegIndex)(uint8_t) bits(machInst, 4, 0);
+        IntRegIndex rn = makeSP((IntRegIndex)(uint8_t) bits(machInst, 9, 5));
+        IntRegIndex pg = (IntRegIndex)(uint8_t) bits(machInst, 12, 10);
+        uint64_t imm = sext<4>(bits(machInst, 19, 16));
+        uint8_t msz = bits(machInst, 24, 23);
+        switch (msz) {
+            case 0:
+                return new SveLd1RqSI<uint8_t, uint8_t>("ld1rqb",
+                        machInst, zt, pg, rn, imm);
+            case 1:
+                return new SveLd1RqSI<uint16_t, uint16_t>("ld1rqh",
+                        machInst, zt, pg, rn, imm);
+            case 2:
+                return new SveLd1RqSI<uint32_t, uint32_t>("ld1rqw",
+                        machInst, zt, pg, rn, imm);
+            case 3:
+                return new SveLd1RqSI<uint64_t, uint64_t>("ld1rqd",
+                        machInst, zt, pg, rn, imm);
+        }
+
         return new Unknown64(machInst);
     }  // decodeSveLoadBcastQuadSI
 
