@@ -152,8 +152,6 @@ static const char GDBEnd = '#';
 static const char GDBGoodP = '+';
 static const char GDBBadP = '-';
 
-static const int GDBPacketBufLen = 1024;
-
 vector<BaseRemoteGDB *> debuggers;
 
 class HardBreakpoint : public PCEvent
@@ -441,20 +439,19 @@ BaseRemoteGDB::trap(int type)
     regCachePtr = gdbRegs();
     regCachePtr->getRegs(tc);
 
-    char data[GDBPacketBufLen + 1];
     GdbCommand::Context cmdCtx;
     cmdCtx.type = type;
-    cmdCtx.data = &data[1];
+    std::vector<char> data;
 
     for (;;) {
         try {
-            size_t datalen = recv(data, sizeof(data));
-            if (datalen < 1)
+            recv(data);
+            if (data.size() == 1)
                 throw BadClient();
-
-            data[datalen] = 0; // Sentinel
             cmdCtx.cmd_byte = data[0];
-            cmdCtx.len = datalen - 1;
+            cmdCtx.data = data.data() + 1;
+            // One for sentinel, one for cmd_byte.
+            cmdCtx.len = data.size() - 2;
 
             auto cmdIt = command_map.find(cmdCtx.cmd_byte);
             if (cmdIt == command_map.end()) {
@@ -521,41 +518,31 @@ BaseRemoteGDB::putbyte(uint8_t b)
 }
 
 // Receive a packet from gdb
-int
-BaseRemoteGDB::recv(char *bp, int maxlen)
+void
+BaseRemoteGDB::recv(std::vector<char>& bp)
 {
-    char *p;
     uint8_t c;
     int csum;
-    int len;
+    bp.resize(0);
 
     do {
-        p = bp;
-        csum = len = 0;
+        csum = 0;
         // Find the beginning of a packet
         while ((c = getbyte()) != GDBStart);
 
         // Read until you find the end of the data in the packet, and keep
         // track of the check sum.
-        while (len < maxlen) {
+        while (true) {
             c = getbyte();
             if (c == GDBEnd)
                 break;
             c &= 0x7f;
             csum += c;
-            *p++ = c;
-            len++;
+            bp.push_back(c);
         }
 
-        // Mask the check sum, and terminate the command string.
+        // Mask the check sum.
         csum &= 0xff;
-        *p = '\0';
-
-        // If the command was too long, report an error.
-        if (len >= maxlen) {
-            putbyte(GDBBadP);
-            continue;
-        }
 
         // Bring in the checksum. If the check sum matches, csum will be 0.
         csum -= digit2i(getbyte()) * 16;
@@ -566,21 +553,20 @@ BaseRemoteGDB::recv(char *bp, int maxlen)
             // Report that the packet was received correctly
             putbyte(GDBGoodP);
             // Sequence present?
-            if (bp[2] == ':') {
+            if (bp.size() > 2 && bp[2] == ':') {
                 putbyte(bp[0]);
                 putbyte(bp[1]);
-                len -= 3;
-                memcpy(bp, bp+3, len);
+                auto begin = std::begin(bp);
+                bp.erase(begin, std::next(begin, 3));
             }
             break;
         }
         // Otherwise, report that there was a mistake.
         putbyte(GDBBadP);
     } while (1);
-
-    DPRINTF(GDBRecv, "recv:  %s\n", bp);
-
-    return len;
+    // Sentinel.
+    bp.push_back('\0');
+    DPRINTF(GDBRecv, "recv:  %s\n", bp.data());
 }
 
 // Send a packet to gdb

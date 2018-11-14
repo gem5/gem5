@@ -171,7 +171,7 @@ class BaseRemoteGDB
     uint8_t getbyte();
     void putbyte(uint8_t b);
 
-    int recv(char *data, int len);
+    void recv(std::vector<char> &bp);
     void send(const char *data);
 
     /*
