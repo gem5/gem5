@@ -218,7 +218,9 @@ RemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
 
     for (int i = 0; i < 31; ++i)
         context->setIntReg(INTREG_X0 + i, r.x[i]);
-    context->pcState(r.pc);
+    auto pc_state = context->pcState();
+    pc_state.set(r.pc);
+    context->pcState(pc_state);
     context->setMiscRegNoEffect(MISCREG_CPSR, r.cpsr);
     // Update the stack pointer. This should be done after
     // updating CPSR/PSTATE since that might affect how SPX gets
@@ -282,7 +284,9 @@ RemoteGDB::AArch32GdbRegCache::setRegs(ThreadContext *context) const
     context->setIntReg(INTREG_R12, r.gpr[12]);
     context->setIntReg(INTREG_SP, r.gpr[13]);
     context->setIntReg(INTREG_LR, r.gpr[14]);
-    context->pcState(r.gpr[15]);
+    auto pc_state = context->pcState();
+    pc_state.set(r.gpr[15]);
+    context->pcState(pc_state);
 
     // One day somebody will implement transfer of FPRs correctly.
 
