@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2018 ARM Limited
  * Copyright (c) 2016 Google Inc.
  * Copyright (c) 2017, Centre National de la Recherche Scientifique
  * All rights reserved.
@@ -372,6 +372,12 @@ void
 CommMonitor::recvRespRetry()
 {
     masterPort.sendRetryResp();
+}
+
+bool
+CommMonitor::tryTiming(PacketPtr pkt)
+{
+    return masterPort.tryTiming(pkt);
 }
 
 void
