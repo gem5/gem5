@@ -99,11 +99,9 @@ class BaseSetAssoc : public BaseTags
     virtual ~BaseSetAssoc() {};
 
     /**
-     * Initialize blocks and set the parent cache back pointer.
-     *
-     * @param _cache Pointer to parent cache.
+     * Initialize blocks as CacheBlk instances.
      */
-    void tagsInit(BaseCache *_cache) override;
+    void tagsInit() override;
 
     /**
      * This function updates the tags when a block is invalidated. It also

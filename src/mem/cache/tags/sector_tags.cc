@@ -64,11 +64,8 @@ SectorTags::SectorTags(const SectorTagsParams *p)
 }
 
 void
-SectorTags::tagsInit(BaseCache* cache)
+SectorTags::tagsInit()
 {
-    // Set parent cache
-    setCache(cache);
-
     // Initialize all blocks
     unsigned blk_index = 0;       // index into blks array
     for (unsigned sec_blk_index = 0; sec_blk_index < numSectors;

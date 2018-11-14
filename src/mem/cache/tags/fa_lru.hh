@@ -159,11 +159,9 @@ class FALRU : public BaseTags
     ~FALRU();
 
     /**
-     * Initialize blocks and set the parent cache back pointer.
-     *
-     * @param _cache Pointer to parent cache.
+     * Initialize blocks as FALRUBlk instances.
      */
-    void tagsInit(BaseCache *_cache) override;
+    void tagsInit() override;
 
     /**
      * Register the stats for this object.

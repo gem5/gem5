@@ -101,11 +101,9 @@ class SectorTags : public BaseTags
     virtual ~SectorTags() {};
 
     /**
-     * Initialize blocks and set the parent cache back pointer.
-     *
-     * @param _cache Pointer to parent cache.
+     * Initialize blocks as SectorBlk and SectorSubBlk instances.
      */
-    void tagsInit(BaseCache *_cache) override;
+    void tagsInit() override;
 
     /**
      * This function updates the tags when a block is invalidated but does

@@ -61,7 +61,7 @@
 #include "params/BaseTags.hh"
 #include "sim/clocked_object.hh"
 
-class BaseCache;
+class System;
 class IndexingPolicy;
 class ReplaceableEntry;
 
@@ -80,8 +80,8 @@ class BaseTags : public ClockedObject
     /** The tag lookup latency of the cache. */
     const Cycles lookupLatency;
 
-    /** Pointer to the parent cache. */
-    BaseCache *cache;
+    /** System we are currently operating in. */
+    System *system;
 
     /** Indexing policy */
     BaseIndexingPolicy *indexingPolicy;
@@ -153,13 +153,6 @@ class BaseTags : public ClockedObject
      * @}
      */
 
-    /**
-     * Set the parent cache back pointer.
-     *
-     * @param _cache Pointer to parent cache.
-     */
-    void setCache(BaseCache *_cache);
-
   public:
     typedef BaseTagsParams Params;
     BaseTags(const Params *p);
@@ -170,11 +163,11 @@ class BaseTags : public ClockedObject
     virtual ~BaseTags() {}
 
     /**
-     * Initialize blocks and set the parent cache back pointer.
-     *
-     * @param _cache Pointer to parent cache.
+     * Initialize blocks. Must be overriden by every subclass that uses
+     * a block type different from its parent's, as the current Python
+     * code generation does not allow templates.
      */
-    virtual void tagsInit(BaseCache *_cache) = 0;
+    virtual void tagsInit() = 0;
 
     /**
      * Register local statistics.

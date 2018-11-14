@@ -84,11 +84,8 @@ FALRU::~FALRU()
 }
 
 void
-FALRU::tagsInit(BaseCache* cache)
+FALRU::tagsInit()
 {
-    // Set parent cache
-    setCache(cache);
-
     head = &(blks[0]);
     head->prev = nullptr;
     head->next = &(blks[1]);

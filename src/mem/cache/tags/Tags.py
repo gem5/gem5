@@ -44,6 +44,10 @@ class BaseTags(ClockedObject):
     type = 'BaseTags'
     abstract = True
     cxx_header = "mem/cache/tags/base.hh"
+
+    # Get system to which it belongs
+    system = Param.System(Parent.any, "System we belong to")
+
     # Get the size from the parent (cache)
     size = Param.MemorySize(Parent.size, "capacity in bytes")
 

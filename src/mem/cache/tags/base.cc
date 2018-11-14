@@ -51,7 +51,6 @@
 #include <cassert>
 
 #include "base/types.hh"
-#include "mem/cache/base.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
 #include "mem/request.hh"
@@ -62,18 +61,11 @@
 BaseTags::BaseTags(const Params *p)
     : ClockedObject(p), blkSize(p->block_size), blkMask(blkSize - 1),
       size(p->size), lookupLatency(p->tag_latency),
-      cache(nullptr), indexingPolicy(p->indexing_policy),
+      system(p->system), indexingPolicy(p->indexing_policy),
       warmupBound((p->warmup_percentage/100.0) * (p->size / p->block_size)),
       warmedUp(false), numBlocks(p->size / p->block_size),
       dataBlks(new uint8_t[p->size]) // Allocate data storage in one big chunk
 {
-}
-
-void
-BaseTags::setCache(BaseCache *_cache)
-{
-    assert(!cache);
-    cache = _cache;
 }
 
 ReplaceableEntry*
@@ -115,7 +107,7 @@ BaseTags::insertBlock(const Addr addr, const bool is_secure,
     // Previous block, if existed, has been removed, and now we have
     // to insert the new one
     // Deal with what we are bringing in
-    assert(src_master_ID < cache->system->maxMasters());
+    assert(src_master_ID < system->maxMasters());
     occupancies[src_master_ID]++;
 
     // Insert block with tag, src master id and task id
@@ -243,13 +235,13 @@ BaseTags::regStats()
         ;
 
     occupancies
-        .init(cache->system->maxMasters())
+        .init(system->maxMasters())
         .name(name() + ".occ_blocks")
         .desc("Average occupied blocks per requestor")
         .flags(nozero | nonan)
         ;
-    for (int i = 0; i < cache->system->maxMasters(); i++) {
-        occupancies.subname(i, cache->system->getMasterName(i));
+    for (int i = 0; i < system->maxMasters(); i++) {
+        occupancies.subname(i, system->getMasterName(i));
     }
 
     avgOccs
@@ -257,8 +249,8 @@ BaseTags::regStats()
         .desc("Average percentage of cache occupancy")
         .flags(nozero | total)
         ;
-    for (int i = 0; i < cache->system->maxMasters(); i++) {
-        avgOccs.subname(i, cache->system->getMasterName(i));
+    for (int i = 0; i < system->maxMasters(); i++) {
+        avgOccs.subname(i, system->getMasterName(i));
     }
 
     avgOccs = occupancies / Stats::constant(numBlocks);

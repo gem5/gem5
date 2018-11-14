@@ -63,11 +63,8 @@ BaseSetAssoc::BaseSetAssoc(const Params *p)
 }
 
 void
-BaseSetAssoc::tagsInit(BaseCache* cache)
+BaseSetAssoc::tagsInit()
 {
-    // Set parent cache
-    setCache(cache);
-
     // Initialize all blocks
     for (unsigned blk_index = 0; blk_index < numBlocks; blk_index++) {
         // Locate next cache block
