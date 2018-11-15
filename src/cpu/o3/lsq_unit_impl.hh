@@ -968,8 +968,10 @@ LSQUnit<Impl>::writeback(const DynInstPtr &inst, PacketPtr pkt)
             // the access as this discards the current fault.
 
             // If we have an outstanding fault, the fault should only be of
-            // type ReExec.
-            assert(dynamic_cast<ReExec*>(inst->fault.get()) != nullptr);
+            // type ReExec or - in case of a SplitRequest - a partial
+            // translation fault
+            assert(dynamic_cast<ReExec*>(inst->fault.get()) != nullptr ||
+                   inst->savedReq->isPartialFault());
 
             DPRINTF(LSQUnit, "Not completing instruction [sn:%lli] access "
                     "due to pending fault.\n", inst->seqNum);
