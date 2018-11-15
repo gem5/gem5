@@ -203,11 +203,13 @@ RemoteGDB::AArch64GdbRegCache::getRegs(ThreadContext *context)
     r.pc = context->pcState().pc();
     r.cpsr = context->readMiscRegNoEffect(MISCREG_CPSR);
 
-    for (int i = 0; i < 32*4; i += 4) {
-        r.v[i + 0] = context->readFloatRegBits(i + 2);
-        r.v[i + 1] = context->readFloatRegBits(i + 3);
-        r.v[i + 2] = context->readFloatRegBits(i + 0);
-        r.v[i + 3] = context->readFloatRegBits(i + 1);
+    size_t base = 0;
+    for (int i = 0; i < NumVecV8ArchRegs; i++) {
+        auto v = (context->readVecReg(RegId(VecRegClass, i))).as<VecElem>();
+        for (size_t j = 0; j < NumVecElemPerVecReg; j++) {
+            r.v[base] = v[j];
+            base++;
+        }
     }
 }
 
@@ -227,11 +229,14 @@ RemoteGDB::AArch64GdbRegCache::setRegs(ThreadContext *context) const
     // mapped.
     context->setIntReg(INTREG_SPX, r.spx);
 
-    for (int i = 0; i < 32*4; i += 4) {
-        context->setFloatRegBits(i + 2, r.v[i + 0]);
-        context->setFloatRegBits(i + 3, r.v[i + 1]);
-        context->setFloatRegBits(i + 0, r.v[i + 2]);
-        context->setFloatRegBits(i + 1, r.v[i + 3]);
+    size_t base = 0;
+    for (int i = 0; i < NumVecV8ArchRegs; i++) {
+        auto v = (context->getWritableVecReg(
+                RegId(VecRegClass, i))).as<VecElem>();
+        for (size_t j = 0; j < NumVecElemPerVecReg; j++) {
+            v[j] = r.v[base];
+            base++;
+        }
     }
 }
 

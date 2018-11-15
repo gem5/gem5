@@ -96,7 +96,7 @@ class RemoteGDB : public BaseRemoteGDB
           uint64_t spx;
           uint64_t pc;
           uint32_t cpsr;
-          uint32_t v[32*4];
+          VecElem v[NumVecV8ArchRegs * NumVecElemPerVecReg];
         } M5_ATTR_PACKED r;
       public:
         char *data() const { return (char *)&r; }
