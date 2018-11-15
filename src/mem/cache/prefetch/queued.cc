@@ -265,8 +265,9 @@ QueuedPrefetcher::insert(AddrPriority &pf_info, bool is_secure)
         pfq.emplace_back(dpp);
     } else {
         iterator it = pfq.end();
-        while (it != pfq.begin() && dpp > *it)
+        do {
             --it;
+        } while (it != pfq.begin() && dpp > *it);
         /* If we reach the head, we have to see if the new element is new head
          * or not */
         if (it == pfq.begin() && dpp <= *it)
