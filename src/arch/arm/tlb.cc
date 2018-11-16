@@ -1418,6 +1418,11 @@ TLB::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         Translation *translation, bool timing, bool functional,
         bool is_secure, TLB::ArmTranslationType tranType)
 {
+    // In a 2-stage system, the IPA->PA translation can be started via this
+    // call so make sure the miscRegs are correct.
+    if (isStage2) {
+        updateMiscReg(tc, tranType);
+    }
     bool is_fetch = (mode == Execute);
     bool is_write = (mode == Write);
 
