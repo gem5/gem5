@@ -49,7 +49,7 @@ def setGlobalFrequency(ticksPerSecond):
     else:
         raise TypeError, \
               "wrong type '%s' for ticksPerSecond" % type(ticksPerSecond)
-    _m5.core.setClockFrequency(tps)
+    _m5.core.setClockFrequency(int(tps))
 
 # how big does a rounding error need to be before we warn about it?
 frequency_tolerance = 0.001  # 0.1%
