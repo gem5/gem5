@@ -140,7 +140,7 @@ BasePrefetcher::samePage(Addr a, Addr b) const
 Addr
 BasePrefetcher::blockAddress(Addr a) const
 {
-    return a & ~(blkSize-1);
+    return a & ~((Addr)blkSize-1);
 }
 
 Addr
