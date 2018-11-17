@@ -39,6 +39,8 @@
 #include <string>
 #include <vector>
 
+#include "base/logging.hh"
+
 inline void
 eat_lead_white(std::string &s)
 {
@@ -157,6 +159,8 @@ to_number(const std::string &value, T &retval)
         return false;
     } catch (const std::invalid_argument&) {
         return false;
+    } catch (...) {
+        panic("Unrecognized exception.\n");
     }
 }
 
