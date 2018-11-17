@@ -33,7 +33,11 @@
 #include <valgrind/valgrind.h>
 #endif
 
+#include <sys/mman.h>
+#include <unistd.h>
+
 #include <cerrno>
+#include <cstdio>
 #include <cstring>
 
 #include "base/logging.hh"
@@ -71,20 +75,32 @@ Fiber::entryTrampoline()
     startingFiber->start();
 }
 
-Fiber::Fiber(size_t stack_size) :
-    link(primaryFiber()),
-    stack(stack_size ? new uint8_t[stack_size] : nullptr),
-    stackSize(stack_size), started(false), _finished(false)
-{
-#if HAVE_VALGRIND
-    valgrindStackId = VALGRIND_STACK_REGISTER(stack, stack + stack_size);
-#endif
-}
+Fiber::Fiber(size_t stack_size) : Fiber(primaryFiber(), stack_size)
+{}
 
 Fiber::Fiber(Fiber *link, size_t stack_size) :
-    link(link), stack(stack_size ? new uint8_t[stack_size] : nullptr),
-    stackSize(stack_size), started(false), _finished(false)
-{}
+    link(link), stack(nullptr), stackSize(stack_size), guardPage(nullptr),
+    guardPageSize(sysconf(_SC_PAGE_SIZE)), started(false), _finished(false)
+{
+    if (stack_size) {
+        guardPage = mmap(nullptr, guardPageSize + stack_size,
+                         PROT_READ | PROT_WRITE,
+                         MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+        if (guardPage == (void *)MAP_FAILED) {
+            perror("mmap");
+            fatal("Could not mmap %d byte fiber stack.\n", stack_size);
+        }
+        stack = (void *)((uint8_t *)guardPage + guardPageSize);
+        if (mprotect(guardPage, guardPageSize, PROT_NONE)) {
+            perror("mprotect");
+            fatal("Could not forbid access to fiber stack guard page.");
+        }
+    }
+#if HAVE_VALGRIND
+    valgrindStackId = VALGRIND_STACK_REGISTER(
+            stack, (uint8_t *)stack + stack_size);
+#endif
+}
 
 Fiber::~Fiber()
 {
@@ -92,7 +108,8 @@ Fiber::~Fiber()
 #if HAVE_VALGRIND
     VALGRIND_STACK_DEREGISTER(valgrindStackId);
 #endif
-    delete [] stack;
+    if (guardPage)
+        munmap(guardPage, guardPageSize + stackSize);
 }
 
 void

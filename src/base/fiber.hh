@@ -106,8 +106,10 @@ class Fiber
     Fiber *link;
 
     // The stack for this context, or a nullptr if allocated elsewhere.
-    uint8_t *stack;
+    void *stack;
     size_t stackSize;
+    void *guardPage;
+    size_t guardPageSize;
 #if HAVE_VALGRIND
     unsigned valgrindStackId;
 #endif
