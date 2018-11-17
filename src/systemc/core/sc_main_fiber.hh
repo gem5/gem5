@@ -47,6 +47,8 @@ class ScMainFiber : public Fiber
     bool _called = false;
 
   public:
+    ScMainFiber() : Fiber(8 * 1024 * 1024) {}
+
     int argc() { return _argc; }
     const char *const *argv() { return _argv; }
     std::string resultStr() { return _resultStr; }
