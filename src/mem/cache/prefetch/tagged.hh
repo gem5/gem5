@@ -51,7 +51,7 @@ class TaggedPrefetcher : public QueuedPrefetcher
 
     ~TaggedPrefetcher() {}
 
-    void calculatePrefetch(const PacketPtr &pkt,
+    void calculatePrefetch(const PrefetchInfo &pfi,
                            std::vector<AddrPriority> &addresses) override;
 };
 

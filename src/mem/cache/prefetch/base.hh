@@ -78,6 +78,96 @@ class BasePrefetcher : public ClockedObject
     std::vector<PrefetchListener *> listeners;
   protected:
 
+    /**
+     * Class containing the information needed by the prefetch to train and
+     * generate new prefetch requests.
+     */
+    class PrefetchInfo {
+        /** The address. */
+        Addr address;
+        /** The program counter that generated this address. */
+        Addr pc;
+        /** The requestor ID that generated this address. */
+        MasterID masterId;
+        /** Validity bit for the PC of this address. */
+        bool validPC;
+        /** Whether this address targets the secure memory space. */
+        bool secure;
+
+      public:
+        /**
+         * Obtains the address value of this Prefetcher address.
+         * @return the addres value.
+         */
+        Addr getAddr() const
+        {
+            return address;
+        }
+
+        /**
+         * Returns true if the address targets the secure memory space.
+         * @return true if the address targets the secure memory space.
+         */
+        bool isSecure() const
+        {
+            return secure;
+        }
+
+        /**
+         * Returns the program counter that generated this request.
+         * @return the pc value
+         */
+        Addr getPC() const
+        {
+            assert(hasPC());
+            return pc;
+        }
+
+        /**
+         * Returns true if the associated program counter is valid
+         * @return true if the program counter has a valid value
+         */
+        bool hasPC() const
+        {
+            return validPC;
+        }
+
+        /**
+         * Gets the requestor ID that generated this address
+         * @return the requestor ID that generated this address
+         */
+        MasterID getMasterId() const
+        {
+            return masterId;
+        }
+
+        /**
+         * Check for equality
+         * @param pfi PrefetchInfo to compare against
+         * @return True if this object and the provided one are equal
+         */
+        bool sameAddr(PrefetchInfo const &pfi) const
+        {
+            return this->getAddr() == pfi.getAddr() &&
+                this->isSecure() == pfi.isSecure();
+        }
+
+        /**
+         * Constructs a PrefetchInfo using a PacketPtr.
+         * @param pkt PacketPtr used to generate the PrefetchInfo
+         * @param addr the address value of the new object
+         */
+        PrefetchInfo(PacketPtr pkt, Addr addr);
+
+        /**
+         * Constructs a PrefetchInfo using a new address value and
+         * another PrefetchInfo as a reference.
+         * @param pfi PrefetchInfo used to generate this new object
+         * @param addr the address value of the new object
+         */
+        PrefetchInfo(PrefetchInfo const &pfi, Addr addr);
+    };
+
     // PARAMETERS
 
     /** Pointr to the parent cache. */
@@ -112,6 +202,9 @@ class BasePrefetcher : public ClockedObject
     /** Prefetch on every access, not just misses */
     const bool prefetchOnAccess;
 
+    /** Use Virtual Addresses for prefetching */
+    const bool useVirtualAddresses;
+
     /** Determine if this access should be observed */
     bool observeAccess(const PacketPtr &pkt) const;
 
@@ -134,7 +227,6 @@ class BasePrefetcher : public ClockedObject
     /** Build the address of the i-th block inside the page */
     Addr pageIthBlockAddress(Addr page, uint32_t i) const;
 
-
     Stats::Scalar pfIssued;
 
   public:
@@ -149,7 +241,7 @@ class BasePrefetcher : public ClockedObject
      * Notify prefetcher of cache access (may be any access or just
      * misses, depending on cache parameters.)
      */
-    virtual void notify(const PacketPtr &pkt) = 0;
+    virtual void notify(const PacketPtr &pkt, const PrefetchInfo &pfi) = 0;
 
     virtual PacketPtr getPacket() = 0;
 

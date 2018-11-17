@@ -44,10 +44,10 @@ TaggedPrefetcher::TaggedPrefetcher(const TaggedPrefetcherParams *p)
 }
 
 void
-TaggedPrefetcher::calculatePrefetch(const PacketPtr &pkt,
+TaggedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
         std::vector<AddrPriority> &addresses)
 {
-    Addr blkAddr = pkt->getBlockAddr(blkSize);
+    Addr blkAddr = blockAddress(pfi.getAddr());
 
     for (int d = 1; d <= degree; d++) {
         Addr newAddr = blkAddr + d*(blkSize);

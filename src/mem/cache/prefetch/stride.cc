@@ -138,19 +138,19 @@ StridePrefetcher::PCTable::~PCTable()
 }
 
 void
-StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
+StridePrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                     std::vector<AddrPriority> &addresses)
 {
-    if (!pkt->req->hasPC()) {
+    if (!pfi.hasPC()) {
         DPRINTF(HWPrefetch, "Ignoring request with no PC.\n");
         return;
     }
 
     // Get required packet info
-    Addr pkt_addr = pkt->getAddr();
-    Addr pc = pkt->req->getPC();
-    bool is_secure = pkt->isSecure();
-    MasterID master_id = useMasterId ? pkt->req->masterId() : 0;
+    Addr pf_addr = pfi.getAddr();
+    Addr pc = pfi.getPC();
+    bool is_secure = pfi.isSecure();
+    MasterID master_id = useMasterId ? pfi.getMasterId() : 0;
 
     // Get corresponding pc table
     PCTable* pcTable = findTable(master_id);
@@ -160,7 +160,7 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
 
     if (entry != nullptr) {
         // Hit in table
-        int new_stride = pkt_addr - entry->lastAddr;
+        int new_stride = pf_addr - entry->lastAddr;
         bool stride_match = (new_stride == entry->stride);
 
         // Adjust confidence for stride entry
@@ -176,11 +176,11 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
         }
 
         DPRINTF(HWPrefetch, "Hit: PC %x pkt_addr %x (%s) stride %d (%s), "
-                "conf %d\n", pc, pkt_addr, is_secure ? "s" : "ns", new_stride,
-                stride_match ? "match" : "change",
+                "conf %d\n", pc, pf_addr, is_secure ? "s" : "ns",
+                new_stride, stride_match ? "match" : "change",
                 entry->confidence);
 
-        entry->lastAddr = pkt_addr;
+        entry->lastAddr = pf_addr;
 
         // Abort prefetch generation if below confidence threshold
         if (entry->confidence < threshConf)
@@ -194,8 +194,8 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
                 prefetch_stride = (new_stride < 0) ? -blkSize : blkSize;
             }
 
-            Addr new_addr = pkt_addr + d * prefetch_stride;
-            if (samePage(pkt_addr, new_addr)) {
+            Addr new_addr = pf_addr + d * prefetch_stride;
+            if (samePage(pf_addr, new_addr)) {
                 DPRINTF(HWPrefetch, "Queuing prefetch to %#x.\n", new_addr);
                 addresses.push_back(AddrPriority(new_addr, 0));
             } else {
@@ -207,7 +207,7 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
         }
     } else {
         // Miss in table
-        DPRINTF(HWPrefetch, "Miss: PC %x pkt_addr %x (%s)\n", pc, pkt_addr,
+        DPRINTF(HWPrefetch, "Miss: PC %x pkt_addr %x (%s)\n", pc, pf_addr,
                 is_secure ? "s" : "ns");
 
         StrideEntry* entry = pcTable->findVictim(pc);
@@ -218,7 +218,7 @@ StridePrefetcher::calculatePrefetch(const PacketPtr &pkt,
 
         // Insert new entry's data
         entry->instAddr = pc;
-        entry->lastAddr = pkt_addr;
+        entry->lastAddr = pf_addr;
         entry->isSecure = is_secure;
         entry->confidence = startConf;
         replacementPolicy->reset(entry->replacementData);
