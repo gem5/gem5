@@ -100,6 +100,7 @@ class LTAGE(BranchPredictor):
     logSizeLoopPred = Param.Unsigned(8, "Log size of the loop predictor")
     nHistoryTables = Param.Unsigned(12, "Number of history tables")
     tagTableCounterBits = Param.Unsigned(3, "Number of tag table counter bits")
+    tagTableUBits = Param.Unsigned(2, "Number of tag table u bits")
     histBufferSize = Param.Unsigned(2097152,
             "A large number to track all branch histories(2MEntries default)")
     minHist = Param.Unsigned(4, "Minimum history size of LTAGE")

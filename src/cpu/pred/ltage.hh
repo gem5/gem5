@@ -94,7 +94,7 @@ class LTAGE: public BPredUnit
     {
         int8_t ctr;
         uint16_t tag;
-        int8_t u;
+        uint8_t u;
         TageEntry() : ctr(0), tag(0), u(0) { }
     };
 
@@ -360,6 +360,7 @@ class LTAGE: public BPredUnit
     const unsigned logSizeLoopPred;
     const unsigned nHistoryTables;
     const unsigned tagTableCounterBits;
+    const unsigned tagTableUBits;
     const unsigned histBufferSize;
     const unsigned minHist;
     const unsigned maxHist;

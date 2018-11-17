@@ -55,6 +55,7 @@ LTAGE::LTAGE(const LTAGEParams *params)
     logSizeLoopPred(params->logSizeLoopPred),
     nHistoryTables(params->nHistoryTables),
     tagTableCounterBits(params->tagTableCounterBits),
+    tagTableUBits(params->tagTableUBits),
     histBufferSize(params->histBufferSize),
     minHist(params->minHist),
     maxHist(params->maxHist),
@@ -68,6 +69,11 @@ LTAGE::LTAGE(const LTAGEParams *params)
     loopNumIterMask((1 << loopTableIterBits) - 1),
     threadHistory(params->numThreads)
 {
+    // Current method for periodically resetting the u counter bits only
+    // works for 1 or 2 bits
+    // Also make sure that it is not 0
+    assert(tagTableUBits <= 2 && (tagTableUBits > 0));
+
     // we use uint16_t type for these vales, so they cannot be more than
     // 16 bits
     assert(loopTableTagBits <= 16);
@@ -576,7 +582,7 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
 
         if (alloc) {
             // is there some "unuseful" entry to allocate
-            int8_t min = 1;
+            uint8_t min = 1;
             for (int i = nHistoryTables; i > bi->hitBank; i--) {
                 if (gtable[i][bi->tableIndices[i]].u < min) {
                     min = gtable[i][bi->tableIndices[i]].u;
@@ -605,7 +611,6 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
                 if ((gtable[i][bi->tableIndices[i]].u == 0)) {
                     gtable[i][bi->tableIndices[i]].tag = bi->tableTags[i];
                     gtable[i][bi->tableIndices[i]].ctr = (taken) ? 0 : -1;
-                    gtable[i][bi->tableIndices[i]].u = 0; //?
                     break;
                 }
             }
@@ -643,12 +648,9 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
             }
 
             // update the u counter
-            if (longest_match_pred != bi->altTaken) {
-                if (longest_match_pred == taken) {
-                    if (gtable[bi->hitBank][bi->hitBankIndex].u < 1) {
-                        gtable[bi->hitBank][bi->hitBankIndex].u++;
-                    }
-                }
+            if (bi->tagePred != bi->altTaken) {
+                unsignedCtrUpdate(gtable[bi->hitBank][bi->hitBankIndex].u,
+                                  bi->tagePred == taken, tagTableUBits);
             }
         } else {
             baseUpdate(pc, taken, bi);
