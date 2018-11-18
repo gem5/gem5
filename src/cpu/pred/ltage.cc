@@ -49,9 +49,7 @@
 
 LTAGE::LTAGE(const LTAGEParams *params)
   : BPredUnit(params),
-    logSizeBiMP(params->logSizeBiMP),
     logRatioBiModalHystEntries(params->logRatioBiModalHystEntries),
-    logSizeTagTables(params->logSizeTagTables),
     logSizeLoopPred(params->logSizeLoopPred),
     nHistoryTables(params->nHistoryTables),
     tagTableCounterBits(params->tagTableCounterBits),
@@ -59,15 +57,21 @@ LTAGE::LTAGE(const LTAGEParams *params)
     histBufferSize(params->histBufferSize),
     minHist(params->minHist),
     maxHist(params->maxHist),
-    minTagWidth(params->minTagWidth),
+    pathHistBits(params->pathHistBits),
     loopTableAgeBits(params->loopTableAgeBits),
     loopTableConfidenceBits(params->loopTableConfidenceBits),
     loopTableTagBits(params->loopTableTagBits),
     loopTableIterBits(params->loopTableIterBits),
+    logLoopTableAssoc(params->logLoopTableAssoc),
     confidenceThreshold((1 << loopTableConfidenceBits) - 1),
     loopTagMask((1 << loopTableTagBits) - 1),
     loopNumIterMask((1 << loopTableIterBits) - 1),
-    threadHistory(params->numThreads)
+    tagTableTagWidths(params->tagTableTagWidths),
+    logTagTableSizes(params->logTagTableSizes),
+    threadHistory(params->numThreads),
+    logUResetPeriod(params->logUResetPeriod),
+    useAltOnNaBits(params->useAltOnNaBits),
+    withLoopBits(params->withLoopBits)
 {
     // Current method for periodically resetting the u counter bits only
     // works for 1 or 2 bits
@@ -79,10 +83,18 @@ LTAGE::LTAGE(const LTAGEParams *params)
     assert(loopTableTagBits <= 16);
     assert(loopTableIterBits <= 16);
 
+    assert(logSizeLoopPred >= logLoopTableAssoc);
+
+    // we use int type for the path history, so it cannot be more than
+    // its size
+    assert(pathHistBits <= (sizeof(int)*8));
+
+    // initialize the counter to half of the period
+    assert(logUResetPeriod != 0);
+    tCounter = ULL(1) << (logUResetPeriod - 1);
+
     assert(params->histBufferSize > params->maxHist * 2);
     useAltPredForNewlyAllocated = 0;
-    logTick = 19;
-    tCounter = ULL(1) << (logTick - 1);
 
     for (auto& history : threadHistory) {
         history.pathHist = 0;
@@ -103,27 +115,12 @@ LTAGE::LTAGE(const LTAGEParams *params)
                     + 0.5);
     }
 
-    tagWidths[1] = minTagWidth;
-    tagWidths[2] = minTagWidth;
-    tagWidths[3] = minTagWidth + 1;
-    tagWidths[4] = minTagWidth + 1;
-    tagWidths[5] = minTagWidth + 2;
-    tagWidths[6] = minTagWidth + 3;
-    tagWidths[7] = minTagWidth + 4;
-    tagWidths[8] = minTagWidth + 5;
-    tagWidths[9] = minTagWidth + 5;
-    tagWidths[10] = minTagWidth + 6;
-    tagWidths[11] = minTagWidth + 7;
-    tagWidths[12] = minTagWidth + 8;
+    assert(tagTableTagWidths.size() == (nHistoryTables+1));
+    assert(logTagTableSizes.size() == (nHistoryTables+1));
 
-    for (int i = 1; i <= 2; i++)
-        tagTableSizes[i] = logSizeTagTables - 1;
-    for (int i = 3; i <= 6; i++)
-        tagTableSizes[i] = logSizeTagTables;
-    for (int i = 7; i <= 10; i++)
-        tagTableSizes[i] = logSizeTagTables - 1;
-    for (int i = 11; i <= 12; i++)
-        tagTableSizes[i] = logSizeTagTables - 2;
+    // First entry is for the Bimodal table and it is untagged in this
+    // implementation
+    assert(tagTableTagWidths[0] == 0);
 
     for (auto& history : threadHistory) {
         history.computeIndices = new FoldedHistory[nHistoryTables+1];
@@ -131,17 +128,18 @@ LTAGE::LTAGE(const LTAGEParams *params)
         history.computeTags[1] = new FoldedHistory[nHistoryTables+1];
 
         for (int i = 1; i <= nHistoryTables; i++) {
-            history.computeIndices[i].init(histLengths[i], (tagTableSizes[i]));
+            history.computeIndices[i].init(
+                histLengths[i], (logTagTableSizes[i]));
             history.computeTags[0][i].init(
-                history.computeIndices[i].origLength, tagWidths[i]);
+                history.computeIndices[i].origLength, tagTableTagWidths[i]);
             history.computeTags[1][i].init(
-                history.computeIndices[i].origLength, tagWidths[i] - 1);
+                history.computeIndices[i].origLength, tagTableTagWidths[i]-1);
             DPRINTF(LTage, "HistLength:%d, TTSize:%d, TTTWidth:%d\n",
-                    histLengths[i], tagTableSizes[i], tagWidths[i]);
+                    histLengths[i], logTagTableSizes[i], tagTableTagWidths[i]);
         }
     }
 
-    const uint64_t bimodalTableSize = ULL(1) << logSizeBiMP;
+    const uint64_t bimodalTableSize = ULL(1) << logTagTableSizes[0];
     btablePrediction.resize(bimodalTableSize, false);
     btableHysteresis.resize(bimodalTableSize >> logRatioBiModalHystEntries,
                             true);
@@ -149,7 +147,7 @@ LTAGE::LTAGE(const LTAGEParams *params)
     ltable = new LoopEntry[ULL(1) << logSizeLoopPred];
     gtable = new TageEntry*[nHistoryTables + 1];
     for (int i = 1; i <= nHistoryTables; i++) {
-        gtable[i] = new TageEntry[1<<(tagTableSizes[i])];
+        gtable[i] = new TageEntry[1<<(logTagTableSizes[i])];
     }
 
     tableIndices = new int [nHistoryTables+1];
@@ -161,14 +159,21 @@ LTAGE::LTAGE(const LTAGEParams *params)
 int
 LTAGE::bindex(Addr pc_in) const
 {
-    return ((pc_in >> instShiftAmt) & ((ULL(1) << (logSizeBiMP)) - 1));
+    return ((pc_in >> instShiftAmt) & ((ULL(1) << (logTagTableSizes[0])) - 1));
 }
 
 int
 LTAGE::lindex(Addr pc_in) const
 {
-    return (((pc_in >> instShiftAmt) &
-             ((ULL(1) << (logSizeLoopPred - 2)) - 1)) << 2);
+    // The loop table is implemented as a linear table
+    // If associativity is N (N being 1 << logLoopTableAssoc),
+    // the first N entries are for set 0, the next N entries are for set 1,
+    // and so on.
+    // Thus, this function calculates the set and then it gets left shifted
+    // by logLoopTableAssoc in order to return the index of the first of the
+    // N entries of the set
+    Addr mask = (ULL(1) << (logSizeLoopPred - logLoopTableAssoc)) - 1;
+    return (((pc_in >> instShiftAmt) & mask) << logLoopTableAssoc);
 }
 
 int
@@ -177,13 +182,13 @@ LTAGE::F(int A, int size, int bank) const
     int A1, A2;
 
     A = A & ((ULL(1) << size) - 1);
-    A1 = (A & ((ULL(1) << tagTableSizes[bank]) - 1));
-    A2 = (A >> tagTableSizes[bank]);
-    A2 = ((A2 << bank) & ((ULL(1) << tagTableSizes[bank]) - 1))
-       + (A2 >> (tagTableSizes[bank] - bank));
+    A1 = (A & ((ULL(1) << logTagTableSizes[bank]) - 1));
+    A2 = (A >> logTagTableSizes[bank]);
+    A2 = ((A2 << bank) & ((ULL(1) << logTagTableSizes[bank]) - 1))
+       + (A2 >> (logTagTableSizes[bank] - bank));
     A = A1 ^ A2;
-    A = ((A << bank) & ((ULL(1) << tagTableSizes[bank]) - 1))
-      + (A >> (tagTableSizes[bank] - bank));
+    A = ((A << bank) & ((ULL(1) << logTagTableSizes[bank]) - 1))
+      + (A >> (logTagTableSizes[bank] - bank));
     return (A);
 }
 
@@ -193,14 +198,16 @@ int
 LTAGE::gindex(ThreadID tid, Addr pc, int bank) const
 {
     int index;
-    int hlen = (histLengths[bank] > 16) ? 16 : histLengths[bank];
+    int hlen = (histLengths[bank] > pathHistBits) ? pathHistBits :
+                                                    histLengths[bank];
+    const Addr shiftedPc = pc >> instShiftAmt;
     index =
-        (pc >> instShiftAmt) ^
-        ((pc >> instShiftAmt) >> ((int) abs(tagTableSizes[bank] - bank) + 1)) ^
+        shiftedPc ^
+        (shiftedPc >> ((int) abs(logTagTableSizes[bank] - bank) + 1)) ^
         threadHistory[tid].computeIndices[bank].comp ^
         F(threadHistory[tid].pathHist, hlen, bank);
 
-    return (index & ((ULL(1) << (tagTableSizes[bank])) - 1));
+    return (index & ((ULL(1) << (logTagTableSizes[bank])) - 1));
 }
 
 
@@ -212,7 +219,7 @@ LTAGE::gtag(ThreadID tid, Addr pc, int bank) const
               threadHistory[tid].computeTags[0][bank].comp ^
               (threadHistory[tid].computeTags[1][bank].comp << 1);
 
-    return (tag & ((ULL(1) << tagWidths[bank]) - 1));
+    return (tag & ((ULL(1) << tagTableTagWidths[bank]) - 1));
 }
 
 
@@ -280,9 +287,10 @@ LTAGE::getLoop(Addr pc, BranchInfo* bi) const
     bi->loopHit = -1;
     bi->loopPredValid = false;
     bi->loopIndex = lindex(pc);
-    bi->loopTag = ((pc) >> (instShiftAmt + logSizeLoopPred - 2)) & loopTagMask;
+    unsigned pcShift = instShiftAmt + logSizeLoopPred - logLoopTableAssoc;
+    bi->loopTag = ((pc) >> pcShift) & loopTagMask;
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < (1 << logLoopTableAssoc); i++) {
         if (ltable[bi->loopIndex + i].tag == bi->loopTag) {
             bi->loopHit = i;
             bi->loopPredValid =
@@ -379,8 +387,8 @@ LTAGE::loopUpdate(Addr pc, bool taken, BranchInfo* bi)
     } else if (taken) {
         //try to allocate an entry on taken branch
         int nrand = random_mt.random<int>();
-        for (int i = 0; i < 4; i++) {
-            int loop_hit = (nrand + i) & 3;
+        for (int i = 0; i < (1 << logLoopTableAssoc); i++) {
+            int loop_hit = (nrand + i) & ((1 << logLoopTableAssoc) - 1);
             idx = bi->loopIndex + loop_hit;
             if (ltable[idx].age == 0) {
                 DPRINTF(LTage, "Allocating loop pred entry for branch %lx\n",
@@ -552,7 +560,9 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
 
         if (bi->loopPredValid) {
             if (bi->tagePred != bi->loopPred) {
-                ctrUpdate(loopUseCounter, (bi->loopPred== taken), 7);
+                ctrUpdate(loopUseCounter,
+                          (bi->loopPred == taken),
+                          withLoopBits);
             }
         }
 
@@ -575,7 +585,7 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
                 // allocate new entry even if the overall prediction was false
                 if (longest_match_pred != bi->altTaken) {
                     ctrUpdate(useAltPredForNewlyAllocated,
-                         bi->altTaken == taken, 4);
+                         bi->altTaken == taken, useAltOnNaBits);
                 }
             }
         }
@@ -617,11 +627,11 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
         }
         //periodic reset of u: reset is not complete but bit by bit
         tCounter++;
-        if ((tCounter & ((ULL(1) << logTick) - 1)) == 0) {
+        if ((tCounter & ((ULL(1) << logUResetPeriod) - 1)) == 0) {
             // reset least significant bit
             // most significant bit becomes least significant bit
             for (int i = 1; i <= nHistoryTables; i++) {
-                for (int j = 0; j < (ULL(1) << tagTableSizes[i]); j++) {
+                for (int j = 0; j < (ULL(1) << logTagTableSizes[i]); j++) {
                     gtable[i][j].u = gtable[i][j].u >> 1;
                 }
             }
@@ -674,7 +684,7 @@ LTAGE::updateHistories(ThreadID tid, Addr branch_pc, bool taken, void* b)
     //update user history
     updateGHist(tHist.gHist, taken, tHist.globalHistory, tHist.ptGhist);
     tHist.pathHist = (tHist.pathHist << 1) + pathbit;
-    tHist.pathHist = (tHist.pathHist & ((ULL(1) << 16) - 1));
+    tHist.pathHist = (tHist.pathHist & ((ULL(1) << pathHistBits) - 1));
 
     bi->ptGhist = tHist.ptGhist;
     bi->pathHist = tHist.pathHist;

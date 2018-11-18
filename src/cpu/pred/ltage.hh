@@ -354,9 +354,7 @@ class LTAGE: public BPredUnit
      */
     void specLoopUpdate(Addr pc, bool taken, BranchInfo* bi);
 
-    const unsigned logSizeBiMP;
     const unsigned logRatioBiModalHystEntries;
-    const unsigned logSizeTagTables;
     const unsigned logSizeLoopPred;
     const unsigned nHistoryTables;
     const unsigned tagTableCounterBits;
@@ -364,15 +362,18 @@ class LTAGE: public BPredUnit
     const unsigned histBufferSize;
     const unsigned minHist;
     const unsigned maxHist;
-    const unsigned minTagWidth;
+    const unsigned pathHistBits;
     const unsigned loopTableAgeBits;
     const unsigned loopTableConfidenceBits;
     const unsigned loopTableTagBits;
     const unsigned loopTableIterBits;
-
+    const unsigned logLoopTableAssoc;
     const uint8_t confidenceThreshold;
     const uint16_t loopTagMask;
     const uint16_t loopNumIterMask;
+
+    const std::vector<unsigned> tagTableTagWidths;
+    const std::vector<int> logTagTableSizes;
 
     std::vector<bool> btablePrediction;
     std::vector<bool> btableHysteresis;
@@ -404,16 +405,16 @@ class LTAGE: public BPredUnit
 
     std::vector<ThreadHistory> threadHistory;
 
-    int tagWidths[15];
-    int tagTableSizes[15];
     int *histLengths;
     int *tableIndices;
     int *tableTags;
 
     int8_t loopUseCounter;
     int8_t useAltPredForNewlyAllocated;
-    int tCounter;
-    int logTick;
+    uint64_t tCounter;
+    uint64_t logUResetPeriod;
+    unsigned useAltOnNaBits;
+    unsigned withLoopBits;
 };
 
 #endif // __CPU_PRED_LTAGE
