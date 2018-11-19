@@ -1,5 +1,16 @@
 # -*- mode:python -*-
 
+# Copyright (c) 2018 ARM Limited
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2004-2005 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -211,6 +222,76 @@ class SourceFile(object):
     def __ge__(self, other): return self.filename >= other.filename
     def __eq__(self, other): return self.filename == other.filename
     def __ne__(self, other): return self.filename != other.filename
+
+def blobToCpp(data, symbol, cpp_code, hpp_code=None, namespace=None):
+    '''
+    Convert bytes data into C++ .cpp and .hh uint8_t byte array
+    code containing that binary data.
+
+    :param data: binary data to be converted to C++
+    :param symbol: name of the symbol
+    :param cpp_code: append the generated cpp_code to this object
+    :param hpp_code: append the generated hpp_code to this object
+                     If None, ignore it. Otherwise, also include it
+                     in the .cpp file.
+    :param namespace: namespace to put the symbol into. If None,
+                      don't put the symbols into any namespace.
+    '''
+    symbol_len_declaration = 'const std::size_t {}_len'.format(symbol)
+    symbol_declaration = 'const std::uint8_t {}[]'.format(symbol)
+    if hpp_code is not None:
+        cpp_code('''\
+#include "blobs/{}.hh"
+'''.format(symbol))
+        hpp_code('''\
+#include <cstddef>
+#include <cstdint>
+''')
+        if namespace is not None:
+            hpp_code('namespace {} {{'.format(namespace))
+        hpp_code('extern ' + symbol_len_declaration + ';')
+        hpp_code('extern ' + symbol_declaration + ';')
+        if namespace is not None:
+            hpp_code('}')
+    if namespace is not None:
+        cpp_code('namespace {} {{'.format(namespace))
+    cpp_code(symbol_len_declaration + ' = {};'.format(len(data)))
+    cpp_code(symbol_declaration + ' = {')
+    cpp_code.indent()
+    step = 16
+    for i in xrange(0, len(data), step):
+        x = array.array('B', data[i:i+step])
+        cpp_code(''.join('%d,' % d for d in x))
+    cpp_code.dedent()
+    cpp_code('};')
+    if namespace is not None:
+        cpp_code('}')
+
+def Blob(blob_path, symbol):
+    '''
+    Embed an arbitrary blob into the gem5 executable,
+    and make it accessible to C++ as a byte array.
+    '''
+    blob_path = os.path.abspath(blob_path)
+    blob_out_dir = os.path.join(env['BUILDDIR'], 'blobs')
+    path_noext = joinpath(blob_out_dir, symbol)
+    cpp_path = path_noext + '.cc'
+    hpp_path = path_noext + '.hh'
+    def embedBlob(target, source, env):
+        data = file(str(source[0]), 'r').read()
+        cpp_code = code_formatter()
+        hpp_code = code_formatter()
+        blobToCpp(data, symbol, cpp_code, hpp_code, namespace='Blobs')
+        cpp_path = str(target[0])
+        hpp_path = str(target[1])
+        cpp_dir = os.path.split(cpp_path)[0]
+        if not os.path.exists(cpp_dir):
+            os.makedirs(cpp_dir)
+        cpp_code.write(cpp_path)
+        hpp_code.write(hpp_path)
+    env.Command([cpp_path, hpp_path], blob_path,
+                MakeAction(embedBlob, Transform("EMBED BLOB")))
+    Source(cpp_path)
 
 class Source(SourceFile):
     ungrouped_tag = 'No link group'
@@ -440,6 +521,7 @@ class Gem5(Executable):
 
 
 # Children should have access
+Export('Blob')
 Export('Source')
 Export('PySource')
 Export('SimObject')
@@ -1069,16 +1151,10 @@ def embedPyFile(target, source, env):
 
 namespace {
 
-const uint8_t data_${sym}[] = {
 ''')
-    code.indent()
-    step = 16
-    for i in xrange(0, len(data), step):
-        x = array.array('B', data[i:i+step])
-        code(''.join('%d,' % d for d in x))
-    code.dedent()
+    blobToCpp(data, 'data_' + sym, code)
+    code('''\
 
-    code('''};
 
 EmbeddedPython embedded_${sym}(
     ${{c_str(pysource.arcname)}},
