@@ -50,8 +50,8 @@ namespace PowerISA
 class ISA : public SimObject
 {
   protected:
-    MiscReg dummy;
-    MiscReg miscRegs[NumMiscRegs];
+    RegVal dummy;
+    RegVal miscRegs[NumMiscRegs];
 
   public:
     typedef PowerISAParams Params;
@@ -61,14 +61,14 @@ class ISA : public SimObject
     {
     }
 
-    MiscReg
+    RegVal
     readMiscRegNoEffect(int misc_reg) const
     {
         fatal("Power does not currently have any misc regs defined\n");
         return dummy;
     }
 
-    MiscReg
+    RegVal
     readMiscReg(int misc_reg, ThreadContext *tc)
     {
         fatal("Power does not currently have any misc regs defined\n");
@@ -76,13 +76,13 @@ class ISA : public SimObject
     }
 
     void
-    setMiscRegNoEffect(int misc_reg, MiscReg val)
+    setMiscRegNoEffect(int misc_reg, RegVal val)
     {
         fatal("Power does not currently have any misc regs defined\n");
     }
 
     void
-    setMiscReg(int misc_reg, MiscReg val, ThreadContext *tc)
+    setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
     {
         fatal("Power does not currently have any misc regs defined\n");
     }

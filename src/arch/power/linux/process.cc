@@ -437,7 +437,7 @@ PowerLinuxProcess::initState()
     PowerProcess::initState();
 }
 
-PowerISA::IntReg
+RegVal
 PowerLinuxProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     // Linux apparently allows more parameter than the ABI says it should.
@@ -447,7 +447,7 @@ PowerLinuxProcess::getSyscallArg(ThreadContext *tc, int &i)
 }
 
 void
-PowerLinuxProcess::setSyscallArg(ThreadContext *tc, int i, PowerISA::IntReg val)
+PowerLinuxProcess::setSyscallArg(ThreadContext *tc, int i, RegVal val)
 {
     // Linux apparently allows more parameter than the ABI says it should.
     // This limit may need to be increased even further.

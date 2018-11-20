@@ -277,7 +277,7 @@ PowerProcess::argsInit(int intSize, int pageSize)
     memState->setStackMin(roundDown(stack_min, pageSize));
 }
 
-PowerISA::IntReg
+RegVal
 PowerProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 5);
@@ -285,7 +285,7 @@ PowerProcess::getSyscallArg(ThreadContext *tc, int &i)
 }
 
 void
-PowerProcess::setSyscallArg(ThreadContext *tc, int i, PowerISA::IntReg val)
+PowerProcess::setSyscallArg(ThreadContext *tc, int i, RegVal val)
 {
     assert(i < 5);
     tc->setIntReg(ArgumentReg0 + i, val);

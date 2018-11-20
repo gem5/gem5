@@ -50,10 +50,10 @@ class PowerProcess : public Process
 
   public:
     void argsInit(int intSize, int pageSize);
-    PowerISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
+    RegVal getSyscallArg(ThreadContext *tc, int &i);
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
-    void setSyscallArg(ThreadContext *tc, int i, PowerISA::IntReg val);
+    void setSyscallArg(ThreadContext *tc, int i, RegVal val);
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
