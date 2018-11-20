@@ -47,10 +47,7 @@
 
 namespace NullISA {
 
-typedef RegVal IntReg;
-typedef RegVal FloatReg;
 typedef uint8_t CCReg;
-typedef RegVal MiscReg;
 const RegIndex ZeroReg = 0;
 
 // Not applicable to null
