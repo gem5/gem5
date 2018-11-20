@@ -49,7 +49,6 @@ typedef RegVal IntReg;
 
 // Floating point register file entry type
 typedef RegVal FloatRegBits;
-typedef FloatRegVal FloatReg;
 typedef RegVal MiscReg;
 
 // dummy typedef since we don't have CC regs

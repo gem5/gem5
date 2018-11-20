@@ -166,7 +166,6 @@ isRomMicroPC(MicroPC upc)
 const Addr MaxAddr = (Addr)-1;
 
 typedef uint64_t RegVal;
-typedef double FloatRegVal;
 
 static inline uint32_t
 floatToBits32(float val)

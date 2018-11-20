@@ -48,7 +48,6 @@ const int MaxMiscDestRegs = AlphaISAInst::MaxMiscDestRegs + 1;
 typedef RegVal IntReg;
 
 // floating point register file entry type
-typedef FloatRegVal FloatReg;
 typedef RegVal FloatRegBits;
 
 // control register file contents

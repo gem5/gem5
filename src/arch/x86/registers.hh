@@ -105,7 +105,6 @@ constexpr unsigned NumVecRegs = 1;
 
 //These floating point types are correct for mmx, but not
 //technically for x87 (80 bits) or at all for xmm (128 bits)
-typedef FloatRegVal FloatReg;
 typedef RegVal FloatRegBits;
 
 } // namespace X86ISA

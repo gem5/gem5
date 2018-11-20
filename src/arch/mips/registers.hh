@@ -282,7 +282,6 @@ typedef RegVal IntReg;
 
 // floating point register file entry type
 typedef RegVal FloatRegBits;
-typedef FloatRegVal FloatReg;
 
 // cop-0/cop-1 system control register
 typedef RegVal MiscReg;
