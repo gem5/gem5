@@ -54,11 +54,10 @@ class RiscvProcess : public Process
     void argsInit(int pageSize);
 
   public:
-    RiscvISA::IntReg getSyscallArg(ThreadContext *tc, int &i) override;
+    RegVal getSyscallArg(ThreadContext *tc, int &i) override;
     /// Explicitly import the otherwise hidden getSyscallArg
     using Process::getSyscallArg;
-    void setSyscallArg(ThreadContext *tc, int i,
-                       RiscvISA::IntReg val) override;
+    void setSyscallArg(ThreadContext *tc, int i, RegVal val) override;
     void setSyscallReturn(ThreadContext *tc,
                           SyscallReturn return_value) override;
 

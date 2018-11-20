@@ -781,7 +781,7 @@ decode QUADRANT default Unknown::unknown() {
                     }});
                     0x1: divuw({{
                         if (Rs2_uw == 0) {
-                            Rd_sd = numeric_limits<IntReg>::max();
+                            Rd_sd = numeric_limits<uint64_t>::max();
                         } else {
                             Rd_sd = (int32_t)(Rs1_uw/Rs2_uw);
                         }

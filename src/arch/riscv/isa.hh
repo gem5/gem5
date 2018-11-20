@@ -65,7 +65,7 @@ enum PrivilegeMode {
 class ISA : public SimObject
 {
   protected:
-    std::vector<MiscReg> miscRegFile;
+    std::vector<RegVal> miscRegFile;
 
     bool hpmCounterEnabled(int counter) const;
 
@@ -74,10 +74,10 @@ class ISA : public SimObject
 
     void clear();
 
-    MiscReg readMiscRegNoEffect(int misc_reg) const;
-    MiscReg readMiscReg(int misc_reg, ThreadContext *tc);
-    void setMiscRegNoEffect(int misc_reg, MiscReg val);
-    void setMiscReg(int misc_reg, MiscReg val, ThreadContext *tc);
+    RegVal readMiscRegNoEffect(int misc_reg) const;
+    RegVal readMiscReg(int misc_reg, ThreadContext *tc);
+    void setMiscRegNoEffect(int misc_reg, RegVal val);
+    void setMiscReg(int misc_reg, RegVal val, ThreadContext *tc);
 
     RegId flattenRegId(const RegId &regId) const { return regId; }
     int flattenIntIndex(int reg) const { return reg; }

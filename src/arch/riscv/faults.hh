@@ -44,7 +44,7 @@
 namespace RiscvISA
 {
 
-enum FloatException : MiscReg {
+enum FloatException : uint64_t {
     FloatInexact = 0x1,
     FloatUnderflow = 0x2,
     FloatOverflow = 0x4,
@@ -61,7 +61,7 @@ enum FloatException : MiscReg {
  * For more details on exception causes, see Chapter 3.1.20 of the RISC-V
  * privileged specification v 1.10. Codes are enumerated in Table 3.6.
  */
-enum ExceptionCode : MiscReg {
+enum ExceptionCode : uint64_t {
     INST_ADDR_MISALIGNED = 0,
     INST_ACCESS = 1,
     INST_ILLEGAL = 2,
@@ -106,7 +106,7 @@ class RiscvFault : public FaultBase
     FaultName name() const override { return _name; }
     bool isInterrupt() const { return _interrupt; }
     ExceptionCode exception() const { return _code; }
-    virtual MiscReg trap_value() const { return 0; }
+    virtual RegVal trap_value() const { return 0; }
 
     virtual void invokeSE(ThreadContext *tc, const StaticInstPtr &inst);
     void invoke(ThreadContext *tc, const StaticInstPtr &inst) override;
@@ -142,7 +142,7 @@ class InstFault : public RiscvFault
         : RiscvFault(n, false, INST_ILLEGAL), _inst(inst)
     {}
 
-    MiscReg trap_value() const override { return _inst; }
+    RegVal trap_value() const override { return _inst; }
 };
 
 class UnknownInstFault : public InstFault
@@ -206,7 +206,7 @@ class AddressFault : public RiscvFault
         : RiscvFault("Address", false, code), _addr(addr)
     {}
 
-    MiscReg trap_value() const override { return _addr; }
+    RegVal trap_value() const override { return _addr; }
 };
 
 class BreakpointFault : public RiscvFault
@@ -219,7 +219,7 @@ class BreakpointFault : public RiscvFault
         : RiscvFault("Breakpoint", false, BREAKPOINT), pcState(pc)
     {}
 
-    MiscReg trap_value() const override { return pcState.pc(); }
+    RegVal trap_value() const override { return pcState.pc(); }
     void invokeSE(ThreadContext *tc, const StaticInstPtr &inst) override;
 };
 
