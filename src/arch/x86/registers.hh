@@ -117,7 +117,7 @@ constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
 //These floating point types are correct for mmx, but not
 //technically for x87 (80 bits) or at all for xmm (128 bits)
-typedef RegVal FloatRegBits;
+typedef RegVal FloatReg;
 
 } // namespace X86ISA
 

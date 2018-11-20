@@ -208,7 +208,7 @@ Checker<Impl>::verify(const DynInstPtr &completed_inst)
         // maintain $r0 semantics
         thread->setIntReg(ZeroReg, 0);
 #if THE_ISA == ALPHA_ISA
-        thread->setFloatRegBits(ZeroReg, 0);
+        thread->setFloatReg(ZeroReg, 0);
 #endif
 
         // Check if any recent PC changes match up with anything we
@@ -609,7 +609,7 @@ Checker<Impl>::copyResult(const DynInstPtr &inst,
             break;
           case FloatRegClass:
             panic_if(!mismatch_val.isScalar(), "Unexpected type of result");
-            thread->setFloatRegBits(idx.index(), mismatch_val.asInteger());
+            thread->setFloatReg(idx.index(), mismatch_val.asInteger());
             break;
           case VecRegClass:
             panic_if(!mismatch_val.isVector(), "Unexpected type of result");
@@ -644,7 +644,7 @@ Checker<Impl>::copyResult(const DynInstPtr &inst,
             break;
           case FloatRegClass:
             panic_if(!res.isScalar(), "Unexpected type of result");
-            thread->setFloatRegBits(idx.index(), res.asInteger());
+            thread->setFloatReg(idx.index(), res.asInteger());
             break;
           case VecRegClass:
             panic_if(!res.isVector(), "Unexpected type of result");

@@ -225,7 +225,7 @@ zeroRegisters(CPU *cpu)
     // (no longer very clean due to the change in setIntReg() in the
     // cpu model.  Consider changing later.)
     cpu->thread->setIntReg(ZeroReg, 0);
-    cpu->thread->setFloatRegBits(ZeroReg, 0);
+    cpu->thread->setFloatReg(ZeroReg, 0);
 }
 
 void
@@ -247,7 +247,7 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
 
     // Then loop through the floating point registers.
     for (int i = 0; i < NumFloatRegs; i++)
-        dest->setFloatRegBitsFlat(i, src->readFloatRegBitsFlat(i));
+        dest->setFloatRegFlat(i, src->readFloatRegFlat(i));
 
     // Would need to add condition-code regs if implemented
     assert(NumCCRegs == 0);

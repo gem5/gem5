@@ -61,7 +61,7 @@ class RemoteGDB : public BaseRemoteGDB
         struct {
             IntReg gpr[NumIntArchRegs];
             IntReg pc;
-            FloatRegBits fpr[NumFloatRegs];
+            FloatReg fpr[NumFloatRegs];
 
             MiscReg csr_base;
             uint32_t fflags;

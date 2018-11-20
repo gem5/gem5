@@ -838,7 +838,7 @@ updateKvmStateFPUCommon(ThreadContext *tc, T &fpu)
     for (int i = 0; i < 8; ++i) {
         const unsigned reg_idx((i + top) & 0x7);
         const double value(bitsToFloat64(
-                    tc->readFloatRegBits(FLOATREG_FPR(reg_idx))));
+                    tc->readFloatReg(FLOATREG_FPR(reg_idx))));
         DPRINTF(KvmContext, "Setting KVM FP reg %i (st[%i]) := %f\n",
                 reg_idx, i, value);
         X86ISA::storeFloat80(fpu.fpr[i], value);
@@ -848,9 +848,9 @@ updateKvmStateFPUCommon(ThreadContext *tc, T &fpu)
 
     for (int i = 0; i < 16; ++i) {
         *(uint64_t *)&fpu.xmm[i][0] =
-            tc->readFloatRegBits(FLOATREG_XMM_LOW(i));
+            tc->readFloatReg(FLOATREG_XMM_LOW(i));
         *(uint64_t *)&fpu.xmm[i][8] =
-            tc->readFloatRegBits(FLOATREG_XMM_HIGH(i));
+            tc->readFloatReg(FLOATREG_XMM_HIGH(i));
     }
 }
 
@@ -1050,7 +1050,7 @@ updateThreadContextFPUCommon(ThreadContext *tc, const T &fpu)
         const double value(X86ISA::loadFloat80(fpu.fpr[i]));
         DPRINTF(KvmContext, "Setting gem5 FP reg %i (st[%i]) := %f\n",
                 reg_idx, i, value);
-        tc->setFloatRegBits(FLOATREG_FPR(reg_idx), floatToBits64(value));
+        tc->setFloatReg(FLOATREG_FPR(reg_idx), floatToBits64(value));
     }
 
     // TODO: We should update the MMX state
@@ -1068,10 +1068,8 @@ updateThreadContextFPUCommon(ThreadContext *tc, const T &fpu)
     tc->setMiscRegNoEffect(MISCREG_FOP, fpu.last_opcode);
 
     for (int i = 0; i < 16; ++i) {
-        tc->setFloatRegBits(FLOATREG_XMM_LOW(i),
-                            *(uint64_t *)&fpu.xmm[i][0]);
-        tc->setFloatRegBits(FLOATREG_XMM_HIGH(i),
-                            *(uint64_t *)&fpu.xmm[i][8]);
+        tc->setFloatReg(FLOATREG_XMM_LOW(i), *(uint64_t *)&fpu.xmm[i][0]);
+        tc->setFloatReg(FLOATREG_XMM_HIGH(i), *(uint64_t *)&fpu.xmm[i][8]);
     }
 }
 

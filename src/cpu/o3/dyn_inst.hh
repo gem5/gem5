@@ -222,7 +222,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
                 break;
               case FloatRegClass:
                 this->setFloatRegOperandBits(this->staticInst.get(), idx,
-                               this->cpu->readFloatRegBits(prev_phys_reg));
+                               this->cpu->readFloatReg(prev_phys_reg));
                 break;
               case VecRegClass:
                 this->setVecRegOperand(this->staticInst.get(), idx,
@@ -280,7 +280,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     RegVal
     readFloatRegOperandBits(const StaticInst *si, int idx)
     {
-        return this->cpu->readFloatRegBits(this->_srcRegIdx[idx]);
+        return this->cpu->readFloatReg(this->_srcRegIdx[idx]);
     }
 
     const VecRegContainer&
@@ -396,7 +396,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     void
     setFloatRegOperandBits(const StaticInst *si, int idx, RegVal val)
     {
-        this->cpu->setFloatRegBits(this->_destRegIdx[idx], val);
+        this->cpu->setFloatReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setFloatRegOperandBits(si, idx, val);
     }
 

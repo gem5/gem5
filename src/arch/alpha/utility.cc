@@ -48,7 +48,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
     const int NumArgumentRegs = 6;
     if (number < NumArgumentRegs) {
         if (fp)
-            return tc->readFloatRegBits(16 + number);
+            return tc->readFloatReg(16 + number);
         else
             return tc->readIntReg(16 + number);
     } else {
@@ -70,7 +70,7 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
 
     // Then loop through the floating point registers.
     for (int i = 0; i < NumFloatRegs; ++i)
-        dest->setFloatRegBits(i, src->readFloatRegBits(i));
+        dest->setFloatReg(i, src->readFloatReg(i));
 
     // Would need to add condition-code regs if implemented
     assert(NumCCRegs == 0);

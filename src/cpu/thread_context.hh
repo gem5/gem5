@@ -208,7 +208,7 @@ class ThreadContext
     //
     virtual RegVal readIntReg(int reg_idx) = 0;
 
-    virtual RegVal readFloatRegBits(int reg_idx) = 0;
+    virtual RegVal readFloatReg(int reg_idx) = 0;
 
     virtual const VecRegContainer& readVecReg(const RegId& reg) const = 0;
     virtual VecRegContainer& getWritableVecReg(const RegId& reg) = 0;
@@ -252,7 +252,7 @@ class ThreadContext
 
     virtual void setIntReg(int reg_idx, RegVal val) = 0;
 
-    virtual void setFloatRegBits(int reg_idx, RegVal val) = 0;
+    virtual void setFloatReg(int reg_idx, RegVal val) = 0;
 
     virtual void setVecReg(const RegId& reg, const VecRegContainer& val) = 0;
 
@@ -338,8 +338,8 @@ class ThreadContext
     virtual RegVal readIntRegFlat(int idx) = 0;
     virtual void setIntRegFlat(int idx, RegVal val) = 0;
 
-    virtual RegVal readFloatRegBitsFlat(int idx) = 0;
-    virtual void setFloatRegBitsFlat(int idx, RegVal val) = 0;
+    virtual RegVal readFloatRegFlat(int idx) = 0;
+    virtual void setFloatRegFlat(int idx, RegVal val) = 0;
 
     virtual const VecRegContainer& readVecRegFlat(int idx) const = 0;
     virtual VecRegContainer& getWritableVecRegFlat(int idx) = 0;
@@ -467,8 +467,8 @@ class ProxyThreadContext : public ThreadContext
     RegVal readIntReg(int reg_idx)
     { return actualTC->readIntReg(reg_idx); }
 
-    RegVal readFloatRegBits(int reg_idx)
-    { return actualTC->readFloatRegBits(reg_idx); }
+    RegVal readFloatReg(int reg_idx)
+    { return actualTC->readFloatReg(reg_idx); }
 
     const VecRegContainer& readVecReg(const RegId& reg) const
     { return actualTC->readVecReg(reg); }
@@ -528,8 +528,8 @@ class ProxyThreadContext : public ThreadContext
     void setIntReg(int reg_idx, RegVal val)
     { actualTC->setIntReg(reg_idx, val); }
 
-    void setFloatRegBits(int reg_idx, RegVal val)
-    { actualTC->setFloatRegBits(reg_idx, val); }
+    void setFloatReg(int reg_idx, RegVal val)
+    { actualTC->setFloatReg(reg_idx, val); }
 
     void setVecReg(const RegId& reg, const VecRegContainer& val)
     { actualTC->setVecReg(reg, val); }
@@ -590,11 +590,11 @@ class ProxyThreadContext : public ThreadContext
     void setIntRegFlat(int idx, RegVal val)
     { actualTC->setIntRegFlat(idx, val); }
 
-    RegVal readFloatRegBitsFlat(int idx)
-    { return actualTC->readFloatRegBitsFlat(idx); }
+    RegVal readFloatRegFlat(int idx)
+    { return actualTC->readFloatRegFlat(idx); }
 
-    void setFloatRegBitsFlat(int idx, RegVal val)
-    { actualTC->setFloatRegBitsFlat(idx, val); }
+    void setFloatRegFlat(int idx, RegVal val)
+    { actualTC->setFloatRegFlat(idx, val); }
 
     const VecRegContainer& readVecRegFlat(int id) const
     { return actualTC->readVecRegFlat(id); }

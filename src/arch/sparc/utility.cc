@@ -232,7 +232,7 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
 
     // Then loop through the floating point registers.
     for (int i = 0; i < SparcISA::NumFloatArchRegs; ++i) {
-        dest->setFloatRegBits(i, src->readFloatRegBits(i));
+        dest->setFloatReg(i, src->readFloatReg(i));
     }
 
     // Would need to add condition-code regs if implemented

@@ -239,7 +239,7 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
          dest->setIntRegFlat(i, src->readIntRegFlat(i));
     //copy float regs
     for (int i = 0; i < NumFloatRegs; ++i)
-         dest->setFloatRegBitsFlat(i, src->readFloatRegBitsFlat(i));
+         dest->setFloatRegFlat(i, src->readFloatRegFlat(i));
     //copy condition-code regs
     for (int i = 0; i < NumCCRegs; ++i)
          dest->setCCRegFlat(i, src->readCCRegFlat(i));

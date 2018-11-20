@@ -72,7 +72,7 @@ namespace X86ISA
         int
         numItems(int size) const
         {
-            return scalarOp() ? 1 : (sizeof(FloatRegBits) / size);
+            return scalarOp() ? 1 : (sizeof(FloatReg) / size);
         }
 
         bool

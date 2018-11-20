@@ -255,11 +255,11 @@ class SimpleThread : public ThreadState
     }
 
     RegVal
-    readFloatRegBits(int reg_idx)
+    readFloatReg(int reg_idx)
     {
         int flatIndex = isa->flattenFloatIndex(reg_idx);
         assert(flatIndex < TheISA::NumFloatRegs);
-        RegVal regVal(readFloatRegBitsFlat(flatIndex));
+        RegVal regVal(readFloatRegFlat(flatIndex));
         DPRINTF(FloatRegs, "Reading float reg %d (%d) bits as %#x.\n",
                 reg_idx, flatIndex, regVal);
         return regVal;
@@ -406,14 +406,14 @@ class SimpleThread : public ThreadState
     }
 
     void
-    setFloatRegBits(int reg_idx, RegVal val)
+    setFloatReg(int reg_idx, RegVal val)
     {
         int flatIndex = isa->flattenFloatIndex(reg_idx);
         assert(flatIndex < TheISA::NumFloatRegs);
         // XXX: Fix array out of bounds compiler error for gem5.fast
         // when checkercpu enabled
         if (flatIndex < TheISA::NumFloatRegs)
-            setFloatRegBitsFlat(flatIndex, val);
+            setFloatRegFlat(flatIndex, val);
         DPRINTF(FloatRegs, "Setting float reg %d (%d) bits to %#x.\n",
                 reg_idx, flatIndex, val);
     }
@@ -558,8 +558,8 @@ class SimpleThread : public ThreadState
     RegVal readIntRegFlat(int idx) { return intRegs[idx]; }
     void setIntRegFlat(int idx, RegVal val) { intRegs[idx] = val; }
 
-    RegVal readFloatRegBitsFlat(int idx) { return floatRegs[idx]; }
-    void setFloatRegBitsFlat(int idx, RegVal val) { floatRegs[idx] = val; }
+    RegVal readFloatRegFlat(int idx) { return floatRegs[idx]; }
+    void setFloatRegFlat(int idx, RegVal val) { floatRegs[idx] = val; }
 
     const VecRegContainer &
     readVecRegFlat(const RegIndex& reg) const

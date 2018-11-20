@@ -220,7 +220,7 @@ RemoteGDB::AlphaGdbRegCache::getRegs(ThreadContext *context)
 
     for (int i = 0; i < 32; ++i)
 #ifdef KGDB_FP_REGS
-       r.fpr[i] = context->readFloatRegBits(i);
+       r.fpr[i] = context->readFloatReg(i);
 #else
        r.fpr[i] = 0;
 #endif
@@ -243,7 +243,7 @@ RemoteGDB::AlphaGdbRegCache::setRegs(ThreadContext *context) const
 
 #ifdef KGDB_FP_REGS
     for (int i = 0; i < NumFloatArchRegs; ++i) {
-        context->setFloatRegBits(i, gdbregs.regs64[i + KGDB_REG_F0]);
+        context->setFloatReg(i, gdbregs.regs64[i + KGDB_REG_F0]);
     }
 #endif
     context->pcState(r.pc);

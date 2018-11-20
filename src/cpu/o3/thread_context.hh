@@ -189,10 +189,10 @@ class O3ThreadContext : public ThreadContext
     }
 
     virtual RegVal
-    readFloatRegBits(int reg_idx)
+    readFloatReg(int reg_idx)
     {
-        return readFloatRegBitsFlat(flattenRegId(RegId(FloatRegClass,
-                                                 reg_idx)).index());
+        return readFloatRegFlat(flattenRegId(RegId(FloatRegClass,
+                                             reg_idx)).index());
     }
 
     virtual const VecRegContainer &
@@ -284,10 +284,10 @@ class O3ThreadContext : public ThreadContext
     }
 
     virtual void
-    setFloatRegBits(int reg_idx, RegVal val)
+    setFloatReg(int reg_idx, RegVal val)
     {
-        setFloatRegBitsFlat(flattenRegId(RegId(FloatRegClass,
-                                               reg_idx)).index(), val);
+        setFloatRegFlat(flattenRegId(RegId(FloatRegClass,
+                                           reg_idx)).index(), val);
     }
 
     virtual void
@@ -391,8 +391,8 @@ class O3ThreadContext : public ThreadContext
     virtual RegVal readIntRegFlat(int idx);
     virtual void setIntRegFlat(int idx, RegVal val);
 
-    virtual RegVal readFloatRegBitsFlat(int idx);
-    virtual void setFloatRegBitsFlat(int idx, RegVal val);
+    virtual RegVal readFloatRegFlat(int idx);
+    virtual void setFloatRegFlat(int idx, RegVal val);
 
     virtual const VecRegContainer& readVecRegFlat(int idx) const;
     /** Read vector register operand for modification, flat indexing. */

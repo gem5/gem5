@@ -209,9 +209,9 @@ class CheckerThreadContext : public ThreadContext
     RegVal readIntReg(int reg_idx) { return actualTC->readIntReg(reg_idx); }
 
     RegVal
-    readFloatRegBits(int reg_idx)
+    readFloatReg(int reg_idx)
     {
-        return actualTC->readFloatRegBits(reg_idx);
+        return actualTC->readFloatReg(reg_idx);
     }
 
     const VecRegContainer& readVecReg(const RegId& reg) const
@@ -280,10 +280,10 @@ class CheckerThreadContext : public ThreadContext
     }
 
     void
-    setFloatRegBits(int reg_idx, RegVal val)
+    setFloatReg(int reg_idx, RegVal val)
     {
-        actualTC->setFloatRegBits(reg_idx, val);
-        checkerTC->setFloatRegBits(reg_idx, val);
+        actualTC->setFloatReg(reg_idx, val);
+        checkerTC->setFloatReg(reg_idx, val);
     }
 
     void
@@ -404,15 +404,15 @@ class CheckerThreadContext : public ThreadContext
     }
 
     RegVal
-    readFloatRegBitsFlat(int idx)
+    readFloatRegFlat(int idx)
     {
-        return actualTC->readFloatRegBitsFlat(idx);
+        return actualTC->readFloatRegFlat(idx);
     }
 
     void
-    setFloatRegBitsFlat(int idx, RegVal val)
+    setFloatRegFlat(int idx, RegVal val)
     {
-        actualTC->setFloatRegBitsFlat(idx, val);
+        actualTC->setFloatRegFlat(idx, val);
     }
 
     const VecRegContainer &

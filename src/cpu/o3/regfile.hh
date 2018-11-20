@@ -194,7 +194,7 @@ class PhysRegFile
     }
 
     RegVal
-    readFloatRegBits(PhysRegIdPtr phys_reg) const
+    readFloatReg(PhysRegIdPtr phys_reg) const
     {
         assert(phys_reg->isFloatPhysReg());
 
@@ -316,7 +316,7 @@ class PhysRegFile
     }
 
     void
-    setFloatRegBits(PhysRegIdPtr phys_reg, RegVal val)
+    setFloatReg(PhysRegIdPtr phys_reg, RegVal val)
     {
         assert(phys_reg->isFloatPhysReg());
 

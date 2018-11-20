@@ -184,7 +184,7 @@ RemoteGDB::PowerGdbRegCache::getRegs(ThreadContext *context)
         r.gpr[i] = htobe((uint32_t)context->readIntReg(i));
 
     for (int i = 0; i < NumFloatArchRegs; i++)
-        r.fpr[i] = context->readFloatRegBits(i);
+        r.fpr[i] = context->readFloatReg(i);
 
     r.pc = htobe((uint32_t)context->pcState().pc());
     r.msr = 0; // Is MSR modeled?
@@ -203,7 +203,7 @@ RemoteGDB::PowerGdbRegCache::setRegs(ThreadContext *context) const
         context->setIntReg(i, betoh(r.gpr[i]));
 
     for (int i = 0; i < NumFloatArchRegs; i++)
-        context->setFloatRegBits(i, r.fpr[i]);
+        context->setFloatReg(i, r.fpr[i]);
 
     context->pcState(betoh(r.pc));
     // Is MSR modeled?

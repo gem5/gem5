@@ -49,7 +49,7 @@ const int MaxMiscDestRegs = PowerISAInst::MaxMiscDestRegs + 1;
 typedef RegVal IntReg;
 
 // Floating point register file entry type
-typedef RegVal FloatRegBits;
+typedef RegVal FloatReg;
 typedef RegVal MiscReg;
 
 // dummy typedef since we don't have CC regs

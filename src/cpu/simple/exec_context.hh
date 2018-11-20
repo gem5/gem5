@@ -202,7 +202,7 @@ class SimpleExecContext : public ExecContext {
         numFpRegReads++;
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.isFloatReg());
-        return thread->readFloatRegBits(reg.index());
+        return thread->readFloatReg(reg.index());
     }
 
     /** Sets the bits of a floating point register of single width
@@ -213,7 +213,7 @@ class SimpleExecContext : public ExecContext {
         numFpRegWrites++;
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isFloatReg());
-        thread->setFloatRegBits(reg.index(), val);
+        thread->setFloatReg(reg.index(), val);
     }
 
     /** Reads a vector register. */

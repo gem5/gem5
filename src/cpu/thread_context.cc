@@ -71,8 +71,8 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 
     // Then loop through the floating point registers.
     for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
-        RegVal t1 = one->readFloatRegBits(i);
-        RegVal t2 = two->readFloatRegBits(i);
+        RegVal t1 = one->readFloatReg(i);
+        RegVal t2 = two->readFloatReg(i);
         if (t1 != t2)
             panic("Float reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
@@ -169,7 +169,7 @@ serialize(ThreadContext &tc, CheckpointOut &cp)
 
     RegVal floatRegs[NumFloatRegs];
     for (int i = 0; i < NumFloatRegs; ++i)
-        floatRegs[i] = tc.readFloatRegBitsFlat(i);
+        floatRegs[i] = tc.readFloatRegFlat(i);
     // This is a bit ugly, but needed to maintain backwards
     // compatibility.
     arrayParamOut(cp, "floatRegs.i", floatRegs, NumFloatRegs);
@@ -213,7 +213,7 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
     // compatibility.
     arrayParamIn(cp, "floatRegs.i", floatRegs, NumFloatRegs);
     for (int i = 0; i < NumFloatRegs; ++i)
-        tc.setFloatRegBitsFlat(i, floatRegs[i]);
+        tc.setFloatRegFlat(i, floatRegs[i]);
 
     std::vector<TheISA::VecRegContainer> vecRegs(NumVecRegs);
     UNSERIALIZE_CONTAINER(vecRegs);

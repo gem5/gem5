@@ -199,7 +199,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     {
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.isFloatReg());
-        return thread->readFloatRegBits(reg.index());
+        return thread->readFloatReg(reg.index());
     }
 
     /**
@@ -374,7 +374,7 @@ class CheckerCPU : public BaseCPU, public ExecContext
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isFloatReg());
-        thread->setFloatRegBits(reg.index(), val);
+        thread->setFloatReg(reg.index(), val);
         setScalarResult(val);
     }
 

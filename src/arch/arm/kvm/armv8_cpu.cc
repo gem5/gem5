@@ -252,7 +252,7 @@ ArmV8KvmCPU::updateKvmState()
         const RegIndex reg_base(i * FP_REGS_PER_VFP_REG);
         KvmFPReg reg;
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
-            reg.s[j].i = tc->readFloatRegBits(reg_base + j);
+            reg.s[j].i = tc->readFloatReg(reg_base + j);
 
         setOneReg(kvmFPReg(i), reg.data);
         DPRINTF(KvmContext, "  Q%i: %s\n", i, getAndFormatOneReg(kvmFPReg(i)));
@@ -326,7 +326,7 @@ ArmV8KvmCPU::updateThreadContext()
         DPRINTF(KvmContext, "  Q%i: %s\n", i, getAndFormatOneReg(kvmFPReg(i)));
         getOneReg(kvmFPReg(i), reg.data);
         for (int j = 0; j < FP_REGS_PER_VFP_REG; j++)
-            tc->setFloatRegBits(reg_base + j, reg.s[j].i);
+            tc->setFloatReg(reg_base + j, reg.s[j].i);
     }
 
     for (const auto &ri : getSysRegMap()) {

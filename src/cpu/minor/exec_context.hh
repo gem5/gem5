@@ -99,7 +99,7 @@ class ExecContext : public ::ExecContext
         setPredicate(true);
         thread.setIntReg(TheISA::ZeroReg, 0);
 #if THE_ISA == ALPHA_ISA
-        thread.setFloatRegBits(TheISA::ZeroReg, 0);
+        thread.setFloatReg(TheISA::ZeroReg, 0);
 #endif
     }
 
@@ -134,7 +134,7 @@ class ExecContext : public ::ExecContext
     {
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.isFloatReg());
-        return thread.readFloatRegBits(reg.index());
+        return thread.readFloatReg(reg.index());
     }
 
     const TheISA::VecRegContainer &
@@ -190,7 +190,7 @@ class ExecContext : public ::ExecContext
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isFloatReg());
-        thread.setFloatRegBits(reg.index(), val);
+        thread.setFloatReg(reg.index(), val);
     }
 
     void
@@ -443,7 +443,7 @@ class ExecContext : public ::ExecContext
                 return other_thread->readIntReg(reg.index());
                 break;
             case FloatRegClass:
-                return other_thread->readFloatRegBits(reg.index());
+                return other_thread->readFloatReg(reg.index());
                 break;
             case MiscRegClass:
                 return other_thread->readMiscReg(reg.index());
@@ -466,7 +466,7 @@ class ExecContext : public ::ExecContext
                 return other_thread->setIntReg(reg.index(), val);
                 break;
             case FloatRegClass:
-                return other_thread->setFloatRegBits(reg.index(), val);
+                return other_thread->setFloatReg(reg.index(), val);
                 break;
             case MiscRegClass:
                 return other_thread->setMiscReg(reg.index(), val);

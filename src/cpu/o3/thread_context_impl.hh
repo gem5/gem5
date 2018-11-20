@@ -205,9 +205,9 @@ O3ThreadContext<Impl>::readIntRegFlat(int reg_idx)
 
 template <class Impl>
 RegVal
-O3ThreadContext<Impl>::readFloatRegBitsFlat(int reg_idx)
+O3ThreadContext<Impl>::readFloatRegFlat(int reg_idx)
 {
-    return cpu->readArchFloatRegBits(reg_idx, thread->threadId());
+    return cpu->readArchFloatReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
@@ -264,9 +264,9 @@ O3ThreadContext<Impl>::setIntRegFlat(int reg_idx, RegVal val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setFloatRegBitsFlat(int reg_idx, RegVal val)
+O3ThreadContext<Impl>::setFloatRegFlat(int reg_idx, RegVal val)
 {
-    cpu->setArchFloatRegBits(reg_idx, val, thread->threadId());
+    cpu->setArchFloatReg(reg_idx, val, thread->threadId());
 
     conditionalSquash();
 }

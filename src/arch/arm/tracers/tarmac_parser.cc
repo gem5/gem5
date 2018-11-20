@@ -647,35 +647,35 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
             break;
           case REG_S:
             if (instRecord.isetstate == ISET_A64)
-                value_lo = thread->readFloatRegBits(it->index * 4);
+                value_lo = thread->readFloatReg(it->index * 4);
             else
-                value_lo = thread->readFloatRegBits(it->index);
+                value_lo = thread->readFloatReg(it->index);
             break;
           case REG_D:
             if (instRecord.isetstate == ISET_A64)
-                value_lo = thread->readFloatRegBits(it->index * 4) |
-                    (uint64_t) thread->readFloatRegBits(it->index * 4 + 1) <<
+                value_lo = thread->readFloatReg(it->index * 4) |
+                    (uint64_t) thread->readFloatReg(it->index * 4 + 1) <<
                     32;
             else
-                value_lo = thread->readFloatRegBits(it->index * 2) |
-                    (uint64_t) thread->readFloatRegBits(it->index * 2 + 1) <<
+                value_lo = thread->readFloatReg(it->index * 2) |
+                    (uint64_t) thread->readFloatReg(it->index * 2 + 1) <<
                     32;
             break;
           case REG_Q:
             check_value_hi = true;
             if (instRecord.isetstate == ISET_A64) {
-                value_lo = thread->readFloatRegBits(it->index * 4) |
-                    (uint64_t) thread->readFloatRegBits(it->index * 4 + 1) <<
+                value_lo = thread->readFloatReg(it->index * 4) |
+                    (uint64_t) thread->readFloatReg(it->index * 4 + 1) <<
                     32;
-                value_hi = thread->readFloatRegBits(it->index * 4 + 2) |
-                    (uint64_t) thread->readFloatRegBits(it->index * 4 + 3) <<
+                value_hi = thread->readFloatReg(it->index * 4 + 2) |
+                    (uint64_t) thread->readFloatReg(it->index * 4 + 3) <<
                     32;
             } else {
-                value_lo = thread->readFloatRegBits(it->index * 2) |
-                    (uint64_t) thread->readFloatRegBits(it->index * 2 + 1) <<
+                value_lo = thread->readFloatReg(it->index * 2) |
+                    (uint64_t) thread->readFloatReg(it->index * 2 + 1) <<
                     32;
-                value_hi = thread->readFloatRegBits(it->index * 2 + 2) |
-                    (uint64_t) thread->readFloatRegBits(it->index * 2 + 3) <<
+                value_hi = thread->readFloatReg(it->index * 2 + 2) |
+                    (uint64_t) thread->readFloatReg(it->index * 2 + 3) <<
                     32;
             }
             break;

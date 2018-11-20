@@ -410,7 +410,7 @@ class FullO3CPU : public BaseO3CPU
 
     RegVal readIntReg(PhysRegIdPtr phys_reg);
 
-    RegVal readFloatRegBits(PhysRegIdPtr phys_reg);
+    RegVal readFloatReg(PhysRegIdPtr phys_reg);
 
     const VecRegContainer& readVecReg(PhysRegIdPtr reg_idx) const;
 
@@ -467,7 +467,7 @@ class FullO3CPU : public BaseO3CPU
 
     void setIntReg(PhysRegIdPtr phys_reg, RegVal val);
 
-    void setFloatRegBits(PhysRegIdPtr phys_reg, RegVal val);
+    void setFloatReg(PhysRegIdPtr phys_reg, RegVal val);
 
     void setVecReg(PhysRegIdPtr reg_idx, const VecRegContainer& val);
 
@@ -479,7 +479,7 @@ class FullO3CPU : public BaseO3CPU
 
     RegVal readArchIntReg(int reg_idx, ThreadID tid);
 
-    RegVal readArchFloatRegBits(int reg_idx, ThreadID tid);
+    RegVal readArchFloatReg(int reg_idx, ThreadID tid);
 
     const VecRegContainer& readArchVecReg(int reg_idx, ThreadID tid) const;
     /** Read architectural vector register for modification. */
@@ -523,7 +523,7 @@ class FullO3CPU : public BaseO3CPU
      */
     void setArchIntReg(int reg_idx, RegVal val, ThreadID tid);
 
-    void setArchFloatRegBits(int reg_idx, RegVal val, ThreadID tid);
+    void setArchFloatReg(int reg_idx, RegVal val, ThreadID tid);
 
     void setArchVecPredReg(int reg_idx, const VecPredRegContainer& val,
                            ThreadID tid);

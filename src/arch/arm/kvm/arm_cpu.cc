@@ -697,8 +697,8 @@ ArmKvmCPU::updateKvmStateVFP(uint64_t id, bool show_warnings)
         const unsigned idx_hi(idx_base + 1);
         const unsigned idx_lo(idx_base + 0);
         uint64_t value(
-            ((uint64_t)tc->readFloatRegBitsFlat(idx_hi) << 32) |
-            tc->readFloatRegBitsFlat(idx_lo));
+            ((uint64_t)tc->readFloatRegFlat(idx_hi) << 32) |
+            tc->readFloatRegFlat(idx_lo));
 
         setOneReg(id, value);
     } else if (REG_IS_VFP_CTRL(id)) {
@@ -839,8 +839,8 @@ ArmKvmCPU::updateTCStateVFP(uint64_t id, bool show_warnings)
         const unsigned idx_lo(idx_base + 0);
         uint64_t value(getOneRegU64(id));
 
-        tc->setFloatRegBitsFlat(idx_hi, (value >> 32) & 0xFFFFFFFF);
-        tc->setFloatRegBitsFlat(idx_lo, value & 0xFFFFFFFF);
+        tc->setFloatRegFlat(idx_hi, (value >> 32) & 0xFFFFFFFF);
+        tc->setFloatRegFlat(idx_lo, value & 0xFFFFFFFF);
     } else if (REG_IS_VFP_CTRL(id)) {
         MiscRegIndex idx(decodeVFPCtrlReg(id));
         if (idx == NUM_MISCREGS) {
