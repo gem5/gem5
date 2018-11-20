@@ -109,10 +109,7 @@ class SimpleThread : public ThreadState
     typedef ThreadContext::Status Status;
 
   protected:
-    union {
-        FloatReg f[TheISA::NumFloatRegs];
-        FloatRegBits i[TheISA::NumFloatRegs];
-    } floatRegs;
+    FloatRegBits floatRegs[TheISA::NumFloatRegs];
     TheISA::IntReg intRegs[TheISA::NumIntRegs];
     VecRegContainer vecRegs[TheISA::NumVecRegs];
 #ifdef ISA_HAS_CC_REGS
@@ -230,7 +227,7 @@ class SimpleThread : public ThreadState
     {
         _pcState = 0;
         memset(intRegs, 0, sizeof(intRegs));
-        memset(floatRegs.i, 0, sizeof(floatRegs.i));
+        memset(floatRegs, 0, sizeof(floatRegs));
         for (int i = 0; i < TheISA::NumVecRegs; i++) {
             vecRegs[i].zero();
         }
@@ -258,8 +255,8 @@ class SimpleThread : public ThreadState
         int flatIndex = isa->flattenFloatIndex(reg_idx);
         assert(flatIndex < TheISA::NumFloatRegs);
         FloatRegBits regVal(readFloatRegBitsFlat(flatIndex));
-        DPRINTF(FloatRegs, "Reading float reg %d (%d) bits as %#x, %f.\n",
-                reg_idx, flatIndex, regVal, floatRegs.f[flatIndex]);
+        DPRINTF(FloatRegs, "Reading float reg %d (%d) bits as %#x.\n",
+                reg_idx, flatIndex, regVal);
         return regVal;
     }
 
@@ -388,8 +385,8 @@ class SimpleThread : public ThreadState
         // when checkercpu enabled
         if (flatIndex < TheISA::NumFloatRegs)
             setFloatRegBitsFlat(flatIndex, val);
-        DPRINTF(FloatRegs, "Setting float reg %d (%d) bits to %#x, %#f.\n",
-                reg_idx, flatIndex, val, floatRegs.f[flatIndex]);
+        DPRINTF(FloatRegs, "Setting float reg %d (%d) bits to %#x.\n",
+                reg_idx, flatIndex, val);
     }
 
     void setVecReg(const RegId& reg, const VecRegContainer& val)
@@ -518,9 +515,9 @@ class SimpleThread : public ThreadState
     uint64_t readIntRegFlat(int idx) { return intRegs[idx]; }
     void setIntRegFlat(int idx, uint64_t val) { intRegs[idx] = val; }
 
-    FloatRegBits readFloatRegBitsFlat(int idx) { return floatRegs.i[idx]; }
+    FloatRegBits readFloatRegBitsFlat(int idx) { return floatRegs[idx]; }
     void setFloatRegBitsFlat(int idx, FloatRegBits val) {
-        floatRegs.i[idx] = val;
+        floatRegs[idx] = val;
     }
 
     const VecRegContainer& readVecRegFlat(const RegIndex& reg) const

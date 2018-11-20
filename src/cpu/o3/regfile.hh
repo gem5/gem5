@@ -79,17 +79,12 @@ class PhysRegFile
   private:
     static constexpr auto NumVecElemPerVecReg = TheISA::NumVecElemPerVecReg;
 
-    typedef union {
-        FloatReg d;
-        FloatRegBits q;
-    } PhysFloatReg;
-
     /** Integer register file. */
     std::vector<IntReg> intRegFile;
     std::vector<PhysRegId> intRegIds;
 
     /** Floating point register file. */
-    std::vector<PhysFloatReg> floatRegFile;
+    std::vector<FloatRegBits> floatRegFile;
     std::vector<PhysRegId> floatRegIds;
 
     /** Vector register file. */
@@ -191,7 +186,7 @@ class PhysRegFile
     {
         assert(phys_reg->isFloatPhysReg());
 
-        FloatRegBits floatRegBits = floatRegFile[phys_reg->index()].q;
+        FloatRegBits floatRegBits = floatRegFile[phys_reg->index()];
 
         DPRINTF(IEW, "RegFile: Access to float register %i as int, "
                 "has data %#x\n", phys_reg->index(),
@@ -294,7 +289,7 @@ class PhysRegFile
                 phys_reg->index(), (uint64_t)val);
 
         if (!phys_reg->isZeroReg())
-            floatRegFile[phys_reg->index()].q = val;
+            floatRegFile[phys_reg->index()] = val;
     }
 
     /** Sets a vector register to the given value. */
