@@ -617,35 +617,37 @@ class FloatRegOperand(Operand):
         return c_src + c_dest
 
     def makeRead(self, predRead):
-        bit_select = 0
-        if (self.ctype == 'float' or self.ctype == 'double'):
-            func = 'readFloatRegOperand'
-        else:
-            func = 'readFloatRegOperandBits'
         if self.read_code != None:
-            return self.buildReadCode(func)
+            return self.buildReadCode('readFloatRegOperandBits')
 
         if predRead:
             rindex = '_sourceIndex++'
         else:
             rindex = '%d' % self.src_reg_idx
 
-        return '%s = xc->%s(this, %s);\n' % \
-            (self.base_name, func, rindex)
+        code = 'xc->readFloatRegOperandBits(this, %s)' % rindex
+        if self.ctype == 'float':
+            code = 'bitsToFloat32(%s)' % code
+        elif self.ctype == 'double':
+            code = 'bitsToFloat64(%s)' % code
+        return '%s = %s;\n' % (self.base_name, code)
 
     def makeWrite(self, predWrite):
-        if (self.ctype == 'float' or self.ctype == 'double'):
-            func = 'setFloatRegOperand'
-        else:
-            func = 'setFloatRegOperandBits'
         if self.write_code != None:
-            return self.buildWriteCode(func)
+            return self.buildWriteCode('setFloatRegOperandBits')
 
         if predWrite:
             wp = '_destIndex++'
         else:
             wp = '%d' % self.dest_reg_idx
-        wp = 'xc->%s(this, %s, final_val);' % (func, wp)
+
+        val = 'final_val'
+        if self.ctype == 'float':
+            val = 'floatToBits32(%s)' % val
+        elif self.ctype == 'double':
+            val = 'floatToBits64(%s)' % val
+
+        wp = 'xc->setFloatRegOperandBits(this, %s, %s);' % (wp, val)
 
         wb = '''
         {
