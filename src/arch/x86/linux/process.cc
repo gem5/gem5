@@ -298,7 +298,11 @@ static SyscallDesc syscallDescs64[] = {
     /*  75 */ SyscallDesc("fdatasync", unimplementedFunc),
     /*  76 */ SyscallDesc("truncate", truncateFunc),
     /*  77 */ SyscallDesc("ftruncate", ftruncateFunc),
+#if defined(SYS_getdents)
     /*  78 */ SyscallDesc("getdents", getdentsFunc),
+#else
+    /*  78 */ SyscallDesc("getdents", unimplementedFunc),
+#endif
     /*  79 */ SyscallDesc("getcwd", getcwdFunc),
     /*  80 */ SyscallDesc("chdir", chdirFunc),
     /*  81 */ SyscallDesc("fchdir", unimplementedFunc),
@@ -690,7 +694,11 @@ static SyscallDesc syscallDescs32[] = {
     /* 138 */ SyscallDesc("setfsuid", unimplementedFunc),
     /* 139 */ SyscallDesc("setfsgid", unimplementedFunc),
     /* 140 */ SyscallDesc("_llseek", _llseekFunc),
+#if defined(SYS_getdents)
     /* 141 */ SyscallDesc("getdents", getdentsFunc),
+#else
+    /* 141 */ SyscallDesc("getdents", unimplementedFunc),
+#endif
     /* 142 */ SyscallDesc("_newselect", unimplementedFunc),
     /* 143 */ SyscallDesc("flock", unimplementedFunc),
     /* 144 */ SyscallDesc("msync", unimplementedFunc),

@@ -303,9 +303,11 @@ SyscallReturn pipeImpl(SyscallDesc *desc, int num, Process *p,
 SyscallReturn getpidFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc);
 
+#if defined(SYS_getdents)
 // Target getdents() handler.
 SyscallReturn getdentsFunc(SyscallDesc *desc, int num,
                            Process *p, ThreadContext *tc);
+#endif
 
 // Target getuid() handler.
 SyscallReturn getuidFunc(SyscallDesc *desc, int num,
