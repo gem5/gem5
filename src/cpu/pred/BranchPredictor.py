@@ -87,34 +87,55 @@ class BiModeBP(BranchPredictor):
     choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
     choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
 
-class LTAGE(BranchPredictor):
+# TAGE branch predictor as described in https://www.jilp.org/vol8/v8paper1.pdf
+# The default sizes below are for the 8C-TAGE configuration (63.5 Kbits)
+class TAGE(BranchPredictor):
+    type = 'TAGE'
+    cxx_class = 'TAGE'
+    cxx_header = "cpu/pred/tage.hh"
+
+    nHistoryTables = Param.Unsigned(7, "Number of history tables")
+    minHist = Param.Unsigned(5, "Minimum history size of LTAGE")
+    maxHist = Param.Unsigned(130, "Maximum history size of LTAGE")
+
+    tagTableTagWidths = VectorParam.Unsigned(
+        [0, 9, 9, 10, 10, 11, 11, 12], "Tag size in TAGE tag tables")
+    logTagTableSizes = VectorParam.Int(
+        [13, 9, 9, 9, 9, 9, 9, 9], "Log2 of TAGE table sizes")
+    logRatioBiModalHystEntries = Param.Unsigned(2,
+        "Log num of prediction entries for a shared hysteresis bit " \
+        "for the Bimodal")
+
+    tagTableCounterBits = Param.Unsigned(3, "Number of tag table counter bits")
+    tagTableUBits = Param.Unsigned(2, "Number of tag table u bits")
+
+    histBufferSize = Param.Unsigned(2097152,
+            "A large number to track all branch histories(2MEntries default)")
+
+    pathHistBits = Param.Unsigned(16, "Path history size")
+    logUResetPeriod = Param.Unsigned(18,
+        "Log period in number of branches to reset TAGE useful counters")
+    useAltOnNaBits = Param.Unsigned(4, "Size of the USE_ALT_ON_NA counter")
+
+
+# LTAGE branch predictor as described in
+# https://www.irisa.fr/caps/people/seznec/L-TAGE.pdf
+# It is basically a TAGE predictor plus a loop predictor
+# The differnt TAGE sizes are updated according to the paper values (256 Kbits)
+class LTAGE(TAGE):
     type = 'LTAGE'
     cxx_class = 'LTAGE'
     cxx_header = "cpu/pred/ltage.hh"
 
-    logRatioBiModalHystEntries = Param.Unsigned(2,
-        "Log num of prediction entries for a shared hysteresis bit " \
-        "for the Bimodal")
-    logSizeLoopPred = Param.Unsigned(8, "Log size of the loop predictor")
-    nHistoryTables = Param.Unsigned(12, "Number of history tables")
-    tagTableCounterBits = Param.Unsigned(3, "Number of tag table counter bits")
-    tagTableUBits = Param.Unsigned(2, "Number of tag table u bits")
-    histBufferSize = Param.Unsigned(2097152,
-            "A large number to track all branch histories(2MEntries default)")
-    minHist = Param.Unsigned(4, "Minimum history size of LTAGE")
-    maxHist = Param.Unsigned(640, "Maximum history size of LTAGE")
-    pathHistBits = Param.Unsigned(16, "Path history size")
-    tagTableTagWidths = VectorParam.Unsigned(
-        [0, 7, 7, 8, 8, 9, 10, 11, 12, 12, 13, 14, 15],
-        "Tag size in TAGE tag tables")
-    logTagTableSizes = VectorParam.Int(
-        [14, 10, 10, 11, 11, 11, 11, 10, 10, 10, 10, 9, 9],
-        "Log2 of TAGE table sizes")
-    logUResetPeriod = Param.Unsigned(19,
-        "Log period in number of branches to reset TAGE useful counters")
-    useAltOnNaBits = Param.Unsigned(4, "Size of the USE_ALT_ON_NA counter")
-    withLoopBits = Param.Unsigned(7, "Size of the WITHLOOP counter")
+    nHistoryTables = 12
+    minHist = 4
+    maxHist = 640
+    tagTableTagWidths = [0, 7, 7, 8, 8, 9, 10, 11, 12, 12, 13, 14, 15]
+    logTagTableSizes = [14, 10, 10, 11, 11, 11, 11, 10, 10, 10, 10, 9, 9]
+    logUResetPeriod = 19
 
+    logSizeLoopPred = Param.Unsigned(8, "Log size of the loop predictor")
+    withLoopBits = Param.Unsigned(7, "Size of the WITHLOOP counter")
     loopTableAgeBits = Param.Unsigned(8, "Number of age bits per loop entry")
     loopTableConfidenceBits = Param.Unsigned(2,
             "Number of confidence bits per loop entry")
