@@ -107,7 +107,7 @@ initIPRs(ThreadContext *tc, int cpuId)
     tc->setMiscRegNoEffect(IPR_PALtemp16, cpuId);
 }
 
-MiscReg
+RegVal
 ISA::readIpr(int idx, ThreadContext *tc)
 {
     uint64_t retval = 0;        // return value, default 0

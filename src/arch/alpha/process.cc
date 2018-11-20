@@ -222,7 +222,7 @@ AlphaProcess::initState()
     tc->setMiscRegNoEffect(IPR_MCSR, 0);
 }
 
-AlphaISA::IntReg
+RegVal
 AlphaProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 6);
@@ -230,7 +230,7 @@ AlphaProcess::getSyscallArg(ThreadContext *tc, int &i)
 }
 
 void
-AlphaProcess::setSyscallArg(ThreadContext *tc, int i, AlphaISA::IntReg val)
+AlphaProcess::setSyscallArg(ThreadContext *tc, int i, RegVal val)
 {
     assert(i < 6);
     tc->setIntReg(FirstArgumentReg + i, val);
@@ -248,7 +248,7 @@ AlphaProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn sysret)
         tc->setIntReg(ReturnValueReg, sysret.returnValue());
     } else {
         // got an error, return details
-        tc->setIntReg(SyscallSuccessReg, (IntReg)-1);
+        tc->setIntReg(SyscallSuccessReg, (RegVal)-1);
         tc->setIntReg(ReturnValueReg, sysret.errnoValue());
     }
 }

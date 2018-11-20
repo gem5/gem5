@@ -46,14 +46,6 @@ using AlphaISAInst::MaxInstDestRegs;
 // Locked read/write flags are can't be detected by the ISA parser
 const int MaxMiscDestRegs = AlphaISAInst::MaxMiscDestRegs + 1;
 
-typedef RegVal IntReg;
-
-// floating point register file entry type
-typedef RegVal FloatReg;
-
-// control register file contents
-typedef RegVal MiscReg;
-
 // dummy typedef since we don't have CC regs
 typedef uint8_t CCReg;
 
