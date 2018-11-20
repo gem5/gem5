@@ -191,15 +191,6 @@ class SimpleExecContext : public ExecContext {
         thread->setIntReg(reg.index(), val);
     }
 
-    /** Reads a floating point register of single register width. */
-    FloatReg readFloatRegOperand(const StaticInst *si, int idx) override
-    {
-        numFpRegReads++;
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isFloatReg());
-        return thread->readFloatReg(reg.index());
-    }
-
     /** Reads a floating point register in its binary format, instead
      * of by value. */
     FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx) override
@@ -208,16 +199,6 @@ class SimpleExecContext : public ExecContext {
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.isFloatReg());
         return thread->readFloatRegBits(reg.index());
-    }
-
-    /** Sets a floating point register of single width to a value. */
-    void setFloatRegOperand(const StaticInst *si, int idx,
-                            FloatReg val) override
-    {
-        numFpRegWrites++;
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isFloatReg());
-        thread->setFloatReg(reg.index(), val);
     }
 
     /** Sets the bits of a floating point register of single width

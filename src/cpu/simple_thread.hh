@@ -253,16 +253,6 @@ class SimpleThread : public ThreadState
         return regVal;
     }
 
-    FloatReg readFloatReg(int reg_idx)
-    {
-        int flatIndex = isa->flattenFloatIndex(reg_idx);
-        assert(flatIndex < TheISA::NumFloatRegs);
-        FloatReg regVal(readFloatRegFlat(flatIndex));
-        DPRINTF(FloatRegs, "Reading float reg %d (%d) as %f, %#x.\n",
-                reg_idx, flatIndex, regVal, floatRegs.i[flatIndex]);
-        return regVal;
-    }
-
     FloatRegBits readFloatRegBits(int reg_idx)
     {
         int flatIndex = isa->flattenFloatIndex(reg_idx);
@@ -388,15 +378,6 @@ class SimpleThread : public ThreadState
         DPRINTF(IntRegs, "Setting int reg %d (%d) to %#x.\n",
                 reg_idx, flatIndex, val);
         setIntRegFlat(flatIndex, val);
-    }
-
-    void setFloatReg(int reg_idx, FloatReg val)
-    {
-        int flatIndex = isa->flattenFloatIndex(reg_idx);
-        assert(flatIndex < TheISA::NumFloatRegs);
-        setFloatRegFlat(flatIndex, val);
-        DPRINTF(FloatRegs, "Setting float reg %d (%d) to %f, %#x.\n",
-                reg_idx, flatIndex, val, floatRegs.i[flatIndex]);
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
@@ -536,9 +517,6 @@ class SimpleThread : public ThreadState
 
     uint64_t readIntRegFlat(int idx) { return intRegs[idx]; }
     void setIntRegFlat(int idx, uint64_t val) { intRegs[idx] = val; }
-
-    FloatReg readFloatRegFlat(int idx) { return floatRegs.f[idx]; }
-    void setFloatRegFlat(int idx, FloatReg val) { floatRegs.f[idx] = val; }
 
     FloatRegBits readFloatRegBitsFlat(int idx) { return floatRegs.i[idx]; }
     void setFloatRegBitsFlat(int idx, FloatRegBits val) {

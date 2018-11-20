@@ -660,12 +660,6 @@ class BaseDynInst : public ExecContext, public RefCounted
         setScalarResult(val);
     }
 
-    /** Records an fp register being set to a value. */
-    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
-    {
-        setScalarResult(val);
-    }
-
     /** Record a vector register being set to a value */
     void setVecRegOperand(const StaticInst *si, int idx,
             const VecRegContainer& val)

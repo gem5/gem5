@@ -99,7 +99,7 @@ class ExecContext : public ::ExecContext
         setPredicate(true);
         thread.setIntReg(TheISA::ZeroReg, 0);
 #if THE_ISA == ALPHA_ISA
-        thread.setFloatReg(TheISA::ZeroReg, 0.0);
+        thread.setFloatRegBits(TheISA::ZeroReg, 0);
 #endif
     }
 
@@ -127,14 +127,6 @@ class ExecContext : public ::ExecContext
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.isIntReg());
         return thread.readIntReg(reg.index());
-    }
-
-    TheISA::FloatReg
-    readFloatRegOperand(const StaticInst *si, int idx) override
-    {
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isFloatReg());
-        return thread.readFloatReg(reg.index());
     }
 
     TheISA::FloatRegBits
@@ -175,15 +167,6 @@ class ExecContext : public ::ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isIntReg());
         thread.setIntReg(reg.index(), val);
-    }
-
-    void
-    setFloatRegOperand(const StaticInst *si, int idx,
-        TheISA::FloatReg val) override
-    {
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isFloatReg());
-        thread.setFloatReg(reg.index(), val);
     }
 
     void

@@ -104,17 +104,10 @@ class ExecContext {
      * @name Floating Point Register Interfaces
      */
 
-    /** Reads a floating point register of single register width. */
-    virtual FloatReg readFloatRegOperand(const StaticInst *si, int idx) = 0;
-
     /** Reads a floating point register in its binary format, instead
      * of by value. */
     virtual FloatRegBits readFloatRegOperandBits(const StaticInst *si,
                                                  int idx) = 0;
-
-    /** Sets a floating point register of single width to a value. */
-    virtual void setFloatRegOperand(const StaticInst *si,
-                                    int idx, FloatReg val) = 0;
 
     /** Sets the bits of a floating point register of single width
      * to a binary value. */

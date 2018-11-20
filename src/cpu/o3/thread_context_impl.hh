@@ -200,17 +200,10 @@ O3ThreadContext<Impl>::readIntRegFlat(int reg_idx)
 }
 
 template <class Impl>
-TheISA::FloatReg
-O3ThreadContext<Impl>::readFloatRegFlat(int reg_idx)
-{
-    return cpu->readArchFloatReg(reg_idx, thread->threadId());
-}
-
-template <class Impl>
 TheISA::FloatRegBits
 O3ThreadContext<Impl>::readFloatRegBitsFlat(int reg_idx)
 {
-    return cpu->readArchFloatRegInt(reg_idx, thread->threadId());
+    return cpu->readArchFloatRegBits(reg_idx, thread->threadId());
 }
 
 template <class Impl>
@@ -253,18 +246,9 @@ O3ThreadContext<Impl>::setIntRegFlat(int reg_idx, uint64_t val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setFloatRegFlat(int reg_idx, FloatReg val)
-{
-    cpu->setArchFloatReg(reg_idx, val, thread->threadId());
-
-    conditionalSquash();
-}
-
-template <class Impl>
-void
 O3ThreadContext<Impl>::setFloatRegBitsFlat(int reg_idx, FloatRegBits val)
 {
-    cpu->setArchFloatRegInt(reg_idx, val, thread->threadId());
+    cpu->setArchFloatRegBits(reg_idx, val, thread->threadId());
 
     conditionalSquash();
 }

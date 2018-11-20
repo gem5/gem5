@@ -152,7 +152,7 @@ copyRegs(ThreadContext *src, ThreadContext *dest)
         dest->setIntRegFlat(i, src->readIntRegFlat(i));
 
     for (int i = 0; i < NumFloatRegs; i++)
-        dest->setFloatRegFlat(i, src->readFloatRegFlat(i));
+        dest->setFloatRegBitsFlat(i, src->readFloatRegBitsFlat(i));
 
     for (int i = 0; i < NumVecRegs; i++)
         dest->setVecRegFlat(i, src->readVecRegFlat(i));

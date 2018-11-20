@@ -196,13 +196,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
         return thread->readIntReg(reg.index());
     }
 
-    FloatReg readFloatRegOperand(const StaticInst *si, int idx) override
-    {
-        const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isFloatReg());
-        return thread->readFloatReg(reg.index());
-    }
-
     FloatRegBits readFloatRegOperandBits(const StaticInst *si,
                                          int idx) override
     {
@@ -350,15 +343,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isIntReg());
         thread->setIntReg(reg.index(), val);
-        setScalarResult(val);
-    }
-
-    void setFloatRegOperand(const StaticInst *si, int idx,
-                            FloatReg val) override
-    {
-        const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isFloatReg());
-        thread->setFloatReg(reg.index(), val);
         setScalarResult(val);
     }
 

@@ -840,7 +840,8 @@ updateKvmStateFPUCommon(ThreadContext *tc, T &fpu)
     const unsigned top((fpu.fsw >> 11) & 0x7);
     for (int i = 0; i < 8; ++i) {
         const unsigned reg_idx((i + top) & 0x7);
-        const double value(tc->readFloatReg(FLOATREG_FPR(reg_idx)));
+        const double value(bitsToFloat64(
+                    tc->readFloatRegBits(FLOATREG_FPR(reg_idx))));
         DPRINTF(KvmContext, "Setting KVM FP reg %i (st[%i]) := %f\n",
                 reg_idx, i, value);
         X86ISA::storeFloat80(fpu.fpr[i], value);
@@ -1055,7 +1056,7 @@ updateThreadContextFPUCommon(ThreadContext *tc, const T &fpu)
         const double value(X86ISA::loadFloat80(fpu.fpr[i]));
         DPRINTF(KvmContext, "Setting gem5 FP reg %i (st[%i]) := %f\n",
                 reg_idx, i, value);
-        tc->setFloatReg(FLOATREG_FPR(reg_idx), value);
+        tc->setFloatRegBits(FLOATREG_FPR(reg_idx), floatToBits64(value));
     }
 
     // TODO: We should update the MMX state

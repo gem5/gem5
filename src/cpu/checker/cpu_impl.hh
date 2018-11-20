@@ -208,7 +208,7 @@ Checker<Impl>::verify(const DynInstPtr &completed_inst)
         // maintain $r0 semantics
         thread->setIntReg(ZeroReg, 0);
 #if THE_ISA == ALPHA_ISA
-        thread->setFloatReg(ZeroReg, 0.0);
+        thread->setFloatRegBits(ZeroReg, 0);
 #endif
 
         // Check if any recent PC changes match up with anything we

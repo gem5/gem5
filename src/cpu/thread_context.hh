@@ -210,8 +210,6 @@ class ThreadContext
     //
     virtual uint64_t readIntReg(int reg_idx) = 0;
 
-    virtual FloatReg readFloatReg(int reg_idx) = 0;
-
     virtual FloatRegBits readFloatRegBits(int reg_idx) = 0;
 
     virtual const VecRegContainer& readVecReg(const RegId& reg) const = 0;
@@ -251,8 +249,6 @@ class ThreadContext
     virtual CCReg readCCReg(int reg_idx) = 0;
 
     virtual void setIntReg(int reg_idx, uint64_t val) = 0;
-
-    virtual void setFloatReg(int reg_idx, FloatReg val) = 0;
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val) = 0;
 
@@ -336,9 +332,6 @@ class ThreadContext
 
     virtual uint64_t readIntRegFlat(int idx) = 0;
     virtual void setIntRegFlat(int idx, uint64_t val) = 0;
-
-    virtual FloatReg readFloatRegFlat(int idx) = 0;
-    virtual void setFloatRegFlat(int idx, FloatReg val) = 0;
 
     virtual FloatRegBits readFloatRegBitsFlat(int idx) = 0;
     virtual void setFloatRegBitsFlat(int idx, FloatRegBits val) = 0;
@@ -464,9 +457,6 @@ class ProxyThreadContext : public ThreadContext
     uint64_t readIntReg(int reg_idx)
     { return actualTC->readIntReg(reg_idx); }
 
-    FloatReg readFloatReg(int reg_idx)
-    { return actualTC->readFloatReg(reg_idx); }
-
     FloatRegBits readFloatRegBits(int reg_idx)
     { return actualTC->readFloatRegBits(reg_idx); }
 
@@ -521,9 +511,6 @@ class ProxyThreadContext : public ThreadContext
 
     void setIntReg(int reg_idx, uint64_t val)
     { actualTC->setIntReg(reg_idx, val); }
-
-    void setFloatReg(int reg_idx, FloatReg val)
-    { actualTC->setFloatReg(reg_idx, val); }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     { actualTC->setFloatRegBits(reg_idx, val); }
@@ -583,12 +570,6 @@ class ProxyThreadContext : public ThreadContext
 
     void setIntRegFlat(int idx, uint64_t val)
     { actualTC->setIntRegFlat(idx, val); }
-
-    FloatReg readFloatRegFlat(int idx)
-    { return actualTC->readFloatRegFlat(idx); }
-
-    void setFloatRegFlat(int idx, FloatReg val)
-    { actualTC->setFloatRegFlat(idx, val); }
 
     FloatRegBits readFloatRegBitsFlat(int idx)
     { return actualTC->readFloatRegBitsFlat(idx); }

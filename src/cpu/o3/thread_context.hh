@@ -184,11 +184,6 @@ class O3ThreadContext : public ThreadContext
                                                  reg_idx)).index());
     }
 
-    virtual FloatReg readFloatReg(int reg_idx) {
-        return readFloatRegFlat(flattenRegId(RegId(FloatRegClass,
-                                                 reg_idx)).index());
-    }
-
     virtual FloatRegBits readFloatRegBits(int reg_idx) {
         return readFloatRegBitsFlat(flattenRegId(RegId(FloatRegClass,
                                                  reg_idx)).index());
@@ -266,11 +261,6 @@ class O3ThreadContext : public ThreadContext
     /** Sets an integer register to a value. */
     virtual void setIntReg(int reg_idx, uint64_t val) {
         setIntRegFlat(flattenRegId(RegId(IntRegClass, reg_idx)).index(), val);
-    }
-
-    virtual void setFloatReg(int reg_idx, FloatReg val) {
-        setFloatRegFlat(flattenRegId(RegId(FloatRegClass,
-                                           reg_idx)).index(), val);
     }
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val) {
@@ -363,9 +353,6 @@ class O3ThreadContext : public ThreadContext
 
     virtual uint64_t readIntRegFlat(int idx);
     virtual void setIntRegFlat(int idx, uint64_t val);
-
-    virtual FloatReg readFloatRegFlat(int idx);
-    virtual void setFloatRegFlat(int idx, FloatReg val);
 
     virtual FloatRegBits readFloatRegBitsFlat(int idx);
     virtual void setFloatRegBitsFlat(int idx, FloatRegBits val);
