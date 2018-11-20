@@ -141,6 +141,8 @@ namespace Gcn3ISA
              *
              */
             regIdx = numScalarRegs - 2;
+        } else if (idx == REG_VCC_HI) {
+            regIdx = numScalarRegs - 1;
         } else if (idx == REG_FLAT_SCRATCH_LO) {
             /**
              * the FLAT_SCRATCH register occupies the two SRF entries
