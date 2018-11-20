@@ -192,9 +192,9 @@ output exec {{
             if (!FullSystem)
                 return true;
 
-            MiscReg Stat = xc->readMiscReg(MISCREG_STATUS);
+            RegVal Stat = xc->readMiscReg(MISCREG_STATUS);
             if (cop_num == 0) {
-                MiscReg Dbg = xc->readMiscReg(MISCREG_DEBUG);
+                RegVal Dbg = xc->readMiscReg(MISCREG_DEBUG);
                 // In Stat, EXL, ERL or CU0 set, CP0 accessible
                 // In Dbg, DM bit set, CP0 accessible
                 // In Stat, KSU = 0, kernel mode is base mode
@@ -212,8 +212,8 @@ output exec {{
         isCoprocessor0Enabled(ExecContext *xc)
         {
             if (FullSystem) {
-                MiscReg Stat = xc->readMiscReg(MISCREG_STATUS);
-                MiscReg Dbg = xc->readMiscReg(MISCREG_DEBUG);
+                RegVal Stat = xc->readMiscReg(MISCREG_STATUS);
+                RegVal Dbg = xc->readMiscReg(MISCREG_DEBUG);
                 // In Stat, EXL, ERL or CU0 set, CP0 accessible
                 // In Dbg, DM bit set, CP0 accessible
                 // In Stat KSU = 0, kernel mode is base mode
@@ -227,7 +227,7 @@ output exec {{
         bool
         isMMUTLB(ExecContext *xc)
         {
-            MiscReg Config = xc->readMiscReg(MISCREG_CONFIG);
+            RegVal Config = xc->readMiscReg(MISCREG_CONFIG);
             return FullSystem && (Config & 0x380) == 0x80;
         }
 }};

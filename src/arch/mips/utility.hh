@@ -74,8 +74,8 @@ bool isSnan(void *val_ptr, int size);
 static inline bool
 inUserMode(ThreadContext *tc)
 {
-    MiscReg Stat = tc->readMiscReg(MISCREG_STATUS);
-    MiscReg Dbg = tc->readMiscReg(MISCREG_DEBUG);
+    RegVal Stat = tc->readMiscReg(MISCREG_STATUS);
+    RegVal Dbg = tc->readMiscReg(MISCREG_DEBUG);
 
     if ((Stat & 0x10000006) == 0 &&  // EXL, ERL or CU0 set, CP0 accessible
         (Dbg & 0x40000000) == 0 &&   // DM bit set, CP0 accessible
