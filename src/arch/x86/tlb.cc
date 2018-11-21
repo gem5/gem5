@@ -185,10 +185,10 @@ TLB::translateInt(const RequestPtr &req, ThreadContext *tc)
         if (!msrAddrToIndex(regNum, vaddr))
             return std::make_shared<GeneralProtection>(0);
 
-        //The index is multiplied by the size of a MiscReg so that
+        //The index is multiplied by the size of a RegVal so that
         //any memory dependence calculations will not see these as
         //overlapping.
-        req->setPaddr((Addr)regNum * sizeof(MiscReg));
+        req->setPaddr((Addr)regNum * sizeof(RegVal));
         return NoFault;
     } else if (prefix == IntAddrPrefixIO) {
         // TODO If CPL > IOPL or in virtual mode, check the I/O permission
@@ -200,7 +200,7 @@ TLB::translateInt(const RequestPtr &req, ThreadContext *tc)
         assert(!(IOPort & ~0xFFFF));
         if (IOPort == 0xCF8 && req->getSize() == 4) {
             req->setFlags(Request::MMAPPED_IPR);
-            req->setPaddr(MISCREG_PCI_CONFIG_ADDRESS * sizeof(MiscReg));
+            req->setPaddr(MISCREG_PCI_CONFIG_ADDRESS * sizeof(RegVal));
         } else if ((IOPort & ~mask(2)) == 0xCFC) {
             req->setFlags(Request::UNCACHEABLE | Request::STRICT_ORDER);
             Addr configAddress =

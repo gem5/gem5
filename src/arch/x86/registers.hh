@@ -96,9 +96,7 @@ const int FramePointerReg = INTREG_RBP;
 // value
 const int SyscallPseudoReturnReg = INTREG_RDX;
 
-typedef RegVal IntReg;
 typedef uint64_t CCReg;
-typedef RegVal MiscReg;
 
 // Not applicable to x86
 using VecElem = ::DummyVecElem;
@@ -114,10 +112,6 @@ using ConstVecPredReg = ::DummyConstVecPredReg;
 using VecPredRegContainer = ::DummyVecPredRegContainer;
 constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
 constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
-
-//These floating point types are correct for mmx, but not
-//technically for x87 (80 bits) or at all for xmm (128 bits)
-typedef RegVal FloatReg;
 
 } // namespace X86ISA
 

@@ -549,7 +549,7 @@ X86_64LinuxProcess::X86_64LinuxProcess(ProcessParams * params,
 {}
 
 void X86_64LinuxProcess::clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                               Process *process, TheISA::IntReg flags)
+                               Process *process, RegVal flags)
 {
     X86_64Process::clone(old_tc, new_tc, (X86_64Process*)process, flags);
 }
@@ -891,7 +891,7 @@ I386LinuxProcess::I386LinuxProcess(ProcessParams * params, ObjectFile *objFile)
 {}
 
 void I386LinuxProcess::clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                             Process *process, TheISA::IntReg flags)
+                             Process *process, RegVal flags)
 {
     I386Process::clone(old_tc, new_tc, (I386Process*)process, flags);
 }

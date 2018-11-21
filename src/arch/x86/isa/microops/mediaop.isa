@@ -245,7 +245,7 @@ let {{
                     src2, size, destSize, srcSize, ext)
         op_class = 'SimdMiscOp'
         code = '''
-            int items = sizeof(FloatReg) / srcSize;
+            int items = sizeof(double) / srcSize;
             int offset = imm8;
             if (bits(src1, 0) && (ext & 0x1))
                 offset -= items;
@@ -267,7 +267,7 @@ let {{
                     src2, size, destSize, srcSize, ext)
         op_class = 'SimdMiscOp'
         code = '''
-            int items = sizeof(FloatReg) / destSize;
+            int items = sizeof(double) / destSize;
             int offset = imm8;
             if (bits(dest, 0) && (ext & 0x1))
                 offset -= items;
@@ -289,7 +289,7 @@ let {{
                     "InstRegIndex(0)", size, destSize, srcSize, ext)
         op_class = 'SimdMiscOp'
         code = '''
-            int items = sizeof(FloatReg) / srcSize;
+            int items = sizeof(double) / srcSize;
             uint64_t result = 0;
             int offset = (ext & 0x1) ? items : 0;
             for (int i = 0; i < items; i++) {
@@ -325,7 +325,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = sizeof(FloatReg) / size;
+            int items = sizeof(double) / size;
             int options;
             int optionBits;
             if (size == 8) {
@@ -342,7 +342,7 @@ let {{
             for (int i = 0; i < items; i++) {
                 uint64_t resBits;
                 uint8_t lsel = sel & mask(optionBits);
-                if (lsel * size >= sizeof(FloatReg)) {
+                if (lsel * size >= sizeof(double)) {
                     lsel -= options / 2;
                     resBits = bits(FpSrcReg2_uqw,
                             (lsel + 1) * sizeBits - 1,
@@ -367,7 +367,7 @@ let {{
         code = '''
             assert(srcSize == destSize);
             int size = destSize;
-            int items = (sizeof(FloatReg) / size) / 2;
+            int items = (sizeof(double) / size) / 2;
             int offset = ext ? items : 0;
             uint64_t result = 0;
             for (int i = 0; i < items; i++) {
@@ -393,7 +393,7 @@ let {{
         op_class = 'SimdMiscOp'
         code = '''
             assert(srcSize == destSize * 2);
-            int items = (sizeof(FloatReg) / destSize);
+            int items = (sizeof(double) / destSize);
             int destBits = destSize * 8;
             int srcBits = srcSize * 8;
             uint64_t result = 0;
@@ -1091,7 +1091,7 @@ let {{
         op_class = 'SimdAddOp'
         code = '''
             int srcBits = srcSize * 8;
-            int items = sizeof(FloatReg) / srcSize;
+            int items = sizeof(double) / srcSize;
 
             uint64_t sum = 0;
             for (int i = 0; i < items; i++) {

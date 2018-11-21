@@ -119,7 +119,7 @@ X86Process::X86Process(ProcessParams *params, ObjectFile *objFile,
 }
 
 void X86Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                       Process *p, TheISA::IntReg flags)
+                       Process *p, RegVal flags)
 {
     Process::clone(old_tc, new_tc, p, flags);
     X86Process *process = (X86Process*)p;
@@ -444,11 +444,11 @@ X86_64Process::initState()
             tc->setMiscReg(MISCREG_IDTR_LIMIT, 0xffff);
 
             /* enabling syscall and sysret */
-            MiscReg star = ((MiscReg)sret << 48) | ((MiscReg)scall << 32);
+            RegVal star = ((RegVal)sret << 48) | ((RegVal)scall << 32);
             tc->setMiscReg(MISCREG_STAR, star);
-            MiscReg lstar = (MiscReg)syscallCodeVirtAddr;
+            RegVal lstar = (RegVal)syscallCodeVirtAddr;
             tc->setMiscReg(MISCREG_LSTAR, lstar);
-            MiscReg sfmask = (1 << 8) | (1 << 10); // TF | DF
+            RegVal sfmask = (1 << 8) | (1 << 10); // TF | DF
             tc->setMiscReg(MISCREG_SF_MASK, sfmask);
         }
 
@@ -1070,7 +1070,7 @@ X86Process::setSyscallReturn(ThreadContext *tc, SyscallReturn retval)
     tc->setIntReg(INTREG_RAX, retval.encodedValue());
 }
 
-X86ISA::IntReg
+RegVal
 X86_64Process::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < NumArgumentRegs);
@@ -1078,7 +1078,7 @@ X86_64Process::getSyscallArg(ThreadContext *tc, int &i)
 }
 
 void
-X86_64Process::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
+X86_64Process::setSyscallArg(ThreadContext *tc, int i, RegVal val)
 {
     assert(i < NumArgumentRegs);
     return tc->setIntReg(ArgumentReg[i], val);
@@ -1086,20 +1086,20 @@ X86_64Process::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
 
 void
 X86_64Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                     Process *p, TheISA::IntReg flags)
+                     Process *p, RegVal flags)
 {
     X86Process::clone(old_tc, new_tc, p, flags);
     ((X86_64Process*)p)->vsyscallPage = vsyscallPage;
 }
 
-X86ISA::IntReg
+RegVal
 I386Process::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < NumArgumentRegs32);
     return tc->readIntReg(ArgumentReg32[i++]);
 }
 
-X86ISA::IntReg
+RegVal
 I386Process::getSyscallArg(ThreadContext *tc, int &i, int width)
 {
     assert(width == 32 || width == 64);
@@ -1111,7 +1111,7 @@ I386Process::getSyscallArg(ThreadContext *tc, int &i, int width)
 }
 
 void
-I386Process::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
+I386Process::setSyscallArg(ThreadContext *tc, int i, RegVal val)
 {
     assert(i < NumArgumentRegs);
     return tc->setIntReg(ArgumentReg[i], val);
@@ -1119,7 +1119,7 @@ I386Process::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
 
 void
 I386Process::clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                   Process *p, TheISA::IntReg flags)
+                   Process *p, RegVal flags)
 {
     X86Process::clone(old_tc, new_tc, p, flags);
     ((I386Process*)p)->vsyscallPage = vsyscallPage;

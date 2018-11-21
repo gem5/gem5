@@ -92,7 +92,7 @@ namespace X86ISA
         void setSyscallReturn(ThreadContext *tc,
                               SyscallReturn return_value) override;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                   Process *process, TheISA::IntReg flags) override;
+                   Process *process, RegVal flags) override;
 
         X86Process &
         operator=(const X86Process &in)
@@ -142,13 +142,12 @@ namespace X86ISA
         void argsInit(int pageSize);
         void initState() override;
 
-        X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i) override;
+        RegVal getSyscallArg(ThreadContext *tc, int &i) override;
         /// Explicitly import the otherwise hidden getSyscallArg
         using Process::getSyscallArg;
-        void setSyscallArg(ThreadContext *tc, int i,
-                           X86ISA::IntReg val) override;
+        void setSyscallArg(ThreadContext *tc, int i, RegVal val) override;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                   Process *process, TheISA::IntReg flags) override;
+                   Process *process, RegVal flags) override;
     };
 
     class I386Process : public X86Process
@@ -187,14 +186,11 @@ namespace X86ISA
 
         void syscall(int64_t callnum, ThreadContext *tc,
                      Fault *fault) override;
-        X86ISA::IntReg getSyscallArg(ThreadContext *tc,
-                                     int &i) override;
-        X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i,
-                                     int width) override;
-        void setSyscallArg(ThreadContext *tc, int i,
-                           X86ISA::IntReg val) override;
+        RegVal getSyscallArg(ThreadContext *tc, int &i) override;
+        RegVal getSyscallArg(ThreadContext *tc, int &i, int width) override;
+        void setSyscallArg(ThreadContext *tc, int i, RegVal val) override;
         void clone(ThreadContext *old_tc, ThreadContext *new_tc,
-                   Process *process, TheISA::IntReg flags) override;
+                   Process *process, RegVal flags) override;
     };
 
 }

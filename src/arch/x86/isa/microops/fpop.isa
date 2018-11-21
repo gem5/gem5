@@ -380,7 +380,7 @@ let {{
 
     class PremFp(FpBinaryOp):
         code = '''
-            MiscReg new_fsw = FSW;
+            RegVal new_fsw = FSW;
             int src1_exp;
             int src2_exp;
             std::frexp(FpSrcReg1, &src1_exp);

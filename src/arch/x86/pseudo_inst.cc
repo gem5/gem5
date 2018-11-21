@@ -52,7 +52,7 @@ m5Syscall(ThreadContext *tc)
     Fault fault;
     tc->syscall(tc->readIntReg(INTREG_RAX), &fault);
 
-    MiscReg rflags = tc->readMiscReg(MISCREG_RFLAGS);
+    RegVal rflags = tc->readMiscReg(MISCREG_RFLAGS);
     rflags &= ~(1 << 16);
     tc->setMiscReg(MISCREG_RFLAGS, rflags);
 }
