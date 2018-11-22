@@ -60,7 +60,6 @@ class BaseSimpleCPU;
 
 class SimpleExecContext : public ExecContext {
   protected:
-    typedef TheISA::CCReg CCReg;
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
 
@@ -365,7 +364,7 @@ class SimpleExecContext : public ExecContext {
         thread->setVecPredReg(reg, val);
     }
 
-    CCReg
+    RegVal
     readCCRegOperand(const StaticInst *si, int idx) override
     {
         numCCRegReads++;
@@ -375,7 +374,7 @@ class SimpleExecContext : public ExecContext {
     }
 
     void
-    setCCRegOperand(const StaticInst *si, int idx, CCReg val) override
+    setCCRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         numCCRegWrites++;
         const RegId& reg = si->destRegIdx(idx);

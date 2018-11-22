@@ -47,7 +47,6 @@
 
 namespace NullISA {
 
-typedef uint8_t CCReg;
 const RegIndex ZeroReg = 0;
 
 // Not applicable to null

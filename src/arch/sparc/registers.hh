@@ -46,9 +46,6 @@ using SparcISAInst::MaxInstSrcRegs;
 using SparcISAInst::MaxInstDestRegs;
 using SparcISAInst::MaxMiscDestRegs;
 
-// dummy typedef since we don't have CC regs
-typedef uint8_t CCReg;
-
 // Not applicable to SPARC
 using VecElem = ::DummyVecElem;
 using VecReg = ::DummyVecReg;

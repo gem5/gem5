@@ -46,9 +46,6 @@ using AlphaISAInst::MaxInstDestRegs;
 // Locked read/write flags are can't be detected by the ISA parser
 const int MaxMiscDestRegs = AlphaISAInst::MaxMiscDestRegs + 1;
 
-// dummy typedef since we don't have CC regs
-typedef uint8_t CCReg;
-
 // Not applicable to Alpha
 using VecElem = ::DummyVecElem;
 using VecReg = ::DummyVecReg;

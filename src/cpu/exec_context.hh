@@ -74,7 +74,6 @@ class ExecContext {
   public:
     typedef TheISA::PCState PCState;
 
-    typedef TheISA::CCReg CCReg;
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
     using VecPredRegContainer = TheISA::VecPredRegContainer;
@@ -189,8 +188,9 @@ class ExecContext {
      * @{
      * @name Condition Code Registers
      */
-    virtual CCReg readCCRegOperand(const StaticInst *si, int idx) = 0;
-    virtual void setCCRegOperand(const StaticInst *si, int idx, CCReg val) = 0;
+    virtual RegVal readCCRegOperand(const StaticInst *si, int idx) = 0;
+    virtual void setCCRegOperand(
+            const StaticInst *si, int idx, RegVal val) = 0;
     /** @} */
 
     /**

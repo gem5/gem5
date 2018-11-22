@@ -64,8 +64,6 @@ using RiscvISAInst::MaxInstSrcRegs;
 using RiscvISAInst::MaxInstDestRegs;
 const int MaxMiscDestRegs = 1;
 
-typedef uint8_t CCReg; // Not applicable to Riscv
-
 // Not applicable to RISC-V
 using VecElem = ::DummyVecElem;
 using VecReg = ::DummyVecReg;

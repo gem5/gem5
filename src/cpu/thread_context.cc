@@ -108,8 +108,8 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
 
     // loop through the Condition Code registers.
     for (int i = 0; i < TheISA::NumCCRegs; ++i) {
-        TheISA::CCReg t1 = one->readCCReg(i);
-        TheISA::CCReg t2 = two->readCCReg(i);
+        RegVal t1 = one->readCCReg(i);
+        RegVal t2 = two->readCCReg(i);
         if (t1 != t2)
             panic("CC reg idx %d doesn't match, one: %#x, two: %#x",
                   i, t1, t2);
@@ -192,7 +192,7 @@ serialize(ThreadContext &tc, CheckpointOut &cp)
     SERIALIZE_ARRAY(intRegs, NumIntRegs);
 
 #ifdef ISA_HAS_CC_REGS
-    CCReg ccRegs[NumCCRegs];
+    RegVal ccRegs[NumCCRegs];
     for (int i = 0; i < NumCCRegs; ++i)
         ccRegs[i] = tc.readCCRegFlat(i);
     SERIALIZE_ARRAY(ccRegs, NumCCRegs);
@@ -233,7 +233,7 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
         tc.setIntRegFlat(i, intRegs[i]);
 
 #ifdef ISA_HAS_CC_REGS
-    CCReg ccRegs[NumCCRegs];
+    RegVal ccRegs[NumCCRegs];
     UNSERIALIZE_ARRAY(ccRegs, NumCCRegs);
     for (int i = 0; i < NumCCRegs; ++i)
         tc.setCCRegFlat(i, ccRegs[i]);

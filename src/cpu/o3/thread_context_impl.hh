@@ -247,7 +247,7 @@ O3ThreadContext<Impl>::getWritableVecPredRegFlat(int reg_id)
 }
 
 template <class Impl>
-TheISA::CCReg
+RegVal
 O3ThreadContext<Impl>::readCCRegFlat(int reg_idx)
 {
     return cpu->readArchCCReg(reg_idx, thread->threadId());
@@ -301,7 +301,7 @@ O3ThreadContext<Impl>::setVecPredRegFlat(int reg_idx,
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setCCRegFlat(int reg_idx, TheISA::CCReg val)
+O3ThreadContext<Impl>::setCCRegFlat(int reg_idx, RegVal val)
 {
     cpu->setArchCCReg(reg_idx, val, thread->threadId());
 

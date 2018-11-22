@@ -463,7 +463,7 @@ class FullO3CPU : public BaseO3CPU
 
     VecPredRegContainer& getWritableVecPredReg(PhysRegIdPtr reg_idx);
 
-    TheISA::CCReg readCCReg(PhysRegIdPtr phys_reg);
+    RegVal readCCReg(PhysRegIdPtr phys_reg);
 
     void setIntReg(PhysRegIdPtr phys_reg, RegVal val);
 
@@ -475,7 +475,7 @@ class FullO3CPU : public BaseO3CPU
 
     void setVecPredReg(PhysRegIdPtr reg_idx, const VecPredRegContainer& val);
 
-    void setCCReg(PhysRegIdPtr phys_reg, TheISA::CCReg val);
+    void setCCReg(PhysRegIdPtr phys_reg, RegVal val);
 
     RegVal readArchIntReg(int reg_idx, ThreadID tid);
 
@@ -514,7 +514,7 @@ class FullO3CPU : public BaseO3CPU
 
     VecPredRegContainer& getWritableArchVecPredReg(int reg_idx, ThreadID tid);
 
-    TheISA::CCReg readArchCCReg(int reg_idx, ThreadID tid);
+    RegVal readArchCCReg(int reg_idx, ThreadID tid);
 
     /** Architectural register accessors.  Looks up in the commit
      * rename table to obtain the true physical index of the
@@ -533,7 +533,7 @@ class FullO3CPU : public BaseO3CPU
     void setArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
                         const VecElem& val, ThreadID tid);
 
-    void setArchCCReg(int reg_idx, TheISA::CCReg val, ThreadID tid);
+    void setArchCCReg(int reg_idx, RegVal val, ThreadID tid);
 
     /** Sets the commit PC state of a specific thread. */
     void pcState(const TheISA::PCState &newPCState, ThreadID tid);

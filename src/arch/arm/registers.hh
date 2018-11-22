@@ -77,9 +77,6 @@ using VecPredRegContainer = ::DummyVecPredRegContainer;
 constexpr size_t VecPredRegSizeBits = ::DummyVecPredRegSizeBits;
 constexpr bool VecPredRegHasPackedRepr = ::DummyVecPredRegHasPackedRepr;
 
-// condition code register; must be at least 32 bits for FpCondCodes
-typedef uint64_t CCReg;
-
 // Constants Related to the number of registers
 const int NumIntArchRegs = NUM_ARCH_INTREGS;
 // The number of single precision floating point registers

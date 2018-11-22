@@ -662,7 +662,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     }
 
     /** Records a CC register being set to a value. */
-    void setCCRegOperand(const StaticInst *si, int idx, CCReg val)
+    void setCCRegOperand(const StaticInst *si, int idx, RegVal val)
     {
         setScalarResult(val);
     }

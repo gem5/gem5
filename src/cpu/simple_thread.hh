@@ -100,7 +100,6 @@ class SimpleThread : public ThreadState
 {
   protected:
     typedef TheISA::MachInst MachInst;
-    typedef TheISA::CCReg CCReg;
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
     using VecPredRegContainer = TheISA::VecPredRegContainer;
@@ -113,7 +112,7 @@ class SimpleThread : public ThreadState
     VecRegContainer vecRegs[TheISA::NumVecRegs];
     VecPredRegContainer vecPredRegs[TheISA::NumVecPredRegs];
 #ifdef ISA_HAS_CC_REGS
-    TheISA::CCReg ccRegs[TheISA::NumCCRegs];
+    RegVal ccRegs[TheISA::NumCCRegs];
 #endif
     TheISA::ISA *const isa;    // one "instance" of the current ISA.
 
@@ -379,7 +378,8 @@ class SimpleThread : public ThreadState
         return regVal;
     }
 
-    CCReg readCCReg(int reg_idx)
+    RegVal
+    readCCReg(int reg_idx)
     {
 #ifdef ISA_HAS_CC_REGS
         int flatIndex = isa->flattenCCIndex(reg_idx);
@@ -449,7 +449,7 @@ class SimpleThread : public ThreadState
     }
 
     void
-    setCCReg(int reg_idx, CCReg val)
+    setCCReg(int reg_idx, RegVal val)
     {
 #ifdef ISA_HAS_CC_REGS
         int flatIndex = isa->flattenCCIndex(reg_idx);
@@ -622,13 +622,13 @@ class SimpleThread : public ThreadState
     }
 
 #ifdef ISA_HAS_CC_REGS
-    CCReg readCCRegFlat(int idx) { return ccRegs[idx]; }
-    void setCCRegFlat(int idx, CCReg val) { ccRegs[idx] = val; }
+    RegVal readCCRegFlat(int idx) { return ccRegs[idx]; }
+    void setCCRegFlat(int idx, RegVal val) { ccRegs[idx] = val; }
 #else
-    CCReg readCCRegFlat(int idx)
+    RegVal readCCRegFlat(int idx)
     { panic("readCCRegFlat w/no CC regs!\n"); }
 
-    void setCCRegFlat(int idx, CCReg val)
+    void setCCRegFlat(int idx, RegVal val)
     { panic("setCCRegFlat w/no CC regs!\n"); }
 #endif
 };

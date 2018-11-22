@@ -271,7 +271,9 @@ class O3ThreadContext : public ThreadContext
         return getWritableVecPredRegFlat(flattenRegId(id).index());
     }
 
-    virtual CCReg readCCReg(int reg_idx) {
+    virtual RegVal
+    readCCReg(int reg_idx)
+    {
         return readCCRegFlat(flattenRegId(RegId(CCRegClass,
                                                  reg_idx)).index());
     }
@@ -310,7 +312,7 @@ class O3ThreadContext : public ThreadContext
     }
 
     virtual void
-    setCCReg(int reg_idx, CCReg val)
+    setCCReg(int reg_idx, RegVal val)
     {
         setCCRegFlat(flattenRegId(RegId(CCRegClass, reg_idx)).index(), val);
     }
@@ -424,8 +426,8 @@ class O3ThreadContext : public ThreadContext
     virtual void setVecPredRegFlat(int idx,
                                    const VecPredRegContainer& val) override;
 
-    virtual CCReg readCCRegFlat(int idx);
-    virtual void setCCRegFlat(int idx, CCReg val);
+    virtual RegVal readCCRegFlat(int idx);
+    virtual void setCCRegFlat(int idx, RegVal val);
 };
 
 #endif

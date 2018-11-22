@@ -283,9 +283,6 @@ const int NumMiscRegs = MISCREG_NUMREGS;
 
 const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
 
-// dummy typedef since we don't have CC regs
-typedef uint8_t CCReg;
-
 // Not applicable to MIPS
 using VecElem = ::DummyVecElem;
 using VecReg = ::DummyVecReg;

@@ -95,7 +95,6 @@ class ThreadContext
 {
   protected:
     typedef TheISA::MachInst MachInst;
-    typedef TheISA::CCReg CCReg;
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
     using VecPredRegContainer = TheISA::VecPredRegContainer;
@@ -248,7 +247,7 @@ class ThreadContext
         const = 0;
     virtual VecPredRegContainer& getWritableVecPredReg(const RegId& reg) = 0;
 
-    virtual CCReg readCCReg(int reg_idx) = 0;
+    virtual RegVal readCCReg(int reg_idx) = 0;
 
     virtual void setIntReg(int reg_idx, RegVal val) = 0;
 
@@ -261,7 +260,7 @@ class ThreadContext
     virtual void setVecPredReg(const RegId& reg,
                                const VecPredRegContainer& val) = 0;
 
-    virtual void setCCReg(int reg_idx, CCReg val) = 0;
+    virtual void setCCReg(int reg_idx, RegVal val) = 0;
 
     virtual TheISA::PCState pcState() = 0;
 
@@ -355,8 +354,8 @@ class ThreadContext
     virtual void setVecPredRegFlat(int idx,
                                    const VecPredRegContainer& val) = 0;
 
-    virtual CCReg readCCRegFlat(int idx) = 0;
-    virtual void setCCRegFlat(int idx, CCReg val) = 0;
+    virtual RegVal readCCRegFlat(int idx) = 0;
+    virtual void setCCRegFlat(int idx, RegVal val) = 0;
     /** @} */
 
 };
@@ -522,7 +521,7 @@ class ProxyThreadContext : public ThreadContext
     VecPredRegContainer& getWritableVecPredReg(const RegId& reg)
     { return actualTC->getWritableVecPredReg(reg); }
 
-    CCReg readCCReg(int reg_idx)
+    RegVal readCCReg(int reg_idx)
     { return actualTC->readCCReg(reg_idx); }
 
     void setIntReg(int reg_idx, RegVal val)
@@ -540,7 +539,7 @@ class ProxyThreadContext : public ThreadContext
     void setVecElem(const RegId& reg, const VecElem& val)
     { actualTC->setVecElem(reg, val); }
 
-    void setCCReg(int reg_idx, CCReg val)
+    void setCCReg(int reg_idx, RegVal val)
     { actualTC->setCCReg(reg_idx, val); }
 
     TheISA::PCState pcState() { return actualTC->pcState(); }
@@ -622,10 +621,10 @@ class ProxyThreadContext : public ThreadContext
     void setVecPredRegFlat(int idx, const VecPredRegContainer& val)
     { actualTC->setVecPredRegFlat(idx, val); }
 
-    CCReg readCCRegFlat(int idx)
+    RegVal readCCRegFlat(int idx)
     { return actualTC->readCCRegFlat(idx); }
 
-    void setCCRegFlat(int idx, CCReg val)
+    void setCCRegFlat(int idx, RegVal val)
     { actualTC->setCCRegFlat(idx, val); }
 };
 

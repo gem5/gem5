@@ -96,8 +96,6 @@ const int FramePointerReg = INTREG_RBP;
 // value
 const int SyscallPseudoReturnReg = INTREG_RDX;
 
-typedef uint64_t CCReg;
-
 // Not applicable to x86
 using VecElem = ::DummyVecElem;
 using VecReg = ::DummyVecReg;

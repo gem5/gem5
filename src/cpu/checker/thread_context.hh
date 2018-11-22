@@ -269,7 +269,7 @@ class CheckerThreadContext : public ThreadContext
     VecPredRegContainer& getWritableVecPredReg(const RegId& reg) override
     { return actualTC->getWritableVecPredReg(reg); }
 
-    CCReg readCCReg(int reg_idx)
+    RegVal readCCReg(int reg_idx)
     { return actualTC->readCCReg(reg_idx); }
 
     void
@@ -308,7 +308,7 @@ class CheckerThreadContext : public ThreadContext
     }
 
     void
-    setCCReg(int reg_idx, CCReg val)
+    setCCReg(int reg_idx, RegVal val)
     {
         actualTC->setCCReg(reg_idx, val);
         checkerTC->setCCReg(reg_idx, val);
@@ -450,10 +450,10 @@ class CheckerThreadContext : public ThreadContext
     void setVecPredRegFlat(int idx, const VecPredRegContainer& val) override
     { actualTC->setVecPredRegFlat(idx, val); }
 
-    CCReg readCCRegFlat(int idx)
+    RegVal readCCRegFlat(int idx)
     { return actualTC->readCCRegFlat(idx); }
 
-    void setCCRegFlat(int idx, CCReg val)
+    void setCCRegFlat(int idx, RegVal val)
     { actualTC->setCCRegFlat(idx, val); }
 };
 

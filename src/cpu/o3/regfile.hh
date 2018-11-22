@@ -65,7 +65,6 @@ class PhysRegFile
 {
   private:
 
-    typedef TheISA::CCReg CCReg;
     using VecElem = TheISA::VecElem;
     using VecRegContainer = TheISA::VecRegContainer;
     using PhysIds = std::vector<PhysRegId>;
@@ -95,7 +94,7 @@ class PhysRegFile
     std::vector<PhysRegId> vecPredRegIds;
 
     /** Condition-code register file. */
-    std::vector<CCReg> ccRegFile;
+    std::vector<RegVal> ccRegFile;
     std::vector<PhysRegId> ccRegIds;
 
     /** Misc Reg Ids */
@@ -290,7 +289,7 @@ class PhysRegFile
     }
 
     /** Reads a condition-code register. */
-    CCReg
+    RegVal
     readCCReg(PhysRegIdPtr phys_reg)
     {
         assert(phys_reg->isCCPhysReg());
@@ -365,7 +364,7 @@ class PhysRegFile
 
     /** Sets a condition-code register to the given value. */
     void
-    setCCReg(PhysRegIdPtr phys_reg, CCReg val)
+    setCCReg(PhysRegIdPtr phys_reg, RegVal val)
     {
         assert(phys_reg->isCCPhysReg());
 

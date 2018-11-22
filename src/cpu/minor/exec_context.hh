@@ -401,7 +401,7 @@ class ExecContext : public ::ExecContext
         thread.getDTBPtr()->demapPage(vaddr, asn);
     }
 
-    TheISA::CCReg
+    RegVal
     readCCRegOperand(const StaticInst *si, int idx) override
     {
         const RegId& reg = si->srcRegIdx(idx);
@@ -410,7 +410,7 @@ class ExecContext : public ::ExecContext
     }
 
     void
-    setCCRegOperand(const StaticInst *si, int idx, TheISA::CCReg val) override
+    setCCRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isCCReg());

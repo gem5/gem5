@@ -46,9 +46,6 @@ using PowerISAInst::MaxInstDestRegs;
 // be detected by it. Manually add it here.
 const int MaxMiscDestRegs = PowerISAInst::MaxMiscDestRegs + 1;
 
-// dummy typedef since we don't have CC regs
-typedef uint8_t CCReg;
-
 // Not applicable to Power
 using VecElem = ::DummyVecElem;
 using VecReg = ::DummyVecReg;

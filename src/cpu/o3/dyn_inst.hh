@@ -66,7 +66,6 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     /** Binary machine instruction type. */
     typedef TheISA::MachInst MachInst;
     /** Register types. */
-    typedef TheISA::CCReg   CCReg;
     using VecRegContainer = TheISA::VecRegContainer;
     using VecElem = TheISA::VecElem;
     static constexpr auto NumVecElemPerVecReg = TheISA::NumVecElemPerVecReg;
@@ -378,7 +377,8 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         return this->cpu->getWritableVecPredReg(this->_destRegIdx[idx]);
     }
 
-    CCReg readCCRegOperand(const StaticInst *si, int idx)
+    RegVal
+    readCCRegOperand(const StaticInst *si, int idx)
     {
         return this->cpu->readCCReg(this->_srcRegIdx[idx]);
     }
@@ -424,7 +424,7 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         BaseDynInst<Impl>::setVecPredRegOperand(si, idx, val);
     }
 
-    void setCCRegOperand(const StaticInst *si, int idx, CCReg val)
+    void setCCRegOperand(const StaticInst *si, int idx, RegVal val)
     {
         this->cpu->setCCReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setCCRegOperand(si, idx, val);

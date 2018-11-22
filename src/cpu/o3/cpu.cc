@@ -1379,7 +1379,7 @@ FullO3CPU<Impl>::getWritableVecPredReg(PhysRegIdPtr phys_reg)
 }
 
 template <class Impl>
-CCReg
+RegVal
 FullO3CPU<Impl>::readCCReg(PhysRegIdPtr phys_reg)
 {
     ccRegfileReads++;
@@ -1429,7 +1429,7 @@ FullO3CPU<Impl>::setVecPredReg(PhysRegIdPtr phys_reg,
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setCCReg(PhysRegIdPtr phys_reg, CCReg val)
+FullO3CPU<Impl>::setCCReg(PhysRegIdPtr phys_reg, RegVal val)
 {
     ccRegfileWrites++;
     regFile.setCCReg(phys_reg, val);
@@ -1508,7 +1508,7 @@ FullO3CPU<Impl>::getWritableArchVecPredReg(int reg_idx, ThreadID tid)
 }
 
 template <class Impl>
-CCReg
+RegVal
 FullO3CPU<Impl>::readArchCCReg(int reg_idx, ThreadID tid)
 {
     ccRegfileReads++;
@@ -1572,7 +1572,7 @@ FullO3CPU<Impl>::setArchVecPredReg(int reg_idx, const VecPredRegContainer& val,
 
 template <class Impl>
 void
-FullO3CPU<Impl>::setArchCCReg(int reg_idx, CCReg val, ThreadID tid)
+FullO3CPU<Impl>::setArchCCReg(int reg_idx, RegVal val, ThreadID tid)
 {
     ccRegfileWrites++;
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
