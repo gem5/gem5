@@ -153,30 +153,26 @@ class RunPhase(TestPhaseBase):
             '--kill-after', str(args.timeout * 2),
             str(args.timeout)
         ]
-        curdir = os.getcwd()
         def run_test(test):
             cmd = []
             if args.timeout:
                 cmd.extend(timeout_cmd)
             cmd.extend([
-                test.full_path(),
+                os.path.abspath(test.full_path()),
                 '-rd', os.path.abspath(test.m5out_dir()),
                 '--listener-mode=off',
                 '--quiet',
-                config_path,
-                '--working-dir',
-                os.path.dirname(test.dir())
+                os.path.abspath(config_path),
             ])
             # Ensure the output directory exists.
             if not os.path.exists(test.m5out_dir()):
                 os.makedirs(test.m5out_dir())
             try:
-                subprocess.check_call(cmd)
+                subprocess.check_call(cmd, cwd=os.path.dirname(test.dir()))
             except subprocess.CalledProcessError, error:
                 returncode = error.returncode
             else:
                 returncode = 0
-            os.chdir(curdir)
             with open(test.returncode_file(), 'w') as rc:
                 rc.write('%d\n' % returncode)
 
