@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2018 ARM Limited
+ * All rights reserved
+ *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -34,7 +37,8 @@
 #include <string>
 #include <vector>
 
-#include "base/cprintf.hh"
+#include <gtest/gtest.h>
+
 #include "base/inifile.hh"
 
 using namespace std;
@@ -63,30 +67,44 @@ Test4+=mia
 
 };
 
-int
-main(int argc, char *argv[])
+TEST(Initest, MatchFound)
 {
     IniFile simConfigDB;
     simConfigDB.load(iniFile);
 
-    string value;
+    std::string value;
 
-#define FIND(C, E) \
-  if (simConfigDB.find(C, E, value)) \
-    cout << ">" << value << "<\n"; \
-  else \
-    cout << "Not Found!\n"
+    auto ret = simConfigDB.find("General", "Test2", value);
+    ASSERT_TRUE(ret);
+    ASSERT_STREQ(value.c_str(), "bar");
 
-    FIND("General", "Test2");
-    FIND("Junk", "Test3");
-    FIND("Junk", "Test4");
-    FIND("General", "Test1");
-    FIND("Junk2", "test3");
-    FIND("General", "Test3");
+    ret = simConfigDB.find("Junk", "Test3", value);
+    ASSERT_TRUE(ret);
+    ASSERT_STREQ(value.c_str(), "yo");
 
-    cout << "\n";
+    ret = simConfigDB.find("Junk", "Test4", value);
+    ASSERT_TRUE(ret);
+    ASSERT_STREQ(value.c_str(), "mama mia");
 
-    simConfigDB.dump();
+    ret = simConfigDB.find("General", "Test1", value);
+    ASSERT_TRUE(ret);
+    ASSERT_STREQ(value.c_str(), "BARasdf");
 
-    return 0;
+    ret = simConfigDB.find("General", "Test3", value);
+    ASSERT_TRUE(ret);
+    ASSERT_STREQ(value.c_str(), "89");
+}
+
+TEST(Initest, MatchNotFound)
+{
+    IniFile simConfigDB;
+    simConfigDB.load(iniFile);
+
+    std::string value;
+
+    auto ret = simConfigDB.find("Junk2", "test3", value);
+    ASSERT_FALSE(ret);
+
+    ret = simConfigDB.find("Junk", "test4", value);
+    ASSERT_FALSE(ret);
 }

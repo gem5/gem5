@@ -33,7 +33,6 @@ Import('*')
 Source('unittest.cc')
 
 UnitTest('cprintftime', 'cprintftime.cc')
-UnitTest('initest', 'initest.cc')
 UnitTest('nmtest', 'nmtest.cc')
 UnitTest('refcnttest', 'refcnttest.cc')
 UnitTest('strnumtest', 'strnumtest.cc')
