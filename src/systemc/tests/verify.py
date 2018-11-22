@@ -165,7 +165,7 @@ class RunPhase(TestPhaseBase):
                 '--quiet',
                 config_path,
                 '--working-dir',
-                os.path.dirname(test.src_dir())
+                os.path.dirname(test.dir())
             ])
             # Ensure the output directory exists.
             if not os.path.exists(test.m5out_dir()):
