@@ -26,16 +26,19 @@ Read main.cc for more details of the implementation and sc_... files for
 To build:
 
 First build gem5 as a library with cxx-config support and (optionally)
-without python.  Also build a normal gem5 (cxx-config not needed, Python
-needed):
+without python.  When building the library, disable gem5's native SystemC
+API support, as that will conflict with the external version.  Also build a
+normal gem5 (cxx-config not needed, Python needed):
 
 > cd ../../..
 > scons build/ARM/gem5.opt
-> scons --with-cxx-config --without-python build/ARM/libgem5_opt.so
+> scons --with-cxx-config --without-python USE_SYSTEMC=0 \
+>       build/ARM/libgem5_opt.so
 > cd util/systemc
 
 Note: For MAC / OSX this command should be used:
-> scons --with-cxx-config --without-python build/ARM/libgem5_opt.dylib
+> scons --with-cxx-config --without-python USE_SYSTEMC=0 \
+>       build/ARM/libgem5_opt.dylib
 
 Set a proper LD_LIBRARY_PATH e.g. for bash:
 > export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
