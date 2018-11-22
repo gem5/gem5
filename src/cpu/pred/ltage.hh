@@ -67,6 +67,8 @@ class LTAGE: public TAGE
     // Base class methods.
     void squash(ThreadID tid, void *bp_history) override;
 
+    void regStats() override;
+
   private:
     // Prediction Structures
     // Loop Predictor Entry
@@ -82,6 +84,11 @@ class LTAGE: public TAGE
 
         LoopEntry() : numIter(0), currentIter(0), currentIterSpec(0),
                       confidence(0), tag(0), age(0), dir(0) { }
+    };
+
+    // more provider types
+    enum {
+        LOOP = LAST_TAGE_PROVIDER_TYPE + 1
     };
 
     // Primary branch history entry
@@ -177,6 +184,14 @@ class LTAGE: public TAGE
     void squash(
         ThreadID tid, bool taken, void *bp_history) override;
 
+    /**
+     * Update the stats
+     * @param taken Actual branch outcome
+     * @param bi Pointer to information on the prediction
+     * recorded at prediction time.
+     */
+    void updateStats(bool taken, TageBranchInfo* bi) override;
+
     const unsigned logSizeLoopPred;
     const unsigned loopTableAgeBits;
     const unsigned loopTableConfidenceBits;
@@ -191,6 +206,10 @@ class LTAGE: public TAGE
 
     int8_t loopUseCounter;
     unsigned withLoopBits;
+
+    // stats
+    Stats::Scalar loopPredictorCorrect;
+    Stats::Scalar loopPredictorWrong;
 };
 
 #endif // __CPU_PRED_LTAGE

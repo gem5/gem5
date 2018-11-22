@@ -71,6 +71,8 @@ class TAGE: public BPredUnit
     virtual void squash(ThreadID tid, void *bp_history) override;
     unsigned getGHR(ThreadID tid, void *bp_history) const override;
 
+    virtual void regStats() override;
+
   protected:
     // Prediction Structures
 
@@ -110,6 +112,15 @@ class TAGE: public BPredUnit
         }
     };
 
+    // provider type
+    enum {
+        BIMODAL_ONLY = 0,
+        TAGE_LONGEST_MATCH,
+        BIMODAL_ALT_MATCH,
+        TAGE_ALT_MATCH,
+        LAST_TAGE_PROVIDER_TYPE = TAGE_ALT_MATCH
+    };
+
     // Primary branch history entry
     struct TageBranchInfo
     {
@@ -141,6 +152,9 @@ class TAGE: public BPredUnit
         int *ct0;
         int *ct1;
 
+        // for stats purposes
+        unsigned provider;
+
         TageBranchInfo(int sz)
             : pathHist(0), ptGhist(0),
               hitBank(0), hitBankIndex(0),
@@ -148,7 +162,8 @@ class TAGE: public BPredUnit
               bimodalIndex(0),
               tagePred(false), altTaken(false),
               condBranch(false), longestMatchPred(false),
-              pseudoNewAlloc(false), branchPC(0)
+              pseudoNewAlloc(false), branchPC(0),
+              provider(-1)
         {
             storage = new int [sz * 5];
             tableIndices = storage;
@@ -320,6 +335,14 @@ class TAGE: public BPredUnit
     bool tagePredict(
         ThreadID tid, Addr branch_pc, bool cond_branch, TageBranchInfo* bi);
 
+    /**
+     * Update the stats
+     * @param taken Actual branch outcome
+     * @param bi Pointer to information on the prediction
+     * recorded at prediction time.
+     */
+    virtual void updateStats(bool taken, TageBranchInfo* bi);
+
     const unsigned logRatioBiModalHystEntries;
     const unsigned nHistoryTables;
     const unsigned tagTableCounterBits;
@@ -369,6 +392,21 @@ class TAGE: public BPredUnit
     uint64_t tCounter;
     uint64_t logUResetPeriod;
     unsigned useAltOnNaBits;
+
+    // stats
+    Stats::Scalar tageLongestMatchProviderCorrect;
+    Stats::Scalar tageAltMatchProviderCorrect;
+    Stats::Scalar bimodalAltMatchProviderCorrect;
+    Stats::Scalar tageBimodalProviderCorrect;
+    Stats::Scalar tageLongestMatchProviderWrong;
+    Stats::Scalar tageAltMatchProviderWrong;
+    Stats::Scalar bimodalAltMatchProviderWrong;
+    Stats::Scalar tageBimodalProviderWrong;
+    Stats::Scalar tageAltMatchProviderWouldHaveHit;
+    Stats::Scalar tageLongestMatchProviderWouldHaveHit;
+
+    Stats::Vector tageLongestMatchProvider;
+    Stats::Vector tageAltMatchProvider;
 };
 
 #endif // __CPU_PRED_TAGE

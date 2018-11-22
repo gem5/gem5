@@ -228,6 +228,7 @@ LTAGE::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
 
         if ((loopUseCounter >= 0) && bi->loopPredValid) {
             pred_taken = bi->loopPred;
+            bi->provider = LOOP;
         }
         DPRINTF(LTage, "Predict for %lx: taken?:%d, loopTaken?:%d, "
                 "loopValid?:%d, loopUseCounter:%d, tagePred:%d, altPred:%d\n",
@@ -287,6 +288,43 @@ LTAGE::squash(ThreadID tid, void *bp_history)
 
     TAGE::squash(tid, bp_history);
 }
+
+
+void
+LTAGE::updateStats(bool taken, TageBranchInfo* bi)
+{
+    TAGE::updateStats(taken, bi);
+
+    LTageBranchInfo * ltage_bi = static_cast<LTageBranchInfo *>(bi);
+
+    if (ltage_bi->provider == LOOP) {
+        if (taken == ltage_bi->loopPred) {
+            loopPredictorCorrect++;
+        } else {
+            loopPredictorWrong++;
+        }
+    }
+}
+
+
+
+void
+LTAGE::regStats()
+{
+    TAGE::regStats();
+
+    loopPredictorCorrect
+        .name(name() + ".loopPredictorCorrect")
+        .desc("Number of times the loop predictor is the provider and "
+              "the prediction is correct");
+
+    loopPredictorWrong
+        .name(name() + ".loopPredictorWrong")
+        .desc("Number of times the loop predictor is the provier and "
+              "the prediction is wrong");
+}
+
+
 
 LTAGE*
 LTAGEParams::create()
