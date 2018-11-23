@@ -76,11 +76,11 @@ class LTAGE: public TAGE
     {
         uint16_t numIter;
         uint16_t currentIter;
-        uint16_t currentIterSpec;
+        uint16_t currentIterSpec; // only for useSpeculation
         uint8_t confidence;
         uint16_t tag;
         uint8_t age;
-        bool dir;
+        bool dir; // only for useDirectionBit
 
         LoopEntry() : numIter(0), currentIter(0), currentIterSpec(0),
                       confidence(0), tag(0), age(0), dir(0) { }
@@ -100,13 +100,14 @@ class LTAGE: public TAGE
         bool loopPred;
         bool loopPredValid;
         int  loopIndex;
+        int  loopLowPcBits;  // only for useHashing
         int loopHit;
 
         LTageBranchInfo(int sz)
             : TageBranchInfo(sz),
               loopTag(0), currentIter(0),
               loopPred(false),
-              loopPredValid(false), loopIndex(0), loopHit(0)
+              loopPredValid(false), loopIndex(0), loopLowPcBits(0), loopHit(0)
         {}
     };
 
@@ -118,13 +119,24 @@ class LTAGE: public TAGE
     int lindex(Addr pc_in) const;
 
     /**
+     * Computes the index used to access the
+     * ltable structures.
+     * It may take hashing into account
+     * @param index Result of lindex function
+     * @param lowPcBits PC bits masked with set size
+     * @param way Way to be used
+     */
+    int finallindex(int lindex, int lowPcBits, int way) const;
+
+    /**
      * Get a branch prediction from the loop
      * predictor.
      * @param pc The unshifted branch PC.
      * @param bi Pointer to information on the
      * prediction.
+     * @param speculative Use speculative number of iterations
      */
-    bool getLoop(Addr pc, LTageBranchInfo* bi) const;
+    bool getLoop(Addr pc, LTageBranchInfo* bi, bool speculative) const;
 
    /**
     * Updates the loop predictor.
@@ -137,13 +149,12 @@ class LTAGE: public TAGE
 
     /**
      * Speculatively updates the loop predictor
-     * iteration count.
-     * @param pc The unshifted branch PC.
+     * iteration count (only for useSpeculation).
      * @param taken The predicted branch outcome.
      * @param bi Pointer to information on the prediction
      * recorded at prediction time.
      */
-    void specLoopUpdate(Addr pc, bool taken, LTageBranchInfo* bi);
+    void specLoopUpdate(bool taken, LTageBranchInfo* bi);
 
     /**
      * Update LTAGE for conditional branches.
@@ -201,11 +212,16 @@ class LTAGE: public TAGE
     const uint8_t confidenceThreshold;
     const uint16_t loopTagMask;
     const uint16_t loopNumIterMask;
+    const int loopSetMask;
 
     LoopEntry *ltable;
 
     int8_t loopUseCounter;
     unsigned withLoopBits;
+
+    const bool useDirectionBit;
+    const bool useSpeculation;
+    const bool useHashing;
 
     // stats
     Stats::Scalar loopPredictorCorrect;
