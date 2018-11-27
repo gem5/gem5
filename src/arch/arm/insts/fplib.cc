@@ -42,6 +42,7 @@
 
 #include <cassert>
 
+#include "base/logging.hh"
 #include "fplib.hh"
 
 namespace ArmISA
@@ -3740,7 +3741,7 @@ fplibRecipEstimate(uint16_t op, FPSCR &fpscr)
             overflow_to_inf = false;
             break;
           default:
-            assert(0);
+            panic("Unrecognized FP rounding mode");
         }
         result = overflow_to_inf ? fp16_infinity(sgn) : fp16_max_normal(sgn);
         flags |= FPLIB_OFC | FPLIB_IXC;
@@ -3802,7 +3803,7 @@ fplibRecipEstimate(uint32_t op, FPSCR &fpscr)
             overflow_to_inf = false;
             break;
           default:
-            assert(0);
+            panic("Unrecognized FP rounding mode");
         }
         result = overflow_to_inf ? fp32_infinity(sgn) : fp32_max_normal(sgn);
         flags |= FPLIB_OFC | FPLIB_IXC;
@@ -3864,7 +3865,7 @@ fplibRecipEstimate(uint64_t op, FPSCR &fpscr)
             overflow_to_inf = false;
             break;
           default:
-            assert(0);
+            panic("Unrecognized FP rounding mode");
         }
         result = overflow_to_inf ? fp64_infinity(sgn) : fp64_max_normal(sgn);
         flags |= FPLIB_OFC | FPLIB_IXC;
@@ -4108,7 +4109,7 @@ fplibRoundInt(uint16_t op, FPRounding rounding, bool exact, FPSCR &fpscr)
             x += err >> 1;
             break;
           default:
-            assert(0);
+            panic("Unrecognized FP rounding mode");
         }
 
         if (x == 0) {
@@ -4173,7 +4174,7 @@ fplibRoundInt(uint32_t op, FPRounding rounding, bool exact, FPSCR &fpscr)
             x += err >> 1;
             break;
           default:
-            assert(0);
+            panic("Unrecognized FP rounding mode");
         }
 
         if (x == 0) {
@@ -4238,7 +4239,7 @@ fplibRoundInt(uint64_t op, FPRounding rounding, bool exact, FPSCR &fpscr)
             x += err >> 1;
             break;
           default:
-            assert(0);
+            panic("Unrecognized FP rounding mode");
         }
 
         if (x == 0) {
@@ -4575,7 +4576,7 @@ FPToFixed_64(int sgn, int exp, uint64_t mnt, bool u, FPRounding rounding,
         x += err >> 1;
         break;
       default:
-        assert(0);
+        panic("Unrecognized FP rounding mode");
     }
 
     if (u ? sgn && x : x > (1ULL << (FP64_BITS - 1)) - !sgn) {

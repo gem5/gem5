@@ -37,6 +37,7 @@
 
 #include <cstring>
 
+#include "base/logging.hh"
 #include "debug/GPUTLB.hh"
 #include "sim/process.hh"
 
@@ -335,7 +336,7 @@ TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
 void
 TLBCoalescer::CpuSidePort::recvReqRetry()
 {
-    assert(false);
+    panic("recvReqRetry called");
 }
 
 void

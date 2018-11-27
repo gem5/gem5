@@ -39,6 +39,7 @@
 #include <cstdint>
 #include <string>
 
+#include "base/logging.hh"
 #include "enums/MemType.hh"
 #include "enums/StorageClassType.hh"
 #include "gpu-compute/compute_unit.hh"
@@ -407,8 +408,7 @@ class GPUDynInst : public GPUExecContext
         } else if (isGroupSeg()) {
             req->setMemSpaceConfigFlags(Request::GROUP_SEGMENT);
         } else if (isFlat()) {
-            // TODO: translate to correct scope
-            assert(false);
+            panic("TODO: translate to correct scope");
         } else {
             fatal("%s has bad segment type\n", disassemble());
         }

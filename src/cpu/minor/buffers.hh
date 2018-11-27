@@ -118,7 +118,11 @@ class NoBubbleTraits
 {
   public:
     static bool isBubble(const ElemType &) { return false; }
-    static ElemType bubble() { assert(false); }
+    static ElemType
+    bubble()
+    {
+        panic("bubble called but no bubble interface");
+    }
 };
 
 /** Pass on call to the element */

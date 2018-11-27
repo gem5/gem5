@@ -46,6 +46,7 @@
 
 #include <list>
 
+#include "base/logging.hh"
 #include "cpu/o3/rob.hh"
 #include "debug/Fetch.hh"
 #include "debug/ROB.hh"
@@ -99,8 +100,8 @@ ROB<Impl>::ROB(O3CPU *_cpu, DerivO3CPUParams *params)
             maxEntries[tid] = threshold;
         }
     } else {
-        assert(0 && "Invalid ROB Sharing Policy.Options Are:{Dynamic,"
-                    "Partitioned, Threshold}");
+        panic("Invalid ROB sharing policy. Options are: Dynamic, "
+                "Partitioned, Threshold");
     }
 
     resetState();

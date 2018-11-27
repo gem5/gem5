@@ -52,6 +52,7 @@
 #include <cassert>
 #include <string>
 
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/Drain.hh"
@@ -108,8 +109,7 @@ class Queue : public Drainable
                 return readyList.insert(i, entry);
             }
         }
-        assert(false);
-        return readyList.end();  // keep stupid compilers happy
+        panic("Failed to add to ready list.");
     }
 
     /** The number of entries that are in service. */

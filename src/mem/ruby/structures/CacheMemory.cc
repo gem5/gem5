@@ -30,6 +30,7 @@
 #include "mem/ruby/structures/CacheMemory.hh"
 
 #include "base/intmath.hh"
+#include "base/logging.hh"
 #include "debug/RubyCache.hh"
 #include "debug/RubyCacheTrace.hh"
 #include "debug/RubyResourceStalls.hh"
@@ -637,8 +638,7 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Addr addr)
             return false;
         }
     } else {
-        assert(false);
-        return true;
+        panic("Unrecognized cache resource type.");
     }
 }
 

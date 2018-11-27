@@ -49,8 +49,9 @@
 #include <string>
 
 #include "arch/utility.hh"
-#include "base/loader/symtab.hh"
 #include "base/cp_annotate.hh"
+#include "base/loader/symtab.hh"
+#include "base/logging.hh"
 #include "config/the_isa.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/o3/commit.hh"
@@ -127,8 +128,8 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
 
         DPRINTF(Commit,"Commit Policy set to Oldest Ready.");
     } else {
-        assert(0 && "Invalid SMT Commit Policy. Options Are: {Aggressive,"
-               "RoundRobin,OldestReady}");
+        panic("Invalid SMT commit policy. Options are: Aggressive, "
+               "RoundRobin, OldestReady");
     }
 
     for (ThreadID tid = 0; tid < numThreads; tid++) {

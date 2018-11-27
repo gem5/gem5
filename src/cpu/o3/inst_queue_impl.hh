@@ -48,6 +48,7 @@
 #include <limits>
 #include <vector>
 
+#include "base/logging.hh"
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/inst_queue.hh"
 #include "debug/IQ.hh"
@@ -162,8 +163,8 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
         DPRINTF(IQ, "IQ sharing policy set to Threshold:"
                 "%i entries per thread.\n",thresholdIQ);
    } else {
-       assert(0 && "Invalid IQ Sharing Policy.Options Are:{Dynamic,"
-              "Partitioned, Threshold}");
+       panic("Invalid IQ sharing policy. Options are: Dynamic, "
+              "Partitioned, Threshold");
    }
 }
 

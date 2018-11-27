@@ -48,6 +48,7 @@
 #include <list>
 #include <string>
 
+#include "base/logging.hh"
 #include "cpu/o3/lsq.hh"
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"
@@ -109,8 +110,8 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
                 "%i entries per LQ | %i entries per SQ\n",
                 maxLQEntries,maxSQEntries);
     } else {
-        assert(0 && "Invalid LSQ Sharing Policy.Options Are:{Dynamic,"
-                    "Partitioned, Threshold}");
+        panic("Invalid LSQ sharing policy. Options are: Dynamic, "
+                    "Partitioned, Threshold");
     }
 
     //Initialize LSQs

@@ -44,6 +44,7 @@
 
 #include "arch/locked_mem.hh"
 #include "arch/mmapped_ipr.hh"
+#include "base/logging.hh"
 #include "cpu/minor/cpu.hh"
 #include "cpu/minor/exec_context.hh"
 #include "cpu/minor/execute.hh"
@@ -1121,8 +1122,7 @@ LSQ::tryToSend(LSQRequestPtr request)
                 request->setState(LSQRequest::StoreBufferIssuing);
                 break;
               default:
-                assert(false);
-                break;
+                panic("Unrecognized LSQ request state %d.", request->state);
             }
 
             state = MemoryRunning;
@@ -1144,8 +1144,7 @@ LSQ::tryToSend(LSQRequestPtr request)
                 request->setState(LSQRequest::StoreBufferNeedsRetry);
                 break;
               default:
-                assert(false);
-                break;
+                panic("Unrecognized LSQ request state %d.", request->state);
             }
         }
     }
@@ -1226,10 +1225,7 @@ LSQ::recvTimingResp(PacketPtr response)
         }
         break;
       default:
-        /* Shouldn't be allowed to receive a response from another
-         *  state */
-        assert(false);
-        break;
+        panic("Shouldn't be allowed to receive a response from another state");
     }
 
     /* We go to idle even if there are more things in the requests queue
@@ -1260,7 +1256,7 @@ LSQ::recvReqRetry()
         retryRequest->setState(LSQRequest::StoreInStoreBuffer);
         break;
       default:
-        assert(false);
+        panic("Unrecognized retry request state %d.", retryRequest->state);
     }
 
     /* Set state back to MemoryRunning so that the following
@@ -1283,8 +1279,7 @@ LSQ::recvReqRetry()
             storeBuffer.countIssuedStore(retryRequest);
             break;
           default:
-            assert(false);
-            break;
+            panic("Unrecognized retry request state %d.", retryRequest->state);
         }
 
         retryRequest = NULL;

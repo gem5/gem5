@@ -45,6 +45,7 @@
 #include "arch/x86/regs/misc.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/bitfield.hh"
+#include "base/logging.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
@@ -1150,16 +1151,16 @@ namespace X86ISA
 
         if ((inUser && !tlb_entry->user) ||
             (mode == BaseTLB::Write && badWrite)) {
-           // The page must have been present to get into the TLB in
-           // the first place. We'll assume the reserved bits are
-           // fine even though we're not checking them.
-           assert(false);
+            // The page must have been present to get into the TLB in
+            // the first place. We'll assume the reserved bits are
+            // fine even though we're not checking them.
+            panic("Page fault detected");
         }
 
         if (storeCheck && badWrite) {
-           // This would fault if this were a write, so return a page
-           // fault that reflects that happening.
-           assert(false);
+            // This would fault if this were a write, so return a page
+            // fault that reflects that happening.
+            panic("Page fault detected");
         }
     }
 
@@ -1362,7 +1363,7 @@ namespace X86ISA
              */
             handleTranslationReturn(virtPageAddr, TLB_MISS, pkt);
         } else {
-            assert(false);
+            panic("Unexpected TLB outcome %d", outcome);
         }
     }
 
@@ -1607,7 +1608,7 @@ namespace X86ISA
     {
         // The CPUSidePort never sends anything but replies. No retries
         // expected.
-        assert(false);
+        panic("recvReqRetry called");
     }
 
     AddrRangeList
@@ -1648,7 +1649,7 @@ namespace X86ISA
     {
         // No retries should reach the TLB. The retries
         // should only reach the TLBCoalescer.
-        assert(false);
+        panic("recvReqRetry called");
     }
 
     void

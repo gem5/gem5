@@ -43,6 +43,7 @@
 #define __ARCH_ARM_INSTS_PREDINST_HH__
 
 #include "arch/arm/insts/static_inst.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 
 namespace ArmISA
@@ -186,7 +187,7 @@ vfp_modified_imm(uint8_t data, FpDataType dtype)
                   (bits(bigData, 7) << 63);
         break;
       default:
-        assert(0);
+        panic("Unrecognized FP data type");
     }
     return bigData;
 }

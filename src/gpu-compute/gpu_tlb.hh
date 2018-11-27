@@ -272,7 +272,7 @@ namespace X86ISA
             virtual void recvFunctional(PacketPtr pkt);
             virtual void recvRangeChange() { }
             virtual void recvReqRetry();
-            virtual void recvRespRetry() { assert(false); }
+            virtual void recvRespRetry() { panic("recvRespRetry called"); }
             virtual AddrRangeList getAddrRanges() const;
         };
 

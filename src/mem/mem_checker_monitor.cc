@@ -43,6 +43,7 @@
 
 #include <memory>
 
+#include "base/logging.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "debug/MemCheckerMonitor.hh"
@@ -129,15 +130,13 @@ MemCheckerMonitor::recvFunctionalSnoop(PacketPtr pkt)
 Tick
 MemCheckerMonitor::recvAtomic(PacketPtr pkt)
 {
-    assert(false && "Atomic not supported");
-    return masterPort.sendAtomic(pkt);
+    panic("Atomic not supported");
 }
 
 Tick
 MemCheckerMonitor::recvAtomicSnoop(PacketPtr pkt)
 {
-    assert(false && "Atomic not supported");
-    return slavePort.sendAtomicSnoop(pkt);
+    panic("Atomic not supported");
 }
 
 bool

@@ -29,6 +29,7 @@
 #include "mem/ruby/filters/H3BloomFilter.hh"
 
 #include "base/intmath.hh"
+#include "base/logging.hh"
 
 using namespace std;
 
@@ -437,8 +438,7 @@ H3BloomFilter::set(Addr addr)
 void
 H3BloomFilter::unset(Addr addr)
 {
-    cout << "ERROR: Unset should never be called in a Bloom filter";
-    assert(0);
+    panic("ERROR: Unset should never be called in a Bloom filter");
 }
 
 bool

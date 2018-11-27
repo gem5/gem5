@@ -121,9 +121,7 @@ output exec {{
             return packet->getLE<uint64_t>();
 
           default:
-            std::cerr << "bad store data size = " << packet->getSize() << std::endl;
-
-            assert(0);
+            panic("bad store data size = %d", packet->getSize());
             return 0;
         }
     }
