@@ -52,6 +52,7 @@
 #include <cstdint>
 
 #include "arch/isa_traits.hh"
+#include "arch/generic/tlb.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/packet.hh"
@@ -326,6 +327,9 @@ class BasePrefetcher : public ClockedObject
     /** Total prefetches that has been useful */
     uint64_t usefulPrefetches;
 
+    /** Registered tlb for address translations */
+    BaseTLB * tlb;
+
   public:
 
     BasePrefetcher(const BasePrefetcherParams *p);
@@ -371,5 +375,13 @@ class BasePrefetcher : public ClockedObject
      * @param name The probe name
      */
     void addEventProbe(SimObject *obj, const char *name);
+
+    /**
+     * Add a BaseTLB object to be used whenever a translation is needed.
+     * This is generally required when the prefetcher is allowed to generate
+     * page crossing references and/or uses virtual addresses for training.
+     * @param tlb pointer to the BaseTLB object to add
+     */
+    void addTLB(BaseTLB *tlb);
 };
 #endif //__MEM_CACHE_PREFETCH_BASE_HH__

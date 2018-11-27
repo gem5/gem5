@@ -96,7 +96,7 @@ BasePrefetcher::BasePrefetcher(const BasePrefetcherParams *p)
       masterId(p->sys->getMasterId(this)), pageBytes(p->sys->getPageBytes()),
       prefetchOnAccess(p->prefetch_on_access),
       useVirtualAddresses(p->use_virtual_addresses), issuedPrefetches(0),
-      usefulPrefetches(0)
+      usefulPrefetches(0), tlb(nullptr)
 {
 }
 
@@ -253,4 +253,11 @@ BasePrefetcher::addEventProbe(SimObject *obj, const char *name)
 {
     ProbeManager *pm(obj->getProbeManager());
     listeners.push_back(new PrefetchListener(*this, pm, name));
+}
+
+void
+BasePrefetcher::addTLB(BaseTLB *t)
+{
+    fatal_if(tlb != nullptr, "Only one TLB can be registered");
+    tlb = t;
 }

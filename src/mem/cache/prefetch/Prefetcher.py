@@ -65,6 +65,7 @@ class BasePrefetcher(ClockedObject):
     cxx_header = "mem/cache/prefetch/base.hh"
     cxx_exports = [
         PyBindMethod("addEventProbe"),
+        PyBindMethod("addTLB"),
     ]
     sys = Param.System(Parent.any, "System this prefetcher belongs to")
 
@@ -88,6 +89,8 @@ class BasePrefetcher(ClockedObject):
     # Override the normal SimObject::regProbeListeners method and
     # register deferred event handlers.
     def regProbeListeners(self):
+        for tlb in self._tlbs:
+            self.getCCObject().addTLB(tlb.getCCObject())
         for event in self._events:
            event.register()
         self.getCCObject().regProbeListeners()
@@ -98,6 +101,11 @@ class BasePrefetcher(ClockedObject):
         if len(probeNames) <= 0:
             raise TypeError("probeNames must have at least one element")
         self.addEvent(HWPProbeEvent(self, simObj, *probeNames))
+    _tlbs = []
+    def registerTLB(self, simObj):
+        if not isinstance(simObj, SimObject):
+            raise TypeError("argument must be a SimObject type")
+        self._tlbs.append(simObj)
 
 class MultiPrefetcher(BasePrefetcher):
     type = 'MultiPrefetcher'
@@ -113,6 +121,8 @@ class QueuedPrefetcher(BasePrefetcher):
     cxx_header = "mem/cache/prefetch/queued.hh"
     latency = Param.Int(1, "Latency for generated prefetches")
     queue_size = Param.Int(32, "Maximum number of queued prefetches")
+    max_prefetch_requests_with_pending_translation = Param.Int(32,
+        "Maximum number of queued prefetches that have a missing translation")
     queue_squash = Param.Bool(True, "Squash queued prefetch on demand access")
     queue_filter = Param.Bool(True, "Don't queue redundant prefetches")
     cache_snoop = Param.Bool(False, "Snoop cache to eliminate redundant request")
