@@ -391,7 +391,7 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
 
         // request_time is used here, taking into account lat and the delay
         // charged if the packet comes from the xbar.
-        cpuSidePort.schedTimingResp(pkt, request_time, true);
+        cpuSidePort.schedTimingResp(pkt, request_time);
 
         // If an outstanding request is in progress (we found an
         // MSHR) this is set to null
@@ -802,7 +802,7 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
             }
             // Reset the bus additional time as it is now accounted for
             tgt_pkt->headerDelay = tgt_pkt->payloadDelay = 0;
-            cpuSidePort.schedTimingResp(tgt_pkt, completion_time, true);
+            cpuSidePort.schedTimingResp(tgt_pkt, completion_time);
             break;
 
           case MSHR::Target::FromPrefetcher:
@@ -932,7 +932,7 @@ Cache::doTimingSupplyResponse(PacketPtr req_pkt, const uint8_t *blk_data,
     pkt->headerDelay = pkt->payloadDelay = 0;
     DPRINTF(CacheVerbose, "%s: created response: %s tick: %lu\n", __func__,
             pkt->print(), forward_time);
-    memSidePort.schedTimingSnoopResp(pkt, forward_time, true);
+    memSidePort.schedTimingSnoopResp(pkt, forward_time);
 }
 
 uint32_t

@@ -288,7 +288,7 @@ NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
 
             // Reset the bus additional time as it is now accounted for
             tgt_pkt->headerDelay = tgt_pkt->payloadDelay = 0;
-            cpuSidePort.schedTimingResp(tgt_pkt, completion_time, true);
+            cpuSidePort.schedTimingResp(tgt_pkt, completion_time);
             break;
 
           case MSHR::Target::FromPrefetcher:

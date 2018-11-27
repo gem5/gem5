@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012,2015 ARM Limited
+ * Copyright (c) 2012,2015,2018 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -96,6 +96,13 @@ class PacketQueue : public Drainable
       */
     bool _disableSanityCheck;
 
+    /**
+     * if true, inserted packets have to be unconditionally scheduled
+     * after the last packet in the queue that references the same
+     * address
+     */
+    bool forceOrder;
+
   protected:
 
     /** Label to use for print request packets label stack. */
@@ -130,11 +137,13 @@ class PacketQueue : public Drainable
      *
      * @param _em Event manager used for scheduling this queue
      * @param _label Label to push on the label stack for print request packets
+     * @param force_order Force insertion order for packets with same address
      * @param disable_sanity_check Flag used to disable the sanity check
      *        on the size of the transmitList. The check is enabled by default.
      */
     PacketQueue(EventManager& _em, const std::string& _label,
                 const std::string& _sendEventName,
+                bool force_order = false,
                 bool disable_sanity_check = false);
 
     /**
@@ -187,9 +196,8 @@ class PacketQueue : public Drainable
      *
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
-     * @param force_order Force insertion order for packets with same address
      */
-    void schedSendTiming(PacketPtr pkt, Tick when, bool force_order = false);
+    void schedSendTiming(PacketPtr pkt, Tick when);
 
     /**
      * Retry sending a packet from the queue. Note that this is not
@@ -267,9 +275,11 @@ class SnoopRespPacketQueue : public PacketQueue
      *
      * @param _em Event manager used for scheduling this queue
      * @param _masterPort Master port used to send the packets
+     * @param force_order Force insertion order for packets with same address
      * @param _label Label to push on the label stack for print request packets
      */
     SnoopRespPacketQueue(EventManager& _em, MasterPort& _masterPort,
+                         bool force_order = false,
                          const std::string _label = "SnoopRespPacketQueue");
 
     virtual ~SnoopRespPacketQueue() { }
@@ -303,10 +313,12 @@ class RespPacketQueue : public PacketQueue
      *
      * @param _em Event manager used for scheduling this queue
      * @param _slavePort Slave port used to send the packets
+     * @param force_order Force insertion order for packets with same address
      * @param _label Label to push on the label stack for print request packets
      */
     RespPacketQueue(EventManager& _em, SlavePort& _slavePort,
-                     const std::string _label = "RespPacketQueue");
+                    bool force_order = false,
+                    const std::string _label = "RespPacketQueue");
 
     virtual ~RespPacketQueue() { }
 

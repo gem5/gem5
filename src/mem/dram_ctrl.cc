@@ -938,7 +938,7 @@ DRAMCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
 
         // queue the packet in the response queue to be sent out after
         // the static latency has passed
-        port.schedTimingResp(pkt, response_time, true);
+        port.schedTimingResp(pkt, response_time);
     } else {
         // @todo the packet is going to be deleted, and the DRAMPacket
         // is still having a pointer to it
@@ -2924,7 +2924,7 @@ DRAMCtrl::drainResume()
 }
 
 DRAMCtrl::MemoryPort::MemoryPort(const std::string& name, DRAMCtrl& _memory)
-    : QueuedSlavePort(name, &_memory, queue), queue(_memory, *this),
+    : QueuedSlavePort(name, &_memory, queue), queue(_memory, *this, true),
       memory(_memory)
 { }
 

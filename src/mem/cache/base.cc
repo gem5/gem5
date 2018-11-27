@@ -69,7 +69,8 @@ using namespace std;
 BaseCache::CacheSlavePort::CacheSlavePort(const std::string &_name,
                                           BaseCache *_cache,
                                           const std::string &_label)
-    : QueuedSlavePort(_name, _cache, queue), queue(*_cache, *this, _label),
+    : QueuedSlavePort(_name, _cache, queue),
+      queue(*_cache, *this, true, _label),
       blocked(false), mustSendRetry(false),
       sendRetryEvent([this]{ processSendRetry(); }, _name)
 {
@@ -228,7 +229,7 @@ BaseCache::handleTimingReqHit(PacketPtr pkt, CacheBlk *blk, Tick request_time)
         // lat, neglecting responseLatency, modelling hit latency
         // just as the value of lat overriden by access(), which calls
         // the calculateAccessLatency() function.
-        cpuSidePort.schedTimingResp(pkt, request_time, true);
+        cpuSidePort.schedTimingResp(pkt, request_time);
     } else {
         DPRINTF(Cache, "%s satisfied %s, no response needed\n", __func__,
                 pkt->print());
@@ -400,7 +401,7 @@ BaseCache::handleUncacheableWriteResp(PacketPtr pkt)
     // Reset the bus additional time as it is now accounted for
     pkt->headerDelay = pkt->payloadDelay = 0;
 
-    cpuSidePort.schedTimingResp(pkt, completion_time, true);
+    cpuSidePort.schedTimingResp(pkt, completion_time);
 }
 
 void
@@ -2400,7 +2401,7 @@ BaseCache::MemSidePort::MemSidePort(const std::string &_name,
                                     const std::string &_label)
     : CacheMasterPort(_name, _cache, _reqQueue, _snoopRespQueue),
       _reqQueue(*_cache, *this, _snoopRespQueue, _label),
-      _snoopRespQueue(*_cache, *this, _label), cache(_cache)
+      _snoopRespQueue(*_cache, *this, true, _label), cache(_cache)
 {
 }
 
