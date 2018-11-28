@@ -612,6 +612,7 @@ template<> ArmFault::FaultVals ArmFaultVals<Interrupt>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<VirtualInterrupt>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<FastInterrupt>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<VirtualFastInterrupt>::vals;
+template<> ArmFault::FaultVals ArmFaultVals<IllegalInstSetStateFault>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SupervisorTrap>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SecureMonitorTrap>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<PCAlignmentFault>::vals;
