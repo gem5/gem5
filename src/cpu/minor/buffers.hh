@@ -381,6 +381,8 @@ class Reservable
 
     /** Free a reserved slot */
     virtual void freeReservation() = 0;
+
+    virtual ~Reservable() {};
 };
 
 /** Wrapper for a queue type to act as a pipeline stage input queue.
@@ -417,8 +419,6 @@ class Queue : public Named, public Reservable
         capacity(capacity_),
         dataName(data_name)
     { }
-
-    virtual ~Queue() { }
 
   public:
     /** Push an element into the buffer if it isn't a bubble.  Bubbles are

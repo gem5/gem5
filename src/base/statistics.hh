@@ -2090,6 +2090,8 @@ class Node
      *
      */
     virtual std::string str() const = 0;
+
+    virtual ~Node() {};
 };
 
 /** Shared pointer to a function Node. */

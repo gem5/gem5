@@ -63,6 +63,8 @@ class StreamGen
     }
 
   public:
+    virtual ~StreamGen() {};
+
     virtual uint32_t pickStreamID() = 0;
     virtual uint32_t pickSubStreamID() = 0;
 

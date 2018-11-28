@@ -47,6 +47,8 @@ class FaultBase
     virtual FaultName name() const = 0;
     virtual void invoke(ThreadContext * tc, const StaticInstPtr &inst =
                         StaticInst::nullStaticInstPtr);
+
+    virtual ~FaultBase() {};
 };
 
 class UnimpFault : public FaultBase

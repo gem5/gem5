@@ -99,6 +99,8 @@ class QueuePolicy
      */
     void setMemCtrl(MemCtrl* mem) { memCtrl = mem; };
 
+    virtual ~QueuePolicy() {};
+
   protected:
     QueuePolicy(const QoSMemCtrlParams* p)
       : memCtrl(nullptr)
