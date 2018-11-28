@@ -105,7 +105,10 @@ class CacheBlk : public ReplaceableEntry
     /** The current status of this block. @sa CacheBlockStatusBits */
     State status;
 
-    /** Which curTick() will this block be accessible */
+    /**
+     * Which curTick() will this block be accessible. Its value is only
+     * meaningful if the block is valid.
+     */
     Tick whenReady;
 
     /** Number of references to this block since it was brought in. */
@@ -114,7 +117,10 @@ class CacheBlk : public ReplaceableEntry
     /** holds the source requestor ID for this block. */
     int srcMasterId;
 
-    /** Tick on which the block was inserted in the cache. */
+    /**
+     * Tick on which the block was inserted in the cache. Its value is only
+     * meaningful if the block is valid.
+     */
     Tick tickInserted;
 
   protected:
@@ -160,7 +166,7 @@ class CacheBlk : public ReplaceableEntry
     std::list<Lock> lockList;
 
   public:
-    CacheBlk() : data(nullptr)
+    CacheBlk() : data(nullptr), tickInserted(0)
     {
         invalidate();
     }
@@ -211,7 +217,6 @@ class CacheBlk : public ReplaceableEntry
         whenReady = MaxTick;
         refCount = 0;
         srcMasterId = Request::invldMasterId;
-        tickInserted = MaxTick;
         lockList.clear();
     }
 
@@ -258,6 +263,30 @@ class CacheBlk : public ReplaceableEntry
     virtual void setSecure()
     {
         status |= BlkSecure;
+    }
+
+    /**
+     * Get tick at which block's data will be available for access.
+     *
+     * @return Data ready tick.
+     */
+    Tick getWhenReady() const
+    {
+        return whenReady;
+    }
+
+    /**
+     * Set tick at which block's data will be available for access. The new
+     * tick must be chronologically sequential with respect to previous
+     * accesses.
+     *
+     * @param tick New data ready tick.
+     */
+    void setWhenReady(const Tick tick)
+    {
+        assert((whenReady == MaxTick) || (tick >= whenReady));
+        assert(tick >= tickInserted);
+        whenReady = tick;
     }
 
     /**

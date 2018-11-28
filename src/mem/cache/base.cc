@@ -900,10 +900,11 @@ BaseCache::calculateAccessLatency(const CacheBlk* blk,
         }
 
         // Check if the block to be accessed is available. If not, apply the
-        // access latency on top of block->whenReady.
-        if (blk->whenReady > curTick() &&
-            ticksToCycles(blk->whenReady - curTick()) > lat) {
-            lat += ticksToCycles(blk->whenReady - curTick());
+        // access latency on top of when the block is ready to be accessed.
+        const Tick when_ready = blk->getWhenReady();
+        if (when_ready > curTick() &&
+            ticksToCycles(when_ready - curTick()) > lat) {
+            lat += ticksToCycles(when_ready - curTick());
         }
     }
 
@@ -1024,8 +1025,8 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
         // populate the time when the block will be ready to access.
-        blk->whenReady = clockEdge(fillLatency) + pkt->headerDelay +
-            pkt->payloadDelay;
+        blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
+            pkt->payloadDelay);
         return true;
     } else if (pkt->cmd == MemCmd::CleanEvict) {
         if (blk) {
@@ -1081,8 +1082,8 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         incHitCount(pkt);
         // populate the time when the block will be ready to access.
-        blk->whenReady = clockEdge(fillLatency) + pkt->headerDelay +
-            pkt->payloadDelay;
+        blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
+            pkt->payloadDelay);
         // if this a write-through packet it will be sent to cache
         // below
         return !pkt->writeThrough();
@@ -1212,8 +1213,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
         pkt->writeDataToBlock(blk->data, blkSize);
     }
     // We pay for fillLatency here.
-    blk->whenReady = clockEdge() + fillLatency * clockPeriod() +
-        pkt->payloadDelay;
+    blk->setWhenReady(clockEdge(fillLatency) + pkt->payloadDelay);
 
     return blk;
 }
