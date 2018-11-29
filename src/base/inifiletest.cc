@@ -32,12 +32,12 @@
  *          Steve Reinhardt
  */
 
+#include <gtest/gtest.h>
+
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-
-#include <gtest/gtest.h>
 
 #include "base/inifile.hh"
 
