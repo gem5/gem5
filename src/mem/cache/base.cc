@@ -355,9 +355,10 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         // access() will set the lat value.
         satisfied = access(pkt, blk, lat, writebacks);
 
-        // copy writebacks to write buffer here to ensure they logically
-        // precede anything happening below
-        doWritebacks(writebacks, forward_time);
+        // After the evicted blocks are selected, they must be forwarded
+        // to the write buffer to ensure they logically precede anything
+        // happening below
+        doWritebacks(writebacks, clockEdge(lat + forwardLatency));
     }
 
     // Here we charge the headerDelay that takes into account the latencies
