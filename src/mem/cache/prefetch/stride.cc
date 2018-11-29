@@ -195,15 +195,7 @@ StridePrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
             }
 
             Addr new_addr = pf_addr + d * prefetch_stride;
-            if (samePage(pf_addr, new_addr)) {
-                DPRINTF(HWPrefetch, "Queuing prefetch to %#x.\n", new_addr);
-                addresses.push_back(AddrPriority(new_addr, 0));
-            } else {
-                // Record the number of page crossing prefetches generated
-                pfSpanPage += degree - d + 1;
-                DPRINTF(HWPrefetch, "Ignoring page crossing prefetch.\n");
-                return;
-            }
+            addresses.push_back(AddrPriority(new_addr, 0));
         }
     } else {
         // Miss in table

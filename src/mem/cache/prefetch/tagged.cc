@@ -51,13 +51,7 @@ TaggedPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
     for (int d = 1; d <= degree; d++) {
         Addr newAddr = blkAddr + d*(blkSize);
-        if (!samePage(blkAddr, newAddr)) {
-            // Count number of unissued prefetches due to page crossing
-            pfSpanPage += degree - d + 1;
-            return;
-        } else {
-            addresses.push_back(AddrPriority(newAddr,0));
-        }
+        addresses.push_back(AddrPriority(newAddr,0));
     }
 }
 

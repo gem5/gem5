@@ -93,14 +93,20 @@ QueuedPrefetcher::notify(const PacketPtr &pkt, const PrefetchInfo &pfi)
         // Block align prefetch address
         addr_prio.first = blockAddress(addr_prio.first);
 
-        PrefetchInfo new_pfi(pfi,addr_prio.first);
+        if (samePage(pfi.getAddr(), addr_prio.first)) {
+            PrefetchInfo new_pfi(pfi,addr_prio.first);
 
-        pfIdentified++;
-        DPRINTF(HWPrefetch, "Found a pf candidate addr: %#x, "
-                "inserting into prefetch queue.\n", new_pfi.getAddr());
+            pfIdentified++;
+            DPRINTF(HWPrefetch, "Found a pf candidate addr: %#x, "
+                    "inserting into prefetch queue.\n", new_pfi.getAddr());
 
-        // Create and insert the request
-        insert(pkt, new_pfi, addr_prio.second);
+            // Create and insert the request
+            insert(pkt, new_pfi, addr_prio.second);
+        } else {
+            // Record the number of page crossing prefetches generate
+            pfSpanPage += 1;
+            DPRINTF(HWPrefetch, "Ignoring page crossing prefetch.\n");
+        }
     }
 }
 
