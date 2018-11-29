@@ -34,6 +34,6 @@ SimObject('Prefetcher.py')
 
 Source('base.cc')
 Source('queued.cc')
+Source('signature_path.cc')
 Source('stride.cc')
 Source('tagged.cc')
-

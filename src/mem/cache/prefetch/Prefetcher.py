@@ -40,6 +40,7 @@
 #          Mitch Hayenga
 
 from ClockedObject import ClockedObject
+from IndexingPolicies import *
 from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
@@ -139,3 +140,42 @@ class TaggedPrefetcher(QueuedPrefetcher):
     cxx_header = "mem/cache/prefetch/tagged.hh"
 
     degree = Param.Int(2, "Number of prefetches to generate")
+
+class SignaturePathPrefetcher(QueuedPrefetcher):
+    type = 'SignaturePathPrefetcher'
+    cxx_class = 'SignaturePathPrefetcher'
+    cxx_header = "mem/cache/prefetch/signature_path.hh"
+
+    signature_shift = Param.UInt8(3,
+        "Number of bits to shift when calculating a new signature");
+    signature_bits = Param.UInt16(12,
+        "Size of the signature, in bits");
+    signature_table_entries = Param.MemorySize("1024",
+        "Number of entries of the signature table")
+    signature_table_assoc = Param.Unsigned(2,
+        "Associativity of the signature table")
+    signature_table_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1, assoc = Parent.signature_table_assoc,
+        size = Parent.signature_table_entries),
+        "Indexing policy of the signature table")
+    signature_table_replacement_policy = Param.BaseReplacementPolicy(LRURP(),
+        "Replacement policy of the signature table")
+
+    max_counter_value = Param.UInt8(7, "Maximum pattern counter value")
+    pattern_table_entries = Param.MemorySize("4096",
+        "Number of entries of the pattern table")
+    pattern_table_assoc = Param.Unsigned(1,
+        "Associativity of the pattern table")
+    strides_per_pattern_entry = Param.Unsigned(4,
+        "Number of strides stored in each pattern entry")
+    pattern_table_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1, assoc = Parent.pattern_table_assoc,
+        size = Parent.pattern_table_entries),
+        "Indexing policy of the pattern table")
+    pattern_table_replacement_policy = Param.BaseReplacementPolicy(LRURP(),
+        "Replacement policy of the pattern table")
+
+    prefetch_confidence_threshold = Param.Float(0.5,
+        "Minimum confidence to issue prefetches")
+    lookahead_confidence_threshold = Param.Float(0.75,
+        "Minimum confidence to continue exploring lookahead entries")
