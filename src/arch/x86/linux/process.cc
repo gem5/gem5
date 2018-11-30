@@ -39,6 +39,8 @@
 
 #include "arch/x86/linux/process.hh"
 
+#include <sys/syscall.h>
+
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/linux/linux.hh"
 #include "arch/x86/registers.hh"

@@ -32,7 +32,7 @@
 #include "sim/syscall_emul.hh"
 
 #include <fcntl.h>
-#include <syscall.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 
 #include <csignal>
