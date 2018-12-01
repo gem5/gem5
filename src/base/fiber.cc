@@ -33,6 +33,14 @@
 #include <valgrind/valgrind.h>
 #endif
 
+// Mac OS requires _DARWIN_C_SOURCE if _POSIX_C_SOURCE is defined,
+// otherwise it will mask the definition of MAP_ANONYMOUS.
+// _POSIX_C_SOURCE is already defined by including <ucontext.h> in
+// base/fiber.hh
+#if defined(__APPLE__) && defined(__MACH__)
+#define _DARWIN_C_SOURCE
+#endif
+
 #include <sys/mman.h>
 #include <unistd.h>
 
