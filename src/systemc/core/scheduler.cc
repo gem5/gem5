@@ -108,6 +108,8 @@ Scheduler::clear()
 void
 Scheduler::initPhase()
 {
+    runUpdate();
+
     for (Process *p = initList.getNext(); p; p = initList.getNext()) {
         p->popListNode();
 
@@ -121,7 +123,6 @@ Scheduler::initPhase()
         }
     }
 
-    runUpdate();
     runDelta();
 
     for (auto ets: eventsToSchedule)
