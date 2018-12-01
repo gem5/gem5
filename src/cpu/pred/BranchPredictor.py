@@ -95,8 +95,8 @@ class TAGE(BranchPredictor):
     cxx_header = "cpu/pred/tage.hh"
 
     nHistoryTables = Param.Unsigned(7, "Number of history tables")
-    minHist = Param.Unsigned(5, "Minimum history size of LTAGE")
-    maxHist = Param.Unsigned(130, "Maximum history size of LTAGE")
+    minHist = Param.Unsigned(5, "Minimum history size of TAGE")
+    maxHist = Param.Unsigned(130, "Maximum history size of TAGE")
 
     tagTableTagWidths = VectorParam.Unsigned(
         [0, 9, 9, 10, 10, 11, 11, 12], "Tag size in TAGE tag tables")

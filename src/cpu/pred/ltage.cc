@@ -365,7 +365,7 @@ LTAGE::regStats()
 
     loopPredictorWrong
         .name(name() + ".loopPredictorWrong")
-        .desc("Number of times the loop predictor is the provier and "
+        .desc("Number of times the loop predictor is the provider and "
               "the prediction is wrong");
 }
 
