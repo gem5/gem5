@@ -341,3 +341,25 @@ class SlimAMPMPrefetcher(QueuedPrefetcher):
     dcpt = Param.DeltaCorrelatingPredictionTables(
         SlimDeltaCorrelatingPredictionTables(),
         "Delta Correlating Prediction Tables object")
+
+class BOPPrefetcher(QueuedPrefetcher):
+    type = "BOPPrefetcher"
+    cxx_class = "BOPPrefetcher"
+    cxx_header = "mem/cache/prefetch/bop.hh"
+    score_max = Param.Unsigned(31, "Max. score to update the best offset")
+    round_max = Param.Unsigned(100, "Max. round to update the best offset")
+    bad_score = Param.Unsigned(10, "Score at which the HWP is disabled")
+    rr_size = Param.Unsigned(64, "Number of entries of each RR bank")
+    tag_bits = Param.Unsigned(12, "Bits used to store the tag")
+    offset_list_size = Param.Unsigned(46,
+                "Number of entries in the offsets list")
+    negative_offsets_enable = Param.Bool(True,
+                "Initialize the offsets list also with negative values \
+                (i.e. the table will have half of the entries with positive \
+                offsets and the other half with negative ones)")
+    delay_queue_enable = Param.Bool(True, "Enable the delay queue")
+    delay_queue_size = Param.Unsigned(15,
+                "Number of entries in the delay queue")
+    delay_queue_cycles = Param.Cycles(60,
+                "Cycles to delay a write in the left RR table from the delay \
+                queue")

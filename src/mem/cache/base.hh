@@ -331,6 +331,9 @@ class BaseCache : public MemObject
     /** To probe when a cache miss occurs */
     ProbePointArg<PacketPtr> *ppMiss;
 
+    /** To probe when a cache fill occurs */
+    ProbePointArg<PacketPtr> *ppFill;
+
     /**
      * The writeAllocator drive optimizations for streaming writes.
      * It first determines whether a WriteReq MSHR should be delayed,

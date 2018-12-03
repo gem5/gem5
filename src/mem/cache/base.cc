@@ -478,6 +478,7 @@ BaseCache::recvTimingResp(PacketPtr pkt)
             writeAllocator->allocate() : mshr->allocOnFill();
         blk = handleFill(pkt, blk, writebacks, allocate);
         assert(blk != nullptr);
+        ppFill->notify(pkt);
     }
 
     if (blk && blk->isValid() && pkt->isClean() && !pkt->isInvalidate()) {
@@ -2223,6 +2224,7 @@ BaseCache::regProbePoints()
 {
     ppHit = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Hit");
     ppMiss = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Miss");
+    ppFill = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Fill");
 }
 
 ///////////////

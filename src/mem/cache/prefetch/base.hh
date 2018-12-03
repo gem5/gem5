@@ -67,12 +67,13 @@ class BasePrefetcher : public ClockedObject
     {
       public:
         PrefetchListener(BasePrefetcher &_parent, ProbeManager *pm,
-                         const std::string &name)
+                         const std::string &name, bool _isFill = false)
             : ProbeListenerArgBase(pm, name),
-              parent(_parent) {}
+              parent(_parent), isFill(_isFill) {}
         void notify(const PacketPtr &pkt) override;
       protected:
         BasePrefetcher &parent;
+        bool isFill;
     };
 
     std::vector<PrefetchListener *> listeners;
@@ -252,6 +253,10 @@ class BasePrefetcher : public ClockedObject
      * misses, depending on cache parameters.)
      */
     virtual void notify(const PacketPtr &pkt, const PrefetchInfo &pfi) = 0;
+
+    /** Notify prefetcher of cache fill */
+    virtual void notifyFill(const PacketPtr &pkt)
+    {}
 
     virtual PacketPtr getPacket() = 0;
 

@@ -72,7 +72,11 @@ BasePrefetcher::PrefetchInfo::PrefetchInfo(PrefetchInfo const &pfi, Addr addr)
 void
 BasePrefetcher::PrefetchListener::notify(const PacketPtr &pkt)
 {
-    parent.probeNotify(pkt);
+    if (isFill) {
+        parent.notifyFill(pkt);
+    } else {
+        parent.probeNotify(pkt);
+    }
 }
 
 BasePrefetcher::BasePrefetcher(const BasePrefetcherParams *p)
@@ -224,6 +228,7 @@ BasePrefetcher::regProbeListeners()
     if (listeners.empty() && cache != nullptr) {
         ProbeManager *pm(cache->getProbeManager());
         listeners.push_back(new PrefetchListener(*this, pm, "Miss"));
+        listeners.push_back(new PrefetchListener(*this, pm, "Fill", true));
         if (prefetchOnAccess) {
             listeners.push_back(new PrefetchListener(*this, pm, "Hit"));
         }
