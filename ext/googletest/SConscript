@@ -1,5 +1,8 @@
 # Copyright 2017 Google Inc.
 #
+# Copyright (c) 2018 ARM Limited
+# All rights reserved.
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met: redistributions of source code must retain the above copyright
@@ -28,22 +31,26 @@ Import('main')
 # The root of the build directory.
 build = Dir('.')
 # The root of the original directory.
-base = build.srcdir
+gtest_base = build.srcdir.Dir('googletest')
+gmock_base = build.srcdir.Dir('googlemock')
 # Include files from the original directory.
-include = base.Dir('include')
+gtest_include = gtest_base.Dir('include')
+gmock_include = gmock_base.Dir('include')
 # Use source files from the build directory so build products end up there.
-src = Dir('src')
+gtest_src = Dir('googletest/src')
+gmock_src = Dir('googlemock/src')
 
-main.Append(CPPPATH=[include])
+main.Append(CPPPATH=[gtest_include, gmock_include])
 main.Append(LIBPATH=[build])
 
 env = main.Clone(CPPFLAGS='-g -Wall -Wextra -pthread'
-                          ' -Wno-undef -isystem %s' % include)
-env.Append(CPPPATH=[base])
+                          ' -Wno-undef -isystem %s -isystem %s' % (gtest_include, gmock_include))
+env.Append(CPPPATH=[gtest_base, gmock_base])
 
-gtest_all = env.Object(src.File('gtest-all.cc'))
+gtest_all = env.Object(gtest_src.File('gtest-all.cc'))
+gmock_all = env.Object(gmock_src.File('gmock-all.cc'))
 gtest_main = env.StaticLibrary(
-    target='gtest_main', source=[gtest_all, src.File('gtest_main.cc')])
+    target='libgtest', source=[gtest_all, gmock_all, gtest_src.File('gtest_main.cc')])
 
-main['GTEST_LIBS'] = ['gtest_main', 'pthread']
-main['GTEST_CPPFLAGS'] = '-pthread -Wno-undef -isystem %s' % include.abspath
+main['GTEST_LIBS'] = ['libgtest', 'pthread']
+main['GTEST_CPPFLAGS'] = '-pthread -DUSE_GMOCK -Wno-undef -isystem %s' % gtest_include.abspath
