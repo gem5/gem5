@@ -220,9 +220,11 @@ void
 BaseCache::handleTimingReqHit(PacketPtr pkt, CacheBlk *blk, Tick request_time)
 {
     if (pkt->needsResponse()) {
+        // These delays should have been consumed by now
+        assert(pkt->headerDelay == 0);
+        assert(pkt->payloadDelay == 0);
+
         pkt->makeTimingResponse();
-        // @todo: Make someone pay for this
-        pkt->headerDelay = pkt->payloadDelay = 0;
 
         // In this case we are considering request_time that takes
         // into account the delay of the xbar, if any, and just
