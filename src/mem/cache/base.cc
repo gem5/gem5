@@ -890,6 +890,15 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
 //
 /////////////////////////////////////////////////////
 Cycles
+BaseCache::calculateTagOnlyLatency(const uint32_t delay,
+                                   const Cycles lookup_lat) const
+{
+    // A tag-only access has to wait for the packet to arrive in order to
+    // perform the tag lookup.
+    return ticksToCycles(delay) + lookup_lat;
+}
+
+Cycles
 BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
                                   const Cycles lookup_lat) const
 {
@@ -914,9 +923,10 @@ BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
             lat += ticksToCycles(when_ready - tick);
         }
     } else {
-        // In case of a miss, apply lookup latency on top of the metadata
-        // delay, as the access can only start when it arrives.
-        lat = ticksToCycles(delay) + lookup_lat;
+        // In case of a miss, we neglect the data access in a parallel
+        // configuration (i.e., the data access will be stopped as soon as
+        // we find out it is a miss), and use the tag-only latency.
+        lat = calculateTagOnlyLatency(delay, lookup_lat);
     }
 
     return lat;
@@ -937,11 +947,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     Cycles tag_latency(0);
     blk = tags->accessBlock(pkt->getAddr(), pkt->isSecure(), tag_latency);
 
-    // Calculate access latency on top of when the packet arrives. This
-    // takes into account the bus delay.
-    lat = calculateAccessLatency(blk, pkt->headerDelay,
-                                 tag_latency);
-
     DPRINTF(Cache, "%s for %s %s\n", __func__, pkt->print(),
             blk ? "hit " + blk->print() : "miss");
 
@@ -952,6 +957,11 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // We defer any changes to the state of the block until we
         // create and mark as in service the mshr for the downstream
         // packet.
+
+        // Calculate access latency on top of when the packet arrives. This
+        // takes into account the bus delay.
+        lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
+
         return false;
     }
 
@@ -981,6 +991,10 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                 // BLOCK_CACHED flag in the Writeback if set and
                 // discard the CleanEvict by returning true.
                 wbPkt->clearBlockCached();
+
+                // A clean evict does not need to access the data array
+                lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
+
                 return true;
             } else {
                 assert(pkt->cmd == MemCmd::WritebackDirty);
@@ -1006,6 +1020,14 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             mshrQueue.findMatch(pkt->getAddr(), pkt->isSecure())) {
             DPRINTF(Cache, "Clean writeback %#llx to block with MSHR, "
                     "dropping\n", pkt->getAddr());
+
+            // A writeback searches for the block, then writes the data.
+            // As the writeback is being dropped, the data is not touched,
+            // and we just had to wait for the time to find a match in the
+            // MSHR. As of now assume a mshr queue search takes as long as
+            // a tag lookup for simplicity.
+            lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
+
             return true;
         }
 
@@ -1015,6 +1037,11 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             if (!blk) {
                 // no replaceable block available: give up, fwd to next level.
                 incMissCount(pkt);
+
+                // A writeback searches for the block, then writes the data.
+                // As the block could not be found, it was a tag-only access.
+                lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
+
                 return false;
             }
 
@@ -1043,8 +1070,15 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         // soon as the fill is done
         blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
             std::max(cyclesToTicks(tag_latency), (uint64_t)pkt->payloadDelay));
+
+        // A writeback searches for the block, then writes the data
+        lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
+
         return true;
     } else if (pkt->cmd == MemCmd::CleanEvict) {
+        // A CleanEvict does not need to access the data array
+        lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
+
         if (blk) {
             // Found the block in the tags, need to stop CleanEvict from
             // propagating further down the hierarchy. Returning true will
@@ -1066,6 +1100,10 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         if (!blk) {
             if (pkt->writeThrough()) {
+                // A writeback searches for the block, then writes the data.
+                // As the block could not be found, it was a tag-only access.
+                lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
+
                 // if this is a write through packet, we don't try to
                 // allocate if the block is not present
                 return false;
@@ -1076,6 +1114,13 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                     // no replaceable block available: give up, fwd to
                     // next level.
                     incMissCount(pkt);
+
+                    // A writeback searches for the block, then writes the
+                    // data. As the block could not be found, it was a tag-only
+                    // access.
+                    lat = calculateTagOnlyLatency(pkt->headerDelay,
+                                                  tag_latency);
+
                     return false;
                 }
 
@@ -1104,6 +1149,9 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
             std::max(cyclesToTicks(tag_latency), (uint64_t)pkt->payloadDelay));
 
+        // A writeback searches for the block, then writes the data
+        lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
+
         // if this a write-through packet it will be sent to cache
         // below
         return !pkt->writeThrough();
@@ -1114,6 +1162,13 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         satisfyRequest(pkt, blk);
         maintainClusivity(pkt->fromCache(), blk);
 
+        // Calculate access latency based on the need to access the data array
+        if (pkt->isRead() || pkt->isWrite()) {
+            lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
+        } else {
+            lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
+        }
+
         return true;
     }
 
@@ -1121,6 +1176,8 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     // or have block but need writable
 
     incMissCount(pkt);
+
+    lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
 
     if (!blk && pkt->isLLSC() && pkt->isWrite()) {
         // complete miss on store conditional... just give up now
