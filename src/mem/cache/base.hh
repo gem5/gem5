@@ -426,10 +426,11 @@ class BaseCache : public MemObject
      * whether access was a hit or miss.
      *
      * @param blk The cache block that was accessed.
+     * @param delay The delay until the packet's metadata is present.
      * @param lookup_lat Latency of the respective tag lookup.
      * @return The number of ticks that pass due to a block access.
      */
-    Cycles calculateAccessLatency(const CacheBlk* blk,
+    Cycles calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
                                   const Cycles lookup_lat) const;
 
     /**

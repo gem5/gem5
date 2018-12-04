@@ -365,7 +365,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     // The latency charged is just the value set by the access() function.
     // In case of a hit we are neglecting response latency.
     // In case of a miss we are neglecting forward latency.
-    Tick request_time = clockEdge(lat) + pkt->headerDelay;
+    Tick request_time = clockEdge(lat);
     // Here we reset the timing of the packet.
     pkt->headerDelay = pkt->payloadDelay = 0;
 
@@ -889,27 +889,33 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
 //
 /////////////////////////////////////////////////////
 Cycles
-BaseCache::calculateAccessLatency(const CacheBlk* blk,
+BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
                                   const Cycles lookup_lat) const
 {
-    Cycles lat(lookup_lat);
+    Cycles lat(0);
 
     if (blk != nullptr) {
-        // First access tags, then data
+        // As soon as the access arrives, for sequential accesses first access
+        // tags, then the data entry. In the case of parallel accesses the
+        // latency is dictated by the slowest of tag and data latencies.
         if (sequentialAccess) {
-            lat += dataLatency;
-        // Latency is dictated by the slowest of tag and data latencies
+            lat = ticksToCycles(delay) + lookup_lat + dataLatency;
         } else {
-            lat = std::max(lookup_lat, dataLatency);
+            lat = ticksToCycles(delay) + std::max(lookup_lat, dataLatency);
         }
 
         // Check if the block to be accessed is available. If not, apply the
         // access latency on top of when the block is ready to be accessed.
+        const Tick tick = curTick() + delay;
         const Tick when_ready = blk->getWhenReady();
-        if (when_ready > curTick() &&
-            ticksToCycles(when_ready - curTick()) > lat) {
-            lat += ticksToCycles(when_ready - curTick());
+        if (when_ready > tick &&
+            ticksToCycles(when_ready - tick) > lat) {
+            lat += ticksToCycles(when_ready - tick);
         }
+    } else {
+        // In case of a miss, apply lookup latency on top of the metadata
+        // delay, as the access can only start when it arrives.
+        lat = ticksToCycles(delay) + lookup_lat;
     }
 
     return lat;
@@ -930,8 +936,10 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     Cycles tag_latency(0);
     blk = tags->accessBlock(pkt->getAddr(), pkt->isSecure(), tag_latency);
 
-    // Calculate access latency
-    lat = calculateAccessLatency(blk, tag_latency);
+    // Calculate access latency on top of when the packet arrives. This
+    // takes into account the bus delay.
+    lat = calculateAccessLatency(blk, pkt->headerDelay,
+                                 tag_latency);
 
     DPRINTF(Cache, "%s for %s %s\n", __func__, pkt->print(),
             blk ? "hit " + blk->print() : "miss");
