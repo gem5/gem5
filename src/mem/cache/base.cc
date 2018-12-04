@@ -1037,9 +1037,12 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         pkt->writeDataToBlock(blk->data, blkSize);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
-        // populate the time when the block will be ready to access.
+
+        // When the packet metadata arrives, the tag lookup will be done while
+        // the payload is arriving. Then the block will be ready to access as
+        // soon as the fill is done
         blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
-            pkt->payloadDelay);
+            std::max(cyclesToTicks(tag_latency), (uint64_t)pkt->payloadDelay));
         return true;
     } else if (pkt->cmd == MemCmd::CleanEvict) {
         if (blk) {
@@ -1094,9 +1097,13 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
 
         incHitCount(pkt);
-        // populate the time when the block will be ready to access.
+
+        // When the packet metadata arrives, the tag lookup will be done while
+        // the payload is arriving. Then the block will be ready to access as
+        // soon as the fill is done
         blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
-            pkt->payloadDelay);
+            std::max(cyclesToTicks(tag_latency), (uint64_t)pkt->payloadDelay));
+
         // if this a write-through packet it will be sent to cache
         // below
         return !pkt->writeThrough();
