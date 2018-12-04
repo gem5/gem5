@@ -123,13 +123,6 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
               name());
     }
 
-    // nothing on the list
-    if (transmitList.empty()) {
-        transmitList.emplace_front(when, pkt);
-        schedSendEvent(when);
-        return;
-    }
-
     // we should either have an outstanding retry, or a send event
     // scheduled, but there is an unfortunate corner case where the
     // x86 page-table walker and timing CPU send out a new request as
@@ -142,15 +135,21 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
     // order by tick; however, if forceOrder is set, also make sure
     // not to re-order in front of some existing packet with the same
     // address
-    auto i = transmitList.end();
-    --i;
-    while (i != transmitList.begin() && when < i->tick &&
-           !(forceOrder && i->pkt->getAddr() == pkt->getAddr()))
-        --i;
-
-    // emplace inserts the element before the position pointed to by
-    // the iterator, so advance it one step
-    transmitList.emplace(++i, when, pkt);
+    auto it = transmitList.end();
+    while (it != transmitList.begin()) {
+        --it;
+        if ((forceOrder && it->pkt->getAddr() == pkt->getAddr()) ||
+            it->tick <= when) {
+            // emplace inserts the element before the position pointed to by
+            // the iterator, so advance it one step
+            transmitList.emplace(++it, when, pkt);
+            return;
+        }
+    }
+    // either the packet list is empty or this has to be inserted
+    // before every other packet
+    transmitList.emplace_front(when, pkt);
+    schedSendEvent(when);
 }
 
 void
