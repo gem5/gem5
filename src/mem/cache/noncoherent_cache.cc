@@ -243,7 +243,7 @@ NoncoherentCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
 
 void
 NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
-                                     CacheBlk *blk, PacketList &writebacks)
+                                     CacheBlk *blk)
 {
     MSHR::Target *initial_tgt = mshr->getTarget();
     // First offset for critical word first calculations

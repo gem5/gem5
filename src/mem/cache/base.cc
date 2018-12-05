@@ -498,7 +498,7 @@ BaseCache::recvTimingResp(PacketPtr pkt)
         mshr->promoteWritable();
     }
 
-    serviceMSHRTargets(mshr, pkt, blk, writebacks);
+    serviceMSHRTargets(mshr, pkt, blk);
 
     if (mshr->promoteDeferredTargets()) {
         // avoid later read getting stale data while write miss is

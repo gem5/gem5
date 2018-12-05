@@ -685,8 +685,7 @@ Cache::recvAtomic(PacketPtr pkt)
 
 
 void
-Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk,
-                          PacketList &writebacks)
+Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
 {
     MSHR::Target *initial_tgt = mshr->getTarget();
     // First offset for critical word first calculations

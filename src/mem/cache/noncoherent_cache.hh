@@ -86,7 +86,7 @@ class NoncoherentCache : public BaseCache
     void doWritebacksAtomic(PacketList& writebacks) override;
 
     void serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
-                            CacheBlk *blk, PacketList& writebacks) override;
+                            CacheBlk *blk) override;
 
     void recvTimingResp(PacketPtr pkt) override;
 

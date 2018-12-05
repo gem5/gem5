@@ -495,16 +495,14 @@ class BaseCache : public MemObject
      * Service non-deferred MSHR targets using the received response
      *
      * Iterates through the list of targets that can be serviced with
-     * the current response. Any writebacks that need to performed
-     * must be appended to the writebacks parameter.
+     * the current response.
      *
      * @param mshr The MSHR that corresponds to the reponse
      * @param pkt The response packet
      * @param blk The reference block
-     * @param writebacks List of writebacks that need to be performed
      */
     virtual void serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
-                                    CacheBlk *blk, PacketList& writebacks) = 0;
+                                    CacheBlk *blk) = 0;
 
     /**
      * Handles a response (cache line fill/write ack) from the bus.
