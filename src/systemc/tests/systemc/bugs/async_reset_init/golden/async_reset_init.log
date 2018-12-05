@@ -2,9 +2,8 @@ SystemC Simulation
 Starting simulation ... 
    0 s (0): top.method1: reset state
    0 s (0): top.method0: reset state
-   0 s (0): top.method0: reset state
-   0 s (0): top.thread0: reset state
    0 s (0): top.thread1: reset state
+   0 s (0): top.thread0: reset state
  10 ns (1): top.method1: reset state
  10 ns (1): top.method0: reset state
  10 ns (1): top.thread1: reset state
@@ -19,8 +18,8 @@ Starting simulation ...
  40 ns (3): top.thread0: continuing
  50 ns (4): top.method1: reset state
  50 ns (4): top.method0: reset state
- 50 ns (4): top.thread0: reset state
  50 ns (4): top.thread1: reset state
+ 50 ns (4): top.thread0: reset state
  60 ns (5): top.method1: reset state
  60 ns (5): top.method0: reset state
  60 ns (5): top.thread1: reset state

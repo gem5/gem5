@@ -1,6 +1,6 @@
 SystemC Simulation
-c is (a + b)
 d is (a * b)
+c is (a + b)
   a =  1  b =  1  c =  1  d =  1
 d is (a / b)
   a =  0  b =  1  c =  1  d =  0

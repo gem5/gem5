@@ -3,10 +3,10 @@ simulation time:0 s    writing 0 to channel
 simulation time:0 s    reading 0 from channel
 simulation time:10 ns    writing 1 to channel
 simulation time:10 ns    reading 1 from channel
-simulation time:20 ns    reading 1 from channel
 simulation time:20 ns    writing 2 to channel
-simulation time:30 ns    reading 2 from channel
+simulation time:20 ns    reading 2 from channel
 simulation time:30 ns    writing 3 to channel
+simulation time:30 ns    reading 3 from channel
 simulation time:40 ns    reading 3 from channel
 simulation time:40 ns    writing 4 to channel
 simulation time:50 ns    reading 4 from channel

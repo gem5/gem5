@@ -17,16 +17,16 @@ SystemC Simulation
 2500 ps ... static thread event wait 
 2500 ps ... static thread clocked
 2500 ps ... static cthread
+3 ns ... dynamic thread clocked
 3 ns ... static thread clocked
 3 ns ... static cthread
-3 ns ... dynamic thread clocked
 
 3500 ps clearing asynchronous reset
 
 5500 ps asserting synchronous reset
+6 ns ... dynamic thread clocked
 6 ns ... static thread clocked
 6 ns ... static cthread
-6 ns ... dynamic thread clocked
 
 6500 ps clearing synchronous reset
 
@@ -38,22 +38,22 @@ SystemC Simulation
 13500 ps ... static thread event wait 
 13500 ps ... static thread clocked
 13500 ps ... static cthread
+14 ns ... dynamic thread clocked
 14 ns ... static thread clocked
 14 ns ... static cthread
-14 ns ... dynamic thread clocked
+15 ns ... dynamic thread clocked
 15 ns ... static thread clocked
 15 ns ... static cthread
-15 ns ... dynamic thread clocked
 
 15500 ps clearing asynchronous reset
 
 17500 ps asserting synchronous reset
+18 ns ... dynamic thread clocked
 18 ns ... static thread clocked
 18 ns ... static cthread
-18 ns ... dynamic thread clocked
+19 ns ... dynamic thread clocked
 19 ns ... static thread clocked
 19 ns ... static cthread
-19 ns ... dynamic thread clocked
 
 19500 ps clearing synchronous reset
 

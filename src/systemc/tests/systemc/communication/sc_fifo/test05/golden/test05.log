@@ -26,20 +26,20 @@ SystemC Simulation
 20 ns,5: reader: 17
 20 ns,5: reader: 18
 20 ns,5: reader: 19
+20 ns,6: writer: data read event
+20 ns,6: writer: waiting
 20 ns,6: reader: 20
 20 ns,6: reader: 21
 20 ns,6: reader: 22
 20 ns,6: reader: 23
 20 ns,6: reader: 24
-20 ns,6: writer: data read event
-20 ns,6: writer: waiting
+20 ns,7: writer: data read event
+20 ns,7: writer: waiting
 20 ns,7: reader: 26
 20 ns,7: reader: 27
 20 ns,7: reader: 28
 20 ns,7: reader: 29
 20 ns,7: reader: 30
-20 ns,7: writer: data read event
-20 ns,7: writer: waiting
 20 ns,8: writer: data read event
 30 ns,9: reader: 10 available samples
 30 ns,9: reader: non-blocking read

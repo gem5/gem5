@@ -1,8 +1,8 @@
 SystemC Simulation
 top.parent.method_0 triggered (0 s @ 1)
 top.parent.thread_0 triggered (0 s @ 1)
-top.parent.method_0.thread_0 triggered (0 s @ 1)
 top.parent.thread_0.method_0 triggered (0 s @ 1)
+top.parent.method_0.thread_0 triggered (0 s @ 1)
 top.parent.method_0.thread_0.method_0 triggered (0 s @ 1)
 top.parent.thread_0.method_0.thread_0 triggered (0 s @ 1)
 top.parent.method_0.thread_0.method_0 triggered (10 ns @ 4)

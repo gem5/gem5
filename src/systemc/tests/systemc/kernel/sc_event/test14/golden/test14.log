@@ -17,20 +17,20 @@ simulation time:30 ns receiver_1  -e5
 simulation time:35 ns receiver_2  -e6
 simulation time:35 ns sender_1    -e1 -e2
 simulation time:40 ns sender_2    -e3 -e4
-simulation time:45 ns sender_1    -e1 -e2
 simulation time:45 ns receiver_2  -e6
+simulation time:45 ns sender_1    -e1 -e2
 simulation time:50 ns receiver_1  -e5
-simulation time:55 ns sender_1    -e1 -e2
 simulation time:55 ns receiver_2  -e6
+simulation time:55 ns sender_1    -e1 -e2
 simulation time:60 ns sender_2    -e3 -e4
-simulation time:65 ns sender_1    -e1 -e2
 simulation time:65 ns receiver_2  -e6
+simulation time:65 ns sender_1    -e1 -e2
 simulation time:70 ns receiver_1  -e5
-simulation time:75 ns sender_1    -e1 -e2
 simulation time:75 ns receiver_2  -e6
+simulation time:75 ns sender_1    -e1 -e2
 simulation time:80 ns sender_2    -e3 -e4
-simulation time:85 ns sender_1    -e1 -e2
 simulation time:85 ns receiver_2  -e6
+simulation time:85 ns sender_1    -e1 -e2
 simulation time:90 ns receiver_1  -e5
-simulation time:95 ns sender_1    -e1 -e2
 simulation time:95 ns receiver_2  -e6
+simulation time:95 ns sender_1    -e1 -e2

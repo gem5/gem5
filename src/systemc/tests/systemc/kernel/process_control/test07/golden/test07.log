@@ -14,8 +14,8 @@ SystemC Simulation
     dut.parent.child1.local (sc_object)
     dut.parent.child1.dyn_obj (sc_object)
 ---------------------- 
-+++ dut.parent.child1.grandchild starting (150 ns)
 +++ dut.parent.child0.grandchild starting (150 ns)
++++ dut.parent.child1.grandchild starting (150 ns)
 ------ (200 ns) ------
  dut (sc_module)
   dut.parent (sc_thread_process) (running)
@@ -29,10 +29,10 @@ SystemC Simulation
     dut.parent.child1.grandchild (sc_thread_process) (running)
      dut.parent.child1.grandchild.local (sc_object)
 ---------------------- 
-+++ dut.parent.child1 exiting (250 ns)
-+++ dut.parent.child1.local deleted
 +++ dut.parent.child0 exiting (250 ns)
 +++ dut.parent.child0.local deleted
++++ dut.parent.child1 exiting (250 ns)
++++ dut.parent.child1.local deleted
 ------ (300 ns) ------
  dut (sc_module)
   dut.parent (sc_thread_process) (running)
@@ -44,10 +44,10 @@ SystemC Simulation
      dut.parent.child1.grandchild.local (sc_object)
     dut.parent.child1.dyn_obj (sc_object)
 ---------------------- 
-+++ dut.parent.child1.grandchild exiting (350 ns)
-+++ dut.parent.child1.grandchild.local deleted
 +++ dut.parent.child0.grandchild exiting (350 ns)
 +++ dut.parent.child0.grandchild.local deleted
++++ dut.parent.child1.grandchild exiting (350 ns)
++++ dut.parent.child1.grandchild.local deleted
 ------ (400 ns) ------
  dut (sc_module)
   dut.parent (sc_thread_process) (running)

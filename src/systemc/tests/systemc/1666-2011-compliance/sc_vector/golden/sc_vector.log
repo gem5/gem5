@@ -1,26 +1,26 @@
 SystemC Simulation
 Called method() in top.m1.target_vec_0 at 10 ns
 Called method() in top.m1.target_vec_1 at 10 ns
-Called method() in top.m3.targets_0 at 10 ns
-Called method() in top.m1.target_vec_3 at 10 ns
-Called method() in top.m3.target_vec_2 at 10 ns
-Called method() in top.m3.target_vec_1 at 10 ns
-Called method() in top.m3.target_vec_0 at 10 ns
-Called method() in top.m2.targets_0 at 10 ns
-Called method() in top.m2.target_vec_3 at 10 ns
-Called method() in top.m2.target_vec_2 at 10 ns
-Called method() in top.m2.target_vec_1 at 10 ns
-Called method() in top.m2.target_vec_0 at 10 ns
-Called method() in top.m1.targets_0 at 10 ns
-Called method() in top.m3.target_vec_3 at 10 ns
 Called method() in top.m1.target_vec_2 at 10 ns
+Called method() in top.m1.target_vec_3 at 10 ns
+Called method() in top.m1.targets_0 at 10 ns
+Called method() in top.m2.target_vec_0 at 10 ns
+Called method() in top.m2.target_vec_1 at 10 ns
+Called method() in top.m2.target_vec_2 at 10 ns
+Called method() in top.m2.target_vec_3 at 10 ns
+Called method() in top.m2.targets_0 at 10 ns
+Called method() in top.m3.target_vec_0 at 10 ns
+Called method() in top.m3.target_vec_1 at 10 ns
+Called method() in top.m3.target_vec_2 at 10 ns
+Called method() in top.m3.target_vec_3 at 10 ns
+Called method() in top.m3.targets_0 at 10 ns
 Called method() in top.m1.targets_1 at 20 ns
 Called method() in top.m2.targets_1 at 20 ns
 Called method() in top.m3.targets_1 at 20 ns
 Top:0100
-Called method() in top.m3.targets_2 at 30 ns
-Called method() in top.m2.targets_2 at 30 ns
 Called method() in top.m1.targets_2 at 30 ns
+Called method() in top.m2.targets_2 at 30 ns
+Called method() in top.m3.targets_2 at 30 ns
 Top:0120
 Called method() in top.m1.targets_3 at 40 ns
 Called method() in top.m2.targets_3 at 40 ns
