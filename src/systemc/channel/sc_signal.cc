@@ -69,6 +69,20 @@ ScSignalBase::_signalChange()
     _valueChangedEvent.notify(sc_core::SC_ZERO_TIME);
 }
 
+void
+ScSignalBaseBinary::_signalPosedge()
+{
+    _posStamp = getChangeStamp();
+    _posedgeEvent.notify(sc_core::SC_ZERO_TIME);
+}
+
+void
+ScSignalBaseBinary::_signalNegedge()
+{
+    _negStamp = getChangeStamp();
+    _negedgeEvent.notify(sc_core::SC_ZERO_TIME);
+}
+
 namespace
 {
 
