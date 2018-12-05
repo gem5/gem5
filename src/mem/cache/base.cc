@@ -1289,8 +1289,9 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
         pkt->writeDataToBlock(blk->data, blkSize);
     }
-    // We pay for fillLatency here.
-    blk->setWhenReady(clockEdge(fillLatency) + pkt->payloadDelay);
+    // The block will be ready when the payload arrives and the fill is done
+    blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
+                      pkt->payloadDelay);
 
     return blk;
 }
