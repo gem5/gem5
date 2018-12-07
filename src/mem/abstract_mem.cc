@@ -289,6 +289,7 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
     return allowStore;
 }
 
+#if TRACING_ON
 static inline void
 tracePacket(System *sys, const char *label, PacketPtr pkt)
 {
@@ -308,7 +309,6 @@ tracePacket(System *sys, const char *label, PacketPtr pkt)
     DDUMP(MemoryAccess, pkt->getConstPtr<uint8_t>(), pkt->getSize());
 }
 
-#if TRACING_ON
 #   define TRACE_PACKET(A) tracePacket(system(), A, pkt)
 #else
 #   define TRACE_PACKET(A)
