@@ -284,7 +284,6 @@ class CacheBlk : public ReplaceableEntry
      */
     void setWhenReady(const Tick tick)
     {
-        assert((whenReady == MaxTick) || (tick >= whenReady));
         assert(tick >= tickInserted);
         whenReady = tick;
     }
