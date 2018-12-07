@@ -394,7 +394,7 @@ class CircularQueue : private std::vector<T>
     };
 
   public:
-    using typename Base::operator[];
+    using Base::operator[];
 
     explicit CircularQueue(uint32_t size = 0)
         : _capacity(size), _head(1), _tail(0), _empty(true), _round(0)
