@@ -46,6 +46,29 @@
 
 namespace Gcn3ISA
 {
+    struct BufferRsrcDescriptor
+    {
+        uint64_t baseAddr : 48;
+        uint32_t stride : 14;
+        uint32_t cacheSwizzle : 1;
+        uint32_t swizzleEn : 1;
+        uint32_t numRecords : 32;
+        uint32_t dstSelX : 3;
+        uint32_t dstSelY : 3;
+        uint32_t dstSelZ : 3;
+        uint32_t dstSelW : 3;
+        uint32_t numFmt : 3;
+        uint32_t dataFmt : 4;
+        uint32_t elemSize : 2;
+        uint32_t idxStride : 2;
+        uint32_t addTidEn : 1;
+        uint32_t atc : 1;
+        uint32_t hashEn : 1;
+        uint32_t heap : 1;
+        uint32_t mType : 3;
+        uint32_t type : 2;
+    };
+
     // --- purely virtual instruction classes ---
 
     class Inst_SOP2 : public GCN3GPUStaticInst
@@ -197,14 +220,45 @@ namespace Gcn3ISA
                                                     MemCmd::WriteReq);
         }
 
+        /**
+         * For normal s_load_dword/s_store_dword instruction addresses.
+         */
         void
-        calcAddr(GPUDynInstPtr gpuDynInst, ConstScalarOperandU64 &addr,
-            ScalarRegU32 offset)
+        calcAddr(GPUDynInstPtr gpu_dyn_inst, ConstScalarOperandU64 &addr,
+                 ScalarRegU32 offset)
         {
-            Addr vaddr = addr.rawData();
-            vaddr += offset;
-            vaddr &= ~0x3;
-            gpuDynInst->scalarAddr = vaddr;
+            Addr vaddr = ((addr.rawData() + offset) & ~0x3);
+            gpu_dyn_inst->scalarAddr = vaddr;
+        }
+
+        /**
+         * For s_buffer_load_dword/s_buffer_store_dword instruction addresses.
+         * The s_buffer instructions use the same buffer resource descriptor
+         * as the MUBUF instructions.
+         */
+        void
+        calcAddr(GPUDynInstPtr gpu_dyn_inst,
+                 ConstScalarOperandU128 &s_rsrc_desc, ScalarRegU32 offset)
+        {
+            BufferRsrcDescriptor rsrc_desc;
+            ScalarRegU32 clamped_offset(offset);
+            std::memcpy((void*)&rsrc_desc, s_rsrc_desc.rawDataPtr(),
+                        sizeof(BufferRsrcDescriptor));
+
+            /**
+             * The address is clamped if:
+             *     Stride is zero: clamp if offset >= num_records
+             *     Stride is non-zero: clamp if offset > (stride * num_records)
+             */
+            if (!rsrc_desc.stride && offset >= rsrc_desc.numRecords) {
+                clamped_offset = rsrc_desc.numRecords;
+            } else if (rsrc_desc.stride && offset
+                       > (rsrc_desc.stride * rsrc_desc.numRecords)) {
+                clamped_offset = (rsrc_desc.stride * rsrc_desc.numRecords);
+            }
+
+            Addr vaddr = ((rsrc_desc.baseAddr + clamped_offset) & ~0x3);
+            gpu_dyn_inst->scalarAddr = vaddr;
         }
 
         // first instruction DWORD
@@ -469,29 +523,6 @@ namespace Gcn3ISA
         int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
 
       protected:
-        struct BufferRsrcDescriptor
-        {
-            uint64_t baseAddr : 48;
-            uint32_t stride : 14;
-            uint32_t cacheSwizzle : 1;
-            uint32_t swizzleEn : 1;
-            uint32_t numRecords : 32;
-            uint32_t dstSelX : 3;
-            uint32_t dstSelY : 3;
-            uint32_t dstSelZ : 3;
-            uint32_t dstSelW : 3;
-            uint32_t numFmt : 3;
-            uint32_t dataFmt : 4;
-            uint32_t elemSize : 2;
-            uint32_t idxStride : 2;
-            uint32_t addTidEn : 1;
-            uint32_t atc : 1;
-            uint32_t hashEn : 1;
-            uint32_t heap : 1;
-            uint32_t mType : 3;
-            uint32_t type : 2;
-        };
-
         template<typename T>
         void
         initMemRead(GPUDynInstPtr gpuDynInst)

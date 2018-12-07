@@ -4857,17 +4857,45 @@ namespace Gcn3ISA
     void
     Inst_SMEM__S_BUFFER_LOAD_DWORDX16::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+        ScalarRegU32 offset(0);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, instData.SBASE);
+
+        rsrcDesc.read();
+
+        if (instData.IMM) {
+            offset = extData.OFFSET;
+        } else {
+            ConstScalarOperandU32 off_sgpr(gpuDynInst, extData.OFFSET);
+            off_sgpr.read();
+            offset = off_sgpr.rawData();
+        }
+
+        calcAddr(gpuDynInst, rsrcDesc, offset);
+
+        gpuDynInst->computeUnit()->scalarMemoryPipe
+            .getGMReqFIFO().push(gpuDynInst);
+
+        wf->scalarRdGmReqsInPipe--;
+        wf->scalarOutstandingReqsRdGm++;
+        gpuDynInst->wavefront()->outstandingReqs++;
+        gpuDynInst->wavefront()->validateRequestCounters();
+    } // execute
 
     void
     Inst_SMEM__S_BUFFER_LOAD_DWORDX16::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
+        initMemRead<16>(gpuDynInst);
     } // initiateAcc
 
     void
     Inst_SMEM__S_BUFFER_LOAD_DWORDX16::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        ScalarOperandU512 sdst(gpuDynInst, instData.SDATA);
+        sdst.write();
     } // completeAcc
 
     Inst_SMEM__S_STORE_DWORD::Inst_SMEM__S_STORE_DWORD(InFmt_SMEM *iFmt)
