@@ -17,75 +17,75 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_NONBLOCKING_PORT_H__
-#define __TLM_NONBLOCKING_PORT_H__
+#ifndef \
+    __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_PORTS_TLM_NONBLOCKING_PORT_H__
+#define \
+    __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_PORTS_TLM_NONBLOCKING_PORT_H__
 
 #include "tlm_core/tlm_1/tlm_req_rsp/tlm_1_interfaces/tlm_core_ifs.h"
 #include "tlm_core/tlm_1/tlm_req_rsp/tlm_ports/tlm_event_finder.h"
 
-namespace tlm {
+namespace tlm
+{
 
-template < typename T >
+template <typename T>
 class tlm_nonblocking_get_port :
-public sc_core::sc_port< tlm_nonblocking_get_if< T > , 1 >
+    public sc_core::sc_port<tlm_nonblocking_get_if<T>, 1>
 {
-public:
-  typedef tlm_nonblocking_get_if<T> get_if_type;
+  public:
+    typedef tlm_nonblocking_get_if<T> get_if_type;
 
-  tlm_nonblocking_get_port( const char *port_name ) :
-    sc_core::sc_port< tlm_nonblocking_get_if< T > , 1 >( port_name ) {}
+    tlm_nonblocking_get_port(const char *port_name) :
+        sc_core::sc_port<tlm_nonblocking_get_if<T>, 1>(port_name)
+    {}
 
-  sc_core::sc_event_finder& ok_to_get() const {
-
-    return *new tlm_event_finder_t< get_if_type , T >(
-       *this,
-       &get_if_type::ok_to_get );
-
-  }
-
+    sc_core::sc_event_finder &
+    ok_to_get() const
+    {
+        return *new tlm_event_finder_t<get_if_type, T >(
+                *this, &get_if_type::ok_to_get);
+    }
 };
 
-template < typename T >
+template <typename T>
 class tlm_nonblocking_peek_port :
-public sc_core::sc_port< tlm_nonblocking_peek_if< T > , 1 >
+    public sc_core::sc_port<tlm_nonblocking_peek_if<T>, 1>
 {
-public:
-  typedef tlm_nonblocking_peek_if<T> peek_if_type;
+  public:
+    typedef tlm_nonblocking_peek_if<T> peek_if_type;
 
-  tlm_nonblocking_peek_port( const char *port_name ) :
-    sc_core::sc_port< tlm_nonblocking_peek_if< T > , 1 >( port_name ) {}
+    tlm_nonblocking_peek_port(const char *port_name) :
+        sc_core::sc_port<tlm_nonblocking_peek_if<T>, 1>(port_name)
+    {}
 
-  sc_core::sc_event_finder& ok_to_peek() const {
-
-    return *new tlm_event_finder_t< peek_if_type , T >(
-       *this,
-       &peek_if_type::ok_to_peek );
-
-  }
-
+    sc_core::sc_event_finder &
+    ok_to_peek() const
+    {
+        return *new tlm_event_finder_t<peek_if_type, T>(
+                *this, &peek_if_type::ok_to_peek);
+    }
 };
 
-
-template < typename T >
+template <typename T>
 class tlm_nonblocking_put_port :
-public sc_core::sc_port< tlm_nonblocking_put_if< T > , 1 >
+    public sc_core::sc_port<tlm_nonblocking_put_if<T>, 1>
 {
-public:
-  typedef tlm_nonblocking_put_if<T> put_if_type;
+  public:
+    typedef tlm_nonblocking_put_if<T> put_if_type;
 
-  tlm_nonblocking_put_port( const char *port_name ) :
-    sc_core::sc_port< tlm_nonblocking_put_if< T > , 1 >( port_name ) {}
+    tlm_nonblocking_put_port(const char *port_name) :
+        sc_core::sc_port<tlm_nonblocking_put_if<T>, 1>(port_name)
+    {}
 
-  sc_core::sc_event_finder& ok_to_put() const {
-
-    return *new tlm_event_finder_t< put_if_type , T >(
-             *this,
-       &put_if_type::ok_to_put );
-
-  }
-
+    sc_core::sc_event_finder &
+    ok_to_put() const
+    {
+        return *new tlm_event_finder_t<put_if_type, T>(
+                *this, &put_if_type::ok_to_put);
+    }
 };
 
 } // namespace tlm
 
 #endif
+/*__SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_PORTS_TLM_NONBLOCKING_PORT_H__*/

@@ -17,37 +17,37 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_ANALYSIS_TRIPLE_H__
-#define __TLM_ANALYSIS_TRIPLE_H__
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_ANALYSIS_TRIPLE_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_ANALYSIS_TRIPLE_H__
 
-//#include <systemc>
+namespace tlm
+{
 
-namespace tlm {
+template <typename T>
+struct tlm_analysis_triple
+{
+    sc_core::sc_time start_time;
+    T transaction;
+    sc_core::sc_time end_time;
 
-template< typename T>
-struct tlm_analysis_triple {
+    tlm_analysis_triple() {}
 
-  sc_core::sc_time start_time;
-  T transaction;
-  sc_core::sc_time end_time;
+    tlm_analysis_triple(const tlm_analysis_triple &triple)
+    {
+        start_time = triple.start_time;
+        transaction = triple.transaction;
+        end_time = triple.end_time;
+    }
 
-  tlm_analysis_triple() {}
+    tlm_analysis_triple(const T &t)
+    {
+        transaction = t;
+    }
 
-  tlm_analysis_triple( const tlm_analysis_triple &triple ) {
-    start_time = triple.start_time;
-    transaction = triple.transaction;
-    end_time = triple.end_time;
-  }
-
-  tlm_analysis_triple( const T &t ) {
-    transaction = t;
-  }
-
-  operator T() { return transaction; }
-  operator const T &() const { return transaction; }
-
+    operator T() { return transaction; }
+    operator const T &() const { return transaction; }
 };
 
 } // namespace tlm
 
-#endif
+#endif /* __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_ANALYSIS_TRIPLE_H__ */

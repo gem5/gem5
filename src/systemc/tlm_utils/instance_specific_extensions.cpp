@@ -17,233 +17,250 @@
 
  *****************************************************************************/
 
-#include "tlm_utils/instance_specific_extensions_int.h"
-#include "sysc/utils/sc_typeindex.h" // sc_typeindex
+#include <tlm_utils/instance_specific_extensions_int.h>
 
-#include <map>
 #include <iostream>
+#include <map>
+#include <systemc>
+#include <tlm>
 
-namespace tlm {
-template class SC_API tlm_array<tlm_utils::ispex_base*>;
+namespace tlm
+{
+
+template class tlm_array<tlm_utils::ispex_base *>;
+
 } // namespace tlm
 
-namespace tlm_utils {
-/* anonymous */ namespace {
-class ispex_registry // copied from tlm_gp.cpp
+namespace tlm_utils
 {
-  typedef unsigned int key_type;
-  typedef std::map<sc_core::sc_type_index, key_type> type_map;
-public:
-  static ispex_registry& instance()
-  {
-    if (!instance_) // don't cleanup registry
-      instance_ = new ispex_registry();
-    return *instance_;
-  }
 
-  unsigned int register_extension(sc_core::sc_type_index type)
-  {
-    type_map::const_iterator it = ids_.find( type );
+namespace
+{
 
-    if( it == ids_.end() ) { // new extension - generate/store ID
-      type_map::value_type v( type, static_cast<key_type>(ids_.size()) );
-      ids_.insert( v );
-      return v.second;
+class ispex_registry // Copied from tlm_gp.cpp.
+{
+    typedef unsigned int key_type;
+    typedef std::map<sc_core::sc_type_index, key_type> type_map;
+
+  public:
+    static ispex_registry &
+    instance()
+    {
+        if (!instance_) {
+            // Don't cleanup registry.
+            instance_ = new ispex_registry();
+        }
+        return *instance_;
     }
-    return it->second;
-  }
 
-  static unsigned int max_num_extensions()
-    { return (instance_) ? instance().ids_.size() : 0; }
+    unsigned int
+    register_extension(sc_core::sc_type_index type)
+    {
+        type_map::const_iterator it = ids_.find(type);
 
-private:
-  static ispex_registry* instance_;
-  type_map ids_;
-  ispex_registry() /* = default */ {}
+        if (it == ids_.end()) {
+            // New extension - generate/store ID.
+            type_map::value_type v(type, static_cast<key_type>(ids_.size()));
+            ids_.insert(v);
+            return v.second;
+        }
+        return it->second;
+    }
 
-}; // class ispex_registry
+    static unsigned int
+    max_num_extensions()
+    {
+        return (instance_) ? instance().ids_.size() : 0;
+    }
 
-ispex_registry* ispex_registry::instance_ = NULL;
+  private:
+    static ispex_registry *instance_;
+    type_map ids_;
+    ispex_registry() {}
+};
+
+ispex_registry *ispex_registry::instance_ = nullptr;
+
 } //  anonymous namespace
 
 unsigned int
-ispex_base::register_private_extension(const std::type_info& type)
+ispex_base::register_private_extension(const std::type_info &type)
 {
-  return ispex_registry::instance().register_extension(type);
+    return ispex_registry::instance().register_extension(type);
 }
 
-//Helper to do the numbering of private extension accessors
-static unsigned int max_num_ispex_accessors(bool increment=false)
+// Helper to do the numbering of private extension accessors.
+static unsigned int
+max_num_ispex_accessors(bool increment=false)
 {
     static unsigned int max_num = 0;
-    if (increment) ++max_num;
+    if (increment)
+        ++max_num;
     return max_num;
 }
 
 // ----------------------------------------------------------------------------
 
-//the pool for the container, plain as can be
+// The pool for the container, plain as can be.
 class instance_specific_extension_container_pool
 {
-  instance_specific_extension_container_pool()
-    : unused(NULL){}
+    instance_specific_extension_container_pool() : unused(nullptr) {}
+    ~instance_specific_extension_container_pool();
 
-  ~instance_specific_extension_container_pool();
+  public:
+    static instance_specific_extension_container_pool &
+    instance()
+    {
+        static instance_specific_extension_container_pool inst;
+        return inst;
+    }
 
-public:
-  static instance_specific_extension_container_pool& instance()
-  {
-    static instance_specific_extension_container_pool inst;
-    return inst;
-  }
+    instance_specific_extension_container *create();
+    void free(instance_specific_extension_container *);
 
-  instance_specific_extension_container* create();
-  void free(instance_specific_extension_container*);
+  private:
+    instance_specific_extension_container *unused;
+};
 
-private:
-  instance_specific_extension_container* unused;
-}; // class instance_specific_extension_container_pool
-
-instance_specific_extension_container*
+instance_specific_extension_container *
 instance_specific_extension_container_pool::create()
 {
-  if (!unused) {
-    unused =new instance_specific_extension_container();
-  }
-  instance_specific_extension_container* tmp = unused;
-  unused = unused->next;
-  return tmp;
+    if (!unused) {
+        unused = new instance_specific_extension_container();
+    }
+    instance_specific_extension_container *tmp = unused;
+    unused = unused->next;
+    return tmp;
 }
 
 void
-instance_specific_extension_container_pool::
-  free(instance_specific_extension_container* cont)
+instance_specific_extension_container_pool::free(
+        instance_specific_extension_container *cont)
 {
-  cont->next=unused;
-  unused=cont;
+    cont->next = unused;
+    unused = cont;
 }
 
 instance_specific_extension_container_pool::
-  ~instance_specific_extension_container_pool()
+    ~instance_specific_extension_container_pool()
 {
-  while(unused) {
-    instance_specific_extension_container* tmp = unused;
-    unused=unused->next;
-    delete tmp;
-  }
+    while (unused) {
+        instance_specific_extension_container *tmp = unused;
+        unused = unused->next;
+        delete tmp;
+    }
 }
 
 // ----------------------------------------------------------------------------
 
-instance_specific_extension_container*
+instance_specific_extension_container *
 instance_specific_extension_container::create()
 {
-  return instance_specific_extension_container_pool::instance().create();
+    return instance_specific_extension_container_pool::instance().create();
 }
 
-instance_specific_extension_container::instance_specific_extension_container()
-  : use_count(0)
-  , m_txn(NULL)
-  , m_release_fn(NULL)
-  , m_carrier(NULL)
-  , next(NULL)
+instance_specific_extension_container::
+    instance_specific_extension_container() :
+    use_count(0), m_txn(NULL), m_release_fn(NULL), m_carrier(NULL), next(NULL)
 {
-  resize();
+    resize();
 }
 
 void
 instance_specific_extension_container::
-  attach_carrier(instance_specific_extension_carrier* carrier,
-                 void* txn, release_fn* rel_fn)
+    attach_carrier(instance_specific_extension_carrier *carrier,
+            void *txn, release_fn *rel_fn)
 {
-  m_txn = txn;
-  m_release_fn = rel_fn;
-  m_carrier = carrier;
+    m_txn = txn;
+    m_release_fn = rel_fn;
+    m_carrier = carrier;
 }
 
 void
 instance_specific_extension_container::resize()
 {
-  m_ispex_per_accessor.resize( max_num_ispex_accessors() );
+    m_ispex_per_accessor.resize(max_num_ispex_accessors());
 
-  for (unsigned int i=0; i < m_ispex_per_accessor.size(); ++i) {
-    m_ispex_per_accessor[i] = new instance_specific_extensions_per_accessor(this);
-    m_ispex_per_accessor[i]->resize_extensions();
-  }
+    for (unsigned int i = 0; i < m_ispex_per_accessor.size(); ++i) {
+        m_ispex_per_accessor[i] =
+            new instance_specific_extensions_per_accessor(this);
+        m_ispex_per_accessor[i]->resize_extensions();
+    }
 }
 
 instance_specific_extension_container::
-  ~instance_specific_extension_container()
+    ~instance_specific_extension_container()
 {
-  for (unsigned int i=0; i<m_ispex_per_accessor.size(); ++i)
-    delete m_ispex_per_accessor[i];
+    for (unsigned int i = 0; i < m_ispex_per_accessor.size(); ++i)
+        delete m_ispex_per_accessor[i];
 }
 
 void
 instance_specific_extension_container::inc_use_count()
 {
-  use_count++;
+    use_count++;
 }
 
 void
 instance_specific_extension_container::dec_use_count()
 {
-  if ((--use_count)==0) { // if this container isn't used any more
-    // we release the carrier extension
-    m_release_fn(m_carrier, m_txn);
-    // we send it back to our pool
-    instance_specific_extension_container_pool::instance().free(this);
-  }
+    if ((--use_count) == 0) {
+        // If this container isn't used any more we release the carrier
+        // extension.
+        m_release_fn(m_carrier, m_txn);
+        // We send it back to our pool.
+        instance_specific_extension_container_pool::instance().free(this);
+    }
 }
 
-instance_specific_extensions_per_accessor*
+instance_specific_extensions_per_accessor *
 instance_specific_extension_container::get_accessor(unsigned int idx)
 {
-  return m_ispex_per_accessor[idx];
+    return m_ispex_per_accessor[idx];
 }
 
 // ----------------------------------------------------------------------------
 
 // non-templatized version with manual index:
-ispex_base*
-instance_specific_extensions_per_accessor::
-  set_extension(unsigned int index, ispex_base* ext)
+ispex_base *
+instance_specific_extensions_per_accessor::set_extension(
+        unsigned int index, ispex_base *ext)
 {
-  resize_extensions();
-  ispex_base* tmp = m_extensions[index];
-  m_extensions[index] = ext;
-  if (!tmp && ext) m_container->inc_use_count();
-  return tmp;
+    resize_extensions();
+    ispex_base *tmp = m_extensions[index];
+    m_extensions[index] = ext;
+    if (!tmp && ext)
+        m_container->inc_use_count();
+    return tmp;
 }
 
-ispex_base*
-instance_specific_extensions_per_accessor::
-  get_extension(unsigned int index) const
+ispex_base *
+instance_specific_extensions_per_accessor::get_extension(
+        unsigned int index) const
 {
-  return (index < m_extensions.size()) ? m_extensions[index] : NULL;
+    return (index < m_extensions.size()) ? m_extensions[index] : nullptr;
 }
 
 void
-instance_specific_extensions_per_accessor::
-  clear_extension(unsigned int index)
+instance_specific_extensions_per_accessor::clear_extension(unsigned int index)
 {
-  if (index < m_extensions.size())
-  {
-    if (m_extensions[index]) m_container->dec_use_count();
-    m_extensions[index] = static_cast<ispex_base*>(0);
-  }
+    if (index < m_extensions.size()) {
+        if (m_extensions[index])
+            m_container->dec_use_count();
+        m_extensions[index] = static_cast<ispex_base *>(nullptr);
+    }
 }
 
 void
 instance_specific_extensions_per_accessor::resize_extensions()
 {
-  m_extensions.expand(ispex_registry::max_num_extensions());
+    m_extensions.expand(ispex_registry::max_num_extensions());
 }
 
 // ----------------------------------------------------------------------------
 
-instance_specific_extension_accessor::instance_specific_extension_accessor()
-  : m_index(max_num_ispex_accessors(true)-1)
+instance_specific_extension_accessor::instance_specific_extension_accessor() :
+    m_index(max_num_ispex_accessors(true) - 1)
 {}
 
 } // namespace tlm_utils

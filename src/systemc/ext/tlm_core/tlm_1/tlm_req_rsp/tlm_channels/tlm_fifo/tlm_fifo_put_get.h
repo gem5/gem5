@@ -17,124 +17,100 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_FIFO_PUT_GET_IF_H__
-#define __TLM_FIFO_PUT_GET_IF_H__
+#ifndef \
+    __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_TLM_FIFO_PUT_GET_H__
+#define \
+    __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_TLM_FIFO_PUT_GET_H__
 
-namespace tlm {
-
-/******************************************************************
-//
-// get interface
-//
-******************************************************************/
-
-template <typename T>
-inline
-T
-tlm_fifo<T>::get( tlm_tag<T> * )
+namespace tlm
 {
 
-  while( is_empty() ) {
-    wait( m_data_written_event );
-  }
-
-  m_num_read ++;
-  request_update();
-
-  return buffer.read();
-
-}
-
-// non-blocking read
-
+// Get interface.
 template <typename T>
-inline
-bool
-tlm_fifo<T>::nb_get( T& val_ )
+inline T
+tlm_fifo<T>::get(tlm_tag<T> *)
 {
-
-  if( is_empty() ) {
-    return false;
-  }
-
-  m_num_read ++;
-  request_update();
-
-  val_ = buffer.read();
-
-  return true;
-
-}
-
-template <typename T>
-inline
-bool
-tlm_fifo<T>::nb_can_get( tlm_tag<T> * ) const {
-
-  return !is_empty();
-
-}
-
-
-/******************************************************************
-//
-// put interface
-//
-******************************************************************/
-
-template <typename T>
-inline
-void
-tlm_fifo<T>::put( const T& val_ )
-{
-    while( is_full() ) {
-  wait( m_data_read_event );
+    while (is_empty()) {
+        wait(m_data_written_event);
     }
 
-    if( buffer.is_full() ) {
+    m_num_read++;
+    request_update();
 
-      buffer.resize( buffer.size() * 2 );
+    return buffer.read();
+}
 
+// Non-blocking read.
+template <typename T>
+inline bool
+tlm_fifo<T>::nb_get(T &val_)
+{
+    if (is_empty()) {
+        return false;
     }
 
-    m_num_written ++;
-    buffer.write( val_ );
+    m_num_read++;
+    request_update();
+
+    val_ = buffer.read();
+
+    return true;
+}
+
+template <typename T>
+inline bool
+tlm_fifo<T>::nb_can_get(tlm_tag<T> *) const
+{
+    return !is_empty();
+}
+
+
+// Put interface.
+template <typename T>
+inline void
+tlm_fifo<T>::put(const T &val_)
+{
+    while (is_full()) {
+        wait(m_data_read_event);
+    }
+
+    if (buffer.is_full()) {
+        buffer.resize(buffer.size() * 2);
+    }
+
+    m_num_written++;
+    buffer.write(val_);
 
     request_update();
 }
 
 template <typename T>
-inline
-bool
-tlm_fifo<T>::nb_put( const T& val_ )
+inline bool
+tlm_fifo<T>::nb_put(const T &val_)
 {
+    if (is_full()) {
+        return false;
+    }
 
-  if( is_full() ) {
-    return false;
-  }
+    if (buffer.is_full()) {
+        buffer.resize(buffer.size() * 2);
+    }
 
-  if( buffer.is_full() ) {
+    m_num_written++;
+    buffer.write(val_);
+    request_update();
 
-    buffer.resize( buffer.size() * 2 );
-
-  }
-
-  m_num_written ++;
-  buffer.write( val_ );
-  request_update();
-
-  return true;
+    return true;
 }
 
-template < typename T >
-inline
-bool
-tlm_fifo<T>::nb_can_put( tlm_tag<T> * ) const {
-
-  return !is_full();
-
+template <typename T>
+inline bool
+tlm_fifo<T>::nb_can_put(tlm_tag<T> *) const
+{
+    return !is_full();
 }
 
 } // namespace tlm
 
 #endif
+/* __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_TLM_FIFO_PUT_GET_H__ */

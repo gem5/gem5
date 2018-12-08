@@ -17,92 +17,101 @@
 
  *****************************************************************************/
 
-#ifndef TLM_CORE_TLM2_TLM_PHASE_H_INCLUDED_
-#define TLM_CORE_TLM2_TLM_PHASE_H_INCLUDED_
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_GENERIC_PAYLOAD_TLM_PHASE_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_GENERIC_PAYLOAD_TLM_PHASE_H__
 
-#include <string>
 #include <iostream>
 #include <typeinfo>
 #include <vector>
 
-#include "sysc/kernel/sc_cmnhdr.h" // SC_API
-#include "sysc/kernel/sc_macros.h" // SC_CONCAT_HELPER_, SC_STRINGIFY_HELPER_
+#define SC_CONCAT_HELPER_(a, b) SC_CONCAT_HELPER_DEFERRED_(a, b)
+#define SC_CONCAT_HELPER_DEFERRED_(a, b) SC_CONCAT_HELPER_MORE_DEFERRED_(a, b)
+#define SC_CONCAT_HELPER_MORE_DEFERRED_(a, b) a ## b
 
-namespace tlm {
+#define SC_STRINGIFY_HELPER_(a) SC_STRINGIFY_HELPER_DEFERRED_(a)
+#define SC_STRINGIFY_HELPER_DEFERRED_(a) SC_STRINGIFY_HELPER_MORE_DEFERRED_(a)
+#define SC_STRINGIFY_HELPER_MORE_DEFERRED_(a) #a
 
-enum SC_API tlm_phase_enum
+namespace tlm
 {
-  UNINITIALIZED_PHASE=0,
-  BEGIN_REQ=1,
-  END_REQ,
-  BEGIN_RESP,
-  END_RESP
+
+enum tlm_phase_enum
+{
+    UNINITIALIZED_PHASE = 0,
+    BEGIN_REQ = 1,
+    END_REQ,
+    BEGIN_RESP,
+    END_RESP
 };
 
-class SC_API tlm_phase
+class tlm_phase
 {
-public:
-  tlm_phase();
-  tlm_phase(unsigned int id); // TODO: should be dropped
+  public:
+    tlm_phase();
+    tlm_phase(unsigned int id);
 
-  tlm_phase(tlm_phase_enum standard);
-  tlm_phase& operator=(tlm_phase_enum standard);
+    tlm_phase(tlm_phase_enum standard);
+    tlm_phase &operator = (tlm_phase_enum standard);
 
-  operator unsigned int() const { return m_id; }
-  const char* get_name() const;
+    operator unsigned int() const { return m_id; }
+    const char *get_name() const;
 
-protected:
-  // register extended phase
-  tlm_phase( const std::type_info & type, const char* name );
+  protected:
+    // Register extended phase.
+    tlm_phase(const std::type_info &type, const char *name);
 
-private:
-  unsigned int m_id;
+  private:
+    unsigned int m_id;
 };
 
-inline
-tlm_phase::tlm_phase()
-  : m_id( UNINITIALIZED_PHASE )
-{}
+inline tlm_phase::tlm_phase() : m_id(UNINITIALIZED_PHASE) {}
 
-inline
-tlm_phase::tlm_phase( tlm_phase_enum standard )
-  : m_id( standard )
-{}
+inline tlm_phase::tlm_phase(tlm_phase_enum standard) : m_id(standard) {}
 
-inline
-tlm_phase& tlm_phase::operator=( tlm_phase_enum standard )
+inline tlm_phase &
+tlm_phase::operator = (tlm_phase_enum standard)
 {
-  m_id = standard;
-  return *this;
+    m_id = standard;
+    return *this;
 }
 
-inline
-std::ostream& operator<<(std::ostream& s, const tlm_phase& p)
+inline std::ostream &
+operator << (std::ostream &s, const tlm_phase &p)
 {
-  s << p.get_name();
-  return s;
+    s << p.get_name();
+    return s;
 }
 
 #define TLM_DECLARE_EXTENDED_PHASE(name_arg) \
-  static class SC_CONCAT_HELPER_(tlm_phase_, name_arg) \
-    : public ::tlm::tlm_phase \
-  { \
+static class SC_CONCAT_HELPER_(tlm_phase_, name_arg) : \
+    public ::tlm::tlm_phase \
+{ \
     typedef SC_CONCAT_HELPER_(tlm_phase_, name_arg) this_type; \
   public: \
-    SC_CONCAT_HELPER_(tlm_phase_, name_arg)() /* register extended phase */ \
-      : ::tlm::tlm_phase( typeid(*this), SC_STRINGIFY_HELPER_(name_arg) ) \
+    SC_CONCAT_HELPER_(tlm_phase_, name_arg)() : \
+        /* register extended phase */ \
+        ::tlm::tlm_phase(typeid(*this), SC_STRINGIFY_HELPER_(name_arg)) \
     {} \
     \
-    static const this_type& get_phase() /* needed only for IEEE 1666-2011 */ \
-      { static this_type this_; return this_; } \
-  } \
-  const name_arg
+    static const this_type &get_phase() \
+        /* needed only for IEEE 1666-2011 */ \
+    { \
+        static this_type this_; \
+        return this_; \
+    } \
+} const name_arg
 
 // for backwards-compatibility
-#define DECLARE_EXTENDED_PHASE( NameArg ) \
-    TLM_DECLARE_EXTENDED_PHASE( NameArg )
+#define DECLARE_EXTENDED_PHASE(NameArg) TLM_DECLARE_EXTENDED_PHASE(NameArg)
 
 } // namespace tlm
 
-#endif /* TLM_CORE_TLM2_TLM_PHASE_H_INCLUDED_ */
-// Taf!
+#undef SC_CONCAT_HELPER_
+#undef SC_CONCAT_HELPER_DEFERRED_
+#undef SC_CONCAT_HELPER_MORE_DEFERRED_
+
+#undef SC_STRINGIFY_HELPER_
+#undef SC_STRINGIFY_HELPER_DEFERRED_
+#undef SC_STRINGIFY_HELPER_MORE_DEFERRED_
+
+#endif /* __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_GENERIC_PAYLOAD_TLM_PHASE_H__ */

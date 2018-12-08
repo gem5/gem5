@@ -17,21 +17,21 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_REQ_RSP_H__
-#define __TLM_REQ_RSP_H__
+#ifndef __SYsTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_REQ_RSP_H__
+#define __SYsTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_REQ_RSP_H__
 
-// The unannotated TLM interfaces
+// The unannotated TLM interfaces.
 
 #include "tlm_core/tlm_1/tlm_req_rsp/tlm_1_interfaces/tlm_core_ifs.h"
 #include "tlm_core/tlm_1/tlm_req_rsp/tlm_1_interfaces/tlm_master_slave_ifs.h"
 
-// The channels : tlm_fifo, tlm_transport_channel and tlm_req_rsp_channel
+// The channels : tlm_fifo, tlm_transport_channel and tlm_req_rsp_channel.
 
 #include "tlm_core/tlm_1/tlm_req_rsp/tlm_channels/tlm_req_rsp_channels/tlm_req_rsp_channels.h"
 
-// Some non blocking ports to provide static sensitivity
+// Some non blocking ports to provide static sensitivity.
 
 #include "tlm_core/tlm_1/tlm_req_rsp/tlm_ports/tlm_nonblocking_port.h"
 
 
-#endif /* __TLM_REQ_RSP_H__ */
+#endif /*__SYsTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_REQ_RSP_H__ */

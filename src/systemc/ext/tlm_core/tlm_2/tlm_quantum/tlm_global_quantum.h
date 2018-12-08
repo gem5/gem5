@@ -17,12 +17,13 @@
 
  *****************************************************************************/
 
-#ifndef TLM_CORE_TLM2_TLM_GLOBAL_QUANTUM_H_INCLUDED_
-#define TLM_CORE_TLM2_TLM_GLOBAL_QUANTUM_H_INCLUDED_
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_QUANTUM_TLM_GLOBAL_QUANTUM_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_QUANTUM_TLM_GLOBAL_QUANTUM_H__
 
-#include "sysc/kernel/sc_time.h"
+#include <systemc>
 
-namespace tlm {
+namespace tlm
+{
 
 //
 // tlm_global_quantum class
@@ -38,45 +39,38 @@ namespace tlm {
 // the global quantum is set.
 //
 
-class SC_API tlm_global_quantum
+class tlm_global_quantum
 {
-public:
-  //
-  // Returns a reference to the tlm_global_quantum singleton
-  //
-  static tlm_global_quantum& instance();
+  public:
+    //
+    // Returns a reference to the tlm_global_quantum singleton
+    //
+    static tlm_global_quantum &instance();
 
-public:
+  public:
 
-  //
-  // Setter/getter for the global quantum
-  //
-  void set(const sc_core::sc_time& t)
-  {
-    m_global_quantum = t;
-  }
+    //
+    // Setter/getter for the global quantum
+    //
+    void set(const sc_core::sc_time &t) { m_global_quantum = t; }
+    const sc_core::sc_time &get() const { return m_global_quantum; }
 
-  const sc_core::sc_time& get() const
-  {
-    return m_global_quantum;
-  }
+    //
+    // This function will calculate the maximum value for the next local
+    // quantum for an initiator. All initiators should synchronize on
+    // integer multiples of the global quantum value. The value for the
+    // local quantum of an initiator can be smaller, but should never be
+    // greater than the value returned by this method.
+    //
+    sc_core::sc_time compute_local_quantum();
 
-  //
-  // This function will calculate the maximum value for the next local
-  // quantum for an initiator. All initiators should synchronize on
-  // integer multiples of the global quantum value. The value for the
-  // local quantum of an initiator can be smaller, but should never be
-  // greater than the value returned by this method.
-  //
-  sc_core::sc_time compute_local_quantum();
+  protected:
+    tlm_global_quantum();
 
-protected:
-  tlm_global_quantum();
-
-protected:
-  sc_core::sc_time m_global_quantum;
+  protected:
+    sc_core::sc_time m_global_quantum;
 };
 
 } // namespace tlm
 
-#endif // TLM_CORE_TLM2_TLM_GLOBAL_QUANTUM_H_INCLUDED_
+#endif /* __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_QUANTUM_TLM_GLOBAL_QUANTUM_H__ */

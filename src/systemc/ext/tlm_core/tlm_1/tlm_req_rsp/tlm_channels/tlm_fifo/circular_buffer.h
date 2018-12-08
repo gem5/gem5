@@ -17,252 +17,239 @@
 
  *****************************************************************************/
 
-//
-// To the LRM writer : this class is purely an artifact of the implementation.
-//
-
-#ifndef __CIRCULAR_BUFFER_H__
-#define __CIRCULAR_BUFFER_H__
+#ifndef \
+    __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_CIRCULAR_BUFFER_H__
+#define \
+    __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_CIRCULAR_BUFFER_H__
 
 #include <iostream>
 
-namespace tlm {
+namespace tlm
+{
 
-template < typename T >
+template <typename T>
 class circular_buffer
 {
-public:
+  public:
+    explicit circular_buffer(int size=0);
+    ~circular_buffer();
 
-  explicit
-  circular_buffer( int size = 0 );
-  ~circular_buffer();
+    void resize(int size);
+    void clear();
 
-  void resize( int size );
-  void clear();
+    T read();
+    void write(const T &);
 
-  T read();
-  void write( const T & );
+    bool is_empty() const { return used() == 0; }
+    bool is_full() const { return free() == 0; }
 
-  bool is_empty() const { return used() == 0; }
-  bool is_full() const { return free() == 0; }
+    int size() const { return m_size; }
+    int used() const { return m_used; }
+    int free() const { return m_free; }
 
-  int size() const { return m_size; }
-  int used() const { return m_used; }
-  int free() const { return m_free; }
+    const T &read_data() const { return buf_read(m_buf, m_ri); }
+    const T &
+    peek_data(int i) const
+    {
+        return buf_read(m_buf, (m_ri + i) % size());
+    }
 
-  const T& read_data() const
-    { return buf_read( m_buf, m_ri ); }
+    T &
+    poke_data(int i)
+    {
+        return buf_read(m_buf, (m_wi + i) % size());
+    }
 
-  const T& peek_data( int i ) const
-    { return buf_read( m_buf, (m_ri + i) % size() ); }
+    void debug() const;
 
-  T & poke_data( int i )
-    { return buf_read( m_buf , (m_wi + i) % size() ); }
+  private:
+    void increment_write_pos(int i=1);
+    void increment_read_pos(int i=1);
 
-  void debug() const;
+    void init();
 
-private:
-  void increment_write_pos( int i = 1 );
-  void increment_read_pos( int i = 1 );
+    // Disabled.
+    circular_buffer(const circular_buffer<T> &b);
+    circular_buffer<T> &operator = (const circular_buffer<T> &);
 
-  void init();
+    void *buf_alloc(int size);
+    void buf_free(void *&buf);
+    void buf_write(void *buf, int n, const T &t);
+    T &buf_read(void *buf, int n) const;
+    void buf_clear(void *buf, int n);
 
-  circular_buffer( const circular_buffer<T> &b );              // disabled
-  circular_buffer<T> &operator=( const circular_buffer<T> & ); // disabled
-
-  void* buf_alloc( int size );
-  void  buf_free( void*& buf );
-  void  buf_write( void* buf, int n, const T & t );
-  T&    buf_read( void* buf, int n ) const;
-  void  buf_clear( void* buf, int n );
-
-private:
-  int    m_size;                   // size of the buffer
-  void*  m_buf;                    // the buffer
-  int    m_free;                   // number of free spaces
-  int    m_used;                   // number of used spaces
-  int    m_ri;                     // index of next read
-  int    m_wi;                     // index of next write
-
+  private:
+    int m_size; // size of the buffer
+    void *m_buf; // the buffer
+    int m_free; // number of free spaces
+    int m_used; // number of used spaces
+    int m_ri; // index of next read
+    int m_wi; // index of next write
 };
 
-template< typename T >
+template <typename T>
 void
 circular_buffer<T>::debug() const
 {
+    std::cout << "Buffer debug" << std::endl;
+    std::cout << "Size : " << size() << std::endl;
+    std::cout << "Free/Used " << free() << "/" << used() << std::endl;
+    std::cout << "Indices : r/w = " << m_ri << "/" << m_wi << std::endl;
 
-  std::cout << "Buffer debug" << std::endl;
-  std::cout << "Size : " << size() << std::endl;
-  std::cout << "Free/Used " << free() << "/" << used() << std::endl;
-  std::cout << "Indices : r/w = " << m_ri << "/" << m_wi << std::endl;
+    if (is_empty()) {
+        std::cout << "empty" << std::endl;
+    }
 
-  if( is_empty() ) {
+    if (is_full()) {
+        std::cout << "full" << std::endl;
+    }
 
-    std::cout << "empty" << std::endl;
-
-  }
-
-  if( is_full() ) {
-
-    std::cout << "full" << std::endl;
-
-  }
-
-  std::cout << "Data : " << std::endl;
-  for( int i = 0; i < used(); i++ ) {
-
-    std::cout << peek_data( i ) << std::endl;
-
-  }
-
-
+    std::cout << "Data : " << std::endl;
+    for (int i = 0; i < used(); i++) {
+        std::cout << peek_data( i ) << std::endl;
+    }
 }
 
-template < typename T >
-circular_buffer<T>::circular_buffer( int size )
-  : m_size(size)
-  , m_buf(0)
+template <typename T>
+circular_buffer<T>::circular_buffer(int size) : m_size(size), m_buf(0)
 {
-  init();
-
+    init();
 }
 
-template < typename T >
+template <typename T>
 void
 circular_buffer<T>::clear()
 {
-  for( int i=0; i < used(); i++ ) {
-    buf_clear( m_buf, (m_ri + i) % m_size );
-  }
-  m_free = m_size;
-  m_used = m_ri = m_wi = 0;
+    for (int i = 0; i < used(); i++) {
+        buf_clear(m_buf, (m_ri + i) % m_size);
+    }
+    m_free = m_size;
+    m_used = m_ri = m_wi = 0;
 }
 
-template < typename T >
+template <typename T>
 circular_buffer<T>::~circular_buffer()
 {
-  clear();
-  buf_free( m_buf );
+    clear();
+    buf_free(m_buf);
 }
 
-template < typename T >
+template <typename T>
 void
-circular_buffer<T>::resize( int size )
+circular_buffer<T>::resize(int size)
 {
+    int i;
+    void *new_buf = buf_alloc(size);
 
-  int i;
-  void * new_buf = buf_alloc(size);
+    for (i = 0; i < size && i < used(); i++) {
+        buf_write(new_buf, i, peek_data(i));
+        buf_clear(m_buf, (m_ri + i) % m_size);
+    }
 
-  for( i = 0; i < size && i < used(); i++ ) {
+    buf_free(m_buf);
 
-    buf_write( new_buf, i, peek_data( i ) );
-    buf_clear( m_buf, (m_ri + i) % m_size );
+    m_size = size;
+    m_ri = 0;
+    m_wi = i % m_size;
+    m_used = i;
+    m_free = m_size - m_used;
 
-  }
-
-  buf_free( m_buf );
-
-  m_size = size;
-  m_ri   = 0;
-  m_wi   = i % m_size;
-  m_used = i;
-  m_free = m_size - m_used;
-
-  m_buf  = new_buf;
+    m_buf = new_buf;
 }
 
 
-template < typename T >
+template <typename T>
 void
-circular_buffer<T>::init() {
+circular_buffer<T>::init()
+{
+    if (m_size > 0) {
+        m_buf = buf_alloc(m_size);
+    }
 
-  if( m_size > 0 ) {
-    m_buf = buf_alloc( m_size );
-  }
-
-  m_free = m_size;
-  m_used = 0;
-  m_ri = 0;
-  m_wi = 0;
-
+    m_free = m_size;
+    m_used = 0;
+    m_ri = 0;
+    m_wi = 0;
 }
 
-template < typename T >
+template <typename T>
 T
 circular_buffer<T>::read()
 {
-  T t = read_data();
+    T t = read_data();
 
-  buf_clear( m_buf, m_ri );
-  increment_read_pos();
+    buf_clear(m_buf, m_ri);
+    increment_read_pos();
 
-  return t;
+    return t;
 }
 
-template < typename T >
+template <typename T>
 void
-circular_buffer<T>::write( const T &t )
+circular_buffer<T>::write(const T &t)
 {
-  buf_write( m_buf, m_wi, t );
-  increment_write_pos();
+    buf_write(m_buf, m_wi, t);
+    increment_write_pos();
 }
 
-
-template < typename T >
+template <typename T>
 void
-circular_buffer<T>::increment_write_pos( int i ) {
-
-  m_wi = ( m_wi + i ) % m_size;
-  m_used += i;
-  m_free -= i;
-
+circular_buffer<T>::increment_write_pos(int i)
+{
+    m_wi = (m_wi + i) % m_size;
+    m_used += i;
+    m_free -= i;
 }
 
-template < typename T >
+template <typename T>
 void
-circular_buffer<T>::increment_read_pos( int i ) {
-
-  m_ri = ( m_ri + i ) % m_size;
-  m_used -= i;
-  m_free += i;
-
+circular_buffer<T>::increment_read_pos(int i)
+{
+    m_ri = (m_ri + i) % m_size;
+    m_used -= i;
+    m_free += i;
 }
 
-template < typename T >
-inline void*
-circular_buffer<T>::buf_alloc( int size )
-    { return new unsigned char[ size * sizeof(T) ]; }
-
-template < typename T >
-inline void
-circular_buffer<T>::buf_free( void* & buf )
-    { delete [] static_cast<unsigned char*>(buf); buf = 0; }
-
-template < typename T >
-inline void
-circular_buffer<T>::buf_write( void* buf, int n, const T & t )
+template <typename T>
+inline void *
+circular_buffer<T>::buf_alloc(int size)
 {
-  T* p = static_cast<T*>(buf) + n;
-  new (p) T(t);
+    return new unsigned char [size * sizeof(T)];
 }
 
-template < typename T >
-inline T&
-circular_buffer<T>::buf_read( void* buf, int n ) const
+template <typename T>
+inline void
+circular_buffer<T>::buf_free(void *&buf)
 {
-  T* p = static_cast<T*>(buf) + n;
-  return *p;
+    delete [] static_cast<unsigned char *>(buf);
+    buf = nullptr;
 }
 
-template < typename T >
+template <typename T>
 inline void
-circular_buffer<T>::buf_clear( void* buf, int n )
+circular_buffer<T>::buf_write(void *buf, int n, const T &t)
 {
-  T* p = static_cast<T*>(buf) + n;
-  p->~T();
+    T *p = static_cast<T *>(buf) + n;
+    new (p)T(t);
+}
+
+template <typename T>
+inline T &
+circular_buffer<T>::buf_read(void *buf, int n) const
+{
+    T *p = static_cast<T *>(buf) + n;
+    return *p;
+}
+
+template <typename T>
+inline void
+circular_buffer<T>::buf_clear(void *buf, int n)
+{
+    T *p = static_cast<T *>(buf) + n;
+    p->~T();
 }
 
 } // namespace tlm
 
 #endif
-
+/* __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_CIRCULAR_BUFFER_H__ */

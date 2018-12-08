@@ -17,33 +17,33 @@
 
  *****************************************************************************/
 
-#include "tlm_core/tlm_2/tlm_quantum/tlm_global_quantum.h"
-#include "sysc/kernel/sc_simcontext.h" // sc_time_stamp
+#include <systemc>
+#include <tlm>
 
-namespace tlm {
+namespace tlm
+{
 
-tlm_global_quantum::tlm_global_quantum()
-  : m_global_quantum(sc_core::SC_ZERO_TIME)
+tlm_global_quantum::tlm_global_quantum() :
+    m_global_quantum(sc_core::SC_ZERO_TIME)
 {}
 
-
-tlm_global_quantum& tlm_global_quantum::instance()
+tlm_global_quantum &
+tlm_global_quantum::instance()
 {
-  static tlm_global_quantum instance_;
-  return instance_;
+    static tlm_global_quantum instance_;
+    return instance_;
 }
-
 
 sc_core::sc_time
 tlm_global_quantum::compute_local_quantum()
 {
-  if (m_global_quantum != sc_core::SC_ZERO_TIME) {
-    const sc_core::sc_time current = sc_core::sc_time_stamp();
-    const sc_core::sc_time g_quant = m_global_quantum;
-    return g_quant - (current % g_quant);
-  } else {
-    return sc_core::SC_ZERO_TIME;
-  }
+    if (m_global_quantum != sc_core::SC_ZERO_TIME) {
+        const sc_core::sc_time current = sc_core::sc_time_stamp();
+        const sc_core::sc_time g_quant = m_global_quantum;
+        return g_quant - (current % g_quant);
+    } else {
+        return sc_core::SC_ZERO_TIME;
+    }
 }
 
 } // namespace tlm

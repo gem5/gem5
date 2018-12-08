@@ -17,68 +17,70 @@
 
  *****************************************************************************/
 
-#include "tlm_utils/convenience_socket_bases.h"
+#include <tlm_utils/convenience_socket_bases.h>
 
-#include "sysc/kernel/sc_object.h"
-#include "sysc/kernel/sc_simcontext.h"
-#include "sysc/utils/sc_report.h"
 #include <sstream>
+#include <systemc>
 
-namespace tlm_utils {
+namespace tlm_utils
+{
 
 void
-convenience_socket_base::display_warning(const char* text) const
+convenience_socket_base::display_warning(const char *text) const
 {
-  std::stringstream s;
-  s << get_socket()->name() << ": " << text;
-  SC_REPORT_WARNING(get_report_type(), s.str().c_str());
-}
-
-void
-convenience_socket_base::display_error(const char* text) const
-{
-  std::stringstream s;
-  s << get_socket()->name() << ": " << text;
-  SC_REPORT_ERROR(get_report_type(), s.str().c_str());
-}
-
-//simple helpers for warnings an errors to shorten in code notation
-
-void
-convenience_socket_cb_holder::display_warning(const char* msg) const
-{
-  m_owner->display_warning(msg);
-}
-
-void
-convenience_socket_cb_holder::display_error(const char* msg) const
-{
-  m_owner->display_error(msg);
-}
-
-const char*
-simple_socket_base::get_report_type() const {
-  return "/OSCI_TLM-2/simple_socket";
-}
-
-void
-simple_socket_base::elaboration_check(const char* action) const
-{
-  if (sc_core::sc_get_curr_simcontext()->elaboration_done()) {
     std::stringstream s;
-    s << " elaboration completed, " << action << " not allowed";
-    display_error(s.str().c_str());
-  }
+    s << get_socket()->name() << ": " << text;
+    SC_REPORT_WARNING(get_report_type(), s.str().c_str());
 }
 
-const char*
-passthrough_socket_base::get_report_type() const {
-  return "/OSCI_TLM-2/passthrough_socket";
+void
+convenience_socket_base::display_error(const char *text) const
+{
+    std::stringstream s;
+    s << get_socket()->name() << ": " << text;
+    SC_REPORT_ERROR(get_report_type(), s.str().c_str());
 }
 
-const char*
-multi_socket_base::get_report_type() const {
-  return "/OSCI_TLM-2/multi_socket";
+// Simple helpers for warnings an errors to shorten in code notation.
+
+void
+convenience_socket_cb_holder::display_warning(const char *msg) const
+{
+    m_owner->display_warning(msg);
+}
+
+void
+convenience_socket_cb_holder::display_error(const char *msg) const
+{
+    m_owner->display_error(msg);
+}
+
+const char *
+simple_socket_base::get_report_type() const
+{
+    return "/OSCI_TLM-2/simple_socket";
+}
+
+void
+simple_socket_base::elaboration_check(const char *action) const
+{
+    if (sc_core::sc_get_curr_simcontext()->elaboration_done()) {
+        std::stringstream s;
+        s << " elaboration completed, " << action << " not allowed";
+        display_error(s.str().c_str());
+    }
+}
+
+const char *
+passthrough_socket_base::get_report_type() const
+{
+    return "/OSCI_TLM-2/passthrough_socket";
+}
+
+const char *
+multi_socket_base::get_report_type() const
+{
+    return "/OSCI_TLM-2/multi_socket";
 }
 
 } // namespace tlm_utils

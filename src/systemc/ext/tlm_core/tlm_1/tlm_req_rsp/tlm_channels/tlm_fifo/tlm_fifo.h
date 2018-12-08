@@ -17,8 +17,10 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_FIFO_H__
-#define __TLM_FIFO_H__
+#ifndef \
+    __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_TLM_FIFO_H__
+#define \
+    __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_TLM_FIFO_H__
 
 //
 // This implements put, get and peek
@@ -34,171 +36,147 @@
 // actual physical buffer.
 //
 
-//#include <systemc>
-
 #include "tlm_core/tlm_1/tlm_req_rsp/tlm_1_interfaces/tlm_fifo_ifs.h"
 #include "tlm_core/tlm_1/tlm_req_rsp/tlm_channels/tlm_fifo/circular_buffer.h"
 
-namespace tlm {
+namespace tlm
+{
 
 template <typename T>
-class tlm_fifo :
-  public virtual tlm_fifo_get_if<T>,
-  public virtual tlm_fifo_put_if<T>,
-  public sc_core::sc_prim_channel
+class tlm_fifo : public virtual tlm_fifo_get_if<T>,
+    public virtual tlm_fifo_put_if<T>, public sc_core::sc_prim_channel
 {
-public:
-
-    // constructors
-
-    explicit tlm_fifo( int size_ = 1 )
-      : sc_core::sc_prim_channel( sc_core::sc_gen_unique_name( "fifo" ) ) {
-
-      init( size_ );
-
+  public:
+    // Constructors.
+    explicit tlm_fifo(int size_=1) :
+        sc_core::sc_prim_channel(sc_core::sc_gen_unique_name("fifo"))
+    {
+        init(size_);
     }
 
-    explicit tlm_fifo( const char* name_, int size_ = 1 )
-      : sc_core::sc_prim_channel( name_ ) {
-
-      init( size_ );
-
+    explicit tlm_fifo(const char *name_, int size_=1) :
+        sc_core::sc_prim_channel(name_)
+    {
+        init(size_);
     }
 
-    // destructor
-
+    // Destructor..
     virtual ~tlm_fifo() {}
 
-    // tlm get interface
+    // Tlm get interface.
+    T get(tlm_tag<T> * =nullptr);
 
-    T get( tlm_tag<T> * = 0 );
-
-    bool nb_get( T& );
-    bool nb_can_get( tlm_tag<T> * = 0 ) const;
-    const sc_core::sc_event &ok_to_get( tlm_tag<T> * = 0 ) const {
-      return m_data_written_event;
+    bool nb_get(T &);
+    bool nb_can_get(tlm_tag<T> * =nullptr) const;
+    const sc_core::sc_event &
+    ok_to_get(tlm_tag<T> * =nullptr) const
+    {
+        return m_data_written_event;
     }
 
-    // tlm peek interface
+    // Tlm peek interface.
+    T peek(tlm_tag<T> * =nullptr) const;
 
-    T peek( tlm_tag<T> * = 0 ) const;
-
-    bool nb_peek( T& ) const;
-    bool nb_can_peek( tlm_tag<T> * = 0 ) const;
-    const sc_core::sc_event &ok_to_peek( tlm_tag<T> * = 0 ) const {
-      return m_data_written_event;
+    bool nb_peek(T &) const;
+    bool nb_can_peek(tlm_tag<T> * =nullptr) const;
+    const sc_core::sc_event &
+    ok_to_peek(tlm_tag<T> * =nullptr) const
+    {
+        return m_data_written_event;
     }
 
-    // tlm put interface
+    // Tlm put interface.
+    void put(const T &);
 
-    void put( const T& );
-
-    bool nb_put( const T& );
-    bool nb_can_put( tlm_tag<T> * = 0 ) const;
-
-    const sc_core::sc_event& ok_to_put( tlm_tag<T> * = 0 ) const {
-      return m_data_read_event;
+    bool nb_put(const T &);
+    bool nb_can_put(tlm_tag<T> * =nullptr) const;
+    const sc_core::sc_event &
+    ok_to_put(tlm_tag<T> * =nullptr) const
+    {
+        return m_data_read_event;
     }
 
-    // resize if
+    // Resize if.
+    void nb_expand(unsigned int n=1);
+    void nb_unbound(unsigned int n=16);
 
-    void nb_expand( unsigned int n = 1 );
-    void nb_unbound( unsigned int n = 16 );
+    bool nb_reduce(unsigned int n=1);
+    bool nb_bound(unsigned int n);
 
-    bool nb_reduce( unsigned int n = 1 );
-    bool nb_bound( unsigned int n );
+    // Debug interface.
+    bool nb_peek(T &, int n) const;
+    bool nb_poke(const T &, int n=0);
 
-    // debug interface
+    int used() const { return m_num_readable - m_num_read; }
+    int size() const { return m_size; }
 
-    bool nb_peek( T & , int n ) const;
-    bool nb_poke( const T & , int n = 0 );
+    void
+    debug() const
+    {
+        if (is_empty())
+            std::cout << "empty" << std::endl;
+        if (is_full())
+            std::cout << "full" << std::endl;
 
-    int used() const {
-      return m_num_readable - m_num_read;
+        std::cout << "size " << size() << " - " << used() << " used "
+                  << std::endl;
+        std::cout << "readable " << m_num_readable << std::endl;
+        std::cout << "written/read " << m_num_written << "/" << m_num_read
+                  << std::endl;
     }
 
-    int size() const {
-      return m_size;
+    // Support functions.
+    static const char * const kind_string;
+    const char *kind() const { return kind_string; }
+
+  protected:
+    sc_core::sc_event &
+    read_event(tlm_tag<T> * =nullptr)
+    {
+        return m_data_read_event;
     }
-
-    void debug() const {
-
-      if( is_empty() ) std::cout << "empty" << std::endl;
-      if( is_full() ) std::cout << "full" << std::endl;
-
-      std::cout << "size " << size() << " - " << used() << " used "
-                << std::endl;
-      std::cout << "readable " << m_num_readable
-                << std::endl;
-      std::cout << "written/read " << m_num_written << "/" << m_num_read
-                << std::endl;
-
-    }
-
-    // support functions
-
-    static const char* const kind_string;
-
-    const char* kind() const
-        { return kind_string; }
-
-
-protected:
-    sc_core::sc_event &read_event( tlm_tag<T> * = 0 ) {
-      return m_data_read_event;
-    }
-
-protected:
 
     void update();
-
-    // support methods
-
-    void init( int );
-
-protected:
+    void init(int);
 
     circular_buffer<T> buffer;
 
-    int m_size;                  // logical size of fifo
+    int m_size; // logical size of fifo
 
-    int m_num_readable;          // #samples readable
-    int m_num_read;          // #samples read during this delta cycle
-    int m_num_written;           // #samples written during this delta cycle
-    bool m_expand;               // has an expand occurred during this delta cycle ?
-    int m_num_read_no_notify;    // #samples read without notify during this delta cycle
+    int m_num_readable; // #samples readable
+    int m_num_read; // #samples read during this delta cycle
+    int m_num_written; // #samples written during this delta cycle
+    bool m_expand; // has an expand occurred during this delta cycle ?
+    // #samples read without notify during this delta cycle
+    int m_num_read_no_notify;
 
     sc_core::sc_event m_data_read_event;
     sc_core::sc_event m_data_written_event;
 
-private:
-
+  private:
     // disabled
-    tlm_fifo( const tlm_fifo<T>& );
-    tlm_fifo& operator = ( const tlm_fifo<T>& );
+    tlm_fifo(const tlm_fifo<T> &);
+    tlm_fifo &operator = (const tlm_fifo<T> &);
 
     //
     // use nb_can_get() and nb_can_put() rather than the following two
     // private functions
     //
 
-    bool is_empty() const {
-      return used() == 0;
-    }
+    bool is_empty() const { return used() == 0; }
 
-    bool is_full() const {
-      //return size() == m_num_readable + m_num_written; // Old buggy code
-      if( size() < 0 )
-        return false;
-      else
-        return size() <= m_num_readable + m_num_written;
+    bool
+    is_full() const
+    {
+        if (size() < 0)
+            return false;
+        else
+            return size() <= m_num_readable + m_num_written;
     }
-
 };
 
 template <typename T>
-const char* const tlm_fifo<T>::kind_string = "tlm_fifo";
-
+const char *const tlm_fifo<T>::kind_string = "tlm_fifo";
 
 /******************************************************************
 //
@@ -206,43 +184,36 @@ const char* const tlm_fifo<T>::kind_string = "tlm_fifo";
 //
 ******************************************************************/
 
-template< typename T >
-inline
-void
-tlm_fifo<T>::init( int size_ ) {
-
-  if( size_ > 0 ) {
-    buffer.resize( size_ );
-  }
-
-  else if( size_ < 0 ) {
-    buffer.resize( -size_ );
-  }
-
-  else {
-    buffer.resize( 16 );
-  }
-
-  m_size = size_;
-  m_num_readable = 0;
-  m_num_read = 0;
-  m_num_written = 0;
-  m_expand = false;
-  m_num_read_no_notify = false;
-
-}
-
-template < typename T>
-inline
-void
-tlm_fifo<T>::update()
+template <typename T>
+inline void
+tlm_fifo<T>::init(int size_)
 {
-    if( m_num_read > m_num_read_no_notify || m_expand ) {
-  m_data_read_event.notify( sc_core::SC_ZERO_TIME );
+    if (size_ > 0) {
+        buffer.resize( size_ );
+    } else if (size_ < 0) {
+        buffer.resize(-size_);
+    } else {
+        buffer.resize(16);
     }
 
-    if( m_num_written > 0 ) {
-  m_data_written_event.notify( sc_core::SC_ZERO_TIME );
+    m_size = size_;
+    m_num_readable = 0;
+    m_num_read = 0;
+    m_num_written = 0;
+    m_expand = false;
+    m_num_read_no_notify = false;
+}
+
+template <typename T>
+inline void
+tlm_fifo<T>::update()
+{
+    if (m_num_read > m_num_read_no_notify || m_expand) {
+        m_data_read_event.notify(sc_core::SC_ZERO_TIME);
+    }
+
+    if (m_num_written > 0) {
+        m_data_written_event.notify(sc_core::SC_ZERO_TIME);
     }
 
     m_expand = false;
@@ -250,7 +221,6 @@ tlm_fifo<T>::update()
     m_num_written = 0;
     m_num_readable = buffer.used();
     m_num_read_no_notify = 0;
-
 }
 
 } // namespace tlm
@@ -260,4 +230,4 @@ tlm_fifo<T>::update()
 #include "tlm_core/tlm_1/tlm_req_rsp/tlm_channels/tlm_fifo/tlm_fifo_resize.h"
 
 #endif
-
+/*__SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_TLM_FIFO_H__*/

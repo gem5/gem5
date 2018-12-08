@@ -17,8 +17,8 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_HEADER__
-#define __TLM_HEADER__
+#ifndef __SYSTEMC_EXT_TLM__
+#define __SYSTEMC_EXT_TLM__
 
 #include <systemc>    // main SystemC header
 
@@ -30,4 +30,4 @@
 #include "tlm_core/tlm_2/tlm_sockets/tlm_sockets.h"
 #include "tlm_core/tlm_2/tlm_quantum/tlm_quantum.h"
 
-#endif /* TLM_HEADER_INCLUDED_ */
+#endif /* __SYSTEMC_EXT_TLM__ */

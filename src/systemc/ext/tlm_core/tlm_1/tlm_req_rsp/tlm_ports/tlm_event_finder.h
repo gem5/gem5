@@ -17,60 +17,53 @@
 
  *****************************************************************************/
 
-#ifndef TLM_CORE_TLM_EVENT_FINDER_H_INCLUDED_
-#define TLM_CORE_TLM_EVENT_FINDER_H_INCLUDED_
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_PORTS_TLM_EVENT_FINDER_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_PORTS_TLM_EVENT_FINDER_H__
 
 #include "tlm_core/tlm_1/tlm_req_rsp/tlm_1_interfaces/tlm_tag.h"
 
-namespace tlm {
-
-template <class IF , class T>
-class tlm_event_finder_t
-  : public sc_core::sc_event_finder
+namespace tlm
 {
-public:
 
-    // constructor
+template <class IF, class T>
+class tlm_event_finder_t : public sc_core::sc_event_finder
+{
+  public:
+    tlm_event_finder_t(const sc_core::sc_port_base &port_,
+                       const sc_core::sc_event &(IF::*event_method_)(
+                           tlm_tag<T> *) const) :
+        sc_core::sc_event_finder(port_), m_event_method(event_method_)
+    {}
 
-    tlm_event_finder_t( const sc_core::sc_port_base& port_,
-                        const sc_core::sc_event& (IF::*event_method_) ( tlm_tag<T> * ) const )
-        : sc_core::sc_event_finder( port_ ), m_event_method( event_method_ )
-        {}
+    virtual ~tlm_event_finder_t() {}
 
-    // destructor (does nothing)
+    virtual const sc_core::sc_event &
+        find_event(sc_core::sc_interface *if_p=nullptr) const;
 
-    virtual ~tlm_event_finder_t()
-        {}
+  private:
+    const sc_core::sc_event &(IF::*m_event_method)(tlm_tag<T> *) const;
 
-    virtual const sc_core::sc_event& find_event( sc_core::sc_interface* if_p = 0 ) const;
-
-private:
-
-    const sc_core::sc_event& (IF::*m_event_method) ( tlm_tag<T> * ) const;
-
-private:
-
+  private:
     // disabled
     tlm_event_finder_t();
-    tlm_event_finder_t( const tlm_event_finder_t<IF,T>& );
-    tlm_event_finder_t<IF,T>& operator = ( const tlm_event_finder_t<IF,T>& );
+    tlm_event_finder_t(const tlm_event_finder_t<IF, T> &);
+    tlm_event_finder_t<IF, T> &operator = (const tlm_event_finder_t<IF, T> &);
 };
 
-
-template <class IF , class T>
-inline
-const sc_core::sc_event&
-tlm_event_finder_t<IF,T>::find_event( sc_core::sc_interface* if_p ) const
+template <class IF, class T>
+inline const sc_core::sc_event &
+tlm_event_finder_t<IF, T>::find_event(sc_core::sc_interface *if_p) const
 {
-    const IF* iface = ( if_p ) ? dynamic_cast<const IF*>( if_p ) :
-                                 dynamic_cast<const IF*>( port().get_interface() );
-    if( iface == 0 ) {
-        report_error( sc_core::SC_ID_FIND_EVENT_, "port is not bound" );
+    const IF *iface = if_p ? dynamic_cast<const IF *>(if_p) :
+        dynamic_cast<const IF *>(port().get_interface());
+    if (iface == nullptr) {
+        report_error(sc_core::SC_ID_FIND_EVENT_, "port is not bound");
         return sc_core::sc_event::none;
     }
-    return (const_cast<IF*>( iface )->*m_event_method) ( 0 );
+    return (const_cast<IF *>(iface)->*m_event_method)(nullptr);
 }
 
 } // namespace tlm
 
-#endif // TLM_CORE_TLM_EVENT_FINDER_H_INCLUDED_
+// __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_PORTS_TLM_EVENT_FINDER_H__
+#endif

@@ -17,26 +17,28 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_WRITE_IF_H__
-#define __TLM_WRITE_IF_H__
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_WRITE_IF_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_WRITE_IF_H__
 
 #include <systemc>
 
-namespace tlm {
+namespace tlm
+{
 
 template <typename T>
-class tlm_write_if : public virtual sc_core::sc_interface {
-public:
-  virtual void write(const T& t) = 0;
+class tlm_write_if : public virtual sc_core::sc_interface
+{
+  public:
+    virtual void write(const T &t) = 0;
 };
 
 template <typename T>
-class tlm_delayed_write_if : public virtual sc_core::sc_interface {
-public:
-  virtual void write(const T& t, const sc_core::sc_time& time) = 0;
+class tlm_delayed_write_if : public virtual sc_core::sc_interface
+{
+  public:
+    virtual void write(const T &t, const sc_core::sc_time &time) = 0;
 };
 
 } // namespace tlm
 
-
-#endif
+#endif /* __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_WRITE_IF_H__ */

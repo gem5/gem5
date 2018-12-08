@@ -17,23 +17,22 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_ANALYSIS_IF_H__
-#define __TLM_ANALYSIS_IF_H__
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_ANALYSIS_IF_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_ANALYSIS_IF_H__
 
 #include "tlm_core/tlm_1/tlm_analysis/tlm_write_if.h"
 
-namespace tlm {
+namespace tlm
+{
 
-template < typename T >
+template <typename T>
 class tlm_analysis_if : public virtual tlm_write_if<T>
-{
-};
+{};
 
-template < typename T >
+template <typename T>
 class tlm_delayed_analysis_if : public virtual tlm_delayed_write_if<T>
-{
-};
+{};
 
 } // namespace tlm
 
-#endif
+#endif /* __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_ANALYSIS_IF_H__ */

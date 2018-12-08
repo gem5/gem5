@@ -17,12 +17,13 @@
 
  *****************************************************************************/
 
-#ifndef TLM_CORE_TLM_BASE_SOCKET_IF_H_INCLUDED_
-#define TLM_CORE_TLM_BASE_SOCKET_IF_H_INCLUDED_
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_SOCKETS_TLM_BASE_SOCKET_IF_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_SOCKETS_TLM_BASE_SOCKET_IF_H__
 
-#include "sysc/utils/sc_typeindex.h"
+#include <systemc>
 
-namespace tlm {
+namespace tlm
+{
 
 enum tlm_socket_category
 {
@@ -38,19 +39,19 @@ enum tlm_socket_category
 
 class tlm_base_socket_if
 {
-public:
-  virtual sc_core::sc_port_base &         get_port_base() = 0;
-  virtual sc_core::sc_port_base const &   get_port_base() const = 0;
-  virtual sc_core::sc_export_base &       get_export_base() = 0;
-  virtual sc_core::sc_export_base const & get_export_base() const = 0;
-  virtual unsigned int                    get_bus_width() const = 0;
-  virtual sc_core::sc_type_index          get_protocol_types() const = 0;
-  virtual tlm_socket_category             get_socket_category() const = 0;
-  
-protected:
-  virtual ~tlm_base_socket_if() {}
+  public:
+    virtual sc_core::sc_port_base &get_port_base() = 0;
+    virtual sc_core::sc_port_base const &get_port_base() const = 0;
+    virtual sc_core::sc_export_base &get_export_base() = 0;
+    virtual sc_core::sc_export_base const &get_export_base() const = 0;
+    virtual unsigned int get_bus_width() const = 0;
+    virtual sc_core::sc_type_index get_protocol_types() const = 0;
+    virtual tlm_socket_category get_socket_category() const = 0;
+
+  protected:
+    virtual ~tlm_base_socket_if() {}
 };
 
 } // namespace tlm
 
-#endif // TLM_CORE_TLM_BASE_SOCKET_IF_H_INCLUDED_
+#endif // __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_SOCKETS_TLM_BASE_SOCKET_IF_H__

@@ -17,77 +17,67 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_FIFO_RESIZE_H__
-#define __TLM_FIFO_RESIZE_H__
+#ifndef \
+    __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_TLM_FIFO_RESIZE_H__
+#define \
+    __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_TLM_FIFO_RESIZE_H__
 
-/******************************************************************
-//
-// resize interface
-//
-******************************************************************/
+// Resize interface.
+namespace tlm
+{
 
-namespace tlm {
+template <typename T>
+inline void
+tlm_fifo<T>::nb_expand(unsigned int n)
+{
+    if (m_size >= 0) {
+        m_expand = true;
+        m_size += n;
+        request_update();
+    }
+}
 
-template < typename T>
-inline
-void
-tlm_fifo<T>::nb_expand( unsigned int n ) {
-
-  if( m_size >= 0 ) {
+template <typename T>
+inline void
+tlm_fifo<T>::nb_unbound(unsigned int n)
+{
     m_expand = true;
-    m_size += n;
+    m_size = -n;
+
+    if (buffer.size() < static_cast<int>(n)) {
+        buffer.resize(n);
+    }
+
     request_update();
-  }
 }
 
-template < typename T>
-inline
-void
-tlm_fifo<T>::nb_unbound( unsigned int n ) {
+template <typename T>
+inline bool
+tlm_fifo<T>::nb_reduce(unsigned int n)
+{
+    if (m_size < 0) {
+        return false;
+    }
 
-  m_expand = true;
-  m_size = -n;
-
-  if( buffer.size() < static_cast<int>( n ) ) {
-    buffer.resize( n );
-  }
-
-  request_update();
-
+    return nb_bound(size() - n);
 }
 
-template < typename T>
-inline
-bool
-tlm_fifo<T>::nb_reduce( unsigned int n ) {
+template <typename T>
+inline bool
+tlm_fifo<T>::nb_bound(unsigned int new_size)
+{
+    bool ret = true;
 
-  if( m_size < 0 ) {
-    return false;
-  }
+    if (static_cast<int>(new_size) < used()) {
+        new_size = used();
+        ret = false;
+    }
 
-  return nb_bound( size() - n );
-
-}
-
-template < typename T>
-inline
-bool
-tlm_fifo<T>::nb_bound( unsigned int new_size ) {
-
-  bool ret = true;
-
-  if( static_cast<int>( new_size ) < used() ) {
-
-    new_size = used();
-    ret = false;
-
-  }
-
-  m_size = new_size;
-  return ret;
-
+    m_size = new_size;
+    return ret;
 }
 
 } // namespace tlm
 
 #endif
+/* __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_CHANNELS_TLM_FIFO_TLM_FIFO_RESIZE_H__ */

@@ -16,62 +16,73 @@
   permissions and limitations under the License.
 
  *****************************************************************************/
-#ifndef TLM_UTILS_CONVENIENCE_SOCKET_BASES_H_INCLUDED_
-#define TLM_UTILS_CONVENIENCE_SOCKET_BASES_H_INCLUDED_
+#ifndef __SYSTEMC_EXT_TLM_UTILS_CONVENIENCE_SOCKET_BASES_H__
+#define __SYSTEMC_EXT_TLM_UTILS_CONVENIENCE_SOCKET_BASES_H__
 
-#include <sysc/kernel/sc_cmnhdr.h>
+#include <systemc>
 
-namespace sc_core { class SC_API sc_object; }
-
-namespace tlm_utils {
-
-// implementation-defined base class helper for convenience sockets
-class SC_API convenience_socket_base
+namespace sc_core
 {
-public:
-  void display_warning(const char* msg) const;
-  void display_error(const char* msg) const;
-protected:
-  virtual ~convenience_socket_base(){}
-private:
-  virtual const char* get_report_type() const = 0;
-  virtual const sc_core::sc_object* get_socket() const = 0;
+
+class sc_object;
+
+} // namespace sc_core
+
+namespace tlm_utils
+{
+
+// Implementation-defined base class helper for convenience sockets.
+class convenience_socket_base
+{
+  public:
+    void display_warning(const char *msg) const;
+    void display_error(const char *msg) const;
+
+  protected:
+    virtual ~convenience_socket_base() {}
+
+  private:
+    virtual const char *get_report_type() const = 0;
+    virtual const sc_core::sc_object *get_socket() const = 0;
 };
 
-// implementation-defined base class helper for simple sockets
-class SC_API simple_socket_base : public convenience_socket_base
+// Implementation-defined base class helper for simple sockets.
+class simple_socket_base : public convenience_socket_base
 {
-  virtual const char* get_report_type() const;
-protected:
-  void elaboration_check(const char* action) const;
+    virtual const char *get_report_type() const;
+
+  protected:
+    void elaboration_check(const char *action) const;
 };
 
-// implementation-defined base class helper for passthrough sockets
-class SC_API passthrough_socket_base : public convenience_socket_base
+// Implementation-defined base class helper for passthrough sockets.
+class passthrough_socket_base : public convenience_socket_base
 {
-  virtual const char* get_report_type() const;
+    virtual const char *get_report_type() const;
 };
 
-// implementation-defined base class helper for multi sockets
-class SC_API multi_socket_base : public convenience_socket_base
+// Implementation-defined base class helper for multi sockets.
+class multi_socket_base : public convenience_socket_base
 {
-  virtual const char* get_report_type() const;
+    virtual const char *get_report_type() const;
 };
 
-// implementation-defined base class for callback helpers
-class SC_API convenience_socket_cb_holder
+// Implementation-defined base class for callback helpers.
+class convenience_socket_cb_holder
 {
-public:
-  void display_warning(const char* msg) const;
-  void display_error(const char* msg) const;
+  public:
+    void display_warning(const char *msg) const;
+    void display_error(const char *msg) const;
 
-protected:
-  explicit convenience_socket_cb_holder(convenience_socket_base* owner)
-    : m_owner(owner) {}
+  protected:
+    explicit convenience_socket_cb_holder(convenience_socket_base *owner) :
+        m_owner(owner)
+    {}
 
-private:
-  convenience_socket_base* m_owner;
+  private:
+    convenience_socket_base *m_owner;
 };
 
 } // namespace tlm_utils
-#endif // TLM_UTILS_CONVENIENCE_SOCKET_BASES_H_INCLUDED_
+
+#endif /* __SYSTEMC_EXT_TLM_UTILS_CONVENIENCE_SOCKET_BASES_H__ */

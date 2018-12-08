@@ -17,64 +17,54 @@
 
  *****************************************************************************/
 
-/* ---------------------------------------------------------------------------------------
- @file tlm_helpers.h
- 
- @brief
- 
-  Original Authors:
-    Charles Wilson, ESLX
-    
---------------------------------------------------------------------------------------- */
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_GENERIC_PAYLOAD_TLM_HELPERS_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_GENERIC_PAYLOAD_TLM_HELPERS_H__
 
-#ifndef __TLM_HELPERS_H__
-#define __TLM_HELPERS_H__
-
-//#include <sys/param.h>
-//#include <cstring>
-
-namespace tlm {
+namespace tlm
+{
 
 enum tlm_endianness { TLM_UNKNOWN_ENDIAN, TLM_LITTLE_ENDIAN, TLM_BIG_ENDIAN };
 
-inline tlm_endianness get_host_endianness(void)
+inline tlm_endianness
+get_host_endianness()
 {
-  static tlm_endianness host_endianness = TLM_UNKNOWN_ENDIAN;
-  
-  if (host_endianness == TLM_UNKNOWN_ENDIAN) {
-    unsigned int number = 1;
-    unsigned char *p_msb_or_lsb = (unsigned char*)&number;
+    static tlm_endianness host_endianness = TLM_UNKNOWN_ENDIAN;
 
-    host_endianness = (p_msb_or_lsb[0] == 0) ? TLM_BIG_ENDIAN : TLM_LITTLE_ENDIAN;
-  }
-  return host_endianness;
+    if (host_endianness == TLM_UNKNOWN_ENDIAN) {
+        unsigned int number = 1;
+        unsigned char *p_msb_or_lsb = (unsigned char *)&number;
+        host_endianness = (p_msb_or_lsb[0] == 0) ?
+            TLM_BIG_ENDIAN : TLM_LITTLE_ENDIAN;
+    }
+    return host_endianness;
 }
 
-inline bool host_has_little_endianness(void)
+inline bool
+host_has_little_endianness()
 {
-  static tlm_endianness host_endianness = TLM_UNKNOWN_ENDIAN;
-  static bool host_little_endian = false;
-  
-  if (host_endianness == TLM_UNKNOWN_ENDIAN) {
-    unsigned int number = 1;
-    unsigned char *p_msb_or_lsb = (unsigned char*)&number;
+    static tlm_endianness host_endianness = TLM_UNKNOWN_ENDIAN;
+    static bool host_little_endian = false;
 
-    host_little_endian = (p_msb_or_lsb[0] == 0) ? false : true;
-  }
+    if (host_endianness == TLM_UNKNOWN_ENDIAN) {
+        unsigned int number = 1;
+        unsigned char *p_msb_or_lsb = (unsigned char *)&number;
 
-  return host_little_endian;
+        host_little_endian = (p_msb_or_lsb[0] == 0) ? false : true;
+    }
+
+    return host_little_endian;
 }
 
-inline bool has_host_endianness(tlm_endianness endianness)
+inline bool
+has_host_endianness(tlm_endianness endianness)
 {
-  if (host_has_little_endianness()) {
-    return endianness == TLM_LITTLE_ENDIAN;
-
-  } else {
-    return endianness == TLM_BIG_ENDIAN;
-  }
-} 
+    if (host_has_little_endianness()) {
+        return endianness == TLM_LITTLE_ENDIAN;
+    } else {
+        return endianness == TLM_BIG_ENDIAN;
+    }
+}
 
 } // namespace tlm
 
-#endif /* __TLM_HELPERS_H__ */
+#endif /* __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_GENERIC_PAYLOAD_TLM_HELPERS_H__ */

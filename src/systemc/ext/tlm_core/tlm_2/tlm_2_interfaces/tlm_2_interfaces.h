@@ -17,11 +17,10 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_2_INTERFACES_H__
-#define __TLM_2_INTERFACES_H__
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_2_INTERFACES_TLM_2_INTERFACES_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_2_INTERFACES_TLM_2_INTERFACES_H__
 
 #include "tlm_core/tlm_2/tlm_2_interfaces/tlm_dmi.h"
 #include "tlm_core/tlm_2/tlm_2_interfaces/tlm_fw_bw_ifs.h"
 
-#endif
-
+#endif /* __SYSTEMC_EXT_TLM_CORE_TLM_2_INTERFACES_TLM_2_INTERFACES_H__ */

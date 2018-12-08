@@ -17,57 +17,62 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_MASTER_SLAVE_IFS_H__
-#define __TLM_MASTER_SLAVE_IFS_H__
+#ifndef \
+    __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_1_INTERFACES_TLM_MASTER_SLAVE_IFS_H__
+#define \
+    __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_1_INTERFACES_TLM_MASTER_SLAVE_IFS_H__
 
 #include "tlm_core/tlm_1/tlm_req_rsp/tlm_1_interfaces/tlm_core_ifs.h"
 
-namespace tlm {
+namespace tlm
+{
 
 //
 // req/rsp combined interfaces
 //
 
-// blocking
-
-template < typename REQ , typename RSP>
+// Blocking.
+template <typename REQ, typename RSP>
 class tlm_blocking_master_if :
-  public virtual tlm_blocking_put_if< REQ > ,
-  public virtual tlm_blocking_get_peek_if< RSP > {};
+    public virtual tlm_blocking_put_if<REQ>,
+    public virtual tlm_blocking_get_peek_if<RSP>
+{};
 
-template < typename REQ , typename RSP>
+template <typename REQ, typename RSP>
 class tlm_blocking_slave_if :
-  public virtual tlm_blocking_put_if< RSP > ,
-  public virtual tlm_blocking_get_peek_if< REQ > {};
+    public virtual tlm_blocking_put_if<RSP>,
+    public virtual tlm_blocking_get_peek_if<REQ>
+{};
 
-// nonblocking
-
-template < typename REQ , typename RSP >
+// Nonblocking.
+template <typename REQ, typename RSP>
 class tlm_nonblocking_master_if :
-  public virtual tlm_nonblocking_put_if< REQ > ,
-  public virtual tlm_nonblocking_get_peek_if< RSP > {};
+    public virtual tlm_nonblocking_put_if<REQ>,
+    public virtual tlm_nonblocking_get_peek_if<RSP>
+{};
 
-template < typename REQ , typename RSP >
+template <typename REQ, typename RSP>
 class tlm_nonblocking_slave_if :
-  public virtual tlm_nonblocking_put_if< RSP > ,
-  public virtual tlm_nonblocking_get_peek_if< REQ > {};
+    public virtual tlm_nonblocking_put_if<RSP>,
+    public virtual tlm_nonblocking_get_peek_if<REQ>
+{};
 
-// combined
+// Combined.
+template <typename REQ, typename RSP>
+class tlm_master_if : public virtual tlm_put_if<REQ>,
+    public virtual tlm_get_peek_if<RSP> ,
+    public virtual tlm_blocking_master_if<REQ, RSP>,
+    public virtual tlm_nonblocking_master_if<REQ, RSP>
+{};
 
-template < typename REQ , typename RSP >
-class tlm_master_if :
-  public virtual tlm_put_if< REQ > ,
-  public virtual tlm_get_peek_if< RSP > ,
-  public virtual tlm_blocking_master_if< REQ , RSP > ,
-  public virtual tlm_nonblocking_master_if< REQ , RSP > {};
-
-template < typename REQ , typename RSP >
-class tlm_slave_if :
-  public virtual tlm_put_if< RSP > ,
-  public virtual tlm_get_peek_if< REQ > ,
-  public virtual tlm_blocking_slave_if< REQ , RSP > ,
-  public virtual tlm_nonblocking_slave_if< REQ , RSP > {};
+template <typename REQ, typename RSP>
+class tlm_slave_if : public virtual tlm_put_if<RSP>,
+    public virtual tlm_get_peek_if<REQ>,
+    public virtual tlm_blocking_slave_if<REQ, RSP>,
+    public virtual tlm_nonblocking_slave_if<REQ, RSP>
+{};
 
 } // namespace tlm
 
 #endif
+/* __TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_1_INTERFACES_TLM_MASTER_SLAVE_IFS_H__ */

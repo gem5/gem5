@@ -17,43 +17,43 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_FW_BW_IFS_H__
-#define __TLM_FW_BW_IFS_H__
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_2_INTERFACES_TLM_FW_BW_IFS_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_2_INTERFACES_TLM_FW_BW_IFS_H__
 
 #include <systemc>
-#include "tlm_core/tlm_2/tlm_generic_payload/tlm_generic_payload.h"
-#include "tlm_core/tlm_2/tlm_2_interfaces/tlm_dmi.h"
 
-namespace tlm {
+#include "tlm_core/tlm_2/tlm_2_interfaces/tlm_dmi.h"
+#include "tlm_core/tlm_2/tlm_generic_payload/tlm_generic_payload.h"
+
+namespace tlm
+{
 
 enum tlm_sync_enum { TLM_ACCEPTED, TLM_UPDATED, TLM_COMPLETED };
 
 ////////////////////////////////////////////////////////////////////////////
 // Basic interfaces
 ////////////////////////////////////////////////////////////////////////////
-template <typename TRANS = tlm_generic_payload,
-          typename PHASE = tlm_phase>
-class tlm_fw_nonblocking_transport_if : public virtual sc_core::sc_interface {
-public:
-  virtual tlm_sync_enum nb_transport_fw(TRANS& trans,
-                                        PHASE& phase,
-                                        sc_core::sc_time& t) = 0;
+template <typename TRANS=tlm_generic_payload, typename PHASE=tlm_phase>
+class tlm_fw_nonblocking_transport_if : public virtual sc_core::sc_interface
+{
+  public:
+    virtual tlm_sync_enum nb_transport_fw(TRANS &trans, PHASE &phase,
+                                          sc_core::sc_time& t) = 0;
 };
 
-template <typename TRANS = tlm_generic_payload,
-          typename PHASE = tlm_phase>
-class tlm_bw_nonblocking_transport_if : public virtual sc_core::sc_interface {
-public:
-  virtual tlm_sync_enum nb_transport_bw(TRANS& trans,
-                                        PHASE& phase,
-                                        sc_core::sc_time& t) = 0;
+template <typename TRANS=tlm_generic_payload, typename PHASE=tlm_phase>
+class tlm_bw_nonblocking_transport_if : public virtual sc_core::sc_interface
+{
+  public:
+    virtual tlm_sync_enum nb_transport_bw(TRANS &trans, PHASE &phase,
+                                          sc_core::sc_time &t) = 0;
 };
 
-template <typename TRANS = tlm_generic_payload>
-class tlm_blocking_transport_if : public virtual sc_core::sc_interface {
-public:
-  virtual void b_transport(TRANS& trans,
-                           sc_core::sc_time& t) = 0;
+template <typename TRANS=tlm_generic_payload>
+class tlm_blocking_transport_if : public virtual sc_core::sc_interface
+{
+  public:
+    virtual void b_transport(TRANS &trans, sc_core::sc_time &t) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -115,12 +115,11 @@ public:
 // required to set the DMI hint to true if a DMI request on the given address
 // with the given transaction type (read or write) would have succeeded.
 
-template <typename TRANS = tlm_generic_payload>
+template <typename TRANS=tlm_generic_payload>
 class tlm_fw_direct_mem_if : public virtual sc_core::sc_interface
 {
-public:
-  virtual bool get_direct_mem_ptr(TRANS& trans,
-                                  tlm_dmi&  dmi_data) = 0;
+  public:
+    virtual bool get_direct_mem_ptr(TRANS &trans, tlm_dmi &dmi_data) = 0;
 };
 
 // The semantics of the backwards call is as follows:
@@ -152,9 +151,9 @@ public:
 //
 class tlm_bw_direct_mem_if : public virtual sc_core::sc_interface
 {
-public:
-  virtual void invalidate_direct_mem_ptr(sc_dt::uint64 start_range,
-                                         sc_dt::uint64 end_range) = 0;
+  public:
+    virtual void invalidate_direct_mem_ptr(sc_dt::uint64 start_range,
+                                           sc_dt::uint64 end_range) = 0;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -181,13 +180,13 @@ public:
 //   this number must be <= num_bytes. Thus, a target can safely return 0 if it
 //   does not support debug transactions.
 //
-template <typename TRANS = tlm_generic_payload>
+template <typename TRANS=tlm_generic_payload>
 class tlm_transport_dbg_if : public virtual sc_core::sc_interface
 {
-public:
-  // The return value of defines the number of bytes successfully
-  // transferred.
-  virtual unsigned int transport_dbg(TRANS& trans) = 0;
+  public:
+    // The return value of defines the number of bytes successfully
+    // transferred.
+    virtual unsigned int transport_dbg(TRANS &trans) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -196,28 +195,28 @@ public:
 
 struct tlm_base_protocol_types
 {
-  typedef tlm_generic_payload tlm_payload_type;
-  typedef tlm_phase tlm_phase_type;
+    typedef tlm_generic_payload tlm_payload_type;
+    typedef tlm_phase tlm_phase_type;
 };
 
 // The forward interface:
-template <typename TYPES = tlm_base_protocol_types>
-class tlm_fw_transport_if
-  : public virtual tlm_fw_nonblocking_transport_if<typename TYPES::tlm_payload_type,
-                                                   typename TYPES::tlm_phase_type>
-  , public virtual tlm_blocking_transport_if<typename TYPES::tlm_payload_type>
-  , public virtual tlm_fw_direct_mem_if<typename TYPES::tlm_payload_type>
-  , public virtual tlm_transport_dbg_if<typename TYPES::tlm_payload_type>
+template <typename TYPES=tlm_base_protocol_types>
+class tlm_fw_transport_if :
+    public virtual tlm_fw_nonblocking_transport_if<
+        typename TYPES::tlm_payload_type, typename TYPES::tlm_phase_type>,
+    public virtual tlm_blocking_transport_if<typename TYPES::tlm_payload_type>,
+    public virtual tlm_fw_direct_mem_if<typename TYPES::tlm_payload_type>,
+    public virtual tlm_transport_dbg_if<typename TYPES::tlm_payload_type>
 {};
 
 // The backward interface:
-template <typename TYPES = tlm_base_protocol_types>
-class tlm_bw_transport_if
-  : public virtual tlm_bw_nonblocking_transport_if<typename TYPES::tlm_payload_type,
-                                                   typename TYPES::tlm_phase_type>
-  , public virtual tlm_bw_direct_mem_if
+template <typename TYPES=tlm_base_protocol_types>
+class tlm_bw_transport_if :
+    public virtual tlm_bw_nonblocking_transport_if<
+        typename TYPES::tlm_payload_type, typename TYPES::tlm_phase_type>,
+    public virtual tlm_bw_direct_mem_if
 {};
 
 } // namespace tlm
 
-#endif /* __TLM_FW_BW_IFS_H__ */
+#endif /* __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_2_INTERFACES_TLM_FW_BW_IFS_H__ */

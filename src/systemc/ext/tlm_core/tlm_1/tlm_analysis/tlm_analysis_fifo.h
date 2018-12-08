@@ -17,38 +17,30 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_ANALYSIS_FIFO_H__
-#define __TLM_ANALYSIS_FIFO_H__
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_ANALYSIS_FIFO_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_ANALYSIS_FIFO_H__
 
-#include "tlm_core/tlm_1/tlm_req_rsp/tlm_channels/tlm_fifo/tlm_fifo.h"
 #include "tlm_core/tlm_1/tlm_analysis/tlm_analysis_if.h"
 #include "tlm_core/tlm_1/tlm_analysis/tlm_analysis_triple.h"
+#include "tlm_core/tlm_1/tlm_req_rsp/tlm_channels/tlm_fifo/tlm_fifo.h"
 
-namespace tlm {
+namespace tlm
+{
 
-template< typename T >
-class tlm_analysis_fifo :
-  public tlm_fifo< T > ,
-  public virtual tlm_analysis_if< T > ,
-  public virtual tlm_analysis_if< tlm_analysis_triple< T > > {
+template <typename T>
+class tlm_analysis_fifo : public tlm_fifo<T>,
+    public virtual tlm_analysis_if<T>,
+    public virtual tlm_analysis_if<tlm_analysis_triple<T>>
+{
+  public:
+    // analysis fifo is an unbounded tlm_fifo
+    tlm_analysis_fifo(const char *nm) : tlm_fifo<T>(nm, -16) {}
+    tlm_analysis_fifo() : tlm_fifo<T>(-16) {}
 
- public:
-
- // analysis fifo is an unbounded tlm_fifo
-
-  tlm_analysis_fifo( const char *nm ) : tlm_fifo<T>( nm , -16 ) {}
-  tlm_analysis_fifo() : tlm_fifo<T>( -16 ) {}
-
-  void write( const tlm_analysis_triple<T> &t ) {
-    nb_put( t );
-  }
-
-  void write( const T &t ) {
-    nb_put( t );
-  }
-
+    void write(const tlm_analysis_triple<T> &t) { nb_put(t); }
+    void write(const T &t) { nb_put(t); }
 };
 
 } // namespace tlm
 
-#endif
+#endif /* __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_ANALYSIS_TLM_ANALYSIS_FIFO_H__ */

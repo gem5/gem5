@@ -17,15 +17,17 @@
 
  *****************************************************************************/
 
-//
-// Note to the LRM writer : This is part of the core TLM standard
-//
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_1_INTERFACES_TLM_TAG_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_1_INTERFACES_TLM_TAG_H__
 
-#ifndef __TLM_TAG_H__
-#define __TLM_TAG_H__
+namespace tlm
+{
 
-namespace tlm {
-template<class  T> class tlm_tag {};
+template <class T>
+class tlm_tag
+{};
+
 }
 
 #endif
+/* __SYSTEMC_EXT_TLM_CORE_TLM_1_TLM_REQ_RSP_TLM_1_INTERFACES_TLM_TAG_H__ */

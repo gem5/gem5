@@ -17,13 +17,12 @@
 
  *****************************************************************************/
 
-#ifndef __TLM_GENERIC_PAYLOAD_H__
-#define __TLM_GENERIC_PAYLOAD_H__
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_GENERIC_TLM_GENERIC_PAYLOAD_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_GENERIC_TLM_GENERIC_PAYLOAD_H__
 
+#include "tlm_core/tlm_2/tlm_generic_payload/tlm_endian_conv.h"
+#include "tlm_core/tlm_2/tlm_generic_payload/tlm_gp.h"
 #include "tlm_core/tlm_2/tlm_generic_payload/tlm_helpers.h"
 #include "tlm_core/tlm_2/tlm_generic_payload/tlm_phase.h"
-#include "tlm_core/tlm_2/tlm_generic_payload/tlm_gp.h"
-#include "tlm_core/tlm_2/tlm_generic_payload/tlm_endian_conv.h"
 
-#endif
-
+#endif /* __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_GENERIC_TLM_GENERIC_PAYLOAD_H__ */

@@ -17,239 +17,207 @@
 
  *****************************************************************************/
 
-#ifndef TLM_CORE_TLM_TARGET_SOCKET_H_INCLUDED_
-#define TLM_CORE_TLM_TARGET_SOCKET_H_INCLUDED_
+#ifndef __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_SOCKETS_TLM_TARGET_SOCKET_H__
+#define __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_SOCKETS_TLM_TARGET_SOCKET_H__
 
 #include "tlm_core/tlm_2/tlm_sockets/tlm_base_socket_if.h"
 #include "tlm_core/tlm_2/tlm_2_interfaces/tlm_fw_bw_ifs.h"
 
+namespace tlm
+{
 
-namespace tlm {
-
-template <unsigned int BUSWIDTH = 32,
-          typename FW_IF = tlm_fw_transport_if<>,
-          typename BW_IF = tlm_bw_transport_if<> >
+template <unsigned int BUSWIDTH=32, typename FW_IF=tlm_fw_transport_if<>,
+          typename BW_IF=tlm_bw_transport_if<>>
 class tlm_base_target_socket_b
 {
-public:
-  virtual ~tlm_base_target_socket_b() {}
+  public:
+    virtual ~tlm_base_target_socket_b() {}
 
-  virtual sc_core::sc_port_b<BW_IF> & get_base_port() = 0;
-  virtual sc_core::sc_export<FW_IF> & get_base_export() = 0;
-  virtual                    FW_IF  & get_base_interface() = 0;
+    virtual sc_core::sc_port_b<BW_IF> &get_base_port() = 0;
+    virtual sc_core::sc_export<FW_IF> &get_base_export() = 0;
+    virtual FW_IF &get_base_interface() = 0;
 };
 
-template <unsigned int BUSWIDTH,
-          typename FW_IF,
-          typename BW_IF> class tlm_base_initiator_socket_b;
+template <unsigned int BUSWIDTH, typename FW_IF, typename BW_IF>
+class tlm_base_initiator_socket_b;
 
-template <unsigned int BUSWIDTH,
-          typename FW_IF,
-          typename BW_IF,
-          int N,
-          sc_core::sc_port_policy POL> class tlm_base_initiator_socket;
+template <unsigned int BUSWIDTH, typename FW_IF, typename BW_IF, int N,
+          sc_core::sc_port_policy POL>
+class tlm_base_initiator_socket;
 
-template <unsigned int BUSWIDTH = 32,
-          typename FW_IF = tlm_fw_transport_if<>,
-          typename BW_IF = tlm_bw_transport_if<>,
-          int N = 1,
-          sc_core::sc_port_policy POL = sc_core::SC_ONE_OR_MORE_BOUND>
-class tlm_base_target_socket : public tlm_base_socket_if,
-                               public tlm_base_target_socket_b<BUSWIDTH, FW_IF, BW_IF>,
-                               public sc_core::sc_export<FW_IF>
+template <unsigned int BUSWIDTH=32, typename FW_IF=tlm_fw_transport_if<>,
+          typename BW_IF=tlm_bw_transport_if<>, int N=1,
+          sc_core::sc_port_policy POL=sc_core::SC_ONE_OR_MORE_BOUND>
+class tlm_base_target_socket :
+    public tlm_base_socket_if,
+    public tlm_base_target_socket_b<BUSWIDTH, FW_IF, BW_IF>,
+    public sc_core::sc_export<FW_IF>
 {
-public:
-  typedef FW_IF fw_interface_type;
-  typedef BW_IF bw_interface_type;
-  typedef sc_core::sc_port<bw_interface_type, N , POL> port_type;
+  public:
+    typedef FW_IF fw_interface_type;
+    typedef BW_IF bw_interface_type;
+    typedef sc_core::sc_port<bw_interface_type, N, POL> port_type;
 
-  typedef sc_core::sc_export<fw_interface_type> export_type;
-  typedef tlm_base_initiator_socket_b<BUSWIDTH,
-                                      fw_interface_type,
-                                      bw_interface_type>  base_initiator_socket_type;
+    typedef sc_core::sc_export<fw_interface_type> export_type;
+    typedef tlm_base_initiator_socket_b<
+        BUSWIDTH, fw_interface_type, bw_interface_type>
+        base_initiator_socket_type;
 
-  typedef tlm_base_target_socket_b<BUSWIDTH,
-                                   fw_interface_type,
-                                   bw_interface_type> base_type;
+    typedef tlm_base_target_socket_b<
+        BUSWIDTH, fw_interface_type, bw_interface_type> base_type;
 
-  template <unsigned int, typename, typename, int, sc_core::sc_port_policy>
-  friend class tlm_base_initiator_socket;
+    template <unsigned int, typename, typename, int, sc_core::sc_port_policy>
+    friend class tlm_base_initiator_socket;
 
-public:
-  tlm_base_target_socket()
-  : export_type(sc_core::sc_gen_unique_name("tlm_base_target_socket"))
-  , m_port(sc_core::sc_gen_unique_name("tlm_base_target_socket_port"))
-  {
-  }
+  public:
+    tlm_base_target_socket() :
+        export_type(sc_core::sc_gen_unique_name("tlm_base_target_socket")),
+        m_port(sc_core::sc_gen_unique_name("tlm_base_target_socket_port"))
+    {}
 
-  explicit tlm_base_target_socket(const char* name)
-  : export_type(name)
-  , m_port(sc_core::sc_gen_unique_name((std::string(name) + "_port").c_str()))
-  {
-  }
+    explicit tlm_base_target_socket(const char *name) :
+        export_type(name), m_port(sc_core::sc_gen_unique_name(
+                    (std::string(name) + "_port").c_str()))
+    {}
 
-  virtual const char* kind() const
-  {
-    return "tlm_base_target_socket";
-  }
+    virtual const char *kind() const { return "tlm_base_target_socket"; }
 
-  //
-  // Bind target socket to initiator socket
-  // - Binds the port of the initiator socket to the export of the target
-  //   socket
-  // - Binds the port of the target socket to the export of the initiator
-  //   socket
-  //
-  virtual void bind(base_initiator_socket_type& s)
-  {
-    // initiator.port -> target.export
-    (s.get_base_port())(get_base_interface());
-    // target.port -> initiator.export
-    get_base_port()(s.get_base_interface());
-  }
-
-  void operator() (base_initiator_socket_type& s)
-  {
-    bind(s);
-  }
-
-  //
-  // Bind target socket to target socket (hierarchical bind)
-  // - Binds both the export and the port
-  //
-  virtual void bind(base_type& s)
-  {
-    // export
-    (get_base_export())(s.get_base_export());
-    // port
-    (s.get_base_port())(get_base_port());
-  }
-
-  void operator() (base_type& s)
-  {
-    bind(s);
-  }
-
-  //
-  // Bind interface to socket
-  // - Binds the interface to the export
-  //
-  virtual void bind(fw_interface_type& ifs)
-  {
-    export_type* exp = &get_base_export();
-    if( this == exp ) {
-      export_type::bind( ifs ); // non-virtual function call
-    } else {
-      exp->bind( ifs );
+    //
+    // Bind target socket to initiator socket
+    // - Binds the port of the initiator socket to the export of the target
+    //   socket
+    // - Binds the port of the target socket to the export of the initiator
+    //   socket
+    //
+    virtual void
+    bind(base_initiator_socket_type &s)
+    {
+        // initiator.port -> target.export
+        (s.get_base_port())(get_base_interface());
+        // target.port -> initiator.export
+        get_base_port()(s.get_base_interface());
     }
-  }
 
-  void operator() (fw_interface_type& s)
-  {
-    bind(s);
-  }
+    void operator () (base_initiator_socket_type &s) { bind(s); }
 
-  //
-  // Forward to 'size()' of port class
-  //
-  int size() const
-  {
-    return m_port.size();
-  }
+    //
+    // Bind target socket to target socket (hierarchical bind)
+    // - Binds both the export and the port
+    //
+    virtual void
+    bind(base_type &s)
+    {
+        // export
+        (get_base_export())(s.get_base_export());
+        // port
+        (s.get_base_port())(get_base_port());
+    }
 
-  //
-  // Forward to 'operator->()' of port class
-  //
-  bw_interface_type* operator->()
-  {
-    return m_port.operator->();
-  }
+    void operator () (base_type &s) { bind(s); }
 
-  //
-  // Forward to 'operator[]()' of port class
-  //
-  bw_interface_type* operator[](int i)
-  {
-    return m_port.operator[](i);
-  }
+    //
+    // Bind interface to socket
+    // - Binds the interface to the export
+    //
+    virtual void
+    bind(fw_interface_type &ifs)
+    {
+        export_type *exp = &get_base_export();
+        if (this == exp) {
+            export_type::bind(ifs);
+        } else {
+            exp->bind( ifs );
+        }
+    }
 
-  // Implementation of tlm_base_socket_if functions
-  virtual sc_core::sc_port_base &         get_port_base()
-    { return m_port; }
-  virtual sc_core::sc_port_base const &   get_port_base() const
-    { return m_port; }
-  virtual sc_core::sc_export_base &       get_export_base()
-    { return *this; }
-  virtual sc_core::sc_export_base const & get_export_base() const
-    { return *this; }
-  virtual unsigned int                    get_bus_width() const
-    { return BUSWIDTH; }
-  virtual tlm_socket_category             get_socket_category() const
-    { return TLM_TARGET_SOCKET; }
+    void operator () (fw_interface_type &s) { bind(s); }
 
-  // Implementation of tlm_base_target_socket_b functions
-  virtual sc_core::sc_port_b<BW_IF> &       get_base_port()
-    { return m_port; }
-  virtual sc_core::sc_port_b<BW_IF> const & get_base_port() const
-    { return m_port; }
+    //
+    // Forward to 'size()' of port class.
+    //
+    int size() const { return m_port.size(); }
 
-  virtual                    FW_IF  &       get_base_interface()
-    { return *this; }
-  virtual                    FW_IF  const & get_base_interface() const
-    { return *this; }
+    //
+    // Forward to 'operator->()' of port class.
+    //
+    bw_interface_type *operator->() { return m_port.operator->(); }
 
-  virtual sc_core::sc_export<FW_IF> &       get_base_export()
-    { return *this; }
-  virtual sc_core::sc_export<FW_IF> const & get_base_export() const
-    { return *this; }
+    //
+    // Forward to 'operator[]()' of port class.
+    //
+    bw_interface_type *operator[](int i) { return m_port.operator[](i); }
 
-protected:
-  port_type m_port;
+    // Implementation of tlm_base_socket_if functions.
+    virtual sc_core::sc_port_base &get_port_base() { return m_port; }
+    virtual sc_core::sc_port_base const &
+    get_port_base() const
+    {
+        return m_port;
+    }
+    virtual sc_core::sc_export_base &get_export_base() { return *this; }
+    virtual sc_core::sc_export_base const &
+    get_export_base() const
+    {
+        return *this;
+    }
+    virtual unsigned int get_bus_width() const { return BUSWIDTH; }
+    virtual tlm_socket_category
+    get_socket_category() const
+    {
+        return TLM_TARGET_SOCKET;
+    }
+
+    // Implementation of tlm_base_target_socket_b functions
+    virtual sc_core::sc_port_b<BW_IF> &get_base_port() { return m_port; }
+    virtual sc_core::sc_port_b<BW_IF> const &
+    get_base_port() const
+    {
+        return m_port;
+    }
+
+    virtual FW_IF &get_base_interface() { return *this; }
+    virtual FW_IF const &get_base_interface() const { return *this; }
+
+    virtual sc_core::sc_export<FW_IF> &get_base_export() { return *this; }
+    virtual sc_core::sc_export<FW_IF> const &
+    get_base_export() const
+    {
+        return *this;
+    }
+
+  protected:
+    port_type m_port;
 };
 
-
-//
-// Convenience blocking and non-blocking socket classes
-//
-
-template <unsigned int BUSWIDTH = 32,
-          typename TYPES = tlm_base_protocol_types,
-          int N = 1,
-          sc_core::sc_port_policy POL = sc_core::SC_ONE_OR_MORE_BOUND>
+template <unsigned int BUSWIDTH=32, typename TYPES=tlm_base_protocol_types,
+          int N=1, sc_core::sc_port_policy POL=sc_core::SC_ONE_OR_MORE_BOUND>
 class tlm_target_socket :
-  public tlm_base_target_socket <BUSWIDTH,
-                            tlm_fw_transport_if<TYPES>,
-                            tlm_bw_transport_if<TYPES>,
-                            N, POL>
+    public tlm_base_target_socket<
+        BUSWIDTH, tlm_fw_transport_if<TYPES>,
+        tlm_bw_transport_if<TYPES>, N, POL>
 {
-public:
-  tlm_target_socket() :
-    tlm_base_target_socket<BUSWIDTH,
-                      tlm_fw_transport_if<TYPES>,
-                      tlm_bw_transport_if<TYPES>,
-                      N, POL>()
-  {
-  }
+  public:
+    tlm_target_socket() :
+        tlm_base_target_socket<
+            BUSWIDTH, tlm_fw_transport_if<TYPES>,
+            tlm_bw_transport_if<TYPES>, N, POL>()
+    {}
 
-  explicit tlm_target_socket(const char* name) :
-    tlm_base_target_socket<BUSWIDTH,
-                      tlm_fw_transport_if<TYPES>,
-                      tlm_bw_transport_if<TYPES>,
-                      N, POL>(name)
-  {
-  }
+    explicit tlm_target_socket(const char *name) :
+        tlm_base_target_socket<
+            BUSWIDTH, tlm_fw_transport_if<TYPES>,
+            tlm_bw_transport_if<TYPES>, N, POL>(name)
+    {}
 
-  virtual const char* kind() const
-  {
-    return "tlm_target_socket";
-  }
+    virtual const char* kind() const { return "tlm_target_socket"; }
 
-  virtual sc_core::sc_type_index get_protocol_types() const
-  {
-    return typeid(TYPES);
-  }
+    virtual sc_core::sc_type_index
+    get_protocol_types() const
+    {
+        return typeid(TYPES);
+    }
 };
 
 } // namespace tlm
 
-#endif // TLM_CORE_TLM_TARGET_SOCKET_H_INCLUDED_
+#endif /* __SYSTEMC_EXT_TLM_CORE_TLM_2_TLM_SOCKETS_TLM_TARGET_SOCKET_H__ */
