@@ -170,6 +170,7 @@ if env['USE_SYSTEMC']:
         os.path.walk(str(subdir_src), visitor, None)
 
     scan_dir_for_tests('systemc')
+    scan_dir_for_tests('tlm')
 
 
     def build_tests_json(target, source, env):
