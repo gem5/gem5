@@ -7260,8 +7260,16 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
+                int exp;
+                std::frexp(src[lane],&exp);
                 if (std::isnan(src[lane])) {
                     vdst[lane] = 0;
+                } else if (std::isinf(src[lane]) || exp > 30) {
+                    if (std::signbit(src[lane])) {
+                        vdst[lane] = INT_MIN;
+                    } else {
+                        vdst[lane] = INT_MAX;
+                    }
                 } else {
                     vdst[lane] = (VecElemI32)src[lane];
                 }
@@ -7386,8 +7394,18 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
+                int exp;
+                std::frexp(src[lane],&exp);
                 if (std::isnan(src[lane])) {
                     vdst[lane] = 0;
+                } else if (std::isinf(src[lane])) {
+                    if (std::signbit(src[lane])) {
+                        vdst[lane] = 0;
+                    } else {
+                        vdst[lane] = UINT_MAX;
+                    }
+                } else if (exp > 31) {
+                    vdst[lane] = UINT_MAX;
                 } else {
                     vdst[lane] = (VecElemU32)src[lane];
                 }
@@ -7422,8 +7440,16 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
+                int exp;
+                std::frexp(src[lane],&exp);
                 if (std::isnan(src[lane])) {
                     vdst[lane] = 0;
+                } else if (std::isinf(src[lane]) || exp > 30) {
+                    if (std::signbit(src[lane])) {
+                        vdst[lane] = INT_MIN;
+                    } else {
+                        vdst[lane] = INT_MAX;
+                    }
                 } else {
                     vdst[lane] = (VecElemI32)src[lane];
                 }
@@ -7772,8 +7798,18 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
+                int exp;
+                std::frexp(src[lane],&exp);
                 if (std::isnan(src[lane])) {
                     vdst[lane] = 0;
+                } else if (std::isinf(src[lane])) {
+                    if (std::signbit(src[lane])) {
+                        vdst[lane] = 0;
+                    } else {
+                        vdst[lane] = UINT_MAX;
+                    }
+                } else if (exp > 31) {
+                    vdst[lane] = UINT_MAX;
                 } else {
                     vdst[lane] = (VecElemU32)src[lane];
                 }
@@ -25075,8 +25111,16 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
+                int exp;
+                std::frexp(src[lane],&exp);
                 if (std::isnan(src[lane])) {
                     vdst[lane] = 0;
+                } else if (std::isinf(src[lane]) || exp > 30) {
+                    if (std::signbit(src[lane])) {
+                        vdst[lane] = INT_MIN;
+                    } else {
+                        vdst[lane] = INT_MAX;
+                    }
                 } else {
                     vdst[lane] = (VecElemI32)src[lane];
                 }
@@ -25235,8 +25279,18 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
+                int exp;
+                std::frexp(src[lane],&exp);
                 if (std::isnan(src[lane])) {
                     vdst[lane] = 0;
+                } else if (std::isinf(src[lane])) {
+                    if (std::signbit(src[lane])) {
+                        vdst[lane] = 0;
+                    } else {
+                        vdst[lane] = UINT_MAX;
+                    }
+                } else if (exp > 31) {
+                    vdst[lane] = UINT_MAX;
                 } else {
                     vdst[lane] = (VecElemU32)src[lane];
                 }
@@ -25287,8 +25341,16 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
+                int exp;
+                std::frexp(src[lane],&exp);
                 if (std::isnan(src[lane])) {
                     vdst[lane] = 0;
+                } else if (std::isinf(src[lane]) || exp > 30) {
+                    if (std::signbit(src[lane])) {
+                        vdst[lane] = INT_MIN;
+                    } else {
+                        vdst[lane] = INT_MAX;
+                    }
                 } else {
                     vdst[lane] = (VecElemI32)src[lane];
                 }
@@ -25725,7 +25787,21 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                vdst[lane] = (VecElemU32)src[lane];
+                int exp;
+                std::frexp(src[lane],&exp);
+                if (std::isnan(src[lane])) {
+                    vdst[lane] = 0;
+                } else if (std::isinf(src[lane])) {
+                    if (std::signbit(src[lane])) {
+                        vdst[lane] = 0;
+                    } else {
+                        vdst[lane] = UINT_MAX;
+                    }
+                } else if (exp > 31) {
+                    vdst[lane] = UINT_MAX;
+                } else {
+                    vdst[lane] = (VecElemU32)src[lane];
+                }
             }
         }
 
