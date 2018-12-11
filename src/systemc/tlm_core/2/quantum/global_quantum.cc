@@ -40,7 +40,8 @@ tlm_global_quantum::compute_local_quantum()
     if (m_global_quantum != sc_core::SC_ZERO_TIME) {
         const sc_core::sc_time current = sc_core::sc_time_stamp();
         const sc_core::sc_time g_quant = m_global_quantum;
-        return g_quant - (current % g_quant);
+        return sc_core::sc_time::from_value(
+                g_quant.value() - (current.value() % g_quant.value()));
     } else {
         return sc_core::SC_ZERO_TIME;
     }
