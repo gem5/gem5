@@ -20,6 +20,7 @@
 #ifndef __SYSTEMC_EXT_TLM__
 #define __SYSTEMC_EXT_TLM__
 
+#include <cstring>
 #include <systemc>    // main SystemC header
 
 #include "tlm_core/2/version.h"
