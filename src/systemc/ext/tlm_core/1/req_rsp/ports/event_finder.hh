@@ -20,6 +20,8 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_PORTS_EVENT_FINDER_HH__
 #define __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_PORTS_EVENT_FINDER_HH__
 
+#include <sstream>
+
 #include "tlm_core/1/req_rsp/interfaces/tag.hh"
 
 namespace tlm
@@ -56,9 +58,12 @@ tlm_event_finder_t<IF, T>::find_event(sc_core::sc_interface *if_p) const
 {
     const IF *iface = if_p ? dynamic_cast<const IF *>(if_p) :
         dynamic_cast<const IF *>(port()->_gem5Interface(0));
-    static sc_core::sc_event none;
     if (iface == nullptr) {
-        report_error(sc_core::SC_ID_FIND_EVENT_, "port is not bound");
+        std::ostringstream out;
+        out << "port is not bound: port '" << port()->name() <<
+            "' (" << port()->kind() << ")";
+        SC_REPORT_ERROR(sc_core::SC_ID_FIND_EVENT_, out.str().c_str());
+        static sc_core::sc_event none;
         return none;
     }
     return (const_cast<IF *>(iface)->*m_event_method)(nullptr);
