@@ -77,6 +77,12 @@ sc_simcontext::next_object()
         return nullptr;
 }
 
+bool
+sc_simcontext::elaboration_done()
+{
+    return ::sc_gem5::scheduler.elaborationDone();
+}
+
 sc_simcontext *
 sc_get_curr_simcontext()
 {
