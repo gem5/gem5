@@ -17,17 +17,30 @@
 
  *****************************************************************************/
 
-#ifndef __SYSTEMC_EXT_TLM__
-#define __SYSTEMC_EXT_TLM__
+#ifndef __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_FIFO_H__
+#define __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_FIFO_H__
 
-#include <systemc>    // main SystemC header
+#include "tlm_core/1/analysis/analysis_if.h"
+#include "tlm_core/1/analysis/analysis_triple.h"
+#include "tlm_core/1/req_rsp/channels/fifo/fifo.h"
 
-#include "tlm_core/2/version.h"
-#include "tlm_core/1/analysis/analysis.h"
-#include "tlm_core/1/req_rsp/req_rsp.h"
-#include "tlm_core/2/interfaces/interfaces.h"
-#include "tlm_core/2/generic_payload/generic_payload.h"
-#include "tlm_core/2/sockets/sockets.h"
-#include "tlm_core/2/quantum/quantum.h"
+namespace tlm
+{
 
-#endif /* __SYSTEMC_EXT_TLM__ */
+template <typename T>
+class tlm_analysis_fifo : public tlm_fifo<T>,
+    public virtual tlm_analysis_if<T>,
+    public virtual tlm_analysis_if<tlm_analysis_triple<T>>
+{
+  public:
+    // analysis fifo is an unbounded tlm_fifo
+    tlm_analysis_fifo(const char *nm) : tlm_fifo<T>(nm, -16) {}
+    tlm_analysis_fifo() : tlm_fifo<T>(-16) {}
+
+    void write(const tlm_analysis_triple<T> &t) { nb_put(t); }
+    void write(const T &t) { nb_put(t); }
+};
+
+} // namespace tlm
+
+#endif /* __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_FIFO_H__ */

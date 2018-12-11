@@ -17,17 +17,22 @@
 
  *****************************************************************************/
 
-#ifndef __SYSTEMC_EXT_TLM__
-#define __SYSTEMC_EXT_TLM__
+#ifndef __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_IF_H__
+#define __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_IF_H__
 
-#include <systemc>    // main SystemC header
+#include "tlm_core/1/analysis/write_if.h"
 
-#include "tlm_core/2/version.h"
-#include "tlm_core/1/analysis/analysis.h"
-#include "tlm_core/1/req_rsp/req_rsp.h"
-#include "tlm_core/2/interfaces/interfaces.h"
-#include "tlm_core/2/generic_payload/generic_payload.h"
-#include "tlm_core/2/sockets/sockets.h"
-#include "tlm_core/2/quantum/quantum.h"
+namespace tlm
+{
 
-#endif /* __SYSTEMC_EXT_TLM__ */
+template <typename T>
+class tlm_analysis_if : public virtual tlm_write_if<T>
+{};
+
+template <typename T>
+class tlm_delayed_analysis_if : public virtual tlm_delayed_write_if<T>
+{};
+
+} // namespace tlm
+
+#endif /* __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_IF_H__ */

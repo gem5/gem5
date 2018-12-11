@@ -20,7 +20,7 @@
 #ifndef __SYSTEMC_EXT_TLM_UTILS_TLM_QUANTUMKEEPER_H__
 #define __SYSTEMC_EXT_TLM_UTILS_TLM_QUANTUMKEEPER_H__
 
-#include "tlm_core/tlm_2/tlm_quantum/tlm_global_quantum.h"
+#include <tlm>
 
 namespace tlm_utils
 {

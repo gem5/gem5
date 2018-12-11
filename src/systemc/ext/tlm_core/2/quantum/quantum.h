@@ -17,17 +17,9 @@
 
  *****************************************************************************/
 
-#ifndef __SYSTEMC_EXT_TLM__
-#define __SYSTEMC_EXT_TLM__
+#ifndef ____SYSTEMC_EXT_TLM_CORE_2_QUANTUM_QUANTUM_H__
+#define ____SYSTEMC_EXT_TLM_CORE_2_QUANTUM_QUANTUM_H__
 
-#include <systemc>    // main SystemC header
+#include "tlm_core/2/quantum/global_quantum.h"
 
-#include "tlm_core/2/version.h"
-#include "tlm_core/1/analysis/analysis.h"
-#include "tlm_core/1/req_rsp/req_rsp.h"
-#include "tlm_core/2/interfaces/interfaces.h"
-#include "tlm_core/2/generic_payload/generic_payload.h"
-#include "tlm_core/2/sockets/sockets.h"
-#include "tlm_core/2/quantum/quantum.h"
-
-#endif /* __SYSTEMC_EXT_TLM__ */
+#endif /* ____SYSTEMC_EXT_TLM_CORE_2_QUANTUM_QUANTUM_H__ */

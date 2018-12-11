@@ -17,17 +17,37 @@
 
  *****************************************************************************/
 
-#ifndef __SYSTEMC_EXT_TLM__
-#define __SYSTEMC_EXT_TLM__
+#ifndef __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_TRIPLE_H__
+#define __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_TRIPLE_H__
 
-#include <systemc>    // main SystemC header
+namespace tlm
+{
 
-#include "tlm_core/2/version.h"
-#include "tlm_core/1/analysis/analysis.h"
-#include "tlm_core/1/req_rsp/req_rsp.h"
-#include "tlm_core/2/interfaces/interfaces.h"
-#include "tlm_core/2/generic_payload/generic_payload.h"
-#include "tlm_core/2/sockets/sockets.h"
-#include "tlm_core/2/quantum/quantum.h"
+template <typename T>
+struct tlm_analysis_triple
+{
+    sc_core::sc_time start_time;
+    T transaction;
+    sc_core::sc_time end_time;
 
-#endif /* __SYSTEMC_EXT_TLM__ */
+    tlm_analysis_triple() {}
+
+    tlm_analysis_triple(const tlm_analysis_triple &triple)
+    {
+        start_time = triple.start_time;
+        transaction = triple.transaction;
+        end_time = triple.end_time;
+    }
+
+    tlm_analysis_triple(const T &t)
+    {
+        transaction = t;
+    }
+
+    operator T() { return transaction; }
+    operator const T &() const { return transaction; }
+};
+
+} // namespace tlm
+
+#endif /* __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_TRIPLE_H__ */

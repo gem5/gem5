@@ -17,17 +17,20 @@
 
  *****************************************************************************/
 
-#ifndef __SYSTEMC_EXT_TLM__
-#define __SYSTEMC_EXT_TLM__
+#ifndef __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_REQ_RSP_H__
+#define __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_REQ_RSP_H__
 
-#include <systemc>    // main SystemC header
+// The unannotated TLM interfaces.
 
-#include "tlm_core/2/version.h"
-#include "tlm_core/1/analysis/analysis.h"
-#include "tlm_core/1/req_rsp/req_rsp.h"
-#include "tlm_core/2/interfaces/interfaces.h"
-#include "tlm_core/2/generic_payload/generic_payload.h"
-#include "tlm_core/2/sockets/sockets.h"
-#include "tlm_core/2/quantum/quantum.h"
+#include "tlm_core/1/req_rsp/interfaces/core_ifs.h"
+#include "tlm_core/1/req_rsp/interfaces/master_slave_ifs.h"
 
-#endif /* __SYSTEMC_EXT_TLM__ */
+// The channels : tlm_fifo, tlm_transport_channel and tlm_req_rsp_channel.
+
+#include "tlm_core/1/req_rsp/channels/req_rsp_channels/req_rsp_channels.h"
+
+// Some non blocking ports to provide static sensitivity.
+
+#include "tlm_core/1/req_rsp/ports/nonblocking_port.h"
+
+#endif /* __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_REQ_RSP_H__ */
