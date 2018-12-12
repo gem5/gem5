@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012,2017-2018 ARM Limited
+ * Copyright (c) 2010-2012,2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -284,7 +284,10 @@ AbstractMemory::checkLockedAddrList(PacketPtr pkt)
                 DPRINTF(LLSC, "Erasing lock record: context %d addr %#x\n",
                         i->contextId, paddr);
                 ContextID owner_cid = i->contextId;
-                ContextID requester_cid = pkt->req->contextId();
+                assert(owner_cid != InvalidContextID);
+                ContextID requester_cid = req->hasContextId() ?
+                                           req->contextId() :
+                                           InvalidContextID;
                 if (owner_cid != requester_cid) {
                     ThreadContext* ctx = system()->getThreadContext(owner_cid);
                     TheISA::globalClearExclusive(ctx);
