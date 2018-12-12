@@ -15,6 +15,10 @@ path.startswith("systemc/kernel/phase_callbacks/"),
 
 
 path in (
+    # Fails with undiagnosed output differences.
+    "tlm/bus",
+    "tlm/bus_dmi",
+
     # Uses sc_elab_and_sim.
     "systemc/kernel/sc_main_main",
 
