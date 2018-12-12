@@ -47,7 +47,7 @@ args = parser.parse_args()
 if args.working_dir:
     os.chdir(args.working_dir)
 
-kernel.sc_main();
+kernel.sc_main('gem5_systemc_test');
 
 m5.instantiate(None)
 
