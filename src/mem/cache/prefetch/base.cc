@@ -81,7 +81,8 @@ BasePrefetcher::BasePrefetcher(const BasePrefetcherParams *p)
       onWrite(p->on_write), onData(p->on_data), onInst(p->on_inst),
       masterId(p->sys->getMasterId(this)), pageBytes(p->sys->getPageBytes()),
       prefetchOnAccess(p->prefetch_on_access),
-      useVirtualAddresses(p->use_virtual_addresses)
+      useVirtualAddresses(p->use_virtual_addresses), issuedPrefetches(0),
+      usefulPrefetches(0)
 {
 }
 
@@ -146,6 +147,12 @@ BasePrefetcher::inMissQueue(Addr addr, bool is_secure) const
 }
 
 bool
+BasePrefetcher::hasBeenPrefetched(Addr addr, bool is_secure) const
+{
+    return cache->hasBeenPrefetched(addr, is_secure);
+}
+
+bool
 BasePrefetcher::samePage(Addr a, Addr b) const
 {
     return roundDown(a, pageBytes) == roundDown(b, pageBytes);
@@ -189,6 +196,10 @@ BasePrefetcher::probeNotify(const PacketPtr &pkt)
     if (pkt->cmd.isSWPrefetch()) return;
     if (pkt->req->isCacheMaintenance()) return;
     if (pkt->isWrite() && cache != nullptr && cache->coalesce()) return;
+
+    if (hasBeenPrefetched(pkt->getAddr(), pkt->isSecure())) {
+        usefulPrefetches += 1;
+    }
 
     // Verify this access type is observed by prefetcher
     if (observeAccess(pkt)) {

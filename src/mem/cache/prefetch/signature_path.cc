@@ -53,6 +53,14 @@ SignaturePathPrefetcher::SignaturePathPrefetcher(
                    p->pattern_table_replacement_policy,
                    PatternEntry(stridesPerPatternEntry))
 {
+    fatal_if(prefetchConfidenceThreshold < 0,
+        "The prefetch confidence threshold must be greater than 0\n");
+    fatal_if(prefetchConfidenceThreshold > 1,
+        "The prefetch confidence threshold must be less than 1\n");
+    fatal_if(lookaheadConfidenceThreshold < 0,
+        "The lookahead confidence threshold must be greater than 0\n");
+    fatal_if(lookaheadConfidenceThreshold > 1,
+        "The lookahead confidence threshold must be less than 1\n");
 }
 
 SignaturePathPrefetcher::PatternStrideEntry &
@@ -86,28 +94,34 @@ SignaturePathPrefetcher::PatternEntry::getStrideEntry(stride_t stride,
 }
 
 void
-SignaturePathPrefetcher::addPrefetch(Addr ppn, stride_t block,
+SignaturePathPrefetcher::addPrefetch(Addr ppn, stride_t last_block,
+    stride_t delta, double path_confidence, signature_t signature,
     bool is_secure, std::vector<AddrPriority> &addresses)
 {
-    /**
-     * block is relative to the provided ppn. Assuming a page size of 4kB and
-     * a block size of 64B, the range of the stride of this prefetcher is
-     * -63,63 (pageBytes/blkSize) as the last accessed block also ranges from
-     * 0,63, the block value is expected to be between -63 and 126
-     * Negative block means that we are accessing the lower contiguous page,
-     * 64 or greater point to the next contiguous.
-     */
-    assert(block > -((stride_t)(pageBytes/blkSize)));
-    assert(block < 2*((stride_t)(pageBytes/blkSize)));
+    stride_t block = last_block + delta;
 
     Addr pf_ppn;
     stride_t pf_block;
     if (block < 0) {
-        pf_ppn = ppn - 1;
-        pf_block = block + (pageBytes/blkSize);
+        stride_t num_cross_pages = 1 + (-block) / (pageBytes/blkSize);
+        if (num_cross_pages > ppn) {
+            // target address smaller than page 0, ignore this request;
+            return;
+        }
+        pf_ppn = ppn - num_cross_pages;
+        pf_block = block + (pageBytes/blkSize) * num_cross_pages;
+        handlePageCrossingLookahead(signature, last_block, delta,
+                                    path_confidence);
     } else if (block >= (pageBytes/blkSize)) {
-        pf_ppn = ppn + 1;
-        pf_block = block - (pageBytes/blkSize);
+        stride_t num_cross_pages = block / (pageBytes/blkSize);
+        if (MaxAddr/pageBytes < (ppn + num_cross_pages)) {
+            // target address goes beyond MaxAddr, ignore this request;
+            return;
+        }
+        pf_ppn = ppn + num_cross_pages;
+        pf_block = block - (pageBytes/blkSize) * num_cross_pages;
+        handlePageCrossingLookahead(signature, last_block, delta,
+                                    path_confidence);
     } else {
         pf_ppn = ppn;
         pf_block = block;
@@ -121,6 +135,24 @@ SignaturePathPrefetcher::addPrefetch(Addr ppn, stride_t block,
 }
 
 void
+SignaturePathPrefetcher::handleSignatureTableMiss(stride_t current_block,
+    signature_t &new_signature, double &new_conf, stride_t &new_stride)
+{
+    new_signature = current_block;
+    new_conf = 1.0;
+    new_stride = current_block;
+}
+
+void
+SignaturePathPrefetcher::increasePatternEntryCounter(
+        PatternEntry &pattern_entry, PatternStrideEntry &pstride_entry)
+{
+    if (pstride_entry.counter < maxCounterValue) {
+        pstride_entry.counter += 1;
+    }
+}
+
+void
 SignaturePathPrefetcher::updatePatternTable(Addr signature, stride_t stride)
 {
     assert(stride != 0);
@@ -128,28 +160,31 @@ SignaturePathPrefetcher::updatePatternTable(Addr signature, stride_t stride)
     PatternEntry &p_entry = getPatternEntry(signature);
     PatternStrideEntry &ps_entry = p_entry.getStrideEntry(stride,
                                                           maxCounterValue);
-    if (ps_entry.counter < maxCounterValue) {
-        ps_entry.counter += 1;
-    }
+    increasePatternEntryCounter(p_entry, ps_entry);
 }
 
 SignaturePathPrefetcher::SignatureEntry &
 SignaturePathPrefetcher::getSignatureEntry(Addr ppn, bool is_secure,
-                                           stride_t block, bool &miss)
+        stride_t block, bool &miss, stride_t &stride,
+        double &initial_confidence)
 {
     SignatureEntry* signature_entry = signatureTable.findEntry(ppn, is_secure);
     if (signature_entry != nullptr) {
         signatureTable.accessEntry(signature_entry);
         miss = false;
+        stride = block - signature_entry->lastBlock;
     } else {
         signature_entry = signatureTable.findVictim(ppn);
         assert(signature_entry != nullptr);
 
+        // Sets signature_entry->signature, initial_confidence, and stride
+        handleSignatureTableMiss(block, signature_entry->signature,
+            initial_confidence, stride);
+
         signatureTable.insertEntry(ppn, is_secure, signature_entry);
-        signature_entry->signature = block;
-        signature_entry->lastBlock = block;
         miss = true;
     }
+    signature_entry->lastBlock = block;
     return *signature_entry;
 }
 
@@ -170,6 +205,31 @@ SignaturePathPrefetcher::getPatternEntry(Addr signature)
     return *pattern_entry;
 }
 
+double
+SignaturePathPrefetcher::calculatePrefetchConfidence(PatternEntry const &sig,
+        PatternStrideEntry const &entry) const
+{
+    return ((double) entry.counter) / maxCounterValue;
+}
+
+double
+SignaturePathPrefetcher::calculateLookaheadConfidence(PatternEntry const &sig,
+        PatternStrideEntry const &lookahead) const
+{
+    double lookahead_confidence;
+    if (lookahead.counter == maxCounterValue) {
+        /**
+         * maximum confidence is 0.95, guaranteeing that
+         * current confidence will eventually fall beyond
+         * the threshold
+         */
+        lookahead_confidence = 0.95;
+    } else {
+        lookahead_confidence = ((double) lookahead.counter / maxCounterValue);
+    }
+    return lookahead_confidence;
+}
+
 void
 SignaturePathPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                  std::vector<AddrPriority> &addresses)
@@ -179,19 +239,20 @@ SignaturePathPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     stride_t current_block = (request_addr % pageBytes) / blkSize;
     stride_t stride;
     bool is_secure = pfi.isSecure();
+    double initial_confidence = 1.0;
 
     // Get the SignatureEntry of this page to:
     // - compute the current stride
     // - obtain the current signature of accesses
     bool miss;
     SignatureEntry &signature_entry = getSignatureEntry(ppn, is_secure,
-                                                        current_block, miss);
+            current_block, miss, stride, initial_confidence);
+
     if (miss) {
         // No history for this page, can't continue
         return;
     }
 
-    stride = current_block - signature_entry.lastBlock;
     if (stride == 0) {
         // Can't continue with a stride 0
         return;
@@ -200,16 +261,17 @@ SignaturePathPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     // Update the confidence of the current signature
     updatePatternTable(signature_entry.signature, stride);
 
-    // Update the current SignatureEntry signature and lastBlock
+    // Update the current SignatureEntry signature
     signature_entry.signature =
         updateSignature(signature_entry.signature, stride);
-    signature_entry.lastBlock = current_block;
 
     signature_t current_signature = signature_entry.signature;
-    double current_confidence = 1.0;
+    double current_confidence = initial_confidence;
     stride_t current_stride = signature_entry.lastBlock;
 
-    do {
+    // Look for prefetch candidates while the current path confidence is
+    // high enough
+    while (current_confidence > lookaheadConfidenceThreshold) {
         // With the updated signature, attempt to generate prefetches
         // - search the PatternTable and select all entries with enough
         //   confidence, these are prefetch candidates
@@ -226,45 +288,40 @@ SignaturePathPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                     lookahead = &entry;
                 }
                 double prefetch_confidence =
-                    (double) entry.counter / maxCounterValue;
+                    calculatePrefetchConfidence(*current_pattern_entry, entry);
 
                 if (prefetch_confidence >= prefetchConfidenceThreshold) {
                     assert(entry.stride != 0);
                     //prefetch candidate
-                    addPrefetch(ppn, current_stride + entry.stride,
-                                         is_secure, addresses);
+                    addPrefetch(ppn, current_stride, entry.stride,
+                                current_confidence, current_signature,
+                                is_secure, addresses);
                 }
             }
         }
+
         if (lookahead != nullptr) {
-            // If a lookahead was selected, compute its confidence using
-            // the counter of its entry and the accumulated confidence
-            // if the confidence is high enough, generate a new signature
-            double lookahead_confidence;
-            if (lookahead->counter == maxCounterValue) {
-                // maximum confidence is 0.95, guaranteeing that
-                // current confidence will eventually fall beyond
-                // the threshold
-                lookahead_confidence = 0.95;
-            } else {
-                lookahead_confidence =
-                    ((double) lookahead->counter / maxCounterValue);
-            }
-            current_confidence *= lookahead_confidence;
+            current_confidence *= calculateLookaheadConfidence(
+                    *current_pattern_entry, *lookahead);
             current_signature =
                 updateSignature(current_signature, lookahead->stride);
             current_stride += lookahead->stride;
         } else {
             current_confidence = 0.0;
         }
-        // If the accumulated confidence is high enough, keep repeating
-        // this process with the updated signature
     }
-    while (current_confidence > lookaheadConfidenceThreshold);
 
+    auxiliaryPrefetcher(ppn, current_block, is_secure, addresses);
+}
+
+void
+SignaturePathPrefetcher::auxiliaryPrefetcher(Addr ppn, stride_t current_block,
+        bool is_secure, std::vector<AddrPriority> &addresses)
+{
     if (addresses.empty()) {
         // Enable the next line prefetcher if no prefetch candidates are found
-        addPrefetch(ppn, current_block + 1, is_secure, addresses);
+        addPrefetch(ppn, current_block, 1, 0.0 /* unused*/, 0 /* unused */,
+                    is_secure, addresses);
     }
 }
 

@@ -124,6 +124,7 @@ QueuedPrefetcher::getPacket()
     pfq.pop_front();
 
     pfIssued++;
+    issuedPrefetches += 1;
     assert(pkt != nullptr);
     DPRINTF(HWPrefetch, "Generating prefetch for %#x.\n", pkt->getAddr());
     return pkt;

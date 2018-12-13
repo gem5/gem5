@@ -180,6 +180,29 @@ class SignaturePathPrefetcher(QueuedPrefetcher):
     lookahead_confidence_threshold = Param.Float(0.75,
         "Minimum confidence to continue exploring lookahead entries")
 
+class SignaturePathPrefetcherV2(SignaturePathPrefetcher):
+    type = 'SignaturePathPrefetcherV2'
+    cxx_class = 'SignaturePathPrefetcherV2'
+    cxx_header = "mem/cache/prefetch/signature_path_v2.hh"
+
+    signature_table_entries = "256"
+    signature_table_assoc = 1
+    pattern_table_entries = "512"
+    pattern_table_assoc = 1
+    max_counter_value = 15
+    prefetch_confidence_threshold = 0.25
+    lookahead_confidence_threshold = 0.25
+
+    global_history_register_entries = Param.MemorySize("8",
+        "Number of entries of global history register")
+    global_history_register_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1,
+        assoc = Parent.global_history_register_entries,
+        size = Parent.global_history_register_entries),
+        "Indexing policy of the global history register")
+    global_history_register_replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(), "Replacement policy of the global history register")
+
 class AccessMapPatternMatchingPrefetcher(QueuedPrefetcher):
     type = 'AccessMapPatternMatchingPrefetcher'
     cxx_class = 'AccessMapPatternMatchingPrefetcher'
