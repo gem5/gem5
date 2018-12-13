@@ -363,3 +363,13 @@ class BOPPrefetcher(QueuedPrefetcher):
     delay_queue_cycles = Param.Cycles(60,
                 "Cycles to delay a write in the left RR table from the delay \
                 queue")
+
+class SBOOEPrefetcher(QueuedPrefetcher):
+    type = 'SBOOEPrefetcher'
+    cxx_class = 'SBOOEPrefetcher'
+    cxx_header = "mem/cache/prefetch/sbooe.hh"
+    latency_buffer_size = Param.Int(32, "Entries in the latency buffer")
+    sequential_prefetchers = Param.Int(9, "Number of sequential prefetchers")
+    sandbox_entries = Param.Int(1024, "Size of the address buffer")
+    score_threshold_pct = Param.Percent(25, "Min. threshold to issue a \
+        prefetch. The value is the percentage of sandbox entries to use")
