@@ -28952,22 +28952,34 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                if (std::fpclassify(src1[lane]) == FP_ZERO) {
-                    if (std::signbit(src1[lane])) {
-                        vdst[lane] = -INFINITY;
-                    } else {
-                        vdst[lane] = +INFINITY;
-                    }
-                } else if (std::isnan(src2[lane]) || std::isnan(src1[lane])) {
-                    vdst[lane] = NAN;
-                } else if (std::isinf(src1[lane])) {
-                    if (std::signbit(src1[lane])) {
-                        vdst[lane] = -INFINITY;
-                    } else {
-                        vdst[lane] = +INFINITY;
-                    }
+                int signOut = std::signbit(src1[lane]) ^
+                              std::signbit(src2[lane]);
+                int exp1, exp2;
+                std::frexp(src1[lane],&exp1);
+                std::frexp(src2[lane],&exp2);
+                if (std::isnan(src2[lane])) {
+                    vdst[lane] = src2[lane];
+                } else if (std::isnan(src1[lane])) {
+                    vdst[lane] = src1[lane];
+                } else if (src1[lane] == 0.0 && src2[lane] == 0.0) {
+                    vdst[lane] = -NAN;
+                } else if (std::isinf(src1[lane]) && std::isinf(src2[lane])) {
+                    vdst[lane] = -NAN;
+                } else if (src1[lane] == 0.0 || std::isinf(src2[lane])) {
+                    vdst[lane] = signOut ? -INFINITY : +INFINITY;
+                } else if (src2[lane] == 0.0 || std::isinf(src1[lane])) {
+                    vdst[lane] = signOut ? -0.0 : +0.0;
+                } else if (exp2 - exp1 < -1075) {
+                    warn_once("fixup_f64 unimplemented case:"
+                              "exp2 - ex1 < -1075");
+                    vdst[lane] = src0[lane];
+                } else if (exp1 == 2047) {
+                    warn_once("fixup_f64 unimplemented case:"
+                              "exp1 == 2047");
+                    vdst[lane] = src0[lane];
                 } else {
-                    vdst[lane] = src2[lane] / src1[lane];
+                    vdst[lane] = ((uint64_t)signOut<<63) |
+                        ((uint64_t)src0[lane] & 0x7fffffffffffffffULL);
                 }
             }
         }
@@ -29077,8 +29089,37 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                vdst[lane] = src0[lane];
+                int exp1, exp2;
+                std::frexp(src1[lane],&exp1);
+                std::frexp(src2[lane],&exp2);
                 vcc.setBit(lane, 0);
+                if (src2[lane] == 0 || src1[lane] == 0) {
+                    vdst[lane] = NAN;
+                } else if (exp2 - exp1 >= 768) {
+                    vcc.setBit(lane, 1);
+                    if (src0[lane] == src1[lane]) {
+                        vdst[lane] = std::ldexp(src0[lane],128);
+                    }
+                } else if (exp1 == 0) {
+                    vdst[lane] = std::ldexp(src0[lane],128);
+                } else if (exp1 >= 0x7fd && exp2 - exp1 <= -768) {
+                    vcc.setBit(lane, 1);
+                    if (src0[lane] == src1[lane]) {
+                        vdst[lane] = std::ldexp(src0[lane],-128);
+                    }
+                } else if (exp1 >= 0x7fd) {
+                    vdst[lane] = std::ldexp(src0[lane],-128);
+                } else if (exp2 - exp1 <= -768) {
+                    vcc.setBit(lane, 1);
+                    if (src0[lane] != src2[lane]) {
+                        vdst[lane] = std::ldexp(src0[lane],128);
+                    }
+                } else if (exp2 <= 53) {
+                    vdst[lane] = std::ldexp(src0[lane],128);
+                }
+                else {
+                    vdst[lane] = src0[lane];
+                }
             }
         }
 
@@ -29171,10 +29212,12 @@ namespace Gcn3ISA
         ConstVecOperandF64 src1(gpuDynInst, extData.SRC1);
         ConstVecOperandF64 src2(gpuDynInst, extData.SRC2);
         VecOperandF64 vdst(gpuDynInst, instData.VDST);
+        ConstScalarOperandU64 vcc(gpuDynInst, REG_VCC_LO);
 
         src0.readSrc();
         src1.readSrc();
         src2.readSrc();
+        vcc.read();
 
         if (instData.ABS & 0x1) {
             src0.absModifier();
@@ -29202,7 +29245,12 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                vdst[lane] = std::fma(src0[lane], src1[lane], src2[lane]);
+                if (bits(vcc.rawData(), lane)) {
+                    vdst[lane] = pow(2,64) *
+                        std::fma(src0[lane], src1[lane], src2[lane]);
+                } else {
+                    vdst[lane] = std::fma(src0[lane], src1[lane], src2[lane]);
+                }
             }
         }
 
