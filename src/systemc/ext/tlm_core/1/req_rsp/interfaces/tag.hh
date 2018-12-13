@@ -17,18 +17,16 @@
 
  *****************************************************************************/
 
-#ifndef __SYSTEMC_EXT_TLM__
-#define __SYSTEMC_EXT_TLM__
+#ifndef __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_INTERFACES_TAG_HH__
+#define __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_INTERFACES_TAG_HH__
 
-#include <cstring>
-#include <systemc>    // main SystemC header
+namespace tlm
+{
 
-#include "tlm_core/2/version.hh"
-#include "tlm_core/1/analysis/analysis.hh"
-#include "tlm_core/1/req_rsp/req_rsp.hh"
-#include "tlm_core/2/interfaces/interfaces.hh"
-#include "tlm_core/2/generic_payload/generic_payload.hh"
-#include "tlm_core/2/sockets/sockets.hh"
-#include "tlm_core/2/quantum/quantum.hh"
+template <class T>
+class tlm_tag
+{};
 
-#endif /* __SYSTEMC_EXT_TLM__ */
+}
+
+#endif /* __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_INTERFACES_TAG_HH__ */

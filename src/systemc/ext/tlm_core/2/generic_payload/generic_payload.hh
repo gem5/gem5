@@ -17,18 +17,12 @@
 
  *****************************************************************************/
 
-#ifndef __SYSTEMC_EXT_TLM__
-#define __SYSTEMC_EXT_TLM__
+#ifndef __SYSTEMC_EXT_TLM_CORE_2_GENERIC_GENERIC_PAYLOAD_HH__
+#define __SYSTEMC_EXT_TLM_CORE_2_GENERIC_GENERIC_PAYLOAD_HH__
 
-#include <cstring>
-#include <systemc>    // main SystemC header
+#include "tlm_core/2/generic_payload/endian_conv.hh"
+#include "tlm_core/2/generic_payload/gp.hh"
+#include "tlm_core/2/generic_payload/helpers.hh"
+#include "tlm_core/2/generic_payload/phase.hh"
 
-#include "tlm_core/2/version.hh"
-#include "tlm_core/1/analysis/analysis.hh"
-#include "tlm_core/1/req_rsp/req_rsp.hh"
-#include "tlm_core/2/interfaces/interfaces.hh"
-#include "tlm_core/2/generic_payload/generic_payload.hh"
-#include "tlm_core/2/sockets/sockets.hh"
-#include "tlm_core/2/quantum/quantum.hh"
-
-#endif /* __SYSTEMC_EXT_TLM__ */
+#endif /* __SYSTEMC_EXT_TLM_CORE_2_GENERIC_GENERIC_PAYLOAD_HH__ */

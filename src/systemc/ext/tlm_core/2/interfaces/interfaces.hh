@@ -17,18 +17,10 @@
 
  *****************************************************************************/
 
-#ifndef __SYSTEMC_EXT_TLM__
-#define __SYSTEMC_EXT_TLM__
+#ifndef __SYSTEMC_EXT_TLM_CORE_2_INTERFACES_INTERFACES_HH__
+#define __SYSTEMC_EXT_TLM_CORE_2_INTERFACES_INTERFACES_HH__
 
-#include <cstring>
-#include <systemc>    // main SystemC header
+#include "tlm_core/2/interfaces/dmi.hh"
+#include "tlm_core/2/interfaces/fw_bw_ifs.hh"
 
-#include "tlm_core/2/version.hh"
-#include "tlm_core/1/analysis/analysis.hh"
-#include "tlm_core/1/req_rsp/req_rsp.hh"
-#include "tlm_core/2/interfaces/interfaces.hh"
-#include "tlm_core/2/generic_payload/generic_payload.hh"
-#include "tlm_core/2/sockets/sockets.hh"
-#include "tlm_core/2/quantum/quantum.hh"
-
-#endif /* __SYSTEMC_EXT_TLM__ */
+#endif /* __SYSTEMC_EXT_TLM_CORE_2_INTERFACES_INTERFACES_HH__ */
