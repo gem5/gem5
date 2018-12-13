@@ -32,6 +32,7 @@ Import('*')
 
 SimObject('Prefetcher.py')
 
+Source('access_map_pattern_matching.cc')
 Source('base.cc')
 Source('queued.cc')
 Source('signature_path.cc')

@@ -179,3 +179,37 @@ class SignaturePathPrefetcher(QueuedPrefetcher):
         "Minimum confidence to issue prefetches")
     lookahead_confidence_threshold = Param.Float(0.75,
         "Minimum confidence to continue exploring lookahead entries")
+
+class AccessMapPatternMatchingPrefetcher(QueuedPrefetcher):
+    type = 'AccessMapPatternMatchingPrefetcher'
+    cxx_class = 'AccessMapPatternMatchingPrefetcher'
+    cxx_header = "mem/cache/prefetch/access_map_pattern_matching.hh"
+
+    start_degree = Param.Unsigned(4,
+        "Initial degree (Maximum number of prefetches generated")
+    hot_zone_size = Param.MemorySize("2kB", "Memory covered by a hot zone")
+    access_map_table_entries = Param.MemorySize("256",
+        "Number of entries in the access map table")
+    access_map_table_assoc = Param.Unsigned(8,
+        "Associativity of the access map table")
+    access_map_table_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1, assoc = Parent.access_map_table_assoc,
+        size = Parent.access_map_table_entries),
+        "Indexing policy of the access map table")
+    access_map_table_replacement_policy = Param.BaseReplacementPolicy(LRURP(),
+        "Replacement policy of the access map table")
+    high_coverage_threshold = Param.Float(0.25,
+        "A prefetch coverage factor bigger than this is considered high")
+    low_coverage_threshold = Param.Float(0.125,
+        "A prefetch coverage factor smaller than this is considered low")
+    high_accuracy_threshold = Param.Float(0.5,
+        "A prefetch accuracy factor bigger than this is considered high")
+    low_accuracy_threshold = Param.Float(0.25,
+        "A prefetch accuracy factor smaller than this is considered low")
+    high_cache_hit_threshold = Param.Float(0.875,
+        "A cache hit ratio bigger than this is considered high")
+    low_cache_hit_threshold = Param.Float(0.75,
+        "A cache hit ratio smaller than this is considered low")
+    epoch_cycles = Param.Cycles(256000, "Cycles in an epoch period")
+    offchip_memory_latency = Param.Latency("30ns",
+        "Memory latency used to compute the required memory bandwidth")
