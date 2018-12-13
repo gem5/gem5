@@ -55,7 +55,7 @@ inline const sc_core::sc_event &
 tlm_event_finder_t<IF, T>::find_event(sc_core::sc_interface *if_p) const
 {
     const IF *iface = if_p ? dynamic_cast<const IF *>(if_p) :
-        dynamic_cast<const IF *>(port().get_interface());
+        dynamic_cast<const IF *>(port()->_gem5Interface(0));
     if (iface == nullptr) {
         report_error(sc_core::SC_ID_FIND_EVENT_, "port is not bound");
         return sc_core::sc_event::none;
