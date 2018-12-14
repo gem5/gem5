@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2016 ARM Limited
+# Copyright (c) 2014, 2016, 2019 ARM Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -807,7 +807,7 @@ class VecRegOperand(Operand):
             self.op_rd = self.makeReadW(predWrite) + self.op_rd
 
 class VecElemOperand(Operand):
-    reg_class = 'VectorElemClass'
+    reg_class = 'VecElemClass'
 
     def isReg(self):
         return 1
@@ -826,8 +826,6 @@ class VecElemOperand(Operand):
         c_dest = ''
 
         numAccessNeeded = 1
-        regId = 'RegId(%s, %s * numVecElemPerVecReg + elemIdx, %s)' % \
-                (self.reg_class, self.reg_spec)
 
         if self.is_src:
             c_src = ('\n\t_srcRegIdx[_numSrcRegs++] = RegId(%s, %s, %s);' %
@@ -840,15 +838,26 @@ class VecElemOperand(Operand):
         return c_src + c_dest
 
     def makeRead(self, predRead):
-        c_read = ('\n/* Elem is kept inside the operand description */' +
-                  '\n\tVecElem %s = xc->readVecElemOperand(this, %d);' %
-                  (self.base_name, self.src_reg_idx))
-        return c_read
+        c_read = 'xc->readVecElemOperand(this, %d)' % self.src_reg_idx
+
+        if self.ctype == 'float':
+            c_read = 'bitsToFloat32(%s)' % c_read
+        elif self.ctype == 'double':
+            c_read = 'bitsToFloat64(%s)' % c_read
+
+        return '\n\t%s %s = %s;\n' % (self.ctype, self.base_name, c_read)
 
     def makeWrite(self, predWrite):
-        c_write = ('\n/* Elem is kept inside the operand description */' +
-                   '\n\txc->setVecElemOperand(this, %d, %s);' %
-                   (self.dest_reg_idx, self.base_name))
+        if self.ctype == 'float':
+            c_write = 'floatToBits32(%s)' % self.base_name
+        elif self.ctype == 'double':
+            c_write = 'floatToBits64(%s)' % self.base_name
+        else:
+            c_write = self.base_name
+
+        c_write = ('\n\txc->setVecElemOperand(this, %d, %s);' %
+                  (self.dest_reg_idx, c_write))
+
         return c_write
 
 class CCRegOperand(Operand):
