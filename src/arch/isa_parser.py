@@ -1939,6 +1939,7 @@ del wrap
         try:
             exec split_setup+fixPythonIndentation(t[2]) in self.exportContext
         except Exception, exc:
+            traceback.print_exc(file=sys.stdout)
             if debug:
                 raise
             error(t.lineno(1), 'In global let block: %s' % exc)
