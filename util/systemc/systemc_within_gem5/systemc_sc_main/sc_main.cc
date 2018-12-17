@@ -43,6 +43,7 @@ class Printer : public sc_core::sc_module
         SC_THREAD(print);
     }
 
+    using sc_core::sc_object::print;
     void
     print()
     {

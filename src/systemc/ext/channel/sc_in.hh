@@ -83,6 +83,7 @@ class sc_in : public sc_port<sc_signal_in_if<T>, 1>
         _valueChangedFinder(*this, &sc_signal_in_if<T>::value_changed_event)
     {}
 
+    using sc_port<sc_signal_in_if<T>, 1>::bind;
     virtual void
     bind(const sc_signal_in_if<T> &i)
     {
