@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 ARM Limited
+// Copyright (c) 2017-2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -560,7 +560,9 @@ def template SveGatherLoadMicroopExecute {{
         if (fault == NoFault) {
             %(fault_status_reset_code)s;
             %(memacc_code)s;
-            %(op_wb)s;
+            if (traceData) {
+                traceData->setData(memData);
+            }
         } else {
             %(fault_status_set_code)s;
             if (firstFault) {
@@ -572,7 +574,9 @@ def template SveGatherLoadMicroopExecute {{
                   fault = NoFault;
                   memData = 0;
                   %(memacc_code)s;
-                  %(op_wb)s;
+                  if (traceData) {
+                      traceData->setData(memData);
+                  }
                }
             }
         }
@@ -638,7 +642,9 @@ def template SveGatherLoadMicroopCompleteAcc {{
         }
 
         %(memacc_code)s;
-        %(op_wb)s;
+        if (traceData) {
+            traceData->setData(memData);
+        }
 
         return NoFault;
     }
