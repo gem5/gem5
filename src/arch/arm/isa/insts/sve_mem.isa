@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 ARM Limited
+// Copyright (c) 2017-2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1117,11 +1117,12 @@ let {{
         tplHeader = 'template <class RegElemType, class MemElemType>'
         tplArgs = '<RegElemType, MemElemType>'
         if indexed_addr_form == IndexedAddrForm.VEC_PLUS_IMM:
-            eaCode = '''
+            eaCode_store = '''
         EA = AA64FpBase_x[elemIndex] + imm * sizeof(MemElemType)'''
+            eaCode_load = '''
+        EA = AA64FpUreg0_x[elemIndex] + imm * sizeof(MemElemType)'''
         else:
-            eaCode = '''
-        uint64_t offset = AA64FpOffset_x[elemIndex];
+            offset_code = '''
         if (offsetIs32) {
             offset &= (1ULL << 32) - 1;
         }
@@ -1132,6 +1133,11 @@ let {{
             offset *= sizeof(MemElemType);
         }
         EA = XBase + offset'''
+            eaCode_store = '''
+        uint64_t offset = AA64FpOffset_x[elemIndex];''' + offset_code
+            eaCode_load = '''
+        uint64_t offset = AA64FpUreg0_x[elemIndex];''' + offset_code
+
         loadMemAccCode = '''
             AA64FpDest_x[elemIndex] = memData;
         '''
@@ -1149,7 +1155,7 @@ let {{
             {'tpl_header': tplHeader,
              'tpl_args': tplArgs,
              'memacc_code': loadMemAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode,
+             'ea_code' : sveEnabledCheckCode + eaCode_load,
              'fault_status_set_code' : faultStatusSetCode,
              'fault_status_reset_code' : faultStatusResetCode,
              'pred_check_code' : predCheckCode,
@@ -1163,7 +1169,7 @@ let {{
             {'tpl_header': tplHeader,
              'tpl_args': tplArgs,
              'memacc_code': storeMemAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode,
+             'ea_code' : sveEnabledCheckCode + eaCode_store,
              'pred_check_code' : predCheckCode,
              'fa_code' : ''},
             ['IsMicroop', 'IsMemRef', 'IsStore'])
