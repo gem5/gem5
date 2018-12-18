@@ -205,7 +205,37 @@ longDescFormatInUse(ThreadContext *tc)
     return ArmSystem::haveLPAE(tc) && ttbcr.eae;
 }
 
-uint32_t
+MiscReg
+readMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
+{
+    CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    const ExceptionLevel current_el =
+        opModeToEL((OperatingMode) (uint8_t) cpsr.mode);
+
+    const bool is_secure = isSecureBelowEL3(tc);
+
+    switch (current_el) {
+      case EL0:
+        // Note: in MsrMrs instruction we read the register value before
+        // checking access permissions. This means that EL0 entry must
+        // be part of the table even if MPIDR is not accessible in user
+        // mode.
+        warn_once("Trying to read MPIDR at EL0\n");
+        M5_FALLTHROUGH;
+      case EL1:
+        if (ArmSystem::haveEL(tc, EL2) && !is_secure)
+            return tc->readMiscReg(MISCREG_VMPIDR_EL2);
+        else
+            return getMPIDR(arm_sys, tc);
+      case EL2:
+      case EL3:
+        return getMPIDR(arm_sys, tc);
+      default:
+        panic("Invalid EL for reading MPIDR register\n");
+    }
+}
+
+MiscReg
 getMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
 {
     // Multiprocessor Affinity Register MPIDR from Cortex(tm)-A15 Technical

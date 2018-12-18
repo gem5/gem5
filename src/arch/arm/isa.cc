@@ -477,18 +477,10 @@ ISA::readMiscReg(int misc_reg, ThreadContext *tc)
             return val;
         }
       case MISCREG_MPIDR:
-        cpsr = readMiscRegNoEffect(MISCREG_CPSR);
-        scr  = readMiscRegNoEffect(MISCREG_SCR);
-        if ((cpsr.mode == MODE_HYP) || inSecureState(scr, cpsr)) {
-            return getMPIDR(system, tc);
-        } else {
-            return readMiscReg(MISCREG_VMPIDR, tc);
-        }
-            break;
       case MISCREG_MPIDR_EL1:
-        // @todo in the absence of v8 virtualization support just return MPIDR_EL1
-        return getMPIDR(system, tc) & 0xffffffff;
+        return readMPIDR(system, tc);
       case MISCREG_VMPIDR:
+      case MISCREG_VMPIDR_EL2:
         // top bit defined as RES1
         return readMiscRegNoEffect(misc_reg) | 0x80000000;
       case MISCREG_ID_AFR0: // not implemented, so alias MIDR

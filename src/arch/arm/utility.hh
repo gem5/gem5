@@ -250,7 +250,13 @@ inline bool isSecureBelowEL3(ThreadContext *tc);
 
 bool longDescFormatInUse(ThreadContext *tc);
 
-uint32_t getMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
+/** This helper function is either returing the value of
+ * MPIDR_EL1 (by calling getMPIDR), or it is issuing a read
+ * to VMPIDR_EL2 (as it happens in virtualized systems) */
+MiscReg readMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
+
+/** This helper function is returing the value of MPIDR_EL1 */
+MiscReg getMPIDR(ArmSystem *arm_sys, ThreadContext *tc);
 
 static inline uint32_t
 mcrMrcIssBuild(bool isRead, uint32_t crm, IntRegIndex rt, uint32_t crn,
