@@ -135,6 +135,7 @@ class Pl011 : public Uart, public AmbaDevice
     static const int UART_RIS  = 0x03C;
     static const int UART_MIS  = 0x040;
     static const int UART_ICR  = 0x044;
+    static const int UART_DMACR = 0x048;
 
     static const uint16_t UART_RIINTR = 1 << 0;
     static const uint16_t UART_CTSINTR = 1 << 1;

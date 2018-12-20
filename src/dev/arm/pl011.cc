@@ -133,6 +133,10 @@ Pl011::read(PacketPtr pkt)
         DPRINTF(Uart, "Reading Masked Int status as 0x%x\n", maskInt());
         data = maskInt();
         break;
+      case UART_DMACR:
+        warn("PL011: DMA not supported\n");
+        data = 0x0; // DMA never enabled
+        break;
       default:
         if (readId(pkt, AMBA_ID, pioAddr)) {
             // Hack for variable size accesses
@@ -238,6 +242,14 @@ Pl011::write(PacketPtr pkt)
                     "UART_ICR write\n");
             dataAvailable();
         }
+        break;
+      case UART_DMACR:
+        // DMA is not supported, so panic if anyome tries to enable it.
+        // Bits 0, 1, 2 enables DMA on RX, TX, ERR respectively, others res0.
+        if (data & 0x7) {
+            panic("Tried to enable DMA on PL011\n");
+        }
+        warn("PL011: DMA not supported\n");
         break;
       default:
         panic("Tried to write PL011 at offset %#x that doesn't exist\n", daddr);
