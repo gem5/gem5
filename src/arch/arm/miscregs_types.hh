@@ -460,6 +460,7 @@ namespace ArmISA
         Bitfield<5> pd1;
         // Long-descriptor translation table format
         Bitfield<2, 0> t0sz;
+        Bitfield<6> t2e;
         Bitfield<7> epd0;
         Bitfield<9, 8> irgn0;
         Bitfield<11, 10> orgn0;
@@ -481,6 +482,8 @@ namespace ArmISA
         // TCR_EL2/3 (AArch64)
         Bitfield<18, 16> ps;
         Bitfield<20> tbi;
+        Bitfield<41> hpd0;
+        Bitfield<42> hpd1;
     EndBitUnion(TTBCR)
 
     // Fields of TCR_EL{1,2,3} (mostly overlapping)
@@ -505,6 +508,10 @@ namespace ArmISA
         Bitfield<36> as; // EL1
         Bitfield<37> tbi0; // EL1
         Bitfield<38> tbi1; // EL1
+        Bitfield<39> ha;
+        Bitfield<40> hd;
+        Bitfield<41> hpd0;
+        Bitfield<42> hpd1;
     EndBitUnion(TCR)
 
     BitUnion32(HTCR)
@@ -512,6 +519,7 @@ namespace ArmISA
         Bitfield<9, 8> irgn0;
         Bitfield<11, 10> orgn0;
         Bitfield<13, 12> sh0;
+        Bitfield<24> hpd;
     EndBitUnion(HTCR)
 
     BitUnion32(VTCR_t)
@@ -524,6 +532,8 @@ namespace ArmISA
         Bitfield<13, 12> sh0;
         Bitfield<15, 14> tg0;
         Bitfield<18, 16> ps; // Only defined for VTCR_EL2
+        Bitfield<21> ha;     // Only defined for VTCR_EL2
+        Bitfield<22> hd;     // Only defined for VTCR_EL2
     EndBitUnion(VTCR_t)
 
     BitUnion32(PRRR)
