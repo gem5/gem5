@@ -95,3 +95,42 @@ class Gicv2m(PioDevice):
     pio_delay = Param.Latency('10ns', "Delay for PIO r/w")
     gic = Param.BaseGic(Parent.any, "Gic on which to trigger interrupts")
     frames = VectorParam.Gicv2mFrame([], "Power of two number of frames")
+
+class VGic(PioDevice):
+    type = 'VGic'
+    cxx_header = "dev/arm/vgic.hh"
+    gic = Param.BaseGic(Parent.any, "Gic to use for interrupting")
+    platform = Param.Platform(Parent.any, "Platform this device is part of.")
+    vcpu_addr = Param.Addr(0, "Address for vcpu interfaces")
+    hv_addr = Param.Addr(0, "Address for hv control")
+    pio_delay = Param.Latency('10ns', "Delay for PIO r/w")
+   # The number of list registers is not currently configurable at runtime.
+    ppint = Param.UInt32("HV maintenance interrupt number")
+
+    def generateDeviceTree(self, state):
+        gic = self.gic.unproxy(self)
+
+        node = FdtNode("interrupt-controller")
+        node.appendCompatible(["gem5,gic", "arm,cortex-a15-gic",
+                               "arm,cortex-a9-gic"])
+        node.append(FdtPropertyWords("#interrupt-cells", [3]))
+        node.append(FdtPropertyWords("#address-cells", [0]))
+        node.append(FdtProperty("interrupt-controller"))
+
+        regs = (
+            state.addrCells(gic.dist_addr) +
+            state.sizeCells(0x1000) +
+            state.addrCells(gic.cpu_addr) +
+            state.sizeCells(0x1000) +
+            state.addrCells(self.hv_addr) +
+            state.sizeCells(0x2000) +
+            state.addrCells(self.vcpu_addr) +
+            state.sizeCells(0x2000) )
+
+        node.append(FdtPropertyWords("reg", regs))
+        node.append(FdtPropertyWords("interrupts",
+                                     [1, int(self.ppint)-16, 0xf04]))
+
+        node.appendPhandle(gic)
+
+        yield node
