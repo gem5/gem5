@@ -1082,6 +1082,9 @@ for root, dirs, files in os.walk(ext_dir):
         main.SConscript(joinpath(root, 'SConscript'),
                         variant_dir=joinpath(build_root, build_dir))
 
+gdb_xml_dir = joinpath(ext_dir, 'gdb-xml')
+Export('gdb_xml_dir')
+
 main.Prepend(CPPPATH=Dir('ext/pybind11/include/'))
 
 ###################################################

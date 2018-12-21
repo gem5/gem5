@@ -293,6 +293,9 @@ def Blob(blob_path, symbol):
                 MakeAction(embedBlob, Transform("EMBED BLOB")))
     Source(cpp_path)
 
+def GdbXml(xml_id, symbol):
+    Blob(joinpath(gdb_xml_dir, xml_id), symbol)
+
 class Source(SourceFile):
     ungrouped_tag = 'No link group'
     source_groups = set()
@@ -522,6 +525,7 @@ class Gem5(Executable):
 
 # Children should have access
 Export('Blob')
+Export('GdbXml')
 Export('Source')
 Export('PySource')
 Export('SimObject')
