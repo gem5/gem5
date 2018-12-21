@@ -64,6 +64,9 @@ const AddrRange GicV2::GICD_ICFGR     (0xc00, 0xcff);
 
 GicV2::GicV2(const Params *p)
     : BaseGic(p),
+      gicdPIDR(p->gicd_pidr),
+      gicdIIDR(p->gicd_iidr),
+      giccIIDR(p->gicc_iidr),
       distRange(RangeSize(p->dist_addr, DIST_SIZE)),
       cpuRange(RangeSize(p->cpu_addr, p->cpu_size)),
       addrRanges{distRange, cpuRange},
@@ -268,16 +271,16 @@ GicV2::readDistributor(ContextID ctx, Addr daddr, size_t resp_sz)
                 (haveGem5Extensions ? 0x100 : 0x0));
       case GICD_PIDR0:
         //ARM defined DevID
-        return (GICD_400_PIDR_VALUE & 0xFF);
+        return (gicdPIDR & 0xFF);
       case GICD_PIDR1:
-        return ((GICD_400_PIDR_VALUE >> 8) & 0xFF);
+        return ((gicdPIDR >> 8) & 0xFF);
       case GICD_PIDR2:
-        return ((GICD_400_PIDR_VALUE >> 16) & 0xFF);
+        return ((gicdPIDR >> 16) & 0xFF);
       case GICD_PIDR3:
-        return ((GICD_400_PIDR_VALUE >> 24) & 0xFF);
+        return ((gicdPIDR >> 24) & 0xFF);
       case GICD_IIDR:
          /* revision id is resorted to 1 and variant to 0*/
-        return GICD_400_IIDR_VALUE;
+        return gicdIIDR;
       default:
         panic("Tried to read Gic distributor at offset %#x\n", daddr);
         break;
@@ -307,7 +310,7 @@ GicV2::readCpu(ContextID ctx, Addr daddr)
 {
     switch(daddr) {
       case GICC_IIDR:
-        return GICC_400_IIDR_VALUE;
+        return giccIIDR;
       case GICC_CTLR:
         return cpuControl[ctx];
       case GICC_PMR:

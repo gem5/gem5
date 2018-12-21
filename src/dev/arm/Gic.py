@@ -49,6 +49,15 @@ class BaseGic(PioDevice):
 
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
 
+    gicd_iidr = Param.UInt32(0,
+        "Distributor Implementer Identification Register")
+    gicd_pidr = Param.UInt32(0,
+        "Peripheral Identification Register")
+    gicc_iidr = Param.UInt32(0,
+        "CPU Interface Identification Register")
+    gicv_iidr = Param.UInt32(0,
+        "VM CPU Interface Identification Register")
+
 class ArmInterruptPin(SimObject):
     type = 'ArmInterruptPin'
     cxx_header = "dev/arm/base_gic.hh"
@@ -81,6 +90,19 @@ class GicV2(BaseGic):
     it_lines = Param.UInt32(128, "Number of interrupt lines supported (max = 1020)")
     gem5_extensions = Param.Bool(False, "Enable gem5 extensions")
 
+class Gic400(GicV2):
+    """
+    As defined in:
+    "ARM Generic Interrupt Controller Architecture" version 2.0
+    "CoreLink GIC-400 Generic Interrupt Controller" revision r0p1
+    """
+    gicd_pidr = 0x002bb490
+    gicd_iidr = 0x0200143B
+    gicc_iidr = 0x0202143B
+
+    # gicv_iidr same as gicc_idr
+    gicv_iidr = gicc_iidr
+
 class Gicv2mFrame(SimObject):
     type = 'Gicv2mFrame'
     cxx_header = "dev/arm/gic_v2m.hh"
@@ -106,6 +128,10 @@ class VGic(PioDevice):
     pio_delay = Param.Latency('10ns', "Delay for PIO r/w")
    # The number of list registers is not currently configurable at runtime.
     ppint = Param.UInt32("HV maintenance interrupt number")
+
+    # gicv_iidr same as gicc_idr
+    gicv_iidr = Param.UInt32(Self.gic.gicc_iidr,
+        "VM CPU Interface Identification Register")
 
     def generateDeviceTree(self, state):
         gic = self.gic.unproxy(self)
