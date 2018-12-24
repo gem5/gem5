@@ -51,6 +51,9 @@ from BranchPredictor import *
 class FetchPolicy(ScopedEnum):
     vals = [ 'SingleThread', 'RoundRobin', 'Branch', 'IQCount', 'LSQCount' ]
 
+class SMTQueuePolicy(ScopedEnum):
+    vals = [ 'Dynamic', 'Partitioned', 'Threshold' ]
+
 class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
     cxx_header = 'cpu/o3/deriv.hh'
@@ -151,7 +154,8 @@ class DerivO3CPU(BaseCPU):
 
     smtNumFetchingThreads = Param.Unsigned(1, "SMT Number of Fetching Threads")
     smtFetchPolicy = Param.FetchPolicy('SingleThread', "SMT Fetch policy")
-    smtLSQPolicy    = Param.String('Partitioned', "SMT LSQ Sharing Policy")
+    smtLSQPolicy    = Param.SMTQueuePolicy('Partitioned',
+                                           "SMT LSQ Sharing Policy")
     smtLSQThreshold = Param.Int(100, "SMT LSQ Threshold Sharing Parameter")
     smtIQPolicy    = Param.String('Partitioned', "SMT IQ Sharing Policy")
     smtIQThreshold = Param.Int(100, "SMT IQ Threshold Sharing Parameter")

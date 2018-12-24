@@ -61,7 +61,7 @@ using namespace std;
 template <class Impl>
 LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
     : cpu(cpu_ptr), iewStage(iew_ptr),
-      lsqPolicy(readLSQPolicy(params->smtLSQPolicy)),
+      lsqPolicy(params->smtLSQPolicy),
       LQEntries(params->LQEntries),
       SQEntries(params->SQEntries),
       maxLQEntries(maxLSQAllocation(lsqPolicy, LQEntries, params->numThreads,
@@ -77,13 +77,13 @@ LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
     //**********************************************/
 
     //Figure out fetch policy
-    if (lsqPolicy == Dynamic) {
+    if (lsqPolicy == SMTQueuePolicy::Dynamic) {
         DPRINTF(LSQ, "LSQ sharing policy set to Dynamic\n");
-    } else if (lsqPolicy == Partitioned) {
+    } else if (lsqPolicy == SMTQueuePolicy::Partitioned) {
         DPRINTF(Fetch, "LSQ sharing policy set to Partitioned: "
                 "%i entries per LQ | %i entries per SQ\n",
                 maxLQEntries,maxSQEntries);
-    } else if (lsqPolicy == Threshold) {
+    } else if (lsqPolicy == SMTQueuePolicy::Threshold) {
 
         assert(params->smtLSQThreshold > LQEntries);
         assert(params->smtLSQThreshold > SQEntries);
@@ -172,7 +172,7 @@ template <class Impl>
 int
 LSQ<Impl>::entryAmount(ThreadID num_threads)
 {
-    if (lsqPolicy == Partitioned) {
+    if (lsqPolicy == SMTQueuePolicy::Partitioned) {
         return LQEntries / num_threads;
     } else {
         return 0;
@@ -183,14 +183,15 @@ template <class Impl>
 void
 LSQ<Impl>::resetEntries()
 {
-    if (lsqPolicy != Dynamic || numThreads > 1) {
+    if (lsqPolicy != SMTQueuePolicy::Dynamic || numThreads > 1) {
         int active_threads = activeThreads->size();
 
         int maxEntries;
 
-        if (lsqPolicy == Partitioned) {
+        if (lsqPolicy == SMTQueuePolicy::Partitioned) {
             maxEntries = LQEntries / active_threads;
-        } else if (lsqPolicy == Threshold && active_threads == 1) {
+        } else if (lsqPolicy == SMTQueuePolicy::Threshold &&
+                   active_threads == 1) {
             maxEntries = LQEntries;
         } else {
             maxEntries = LQEntries;
@@ -500,7 +501,7 @@ LSQ<Impl>::isFull(ThreadID tid)
 {
     //@todo: Change to Calculate All Entries for
     //Dynamic Policy
-    if (lsqPolicy == Dynamic)
+    if (lsqPolicy == SMTQueuePolicy::Dynamic)
         return isFull();
     else
         return thread[tid].lqFull() || thread[tid].sqFull();
@@ -570,7 +571,7 @@ LSQ<Impl>::lqFull(ThreadID tid)
 {
     //@todo: Change to Calculate All Entries for
     //Dynamic Policy
-    if (lsqPolicy == Dynamic)
+    if (lsqPolicy == SMTQueuePolicy::Dynamic)
         return lqFull();
     else
         return thread[tid].lqFull();
@@ -599,7 +600,7 @@ LSQ<Impl>::sqFull(ThreadID tid)
 {
      //@todo: Change to Calculate All Entries for
     //Dynamic Policy
-    if (lsqPolicy == Dynamic)
+    if (lsqPolicy == SMTQueuePolicy::Dynamic)
         return sqFull();
     else
         return thread[tid].sqFull();
@@ -626,7 +627,7 @@ template<class Impl>
 bool
 LSQ<Impl>::isStalled(ThreadID tid)
 {
-    if (lsqPolicy == Dynamic)
+    if (lsqPolicy == SMTQueuePolicy::Dynamic)
         return isStalled();
     else
         return thread[tid].isStalled();
