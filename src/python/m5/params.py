@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014, 2017 ARM Limited
+# Copyright (c) 2012-2014, 2017, 2018 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -1243,7 +1243,10 @@ class MetaEnum(MetaParamValue):
             raise TypeError, "Enum-derived class must define "\
                   "attribute 'map' or 'vals'"
 
-        cls.cxx_type = 'Enums::%s' % name
+        if cls.is_class:
+            cls.cxx_type = '%s' % name
+        else:
+            cls.cxx_type = 'Enums::%s' % name
 
         super(MetaEnum, cls).__init__(name, bases, init_dict)
 
@@ -1260,22 +1263,36 @@ class MetaEnum(MetaParamValue):
 #ifndef $idem_macro
 #define $idem_macro
 
+''')
+        if cls.is_class:
+            code('''\
+enum class $name {
+''')
+        else:
+            code('''\
 $wrapper $wrapper_name {
     enum $name {
 ''')
-        code.indent(2)
+            code.indent(1)
+        code.indent(1)
         for val in cls.vals:
             code('$val = ${{cls.map[val]}},')
         code('Num_$name = ${{len(cls.vals)}}')
-        code.dedent(2)
-        code('    };')
+        code.dedent(1)
+        code('};')
 
-        if cls.wrapper_is_struct:
-            code('    static const char *${name}Strings[Num_${name}];')
-            code('};')
+        if cls.is_class:
+            code('''\
+extern const char *${name}Strings[static_cast<int>(${name}::Num_${name})];
+''')
+        elif cls.wrapper_is_struct:
+            code('static const char *${name}Strings[Num_${name}];')
         else:
             code('extern const char *${name}Strings[Num_${name}];')
-            code('}')
+
+        if not cls.is_class:
+            code.dedent(1)
+            code('};')
 
         code()
         code('#endif // $idem_macro')
@@ -1290,9 +1307,14 @@ $wrapper $wrapper_name {
             code('const char *${wrapper_name}::${name}Strings'
                 '[Num_${name}] =')
         else:
-            code('namespace Enums {')
-            code.indent(1)
-            code(' const char *${name}Strings[Num_${name}] =')
+            if cls.is_class:
+                code('''\
+const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
+''')
+            else:
+                code('namespace Enums {')
+                code.indent(1)
+                code('const char *${name}Strings[Num_${name}] =')
 
         code('{')
         code.indent(1)
@@ -1301,14 +1323,15 @@ $wrapper $wrapper_name {
         code.dedent(1)
         code('};')
 
-        if not cls.wrapper_is_struct:
-            code('} // namespace $wrapper_name')
+        if not cls.wrapper_is_struct and not cls.is_class:
             code.dedent(1)
+            code('} // namespace $wrapper_name')
+
 
     def pybind_def(cls, code):
         name = cls.__name__
-        wrapper_name = cls.wrapper_name
         enum_name = cls.__name__ if cls.enum_name is None else cls.enum_name
+        wrapper_name = enum_name if cls.is_class else cls.wrapper_name
 
         code('''#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
@@ -1322,8 +1345,11 @@ module_init(py::module &m_internal)
 {
     py::module m = m_internal.def_submodule("enum_${name}");
 
-    py::enum_<${wrapper_name}::${enum_name}>(m, "enum_${name}")
 ''')
+        if cls.is_class:
+            code('py::enum_<${enum_name}>(m, "enum_${name}")')
+        else:
+            code('py::enum_<${wrapper_name}::${enum_name}>(m, "enum_${name}")')
 
         code.indent()
         code.indent()
@@ -1351,6 +1377,8 @@ class Enum(ParamValue):
 
     # If true, the enum is wrapped in a struct rather than a namespace
     wrapper_is_struct = False
+
+    is_class = False
 
     # If not None, use this as the enum name rather than this class name
     enum_name = None
@@ -1389,6 +1417,24 @@ class Enum(ParamValue):
 
     def __str__(self):
         return self.value
+
+# This param will generate a scoped c++ enum and its python bindings.
+class ScopedEnum(Enum):
+    __metaclass__ = MetaEnum
+    vals = []
+    cmd_line_settable = True
+
+    # The name of the wrapping namespace or struct
+    wrapper_name = None
+
+    # If true, the enum is wrapped in a struct rather than a namespace
+    wrapper_is_struct = False
+
+    # If true, the generated enum is a scoped enum
+    is_class = True
+
+    # If not None, use this as the enum name rather than this class name
+    enum_name = None
 
 # how big does a rounding error need to be before we warn about it?
 frequency_tolerance = 0.001  # 0.1%
@@ -2041,7 +2087,7 @@ def clear():
     allParams = baseParams.copy()
 
 __all__ = ['Param', 'VectorParam',
-           'Enum', 'Bool', 'String', 'Float',
+           'Enum', 'ScopedEnum', 'Bool', 'String', 'Float',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
            'Int32', 'UInt32', 'Int64', 'UInt64',
            'Counter', 'Addr', 'Tick', 'Percent',
