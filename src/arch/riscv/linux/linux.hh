@@ -34,7 +34,7 @@
 #include "arch/riscv/utility.hh"
 #include "kern/linux/linux.hh"
 
-class RiscvLinux : public Linux
+class RiscvLinux64 : public Linux
 {
   public:
     static const int TGT_SIGHUP         =  1;
@@ -186,6 +186,176 @@ class RiscvLinux : public Linux
         uint16_t pad;
         uint64_t totalhigh;
         uint64_t freehigh;
+        uint32_t mem_unit;
+    } tgt_sysinfo;
+
+    static void
+    archClone(uint64_t flags,
+              Process *pp, Process *cp,
+              ThreadContext *ptc, ThreadContext *ctc,
+              uint64_t stack, uint64_t tls)
+    {
+        RiscvISA::copyRegs(ptc, ctc);
+        if (stack)
+            ctc->setIntReg(RiscvISA::StackPointerReg, stack);
+    }
+};
+
+class RiscvLinux32 : public Linux
+{
+  public:
+    static const int TGT_SIGHUP         =  1;
+    static const int TGT_SIGINT         =  2;
+    static const int TGT_SIGQUIT        =  3;
+    static const int TGT_SIGILL         =  4;
+    static const int TGT_SIGTRAP        =  5;
+    static const int TGT_SIGABRT        =  6;
+    static const int TGT_SIGIOT         =  6;
+    static const int TGT_SIGEMT         =  7;
+    static const int TGT_SIGFPE         =  8;
+    static const int TGT_SIGKILL        =  9;
+    static const int TGT_SIGBUS         = 10;
+    static const int TGT_SIGSEGV        = 11;
+    static const int TGT_SIGSYS         = 12;
+    static const int TGT_SIGPIPE        = 13;
+    static const int TGT_SIGALRM        = 14;
+    static const int TGT_SIGTERM        = 15;
+    static const int TGT_SIGURG         = 16;
+    static const int TGT_SIGSTOP        = 17;
+    static const int TGT_SIGTSTP        = 18;
+    static const int TGT_SIGCONT        = 19;
+    static const int TGT_SIGCHLD        = 20;
+    static const int TGT_SIGCLD         = 20;
+    static const int TGT_SIGTTIN        = 21;
+    static const int TGT_SIGTTOU        = 22;
+    static const int TGT_SIGPOLL        = 23;
+    static const int TGT_SIGIO          = 23;
+    static const int TGT_SIGXCPU        = 24;
+    static const int TGT_SIGXFSZ        = 25;
+    static const int TGT_SIGVTALRM      = 26;
+    static const int TGT_SIGPROF        = 27;
+    static const int TGT_SIGWINCH       = 28;
+    static const int TGT_SIGLOST        = 29;
+    static const int TGT_SIGPWR         = 29;
+    static const int TGT_SIGUSR1        = 30;
+    static const int TGT_SIGUSR2        = 31;
+
+    /// This table maps the target open() flags to the corresponding
+    /// host open() flags.
+    static SyscallFlagTransTable openFlagTable[];
+
+    /// Number of entries in openFlagTable[].
+    static const int NUM_OPEN_FLAGS;
+
+    //@{
+    /// open(2) flag values.
+    // The following values match newlib 3.0.0.
+    // Note that glibc has different values.
+    static const int TGT_O_RDONLY       = 0x000000; //!< O_RDONLY
+    static const int TGT_O_WRONLY       = 0x000001; //!< O_WRONLY
+    static const int TGT_O_RDWR         = 0x000002; //!< O_RDWR
+    static const int TGT_O_CREAT        = 0x000200; //!< O_CREAT
+    static const int TGT_O_EXCL         = 0x000800; //!< O_EXCL
+    static const int TGT_O_NOCTTY       = 0x008000; //!< O_NOCTTY
+    static const int TGT_O_TRUNC        = 0x000400; //!< O_TRUNC
+    static const int TGT_O_APPEND       = 0x000008; //!< O_APPEND
+    static const int TGT_O_NONBLOCK     = 0x004000; //!< O_NONBLOCK
+    static const int TGT_O_SYNC         = 0x002000; //!< O_SYNC
+    static const int TGT_FSYNC          = 0x002000; //!< FSYNC
+    static const int TGT_FASYNC         = 0x000040; //!< FASYNC
+    // The following are not present in riscv32-unknown-elf <fcntl.h>
+    static const int TGT_O_DSYNC        = 0x010000; //!< O_DSYNC
+    static const int TGT_O_CLOEXEC      = 0x040000; //!< O_CLOEXEC
+    static const int TGT_O_NOINHERIT    = 0x040000; //!< O_NOINHERIT
+    static const int TGT_O_DIRECT       = 0x080000; //!< O_DIRECT
+    static const int TGT_O_NOFOLLOW     = 0x100000; //!< O_NOFOLLOW
+    static const int TGT_O_DIRECTORY    = 0x200000; //!< O_DIRECTORY
+    // The following are not defined by riscv32-unknown-elf
+    static const int TGT_O_LARGEFILE    = 0x020000; //!< O_LARGEFILE
+    static const int TGT_O_NOATIME      = 0x800000; //!< O_NOATIME
+    static const int TGT_O_PATH         = 0x400000; //!< O_PATH
+    //@}
+
+    // Only defined in riscv-unknown-elf for proxy kernel and not linux kernel
+    static const unsigned TGT_MAP_SHARED        = 0x0001;
+    static const unsigned TGT_MAP_PRIVATE       = 0x0002;
+    static const unsigned TGT_MAP_FIXED         = 0x0010;
+    static const unsigned TGT_MAP_ANONYMOUS     = 0x0020;
+    static const unsigned TGT_MAP_POPULATE      = 0x1000;
+    static const unsigned TGT_MREMAP_FIXED      = 0x0020;
+
+    static const unsigned NUM_MMAP_FLAGS;
+
+    // Newlib 3.0.0 defaults to 64-bits for time_t.
+    // Currently time_t in glibc for riscv32 is 32-bits, but will be changed.
+    typedef int64_t time_t;
+
+    /// Limit struct for getrlimit/setrlimit.
+    struct rlimit {
+        uint32_t  rlim_cur;     //!< soft limit
+        uint32_t  rlim_max;     //!< hard limit
+    };
+
+    struct timespec {
+        time_t tv_sec;
+        int32_t tv_nsec;
+    };
+
+    typedef struct {
+        int32_t val[2];
+    } tgt_fsid_t;
+
+    typedef struct {
+        uint64_t st_dev;
+        uint64_t st_ino;
+        uint32_t st_mode;
+        uint32_t st_nlink;
+        uint32_t st_uid;
+        uint32_t st_gid;
+        uint64_t st_rdev;
+        uint64_t __pad1;
+        int64_t st_size;
+        int32_t st_blksize;
+        int32_t __pad2;
+        int64_t st_blocks;
+        time_t st_atimeX;
+        int32_t st_atime_nsec;
+        time_t st_mtimeX;
+        int32_t st_mtime_nsec;
+        time_t st_ctimeX;
+        int32_t st_ctime_nsec;
+        int32_t __unused4;
+        int32_t __unused5;
+    } tgt_stat;
+
+    typedef struct {
+        uint32_t f_type;
+        uint32_t f_bsize;
+        uint32_t f_blocks;
+        uint32_t f_bfree;
+        uint32_t f_bavail;
+        uint32_t f_files;
+        uint32_t f_ffree;
+        tgt_fsid_t f_fsid;
+        uint32_t f_namelen;
+        uint32_t f_frsize;
+        uint32_t f_flags;
+        uint32_t f_spare[4];
+    } tgt_statfs;
+
+    typedef struct {
+        int32_t uptime;
+        uint32_t loads[3];
+        uint32_t totalram;
+        uint32_t freeram;
+        uint32_t sharedram;
+        uint32_t bufferram;
+        uint32_t totalswap;
+        uint32_t freeswap;
+        uint16_t procs;
+        uint16_t pad;
+        uint32_t totalhigh;
+        uint32_t freehigh;
         uint32_t mem_unit;
     } tgt_sysinfo;
 

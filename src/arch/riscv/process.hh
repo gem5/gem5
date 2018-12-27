@@ -47,9 +47,6 @@ class RiscvProcess : public Process
 {
   protected:
     RiscvProcess(ProcessParams * params, ObjectFile *objFile);
-
-    void initState() override;
-
     template<class IntType>
     void argsInit(int pageSize);
 
@@ -62,6 +59,20 @@ class RiscvProcess : public Process
                           SyscallReturn return_value) override;
 
     virtual bool mmapGrowsDown() const override { return false; }
+};
+
+class RiscvProcess64 : public RiscvProcess
+{
+  protected:
+    RiscvProcess64(ProcessParams * params, ObjectFile *objFile);
+    void initState() override;
+};
+
+class RiscvProcess32 : public RiscvProcess
+{
+  protected:
+    RiscvProcess32(ProcessParams * params, ObjectFile *objFile);
+    void initState() override;
 };
 
 #endif // __RISCV_PROCESS_HH__

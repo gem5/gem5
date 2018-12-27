@@ -58,13 +58,17 @@ class PCState : public GenericISA::UPCState<MachInst>
 {
   private:
     bool _compressed;
+    bool _rv32;
 
   public:
-    PCState() : UPCState() { _compressed = false; }
-    PCState(Addr val) : UPCState(val) { _compressed = false; }
+    PCState() : UPCState() { _compressed = false; _rv32 = false; }
+    PCState(Addr val) : UPCState(val) { _compressed = false; _rv32 = false; }
 
     void compressed(bool c) { _compressed = c; }
     bool compressed() { return _compressed; }
+
+    void rv32(bool val) { _rv32 = val; }
+    bool rv32() const { return _rv32; }
 
     bool
     branching() const
