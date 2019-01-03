@@ -21,9 +21,9 @@
 #include <map>
 #include <systemc>
 #include <tlm>
+#include <typeindex>
 
 using sc_core::sc_string_view;
-using sc_core::sc_type_index;
 
 namespace tlm
 {
@@ -43,7 +43,7 @@ struct tlm_phase_registry
     }
 
     unsigned int
-    register_phase(sc_type_index type, sc_string_view name)
+    register_phase(std::type_index type, sc_string_view name)
     {
         type_map::const_iterator it = ids_.find(type);
 
@@ -77,7 +77,7 @@ struct tlm_phase_registry
     }
 
   private:
-    typedef std::map<sc_type_index, key_type> type_map;
+    typedef std::map<std::type_index, key_type> type_map;
     typedef std::vector<std::string> name_table;
 
     type_map ids_;

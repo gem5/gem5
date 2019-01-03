@@ -21,6 +21,7 @@
 #define __SYSTEMC_EXT_TLM_CORE_2_SOCKETS_BASE_SOCKET_IF_H__
 
 #include <systemc>
+#include <typeindex>
 
 namespace tlm
 {
@@ -45,7 +46,7 @@ class tlm_base_socket_if
     virtual sc_core::sc_export_base &get_export_base() = 0;
     virtual sc_core::sc_export_base const &get_export_base() const = 0;
     virtual unsigned int get_bus_width() const = 0;
-    virtual sc_core::sc_type_index get_protocol_types() const = 0;
+    virtual std::type_index get_protocol_types() const = 0;
     virtual tlm_socket_category get_socket_category() const = 0;
 
   protected:

@@ -20,6 +20,8 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_2_SOCKETS_TARGET_SOCKET_HH__
 #define __SYSTEMC_EXT_TLM_CORE_2_SOCKETS_TARGET_SOCKET_HH__
 
+#include <typeindex>
+
 #include "tlm_core/2/interfaces/fw_bw_ifs.hh"
 #include "tlm_core/2/sockets/base_socket_if.hh"
 
@@ -211,7 +213,7 @@ class tlm_target_socket :
 
     virtual const char* kind() const { return "tlm_target_socket"; }
 
-    virtual sc_core::sc_type_index
+    virtual std::type_index
     get_protocol_types() const
     {
         return typeid(TYPES);

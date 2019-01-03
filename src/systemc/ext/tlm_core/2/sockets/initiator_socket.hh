@@ -20,6 +20,8 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_2_SOCKETS_INITIATOR_SOCKET_HH__
 #define __SYSTEMC_EXT_TLM_CORE_2_SOCKETS_INITIATOR_SOCKET_HH__
 
+#include <typeindex>
+
 #include "tlm_core/2/interfaces/fw_bw_ifs.hh"
 #include "tlm_core/2/sockets/base_socket_if.hh"
 
@@ -192,7 +194,7 @@ class tlm_initiator_socket : public tlm_base_initiator_socket<
 
     virtual const char *kind() const { return "tlm_initiator_socket"; }
 
-    virtual sc_core::sc_type_index
+    virtual std::type_index
     get_protocol_types() const
     {
         return typeid(TYPES);

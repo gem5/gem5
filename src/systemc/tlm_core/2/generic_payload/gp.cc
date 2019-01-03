@@ -21,8 +21,7 @@
 #include <map>
 #include <systemc>
 #include <tlm>
-
-using sc_core::sc_type_index;
+#include <typeindex>
 
 namespace tlm
 {
@@ -39,7 +38,7 @@ namespace
 class tlm_extension_registry
 {
     typedef unsigned int key_type;
-    typedef std::map<sc_core::sc_type_index, key_type> type_map;
+    typedef std::map<std::type_index, key_type> type_map;
   public:
     static tlm_extension_registry &
     instance()
@@ -52,7 +51,7 @@ class tlm_extension_registry
     }
 
     unsigned int
-    register_extension(sc_type_index type)
+    register_extension(std::type_index type)
     {
         type_map::const_iterator it = ids_.find(type);
 

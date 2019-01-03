@@ -23,6 +23,7 @@
 #include <map>
 #include <systemc>
 #include <tlm>
+#include <typeindex>
 
 namespace tlm
 {
@@ -40,7 +41,7 @@ namespace
 class ispex_registry // Copied from tlm_gp.cpp.
 {
     typedef unsigned int key_type;
-    typedef std::map<sc_core::sc_type_index, key_type> type_map;
+    typedef std::map<std::type_index, key_type> type_map;
 
   public:
     static ispex_registry &
@@ -54,7 +55,7 @@ class ispex_registry // Copied from tlm_gp.cpp.
     }
 
     unsigned int
-    register_extension(sc_core::sc_type_index type)
+    register_extension(std::type_index type)
     {
         type_map::const_iterator it = ids_.find(type);
 
