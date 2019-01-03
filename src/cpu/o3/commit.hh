@@ -50,6 +50,7 @@
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/timebuf.hh"
+#include "enums/CommitPolicy.hh"
 #include "sim/probe/probe.hh"
 
 struct DerivO3CPUParams;
@@ -117,13 +118,6 @@ class DefaultCommit
         TrapPending,
         FetchTrapPending,
         SquashAfterPending, //< Committing instructions before a squash.
-    };
-
-    /** Commit policy for SMT mode. */
-    enum CommitPolicy {
-        Aggressive,
-        RoundRobin,
-        OldestReady
     };
 
   private:

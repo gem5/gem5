@@ -54,6 +54,9 @@ class FetchPolicy(ScopedEnum):
 class SMTQueuePolicy(ScopedEnum):
     vals = [ 'Dynamic', 'Partitioned', 'Threshold' ]
 
+class CommitPolicy(ScopedEnum):
+    vals = [ 'Aggressive', 'RoundRobin', 'OldestReady' ]
+
 class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
     cxx_header = 'cpu/o3/deriv.hh'
@@ -163,7 +166,7 @@ class DerivO3CPU(BaseCPU):
     smtROBPolicy   = Param.SMTQueuePolicy('Partitioned',
                                           "SMT ROB Sharing Policy")
     smtROBThreshold = Param.Int(100, "SMT ROB Threshold Sharing Parameter")
-    smtCommitPolicy = Param.String('RoundRobin', "SMT Commit Policy")
+    smtCommitPolicy = Param.CommitPolicy('RoundRobin', "SMT Commit Policy")
 
     branchPred = Param.BranchPredictor(TournamentBP(numThreads =
                                                        Parent.numThreads),

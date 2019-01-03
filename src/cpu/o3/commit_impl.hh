@@ -82,7 +82,8 @@ DefaultCommit<Impl>::processTrapEvent(ThreadID tid)
 
 template <class Impl>
 DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
-    : cpu(_cpu),
+    : commitPolicy(params->smtCommitPolicy),
+      cpu(_cpu),
       iewToCommitDelay(params->iewToCommitDelay),
       commitToIEWDelay(params->commitToIEWDelay),
       renameToROBDelay(params->renameToROBDelay),
@@ -103,33 +104,12 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
 
     _status = Active;
     _nextStatus = Inactive;
-    std::string policy = params->smtCommitPolicy;
 
-    //Convert string to lowercase
-    std::transform(policy.begin(), policy.end(), policy.begin(),
-                   (int(*)(int)) tolower);
-
-    //Assign commit policy
-    if (policy == "aggressive"){
-        commitPolicy = Aggressive;
-
-        DPRINTF(Commit,"Commit Policy set to Aggressive.\n");
-    } else if (policy == "roundrobin"){
-        commitPolicy = RoundRobin;
-
+    if (commitPolicy == CommitPolicy::RoundRobin) {
         //Set-Up Priority List
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             priority_list.push_back(tid);
         }
-
-        DPRINTF(Commit,"Commit Policy set to Round Robin.\n");
-    } else if (policy == "oldestready"){
-        commitPolicy = OldestReady;
-
-        DPRINTF(Commit,"Commit Policy set to Oldest Ready.");
-    } else {
-        panic("Invalid SMT commit policy. Options are: Aggressive, "
-               "RoundRobin, OldestReady");
     }
 
     for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
@@ -1431,16 +1411,16 @@ DefaultCommit<Impl>::getCommittingThread()
     if (numThreads > 1) {
         switch (commitPolicy) {
 
-          case Aggressive:
+          case CommitPolicy::Aggressive:
             //If Policy is Aggressive, commit will call
             //this function multiple times per
             //cycle
             return oldestReady();
 
-          case RoundRobin:
+          case CommitPolicy::RoundRobin:
             return roundRobin();
 
-          case OldestReady:
+          case CommitPolicy::OldestReady:
             return oldestReady();
 
           default:
