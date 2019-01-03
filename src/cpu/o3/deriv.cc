@@ -57,14 +57,8 @@ DerivO3CPUParams::create()
 
     numThreads = actual_num_threads;
 
-    // Default smtFetchPolicy to "RoundRobin", if necessary.
-    std::string round_robin_policy = "RoundRobin";
-    std::string single_thread = "SingleThread";
-
-    if (actual_num_threads > 1 && single_thread.compare(smtFetchPolicy) == 0)
-        smtFetchPolicy = round_robin_policy;
-    else
-        smtFetchPolicy = smtFetchPolicy;
+    if (actual_num_threads > 1 && smtFetchPolicy == FetchPolicy::SingleThread)
+        smtFetchPolicy = FetchPolicy::RoundRobin;
 
     return new DerivO3CPU(this);
 }

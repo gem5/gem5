@@ -1,4 +1,4 @@
-# Copyright (c) 2016 ARM Limited
+# Copyright (c) 2016, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -47,6 +47,9 @@ from BaseCPU import BaseCPU
 from FUPool import *
 from O3Checker import O3Checker
 from BranchPredictor import *
+
+class FetchPolicy(ScopedEnum):
+    vals = [ 'SingleThread', 'RoundRobin', 'Branch', 'IQCount', 'LSQCount' ]
 
 class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
@@ -147,7 +150,7 @@ class DerivO3CPU(BaseCPU):
     numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
 
     smtNumFetchingThreads = Param.Unsigned(1, "SMT Number of Fetching Threads")
-    smtFetchPolicy = Param.String('SingleThread', "SMT Fetch policy")
+    smtFetchPolicy = Param.FetchPolicy('SingleThread', "SMT Fetch policy")
     smtLSQPolicy    = Param.String('Partitioned', "SMT LSQ Sharing Policy")
     smtLSQThreshold = Param.Int(100, "SMT LSQ Threshold Sharing Parameter")
     smtIQPolicy    = Param.String('Partitioned', "SMT IQ Sharing Policy")

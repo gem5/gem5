@@ -52,6 +52,7 @@
 #include "cpu/pred/bpred_unit.hh"
 #include "cpu/timebuf.hh"
 #include "cpu/translation.hh"
+#include "enums/FetchPolicy.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "sim/eventq.hh"
@@ -172,15 +173,6 @@ class DefaultFetch
         NoGoodAddr
     };
 
-    /** Fetching Policy, Add new policies here.*/
-    enum FetchPriority {
-        SingleThread,
-        RoundRobin,
-        Branch,
-        IQ,
-        LSQ
-    };
-
   private:
     /** Fetch status. */
     FetchStatus _status;
@@ -189,7 +181,7 @@ class DefaultFetch
     ThreadStatus fetchStatus[Impl::MaxThreads];
 
     /** Fetch policy. */
-    FetchPriority fetchPolicy;
+    FetchPolicy fetchPolicy;
 
     /** List that has the threads organized by priority. */
     std::list<ThreadID> priorityList;
@@ -364,7 +356,7 @@ class DefaultFetch
                          TheISA::PCState nextPC, bool trace);
 
     /** Returns the appropriate thread to fetch, given the fetch policy. */
-    ThreadID getFetchingThread(FetchPriority &fetch_priority);
+    ThreadID getFetchingThread();
 
     /** Returns the appropriate thread to fetch using a round robin policy. */
     ThreadID roundRobin();
