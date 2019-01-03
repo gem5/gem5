@@ -56,29 +56,21 @@ using namespace std;
 
 template <class Impl>
 ROB<Impl>::ROB(O3CPU *_cpu, DerivO3CPUParams *params)
-    : cpu(_cpu),
+    : robPolicy(params->smtROBPolicy),
+      cpu(_cpu),
       numEntries(params->numROBEntries),
       squashWidth(params->squashWidth),
       numInstsInROB(0),
       numThreads(params->numThreads)
 {
-    std::string policy = params->smtROBPolicy;
-
-    //Convert string to lowercase
-    std::transform(policy.begin(), policy.end(), policy.begin(),
-                   (int(*)(int)) tolower);
-
     //Figure out rob policy
-    if (policy == "dynamic") {
-        robPolicy = Dynamic;
-
+    if (robPolicy == SMTQueuePolicy::Dynamic) {
         //Set Max Entries to Total ROB Capacity
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             maxEntries[tid] = numEntries;
         }
 
-    } else if (policy == "partitioned") {
-        robPolicy = Partitioned;
+    } else if (robPolicy == SMTQueuePolicy::Partitioned) {
         DPRINTF(Fetch, "ROB sharing policy set to Partitioned\n");
 
         //@todo:make work if part_amt doesnt divide evenly.
@@ -89,8 +81,7 @@ ROB<Impl>::ROB(O3CPU *_cpu, DerivO3CPUParams *params)
             maxEntries[tid] = part_amt;
         }
 
-    } else if (policy == "threshold") {
-        robPolicy = Threshold;
+    } else if (robPolicy == SMTQueuePolicy::Threshold) {
         DPRINTF(Fetch, "ROB sharing policy set to Threshold\n");
 
         int threshold =  params->smtROBThreshold;;
@@ -99,10 +90,8 @@ ROB<Impl>::ROB(O3CPU *_cpu, DerivO3CPUParams *params)
         for (ThreadID tid = 0; tid < numThreads; tid++) {
             maxEntries[tid] = threshold;
         }
-    } else {
-        panic("Invalid ROB sharing policy. Options are: Dynamic, "
-                "Partitioned, Threshold");
     }
+
     for (ThreadID tid = numThreads; tid < Impl::MaxThreads; tid++) {
         maxEntries[tid] = 0;
     }
@@ -163,7 +152,7 @@ template <class Impl>
 void
 ROB<Impl>::resetEntries()
 {
-    if (robPolicy != Dynamic || numThreads > 1) {
+    if (robPolicy != SMTQueuePolicy::Dynamic || numThreads > 1) {
         int active_threads = activeThreads->size();
 
         list<ThreadID>::iterator threads = activeThreads->begin();
@@ -172,9 +161,10 @@ ROB<Impl>::resetEntries()
         while (threads != end) {
             ThreadID tid = *threads++;
 
-            if (robPolicy == Partitioned) {
+            if (robPolicy == SMTQueuePolicy::Partitioned) {
                 maxEntries[tid] = numEntries / active_threads;
-            } else if (robPolicy == Threshold && active_threads == 1) {
+            } else if (robPolicy == SMTQueuePolicy::Threshold &&
+                       active_threads == 1) {
                 maxEntries[tid] = numEntries;
             }
         }
@@ -185,7 +175,7 @@ template <class Impl>
 int
 ROB<Impl>::entryAmount(ThreadID num_threads)
 {
-    if (robPolicy == Partitioned) {
+    if (robPolicy == SMTQueuePolicy::Partitioned) {
         return numEntries / num_threads;
     } else {
         return 0;

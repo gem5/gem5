@@ -160,7 +160,8 @@ class DerivO3CPU(BaseCPU):
     smtIQPolicy    = Param.SMTQueuePolicy('Partitioned',
                                           "SMT IQ Sharing Policy")
     smtIQThreshold = Param.Int(100, "SMT IQ Threshold Sharing Parameter")
-    smtROBPolicy   = Param.String('Partitioned', "SMT ROB Sharing Policy")
+    smtROBPolicy   = Param.SMTQueuePolicy('Partitioned',
+                                          "SMT ROB Sharing Policy")
     smtROBThreshold = Param.Int(100, "SMT ROB Threshold Sharing Parameter")
     smtCommitPolicy = Param.String('RoundRobin', "SMT Commit Policy")
 
