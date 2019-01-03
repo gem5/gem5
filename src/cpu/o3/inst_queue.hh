@@ -55,6 +55,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/op_class.hh"
 #include "cpu/timebuf.hh"
+#include "enums/SMTQueuePolicy.hh"
 #include "sim/eventq.hh"
 
 struct DerivO3CPUParams;
@@ -403,15 +404,8 @@ class InstructionQueue
     // Various parameters
     //////////////////////////////////////
 
-    /** IQ Resource Sharing Policy */
-    enum IQPolicy {
-        Dynamic,
-        Partitioned,
-        Threshold
-    };
-
     /** IQ sharing policy for SMT. */
-    IQPolicy iqPolicy;
+    SMTQueuePolicy iqPolicy;
 
     /** Number of Total Threads*/
     ThreadID numThreads;
