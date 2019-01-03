@@ -19,11 +19,10 @@
 
 #include <cstring>
 #include <map>
+#include <string>
 #include <systemc>
 #include <tlm>
 #include <typeindex>
-
-using sc_core::sc_string_view;
 
 namespace tlm
 {
@@ -43,7 +42,7 @@ struct tlm_phase_registry
     }
 
     unsigned int
-    register_phase(std::type_index type, sc_string_view name)
+    register_phase(std::type_index type, std::string name)
     {
         type_map::const_iterator it = ids_.find(type);
 
