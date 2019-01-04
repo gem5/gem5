@@ -317,7 +317,7 @@ class SimpleExecContext : public ExecContext {
     readVecElemOperand(const StaticInst *si, int idx) const override
     {
         numVecRegReads++;
-        const RegId& reg = si->destRegIdx(idx);
+        const RegId& reg = si->srcRegIdx(idx);
         assert(reg.isVecElem());
         return thread->readVecElem(reg);
     }

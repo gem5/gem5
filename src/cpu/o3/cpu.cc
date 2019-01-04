@@ -1410,7 +1410,7 @@ FullO3CPU<Impl>::readArchVecElem(const RegIndex& reg_idx, const ElemIndex& ldx,
                                  ThreadID tid) const -> const VecElem&
 {
     PhysRegIdPtr phys_reg = commitRenameMap[tid].lookup(
-                                RegId(VecRegClass, reg_idx, ldx));
+                                RegId(VecElemClass, reg_idx, ldx));
     return readVecElem(phys_reg);
 }
 

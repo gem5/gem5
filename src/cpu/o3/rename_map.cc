@@ -161,7 +161,7 @@ UnifiedRenameMap::switchMode(VecMode newVecMode, UnifiedFreeList* freeList)
         /* The free list should currently be tracking register elems. */
         panic_if(freeList->hasFreeVecRegs(),
                 "The free list is already tracking full Vec");
-        panic_if(freeList->numFreeVecRegs() !=
+        panic_if(freeList->numFreeVecElems() !=
                 regFile->numVecElemPhysRegs() - TheISA::NumFloatRegs,
                 "The free list has lost vector register elements");
         /* To rebuild the arch regs we take the easy road:

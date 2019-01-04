@@ -1039,6 +1039,7 @@ DefaultRename<Impl>::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
             fpRenameLookups++;
             break;
           case VecRegClass:
+          case VecElemClass:
             vecRenameLookups++;
             break;
           case CCRegClass:

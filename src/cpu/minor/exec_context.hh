@@ -157,7 +157,7 @@ class ExecContext : public ::ExecContext
     readVecElemOperand(const StaticInst *si, int idx) const override
     {
         const RegId& reg = si->srcRegIdx(idx);
-        assert(reg.isVecReg());
+        assert(reg.isVecElem());
         return thread.readVecElem(reg);
     }
 
@@ -268,7 +268,7 @@ class ExecContext : public ::ExecContext
                       const TheISA::VecElem val) override
     {
         const RegId& reg = si->destRegIdx(idx);
-        assert(reg.isVecReg());
+        assert(reg.isVecElem());
         thread.setVecElem(reg, val);
     }
 

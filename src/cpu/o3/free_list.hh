@@ -234,6 +234,9 @@ class UnifiedFreeList
     /** Returns the number of free vector registers. */
     unsigned numFreeVecRegs() const { return vecList.numFreeRegs(); }
 
+    /** Returns the number of free vector registers. */
+    unsigned numFreeVecElems() const { return vecElemList.numFreeRegs(); }
+
     /** Returns the number of free cc registers. */
     unsigned numFreeCCRegs() const { return ccList.numFreeRegs(); }
 };
