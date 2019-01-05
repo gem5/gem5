@@ -66,6 +66,9 @@ class LTAGE: public TAGE
 
     // Base class methods.
     void squash(ThreadID tid, void *bp_history) override;
+    void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
+                bool squashed, const StaticInstPtr & inst,
+                Addr corrTarget) override;
 
     void regStats() override;
 
@@ -88,7 +91,7 @@ class LTAGE: public TAGE
 
     // more provider types
     enum {
-        LOOP = LAST_TAGE_PROVIDER_TYPE + 1
+        LOOP = TAGEBase::LAST_TAGE_PROVIDER_TYPE + 1
     };
 
     // Primary branch history entry
@@ -103,11 +106,14 @@ class LTAGE: public TAGE
         int  loopLowPcBits;  // only for useHashing
         int loopHit;
 
-        LTageBranchInfo(int sz)
-            : TageBranchInfo(sz),
+        LTageBranchInfo(TAGEBase &tage)
+            : TageBranchInfo(tage),
               loopTag(0), currentIter(0),
               loopPred(false),
               loopPredValid(false), loopIndex(0), loopLowPcBits(0), loopHit(0)
+        {}
+
+        virtual ~LTageBranchInfo()
         {}
     };
 
@@ -157,17 +163,6 @@ class LTAGE: public TAGE
     void specLoopUpdate(bool taken, LTageBranchInfo* bi);
 
     /**
-     * Update LTAGE for conditional branches.
-     * @param branch_pc The unshifted branch PC.
-     * @param taken Actual branch outcome.
-     * @param bi Pointer to information on the prediction
-     * recorded at prediction time.
-     * @nrand Random int number from 0 to 3
-     */
-    void condBranchUpdate(
-        Addr branch_pc, bool taken, TageBranchInfo* bi, int nrand) override;
-
-    /**
      * Get a branch prediction from LTAGE. *NOT* an override of
      * BpredUnit::predict().
      * @param tid The thread ID to select the global
@@ -184,24 +179,9 @@ class LTAGE: public TAGE
      * Restores speculatively updated path and direction histories.
      * Also recomputes compressed (folded) histories based on the
      * correct branch outcome.
-     * This version of squash() is called once on a branch misprediction.
-     * @param tid The Thread ID to select the histories to rollback.
-     * @param taken The correct branch outcome.
-     * @param bp_history Wrapping pointer to TageBranchInfo (to allow
-     * storing derived class prediction information in the
-     * base class).
-     * @post bp_history points to valid memory.
+     * @param bi Branch information.
      */
-    void squash(
-        ThreadID tid, bool taken, void *bp_history) override;
-
-    /**
-     * Update the stats
-     * @param taken Actual branch outcome
-     * @param bi Pointer to information on the prediction
-     * recorded at prediction time.
-     */
-    void updateStats(bool taken, TageBranchInfo* bi) override;
+    void squashLoop(LTageBranchInfo * bi);
 
     const unsigned logSizeLoopPred;
     const unsigned loopTableAgeBits;

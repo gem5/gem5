@@ -92,7 +92,7 @@ class LocalBP : public BPredUnit
      * @param taken Whether or not the branch was taken.
      */
     void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
-                bool squashed);
+                bool squashed, const StaticInstPtr & inst, Addr corrTarget);
 
     void squash(ThreadID tid, void *bp_history)
     { assert(bp_history == NULL); }

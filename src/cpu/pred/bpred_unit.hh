@@ -175,10 +175,15 @@ class BPredUnit : public SimObject
      * associated with the branch lookup that is being updated.
      * @param squashed Set to true when this function is called during a
      * squash operation.
+     * @param inst Static instruction information
+     * @param corrTarget The resolved target of the branch (only needed
+     * for squashed branches)
      * @todo Make this update flexible enough to handle a global predictor.
      */
     virtual void update(ThreadID tid, Addr instPC, bool taken,
-                        void *bp_history, bool squashed) = 0;
+                   void *bp_history, bool squashed,
+                   const StaticInstPtr & inst = StaticInst::nullStaticInstPtr,
+                   Addr corrTarget = MaxAddr) = 0;
     /**
      * Updates the BTB with the target of a branch.
      * @param inst_PC The branch's PC that will be updated.
@@ -200,10 +205,11 @@ class BPredUnit : public SimObject
          */
         PredictorHistory(const InstSeqNum &seq_num, Addr instPC,
                          bool pred_taken, void *bp_history,
-                         ThreadID _tid)
+                         ThreadID _tid, const StaticInstPtr & inst)
             : seqNum(seq_num), pc(instPC), bpHistory(bp_history), RASTarget(0),
               RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
-              wasCall(0), wasReturn(0), wasIndirect(0)
+              wasCall(0), wasReturn(0), wasIndirect(0),
+              target(MaxAddr), inst(inst)
         {}
 
         bool operator==(const PredictorHistory &entry) const {
@@ -248,6 +254,14 @@ class BPredUnit : public SimObject
 
         /** Wether this instruction was an indirect branch */
         bool wasIndirect;
+
+        /** Target of the branch. First it is predicted, and fixed later
+         *  if necessary
+         */
+        Addr target;
+
+        /** The branch instrction */
+        const StaticInstPtr inst;
     };
 
     typedef std::deque<PredictorHistory> History;

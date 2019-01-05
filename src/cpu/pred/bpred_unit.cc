@@ -210,7 +210,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             "for PC %s\n", tid, seqNum, pc);
 
     PredictorHistory predict_record(seqNum, pc.instAddr(),
-                                    pred_taken, bp_history, tid);
+                                    pred_taken, bp_history, tid, inst);
 
     // Now lookup in the BTB or RAS.
     if (pred_taken) {
@@ -309,6 +309,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         }
         TheISA::advancePC(target, inst);
     }
+    predict_record.target = target.instAddr();
 
     pc = target;
 
@@ -332,7 +333,9 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
         // Update the branch predictor with the correct results.
         update(tid, predHist[tid].back().pc,
                     predHist[tid].back().predTaken,
-                    predHist[tid].back().bpHistory, false);
+                    predHist[tid].back().bpHistory, false,
+                    predHist[tid].back().inst,
+                    predHist[tid].back().target);
 
         predHist[tid].pop_back();
     }
@@ -440,9 +443,11 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
 
         // Remember the correct direction for the update at commit.
         pred_hist.front().predTaken = actually_taken;
+        pred_hist.front().target = corrTarget.instAddr();
 
         update(tid, (*hist_it).pc, actually_taken,
-               pred_hist.front().bpHistory, true);
+               pred_hist.front().bpHistory, true, pred_hist.front().inst,
+               corrTarget.instAddr());
 
         if (actually_taken) {
             if (hist_it->wasReturn && !hist_it->usedRAS) {

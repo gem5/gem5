@@ -87,12 +87,14 @@ class BiModeBP(BranchPredictor):
     choicePredictorSize = Param.Unsigned(8192, "Size of choice predictor")
     choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
 
-# TAGE branch predictor as described in https://www.jilp.org/vol8/v8paper1.pdf
-# The default sizes below are for the 8C-TAGE configuration (63.5 Kbits)
-class TAGE(BranchPredictor):
-    type = 'TAGE'
-    cxx_class = 'TAGE'
-    cxx_header = "cpu/pred/tage.hh"
+class TAGEBase(SimObject):
+    type = 'TAGEBase'
+    cxx_class = 'TAGEBase'
+    cxx_header = "cpu/pred/tage_base.hh"
+
+    numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+    instShiftAmt = Param.Unsigned(Parent.instShiftAmt,
+        "Number of bits to shift instructions by")
 
     nHistoryTables = Param.Unsigned(7, "Number of history tables")
     minHist = Param.Unsigned(5, "Minimum history size of TAGE")
@@ -115,8 +117,33 @@ class TAGE(BranchPredictor):
     pathHistBits = Param.Unsigned(16, "Path history size")
     logUResetPeriod = Param.Unsigned(18,
         "Log period in number of branches to reset TAGE useful counters")
+    numUseAltOnNa = Param.Unsigned(1, "Number of USE_ALT_ON_NA counters")
     useAltOnNaBits = Param.Unsigned(4, "Size of the USE_ALT_ON_NA counter")
 
+    maxNumAlloc = Param.Unsigned(1,
+        "Max number of TAGE entries allocted on mispredict")
+
+    # List of enabled TAGE tables. If empty, all are enabled
+    noSkip = VectorParam.Bool([], "Vector of enabled TAGE tables")
+
+    speculativeHistUpdate = Param.Bool(True,
+        "Use speculative update for histories")
+
+# TAGE branch predictor as described in https://www.jilp.org/vol8/v8paper1.pdf
+# The default sizes below are for the 8C-TAGE configuration (63.5 Kbits)
+class TAGE(BranchPredictor):
+    type = 'TAGE'
+    cxx_class = 'TAGE'
+    cxx_header = "cpu/pred/tage.hh"
+    tage = Param.TAGEBase(TAGEBase(), "Tage object")
+
+class LTAGE_TAGE(TAGEBase):
+    nHistoryTables = 12
+    minHist = 4
+    maxHist = 640
+    tagTableTagWidths = [0, 7, 7, 8, 8, 9, 10, 11, 12, 12, 13, 14, 15]
+    logTagTableSizes = [14, 10, 10, 11, 11, 11, 11, 10, 10, 10, 10, 9, 9]
+    logUResetPeriod = 19
 
 # LTAGE branch predictor as described in
 # https://www.irisa.fr/caps/people/seznec/L-TAGE.pdf
@@ -127,12 +154,7 @@ class LTAGE(TAGE):
     cxx_class = 'LTAGE'
     cxx_header = "cpu/pred/ltage.hh"
 
-    nHistoryTables = 12
-    minHist = 4
-    maxHist = 640
-    tagTableTagWidths = [0, 7, 7, 8, 8, 9, 10, 11, 12, 12, 13, 14, 15]
-    logTagTableSizes = [14, 10, 10, 11, 11, 11, 11, 10, 10, 10, 10, 9, 9]
-    logUResetPeriod = 19
+    tage = LTAGE_TAGE()
 
     logSizeLoopPred = Param.Unsigned(8, "Log size of the loop predictor")
     withLoopBits = Param.Unsigned(7, "Size of the WITHLOOP counter")

@@ -101,9 +101,12 @@ class TournamentBP : public BPredUnit
      * when the branch was predicted.
      * @param squashed is set when this function is called during a squash
      * operation.
+     * @param inst Static instruction information
+     * @param corrTarget Resolved target of the branch (only needed if
+     * squashed)
      */
     void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
-                bool squashed);
+                bool squashed, const StaticInstPtr & inst, Addr corrTarget);
 
     /**
      * Restores the global branch history on a squash.

@@ -161,7 +161,7 @@ BiModeBP::btbUpdate(ThreadID tid, Addr branchAddr, void * &bpHistory)
  */
 void
 BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *bpHistory,
-                 bool squashed)
+                 bool squashed, const StaticInstPtr & inst, Addr corrTarget)
 {
     assert(bpHistory);
 

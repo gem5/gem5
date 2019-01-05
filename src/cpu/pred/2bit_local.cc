@@ -119,7 +119,7 @@ LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
 
 void
 LocalBP::update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
-                bool squashed)
+                bool squashed, const StaticInstPtr & inst, Addr corrTarget)
 {
     assert(bp_history == NULL);
     unsigned local_predictor_idx;

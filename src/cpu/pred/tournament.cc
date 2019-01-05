@@ -266,7 +266,8 @@ TournamentBP::uncondBranch(ThreadID tid, Addr pc, void * &bp_history)
 
 void
 TournamentBP::update(ThreadID tid, Addr branch_addr, bool taken,
-                     void *bp_history, bool squashed)
+                     void *bp_history, bool squashed,
+                     const StaticInstPtr & inst, Addr corrTarget)
 {
     assert(bp_history);
 
