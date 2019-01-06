@@ -285,11 +285,8 @@ class BPredUnit : public SimObject
     /** The per-thread return address stack. */
     std::vector<ReturnAddrStack> RAS;
 
-    /** Option to disable indirect predictor. */
-    const bool useIndirect;
-
     /** The indirect target predictor. */
-    IndirectPredictor iPred;
+    IndirectPredictor * iPred;
 
     /** Stat for number of BP lookups. */
     Stats::Scalar lookups;

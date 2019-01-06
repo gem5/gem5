@@ -28,78 +28,41 @@
  * Authors: Mitch Hayenga
  */
 
-#ifndef __CPU_PRED_INDIRECT_HH__
-#define __CPU_PRED_INDIRECT_HH__
-
-#include <deque>
+#ifndef __CPU_PRED_INDIRECT_BASE_HH__
+#define __CPU_PRED_INDIRECT_BASE_HH__
 
 #include "arch/isa_traits.hh"
 #include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
+#include "params/IndirectPredictor.hh"
+#include "sim/sim_object.hh"
 
-class IndirectPredictor
+class IndirectPredictor : public SimObject
 {
   public:
-    IndirectPredictor(bool hash_ghr, bool hash_targets,
-                      unsigned num_sets, unsigned num_ways,
-                      unsigned tag_bits, unsigned path_len,
-                      unsigned inst_shift, unsigned num_threads,
-                      unsigned ghr_size);
-    bool lookup(Addr br_addr, TheISA::PCState& br_target, ThreadID tid);
-    void recordIndirect(Addr br_addr, Addr tgt_addr, InstSeqNum seq_num,
-                        ThreadID tid);
-    void commit(InstSeqNum seq_num, ThreadID tid, void * indirect_history);
-    void squash(InstSeqNum seq_num, ThreadID tid);
-    void recordTarget(InstSeqNum seq_num, void * indirect_history,
-                      const TheISA::PCState& target, ThreadID tid);
-    void genIndirectInfo(ThreadID tid, void* & indirect_history);
-    void updateDirectionInfo(ThreadID tid, bool actually_taken);
-    void deleteIndirectInfo(ThreadID tid, void * indirect_history);
-    void changeDirectionPrediction(ThreadID tid, void * indirect_history,
-                                   bool actually_taken);
 
-  private:
-    const bool hashGHR;
-    const bool hashTargets;
-    const unsigned numSets;
-    const unsigned numWays;
-    const unsigned tagBits;
-    const unsigned pathLength;
-    const unsigned instShift;
-    const unsigned ghrNumBits;
-    const unsigned ghrMask;
+    typedef IndirectPredictorParams Params;
 
-    struct IPredEntry
+    IndirectPredictor(const Params *params)
+        : SimObject(params)
     {
-        IPredEntry() : tag(0), target(0) { }
-        Addr tag;
-        TheISA::PCState target;
-    };
+    }
 
-    std::vector<std::vector<IPredEntry> > targetCache;
-
-    Addr getSetIndex(Addr br_addr, unsigned ghr, ThreadID tid);
-    Addr getTag(Addr br_addr);
-
-    struct HistoryEntry
-    {
-        HistoryEntry(Addr br_addr, Addr tgt_addr, InstSeqNum seq_num)
-            : pcAddr(br_addr), targetAddr(tgt_addr), seqNum(seq_num) { }
-        Addr pcAddr;
-        Addr targetAddr;
-        InstSeqNum seqNum;
-    };
-
-
-    struct ThreadInfo {
-        ThreadInfo() : headHistEntry(0), ghr(0) { }
-
-        std::deque<HistoryEntry> pathHist;
-        unsigned headHistEntry;
-        unsigned ghr;
-    };
-
-    std::vector<ThreadInfo> threadInfo;
+    virtual bool lookup(Addr br_addr, TheISA::PCState& br_target,
+                        ThreadID tid) = 0;
+    virtual void recordIndirect(Addr br_addr, Addr tgt_addr,
+                                InstSeqNum seq_num, ThreadID tid) = 0;
+    virtual void commit(InstSeqNum seq_num, ThreadID tid,
+                        void * indirect_history) = 0;
+    virtual void squash(InstSeqNum seq_num, ThreadID tid) = 0;
+    virtual void recordTarget(InstSeqNum seq_num, void * indirect_history,
+                              const TheISA::PCState& target, ThreadID tid) = 0;
+    virtual void genIndirectInfo(ThreadID tid, void* & indirect_history) = 0;
+    virtual void updateDirectionInfo(ThreadID tid, bool actually_taken) = 0;
+    virtual void deleteIndirectInfo(ThreadID tid, void * indirect_history) = 0;
+    virtual void changeDirectionPrediction(ThreadID tid,
+                                           void * indirect_history,
+                                           bool actually_taken) = 0;
 };
 
-#endif // __CPU_PRED_INDIRECT_HH__
+#endif // __CPU_PRED_INDIRECT_BASE_HH__

@@ -62,16 +62,7 @@ BPredUnit::BPredUnit(const Params *params)
           params->instShiftAmt,
           params->numThreads),
       RAS(numThreads),
-      useIndirect(params->useIndirect),
-      iPred(params->indirectHashGHR,
-            params->indirectHashTargets,
-            params->indirectSets,
-            params->indirectWays,
-            params->indirectTagSize,
-            params->indirectPathLength,
-            params->instShiftAmt,
-            params->numThreads,
-            params->indirectGHRBits),
+      iPred(params->indirectBranchPred),
       instShiftAmt(params->instShiftAmt)
 {
     for (auto& r : RAS)
@@ -212,8 +203,8 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     }
 
     const bool orig_pred_taken = pred_taken;
-    if (useIndirect) {
-        iPred.genIndirectInfo(tid, indirect_history);
+    if (iPred) {
+        iPred->genIndirectInfo(tid, indirect_history);
     }
 
     DPRINTF(Branch, "[tid:%i] [sn:%llu] "
@@ -260,7 +251,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                         tid, seqNum, pc, pc, RAS[tid].topIdx());
             }
 
-            if (inst->isDirectCtrl() || !useIndirect) {
+            if (inst->isDirectCtrl() || !iPred) {
                 // Check BTB on direct branches
                 if (BTB.valid(pc.instAddr(), tid)) {
                     ++BTBHits;
@@ -293,7 +284,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                 predict_record.wasIndirect = true;
                 ++indirectLookups;
                 //Consult indirect predictor on indirect control
-                if (iPred.lookup(pc.instAddr(), target, tid)) {
+                if (iPred->lookup(pc.instAddr(), target, tid)) {
                     // Indirect predictor hit
                     ++indirectHits;
                     DPRINTF(Branch,
@@ -317,7 +308,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                     }
                     TheISA::advancePC(target, inst);
                 }
-                iPred.recordIndirect(pc.instAddr(), target.instAddr(), seqNum,
+                iPred->recordIndirect(pc.instAddr(), target.instAddr(), seqNum,
                         tid);
             }
         }
@@ -331,13 +322,13 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
     pc = target;
 
-    if (useIndirect) {
+    if (iPred) {
         // Update the indirect predictor with the direction prediction
         // Note that this happens after indirect lookup, so it does not use
         // the new information
         // Note also that we use orig_pred_taken instead of pred_taken in
         // as this is the actual outcome of the direction prediction
-        iPred.updateDirectionInfo(tid, orig_pred_taken);
+        iPred->updateDirectionInfo(tid, orig_pred_taken);
     }
 
     predHist[tid].push_front(predict_record);
@@ -365,8 +356,8 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
                     predHist[tid].back().inst,
                     predHist[tid].back().target);
 
-        if (useIndirect) {
-            iPred.commit(done_sn, tid, predHist[tid].back().indirectHistory);
+        if (iPred) {
+            iPred->commit(done_sn, tid, predHist[tid].back().indirectHistory);
         }
 
         predHist[tid].pop_back();
@@ -378,8 +369,8 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 {
     History &pred_hist = predHist[tid];
 
-    if (useIndirect) {
-        iPred.squash(squashed_sn, tid);
+    if (iPred) {
+        iPred->squash(squashed_sn, tid);
     }
 
     while (!pred_hist.empty() &&
@@ -402,8 +393,8 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 
         // This call should delete the bpHistory.
         squash(tid, pred_hist.front().bpHistory);
-        if (useIndirect) {
-            iPred.deleteIndirectInfo(tid, pred_hist.front().indirectHistory);
+        if (iPred) {
+            iPred->deleteIndirectInfo(tid, pred_hist.front().indirectHistory);
         }
 
         DPRINTF(Branch, "[tid:%i] [squash sn:%llu] "
@@ -487,8 +478,8 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                pred_hist.front().bpHistory, true, pred_hist.front().inst,
                corrTarget.instAddr());
 
-        if (useIndirect) {
-            iPred.changeDirectionPrediction(tid,
+        if (iPred) {
+            iPred->changeDirectionPrediction(tid,
                 pred_hist.front().indirectHistory, actually_taken);
         }
 
@@ -504,9 +495,11 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             }
             if (hist_it->wasIndirect) {
                 ++indirectMispredicted;
-                iPred.recordTarget(
-                    hist_it->seqNum, pred_hist.front().indirectHistory,
-                    corrTarget, tid);
+                if (iPred) {
+                    iPred->recordTarget(
+                        hist_it->seqNum, pred_hist.front().indirectHistory,
+                        corrTarget, tid);
+                }
             } else {
                 DPRINTF(Branch,"[tid:%i] [squash sn:%llu] "
                         "BTB Update called for [sn:%llu] "
