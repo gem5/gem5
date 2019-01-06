@@ -193,8 +193,6 @@ class BPredUnit : public SimObject
     { BTB.update(instPC, target, 0); }
 
 
-    virtual unsigned getGHR(ThreadID tid, void* bp_history) const { return 0; }
-
     void dump();
 
   private:
@@ -205,11 +203,13 @@ class BPredUnit : public SimObject
          */
         PredictorHistory(const InstSeqNum &seq_num, Addr instPC,
                          bool pred_taken, void *bp_history,
-                         ThreadID _tid, const StaticInstPtr & inst)
-            : seqNum(seq_num), pc(instPC), bpHistory(bp_history), RASTarget(0),
-              RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
-              wasCall(0), wasReturn(0), wasIndirect(0),
-              target(MaxAddr), inst(inst)
+                         void *indirect_history, ThreadID _tid,
+                         const StaticInstPtr & inst)
+            : seqNum(seq_num), pc(instPC), bpHistory(bp_history),
+              indirectHistory(indirect_history), RASTarget(0), RASIndex(0),
+              tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
+              wasCall(0), wasReturn(0), wasIndirect(0), target(MaxAddr),
+              inst(inst)
         {}
 
         bool operator==(const PredictorHistory &entry) const {
@@ -227,6 +227,8 @@ class BPredUnit : public SimObject
          * branch predictor.
          */
         void *bpHistory;
+
+        void *indirectHistory;
 
         /** The RAS target (only valid if a return). */
         TheISA::PCState RASTarget;

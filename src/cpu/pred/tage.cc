@@ -51,16 +51,6 @@ TAGE::TAGE(const TAGEParams *params) : BPredUnit(params), tage(params->tage)
 {
 }
 
-// Get GHR for hashing indirect predictor
-// Build history backwards from pointer in
-// bp_history.
-unsigned
-TAGE::getGHR(ThreadID tid, void *bp_history) const
-{
-    TageBranchInfo* bi = static_cast<TageBranchInfo*>(bp_history);
-    return tage->getGHR(tid, bi->tageBranchInfo);
-}
-
 // PREDICTOR UPDATE
 void
 TAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,

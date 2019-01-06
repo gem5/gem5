@@ -89,7 +89,6 @@ class TAGE: public BPredUnit
                 bool squashed, const StaticInstPtr & inst,
                 Addr corrTarget) override;
     virtual void squash(ThreadID tid, void *bp_history) override;
-    unsigned getGHR(ThreadID tid, void *bp_history) const override;
 };
 
 #endif // __CPU_PRED_TAGE
