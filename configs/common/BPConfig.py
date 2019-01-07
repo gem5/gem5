@@ -86,3 +86,54 @@ def bp_names():
 for name, cls in inspect.getmembers(m5.objects, is_bp_class):
     _bp_classes[name] = cls
 
+
+# The same for indirect branch predictors...
+# Dictionary of mapping names of real branch predictor models to classes.
+_indirect_bp_classes = {}
+
+
+def is_indirect_bp_class(cls):
+    """Determine if a class is an indirect branch predictor that can be
+    instantiated"""
+
+    # We can't use the normal inspect.isclass because the ParamFactory
+    # and ProxyFactory classes have a tendency to confuse it.
+    try:
+        return issubclass(cls, m5.objects.IndirectPredictor) and \
+            not cls.abstract
+    except (TypeError, AttributeError):
+        return False
+
+def get_indirect(name):
+    """Get an Indirect BP class from a user provided class name or alias."""
+
+    try:
+        indirect_bp_class = _indirect_bp_classes[name]
+        return indirect_bp_class
+    except KeyError:
+        print("%s is not a valid indirect BP model." % (name,))
+        sys.exit(1)
+
+def print_indirect_bp_list():
+    """Print a list of available indirect BP classes."""
+
+    print("Available Indirect BranchPredictor classes:")
+    doc_wrapper = TextWrapper(initial_indent="\t\t", subsequent_indent="\t\t")
+    for name, cls in _indirect_bp_classes.items():
+        print("\t%s" % name)
+
+        # Try to extract the class documentation from the class help
+        # string.
+        doc = inspect.getdoc(cls)
+        if doc:
+            for line in doc_wrapper.wrap(doc):
+                print(line)
+
+def indirect_bp_names():
+    """Return a list of valid Indirect Branch Predictor names."""
+    return _indirect_bp_classes.keys()
+
+# Add all indirect BPs in the object hierarchy.
+for name, cls in inspect.getmembers(m5.objects, is_indirect_bp_class):
+    _indirect_bp_classes[name] = cls
+

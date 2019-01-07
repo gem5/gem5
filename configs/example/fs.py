@@ -206,6 +206,11 @@ def build_test_system(np):
             if options.bp_type:
                 bpClass = BPConfig.get(options.bp_type)
                 test_sys.cpu[i].branchPred = bpClass()
+            if options.indirect_bp_type:
+                IndirectBPClass = \
+                    BPConfig.get_indirect(options.indirect_bp_type)
+                test_sys.cpu[i].branchPred.indirectBranchPred = \
+                    IndirectBPClass()
             test_sys.cpu[i].createThreads()
 
         # If elastic tracing is enabled when not restoring from checkpoint and

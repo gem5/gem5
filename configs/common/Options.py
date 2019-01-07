@@ -64,6 +64,10 @@ def _listHWPTypes(option, opt, value, parser):
     HWPConfig.print_hwp_list()
     sys.exit(0)
 
+def _listIndirectBPTypes(option, opt, value, parser):
+    BPConfig.print_indirect_bp_list()
+    sys.exit(0)
+
 def _listMemTypes(option, opt, value, parser):
     MemConfig.print_mem_list()
     sys.exit(0)
@@ -162,12 +166,19 @@ def addCommonOptions(parser):
     parser.add_option("--list-bp-types",
                       action="callback", callback=_listBPTypes,
                       help="List available branch predictor types")
+    parser.add_option("--list-indirect-bp-types",
+                      action="callback", callback=_listIndirectBPTypes,
+                      help="List available indirect branch predictor types")
     parser.add_option("--bp-type", type="choice", default=None,
                       choices=BPConfig.bp_names(),
                       help = """
                       type of branch predictor to run with
                       (if not set, use the default branch predictor of
                       the selected CPU)""")
+    parser.add_option("--indirect-bp-type", type="choice",
+                      default="SimpleIndirectPredictor",
+                      choices=BPConfig.indirect_bp_names(),
+                      help = "type of indirect branch predictor to run with")
     parser.add_option("--list-hwp-types",
                       action="callback", callback=_listHWPTypes,
                       help="List available hardware prefetcher types")

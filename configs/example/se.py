@@ -240,6 +240,10 @@ for i in range(np):
         bpClass = BPConfig.get(options.bp_type)
         system.cpu[i].branchPred = bpClass()
 
+    if options.indirect_bp_type:
+        indirectBPClass = BPConfig.get_indirect(options.indirect_bp_type)
+        system.cpu[i].branchPred.indirectBranchPred = indirectBPClass()
+
     system.cpu[i].createThreads()
 
 system.redirect_paths = redirect_paths(os.path.expanduser(options.chroot))
