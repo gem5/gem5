@@ -309,6 +309,12 @@ SyscallReturn getdentsFunc(SyscallDesc *desc, int num,
                            Process *p, ThreadContext *tc);
 #endif
 
+#if defined(SYS_getdents64)
+// Target getdents() handler.
+SyscallReturn getdents64Func(SyscallDesc *desc, int num,
+                           Process *p, ThreadContext *tc);
+#endif
+
 // Target getuid() handler.
 SyscallReturn getuidFunc(SyscallDesc *desc, int num,
                          Process *p, ThreadContext *tc);

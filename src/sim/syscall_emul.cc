@@ -1151,9 +1151,10 @@ rmdirFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
     return (result == -1) ? -errno : result;
 }
 
-#if defined(SYS_getdents)
-SyscallReturn
-getdentsFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
+#if defined(SYS_getdents) || defined(SYS_getdents64)
+template<typename DE, int SYS_NUM>
+static SyscallReturn
+getdentsImpl(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
     int index = 0;
     int tgt_fd = p->getSyscallArg(tc, index);
@@ -1166,21 +1167,14 @@ getdentsFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
     int sim_fd = hbfdp->getSimFD();
 
     BufferArg buf_arg(buf_ptr, count);
-    auto status = syscall(SYS_getdents, sim_fd, buf_arg.bufferPtr(), count);
+    auto status = syscall(SYS_NUM, sim_fd, buf_arg.bufferPtr(), count);
 
     if (status == -1)
         return -errno;
 
-    typedef struct linux_dirent {
-        unsigned long d_ino;
-        unsigned long d_off;
-        unsigned short d_reclen;
-        char dname[];
-    } LinDent;
-
     unsigned traversed = 0;
     while (traversed < status) {
-        LinDent *buffer = (LinDent*)((Addr)buf_arg.bufferPtr() + traversed);
+        DE *buffer = (DE*)((Addr)buf_arg.bufferPtr() + traversed);
 
         auto host_reclen = buffer->d_reclen;
 
@@ -1198,5 +1192,35 @@ getdentsFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 
     buf_arg.copyOut(tc->getMemProxy());
     return status;
+}
+#endif
+
+#if defined(SYS_getdents)
+SyscallReturn
+getdentsFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
+{
+    typedef struct linux_dirent {
+        unsigned long d_ino;
+        unsigned long d_off;
+        unsigned short d_reclen;
+        char dname[];
+    } LinDent;
+
+    return getdentsImpl<LinDent, SYS_getdents>(desc, callnum, p, tc);
+}
+#endif
+
+#if defined(SYS_getdents64)
+SyscallReturn
+getdents64Func(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
+{
+    typedef struct linux_dirent64 {
+        ino64_t d_ino;
+        off64_t d_off;
+        unsigned short d_reclen;
+        char dname[];
+    } LinDent64;
+
+    return getdentsImpl<LinDent64, SYS_getdents64>(desc, callnum, p, tc);
 }
 #endif

@@ -46,6 +46,8 @@
 
 #include "arch/arm/linux/process.hh"
 
+#include <sys/syscall.h>
+
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/linux/linux.hh"
 #include "base/trace.hh"
@@ -342,7 +344,11 @@ static SyscallDesc syscallDescs32[] = {
     /* 214 */ SyscallDesc("setgid", unimplementedFunc),
     /* 215 */ SyscallDesc("setfsuid", unimplementedFunc),
     /* 216 */ SyscallDesc("setfsgid", unimplementedFunc),
+#if defined(SYS_getdents64)
+    /* 217 */ SyscallDesc("getdents64", getdents64Func),
+#else
     /* 217 */ SyscallDesc("getdents64", unimplementedFunc),
+#endif
     /* 218 */ SyscallDesc("pivot_root", unimplementedFunc),
     /* 219 */ SyscallDesc("mincore", unimplementedFunc),
     /* 220 */ SyscallDesc("madvise", ignoreFunc),
@@ -555,7 +561,11 @@ static SyscallDesc syscallDescs64[] = {
     /*   58 */ SyscallDesc("vhangup", unimplementedFunc),
     /*   59 */ SyscallDesc("pipe2", unimplementedFunc),
     /*   60 */ SyscallDesc("quotactl", unimplementedFunc),
+#if defined(SYS_getdents64)
+    /*   61 */ SyscallDesc("getdents64", getdents64Func),
+#else
     /*   61 */ SyscallDesc("getdents64", unimplementedFunc),
+#endif
     /*   62 */ SyscallDesc("llseek", lseekFunc),
     /*   63 */ SyscallDesc("read", readFunc),
     /*   64 */ SyscallDesc("write", writeFunc),
