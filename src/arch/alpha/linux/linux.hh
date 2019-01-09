@@ -31,6 +31,7 @@
 #ifndef __ALPHA_ALPHA_LINUX_LINUX_HH__
 #define __ALPHA_ALPHA_LINUX_LINUX_HH__
 
+#include "arch/alpha/utility.hh"
 #include "kern/linux/linux.hh"
 
 /* AlphaLinux class contains static constants/definitions/misc.
@@ -196,6 +197,17 @@ class AlphaLinux : public Linux
     // For futex system call
     static const unsigned TGT_EAGAIN      = 35;
     static const unsigned TGT_EWOULDBLOCK = TGT_EAGAIN;
+
+    static void
+    archClone(uint64_t flags,
+              Process *pp, Process *cp,
+              ThreadContext *ptc, ThreadContext *ctc,
+              uint64_t stack, uint64_t tls)
+    {
+        AlphaISA::copyMiscRegs(ptc, ctc);
+        if (stack)
+            ctc->setIntReg(AlphaISA::StackPointerReg, stack);
+    }
 };
 
 #endif // __ALPHA_ALPHA_LINUX_LINUX_HH__

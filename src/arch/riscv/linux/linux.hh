@@ -31,6 +31,7 @@
 #ifndef __ARCH_RISCV_LINUX_LINUX_HH__
 #define __ARCH_RISCV_LINUX_LINUX_HH__
 
+#include "arch/riscv/utility.hh"
 #include "kern/linux/linux.hh"
 
 class RiscvLinux : public Linux
@@ -187,6 +188,17 @@ class RiscvLinux : public Linux
         uint64_t freehigh;
         uint32_t mem_unit;
     } tgt_sysinfo;
+
+    static void
+    archClone(uint64_t flags,
+              Process *pp, Process *cp,
+              ThreadContext *ptc, ThreadContext *ctc,
+              uint64_t stack, uint64_t tls)
+    {
+        RiscvISA::copyRegs(ptc, ctc);
+        if (stack)
+            ctc->setIntReg(RiscvISA::StackPointerReg, stack);
+    }
 };
 
 #endif

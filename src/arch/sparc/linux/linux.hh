@@ -31,6 +31,7 @@
 #ifndef __ARCH_SPARC_LINUX_LINUX_HH__
 #define __ARCH_SPARC_LINUX_LINUX_HH__
 
+#include "arch/sparc/utility.hh"
 #include "kern/linux/linux.hh"
 
 class SparcLinux : public Linux
@@ -181,6 +182,28 @@ class SparcLinux : public Linux
           default:
             return false;
         }
+    }
+
+    static void
+    archClone(uint64_t flags,
+              Process *pp, Process *cp,
+              ThreadContext *ptc, ThreadContext *ctc,
+              uint64_t stack, uint64_t tls)
+    {
+        SparcISA::copyRegs(ptc, ctc);
+        ctc->setIntReg(SparcISA::NumIntArchRegs + 6, 0);
+        ctc->setIntReg(SparcISA::NumIntArchRegs + 4, 0);
+        ctc->setIntReg(SparcISA::NumIntArchRegs + 3, SparcISA::NWindows - 2);
+        ctc->setIntReg(SparcISA::NumIntArchRegs + 5, SparcISA::NWindows);
+        ctc->setMiscReg(SparcISA::MISCREG_CWP, 0);
+        ctc->setIntReg(SparcISA::NumIntArchRegs + 7, 0);
+        ctc->setMiscRegNoEffect(SparcISA::MISCREG_TL, 0);
+        ctc->setMiscReg(SparcISA::MISCREG_ASI, SparcISA::ASI_PRIMARY);
+        for (int y = 8; y < 32; y++)
+            ctc->setIntReg(y, ptc->readIntReg(y));
+
+        if (stack)
+            ctc->setIntReg(SparcISA::StackPointerReg, stack);
     }
 };
 

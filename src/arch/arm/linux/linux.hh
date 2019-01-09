@@ -45,9 +45,26 @@
 #ifndef __ARCH_ARM_LINUX_LINUX_HH__
 #define __ARCH_ARM_LINUX_LINUX_HH__
 
+#include "arch/arm/utility.hh"
 #include "kern/linux/linux.hh"
 
-class ArmLinux32 : public Linux
+class ArmLinux : public Linux
+{
+  public:
+    static void
+    archClone(uint64_t flags,
+              Process *pp, Process *cp,
+              ThreadContext *ptc, ThreadContext *ctc,
+              uint64_t stack, uint64_t tls)
+    {
+        ArmISA::copyRegs(ptc, ctc);
+
+        if (stack)
+            ctc->setIntReg(TheISA::StackPointerReg, stack);
+    }
+};
+
+class ArmLinux32 : public ArmLinux
 {
   public:
 
@@ -256,7 +273,7 @@ class ArmLinux32 : public Linux
     };
 };
 
-class ArmLinux64 : public Linux
+class ArmLinux64 : public ArmLinux
 {
   public:
 

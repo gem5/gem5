@@ -40,9 +40,31 @@
 #ifndef __ARCH_X86_LINUX_LINUX_HH__
 #define __ARCH_X86_LINUX_LINUX_HH__
 
+#include "arch/x86/utility.hh"
 #include "kern/linux/linux.hh"
 
-class X86Linux64 : public Linux
+class X86Linux : public Linux
+{
+  public:
+    static void
+    archClone(uint64_t flags,
+                          Process *pp, Process *cp,
+                          ThreadContext *ptc, ThreadContext *ctc,
+                          uint64_t stack, uint64_t tls)
+    {
+        X86ISA::copyRegs(ptc, ctc);
+
+        if (flags & TGT_CLONE_SETTLS) {
+            ctc->setMiscRegNoEffect(X86ISA::MISCREG_FS_BASE, tls);
+            ctc->setMiscRegNoEffect(X86ISA::MISCREG_FS_EFF_BASE, tls);
+        }
+
+        if (stack)
+            ctc->setIntReg(X86ISA::StackPointerReg, stack);
+    }
+};
+
+class X86Linux64 : public X86Linux
 {
   public:
 
@@ -185,7 +207,7 @@ class X86Linux64 : public Linux
 
 };
 
-class X86Linux32 : public Linux
+class X86Linux32 : public X86Linux
 {
   public:
 

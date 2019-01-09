@@ -1279,11 +1279,11 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
      * The flag defines the list of clone() arguments in the following
      * order: flags -> newStack -> ptidPtr -> tlsPtr -> ctidPtr
      */
-    Addr tlsPtr M5_VAR_USED = p->getSyscallArg(tc, index);
+    Addr tlsPtr = p->getSyscallArg(tc, index);
     Addr ctidPtr = p->getSyscallArg(tc, index);
 #else
     Addr ctidPtr = p->getSyscallArg(tc, index);
-    Addr tlsPtr M5_VAR_USED = p->getSyscallArg(tc, index);
+    Addr tlsPtr = p->getSyscallArg(tc, index);
 #endif
 
     if (((flags & OS::TGT_CLONE_SIGHAND)&& !(flags & OS::TGT_CLONE_VM)) ||
@@ -1365,33 +1365,7 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 
     ctc->clearArchRegs();
 
-#if THE_ISA == ALPHA_ISA
-    TheISA::copyMiscRegs(tc, ctc);
-#elif THE_ISA == SPARC_ISA
-    TheISA::copyRegs(tc, ctc);
-    ctc->setIntReg(TheISA::NumIntArchRegs + 6, 0);
-    ctc->setIntReg(TheISA::NumIntArchRegs + 4, 0);
-    ctc->setIntReg(TheISA::NumIntArchRegs + 3, TheISA::NWindows - 2);
-    ctc->setIntReg(TheISA::NumIntArchRegs + 5, TheISA::NWindows);
-    ctc->setMiscReg(TheISA::MISCREG_CWP, 0);
-    ctc->setIntReg(TheISA::NumIntArchRegs + 7, 0);
-    ctc->setMiscRegNoEffect(TheISA::MISCREG_TL, 0);
-    ctc->setMiscReg(TheISA::MISCREG_ASI, TheISA::ASI_PRIMARY);
-    for (int y = 8; y < 32; y++)
-        ctc->setIntReg(y, tc->readIntReg(y));
-#elif THE_ISA == ARM_ISA or THE_ISA == X86_ISA or THE_ISA == RISCV_ISA
-    TheISA::copyRegs(tc, ctc);
-#endif
-
-#if THE_ISA == X86_ISA
-    if (flags & OS::TGT_CLONE_SETTLS) {
-        ctc->setMiscRegNoEffect(TheISA::MISCREG_FS_BASE, tlsPtr);
-        ctc->setMiscRegNoEffect(TheISA::MISCREG_FS_EFF_BASE, tlsPtr);
-    }
-#endif
-
-    if (newStack)
-        ctc->setIntReg(TheISA::StackPointerReg, newStack);
+    OS::archClone(flags, p, cp, tc, ctc, newStack, tlsPtr);
 
     cp->setSyscallReturn(ctc, 0);
 
