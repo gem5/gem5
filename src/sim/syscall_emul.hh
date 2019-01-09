@@ -1402,7 +1402,9 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
     ctc->setIntReg(TheISA::SyscallPseudoReturnReg, 1);
 #endif
 
-    ctc->pcState(tc->nextInstAddr());
+    TheISA::PCState cpc = tc->pcState();
+    cpc.advance();
+    ctc->pcState(cpc);
     ctc->activate();
 
     return cp->pid();
