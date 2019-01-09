@@ -58,6 +58,12 @@ class ArmLinux : public Linux
               uint64_t stack, uint64_t tls)
     {
         ArmISA::copyRegs(ptc, ctc);
+
+        if (flags & TGT_CLONE_SETTLS) {
+            /* TPIDR_EL0 is architecturally mapped to TPIDRURW, so
+             * this works for both aarch32 and aarch64. */
+            ctc->setMiscReg(ArmISA::MISCREG_TPIDR_EL0, tls);
+        }
     }
 };
 
