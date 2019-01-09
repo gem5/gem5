@@ -58,9 +58,6 @@ class ArmLinux : public Linux
               uint64_t stack, uint64_t tls)
     {
         ArmISA::copyRegs(ptc, ctc);
-
-        if (stack)
-            ctc->setIntReg(TheISA::StackPointerReg, stack);
     }
 };
 
@@ -271,6 +268,18 @@ class ArmLinux32 : public ArmLinux
         int32_t tms_cutime;     //!< user time of children
         int32_t tms_cstime;     //!< system time of children
     };
+
+    static void
+    archClone(uint64_t flags,
+              Process *pp, Process *cp,
+              ThreadContext *ptc, ThreadContext *ctc,
+              uint64_t stack, uint64_t tls)
+    {
+        ArmLinux::archClone(flags, pp, cp, ptc, ctc, stack, tls);
+
+        if (stack)
+            ctc->setIntReg(ArmISA::INTREG_SP, stack);
+    }
 };
 
 class ArmLinux64 : public ArmLinux
@@ -516,6 +525,17 @@ class ArmLinux64 : public ArmLinux
         int64_t tms_cutime;     //!< user time of children
         int64_t tms_cstime;     //!< system time of children
     };
+
+    static void archClone(uint64_t flags,
+                          Process *pp, Process *cp,
+                          ThreadContext *ptc, ThreadContext *ctc,
+                          uint64_t stack, uint64_t tls)
+    {
+        ArmLinux::archClone(flags, pp, cp, ptc, ctc, stack, tls);
+
+        if (stack)
+            ctc->setIntReg(ArmISA::INTREG_SP0, stack);
+    }
 };
 
 #endif
