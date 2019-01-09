@@ -87,10 +87,6 @@ class ArmISA(SimObject):
     id_aa64afr1_el1 = Param.UInt64(0x0000000000000000,
         "AArch64 Auxiliary Feature Register 1")
 
-    # Initial vector register rename mode
-    vecRegRenameMode = Param.VecRegRenameMode('Full',
-        "Initial rename mode for vecregs")
-
     # 1 CTX CMPs | 2 WRPs | 2 BRPs | !PMU | !Trace | Debug v8-A
     id_aa64dfr0_el1 = Param.UInt64(0x0000000000101006,
         "AArch64 Debug Feature Register 0")

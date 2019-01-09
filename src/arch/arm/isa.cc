@@ -62,7 +62,7 @@ ISA::ISA(Params *p)
     : SimObject(p),
       system(NULL),
       _decoderFlavour(p->decoderFlavour),
-      _vecRegRenameMode(p->vecRegRenameMode),
+      _vecRegRenameMode(Enums::Full),
       pmu(p->pmu),
       impdefAsNop(p->impdef_nop)
 {
@@ -102,6 +102,10 @@ ISA::ISA(Params *p)
     if (system && dynamic_cast<Gicv3 *>(system->getGIC())) {
         haveGICv3CPUInterface = true;
     }
+
+    // Initial rename mode depends on highestEL
+    const_cast<Enums::VecRegRenameMode&>(_vecRegRenameMode) =
+        highestELIs64 ? Enums::Full : Enums::Elem;
 
     initializeMiscRegMetadata();
     preUnflattenMiscReg();
