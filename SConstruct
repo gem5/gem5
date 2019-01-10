@@ -92,6 +92,7 @@ from os import mkdir, environ
 from os.path import abspath, basename, dirname, expanduser, normpath
 from os.path import exists,  isdir, isfile
 from os.path import join as joinpath, split as splitpath
+from re import match
 
 # SCons includes
 import SCons
@@ -710,9 +711,11 @@ if main['USE_PYTHON']:
                                     exception='').strip()
     py_includes = readCommand([python_config, '--includes'],
                               exception='').split()
+    py_includes = filter(lambda s: match(r'.*\/include\/.*',s), py_includes)
     # Strip the -I from the include folders before adding them to the
     # CPPPATH
-    main.Append(CPPPATH=map(lambda inc: inc[2:], py_includes))
+    py_includes = map(lambda s: s[2:] if s.startswith('-I') else s, py_includes)
+    main.Append(CPPPATH=py_includes)
 
     # Read the linker flags and split them into libraries and other link
     # flags. The libraries are added later through the call the CheckLib.
