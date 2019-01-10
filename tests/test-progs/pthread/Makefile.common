@@ -35,7 +35,32 @@
 #
 # Authors: Andreas Sandberg
 
-CROSS_COMPILE =
-BIN_DIR = bin.x86
+CC := $(CROSS_COMPILE)$(CC)
+CXX := $(CROSS_COMPILE)$(CXX)
+LD := $(CXX)
+CCFLAGS ?=
+CXXFLAGS ?= -g -O3 -static -std=c++11
+LDFLAGS ?= -pthread
 
--include Makefile.common
+BIN_DIR ?= ./bin
+
+TESTS = test_pthread_create_seq 	\
+	test_pthread_create_para 	\
+	test_pthread_mutex		\
+	test_atomic			\
+	test_pthread_cond		\
+	test_std_thread			\
+	test_std_mutex			\
+	test_std_condition_variable
+
+all: $(addprefix $(BIN_DIR)/,$(TESTS))
+
+$(BIN_DIR)/%: src/%.cpp
+	@mkdir -p $(BIN_DIR)
+	$(CXX) -o $@ $(CCFLAGS) $(CXXFLAGS) $(LDFLAGS) $^
+
+clean:
+	$(RM) $(BIN_DIR)/*
+
+.PHONY: all clean
+

@@ -35,7 +35,7 @@
 #
 # Authors: Andreas Sandberg
 
-CROSS_COMPILE =
-BIN_DIR = bin.x86
+CROSS_COMPILE = arm-linux-gnueabihf-
+BIN_DIR = bin.aarch32
 
 -include Makefile.common

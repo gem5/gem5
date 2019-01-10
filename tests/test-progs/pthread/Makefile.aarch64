@@ -35,7 +35,7 @@
 #
 # Authors: Andreas Sandberg
 
-CROSS_COMPILE =
-BIN_DIR = bin.x86
+CROSS_COMPILE = aarch64-linux-gnu-
+BIN_DIR = bin.aarch64
 
 -include Makefile.common
