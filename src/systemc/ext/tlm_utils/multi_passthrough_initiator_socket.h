@@ -141,10 +141,10 @@ class multi_passthrough_initiator_socket :
         if (!m_beoe_disabled) { // We are not bound hierarchically.
             // So we bind the dummy to avoid a SystemC error.
             base_type::m_export.bind(m_dummy);
-            // and then return our own export so that the hierarchical
-            // binding is set up properly.
-            return base_type::get_base_export();
         }
+        // and then return our own export so that the hierarchical
+        // binding is set up properly.
+        return base_type::get_base_export();
     }
 
     virtual const sc_core::sc_export<tlm::tlm_bw_transport_if<TYPES>> &
