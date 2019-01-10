@@ -160,7 +160,6 @@ class SimpleRenameMap
     /** @} */
 };
 
-
 /**
  * Unified register rename map for all classes of registers.  Wraps a
  * set of class-specific rename maps.  Methods that do not specify a
@@ -377,8 +376,16 @@ class UnifiedRenameMap
     /**
      * Set vector mode to Full or Elem.
      * Ignore 'silent' modifications.
+     *
+     * @param newVecMode new vector renaming mode
      */
-    void switchMode(VecMode newVecMode, UnifiedFreeList* freeList);
+    void switchMode(VecMode newVecMode);
+
+    /**
+     * Switch freeList of registers from Full to Elem or vicevers
+     * depending on vecMode (vector renaming mode).
+     */
+    void switchFreeList(UnifiedFreeList* freeList);
 
 };
 

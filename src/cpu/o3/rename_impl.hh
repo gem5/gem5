@@ -927,10 +927,6 @@ DefaultRename<Impl>::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
 
     // After a syscall squashes everything, the history buffer may be empty
     // but the ROB may still be squashing instructions.
-    if (historyBuffer[tid].empty()) {
-        return;
-    }
-
     // Go through the most recent instructions, undoing the mappings
     // they did and freeing up the registers.
     while (!historyBuffer[tid].empty() &&
@@ -965,6 +961,9 @@ DefaultRename<Impl>::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
 
         ++renameUndoneMaps;
     }
+
+    // Check if we need to change vector renaming mode after squashing
+    cpu->switchRenameMode(tid, freeList);
 }
 
 template<class Impl>

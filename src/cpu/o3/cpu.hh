@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013, 2016-2018 ARM Limited
+ * Copyright (c) 2011-2013, 2016-2019 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -371,6 +371,14 @@ class FullO3CPU : public BaseO3CPU
 
     bool simPalCheck(int palFunc, ThreadID tid);
 
+    /** Check if a change in renaming is needed for vector registers.
+     * The vecMode variable is updated and propagated to rename maps.
+     *
+     * @param tid ThreadID
+     * @param freelist list of free registers
+     */
+    void switchRenameMode(ThreadID tid, UnifiedFreeList* freelist);
+
     /** Returns the Fault for any valid interrupt. */
     Fault getInterrupts();
 
@@ -408,6 +416,13 @@ class FullO3CPU : public BaseO3CPU
      * Read physical vector register for modification.
      */
     VecRegContainer& getWritableVecReg(PhysRegIdPtr reg_idx);
+
+    /** Returns current vector renaming mode */
+    Enums::VecRegRenameMode vecRenameMode() const { return vecMode; }
+
+    /** Sets the current vector renaming mode */
+    void vecRenameMode(Enums::VecRegRenameMode vec_mode)
+    { vecMode = vec_mode; }
 
     /**
      * Read physical vector register lane

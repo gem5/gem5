@@ -45,6 +45,7 @@
 #ifndef __CPU_O3_THREAD_CONTEXT_IMPL_HH__
 #define __CPU_O3_THREAD_CONTEXT_IMPL_HH__
 
+#include "arch/generic/traits.hh"
 #include "arch/kernel_stats.hh"
 #include "arch/registers.hh"
 #include "config/the_isa.hh"
@@ -176,6 +177,9 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
 {
+    // Set vector renaming mode before copying registers
+    cpu->vecRenameMode(RenameMode<TheISA::ISA>::mode(tc->pcState()));
+
     // Prevent squashing
     thread->noSquashFromTC = true;
     TheISA::copyRegs(tc, this);

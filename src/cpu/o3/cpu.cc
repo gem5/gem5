@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2012, 2014, 2016, 2017 ARM Limited
+ * Copyright (c) 2011-2012, 2014, 2016, 2017, 2019 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -155,7 +155,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
       /* It is mandatory that all SMT threads use the same renaming mode as
        * they are sharing registers and rename */
-      vecMode(initRenameMode<TheISA::ISA>::mode(params->isa[0])),
+      vecMode(RenameMode<TheISA::ISA>::init(params->isa[0])),
       regFile(params->numPhysIntRegs,
               params->numPhysFloatRegs,
               params->numPhysVecRegs,
@@ -266,7 +266,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     // Setup the rename map for whichever stages need it.
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         isa[tid] = params->isa[tid];
-        assert(initRenameMode<TheISA::ISA>::equals(isa[tid], isa[0]));
+        assert(RenameMode<TheISA::ISA>::equalsInit(isa[tid], isa[0]));
 
         // Only Alpha has an FP zero register, so for other ISAs we
         // use an invalid FP register index to avoid special treatment
@@ -958,6 +958,25 @@ FullO3CPU<Impl>::simPalCheck(int palFunc, ThreadID tid)
     }
 #endif
     return true;
+}
+
+template <class Impl>
+void
+FullO3CPU<Impl>::switchRenameMode(ThreadID tid, UnifiedFreeList* freelist)
+{
+    auto pc = this->pcState(tid);
+
+    // new_mode is the new vector renaming mode
+    auto new_mode = RenameMode<TheISA::ISA>::mode(pc);
+
+    // We update vecMode only if there has been a change
+    if (new_mode != vecMode) {
+        vecMode = new_mode;
+
+        renameMap[tid].switchMode(vecMode);
+        commitRenameMap[tid].switchMode(vecMode);
+        renameMap[tid].switchFreeList(freelist);
+    }
 }
 
 template <class Impl>

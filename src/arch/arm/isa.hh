@@ -699,15 +699,28 @@ namespace ArmISA
 }
 
 template<>
-struct initRenameMode<ArmISA::ISA>
+struct RenameMode<ArmISA::ISA>
 {
-    static Enums::VecRegRenameMode mode(const ArmISA::ISA* isa)
+    static Enums::VecRegRenameMode
+    init(const ArmISA::ISA* isa)
     {
         return isa->vecRegRenameMode();
     }
-    static bool equals(const ArmISA::ISA* isa1, const ArmISA::ISA* isa2)
+
+    static Enums::VecRegRenameMode
+    mode(const ArmISA::PCState& pc)
     {
-        return mode(isa1) == mode(isa2);
+        if (pc.aarch64()) {
+            return Enums::Full;
+        } else {
+            return Enums::Elem;
+        }
+    }
+
+    static bool
+    equalsInit(const ArmISA::ISA* isa1, const ArmISA::ISA* isa2)
+    {
+        return init(isa1) == init(isa2);
     }
 };
 
