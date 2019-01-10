@@ -74,7 +74,7 @@ Scoreboard::findIndex(const RegId& reg, Index &scoreboard_index)
             break;
           case VecElemClass:
             scoreboard_index = TheISA::NumIntRegs + TheISA::NumCCRegs +
-                TheISA::NumFloatRegs + TheISA::NumVecRegs + reg.index();
+                TheISA::NumFloatRegs + reg.flatIndex();
             ret = true;
             break;
           case CCRegClass:

@@ -94,7 +94,8 @@ class Scoreboard : public Named
     Scoreboard(const std::string &name) :
         Named(name),
         numRegs(TheISA::NumIntRegs + TheISA::NumCCRegs +
-            TheISA::NumFloatRegs + TheISA::NumVecRegs),
+            TheISA::NumFloatRegs +
+            (TheISA::NumVecRegs * TheISA::NumVecElemPerVecReg)),
         numResults(numRegs, 0),
         numUnpredictableResults(numRegs, 0),
         fuIndices(numRegs, 0),
