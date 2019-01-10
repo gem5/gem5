@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python2.7
 #
 # Copyright (c) 2017-2018 Arm Limited
 # All rights reserved

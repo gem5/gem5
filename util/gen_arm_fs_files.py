@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python2.7
 
 # Copyright (c) 2017-2018 Metempsy Technology Consulting
 # All rights reserved.
