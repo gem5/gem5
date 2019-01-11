@@ -129,9 +129,6 @@ let {{
     def vectorRegElem(elem, ext = 'sf', zeroing = False):
         return (elem, ext, zeroing)
 
-    def floatReg(idx):
-        return ('FloatReg', 'sf', idx, 'IsFloating', srtNormal)
-
     def intReg(idx):
         return ('IntReg', 'uw', idx, 'IsInteger', srtNormal,
                 maybePCRead, maybePCWrite)
