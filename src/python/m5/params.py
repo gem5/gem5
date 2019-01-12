@@ -1805,7 +1805,7 @@ class PortRef(object):
             else:
                 raise TypeError, \
                       "Splicing non-port references '%s','%s' to port '%s'"\
-                      % (new_peer, peers_new_peer, self)
+                      % (new_master_peer, new_slave_peer, self)
         else:
             fatal("Port %s not connected, cannot splice in new peers\n", self)
 
