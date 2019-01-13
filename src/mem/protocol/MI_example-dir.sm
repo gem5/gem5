@@ -498,6 +498,7 @@ machine(MachineType:Directory, "Directory protocol")
 
   transition(I, GETX, IM) {
     //d_sendData;
+    v_allocateTBEFromRequestNet;
     qf_queueMemoryFetchRequest;
     e_ownerIsRequestor;
     i_popIncomingRequestQueue;
@@ -506,6 +507,7 @@ machine(MachineType:Directory, "Directory protocol")
   transition(IM, Memory_Data, M) {
     d_sendData;
     //e_ownerIsRequestor;
+    w_deallocateTBE;
     l_popMemQueue;
   }
 
