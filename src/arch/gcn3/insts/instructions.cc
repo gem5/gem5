@@ -28952,34 +28952,35 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                int signOut = std::signbit(src1[lane]) ^
-                              std::signbit(src2[lane]);
-                int exp1, exp2;
-                std::frexp(src1[lane],&exp1);
-                std::frexp(src2[lane],&exp2);
-                if (std::isnan(src2[lane])) {
-                    vdst[lane] = src2[lane];
-                } else if (std::isnan(src1[lane])) {
-                    vdst[lane] = src1[lane];
-                } else if (src1[lane] == 0.0 && src2[lane] == 0.0) {
-                    vdst[lane] = -NAN;
+                int sign_out = std::signbit(src1[lane])
+                              ^ std::signbit(src2[lane]);
+                int exp1(0);
+                int exp2(0);
+                std::frexp(src1[lane], &exp1);
+                std::frexp(src2[lane], &exp2);
+
+                if (std::isnan(src1[lane]) || std::isnan(src2[lane])) {
+                    vdst[lane] = std::numeric_limits<VecElemF64>::quiet_NaN();
+                } else if (std::fpclassify(src1[lane]) == FP_ZERO
+                           && std::fpclassify(src2[lane]) == FP_ZERO) {
+                    vdst[lane]
+                        = std::numeric_limits<VecElemF64>::signaling_NaN();
                 } else if (std::isinf(src1[lane]) && std::isinf(src2[lane])) {
-                    vdst[lane] = -NAN;
-                } else if (src1[lane] == 0.0 || std::isinf(src2[lane])) {
-                    vdst[lane] = signOut ? -INFINITY : +INFINITY;
-                } else if (src2[lane] == 0.0 || std::isinf(src1[lane])) {
-                    vdst[lane] = signOut ? -0.0 : +0.0;
+                    vdst[lane]
+                        = std::numeric_limits<VecElemF64>::signaling_NaN();
+                } else if (std::fpclassify(src1[lane]) == FP_ZERO
+                           || std::isinf(src2[lane])) {
+                    vdst[lane] = sign_out ? -INFINITY : +INFINITY;
+                } else if (std::isinf(src1[lane])
+                           || std::fpclassify(src2[lane]) == FP_ZERO) {
+                    vdst[lane] = sign_out ? -0.0 : +0.0;
                 } else if (exp2 - exp1 < -1075) {
-                    warn_once("fixup_f64 unimplemented case:"
-                              "exp2 - ex1 < -1075");
                     vdst[lane] = src0[lane];
                 } else if (exp1 == 2047) {
-                    warn_once("fixup_f64 unimplemented case:"
-                              "exp1 == 2047");
                     vdst[lane] = src0[lane];
                 } else {
-                    vdst[lane] = ((uint64_t)signOut<<63) |
-                        ((uint64_t)src0[lane] & 0x7fffffffffffffffULL);
+                    vdst[lane] = sign_out ? -std::fabs(src0[lane])
+                        : std::fabs(src0[lane]);
                 }
             }
         }
@@ -29089,36 +29090,37 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                int exp1, exp2;
-                std::frexp(src1[lane],&exp1);
-                std::frexp(src2[lane],&exp2);
+                int exp1(0);
+                int exp2(0);
+                std::frexp(src1[lane], &exp1);
+                std::frexp(src2[lane], &exp2);
                 vcc.setBit(lane, 0);
-                if (src2[lane] == 0 || src1[lane] == 0) {
+
+                if (std::fpclassify(src1[lane]) == FP_ZERO
+                    || std::fpclassify(src2[lane]) == FP_ZERO) {
                     vdst[lane] = NAN;
                 } else if (exp2 - exp1 >= 768) {
                     vcc.setBit(lane, 1);
                     if (src0[lane] == src1[lane]) {
-                        vdst[lane] = std::ldexp(src0[lane],128);
+                        vdst[lane] = std::ldexp(src0[lane], 128);
                     }
-                } else if (exp1 == 0) {
-                    vdst[lane] = std::ldexp(src0[lane],128);
-                } else if (exp1 >= 0x7fd && exp2 - exp1 <= -768) {
+                } else if (!std::isnormal(src1[lane])) {
+                    vdst[lane] = std::ldexp(src0[lane], 128);
+                } else if (!std::isnormal(1.0 / src1[lane])
+                           && !std::isnormal(src2[lane] / src1[lane])) {
                     vcc.setBit(lane, 1);
                     if (src0[lane] == src1[lane]) {
-                        vdst[lane] = std::ldexp(src0[lane],-128);
+                        vdst[lane] = std::ldexp(src0[lane], 128);
                     }
-                } else if (exp1 >= 0x7fd) {
-                    vdst[lane] = std::ldexp(src0[lane],-128);
-                } else if (exp2 - exp1 <= -768) {
+                } else if (!std::isnormal(1.0 / src1[lane])) {
+                    vdst[lane] = std::ldexp(src0[lane], -128);
+                } else if (!std::isnormal(src2[lane] / src1[lane])) {
                     vcc.setBit(lane, 1);
-                    if (src0[lane] != src2[lane]) {
-                        vdst[lane] = std::ldexp(src0[lane],128);
+                    if (src0[lane] == src2[lane]) {
+                        vdst[lane] = std::ldexp(src0[lane], 128);
                     }
                 } else if (exp2 <= 53) {
-                    vdst[lane] = std::ldexp(src0[lane],128);
-                }
-                else {
-                    vdst[lane] = src0[lane];
+                    vdst[lane] = std::ldexp(src0[lane], 128);
                 }
             }
         }
@@ -29246,8 +29248,8 @@ namespace Gcn3ISA
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 if (bits(vcc.rawData(), lane)) {
-                    vdst[lane] = pow(2,64) *
-                        std::fma(src0[lane], src1[lane], src2[lane]);
+                    vdst[lane] = std::pow(2, 64)
+                        * std::fma(src0[lane], src1[lane], src2[lane]);
                 } else {
                     vdst[lane] = std::fma(src0[lane], src1[lane], src2[lane]);
                 }
