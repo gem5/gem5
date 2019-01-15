@@ -289,7 +289,8 @@ template <class T>
 bool
 parseParam(const std::string &s, BitUnionType<T> &value)
 {
-    auto storage = static_cast<BitUnionBaseType<T>>(value);
+    // Zero initialize storage to avoid leaking an uninitialized value
+    BitUnionBaseType<T> storage = BitUnionBaseType<T>();
     auto res = to_number(s, storage);
     value = storage;
     return res;
