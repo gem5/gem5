@@ -10,7 +10,7 @@ from __future__ import print_function
 import sys
 import os
 
-base_dir = os.path.dirname(os.path.abspath(__name__))
+base_dir = os.path.dirname(os.path.abspath(__file__))
 ext_path = os.path.join(base_dir, os.pardir, 'ext')
 
 sys.path.insert(0, base_dir)
