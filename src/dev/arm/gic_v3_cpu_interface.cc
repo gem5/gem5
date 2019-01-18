@@ -159,9 +159,16 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       case MISCREG_ICC_IGRPEN0:
       case MISCREG_ICC_IGRPEN0_EL1: {
           if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
-              return isa->readMiscRegNoEffect(MISCREG_ICV_IGRPEN0_EL1);
+              return readMiscReg(MISCREG_ICV_IGRPEN0_EL1);
           }
 
+          break;
+      }
+
+      case MISCREG_ICV_IGRPEN0_EL1: {
+          ICH_VMCR_EL2 ich_vmcr_el2 =
+              isa->readMiscRegNoEffect(MISCREG_ICH_VMCR_EL2);
+          value = ich_vmcr_el2.VENG0;
           break;
       }
 
@@ -169,9 +176,16 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       case MISCREG_ICC_IGRPEN1:
       case MISCREG_ICC_IGRPEN1_EL1: {
           if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
-              return isa->readMiscRegNoEffect(MISCREG_ICV_IGRPEN1_EL1);
+              return readMiscReg(MISCREG_ICV_IGRPEN1_EL1);
           }
 
+          break;
+      }
+
+      case MISCREG_ICV_IGRPEN1_EL1: {
+          ICH_VMCR_EL2 ich_vmcr_el2 =
+              isa->readMiscRegNoEffect(MISCREG_ICH_VMCR_EL2);
+          value = ich_vmcr_el2.VENG1;
           break;
       }
 
@@ -380,7 +394,7 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       case MISCREG_ICC_PMR:
       case MISCREG_ICC_PMR_EL1:
         if ((currEL() == EL1) && !inSecureState() && (hcr_imo || hcr_fmo)) {
-            return isa->readMiscRegNoEffect(MISCREG_ICV_PMR_EL1);
+            return readMiscReg(MISCREG_ICV_PMR_EL1);
         }
 
         if (haveEL(EL3) && !inSecureState() &&
@@ -400,6 +414,14 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
         }
 
         break;
+
+      case MISCREG_ICV_PMR_EL1: { // Priority Mask Register
+          ICH_VMCR_EL2 ich_vmcr_el2 =
+              isa->readMiscRegNoEffect(MISCREG_ICH_VMCR_EL2);
+
+          value = ich_vmcr_el2.VPMR;
+          break;
+      }
 
       // Interrupt Acknowledge Register 0
       case MISCREG_ICC_IAR0:
@@ -1273,7 +1295,7 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
       case MISCREG_ICC_PMR:
       case MISCREG_ICC_PMR_EL1: {
           if ((currEL() == EL1) && !inSecureState() && (hcr_imo || hcr_fmo)) {
-              return isa->setMiscRegNoEffect(MISCREG_ICV_PMR_EL1, val);
+              return setMiscReg(MISCREG_ICV_PMR_EL1, val);
           }
 
           val &= 0xff;
@@ -1301,6 +1323,16 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
 
           val &= ~0U << (8 - PRIORITY_BITS);
           break;
+      }
+
+      case MISCREG_ICV_PMR_EL1: { // Priority Mask Register
+          ICH_VMCR_EL2 ich_vmcr_el2 =
+             isa->readMiscRegNoEffect(MISCREG_ICH_VMCR_EL2);
+          ich_vmcr_el2.VPMR = val & 0xff;
+
+          isa->setMiscRegNoEffect(MISCREG_ICH_VMCR_EL2, ich_vmcr_el2);
+          virtualUpdate();
+          return;
       }
 
       // Interrupt Group 0 Enable Register EL1
