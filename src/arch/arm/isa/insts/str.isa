@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2011,2017 ARM Limited
+// Copyright (c) 2010-2011,2017,2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -183,11 +183,16 @@ let {{
             if self.user:
                 self.memFlags.append("ArmISA::TLB::UserMode")
 
-            if self.flavor == "exclusive":
+            if self.flavor in ("exclusive", "relex"):
                 self.instFlags.append("IsStoreConditional")
                 self.memFlags.append("Request::LLSC")
             elif self.flavor != "fp":
                 self.memFlags.append("ArmISA::TLB::AllowUnaligned")
+
+            if self.flavor in ("release", "relex"):
+                self.instFlags.extend(["IsMemBarrier",
+                                       "IsWriteBarrier",
+                                       "IsReadBarrier"])
 
             # Disambiguate the class name for different flavors of stores
             if self.flavor != "normal":
@@ -258,12 +263,17 @@ let {{
             self.Name = self.nameFunc(self.post, self.add, self.writeback)
 
             # Add memory request flags where necessary
-            if self.flavor == "exclusive":
+            if self.flavor in ("exclusive", "relex"):
                 self.instFlags.append("IsStoreConditional")
                 self.memFlags.append("Request::LLSC")
                 self.memFlags.append("ArmISA::TLB::AlignDoubleWord")
             else:
                 self.memFlags.append("ArmISA::TLB::AlignWord")
+
+            if self.flavor in ("release", "relex"):
+                self.instFlags.extend(["IsMemBarrier",
+                                       "IsWriteBarrier",
+                                       "IsReadBarrier"])
 
             # Disambiguate the class name for different flavors of stores
             if self.flavor != "normal":
@@ -388,6 +398,14 @@ let {{
                flavor="exclusive").emit()
     StoreDoubleImmEx("strexd", False, True, False,
                      flavor="exclusive").emit()
+
+    StoreImm("stl", False, True, False, size=4, flavor="release").emit()
+    StoreImm("stlh", False, True, False, size=2, flavor="release").emit()
+    StoreImm("stlb", False, True, False, size=1, flavor="release").emit()
+    StoreImmEx("stlex", False, True, False, size=4, flavor="relex").emit()
+    StoreImmEx("stlexh", False, True, False, size=2, flavor="relex").emit()
+    StoreImmEx("stlexb", False, True, False, size=1, flavor="relex").emit()
+    StoreDoubleImmEx("stlexd", False, True, False, flavor="relex").emit()
 
     StoreImm("vstr", False, True, False, size=4, flavor="fp").emit()
     StoreImm("vstr", False, False, False, size=4, flavor="fp").emit()

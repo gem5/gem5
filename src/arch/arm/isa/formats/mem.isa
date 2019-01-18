@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010 ARM Limited
+// Copyright (c) 2010,2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -225,21 +225,54 @@ def format ArmSyncMem() {{
         const IntRegIndex rn = (IntRegIndex)(uint32_t)bits(machInst, 19, 16);
         const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
         const IntRegIndex rt2 = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
-        switch (PUBWL) {
-          case 0x18:
+
+        const auto type_L = bits(machInst, 22, 20);
+        const auto ex_ord = bits(machInst, 9, 8);
+        const auto dec_fields = (type_L << 2) | ex_ord;
+
+        switch (dec_fields) {
+          case 0x00:
+            return new %(stl)s(machInst, rt, rn, true, 0);
+          case 0x02:
+            return new %(stlex)s(machInst, rt, rt2, rn, true, 0);
+          case 0x03:
             return new %(strex)s(machInst, rt, rt2, rn, true, 0);
-          case 0x19:
+          case 0x04:
+            return new %(lda)s(machInst, rt, rn, true, 0);
+          case 0x06:
+            return new %(ldaex)s(machInst, rt, rn, true, 0);
+          case 0x07:
             return new %(ldrex)s(machInst, rt, rn, true, 0);
-          case 0x1a:
+          case 0x0a:
+            return new %(stlexd)s(machInst, rt, rt2, rt2 + 1, rn, true, 0);
+          case 0x0b:
             return new %(strexd)s(machInst, rt, rt2, rt2 + 1, rn, true, 0);
-          case 0x1b:
+          case 0x0e:
+            return new %(ldaexd)s(machInst, rt, rt + 1, rn, true, 0);
+          case 0x0f:
             return new %(ldrexd)s(machInst, rt, rt + 1, rn, true, 0);
-          case 0x1c:
+          case 0x10:
+            return new %(stlb)s(machInst, rt, rn, true, 0);
+          case 0x12:
+            return new %(stlexb)s(machInst, rt, rt2, rn, true, 0);
+          case 0x13:
             return new %(strexb)s(machInst, rt, rt2, rn, true, 0);
-          case 0x1d:
+          case 0x14:
+            return new %(ldab)s(machInst, rt, rn, true, 0);
+          case 0x16:
+            return new %(ldaexb)s(machInst, rt, rn, true, 0);
+          case 0x17:
             return new %(ldrexb)s(machInst, rt, rn, true, 0);
-          case 0x1e:
+          case 0x18:
+            return new %(stlh)s(machInst, rt, rn, true, 0);
+          case 0x1a:
+            return new %(stlexh)s(machInst, rt, rt2, rn, true, 0);
+          case 0x1b:
             return new %(strexh)s(machInst, rt, rt2, rn, true, 0);
+          case 0x1c:
+            return new %(ldah)s(machInst, rt, rn, true, 0);
+          case 0x1e:
+            return new %(ldaexh)s(machInst, rt, rn, true, 0);
           case 0x1f:
             return new %(ldrexh)s(machInst, rt, rn, true, 0);
           default:
@@ -254,7 +287,23 @@ def format ArmSyncMem() {{
         "strex" : "STREX_" + storeImmClassName(False, True, False, size=4),
         "strexb" : "STREXB_" + storeImmClassName(False, True, False, size=1),
         "strexh" : "STREXH_" + storeImmClassName(False, True, False, size=2),
-        "strexd" : "STREXD_" + storeDoubleImmClassName(False, True, False)
+        "strexd" : "STREXD_" + storeDoubleImmClassName(False, True, False),
+
+        "lda" : "LDA_" + loadImmClassName(False, True, False, size=4),
+        "ldab" : "LDAB_" + loadImmClassName(False, True, False, size=1),
+        "ldah" : "LDAH_" + loadImmClassName(False, True, False, size=2),
+        "ldaex" : "LDAEX_" + loadImmClassName(False, True, False, size=4),
+        "ldaexb" : "LDAEXB_" + loadImmClassName(False, True, False, size=1),
+        "ldaexh" : "LDAEXH_" + loadImmClassName(False, True, False, size=2),
+        "ldaexd" : "LDAEXD_" + loadDoubleImmClassName(False, True, False),
+
+        "stl" : "STL_" + storeImmClassName(False, True, False, size=4),
+        "stlb" : "STLB_" + storeImmClassName(False, True, False, size=1),
+        "stlh" : "STLH_" + storeImmClassName(False, True, False, size=2),
+        "stlex" : "STLEX_" + storeImmClassName(False, True, False, size=4),
+        "stlexb" : "STLEXB_" + storeImmClassName(False, True, False, size=1),
+        "stlexh" : "STLEXH_" + storeImmClassName(False, True, False, size=2),
+        "stlexd" : "STLEXD_" + storeDoubleImmClassName(False, True, False)
     }
 }};
 
@@ -341,6 +390,21 @@ def format Thumb32LdrStrDExTbh() {{
                       case 0x7:
                         return new %(strexd)s(machInst, rd, rt,
                                               rt2, rn, true, 0);
+                      case 0x8:
+                        return new %(stlb)s(machInst, rt, rn, true, 0);
+                      case 0x9:
+                        return new %(stlh)s(machInst, rt, rn, true, 0);
+                      case 0xa:
+                        return new %(stl)s(machInst, rt, rn, true, 0);
+                      case 0xc:
+                        return new %(stlexb)s(machInst, rd, rt, rn, true, 0);
+                      case 0xd:
+                        return new %(stlexh)s(machInst, rd, rt, rn, true, 0);
+                      case 0xe:
+                        return new %(stlex)s(machInst, rd, rt, rn, true, 0);
+                      case 0xf:
+                        return new %(stlexd)s(machInst, rd, rt,
+                                              rt2, rn, true, 0);
                       default:
                         return new Unknown(machInst);
                     }
@@ -356,6 +420,20 @@ def format Thumb32LdrStrDExTbh() {{
                         return new %(ldrexh)s(machInst, rt, rn, true, 0);
                       case 0x7:
                         return new %(ldrexd)s(machInst, rt, rt2, rn, true, 0);
+                      case 0x8:
+                        return new %(ldab)s(machInst, rt, rn, true, 0);
+                      case 0x9:
+                        return new %(ldah)s(machInst, rt, rn, true, 0);
+                      case 0xa:
+                        return new %(lda)s(machInst, rt, rn, true, 0);
+                      case 0xc:
+                        return new %(ldaexb)s(machInst, rt, rn, true, 0);
+                      case 0xd:
+                        return new %(ldaexh)s(machInst, rt, rn, true, 0);
+                      case 0xe:
+                        return new %(ldaex)s(machInst, rt, rn, true, 0);
+                      case 0xf:
+                        return new %(ldaexd)s(machInst, rt, rt2, rn, true, 0);
                       default:
                         return new Unknown(machInst);
                     }
@@ -422,7 +500,22 @@ def format Thumb32LdrStrDExTbh() {{
         "strd_p" : storeDoubleImmClassName(False, False, False),
         "strd_pw" : storeDoubleImmClassName(False, False, True),
         "strd_pu" : storeDoubleImmClassName(False, True, False),
-        "strd_puw" : storeDoubleImmClassName(False, True, True)
+        "strd_puw" : storeDoubleImmClassName(False, True, True),
+
+        "stl" : "STL_" + storeImmClassName(False, True, False, size=4),
+        "stlh" : "STLH_" + storeImmClassName(False, True, False, size=2),
+        "stlb" : "STLB_" + storeImmClassName(False, True, False, size=1),
+        "stlex" : "STLEX_" + storeImmClassName(False, True, False, size=4),
+        "stlexh" : "STLEXH_" + storeImmClassName(False, True, False, size=2),
+        "stlexb" : "STLEXB_" + storeImmClassName(False, True, False, size=1),
+        "stlexd" : "STLEXD_" + storeDoubleImmClassName(False, True, False),
+        "lda" : "LDA_" + loadImmClassName(False, True, False, size=4),
+        "ldah" : "LDAH_" + loadImmClassName(False, True, False, size=2),
+        "ldab" : "LDAB_" + loadImmClassName(False, True, False, size=1),
+        "ldaex" : "LDAEX_" + loadImmClassName(False, True, False, size=4),
+        "ldaexh" : "LDAEXH_" + loadImmClassName(False, True, False, size=2),
+        "ldaexb" : "LDAEXB_" + loadImmClassName(False, True, False, size=1),
+        "ldaexd" : "LDAEXD_" + loadDoubleImmClassName(False, True, False)
     }
 }};
 

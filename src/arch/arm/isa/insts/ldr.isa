@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2011 ARM Limited
+// Copyright (c) 2010-2011,2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -173,10 +173,16 @@ let {{
             elif self.flavor == "iprefetch":
                 self.memFlags.append("Request::PREFETCH")
                 self.instFlags = ['IsInstPrefetch']
-            elif self.flavor == "exclusive":
-                self.memFlags.append("Request::LLSC")
             elif self.flavor == "normal":
                 self.memFlags.append("ArmISA::TLB::AllowUnaligned")
+
+            if self.flavor in ("exclusive", "acex"):
+                self.memFlags.append("Request::LLSC")
+
+            if self.flavor in ("acquire", "acex"):
+                self.instFlags.extend(["IsMemBarrier",
+                                       "IsWriteBarrier",
+                                       "IsReadBarrier"])
 
             # Disambiguate the class name for different flavors of loads
             if self.flavor != "normal":
@@ -235,8 +241,9 @@ let {{
             # Build the default class name
             self.Name = self.nameFunc(self.post, self.add, self.writeback)
 
+            self.instFlags = []
             # Add memory request flags where necessary
-            if self.flavor == "exclusive":
+            if self.flavor in ("exclusive", "acex"):
                 self.memFlags.append("Request::LLSC")
                 self.memFlags.append("ArmISA::TLB::AlignDoubleWord")
             else:
@@ -245,6 +252,11 @@ let {{
             # Disambiguate the class name for different flavors of loads
             if self.flavor != "normal":
                 self.Name = "%s_%s" % (self.name.upper(), self.Name)
+
+            if self.flavor in ("acquire", "acex"):
+                self.instFlags.extend(["IsMemBarrier",
+                                       "IsWriteBarrier",
+                                       "IsReadBarrier"])
 
         def emit(self):
             # Address computation code
@@ -279,7 +291,7 @@ let {{
             wbDecl = None
             if self.writeback:
                 wbDecl = self.wbDecl
-            self.emitHelper(base, wbDecl)
+            self.emitHelper(base, wbDecl, self.instFlags)
 
     def loadDoubleImmClassName(post, add, writeback):
         return memClassName("LOAD_IMMD", post, add, writeback, 4, False, False)
@@ -364,6 +376,14 @@ let {{
     LoadImm("ldrexh", False, True, False, size=2, flavor="exclusive").emit()
     LoadImm("ldrexb", False, True, False, size=1, flavor="exclusive").emit()
     LoadDoubleImm("ldrexd", False, True, False, flavor="exclusive").emit()
+
+    LoadImm("lda", False, True, False, size=4, flavor="acquire").emit()
+    LoadImm("ldah", False, True, False, size=2, flavor="acquire").emit()
+    LoadImm("ldab", False, True, False, size=1, flavor="acquire").emit()
+    LoadImm("ldaex", False, True, False, size=4, flavor="acex").emit()
+    LoadImm("ldaexh", False, True, False, size=2, flavor="acex").emit()
+    LoadImm("ldaexb", False, True, False, size=1, flavor="acex").emit()
+    LoadDoubleImm("ldaexd", False, True, False, flavor="acex").emit()
 
     LoadImm("vldr", False, True, False, size=4, flavor="fp").emit()
     LoadImm("vldr", False, False, False, size=4, flavor="fp").emit()
