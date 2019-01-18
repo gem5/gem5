@@ -151,18 +151,32 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
       case MISCREG_ICC_IGRPEN0:
       case MISCREG_ICC_IGRPEN0_EL1: {
           if ((currEL() == EL1) && !inSecureState() && hcr_fmo) {
-              return isa->readMiscRegNoEffect(MISCREG_ICV_IGRPEN0_EL1);
+              return readMiscReg(MISCREG_ICV_IGRPEN0_EL1);
           }
 
+          break;
+      }
+
+      case MISCREG_ICV_IGRPEN0_EL1: {
+          RegVal ich_vmcr_el2 =
+              isa->readMiscRegNoEffect(MISCREG_ICH_VMCR_EL2);
+          value = bits(ich_vmcr_el2, ICH_VMCR_EL2_VENG0_SHIFT);
           break;
       }
 
       case MISCREG_ICC_IGRPEN1:
       case MISCREG_ICC_IGRPEN1_EL1: {
           if ((currEL() == EL1) && !inSecureState() && hcr_imo) {
-              return isa->readMiscRegNoEffect(MISCREG_ICV_IGRPEN1_EL1);
+              return readMiscReg(MISCREG_ICV_IGRPEN1_EL1);
           }
 
+          break;
+      }
+
+      case MISCREG_ICV_IGRPEN1_EL1: {
+          RegVal ich_vmcr_el2 =
+              isa->readMiscRegNoEffect(MISCREG_ICH_VMCR_EL2);
+          value = bits(ich_vmcr_el2, ICH_VMCR_EL2_VENG1_SHIFT);
           break;
       }
 
