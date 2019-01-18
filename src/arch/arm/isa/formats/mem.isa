@@ -226,10 +226,6 @@ def format ArmSyncMem() {{
         const IntRegIndex rt = (IntRegIndex)(uint32_t)bits(machInst, 15, 12);
         const IntRegIndex rt2 = (IntRegIndex)(uint32_t)bits(machInst, 3, 0);
         switch (PUBWL) {
-          case 0x10:
-            return new Swp(machInst, rt, rt2, rn);
-          case 0x14:
-            return new Swpb(machInst, rt, rt2, rn);
           case 0x18:
             return new %(strex)s(machInst, rt, rt2, rn, true, 0);
           case 0x19:

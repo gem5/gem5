@@ -47,23 +47,6 @@
 namespace ArmISA
 {
 
-class Swap : public PredOp
-{
-  protected:
-    IntRegIndex dest;
-    IntRegIndex op1;
-    IntRegIndex base;
-
-    Swap(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-         IntRegIndex _dest, IntRegIndex _op1, IntRegIndex _base)
-        : PredOp(mnem, _machInst, __opClass),
-          dest(_dest), op1(_op1), base(_base)
-    {}
-
-    std::string generateDisassembly(
-            Addr pc, const SymbolTable *symtab) const override;
-};
-
 class MightBeMicro : public PredOp
 {
   protected:

@@ -62,9 +62,6 @@ split decoder;
 //Stores of a single item
 ##include "str.isa"
 
-//Swaps
-##include "swap.isa"
-
 //Load/store multiple
 ##include "macromem.isa"
 
