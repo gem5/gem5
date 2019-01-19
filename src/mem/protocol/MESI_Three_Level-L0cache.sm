@@ -101,6 +101,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
 
     Data,               desc="Data for processor";
     Data_Exclusive,     desc="Data for processor";
+    Data_Stale,         desc="Data for processor, but not for storage";
 
     Ack,        desc="Ack for processor";
     Ack_all,      desc="Last ack for processor";
@@ -268,6 +269,8 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
             trigger(Event:Data_Exclusive, in_msg.addr, cache_entry, tbe);
         } else if(in_msg.Class == CoherenceClass:DATA) {
             trigger(Event:Data, in_msg.addr, cache_entry, tbe);
+        } else if(in_msg.Class == CoherenceClass:STALE_DATA) {
+            trigger(Event:Data_Stale, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Class == CoherenceClass:ACK) {
             trigger(Event:Ack, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Class == CoherenceClass:WB_ACK) {
@@ -732,6 +735,15 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     kd_wakeUpDependents;
   }
 
+  transition(IS, Data_Stale, I) {
+    u_writeDataToCache;
+    hx_load_hit;
+    s_deallocateTBE;
+    ff_deallocateCacheBlock;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
   transition(Inst_IS, Data, S) {
     u_writeInstToCache;
     hx_ifetch_hit;
@@ -744,6 +756,15 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     u_writeInstToCache;
     hx_ifetch_hit;
     s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(Inst_IS, Data_Stale, I) {
+    u_writeInstToCache;
+    hx_ifetch_hit;
+    s_deallocateTBE;
+    ff_deallocateCacheBlock;
     o_popIncomingResponseQueue;
     kd_wakeUpDependents;
   }
