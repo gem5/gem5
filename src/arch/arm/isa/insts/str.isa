@@ -48,8 +48,7 @@ let {{
         execBase = 'Store'
 
         def __init__(self, mnem, post, add, writeback, size=4,
-                     sign=False, user=False, flavor="normal",
-                     instFlags = []):
+                     sign=False, user=False, flavor="normal"):
             super(StoreInst, self).__init__()
 
             self.name = mnem
@@ -60,7 +59,7 @@ let {{
             self.sign = sign
             self.user = user
             self.flavor = flavor
-            self.instFlags = instFlags
+            self.instFlags = []
             if self.add:
                 self.op = " +"
             else:
@@ -185,6 +184,7 @@ let {{
                 self.memFlags.append("ArmISA::TLB::UserMode")
 
             if self.flavor == "exclusive":
+                self.instFlags.append("IsStoreConditional")
                 self.memFlags.append("Request::LLSC")
             elif self.flavor != "fp":
                 self.memFlags.append("ArmISA::TLB::AllowUnaligned")
@@ -259,6 +259,7 @@ let {{
 
             # Add memory request flags where necessary
             if self.flavor == "exclusive":
+                self.instFlags.append("IsStoreConditional")
                 self.memFlags.append("Request::LLSC")
                 self.memFlags.append("ArmISA::TLB::AlignDoubleWord")
             else:
@@ -379,14 +380,14 @@ let {{
 
     buildDoubleStores("strd")
 
-    StoreImmEx("strex", False, True, False, size=4, flavor="exclusive",
-               instFlags = ['IsStoreConditional']).emit()
-    StoreImmEx("strexh", False, True, False, size=2, flavor="exclusive",
-               instFlags = ['IsStoreConditional']).emit()
-    StoreImmEx("strexb", False, True, False, size=1, flavor="exclusive",
-               instFlags = ['IsStoreConditional']).emit()
-    StoreDoubleImmEx("strexd", False, True, False, flavor="exclusive",
-               instFlags = ['IsStoreConditional']).emit()
+    StoreImmEx("strex", False, True, False, size=4,
+               flavor="exclusive").emit()
+    StoreImmEx("strexh", False, True, False, size=2,
+               flavor="exclusive").emit()
+    StoreImmEx("strexb", False, True, False, size=1,
+               flavor="exclusive").emit()
+    StoreDoubleImmEx("strexd", False, True, False,
+                     flavor="exclusive").emit()
 
     StoreImm("vstr", False, True, False, size=4, flavor="fp").emit()
     StoreImm("vstr", False, False, False, size=4, flavor="fp").emit()
