@@ -91,7 +91,6 @@ Gicv3::read(PacketPtr pkt)
 {
     const Addr addr = pkt->getAddr();
     const size_t size = pkt->getSize();
-    const ContextID context_id = pkt->req->contextId();
     bool is_secure_access = pkt->isSecure();
     uint64_t resp = 0;
     Tick delay = 0;
@@ -103,7 +102,7 @@ Gicv3::read(PacketPtr pkt)
         delay = params()->dist_pio_delay;
         DPRINTF(GIC, "Gicv3::read(): (distributor) context_id %d register %#x "
                 "size %d is_secure_access %d (value %#x)\n",
-                context_id, daddr, size, is_secure_access, resp);
+                pkt->req->contextId(), daddr, size, is_secure_access, resp);
     } else if (redistRange.contains(addr)) {
         Addr daddr = addr - redistRange.start();
         uint32_t redistributor_id =
@@ -117,8 +116,8 @@ Gicv3::read(PacketPtr pkt)
         delay = params()->redist_pio_delay;
         DPRINTF(GIC, "Gicv3::read(): (redistributor %d) context_id %d "
                 "register %#x size %d is_secure_access %d (value %#x)\n",
-                redistributor_id, context_id, daddr, size, is_secure_access,
-                resp);
+                redistributor_id, pkt->req->contextId(), daddr, size,
+                is_secure_access, resp);
     } else {
         panic("Gicv3::read(): unknown address %#x\n", addr);
     }
@@ -134,7 +133,6 @@ Gicv3::write(PacketPtr pkt)
     const size_t size = pkt->getSize();
     uint64_t data = pkt->getUintX(LittleEndianByteOrder);
     const Addr addr = pkt->getAddr();
-    const ContextID context_id = pkt->req->contextId();
     bool is_secure_access = pkt->isSecure();
     Tick delay = 0;
 
@@ -143,7 +141,7 @@ Gicv3::write(PacketPtr pkt)
         panic_if(!distributor, "Distributor is null!");
         DPRINTF(GIC, "Gicv3::write(): (distributor) context_id %d "
                 "register %#x size %d is_secure_access %d value %#x\n",
-                context_id, daddr, size, is_secure_access, data);
+                pkt->req->contextId(), daddr, size, is_secure_access, data);
         distributor->write(daddr, data, size, is_secure_access);
         delay = params()->dist_pio_delay;
     } else if (redistRange.contains(addr)) {
@@ -156,8 +154,8 @@ Gicv3::write(PacketPtr pkt)
         panic_if(!redistributors[redistributor_id], "Redistributor is null!");
         DPRINTF(GIC, "Gicv3::write(): (redistributor %d) context_id %d "
                 "register %#x size %d is_secure_access %d value %#x\n",
-                redistributor_id, context_id, daddr, size, is_secure_access,
-                data);
+                redistributor_id, pkt->req->contextId(), daddr, size,
+                is_secure_access, data);
         redistributors[redistributor_id]->write(daddr, data, size,
                                                 is_secure_access);
         delay = params()->redist_pio_delay;
