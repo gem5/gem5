@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2018 ARM Limited
+ * Copyright (c) 2010-2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -786,6 +786,11 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
 
                     tgt_pkt->setData(pkt->getConstPtr<uint8_t>());
                 }
+
+                // this response did not allocate here and therefore
+                // it was not consumed, make sure that any flags are
+                // carried over to cache above
+                tgt_pkt->copyResponderFlags(pkt);
             }
             tgt_pkt->makeTimingResponse();
             // if this packet is an error copy that to the new packet
@@ -965,7 +970,6 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
         // first propagate snoop upward to see if anyone above us wants to
         // handle it.  save & restore packet src since it will get
         // rewritten to be relative to cpu-side bus (if any)
-        bool alreadyResponded = pkt->cacheResponding();
         if (is_timing) {
             // copy the packet so that we can clear any flags before
             // forwarding it upwards, we also allocate data (passing
@@ -983,16 +987,6 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
             // cache
             snoop_delay += snoopPkt.headerDelay;
 
-            if (snoopPkt.cacheResponding()) {
-                // cache-to-cache response from some upper cache
-                assert(!alreadyResponded);
-                pkt->setCacheResponding();
-            }
-            // upstream cache has the block, or has an outstanding
-            // MSHR, pass the flag on
-            if (snoopPkt.hasSharers()) {
-                pkt->setHasSharers();
-            }
             // If this request is a prefetch or clean evict and an upper level
             // signals block present, make sure to propagate the block
             // presence to the requester.
@@ -1004,9 +998,14 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
             if (snoopPkt.satisfied()) {
                 pkt->setSatisfied();
             }
+
+            // Copy over flags from the snoop response to make sure we
+            // inform the final destination
+            pkt->copyResponderFlags(&snoopPkt);
         } else {
+            bool already_responded = pkt->cacheResponding();
             cpuSidePort.sendAtomicSnoop(pkt);
-            if (!alreadyResponded && pkt->cacheResponding()) {
+            if (!already_responded && pkt->cacheResponding()) {
                 // cache-to-cache response from some upper cache:
                 // forward response to original requester
                 assert(pkt->isResponse());

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 ARM Limited
+ * Copyright (c) 2012-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -264,6 +264,9 @@ class Packet : public Printable
     enum : FlagsType {
         // Flags to transfer across when copying a packet
         COPY_FLAGS             = 0x0000003F,
+
+        // Flags that are used to create reponse packets
+        RESPONDER_FLAGS        = 0x00000009,
 
         // Does this packet have sharers (which means it should not be
         // considered writable) or not. See setHasSharers below.
@@ -648,6 +651,15 @@ class Packet : public Printable
     }
     bool responderHadWritable() const
     { return flags.isSet(RESPONDER_HAD_WRITABLE); }
+
+    /**
+     * Copy the reponse flags from an input packet to this packet. The
+     * reponse flags determine whether a responder has been found and
+     * the state at which the block will be at the destination.
+     *
+     * @pkt The packet that we will copy flags from
+     */
+    void copyResponderFlags(const PacketPtr pkt);
 
     /**
      * A writeback/writeclean cmd gets propagated further downstream

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2018 ARM Limited
+ * Copyright (c) 2011-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -300,6 +300,16 @@ Packet::trySatisfyFunctional(Printable *obj, Addr addr, bool is_secure, int size
 
     // keep going with request by default
     return false;
+}
+
+void
+Packet::copyResponderFlags(const PacketPtr pkt)
+{
+    assert(isRequest());
+    // If we have already found a responder, no other cache should
+    // commit to responding
+    assert(!pkt->cacheResponding() || !cacheResponding());
+    flags.set(pkt->flags & RESPONDER_FLAGS);
 }
 
 void
