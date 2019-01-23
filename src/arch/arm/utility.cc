@@ -205,7 +205,7 @@ longDescFormatInUse(ThreadContext *tc)
     return ArmSystem::haveLPAE(tc) && ttbcr.eae;
 }
 
-MiscReg
+RegVal
 readMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
 {
     CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
@@ -235,7 +235,7 @@ readMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
     }
 }
 
-MiscReg
+RegVal
 getMPIDR(ArmSystem *arm_sys, ThreadContext *tc)
 {
     // Multiprocessor Affinity Register MPIDR from Cortex(tm)-A15 Technical
