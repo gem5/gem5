@@ -21,8 +21,10 @@
 #define __SYSTEMC_EXT_TLM_UTILS_MULTI_SOCKET_BASES_H__
 
 #include <map>
-#include <tlm>
-#include "tlm_utils/convenience_socket_bases.h"
+
+#include "../core/sc_port.hh"
+#include "../tlm_core/2/interfaces/fw_bw_ifs.hh"
+#include "convenience_socket_bases.h"
 
 namespace tlm_utils
 {

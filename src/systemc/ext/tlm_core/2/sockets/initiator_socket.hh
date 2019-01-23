@@ -22,8 +22,8 @@
 
 #include <typeindex>
 
-#include "tlm_core/2/interfaces/fw_bw_ifs.hh"
-#include "tlm_core/2/sockets/base_socket_if.hh"
+#include "../interfaces/fw_bw_ifs.hh"
+#include "base_socket_if.hh"
 
 namespace tlm
 {

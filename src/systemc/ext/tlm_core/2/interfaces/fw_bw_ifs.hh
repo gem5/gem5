@@ -20,10 +20,10 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_2_INTERFACES_FW_BW_IFS_HH__
 #define __SYSTEMC_EXT_TLM_CORE_2_INTERFACES_FW_BW_IFS_HH__
 
-#include <systemc>
-
-#include "tlm_core/2/generic_payload/generic_payload.hh"
-#include "tlm_core/2/interfaces/dmi.hh"
+#include "../../../core/sc_interface.hh"
+#include "../../../core/sc_time.hh"
+#include "../generic_payload/generic_payload.hh"
+#include "dmi.hh"
 
 namespace tlm
 {

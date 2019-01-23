@@ -19,9 +19,9 @@
 
 #include <cstring>  // std::memcpy et.al.
 #include <map>
-#include <systemc>
-#include <tlm>
 #include <typeindex>
+
+#include "systemc/ext/tlm_core/2/generic_payload/gp.hh"
 
 namespace tlm
 {

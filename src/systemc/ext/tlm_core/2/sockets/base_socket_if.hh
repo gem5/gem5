@@ -20,8 +20,10 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_2_SOCKETS_BASE_SOCKET_IF_H__
 #define __SYSTEMC_EXT_TLM_CORE_2_SOCKETS_BASE_SOCKET_IF_H__
 
-#include <systemc>
 #include <typeindex>
+
+#include "../../../core/sc_export.hh"
+#include "../../../core/sc_port.hh"
 
 namespace tlm
 {

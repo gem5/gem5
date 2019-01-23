@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <deque>
 
-#include "tlm_core/1/analysis/analysis_if.hh"
+#include "analysis_if.hh"
 
 namespace tlm
 {

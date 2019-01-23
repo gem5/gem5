@@ -20,10 +20,10 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_HH__
 #define __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_HH__
 
-#include "tlm_core/1/analysis/analysis_fifo.hh"
-#include "tlm_core/1/analysis/analysis_if.hh"
-#include "tlm_core/1/analysis/analysis_port.hh"
-#include "tlm_core/1/analysis/analysis_triple.hh"
-#include "tlm_core/1/analysis/write_if.hh"
+#include "analysis_fifo.hh"
+#include "analysis_if.hh"
+#include "analysis_port.hh"
+#include "analysis_triple.hh"
+#include "write_if.hh"
 
 #endif /* __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_HH__ */

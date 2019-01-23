@@ -22,9 +22,9 @@
 #define \
     __EXT_TLM_CORE_1_REQ_RSP_CHANNELS_REQ_RSP_CHANNELS_REQ_RSP_CHANNELS_HH__
 
-#include "tlm_core/1/req_rsp/adapters/adapters.hh"
-#include "tlm_core/1/req_rsp/channels/fifo/fifo.hh"
-#include "tlm_core/1/req_rsp/channels/req_rsp_channels/put_get_imp.hh"
+#include "../../adapters/adapters.hh"
+#include "../fifo/fifo.hh"
+#include "put_get_imp.hh"
 
 namespace tlm
 {

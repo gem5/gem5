@@ -20,7 +20,7 @@
 #ifndef __TLM_CORE_1_REQ_RSP_INTERFACES_MASTER_SLAVE_IFS_HH__
 #define __TLM_CORE_1_REQ_RSP_INTERFACES_MASTER_SLAVE_IFS_HH__
 
-#include "tlm_core/1/req_rsp/interfaces/core_ifs.hh"
+#include "core_ifs.hh"
 
 namespace tlm
 {

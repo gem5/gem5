@@ -20,7 +20,7 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_2_INTERFACES_INTERFACES_HH__
 #define __SYSTEMC_EXT_TLM_CORE_2_INTERFACES_INTERFACES_HH__
 
-#include "tlm_core/2/interfaces/dmi.hh"
-#include "tlm_core/2/interfaces/fw_bw_ifs.hh"
+#include "dmi.hh"
+#include "fw_bw_ifs.hh"
 
 #endif /* __SYSTEMC_EXT_TLM_CORE_2_INTERFACES_INTERFACES_HH__ */

@@ -47,7 +47,7 @@ the extension before/after setting/clearing the extension.
 #ifndef __SYSTEMC_EXT_TLM_UTILS_INSTANCE_SPECIFIC_EXTENSIONS_H__
 #define __SYSTEMC_EXT_TLM_UTILS_INSTANCE_SPECIFIC_EXTENSIONS_H__
 
-#include "tlm_utils/instance_specific_extensions_int.h"
+#include "instance_specific_extensions_int.h"
 
 namespace tlm_utils
 {

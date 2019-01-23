@@ -34,8 +34,8 @@
 // actual physical buffer.
 //
 
-#include "tlm_core/1/req_rsp/channels/fifo/circular_buffer.hh"
-#include "tlm_core/1/req_rsp/interfaces/fifo_ifs.hh"
+#include "../../interfaces/fifo_ifs.hh"
+#include "circular_buffer.hh"
 
 namespace tlm
 {
@@ -223,8 +223,8 @@ tlm_fifo<T>::update()
 
 } // namespace tlm
 
-#include "tlm_core/1/req_rsp/channels/fifo/fifo_peek.hh"
-#include "tlm_core/1/req_rsp/channels/fifo/fifo_put_get.hh"
-#include "tlm_core/1/req_rsp/channels/fifo/fifo_resize.hh"
+#include "fifo_peek.hh"
+#include "fifo_put_get.hh"
+#include "fifo_resize.hh"
 
 #endif /* __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_CHANNELS_FIFO_FIFO_HH__ */

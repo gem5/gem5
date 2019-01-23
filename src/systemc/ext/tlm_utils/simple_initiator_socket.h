@@ -20,9 +20,13 @@
 #ifndef __SYSTEMC_EXT_TLM_UTILS_SIMPLE_INITIATOR_SOCKET_H__
 #define __SYSTEMC_EXT_TLM_UTILS_SIMPLE_INITIATOR_SOCKET_H__
 
-#include <tlm>
-
-#include "tlm_utils/convenience_socket_bases.h"
+#include "../core/sc_module.hh"
+#include "../core/sc_port.hh"
+#include "../tlm_core/2/generic_payload/gp.hh"
+#include "../tlm_core/2/interfaces/fw_bw_ifs.hh"
+#include "../tlm_core/2/sockets/initiator_socket.hh"
+#include "../utils/sc_report_handler.hh"
+#include "convenience_socket_bases.h"
 
 namespace tlm_utils
 {

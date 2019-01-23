@@ -20,7 +20,7 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_ADAPTERS_HH__
 #define __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_ADAPTERS_HH__
 
-#include "tlm_core/1/req_rsp/interfaces/master_slave_ifs.hh"
+#include "../interfaces/master_slave_ifs.hh"
 
 namespace tlm
 {

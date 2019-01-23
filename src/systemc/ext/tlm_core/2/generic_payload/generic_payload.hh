@@ -20,9 +20,9 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_2_GENERIC_GENERIC_PAYLOAD_HH__
 #define __SYSTEMC_EXT_TLM_CORE_2_GENERIC_GENERIC_PAYLOAD_HH__
 
-#include "tlm_core/2/generic_payload/endian_conv.hh"
-#include "tlm_core/2/generic_payload/gp.hh"
-#include "tlm_core/2/generic_payload/helpers.hh"
-#include "tlm_core/2/generic_payload/phase.hh"
+#include "endian_conv.hh"
+#include "gp.hh"
+#include "helpers.hh"
+#include "phase.hh"
 
 #endif /* __SYSTEMC_EXT_TLM_CORE_2_GENERIC_GENERIC_PAYLOAD_HH__ */

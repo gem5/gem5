@@ -20,10 +20,10 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_2_GENERIC_PAYLOAD_GP_HH__
 #define __SYSTEMC_EXT_TLM_CORE_2_GENERIC_PAYLOAD_GP_HH__
 
-#include <systemc>
 #include <typeinfo> // std::type_info
 
-#include "tlm_core/2/generic_payload/array.hh"
+#include "../../../utils/sc_report_handler.hh" // sc_assert
+#include "array.hh"
 
 namespace tlm
 {

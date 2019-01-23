@@ -20,9 +20,9 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_FIFO_HH__
 #define __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_FIFO_HH__
 
-#include "tlm_core/1/analysis/analysis_if.hh"
-#include "tlm_core/1/analysis/analysis_triple.hh"
-#include "tlm_core/1/req_rsp/channels/fifo/fifo.hh"
+#include "../req_rsp/channels/fifo/fifo.hh"
+#include "analysis_if.hh"
+#include "analysis_triple.hh"
 
 namespace tlm
 {

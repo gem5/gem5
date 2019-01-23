@@ -20,7 +20,7 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_WRITE_IF_HH__
 #define __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_WRITE_IF_HH__
 
-#include <systemc>
+#include "../../../core/sc_interface.hh"
 
 namespace tlm
 {

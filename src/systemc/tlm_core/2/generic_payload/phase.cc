@@ -20,9 +20,10 @@
 #include <cstring>
 #include <map>
 #include <string>
-#include <systemc>
-#include <tlm>
 #include <typeindex>
+
+#include "systemc/ext/tlm_core/2/generic_payload/phase.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace tlm
 {

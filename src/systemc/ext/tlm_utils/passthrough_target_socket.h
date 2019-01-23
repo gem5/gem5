@@ -20,8 +20,11 @@
 #ifndef __SYSTEMC_EXT_TLM_UTILS_PASSTHROUGH_TARGET_SOCKET_H__
 #define __SYSTEMC_EXT_TLM_UTILS_PASSTHROUGH_TARGET_SOCKET_H__
 
-#include <tlm>
-#include "tlm_utils/convenience_socket_bases.h"
+#include "../core/sc_port.hh"
+#include "../core/sc_time.hh"
+#include "../tlm_core/2/sockets/target_socket.hh"
+#include "../utils/sc_report_handler.hh"
+#include "convenience_socket_bases.h"
 
 namespace tlm_utils
 {

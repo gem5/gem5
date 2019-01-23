@@ -20,6 +20,6 @@
 #ifndef ____SYSTEMC_EXT_TLM_CORE_2_QUANTUM_QUANTUM_HH__
 #define ____SYSTEMC_EXT_TLM_CORE_2_QUANTUM_QUANTUM_HH__
 
-#include "tlm_core/2/quantum/global_quantum.hh"
+#include "global_quantum.hh"
 
 #endif /* ____SYSTEMC_EXT_TLM_CORE_2_QUANTUM_QUANTUM_HH__ */

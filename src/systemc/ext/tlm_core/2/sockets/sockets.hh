@@ -20,7 +20,7 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_2_SOCKETS_SOCKETS_HH__
 #define __SYSTEMC_EXT_TLM_CORE_2_SOCKETS_SOCKETS_HH__
 
-#include "tlm_core/2/sockets/initiator_socket.hh"
-#include "tlm_core/2/sockets/target_socket.hh"
+#include "initiator_socket.hh"
+#include "target_socket.hh"
 
 #endif /* __SYSTEMC_EXT_TLM_CORE_2_SOCKETS_SOCKETS_HH__ */

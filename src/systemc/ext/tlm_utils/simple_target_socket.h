@@ -20,11 +20,15 @@
 #ifndef __SYSTEMC_EXT_TLM_UTILS_SIMPLE_TARGET_SOCKET_H__
 #define __SYSTEMC_EXT_TLM_UTILS_SIMPLE_TARGET_SOCKET_H__
 
-#include <systemc>
-#include <tlm>
-
-#include "tlm_utils/convenience_socket_bases.h"
-#include "tlm_utils/peq_with_get.h"
+#include "../core/sc_event.hh"
+#include "../core/sc_module.hh"
+#include "../core/sc_port.hh"
+#include "../tlm_core/2/generic_payload/gp.hh"
+#include "../tlm_core/2/interfaces/fw_bw_ifs.hh"
+#include "../tlm_core/2/sockets/target_socket.hh"
+#include "../utils/sc_report_handler.hh"
+#include "convenience_socket_bases.h"
+#include "peq_with_get.h"
 
 namespace tlm_utils
 {

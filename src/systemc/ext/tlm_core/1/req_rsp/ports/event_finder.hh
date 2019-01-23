@@ -22,7 +22,7 @@
 
 #include <sstream>
 
-#include "tlm_core/1/req_rsp/interfaces/tag.hh"
+#include "../interfaces/tag.hh"
 
 namespace tlm
 {

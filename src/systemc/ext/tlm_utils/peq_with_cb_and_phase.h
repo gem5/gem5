@@ -20,9 +20,13 @@
 #ifndef __SYSTEMC_EXT_TLM_UTILS_PEQ_WITH_CB_AND_PHASE_H__
 #define __SYSTEMC_EXT_TLM_UTILS_PEQ_WITH_CB_AND_PHASE_H__
 
-#include <systemc>
-#include <tlm>
 #include <vector>
+
+#include "../core/sc_main.hh"
+#include "../core/sc_object.hh"
+#include "../core/sc_spawn.hh"
+#include "../core/sc_time.hh"
+#include "../dt/int/sc_nbdefs.hh"
 
 namespace tlm_utils
 {

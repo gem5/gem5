@@ -20,8 +20,8 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_PORTS_NONBLOCKING_PORT_HH__
 #define __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_PORTS_NONBLOCKING_PORT_HH__
 
-#include "tlm_core/1/req_rsp/interfaces/core_ifs.hh"
-#include "tlm_core/1/req_rsp/ports/event_finder.hh"
+#include "../interfaces/core_ifs.hh"
+#include "event_finder.hh"
 
 namespace tlm
 {

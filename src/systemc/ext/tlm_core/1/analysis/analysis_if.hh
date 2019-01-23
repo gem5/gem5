@@ -20,7 +20,7 @@
 #ifndef __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_IF_HH__
 #define __SYSTEMC_EXT_TLM_CORE_1_ANALYSIS_ANALYSIS_IF_HH__
 
-#include "tlm_core/1/analysis/write_if.hh"
+#include "write_if.hh"
 
 namespace tlm
 {

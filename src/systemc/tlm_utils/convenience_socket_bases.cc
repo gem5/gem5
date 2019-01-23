@@ -20,7 +20,10 @@
 #include <tlm_utils/convenience_socket_bases.h>
 
 #include <sstream>
-#include <systemc>
+
+#include "systemc/ext/core/sc_object.hh"
+#include "systemc/ext/core/sc_simcontext.hh"
+#include "systemc/ext/utils/sc_report_handler.hh"
 
 namespace tlm_utils
 {
