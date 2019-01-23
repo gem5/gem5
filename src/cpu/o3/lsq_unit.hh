@@ -725,7 +725,10 @@ LSQUnit<Impl>::read(LSQRequest *req, int load_idx)
                 store_has_lower_limit && store_has_upper_limit &&
                 !req->mainRequest()->isLLSC()) {
 
-                coverage = AddrRangeCoverage::FullAddrRangeCoverage;
+                const auto& store_req = store_it->request()->mainRequest();
+                coverage = store_req->isMasked() ?
+                    AddrRangeCoverage::PartialAddrRangeCoverage :
+                    AddrRangeCoverage::FullAddrRangeCoverage;
             } else if (
                 // This is the partial store-load forwarding case where a store
                 // has only part of the load's data and the load isn't LLSC
