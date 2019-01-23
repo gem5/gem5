@@ -142,9 +142,17 @@ LSQ::LSQRequest::containsAddrRangeOf(
 LSQ::AddrRangeCoverage
 LSQ::LSQRequest::containsAddrRangeOf(LSQRequestPtr other_request)
 {
-    return containsAddrRangeOf(request->getPaddr(), request->getSize(),
+    AddrRangeCoverage ret = containsAddrRangeOf(
+        request->getPaddr(), request->getSize(),
         other_request->request->getPaddr(), other_request->request->getSize());
+    /* If there is a strobe mask then store data forwarding might not be
+     * correct. Instead of checking enablemant of every byte we just fall back
+     * to PartialAddrRangeCoverage to prohibit store data forwarding */
+    if (ret == FullAddrRangeCoverage && request->isMasked())
+        ret = PartialAddrRangeCoverage;
+    return ret;
 }
+
 
 bool
 LSQ::LSQRequest::isBarrier()
