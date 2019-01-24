@@ -189,7 +189,7 @@ def build_test_system(np):
 
         # Sanity check
         if options.simpoint_profile:
-            if not CpuConfig.is_atomic_cpu(TestCPUClass):
+            if not CpuConfig.is_noncaching_cpu(TestCPUClass):
                 fatal("SimPoint generation should be done with atomic cpu")
             if np > 1:
                 fatal("SimPoint generation not supported with more than one CPUs")
