@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 ARM Limited
+ * Copyright (c) 2015, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -120,7 +120,6 @@ MemTest::MemTest(const Params *p)
     // kick things into action
     schedule(tickEvent, curTick());
     schedule(noRequestEvent, clockEdge(progressCheck));
-    schedule(noResponseEvent, clockEdge(progressCheck));
 }
 
 Port &
@@ -189,8 +188,12 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
     // the packet will delete the data
     delete pkt;
 
-    // finally shift the response timeout forward
-    reschedule(noResponseEvent, clockEdge(progressCheck), true);
+    // finally shift the response timeout forward if we are still
+    // expecting responses; deschedule it otherwise
+    if (outstandingAddrs.size() != 0)
+        reschedule(noResponseEvent, clockEdge(progressCheck));
+    else if (noResponseEvent.scheduled())
+        deschedule(noResponseEvent);
 }
 
 void
@@ -303,6 +306,10 @@ MemTest::tick()
     } else {
         DPRINTF(MemTest, "Waiting for retry\n");
     }
+
+    // Schedule noResponseEvent now if we are expecting a response
+    if (!noResponseEvent.scheduled() && (outstandingAddrs.size() != 0))
+        schedule(noResponseEvent, clockEdge(progressCheck));
 }
 
 void
@@ -327,6 +334,7 @@ MemTest::recvRetry()
         retryPkt = nullptr;
         // kick things into action again
         schedule(tickEvent, clockEdge(interval));
+        reschedule(noRequestEvent, clockEdge(progressCheck), true);
     }
 }
 
