@@ -531,6 +531,10 @@ class MSHR : public QueueEntry, public Printable
      * @return string with mshr fields + [deferred]targets
      */
     std::string print() const;
+
+    bool matchBlockAddr(const Addr addr, const bool is_secure) const override;
+    bool matchBlockAddr(const PacketPtr pkt) const override;
+    bool conflictAddr(const QueueEntry* entry) const override;
 };
 
 #endif // __MEM_CACHE_MSHR_HH__

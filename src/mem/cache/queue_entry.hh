@@ -119,12 +119,39 @@ class QueueEntry : public Packet::SenderState
     /** True if the entry targets the secure memory space. */
     bool isSecure;
 
-    QueueEntry() : readyTime(0), _isUncacheable(false),
-                   inService(false), order(0), blkAddr(0), blkSize(0),
-                   isSecure(false)
+    QueueEntry()
+        : readyTime(0), _isUncacheable(false),
+          inService(false), order(0), blkAddr(0), blkSize(0), isSecure(false)
     {}
 
     bool isUncacheable() const { return _isUncacheable; }
+
+    /**
+     * Check if entry corresponds to the one being looked for.
+     *
+     * @param addr Address to match against.
+     * @param is_secure Whether the target should be in secure space or not.
+     * @return True if entry matches given information.
+     */
+    virtual bool matchBlockAddr(const Addr addr, const bool is_secure)
+                                                            const = 0;
+
+    /**
+     * Check if entry contains a packet that corresponds to the one being
+     * looked for.
+     *
+     * @param pkt The packet to search for.
+     * @return True if any of its targets' packets matches the given one.
+     */
+    virtual bool matchBlockAddr(const PacketPtr pkt) const = 0;
+
+    /**
+     * Check if given entry's packets conflict with this' entries packets.
+     *
+     * @param entry Other entry to compare against.
+     * @return True if entry matches given information.
+     */
+    virtual bool conflictAddr(const QueueEntry* entry) const = 0;
 
     /**
      * Send this queue entry as a downstream packet, with the exact

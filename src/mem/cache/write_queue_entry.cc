@@ -112,6 +112,9 @@ WriteQueueEntry::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
              "a cacheable eviction or a writeclean");
 
     targets.add(target, when_ready, _order);
+
+    // All targets must refer to the same block
+    assert(target->matchBlockAddr(targets.front().pkt, blkSize));
 }
 
 void
@@ -139,6 +142,27 @@ bool
 WriteQueueEntry::sendPacket(BaseCache &cache)
 {
     return cache.sendWriteQueuePacket(this);
+}
+
+bool
+WriteQueueEntry::matchBlockAddr(const Addr addr, const bool is_secure) const
+{
+    assert(hasTargets());
+    return (blkAddr == addr) && (isSecure == is_secure);
+}
+
+bool
+WriteQueueEntry::matchBlockAddr(const PacketPtr pkt) const
+{
+    assert(hasTargets());
+    return pkt->matchBlockAddr(blkAddr, isSecure, blkSize);
+}
+
+bool
+WriteQueueEntry::conflictAddr(const QueueEntry* entry) const
+{
+    assert(hasTargets());
+    return entry->matchBlockAddr(blkAddr, isSecure);
 }
 
 void

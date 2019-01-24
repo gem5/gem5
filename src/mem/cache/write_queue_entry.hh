@@ -179,6 +179,10 @@ class WriteQueueEntry : public QueueEntry, public Printable
      * @return string with mshr fields
      */
     std::string print() const;
+
+    bool matchBlockAddr(const Addr addr, const bool is_secure) const override;
+    bool matchBlockAddr(const PacketPtr pkt) const override;
+    bool conflictAddr(const QueueEntry* entry) const override;
 };
 
 #endif // __MEM_CACHE_WRITE_QUEUE_ENTRY_HH__

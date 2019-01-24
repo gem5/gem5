@@ -729,9 +729,7 @@ BaseCache::getNextQueueEntry()
     // full write buffer, otherwise we favour the miss requests
     if (wq_entry && (writeBuffer.isFull() || !miss_mshr)) {
         // need to search MSHR queue for conflicting earlier miss.
-        MSHR *conflict_mshr =
-            mshrQueue.findPending(wq_entry->blkAddr,
-                                  wq_entry->isSecure);
+        MSHR *conflict_mshr = mshrQueue.findPending(wq_entry);
 
         if (conflict_mshr && conflict_mshr->order < wq_entry->order) {
             // Service misses in order until conflict is cleared.
@@ -744,9 +742,7 @@ BaseCache::getNextQueueEntry()
         return wq_entry;
     } else if (miss_mshr) {
         // need to check for conflicting earlier writeback
-        WriteQueueEntry *conflict_mshr =
-            writeBuffer.findPending(miss_mshr->blkAddr,
-                                    miss_mshr->isSecure);
+        WriteQueueEntry *conflict_mshr = writeBuffer.findPending(miss_mshr);
         if (conflict_mshr) {
             // not sure why we don't check order here... it was in the
             // original code but commented out.

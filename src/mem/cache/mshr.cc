@@ -273,6 +273,9 @@ MSHR::allocate(Addr blk_addr, unsigned blk_size, PacketPtr target,
     Target::Source source = (target->cmd == MemCmd::HardPFReq) ?
         Target::FromPrefetcher : Target::FromCPU;
     targets.add(target, when_ready, _order, source, true, alloc_on_fill);
+
+    // All targets must refer to the same block
+    assert(target->matchBlockAddr(targets.front().pkt, blkSize));
 }
 
 
@@ -684,4 +687,25 @@ MSHR::print() const
     std::ostringstream str;
     print(str);
     return str.str();
+}
+
+bool
+MSHR::matchBlockAddr(const Addr addr, const bool is_secure) const
+{
+    assert(hasTargets());
+    return (blkAddr == addr) && (isSecure == is_secure);
+}
+
+bool
+MSHR::matchBlockAddr(const PacketPtr pkt) const
+{
+    assert(hasTargets());
+    return pkt->matchBlockAddr(blkAddr, isSecure, blkSize);
+}
+
+bool
+MSHR::conflictAddr(const QueueEntry* entry) const
+{
+    assert(hasTargets());
+    return entry->matchBlockAddr(blkAddr, isSecure);
 }
