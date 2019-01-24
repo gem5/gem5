@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2017 ARM Limited
+ * Copyright (c) 2014, 2017, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -229,6 +229,12 @@ class Logger
     do { \
         if ((cond)) \
             warn(__VA_ARGS__); \
+    } while (0)
+
+#define warn_if_once(cond, ...) \
+    do { \
+        if ((cond)) \
+            warn_once(__VA_ARGS__); \
     } while (0)
 
 /**
