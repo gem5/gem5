@@ -39,7 +39,7 @@ test_progs = {
 for isa in test_progs:
     for binary in test_progs[isa]:
         import os
-        path = os.path.join('hello', 'bin', isa, 'linux')
+        path = os.path.join('test-progs', 'hello', 'bin', isa, 'linux')
         hello_program = DownloadedProgram(path, binary)
 
         ref_path = joinpath(getcwd(), 'ref')
