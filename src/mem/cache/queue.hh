@@ -51,6 +51,7 @@
 
 #include <cassert>
 #include <string>
+#include <type_traits>
 
 #include "base/logging.hh"
 #include "base/trace.hh"
@@ -68,6 +69,9 @@
 template<class Entry>
 class Queue : public Drainable
 {
+    static_assert(std::is_base_of<QueueEntry, Entry>::value,
+        "Entry must be derived from QueueEntry");
+
   protected:
     /** Local label (for functional print requests) */
     const std::string label;
