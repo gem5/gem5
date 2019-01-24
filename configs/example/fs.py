@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013, 2016 ARM Limited
+# Copyright (c) 2010-2013, 2016, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -95,7 +95,6 @@ def build_test_system(np):
                                  options.num_cpus, bm[0], options.dtb_filename,
                                  bare_metal=options.bare_metal,
                                  cmdline=cmdline,
-                                 ignore_dtb=options.generate_dtb,
                                  external_memory=
                                    options.external_memory_system,
                                  ruby=options.ruby,
@@ -241,8 +240,7 @@ def build_drive_system(np):
                                        cmdline=cmdline)
     elif buildEnv['TARGET_ISA'] == 'arm':
         drive_sys = makeArmSystem(drive_mem_mode, options.machine_type, np,
-                                  bm[1], options.dtb_filename, cmdline=cmdline,
-                                  ignore_dtb=options.generate_dtb)
+                                  bm[1], options.dtb_filename, cmdline=cmdline)
 
     # Create a top-level voltage domain
     drive_sys.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
@@ -354,12 +352,8 @@ if options.timesync:
 if options.frame_capture:
     VncServer.frame_capture = True
 
-if buildEnv['TARGET_ISA'] == "arm" and options.generate_dtb:
-    # Sanity checks
-    if options.dtb_filename:
-        fatal("--generate-dtb and --dtb-filename cannot be specified at the"\
-             "same time.")
-
+if buildEnv['TARGET_ISA'] == "arm" and not options.bare_metal \
+        and not options.dtb_filename:
     if options.machine_type not in ["VExpress_GEM5", "VExpress_GEM5_V1"]:
         warn("Can only correctly generate a dtb for VExpress_GEM5_V1 " \
              "platforms, unless custom hardware models have been equipped "\
