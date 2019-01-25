@@ -134,5 +134,5 @@ class Grammar(object):
 
     def t_error(self, t):
         msg = "Illegal character %s @ %d:%d" % \
-            (`t.value[0]`, t.lineno, t.lexpos)
+            (repr(t.value[0]), t.lineno, t.lexpos)
         raise ParseError(msg, t)

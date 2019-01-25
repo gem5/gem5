@@ -214,7 +214,7 @@ if __name__ == '__main__':
     d['y'] = 26
     display(d)
 
-    print(`d`)
+    print(repr(d))
 
     print(d.copy())
 

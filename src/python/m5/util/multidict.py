@@ -40,7 +40,7 @@ class multidict(object):
         return str(dict(self.items()))
 
     def __repr__(self):
-        return `dict(self.items())`
+        return repr(dict(list(self.items())))
 
     def __contains__(self, key):
         return key in self.local or key in self.parent
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     test2.setdefault('b', 'blah')
     print(test1)
     print(test2)
-    print(`test2`)
+    print(repr(test2))
 
     print(len(test2))
 
