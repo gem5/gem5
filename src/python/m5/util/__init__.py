@@ -45,14 +45,14 @@ import os
 import re
 import sys
 
-import convert
-import jobfile
+from . import convert
+from . import jobfile
 
-from attrdict import attrdict, multiattrdict, optiondict
-from code_formatter import code_formatter
-from multidict import multidict
-from smartdict import SmartDict
-from sorteddict import SortedDict
+from .attrdict import attrdict, multiattrdict, optiondict
+from .code_formatter import code_formatter
+from .multidict import multidict
+from .smartdict import SmartDict
+from .sorteddict import SortedDict
 
 # panic() should be called when something happens that should never
 # ever happen regardless of what the user does (i.e., an acutal m5

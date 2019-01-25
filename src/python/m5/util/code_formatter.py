@@ -279,7 +279,7 @@ class code_formatter(object):
 __all__ = [ "code_formatter" ]
 
 if __name__ == '__main__':
-    from code_formatter import code_formatter
+    from .code_formatter import code_formatter
     f = code_formatter()
 
     class Foo(dict):

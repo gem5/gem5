@@ -26,6 +26,9 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 from m5.internal import params
 from m5.SimObject import *
 

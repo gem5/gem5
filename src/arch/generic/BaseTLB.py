@@ -29,7 +29,7 @@
 #          Ivan Pizarro
 
 from m5.params import *
-from MemObject import MemObject
+from m5.objects.MemObject import MemObject
 
 class BaseTLB(MemObject):
     type = 'BaseTLB'

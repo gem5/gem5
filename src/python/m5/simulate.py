@@ -51,14 +51,14 @@ import _m5.drain
 import _m5.core
 from _m5.stats import updateEvents as updateStatEvents
 
-import stats
-import SimObject
-import ticks
-import objects
+from . import stats
+from . import SimObject
+from . import ticks
+from . import objects
 from m5.util.dot_writer import do_dot, do_dvfs_dot
 
-from util import fatal
-from util import attrdict
+from .util import fatal
+from .util import attrdict
 
 # define a MaxTick parameter, unsigned 64 bit
 MaxTick = 2**64 - 1

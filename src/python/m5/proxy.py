@@ -45,9 +45,12 @@
 #
 #####################################################################
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import copy
 
-import params
+from . import params
 
 class BaseProxy(object):
     def __init__(self, search_self, search_up):

@@ -68,9 +68,9 @@ import sys
 import time
 import math
 
-import proxy
-import ticks
-from util import *
+from . import proxy
+from . import ticks
+from .util import *
 
 def isSimObject(*args, **kwargs):
     return SimObject.isSimObject(*args, **kwargs)
@@ -2159,4 +2159,4 @@ __all__ = ['Param', 'VectorParam',
            'MasterPort', 'SlavePort',
            'VectorMasterPort', 'VectorSlavePort']
 
-import SimObject
+from . import SimObject

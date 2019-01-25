@@ -26,6 +26,9 @@
 #
 # Authors: Nathan Binkert
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 # Simple importer that allows python to import data from a dict of
 # code objects.  The keys are the module path, and the items are the
 # filename and bytecode of the file.

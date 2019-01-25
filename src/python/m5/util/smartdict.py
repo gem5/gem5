@@ -41,9 +41,11 @@
 # rather than a normal value, and (c) coerce values written to the
 # dict to be strings.
 
+from __future__ import print_function
+from __future__ import absolute_import
 
-from convert import *
-from attrdict import attrdict
+from .convert import *
+from .attrdict import attrdict
 
 class Variable(str):
     """Intelligent proxy class for SmartDict.  Variable will use the

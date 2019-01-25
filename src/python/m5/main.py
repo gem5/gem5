@@ -54,8 +54,8 @@ brief_copyright=\
     "gem5 is copyrighted software; use the --copyright option for details."
 
 def parse_options():
-    import config
-    from options import OptionParser
+    from . import config
+    from .options import OptionParser
 
     options = OptionParser(usage=usage, version=version,
                            description=brief_copyright)
@@ -203,15 +203,15 @@ def _check_tracing():
 def main(*args):
     import m5
 
-    import core
-    import debug
-    import defines
-    import event
-    import info
-    import stats
-    import trace
+    from . import core
+    from . import debug
+    from . import defines
+    from . import event
+    from . import info
+    from . import stats
+    from . import trace
 
-    from util import inform, fatal, panic, isInteractive
+    from .util import inform, fatal, panic, isInteractive
 
     if len(args) == 0:
         options, arguments = parse_options()
@@ -286,7 +286,7 @@ def main(*args):
         debug.help()
 
     if options.list_sim_objects:
-        import SimObject
+        from . import SimObject
         done = True
         print("SimObjects:")
         objects = list(SimObject.allClasses.keys())
