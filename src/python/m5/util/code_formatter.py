@@ -74,7 +74,7 @@ class lookup(object):
             return self.args[item]
         except ValueError:
             pass
-        raise IndexError, "Could not find '%s'" % item
+        raise IndexError("Could not find '%s'" % item)
 
 class code_formatter_meta(type):
     pattern = r"""

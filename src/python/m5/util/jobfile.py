@@ -38,7 +38,7 @@ class Data(object):
 
     def update(self, obj):
         if not isinstance(obj, Data):
-            raise AttributeError, "can only update from Data object"
+            raise AttributeError("can only update from Data object")
 
         for key,val in obj.__dict__.iteritems():
             if key.startswith('_') or key in ('name', 'desc'):
@@ -52,22 +52,22 @@ class Data(object):
                 if self.__dict__[key] == val:
                     continue
 
-                raise AttributeError, \
-                      "%s specified more than once old: %s new: %s" % \
-                      (key, self.__dict__[key], val)
+                raise AttributeError(
+                    "%s specified more than once old: %s new: %s" % \
+                    (key, self.__dict__[key], val))
 
             d = self.__dict__[key]
             for k,v in val.iteritems():
                 if k in d:
-                    raise AttributeError, \
-                          "%s specified more than once in %s" % (k, key)
+                    raise AttributeError(
+                        "%s specified more than once in %s" % (k, key))
                 d[k] = v
 
         if hasattr(self, 'system') and hasattr(obj, 'system'):
             if self.system != obj.system:
-                raise AttributeError, \
-                      "conflicting values for system: '%s'/'%s'" % \
-                      (self.system, obj.system)
+                raise AttributeError(
+                    "conflicting values for system: '%s'/'%s'" % \
+                    (self.system, obj.system))
 
     def printinfo(self):
         if self.name:
@@ -96,7 +96,7 @@ class Data(object):
 
     def __getitem__(self, key):
         if key.startswith('_'):
-            raise KeyError, "Key '%s' not found" % attr
+            raise KeyError("Key '%s' not found" % attr)
         return self.__dict__[key]
 
     def __iter__(self):
@@ -131,8 +131,8 @@ class Job(Data):
         config = options[0]._config
         for opt in options:
             if opt._config != config:
-                raise AttributeError, \
-                      "All options are not from the same Configuration"
+                raise AttributeError(
+                    "All options are not from the same Configuration")
 
         self._config = config
         self._groups = [ opt._group for opt in options ]
@@ -309,7 +309,7 @@ class Configuration(Data):
     def checkchildren(self, kids):
         for kid in kids:
             if kid._config != self:
-                raise AttributeError, "child from the wrong configuration"
+                raise AttributeError("child from the wrong configuration")
 
     def sortgroups(self, groups):
         groups = [ (grp._number, grp) for grp in groups ]
@@ -387,7 +387,7 @@ class Configuration(Data):
             if job.name == jobname:
                 return job
         else:
-            raise AttributeError, "job '%s' not found" % jobname
+            raise AttributeError("job '%s' not found" % jobname)
 
     def job(self, options):
         self.checkchildren(options)
@@ -414,13 +414,12 @@ def JobFile(jobfile):
                 filename = testname
                 break
         else:
-            raise AttributeError, \
-                  "Could not find file '%s'" % jobfile
+            raise AttributeError("Could not find file '%s'" % jobfile)
 
     data = {}
     execfile(filename, data)
     if 'conf' not in data:
-        raise ImportError, 'cannot import name conf from %s' % jobfile
+        raise ImportError('cannot import name conf from %s' % jobfile)
     return data['conf']
 
 def main(conf=None):
@@ -448,11 +447,11 @@ def main(conf=None):
 
     if conf is None:
         if len(args) != 1:
-            raise AttributeError, usage
+            raise AttributeError(usage)
         conf = JobFile(args[0])
     else:
         if len(args) != 0:
-            raise AttributeError, usage
+            raise AttributeError(usage)
 
     if both:
         jobs = conf.alljobs()

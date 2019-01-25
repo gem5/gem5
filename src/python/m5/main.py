@@ -209,7 +209,7 @@ def main(*args):
     elif len(args) == 2:
         options, arguments = args
     else:
-        raise TypeError, "main() takes 0 or 2 arguments (%d given)" % len(args)
+        raise TypeError("main() takes 0 or 2 arguments (%d given)" % len(args))
 
     m5.options = options
 

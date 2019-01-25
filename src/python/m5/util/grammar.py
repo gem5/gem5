@@ -37,18 +37,17 @@ class ParseError(Exception):
 class Grammar(object):
     def setupLexerFactory(self, **kwargs):
         if 'module' in kwargs:
-            raise AttributeError, "module is an illegal attribute"
+            raise AttributeError("module is an illegal attribute")
         self.lex_kwargs = kwargs
 
     def setupParserFactory(self, **kwargs):
         if 'module' in kwargs:
-            raise AttributeError, "module is an illegal attribute"
+            raise AttributeError("module is an illegal attribute")
 
         if 'output' in kwargs:
             dir,tab = os.path.split(output)
             if not tab.endswith('.py'):
-                raise AttributeError, \
-                    'The output file must end with .py'
+                raise AttributeError('The output file must end with .py')
             kwargs['outputdir'] = dir
             kwargs['tabmodule'] = tab[:-3]
 
@@ -90,13 +89,13 @@ class Grammar(object):
                 return -1
             return self.current_lexer.lineno
 
-        raise AttributeError, \
-            "'%s' object has no attribute '%s'" % (type(self), attr)
+        raise AttributeError(
+            "'%s' object has no attribute '%s'" % (type(self), attr))
 
     def parse_string(self, data, source='<string>', debug=None, tracking=0):
         if not isinstance(data, basestring):
-            raise AttributeError, \
-                "argument must be a string, was '%s'" % type(f)
+            raise AttributeError(
+                "argument must be a string, was '%s'" % type(f))
 
         import new
         lexer = self.lex.clone()
@@ -120,8 +119,8 @@ class Grammar(object):
         elif isinstance(f, file):
             source = f.name
         else:
-            raise AttributeError, \
-                "argument must be either a string or file, was '%s'" % type(f)
+            raise AttributeError(
+                "argument must be either a string or file, was '%s'" % type(f))
 
         return self.parse_string(f.read(), source, **kwargs)
 

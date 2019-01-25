@@ -48,11 +48,11 @@ class multidict(object):
     def __delitem__(self, key):
         try:
             del self.local[key]
-        except KeyError, e:
+        except KeyError as e:
             if key in self.parent:
                 self.deleted[key] = True
             else:
-                raise KeyError, e
+                raise KeyError(e)
 
     def __setitem__(self, key, value):
         self.deleted.pop(key, False)
@@ -61,11 +61,11 @@ class multidict(object):
     def __getitem__(self, key):
         try:
             return self.local[key]
-        except KeyError, e:
+        except KeyError as e:
             if not self.deleted.get(key, False) and key in self.parent:
                 return self.parent[key]
             else:
-                raise KeyError, e
+                raise KeyError(e)
 
     def __len__(self):
         return len(self.local) + len(self.parent)
@@ -106,7 +106,7 @@ class multidict(object):
     def get(self, key, default=None):
         try:
             return self[key]
-        except KeyError, e:
+        except KeyError as e:
             return default
 
     def setdefault(self, key, default):
