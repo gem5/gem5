@@ -40,6 +40,7 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+from six import add_metaclass
 import six
 if six.PY3:
     long = int
@@ -1073,10 +1074,10 @@ class SimObjectCliWrapper(object):
 # The SimObject class is the root of the special hierarchy.  Most of
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
+@add_metaclass(MetaSimObject)
 class SimObject(object):
     # Specify metaclass.  Any class inheriting from SimObject will
     # get this metaclass.
-    __metaclass__ = MetaSimObject
     type = 'SimObject'
     abstract = True
 

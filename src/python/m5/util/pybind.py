@@ -35,12 +35,12 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+from six import add_metaclass
 
 from abc import *
 
+@add_metaclass(ABCMeta)
 class PyBindExport(object):
-    __metaclass__ = ABCMeta
-
     @abstractmethod
     def export(self, code, cname):
         pass
