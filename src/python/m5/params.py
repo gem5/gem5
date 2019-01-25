@@ -157,12 +157,12 @@ class ParamDesc(object):
             else:
                 raise TypeError('too many arguments')
 
-        if kwargs.has_key('desc'):
+        if 'desc' in kwargs:
             assert(not hasattr(self, 'desc'))
             self.desc = kwargs['desc']
             del kwargs['desc']
 
-        if kwargs.has_key('default'):
+        if 'default' in kwargs:
             assert(not hasattr(self, 'default'))
             self.default = kwargs['default']
             del kwargs['default']
@@ -1224,14 +1224,14 @@ class MetaEnum(MetaParamValue):
         return cls
 
     def __init__(cls, name, bases, init_dict):
-        if init_dict.has_key('map'):
+        if 'map' in init_dict:
             if not isinstance(cls.map, dict):
                 raise TypeError("Enum-derived class attribute 'map' " \
                       "must be of type dict")
             # build list of value strings from map
             cls.vals = cls.map.keys()
             cls.vals.sort()
-        elif init_dict.has_key('vals'):
+        elif 'vals' in init_dict:
             if not isinstance(cls.vals, list):
                 raise TypeError("Enum-derived class attribute 'vals' " \
                       "must be of type list")
@@ -1855,7 +1855,7 @@ class PortRef(object):
                   "cannot splice in new peers\n", self)
 
     def clone(self, simobj, memo):
-        if memo.has_key(self):
+        if self in memo:
             return memo[self]
         newRef = copy.copy(self)
         memo[self] = newRef
@@ -1978,7 +1978,7 @@ class VectorPortRef(object):
             self._get_next().connect(other)
 
     def clone(self, simobj, memo):
-        if memo.has_key(self):
+        if self in memo:
             return memo[self]
         newRef = copy.copy(self)
         memo[self] = newRef

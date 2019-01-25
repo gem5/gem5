@@ -239,7 +239,7 @@ class $py_ident(RubyController):
             if param.rvalue is not None:
                 dflt_str = str(param.rvalue.inline()) + ', '
 
-            if python_class_map.has_key(param.type_ast.type.c_ident):
+            if param.type_ast.type.c_ident in python_class_map:
                 python_type = python_class_map[param.type_ast.type.c_ident]
                 code('${{param.ident}} = Param.${{python_type}}(${dflt_str}"")')
 
@@ -1109,7 +1109,7 @@ ${ident}_Controller::wakeup()
         for port in self.in_ports:
             code.indent()
             code('// ${ident}InPort $port')
-            if port.pairs.has_key("rank"):
+            if "rank" in port.pairs:
                 code('m_cur_in_port = ${{port.pairs["rank"]}};')
             else:
                 code('m_cur_in_port = 0;')

@@ -43,7 +43,7 @@ class multidict(object):
         return `dict(self.items())`
 
     def __contains__(self, key):
-        return self.local.has_key(key) or self.parent.has_key(key)
+        return key in self.local or key in self.parent
 
     def __delitem__(self, key):
         try:

@@ -534,7 +534,7 @@ class MetaSimObject(type):
                 cls._new_port(key, val)
 
             # init-time-only keywords
-            elif cls.init_keywords.has_key(key):
+            elif key in cls.init_keywords:
                 cls._set_keyword(key, val, cls.init_keywords[key])
 
             # default: use normal path (ends up in __setattr__)
@@ -613,11 +613,11 @@ class MetaSimObject(type):
             type.__setattr__(cls, attr, value)
             return
 
-        if cls.keywords.has_key(attr):
+        if attr in cls.keywords:
             cls._set_keyword(attr, value, cls.keywords[attr])
             return
 
-        if cls._ports.has_key(attr):
+        if attr in cls._ports:
             cls._cls_get_port_ref(attr).connect(value)
             return
 
@@ -652,10 +652,10 @@ class MetaSimObject(type):
         if attr == 'cxx_namespaces':
             return cls.cxx_class_path[:-1]
 
-        if cls._values.has_key(attr):
+        if attr in cls._values:
             return cls._values[attr]
 
-        if cls._children.has_key(attr):
+        if attr in cls._children:
             return cls._children[attr]
 
         raise AttributeError(
@@ -1158,7 +1158,7 @@ class SimObject(object):
             # create a new dict and use that.
             memo_dict = {}
             kwargs['_memo'] = memo_dict
-        elif memo_dict.has_key(self):
+        elif self in memo_dict:
             # clone already done & memoized
             return memo_dict[self]
         return self.__class__(_ancestor = self, **kwargs)
@@ -1174,13 +1174,13 @@ class SimObject(object):
         return ref
 
     def __getattr__(self, attr):
-        if self._ports.has_key(attr):
+        if attr in self._ports:
             return self._get_port_ref(attr)
 
-        if self._values.has_key(attr):
+        if attr in self._values:
             return self._values[attr]
 
-        if self._children.has_key(attr):
+        if attr in self._children:
             return self._children[attr]
 
         # If the attribute exists on the C++ object, transparently
@@ -1206,7 +1206,7 @@ class SimObject(object):
             object.__setattr__(self, attr, value)
             return
 
-        if self._ports.has_key(attr):
+        if attr in self._ports:
             # set up port connection
             self._get_port_ref(attr).connect(value)
             return
@@ -1294,7 +1294,7 @@ class SimObject(object):
         if child.has_parent():
             warn("add_child('%s'): child '%s' already has parent", name,
                 child.get_name())
-        if self._children.has_key(name):
+        if name in self._children:
             # This code path had an undiscovered bug that would make it fail
             # at runtime. It had been here for a long time and was only
             # exposed by a buggy script. Changes here will probably not be

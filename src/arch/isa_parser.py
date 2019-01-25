@@ -142,7 +142,7 @@ class Template(object):
             del myDict['snippets']
 
             snippetLabels = [l for l in labelRE.findall(template)
-                             if d.snippets.has_key(l)]
+                             if l in d.snippets]
 
             snippets = dict([(s, self.parser.mungeSnippet(d.snippets[s]))
                              for s in snippetLabels])

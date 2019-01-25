@@ -1338,7 +1338,7 @@ def identifyTarget(t):
     ext = t.split('.')[-1]
     if ext in target_types:
         return ext
-    if obj2target.has_key(ext):
+    if ext in obj2target:
         return obj2target[ext]
     match = re.search(r'/tests/([^/]+)/', t)
     if match and match.group(1) in target_types:
