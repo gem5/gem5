@@ -49,6 +49,7 @@ import os
 import m5
 from m5.util import addToPath
 from m5.objects import *
+from m5.options import *
 import argparse
 
 m5.util.addToPath('../..')
@@ -92,12 +93,6 @@ def create_cow_image(name):
 def create(args):
     ''' Create and configure the system object. '''
 
-    if not args.dtb:
-        dtb_file = SysPaths.binary("armv8_gem5_v1_%icpu.%s.dtb" %
-                                   (args.num_cores, default_dist_version))
-    else:
-        dtb_file = args.dtb
-
     if args.script and not os.path.isfile(args.script):
         print("Error: Bootscript %s does not exist" % args.script)
         sys.exit(1)
@@ -110,7 +105,6 @@ def create(args):
     system = devices.SimpleSystem(want_caches,
                                   args.mem_size,
                                   mem_mode=mem_mode,
-                                  dtb_filename=dtb_file,
                                   kernel=SysPaths.binary(args.kernel),
                                   readfile=args.script)
 
@@ -152,6 +146,12 @@ def create(args):
 
     # Setup gem5's minimal Linux boot loader.
     system.realview.setupBootLoader(system.membus, system, SysPaths.binary)
+
+    if args.dtb:
+        system.dtb_filename = args.dtb
+    else:
+        # No DTB specified: autogenerate DTB
+        system.generateDtb(m5.options.outdir, 'system.dtb')
 
     # Linux boot command flags
     kernel_cmd = [
