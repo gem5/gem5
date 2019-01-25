@@ -417,7 +417,7 @@ def JobFile(jobfile):
             raise AttributeError("Could not find file '%s'" % jobfile)
 
     data = {}
-    execfile(filename, data)
+    exec(compile(open(filename).read(), filename, 'exec'), data)
     if 'conf' not in data:
         raise ImportError('cannot import name conf from %s' % jobfile)
     return data['conf']
