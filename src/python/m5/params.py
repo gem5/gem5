@@ -60,6 +60,9 @@
 #####################################################################
 
 from __future__ import print_function
+import six
+if six.PY3:
+    long = int
 
 import copy
 import datetime

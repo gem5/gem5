@@ -27,6 +27,9 @@
 # Authors: Nathan Binkert
 
 from __future__ import print_function
+import six
+if six.PY3:
+    long = int
 
 import sys
 from m5.util import warn
