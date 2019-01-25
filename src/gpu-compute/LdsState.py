@@ -35,7 +35,7 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
-from MemObject import MemObject
+from m5.objects.MemObject import MemObject
 
 class LdsState(MemObject):
     type = 'LdsState'

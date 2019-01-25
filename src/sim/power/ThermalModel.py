@@ -36,7 +36,7 @@
 # Authors: David Guillen Fandos
 
 from m5.SimObject import *
-from ClockedObject import ClockedObject
+from m5.objects.ClockedObject import ClockedObject
 
 from m5.params import *
 from m5.objects import ThermalDomain

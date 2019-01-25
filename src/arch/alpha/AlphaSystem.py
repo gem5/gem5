@@ -28,7 +28,8 @@
 
 from m5.params import *
 from m5.proxy import *
-from System import System
+
+from m5.objects.System import System
 
 class AlphaSystem(System):
     type = 'AlphaSystem'

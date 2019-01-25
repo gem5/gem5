@@ -40,8 +40,8 @@
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from MemObject import MemObject
-from BaseTLB import BaseTLB
+from m5.objects.MemObject import MemObject
+from m5.objects.BaseTLB import BaseTLB
 
 # Basic stage 1 translation objects
 class ArmTableWalker(MemObject):

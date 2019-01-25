@@ -37,7 +37,7 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-from Graphics import *
+from m5.objects.Graphics import *
 
 
 class VncInput(SimObject):

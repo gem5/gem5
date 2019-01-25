@@ -45,8 +45,8 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
-from DVFSHandler import *
-from SimpleMemory import *
+from m5.objects.DVFSHandler import *
+from m5.objects.SimpleMemory import *
 
 class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing',
                                 'atomic_noncaching']

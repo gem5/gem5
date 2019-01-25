@@ -39,12 +39,13 @@
 # Authors: Ron Dreslinski
 #          Mitch Hayenga
 
-from ClockedObject import ClockedObject
-from IndexingPolicies import *
 from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
-from ReplacementPolicies import *
+
+from m5.objects.ClockedObject import ClockedObject
+from m5.objects.IndexingPolicies import *
+from m5.objects.ReplacementPolicies import *
 
 class HWPProbeEvent(object):
     def __init__(self, prefetcher, obj, *listOfNames):

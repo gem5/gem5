@@ -43,10 +43,11 @@ from __future__ import print_function
 from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
-from BaseCPU import BaseCPU
-from FUPool import *
-from O3Checker import O3Checker
-from BranchPredictor import *
+
+from m5.objects.BaseCPU import BaseCPU
+from m5.objects.FUPool import *
+from m5.objects.O3Checker import O3Checker
+from m5.objects.BranchPredictor import *
 
 class FetchPolicy(ScopedEnum):
     vals = [ 'SingleThread', 'RoundRobin', 'Branch', 'IQCount', 'LSQCount' ]
@@ -178,7 +179,7 @@ class DerivO3CPU(BaseCPU):
 
     def addCheckerCpu(self):
         if buildEnv['TARGET_ISA'] in ['arm']:
-            from ArmTLB import ArmTLB
+            from m5.objects.ArmTLB import ArmTLB
 
             self.checker = O3Checker(workload=self.workload,
                                      exitOnError=False,

@@ -29,12 +29,12 @@
 from m5.params import *
 from m5.proxy import *
 
-from Device import IsaFake
-from Platform import Platform
-from SouthBridge import SouthBridge
-from Terminal import Terminal
-from Uart import Uart8250
-from PciHost import GenericPciHost
+from m5.objects.Device import IsaFake
+from m5.objects.Platform import Platform
+from m5.objects.SouthBridge import SouthBridge
+from m5.objects.Terminal import Terminal
+from m5.objects.Uart import Uart8250
+from m5.objects.PciHost import GenericPciHost
 
 def x86IOAddress(port):
     IO_address_space_base = 0x8000000000000000

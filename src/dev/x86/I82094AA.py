@@ -28,8 +28,8 @@
 
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice
-from X86IntPin import X86IntSinkPin
+from m5.objects.Device import BasicPioDevice
+from m5.objects.X86IntPin import X86IntSinkPin
 
 class I82094AA(BasicPioDevice):
     type = 'I82094AA'

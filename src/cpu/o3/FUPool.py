@@ -28,8 +28,8 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-from FuncUnit import *
-from FuncUnitConfig import *
+from m5.objects.FuncUnit import *
+from m5.objects.FuncUnitConfig import *
 
 class FUPool(SimObject):
     type = 'FUPool'

@@ -41,7 +41,8 @@
 from m5.SimObject import SimObject
 from m5.defines import buildEnv
 from m5.params import *
-from FuncUnit import *
+
+from m5.objects.FuncUnit import *
 
 class IntALU(FUDesc):
     opList = [ OpDesc(opClass='IntAlu') ]

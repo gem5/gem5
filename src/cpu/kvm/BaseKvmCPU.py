@@ -39,8 +39,8 @@ from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
 
-from BaseCPU import BaseCPU
-from KvmVM import KvmVM
+from m5.objects.BaseCPU import BaseCPU
+from m5.objects.KvmVM import KvmVM
 
 class BaseKvmCPU(BaseCPU):
     type = 'BaseKvmCPU'

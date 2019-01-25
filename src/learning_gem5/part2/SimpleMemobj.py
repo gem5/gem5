@@ -28,7 +28,7 @@
 # Authors: Jason Lowe-Power
 
 from m5.params import *
-from MemObject import MemObject
+from m5.objects.MemObject import MemObject
 
 class SimpleMemobj(MemObject):
     type = 'SimpleMemobj'

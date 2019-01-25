@@ -38,8 +38,8 @@
 
 from m5.params import *
 from m5.proxy import *
-from MemObject import MemObject
-from System import System
+from m5.objects.MemObject import MemObject
+from m5.objects.System import System
 
 # The communication monitor will most typically be used in combination
 # with periodic dumping and resetting of stats using schedStatEvent

@@ -36,7 +36,7 @@
 # Authors: Andreas Sandberg
 
 from m5.params import *
-from AtomicSimpleCPU import AtomicSimpleCPU
+from m5.objects.AtomicSimpleCPU import AtomicSimpleCPU
 
 class NonCachingSimpleCPU(AtomicSimpleCPU):
     """Simple CPU model based on the atomic CPU. Unlike the atomic CPU,

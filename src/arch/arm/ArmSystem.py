@@ -41,8 +41,8 @@ from m5.options import *
 from m5.SimObject import *
 from m5.util.fdthelper import *
 
-from System import System
-from ArmSemihosting import ArmSemihosting
+from m5.objects.System import System
+from m5.objects.ArmSemihosting import ArmSemihosting
 
 class ArmMachineType(Enum):
     map = {

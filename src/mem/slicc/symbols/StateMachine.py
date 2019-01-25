@@ -226,7 +226,7 @@ class StateMachine(Symbol):
         code('''
 from m5.params import *
 from m5.SimObject import SimObject
-from Controller import RubyController
+from m5.objects.Controller import RubyController
 
 class $py_ident(RubyController):
     type = '$py_ident'

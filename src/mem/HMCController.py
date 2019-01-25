@@ -39,7 +39,7 @@
 # Authors: Erfan Azarkhish
 
 from m5.params import *
-from XBar import *
+from m5.objects.XBar import *
 
 # References:
 # [1] http://www.open-silicon.com/open-silicon-ips/hmc/

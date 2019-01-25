@@ -41,8 +41,8 @@
 from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
-from Device import DmaDevice
-from PciHost import PciHost
+from m5.objects.Device import DmaDevice
+from m5.objects.PciHost import PciHost
 
 class PciDevice(DmaDevice):
     type = 'PciDevice'

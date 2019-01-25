@@ -38,7 +38,7 @@
 #          Sascha Bischoff
 
 from m5.params import *
-from BaseTrafficGen import *
+from m5.objects.BaseTrafficGen import *
 
 # The behaviour of this traffic generator is specified in a
 # configuration file, and this file describes a state transition graph

@@ -40,8 +40,8 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
-from ArmPMU import ArmPMU
-from ISACommon import VecRegRenameMode
+from m5.objects.ArmPMU import ArmPMU
+from m5.objects.ISACommon import VecRegRenameMode
 
 # Enum for DecoderFlavour
 class DecoderFlavour(Enum): vals = ['Generic']

@@ -29,7 +29,7 @@
 
 from m5.params import *
 from m5.proxy import *
-from PseudoLRUReplacementPolicy import PseudoLRUReplacementPolicy
+from m5.objects.PseudoLRUReplacementPolicy import PseudoLRUReplacementPolicy
 from m5.SimObject import SimObject
 
 class RubyCache(SimObject):

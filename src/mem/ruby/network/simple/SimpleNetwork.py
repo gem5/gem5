@@ -29,9 +29,10 @@
 
 from m5.params import *
 from m5.proxy import *
-from Network import RubyNetwork
-from BasicRouter import BasicRouter
-from MessageBuffer import MessageBuffer
+
+from m5.objects.Network import RubyNetwork
+from m5.objects.BasicRouter import BasicRouter
+from m5.objects.MessageBuffer import MessageBuffer
 
 class SimpleNetwork(RubyNetwork):
     type = 'SimpleNetwork'

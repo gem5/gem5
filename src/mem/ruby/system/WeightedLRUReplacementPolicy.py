@@ -33,8 +33,8 @@
 
 from m5.params import *
 from m5.proxy import *
-from MemObject import MemObject
-from ReplacementPolicy import ReplacementPolicy
+from m5.objects.MemObject import MemObject
+from m5.objects.ReplacementPolicy import ReplacementPolicy
 
 class WeightedLRUReplacementPolicy(ReplacementPolicy):
     type = "WeightedLRUReplacementPolicy"

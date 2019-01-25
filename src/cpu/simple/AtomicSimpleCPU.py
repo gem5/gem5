@@ -39,8 +39,8 @@
 # Authors: Nathan Binkert
 
 from m5.params import *
-from BaseSimpleCPU import BaseSimpleCPU
-from SimPoint import SimPoint
+from m5.objects.BaseSimpleCPU import BaseSimpleCPU
+from m5.objects.SimPoint import SimPoint
 
 class AtomicSimpleCPU(BaseSimpleCPU):
     """Simple CPU model executing a configurable number of

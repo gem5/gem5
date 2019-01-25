@@ -39,7 +39,7 @@
 
 from m5.params import *
 from m5.SimObject import SimObject
-from Device import BasicPioDevice
+from m5.objects.Device import BasicPioDevice
 from m5.proxy import *
 from m5.util.fdthelper import *
 
