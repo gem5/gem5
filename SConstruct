@@ -215,6 +215,19 @@ def makePathListAbsolute(path_list, root=GetLaunchDir()):
     return [abspath(joinpath(root, expanduser(str(p))))
             for p in path_list]
 
+def find_first_prog(prog_names):
+    """Find the absolute path to the first existing binary in prog_names"""
+
+    if not isinstance(prog_names, (list, tuple)):
+        prog_names = [ prog_names ]
+
+    for p in prog_names:
+        p = main.WhereIs(p)
+        if p is not None:
+            return p
+
+    return None
+
 # Each target must have 'build' in the interior of the path; the
 # directory below this will determine the build parameters.  For
 # example, for target 'foo/bar/build/ALPHA_SE/arch/alpha/blah.do' we
@@ -276,6 +289,8 @@ global_vars = Variables(global_vars_file, args=ARGUMENTS)
 global_vars.AddVariables(
     ('CC', 'C compiler', environ.get('CC', main['CC'])),
     ('CXX', 'C++ compiler', environ.get('CXX', main['CXX'])),
+    ('PYTHON_CONFIG', 'Python config binary to use',
+     [ 'python2.7-config', 'python-config' ]),
     ('PROTOC', 'protoc tool', environ.get('PROTOC', 'protoc')),
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
@@ -702,13 +717,14 @@ if main['USE_PYTHON']:
     # we add them explicitly below. If you want to link in an alternate
     # version of python, see above for instructions on how to invoke
     # scons with the appropriate PATH set.
-    #
-    # First we check if python2-config exists, else we use python-config
-    python_config = readCommand(['which', 'python2-config'],
-                                exception='').strip()
-    if not os.path.exists(python_config):
-        python_config = readCommand(['which', 'python-config'],
-                                    exception='').strip()
+
+    python_config = find_first_prog(main['PYTHON_CONFIG'])
+    if python_config is None:
+        print("Error: can't find a suitable python-config, tried %s" % \
+              main['PYTHON_CONFIG'])
+        Exit(1)
+
+    print("Info: Using Python config: %s" % (python_config, ))
     py_includes = readCommand([python_config, '--includes'],
                               exception='').split()
     py_includes = filter(lambda s: match(r'.*\/include\/.*',s), py_includes)
