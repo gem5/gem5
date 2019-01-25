@@ -51,6 +51,7 @@
 #include <iostream>
 #include <list>
 #include <string>
+#include <vector>
 
 #include "base/cprintf.hh"
 #include "base/logging.hh"
@@ -249,13 +250,30 @@ const char * __attribute__((weak)) m5MainCommands[] = {
  * main function.
  */
 int
-m5Main(int argc, char **argv)
+m5Main(int argc, char **_argv)
 {
 #if HAVE_PROTOBUF
     // Verify that the version of the protobuf library that we linked
     // against is compatible with the version of the headers we
     // compiled against.
     GOOGLE_PROTOBUF_VERIFY_VERSION;
+#endif
+
+
+#if PY_MAJOR_VERSION >= 3
+    typedef std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> WArgUPtr;
+    std::vector<WArgUPtr> v_argv;
+    std::vector<wchar_t *> vp_argv;
+    v_argv.reserve(argc);
+    vp_argv.reserve(argc);
+    for (int i = 0; i < argc; i++) {
+        v_argv.emplace_back(Py_DecodeLocale(_argv[i], NULL), &PyMem_RawFree);
+        vp_argv.emplace_back(v_argv.back().get());
+    }
+
+    wchar_t **argv = vp_argv.data();
+#else
+    char **argv = _argv;
 #endif
 
     PySys_SetArgv(argc, argv);

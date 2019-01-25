@@ -45,7 +45,14 @@ main(int argc, char **argv)
     // Initialize m5 special signal handling.
     initSignals();
 
+#if PY_MAJOR_VERSION >= 3
+    std::unique_ptr<wchar_t[], decltype(&PyMem_RawFree)> program(
+        Py_DecodeLocale(argv[0], NULL),
+        &PyMem_RawFree);
+    Py_SetProgramName(program.get());
+#else
     Py_SetProgramName(argv[0]);
+#endif
 
     // initialize embedded Python interpreter
     Py_Initialize();
