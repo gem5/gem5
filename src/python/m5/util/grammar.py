@@ -115,7 +115,7 @@ class Grammar(object):
     def parse_file(self, f, **kwargs):
         if isinstance(f, basestring):
             source = f
-            f = file(f, 'r')
+            f = open(f, 'r')
         elif isinstance(f, file):
             source = f.name
         else:

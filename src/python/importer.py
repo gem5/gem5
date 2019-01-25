@@ -67,7 +67,7 @@ class CodeImporter(object):
 
             override = os.environ.get('M5_OVERRIDE_PY_SOURCE', 'false').lower()
             if override in ('true', 'yes') and  os.path.exists(abspath):
-                src = file(abspath, 'r').read()
+                src = open(abspath, 'r').read()
                 code = compile(src, abspath, 'exec')
 
             if os.path.basename(srcfile) == '__init__.py':

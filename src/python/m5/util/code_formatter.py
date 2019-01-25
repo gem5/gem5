@@ -154,7 +154,7 @@ class code_formatter(object):
         self._data = []
 
     def write(self, *args):
-        f = file(os.path.join(*args), "w")
+        f = open(os.path.join(*args), "w")
         for data in self._data:
             f.write(data)
         f.close()

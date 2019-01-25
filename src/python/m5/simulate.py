@@ -92,7 +92,7 @@ def instantiate(ckpt_dir=None):
     for obj in root.descendants(): obj.unproxyParams()
 
     if options.dump_config:
-        ini_file = file(os.path.join(options.outdir, options.dump_config), 'w')
+        ini_file = open(os.path.join(options.outdir, options.dump_config), 'w')
         # Print ini sections in sorted order for easier diffing
         for obj in sorted(root.descendants(), key=lambda o: o.path()):
             obj.print_ini(ini_file)
@@ -101,7 +101,8 @@ def instantiate(ckpt_dir=None):
     if options.json_config:
         try:
             import json
-            json_file = file(os.path.join(options.outdir, options.json_config), 'w')
+            json_file = open(
+                os.path.join(options.outdir, options.json_config), 'w')
             d = root.get_config_as_dict()
             json.dump(d, json_file, indent=4)
             json_file.close()
