@@ -261,16 +261,7 @@ def build(options):
     if options.dtb is not None:
         system.dtb_filename = SysPaths.binary(options.dtb)
     else:
-        def create_dtb_for_system(system, filename):
-            state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
-            rootNode = system.generateDeviceTree(state)
-
-            fdt = Fdt()
-            fdt.add_rootnode(rootNode)
-            dtb_filename = os.path.join(m5.options.outdir, filename)
-            return fdt.writeDtbFile(dtb_filename)
-
-        system.dtb_filename = create_dtb_for_system(system, 'system.dtb')
+        system.generateDtb(m5.options.outdir, 'system.dtb')
 
     return root
 

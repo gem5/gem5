@@ -37,6 +37,7 @@
 #          Glenn Bergmans
 
 from m5.params import *
+from m5.options import *
 from m5.SimObject import *
 from m5.util.fdthelper import *
 
@@ -137,6 +138,19 @@ class GenericArmSystem(ArmSystem):
                                     "guest kernel panics")
     panic_on_oops = Param.Bool(False, "Trigger a gem5 panic if the " \
                                    "guest kernel oopses")
+
+    def generateDtb(self, outdir, filename):
+        """
+        Autogenerate DTB. Arguments are the folder where the DTB
+        will be stored, and the name of the DTB file.
+        """
+        state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
+        rootNode = self.generateDeviceTree(state)
+
+        fdt = Fdt()
+        fdt.add_rootnode(rootNode)
+        dtb_filename = os.path.join(outdir, filename)
+        self.dtb_filename = fdt.writeDtbFile(dtb_filename)
 
 class LinuxArmSystem(GenericArmSystem):
     type = 'LinuxArmSystem'
