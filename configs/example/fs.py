@@ -138,7 +138,7 @@ def build_test_system(np):
 
     # For now, assign all the CPUs to the same clock domain
     test_sys.cpu = [TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i)
-                    for i in xrange(np)]
+                    for i in range(np)]
 
     if CpuConfig.is_kvm_cpu(TestCPUClass) or CpuConfig.is_kvm_cpu(FutureClass):
         test_sys.kvm_vm = KvmVM()
@@ -194,7 +194,7 @@ def build_test_system(np):
             if np > 1:
                 fatal("SimPoint generation not supported with more than one CPUs")
 
-        for i in xrange(np):
+        for i in range(np):
             if options.simpoint_profile:
                 test_sys.cpu[i].addSimPointProbe(options.simpoint_interval)
             if options.checker:
@@ -277,7 +277,7 @@ def build_drive_system(np):
     # memory bus
     drive_sys.mem_ctrls = [DriveMemClass(range = r)
                            for r in drive_sys.mem_ranges]
-    for i in xrange(len(drive_sys.mem_ctrls)):
+    for i in range(len(drive_sys.mem_ctrls)):
         drive_sys.mem_ctrls[i].port = drive_sys.membus.master
 
     drive_sys.init_param = options.init_param

@@ -76,7 +76,9 @@ parser.add_option("--wfs-per-simd", type="int", default=10, help="Number of " \
 #
 Ruby.define_options(parser)
 
-execfile(os.path.join(config_root, "common", "Options.py"))
+exec(compile( \
+    open(os.path.join(config_root, "common", "Options.py")).read(), \
+    os.path.join(config_root, "common", "Options.py"), 'exec'))
 
 (options, args) = parser.parse_args()
 
@@ -97,7 +99,7 @@ options.l3_assoc=2
 assert(options.num_compute_units >= 1)
 n_cu = options.num_compute_units
 
-options.num_sqc = int((n_cu + options.cu_per_sqc - 1) / options.cu_per_sqc)
+options.num_sqc = int((n_cu + options.cu_per_sqc - 1) // options.cu_per_sqc)
 
 if args:
      print("Error: script doesn't take any positional arguments")

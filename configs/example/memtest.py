@@ -257,7 +257,7 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
      limit = (len(cachespec) - level + 1) * 100000000
      testers = [proto_tester(interval = 10 * (level * level + 1),
                              progress_check = limit) \
-                     for i in xrange(ntesters)]
+                     for i in range(ntesters)]
      if ntesters:
           subsys.tester = testers
 
@@ -272,8 +272,8 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
           # Create and connect the caches, both the ones fanning out
           # to create the tree, and the ones used to connect testers
           # on this level
-          tree_caches = [prototypes[0]() for i in xrange(ncaches[0])]
-          tester_caches = [proto_l1() for i in xrange(ntesters)]
+          tree_caches = [prototypes[0]() for i in range(ncaches[0])]
+          tester_caches = [proto_l1() for i in range(ntesters)]
 
           subsys.cache = tester_caches + tree_caches
           for cache in tree_caches:

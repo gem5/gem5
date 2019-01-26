@@ -63,8 +63,8 @@ class Pt2Pt(SimpleTopology):
 
         link_count = len(nodes)
         int_links = []
-        for i in xrange(len(nodes)):
-            for j in xrange(len(nodes)):
+        for i in range(len(nodes)):
+            for j in range(len(nodes)):
                 if (i != j):
                     link_count += 1
                     int_links.append(IntLink(link_id=link_count,

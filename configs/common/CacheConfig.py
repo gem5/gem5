@@ -97,7 +97,7 @@ def config_cache(options, system):
     if options.memchecker:
         system.memchecker = MemChecker()
 
-    for i in xrange(options.num_cpus):
+    for i in range(options.num_cpus):
         if options.caches:
             icache = icache_class(size=options.l1i_size,
                                   assoc=options.l1i_assoc)

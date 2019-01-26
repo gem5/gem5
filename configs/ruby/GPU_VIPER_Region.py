@@ -469,7 +469,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
     # For an odd number of CPUs, still create the right number of controllers
     crossbar_bw = 16 * options.num_compute_units #Assuming a 2GHz clock
     cpuCluster = Cluster(extBW = (crossbar_bw), intBW=crossbar_bw)
-    for i in xrange((options.num_cpus + 1) / 2):
+    for i in range((options.num_cpus + 1) // 2):
 
         cp_cntrl = CPCntrl()
         cp_cntrl.create(options, ruby_system, system)
@@ -535,7 +535,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
         cpuCluster.add(rb_cntrl)
 
     gpuCluster = Cluster(extBW = (crossbar_bw), intBW = crossbar_bw)
-    for i in xrange(options.num_compute_units):
+    for i in range(options.num_compute_units):
 
         tcp_cntrl = TCPCntrl(TCC_select_num_bits = TCC_bits,
                              issue_latency = 1,
@@ -571,7 +571,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
 
         gpuCluster.add(tcp_cntrl)
 
-    for i in xrange(options.num_sqc):
+    for i in range(options.num_sqc):
 
         sqc_cntrl = SQCCntrl(TCC_select_num_bits = TCC_bits)
         sqc_cntrl.create(options, ruby_system, system)
@@ -599,7 +599,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
 
     numa_bit = 6
 
-    for i in xrange(options.num_tccs):
+    for i in range(options.num_tccs):
 
         tcc_cntrl = TCCCntrl()
         tcc_cntrl.create(options, ruby_system, system)

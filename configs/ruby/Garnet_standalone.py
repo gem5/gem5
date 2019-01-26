@@ -66,7 +66,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     # controller constructors are called before the network constructor
     #
 
-    for i in xrange(options.num_cpus):
+    for i in range(options.num_cpus):
         #
         # First create the Ruby objects associated with this cpu
         # Only one cache exists for this protocol, so by default use the L1D

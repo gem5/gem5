@@ -339,8 +339,9 @@ def addFSOptions(parser):
     # System options
     parser.add_option("--kernel", action="store", type="string")
     parser.add_option("--os-type", action="store", type="choice",
-            choices=os_types[buildEnv['TARGET_ISA']], default="linux",
-            help="Specifies type of OS to boot")
+                      choices=os_types[str(buildEnv['TARGET_ISA'])],
+                      default="linux",
+                      help="Specifies type of OS to boot")
     parser.add_option("--script", action="store", type="string")
     parser.add_option("--frame-capture", action="store_true",
             help="Stores changed frame buffers from the VNC server to compressed "\

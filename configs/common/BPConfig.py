@@ -79,7 +79,7 @@ def print_bp_list():
 
 def bp_names():
     """Return a list of valid Branch Predictor names."""
-    return _bp_classes.keys()
+    return list(_bp_classes.keys())
 
 # Add all BPs in the object hierarchy.
 for name, cls in inspect.getmembers(m5.objects, is_bp_class):

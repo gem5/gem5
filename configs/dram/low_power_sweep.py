@@ -166,11 +166,11 @@ pd_entry_time = (system.mem_ctrls[0].tRAS.value +
 
 # We sweep itt max using the multipliers specified by the user.
 itt_max_str = args.itt_list.strip().split()
-itt_max_multiples = map(lambda x : int(x), itt_max_str)
+itt_max_multiples = [ int(x) for x in itt_max_str ]
 if len(itt_max_multiples) == 0:
     fatal("String for itt-max-list detected empty\n")
 
-itt_max_values = map(lambda m : pd_entry_time * m, itt_max_multiples)
+itt_max_values = [ pd_entry_time * m for m in itt_max_multiples ]
 
 # Generate request addresses in the entire range, assume we start at 0
 max_addr = mem_range.end

@@ -141,6 +141,6 @@ Benchmarks = {
                             None, 'android-ics')]
 }
 
-benchs = Benchmarks.keys()
+benchs = list(Benchmarks.keys())
 benchs.sort()
 DefinedBenchmarks = ", ".join(benchs)

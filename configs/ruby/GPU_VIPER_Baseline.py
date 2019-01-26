@@ -407,7 +407,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
     # Clusters
     crossbar_bw = 16 * options.num_compute_units #Assuming a 2GHz clock
     mainCluster = Cluster(intBW = crossbar_bw)
-    for i in xrange(options.num_dirs):
+    for i in range(options.num_dirs):
 
         dir_cntrl = DirCntrl(noTCCdir=True,TCC_select_num_bits = TCC_bits)
         dir_cntrl.create(options, ruby_system, system)
@@ -440,7 +440,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
         mainCluster.add(dir_cntrl)
 
     cpuCluster = Cluster(extBW = crossbar_bw, intBW=crossbar_bw)
-    for i in xrange((options.num_cpus + 1) / 2):
+    for i in range((options.num_cpus + 1) // 2):
 
         cp_cntrl = CPCntrl()
         cp_cntrl.create(options, ruby_system, system)
@@ -473,7 +473,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
         cpuCluster.add(cp_cntrl)
 
     gpuCluster = Cluster(extBW = crossbar_bw, intBW = crossbar_bw)
-    for i in xrange(options.num_compute_units):
+    for i in range(options.num_compute_units):
 
         tcp_cntrl = TCPCntrl(TCC_select_num_bits = TCC_bits,
                              issue_latency = 1,
@@ -510,7 +510,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
 
         gpuCluster.add(tcp_cntrl)
 
-    for i in xrange(options.num_sqc):
+    for i in range(options.num_sqc):
 
         sqc_cntrl = SQCCntrl(TCC_select_num_bits = TCC_bits)
         sqc_cntrl.create(options, ruby_system, system)
@@ -539,7 +539,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
     # Because of wire buffers, num_tccs must equal num_tccdirs
     numa_bit = 6
 
-    for i in xrange(options.num_tccs):
+    for i in range(options.num_tccs):
 
         tcc_cntrl = TCCCntrl()
         tcc_cntrl.create(options, ruby_system, system)

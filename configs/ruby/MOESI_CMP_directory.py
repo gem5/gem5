@@ -67,7 +67,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     l2_bits = int(math.log(options.num_l2caches, 2))
     block_size_bits = int(math.log(options.cacheline_size, 2))
 
-    for i in xrange(options.num_cpus):
+    for i in range(options.num_cpus):
         #
         # First create the Ruby objects associated with this cpu
         #
@@ -126,7 +126,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
 
     l2_index_start = block_size_bits + l2_bits
 
-    for i in xrange(options.num_l2caches):
+    for i in range(options.num_l2caches):
         #
         # First create the Ruby objects associated with this cpu
         #

@@ -167,41 +167,41 @@ all_cpus = []
 all_l1s = []
 all_l1buses = []
 if options.timing:
-    clusters = [ Cluster() for i in xrange(options.numclusters)]
-    for j in xrange(options.numclusters):
+    clusters = [ Cluster() for i in range(options.numclusters)]
+    for j in range(options.numclusters):
         clusters[j].id = j
     for cluster in clusters:
         cluster.clusterbus = L2XBar(clock=busFrequency)
         all_l1buses += [cluster.clusterbus]
         cluster.cpus = [TimingSimpleCPU(cpu_id = i + cluster.id,
                                         clock=options.frequency)
-                        for i in xrange(cpusPerCluster)]
+                        for i in range(cpusPerCluster)]
         all_cpus += cluster.cpus
         cluster.l1 = L1(size=options.l1size, assoc = 4)
         all_l1s += [cluster.l1]
 elif options.detailed:
-    clusters = [ Cluster() for i in xrange(options.numclusters)]
-    for j in xrange(options.numclusters):
+    clusters = [ Cluster() for i in range(options.numclusters)]
+    for j in range(options.numclusters):
         clusters[j].id = j
     for cluster in clusters:
         cluster.clusterbus = L2XBar(clock=busFrequency)
         all_l1buses += [cluster.clusterbus]
         cluster.cpus = [DerivO3CPU(cpu_id = i + cluster.id,
                                    clock=options.frequency)
-                        for i in xrange(cpusPerCluster)]
+                        for i in range(cpusPerCluster)]
         all_cpus += cluster.cpus
         cluster.l1 = L1(size=options.l1size, assoc = 4)
         all_l1s += [cluster.l1]
 else:
-    clusters = [ Cluster() for i in xrange(options.numclusters)]
-    for j in xrange(options.numclusters):
+    clusters = [ Cluster() for i in range(options.numclusters)]
+    for j in range(options.numclusters):
         clusters[j].id = j
     for cluster in clusters:
         cluster.clusterbus = L2XBar(clock=busFrequency)
         all_l1buses += [cluster.clusterbus]
         cluster.cpus = [AtomicSimpleCPU(cpu_id = i + cluster.id,
                                         clock=options.frequency)
-                        for i in xrange(cpusPerCluster)]
+                        for i in range(cpusPerCluster)]
         all_cpus += cluster.cpus
         cluster.l1 = L1(size=options.l1size, assoc = 4)
         all_l1s += [cluster.l1]

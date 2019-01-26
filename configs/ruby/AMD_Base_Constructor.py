@@ -115,7 +115,7 @@ def construct(options, system, ruby_system):
     cpu_sequencers = []
     cpuCluster = None
     cpuCluster = Cluster(name="CPU Cluster", extBW = 8, intBW=8) # 16 GB/s
-    for i in xrange((options.num_cpus + 1) / 2):
+    for i in range((options.num_cpus + 1) // 2):
 
         cp_cntrl = CPCntrl()
         cp_cntrl.create(options, ruby_system, system)

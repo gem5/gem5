@@ -99,7 +99,7 @@ def print_cpu_list():
 
 def cpu_names():
     """Return a list of valid CPU names."""
-    return _cpu_classes.keys()
+    return list(_cpu_classes.keys())
 
 def config_etrace(cpu_cls, cpu_list, options):
     if issubclass(cpu_cls, m5.objects.DerivO3CPU):

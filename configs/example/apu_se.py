@@ -225,7 +225,7 @@ if options.TLB_config == "perLane":
 
 # List of compute units; one GPU can have multiple compute units
 compute_units = []
-for i in xrange(n_cu):
+for i in range(n_cu):
     compute_units.append(ComputeUnit(cu_id = i, perLaneTLB = per_lane,
                                      num_SIMDs = options.simds_per_cu,
                                      wfSize = options.wf_size,
@@ -255,8 +255,8 @@ for i in xrange(n_cu):
                                              options.outOfOrderDataDelivery))
     wavefronts = []
     vrfs = []
-    for j in xrange(options.simds_per_cu):
-        for k in xrange(shader.n_wf):
+    for j in range(options.simds_per_cu):
+        for k in range(shader.n_wf):
             wavefronts.append(Wavefront(simdId = j, wf_slot_id = k,
                                         wfSize = options.wf_size))
         vrfs.append(VectorRegisterFile(simd_id=j,
@@ -311,7 +311,7 @@ if fast_forward:
     future_cpu_list = []
 
     # Initial CPUs to be used during fast-forwarding.
-    for i in xrange(options.num_cpus):
+    for i in range(options.num_cpus):
         cpu = CpuClass(cpu_id = i,
                        clk_domain = SrcClockDomain(
                            clock = options.CPUClock,
@@ -328,7 +328,7 @@ else:
     MainCpuClass = CpuClass
 
 # CPs to be used throughout the simulation.
-for i in xrange(options.num_cp):
+for i in range(options.num_cp):
     cp = MainCpuClass(cpu_id = options.num_cpus + i,
                       clk_domain = SrcClockDomain(
                           clock = options.CPUClock,
@@ -337,7 +337,7 @@ for i in xrange(options.num_cp):
     cp_list.append(cp)
 
 # Main CPUs (to be used after fast-forwarding if fast-forwarding is specified).
-for i in xrange(options.num_cpus):
+for i in range(options.num_cpus):
     cpu = MainCpuClass(cpu_id = i,
                        clk_domain = SrcClockDomain(
                            clock = options.CPUClock,
@@ -400,7 +400,7 @@ for cp in cp_list:
     cp.workload = host_cpu.workload
 
 if fast_forward:
-    for i in xrange(len(future_cpu_list)):
+    for i in range(len(future_cpu_list)):
         future_cpu_list[i].workload = cpu_list[i].workload
         future_cpu_list[i].createThreads()
 
@@ -408,7 +408,7 @@ if fast_forward:
 # List of CPUs that must be switched when moving between KVM and simulation
 if fast_forward:
     switch_cpu_list = \
-        [(cpu_list[i], future_cpu_list[i]) for i in xrange(options.num_cpus)]
+        [(cpu_list[i], future_cpu_list[i]) for i in range(options.num_cpus)]
 
 # Full list of processing cores in the system. Note that
 # dispatcher is also added to cpu_list although it is
@@ -431,7 +431,7 @@ if fast_forward:
     have_kvm_support = 'BaseKvmCPU' in globals()
     if have_kvm_support and buildEnv['TARGET_ISA'] == "x86":
         system.vm = KvmVM()
-        for i in xrange(len(host_cpu.workload)):
+        for i in range(len(host_cpu.workload)):
             host_cpu.workload[i].useArchPT = True
             host_cpu.workload[i].kvmInSE = True
     else:
@@ -479,15 +479,15 @@ gpu_port_idx = len(system.ruby._cpu_ports) \
 gpu_port_idx = gpu_port_idx - options.num_cp * 2
 
 wavefront_size = options.wf_size
-for i in xrange(n_cu):
+for i in range(n_cu):
     # The pipeline issues wavefront_size number of uncoalesced requests
     # in one GPU issue cycle. Hence wavefront_size mem ports.
-    for j in xrange(wavefront_size):
+    for j in range(wavefront_size):
         system.cpu[shader_idx].CUs[i].memory_port[j] = \
                   system.ruby._cpu_ports[gpu_port_idx].slave[j]
     gpu_port_idx += 1
 
-for i in xrange(n_cu):
+for i in range(n_cu):
     if i > 0 and not i % options.cu_per_sqc:
         print("incrementing idx on ", i)
         gpu_port_idx += 1
@@ -496,7 +496,7 @@ for i in xrange(n_cu):
 gpu_port_idx = gpu_port_idx + 1
 
 # attach CP ports to Ruby
-for i in xrange(options.num_cp):
+for i in range(options.num_cp):
     system.cpu[cp_idx].createInterruptController()
     system.cpu[cp_idx].dcache_port = \
                 system.ruby._cpu_ports[gpu_port_idx + i * 2].slave

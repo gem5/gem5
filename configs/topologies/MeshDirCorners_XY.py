@@ -126,8 +126,8 @@ class MeshDirCorners_XY(SimpleTopology):
         int_links = []
 
         # East output to West input links (weight = 1)
-        for row in xrange(num_rows):
-            for col in xrange(num_columns):
+        for row in range(num_rows):
+            for col in range(num_columns):
                 if (col + 1 < num_columns):
                     east_out = col + (row * num_columns)
                     west_in = (col + 1) + (row * num_columns)
@@ -141,8 +141,8 @@ class MeshDirCorners_XY(SimpleTopology):
                     link_count += 1
 
         # West output to East input links (weight = 1)
-        for row in xrange(num_rows):
-            for col in xrange(num_columns):
+        for row in range(num_rows):
+            for col in range(num_columns):
                 if (col + 1 < num_columns):
                     east_in = col + (row * num_columns)
                     west_out = (col + 1) + (row * num_columns)
@@ -156,8 +156,8 @@ class MeshDirCorners_XY(SimpleTopology):
                     link_count += 1
 
         # North output to South input links (weight = 2)
-        for col in xrange(num_columns):
-            for row in xrange(num_rows):
+        for col in range(num_columns):
+            for row in range(num_rows):
                 if (row + 1 < num_rows):
                     north_out = col + (row * num_columns)
                     south_in = col + ((row + 1) * num_columns)
@@ -171,8 +171,8 @@ class MeshDirCorners_XY(SimpleTopology):
                     link_count += 1
 
         # South output to North input links (weight = 2)
-        for col in xrange(num_columns):
-            for row in xrange(num_rows):
+        for col in range(num_columns):
+            for row in range(num_rows):
                 if (row + 1 < num_rows):
                     north_in = col + (row * num_columns)
                     south_out = col + ((row + 1) * num_columns)

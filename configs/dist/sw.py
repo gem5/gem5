@@ -57,7 +57,7 @@ def build_switch(options):
                                       sync_repeat = options.dist_sync_repeat,
                                       is_switch = True,
                                       num_nodes = options.dist_size)
-                       for i in xrange(options.dist_size)]
+                       for i in range(options.dist_size)]
 
     for (i, link) in enumerate(switch.portlink):
         link.int0 = switch.interface[i]

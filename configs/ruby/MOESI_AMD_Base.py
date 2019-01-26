@@ -248,7 +248,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
         block_size_bits = int(math.log(options.cacheline_size, 2))
         numa_bit = block_size_bits + dir_bits - 1
 
-    for i in xrange(options.num_dirs):
+    for i in range(options.num_dirs):
         dir_ranges = []
         for r in system.mem_ranges:
             addr_range = m5.objects.AddrRange(r.start, size = r.size(),
@@ -294,7 +294,7 @@ def create_system(options, full_system, system, dma_devices, bootmem,
 
     # For an odd number of CPUs, still create the right number of controllers
     cpuCluster = Cluster(extBW = 512, intBW = 512)  # 1 TB/s
-    for i in xrange((options.num_cpus + 1) / 2):
+    for i in range((options.num_cpus + 1) // 2):
 
         cp_cntrl = CPCntrl()
         cp_cntrl.create(options, ruby_system, system)

@@ -87,7 +87,8 @@ parser.add_option("--inj-vnet", type="int", default=-1,
 #
 Ruby.define_options(parser)
 
-execfile(os.path.join(config_root, "common", "Options.py"))
+exec(compile(open(os.path.join(config_root, "common", "Options.py")).read(),
+             os.path.join(config_root, "common", "Options.py"), 'exec'))
 
 (options, args) = parser.parse_args()
 
@@ -112,7 +113,7 @@ cpus = [ GarnetSyntheticTraffic(
                      inj_vnet=options.inj_vnet,
                      precision=options.precision,
                      num_dest=options.num_dirs) \
-         for i in xrange(options.num_cpus) ]
+         for i in range(options.num_cpus) ]
 
 # create the desired simulated system
 system = System(cpu = cpus, mem_ranges = [AddrRange(options.mem_size)])

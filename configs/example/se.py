@@ -171,7 +171,7 @@ if options.smt and options.num_cpus > 1:
     fatal("You cannot use SMT with multiple CPUs!")
 
 np = options.num_cpus
-system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
+system = System(cpu = [CPUClass(cpu_id=i) for i in range(np)],
                 mem_mode = test_mem_mode,
                 mem_ranges = [AddrRange(options.mem_size)],
                 cache_line_size = options.cacheline_size)
@@ -220,7 +220,7 @@ if options.simpoint_profile:
     if np > 1:
         fatal("SimPoint generation not supported with more than one CPUs")
 
-for i in xrange(np):
+for i in range(np):
     if options.smt:
         system.cpu[i].workload = multiprocesses
     elif len(multiprocesses) == 1:
@@ -246,7 +246,7 @@ if options.ruby:
 
     system.ruby.clk_domain = SrcClockDomain(clock = options.ruby_clock,
                                         voltage_domain = system.voltage_domain)
-    for i in xrange(np):
+    for i in range(np):
         ruby_port = system.ruby._cpu_ports[i]
 
         # Create the interrupt controller and connect its ports to Ruby

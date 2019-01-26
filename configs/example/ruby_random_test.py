@@ -59,7 +59,9 @@ parser.add_option("-f", "--wakeup_freq", metavar="N", default=10,
 #
 Ruby.define_options(parser)
 
-execfile(os.path.join(config_root, "common", "Options.py"))
+exec(compile( \
+    open(os.path.join(config_root, "common", "Options.py")).read(), \
+    os.path.join(config_root, "common", "Options.py"), 'exec'))
 
 (options, args) = parser.parse_args()
 

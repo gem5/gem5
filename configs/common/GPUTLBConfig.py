@@ -69,7 +69,7 @@ def Coalescer_constructor(level):
 def create_TLB_Coalescer(options, my_level, my_index, TLB_name, Coalescer_name):
     # arguments: options, TLB level, number of private structures for this Level,
     # TLB name and  Coalescer name
-    for i in xrange(my_index):
+    for i in range(my_index):
         TLB_name.append(eval(TLB_constructor(my_level)))
         Coalescer_name.append(eval(Coalescer_constructor(my_level)))
 
@@ -109,7 +109,7 @@ def config_tlb_hierarchy(options, system, shader_idx):
     # Create the hiearchy
     # Call the appropriate constructors and add objects to the system
 
-    for i in xrange(len(TLB_hierarchy)):
+    for i in range(len(TLB_hierarchy)):
         hierarchy_level = TLB_hierarchy[i]
         level = i+1
         for TLB_type in hierarchy_level:
@@ -143,7 +143,7 @@ def config_tlb_hierarchy(options, system, shader_idx):
     # Each TLB is connected with its Coalescer through a single port.
     # There is a one-to-one mapping of TLBs to Coalescers at a given level
     # This won't be modified no matter what the hierarchy looks like.
-    for i in xrange(len(TLB_hierarchy)):
+    for i in range(len(TLB_hierarchy)):
         hierarchy_level = TLB_hierarchy[i]
         level = i+1
         for TLB_type in hierarchy_level:
@@ -159,7 +159,7 @@ def config_tlb_hierarchy(options, system, shader_idx):
         name = TLB_type['name']
         num_TLBs = TLB_type['width']
         if name == 'l1':     # L1 D-TLBs
-            tlb_per_cu = num_TLBs / n_cu
+            tlb_per_cu = num_TLBs // n_cu
             for cu_idx in range(n_cu):
                 if tlb_per_cu:
                     for tlb in range(tlb_per_cu):

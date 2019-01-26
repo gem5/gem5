@@ -246,9 +246,9 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
      # The levels are indexing backwards through the list
      ntesters = testerspec[len(cachespec) - level]
 
-     testers = [proto_tester() for i in xrange(ntesters)]
+     testers = [proto_tester() for i in range(ntesters)]
      checkers = [MemCheckerMonitor(memchecker = system.memchecker) \
-                      for i in xrange(ntesters)]
+                      for i in range(ntesters)]
      if ntesters:
           subsys.tester = testers
           subsys.checkers = checkers
@@ -264,8 +264,8 @@ def make_cache_level(ncaches, prototypes, level, next_cache):
           # Create and connect the caches, both the ones fanning out
           # to create the tree, and the ones used to connect testers
           # on this level
-          tree_caches = [prototypes[0]() for i in xrange(ncaches[0])]
-          tester_caches = [proto_l1() for i in xrange(ntesters)]
+          tree_caches = [prototypes[0]() for i in range(ncaches[0])]
+          tester_caches = [proto_l1() for i in range(ntesters)]
 
           subsys.cache = tester_caches + tree_caches
           for cache in tree_caches:

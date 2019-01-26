@@ -182,15 +182,15 @@ busFrequency = Frequency(options.frequency)
 if options.timing:
     cpus = [TimingSimpleCPU(cpu_id = i,
                             clock=options.frequency)
-            for i in xrange(options.numcpus)]
+            for i in range(options.numcpus)]
 elif options.detailed:
     cpus = [DerivO3CPU(cpu_id = i,
                        clock=options.frequency)
-            for i in xrange(options.numcpus)]
+            for i in range(options.numcpus)]
 else:
     cpus = [AtomicSimpleCPU(cpu_id = i,
                             clock=options.frequency)
-            for i in xrange(options.numcpus)]
+            for i in range(options.numcpus)]
 
 # ----------------------
 # Create a system, and add system wide objects

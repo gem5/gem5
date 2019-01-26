@@ -93,13 +93,13 @@ class Benchmark(object):
         try:
             func = getattr(self.__class__, input_set)
         except AttributeError:
-            raise AttributeError, \
-                  'The benchmark %s does not have the %s input set' % \
-                  (self.name, input_set)
+            raise AttributeError(
+                'The benchmark %s does not have the %s input set' % \
+                (self.name, input_set))
 
         executable = joinpath(spec_dist, 'binaries', isa, os, self.binary)
         if not isfile(executable):
-            raise AttributeError, '%s not found' % executable
+            raise AttributeError('%s not found' % executable)
         self.executable = executable
 
         # root of tree for input & output data files
@@ -113,7 +113,7 @@ class Benchmark(object):
         self.input_set = input_set
 
         if not isdir(inputs_dir):
-            raise AttributeError, '%s not found' % inputs_dir
+            raise AttributeError('%s not found' % inputs_dir)
 
         self.inputs_dir = [ inputs_dir ]
         if isdir(all_dir):
@@ -670,7 +670,7 @@ class vortex(Benchmark):
         elif (isa == 'sparc' or isa == 'sparc32'):
             self.endian = 'bendian'
         else:
-            raise AttributeError, "unknown ISA %s" % isa
+            raise AttributeError("unknown ISA %s" % isa)
 
         super(vortex, self).__init__(isa, os, input_set)
 

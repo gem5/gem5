@@ -64,7 +64,7 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     #
     block_size_bits = int(math.log(options.cacheline_size, 2))
 
-    for i in xrange(options.num_cpus):
+    for i in range(options.num_cpus):
         #
         # First create the Ruby objects associated with this cpu
         # Only one cache exists for this protocol, so by default use the L1D

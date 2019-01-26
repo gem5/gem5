@@ -548,7 +548,7 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, self=None, Ruby=False):
     # Set up the Intel MP table
     base_entries = []
     ext_entries = []
-    for i in xrange(numCPUs):
+    for i in range(numCPUs):
         bp = X86IntelMPProcessor(
                 local_apic_id = i,
                 local_apic_version = 0x14,

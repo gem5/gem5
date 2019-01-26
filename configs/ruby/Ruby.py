@@ -214,7 +214,7 @@ def create_system(options, full_system, system, piobus = None, dma_ports = [],
 
 def create_directories(options, bootmem, ruby_system, system):
     dir_cntrl_nodes = []
-    for i in xrange(options.num_dirs):
+    for i in range(options.num_dirs):
         dir_cntrl = Directory_Controller()
         dir_cntrl.version = i
         dir_cntrl.directory = RubyDirectoryMemory()
