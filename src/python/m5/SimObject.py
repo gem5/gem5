@@ -875,7 +875,7 @@ def cxxMethod(*args, **kwargs):
     """Decorator to export C++ functions to Python"""
 
     def decorate(func):
-        name = func.func_name
+        name = func.__name__
         override = kwargs.get("override", False)
         cxx_name = kwargs.get("cxx_name", name)
 
