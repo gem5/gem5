@@ -255,7 +255,8 @@ def blobToCpp(data, symbol, cpp_code, hpp_code=None, namespace=None):
             hpp_code('}')
     if namespace is not None:
         cpp_code('namespace {} {{'.format(namespace))
-    cpp_code(symbol_len_declaration + ' = {};'.format(len(data)))
+    if hpp_code is not None:
+        cpp_code(symbol_len_declaration + ' = {};'.format(len(data)))
     cpp_code(symbol_declaration + ' = {')
     cpp_code.indent()
     step = 16
