@@ -26,7 +26,11 @@
 
 from __future__ import print_function
 
-import __builtin__
+try:
+    import builtins
+except ImportError:
+    # Python 2 fallback
+    import __builtin__ as builtins
 import inspect
 import os
 import re
@@ -66,8 +70,8 @@ class lookup(object):
         if self.formatter.globals and item in self.frame.f_globals:
             return self.frame.f_globals[item]
 
-        if item in __builtin__.__dict__:
-            return __builtin__.__dict__[item]
+        if item in builtins.__dict__:
+            return builtins.__dict__[item]
 
         try:
             item = int(item)

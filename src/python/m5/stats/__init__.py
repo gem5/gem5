@@ -71,7 +71,11 @@ def _url_factory(func):
 
     @wraps(func)
     def wrapper(url):
-        from urlparse import parse_qs
+        try:
+            from urllib.parse import parse_qs
+        except ImportError:
+            # Python 2 fallback
+            from urlparse import parse_qs
         from ast import literal_eval
 
         qs = parse_qs(url.query, keep_blank_values=True)
@@ -135,7 +139,11 @@ def addStatVisitor(url):
 
     """
 
-    from urlparse import urlsplit
+    try:
+        from urllib.parse import urlsplit
+    except ImportError:
+        # Python 2 fallback
+        from urlparse import urlsplit
 
     parsed = urlsplit(url)
 
