@@ -73,12 +73,15 @@ from . import ticks
 from .util import *
 
 def isSimObject(*args, **kwargs):
+    from . import SimObject
     return SimObject.isSimObject(*args, **kwargs)
 
 def isSimObjectSequence(*args, **kwargs):
+    from . import SimObject
     return SimObject.isSimObjectSequence(*args, **kwargs)
 
 def isSimObjectClass(*args, **kwargs):
+    from . import SimObject
     return SimObject.isSimObjectClass(*args, **kwargs)
 
 allParams = {}
@@ -175,6 +178,7 @@ class ParamDesc(object):
 
     def __getattr__(self, attr):
         if attr == 'ptype':
+            from . import SimObject
             ptype = SimObject.allClasses[self.ptype_str]
             assert isSimObjectClass(ptype)
             self.ptype = ptype
@@ -2158,5 +2162,3 @@ __all__ = ['Param', 'VectorParam',
            'NextEthernetAddr', 'NULL',
            'MasterPort', 'SlavePort',
            'VectorMasterPort', 'VectorSlavePort']
-
-from . import SimObject
