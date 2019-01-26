@@ -904,7 +904,7 @@ class Bool(ParamValue):
         code('%s to_bool(%s, %s);' % (ret, src, dest))
 
 def IncEthernetAddr(addr, val = 1):
-    bytes = map(lambda x: int(x, 16), addr.split(':'))
+    bytes = [ int(x, 16) for x in addr.split(':') ]
     bytes[5] += val
     for i in (5, 4, 3, 2, 1):
         val,rem = divmod(bytes[i], 256)
@@ -1282,7 +1282,7 @@ class MetaEnum(MetaParamValue):
                 raise TypeError("Enum-derived class attribute 'map' " \
                       "must be of type dict")
             # build list of value strings from map
-            cls.vals = cls.map.keys()
+            cls.vals = list(cls.map.keys())
             cls.vals.sort()
         elif 'vals' in init_dict:
             if not isinstance(cls.vals, list):
@@ -1453,7 +1453,7 @@ class Enum(ParamValue):
     @classmethod
     def cxx_ini_parse(cls, code, src, dest, ret):
         code('if (false) {')
-        for elem_name in cls.map.iterkeys():
+        for elem_name in cls.map.keys():
             code('} else if (%s == "%s") {' % (src, elem_name))
             code.indent()
             code('%s = Enums::%s;' % (dest, elem_name))

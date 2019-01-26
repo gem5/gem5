@@ -129,7 +129,7 @@ class OptionParser(dict):
     def parse_args(self):
         opts,args = self._optparse.parse_args()
 
-        for key,val in opts.__dict__.iteritems():
+        for key,val in opts.__dict__.items():
             if val is not None or key not in self:
                 self[key] = val
 

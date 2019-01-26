@@ -296,11 +296,11 @@ if __name__ == '__main__':
     f('    $y')
     f('''$__file__:$__line__
 {''')
-    f("${{', '.join(str(x) for x in xrange(4))}}")
+    f("${{', '.join(str(x) for x in range(4))}}")
     f('${x}')
     f('$x')
     f.indent()
-    for i in xrange(5):
+    for i in range(5):
         f('$x')
         f('$i')
         f('$0', "zero")

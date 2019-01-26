@@ -34,6 +34,6 @@ try:
 except NameError:
     modules = { }
 
-for module in modules.iterkeys():
+for module in modules.keys():
     if module.startswith('m5.objects.'):
         exec("from %s import *" % module)

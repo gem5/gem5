@@ -67,7 +67,7 @@ except:
     pydot = False
 
 def simnode_children(simNode):
-    for child in simNode._children.itervalues():
+    for child in simNode._children.values():
         if isNullPointer(child):
             continue
         if isSimObjectVector(child):

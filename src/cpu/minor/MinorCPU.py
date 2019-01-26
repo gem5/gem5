@@ -102,7 +102,7 @@ def minorMakeOpClassSet(op_classes):
     def boxOpClass(op_class):
         return MinorOpClass(opClass=op_class)
 
-    return MinorOpClassSet(opClasses=map(boxOpClass, op_classes))
+    return MinorOpClassSet(opClasses=[ boxOpClass(o) for o in op_classes ])
 
 class MinorFU(SimObject):
     type = 'MinorFU'

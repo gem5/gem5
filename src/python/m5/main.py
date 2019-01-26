@@ -261,7 +261,7 @@ def main(*args):
         print()
         print('compiled %s' % defines.compileDate)
         print('build options:')
-        keys = defines.buildEnv.keys()
+        keys = list(defines.buildEnv.keys())
         keys.sort()
         for key in keys:
             val = defines.buildEnv[key]
@@ -289,12 +289,12 @@ def main(*args):
         import SimObject
         done = True
         print("SimObjects:")
-        objects = SimObject.allClasses.keys()
+        objects = list(SimObject.allClasses.keys())
         objects.sort()
         for name in objects:
             obj = SimObject.allClasses[name]
             print("    %s" % obj)
-            params = obj._params.keys()
+            params = list(obj._params.keys())
             params.sort()
             for pname in params:
                 param = obj._params[pname]

@@ -724,7 +724,7 @@ ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
             # For each field
             code.indent()
             code('  case ${{self.c_ident}}_NUM:')
-            for enum in reversed(self.enums.values()):
+            for enum in reversed(list(self.enums.values())):
                 # Check if there is a defined machine with this type
                 if enum.primary:
                     code('    base += ${{enum.ident}}_Controller::getNumControllers();')

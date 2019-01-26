@@ -93,7 +93,7 @@ def txn_generator(nr):
   pr_enabled = 0.5
   bus_widths = [1, 2, 4, 8, 16]
   data_widths = [1, 2, 4, 8, 16] + [1, 2, 4, 8] + [1, 2, 4] + [1, 2]
-  lengths = range(1,33) + range(1,17) + range(1,9) + range(1,5) + range(1,3)
+  lengths = list(range(1,33)) + list(range(1,17)) + list(range(1,9)) + list(range(1,5)) + list(range(1,3))
   pr_short_be = 0.2
   pr_stream = 0.1
   nr_generated = 0
@@ -105,8 +105,8 @@ def txn_generator(nr):
       if data_width <= bus_width:  break
       if random.random() < 0.25:  break
     length = random.choice(lengths)
-    addr_base = random.choice(range(0,1024,bus_width))
-    addr_offset = random.choice(range(bus_width)+[0]*(bus_width/2))
+    addr_base = random.choice(list(range(0,1024,bus_width)))
+    addr_offset = random.choice(list(range(bus_width))+[0]*(bus_width/2))
     txn = transaction(
       bus_width = bus_width,
       data_width = data_width,

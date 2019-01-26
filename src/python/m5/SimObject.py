@@ -168,7 +168,7 @@ def createCxxConfigDirectoryEntryFile(code, name, simobj, is_header):
         code('#include "base/str.hh"')
         code('#include "cxx_config/${name}.hh"')
 
-        if simobj._ports.values() != []:
+        if simobj._ports:
             code('#include "mem/mem_object.hh"')
             code('#include "mem/port.hh"')
 
@@ -726,7 +726,7 @@ module_init(py::module &m_internal)
             for k, v in sorted(cls._params.local.items())
         ] + [
             PyBindProperty("port_%s_connection_count" % port.name)
-            for port in ports.itervalues()
+            for port in ports.values()
         ]
         for exp in param_exports:
             exp.export(code, "%sParams" % cls)
@@ -813,7 +813,7 @@ module_init(py::module &m_internal)
 
         for param in params:
             param.cxx_predecls(code)
-        for port in ports.itervalues():
+        for port in ports.values():
             port.cxx_predecls(code)
         code()
 
@@ -846,7 +846,7 @@ module_init(py::module &m_internal)
 
         for param in params:
             param.cxx_decl(code)
-        for port in ports.itervalues():
+        for port in ports.values():
             port.cxx_decl(code)
 
         code.dedent()
@@ -886,7 +886,8 @@ def cxxMethod(*args, **kwargs):
 
         # Create tuples of (argument, default)
         if defaults:
-            args = args[:-len(defaults)] + zip(args[-len(defaults):], defaults)
+            args = args[:-len(defaults)] + \
+                   list(zip(args[-len(defaults):], defaults))
         # Don't include self in the argument list to PyBind
         args = args[1:]
 
@@ -1118,7 +1119,7 @@ class SimObject(object):
         # Do children before parameter values so that children that
         # are also param values get cloned properly.
         self._children = {}
-        for key,val in ancestor._children.iteritems():
+        for key,val in ancestor._children.items():
             self.add_child(key, val(_memo=memo_dict))
 
         # Inherit parameter values from class using multidict so
@@ -1127,7 +1128,7 @@ class SimObject(object):
         self._values = multidict(ancestor._values)
         self._hr_values = multidict(ancestor._hr_values)
         # clone SimObject-valued parameters
-        for key,val in ancestor._values.iteritems():
+        for key,val in ancestor._values.items():
             val = tryAsSimObjectOrVector(val)
             if val is not None:
                 self._values[key] = val(_memo=memo_dict)
@@ -1135,10 +1136,10 @@ class SimObject(object):
         # clone port references.  no need to use a multidict here
         # since we will be creating new references for all ports.
         self._port_refs = {}
-        for key,val in ancestor._port_refs.iteritems():
+        for key,val in ancestor._port_refs.items():
             self._port_refs[key] = val.clone(self, memo_dict)
         # apply attribute assignments from keyword args, if any
-        for key,val in kwargs.iteritems():
+        for key,val in kwargs.items():
             setattr(self, key, val)
 
     # "Clone" the current instance by creating another instance of
@@ -1310,7 +1311,7 @@ class SimObject(object):
     # that when we instantiate all the parameter objects we're still
     # inside the configuration hierarchy.
     def adoptOrphanParams(self):
-        for key,val in self._values.iteritems():
+        for key,val in self._values.items():
             if not isSimObjectVector(val) and isSimObjectSequence(val):
                 # need to convert raw SimObject sequences to
                 # SimObjectVector class so we can call has_parent()
@@ -1345,7 +1346,7 @@ class SimObject(object):
             return self, True
 
         found_obj = None
-        for child in self._children.itervalues():
+        for child in self._children.values():
             visited = False
             if hasattr(child, '_visited'):
               visited = getattr(child, '_visited')
@@ -1357,7 +1358,7 @@ class SimObject(object):
                           (found_obj.path, child.path))
                 found_obj = child
         # search param space
-        for pname,pdesc in self._params.iteritems():
+        for pname,pdesc in self._params.items():
             if issubclass(pdesc.ptype, ptype):
                 match_obj = self._values[pname]
                 if found_obj != None and found_obj != match_obj:
@@ -1370,7 +1371,7 @@ class SimObject(object):
     def find_all(self, ptype):
         all = {}
         # search children
-        for child in self._children.itervalues():
+        for child in self._children.values():
             # a child could be a list, so ensure we visit each item
             if isinstance(child, list):
                 children = child
@@ -1386,7 +1387,7 @@ class SimObject(object):
                     child_all, done = child.find_all(ptype)
                     all.update(dict(zip(child_all, [done] * len(child_all))))
         # search param space
-        for pname,pdesc in self._params.iteritems():
+        for pname,pdesc in self._params.items():
             if issubclass(pdesc.ptype, ptype):
                 match_obj = self._values[pname]
                 if not isproxy(match_obj) and not isNullPointer(match_obj):
@@ -1399,7 +1400,7 @@ class SimObject(object):
         return self
 
     def unproxyParams(self):
-        for param in self._params.iterkeys():
+        for param in self._params.keys():
             value = self._values.get(param)
             if value != None and isproxy(value):
                 try:
@@ -1412,7 +1413,7 @@ class SimObject(object):
 
         # Unproxy ports in sorted order so that 'append' operations on
         # vector ports are done in a deterministic fashion.
-        port_names = self._ports.keys()
+        port_names = list(self._ports.keys())
         port_names.sort()
         for port_name in port_names:
             port = self._port_refs.get(port_name)
@@ -1489,7 +1490,7 @@ class SimObject(object):
         cc_params = cc_params_struct()
         cc_params.name = str(self)
 
-        param_names = self._params.keys()
+        param_names = list(self._params.keys())
         param_names.sort()
         for param in param_names:
             value = self._values.get(param)
@@ -1513,7 +1514,7 @@ class SimObject(object):
             else:
                 setattr(cc_params, param, value)
 
-        port_names = self._ports.keys()
+        port_names = list(self._ports.keys())
         port_names.sort()
         for port_name in port_names:
             port = self._port_refs.get(port_name, None)
@@ -1550,7 +1551,7 @@ class SimObject(object):
         # The order of the dict is implementation dependent, so sort
         # it based on the key (name) to ensure the order is the same
         # on all hosts
-        for (name, child) in sorted(self._children.iteritems()):
+        for (name, child) in sorted(self._children.items()):
             for obj in child.descendants():
                 yield obj
 
@@ -1567,7 +1568,7 @@ class SimObject(object):
     def connectPorts(self):
         # Sort the ports based on their attribute name to ensure the
         # order is the same on all hosts
-        for (attr, portRef) in sorted(self._port_refs.iteritems()):
+        for (attr, portRef) in sorted(self._port_refs.items()):
             portRef.ccConnect()
 
     # Default function for generating the device structure.
@@ -1577,7 +1578,7 @@ class SimObject(object):
         yield  # make this function a (null) generator
 
     def recurseDeviceTree(self, state):
-        for child in self._children.itervalues():
+        for child in self._children.values():
             for item in child: # For looping over SimObjectVectors
                 for dt in item.generateDeviceTree(state):
                     yield dt

@@ -241,26 +241,26 @@ class BaseCPU(MemObject):
 
     def createInterruptController(self):
         if buildEnv['TARGET_ISA'] == 'sparc':
-            self.interrupts = [SparcInterrupts() for i in xrange(self.numThreads)]
+            self.interrupts = [SparcInterrupts() for i in range(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'alpha':
-            self.interrupts = [AlphaInterrupts() for i in xrange(self.numThreads)]
+            self.interrupts = [AlphaInterrupts() for i in range(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'x86':
             self.apic_clk_domain = DerivedClockDomain(clk_domain =
                                                       Parent.clk_domain,
                                                       clk_divider = 16)
             self.interrupts = [X86LocalApic(clk_domain = self.apic_clk_domain,
                                            pio_addr=0x2000000000000000)
-                               for i in xrange(self.numThreads)]
+                               for i in range(self.numThreads)]
             _localApic = self.interrupts
         elif buildEnv['TARGET_ISA'] == 'mips':
-            self.interrupts = [MipsInterrupts() for i in xrange(self.numThreads)]
+            self.interrupts = [MipsInterrupts() for i in range(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'arm':
-            self.interrupts = [ArmInterrupts() for i in xrange(self.numThreads)]
+            self.interrupts = [ArmInterrupts() for i in range(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'power':
-            self.interrupts = [PowerInterrupts() for i in xrange(self.numThreads)]
+            self.interrupts = [PowerInterrupts() for i in range(self.numThreads)]
         elif buildEnv['TARGET_ISA'] == 'riscv':
             self.interrupts = \
-                [RiscvInterrupts() for i in xrange(self.numThreads)]
+                [RiscvInterrupts() for i in range(self.numThreads)]
         else:
             print("Don't know what Interrupt Controller to use for ISA %s" %
                   buildEnv['TARGET_ISA'])
@@ -318,7 +318,7 @@ class BaseCPU(MemObject):
         # If no ISAs have been created, assume that the user wants the
         # default ISA.
         if len(self.isa) == 0:
-            self.isa = [ default_isa_class() for i in xrange(self.numThreads) ]
+            self.isa = [ default_isa_class() for i in range(self.numThreads) ]
         else:
             if len(self.isa) != int(self.numThreads):
                 raise RuntimeError("Number of ISA instances doesn't "

@@ -138,17 +138,11 @@ class SmartDict(attrdict):
         dict.__setitem__(self, key, str(item))
 
     def values(self):
-        return [ Variable(v) for v in dict.values(self) ]
-
-    def itervalues(self):
-        for value in dict.itervalues(self):
+        for value in dict.values(self):
             yield Variable(value)
 
     def items(self):
-        return [ (k, Variable(v)) for k,v in dict.items(self) ]
-
-    def iteritems(self):
-        for key,value in dict.iteritems(self):
+        for key,value in dict.items(self):
             yield key, Variable(value)
 
     def get(self, key, default='False'):

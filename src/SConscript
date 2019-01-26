@@ -826,7 +826,7 @@ buildEnv = m5.util.SmartDict($build_env)
 
 compileDate = _m5.core.compileDate
 _globals = globals()
-for key,val in _m5.core.__dict__.iteritems():
+for key,val in _m5.core.__dict__.items():
     if key.startswith('flag_'):
         flag = key[5:]
         _globals[flag] = val

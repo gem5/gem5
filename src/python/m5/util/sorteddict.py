@@ -41,7 +41,7 @@ class SortedDict(dict):
         try:
             return self._sorted_keys
         except AttributeError:
-            _sorted_keys = self.sorted(dict.iterkeys(self))
+            _sorted_keys = self.sorted(dict.keys(self))
             self._sorted_keys = _sorted_keys
             return _sorted_keys
 
@@ -89,7 +89,7 @@ class SortedDict(dict):
 
     def __repr__(self):
         return 'SortedDict({%s})' % ', '.join('%r: %r' % item
-                                              for item in self.iteritems())
+                                              for item in self.items())
     def __setitem__(self, key, item):
         dict.__setitem__(self, key, item)
         self._del_keys()
@@ -107,22 +107,13 @@ class SortedDict(dict):
         return t(self)
 
     def keys(self):
-        return self._keys[:]
+        return self._keys
 
     def values(self):
-        return list(self.itervalues())
-
-    def items(self):
-        return list(self.iteritems())
-
-    def iterkeys(self):
-        return iter(self._keys)
-
-    def itervalues(self):
         for k in self._keys:
             yield self[k]
 
-    def iteritems(self):
+    def items(self):
         for k in self._keys:
             yield k, self[k]
 
@@ -184,12 +175,12 @@ class SortedDict(dict):
 if __name__ == '__main__':
     def display(d):
         print(d)
-        print(d.keys())
-        print(list(d.iterkeys()))
-        print(d.values())
-        print(list(d.itervalues()))
-        print(d.items())
-        print(list(d.iteritems()))
+        print(list(d.keys()))
+        print(list(d.keys()))
+        print(list(d.values()))
+        print(list(d.values()))
+        print(list(d.items()))
+        print(list(d.items()))
 
     d = SortedDict(x=24,e=5,j=4,b=2,z=26,d=4)
     display(d)

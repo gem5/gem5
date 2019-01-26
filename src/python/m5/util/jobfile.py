@@ -40,7 +40,7 @@ class Data(object):
         if not isinstance(obj, Data):
             raise AttributeError("can only update from Data object")
 
-        for key,val in obj.__dict__.iteritems():
+        for key,val in obj.__dict__.items():
             if key.startswith('_') or key in ('name', 'desc'):
                 continue
 
@@ -57,7 +57,7 @@ class Data(object):
                     (key, self.__dict__[key], val))
 
             d = self.__dict__[key]
-            for k,v in val.iteritems():
+            for k,v in val.items():
                 if k in d:
                     raise AttributeError(
                         "%s specified more than once in %s" % (k, key))
@@ -100,7 +100,7 @@ class Data(object):
         return self.__dict__[key]
 
     def __iter__(self):
-        keys = self.__dict__.keys()
+        keys = list(self.__dict__.keys())
         keys.sort()
         for key in keys:
             if not key.startswith('_'):
@@ -115,7 +115,7 @@ class Data(object):
 
     def __repr__(self):
         d = {}
-        for key,value in self.__dict__.iteritems():
+        for key,value in self.__dict__.items():
             if not key.startswith('_'):
                 d[key] = value
 
