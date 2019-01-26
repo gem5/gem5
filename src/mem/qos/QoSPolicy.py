@@ -35,6 +35,8 @@
 #
 # Authors: Giacomo Travaglini
 
+from six import string_types
+
 from m5.SimObject import *
 from m5.params import *
 
@@ -71,7 +73,7 @@ class QoSFixedPriorityPolicy(QoSPolicy):
             for mprio in self._mpriorities:
                 master = mprio[0]
                 priority = mprio[1]
-                if isinstance(master, basestring):
+                if isinstance(master, string_types):
                     self.getCCObject().initMasterName(
                         master, int(priority))
                 else:
@@ -108,7 +110,7 @@ class QoSPropFairPolicy(QoSPolicy):
             for mprio in self._mscores:
                 master = mprio[0]
                 score = mprio[1]
-                if isinstance(master, basestring):
+                if isinstance(master, string_types):
                     self.getCCObject().initMasterName(
                         master, float(score))
                 else:

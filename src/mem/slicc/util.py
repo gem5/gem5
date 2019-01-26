@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import print_function
+from six import string_types
 
 import os
 import sys
@@ -49,7 +50,7 @@ class PairContainer(object):
 
 class Location(object):
     def __init__(self, filename, lineno, no_warning=False):
-        if not isinstance(filename, basestring):
+        if not isinstance(filename, string_types):
             raise AttributeError, \
                 "filename must be a string, found '%s'" % (type(filename), )
         if not isinstance(lineno, (int, long)):

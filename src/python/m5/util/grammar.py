@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+from six import string_types
 
 import ply.lex
 import ply.yacc
@@ -93,7 +94,7 @@ class Grammar(object):
             "'%s' object has no attribute '%s'" % (type(self), attr))
 
     def parse_string(self, data, source='<string>', debug=None, tracking=0):
-        if not isinstance(data, basestring):
+        if not isinstance(data, string_types):
             raise AttributeError(
                 "argument must be a string, was '%s'" % type(f))
 
@@ -113,7 +114,7 @@ class Grammar(object):
         return result
 
     def parse_file(self, f, **kwargs):
-        if isinstance(f, basestring):
+        if isinstance(f, string_types):
             source = f
             f = open(f, 'r')
         elif isinstance(f, file):
