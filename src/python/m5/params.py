@@ -829,8 +829,11 @@ class Bool(ParamValue):
 
     # implement truth value testing for Bool parameters so that these params
     # evaluate correctly during the python configuration phase
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.value)
+
+    # Python 2.7 uses __nonzero__ instead of __bool__
+    __nonzero__ = __bool__
 
     def ini_str(self):
         if self.value:
