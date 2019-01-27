@@ -365,7 +365,7 @@ class BaseCPU(MemObject):
                 warn("Platform not found for device tree generation; " \
                      "system or multiple CPUs may not start")
 
-            freq = round(self.clk_domain.unproxy(self).clock[0].frequency)
+            freq = int(self.clk_domain.unproxy(self).clock[0].frequency)
             node.append(FdtPropertyWords("clock-frequency", freq))
 
             # Unique key for this CPU

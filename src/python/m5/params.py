@@ -606,6 +606,9 @@ class CheckedInt(NumericParamValue):
         self.__init__(value)
         return value
 
+    def __index__(self):
+        return int(self.value)
+
     @classmethod
     def cxx_predecls(cls, code):
         # most derived types require this, so we just do it here once
