@@ -116,6 +116,3 @@ for (i, ruby_port) in enumerate(system.ruby._cpu_ports):
 
 root = Root(full_system = False, system = system)
 root.system.mem_mode = 'timing'
-
-# Not much point in this being higher than the L1 latency
-m5.ticks.setGlobalFrequency('1ns')
