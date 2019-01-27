@@ -187,13 +187,15 @@ class AttrProxy(BaseProxy):
             if hasattr(val, '_visited'):
                 visited = getattr(val, '_visited')
 
-            if not visited:
+            if visited:
+                return None, False
+
+            if not isproxy(val):
                 # for any additional unproxying to be done, pass the
                 # current, rather than the original object so that proxy
                 # has the right context
                 obj = val
-            else:
-                return None, False
+
         except:
             return None, False
         while isproxy(val):
