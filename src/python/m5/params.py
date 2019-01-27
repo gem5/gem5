@@ -454,6 +454,10 @@ class String(ParamValue,str):
 # operations in a type-safe way.  e.g., a Latency times an int returns
 # a new Latency object.
 class NumericParamValue(ParamValue):
+    @staticmethod
+    def unwrap(v):
+        return v.value if isinstance(v, NumericParamValue) else v
+
     def __str__(self):
         return str(self.value)
 
@@ -472,23 +476,69 @@ class NumericParamValue(ParamValue):
 
     def __mul__(self, other):
         newobj = self.__class__(self)
-        newobj.value *= other
+        newobj.value *= NumericParamValue.unwrap(other)
         newobj._check()
         return newobj
 
     __rmul__ = __mul__
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         newobj = self.__class__(self)
-        newobj.value /= other
+        newobj.value /= NumericParamValue.unwrap(other)
+        newobj._check()
+        return newobj
+
+    def __floordiv__(self, other):
+        newobj = self.__class__(self)
+        newobj.value //= NumericParamValue.unwrap(other)
+        newobj._check()
+        return newobj
+
+
+    def __add__(self, other):
+        newobj = self.__class__(self)
+        newobj.value += NumericParamValue.unwrap(other)
         newobj._check()
         return newobj
 
     def __sub__(self, other):
         newobj = self.__class__(self)
-        newobj.value -= other
+        newobj.value -= NumericParamValue.unwrap(other)
         newobj._check()
         return newobj
+
+    def __iadd__(self, other):
+        self.value += NumericParamValue.unwrap(other)
+        self._check()
+        return self
+
+    def __isub__(self, other):
+        self.value -= NumericParamValue.unwrap(other)
+        self._check()
+        return self
+
+    def __imul__(self, other):
+        self.value *= NumericParamValue.unwrap(other)
+        self._check()
+        return self
+
+    def __itruediv__(self, other):
+        self.value /= NumericParamValue.unwrap(other)
+        self._check()
+        return self
+
+    def __ifloordiv__(self, other):
+        self.value //= NumericParamValue.unwrap(other)
+        self._check()
+        return self
+
+    def __lt__(self, other):
+        return self.value < NumericParamValue.unwrap(other)
+
+    # Python 2.7 pre __future__.division operators
+    # TODO: Remove these when after "import division from __future__"
+    __div__ =  __truediv__
+    __idiv__ = __itruediv__
 
     def config_value(self):
         return self.value
