@@ -83,7 +83,7 @@ arm_fs_long_tests = [
     'realview64-simple-timing-dual-ruby',
 ]
 
-tarball = 'aarch-system-2014-10.tar.bz2'
+tarball = 'aarch-system-201901106.tar.bz2'
 url = "http://gem5.org/dist/current/arm/" + tarball
 path = os.path.dirname(os.path.abspath(__file__))
 arm_fs_binaries = DownloadedArchive(url, path, tarball)

@@ -1,4 +1,4 @@
-# Copyright (c) 2017 ARM Limited
+# Copyright (c) 2017, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -38,7 +38,8 @@
 from m5.objects import *
 from arm_generic import *
 
-root = LinuxArmFSSystemUniprocessor(mem_mode='timing',
+root = LinuxArmFSSystemUniprocessor(aarch64_kernel=False,
+                                    mem_mode='timing',
                                     mem_class=DDR3_1600_8x8,
                                     cpu_class=TimingSimpleCPU,
                                     use_ruby=True).create_root()

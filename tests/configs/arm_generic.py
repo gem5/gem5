@@ -73,7 +73,7 @@ class LinuxArmSystemBuilder(object):
     ARM-specific create_system method to a class deriving from one of
     the generic base systems.
     """
-    def __init__(self, machine_type, **kwargs):
+    def __init__(self, machine_type, aarch64_kernel, **kwargs):
         """
         Arguments:
           machine_type -- String describing the platform to simulate
@@ -84,9 +84,21 @@ class LinuxArmSystemBuilder(object):
         self.num_cpus = kwargs.get('num_cpus', 1)
         self.mem_size = kwargs.get('mem_size', '256MB')
         self.use_ruby = kwargs.get('use_ruby', False)
+        self.aarch64_kernel = aarch64_kernel
 
     def create_system(self):
-        sc = SysConfig(None, self.mem_size, None)
+        if self.aarch64_kernel:
+            gem5_kernel = "vmlinux.arm64"
+            disk_image = "m5_exit.squashfs.arm64"
+        else:
+            gem5_kernel = "vmlinux.arm"
+            disk_image = "m5_exit.squashfs.arm"
+
+        default_kernels = {
+            "VExpress_GEM5_V1": gem5_kernel,
+        }
+
+        sc = SysConfig(None, self.mem_size, disk_image, "/dev/sda")
         system = FSConfig.makeArmSystem(self.mem_mode,
                                         self.machine_type, self.num_cpus,
                                         sc, False, ruby=self.use_ruby)
@@ -97,26 +109,21 @@ class LinuxArmSystemBuilder(object):
         system.panic_on_panic = True
         system.panic_on_oops = True
 
-        default_kernels = {
-            "VExpress_EMM": "vmlinux.aarch32.ll_20131205.0-gem5",
-            "VExpress_EMM64": "vmlinux.aarch64.20140821",
-        }
         system.kernel = SysPaths.binary(default_kernels[self.machine_type])
-        default_dtbs = {
-           "VExpress_EMM": "vexpress.aarch32.ll_20131205.0-gem5.{}cpu.dtb" \
-             .format(self.num_cpus),
-           "VExpress_EMM64": "vexpress.aarch64.20140821.dtb",
-        }
-        system.dtb_filename = SysPaths.binary(default_dtbs[self.machine_type])
 
         self.init_system(system)
+
+        system.generateDtb(m5.options.outdir, 'system.dtb')
         return system
 
 class LinuxArmFSSystem(LinuxArmSystemBuilder,
                        BaseFSSystem):
     """Basic ARM full system builder."""
 
-    def __init__(self, machine_type='VExpress_EMM', **kwargs):
+    def __init__(self,
+                 machine_type='VExpress_GEM5_V1',
+                 aarch64_kernel=True,
+                 **kwargs):
         """Initialize an ARM system that supports full system simulation.
 
         Note: Keyword arguments that are not listed below will be
@@ -126,7 +133,8 @@ class LinuxArmFSSystem(LinuxArmSystemBuilder,
           machine_type -- String describing the platform to simulate
         """
         BaseFSSystem.__init__(self, **kwargs)
-        LinuxArmSystemBuilder.__init__(self, machine_type, **kwargs)
+        LinuxArmSystemBuilder.__init__(
+            self, machine_type, aarch64_kernel, **kwargs)
 
     def create_caches_private(self, cpu):
         # Use the more representative cache configuration
@@ -143,13 +151,21 @@ class LinuxArmFSSystemUniprocessor(LinuxArmSystemBuilder,
     test cases.
     """
 
-    def __init__(self, machine_type='VExpress_EMM', **kwargs):
+    def __init__(self,
+                 machine_type='VExpress_GEM5_V1',
+                 aarch64_kernel=True,
+                 **kwargs):
         BaseFSSystemUniprocessor.__init__(self, **kwargs)
-        LinuxArmSystemBuilder.__init__(self, machine_type, **kwargs)
+        LinuxArmSystemBuilder.__init__(
+            self, machine_type, aarch64_kernel, **kwargs)
 
 class LinuxArmFSSwitcheroo(LinuxArmSystemBuilder, BaseFSSwitcheroo):
     """Uniprocessor ARM system prepared for CPU switching"""
 
-    def __init__(self, machine_type='VExpress_EMM', **kwargs):
+    def __init__(self,
+                 machine_type='VExpress_GEM5_V1',
+                 aarch64_kernel=True,
+                 **kwargs):
         BaseFSSwitcheroo.__init__(self, **kwargs)
-        LinuxArmSystemBuilder.__init__(self, machine_type, **kwargs)
+        LinuxArmSystemBuilder.__init__(
+            self, machine_type, aarch64_kernel, **kwargs)

@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -38,7 +38,8 @@
 from m5.objects import *
 from arm_generic import *
 
-root = LinuxArmFSSystem(mem_mode='atomic',
+root = LinuxArmFSSystem(aarch64_kernel=False,
+                        mem_mode='atomic',
                         mem_class=SimpleMemory,
                         cpu_class=AtomicSimpleCPU,
                         num_cpus=2).create_root()

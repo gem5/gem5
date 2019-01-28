@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -38,7 +38,6 @@
 from m5.objects import *
 from arm_generic import *
 
-root = LinuxArmFSSystemUniprocessor(machine_type='VExpress_EMM64',
-                                    mem_mode='timing',
+root = LinuxArmFSSystemUniprocessor(mem_mode='timing',
                                     mem_class=DDR3_1600_8x8,
                                     cpu_class=TimingSimpleCPU).create_root()

@@ -1,4 +1,4 @@
-# Copyright (c) 2012 ARM Limited
+# Copyright (c) 2012, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -40,6 +40,7 @@ from arm_generic import *
 import switcheroo
 
 root = LinuxArmFSSwitcheroo(
+    aarch64_kernel=False,
     mem_class=DDR3_1600_8x8,
     cpu_classes=(DerivO3CPU, DerivO3CPU)
     ).create_root()

@@ -994,7 +994,7 @@ Interrupts:
 
     def setupBootLoader(self, cur_sys, loc):
         if not cur_sys.boot_loader:
-            cur_sys.boot_loader = [ loc('boot_emm.arm64'), loc('boot_emm.arm') ]
+            cur_sys.boot_loader = [ loc('boot.arm64'), loc('boot.arm') ]
         cur_sys.atags_addr = 0x8000000
         cur_sys.load_offset = 0x80000000
 
@@ -1054,7 +1054,7 @@ class VExpress_GEM5_V2_Base(VExpress_GEM5_Base):
             ]
 
     def setupBootLoader(self, cur_sys, loc):
-        cur_sys.boot_loader = [ loc('boot_emm_v2.arm64') ]
+        cur_sys.boot_loader = [ loc('boot_v2.arm64') ]
         super(VExpress_GEM5_V2_Base,self).setupBootLoader(
                 cur_sys, loc)
 
