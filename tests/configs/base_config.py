@@ -288,7 +288,7 @@ class BaseFSSystem(BaseSystem):
                                            response_latency = 20,
                                            tgts_per_mshr = 8)
                           for r in system.mem_ranges]
-            for i in xrange(len(system.physmem)):
+            for i in range(len(system.physmem)):
                 system.physmem[i].port = system.llc[i].mem_side
                 system.llc[i].cpu_side = system.membus.master
 

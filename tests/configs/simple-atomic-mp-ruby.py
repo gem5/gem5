@@ -30,7 +30,7 @@ import m5
 from m5.objects import *
 
 nb_cores = 4
-cpus = [ AtomicSimpleCPU(cpu_id=i) for i in xrange(nb_cores) ]
+cpus = [ AtomicSimpleCPU(cpu_id=i) for i in range(nb_cores) ]
 
 import ruby_config
 ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)

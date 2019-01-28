@@ -59,7 +59,7 @@ options.l2_assoc=2
 options.l3_assoc=2
 
 nb_cores = 4
-cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(nb_cores) ]
+cpus = [ TimingSimpleCPU(cpu_id=i) for i in range(nb_cores) ]
 
 # overwrite the num_cpus to equal nb_cores
 options.num_cpus = nb_cores

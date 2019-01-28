@@ -85,7 +85,7 @@ args = parser.parse_args()
 executable = args.executable
 
 for config in args.config:
-    execfile(config)
+    exec(compile(open(config).read(), config, 'exec'))
 
 # Initialize all CPUs in a system
 def initCPUs(sys):

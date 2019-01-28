@@ -63,7 +63,7 @@ system.clk_domain = SrcClockDomain(clock = '1GHz',
 system.cpu_clk_domain = SrcClockDomain(clock = '2GHz',
                                        voltage_domain = system.voltage_domain)
 system.cpu = [TimingSimpleCPU(cpu_id=i, clk_domain = system.cpu_clk_domain)
-              for i in xrange(options.num_cpus)]
+              for i in range(options.num_cpus)]
 
 Ruby.create_system(options, True, system, system.iobus, system._dma_ports)
 
