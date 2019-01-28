@@ -177,6 +177,32 @@ def srcpath(path):
     """Path to file in gem5's source tree"""
     return joinpath(os.path.dirname(__file__), "..", path)
 
+def run_config(config, argv=None):
+    """Execute a configuration script that is external to the test system"""
+
+    src_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
+    abs_path = joinpath(src_root, config)
+
+    code = compile(open(abs_path, 'r').read(), abs_path, 'exec')
+    scope = {
+        '__file__' : config,
+        '__name__' : '__m5_main__',
+    }
+
+    # Set the working directory in case we are executing from
+    # outside gem5's source tree
+    os.chdir(src_root)
+
+    # gem5 normally adds the script's directory to the path to make
+    # script-relative imports work.
+    sys.path = [ os.path.dirname(abs_path), ] + sys.path
+
+    if argv is None:
+        sys.argv = [ config, ]
+    else:
+        sys.argv = argv
+    exec(code, scope)
+
 # build configuration
 sys.path.append(joinpath(tests_root, 'configs'))
 test_filename = config
