@@ -42,238 +42,42 @@
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
-#include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Fetch.hh"
 #include "debug/LTage.hh"
 
 LTAGE::LTAGE(const LTAGEParams *params)
-  : TAGE(params),
-    logSizeLoopPred(params->logSizeLoopPred),
-    loopTableAgeBits(params->loopTableAgeBits),
-    loopTableConfidenceBits(params->loopTableConfidenceBits),
-    loopTableTagBits(params->loopTableTagBits),
-    loopTableIterBits(params->loopTableIterBits),
-    logLoopTableAssoc(params->logLoopTableAssoc),
-    confidenceThreshold((1 << loopTableConfidenceBits) - 1),
-    loopTagMask((1 << loopTableTagBits) - 1),
-    loopNumIterMask((1 << loopTableIterBits) - 1),
-    loopSetMask((1 << (logSizeLoopPred - logLoopTableAssoc)) - 1),
-    loopUseCounter(0),
-    withLoopBits(params->withLoopBits),
-    useDirectionBit(params->useDirectionBit),
-    useSpeculation(params->useSpeculation),
-    useHashing(params->useHashing)
+  : TAGE(params), loopPredictor(params->loop_predictor)
 {
-    // we use uint16_t type for these vales, so they cannot be more than
-    // 16 bits
-    assert(loopTableTagBits <= 16);
-    assert(loopTableIterBits <= 16);
-
-    assert(logSizeLoopPred >= logLoopTableAssoc);
-
-    ltable = new LoopEntry[ULL(1) << logSizeLoopPred];
-}
-
-int
-LTAGE::lindex(Addr pc_in) const
-{
-    // The loop table is implemented as a linear table
-    // If associativity is N (N being 1 << logLoopTableAssoc),
-    // the first N entries are for set 0, the next N entries are for set 1,
-    // and so on.
-    // Thus, this function calculates the set and then it gets left shifted
-    // by logLoopTableAssoc in order to return the index of the first of the
-    // N entries of the set
-    Addr mask = (ULL(1) << (logSizeLoopPred - logLoopTableAssoc)) - 1;
-    Addr pc = pc_in >> instShiftAmt;
-    if (useHashing) {
-        // copied from TAGE-SC-L
-        // (http://www.jilp.org/cbp2016/code/AndreSeznecLimited.tar.gz)
-        pc ^= (pc_in >> (instShiftAmt + logLoopTableAssoc));
-    }
-    return ((pc & mask) << logLoopTableAssoc);
-}
-
-int
-LTAGE::finallindex(int index, int lowPcBits, int way) const
-{
-    // copied from TAGE-SC-L
-    // (http://www.jilp.org/cbp2016/code/AndreSeznecLimited.tar.gz)
-    return (useHashing ? (index ^ ((lowPcBits >> way) << logLoopTableAssoc)) :
-                         (index))
-           + way;
-}
-
-//loop prediction: only used if high confidence
-bool
-LTAGE::getLoop(Addr pc, LTageBranchInfo* bi, bool speculative) const
-{
-    bi->loopHit = -1;
-    bi->loopPredValid = false;
-    bi->loopIndex = lindex(pc);
-    unsigned pcShift = instShiftAmt + logSizeLoopPred - logLoopTableAssoc;
-    bi->loopTag = ((pc) >> pcShift) & loopTagMask;
-
-    if (useHashing) {
-        bi->loopTag ^= ((pc >> (pcShift + logSizeLoopPred)) & loopTagMask);
-        bi->loopLowPcBits = (pc >> pcShift) & loopSetMask;
-    }
-
-    for (int i = 0; i < (1 << logLoopTableAssoc); i++) {
-        int idx = finallindex(bi->loopIndex, bi->loopLowPcBits, i);
-        if (ltable[idx].tag == bi->loopTag) {
-            bi->loopHit = i;
-            bi->loopPredValid =
-                ltable[idx].confidence == confidenceThreshold;
-
-            uint16_t iter = speculative ? ltable[idx].currentIterSpec
-                                        : ltable[idx].currentIter;
-
-            if ((iter + 1) == ltable[idx].numIter) {
-                return useDirectionBit ? !(ltable[idx].dir) : false;
-            } else {
-                return useDirectionBit ? (ltable[idx].dir) : true;
-            }
-        }
-    }
-    return false;
-}
-
-void
-LTAGE::specLoopUpdate(bool taken, LTageBranchInfo* bi)
-{
-    if (bi->loopHit>=0) {
-        int index = finallindex(bi->loopIndex, bi->loopLowPcBits, bi->loopHit);
-        if (taken != ltable[index].dir) {
-            ltable[index].currentIterSpec = 0;
-        } else {
-            ltable[index].currentIterSpec =
-                (ltable[index].currentIterSpec + 1) & loopNumIterMask;
-        }
-    }
-}
-
-void
-LTAGE::loopUpdate(Addr pc, bool taken, LTageBranchInfo* bi)
-{
-    int idx = finallindex(bi->loopIndex, bi->loopLowPcBits, bi->loopHit);
-    if (bi->loopHit >= 0) {
-        //already a hit
-        if (bi->loopPredValid) {
-            if (taken != bi->loopPred) {
-                // free the entry
-                ltable[idx].numIter = 0;
-                ltable[idx].age = 0;
-                ltable[idx].confidence = 0;
-                ltable[idx].currentIter = 0;
-                return;
-            } else if (bi->loopPred != bi->tageBranchInfo->tagePred) {
-                DPRINTF(LTage, "Loop Prediction success:%lx\n",pc);
-                TAGEBase::unsignedCtrUpdate(ltable[idx].age, true,
-                                            loopTableAgeBits);
-            }
-        }
-
-        ltable[idx].currentIter =
-            (ltable[idx].currentIter + 1) & loopNumIterMask;
-        if (ltable[idx].currentIter > ltable[idx].numIter) {
-            ltable[idx].confidence = 0;
-            if (ltable[idx].numIter != 0) {
-                // free the entry
-                ltable[idx].numIter = 0;
-                ltable[idx].age = 0;
-                ltable[idx].confidence = 0;
-            }
-        }
-
-        if (taken != (useDirectionBit ? ltable[idx].dir : true)) {
-            if (ltable[idx].currentIter == ltable[idx].numIter) {
-                DPRINTF(LTage, "Loop End predicted successfully:%lx\n", pc);
-
-                TAGEBase::unsignedCtrUpdate(ltable[idx].confidence, true,
-                                  loopTableConfidenceBits);
-                //just do not predict when the loop count is 1 or 2
-                if (ltable[idx].numIter < 3) {
-                    // free the entry
-                    ltable[idx].dir = taken; // ignored if no useDirectionBit
-                    ltable[idx].numIter = 0;
-                    ltable[idx].age = 0;
-                    ltable[idx].confidence = 0;
-                }
-            } else {
-                DPRINTF(LTage, "Loop End predicted incorrectly:%lx\n", pc);
-                if (ltable[idx].numIter == 0) {
-                    // first complete nest;
-                    ltable[idx].confidence = 0;
-                    ltable[idx].numIter = ltable[idx].currentIter;
-                } else {
-                    //not the same number of iterations as last time: free the
-                    //entry
-                    ltable[idx].numIter = 0;
-                    ltable[idx].age = 0;
-                    ltable[idx].confidence = 0;
-                }
-            }
-            ltable[idx].currentIter = 0;
-        }
-
-    } else if (useDirectionBit ?
-                ((bi->loopPredValid ?
-                    bi->loopPred : bi->tageBranchInfo->tagePred) != taken) :
-                taken) {
-        //try to allocate an entry on taken branch
-        int nrand = TAGEBase::getRandom();
-        for (int i = 0; i < (1 << logLoopTableAssoc); i++) {
-            int loop_hit = (nrand + i) & ((1 << logLoopTableAssoc) - 1);
-            idx = bi->loopIndex + loop_hit;
-            if (ltable[idx].age == 0) {
-                DPRINTF(LTage, "Allocating loop pred entry for branch %lx\n",
-                        pc);
-                ltable[idx].dir = !taken; // ignored if no useDirectionBit
-                ltable[idx].tag = bi->loopTag;
-                ltable[idx].numIter = 0;
-                ltable[idx].age = (1 << loopTableAgeBits) - 1;
-                ltable[idx].confidence = 0;
-                ltable[idx].currentIter = 1;
-                break;
-
-            }
-            else
-                ltable[idx].age--;
-        }
-    }
-
 }
 
 //prediction
 bool
 LTAGE::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
 {
-    LTageBranchInfo *bi = new LTageBranchInfo(*tage);
+    LTageBranchInfo *bi = new LTageBranchInfo(*tage, *loopPredictor);
     b = (void*)(bi);
 
     bool pred_taken = tage->tagePredict(tid, branch_pc, cond_branch,
                                         bi->tageBranchInfo);
 
+    pred_taken = loopPredictor->loopPredict(tid, branch_pc, cond_branch,
+                                            bi->lpBranchInfo, pred_taken,
+                                            instShiftAmt);
     if (cond_branch) {
-        // loop prediction
-        bi->loopPred = getLoop(branch_pc, bi, useSpeculation);
-
-        if ((loopUseCounter >= 0) && bi->loopPredValid) {
-            pred_taken = bi->loopPred;
+        if (bi->lpBranchInfo->loopPredUsed) {
             bi->tageBranchInfo->provider = LOOP;
         }
         DPRINTF(LTage, "Predict for %lx: taken?:%d, loopTaken?:%d, "
                 "loopValid?:%d, loopUseCounter:%d, tagePred:%d, altPred:%d\n",
-                branch_pc, pred_taken, bi->loopPred, bi->loopPredValid,
-                loopUseCounter, bi->tageBranchInfo->tagePred,
-                bi->tageBranchInfo->altTaken);
-
-        if (useSpeculation) {
-            specLoopUpdate(pred_taken, bi);
-        }
+                branch_pc, pred_taken, bi->lpBranchInfo->loopPred,
+                bi->lpBranchInfo->loopPredValid,
+                loopPredictor->getLoopUseCounter(),
+                bi->tageBranchInfo->tagePred, bi->tageBranchInfo->altTaken);
     }
+
+    // record final prediction
+    bi->lpBranchInfo->predTaken = pred_taken;
 
     return pred_taken;
 }
@@ -286,12 +90,17 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
 
     LTageBranchInfo* bi = static_cast<LTageBranchInfo*>(bp_history);
 
+    assert(corrTarget != MaxAddr);
+
     if (squashed) {
         if (tage->isSpeculativeUpdateEnabled()) {
             // This restores the global history, then update it
             // and recomputes the folded histories.
             tage->squash(tid, taken, bi->tageBranchInfo, corrTarget);
-            squashLoop(bi);
+
+            if (bi->tageBranchInfo->condBranch) {
+                loopPredictor->squashLoop(bi->lpBranchInfo);
+            }
         }
         return;
     }
@@ -301,31 +110,13 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
         DPRINTF(LTage, "Updating tables for branch:%lx; taken?:%d\n",
                 branch_pc, taken);
         tage->updateStats(taken, bi->tageBranchInfo);
-        // update stats
-        if (bi->tageBranchInfo->provider == LOOP) {
-            if (taken == bi->loopPred) {
-                loopPredictorCorrect++;
-            } else {
-                loopPredictorWrong++;
-            }
-        }
-        // cond Branch Update
-        if (useSpeculation) {
-            // recalculate loop prediction without speculation
-            // It is ok to overwrite the loop prediction fields in bi
-            // as the stats have already been updated with the previous
-            // values
-            bi->loopPred = getLoop(branch_pc, bi, false);
-        }
-        if (bi->loopPredValid) {
-            if (bi->tageBranchInfo->tagePred != bi->loopPred) {
-                TAGEBase::ctrUpdate(loopUseCounter,
-                        (bi->loopPred == taken),
-                        withLoopBits);
-            }
-        }
 
-        loopUpdate(branch_pc, taken, bi);
+        loopPredictor->updateStats(taken, bi->lpBranchInfo);
+
+        loopPredictor->condBranchUpdate(tid, branch_pc, taken,
+            bi->tageBranchInfo->tagePred, bi->lpBranchInfo, instShiftAmt,
+            TAGEBase::getRandom(), TAGEBase::getRandom(),
+            TAGEBase::getRandom());
 
         tage->condBranchUpdate(tid, branch_pc, taken, bi->tageBranchInfo,
                                nrand, corrTarget);
@@ -338,25 +129,12 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
 }
 
 void
-LTAGE::squashLoop(LTageBranchInfo* bi)
-{
-    if (bi->tageBranchInfo->condBranch) {
-        if (bi->loopHit >= 0) {
-            int idx = finallindex(bi->loopIndex,
-                                  bi->loopLowPcBits,
-                                  bi->loopHit);
-            ltable[idx].currentIterSpec = bi->currentIter;
-        }
-    }
-}
-
-void
 LTAGE::squash(ThreadID tid, void *bp_history)
 {
     LTageBranchInfo* bi = (LTageBranchInfo*)(bp_history);
 
     if (bi->tageBranchInfo->condBranch) {
-        squashLoop(bi);
+        loopPredictor->squash(tid, bi->lpBranchInfo);
     }
 
     TAGE::squash(tid, bp_history);
@@ -366,19 +144,7 @@ void
 LTAGE::regStats()
 {
     TAGE::regStats();
-
-    loopPredictorCorrect
-        .name(name() + ".loopPredictorCorrect")
-        .desc("Number of times the loop predictor is the provider and "
-              "the prediction is correct");
-
-    loopPredictorWrong
-        .name(name() + ".loopPredictorWrong")
-        .desc("Number of times the loop predictor is the provider and "
-              "the prediction is wrong");
 }
-
-
 
 LTAGE*
 LTAGEParams::create()

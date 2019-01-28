@@ -145,16 +145,10 @@ class LTAGE_TAGE(TAGEBase):
     logTagTableSizes = [14, 10, 10, 11, 11, 11, 11, 10, 10, 10, 10, 9, 9]
     logUResetPeriod = 19
 
-# LTAGE branch predictor as described in
-# https://www.irisa.fr/caps/people/seznec/L-TAGE.pdf
-# It is basically a TAGE predictor plus a loop predictor
-# The differnt TAGE sizes are updated according to the paper values (256 Kbits)
-class LTAGE(TAGE):
-    type = 'LTAGE'
-    cxx_class = 'LTAGE'
-    cxx_header = "cpu/pred/ltage.hh"
-
-    tage = LTAGE_TAGE()
+class LoopPredictor(SimObject):
+    type = 'LoopPredictor'
+    cxx_class = 'LoopPredictor'
+    cxx_header = 'cpu/pred/loop_predictor.hh'
 
     logSizeLoopPred = Param.Unsigned(8, "Log size of the loop predictor")
     withLoopBits = Param.Unsigned(7, "Size of the WITHLOOP counter")
@@ -166,8 +160,8 @@ class LTAGE(TAGE):
     logLoopTableAssoc = Param.Unsigned(2, "Log loop predictor associativity")
 
     # Parameters for enabling modifications to the loop predictor
-    # They have been copied from ISL-TAGE
-    # (https://www.jilp.org/jwac-2/program/03_seznec.tgz)
+    # They have been copied from TAGE-GSC-IMLI
+    # (http://www.irisa.fr/alf/downloads/seznec/TAGE-GSC-IMLI.tar)
     #
     # All of them should be disabled to match the original LTAGE implementation
     # (http://hpca23.cse.tamu.edu/taco/camino/cbp2/cbp-src/realistic-seznec.h)
@@ -181,3 +175,25 @@ class LTAGE(TAGE):
     # Add a direction bit to the loop table entries
     useDirectionBit = Param.Bool(False, "Use direction info")
 
+    # If true, use random to decide whether to allocate or not, and only try
+    # with one entry
+    restrictAllocation = Param.Bool(False,
+        "Restrict the allocation conditions")
+
+    initialLoopIter = Param.Unsigned(1, "Initial iteration number")
+    initialLoopAge = Param.Unsigned(255, "Initial age value")
+    optionalAgeReset = Param.Bool(True,
+        "Reset age bits optionally in some cases")
+
+
+# LTAGE branch predictor as described in
+# https://www.irisa.fr/caps/people/seznec/L-TAGE.pdf
+# It is basically a TAGE predictor plus a loop predictor
+# The differnt TAGE sizes are updated according to the paper values (256 Kbits)
+class LTAGE(TAGE):
+    type = 'LTAGE'
+    cxx_class = 'LTAGE'
+    cxx_header = "cpu/pred/ltage.hh"
+
+    tage = LTAGE_TAGE()
+    loop_predictor = Param.LoopPredictor(LoopPredictor(), "Loop predictor")
