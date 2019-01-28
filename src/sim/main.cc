@@ -54,11 +54,15 @@ main(int argc, char **argv)
     Py_SetProgramName(argv[0]);
 #endif
 
+    // Register native modules with Python's init system before
+    // initializing the interpreter.
+    registerNativeModules();
+
     // initialize embedded Python interpreter
     Py_Initialize();
 
     // Initialize the embedded m5 python library
-    ret = initM5Python();
+    ret = EmbeddedPython::initAll();
 
     if (ret == 0) {
         // start m5
