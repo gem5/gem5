@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2016, 2018 ARM Limited
+# Copyright (c) 2012, 2016, 2018, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -85,3 +85,39 @@ class BaseTrafficGen(ClockedObject):
     # Sources for Stream/Substream IDs to apply to requests
     sids = VectorParam.Unsigned([], "StreamIDs to use")
     ssids = VectorParam.Unsigned([], "SubstreamIDs to use")
+
+    # These additional parameters allow TrafficGen to be used with scripts
+    # that expect a BaseCPU
+    cpu_id = Param.Int(-1, "CPU identifier")
+    socket_id = Param.Unsigned(0, "Physical Socket identifier")
+    numThreads = Param.Unsigned(1, "number of HW thread contexts")
+
+    @classmethod
+    def memory_mode(cls):
+        return 'timing'
+
+    @classmethod
+    def require_caches(cls):
+        return False
+
+    def createThreads(self):
+        pass
+
+    def createInterruptController(self):
+        pass
+
+    def connectCachedPorts(self, bus):
+        if hasattr(self, '_cached_ports') and (len(self._cached_ports) > 0):
+            for p in self._cached_ports:
+                exec('self.%s = bus.slave' % p)
+        else:
+            self.port = bus.slave
+
+    def connectAllPorts(self, cached_bus, uncached_bus = None):
+        self.connectCachedPorts(cached_bus)
+
+    def addPrivateSplitL1Caches(self, ic, dc, iwc = None, dwc = None):
+        self.dcache = dc
+        self.port = dc.cpu_side
+        self._cached_ports = ['dcache.mem_side']
+        self._uncached_ports = []
