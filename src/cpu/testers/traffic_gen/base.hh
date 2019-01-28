@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2016-2018 ARM Limited
+ * Copyright (c) 2012-2013, 2016-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,6 +44,7 @@
 
 #include <memory>
 #include <tuple>
+#include <unordered_map>
 
 #include "base/statistics.hh"
 #include "mem/qport.hh"
@@ -93,6 +94,10 @@ class BaseTrafficGen : public ClockedObject
      */
     void recvReqRetry();
 
+    void retryReq();
+
+    bool recvTimingResp(PacketPtr pkt);
+
     /** Transition to the next generator */
     void transition();
 
@@ -118,6 +123,8 @@ class BaseTrafficGen : public ClockedObject
     /** Time of the next packet. */
     Tick nextPacketTick;
 
+    const int maxOutstandingReqs;
+
 
     /** Master port specialisation for the traffic generator */
     class TrafficGenPort : public MasterPort
@@ -132,7 +139,8 @@ class BaseTrafficGen : public ClockedObject
 
         void recvReqRetry() { trafficGen.recvReqRetry(); }
 
-        bool recvTimingResp(PacketPtr pkt);
+        bool recvTimingResp(PacketPtr pkt)
+        { return trafficGen.recvTimingResp(pkt); }
 
         void recvTimingSnoopReq(PacketPtr pkt) { }
 
@@ -161,6 +169,24 @@ class BaseTrafficGen : public ClockedObject
     /** Tick when the stalled packet was meant to be sent. */
     Tick retryPktTick;
 
+    /** Set when we blocked waiting for outstanding reqs */
+    bool blockedWaitingResp;
+
+    /**
+     * Puts this packet in the waitingResp list and returns true if
+     * we are above the maximum number of oustanding requests.
+     */
+    bool allocateWaitingRespSlot(PacketPtr pkt)
+    {
+        assert(waitingResp.find(pkt->req) == waitingResp.end());
+        assert(pkt->needsResponse());
+
+        waitingResp[pkt->req] = curTick();
+
+        return (maxOutstandingReqs > 0) &&
+               (waitingResp.size() > maxOutstandingReqs);
+    }
+
     /** Event for scheduling updates */
     EventFunctionWrapper updateEvent;
 
@@ -176,6 +202,9 @@ class BaseTrafficGen : public ClockedObject
 
     /** Count the time incurred from back-pressure. */
     Stats::Scalar retryTicks;
+
+    /** Reqs waiting for response **/
+    std::unordered_map<RequestPtr,Tick> waitingResp;
 
   public:
     BaseTrafficGen(const BaseTrafficGenParams* p);

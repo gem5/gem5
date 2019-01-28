@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2016-2018 ARM Limited
+ * Copyright (c) 2012-2013, 2016-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -75,9 +75,10 @@ BaseTrafficGen::BaseTrafficGen(const BaseTrafficGenParams* p)
       noProgressEvent([this]{ noProgress(); }, name()),
       nextTransitionTick(0),
       nextPacketTick(0),
+      maxOutstandingReqs(p->max_outstanding_reqs),
       port(name() + ".port", *this),
       retryPkt(NULL),
-      retryPktTick(0),
+      retryPktTick(0), blockedWaitingResp(false),
       updateEvent([this]{ update(); }, name()),
       masterID(system->getMasterId(this)),
       streamGenerator(StreamGen::create(p))
@@ -195,7 +196,9 @@ BaseTrafficGen::update()
         // device accesses that could be part of a trace
         if (pkt && system->isMemAddr(pkt->getAddr())) {
             numPackets++;
-            if (!port.sendTimingReq(pkt)) {
+            // Only attempts to send if not blocked by pending responses
+            blockedWaitingResp = allocateWaitingRespSlot(pkt);
+            if (blockedWaitingResp || !port.sendTimingReq(pkt)) {
                 retryPkt = pkt;
                 retryPktTick = curTick();
             }
@@ -213,8 +216,8 @@ BaseTrafficGen::update()
         }
     }
 
-    // if we are waiting for a retry, do not schedule any further
-    // events, in the case of a transition or a successful send, go
+    // if we are waiting for a retry or for a response, do not schedule any
+    // further events, in the case of a transition or a successful send, go
     // ahead and determine when the next update should take place
     if (retryPkt == NULL) {
         nextPacketTick = activeGenerator->nextPacketTick(elasticReq, 0);
@@ -284,10 +287,18 @@ BaseTrafficGen::start()
 void
 BaseTrafficGen::recvReqRetry()
 {
-    assert(retryPkt != NULL);
-
     DPRINTF(TrafficGen, "Received retry\n");
     numRetries++;
+    retryReq();
+}
+
+void
+BaseTrafficGen::retryReq()
+{
+    assert(retryPkt != NULL);
+    assert(retryPktTick != 0);
+    assert(!blockedWaitingResp);
+
     // attempt to send the packet, and if we are successful start up
     // the machinery again
     if (port.sendTimingReq(retryPkt)) {
@@ -449,9 +460,25 @@ BaseTrafficGen::createTrace(Tick duration,
 }
 
 bool
-BaseTrafficGen::TrafficGenPort::recvTimingResp(PacketPtr pkt)
+BaseTrafficGen::recvTimingResp(PacketPtr pkt)
 {
+    auto iter = waitingResp.find(pkt->req);
+
+    panic_if(iter == waitingResp.end(), "%s: "
+            "Received unexpected response [%s reqPtr=%x]\n",
+               pkt->print(), pkt->req);
+
+    assert(iter->second <= curTick());
+
+    waitingResp.erase(iter);
+
     delete pkt;
+
+    // Sends up the request if we were blocked
+    if (blockedWaitingResp) {
+        blockedWaitingResp = false;
+        retryReq();
+    }
 
     return true;
 }

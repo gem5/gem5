@@ -72,6 +72,11 @@ class BaseTrafficGen(ClockedObject):
     elastic_req = Param.Bool(False,
                              "Slow down requests in case of backpressure")
 
+    # Maximum number of requests waiting for response. Set to 0 for an
+    # unlimited number of outstanding requests.
+    max_outstanding_reqs = Param.Int(0,
+                            "Maximum number of outstanding requests")
+
     # Let the user know if we have waited for a retry and not made any
     # progress for a long period of time. The default value is
     # somewhat arbitrary and may well have to be tuned.
