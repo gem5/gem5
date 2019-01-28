@@ -84,6 +84,13 @@ class DmaDevice(PioDevice):
     abstract = True
     dma = MasterPort("DMA port")
 
+    sid = Param.Unsigned(0,
+        "Stream identifier used by an IOMMU to distinguish amongst "
+        "several devices attached to it")
+    ssid = Param.Unsigned(0,
+        "Substream identifier used by an IOMMU to distinguish amongst "
+        "several devices attached to it")
+
 
 class IsaFake(BasicPioDevice):
     type = 'IsaFake'
