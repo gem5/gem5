@@ -206,6 +206,36 @@ class BaseTrafficGen : public ClockedObject
     /** Reqs waiting for response **/
     std::unordered_map<RequestPtr,Tick> waitingResp;
 
+    /** Count the number of bytes read. */
+    Stats::Scalar bytesRead;
+
+    /** Count the number of bytes written. */
+    Stats::Scalar bytesWritten;
+
+    /** Total num of ticks read reqs took to complete  */
+    Stats::Scalar totalReadLatency;
+
+    /** Total num of ticks write reqs took to complete  */
+    Stats::Scalar totalWriteLatency;
+
+    /** Count the number reads. */
+    Stats::Scalar totalReads;
+
+    /** Count the number writes. */
+    Stats::Scalar totalWrites;
+
+    /** Avg num of ticks each read req took to complete  */
+    Stats::Formula avgReadLatency;
+
+    /** Avg num of ticks each write reqs took to complete  */
+    Stats::Formula avgWriteLatency;
+
+    /** Read bandwidth in bytes/s  */
+    Stats::Formula readBW;
+
+    /** Write bandwidth in bytes/s  */
+    Stats::Formula writeBW;
+
   public:
     BaseTrafficGen(const BaseTrafficGenParams* p);
 

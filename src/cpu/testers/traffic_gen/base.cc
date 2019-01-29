@@ -354,6 +354,51 @@ BaseTrafficGen::regStats()
     retryTicks
         .name(name() + ".retryTicks")
         .desc("Time spent waiting due to back-pressure (ticks)");
+
+    bytesRead
+        .name(name() + ".bytesRead")
+        .desc("Number of bytes read");
+
+    bytesWritten
+        .name(name() + ".bytesWritten")
+        .desc("Number of bytes written");
+
+    totalReadLatency
+        .name(name() + ".totalReadLatency")
+        .desc("Total latency of read requests");
+
+    totalWriteLatency
+        .name(name() + ".totalWriteLatency")
+        .desc("Total latency of write requests");
+
+    totalReads
+        .name(name() + ".totalReads")
+        .desc("Total num of reads");
+
+    totalWrites
+        .name(name() + ".totalWrites")
+        .desc("Total num of writes");
+
+    avgReadLatency
+        .name(name() + ".avgReadLatency")
+        .desc("Avg latency of read requests");
+    avgReadLatency = totalReadLatency / totalReads;
+
+    avgWriteLatency
+        .name(name() + ".avgWriteLatency")
+        .desc("Avg latency of write requests");
+    avgWriteLatency = totalWriteLatency / totalWrites;
+
+    readBW
+        .name(name() + ".readBW")
+        .desc("Read bandwidth in bytes/s");
+    readBW = bytesRead / simSeconds;
+
+    writeBW
+        .name(name() + ".writeBW")
+        .desc("Write bandwidth in bytes/s");
+    writeBW = bytesWritten / simSeconds;
+
 }
 
 std::shared_ptr<BaseGen>
@@ -469,6 +514,16 @@ BaseTrafficGen::recvTimingResp(PacketPtr pkt)
                pkt->print(), pkt->req);
 
     assert(iter->second <= curTick());
+
+    if (pkt->isWrite()) {
+        ++totalWrites;
+        bytesWritten += pkt->req->getSize();
+        totalWriteLatency += curTick() - iter->second;
+    } else {
+        ++totalReads;
+        bytesRead += pkt->req->getSize();
+        totalReadLatency += curTick() - iter->second;
+    }
 
     waitingResp.erase(iter);
 
