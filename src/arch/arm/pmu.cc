@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, 2017-2018 ARM Limited
+ * Copyright (c) 2011-2014, 2017-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -532,7 +532,10 @@ PMU::CounterState::detach()
 void
 PMU::CounterState::attach(PMUEvent* event)
 {
-    value = 0;
+    if (!resetValue) {
+      value = 0;
+      resetValue = true;
+    }
     sourceEvent = event;
     sourceEvent->attachEvent(this);
 }
