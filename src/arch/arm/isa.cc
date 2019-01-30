@@ -64,6 +64,7 @@ ISA::ISA(Params *p)
       _decoderFlavour(p->decoderFlavour),
       _vecRegRenameMode(Enums::Full),
       pmu(p->pmu),
+      haveGICv3CPUInterface(false),
       impdefAsNop(p->impdef_nop)
 {
     miscRegs[MISCREG_SCTLR_RST] = 0;
@@ -94,13 +95,6 @@ ISA::ISA(Params *p)
         haveCrypto = true;
         haveLargeAsid64 = false;
         physAddrRange = 32;  // dummy value
-    }
-
-    // GICv3 CPU interface system registers are supported
-    haveGICv3CPUInterface = false;
-
-    if (system && dynamic_cast<Gicv3 *>(system->getGIC())) {
-        haveGICv3CPUInterface = true;
     }
 
     // Initial rename mode depends on highestEL
@@ -388,6 +382,7 @@ ISA::startup(ThreadContext *tc)
     if (system) {
         Gicv3 *gicv3 = dynamic_cast<Gicv3 *>(system->getGIC());
         if (gicv3) {
+            haveGICv3CPUInterface = true;
             gicv3CpuInterface.reset(gicv3->getCPUInterface(tc->contextId()));
             gicv3CpuInterface->setISA(this);
         }
