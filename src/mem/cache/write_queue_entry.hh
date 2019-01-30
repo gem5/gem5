@@ -76,21 +76,6 @@ class WriteQueueEntry : public QueueEntry, public Printable
     friend class WriteQueue;
 
   public:
-
-    class Target {
-      public:
-
-        const Tick recvTime;  //!< Time when request was received (for stats)
-        const Tick readyTime; //!< Time when request is ready to be serviced
-        const Counter order;  //!< Global order (for memory consistency mgmt)
-        const PacketPtr pkt;  //!< Pending request packet.
-
-        Target(PacketPtr _pkt, Tick _readyTime, Counter _order)
-            : recvTime(curTick()), readyTime(_readyTime), order(_order),
-              pkt(_pkt)
-        {}
-    };
-
     class TargetList : public std::list<Target> {
 
       public:
@@ -165,7 +150,7 @@ class WriteQueueEntry : public QueueEntry, public Printable
      * Returns a reference to the first target.
      * @return A pointer to the first target.
      */
-    Target *getTarget()
+    Target *getTarget() override
     {
         assert(hasTargets());
         return &targets.front();

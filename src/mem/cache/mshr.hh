@@ -124,7 +124,7 @@ class MSHR : public QueueEntry, public Printable
     /** True if the entry is just a simple forward from an upper level */
     bool isForward;
 
-    class Target {
+    class Target : public QueueEntry::Target {
       public:
 
         enum Source {
@@ -133,10 +133,6 @@ class MSHR : public QueueEntry, public Printable
             FromPrefetcher
         };
 
-        const Tick recvTime;  //!< Time when request was received (for stats)
-        const Tick readyTime; //!< Time when request is ready to be serviced
-        const Counter order;  //!< Global order (for memory consistency mgmt)
-        const PacketPtr pkt;  //!< Pending request packet.
         const Source source;  //!< Request from cpu, memory, or prefetcher?
 
         /**
@@ -161,9 +157,8 @@ class MSHR : public QueueEntry, public Printable
 
         Target(PacketPtr _pkt, Tick _readyTime, Counter _order,
                Source _source, bool _markedPending, bool alloc_on_fill)
-            : recvTime(curTick()), readyTime(_readyTime), order(_order),
-              pkt(_pkt), source(_source), markedPending(_markedPending),
-              allocOnFill(alloc_on_fill)
+            : QueueEntry::Target(_pkt, _readyTime, _order), source(_source),
+              markedPending(_markedPending), allocOnFill(alloc_on_fill)
         {}
     };
 
@@ -476,7 +471,7 @@ class MSHR : public QueueEntry, public Printable
      * Returns a reference to the first target.
      * @return A pointer to the first target.
      */
-    Target *getTarget()
+    QueueEntry::Target *getTarget() override
     {
         assert(hasTargets());
         return &targets.front();

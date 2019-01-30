@@ -245,9 +245,8 @@ void
 NoncoherentCache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
                                      CacheBlk *blk)
 {
-    MSHR::Target *initial_tgt = mshr->getTarget();
     // First offset for critical word first calculations
-    const int initial_offset = initial_tgt->pkt->getOffset(blkSize);
+    const int initial_offset = mshr->getTarget()->pkt->getOffset(blkSize);
 
     MSHR::TargetList targets = mshr->extractServiceableTargets(pkt);
     for (auto &target: targets) {

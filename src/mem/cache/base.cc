@@ -439,7 +439,7 @@ BaseCache::recvTimingResp(PacketPtr pkt)
     }
 
     // Initial target is used just for stats
-    MSHR::Target *initial_tgt = mshr->getTarget();
+    QueueEntry::Target *initial_tgt = mshr->getTarget();
     int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
     Tick miss_latency = curTick() - initial_tgt->recvTime;
 

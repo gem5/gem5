@@ -687,7 +687,7 @@ Cache::recvAtomic(PacketPtr pkt)
 void
 Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
 {
-    MSHR::Target *initial_tgt = mshr->getTarget();
+    QueueEntry::Target *initial_tgt = mshr->getTarget();
     // First offset for critical word first calculations
     const int initial_offset = initial_tgt->pkt->getOffset(blkSize);
 

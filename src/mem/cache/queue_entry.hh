@@ -76,6 +76,33 @@ class QueueEntry : public Packet::SenderState
     bool _isUncacheable;
 
   public:
+    /**
+     * A queue entry is holding packets that will be serviced as soon as
+     * resources are available. Since multiple references to the same
+     * address can arrive while a packet is not serviced, each packet is
+     * stored in a target containing its availability, order and other info,
+     * and the queue entry stores these similar targets in a list.
+     */
+    class Target {
+      public:
+        const Tick recvTime;  //!< Time when request was received (for stats)
+        const Tick readyTime; //!< Time when request is ready to be serviced
+        const Counter order;  //!< Global order (for memory consistency mgmt)
+        const PacketPtr pkt;  //!< Pending request packet.
+
+        /**
+         * Default constructor. Assigns the current tick as the arrival time
+         * of the packet.
+         *
+         * @param _pkt The pending request packet.
+         * @param ready_time The tick at which the packet will be serviceable.
+         * @param _order Global order.
+         */
+        Target(PacketPtr _pkt, Tick ready_time, Counter _order)
+            : recvTime(curTick()), readyTime(ready_time), order(_order),
+              pkt(_pkt)
+        {}
+    };
 
     /** True if the entry has been sent downstream. */
     bool inService;
@@ -105,6 +132,12 @@ class QueueEntry : public Packet::SenderState
      */
     virtual bool sendPacket(BaseCache &cache) = 0;
 
+    /**
+     * Returns a pointer to the first target.
+     *
+     * @return A pointer to the first target.
+     */
+    virtual Target* getTarget() = 0;
 };
 
 #endif // __MEM_CACHE_QUEUE_ENTRY_HH__
