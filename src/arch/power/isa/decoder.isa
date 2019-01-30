@@ -88,11 +88,16 @@ decode OPCODE default Unknown::unknown() {
         // Arithmetic instructions all use source registers Ra and Rb,
         // with destination register Rt.
         format IntArithOp {
-            75: mulhw({{ int64_t prod = Ra_sq * Rb_sq; Rt = prod >> 32; }});
-            11: mulhwu({{ uint64_t prod = Ra_uq * Rb_uq; Rt = prod >> 32; }});
-            235: mullw({{ int64_t prod = Ra_sq * Rb_sq; Rt = prod; }});
-            747: mullwo({{ int64_t src1 = Ra_sq; int64_t src2 = Rb; int64_t prod = src1 * src2; Rt = prod; }},
-                        true);
+            75: mulhw({{ int64_t prod = Ra_sd * Rb_sd; Rt = prod >> 32; }});
+            11: mulhwu({{ uint64_t prod = Ra_ud * Rb_ud; Rt = prod >> 32; }});
+            235: mullw({{ int64_t prod = Ra_sd * Rb_sd; Rt = prod; }});
+            747: mullwo({{
+                int64_t src1 = Ra_sd;
+                int64_t src2 = Rb;
+                int64_t prod = src1 * src2;
+                Rt = prod;
+            }},
+            true);
 
             491: divw({{
                 int32_t src1 = Ra_sw;
@@ -559,29 +564,29 @@ decode OPCODE default Unknown::unknown() {
             format FloatRCCheckOp {
                 72: fmr({{ Ft = Fb; }});
                 264: fabs({{
-                    Ft_uq = Fb_uq;
-                    Ft_uq = insertBits(Ft_uq, 63, 0); }});
+                    Ft_ud = Fb_ud;
+                    Ft_ud = insertBits(Ft_ud, 63, 0); }});
                 136: fnabs({{
-                    Ft_uq = Fb_uq;
-                    Ft_uq = insertBits(Ft_uq, 63, 1); }});
+                    Ft_ud = Fb_ud;
+                    Ft_ud = insertBits(Ft_ud, 63, 1); }});
                 40: fneg({{ Ft = -Fb; }});
                 8: fcpsgn({{
-                    Ft_uq = Fb_uq;
-                    Ft_uq = insertBits(Ft_uq, 63, Fa_uq<63:63>);
+                    Ft_ud = Fb_ud;
+                    Ft_ud = insertBits(Ft_ud, 63, Fa_ud<63:63>);
                 }});
-                583: mffs({{ Ft_uq = FPSCR; }});
+                583: mffs({{ Ft_ud = FPSCR; }});
                 134: mtfsfi({{
                     FPSCR = insertCRField(FPSCR, BF + (8 * (1 - W_FIELD)),
                                           U_FIELD);
                 }});
                 711: mtfsf({{
-                    if (L_FIELD == 1) { FPSCR = Fb_uq; }
+                    if (L_FIELD == 1) { FPSCR = Fb_ud; }
                     else {
                         for (int i = 0; i < 8; ++i) {
                             if (bits(FLM, i) == 1) {
                                 int k = 4 * (i + (8 * (1 - W_FIELD)));
                                 FPSCR = insertBits(FPSCR, k + 3, k,
-                                                   bits(Fb_uq, k + 3, k));
+                                                   bits(Fb_ud, k + 3, k));
                             }
                         }
                     }
