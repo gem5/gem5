@@ -42,7 +42,6 @@
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
-#include "base/random.hh"
 #include "debug/Fetch.hh"
 #include "debug/Tage.hh"
 
@@ -425,7 +424,7 @@ TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
 }
 
 void
-TAGEBase::adjustAlloc(bool & alloc, bool taken)
+TAGEBase::adjustAlloc(bool & alloc, bool taken, bool pred_taken)
 {
     // Nothing for this base class implementation
 }
@@ -502,7 +501,7 @@ TAGEBase::resetUctr(uint8_t & u)
 
 void
 TAGEBase::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
-                       BranchInfo* bi, int nrand, Addr corrTarget)
+                       BranchInfo* bi, int nrand, Addr corrTarget, bool pred)
 {
     // TAGE UPDATE
     // try to allocate a  new entries only if prediction was wrong
@@ -526,7 +525,7 @@ TAGEBase::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
         }
     }
 
-    adjustAlloc(alloc, taken);
+    adjustAlloc(alloc, taken, pred);
 
     handleAllocAndUReset(alloc, taken, bi, nrand);
 
@@ -638,12 +637,6 @@ TAGEBase::extraAltCalc(BranchInfo* bi)
 {
     // do nothing. This is only used in some derived classes
     return;
-}
-
-int
-TAGEBase::getRandom()
-{
-    return random_mt.random<int>();
 }
 
 void

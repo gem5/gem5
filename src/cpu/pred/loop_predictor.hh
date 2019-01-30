@@ -180,12 +180,8 @@ class LoopPredictor : public SimObject
     * @param bi Pointer to information on the
     * prediction recorded at prediction time.
     * @param tage_pred tage prediction of the branch
-    * @param random0 random value
-    * @param random1 random value
-    * @param random2 random value
     */
-    void loopUpdate(Addr pc, bool Taken, BranchInfo* bi, bool tage_pred,
-                    int random0, int random1, int random2);
+    void loopUpdate(Addr pc, bool Taken, BranchInfo* bi, bool tage_pred);
 
     /**
      * Speculatively updates the loop predictor
@@ -204,14 +200,9 @@ class LoopPredictor : public SimObject
      * @param bi Pointer to information on the prediction
      * recorded at prediction time.
      * @param instShiftAmt Number of bits to shift instructions
-     * @param rand0 Random integer value
-     * @param rand1 Random integer value
-     * @param rand2 Random integer value
      */
-    void condBranchUpdate(
-        ThreadID tid, Addr branch_pc, bool taken, bool tage_pred,
-        BranchInfo* bi, unsigned instShiftAmt, int rand0, int rand1,
-        int rand2);
+    void condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
+        bool tage_pred, BranchInfo* bi, unsigned instShiftAmt);
 
     /**
      * Get the loop prediction
@@ -244,7 +235,7 @@ class LoopPredictor : public SimObject
 
     virtual bool calcConf(int index) const;
 
-    virtual bool optionalAgeInc(int nrand) const;
+    virtual bool optionalAgeInc() const;
 
     virtual BranchInfo *makeBranchInfo();
 

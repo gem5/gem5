@@ -59,28 +59,29 @@ TAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
     assert(bp_history);
 
     TageBranchInfo *bi = static_cast<TageBranchInfo*>(bp_history);
+    TAGEBase::BranchInfo *tage_bi = bi->tageBranchInfo;
 
     assert(corrTarget != MaxAddr);
 
     if (squashed) {
         // This restores the global history, then update it
         // and recomputes the folded histories.
-        tage->squash(tid, taken, bi->tageBranchInfo, corrTarget);
+        tage->squash(tid, taken, tage_bi, corrTarget);
         return;
     }
 
-    int nrand = TAGEBase::getRandom() & 3;
+    int nrand = random_mt.random<int>() & 3;
     if (bi->tageBranchInfo->condBranch) {
         DPRINTF(Tage, "Updating tables for branch:%lx; taken?:%d\n",
                 branch_pc, taken);
         tage->updateStats(taken, bi->tageBranchInfo);
-        tage->condBranchUpdate(tid, branch_pc, taken, bi->tageBranchInfo,
-                               nrand, corrTarget);
+        tage->condBranchUpdate(tid, branch_pc, taken, tage_bi, nrand,
+                               corrTarget, bi->tageBranchInfo->tagePred);
     }
 
-    tage->updateHistories(tid, branch_pc, taken, bi->tageBranchInfo, false,
-                          inst, corrTarget);
-
+    // optional non speculative update of the histories
+    tage->updateHistories(tid, branch_pc, taken, tage_bi, false, inst,
+                          corrTarget);
     delete bi;
 }
 
@@ -95,7 +96,7 @@ TAGE::squash(ThreadID tid, void *bp_history)
 bool
 TAGE::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
 {
-    TageBranchInfo *bi = new TageBranchInfo(*tage);
+    TageBranchInfo *bi = new TageBranchInfo(*tage);//nHistoryTables+1);
     b = (void*)(bi);
     return tage->tagePredict(tid, branch_pc, cond_branch, bi->tageBranchInfo);
 }
