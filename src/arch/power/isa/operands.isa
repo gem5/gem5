@@ -59,8 +59,8 @@ def operands {{
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 8),
 
     # Program counter and next
-    'PC': ('PCState', 'uw', 'pc', (None, None, 'IsControl'), 9),
-    'NPC': ('PCState', 'uw', 'npc', (None, None, 'IsControl'), 9),
+    'CIA': ('PCState', 'uw', 'pc', (None, None, 'IsControl'), 9),
+    'NIA': ('PCState', 'uw', 'npc', (None, None, 'IsControl'), 9),
 
     # Control registers
     'CR': ('IntReg', 'uw', 'INTREG_CR', 'IsInteger', 9),

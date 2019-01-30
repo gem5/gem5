@@ -386,12 +386,12 @@ decode OPCODE default Unknown::unknown() {
 
         // Conditionally branch relative to PC based on CR and CTR.
         format BranchPCRelCondCtr {
-            0: bc({{ NPC = (uint32_t)(PC + disp); }});
+            0: bc({{ NIA = (uint32_t)(CIA + disp); }});
         }
 
         // Conditionally branch to fixed address based on CR and CTR.
         format BranchNonPCRelCondCtr {
-            1: bca({{ NPC = targetAddr; }});
+            1: bca({{ NIA = targetAddr; }});
         }
     }
 
@@ -399,12 +399,12 @@ decode OPCODE default Unknown::unknown() {
 
         // Unconditionally branch relative to PC.
         format BranchPCRel {
-            0: b({{ NPC = (uint32_t)(PC + disp); }});
+            0: b({{ NIA = (uint32_t)(CIA + disp); }});
         }
 
         // Unconditionally branch to fixed address.
         format BranchNonPCRel {
-            1: ba({{ NPC = targetAddr; }});
+            1: ba({{ NIA = targetAddr; }});
         }
     }
 
@@ -412,12 +412,12 @@ decode OPCODE default Unknown::unknown() {
 
         // Conditionally branch to address in LR based on CR and CTR.
         format BranchLrCondCtr {
-           16: bclr({{ NPC = LR & 0xfffffffc; }});
+           16: bclr({{ NIA = LR & 0xfffffffc; }});
         }
 
         // Conditionally branch to address in CTR based on CR.
         format BranchCtrCond {
-           528: bcctr({{ NPC = CTR & 0xfffffffc; }});
+           528: bcctr({{ NIA = CTR & 0xfffffffc; }});
         }
 
         // Condition register manipulation instructions.
