@@ -44,11 +44,16 @@
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 #include "mem/packet.hh"
+#include "sim/clocked_object.hh"
 
-struct AccessMapPatternMatchingPrefetcherParams;
+struct AccessMapPatternMatchingParams;
 
-class AccessMapPatternMatchingPrefetcher : public QueuedPrefetcher
+class AccessMapPatternMatching : public ClockedObject
 {
+    /** Cacheline size used by the prefetcher using this object */
+    const unsigned blkSize;
+    /** Limit the stride checking to -limitStride/+limitStride */
+    const unsigned limitStride;
     /** Maximum number of prefetch generated */
     const unsigned startDegree;
     /** Amount of memory covered by a hot zone */
@@ -173,9 +178,22 @@ class AccessMapPatternMatchingPrefetcher : public QueuedPrefetcher
     EventFunctionWrapper epochEvent;
 
   public:
-    AccessMapPatternMatchingPrefetcher(
-        const AccessMapPatternMatchingPrefetcherParams* p);
-    ~AccessMapPatternMatchingPrefetcher() {}
+    AccessMapPatternMatching(const AccessMapPatternMatchingParams* p);
+    ~AccessMapPatternMatching()
+    {}
+    void calculatePrefetch(const BasePrefetcher::PrefetchInfo &pfi,
+        std::vector<QueuedPrefetcher::AddrPriority> &addresses);
+};
+
+struct AMPMPrefetcherParams;
+
+class AMPMPrefetcher : public QueuedPrefetcher
+{
+    AccessMapPatternMatching &ampm;
+  public:
+    AMPMPrefetcher(const AMPMPrefetcherParams* p);
+    ~AMPMPrefetcher()
+    {}
     void calculatePrefetch(const PrefetchInfo &pfi,
                            std::vector<AddrPriority> &addresses) override;
 };

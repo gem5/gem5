@@ -204,11 +204,16 @@ class SignaturePathPrefetcherV2(SignaturePathPrefetcher):
     global_history_register_replacement_policy = Param.BaseReplacementPolicy(
         LRURP(), "Replacement policy of the global history register")
 
-class AccessMapPatternMatchingPrefetcher(QueuedPrefetcher):
-    type = 'AccessMapPatternMatchingPrefetcher'
-    cxx_class = 'AccessMapPatternMatchingPrefetcher'
+class AccessMapPatternMatching(ClockedObject):
+    type = 'AccessMapPatternMatching'
+    cxx_class = 'AccessMapPatternMatching'
     cxx_header = "mem/cache/prefetch/access_map_pattern_matching.hh"
 
+    block_size = Param.Unsigned(Parent.block_size,
+        "Cacheline size used by the prefetcher using this object")
+
+    limit_stride = Param.Unsigned(0,
+        "Limit the strides checked up to -X/X, if 0, disable the limit")
     start_degree = Param.Unsigned(4,
         "Initial degree (Maximum number of prefetches generated")
     hot_zone_size = Param.MemorySize("2kB", "Memory covered by a hot zone")
@@ -237,6 +242,13 @@ class AccessMapPatternMatchingPrefetcher(QueuedPrefetcher):
     epoch_cycles = Param.Cycles(256000, "Cycles in an epoch period")
     offchip_memory_latency = Param.Latency("30ns",
         "Memory latency used to compute the required memory bandwidth")
+
+class AMPMPrefetcher(QueuedPrefetcher):
+    type = 'AMPMPrefetcher'
+    cxx_class = 'AMPMPrefetcher'
+    cxx_header = "mem/cache/prefetch/access_map_pattern_matching.hh"
+    ampm = Param.AccessMapPatternMatching( AccessMapPatternMatching(),
+        "Access Map Pattern Matching object")
 
 class DeltaCorrelatingPredictionTables(SimObject):
     type = 'DeltaCorrelatingPredictionTables'
@@ -309,3 +321,23 @@ class IrregularStreamBufferPrefetcher(QueuedPrefetcher):
     sp_address_map_cache_replacement_policy = Param.BaseReplacementPolicy(
         LRURP(),
         "Replacement policy of the Structural-to-Physical Address Map Cache")
+
+class SlimAccessMapPatternMatching(AccessMapPatternMatching):
+    start_degree = 2
+    limit_stride = 4
+
+class SlimDeltaCorrelatingPredictionTables(DeltaCorrelatingPredictionTables):
+    table_entries = "256"
+    table_assoc = 256
+    deltas_per_entry = 9
+
+class SlimAMPMPrefetcher(QueuedPrefetcher):
+    type = 'SlimAMPMPrefetcher'
+    cxx_class = 'SlimAMPMPrefetcher'
+    cxx_header = "mem/cache/prefetch/slim_ampm.hh"
+
+    ampm = Param.AccessMapPatternMatching(SlimAccessMapPatternMatching(),
+        "Access Map Pattern Matching object")
+    dcpt = Param.DeltaCorrelatingPredictionTables(
+        SlimDeltaCorrelatingPredictionTables(),
+        "Delta Correlating Prediction Tables object")
