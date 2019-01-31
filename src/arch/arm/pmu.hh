@@ -619,7 +619,7 @@ class PMU : public SimObject, public ArmISA::BaseISADevice {
     static const RegVal reg_pmcr_wr_mask;
 
     /** Performance monitor interrupt number */
-    ArmInterruptPin *const interrupt;
+    ArmInterruptPin *interrupt;
 
     /**
      * List of event types supported by this PMU.

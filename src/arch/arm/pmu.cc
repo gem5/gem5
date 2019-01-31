@@ -67,7 +67,7 @@ PMU::PMU(const ArmPMUParams *p)
       cycleCounterEventId(p->cycleEventId),
       swIncrementEvent(nullptr),
       reg_pmcr_conf(0),
-      interrupt(p->interrupt->get())
+      interrupt(nullptr),
 {
     DPRINTF(PMUVerbose, "Initializing the PMU.\n");
 
@@ -76,7 +76,7 @@ PMU::PMU(const ArmPMUParams *p)
               maximumCounterCount);
     }
 
-    warn_if(!interrupt, "ARM PMU: No interrupt specified, interrupt " \
+    warn_if(!p->interrupt, "ARM PMU: No interrupt specified, interrupt " \
             "delivery disabled.\n");
 
     /* Setup the performance counter ID registers */
@@ -97,8 +97,10 @@ void
 PMU::setThreadContext(ThreadContext *tc)
 {
     DPRINTF(PMUVerbose, "Assigning PMU to ContextID %i.\n", tc->contextId());
-    if (interrupt)
-        interrupt->setThreadContext(tc);
+    auto pmu_params = static_cast<const ArmPMUParams *>(params());
+
+    if (pmu_params->interrupt)
+        interrupt = pmu_params->interrupt->get(tc);
 }
 
 void
