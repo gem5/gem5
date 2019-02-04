@@ -883,9 +883,6 @@ BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
     // Evict valid blocks
     for (const auto& evict_blk : evict_blks) {
         if (evict_blk->isValid()) {
-            if (evict_blk->wasPrefetched()) {
-                stats.unusedPrefetches++;
-            }
             evictBlock(evict_blk, writebacks);
         }
     }
@@ -1461,11 +1458,6 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
                 DPRINTF(CacheRepl, "Evicting %s (%#llx) to make room for " \
                         "%#llx (%s)\n", blk->print(), regenerateBlkAddr(blk),
                         addr, is_secure);
-
-                if (blk->wasPrefetched()) {
-                    stats.unusedPrefetches++;
-                }
-
                 evictBlock(blk, writebacks);
             }
         }
@@ -1489,6 +1481,11 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 void
 BaseCache::invalidateBlock(CacheBlk *blk)
 {
+    // If block is still marked as prefetched, then it hasn't been used
+    if (blk->wasPrefetched()) {
+        stats.unusedPrefetches++;
+    }
+
     // If handling a block present in the Tags, let it do its invalidation
     // process, which will update stats and invalidate the block itself
     if (blk != tempBlock) {
