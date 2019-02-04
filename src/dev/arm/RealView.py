@@ -493,7 +493,7 @@ class RealView(Platform):
     type = 'RealView'
     cxx_header = "dev/arm/realview.hh"
     system = Param.System(Parent.any, "system")
-    _mem_regions = [(Addr(0), Addr('256MB'))]
+    _mem_regions = [ AddrRange(0, size='256MB') ]
 
     def _on_chip_devices(self):
         return []
@@ -703,7 +703,7 @@ class RealViewPBX(RealView):
         self.energy_ctrl.clk_domain   = clkdomain
 
 class VExpress_EMM(RealView):
-    _mem_regions = [(Addr('2GB'), Addr('2GB'))]
+    _mem_regions = [ AddrRange('2GB', size='2GB') ]
 
     # Ranges based on excluding what is part of on-chip I/O (gic,
     # a9scu)
@@ -837,8 +837,9 @@ class VExpress_EMM(RealView):
 
 class VExpress_EMM64(VExpress_EMM):
     # Three memory regions are specified totalling 512GB
-    _mem_regions = [(Addr('2GB'), Addr('2GB')), (Addr('34GB'), Addr('30GB')),
-                    (Addr('512GB'), Addr('480GB'))]
+    _mem_regions = [ AddrRange('2GB', size='2GB'),
+                     AddrRange('34GB', size='30GB'),
+                     AddrRange('512GB', size='480GB') ]
     pci_host = GenericPciHost(
         conf_base=0x30000000, conf_size='256MB', conf_device_bits=12,
         pci_pio_base=0x2f000000)
@@ -951,7 +952,7 @@ Interrupts:
     """
 
     # Everything above 2GiB is memory
-    _mem_regions = [(Addr('2GB'), Addr('510GB'))]
+    _mem_regions = [ AddrRange('2GB', size='510GB') ]
 
     _off_chip_ranges = [
         # CS1-CS5

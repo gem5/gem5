@@ -263,11 +263,11 @@ def makeArmSystem(mem_mode, machine_type, num_cpus=1, mdesc=None,
     self.mem_ranges = []
     size_remain = long(Addr(mdesc.mem()))
     for region in self.realview._mem_regions:
-        if size_remain > long(region[1]):
-            self.mem_ranges.append(AddrRange(region[0], size=region[1]))
-            size_remain = size_remain - long(region[1])
+        if size_remain > long(region.size()):
+            self.mem_ranges.append(region)
+            size_remain = size_remain - long(region.size())
         else:
-            self.mem_ranges.append(AddrRange(region[0], size=size_remain))
+            self.mem_ranges.append(AddrRange(region.start, size=size_remain))
             size_remain = 0
             break
         warn("Memory size specified spans more than one region. Creating" \
