@@ -79,100 +79,106 @@ class O3ThreadContext : public ThreadContext
     O3ThreadState<Impl> *thread;
 
     /** Returns a pointer to the ITB. */
-    BaseTLB *getITBPtr() { return cpu->itb; }
+    BaseTLB *getITBPtr() override { return cpu->itb; }
 
     /** Returns a pointer to the DTB. */
-    BaseTLB *getDTBPtr() { return cpu->dtb; }
+    BaseTLB *getDTBPtr() override { return cpu->dtb; }
 
-    CheckerCPU *getCheckerCpuPtr() { return NULL; }
+    CheckerCPU *getCheckerCpuPtr() override { return NULL; }
 
     TheISA::Decoder *
-    getDecoderPtr()
+    getDecoderPtr() override
     {
         return cpu->fetch.decoder[thread->threadId()];
     }
 
     /** Returns a pointer to this CPU. */
-    virtual BaseCPU *getCpuPtr() { return cpu; }
+    virtual BaseCPU *getCpuPtr() override { return cpu; }
 
     /** Reads this CPU's ID. */
-    virtual int cpuId() const { return cpu->cpuId(); }
+    virtual int cpuId() const override { return cpu->cpuId(); }
 
     /** Reads this CPU's Socket ID. */
-    virtual uint32_t socketId() const { return cpu->socketId(); }
+    virtual uint32_t socketId() const override { return cpu->socketId(); }
 
-    virtual ContextID contextId() const { return thread->contextId(); }
+    virtual ContextID
+    contextId() const override { return thread->contextId(); }
 
-    virtual void setContextId(int id) { thread->setContextId(id); }
+    virtual void setContextId(int id) override { thread->setContextId(id); }
 
     /** Returns this thread's ID number. */
-    virtual int threadId() const { return thread->threadId(); }
-    virtual void setThreadId(int id) { return thread->setThreadId(id); }
+    virtual int threadId() const override
+    { return thread->threadId(); }
+    virtual void setThreadId(int id) override
+    { return thread->setThreadId(id); }
 
     /** Returns a pointer to the system. */
-    virtual System *getSystemPtr() { return cpu->system; }
+    virtual System *getSystemPtr() override { return cpu->system; }
 
     /** Returns a pointer to this thread's kernel statistics. */
-    virtual TheISA::Kernel::Statistics *getKernelStats()
+    virtual TheISA::Kernel::Statistics *getKernelStats() override
     { return thread->kernelStats; }
 
     /** Returns a pointer to this thread's process. */
-    virtual Process *getProcessPtr() { return thread->getProcessPtr(); }
+    virtual Process *getProcessPtr() override
+    { return thread->getProcessPtr(); }
 
-    virtual void setProcessPtr(Process *p) { thread->setProcessPtr(p); }
+    virtual void setProcessPtr(Process *p) override
+    { thread->setProcessPtr(p); }
 
-    virtual PortProxy &getPhysProxy() { return thread->getPhysProxy(); }
+    virtual PortProxy &getPhysProxy() override
+    { return thread->getPhysProxy(); }
 
-    virtual FSTranslatingPortProxy &getVirtProxy();
+    virtual FSTranslatingPortProxy &getVirtProxy() override;
 
-    virtual void initMemProxies(ThreadContext *tc)
+    virtual void initMemProxies(ThreadContext *tc) override
     { thread->initMemProxies(tc); }
 
-    virtual SETranslatingPortProxy &getMemProxy()
+    virtual SETranslatingPortProxy &getMemProxy() override
     { return thread->getMemProxy(); }
 
     /** Returns this thread's status. */
-    virtual Status status() const { return thread->status(); }
+    virtual Status status() const override { return thread->status(); }
 
     /** Sets this thread's status. */
-    virtual void setStatus(Status new_status)
+    virtual void setStatus(Status new_status) override
     { thread->setStatus(new_status); }
 
     /** Set the status to Active. */
-    virtual void activate();
+    virtual void activate() override;
 
     /** Set the status to Suspended. */
-    virtual void suspend();
+    virtual void suspend() override;
 
     /** Set the status to Halted. */
-    virtual void halt();
+    virtual void halt() override;
 
     /** Dumps the function profiling information.
      * @todo: Implement.
      */
-    virtual void dumpFuncProfile();
+    virtual void dumpFuncProfile() override;
 
     /** Takes over execution of a thread from another CPU. */
-    virtual void takeOverFrom(ThreadContext *old_context);
+    virtual void takeOverFrom(ThreadContext *old_context) override;
 
     /** Registers statistics associated with this TC. */
-    virtual void regStats(const std::string &name);
+    virtual void regStats(const std::string &name) override;
 
     /** Reads the last tick that this thread was activated on. */
-    virtual Tick readLastActivate();
+    virtual Tick readLastActivate() override;
     /** Reads the last tick that this thread was suspended on. */
-    virtual Tick readLastSuspend();
+    virtual Tick readLastSuspend() override;
 
     /** Clears the function profiling information. */
-    virtual void profileClear();
+    virtual void profileClear() override;
     /** Samples the function profiling information. */
-    virtual void profileSample();
+    virtual void profileSample() override;
 
     /** Copies the architectural registers from another TC into this TC. */
-    virtual void copyArchRegs(ThreadContext *tc);
+    virtual void copyArchRegs(ThreadContext *tc) override;
 
     /** Resets all architectural registers to 0. */
-    virtual void clearArchRegs();
+    virtual void clearArchRegs() override;
 
     /** Reads an integer register. */
     virtual RegVal
@@ -182,21 +188,21 @@ class O3ThreadContext : public ThreadContext
                                                  reg_idx)).index());
     }
     virtual RegVal
-    readIntReg(int reg_idx)
+    readIntReg(int reg_idx) override
     {
         return readIntRegFlat(flattenRegId(RegId(IntRegClass,
                                                  reg_idx)).index());
     }
 
     virtual RegVal
-    readFloatReg(int reg_idx)
+    readFloatReg(int reg_idx) override
     {
         return readFloatRegFlat(flattenRegId(RegId(FloatRegClass,
                                              reg_idx)).index());
     }
 
     virtual const VecRegContainer &
-    readVecReg(const RegId& id) const
+    readVecReg(const RegId& id) const override
     {
         return readVecRegFlat(flattenRegId(id).index());
     }
@@ -205,7 +211,7 @@ class O3ThreadContext : public ThreadContext
      * Read vector register operand for modification, hierarchical indexing.
      */
     virtual VecRegContainer &
-    getWritableVecReg(const RegId& id)
+    getWritableVecReg(const RegId& id) override
     {
         return getWritableVecRegFlat(flattenRegId(id).index());
     }
@@ -214,7 +220,7 @@ class O3ThreadContext : public ThreadContext
     /** @{ */
     /** Reads source vector 8bit operand. */
     virtual ConstVecLane8
-    readVec8BitLaneReg(const RegId& id) const
+    readVec8BitLaneReg(const RegId& id) const override
     {
         return readVecLaneFlat<uint8_t>(flattenRegId(id).index(),
                     id.elemIndex());
@@ -222,7 +228,7 @@ class O3ThreadContext : public ThreadContext
 
     /** Reads source vector 16bit operand. */
     virtual ConstVecLane16
-    readVec16BitLaneReg(const RegId& id) const
+    readVec16BitLaneReg(const RegId& id) const override
     {
         return readVecLaneFlat<uint16_t>(flattenRegId(id).index(),
                     id.elemIndex());
@@ -230,7 +236,7 @@ class O3ThreadContext : public ThreadContext
 
     /** Reads source vector 32bit operand. */
     virtual ConstVecLane32
-    readVec32BitLaneReg(const RegId& id) const
+    readVec32BitLaneReg(const RegId& id) const override
     {
         return readVecLaneFlat<uint32_t>(flattenRegId(id).index(),
                     id.elemIndex());
@@ -238,7 +244,7 @@ class O3ThreadContext : public ThreadContext
 
     /** Reads source vector 64bit operand. */
     virtual ConstVecLane64
-    readVec64BitLaneReg(const RegId& id) const
+    readVec64BitLaneReg(const RegId& id) const override
     {
         return readVecLaneFlat<uint64_t>(flattenRegId(id).index(),
                     id.elemIndex());
@@ -246,33 +252,35 @@ class O3ThreadContext : public ThreadContext
 
     /** Write a lane of the destination vector register. */
     virtual void setVecLane(const RegId& reg,
-            const LaneData<LaneSize::Byte>& val)
+            const LaneData<LaneSize::Byte>& val) override
     { return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val); }
     virtual void setVecLane(const RegId& reg,
-            const LaneData<LaneSize::TwoByte>& val)
+            const LaneData<LaneSize::TwoByte>& val) override
     { return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val); }
     virtual void setVecLane(const RegId& reg,
-            const LaneData<LaneSize::FourByte>& val)
+            const LaneData<LaneSize::FourByte>& val) override
     { return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val); }
     virtual void setVecLane(const RegId& reg,
-            const LaneData<LaneSize::EightByte>& val)
+            const LaneData<LaneSize::EightByte>& val) override
     { return setVecLaneFlat(flattenRegId(reg).index(), reg.elemIndex(), val); }
     /** @} */
 
-    virtual const VecElem& readVecElem(const RegId& reg) const {
+    virtual const VecElem& readVecElem(const RegId& reg) const override {
         return readVecElemFlat(flattenRegId(reg).index(), reg.elemIndex());
     }
 
-    virtual const VecPredRegContainer& readVecPredReg(const RegId& id) const {
+    virtual const VecPredRegContainer&
+    readVecPredReg(const RegId& id) const override {
         return readVecPredRegFlat(flattenRegId(id).index());
     }
 
-    virtual VecPredRegContainer& getWritableVecPredReg(const RegId& id) {
+    virtual VecPredRegContainer&
+    getWritableVecPredReg(const RegId& id) override {
         return getWritableVecPredRegFlat(flattenRegId(id).index());
     }
 
     virtual RegVal
-    readCCReg(int reg_idx)
+    readCCReg(int reg_idx) override
     {
         return readCCRegFlat(flattenRegId(RegId(CCRegClass,
                                                  reg_idx)).index());
@@ -280,101 +288,101 @@ class O3ThreadContext : public ThreadContext
 
     /** Sets an integer register to a value. */
     virtual void
-    setIntReg(int reg_idx, RegVal val)
+    setIntReg(int reg_idx, RegVal val) override
     {
         setIntRegFlat(flattenRegId(RegId(IntRegClass, reg_idx)).index(), val);
     }
 
     virtual void
-    setFloatReg(int reg_idx, RegVal val)
+    setFloatReg(int reg_idx, RegVal val) override
     {
         setFloatRegFlat(flattenRegId(RegId(FloatRegClass,
                                            reg_idx)).index(), val);
     }
 
     virtual void
-    setVecReg(const RegId& reg, const VecRegContainer& val)
+    setVecReg(const RegId& reg, const VecRegContainer& val) override
     {
         setVecRegFlat(flattenRegId(reg).index(), val);
     }
 
     virtual void
-    setVecElem(const RegId& reg, const VecElem& val)
+    setVecElem(const RegId& reg, const VecElem& val) override
     {
         setVecElemFlat(flattenRegId(reg).index(), reg.elemIndex(), val);
     }
 
     virtual void
     setVecPredReg(const RegId& reg,
-                  const VecPredRegContainer& val)
+                  const VecPredRegContainer& val) override
     {
         setVecPredRegFlat(flattenRegId(reg).index(), val);
     }
 
     virtual void
-    setCCReg(int reg_idx, RegVal val)
+    setCCReg(int reg_idx, RegVal val) override
     {
         setCCRegFlat(flattenRegId(RegId(CCRegClass, reg_idx)).index(), val);
     }
 
     /** Reads this thread's PC state. */
-    virtual TheISA::PCState pcState()
+    virtual TheISA::PCState pcState() override
     { return cpu->pcState(thread->threadId()); }
 
     /** Sets this thread's PC state. */
-    virtual void pcState(const TheISA::PCState &val);
+    virtual void pcState(const TheISA::PCState &val) override;
 
-    virtual void pcStateNoRecord(const TheISA::PCState &val);
+    virtual void pcStateNoRecord(const TheISA::PCState &val) override;
 
     /** Reads this thread's PC. */
-    virtual Addr instAddr()
+    virtual Addr instAddr() override
     { return cpu->instAddr(thread->threadId()); }
 
     /** Reads this thread's next PC. */
-    virtual Addr nextInstAddr()
+    virtual Addr nextInstAddr() override
     { return cpu->nextInstAddr(thread->threadId()); }
 
     /** Reads this thread's next PC. */
-    virtual MicroPC microPC()
+    virtual MicroPC microPC() override
     { return cpu->microPC(thread->threadId()); }
 
     /** Reads a miscellaneous register. */
-    virtual RegVal readMiscRegNoEffect(int misc_reg) const
+    virtual RegVal readMiscRegNoEffect(int misc_reg) const override
     { return cpu->readMiscRegNoEffect(misc_reg, thread->threadId()); }
 
     /** Reads a misc. register, including any side-effects the
      * read might have as defined by the architecture. */
-    virtual RegVal readMiscReg(int misc_reg)
+    virtual RegVal readMiscReg(int misc_reg) override
     { return cpu->readMiscReg(misc_reg, thread->threadId()); }
 
     /** Sets a misc. register. */
-    virtual void setMiscRegNoEffect(int misc_reg, RegVal val);
+    virtual void setMiscRegNoEffect(int misc_reg, RegVal val) override;
 
     /** Sets a misc. register, including any side-effects the
      * write might have as defined by the architecture. */
-    virtual void setMiscReg(int misc_reg, RegVal val);
+    virtual void setMiscReg(int misc_reg, RegVal val) override;
 
-    virtual RegId flattenRegId(const RegId& regId) const;
+    virtual RegId flattenRegId(const RegId& regId) const override;
 
     /** Returns the number of consecutive store conditional failures. */
     // @todo: Figure out where these store cond failures should go.
-    virtual unsigned readStCondFailures()
+    virtual unsigned readStCondFailures() override
     { return thread->storeCondFailures; }
 
     /** Sets the number of consecutive store conditional failures. */
-    virtual void setStCondFailures(unsigned sc_failures)
+    virtual void setStCondFailures(unsigned sc_failures) override
     { thread->storeCondFailures = sc_failures; }
 
     /** Executes a syscall in SE mode. */
-    virtual void syscall(int64_t callnum, Fault *fault)
+    virtual void syscall(int64_t callnum, Fault *fault) override
     { return cpu->syscall(callnum, thread->threadId(), fault); }
 
     /** Reads the funcExeInst counter. */
-    virtual Counter readFuncExeInst() { return thread->funcExeInst; }
+    virtual Counter readFuncExeInst() override { return thread->funcExeInst; }
 
     /** Returns pointer to the quiesce event. */
     virtual EndQuiesceEvent *
-    getQuiesceEvent()
+    getQuiesceEvent() override
     {
         return this->thread->quiesceEvent;
     }
@@ -390,16 +398,16 @@ class O3ThreadContext : public ThreadContext
             cpu->squashFromTC(thread->threadId());
     }
 
-    virtual RegVal readIntRegFlat(int idx);
-    virtual void setIntRegFlat(int idx, RegVal val);
+    virtual RegVal readIntRegFlat(int idx) override;
+    virtual void setIntRegFlat(int idx, RegVal val) override;
 
-    virtual RegVal readFloatRegFlat(int idx);
-    virtual void setFloatRegFlat(int idx, RegVal val);
+    virtual RegVal readFloatRegFlat(int idx) override;
+    virtual void setFloatRegFlat(int idx, RegVal val) override;
 
-    virtual const VecRegContainer& readVecRegFlat(int idx) const;
+    virtual const VecRegContainer& readVecRegFlat(int idx) const override;
     /** Read vector register operand for modification, flat indexing. */
-    virtual VecRegContainer& getWritableVecRegFlat(int idx);
-    virtual void setVecRegFlat(int idx, const VecRegContainer& val);
+    virtual VecRegContainer& getWritableVecRegFlat(int idx) override;
+    virtual void setVecRegFlat(int idx, const VecRegContainer& val) override;
 
     template <typename VecElem>
     VecLaneT<VecElem, true>
@@ -415,10 +423,12 @@ class O3ThreadContext : public ThreadContext
         cpu->template setArchVecLane(idx, lId, thread->threadId(), val);
     }
 
-    virtual const VecElem& readVecElemFlat(const RegIndex& idx,
-                                           const ElemIndex& elemIndex) const;
-    virtual void setVecElemFlat(const RegIndex& idx, const ElemIndex& elemIdx,
-                                const VecElem& val);
+    virtual const VecElem& readVecElemFlat(
+        const RegIndex& idx,
+        const ElemIndex& elemIndex) const override;
+    virtual void setVecElemFlat(
+        const RegIndex& idx,
+        const ElemIndex& elemIdx, const VecElem& val) override;
 
     virtual const VecPredRegContainer& readVecPredRegFlat(int idx)
         const override;
@@ -426,8 +436,8 @@ class O3ThreadContext : public ThreadContext
     virtual void setVecPredRegFlat(int idx,
                                    const VecPredRegContainer& val) override;
 
-    virtual RegVal readCCRegFlat(int idx);
-    virtual void setCCRegFlat(int idx, RegVal val);
+    virtual RegVal readCCRegFlat(int idx) override;
+    virtual void setCCRegFlat(int idx, RegVal val) override;
 };
 
 #endif

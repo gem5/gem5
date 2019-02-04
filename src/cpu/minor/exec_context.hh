@@ -204,7 +204,7 @@ class ExecContext : public ::ExecContext
 
     void
     setVecPredRegOperand(const StaticInst *si, int idx,
-                         const TheISA::VecPredRegContainer& val)
+                         const TheISA::VecPredRegContainer& val) override
     {
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.isVecPredReg());

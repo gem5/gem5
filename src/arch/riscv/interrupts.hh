@@ -131,7 +131,7 @@ class Interrupts : public SimObject
     void setIE(const uint64_t& val) { ie = val; }
 
     void
-    serialize(CheckpointOut &cp)
+    serialize(CheckpointOut &cp) const
     {
         SERIALIZE_SCALAR(ip.to_ulong());
         SERIALIZE_SCALAR(ie.to_ulong());
