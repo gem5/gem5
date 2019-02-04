@@ -207,8 +207,8 @@ class SimpleSystem(LinuxArmSystem):
         self.iobridge = Bridge(delay='50ns')
         # Device DMA -> MEM
         mem_range = self.realview._mem_regions[0]
-        mem_range_size = long(mem_range[1]) - long(mem_range[0])
-        assert mem_range_size >= long(Addr(mem_size))
+        max_size = long(mem_range[1])
+        assert max_size >= long(Addr(mem_size))
         self.mem_ranges = [ AddrRange(start=mem_range[0], size=mem_size) ]
         self._caches = caches
         if self._caches:
