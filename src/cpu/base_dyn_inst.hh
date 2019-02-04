@@ -221,7 +221,7 @@ class BaseDynInst : public ExecContext, public RefCounted
     short asid;
 
     /** The size of the request */
-    uint8_t effSize;
+    unsigned effSize;
 
     /** Pointer to the data for the memory access. */
     uint8_t *memData;
