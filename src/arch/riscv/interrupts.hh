@@ -74,7 +74,7 @@ class Interrupts : public SimObject
     std::bitset<NumInterruptTypes>
     globalMask(ThreadContext *tc) const
     {
-        INTERRUPT mask;
+        INTERRUPT mask = 0;
         STATUS status = tc->readMiscReg(MISCREG_STATUS);
         if (status.mie)
             mask.mei = mask.mti = mask.msi = 1;
