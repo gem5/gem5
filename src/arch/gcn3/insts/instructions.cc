@@ -32266,6 +32266,7 @@ namespace Gcn3ISA
     Inst_DS__DS_SWIZZLE_B32::Inst_DS__DS_SWIZZLE_B32(InFmt_DS *iFmt)
         : Inst_DS(iFmt, "ds_swizzle_b32")
     {
+         setFlag(Load);
     } // Inst_DS__DS_SWIZZLE_B32
 
     Inst_DS__DS_SWIZZLE_B32::~Inst_DS__DS_SWIZZLE_B32()
@@ -32277,8 +32278,107 @@ namespace Gcn3ISA
     void
     Inst_DS__DS_SWIZZLE_B32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
-    }
+        Wavefront *wf = gpuDynInst->wavefront();
+        wf->rdLmReqsInPipe--;
+        wf->validateRequestCounters();
+
+        if (gpuDynInst->exec_mask.none()) {
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()
+                                ->cyclesToTicks(Cycles(24)));
+
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA0);
+        VecOperandU32 vdst(gpuDynInst, extData.VDST);
+        /**
+         * The "DS pattern" is comprised of both offset fields. That is, the
+         * swizzle pattern between lanes. Bit 15 of the DS pattern dictates
+         * which swizzle mode to use. There are two different swizzle
+         * patterns: 1) QDMode and 2) Bit-masks mode. If bit 15 is set use
+         * QDMode else use Bit-masks mode. The remaining bits dictate how to
+         * swizzle the lanes.
+         *
+         * QDMode:      Chunks the lanes into 4s and swizzles among them.
+         *              Bits 7:6 dictate where lane 3 (of the current chunk)
+         *              gets its date, 5:4 lane 2, etc.
+         *
+         * Bit-mask:    This mode breaks bits 14:0 into 3 equal-sized chunks.
+         *              14:10 is the xor_mask, 9:5 is the or_mask, and 4:0
+         *              is the and_mask. Each lane is swizzled by performing
+         *              the appropriate operation using these masks.
+         */
+        VecElemU16 ds_pattern = ((instData.OFFSET1 << 8) | instData.OFFSET0);
+
+        data.read();
+
+        if (bits(ds_pattern, 15)) {
+            // QDMode
+            for (int lane = 0; lane < NumVecElemPerVecReg; lane += 4) {
+                /**
+                 * This operation allows data sharing between groups
+                 * of four consecutive threads. Note the increment by
+                 * 4 in the for loop.
+                 */
+                if (gpuDynInst->exec_mask[lane]) {
+                    int index0 = lane + bits(ds_pattern, 1, 0);
+                    panic_if(index0 >= NumVecElemPerVecReg, "%s: index0 (%d) "
+                             "is out of bounds.\n", gpuDynInst->disassemble(),
+                             index0);
+                    vdst[lane]
+                        = gpuDynInst->exec_mask[index0] ? data[index0]: 0;
+                }
+                if (gpuDynInst->exec_mask[lane + 1]) {
+                    int index1 = lane + bits(ds_pattern, 3, 2);
+                    panic_if(index1 >= NumVecElemPerVecReg, "%s: index1 (%d) "
+                             "is out of bounds.\n", gpuDynInst->disassemble(),
+                             index1);
+                    vdst[lane + 1]
+                        = gpuDynInst->exec_mask[index1] ? data[index1]: 0;
+                }
+                if (gpuDynInst->exec_mask[lane + 2]) {
+                    int index2 = lane + bits(ds_pattern, 5, 4);
+                    panic_if(index2 >= NumVecElemPerVecReg, "%s: index2 (%d) "
+                             "is out of bounds.\n", gpuDynInst->disassemble(),
+                             index2);
+                    vdst[lane + 2]
+                        = gpuDynInst->exec_mask[index2] ? data[index2]: 0;
+                }
+                if (gpuDynInst->exec_mask[lane + 3]) {
+                    int index3 = lane + bits(ds_pattern, 7, 6);
+                    panic_if(index3 >= NumVecElemPerVecReg, "%s: index3 (%d) "
+                             "is out of bounds.\n", gpuDynInst->disassemble(),
+                             index3);
+                    vdst[lane + 3]
+                        = gpuDynInst->exec_mask[index3] ? data[index3]: 0;
+                }
+            }
+        } else {
+            // Bit Mode
+            int and_mask = bits(ds_pattern, 4, 0);
+            int or_mask = bits(ds_pattern, 9, 5);
+            int xor_mask = bits(ds_pattern, 14, 10);
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    int index = (((lane & and_mask) | or_mask) ^ xor_mask);
+                    // Adjust for the next 32 lanes.
+                    if (lane > 31) {
+                        index += 32;
+                    }
+                    panic_if(index >= NumVecElemPerVecReg, "%s: index (%d) is "
+                             "out of bounds.\n", gpuDynInst->disassemble(),
+                             index);
+                    vdst[lane]
+                        = gpuDynInst->exec_mask[index] ? data[index] : 0;
+                }
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_DS__DS_PERMUTE_B32 class methods ---
 
     Inst_DS__DS_PERMUTE_B32::Inst_DS__DS_PERMUTE_B32(InFmt_DS *iFmt)
         : Inst_DS(iFmt, "ds_permute_b32")
