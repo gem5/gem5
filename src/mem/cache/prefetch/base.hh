@@ -76,7 +76,8 @@ class BasePrefetcher : public ClockedObject
     };
 
     std::vector<PrefetchListener *> listeners;
-  protected:
+
+  public:
 
     /**
      * Class containing the information needed by the prefetch to train and
@@ -167,6 +168,8 @@ class BasePrefetcher : public ClockedObject
          */
         PrefetchInfo(PrefetchInfo const &pfi, Addr addr);
     };
+
+  protected:
 
     // PARAMETERS
 

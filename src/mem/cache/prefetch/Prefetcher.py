@@ -237,3 +237,32 @@ class AccessMapPatternMatchingPrefetcher(QueuedPrefetcher):
     epoch_cycles = Param.Cycles(256000, "Cycles in an epoch period")
     offchip_memory_latency = Param.Latency("30ns",
         "Memory latency used to compute the required memory bandwidth")
+
+class DeltaCorrelatingPredictionTables(SimObject):
+    type = 'DeltaCorrelatingPredictionTables'
+    cxx_class = 'DeltaCorrelatingPredictionTables'
+    cxx_header = "mem/cache/prefetch/delta_correlating_prediction_tables.hh"
+    deltas_per_entry = Param.Unsigned(20,
+        "Number of deltas stored in each table entry")
+    delta_bits = Param.Unsigned(12, "Bits per delta")
+    delta_mask_bits = Param.Unsigned(8,
+        "Lower bits to mask when comparing deltas")
+    table_entries = Param.MemorySize("128",
+        "Number of entries in the table")
+    table_assoc = Param.Unsigned(128,
+        "Associativity of the table")
+    table_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1, assoc = Parent.table_assoc,
+        size = Parent.table_entries),
+        "Indexing policy of the table")
+    table_replacement_policy = Param.BaseReplacementPolicy(LRURP(),
+        "Replacement policy of the table")
+
+class DCPTPrefetcher(QueuedPrefetcher):
+    type = 'DCPTPrefetcher'
+    cxx_class = 'DCPTPrefetcher'
+    cxx_header = "mem/cache/prefetch/delta_correlating_prediction_tables.hh"
+    dcpt = Param.DeltaCorrelatingPredictionTables(
+        DeltaCorrelatingPredictionTables(),
+        "Delta Correlating Prediction Tables object")
+

@@ -34,6 +34,7 @@ SimObject('Prefetcher.py')
 
 Source('access_map_pattern_matching.cc')
 Source('base.cc')
+Source('delta_correlating_prediction_tables.cc')
 Source('queued.cc')
 Source('signature_path.cc')
 Source('signature_path_v2.cc')
