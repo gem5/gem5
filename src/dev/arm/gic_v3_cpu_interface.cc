@@ -460,6 +460,14 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
               if (int_id < Gicv3::INTID_SECURE) {
                   activateIRQ(int_id, hppi.group);
               }
+
+              // LPIs are not activated and when acked their pending
+              // bit is cleared
+              if (int_id >= Gicv3Redistributor::SMALLEST_LPI_ID)
+              {
+                  redistributor->setClrLPI(int_id, false);
+              }
+
           } else {
               int_id = Gicv3::INTID_SPURIOUS;
           }

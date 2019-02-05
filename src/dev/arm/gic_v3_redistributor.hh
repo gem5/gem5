@@ -119,6 +119,24 @@ class Gicv3Redistributor : public Serializable
     // Interrupt Priority Registers
     static const AddrRange GICR_IPRIORITYR;
 
+    // GIC physical LPI Redistributor register
+    enum {
+        // Set LPI Pending Register
+        GICR_SETLPIR = RD_base + 0x0040,
+        // Clear LPI Pending Register
+        GICR_CLRLPIR = RD_base + 0x0048,
+        //Redistributor Properties Base Address Register
+        GICR_PROPBASER = RD_base + 0x0070,
+        // Redistributor LPI Pending Table Base Address Register
+        GICR_PENDBASER = RD_base + 0x0078,
+        // Redistributor Invalidate LPI Register
+        GICR_INVLPIR = RD_base + 0x00A0,
+        // Redistributor Invalidate All Register
+        GICR_INVALLR = RD_base + 0x00B0,
+        // Redistributor Synchronize Register
+        GICR_SYNCR = RD_base + 0x00C0,
+    };
+
     std::vector <uint8_t> irqGroup;
     std::vector <bool> irqEnabled;
     std::vector <bool> irqPending;
@@ -131,7 +149,21 @@ class Gicv3Redistributor : public Serializable
     bool DPG1S;
     bool DPG1NS;
     bool DPG0;
+    bool EnableLPIs;
 
+    Addr lpiConfigurationTablePtr;
+    uint8_t lpiIDBits;
+    Addr lpiPendingTablePtr;
+
+    BitUnion8(LPIConfigurationTableEntry)
+        Bitfield<7, 2> priority;
+        Bitfield<1> res1;
+        Bitfield<0> enable;
+    EndBitUnion(LPIConfigurationTableEntry)
+
+    std::vector<LPIConfigurationTableEntry> lpiConfigurationTable;
+
+    static const uint32_t GICR_CTLR_ENABLE_LPIS = 1 << 0;
     static const uint32_t GICR_CTLR_DPG0 = 1 << 24;
     static const uint32_t GICR_CTLR_DPG1NS = 1 << 25;
     static const uint32_t GICR_CTLR_DPG1S = 1 << 26;
@@ -146,6 +178,8 @@ class Gicv3Redistributor : public Serializable
      * loader code.
      */
     static const uint32_t ADDR_RANGE_SIZE = 0x40000;
+
+    static const uint32_t SMALLEST_LPI_ID = 8192;
 
     Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id);
     ~Gicv3Redistributor();
@@ -168,6 +202,7 @@ class Gicv3Redistributor : public Serializable
     }
 
     bool canBeSelectedFor1toNInterrupt(Gicv3::GroupId group);
+    void setClrLPI(uint64_t data, bool set);
 
   protected:
 
@@ -178,6 +213,7 @@ class Gicv3Redistributor : public Serializable
     Gicv3::GroupId getIntGroup(int int_id);
     void activateIRQ(uint32_t int_id);
     void deactivateIRQ(uint32_t int_id);
+    void invalLpiConfig(uint32_t lpi_entry_index);
 };
 
 #endif //__DEV_ARM_GICV3_REDISTRIBUTOR_H__
