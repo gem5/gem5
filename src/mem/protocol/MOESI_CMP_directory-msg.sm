@@ -1,5 +1,16 @@
-
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -40,11 +51,10 @@ enumeration(CoherenceRequestType, desc="...") {
   PUTO,      desc="Put Owned";
   PUTO_SHARERS,      desc="Put Owned, but sharers exist so don't remove from sharers list";
   PUTS,      desc="Put Shared";
-  WB_ACK,    desc="Writeback ack";
-  WB_ACK_DATA,    desc="Writeback ack";
-  WB_NACK,   desc="Writeback neg. ack";
   INV,       desc="Invalidation";
-  
+  WRITEBACK_CLEAN_DATA,   desc="Clean writeback (contains data)";
+  WRITEBACK_CLEAN_ACK,    desc="Clean writeback (contains no data)";
+  WRITEBACK_DIRTY_DATA,   desc="Dirty writeback (contains data)";
   DMA_READ,  desc="DMA Read";
   DMA_WRITE, desc="DMA Write";
 }
@@ -56,9 +66,9 @@ enumeration(CoherenceResponseType, desc="...") {
   DATA_EXCLUSIVE,    desc="Data, no processor has a copy";
   UNBLOCK,           desc="Unblock";
   UNBLOCK_EXCLUSIVE, desc="Unblock, we're in E/M";
-  WRITEBACK_CLEAN_DATA,   desc="Clean writeback (contains data)";
-  WRITEBACK_CLEAN_ACK,   desc="Clean writeback (contains no data)";
-  WRITEBACK_DIRTY_DATA,   desc="Dirty writeback (contains data)";
+  WB_ACK,            desc="Writeback ack";
+  WB_ACK_DATA,       desc="Writeback ack";
+  WB_NACK,           desc="Writeback neg. ack";
   DMA_ACK,           desc="Ack that a DMA write completed";
 }
 
@@ -100,7 +110,9 @@ structure(RequestMsg, desc="...", interface="Message") {
   bool functionalRead(Packet *pkt) {
     // Read only those messages that contain the data
     if (Type == CoherenceRequestType:DMA_READ ||
-        Type == CoherenceRequestType:DMA_WRITE) {
+        Type == CoherenceRequestType:DMA_WRITE ||
+        Type == CoherenceRequestType:WRITEBACK_CLEAN_DATA ||
+        Type == CoherenceRequestType:WRITEBACK_DIRTY_DATA) {
         return testAndRead(addr, DataBlk, pkt);
     }
     return false;
@@ -127,9 +139,7 @@ structure(ResponseMsg, desc="...", interface="Message") {
   bool functionalRead(Packet *pkt) {
     // Read only those messages that contain the data
     if (Type == CoherenceResponseType:DATA ||
-        Type == CoherenceResponseType:DATA_EXCLUSIVE ||
-        Type == CoherenceResponseType:WRITEBACK_CLEAN_DATA ||
-        Type == CoherenceResponseType:WRITEBACK_DIRTY_DATA) {
+        Type == CoherenceResponseType:DATA_EXCLUSIVE) {
         return testAndRead(addr, DataBlk, pkt);
     }
     return false;

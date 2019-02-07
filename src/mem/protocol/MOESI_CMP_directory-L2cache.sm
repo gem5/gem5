@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -620,30 +632,12 @@ machine(MachineType:L2Cache, "Token protocol")
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK_EXCLUSIVE) {
           trigger(Event:Exclusive_Unblock, in_msg.addr,
                   getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
-        } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_DIRTY_DATA) {
-          Entry cache_entry := getCacheEntry(in_msg.addr);
-          if (is_invalid(cache_entry) &&
-                   L2cache.cacheAvail(in_msg.addr) == false) {
-            trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.addr),
-                    getCacheEntry(L2cache.cacheProbe(in_msg.addr)),
-                    TBEs[L2cache.cacheProbe(in_msg.addr)]);
-          }
-          else {
-            trigger(Event:L1_WBDIRTYDATA, in_msg.addr,
-                    cache_entry, TBEs[in_msg.addr]);
-          }
-        } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_CLEAN_DATA) {
-          Entry cache_entry := getCacheEntry(in_msg.addr);
-          if (is_invalid(cache_entry) &&
-                   L2cache.cacheAvail(in_msg.addr) == false) {
-            trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.addr),
-                    getCacheEntry(L2cache.cacheProbe(in_msg.addr)),
-                    TBEs[L2cache.cacheProbe(in_msg.addr)]);
-          }
-          else {
-            trigger(Event:L1_WBCLEANDATA, in_msg.addr,
-                    cache_entry, TBEs[in_msg.addr]);
-          }
+        } else if (in_msg.Type == CoherenceResponseType:WB_ACK) {
+          trigger(Event:Writeback_Ack, in_msg.addr,
+                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
+        } else if (in_msg.Type == CoherenceResponseType:WB_NACK) {
+          trigger(Event:Writeback_Nack, in_msg.addr,
+                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
           trigger(Event:DmaAck, in_msg.addr,
                   getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
@@ -676,12 +670,6 @@ machine(MachineType:L2Cache, "Token protocol")
         } else if (in_msg.Type == CoherenceRequestType:INV) {
           trigger(Event:Inv, in_msg.addr,
                   getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
-        } else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
-          trigger(Event:Writeback_Ack, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
-        } else if (in_msg.Type == CoherenceRequestType:WB_NACK) {
-          trigger(Event:Writeback_Nack, in_msg.addr,
-                  getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
         } else {
           error("Unexpected message");
         }
@@ -713,6 +701,30 @@ machine(MachineType:L2Cache, "Token protocol")
           }
           else {
             trigger(Event:L1_PUTS, in_msg.addr,
+                    cache_entry, TBEs[in_msg.addr]);
+          }
+        } else if (in_msg.Type == CoherenceRequestType:WRITEBACK_DIRTY_DATA) {
+          Entry cache_entry := getCacheEntry(in_msg.addr);
+          if (is_invalid(cache_entry) &&
+                   L2cache.cacheAvail(in_msg.addr) == false) {
+            trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.addr),
+                    getCacheEntry(L2cache.cacheProbe(in_msg.addr)),
+                    TBEs[L2cache.cacheProbe(in_msg.addr)]);
+          }
+          else {
+            trigger(Event:L1_WBDIRTYDATA, in_msg.addr,
+                    cache_entry, TBEs[in_msg.addr]);
+          }
+        } else if (in_msg.Type == CoherenceRequestType:WRITEBACK_CLEAN_DATA) {
+          Entry cache_entry := getCacheEntry(in_msg.addr);
+          if (is_invalid(cache_entry) &&
+                   L2cache.cacheAvail(in_msg.addr) == false) {
+            trigger(Event:L2_Replacement, L2cache.cacheProbe(in_msg.addr),
+                    getCacheEntry(L2cache.cacheProbe(in_msg.addr)),
+                    TBEs[L2cache.cacheProbe(in_msg.addr)]);
+          }
+          else {
+            trigger(Event:L1_WBCLEANDATA, in_msg.addr,
                     cache_entry, TBEs[in_msg.addr]);
           }
         } else {
@@ -1191,9 +1203,15 @@ machine(MachineType:L2Cache, "Token protocol")
     }
   }
 
-  action(gg_clearOwnerFromL1Response, "g\g", desc="Clear sharer from L1 response queue") {
-    peek(responseNetwork_in, ResponseMsg) {
-      removeOwnerFromDir(cache_entry, in_msg.addr, in_msg.Sender);
+  action(gg_clearSharerFromL1Request, "clsl1r", desc="Clear sharer from L1 request queue") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      removeSharerFromDir(cache_entry, in_msg.addr, in_msg.Requestor);
+    }
+  }
+
+  action(gg_clearOwnerFromL1Request, "clol1r", desc="Clear owner from L1 request queue") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      removeOwnerFromDir(cache_entry, in_msg.addr, in_msg.Requestor);
     }
   }
 
@@ -1330,12 +1348,11 @@ machine(MachineType:L2Cache, "Token protocol")
 
   action(l_writebackAckNeedData, "l", desc="Send writeback ack to L1 requesting data") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
+      enqueue( responseNetwork_out, ResponseMsg, response_latency ) {
         out_msg.addr := in_msg.addr;
-        // out_msg.Type := CoherenceResponseType:WRITEBACK_SEND_DATA;
-        out_msg.Type := CoherenceRequestType:WB_ACK_DATA;
-        out_msg.Requestor := machineID;
-        out_msg.RequestorMachine := MachineType:L2Cache;
+        out_msg.Type := CoherenceResponseType:WB_ACK_DATA;
+        out_msg.Sender := machineID;
+        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -1344,12 +1361,11 @@ machine(MachineType:L2Cache, "Token protocol")
 
   action(l_writebackAckDropData, "\l", desc="Send writeback ack to L1 indicating to drop data") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
+      enqueue( responseNetwork_out, ResponseMsg, response_latency ) {
         out_msg.addr := in_msg.addr;
-        // out_msg.Type := CoherenceResponseType:WRITEBACK_ACK;
-        out_msg.Type := CoherenceRequestType:WB_ACK;
-        out_msg.Requestor := machineID;
-        out_msg.RequestorMachine := MachineType:L2Cache;
+        out_msg.Type := CoherenceResponseType:WB_ACK;
+        out_msg.Sender := machineID;
+        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -1358,11 +1374,11 @@ machine(MachineType:L2Cache, "Token protocol")
 
   action(ll_writebackNack, "\ll", desc="Send writeback nack to L1") {
     peek(L1requestNetwork_in, RequestMsg) {
-      enqueue( localRequestNetwork_out, RequestMsg, response_latency ) {
+      enqueue( responseNetwork_out, ResponseMsg, response_latency ) {
         out_msg.addr := in_msg.addr;
-        out_msg.Type := CoherenceRequestType:WB_NACK;
-        out_msg.Requestor := machineID;
-        out_msg.RequestorMachine := MachineType:L2Cache;
+        out_msg.Type := CoherenceResponseType:WB_NACK;
+        out_msg.Sender := machineID;
+        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -1429,19 +1445,18 @@ machine(MachineType:L2Cache, "Token protocol")
 
 
   action( qq_sendDataFromTBEToMemory, "qq", desc="Send data from TBE to directory") {
-    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
+    enqueue(globalRequestNetwork_out, RequestMsg, response_latency) {
       assert(is_valid(tbe));
       out_msg.addr := address;
-      out_msg.Sender := machineID;
-      out_msg.SenderMachine := MachineType:L2Cache;
+      out_msg.Requestor := machineID;
+      out_msg.RequestorMachine := MachineType:L2Cache;
       out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
-      out_msg.Dirty := tbe.Dirty;
       if (tbe.Dirty) {
-        out_msg.Type := CoherenceResponseType:WRITEBACK_DIRTY_DATA;
+        out_msg.Type := CoherenceRequestType:WRITEBACK_DIRTY_DATA;
         out_msg.DataBlk := tbe.DataBlk;
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
       } else {
-         out_msg.Type := CoherenceResponseType:WRITEBACK_CLEAN_ACK;
+         out_msg.Type := CoherenceRequestType:WRITEBACK_CLEAN_ACK;
         // NOTE: in a real system this would not send data.  We send
         // data here only so we can check it at the memory
          out_msg.DataBlk := tbe.DataBlk;
@@ -1492,15 +1507,23 @@ machine(MachineType:L2Cache, "Token protocol")
   }
 
 
-  action(u_writeDataToCache, "u", desc="Write data to cache") {
-    peek(responseNetwork_in, ResponseMsg) {
+  action(u_writeCleanDataToCache, "wCd", desc="Write clean data to cache") {
+    peek(L1requestNetwork_in, RequestMsg) {
       assert(is_valid(cache_entry));
       cache_entry.DataBlk := in_msg.DataBlk;
       DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
             address, cache_entry.DataBlk);
-      if ((cache_entry.Dirty == false) && in_msg.Dirty) {
-        cache_entry.Dirty := in_msg.Dirty;
-      }
+      assert(cache_entry.Dirty == false);
+    }
+  }
+
+  action(u_writeDirtyDataToCache, "wDd", desc="Write dirty data to cache") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      assert(is_valid(cache_entry));
+      cache_entry.DataBlk := in_msg.DataBlk;
+      DPRINTF(RubySlicc, "Address: %#x, Data Block: %s\n",
+            address, cache_entry.DataBlk);
+      cache_entry.Dirty := true;
     }
   }
 
@@ -1538,11 +1561,18 @@ machine(MachineType:L2Cache, "Token protocol")
     localDirectory.deallocate(address);
   }
 
-  action(zz_recycleRequestQueue, "\zz", desc="Send the head of the mandatory queue to the back of the queue.") {
+  action(zz_recycleGlobalRequestQueue, "\zglb", desc="Send the head of the mandatory queue to the back of the queue.") {
     peek(requestNetwork_in, RequestMsg) {
       APPEND_TRANSITION_COMMENT(in_msg.Requestor);
     }
     requestNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
+  }
+
+  action(zz_recycleL1RequestQueue, "\zl1", desc="Send the head of the mandatory queue to the back of the queue.") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+    }
+    L1requestNetwork_in.recycle(clockEdge(), cyclesToTicks(recycle_latency));
   }
 
   action(zz_recycleResponseQueue, "\z\z", desc="Send the head of the mandatory queue to the back of the queue.") {
@@ -1586,23 +1616,23 @@ machine(MachineType:L2Cache, "Token protocol")
   }
 
   transition({IFGX, IFGS, ISFGS, IFGXX, IFLXO, OFGX, ILOW, ILOXW, ILOSW, ILOSXW, SLSW, OLSW, ILSW, IW, ILXW, OW, SW, OXW, OLSXW, IFLS, IFLO, IFLOX, IFLOXX, IFLOSX,OLSXS,  IGS, IGM, IGMLS, IGMO, MM, SS, OO, OI, MI, MII, OLSI, ILSI, SLSS, OLSS, OLSF, IGMIOFS, ILOSD, ILOSXD, ILOD, ILXD, ILOXD}, L2_Replacement) {
-    zz_recycleResponseQueue;
+    zz_recycleL1RequestQueue;
   }
 
   transition({IFGX, IFGS, ISFGS, IFGXX, IFLXO, OFGX, ILOW, ILOXW, ILOSW, ILOSXW, SLSW, OLSW, ILSW, IW, OW, SW, OXW, OLSXW, ILXW, IFLS, IFLO, IFLOX, IFLOXX, IFLOSX,OLSXS, IGS, IGM, MM, SS, OO, SLSS, OLSS, OLSF, IGMIOFS, ILOSD, ILOSXD, ILOD, ILXD, ILOXD}, {Fwd_GETX, Fwd_GETS, Fwd_DMA}) {
-    zz_recycleRequestQueue;
+    zz_recycleGlobalRequestQueue;
   }
 
   transition({OGMIO, IGMIO, IGMO}, Fwd_DMA) {
-    zz_recycleRequestQueue;
+    zz_recycleGlobalRequestQueue;
   }
 
   transition({IFGX, IFGS, ISFGS, IFGXX, IFLXO, OFGX, ILOW, ILOXW, ILOSW, ILOSXW, SLSW, OLSW, ILSW, IW, OW, SW, OXW, OLSXW, ILXW, IFLS, IFLO, IFLOX, IFLOXX, IFLOSX,OLSXS, MM, SS, OO, SLSS, OLSS, OLSF, IGMIOFS, ILOSD, ILOSXD, ILOD, ILXD, ILOXD}, {Inv}) {
-    zz_recycleRequestQueue;
+    zz_recycleGlobalRequestQueue;
   }
 
   transition({IGM, IGS, ILOSD, ILOSXD, ILOD, ILXD, ILOXD}, {Own_GETX}) {
-    zz_recycleRequestQueue;
+    zz_recycleGlobalRequestQueue;
   }
 
   // must happened because we forwarded GETX to local exclusive trying to do wb
@@ -2643,8 +2673,8 @@ machine(MachineType:L2Cache, "Token protocol")
     gg_clearLocalSharers;
     vv_allocateL2CacheBlock;
     y_copyDirToCacheAndRemove;
-    u_writeDataToCache;
-    n_popResponseQueue;
+    u_writeDirtyDataToCache;
+    o_popL1RequestQueue;
     wa_wakeUpDependents;
   }
 
@@ -2653,8 +2683,8 @@ machine(MachineType:L2Cache, "Token protocol")
     gg_clearLocalSharers;
     vv_allocateL2CacheBlock;
     y_copyDirToCacheAndRemove;
-    u_writeDataToCache;
-    n_popResponseQueue;
+    u_writeCleanDataToCache;
+    o_popL1RequestQueue;
     wa_wakeUpDependents;
   }
 
@@ -2667,67 +2697,93 @@ machine(MachineType:L2Cache, "Token protocol")
   transition(ILSW, L1_WBCLEANDATA, SLS) {
     vv_allocateL2CacheBlock;
     y_copyDirToCacheAndRemove;
-    u_writeDataToCache;
-    gg_clearSharerFromL1Response;
-    n_popResponseQueue;
+    u_writeCleanDataToCache;
+    gg_clearSharerFromL1Request;
+    o_popL1RequestQueue;
     wa_wakeUpDependents;
   }
 
   transition(IW, L1_WBCLEANDATA, S) {
     vv_allocateL2CacheBlock;
     y_copyDirToCacheAndRemove;
-    u_writeDataToCache;
-    gg_clearSharerFromL1Response;
-    n_popResponseQueue;
+    u_writeCleanDataToCache;
+    gg_clearSharerFromL1Request;
+    o_popL1RequestQueue;
     wa_wakeUpDependents;
   }
 
   // Owner can have dirty data
-  transition(ILOW, {L1_WBCLEANDATA, L1_WBDIRTYDATA}, O) {
+  transition(ILOW, L1_WBDIRTYDATA, O) {
     vv_allocateL2CacheBlock;
     y_copyDirToCacheAndRemove;
-    gg_clearOwnerFromL1Response;
-    u_writeDataToCache;
-    n_popResponseQueue;
+    gg_clearOwnerFromL1Request;
+    u_writeDirtyDataToCache;
+    o_popL1RequestQueue;
+    wa_wakeUpDependents;
+  }
+
+  transition(ILOW, L1_WBCLEANDATA, O) {
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    gg_clearOwnerFromL1Request;
+    u_writeCleanDataToCache;
+    o_popL1RequestQueue;
     wa_wakeUpDependents;
   }
 
   transition(ILOXW, L1_WBDIRTYDATA, M) {
     vv_allocateL2CacheBlock;
     y_copyDirToCacheAndRemove;
-    gg_clearOwnerFromL1Response;
-    u_writeDataToCache;
-    n_popResponseQueue;
+    gg_clearOwnerFromL1Request;
+    u_writeDirtyDataToCache;
+    o_popL1RequestQueue;
     wa_wakeUpDependents;
   }
 
   transition(ILOXW, L1_WBCLEANDATA, M) {
     vv_allocateL2CacheBlock;
     y_copyDirToCacheAndRemove;
-    gg_clearOwnerFromL1Response;
-    u_writeDataToCache;
-    n_popResponseQueue;
+    gg_clearOwnerFromL1Request;
+    u_writeCleanDataToCache;
+    o_popL1RequestQueue;
     wa_wakeUpDependents;
   }
 
-  transition(ILOSW, {L1_WBCLEANDATA, L1_WBDIRTYDATA}, OLS) {
+  transition(ILOSW, L1_WBDIRTYDATA, OLS) {
     vv_allocateL2CacheBlock;
     y_copyDirToCacheAndRemove;
-    gg_clearOwnerFromL1Response;
-    u_writeDataToCache;
-    n_popResponseQueue;
+    gg_clearOwnerFromL1Request;
+    u_writeDirtyDataToCache;
+    o_popL1RequestQueue;
     wa_wakeUpDependents;
   }
 
-  transition(ILOSXW, {L1_WBCLEANDATA, L1_WBDIRTYDATA}, OLSX) {
+  transition(ILOSW, L1_WBCLEANDATA, OLS) {
     vv_allocateL2CacheBlock;
     y_copyDirToCacheAndRemove;
-    gg_clearOwnerFromL1Response;
-    u_writeDataToCache;
-    n_popResponseQueue;
+    gg_clearOwnerFromL1Request;
+    u_writeCleanDataToCache;
+    o_popL1RequestQueue;
     wa_wakeUpDependents;
   }
 
+  transition(ILOSXW, L1_WBDIRTYDATA, OLSX) {
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    gg_clearOwnerFromL1Request;
+    u_writeDirtyDataToCache;
+    o_popL1RequestQueue;
+    wa_wakeUpDependents;
+  }
+
+  transition(ILOSXW, L1_WBCLEANDATA, OLSX) {
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    gg_clearOwnerFromL1Request;
+    u_writeCleanDataToCache;
+    o_popL1RequestQueue;
+    wa_wakeUpDependents;
+  }
 
   transition(SLSW, {Unblock}, SLS) {
     gg_clearSharerFromL1Response;
@@ -2838,39 +2894,39 @@ machine(MachineType:L2Cache, "Token protocol")
   transition({MI, OI}, Writeback_Ack, I) {
     qq_sendDataFromTBEToMemory;
     s_deallocateTBE;
-    m_popRequestQueue;
+    n_popResponseQueue;
     wa_wakeUpDependents;
   }
 
   transition(MII, Writeback_Nack, I) {
     s_deallocateTBE;
-    m_popRequestQueue;
+    n_popResponseQueue;
     wa_wakeUpDependents;
   }
 
   transition(OI, Writeback_Nack) {
     b_issuePUTO;
-    m_popRequestQueue;
+    n_popResponseQueue;
   }
 
   transition(OLSI, Writeback_Ack, ILS) {
     qq_sendDataFromTBEToMemory;
     s_deallocateTBE;
-    m_popRequestQueue;
+    n_popResponseQueue;
     wa_wakeUpDependents;
   }
 
   transition(MII, Writeback_Ack, I) {
     f_sendUnblock;
     s_deallocateTBE;
-    m_popRequestQueue;
+    n_popResponseQueue;
     wa_wakeUpDependents;
   }
 
   transition(ILSI, Writeback_Ack, ILS) {
     f_sendUnblock;
     s_deallocateTBE;
-    m_popRequestQueue;
+    n_popResponseQueue;
     wa_wakeUpDependents;
   }
 }

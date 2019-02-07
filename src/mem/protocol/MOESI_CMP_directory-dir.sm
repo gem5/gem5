@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2013 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -243,12 +255,6 @@ machine(MachineType:Directory, "Directory protocol")
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK_EXCLUSIVE) {
           trigger(Event:Exclusive_Unblock, in_msg.addr,
                   TBEs[in_msg.addr]);
-        } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_DIRTY_DATA) {
-          trigger(Event:Dirty_Writeback, in_msg.addr,
-                  TBEs[in_msg.addr]);
-        } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_CLEAN_ACK) {
-          trigger(Event:Clean_Writeback, in_msg.addr,
-                  TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
           trigger(Event:Data, in_msg.addr,
                   TBEs[in_msg.addr]);
@@ -275,6 +281,12 @@ machine(MachineType:Directory, "Directory protocol")
           trigger(Event:PUTO, in_msg.addr, TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceRequestType:PUTO_SHARERS) {
           trigger(Event:PUTO_SHARERS, in_msg.addr, TBEs[in_msg.addr]);
+        } else if (in_msg.Type == CoherenceRequestType:WRITEBACK_DIRTY_DATA) {
+          trigger(Event:Dirty_Writeback, in_msg.addr,
+                  TBEs[in_msg.addr]);
+        } else if (in_msg.Type == CoherenceRequestType:WRITEBACK_CLEAN_ACK) {
+          trigger(Event:Clean_Writeback, in_msg.addr,
+                  TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {
           trigger(Event:DMA_READ, makeLineAddress(in_msg.addr),
                   TBEs[makeLineAddress(in_msg.addr)]);
@@ -308,11 +320,11 @@ machine(MachineType:Directory, "Directory protocol")
 
   action(a_sendWriteBackAck, "a", desc="Send writeback ack to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, directory_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, directory_latency) {
         out_msg.addr := address;
-        out_msg.Type := CoherenceRequestType:WB_ACK;
-        out_msg.Requestor := in_msg.Requestor;
-        out_msg.RequestorMachine := MachineType:Directory;
+        out_msg.Type := CoherenceResponseType:WB_ACK;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.SenderMachine := MachineType:Directory;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -321,11 +333,11 @@ machine(MachineType:Directory, "Directory protocol")
 
   action(b_sendWriteBackNack, "b", desc="Send writeback nack to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, directory_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, directory_latency) {
         out_msg.addr := address;
-        out_msg.Type := CoherenceRequestType:WB_NACK;
-        out_msg.Requestor := in_msg.Requestor;
-        out_msg.RequestorMachine := MachineType:Directory;
+        out_msg.Type := CoherenceResponseType:WB_NACK;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.SenderMachine := MachineType:Directory;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -472,13 +484,13 @@ machine(MachineType:Directory, "Directory protocol")
     }
   }
 
-  action(qw_queueMemoryWBRequest, "qw", desc="Queue off-chip writeback request") {
-    peek(unblockNetwork_in, ResponseMsg) {
+  action(qw_queueMemoryWBFromCacheRequest, "qw", desc="Queue off-chip writeback request") {
+    peek(requestQueue_in, RequestMsg) {
       if (is_valid(tbe)) {
         queueMemoryWrite(tbe.Requestor, address, to_memory_controller_latency,
                          in_msg.DataBlk);
       } else {
-        queueMemoryWrite(in_msg.Sender, address, to_memory_controller_latency,
+        queueMemoryWrite(in_msg.Requestor, address, to_memory_controller_latency,
                          in_msg.DataBlk);
       }
     }
@@ -495,7 +507,7 @@ machine(MachineType:Directory, "Directory protocol")
     }
   }
 
-  action(qw_queueMemoryWBRequest2, "/qw", desc="Queue off-chip writeback request") {
+  action(qw_queueMemoryWBFromDMARequest, "/qw", desc="Queue off-chip writeback request") {
     peek(requestQueue_in, RequestMsg) {
       queueMemoryWrite(in_msg.Requestor, address, to_memory_controller_latency,
                        in_msg.DataBlk);
@@ -567,7 +579,7 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   transition(I, DMA_WRITE, XI_U) {
-    qw_queueMemoryWBRequest2;
+    qw_queueMemoryWBFromDMARequest;
     a_sendDMAAck;  // ack count may be zero
     i_popIncomingRequestQueue;
   }
@@ -597,7 +609,7 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   transition(S, DMA_WRITE, XI_U) {
-    qw_queueMemoryWBRequest2;
+    qw_queueMemoryWBFromDMARequest;
     a_sendDMAAck;  // ack count may be zero
     g_sendInvalidations;  // the DMA will collect invalidations
     i_popIncomingRequestQueue;
@@ -768,47 +780,47 @@ machine(MachineType:Directory, "Directory protocol")
   transition(MI, Dirty_Writeback, I) {
     c_clearOwner;
     cc_clearSharers;
-    qw_queueMemoryWBRequest;
-    j_popIncomingUnblockQueue;
+    qw_queueMemoryWBFromCacheRequest;
+    i_popIncomingRequestQueue;
   }
 
   transition(MIS, Dirty_Writeback, S) {
     c_moveOwnerToSharer;
-    qw_queueMemoryWBRequest;
-    j_popIncomingUnblockQueue;
+    qw_queueMemoryWBFromCacheRequest;
+    i_popIncomingRequestQueue;
   }
 
   transition(MIS, Clean_Writeback, S) {
     c_moveOwnerToSharer;
-    j_popIncomingUnblockQueue;
+    i_popIncomingRequestQueue;
   }
 
   transition(OS, Dirty_Writeback, S) {
     c_clearOwner;
-    qw_queueMemoryWBRequest;
-    j_popIncomingUnblockQueue;
+    qw_queueMemoryWBFromCacheRequest;
+    i_popIncomingRequestQueue;
   }
 
   transition(OSS, Dirty_Writeback, S) {
     c_moveOwnerToSharer;
-    qw_queueMemoryWBRequest;
-    j_popIncomingUnblockQueue;
+    qw_queueMemoryWBFromCacheRequest;
+    i_popIncomingRequestQueue;
   }
 
   transition(OSS, Clean_Writeback, S) {
     c_moveOwnerToSharer;
-    j_popIncomingUnblockQueue;
+    i_popIncomingRequestQueue;
   }
 
   transition(MI, Clean_Writeback, I) {
     c_clearOwner;
     cc_clearSharers;
-    j_popIncomingUnblockQueue;
+    i_popIncomingRequestQueue;
   }
 
   transition(OS, Clean_Writeback, S) {
     c_clearOwner;
-    j_popIncomingUnblockQueue;
+    i_popIncomingRequestQueue;
   }
 
   transition({MI, MIS}, Unblock, M) {
