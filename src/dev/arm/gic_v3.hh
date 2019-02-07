@@ -34,14 +34,15 @@
 #include "dev/arm/base_gic.hh"
 #include "params/Gicv3.hh"
 
+class Gicv3CPUInterface;
 class Gicv3Distributor;
 class Gicv3Redistributor;
-class Gicv3CPUInterface;
 
 class Gicv3 : public BaseGic
 {
   protected:
 
+    typedef Gicv3Params Params;
     Gicv3Distributor * distributor;
     std::vector<Gicv3Redistributor *> redistributors;
     std::vector<Gicv3CPUInterface *> cpuInterfaces;
@@ -51,7 +52,7 @@ class Gicv3 : public BaseGic
 
   public:
 
-    // Special interrupt IDs
+    // Special interrupt IDs, as per SPEC 2.2.1 section
     static const int INTID_SECURE = 1020;
     static const int INTID_NONSECURE = 1021;
     static const int INTID_SPURIOUS = 1023;
@@ -61,6 +62,7 @@ class Gicv3 : public BaseGic
     // Number of Private Peripheral Interrupts
     static const int PPI_MAX = 16;
 
+    // Interrupt states for PPIs, SGIs and SPIs, as per SPEC 4.1.2 section
     typedef enum {
         INT_INACTIVE,
         INT_PENDING,
@@ -68,6 +70,7 @@ class Gicv3 : public BaseGic
         INT_ACTIVE_PENDING,
     } IntStatus;
 
+    // Interrupt groups, as per SPEC section 4.6
     typedef enum {
         G0S,
         G1S,
@@ -79,7 +82,19 @@ class Gicv3 : public BaseGic
         INT_EDGE_TRIGGERED,
     } IntTriggerType;
 
-    typedef Gicv3Params Params;
+  protected:
+
+    void clearInt(uint32_t int_id) override;
+    void clearPPInt(uint32_t int_id, uint32_t cpu) override;
+
+    inline AddrRangeList
+    getAddrRanges() const override
+    {
+        return addrRanges;
+    }
+
+    void init() override;
+    void initState() override;
 
     const Params *
     params() const
@@ -87,41 +102,33 @@ class Gicv3 : public BaseGic
         return dynamic_cast<const Params *>(_params);
     }
 
-    Gicv3(const Params * p);
-    ~Gicv3();
-    void init() override;
-    void initState() override;
-
-    AddrRangeList
-    getAddrRanges() const override
-    {
-        return addrRanges;
-    }
-
     Tick read(PacketPtr pkt) override;
-    Tick write(PacketPtr pkt) override;
+    void reset();
     void sendInt(uint32_t int_id) override;
-    void clearInt(uint32_t int_id) override;
     void sendPPInt(uint32_t int_id, uint32_t cpu) override;
-    void clearPPInt(uint32_t int_id, uint32_t cpu) override;
-
     void serialize(CheckpointOut & cp) const override;
     void unserialize(CheckpointIn & cp) override;
+    Tick write(PacketPtr pkt) override;
 
-    Gicv3Distributor *
-    getDistributor() const
-    {
-        return distributor;
-    }
+  public:
 
-    Gicv3CPUInterface *
+    Gicv3(const Params * p);
+    void deassertInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
+
+    inline Gicv3CPUInterface *
     getCPUInterface(int cpu_id) const
     {
         assert(cpu_id < cpuInterfaces.size() and cpuInterfaces[cpu_id]);
         return cpuInterfaces[cpu_id];
     }
 
-    Gicv3Redistributor *
+    inline Gicv3Distributor *
+    getDistributor() const
+    {
+        return distributor;
+    }
+
+    inline Gicv3Redistributor *
     getRedistributor(ContextID context_id) const
     {
         assert(context_id < redistributors.size() and
@@ -129,14 +136,9 @@ class Gicv3 : public BaseGic
         return redistributors[context_id];
     }
 
-    Gicv3Redistributor * getRedistributorByAffinity(uint32_t affinity);
+    Gicv3Redistributor *
+    getRedistributorByAffinity(uint32_t affinity) const;
     void postInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
-    void postDelayedInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
-    void deassertInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
-
-  protected:
-
-    void reset();
 };
 
 #endif //__DEV_ARM_GICV3_H__

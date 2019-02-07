@@ -106,21 +106,21 @@ class Gicv3Distributor : public Serializable
     static const AddrRange GICD_IROUTER;
 
     BitUnion64(IROUTER)
-    Bitfield<63, 40> res0_1;
-    Bitfield<39, 32> Aff3;
-    Bitfield<31> IRM;
-    Bitfield<30, 24> res0_2;
-    Bitfield<23, 16> Aff2;
-    Bitfield<15, 8> Aff1;
-    Bitfield<7, 0> Aff0;
+        Bitfield<63, 40> res0_1;
+        Bitfield<39, 32> Aff3;
+        Bitfield<31>     IRM;
+        Bitfield<30, 24> res0_2;
+        Bitfield<23, 16> Aff2;
+        Bitfield<15, 8>  Aff1;
+        Bitfield<7, 0>   Aff0;
     EndBitUnion(IROUTER)
 
-    static const uint32_t GICD_CTLR_ENABLEGRP0 = 1 << 0;
+    static const uint32_t GICD_CTLR_ENABLEGRP0   = 1 << 0;
+    static const uint32_t GICD_CTLR_ENABLEGRP1   = 1 << 0;
     static const uint32_t GICD_CTLR_ENABLEGRP1NS = 1 << 1;
-    static const uint32_t GICD_CTLR_ENABLEGRP1S = 1 << 2;
-    static const uint32_t GICD_CTLR_ENABLEGRP1 = 1 << 0;
-    static const uint32_t GICD_CTLR_ENABLEGRP1A = 1 << 1;
-    static const uint32_t GICD_CTLR_DS = 1 << 6;
+    static const uint32_t GICD_CTLR_ENABLEGRP1A  = 1 << 1;
+    static const uint32_t GICD_CTLR_ENABLEGRP1S  = 1 << 2;
+    static const uint32_t GICD_CTLR_DS           = 1 << 6;
 
     bool ARE;
     bool DS;
@@ -141,19 +141,15 @@ class Gicv3Distributor : public Serializable
 
     static const uint32_t ADDR_RANGE_SIZE = 0x10000;
 
-    Gicv3Distributor(Gicv3 * gic, uint32_t it_lines);
-    ~Gicv3Distributor();
-    void init();
-    void initState();
+  protected:
 
-    uint64_t read(Addr addr, size_t size, bool is_secure_access);
-    void write(Addr addr, uint64_t data, size_t size,
-               bool is_secure_access);
-    void serialize(CheckpointOut & cp) const override;
-    void unserialize(CheckpointIn & cp) override;
+    void activateIRQ(uint32_t int_id);
+    void deactivateIRQ(uint32_t int_id);
+    void fullUpdate();
+    Gicv3::GroupId getIntGroup(int int_id) const;
 
-    bool
-    groupEnabled(Gicv3::GroupId group)
+    inline bool
+    groupEnabled(Gicv3::GroupId group) const
     {
         if (DS == 0) {
             switch (group) {
@@ -186,16 +182,9 @@ class Gicv3Distributor : public Serializable
         }
     }
 
-    void sendInt(uint32_t int_id);
-    void intDeasserted(uint32_t int_id);
-    Gicv3::IntStatus intStatus(uint32_t int_id);
-    void updateAndInformCPUInterfaces();
-    void update();
-    void fullUpdate();
-    void activateIRQ(uint32_t int_id);
-    void deactivateIRQ(uint32_t int_id);
+    Gicv3::IntStatus intStatus(uint32_t int_id) const;
 
-    inline bool isNotSPI(uint8_t int_id)
+    inline bool isNotSPI(uint8_t int_id) const
     {
         if (int_id < (Gicv3::SGI_MAX + Gicv3::PPI_MAX) || int_id >= itLines) {
             return true;
@@ -204,15 +193,28 @@ class Gicv3Distributor : public Serializable
         }
     }
 
-    inline bool nsAccessToSecInt(uint8_t int_id, bool is_secure_access)
+    inline bool nsAccessToSecInt(uint8_t int_id, bool is_secure_access) const
     {
         return !DS && !is_secure_access && getIntGroup(int_id) != Gicv3::G1NS;
     }
 
-  protected:
-
     void reset();
-    Gicv3::GroupId getIntGroup(int int_id);
+    void serialize(CheckpointOut & cp) const override;
+    void unserialize(CheckpointIn & cp) override;
+    void update();
+    void updateAndInformCPUInterfaces();
+
+  public:
+
+    Gicv3Distributor(Gicv3 * gic, uint32_t it_lines);
+
+    void deassertSPI(uint32_t int_id);
+    void init();
+    void initState();
+    uint64_t read(Addr addr, size_t size, bool is_secure_access);
+    void sendInt(uint32_t int_id);
+    void write(Addr addr, uint64_t data, size_t size,
+               bool is_secure_access);
 };
 
 #endif //__DEV_ARM_GICV3_DISTRIBUTOR_H__

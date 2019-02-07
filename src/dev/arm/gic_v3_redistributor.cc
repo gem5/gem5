@@ -37,7 +37,7 @@
 #include "mem/fs_translating_port_proxy.hh"
 
 const AddrRange Gicv3Redistributor::GICR_IPRIORITYR(SGI_base + 0x0400,
-        SGI_base + 0x041f);
+                                                    SGI_base + 0x041f);
 
 Gicv3Redistributor::Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id)
     : gic(gic),
@@ -52,10 +52,6 @@ Gicv3Redistributor::Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id)
       irqConfig(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
       irqGrpmod(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
       irqNsacr(Gicv3::SGI_MAX + Gicv3::PPI_MAX)
-{
-}
-
-Gicv3Redistributor::~Gicv3Redistributor()
 {
 }
 
@@ -191,8 +187,7 @@ Gicv3Redistributor::read(Addr addr, size_t size, bool is_secure_access)
         }
 
       case GICR_PIDR0: { // Peripheral ID0 Register
-          uint8_t part_0 = 0x92; // Part number, bits[7:0]
-          return part_0;
+          return 0x92; // Part number, bits[7:0]
       }
 
       case GICR_PIDR1: { // Peripheral ID1 Register
@@ -299,7 +294,7 @@ Gicv3Redistributor::read(Addr addr, size_t size, bool is_secure_access)
           uint32_t first_int_id = addr == GICR_ICFGR0 ? 0 : Gicv3::SGI_MAX;
 
           for (int i = 0, int_id = first_int_id; i < 32;
-                  i = i + 2, int_id++) {
+               i = i + 2, int_id++) {
               if (!distributor->DS && !is_secure_access) {
                   // RAZ/WI for non-secure accesses for secure interrupts
                   if (getIntGroup(int_id) != Gicv3::G1NS) {
@@ -346,7 +341,7 @@ Gicv3Redistributor::read(Addr addr, size_t size, bool is_secure_access)
                   value = 0;
               } else {
                   for (int i = 0, int_id = 0; i < 8 * size;
-                          i = i + 2, int_id++) {
+                       i = i + 2, int_id++) {
                       value |= irqNsacr[int_id] << i;
                   }
               }
@@ -439,11 +434,11 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
         }
 
         if (not peInLowPowerState and
-                (data & GICR_WAKER_ProcessorSleep)) {
+            (data & GICR_WAKER_ProcessorSleep)) {
             DPRINTF(GIC, "Gicv3Redistributor::write(): "
                     "PE entering in low power state\n");
         } else if (peInLowPowerState and
-                not(data & GICR_WAKER_ProcessorSleep)) {
+                   not(data & GICR_WAKER_ProcessorSleep)) {
             DPRINTF(GIC, "Gicv3Redistributor::write(): powering up PE\n");
         }
 
@@ -596,7 +591,7 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
           int first_intid = Gicv3::SGI_MAX;
 
           for (int i = 0, int_id = first_intid; i < 8 * size;
-                  i = i + 2, int_id++) {
+               i = i + 2, int_id++) {
               if (!distributor->DS && !is_secure_access) {
                   // RAZ/WI for non-secure accesses for secure interrupts
                   if (getIntGroup(int_id) != Gicv3::G1NS) {
@@ -604,9 +599,9 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
                   }
               }
 
-              irqConfig[int_id] = data & (0x2 << i)
-                  ? Gicv3::INT_EDGE_TRIGGERED :
-                  Gicv3::INT_LEVEL_SENSITIVE;
+              irqConfig[int_id] = data & (0x2 << i) ?
+                                  Gicv3::INT_EDGE_TRIGGERED :
+                                  Gicv3::INT_LEVEL_SENSITIVE;
               DPRINTF(GIC, "Gicv3Redistributor::write(): "
                       "int_id %d (PPI) config %d\n",
                       int_id, irqConfig[int_id]);
@@ -640,7 +635,7 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
                   // RAZ/WI
               } else {
                   for (int i = 0, int_id = 0; i < 8 * size;
-                          i = i + 2, int_id++) {
+                       i = i + 2, int_id++) {
                       irqNsacr[int_id] = (data >> i) & 0x3;
                   }
               }
@@ -773,7 +768,7 @@ Gicv3Redistributor::sendSGI(uint32_t int_id, Gicv3::GroupId group, bool ns)
         int nsaccess = irqNsacr[int_id];
 
         if ((int_group == Gicv3::G0S && nsaccess < 1) ||
-                (int_group == Gicv3::G1S && nsaccess < 2)) {
+            (int_group == Gicv3::G1S && nsaccess < 2)) {
             return;
         }
     }
@@ -785,7 +780,7 @@ Gicv3Redistributor::sendSGI(uint32_t int_id, Gicv3::GroupId group, bool ns)
 }
 
 Gicv3::IntStatus
-Gicv3Redistributor::intStatus(uint32_t int_id)
+Gicv3Redistributor::intStatus(uint32_t int_id) const
 {
     assert(int_id < Gicv3::SGI_MAX + Gicv3::PPI_MAX);
 
@@ -818,13 +813,13 @@ Gicv3Redistributor::update()
         if (irqPending[int_id] && irqEnabled[int_id] &&
                 !irqActive[int_id] && group_enabled) {
             if ((irqPriority[int_id] < cpuInterface->hppi.prio) ||
-                    /*
-                     * Multiple pending ints with same priority.
-                     * Implementation choice which one to signal.
-                     * Our implementation selects the one with the lower id.
-                     */
-                    (irqPriority[int_id] == cpuInterface->hppi.prio &&
-                     int_id < cpuInterface->hppi.intid)) {
+                /*
+                 * Multiple pending ints with same priority.
+                 * Implementation choice which one to signal.
+                 * Our implementation selects the one with the lower id.
+                 */
+                (irqPriority[int_id] == cpuInterface->hppi.prio &&
+                 int_id < cpuInterface->hppi.intid)) {
                 cpuInterface->hppi.intid = int_id;
                 cpuInterface->hppi.prio = irqPriority[int_id];
                 cpuInterface->hppi.group = int_group;
@@ -870,7 +865,7 @@ Gicv3Redistributor::update()
     }
 
     if (!new_hppi && cpuInterface->hppi.prio != 0xff &&
-            cpuInterface->hppi.intid < Gicv3::SGI_MAX + Gicv3::PPI_MAX) {
+        cpuInterface->hppi.intid < Gicv3::SGI_MAX + Gicv3::PPI_MAX) {
         distributor->fullUpdate();
     }
 }
@@ -934,7 +929,7 @@ Gicv3Redistributor::updateAndInformCPUInterface()
 }
 
 Gicv3::GroupId
-Gicv3Redistributor::getIntGroup(int int_id)
+Gicv3Redistributor::getIntGroup(int int_id) const
 {
     assert(int_id < (Gicv3::SGI_MAX + Gicv3::PPI_MAX));
 
@@ -973,7 +968,7 @@ Gicv3Redistributor::deactivateIRQ(uint32_t int_id)
 }
 
 uint32_t
-Gicv3Redistributor::getAffinity()
+Gicv3Redistributor::getAffinity() const
 {
     ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
     uint64_t mpidr = getMPIDR(gic->getSystem(), tc);
@@ -990,7 +985,7 @@ Gicv3Redistributor::getAffinity()
 }
 
 bool
-Gicv3Redistributor::canBeSelectedFor1toNInterrupt(Gicv3::GroupId group)
+Gicv3Redistributor::canBeSelectedFor1toNInterrupt(Gicv3::GroupId group) const
 {
     if (peInLowPowerState) {
         return false;

@@ -45,10 +45,6 @@ Gicv3::Gicv3(const Params * p)
 {
 }
 
-Gicv3::~Gicv3()
-{
-}
-
 void
 Gicv3::init()
 {
@@ -112,7 +108,7 @@ Gicv3::read(PacketPtr pkt)
                  "Invalid redistributor_id!");
         panic_if(!redistributors[redistributor_id], "Redistributor is null!");
         resp = redistributors[redistributor_id]->read(daddr, size,
-                is_secure_access);
+                                                      is_secure_access);
         delay = params()->redist_pio_delay;
         DPRINTF(GIC, "Gicv3::read(): (redistributor %d) context_id %d "
                 "register %#x size %d is_secure_access %d (value %#x)\n",
@@ -179,7 +175,7 @@ Gicv3::sendInt(uint32_t int_id)
 void
 Gicv3::clearInt(uint32_t number)
 {
-    distributor->intDeasserted(number);
+    distributor->deassertSPI(number);
 }
 
 void
@@ -201,7 +197,7 @@ Gicv3::clearPPInt(uint32_t num, uint32_t cpu)
 void
 Gicv3::postInt(uint32_t cpu, ArmISA::InterruptTypes int_type)
 {
-    postDelayedInt(cpu, int_type);
+    platform->intrctrl->post(cpu, int_type, 0);
 }
 
 void
@@ -210,14 +206,8 @@ Gicv3::deassertInt(uint32_t cpu, ArmISA::InterruptTypes int_type)
     platform->intrctrl->clear(cpu, int_type, 0);
 }
 
-void
-Gicv3::postDelayedInt(uint32_t cpu, ArmISA::InterruptTypes int_type)
-{
-    platform->intrctrl->post(cpu, int_type, 0);
-}
-
 Gicv3Redistributor *
-Gicv3::getRedistributorByAffinity(uint32_t affinity)
+Gicv3::getRedistributorByAffinity(uint32_t affinity) const
 {
     for (auto & redistributor : redistributors) {
         if (redistributor->getAffinity() == affinity) {
@@ -234,14 +224,12 @@ Gicv3::serialize(CheckpointOut & cp) const
     distributor->serializeSection(cp, "distributor");
 
     for (uint32_t redistributor_id = 0;
-         redistributor_id < redistributors.size();
-         redistributor_id++)
+         redistributor_id < redistributors.size(); redistributor_id++)
         redistributors[redistributor_id]->serializeSection(cp,
             csprintf("redistributors.%i", redistributor_id));
 
     for (uint32_t cpu_interface_id = 0;
-         cpu_interface_id < cpuInterfaces.size();
-         cpu_interface_id++)
+         cpu_interface_id < cpuInterfaces.size(); cpu_interface_id++)
         cpuInterfaces[cpu_interface_id]->serializeSection(cp,
             csprintf("cpuInterface.%i", cpu_interface_id));
 }
@@ -254,14 +242,12 @@ Gicv3::unserialize(CheckpointIn & cp)
     distributor->unserializeSection(cp, "distributor");
 
     for (uint32_t redistributor_id = 0;
-         redistributor_id < redistributors.size();
-         redistributor_id++)
+         redistributor_id < redistributors.size(); redistributor_id++)
         redistributors[redistributor_id]->unserializeSection(cp,
             csprintf("redistributors.%i", redistributor_id));
 
     for (uint32_t cpu_interface_id = 0;
-         cpu_interface_id < cpuInterfaces.size();
-         cpu_interface_id++)
+         cpu_interface_id < cpuInterfaces.size(); cpu_interface_id++)
         cpuInterfaces[cpu_interface_id]->unserializeSection(cp,
             csprintf("cpuInterface.%i", cpu_interface_id));
 }
