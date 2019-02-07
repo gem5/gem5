@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2016 ARM Limited
+ * Copyright (c) 2013-2016,2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
 #ifndef __MEM_SNOOP_FILTER_HH__
 #define __MEM_SNOOP_FILTER_HH__
 
+#include <bitset>
 #include <unordered_map>
 #include <utility>
 
@@ -86,6 +87,10 @@
  */
 class SnoopFilter : public SimObject {
   public:
+
+    // Change for systems with more than 256 ports tracked by this object
+    static const int SNOOP_MASK_SIZE = 256;
+
     typedef std::vector<QueuedSlavePort*> SnoopList;
 
     SnoopFilter (const SnoopFilterParams *p) :
@@ -114,9 +119,9 @@ class SnoopFilter : public SimObject {
         }
 
         // make sure we can deal with this many ports
-        fatal_if(id > 8 * sizeof(SnoopMask),
+        fatal_if(id > SNOOP_MASK_SIZE,
                  "Snoop filter only supports %d snooping ports, got %d\n",
-                 8 * sizeof(SnoopMask), id);
+                 SNOOP_MASK_SIZE, id);
     }
 
     /**
@@ -198,13 +203,9 @@ class SnoopFilter : public SimObject {
 
     /**
      * The underlying type for the bitmask we use for tracking. This
-     * limits the number of snooping ports supported per crossbar. For
-     * the moment it is an uint64_t to offer maximum
-     * scalability. However, it is possible to use e.g. a uint16_t or
-     * uint32_to slim down the footprint of the hash map (and
-     * ultimately improve the simulation performance).
+     * limits the number of snooping ports supported per crossbar.
      */
-    typedef uint64_t SnoopMask;
+    typedef std::bitset<SNOOP_MASK_SIZE> SnoopMask;
 
     /**
     * Per cache line item tracking a bitmask of SlavePorts who have an
@@ -314,7 +315,7 @@ SnoopFilter::maskToPortList(SnoopMask port_mask) const
 {
     SnoopList res;
     for (const auto& p : slavePorts)
-        if (port_mask & portToMask(*p))
+        if ((port_mask & portToMask(*p)).any())
             res.push_back(p);
     return res;
 }
