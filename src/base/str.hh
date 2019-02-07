@@ -40,6 +40,7 @@
 #include <locale>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "base/logging.hh"
@@ -108,8 +109,7 @@ tokenize(std::vector<std::string> &vector, const std::string &s,
  *       integeral type, as well as enums and floating-point types.
  */
 template <class T>
-typename std::enable_if<(std::is_integral<T>::value ||
-                        std::is_enum<T>::value) &&
+typename std::enable_if<std::is_integral<T>::value &&
                         std::is_signed<T>::value, T>::type
 __to_number(const std::string &value)
 {
@@ -121,8 +121,7 @@ __to_number(const std::string &value)
 }
 
 template <class T>
-typename std::enable_if<(std::is_integral<T>::value ||
-                        std::is_enum<T>::value) &&
+typename std::enable_if<std::is_integral<T>::value &&
                         !std::is_signed<T>::value, T>::type
 __to_number(const std::string &value)
 {
@@ -130,6 +129,14 @@ __to_number(const std::string &value)
     unsigned long long r = std::stoull(value, nullptr, 0);
     if (r > std::numeric_limits<T>::max())
         throw std::out_of_range("Out of range");
+    return static_cast<T>(r);
+}
+
+template <class T>
+typename std::enable_if<std::is_enum<T>::value, T>::type
+__to_number(const std::string &value)
+{
+    auto r = __to_number<typename std::underlying_type<T>::type>(value);
     return static_cast<T>(r);
 }
 
