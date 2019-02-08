@@ -278,8 +278,7 @@ void
 PhysicalMemory::access(PacketPtr pkt)
 {
     assert(pkt->isRequest());
-    AddrRange addr_range = RangeSize(pkt->getAddr(), pkt->getSize());
-    const auto& m = addrMap.contains(addr_range);
+    const auto& m = addrMap.contains(pkt->getAddrRange());
     assert(m != addrMap.end());
     m->second->access(pkt);
 }
@@ -288,8 +287,7 @@ void
 PhysicalMemory::functionalAccess(PacketPtr pkt)
 {
     assert(pkt->isRequest());
-    AddrRange addr_range = RangeSize(pkt->getAddr(), pkt->getSize());
-    const auto& m = addrMap.contains(addr_range);
+    const auto& m = addrMap.contains(pkt->getAddrRange());
     assert(m != addrMap.end());
     m->second->functionalAccess(pkt);
 }

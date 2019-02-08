@@ -227,6 +227,12 @@ MemCmd::commandInfo[] =
       InvalidCmd, "InvalidateResp" }
 };
 
+AddrRange
+Packet::getAddrRange() const
+{
+    return RangeSize(getAddr(), getSize());
+}
+
 bool
 Packet::trySatisfyFunctional(Printable *obj, Addr addr, bool is_secure, int size,
                         uint8_t *_data)

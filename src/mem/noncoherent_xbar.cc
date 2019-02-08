@@ -108,8 +108,7 @@ NoncoherentXBar::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     assert(!pkt->isExpressSnoop());
 
     // determine the destination based on the address
-    AddrRange addr_range = RangeSize(pkt->getAddr(), pkt->getSize());
-    PortID master_port_id = findPort(addr_range);
+    PortID master_port_id = findPort(pkt->getAddrRange());
 
     // test if the layer should be considered occupied for the current
     // port
@@ -255,8 +254,7 @@ NoncoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID slave_port_id,
     unsigned int pkt_cmd = pkt->cmdToIndex();
 
     // determine the destination port
-    AddrRange addr_range = RangeSize(pkt->getAddr(), pkt->getSize());
-    PortID master_port_id = findPort(addr_range);
+    PortID master_port_id = findPort(pkt->getAddrRange());
 
     // stats updates for the request
     pktCount[slave_port_id][master_port_id]++;
@@ -308,8 +306,7 @@ NoncoherentXBar::recvFunctional(PacketPtr pkt, PortID slave_port_id)
     }
 
     // determine the destination port
-    AddrRange addr_range = RangeSize(pkt->getAddr(), pkt->getSize());
-    PortID dest_id = findPort(addr_range);
+    PortID dest_id = findPort(pkt->getAddrRange());
 
     // forward the request to the appropriate destination
     masterPorts[dest_id]->sendFunctional(pkt);

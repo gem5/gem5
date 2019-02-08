@@ -57,6 +57,7 @@
 #include <cassert>
 #include <list>
 
+#include "base/addr_range.hh"
 #include "base/cast.hh"
 #include "base/compiler.hh"
 #include "base/flags.hh"
@@ -735,6 +736,13 @@ class Packet : public Printable
     void setAddr(Addr _addr) { assert(flags.isSet(VALID_ADDR)); addr = _addr; }
 
     unsigned getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
+
+    /**
+     * Get address range to which this packet belongs.
+     *
+     * @return Address range of this packet.
+     */
+    AddrRange getAddrRange() const;
 
     Addr getOffset(unsigned int blk_size) const
     {
