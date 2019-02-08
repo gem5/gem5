@@ -67,7 +67,7 @@ PMU::PMU(const ArmPMUParams *p)
       cycleCounterEventId(p->cycleEventId),
       swIncrementEvent(nullptr),
       reg_pmcr_conf(0),
-      interrupt(nullptr),
+      interrupt(nullptr)
 {
     DPRINTF(PMUVerbose, "Initializing the PMU.\n");
 
