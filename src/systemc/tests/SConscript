@@ -91,7 +91,7 @@ if env['USE_SYSTEMC']:
             env = env.Clone()
             sources = list(self.sources)
             for f in self.filters:
-                sources = Source.all.apply_filter(f)
+                sources += Source.all.apply_filter(f)
             objs = self.srcs_to_objs(env, sources)
             objs = objs + env['MAIN_OBJS']
             relpath = os.path.relpath(

@@ -472,7 +472,7 @@ class UnitTest(Executable):
     def declare(self, env):
         sources = list(self.sources)
         for f in self.filters:
-            sources = Source.all.apply_filter(f)
+            sources += Source.all.apply_filter(f)
         objs = self.srcs_to_objs(env, sources) + env['STATIC_OBJS']
         if self.main:
             objs += env['MAIN_OBJS']
