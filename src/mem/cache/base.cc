@@ -649,8 +649,8 @@ BaseCache::functionalAccess(PacketPtr pkt, bool from_cpu_side)
 
     bool done = have_dirty ||
         cpuSidePort.trySatisfyFunctional(pkt) ||
-        mshrQueue.trySatisfyFunctional(pkt, blk_addr) ||
-        writeBuffer.trySatisfyFunctional(pkt, blk_addr) ||
+        mshrQueue.trySatisfyFunctional(pkt) ||
+        writeBuffer.trySatisfyFunctional(pkt) ||
         memSidePort.trySatisfyFunctional(pkt);
 
     DPRINTF(CacheVerbose, "%s: %s %s%s%s\n", __func__,  pkt->print(),

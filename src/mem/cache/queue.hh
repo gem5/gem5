@@ -181,11 +181,11 @@ class Queue : public Drainable
         return nullptr;
     }
 
-    bool trySatisfyFunctional(PacketPtr pkt, Addr blk_addr)
+    bool trySatisfyFunctional(PacketPtr pkt)
     {
         pkt->pushLabel(label);
         for (const auto& entry : allocatedList) {
-            if (entry->matchBlockAddr(blk_addr, pkt->isSecure()) &&
+            if (entry->matchBlockAddr(pkt) &&
                 entry->trySatisfyFunctional(pkt)) {
                 pkt->popLabel();
                 return true;
