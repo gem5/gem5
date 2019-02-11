@@ -2451,7 +2451,7 @@ BaseCache::CacheReqPacketQueue::sendDeferredPacket()
     } else {
         // let our snoop responses go first if there are responses to
         // the same addresses
-        if (checkConflictingSnoop(entry->blkAddr)) {
+        if (checkConflictingSnoop(entry->getTarget()->pkt)) {
             return;
         }
         waitingOnRetry = entry->sendPacket(cache);

@@ -172,9 +172,14 @@ class PacketQueue : public Drainable
     { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
 
     /**
-     * Check if a packets address exists in the queue.
+     * Check if a packet corresponding to the same address exists in the
+     * queue.
+     *
+     * @param pkt The packet to compare against.
+     * @param blk_size Block size in bytes.
+     * @return Whether a corresponding packet is found.
      */
-    bool hasAddr(Addr addr) const;
+    bool checkConflict(const PacketPtr pkt, const int blk_size) const;
 
     /** Check the list of buffered packets against the supplied
      * functional request. */

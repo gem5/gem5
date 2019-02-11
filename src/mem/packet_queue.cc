@@ -72,12 +72,12 @@ PacketQueue::retry()
 }
 
 bool
-PacketQueue::hasAddr(Addr addr) const
+PacketQueue::checkConflict(const PacketPtr pkt, const int blk_size) const
 {
     // caller is responsible for ensuring that all packets have the
     // same alignment
     for (const auto& p : transmitList) {
-        if (p.pkt->getAddr() == addr)
+        if (p.pkt->matchBlockAddr(pkt, blk_size))
             return true;
     }
     return false;
@@ -138,8 +138,7 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when)
     auto it = transmitList.end();
     while (it != transmitList.begin()) {
         --it;
-        if ((forceOrder && it->pkt->getAddr() == pkt->getAddr()) ||
-            it->tick <= when) {
+        if ((forceOrder && it->pkt->matchAddr(pkt)) || it->tick <= when) {
             // emplace inserts the element before the position pointed to by
             // the iterator, so advance it one step
             transmitList.emplace(++it, when, pkt);

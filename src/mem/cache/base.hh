@@ -189,10 +189,12 @@ class BaseCache : public MemObject
          * send out, and if so simply stall any requests, and schedule
          * a send event at the same time as the next snoop response is
          * being sent out.
+         *
+         * @param pkt The packet to check for conflicts against.
          */
-        bool checkConflictingSnoop(Addr addr)
+        bool checkConflictingSnoop(const PacketPtr pkt)
         {
-            if (snoopRespQueue.hasAddr(addr)) {
+            if (snoopRespQueue.checkConflict(pkt, cache.blkSize)) {
                 DPRINTF(CachePort, "Waiting for snoop response to be "
                         "sent\n");
                 Tick when = snoopRespQueue.deferredPacketReadyTime();

@@ -174,7 +174,7 @@ SimpleMemory::recvTimingReq(PacketPtr pkt)
         auto i = packetQueue.end();
         --i;
         while (i != packetQueue.begin() && when_to_send < i->tick &&
-               i->pkt->getAddr() != pkt->getAddr())
+               !i->pkt->matchAddr(pkt))
             --i;
 
         // emplace inserts the element before the position pointed to by

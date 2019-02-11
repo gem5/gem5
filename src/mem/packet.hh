@@ -980,6 +980,45 @@ class Packet : public Printable
         flags.set(VALID_SIZE);
     }
 
+    /**
+     * Check if packet corresponds to a given block-aligned address and
+     * address space.
+     *
+     * @param addr The address to compare against.
+     * @param is_secure Whether addr belongs to the secure address space.
+     * @param blk_size Block size in bytes.
+     * @return Whether packet matches description.
+     */
+    bool matchBlockAddr(const Addr addr, const bool is_secure,
+                        const int blk_size) const;
+
+    /**
+     * Check if this packet refers to the same block-aligned address and
+     * address space as another packet.
+     *
+     * @param pkt The packet to compare against.
+     * @param blk_size Block size in bytes.
+     * @return Whether packet matches description.
+     */
+    bool matchBlockAddr(const PacketPtr pkt, const int blk_size) const;
+
+    /**
+     * Check if packet corresponds to a given address and address space.
+     *
+     * @param addr The address to compare against.
+     * @param is_secure Whether addr belongs to the secure address space.
+     * @return Whether packet matches description.
+     */
+    bool matchAddr(const Addr addr, const bool is_secure) const;
+
+    /**
+     * Check if this packet refers to the same address and address space as
+     * another packet.
+     *
+     * @param pkt The packet to compare against.
+     * @return Whether packet matches description.
+     */
+    bool matchAddr(const PacketPtr pkt) const;
 
   public:
     /**

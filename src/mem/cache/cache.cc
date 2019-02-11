@@ -383,7 +383,7 @@ Cache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk, Tick forward_time,
                                                        pkt->req->masterId());
             pf = new Packet(req, pkt->cmd);
             pf->allocate();
-            assert(pf->getAddr() == pkt->getAddr());
+            assert(pf->matchAddr(pkt));
             assert(pf->getSize() == pkt->getSize());
         }
 
@@ -781,7 +781,7 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
                     pkt->payloadDelay;
                 if (pkt->isRead() && !is_error) {
                     // sanity check
-                    assert(pkt->getAddr() == tgt_pkt->getAddr());
+                    assert(pkt->matchAddr(tgt_pkt));
                     assert(pkt->getSize() >= tgt_pkt->getSize());
 
                     tgt_pkt->setData(pkt->getConstPtr<uint8_t>());
