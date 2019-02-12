@@ -37,7 +37,7 @@ from m5.objects import SystemC_Kernel, Root
 kernel = SystemC_Kernel()
 root = Root(full_system=True, systemc_kernel=kernel)
 
-kernel.sc_main('gem5_systemc', *sys.argv)
+kernel.sc_main(*sys.argv)
 
 m5.instantiate(None)
 
