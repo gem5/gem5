@@ -51,7 +51,6 @@ import jobfile
 from attrdict import attrdict, multiattrdict, optiondict
 from code_formatter import code_formatter
 from multidict import multidict
-from orderdict import orderdict
 from smartdict import SmartDict
 from sorteddict import SortedDict
 
