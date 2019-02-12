@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014, 2016-2018 ARM Limited
+ * Copyright (c) 2009-2014, 2016-2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -579,6 +579,16 @@ mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss)
                 break;
               case MISCREG_PMCR:
                 trapToHype = hdcr.tpmcr;
+                break;
+              // GICv3 regs
+              case MISCREG_ICC_SGI0R:
+                if (tc->getIsaPtr()->haveGICv3CpuIfc())
+                    trapToHype = hcr.fmo;
+                break;
+              case MISCREG_ICC_SGI1R:
+              case MISCREG_ICC_ASGI1R:
+                if (tc->getIsaPtr()->haveGICv3CpuIfc())
+                    trapToHype = hcr.imo;
                 break;
               // No default action needed
               default:
