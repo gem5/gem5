@@ -193,6 +193,8 @@ def interact(scope):
 
 
 def _check_tracing():
+    import defines
+
     if defines.TRACING_ON:
         return
 
