@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015-2018 ARM Limited
+ * Copyright (c) 2012-2013, 2015-2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -459,17 +459,20 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
             // in the case of an uncacheable request there is no need
             // to set the responderHadWritable flag, but since the
             // recipient does not care there is no harm in doing so
+        } else if (isPendingModified() && pkt->isClean()) {
+            // this cache doesn't respond to the clean request, a
+            // destination xbar will respond to this request, but to
+            // do so it needs to know if it should wait for the
+            // WriteCleanReq
+            pkt->setSatisfied();
         }
+
         targets.add(cp_pkt, curTick(), _order, Target::FromSnoop,
                     downstreamPending && targets.needsWritable, false);
 
         if (pkt->needsWritable() || pkt->isInvalidate()) {
             // This transaction will take away our pending copy
             postInvalidate = true;
-        }
-
-        if (isPendingModified() && pkt->isClean()) {
-            pkt->setSatisfied();
         }
     }
 

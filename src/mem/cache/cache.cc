@@ -1180,13 +1180,6 @@ Cache::recvTimingSnoopReq(PacketPtr pkt)
         return;
     }
 
-    // Bypass any existing cache maintenance requests if the request
-    // has been satisfied already (i.e., the dirty block has been
-    // found).
-    if (mshr && pkt->req->isCacheMaintenance() && pkt->satisfied()) {
-        return;
-    }
-
     // Let the MSHR itself track the snoop and decide whether we want
     // to go ahead and do the regular cache snoop
     if (mshr && mshr->handleSnoop(pkt, order++)) {
