@@ -303,8 +303,8 @@ DRAMCtrl::writeQueueFull(unsigned int neededEntries) const
 }
 
 DRAMCtrl::DRAMPacket*
-DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
-                       bool isRead)
+DRAMCtrl::decodeAddr(const PacketPtr pkt, Addr dramPktAddr, unsigned size,
+                     bool isRead) const
 {
     // decode the address based on the address mapping scheme, with
     // Ro, Ra, Co, Ba and Ch denoting row, rank, column, bank and

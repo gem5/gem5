@@ -839,8 +839,8 @@ class DRAMCtrl : public QoS::MemCtrl
      * @param isRead Is the request for a read or a write to DRAM
      * @return A DRAMPacket pointer with the decoded information
      */
-    DRAMPacket* decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned int size,
-                           bool isRead);
+    DRAMPacket* decodeAddr(const PacketPtr pkt, Addr dramPktAddr,
+                           unsigned int size, bool isRead) const;
 
     /**
      * The memory schduler/arbiter - picks which request needs to
