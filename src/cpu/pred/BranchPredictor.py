@@ -475,3 +475,85 @@ class TAGE_SC_L_8KB(TAGE_SC_L):
     tage = TAGE_SC_L_TAGE_8KB()
     loop_predictor = TAGE_SC_L_8KB_LoopPredictor()
     statistical_corrector = TAGE_SC_L_8KB_StatisticalCorrector()
+
+class MultiperspectivePerceptron(BranchPredictor):
+    type = 'MultiperspectivePerceptron'
+    cxx_class = 'MultiperspectivePerceptron'
+    cxx_header = 'cpu/pred/multiperspective_perceptron.hh'
+    abstract = True
+
+    num_filter_entries = Param.Int("Number of filter entries")
+    num_local_histories = Param.Int("Number of local history entries")
+    local_history_length = Param.Int(11,
+        "Length in bits of each history entry")
+
+    block_size = Param.Int(21,
+        "number of ghist bits in a 'block'; this is the width of an initial "
+        "hash of ghist")
+    pcshift = Param.Int(-10, "Shift for hashing PC")
+    threshold = Param.Int(1, "Threshold for deciding low/high confidence")
+    bias0 = Param.Int(-5,
+        "Bias perceptron output this much on all-bits-zero local history")
+    bias1 = Param.Int(5,
+        "Bias perceptron output this much on all-bits-one local history")
+    biasmostly0 = Param.Int(-1,
+        "Bias perceptron output this much on almost-all-bits-zero local "
+        "history")
+    biasmostly1 = Param.Int(1,
+        "Bias perceptron output this much on almost-all-bits-one local "
+        "history")
+    nbest = Param.Int(20,
+        "Use this many of the top performing tables on a low-confidence "
+        "branch")
+    tunebits = Param.Int(24, "Number of bits in misprediction counters")
+    hshift = Param.Int(-6,
+        "How much to shift initial feauture hash before XORing with PC bits")
+    imli_mask1 = Param.UInt64(
+        "Which tables should have their indices hashed with the first IMLI "
+        "counter")
+    imli_mask4 = Param.UInt64(
+        "Which tables should have their indices hashed with the fourth IMLI "
+        "counter")
+    recencypos_mask = Param.UInt64(
+        "Which tables should have their indices hashed with the recency "
+        "position")
+    fudge = Param.Float(0.245, "Fudge factor to multiply by perceptron output")
+    n_sign_bits = Param.Int(2, "Number of sign bits per magnitude")
+    pcbit = Param.Int(2, "Bit from the PC to use for hashing global history")
+    decay = Param.Int(0, "Whether and how often to decay a random weight")
+    record_mask = Param.Int(191,
+        "Which histories are updated with filtered branch outcomes")
+    hash_taken = Param.Bool(False,
+        "Hash the taken/not taken value with a PC bit")
+    tuneonly = Param.Bool(True,
+        "If true, only count mispredictions of low-confidence branches")
+    extra_rounds = Param.Int(1,
+        "Number of extra rounds of training a single weight on a "
+        "low-confidence prediction")
+    speed = Param.Int(9, "Adaptive theta learning speed")
+    initial_theta = Param.Int(10, "Initial theta")
+    budgetbits = Param.Int("Hardware budget in bits")
+    speculative_update = Param.Bool(False,
+        "Use speculative update for histories")
+
+class MultiperspectivePerceptron8KB(MultiperspectivePerceptron):
+    type = 'MultiperspectivePerceptron8KB'
+    cxx_class = 'MultiperspectivePerceptron8KB'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_8KB.hh'
+    budgetbits = 8192 * 8 + 2048
+    num_local_histories = 48
+    num_filter_entries = 0
+    imli_mask1 = 0x6
+    imli_mask4 = 0x4400
+    recencypos_mask = 0x100000090
+
+class MultiperspectivePerceptron64KB(MultiperspectivePerceptron):
+    type = 'MultiperspectivePerceptron64KB'
+    cxx_class = 'MultiperspectivePerceptron64KB'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_64KB.hh'
+    budgetbits = 65536 * 8 + 2048
+    num_local_histories = 510
+    num_filter_entries = 18025
+    imli_mask1 = 0xc1000
+    imli_mask4 = 0x80008000
+    recencypos_mask = 0x100000090
