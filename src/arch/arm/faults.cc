@@ -749,15 +749,16 @@ UndefinedInstruction::invoke(ThreadContext *tc, const StaticInstPtr &inst)
 
     // If the mnemonic isn't defined this has to be an unknown instruction.
     assert(unknown || mnemonic != NULL);
+    auto arm_inst = static_cast<ArmStaticInst *>(inst.get());
     if (disabled) {
         panic("Attempted to execute disabled instruction "
-                "'%s' (inst 0x%08x)", mnemonic, machInst);
+                "'%s' (inst 0x%08x)", mnemonic, arm_inst->encoding());
     } else if (unknown) {
         panic("Attempted to execute unknown instruction (inst 0x%08x)",
-              machInst);
+              arm_inst->encoding());
     } else {
         panic("Attempted to execute unimplemented instruction "
-                "'%s' (inst 0x%08x)", mnemonic, machInst);
+                "'%s' (inst 0x%08x)", mnemonic, arm_inst->encoding());
     }
 }
 
