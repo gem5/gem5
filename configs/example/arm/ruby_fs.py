@@ -46,7 +46,7 @@ from common import MemConfig
 from common import ObjectList
 from common import Options
 from common import SysPaths
-from common.cores.arm import HPI
+from common.cores.arm import O3_ARM_v7a, HPI
 from ruby import Ruby
 
 import devices
@@ -62,6 +62,7 @@ cpu_types = {
     "noncaching" : NonCachingSimpleCPU,
     "minor" : MinorCPU,
     "hpi" : HPI.HPI,
+    "o3" : O3_ARM_v7a.O3_ARM_v7a_3,
 }
 
 def create_cow_image(name):
