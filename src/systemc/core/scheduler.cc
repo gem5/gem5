@@ -32,6 +32,7 @@
 #include "base/fiber.hh"
 #include "base/logging.hh"
 #include "sim/eventq.hh"
+#include "sim/sim_exit.hh"
 #include "systemc/core/kernel.hh"
 #include "systemc/core/sc_main_fiber.hh"
 #include "systemc/ext/core/messages.hh"
@@ -352,8 +353,15 @@ Scheduler::pause()
     status(StatusPaused);
     kernel->status(::sc_core::SC_PAUSED);
     runOnce = false;
-    if (scMainFiber.called() && !scMainFiber.finished())
-        scMainFiber.run();
+    if (scMainFiber.called()) {
+        if (!scMainFiber.finished())
+            scMainFiber.run();
+    } else {
+        if (scMainFiber.finished())
+            fatal("Pausing systemc after sc_main completed.");
+        else
+            exitSimLoopNow("systemc pause");
+    }
 }
 
 void
@@ -365,8 +373,15 @@ Scheduler::stop()
     clear();
 
     runOnce = false;
-    if (scMainFiber.called() && !scMainFiber.finished())
-        scMainFiber.run();
+    if (scMainFiber.called()) {
+        if (!scMainFiber.finished())
+            scMainFiber.run();
+    } else {
+        if (scMainFiber.finished())
+            fatal("Stopping systemc after sc_main completed.");
+        else
+            exitSimLoopNow("systemc stop");
+    }
 }
 
 void
