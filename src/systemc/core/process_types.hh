@@ -94,7 +94,7 @@ class Thread : public Process
                 thread->run();
             } catch (...) {
                 thread->terminate();
-                scheduler.throwToScMain();
+                scheduler.throwUp();
                 return;
             }
             thread->terminate();

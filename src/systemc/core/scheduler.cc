@@ -47,7 +47,7 @@ namespace sc_gem5
 Scheduler::Scheduler() :
     eq(nullptr), readyEvent(this, false, ReadyPriority),
     pauseEvent(this, false, PausePriority),
-    stopEvent(this, false, StopPriority), _throwToScMain(nullptr),
+    stopEvent(this, false, StopPriority), _throwUp(nullptr),
     starvationEvent(this, false, StarvationPriority),
     _elaborationDone(false), _started(false), _stopNow(false),
     _status(StatusOther), maxTickEvent(this, false, MaxTickPriority),
@@ -180,7 +180,7 @@ Scheduler::yield()
             try {
                 _current->run();
             } catch (...) {
-                throwToScMain();
+                throwUp();
             }
         }
     }
@@ -327,7 +327,7 @@ Scheduler::runUpdate()
             channel = updateList.getNext();
         }
     } catch (...) {
-        throwToScMain();
+        throwUp();
     }
 }
 
@@ -340,7 +340,7 @@ Scheduler::runDelta()
         while (!deltas.empty())
             deltas.back()->run();
     } catch (...) {
-        throwToScMain();
+        throwUp();
     }
 }
 
@@ -398,9 +398,9 @@ Scheduler::start(Tick max_tick, bool run_to_time)
     if (starvationEvent.scheduled())
         deschedule(&starvationEvent);
 
-    if (_throwToScMain) {
-        const ::sc_core::sc_report *to_throw = _throwToScMain;
-        _throwToScMain = nullptr;
+    if (_throwUp) {
+        const ::sc_core::sc_report *to_throw = _throwUp;
+        _throwUp = nullptr;
         throw *to_throw;
     }
 }
@@ -423,12 +423,17 @@ Scheduler::schedulePause()
 }
 
 void
-Scheduler::throwToScMain()
+Scheduler::throwUp()
 {
-    ::sc_core::sc_report report = reportifyException();
-    _throwToScMain = &report;
-    status(StatusOther);
-    scMainFiber.run();
+    if (scMainFiber.called() && !scMainFiber.finished()) {
+        ::sc_core::sc_report report = reportifyException();
+        _throwUp = &report;
+        status(StatusOther);
+        scMainFiber.run();
+    } else {
+        reportHandlerProc(reportifyException(),
+                ::sc_core::sc_report_handler::get_catch_actions());
+    }
 }
 
 void
