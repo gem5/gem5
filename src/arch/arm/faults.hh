@@ -60,6 +60,8 @@ namespace ArmISA
 {
 typedef Addr FaultOffset;
 
+class ArmStaticInst;
+
 class ArmFault : public FaultBase
 {
   protected:
@@ -212,6 +214,8 @@ class ArmFault : public FaultBase
     void invoke64(ThreadContext *tc, const StaticInstPtr &inst =
                   StaticInst::nullStaticInstPtr);
     void update(ThreadContext *tc);
+
+    ArmStaticInst *instrAnnotate(const StaticInstPtr &inst);
     virtual void annotate(AnnotationIDs id, uint64_t val) {}
     virtual FaultStat& countStat() = 0;
     virtual FaultOffset offset(ThreadContext *tc) = 0;

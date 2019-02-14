@@ -496,10 +496,7 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     // if we have a valid instruction then use it to annotate this fault with
     // extra information. This is used to generate the correct fault syndrome
     // information
-    if (inst) {
-        ArmStaticInst *armInst = static_cast<ArmStaticInst *>(inst.get());
-        armInst->annotateFault(this);
-    }
+    ArmStaticInst *arm_inst M5_VAR_USED = instrAnnotate(inst);
 
     // Ensure Secure state if initially in Monitor mode
     if (have_security && saved_cpsr.mode == MODE_MON) {
@@ -587,8 +584,10 @@ ArmFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     }
 
     Addr newPc = getVector(tc);
-    DPRINTF(Faults, "Invoking Fault:%s cpsr:%#x PC:%#x lr:%#x newVec: %#x\n",
-            name(), cpsr, curPc, tc->readIntReg(INTREG_LR), newPc);
+    DPRINTF(Faults, "Invoking Fault:%s cpsr:%#x PC:%#x lr:%#x newVec: %#x "
+            "%s\n", name(), cpsr, curPc, tc->readIntReg(INTREG_LR),
+            newPc, arm_inst ? csprintf("inst: %#x", arm_inst->encoding()) :
+            std::string());
     PCState pc(newPc);
     pc.thumb(cpsr.t);
     pc.nextThumb(pc.thumb());
@@ -673,24 +672,38 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     cpsr.ss = 0;
     tc->setMiscReg(MISCREG_CPSR, cpsr);
 
+    // If we have a valid instruction then use it to annotate this fault with
+    // extra information. This is used to generate the correct fault syndrome
+    // information
+    ArmStaticInst *arm_inst M5_VAR_USED = instrAnnotate(inst);
+
     // Set PC to start of exception handler
     Addr new_pc = purifyTaggedAddr(vec_address, tc, toEL);
     DPRINTF(Faults, "Invoking Fault (AArch64 target EL):%s cpsr:%#x PC:%#x "
-            "elr:%#x newVec: %#x\n", name(), cpsr, curr_pc, ret_addr, new_pc);
+            "elr:%#x newVec: %#x %s\n", name(), cpsr, curr_pc, ret_addr,
+            new_pc, arm_inst ? csprintf("inst: %#x", arm_inst->encoding()) :
+            std::string());
     PCState pc(new_pc);
     pc.aarch64(!cpsr.width);
     pc.nextAArch64(!cpsr.width);
     pc.illegalExec(false);
     tc->pcState(pc);
 
-    // If we have a valid instruction then use it to annotate this fault with
-    // extra information. This is used to generate the correct fault syndrome
-    // information
-    if (inst)
-        static_cast<ArmStaticInst *>(inst.get())->annotateFault(this);
     // Save exception syndrome
     if ((nextMode() != MODE_IRQ) && (nextMode() != MODE_FIQ))
         setSyndrome(tc, getSyndromeReg64());
+}
+
+ArmStaticInst *
+ArmFault::instrAnnotate(const StaticInstPtr &inst)
+{
+    if (inst) {
+        auto arm_inst = static_cast<ArmStaticInst *>(inst.get());
+        arm_inst->annotateFault(this);
+        return arm_inst;
+    } else {
+        return nullptr;
+    }
 }
 
 Addr
