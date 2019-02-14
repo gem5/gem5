@@ -1,3 +1,15 @@
+# Copyright (c) 2019 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
@@ -64,7 +76,6 @@ def create_system(options, full_system, system, dma_ports, bootmem,
     # Must create the individual controllers before the network to ensure the
     # controller constructors are called before the network constructor
     #
-    l2_bits = int(math.log(options.num_l2caches, 2))
     block_size_bits = int(math.log(options.cacheline_size, 2))
 
     for i in range(options.num_cpus):
@@ -94,7 +105,6 @@ def create_system(options, full_system, system, dma_ports, bootmem,
 
         l1_cntrl = L1Cache_Controller(version=i, L1Icache=l1i_cache,
                                       L1Dcache=l1d_cache,
-                                      l2_select_num_bits=l2_bits,
                                       send_evictions=send_evicts(options),
                                       transitions_per_cycle=options.ports,
                                       clk_domain=clk_domain,
@@ -124,7 +134,21 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         l1_cntrl.triggerQueue = MessageBuffer(ordered = True)
 
 
-    l2_index_start = block_size_bits + l2_bits
+    # Create the L2s interleaved addr ranges
+    l2_addr_ranges = []
+    l2_bits = int(math.log(options.num_l2caches, 2))
+    numa_bit = block_size_bits + l2_bits - 1
+    sysranges = [] + system.mem_ranges
+    if bootmem: sysranges.append(bootmem.range)
+    for i in range(options.num_l2caches):
+        ranges = []
+        for r in sysranges:
+            addr_range = AddrRange(r.start, size = r.size(),
+                                    intlvHighBit = numa_bit,
+                                    intlvBits = l2_bits,
+                                    intlvMatch = i)
+            ranges.append(addr_range)
+        l2_addr_ranges.append(ranges)
 
     for i in range(options.num_l2caches):
         #
@@ -132,12 +156,13 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         #
         l2_cache = L2Cache(size = options.l2_size,
                            assoc = options.l2_assoc,
-                           start_index_bit = l2_index_start)
+                           start_index_bit = block_size_bits + l2_bits)
 
         l2_cntrl = L2Cache_Controller(version = i,
                                       L2cache = l2_cache,
                                       transitions_per_cycle = options.ports,
-                                      ruby_system = ruby_system)
+                                      ruby_system = ruby_system,
+                                      addr_ranges = l2_addr_ranges[i])
 
         exec("ruby_system.l2_cntrl%d = l2_cntrl" % i)
         l2_cntrl_nodes.append(l2_cntrl)
