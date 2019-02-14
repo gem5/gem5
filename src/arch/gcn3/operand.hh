@@ -435,9 +435,10 @@ namespace Gcn3ISA
 
             if (!isScalarReg(_opIdx)) {
                 if (_opIdx == REG_EXEC_LO) {
-                    ScalarRegU64 new_exec_mask_val(0);
+                    ScalarRegU64 new_exec_mask_val
+                        = wf->execMask().to_ullong();
                     std::memcpy((void*)&new_exec_mask_val,
-                        (void*)srfData.data(), sizeof(new_exec_mask_val));
+                        (void*)srfData.data(), sizeof(srfData));
                     VectorMask new_exec_mask(new_exec_mask_val);
                     wf->execMask() = new_exec_mask;
                     DPRINTF(GPUSRF, "Write EXEC\n");
@@ -513,7 +514,6 @@ namespace Gcn3ISA
             switch(_opIdx) {
               case REG_EXEC_LO:
                 {
-                    assert(NumDwords == 2);
                     ScalarRegU64 exec_mask = _gpuDynInst->wavefront()->
                         execMask().to_ullong();
                     std::memcpy((void*)srfData.data(), (void*)&exec_mask,
