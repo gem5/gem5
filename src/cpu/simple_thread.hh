@@ -203,6 +203,8 @@ class SimpleThread : public ThreadState
 
     CheckerCPU *getCheckerCpuPtr() { return NULL; }
 
+    TheISA::ISA *getIsaPtr() { return isa; }
+
     TheISA::Decoder *getDecoderPtr() { return &decoder; }
 
     System *getSystemPtr() { return system; }
