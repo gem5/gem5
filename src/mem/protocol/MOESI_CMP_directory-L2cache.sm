@@ -626,7 +626,7 @@ machine(MachineType:L2Cache, "Token protocol")
           trigger(Event:Data_Exclusive, in_msg.addr,
                   getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
-          DPRINTF(ProtocolTrace, "Received Unblock from L1 addr: %x\n", in_msg.addr);
+          DPRINTF(RubySlicc, "Received Unblock from L1 addr: %x\n", in_msg.addr);
           trigger(Event:Unblock, in_msg.addr,
                   getCacheEntry(in_msg.addr), TBEs[in_msg.addr]);
         } else if (in_msg.Type == CoherenceResponseType:UNBLOCK_EXCLUSIVE) {
