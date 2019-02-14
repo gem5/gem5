@@ -50,9 +50,11 @@ Scheduler::Scheduler() :
     stopEvent(this, false, StopPriority), _throwUp(nullptr),
     starvationEvent(this, false, StarvationPriority),
     _elaborationDone(false), _started(false), _stopNow(false),
-    _status(StatusOther), maxTickEvent(this, false, MaxTickPriority),
+    _status(StatusOther), maxTick(::MaxTick),
+    maxTickEvent(this, false, MaxTickPriority),
     timeAdvancesEvent(this, false, TimeAdvancesPriority), _numCycles(0),
-    _changeStamp(0), _current(nullptr), initDone(false), runOnce(false)
+    _changeStamp(0), _current(nullptr), initDone(false), runToTime(true),
+    runOnce(false)
 {}
 
 Scheduler::~Scheduler()
