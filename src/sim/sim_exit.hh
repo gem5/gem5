@@ -52,5 +52,9 @@ void registerExitCallback(Callback *);
 void exitSimLoop(const std::string &message, int exit_code = 0,
                  Tick when = curTick(), Tick repeat = 0,
                  bool serialize = false);
+/// Schedule an event as above, but make it high priority so it runs before
+/// any normal events which are schedule at the current time.
+void exitSimLoopNow(const std::string &message, int exit_code = 0,
+                    Tick repeat = 0, bool serialize = false);
 
 #endif // __SIM_EXIT_HH__
