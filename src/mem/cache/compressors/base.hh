@@ -51,7 +51,8 @@ struct BaseCacheCompressorParams;
  * Base cache compressor interface. Every cache compressor must implement a
  * compression and a decompression method.
  */
-class BaseCacheCompressor : public SimObject {
+class BaseCacheCompressor : public SimObject
+{
   protected:
     /**
      * This compressor must be able to access the protected functions of
@@ -76,17 +77,29 @@ class BaseCacheCompressor : public SimObject {
      */
     const std::size_t sizeThreshold;
 
-    /**
-     * @defgroup CompressionStats Compression specific statistics.
-     * @{
-     */
+    struct BaseCacheCompressorStats : public Stats::Group
+    {
+        const BaseCacheCompressor& compressor;
 
-    /** Number of blocks that were compressed to this power of two size. */
-    Stats::Vector compressionSize;
+        BaseCacheCompressorStats(BaseCacheCompressor& compressor);
 
-    /**
-     * @}
-     */
+        void regStats() override;
+
+        /** Number of compressions performed. */
+        Stats::Scalar compressions;
+
+        /** Number of blocks that were compressed to this power of two size. */
+        Stats::Vector compressionSize;
+
+        /** Total compressed data size, in number of bits. */
+        Stats::Scalar compressionSizeBits;
+
+        /** Average data size after compression, in number of bits. */
+        Stats::Formula avgCompressionSizeBits;
+
+        /** Number of decompressions performed. */
+        Stats::Scalar decompressions;
+    } stats;
 
     /**
      * Apply the compression process to the cache line.
@@ -144,7 +157,7 @@ class BaseCacheCompressor : public SimObject {
      *
      * @param blk The compressed block.
      */
-    Cycles getDecompressionLatency(const CacheBlk* blk) const;
+    Cycles getDecompressionLatency(const CacheBlk* blk);
 
     /**
      * Set the decompression latency of compressed block.
@@ -161,11 +174,6 @@ class BaseCacheCompressor : public SimObject {
      * @param size_bits The block size.
      */
     static void setSizeBits(CacheBlk* blk, const std::size_t size_bits);
-
-    /**
-     * Register local statistics.
-     */
-    void regStats() override;
 };
 
 class BaseCacheCompressor::CompressionData {
