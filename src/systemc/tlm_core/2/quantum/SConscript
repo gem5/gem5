@@ -29,3 +29,5 @@ Import('*')
 
 if env['USE_SYSTEMC']:
     Source('global_quantum.cc')
+    if env['USE_PYTHON']:
+        Source('global_quantum_python.cc')

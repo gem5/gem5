@@ -58,6 +58,11 @@ class SystemC_Kernel(SimObject):
         return SystemC_Kernel.ScMainResult(
                 sc_main_result_code(), sc_main_result_str());
 
+    def tlm_global_quantum_instance(self):
+        '''Retrieve the global tlm quantum instance'''
+        from _m5.systemc import tlm_global_quantum
+        return tlm_global_quantum.instance()
+
 # This class represents systemc sc_object instances in python config files. It
 # inherits from SimObject in python, but the c++ version, sc_core::sc_object,
 # doesn't inherit from gem5's c++ SimObject class.
