@@ -36,6 +36,12 @@ class SystemC_Kernel(SimObject):
     cxx_class = 'sc_gem5::Kernel'
     cxx_header = 'systemc/core/kernel.hh'
 
+    # The sc_time type won't exist until some setup code runs in gem5.
+    try:
+        from _m5.systemc import sc_time
+    except:
+        pass
+
     class ScMainResult(object):
         def __init__(self, code, message):
             self.code = code

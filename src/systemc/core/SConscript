@@ -64,3 +64,4 @@ if env['USE_SYSTEMC']:
     if env['USE_PYTHON']:
         Source('python.cc')
         Source('sc_main_python.cc')
+        Source('sc_time_python.cc')
