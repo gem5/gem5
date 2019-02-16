@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import orderdict
+from collections import OrderedDict
 
 from slicc.util import PairContainer
 from slicc.symbols.Symbol import Symbol
@@ -89,9 +89,9 @@ class Type(Symbol):
         self.isStateDecl = ("state_decl" in self)
         self.statePermPairs = []
 
-        self.data_members = orderdict()
+        self.data_members = OrderedDict()
         self.methods = {}
-        self.enums = orderdict()
+        self.enums = OrderedDict()
 
     @property
     def isPrimitive(self):

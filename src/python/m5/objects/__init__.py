@@ -36,4 +36,4 @@ except NameError:
 
 for module in modules.iterkeys():
     if module.startswith('m5.objects.'):
-        exec "from %s import *" % module
+        exec("from %s import *" % module)

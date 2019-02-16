@@ -1,5 +1,4 @@
-# Copyright (c) 2005 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2019 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,50 +23,26 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Gabe Black
 
-__all__ = [ 'orderdict' ]
+from __future__ import print_function
 
-from UserDict import DictMixin
+import sys
 
-class orderdict(dict, DictMixin):
-    def __init__(self, *args, **kwargs):
-        if len(args) > 1:
-            raise TypeError("expected at most one argument, got %d" % \
-                            len(args))
-        self._keys = []
-        self.update(*args, **kwargs)
+import m5
+from m5.objects import SystemC_Kernel, Root
 
-    def __setitem__(self, key, item):
-        if key not in self:
-            self._keys.append(key)
-        super(orderdict, self).__setitem__(key, item)
+# pylint:disable=unused-variable
 
-    def __delitem__(self, key):
-        super(orderdict, self).__delitem__(key)
-        self._keys.remove(key)
+kernel = SystemC_Kernel()
+root = Root(full_system=True, systemc_kernel=kernel)
 
-    def clear(self):
-        super(orderdict, self).clear()
-        self._keys = []
+kernel.sc_main(*sys.argv)
 
-    def iterkeys(self):
-        for key in self._keys:
-            yield key
+m5.instantiate(None)
 
-    def itervalues(self):
-        for key in self._keys:
-            yield self[key]
+cause = m5.simulate(m5.MaxTick).getCause()
 
-    def iteritems(self):
-        for key in self._keys:
-            yield key, self[key]
-
-    def keys(self):
-        return self._keys[:]
-
-    def values(self):
-        return [ self[key] for key in self._keys ]
-
-    def items(self):
-        return [ (self[key],key) for key in self._keys ]
+result = kernel.sc_main_result()
+if result.code != 0:
+    m5.util.panic('sc_main return code was %d.' % result.code)

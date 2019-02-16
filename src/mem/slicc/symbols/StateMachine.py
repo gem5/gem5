@@ -26,7 +26,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import orderdict
+from collections import OrderedDict
 
 from slicc.symbols.Symbol import Symbol
 from slicc.symbols.Var import Var
@@ -78,10 +78,10 @@ class StateMachine(Symbol):
             if str(param.type_ast.type) == "Prefetcher":
                 self.prefetchers.append(var)
 
-        self.states = orderdict()
-        self.events = orderdict()
-        self.actions = orderdict()
-        self.request_types = orderdict()
+        self.states = OrderedDict()
+        self.events = OrderedDict()
+        self.actions = OrderedDict()
+        self.request_types = OrderedDict()
         self.transitions = []
         self.in_ports = []
         self.functions = []
@@ -226,7 +226,7 @@ class StateMachine(Symbol):
         code('''
 from m5.params import *
 from m5.SimObject import SimObject
-from Controller import RubyController
+from m5.objects.Controller import RubyController
 
 class $py_ident(RubyController):
     type = '$py_ident'
@@ -239,7 +239,7 @@ class $py_ident(RubyController):
             if param.rvalue is not None:
                 dflt_str = str(param.rvalue.inline()) + ', '
 
-            if python_class_map.has_key(param.type_ast.type.c_ident):
+            if param.type_ast.type.c_ident in python_class_map:
                 python_type = python_class_map[param.type_ast.type.c_ident]
                 code('${{param.ident}} = Param.${{python_type}}(${dflt_str}"")')
 
@@ -1109,7 +1109,7 @@ ${ident}_Controller::wakeup()
         for port in self.in_ports:
             code.indent()
             code('// ${ident}InPort $port')
-            if port.pairs.has_key("rank"):
+            if "rank" in port.pairs:
                 code('m_cur_in_port = ${{port.pairs["rank"]}};')
             else:
                 code('m_cur_in_port = 0;')
@@ -1303,7 +1303,7 @@ ${ident}_Controller::doTransitionWorker(${ident}_Event event,
 ''')
 
         # This map will allow suppress generating duplicate code
-        cases = orderdict()
+        cases = OrderedDict()
 
         for trans in self.transitions:
             case_string = "%s_State_%s, %s_Event_%s" % \

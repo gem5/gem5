@@ -38,8 +38,8 @@
 import sys
 from m5.params import *
 from m5.proxy import *
-from Device import DmaDevice
-from AbstractNVM import *
+from m5.objects.Device import DmaDevice
+from m5.objects.AbstractNVM import *
 
 class UFSHostDevice(DmaDevice):
     type = 'UFSHostDevice'

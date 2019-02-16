@@ -40,8 +40,9 @@
 
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice
-from Serial import SerialDevice
+
+from m5.objects.Device import BasicPioDevice
+from m5.objects.Serial import SerialDevice
 
 class Uart(BasicPioDevice):
     type = 'Uart'

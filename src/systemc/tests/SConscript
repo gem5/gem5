@@ -91,14 +91,15 @@ if env['USE_SYSTEMC']:
             env = env.Clone()
             sources = list(self.sources)
             for f in self.filters:
-                sources = Source.all.apply_filter(f)
+                sources += Source.all.apply_filter(f)
             objs = self.srcs_to_objs(env, sources)
             objs = objs + env['MAIN_OBJS']
             relpath = os.path.relpath(
                     env['SHARED_LIB'][0].dir.abspath,
                     self.path(env).dir.abspath)
             env.Append(LINKFLAGS=Split('-z origin'))
-            env.Append(RPATH=env.Literal(os.path.join('\\$$ORIGIN', relpath)))
+            env.Append(RPATH=[
+                    env.Literal(os.path.join('\\$$ORIGIN', relpath))])
             test_bin = super(SystemCTestBin, self).declare(env, objs)
             test_dir = self.dir.Dir(self.reldir)
             for dep in self.test_deps:

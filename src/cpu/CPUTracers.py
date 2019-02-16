@@ -28,7 +28,7 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-from InstTracer import InstTracer
+from m5.objects.InstTracer import InstTracer
 
 class ExeTracer(InstTracer):
     type = 'ExeTracer'

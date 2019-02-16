@@ -31,7 +31,7 @@
 from m5.SimObject import SimObject
 from m5.params import *
 
-from BaseTLB import BaseTLB
+from m5.objects.BaseTLB import BaseTLB
 
 class PowerTLB(BaseTLB):
     type = 'PowerTLB'

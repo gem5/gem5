@@ -115,8 +115,6 @@ class TournamentBP : public BPredUnit
      */
     void squash(ThreadID tid, void *bp_history);
 
-    unsigned getGHR(ThreadID tid, void *bp_history) const;
-
   private:
     /**
      * Returns if the branch should be taken or not, given a counter

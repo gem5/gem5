@@ -39,12 +39,13 @@
 # Authors: Ron Dreslinski
 #          Mitch Hayenga
 
-from ClockedObject import ClockedObject
-from IndexingPolicies import *
 from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
-from ReplacementPolicies import *
+
+from m5.objects.ClockedObject import ClockedObject
+from m5.objects.IndexingPolicies import *
+from m5.objects.ReplacementPolicies import *
 
 class HWPProbeEvent(object):
     def __init__(self, prefetcher, obj, *listOfNames):
@@ -236,3 +237,75 @@ class AccessMapPatternMatchingPrefetcher(QueuedPrefetcher):
     epoch_cycles = Param.Cycles(256000, "Cycles in an epoch period")
     offchip_memory_latency = Param.Latency("30ns",
         "Memory latency used to compute the required memory bandwidth")
+
+class DeltaCorrelatingPredictionTables(SimObject):
+    type = 'DeltaCorrelatingPredictionTables'
+    cxx_class = 'DeltaCorrelatingPredictionTables'
+    cxx_header = "mem/cache/prefetch/delta_correlating_prediction_tables.hh"
+    deltas_per_entry = Param.Unsigned(20,
+        "Number of deltas stored in each table entry")
+    delta_bits = Param.Unsigned(12, "Bits per delta")
+    delta_mask_bits = Param.Unsigned(8,
+        "Lower bits to mask when comparing deltas")
+    table_entries = Param.MemorySize("128",
+        "Number of entries in the table")
+    table_assoc = Param.Unsigned(128,
+        "Associativity of the table")
+    table_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1, assoc = Parent.table_assoc,
+        size = Parent.table_entries),
+        "Indexing policy of the table")
+    table_replacement_policy = Param.BaseReplacementPolicy(LRURP(),
+        "Replacement policy of the table")
+
+class DCPTPrefetcher(QueuedPrefetcher):
+    type = 'DCPTPrefetcher'
+    cxx_class = 'DCPTPrefetcher'
+    cxx_header = "mem/cache/prefetch/delta_correlating_prediction_tables.hh"
+    dcpt = Param.DeltaCorrelatingPredictionTables(
+        DeltaCorrelatingPredictionTables(),
+        "Delta Correlating Prediction Tables object")
+
+class IrregularStreamBufferPrefetcher(QueuedPrefetcher):
+    type = "IrregularStreamBufferPrefetcher"
+    cxx_class = "IrregularStreamBufferPrefetcher"
+    cxx_header = "mem/cache/prefetch/irregular_stream_buffer.hh"
+
+    max_counter_value = Param.Unsigned(3,
+        "Maximum value of the confidence counter")
+    chunk_size = Param.Unsigned(256,
+        "Maximum number of addresses in a temporal stream")
+    degree = Param.Unsigned(4, "Number of prefetches to generate")
+    training_unit_assoc = Param.Unsigned(128,
+        "Associativity of the training unit")
+    training_unit_entries = Param.MemorySize("128",
+        "Number of entries of the training unit")
+    training_unit_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1, assoc = Parent.training_unit_assoc,
+        size = Parent.training_unit_entries),
+        "Indexing policy of the training unit")
+    training_unit_replacement_policy = Param.BaseReplacementPolicy(LRURP(),
+        "Replacement policy of the training unit")
+
+    prefetch_candidates_per_entry = Param.Unsigned(16,
+        "Number of prefetch candidates stored in a SP-AMC entry")
+    address_map_cache_assoc = Param.Unsigned(128,
+        "Associativity of the PS/SP AMCs")
+    address_map_cache_entries = Param.MemorySize("128",
+        "Number of entries of the PS/SP AMCs")
+    ps_address_map_cache_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1,
+        assoc = Parent.address_map_cache_assoc,
+        size = Parent.address_map_cache_entries),
+        "Indexing policy of the Physical-to-Structural Address Map Cache")
+    ps_address_map_cache_replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(),
+        "Replacement policy of the Physical-to-Structural Address Map Cache")
+    sp_address_map_cache_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1,
+        assoc = Parent.address_map_cache_assoc,
+        size = Parent.address_map_cache_entries),
+        "Indexing policy of the Structural-to-Physical Address Mao Cache")
+    sp_address_map_cache_replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(),
+        "Replacement policy of the Structural-to-Physical Address Map Cache")

@@ -220,11 +220,9 @@ class DownloadedProgram(Fixture):
         super(DownloadedProgram, self).__init__("download-" + program,
                                                 build_once=True, **kwargs)
 
-        self.program_dir = joinpath('test-progs', path)
+        self.program_dir = path
         self.path = joinpath(self.program_dir, program)
-
         self.url = self.urlbase + self.path
-
     def _download(self):
         import urllib
         log.test_log.debug("Downloading " + self.url + " to " + self.path)

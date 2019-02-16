@@ -38,7 +38,7 @@
 #          Thomas Grass
 
 from m5.params import *
-from BaseCPU import BaseCPU
+from m5.objects.BaseCPU import BaseCPU
 
 class TraceCPU(BaseCPU):
     """Trace CPU model which replays traces generated in a prior simulation

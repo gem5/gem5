@@ -39,7 +39,7 @@
 
 from m5.params import *
 from m5.proxy import *
-from MemObject import MemObject
+from m5.objects.MemObject import MemObject
 
 # Types of Stream Generators.
 # Those are orthogonal to the other generators in the TrafficGen

@@ -1,32 +1,41 @@
-CPP      := riscv64-unknown-linux-gnu-g++
-OBJDUMP  := riscv64-unknown-linux-gnu-objdump
-CPPFLAGS := -g -O3 -static -std=c++11 -march=rv64gc
-LFLAGS := -pthread -Wl,--whole-archive -lpthread -latomic -Wl,--no-whole-archive
+# Copyright (c) 2019 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Andreas Sandberg
 
-SRC_DIR := ./src
-BIN_DIR := ./bin
+CROSS_COMPILE = riscv64-unknown-linux-gnu-
+BIN_DIR = bin.riscv64
 
-TEST_SRC := test_pthread_create_seq.cpp \
-            test_pthread_create_para.cpp \
-            test_pthread_mutex.cpp \
-            test_atomic.cpp \
-            test_pthread_cond.cpp \
-            test_std_thread.cpp \
-            test_std_mutex.cpp \
-            test_std_condition_variable.cpp \
-
-TEST_BIN  := $(patsubst %.cpp,%,$(TEST_SRC))
-TEST_DUMP := $(patsubst %.cpp,%.objdump,$(TEST_SRC))
-
-# Rules
-
-.PHONY: default clean
-
-default: $(TEST_BIN)
-
-$(TEST_BIN):
-	mkdir -p $(BIN_DIR)
-	$(CPP) $(CPPFLAGS) $(SRC_DIR)/$@.cpp $(LFLAGS) -o $(BIN_DIR)/$@
-
-clean:
-	$(RM) -r $(BIN_DIR)/*
+-include Makefile.common

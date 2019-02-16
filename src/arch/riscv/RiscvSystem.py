@@ -31,8 +31,8 @@
 #          Robert Scheffel
 
 from m5.params import *
-from System import System
 
+from m5.objects.System import System
 
 class RiscvSystem(System):
     type = 'RiscvSystem'

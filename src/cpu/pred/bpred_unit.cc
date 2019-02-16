@@ -192,6 +192,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     ppBranches->notify(1);
 
     void *bp_history = NULL;
+    void *indirect_history = NULL;
 
     if (inst->isUncondCtrl()) {
         DPRINTF(Branch, "[tid:%i]: Unconditional control.\n", tid);
@@ -206,11 +207,15 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                 " predicted %i for PC %s\n", tid, seqNum,  pred_taken, pc);
     }
 
+    if (useIndirect) {
+        iPred.updateDirectionInfo(tid, pred_taken, indirect_history);
+    }
+
     DPRINTF(Branch, "[tid:%i]: [sn:%i] Creating prediction history "
             "for PC %s\n", tid, seqNum, pc);
 
-    PredictorHistory predict_record(seqNum, pc.instAddr(),
-                                    pred_taken, bp_history, tid, inst);
+    PredictorHistory predict_record(seqNum, pc.instAddr(), pred_taken,
+                                    bp_history, indirect_history, tid, inst);
 
     // Now lookup in the BTB or RAS.
     if (pred_taken) {
@@ -280,8 +285,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                 predict_record.wasIndirect = true;
                 ++indirectLookups;
                 //Consult indirect predictor on indirect control
-                if (iPred.lookup(pc.instAddr(), getGHR(tid, bp_history),
-                        target, tid)) {
+                if (iPred.lookup(pc.instAddr(), target, tid)) {
                     // Indirect predictor hit
                     ++indirectHits;
                     DPRINTF(Branch, "[tid:%i]: Instruction %s predicted "
@@ -327,7 +331,6 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
     DPRINTF(Branch, "[tid:%i]: Committing branches until "
             "[sn:%lli].\n", tid, done_sn);
 
-    iPred.commit(done_sn, tid);
     while (!predHist[tid].empty() &&
            predHist[tid].back().seqNum <= done_sn) {
         // Update the branch predictor with the correct results.
@@ -336,6 +339,8 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
                     predHist[tid].back().bpHistory, false,
                     predHist[tid].back().inst,
                     predHist[tid].back().target);
+
+        iPred.commit(done_sn, tid, predHist[tid].back().indirectHistory);
 
         predHist[tid].pop_back();
     }
@@ -366,6 +371,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 
         // This call should delete the bpHistory.
         squash(tid, pred_hist.front().bpHistory);
+        iPred.deleteDirectionInfo(tid, pred_hist.front().indirectHistory);
 
         DPRINTF(Branch, "[tid:%i]: Removing history for [sn:%i] "
                 "PC %s.\n", tid, pred_hist.front().seqNum,
@@ -429,9 +435,6 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                     tid, hist_it->seqNum);
         }
 
-        // Get the underlying Global History Register
-        unsigned ghr = getGHR(tid, hist_it->bpHistory);
-
         // There are separate functions for in-order and out-of-order
         // branch prediction, but not for update. Therefore, this
         // call should take into account that the mispredicted branch may
@@ -449,6 +452,9 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                pred_hist.front().bpHistory, true, pred_hist.front().inst,
                corrTarget.instAddr());
 
+        iPred.changeDirectionPrediction(tid, pred_hist.front().indirectHistory,
+                                        actually_taken);
+
         if (actually_taken) {
             if (hist_it->wasReturn && !hist_it->usedRAS) {
                  DPRINTF(Branch, "[tid: %i] Incorrectly predicted"
@@ -459,7 +465,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             }
             if (hist_it->wasIndirect) {
                 ++indirectMispredicted;
-                iPred.recordTarget(hist_it->seqNum, ghr, corrTarget, tid);
+                iPred.recordTarget(hist_it->seqNum, corrTarget, tid);
             } else {
                 DPRINTF(Branch,"[tid: %i] BTB Update called for [sn:%i]"
                         " PC: %s\n", tid,hist_it->seqNum, hist_it->pc);

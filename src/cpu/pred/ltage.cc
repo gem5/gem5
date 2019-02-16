@@ -42,6 +42,7 @@
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
+#include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Fetch.hh"
 #include "debug/LTage.hh"
@@ -49,6 +50,12 @@
 LTAGE::LTAGE(const LTAGEParams *params)
   : TAGE(params), loopPredictor(params->loop_predictor)
 {
+}
+
+void
+LTAGE::init()
+{
+    TAGE::init();
 }
 
 //prediction
@@ -82,6 +89,7 @@ LTAGE::predict(ThreadID tid, Addr branch_pc, bool cond_branch, void* &b)
     return pred_taken;
 }
 
+// PREDICTOR UPDATE
 void
 LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
               bool squashed, const StaticInstPtr & inst, Addr corrTarget)
@@ -105,7 +113,7 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
         return;
     }
 
-    int nrand = TAGEBase::getRandom() & 3;
+    int nrand = random_mt.random<int>() & 3;
     if (bi->tageBranchInfo->condBranch) {
         DPRINTF(LTage, "Updating tables for branch:%lx; taken?:%d\n",
                 branch_pc, taken);
@@ -114,12 +122,10 @@ LTAGE::update(ThreadID tid, Addr branch_pc, bool taken, void* bp_history,
         loopPredictor->updateStats(taken, bi->lpBranchInfo);
 
         loopPredictor->condBranchUpdate(tid, branch_pc, taken,
-            bi->tageBranchInfo->tagePred, bi->lpBranchInfo, instShiftAmt,
-            TAGEBase::getRandom(), TAGEBase::getRandom(),
-            TAGEBase::getRandom());
+            bi->tageBranchInfo->tagePred, bi->lpBranchInfo, instShiftAmt);
 
         tage->condBranchUpdate(tid, branch_pc, taken, bi->tageBranchInfo,
-                               nrand, corrTarget);
+            nrand, corrTarget, bi->lpBranchInfo->predTaken);
     }
 
     tage->updateHistories(tid, branch_pc, taken, bi->tageBranchInfo, false,

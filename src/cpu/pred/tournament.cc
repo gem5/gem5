@@ -366,12 +366,6 @@ TournamentBPParams::create()
     return new TournamentBP(this);
 }
 
-unsigned
-TournamentBP::getGHR(ThreadID tid, void *bp_history) const
-{
-    return static_cast<BPHistory *>(bp_history)->globalHistory;
-}
-
 #ifdef DEBUG
 int
 TournamentBP::BPHistory::newCount = 0;

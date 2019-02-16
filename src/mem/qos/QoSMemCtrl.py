@@ -36,8 +36,8 @@
 # Authors: Matteo Andreozzi
 
 from m5.params import *
-from AbstractMemory import AbstractMemory
-from QoSTurnaround import *
+from m5.objects.AbstractMemory import AbstractMemory
+from m5.objects.QoSTurnaround import *
 
 # QoS Queue Selection policy used to select packets among same-QoS queues
 class QoSQPolicy(Enum): vals = ["fifo", "lifo", "lrg"]

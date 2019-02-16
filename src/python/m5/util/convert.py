@@ -89,7 +89,7 @@ binary_prefixes = {
 
 def assertStr(value):
     if not isinstance(value, str):
-        raise TypeError, "wrong type '%s' should be str" % type(value)
+        raise TypeError("wrong type '%s' should be str" % type(value))
 
 
 # memory size configuration stuff
@@ -102,8 +102,8 @@ def toFloat(value, target_type='float', units=None, prefixes=[]):
         try:
             return float(value)
         except ValueError:
-            raise ValueError, "cannot convert '%s' to %s" % \
-                    (value, target_type)
+            raise ValueError("cannot convert '%s' to %s" % \
+                             (value, target_type))
 
     value = value[:-len(units)]
 
@@ -124,8 +124,8 @@ def toInteger(value, target_type='integer', units=None, prefixes=[]):
     value = toFloat(value, target_type, units, prefixes)
     result = long(value)
     if value != result:
-        raise ValueError, "cannot convert '%s' to integer %s" % \
-                (value, target_type)
+        raise ValueError("cannot convert '%s' to integer %s" % \
+                (value, target_type))
 
     return result
 
@@ -155,7 +155,7 @@ def anyToLatency(value):
     """result is a clock period"""
     try:
         return 1 / toFrequency(value)
-    except ValueError, ZeroDivisionError:
+    except (ValueError, ZeroDivisionError):
         pass
 
     try:
@@ -163,7 +163,7 @@ def anyToLatency(value):
     except ValueError:
         pass
 
-    raise ValueError, "cannot convert '%s' to clock period" % value
+    raise ValueError("cannot convert '%s' to clock period" % value)
 
 def anyToFrequency(value):
     """result is a clock period"""
@@ -174,10 +174,10 @@ def anyToFrequency(value):
 
     try:
         return 1 / toLatency(value)
-    except ValueError, ZeroDivisionError:
+    except ValueError as ZeroDivisionError:
         pass
 
-    raise ValueError, "cannot convert '%s' to clock period" % value
+    raise ValueError("cannot convert '%s' to clock period" % value)
 
 def toNetworkBandwidth(value):
     return toMetricFloat(value, 'network bandwidth', 'bps')
@@ -190,29 +190,29 @@ def toMemorySize(value):
 
 def toIpAddress(value):
     if not isinstance(value, str):
-        raise TypeError, "wrong type '%s' should be str" % type(value)
+        raise TypeError("wrong type '%s' should be str" % type(value))
 
     bytes = value.split('.')
     if len(bytes) != 4:
-        raise ValueError, 'invalid ip address %s' % value
+        raise ValueError('invalid ip address %s' % value)
 
     for byte in bytes:
         if not 0 <= int(byte) <= 0xff:
-            raise ValueError, 'invalid ip address %s' % value
+            raise ValueError('invalid ip address %s' % value)
 
     return (int(bytes[0]) << 24) | (int(bytes[1]) << 16) | \
            (int(bytes[2]) << 8)  | (int(bytes[3]) << 0)
 
 def toIpNetmask(value):
     if not isinstance(value, str):
-        raise TypeError, "wrong type '%s' should be str" % type(value)
+        raise TypeError("wrong type '%s' should be str" % type(value))
 
     (ip, netmask) = value.split('/')
     ip = toIpAddress(ip)
     netmaskParts = netmask.split('.')
     if len(netmaskParts) == 1:
         if not 0 <= int(netmask) <= 32:
-            raise ValueError, 'invalid netmask %s' % netmask
+            raise ValueError('invalid netmask %s' % netmask)
         return (ip, int(netmask))
     elif len(netmaskParts) == 4:
         netmaskNum = toIpAddress(netmask)
@@ -223,18 +223,18 @@ def toIpNetmask(value):
             testVal |= (1 << (31 - i))
             if testVal == netmaskNum:
                 return (ip, i + 1)
-        raise ValueError, 'invalid netmask %s' % netmask
+        raise ValueError('invalid netmask %s' % netmask)
     else:
-        raise ValueError, 'invalid netmask %s' % netmask
+        raise ValueError('invalid netmask %s' % netmask)
 
 def toIpWithPort(value):
     if not isinstance(value, str):
-        raise TypeError, "wrong type '%s' should be str" % type(value)
+        raise TypeError("wrong type '%s' should be str" % type(value))
 
     (ip, port) = value.split(':')
     ip = toIpAddress(ip)
     if not 0 <= int(port) <= 0xffff:
-        raise ValueError, 'invalid port %s' % port
+        raise ValueError('invalid port %s' % port)
     return (ip, int(port))
 
 def toVoltage(value):

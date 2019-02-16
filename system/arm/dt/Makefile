@@ -50,6 +50,14 @@ TARGETS=\
 	armv8_gem5_v2_8cpu.dtb \
 	armv8_gem5_v2_16cpu.dtb
 
+VEXPRESS_GEM5_V1_DTSIS=\
+	platforms/vexpress_gem5_v1.dtsi \
+	platforms/vexpress_gem5_v1_base.dtsi
+
+VEXPRESS_GEM5_V2_DTSIS=\
+	platforms/vexpress_gem5_v2.dtsi \
+	platforms/vexpress_gem5_v2_base.dtsi
+
 GEN_DTS=mkdir -p .gen; \
 	$(CPP) -x assembler-with-cpp \
 		$(DTC_CPP_FLAGS) \
@@ -59,21 +67,17 @@ GEN_DTS=mkdir -p .gen; \
 
 all: $(TARGETS)
 
-platforms/vexpress_gem5_v1.dtsi: platforms/vexpress_gem5_v1_base.dtsi
-
-platforms/vexpress_gem5_v2.dtsi: platforms/vexpress_gem5_v2_base.dtsi
-
-.gen/armv7_gem5_v1_%cpu.dts: armv7.dts platforms/vexpress_gem5_v1.dtsi
+.gen/armv7_gem5_v1_%cpu.dts: armv7.dts $(VEXPRESS_GEM5_V1_DTSIS)
 	$(call GEN_DTS,vexpress_gem5_v1.dtsi,$*)
 
-.gen/armv8_gem5_v1_%cpu.dts: armv8.dts platforms/vexpress_gem5_v1.dtsi
+.gen/armv8_gem5_v1_%cpu.dts: armv8.dts $(VEXPRESS_GEM5_V1_DTSIS)
 	$(call GEN_DTS,vexpress_gem5_v1.dtsi,$*)
 
-.gen/armv8_gem5_v2_%cpu.dts: armv8.dts platforms/vexpress_gem5_v2.dtsi
+.gen/armv8_gem5_v2_%cpu.dts: armv8.dts $(VEXPRESS_GEM5_V2_DTSIS)
 	$(call GEN_DTS,vexpress_gem5_v2.dtsi,$*)
 
 .gen/armv8_gem5_v1_big_little%.dts: armv8_big_little.dts \
-	platforms/vexpress_gem5_v1.dtsi
+	$(VEXPRESS_GEM5_V1_DTSIS)
 	$(call GEN_DTS,vexpress_gem5_v1.dtsi,$*)
 
 %.dtb: .gen/%.dts

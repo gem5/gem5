@@ -92,7 +92,7 @@ def instantiate(ckpt_dir=None):
     for obj in root.descendants(): obj.unproxyParams()
 
     if options.dump_config:
-        ini_file = file(os.path.join(options.outdir, options.dump_config), 'w')
+        ini_file = open(os.path.join(options.outdir, options.dump_config), 'w')
         # Print ini sections in sorted order for easier diffing
         for obj in sorted(root.descendants(), key=lambda o: o.path()):
             obj.print_ini(ini_file)
@@ -101,7 +101,8 @@ def instantiate(ckpt_dir=None):
     if options.json_config:
         try:
             import json
-            json_file = file(os.path.join(options.outdir, options.json_config), 'w')
+            json_file = open(
+                os.path.join(options.outdir, options.json_config), 'w')
             d = root.get_config_as_dict()
             json.dump(d, json_file, indent=4)
             json_file.close()
@@ -221,7 +222,7 @@ def memInvalidate(root):
 def checkpoint(dir):
     root = objects.Root.getInstance()
     if not isinstance(root, objects.Root):
-        raise TypeError, "Checkpoint must be called on a root object."
+        raise TypeError("Checkpoint must be called on a root object.")
 
     drain()
     memWriteback(root)
@@ -230,8 +231,8 @@ def checkpoint(dir):
 
 def _changeMemoryMode(system, mode):
     if not isinstance(system, (objects.Root, objects.System)):
-        raise TypeError, "Parameter of type '%s'.  Must be type %s or %s." % \
-              (type(system), objects.Root, objects.System)
+        raise TypeError("Parameter of type '%s'.  Must be type %s or %s." % \
+              (type(system), objects.Root, objects.System))
     if system.getMemoryMode() != mode:
         system.setMemoryMode(mode)
     else:
@@ -253,10 +254,10 @@ def switchCpus(system, cpuList, verbose=True):
         print("switching cpus")
 
     if not isinstance(cpuList, list):
-        raise RuntimeError, "Must pass a list to this function"
+        raise RuntimeError("Must pass a list to this function")
     for item in cpuList:
         if not isinstance(item, tuple) or len(item) != 2:
-            raise RuntimeError, "List must have tuples of (oldCPU,newCPU)"
+            raise RuntimeError("List must have tuples of (oldCPU,newCPU)")
 
     old_cpus = [old_cpu for old_cpu, new_cpu in cpuList]
     new_cpus = [new_cpu for old_cpu, new_cpu in cpuList]
@@ -264,33 +265,31 @@ def switchCpus(system, cpuList, verbose=True):
     memory_mode_name = new_cpus[0].memory_mode()
     for old_cpu, new_cpu in cpuList:
         if not isinstance(old_cpu, objects.BaseCPU):
-            raise TypeError, "%s is not of type BaseCPU" % old_cpu
+            raise TypeError("%s is not of type BaseCPU" % old_cpu)
         if not isinstance(new_cpu, objects.BaseCPU):
-            raise TypeError, "%s is not of type BaseCPU" % new_cpu
+            raise TypeError("%s is not of type BaseCPU" % new_cpu)
         if new_cpu in old_cpu_set:
-            raise RuntimeError, \
-                "New CPU (%s) is in the list of old CPUs." % (old_cpu,)
+            raise RuntimeError(
+                "New CPU (%s) is in the list of old CPUs." % (old_cpu,))
         if not new_cpu.switchedOut():
-            raise RuntimeError, \
-                "New CPU (%s) is already active." % (new_cpu,)
+            raise RuntimeError("New CPU (%s) is already active." % (new_cpu,))
         if not new_cpu.support_take_over():
-            raise RuntimeError, \
-                "New CPU (%s) does not support CPU handover." % (old_cpu,)
+            raise RuntimeError(
+                "New CPU (%s) does not support CPU handover." % (old_cpu,))
         if new_cpu.memory_mode() != memory_mode_name:
-            raise RuntimeError, \
+            raise RuntimeError(
                 "%s and %s require different memory modes." % (new_cpu,
-                                                               new_cpus[0])
+                                                               new_cpus[0]))
         if old_cpu.switchedOut():
-            raise RuntimeError, \
-                "Old CPU (%s) is inactive." % (new_cpu,)
+            raise RuntimeError("Old CPU (%s) is inactive." % (new_cpu,))
         if not old_cpu.support_take_over():
-            raise RuntimeError, \
-                "Old CPU (%s) does not support CPU handover." % (old_cpu,)
+            raise RuntimeError(
+                "Old CPU (%s) does not support CPU handover." % (old_cpu,))
 
     try:
         memory_mode = _memory_modes[memory_mode_name]
     except KeyError:
-        raise RuntimeError, "Invalid memory mode (%s)" % memory_mode_name
+        raise RuntimeError("Invalid memory mode (%s)" % memory_mode_name)
 
     drain()
 
@@ -343,13 +342,13 @@ def fork(simout="%(parent)s.f%(fork_seq)i"):
     global fork_count
 
     if not _m5.core.listenersDisabled():
-        raise RuntimeError, "Can not fork a simulator with listeners enabled"
+        raise RuntimeError("Can not fork a simulator with listeners enabled")
 
     drain()
 
     try:
         pid = os.fork()
-    except OSError, e:
+    except OSError as e:
         raise e
 
     if pid == 0:

@@ -229,12 +229,6 @@ BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken, void *bpHistory,
     delete history;
 }
 
-unsigned
-BiModeBP::getGHR(ThreadID tid, void *bp_history) const
-{
-    return static_cast<BPHistory*>(bp_history)->globalHistoryReg;
-}
-
 void
 BiModeBP::updateGlobalHistReg(ThreadID tid, bool taken)
 {

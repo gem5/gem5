@@ -36,7 +36,7 @@
 # Authors: Andrew Bardsley
 
 from m5.params import *
-from MemObject import MemObject
+from m5.objects.MemObject import MemObject
 
 class ExternalSlave(MemObject):
     type = 'ExternalSlave'

@@ -230,7 +230,7 @@ class sc_port_b : public sc_port_base
     {
         IF *interface = dynamic_cast<IF *>(iface);
         sc_assert(interface);
-        for (int i = 0; i < _interfaces.size(); i++) {
+        for (unsigned i = 0; i < _interfaces.size(); i++) {
             if (interface == _interfaces[i]) {
                 report_error(SC_ID_BIND_IF_TO_PORT_,
                         "interface already bound to port");

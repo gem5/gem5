@@ -22,7 +22,7 @@
 #define \
     __SYSTEMC_EXT_TLM_CORE_1_REQ_RSP_CHANNELS_REQ_RSP_CHANNELS_PUT_GET_IMP_HH__
 
-#include "tlm_core/1/req_rsp/interfaces/master_slave_ifs.hh"
+#include "../../interfaces/master_slave_ifs.hh"
 
 namespace tlm
 {

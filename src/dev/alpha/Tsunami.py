@@ -28,12 +28,12 @@
 
 from m5.params import *
 from m5.proxy import *
-from BadDevice import BadDevice
-from AlphaBackdoor import AlphaBackdoor
-from Device import BasicPioDevice, IsaFake, BadAddr
-from PciHost import GenericPciHost
-from Platform import Platform
-from Uart import Uart8250
+from m5.objects.BadDevice import BadDevice
+from m5.objects.AlphaBackdoor import AlphaBackdoor
+from m5.objects.Device import BasicPioDevice, IsaFake, BadAddr
+from m5.objects.PciHost import GenericPciHost
+from m5.objects.Platform import Platform
+from m5.objects.Uart import Uart8250
 
 class TsunamiCChip(BasicPioDevice):
     type = 'TsunamiCChip'

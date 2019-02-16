@@ -44,14 +44,18 @@ class IndirectPredictor
                       unsigned num_sets, unsigned num_ways,
                       unsigned tag_bits, unsigned path_len,
                       unsigned inst_shift, unsigned num_threads);
-    bool lookup(Addr br_addr, unsigned ghr, TheISA::PCState& br_target,
-                ThreadID tid);
+    bool lookup(Addr br_addr, TheISA::PCState& br_target, ThreadID tid);
     void recordIndirect(Addr br_addr, Addr tgt_addr, InstSeqNum seq_num,
                         ThreadID tid);
-    void commit(InstSeqNum seq_num, ThreadID tid);
+    void commit(InstSeqNum seq_num, ThreadID tid, void * indirect_history);
     void squash(InstSeqNum seq_num, ThreadID tid);
-    void recordTarget(InstSeqNum seq_num, unsigned ghr,
-                      const TheISA::PCState& target, ThreadID tid);
+    void recordTarget(InstSeqNum seq_num, const TheISA::PCState& target,
+                      ThreadID tid);
+    void updateDirectionInfo(ThreadID tid, bool taken,
+                             void* & indirect_history);
+    void changeDirectionPrediction(ThreadID tid, void * indirect_history,
+                                   bool actually_taken);
+    void deleteDirectionInfo(ThreadID tid, void * indirect_history);
 
   private:
     const bool hashGHR;
@@ -85,10 +89,11 @@ class IndirectPredictor
 
 
     struct ThreadInfo {
-        ThreadInfo() : headHistEntry(0) { }
+        ThreadInfo() : headHistEntry(0), ghr(0) { }
 
         std::deque<HistoryEntry> pathHist;
         unsigned headHistEntry;
+        unsigned ghr;
     };
 
     std::vector<ThreadInfo> threadInfo;

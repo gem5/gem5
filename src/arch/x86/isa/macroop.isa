@@ -333,7 +333,7 @@ let {{
     noModRMString = "env.setSeg(machInst);\n"
     def genMacroop(Name, env):
         blocks = OutputBlocks()
-        if not macroopDict.has_key(Name):
+        if not Name in macroopDict:
             raise Exception, "Unrecognized instruction: %s" % Name
         macroop = macroopDict[Name]
         if not macroop.declared:

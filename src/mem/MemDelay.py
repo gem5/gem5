@@ -36,7 +36,7 @@
 # Authors: Andreas Sandberg
 
 from m5.params import *
-from MemObject import MemObject
+from m5.objects.MemObject import MemObject
 
 class MemDelay(MemObject):
     type = 'MemDelay'

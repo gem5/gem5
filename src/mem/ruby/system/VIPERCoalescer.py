@@ -34,7 +34,7 @@
 
 from m5.params import *
 from m5.proxy import *
-from GPUCoalescer import *
+from m5.objects.GPUCoalescer import *
 
 class VIPERCoalescer(RubyGPUCoalescer):
     type = 'VIPERCoalescer'

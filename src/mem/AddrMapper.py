@@ -36,7 +36,7 @@
 # Authors: Andreas Hansson
 
 from m5.params import *
-from MemObject import MemObject
+from m5.objects.MemObject import MemObject
 
 # An address mapper changes the packet addresses in going from the
 # slave port side of the mapper to the master port side. When the

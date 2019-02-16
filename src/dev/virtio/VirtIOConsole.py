@@ -39,8 +39,8 @@
 
 from m5.params import *
 from m5.proxy import *
-from VirtIO import VirtIODeviceBase
-from Serial import SerialDevice
+from m5.objects.VirtIO import VirtIODeviceBase
+from m5.objects.Serial import SerialDevice
 
 class VirtIOConsole(VirtIODeviceBase):
     type = 'VirtIOConsole'

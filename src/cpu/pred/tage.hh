@@ -77,6 +77,7 @@ class TAGE: public BPredUnit
 
     virtual bool predict(ThreadID tid, Addr branch_pc, bool cond_branch,
                          void* &b);
+
   public:
 
     TAGE(const TAGEParams *params);
@@ -87,9 +88,8 @@ class TAGE: public BPredUnit
     void btbUpdate(ThreadID tid, Addr branch_addr, void* &bp_history) override;
     void update(ThreadID tid, Addr branch_addr, bool taken, void *bp_history,
                 bool squashed, const StaticInstPtr & inst,
-                Addr corrTarget) override;
+                Addr corrTarget = MaxAddr) override;
     virtual void squash(ThreadID tid, void *bp_history) override;
-    unsigned getGHR(ThreadID tid, void *bp_history) const override;
 };
 
 #endif // __CPU_PRED_TAGE

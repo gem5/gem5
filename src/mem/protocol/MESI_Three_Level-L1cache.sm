@@ -71,6 +71,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     IS, AccessPermission:Busy, desc="L1 idle, issued GETS, have not seen response yet";
     IM, AccessPermission:Busy, desc="L1 idle, issued GETX, have not seen response yet";
     SM, AccessPermission:Read_Only, desc="L1 idle, issued GETX, have not seen response yet";
+    IS_I, AccessPermission:Busy, desc="L1 idle, issued GETS, saw Inv before data because directory doesn't block on GETS hit";
     M_I, AccessPermission:Busy, desc="L1 replacing, waiting for ACK";
     SINK_WB_ACK, AccessPermission:Busy, desc="This is to sink WB_Acks from L2";
 
@@ -278,7 +279,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
         if(in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
           trigger(Event:Data_Exclusive, in_msg.addr, cache_entry, tbe);
         } else if(in_msg.Type == CoherenceResponseType:DATA) {
-          if (getState(tbe, cache_entry, in_msg.addr) == State:IS &&
+          if ((getState(tbe, cache_entry, in_msg.addr) == State:IS ||
+               getState(tbe, cache_entry, in_msg.addr) == State:IS_I) &&
               machineIDToMachineType(in_msg.Sender) == MachineType:L1Cache) {
 
               trigger(Event:DataS_fromL1, in_msg.addr, cache_entry, tbe);
@@ -626,6 +628,20 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       }
   }
 
+  action(h_stale_data_to_l0, "hs", desc="If not prefetch, send data to the L0 cache.") {
+      enqueue(bufferToL0_out, CoherenceMsg, l1_response_latency) {
+          assert(is_valid(cache_entry));
+
+          out_msg.addr := address;
+          out_msg.Class := CoherenceClass:STALE_DATA;
+          out_msg.Sender := machineID;
+          out_msg.Dest := createMachineID(MachineType:L0Cache, version);
+          out_msg.DataBlk := cache_entry.DataBlk;
+          out_msg.Dirty := cache_entry.Dirty;
+          out_msg.MessageSize := MessageSizeType:Response_Data;
+       }
+   }
+
   action(i_allocateTBE, "i", desc="Allocate TBE (number of invalidates=0)") {
     check_allocate(TBEs);
     assert(is_valid(cache_entry));
@@ -733,7 +749,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   //*****************************************************
 
   // Transitions for Load/Store/Replacement/WriteBack from transient states
-  transition({IS, IM, M_I, SM, SINK_WB_ACK, S_IL0, M_IL0, E_IL0, MM_IL0},
+  transition({IS, IM, IS_I, M_I, SM, SINK_WB_ACK, S_IL0, M_IL0, E_IL0, MM_IL0},
              {Load, Store, L1_Replacement}) {
     z0_stallAndWaitL0Queue;
   }
@@ -895,10 +911,24 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   }
 
   // Transitions from IS
+  transition({IS,IS_I}, Inv, IS_I) {
+    fi_sendInvAck;
+    l_popL2RequestQueue;
+  }
+
   transition(IS, Data_all_Acks, S) {
     u_writeDataFromL2Response;
     h_data_to_l0;
     s_deallocateTBE;
+    o_popL2ResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(IS_I, Data_all_Acks, I) {
+    u_writeDataFromL2Response;
+    h_stale_data_to_l0;
+    s_deallocateTBE;
+    ff_deallocateCacheBlock;
     o_popL2ResponseQueue;
     kd_wakeUpDependents;
   }
@@ -912,8 +942,18 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     kd_wakeUpDependents;
   }
 
+  transition(IS_I, DataS_fromL1, I) {
+    u_writeDataFromL2Response;
+    j_sendUnblock;
+    h_stale_data_to_l0;
+    s_deallocateTBE;
+    ff_deallocateCacheBlock;
+    o_popL2ResponseQueue;
+    kd_wakeUpDependents;
+  }
+
   // directory is blocked when sending exclusive data
-  transition(IS, Data_Exclusive, E) {
+  transition({IS,IS_I}, Data_Exclusive, E) {
     u_writeDataFromL2Response;
     hh_xdata_to_l0;
     jj_sendExclusiveUnblock;
@@ -1012,7 +1052,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     z2_stallAndWaitL2Queue;
   }
 
-  transition({IS, S_IL0, M_IL0, E_IL0, MM_IL0}, {Inv, Fwd_GETX, Fwd_GETS}) {
+  transition({S_IL0, M_IL0, E_IL0, MM_IL0}, {Inv, Fwd_GETX, Fwd_GETS}) {
     z2_stallAndWaitL2Queue;
   }
 }

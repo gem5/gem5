@@ -317,10 +317,11 @@ class TAGEBase : public SimObject
      * recorded at prediction time.
      * @nrand Random int number from 0 to 3
      * @param corrTarget The correct branch target
+     * @param pred Final prediction for this branch
      */
     virtual void condBranchUpdate(
         ThreadID tid, Addr branch_pc, bool taken, BranchInfo* bi,
-        int nrand, Addr corrTarget);
+        int nrand, Addr corrTarget, bool pred);
 
     /**
      * TAGE prediction called from TAGE::predict
@@ -370,7 +371,7 @@ class TAGEBase : public SimObject
      * on an update
      * For this base TAGE implementation it does nothing
      */
-    virtual void adjustAlloc(bool & alloc, bool taken);
+    virtual void adjustAlloc(bool & alloc, bool taken, bool pred_taken);
 
     /**
      * Handles Allocation and U bits reset on an update
@@ -399,13 +400,6 @@ class TAGEBase : public SimObject
      * For this base TAGE class it does nothing
      */
     virtual void extraAltCalc(BranchInfo* bi);
-
-    /**
-     * Algorithm for returning a random number
-     * This base TAGE class just uses random_mt, but some derived classes
-     * may want to use a more realistic implementation or force some values
-     */
-    static int getRandom();
 
     void btbUpdate(ThreadID tid, Addr branch_addr, BranchInfo* &bi);
     unsigned getGHR(ThreadID tid, BranchInfo *bi) const;

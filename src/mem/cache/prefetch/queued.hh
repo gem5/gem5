@@ -89,7 +89,6 @@ class QueuedPrefetcher : public BasePrefetcher
             return !(*this > that);
         }
     };
-    using AddrPriority = std::pair<Addr, int32_t>;
 
     std::list<DeferredPacket> pfq;
 
@@ -126,6 +125,8 @@ class QueuedPrefetcher : public BasePrefetcher
     Stats::Scalar pfSpanPage;
 
   public:
+    using AddrPriority = std::pair<Addr, int32_t>;
+
     QueuedPrefetcher(const QueuedPrefetcherParams *p);
     virtual ~QueuedPrefetcher();
 
