@@ -34,15 +34,15 @@
 #include "arch/arm/isa_device.hh"
 #include "dev/arm/gic_v3.hh"
 
-class Gicv3Redistributor;
 class Gicv3Distributor;
+class Gicv3Redistributor;
 
 class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
 {
   private:
 
-    friend class Gicv3Redistributor;
     friend class Gicv3Distributor;
+    friend class Gicv3Redistributor;
 
   protected:
 
@@ -51,61 +51,91 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     Gicv3Distributor * distributor;
     uint32_t cpuId;
 
-    static const uint32_t ICC_SRE_EL1_SRE = 1 << 0;
-    static const uint32_t ICC_SRE_EL1_DFB = 1 << 1;
-    static const uint32_t ICC_SRE_EL1_DIB = 1 << 2;
+    BitUnion64(ICC_CTLR_EL1)
+        Bitfield<63, 20> res0_3;
+        Bitfield<19>     ExtRange;
+        Bitfield<18>     RSS;
+        Bitfield<17, 16> res0_2;
+        Bitfield<15>     A3V;
+        Bitfield<14>     SEIS;
+        Bitfield<13, 11> IDbits;
+        Bitfield<10, 8>  PRIbits;
+        Bitfield<7>      res0_1;
+        Bitfield<6>      PMHE;
+        Bitfield<5, 2>   res0_0;
+        Bitfield<1>      EOImode;
+        Bitfield<0>      CBPR;
+    EndBitUnion(ICC_CTLR_EL1)
 
-    static const uint32_t ICC_SRE_EL2_SRE = 1 << 0;
-    static const uint32_t ICC_SRE_EL2_DFB = 1 << 1;
-    static const uint32_t ICC_SRE_EL2_DIB = 1 << 2;
-    static const uint32_t ICC_SRE_EL2_ENABLE = 1 << 3;
+    BitUnion64(ICC_CTLR_EL3)
+        Bitfield<63, 20> res0_2;
+        Bitfield<19>     ExtRange;
+        Bitfield<18>     RSS;
+        Bitfield<17>     nDS;
+        Bitfield<16>     res0_1;
+        Bitfield<15>     A3V;
+        Bitfield<14>     SEIS;
+        Bitfield<13, 11> IDbits;
+        Bitfield<10, 8>  PRIbits;
+        Bitfield<7>      res0_0;
+        Bitfield<6>      PMHE;
+        Bitfield<5>      RM;
+        Bitfield<4>      EOImode_EL1NS;
+        Bitfield<3>      EOImode_EL1S;
+        Bitfield<2>      EOImode_EL3;
+        Bitfield<1>      CBPR_EL1NS;
+        Bitfield<0>      CBPR_EL1S;
+    EndBitUnion(ICC_CTLR_EL3)
 
-    static const uint32_t ICC_SRE_EL3_SRE = 1 << 0;
-    static const uint32_t ICC_SRE_EL3_DFB = 1 << 1;
-    static const uint32_t ICC_SRE_EL3_DIB = 1 << 2;
-    static const uint32_t ICC_SRE_EL3_ENABLE = 1 << 3;
+    BitUnion64(ICC_IGRPEN0_EL1)
+        Bitfield<63, 1> res0;
+        Bitfield<0>     Enable;
+    EndBitUnion(ICC_IGRPEN0_EL1)
 
-    static const uint32_t ICC_CTLR_EL3_CBPR_EL1S = 1 << 0;
-    static const uint32_t ICC_CTLR_EL3_CBPR_EL1NS = 1 << 1;
-    static const uint32_t ICC_CTLR_EL3_EOIMODE_EL3 = 1 << 2;
-    static const uint32_t ICC_CTLR_EL3_EOIMODE_EL1S = 1 << 3;
-    static const uint32_t ICC_CTLR_EL3_EOIMODE_EL1NS = 1 << 4;
-    static const uint32_t ICC_CTLR_EL3_RM = 1 << 5;
-    static const uint32_t ICC_CTLR_EL3_PMHE = 1 << 6;
-    static const uint32_t ICC_CTLR_EL3_PRIBITS_SHIFT = 8;
-    static const uint32_t ICC_CTLR_EL3_IDBITS_SHIFT = 11;
-    static const uint32_t ICC_CTLR_EL3_SEIS = 1 << 14;
-    static const uint32_t ICC_CTLR_EL3_A3V = 1 << 15;
-    static const uint32_t ICC_CTLR_EL3_nDS = 1 << 17;
-    static const uint32_t ICC_CTLR_EL3_RSS = 1 << 18;
+    BitUnion64(ICC_IGRPEN1_EL1)
+        Bitfield<63, 1> res0;
+        Bitfield<0>     Enable;
+    EndBitUnion(ICC_IGRPEN1_EL1)
 
-    static const uint32_t ICC_CTLR_EL1_CBPR = 1 << 0;
-    static const uint32_t ICC_CTLR_EL1_EOIMODE = 1 << 1;
-    static const uint32_t ICC_CTLR_EL1_PMHE = 1 << 6;
-    static const uint32_t ICC_CTLR_EL1_SEIS = 1 << 14;
-    static const uint32_t ICC_CTLR_EL1_A3V = 1 << 15;
-    static const uint32_t ICC_CTLR_EL1_RSS = 1 << 18;
-    static const uint32_t ICC_CTLR_EL1_PRIBITS_SHIFT = 8;
-    static const uint32_t ICC_CTLR_EL1_PRIBITS_MASK =
-        7U << ICC_CTLR_EL1_PRIBITS_SHIFT;
-    static const uint32_t ICC_CTLR_EL1_IDBITS_SHIFT = 11;
+    BitUnion64(ICC_IGRPEN1_EL3)
+        Bitfield<63, 2> res0;
+        Bitfield<1>     EnableGrp1S;
+        Bitfield<0>     EnableGrp1NS;
+    EndBitUnion(ICC_IGRPEN1_EL3)
 
-    static const uint32_t ICC_IGRPEN0_EL1_ENABLE = 1 << 0;
-    static const uint32_t ICC_IGRPEN1_EL1_ENABLE = 1 << 0;
+    BitUnion64(ICC_SRE_EL1)
+        Bitfield<63, 3> res0;
+        Bitfield<2>     DIB;
+        Bitfield<1>     DFB;
+        Bitfield<0>     SRE;
+    EndBitUnion(ICC_SRE_EL1)
 
-    static const uint32_t ICC_IGRPEN1_EL3_ENABLEGRP1NS = 1 << 0;
-    static const uint32_t ICC_IGRPEN1_EL3_ENABLEGRP1S = 1 << 1;
+    BitUnion64(ICC_SRE_EL2)
+        Bitfield<63, 4> res0;
+        Bitfield<3>     Enable;
+        Bitfield<2>     DIB;
+        Bitfield<1>     DFB;
+        Bitfield<0>     SRE;
+    EndBitUnion(ICC_SRE_EL2)
+
+    BitUnion64(ICC_SRE_EL3)
+        Bitfield<63, 4> res0;
+        Bitfield<3>     Enable;
+        Bitfield<2>     DIB;
+        Bitfield<1>     DFB;
+        Bitfield<0>     SRE;
+    EndBitUnion(ICC_SRE_EL3)
 
     static const uint8_t PRIORITY_BITS = 5;
 
-    /* Minimum BPR for Secure, or when security not enabled */
+    // Minimum BPR for Secure, or when security not enabled
     static const uint8_t GIC_MIN_BPR = 2;
-    /* Minimum BPR for Nonsecure when security is enabled */
+    //  Minimum BPR for Nonsecure when security is enabled
     static const uint8_t GIC_MIN_BPR_NS = GIC_MIN_BPR + 1;
 
-    static const uint8_t VIRTUAL_PRIORITY_BITS = 5;
+    static const uint8_t VIRTUAL_PRIORITY_BITS   = 5;
     static const uint8_t VIRTUAL_PREEMPTION_BITS = 5;
-    static const uint8_t VIRTUAL_NUM_LIST_REGS = 16;
+    static const uint8_t VIRTUAL_NUM_LIST_REGS   = 16;
 
     static const uint8_t GIC_MIN_VBPR = 7 - VIRTUAL_PREEMPTION_BITS;
 
@@ -119,19 +149,19 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
 
     // GIC CPU interface memory mapped control registers (legacy)
     enum {
-        GICC_CTLR = 0x0000,
-        GICC_PMR = 0x0004,
-        GICC_BPR = 0x0008,
-        GICC_IAR = 0x000C,
-        GICC_EOIR = 0x0010,
-        GICC_RPR = 0x0014,
-        GICC_HPPI = 0x0018,
-        GICC_ABPR = 0x001C,
-        GICC_AIAR = 0x0020,
-        GICC_AEOIR = 0x0024,
-        GICC_AHPPIR = 0x0028,
+        GICC_CTLR    = 0x0000,
+        GICC_PMR     = 0x0004,
+        GICC_BPR     = 0x0008,
+        GICC_IAR     = 0x000C,
+        GICC_EOIR    = 0x0010,
+        GICC_RPR     = 0x0014,
+        GICC_HPPI    = 0x0018,
+        GICC_ABPR    = 0x001C,
+        GICC_AIAR    = 0x0020,
+        GICC_AEOIR   = 0x0024,
+        GICC_AHPPIR  = 0x0028,
         GICC_STATUSR = 0x002C,
-        GICC_IIDR = 0x00FC,
+        GICC_IIDR    = 0x00FC,
     };
 
     static const AddrRange GICC_APR;
@@ -139,163 +169,166 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
 
     // GIC CPU virtual interface memory mapped control registers (legacy)
     enum {
-        GICH_HCR = 0x0000,
-        GICH_VTR = 0x0004,
-        GICH_VMCR = 0x0008,
-        GICH_MISR = 0x0010,
-        GICH_EISR = 0x0020,
+        GICH_HCR   = 0x0000,
+        GICH_VTR   = 0x0004,
+        GICH_VMCR  = 0x0008,
+        GICH_MISR  = 0x0010,
+        GICH_EISR  = 0x0020,
         GICH_ELRSR = 0x0030,
     };
 
     static const AddrRange GICH_APR;
     static const AddrRange GICH_LR;
 
-    static const uint32_t ICH_HCR_EL2_EN = 1 << 0;
-    static const uint32_t ICH_HCR_EL2_UIE = 1 << 1;
-    static const uint32_t ICH_HCR_EL2_LRENPIE = 1 << 2;
-    static const uint32_t ICH_HCR_EL2_NPIE = 1 << 3;
-    static const uint32_t ICH_HCR_EL2_VGRP0EIE = 1 << 4;
-    static const uint32_t ICH_HCR_EL2_VGRP0DIE = 1 << 5;
-    static const uint32_t ICH_HCR_EL2_VGRP1EIE = 1 << 6;
-    static const uint32_t ICH_HCR_EL2_VGRP1DIE = 1 << 7;
-    static const uint32_t ICH_HCR_EL2_TC = 1 << 10;
-    static const uint32_t ICH_HCR_EL2_TALL0 = 1 << 11;
-    static const uint32_t ICH_HCR_EL2_TALL1 = 1 << 12;
-    static const uint32_t ICH_HCR_EL2_TSEI = 1 << 13;
-    static const uint32_t ICH_HCR_EL2_TDIR = 1 << 14;
-    static const uint32_t ICH_HCR_EL2_EOICOUNT_MASK = 0x1fU << 27;
+    BitUnion64(ICH_HCR_EL2)
+        Bitfield<63, 32> res0_2;
+        Bitfield<31, 27> EOIcount;
+        Bitfield<26, 15> res0_1;
+        Bitfield<14>     TDIR;
+        Bitfield<13>     TSEI;
+        Bitfield<12>     TALL1;
+        Bitfield<11>     TALL0;
+        Bitfield<10>     TC;
+        Bitfield<9, 8>   res0_0;
+        Bitfield<7>      VGrp1DIE;
+        Bitfield<6>      VGrp1EIE;
+        Bitfield<5>      VGrp0DIE;
+        Bitfield<4>      VGrp0EIE;
+        Bitfield<3>      NPIE;
+        Bitfield<2>      LRENPIE;
+        Bitfield<1>      UIE;
+        Bitfield<0>      En;
+    EndBitUnion(ICH_HCR_EL2)
 
-    static const uint64_t ICH_LR_EL2_VINTID_SHIFT = 0;
-    static const uint64_t ICH_LR_EL2_VINTID_LENGTH = 32;
-    static const uint64_t ICH_LR_EL2_VINTID_MASK =
-        (0xffffffffULL << ICH_LR_EL2_VINTID_SHIFT);
-    static const uint64_t ICH_LR_EL2_PINTID_SHIFT = 32;
-    static const uint64_t ICH_LR_EL2_PINTID_LENGTH = 10;
-    static const uint64_t ICH_LR_EL2_PINTID_MASK =
-        (0x3ffULL << ICH_LR_EL2_PINTID_SHIFT);
-    /* Note that EOI shares with the top bit of the pINTID field */
-    static const uint64_t ICH_LR_EL2_EOI = (1ULL << 41);
-    static const uint64_t ICH_LR_EL2_PRIORITY_SHIFT = 48;
-    static const uint64_t ICH_LR_EL2_PRIORITY_LENGTH = 8;
-    static const uint64_t ICH_LR_EL2_PRIORITY_MASK =
-        (0xffULL << ICH_LR_EL2_PRIORITY_SHIFT);
-    static const uint64_t ICH_LR_EL2_GROUP = (1ULL << 60);
-    static const uint64_t ICH_LR_EL2_HW = (1ULL << 61);
-    static const uint64_t ICH_LR_EL2_STATE_SHIFT = 62;
-    static const uint64_t ICH_LR_EL2_STATE_LENGTH = 2;
-    static const uint64_t ICH_LR_EL2_STATE_MASK =
-        (3ULL << ICH_LR_EL2_STATE_SHIFT);
-    /* values for the state field: */
-    static const uint64_t ICH_LR_EL2_STATE_INVALID = 0;
-    static const uint64_t ICH_LR_EL2_STATE_PENDING = 1;
-    static const uint64_t ICH_LR_EL2_STATE_ACTIVE = 2;
+    BitUnion64(ICH_LR_EL2)
+        Bitfield<63, 62> State;
+        Bitfield<61>     HW;
+        Bitfield<60>     Group;
+        Bitfield<59, 56> res0_1;
+        Bitfield<55, 48> Priority;
+        Bitfield<47, 45> res0_0;
+        Bitfield<44, 32> pINTID;
+        Bitfield<41>     EOI;
+        Bitfield<31, 0>  vINTID;
+    EndBitUnion(ICH_LR_EL2)
+
+    static const uint64_t ICH_LR_EL2_STATE_INVALID        = 0;
+    static const uint64_t ICH_LR_EL2_STATE_PENDING        = 1;
+    static const uint64_t ICH_LR_EL2_STATE_ACTIVE         = 2;
     static const uint64_t ICH_LR_EL2_STATE_ACTIVE_PENDING = 3;
-    static const uint64_t ICH_LR_EL2_STATE_PENDING_BIT =
-        (1ULL << ICH_LR_EL2_STATE_SHIFT);
-    static const uint64_t ICH_LR_EL2_STATE_ACTIVE_BIT =
-        (2ULL << ICH_LR_EL2_STATE_SHIFT);
 
-    static const uint64_t ICH_LRC_PRIORITY_SHIFT =
-        ICH_LR_EL2_PRIORITY_SHIFT - 32;
-    static const uint64_t ICH_LRC_PRIORITY_LENGTH =
-        ICH_LR_EL2_PRIORITY_LENGTH;
+    BitUnion32(ICH_LRC)
+        Bitfield<31, 30> State;
+        Bitfield<29>     HW;
+        Bitfield<28>     Group;
+        Bitfield<27, 24> res0_1;
+        Bitfield<23, 16> Priority;
+        Bitfield<15, 13> res0_0;
+        Bitfield<12, 0>  pINTID;
+        Bitfield<9>      EOI;
+    EndBitUnion(ICH_LRC)
 
-    static const uint32_t ICH_MISR_EL2_EOI = (1 << 0);
-    static const uint32_t ICH_MISR_EL2_U = (1 << 1);
-    static const uint32_t ICH_MISR_EL2_LRENP = (1 << 2);
-    static const uint32_t ICH_MISR_EL2_NP = (1 << 3);
-    static const uint32_t ICH_MISR_EL2_VGRP0E = (1 << 4);
-    static const uint32_t ICH_MISR_EL2_VGRP0D = (1 << 5);
-    static const uint32_t ICH_MISR_EL2_VGRP1E = (1 << 6);
-    static const uint32_t ICH_MISR_EL2_VGRP1D = (1 << 7);
+    BitUnion64(ICH_MISR_EL2)
+        Bitfield<63, 8> res0;
+        Bitfield<7>     VGrp1D;
+        Bitfield<6>     VGrp1E;
+        Bitfield<5>     VGrp0D;
+        Bitfield<4>     VGrp0E;
+        Bitfield<3>     NP;
+        Bitfield<2>     LRENP;
+        Bitfield<1>     U;
+        Bitfield<0>     EOI;
+    EndBitUnion(ICH_MISR_EL2)
 
-    static const uint32_t ICH_VMCR_EL2_VENG0_SHIFT = 0;
-    static const uint32_t ICH_VMCR_EL2_VENG0 =
-        (1 << ICH_VMCR_EL2_VENG0_SHIFT);
-    static const uint32_t ICH_VMCR_EL2_VENG1_SHIFT = 1;
-    static const uint32_t ICH_VMCR_EL2_VENG1 =
-        (1 << ICH_VMCR_EL2_VENG1_SHIFT);
-    static const uint32_t ICH_VMCR_EL2_VACKCTL = (1 << 2);
-    static const uint32_t ICH_VMCR_EL2_VFIQEN = (1 << 3);
-    static const uint32_t ICH_VMCR_EL2_VCBPR_SHIFT = 4;
-    static const uint32_t ICH_VMCR_EL2_VCBPR =
-        (1 << ICH_VMCR_EL2_VCBPR_SHIFT);
-    static const uint32_t ICH_VMCR_EL2_VEOIM_SHIFT = 9;
-    static const uint32_t ICH_VMCR_EL2_VEOIM =
-        (1 << ICH_VMCR_EL2_VEOIM_SHIFT);
-    static const uint32_t ICH_VMCR_EL2_VBPR1_SHIFT = 18;
-    static const uint32_t ICH_VMCR_EL2_VBPR1_LENGTH = 3;
-    static const uint32_t ICH_VMCR_EL2_VBPR1_MASK =
-        (0x7U << ICH_VMCR_EL2_VBPR1_SHIFT);
-    static const uint32_t ICH_VMCR_EL2_VBPR0_SHIFT = 21;
-    static const uint32_t ICH_VMCR_EL2_VBPR0_LENGTH = 3;
-    static const uint32_t ICH_VMCR_EL2_VBPR0_MASK =
-        (0x7U << ICH_VMCR_EL2_VBPR0_SHIFT);
-    static const uint32_t ICH_VMCR_EL2_VPMR_SHIFT = 24;
-    static const uint32_t ICH_VMCR_EL2_VPMR_LENGTH = 8;
-    static const uint32_t ICH_VMCR_EL2_VPMR_MASK =
-        (0xffU << ICH_VMCR_EL2_VPMR_SHIFT);
+    BitUnion64(ICH_VMCR_EL2)
+        Bitfield<63, 32> res0_2;
+        Bitfield<31, 24> VPMR;
+        Bitfield<23, 21> VBPR0;
+        Bitfield<20, 18> VBPR1;
+        Bitfield<17, 10> res0_1;
+        Bitfield<9>      VEOIM;
+        Bitfield<8, 5>   res0_0;
+        Bitfield<4>      VCBPR;
+        Bitfield<3>      VFIQEn;
+        Bitfield<2>      VAckCtl;
+        Bitfield<1>      VENG1;
+        Bitfield<0>      VENG0;
+    EndBitUnion(ICH_VMCR_EL2)
 
-    static const uint32_t ICH_VTR_EL2_LISTREGS_SHIFT = 0;
-    static const uint32_t ICH_VTR_EL2_TDS = 1 << 19;
-    static const uint32_t ICH_VTR_EL2_NV4 = 1 << 20;
-    static const uint32_t ICH_VTR_EL2_A3V = 1 << 21;
-    static const uint32_t ICH_VTR_EL2_SEIS = 1 << 22;
-    static const uint32_t ICH_VTR_EL2_IDBITS_SHIFT = 23;
-    static const uint32_t ICH_VTR_EL2_PREBITS_SHIFT = 26;
-    static const uint32_t ICH_VTR_EL2_PRIBITS_SHIFT = 29;
+    BitUnion64(ICH_VTR_EL2)
+        Bitfield<63, 32> res0_1;
+        Bitfield<31, 29> PRIbits;
+        Bitfield<28, 26> PREbits;
+        Bitfield<25, 23> IDbits;
+        Bitfield<22>     SEIS;
+        Bitfield<21>     A3V;
+        Bitfield<20>     res1;
+        Bitfield<19>     TDS;
+        Bitfield<18, 5>  res0_0;
+        Bitfield<4, 0>   ListRegs;
+    EndBitUnion(ICH_VTR_EL2)
+
+    BitUnion64(ICV_CTLR_EL1)
+        Bitfield<63, 19> res0_2;
+        Bitfield<18>     RSS;
+        Bitfield<17, 16> res0_1;
+        Bitfield<15>     A3V;
+        Bitfield<14>     SEIS;
+        Bitfield<13, 11> IDbits;
+        Bitfield<10, 8>  PRIbits;
+        Bitfield<7, 2>   res0_0;
+        Bitfield<1>      EOImode;
+        Bitfield<0>      CBPR;
+    EndBitUnion(ICV_CTLR_EL1)
+
+  protected:
+
+    void activateIRQ(uint32_t intid, Gicv3::GroupId group);
+    int currEL() const;
+    void deactivateIRQ(uint32_t intid, Gicv3::GroupId group);
+    void dropPriority(Gicv3::GroupId group);
+    uint64_t eoiMaintenanceInterruptStatus() const;
+    bool getHCREL2FMO() const;
+    bool getHCREL2IMO() const;
+    uint32_t getHPPIR0() const;
+    uint32_t getHPPIR1() const;
+    int getHPPVILR() const;
+    bool groupEnabled(Gicv3::GroupId group) const;
+    uint32_t groupPriorityMask(Gicv3::GroupId group) const;
+    bool haveEL(ArmISA::ExceptionLevel el) const;
+    int highestActiveGroup() const;
+    uint8_t highestActivePriority() const;
+    bool hppiCanPreempt() const;
+    bool hppviCanPreempt(int lrIdx) const;
+    bool inSecureState() const;
+    ArmISA::InterruptTypes intSignalType(Gicv3::GroupId group) const;
+    bool isAA64() const;
+    bool isEL3OrMon() const;
+    bool isEOISplitMode() const;
+    bool isSecureBelowEL3() const;
+    ICH_MISR_EL2 maintenanceInterruptStatus() const;
+    RegVal readMiscReg(int misc_reg) override;
+    void reset();
+    void serialize(CheckpointOut & cp) const override;
+    void setMiscReg(int misc_reg, RegVal val) override;
+    void unserialize(CheckpointIn & cp) override;
+    void update();
+    void virtualActivateIRQ(uint32_t lrIdx);
+    void virtualDeactivateIRQ(int lrIdx);
+    uint8_t virtualDropPriority();
+    int virtualFindActive(uint32_t intid) const;
+    uint32_t virtualGroupPriorityMask(Gicv3::GroupId group) const;
+    uint8_t virtualHighestActivePriority() const;
+    void virtualIncrementEOICount();
+    bool virtualIsEOISplitMode() const;
+    void virtualUpdate();
 
   public:
 
     Gicv3CPUInterface(Gicv3 * gic, uint32_t cpu_id);
-    ~Gicv3CPUInterface();
+
     void init();
     void initState();
-
-    RegVal readMiscReg(int misc_reg) override;
-    void setMiscReg(int misc_reg, RegVal val) override;
-    void update();
-    void virtualUpdate();
-
-    void serialize(CheckpointOut & cp) const override;
-    void unserialize(CheckpointIn & cp) override;
-
-  protected:
-
-    void reset();
-    bool hppiCanPreempt();
-    bool hppviCanPreempt(int lrIdx);
-    bool groupEnabled(Gicv3::GroupId group);
-    uint8_t highestActivePriority();
-    uint8_t virtualHighestActivePriority();
-    bool inSecureState();
-    int currEL();
-    bool haveEL(ArmISA::ExceptionLevel el);
-    void activateIRQ(uint32_t intid, Gicv3::GroupId group);
-    void virtualActivateIRQ(uint32_t lrIdx);
-    void deactivateIRQ(uint32_t intid, Gicv3::GroupId group);
-    void virtualDeactivateIRQ(int lrIdx);
-    uint32_t groupPriorityMask(Gicv3::GroupId group);
-    uint32_t virtualGroupPriorityMask(Gicv3::GroupId group);
-    void dropPriority(Gicv3::GroupId group);
-    uint8_t virtualDropPriority();
-    ArmISA::InterruptTypes intSignalType(Gicv3::GroupId group);
-    bool isEOISplitMode();
-    bool virtualIsEOISplitMode();
-    bool isSecureBelowEL3();
-    bool inSecureState2();
-    uint32_t eoiMaintenanceInterruptStatus(uint32_t * misr);
-    uint32_t maintenanceInterruptStatus();
-    int highestActiveGroup();
-    bool getHCREL2FMO();
-    bool getHCREL2IMO();
-    uint32_t getHPPIR1();
-    uint32_t getHPPIR0();
-    int getHPPVILR();
-    int virtualFindActive(uint32_t intid);
-    void virtualIncrementEOICount();
-    bool isEL3OrMon();
-    bool isAA64();
 };
 
 #endif //__DEV_ARM_GICV3_CPU_INTERFACE_H__
