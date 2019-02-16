@@ -93,26 +93,32 @@ def assertStr(value):
 
 
 # memory size configuration stuff
-def toFloat(value, target_type='float', units=None, prefixes=[]):
+def toNum(value, target_type, units, prefixes, converter):
     assertStr(value)
+
+    def convert(val):
+        try:
+            return converter(val)
+        except ValueError:
+            raise ValueError(
+                "cannot convert '%s' to %s" % (value, target_type))
 
     if units and not value.endswith(units):
         units = None
     if not units:
-        try:
-            return float(value)
-        except ValueError:
-            raise ValueError("cannot convert '%s' to %s" % \
-                             (value, target_type))
+        return convert(value)
 
     value = value[:-len(units)]
 
     prefix = next((p for p in prefixes.keys() if value.endswith(p)), None)
     if not prefix:
-        return float(value)
+        return convert(value)
     value = value[:-len(prefix)]
 
-    return float(value) * prefixes[prefix]
+    return convert(value) * prefixes[prefix]
+
+def toFloat(value, target_type='float', units=None, prefixes=[]):
+    return toNum(value, target_type, units, prefixes, float)
 
 def toMetricFloat(value, target_type='float', units=None):
     return toFloat(value, target_type, units, metric_prefixes)
@@ -121,13 +127,8 @@ def toBinaryFloat(value, target_type='float', units=None):
     return toFloat(value, target_type, units, binary_prefixes)
 
 def toInteger(value, target_type='integer', units=None, prefixes=[]):
-    value = toFloat(value, target_type, units, prefixes)
-    result = long(value)
-    if value != result:
-        raise ValueError("cannot convert '%s' to integer %s" % \
-                (value, target_type))
-
-    return result
+    intifier = lambda x: int(x, 0)
+    return toNum(value, target_type, units, prefixes, intifier)
 
 def toMetricInteger(value, target_type='integer', units=None):
     return toInteger(value, target_type, units, metric_prefixes)
