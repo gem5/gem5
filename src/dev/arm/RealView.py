@@ -728,7 +728,7 @@ class VExpress_EMM(RealView):
 
     ### On-chip devices ###
     gic = Gic400(dist_addr=0x2C001000, cpu_addr=0x2C002000)
-    vgic   = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
+    vgic   = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, maint_int=25)
 
     local_cpu_timer = CpuLocalTimer(int_timer=ArmPPI(num=29),
                                     int_watchdog=ArmPPI(num=30),
@@ -1062,7 +1062,7 @@ Interrupts:
 class VExpress_GEM5_V1_Base(VExpress_GEM5_Base):
     gic = kvm_gicv2_class(dist_addr=0x2c001000, cpu_addr=0x2c002000,
                           it_lines=512)
-    vgic = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, ppint=25)
+    vgic = VGic(vcpu_addr=0x2c006000, hv_addr=0x2c004000, maint_int=25)
     gicv2m = Gicv2m()
     gicv2m.frames = [
         Gicv2mFrame(spi_base=256, spi_len=64, addr=0x2c1c0000),
