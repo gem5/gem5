@@ -64,6 +64,12 @@ Gicv3CPUInterface::reset()
     hppi.prio = 0xff;
 }
 
+void
+Gicv3CPUInterface::setThreadContext(ThreadContext *tc)
+{
+    maintenanceInterrupt = gic->params()->maint_int->get(tc);
+}
+
 bool
 Gicv3CPUInterface::getHCREL2FMO() const
 {
@@ -1985,7 +1991,7 @@ Gicv3CPUInterface::virtualUpdate()
 
     if (ich_hcr_el2.En) {
         if (maintenanceInterruptStatus()) {
-            redistributor->sendPPInt(25);
+            maintenanceInterrupt->raise();
         }
     }
 

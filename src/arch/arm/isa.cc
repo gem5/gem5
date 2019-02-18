@@ -403,6 +403,7 @@ ISA::startup(ThreadContext *tc)
             haveGICv3CPUInterface = true;
             gicv3CpuInterface.reset(gicv3->getCPUInterface(tc->contextId()));
             gicv3CpuInterface->setISA(this);
+            gicv3CpuInterface->setThreadContext(tc);
         }
     }
 }

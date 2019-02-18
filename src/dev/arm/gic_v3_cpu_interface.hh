@@ -51,6 +51,8 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     Gicv3Distributor * distributor;
     uint32_t cpuId;
 
+    ArmInterruptPin *maintenanceInterrupt;
+
     BitUnion64(ICC_CTLR_EL1)
         Bitfield<63, 20> res0_3;
         Bitfield<19>     ExtRange;
@@ -307,10 +309,8 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     bool isEOISplitMode() const;
     bool isSecureBelowEL3() const;
     ICH_MISR_EL2 maintenanceInterruptStatus() const;
-    RegVal readMiscReg(int misc_reg) override;
     void reset();
     void serialize(CheckpointOut & cp) const override;
-    void setMiscReg(int misc_reg, RegVal val) override;
     void unserialize(CheckpointIn & cp) override;
     void update();
     void virtualActivateIRQ(uint32_t lrIdx);
@@ -329,6 +329,11 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
 
     void init();
     void initState();
+
+  public: // BaseISADevice
+    RegVal readMiscReg(int misc_reg) override;
+    void setMiscReg(int misc_reg, RegVal val) override;
+    void setThreadContext(ThreadContext *tc) override;
 };
 
 #endif //__DEV_ARM_GICV3_CPU_INTERFACE_H__

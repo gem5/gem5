@@ -173,3 +173,8 @@ class Gicv3(BaseGic):
             "Delay for PIO r/w to redistributors")
     it_lines = Param.UInt32(1020,
             "Number of interrupt lines supported (max = 1020)")
+
+    maint_int = Param.ArmInterruptPin(
+        "HV maintenance interrupt."
+        "ARM strongly recommends that maintenance interrupts "
+        "are configured to use INTID 25 (PPI Interrupt).")

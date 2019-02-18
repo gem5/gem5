@@ -41,6 +41,7 @@ class Gicv3Redistributor;
 class Gicv3 : public BaseGic
 {
   protected:
+    friend class Gicv3CPUInterface;
 
     typedef Gicv3Params Params;
     Gicv3Distributor * distributor;
