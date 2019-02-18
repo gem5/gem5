@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2016 ARM Limited
+// Copyright (c) 2010-2013,2016,2018-2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -993,85 +993,96 @@ let {{
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntDRIop);
     exec_output += PredOpExecute.subst(vcvtFpSIntDRIop);
 
-    vcvtFpUIntSCode = vfpEnabledCheckCode + '''
+    round_mode_suffix_to_mode = {
+        '': 'VfpRoundZero',
+        'a': 'VfpRoundAway',
+        'm': 'VfpRoundDown',
+        'n': 'VfpRoundNearest',
+        'p': 'VfpRoundUpward',
+    }
+
+    def buildVcvt(code, className, roundModeSuffix):
+        global header_output, decoder_output, exec_output, \
+            vfpEnabledCheckCode, round_mode_suffix_to_mode
+        full_code = vfpEnabledCheckCode + code.format(
+            round_mode=round_mode_suffix_to_mode[roundModeSuffix],
+        )
+        iop = InstObjParams(
+            "vcvt{}".format(roundModeSuffix),
+            className.format(roundModeSuffix),
+            "FpRegRegOp",
+            { "code": full_code,
+              "predicate_test": predicateTest,
+              "op_class": "SimdFloatCvtOp" },
+            []
+        )
+        header_output += FpRegRegOpDeclare.subst(iop);
+        decoder_output += FpRegRegOpConstructor.subst(iop);
+        exec_output += PredOpExecute.subst(iop);
+
+    code = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest_uw = vfpFpToFixed<float>(FpOp1, false, 32, 0);
+        FpDest_uw = vfpFpToFixed<float>(
+            FpOp1, false, 32, 0, true, {round_mode});
         __asm__ __volatile__("" :: "m" (FpDest_uw));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
     '''
-    vcvtFpUIntSIop = InstObjParams("vcvt", "VcvtFpUIntS", "FpRegRegOp",
-                                     { "code": vcvtFpUIntSCode,
-                                       "predicate_test": predicateTest,
-                                       "op_class": "SimdFloatCvtOp" }, [])
-    header_output += FpRegRegOpDeclare.subst(vcvtFpUIntSIop);
-    decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntSIop);
-    exec_output += PredOpExecute.subst(vcvtFpUIntSIop);
+    for round_mode_suffix in round_mode_suffix_to_mode:
+        buildVcvt(code, "Vcvt{}FpUIntS", round_mode_suffix)
 
-    vcvtFpUIntDCode = vfpEnabledCheckCode + '''
+    code = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         double cOp1 = dbl(FpOp1P0_uw, FpOp1P1_uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
-        uint64_t result = vfpFpToFixed<double>(cOp1, false, 32, 0);
+        uint64_t result = vfpFpToFixed<double>(
+            cOp1, false, 32, 0, true, {round_mode});
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = result;
         FpscrExc = fpscr;
     '''
-    vcvtFpUIntDIop = InstObjParams("vcvt", "VcvtFpUIntD", "FpRegRegOp",
-                                     { "code": vcvtFpUIntDCode,
-                                       "predicate_test": predicateTest,
-                                       "op_class": "SimdFloatCvtOp" }, [])
-    header_output += FpRegRegOpDeclare.subst(vcvtFpUIntDIop);
-    decoder_output += FpRegRegOpConstructor.subst(vcvtFpUIntDIop);
-    exec_output += PredOpExecute.subst(vcvtFpUIntDIop);
+    for round_mode_suffix in round_mode_suffix_to_mode:
+        buildVcvt(code, "Vcvt{}FpUIntD", round_mode_suffix)
 
-    vcvtFpSIntSCode = vfpEnabledCheckCode + '''
+    code = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         vfpFlushToZero(fpscr, FpOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (FpOp1) : "m" (FpOp1));
-        FpDest_sw = vfpFpToFixed<float>(FpOp1, true, 32, 0);
+        FpDest_sw = vfpFpToFixed<float>(
+            FpOp1, true, 32, 0, true, {round_mode});
         __asm__ __volatile__("" :: "m" (FpDest_sw));
         finishVfp(fpscr, state, fpscr.fz);
         FpscrExc = fpscr;
     '''
-    vcvtFpSIntSIop = InstObjParams("vcvt", "VcvtFpSIntS", "FpRegRegOp",
-                                     { "code": vcvtFpSIntSCode,
-                                       "predicate_test": predicateTest,
-                                       "op_class": "SimdFloatCvtOp" }, [])
-    header_output += FpRegRegOpDeclare.subst(vcvtFpSIntSIop);
-    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntSIop);
-    exec_output += PredOpExecute.subst(vcvtFpSIntSIop);
+    for round_mode_suffix in round_mode_suffix_to_mode:
+        buildVcvt(code, "Vcvt{}FpSIntS", round_mode_suffix)
 
-    vcvtFpSIntDCode = vfpEnabledCheckCode + '''
+    code = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         double cOp1 = dbl(FpOp1P0_uw, FpOp1P1_uw);
         vfpFlushToZero(fpscr, cOp1);
         VfpSavedState state = prepFpState(fpscr.rMode);
         fesetround(FeRoundZero);
         __asm__ __volatile__("" : "=m" (cOp1) : "m" (cOp1));
-        int64_t result = vfpFpToFixed<double>(cOp1, true, 32, 0);
+        int64_t result = vfpFpToFixed<double>(
+            cOp1, true, 32, 0, true, {round_mode});
         __asm__ __volatile__("" :: "m" (result));
         finishVfp(fpscr, state, fpscr.fz);
         FpDestP0_uw = result;
         FpscrExc = fpscr;
     '''
-    vcvtFpSIntDIop = InstObjParams("vcvt", "VcvtFpSIntD", "FpRegRegOp",
-                                     { "code": vcvtFpSIntDCode,
-                                       "predicate_test": predicateTest,
-                                       "op_class": "SimdFloatCvtOp" }, [])
-    header_output += FpRegRegOpDeclare.subst(vcvtFpSIntDIop);
-    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSIntDIop);
-    exec_output += PredOpExecute.subst(vcvtFpSIntDIop);
+    for round_mode_suffix in round_mode_suffix_to_mode:
+        buildVcvt(code, "Vcvt{}FpSIntD", round_mode_suffix)
 
     vcvtFpSFpDCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = (FPSCR) FpscrExc;
