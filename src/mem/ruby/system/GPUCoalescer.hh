@@ -266,11 +266,6 @@ class GPUCoalescer : public RubyPort
     CacheMemory* m_dataCache_ptr;
     CacheMemory* m_instCache_ptr;
 
-    // The cache access latency for this GPU data cache. This is assessed at the
-    // beginning of each access. This should be very similar to the
-    // implementation in Sequencer() as this is very much like a Sequencer
-    Cycles m_data_cache_hit_latency;
-
     // We need to track both the primary and secondary request types.
     // The secondary request type comprises a subset of RubyRequestTypes that
     // are understood by the L1 Controller. A primary request type can be any

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017,2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -102,6 +102,13 @@ class AbstractController : public ClockedObject, public Consumer
     virtual Sequencer* getCPUSequencer() const = 0;
     virtual GPUCoalescer* getGPUCoalescer() const = 0;
 
+    // This latency is used by the sequencer when enqueueing requests.
+    // Different latencies may be used depending on the request type.
+    // This is the hit latency unless the top-level cache controller
+    // introduces additional cycles in the response path.
+    virtual Cycles mandatoryQueueLatency(const RubyRequestType& param_type)
+    { return m_mandatory_queue_latency; }
+
     //! These functions are used by ruby system to read/write the data blocks
     //! that exist with in the controller.
     virtual void functionalRead(const Addr &addr, PacketPtr) = 0;
@@ -195,6 +202,7 @@ class AbstractController : public ClockedObject, public Consumer
     const int m_transitions_per_cycle;
     const unsigned int m_buffer_size;
     Cycles m_recycle_latency;
+    const Cycles m_mandatory_queue_latency;
 
     //! Counter for the number of cycles when the transitions carried out
     //! were equal to the maximum allowed

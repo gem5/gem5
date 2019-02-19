@@ -143,8 +143,6 @@ GPUCoalescer::GPUCoalescer(const Params *p)
     assert(m_instCache_ptr);
     assert(m_dataCache_ptr);
 
-    m_data_cache_hit_latency = p->dcache_hit_latency;
-
     m_runningGarnetStandalone = p->garnet_standalone;
     assumingRfOCoherence = p->assume_rfo;
 }
@@ -950,12 +948,12 @@ GPUCoalescer::issueRequest(PacketPtr pkt, RubyRequestType secondary_type)
     fatal_if(secondary_type == RubyRequestType_IFETCH,
              "there should not be any I-Fetch requests in the GPU Coalescer");
 
-    // Send the message to the cache controller
-    fatal_if(m_data_cache_hit_latency == 0,
-             "should not have a latency of zero");
+    Tick latency = cyclesToTicks(
+                        m_controller->mandatoryQueueLatency(secondary_type));
+    assert(latency > 0);
 
     assert(m_mandatory_q_ptr);
-    m_mandatory_q_ptr->enqueue(msg, clockEdge(), m_data_cache_hit_latency);
+    m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
 }
 
 template <class KEY, class VALUE>

@@ -54,4 +54,3 @@ class RubyGPUCoalescer(RubyPort):
        "max outstanding cycles for a request before " \
        "deadlock/livelock declared")
    garnet_standalone = Param.Bool(False, "")
-   dcache_hit_latency = Param.Cycles(1, "Data cache hit latency")

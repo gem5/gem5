@@ -115,8 +115,6 @@ class CPCntrl(CorePair_Controller, CntrlBase):
         self.L2cache.create(options)
 
         self.sequencer = RubySequencer()
-        self.sequencer.icache_hit_latency = 2
-        self.sequencer.dcache_hit_latency = 2
         self.sequencer.version = self.seqCount()
         self.sequencer.icache = self.L1Icache
         self.sequencer.dcache = self.L1D0cache
@@ -128,11 +126,12 @@ class CPCntrl(CorePair_Controller, CntrlBase):
         self.sequencer1.version = self.seqCount()
         self.sequencer1.icache = self.L1Icache
         self.sequencer1.dcache = self.L1D1cache
-        self.sequencer1.icache_hit_latency = 2
-        self.sequencer1.dcache_hit_latency = 2
         self.sequencer1.ruby_system = ruby_system
         self.sequencer1.coreid = 1
         self.sequencer1.is_cpu_sequencer = True
+
+        # Defines icache/dcache hit latency
+        self.mandatory_queue_latency = 2
 
         self.issue_latency = options.cpu_to_dir_latency
         self.send_evictions = send_evicts(options)

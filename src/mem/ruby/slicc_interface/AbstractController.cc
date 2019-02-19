@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017,2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -55,6 +55,7 @@ AbstractController::AbstractController(const Params *p)
       m_number_of_TBEs(p->number_of_TBEs),
       m_transitions_per_cycle(p->transitions_per_cycle),
       m_buffer_size(p->buffer_size), m_recycle_latency(p->recycle_latency),
+      m_mandatory_queue_latency(p->mandatory_queue_latency),
       memoryPort(csprintf("%s.memory", name()), this, ""),
       addrRanges(p->addr_ranges.begin(), p->addr_ranges.end())
 {
