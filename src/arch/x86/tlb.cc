@@ -455,7 +455,7 @@ void
 TLB::regStats()
 {
     using namespace Stats;
-
+    BaseTLB::regStats();
     rdAccesses
         .name(name() + ".rdAccesses")
         .desc("TLB accesses on read requests");
