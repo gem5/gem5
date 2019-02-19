@@ -461,8 +461,7 @@ roundPage(Addr addr)
 }
 
 bool
-mcrMrc15TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
-                  HDCR hdcr, HSTR hstr, HCPTR hcptr, uint32_t iss)
+mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss)
 {
     bool        isRead;
     uint32_t    crm;
@@ -472,6 +471,12 @@ mcrMrc15TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
     uint32_t    opc2;
     bool        trapToHype = false;
 
+    const CPSR cpsr = tc->readMiscReg(MISCREG_CPSR);
+    const HCR hcr = tc->readMiscReg(MISCREG_HCR);
+    const SCR scr = tc->readMiscReg(MISCREG_SCR);
+    const HDCR hdcr = tc->readMiscReg(MISCREG_HDCR);
+    const HSTR hstr = tc->readMiscReg(MISCREG_HSTR);
+    const HCPTR hcptr = tc->readMiscReg(MISCREG_HCPTR);
 
     if (!inSecureState(scr, cpsr) && (cpsr.mode != MODE_HYP)) {
         mcrMrcIssExtract(iss, isRead, crm, rt, crn, opc1, opc2);

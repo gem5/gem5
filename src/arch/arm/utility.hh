@@ -313,8 +313,8 @@ msrMrs64IssBuild(bool isRead, uint32_t op0, uint32_t op1, uint32_t crn,
 }
 
 bool
-mcrMrc15TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
-                  HDCR hdcr, HSTR hstr, HCPTR hcptr, uint32_t iss);
+mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc, uint32_t iss);
+
 bool
 mcrMrc14TrapToHyp(const MiscRegIndex miscReg, HCR hcr, CPSR cpsr, SCR scr,
                   HDCR hdcr, HSTR hstr, HCPTR hcptr, uint32_t iss);

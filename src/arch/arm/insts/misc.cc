@@ -339,15 +339,8 @@ McrMrcMiscInst::McrMrcMiscInst(const char *_mnemonic, ExtMachInst _machInst,
 Fault
 McrMrcMiscInst::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 {
-    uint32_t cpsr = xc->readMiscReg(MISCREG_CPSR);
-    uint32_t hcr = xc->readMiscReg(MISCREG_HCR);
-    uint32_t scr = xc->readMiscReg(MISCREG_SCR);
-    uint32_t hdcr = xc->readMiscReg(MISCREG_HDCR);
-    uint32_t hstr = xc->readMiscReg(MISCREG_HSTR);
-    uint32_t hcptr = xc->readMiscReg(MISCREG_HCPTR);
+    bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), iss);
 
-    bool hypTrap  = mcrMrc15TrapToHyp(miscReg, hcr, cpsr, scr, hdcr, hstr,
-                                      hcptr, iss);
     if (hypTrap) {
         return std::make_shared<HypervisorTrap>(machInst, iss,
                                                 EC_TRAPPED_CP15_MCR_MRC);
@@ -371,15 +364,8 @@ McrMrcImplDefined::McrMrcImplDefined(const char *_mnemonic,
 Fault
 McrMrcImplDefined::execute(ExecContext *xc, Trace::InstRecord *traceData) const
 {
-    uint32_t cpsr = xc->readMiscReg(MISCREG_CPSR);
-    uint32_t hcr = xc->readMiscReg(MISCREG_HCR);
-    uint32_t scr = xc->readMiscReg(MISCREG_SCR);
-    uint32_t hdcr = xc->readMiscReg(MISCREG_HDCR);
-    uint32_t hstr = xc->readMiscReg(MISCREG_HSTR);
-    uint32_t hcptr = xc->readMiscReg(MISCREG_HCPTR);
+    bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), iss);
 
-    bool hypTrap  = mcrMrc15TrapToHyp(miscReg, hcr, cpsr, scr, hdcr, hstr,
-                                      hcptr, iss);
     if (hypTrap) {
         return std::make_shared<HypervisorTrap>(machInst, iss,
                                                 EC_TRAPPED_CP15_MCR_MRC);

@@ -920,8 +920,9 @@ let {{
     MiscRegIndex miscReg = (MiscRegIndex)
                            xc->tcBase()->flattenRegId(RegId(MiscRegClass,
                                                       preFlatOp1)).index();
-    bool hypTrap = mcrMrc15TrapToHyp(miscReg, Hcr, Cpsr, Scr, Hdcr, Hstr,
-                                     Hcptr, imm);
+
+    bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), imm);
+
     bool can_read, undefined;
     std::tie(can_read, undefined) = canReadCoprocReg(miscReg, Scr, Cpsr);
     // if we're in non secure PL1 mode then we can trap regargless of whether
@@ -952,8 +953,9 @@ let {{
     MiscRegIndex miscReg = (MiscRegIndex)
                        xc->tcBase()->flattenRegId(RegId(MiscRegClass,
                                                   preFlatDest)).index();
-    bool hypTrap  = mcrMrc15TrapToHyp(miscReg, Hcr, Cpsr, Scr, Hdcr, Hstr,
-                                      Hcptr, imm);
+
+    bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), imm);
+
     bool can_write, undefined;
     std::tie(can_write, undefined) = canWriteCoprocReg(miscReg, Scr, Cpsr);
 
@@ -1092,8 +1094,9 @@ let {{
         int preFlatDest = snsBankedIndex(dest, xc->tcBase());
         MiscRegIndex miscReg = (MiscRegIndex) xc->tcBase()->flattenRegId(
             RegId(MiscRegClass, preFlatDest)).index();
-        bool hypTrap  = mcrMrc15TrapToHyp(miscReg, Hcr, Cpsr, Scr, Hdcr, Hstr,
-                                          Hcptr, imm);
+
+        bool hypTrap = mcrMrc15TrapToHyp(miscReg, xc->tcBase(), imm);
+
         bool can_write, undefined;
         std::tie(can_write, undefined) = canWriteCoprocReg(miscReg, Scr, Cpsr);
 
@@ -1190,8 +1193,8 @@ let {{
 
     isbCode = '''
         // If the barrier is due to a CP15 access check for hyp traps
-        if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15ISB, Hcr, Cpsr, Scr,
-            Hdcr, Hstr, Hcptr, imm)) {
+        if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15ISB,
+            xc->tcBase(), imm)) {
             return std::make_shared<HypervisorTrap>(machInst, imm,
                 EC_TRAPPED_CP15_MCR_MRC);
         }
@@ -1206,8 +1209,8 @@ let {{
 
     dsbCode = '''
         // If the barrier is due to a CP15 access check for hyp traps
-        if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DSB, Hcr, Cpsr, Scr,
-            Hdcr, Hstr, Hcptr, imm)) {
+        if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DSB,
+            xc->tcBase(), imm)) {
             return std::make_shared<HypervisorTrap>(machInst, imm,
                 EC_TRAPPED_CP15_MCR_MRC);
         }
@@ -1222,8 +1225,8 @@ let {{
 
     dmbCode = '''
         // If the barrier is due to a CP15 access check for hyp traps
-        if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DMB, Hcr, Cpsr, Scr,
-            Hdcr, Hstr, Hcptr, imm)) {
+        if ((imm != 0) && mcrMrc15TrapToHyp(MISCREG_CP15DMB,
+            xc->tcBase(), imm)) {
             return std::make_shared<HypervisorTrap>(machInst, imm,
                 EC_TRAPPED_CP15_MCR_MRC);
         }
