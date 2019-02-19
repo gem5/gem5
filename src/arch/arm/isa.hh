@@ -105,6 +105,8 @@ namespace ArmISA
          */
         bool impdefAsNop;
 
+        bool afterStartup;
+
         /** MiscReg metadata **/
         struct MiscRegLUTEntry {
             uint32_t lower;  // Lower half mapped to this register
@@ -705,6 +707,16 @@ namespace ArmISA
         void startup(ThreadContext *tc);
 
         Enums::DecoderFlavour decoderFlavour() const { return _decoderFlavour; }
+
+        /** Getter for haveGICv3CPUInterface */
+        bool haveGICv3CpuIfc() const
+        {
+            // haveGICv3CPUInterface is initialized at startup time, hence
+            // trying to read its value before the startup stage will lead
+            // to an error
+            assert(afterStartup);
+            return haveGICv3CPUInterface;
+        }
 
         Enums::VecRegRenameMode
         vecRegRenameMode() const

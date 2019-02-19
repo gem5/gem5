@@ -65,7 +65,8 @@ ISA::ISA(Params *p)
       _vecRegRenameMode(Enums::Full),
       pmu(p->pmu),
       haveGICv3CPUInterface(false),
-      impdefAsNop(p->impdef_nop)
+      impdefAsNop(p->impdef_nop),
+      afterStartup(false)
 {
     miscRegs[MISCREG_SCTLR_RST] = 0;
 
@@ -406,6 +407,8 @@ ISA::startup(ThreadContext *tc)
             gicv3CpuInterface->setThreadContext(tc);
         }
     }
+
+    afterStartup = true;
 }
 
 
