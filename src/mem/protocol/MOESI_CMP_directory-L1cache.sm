@@ -278,7 +278,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
   // ** IN_PORTS **
 
   // Use Timer
-  in_port(useTimerTable_in, Addr, useTimerTable) {
+  in_port(useTimerTable_in, Addr, useTimerTable, rank=4) {
     if (useTimerTable_in.isReady(clockEdge())) {
         Addr readyAddress := useTimerTable.nextAddress();
         trigger(Event:Use_Timeout, readyAddress, getCacheEntry(readyAddress),
@@ -287,7 +287,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
   }
 
   // Trigger Queue
-  in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=3) {
     if (triggerQueue_in.isReady(clockEdge())) {
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
@@ -301,7 +301,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
   }
 
   // Response Network
-  in_port(responseToL1Cache_in, ResponseMsg, responseToL1Cache) {
+  in_port(responseToL1Cache_in, ResponseMsg, responseToL1Cache, rank=2) {
     if (responseToL1Cache_in.isReady(clockEdge())) {
       peek(responseToL1Cache_in, ResponseMsg, block_on="addr") {
         if (in_msg.Type == CoherenceResponseType:ACK) {
@@ -331,7 +331,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
 
 
   // Request Network
-  in_port(requestNetwork_in, RequestMsg, requestToL1Cache) {
+  in_port(requestNetwork_in, RequestMsg, requestToL1Cache, rank=1) {
     if (requestNetwork_in.isReady(clockEdge())) {
       peek(requestNetwork_in, RequestMsg, block_on="addr") {
         assert(in_msg.Destination.isElement(machineID));
@@ -362,7 +362,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
   }
 
   // Mandatory Queue betweens Node's CPU and it's L1 caches
-  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, desc="...") {
+  in_port(mandatoryQueue_in, RubyRequest, mandatoryQueue, rank=0) {
     if (mandatoryQueue_in.isReady(clockEdge())) {
       peek(mandatoryQueue_in, RubyRequest, block_on="LineAddress") {
 

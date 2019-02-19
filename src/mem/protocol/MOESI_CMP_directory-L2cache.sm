@@ -592,7 +592,7 @@ machine(MachineType:L2Cache, "Token protocol")
   // ** IN_PORTS **
 
   // Trigger Queue
-  in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=3) {
     if (triggerQueue_in.isReady(clockEdge())) {
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
@@ -606,7 +606,7 @@ machine(MachineType:L2Cache, "Token protocol")
   }
 
   // Response Network
-  in_port(responseNetwork_in, ResponseMsg, responseToL2Cache) {
+  in_port(responseNetwork_in, ResponseMsg, responseToL2Cache, rank=2) {
     if (responseNetwork_in.isReady(clockEdge())) {
       peek(responseNetwork_in, ResponseMsg) {
         assert(in_msg.Destination.isElement(machineID));
@@ -650,7 +650,7 @@ machine(MachineType:L2Cache, "Token protocol")
 
 
   // Request Network
-  in_port(requestNetwork_in, RequestMsg, GlobalRequestToL2Cache) {
+  in_port(requestNetwork_in, RequestMsg, GlobalRequestToL2Cache, rank=1) {
     if (requestNetwork_in.isReady(clockEdge())) {
       peek(requestNetwork_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:DMA_WRITE) {
@@ -677,7 +677,7 @@ machine(MachineType:L2Cache, "Token protocol")
     }
   }
 
-  in_port(L1requestNetwork_in, RequestMsg, L1RequestToL2Cache) {
+  in_port(L1requestNetwork_in, RequestMsg, L1RequestToL2Cache, rank=0) {
     if (L1requestNetwork_in.isReady(clockEdge())) {
       peek(L1requestNetwork_in, RequestMsg) {
         assert(in_msg.Destination.isElement(machineID));

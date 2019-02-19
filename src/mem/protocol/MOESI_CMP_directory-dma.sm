@@ -118,7 +118,7 @@ machine(MachineType:DMA, "DMA Controller")
   out_port(respToDirectory_out, ResponseMsg, respToDir, desc="...");
   out_port(triggerQueue_out, TriggerMsg, triggerQueue, desc="...");
 
-  in_port(dmaResponseQueue_in, ResponseMsg, responseFromDir, desc="...") {
+  in_port(dmaResponseQueue_in, ResponseMsg, responseFromDir, rank=2) {
     if (dmaResponseQueue_in.isReady(clockEdge())) {
       peek( dmaResponseQueue_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
@@ -139,7 +139,7 @@ machine(MachineType:DMA, "DMA Controller")
   }
 
   // Trigger Queue
-  in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=1) {
     if (triggerQueue_in.isReady(clockEdge())) {
       peek(triggerQueue_in, TriggerMsg) {
         if (in_msg.Type == TriggerType:ALL_ACKS) {
@@ -151,7 +151,7 @@ machine(MachineType:DMA, "DMA Controller")
     }
   }
 
-  in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {
+  in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, rank=0) {
     if (dmaRequestQueue_in.isReady(clockEdge())) {
       peek(dmaRequestQueue_in, SequencerMsg) {
         if (in_msg.Type == SequencerRequestType:LD ) {

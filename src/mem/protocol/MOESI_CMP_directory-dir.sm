@@ -241,7 +241,7 @@ machine(MachineType:Directory, "Directory protocol")
 
   // ** IN_PORTS **
 
-  in_port(unblockNetwork_in, ResponseMsg, responseToDir) {
+  in_port(unblockNetwork_in, ResponseMsg, responseToDir, rank=2) {
     if (unblockNetwork_in.isReady(clockEdge())) {
       peek(unblockNetwork_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
@@ -268,7 +268,7 @@ machine(MachineType:Directory, "Directory protocol")
     }
   }
 
-  in_port(requestQueue_in, RequestMsg, requestToDir) {
+  in_port(requestQueue_in, RequestMsg, requestToDir, rank=1) {
     if (requestQueue_in.isReady(clockEdge())) {
       peek(requestQueue_in, RequestMsg) {
         if (in_msg.Type == CoherenceRequestType:GETS) {
@@ -301,7 +301,7 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   // off-chip memory request/response is done
-  in_port(memQueue_in, MemoryMsg, responseFromMemory) {
+  in_port(memQueue_in, MemoryMsg, responseFromMemory, rank=0) {
     if (memQueue_in.isReady(clockEdge())) {
       peek(memQueue_in, MemoryMsg) {
         if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
