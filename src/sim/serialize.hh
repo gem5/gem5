@@ -474,7 +474,15 @@ arrayParamOut(CheckpointOut &os, const std::string &name,
     os << "\n";
 }
 
-
+/**
+ * Extract values stored in the checkpoint, and assign them to the provided
+ * array container.
+ *
+ * @param cp The checkpoint to be parsed.
+ * @param name Name of the container.
+ * @param param The array container.
+ * @param size The expected number of entries to be extracted.
+ */
 template <class T>
 void
 arrayParamIn(CheckpointIn &cp, const std::string &name,
@@ -496,9 +504,9 @@ arrayParamIn(CheckpointIn &cp, const std::string &name,
     // Need this if we were doing a vector
     // value.resize(tokens.size());
 
-    if (tokens.size() != size) {
-        fatal("Array size mismatch on %s:%s'\n", section, name);
-    }
+    fatal_if(tokens.size() != size,
+             "Array size mismatch on %s:%s (Got %u, expected %u)'\n",
+             section, name, tokens.size(), size);
 
     for (std::vector<std::string>::size_type i = 0; i < tokens.size(); i++) {
         // need to parse into local variable to handle vector<bool>,
