@@ -42,7 +42,8 @@ machine(MachineType:L1Cache, "L1 cache protocol")
  : Sequencer * sequencer;
    CacheMemory * L1Icache;
    CacheMemory * L1Dcache;
-   Cycles request_latency := 2;
+   Cycles request_latency := 1;
+   Cycles response_latency := 1;
    Cycles use_timeout_latency := 50;
    bool send_evictions;
 
@@ -180,6 +181,24 @@ machine(MachineType:L1Cache, "L1 cache protocol")
       return cache_entry.CacheState;
     }
     return State:I;
+  }
+
+  // L1 hit latency
+  Cycles mandatoryQueueLatency(RubyRequestType type) {
+    if (type == RubyRequestType:IFETCH) {
+      return L1Icache.getTagLatency();
+    } else {
+      return L1Dcache.getTagLatency();
+    }
+  }
+
+  // Latency for responses that fetch data from cache
+  Cycles cacheResponseLatency() {
+    if (L1Dcache.getTagLatency() > response_latency) {
+      return L1Dcache.getTagLatency();
+    } else {
+      return response_latency;
+    }
   }
 
   void setState(TBE tbe, Entry cache_entry, Addr addr, State state) {
@@ -510,7 +529,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
     peek(requestNetwork_in, RequestMsg) {
       assert(is_valid(cache_entry));
       if (in_msg.RequestorMachine == MachineType:L2Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, cacheResponseLatency()) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
@@ -526,7 +545,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
         DPRINTF(RubySlicc, "Sending data to L2: %#x\n", in_msg.addr);
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, cacheResponseLatency()) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
@@ -544,7 +563,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
   }
 
   action(e_sendDataToL2, "ee", desc="Send data from cache to requestor") {
-    enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, cacheResponseLatency()) {
       assert(is_valid(cache_entry));
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:DATA;
@@ -563,7 +582,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
     peek(requestNetwork_in, RequestMsg) {
       assert(is_valid(cache_entry));
       if (in_msg.RequestorMachine == MachineType:L2Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, cacheResponseLatency()) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
@@ -578,7 +597,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
         DPRINTF(RubySlicc, "Sending exclusive data to L2\n");
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, cacheResponseLatency()) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
@@ -597,7 +616,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
   action(f_sendAck, "f", desc="Send ack from cache to requestor") {
     peek(requestNetwork_in, RequestMsg) {
       if (in_msg.RequestorMachine == MachineType:L1Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, response_latency) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
@@ -608,7 +627,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
         }
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, response_latency) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
@@ -623,7 +642,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
   }
 
   action(g_sendUnblock, "g", desc="Send unblock to memory") {
-    enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Sender := machineID;
@@ -635,7 +654,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
   }
 
   action(gg_sendUnblockExclusive, "\g", desc="Send unblock exclusive to memory") {
-    enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+    enqueue(responseNetwork_out, ResponseMsg, response_latency) {
       out_msg.addr := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK_EXCLUSIVE;
       out_msg.Sender := machineID;
@@ -746,7 +765,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
 
   action(ub_dmaUnblockL2Cache, "ub", desc="Send dma ack to l2 cache") {
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+      enqueue(responseNetwork_out, ResponseMsg, response_latency) {
         out_msg.addr := address;
         out_msg.Type := CoherenceResponseType:DMA_ACK;
         out_msg.Sender := machineID;
@@ -765,7 +784,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
       assert(is_valid(tbe));
       if (in_msg.RequestorMachine == MachineType:L1Cache ||
           in_msg.RequestorMachine == MachineType:DMA) {
-        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, response_latency) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
@@ -779,7 +798,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
         }
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, response_latency) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
@@ -800,7 +819,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
     peek(requestNetwork_in, RequestMsg) {
       assert(is_valid(tbe));
       if (in_msg.RequestorMachine == MachineType:L1Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, response_latency) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
@@ -813,7 +832,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
         }
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, request_latency) {
+        enqueue(responseNetwork_out, ResponseMsg, response_latency) {
           out_msg.addr := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
