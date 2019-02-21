@@ -1072,6 +1072,27 @@ partial_shared_builder = Builder(action=SCons.Defaults.ShLinkAction,
 main.Append(BUILDERS = { 'PartialShared' : partial_shared_builder,
                          'PartialStatic' : partial_static_builder })
 
+def add_local_rpath(env, *targets):
+    '''Set up an RPATH for a library which lives in the build directory.
+
+    The construction environment variable BIN_RPATH_PREFIX should be set to
+    the relative path of the build directory starting from the location of the
+    binary.'''
+    for target in targets:
+        target = env.Entry(target)
+        if not target.isdir():
+            target = target.dir
+        relpath = os.path.relpath(target.abspath, env['BUILDDIR'])
+        components = [
+            '\\$$ORIGIN',
+            '${BIN_RPATH_PREFIX}',
+            relpath
+        ]
+        env.Append(RPATH=[env.Literal(os.path.join(*components))])
+
+main.Append(LINKFLAGS=Split('-z origin'))
+main.AddMethod(add_local_rpath, 'AddLocalRPATH')
+
 # builds in ext are shared across all configs in the build root.
 ext_dir = abspath(joinpath(str(main.root), 'ext'))
 ext_build_dirs = []

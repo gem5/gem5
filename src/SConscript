@@ -449,6 +449,10 @@ class Executable(object):
         if objs is None:
             objs = self.srcs_to_objs(env, self.sources)
 
+        env = env.Clone()
+        env['BIN_RPATH_PREFIX'] = os.path.relpath(
+                env['BUILDDIR'], self.path(env).dir.abspath)
+
         if env['STRIP_EXES']:
             stripped = self.path(env)
             unstripped = env.File(str(stripped) + '.unstripped')
