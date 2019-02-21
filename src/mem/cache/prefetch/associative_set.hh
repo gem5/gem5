@@ -195,6 +195,48 @@ class AssociativeSet {
      * @param entry pointer to the container entry to be inserted
      */
     void insertEntry(Addr addr, bool is_secure, Entry* entry);
+
+    /** Iterator types */
+    using const_iterator = typename std::vector<Entry>::const_iterator;
+    using iterator = typename std::vector<Entry>::iterator;
+
+    /**
+     * Returns an iterator to the first entry of the dictionary
+     * @result iterator to the first element
+     */
+    iterator begin()
+    {
+        return entries.begin();
+    }
+
+    /**
+     * Returns an iterator pointing to the end of the the dictionary
+     * (placeholder element, should not be accessed)
+     * @result iterator to the end element
+     */
+    iterator end()
+    {
+        return entries.end();
+    }
+
+    /**
+     * Returns an iterator to the first entry of the dictionary
+     * @result iterator to the first element
+     */
+    const_iterator begin() const
+    {
+        return entries.begin();
+    }
+
+    /**
+     * Returns an iterator pointing to the end of the the dictionary
+     * (placeholder element, should not be accessed)
+     * @result iterator to the end element
+     */
+    const_iterator end() const
+    {
+        return entries.end();
+    }
 };
 
 #endif//__CACHE_PREFETCH_ASSOCIATIVE_SET_HH__
