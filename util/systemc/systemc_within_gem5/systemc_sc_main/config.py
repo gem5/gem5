@@ -52,7 +52,7 @@ args = parser.parse_args()
 #
 # The arguements passed to this function will be treated as the argv values
 # passed to the c++ sc_main, with the argc value set appropriately.
-kernel.sc_main(*args.word);
+m5.systemc.sc_main(*args.word);
 
 # Construct the SimObject hierarchy. Anything sc_main built has already been
 # constructed.
@@ -64,6 +64,6 @@ m5.instantiate(None)
 cause = m5.simulate(m5.MaxTick).getCause()
 
 # If sc_main finished, extract what it returned and do something with it.
-result = kernel.sc_main_result()
+result = m5.systemc.sc_main_result()
 if result.code != 0:
     sys.exit(int(result.code))
