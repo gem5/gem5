@@ -1,5 +1,4 @@
-# Copyright (c) 2005 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2019 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,39 +23,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Gabe Black
 
-from __future__ import print_function
-from __future__ import absolute_import
+import _m5.systemc
 
-# Import useful subpackages of M5, but *only* when run as an m5
-# script.  This is mostly to keep backward compatibility with existing
-# scripts while allowing new SCons code to operate properly.
+from _m5.systemc import sc_main
+from _m5.systemc import sc_time
+from _m5.systemc import sc_main_result_code, sc_main_result_str
 
-try:
-    # Try to import a native module
-    import _m5.core
+class ScMainResult(object):
+    def __init__(self, code, message):
+        self.code = code
+        self.message = message
 
-    # Try to grab something from it in case demandimport is being used
-    _m5.core.curTick
-    in_gem5 = True
-except ImportError:
-    # The import failed, we're being called from the build system
-    in_gem5 = False
+def sc_main_result():
+    '''Retrieve and return the results of running sc_main'''
+    return ScMainResult(sc_main_result_code(), sc_main_result_str())
 
-if in_gem5:
-    from . import SimObject
-    from . import core
-    from . import defines
-    from . import objects
-    from . import params
-    from . import stats
-    if defines.buildEnv['USE_SYSTEMC']:
-        from . import systemc
-        from . import tlm
-    from . import util
-
-    from .event import *
-    from .main import main
-    from .simulate import *
-
+__all__ = [ 'sc_main', 'sc_time', 'sc_main_result' ]

@@ -1,5 +1,4 @@
-# Copyright (c) 2005 The Regents of The University of Michigan
-# All rights reserved.
+# Copyright 2019 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,39 +23,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Gabe Black
 
-from __future__ import print_function
-from __future__ import absolute_import
+import _m5.systemc
 
-# Import useful subpackages of M5, but *only* when run as an m5
-# script.  This is mostly to keep backward compatibility with existing
-# scripts while allowing new SCons code to operate properly.
+from _m5.systemc import tlm_global_quantum
 
-try:
-    # Try to import a native module
-    import _m5.core
+def tlm_global_quantum_instance():
+    return tlm_global_quantum.instance()
 
-    # Try to grab something from it in case demandimport is being used
-    _m5.core.curTick
-    in_gem5 = True
-except ImportError:
-    # The import failed, we're being called from the build system
-    in_gem5 = False
-
-if in_gem5:
-    from . import SimObject
-    from . import core
-    from . import defines
-    from . import objects
-    from . import params
-    from . import stats
-    if defines.buildEnv['USE_SYSTEMC']:
-        from . import systemc
-        from . import tlm
-    from . import util
-
-    from .event import *
-    from .main import main
-    from .simulate import *
-
+__all__ = [ 'tlm_global_quantum_instance' ]
