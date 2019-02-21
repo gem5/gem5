@@ -40,13 +40,6 @@ from m5.objects import SystemC_Kernel, Root
 kernel = SystemC_Kernel()
 root = Root(full_system=True, systemc_kernel=kernel)
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--working-dir')
-
-args = parser.parse_args()
-if args.working_dir:
-    os.chdir(args.working_dir)
-
 m5.systemc.sc_main('gem5_systemc_test');
 
 m5.instantiate(None)
