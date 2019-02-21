@@ -51,10 +51,12 @@
 
 #include <cstdint>
 
+#include "arch/isa_traits.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
+#include "sim/byteswap.hh"
 #include "sim/clocked_object.hh"
 #include "sim/probe/probe.hh"
 
@@ -67,13 +69,15 @@ class BasePrefetcher : public ClockedObject
     {
       public:
         PrefetchListener(BasePrefetcher &_parent, ProbeManager *pm,
-                         const std::string &name, bool _isFill = false)
+                         const std::string &name, bool _isFill = false,
+                         bool _miss = false)
             : ProbeListenerArgBase(pm, name),
-              parent(_parent), isFill(_isFill) {}
+              parent(_parent), isFill(_isFill), miss(_miss) {}
         void notify(const PacketPtr &pkt) override;
       protected:
         BasePrefetcher &parent;
-        bool isFill;
+        const bool isFill;
+        const bool miss;
     };
 
     std::vector<PrefetchListener *> listeners;
@@ -85,7 +89,7 @@ class BasePrefetcher : public ClockedObject
      * generate new prefetch requests.
      */
     class PrefetchInfo {
-        /** The address. */
+        /** The address used to train and generate prefetches */
         Addr address;
         /** The program counter that generated this address. */
         Addr pc;
@@ -95,6 +99,16 @@ class BasePrefetcher : public ClockedObject
         bool validPC;
         /** Whether this address targets the secure memory space. */
         bool secure;
+        /** Size in bytes of the request triggering this event */
+        unsigned int size;
+        /** Whether this event comes from a write request */
+        bool write;
+        /** Physical address, needed because address can be virtual */
+        Addr paddress;
+        /** Whether this event comes from a cache miss */
+        bool cacheMiss;
+        /** Pointer to the associated request data */
+        uint8_t *data;
 
       public:
         /**
@@ -144,6 +158,67 @@ class BasePrefetcher : public ClockedObject
         }
 
         /**
+         * Gets the size of the request triggering this event
+         * @return the size in bytes of the request triggering this event
+         */
+        unsigned int getSize() const
+        {
+            return size;
+        }
+
+        /**
+         * Checks if the request that caused this prefetch event was a write
+         * request
+         * @return true if the request causing this event is a write request
+         */
+        bool isWrite() const
+        {
+            return write;
+        }
+
+        /**
+         * Gets the physical address of the request
+         * @return physical address of the request
+         */
+        Addr getPaddr() const
+        {
+            return paddress;
+        }
+
+        /**
+         * Check if this event comes from a cache miss
+         * @result true if this event comes from a cache miss
+         */
+        bool isCacheMiss() const
+        {
+            return cacheMiss;
+        }
+
+        /**
+         * Gets the associated data of the request triggering the event
+         * @param Byte ordering of the stored data
+         * @return the data
+         */
+        template <typename T>
+        inline T
+        get(ByteOrder endian = TheISA::GuestByteOrder) const
+        {
+            if (data == nullptr) {
+                panic("PrefetchInfo::get called with a request with no data.");
+            }
+            switch (endian) {
+                case BigEndianByteOrder:
+                    return betoh(*(T*)data);
+
+                case LittleEndianByteOrder:
+                    return letoh(*(T*)data);
+
+                default:
+                    panic("Illegal byte order in PrefetchInfo::get()\n");
+            };
+        }
+
+        /**
          * Check for equality
          * @param pfi PrefetchInfo to compare against
          * @return True if this object and the provided one are equal
@@ -157,9 +232,11 @@ class BasePrefetcher : public ClockedObject
         /**
          * Constructs a PrefetchInfo using a PacketPtr.
          * @param pkt PacketPtr used to generate the PrefetchInfo
-         * @param addr the address value of the new object
+         * @param addr the address value of the new object, this address is
+         *        used to train the prefetcher
+         * @param miss whether this event comes from a cache miss
          */
-        PrefetchInfo(PacketPtr pkt, Addr addr);
+        PrefetchInfo(PacketPtr pkt, Addr addr, bool miss);
 
         /**
          * Constructs a PrefetchInfo using a new address value and
@@ -168,6 +245,11 @@ class BasePrefetcher : public ClockedObject
          * @param addr the address value of the new object
          */
         PrefetchInfo(PrefetchInfo const &pfi, Addr addr);
+
+        ~PrefetchInfo()
+        {
+            delete data;
+        }
     };
 
   protected:
@@ -209,8 +291,12 @@ class BasePrefetcher : public ClockedObject
     /** Use Virtual Addresses for prefetching */
     const bool useVirtualAddresses;
 
-    /** Determine if this access should be observed */
-    bool observeAccess(const PacketPtr &pkt) const;
+    /**
+     * Determine if this access should be observed
+     * @param pkt The memory request causing the event
+     * @param miss whether this event comes from a cache miss
+     */
+    bool observeAccess(const PacketPtr &pkt, bool miss) const;
 
     /** Determine if address is in cache */
     bool inCache(Addr addr, bool is_secure) const;
@@ -275,8 +361,9 @@ class BasePrefetcher : public ClockedObject
     /**
      * Process a notification event from the ProbeListener.
      * @param pkt The memory request causing the event
+     * @param miss whether this event comes from a cache miss
      */
-    void probeNotify(const PacketPtr &pkt);
+    void probeNotify(const PacketPtr &pkt, bool miss);
 
     /**
      * Add a SimObject and a probe name to listen events from
