@@ -136,8 +136,8 @@ SwitchAllocator::arbitrate_inports()
                     m_port_requests[outport][inport] = true;
                     m_vc_winners[outport][inport]= invc;
 
-                    // Update Round Robin pointer
-                    m_round_robin_invc[inport]++;
+                    // Update Round Robin pointer to the next VC
+                    m_round_robin_invc[inport] = invc + 1;
                     if (m_round_robin_invc[inport] >= m_num_vcs)
                         m_round_robin_invc[inport] = 0;
 
@@ -252,7 +252,7 @@ SwitchAllocator::arbitrate_outports()
                 m_port_requests[outport][inport] = false;
 
                 // Update Round Robin pointer
-                m_round_robin_inport[outport]++;
+                m_round_robin_inport[outport] = inport + 1;
                 if (m_round_robin_inport[outport] >= m_num_inports)
                     m_round_robin_inport[outport] = 0;
 
