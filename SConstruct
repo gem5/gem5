@@ -1090,7 +1090,9 @@ def add_local_rpath(env, *targets):
         ]
         env.Append(RPATH=[env.Literal(os.path.join(*components))])
 
-main.Append(LINKFLAGS=Split('-z origin'))
+if sys.platform != "darwin":
+    main.Append(LINKFLAGS=Split('-z origin'))
+
 main.AddMethod(add_local_rpath, 'AddLocalRPATH')
 
 # builds in ext are shared across all configs in the build root.
