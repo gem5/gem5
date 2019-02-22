@@ -165,7 +165,7 @@ namespace X86ISA
          *
          * @return A pointer to the walker master port
          */
-        BaseMasterPort *getMasterPort() override;
+        BaseMasterPort *getTableWalkerMasterPort() override;
     };
 }
 

@@ -401,7 +401,7 @@ class TLB : public BaseTLB
      *
      * @return A pointer to the walker master port
      */
-    BaseMasterPort* getMasterPort() override;
+    BaseMasterPort* getTableWalkerMasterPort() override;
 
     // Caching misc register values here.
     // Writing to misc registers needs to invalidate them.

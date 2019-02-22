@@ -512,7 +512,7 @@ TLB::unserialize(CheckpointIn &cp)
 }
 
 BaseMasterPort *
-TLB::getMasterPort()
+TLB::getTableWalkerMasterPort()
 {
     return &walker->getMasterPort("port");
 }

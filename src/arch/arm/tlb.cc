@@ -1244,7 +1244,7 @@ TLB::translateComplete(const RequestPtr &req, ThreadContext *tc,
 }
 
 BaseMasterPort*
-TLB::getMasterPort()
+TLB::getTableWalkerMasterPort()
 {
     return &stage2Mmu->getPort();
 }

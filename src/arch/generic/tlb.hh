@@ -58,6 +58,7 @@ class BaseTLB : public MemObject
     {}
 
   public:
+
     enum Mode { Read, Write, Execute };
 
     class Translation
@@ -138,7 +139,7 @@ class BaseTLB : public MemObject
      *
      * @return A pointer to the walker master port or NULL if not present
      */
-    virtual BaseMasterPort* getMasterPort() { return NULL; }
+    virtual BaseMasterPort* getTableWalkerMasterPort() { return NULL; }
 
     void memInvalidate() { flushAll(); }
 };
