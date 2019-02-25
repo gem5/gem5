@@ -43,6 +43,7 @@ from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
 
+from m5.objects.BaseCPU import BaseCPU
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.IndexingPolicies import *
 from m5.objects.ReplacementPolicies import *
@@ -444,3 +445,42 @@ class STeMSPrefetcher(QueuedPrefetcher):
         "Number of entries of the Region Miss Order Buffer")
     reconstruction_entries = Param.Unsigned(256,
         "Number of reconstruction entries")
+
+class HWPProbeEventRetiredInsts(HWPProbeEvent):
+    def register(self):
+        if self.obj:
+            for name in self.names:
+                self.prefetcher.getCCObject().addEventProbeRetiredInsts(
+                    self.obj.getCCObject(), name)
+
+class PIFPrefetcher(QueuedPrefetcher):
+    type = 'PIFPrefetcher'
+    cxx_class = 'PIFPrefetcher'
+    cxx_header = "mem/cache/prefetch/pif.hh"
+    cxx_exports = [
+        PyBindMethod("addEventProbeRetiredInsts"),
+    ]
+
+    prec_spatial_region_bits = Param.Unsigned(2,
+        "Number of preceding addresses in the spatial region")
+    succ_spatial_region_bits = Param.Unsigned(8,
+        "Number of subsequent addresses in the spatial region")
+    compactor_entries = Param.Unsigned(2, "Entries in the temp. compactor")
+    stream_address_buffer_entries = Param.Unsigned(7, "Entries in the SAB")
+    history_buffer_size = Param.Unsigned(16, "Entries in the history buffer")
+
+    index_entries = Param.MemorySize("64",
+        "Number of entries in the index")
+    index_assoc = Param.Unsigned(64,
+        "Associativity of the index")
+    index_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1, assoc = Parent.index_assoc,
+        size = Parent.index_entries),
+        "Indexing policy of the index")
+    index_replacement_policy = Param.BaseReplacementPolicy(LRURP(),
+        "Replacement policy of the index")
+
+    def listenFromProbeRetiredInstructions(self, simObj):
+        if not isinstance(simObj, BaseCPU):
+            raise TypeError("argument must be of BaseCPU type")
+        self.addEvent(HWPProbeEventRetiredInsts(self, simObj,"RetiredInstsPC"))
