@@ -437,8 +437,15 @@ namespace Gcn3ISA
                 if (_opIdx == REG_EXEC_LO) {
                     ScalarRegU64 new_exec_mask_val
                         = wf->execMask().to_ullong();
-                    std::memcpy((void*)&new_exec_mask_val,
-                        (void*)srfData.data(), sizeof(srfData));
+                    if (NumDwords == 1) {
+                        std::memcpy((void*)&new_exec_mask_val,
+                            (void*)srfData.data(), sizeof(VecElemU32));
+                    } else if (NumDwords == 2) {
+                        std::memcpy((void*)&new_exec_mask_val,
+                            (void*)srfData.data(), sizeof(VecElemU64));
+                    } else {
+                        panic("Trying to write more than 2 DWORDS to EXEC\n");
+                    }
                     VectorMask new_exec_mask(new_exec_mask_val);
                     wf->execMask() = new_exec_mask;
                     DPRINTF(GPUSRF, "Write EXEC\n");
