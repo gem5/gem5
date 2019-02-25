@@ -297,16 +297,18 @@ void
 MessageBuffer::reanalyzeList(list<MsgPtr> &lt, Tick schdTick)
 {
     while (!lt.empty()) {
-        m_msg_counter++;
         MsgPtr m = lt.front();
-        m->setLastEnqueueTime(schdTick);
-        m->setMsgCounter(m_msg_counter);
+        assert(m->getLastEnqueueTime() <= schdTick);
 
         m_prio_heap.push_back(m);
         push_heap(m_prio_heap.begin(), m_prio_heap.end(),
                   greater<MsgPtr>());
 
         m_consumer->scheduleEventAbsolute(schdTick);
+
+        DPRINTF(RubyQueue, "Requeue arrival_time: %lld, Message: %s\n",
+            schdTick, *(m.get()));
+
         lt.pop_front();
     }
 }
