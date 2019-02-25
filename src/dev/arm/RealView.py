@@ -121,6 +121,10 @@ class GenericArmPciHost(GenericPciHost):
     int_base = Param.Unsigned("PCI interrupt base")
     int_count = Param.Unsigned("Maximum number of interrupts used by this host")
 
+    # This python parameter can be used in configuration scripts to turn
+    # on/off the fdt dma-coherent flag when doing dtb autogeneration
+    _dma_coherent = True
+
     def generateDeviceTree(self, state):
         local_state = FdtState(addr_cells=3, size_cells=2, cpu_cells=1)
         intterrupt_cells = 1
@@ -182,7 +186,8 @@ class GenericArmPciHost(GenericPciHost):
             m5.fatal("Unsupported PCI interrupt policy " +
                      "for Device Tree generation")
 
-        node.append(FdtProperty("dma-coherent"))
+        if self._dma_coherent:
+            node.append(FdtProperty("dma-coherent"))
 
         yield node
 
