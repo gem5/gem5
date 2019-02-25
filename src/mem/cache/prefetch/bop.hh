@@ -151,7 +151,7 @@ class BOPPrefetcher : public QueuedPrefetcher
         ~BOPPrefetcher() {}
 
         void calculatePrefetch(const PrefetchInfo &pfi,
-                               std::vector<AddrPriority> &addresses);
+                               std::vector<AddrPriority> &addresses) override;
 };
 
 #endif /* __MEM_CACHE_PREFETCH_BOP_HH__ */
