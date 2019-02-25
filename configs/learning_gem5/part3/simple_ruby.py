@@ -38,6 +38,7 @@ IMPORTANT: If you modify this file, it's likely that the Learning gem5 book
 
 """
 from __future__ import print_function
+from __future__ import absolute_import
 
 # import the m5 (gem5) library created when gem5 is built
 import m5
@@ -46,7 +47,7 @@ from m5.objects import *
 
 # You can import ruby_caches_MI_example to use the MI_example protocol instead
 # of the MSI protocol
-from msi_caches import MyCacheSystem
+from .msi_caches import MyCacheSystem
 
 # create the system we are going to simulate
 system = System()

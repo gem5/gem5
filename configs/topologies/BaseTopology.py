@@ -26,6 +26,9 @@
 #
 # Authors: Jason Power
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import m5
 
 class BaseTopology(object):

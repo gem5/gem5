@@ -37,6 +37,7 @@
 #          Andreas Hansson
 
 from __future__ import print_function
+from __future__ import absolute_import
 
 import argparse
 
@@ -45,8 +46,9 @@ from m5.objects import *
 from m5.util import addToPath
 from m5.stats import periodicStatDump
 
-addToPath(os.getcwd() + '/configs/common')
-import MemConfig
+addToPath('../')
+
+from common import MemConfig
 
 # This script aims at triggering low power state transitions in the DRAM
 # controller. The traffic generator is used in DRAM mode and traffic

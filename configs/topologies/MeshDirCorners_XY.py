@@ -26,10 +26,13 @@
 #
 # Authors: Brad Beckmann
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 from m5.params import *
 from m5.objects import *
 
-from BaseTopology import SimpleTopology
+from .BaseTopology import SimpleTopology
 
 # Creates a Mesh topology with 4 directories, one at each corner.
 # One L1 (and L2, depending on the protocol) are connected to each router.

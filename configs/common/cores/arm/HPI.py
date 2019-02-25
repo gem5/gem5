@@ -46,6 +46,7 @@ at: http://www.arm.com/ResearchEnablement/SystemModeling
 """
 
 from __future__ import print_function
+from __future__ import absolute_import
 
 from m5.objects import *
 

@@ -34,3 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Andreas Hansson
+
+from __future__ import print_function
+from __future__ import absolute_import
+

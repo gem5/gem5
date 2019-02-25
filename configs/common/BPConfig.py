@@ -30,6 +30,7 @@
 # hanle branch predictors instead of memory controllers / CPUs
 
 from __future__ import print_function
+from __future__ import absolute_import
 
 from m5 import fatal
 import m5.objects

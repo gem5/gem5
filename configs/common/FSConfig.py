@@ -40,11 +40,12 @@
 # Authors: Kevin Lim
 
 from __future__ import print_function
+from __future__ import absolute_import
 
 from m5.objects import *
-from Benchmarks import *
 from m5.util import *
-from common import PlatformConfig
+from .Benchmarks import *
+from . import PlatformConfig
 
 # Populate to reflect supported os types per target ISA
 os_types = { 'alpha' : [ 'linux' ],

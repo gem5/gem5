@@ -32,6 +32,7 @@
 # Authors: Lisa Hsu
 
 from __future__ import print_function
+from __future__ import absolute_import
 
 # Configure the TLB hierarchy
 # Places which would probably need to be modified if you

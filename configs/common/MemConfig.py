@@ -37,12 +37,13 @@
 #          Andreas Hansson
 
 from __future__ import print_function
+from __future__ import absolute_import
 
 import m5.objects
 import inspect
 import sys
-import HMC
 from textwrap import  TextWrapper
+from . import HMC
 
 # Dictionary of mapping names of real memory controller models to
 # classes.

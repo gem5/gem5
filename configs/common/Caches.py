@@ -38,6 +38,9 @@
 #
 # Authors: Lisa Hsu
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 from m5.defines import buildEnv
 from m5.objects import *
 

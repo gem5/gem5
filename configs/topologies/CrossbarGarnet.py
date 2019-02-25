@@ -26,10 +26,13 @@
 #
 # Authors: Tushar Krishna
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 from m5.params import *
 from m5.objects import *
 
-from BaseTopology import SimpleTopology
+from .BaseTopology import SimpleTopology
 
 class CrossbarGarnet(SimpleTopology):
     description='CrossbarGarnet'

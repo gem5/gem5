@@ -38,15 +38,18 @@
 #
 # Authors: Lisa Hsu
 
+from __future__ import print_function
+from __future__ import absolute_import
+
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
-from common.Benchmarks import *
 
-from common import CpuConfig
-from common import BPConfig
-from common import MemConfig
-from common import PlatformConfig
+from .Benchmarks import *
+from . import CpuConfig
+from . import BPConfig
+from . import MemConfig
+from . import PlatformConfig
 
 def _listCpuTypes(option, opt, value, parser):
     CpuConfig.print_cpu_list()
@@ -330,7 +333,7 @@ def addSEOptions(parser):
                       help="Redirect stderr to a file.")
 
 def addFSOptions(parser):
-    from FSConfig import os_types
+    from .FSConfig import os_types
 
     # Simulation options
     parser.add_option("--timesync", action="store_true",

@@ -40,14 +40,15 @@
 # Authors: Lisa Hsu
 
 from __future__ import print_function
+from __future__ import absolute_import
 
 import sys
 from os import getcwd
 from os.path import join as joinpath
 
-from common import CpuConfig
-from common import BPConfig
-from common import MemConfig
+from . import CpuConfig
+from . import BPConfig
+from . import MemConfig
 
 import m5
 from m5.defines import buildEnv
