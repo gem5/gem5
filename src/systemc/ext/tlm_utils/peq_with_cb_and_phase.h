@@ -27,6 +27,7 @@
 #include "../core/sc_spawn.hh"
 #include "../core/sc_time.hh"
 #include "../dt/int/sc_nbdefs.hh"
+#include "../tlm_core/2/interfaces/fw_bw_ifs.hh"
 
 namespace tlm_utils
 {

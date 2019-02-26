@@ -25,6 +25,7 @@
 #include "../tlm_core/2/generic_payload/gp.hh"
 #include "../tlm_core/2/interfaces/fw_bw_ifs.hh"
 #include "../tlm_core/2/sockets/initiator_socket.hh"
+#include "../tlm_core/2/sockets/target_socket.hh"
 #include "../utils/sc_report_handler.hh"
 #include "convenience_socket_bases.h"
 
