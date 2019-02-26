@@ -371,7 +371,9 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 
         // This call should delete the bpHistory.
         squash(tid, pred_hist.front().bpHistory);
-        iPred.deleteDirectionInfo(tid, pred_hist.front().indirectHistory);
+        if (useIndirect) {
+            iPred.deleteDirectionInfo(tid, pred_hist.front().indirectHistory);
+        }
 
         DPRINTF(Branch, "[tid:%i]: Removing history for [sn:%i] "
                 "PC %s.\n", tid, pred_hist.front().seqNum,
@@ -452,8 +454,10 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                pred_hist.front().bpHistory, true, pred_hist.front().inst,
                corrTarget.instAddr());
 
-        iPred.changeDirectionPrediction(tid, pred_hist.front().indirectHistory,
-                                        actually_taken);
+        if (useIndirect) {
+            iPred.changeDirectionPrediction(tid,
+                pred_hist.front().indirectHistory, actually_taken);
+        }
 
         if (actually_taken) {
             if (hist_it->wasReturn && !hist_it->usedRAS) {
