@@ -113,6 +113,7 @@ class SLICC(Grammar):
         'check_allocate' : 'CHECK_ALLOCATE',
         'check_next_cycle' : 'CHECK_NEXT_CYCLE',
         'check_stop_slots' : 'CHECK_STOP_SLOTS',
+        'check_on_cache_probe' : 'CHECK_PROBE',
         'static_cast' : 'STATIC_CAST',
         'if' : 'IF',
         'is_valid' : 'IS_VALID',
@@ -604,6 +605,10 @@ class SLICC(Grammar):
     def p_statement__check_stop(self, p):
         "statement : CHECK_STOP_SLOTS '(' var ',' STRING ',' STRING ')' SEMI"
         p[0] = ast.CheckStopStatementAST(self, p[3], p[5], p[7])
+
+    def p_statement__check_probe(self, p):
+        "statement : CHECK_PROBE '(' var ',' var ')' SEMI"
+        p[0] = ast.CheckProbeStatementAST(self, p[3], p[5])
 
     def p_statement__return(self, p):
         "statement : RETURN expr SEMI"

@@ -70,3 +70,4 @@ from slicc.ast.TypeFieldAST import *
 from slicc.ast.TypeFieldEnumAST import *
 from slicc.ast.TypeFieldStateAST import *
 from slicc.ast.VarExprAST import *
+from slicc.ast.CheckProbeStatementAST import *
