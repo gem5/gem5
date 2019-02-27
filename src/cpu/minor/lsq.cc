@@ -65,13 +65,49 @@ LSQ::LSQRequest::LSQRequest(LSQ &port_, MinorDynInstPtr inst_, bool isLoad_,
     data(data_),
     packet(NULL),
     request(),
-    fault(NoFault),
     res(res_),
     skipped(false),
     issuedToMemory(false),
+    isTranslationDelayed(false),
     state(NotIssued)
 {
     request = std::make_shared<Request>();
+}
+
+void
+LSQ::LSQRequest::tryToSuppressFault()
+{
+    SimpleThread &thread = *port.cpu.threads[inst->id.threadId];
+    TheISA::PCState old_pc = thread.pcState();
+    ExecContext context(port.cpu, thread, port.execute, inst);
+    Fault M5_VAR_USED fault = inst->translationFault;
+
+    // Give the instruction a chance to suppress a translation fault
+    inst->translationFault = inst->staticInst->initiateAcc(&context, nullptr);
+    if (inst->translationFault == NoFault) {
+        DPRINTFS(MinorMem, (&port),
+                 "Translation fault suppressed for inst:%s\n", *inst);
+    } else {
+        assert(inst->translationFault == fault);
+    }
+    thread.pcState(old_pc);
+}
+
+void
+LSQ::LSQRequest::completeDisabledMemAccess()
+{
+    DPRINTFS(MinorMem, (&port), "Complete disabled mem access for inst:%s\n",
+             *inst);
+
+    SimpleThread &thread = *port.cpu.threads[inst->id.threadId];
+    TheISA::PCState old_pc = thread.pcState();
+
+    ExecContext context(port.cpu, thread, port.execute, inst);
+
+    context.setMemAccPredicate(false);
+    inst->staticInst->completeAcc(nullptr, &context, inst->traceData);
+
+    thread.pcState(old_pc);
 }
 
 void
@@ -227,16 +263,26 @@ void
 LSQ::SingleDataRequest::finish(const Fault &fault_, const RequestPtr &request_,
                                ThreadContext *tc, BaseTLB::Mode mode)
 {
-    fault = fault_;
-
     port.numAccessesInDTLB--;
 
     DPRINTFS(MinorMem, (&port), "Received translation response for"
-        " request: %s\n", *inst);
+             " request: %s delayed:%d %s\n", *inst, isTranslationDelayed,
+             fault_ != NoFault ? fault_->name() : "");
 
-    makePacket();
-
-    setState(Translated);
+    if (fault_ != NoFault) {
+        inst->translationFault = fault_;
+        if (isTranslationDelayed) {
+            tryToSuppressFault();
+            if (inst->translationFault == NoFault) {
+                completeDisabledMemAccess();
+                setState(Complete);
+            }
+        }
+        setState(Translated);
+    } else {
+        setState(Translated);
+        makePacket();
+    }
     port.tryToSendToTransfers(this);
 
     /* Let's try and wake up the processor for the next cycle */
@@ -281,8 +327,6 @@ void
 LSQ::SplitDataRequest::finish(const Fault &fault_, const RequestPtr &request_,
                               ThreadContext *tc, BaseTLB::Mode mode)
 {
-    fault = fault_;
-
     port.numAccessesInDTLB--;
 
     unsigned int M5_VAR_USED expected_fragment_index =
@@ -292,7 +336,9 @@ LSQ::SplitDataRequest::finish(const Fault &fault_, const RequestPtr &request_,
     numTranslatedFragments++;
 
     DPRINTFS(MinorMem, (&port), "Received translation response for fragment"
-        " %d of request: %s\n", expected_fragment_index, *inst);
+             " %d of request: %s delayed:%d %s\n", expected_fragment_index,
+             *inst, isTranslationDelayed,
+             fault_ != NoFault ? fault_->name() : "");
 
     assert(request_ == fragmentRequests[expected_fragment_index]);
 
@@ -300,18 +346,33 @@ LSQ::SplitDataRequest::finish(const Fault &fault_, const RequestPtr &request_,
      *  tryToSendToTransfers does take */
     port.cpu.wakeupOnEvent(Pipeline::ExecuteStageId);
 
-    if (fault != NoFault) {
+    if (fault_ != NoFault) {
         /* tryToSendToTransfers will handle the fault */
+        inst->translationFault = fault_;
 
         DPRINTFS(MinorMem, (&port), "Faulting translation for fragment:"
             " %d of request: %s\n",
             expected_fragment_index, *inst);
 
-        setState(Translated);
+        if (expected_fragment_index > 0 || isTranslationDelayed)
+            tryToSuppressFault();
+        if (expected_fragment_index == 0) {
+            if (isTranslationDelayed && inst->translationFault == NoFault) {
+                completeDisabledMemAccess();
+                setState(Complete);
+            } else {
+                setState(Translated);
+            }
+        } else if (inst->translationFault == NoFault) {
+            setState(Translated);
+            numTranslatedFragments--;
+            makeFragmentPackets();
+        } else {
+            setState(Translated);
+        }
         port.tryToSendToTransfers(this);
     } else if (numTranslatedFragments == numFragments) {
         makeFragmentPackets();
-
         setState(Translated);
         port.tryToSendToTransfers(this);
     } else {
@@ -562,6 +623,7 @@ LSQ::SplitDataRequest::stepToNextPacket()
 void
 LSQ::SplitDataRequest::retireResponse(PacketPtr response)
 {
+    assert(inst->translationFault == NoFault);
     assert(numRetiredFragments < numTranslatedFragments);
 
     DPRINTFS(MinorMem, (&port), "Retiring fragment addr: 0x%x size: %d"
@@ -950,7 +1012,7 @@ LSQ::tryToSendToTransfers(LSQRequestPtr request)
         return;
     }
 
-    if (request->fault != NoFault) {
+    if (request->inst->translationFault != NoFault) {
         if (request->inst->staticInst->isPrefetch()) {
             DPRINTF(MinorMem, "Not signalling fault for faulting prefetch\n");
         }
@@ -1508,12 +1570,18 @@ LSQ::needsToTick()
     return ret;
 }
 
-void
+Fault
 LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
                  unsigned int size, Addr addr, Request::Flags flags,
                  uint64_t *res, AtomicOpFunctor *amo_op,
                  const std::vector<bool>& byteEnable)
 {
+    assert(inst->translationFault == NoFault || inst->inLSQ);
+
+    if (inst->inLSQ) {
+        return inst->translationFault;
+    }
+
     bool needs_burst = transferNeedsBurst(addr, size, lineWidth);
 
     if (needs_burst && inst->staticInst->isAtomic()) {
@@ -1568,12 +1636,13 @@ LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
         addr, size, flags, cpu.dataMasterId(),
         /* I've no idea why we need the PC, but give it */
         inst->pc.instAddr(), amo_op);
-    if (!byteEnable.empty()) {
-        request->request->setByteEnable(byteEnable);
-    }
+    request->request->setByteEnable(byteEnable);
 
     requests.push(request);
+    inst->inLSQ = true;
     request->startAddrTranslation();
+
+    return inst->translationFault;
 }
 
 void
@@ -1642,15 +1711,11 @@ LSQ::issuedMemBarrierInst(MinorDynInstPtr inst)
 void
 LSQ::LSQRequest::makePacket()
 {
+    assert(inst->translationFault == NoFault);
+
     /* Make the function idempotent */
     if (packet)
         return;
-
-    // if the translation faulted, do not create a packet
-    if (fault != NoFault) {
-        assert(packet == NULL);
-        return;
-    }
 
     packet = makePacketForRequest(request, isLoad, this, data);
     /* Null the ret data so we know not to deallocate it when the

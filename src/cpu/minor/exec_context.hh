@@ -116,9 +116,8 @@ class ExecContext : public ::ExecContext
                     const std::vector<bool>& byteEnable = std::vector<bool>())
         override
     {
-        execute.getLSQ().pushRequest(inst, true /* load */, nullptr,
+        return execute.getLSQ().pushRequest(inst, true /* load */, nullptr,
             size, addr, flags, nullptr, nullptr, byteEnable);
-        return NoFault;
     }
 
     Fault
@@ -128,9 +127,8 @@ class ExecContext : public ::ExecContext
         override
     {
         assert(byteEnable.empty() || byteEnable.size() == size);
-        execute.getLSQ().pushRequest(inst, false /* store */, data,
+        return execute.getLSQ().pushRequest(inst, false /* store */, data,
             size, addr, flags, res, nullptr, byteEnable);
-        return NoFault;
     }
 
     Fault
@@ -138,9 +136,8 @@ class ExecContext : public ::ExecContext
                    AtomicOpFunctor *amo_op) override
     {
         // AMO requests are pushed through the store path
-        execute.getLSQ().pushRequest(inst, false /* amo */, nullptr,
+        return execute.getLSQ().pushRequest(inst, false /* amo */, nullptr,
             size, addr, flags, nullptr, amo_op);
-        return NoFault;
     }
 
     RegVal

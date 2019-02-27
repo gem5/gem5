@@ -554,6 +554,16 @@ LSQUnit<Impl>::executeLoad(const DynInstPtr &inst)
     if (inst->isTranslationDelayed() && load_fault == NoFault)
         return load_fault;
 
+    if (load_fault != NoFault && inst->translationCompleted() &&
+        inst->savedReq->isPartialFault() && !inst->savedReq->isComplete()) {
+        assert(inst->savedReq->isSplit());
+        // If we have a partial fault where the mem access is not complete yet
+        // then the cache must have been blocked. This load will be re-executed
+        // when the cache gets unblocked. We will handle the fault when the
+        // mem access is complete.
+        return NoFault;
+    }
+
     // If the instruction faulted or predicated false, then we need to send it
     // along to commit without the instruction completing.
     if (load_fault != NoFault || !inst->readPredicate()) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, 2016 ARM Limited
+ * Copyright (c) 2013-2014, 2016,2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -108,6 +108,8 @@ MinorDynInst::reportData(std::ostream &os) const
         os << "-";
     else if (isFault())
         os << "F;" << id;
+    else if (translationFault != NoFault)
+        os << "TF;" << id;
     else
         os << id;
 }
@@ -120,6 +122,8 @@ operator <<(std::ostream &os, const MinorDynInst &inst)
 
     if (inst.isFault())
         os << "fault: \"" << inst.fault->name() << '"';
+    else if (inst.translationFault != NoFault)
+        os << "translation fault: \"" << inst.translationFault->name() << '"';
     else if (inst.staticInst)
         os << inst.staticInst->getName();
     else

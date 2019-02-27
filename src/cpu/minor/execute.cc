@@ -337,19 +337,19 @@ Execute::handleMemResponse(MinorDynInstPtr inst,
      *  context predicate, otherwise, it will be set to false */
     bool use_context_predicate = true;
 
-    if (response->fault != NoFault) {
+    if (inst->translationFault != NoFault) {
         /* Invoke memory faults. */
         DPRINTF(MinorMem, "Completing fault from DTLB access: %s\n",
-            response->fault->name());
+            inst->translationFault->name());
 
         if (inst->staticInst->isPrefetch()) {
             DPRINTF(MinorMem, "Not taking fault on prefetch: %s\n",
-                response->fault->name());
+                inst->translationFault->name());
 
             /* Don't assign to fault */
         } else {
             /* Take the fault raised during the TLB/memory access */
-            fault = response->fault;
+            fault = inst->translationFault;
 
             fault->invoke(thread, inst->staticInst);
         }
@@ -468,6 +468,18 @@ Execute::executeMemRefInst(MinorDynInstPtr inst, BranchData &branch,
 
         Fault init_fault = inst->staticInst->initiateAcc(&context,
             inst->traceData);
+
+        if (inst->inLSQ) {
+            if (init_fault != NoFault) {
+                assert(inst->translationFault != NoFault);
+                // Translation faults are dealt with in handleMemResponse()
+                init_fault = NoFault;
+            } else {
+                // If we have a translation fault then it got suppressed  by
+                // initateAcc()
+                inst->translationFault = NoFault;
+            }
+        }
 
         if (init_fault != NoFault) {
             DPRINTF(MinorExecute, "Fault on memory inst: %s"

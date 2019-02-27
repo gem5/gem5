@@ -733,7 +733,7 @@ LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
 
     /* This is the place were instructions get the effAddr. */
     if (req->isTranslationComplete()) {
-        if (inst->getFault() == NoFault) {
+        if (req->isMemAccessRequired()) {
             inst->effAddr = req->getVaddr();
             inst->effSize = size;
             inst->effAddrValid(true);
@@ -741,10 +741,17 @@ LSQ<Impl>::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
             if (cpu->checker) {
                 inst->reqToVerify = std::make_shared<Request>(*req->request());
             }
+            Fault fault;
             if (isLoad)
-                inst->getFault() = cpu->read(req, inst->lqIdx);
+                fault = cpu->read(req, inst->lqIdx);
             else
-                inst->getFault() = cpu->write(req, data, inst->sqIdx);
+                fault = cpu->write(req, data, inst->sqIdx);
+            // inst->getFault() may have the first-fault of a
+            // multi-access split request at this point.
+            // Overwrite that only if we got another type of fault
+            // (e.g. re-exec).
+            if (fault != NoFault)
+                inst->getFault() = fault;
         } else if (isLoad) {
             inst->setMemAccPredicate(false);
             // Commit will have to clean up whatever happened.  Set this
@@ -797,13 +804,16 @@ void
 LSQ<Impl>::SplitDataRequest::finish(const Fault &fault, const RequestPtr &req,
         ThreadContext* tc, BaseTLB::Mode mode)
 {
-    _fault.push_back(fault);
-    assert(req == _requests[numTranslatedFragments] || this->isDelayed());
+    int i;
+    for (i = 0; i < _requests.size() && _requests[i] != req; i++);
+    assert(i < _requests.size());
+    _fault[i] = fault;
 
     numInTranslationFragments--;
     numTranslatedFragments++;
 
-    mainReq->setFlags(req->getFlags());
+    if (fault == NoFault)
+        mainReq->setFlags(req->getFlags());
 
     if (numTranslatedFragments == _requests.size()) {
         if (_inst->isSquashed()) {
@@ -811,27 +821,30 @@ LSQ<Impl>::SplitDataRequest::finish(const Fault &fault, const RequestPtr &req,
         } else {
             _inst->strictlyOrdered(mainReq->isStrictlyOrdered());
             flags.set(Flag::TranslationFinished);
-            auto fault_it = _fault.begin();
-            /* Ffwd to the first NoFault. */
-            while (fault_it != _fault.end() && *fault_it == NoFault)
-                fault_it++;
-            /* If none of the fragments faulted: */
-            if (fault_it == _fault.end()) {
-                _inst->physEffAddr = request(0)->getPaddr();
+            _inst->translationCompleted(true);
 
+            for (i = 0; i < _fault.size() && _fault[i] == NoFault; i++);
+            if (i > 0) {
+                _inst->physEffAddr = request(0)->getPaddr();
                 _inst->memReqFlags = mainReq->getFlags();
                 if (mainReq->isCondSwap()) {
+                    assert (i == _fault.size());
                     assert(_res);
                     mainReq->setExtraData(*_res);
                 }
-                setState(State::Request);
-                _inst->fault = NoFault;
+                if (i == _fault.size()) {
+                    _inst->fault = NoFault;
+                    setState(State::Request);
+                } else {
+                  _inst->fault = _fault[i];
+                  setState(State::PartialFault);
+                }
             } else {
+                _inst->fault = _fault[0];
                 setState(State::Fault);
-                _inst->fault = *fault_it;
             }
-            _inst->translationCompleted(true);
         }
+
     }
 }
 
