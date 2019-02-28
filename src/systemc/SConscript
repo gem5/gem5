@@ -27,22 +27,9 @@
 
 Import('*')
 
-from m5.util import compareVersions
-from m5.util.terminal import termcap
+if not env['USE_SYSTEMC']:
+    Return()
 
-if env['USE_SYSTEMC']:
-    if ('GCC_VERSION' in env and \
-        compareVersions(env['GCC_VERSION'], '5.0') < 0) or \
-        env['PLATFORM'] == 'darwin':
+env.UseSystemcCheck(warn=True)
 
-        if env['PLATFORM'] == 'darwin':
-            print(termcap.Yellow + termcap.Bold +
-                  'Warning: Disabling systemc on Mac OS.' + termcap.Normal)
-        else:
-            print(termcap.Yellow + termcap.Bold +
-                  'Warning: Disabling systemc on gcc versions less than 5.0.' +
-                  termcap.Normal)
-        env['USE_SYSTEMC'] = False
-        Return()
-
-    env.Append(CPPPATH=Dir('ext'))
+env.Append(CPPPATH=Dir('ext'))
