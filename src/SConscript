@@ -1388,9 +1388,9 @@ if 'opt' in needed_envs:
 
 # "Fast" binary
 if 'fast' in needed_envs:
-    disable_partial = disable_partial and \
-            env.get('BROKEN_INCREMENTAL_LTO', False) and \
-            GetOption('force_lto')
+    disable_partial = disable_partial or \
+            (env.get('BROKEN_INCREMENTAL_LTO', False) and \
+            GetOption('force_lto'))
     makeEnv(env, 'fast', '.fo', strip = True,
             CCFLAGS = Split(ccflags['fast']),
             CPPDEFINES = ['NDEBUG', 'TRACING_ON=0'],
