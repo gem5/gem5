@@ -120,7 +120,6 @@ Fetch2::dumpAllInput(ThreadID tid)
         popInput(tid);
 
     fetchInfo[tid].inputIndex = 0;
-    fetchInfo[tid].havePC = false;
 }
 
 void

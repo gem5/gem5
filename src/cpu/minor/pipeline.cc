@@ -199,7 +199,6 @@ void
 Pipeline::wakeupFetch(ThreadID tid)
 {
     fetch1.wakeupFetch(tid);
-    fetch2.dumpAllInput(tid);
 }
 
 bool
