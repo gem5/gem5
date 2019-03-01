@@ -284,7 +284,7 @@ SCMasterPort::b_transport(tlm::tlm_generic_payload& trans,
     // update time
     t += delay;
 
-    if (extension != nullptr)
+    if (extension == nullptr)
         destroyPacket(pkt);
 
     trans.set_response_status(tlm::TLM_OK_RESPONSE);
