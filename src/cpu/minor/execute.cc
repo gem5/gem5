@@ -248,14 +248,7 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
             pc_before, target);
     }
 
-    if (thread->status() == ThreadContext::Suspended) {
-        /* Thread got suspended */
-        DPRINTF(Branch, "Thread got suspended: branch from 0x%x to 0x%x "
-            "inst: %s\n",
-            inst->pc.instAddr(), target.instAddr(), *inst);
-
-        reason = BranchData::SuspendThread;
-    } else if (inst->predictedTaken && !force_branch) {
+    if (inst->predictedTaken && !force_branch) {
         /* Predicted to branch */
         if (!must_branch) {
             /* No branch was taken, change stream to get us back to the
@@ -1068,7 +1061,8 @@ Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
         !branch.isStreamChange() && /* No real branch */
         fault == NoFault && /* No faults */
         completed_inst && /* Still finding instructions to execute */
-        num_insts_committed != commitLimit /* Not reached commit limit */
+        num_insts_committed != commitLimit && /* Not reached commit limit */
+        cpu.getContext(thread_id)->status() != ThreadContext::Suspended
         )
     {
         if (only_commit_microops) {
