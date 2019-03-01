@@ -61,7 +61,6 @@
 #include "cpu/exetrace.hh"
 #include "cpu/inst_res.hh"
 #include "cpu/inst_seq.hh"
-#include "cpu/o3/comm.hh"
 #include "cpu/op_class.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/translation.hh"
