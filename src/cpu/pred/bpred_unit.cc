@@ -70,7 +70,8 @@ BPredUnit::BPredUnit(const Params *params)
             params->indirectTagSize,
             params->indirectPathLength,
             params->instShiftAmt,
-            params->numThreads),
+            params->numThreads,
+            params->indirectGHRBits),
       instShiftAmt(params->instShiftAmt)
 {
     for (auto& r : RAS)
@@ -207,8 +208,9 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                 " predicted %i for PC %s\n", tid, seqNum,  pred_taken, pc);
     }
 
+    const bool orig_pred_taken = pred_taken;
     if (useIndirect) {
-        iPred.updateDirectionInfo(tid, pred_taken, indirect_history);
+        iPred.genIndirectInfo(tid, indirect_history);
     }
 
     DPRINTF(Branch, "[tid:%i]: [sn:%i] Creating prediction history "
@@ -317,6 +319,15 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
     pc = target;
 
+    if (useIndirect) {
+        // Update the indirect predictor with the direction prediction
+        // Note that this happens after indirect lookup, so it does not use
+        // the new information
+        // Note also that we use orig_pred_taken instead of pred_taken in
+        // as this is the actual outcome of the direction prediction
+        iPred.updateDirectionInfo(tid, orig_pred_taken);
+    }
+
     predHist[tid].push_front(predict_record);
 
     DPRINTF(Branch, "[tid:%i]: [sn:%i]: History entry added."
@@ -340,7 +351,9 @@ BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
                     predHist[tid].back().inst,
                     predHist[tid].back().target);
 
-        iPred.commit(done_sn, tid, predHist[tid].back().indirectHistory);
+        if (useIndirect) {
+            iPred.commit(done_sn, tid, predHist[tid].back().indirectHistory);
+        }
 
         predHist[tid].pop_back();
     }
@@ -351,7 +364,10 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 {
     History &pred_hist = predHist[tid];
 
-    iPred.squash(squashed_sn, tid);
+    if (useIndirect) {
+        iPred.squash(squashed_sn, tid);
+    }
+
     while (!pred_hist.empty() &&
            pred_hist.front().seqNum > squashed_sn) {
         if (pred_hist.front().usedRAS) {
@@ -372,7 +388,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
         // This call should delete the bpHistory.
         squash(tid, pred_hist.front().bpHistory);
         if (useIndirect) {
-            iPred.deleteDirectionInfo(tid, pred_hist.front().indirectHistory);
+            iPred.deleteIndirectInfo(tid, pred_hist.front().indirectHistory);
         }
 
         DPRINTF(Branch, "[tid:%i]: Removing history for [sn:%i] "
@@ -469,7 +485,9 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             }
             if (hist_it->wasIndirect) {
                 ++indirectMispredicted;
-                iPred.recordTarget(hist_it->seqNum, corrTarget, tid);
+                iPred.recordTarget(
+                    hist_it->seqNum, pred_hist.front().indirectHistory,
+                    corrTarget, tid);
             } else {
                 DPRINTF(Branch,"[tid: %i] BTB Update called for [sn:%i]"
                         " PC: %s\n", tid,hist_it->seqNum, hist_it->pc);

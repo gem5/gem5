@@ -51,6 +51,7 @@ class BranchPredictor(SimObject):
     indirectTagSize = Param.Unsigned(16, "Indirect target cache tag bits")
     indirectPathLength = Param.Unsigned(3,
         "Previous indirect targets to use for path history")
+    indirectGHRBits = Param.Unsigned(13, "Indirect GHR number of bits")
 
 
 
