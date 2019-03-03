@@ -112,6 +112,8 @@ RegVal
 ISA::readMiscReg(int misc_reg, ThreadContext *tc)
 {
     switch (misc_reg) {
+      case MISCREG_HARTID:
+        return tc->contextId();
       case MISCREG_CYCLE:
         if (hpmCounterEnabled(MISCREG_CYCLE)) {
             DPRINTF(RiscvMisc, "Cycle counter at: %llu.\n",
