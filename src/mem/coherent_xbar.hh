@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015, 2017 ARM Limited
+ * Copyright (c) 2011-2015, 2017, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -278,8 +278,19 @@ class CoherentXBar : public BaseXBar
       * broadcast needed for probes.  NULL denotes an absent filter. */
     SnoopFilter *snoopFilter;
 
+    /** Cycles of snoop response latency.*/
     const Cycles snoopResponseLatency;
+
+    /** Maximum number of outstading snoops sanity check*/
+    const unsigned int maxOutstandingSnoopCheck;
+
+    /** Maximum routing table size sanity check*/
+    const unsigned int maxRoutingTableSizeCheck;
+
+    /** Is this crossbar the point of coherency? **/
     const bool pointOfCoherency;
+
+    /** Is this crossbar the point of unification? **/
     const bool pointOfUnification;
 
     /**
