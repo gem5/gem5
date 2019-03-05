@@ -44,6 +44,7 @@ if env['TARGET_ISA'] == 'arm':
     SimObject('FlashDevice.py')
     SimObject('Gic.py')
     SimObject('RealView.py')
+    SimObject('SMMUv3.py')
     SimObject('UFSHostDevice.py')
     SimObject('EnergyCtrl.py')
     SimObject('NoMali.py')
@@ -66,6 +67,15 @@ if env['TARGET_ISA'] == 'arm':
     Source('pl111.cc')
     Source('hdlcd.cc')
     Source('kmi.cc')
+    Source('smmu_v3.cc');
+    Source('smmu_v3_caches.cc');
+    Source('smmu_v3_cmdexec.cc');
+    Source('smmu_v3_events.cc');
+    Source('smmu_v3_ports.cc');
+    Source('smmu_v3_proc.cc');
+    Source('smmu_v3_ptops.cc');
+    Source('smmu_v3_slaveifc.cc');
+    Source('smmu_v3_transl.cc');
     Source('timer_sp804.cc')
     Source('gpu_nomali.cc')
     Source('pci_host.cc')
@@ -88,6 +98,8 @@ if env['TARGET_ISA'] == 'arm':
     DebugFlag('GIC')
     DebugFlag('ITS')
     DebugFlag('RVCTRL')
+    DebugFlag('SMMUv3')
+    DebugFlag('SMMUv3Hazard')
     DebugFlag('EnergyCtrl')
     DebugFlag('UFSHostDevice')
     DebugFlag('VGIC')
