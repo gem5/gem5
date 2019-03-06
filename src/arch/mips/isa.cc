@@ -450,7 +450,7 @@ ISA::setMiscRegNoEffect(int misc_reg, RegVal val, ThreadID tid)
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
     DPRINTF(MipsPRA,
-            "[tid:%i]: Setting (direct set) CP0 Register:%u "
+            "[tid:%i] Setting (direct set) CP0 Register:%u "
             "Select:%u (%s) to %#x.\n",
             tid, misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg], val);
 
@@ -463,7 +463,7 @@ ISA::setRegMask(int misc_reg, RegVal val, ThreadID tid)
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
     DPRINTF(MipsPRA,
-            "[tid:%i]: Setting CP0 Register: %u Select: %u (%s) to %#x\n",
+            "[tid:%i] Setting CP0 Register: %u Select: %u (%s) to %#x\n",
             tid, misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg], val);
     miscRegFile_WriteMask[misc_reg][reg_sel] = val;
 }
@@ -479,7 +479,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc, ThreadID tid)
         ? tid : getVPENum(tid);
 
     DPRINTF(MipsPRA,
-            "[tid:%i]: Setting CP0 Register:%u "
+            "[tid:%i] Setting CP0 Register:%u "
             "Select:%u (%s) to %#x, with effect.\n",
             tid, misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg], val);
 

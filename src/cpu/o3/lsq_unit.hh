@@ -852,7 +852,7 @@ LSQUnit<Impl>::write(LSQRequest *req, uint8_t *data, int store_idx)
     assert(storeQueue[store_idx].valid());
 
     DPRINTF(LSQUnit, "Doing write to store idx %i, addr %#x | storeHead:%i "
-            "[sn:%i]\n",
+            "[sn:%llu]\n",
             store_idx - 1, req->request()->getPaddr(), storeQueue.head() - 1,
             storeQueue[store_idx].instruction()->seqNum);
 

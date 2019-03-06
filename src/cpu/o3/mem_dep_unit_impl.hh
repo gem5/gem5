@@ -593,7 +593,7 @@ MemDepUnit<MemDepPred, Impl>::dumpLists()
         int num = 0;
 
         while (inst_list_it != instList[tid].end()) {
-            cprintf("Instruction:%i\nPC: %s\n[sn:%i]\n[tid:%i]\nIssued:%i\n"
+            cprintf("Instruction:%i\nPC: %s\n[sn:%llu]\n[tid:%i]\nIssued:%i\n"
                     "Squashed:%i\n\n",
                     num, (*inst_list_it)->pcState(),
                     (*inst_list_it)->seqNum,

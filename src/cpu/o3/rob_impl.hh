@@ -254,8 +254,8 @@ ROB<Impl>::retireHead(ThreadID tid)
 
     assert(head_inst->readyToCommit());
 
-    DPRINTF(ROB, "[tid:%u]: Retiring head instruction, "
-            "instruction PC %s, [sn:%lli]\n", tid, head_inst->pcState(),
+    DPRINTF(ROB, "[tid:%i] Retiring head instruction, "
+            "instruction PC %s, [sn:%llu]\n", tid, head_inst->pcState(),
             head_inst->seqNum);
 
     --numInstsInROB;
@@ -323,13 +323,13 @@ void
 ROB<Impl>::doSquash(ThreadID tid)
 {
     robWrites++;
-    DPRINTF(ROB, "[tid:%u]: Squashing instructions until [sn:%i].\n",
+    DPRINTF(ROB, "[tid:%i] Squashing instructions until [sn:%llu].\n",
             tid, squashedSeqNum[tid]);
 
     assert(squashIt[tid] != instList[tid].end());
 
     if ((*squashIt[tid])->seqNum < squashedSeqNum[tid]) {
-        DPRINTF(ROB, "[tid:%u]: Done squashing instructions.\n",
+        DPRINTF(ROB, "[tid:%i] Done squashing instructions.\n",
                 tid);
 
         squashIt[tid] = instList[tid].end();
@@ -346,7 +346,7 @@ ROB<Impl>::doSquash(ThreadID tid)
          (*squashIt[tid])->seqNum > squashedSeqNum[tid];
          ++numSquashed)
     {
-        DPRINTF(ROB, "[tid:%u]: Squashing instruction PC %s, seq num %i.\n",
+        DPRINTF(ROB, "[tid:%i] Squashing instruction PC %s, seq num %i.\n",
                 (*squashIt[tid])->threadNumber,
                 (*squashIt[tid])->pcState(),
                 (*squashIt[tid])->seqNum);
@@ -381,7 +381,7 @@ ROB<Impl>::doSquash(ThreadID tid)
 
     // Check if ROB is done squashing.
     if ((*squashIt[tid])->seqNum <= squashedSeqNum[tid]) {
-        DPRINTF(ROB, "[tid:%u]: Done squashing instructions.\n",
+        DPRINTF(ROB, "[tid:%i] Done squashing instructions.\n",
                 tid);
 
         squashIt[tid] = instList[tid].end();
@@ -481,7 +481,7 @@ ROB<Impl>::squash(InstSeqNum squash_num, ThreadID tid)
 {
     if (isEmpty(tid)) {
         DPRINTF(ROB, "Does not need to squash due to being empty "
-                "[sn:%i]\n",
+                "[sn:%llu]\n",
                 squash_num);
 
         return;

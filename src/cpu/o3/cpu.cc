@@ -689,11 +689,11 @@ FullO3CPU<Impl>::activateThread(ThreadID tid)
     list<ThreadID>::iterator isActive =
         std::find(activeThreads.begin(), activeThreads.end(), tid);
 
-    DPRINTF(O3CPU, "[tid:%i]: Calling activate thread.\n", tid);
+    DPRINTF(O3CPU, "[tid:%i] Calling activate thread.\n", tid);
     assert(!switchedOut());
 
     if (isActive == activeThreads.end()) {
-        DPRINTF(O3CPU, "[tid:%i]: Adding to active threads list\n",
+        DPRINTF(O3CPU, "[tid:%i] Adding to active threads list\n",
                 tid);
 
         activeThreads.push_back(tid);
@@ -708,11 +708,11 @@ FullO3CPU<Impl>::deactivateThread(ThreadID tid)
     list<ThreadID>::iterator thread_it =
         std::find(activeThreads.begin(), activeThreads.end(), tid);
 
-    DPRINTF(O3CPU, "[tid:%i]: Calling deactivate thread.\n", tid);
+    DPRINTF(O3CPU, "[tid:%i] Calling deactivate thread.\n", tid);
     assert(!switchedOut());
 
     if (thread_it != activeThreads.end()) {
-        DPRINTF(O3CPU,"[tid:%i]: Removing from active threads list\n",
+        DPRINTF(O3CPU,"[tid:%i] Removing from active threads list\n",
                 tid);
         activeThreads.erase(thread_it);
     }
@@ -790,7 +790,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::suspendContext(ThreadID tid)
 {
-    DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
+    DPRINTF(O3CPU,"[tid:%i] Suspending Thread Context.\n", tid);
     assert(!switchedOut());
 
     deactivateThread(tid);
@@ -812,7 +812,7 @@ void
 FullO3CPU<Impl>::haltContext(ThreadID tid)
 {
     //For now, this is the same as deallocate
-    DPRINTF(O3CPU,"[tid:%i]: Halt Context called. Deallocating\n", tid);
+    DPRINTF(O3CPU,"[tid:%i] Halt Context called. Deallocating\n", tid);
     assert(!switchedOut());
 
     deactivateThread(tid);

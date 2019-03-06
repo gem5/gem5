@@ -238,7 +238,7 @@ DefaultDecode<Impl>::checkStall(ThreadID tid) const
     bool ret_val = false;
 
     if (stalls[tid].rename) {
-        DPRINTF(Decode,"[tid:%i]: Stall fom Rename stage detected.\n", tid);
+        DPRINTF(Decode,"[tid:%i] Stall fom Rename stage detected.\n", tid);
         ret_val = true;
     }
 
@@ -256,7 +256,7 @@ template<class Impl>
 bool
 DefaultDecode<Impl>::block(ThreadID tid)
 {
-    DPRINTF(Decode, "[tid:%u]: Blocking.\n", tid);
+    DPRINTF(Decode, "[tid:%i] Blocking.\n", tid);
 
     // Add the current inputs to the skid buffer so they can be
     // reprocessed when this stage unblocks.
@@ -288,7 +288,7 @@ DefaultDecode<Impl>::unblock(ThreadID tid)
 {
     // Decode is done unblocking only if the skid buffer is empty.
     if (skidBuffer[tid].empty()) {
-        DPRINTF(Decode, "[tid:%u]: Done unblocking.\n", tid);
+        DPRINTF(Decode, "[tid:%i] Done unblocking.\n", tid);
         toFetch->decodeUnblock[tid] = true;
         wroteToTimeBuffer = true;
 
@@ -296,7 +296,7 @@ DefaultDecode<Impl>::unblock(ThreadID tid)
         return true;
     }
 
-    DPRINTF(Decode, "[tid:%u]: Currently unblocking.\n", tid);
+    DPRINTF(Decode, "[tid:%i] Currently unblocking.\n", tid);
 
     return false;
 }
@@ -305,7 +305,7 @@ template<class Impl>
 void
 DefaultDecode<Impl>::squash(const DynInstPtr &inst, ThreadID tid)
 {
-    DPRINTF(Decode, "[tid:%i]: [sn:%i] Squashing due to incorrect branch "
+    DPRINTF(Decode, "[tid:%i] [sn:%llu] Squashing due to incorrect branch "
             "prediction detected at decode.\n", tid, inst->seqNum);
 
     // Send back mispredict information.
@@ -357,7 +357,7 @@ template<class Impl>
 unsigned
 DefaultDecode<Impl>::squash(ThreadID tid)
 {
-    DPRINTF(Decode, "[tid:%i]: Squashing.\n",tid);
+    DPRINTF(Decode, "[tid:%i] Squashing.\n",tid);
 
     if (decodeStatus[tid] == Blocked ||
         decodeStatus[tid] == Unblocking) {
@@ -522,7 +522,7 @@ DefaultDecode<Impl>::checkSignalsAndUpdate(ThreadID tid)
     // Check squash signals from commit.
     if (fromCommit->commitInfo[tid].squash) {
 
-        DPRINTF(Decode, "[tid:%u]: Squashing instructions due to squash "
+        DPRINTF(Decode, "[tid:%i] Squashing instructions due to squash "
                 "from commit.\n", tid);
 
         squash(tid);
@@ -535,7 +535,7 @@ DefaultDecode<Impl>::checkSignalsAndUpdate(ThreadID tid)
     }
 
     if (decodeStatus[tid] == Blocked) {
-        DPRINTF(Decode, "[tid:%u]: Done blocking, switching to unblocking.\n",
+        DPRINTF(Decode, "[tid:%i] Done blocking, switching to unblocking.\n",
                 tid);
 
         decodeStatus[tid] = Unblocking;
@@ -548,7 +548,7 @@ DefaultDecode<Impl>::checkSignalsAndUpdate(ThreadID tid)
     if (decodeStatus[tid] == Squashing) {
         // Switch status to running if decode isn't being told to block or
         // squash this cycle.
-        DPRINTF(Decode, "[tid:%u]: Done squashing, switching to running.\n",
+        DPRINTF(Decode, "[tid:%i] Done squashing, switching to running.\n",
                 tid);
 
         decodeStatus[tid] = Running;
@@ -618,7 +618,7 @@ DefaultDecode<Impl>::decode(bool &status_change, ThreadID tid)
     // will allow, as long as it is not currently blocked.
     if (decodeStatus[tid] == Running ||
         decodeStatus[tid] == Idle) {
-        DPRINTF(Decode, "[tid:%u]: Not blocked, so attempting to run "
+        DPRINTF(Decode, "[tid:%i] Not blocked, so attempting to run "
                 "stage.\n",tid);
 
         decodeInsts(tid);
@@ -652,13 +652,13 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
         skidBuffer[tid].size() : insts[tid].size();
 
     if (insts_available == 0) {
-        DPRINTF(Decode, "[tid:%u] Nothing to do, breaking out"
+        DPRINTF(Decode, "[tid:%i] Nothing to do, breaking out"
                 " early.\n",tid);
         // Should I change the status to idle?
         ++decodeIdleCycles;
         return;
     } else if (decodeStatus[tid] == Unblocking) {
-        DPRINTF(Decode, "[tid:%u] Unblocking, removing insts from skid "
+        DPRINTF(Decode, "[tid:%i] Unblocking, removing insts from skid "
                 "buffer.\n",tid);
         ++decodeUnblockCycles;
     } else if (decodeStatus[tid] == Running) {
@@ -669,7 +669,7 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
         &insts_to_decode = decodeStatus[tid] == Unblocking ?
         skidBuffer[tid] : insts[tid];
 
-    DPRINTF(Decode, "[tid:%u]: Sending instruction to rename.\n",tid);
+    DPRINTF(Decode, "[tid:%i] Sending instruction to rename.\n",tid);
 
     while (insts_available > 0 && toRenameIndex < decodeWidth) {
         assert(!insts_to_decode.empty());
@@ -678,11 +678,11 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
 
         insts_to_decode.pop();
 
-        DPRINTF(Decode, "[tid:%u]: Processing instruction [sn:%lli] with "
+        DPRINTF(Decode, "[tid:%i] Processing instruction [sn:%lli] with "
                 "PC %s\n", tid, inst->seqNum, inst->pcState());
 
         if (inst->isSquashed()) {
-            DPRINTF(Decode, "[tid:%u]: Instruction %i with PC %s is "
+            DPRINTF(Decode, "[tid:%i] Instruction %i with PC %s is "
                     "squashed, skipping.\n",
                     tid, inst->seqNum, inst->pcState());
 
@@ -747,8 +747,10 @@ DefaultDecode<Impl>::decodeInsts(ThreadID tid)
                 squash(inst, inst->threadNumber);
                 TheISA::PCState target = inst->branchTarget();
 
-                DPRINTF(Decode, "[sn:%i]: Updating predictions: PredPC: %s\n",
-                        inst->seqNum, target);
+                DPRINTF(Decode,
+                        "[tid:%i] [sn:%llu] "
+                        "Updating predictions: PredPC: %s\n",
+                        tid, inst->seqNum, target);
                 //The micro pc after an instruction level branch should be 0
                 inst->setPredTarg(target);
                 break;
