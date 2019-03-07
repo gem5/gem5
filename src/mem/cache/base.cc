@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2018 ARM Limited
+ * Copyright (c) 2012-2013, 2018-2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -1263,6 +1263,31 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 
             chatty_assert(!isReadOnly, "Should never see dirty snoop response "
                           "in read-only cache %s\n", name());
+
+        } else if (pkt->cmd.isSWPrefetch() && pkt->needsWritable()) {
+            // All other copies of the block were invalidated and we
+            // have an exclusive copy.
+
+            // The coherence protocol assumes that if we fetched an
+            // exclusive copy of the block, we have the intention to
+            // modify it. Therefore the MSHR for the PrefetchExReq has
+            // been the point of ordering and this cache has commited
+            // to respond to snoops for the block.
+            //
+            // In most cases this is true anyway - a PrefetchExReq
+            // will be followed by a WriteReq. However, if that
+            // doesn't happen, the block is not marked as dirty and
+            // the cache doesn't respond to snoops that has committed
+            // to do so.
+            //
+            // To avoid deadlocks in cases where there is a snoop
+            // between the PrefetchExReq and the expected WriteReq, we
+            // proactively mark the block as Dirty.
+
+            blk->status |= BlkDirty;
+
+            panic_if(!isReadOnly, "Prefetch exclusive requests from read-only "
+                     "cache %s\n", name());
         }
     }
 
