@@ -53,7 +53,6 @@
 #include <iostream>
 
 #include "dev/net/etherlink.hh"
-#include "dev/net/etherobject.hh"
 #include "params/DistEtherLink.hh"
 
 class DistIface;
@@ -62,7 +61,7 @@ class EthPacketData;
 /**
  * Model for a fixed bandwidth full duplex ethernet link.
  */
-class DistEtherLink : public SimObject, public EtherObject
+class DistEtherLink : public SimObject
 {
   protected:
     class LocalIface;
@@ -224,7 +223,8 @@ class DistEtherLink : public SimObject, public EtherObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    EtherInt *getEthPort(const std::string &if_name, int idx) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     virtual void init() override;
     virtual void startup() override;

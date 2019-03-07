@@ -87,13 +87,13 @@ PioDevice::init()
     pioPort.sendRangeChange();
 }
 
-BaseSlavePort &
-PioDevice::getSlavePort(const std::string &if_name, PortID idx)
+Port &
+PioDevice::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "pio") {
         return pioPort;
     }
-    return MemObject::getSlavePort(if_name, idx);
+    return MemObject::getPort(if_name, idx);
 }
 
 BasicPioDevice::BasicPioDevice(const Params *p, Addr size)

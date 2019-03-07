@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2007 The Regents of The University of Michigan
  * Copyright 2019 Google, Inc.
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,29 +24,25 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
- *          Gabe Black
+ * Authors: Gabe Black
  */
 
-/**
- * @file
- * Base Ethernet Object declaration.
- */
+#include "pybind11/pybind11.h"
+#include "sim/init.hh"
+#include "sim/port.hh"
 
-#ifndef __DEV_NET_ETHEROBJECT_HH__
-#define __DEV_NET_ETHEROBJECT_HH__
-
-#include <string>
-
-class EtherInt;
-
-/**
- * The base EtherObject interface.
- */
-class EtherObject
+namespace
 {
-  public:
-    virtual EtherInt *getEthPort(const std::string &if_name, int idx=-1) = 0;
-};
 
-#endif // __DEV_NET_ETHEROBJECT_HH__
+void
+sim_pybind(pybind11::module &m_internal)
+{
+    pybind11::module m = m_internal.def_submodule("sim");
+    pybind11::class_<
+        Port, std::unique_ptr<Port, pybind11::nodelete>>(m, "Port")
+        .def("bind", &Port::bind)
+        ;
+}
+EmbeddedPyBind embed_("sim", &sim_pybind);
+
+} // anonymous namespace

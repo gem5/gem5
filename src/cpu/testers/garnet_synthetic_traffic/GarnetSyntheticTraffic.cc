@@ -110,13 +110,13 @@ GarnetSyntheticTraffic::GarnetSyntheticTraffic(const Params *p)
             name(), id);
 }
 
-BaseMasterPort &
-GarnetSyntheticTraffic::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+GarnetSyntheticTraffic::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "test")
         return cachePort;
     else
-        return MemObject::getMasterPort(if_name, idx);
+        return MemObject::getPort(if_name, idx);
 }
 
 void

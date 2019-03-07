@@ -691,8 +691,8 @@ class ComputeUnit : public MemObject
     // port to the SQC TLB (there's a separate TLB for each I-cache)
     ITLBPort *sqcTLBPort;
 
-    virtual BaseMasterPort&
-    getMasterPort(const std::string &if_name, PortID idx)
+    Port &
+    getPort(const std::string &if_name, PortID idx) override
     {
         if (if_name == "memory_port") {
             memPort[idx] = new DataPort(csprintf("%s-port%d", name(), idx),

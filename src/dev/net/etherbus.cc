@@ -81,8 +81,8 @@ EtherBus::txDone()
     packet = 0;
 }
 
-EtherInt*
-EtherBus::getEthPort(const std::string &if_name, int idx)
+Port &
+EtherBus::getPort(const std::string &if_name, PortID idx)
 {
     panic("Etherbus doesn't work\n");
 }

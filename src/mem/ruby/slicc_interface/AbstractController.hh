@@ -126,8 +126,8 @@ class AbstractController : public MemObject, public Consumer
     virtual void initNetQueues() = 0;
 
     /** A function used to return the port associated with this bus object. */
-    BaseMasterPort& getMasterPort(const std::string& if_name,
-                                  PortID idx = InvalidPortID);
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID);
 
     void queueMemoryRead(const MachineID &id, Addr addr, Cycles latency);
     void queueMemoryWrite(const MachineID &id, Addr addr, Cycles latency,

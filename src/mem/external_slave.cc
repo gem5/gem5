@@ -49,7 +49,7 @@
  *  a message.  The stub port can be used to configure and test a system
  *  where the external port is used for a peripheral before connecting
  *  the external port */
-class StubSlavePort : public ExternalSlave::Port
+class StubSlavePort : public ExternalSlave::ExternalPort
 {
   public:
     void processResponseEvent();
@@ -66,7 +66,7 @@ class StubSlavePort : public ExternalSlave::Port
 
     StubSlavePort(const std::string &name_,
         ExternalSlave &owner_) :
-        ExternalSlave::Port(name_, owner_),
+        ExternalSlave::ExternalPort(name_, owner_),
         responseEvent([this]{ processResponseEvent(); }, name()),
         responsePacket(NULL), mustRetry(false)
     { }
@@ -83,7 +83,7 @@ class StubSlavePortHandler : public
     ExternalSlave::Handler
 {
   public:
-    ExternalSlave::Port *getExternalPort(
+    ExternalSlave::ExternalPort *getExternalPort(
         const std::string &name_,
         ExternalSlave &owner,
         const std::string &port_data)
@@ -175,7 +175,7 @@ std::map<std::string, ExternalSlave::Handler *>
     ExternalSlave::portHandlers;
 
 AddrRangeList
-ExternalSlave::Port::getAddrRanges() const
+ExternalSlave::ExternalPort::getAddrRanges() const
 {
     return owner.addrRanges;
 }
@@ -193,9 +193,8 @@ ExternalSlave::ExternalSlave(ExternalSlaveParams *params) :
         registerHandler("stub", new StubSlavePortHandler);
 }
 
-BaseSlavePort &
-ExternalSlave::getSlavePort(const std::string &if_name,
-    PortID idx)
+Port &
+ExternalSlave::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "port") {
         DPRINTF(ExternalPort, "Trying to bind external port: %s %s\n",
@@ -217,7 +216,7 @@ ExternalSlave::getSlavePort(const std::string &if_name,
         }
         return *externalPort;
     } else {
-        return MemObject::getSlavePort(if_name, idx);
+        return MemObject::getPort(if_name, idx);
     }
 }
 

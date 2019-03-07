@@ -27,22 +27,33 @@
  * Authors: Gabe Black
  */
 
-#include "python/pybind11/pybind.hh"
+#ifndef __MEM_RUBY_NETWORK_DUMMY_PORT_HH__
+#define __MEM_RUBY_NETWORK_DUMMY_PORT_HH__
 
-#include "dev/net/etherobject.hh"
-#include "sim/init.hh"
+#include "mem/port.hh"
 
-namespace
+class RubyDummyPort : public Port
 {
+  public:
+    RubyDummyPort() : Port("DummyPort", -1) {}
 
-void
-ethernet_pybind(pybind11::module &m_internal)
-{
-    pybind11::module m = m_internal.def_submodule("ethernet");
-    pybind11::class_<
-        EtherObject, std::unique_ptr<EtherObject, pybind11::nodelete>>(
-                m, "EtherObject");
-}
-EmbeddedPyBind embed_("ethernet", &ethernet_pybind);
+    void
+    bind(Port &peer) override
+    {
+        // No need to connect anything here currently. MessageBuffer
+        // port connections only serve to print the connections in
+        // the config output.
+        // TODO: Add real ports to MessageBuffers and use MemObject connect
+        // code below to bind MessageBuffer senders and receivers
+    }
+    void unbind() override {}
 
-} // anonymous namespace
+    static RubyDummyPort &
+    instance()
+    {
+        static RubyDummyPort dummy;
+        return dummy;
+    }
+};
+
+#endif //__MEM_RUBY_NETWORK_DUMMY_PORT_HH__

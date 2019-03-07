@@ -47,7 +47,6 @@ from m5.objects.PciDevice import PciDevice
 class EtherLink(SimObject):
     type = 'EtherLink'
     cxx_header = "dev/net/etherlink.hh"
-    cxx_extra_bases = [ "EtherObject" ]
     int0 = SlavePort("interface 0")
     int1 = SlavePort("interface 1")
     delay = Param.Latency('0us', "packet transmit delay")
@@ -58,7 +57,6 @@ class EtherLink(SimObject):
 class DistEtherLink(SimObject):
     type = 'DistEtherLink'
     cxx_header = "dev/net/dist_etherlink.hh"
-    cxx_extra_bases = [ "EtherObject" ]
     int0 = SlavePort("interface 0")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
@@ -77,7 +75,6 @@ class DistEtherLink(SimObject):
 class EtherBus(SimObject):
     type = 'EtherBus'
     cxx_header = "dev/net/etherbus.hh"
-    cxx_extra_bases = [ "EtherObject" ]
     loopback = Param.Bool(True, "send packet back to the sending interface")
     dump = Param.EtherDump(NULL, "dump object")
     speed = Param.NetworkBandwidth('100Mbps', "bus speed in bits per second")
@@ -85,7 +82,6 @@ class EtherBus(SimObject):
 class EtherSwitch(SimObject):
     type = 'EtherSwitch'
     cxx_header = "dev/net/etherswitch.hh"
-    cxx_extra_bases = [ "EtherObject" ]
     dump = Param.EtherDump(NULL, "dump object")
     fabric_speed = Param.NetworkBandwidth('10Gbps', "switch fabric speed in bits "
                                           "per second")
@@ -99,7 +95,6 @@ class EtherTapBase(SimObject):
     type = 'EtherTapBase'
     abstract = True
     cxx_header = "dev/net/ethertap.hh"
-    cxx_extra_bases = [ "EtherObject" ]
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
     tap = SlavePort("Ethernet interface to connect to gem5's network")
@@ -127,7 +122,6 @@ class EtherDevice(PciDevice):
     type = 'EtherDevice'
     abstract = True
     cxx_header = "dev/net/etherdevice.hh"
-    cxx_extra_bases = [ "EtherObject" ]
     interface = MasterPort("Ethernet Interface")
 
 class IGbE(EtherDevice):

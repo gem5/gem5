@@ -231,11 +231,11 @@ SimpleMemory::recvRespRetry()
     dequeue();
 }
 
-BaseSlavePort &
-SimpleMemory::getSlavePort(const std::string &if_name, PortID idx)
+Port &
+SimpleMemory::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "port") {
-        return MemObject::getSlavePort(if_name, idx);
+        return MemObject::getPort(if_name, idx);
     } else {
         return port;
     }

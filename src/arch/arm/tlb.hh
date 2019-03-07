@@ -392,7 +392,7 @@ class TLB : public BaseTLB
     void regProbePoints() override;
 
     /**
-     * Get the table walker master port. This is used for migrating
+     * Get the table walker port. This is used for migrating
      * port connections during a CPU takeOverFrom() call. For
      * architectures that do not have a table walker, NULL is
      * returned, hence the use of a pointer rather than a
@@ -401,7 +401,7 @@ class TLB : public BaseTLB
      *
      * @return A pointer to the walker master port
      */
-    BaseMasterPort* getTableWalkerMasterPort() override;
+    Port *getTableWalkerPort() override;
 
     // Caching misc register values here.
     // Writing to misc registers needs to invalidate them.

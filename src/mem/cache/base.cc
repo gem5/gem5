@@ -185,23 +185,15 @@ BaseCache::init()
     forwardSnoops = cpuSidePort.isSnooping();
 }
 
-BaseMasterPort &
-BaseCache::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+BaseCache::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "mem_side") {
         return memSidePort;
-    }  else {
-        return MemObject::getMasterPort(if_name, idx);
-    }
-}
-
-BaseSlavePort &
-BaseCache::getSlavePort(const std::string &if_name, PortID idx)
-{
-    if (if_name == "cpu_side") {
+    } else if (if_name == "cpu_side") {
         return cpuSidePort;
-    } else {
-        return MemObject::getSlavePort(if_name, idx);
+    }  else {
+        return MemObject::getPort(if_name, idx);
     }
 }
 

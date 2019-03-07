@@ -61,7 +61,6 @@
 #include "dev/net/etherdump.hh"
 #include "dev/net/etherint.hh"
 #include "dev/net/etherlink.hh"
-#include "dev/net/etherobject.hh"
 #include "dev/net/etherpkt.hh"
 #include "dev/net/tcp_iface.hh"
 #include "params/EtherLink.hh"
@@ -109,15 +108,12 @@ DistEtherLink::~DistEtherLink()
     delete distIface;
 }
 
-EtherInt*
-DistEtherLink::getEthPort(const std::string &if_name, int idx)
+Port &
+DistEtherLink::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name != "int0") {
-        return nullptr;
-    } else {
-        panic_if(localIface->getPeer(), "interface already connected to");
-    }
-    return localIface;
+    if (if_name == "int0")
+        return *localIface;
+    return SimObject::getPort(if_name, idx);
 }
 
 void

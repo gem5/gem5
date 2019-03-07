@@ -69,12 +69,9 @@ class MemDelay : public MemObject
 
     void init() override;
 
-  protected: // Port interfaces
-    BaseMasterPort& getMasterPort(const std::string &if_name,
-                                          PortID idx = InvalidPortID) override;
-
-    BaseSlavePort& getSlavePort(const std::string &if_name,
-                                PortID idx = InvalidPortID) override;
+  protected: // Port interface
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     class MasterPort : public QueuedMasterPort
     {

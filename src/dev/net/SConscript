@@ -45,7 +45,6 @@
 Import('*')
 
 SimObject('Ethernet.py')
-Source('python.cc', add_tags='python')
 
 # Basic Ethernet infrastructure
 Source('etherbus.cc')

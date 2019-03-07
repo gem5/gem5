@@ -124,13 +124,13 @@ MemTest::MemTest(const Params *p)
     schedule(noResponseEvent, clockEdge(progressCheck));
 }
 
-BaseMasterPort &
-MemTest::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+MemTest::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "port")
         return port;
     else
-        return MemObject::getMasterPort(if_name, idx);
+        return MemObject::getPort(if_name, idx);
 }
 
 void

@@ -336,11 +336,11 @@ void DRAMSim2::writeComplete(unsigned id, uint64_t addr, uint64_t cycle)
         signalDrainDone();
 }
 
-BaseSlavePort&
-DRAMSim2::getSlavePort(const std::string &if_name, PortID idx)
+Port &
+DRAMSim2::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "port") {
-        return MemObject::getSlavePort(if_name, idx);
+        return MemObject::getPort(if_name, idx);
     } else {
         return port;
     }

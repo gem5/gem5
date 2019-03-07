@@ -133,12 +133,11 @@ class MemSinkCtrl : public MemCtrl
     /**
      * Getter method to access this memory's slave port
      *
-     * @param interface interface name
+     * @param if_name interface name
      * @param idx port ID number
      * @return reference to this memory's slave port
      */
-    BaseSlavePort& getSlavePort(const std::string&,
-            PortID = InvalidPortID) override;
+    Port &getPort(const std::string &if_name, PortID=InvalidPortID) override;
 
     /**
      * Initializes this object

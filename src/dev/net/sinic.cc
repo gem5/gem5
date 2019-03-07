@@ -142,16 +142,12 @@ Device::resetStats()
     _maxVnicDistance = 0;
 }
 
-EtherInt*
-Device::getEthPort(const std::string &if_name, int idx)
+Port &
+Device::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "interface") {
-        if (interface->getPeer())
-            panic("interface already connected to\n");
-
-        return interface;
-    }
-    return NULL;
+    if (if_name == "interface")
+        return *interface;
+    return EtherDevBase::getPort(if_name, idx);
 }
 
 

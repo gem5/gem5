@@ -114,8 +114,8 @@ TableWalker::init()
     fatal_if(!tlb, "Table walker must have a valid TLB\n");
 }
 
-BaseMasterPort&
-TableWalker::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+TableWalker::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "port") {
         if (!isStage2) {
@@ -124,7 +124,7 @@ TableWalker::getMasterPort(const std::string &if_name, PortID idx)
             fatal("Cannot access table walker port through stage-two walker\n");
         }
     }
-    return MemObject::getMasterPort(if_name, idx);
+    return MemObject::getPort(if_name, idx);
 }
 
 TableWalker::WalkerState::WalkerState() :

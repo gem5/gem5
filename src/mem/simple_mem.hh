@@ -187,8 +187,8 @@ class SimpleMemory : public AbstractMemory
 
     DrainState drain() override;
 
-    BaseSlavePort& getSlavePort(const std::string& if_name,
-                                PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
     void init() override;
 
   protected:

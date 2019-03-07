@@ -73,23 +73,15 @@ MemCheckerMonitor::init()
         fatal("Communication monitor is not connected on both sides.\n");
 }
 
-BaseMasterPort&
-MemCheckerMonitor::getMasterPort(const std::string& if_name, PortID idx)
+Port &
+MemCheckerMonitor::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "master" || if_name == "mem_side") {
         return masterPort;
-    } else {
-        return MemObject::getMasterPort(if_name, idx);
-    }
-}
-
-BaseSlavePort&
-MemCheckerMonitor::getSlavePort(const std::string& if_name, PortID idx)
-{
-    if (if_name == "slave" || if_name == "cpu_side") {
+    } else if (if_name == "slave" || if_name == "cpu_side") {
         return slavePort;
     } else {
-        return MemObject::getSlavePort(if_name, idx);
+        return MemObject::getPort(if_name, idx);
     }
 }
 

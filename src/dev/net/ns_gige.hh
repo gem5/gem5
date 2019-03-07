@@ -341,7 +341,8 @@ class NSGigE : public EtherDevBase
     NSGigE(Params *params);
     ~NSGigE();
 
-    EtherInt *getEthPort(const std::string &if_name, int idx) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     Tick writeConfig(PacketPtr pkt) override;
 

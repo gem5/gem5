@@ -173,15 +173,12 @@ NSGigE::writeConfig(PacketPtr pkt)
     return configDelay;
 }
 
-EtherInt*
-NSGigE::getEthPort(const std::string &if_name, int idx)
+Port &
+NSGigE::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "interface") {
-       if (interface->getPeer())
-           panic("interface already connected to\n");
-       return interface;
-    }
-    return NULL;
+    if (if_name == "interface")
+       return *interface;
+    return EtherDevBase::getPort(if_name, idx);
 }
 
 /**

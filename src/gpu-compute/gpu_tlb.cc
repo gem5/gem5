@@ -137,33 +137,25 @@ namespace X86ISA
         assert(translationReturnEvent.empty());
     }
 
-    BaseSlavePort&
-    GpuTLB::getSlavePort(const std::string &if_name, PortID idx)
+    Port &
+    GpuTLB::getPort(const std::string &if_name, PortID idx)
     {
         if (if_name == "slave") {
             if (idx >= static_cast<PortID>(cpuSidePort.size())) {
-                panic("TLBCoalescer::getSlavePort: unknown index %d\n", idx);
+                panic("TLBCoalescer::getPort: unknown index %d\n", idx);
             }
 
             return *cpuSidePort[idx];
-        } else {
-            panic("TLBCoalescer::getSlavePort: unknown port %s\n", if_name);
-        }
-    }
-
-    BaseMasterPort&
-    GpuTLB::getMasterPort(const std::string &if_name, PortID idx)
-    {
-        if (if_name == "master") {
+        } else if (if_name == "master") {
             if (idx >= static_cast<PortID>(memSidePort.size())) {
-                panic("TLBCoalescer::getMasterPort: unknown index %d\n", idx);
+                panic("TLBCoalescer::getPort: unknown index %d\n", idx);
             }
 
             hasMemSidePort = true;
 
             return *memSidePort[idx];
         } else {
-            panic("TLBCoalescer::getMasterPort: unknown port %s\n", if_name);
+            panic("TLBCoalescer::getPort: unknown port %s\n", if_name);
         }
     }
 

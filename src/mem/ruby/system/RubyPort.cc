@@ -87,53 +87,37 @@ RubyPort::init()
     m_mandatory_q_ptr = m_controller->getMandatoryQueue();
 }
 
-BaseMasterPort &
-RubyPort::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+RubyPort::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "mem_master_port") {
         return memMasterPort;
-    }
-
-    if (if_name == "pio_master_port") {
+    } else if (if_name == "pio_master_port") {
         return pioMasterPort;
-    }
-
-    // used by the x86 CPUs to connect the interrupt PIO and interrupt slave
-    // port
-    if (if_name != "master") {
-        // pass it along to our super class
-        return MemObject::getMasterPort(if_name, idx);
-    } else {
+    } else if (if_name == "mem_slave_port") {
+        return memSlavePort;
+    } else if (if_name == "pio_slave_port") {
+        return pioSlavePort;
+    } else if (if_name == "master") {
+        // used by the x86 CPUs to connect the interrupt PIO and interrupt
+        // slave port
         if (idx >= static_cast<PortID>(master_ports.size())) {
-            panic("RubyPort::getMasterPort: unknown index %d\n", idx);
+            panic("RubyPort::getPort master: unknown index %d\n", idx);
         }
 
         return *master_ports[idx];
-    }
-}
-
-BaseSlavePort &
-RubyPort::getSlavePort(const std::string &if_name, PortID idx)
-{
-    if (if_name == "mem_slave_port") {
-        return memSlavePort;
-    }
-
-    if (if_name == "pio_slave_port")
-        return pioSlavePort;
-
-    // used by the CPUs to connect the caches to the interconnect, and
-    // for the x86 case also the interrupt master
-    if (if_name != "slave") {
-        // pass it along to our super class
-        return MemObject::getSlavePort(if_name, idx);
-    } else {
+    } else if (if_name == "slave") {
+        // used by the CPUs to connect the caches to the interconnect, and
+        // for the x86 case also the interrupt master
         if (idx >= static_cast<PortID>(slave_ports.size())) {
-            panic("RubyPort::getSlavePort: unknown index %d\n", idx);
+            panic("RubyPort::getPort slave: unknown index %d\n", idx);
         }
 
         return *slave_ports[idx];
     }
+
+    // pass it along to our super class
+    return MemObject::getPort(if_name, idx);
 }
 
 RubyPort::PioMasterPort::PioMasterPort(const std::string &_name,

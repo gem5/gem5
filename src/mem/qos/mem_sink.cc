@@ -106,11 +106,11 @@ MemSinkCtrl::recvFunctional(PacketPtr pkt)
     pkt->popLabel();
 }
 
-BaseSlavePort &
-MemSinkCtrl::getSlavePort(const std::string &interface, PortID idx)
+Port &
+MemSinkCtrl::getPort(const std::string &interface, PortID idx)
 {
     if (interface != "port") {
-        return MemObject::getSlavePort(interface, idx);
+        return MemObject::getPort(interface, idx);
     } else {
         return port;
     }

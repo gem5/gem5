@@ -471,9 +471,9 @@ CxxConfigManager::bindPort(
      *  getCxxConfigDirectoryEntry for each object. */
 
     /* It would be nice to be able to catch the errors from these calls. */
-    BaseMasterPort &master_port = master_mem_object->getMasterPort(
+    Port &master_port = master_mem_object->getPort(
         master_port_name, master_port_index);
-    BaseSlavePort &slave_port = slave_mem_object->getSlavePort(
+    Port &slave_port = slave_mem_object->getPort(
         slave_port_name, slave_port_index);
 
     if (master_port.isConnected()) {

@@ -125,8 +125,8 @@ class PioDevice : public MemObject
 
     virtual void init();
 
-    virtual BaseSlavePort &getSlavePort(const std::string &if_name,
-                                        PortID idx = InvalidPortID);
+    Port &getPort(const std::string &if_name,
+            PortID idx=InvalidPortID) override;
 
     friend class PioPort;
 

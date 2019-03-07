@@ -179,8 +179,8 @@ class DmaDevice : public PioDevice
 
     unsigned int cacheBlockSize() const { return sys->cacheLineSize(); }
 
-    BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
 };
 

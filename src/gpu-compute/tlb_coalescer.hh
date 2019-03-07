@@ -211,8 +211,8 @@ class TLBCoalescer : public MemObject
     // Coalescer master ports on the memory side
     std::vector<MemSidePort*> memSidePort;
 
-    BaseMasterPort& getMasterPort(const std::string &if_name, PortID idx);
-    BaseSlavePort& getSlavePort(const std::string &if_name, PortID idx);
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     void processProbeTLBEvent();
     /// This event issues the TLB probes

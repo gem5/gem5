@@ -62,16 +62,15 @@ EtherSwitch::~EtherSwitch()
     interfaces.clear();
 }
 
-EtherInt*
-EtherSwitch::getEthPort(const std::string &if_name, int idx)
+Port &
+EtherSwitch::getPort(const std::string &if_name, PortID idx)
 {
-    if (idx < 0 || idx >= interfaces.size())
-        return nullptr;
+    if (if_name == "interface") {
+        panic_if(idx < 0 || idx >= interfaces.size(), "index out of bounds");
+        return *interfaces.at(idx);
+    }
 
-    Interface *interface = interfaces.at(idx);
-    panic_if(interface->getPeer(), "interface already connected\n");
-
-    return interface;
+    return SimObject::getPort(if_name, idx);
 }
 
 bool

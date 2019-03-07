@@ -128,8 +128,8 @@ class System : public MemObject
     /**
      * Additional function to return the Port of a memory object.
      */
-    BaseMasterPort& getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     /** @{ */
     /**

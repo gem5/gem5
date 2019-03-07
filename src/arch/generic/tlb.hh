@@ -131,15 +131,15 @@ class BaseTLB : public MemObject
     virtual void takeOverFrom(BaseTLB *otlb) = 0;
 
     /**
-     * Get the table walker master port if present. This is used for
+     * Get the table walker port if present. This is used for
      * migrating port connections during a CPU takeOverFrom()
      * call. For architectures that do not have a table walker, NULL
      * is returned, hence the use of a pointer rather than a
      * reference.
      *
-     * @return A pointer to the walker master port or NULL if not present
+     * @return A pointer to the walker port or NULL if not present
      */
-    virtual BaseMasterPort* getTableWalkerMasterPort() { return NULL; }
+    virtual Port* getTableWalkerPort() { return NULL; }
 
     void memInvalidate() { flushAll(); }
 };

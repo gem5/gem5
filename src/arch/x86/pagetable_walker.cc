@@ -167,13 +167,13 @@ bool Walker::sendTiming(WalkerState* sendingState, PacketPtr pkt)
 
 }
 
-BaseMasterPort &
-Walker::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+Walker::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "port")
         return port;
     else
-        return MemObject::getMasterPort(if_name, idx);
+        return MemObject::getPort(if_name, idx);
 }
 
 void

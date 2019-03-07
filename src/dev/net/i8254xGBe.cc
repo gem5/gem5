@@ -139,16 +139,12 @@ IGbE::init()
     PciDevice::init();
 }
 
-EtherInt*
-IGbE::getEthPort(const std::string &if_name, int idx)
+Port &
+IGbE::getPort(const std::string &if_name, PortID idx)
 {
-
-    if (if_name == "interface") {
-        if (etherInt->getPeer())
-            panic("Port already connected to\n");
-        return etherInt;
-    }
-    return NULL;
+    if (if_name == "interface")
+        return *etherInt;
+    return EtherDevice::getPort(if_name, idx);
 }
 
 Tick

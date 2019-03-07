@@ -215,22 +215,15 @@ class Interrupts : public BasicPioDevice, IntDevice
 
     AddrRangeList getIntAddrRange() const override;
 
-    BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID) override
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override
     {
         if (if_name == "int_master") {
             return intMasterPort;
-        }
-        return BasicPioDevice::getMasterPort(if_name, idx);
-    }
-
-    BaseSlavePort &getSlavePort(const std::string &if_name,
-                                PortID idx = InvalidPortID) override
-    {
-        if (if_name == "int_slave") {
+        } else if (if_name == "int_slave") {
             return intSlavePort;
         }
-        return BasicPioDevice::getSlavePort(if_name, idx);
+        return BasicPioDevice::getPort(if_name, idx);
     }
 
     /*

@@ -88,13 +88,13 @@ BaseTrafficGen::~BaseTrafficGen()
 {
 }
 
-BaseMasterPort&
-BaseTrafficGen::getMasterPort(const string& if_name, PortID idx)
+Port &
+BaseTrafficGen::getPort(const string &if_name, PortID idx)
 {
     if (if_name == "port") {
         return port;
     } else {
-        return MemObject::getMasterPort(if_name, idx);
+        return MemObject::getPort(if_name, idx);
     }
 }
 

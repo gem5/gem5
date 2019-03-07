@@ -51,30 +51,20 @@ SimpleCache::SimpleCache(SimpleCacheParams *params) :
     }
 }
 
-BaseMasterPort&
-SimpleCache::getMasterPort(const std::string& if_name, PortID idx)
+Port &
+SimpleCache::getPort(const std::string &if_name, PortID idx)
 {
     panic_if(idx != InvalidPortID, "This object doesn't support vector ports");
 
     // This is the name from the Python SimObject declaration in SimpleCache.py
     if (if_name == "mem_side") {
         return memPort;
-    } else {
-        // pass it along to our super class
-        return MemObject::getMasterPort(if_name, idx);
-    }
-}
-
-BaseSlavePort&
-SimpleCache::getSlavePort(const std::string& if_name, PortID idx)
-{
-    // This is the name from the Python SimObject declaration (SimpleMemobj.py)
-    if (if_name == "cpu_side" && idx < cpuPorts.size()) {
+    } else if (if_name == "cpu_side" && idx < cpuPorts.size()) {
         // We should have already created all of the ports in the constructor
         return cpuPorts[idx];
     } else {
         // pass it along to our super class
-        return MemObject::getSlavePort(if_name, idx);
+        return MemObject::getPort(if_name, idx);
     }
 }
 

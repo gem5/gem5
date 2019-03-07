@@ -308,11 +308,8 @@ namespace X86ISA
         // TLB ports on the memory side
         std::vector<MemSidePort*> memSidePort;
 
-        BaseMasterPort &getMasterPort(const std::string &if_name,
-                                      PortID idx=InvalidPortID);
-
-        BaseSlavePort &getSlavePort(const std::string &if_name,
-                                    PortID idx=InvalidPortID);
+        Port &getPort(const std::string &if_name,
+                      PortID idx=InvalidPortID) override;
 
         /**
          * TLB TranslationState: this currently is a somewhat bastardization of

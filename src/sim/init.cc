@@ -207,7 +207,6 @@ EmbeddedPyBind::initAll()
     pybind_init_debug(m_m5);
 
     pybind_init_event(m_m5);
-    pybind_init_pyobject(m_m5);
     pybind_init_stats(m_m5);
 
     for (auto &kv : getMap()) {

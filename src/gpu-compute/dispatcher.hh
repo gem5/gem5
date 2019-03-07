@@ -140,8 +140,8 @@ class GpuDispatcher : public DmaDevice
 
         TLBPort *tlbPort;
 
-        virtual BaseMasterPort& getMasterPort(const std::string &if_name,
-                                              PortID idx);
+        Port &getPort(const std::string &if_name,
+                      PortID idx=InvalidPortID) override;
 
         AddrRangeList getAddrRanges() const;
         Tick read(PacketPtr pkt);

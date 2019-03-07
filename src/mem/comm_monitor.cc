@@ -83,23 +83,15 @@ CommMonitor::regProbePoints()
     ppPktResp.reset(new ProbePoints::Packet(getProbeManager(), "PktResponse"));
 }
 
-BaseMasterPort&
-CommMonitor::getMasterPort(const std::string& if_name, PortID idx)
+Port &
+CommMonitor::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "master") {
         return masterPort;
-    } else {
-        return MemObject::getMasterPort(if_name, idx);
-    }
-}
-
-BaseSlavePort&
-CommMonitor::getSlavePort(const std::string& if_name, PortID idx)
-{
-    if (if_name == "slave") {
+    } else if (if_name == "slave") {
         return slavePort;
     } else {
-        return MemObject::getSlavePort(if_name, idx);
+        return MemObject::getPort(if_name, idx);
     }
 }
 

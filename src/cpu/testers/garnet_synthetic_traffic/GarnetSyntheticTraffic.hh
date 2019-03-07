@@ -64,8 +64,8 @@ class GarnetSyntheticTraffic : public MemObject
     // main simulation loop (one cycle)
     void tick();
 
-    virtual BaseMasterPort &getMasterPort(const std::string &if_name,
-                                          PortID idx = InvalidPortID);
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     /**
      * Print state of address in memory system via PrintReq (for

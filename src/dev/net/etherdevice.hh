@@ -37,7 +37,6 @@
 #define __DEV_NET_ETHERDEVICE_HH__
 
 #include "base/statistics.hh"
-#include "dev/net/etherobject.hh"
 #include "dev/pci/device.hh"
 #include "params/EtherDevBase.hh"
 #include "params/EtherDevice.hh"
@@ -45,7 +44,7 @@
 
 class EtherInt;
 
-class EtherDevice : public PciDevice, public EtherObject
+class EtherDevice : public PciDevice
 {
   public:
     typedef EtherDeviceParams Params;

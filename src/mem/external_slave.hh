@@ -67,18 +67,18 @@ class ExternalSlave : public MemObject
 {
   public:
     /** Derive from this class to create an external port interface */
-    class Port : public SlavePort
+    class ExternalPort : public SlavePort
     {
       protected:
         ExternalSlave &owner;
 
       public:
-        Port(const std::string &name_,
+        ExternalPort(const std::string &name_,
             ExternalSlave &owner_) :
             SlavePort(name_, &owner_), owner(owner_)
         { }
 
-        ~Port() { }
+        ~ExternalPort() { }
 
         /** Any or all of recv... can be overloaded to provide the port's
          *  functionality */
@@ -95,14 +95,14 @@ class ExternalSlave : public MemObject
       public:
         /** Create or find an external port which can be bound.  Returns
          *  NULL on failure */
-        virtual Port *getExternalPort(
+        virtual ExternalPort *getExternalPort(
             const std::string &name, ExternalSlave &owner,
             const std::string &port_data) = 0;
     };
 
   protected:
     /** The peer port for the gem5 port "port" */
-    Port *externalPort;
+    ExternalPort *externalPort;
 
     /** Name of the bound port.  This will be name() + ".port" */
     std::string portName;
@@ -126,9 +126,9 @@ class ExternalSlave : public MemObject
   public:
     ExternalSlave(ExternalSlaveParams *params);
 
-    /** SlavePort interface.  Responds only to port "port" */
-    BaseSlavePort &getSlavePort(const std::string &if_name,
-        PortID idx = InvalidPortID);
+    /** Port interface.  Responds only to port "port" */
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     /** Register a handler which can provide ports with port_type ==
      *  handler_name */

@@ -262,13 +262,13 @@ DmaPort::sendDma()
         panic("Unknown memory mode.");
 }
 
-BaseMasterPort &
-DmaDevice::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+DmaDevice::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "dma") {
         return dmaPort;
     }
-    return PioDevice::getMasterPort(if_name, idx);
+    return PioDevice::getPort(if_name, idx);
 }
 
 

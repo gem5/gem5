@@ -78,15 +78,15 @@ RubyDirectedTester::init()
     generator->setDirectedTester(this);
 }
 
-BaseMasterPort &
-RubyDirectedTester::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+RubyDirectedTester::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "cpuPort") {
         // pass it along to our super class
-        return MemObject::getMasterPort(if_name, idx);
+        return MemObject::getPort(if_name, idx);
     } else {
         if (idx >= static_cast<int>(ports.size())) {
-            panic("RubyDirectedTester::getMasterPort: unknown index %d\n", idx);
+            panic("RubyDirectedTester::getPort: unknown index %d\n", idx);
         }
 
         return *ports[idx];

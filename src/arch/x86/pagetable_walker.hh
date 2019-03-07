@@ -160,8 +160,8 @@ namespace X86ISA
                 const RequestPtr &req, BaseTLB::Mode mode);
         Fault startFunctional(ThreadContext * _tc, Addr &addr,
                 unsigned &logBytes, BaseTLB::Mode mode);
-        BaseMasterPort &getMasterPort(const std::string &if_name,
-                                      PortID idx = InvalidPortID);
+        Port &getPort(const std::string &if_name,
+                      PortID idx=InvalidPortID) override;
 
       protected:
         // The TLB we're supposed to load.

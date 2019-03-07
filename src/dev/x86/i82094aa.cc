@@ -70,12 +70,12 @@ X86ISA::I82094AA::init()
     IntDevice::init();
 }
 
-BaseMasterPort &
-X86ISA::I82094AA::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+X86ISA::I82094AA::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "int_master")
         return intMasterPort;
-    return BasicPioDevice::getMasterPort(if_name, idx);
+    return BasicPioDevice::getPort(if_name, idx);
 }
 
 AddrRangeList

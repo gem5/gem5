@@ -436,8 +436,8 @@ class LdsState: public MemObject
         return range;
     }
 
-    virtual BaseSlavePort &
-    getSlavePort(const std::string& if_name, PortID idx)
+    Port &
+    getPort(const std::string &if_name, PortID idx)
     {
         if (if_name == "cuPort") {
             // TODO need to set name dynamically at this point?

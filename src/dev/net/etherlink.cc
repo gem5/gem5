@@ -88,20 +88,14 @@ EtherLink::~EtherLink()
     delete interface[1];
 }
 
-EtherInt*
-EtherLink::getEthPort(const std::string &if_name, int idx)
+Port &
+EtherLink::getPort(const std::string &if_name, PortID idx)
 {
-    Interface *i;
     if (if_name == "int0")
-        i = interface[0];
+        return *interface[0];
     else if (if_name == "int1")
-        i = interface[1];
-    else
-        return NULL;
-    if (i->getPeer())
-        panic("interface already connected to\n");
-
-    return i;
+        return *interface[1];
+    return SimObject::getPort(if_name, idx);
 }
 
 

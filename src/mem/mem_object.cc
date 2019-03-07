@@ -47,15 +47,3 @@ MemObject::MemObject(const Params *params)
     : ClockedObject(params)
 {
 }
-
-BaseMasterPort&
-MemObject::getMasterPort(const std::string& if_name, PortID idx)
-{
-    fatal("%s does not have any master port named %s\n", name(), if_name);
-}
-
-BaseSlavePort&
-MemObject::getSlavePort(const std::string& if_name, PortID idx)
-{
-    fatal("%s does not have any slave port named %s\n", name(), if_name);
-}

@@ -159,15 +159,12 @@ EtherTapBase::stopPolling()
 }
 
 
-EtherInt*
-EtherTapBase::getEthPort(const std::string &if_name, int idx)
+Port &
+EtherTapBase::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "tap") {
-        if (interface->getPeer())
-            panic("Interface already connected to\n");
-        return interface;
-    }
-    return NULL;
+    if (if_name == "tap")
+        return *interface;
+    return SimObject::getPort(if_name, idx);
 }
 
 bool

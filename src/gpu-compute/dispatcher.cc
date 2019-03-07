@@ -251,14 +251,14 @@ GpuDispatcher::write(PacketPtr pkt)
 }
 
 
-BaseMasterPort&
-GpuDispatcher::getMasterPort(const std::string &if_name, PortID idx)
+Port &
+GpuDispatcher::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name == "translation_port") {
         return *tlbPort;
     }
 
-    return DmaDevice::getMasterPort(if_name, idx);
+    return DmaDevice::getPort(if_name, idx);
 }
 
 void

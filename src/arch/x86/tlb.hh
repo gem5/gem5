@@ -156,16 +156,16 @@ namespace X86ISA
         void unserialize(CheckpointIn &cp) override;
 
         /**
-         * Get the table walker master port. This is used for
+         * Get the table walker port. This is used for
          * migrating port connections during a CPU takeOverFrom()
          * call. For architectures that do not have a table walker,
          * NULL is returned, hence the use of a pointer rather than a
          * reference. For X86 this method will always return a valid
          * port pointer.
          *
-         * @return A pointer to the walker master port
+         * @return A pointer to the walker port
          */
-        BaseMasterPort *getTableWalkerMasterPort() override;
+        Port *getTableWalkerPort() override;
     };
 }
 

@@ -889,8 +889,8 @@ class TableWalker : public MemObject
     DrainState drain() override;
     void drainResume() override;
 
-    BaseMasterPort& getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     void regStats() override;
 

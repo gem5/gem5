@@ -102,8 +102,8 @@ class I82094AA : public BasicPioDevice, public IntDevice
     void writeReg(uint8_t offset, uint32_t value);
     uint32_t readReg(uint8_t offset);
 
-    BaseMasterPort &getMasterPort(const std::string &if_name,
-                                  PortID idx = InvalidPortID) override;
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
 
     Tick recvResponse(PacketPtr pkt) override;
 
