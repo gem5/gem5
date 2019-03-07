@@ -142,6 +142,41 @@ class TaggedPrefetcher(QueuedPrefetcher):
 
     degree = Param.Int(2, "Number of prefetches to generate")
 
+class IndirectMemoryPrefetcher(QueuedPrefetcher):
+    type = 'IndirectMemoryPrefetcher'
+    cxx_class = 'IndirectMemoryPrefetcher'
+    cxx_header = "mem/cache/prefetch/indirect_memory.hh"
+    pt_table_entries = Param.MemorySize("16",
+        "Number of entries of the Prefetch Table")
+    pt_table_assoc = Param.Unsigned(16, "Associativity of the Prefetch Table")
+    pt_table_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1, assoc = Parent.pt_table_assoc,
+        size = Parent.pt_table_entries),
+        "Indexing policy of the pattern table")
+    pt_table_replacement_policy = Param.BaseReplacementPolicy(LRURP(),
+        "Replacement policy of the pattern table")
+    max_prefetch_distance = Param.Unsigned(16, "Maximum prefetch distance")
+    max_indirect_counter_value = Param.Unsigned(8,
+        "Maximum value of the indirect counter")
+    ipd_table_entries = Param.MemorySize("4",
+        "Number of entries of the Indirect Pattern Detector")
+    ipd_table_assoc = Param.Unsigned(4,
+        "Associativity of the Indirect Pattern Detector")
+    ipd_table_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1, assoc = Parent.ipd_table_assoc,
+        size = Parent.ipd_table_entries),
+        "Indexing policy of the Indirect Pattern Detector")
+    ipd_table_replacement_policy = Param.BaseReplacementPolicy(LRURP(),
+        "Replacement policy of the Indirect Pattern Detector")
+    shift_values = VectorParam.Int([2, 3, 4, -3], "Shift values to evaluate")
+    addr_array_len = Param.Unsigned(4, "Number of misses tracked")
+    prefetch_threshold = Param.Unsigned(2,
+        "Counter threshold to start the indirect prefetching")
+    stream_counter_threshold = Param.Unsigned(4,
+        "Counter threshold to enable the stream prefetcher")
+    streaming_distance = Param.Unsigned(4,
+        "Number of prefetches to generate when using the stream prefetcher")
+
 class SignaturePathPrefetcher(QueuedPrefetcher):
     type = 'SignaturePathPrefetcher'
     cxx_class = 'SignaturePathPrefetcher'
