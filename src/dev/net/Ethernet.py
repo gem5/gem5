@@ -127,6 +127,7 @@ class EtherDevice(PciDevice):
     type = 'EtherDevice'
     abstract = True
     cxx_header = "dev/net/etherdevice.hh"
+    cxx_extra_bases = [ "EtherObject" ]
     interface = MasterPort("Ethernet Interface")
 
 class IGbE(EtherDevice):

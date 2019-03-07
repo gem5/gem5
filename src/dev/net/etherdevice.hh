@@ -37,6 +37,7 @@
 #define __DEV_NET_ETHERDEVICE_HH__
 
 #include "base/statistics.hh"
+#include "dev/net/etherobject.hh"
 #include "dev/pci/device.hh"
 #include "params/EtherDevBase.hh"
 #include "params/EtherDevice.hh"
@@ -44,11 +45,7 @@
 
 class EtherInt;
 
-/**
- * The base EtherObject class, allows for an accesor function to a
- * simobj that returns the Port.
- */
-class EtherDevice : public PciDevice
+class EtherDevice : public PciDevice, public EtherObject
 {
   public:
     typedef EtherDeviceParams Params;
@@ -61,10 +58,6 @@ class EtherDevice : public PciDevice
     {
         return dynamic_cast<const Params *>(_params);
     }
-
-  public:
-    /** Additional function to return the Port of a memory object. */
-    virtual EtherInt *getEthPort(const std::string &if_name, int idx = -1) = 0;
 
   public:
     void regStats();
