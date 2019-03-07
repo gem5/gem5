@@ -87,6 +87,7 @@ class BaseProxy(object):
     __rmul__ = __mul__
 
     def _mulcheck(self, result, base):
+        from . import params
         for multiplier in self._multipliers:
             if isproxy(multiplier):
                 multiplier = multiplier.unproxy(base)
@@ -96,7 +97,7 @@ class BaseProxy(object):
                     raise TypeError(
                         "Proxy multiplier must be a numerical param")
                 multiplier = multiplier.getValue()
-            result *= multiplier
+            result = result * multiplier
         return result
 
     def unproxy(self, base):
