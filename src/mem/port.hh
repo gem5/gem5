@@ -52,52 +52,9 @@
 
 #include "base/addr_range.hh"
 #include "mem/packet.hh"
+#include "sim/port.hh"
 
 class MemObject;
-
-/**
- * Ports are used to interface memory objects to each other. A port is
- * either a master or a slave and the connected peer is always of the
- * opposite role. Each port has a name, an owner, and an identifier.
- */
-class Port
-{
-
-  private:
-
-    /** Descriptive name (for DPRINTF output) */
-    std::string portName;
-
-  protected:
-
-    /**
-     * A numeric identifier to distinguish ports in a vector, and set
-     * to InvalidPortID in case this port is not part of a vector.
-     */
-    const PortID id;
-
-    /**
-     * Abstract base class for ports
-     *
-     * @param _name Port name including the owners name
-     * @param _id A port identifier for vector ports
-     */
-    Port(const std::string& _name, PortID _id);
-
-    /**
-     * Virtual destructor due to inheritance.
-     */
-    virtual ~Port();
-
-  public:
-
-    /** Return port name (for DPRINTF). */
-    const std::string name() const { return portName; }
-
-    /** Get the port id. */
-    PortID getId() const { return id; }
-
-};
 
 /** Forward declaration */
 class BaseSlavePort;

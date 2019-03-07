@@ -51,15 +51,6 @@
 #include "base/trace.hh"
 #include "mem/mem_object.hh"
 
-Port::Port(const std::string &_name, PortID _id)
-    : portName(_name), id(_id)
-{
-}
-
-Port::~Port()
-{
-}
-
 BaseMasterPort::BaseMasterPort(const std::string &name, PortID _id)
     : Port(name, _id), _baseSlavePort(NULL)
 {
