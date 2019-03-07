@@ -50,7 +50,9 @@
 #include "dev/net/etherint.hh"
 #include "dev/net/etherobject.hh"
 #include "mem/mem_object.hh"
+#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/ruby/system/Sequencer.hh"
 #include "sim/full_system.hh"
 
 namespace py = pybind11;
@@ -84,8 +86,11 @@ connectPorts(SimObject *o1, const std::string &name1, int i1,
     MessageBuffer *mb1, *mb2;
     mb1 = dynamic_cast<MessageBuffer*>(o1);
     mb2 = dynamic_cast<MessageBuffer*>(o2);
+    Network *nw1, *nw2;
+    nw1 = dynamic_cast<Network*>(o1);
+    nw2 = dynamic_cast<Network*>(o2);
 
-    if (mb1 || mb2) {
+    if ((mb1 || nw1) && (mb2 || nw2)) {
         // No need to connect anything here currently. MessageBuffer
         // connections in Python only serve to print the connections in
         // the config output.
