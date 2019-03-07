@@ -1943,8 +1943,6 @@ class PortRef(object):
 
     # Call C++ to create corresponding port connection between C++ objects
     def ccConnect(self):
-        from _m5.pyobject import connectPorts
-
         if self.ccConnected: # already done this
             return
 
@@ -1952,27 +1950,11 @@ class PortRef(object):
         if not self.peer: # nothing to connect to
             return
 
-        # check that we connect a master to a slave
-        if self.role == peer.role:
-            raise TypeError(
-                "cannot connect '%s' and '%s' due to identical role '%s'" % \
-                (peer, self, self.role))
+        port = self.simobj.getPort(self.name, self.index)
+        peer_port = peer.simobj.getPort(peer.name, peer.index)
+        port.bind(peer_port)
 
-        if self.role == 'SLAVE':
-            # do nothing and let the master take care of it
-            return
-
-        try:
-            # self is always the master and peer the slave
-            connectPorts(self.simobj.getCCObject(), self.name, self.index,
-                         peer.simobj.getCCObject(), peer.name, peer.index)
-        except:
-            print("Error connecting port %s.%s to %s.%s" %
-                  (self.simobj.path(), self.name,
-                   peer.simobj.path(), peer.name))
-            raise
         self.ccConnected = True
-        peer.ccConnected = True
 
 # A reference to an individual element of a VectorPort... much like a
 # PortRef, but has an index.
