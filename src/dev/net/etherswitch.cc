@@ -43,7 +43,7 @@
 using namespace std;
 
 EtherSwitch::EtherSwitch(const Params *p)
-    : EtherObject(p), ttl(p->time_to_live)
+    : SimObject(p), ttl(p->time_to_live)
 {
     for (int i = 0; i < p->port_interface_connection_count; ++i) {
         std::string interfaceName = csprintf("%s.interface%d", name(), i);

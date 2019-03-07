@@ -51,7 +51,7 @@
 using namespace std;
 
 EtherBus::EtherBus(const Params *p)
-    : EtherObject(p), ticksPerByte(p->speed), loopback(p->loopback),
+    : SimObject(p), ticksPerByte(p->speed), loopback(p->loopback),
       event([this]{ txDone(); }, "ethernet bus completion"),
       sender(0), dump(p->dump)
 {

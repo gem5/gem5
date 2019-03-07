@@ -62,7 +62,7 @@ class Checkpoint;
 /*
  * Model for a fixed bandwidth full duplex ethernet link
  */
-class EtherLink : public EtherObject
+class EtherLink : public EtherObject, public SimObject
 {
   protected:
     class Interface;

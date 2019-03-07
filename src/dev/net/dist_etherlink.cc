@@ -72,7 +72,7 @@
 using namespace std;
 
 DistEtherLink::DistEtherLink(const Params *p)
-    : EtherObject(p), linkDelay(p->delay)
+    : SimObject(p), linkDelay(p->delay)
 {
     DPRINTF(DistEthernet,"DistEtherLink::DistEtherLink() "
             "link delay:%llu ticksPerByte:%f\n", p->delay, p->speed);

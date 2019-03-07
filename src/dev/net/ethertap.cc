@@ -92,7 +92,7 @@ class TapEvent : public PollEvent
 };
 
 EtherTapBase::EtherTapBase(const Params *p)
-    : EtherObject(p), buflen(p->bufsz), dump(p->dump), event(NULL),
+    : SimObject(p), buflen(p->bufsz), dump(p->dump), event(NULL),
       interface(NULL),
       txEvent([this]{ retransmit(); }, "EtherTapBase retransmit")
 {

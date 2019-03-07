@@ -47,8 +47,9 @@
 #include "dev/net/pktfifo.hh"
 #include "params/EtherSwitch.hh"
 #include "sim/eventq.hh"
+#include "sim/sim_object.hh"
 
-class EtherSwitch : public EtherObject
+class EtherSwitch : public SimObject, public EtherObject
 {
   public:
     typedef EtherSwitchParams Params;

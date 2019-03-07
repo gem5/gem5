@@ -43,7 +43,7 @@
 
 class EtherDump;
 class EtherInt;
-class EtherBus : public EtherObject
+class EtherBus : public SimObject, public EtherObject
 {
   protected:
     typedef std::list<EtherInt *> devlist_t;
@@ -72,7 +72,7 @@ class EtherBus : public EtherObject
     void reg(EtherInt *dev);
     bool busy() const { return (bool)packet; }
     bool send(EtherInt *sender, EthPacketPtr &packet);
-    virtual EtherInt *getEthPort(const std::string &if_name, int idx);
+    EtherInt *getEthPort(const std::string &if_name, int idx) override;
 };
 
 #endif // __DEV_NET_ETHERBUS_HH__

@@ -56,7 +56,7 @@
 class TapEvent;
 class EtherTapInt;
 
-class EtherTapBase : public EtherObject
+class EtherTapBase : public SimObject, public EtherObject
 {
   public:
     typedef EtherTapBaseParams Params;

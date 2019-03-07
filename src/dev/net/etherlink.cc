@@ -67,7 +67,7 @@
 using namespace std;
 
 EtherLink::EtherLink(const Params *p)
-    : EtherObject(p)
+    : SimObject(p)
 {
     link[0] = new Link(name() + ".link0", this, 0, p->speed,
                        p->delay, p->delay_var, p->dump);
