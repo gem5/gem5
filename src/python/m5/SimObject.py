@@ -882,6 +882,7 @@ def cxxMethod(*args, **kwargs):
         name = func.__name__
         override = kwargs.get("override", False)
         cxx_name = kwargs.get("cxx_name", name)
+        return_value_policy = kwargs.get("return_value_policy", None)
 
         args, varargs, keywords, defaults = inspect.getargspec(func)
         if varargs or keywords:
@@ -906,7 +907,8 @@ def cxxMethod(*args, **kwargs):
             return func(self, *args, **kwargs)
 
         f = py_call if override else cxx_call
-        f.__pybind = PyBindMethod(name, cxx_name=cxx_name, args=args)
+        f.__pybind = PyBindMethod(name, cxx_name=cxx_name, args=args,
+                                  return_value_policy=return_value_policy)
 
         return f
 
