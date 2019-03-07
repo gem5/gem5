@@ -51,8 +51,8 @@
 #include "base/trace.hh"
 #include "mem/mem_object.hh"
 
-Port::Port(const std::string &_name, MemObject& _owner, PortID _id)
-    : portName(_name), id(_id), owner(_owner)
+Port::Port(const std::string &_name, PortID _id)
+    : portName(_name), id(_id)
 {
 }
 
@@ -60,9 +60,8 @@ Port::~Port()
 {
 }
 
-BaseMasterPort::BaseMasterPort(const std::string& name, MemObject* owner,
-                               PortID _id)
-    : Port(name, *owner, _id), _baseSlavePort(NULL)
+BaseMasterPort::BaseMasterPort(const std::string &name, PortID _id)
+    : Port(name, _id), _baseSlavePort(NULL)
 {
 }
 
@@ -86,9 +85,8 @@ BaseMasterPort::isConnected() const
     return _baseSlavePort != NULL;
 }
 
-BaseSlavePort::BaseSlavePort(const std::string& name, MemObject* owner,
-                             PortID _id)
-    : Port(name, *owner, _id), _baseMasterPort(NULL)
+BaseSlavePort::BaseSlavePort(const std::string &name, PortID _id)
+    : Port(name, _id), _baseMasterPort(NULL)
 {
 }
 
@@ -115,8 +113,8 @@ BaseSlavePort::isConnected() const
 /**
  * Master port
  */
-MasterPort::MasterPort(const std::string& name, MemObject* owner, PortID _id)
-    : BaseMasterPort(name, owner, _id), _slavePort(NULL)
+MasterPort::MasterPort(const std::string& name, MemObject* _owner, PortID _id)
+    : BaseMasterPort(name, _id), _slavePort(NULL), owner(*_owner)
 {
 }
 
@@ -219,8 +217,8 @@ MasterPort::printAddr(Addr a)
 /**
  * Slave port
  */
-SlavePort::SlavePort(const std::string& name, MemObject* owner, PortID id)
-    : BaseSlavePort(name, owner, id), _masterPort(NULL)
+SlavePort::SlavePort(const std::string& name, MemObject* _owner, PortID id)
+    : BaseSlavePort(name, id), _masterPort(NULL), owner(*_owner)
 {
 }
 

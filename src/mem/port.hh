@@ -76,17 +76,13 @@ class Port
      */
     const PortID id;
 
-    /** A reference to the MemObject that owns this port. */
-    MemObject& owner;
-
     /**
      * Abstract base class for ports
      *
      * @param _name Port name including the owners name
-     * @param _owner The MemObject that is the structural owner of this port
      * @param _id A port identifier for vector ports
      */
-    Port(const std::string& _name, MemObject& _owner, PortID _id);
+    Port(const std::string& _name, PortID _id);
 
     /**
      * Virtual destructor due to inheritance.
@@ -119,8 +115,7 @@ class BaseMasterPort : public Port
 
     BaseSlavePort* _baseSlavePort;
 
-    BaseMasterPort(const std::string& name, MemObject* owner,
-                   PortID id = InvalidPortID);
+    BaseMasterPort(const std::string& name, PortID id=InvalidPortID);
     virtual ~BaseMasterPort();
 
   public:
@@ -143,8 +138,7 @@ class BaseSlavePort : public Port
 
     BaseMasterPort* _baseMasterPort;
 
-    BaseSlavePort(const std::string& name, MemObject* owner,
-                  PortID id = InvalidPortID);
+    BaseSlavePort(const std::string& name, PortID id=InvalidPortID);
     virtual ~BaseSlavePort();
 
   public:
@@ -173,10 +167,14 @@ class MasterPort : public BaseMasterPort
 
     SlavePort* _slavePort;
 
+  protected:
+
+    MemObject& owner;
+
   public:
 
-    MasterPort(const std::string& name, MemObject* owner,
-               PortID id = InvalidPortID);
+    MasterPort(const std::string& name, MemObject* _owner,
+               PortID id=InvalidPortID);
     virtual ~MasterPort();
 
     /**
@@ -350,10 +348,14 @@ class SlavePort : public BaseSlavePort
 
     MasterPort* _masterPort;
 
+  protected:
+
+    MemObject& owner;
+
   public:
 
-    SlavePort(const std::string& name, MemObject* owner,
-              PortID id = InvalidPortID);
+    SlavePort(const std::string& name, MemObject* _owner,
+              PortID id=InvalidPortID);
     virtual ~SlavePort();
 
     /**
