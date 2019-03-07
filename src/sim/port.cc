@@ -49,5 +49,7 @@
 
 #include "sim/port.hh"
 
-Port::Port(const std::string& _name, PortID _id) : portName(_name), id(_id) {}
+Port::Port(const std::string& _name, PortID _id) :
+    portName(_name), id(_id), _connected(false)
+{}
 Port::~Port() {}

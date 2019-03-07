@@ -34,6 +34,25 @@
 #include "sim/sim_object.hh"
 
 void
+EtherInt::bind(Port &peer)
+{
+    EtherInt *p = dynamic_cast<EtherInt *>(&peer);
+    if (!p) {
+        fatal("Attempt to bind port %s to non-ethernet port %s.",
+                name(), peer.name());
+    }
+    setPeer(p);
+    _connected = true;
+}
+
+void
+EtherInt::unbind()
+{
+    peer = nullptr;
+    _connected = false;
+}
+
+void
 EtherInt::setPeer(EtherInt *p)
 {
     if (peer && peer != p)

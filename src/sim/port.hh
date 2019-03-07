@@ -63,7 +63,7 @@ class Port
   private:
 
     /** Descriptive name (for DPRINTF output) */
-    std::string portName;
+    const std::string portName;
 
   protected:
 
@@ -72,6 +72,10 @@ class Port
      * to InvalidPortID in case this port is not part of a vector.
      */
     const PortID id;
+    /**
+     * Whether this port is currently connected to a peer port.
+     */
+    bool _connected;
 
     /**
      * Abstract base class for ports
@@ -94,6 +98,14 @@ class Port
     /** Get the port id. */
     PortID getId() const { return id; }
 
+    /** Attach to a peer port. */
+    virtual void bind(Port &peer) = 0;
+
+    /** Dettach from a peer port. */
+    virtual void unbind() = 0;
+
+    /** Is this port currently connected to a peer? */
+    bool isConnected() const { return _connected; }
 };
 
 #endif //__SIM_PORT_HH__

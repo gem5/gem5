@@ -60,6 +60,9 @@ class EtherInt : public Port
     /** Return port name (for DPRINTF). */
     const std::string &name() const { return portName; }
 
+    void bind(Port &peer) override;
+    void unbind() override;
+
     void setPeer(EtherInt *p);
     EtherInt* getPeer() { return peer; }
 

@@ -77,10 +77,7 @@ class BaseMasterPort : public Port
 
   public:
 
-    virtual void bind(BaseSlavePort& slave_port) = 0;
-    virtual void unbind() = 0;
     BaseSlavePort& getSlavePort() const;
-    bool isConnected() const;
 
 };
 
@@ -101,7 +98,6 @@ class BaseSlavePort : public Port
   public:
 
     BaseMasterPort& getMasterPort() const;
-    bool isConnected() const;
 
 };
 
@@ -138,12 +134,12 @@ class MasterPort : public BaseMasterPort
      * Bind this master port to a slave port. This also does the
      * mirror action and binds the slave port to the master port.
      */
-    void bind(BaseSlavePort& slave_port);
+    void bind(Port &peer) override;
 
     /**
      * Unbind this master port and the associated slave port.
      */
-    void unbind();
+    void unbind() override;
 
     /**
      * Send an atomic request packet, where the data is moved and the
@@ -394,19 +390,25 @@ class SlavePort : public BaseSlavePort
      */
     virtual AddrRangeList getAddrRanges() const = 0;
 
+    /**
+     * We let the master port do the work, so these don't do anything.
+     */
+    void unbind() override {}
+    void bind(Port &peer) override {}
+
   protected:
 
     /**
      * Called by the master port to unbind. Should never be called
      * directly.
      */
-    void unbind();
+    void slaveUnbind();
 
     /**
      * Called by the master port to bind. Should never be called
      * directly.
      */
-    void bind(MasterPort& master_port);
+    void slaveBind(MasterPort& master_port);
 
     /**
      * Receive an atomic request packet from the master port.
