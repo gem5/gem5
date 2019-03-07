@@ -39,21 +39,22 @@
 #include <string>
 
 #include "dev/net/etherpkt.hh"
+#include "mem/port.hh"
 
 /*
  * Class representing the actual interface between two ethernet
  * components.  These components are intended to attach to another
  * ethernet interface on one side and whatever device on the other.
  */
-class EtherInt
+class EtherInt : public Port
 {
   protected:
     mutable std::string portName;
     EtherInt *peer;
 
   public:
-    EtherInt(const std::string &name)
-        : portName(name), peer(NULL) {}
+    EtherInt(const std::string &name, int idx=InvalidPortID)
+        : Port(name, idx), portName(name), peer(NULL) {}
     virtual ~EtherInt() {}
 
     /** Return port name (for DPRINTF). */
