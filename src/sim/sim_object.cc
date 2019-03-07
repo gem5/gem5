@@ -133,6 +133,12 @@ SimObject::getProbeManager()
     return probeManager;
 }
 
+Port &
+SimObject::getPort(const std::string &if_name, PortID idx)
+{
+    fatal("%s does not have any port named %s\n", name(), if_name);
+}
+
 //
 // static function: serialize all SimObjects.
 //

@@ -1642,6 +1642,10 @@ class SimObject(object):
     def getValue(self):
         return self.getCCObject()
 
+    @cxxMethod(return_value_policy="reference")
+    def getPort(self, if_name, idx):
+        pass
+
     # Create C++ port connections corresponding to the connections in
     # _port_refs
     def connectPorts(self):

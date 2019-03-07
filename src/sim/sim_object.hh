@@ -56,6 +56,7 @@
 #include "sim/drain.hh"
 #include "sim/eventq.hh"
 #include "sim/eventq_impl.hh"
+#include "sim/port.hh"
 #include "sim/serialize.hh"
 
 class EventManager;
@@ -168,6 +169,18 @@ class SimObject : public EventManager, public Serializable, public Drainable
      * Get the probe manager for this object.
      */
     ProbeManager *getProbeManager();
+
+    /**
+     * Get a port with a given name and index. This is used at binding time
+     * and returns a reference to a protocol-agnostic port.
+     *
+     * @param if_name Port name
+     * @param idx Index in the case of a VectorPort
+     *
+     * @return A reference to the given port
+     */
+    virtual Port &getPort(const std::string &if_name,
+                          PortID idx=InvalidPortID);
 
     /**
      * startup() is the final initialization call before simulation.
