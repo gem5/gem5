@@ -117,7 +117,7 @@ class GPUDynInst : public GPUExecContext
     GPUDynInst(ComputeUnit *_cu, Wavefront *_wf, GPUStaticInst *static_inst,
                uint64_t instSeqNum);
     ~GPUDynInst();
-    void initOperandInfo(GPUDynInstPtr &gpu_dyn_inst);
+    void initOperandInfo();
     void execute(GPUDynInstPtr gpuDynInst);
 
     const std::vector<RegisterOperandInfo>&
@@ -159,7 +159,7 @@ class GPUDynInst : public GPUExecContext
     int getNumOperands();
     bool isVectorRegister(int operandIdx);
     bool isScalarRegister(int operandIdx);
-    int getRegisterIndex(int operandIdx, GPUDynInstPtr gpuDynInst);
+    int getRegisterIndex(int operandIdx);
     int getOperandSize(int operandIdx);
     bool isDstOperand(int operandIdx);
     bool isSrcOperand(int operandIdx);

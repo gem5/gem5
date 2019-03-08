@@ -70,7 +70,7 @@ namespace Gcn3ISA
         int getOperandSize(int opIdx) override { return 0; }
 
         int
-        getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override
+        getRegisterIndex(int opIdx, int num_scalar_regs) override
         {
             return 0;
         }

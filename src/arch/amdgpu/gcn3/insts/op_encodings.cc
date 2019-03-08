@@ -128,21 +128,18 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_SOP2::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_SOP2::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
 
         switch (opIdx) {
           case 0:
-            return opSelectorToRegIdx(instData.SSRC0,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SSRC0, num_scalar_regs);
           case 1:
-            return opSelectorToRegIdx(instData.SSRC1,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SSRC1, num_scalar_regs);
           case 2:
-            return opSelectorToRegIdx(instData.SDST,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
           default:
             fatal("Operand at idx %i does not exist\n", opIdx);
             return -1;
@@ -244,7 +241,7 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_SOPK::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_SOPK::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -253,8 +250,7 @@ namespace Gcn3ISA
           case 0:
             return  -1;
           case 1:
-            return opSelectorToRegIdx(instData.SDST,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
           default:
             fatal("Operand at idx %i does not exist\n", opIdx);
             return -1;
@@ -349,7 +345,7 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_SOP1::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_SOP1::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -359,14 +355,11 @@ namespace Gcn3ISA
             if (instData.OP == 0x1C) {
                 // Special case for s_getpc, which has no source reg.
                 // Instead, it implicitly reads the PC.
-                return opSelectorToRegIdx(instData.SDST,
-                        gpuDynInst->wavefront()->reservedScalarRegs);
+                return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
             }
-            return opSelectorToRegIdx(instData.SSRC0,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SSRC0, num_scalar_regs);
           case 1:
-            return opSelectorToRegIdx(instData.SDST,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
           default:
             fatal("Operand at idx %i does not exist\n", opIdx);
             return -1;
@@ -467,18 +460,16 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_SOPC::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_SOPC::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
 
         switch (opIdx) {
           case 0:
-            return opSelectorToRegIdx(instData.SSRC0,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SSRC0, num_scalar_regs);
           case 1:
-            return opSelectorToRegIdx(instData.SSRC1,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SSRC1, num_scalar_regs);
           default:
             fatal("Operand at idx %i does not exist\n", opIdx);
             return -1;
@@ -583,7 +574,7 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_SOPP::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_SOPP::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -691,7 +682,7 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_SMEM::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_SMEM::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -700,8 +691,7 @@ namespace Gcn3ISA
           case 0:
             // SBASE has an implied LSB of 0, so we need
             // to shift by one to get the actual value
-            return opSelectorToRegIdx(instData.SBASE << 1,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SBASE << 1, num_scalar_regs);
           case 1:
             if (instData.IMM) {
               // operand is an immediate value, not a register
@@ -710,8 +700,7 @@ namespace Gcn3ISA
               return extData.OFFSET;
             }
           case 2:
-            return opSelectorToRegIdx(instData.SDATA,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SDATA, num_scalar_regs);
           default:
             fatal("Operand at idx %i does not exist\n", opIdx);
             return -1;
@@ -901,21 +890,19 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_VOP2::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_VOP2::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
 
         switch (opIdx) {
           case 0:
-            return opSelectorToRegIdx(instData.SRC0,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SRC0, num_scalar_regs);
           case 1:
             return instData.VSRC1;
           case 2:
             if (readsVCC()) {
-                return opSelectorToRegIdx(REG_VCC_LO,
-                        gpuDynInst->wavefront()->reservedScalarRegs);
+                return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
             } else {
                 return instData.VDST;
             }
@@ -924,13 +911,11 @@ namespace Gcn3ISA
             if (readsVCC()) {
                 return instData.VDST;
             } else {
-                return opSelectorToRegIdx(REG_VCC_LO,
-                        gpuDynInst->wavefront()->reservedScalarRegs);
+                return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
             }
           case 4:
             assert(writesVCC() && readsVCC());
-            return opSelectorToRegIdx(REG_VCC_LO,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
           default:
             fatal("Operand at idx %i does not exist\n", opIdx);
             return -1;
@@ -1044,15 +1029,14 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_VOP1::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_VOP1::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
 
         switch (opIdx) {
           case 0:
-            return opSelectorToRegIdx(instData.SRC0,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SRC0, num_scalar_regs);
           case 1:
             return instData.VDST;
           default:
@@ -1066,6 +1050,7 @@ namespace Gcn3ISA
     Inst_VOPC::Inst_VOPC(InFmt_VOPC *iFmt, const std::string &opcode)
         : GCN3GPUStaticInst(opcode)
     {
+        setFlag(WritesVCC);
         // copy first instruction DWORD
         instData = iFmt[0];
         if (hasSecondDword(iFmt)) {
@@ -1167,21 +1152,19 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_VOPC::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_VOPC::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
 
         switch (opIdx) {
           case 0:
-            return opSelectorToRegIdx(instData.SRC0,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SRC0, num_scalar_regs);
           case 1:
             return instData.VSRC1;
           case 2:
             // VCC
-            return opSelectorToRegIdx(REG_VCC_LO,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
           default:
             fatal("Operand at idx %i does not exist\n", opIdx);
             return -1;
@@ -1437,7 +1420,7 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_VOP3::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_VOP3::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -1445,20 +1428,17 @@ namespace Gcn3ISA
         switch (opIdx) {
           case 0:
             // SRC0
-            return opSelectorToRegIdx(extData.SRC0,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(extData.SRC0, num_scalar_regs);
           case 1:
             if (numSrcRegOperands() > 1) {
                 // if we have more than 1 source operand then
                 // op index 1 corresponds to SRC1
-                return opSelectorToRegIdx(extData.SRC1,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+                return opSelectorToRegIdx(extData.SRC1, num_scalar_regs);
             } else {
                 // if we only have 1 source operand, opIdx 1
                 // will be VDST
                 if (sgprDst) {
-                    return opSelectorToRegIdx(instData.VDST,
-                            gpuDynInst->wavefront()->reservedScalarRegs);
+                    return opSelectorToRegIdx(instData.VDST, num_scalar_regs);
                 }
                 return instData.VDST;
             }
@@ -1468,15 +1448,13 @@ namespace Gcn3ISA
                 // op index 2 corresponds to SRC2. SRC2 may be
                 // a scalar or vector register, an inline
                 // constant, or a special HW register
-                return opSelectorToRegIdx(extData.SRC2,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+                return opSelectorToRegIdx(extData.SRC2, num_scalar_regs);
             } else if (numSrcRegOperands() == 2) {
                 // if we only have 2 source operands, opIdx 2
                 // will be VDST, and VDST is always a vector
                 // reg
                 if (sgprDst) {
-                    return opSelectorToRegIdx(instData.VDST,
-                            gpuDynInst->wavefront()->reservedScalarRegs);
+                    return opSelectorToRegIdx(instData.VDST, num_scalar_regs);
                 }
                 return instData.VDST;
             } else {
@@ -1484,31 +1462,27 @@ namespace Gcn3ISA
                 // VDST then it must be a VCC read or write,
                 // and VCC is never stored in a VGPR
                 assert(writesVCC() || readsVCC());
-                return opSelectorToRegIdx(REG_VCC_LO,
-                        gpuDynInst->wavefront()->reservedScalarRegs);
+                return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
             }
           case 3:
             if (numSrcRegOperands() == 3) {
                 // if we have 3 source operands then op
                 // idx 3 will correspond to VDST
                 if (sgprDst) {
-                    return opSelectorToRegIdx(instData.VDST,
-                            gpuDynInst->wavefront()->reservedScalarRegs);
+                    return opSelectorToRegIdx(instData.VDST, num_scalar_regs);
                 }
                 return instData.VDST;
             } else {
                 // if this idx doesn't correspond to VDST
                 // then it must be a VCC read or write
                 assert(writesVCC() || readsVCC());
-                return opSelectorToRegIdx(REG_VCC_LO,
-                        gpuDynInst->wavefront()->reservedScalarRegs);
+                return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
             }
           case 4:
             // if a VOP3 instruction has more than 4 ops
             // it must read from and write to VCC
             assert(writesVCC() || readsVCC());
-            return opSelectorToRegIdx(REG_VCC_LO,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(REG_VCC_LO, num_scalar_regs);
           default:
             fatal("Operand at idx %i does not exist\n", opIdx);
             return -1;
@@ -1731,7 +1705,7 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_VOP3_SDST_ENC::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_VOP3_SDST_ENC::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -1739,14 +1713,12 @@ namespace Gcn3ISA
         switch (opIdx) {
           case 0:
             // SRC0
-            return opSelectorToRegIdx(extData.SRC0,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(extData.SRC0, num_scalar_regs);
           case 1:
             if (numSrcRegOperands() > 1) {
                 // if we have more than 1 source operand then
                 // op index 1 corresponds to SRC1
-                return opSelectorToRegIdx(extData.SRC1,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+                return opSelectorToRegIdx(extData.SRC1, num_scalar_regs);
             } else {
                 // if we only have 1 source operand, opIdx 1
                 // will be VDST
@@ -1756,8 +1728,7 @@ namespace Gcn3ISA
             if (numSrcRegOperands() > 2) {
                 // if we have more than 2 source operand then
                 // op index 2 corresponds to SRC2
-                return opSelectorToRegIdx(extData.SRC2,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+                return opSelectorToRegIdx(extData.SRC2, num_scalar_regs);
             } else if (numSrcRegOperands() == 2) {
                 // if we only have 2 source operands, opIdx 2
                 // will be VDST
@@ -1766,8 +1737,7 @@ namespace Gcn3ISA
                 // if this idx doesn't correspond to SRCX or
                 // VDST then it must be a VCC read or write
                 assert(writesVCC() || readsVCC());
-                return opSelectorToRegIdx(instData.SDST,
-                        gpuDynInst->wavefront()->reservedScalarRegs);
+                return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
             }
           case 3:
             if (numSrcRegOperands() == 3) {
@@ -1778,15 +1748,13 @@ namespace Gcn3ISA
                 // if this idx doesn't correspond to VDST
                 // then it must be a VCC read or write
                 assert(writesVCC() || readsVCC());
-                return opSelectorToRegIdx(instData.SDST,
-                        gpuDynInst->wavefront()->reservedScalarRegs);
+                return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
             }
           case 4:
             // if a VOP3 instruction has more than 4 ops
             // it must read from and write to VCC
             assert(writesVCC() || readsVCC());
-            return opSelectorToRegIdx(instData.SDST,
-                    gpuDynInst->wavefront()->reservedScalarRegs);
+            return opSelectorToRegIdx(instData.SDST, num_scalar_regs);
           default:
             fatal("Operand at idx %i does not exist\n", opIdx);
             return -1;
@@ -1871,7 +1839,7 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_DS::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_DS::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -1993,7 +1961,7 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_MUBUF::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_MUBUF::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -2170,7 +2138,7 @@ namespace Gcn3ISA
     }
 
     int
-    Inst_FLAT::getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst)
+    Inst_FLAT::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());

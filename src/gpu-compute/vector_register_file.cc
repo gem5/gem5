@@ -59,7 +59,7 @@ VectorRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
 {
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isVectorRegister(i) && ii->isSrcOperand(i)) {
-            int vgprIdx = ii->getRegisterIndex(i, ii);
+            int vgprIdx = ii->getRegisterIndex(i);
 
             // determine number of registers
             int nRegs =
@@ -89,7 +89,7 @@ VectorRegisterFile::scheduleWriteOperands(Wavefront *w, GPUDynInstPtr ii)
     // iterate over all register destination operands
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-            int vgprIdx = ii->getRegisterIndex(i, ii);
+            int vgprIdx = ii->getRegisterIndex(i);
             int nRegs = ii->getOperandSize(i) <= 4 ? 1 :
                 ii->getOperandSize(i) / 4;
 
@@ -150,7 +150,7 @@ VectorRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
 
         for (int i = 0; i < ii->getNumOperands(); i++) {
             if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-                int vgprIdx = ii->getRegisterIndex(i, ii);
+                int vgprIdx = ii->getRegisterIndex(i);
                 int nRegs = ii->getOperandSize(i) <= 4 ? 1
                     : ii->getOperandSize(i) / 4;
                 for (int j = 0; j < nRegs; j++) {
@@ -183,7 +183,7 @@ VectorRegisterFile::scheduleWriteOperandsFromLoad(
     assert(ii->isLoad() || ii->isAtomicRet());
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isVectorRegister(i) && ii->isDstOperand(i)) {
-            int vgprIdx = ii->getRegisterIndex(i, ii);
+            int vgprIdx = ii->getRegisterIndex(i);
             int nRegs = ii->getOperandSize(i) <= 4 ? 1 :
                 ii->getOperandSize(i) / 4;
 

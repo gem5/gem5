@@ -53,7 +53,7 @@ ScalarRegisterFile::operandsReady(Wavefront *w, GPUDynInstPtr ii) const
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isScalarRegister(i) && ii->isSrcOperand(i)) {
 
-            int sgprIdx = ii->getRegisterIndex(i, ii);
+            int sgprIdx = ii->getRegisterIndex(i);
             int nRegs = ii->getOperandSize(i) <= 4 ? 1 :
                 ii->getOperandSize(i) / 4;
 
@@ -84,7 +84,7 @@ ScalarRegisterFile::scheduleWriteOperands(Wavefront *w, GPUDynInstPtr ii)
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isScalarRegister(i) && ii->isDstOperand(i)) {
 
-            int sgprIdx = ii->getRegisterIndex(i, ii);
+            int sgprIdx = ii->getRegisterIndex(i);
             int nRegs = ii->getOperandSize(i) <= 4 ? 1 :
                 ii->getOperandSize(i) / 4;
 
@@ -116,7 +116,7 @@ ScalarRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
 
         for (int i = 0; i < ii->getNumOperands(); i++) {
             if (ii->isScalarRegister(i) && ii->isDstOperand(i)) {
-                int sgprIdx = ii->getRegisterIndex(i, ii);
+                int sgprIdx = ii->getRegisterIndex(i);
                 int nRegs = ii->getOperandSize(i) <= 4 ? 1
                     : ii->getOperandSize(i) / 4;
                 for (int j = 0; j < nRegs; j++) {
@@ -139,7 +139,7 @@ ScalarRegisterFile::scheduleWriteOperandsFromLoad(Wavefront *w,
     for (int i = 0; i < ii->getNumOperands(); ++i) {
         if (ii->isScalarRegister(i) && ii->isDstOperand(i)) {
 
-            int sgprIdx = ii->getRegisterIndex(i, ii);
+            int sgprIdx = ii->getRegisterIndex(i);
             int nRegs = ii->getOperandSize(i) <= 4 ? 1 :
                 ii->getOperandSize(i) / 4;
 

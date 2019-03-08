@@ -86,8 +86,7 @@ class GPUStaticInst : public GPUStaticInstFlags
     virtual bool isExecMaskRegister(int opIdx) = 0;
     virtual int getOperandSize(int operandIndex) = 0;
 
-    virtual int getRegisterIndex(int operandIndex,
-                                 GPUDynInstPtr gpuDynInst) = 0;
+    virtual int getRegisterIndex(int operandIndex, int num_scalar_regs) = 0;
 
     virtual int numDstRegOperands() = 0;
     virtual int numSrcRegOperands() = 0;
@@ -310,7 +309,7 @@ class KernelLaunchStaticInst : public GPUStaticInst
     int getOperandSize(int operandIndex) override { return 0; }
 
     int
-    getRegisterIndex(int operandIndex, GPUDynInstPtr gpuDynInst) override
+    getRegisterIndex(int operandIndex, int num_scalar_regs) override
     {
         return 0;
     }

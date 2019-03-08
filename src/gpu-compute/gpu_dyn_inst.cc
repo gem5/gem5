@@ -85,9 +85,8 @@ GPUDynInst::GPUDynInst(ComputeUnit *_cu, Wavefront *_wf,
 }
 
 void
-GPUDynInst::initOperandInfo(GPUDynInstPtr &gpu_dyn_inst)
+GPUDynInst::initOperandInfo()
 {
-    assert(gpu_dyn_inst->wavefront());
     /**
      * Generate and cache the operand to register mapping information. This
      * prevents this info from being generated multiple times throughout
@@ -102,7 +101,7 @@ GPUDynInst::initOperandInfo(GPUDynInstPtr &gpu_dyn_inst)
         int op_num_dwords(-1);
 
         if (isVectorRegister(op_idx)) {
-            virt_idx = getRegisterIndex(op_idx, gpu_dyn_inst);
+            virt_idx = getRegisterIndex(op_idx);
             op_num_dwords = numOpdDWORDs(op_idx);
 
             if (isSrcOperand(op_idx)) {
@@ -143,7 +142,7 @@ GPUDynInst::initOperandInfo(GPUDynInstPtr &gpu_dyn_inst)
                                           phys_indices);
             }
         } else if (isScalarRegister(op_idx)) {
-            virt_idx = getRegisterIndex(op_idx, gpu_dyn_inst);
+            virt_idx = getRegisterIndex(op_idx);
             op_num_dwords = numOpdDWORDs(op_idx);
 
             if (isSrcOperand(op_idx)) {
@@ -287,9 +286,9 @@ GPUDynInst::isScalarRegister(int operandIdx)
 }
 
 int
-GPUDynInst::getRegisterIndex(int operandIdx, GPUDynInstPtr gpuDynInst)
+GPUDynInst::getRegisterIndex(int operandIdx)
 {
-    return _staticInst->getRegisterIndex(operandIdx, gpuDynInst);
+    return _staticInst->getRegisterIndex(operandIdx, wf->reservedScalarRegs);
 }
 
 int

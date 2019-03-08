@@ -79,7 +79,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         // first instruction DWORD
@@ -103,7 +103,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         // first instruction DWORD
@@ -127,7 +127,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         // first instruction DWORD
@@ -151,7 +151,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         // first instruction DWORD
@@ -175,7 +175,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         // first instruction DWORD
@@ -193,7 +193,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         /**
@@ -276,7 +276,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         // first instruction DWORD
@@ -300,7 +300,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         // first instruction DWORD
@@ -324,7 +324,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         // first instruction DWORD
@@ -361,7 +361,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         // first instruction DWORD
@@ -395,7 +395,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         // first instruction DWORD
@@ -418,7 +418,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         template<typename T>
@@ -518,7 +518,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         template<typename T>
@@ -649,7 +649,7 @@ namespace Gcn3ISA
                      * non-formatted accesses, this is done on a per-lane
                      * basis.
                      */
-                    if (stride == 0 || !rsrc_desc.swizzleEn) {
+                    if (rsrc_desc.stride == 0 || !rsrc_desc.swizzleEn) {
                         if (buf_off + stride * buf_idx >=
                             rsrc_desc.numRecords - s_offset.rawData()) {
                             DPRINTF(GCN3, "mubuf out-of-bounds condition 1: "
@@ -657,13 +657,13 @@ namespace Gcn3ISA
                                     "const_stride = %llx, "
                                     "const_num_records = %llx\n",
                                     lane, buf_off + stride * buf_idx,
-                                    stride, rsrc_desc.numRecords);
+                                    rsrc_desc.stride, rsrc_desc.numRecords);
                             oobMask.set(lane);
                             continue;
                         }
                     }
 
-                    if (stride != 0 && rsrc_desc.swizzleEn) {
+                    if (rsrc_desc.stride != 0 && rsrc_desc.swizzleEn) {
                         if (buf_idx >= rsrc_desc.numRecords ||
                             buf_off >= stride) {
                             DPRINTF(GCN3, "mubuf out-of-bounds condition 2: "
@@ -776,7 +776,7 @@ namespace Gcn3ISA
 
         bool isScalarRegister(int opIdx) override;
         bool isVectorRegister(int opIdx) override;
-        int getRegisterIndex(int opIdx, GPUDynInstPtr gpuDynInst) override;
+        int getRegisterIndex(int opIdx, int num_scalar_regs) override;
 
       protected:
         template<typename T>

@@ -927,7 +927,7 @@ Wavefront::exec()
     // vector RAW dependency tracking
     for (int i = 0; i < ii->getNumOperands(); i++) {
         if (ii->isVectorRegister(i)) {
-            int vgpr = ii->getRegisterIndex(i, ii);
+            int vgpr = ii->getRegisterIndex(i);
             int nReg = ii->getOperandSize(i) <= 4 ? 1 :
                 ii->getOperandSize(i) / 4;
             for (int n = 0; n < nReg; n++) {
