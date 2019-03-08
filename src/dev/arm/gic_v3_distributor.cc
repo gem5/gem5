@@ -578,6 +578,10 @@ Gicv3Distributor::write(Addr addr, uint64_t data, size_t size,
         // Interrupt Clear-Enable Registers
         int first_intid = (addr - GICD_ICENABLER.start()) * 8;
 
+        if (isNotSPI(first_intid)) {
+            return;
+        }
+
         for (int i = 0, int_id = first_intid; i < 8 * size && int_id < itLines;
              i++, int_id++) {
 
