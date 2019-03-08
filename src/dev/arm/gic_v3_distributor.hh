@@ -184,7 +184,7 @@ class Gicv3Distributor : public Serializable
 
     Gicv3::IntStatus intStatus(uint32_t int_id) const;
 
-    inline bool isNotSPI(uint8_t int_id) const
+    inline bool isNotSPI(uint32_t int_id) const
     {
         if (int_id < (Gicv3::SGI_MAX + Gicv3::PPI_MAX) || int_id >= itLines) {
             return true;
@@ -193,7 +193,7 @@ class Gicv3Distributor : public Serializable
         }
     }
 
-    inline bool nsAccessToSecInt(uint8_t int_id, bool is_secure_access) const
+    inline bool nsAccessToSecInt(uint32_t int_id, bool is_secure_access) const
     {
         return !DS && !is_secure_access && getIntGroup(int_id) != Gicv3::G1NS;
     }
