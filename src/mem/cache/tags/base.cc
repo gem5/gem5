@@ -98,20 +98,21 @@ BaseTags::findBlock(Addr addr, bool is_secure) const
 }
 
 void
-BaseTags::insertBlock(const Addr addr, const bool is_secure,
-                      const int src_master_ID, const uint32_t task_ID,
-                      CacheBlk *blk)
+BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
 {
     assert(!blk->isValid());
 
     // Previous block, if existed, has been removed, and now we have
     // to insert the new one
+
     // Deal with what we are bringing in
-    assert(src_master_ID < system->maxMasters());
-    occupancies[src_master_ID]++;
+    MasterID master_id = pkt->req->masterId();
+    assert(master_id < system->maxMasters());
+    occupancies[master_id]++;
 
     // Insert block with tag, src master id and task id
-    blk->insert(extractTag(addr), is_secure, src_master_ID, task_ID);
+    blk->insert(extractTag(pkt->getAddr()), pkt->isSecure(), master_id,
+                pkt->req->taskId());
 
     // Check if cache warm up is done
     if (!warmedUp && tagsInUse.value() >= warmupBound) {

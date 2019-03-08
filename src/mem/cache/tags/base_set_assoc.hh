@@ -60,6 +60,7 @@
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
+#include "mem/packet.hh"
 #include "params/BaseSetAssoc.hh"
 
 /**
@@ -182,18 +183,13 @@ class BaseSetAssoc : public BaseTags
     /**
      * Insert the new block into the cache and update replacement data.
      *
-     * @param addr Address of the block.
-     * @param is_secure Whether the block is in secure space or not.
-     * @param src_master_ID The source requestor ID.
-     * @param task_ID The new task ID.
+     * @param pkt Packet holding the address to update
      * @param blk The block to update.
      */
-    void insertBlock(const Addr addr, const bool is_secure,
-                     const int src_master_ID, const uint32_t task_ID,
-                     CacheBlk *blk) override
+    void insertBlock(const PacketPtr pkt, CacheBlk *blk) override
     {
         // Insert block
-        BaseTags::insertBlock(addr, is_secure, src_master_ID, task_ID, blk);
+        BaseTags::insertBlock(pkt, blk);
 
         // Increment tag counter
         tagsInUse++;

@@ -1359,8 +1359,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     }
 
     // Insert new block at victimized entry
-    tags->insertBlock(addr, is_secure, pkt->req->masterId(),
-                      pkt->req->taskId(), victim);
+    tags->insertBlock(pkt, victim);
 
     return victim;
 }

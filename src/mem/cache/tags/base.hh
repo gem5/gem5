@@ -58,6 +58,7 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "mem/cache/cache_blk.hh"
+#include "mem/packet.hh"
 #include "params/BaseTags.hh"
 #include "sim/clocked_object.hh"
 
@@ -305,15 +306,10 @@ class BaseTags : public ClockedObject
     /**
      * Insert the new block into the cache and update stats.
      *
-     * @param addr Address of the block.
-     * @param is_secure Whether the block is in secure space or not.
-     * @param src_master_ID The source requestor ID.
-     * @param task_ID The new task ID.
+     * @param pkt Packet holding the address to update
      * @param blk The block to update.
      */
-    virtual void insertBlock(const Addr addr, const bool is_secure,
-                             const int src_master_ID, const uint32_t task_ID,
-                             CacheBlk *blk);
+    virtual void insertBlock(const PacketPtr pkt, CacheBlk *blk);
 
     /**
      * Regenerate the block address.

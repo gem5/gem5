@@ -41,9 +41,9 @@
 
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/tags/sector_blk.hh"
+#include "mem/packet.hh"
 #include "params/SectorTags.hh"
 
-class BaseCache;
 class BaseReplacementPolicy;
 class ReplaceableEntry;
 
@@ -129,15 +129,10 @@ class SectorTags : public BaseTags
     /**
      * Insert the new block into the cache and update replacement data.
      *
-     * @param addr Address of the block.
-     * @param is_secure Whether the block is in secure space or not.
-     * @param src_master_ID The source requestor ID.
-     * @param task_ID The new task ID.
+     * @param pkt Packet holding the address to update
      * @param blk The block to update.
      */
-    void insertBlock(const Addr addr, const bool is_secure,
-                     const int src_master_ID, const uint32_t task_ID,
-                     CacheBlk *blk) override;
+    void insertBlock(const PacketPtr pkt, CacheBlk *blk) override;
 
     /**
      * Finds the given address in the cache, do not update replacement data.

@@ -62,6 +62,7 @@
 #include "base/types.hh"
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/tags/base.hh"
+#include "mem/packet.hh"
 #include "params/FALRU.hh"
 
 // Uncomment to enable sanity checks for the FALRU cache and the
@@ -227,15 +228,10 @@ class FALRU : public BaseTags
     /**
      * Insert the new block into the cache and update replacement data.
      *
-     * @param addr Address of the block.
-     * @param is_secure Whether the block is in secure space or not.
-     * @param src_master_ID The source requestor ID.
-     * @param task_ID The new task ID.
+     * @param pkt Packet holding the address to update
      * @param blk The block to update.
      */
-    void insertBlock(const Addr addr, const bool is_secure,
-                     const int src_master_ID, const uint32_t task_ID,
-                     CacheBlk *blk) override;
+    void insertBlock(const PacketPtr pkt, CacheBlk *blk) override;
 
     /**
      * Generate the tag from the addres. For fully associative this is just the
