@@ -123,3 +123,5 @@ DebugFlag('SerialLink')
 DebugFlag("MemChecker")
 DebugFlag("MemCheckerMonitor")
 DebugFlag("QOS")
+
+DebugFlag("debug")

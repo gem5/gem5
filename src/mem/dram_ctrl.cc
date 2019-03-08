@@ -54,6 +54,7 @@
 #include "debug/DRAMState.hh"
 #include "debug/Drain.hh"
 #include "debug/QOS.hh"
+#include "debug/debug.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -287,7 +288,6 @@ DRAMCtrl::readQueueFull(unsigned int neededEntries) const
     DPRINTF(DRAM, "Read queue limit %d, current size %d, entries needed %d\n",
             readBufferSize, totalReadQueueSize + respQueue.size(),
             neededEntries);
-
     auto rdsize_new = totalReadQueueSize + respQueue.size() + neededEntries;
     return rdsize_new > readBufferSize;
 }
@@ -411,6 +411,7 @@ DRAMCtrl::decodeAddr(PacketPtr pkt, Addr dramPktAddr, unsigned size,
 void
 DRAMCtrl::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
 {
+    DPRINTF(debug, "mem/dram_ctrl.cc addToReadQueue() start\n");
     // only add to the read queue here. whenever the request is
     // eventually done, set the readyTime, and call schedule()
     assert(!pkt->isWrite());
@@ -512,6 +513,7 @@ DRAMCtrl::addToReadQueue(PacketPtr pkt, unsigned int pktCount)
         DPRINTF(DRAM, "Request scheduled immediately\n");
         schedule(nextReqEvent, curTick());
     }
+    DPRINTF(debug, "mem/dram_ctrl.cc addToReadQueue() end\n");
 }
 
 void
@@ -615,6 +617,7 @@ DRAMCtrl::printQs() const
 bool
 DRAMCtrl::recvTimingReq(PacketPtr pkt)
 {
+    DPRINTF(debug, "mem/dram_ctrl.cc recvTimingReq() start\n");
     // This is where we enter from the outside world
     DPRINTF(DRAM, "recvTimingReq: request %s addr %lld size %d\n",
             pkt->cmdString(), pkt->getAddr(), pkt->getSize());
@@ -647,6 +650,8 @@ DRAMCtrl::recvTimingReq(PacketPtr pkt)
     if (pkt->isRead()) {
         assert(size != 0);
         if (readQueueFull(dram_pkt_count)) {
+            DPRINTF(debug, "mem/dram_ctrl.cc readQueueFull(), dram_pkt_count
+            %d\n", dram_pkt_count);
             DPRINTF(DRAM, "Read queue full, not accepting\n");
             // remember that we have to retry this port
             retryRdReq = true;
@@ -672,7 +677,7 @@ DRAMCtrl::recvTimingReq(PacketPtr pkt)
             bytesWrittenSys += size;
         }
     }
-
+    DPRINTF(debug, "mem/dram_ctrl.cc recvTimingReq() end\n");
     return true;
 }
 
@@ -916,6 +921,7 @@ DRAMCtrl::chooseNextFRFCFS(DRAMPacketQueue& queue, Tick extra_col_delay)
 void
 DRAMCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
 {
+    DPRINTF(debug, "mem/dram_ctrl.cc accessAndRespond() start\n");
     DPRINTF(DRAM, "Responding to Address %lld.. ",pkt->getAddr());
 
     bool needsResponse = pkt->needsResponse();
@@ -946,7 +952,7 @@ DRAMCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
     }
 
     DPRINTF(DRAM, "Done\n");
-
+    DPRINTF(debug, "mem/dram_ctrl.cc accessAndRespond() end\n");
     return;
 }
 
@@ -2961,6 +2967,9 @@ bool
 DRAMCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
 {
     // pass it to the memory controller
+    DPRINTF(debug, "recvTimingReq: request %s addr %lld size %d\n",
+            pkt->cmdString(), pkt->getAddr(), pkt->getSize());
+    DPRINTF(debug, "mem/dram_ctrl.cc MemoryPort::recvTimingReq()\n");
     return memory.recvTimingReq(pkt);
 }
 

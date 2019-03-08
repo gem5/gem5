@@ -51,6 +51,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/LLSC.hh"
 #include "debug/MemoryAccess.hh"
+#include "debug/debug.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
@@ -317,6 +318,7 @@ tracePacket(System *sys, const char *label, PacketPtr pkt)
 void
 AbstractMemory::access(PacketPtr pkt)
 {
+    DPRINTF(debug, "mem/abstrac_mem.cc access() start\n");
     if (pkt->cacheResponding()) {
         DPRINTF(MemoryAccess, "Cache responding to %#llx: not responding\n",
                 pkt->getAddr());
@@ -415,6 +417,7 @@ AbstractMemory::access(PacketPtr pkt)
     if (pkt->needsResponse()) {
         pkt->makeResponse();
     }
+    DPRINTF(debug, "mem/abstrac_mem.cc access() end\n");
 }
 
 void
