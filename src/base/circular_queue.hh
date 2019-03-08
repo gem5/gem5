@@ -106,8 +106,17 @@ class CircularQueue : private std::vector<T>
     static uint32_t
     moduloSub(uint32_t op1, uint32_t op2, uint32_t size)
     {
-        int ret = (uint32_t)(op1 - op2) % size;
+        int32_t ret = sub(op1, op2, size);
         return ret >= 0 ? ret : ret + size;
+    }
+
+    static int32_t
+    sub(uint32_t op1, uint32_t op2, uint32_t size)
+    {
+        if (op1 > op2)
+            return (op1 - op2) % size;
+        else
+            return -((op2 - op1) % size);
     }
 
     void increase(uint32_t& v, size_t delta = 1)
@@ -355,10 +364,10 @@ class CircularQueue : private std::vector<T>
         difference_type operator-(const iterator& that)
         {
             /* If a is already at the end, we can safely return 0. */
-            auto ret = _cq->moduloSub(this->_idx, that._idx);
+            auto ret = _cq->sub(this->_idx, that._idx, _cq->capacity());
 
-            if (ret == 0 && this->_round != that._round) {
-                ret += this->_round * _cq->capacity();
+            if (this->_round != that._round) {
+                ret += ((this->_round - that._round) * _cq->capacity());
             }
             return ret;
         }
