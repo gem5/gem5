@@ -199,8 +199,8 @@ Process::clone(ThreadContext *otc, ThreadContext *ntc,
          * host file descriptors are also dup'd so that the flags for the
          * host file descriptor is independent of the other process.
          */
+        std::shared_ptr<FDArray> nfds = np->fds;
         for (int tgt_fd = 0; tgt_fd < fds->getSize(); tgt_fd++) {
-            std::shared_ptr<FDArray> nfds = np->fds;
             std::shared_ptr<FDEntry> this_fde = (*fds)[tgt_fd];
             if (!this_fde) {
                 nfds->setFDEntry(tgt_fd, nullptr);
