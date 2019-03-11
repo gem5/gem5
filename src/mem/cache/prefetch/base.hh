@@ -201,7 +201,7 @@ class BasePrefetcher : public ClockedObject
          */
         template <typename T>
         inline T
-        get(ByteOrder endian = TheISA::GuestByteOrder) const
+        get(ByteOrder endian) const
         {
             if (data == nullptr) {
                 panic("PrefetchInfo::get called with a request with no data.");
