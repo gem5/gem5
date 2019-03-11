@@ -1,0 +1,8 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+
+Global frequency set at 1000000000000 ticks per second
+Hello World! From a SimObject!
+Beginning simulation!
+Exiting @ tick 18446744073709551615 because simulate() limit reached
