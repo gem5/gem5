@@ -1,4 +1,4 @@
-# Copyright 2018 Google, Inc.
+# Copyright 2019 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -25,19 +25,28 @@
 #
 # Authors: Gabe Black
 
-Import('*')
+from m5.objects.SystemC import SystemC_ScModule
+from m5.params import *
+from m5.proxy import *
 
-if not env['USE_SYSTEMC']:
-    Return()
+class Gem5ToTlmBridge(SystemC_ScModule):
+    type = 'Gem5ToTlmBridge'
+    cxx_class = 'sc_gem5::Gem5ToTlmBridge'
+    cxx_header = 'systemc/tlm_bridge/gem5_to_tlm.hh'
 
-SimObject('TlmBridge.py')
+    system = Param.System(Parent.any, "system")
 
-Source('gem5_to_tlm.cc')
-Source('tlm_to_gem5.cc')
+    gem5 = SlavePort('gem5 slave port')
+    tlm = MasterPort('TLM initiator socket')
+    addr_ranges = VectorParam.AddrRange([],
+            'Addresses served by this port\'s TLM side')
 
-Source('master_transactor.cc')
-Source('sc_ext.cc')
-Source('sc_master_port.cc')
-Source('sc_mm.cc')
-Source('sc_slave_port.cc')
-Source('slave_transactor.cc')
+class TlmToGem5Bridge(SystemC_ScModule):
+    type = 'TlmToGem5Bridge'
+    cxx_class = 'sc_gem5::TlmToGem5Bridge'
+    cxx_header = 'systemc/tlm_bridge/tlm_to_gem5.hh'
+
+    system = Param.System(Parent.any, "system")
+
+    gem5 = MasterPort('gem5 master port')
+    tlm = SlavePort('TLM target socket')
