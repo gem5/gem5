@@ -983,6 +983,13 @@ pipe2Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
 }
 
 SyscallReturn
+getpgrpFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
+{
+    auto process = tc->getProcessPtr();
+    return process->pgid();
+}
+
+SyscallReturn
 setpgidFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 {
     int index = 0;

@@ -373,7 +373,7 @@ static SyscallDesc syscallDescs64[] = {
     /* 108 */ SyscallDesc("getegid", getegidFunc),
     /* 109 */ SyscallDesc("setpgid", setpgidFunc),
     /* 110 */ SyscallDesc("getppid", getppidFunc),
-    /* 111 */ SyscallDesc("getpgrp", unimplementedFunc),
+    /* 111 */ SyscallDesc("getpgrp", getpgrpFunc),
     /* 112 */ SyscallDesc("setsid", unimplementedFunc),
     /* 113 */ SyscallDesc("setreuid", unimplementedFunc),
     /* 114 */ SyscallDesc("setregid", unimplementedFunc),

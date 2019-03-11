@@ -226,6 +226,9 @@ SyscallReturn gettidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 /// Target chown() handler.
 SyscallReturn chownFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 
+/// Target getpgrpFunc() handler.
+SyscallReturn getpgrpFunc(SyscallDesc *desc, int num, ThreadContext *tc);
+
 /// Target setpgid() handler.
 SyscallReturn setpgidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 
