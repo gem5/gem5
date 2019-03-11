@@ -2101,6 +2101,7 @@ let {{
                             } else {
                                 return new VcvtaFpUIntD(machInst, vdInt, vm);
                             }
+                          default: return new Unknown(machInst);
                         }
                       case 0x1:
                         switch(size) {
@@ -2121,6 +2122,7 @@ let {{
                             } else {
                                 return new VcvtnFpUIntD(machInst, vdInt, vm);
                             }
+                          default: return new Unknown(machInst);
                         }
                       case 0x2:
                         switch(size) {
@@ -2141,6 +2143,7 @@ let {{
                             } else {
                                 return new VcvtpFpUIntD(machInst, vdInt, vm);
                             }
+                          default: return new Unknown(machInst);
                         }
                       case 0x3:
                         switch(size) {
@@ -2161,7 +2164,9 @@ let {{
                             } else {
                                 return new VcvtmFpUIntD(machInst, vdInt, vm);
                             }
+                          default: return new Unknown(machInst);
                         }
+                      default: return new Unknown(machInst);
                     }
                 }
             } else if (b31_b24 && !b23 && b11_b9 && !op3 && b4){
