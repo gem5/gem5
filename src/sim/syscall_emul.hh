@@ -1338,7 +1338,7 @@ fstat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
     int tgt_fd = p->getSyscallArg(tc, index);
     Addr bufPtr = p->getSyscallArg(tc, index);
 
-    auto ffdp = std::dynamic_pointer_cast<FileFDEntry>((*p->fds)[tgt_fd]);
+    auto ffdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
     if (!ffdp)
         return -EBADF;
     int sim_fd = ffdp->getSimFD();
