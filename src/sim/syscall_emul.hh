@@ -1970,6 +1970,12 @@ getrlimitFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         rlp->rlim_max = TheISA::htog(rlp->rlim_max);
         break;
 
+      case OS::TGT_RLIMIT_NPROC:
+        rlp->rlim_cur = rlp->rlim_max = tc->getSystemPtr()->numContexts();
+        rlp->rlim_cur = TheISA::htog(rlp->rlim_cur);
+        rlp->rlim_max = TheISA::htog(rlp->rlim_max);
+        break;
+
       default:
         warn("getrlimit: unimplemented resource %d", resource);
         return -EINVAL;
