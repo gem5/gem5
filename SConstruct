@@ -97,6 +97,7 @@ from re import match
 # SCons includes
 import SCons
 import SCons.Node
+import SCons.Node.FS
 
 from m5.util import compareVersions, readCommand
 
@@ -1096,7 +1097,7 @@ def add_local_rpath(env, *targets):
     binary.'''
     for target in targets:
         target = env.Entry(target)
-        if not target.isdir():
+        if not isinstance(target, SCons.Node.FS.Dir):
             target = target.dir
         relpath = os.path.relpath(target.abspath, env['BUILDDIR'])
         components = [
