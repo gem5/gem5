@@ -33,11 +33,6 @@ if not env['USE_SYSTEMC']:
 SimObject('TlmBridge.py')
 
 Source('gem5_to_tlm.cc')
-Source('tlm_to_gem5.cc')
-
-Source('master_transactor.cc')
 Source('sc_ext.cc')
-Source('sc_master_port.cc')
 Source('sc_mm.cc')
-Source('sc_slave_port.cc')
-Source('slave_transactor.cc')
+Source('tlm_to_gem5.cc')
