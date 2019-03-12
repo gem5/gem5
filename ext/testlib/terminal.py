@@ -106,10 +106,16 @@ def get_termcap(use_colors = None):
 
 def terminal_size():
     '''Return the (width, heigth) of the terminal screen.'''
-    h, w, hp, wp = struct.unpack('HHHH',
-        fcntl.ioctl(0, termios.TIOCGWINSZ,
-        struct.pack('HHHH', 0, 0, 0, 0)))
-    return w, h
+    try:
+        h, w, hp, wp = struct.unpack('HHHH',
+            fcntl.ioctl(0, termios.TIOCGWINSZ,
+            struct.pack('HHHH', 0, 0, 0, 0)))
+        return w, h
+    except IOError:
+        # It's possible that in sandboxed environments the above ioctl is not
+        # allowed (e.g., some jenkins setups)
+        return 80, 24
+
 
 def separator(char=default_separator, color=None):
     '''
