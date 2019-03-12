@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 
+#include "base/logging.hh"
 #include "systemc/core/event.hh"
 #include "systemc/core/kernel.hh"
 #include "systemc/core/module.hh"
@@ -113,6 +114,12 @@ sc_bind_proxy::sc_bind_proxy(sc_port_base &_port) :
 {}
 
 const sc_bind_proxy SC_BIND_PROXY_NIL;
+
+::Port &
+sc_module::gem5_getPort(const std::string &if_name, int idx)
+{
+    fatal("%s does not have any port named %s\n", name(), if_name);
+}
 
 sc_module::~sc_module() { delete _gem5_module; }
 

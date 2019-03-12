@@ -30,6 +30,7 @@
 #ifndef __SYSTEMC_CORE_EXT_SC_MODULE_HH__
 #define __SYSTEMC_CORE_EXT_SC_MODULE_HH__
 
+#include <string>
 #include <vector>
 
 #include "sc_object.hh"
@@ -57,6 +58,9 @@ Process *newThreadProcess(const char *name, ProcessFuncWrapper *func);
 Process *newCThreadProcess(const char *name, ProcessFuncWrapper *func);
 
 } // namespace sc_gem5
+
+// Gem5 prototype
+class Port;
 
 namespace sc_core
 {
@@ -94,6 +98,10 @@ extern const sc_bind_proxy SC_BIND_PROXY_NIL;
 
 class sc_module : public sc_object
 {
+  public:
+    // Gem5 specific extensions
+    virtual ::Port &gem5_getPort(const std::string &if_name, int idx=-1);
+
   public:
     friend class ::sc_gem5::Kernel;
     friend class ::sc_gem5::Module;
