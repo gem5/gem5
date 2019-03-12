@@ -252,7 +252,10 @@ SyscallReturn pipeFunc(SyscallDesc *desc, int num, ThreadContext *tc);
 
 /// Internal pipe() handler.
 SyscallReturn pipeImpl(SyscallDesc *desc, int num, ThreadContext *tc,
-                       bool pseudoPipe);
+                       bool pseudo_pipe, bool is_pipe2=false);
+
+/// Target pipe() handler.
+SyscallReturn pipe2Func(SyscallDesc *desc, int num, ThreadContext *tc);
 
 /// Target getpid() handler.
 SyscallReturn getpidFunc(SyscallDesc *desc, int num, ThreadContext *tc);
