@@ -55,6 +55,10 @@ class TempdirFixture(Fixture):
         if self.path is not None:
             shutil.rmtree(self.path)
 
+    def skip_cleanup(self):
+        # Set path to none so it's not deleted
+        self.path = None
+
 
 class SConsFixture(Fixture):
     '''

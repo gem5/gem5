@@ -98,6 +98,13 @@ class Fixture(object):
     def copy(self):
         return copy.deepcopy(self)
 
+    def skip_cleanup(self):
+        '''
+        If this method is called, then we should make sure that nothing is
+        done when the teardown() function is called.
+        '''
+        pass
+
 
 def globalfixture(fixture):
     '''
