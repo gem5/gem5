@@ -1065,14 +1065,14 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
 
+        // A writeback searches for the block, then writes the data
+        lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
+
         // When the packet metadata arrives, the tag lookup will be done while
         // the payload is arriving. Then the block will be ready to access as
         // soon as the fill is done
         blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
             std::max(cyclesToTicks(tag_latency), (uint64_t)pkt->payloadDelay));
-
-        // A writeback searches for the block, then writes the data
-        lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
 
         return true;
     } else if (pkt->cmd == MemCmd::CleanEvict) {
@@ -1143,14 +1143,14 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         incHitCount(pkt);
 
+        // A writeback searches for the block, then writes the data
+        lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
+
         // When the packet metadata arrives, the tag lookup will be done while
         // the payload is arriving. Then the block will be ready to access as
         // soon as the fill is done
         blk->setWhenReady(clockEdge(fillLatency) + pkt->headerDelay +
             std::max(cyclesToTicks(tag_latency), (uint64_t)pkt->payloadDelay));
-
-        // A writeback searches for the block, then writes the data
-        lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
 
         // if this a write-through packet it will be sent to cache
         // below
@@ -1159,8 +1159,6 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                        blk->isReadable())) {
         // OK to satisfy access
         incHitCount(pkt);
-        satisfyRequest(pkt, blk);
-        maintainClusivity(pkt->fromCache(), blk);
 
         // Calculate access latency based on the need to access the data array
         if (pkt->isRead() || pkt->isWrite()) {
@@ -1168,6 +1166,9 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         } else {
             lat = calculateTagOnlyLatency(pkt->headerDelay, tag_latency);
         }
+
+        satisfyRequest(pkt, blk);
+        maintainClusivity(pkt->fromCache(), blk);
 
         return true;
     }
