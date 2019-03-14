@@ -31,6 +31,21 @@ import functools
 import helper
 import runner as runner_mod
 
+class TestingException(Exception):
+    '''Common ancestor for manual Testing Exceptions.'''
+class TestFailException(TestingException):
+    '''Signals that a test has failed.'''
+class TestSkipException(TestingException):
+    '''Signals that a test has been skipped.'''
+
+def fail(message):
+    '''Cause the current test to fail with the given message.'''
+    raise TestFailException(message)
+
+def skip(message):
+    '''Cause the current test to skip with the given message.'''
+    raise TestSkipException(message)
+
 class TestCase(object):
     '''
     Base class for all tests.
