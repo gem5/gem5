@@ -128,6 +128,7 @@ namespace Aarch64
                         return decodeSveIntArithUnaryPred(machInst);
                     }
                 }
+                break;
             }
           case 0x1:
             {
@@ -166,6 +167,7 @@ namespace Aarch64
                   case 0x3:
                     return decodeSveElemCount(machInst);
                 }
+                break;
             }
           case 0x2:
             if (bits(machInst, 20)) {
@@ -195,6 +197,7 @@ namespace Aarch64
                   case 0x3:
                     return decodeSveSelVec(machInst);
                 }
+                break;
             }
           case 0x4:
             return decodeSveIntCmpVec(machInst);
@@ -279,6 +282,7 @@ namespace Aarch64
                               case 0x3:
                                   return decodeSveFpAccumReduc(machInst);
                             }
+                            break;
                         }
                       case 0x2:
                         return decodeSveFpArithPred(machInst);
@@ -286,6 +290,7 @@ namespace Aarch64
                         return decodeSveFpUnaryPred(machInst);
                     }
                 }
+                break;
             }
           case 0x3:
             return decodeSveFpFusedMulAdd(machInst);

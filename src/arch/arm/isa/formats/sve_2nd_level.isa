@@ -118,6 +118,7 @@ namespace Aarch64
                         return new Unknown64(machInst);
                     }
                 }
+                break;
             }
           case 0x3:
             {
@@ -532,6 +533,7 @@ namespace Aarch64
                             return new SveIndexII<int64_t>(machInst,
                                     zd, imm5, imm5b);
                     }
+                    break;
                 }
             case 1:
                 { // INDEX (scalar, immediate)
@@ -552,6 +554,7 @@ namespace Aarch64
                             return new SveIndexRI<int64_t>(machInst,
                                     zd, zn, imm5);
                     }
+                    break;
                 }
             case 2:
                 { // INDEX (immediate, scalar)
@@ -572,6 +575,7 @@ namespace Aarch64
                             return new SveIndexIR<int64_t>(machInst,
                                     zd, imm5, zm);
                     }
+                    break;
                 }
             case 3:
                 { // INDEX (scalars)
