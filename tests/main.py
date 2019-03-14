@@ -21,4 +21,4 @@ import testlib.config as config
 import testlib.helper as helper
 
 config.basedir = helper.absdirpath(__file__)
-testlib()
+sys.exit(testlib())

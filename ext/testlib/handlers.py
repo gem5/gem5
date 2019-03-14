@@ -166,6 +166,18 @@ class ResultHandler(log.Handler):
         self._closed = True
         self._save()
 
+    def unsuccessful(self):
+        '''
+        Performs an or reduce on all of the results.
+        Returns true if at least one test is unsuccessful, false when all tests
+        pass
+        '''
+        for suite_result in self.internal_results:
+            if suite_result.unsuccessful:
+                return True
+        # If all are successful, then this wasn't "unsuccessful"
+        return False
+
 
 #TODO Change from a handler to an internal post processor so it can be used
 # to reprint results

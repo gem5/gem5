@@ -78,6 +78,14 @@ class RunLogHandler():
     def close(self):
         self.mp_handler.close()
 
+    def unsuccessful(self):
+        '''
+        Performs an or reduce on all of the results.
+        Returns true if at least one test is unsuccessful, false when all tests
+        pass
+        '''
+        return self.result_handler.unsuccessful()
+
 def get_config_tags():
     return getattr(config.config,
             config.StorePositionalTagsAction.position_kword)
@@ -225,6 +233,8 @@ def do_list():
         qrunner.list_tests()
         qrunner.list_tags()
 
+    return 0
+
 def run_schedule(test_schedule, log_handler):
     '''
     Test Phases
@@ -273,7 +283,11 @@ def run_schedule(test_schedule, log_handler):
         library_runner = runner.LibraryRunner(test_schedule)
     library_runner.run()
 
+    failed = log_handler.unsuccessful()
+
     log_handler.finish_testing()
+
+    return 1 if failed else 0
 
 def do_run():
     # Initialize early parts of the log.
@@ -297,8 +311,7 @@ def do_run():
             # Filter tests based on tags
             filter_with_config_tags(test_schedule)
         # Execute the tests
-        run_schedule(test_schedule, log_handler)
-
+        return run_schedule(test_schedule, log_handler)
 
 def do_rerun():
     # Init early parts of log
@@ -308,21 +321,25 @@ def do_rerun():
                 os.path.join(config.config.result_path,
                 config.constants.pickle_filename))
 
-        rerun_suites = (suite.uid for suite in results if suite.unsucessful)
+        rerun_suites = (suite.uid for suite in results if suite.unsuccessful)
 
         # Use loader to load suites
         loader = loader_mod.Loader()
         test_schedule = loader.load_schedule_for_suites(*rerun_suites)
 
         # Execute the tests
-        run_schedule(test_schedule, log_handler)
+        return run_schedule(test_schedule, log_handler)
 
 def main():
     '''
     Main entrypoint for the testlib test library.
+    Returns 0 on success and 1 otherwise so it can be used as a return code
+    for scripts.
     '''
     config.initialize_config()
 
     # 'do' the given command.
-    globals()['do_'+config.config.command]()
+    result = globals()['do_'+config.config.command]()
     log.test_log.close()
+
+    return result

@@ -58,7 +58,7 @@ class _CommonMetadataMixin:
         self._metadata.result = result
 
     @property
-    def unsucessful(self):
+    def unsuccessful(self):
         return self._metadata.result.value != state.Result.Passed
 
 
