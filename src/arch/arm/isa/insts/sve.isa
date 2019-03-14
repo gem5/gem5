@@ -3182,9 +3182,9 @@ let {{
     sveBinInst('bic', 'BicPred', 'SimdAluOp', unsignedTypes, bicCode,
                PredType.MERGE, True)
     # BIC (vectors, unpredicated)
-    bicCode = 'destElem = srcElem1 & ~srcElem2;'
     sveBinInst('bic', 'BicUnpred', 'SimdAluOp', unsignedTypes, bicCode)
     # BIC, BICS (predicates)
+    bicCode = 'destElem = srcElem1 && !srcElem2;'
     svePredLogicalInst('bic', 'PredBic', 'SimdPredAluOp', ('uint8_t',),
                        bicCode)
     svePredLogicalInst('bics', 'PredBics', 'SimdPredAluOp', ('uint8_t',),
