@@ -4278,7 +4278,9 @@ let {{
             bool negSrc1 = (srcElem1 < 0);
             bool negSrc2 = (srcElem2 < 0);
             if ((negDest != negSrc1) && (negSrc1 == negSrc2)) {
-                destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+                destElem = static_cast<Element>(
+                    (Element)1 << (sizeof(Element) * 8 - 1)
+                    );
                 if (negDest)
                     destElem -= 1;
             }
@@ -4293,7 +4295,9 @@ let {{
         bool negSrc = (srcElem1 < 0);
         bool posCount = ((count * imm) >= 0);
         if ((negDest != negSrc) && (negSrc == posCount)) {
-            destElem = (%(dstType)s)1 << (sizeof(%(dstType)s) * 8 - 1);
+            destElem = static_cast<%(dstType)s>(
+                (%(dstType)s)1 << (sizeof(%(dstType)s) * 8 - 1)
+                );
             if (negDest)
                 destElem -= 1;
         }
@@ -4350,7 +4354,9 @@ let {{
         bool negSrc = (srcElem1 < 0);
         bool negCount = ((count * imm) < 0);
         if ((negDest != negSrc) && (negSrc == negCount)) {
-            destElem = (%(dstType)s)1 << (sizeof(%(dstType)s) * 8 - 1);
+            destElem = static_cast<%(dstType)s>(
+                (%(dstType)s)1 << (sizeof(%(dstType)s) * 8 - 1)
+                );
             if (negDest)
                 destElem -= 1;
         }
@@ -4407,7 +4413,9 @@ let {{
         bool negSrc1 = (srcElem1 < 0);
         bool posSrc2 = (srcElem2 >= 0);
         if ((negDest != negSrc1) && (negSrc1 == posSrc2)) {
-            destElem = (Element)1 << (sizeof(Element) * 8 - 1);
+            destElem = static_cast<Element>(
+                (Element)1 << (sizeof(Element) * 8 - 1)
+                );
             if (negDest)
                 destElem -= 1;
         }

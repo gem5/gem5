@@ -182,7 +182,7 @@ reverseBits(T val, std::size_t size = sizeof(T))
     assert(size <= sizeof(T));
 
     T output = 0;
-    for (auto byte = 0; byte < size; byte++, val >>= 8) {
+    for (auto byte = 0; byte < size; byte++, val = static_cast<T>(val >> 8)) {
         output = (output << 8) | reverseLookUpTable[val & 0xFF];
     }
 
