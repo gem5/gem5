@@ -29,9 +29,10 @@ from m5.objects.SystemC import SystemC_ScModule
 from m5.params import *
 from m5.proxy import *
 
-class Gem5ToTlmBridge(SystemC_ScModule):
-    type = 'Gem5ToTlmBridge'
-    cxx_class = 'sc_gem5::Gem5ToTlmBridge'
+class Gem5ToTlmBridgeBase(SystemC_ScModule):
+    type = 'Gem5ToTlmBridgeBase'
+    abstract = True
+    cxx_class = 'sc_gem5::Gem5ToTlmBridgeBase'
     cxx_header = 'systemc/tlm_bridge/gem5_to_tlm.hh'
 
     system = Param.System(Parent.any, "system")
@@ -41,12 +42,39 @@ class Gem5ToTlmBridge(SystemC_ScModule):
     addr_ranges = VectorParam.AddrRange([],
             'Addresses served by this port\'s TLM side')
 
-class TlmToGem5Bridge(SystemC_ScModule):
-    type = 'TlmToGem5Bridge'
-    cxx_class = 'sc_gem5::TlmToGem5Bridge'
+class TlmToGem5BridgeBase(SystemC_ScModule):
+    type = 'TlmToGem5BridgeBase'
+    abstract = True
+    cxx_class = 'sc_gem5::TlmToGem5BridgeBase'
     cxx_header = 'systemc/tlm_bridge/tlm_to_gem5.hh'
 
     system = Param.System(Parent.any, "system")
 
     gem5 = MasterPort('gem5 master port')
     tlm = SlavePort('TLM target socket')
+
+
+class Gem5ToTlmBridge32(Gem5ToTlmBridgeBase):
+    type = 'Gem5ToTlmBridge32'
+    cxx_template_params = [ 'unsigned int BITWIDTH' ]
+    cxx_class = 'sc_gem5::Gem5ToTlmBridge<32>'
+    cxx_header = 'systemc/tlm_bridge/gem5_to_tlm.hh'
+
+class Gem5ToTlmBridge64(Gem5ToTlmBridgeBase):
+    type = 'Gem5ToTlmBridge64'
+    cxx_template_params = [ 'unsigned int BITWIDTH' ]
+    cxx_class = 'sc_gem5::Gem5ToTlmBridge<64>'
+    cxx_header = 'systemc/tlm_bridge/gem5_to_tlm.hh'
+
+
+class TlmToGem5Bridge32(TlmToGem5BridgeBase):
+    type = 'TlmToGem5Bridge32'
+    cxx_template_params = [ 'unsigned int BITWIDTH' ]
+    cxx_class = 'sc_gem5::TlmToGem5Bridge<32>'
+    cxx_header = 'systemc/tlm_bridge/tlm_to_gem5.hh'
+
+class TlmToGem5Bridge64(TlmToGem5BridgeBase):
+    type = 'TlmToGem5Bridge64'
+    cxx_template_params = [ 'unsigned int BITWIDTH' ]
+    cxx_class = 'sc_gem5::TlmToGem5Bridge<64>'
+    cxx_header = 'systemc/tlm_bridge/tlm_to_gem5.hh'

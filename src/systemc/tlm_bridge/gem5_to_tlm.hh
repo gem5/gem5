@@ -66,7 +66,7 @@
 #include <string>
 
 #include "mem/port.hh"
-#include "params/Gem5ToTlmBridge.hh"
+#include "params/Gem5ToTlmBridgeBase.hh"
 #include "sim/system.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
@@ -78,13 +78,20 @@
 namespace sc_gem5
 {
 
-class Gem5ToTlmBridge : public sc_core::sc_module
+class Gem5ToTlmBridgeBase : public sc_core::sc_module
+{
+  protected:
+    using sc_core::sc_module::sc_module;
+};
+
+template <unsigned int BITWIDTH>
+class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
 {
   private:
     class BridgeSlavePort : public SlavePort
     {
       protected:
-        Gem5ToTlmBridge &bridge;
+        Gem5ToTlmBridge<BITWIDTH> &bridge;
 
         AddrRangeList
         getAddrRanges() const override
@@ -119,14 +126,16 @@ class Gem5ToTlmBridge : public sc_core::sc_module
         void recvRespRetry() override { bridge.recvRespRetry(); }
 
       public:
-        BridgeSlavePort(const std::string &name_, Gem5ToTlmBridge &bridge_) :
+        BridgeSlavePort(const std::string &name_,
+                        Gem5ToTlmBridge<BITWIDTH> &bridge_) :
             SlavePort(name_, nullptr), bridge(bridge_)
         {}
     };
 
     BridgeSlavePort bsp;
-    tlm_utils::simple_initiator_socket<Gem5ToTlmBridge, 64> socket;
-    sc_gem5::TlmInitiatorWrapper<64> wrapper;
+    tlm_utils::simple_initiator_socket<
+        Gem5ToTlmBridge<BITWIDTH>, BITWIDTH> socket;
+    sc_gem5::TlmInitiatorWrapper<BITWIDTH> wrapper;
 
     System *system;
 
@@ -151,7 +160,7 @@ class Gem5ToTlmBridge : public sc_core::sc_module
     AddrRangeList addrRanges;
 
   protected:
-    void pec(Gem5SystemC::PayloadEvent<Gem5ToTlmBridge> *pe,
+    void pec(Gem5SystemC::PayloadEvent<Gem5ToTlmBridge<BITWIDTH>> *pe,
              tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);
 
     // The gem5 port interface.
@@ -172,10 +181,10 @@ class Gem5ToTlmBridge : public sc_core::sc_module
   public:
     ::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
 
-    typedef Gem5ToTlmBridgeParams Params;
+    typedef Gem5ToTlmBridgeBaseParams Params;
     Gem5ToTlmBridge(Params *p, const sc_core::sc_module_name &mn);
 
-    tlm_utils::simple_initiator_socket<Gem5ToTlmBridge, 64> &
+    tlm_utils::simple_initiator_socket<Gem5ToTlmBridge<BITWIDTH>, BITWIDTH> &
     getSocket()
     {
         return socket;

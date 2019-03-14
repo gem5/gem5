@@ -63,6 +63,8 @@
 
 #include "systemc/tlm_bridge/gem5_to_tlm.hh"
 
+#include "params/Gem5ToTlmBridge32.hh"
+#include "params/Gem5ToTlmBridge64.hh"
 #include "sim/system.hh"
 #include "systemc/tlm_bridge/sc_ext.hh"
 #include "systemc/tlm_bridge/sc_mm.hh"
@@ -106,8 +108,10 @@ packet2payload(PacketPtr packet, tlm::tlm_generic_payload &trans)
     }
 }
 
+template <unsigned int BITWIDTH>
 void
-Gem5ToTlmBridge::pec(Gem5SystemC::PayloadEvent<Gem5ToTlmBridge> *pe,
+Gem5ToTlmBridge<BITWIDTH>::pec(
+        Gem5SystemC::PayloadEvent<Gem5ToTlmBridge<BITWIDTH>> *pe,
         tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase)
 {
     sc_core::sc_time delay;
@@ -163,8 +167,9 @@ Gem5ToTlmBridge::pec(Gem5SystemC::PayloadEvent<Gem5ToTlmBridge> *pe,
 }
 
 // Similar to TLM's blocking transport (LT)
+template <unsigned int BITWIDTH>
 Tick
-Gem5ToTlmBridge::recvAtomic(PacketPtr packet)
+Gem5ToTlmBridge<BITWIDTH>::recvAtomic(PacketPtr packet)
 {
     panic_if(packet->cacheResponding(),
              "Should not see packets where cache is responding");
@@ -205,8 +210,9 @@ Gem5ToTlmBridge::recvAtomic(PacketPtr packet)
     return delay.value();
 }
 
+template <unsigned int BITWIDTH>
 void
-Gem5ToTlmBridge::recvFunctionalSnoop(PacketPtr packet)
+Gem5ToTlmBridge<BITWIDTH>::recvFunctionalSnoop(PacketPtr packet)
 {
     // Snooping should be implemented with tlm_dbg_transport.
     SC_REPORT_FATAL("Gem5ToTlmBridge",
@@ -214,8 +220,9 @@ Gem5ToTlmBridge::recvFunctionalSnoop(PacketPtr packet)
 }
 
 // Similar to TLM's non-blocking transport (AT).
+template <unsigned int BITWIDTH>
 bool
-Gem5ToTlmBridge::recvTimingReq(PacketPtr packet)
+Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
 {
     panic_if(packet->cacheResponding(),
              "Should not see packets where cache is responding");
@@ -309,8 +316,9 @@ Gem5ToTlmBridge::recvTimingReq(PacketPtr packet)
     return true;
 }
 
+template <unsigned int BITWIDTH>
 bool
-Gem5ToTlmBridge::recvTimingSnoopResp(PacketPtr packet)
+Gem5ToTlmBridge<BITWIDTH>::recvTimingSnoopResp(PacketPtr packet)
 {
     // Snooping should be implemented with tlm_dbg_transport.
     SC_REPORT_FATAL("Gem5ToTlmBridge",
@@ -318,14 +326,16 @@ Gem5ToTlmBridge::recvTimingSnoopResp(PacketPtr packet)
     return false;
 }
 
+template <unsigned int BITWIDTH>
 bool
-Gem5ToTlmBridge::tryTiming(PacketPtr packet)
+Gem5ToTlmBridge<BITWIDTH>::tryTiming(PacketPtr packet)
 {
     panic("tryTiming(PacketPtr) isn't implemented.");
 }
 
+template <unsigned int BITWIDTH>
 void
-Gem5ToTlmBridge::recvRespRetry()
+Gem5ToTlmBridge<BITWIDTH>::recvRespRetry()
 {
     /* Retry a response */
     sc_assert(blockingResponse);
@@ -347,8 +357,9 @@ Gem5ToTlmBridge::recvRespRetry()
 }
 
 // Similar to TLM's debug transport.
+template <unsigned int BITWIDTH>
 void
-Gem5ToTlmBridge::recvFunctional(PacketPtr packet)
+Gem5ToTlmBridge<BITWIDTH>::recvFunctional(PacketPtr packet)
 {
     // Prepare the transaction.
     tlm::tlm_generic_payload *trans = mm.allocate();
@@ -369,8 +380,9 @@ Gem5ToTlmBridge::recvFunctional(PacketPtr packet)
     trans->release();
 }
 
+template <unsigned int BITWIDTH>
 tlm::tlm_sync_enum
-Gem5ToTlmBridge::nb_transport_bw(tlm::tlm_generic_payload &trans,
+Gem5ToTlmBridge<BITWIDTH>::nb_transport_bw(tlm::tlm_generic_payload &trans,
     tlm::tlm_phase &phase, sc_core::sc_time &delay)
 {
     auto *pe = new Gem5SystemC::PayloadEvent<Gem5ToTlmBridge>(
@@ -381,9 +393,10 @@ Gem5ToTlmBridge::nb_transport_bw(tlm::tlm_generic_payload &trans,
     return tlm::TLM_ACCEPTED;
 }
 
-Gem5ToTlmBridge::Gem5ToTlmBridge(
+template <unsigned int BITWIDTH>
+Gem5ToTlmBridge<BITWIDTH>::Gem5ToTlmBridge(
         Params *params, const sc_core::sc_module_name &mn) :
-    sc_core::sc_module(mn), bsp(std::string(name()) + ".gem5", *this),
+    Gem5ToTlmBridgeBase(mn), bsp(std::string(name()) + ".gem5", *this),
     socket("tlm_socket"),
     wrapper(socket, std::string(name()) + ".tlm", InvalidPortID),
     system(params->system), blockingRequest(nullptr),
@@ -392,8 +405,9 @@ Gem5ToTlmBridge::Gem5ToTlmBridge(
 {
 }
 
+template <unsigned int BITWIDTH>
 ::Port &
-Gem5ToTlmBridge::gem5_getPort(const std::string &if_name, int idx)
+Gem5ToTlmBridge<BITWIDTH>::gem5_getPort(const std::string &if_name, int idx)
 {
     if (if_name == "gem5")
         return bsp;
@@ -403,8 +417,9 @@ Gem5ToTlmBridge::gem5_getPort(const std::string &if_name, int idx)
     return sc_core::sc_module::gem5_getPort(if_name, idx);
 }
 
+template <unsigned int BITWIDTH>
 void
-Gem5ToTlmBridge::before_end_of_elaboration()
+Gem5ToTlmBridge<BITWIDTH>::before_end_of_elaboration()
 {
     bsp.sendRangeChange();
 
@@ -414,9 +429,16 @@ Gem5ToTlmBridge::before_end_of_elaboration()
 
 } // namespace sc_gem5
 
-sc_gem5::Gem5ToTlmBridge *
-Gem5ToTlmBridgeParams::create()
+sc_gem5::Gem5ToTlmBridge<32> *
+Gem5ToTlmBridge32Params::create()
 {
-    return new sc_gem5::Gem5ToTlmBridge(
+    return new sc_gem5::Gem5ToTlmBridge<32>(
+            this, sc_core::sc_module_name(name.c_str()));
+}
+
+sc_gem5::Gem5ToTlmBridge<64> *
+Gem5ToTlmBridge64Params::create()
+{
+    return new sc_gem5::Gem5ToTlmBridge<64>(
             this, sc_core::sc_module_name(name.c_str()));
 }

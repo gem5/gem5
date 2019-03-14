@@ -62,7 +62,7 @@
 #define __SYSTEMC_TLM_BRIDGE_TLM_TO_GEM5_HH__
 
 #include "mem/port.hh"
-#include "params/TlmToGem5Bridge.hh"
+#include "params/TlmToGem5BridgeBase.hh"
 #include "systemc/ext/core/sc_module.hh"
 #include "systemc/ext/core/sc_module_name.hh"
 #include "systemc/ext/tlm_core/2/generic_payload/gp.hh"
@@ -74,7 +74,14 @@
 namespace sc_gem5
 {
 
-class TlmToGem5Bridge : public sc_core::sc_module
+class TlmToGem5BridgeBase : public sc_core::sc_module
+{
+  protected:
+    using sc_core::sc_module::sc_module;
+};
+
+template <unsigned int BITWIDTH>
+class TlmToGem5Bridge : public TlmToGem5BridgeBase
 {
   private:
     struct TlmSenderState : public Packet::SenderState
@@ -86,7 +93,7 @@ class TlmToGem5Bridge : public sc_core::sc_module
     class BridgeMasterPort : public MasterPort
     {
       protected:
-        TlmToGem5Bridge &bridge;
+        TlmToGem5Bridge<BITWIDTH> &bridge;
 
         bool
         recvTimingResp(PacketPtr pkt) override
@@ -97,12 +104,13 @@ class TlmToGem5Bridge : public sc_core::sc_module
         void recvRangeChange() override { bridge.recvRangeChange(); }
 
       public:
-        BridgeMasterPort(const std::string &name_, TlmToGem5Bridge &bridge_) :
+        BridgeMasterPort(const std::string &name_,
+                         TlmToGem5Bridge<BITWIDTH> &bridge_) :
             MasterPort(name_, nullptr), bridge(bridge_)
         {}
     };
 
-    tlm_utils::peq_with_cb_and_phase<TlmToGem5Bridge> peq;
+    tlm_utils::peq_with_cb_and_phase<TlmToGem5Bridge<BITWIDTH>> peq;
 
     bool waitForRetry;
     tlm::tlm_generic_payload *pendingRequest;
@@ -113,8 +121,9 @@ class TlmToGem5Bridge : public sc_core::sc_module
     bool responseInProgress;
 
     BridgeMasterPort bmp;
-    tlm_utils::simple_target_socket<TlmToGem5Bridge, 64> socket;
-    sc_gem5::TlmTargetWrapper<64> wrapper;
+    tlm_utils::simple_target_socket<
+        TlmToGem5Bridge<BITWIDTH>, BITWIDTH> socket;
+    sc_gem5::TlmTargetWrapper<BITWIDTH> wrapper;
 
     System *system;
 
@@ -151,10 +160,10 @@ class TlmToGem5Bridge : public sc_core::sc_module
   public:
     ::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;
 
-    typedef TlmToGem5BridgeParams Params;
+    typedef TlmToGem5BridgeBaseParams Params;
     TlmToGem5Bridge(Params *p, const sc_core::sc_module_name &mn);
 
-    tlm_utils::simple_target_socket<TlmToGem5Bridge, 64> &
+    tlm_utils::simple_target_socket<TlmToGem5Bridge<BITWIDTH>, BITWIDTH> &
     getSocket()
     {
         return socket;
