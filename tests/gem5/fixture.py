@@ -229,9 +229,14 @@ class DownloadedProgram(Fixture):
         self.url = self.urlbase + self.path
     def _download(self):
         import urllib
+        import errno
         log.test_log.debug("Downloading " + self.url + " to " + self.path)
         if not os.path.exists(self.program_dir):
-            os.makedirs(self.program_dir)
+            try:
+                os.makedirs(self.program_dir)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
         urllib.urlretrieve(self.url, self.path)
 
     def _getremotetime(self):
