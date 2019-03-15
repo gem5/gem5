@@ -53,7 +53,8 @@ IndirectMemoryPrefetcher::IndirectMemoryPrefetcher(
     byteOrder((ByteOrder) -1)
 #endif
 {
-    fatal_if(byteOrder == -1, "This prefetcher requires a defined ISA\n");
+    fatal_if(byteOrder == static_cast<ByteOrder>(-1),
+            "This prefetcher requires a defined ISA\n");
 }
 
 void
