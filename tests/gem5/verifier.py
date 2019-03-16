@@ -135,6 +135,7 @@ class MatchStdout(DerivedGoldStandard):
             re.compile('^command line:'),
             re.compile("^Couldn't import dot_parser,"),
             re.compile("^info: kernel located at:"),
+            re.compile("^info: Standard input is not a terminal"),
             re.compile("^Couldn't unlink "),
             re.compile("^Using GPU kernel code file\(s\) "),
         ]
