@@ -51,7 +51,7 @@ all: m5
 	$(CC) $(CFLAGS) -fPIC -o $@ -c $<
 
 m5: $(OBJS)
-	$(CC) -o $@ $(OBJS)
+	$(CC) -o $@ $(OBJS) -no-pie
 
 m5op_x86.opic: m5op_x86.S
 	$(CC) $(CFLAGS) -DM5OP_PIC -fPIC -o $@ -c $<
