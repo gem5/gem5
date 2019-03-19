@@ -110,7 +110,7 @@ class Stage2MMU : public SimObject
      * is used by the two table walkers, and is exposed externally and
      * connected through the stage-one table walker.
      */
-    DmaPort& getPort() { return port; }
+    DmaPort& getDMAPort() { return port; }
 
     Fault readDataUntimed(ThreadContext *tc, Addr oVAddr, Addr descAddr,
         uint8_t *data, int numBytes, Request::Flags flags, bool isFunctional);

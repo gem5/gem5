@@ -132,9 +132,9 @@ Stage2MMU::Stage2Translation::finish(const Fault &_fault,
     }
 
     if (_fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
-        parent.getPort().dmaAction(MemCmd::ReadReq, req->getPaddr(), numBytes,
-                                   event, data, tc->getCpuPtr()->clockPeriod(),
-                                   req->getFlags());
+        parent.getDMAPort().dmaAction(
+            MemCmd::ReadReq, req->getPaddr(), numBytes, event, data,
+            tc->getCpuPtr()->clockPeriod(), req->getFlags());
     } else {
         // We can't do the DMA access as there's been a problem, so tell the
         // event we're done
