@@ -73,7 +73,7 @@ class MemCheckerMonitor : public MemObject
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
 
-    virtual void init();
+    void init() override;
 
   private:
 

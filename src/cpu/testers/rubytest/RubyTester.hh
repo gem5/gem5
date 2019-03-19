@@ -103,7 +103,7 @@ class RubyTester : public MemObject
     MasterPort* getReadableCpuPort(int idx);
     MasterPort* getWritableCpuPort(int idx);
 
-    virtual void init();
+    void init() override;
 
     void wakeup();
 

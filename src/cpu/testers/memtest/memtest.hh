@@ -75,7 +75,7 @@ class MemTest : public MemObject
     typedef MemTestParams Params;
     MemTest(const Params *p);
 
-    virtual void regStats();
+    void regStats() override;
 
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;

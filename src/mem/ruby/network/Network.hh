@@ -82,7 +82,7 @@ class Network : public ClockedObject
     { return dynamic_cast<const Params *>(_params); }
 
     virtual ~Network();
-    virtual void init();
+    void init() override;
 
     static uint32_t getNumberOfVirtualNetworks() { return m_virtual_networks; }
     int getNumNodes() const { return m_nodes; }

@@ -123,7 +123,7 @@ class PioDevice : public MemObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    virtual void init();
+    void init() override;
 
     Port &getPort(const std::string &if_name,
             PortID idx=InvalidPortID) override;

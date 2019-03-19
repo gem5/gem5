@@ -59,7 +59,7 @@ class GarnetSyntheticTraffic : public MemObject
     typedef GarnetSyntheticTrafficParams Params;
     GarnetSyntheticTraffic(const Params *p);
 
-    virtual void init();
+    void init() override;
 
     // main simulation loop (one cycle)
     void tick();

@@ -72,7 +72,7 @@ class RubyDirectedTester : public MemObject
 
     MasterPort* getCpuPort(int idx);
 
-    virtual void init();
+    void init() override;
 
     void wakeup();
 

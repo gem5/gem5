@@ -128,7 +128,7 @@ class MessageBuffer : public SimObject
         return RubyDummyPort::instance();
     }
 
-    void regStats();
+    void regStats() override;
 
     // Function for figuring out if any of the messages in the buffer need
     // to be updated with the data from the packet.

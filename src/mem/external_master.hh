@@ -129,7 +129,7 @@ class ExternalMaster : public MemObject
     static void registerHandler(const std::string &handler_name,
         Handler *handler);
 
-    void init();
+    void init() override;
 
     const MasterID masterId;
 };
