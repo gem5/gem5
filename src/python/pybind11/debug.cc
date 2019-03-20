@@ -75,7 +75,7 @@ ignore(const char *expr)
 {
     ObjectMatch ignore(expr);
 
-    Trace::getDebugLogger()->setIgnore(ignore);
+    Trace::getDebugLogger()->addIgnore(ignore);
 }
 
 void

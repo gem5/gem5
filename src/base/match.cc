@@ -44,6 +44,12 @@ ObjectMatch::ObjectMatch(const string &expr)
 }
 
 void
+ObjectMatch::add(const ObjectMatch &other)
+{
+    tokens.insert(tokens.end(), other.tokens.begin(), other.tokens.end());
+}
+
+void
 ObjectMatch::setExpression(const string &expr)
 {
     tokens.resize(1);

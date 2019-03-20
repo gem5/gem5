@@ -47,6 +47,7 @@ class ObjectMatch
   public:
     ObjectMatch();
     ObjectMatch(const std::string &expression);
+    void add(const ObjectMatch &other);
     void setExpression(const std::string &expression);
     void setExpression(const std::vector<std::string> &expression);
     bool match(const std::string &name) const
