@@ -198,8 +198,10 @@ TEST(CircularQueueTest, IteratorsOp)
     cq.push_back(first_value);
     cq.push_back(second_value);
 
+    auto negative_offset = -(cq_size + 1);
     auto it_1 = cq.begin();
     auto it_2 = cq.begin() + 1;
+    auto it_3 = cq.begin() - negative_offset;
 
     // Operators test
     ASSERT_TRUE(it_1 != it_2);
@@ -213,6 +215,7 @@ TEST(CircularQueueTest, IteratorsOp)
     ASSERT_EQ(it_1, it_2 - 1);
     ASSERT_EQ(it_2 - it_1, 1);
     ASSERT_EQ(it_1 - it_2, -1);
+    ASSERT_EQ(it_3._round, 1);
 
     auto temp_it = it_1;
     ASSERT_EQ(++temp_it, it_2);

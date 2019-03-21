@@ -323,12 +323,12 @@ class CircularQueue : private std::vector<T>
             assert(_cq);
 
             /* C does not do euclidean division, so we have to adjust */
-            if (t >= 0)
+            if (t >= 0) {
                 _round += (-t + _idx) / _cq->capacity();
-            else
-                _round += (-t + _idx - _cq->capacity() + 1) / _cq->capacity();
-
-            _idx = _cq->moduloSub(_idx, t);
+                _idx = _cq->moduloSub(_idx, t);
+            } else {
+                *this += -t;
+            }
             return *this;
         }
 
