@@ -144,6 +144,13 @@ MasterPort::sendAtomic(PacketPtr pkt)
     return _slavePort->recvAtomic(pkt);
 }
 
+Tick
+MasterPort::sendAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
+{
+    assert(pkt->isRequest());
+    return _slavePort->recvAtomicBackdoor(pkt, backdoor);
+}
+
 void
 MasterPort::sendFunctional(PacketPtr pkt)
 {
@@ -195,7 +202,8 @@ MasterPort::printAddr(Addr a)
  * Slave port
  */
 SlavePort::SlavePort(const std::string& name, MemObject* _owner, PortID id)
-    : BaseSlavePort(name, id), _masterPort(NULL), owner(*_owner)
+    : BaseSlavePort(name, id), _masterPort(NULL), defaultBackdoorWarned(false),
+    owner(*_owner)
 {
 }
 
@@ -217,6 +225,16 @@ SlavePort::slaveBind(MasterPort& master_port)
     _baseMasterPort = &master_port;
     _masterPort = &master_port;
     _connected = true;
+}
+
+Tick
+SlavePort::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor)
+{
+    if (!defaultBackdoorWarned) {
+        warn("Port %s doesn't support requesting a back door.", name());
+        defaultBackdoorWarned = true;
+    }
+    return recvAtomic(pkt);
 }
 
 Tick
