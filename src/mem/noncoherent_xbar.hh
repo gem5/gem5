@@ -113,7 +113,13 @@ class NoncoherentXBar : public BaseXBar
         Tick
         recvAtomic(PacketPtr pkt) override
         {
-            return xbar.recvAtomic(pkt, id);
+            return xbar.recvAtomicBackdoor(pkt, id);
+        }
+
+        Tick
+        recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor) override
+        {
+            return xbar.recvAtomicBackdoor(pkt, id, &backdoor);
         }
 
         void
@@ -172,7 +178,8 @@ class NoncoherentXBar : public BaseXBar
     virtual bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
     virtual bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
     void recvReqRetry(PortID master_port_id);
-    Tick recvAtomic(PacketPtr pkt, PortID slave_port_id);
+    Tick recvAtomicBackdoor(PacketPtr pkt, PortID slave_port_id,
+                            MemBackdoorPtr *backdoor=nullptr);
     void recvFunctional(PacketPtr pkt, PortID slave_port_id);
 
   public:

@@ -123,7 +123,13 @@ class CoherentXBar : public BaseXBar
         Tick
         recvAtomic(PacketPtr pkt) override
         {
-            return xbar.recvAtomic(pkt, id);
+            return xbar.recvAtomicBackdoor(pkt, id);
+        }
+
+        Tick
+        recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor) override
+        {
+            return xbar.recvAtomicBackdoor(pkt, id, &backdoor);
         }
 
         void
@@ -314,7 +320,8 @@ class CoherentXBar : public BaseXBar
     void forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id,
                        const std::vector<QueuedSlavePort*>& dests);
 
-    Tick recvAtomic(PacketPtr pkt, PortID slave_port_id);
+    Tick recvAtomicBackdoor(PacketPtr pkt, PortID slave_port_id,
+                            MemBackdoorPtr *backdoor=nullptr);
     Tick recvAtomicSnoop(PacketPtr pkt, PortID master_port_id);
 
     /**

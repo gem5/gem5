@@ -721,7 +721,8 @@ CoherentXBar::recvReqRetry(PortID master_port_id)
 }
 
 Tick
-CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
+CoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID slave_port_id,
+                                 MemBackdoorPtr *backdoor)
 {
     DPRINTF(CoherentXBar, "%s: src %s packet %s\n", __func__,
             slavePorts[slave_port_id]->name(), pkt->print());
@@ -800,7 +801,10 @@ CoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
             }
 
             // forward the request to the appropriate destination
-            response_latency = masterPorts[master_port_id]->sendAtomic(pkt);
+            auto master = masterPorts[master_port_id];
+            response_latency = backdoor ?
+                master->sendAtomicBackdoor(pkt, *backdoor) :
+                master->sendAtomic(pkt);
         } else {
             // if it does not need a response we sink the packet above
             assert(pkt->needsResponse());

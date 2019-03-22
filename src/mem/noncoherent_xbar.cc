@@ -244,7 +244,8 @@ NoncoherentXBar::recvReqRetry(PortID master_port_id)
 }
 
 Tick
-NoncoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
+NoncoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID slave_port_id,
+                                    MemBackdoorPtr *backdoor)
 {
     DPRINTF(NoncoherentXBar, "recvAtomic: packet src %s addr 0x%x cmd %s\n",
             slavePorts[slave_port_id]->name(), pkt->getAddr(),
@@ -263,7 +264,9 @@ NoncoherentXBar::recvAtomic(PacketPtr pkt, PortID slave_port_id)
     transDist[pkt_cmd]++;
 
     // forward the request to the appropriate destination
-    Tick response_latency = masterPorts[master_port_id]->sendAtomic(pkt);
+    auto master = masterPorts[master_port_id];
+    Tick response_latency = backdoor ?
+        master->sendAtomicBackdoor(pkt, *backdoor) : master->sendAtomic(pkt);
 
     // add the response data
     if (pkt->isResponse()) {
