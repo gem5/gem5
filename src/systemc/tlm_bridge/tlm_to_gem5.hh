@@ -139,6 +139,8 @@ class TlmToGem5Bridge : public TlmToGem5BridgeBase
 
     void checkTransaction(tlm::tlm_generic_payload &trans);
 
+    void invalidateDmi(const ::MemBackdoor &backdoor);
+
   protected:
     // payload event call back
     void peq_cb(tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);

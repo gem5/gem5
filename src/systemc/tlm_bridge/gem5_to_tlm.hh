@@ -103,6 +103,11 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
         {
             return bridge.recvAtomic(pkt);
         }
+        Tick
+        recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor) override
+        {
+            return bridge.recvAtomicBackdoor(pkt, backdoor);
+        }
         void
         recvFunctional(PacketPtr pkt) override
         {
@@ -163,8 +168,12 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
     void pec(Gem5SystemC::PayloadEvent<Gem5ToTlmBridge<BITWIDTH>> *pe,
              tlm::tlm_generic_payload &trans, const tlm::tlm_phase &phase);
 
+    MemBackdoorPtr getBackdoor(tlm::tlm_generic_payload &trans);
+    AddrRangeMap<MemBackdoorPtr> backdoorMap;
+
     // The gem5 port interface.
     Tick recvAtomic(PacketPtr packet);
+    Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &backdoor);
     void recvFunctional(PacketPtr packet);
     bool recvTimingReq(PacketPtr packet);
     bool tryTiming(PacketPtr packet);
@@ -177,6 +186,8 @@ class Gem5ToTlmBridge : public Gem5ToTlmBridgeBase
     tlm::tlm_sync_enum nb_transport_bw(tlm::tlm_generic_payload &trans,
                                        tlm::tlm_phase &phase,
                                        sc_core::sc_time &t);
+    void invalidate_direct_mem_ptr(
+            sc_dt::uint64 start_range, sc_dt::uint64 end_range);
 
   public:
     ::Port &gem5_getPort(const std::string &if_name, int idx=-1) override;

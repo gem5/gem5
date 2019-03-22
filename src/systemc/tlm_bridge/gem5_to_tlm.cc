@@ -80,32 +80,45 @@ Gem5SystemC::MemoryManager mm;
 
 /**
  * Convert a gem5 packet to a TLM payload by copying all the relevant
- * information to a previously allocated tlm payload
+ * information to new tlm payload.
  */
-void
-packet2payload(PacketPtr packet, tlm::tlm_generic_payload &trans)
+tlm::tlm_generic_payload *
+packet2payload(PacketPtr packet)
 {
-    trans.set_address(packet->getAddr());
+    tlm::tlm_generic_payload *trans = mm.allocate();
+    trans->acquire();
+
+    trans->set_address(packet->getAddr());
 
     /* Check if this transaction was allocated by mm */
-    sc_assert(trans.has_mm());
+    sc_assert(trans->has_mm());
 
     unsigned int size = packet->getSize();
     unsigned char *data = packet->getPtr<unsigned char>();
 
-    trans.set_data_length(size);
-    trans.set_streaming_width(size);
-    trans.set_data_ptr(data);
+    trans->set_data_length(size);
+    trans->set_streaming_width(size);
+    trans->set_data_ptr(data);
 
-    if (packet->isRead()) {
-        trans.set_command(tlm::TLM_READ_COMMAND);
+    if ((packet->req->getFlags() & Request::NO_ACCESS) != 0) {
+        /* Do nothing */
+        trans->set_command(tlm::TLM_IGNORE_COMMAND);
+    } else if (packet->isRead()) {
+        trans->set_command(tlm::TLM_READ_COMMAND);
     } else if (packet->isInvalidate()) {
         /* Do nothing */
+        trans->set_command(tlm::TLM_IGNORE_COMMAND);
     } else if (packet->isWrite()) {
-        trans.set_command(tlm::TLM_WRITE_COMMAND);
+        trans->set_command(tlm::TLM_WRITE_COMMAND);
     } else {
         SC_REPORT_FATAL("Gem5ToTlmBridge", "No R/W packet");
     }
+
+    // Attach the packet pointer to the TLM transaction to keep track.
+    auto *extension = new Gem5SystemC::Gem5Extension(packet);
+    trans->set_auto_extension(extension);
+
+    return trans;
 }
 
 template <unsigned int BITWIDTH>
@@ -166,6 +179,37 @@ Gem5ToTlmBridge<BITWIDTH>::pec(
     delete pe;
 }
 
+template <unsigned int BITWIDTH>
+MemBackdoorPtr
+Gem5ToTlmBridge<BITWIDTH>::getBackdoor(tlm::tlm_generic_payload &trans)
+{
+    sc_dt::uint64 start = trans.get_address();
+    sc_dt::uint64 end = start + trans.get_data_length();
+
+    // Check for a back door we already know about.
+    AddrRange r(start, end);
+    auto it = backdoorMap.contains(r);
+    if (it != backdoorMap.end())
+        return it->second;
+
+    // If not, ask the target for one.
+    tlm::tlm_dmi dmi_data;
+    if (!socket->get_direct_mem_ptr(trans, dmi_data))
+        return nullptr;
+
+    // If the target gave us one, translate it to a gem5 MemBackdoor and
+    // store it in our cache.
+    AddrRange dmi_r(dmi_data.get_start_address(), dmi_data.get_end_address());
+    auto backdoor = new MemBackdoor(
+            dmi_r, dmi_data.get_dmi_ptr(), MemBackdoor::NoAccess);
+    backdoor->readable(dmi_data.is_read_allowed());
+    backdoor->writeable(dmi_data.is_write_allowed());
+
+    backdoorMap.insert(dmi_r, backdoor);
+
+    return backdoor;
+}
+
 // Similar to TLM's blocking transport (LT)
 template <unsigned int BITWIDTH>
 Tick
@@ -174,36 +218,51 @@ Gem5ToTlmBridge<BITWIDTH>::recvAtomic(PacketPtr packet)
     panic_if(packet->cacheResponding(),
              "Should not see packets where cache is responding");
 
-    panic_if(!(packet->isRead() || packet->isWrite()),
-             "Should only see read and writes at TLM memory\n");
+    // Prepare the transaction.
+    auto *trans = packet2payload(packet);
+
+    sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
+
+    if (trans->get_command() != tlm::TLM_IGNORE_COMMAND) {
+        // Execute b_transport:
+        socket->b_transport(*trans, delay);
+    }
+
+    if (packet->needsResponse())
+        packet->makeResponse();
+
+    trans->release();
+
+    return delay.value();
+}
+
+template <unsigned int BITWIDTH>
+Tick
+Gem5ToTlmBridge<BITWIDTH>::recvAtomicBackdoor(
+        PacketPtr packet, MemBackdoorPtr &backdoor)
+{
+    panic_if(packet->cacheResponding(),
+             "Should not see packets where cache is responding");
 
     sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
 
     // Prepare the transaction.
-    tlm::tlm_generic_payload *trans = mm.allocate();
-    trans->acquire();
-    packet2payload(packet, *trans);
+    auto *trans = packet2payload(packet);
 
-    // Attach the packet pointer to the TLM transaction to keep track.
-    auto *extension = new Gem5SystemC::Gem5Extension(packet);
-    trans->set_auto_extension(extension);
-
-    // Execute b_transport:
-    if (packet->cmd == MemCmd::SwapReq) {
-        SC_REPORT_FATAL("Gem5ToTlmBridge", "SwapReq not supported");
-    } else if (packet->isRead()) {
+    if (trans->get_command() != tlm::TLM_IGNORE_COMMAND) {
+        // Execute b_transport:
         socket->b_transport(*trans, delay);
-    } else if (packet->isInvalidate()) {
-        // do nothing
-    } else if (packet->isWrite()) {
-        socket->b_transport(*trans, delay);
+        // If the hint said we could use DMI, set that up.
+        if (trans->is_dmi_allowed())
+            backdoor = getBackdoor(*trans);
     } else {
-        SC_REPORT_FATAL("Gem5ToTlmBridge", "Typo of request not supported");
+        // There's no transaction to piggy back on, so just request the
+        // backdoor normally.
+        backdoor = getBackdoor(*trans);
     }
 
-    if (packet->needsResponse()) {
+    if (packet->needsResponse())
         packet->makeResponse();
-    }
 
     trans->release();
 
@@ -254,13 +313,7 @@ Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
      */
 
     // Prepare the transaction.
-    tlm::tlm_generic_payload *trans = mm.allocate();
-    trans->acquire();
-    packet2payload(packet, *trans);
-
-    // Attach the packet pointer to the TLM transaction to keep track.
-    auto *extension = new Gem5SystemC::Gem5Extension(packet);
-    trans->set_auto_extension(extension);
+    auto *trans = packet2payload(packet);
 
     /*
      * Pay for annotated transport delays.
@@ -362,13 +415,7 @@ void
 Gem5ToTlmBridge<BITWIDTH>::recvFunctional(PacketPtr packet)
 {
     // Prepare the transaction.
-    tlm::tlm_generic_payload *trans = mm.allocate();
-    trans->acquire();
-    packet2payload(packet, *trans);
-
-    // Attach the packet pointer to the TLM transaction to keep track.
-    auto *extension = new Gem5SystemC::Gem5Extension(packet);
-    trans->set_auto_extension(extension);
+    auto *trans = packet2payload(packet);
 
     /* Execute Debug Transport: */
     unsigned int bytes = socket->transport_dbg(*trans);
@@ -391,6 +438,24 @@ Gem5ToTlmBridge<BITWIDTH>::nb_transport_bw(tlm::tlm_generic_payload &trans,
     system->wakeupEventQueue(nextEventTick);
     system->schedule(pe, nextEventTick);
     return tlm::TLM_ACCEPTED;
+}
+
+template <unsigned int BITWIDTH>
+void
+Gem5ToTlmBridge<BITWIDTH>::invalidate_direct_mem_ptr(
+        sc_dt::uint64 start_range, sc_dt::uint64 end_range)
+{
+    AddrRange r(start_range, end_range);
+
+    for (;;) {
+        auto it = backdoorMap.intersects(r);
+        if (it == backdoorMap.end())
+            break;
+
+        it->second->invalidate();
+        delete it->second;
+        backdoorMap.erase(it);
+    };
 }
 
 template <unsigned int BITWIDTH>
@@ -424,6 +489,8 @@ Gem5ToTlmBridge<BITWIDTH>::before_end_of_elaboration()
     bsp.sendRangeChange();
 
     socket.register_nb_transport_bw(this, &Gem5ToTlmBridge::nb_transport_bw);
+    socket.register_invalidate_direct_mem_ptr(
+            this, &Gem5ToTlmBridge::invalidate_direct_mem_ptr);
     sc_core::sc_module::before_end_of_elaboration();
 }
 

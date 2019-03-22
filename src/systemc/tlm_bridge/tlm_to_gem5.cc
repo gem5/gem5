@@ -64,6 +64,7 @@
 #include "params/TlmToGem5Bridge64.hh"
 #include "sim/system.hh"
 #include "systemc/ext/core/sc_module_name.hh"
+#include "systemc/ext/core/sc_time.hh"
 
 namespace sc_gem5
 {
@@ -212,6 +213,14 @@ TlmToGem5Bridge<BITWIDTH>::checkTransaction(tlm::tlm_generic_payload &trans)
 
 template <unsigned int BITWIDTH>
 void
+TlmToGem5Bridge<BITWIDTH>::invalidateDmi(const ::MemBackdoor &backdoor)
+{
+    socket->invalidate_direct_mem_ptr(
+            backdoor.range().start(), backdoor.range().end());
+}
+
+template <unsigned int BITWIDTH>
+void
 TlmToGem5Bridge<BITWIDTH>::peq_cb(tlm::tlm_generic_payload &trans,
                                   const tlm::tlm_phase &phase)
 {
@@ -272,7 +281,10 @@ TlmToGem5Bridge<BITWIDTH>::b_transport(tlm::tlm_generic_payload &trans,
         pkt = generatePacket(trans);
     }
 
-    Tick ticks = bmp.sendAtomic(pkt);
+    MemBackdoorPtr backdoor = nullptr;
+    Tick ticks = bmp.sendAtomicBackdoor(pkt, backdoor);
+    if (backdoor)
+        trans.set_dmi_allowed(true);
 
     // send an atomic request to gem5
     panic_if(pkt->needsResponse() && !pkt->isResponse(),
@@ -318,7 +330,51 @@ bool
 TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
                                               tlm::tlm_dmi &dmi_data)
 {
-    return false;
+    Gem5SystemC::Gem5Extension *extension = nullptr;
+    trans.get_extension(extension);
+
+    PacketPtr pkt = nullptr;
+
+    // If there is an extension, this transaction was initiated by the gem5
+    // world and we can pipe through the original packet.
+    if (extension != nullptr) {
+        extension->setPipeThrough();
+        pkt = extension->getPacket();
+    } else {
+        pkt = generatePacket(trans);
+        pkt->req->setFlags(Request::NO_ACCESS);
+    }
+
+    MemBackdoorPtr backdoor = nullptr;
+    bmp.sendAtomicBackdoor(pkt, backdoor);
+    if (backdoor) {
+        trans.set_dmi_allowed(true);
+        dmi_data.set_dmi_ptr(backdoor->ptr());
+        dmi_data.set_start_address(backdoor->range().start());
+        dmi_data.set_end_address(backdoor->range().end());
+
+        typedef tlm::tlm_dmi::dmi_access_e access_t;
+        access_t access = tlm::tlm_dmi::DMI_ACCESS_NONE;
+        if (backdoor->readable())
+            access = (access_t)(access | tlm::tlm_dmi::DMI_ACCESS_READ);
+        if (backdoor->writeable())
+            access = (access_t)(access | tlm::tlm_dmi::DMI_ACCESS_WRITE);
+        dmi_data.set_granted_access(access);
+
+        backdoor->addInvalidationCallback(
+            [this](const MemBackdoor &backdoor)
+            {
+                invalidateDmi(backdoor);
+            }
+        );
+    }
+
+    if (extension == nullptr)
+        destroyPacket(pkt);
+
+    trans.set_response_status(tlm::TLM_OK_RESPONSE);
+
+    return backdoor != nullptr;
 }
 
 template <unsigned int BITWIDTH>
@@ -443,6 +499,8 @@ TlmToGem5Bridge<BITWIDTH>::before_end_of_elaboration()
         SC_REPORT_INFO("TlmToGem5Bridge", "register blocking interface");
         socket.register_b_transport(
                 this, &TlmToGem5Bridge<BITWIDTH>::b_transport);
+        socket.register_get_direct_mem_ptr(
+                this, &TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr);
     } else {
         panic("gem5 operates neither in Timing nor in Atomic mode");
     }
