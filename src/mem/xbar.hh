@@ -116,9 +116,6 @@ class BaseXBar : public MemObject
          */
         DrainState drain() override;
 
-        /**
-         * Get the crossbar layer's name
-         */
         const std::string name() const { return xbar.name() + _name; }
 
 
@@ -154,7 +151,6 @@ class BaseXBar : public MemObject
          */
         void failedTiming(SrcType* src_port, Tick busy_time);
 
-        /** Occupy the layer until until */
         void occupyLayer(Tick until);
 
         /**
@@ -170,9 +166,6 @@ class BaseXBar : public MemObject
          */
         void recvRetry();
 
-        /**
-         * Register stats for the layer
-         */
         void regStats();
 
       protected:
@@ -193,7 +186,6 @@ class BaseXBar : public MemObject
         /** The crossbar this layer is a part of. */
         BaseXBar& xbar;
 
-        /** A name for this layer. */
         std::string _name;
 
         /**
@@ -214,7 +206,6 @@ class BaseXBar : public MemObject
          */
         enum State { IDLE, BUSY, RETRY };
 
-        /** track the state of the layer */
         State state;
 
         /**
@@ -235,8 +226,6 @@ class BaseXBar : public MemObject
          * potential waiting port, or drain if asked to do so.
          */
         void releaseLayer();
-
-        /** event used to schedule a release of the layer */
         EventFunctionWrapper releaseEvent;
 
         /**
@@ -249,7 +238,7 @@ class BaseXBar : public MemObject
 
     };
 
-    class ReqLayer : public Layer<SlavePort,MasterPort>
+    class ReqLayer : public Layer<SlavePort, MasterPort>
     {
       public:
         /**
@@ -260,15 +249,18 @@ class BaseXBar : public MemObject
          * @param _name the layer's name
          */
         ReqLayer(MasterPort& _port, BaseXBar& _xbar, const std::string& _name) :
-            Layer(_port, _xbar, _name) {}
+            Layer(_port, _xbar, _name)
+        {}
 
       protected:
-
-        void sendRetry(SlavePort* retry_port)
-        { retry_port->sendRetryReq(); }
+        void
+        sendRetry(SlavePort* retry_port) override
+        {
+            retry_port->sendRetryReq();
+        }
     };
 
-    class RespLayer : public Layer<MasterPort,SlavePort>
+    class RespLayer : public Layer<MasterPort, SlavePort>
     {
       public:
         /**
@@ -278,16 +270,20 @@ class BaseXBar : public MemObject
          * @param _xbar the crossbar this layer belongs to
          * @param _name the layer's name
          */
-        RespLayer(SlavePort& _port, BaseXBar& _xbar, const std::string& _name) :
-            Layer(_port, _xbar, _name) {}
+        RespLayer(SlavePort& _port, BaseXBar& _xbar,
+                  const std::string& _name) :
+            Layer(_port, _xbar, _name)
+        {}
 
       protected:
-
-        void sendRetry(MasterPort* retry_port)
-        { retry_port->sendRetryResp(); }
+        void
+        sendRetry(MasterPort* retry_port) override
+        {
+            retry_port->sendRetryResp();
+        }
     };
 
-    class SnoopRespLayer : public Layer<SlavePort,MasterPort>
+    class SnoopRespLayer : public Layer<SlavePort, MasterPort>
     {
       public:
         /**
@@ -299,12 +295,16 @@ class BaseXBar : public MemObject
          */
         SnoopRespLayer(MasterPort& _port, BaseXBar& _xbar,
                        const std::string& _name) :
-            Layer(_port, _xbar, _name) {}
+            Layer(_port, _xbar, _name)
+        {}
 
       protected:
 
-        void sendRetry(SlavePort* retry_port)
-        { retry_port->sendRetrySnoopResp(); }
+        void
+        sendRetry(SlavePort* retry_port) override
+        {
+            retry_port->sendRetrySnoopResp();
+        }
     };
 
     /**
@@ -312,9 +312,7 @@ class BaseXBar : public MemObject
      * and to decode the address.
      */
     const Cycles frontendLatency;
-    /** Cycles of forward latency */
     const Cycles forwardLatency;
-    /** Cycles of response latency */
     const Cycles responseLatency;
     /** the width of the xbar in bytes */
     const uint32_t width;
@@ -417,7 +415,6 @@ class BaseXBar : public MemObject
                   PortID idx=InvalidPortID) override;
 
     void regStats() override;
-
 };
 
 #endif //__MEM_XBAR_HH__

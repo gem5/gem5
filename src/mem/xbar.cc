@@ -76,11 +76,6 @@ BaseXBar::~BaseXBar()
         delete s;
 }
 
-void
-BaseXBar::init()
-{
-}
-
 Port &
 BaseXBar::getPort(const std::string &if_name, PortID idx)
 {
@@ -136,7 +131,7 @@ BaseXBar::calcPacketTiming(PacketPtr pkt, Tick header_delay)
 }
 
 template <typename SrcType, typename DstType>
-BaseXBar::Layer<SrcType,DstType>::Layer(DstType& _port, BaseXBar& _xbar,
+BaseXBar::Layer<SrcType, DstType>::Layer(DstType& _port, BaseXBar& _xbar,
                                        const std::string& _name) :
     port(_port), xbar(_xbar), _name(_name), state(IDLE),
     waitingForPeer(NULL), releaseEvent([this]{ releaseLayer(); }, name())
@@ -144,7 +139,7 @@ BaseXBar::Layer<SrcType,DstType>::Layer(DstType& _port, BaseXBar& _xbar,
 }
 
 template <typename SrcType, typename DstType>
-void BaseXBar::Layer<SrcType,DstType>::occupyLayer(Tick until)
+void BaseXBar::Layer<SrcType, DstType>::occupyLayer(Tick until)
 {
     // ensure the state is busy at this point, as the layer should
     // transition from idle as soon as it has decided to forward the
@@ -165,7 +160,7 @@ void BaseXBar::Layer<SrcType,DstType>::occupyLayer(Tick until)
 
 template <typename SrcType, typename DstType>
 bool
-BaseXBar::Layer<SrcType,DstType>::tryTiming(SrcType* src_port)
+BaseXBar::Layer<SrcType, DstType>::tryTiming(SrcType* src_port)
 {
     // if we are in the retry state, we will not see anything but the
     // retrying port (or in the case of the snoop ports the snoop
@@ -196,7 +191,7 @@ BaseXBar::Layer<SrcType,DstType>::tryTiming(SrcType* src_port)
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType,DstType>::succeededTiming(Tick busy_time)
+BaseXBar::Layer<SrcType, DstType>::succeededTiming(Tick busy_time)
 {
     // we should have gone from idle or retry to busy in the tryTiming
     // test
@@ -208,7 +203,7 @@ BaseXBar::Layer<SrcType,DstType>::succeededTiming(Tick busy_time)
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType,DstType>::failedTiming(SrcType* src_port,
+BaseXBar::Layer<SrcType, DstType>::failedTiming(SrcType* src_port,
                                               Tick busy_time)
 {
     // ensure no one got in between and tried to send something to
@@ -230,7 +225,7 @@ BaseXBar::Layer<SrcType,DstType>::failedTiming(SrcType* src_port,
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType,DstType>::releaseLayer()
+BaseXBar::Layer<SrcType, DstType>::releaseLayer()
 {
     // releasing the bus means we should now be idle
     assert(state == BUSY);
@@ -254,7 +249,7 @@ BaseXBar::Layer<SrcType,DstType>::releaseLayer()
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType,DstType>::retryWaiting()
+BaseXBar::Layer<SrcType, DstType>::retryWaiting()
 {
     // this should never be called with no one waiting
     assert(!waitingForLayer.empty());
@@ -289,7 +284,7 @@ BaseXBar::Layer<SrcType,DstType>::retryWaiting()
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType,DstType>::recvRetry()
+BaseXBar::Layer<SrcType, DstType>::recvRetry()
 {
     // we should never get a retry without having failed to forward
     // something to this port
@@ -573,7 +568,7 @@ BaseXBar::regStats()
 
 template <typename SrcType, typename DstType>
 DrainState
-BaseXBar::Layer<SrcType,DstType>::drain()
+BaseXBar::Layer<SrcType, DstType>::drain()
 {
     //We should check that we're not "doing" anything, and that noone is
     //waiting. We might be idle but have someone waiting if the device we
@@ -588,7 +583,7 @@ BaseXBar::Layer<SrcType,DstType>::drain()
 
 template <typename SrcType, typename DstType>
 void
-BaseXBar::Layer<SrcType,DstType>::regStats()
+BaseXBar::Layer<SrcType, DstType>::regStats()
 {
     using namespace Stats;
 
@@ -611,5 +606,5 @@ BaseXBar::Layer<SrcType,DstType>::regStats()
  * file, but since there are only two given options (MasterPort and
  * SlavePort) it seems a bit excessive at this point.
  */
-template class BaseXBar::Layer<SlavePort,MasterPort>;
-template class BaseXBar::Layer<MasterPort,SlavePort>;
+template class BaseXBar::Layer<SlavePort, MasterPort>;
+template class BaseXBar::Layer<MasterPort, SlavePort>;

@@ -108,35 +108,35 @@ class CoherentXBar : public BaseXBar
 
       protected:
 
-        /**
-         * When receiving a timing request, pass it to the crossbar.
-         */
-        virtual bool recvTimingReq(PacketPtr pkt)
-        { return xbar.recvTimingReq(pkt, id); }
+        bool
+        recvTimingReq(PacketPtr pkt) override
+        {
+            return xbar.recvTimingReq(pkt, id);
+        }
 
-        /**
-         * When receiving a timing snoop response, pass it to the crossbar.
-         */
-        virtual bool recvTimingSnoopResp(PacketPtr pkt)
-        { return xbar.recvTimingSnoopResp(pkt, id); }
+        bool
+        recvTimingSnoopResp(PacketPtr pkt) override
+        {
+            return xbar.recvTimingSnoopResp(pkt, id);
+        }
 
-        /**
-         * When receiving an atomic request, pass it to the crossbar.
-         */
-        virtual Tick recvAtomic(PacketPtr pkt)
-        { return xbar.recvAtomic(pkt, id); }
+        Tick
+        recvAtomic(PacketPtr pkt) override
+        {
+            return xbar.recvAtomic(pkt, id);
+        }
 
-        /**
-         * When receiving a functional request, pass it to the crossbar.
-         */
-        virtual void recvFunctional(PacketPtr pkt)
-        { xbar.recvFunctional(pkt, id); }
+        void
+        recvFunctional(PacketPtr pkt) override
+        {
+            xbar.recvFunctional(pkt, id);
+        }
 
-        /**
-         * Return the union of all adress ranges seen by this crossbar.
-         */
-        virtual AddrRangeList getAddrRanges() const
-        { return xbar.getAddrRanges(); }
+        AddrRangeList
+        getAddrRanges() const override
+        {
+            return xbar.getAddrRanges();
+        }
 
     };
 
@@ -166,42 +166,34 @@ class CoherentXBar : public BaseXBar
          *
          * @return a boolean that is true if this port is snooping
          */
-        virtual bool isSnooping() const
-        { return true; }
+        bool isSnooping() const override { return true; }
 
-        /**
-         * When receiving a timing response, pass it to the crossbar.
-         */
-        virtual bool recvTimingResp(PacketPtr pkt)
-        { return xbar.recvTimingResp(pkt, id); }
+        bool
+        recvTimingResp(PacketPtr pkt) override
+        {
+            return xbar.recvTimingResp(pkt, id);
+        }
 
-        /**
-         * When receiving a timing snoop request, pass it to the crossbar.
-         */
-        virtual void recvTimingSnoopReq(PacketPtr pkt)
-        { return xbar.recvTimingSnoopReq(pkt, id); }
+        void
+        recvTimingSnoopReq(PacketPtr pkt) override
+        {
+            return xbar.recvTimingSnoopReq(pkt, id);
+        }
 
-        /**
-         * When receiving an atomic snoop request, pass it to the crossbar.
-         */
-        virtual Tick recvAtomicSnoop(PacketPtr pkt)
-        { return xbar.recvAtomicSnoop(pkt, id); }
+        Tick
+        recvAtomicSnoop(PacketPtr pkt) override
+        {
+            return xbar.recvAtomicSnoop(pkt, id);
+        }
 
-        /**
-         * When receiving a functional snoop request, pass it to the crossbar.
-         */
-        virtual void recvFunctionalSnoop(PacketPtr pkt)
-        { xbar.recvFunctionalSnoop(pkt, id); }
+        void
+        recvFunctionalSnoop(PacketPtr pkt) override
+        {
+            xbar.recvFunctionalSnoop(pkt, id);
+        }
 
-        /** When reciving a range change from the peer port (at id),
-            pass it to the crossbar. */
-        virtual void recvRangeChange()
-        { xbar.recvRangeChange(id); }
-
-        /** When reciving a retry from the peer port (at id),
-            pass it to the crossbar. */
-        virtual void recvReqRetry()
-        { xbar.recvReqRetry(id); }
+        void recvRangeChange() override { xbar.recvRangeChange(id); }
+        void recvReqRetry() override { xbar.recvReqRetry(id); }
 
     };
 
@@ -231,23 +223,23 @@ class CoherentXBar : public BaseXBar
          * Override the sending of retries and pass them on through
          * the mirrored slave port.
          */
-        void sendRetryResp() {
+        void
+        sendRetryResp() override
+        {
             // forward it as a snoop response retry
             slavePort.sendRetrySnoopResp();
         }
 
-        /**
-         * Provided as necessary.
-         */
-        void recvReqRetry() { panic("SnoopRespPort should never see retry\n"); }
-
-        /**
-         * Provided as necessary.
-         */
-        bool recvTimingResp(PacketPtr pkt)
+        void
+        recvReqRetry() override
         {
-            panic("SnoopRespPort should never see timing response\n");
-            return false;
+            panic("SnoopRespPort should never see retry");
+        }
+
+        bool
+        recvTimingResp(PacketPtr pkt) override
+        {
+            panic("SnoopRespPort should never see timing response");
         }
 
     };
@@ -280,13 +272,8 @@ class CoherentXBar : public BaseXBar
       * broadcast needed for probes.  NULL denotes an absent filter. */
     SnoopFilter *snoopFilter;
 
-    /** Cycles of snoop response latency.*/
     const Cycles snoopResponseLatency;
-
-    /** Is this crossbar the point of coherency? **/
     const bool pointOfCoherency;
-
-    /** Is this crossbar the point of unification? **/
     const bool pointOfUnification;
 
     /**
@@ -295,24 +282,10 @@ class CoherentXBar : public BaseXBar
      */
     std::unique_ptr<Packet> pendingDelete;
 
-    /** Function called by the port when the crossbar is recieving a Timing
-      request packet.*/
     bool recvTimingReq(PacketPtr pkt, PortID slave_port_id);
-
-    /** Function called by the port when the crossbar is recieving a Timing
-      response packet.*/
     bool recvTimingResp(PacketPtr pkt, PortID master_port_id);
-
-    /** Function called by the port when the crossbar is recieving a timing
-        snoop request.*/
     void recvTimingSnoopReq(PacketPtr pkt, PortID master_port_id);
-
-    /** Function called by the port when the crossbar is recieving a timing
-        snoop response.*/
     bool recvTimingSnoopResp(PacketPtr pkt, PortID slave_port_id);
-
-    /** Timing function called by port when it is once again able to process
-     * requests. */
     void recvReqRetry(PortID master_port_id);
 
     /**
@@ -323,7 +296,9 @@ class CoherentXBar : public BaseXBar
      * @param pkt Packet to forward
      * @param exclude_slave_port_id Id of slave port to exclude
      */
-    void forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id) {
+    void
+    forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id)
+    {
         forwardTiming(pkt, exclude_slave_port_id, snoopPorts);
     }
 
@@ -339,12 +314,7 @@ class CoherentXBar : public BaseXBar
     void forwardTiming(PacketPtr pkt, PortID exclude_slave_port_id,
                        const std::vector<QueuedSlavePort*>& dests);
 
-    /** Function called by the port when the crossbar is recieving a Atomic
-      transaction.*/
     Tick recvAtomic(PacketPtr pkt, PortID slave_port_id);
-
-    /** Function called by the port when the crossbar is recieving an
-        atomic snoop transaction.*/
     Tick recvAtomicSnoop(PacketPtr pkt, PortID master_port_id);
 
     /**
@@ -357,8 +327,8 @@ class CoherentXBar : public BaseXBar
      *
      * @return a pair containing the snoop response and snoop latency
      */
-    std::pair<MemCmd, Tick> forwardAtomic(PacketPtr pkt,
-                                          PortID exclude_slave_port_id)
+    std::pair<MemCmd, Tick>
+    forwardAtomic(PacketPtr pkt, PortID exclude_slave_port_id)
     {
         return forwardAtomic(pkt, exclude_slave_port_id, InvalidPortID,
                              snoopPorts);
@@ -423,7 +393,8 @@ class CoherentXBar : public BaseXBar
      *
      * @return Whether the memory below is the destination for the packet
      */
-    bool isDestination(const PacketPtr pkt) const
+    bool
+    isDestination(const PacketPtr pkt) const
     {
         return (pkt->req->isToPOC() && pointOfCoherency) ||
             (pkt->req->isToPOU() && pointOfUnification);
