@@ -432,14 +432,14 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 
 #if THE_ISA == MIPS_ISA
     RegVal
-    readRegOtherThread(const RegId& misc_reg, ThreadID tid)
+    readRegOtherThread(const RegId& misc_reg, ThreadID tid) override
     {
         panic("MIPS MT not defined for O3 CPU.\n");
         return 0;
     }
 
     void
-    setRegOtherThread(const RegId& misc_reg, RegVal val, ThreadID tid)
+    setRegOtherThread(const RegId& misc_reg, RegVal val, ThreadID tid) override
     {
         panic("MIPS MT not defined for O3 CPU.\n");
     }
