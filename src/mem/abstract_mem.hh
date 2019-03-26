@@ -49,6 +49,7 @@
 #ifndef __MEM_ABSTRACT_MEMORY_HH__
 #define __MEM_ABSTRACT_MEMORY_HH__
 
+#include "mem/backdoor.hh"
 #include "mem/mem_object.hh"
 #include "params/AbstractMemory.hh"
 #include "sim/stats.hh"
@@ -109,6 +110,9 @@ class AbstractMemory : public MemObject
 
     // Pointer to host memory used to implement this memory
     uint8_t* pmemAddr;
+
+    // Backdoor to access this memory.
+    MemBackdoor backdoor;
 
     // Enable specific memories to be reported to the configuration table
     const bool confTableReported;
