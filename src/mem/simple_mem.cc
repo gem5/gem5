@@ -80,6 +80,16 @@ SimpleMemory::recvAtomic(PacketPtr pkt)
     return getLatency();
 }
 
+Tick
+SimpleMemory::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor)
+{
+    Tick latency = recvAtomic(pkt);
+
+    if (backdoor.ptr())
+        _backdoor = &backdoor;
+    return latency;
+}
+
 void
 SimpleMemory::recvFunctional(PacketPtr pkt)
 {
@@ -269,6 +279,13 @@ Tick
 SimpleMemory::MemoryPort::recvAtomic(PacketPtr pkt)
 {
     return memory.recvAtomic(pkt);
+}
+
+Tick
+SimpleMemory::MemoryPort::recvAtomicBackdoor(
+        PacketPtr pkt, MemBackdoorPtr &_backdoor)
+{
+    return memory.recvAtomicBackdoor(pkt, _backdoor);
 }
 
 void

@@ -84,27 +84,20 @@ class SimpleMemory : public AbstractMemory
 
     class MemoryPort : public SlavePort
     {
-
       private:
-
         SimpleMemory& memory;
 
       public:
-
         MemoryPort(const std::string& _name, SimpleMemory& _memory);
 
       protected:
-
-        Tick recvAtomic(PacketPtr pkt);
-
-        void recvFunctional(PacketPtr pkt);
-
-        bool recvTimingReq(PacketPtr pkt);
-
-        void recvRespRetry();
-
+        Tick recvAtomic(PacketPtr pkt) override;
+        Tick recvAtomicBackdoor(
+                PacketPtr pkt, MemBackdoorPtr &_backdoor) override;
+        void recvFunctional(PacketPtr pkt) override;
+        bool recvTimingReq(PacketPtr pkt) override;
+        void recvRespRetry() override;
         AddrRangeList getAddrRanges() const;
-
     };
 
     MemoryPort port;
@@ -192,15 +185,11 @@ class SimpleMemory : public AbstractMemory
     void init() override;
 
   protected:
-
     Tick recvAtomic(PacketPtr pkt);
-
+    Tick recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor);
     void recvFunctional(PacketPtr pkt);
-
     bool recvTimingReq(PacketPtr pkt);
-
     void recvRespRetry();
-
 };
 
 #endif //__MEM_SIMPLE_MEMORY_HH__
