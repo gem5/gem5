@@ -872,7 +872,7 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     if (inst->traceData)
         inst->traceData->setCPSeq(thread->numOp);
 
-    cpu.probeInstCommit(inst->staticInst);
+    cpu.probeInstCommit(inst->staticInst, inst->pc.instAddr());
 }
 
 bool

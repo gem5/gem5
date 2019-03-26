@@ -1623,7 +1623,7 @@ FullO3CPU<Impl>::instDone(ThreadID tid, const DynInstPtr &inst)
     thread[tid]->numOps++;
     committedOps[tid]++;
 
-    probeInstCommit(inst->staticInst);
+    probeInstCommit(inst->staticInst, inst->instAddr());
 }
 
 template <class Impl>

@@ -487,8 +487,9 @@ class BaseCPU : public MemObject
      * instruction.
      *
      * @param inst Instruction that just committed
+     * @param pc PC of the instruction that just committed
      */
-    virtual void probeInstCommit(const StaticInstPtr &inst);
+    virtual void probeInstCommit(const StaticInstPtr &inst, Addr pc);
 
    protected:
     /**
@@ -509,6 +510,7 @@ class BaseCPU : public MemObject
      * instructions may call notify once for the entire bundle.
      */
     ProbePoints::PMUUPtr ppRetiredInsts;
+    ProbePoints::PMUUPtr ppRetiredInstsPC;
 
     /** Retired load instructions */
     ProbePoints::PMUUPtr ppRetiredLoads;

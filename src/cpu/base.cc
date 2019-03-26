@@ -391,6 +391,7 @@ BaseCPU::regProbePoints()
     ppActiveCycles = pmuProbePoint("ActiveCycles");
 
     ppRetiredInsts = pmuProbePoint("RetiredInsts");
+    ppRetiredInstsPC = pmuProbePoint("RetiredInstsPC");
     ppRetiredLoads = pmuProbePoint("RetiredLoads");
     ppRetiredStores = pmuProbePoint("RetiredStores");
     ppRetiredBranches = pmuProbePoint("RetiredBranches");
@@ -400,11 +401,12 @@ BaseCPU::regProbePoints()
 }
 
 void
-BaseCPU::probeInstCommit(const StaticInstPtr &inst)
+BaseCPU::probeInstCommit(const StaticInstPtr &inst, Addr pc)
 {
-    if (!inst->isMicroop() || inst->isLastMicroop())
+    if (!inst->isMicroop() || inst->isLastMicroop()) {
         ppRetiredInsts->notify(1);
-
+        ppRetiredInstsPC->notify(pc);
+    }
 
     if (inst->isLoad())
         ppRetiredLoads->notify(1);

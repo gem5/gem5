@@ -661,7 +661,7 @@ BaseSimpleCPU::postExecute()
     }
 
     // Call CPU instruction commit probes
-    probeInstCommit(curStaticInst);
+    probeInstCommit(curStaticInst, instAddr);
 }
 
 void
