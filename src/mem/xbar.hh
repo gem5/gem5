@@ -408,8 +408,6 @@ class BaseXBar : public MemObject
 
     virtual ~BaseXBar();
 
-    void init() override;
-
     /** A function used to return the port associated with this object. */
     Port &getPort(const std::string &if_name,
                   PortID idx=InvalidPortID) override;
