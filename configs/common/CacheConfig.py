@@ -47,6 +47,7 @@ from __future__ import absolute_import
 import m5
 from m5.objects import *
 from .Caches import *
+from . import HWPConfig
 
 def config_cache(options, system):
     if options.external_memory_system and (options.caches or options.l2cache):
@@ -104,6 +105,14 @@ def config_cache(options, system):
         system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain)
         system.l2.cpu_side = system.tol2bus.master
         system.l2.mem_side = system.membus.slave
+        if options.l2_hwp_type:
+            hwpClass = HWPConfig.get(options.l2_hwp_type)
+            if system.l2.prefetcher != "Null":
+                print("Warning: l2-hwp-type is set (", hwpClass, "), but",
+                      "the current l2 has a default Hardware Prefetcher",
+                      "of type", type(system.l2.prefetcher), ", using the",
+                      "specified by the flag option.")
+            system.l2.prefetcher = hwpClass()
 
     if options.memchecker:
         system.memchecker = MemChecker()
@@ -138,6 +147,24 @@ def config_cache(options, system):
 
                 # Let CPU connect to monitors
                 dcache = dcache_mon
+
+            if options.l1d_hwp_type:
+                hwpClass = HWPConfig.get(options.l1d_hwp_type)
+                if dcache.prefetcher != m5.params.NULL:
+                    print("Warning: l1d-hwp-type is set (", hwpClass, "), but",
+                          "the current l1d has a default Hardware Prefetcher",
+                          "of type", type(dcache.prefetcher), ", using the",
+                          "specified by the flag option.")
+                dcache.prefetcher = hwpClass()
+
+            if options.l1i_hwp_type:
+                hwpClass = HWPConfig.get(options.l1i_hwp_type)
+                if icache.prefetcher != m5.params.NULL:
+                    print("Warning: l1i-hwp-type is set (", hwpClass, "), but",
+                          "the current l1i has a default Hardware Prefetcher",
+                          "of type", type(icache.prefetcher), ", using the",
+                          "specified by the flag option.")
+                icache.prefetcher = hwpClass()
 
             # When connecting the caches, the clock is also inherited
             # from the CPU in question
