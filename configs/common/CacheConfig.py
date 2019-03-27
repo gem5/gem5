@@ -67,6 +67,15 @@ def config_cache(options, system):
             core.O3_ARM_v7a_DCache, core.O3_ARM_v7a_ICache, \
             core.O3_ARM_v7aL2, \
             core.O3_ARM_v7aWalkCache
+    elif options.cpu_type == "HPI":
+        try:
+            import cores.arm.HPI as core
+        except:
+            print("HPI is unavailable.")
+            sys.exit(1)
+
+        dcache_class, icache_class, l2_cache_class, walk_cache_class = \
+            core.HPI_DCache, core.HPI_ICache, core.HPI_L2, core.HPI_WalkCache
     else:
         dcache_class, icache_class, l2_cache_class, walk_cache_class = \
             L1_DCache, L1_ICache, L2Cache, None
