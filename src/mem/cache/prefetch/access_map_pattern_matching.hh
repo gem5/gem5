@@ -40,7 +40,6 @@
 #ifndef __MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__
 #define __MEM_CACHE_PREFETCH_ACCESS_MAP_PATTERN_MATCHING_HH__
 
-#include "mem/cache/base.hh"
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 #include "mem/packet.hh"
