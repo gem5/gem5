@@ -1389,9 +1389,11 @@ ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
                     gpuDynInst->wfSlotId);
         }
     } else {
-        if (!compute_unit->headTailMap.count(gpuDynInst)) {
-            compute_unit->headTailMap.insert(
-                    std::make_pair(gpuDynInst, curTick()));
+        if (pkt->isRead()) {
+            if (!compute_unit->headTailMap.count(gpuDynInst)) {
+                compute_unit->headTailMap
+                    .insert(std::make_pair(gpuDynInst, curTick()));
+            }
         }
     }
 
