@@ -63,11 +63,19 @@ NetworkBridge::NetworkBridge(const Params *p)
         // CDC type must be set
         panic("CDC type must be set");
     }
+}
 
-    lenBuffer.resize(p->vcs_per_vnet * p->virt_nets);
-    sizeSent.resize(p->vcs_per_vnet * p->virt_nets);
-    flitsSent.resize(p->vcs_per_vnet * p->virt_nets);
-    extraCredit.resize(p->vcs_per_vnet * p->virt_nets);
+void
+NetworkBridge::setVcsPerVnet(uint32_t consumerVcs)
+{
+    DPRINTF(RubyNetwork, "VcsPerVnet VC: %d\n", consumerVcs);
+    NetworkLink::setVcsPerVnet(consumerVcs);
+    lenBuffer.resize(consumerVcs * m_virt_nets);
+    sizeSent.resize(consumerVcs * m_virt_nets);
+    flitsSent.resize(consumerVcs * m_virt_nets);
+    extraCredit.resize(consumerVcs * m_virt_nets);
+
+    nLink->setVcsPerVnet(consumerVcs);
 }
 
 void

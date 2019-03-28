@@ -53,6 +53,7 @@ class NetworkLink : public ClockedObject, public Consumer
 
     void setLinkConsumer(Consumer *consumer);
     void setSourceQueue(flitBuffer *src_queue, ClockedObject *srcClockObject);
+    virtual void setVcsPerVnet(uint32_t consumerVcs);
     void setType(link_type type) { m_type = type; }
     link_type getType() { return m_type; }
     void print(std::ostream& out) const {}
@@ -89,6 +90,7 @@ class NetworkLink : public ClockedObject, public Consumer
     std::vector<unsigned int> m_vc_load;
 
   protected:
+    uint32_t m_virt_nets;
     flitBuffer linkBuffer;
     Consumer *link_consumer;
     flitBuffer *link_srcQueue;

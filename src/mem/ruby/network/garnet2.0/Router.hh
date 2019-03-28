@@ -69,12 +69,13 @@ class Router : public BasicRouter, public Consumer
                    CreditLink *credit_link);
     void addOutPort(PortDirection outport_dirn, NetworkLink *link,
                     std::vector<NetDest>& routing_table_entry,
-                    int link_weight, CreditLink *credit_link);
+                    int link_weight, CreditLink *credit_link,
+                    uint32_t consumerVcs);
 
     Cycles get_pipe_stages(){ return m_latency; }
-    int get_num_vcs()       { return m_num_vcs; }
-    int get_num_vnets()     { return m_virtual_networks; }
-    int get_vc_per_vnet()   { return m_vc_per_vnet; }
+    uint32_t get_num_vcs()       { return m_num_vcs; }
+    uint32_t get_num_vnets()     { return m_virtual_networks; }
+    uint32_t get_vc_per_vnet()   { return m_vc_per_vnet; }
     int get_num_inports()   { return m_input_unit.size(); }
     int get_num_outports()  { return m_output_unit.size(); }
     int get_id()            { return m_id; }
@@ -132,7 +133,7 @@ class Router : public BasicRouter, public Consumer
 
   private:
     Cycles m_latency;
-    int m_virtual_networks, m_vc_per_vnet, m_num_vcs;
+    uint32_t m_virtual_networks, m_vc_per_vnet, m_num_vcs;
     uint32_t m_bit_width;
     GarnetNetwork *m_network_ptr;
 

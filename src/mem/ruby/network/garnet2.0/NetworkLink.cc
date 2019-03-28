@@ -40,9 +40,8 @@ NetworkLink::NetworkLink(const Params *p)
     : ClockedObject(p), Consumer(this), m_id(p->link_id),
       m_type(NUM_LINK_TYPES_),
       m_latency(p->link_latency), m_link_utilized(0),
-      m_vc_load(p->vcs_per_vnet * p->virt_nets),
-      linkBuffer(), link_consumer(nullptr),
-      link_srcQueue(nullptr)
+      m_virt_nets(p->virt_nets), linkBuffer(),
+      link_consumer(nullptr), link_srcQueue(nullptr)
 {
     int num_vnets = (p->supported_vnets).size();
     assert(num_vnets > 0);
@@ -51,13 +50,18 @@ NetworkLink::NetworkLink(const Params *p)
     for (int i = 0; i < num_vnets; i++) {
         mVnets[i] = p->supported_vnets[i];
     }
-    DPRINTF(RubyNetwork,"Created with bitwidth:%d\n", bitWidth);
 }
 
 void
 NetworkLink::setLinkConsumer(Consumer *consumer)
 {
     link_consumer = consumer;
+}
+
+void
+NetworkLink::setVcsPerVnet(uint32_t consumerVcs)
+{
+    m_vc_load.resize(m_virt_nets * consumerVcs);
 }
 
 void

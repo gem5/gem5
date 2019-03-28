@@ -103,7 +103,9 @@ Router::addInPort(PortDirection inport_dirn,
     input_unit->set_in_link(in_link);
     input_unit->set_credit_link(credit_link);
     in_link->setLinkConsumer(this);
+    in_link->setVcsPerVnet(get_vc_per_vnet());
     credit_link->setSourceQueue(input_unit->getCreditQueue(), this);
+    credit_link->setVcsPerVnet(get_vc_per_vnet());
 
     m_input_unit.push_back(std::shared_ptr<InputUnit>(input_unit));
 
@@ -114,18 +116,21 @@ void
 Router::addOutPort(PortDirection outport_dirn,
                    NetworkLink *out_link,
                    std::vector<NetDest>& routing_table_entry, int link_weight,
-                   CreditLink *credit_link)
+                   CreditLink *credit_link, uint32_t consumerVcs)
 {
     fatal_if(out_link->bitWidth != m_bit_width, "Widths of units do not match."
             " Consider inserting SerDes Units");
 
     int port_num = m_output_unit.size();
-    OutputUnit *output_unit = new OutputUnit(port_num, outport_dirn, this);
+    OutputUnit *output_unit = new OutputUnit(port_num, outport_dirn, this,
+                                             consumerVcs);
 
     output_unit->set_out_link(out_link);
     output_unit->set_credit_link(credit_link);
     credit_link->setLinkConsumer(this);
+    credit_link->setVcsPerVnet(consumerVcs);
     out_link->setSourceQueue(output_unit->getOutQueue(), this);
+    out_link->setVcsPerVnet(consumerVcs);
 
     m_output_unit.push_back(std::shared_ptr<OutputUnit>(output_unit));
 

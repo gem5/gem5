@@ -47,7 +47,8 @@ class Router;
 class OutputUnit : public Consumer
 {
   public:
-    OutputUnit(int id, PortDirection direction, Router *router);
+    OutputUnit(int id, PortDirection direction, Router *router,
+               uint32_t consumerVcs);
     ~OutputUnit() = default;
     void set_out_link(NetworkLink *link);
     void set_credit_link(CreditLink *credit_link);
@@ -87,6 +88,12 @@ class OutputUnit : public Consumer
     }
 
     void insert_flit(flit *t_flit);
+
+    inline int
+    getVcsPerVnet()
+    {
+        return m_vc_per_vnet;
+    }
 
     uint32_t functionalWrite(Packet *pkt);
 

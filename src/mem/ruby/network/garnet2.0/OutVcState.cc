@@ -32,13 +32,20 @@
 
 #include "mem/ruby/system/RubySystem.hh"
 
-OutVcState::OutVcState(int id, GarnetNetwork *network_ptr)
+OutVcState::OutVcState(int id, GarnetNetwork *network_ptr,
+    uint32_t consumerVcs)
     : m_time(0)
 {
     m_id = id;
     m_vc_state = IDLE_;
+    /*
+     * We find the virtual network using the number of
+     * vcs per vnet. This assumes that the same vcs per
+     * vnet is used throughout the given object.
+     */
+    int vnet = floor(id/consumerVcs);
 
-    if (network_ptr->get_vnet_type(id) == DATA_VNET_)
+    if (network_ptr->get_vnet_type(vnet) == DATA_VNET_)
         m_max_credit_count = network_ptr->getBuffersPerDataVC();
     else
         m_max_credit_count = network_ptr->getBuffersPerCtrlVC();

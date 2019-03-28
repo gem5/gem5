@@ -58,7 +58,7 @@ GarnetNetwork::GarnetNetwork(const Params *p)
 {
     m_num_rows = p->num_rows;
     m_ni_flit_size = p->ni_flit_size;
-    m_vcs_per_vnet = p->vcs_per_vnet;
+    m_max_vcs_per_vnet = 0;
     m_buffers_per_data_vc = p->buffers_per_data_vc;
     m_buffers_per_ctrl_vc = p->buffers_per_ctrl_vc;
     m_routing_algorithm = p->routing_algorithm;
@@ -166,6 +166,9 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
 
     PortDirection dst_inport_dirn = "Local";
 
+    m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
+                             m_routers[dest]->get_vc_per_vnet());
+
     /*
      * We check if a bridge was enabled at any end of the link.
      * The bridge is enabled if either of clock domain
@@ -185,9 +188,10 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
         m_nis[local_src]->
         addOutPort(garnet_link->extNetBridge[LinkDirection_In],
                    garnet_link->extCredBridge[LinkDirection_In],
-                   dest);
+                   dest, m_routers[dest]->get_vc_per_vnet());
     } else {
-        m_nis[local_src]->addOutPort(net_link, credit_link, dest);
+        m_nis[local_src]->addOutPort(net_link, credit_link, dest,
+            m_routers[dest]->get_vc_per_vnet());
     }
 
     if (garnet_link->intBridgeEn) {
@@ -231,6 +235,9 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
 
     PortDirection src_outport_dirn = "Local";
 
+    m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
+                             m_routers[src]->get_vc_per_vnet());
+
     /*
      * We check if a bridge was enabled at any end of the link.
      * The bridge is enabled if either of clock domain
@@ -261,12 +268,14 @@ GarnetNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
             addOutPort(src_outport_dirn,
                        garnet_link->intNetBridge[LinkDirection_Out],
                        routing_table_entry, link->m_weight,
-                       garnet_link->intCredBridge[LinkDirection_Out]);
+                       garnet_link->intCredBridge[LinkDirection_Out],
+                       m_routers[src]->get_vc_per_vnet());
     } else {
         m_routers[src]->
             addOutPort(src_outport_dirn, net_link,
                        routing_table_entry,
-                       link->m_weight, credit_link);
+                       link->m_weight, credit_link,
+                       m_routers[src]->get_vc_per_vnet());
     }
 }
 
@@ -290,6 +299,10 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
 
     m_networklinks.push_back(net_link);
     m_creditlinks.push_back(credit_link);
+
+    m_max_vcs_per_vnet = std::max(m_max_vcs_per_vnet,
+                             std::max(m_routers[dest]->get_vc_per_vnet(),
+                             m_routers[src]->get_vc_per_vnet()));
 
     /*
      * We check if a bridge was enabled at any end of the link.
@@ -319,11 +332,13 @@ GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
         m_routers[src]->
             addOutPort(src_outport_dirn, garnet_link->srcNetBridge,
                        routing_table_entry,
-                       link->m_weight, garnet_link->srcCredBridge);
+                       link->m_weight, garnet_link->srcCredBridge,
+                       m_routers[dest]->get_vc_per_vnet());
     } else {
         m_routers[src]->addOutPort(src_outport_dirn, net_link,
                         routing_table_entry,
-                        link->m_weight, credit_link);
+                        link->m_weight, credit_link,
+                        m_routers[dest]->get_vc_per_vnet());
     }
 }
 
@@ -479,9 +494,8 @@ GarnetNetwork::regStats()
         .name(name() + ".int_link_utilization");
     m_average_link_utilization
         .name(name() + ".avg_link_utilization");
-
     m_average_vc_load
-        .init(m_virtual_networks * m_vcs_per_vnet)
+        .init(m_virtual_networks * m_max_vcs_per_vnet)
         .name(name() + ".avg_vc_load")
         .flags(Stats::pdf | Stats::total | Stats::nozero | Stats::oneline)
         ;

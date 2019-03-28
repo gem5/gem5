@@ -64,7 +64,6 @@ class GarnetNetwork : public Network
 
     // for network
     uint32_t getNiFlitSize() const { return m_ni_flit_size; }
-    uint32_t getVCsPerVnet() const { return m_vcs_per_vnet; }
     uint32_t getBuffersPerDataVC() { return m_buffers_per_data_vc; }
     uint32_t getBuffersPerCtrlVC() { return m_buffers_per_ctrl_vc; }
     int getRoutingAlgorithm() const { return m_routing_algorithm; }
@@ -76,9 +75,8 @@ class GarnetNetwork : public Network
     // Internal configuration
     bool isVNetOrdered(int vnet) const { return m_ordered[vnet]; }
     VNET_type
-    get_vnet_type(int vc)
+    get_vnet_type(int vnet)
     {
-        int vnet = vc/getVCsPerVnet();
         return m_vnet_type[vnet];
     }
     int getNumRouters();
@@ -147,7 +145,7 @@ class GarnetNetwork : public Network
     int m_num_rows;
     int m_num_cols;
     uint32_t m_ni_flit_size;
-    uint32_t m_vcs_per_vnet;
+    uint32_t m_max_vcs_per_vnet;
     uint32_t m_buffers_per_ctrl_vc;
     uint32_t m_buffers_per_data_vc;
     int m_routing_algorithm;

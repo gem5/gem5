@@ -37,14 +37,15 @@
 #include "mem/ruby/network/garnet2.0/Router.hh"
 #include "mem/ruby/network/garnet2.0/flitBuffer.hh"
 
-OutputUnit::OutputUnit(int id, PortDirection direction, Router *router)
+OutputUnit::OutputUnit(int id, PortDirection direction, Router *router,
+  uint32_t consumerVcs)
   : Consumer(router), m_router(router), m_id(id), m_direction(direction),
-    m_vc_per_vnet(m_router->get_vc_per_vnet())
+    m_vc_per_vnet(consumerVcs)
 {
-    const int m_num_vcs = m_router->get_num_vcs();
+    const int m_num_vcs = consumerVcs * m_router->get_num_vnets();
     outVcState.reserve(m_num_vcs);
     for (int i = 0; i < m_num_vcs; i++) {
-        outVcState.emplace_back(i, m_router->get_net_ptr());
+        outVcState.emplace_back(i, m_router->get_net_ptr(), consumerVcs);
     }
 }
 
