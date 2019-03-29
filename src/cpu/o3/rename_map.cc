@@ -151,8 +151,9 @@ UnifiedRenameMap::switchFreeList(UnifiedFreeList* freeList)
         panic_if(freeList->hasFreeVecRegs(),
                 "The free list is already tracking full Vec");
         panic_if(freeList->numFreeVecElems() !=
-                regFile->numVecElemPhysRegs() - TheISA::NumFloatRegs,
-                "The free list has lost vector register elements");
+                 regFile->numVecElemPhysRegs() -
+                 TheISA::NumVecRegs * TheISA::NumVecElemPerVecReg,
+                 "The free list has lost vector register elements");
 
         auto range = regFile->getRegIds(VecRegClass);
         freeList->addRegs(range.first + TheISA::NumVecRegs, range.second);
