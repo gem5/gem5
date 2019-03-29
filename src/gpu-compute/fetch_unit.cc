@@ -174,24 +174,24 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
                                                  computeUnit.shader->gpuTc,
                                                  false, pkt->senderState);
 
-        if (computeUnit.sqcTLBPort->isStalled()) {
-            assert(computeUnit.sqcTLBPort->retries.size() > 0);
+        if (computeUnit.sqcTLBPort.isStalled()) {
+            assert(computeUnit.sqcTLBPort.retries.size() > 0);
 
             DPRINTF(GPUTLB, "Failed to send TLB req for FETCH addr %#x\n",
                     vaddr);
 
-            computeUnit.sqcTLBPort->retries.push_back(pkt);
-        } else if (!computeUnit.sqcTLBPort->sendTimingReq(pkt)) {
+            computeUnit.sqcTLBPort.retries.push_back(pkt);
+        } else if (!computeUnit.sqcTLBPort.sendTimingReq(pkt)) {
             // Stall the data port;
             // No more packet is issued till
             // ruby indicates resources are freed by
             // a recvReqRetry() call back on this port.
-            computeUnit.sqcTLBPort->stallPort();
+            computeUnit.sqcTLBPort.stallPort();
 
             DPRINTF(GPUTLB, "Failed to send TLB req for FETCH addr %#x\n",
                     vaddr);
 
-            computeUnit.sqcTLBPort->retries.push_back(pkt);
+            computeUnit.sqcTLBPort.retries.push_back(pkt);
         } else {
             DPRINTF(GPUTLB, "sent FETCH translation request for %#x\n", vaddr);
         }
@@ -200,7 +200,7 @@ FetchUnit::initiateFetch(Wavefront *wavefront)
             new TheISA::GpuTLB::TranslationState(BaseTLB::Execute,
                                                  computeUnit.shader->gpuTc);
 
-        computeUnit.sqcTLBPort->sendFunctional(pkt);
+        computeUnit.sqcTLBPort.sendFunctional(pkt);
 
         TheISA::GpuTLB::TranslationState *sender_state =
              safe_cast<TheISA::GpuTLB::TranslationState*>(pkt->senderState);
@@ -257,8 +257,8 @@ FetchUnit::fetch(PacketPtr pkt, Wavefront *wavefront)
     if (timingSim) {
         // translation is done. Send the appropriate timing memory request.
 
-        if (!computeUnit.sqcPort->sendTimingReq(pkt)) {
-            computeUnit.sqcPort->retries.push_back(std::make_pair(pkt,
+        if (!computeUnit.sqcPort.sendTimingReq(pkt)) {
+            computeUnit.sqcPort.retries.push_back(std::make_pair(pkt,
                                                                    wavefront));
 
             DPRINTF(GPUPort, "CU%d: WF[%d][%d]: Fetch addr %#x failed!\n",
@@ -270,7 +270,7 @@ FetchUnit::fetch(PacketPtr pkt, Wavefront *wavefront)
                     pkt->req->getPaddr());
         }
     } else {
-        computeUnit.sqcPort->sendFunctional(pkt);
+        computeUnit.sqcPort.sendFunctional(pkt);
         processFetchReturn(pkt);
     }
 }

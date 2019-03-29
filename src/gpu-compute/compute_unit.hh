@@ -448,7 +448,7 @@ class ComputeUnit : public ClockedObject
     void doSmReturn(GPUDynInstPtr gpuDynInst);
 
     virtual void init() override;
-    void sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt);
+    void sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt);
     void sendScalarRequest(GPUDynInstPtr gpuDynInst, PacketPtr pkt);
     void injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
                               bool kernelMemSync,
@@ -652,16 +652,15 @@ class ComputeUnit : public ClockedObject
     class DataPort : public RequestPort
     {
       public:
-        DataPort(const std::string &_name, ComputeUnit *_cu, PortID _index)
-            : RequestPort(_name, _cu), computeUnit(_cu),
-              index(_index) { }
+        DataPort(const std::string &_name, ComputeUnit *_cu, PortID id)
+            : RequestPort(_name, _cu, id), computeUnit(_cu) { }
 
         bool snoopRangeSent;
 
         struct SenderState : public Packet::SenderState
         {
             GPUDynInstPtr _gpuDynInst;
-            int port_index;
+            PortID port_index;
             Packet::SenderState *saved;
 
             SenderState(GPUDynInstPtr gpuDynInst, PortID _port_index,
@@ -681,7 +680,6 @@ class ComputeUnit : public ClockedObject
 
       protected:
         ComputeUnit *computeUnit;
-        int index;
 
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual Tick recvAtomic(PacketPtr pkt) { return 0; }
@@ -702,11 +700,9 @@ class ComputeUnit : public ClockedObject
     class ScalarDataPort : public RequestPort
     {
       public:
-        ScalarDataPort(const std::string &_name, ComputeUnit *_cu,
-                       PortID _index)
-            : RequestPort(_name, _cu, _index), computeUnit(_cu), index(_index)
+        ScalarDataPort(const std::string &_name, ComputeUnit *_cu)
+            : RequestPort(_name, _cu), computeUnit(_cu)
         {
-            (void)index;
         }
 
         bool recvTimingResp(PacketPtr pkt) override;
@@ -727,11 +723,11 @@ class ComputeUnit : public ClockedObject
         class MemReqEvent : public Event
         {
           private:
-            ScalarDataPort *scalarDataPort;
+            ScalarDataPort &scalarDataPort;
             PacketPtr pkt;
 
           public:
-            MemReqEvent(ScalarDataPort *_scalar_data_port, PacketPtr _pkt)
+            MemReqEvent(ScalarDataPort &_scalar_data_port, PacketPtr _pkt)
                 : Event(), scalarDataPort(_scalar_data_port), pkt(_pkt)
             {
               setFlags(Event::AutoDelete);
@@ -745,16 +741,14 @@ class ComputeUnit : public ClockedObject
 
       private:
         ComputeUnit *computeUnit;
-        PortID index;
     };
 
     // Instruction cache access port
     class SQCPort : public RequestPort
     {
       public:
-        SQCPort(const std::string &_name, ComputeUnit *_cu, PortID _index)
-            : RequestPort(_name, _cu), computeUnit(_cu),
-              index(_index) { }
+        SQCPort(const std::string &_name, ComputeUnit *_cu)
+            : RequestPort(_name, _cu), computeUnit(_cu) { }
 
         bool snoopRangeSent;
 
@@ -775,7 +769,6 @@ class ComputeUnit : public ClockedObject
 
       protected:
         ComputeUnit *computeUnit;
-        int index;
 
         virtual bool recvTimingResp(PacketPtr pkt);
         virtual Tick recvAtomic(PacketPtr pkt) { return 0; }
@@ -795,9 +788,9 @@ class ComputeUnit : public ClockedObject
     class DTLBPort : public RequestPort
     {
       public:
-        DTLBPort(const std::string &_name, ComputeUnit *_cu, PortID _index)
-            : RequestPort(_name, _cu), computeUnit(_cu),
-              index(_index), stalled(false)
+        DTLBPort(const std::string &_name, ComputeUnit *_cu, PortID id)
+            : RequestPort(_name, _cu, id), computeUnit(_cu),
+              stalled(false)
         { }
 
         bool isStalled() { return stalled; }
@@ -820,7 +813,7 @@ class ComputeUnit : public ClockedObject
 
             // the lane in the memInst this is associated with, so we send
             // the memory request down the right port
-            int portIndex;
+            PortID portIndex;
 
             // constructor used for packets involved in timing accesses
             SenderState(GPUDynInstPtr gpuDynInst, PortID port_index)
@@ -830,7 +823,6 @@ class ComputeUnit : public ClockedObject
 
       protected:
         ComputeUnit *computeUnit;
-        int index;
         bool stalled;
 
         virtual bool recvTimingResp(PacketPtr pkt);
@@ -913,8 +905,8 @@ class ComputeUnit : public ClockedObject
     class LDSPort : public RequestPort
     {
       public:
-        LDSPort(const std::string &_name, ComputeUnit *_cu, PortID _id)
-        : RequestPort(_name, _cu, _id), computeUnit(_cu)
+        LDSPort(const std::string &_name, ComputeUnit *_cu)
+        : RequestPort(_name, _cu), computeUnit(_cu)
         {
         }
 
@@ -983,13 +975,7 @@ class ComputeUnit : public ClockedObject
     /** The port to access the Local Data Store
      *  Can be connected to a LDS object
      */
-    LDSPort *ldsPort = nullptr;
-
-    LDSPort *
-    getLdsPort() const
-    {
-        return ldsPort;
-    }
+    LDSPort ldsPort;
 
     TokenManager *
     getTokenManager()
@@ -1000,54 +986,37 @@ class ComputeUnit : public ClockedObject
     /** The memory port for SIMD data accesses.
      *  Can be connected to PhysMem for Ruby for timing simulations
      */
-    std::vector<DataPort*> memPort;
+    std::vector<DataPort> memPort;
     // port to the TLB hierarchy (i.e., the L1 TLB)
-    std::vector<DTLBPort*> tlbPort;
+    std::vector<DTLBPort> tlbPort;
     // port to the scalar data cache
-    ScalarDataPort *scalarDataPort;
+    ScalarDataPort scalarDataPort;
     // port to the scalar data TLB
-    ScalarDTLBPort *scalarDTLBPort;
+    ScalarDTLBPort scalarDTLBPort;
     // port to the SQC (i.e. the I-cache)
-    SQCPort *sqcPort;
+    SQCPort sqcPort;
     // port to the SQC TLB (there's a separate TLB for each I-cache)
-    ITLBPort *sqcTLBPort;
+    ITLBPort sqcTLBPort;
 
     Port &
     getPort(const std::string &if_name, PortID idx) override
     {
-        if (if_name == "memory_port") {
-            memPort[idx] = new DataPort(csprintf("%s-port%d", name(), idx),
-                                        this, idx);
-            return *memPort[idx];
-        } else if (if_name == "translation_port") {
-            tlbPort[idx] = new DTLBPort(csprintf("%s-port%d", name(), idx),
-                                        this, idx);
-            return *tlbPort[idx];
+        if (if_name == "memory_port" && idx < memPort.size()) {
+            return memPort[idx];
+        } else if (if_name == "translation_port" && idx < tlbPort.size()) {
+            return tlbPort[idx];
         } else if (if_name == "scalar_port") {
-            scalarDataPort = new ScalarDataPort(csprintf("%s-port%d", name(),
-                                                idx), this, idx);
-            return *scalarDataPort;
+            return scalarDataPort;
         } else if (if_name == "scalar_tlb_port") {
-            scalarDTLBPort = new ScalarDTLBPort(csprintf("%s-port", name()),
-                                                this);
-            return *scalarDTLBPort;
+            return scalarDTLBPort;
         } else if (if_name == "sqc_port") {
-            sqcPort = new SQCPort(csprintf("%s-port%d", name(), idx),
-                                  this, idx);
-            return *sqcPort;
+            return sqcPort;
         } else if (if_name == "sqc_tlb_port") {
-            sqcTLBPort = new ITLBPort(csprintf("%s-port", name()), this);
-            return *sqcTLBPort;
+            return sqcTLBPort;
         } else if (if_name == "ldsPort") {
-            if (ldsPort) {
-                fatal("an LDS port was already allocated");
-            }
-            ldsPort = new LDSPort(csprintf("%s-port", name()), this, idx);
-            return *ldsPort;
-        } else if (if_name == "gmTokenPort") {
-            return gmTokenPort;
+            return ldsPort;
         } else {
-            panic("incorrect port name");
+            return ClockedObject::getPort(if_name, idx);
         }
     }
 

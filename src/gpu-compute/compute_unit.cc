@@ -96,6 +96,11 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
     resp_tick_latency(p->mem_resp_latency * p->clk_domain->clockPeriod()),
     _masterId(p->system->getMasterId(this, "ComputeUnit")),
     lds(*p->localDataStore), gmTokenPort(name() + ".gmTokenPort", this),
+    ldsPort(csprintf("%s-port", name()), this),
+    scalarDataPort(csprintf("%s-port", name()), this),
+    scalarDTLBPort(csprintf("%s-port", name()), this),
+    sqcPort(csprintf("%s-port", name()), this),
+    sqcTLBPort(csprintf("%s-port", name()), this),
     _cacheLineSize(p->system->cacheLineSize()),
     _numBarrierSlots(p->num_barrier_slots),
     globalSeqNum(0), wavefrontSize(p->wf_size),
@@ -169,15 +174,17 @@ ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p),
         fatal("Invalid WF execution policy (CU)\n");
     }
 
-    memPort.resize(wfSize());
+    for (int i = 0; i < p->port_memory_port_connection_count; ++i) {
+        memPort.emplace_back(csprintf("%s-port%d", name(), i), this, i);
+    }
+
+    for (int i = 0; i < p->port_translation_port_connection_count; ++i) {
+        tlbPort.emplace_back(csprintf("%s-port%d", name(), i), this, i);
+    }
 
     // Setup tokens for slave ports. The number of tokens in memSlaveTokens
     // is the total token count for the entire vector port (i.e., this CU).
     memPortTokens = new TokenManager(p->max_cu_tokens);
-
-    // resize the tlbPort vectorArray
-    int tlbPort_width = perLaneTLB ? wfSize() : 1;
-    tlbPort.resize(tlbPort_width);
 
     registerExitCallback([this]() { exitCallback(); });
 
@@ -214,7 +221,6 @@ ComputeUnit::~ComputeUnit()
         lastVaddrSimd[j].clear();
     }
     lastVaddrCU.clear();
-    delete ldsPort;
 }
 
 int
@@ -781,7 +787,7 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
     // appropriate cycle to process the timing memory response
     // This delay represents the pipeline delay
     SenderState *sender_state = safe_cast<SenderState*>(pkt->senderState);
-    int index = sender_state->port_index;
+    PortID index = sender_state->port_index;
     GPUDynInstPtr gpuDynInst = sender_state->_gpuDynInst;
     GPUDispatcher &dispatcher = computeUnit->shader->dispatcher();
 
@@ -886,7 +892,7 @@ ComputeUnit::DataPort::recvTimingResp(PacketPtr pkt)
     }
 
     EventFunctionWrapper *mem_resp_event =
-        computeUnit->memPort[index]->createMemRespEvent(pkt);
+        computeUnit->memPort[index].createMemRespEvent(pkt);
 
     DPRINTF(GPUPort,
             "CU%d: WF[%d][%d]: gpuDynInst: %d, index %d, addr %#x received!\n",
@@ -1007,7 +1013,7 @@ ComputeUnit::SQCPort::recvReqRetry()
 }
 
 void
-ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
+ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, PortID index, PacketPtr pkt)
 {
     // There must be a way around this check to do the globalMemStart...
     Addr tmp_vaddr = pkt->req->getVaddr();
@@ -1039,7 +1045,7 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
     tlbCycles -= curTick();
     ++tlbRequests;
 
-    int tlbPort_index = perLaneTLB ? index : 0;
+    PortID tlbPort_index = perLaneTLB ? index : 0;
 
     if (shader->timingSim) {
         if (debugSegFault) {
@@ -1074,7 +1080,7 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
         pkt->senderState = translation_state;
 
         if (functionalTLB) {
-            tlbPort[tlbPort_index]->sendFunctional(pkt);
+            tlbPort[tlbPort_index].sendFunctional(pkt);
 
             // update the hitLevel distribution
             int hit_level = translation_state->hitLevel;
@@ -1117,33 +1123,33 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
             // translation is done. Schedule the mem_req_event at the
             // appropriate cycle to send the timing memory request to ruby
             EventFunctionWrapper *mem_req_event =
-                memPort[index]->createMemReqEvent(pkt);
+                memPort[index].createMemReqEvent(pkt);
 
             DPRINTF(GPUPort, "CU%d: WF[%d][%d]: index %d, addr %#x data "
                     "scheduled\n", cu_id, gpuDynInst->simdId,
                     gpuDynInst->wfSlotId, index, pkt->req->getPaddr());
 
             schedule(mem_req_event, curTick() + req_tick_latency);
-        } else if (tlbPort[tlbPort_index]->isStalled()) {
-            assert(tlbPort[tlbPort_index]->retries.size() > 0);
+        } else if (tlbPort[tlbPort_index].isStalled()) {
+            assert(tlbPort[tlbPort_index].retries.size() > 0);
 
             DPRINTF(GPUTLB, "CU%d: WF[%d][%d]: Translation for addr %#x "
                     "failed!\n", cu_id, gpuDynInst->simdId,
                     gpuDynInst->wfSlotId, tmp_vaddr);
 
-            tlbPort[tlbPort_index]->retries.push_back(pkt);
-        } else if (!tlbPort[tlbPort_index]->sendTimingReq(pkt)) {
+            tlbPort[tlbPort_index].retries.push_back(pkt);
+        } else if (!tlbPort[tlbPort_index].sendTimingReq(pkt)) {
             // Stall the data port;
             // No more packet will be issued till
             // ruby indicates resources are freed by
             // a recvReqRetry() call back on this port.
-            tlbPort[tlbPort_index]->stallPort();
+            tlbPort[tlbPort_index].stallPort();
 
             DPRINTF(GPUTLB, "CU%d: WF[%d][%d]: Translation for addr %#x "
                     "failed!\n", cu_id, gpuDynInst->simdId,
                     gpuDynInst->wfSlotId, tmp_vaddr);
 
-            tlbPort[tlbPort_index]->retries.push_back(pkt);
+            tlbPort[tlbPort_index].retries.push_back(pkt);
         } else {
            DPRINTF(GPUTLB,
                    "CU%d: WF[%d][%d]: Translation for addr %#x sent!\n",
@@ -1163,7 +1169,7 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
         pkt->senderState = new TheISA::GpuTLB::TranslationState(TLB_mode,
                                                                 shader->gpuTc);
 
-        tlbPort[tlbPort_index]->sendFunctional(pkt);
+        tlbPort[tlbPort_index].sendFunctional(pkt);
 
         // the addr of the packet is not modified, so we need to create a new
         // packet, or otherwise the memory access will have the old virtual
@@ -1173,7 +1179,7 @@ ComputeUnit::sendRequest(GPUDynInstPtr gpuDynInst, int index, PacketPtr pkt)
         new_pkt->dataStatic(pkt->getPtr<uint8_t>());
 
         // Translation is done. It is safe to send the packet to memory.
-        memPort[0]->sendFunctional(new_pkt);
+        memPort[0].sendFunctional(new_pkt);
 
         DPRINTF(GPUMem, "Functional sendRequest\n");
         DPRINTF(GPUMem, "CU%d: WF[%d][%d]: index %d: addr %#x\n", cu_id,
@@ -1205,12 +1211,12 @@ ComputeUnit::sendScalarRequest(GPUDynInstPtr gpuDynInst, PacketPtr pkt)
         new TheISA::GpuTLB::TranslationState(tlb_mode, shader->gpuTc, false,
                                              pkt->senderState);
 
-    if (scalarDTLBPort->isStalled()) {
-        assert(scalarDTLBPort->retries.size());
-        scalarDTLBPort->retries.push_back(pkt);
-    } else if (!scalarDTLBPort->sendTimingReq(pkt)) {
-        scalarDTLBPort->stallPort();
-        scalarDTLBPort->retries.push_back(pkt);
+    if (scalarDTLBPort.isStalled()) {
+        assert(scalarDTLBPort.retries.size());
+        scalarDTLBPort.retries.push_back(pkt);
+    } else if (!scalarDTLBPort.sendTimingReq(pkt)) {
+        scalarDTLBPort.stallPort();
+        scalarDTLBPort.retries.push_back(pkt);
     } else {
         DPRINTF(GPUTLB, "sent scalar %s translation request for addr %#x\n",
                 tlb_mode == BaseTLB::Read ? "read" : "write",
@@ -1246,7 +1252,7 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
                new ComputeUnit::DataPort::SenderState(gpuDynInst, 0, nullptr));
 
             EventFunctionWrapper *mem_req_event =
-              memPort[0]->createMemReqEvent(pkt);
+              memPort[0].createMemReqEvent(pkt);
 
             DPRINTF(GPUPort, "CU%d: WF[%d][%d]: index %d, addr %#x scheduling "
                     "an acquire\n", cu_id, gpuDynInst->simdId,
@@ -1266,7 +1272,7 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
              new ComputeUnit::DataPort::SenderState(gpuDynInst, 0, nullptr));
 
           EventFunctionWrapper *mem_req_event =
-            memPort[0]->createMemReqEvent(pkt);
+            memPort[0].createMemReqEvent(pkt);
 
           DPRINTF(GPUPort, "CU%d: WF[%d][%d]: index %d, addr %#x scheduling "
                   "a release\n", cu_id, gpuDynInst->simdId,
@@ -1284,7 +1290,7 @@ ComputeUnit::injectGlobalMemFence(GPUDynInstPtr gpuDynInst,
             new ComputeUnit::DataPort::SenderState(gpuDynInst, 0, nullptr));
 
         EventFunctionWrapper *mem_req_event =
-          memPort[0]->createMemReqEvent(pkt);
+          memPort[0].createMemReqEvent(pkt);
 
         DPRINTF(GPUPort,
                 "CU%d: WF[%d][%d]: index %d, addr %#x sync scheduled\n",
@@ -1308,7 +1314,7 @@ ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
 
     DPRINTF(GPUPort, "CU%d: WF[%d][%d]: Response for addr %#x, index %d\n",
             compute_unit->cu_id, gpuDynInst->simdId, gpuDynInst->wfSlotId,
-            pkt->req->getPaddr(), index);
+            pkt->req->getPaddr(), id);
 
     Addr paddr = pkt->req->getPaddr();
 
@@ -1321,7 +1327,7 @@ ComputeUnit::DataPort::processMemRespEvent(PacketPtr pkt)
     int index = gpuDynInst->memStatusVector[paddr].back();
 
     DPRINTF(GPUMem, "Response for addr %#x, index %d\n",
-            pkt->req->getPaddr(), index);
+            pkt->req->getPaddr(), id);
 
     gpuDynInst->memStatusVector[paddr].pop_back();
     gpuDynInst->pAddr = pkt->req->getPaddr();
@@ -1425,7 +1431,7 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
         safe_cast<DTLBPort::SenderState*>(pkt->senderState);
 
     GPUDynInstPtr gpuDynInst = sender_state->_gpuDynInst;
-    int mp_index = sender_state->portIndex;
+    PortID mp_index = sender_state->portIndex;
     Addr vaddr = pkt->req->getVaddr();
     gpuDynInst->memStatusVector[line].push_back(mp_index);
     gpuDynInst->tlbHitLevel[mp_index] = hit_level;
@@ -1535,7 +1541,7 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
     // translation is done. Schedule the mem_req_event at the appropriate
     // cycle to send the timing memory request to ruby
     EventFunctionWrapper *mem_req_event =
-        computeUnit->memPort[mp_index]->createMemReqEvent(new_pkt);
+        computeUnit->memPort[mp_index].createMemReqEvent(new_pkt);
 
     DPRINTF(GPUPort, "CU%d: WF[%d][%d]: index %d, addr %#x data scheduled\n",
             computeUnit->cu_id, gpuDynInst->simdId,
@@ -1575,14 +1581,13 @@ ComputeUnit::DataPort::processMemReqEvent(PacketPtr pkt)
 
         DPRINTF(GPUPort,
                 "CU%d: WF[%d][%d]: index %d, addr %#x data req failed!\n",
-                compute_unit->cu_id, gpuDynInst->simdId,
-                gpuDynInst->wfSlotId, index,
-                pkt->req->getPaddr());
+                compute_unit->cu_id, gpuDynInst->simdId, gpuDynInst->wfSlotId,
+                id, pkt->req->getPaddr());
     } else {
         DPRINTF(GPUPort,
                 "CU%d: WF[%d][%d]: gpuDynInst: %d, index %d, addr %#x data "
                 "req sent!\n", compute_unit->cu_id, gpuDynInst->simdId,
-                gpuDynInst->wfSlotId, gpuDynInst->seqNum(), index,
+                gpuDynInst->wfSlotId, gpuDynInst->seqNum(), id,
                 pkt->req->getPaddr());
     }
 }
@@ -1598,22 +1603,21 @@ ComputeUnit::ScalarDataPort::MemReqEvent::process()
 {
     SenderState *sender_state = safe_cast<SenderState*>(pkt->senderState);
     GPUDynInstPtr gpuDynInst = sender_state->_gpuDynInst;
-    ComputeUnit *compute_unit M5_VAR_USED = scalarDataPort->computeUnit;
+    ComputeUnit *compute_unit M5_VAR_USED = scalarDataPort.computeUnit;
 
-    if (!(scalarDataPort->sendTimingReq(pkt))) {
-        scalarDataPort->retries.push_back(pkt);
+    if (!(scalarDataPort.sendTimingReq(pkt))) {
+        scalarDataPort.retries.push_back(pkt);
 
         DPRINTF(GPUPort,
-                "CU%d: WF[%d][%d]: index %d, addr %#x data req failed!\n",
+                "CU%d: WF[%d][%d]: addr %#x data req failed!\n",
                 compute_unit->cu_id, gpuDynInst->simdId,
-                gpuDynInst->wfSlotId, scalarDataPort->index,
-                pkt->req->getPaddr());
+                gpuDynInst->wfSlotId, pkt->req->getPaddr());
     } else {
         DPRINTF(GPUPort,
-                "CU%d: WF[%d][%d]: gpuDynInst: %d, index %d, addr %#x data "
+                "CU%d: WF[%d][%d]: gpuDynInst: %d, addr %#x data "
                 "req sent!\n", compute_unit->cu_id, gpuDynInst->simdId,
                 gpuDynInst->wfSlotId, gpuDynInst->seqNum(),
-                scalarDataPort->index, pkt->req->getPaddr());
+                pkt->req->getPaddr());
     }
 }
 
@@ -1702,8 +1706,8 @@ ComputeUnit::ScalarDTLBPort::recvTimingResp(PacketPtr pkt)
     req_pkt->senderState =
         new ComputeUnit::ScalarDataPort::SenderState(gpuDynInst);
 
-    if (!computeUnit->scalarDataPort->sendTimingReq(req_pkt)) {
-        computeUnit->scalarDataPort->retries.push_back(req_pkt);
+    if (!computeUnit->scalarDataPort.sendTimingReq(req_pkt)) {
+        computeUnit->scalarDataPort.retries.push_back(req_pkt);
         DPRINTF(GPUMem, "send scalar req failed for: %s\n",
                 gpuDynInst->disassemble());
     } else {
@@ -2544,7 +2548,7 @@ ComputeUnit::sendToLds(GPUDynInstPtr gpuDynInst)
     // This is the SenderState needed upon return
     newPacket->senderState = new LDSPort::SenderState(gpuDynInst);
 
-    return ldsPort->sendTimingReq(newPacket);
+    return ldsPort.sendTimingReq(newPacket);
 }
 
 /**

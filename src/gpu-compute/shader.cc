@@ -400,8 +400,8 @@ Shader::doFunctionalAccess(const RequestPtr &req, MemCmd cmd, void *data,
 
         // fixme: this should be cuList[cu_id] if cu_id != n_cu
         // The latter requires a memPort in the dispatcher
-        cuList[0]->memPort[0]->sendFunctional(new_pkt1);
-        cuList[0]->memPort[0]->sendFunctional(new_pkt2);
+        cuList[0]->memPort[0].sendFunctional(new_pkt1);
+        cuList[0]->memPort[0].sendFunctional(new_pkt2);
 
         delete new_pkt1;
         delete new_pkt2;
@@ -419,7 +419,7 @@ Shader::doFunctionalAccess(const RequestPtr &req, MemCmd cmd, void *data,
 
         // fixme: this should be cuList[cu_id] if cu_id != n_cu
         // The latter requires a memPort in the dispatcher
-        cuList[0]->memPort[0]->sendFunctional(new_pkt);
+        cuList[0]->memPort[0].sendFunctional(new_pkt);
 
         delete new_pkt;
         delete pkt;
@@ -507,7 +507,7 @@ Shader::functionalTLBAccess(PacketPtr pkt, int cu_id, BaseTLB::Mode mode)
     // it's ok tp send all accesses through lane 0
     // since the lane # is not known here,
     // This isn't important since these are functional accesses.
-    cuList[cu_id]->tlbPort[0]->sendFunctional(pkt);
+    cuList[cu_id]->tlbPort[0].sendFunctional(pkt);
 
     /* safe_cast the senderState */
     TheISA::GpuTLB::TranslationState *sender_state =
