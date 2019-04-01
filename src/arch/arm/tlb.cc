@@ -1308,7 +1308,8 @@ TLB::updateMiscReg(ThreadContext *tc, ArmTranslationType tranType)
         isPriv = aarch64EL != EL0;
         if (haveVirtualization) {
             vmid           = bits(tc->readMiscReg(MISCREG_VTTBR_EL2), 55, 48);
-            isHyp  =  tranType & HypMode;
+            isHyp = aarch64EL == EL2;
+            isHyp |= tranType & HypMode;
             isHyp &= (tranType & S1S2NsTran) == 0;
             isHyp &= (tranType & S1CTran)    == 0;
             // Work out if we should skip the first stage of translation and go
