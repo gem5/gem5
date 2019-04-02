@@ -108,6 +108,7 @@ IndirectMemoryPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
                 if (!miss && !pfi.isWrite() && pfi.getSize() <= 8) {
                     int64_t index = 0;
+                    bool read_index = true;
                     switch(pfi.getSize()) {
                         case sizeof(uint8_t):
                             index = pfi.get<uint8_t>(byteOrder);
@@ -122,14 +123,15 @@ IndirectMemoryPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                             index = pfi.get<uint64_t>(byteOrder);
                             break;
                         default:
-                            panic("Invalid access size\n");
+                            // Ignore non-power-of-two sizes
+                            read_index = false;
                     }
-                    if (!pt_entry->enabled) {
+                    if (read_index && !pt_entry->enabled) {
                         // Not enabled (no pattern detected in this stream),
                         // add or update an entry in the pattern detector and
                         // start tracking misses
                         allocateOrUpdateIPDEntry(pt_entry, index);
-                    } else {
+                    } else if (read_index) {
                         // Enabled entry, update the index
                         pt_entry->index = index;
                         if (!pt_entry->increasedIndirectCounter) {
