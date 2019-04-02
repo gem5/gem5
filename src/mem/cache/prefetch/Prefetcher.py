@@ -43,7 +43,6 @@ from m5.SimObject import *
 from m5.params import *
 from m5.proxy import *
 
-from m5.objects.BaseCPU import BaseCPU
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.IndexingPolicies import *
 from m5.objects.ReplacementPolicies import *
@@ -481,6 +480,6 @@ class PIFPrefetcher(QueuedPrefetcher):
         "Replacement policy of the index")
 
     def listenFromProbeRetiredInstructions(self, simObj):
-        if not isinstance(simObj, BaseCPU):
-            raise TypeError("argument must be of BaseCPU type")
+        if not isinstance(simObj, SimObject):
+            raise TypeError("argument must be of SimObject type")
         self.addEvent(HWPProbeEventRetiredInsts(self, simObj,"RetiredInstsPC"))
