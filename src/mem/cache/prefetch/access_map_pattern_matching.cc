@@ -57,9 +57,12 @@ AccessMapPatternMatching::AccessMapPatternMatching(
 {
     fatal_if(!isPowerOf2(hotZoneSize),
         "the hot zone size must be a power of 2");
-    if (!epochEvent.scheduled()) {
-        schedule(epochEvent, clockEdge(epochCycles));
-    }
+}
+
+void
+AccessMapPatternMatching::startup()
+{
+    schedule(epochEvent, clockEdge(epochCycles));
 }
 
 void
@@ -153,6 +156,7 @@ AccessMapPatternMatching::calculatePrefetch(
     std::vector<QueuedPrefetcher::AddrPriority> &addresses)
 {
     assert(addresses.empty());
+
     bool is_secure = pfi.isSecure();
     Addr am_addr = pfi.getAddr() / hotZoneSize;
     Addr current_block = (pfi.getAddr() % hotZoneSize) / blkSize;
