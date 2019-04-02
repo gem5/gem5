@@ -147,7 +147,10 @@ IrregularStreamBufferPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
             Addr sp_index   = mapping.address % prefetchCandidatesPerEntry;
             AddressMappingEntry *sp_am =
                 spAddressMappingCache.findEntry(sp_address, is_secure);
-            assert(sp_am != nullptr);
+            if (sp_am == nullptr) {
+                // The entry has been evicted, can not generate prefetches
+                return;
+            }
             for (unsigned d = 1;
                     d <= degree && (sp_index + d) < prefetchCandidatesPerEntry;
                     d += 1)
