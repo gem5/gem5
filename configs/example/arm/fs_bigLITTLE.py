@@ -242,7 +242,7 @@ def build(options):
 
     # Figure out the memory mode
     if options.big_cpus > 0 and options.little_cpus > 0 and \
-       system.littleCluster.memoryMode() != system.littleCluster.memoryMode():
+       system.bigCluster.memoryMode() != system.littleCluster.memoryMode():
         m5.util.panic("Memory mode missmatch among CPU clusters")
 
 
