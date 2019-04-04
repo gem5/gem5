@@ -69,7 +69,6 @@ machine(MachineType:Directory, "Directory protocol")
     OO, AccessPermission:Busy, desc="Blocked, was in owned";
     MO, AccessPermission:Busy, desc="Blocked, going to owner or maybe modified";
     MM, AccessPermission:Busy, desc="Blocked, going to modified";
-    MM_DMA, AccessPermission:Busy, desc="Blocked, going to I";
 
     MI, AccessPermission:Busy, desc="Blocked on a writeback";
     MIS, AccessPermission:Busy, desc="Blocked on a writeback, but don't remove from sharers when received";

@@ -562,22 +562,6 @@ machine(MachineType:L1Cache, "L1 cache protocol")
     }
   }
 
-  action(e_sendDataToL2, "ee", desc="Send data from cache to requestor") {
-    enqueue(responseNetwork_out, ResponseMsg, cacheResponseLatency()) {
-      assert(is_valid(cache_entry));
-      out_msg.addr := address;
-      out_msg.Type := CoherenceResponseType:DATA;
-      out_msg.Sender := machineID;
-      out_msg.SenderMachine := MachineType:L1Cache;
-      out_msg.Destination.add(mapAddressToMachine(address,
-                                                  MachineType:L2Cache));
-      out_msg.DataBlk := cache_entry.DataBlk;
-      out_msg.Dirty := cache_entry.Dirty;
-      out_msg.Acks := 0; // irrelevant
-      out_msg.MessageSize := MessageSizeType:Response_Data;
-    }
-  }
-
   action(ee_sendDataExclusive, "\e", desc="Send data from cache to requestor, don't keep a shared copy") {
     peek(requestNetwork_in, RequestMsg) {
       assert(is_valid(cache_entry));
@@ -725,7 +709,7 @@ machine(MachineType:L1Cache, "L1 cache protocol")
     mandatoryQueue_in.dequeue(clockEdge());
   }
 
-  action(l_popForwardQueue, "l", desc="Pop forwareded request queue.") {
+  action(l_popForwardQueue, "l", desc="Pop forwarded request queue.") {
     requestNetwork_in.dequeue(clockEdge());
   }
 
@@ -881,15 +865,6 @@ machine(MachineType:L1Cache, "L1 cache protocol")
       if (in_msg.Type == CoherenceResponseType:DATA) {
         //assert(in_msg.Dirty == false);
       }
-    }
-  }
-
-  action(v_writeDataToCacheVerify, "v", desc="Write data to cache, assert it was same as before") {
-    peek(responseToL1Cache_in, ResponseMsg) {
-      assert(is_valid(cache_entry));
-      assert(cache_entry.DataBlk == in_msg.DataBlk);
-      cache_entry.DataBlk := in_msg.DataBlk;
-      cache_entry.Dirty := in_msg.Dirty;
     }
   }
 
