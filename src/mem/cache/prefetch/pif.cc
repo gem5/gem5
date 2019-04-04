@@ -30,7 +30,6 @@
 
 #include "mem/cache/prefetch/pif.hh"
 
-#include <cmath>
 #include <utility>
 
 #include "debug/HWPrefetch.hh"
@@ -59,20 +58,22 @@ PIFPrefetcher::CompactorEntry::CompactorEntry(Addr addr,
     succ.resize(succ_size, false);
 }
 
-unsigned int
+Addr
 PIFPrefetcher::CompactorEntry::distanceFromTrigger(Addr target,
-        unsigned int log_blk_size) const {
+        unsigned int log_blk_size) const
+{
     const Addr target_blk = target >> log_blk_size;
     const Addr trigger_blk = trigger >> log_blk_size;
 
-    return std::abs(target_blk - trigger_blk);
+    return target_blk > trigger_blk ?
+              target_blk - trigger_blk : trigger_blk - target_blk;
 }
 
 bool
 PIFPrefetcher::CompactorEntry::inSameSpatialRegion(Addr pc,
         unsigned int log_blk_size, bool update)
 {
-    unsigned int blk_distance = distanceFromTrigger(pc, log_blk_size);
+    Addr blk_distance = distanceFromTrigger(pc, log_blk_size);
 
     bool hit = (pc > trigger) ?
         (succ.size() >= blk_distance) : (prec.size() >= blk_distance);
@@ -90,7 +91,7 @@ bool
 PIFPrefetcher::CompactorEntry::hasAddress(Addr target,
                                           unsigned int log_blk_size) const
 {
-    unsigned int blk_distance = distanceFromTrigger(target, log_blk_size);
+    Addr blk_distance = distanceFromTrigger(target, log_blk_size);
     bool hit = false;
     if (target > trigger) {
         hit = blk_distance <= succ.size() && succ[blk_distance - 1];

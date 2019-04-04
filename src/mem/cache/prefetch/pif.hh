@@ -116,8 +116,8 @@ class PIFPrefetcher : public QueuedPrefetcher
              * @param log_blk_distance log_2(block size of the cache)
              * @result distance in cache blocks from the address to the trigger
              */
-            unsigned int distanceFromTrigger(Addr addr,
-                                             unsigned int log_blk_size) const;
+            Addr distanceFromTrigger(Addr addr,
+                                     unsigned int log_blk_size) const;
         };
 
         CompactorEntry spatialCompactor;
