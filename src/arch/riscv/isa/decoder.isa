@@ -224,18 +224,9 @@ decode QUADRANT default Unknown::unknown() {
                 }
             }
         }
-        0x5: JOp::c_j({{
-            int64_t offset = CJUMPIMM<3:1> << 1 |
-                             CJUMPIMM<9:9> << 4 |
-                             CJUMPIMM<0:0> << 5 |
-                             CJUMPIMM<5:5> << 6 |
-                             CJUMPIMM<4:4> << 7 |
-                             CJUMPIMM<8:7> << 8 |
-                             CJUMPIMM<6:6> << 10;
-            if (CJUMPIMM<10:10> > 0)
-                offset |= ~((int64_t)0x7FF);
-            NPC = PC + offset;
-        }}, IsIndirectControl, IsUncondControl, IsCall);
+        0x5: CJOp::c_j({{
+            NPC = PC + imm;
+        }}, IsDirectControl, IsUncondControl);
         format CBOp {
             0x6: c_beqz({{
                 if (Rp1 == 0)
