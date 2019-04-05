@@ -86,8 +86,12 @@ system.system_port = system.membus.slave
 # Create a process for a simple "Hello World" application
 process = Process()
 # Set the command
+# grab the specific path to the binary
+thispath = os.path.dirname(os.path.realpath(__file__))
+binpath = os.path.join(thispath, '../../../',
+                       'tests/test-progs/hello/bin/x86/linux/hello')
 # cmd is a list which begins with the executable (like argv)
-process.cmd = ['tests/test-progs/hello/bin/x86/linux/hello']
+process.cmd = [binpath]
 # Set the cpu to use the process as its workload and create thread contexts
 system.cpu.workload = process
 system.cpu.createThreads()
