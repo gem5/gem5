@@ -178,3 +178,7 @@ class Gicv3(BaseGic):
         "HV maintenance interrupt."
         "ARM strongly recommends that maintenance interrupts "
         "are configured to use INTID 25 (PPI Interrupt).")
+
+    cpu_max = Param.Unsigned(256,
+        "Maximum number of PE. This is affecting the maximum number of "
+        "redistributors")

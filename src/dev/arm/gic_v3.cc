@@ -58,6 +58,11 @@ Gicv3::init()
     redistributors.resize(sys->numContexts(), nullptr);
     cpuInterfaces.resize(sys->numContexts(), nullptr);
 
+    panic_if(sys->numContexts() > params()->cpu_max,
+        "Exceeding maximum number of PEs supported by GICv3: "
+        "using %u while maximum is %u\n", sys->numContexts(),
+        params()->cpu_max);
+
     for (int i = 0; i < sys->numContexts(); i++) {
         redistributors[i] = new Gicv3Redistributor(this, i);
         cpuInterfaces[i] = new Gicv3CPUInterface(this, i);
