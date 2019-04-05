@@ -54,10 +54,10 @@ SimpleCache::SimpleCache(SimpleCacheParams *params) :
 Port &
 SimpleCache::getPort(const std::string &if_name, PortID idx)
 {
-    panic_if(idx != InvalidPortID, "This object doesn't support vector ports");
-
     // This is the name from the Python SimObject declaration in SimpleCache.py
     if (if_name == "mem_side") {
+        panic_if(idx != InvalidPortID,
+                 "Mem side of simple cache not a vector port");
         return memPort;
     } else if (if_name == "cpu_side" && idx < cpuPorts.size()) {
         // We should have already created all of the ports in the constructor
