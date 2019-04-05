@@ -49,10 +49,12 @@ TournamentBP::TournamentBP(const TournamentBPParams *params)
     : BPredUnit(params),
       localPredictorSize(params->localPredictorSize),
       localCtrBits(params->localCtrBits),
+      localCtrs(localPredictorSize, SatCounter(localCtrBits)),
       localHistoryTableSize(params->localHistoryTableSize),
       localHistoryBits(ceilLog2(params->localPredictorSize)),
       globalPredictorSize(params->globalPredictorSize),
       globalCtrBits(params->globalCtrBits),
+      globalCtrs(globalPredictorSize, SatCounter(globalCtrBits)),
       globalHistory(params->numThreads, 0),
       globalHistoryBits(
           ceilLog2(params->globalPredictorSize) >
@@ -60,7 +62,8 @@ TournamentBP::TournamentBP(const TournamentBPParams *params)
           ceilLog2(params->globalPredictorSize) :
           ceilLog2(params->choicePredictorSize)),
       choicePredictorSize(params->choicePredictorSize),
-      choiceCtrBits(params->choiceCtrBits)
+      choiceCtrBits(params->choiceCtrBits),
+      choiceCtrs(choicePredictorSize, SatCounter(choiceCtrBits))
 {
     if (!isPowerOf2(localPredictorSize)) {
         fatal("Invalid local predictor size!\n");
@@ -69,12 +72,6 @@ TournamentBP::TournamentBP(const TournamentBPParams *params)
     if (!isPowerOf2(globalPredictorSize)) {
         fatal("Invalid global predictor size!\n");
     }
-
-    //Set up the array of counters for the local predictor
-    localCtrs.resize(localPredictorSize);
-
-    for (int i = 0; i < localPredictorSize; ++i)
-        localCtrs[i].setBits(localCtrBits);
 
     localPredictorMask = mask(localHistoryBits);
 
@@ -88,12 +85,6 @@ TournamentBP::TournamentBP(const TournamentBPParams *params)
     for (int i = 0; i < localHistoryTableSize; ++i)
         localHistoryTable[i] = 0;
 
-    //Setup the array of counters for the global predictor
-    globalCtrs.resize(globalPredictorSize);
-
-    for (int i = 0; i < globalPredictorSize; ++i)
-        globalCtrs[i].setBits(globalCtrBits);
-
     // Set up the global history mask
     // this is equivalent to mask(log2(globalPredictorSize)
     globalHistoryMask = globalPredictorSize - 1;
@@ -105,12 +96,6 @@ TournamentBP::TournamentBP(const TournamentBPParams *params)
     // Set up choiceHistoryMask
     // this is equivalent to mask(log2(choicePredictorSize)
     choiceHistoryMask = choicePredictorSize - 1;
-
-    //Setup the array of counters for the choice predictor
-    choiceCtrs.resize(choicePredictorSize);
-
-    for (int i = 0; i < choicePredictorSize; ++i)
-        choiceCtrs[i].setBits(choiceCtrBits);
 
     //Set up historyRegisterMask
     historyRegisterMask = mask(globalHistoryBits);
@@ -201,15 +186,15 @@ TournamentBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
     local_history_idx = calcLocHistIdx(branch_addr);
     local_predictor_idx = localHistoryTable[local_history_idx]
         & localPredictorMask;
-    local_prediction = localCtrs[local_predictor_idx].read() > localThreshold;
+    local_prediction = localCtrs[local_predictor_idx] > localThreshold;
 
     //Lookup in the global predictor to get its branch prediction
     global_prediction = globalThreshold <
-      globalCtrs[globalHistory[tid] & globalHistoryMask].read();
+      globalCtrs[globalHistory[tid] & globalHistoryMask];
 
     //Lookup in the choice predictor to see which one to use
     choice_prediction = choiceThreshold <
-      choiceCtrs[globalHistory[tid] & choiceHistoryMask].read();
+      choiceCtrs[globalHistory[tid] & choiceHistoryMask];
 
     // Create BPHistory and pass it back to be recorded.
     BPHistory *history = new BPHistory;
@@ -308,16 +293,16 @@ TournamentBP::update(ThreadID tid, Addr branch_addr, bool taken,
     if (history->localPredTaken != history->globalPredTaken &&
         old_local_pred_valid)
     {
-         // If the local prediction matches the actual outcome,
-         // decrement the counter. Otherwise increment the
-         // counter.
-         unsigned choice_predictor_idx =
-           history->globalHistory & choiceHistoryMask;
-         if (history->localPredTaken == taken) {
-             choiceCtrs[choice_predictor_idx].decrement();
-         } else if (history->globalPredTaken == taken) {
-             choiceCtrs[choice_predictor_idx].increment();
-         }
+        // If the local prediction matches the actual outcome,
+        // decrement the counter. Otherwise increment the
+        // counter.
+        unsigned choice_predictor_idx =
+            history->globalHistory & choiceHistoryMask;
+        if (history->localPredTaken == taken) {
+            choiceCtrs[choice_predictor_idx]--;
+        } else if (history->globalPredTaken == taken) {
+            choiceCtrs[choice_predictor_idx]++;
+        }
     }
 
     // Update the counters with the proper
@@ -328,15 +313,15 @@ TournamentBP::update(ThreadID tid, Addr branch_addr, bool taken,
     unsigned global_predictor_idx =
             history->globalHistory & globalHistoryMask;
     if (taken) {
-          globalCtrs[global_predictor_idx].increment();
-          if (old_local_pred_valid) {
-                 localCtrs[old_local_pred_index].increment();
-          }
+        globalCtrs[global_predictor_idx]++;
+        if (old_local_pred_valid) {
+            localCtrs[old_local_pred_index]++;
+        }
     } else {
-          globalCtrs[global_predictor_idx].decrement();
-          if (old_local_pred_valid) {
-              localCtrs[old_local_pred_index].decrement();
-          }
+        globalCtrs[global_predictor_idx]--;
+        if (old_local_pred_valid) {
+            localCtrs[old_local_pred_index]--;
+        }
     }
 
     // We're done with this history, now delete it.

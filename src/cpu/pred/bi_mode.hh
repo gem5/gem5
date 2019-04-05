@@ -87,13 +87,6 @@ class BiModeBP : public BPredUnit
         bool finalPred;
     };
 
-    // choice predictors
-    std::vector<SatCounter> choiceCounters;
-    // taken direction predictors
-    std::vector<SatCounter> takenCounters;
-    // not-taken direction predictors
-    std::vector<SatCounter> notTakenCounters;
-
     std::vector<unsigned> globalHistoryReg;
     unsigned globalHistoryBits;
     unsigned historyRegisterMask;
@@ -104,6 +97,13 @@ class BiModeBP : public BPredUnit
     unsigned globalPredictorSize;
     unsigned globalCtrBits;
     unsigned globalHistoryMask;
+
+    // choice predictors
+    std::vector<SatCounter> choiceCounters;
+    // taken direction predictors
+    std::vector<SatCounter> takenCounters;
+    // not-taken direction predictors
+    std::vector<SatCounter> notTakenCounters;
 
     unsigned choiceThreshold;
     unsigned takenThreshold;

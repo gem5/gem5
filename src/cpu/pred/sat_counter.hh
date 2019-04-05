@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 Inria
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2005-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
@@ -26,87 +38,88 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Daniel Carvalho
  */
 
 #ifndef __CPU_PRED_SAT_COUNTER_HH__
 #define __CPU_PRED_SAT_COUNTER_HH__
 
+#include <cstdint>
+
 #include "base/logging.hh"
 #include "base/types.hh"
 
 /**
- * Private counter class for the internal saturating counters.
  * Implements an n bit saturating counter and provides methods to
  * increment, decrement, and read it.
- * @todo Consider making this something that more closely mimics a
- * built in class so you can use ++ or --.
  */
 class SatCounter
 {
   public:
     /**
-     * Constructor for the counter.
-     */
-    SatCounter()
-        : initialVal(0), counter(0)
-    { }
-
-    /**
-     * Constructor for the counter.
+     * Constructor for the counter. The explicit keyword is used to make
+     * sure the user does not assign a number to the counter thinking it
+     * will be used as a counter value when it is in fact used as the number
+     * of bits.
+     *
      * @param bits How many bits the counter will have.
+     * @param initial_val Starting value for the counter.
      */
-    SatCounter(unsigned bits)
-        : initialVal(0), maxVal((1 << bits) - 1), counter(0)
-    { }
-
-    /**
-     * Constructor for the counter.
-     * @param bits How many bits the counter will have.
-     * @param initial_val Starting value for each counter.
-     */
-    SatCounter(unsigned bits, uint8_t initial_val)
+    explicit SatCounter(unsigned bits, uint8_t initial_val = 0)
         : initialVal(initial_val), maxVal((1 << bits) - 1),
           counter(initial_val)
     {
-        // Check to make sure initial value doesn't exceed the max
-        // counter value.
-        if (initial_val > maxVal) {
-            fatal("BP: Initial counter value exceeds max size.");
-        }
+        fatal_if(bits > 8*sizeof(uint8_t),
+                 "Number of bits exceeds counter size");
+        fatal_if(initial_val > maxVal,
+                 "Saturating counter's Initial value exceeds max value.");
     }
 
-    /**
-     * Sets the number of bits.
-     */
-    void setBits(unsigned bits) { maxVal = (1 << bits) - 1; }
-
-    void reset() { counter = initialVal; }
-
-    /**
-     * Increments the counter's current value.
-     */
-    void increment()
+    /** Pre-increment operator. */
+    SatCounter&
+    operator++()
     {
         if (counter < maxVal) {
             ++counter;
         }
+        return *this;
     }
 
-    /**
-     * Decrements the counter's current value.
-     */
-    void decrement()
+    /** Post-increment operator. */
+    SatCounter
+    operator++(int)
+    {
+        SatCounter old_counter = *this;
+        ++*this;
+        return old_counter;
+    }
+
+    /** Pre-decrement operator. */
+    SatCounter&
+    operator--()
     {
         if (counter > 0) {
             --counter;
         }
+        return *this;
+    }
+
+    /** Post-decrement operator. */
+    SatCounter
+    operator--(int)
+    {
+        SatCounter old_counter = *this;
+        --*this;
+        return old_counter;
     }
 
     /**
      * Read the counter's value.
      */
-    uint8_t read() const
-    { return counter; }
+    operator uint8_t() const { return counter; }
+
+    /** Reset the counter to its initial value. */
+    void reset() { counter = initialVal; }
 
   private:
     uint8_t initialVal;

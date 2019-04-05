@@ -174,9 +174,6 @@ class TournamentBP : public BPredUnit
 
     /** Flag for invalid predictor index */
     static const int invalidPredictorIndex = -1;
-    /** Local counters. */
-    std::vector<SatCounter> localCtrs;
-
     /** Number of counters in the local predictor. */
     unsigned localPredictorSize;
 
@@ -185,6 +182,9 @@ class TournamentBP : public BPredUnit
 
     /** Number of bits of the local predictor's counters. */
     unsigned localCtrBits;
+
+    /** Local counters. */
+    std::vector<SatCounter> localCtrs;
 
     /** Array of local history table entries. */
     std::vector<unsigned> localHistoryTable;
@@ -195,14 +195,14 @@ class TournamentBP : public BPredUnit
     /** Number of bits for each entry of the local history table. */
     unsigned localHistoryBits;
 
-    /** Array of counters that make up the global predictor. */
-    std::vector<SatCounter> globalCtrs;
-
     /** Number of entries in the global predictor. */
     unsigned globalPredictorSize;
 
     /** Number of bits of the global predictor's counters. */
     unsigned globalCtrBits;
+
+    /** Array of counters that make up the global predictor. */
+    std::vector<SatCounter> globalCtrs;
 
     /** Global history register. Contains as much history as specified by
      *  globalHistoryBits. Actual number of bits used is determined by
@@ -225,14 +225,14 @@ class TournamentBP : public BPredUnit
      *  used. */
     unsigned historyRegisterMask;
 
-    /** Array of counters that make up the choice predictor. */
-    std::vector<SatCounter> choiceCtrs;
-
     /** Number of entries in the choice predictor. */
     unsigned choicePredictorSize;
 
     /** Number of bits in the choice predictor's counters. */
     unsigned choiceCtrBits;
+
+    /** Array of counters that make up the choice predictor. */
+    std::vector<SatCounter> choiceCtrs;
 
     /** Thresholds for the counter value; above the threshold is taken,
      *  equal to or below the threshold is not taken.

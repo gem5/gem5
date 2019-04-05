@@ -97,8 +97,6 @@ class LocalBP : public BPredUnit
     void squash(ThreadID tid, void *bp_history)
     { assert(bp_history == NULL); }
 
-    void reset();
-
   private:
     /**
      *  Returns the taken/not taken prediction given the value of the
@@ -111,20 +109,20 @@ class LocalBP : public BPredUnit
     /** Calculates the local index based on the PC. */
     inline unsigned getLocalIndex(Addr &PC);
 
+    /** Size of the local predictor. */
+    const unsigned localPredictorSize;
+
+    /** Number of bits of the local predictor's counters. */
+    const unsigned localCtrBits;
+
+    /** Number of sets. */
+    const unsigned localPredictorSets;
+
     /** Array of counters that make up the local predictor. */
     std::vector<SatCounter> localCtrs;
 
-    /** Size of the local predictor. */
-    unsigned localPredictorSize;
-
-    /** Number of sets. */
-    unsigned localPredictorSets;
-
-    /** Number of bits of the local predictor's counters. */
-    unsigned localCtrBits;
-
     /** Mask to get index bits. */
-    unsigned indexMask;
+    const unsigned indexMask;
 };
 
 #endif // __CPU_PRED_2BIT_LOCAL_PRED_HH__
