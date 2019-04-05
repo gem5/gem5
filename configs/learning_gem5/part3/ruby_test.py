@@ -61,8 +61,8 @@ system.tester = RubyTester(checks_to_complete = 100,
                            wakeup_frequency = 10,
                            num_cpus = 2)
 
-# Create a DDR3 memory controller and connect it to the membus
-system.mem_ctrl = DDR3_1600_8x8()
+# Create a simple memory controller and connect it to the membus
+system.mem_ctrl = SimpleMemory(latency="50ns", bandwidth="0GB/s")
 system.mem_ctrl.range = system.mem_ranges[0]
 
 # Create the Ruby System
