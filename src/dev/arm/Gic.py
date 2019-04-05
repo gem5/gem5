@@ -182,3 +182,5 @@ class Gicv3(BaseGic):
     cpu_max = Param.Unsigned(256,
         "Maximum number of PE. This is affecting the maximum number of "
         "redistributors")
+
+    gicv4 = Param.Bool(True, "GICv4 extension available")

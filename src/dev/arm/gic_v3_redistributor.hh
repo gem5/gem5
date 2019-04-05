@@ -177,7 +177,7 @@ class Gicv3Redistributor : public Serializable
      * Note this must match with DTB/DTS GIC node definition and boot
      * loader code.
      */
-    static const uint32_t ADDR_RANGE_SIZE = 0x40000;
+    const uint32_t addrRangeSize;
 
     static const uint32_t SMALLEST_LPI_ID = 8192;
 

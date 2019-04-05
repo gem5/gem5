@@ -42,6 +42,7 @@ class Gicv3 : public BaseGic
 {
   protected:
     friend class Gicv3CPUInterface;
+    friend class Gicv3Redistributor;
 
     typedef Gicv3Params Params;
     Gicv3Distributor * distributor;
@@ -50,6 +51,7 @@ class Gicv3 : public BaseGic
     AddrRange distRange;
     AddrRange redistRange;
     AddrRangeList addrRanges;
+    uint64_t redistSize;
 
   public:
 

@@ -51,7 +51,8 @@ Gicv3Redistributor::Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id)
       irqPriority(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
       irqConfig(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
       irqGrpmod(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
-      irqNsacr(Gicv3::SGI_MAX + Gicv3::PPI_MAX)
+      irqNsacr(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
+      addrRangeSize(gic->params()->gicv4 ? 0x40000 : 0x20000)
 {
 }
 
