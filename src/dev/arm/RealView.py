@@ -1085,6 +1085,9 @@ class VExpress_GEM5_V1(VExpress_GEM5_V1_Base):
 class VExpress_GEM5_V2_Base(VExpress_GEM5_Base):
     gic = Gicv3(maint_int=ArmPPI(num=25))
 
+    # Limiting to 128 since it will otherwise overlap with PCI space
+    gic.cpu_max = 128
+
     def _on_chip_devices(self):
         return super(VExpress_GEM5_V2_Base,self)._on_chip_devices() + [
                 self.gic,
