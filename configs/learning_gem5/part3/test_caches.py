@@ -44,7 +44,7 @@ from m5.util import fatal
 
 from m5.objects import *
 
-from .msi_caches import L1Cache, DirController, MyNetwork
+from msi_caches import L1Cache, DirController, MyNetwork
 
 class TestCacheSystem(RubySystem):
 

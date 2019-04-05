@@ -42,7 +42,7 @@ import m5
 # import all of the SimObjects
 from m5.objects import *
 
-from .test_caches import TestCacheSystem
+from test_caches import TestCacheSystem
 
 # create the system we are going to simulate
 system = System()

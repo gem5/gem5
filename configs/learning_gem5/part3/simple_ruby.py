@@ -47,7 +47,7 @@ from m5.objects import *
 
 # You can import ruby_caches_MI_example to use the MI_example protocol instead
 # of the MSI protocol
-from .msi_caches import MyCacheSystem
+from msi_caches import MyCacheSystem
 
 # create the system we are going to simulate
 system = System()
@@ -80,7 +80,10 @@ system.caches.setup(system, system.cpu, [system.mem_ctrl])
 isa = str(m5.defines.buildEnv['TARGET_ISA']).lower()
 
 # Run application and use the compiled ISA to find the binary
-binary = 'tests/test-progs/threads/bin/' + isa + '/linux/threads'
+# grab the specific path to the binary
+thispath = os.path.dirname(os.path.realpath(__file__))
+binary = os.path.join(thispath, '../../../', 'tests/test-progs/threads/bin/',
+                      isa, 'linux/threads')
 
 # Create a process for a simple "multi-threaded" application
 process = Process()
