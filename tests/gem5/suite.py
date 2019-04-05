@@ -45,7 +45,8 @@ def gem5_verify_config(name,
                        fixtures=[],
                        valid_isas=constants.supported_isas,
                        valid_variants=constants.supported_variants,
-                       length=constants.supported_lengths[0]):
+                       length=constants.supported_lengths[0],
+                       protocol=None):
     '''
     Helper class to generate common gem5 tests using verifiers.
 
@@ -86,6 +87,8 @@ def gem5_verify_config(name,
                     given_name=name,
                     isa=isa,
                     opt=opt)
+            if protocol:
+                _name += '-'+protocol
 
             # Create the running of gem5 subtest.
             # NOTE: We specifically create this test before our verifiers so
@@ -107,7 +110,7 @@ def gem5_verify_config(name,
             # Create the gem5 target for the specific architecture and
             # variant.
             _fixtures = copy.copy(fixtures)
-            _fixtures.append(Gem5Fixture(isa, opt))
+            _fixtures.append(Gem5Fixture(isa, opt, protocol))
             _fixtures.append(tempdir)
             _fixtures.append(gem5_returncode)
 
