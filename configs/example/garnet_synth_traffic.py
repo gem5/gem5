@@ -88,9 +88,6 @@ parser.add_option("--inj-vnet", type="int", default=-1,
 #
 Ruby.define_options(parser)
 
-exec(compile(open(os.path.join(config_root, "common", "Options.py")).read(),
-             os.path.join(config_root, "common", "Options.py"), 'exec'))
-
 (options, args) = parser.parse_args()
 
 if args:
