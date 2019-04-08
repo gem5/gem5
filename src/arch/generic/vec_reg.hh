@@ -154,7 +154,7 @@
 #include "base/cprintf.hh"
 #include "base/logging.hh"
 
-constexpr unsigned MaxVecRegLenInBytes = 256;
+constexpr unsigned MaxVecRegLenInBytes = 4096;
 
 template <size_t Sz>
 class VecRegContainer;
@@ -523,6 +523,7 @@ class VecLaneT
     friend class VecRegContainer<32>;
     friend class VecRegContainer<64>;
     friend class VecRegContainer<128>;
+    friend class VecRegContainer<256>;
     friend class VecRegContainer<MaxVecRegLenInBytes>;
 
     /** My type alias. */
