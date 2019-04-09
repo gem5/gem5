@@ -85,10 +85,10 @@ class BRRIPRP(BaseReplacementPolicy):
         "Percentage of blocks to be inserted with long RRPV")
 
 class RRIPRP(BRRIPRP):
-    btp = 0
+    btp = 100
 
 class NRURP(BRRIPRP):
-    btp = 0
+    btp = 100
     max_RRPV = 1
 
 class TreePLRURP(BaseReplacementPolicy):

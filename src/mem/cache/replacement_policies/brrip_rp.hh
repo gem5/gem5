@@ -66,6 +66,10 @@ class BRRIPRP : public BaseReplacementPolicy
     {
         /**
          * Re-Reference Interval Prediction Value.
+         * Some values have specific names (according to the paper):
+         * 0 -> near-immediate re-rereference interval
+         * max_RRPV-1 -> long re-rereference interval
+         * max_RRPV -> distant re-rereference interval
          * A value equal to max_RRPV + 1 indicates an invalid entry.
          */
         int rrpv;
