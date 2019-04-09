@@ -333,6 +333,7 @@ PMU::readMiscRegInt(int misc_reg)
       case MISCREG_PMSWINC: // Software Increment Register (RAZ)
         return 0;
 
+      case MISCREG_PMSELR_EL0:
       case MISCREG_PMSELR:
         return reg_pmselr;
 
