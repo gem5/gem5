@@ -46,9 +46,9 @@
 
 #include <vector>
 
+#include "base/sat_counter.hh"
 #include "base/types.hh"
 #include "cpu/pred/bpred_unit.hh"
-#include "cpu/pred/sat_counter.hh"
 #include "params/LocalBP.hh"
 
 /**

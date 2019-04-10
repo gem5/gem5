@@ -35,8 +35,8 @@
 #ifndef __CPU_PRED_BI_MODE_PRED_HH__
 #define __CPU_PRED_BI_MODE_PRED_HH__
 
+#include "base/sat_counter.hh"
 #include "cpu/pred/bpred_unit.hh"
-#include "cpu/pred/sat_counter.hh"
 #include "params/BiModeBP.hh"
 
 /**

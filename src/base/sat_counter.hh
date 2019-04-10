@@ -41,8 +41,8 @@
  *          Daniel Carvalho
  */
 
-#ifndef __CPU_PRED_SAT_COUNTER_HH__
-#define __CPU_PRED_SAT_COUNTER_HH__
+#ifndef __BASE_SAT_COUNTER_HH__
+#define __BASE_SAT_COUNTER_HH__
 
 #include <cstdint>
 
@@ -127,4 +127,4 @@ class SatCounter
     uint8_t counter;
 };
 
-#endif // __CPU_PRED_SAT_COUNTER_HH__
+#endif // __BASE_SAT_COUNTER_HH__
