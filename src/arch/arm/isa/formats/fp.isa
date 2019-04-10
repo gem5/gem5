@@ -341,9 +341,9 @@ let {{
     decodeNeonThreeRegistersSameLength(ExtMachInst machInst)
     {
         const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
-        const uint32_t a = bits(machInst, 11, 8);
-        const bool b = bits(machInst, 4);
-        const uint32_t c = bits(machInst, 21, 20);
+        const uint32_t opc = bits(machInst, 11, 8);
+        const bool o1 = bits(machInst, 4);
+        const uint32_t size = bits(machInst, 21, 20);
         const IntRegIndex vd =
             (IntRegIndex)(2 * (bits(machInst, 15, 12) |
                                (bits(machInst, 22) << 4)));
@@ -353,13 +353,12 @@ let {{
         const IntRegIndex vm =
             (IntRegIndex)(2 * (bits(machInst, 3, 0) |
                                (bits(machInst, 5) << 4)));
-        const unsigned size = bits(machInst, 21, 20);
         const bool q = bits(machInst, 6);
         if (q && ((vd & 0x1) || (vn & 0x1) || (vm & 0x1)))
             return new Unknown(machInst);
-        switch (a) {
+        switch (opc) {
           case 0x0:
-            if (b) {
+            if (o1) {
                 if (u) {
                     return decodeNeonUThreeReg<VqaddUD, VqaddUQ>(
                             q, size, machInst, vd, vn, vm);
@@ -374,12 +373,12 @@ let {{
                         q, u, size, machInst, vd, vn, vm);
             }
           case 0x1:
-            if (!b) {
+            if (!o1) {
                 return decodeNeonUSThreeReg<VrhaddD, VrhaddQ>(
                         q, u, size, machInst, vd, vn, vm);
             } else {
                 if (u) {
-                    switch (c) {
+                    switch (size) {
                       case 0:
                         if (q) {
                             return new VeorQ<uint64_t>(machInst, vd, vn, vm);
@@ -408,7 +407,7 @@ let {{
                         M5_UNREACHABLE;
                     }
                 } else {
-                    switch (c) {
+                    switch (size) {
                       case 0:
                         if (q) {
                             return new VandQ<uint64_t>(machInst, vd, vn, vm);
@@ -453,7 +452,7 @@ let {{
                 }
             }
           case 0x2:
-            if (b) {
+            if (o1) {
                 if (u) {
                     return decodeNeonUThreeReg<VqsubUD, VqsubUQ>(
                             q, size, machInst, vd, vn, vm);
@@ -468,7 +467,7 @@ let {{
                         q, u, size, machInst, vd, vn, vm);
             }
           case 0x3:
-            if (b) {
+            if (o1) {
                 return decodeNeonUSThreeReg<VcgeD, VcgeQ>(
                         q, u, size, machInst, vd, vn, vm);
             } else {
@@ -476,7 +475,7 @@ let {{
                         q, u, size, machInst, vd, vn, vm);
             }
           case 0x4:
-            if (b) {
+            if (o1) {
                 if (u) {
                     return decodeNeonUThreeReg<VqshlUD, VqshlUQ>(
                             q, size, machInst, vd, vm, vn);
@@ -489,7 +488,7 @@ let {{
                         q, u, size, machInst, vd, vm, vn);
             }
           case 0x5:
-            if (b) {
+            if (o1) {
                 if (u) {
                     return decodeNeonUThreeReg<VqrshlUD, VqrshlUQ>(
                             q, size, machInst, vd, vm, vn);
@@ -502,7 +501,7 @@ let {{
                         q, u, size, machInst, vd, vm, vn);
             }
           case 0x6:
-            if (b) {
+            if (o1) {
                 return decodeNeonUSThreeReg<VminD, VminQ>(
                         q, u, size, machInst, vd, vn, vm);
             } else {
@@ -510,7 +509,7 @@ let {{
                         q, u, size, machInst, vd, vn, vm);
             }
           case 0x7:
-            if (b) {
+            if (o1) {
                 return decodeNeonUSThreeReg<VabaD, VabaQ>(
                         q, u, size, machInst, vd, vn, vm);
             } else {
@@ -527,7 +526,7 @@ let {{
                 }
             }
           case 0x8:
-            if (b) {
+            if (o1) {
                 if (u) {
                     return decodeNeonUThreeReg<VceqD, VceqQ>(
                             q, size, machInst, vd, vn, vm);
@@ -545,7 +544,7 @@ let {{
                 }
             }
           case 0x9:
-            if (b) {
+            if (o1) {
                 if (u) {
                     return decodeNeonUThreeReg<NVmulpD, NVmulpQ>(
                             q, size, machInst, vd, vn, vm);
@@ -565,7 +564,7 @@ let {{
           case 0xa:
             if (q)
                 return new Unknown(machInst);
-            if (b) {
+            if (o1) {
                 return decodeNeonUSThreeUSReg<VpminD>(
                         u, size, machInst, vd, vn, vm);
             } else {
@@ -573,7 +572,7 @@ let {{
                         u, size, machInst, vd, vn, vm);
             }
           case 0xb:
-            if (b) {
+            if (o1) {
                 if (u || q) {
                     return new Unknown(machInst);
                 } else {
@@ -590,9 +589,9 @@ let {{
                 }
             }
           case 0xc:
-            if (b) {
+            if (o1) {
                 if (!u) {
-                    if (bits(c, 1) == 0) {
+                    if (bits(size, 1) == 0) {
                         if (q) {
                             return new NVfmaQFp<float>(machInst, vd, vn, vm);
                         } else {
@@ -608,7 +607,7 @@ let {{
                 }
             } else {
                 if (u) {
-                    switch (c) {
+                    switch (size) {
                       case 0x0:
                         return new SHA256H(machInst, vd, vn, vm);
                       case 0x1:
@@ -621,7 +620,7 @@ let {{
                         M5_UNREACHABLE;
                     }
                 } else {
-                    switch (c) {
+                    switch (size) {
                       case 0x0:
                         return new SHA1C(machInst, vd, vn, vm);
                       case 0x1:
@@ -637,9 +636,9 @@ let {{
             }
             return new Unknown(machInst);
           case 0xd:
-            if (b) {
+            if (o1) {
                 if (u) {
-                    if (bits(c, 1) == 0) {
+                    if (bits(size, 1) == 0) {
                         if (q) {
                             return new NVmulQFp<float>(machInst, vd, vn, vm);
                         } else {
@@ -649,7 +648,7 @@ let {{
                         return new Unknown(machInst);
                     }
                 } else {
-                    if (bits(c, 1) == 0) {
+                    if (bits(size, 1) == 0) {
                         if (q) {
                             return new NVmlaQFp<float>(machInst, vd, vn, vm);
                         } else {
@@ -665,7 +664,7 @@ let {{
                 }
             } else {
                 if (u) {
-                    if (bits(c, 1) == 0) {
+                    if (bits(size, 1) == 0) {
                         if (q) {
                             return new VpaddQFp<float>(machInst, vd, vn, vm);
                         } else {
@@ -679,7 +678,7 @@ let {{
                         }
                     }
                 } else {
-                    if (bits(c, 1) == 0) {
+                    if (bits(size, 1) == 0) {
                         if (q) {
                             return new VaddQFp<float>(machInst, vd, vn, vm);
                         } else {
@@ -695,9 +694,9 @@ let {{
                 }
             }
           case 0xe:
-            if (b) {
+            if (o1) {
                 if (u) {
-                    if (bits(c, 1) == 0) {
+                    if (bits(size, 1) == 0) {
                         if (q) {
                             return new VacgeQFp<float>(machInst, vd, vn, vm);
                         } else {
@@ -715,7 +714,7 @@ let {{
                 }
             } else {
                 if (u) {
-                    if (bits(c, 1) == 0) {
+                    if (bits(size, 1) == 0) {
                         if (q) {
                             return new VcgeQFp<float>(machInst, vd, vn, vm);
                         } else {
@@ -729,7 +728,7 @@ let {{
                         }
                     }
                 } else {
-                    if (bits(c, 1) == 0) {
+                    if (bits(size, 1) == 0) {
                         if (q) {
                             return new VceqQFp<float>(machInst, vd, vn, vm);
                         } else {
@@ -741,11 +740,11 @@ let {{
                 }
             }
           case 0xf:
-            if (b) {
+            if (o1) {
                 if (u) {
                     return new Unknown(machInst);
                 } else {
-                    if (bits(c, 1) == 0) {
+                    if (bits(size, 1) == 0) {
                         if (q) {
                             return new VrecpsQFp<float>(machInst, vd, vn, vm);
                         } else {
@@ -761,7 +760,7 @@ let {{
                 }
             } else {
                 if (u) {
-                    if (bits(c, 1) == 0) {
+                    if (bits(size, 1) == 0) {
                         if (q) {
                             return new VpmaxQFp<float>(machInst, vd, vn, vm);
                         } else {
@@ -775,7 +774,7 @@ let {{
                         }
                     }
                 } else {
-                    if (bits(c, 1) == 0) {
+                    if (bits(size, 1) == 0) {
                         if (q) {
                             return new VmaxQFp<float>(machInst, vd, vn, vm);
                         } else {
@@ -903,9 +902,9 @@ let {{
     static StaticInstPtr
     decodeNeonTwoRegAndShift(ExtMachInst machInst)
     {
-        const uint32_t a = bits(machInst, 11, 8);
+        const uint32_t opc = bits(machInst, 11, 8);
         const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
-        const bool b = bits(machInst, 6);
+        const bool q = bits(machInst, 6);
         const bool l = bits(machInst, 7);
         const IntRegIndex vd =
             (IntRegIndex)(2 * (bits(machInst, 15, 12) |
@@ -927,77 +926,77 @@ let {{
         }
         lShiftAmt = imm6 & ~bitSel;
         unsigned rShiftAmt = 0;
-        if (a != 0xe && a != 0xf) {
+        if (opc != 0xe && opc != 0xf) {
             if (size > 2)
                 rShiftAmt = 64 - imm6;
             else
                 rShiftAmt = 2 * (8 << size) - imm6;
         }
 
-        switch (a) {
+        switch (opc) {
           case 0x0:
             return decodeNeonUSTwoShiftReg<NVshrD, NVshrQ>(
-                    b, u, size, machInst, vd, vm, rShiftAmt);
+                    q, u, size, machInst, vd, vm, rShiftAmt);
           case 0x1:
             return decodeNeonUSTwoShiftReg<NVsraD, NVsraQ>(
-                    b, u, size, machInst, vd, vm, rShiftAmt);
+                    q, u, size, machInst, vd, vm, rShiftAmt);
           case 0x2:
             return decodeNeonUSTwoShiftReg<NVrshrD, NVrshrQ>(
-                    b, u, size, machInst, vd, vm, rShiftAmt);
+                    q, u, size, machInst, vd, vm, rShiftAmt);
           case 0x3:
             return decodeNeonUSTwoShiftReg<NVrsraD, NVrsraQ>(
-                    b, u, size, machInst, vd, vm, rShiftAmt);
+                    q, u, size, machInst, vd, vm, rShiftAmt);
           case 0x4:
             if (u) {
                 return decodeNeonUTwoShiftReg<NVsriD, NVsriQ>(
-                        b, size, machInst, vd, vm, rShiftAmt);
+                        q, size, machInst, vd, vm, rShiftAmt);
             } else {
                 return new Unknown(machInst);
             }
           case 0x5:
             if (u) {
                 return decodeNeonUTwoShiftReg<NVsliD, NVsliQ>(
-                        b, size, machInst, vd, vm, lShiftAmt);
+                        q, size, machInst, vd, vm, lShiftAmt);
             } else {
                 return decodeNeonUTwoShiftReg<NVshlD, NVshlQ>(
-                        b, size, machInst, vd, vm, lShiftAmt);
+                        q, size, machInst, vd, vm, lShiftAmt);
             }
           case 0x6:
           case 0x7:
             if (u) {
-                if (a == 0x6) {
+                if (opc == 0x6) {
                     return decodeNeonSTwoShiftReg<NVqshlusD, NVqshlusQ>(
-                            b, size, machInst, vd, vm, lShiftAmt);
+                            q, size, machInst, vd, vm, lShiftAmt);
                 } else {
                     return decodeNeonUTwoShiftReg<NVqshluD, NVqshluQ>(
-                            b, size, machInst, vd, vm, lShiftAmt);
+                            q, size, machInst, vd, vm, lShiftAmt);
                 }
             } else {
                 return decodeNeonSTwoShiftReg<NVqshlD, NVqshlQ>(
-                        b, size, machInst, vd, vm, lShiftAmt);
+                        q, size, machInst, vd, vm, lShiftAmt);
             }
           case 0x8:
             if (l) {
                 return new Unknown(machInst);
             } else if (u) {
                 return decodeNeonSTwoShiftSReg<NVqshruns, NVqrshruns>(
-                        b, size, machInst, vd, vm, rShiftAmt);
+                        q, size, machInst, vd, vm, rShiftAmt);
             } else {
                 return decodeNeonUTwoShiftSReg<NVshrn, NVrshrn>(
-                        b, size, machInst, vd, vm, rShiftAmt);
+                        q, size, machInst, vd, vm, rShiftAmt);
             }
           case 0x9:
             if (l) {
                 return new Unknown(machInst);
             } else if (u) {
                 return decodeNeonUTwoShiftSReg<NVqshrun, NVqrshrun>(
-                        b, size, machInst, vd, vm, rShiftAmt);
+                        q, size, machInst, vd, vm, rShiftAmt);
             } else {
                 return decodeNeonSTwoShiftSReg<NVqshrn, NVqrshrn>(
-                        b, size, machInst, vd, vm, rShiftAmt);
+                        q, size, machInst, vd, vm, rShiftAmt);
             }
           case 0xa:
-            if (l || b) {
+            if (l || q) {
                 return new Unknown(machInst);
             } else {
                 return decodeNeonUSTwoShiftSReg<NVmovl, NVshll>(
@@ -1010,7 +1009,7 @@ let {{
                 if (bits(imm6, 5) == 0)
                     return new Unknown(machInst);
                 if (u) {
-                    if (b) {
+                    if (q) {
                         return new NVcvtu2fpQ<float>(
                                 machInst, vd, vm, 64 - imm6);
                     } else {
@@ -1018,7 +1017,7 @@ let {{
                                 machInst, vd, vm, 64 - imm6);
                     }
                 } else {
-                    if (b) {
+                    if (q) {
                         return new NVcvts2fpQ<float>(
                                 machInst, vd, vm, 64 - imm6);
                     } else {
@@ -1034,7 +1033,7 @@ let {{
                 if (bits(imm6, 5) == 0)
                     return new Unknown(machInst);
                 if (u) {
-                    if (b) {
+                    if (q) {
                         return new NVcvt2ufxQ<float>(
                                 machInst, vd, vm, 64 - imm6);
                     } else {
@@ -1042,7 +1041,7 @@ let {{
                                 machInst, vd, vm, 64 - imm6);
                     }
                 } else {
-                    if (b) {
+                    if (q) {
                         return new NVcvt2sfxQ<float>(
                                 machInst, vd, vm, 64 - imm6);
                     } else {
@@ -1059,7 +1058,7 @@ let {{
     decodeNeonThreeRegDiffLengths(ExtMachInst machInst)
     {
         const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
-        const uint32_t a = bits(machInst, 11, 8);
+        const uint32_t opc = bits(machInst, 11, 8);
         const IntRegIndex vd =
             (IntRegIndex)(2 * (bits(machInst, 15, 12) |
                                (bits(machInst, 22) << 4)));
@@ -1070,7 +1069,7 @@ let {{
             (IntRegIndex)(2 * (bits(machInst, 3, 0) |
                                (bits(machInst, 5) << 4)));
         const unsigned size = bits(machInst, 21, 20);
-        switch (a) {
+        switch (opc) {
           case 0x0:
             return decodeNeonUSThreeUSReg<Vaddl>(
                     u, size, machInst, vd, vn, vm);
@@ -1151,7 +1150,7 @@ let {{
     decodeNeonTwoRegScalar(ExtMachInst machInst)
     {
         const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
-        const uint32_t a = bits(machInst, 11, 8);
+        const uint32_t opc = bits(machInst, 11, 8);
         const unsigned size = bits(machInst, 21, 20);
         const IntRegIndex vd =
             (IntRegIndex)(2 * (bits(machInst, 15, 12) |
@@ -1164,7 +1163,7 @@ let {{
             (IntRegIndex)(2 * bits(machInst, 2, 0));
         const unsigned index = (size == 2) ? (unsigned)bits(machInst, 5) :
             (bits(machInst, 3) | (bits(machInst, 5) << 1));
-        switch (a) {
+        switch (opc) {
           case 0x0:
             if (u) {
                 switch (size) {
@@ -1409,7 +1408,7 @@ let {{
     static StaticInstPtr
     decodeNeonTwoRegMisc(ExtMachInst machInst)
     {
-        const uint32_t a = bits(machInst, 17, 16);
+        const uint32_t opc1 = bits(machInst, 17, 16);
         const uint32_t b = bits(machInst, 10, 6);
         const bool q = bits(machInst, 6);
         const IntRegIndex vd =
@@ -1419,7 +1418,7 @@ let {{
             (IntRegIndex)(2 * (bits(machInst, 3, 0) |
                                (bits(machInst, 5) << 4)));
         const unsigned size = bits(machInst, 19, 18);
-        switch (a) {
+        switch (opc1) {
           case 0x0:
             switch (bits(b, 4, 1)) {
               case 0x0:
@@ -1747,7 +1746,7 @@ let {{
     {
         const bool u = THUMB ? bits(machInst, 28) : bits(machInst, 24);
         const uint32_t a = bits(machInst, 23, 19);
-        const uint32_t b = bits(machInst, 11, 8);
+        const uint32_t q = bits(machInst, 11, 8);
         const uint32_t c = bits(machInst, 7, 4);
         if (bits(a, 4) == 0) {
             return decodeNeonThreeRegistersSameLength(machInst);
@@ -1787,9 +1786,9 @@ let {{
                         return new NVextD<uint8_t>(machInst, vd, vn, vm, imm4);
                     }
                 }
-            } else if (bits(b, 3) == 0 && bits(c, 0) == 0) {
+            } else if (bits(q, 3) == 0 && bits(c, 0) == 0) {
                 return decodeNeonTwoRegMisc(machInst);
-            } else if (bits(b, 3, 2) == 0x2 && bits(c, 0) == 0) {
+            } else if (bits(q, 3, 2) == 0x2 && bits(c, 0) == 0) {
                 unsigned length = bits(machInst, 9, 8) + 1;
                 if ((uint32_t)vn / 2 + length > 32)
                     return new Unknown(machInst);
@@ -1816,7 +1815,7 @@ let {{
                         return new NVtbx4(machInst, vd, vn, vm);
                     }
                 }
-            } else if (b == 0xc && (c & 0x9) == 0) {
+            } else if (q == 0xc && (c & 0x9) == 0) {
                 unsigned imm4 = bits(machInst, 19, 16);
                 if (bits(imm4, 2, 0) == 0)
                     return new Unknown(machInst);
@@ -2027,7 +2026,7 @@ let {{
         const uint32_t l = bits(machInst, 20);
         const uint32_t c = bits(machInst, 8);
         const uint32_t a = bits(machInst, 23, 21);
-        const uint32_t b = bits(machInst, 6, 5);
+        const uint32_t q = bits(machInst, 6, 5);
         const uint32_t o1 = bits(machInst, 18);
         if ((machInst.thumb == 1 && bits(machInst, 28) == 1) ||
             (machInst.thumb == 0 && machInst.condCode == 0xf)) {
@@ -2257,7 +2256,7 @@ let {{
                 } else {
                     return new Unknown(machInst);
                 }
-            } else if (bits(b, 1) == 0) {
+            } else if (bits(q, 1) == 0) {
                 bool q = bits(machInst, 21);
                 unsigned be = (bits(machInst, 22) << 1) | (bits(machInst, 5));
                 IntRegIndex vd = (IntRegIndex)(2 * (uint32_t)
