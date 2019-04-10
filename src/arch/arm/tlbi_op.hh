@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -169,14 +169,11 @@ class DTLBIASID : public TLBIOp
 class TLBIALLN : public TLBIOp
 {
   public:
-    TLBIALLN(ExceptionLevel _targetEL, bool _hyp)
-      : TLBIOp(_targetEL, false), hyp(_hyp)
+    TLBIALLN(ExceptionLevel _targetEL)
+      : TLBIOp(_targetEL, false)
     {}
 
     void operator()(ThreadContext* tc) override;
-
-  protected:
-    bool hyp;
 };
 
 /** TLB Invalidate by VA, All ASID */
@@ -184,15 +181,14 @@ class TLBIMVAA : public TLBIOp
 {
   public:
     TLBIMVAA(ExceptionLevel _targetEL, bool _secure,
-             Addr _addr, bool _hyp)
-      : TLBIOp(_targetEL, _secure), addr(_addr), hyp(_hyp)
+             Addr _addr)
+      : TLBIOp(_targetEL, _secure), addr(_addr)
     {}
 
     void operator()(ThreadContext* tc) override;
 
   protected:
     Addr addr;
-    bool hyp;
 };
 
 /** TLB Invalidate by VA */

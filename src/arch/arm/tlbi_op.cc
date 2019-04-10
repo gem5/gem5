@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -99,26 +99,26 @@ DTLBIASID::operator()(ThreadContext* tc)
 void
 TLBIALLN::operator()(ThreadContext* tc)
 {
-    getITBPtr(tc)->flushAllNs(hyp, targetEL);
-    getDTBPtr(tc)->flushAllNs(hyp, targetEL);
+    getITBPtr(tc)->flushAllNs(targetEL);
+    getDTBPtr(tc)->flushAllNs(targetEL);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getITBPtr(checker)->flushAllNs(hyp, targetEL);
-        getDTBPtr(checker)->flushAllNs(hyp, targetEL);
+        getITBPtr(checker)->flushAllNs(targetEL);
+        getDTBPtr(checker)->flushAllNs(targetEL);
     }
 }
 
 void
 TLBIMVAA::operator()(ThreadContext* tc)
 {
-    getITBPtr(tc)->flushMva(addr, secureLookup, hyp, targetEL);
-    getDTBPtr(tc)->flushMva(addr, secureLookup, hyp, targetEL);
+    getITBPtr(tc)->flushMva(addr, secureLookup, targetEL);
+    getDTBPtr(tc)->flushMva(addr, secureLookup, targetEL);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
-        getITBPtr(checker)->flushMva(addr, secureLookup, hyp, targetEL);
-        getDTBPtr(checker)->flushMva(addr, secureLookup, hyp, targetEL);
+        getITBPtr(checker)->flushMva(addr, secureLookup, targetEL);
+        getDTBPtr(checker)->flushMva(addr, secureLookup, targetEL);
     }
 }
 
@@ -157,16 +157,16 @@ void
 TLBIIPA::operator()(ThreadContext* tc)
 {
     getITBPtr(tc)->flushIpaVmid(addr,
-        secureLookup, false, targetEL);
+        secureLookup, targetEL);
     getDTBPtr(tc)->flushIpaVmid(addr,
-        secureLookup, false, targetEL);
+        secureLookup, targetEL);
 
     CheckerCPU *checker = tc->getCheckerCpuPtr();
     if (checker) {
         getITBPtr(checker)->flushIpaVmid(addr,
-            secureLookup, false, targetEL);
+            secureLookup, targetEL);
         getDTBPtr(checker)->flushIpaVmid(addr,
-            secureLookup, false, targetEL);
+            secureLookup, targetEL);
     }
 }
 

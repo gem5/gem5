@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2018 ARM Limited
+ * Copyright (c) 2010-2013, 2016-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -265,8 +265,10 @@ TLB::flushAllSecurity(bool secure_lookup, uint8_t target_el, bool ignore_el)
 }
 
 void
-TLB::flushAllNs(bool hyp, uint8_t target_el, bool ignore_el)
+TLB::flushAllNs(uint8_t target_el, bool ignore_el)
 {
+    bool hyp = target_el == EL2;
+
     DPRINTF(TLB, "Flushing all NS TLB entries (%s lookup)\n",
             (hyp ? "hyp" : "non-hyp"));
     int x = 0;
@@ -297,7 +299,7 @@ TLB::flushMvaAsid(Addr mva, uint64_t asn, bool secure_lookup, uint8_t target_el)
     DPRINTF(TLB, "Flushing TLB entries with mva: %#x, asid: %#x "
             "(%s lookup)\n", mva, asn, (secure_lookup ?
             "secure" : "non-secure"));
-    _flushMva(mva, asn, secure_lookup, false, false, target_el);
+    _flushMva(mva, asn, secure_lookup, false, target_el);
     flushTlbMvaAsid++;
 }
 
@@ -326,21 +328,24 @@ TLB::flushAsid(uint64_t asn, bool secure_lookup, uint8_t target_el)
 }
 
 void
-TLB::flushMva(Addr mva, bool secure_lookup, bool hyp, uint8_t target_el)
+TLB::flushMva(Addr mva, bool secure_lookup, uint8_t target_el)
 {
     DPRINTF(TLB, "Flushing TLB entries with mva: %#x (%s lookup)\n", mva,
             (secure_lookup ? "secure" : "non-secure"));
-    _flushMva(mva, 0xbeef, secure_lookup, hyp, true, target_el);
+    _flushMva(mva, 0xbeef, secure_lookup, true, target_el);
     flushTlbMva++;
 }
 
 void
-TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup, bool hyp,
+TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup,
                bool ignore_asn, uint8_t target_el)
 {
     TlbEntry *te;
     // D5.7.2: Sign-extend address to 64 bits
     mva = sext<56>(mva);
+
+    bool hyp = target_el == EL2;
+
     te = lookup(mva, asn, vmid, hyp, secure_lookup, false, ignore_asn,
                 target_el);
     while (te != NULL) {
@@ -355,10 +360,10 @@ TLB::_flushMva(Addr mva, uint64_t asn, bool secure_lookup, bool hyp,
 }
 
 void
-TLB::flushIpaVmid(Addr ipa, bool secure_lookup, bool hyp, uint8_t target_el)
+TLB::flushIpaVmid(Addr ipa, bool secure_lookup, uint8_t target_el)
 {
     assert(!isStage2);
-    stage2Tlb->_flushMva(ipa, 0xbeef, secure_lookup, hyp, true, target_el);
+    stage2Tlb->_flushMva(ipa, 0xbeef, secure_lookup, true, target_el);
 }
 
 bool
