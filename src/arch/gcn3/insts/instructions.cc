@@ -39261,10 +39261,23 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
         ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
+        ConstVecOperandU32 cmp(gpuDynInst, extData.DATA + 1);
 
         addr.read();
+        data.read();
+        cmp.read();
 
         calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->x_data))[lane]
+                    = data[lane];
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = cmp[lane];
+            }
+        }
 
         if (gpuDynInst->executedAs() == Enums::SC_GLOBAL ||
             gpuDynInst->executedAs() == Enums::SC_PRIVATE) {
@@ -39293,21 +39306,6 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-        ConstVecOperandU32 cmp(gpuDynInst, extData.DATA + 1);
-
-        data.read();
-        cmp.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->x_data))[lane]
-                    = data[lane];
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = cmp[lane];
-            }
-        }
-
         initAtomicAccess<VecElemU32>(gpuDynInst);
     } // initiateAcc
 
@@ -39364,10 +39362,19 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
         ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
 
         addr.read();
+        data.read();
 
         calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
 
         if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
@@ -39387,17 +39394,6 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_ATOMIC_ADD::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandU32 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
         initAtomicAccess<VecElemU32>(gpuDynInst);
     } // initiateAcc
 
@@ -39733,10 +39729,23 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
         ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
+        ConstVecOperandU64 cmp(gpuDynInst, extData.DATA + 2);
 
         addr.read();
+        data.read();
+        cmp.read();
 
         calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU64*>(gpuDynInst->x_data))[lane]
+                    = data[lane];
+                (reinterpret_cast<VecElemU64*>(gpuDynInst->a_data))[lane]
+                    = cmp[lane];
+            }
+        }
 
         if (gpuDynInst->executedAs() == Enums::SC_GLOBAL ||
             gpuDynInst->executedAs() == Enums::SC_PRIVATE) {
@@ -39765,21 +39774,6 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_ATOMIC_CMPSWAP_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
-        ConstVecOperandU64 cmp(gpuDynInst, extData.DATA + 2);
-
-        data.read();
-        cmp.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU64*>(gpuDynInst->x_data))[lane]
-                    = data[lane];
-                (reinterpret_cast<VecElemU64*>(gpuDynInst->a_data))[lane]
-                    = cmp[lane];
-            }
-        }
-
         initAtomicAccess<VecElemU64>(gpuDynInst);
     } // initiateAcc
 
@@ -39837,10 +39831,20 @@ namespace Gcn3ISA
         gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
 
         ConstVecOperandU64 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
 
         addr.read();
+        data.read();
 
         calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU64*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
+
         if (gpuDynInst->executedAs() == Enums::SC_GLOBAL) {
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
@@ -39859,17 +39863,6 @@ namespace Gcn3ISA
     void
     Inst_FLAT__FLAT_ATOMIC_ADD_X2::initiateAcc(GPUDynInstPtr gpuDynInst)
     {
-        ConstVecOperandU64 data(gpuDynInst, extData.DATA);
-
-        data.read();
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (gpuDynInst->exec_mask[lane]) {
-                (reinterpret_cast<VecElemU64*>(gpuDynInst->a_data))[lane]
-                    = data[lane];
-            }
-        }
-
         initAtomicAccess<VecElemU64>(gpuDynInst);
     } // initiateAcc
 
