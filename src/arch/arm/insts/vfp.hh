@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -446,6 +446,9 @@ uint32_t unsignedRSqrtEstimate(uint32_t op);
 
 float fpRecipEstimate(FPSCR &fpscr, float op);
 uint32_t unsignedRecipEstimate(uint32_t op);
+
+FPSCR
+fpStandardFPSCRValue(const FPSCR &fpscr);
 
 class VfpMacroOp : public PredMacroOp
 {

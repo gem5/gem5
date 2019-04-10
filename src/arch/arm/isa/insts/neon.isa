@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2011, 2015 ARM Limited
+// Copyright (c) 2010-2011, 2015, 2019 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1132,7 +1132,8 @@ let {{
     allTypes = unsignedTypes + signedTypes
 
     def threeEqualRegInst(name, Name, opClass, types, rCount, op,
-                          readDest=False, pairwise=False):
+                          readDest=False, pairwise=False,
+                          standardFpcsr=False):
         global header_output, exec_output
         eWalkCode = simdEnabledCheckCode + '''
         RegVect srcReg1, srcReg2, destReg;
@@ -1147,6 +1148,10 @@ let {{
                     destReg.regs[%(reg)d] = htog(FpDestP%(reg)d_uw);
                 ''' % { "reg" : reg }
         readDestCode = ''
+        if standardFpcsr:
+            eWalkCode += '''
+            FPSCR fpscr = fpStandardFPSCRValue((FPSCR)FpscrExc);
+            '''
         if readDest:
             readDestCode = 'destElem = gtoh(destReg.elements[i]);'
         if pairwise:
@@ -1175,6 +1180,10 @@ let {{
                 destReg.elements[i] = htog(destElem);
             }
             ''' % { "op" : op, "readDest" : readDestCode }
+        if standardFpcsr:
+            eWalkCode += '''
+            FpscrExc = fpscr;
+            '''
         for reg in range(rCount):
             eWalkCode += '''
             FpDestP%(reg)d_uw = gtoh(destReg.regs[%(reg)d]);
@@ -2649,45 +2658,34 @@ let {{
     threeEqualRegInst("vqrdmulh", "VqrdmulhQ",
             "SimdMultOp", smallSignedTypes, 4, vqrdmulhCode)
 
-    vmaxfpCode = '''
-        FPSCR fpscr = (FPSCR) FpscrExc;
-        bool done;
-        destReg = processNans(fpscr, done, true, srcReg1, srcReg2);
-        if (!done) {
-            destReg = binaryOp(fpscr, srcReg1, srcReg2, fpMax<float>,
-                               true, true, VfpRoundNearest);
-        } else if (flushToZero(srcReg1, srcReg2)) {
-            fpscr.idc = 1;
-        }
-        FpscrExc = fpscr;
+    vMinMaxFpCode = '''
+        destElem = fplib%s<Element>(srcElem1, srcElem2, fpscr);
     '''
-    threeEqualRegInstFp("vmax", "VmaxDFp", "SimdFloatCmpOp", ("float",), 2, vmaxfpCode)
-    threeEqualRegInstFp("vmax", "VmaxQFp", "SimdFloatCmpOp", ("float",), 4, vmaxfpCode)
-
-    vminfpCode = '''
-        FPSCR fpscr = (FPSCR) FpscrExc;
-        bool done;
-        destReg = processNans(fpscr, done, true, srcReg1, srcReg2);
-        if (!done) {
-            destReg = binaryOp(fpscr, srcReg1, srcReg2, fpMin<float>,
-                               true, true, VfpRoundNearest);
-        } else if (flushToZero(srcReg1, srcReg2)) {
-            fpscr.idc = 1;
-        }
-        FpscrExc = fpscr;
-    '''
-    threeEqualRegInstFp("vmin", "VminDFp", "SimdFloatCmpOp", ("float",), 2, vminfpCode)
-    threeEqualRegInstFp("vmin", "VminQFp", "SimdFloatCmpOp", ("float",), 4, vminfpCode)
-
-    threeEqualRegInstFp("vpmax", "VpmaxDFp", "SimdFloatCmpOp", ("float",),
-                        2, vmaxfpCode, pairwise=True)
-    threeEqualRegInstFp("vpmax", "VpmaxQFp", "SimdFloatCmpOp", ("float",),
-                        4, vmaxfpCode, pairwise=True)
-
-    threeEqualRegInstFp("vpmin", "VpminDFp", "SimdFloatCmpOp", ("float",),
-                        2, vminfpCode, pairwise=True)
-    threeEqualRegInstFp("vpmin", "VpminQFp", "SimdFloatCmpOp", ("float",),
-                        4, vminfpCode, pairwise=True)
+    vMinMaxInsts = [
+        ("vmax",   "VmaxDFp",   2, "Max",    False, ),
+        ("vmax",   "VmaxQFp",   4, "Max",    False, ),
+        ("vmaxnm", "VmaxnmDFp", 2, "MaxNum", False, ),
+        ("vmaxnm", "VmaxnmQFp", 4, "MaxNum", False, ),
+        ("vpmax",  "VpmaxDFp",  2, "Max",    True,  ),
+        ("vpmax",  "VpmaxQFp",  4, "Max",    True,  ),
+        ("vmin",   "VminDFp",   2, "Min",    False, ),
+        ("vmin",   "VminQFp",   4, "Min",    False, ),
+        ("vminnm", "VminnmDFp", 2, "MinNum", False, ),
+        ("vminnm", "VminnmQFp", 4, "MinNum", False, ),
+        ("vpmin",  "VpminDFp",  2, "Min",    True,  ),
+        ("vpmin",  "VpminQFp",  4, "Min",    True,  ),
+    ]
+    for name, Name, rCount, op, pairwise in vMinMaxInsts:
+        threeEqualRegInst(
+            name,
+            Name,
+            "SimdFloatCmpOp",
+            ("uint32_t",),
+            rCount,
+            vMinMaxFpCode % op,
+            pairwise=pairwise,
+            standardFpcsr=True,
+        )
 
     vaddfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;

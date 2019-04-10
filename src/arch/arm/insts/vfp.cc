@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013 ARM Limited
+ * Copyright (c) 2010-2013, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -890,6 +890,17 @@ unsignedRecipEstimate(uint32_t op)
         return (1 << 31) | bits(estimate, 51, 21);
     }
 }
+
+FPSCR
+fpStandardFPSCRValue(const FPSCR &fpscr)
+{
+    FPSCR new_fpscr(0);
+    new_fpscr.ahp = fpscr.ahp;
+    new_fpscr.dn = 1;
+    new_fpscr.fz = 1;
+    new_fpscr.fz16 = fpscr.fz16;
+    return new_fpscr;
+};
 
 template <class fpType>
 fpType

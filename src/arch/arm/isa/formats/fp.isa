@@ -742,7 +742,23 @@ let {{
           case 0xf:
             if (o1) {
                 if (u) {
-                    return new Unknown(machInst);
+                    if (bits(size, 1) == 0) {
+                        if (q) {
+                            return new VmaxnmQFp<uint32_t>(
+                                machInst, vd, vn, vm);
+                        } else {
+                            return new VmaxnmDFp<uint32_t>(
+                                machInst, vd, vn, vm);
+                        }
+                    } else {
+                        if (q) {
+                            return new VminnmQFp<uint32_t>(
+                                machInst, vd, vn, vm);
+                        } else {
+                            return new VminnmDFp<uint32_t>(
+                                machInst, vd, vn, vm);
+                        }
+                    }
                 } else {
                     if (bits(size, 1) == 0) {
                         if (q) {
@@ -762,29 +778,37 @@ let {{
                 if (u) {
                     if (bits(size, 1) == 0) {
                         if (q) {
-                            return new VpmaxQFp<float>(machInst, vd, vn, vm);
+                            return new VpmaxQFp<uint32_t>(
+                                machInst, vd, vn, vm);
                         } else {
-                            return new VpmaxDFp<float>(machInst, vd, vn, vm);
+                            return new VpmaxDFp<uint32_t>(
+                                machInst, vd, vn, vm);
                         }
                     } else {
                         if (q) {
-                            return new VpminQFp<float>(machInst, vd, vn, vm);
+                            return new VpminQFp<uint32_t>(
+                                machInst, vd, vn, vm);
                         } else {
-                            return new VpminDFp<float>(machInst, vd, vn, vm);
+                            return new VpminDFp<uint32_t>(
+                                machInst, vd, vn, vm);
                         }
                     }
                 } else {
                     if (bits(size, 1) == 0) {
                         if (q) {
-                            return new VmaxQFp<float>(machInst, vd, vn, vm);
+                            return new VmaxQFp<uint32_t>(
+                                machInst, vd, vn, vm);
                         } else {
-                            return new VmaxDFp<float>(machInst, vd, vn, vm);
+                            return new VmaxDFp<uint32_t>(
+                                machInst, vd, vn, vm);
                         }
                     } else {
                         if (q) {
-                            return new VminQFp<float>(machInst, vd, vn, vm);
+                            return new VminQFp<uint32_t>(
+                                machInst, vd, vn, vm);
                         } else {
-                            return new VminDFp<float>(machInst, vd, vn, vm);
+                            return new VminDFp<uint32_t>(
+                                machInst, vd, vn, vm);
                         }
                     }
                 }
