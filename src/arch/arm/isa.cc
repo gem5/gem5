@@ -1219,7 +1219,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
                 assert32(tc);
                 scr = readMiscReg(MISCREG_SCR, tc);
 
-                TLBIMVAA tlbiOp(EL1, haveSecurity && !scr.ns,
+                TLBIMVAA tlbiOp(EL2, haveSecurity && !scr.ns,
                                 mbits(newVal, 31,12), true);
 
                 tlbiOp(tc);
@@ -1232,7 +1232,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
                 assert32(tc);
                 scr = readMiscReg(MISCREG_SCR, tc);
 
-                TLBIMVAA tlbiOp(EL1, haveSecurity && !scr.ns,
+                TLBIMVAA tlbiOp(EL2, haveSecurity && !scr.ns,
                                 mbits(newVal, 31,12), true);
 
                 tlbiOp.broadcast(tc);
@@ -1347,7 +1347,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
             {
                 assert32(tc);
 
-                TLBIALLN tlbiOp(EL1, true);
+                TLBIALLN tlbiOp(EL2, true);
                 tlbiOp(tc);
                 return;
             }
@@ -1356,7 +1356,7 @@ ISA::setMiscReg(int misc_reg, RegVal val, ThreadContext *tc)
             {
                 assert32(tc);
 
-                TLBIALLN tlbiOp(EL1, true);
+                TLBIALLN tlbiOp(EL2, true);
                 tlbiOp.broadcast(tc);
                 return;
             }
