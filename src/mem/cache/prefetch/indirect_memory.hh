@@ -43,6 +43,7 @@
 
 #include <vector>
 
+#include "base/sat_counter.hh"
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 
@@ -56,8 +57,6 @@ class IndirectMemoryPrefetcher : public QueuedPrefetcher
     const std::vector<int> shiftValues;
     /** Counter threshold to start prefetching */
     const unsigned int prefetchThreshold;
-    /** Maximum value of the confidence indirectCounter */
-    const unsigned int maxIndirectCounterValue;
     /** streamCounter value to trigger the streaming prefetcher */
     const int streamCounterThreshold;
     /** Number of prefetches generated when using the streaming prefetcher */
@@ -86,7 +85,7 @@ class IndirectMemoryPrefetcher : public QueuedPrefetcher
         /** Shift detected */
         int shift;
         /** Confidence counter of the indirect fields */
-        int indirectCounter;
+        SatCounter indirectCounter;
         /**
          * This variable is set to indicate that there has been at least one
          * match with the current index value. This information is later used
@@ -95,9 +94,11 @@ class IndirectMemoryPrefetcher : public QueuedPrefetcher
          */
         bool increasedIndirectCounter;
 
-        PrefetchTableEntry() : TaggedEntry(), address(0), secure(false),
-            streamCounter(0), enabled(false), index(0), baseAddr(0), shift(0),
-            indirectCounter(0), increasedIndirectCounter(false)
+        PrefetchTableEntry(unsigned indirect_counter_bits)
+            : TaggedEntry(), address(0), secure(false), streamCounter(0),
+              enabled(false), index(0), baseAddr(0), shift(0),
+              indirectCounter(indirect_counter_bits),
+              increasedIndirectCounter(false)
         {}
 
         void reset() override {
@@ -108,7 +109,7 @@ class IndirectMemoryPrefetcher : public QueuedPrefetcher
             index = 0;
             baseAddr = 0;
             shift = 0;
-            indirectCounter = 0;
+            indirectCounter.reset();
             increasedIndirectCounter = false;
         }
     };

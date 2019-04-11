@@ -212,7 +212,7 @@ STeMSPrefetcher::reconstructSequence(unsigned int rmob_idx,
             patternSequenceTable.accessEntry(pst_entry);
             for (auto &seq_entry : pst_entry->sequence) {
                 if (seq_entry.counter > 1) {
-                    // 3-bit counter: high enough confidence with a
+                    // 2-bit counter: high enough confidence with a
                     // value greater than 1
                     Addr rec_addr = rmob[i].srAddress * spatialRegionSize +
                         seq_entry.offset;

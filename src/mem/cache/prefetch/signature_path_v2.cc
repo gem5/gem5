@@ -96,20 +96,20 @@ void
 SignaturePathPrefetcherV2::increasePatternEntryCounter(
         PatternEntry &pattern_entry, PatternStrideEntry &pstride_entry)
 {
-    if (pattern_entry.counter == maxCounterValue) {
+    if (pattern_entry.counter.isSaturated()) {
         pattern_entry.counter >>= 1;
         for (auto &entry : pattern_entry.strideEntries) {
             entry.counter >>= 1;
         }
     }
-    if (pstride_entry.counter == maxCounterValue) {
+    if (pstride_entry.counter.isSaturated()) {
         pattern_entry.counter >>= 1;
         for (auto &entry : pattern_entry.strideEntries) {
             entry.counter >>= 1;
         }
     }
-    pattern_entry.counter += 1;
-    pstride_entry.counter += 1;
+    pattern_entry.counter++;
+    pstride_entry.counter++;
 }
 
 void

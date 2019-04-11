@@ -41,6 +41,7 @@
 #define __MEM_CACHE_PREFETCH_IRREGULAR_STREAM_BUFFER_HH__
 
 #include "base/callback.hh"
+#include "base/sat_counter.hh"
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 
@@ -48,8 +49,6 @@ struct IrregularStreamBufferPrefetcherParams;
 
 class IrregularStreamBufferPrefetcher : public QueuedPrefetcher
 {
-    /** Maximum value of the confidence counters */
-    const unsigned maxCounterValue;
     /** Size in bytes of a temporal stream */
     const size_t chunkSize;
     /** Number of prefetch candidates per Physical-to-Structural entry */
@@ -71,8 +70,8 @@ class IrregularStreamBufferPrefetcher : public QueuedPrefetcher
     /** Address Mapping entry, holds an address and a confidence counter */
     struct AddressMapping {
         Addr address;
-        unsigned counter;
-        AddressMapping() : address(0), counter(0)
+        SatCounter counter;
+        AddressMapping(unsigned bits) : address(0), counter(bits)
         {}
     };
 
@@ -82,13 +81,14 @@ class IrregularStreamBufferPrefetcher : public QueuedPrefetcher
      */
     struct AddressMappingEntry : public TaggedEntry {
         std::vector<AddressMapping> mappings;
-        AddressMappingEntry(size_t num_mappings) : mappings(num_mappings)
+        AddressMappingEntry(size_t num_mappings, unsigned counter_bits)
+            : mappings(num_mappings, counter_bits)
         {}
         void reset() override
         {
             for (auto &entry : mappings) {
                 entry.address = 0;
-                entry.counter = 0;
+                entry.counter.reset();
             }
         }
     };

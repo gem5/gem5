@@ -36,7 +36,7 @@
 
 IrregularStreamBufferPrefetcher::IrregularStreamBufferPrefetcher(
     const IrregularStreamBufferPrefetcherParams *p)
-    : QueuedPrefetcher(p), maxCounterValue(p->max_counter_value),
+    : QueuedPrefetcher(p),
         chunkSize(p->chunk_size),
         prefetchCandidatesPerEntry(p->prefetch_candidates_per_entry),
         degree(p->degree),
@@ -47,12 +47,14 @@ IrregularStreamBufferPrefetcher::IrregularStreamBufferPrefetcher(
                               p->address_map_cache_entries,
                               p->ps_address_map_cache_indexing_policy,
                               p->ps_address_map_cache_replacement_policy,
-                              AddressMappingEntry(prefetchCandidatesPerEntry)),
+                              AddressMappingEntry(prefetchCandidatesPerEntry,
+                                                  p->num_counter_bits)),
         spAddressMappingCache(p->address_map_cache_assoc,
                               p->address_map_cache_entries,
                               p->sp_address_map_cache_indexing_policy,
                               p->sp_address_map_cache_replacement_policy,
-                              AddressMappingEntry(prefetchCandidatesPerEntry)),
+                              AddressMappingEntry(prefetchCandidatesPerEntry,
+                                                  p->num_counter_bits)),
         structuralAddressCounter(0)
 {
     assert(isPowerOf2(prefetchCandidatesPerEntry));
@@ -100,30 +102,29 @@ IrregularStreamBufferPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
         if (mapping_A.counter > 0 && mapping_B.counter > 0) {
             // Entry for A and B
             if (mapping_B.address == (mapping_A.address + 1)) {
-                if (mapping_B.counter < maxCounterValue) {
-                    mapping_B.counter += 1;
-                }
+                mapping_B.counter++;
             } else {
                 if (mapping_B.counter == 1) {
-                    // counter would hit 0, reassign address
-                    mapping_B.counter = 1;
+                    // Counter would hit 0, reassign address while keeping
+                    // counter at 1
                     mapping_B.address = mapping_A.address + 1;
                     addStructuralToPhysicalEntry(mapping_B.address, is_secure,
                             correlated_addr_B);
                 } else {
-                    mapping_B.counter -= 1;
+                    mapping_B.counter--;
                 }
             }
         } else {
             if (mapping_A.counter == 0) {
                 // if A is not valid, generate a new structural address
-                mapping_A.counter = 1;
+                mapping_A.counter++;
                 mapping_A.address = structuralAddressCounter;
                 structuralAddressCounter += chunkSize;
                 addStructuralToPhysicalEntry(mapping_A.address,
                         is_secure, correlated_addr_A);
             }
-            mapping_B.counter = 1;
+            mapping_B.counter.reset();
+            mapping_B.counter++;
             mapping_B.address = mapping_A.address + 1;
             // update SP-AMC
             addStructuralToPhysicalEntry(mapping_B.address, is_secure,
@@ -203,7 +204,8 @@ IrregularStreamBufferPrefetcher::addStructuralToPhysicalEntry(
     }
     AddressMapping &mapping = sp_entry->mappings[map_index];
     mapping.address = physical_address;
-    mapping.counter = 1;
+    mapping.counter.reset();
+    mapping.counter++;
 }
 
 IrregularStreamBufferPrefetcher*

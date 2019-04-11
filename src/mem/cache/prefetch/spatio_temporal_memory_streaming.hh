@@ -45,6 +45,7 @@
 
 #include <vector>
 
+#include "base/sat_counter.hh"
 #include "mem/cache/prefetch/associative_set.hh"
 #include "mem/cache/prefetch/queued.hh"
 
@@ -74,12 +75,12 @@ class STeMSPrefetcher : public QueuedPrefetcher
         /** Sequence entry data type */
         struct SequenceEntry {
             /** 2-bit confidence counter */
-            unsigned int counter;
+            SatCounter counter;
             /** Offset, in cache lines, within the spatial region */
             unsigned int offset;
             /** Intearleaving position on the global access sequence */
             unsigned int delta;
-            SequenceEntry() : counter(0), offset(0), delta(0)
+            SequenceEntry() : counter(2), offset(0), delta(0)
             {}
         };
         /** Sequence of accesses */
@@ -95,7 +96,7 @@ class STeMSPrefetcher : public QueuedPrefetcher
             pc = 0;
             seqCounter = 0;
             for (auto &seq_entry : sequence) {
-                seq_entry.counter = 0;
+                seq_entry.counter.reset();
                 seq_entry.offset = 0;
                 seq_entry.delta = 0;
             }
@@ -125,15 +126,12 @@ class STeMSPrefetcher : public QueuedPrefetcher
             for (auto &seq_entry : sequence) {
                 if (seq_entry.counter > 0) {
                     if (seq_entry.offset == offset) {
-                        //2 bit counter, saturates at 3
-                        if (seq_entry.counter < 3) {
-                            seq_entry.counter += 1;
-                        }
+                        seq_entry.counter++;
                     }
                 } else {
                     // If the counter is 0 it means that this position is not
                     // being used, and we can allocate the new offset here
-                    seq_entry.counter = 1;
+                    seq_entry.counter++;
                     seq_entry.offset = offset;
                     seq_entry.delta = seqCounter;
                     break;

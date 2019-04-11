@@ -38,11 +38,11 @@ IndirectMemoryPrefetcher::IndirectMemoryPrefetcher(
     const IndirectMemoryPrefetcherParams *p) : QueuedPrefetcher(p),
     maxPrefetchDistance(p->max_prefetch_distance),
     shiftValues(p->shift_values), prefetchThreshold(p->prefetch_threshold),
-    maxIndirectCounterValue(p->max_indirect_counter_value),
     streamCounterThreshold(p->stream_counter_threshold),
     streamingDistance(p->streaming_distance),
     prefetchTable(p->pt_table_assoc, p->pt_table_entries,
-                  p->pt_table_indexing_policy, p->pt_table_replacement_policy),
+                  p->pt_table_indexing_policy, p->pt_table_replacement_policy,
+                  PrefetchTableEntry(p->num_indirect_counter_bits)),
     ipd(p->ipd_table_assoc, p->ipd_table_entries, p->ipd_table_indexing_policy,
         p->ipd_table_replacement_policy,
         IndirectPatternDetectorEntry(p->addr_array_len, shiftValues.size())),
@@ -135,9 +135,7 @@ IndirectMemoryPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                         // Enabled entry, update the index
                         pt_entry->index = index;
                         if (!pt_entry->increasedIndirectCounter) {
-                            if (pt_entry->indirectCounter > 0) {
-                                pt_entry->indirectCounter -= 1;
-                            }
+                            pt_entry->indirectCounter--;
                         } else {
                             // Set this to false, to see if the new index
                             // has any match
@@ -146,8 +144,8 @@ IndirectMemoryPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
                         // If the counter is high enough, start prefetching
                         if (pt_entry->indirectCounter > prefetchThreshold) {
-                            unsigned distance = pt_entry->indirectCounter *
-                                maxPrefetchDistance / maxIndirectCounterValue;
+                            unsigned distance = maxPrefetchDistance *
+                                pt_entry->indirectCounter.calcSaturation();
                             for (int delta = 1; delta < distance; delta += 1) {
                                 Addr pf_addr = pt_entry->baseAddr +
                                     (pt_entry->index << pt_entry->shift);
@@ -237,7 +235,7 @@ IndirectMemoryPrefetcher::trackMissIndex2(Addr miss_addr)
                 pt_entry->baseAddr = ba_array[idx];
                 pt_entry->shift = shift;
                 pt_entry->enabled = true;
-                pt_entry->indirectCounter = 0;
+                pt_entry->indirectCounter.reset();
                 // Release the current IPD Entry
                 entry->reset();
                 // Do not track more misses
@@ -256,10 +254,8 @@ IndirectMemoryPrefetcher::checkAccessMatchOnActiveEntries(Addr addr)
         if (pt_entry.enabled) {
             if (addr == pt_entry.baseAddr +
                        (pt_entry.index << pt_entry.shift)) {
-                if (pt_entry.indirectCounter < maxIndirectCounterValue) {
-                    pt_entry.indirectCounter += 1;
-                    pt_entry.increasedIndirectCounter = true;
-                }
+                pt_entry.indirectCounter++;
+                pt_entry.increasedIndirectCounter = true;
             }
         }
     }
