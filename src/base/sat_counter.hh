@@ -56,6 +56,9 @@
 class SatCounter
 {
   public:
+    /** The default constructor should never be used. */
+    SatCounter() = delete;
+
     /**
      * Constructor for the counter. The explicit keyword is used to make
      * sure the user does not assign a number to the counter thinking it
@@ -73,6 +76,58 @@ class SatCounter
                  "Number of bits exceeds counter size");
         fatal_if(initial_val > maxVal,
                  "Saturating counter's Initial value exceeds max value.");
+    }
+
+    /** Copy constructor. */
+    SatCounter(const SatCounter& other)
+        : initialVal(other.initialVal), maxVal(other.maxVal),
+          counter(other.counter)
+    {
+    }
+
+    /** Copy assignment. */
+    SatCounter& operator=(const SatCounter& other) {
+        if (this != &other) {
+            SatCounter temp(other);
+            this->swap(temp);
+        }
+        return *this;
+    }
+
+    /** Move constructor. */
+    SatCounter(SatCounter&& other)
+    {
+        initialVal = other.initialVal;
+        maxVal = other.maxVal;
+        counter = other.counter;
+        SatCounter temp(0);
+        other.swap(temp);
+    }
+
+    /** Move assignment. */
+    SatCounter& operator=(SatCounter&& other) {
+        if (this != &other) {
+            initialVal = other.initialVal;
+            maxVal = other.maxVal;
+            counter = other.counter;
+            SatCounter temp(0);
+            other.swap(temp);
+        }
+        return *this;
+    }
+
+    /**
+     * Swap the contents of every member of the class. Used for the default
+     * copy-assignment created by the compiler.
+     *
+     * @param other The other object to swap contents with.
+     */
+    void
+    swap(SatCounter& other)
+    {
+        std::swap(initialVal, other.initialVal);
+        std::swap(maxVal, other.maxVal);
+        std::swap(counter, other.counter);
     }
 
     /** Pre-increment operator. */
@@ -113,6 +168,49 @@ class SatCounter
         return old_counter;
     }
 
+    /** Shift-right-assignment. */
+    SatCounter&
+    operator>>=(const int& shift)
+    {
+        this->counter >>= shift;
+        return *this;
+    }
+
+    /** Shift-left-assignment. */
+    SatCounter&
+    operator<<=(const int& shift)
+    {
+        this->counter <<= shift;
+        if (this->counter > maxVal) {
+            this->counter = maxVal;
+        }
+        return *this;
+    }
+
+    /** Add-assignment. */
+    SatCounter&
+    operator+=(const int& value)
+    {
+        if (maxVal - this->counter >= value) {
+            this->counter += value;
+        } else {
+            this->counter = maxVal;
+        }
+        return *this;
+    }
+
+    /** Subtract-assignment. */
+    SatCounter&
+    operator-=(const int& value)
+    {
+        if (this->counter > value) {
+            this->counter -= value;
+        } else {
+            this->counter = 0;
+        }
+        return *this;
+    }
+
     /**
      * Read the counter's value.
      */
@@ -120,6 +218,22 @@ class SatCounter
 
     /** Reset the counter to its initial value. */
     void reset() { counter = initialVal; }
+
+    /**
+     * Calculate saturation percentile of the current counter's value
+     * with regard to its maximum possible value.
+     *
+     * @return A value between 0.0 and 1.0 to indicate which percentile of
+     *         the maximum value the current value is.
+     */
+    double calcSaturation() const { return (double) counter / maxVal; }
+
+    /**
+     * Whether the counter has achieved its maximum value or not.
+     *
+     * @return True if the counter saturated.
+     */
+    bool isSaturated() const { return counter == maxVal; }
 
   private:
     uint8_t initialVal;
