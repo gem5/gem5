@@ -492,7 +492,7 @@ SimpleThread::hwrei()
     pc.npc(readMiscRegNoEffect(IPR_EXC_ADDR));
     pcState(pc);
 
-    CPA::cpa()->swAutoBegin(tc, pc.npc());
+    CPA::cpa()->swAutoBegin(this, pc.npc());
 
     if (kernelStats)
         kernelStats->hwrei();
@@ -509,7 +509,7 @@ bool
 SimpleThread::simPalCheck(int palFunc)
 {
     if (kernelStats)
-        kernelStats->callpal(palFunc, tc);
+        kernelStats->callpal(palFunc, this);
 
     switch (palFunc) {
       case PAL::halt:

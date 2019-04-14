@@ -127,7 +127,7 @@ struct ThreadState : public Serializable {
     /** Reads the number of instructions functionally executed and
      * committed.
      */
-    Counter readFuncExeInst() { return funcExeInst; }
+    Counter readFuncExeInst() const { return funcExeInst; }
 
     /** Sets the total number of instructions functionally executed
      * and committed.

@@ -163,7 +163,7 @@ ThreadContext::quiesceTick(Tick resume)
 }
 
 void
-serialize(ThreadContext &tc, CheckpointOut &cp)
+serialize(const ThreadContext &tc, CheckpointOut &cp)
 {
     using namespace TheISA;
 

@@ -205,64 +205,64 @@ O3ThreadContext<Impl>::clearArchRegs()
 
 template <class Impl>
 RegVal
-O3ThreadContext<Impl>::readIntRegFlat(int reg_idx)
+O3ThreadContext<Impl>::readIntRegFlat(RegIndex reg_idx) const
 {
     return cpu->readArchIntReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
 RegVal
-O3ThreadContext<Impl>::readFloatRegFlat(int reg_idx)
+O3ThreadContext<Impl>::readFloatRegFlat(RegIndex reg_idx) const
 {
     return cpu->readArchFloatReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
 const TheISA::VecRegContainer&
-O3ThreadContext<Impl>::readVecRegFlat(int reg_id) const
+O3ThreadContext<Impl>::readVecRegFlat(RegIndex reg_id) const
 {
     return cpu->readArchVecReg(reg_id, thread->threadId());
 }
 
 template <class Impl>
 TheISA::VecRegContainer&
-O3ThreadContext<Impl>::getWritableVecRegFlat(int reg_id)
+O3ThreadContext<Impl>::getWritableVecRegFlat(RegIndex reg_id)
 {
     return cpu->getWritableArchVecReg(reg_id, thread->threadId());
 }
 
 template <class Impl>
 const TheISA::VecElem&
-O3ThreadContext<Impl>::readVecElemFlat(const RegIndex& idx,
-                                           const ElemIndex& elemIndex) const
+O3ThreadContext<Impl>::readVecElemFlat(RegIndex idx,
+                                       const ElemIndex& elemIndex) const
 {
     return cpu->readArchVecElem(idx, elemIndex, thread->threadId());
 }
 
 template <class Impl>
 const TheISA::VecPredRegContainer&
-O3ThreadContext<Impl>::readVecPredRegFlat(int reg_id) const
+O3ThreadContext<Impl>::readVecPredRegFlat(RegIndex reg_id) const
 {
     return cpu->readArchVecPredReg(reg_id, thread->threadId());
 }
 
 template <class Impl>
 TheISA::VecPredRegContainer&
-O3ThreadContext<Impl>::getWritableVecPredRegFlat(int reg_id)
+O3ThreadContext<Impl>::getWritableVecPredRegFlat(RegIndex reg_id)
 {
     return cpu->getWritableArchVecPredReg(reg_id, thread->threadId());
 }
 
 template <class Impl>
 RegVal
-O3ThreadContext<Impl>::readCCRegFlat(int reg_idx)
+O3ThreadContext<Impl>::readCCRegFlat(RegIndex reg_idx) const
 {
     return cpu->readArchCCReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setIntRegFlat(int reg_idx, RegVal val)
+O3ThreadContext<Impl>::setIntRegFlat(RegIndex reg_idx, RegVal val)
 {
     cpu->setArchIntReg(reg_idx, val, thread->threadId());
 
@@ -271,7 +271,7 @@ O3ThreadContext<Impl>::setIntRegFlat(int reg_idx, RegVal val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setFloatRegFlat(int reg_idx, RegVal val)
+O3ThreadContext<Impl>::setFloatRegFlat(RegIndex reg_idx, RegVal val)
 {
     cpu->setArchFloatReg(reg_idx, val, thread->threadId());
 
@@ -280,7 +280,8 @@ O3ThreadContext<Impl>::setFloatRegFlat(int reg_idx, RegVal val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setVecRegFlat(int reg_idx, const VecRegContainer& val)
+O3ThreadContext<Impl>::setVecRegFlat(
+        RegIndex reg_idx, const VecRegContainer& val)
 {
     cpu->setArchVecReg(reg_idx, val, thread->threadId());
 
@@ -289,7 +290,7 @@ O3ThreadContext<Impl>::setVecRegFlat(int reg_idx, const VecRegContainer& val)
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setVecElemFlat(const RegIndex& idx,
+O3ThreadContext<Impl>::setVecElemFlat(RegIndex idx,
         const ElemIndex& elemIndex, const VecElem& val)
 {
     cpu->setArchVecElem(idx, elemIndex, val, thread->threadId());
@@ -298,7 +299,7 @@ O3ThreadContext<Impl>::setVecElemFlat(const RegIndex& idx,
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setVecPredRegFlat(int reg_idx,
+O3ThreadContext<Impl>::setVecPredRegFlat(RegIndex reg_idx,
                                          const VecPredRegContainer& val)
 {
     cpu->setArchVecPredReg(reg_idx, val, thread->threadId());
@@ -308,7 +309,7 @@ O3ThreadContext<Impl>::setVecPredRegFlat(int reg_idx,
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setCCRegFlat(int reg_idx, RegVal val)
+O3ThreadContext<Impl>::setCCRegFlat(RegIndex reg_idx, RegVal val)
 {
     cpu->setArchCCReg(reg_idx, val, thread->threadId());
 
@@ -342,20 +343,20 @@ O3ThreadContext<Impl>::flattenRegId(const RegId& regId) const
 
 template <class Impl>
 void
-O3ThreadContext<Impl>::setMiscRegNoEffect(int misc_reg, RegVal val)
+O3ThreadContext<Impl>::setMiscRegNoEffect(RegIndex misc_reg, RegVal val)
 {
     cpu->setMiscRegNoEffect(misc_reg, val, thread->threadId());
 
     conditionalSquash();
 }
 
-#endif//__CPU_O3_THREAD_CONTEXT_IMPL_HH__
 template <class Impl>
 void
-O3ThreadContext<Impl>::setMiscReg(int misc_reg, RegVal val)
+O3ThreadContext<Impl>::setMiscReg(RegIndex misc_reg, RegVal val)
 {
     cpu->setMiscReg(misc_reg, val, thread->threadId());
 
     conditionalSquash();
 }
 
+#endif //__CPU_O3_THREAD_CONTEXT_IMPL_HH__
