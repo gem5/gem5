@@ -1562,7 +1562,9 @@ cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     pp->useArchPT = p->useArchPT;
     pp->kvmInSE = p->kvmInSE;
     Process *cp = pp->create();
-    delete pp;
+    // TODO: there is no way to know when the Process SimObject is done with
+    // the params pointer. Both the params pointer (pp) and the process
+    // pointer (cp) are normally managed in python and are never cleaned up.
 
     Process *owner = ctc->getProcessPtr();
     ctc->setProcessPtr(cp);
