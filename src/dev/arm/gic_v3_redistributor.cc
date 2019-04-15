@@ -860,6 +860,43 @@ Gicv3Redistributor::update()
     }
 }
 
+uint8_t
+Gicv3Redistributor::readEntryLPI(uint32_t lpi_id)
+{
+    Addr lpi_pending_entry_ptr = lpiPendingTablePtr + (lpi_id / 8);
+
+    uint8_t lpi_pending_entry;
+    ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
+    tc->getPhysProxy().readBlob(lpi_pending_entry_ptr,
+            (uint8_t*) &lpi_pending_entry,
+            sizeof(lpi_pending_entry));
+
+    return lpi_pending_entry;
+}
+
+void
+Gicv3Redistributor::writeEntryLPI(uint32_t lpi_id, uint8_t lpi_pending_entry)
+{
+    Addr lpi_pending_entry_ptr = lpiPendingTablePtr + (lpi_id / 8);
+
+    ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
+    tc->getPhysProxy().writeBlob(lpi_pending_entry_ptr,
+            (uint8_t*) &lpi_pending_entry,
+            sizeof(lpi_pending_entry));
+}
+
+bool
+Gicv3Redistributor::isPendingLPI(uint32_t lpi_id)
+{
+    // Fetch the LPI pending entry from memory
+    uint8_t lpi_pending_entry = readEntryLPI(lpi_id);
+
+    uint8_t lpi_pending_entry_bit_position = lpi_id % 8;
+    bool is_set = lpi_pending_entry & (1 << lpi_pending_entry_bit_position);
+
+    return is_set;
+}
+
 void
 Gicv3Redistributor::setClrLPI(uint64_t data, bool set)
 {
@@ -878,12 +915,9 @@ Gicv3Redistributor::setClrLPI(uint64_t data, bool set)
         return;
     }
 
-    Addr lpi_pending_entry_ptr = lpiPendingTablePtr + (lpi_id / 8);
-    uint8_t lpi_pending_entry;
-    ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
-    tc->getPhysProxy().readBlob(lpi_pending_entry_ptr,
-            (uint8_t*) &lpi_pending_entry,
-            sizeof(lpi_pending_entry));
+    // Fetch the LPI pending entry from memory
+    uint8_t lpi_pending_entry = readEntryLPI(lpi_id);
+
     uint8_t lpi_pending_entry_bit_position = lpi_id % 8;
     bool is_set = lpi_pending_entry & (1 << lpi_pending_entry_bit_position);
 
@@ -905,9 +939,8 @@ Gicv3Redistributor::setClrLPI(uint64_t data, bool set)
         lpi_pending_entry &= ~(1 << (lpi_pending_entry_bit_position));
     }
 
-    tc->getPhysProxy().writeBlob(lpi_pending_entry_ptr,
-            (uint8_t*) &lpi_pending_entry,
-            sizeof(lpi_pending_entry));
+    writeEntryLPI(lpi_id, lpi_pending_entry);
+
     updateAndInformCPUInterface();
 }
 

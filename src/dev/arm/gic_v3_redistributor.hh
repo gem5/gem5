@@ -190,8 +190,17 @@ class Gicv3Redistributor : public Serializable
         return cpuInterface;
     }
 
+    uint32_t
+    processorNumber() const
+    {
+        return cpuId;
+    }
+
     Gicv3::GroupId getIntGroup(int int_id) const;
     Gicv3::IntStatus intStatus(uint32_t int_id) const;
+    uint8_t readEntryLPI(uint32_t intid);
+    void writeEntryLPI(uint32_t intid, uint8_t lpi_entry);
+    bool isPendingLPI(uint32_t intid);
     void setClrLPI(uint64_t data, bool set);
     void reset();
     void sendSGI(uint32_t int_id, Gicv3::GroupId group, bool ns);
