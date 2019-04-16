@@ -97,7 +97,7 @@ class SimpleMemory : public AbstractMemory
         void recvFunctional(PacketPtr pkt) override;
         bool recvTimingReq(PacketPtr pkt) override;
         void recvRespRetry() override;
-        AddrRangeList getAddrRanges() const;
+        AddrRangeList getAddrRanges() const override;
     };
 
     MemoryPort port;
