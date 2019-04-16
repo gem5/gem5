@@ -44,11 +44,22 @@ from m5.params import *
 from m5.proxy import *
 from m5.objects.PciDevice import PciDevice
 
+ETHERNET_ROLE = 'ETHERNET'
+Port.compat(ETHERNET_ROLE, ETHERNET_ROLE)
+
+class EtherInt(Port):
+    def __init__(self, desc):
+        super(EtherInt, self).__init__(ETHERNET_ROLE, desc)
+
+class VectorEtherInt(VectorPort):
+    def __init__(self, desc):
+        super(VectorEtherInt, self).__init__(ETHERNET_ROLE, desc)
+
 class EtherLink(SimObject):
     type = 'EtherLink'
     cxx_header = "dev/net/etherlink.hh"
-    int0 = SlavePort("interface 0")
-    int1 = SlavePort("interface 1")
+    int0 = EtherInt("interface 0")
+    int1 = EtherInt("interface 1")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
     speed = Param.NetworkBandwidth('1Gbps', "link speed")
@@ -57,7 +68,7 @@ class EtherLink(SimObject):
 class DistEtherLink(SimObject):
     type = 'DistEtherLink'
     cxx_header = "dev/net/dist_etherlink.hh"
-    int0 = SlavePort("interface 0")
+    int0 = EtherInt("interface 0")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
     speed = Param.NetworkBandwidth('1Gbps', "link speed")
@@ -85,7 +96,7 @@ class EtherSwitch(SimObject):
     dump = Param.EtherDump(NULL, "dump object")
     fabric_speed = Param.NetworkBandwidth('10Gbps', "switch fabric speed in bits "
                                           "per second")
-    interface = VectorMasterPort("Ethernet Interface")
+    interface = VectorEtherInt("Ethernet Interface")
     output_buffer_size = Param.MemorySize('1MB', "size of output port buffers")
     delay = Param.Latency('0us', "packet transmit delay")
     delay_var = Param.Latency('0ns', "packet transmit delay variability")
@@ -97,7 +108,7 @@ class EtherTapBase(SimObject):
     cxx_header = "dev/net/ethertap.hh"
     bufsz = Param.Int(10000, "tap buffer size")
     dump = Param.EtherDump(NULL, "dump object")
-    tap = SlavePort("Ethernet interface to connect to gem5's network")
+    tap = EtherInt("Ethernet interface to connect to gem5's network")
 
 if buildEnv['USE_TUNTAP']:
     class EtherTap(EtherTapBase):
@@ -122,7 +133,7 @@ class EtherDevice(PciDevice):
     type = 'EtherDevice'
     abstract = True
     cxx_header = "dev/net/etherdevice.hh"
-    interface = MasterPort("Ethernet Interface")
+    interface = EtherInt("Ethernet Interface")
 
 class IGbE(EtherDevice):
     # Base class for two IGbE adapters listed above
