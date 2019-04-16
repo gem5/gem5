@@ -1,4 +1,4 @@
-# Copyright 2018 Google, Inc.
+# Copyright 2019 Google, Inc.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -25,13 +25,43 @@
 #
 # Authors: Gabe Black
 
-Import('*')
+from m5.params import Port, VectorPort
 
-if not env['USE_SYSTEMC']:
-    Return()
+def TLM_TARGET_ROLE(width):
+    return 'TLM TARGET %d' % width
 
-env.UseSystemcCheck(warn=True)
+def TLM_INITIATOR_ROLE(width):
+    return 'TLM INITIATOR %d' % width
 
-env.Append(CPPPATH=Dir('ext'))
+class TlmTargetSocket(Port):
+    def __init__(self, width, desc):
+        my_role = TLM_TARGET_ROLE(width)
+        peer_role = TLM_INITIATOR_ROLE(width)
+        Port.compat(my_role, peer_role)
 
-SimObject('Tlm.py')
+        super(TlmTargetSocket, self).__init__(my_role, desc)
+
+class VectorTlmTargetSocket(VectorPort):
+    def __init__(self, width, desc):
+        my_role = TLM_TARGET_ROLE(width)
+        peer_role = TLM_INITIATOR_ROLE(width)
+        Port.compat(my_role, peer_role)
+
+        super(VectorTlmTargetSocket, self).__init__(my_role, desc)
+
+class TlmInitiatorSocket(Port):
+    def __init__(self, width, desc):
+        my_role = TLM_INITIATOR_ROLE(width)
+        peer_role = TLM_TARGET_ROLE(width)
+        Port.compat(my_role, peer_role)
+
+        super(TlmInitiatorSocket, self).__init__(my_role, desc, is_source=True)
+
+class VectorTlmInitiatorSocket(VectorPort):
+    def __init__(self, width, desc):
+        my_role = TLM_INITIATOR_ROLE(width)
+        peer_role = TLM_TARGET_ROLE(width)
+        Port.compat(my_role, peer_role)
+
+        super(VectorTlmInitiatorSocket, self).__init__(
+                my_role, desc, is_source=True)
