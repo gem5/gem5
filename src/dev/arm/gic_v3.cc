@@ -35,6 +35,7 @@
 #include "debug/Interrupt.hh"
 #include "dev/arm/gic_v3_cpu_interface.hh"
 #include "dev/arm/gic_v3_distributor.hh"
+#include "dev/arm/gic_v3_its.hh"
 #include "dev/arm/gic_v3_redistributor.hh"
 #include "dev/platform.hh"
 #include "mem/packet.hh"
@@ -77,6 +78,8 @@ Gicv3::init()
         redistributors[i]->init();
         cpuInterfaces[i]->init();
     }
+
+    params()->its->setGIC(this);
 
     BaseGic::init();
 }

@@ -37,6 +37,7 @@
 class Gicv3CPUInterface;
 class Gicv3Distributor;
 class Gicv3Redistributor;
+class Gicv3Its;
 
 class Gicv3 : public BaseGic
 {
@@ -48,6 +49,7 @@ class Gicv3 : public BaseGic
     Gicv3Distributor * distributor;
     std::vector<Gicv3Redistributor *> redistributors;
     std::vector<Gicv3CPUInterface *> cpuInterfaces;
+    Gicv3Its * its;
     AddrRange distRange;
     AddrRange redistRange;
     AddrRangeList addrRanges;

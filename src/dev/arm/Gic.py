@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2017-2018 ARM Limited
+# Copyright (c) 2012-2013, 2017-2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -40,7 +40,7 @@ from m5.proxy import *
 from m5.util.fdthelper import *
 from m5.SimObject import SimObject
 
-from m5.objects.Device import PioDevice
+from m5.objects.Device import PioDevice, BasicPioDevice
 from m5.objects.Platform import Platform
 
 class BaseGic(PioDevice):
@@ -162,9 +162,23 @@ class VGic(PioDevice):
 
         yield node
 
+class Gicv3Its(BasicPioDevice):
+    type = 'Gicv3Its'
+    cxx_header = "dev/arm/gic_v3_its.hh"
+
+    dma = MasterPort("DMA port")
+    pio_size = Param.Unsigned(0x20000, "Gicv3Its pio size")
+
+    # CIL [36] = 0: ITS supports 16-bit CollectionID
+    # Devbits [17:13] = 0b100011: ITS supports 23 DeviceID bits
+    # ID_bits [12:8] = 0b11111: ITS supports 31 EventID bits
+    gits_typer = Param.UInt64(0x30023F01, "GITS_TYPER RO value")
+
 class Gicv3(BaseGic):
     type = 'Gicv3'
     cxx_header = "dev/arm/gic_v3.hh"
+
+    its = Param.Gicv3Its(Gicv3Its(), "GICv3 Interrupt Translation Service")
 
     dist_addr = Param.Addr("Address for distributor")
     dist_pio_delay = Param.Latency('10ns', "Delay for PIO r/w to distributor")

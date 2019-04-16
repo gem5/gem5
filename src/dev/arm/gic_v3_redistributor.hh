@@ -37,6 +37,7 @@
 
 class Gicv3CPUInterface;
 class Gicv3Distributor;
+class Gicv3Its;
 
 class Gicv3Redistributor : public Serializable
 {
@@ -44,6 +45,7 @@ class Gicv3Redistributor : public Serializable
 
     friend class Gicv3CPUInterface;
     friend class Gicv3Distributor;
+    friend class Gicv3Its;
 
   protected:
 
