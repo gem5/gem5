@@ -2099,17 +2099,18 @@ class Port(object):
     def cxx_decl(self, code):
         code('unsigned int port_${{self.name}}_connection_count;')
 
-Port.compat('MASTER', 'SLAVE')
+Port.compat('GEM5 REQUESTER', 'GEM5 RESPONDER')
 
-class MasterPort(Port):
-    # MasterPort("description")
+class RequestPort(Port):
+    # RequestPort("description")
     def __init__(self, desc):
-        super(MasterPort, self).__init__('MASTER', desc, is_source=True)
+        super(RequestPort, self).__init__(
+                'GEM5 REQUESTER', desc, is_source=True)
 
-class SlavePort(Port):
-    # SlavePort("description")
+class ResponsePort(Port):
+    # ResponsePort("description")
     def __init__(self, desc):
-        super(SlavePort, self).__init__('SLAVE', desc)
+        super(ResponsePort, self).__init__('GEM5 RESPONDER', desc)
 
 # VectorPort description object.  Like Port, but represents a vector
 # of connections (e.g., as on a XBar).
@@ -2122,15 +2123,22 @@ class VectorPort(Port):
     def makeRef(self, simobj):
         return VectorPortRef(simobj, self.name, self.role, self.is_source)
 
-class VectorMasterPort(VectorPort):
-    # VectorMasterPort("description")
+class VectorRequestPort(VectorPort):
+    # VectorRequestPort("description")
     def __init__(self, desc):
-        super(VectorMasterPort, self).__init__('MASTER', desc, is_source=True)
+        super(VectorRequestPort, self).__init__(
+                'GEM5 REQUESTER', desc, is_source=True)
 
-class VectorSlavePort(VectorPort):
-    # VectorSlavePort("description")
+class VectorResponsePort(VectorPort):
+    # VectorResponsePort("description")
     def __init__(self, desc):
-        super(VectorSlavePort, self).__init__('SLAVE', desc)
+        super(VectorResponsePort, self).__init__('GEM5 RESPONDER', desc)
+
+# Old names, maintained for compatibility.
+MasterPort = RequestPort
+SlavePort = ResponsePort
+VectorMasterPort = VectorRequestPort
+VectorSlavePort = VectorResponsePort
 
 # 'Fake' ParamDesc for Port references to assign to the _pdesc slot of
 # proxy objects (via set_param_desc()) so that proxy error messages
@@ -2164,5 +2172,6 @@ __all__ = ['Param', 'VectorParam',
            'MaxAddr', 'MaxTick', 'AllMemory',
            'Time',
            'NextEthernetAddr', 'NULL',
-           'Port', 'MasterPort', 'SlavePort',
-           'VectorPort', 'VectorMasterPort', 'VectorSlavePort']
+           'Port', 'RequestPort', 'ResponsePort', 'MasterPort', 'SlavePort',
+           'VectorPort', 'VectorRequestPort', 'VectorResponsePort',
+           'VectorMasterPort', 'VectorSlavePort']
