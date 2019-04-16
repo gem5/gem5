@@ -2115,11 +2115,6 @@ class ResponsePort(Port):
 # VectorPort description object.  Like Port, but represents a vector
 # of connections (e.g., as on a XBar).
 class VectorPort(Port):
-    # VectorPort("role", "description")
-    def __init__(self, role, desc, is_source=False):
-        super(VectorPort, self).__init__(role, desc, is_source)
-        self.isVec = True
-
     def makeRef(self, simobj):
         return VectorPortRef(simobj, self.name, self.role, self.is_source)
 
