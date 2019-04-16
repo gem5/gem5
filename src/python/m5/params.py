@@ -1895,35 +1895,36 @@ class PortRef(object):
         if other.peer is not self:
             other.connect(self)
 
-    # Allow a master/slave port pair to be spliced between
-    # a port and its connected peer. Useful operation for connecting
-    # instrumentation structures into a system when it is necessary
-    # to connect the instrumentation after the full system has been
-    # constructed.
-    def splice(self, new_master_peer, new_slave_peer):
+    # Allow a compatible port pair to be spliced between a port and its
+    # connected peer. Useful operation for connecting instrumentation
+    # structures into a system when it is necessary to connect the
+    # instrumentation after the full system has been constructed.
+    def splice(self, new_1, new_2):
         if not self.peer or proxy.isproxy(self.peer):
             fatal("Port %s not connected, cannot splice in new peers\n", self)
 
-        if not isinstance(new_master_peer, PortRef) or \
-           not isinstance(new_slave_peer, PortRef):
+        if not isinstance(new_1, PortRef) or not isinstance(new_2, PortRef):
             raise TypeError(
                   "Splicing non-port references '%s','%s' to port '%s'" % \
-                  (new_master_peer, new_slave_peer, self))
+                  (new_1, new_2, self))
 
         old_peer = self.peer
-        if self.role == 'SLAVE':
-            self.peer = new_master_peer
-            old_peer.peer = new_slave_peer
-            new_master_peer.connect(self)
-            new_slave_peer.connect(old_peer)
-        elif self.role == 'MASTER':
-            self.peer = new_slave_peer
-            old_peer.peer = new_master_peer
-            new_slave_peer.connect(self)
-            new_master_peer.connect(old_peer)
+
+        if Port.is_compat(old_peer, new_1) and Port.is_compat(self, new_2):
+            old_peer.peer = new_1
+            new_1.peer = old_peer
+            self.peer = new_2
+            new_2.peer = self
+        elif Port.is_compat(old_peer, new_2) and Port.is_compat(self, new_1):
+            old_peer.peer = new_2
+            new_2.peer = old_peer
+            self.peer = new_1
+            new_1.peer = self
         else:
-            panic("Port %s has unknown role, "+\
-                  "cannot splice in new peers\n", self)
+            fatal("Ports %s(%s) and %s(%s) can't be compatibly spliced with "
+                    "%s(%s) and %s(%s)", self, self.role,
+                    old_peer, old_peer.role, new_1, new_1.role,
+                    new_2, new_2.role)
 
     def clone(self, simobj, memo):
         if self in memo:
