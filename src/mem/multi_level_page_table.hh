@@ -204,6 +204,9 @@ public:
     void
     initState(ThreadContext* tc) override
     {
+        if (shared)
+            return;
+
         _basePtr = prepTopTable<EntryTypes...>(system, pageSize);
     }
 

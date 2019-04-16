@@ -75,7 +75,7 @@ class EmulationPageTable : public Serializable
     EmulationPageTable(
             const std::string &__name, uint64_t _pid, Addr _pageSize) :
             pageSize(_pageSize), offsetMask(mask(floorLog2(_pageSize))),
-            _pid(_pid), _name(__name)
+            _pid(_pid), _name(__name), shared(false)
     {
         assert(isPowerOf2(pageSize));
     }
@@ -95,6 +95,9 @@ class EmulationPageTable : public Serializable
         Uncacheable = 4,
         ReadOnly    = 8,
     };
+
+    // flag which marks the page table as shared among software threads
+    bool shared;
 
     virtual void initState(ThreadContext* tc) {};
 

@@ -172,8 +172,12 @@ class Process : public SimObject
 
     Stats::Scalar numSyscalls;  // track how many system calls are executed
 
-    bool useArchPT; // flag for using architecture specific page table
-    bool kvmInSE;   // running KVM requires special initialization
+    // flag for using architecture specific page table
+    bool useArchPT;
+    // running KVM requires special initialization
+    bool kvmInSE;
+    // flag for using the process as a thread which shares page tables
+    bool useForClone;
 
     EmulationPageTable *pTable;
 

@@ -165,6 +165,9 @@ I386Process::I386Process(ProcessParams *params, ObjectFile *objFile,
                          SyscallDesc *_syscallDescs, int _numSyscallDescs)
     : X86Process(params, objFile, _syscallDescs, _numSyscallDescs)
 {
+    if (kvmInSE)
+        panic("KVM CPU model does not support 32 bit processes");
+
     _gdtStart = ULL(0xffffd000);
     _gdtSize = PageBytes;
 
@@ -196,6 +199,9 @@ void
 X86_64Process::initState()
 {
     X86Process::initState();
+
+    if (useForClone)
+        return;
 
     argsInit(PageBytes);
 

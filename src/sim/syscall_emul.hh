@@ -1551,6 +1551,8 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 
     pp->pid = temp_pid;
     pp->ppid = (flags & OS::TGT_CLONE_THREAD) ? p->ppid() : p->pid();
+    pp->useArchPT = p->useArchPT;
+    pp->kvmInSE = p->kvmInSE;
     Process *cp = pp->create();
     delete pp;
 
@@ -1566,6 +1568,10 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
         ptidBuf.copyOut(tc->getMemProxy());
     }
 
+    if (flags & OS::TGT_CLONE_THREAD) {
+        cp->pTable->shared = true;
+        cp->useForClone = true;
+    }
     cp->initState();
     p->clone(tc, ctc, cp, flags);
 
@@ -1599,9 +1605,17 @@ cloneFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
     ctc->setIntReg(TheISA::SyscallPseudoReturnReg, 1);
 #endif
 
-    TheISA::PCState cpc = tc->pcState();
-    cpc.advance();
-    ctc->pcState(cpc);
+    if (p->kvmInSE) {
+#if THE_ISA == X86_ISA
+        ctc->pcState(tc->readIntReg(TheISA::INTREG_RCX));
+#else
+        panic("KVM CPU model is not supported for this ISA");
+#endif
+    } else {
+        TheISA::PCState cpc = tc->pcState();
+        cpc.advance();
+        ctc->pcState(cpc);
+    }
     ctc->activate();
 
     return cp->pid();
