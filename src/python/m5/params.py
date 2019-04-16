@@ -1834,11 +1834,12 @@ AllMemory = AddrRange(0, MaxAddr)
 # Port reference: encapsulates a reference to a particular port on a
 # particular SimObject.
 class PortRef(object):
-    def __init__(self, simobj, name, role):
+    def __init__(self, simobj, name, role, is_source):
         assert(isSimObject(simobj) or isSimObjectClass(simobj))
         self.simobj = simobj
         self.name = name
         self.role = role
+        self.is_source = is_source
         self.peer = None   # not associated with another port yet
         self.ccConnected = False # C++ port connection done?
         self.index = -1  # always -1 for non-vector ports
@@ -1857,7 +1858,8 @@ class PortRef(object):
 
     # for config.json
     def get_config_as_dict(self):
-        return {'role' : self.role, 'peer' : str(self.peer)}
+        return {'role' : self.role, 'peer' : str(self.peer),
+                'is_source' : str(self.is_source)}
 
     def __getattr__(self, attr):
         if attr == 'peerObj':
@@ -1878,14 +1880,20 @@ class PortRef(object):
             fatal("Port %s is already connected to %s, cannot connect %s\n",
                   self, self.peer, other);
         self.peer = other
+
         if proxy.isproxy(other):
             other.set_param_desc(PortParamDesc())
-        elif isinstance(other, PortRef):
-            if other.peer is not self:
-                other.connect(self)
-        else:
+            return
+        elif not isinstance(other, PortRef):
             raise TypeError("assigning non-port reference '%s' to port '%s'" \
                   % (other, self))
+
+        if not Port.is_compat(self, other):
+            fatal("Ports %s and %s with roles '%s' and '%s' "
+                    "are not compatible", self, other, self.role, other.role)
+
+        if other.peer is not self:
+            other.connect(self)
 
     # Allow a master/slave port pair to be spliced between
     # a port and its connected peer. Useful operation for connecting
@@ -1959,8 +1967,8 @@ class PortRef(object):
 # A reference to an individual element of a VectorPort... much like a
 # PortRef, but has an index.
 class VectorPortElementRef(PortRef):
-    def __init__(self, simobj, name, role, index):
-        PortRef.__init__(self, simobj, name, role)
+    def __init__(self, simobj, name, role, is_source, index):
+        PortRef.__init__(self, simobj, name, role, is_source)
         self.index = index
 
     def __str__(self):
@@ -1969,11 +1977,12 @@ class VectorPortElementRef(PortRef):
 # A reference to a complete vector-valued port (not just a single element).
 # Can be indexed to retrieve individual VectorPortElementRef instances.
 class VectorPortRef(object):
-    def __init__(self, simobj, name, role):
+    def __init__(self, simobj, name, role, is_source):
         assert(isSimObject(simobj) or isSimObjectClass(simobj))
         self.simobj = simobj
         self.name = name
         self.role = role
+        self.is_source = is_source
         self.elements = []
 
     def __str__(self):
@@ -1991,14 +2000,16 @@ class VectorPortRef(object):
     # for config.json
     def get_config_as_dict(self):
         return {'role' : self.role,
-                'peer' : [el.ini_str() for el in self.elements]}
+                'peer' : [el.ini_str() for el in self.elements],
+                'is_source' : str(self.is_source)}
 
     def __getitem__(self, key):
         if not isinstance(key, int):
             raise TypeError("VectorPort index must be integer")
         if key >= len(self.elements):
             # need to extend list
-            ext = [VectorPortElementRef(self.simobj, self.name, self.role, i)
+            ext = [VectorPortElementRef(
+                    self.simobj, self.name, self.role, self.is_source, i)
                    for i in range(len(self.elements), key+1)]
             self.elements.extend(ext)
         return self.elements[key]
@@ -2042,10 +2053,31 @@ class VectorPortRef(object):
 # logical port in the SimObject class, not a particular port on a
 # SimObject instance.  The latter are represented by PortRef objects.
 class Port(object):
+    # Port("role", "description")
+
+    _compat_dict = { }
+
+    @classmethod
+    def compat(cls, role, peer):
+        cls._compat_dict.setdefault(role, set()).add(peer)
+        cls._compat_dict.setdefault(peer, set()).add(role)
+
+    @classmethod
+    def is_compat(cls, one, two):
+        for port in one, two:
+            if not port.role in Port._compat_dict:
+                fatal("Unrecognized role '%s' for port %s\n", port.role, port)
+        return one.role in Port._compat_dict[two.role]
+
+    def __init__(self, role, desc, is_source=False):
+        self.desc = desc
+        self.role = role
+        self.is_source = is_source
+
     # Generate a PortRef for this port on the given SimObject with the
     # given name
     def makeRef(self, simobj):
-        return PortRef(simobj, self.name, self.role)
+        return PortRef(simobj, self.name, self.role, self.is_source)
 
     # Connect an instance of this port (on the given SimObject with
     # the given name) with the port described by the supplied PortRef
@@ -2066,52 +2098,38 @@ class Port(object):
     def cxx_decl(self, code):
         code('unsigned int port_${{self.name}}_connection_count;')
 
+Port.compat('MASTER', 'SLAVE')
+
 class MasterPort(Port):
     # MasterPort("description")
-    def __init__(self, *args):
-        if len(args) == 1:
-            self.desc = args[0]
-            self.role = 'MASTER'
-        else:
-            raise TypeError('wrong number of arguments')
+    def __init__(self, desc):
+        super(MasterPort, self).__init__('MASTER', desc, is_source=True)
 
 class SlavePort(Port):
     # SlavePort("description")
-    def __init__(self, *args):
-        if len(args) == 1:
-            self.desc = args[0]
-            self.role = 'SLAVE'
-        else:
-            raise TypeError('wrong number of arguments')
+    def __init__(self, desc):
+        super(SlavePort, self).__init__('SLAVE', desc)
 
 # VectorPort description object.  Like Port, but represents a vector
 # of connections (e.g., as on a XBar).
 class VectorPort(Port):
-    def __init__(self, *args):
+    # VectorPort("role", "description")
+    def __init__(self, role, desc, is_source=False):
+        super(VectorPort, self).__init__(role, desc, is_source)
         self.isVec = True
 
     def makeRef(self, simobj):
-        return VectorPortRef(simobj, self.name, self.role)
+        return VectorPortRef(simobj, self.name, self.role, self.is_source)
 
 class VectorMasterPort(VectorPort):
     # VectorMasterPort("description")
-    def __init__(self, *args):
-        if len(args) == 1:
-            self.desc = args[0]
-            self.role = 'MASTER'
-            VectorPort.__init__(self, *args)
-        else:
-            raise TypeError('wrong number of arguments')
+    def __init__(self, desc):
+        super(VectorMasterPort, self).__init__('MASTER', desc, is_source=True)
 
 class VectorSlavePort(VectorPort):
     # VectorSlavePort("description")
-    def __init__(self, *args):
-        if len(args) == 1:
-            self.desc = args[0]
-            self.role = 'SLAVE'
-            VectorPort.__init__(self, *args)
-        else:
-            raise TypeError('wrong number of arguments')
+    def __init__(self, desc):
+        super(VectorSlavePort, self).__init__('SLAVE', desc)
 
 # 'Fake' ParamDesc for Port references to assign to the _pdesc slot of
 # proxy objects (via set_param_desc()) so that proxy error messages
@@ -2145,5 +2163,5 @@ __all__ = ['Param', 'VectorParam',
            'MaxAddr', 'MaxTick', 'AllMemory',
            'Time',
            'NextEthernetAddr', 'NULL',
-           'MasterPort', 'SlavePort',
-           'VectorMasterPort', 'VectorSlavePort']
+           'Port', 'MasterPort', 'SlavePort',
+           'VectorPort', 'VectorMasterPort', 'VectorSlavePort']
