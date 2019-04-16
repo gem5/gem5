@@ -197,6 +197,7 @@ structure(AbstractCacheEntry, primitive="yes", external = "yes") {
 structure (DirectoryMemory, external = "yes") {
   AbstractCacheEntry allocate(Addr, AbstractCacheEntry);
   AbstractCacheEntry lookup(Addr);
+  void deallocate(Addr);
   bool isPresent(Addr);
   void invalidateBlock(Addr);
   void recordRequestType(DirectoryRequestType);

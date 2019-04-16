@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017,2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -127,10 +127,25 @@ DirectoryMemory::allocate(Addr address, AbstractCacheEntry *entry)
 
     idx = mapAddressToLocalIdx(address);
     assert(idx < m_num_entries);
+    assert(m_entries[idx] == NULL);
     entry->changePermission(AccessPermission_Read_Only);
     m_entries[idx] = entry;
 
     return entry;
+}
+
+void
+DirectoryMemory::deallocate(Addr address)
+{
+    assert(isPresent(address));
+    uint64_t idx;
+    DPRINTF(RubyCache, "Removing entry for address: %#x\n", address);
+
+    idx = mapAddressToLocalIdx(address);
+    assert(idx < m_num_entries);
+    assert(m_entries[idx] != NULL);
+    delete m_entries[idx];
+    m_entries[idx] = NULL;
 }
 
 void
