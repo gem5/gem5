@@ -1,3 +1,15 @@
+# Copyright (c) 2019 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -32,9 +44,12 @@ from m5.proxy import *
 
 from m5.objects.Serial import SerialDevice
 
+class TerminalDump(Enum): vals = ["none", "stdout", "stderr", "file"]
+
 class Terminal(SerialDevice):
     type = 'Terminal'
     cxx_header = "dev/serial/terminal.hh"
     port = Param.TcpPort(3456, "listen port")
     number = Param.Int(0, "terminal number")
-    output = Param.Bool(True, "Enable output dump to file")
+    outfile = Param.TerminalDump("file",
+        "Selects if and where the terminal is dumping its output")
