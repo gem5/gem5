@@ -29,6 +29,8 @@ from m5.objects.SystemC import SystemC_ScModule
 from m5.params import *
 from m5.proxy import *
 
+from m5.objects.Tlm import TlmTargetSocket, TlmInitiatorSocket
+
 class Gem5ToTlmBridgeBase(SystemC_ScModule):
     type = 'Gem5ToTlmBridgeBase'
     abstract = True
@@ -38,7 +40,6 @@ class Gem5ToTlmBridgeBase(SystemC_ScModule):
     system = Param.System(Parent.any, "system")
 
     gem5 = SlavePort('gem5 slave port')
-    tlm = MasterPort('TLM initiator socket')
     addr_ranges = VectorParam.AddrRange([],
             'Addresses served by this port\'s TLM side')
 
@@ -51,7 +52,6 @@ class TlmToGem5BridgeBase(SystemC_ScModule):
     system = Param.System(Parent.any, "system")
 
     gem5 = MasterPort('gem5 master port')
-    tlm = SlavePort('TLM target socket')
 
 
 class Gem5ToTlmBridge32(Gem5ToTlmBridgeBase):
@@ -60,11 +60,15 @@ class Gem5ToTlmBridge32(Gem5ToTlmBridgeBase):
     cxx_class = 'sc_gem5::Gem5ToTlmBridge<32>'
     cxx_header = 'systemc/tlm_bridge/gem5_to_tlm.hh'
 
+    tlm = TlmInitiatorSocket(32, 'TLM initiator socket')
+
 class Gem5ToTlmBridge64(Gem5ToTlmBridgeBase):
     type = 'Gem5ToTlmBridge64'
     cxx_template_params = [ 'unsigned int BITWIDTH' ]
     cxx_class = 'sc_gem5::Gem5ToTlmBridge<64>'
     cxx_header = 'systemc/tlm_bridge/gem5_to_tlm.hh'
+
+    tlm = TlmInitiatorSocket(64, 'TLM initiator socket')
 
 
 class TlmToGem5Bridge32(TlmToGem5BridgeBase):
@@ -73,8 +77,12 @@ class TlmToGem5Bridge32(TlmToGem5BridgeBase):
     cxx_class = 'sc_gem5::TlmToGem5Bridge<32>'
     cxx_header = 'systemc/tlm_bridge/tlm_to_gem5.hh'
 
+    tlm = TlmTargetSocket(32, 'TLM target socket')
+
 class TlmToGem5Bridge64(TlmToGem5BridgeBase):
     type = 'TlmToGem5Bridge64'
     cxx_template_params = [ 'unsigned int BITWIDTH' ]
     cxx_class = 'sc_gem5::TlmToGem5Bridge<64>'
     cxx_header = 'systemc/tlm_bridge/tlm_to_gem5.hh'
+
+    tlm = TlmTargetSocket(64, 'TLM target socket')
