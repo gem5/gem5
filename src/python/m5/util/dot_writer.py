@@ -126,11 +126,23 @@ def dot_create_edges(simNode, callgraph):
     for child in simnode_children(simNode):
         dot_create_edges(child, callgraph)
 
-def dot_add_edge(simNode, callgraph, full_port_name, peerPort):
-    if peerPort.role == "MASTER":
-        peer_port_name = re.sub('\.', '_', peerPort.peer.simobj.path() \
-                + "." + peerPort.peer.name)
-        callgraph.add_edge(pydot.Edge(full_port_name, peer_port_name))
+def dot_add_edge(simNode, callgraph, full_port_name, port):
+    peer = port.peer
+    full_peer_path = re.sub('\.', '_', peer.simobj.path())
+    full_peer_port_name = full_peer_path + "_" + peer.name
+
+    # Each edge is encountered twice, once for each peer. We only want one
+    # edge, so we'll arbitrarily chose which peer "wins" based on their names.
+    if full_peer_port_name < full_port_name:
+        dir_type = {
+            (False, False) : 'both',
+            (True,  False) : 'forward',
+            (False, True)  : 'back',
+            (True,  True)  : 'none'
+        }[ (port.is_source,
+            peer.is_source) ]
+        edge = pydot.Edge(full_port_name, full_peer_port_name, dir=dir_type)
+        callgraph.add_edge(edge)
 
 def dot_create_cluster(simNode, full_path, label):
     # get the parameter values of the node and use them as a tooltip
