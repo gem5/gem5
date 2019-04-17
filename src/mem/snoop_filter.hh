@@ -94,7 +94,7 @@ class SnoopFilter : public SimObject {
     typedef std::vector<QueuedSlavePort*> SnoopList;
 
     SnoopFilter (const SnoopFilterParams *p) :
-        SimObject(p), reqLookupResult(cachedLocations.end()), retryItem{0, 0},
+        SimObject(p), reqLookupResult(cachedLocations.end()),
         linesize(p->system->cacheLineSize()), lookupLatency(p->lookup_latency),
         maxEntryCount(p->max_capacity / p->system->cacheLineSize())
     {
@@ -261,17 +261,37 @@ class SnoopFilter : public SimObject {
 
     /** Simple hash set of cached addresses. */
     SnoopFilterCache cachedLocations;
+
     /**
-     * Iterator used to store the result from lookupRequest until we
-     * call finishRequest.
+     * A request lookup must be followed by a call to finishRequest to inform
+     * the operation's success. If a retry is needed, however, all changes
+     * made to the snoop filter while performing the lookup must be undone.
+     * This structure keeps track of the state previous to such changes.
      */
-    SnoopFilterCache::iterator reqLookupResult;
-    /**
-     * Variable to temporarily store value of snoopfilter entry
-     * incase finishRequest needs to undo changes made in lookupRequest
-     * (because of crossbar retry)
-     */
-    SnoopItem retryItem;
+    struct ReqLookupResult {
+        /** Iterator used to store the result from lookupRequest. */
+        SnoopFilterCache::iterator it;
+
+        /**
+         * Variable to temporarily store value of snoopfilter entry
+         * in case finishRequest needs to undo changes made in lookupRequest
+         * (because of crossbar retry)
+         */
+        SnoopItem retryItem;
+
+        /**
+         * The constructor must be informed of the internal cache's end
+         * iterator, so do not allow the compiler to implictly define it.
+         *
+         * @param end_it Iterator to the end of the internal cache.
+         */
+        ReqLookupResult(SnoopFilterCache::iterator end_it)
+            : it(end_it), retryItem{0, 0}
+        {
+        }
+        ReqLookupResult() = delete;
+    } reqLookupResult;
+
     /** List of all attached snooping slave ports. */
     SnoopList slavePorts;
     /** Track the mapping from port ids to the local mask ids. */
