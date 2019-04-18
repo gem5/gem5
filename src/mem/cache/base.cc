@@ -1326,12 +1326,14 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 
     // The victim will be replaced by a new entry, so increase the replacement
     // counter if a valid block is being replaced
-    if (victim->isValid()) {
-        DPRINTF(Cache, "replacement: replacing %#llx (%s) with %#llx "
-                "(%s): %s\n", regenerateBlkAddr(victim),
-                victim->isSecure() ? "s" : "ns",
-                addr, is_secure ? "s" : "ns",
-                victim->isDirty() ? "writeback" : "clean");
+    if (evict_blks.size() > 0) {
+        for (const auto& blk : evict_blks) {
+            if (blk->isValid()) {
+                DPRINTF(CacheRepl, "Evicting %s (%#llx) to make room for " \
+                        "%#llx (%s)\n", blk->print(), regenerateBlkAddr(blk),
+                        addr, is_secure);
+            }
+        }
 
         replacements++;
     }
