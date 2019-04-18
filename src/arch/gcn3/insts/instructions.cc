@@ -30282,10 +30282,11 @@ namespace Gcn3ISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
-                if (std::isnan(src1[lane]) || std::isinf(src1[lane])) {
+                if (std::isnan(src0[lane]) || std::isinf(src0[lane])) {
                     vdst[lane] = src0[lane];
-                } else if (!std::isnormal(src1[lane])) {
-                    if (std::signbit(src1[lane])) {
+                } else if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
+                           || std::fpclassify(src0[lane]) == FP_ZERO) {
+                    if (std::signbit(src0[lane])) {
                         vdst[lane] = -0.0;
                     } else {
                         vdst[lane] = +0.0;
