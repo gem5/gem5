@@ -161,8 +161,7 @@ Cache::satisfyRequest(PacketPtr pkt, CacheBlk *blk,
 /////////////////////////////////////////////////////
 
 bool
-Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
-              PacketList &writebacks)
+Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat)
 {
 
     if (pkt->req->isUncacheable()) {
@@ -174,97 +173,90 @@ Cache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 
         DPRINTF(Cache, "%s for %s\n", __func__, pkt->print());
 
+        // lookupLatency is the latency in case the request is uncacheable.
+        lat = lookupLatency;
+
         // flush and invalidate any existing block
         CacheBlk *old_blk(tags->findBlock(pkt->getAddr(), pkt->isSecure()));
         if (old_blk && old_blk->isValid()) {
-            BaseCache::evictBlock(old_blk, writebacks);
+            BaseCache::evictBlock(old_blk, clockEdge(lat + forwardLatency));
         }
 
         blk = nullptr;
-        // lookupLatency is the latency in case the request is uncacheable.
-        lat = lookupLatency;
         return false;
     }
 
-    return BaseCache::access(pkt, blk, lat, writebacks);
+    return BaseCache::access(pkt, blk, lat);
 }
 
 void
-Cache::doWritebacks(PacketList& writebacks, Tick forward_time)
+Cache::doWritebacks(PacketPtr pkt, Tick forward_time)
 {
-    while (!writebacks.empty()) {
-        PacketPtr wbPkt = writebacks.front();
-        // We use forwardLatency here because we are copying writebacks to
-        // write buffer.
+    // We use forwardLatency here because we are copying writebacks to
+    // write buffer.
 
-        // Call isCachedAbove for Writebacks, CleanEvicts and
-        // WriteCleans to discover if the block is cached above.
-        if (isCachedAbove(wbPkt)) {
-            if (wbPkt->cmd == MemCmd::CleanEvict) {
-                // Delete CleanEvict because cached copies exist above. The
-                // packet destructor will delete the request object because
-                // this is a non-snoop request packet which does not require a
-                // response.
-                delete wbPkt;
-            } else if (wbPkt->cmd == MemCmd::WritebackClean) {
-                // clean writeback, do not send since the block is
-                // still cached above
-                assert(writebackClean);
-                delete wbPkt;
-            } else {
-                assert(wbPkt->cmd == MemCmd::WritebackDirty ||
-                       wbPkt->cmd == MemCmd::WriteClean);
-                // Set BLOCK_CACHED flag in Writeback and send below, so that
-                // the Writeback does not reset the bit corresponding to this
-                // address in the snoop filter below.
-                wbPkt->setBlockCached();
-                allocateWriteBuffer(wbPkt, forward_time);
-            }
+    // Call isCachedAbove for Writebacks, CleanEvicts and
+    // WriteCleans to discover if the block is cached above.
+    if (isCachedAbove(pkt)) {
+        if (pkt->cmd == MemCmd::CleanEvict) {
+            // Delete CleanEvict because cached copies exist above. The
+            // packet destructor will delete the request object because
+            // this is a non-snoop request packet which does not require a
+            // response.
+            delete pkt;
+        } else if (pkt->cmd == MemCmd::WritebackClean) {
+            // clean writeback, do not send since the block is
+            // still cached above
+            assert(writebackClean);
+            delete pkt;
         } else {
-            // If the block is not cached above, send packet below. Both
-            // CleanEvict and Writeback with BLOCK_CACHED flag cleared will
-            // reset the bit corresponding to this address in the snoop filter
-            // below.
-            allocateWriteBuffer(wbPkt, forward_time);
+            assert(pkt->cmd == MemCmd::WritebackDirty ||
+                   pkt->cmd == MemCmd::WriteClean);
+            // Set BLOCK_CACHED flag in Writeback and send below, so that
+            // the Writeback does not reset the bit corresponding to this
+            // address in the snoop filter below.
+            pkt->setBlockCached();
+            allocateWriteBuffer(pkt, forward_time);
         }
-        writebacks.pop_front();
+    } else {
+        // If the block is not cached above, send packet below. Both
+        // CleanEvict and Writeback with BLOCK_CACHED flag cleared will
+        // reset the bit corresponding to this address in the snoop filter
+        // below.
+        allocateWriteBuffer(pkt, forward_time);
     }
 }
 
 void
-Cache::doWritebacksAtomic(PacketList& writebacks)
+Cache::doWritebacksAtomic(PacketPtr pkt)
 {
-    while (!writebacks.empty()) {
-        PacketPtr wbPkt = writebacks.front();
-        // Call isCachedAbove for both Writebacks and CleanEvicts. If
-        // isCachedAbove returns true we set BLOCK_CACHED flag in Writebacks
-        // and discard CleanEvicts.
-        if (isCachedAbove(wbPkt, false)) {
-            if (wbPkt->cmd == MemCmd::WritebackDirty ||
-                wbPkt->cmd == MemCmd::WriteClean) {
-                // Set BLOCK_CACHED flag in Writeback and send below,
-                // so that the Writeback does not reset the bit
-                // corresponding to this address in the snoop filter
-                // below. We can discard CleanEvicts because cached
-                // copies exist above. Atomic mode isCachedAbove
-                // modifies packet to set BLOCK_CACHED flag
-                memSidePort.sendAtomic(wbPkt);
-            }
-        } else {
-            // If the block is not cached above, send packet below. Both
-            // CleanEvict and Writeback with BLOCK_CACHED flag cleared will
-            // reset the bit corresponding to this address in the snoop filter
-            // below.
-            memSidePort.sendAtomic(wbPkt);
+    // Call isCachedAbove for both Writebacks and CleanEvicts. If
+    // isCachedAbove returns true we set BLOCK_CACHED flag in Writebacks
+    // and discard CleanEvicts.
+    if (isCachedAbove(pkt, false)) {
+        if (pkt->cmd == MemCmd::WritebackDirty ||
+            pkt->cmd == MemCmd::WriteClean) {
+            // Set BLOCK_CACHED flag in Writeback and send below,
+            // so that the Writeback does not reset the bit
+            // corresponding to this address in the snoop filter
+            // below. We can discard CleanEvicts because cached
+            // copies exist above. Atomic mode isCachedAbove
+            // modifies packet to set BLOCK_CACHED flag
+            memSidePort.sendAtomic(pkt);
         }
-        writebacks.pop_front();
-        // In case of CleanEvicts, the packet destructor will delete the
-        // request object because this is a non-snoop request packet which
-        // does not require a response.
-        delete wbPkt;
+    } else {
+        // If the block is not cached above, send packet below. Both
+        // CleanEvict and Writeback with BLOCK_CACHED flag cleared will
+        // reset the bit corresponding to this address in the snoop filter
+        // below.
+        memSidePort.sendAtomic(pkt);
     }
-}
 
+    // In case of CleanEvicts, the packet destructor will delete the
+    // request object because this is a non-snoop request packet which
+    // does not require a response.
+    delete pkt;
+}
 
 void
 Cache::recvTimingSnoopResp(PacketPtr pkt)
@@ -562,8 +554,7 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
 
 
 Cycles
-Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
-                           PacketList &writebacks)
+Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk)
 {
     // deal with the packets that go through the write path of
     // the cache, i.e. any evictions and writes
@@ -625,7 +616,7 @@ Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
                 // the write to a whole line
                 const bool allocate = allocOnFill(pkt->cmd) &&
                     (!writeAllocator || writeAllocator->allocate());
-                blk = handleFill(bus_pkt, blk, writebacks, allocate);
+                blk = handleFill(bus_pkt, blk, allocate);
                 assert(blk != NULL);
                 is_invalidate = false;
                 satisfyRequest(pkt, blk);
@@ -633,8 +624,7 @@ Cache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
                        bus_pkt->cmd == MemCmd::UpgradeResp) {
                 // we're updating cache state to allow us to
                 // satisfy the upstream request from the cache
-                blk = handleFill(bus_pkt, blk, writebacks,
-                                 allocOnFill(pkt->cmd));
+                blk = handleFill(bus_pkt, blk, allocOnFill(pkt->cmd));
                 satisfyRequest(pkt, blk);
                 maintainClusivity(pkt->fromCache(), blk);
             } else {
@@ -1020,17 +1010,15 @@ Cache::handleSnoop(PacketPtr pkt, CacheBlk *blk, bool is_timing,
             DPRINTF(CacheVerbose, "%s: packet (snoop) %s found block: %s\n",
                     __func__, pkt->print(), blk->print());
             PacketPtr wb_pkt = writecleanBlk(blk, pkt->req->getDest(), pkt->id);
-            PacketList writebacks;
-            writebacks.push_back(wb_pkt);
 
             if (is_timing) {
                 // anything that is merely forwarded pays for the forward
                 // latency and the delay provided by the crossbar
                 Tick forward_time = clockEdge(forwardLatency) +
                     pkt->headerDelay;
-                doWritebacks(writebacks, forward_time);
+                doWritebacks(wb_pkt, forward_time);
             } else {
-                doWritebacksAtomic(writebacks);
+                doWritebacksAtomic(wb_pkt);
             }
             pkt->setSatisfied();
         }

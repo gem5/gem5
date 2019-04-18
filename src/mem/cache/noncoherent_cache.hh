@@ -71,8 +71,7 @@ struct NoncoherentCacheParams;
 class NoncoherentCache : public BaseCache
 {
   protected:
-    bool access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
-                PacketList &writebacks) override;
+    bool access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat) override;
 
     void handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk,
                              Tick forward_time,
@@ -80,10 +79,10 @@ class NoncoherentCache : public BaseCache
 
     void recvTimingReq(PacketPtr pkt) override;
 
-    void doWritebacks(PacketList& writebacks,
+    void doWritebacks(PacketPtr pkt,
                       Tick forward_time) override;
 
-    void doWritebacksAtomic(PacketList& writebacks) override;
+    void doWritebacksAtomic(PacketPtr pkt) override;
 
     void serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
                             CacheBlk *blk) override;
@@ -98,8 +97,7 @@ class NoncoherentCache : public BaseCache
         panic("Unexpected timing snoop response %s", pkt->print());
     }
 
-    Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
-                               PacketList &writebacks) override;
+    Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk) override;
 
     Tick recvAtomic(PacketPtr pkt) override;
 

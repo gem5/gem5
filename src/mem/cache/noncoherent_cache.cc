@@ -80,10 +80,9 @@ NoncoherentCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
 }
 
 bool
-NoncoherentCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
-                         PacketList &writebacks)
+NoncoherentCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat)
 {
-    bool success = BaseCache::access(pkt, blk, lat, writebacks);
+    bool success = BaseCache::access(pkt, blk, lat);
 
     if (pkt->isWriteback() || pkt->cmd == MemCmd::WriteClean) {
         assert(blk && blk->isValid());
@@ -98,24 +97,16 @@ NoncoherentCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
 }
 
 void
-NoncoherentCache::doWritebacks(PacketList& writebacks, Tick forward_time)
+NoncoherentCache::doWritebacks(PacketPtr pkt, Tick forward_time)
 {
-    while (!writebacks.empty()) {
-        PacketPtr wb_pkt = writebacks.front();
-        allocateWriteBuffer(wb_pkt, forward_time);
-        writebacks.pop_front();
-    }
+    allocateWriteBuffer(pkt, forward_time);
 }
 
 void
-NoncoherentCache::doWritebacksAtomic(PacketList& writebacks)
+NoncoherentCache::doWritebacksAtomic(PacketPtr pkt)
 {
-    while (!writebacks.empty()) {
-        PacketPtr wb_pkt = writebacks.front();
-        memSidePort.sendAtomic(wb_pkt);
-        writebacks.pop_front();
-        delete wb_pkt;
-    }
+    memSidePort.sendAtomic(pkt);
+    delete pkt;
 }
 
 void
@@ -171,8 +162,7 @@ NoncoherentCache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
 
 
 Cycles
-NoncoherentCache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
-                                      PacketList &writebacks)
+NoncoherentCache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk)
 {
     PacketPtr bus_pkt = createMissPacket(pkt, blk, true,
                                          pkt->isWholeLineWrite(blkSize));
@@ -197,7 +187,7 @@ NoncoherentCache::handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
         // afterall it is a read response
         DPRINTF(Cache, "Block for addr %#llx being updated in Cache\n",
                 bus_pkt->getAddr());
-        blk = handleFill(bus_pkt, blk, writebacks, allocOnFill(bus_pkt->cmd));
+        blk = handleFill(bus_pkt, blk, allocOnFill(bus_pkt->cmd));
         assert(blk);
     }
     satisfyRequest(pkt, blk);

@@ -454,11 +454,9 @@ class BaseCache : public ClockedObject
      * @param pkt The memory request to perform.
      * @param blk The cache block to be updated.
      * @param lat The latency of the access.
-     * @param writebacks List for any writebacks that need to be performed.
      * @return Boolean indicating whether the request was satisfied.
      */
-    virtual bool access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
-                        PacketList &writebacks);
+    virtual bool access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat);
 
     /*
      * Handle a timing request that hit in the cache
@@ -551,11 +549,9 @@ class BaseCache : public ClockedObject
      *
      * @param pkt The packet with the requests
      * @param blk The referenced block
-     * @param writebacks A list with packets for any performed writebacks
      * @return Cycles for handling the request
      */
-    virtual Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
-                                       PacketList &writebacks) = 0;
+    virtual Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk) = 0;
 
     /**
      * Performs the access specified by the request.
@@ -595,13 +591,18 @@ class BaseCache : public ClockedObject
 
     /**
      * Insert writebacks into the write buffer
+     *
+     * @param pkt The writeback packet.
+     * @param forward_time Tick to which the writeback should be scheduled.
      */
-    virtual void doWritebacks(PacketList& writebacks, Tick forward_time) = 0;
+    virtual void doWritebacks(PacketPtr pkt, Tick forward_time) = 0;
 
     /**
-     * Send writebacks down the memory hierarchy in atomic mode
+     * Send writebacks down the memory hierarchy in atomic mode.
+     *
+     * @param pkt The writeback packet.
      */
-    virtual void doWritebacksAtomic(PacketList& writebacks) = 0;
+    virtual void doWritebacksAtomic(PacketPtr pkt) = 0;
 
     /**
      * Create an appropriate downstream bus request packet.
@@ -647,8 +648,7 @@ class BaseCache : public ClockedObject
      */
     void writebackTempBlockAtomic() {
         assert(tempBlockWriteback != nullptr);
-        PacketList writebacks{tempBlockWriteback};
-        doWritebacksAtomic(writebacks);
+        doWritebacksAtomic(tempBlockWriteback);
         tempBlockWriteback = nullptr;
     }
 
@@ -680,11 +680,12 @@ class BaseCache : public ClockedObject
      *
      * @param blk The block to be overwriten.
      * @param data A pointer to the data to be compressed (blk's new data).
-     * @param writebacks List for any writebacks that need to be performed.
+     * @param delay The delay until the packet's metadata is present.
+     * @param tag_latency Latency to access the tags of the replacement victim.
      * @return Whether operation is successful or not.
      */
     bool updateCompressionData(CacheBlk *blk, const uint64_t* data,
-                               PacketList &writebacks);
+        uint32_t delay, Cycles tag_latency);
 
     /**
      * Perform any necessary updates to the block and perform any data
@@ -717,34 +718,27 @@ class BaseCache : public ClockedObject
      * Populates a cache block and handles all outstanding requests for the
      * satisfied fill request. This version takes two memory requests. One
      * contains the fill data, the other is an optional target to satisfy.
-     * Note that the reason we return a list of writebacks rather than
-     * inserting them directly in the write buffer is that this function
-     * is called by both atomic and timing-mode accesses, and in atomic
-     * mode we don't mess with the write buffer (we just perform the
-     * writebacks atomically once the original request is complete).
      *
      * @param pkt The memory request with the fill data.
      * @param blk The cache block if it already exists.
-     * @param writebacks List for any writebacks that need to be performed.
      * @param allocate Whether to allocate a block or use the temp block
      * @return Pointer to the new cache block.
      */
-    CacheBlk *handleFill(PacketPtr pkt, CacheBlk *blk,
-                         PacketList &writebacks, bool allocate);
+    CacheBlk *handleFill(PacketPtr pkt, CacheBlk *blk, bool allocate);
 
     /**
-     * Allocate a new block and perform any necessary writebacks
-     *
-     * Find a victim block and if necessary prepare writebacks for any
-     * existing data. May return nullptr if there are no replaceable
-     * blocks. If a replaceable block is found, it inserts the new block in
-     * its place. The new block, however, is not set as valid yet.
+     * Allocate a new block for the packet's data. The victim block might be
+     * valid, and thus the necessary writebacks are done. May return nullptr
+     * if there are no replaceable blocks. If a replaceable block is found,
+     * it inserts the new block in its place. The new block, however, is not
+     * set as valid yet.
      *
      * @param pkt Packet holding the address to update
-     * @param writebacks A list of writeback packets for the evicted blocks
+     * @param tag_latency Latency to access the tags of the replacement victim.
      * @return the allocated block
      */
-    CacheBlk *allocateBlock(const PacketPtr pkt, PacketList &writebacks);
+    CacheBlk *allocateBlock(const PacketPtr pkt, Cycles tag_latency);
+
     /**
      * Evict a cache block.
      *
@@ -761,9 +755,10 @@ class BaseCache : public ClockedObject
      * Performs a writeback if necesssary and invalidates the block
      *
      * @param blk Block to invalidate
-     * @param writebacks Return a list of packets with writebacks
+     * @param forward_time Tick to which the writeback should be scheduled if
+     *                     in timing mode.
      */
-    void evictBlock(CacheBlk *blk, PacketList &writebacks);
+    void evictBlock(CacheBlk *blk, Tick forward_time);
 
     /**
      * Invalidate a cache block.
