@@ -1307,8 +1307,11 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 
     // Check for transient state allocations. If any of the entries listed
     // for eviction has a transient state, the allocation fails
+    bool replacement = false;
     for (const auto& blk : evict_blks) {
         if (blk->isValid()) {
+            replacement = true;
+
             Addr repl_addr = regenerateBlkAddr(blk);
             MSHR *repl_mshr = mshrQueue.findMatch(repl_addr, blk->isSecure());
             if (repl_mshr) {
@@ -1326,27 +1329,23 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 
     // The victim will be replaced by a new entry, so increase the replacement
     // counter if a valid block is being replaced
-    if (evict_blks.size() > 0) {
+    if (replacement) {
+        // Evict valid blocks associated to this victim block
         for (const auto& blk : evict_blks) {
             if (blk->isValid()) {
                 DPRINTF(CacheRepl, "Evicting %s (%#llx) to make room for " \
                         "%#llx (%s)\n", blk->print(), regenerateBlkAddr(blk),
                         addr, is_secure);
+
+                if (blk->wasPrefetched()) {
+                    unusedPrefetches++;
+                }
+
+                evictBlock(blk, writebacks);
             }
         }
 
         replacements++;
-    }
-
-    // Evict valid blocks associated to this victim block
-    for (const auto& blk : evict_blks) {
-        if (blk->isValid()) {
-            if (blk->wasPrefetched()) {
-                unusedPrefetches++;
-            }
-
-            evictBlock(blk, writebacks);
-        }
     }
 
     // Insert new block at victimized entry
