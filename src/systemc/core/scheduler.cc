@@ -258,6 +258,13 @@ Scheduler::requestUpdate(Channel *c)
 }
 
 void
+Scheduler::asyncRequestUpdate(Channel *c)
+{
+    std::lock_guard<std::mutex> lock(asyncListMutex);
+    asyncUpdateList.pushLast(c);
+}
+
+void
 Scheduler::scheduleReadyEvent()
 {
     // Schedule the evaluate and update phases.
@@ -321,6 +328,12 @@ void
 Scheduler::runUpdate()
 {
     status(StatusUpdate);
+    {
+        std::lock_guard<std::mutex> lock(asyncListMutex);
+        Channel *channel;
+        while ((channel = asyncUpdateList.getNext()) != nullptr)
+            updateList.pushLast(channel);
+    }
 
     try {
         Channel *channel = updateList.getNext();

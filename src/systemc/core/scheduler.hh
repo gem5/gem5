@@ -32,6 +32,7 @@
 
 #include <functional>
 #include <map>
+#include <mutex>
 #include <set>
 #include <vector>
 
@@ -191,6 +192,8 @@ class Scheduler
 
     // Schedule an update for a given channel.
     void requestUpdate(Channel *c);
+    // Same as above, but may be called from a different thread.
+    void asyncRequestUpdate(Channel *c);
 
     // Run the given process immediately, preempting whatever may be running.
     void
@@ -480,6 +483,9 @@ class Scheduler
     ProcessList readyListThreads;
 
     ChannelList updateList;
+
+    ChannelList asyncUpdateList;
+    std::mutex asyncListMutex;
 
     std::map<::Event *, Tick> eventsToSchedule;
 

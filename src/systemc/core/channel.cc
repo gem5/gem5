@@ -54,8 +54,7 @@ Channel::requestUpdate()
 void
 Channel::asyncRequestUpdate()
 {
-    //TODO This should probably not request an update directly.
-    scheduler.requestUpdate(this);
+    scheduler.asyncRequestUpdate(this);
 }
 
 std::set<Channel *> allChannels;
