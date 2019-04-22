@@ -258,7 +258,13 @@ namespace Gcn3ISA
     template <typename T>
     inline T roundNearestEven(T val)
     {
-        T nearest_round = std::round(val * 0.5) * 2.0;
+        T int_part = 0;
+        T nearest_round = std::floor(val + 0.5);
+        if ((int)std::floor(val) % 2 == 0
+            && std::modf(std::abs(val), &int_part) == 0.5) {
+          nearest_round = nearest_round - 1;
+        }
+
         return nearest_round;
     }
 
