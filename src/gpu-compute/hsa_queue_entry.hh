@@ -417,8 +417,8 @@ class HSAQueueEntry
          * workitem Id in the X dimension is always initialized.
          */
         initialVgprState.set(WorkitemIdX, true);
-        initialVgprState.set(WorkitemIdY, akc->enable_vgpr_workitem_id_y);
-        initialVgprState.set(WorkitemIdZ, akc->enable_vgpr_workitem_id_z);
+        initialVgprState.set(WorkitemIdY, akc->enable_vgpr_workitem_id > 0);
+        initialVgprState.set(WorkitemIdZ, akc->enable_vgpr_workitem_id > 1);
     }
 
     // name of the kernel associated with the AQL entry

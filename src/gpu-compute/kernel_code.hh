@@ -130,8 +130,7 @@ struct AMDKernelCode
     uint32_t enable_sgpr_workgroup_id_y : 1;
     uint32_t enable_sgpr_workgroup_id_z : 1;
     uint32_t enable_sgpr_workgroup_info : 1;
-    uint32_t enable_vgpr_workitem_id_y : 1;
-    uint32_t enable_vgpr_workitem_id_z : 1;
+    uint32_t enable_vgpr_workitem_id : 2;
     uint32_t enable_exception_address_watch : 1;
     uint32_t enable_exception_memory_violation : 1;
     uint32_t granulated_lds_size : 9;
