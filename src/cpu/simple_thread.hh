@@ -213,26 +213,30 @@ class SimpleThread : public ThreadState, public ThreadContext
     System *getSystemPtr() override { return system; }
 
     TheISA::Kernel::Statistics *
-    getKernelStats()
+    getKernelStats() override
     {
         return ThreadState::getKernelStats();
     }
 
-    PortProxy &getPhysProxy() { return ThreadState::getPhysProxy(); }
+    PortProxy &getPhysProxy() override { return ThreadState::getPhysProxy(); }
     FSTranslatingPortProxy &
-    getVirtProxy()
+    getVirtProxy() override
     {
         return ThreadState::getVirtProxy();
     }
 
-    void initMemProxies(ThreadContext *tc) { ThreadState::initMemProxies(tc); }
+    void initMemProxies(ThreadContext *tc) override
+    {
+        ThreadState::initMemProxies(tc);
+    }
+
     SETranslatingPortProxy &
-    getMemProxy()
+    getMemProxy() override
     {
         return ThreadState::getMemProxy();
     }
 
-    Process *getProcessPtr() { return ThreadState::getProcessPtr(); }
+    Process *getProcessPtr() override { return ThreadState::getProcessPtr(); }
     void setProcessPtr(Process *p) override { ThreadState::setProcessPtr(p); }
 
     Status status() const override { return _status; }

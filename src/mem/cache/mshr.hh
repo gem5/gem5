@@ -352,7 +352,7 @@ class MSHR : public QueueEntry, public Printable
         assert(inService); return postDowngrade;
     }
 
-    bool sendPacket(BaseCache &cache);
+    bool sendPacket(BaseCache &cache) override;
 
     bool allocOnFill() const {
         return targets.allocOnFill;
@@ -523,7 +523,7 @@ class MSHR : public QueueEntry, public Printable
      */
     void print(std::ostream &os,
                int verbosity = 0,
-               const std::string &prefix = "") const;
+               const std::string &prefix = "") const override;
     /**
      * A no-args wrapper of print(std::ostream...)  meant to be
      * invoked from DPRINTFs avoiding string overheads in fast mode

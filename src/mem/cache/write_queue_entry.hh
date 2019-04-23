@@ -92,7 +92,7 @@ class WriteQueueEntry : public QueueEntry, public Printable
     /** WriteQueueEntry list iterator. */
     typedef List::iterator Iterator;
 
-    bool sendPacket(BaseCache &cache);
+    bool sendPacket(BaseCache &cache) override;
 
   private:
 
@@ -171,7 +171,7 @@ class WriteQueueEntry : public QueueEntry, public Printable
      */
     void print(std::ostream &os,
                int verbosity = 0,
-               const std::string &prefix = "") const;
+               const std::string &prefix = "") const override;
     /**
      * A no-args wrapper of print(std::ostream...)  meant to be
      * invoked from DPRINTFs avoiding string overheads in fast mode
