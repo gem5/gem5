@@ -46,9 +46,9 @@
 
 #include "enums/MemType.hh"
 #include "gpu-compute/misc.hh"
-#include "mem/mem_object.hh"
 #include "mem/port.hh"
 #include "params/LdsState.hh"
+#include "sim/clocked_object.hh"
 
 class ComputeUnit;
 
@@ -108,7 +108,7 @@ class LdsChunk
 
 // Local Data Share (LDS) State per Wavefront (contents of the LDS region
 // allocated to the WorkGroup of this Wavefront)
-class LdsState: public MemObject
+class LdsState: public ClockedObject
 {
   protected:
 

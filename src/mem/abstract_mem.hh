@@ -50,8 +50,9 @@
 #define __MEM_ABSTRACT_MEMORY_HH__
 
 #include "mem/backdoor.hh"
-#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "params/AbstractMemory.hh"
+#include "sim/clocked_object.hh"
 #include "sim/stats.hh"
 
 
@@ -98,10 +99,10 @@ class LockedAddr {
  * An abstract memory represents a contiguous block of physical
  * memory, with an associated address range, and also provides basic
  * functionality for reading and writing this memory without any
- * timing information. It is a MemObject since any subclass must have
- * at least one slave port.
+ * timing information. It is a ClockedObject since subclasses may need timing
+ * information.
  */
-class AbstractMemory : public MemObject
+class AbstractMemory : public ClockedObject
 {
   protected:
 

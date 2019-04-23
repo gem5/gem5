@@ -76,7 +76,6 @@ template <class>
 class O3ThreadContext;
 
 class Checkpoint;
-class MemObject;
 class Process;
 
 struct BaseCPUParams;

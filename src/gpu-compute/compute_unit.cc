@@ -58,7 +58,7 @@
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 
-ComputeUnit::ComputeUnit(const Params *p) : MemObject(p), fetchStage(p),
+ComputeUnit::ComputeUnit(const Params *p) : ClockedObject(p), fetchStage(p),
     scoreboardCheckStage(p), scheduleStage(p), execStage(p),
     globalMemoryPipe(p), localMemoryPipe(p), rrNextMemID(0), rrNextALUWp(0),
     cu_id(p->cu_id), vrf(p->vector_register_file), numSIMDs(p->num_SIMDs),
@@ -1397,7 +1397,7 @@ ComputeUnit::ITLBPort::recvReqRetry()
 void
 ComputeUnit::regStats()
 {
-    MemObject::regStats();
+    ClockedObject::regStats();
 
     vALUInsts
         .name(name() + ".valu_insts")

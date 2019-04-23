@@ -43,9 +43,9 @@ from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
 
-from m5.objects.MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
-class PioDevice(MemObject):
+class PioDevice(ClockedObject):
     type = 'PioDevice'
     cxx_header = "dev/io_device.hh"
     abstract = True

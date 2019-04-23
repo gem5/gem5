@@ -54,8 +54,9 @@
 #include <deque>
 
 #include "base/types.hh"
-#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "params/Bridge.hh"
+#include "sim/clocked_object.hh"
 
 /**
  * A bridge is used to interface two different crossbars (or in general a
@@ -70,7 +71,7 @@
  * the bridge will delay accepting the packet until space becomes
  * available.
  */
-class Bridge : public MemObject
+class Bridge : public ClockedObject
 {
   protected:
 

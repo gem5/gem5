@@ -39,7 +39,7 @@
 
 from m5.params import *
 from m5.proxy import *
-from m5.objects.MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
 # Types of Stream Generators.
 # Those are orthogonal to the other generators in the TrafficGen
@@ -55,7 +55,7 @@ class StreamGenType(Enum): vals = [ 'none', 'fixed', 'random' ]
 # controllers, or function as a black-box replacement for system
 # components that are not yet modelled in detail, e.g. a video engine
 # or baseband subsystem in an SoC.
-class BaseTrafficGen(MemObject):
+class BaseTrafficGen(ClockedObject):
     type = 'BaseTrafficGen'
     abstract = True
     cxx_header = "cpu/testers/traffic_gen/traffic_gen.hh"

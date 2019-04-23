@@ -2849,7 +2849,7 @@ Port &
 DRAMCtrl::getPort(const string &if_name, PortID idx)
 {
     if (if_name != "port") {
-        return MemObject::getPort(if_name, idx);
+        return QoS::MemCtrl::getPort(if_name, idx);
     } else {
         return port;
     }

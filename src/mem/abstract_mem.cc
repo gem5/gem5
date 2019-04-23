@@ -57,7 +57,7 @@
 using namespace std;
 
 AbstractMemory::AbstractMemory(const Params *p) :
-    MemObject(p), range(params()->range), pmemAddr(NULL),
+    ClockedObject(p), range(params()->range), pmemAddr(NULL),
     backdoor(params()->range, nullptr,
              (MemBackdoor::Flags)(MemBackdoor::Readable |
                                   MemBackdoor::Writeable)),
@@ -91,7 +91,7 @@ AbstractMemory::setBackingStore(uint8_t* pmem_addr)
 void
 AbstractMemory::regStats()
 {
-    MemObject::regStats();
+    ClockedObject::regStats();
 
     using namespace Stats;
 

@@ -51,13 +51,13 @@
 
   configs/example/fs.py --caches --cpu-type=arm_detailed --num-cpus=2
 
-  Gem5 uses Memory Objects (MemObject) derived objects as basic blocks for
+  Gem5 uses Simulation Objects (SimObject) derived objects as basic blocks for
   building memory system. They are connected via ports with established
   master/slave hierarchy. Data flow is initiated on master port while the
   response messages and snoop queries appear on the slave port. The following
-  figure shows the hierarchy of Memory Objects used in this document:
+  figure shows the hierarchy of Simulation Objects used in this document:
 
-  \image html "gem5_MS_Fig1.PNG" "Memory Object hierarchy of the model" width=3cm
+  \image html "gem5_MS_Fig1.PNG" "Simulation Object hierarchy of the model" width=3cm
 
   \section gem5_CPU CPU
 
@@ -77,7 +77,7 @@
   Load & store buffers  (for read and write access) don’t impose any
   restriction on the number of active memory accesses. Therefore, the maximum
   number of outstanding CPU’s memory access requests is not limited by CPU
-  Memory Object but by underlying memory system model.
+  Simulation Object but by underlying memory system model.
 
   <b>Split memory access</b> is implemented.
 
@@ -89,7 +89,7 @@
 
   Data Cache object implements a standard cache structure:
 
-  \image html "gem5_MS_Fig2.PNG" "DCache Memory Object" width=3cm
+  \image html "gem5_MS_Fig2.PNG" "DCache Simulation Object" width=3cm
 
   <b>Cached memory reads</b> that match particular cache tag (with Valid & Read
   flags) will be completed (by sending ReadResp to CPU) after a configurable time.

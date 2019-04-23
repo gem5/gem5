@@ -110,7 +110,7 @@ Port &
 MemSinkCtrl::getPort(const std::string &interface, PortID idx)
 {
     if (interface != "port") {
-        return MemObject::getPort(interface, idx);
+        return MemCtrl::getPort(interface, idx);
     } else {
         return port;
     }

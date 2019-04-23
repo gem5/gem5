@@ -40,7 +40,6 @@ from m5.SimObject import SimObject
 
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.Device import DmaDevice
-from m5.objects.MemObject import MemObject
 from m5.objects.Process import EmulatedDriver
 from m5.objects.Bridge import Bridge
 from m5.objects.LdsState import LdsState
@@ -72,7 +71,7 @@ class Wavefront(SimObject):
     wf_slot_id = Param.Int('wavefront id (0-ComputeUnit.max_wfs)')
     wfSize = Param.Int(64, 'Wavefront size (in work items)')
 
-class ComputeUnit(MemObject):
+class ComputeUnit(ClockedObject):
     type = 'ComputeUnit'
     cxx_class = 'ComputeUnit'
     cxx_header = 'gpu-compute/compute_unit.hh'

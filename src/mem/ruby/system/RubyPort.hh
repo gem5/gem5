@@ -49,13 +49,13 @@
 #include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/system/RubySystem.hh"
-#include "mem/mem_object.hh"
 #include "mem/tport.hh"
 #include "params/RubyPort.hh"
+#include "sim/clocked_object.hh"
 
 class AbstractController;
 
-class RubyPort : public MemObject
+class RubyPort : public ClockedObject
 {
   public:
     class MemMasterPort : public QueuedMasterPort

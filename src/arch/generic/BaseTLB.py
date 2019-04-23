@@ -29,9 +29,9 @@
 #          Ivan Pizarro
 
 from m5.params import *
-from m5.objects.MemObject import MemObject
+from m5.SimObject import SimObject
 
-class BaseTLB(MemObject):
+class BaseTLB(SimObject):
     type = 'BaseTLB'
     abstract = True
     cxx_header = "arch/generic/tlb.hh"

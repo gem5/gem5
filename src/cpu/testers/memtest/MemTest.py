@@ -41,9 +41,9 @@
 from m5.params import *
 from m5.proxy import *
 
-from m5.objects.MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
-class MemTest(MemObject):
+class MemTest(ClockedObject):
     type = 'MemTest'
     cxx_header = "cpu/testers/memtest/memtest.hh"
 

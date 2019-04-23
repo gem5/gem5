@@ -50,10 +50,10 @@
 #include "base/logging.hh"
 #include "base/statistics.hh"
 #include "gpu-compute/compute_unit.hh"
-#include "mem/mem_object.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
 #include "params/X86GPUTLB.hh"
+#include "sim/clocked_object.hh"
 #include "sim/sim_object.hh"
 
 class BaseTLB;
@@ -62,7 +62,7 @@ class ThreadContext;
 
 namespace X86ISA
 {
-    class GpuTLB : public MemObject
+    class GpuTLB : public ClockedObject
     {
       protected:
         friend class Walker;

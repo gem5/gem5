@@ -42,7 +42,7 @@
 #include "sim/process.hh"
 
 TLBCoalescer::TLBCoalescer(const Params *p)
-    : MemObject(p),
+    : ClockedObject(p),
       clock(p->clk_domain->clockPeriod()),
       TLBProbesPerCycle(p->probesPerCycle),
       coalescingWindow(p->coalescingWindow),
@@ -525,7 +525,7 @@ TLBCoalescer::processCleanupEvent()
 void
 TLBCoalescer::regStats()
 {
-    MemObject::regStats();
+    ClockedObject::regStats();
 
     uncoalescedAccesses
         .name(name() + ".uncoalesced_accesses")

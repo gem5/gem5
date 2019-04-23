@@ -36,7 +36,7 @@
 # Authors: Andreas Hansson
 
 from m5.params import *
-from m5.objects.MemObject import MemObject
+from m5.SimObject import SimObject
 
 # An address mapper changes the packet addresses in going from the
 # slave port side of the mapper to the master port side. When the
@@ -44,7 +44,7 @@ from m5.objects.MemObject import MemObject
 # necessary range updates. Note that snoop requests that travel from
 # the master port (i.e. the memory side) to the slave port are
 # currently not modified.
-class AddrMapper(MemObject):
+class AddrMapper(SimObject):
     type = 'AddrMapper'
     cxx_header = 'mem/addr_mapper.hh'
     abstract = True

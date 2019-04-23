@@ -26,11 +26,11 @@
 #
 # Authors: Tushar Krishna
 
-from m5.objects.MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
 from m5.proxy import *
 
-class GarnetSyntheticTraffic(MemObject):
+class GarnetSyntheticTraffic(ClockedObject):
     type = 'GarnetSyntheticTraffic'
     cxx_header = \
         "cpu/testers/garnet_synthetic_traffic/GarnetSyntheticTraffic.hh"

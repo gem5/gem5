@@ -48,7 +48,6 @@
 #include "base/statistics.hh"
 #include "base/trace.hh"
 #include "debug/MemTest.hh"
-#include "mem/mem_object.hh"
 #include "sim/sim_exit.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
@@ -85,7 +84,7 @@ MemTest::sendPkt(PacketPtr pkt) {
 }
 
 MemTest::MemTest(const Params *p)
-    : MemObject(p),
+    : ClockedObject(p),
       tickEvent([this]{ tick(); }, name()),
       noRequestEvent([this]{ noRequest(); }, name()),
       noResponseEvent([this]{ noResponse(); }, name()),
@@ -130,7 +129,7 @@ MemTest::getPort(const std::string &if_name, PortID idx)
     if (if_name == "port")
         return port;
     else
-        return MemObject::getPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
 }
 
 void
@@ -197,7 +196,7 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
 void
 MemTest::regStats()
 {
-    MemObject::regStats();
+    ClockedObject::regStats();
 
     using namespace Stats;
 

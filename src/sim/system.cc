@@ -89,7 +89,7 @@ vector<System *> System::systemList;
 int System::numSystemsRunning = 0;
 
 System::System(Params *p)
-    : MemObject(p), _systemPort("system_port", this),
+    : SimObject(p), _systemPort("system_port", this),
       multiThread(p->multi_thread),
       pagePtr(0),
       init_param(p->init_param),
@@ -444,7 +444,7 @@ System::unserialize(CheckpointIn &cp)
 void
 System::regStats()
 {
-    MemObject::regStats();
+    SimObject::regStats();
 
     for (uint32_t j = 0; j < numWorkIds ; j++) {
         workItemStats[j] = new Stats::Histogram();

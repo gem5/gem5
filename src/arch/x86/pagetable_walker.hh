@@ -45,9 +45,9 @@
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/tlb.hh"
 #include "base/types.hh"
-#include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "params/X86PagetableWalker.hh"
+#include "sim/clocked_object.hh"
 #include "sim/faults.hh"
 #include "sim/system.hh"
 
@@ -55,7 +55,7 @@ class ThreadContext;
 
 namespace X86ISA
 {
-    class Walker : public MemObject
+    class Walker : public ClockedObject
     {
       protected:
         // Port for accessing memory
@@ -201,7 +201,7 @@ namespace X86ISA
         }
 
         Walker(const Params *params) :
-            MemObject(params), port(name() + ".port", this),
+            ClockedObject(params), port(name() + ".port", this),
             funcState(this, NULL, NULL, true), tlb(NULL), sys(params->system),
             masterId(sys->getMasterId(this)),
             numSquashable(params->num_squash_per_cycle),

@@ -181,7 +181,7 @@ ExternalSlave::ExternalPort::getAddrRanges() const
 }
 
 ExternalSlave::ExternalSlave(ExternalSlaveParams *params) :
-    MemObject(params),
+    SimObject(params),
     externalPort(NULL),
     portName(params->name + ".port"),
     portType(params->port_type),
@@ -216,7 +216,7 @@ ExternalSlave::getPort(const std::string &if_name, PortID idx)
         }
         return *externalPort;
     } else {
-        return MemObject::getPort(if_name, idx);
+        return SimObject::getPort(if_name, idx);
     }
 }
 

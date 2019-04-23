@@ -40,9 +40,10 @@
 #ifndef __MEM_ADDR_MAPPER_HH__
 #define __MEM_ADDR_MAPPER_HH__
 
-#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "params/AddrMapper.hh"
 #include "params/RangeAddrMapper.hh"
+#include "sim/sim_object.hh"
 
 /**
  * An address mapper changes the packet addresses in going from the
@@ -53,7 +54,7 @@
  * currently not modified.
  */
 
-class AddrMapper : public MemObject
+class AddrMapper : public SimObject
 {
 
   public:

@@ -68,7 +68,7 @@
 using namespace std;
 
 BaseTrafficGen::BaseTrafficGen(const BaseTrafficGenParams* p)
-    : MemObject(p),
+    : ClockedObject(p),
       system(p->system),
       elasticReq(p->elastic_req),
       progressCheck(p->progress_check),
@@ -94,14 +94,14 @@ BaseTrafficGen::getPort(const string &if_name, PortID idx)
     if (if_name == "port") {
         return port;
     } else {
-        return MemObject::getPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
     }
 }
 
 void
 BaseTrafficGen::init()
 {
-    MemObject::init();
+    ClockedObject::init();
 
     if (!port.isConnected())
         fatal("The port of %s is not connected!\n", name());

@@ -34,9 +34,9 @@
 #include <set>
 
 #include "base/statistics.hh"
-#include "mem/mem_object.hh"
 #include "mem/port.hh"
 #include "params/GarnetSyntheticTraffic.hh"
+#include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
 #include "sim/sim_object.hh"
@@ -53,7 +53,7 @@ enum TrafficType {BIT_COMPLEMENT_ = 0,
                   NUM_TRAFFIC_PATTERNS_};
 
 class Packet;
-class GarnetSyntheticTraffic : public MemObject
+class GarnetSyntheticTraffic : public ClockedObject
 {
   public:
     typedef GarnetSyntheticTrafficParams Params;

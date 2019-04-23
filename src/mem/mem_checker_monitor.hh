@@ -44,14 +44,14 @@
 
 #include "base/statistics.hh"
 #include "mem/mem_checker.hh"
-#include "mem/mem_object.hh"
 #include "params/MemCheckerMonitor.hh"
+#include "sim/sim_object.hh"
 #include "sim/system.hh"
 
 /**
  * Implements a MemChecker monitor, to be inserted between two ports.
  */
-class MemCheckerMonitor : public MemObject
+class MemCheckerMonitor : public SimObject
 {
   public:
 

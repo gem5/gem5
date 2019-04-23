@@ -49,7 +49,7 @@
 #include "sim/stats.hh"
 
 CommMonitor::CommMonitor(Params* params)
-    : MemObject(params),
+    : SimObject(params),
       masterPort(name() + "-master", *this),
       slavePort(name() + "-slave", *this),
       samplePeriodicEvent([this]{ samplePeriodic(); }, name()),
@@ -91,7 +91,7 @@ CommMonitor::getPort(const std::string &if_name, PortID idx)
     } else if (if_name == "slave") {
         return slavePort;
     } else {
-        return MemObject::getPort(if_name, idx);
+        return SimObject::getPort(if_name, idx);
     }
 }
 
@@ -381,7 +381,7 @@ CommMonitor::recvRangeChange()
 void
 CommMonitor::regStats()
 {
-    MemObject::regStats();
+    SimObject::regStats();
 
     // Initialise all the monitor stats
     using namespace Stats;

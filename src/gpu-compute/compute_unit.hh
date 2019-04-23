@@ -53,8 +53,8 @@
 #include "gpu-compute/qstruct.hh"
 #include "gpu-compute/schedule_stage.hh"
 #include "gpu-compute/scoreboard_check_stage.hh"
-#include "mem/mem_object.hh"
 #include "mem/port.hh"
+#include "sim/clocked_object.hh"
 
 static const int MAX_REGS_FOR_NON_VEC_MEM_INST = 1;
 static const int MAX_WIDTH_FOR_MEM_INST = 32;
@@ -91,7 +91,7 @@ enum TLB_CACHE
     TLB_HIT_CACHE_HIT
 };
 
-class ComputeUnit : public MemObject
+class ComputeUnit : public ClockedObject
 {
   public:
     FetchStage fetchStage;

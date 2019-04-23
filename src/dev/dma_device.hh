@@ -54,6 +54,8 @@
 #include "sim/drain.hh"
 #include "sim/system.hh"
 
+class ClockedObject;
+
 class DmaPort : public MasterPort, public Drainable
 {
   private:
@@ -109,7 +111,7 @@ class DmaPort : public MasterPort, public Drainable
 
   public:
     /** The device that owns this port. */
-    MemObject *const device;
+    ClockedObject *const device;
 
     /** The system that device/port are in. This is used to select which mode
      * we are currently operating in. */
@@ -141,7 +143,7 @@ class DmaPort : public MasterPort, public Drainable
 
   public:
 
-    DmaPort(MemObject *dev, System *s);
+    DmaPort(ClockedObject *dev, System *s);
 
     RequestPtr dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                          uint8_t *data, Tick delay, Request::Flags flag = 0);

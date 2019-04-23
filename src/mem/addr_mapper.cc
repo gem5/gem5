@@ -40,7 +40,7 @@
 #include "mem/addr_mapper.hh"
 
 AddrMapper::AddrMapper(const AddrMapperParams* p)
-    : MemObject(p),
+    : SimObject(p),
       masterPort(name() + "-master", *this),
       slavePort(name() + "-slave", *this)
 {
@@ -61,7 +61,7 @@ AddrMapper::getPort(const std::string &if_name, PortID idx)
     } else if (if_name == "slave") {
         return slavePort;
     } else {
-        return MemObject::getPort(if_name, idx);
+        return SimObject::getPort(if_name, idx);
     }
 }
 

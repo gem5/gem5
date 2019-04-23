@@ -56,7 +56,7 @@
 #include "debug/XBar.hh"
 
 BaseXBar::BaseXBar(const BaseXBarParams *p)
-    : MemObject(p),
+    : ClockedObject(p),
       frontendLatency(p->frontend_latency),
       forwardLatency(p->forward_latency),
       responseLatency(p->response_latency),
@@ -88,7 +88,7 @@ BaseXBar::getPort(const std::string &if_name, PortID idx)
         // the slave port index translates directly to the vector position
         return *slavePorts[idx];
     } else {
-        return MemObject::getPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
     }
 }
 

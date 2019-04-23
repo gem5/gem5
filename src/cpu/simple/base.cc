@@ -70,7 +70,6 @@
 #include "debug/Decode.hh"
 #include "debug/Fetch.hh"
 #include "debug/Quiesce.hh"
-#include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "params/BaseSimpleCPU.hh"

@@ -49,7 +49,7 @@
 #include "debug/MemCheckerMonitor.hh"
 
 MemCheckerMonitor::MemCheckerMonitor(Params* params)
-    : MemObject(params),
+    : SimObject(params),
       masterPort(name() + "-master", *this),
       slavePort(name() + "-slave", *this),
       warnOnly(params->warn_only),
@@ -81,7 +81,7 @@ MemCheckerMonitor::getPort(const std::string &if_name, PortID idx)
     } else if (if_name == "slave" || if_name == "cpu_side") {
         return slavePort;
     } else {
-        return MemObject::getPort(if_name, idx);
+        return SimObject::getPort(if_name, idx);
     }
 }
 

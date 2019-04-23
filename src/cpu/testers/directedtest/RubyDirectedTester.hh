@@ -34,16 +34,17 @@
 #include <string>
 #include <vector>
 
+#include "mem/packet.hh"
+#include "mem/port.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
-#include "mem/mem_object.hh"
-#include "mem/packet.hh"
 #include "params/RubyDirectedTester.hh"
+#include "sim/clocked_object.hh"
 
 class DirectedGenerator;
 
-class RubyDirectedTester : public MemObject
+class RubyDirectedTester : public ClockedObject
 {
   public:
     class CpuPort : public MasterPort

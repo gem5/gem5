@@ -51,7 +51,7 @@ from m5.objects.SimpleMemory import *
 class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing',
                                 'atomic_noncaching']
 
-class System(MemObject):
+class System(SimObject):
     type = 'System'
     cxx_header = "sim/system.hh"
     system_port = MasterPort("System port")

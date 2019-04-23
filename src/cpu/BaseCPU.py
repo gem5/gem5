@@ -52,10 +52,10 @@ from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *
 
+from m5.objects.ClockedObject import ClockedObject
 from m5.objects.XBar import L2XBar
 from m5.objects.InstTracer import InstTracer
 from m5.objects.CPUTracers import ExeTracer
-from m5.objects.MemObject import MemObject
 from m5.objects.SubSystem import SubSystem
 from m5.objects.ClockDomain import *
 from m5.objects.Platform import Platform
@@ -99,7 +99,7 @@ elif buildEnv['TARGET_ISA'] == 'riscv':
     from m5.objects.RiscvISA import RiscvISA
     default_isa_class = RiscvISA
 
-class BaseCPU(MemObject):
+class BaseCPU(ClockedObject):
     type = 'BaseCPU'
     abstract = True
     cxx_header = "cpu/base.hh"

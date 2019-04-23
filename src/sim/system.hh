@@ -58,7 +58,6 @@
 #include "config/the_isa.hh"
 #include "enums/MemoryMode.hh"
 #include "mem/mem_master.hh"
-#include "mem/mem_object.hh"
 #include "mem/physical.hh"
 #include "mem/port.hh"
 #include "mem/port_proxy.hh"
@@ -66,6 +65,7 @@
 #include "sim/futex_map.hh"
 #include "sim/redirect_path.hh"
 #include "sim/se_signal.hh"
+#include "sim/sim_object.hh"
 
 /**
  * To avoid linking errors with LTO, only include the header if we
@@ -81,7 +81,7 @@ class KvmVM;
 class ObjectFile;
 class ThreadContext;
 
-class System : public MemObject
+class System : public SimObject
 {
   private:
 
@@ -97,7 +97,7 @@ class System : public MemObject
         /**
          * Create a system port with a name and an owner.
          */
-        SystemPort(const std::string &_name, MemObject *_owner)
+        SystemPort(const std::string &_name, SimObject *_owner)
             : MasterPort(_name, _owner)
         { }
         bool recvTimingResp(PacketPtr pkt) override

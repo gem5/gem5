@@ -36,7 +36,6 @@
 #include "cpu/base.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
-#include "mem/mem_object.hh"
 #include "sim/process.hh"
 
 class EndQuiesceEvent;

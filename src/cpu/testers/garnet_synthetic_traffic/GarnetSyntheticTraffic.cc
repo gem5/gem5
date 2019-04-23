@@ -40,7 +40,6 @@
 #include "base/random.hh"
 #include "base/statistics.hh"
 #include "debug/GarnetSyntheticTraffic.hh"
-#include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
@@ -75,7 +74,7 @@ GarnetSyntheticTraffic::sendPkt(PacketPtr pkt)
 }
 
 GarnetSyntheticTraffic::GarnetSyntheticTraffic(const Params *p)
-    : MemObject(p),
+    : ClockedObject(p),
       tickEvent([this]{ tick(); }, "GarnetSyntheticTraffic tick",
                 false, Event::CPU_Tick_Pri),
       cachePort("GarnetSyntheticTraffic", this),
@@ -116,7 +115,7 @@ GarnetSyntheticTraffic::getPort(const std::string &if_name, PortID idx)
     if (if_name == "test")
         return cachePort;
     else
-        return MemObject::getPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
 }
 
 void

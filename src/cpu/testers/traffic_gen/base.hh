@@ -46,8 +46,8 @@
 #include <tuple>
 
 #include "base/statistics.hh"
-#include "mem/mem_object.hh"
 #include "mem/qport.hh"
+#include "sim/clocked_object.hh"
 
 class BaseGen;
 class StreamGen;
@@ -63,7 +63,7 @@ struct BaseTrafficGenParams;
  * system components that are not yet modelled in detail, e.g. a video
  * engine or baseband subsystem.
  */
-class BaseTrafficGen : public MemObject
+class BaseTrafficGen : public ClockedObject
 {
     friend class BaseGen;
 

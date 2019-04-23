@@ -387,16 +387,16 @@ class Packet : public Printable
 
     /**
      * A virtual base opaque structure used to hold state associated
-     * with the packet (e.g., an MSHR), specific to a MemObject that
+     * with the packet (e.g., an MSHR), specific to a SimObject that
      * sees the packet. A pointer to this state is returned in the
-     * packet's response so that the MemObject in question can quickly
+     * packet's response so that the SimObject in question can quickly
      * look up the state needed to process it. A specific subclass
      * would be derived from this to carry state specific to a
      * particular sending device.
      *
-     * As multiple MemObjects may add their SenderState throughout the
+     * As multiple SimObjects may add their SenderState throughout the
      * memory system, the SenderStates create a stack, where a
-     * MemObject can add a new Senderstate, as long as the
+     * SimObject can add a new Senderstate, as long as the
      * predecessing SenderState is restored when the response comes
      * back. For this reason, the predecessor should always be
      * populated with the current SenderState of a packet before

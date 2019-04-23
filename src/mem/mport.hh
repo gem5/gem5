@@ -43,8 +43,8 @@
 #ifndef __MEM_MPORT_HH__
 #define __MEM_MPORT_HH__
 
-#include "mem/mem_object.hh"
 #include "mem/tport.hh"
+#include "sim/sim_object.hh"
 
 /*
  * This file defines a port class which is used for sending and receiving
@@ -57,7 +57,7 @@ class MessageSlavePort : public SimpleTimingPort
 {
 
   public:
-    MessageSlavePort(const std::string &name, MemObject *owner) :
+    MessageSlavePort(const std::string &name, SimObject *owner) :
         SimpleTimingPort(name, owner)
     {}
 
@@ -75,7 +75,7 @@ class MessageMasterPort : public QueuedMasterPort
 {
   public:
 
-    MessageMasterPort(const std::string &name, MemObject *owner) :
+    MessageMasterPort(const std::string &name, SimObject *owner) :
         QueuedMasterPort(name, owner, reqQueue, snoopRespQueue),
         reqQueue(*owner, *this), snoopRespQueue(*owner, *this)
     {}

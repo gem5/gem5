@@ -50,7 +50,7 @@
 #include "sim/system.hh"
 
 RubyTester::RubyTester(const Params *p)
-  : MemObject(p),
+  : ClockedObject(p),
     checkStartEvent([this]{ wakeup(); }, "RubyTester tick",
                     false, Event::CPU_Tick_Pri),
     _masterId(p->system->getMasterId(this)),
@@ -134,7 +134,7 @@ RubyTester::getPort(const std::string &if_name, PortID idx)
     if (if_name != "cpuInstPort" && if_name != "cpuInstDataPort" &&
         if_name != "cpuDataPort") {
         // pass it along to our super class
-        return MemObject::getPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
     } else {
         if (if_name == "cpuInstPort") {
             if (idx > m_num_inst_only_ports) {

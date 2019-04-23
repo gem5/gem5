@@ -55,7 +55,7 @@
 #include "mem/packet.hh"
 #include "sim/port.hh"
 
-class MemObject;
+class SimObject;
 
 /** Forward declaration */
 class BaseSlavePort;
@@ -123,11 +123,11 @@ class MasterPort : public BaseMasterPort
 
   protected:
 
-    MemObject& owner;
+    SimObject& owner;
 
   public:
 
-    MasterPort(const std::string& name, MemObject* _owner,
+    MasterPort(const std::string& name, SimObject* _owner,
                PortID id=InvalidPortID);
     virtual ~MasterPort();
 
@@ -317,11 +317,11 @@ class SlavePort : public BaseSlavePort
 
   protected:
 
-    MemObject& owner;
+    SimObject& owner;
 
   public:
 
-    SlavePort(const std::string& name, MemObject* _owner,
+    SlavePort(const std::string& name, SimObject* _owner,
               PortID id=InvalidPortID);
     virtual ~SlavePort();
 

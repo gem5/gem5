@@ -43,7 +43,7 @@ class RubyDummyPort : public Port
         // No need to connect anything here currently. MessageBuffer
         // port connections only serve to print the connections in
         // the config output.
-        // TODO: Add real ports to MessageBuffers and use MemObject connect
+        // TODO: Add real ports to MessageBuffers and use SimObject connect
         // code below to bind MessageBuffer senders and receivers
     }
     void unbind() override {}

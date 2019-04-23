@@ -43,7 +43,7 @@
 #include "params/SimpleMemDelay.hh"
 
 MemDelay::MemDelay(const MemDelayParams *p)
-    : MemObject(p),
+    : ClockedObject(p),
       masterPort(name() + "-master", *this),
       slavePort(name() + "-slave", *this),
       reqQueue(*this, masterPort),
@@ -68,7 +68,7 @@ MemDelay::getPort(const std::string &if_name, PortID idx)
     } else if (if_name == "slave") {
         return slavePort;
     } else {
-        return MemObject::getPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
     }
 }
 

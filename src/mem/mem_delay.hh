@@ -40,8 +40,8 @@
 #ifndef __MEM_MEM_DELAY_HH__
 #define __MEM_MEM_DELAY_HH__
 
-#include "mem/mem_object.hh"
 #include "mem/qport.hh"
+#include "sim/clocked_object.hh"
 
 struct MemDelayParams;
 struct SimpleMemDelayParams;
@@ -61,7 +61,7 @@ struct SimpleMemDelayParams;
  *
  * NOTE: Packets may be reordered if the delays aren't constant.
  */
-class MemDelay : public MemObject
+class MemDelay : public ClockedObject
 {
 
   public:

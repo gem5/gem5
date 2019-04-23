@@ -36,9 +36,9 @@
 # Authors: Andreas Sandberg
 
 from m5.params import *
-from m5.objects.MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
-class MemDelay(MemObject):
+class MemDelay(ClockedObject):
     type = 'MemDelay'
     cxx_header = 'mem/mem_delay.hh'
     abstract = True

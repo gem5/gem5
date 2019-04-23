@@ -60,10 +60,11 @@
 #ifndef __MEM_EXTERNAL_SLAVE_HH__
 #define __MEM_EXTERNAL_SLAVE_HH__
 
-#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "params/ExternalSlave.hh"
+#include "sim/sim_object.hh"
 
-class ExternalSlave : public MemObject
+class ExternalSlave : public SimObject
 {
   public:
     /** Derive from this class to create an external port interface */

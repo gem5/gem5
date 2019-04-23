@@ -52,7 +52,7 @@ std::map<std::string, ExternalMaster::Handler *>
     ExternalMaster::portHandlers;
 
 ExternalMaster::ExternalMaster(ExternalMasterParams *params) :
-    MemObject(params),
+    SimObject(params),
     externalPort(NULL),
     portName(params->name + ".port"),
     portType(params->port_type),
@@ -83,7 +83,7 @@ ExternalMaster::getPort(const std::string &if_name, PortID idx)
         }
         return *externalPort;
     } else {
-        return MemObject::getPort(if_name, idx);
+        return SimObject::getPort(if_name, idx);
     }
 }
 

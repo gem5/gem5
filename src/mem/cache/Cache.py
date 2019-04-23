@@ -43,7 +43,7 @@ from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
-from m5.objects.MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 from m5.objects.Prefetcher import BasePrefetcher
 from m5.objects.ReplacementPolicies import *
 from m5.objects.Tags import *
@@ -72,7 +72,7 @@ class WriteAllocator(SimObject):
     block_size = Param.Int(Parent.cache_line_size, "block size in bytes")
 
 
-class BaseCache(MemObject):
+class BaseCache(ClockedObject):
     type = 'BaseCache'
     abstract = True
     cxx_header = "mem/cache/base.hh"

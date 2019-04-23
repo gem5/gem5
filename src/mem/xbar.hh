@@ -56,9 +56,9 @@
 
 #include "base/addr_range_map.hh"
 #include "base/types.hh"
-#include "mem/mem_object.hh"
 #include "mem/qport.hh"
 #include "params/BaseXBar.hh"
+#include "sim/clocked_object.hh"
 #include "sim/stats.hh"
 
 /**
@@ -70,7 +70,7 @@
  * The BaseXBar is responsible for the basic flow control (busy or
  * not), the administration of retries, and the address decoding.
  */
-class BaseXBar : public MemObject
+class BaseXBar : public ClockedObject
 {
 
   protected:

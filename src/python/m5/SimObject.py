@@ -172,10 +172,6 @@ def createCxxConfigDirectoryEntryFile(code, name, simobj, is_header):
         code('#include "base/str.hh"')
         code('#include "cxx_config/${name}.hh"')
 
-        if simobj._ports:
-            code('#include "mem/mem_object.hh"')
-            code('#include "mem/port.hh"')
-
         code()
         code('${member_prefix}DirectoryEntry::DirectoryEntry()');
         code('{')

@@ -45,8 +45,6 @@
 #include "cpu/checker/cpu_impl.hh"
 #include "params/O3Checker.hh"
 
-class MemObject;
-
 template
 class Checker<O3CPUImpl>;
 

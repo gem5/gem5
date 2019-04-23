@@ -52,7 +52,7 @@
 #include "sim/system.hh"
 
 RubyPort::RubyPort(const Params *p)
-    : MemObject(p), m_ruby_system(p->ruby_system), m_version(p->version),
+    : ClockedObject(p), m_ruby_system(p->ruby_system), m_version(p->version),
       m_controller(NULL), m_mandatory_q_ptr(NULL),
       m_usingRubyTester(p->using_ruby_tester), system(p->system),
       pioMasterPort(csprintf("%s.pio-master-port", name()), this),
@@ -117,7 +117,7 @@ RubyPort::getPort(const std::string &if_name, PortID idx)
     }
 
     // pass it along to our super class
-    return MemObject::getPort(if_name, idx);
+    return ClockedObject::getPort(if_name, idx);
 }
 
 RubyPort::PioMasterPort::PioMasterPort(const std::string &_name,

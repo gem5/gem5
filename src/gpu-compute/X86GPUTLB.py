@@ -35,16 +35,17 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
-from m5.objects.MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
+from m5.SimObject import SimObject
 
 if buildEnv['FULL_SYSTEM']:
-    class X86PagetableWalker(MemObject):
+    class X86PagetableWalker(SimObject):
         type = 'X86PagetableWalker'
         cxx_class = 'X86ISA::Walker'
         port = SlavePort("Port for the hardware table walker")
         system = Param.System(Parent.any, "system object")
 
-class X86GPUTLB(MemObject):
+class X86GPUTLB(ClockedObject):
     type = 'X86GPUTLB'
     cxx_class = 'X86ISA::GpuTLB'
     cxx_header = 'gpu-compute/gpu_tlb.hh'
@@ -64,7 +65,7 @@ class X86GPUTLB(MemObject):
     allocationPolicy = Param.Bool(True, "Allocate on an access")
     accessDistance = Param.Bool(False, "print accessDistance stats")
 
-class TLBCoalescer(MemObject):
+class TLBCoalescer(ClockedObject):
     type = 'TLBCoalescer'
     cxx_class = 'TLBCoalescer'
     cxx_header = 'gpu-compute/tlb_coalescer.hh'

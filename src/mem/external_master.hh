@@ -60,10 +60,11 @@
 #ifndef __MEM_EXTERNAL_MASTER_HH__
 #define __MEM_EXTERNAL_MASTER_HH__
 
-#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "params/ExternalMaster.hh"
+#include "sim/sim_object.hh"
 
-class ExternalMaster : public MemObject
+class ExternalMaster : public SimObject
 {
   public:
     /** Derive from this class to create an external port interface */

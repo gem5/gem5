@@ -47,13 +47,14 @@
 #include <vector>
 
 #include "cpu/testers/rubytest/CheckTable.hh"
-#include "mem/mem_object.hh"
 #include "mem/packet.hh"
+#include "mem/port.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 #include "params/RubyTester.hh"
+#include "sim/clocked_object.hh"
 
-class RubyTester : public MemObject
+class RubyTester : public ClockedObject
 {
   public:
     class CpuPort : public MasterPort

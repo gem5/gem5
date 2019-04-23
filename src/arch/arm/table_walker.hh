@@ -48,6 +48,7 @@
 #include "arch/arm/tlb.hh"
 #include "mem/request.hh"
 #include "params/ArmTableWalker.hh"
+#include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 
 class ThreadContext;
@@ -59,7 +60,7 @@ class Translation;
 class TLB;
 class Stage2MMU;
 
-class TableWalker : public MemObject
+class TableWalker : public ClockedObject
 {
   public:
     class WalkerState;

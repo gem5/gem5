@@ -49,8 +49,9 @@
 #include <unordered_map>
 
 #include "base/statistics.hh"
-#include "mem/mem_object.hh"
+#include "mem/port.hh"
 #include "params/MemTest.hh"
+#include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 #include "sim/stats.hh"
 
@@ -67,7 +68,7 @@
  * both requests and responses, thus checking that the memory-system
  * is making progress.
  */
-class MemTest : public MemObject
+class MemTest : public ClockedObject
 {
 
   public:

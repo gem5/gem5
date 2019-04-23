@@ -35,9 +35,9 @@ from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 
-from m5.objects.MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
-class LdsState(MemObject):
+class LdsState(ClockedObject):
     type = 'LdsState'
     cxx_class = 'LdsState'
     cxx_header = 'gpu-compute/lds_state.hh'

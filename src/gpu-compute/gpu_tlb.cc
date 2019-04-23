@@ -61,7 +61,7 @@ namespace X86ISA
 {
 
     GpuTLB::GpuTLB(const Params *p)
-        : MemObject(p), configAddress(0), size(p->size),
+        : ClockedObject(p), configAddress(0), size(p->size),
           cleanupEvent([this]{ cleanup(); }, name(), false,
                        Event::Maximum_Pri),
           exitEvent([this]{ exitCallback(); }, name())
@@ -950,7 +950,7 @@ namespace X86ISA
     void
     GpuTLB::regStats()
     {
-        MemObject::regStats();
+        ClockedObject::regStats();
 
         localNumTLBAccesses
             .name(name() + ".local_TLB_accesses")

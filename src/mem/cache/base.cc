@@ -77,7 +77,7 @@ BaseCache::CacheSlavePort::CacheSlavePort(const std::string &_name,
 }
 
 BaseCache::BaseCache(const BaseCacheParams *p, unsigned blk_size)
-    : MemObject(p),
+    : ClockedObject(p),
       cpuSidePort (p->name + ".cpu_side", this, "CpuSidePort"),
       memSidePort(p->name + ".mem_side", this, "MemSidePort"),
       mshrQueue("MSHRs", p->mshrs, 0, p->demand_mshr_reserve), // see below
@@ -193,7 +193,7 @@ BaseCache::getPort(const std::string &if_name, PortID idx)
     } else if (if_name == "cpu_side") {
         return cpuSidePort;
     }  else {
-        return MemObject::getPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
     }
 }
 
@@ -1696,7 +1696,7 @@ BaseCache::unserialize(CheckpointIn &cp)
 void
 BaseCache::regStats()
 {
-    MemObject::regStats();
+    ClockedObject::regStats();
 
     using namespace Stats;
 

@@ -28,9 +28,9 @@
 from m5.params import *
 from m5.proxy import *
 
-from m5.objects.MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
-class RubyTester(MemObject):
+class RubyTester(ClockedObject):
     type = 'RubyTester'
     cxx_header = "cpu/testers/rubytest/RubyTester.hh"
     num_cpus = Param.Int("number of cpus / RubyPorts")

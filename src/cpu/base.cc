@@ -126,7 +126,7 @@ CPUProgressEvent::description() const
 }
 
 BaseCPU::BaseCPU(Params *p, bool is_checker)
-    : MemObject(p), instCnt(0), _cpuId(p->cpu_id), _socketId(p->socket_id),
+    : ClockedObject(p), instCnt(0), _cpuId(p->cpu_id), _socketId(p->socket_id),
       _instMasterId(p->system->getMasterId(this, "inst")),
       _dataMasterId(p->system->getMasterId(this, "data")),
       _taskId(ContextSwitchTaskId::Unknown), _pid(invldPid),
@@ -421,7 +421,7 @@ BaseCPU::probeInstCommit(const StaticInstPtr &inst, Addr pc)
 void
 BaseCPU::regStats()
 {
-    MemObject::regStats();
+    ClockedObject::regStats();
 
     using namespace Stats;
 
@@ -462,7 +462,7 @@ BaseCPU::getPort(const string &if_name, PortID idx)
     else if (if_name == "icache_port")
         return getInstPort();
     else
-        return MemObject::getPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
 }
 
 void

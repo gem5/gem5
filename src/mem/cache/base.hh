@@ -68,12 +68,12 @@
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/write_queue.hh"
 #include "mem/cache/write_queue_entry.hh"
-#include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/packet_queue.hh"
 #include "mem/qport.hh"
 #include "mem/request.hh"
 #include "params/WriteAllocator.hh"
+#include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 #include "sim/probe/probe.hh"
 #include "sim/serialize.hh"
@@ -91,7 +91,7 @@ struct BaseCacheParams;
 /**
  * A basic cache interface. Implements some common functions for speed.
  */
-class BaseCache : public MemObject
+class BaseCache : public ClockedObject
 {
   protected:
     /**

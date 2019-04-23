@@ -173,7 +173,7 @@ Walker::getPort(const std::string &if_name, PortID idx)
     if (if_name == "port")
         return port;
     else
-        return MemObject::getPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
 }
 
 void

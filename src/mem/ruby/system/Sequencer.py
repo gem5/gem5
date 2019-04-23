@@ -29,9 +29,9 @@
 
 from m5.params import *
 from m5.proxy import *
-from m5.objects.MemObject import MemObject
+from m5.objects.ClockedObject import ClockedObject
 
-class RubyPort(MemObject):
+class RubyPort(ClockedObject):
    type = 'RubyPort'
    abstract = True
    cxx_header = "mem/ruby/system/RubyPort.hh"

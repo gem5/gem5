@@ -48,7 +48,7 @@
  * the default constructor that works with SWIG
  */
 LdsState::LdsState(const Params *params) :
-    MemObject(params),
+    ClockedObject(params),
     tickEvent(this),
     cuPort(name() + ".port", this),
     maximumSize(params->size),

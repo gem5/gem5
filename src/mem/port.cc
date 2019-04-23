@@ -49,7 +49,7 @@
 #include "mem/port.hh"
 
 #include "base/trace.hh"
-#include "mem/mem_object.hh"
+#include "sim/sim_object.hh"
 
 BaseMasterPort::BaseMasterPort(const std::string &name, PortID _id)
     : Port(name, _id), _baseSlavePort(NULL)
@@ -92,7 +92,7 @@ BaseSlavePort::getMasterPort() const
 /**
  * Master port
  */
-MasterPort::MasterPort(const std::string& name, MemObject* _owner, PortID _id)
+MasterPort::MasterPort(const std::string& name, SimObject* _owner, PortID _id)
     : BaseMasterPort(name, _id), _slavePort(NULL), owner(*_owner)
 {
 }
@@ -201,7 +201,7 @@ MasterPort::printAddr(Addr a)
 /**
  * Slave port
  */
-SlavePort::SlavePort(const std::string& name, MemObject* _owner, PortID id)
+SlavePort::SlavePort(const std::string& name, SimObject* _owner, PortID id)
     : BaseSlavePort(name, id), _masterPort(NULL), defaultBackdoorWarned(false),
     owner(*_owner)
 {

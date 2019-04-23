@@ -45,8 +45,8 @@
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "debug/CxxConfig.hh"
-#include "mem/mem_object.hh"
 #include "sim/serialize.hh"
+#include "sim/sim_object.hh"
 
 CxxConfigManager::CxxConfigManager(CxxConfigFileBase &configFile_) :
     configFile(configFile_), flags(configFile_.getFlags()),
@@ -451,29 +451,14 @@ CxxConfigManager::bindPort(
     SimObject *slave_object, const std::string &slave_port_name,
     PortID slave_port_index)
 {
-    MemObject *master_mem_object = dynamic_cast<MemObject *>(master_object);
-    MemObject *slave_mem_object = dynamic_cast<MemObject *>(slave_object);
-
-    if (!master_mem_object) {
-        throw Exception(master_object->name(), csprintf(
-            "Object isn't a mem object and so can have master port:"
-            " %s[%d]", master_port_name, master_port_index));
-    }
-
-    if (!slave_mem_object) {
-        throw Exception(slave_object->name(), csprintf(
-            "Object isn't a mem object and so can have slave port:"
-            " %s[%d]", slave_port_name, slave_port_index));
-    }
-
     /* FIXME, check slave_port_index against connection_count
      *  defined for port, need getPortConnectionCount and a
      *  getCxxConfigDirectoryEntry for each object. */
 
     /* It would be nice to be able to catch the errors from these calls. */
-    Port &master_port = master_mem_object->getPort(
+    Port &master_port = master_object->getPort(
         master_port_name, master_port_index);
-    Port &slave_port = slave_mem_object->getPort(
+    Port &slave_port = slave_object->getPort(
         slave_port_name, slave_port_index);
 
     if (master_port.isConnected()) {

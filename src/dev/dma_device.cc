@@ -51,9 +51,10 @@
 #include "debug/DMA.hh"
 #include "debug/Drain.hh"
 #include "mem/port_proxy.hh"
+#include "sim/clocked_object.hh"
 #include "sim/system.hh"
 
-DmaPort::DmaPort(MemObject *dev, System *s)
+DmaPort::DmaPort(ClockedObject *dev, System *s)
     : MasterPort(dev->name() + ".dma", dev),
       device(dev), sys(s), masterId(s->getMasterId(dev)),
       sendEvent([this]{ sendDma(); }, dev->name()),

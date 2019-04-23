@@ -58,7 +58,7 @@
 #include "arch/isa_traits.hh"
 #include "arch/microcode_rom.hh"
 #include "base/statistics.hh"
-#include "mem/mem_object.hh"
+#include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 #include "sim/full_system.hh"
 #include "sim/insttracer.hh"
@@ -106,7 +106,7 @@ class CPUProgressEvent : public Event
     virtual const char *description() const;
 };
 
-class BaseCPU : public MemObject
+class BaseCPU : public ClockedObject
 {
   protected:
 

@@ -47,7 +47,7 @@
 #include "sim/sim_exit.hh"
 
 RubyDirectedTester::RubyDirectedTester(const Params *p)
-  : MemObject(p),
+  : ClockedObject(p),
     directedStartEvent([this]{ wakeup(); }, "Directed tick",
                        false, Event::CPU_Tick_Pri),
     m_requests_to_complete(p->requests_to_complete),
@@ -83,7 +83,7 @@ RubyDirectedTester::getPort(const std::string &if_name, PortID idx)
 {
     if (if_name != "cpuPort") {
         // pass it along to our super class
-        return MemObject::getPort(if_name, idx);
+        return ClockedObject::getPort(if_name, idx);
     } else {
         if (idx >= static_cast<int>(ports.size())) {
             panic("RubyDirectedTester::getPort: unknown index %d\n", idx);
