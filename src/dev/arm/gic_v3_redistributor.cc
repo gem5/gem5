@@ -675,7 +675,7 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
               lpiIDBits = 0xf;
           }
 
-          uint32_t largest_lpi_id = 2 ^ (lpiIDBits + 1);
+          uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
           uint32_t number_lpis = largest_lpi_id - SMALLEST_LPI_ID + 1;
           lpiConfigurationTable.resize(number_lpis);
           break;
@@ -699,7 +699,7 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
 
       case GICR_INVLPIR: { // Redistributor Invalidate LPI Register
           uint32_t lpi_id = data & 0xffffffff;
-          uint32_t largest_lpi_id = 2 ^ (lpiIDBits + 1);
+          uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
 
           if (lpi_id > largest_lpi_id) {
               return;
@@ -830,7 +830,7 @@ Gicv3Redistributor::update()
     }
 
     // Check LPIs
-    uint32_t largest_lpi_id = 2 ^ (lpiIDBits + 1);
+    uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
     char lpi_pending_table[largest_lpi_id / 8];
     ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
     tc->getVirtProxy().readBlob(lpiPendingTablePtr,
@@ -881,7 +881,7 @@ Gicv3Redistributor::setClrLPI(uint64_t data, bool set)
     }
 
     uint32_t lpi_id = data & 0xffffffff;
-    uint32_t largest_lpi_id = 2 ^ (lpiIDBits + 1);
+    uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
 
     if (lpi_id > largest_lpi_id) {
         // Writes to GICR_SETLPIR or GICR_CLRLPIR have not effect if
