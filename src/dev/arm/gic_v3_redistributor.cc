@@ -675,9 +675,6 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
               lpiIDBits = 0xf;
           }
 
-          uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
-          uint32_t number_lpis = largest_lpi_id - SMALLEST_LPI_ID + 1;
-          lpiConfigurationTable.resize(number_lpis);
           break;
       }
 
@@ -698,25 +695,12 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
         break;
 
       case GICR_INVLPIR: { // Redistributor Invalidate LPI Register
-          uint32_t lpi_id = data & 0xffffffff;
-          uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
-
-          if (lpi_id > largest_lpi_id) {
-              return;
-          }
-
-          uint32_t lpi_table_entry_index = lpi_id - SMALLEST_LPI_ID;
-          invalLpiConfig(lpi_table_entry_index);
+          // Do nothing: no caching supported
           break;
       }
 
       case GICR_INVALLR: { // Redistributor Invalidate All Register
-          for (int lpi_table_entry_index = 0;
-               lpi_table_entry_index < lpiConfigurationTable.size();
-               lpi_table_entry_index++) {
-              invalLpiConfig(lpi_table_entry_index);
-          }
-
+          // Do nothing: no caching supported
           break;
       }
 
@@ -724,17 +708,6 @@ Gicv3Redistributor::write(Addr addr, uint64_t data, size_t size,
         panic("Gicv3Redistributor::write(): invalid offset %#x\n", addr);
         break;
     }
-}
-
-void
-Gicv3Redistributor::invalLpiConfig(uint32_t lpi_entry_index)
-{
-    Addr lpi_table_entry_ptr = lpiConfigurationTablePtr +
-        lpi_entry_index * sizeof(LPIConfigurationTableEntry);
-    ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
-    tc->getPhysProxy().readBlob(lpi_table_entry_ptr,
-            (uint8_t*) &lpiConfigurationTable[lpi_entry_index],
-            sizeof(LPIConfigurationTableEntry));
 }
 
 void
@@ -831,12 +804,21 @@ Gicv3Redistributor::update()
 
     // Check LPIs
     if (EnableLPIs) {
-        const uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
-        char lpi_pending_table[largest_lpi_id / 8];
         ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
+
+        const uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
+        const uint32_t number_lpis = largest_lpi_id - SMALLEST_LPI_ID + 1;
+
+        uint8_t lpi_pending_table[largest_lpi_id / 8];
+        uint8_t lpi_config_table[number_lpis];
+
         tc->getPhysProxy().readBlob(lpiPendingTablePtr,
                                     (uint8_t *) lpi_pending_table,
                                     sizeof(lpi_pending_table));
+
+        tc->getPhysProxy().readBlob(lpiConfigurationTablePtr,
+                (uint8_t*) lpi_config_table,
+                sizeof(lpi_config_table));
 
         for (int lpi_id = SMALLEST_LPI_ID; lpi_id < largest_lpi_id;
              lpi_id++) {
@@ -845,16 +827,19 @@ Gicv3Redistributor::update()
             bool lpi_is_pending = lpi_pending_table[lpi_pending_entry_byte] &
                                   1 << lpi_pending_entry_bit_position;
             uint32_t lpi_configuration_entry_index = lpi_id - SMALLEST_LPI_ID;
-            bool lpi_is_enable =
-                lpiConfigurationTable[lpi_configuration_entry_index].enable;
+
+            LPIConfigurationTableEntry config_entry =
+                lpi_config_table[lpi_configuration_entry_index];
+
+            bool lpi_is_enable = config_entry.enable;
+
             // LPIs are always Non-secure Group 1 interrupts,
             // in a system where two Security states are enabled.
             Gicv3::GroupId lpi_group = Gicv3::G1NS;
             bool group_enabled = distributor->groupEnabled(lpi_group);
 
             if (lpi_is_pending && lpi_is_enable && group_enabled) {
-                uint8_t lpi_priority =
-                    lpiConfigurationTable[lpi_configuration_entry_index].priority;
+                uint8_t lpi_priority =config_entry.priority;
 
                 if ((lpi_priority < cpuInterface->hppi.prio) ||
                     (lpi_priority == cpuInterface->hppi.prio &&

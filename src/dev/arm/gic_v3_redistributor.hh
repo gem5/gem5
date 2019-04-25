@@ -161,8 +161,6 @@ class Gicv3Redistributor : public Serializable
         Bitfield<0> enable;
     EndBitUnion(LPIConfigurationTableEntry)
 
-    std::vector<LPIConfigurationTableEntry> lpiConfigurationTable;
-
     static const uint32_t GICR_CTLR_ENABLE_LPIS = 1 << 0;
     static const uint32_t GICR_CTLR_DPG0   = 1 << 24;
     static const uint32_t GICR_CTLR_DPG1NS = 1 << 25;
@@ -205,7 +203,6 @@ class Gicv3Redistributor : public Serializable
   public:
 
     Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id);
-    void invalLpiConfig(uint32_t lpi_entry_index);
     uint32_t getAffinity() const;
     void init();
     void initState();
