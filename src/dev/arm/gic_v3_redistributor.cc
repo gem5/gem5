@@ -839,7 +839,7 @@ Gicv3Redistributor::update()
             bool group_enabled = distributor->groupEnabled(lpi_group);
 
             if (lpi_is_pending && lpi_is_enable && group_enabled) {
-                uint8_t lpi_priority =config_entry.priority;
+                uint8_t lpi_priority = config_entry.priority << 2;
 
                 if ((lpi_priority < cpuInterface->hppi.prio) ||
                     (lpi_priority == cpuInterface->hppi.prio &&
