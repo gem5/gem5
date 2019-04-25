@@ -181,7 +181,8 @@ LinuxAlphaSystem::setDelayLoop(ThreadContext *tc)
         Tick cpuFreq = tc->getCpuPtr()->frequency();
         assert(intrFreq);
         FSTranslatingPortProxy &vp = tc->getVirtProxy();
-        vp.writeHtoG(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988));
+        vp.write(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988),
+                 GuestByteOrder);
     }
 }
 

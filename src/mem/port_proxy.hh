@@ -59,11 +59,6 @@
 #ifndef __MEM_PORT_PROXY_HH__
 #define __MEM_PORT_PROXY_HH__
 
-#include "config/the_isa.hh"
-#if THE_ISA != NULL_ISA
-    #include "arch/isa_traits.hh"
-#endif
-
 #include "mem/port.hh"
 #include "sim/byteswap.hh"
 
@@ -93,27 +88,34 @@ class PortProxy
 
   public:
     PortProxy(MasterPort &port, unsigned int cacheLineSize) :
-        _port(port), _cacheLineSize(cacheLineSize) { }
+        _port(port), _cacheLineSize(cacheLineSize)
+    {}
     virtual ~PortProxy() { }
 
     /**
      * Read size bytes memory at address and store in p.
      */
-    virtual void readBlob(Addr addr, uint8_t* p, int size) const {
+    virtual void
+    readBlob(Addr addr, uint8_t* p, int size) const
+    {
         readBlobPhys(addr, 0, p, size);
     }
 
     /**
      * Write size bytes from p to address.
      */
-    virtual void writeBlob(Addr addr, const uint8_t* p, int size) const {
+    virtual void
+    writeBlob(Addr addr, const uint8_t* p, int size) const
+    {
         writeBlobPhys(addr, 0, p, size);
     }
 
     /**
      * Fill size bytes starting at addr with byte value val.
      */
-    virtual void memsetBlob(Addr addr, uint8_t v, int size) const {
+    virtual void
+    memsetBlob(Addr addr, uint8_t v, int size) const
+    {
         memsetBlobPhys(addr, 0, v, size);
     }
 
@@ -149,33 +151,17 @@ class PortProxy
 
     /**
      * Read sizeof(T) bytes from address and return as object T.
-     * Performs selected endianness transform.
+     * Performs endianness conversion from the selected guest to host order.
      */
     template <typename T>
-    T readGtoH(Addr address, ByteOrder guest_byte_order) const;
+    T read(Addr address, ByteOrder guest_byte_order) const;
 
     /**
      * Write object T to address. Writes sizeof(T) bytes.
-     * Performs selected endianness transform.
+     * Performs endianness conversion from host to the selected guest order.
      */
     template <typename T>
-    void writeHtoG(Addr address, T data, ByteOrder guest_byte_order) const;
-
-#if THE_ISA != NULL_ISA
-    /**
-     * Read sizeof(T) bytes from address and return as object T.
-     * Performs Guest to Host endianness transform.
-     */
-    template <typename T>
-    T readGtoH(Addr address) const;
-
-    /**
-     * Write object T to address. Writes sizeof(T) bytes.
-     * Performs Host to Guest endianness transform.
-     */
-    template <typename T>
-    void writeHtoG(Addr address, T data) const;
-#endif
+    void write(Addr address, T data, ByteOrder guest_byte_order) const;
 };
 
 
@@ -214,7 +200,7 @@ PortProxy::write(Addr address, T data) const
 
 template <typename T>
 T
-PortProxy::readGtoH(Addr address, ByteOrder byte_order) const
+PortProxy::read(Addr address, ByteOrder byte_order) const
 {
     T data;
     readBlob(address, (uint8_t*)&data, sizeof(T));
@@ -223,29 +209,10 @@ PortProxy::readGtoH(Addr address, ByteOrder byte_order) const
 
 template <typename T>
 void
-PortProxy::writeHtoG(Addr address, T data, ByteOrder byte_order) const
+PortProxy::write(Addr address, T data, ByteOrder byte_order) const
 {
     data = htog(data, byte_order);
     writeBlob(address, (uint8_t*)&data, sizeof(T));
 }
-
-#if THE_ISA != NULL_ISA
-template <typename T>
-T
-PortProxy::readGtoH(Addr address) const
-{
-    T data;
-    readBlob(address, (uint8_t*)&data, sizeof(T));
-    return TheISA::gtoh(data);
-}
-
-template <typename T>
-void
-PortProxy::writeHtoG(Addr address, T data) const
-{
-    data = TheISA::htog(data);
-    writeBlob(address, (uint8_t*)&data, sizeof(T));
-}
-#endif
 
 #endif // __MEM_PORT_PROXY_HH__

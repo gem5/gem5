@@ -54,7 +54,7 @@ readSymbol(ThreadContext *tc, const std::string name)
     if (!symtab->findAddress(name, addr))
         panic("thread info not compiled into kernel\n");
 
-    return vp.readGtoH<int32_t>(addr);
+    return vp.read<int32_t>(addr, GuestByteOrder);
 }
 
 ProcessInfo::ProcessInfo(ThreadContext *_tc) : tc(_tc)
@@ -76,7 +76,7 @@ ProcessInfo::task(Addr ksp) const
     Addr tsk;
 
     FSTranslatingPortProxy &vp = tc->getVirtProxy();
-    tsk = vp.readGtoH<Addr>(base + task_off);
+    tsk = vp.read<Addr>(base + task_off, GuestByteOrder);
 
     return tsk;
 }
@@ -91,7 +91,7 @@ ProcessInfo::pid(Addr ksp) const
     uint16_t pd;
 
     FSTranslatingPortProxy &vp = tc->getVirtProxy();
-    pd = vp.readGtoH<uint16_t>(task + pid_off);
+    pd = vp.read<uint16_t>(task + pid_off, GuestByteOrder);
 
     return pd;
 }

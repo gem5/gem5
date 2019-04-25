@@ -66,6 +66,9 @@
 #error "THE_ISA not set"
 #endif
 
+#include "arch/isa_traits.hh"
+#include "sim/byteswap.hh"
+
 template<class IntType>
 AuxVector<IntType>::AuxVector(IntType type, IntType val)
     : _auxType(TheISA::htog(type)), _auxVal(TheISA::htog(val)),

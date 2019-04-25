@@ -41,7 +41,6 @@
 #include "mem/fs_translating_port_proxy.hh"
 #include "sim/system.hh"
 
-using namespace std;
 using namespace MipsISA;
 
 ProcessInfo::ProcessInfo(ThreadContext *_tc) : tc(_tc)
@@ -57,7 +56,7 @@ ProcessInfo::task(Addr ksp) const
     Addr tsk;
 
     FSTranslatingPortProxy &vp = tc->getVirtProxy();
-    tsk = vp.readGtoH<Addr>(base + task_off);
+    tsk = vp.read<Addr>(base + task_off, GuestByteOrder);
 
     return tsk;
 }
@@ -72,12 +71,12 @@ ProcessInfo::pid(Addr ksp) const
     uint16_t pd;
 
     FSTranslatingPortProxy &vp = tc->getVirtProxy();
-    pd = vp.readGtoH<uint16_t>(task + pid_off);
+    pd = vp.read<uint16_t>(task + pid_off, GuestByteOrder);
 
     return pd;
 }
 
-string
+std::string
 ProcessInfo::name(Addr ksp) const
 {
     Addr task = this->task(ksp);

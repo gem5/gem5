@@ -54,23 +54,23 @@ ProcessInfo::ProcessInfo(ThreadContext *_tc)
 
     if (!symtab->findAddress("thread_info_size", addr))
         panic("thread info not compiled into kernel\n");
-    thread_info_size = vp.readGtoH<int32_t>(addr);
+    thread_info_size = vp.read<int32_t>(addr, GuestByteOrder);
 
     if (!symtab->findAddress("task_struct_size", addr))
         panic("thread info not compiled into kernel\n");
-    task_struct_size = vp.readGtoH<int32_t>(addr);
+    task_struct_size = vp.read<int32_t>(addr, GuestByteOrder);
 
     if (!symtab->findAddress("thread_info_task", addr))
         panic("thread info not compiled into kernel\n");
-    task_off = vp.readGtoH<int32_t>(addr);
+    task_off = vp.read<int32_t>(addr, GuestByteOrder);
 
     if (!symtab->findAddress("task_struct_pid", addr))
         panic("thread info not compiled into kernel\n");
-    pid_off = vp.readGtoH<int32_t>(addr);
+    pid_off = vp.read<int32_t>(addr, GuestByteOrder);
 
     if (!symtab->findAddress("task_struct_comm", addr))
         panic("thread info not compiled into kernel\n");
-    name_off = vp.readGtoH<int32_t>(addr);
+    name_off = vp.read<int32_t>(addr, GuestByteOrder);
 }
 
 Addr
@@ -83,7 +83,7 @@ ProcessInfo::task(Addr ksp) const
     Addr tsk;
 
     FSTranslatingPortProxy &vp = tc->getVirtProxy();
-    tsk = vp.readGtoH<Addr>(base + task_off);
+    tsk = vp.read<Addr>(base + task_off, GuestByteOrder);
 
     return tsk;
 }
@@ -98,7 +98,7 @@ ProcessInfo::pid(Addr ksp) const
     uint16_t pd;
 
     FSTranslatingPortProxy &vp = tc->getVirtProxy();
-    pd = vp.readGtoH<uint16_t>(task + pid_off);
+    pd = vp.read<uint16_t>(task + pid_off, GuestByteOrder);
 
     return pd;
 }

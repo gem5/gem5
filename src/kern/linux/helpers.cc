@@ -43,6 +43,7 @@
 #include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "mem/fs_translating_port_proxy.hh"
+#include "sim/byteswap.hh"
 #include "sim/system.hh"
 
 struct DmesgEntry {
@@ -107,9 +108,12 @@ Linux::dumpDmesg(ThreadContext *tc, std::ostream &os)
         return;
     }
 
-    uint32_t log_buf_len = proxy.readGtoH<uint32_t>(addr_lb_len);
-    uint32_t log_first_idx = proxy.readGtoH<uint32_t>(addr_first);
-    uint32_t log_next_idx = proxy.readGtoH<uint32_t>(addr_next);
+    uint32_t log_buf_len =
+        proxy.read<uint32_t>(addr_lb_len, TheISA::GuestByteOrder);
+    uint32_t log_first_idx =
+        proxy.read<uint32_t>(addr_first, TheISA::GuestByteOrder);
+    uint32_t log_next_idx =
+        proxy.read<uint32_t>(addr_next, TheISA::GuestByteOrder);
 
     if (log_first_idx >= log_buf_len || log_next_idx >= log_buf_len) {
         warn("dmesg pointers/length corrupted\n");
