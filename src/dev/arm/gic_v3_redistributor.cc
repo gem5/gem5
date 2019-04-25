@@ -854,7 +854,8 @@ Gicv3Redistributor::update()
     }
 
     if (!new_hppi && cpuInterface->hppi.prio != 0xff &&
-        cpuInterface->hppi.intid < Gicv3::SGI_MAX + Gicv3::PPI_MAX) {
+        (cpuInterface->hppi.intid < Gicv3::SGI_MAX + Gicv3::PPI_MAX ||
+         cpuInterface->hppi.intid > SMALLEST_LPI_ID)) {
         distributor->fullUpdate();
     }
 }

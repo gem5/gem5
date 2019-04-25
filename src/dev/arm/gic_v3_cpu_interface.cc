@@ -409,7 +409,8 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
               int_id = getHPPIR0();
 
               // avoid activation for special interrupts
-              if (int_id < Gicv3::INTID_SECURE) {
+              if (int_id < Gicv3::INTID_SECURE ||
+                  int_id >= Gicv3Redistributor::SMALLEST_LPI_ID) {
                   activateIRQ(int_id, hppi.group);
               }
           } else {
@@ -464,7 +465,8 @@ Gicv3CPUInterface::readMiscReg(int misc_reg)
               int_id = getHPPIR1();
 
               // avoid activation for special interrupts
-              if (int_id < Gicv3::INTID_SECURE) {
+              if (int_id < Gicv3::INTID_SECURE ||
+                  int_id >= Gicv3Redistributor::SMALLEST_LPI_ID) {
                   activateIRQ(int_id, hppi.group);
               }
           } else {
@@ -778,7 +780,8 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
           int int_id = val & 0xffffff;
 
           // avoid activation for special interrupts
-          if (int_id >= Gicv3::INTID_SECURE) {
+          if (int_id >= Gicv3::INTID_SECURE &&
+              int_id <= Gicv3::INTID_SPURIOUS) {
               return;
           }
 
@@ -847,7 +850,8 @@ Gicv3CPUInterface::setMiscReg(int misc_reg, RegVal val)
           int int_id = val & 0xffffff;
 
           // avoid deactivation for special interrupts
-          if (int_id >= Gicv3::INTID_SECURE) {
+          if (int_id >= Gicv3::INTID_SECURE &&
+              int_id <= Gicv3::INTID_SPURIOUS) {
               return;
           }
 
@@ -1770,6 +1774,9 @@ Gicv3CPUInterface::activateIRQ(uint32_t int_id, Gicv3::GroupId group)
         // SPI, distributor
         distributor->activateIRQ(int_id);
         distributor->updateAndInformCPUInterfaces();
+    } else if (int_id >= Gicv3Redistributor::SMALLEST_LPI_ID) {
+        // LPI, Redistributor
+        redistributor->setClrLPI(int_id, false);
     }
 }
 
@@ -1806,7 +1813,8 @@ Gicv3CPUInterface::deactivateIRQ(uint32_t int_id, Gicv3::GroupId group)
         distributor->deactivateIRQ(int_id);
         distributor->updateAndInformCPUInterfaces();
     } else {
-        return;
+        // LPI, redistributor, shouldn't deactivate
+        redistributor->updateAndInformCPUInterface();
     }
 }
 
