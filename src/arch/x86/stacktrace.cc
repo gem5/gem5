@@ -41,46 +41,29 @@
 #include "mem/fs_translating_port_proxy.hh"
 #include "sim/system.hh"
 
-using namespace std;
 namespace X86ISA
 {
 
-ProcessInfo::ProcessInfo(ThreadContext *_tc)
-    : tc(_tc)
+static int32_t
+readSymbol(ThreadContext *tc, const std::string name)
 {
-    Addr addr = 0;
-
     FSTranslatingPortProxy &vp = tc->getVirtProxy();
+    SymbolTable *symtab = tc->getSystemPtr()->kernelSymtab;
 
-    if (!tc->getSystemPtr()->kernelSymtab->findAddress(
-                "thread_info_size", addr)) {
+    Addr addr;
+    if (!symtab->findAddress(name, addr))
         panic("thread info not compiled into kernel\n");
-    }
-    thread_info_size = vp.readGtoH<int32_t>(addr);
 
-    if (!tc->getSystemPtr()->kernelSymtab->findAddress(
-                "task_struct_size", addr)) {
-        panic("thread info not compiled into kernel\n");
-    }
-    task_struct_size = vp.readGtoH<int32_t>(addr);
+    return vp.readGtoH<int32_t>(addr);
+}
 
-    if (!tc->getSystemPtr()->kernelSymtab->findAddress(
-                "thread_info_task", addr)) {
-        panic("thread info not compiled into kernel\n");
-    }
-    task_off = vp.readGtoH<int32_t>(addr);
-
-    if (!tc->getSystemPtr()->kernelSymtab->findAddress(
-                "task_struct_pid", addr)) {
-        panic("thread info not compiled into kernel\n");
-    }
-    pid_off = vp.readGtoH<int32_t>(addr);
-
-    if (!tc->getSystemPtr()->kernelSymtab->findAddress(
-                "task_struct_comm", addr)) {
-        panic("thread info not compiled into kernel\n");
-    }
-    name_off = vp.readGtoH<int32_t>(addr);
+ProcessInfo::ProcessInfo(ThreadContext *_tc) : tc(_tc)
+{
+    thread_info_size = readSymbol(tc, "thread_info_size");
+    task_struct_size = readSymbol(tc, "task_struct_size");
+    task_off = readSymbol(tc, "thread_info_task");
+    pid_off = readSymbol(tc, "task_struct_pid");
+    name_off = readSymbol(tc, "task_struct_comm");
 }
 
 Addr
@@ -113,7 +96,7 @@ ProcessInfo::pid(Addr ksp) const
     return pd;
 }
 
-string
+std::string
 ProcessInfo::name(Addr ksp) const
 {
     Addr task = this->task(ksp);
@@ -214,7 +197,7 @@ StackTrace::dump()
 
     DPRINTFN("------ Stack ------\n");
 
-    string symbol;
+    std::string symbol;
     for (int i = 0, size = stack.size(); i < size; ++i) {
         Addr addr = stack[size - i - 1];
         if (addr == user)
