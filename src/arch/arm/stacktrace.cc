@@ -41,138 +41,148 @@
 #include "mem/fs_translating_port_proxy.hh"
 #include "sim/system.hh"
 
-using namespace std;
 namespace ArmISA
 {
-    ProcessInfo::ProcessInfo(ThreadContext *_tc)
-        : tc(_tc)
-    {
-        Addr addr = 0;
 
-        FSTranslatingPortProxy &vp = tc->getVirtProxy();
+ProcessInfo::ProcessInfo(ThreadContext *_tc)
+    : tc(_tc)
+{
+    Addr addr = 0;
 
-        if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_size", addr))
-            panic("thread info not compiled into kernel\n");
-        thread_info_size = vp.readGtoH<int32_t>(addr);
+    FSTranslatingPortProxy &vp = tc->getVirtProxy();
 
-        if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_size", addr))
-            panic("thread info not compiled into kernel\n");
-        task_struct_size = vp.readGtoH<int32_t>(addr);
-
-        if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_task", addr))
-            panic("thread info not compiled into kernel\n");
-        task_off = vp.readGtoH<int32_t>(addr);
-
-        if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_pid", addr))
-            panic("thread info not compiled into kernel\n");
-        pid_off = vp.readGtoH<int32_t>(addr);
-
-        if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_comm", addr))
-            panic("thread info not compiled into kernel\n");
-        name_off = vp.readGtoH<int32_t>(addr);
+    if (!tc->getSystemPtr()->kernelSymtab->findAddress(
+                "thread_info_size", addr)) {
+        panic("thread info not compiled into kernel\n");
     }
+    thread_info_size = vp.readGtoH<int32_t>(addr);
 
-    Addr
-    ProcessInfo::task(Addr ksp) const
-    {
-        Addr base = ksp & ~0x1fff;
-        if (base == ULL(0xffffffffc0000000))
-            return 0;
-
-        Addr tsk;
-
-        FSTranslatingPortProxy &vp = tc->getVirtProxy();
-        tsk = vp.readGtoH<Addr>(base + task_off);
-
-        return tsk;
+    if (!tc->getSystemPtr()->kernelSymtab->findAddress(
+                "task_struct_size", addr)) {
+        panic("thread info not compiled into kernel\n");
     }
+    task_struct_size = vp.readGtoH<int32_t>(addr);
 
-    int
-    ProcessInfo::pid(Addr ksp) const
-    {
-        Addr task = this->task(ksp);
-        if (!task)
-            return -1;
-
-        uint16_t pd;
-
-        FSTranslatingPortProxy &vp = tc->getVirtProxy();
-        pd = vp.readGtoH<uint16_t>(task + pid_off);
-
-        return pd;
+    if (!tc->getSystemPtr()->kernelSymtab->findAddress(
+                "thread_info_task", addr)) {
+        panic("thread info not compiled into kernel\n");
     }
+    task_off = vp.readGtoH<int32_t>(addr);
 
-    string
-    ProcessInfo::name(Addr ksp) const
-    {
-        Addr task = this->task(ksp);
-        if (!task)
-            return "unknown";
-
-        char comm[256];
-        CopyStringOut(tc, comm, task + name_off, sizeof(comm));
-        if (!comm[0])
-            return "startup";
-
-        return comm;
+    if (!tc->getSystemPtr()->kernelSymtab->findAddress(
+                "task_struct_pid", addr)) {
+        panic("thread info not compiled into kernel\n");
     }
+    pid_off = vp.readGtoH<int32_t>(addr);
 
-    StackTrace::StackTrace()
-        : tc(0), stack(64)
-    {
+    if (!tc->getSystemPtr()->kernelSymtab->findAddress(
+                "task_struct_comm", addr)) {
+        panic("thread info not compiled into kernel\n");
     }
+    name_off = vp.readGtoH<int32_t>(addr);
+}
 
-    StackTrace::StackTrace(ThreadContext *_tc, const StaticInstPtr &inst)
-        : tc(0), stack(64)
-    {
-        trace(_tc, inst);
-    }
+Addr
+ProcessInfo::task(Addr ksp) const
+{
+    Addr base = ksp & ~0x1fff;
+    if (base == ULL(0xffffffffc0000000))
+        return 0;
 
-    StackTrace::~StackTrace()
-    {
-    }
+    Addr tsk;
 
-    void
-    StackTrace::trace(ThreadContext *_tc, bool is_call)
-    {
-    }
+    FSTranslatingPortProxy &vp = tc->getVirtProxy();
+    tsk = vp.readGtoH<Addr>(base + task_off);
 
-    bool
-    StackTrace::isEntry(Addr addr)
-    {
-        return false;
-    }
+    return tsk;
+}
 
-    bool
-    StackTrace::decodeStack(MachInst inst, int &disp)
-    {
-        return false;
-    }
+int
+ProcessInfo::pid(Addr ksp) const
+{
+    Addr task = this->task(ksp);
+    if (!task)
+        return -1;
 
-    bool
-    StackTrace::decodeSave(MachInst inst, int &reg, int &disp)
-    {
-        return false;
-    }
+    uint16_t pd;
 
-    /*
-     * Decode the function prologue for the function we're in, and note
-     * which registers are stored where, and how large the stack frame is.
-     */
-    bool
-    StackTrace::decodePrologue(Addr sp, Addr callpc, Addr func,
-                               int &size, Addr &ra)
-    {
-        return false;
-    }
+    FSTranslatingPortProxy &vp = tc->getVirtProxy();
+    pd = vp.readGtoH<uint16_t>(task + pid_off);
+
+    return pd;
+}
+
+std::string
+ProcessInfo::name(Addr ksp) const
+{
+    Addr task = this->task(ksp);
+    if (!task)
+        return "unknown";
+
+    char comm[256];
+    CopyStringOut(tc, comm, task + name_off, sizeof(comm));
+    if (!comm[0])
+        return "startup";
+
+    return comm;
+}
+
+StackTrace::StackTrace()
+    : tc(0), stack(64)
+{
+}
+
+StackTrace::StackTrace(ThreadContext *_tc, const StaticInstPtr &inst)
+    : tc(0), stack(64)
+{
+    trace(_tc, inst);
+}
+
+StackTrace::~StackTrace()
+{
+}
+
+void
+StackTrace::trace(ThreadContext *_tc, bool is_call)
+{
+}
+
+bool
+StackTrace::isEntry(Addr addr)
+{
+    return false;
+}
+
+bool
+StackTrace::decodeStack(MachInst inst, int &disp)
+{
+    return false;
+}
+
+bool
+StackTrace::decodeSave(MachInst inst, int &reg, int &disp)
+{
+    return false;
+}
+
+/*
+ * Decode the function prologue for the function we're in, and note
+ * which registers are stored where, and how large the stack frame is.
+ */
+bool
+StackTrace::decodePrologue(Addr sp, Addr callpc, Addr func,
+                           int &size, Addr &ra)
+{
+    return false;
+}
 
 #if TRACING_ON
-    void
-    StackTrace::dump()
-    {
-        DPRINTFN("------ Stack ------\n");
+void
+StackTrace::dump()
+{
+    DPRINTFN("------ Stack ------\n");
 
-        DPRINTFN(" Not implemented\n");
-    }
+    DPRINTFN(" Not implemented\n");
+}
 #endif
 }
