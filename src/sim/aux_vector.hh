@@ -41,22 +41,20 @@ class AuxVector
 {
   public:
     AuxVector() = default;
-    AuxVector(IntType type, IntType val);
+    AuxVector(IntType _type, IntType _val) : type(_type), val(_val) {}
 
-    IntType const& getAuxType() const { return _auxType; }
-    IntType const& getAuxVal() const { return _auxVal; }
-    IntType const& getHostAuxType() const { return _auxHostType; }
-    IntType const& getHostAuxVal() const { return _auxHostVal; }
-
-    void setAuxType(IntType type);
-    void setAuxVal(IntType val);
-
-  private:
-    IntType _auxType = 0;
-    IntType _auxVal = 0;
-    IntType _auxHostType = 0;
-    IntType _auxHostVal = 0;
+    IntType type = 0;
+    IntType val = 0;
 };
+
+template<class IntType>
+inline AuxVector<IntType>
+swap_byte(AuxVector<IntType> av)
+{
+    av.type = swap_byte(av.type);
+    av.val = swap_byte(av.val);
+    return av;
+}
 
 enum AuxiliaryVectorType {
     M5_AT_NULL = 0,        // End of vector.
