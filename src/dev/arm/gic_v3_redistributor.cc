@@ -830,38 +830,40 @@ Gicv3Redistributor::update()
     }
 
     // Check LPIs
-    const uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
-    char lpi_pending_table[largest_lpi_id / 8];
-    ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
-    tc->getPhysProxy().readBlob(lpiPendingTablePtr,
-                                (uint8_t *) lpi_pending_table,
-                                sizeof(lpi_pending_table));
+    if (EnableLPIs) {
+        const uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
+        char lpi_pending_table[largest_lpi_id / 8];
+        ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
+        tc->getPhysProxy().readBlob(lpiPendingTablePtr,
+                                    (uint8_t *) lpi_pending_table,
+                                    sizeof(lpi_pending_table));
 
-    for (int lpi_id = SMALLEST_LPI_ID; lpi_id < largest_lpi_id;
-         lpi_id++) {
-        uint32_t lpi_pending_entry_byte = lpi_id / 8;
-        uint8_t lpi_pending_entry_bit_position = lpi_id % 8;
-        bool lpi_is_pending = lpi_pending_table[lpi_pending_entry_byte] &
-                              1 << lpi_pending_entry_bit_position;
-        uint32_t lpi_configuration_entry_index = lpi_id - SMALLEST_LPI_ID;
-        bool lpi_is_enable =
-            lpiConfigurationTable[lpi_configuration_entry_index].enable;
-        // LPIs are always Non-secure Group 1 interrupts,
-        // in a system where two Security states are enabled.
-        Gicv3::GroupId lpi_group = Gicv3::G1NS;
-        bool group_enabled = distributor->groupEnabled(lpi_group);
+        for (int lpi_id = SMALLEST_LPI_ID; lpi_id < largest_lpi_id;
+             lpi_id++) {
+            uint32_t lpi_pending_entry_byte = lpi_id / 8;
+            uint8_t lpi_pending_entry_bit_position = lpi_id % 8;
+            bool lpi_is_pending = lpi_pending_table[lpi_pending_entry_byte] &
+                                  1 << lpi_pending_entry_bit_position;
+            uint32_t lpi_configuration_entry_index = lpi_id - SMALLEST_LPI_ID;
+            bool lpi_is_enable =
+                lpiConfigurationTable[lpi_configuration_entry_index].enable;
+            // LPIs are always Non-secure Group 1 interrupts,
+            // in a system where two Security states are enabled.
+            Gicv3::GroupId lpi_group = Gicv3::G1NS;
+            bool group_enabled = distributor->groupEnabled(lpi_group);
 
-        if (lpi_is_pending && lpi_is_enable && group_enabled) {
-            uint8_t lpi_priority =
-                lpiConfigurationTable[lpi_configuration_entry_index].priority;
+            if (lpi_is_pending && lpi_is_enable && group_enabled) {
+                uint8_t lpi_priority =
+                    lpiConfigurationTable[lpi_configuration_entry_index].priority;
 
-            if ((lpi_priority < cpuInterface->hppi.prio) ||
-                (lpi_priority == cpuInterface->hppi.prio &&
-                 lpi_id < cpuInterface->hppi.intid)) {
-                cpuInterface->hppi.intid = lpi_id;
-                cpuInterface->hppi.prio = lpi_priority;
-                cpuInterface->hppi.group = lpi_group;
-                new_hppi = true;
+                if ((lpi_priority < cpuInterface->hppi.prio) ||
+                    (lpi_priority == cpuInterface->hppi.prio &&
+                     lpi_id < cpuInterface->hppi.intid)) {
+                    cpuInterface->hppi.intid = lpi_id;
+                    cpuInterface->hppi.prio = lpi_priority;
+                    cpuInterface->hppi.group = lpi_group;
+                    new_hppi = true;
+                }
             }
         }
     }
