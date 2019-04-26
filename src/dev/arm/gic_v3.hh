@@ -141,6 +141,10 @@ class Gicv3 : public BaseGic
 
     Gicv3Redistributor *
     getRedistributorByAffinity(uint32_t affinity) const;
+
+    Gicv3Redistributor *
+    getRedistributorByAddr(Addr address) const;
+
     void postInt(uint32_t cpu, ArmISA::InterruptTypes int_type);
 };
 
