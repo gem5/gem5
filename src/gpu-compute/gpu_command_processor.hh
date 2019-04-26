@@ -45,6 +45,7 @@
 #ifndef __DEV_HSA_GPU_COMMAND_PROCESSOR_HH__
 #define __DEV_HSA_GPU_COMMAND_PROCESSOR_HH__
 
+#include "debug/GPUCommandProc.hh"
 #include "dev/hsa/hsa_device.hh"
 #include "dev/hsa/hsa_signal.hh"
 #include "gpu-compute/gpu_compute_driver.hh"
@@ -58,6 +59,7 @@ class GPUCommandProcessor : public HSADevice
 {
   public:
     typedef GPUCommandProcessorParams Params;
+    typedef std::function<void(const uint64_t &)> HsaSignalCallbackFunction;
 
     GPUCommandProcessor() = delete;
     GPUCommandProcessor(const Params &p);
@@ -86,7 +88,9 @@ class GPUCommandProcessor : public HSADevice
     AddrRangeList getAddrRanges() const override;
     System *system();
 
-    void updateHsaSignal(Addr signal_handle, uint64_t signal_value) override;
+    void updateHsaSignal(Addr signal_handle, uint64_t signal_value,
+                         HsaSignalCallbackFunction function =
+                            [] (const uint64_t &) { });
 
     uint64_t functionalReadHsaSignal(Addr signal_handle) override;
 
@@ -112,6 +116,33 @@ class GPUCommandProcessor : public HSADevice
 
     void initABI(HSAQueueEntry *task);
 
+
+    /**
+     * Wraps a std::function object in a DmaCallback.  Much cleaner than
+     * defining a bunch of callback objects for each desired behavior when a
+     * DMA completes.  Contains a built in templated buffer that can be used
+     * for DMA temporary storage.
+     */
+    template <class T>
+    class CPDmaCallback : public DmaCallback
+    {
+        std::function<void(const T &)> _function;
+
+        virtual void
+        process() override
+        {
+            _function(dmaBuffer);
+        }
+
+      public:
+        T dmaBuffer;
+
+        CPDmaCallback(const std::function<void(const T &)> &function,
+                      T dma_buffer_value = 0)
+          : DmaCallback(), _function(function), dmaBuffer(dma_buffer_value)
+        { }
+    };
+
     /**
      * Perform a DMA read of the read_dispatch_id_field_base_byte_offset
      * field, which follows directly after the read_dispatch_id (the read
@@ -124,46 +155,30 @@ class GPUCommandProcessor : public HSADevice
      * to get them based on their known relative position to the read dispatch
      * ID.
      */
-    class ReadDispIdOffsetDmaEvent : public DmaCallback
+    void
+    ReadDispIdOffsetDmaEvent(HSAQueueEntry *task,
+                             const uint32_t &readDispIdOffset)
     {
-      public:
-        ReadDispIdOffsetDmaEvent(GPUCommandProcessor &gpu_cmd_proc,
-                                 HSAQueueEntry *task)
-            : DmaCallback(), readDispIdOffset(0), gpuCmdProc(gpu_cmd_proc),
-              _task(task)
-        {
-        }
+        /**
+         * Now that the read pointer's offset from the base of
+         * the MQD is known, we can use that to calculate the
+         * the address of the MQD itself, the dispatcher will
+         * DMA that into the HSAQueueEntry when a kernel is
+         * launched.
+         */
+        task->hostAMDQueueAddr = hsaPP->getQueueDesc(
+            task->queueId())->hostReadIndexPtr - readDispIdOffset;
 
-        void
-        process() override
-        {
-            /**
-             * Now that the read pointer's offset from the base of
-             * the MQD is known, we can use that to calculate the
-             * the address of the MQD itself, the dispatcher will
-             * DMA that into the HSAQueueEntry when a kernel is
-             * launched.
-             */
-            _task->hostAMDQueueAddr
-                = gpuCmdProc.hsaPP->getQueueDesc(_task->queueId())
-                    ->hostReadIndexPtr - readDispIdOffset;
+        /**
+         * DMA a copy of the MQD into the task. some fields of
+         * the MQD will be used to initialize register state in VI
+         */
+        auto *mqdDmaEvent = new CPDmaCallback<int>(
+            [ = ] (const int &) { MQDDmaEvent(task); });
 
-            /**
-             * DMA a copy of the MQD into the task. Some fields of
-             * the MQD will be used to initialize register state.
-             */
-            auto *mqdDmaEvent = new MQDDmaEvent(gpuCmdProc, _task);
-            gpuCmdProc.dmaReadVirt(_task->hostAMDQueueAddr,
-                                   sizeof(_amd_queue_t), mqdDmaEvent,
-                                   &_task->amdQueue);
-        }
-
-        uint32_t readDispIdOffset;
-
-      private:
-        GPUCommandProcessor &gpuCmdProc;
-        HSAQueueEntry *_task;
-    };
+        dmaReadVirt(task->hostAMDQueueAddr,
+                    sizeof(_amd_queue_t), mqdDmaEvent, &task->amdQueue);
+    }
 
     /**
      * Perform a DMA read of the MQD that corresponds to a hardware
@@ -172,24 +187,94 @@ class GPUCommandProcessor : public HSADevice
      * a dispatch packet, which is needed to initialize register
      * state.
      */
-    class MQDDmaEvent : public DmaCallback
+     void
+     MQDDmaEvent(HSAQueueEntry *task)
+     {
+        /**
+         *  dGPUs on any version of ROCm and APUs starting with ROCm 2.2
+         *  can perform lazy allocation of private segment (scratch) memory,
+         *  where the runtime will intentianally underallocate scratch
+         *  resources to save framebuffer (or system on APU) memory.
+         *  If we don't have enough scratch memory to launch this kernel,
+         *  we need to raise a recoverable error code to the runtime by
+         *  asserting queue_inactive_signal for the queue.  The runtime will
+         *  then try to allocate more scratch and reset this signal.  When
+         *  the signal is reset we should check that the runtime was
+         *  successful and then proceed to launch the kernel.
+         */
+        if (task->privMemPerItem() >
+            task->amdQueue.compute_tmpring_size_wavesize * 1024) {
+            // TODO: Raising this signal will potentially nuke scratch
+            // space for in-flight kernels that were launched from this
+            // queue.  We need to drain all kernels and deschedule the
+            // queue before raising this signal. For now, just assert if
+            // there are any in-flight kernels and tell the user that this
+            // feature still needs to be implemented.
+            fatal_if(hsaPP->inFlightPkts(task->queueId()) > 1,
+                        "Needed more scratch, but kernels are in flight for "
+                        "this queue and it is unsafe to reallocate scratch. "
+                        "We need to implement additional intelligence in the "
+                        "hardware scheduling logic to support CP-driven "
+                        "queue draining and scheduling.");
+            DPRINTF(GPUCommandProc, "Not enough scratch space to launch "
+                    "kernel (%x available, %x requested bytes per "
+                    "workitem). Asking host runtime to allocate more "
+                    "space.\n",
+                    task->amdQueue.compute_tmpring_size_wavesize * 1024,
+                    task->privMemPerItem());
+
+            updateHsaSignal(task->amdQueue.queue_inactive_signal.handle, 1,
+                            [ = ] (const uint64_t &dma_buffer)
+                                { WaitScratchDmaEvent(task, dma_buffer); });
+
+        } else {
+            DPRINTF(GPUCommandProc, "Sufficient scratch space, launching "
+                    "kernel (%x available, %x requested bytes per "
+                    "workitem).\n",
+                    task->amdQueue.compute_tmpring_size_wavesize * 1024,
+                    task->privMemPerItem());
+            dispatchPkt(task);
+        }
+    }
+
+    /**
+     * Poll on queue_inactive signal until the runtime can get around to
+     * taking care of our lack of scratch space.
+     */
+    void
+    WaitScratchDmaEvent(HSAQueueEntry *task, const uint64_t &dmaBuffer)
     {
-      public:
-        MQDDmaEvent(GPUCommandProcessor &gpu_cmd_proc, HSAQueueEntry *task)
-            : DmaCallback(), gpuCmdProc(gpu_cmd_proc), _task(task)
-        {
-        }
+        if (dmaBuffer == 0) {
+            DPRINTF(GPUCommandProc, "Host scratch allocation complete. "
+                    "Attempting to re-read MQD\n");
+            /**
+            * Runtime will have updated the MQD to give us more scratch
+            * space.  Read it out and continue to pester the runtime until
+            * we get all that we need to launch.
+            *
+            * TODO: Technically only need to update private segment fields
+            * since other MQD entries won't change since we last read them.
+            */
+            auto cb = new CPDmaCallback<int>(
+                [ = ] (const int &) { MQDDmaEvent(task); });
 
-        void
-        process() override
-        {
-            gpuCmdProc.dispatchPkt(_task);
+            dmaReadVirt(task->hostAMDQueueAddr, sizeof(_amd_queue_t), cb,
+                        &task->amdQueue);
+        } else {
+            /**
+            * Poll until runtime signals us that scratch space has been
+            * allocated.
+            */
+            Addr value_addr = getHsaSignalValueAddr(
+                task->amdQueue.queue_inactive_signal.handle);
+            DPRINTF(GPUCommandProc, "Polling queue inactive signal at "
+                    "%p.\n", value_addr);
+            auto cb = new CPDmaCallback<uint64_t>(
+                [ = ] (const uint64_t &dma_buffer)
+                { WaitScratchDmaEvent(task, dma_buffer); } );
+            dmaReadVirt(value_addr, sizeof(Addr), cb, &cb->dmaBuffer);
         }
-
-      private:
-        GPUCommandProcessor &gpuCmdProc;
-        HSAQueueEntry *_task;
-    };
+    }
 };
 
 #endif // __DEV_HSA_GPU_COMMAND_PROCESSOR_HH__

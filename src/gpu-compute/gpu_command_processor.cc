@@ -157,7 +157,8 @@ GPUCommandProcessor::functionalReadHsaSignal(Addr signal_handle)
 }
 
 void
-GPUCommandProcessor::updateHsaSignal(Addr signal_handle, uint64_t signal_value)
+GPUCommandProcessor::updateHsaSignal(Addr signal_handle, uint64_t signal_value,
+                                     HsaSignalCallbackFunction function)
 {
     // The signal value is aligned 8 bytes from
     // the actual handle in the runtime
@@ -166,10 +167,9 @@ GPUCommandProcessor::updateHsaSignal(Addr signal_handle, uint64_t signal_value)
     Addr event_addr = getHsaSignalEventAddr(signal_handle);
     DPRINTF(GPUCommandProc, "Triggering completion signal: %x!\n", value_addr);
 
-    Addr *new_signal = new Addr;
-    *new_signal = signal_value;
+    auto cb = new CPDmaCallback<uint64_t>(function, signal_value);
 
-    dmaWriteVirt(value_addr, sizeof(Addr), nullptr, new_signal, 0);
+    dmaWriteVirt(value_addr, sizeof(Addr), cb, &cb->dmaBuffer, 0);
 
     auto tc = system()->threads[0];
     ConstVPtr<uint64_t> mailbox_ptr(mailbox_addr, tc);
@@ -297,14 +297,15 @@ GPUCommandProcessor::signalWakeupEvent(uint32_t event_id)
 void
 GPUCommandProcessor::initABI(HSAQueueEntry *task)
 {
-    auto *readDispIdOffEvent = new ReadDispIdOffsetDmaEvent(*this, task);
+    auto cb = new CPDmaCallback<uint32_t>(
+        [ = ] (const uint32_t &readDispIdOffset)
+            { ReadDispIdOffsetDmaEvent(task, readDispIdOffset); }, 0);
 
     Addr hostReadIdxPtr
         = hsaPP->getQueueDesc(task->queueId())->hostReadIndexPtr;
 
     dmaReadVirt(hostReadIdxPtr + sizeof(hostReadIdxPtr),
-        sizeof(readDispIdOffEvent->readDispIdOffset), readDispIdOffEvent,
-            &readDispIdOffEvent->readDispIdOffset);
+        sizeof(uint32_t), cb, &cb->dmaBuffer);
 }
 
 System*
