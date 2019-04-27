@@ -296,11 +296,11 @@ class Gicv3CPUInterface : public ArmISA::BaseISADevice, public Serializable
     uint32_t getHPPIR1() const;
     int getHPPVILR() const;
     bool groupEnabled(Gicv3::GroupId group) const;
-    uint32_t groupPriorityMask(Gicv3::GroupId group) const;
+    uint32_t groupPriorityMask(Gicv3::GroupId group);
     bool haveEL(ArmISA::ExceptionLevel el) const;
     int highestActiveGroup() const;
     uint8_t highestActivePriority() const;
-    bool hppiCanPreempt() const;
+    bool hppiCanPreempt();
     bool hppviCanPreempt(int lrIdx) const;
     bool inSecureState() const;
     ArmISA::InterruptTypes intSignalType(Gicv3::GroupId group) const;
