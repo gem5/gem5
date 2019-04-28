@@ -539,7 +539,6 @@ class CheckerCPU : public BaseCPU, public ExecContext
     void setStCondFailures(unsigned int sc_failures) override {}
     /////////////////////////////////////////////////////
 
-    Fault hwrei() override { return thread->hwrei(); }
     bool simPalCheck(int palFunc) override
     { return thread->simPalCheck(palFunc); }
     void wakeup(ThreadID tid) override { }

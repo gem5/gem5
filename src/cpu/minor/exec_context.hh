@@ -365,16 +365,6 @@ class ExecContext : public ::ExecContext
         return thread.setMiscReg(reg.index(), val);
     }
 
-    Fault
-    hwrei() override
-    {
-#if THE_ISA == ALPHA_ISA
-        return thread.hwrei();
-#else
-        return NoFault;
-#endif
-    }
-
     bool
     simPalCheck(int palFunc) override
     {

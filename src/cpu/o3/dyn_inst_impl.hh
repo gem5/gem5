@@ -185,34 +185,6 @@ BaseO3DynInst<Impl>::completeAcc(PacketPtr pkt)
 }
 
 template <class Impl>
-Fault
-BaseO3DynInst<Impl>::hwrei()
-{
-#if THE_ISA == ALPHA_ISA
-    // Can only do a hwrei when in pal mode.
-    if (!(this->instAddr() & 0x3))
-        return std::make_shared<AlphaISA::UnimplementedOpcodeFault>();
-
-    // Set the next PC based on the value of the EXC_ADDR IPR.
-    AlphaISA::PCState pc = this->pcState();
-    pc.npc(this->cpu->readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR,
-                                          this->threadNumber));
-    this->pcState(pc);
-    if (CPA::available()) {
-        ThreadContext *tc = this->cpu->tcBase(this->threadNumber);
-        CPA::cpa()->swAutoBegin(tc, this->nextInstAddr());
-    }
-
-    // Tell CPU to clear any state it needs to if a hwrei is taken.
-    this->cpu->hwrei(this->threadNumber);
-#else
-
-#endif
-    // FIXME: XXX check for interrupts? XXX
-    return NoFault;
-}
-
-template <class Impl>
 void
 BaseO3DynInst<Impl>::trap(const Fault &fault)
 {

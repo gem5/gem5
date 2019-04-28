@@ -248,8 +248,6 @@ class BaseO3DynInst : public BaseDynInst<Impl>
             }
         }
     }
-    /** Calls hardware return from error interrupt. */
-    Fault hwrei() override;
     /** Traps to handle specified fault. */
     void trap(const Fault &fault);
     bool simPalCheck(int palFunc) override;

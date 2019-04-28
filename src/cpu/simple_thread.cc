@@ -216,11 +216,6 @@ SimpleThread::copyArchRegs(ThreadContext *src_tc)
 // The following methods are defined in src/arch/alpha/ev5.cc for
 // Alpha.
 #if THE_ISA != ALPHA_ISA
-Fault
-SimpleThread::hwrei()
-{
-    return NoFault;
-}
 
 bool
 SimpleThread::simPalCheck(int palFunc)

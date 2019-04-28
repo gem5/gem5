@@ -918,24 +918,6 @@ FullO3CPU<Impl>::removeThread(ThreadID tid)
 }
 
 template <class Impl>
-Fault
-FullO3CPU<Impl>::hwrei(ThreadID tid)
-{
-#if THE_ISA == ALPHA_ISA
-    // Need to clear the lock flag upon returning from an interrupt.
-    this->setMiscRegNoEffect(AlphaISA::MISCREG_LOCKFLAG, false, tid);
-
-    auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(
-            this->thread[tid]->kernelStats);
-    assert(stats);
-    stats->hwrei();
-
-    // FIXME: XXX check for interrupts? XXX
-#endif
-    return NoFault;
-}
-
-template <class Impl>
 bool
 FullO3CPU<Impl>::simPalCheck(int palFunc, ThreadID tid)
 {

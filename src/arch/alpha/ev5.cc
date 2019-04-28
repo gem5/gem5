@@ -485,28 +485,6 @@ copyIprs(ThreadContext *src, ThreadContext *dest)
 
 using namespace AlphaISA;
 
-Fault
-SimpleThread::hwrei()
-{
-    auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(kernelStats);
-    assert(stats || !kernelStats);
-
-    PCState pc = pcState();
-    if (!(pc.pc() & 0x3))
-        return std::make_shared<UnimplementedOpcodeFault>();
-
-    pc.npc(readMiscRegNoEffect(IPR_EXC_ADDR));
-    pcState(pc);
-
-    CPA::cpa()->swAutoBegin(this, pc.npc());
-
-    if (stats)
-        stats->hwrei();
-
-    // FIXME: XXX check for interrupts? XXX
-    return NoFault;
-}
-
 /**
  * Check for special simulator handling of specific PAL calls.
  * If return value is false, actual PAL call will be suppressed.
