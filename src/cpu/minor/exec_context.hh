@@ -441,51 +441,6 @@ class ExecContext : public ::ExecContext
 
     BaseCPU *getCpuPtr() { return &cpu; }
 
-    /* MIPS: other thread register reading/writing */
-    RegVal
-    readRegOtherThread(const RegId &reg, ThreadID tid=InvalidThreadID)
-    {
-        SimpleThread *other_thread = (tid == InvalidThreadID
-            ? &thread : cpu.threads[tid]);
-
-        switch (reg.classValue()) {
-            case IntRegClass:
-                return other_thread->readIntReg(reg.index());
-                break;
-            case FloatRegClass:
-                return other_thread->readFloatReg(reg.index());
-                break;
-            case MiscRegClass:
-                return other_thread->readMiscReg(reg.index());
-            default:
-                panic("Unexpected reg class! (%s)",
-                      reg.className());
-                return 0;
-        }
-    }
-
-    void
-    setRegOtherThread(const RegId &reg, RegVal val,
-                      ThreadID tid=InvalidThreadID)
-    {
-        SimpleThread *other_thread = (tid == InvalidThreadID
-            ? &thread : cpu.threads[tid]);
-
-        switch (reg.classValue()) {
-            case IntRegClass:
-                return other_thread->setIntReg(reg.index(), val);
-                break;
-            case FloatRegClass:
-                return other_thread->setFloatReg(reg.index(), val);
-                break;
-            case MiscRegClass:
-                return other_thread->setMiscReg(reg.index(), val);
-            default:
-                panic("Unexpected reg class! (%s)",
-                      reg.className());
-        }
-    }
-
   public:
     // monitor/mwait funtions
     void armMonitor(Addr address) override

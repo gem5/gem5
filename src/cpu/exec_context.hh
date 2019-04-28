@@ -353,20 +353,6 @@ class ExecContext {
     virtual AddressMonitor *getAddrMonitor() = 0;
 
     /** @} */
-
-    /**
-     * @{
-     * @name MIPS-Specific Interfaces
-     */
-
-#if THE_ISA == MIPS_ISA
-    virtual RegVal readRegOtherThread(const RegId &reg,
-                                       ThreadID tid=InvalidThreadID) = 0;
-    virtual void setRegOtherThread(const RegId& reg, RegVal val,
-                                   ThreadID tid=InvalidThreadID) = 0;
-#endif
-
-    /** @} */
 };
 
 #endif // __CPU_EXEC_CONTEXT_HH__

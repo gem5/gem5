@@ -299,17 +299,6 @@ class ThreadContext
 
     virtual RegId flattenRegId(const RegId& regId) const = 0;
 
-    virtual RegVal
-    readRegOtherThread(const RegId& misc_reg, ThreadID tid)
-    {
-        return 0;
-    }
-
-    virtual void
-    setRegOtherThread(const RegId& misc_reg, RegVal val, ThreadID tid)
-    {
-    }
-
     // Also not necessarily the best location for these two.  Hopefully will go
     // away once we decide upon where st cond failures goes.
     virtual unsigned readStCondFailures() const = 0;

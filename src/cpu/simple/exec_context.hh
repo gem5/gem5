@@ -566,25 +566,6 @@ class SimpleExecContext : public ExecContext {
     {
         return cpu->getCpuAddrMonitor(thread->threadId());
     }
-
-#if THE_ISA == MIPS_ISA
-    RegVal
-    readRegOtherThread(const RegId& reg, ThreadID tid=InvalidThreadID)
-        override
-    {
-        panic("Simple CPU models do not support multithreaded "
-              "register access.");
-    }
-
-    void
-    setRegOtherThread(const RegId& reg, RegVal val,
-                      ThreadID tid=InvalidThreadID) override
-    {
-        panic("Simple CPU models do not support multithreaded "
-              "register access.");
-    }
-#endif
-
 };
 
 #endif // __CPU_EXEC_CONTEXT_HH__
