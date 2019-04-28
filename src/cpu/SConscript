@@ -30,6 +30,48 @@
 
 Import('*')
 
+DebugFlag('Activity')
+DebugFlag('Commit')
+DebugFlag('Context')
+DebugFlag('Decode')
+DebugFlag('DynInst')
+DebugFlag('ExecEnable',
+        'Filter: Enable exec tracing (no tracing without this)')
+DebugFlag('ExecCPSeq', 'Format: Instruction sequence number')
+DebugFlag('ExecEffAddr', 'Format: Include effective address')
+DebugFlag('ExecFaulting', 'Trace faulting instructions')
+DebugFlag('ExecFetchSeq', 'Format: Fetch sequence number')
+DebugFlag('ExecOpClass', 'Format: Include operand class')
+DebugFlag('ExecRegDelta')
+DebugFlag('ExecResult', 'Format: Include results from execution')
+DebugFlag('ExecSymbol', 'Format: Try to include symbol names')
+DebugFlag('ExecThread', 'Format: Include thread ID in trace')
+DebugFlag('ExecTicks', 'Format: Include tick count')
+DebugFlag('ExecMicro', 'Filter: Include microops')
+DebugFlag('ExecMacro', 'Filter: Include macroops')
+DebugFlag('ExecUser', 'Filter: Trace user mode instructions')
+DebugFlag('ExecKernel', 'Filter: Trace kernel mode instructions')
+DebugFlag('ExecAsid', 'Format: Include ASID in trace')
+DebugFlag('ExecFlags', 'Format: Include instruction flags in trace')
+DebugFlag('Fetch')
+DebugFlag('IntrControl')
+DebugFlag('O3PipeView')
+DebugFlag('PCEvent')
+DebugFlag('Quiesce')
+DebugFlag('Mwait')
+
+CompoundFlag('ExecAll', [ 'ExecEnable', 'ExecCPSeq', 'ExecEffAddr',
+    'ExecFaulting', 'ExecFetchSeq', 'ExecOpClass', 'ExecRegDelta',
+    'ExecResult', 'ExecSymbol', 'ExecThread',
+    'ExecTicks', 'ExecMicro', 'ExecMacro', 'ExecUser', 'ExecKernel',
+    'ExecAsid', 'ExecFlags' ])
+CompoundFlag('Exec', [ 'ExecEnable', 'ExecTicks', 'ExecOpClass', 'ExecThread',
+    'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro', 'ExecMacro',
+    'ExecFaulting', 'ExecUser', 'ExecKernel' ])
+CompoundFlag('ExecNoTicks', [ 'ExecEnable', 'ExecOpClass', 'ExecThread',
+    'ExecEffAddr', 'ExecResult', 'ExecMicro', 'ExecMacro', 'ExecFaulting',
+    'ExecUser', 'ExecKernel' ])
+
 if env['TARGET_ISA'] == 'null':
     SimObject('IntrControl.py')
     Source('intr_control_noisa.cc')
@@ -72,44 +114,3 @@ SimObject('StaticInstFlags.py')
 Source('checker/cpu.cc')
 Source('dummy_checker.cc')
 DebugFlag('Checker')
-
-DebugFlag('Activity')
-DebugFlag('Commit')
-DebugFlag('Context')
-DebugFlag('Decode')
-DebugFlag('DynInst')
-DebugFlag('ExecEnable', 'Filter: Enable exec tracing (no tracing without this)')
-DebugFlag('ExecCPSeq', 'Format: Instruction sequence number')
-DebugFlag('ExecEffAddr', 'Format: Include effective address')
-DebugFlag('ExecFaulting', 'Trace faulting instructions')
-DebugFlag('ExecFetchSeq', 'Format: Fetch sequence number')
-DebugFlag('ExecOpClass', 'Format: Include operand class')
-DebugFlag('ExecRegDelta')
-DebugFlag('ExecResult', 'Format: Include results from execution')
-DebugFlag('ExecSymbol', 'Format: Try to include symbol names')
-DebugFlag('ExecThread', 'Format: Include thread ID in trace')
-DebugFlag('ExecTicks', 'Format: Include tick count')
-DebugFlag('ExecMicro', 'Filter: Include microops')
-DebugFlag('ExecMacro', 'Filter: Include macroops')
-DebugFlag('ExecUser', 'Filter: Trace user mode instructions')
-DebugFlag('ExecKernel', 'Filter: Trace kernel mode instructions')
-DebugFlag('ExecAsid', 'Format: Include ASID in trace')
-DebugFlag('ExecFlags', 'Format: Include instruction flags in trace')
-DebugFlag('Fetch')
-DebugFlag('IntrControl')
-DebugFlag('O3PipeView')
-DebugFlag('PCEvent')
-DebugFlag('Quiesce')
-DebugFlag('Mwait')
-
-CompoundFlag('ExecAll', [ 'ExecEnable', 'ExecCPSeq', 'ExecEffAddr',
-    'ExecFaulting', 'ExecFetchSeq', 'ExecOpClass', 'ExecRegDelta',
-    'ExecResult', 'ExecSymbol', 'ExecThread',
-    'ExecTicks', 'ExecMicro', 'ExecMacro', 'ExecUser', 'ExecKernel',
-    'ExecAsid', 'ExecFlags' ])
-CompoundFlag('Exec', [ 'ExecEnable', 'ExecTicks', 'ExecOpClass', 'ExecThread',
-    'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro', 'ExecMacro',
-    'ExecFaulting', 'ExecUser', 'ExecKernel' ])
-CompoundFlag('ExecNoTicks', [ 'ExecEnable', 'ExecOpClass', 'ExecThread',
-    'ExecEffAddr', 'ExecResult', 'ExecMicro', 'ExecMacro', 'ExecFaulting',
-    'ExecUser', 'ExecKernel' ])
