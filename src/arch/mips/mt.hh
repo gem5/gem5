@@ -47,9 +47,72 @@
 #include "base/bitfield.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
+#include "cpu/exec_context.hh"
 
 namespace MipsISA
 {
+
+static inline RegVal
+readRegOtherThread(ThreadContext *tc, const RegId &reg,
+                   ThreadID tid=InvalidThreadID)
+{
+    ThreadContext *otc = nullptr;
+    if (tid != InvalidThreadID)
+        otc = tc->getCpuPtr()->getContext(tid);
+    else
+        otc = tc;
+
+    switch (reg.classValue()) {
+      case IntRegClass:
+        return otc->readIntReg(reg.index());
+        break;
+      case FloatRegClass:
+        return otc->readFloatReg(reg.index());
+        break;
+      case MiscRegClass:
+        return otc->readMiscReg(reg.index());
+      default:
+        panic("Unexpected reg class! (%s)", reg.className());
+    }
+}
+
+static inline void
+setRegOtherThread(ThreadContext *tc, const RegId& reg, RegVal val,
+                  ThreadID tid=InvalidThreadID)
+{
+    ThreadContext *otc = nullptr;
+    if (tid != InvalidThreadID)
+        otc = tc->getCpuPtr()->getContext(tid);
+    else
+        otc = tc;
+
+    switch (reg.classValue()) {
+      case IntRegClass:
+        return otc->setIntReg(reg.index(), val);
+        break;
+      case FloatRegClass:
+        return otc->setFloatReg(reg.index(), val);
+        break;
+      case MiscRegClass:
+        return otc->setMiscReg(reg.index(), val);
+      default:
+        panic("Unexpected reg class! (%s)", reg.className());
+    }
+}
+
+static inline RegVal
+readRegOtherThread(ExecContext *xc, const RegId &reg,
+                   ThreadID tid=InvalidThreadID)
+{
+    return readRegOtherThread(xc->tcBase(), reg, tid);
+}
+
+static inline void
+setRegOtherThread(ExecContext *xc, const RegId& reg, RegVal val,
+                  ThreadID tid=InvalidThreadID)
+{
+    setRegOtherThread(xc->tcBase(), reg, val, tid);
+}
 
 template <class TC>
 inline unsigned
@@ -113,25 +176,25 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
     int success = 0;
     for (ThreadID tid = 0; tid < num_threads && success == 0; tid++) {
         TCBindReg tidTCBind =
-            tc->readRegOtherThread(RegId(MiscRegClass, MISCREG_TC_BIND), tid);
+            readRegOtherThread(tc, RegId(MiscRegClass, MISCREG_TC_BIND), tid);
         TCBindReg tcBind = tc->readMiscRegNoEffect(MISCREG_TC_BIND);
 
         if (tidTCBind.curVPE == tcBind.curVPE) {
 
             TCStatusReg tidTCStatus =
-                tc->readRegOtherThread(RegId(MiscRegClass, MISCREG_TC_STATUS),
+                readRegOtherThread(tc, RegId(MiscRegClass, MISCREG_TC_STATUS),
                                        tid);
 
             TCHaltReg tidTCHalt =
-                tc->readRegOtherThread(RegId(MiscRegClass, MISCREG_TC_HALT),
+                readRegOtherThread(tc, RegId(MiscRegClass, MISCREG_TC_HALT),
                                        tid);
 
             if (tidTCStatus.da == 1 && tidTCHalt.h == 0 &&
                 tidTCStatus.a == 0 && success == 0) {
 
-                tc->setRegOtherThread(RegId(MiscRegClass, MISCREG_TC_RESTART),
+                setRegOtherThread(tc, RegId(MiscRegClass, MISCREG_TC_RESTART),
                                       Rs, tid);
-                tc->setRegOtherThread(RegId(IntRegClass, Rd_bits), Rt, tid);
+                setRegOtherThread(tc, RegId(IntRegClass, Rd_bits), Rt, tid);
 
                 StatusReg status = tc->readMiscReg(MISCREG_STATUS);
                 TCStatusReg tcStatus = tc->readMiscReg(MISCREG_TC_STATUS);
@@ -150,7 +213,7 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
                 tidTCStatus.asid = tcStatus.asid;
 
                 // Write Status Register
-                tc->setRegOtherThread(RegId(MiscRegClass, MISCREG_TC_STATUS),
+                setRegOtherThread(tc, RegId(MiscRegClass, MISCREG_TC_STATUS),
                                       tidTCStatus, tid);
 
                 // Mark As Successful Fork
@@ -186,13 +249,13 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
 
         for (ThreadID tid = 0; tid < num_threads; tid++) {
             TCStatusReg tidTCStatus =
-                tc->readRegOtherThread(RegId(MiscRegClass, MISCREG_TC_STATUS),
+                readRegOtherThread(tc, RegId(MiscRegClass, MISCREG_TC_STATUS),
                                        tid);
             TCHaltReg tidTCHalt =
-                tc->readRegOtherThread(RegId(MiscRegClass, MISCREG_TC_HALT),
+                readRegOtherThread(tc, RegId(MiscRegClass, MISCREG_TC_HALT),
                                        tid);
             TCBindReg tidTCBind =
-                tc->readRegOtherThread(RegId(MiscRegClass, MISCREG_TC_BIND),
+                readRegOtherThread(tc, RegId(MiscRegClass, MISCREG_TC_BIND),
                                        tid);
 
             if (tidTCBind.curVPE == tcBind.curVPE &&
