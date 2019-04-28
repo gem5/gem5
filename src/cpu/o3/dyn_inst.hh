@@ -250,7 +250,6 @@ class BaseO3DynInst : public BaseDynInst<Impl>
     }
     /** Traps to handle specified fault. */
     void trap(const Fault &fault);
-    bool simPalCheck(int palFunc) override;
 
     /** Emulates a syscall. */
     void syscall(int64_t callnum, Fault *fault) override;

@@ -385,8 +385,6 @@ class FullO3CPU : public BaseO3CPU
     /** Traps to handle given fault. */
     void trap(const Fault &fault, ThreadID tid, const StaticInstPtr &inst);
 
-    bool simPalCheck(int palFunc, ThreadID tid);
-
     /** Check if a change in renaming is needed for vector registers.
      * The vecMode variable is updated and propagated to rename maps.
      *

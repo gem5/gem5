@@ -192,16 +192,6 @@ BaseO3DynInst<Impl>::trap(const Fault &fault)
 }
 
 template <class Impl>
-bool
-BaseO3DynInst<Impl>::simPalCheck(int palFunc)
-{
-#if THE_ISA != ALPHA_ISA
-    panic("simPalCheck called, but PAL only exists in Alpha!\n");
-#endif
-    return this->cpu->simPalCheck(palFunc, this->threadNumber);
-}
-
-template <class Impl>
 void
 BaseO3DynInst<Impl>::syscall(int64_t callnum, Fault *fault)
 {

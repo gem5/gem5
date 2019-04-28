@@ -311,19 +311,6 @@ class ExecContext {
 
     /**
      * @{
-     * @name Alpha-Specific Interfaces
-     */
-
-    /**
-     * Check for special simulator handling of specific PAL calls.  If
-     * return value is false, actual PAL call will be suppressed.
-     */
-    virtual bool simPalCheck(int palFunc) = 0;
-
-    /** @} */
-
-    /**
-     * @{
      * @name ARM-Specific Interfaces
      */
 

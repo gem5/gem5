@@ -181,8 +181,6 @@ class SimpleThread : public ThreadState, public ThreadContext
 
     void dumpFuncProfile() override;
 
-    bool simPalCheck(int palFunc);
-
     /*******************************************
      * ThreadContext interface functions.
      ******************************************/

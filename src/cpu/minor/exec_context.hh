@@ -365,16 +365,6 @@ class ExecContext : public ::ExecContext
         return thread.setMiscReg(reg.index(), val);
     }
 
-    bool
-    simPalCheck(int palFunc) override
-    {
-#if THE_ISA == ALPHA_ISA
-        return thread.simPalCheck(palFunc);
-#else
-        return false;
-#endif
-    }
-
     void
     syscall(int64_t callnum, Fault *fault) override
     {

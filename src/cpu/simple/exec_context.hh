@@ -502,16 +502,6 @@ class SimpleExecContext : public ExecContext {
     /** Returns a pointer to the ThreadContext. */
     ThreadContext *tcBase() override { return thread->getTC(); }
 
-    /**
-     * Check for special simulator handling of specific PAL calls.  If
-     * return value is false, actual PAL call will be suppressed.
-     */
-    bool
-    simPalCheck(int palFunc) override
-    {
-        return thread->simPalCheck(palFunc);
-    }
-
     bool
     readPredicate() const override
     {

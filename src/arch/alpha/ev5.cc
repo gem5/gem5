@@ -482,35 +482,3 @@ copyIprs(ThreadContext *src, ThreadContext *dest)
 }
 
 } // namespace AlphaISA
-
-using namespace AlphaISA;
-
-/**
- * Check for special simulator handling of specific PAL calls.
- * If return value is false, actual PAL call will be suppressed.
- */
-bool
-SimpleThread::simPalCheck(int palFunc)
-{
-    auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(kernelStats);
-    assert(stats || !kernelStats);
-
-    if (stats)
-        stats->callpal(palFunc, this);
-
-    switch (palFunc) {
-      case PAL::halt:
-        halt();
-        if (--System::numSystemsRunning == 0)
-            exitSimLoop("all cpus halted");
-        break;
-
-      case PAL::bpt:
-      case PAL::bugchk:
-        if (system->breakpoint())
-            return false;
-        break;
-    }
-
-    return true;
-}
