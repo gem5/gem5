@@ -44,7 +44,6 @@
 #include "cpu/thread_context.hh"
 
 #include "arch/generic/vec_pred_reg.hh"
-#include "arch/kernel_stats.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"
@@ -52,6 +51,7 @@
 #include "cpu/quiesce_event.hh"
 #include "debug/Context.hh"
 #include "debug/Quiesce.hh"
+#include "kern/kernel_stats.hh"
 #include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
 
@@ -139,7 +139,7 @@ ThreadContext::quiesce()
 
     suspend();
     if (getKernelStats())
-       getKernelStats()->quiesce();
+        getKernelStats()->quiesce();
 }
 
 

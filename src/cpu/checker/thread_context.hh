@@ -52,10 +52,10 @@
 #include "debug/Checker.hh"
 
 class EndQuiesceEvent;
+namespace Kernel {
+    class Statistics;
+};
 namespace TheISA {
-    namespace Kernel {
-        class Statistics;
-    };
     class Decoder;
 };
 
@@ -134,7 +134,7 @@ class CheckerThreadContext : public ThreadContext
 
     System *getSystemPtr() override { return actualTC->getSystemPtr(); }
 
-    TheISA::Kernel::Statistics *
+    ::Kernel::Statistics *
     getKernelStats() override
     {
         return actualTC->getKernelStats();

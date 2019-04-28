@@ -925,7 +925,10 @@ FullO3CPU<Impl>::hwrei(ThreadID tid)
     // Need to clear the lock flag upon returning from an interrupt.
     this->setMiscRegNoEffect(AlphaISA::MISCREG_LOCKFLAG, false, tid);
 
-    this->thread[tid]->kernelStats->hwrei();
+    auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(
+            this->thread[tid]->kernelStats);
+    assert(stats);
+    stats->hwrei();
 
     // FIXME: XXX check for interrupts? XXX
 #endif
@@ -937,9 +940,10 @@ bool
 FullO3CPU<Impl>::simPalCheck(int palFunc, ThreadID tid)
 {
 #if THE_ISA == ALPHA_ISA
-    if (this->thread[tid]->kernelStats)
-        this->thread[tid]->kernelStats->callpal(palFunc,
-                                                this->threadContexts[tid]);
+    auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(
+            this->thread[tid]->kernelStats);
+    if (stats)
+        stats->callpal(palFunc, this->threadContexts[tid]);
 
     switch (palFunc) {
       case PAL::halt:

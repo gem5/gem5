@@ -48,7 +48,6 @@
 #include <vector>
 
 #include "arch/isa_traits.hh"
-#include "arch/kernel_stats.hh"
 #include "arch/types.hh"
 #include "base/trace.hh"
 #include "config/the_isa.hh"

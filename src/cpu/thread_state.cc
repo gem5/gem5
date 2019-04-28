@@ -30,11 +30,11 @@
 
 #include "cpu/thread_state.hh"
 
-#include "arch/kernel_stats.hh"
 #include "base/output.hh"
 #include "cpu/base.hh"
 #include "cpu/profile.hh"
 #include "cpu/quiesce_event.hh"
+#include "kern/kernel_stats.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/port.hh"
 #include "mem/port_proxy.hh"

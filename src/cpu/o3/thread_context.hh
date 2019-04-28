@@ -119,7 +119,7 @@ class O3ThreadContext : public ThreadContext
     System *getSystemPtr() override { return cpu->system; }
 
     /** Returns a pointer to this thread's kernel statistics. */
-    TheISA::Kernel::Statistics *
+    ::Kernel::Statistics *
     getKernelStats() override
     {
         return thread->kernelStats;

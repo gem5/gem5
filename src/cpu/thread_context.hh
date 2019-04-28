@@ -70,10 +70,8 @@ class FSTranslatingPortProxy;
 class PortProxy;
 class Process;
 class System;
-namespace TheISA {
-    namespace Kernel {
-        class Statistics;
-    }
+namespace Kernel {
+    class Statistics;
 }
 
 /**
@@ -150,7 +148,7 @@ class ThreadContext
 
     virtual System *getSystemPtr() = 0;
 
-    virtual TheISA::Kernel::Statistics *getKernelStats() = 0;
+    virtual ::Kernel::Statistics *getKernelStats() = 0;
 
     virtual PortProxy &getPhysProxy() = 0;
 

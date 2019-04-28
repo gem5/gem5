@@ -74,10 +74,8 @@ class CheckerCPU;
 class FunctionProfile;
 class ProfileNode;
 
-namespace TheISA {
-    namespace Kernel {
-        class Statistics;
-    }
+namespace Kernel {
+    class Statistics;
 }
 
 /**
@@ -212,7 +210,7 @@ class SimpleThread : public ThreadState, public ThreadContext
 
     System *getSystemPtr() override { return system; }
 
-    TheISA::Kernel::Statistics *
+    Kernel::Statistics *
     getKernelStats() override
     {
         return ThreadState::getKernelStats();

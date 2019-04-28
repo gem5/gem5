@@ -53,7 +53,6 @@
 
 #include <gem5/asm/generic/m5ops.h>
 
-#include "arch/kernel_stats.hh"
 #include "arch/pseudo_inst.hh"
 #include "arch/utility.hh"
 #include "arch/vtophys.hh"
@@ -68,6 +67,7 @@
 #include "debug/Quiesce.hh"
 #include "debug/WorkItems.hh"
 #include "dev/net/dist_iface.hh"
+#include "kern/kernel_stats.hh"
 #include "params/BaseCPU.hh"
 #include "sim/full_system.hh"
 #include "sim/initparam_keys.hh"

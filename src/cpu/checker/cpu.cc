@@ -47,7 +47,6 @@
 #include <string>
 
 #include "arch/generic/tlb.hh"
-#include "arch/kernel_stats.hh"
 #include "arch/vtophys.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"

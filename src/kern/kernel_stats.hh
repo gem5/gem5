@@ -53,7 +53,7 @@ class Statistics : public Serializable
     virtual ~Statistics() {}
 
     const std::string name() const { return myname; }
-    void regStats(const std::string &name);
+    virtual void regStats(const std::string &name);
 
   public:
     void arm() { _arm++; }

@@ -41,10 +41,8 @@
 class EndQuiesceEvent;
 class FunctionProfile;
 class ProfileNode;
-namespace TheISA {
-    namespace Kernel {
-        class Statistics;
-    }
+namespace Kernel {
+    class Statistics;
 }
 
 class Checkpoint;
@@ -98,7 +96,7 @@ struct ThreadState : public Serializable {
 
     void profileSample();
 
-    TheISA::Kernel::Statistics *getKernelStats() { return kernelStats; }
+    Kernel::Statistics *getKernelStats() { return kernelStats; }
 
     PortProxy &getPhysProxy();
 
@@ -185,7 +183,7 @@ struct ThreadState : public Serializable {
     Addr profilePC;
     EndQuiesceEvent *quiesceEvent;
 
-    TheISA::Kernel::Statistics *kernelStats;
+    Kernel::Statistics *kernelStats;
 
   protected:
     Process *process;

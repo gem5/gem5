@@ -219,6 +219,9 @@ int break_ipl = -1;
 void
 ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
 {
+    auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(
+            tc->getKernelStats());
+    assert(stats || !tc->getKernelStats());
     switch (idx) {
       case IPR_PALtemp0:
       case IPR_PALtemp1:
@@ -267,8 +270,8 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
 
       case IPR_PALtemp23:
         // write entire quad w/ no side-effect
-        if (tc->getKernelStats())
-            tc->getKernelStats()->context(ipr[idx], val, tc);
+        if (stats)
+            stats->context(ipr[idx], val, tc);
         ipr[idx] = val;
         break;
 
@@ -291,17 +294,17 @@ ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
       case IPR_IPLR:
         // only write least significant five bits - interrupt level
         ipr[idx] = val & 0x1f;
-        if (tc->getKernelStats())
-            tc->getKernelStats()->swpipl(ipr[idx]);
+        if (stats)
+            stats->swpipl(ipr[idx]);
         break;
 
       case IPR_DTB_CM:
         if (val & 0x18) {
-            if (tc->getKernelStats())
-                tc->getKernelStats()->mode(Kernel::user, tc);
+            if (stats)
+                stats->mode(Kernel::user, tc);
         } else {
-            if (tc->getKernelStats())
-                tc->getKernelStats()->mode(Kernel::kernel, tc);
+            if (stats)
+                stats->mode(Kernel::kernel, tc);
         }
         M5_FALLTHROUGH;
 
@@ -485,6 +488,9 @@ using namespace AlphaISA;
 Fault
 SimpleThread::hwrei()
 {
+    auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(kernelStats);
+    assert(stats || !kernelStats);
+
     PCState pc = pcState();
     if (!(pc.pc() & 0x3))
         return std::make_shared<UnimplementedOpcodeFault>();
@@ -494,8 +500,8 @@ SimpleThread::hwrei()
 
     CPA::cpa()->swAutoBegin(this, pc.npc());
 
-    if (kernelStats)
-        kernelStats->hwrei();
+    if (stats)
+        stats->hwrei();
 
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
@@ -508,8 +514,11 @@ SimpleThread::hwrei()
 bool
 SimpleThread::simPalCheck(int palFunc)
 {
-    if (kernelStats)
-        kernelStats->callpal(palFunc, this);
+    auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(kernelStats);
+    assert(stats || !kernelStats);
+
+    if (stats)
+        stats->callpal(palFunc, this);
 
     switch (palFunc) {
       case PAL::halt:
