@@ -930,7 +930,24 @@ decode OPCODE default Unknown::unknown() {
   0x1e: decode PALMODE {
       0: OpcdecFault::hw_rei();
         format BasicOperate {
-          1: hw_rei({{ xc->hwrei(); }}, IsSerializing, IsSerializeBefore);
+          1: hw_rei({{
+                Addr pc = PC;
+                if (!(pc & 0x3))
+                    return std::make_shared<UnimplementedOpcodeFault>();
+
+                LockFlag = false;
+                NPC = IprExcAddr;
+
+                ThreadContext *tc = xc->tcBase();
+                auto *base_stats = tc->getKernelStats();
+                auto *stats = dynamic_cast<AlphaISA::Kernel::Statistics *>(
+                        base_stats);
+                assert(stats || !base_stats);
+                if (stats)
+                    stats->hwrei();
+
+                CPA::cpa()->swAutoBegin(tc, IprExcAddr);
+          }}, IsSerializing, IsSerializeBefore);
         }
     }
 
