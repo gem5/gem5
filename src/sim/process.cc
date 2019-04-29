@@ -456,19 +456,16 @@ Process::findDriver(std::string filename)
 std::string
 Process::checkPathRedirect(const std::string &filename)
 {
-    // If the input parameter contains a relative path, convert it. Note,
-    // the return value for this method should always return an absolute
-    // path on the host filesystem. The return value will be used to
-    // open and manipulate the path specified by the input parameter. Since
-    // all filesystem handling in syscall mode is passed through to the host,
-    // we deal only with host paths.
-    auto host_fs_abs_path = absolutePath(filename, true);
+    // If the input parameter contains a relative path, convert it.
+    // The target version of the current working directory is fine since
+    // we immediately convert it using redirect paths into a host version.
+    auto abs_path = absolutePath(filename, false);
 
     for (auto path : system->redirectPaths) {
         // Search through the redirect paths to see if a starting substring of
         // our path falls into any buckets which need to redirected.
-        if (startswith(host_fs_abs_path, path->appPath())) {
-            std::string tail = host_fs_abs_path.substr(path->appPath().size());
+        if (startswith(abs_path, path->appPath())) {
+            std::string tail = abs_path.substr(path->appPath().size());
 
             // If this path needs to be redirected, search through a list
             // of targets to see if we can match a valid file (or directory).
@@ -486,7 +483,7 @@ Process::checkPathRedirect(const std::string &filename)
     }
 
     // The path does not need to be redirected.
-    return host_fs_abs_path;
+    return abs_path;
 }
 
 void
@@ -543,17 +540,17 @@ Process::absolutePath(const std::string &filename, bool host_filesystem)
     if (filename.empty() || startswith(filename, "/"))
         return filename;
 
-    // Verify that the current working directories are initialized properly.
-    // These members should be set initially via params from 'Process.py',
-    // although they may change over time depending on what the application
-    // does during simulation.
-    assert(!tgtCwd.empty());
-    assert(!hostCwd.empty());
-
     // Construct the absolute path given the current working directory for
     // either the host filesystem or target filesystem. The distinction only
     // matters if filesystem redirection is utilized in the simulation.
-    auto path_base = host_filesystem ? hostCwd : tgtCwd;
+    auto path_base = std::string();
+    if (host_filesystem) {
+        path_base = hostCwd;
+        assert(!hostCwd.empty());
+    } else {
+        path_base = tgtCwd;
+        assert(!tgtCwd.empty());
+    }
 
     // Add a trailing '/' if the current working directory did not have one.
     normalize(path_base);
