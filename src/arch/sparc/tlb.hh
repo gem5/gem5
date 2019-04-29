@@ -44,6 +44,11 @@ class Packet;
 namespace SparcISA
 {
 
+const Addr StartVAddrHole = ULL(0x0000800000000000);
+const Addr EndVAddrHole = ULL(0xFFFF7FFFFFFFFFFF);
+const Addr VAddrAMask = ULL(0xFFFFFFFF);
+const Addr PAddrImplMask = ULL(0x000000FFFFFFFFFF);
+
 class TLB : public BaseTLB
 {
     // These faults need to be able to populate the tlb in SE mode.

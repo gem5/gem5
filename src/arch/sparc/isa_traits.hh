@@ -44,22 +44,10 @@ namespace SparcISA
 // This makes sure the big endian versions of certain functions are used.
 using namespace BigEndianGuest;
 
-// real address virtual mapping
-// sort of like alpha super page, but less frequently used
-const Addr SegKPMEnd  = ULL(0xfffffffc00000000);
-const Addr SegKPMBase = ULL(0xfffffac000000000);
-
 const Addr PageShift = 13;
 const Addr PageBytes = ULL(1) << PageShift;
 
 StaticInstPtr decodeInst(ExtMachInst);
-
-/////////// TLB Stuff ////////////
-const Addr StartVAddrHole = ULL(0x0000800000000000);
-const Addr EndVAddrHole = ULL(0xFFFF7FFFFFFFFFFF);
-const Addr VAddrAMask = ULL(0xFFFFFFFF);
-const Addr PAddrImplMask = ULL(0x000000FFFFFFFFFF);
-const Addr BytesInPageMask = ULL(0x1FFF);
 
 // Memory accesses cannot be unaligned
 const bool HasUnalignedMemAcc = false;
