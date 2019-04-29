@@ -43,6 +43,18 @@
 namespace SparcISA
 {
 
+enum InterruptTypes
+{
+    IT_TRAP_LEVEL_ZERO,
+    IT_HINTP,
+    IT_INT_VEC,
+    IT_CPU_MONDO,
+    IT_DEV_MONDO,
+    IT_RES_ERROR,
+    IT_SOFT_INT,
+    NumInterruptTypes
+};
+
 class Interrupts : public SimObject
 {
   private:

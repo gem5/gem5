@@ -40,6 +40,7 @@
 #include <cstring>
 
 #include "arch/sparc/faults.hh"
+#include "arch/sparc/interrupts.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"

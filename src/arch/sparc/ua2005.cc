@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "arch/sparc/interrupts.hh"
 #include "arch/sparc/isa.hh"
 #include "arch/sparc/kernel_stats.hh"
 #include "arch/sparc/registers.hh"

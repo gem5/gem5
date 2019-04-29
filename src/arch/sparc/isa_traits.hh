@@ -61,18 +61,6 @@ const Addr VAddrAMask = ULL(0xFFFFFFFF);
 const Addr PAddrImplMask = ULL(0x000000FFFFFFFFFF);
 const Addr BytesInPageMask = ULL(0x1FFF);
 
-enum InterruptTypes
-{
-    IT_TRAP_LEVEL_ZERO,
-    IT_HINTP,
-    IT_INT_VEC,
-    IT_CPU_MONDO,
-    IT_DEV_MONDO,
-    IT_RES_ERROR,
-    IT_SOFT_INT,
-    NumInterruptTypes
-};
-
 // Memory accesses cannot be unaligned
 const bool HasUnalignedMemAcc = false;
 
