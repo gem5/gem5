@@ -179,7 +179,7 @@ writeMemTiming(ExecContext *xc, Trace::InstRecord *traceData, uint64_t mem,
 {
     if (traceData)
         traceData->setData(mem);
-    mem = TheISA::htog(mem);
+    mem = htog(mem);
     return xc->writeMem((uint8_t *)&mem, dataSize, addr, flags, res);
 }
 
@@ -209,7 +209,7 @@ writeMemAtomic(ExecContext *xc, Trace::InstRecord *traceData, uint64_t mem,
 {
     if (traceData)
         traceData->setData(mem);
-    uint64_t host_mem = TheISA::htog(mem);
+    uint64_t host_mem = htog(mem);
     Fault fault =
           xc->writeMem((uint8_t *)&host_mem, dataSize, addr, flags, res);
     if (fault == NoFault && res)
