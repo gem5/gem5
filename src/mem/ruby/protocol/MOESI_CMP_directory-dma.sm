@@ -192,7 +192,7 @@ machine(MachineType:DMA, "DMA Controller")
           out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
           out_msg.Requestor := machineID;
           out_msg.RequestorMachine := MachineType:DMA;
-          out_msg.MessageSize := MessageSizeType:Writeback_Control;
+          out_msg.MessageSize := MessageSizeType:Data;
         }
       }
   }
