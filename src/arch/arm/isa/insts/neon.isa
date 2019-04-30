@@ -58,6 +58,22 @@ output header {{
         }
     }
 
+    template <class BaseS, class BaseD>
+    StaticInstPtr
+    decodeNeonSizeSingleDouble(unsigned size,
+                         ExtMachInst machInst, IntRegIndex dest,
+                         IntRegIndex op1, IntRegIndex op2)
+    {
+        switch (size) {
+          case 2:
+            return new BaseS(machInst, dest, op1, op2);
+          case 3:
+            return new BaseD(machInst, dest, op1, op2);
+          default:
+            return new Unknown(machInst);
+        }
+    }
+
     template <template <typename T> class Base>
     StaticInstPtr
     decodeNeonSThreeUReg(unsigned size,

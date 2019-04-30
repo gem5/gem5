@@ -578,6 +578,66 @@ let {{
     buildBinFpOp("vmul", "Vmul", "FpRegRegRegOp", "SimdFloatMultOp", "fpMulS",
                  "fpMulD")
 
+    def buildBinOp(name, base, opClass, op):
+        '''
+        Create backported aarch64 instructions that use fplib.
+
+        Because they are backported, these instructions are unconditional.
+        '''
+        global header_output, decoder_output, exec_output
+        inst_datas = [
+            (
+                "s",
+                '''
+                FpDest_uw = fplib%(op)s<>(FpOp1_uw, FpOp2_uw, fpscr);
+                '''
+            ),
+            (
+                "d",
+                '''
+                uint64_t op1 = ((uint64_t)FpOp1P0_uw |
+                               ((uint64_t)FpOp1P1_uw << 32));
+                uint64_t op2 = ((uint64_t)FpOp2P0_uw |
+                               ((uint64_t)FpOp2P1_uw << 32));
+                uint64_t dest = fplib%(op)s<>(op1, op2, fpscr);
+                FpDestP0_uw = dest;
+                FpDestP1_uw = dest >> 32;
+                '''
+            )
+        ]
+        Name = name[0].upper() + name[1:]
+        declareTempl = eval(base + "Declare");
+        constructorTempl = eval(base + "Constructor");
+        for size_suffix, code in inst_datas:
+            code = (
+                '''
+                FPSCR fpscr = (FPSCR)FpscrExc;
+                ''' +
+                code +
+                '''
+                FpscrExc = fpscr;
+                '''
+            )
+            iop = InstObjParams(
+                name + size_suffix,
+                Name + size_suffix.upper(),
+                base,
+                {
+                    "code": code % {"op": op},
+                    "op_class": opClass
+                },
+                []
+            )
+            header_output += declareTempl.subst(iop)
+            decoder_output += constructorTempl.subst(iop)
+            exec_output += BasicExecute.subst(iop)
+    ops = [
+        ("vminnm", "FpRegRegRegOp", "SimdFloatCmpOp", "MinNum"),
+        ("vmaxnm", "FpRegRegRegOp", "SimdFloatCmpOp", "MaxNum"),
+    ]
+    for op in ops:
+        buildBinOp(*op)
+
     def buildUnaryFpOp(name, Name, base, opClass, singleOp, doubleOp = None):
         if doubleOp is None:
             doubleOp = singleOp
