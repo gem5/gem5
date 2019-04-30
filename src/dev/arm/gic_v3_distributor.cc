@@ -472,7 +472,7 @@ Gicv3Distributor::read(Addr addr, size_t size, bool is_secure_access)
         {
             int max_spi_int_id = itLines - 1;
             int it_lines_number = ceil((max_spi_int_id + 1) / 32.0) - 1;
-            return (1 << 26) | (1 << 25) | (1 << 24) | (0xf << 19) |
+            return (1 << 26) | (1 << 25) | (1 << 24) | (IDBITS << 19) |
                 (1 << 17) | (gic->getSystem()->haveSecurity() << 10) |
                 (it_lines_number << 0);
         }

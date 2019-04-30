@@ -140,6 +140,7 @@ class Gicv3Distributor : public Serializable
   public:
 
     static const uint32_t ADDR_RANGE_SIZE = 0x10000;
+    static const uint32_t IDBITS = 0xf;
 
   protected:
 
