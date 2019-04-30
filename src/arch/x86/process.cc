@@ -150,7 +150,7 @@ X86_64Process::X86_64Process(ProcessParams *params, ObjectFile *objFile,
 void
 I386Process::syscall(int64_t callnum, ThreadContext *tc, Fault *fault)
 {
-    TheISA::PCState pc = tc->pcState();
+    PCState pc = tc->pcState();
     Addr eip = pc.pc();
     if (eip >= vsyscallPage.base &&
             eip < vsyscallPage.base + vsyscallPage.size) {

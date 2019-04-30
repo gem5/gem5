@@ -178,7 +178,7 @@ class TarmacTracerRecord : public TarmacBaseRecord
 
   public:
     TarmacTracerRecord(Tick _when, ThreadContext *_thread,
-                       const StaticInstPtr _staticInst, TheISA::PCState _pc,
+                       const StaticInstPtr _staticInst, ArmISA::PCState _pc,
                        TarmacTracer& _tracer,
                        const StaticInstPtr _macroStaticInst = NULL);
 

@@ -45,7 +45,7 @@ let {{
     exec_output = ""
 
     zeroSveVecRegUpperPartCode = '''
-        TheISA::ISA::zeroSveVecRegUpperPart(%s,
+        ArmISA::ISA::zeroSveVecRegUpperPart(%s,
             ArmStaticInst::getCurSveVecLen<uint64_t>(xc->tcBase()));
     '''
 

@@ -85,7 +85,7 @@ class TarmacBaseRecord : public InstRecord
     {
         InstEntry() = default;
         InstEntry(ThreadContext* thread,
-                  TheISA::PCState pc,
+                  ArmISA::PCState pc,
                   const StaticInstPtr staticInst,
                   bool predicate);
 
@@ -101,7 +101,7 @@ class TarmacBaseRecord : public InstRecord
     struct RegEntry
     {
         RegEntry() = default;
-        RegEntry(TheISA::PCState pc);
+        RegEntry(ArmISA::PCState pc);
 
         RegType type;
         RegIndex index;
@@ -123,7 +123,7 @@ class TarmacBaseRecord : public InstRecord
 
   public:
     TarmacBaseRecord(Tick _when, ThreadContext *_thread,
-                     const StaticInstPtr _staticInst, TheISA::PCState _pc,
+                     const StaticInstPtr _staticInst, ArmISA::PCState _pc,
                      const StaticInstPtr _macroStaticInst = NULL);
 
     virtual void dump() = 0;
@@ -135,7 +135,7 @@ class TarmacBaseRecord : public InstRecord
      * @param pc program counter (PCState) variable
      * @return Instruction Set State for the given PCState
      */
-    static ISetState pcToISetState(TheISA::PCState pc);
+    static ISetState pcToISetState(ArmISA::PCState pc);
 };
 
 

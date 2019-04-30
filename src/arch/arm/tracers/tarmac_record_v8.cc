@@ -56,7 +56,7 @@ TarmacTracerRecordV8::TraceInstEntryV8::TraceInstEntryV8(
     const auto thread = tarmCtx.thread;
 
     // Evaluate physical address
-    TheISA::TLB* dtb = static_cast<TLB*>(thread->getDTBPtr());
+    ArmISA::TLB* dtb = static_cast<TLB*>(thread->getDTBPtr());
     paddrValid = dtb->translateFunctional(thread, addr, paddr);
 }
 
@@ -70,7 +70,7 @@ TarmacTracerRecordV8::TraceMemEntryV8::TraceMemEntryV8(
     const auto thread = tarmCtx.thread;
 
     // Evaluate physical address
-    TheISA::TLB* dtb = static_cast<TLB*>(thread->getDTBPtr());
+    ArmISA::TLB* dtb = static_cast<TLB*>(thread->getDTBPtr());
     dtb->translateFunctional(thread, addr, paddr);
 }
 

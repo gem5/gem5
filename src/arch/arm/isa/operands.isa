@@ -51,12 +51,12 @@ def operand_types {{
     'tud' : 'std::array<uint64_t, 2>',
     'sf' : 'float',
     'df' : 'double',
-    'vc' : 'TheISA::VecRegContainer',
+    'vc' : 'ArmISA::VecRegContainer',
     # For operations that are implemented as a template
     'x' : 'TPElem',
     'xs' : 'TPSElem',
     'xd' : 'TPDElem',
-    'pc' : 'TheISA::VecPredRegContainer',
+    'pc' : 'ArmISA::VecPredRegContainer',
     'pb' : 'uint8_t'
 }};
 

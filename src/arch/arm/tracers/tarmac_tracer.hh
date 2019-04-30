@@ -63,7 +63,7 @@ class TarmacContext
   public:
     TarmacContext(ThreadContext* _thread,
                   const StaticInstPtr _staticInst,
-                  TheISA::PCState _pc)
+                  ArmISA::PCState _pc)
       : thread(_thread), staticInst(_staticInst), pc(_pc)
     {}
 
@@ -72,7 +72,7 @@ class TarmacContext
   public:
     ThreadContext* thread;
     const StaticInstPtr staticInst;
-    TheISA::PCState pc;
+    ArmISA::PCState pc;
 };
 
 /**
@@ -99,7 +99,7 @@ class TarmacTracer : public InstTracer
      */
     InstRecord* getInstRecord(Tick when, ThreadContext *tc,
                               const StaticInstPtr staticInst,
-                              TheISA::PCState pc,
+                              ArmISA::PCState pc,
                               const StaticInstPtr macroStaticInst = NULL);
 
   protected:

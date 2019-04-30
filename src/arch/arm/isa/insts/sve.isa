@@ -1555,7 +1555,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecRegContainer tmpVecC;
+        ArmISA::VecRegContainer tmpVecC;
         auto auxOp1 = tmpVecC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i) {
             auxOp1[i] = AA64FpOp1_x[i];
@@ -1616,7 +1616,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecRegContainer tmpVecC;
+        ArmISA::VecRegContainer tmpVecC;
         auto tmpVec = tmpVecC.as<Element>();
         int ePow2Count = 1;
         while (ePow2Count < eCount) {
@@ -1761,7 +1761,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecRegContainer tmpVecC;
+        ArmISA::VecRegContainer tmpVecC;
         auto auxOp2 = tmpVecC.as<Element>();
         for (unsigned i = 0; i < eCount; i++) {
             auxOp2[i] = AA64FpOp2_ud[i];
@@ -1917,7 +1917,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto auxGpOp = tmpPredC.as<Element>();
         for (unsigned i = 0; i < eCount; i++) {
             auxGpOp[i] = GpOp_x[i];
@@ -1981,7 +1981,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto tmpPred = tmpPredC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i)
             tmpPred[i] = GpOp_x[i];
@@ -2140,7 +2140,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto tmpPred = tmpPredC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i)
             tmpPred[i] = GpOp_x[i];
@@ -2185,7 +2185,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto tmpPred = tmpPredC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i)
             tmpPred[i] = GpOp_x[i];
@@ -2268,7 +2268,7 @@ let {{
         unsigned eCount = ArmStaticInst::getCurSveVecLen<uint8_t>(
                 xc->tcBase());
         bool dobreak = false;
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto auxGpOp = tmpPredC.as<uint8_t>();
         for (unsigned i = 0; i < eCount; ++i) {
             auxGpOp[i] = GpOp_ub[i];
@@ -2320,7 +2320,7 @@ let {{
         unsigned eCount = ArmStaticInst::getCurSveVecLen<uint8_t>(
                 xc->tcBase());
         bool last = POp1_ub.lastActive(GpOp_ub, eCount);
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto auxGpOp = tmpPredC.as<uint8_t>();
         for (unsigned i = 0; i < eCount; ++i) {
             auxGpOp[i] = GpOp_ub[i];
@@ -2458,7 +2458,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto auxGpOp = tmpPredC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i) {
             auxGpOp[i] = GpOp_x[i];
@@ -2500,7 +2500,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto auxGpOp = tmpPredC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i)
             auxGpOp[i] = GpOp_x[i];
@@ -2568,14 +2568,14 @@ let {{
         if unpackHalf == Unpack.Low:
             if regType == SrcRegType.Predicate:
                 code += '''
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto auxPOp1 = tmpPredC.as<SElement>();
         for (int i = 0; i < eCount; ++i) {
             auxPOp1[i] = POp1_xs[i];
         }'''
             else:
                 code += '''
-        TheISA::VecRegContainer tmpVecC;
+        ArmISA::VecRegContainer tmpVecC;
         auto auxOp1 = tmpVecC.as<SElement>();
         for (int i = 0; i < eCount; ++i) {
             auxOp1[i] = AA64FpOp1_xs[i];
@@ -2636,7 +2636,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecRegContainer tmpVecC;
+        ArmISA::VecRegContainer tmpVecC;
         auto auxOp1 = tmpVecC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i) {
             auxOp1[i] = AA64FpOp1_x[i];
@@ -2707,7 +2707,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecRegContainer tmpVecC;
+        ArmISA::VecRegContainer tmpVecC;
         auto auxOp1 = tmpVecC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i) {
             auxOp1[i] = AA64FpOp1_x[i];
@@ -2736,7 +2736,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
-        TheISA::VecRegContainer tmpVecC;
+        ArmISA::VecRegContainer tmpVecC;
         auto auxDest = tmpVecC.as<Element>();
         int firstelem = -1, lastelem = -2;
         for (int i = 0; i < eCount; ++i) {
@@ -2799,7 +2799,7 @@ let {{
                 xc->tcBase());'''
         if srcType == SrcRegType.Predicate:
             code += '''
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto auxPOp1 = tmpPredC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i) {
             uint8_t v = POp1_x.get_raw(i);
@@ -2808,7 +2808,7 @@ let {{
         PDest_x[0] = 0;'''
         else:
             code += '''
-        TheISA::VecRegContainer tmpRegC;
+        ArmISA::VecRegContainer tmpRegC;
         auto auxOp1 = tmpRegC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i) {
             auxOp1[i] = AA64FpOp1_x[i];
@@ -4464,7 +4464,7 @@ let {{
         constexpr unsigned sz = sizeof(Element);
         int s;
         int part = %d;
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto auxPDest = tmpPredC.as<uint8_t>();
         for (unsigned i = 0; i < eCount / 2; i++) {
             s = 2 * i + part;
@@ -4485,7 +4485,7 @@ let {{
     trnIterCode = '''
         int s;
         int part = %d;
-        TheISA::VecRegContainer tmpVecC;
+        ArmISA::VecRegContainer tmpVecC;
         auto auxDest = tmpVecC.as<Element>();
         for (unsigned i = 0; i < eCount / 2; i++) {
             s = 2 * i + part;
@@ -4681,7 +4681,7 @@ let {{
         constexpr unsigned sz = sizeof(Element);
         int s;
         int part = %d;
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto auxPDest = tmpPredC.as<uint8_t>();
         for (unsigned i = 0; i < eCount; i++) {
             s = 2 * i + part;
@@ -4705,7 +4705,7 @@ let {{
     uzpIterCode = '''
         int s;
         int part = %d;
-        TheISA::VecRegContainer tmpVecC;
+        ArmISA::VecRegContainer tmpVecC;
         auto auxDest = tmpVecC.as<Element>();
         for (unsigned i = 0; i < eCount; i++) {
             s = 2 * i + part;
@@ -4766,7 +4766,7 @@ let {{
         constexpr unsigned sz = sizeof(Element);
         int s;
         int part = %d;
-        TheISA::VecPredRegContainer tmpPredC;
+        ArmISA::VecPredRegContainer tmpPredC;
         auto auxPDest = tmpPredC.as<uint8_t>();
         for (unsigned i = 0; i < eCount / 2; i++) {
             s = i + (part * (eCount / 2));
@@ -4787,7 +4787,7 @@ let {{
     zipIterCode = '''
         int s;
         int part = %d;
-        TheISA::VecRegContainer tmpVecC;
+        ArmISA::VecRegContainer tmpVecC;
         auto auxDest = tmpVecC.as<Element>();
         for (unsigned i = 0; i < eCount / 2; i++) {
             s = i + (part * (eCount / 2));

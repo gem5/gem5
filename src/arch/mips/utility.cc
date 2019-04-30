@@ -268,7 +268,7 @@ copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 void
 skipFunction(ThreadContext *tc)
 {
-    TheISA::PCState newPC = tc->pcState();
+    PCState newPC = tc->pcState();
     newPC.set(tc->readIntReg(ReturnAddressReg));
     tc->pcState(newPC);
 }

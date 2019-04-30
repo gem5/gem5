@@ -57,8 +57,6 @@ class ProcessInfo
 
 class StackTrace
 {
-  protected:
-    typedef TheISA::MachInst MachInst;
   private:
     ThreadContext *tc;
     std::vector<Addr> stack;

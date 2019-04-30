@@ -47,7 +47,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 
-using namespace TheISA;
+using namespace ArmISA;
 
 namespace Trace {
 

@@ -83,7 +83,7 @@ class TarmacParserRecord : public TarmacBaseRecord
         /** Current instruction. */
         const StaticInstPtr inst;
         /** PC of the current instruction. */
-        TheISA::PCState pc;
+        ArmISA::PCState pc;
         /** True if a mismatch has been detected for this instruction. */
         bool mismatch;
         /**
@@ -95,7 +95,7 @@ class TarmacParserRecord : public TarmacBaseRecord
         TarmacParserRecordEvent(TarmacParser& _parent,
                                 ThreadContext *_thread,
                                 const StaticInstPtr _inst,
-                                TheISA::PCState _pc,
+                                ArmISA::PCState _pc,
                                 bool _mismatch,
                                 bool _mismatch_on_pc_or_opcode) :
             parent(_parent), thread(_thread), inst(_inst), pc(_pc),
@@ -130,10 +130,10 @@ class TarmacParserRecord : public TarmacBaseRecord
      * by gem5.
      */
     static void printMismatchHeader(const StaticInstPtr inst,
-                                    TheISA::PCState pc);
+                                    ArmISA::PCState pc);
 
     TarmacParserRecord(Tick _when, ThreadContext *_thread,
-                       const StaticInstPtr _staticInst, TheISA::PCState _pc,
+                       const StaticInstPtr _staticInst, ArmISA::PCState _pc,
                        TarmacParser& _parent,
                        const StaticInstPtr _macroStaticInst = NULL);
 
@@ -241,7 +241,7 @@ class TarmacParser : public InstTracer
 
     InstRecord *
     getInstRecord(Tick when, ThreadContext *tc, const StaticInstPtr staticInst,
-                  TheISA::PCState pc,
+                  ArmISA::PCState pc,
                   const StaticInstPtr macroStaticInst = NULL)
     {
         if (!started && pc.pc() == startPc)
