@@ -443,6 +443,8 @@ TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
         TLB::translate(req, tc, translation, mode, delayedResponse, true);
     if (!delayedResponse)
         translation->finish(fault, req, tc, mode);
+    else
+        translation->markDelayed();
 }
 
 Walker *
