@@ -29,11 +29,11 @@
 import m5
 from m5.objects import *
 m5.util.addToPath('../configs/')
-from common.FSConfig import *
-from common.Benchmarks import *
+from common import Benchmarks, FSConfig, SysPaths
 
 test_sys = makeLinuxAlphaSystem('atomic',
                                 SysConfig('netperf-stream-client.rcS'))
+test_sys.kernel = SysPaths.binary('vmlinux')
 
 # Dummy voltage domain for all test_sys clock domains
 test_sys.voltage_domain = VoltageDomain()
@@ -70,6 +70,7 @@ test_sys.physmem.port = test_sys.membus.master
 
 drive_sys = makeLinuxAlphaSystem('atomic',
                                  SysConfig('netperf-server.rcS'))
+drive_sys.kernel = SysPaths.binary('vmlinux')
 # Dummy voltage domain for all drive_sys clock domains
 drive_sys.voltage_domain = VoltageDomain()
 # Create the system clock domain

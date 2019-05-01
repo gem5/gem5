@@ -40,7 +40,7 @@ import m5
 from m5.objects import *
 from m5.proxy import *
 m5.util.addToPath('../configs/')
-from common import FSConfig
+from common import FSConfig, SysPaths
 from common.Caches import *
 from base_config import *
 
@@ -60,6 +60,7 @@ class LinuxAlphaSystemBuilder(object):
 
     def create_system(self):
         system = FSConfig.makeLinuxAlphaSystem(self.mem_mode)
+        system.kernel = SysPaths.binary('vmlinux')
         self.init_system(system)
         return system
 

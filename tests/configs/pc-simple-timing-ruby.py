@@ -30,7 +30,7 @@ import m5, os, optparse, sys
 from m5.objects import *
 m5.util.addToPath('../configs/')
 from common.Benchmarks import SysConfig
-from common import FSConfig
+from common import FSConfig, SysPaths
 from ruby import Ruby
 from common import Options
 
@@ -54,6 +54,7 @@ options.num_cpus = 2
 mdesc = SysConfig(disk = 'linux-x86.img')
 system = FSConfig.makeLinuxX86System('timing', options.num_cpus,
                                      mdesc=mdesc, Ruby=True)
+system.kernel = SysPaths.binary('x86_64-vmlinux-2.6.22.9')
 # Dummy voltage domain for all our clock domains
 system.voltage_domain = VoltageDomain(voltage = options.sys_voltage)
 

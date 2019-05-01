@@ -41,7 +41,7 @@ from m5.objects import *
 from m5.proxy import *
 m5.util.addToPath('../configs/')
 from common.Benchmarks import SysConfig
-from common import FSConfig
+from common import FSConfig, SysPaths
 from common.Caches import *
 from base_config import *
 
@@ -60,6 +60,7 @@ class LinuxX86SystemBuilder(object):
         system = FSConfig.makeLinuxX86System(self.mem_mode,
                                              numCPUs=self.num_cpus,
                                              mdesc=mdesc)
+        system.kernel = SysPaths.binary('x86_64-vmlinux-2.6.22.9')
 
         self.init_system(system)
         return system
