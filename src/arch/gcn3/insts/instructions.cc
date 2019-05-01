@@ -9439,7 +9439,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 4)) {
                     // is -denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && std::signbit(src0[lane])) {
                         vcc.setBit(lane, 1);
                         continue;
@@ -9463,7 +9463,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 7)) {
                     // is +denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && !std::signbit(src0[lane])) {
                         vcc.setBit(lane, 1);
                         continue;
@@ -9551,7 +9551,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 4)) {
                     // is -denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && std::signbit(src0[lane])) {
                         vcc.setBit(lane, 1);
                         continue;
@@ -9575,7 +9575,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 7)) {
                     // is +denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && !std::signbit(src0[lane])) {
                         vcc.setBit(lane, 1);
                         continue;
@@ -9664,7 +9664,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 4)) {
                     // is -denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && std::signbit(src0[lane])) {
                         vcc.setBit(lane, 1);
                         continue;
@@ -9688,7 +9688,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 7)) {
                     // is +denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && !std::signbit(src0[lane])) {
                         vcc.setBit(lane, 1);
                         continue;
@@ -9777,7 +9777,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 4)) {
                     // is -denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && std::signbit(src0[lane])) {
                         vcc.setBit(lane, 1);
                         continue;
@@ -9801,7 +9801,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 7)) {
                     // is +denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && !std::signbit(src0[lane])) {
                         vcc.setBit(lane, 1);
                         continue;
@@ -15550,7 +15550,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 4)) {
                     // is -denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && std::signbit(src0[lane])) {
                         sdst.setBit(lane,  1);
                         continue;
@@ -15574,7 +15574,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 7)) {
                     // is +denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && !std::signbit(src0[lane])) {
                         sdst.setBit(lane,  1);
                         continue;
@@ -15665,7 +15665,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 4)) {
                     // is -denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && std::signbit(src0[lane])) {
                         sdst.setBit(lane,  1);
                         continue;
@@ -15689,7 +15689,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 7)) {
                     // is +denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && !std::signbit(src0[lane])) {
                         sdst.setBit(lane,  1);
                         continue;
@@ -15780,7 +15780,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 4)) {
                     // is -denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && std::signbit(src0[lane])) {
                         sdst.setBit(lane, 1);
                         continue;
@@ -15804,7 +15804,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 7)) {
                     // is +denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && !std::signbit(src0[lane])) {
                         sdst.setBit(lane, 1);
                         continue;
@@ -15895,7 +15895,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 4)) {
                     // is -denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && std::signbit(src0[lane])) {
                         sdst.setBit(lane, 1);
                         continue;
@@ -15919,7 +15919,7 @@ namespace Gcn3ISA
                 }
                 if (bits(src1[lane], 7)) {
                     // is +denormal
-                    if (!std::isnormal(src0[lane])
+                    if (std::fpclassify(src0[lane]) == FP_SUBNORMAL
                         && !std::signbit(src0[lane])) {
                         sdst.setBit(lane, 1);
                         continue;
@@ -29249,17 +29249,19 @@ namespace Gcn3ISA
                     if (src0[lane] == src1[lane]) {
                         vdst[lane] = std::ldexp(src0[lane], 128);
                     }
-                } else if (!std::isnormal(src1[lane])) {
+                } else if (std::fpclassify(src1[lane]) == FP_SUBNORMAL) {
                     vdst[lane] = std::ldexp(src0[lane], 128);
-                } else if (!std::isnormal(1.0 / src1[lane])
-                           && !std::isnormal(src2[lane] / src1[lane])) {
+                } else if (std::fpclassify(1.0 / src1[lane]) == FP_SUBNORMAL
+                           && std::fpclassify(src2[lane] / src1[lane])
+                           == FP_SUBNORMAL) {
                     vcc.setBit(lane, 1);
                     if (src0[lane] == src1[lane]) {
                         vdst[lane] = std::ldexp(src0[lane], 128);
                     }
-                } else if (!std::isnormal(1.0 / src1[lane])) {
+                } else if (std::fpclassify(1.0 / src1[lane]) == FP_SUBNORMAL) {
                     vdst[lane] = std::ldexp(src0[lane], -128);
-                } else if (!std::isnormal(src2[lane] / src1[lane])) {
+                } else if (std::fpclassify(src2[lane] / src1[lane])
+                           == FP_SUBNORMAL) {
                     vcc.setBit(lane, 1);
                     if (src0[lane] == src2[lane]) {
                         vdst[lane] = std::ldexp(src0[lane], 128);
