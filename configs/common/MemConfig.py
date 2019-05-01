@@ -224,6 +224,11 @@ def config_mem(options, system):
             if issubclass(cls, m5.objects.DRAMCtrl) and opt_mem_ranks:
                 mem_ctrl.ranks_per_channel = opt_mem_ranks
 
+            # Enable low-power DRAM states if option is set
+            if issubclass(cls, m5.objects.DRAMCtrl):
+                mem_ctrl.enable_dram_powerdown = \
+                        options.enable_dram_powerdown
+
             if opt_elastic_trace_en:
                 mem_ctrl.latency = '1ns'
                 print("For elastic trace, over-riding Simple Memory "

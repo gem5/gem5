@@ -97,7 +97,7 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     backendLatency(p->static_backend_latency),
     nextBurstAt(0), prevArrival(0),
     nextReqTime(0), activeRank(0), timeStampOffset(0),
-    lastStatsResetTick(0)
+    lastStatsResetTick(0), enableDRAMPowerdown(p->enable_dram_powerdown)
 {
     // sanity check the ranks since we rely on bit slicing for the
     // address decoding
@@ -705,7 +705,7 @@ DRAMCtrl::processRespondEvent()
     // track if this is the last packet before idling
     // and that there are no outstanding commands to this rank
     if (dram_pkt->rankRef.isQueueEmpty() &&
-        dram_pkt->rankRef.outstandingEvents == 0) {
+        dram_pkt->rankRef.outstandingEvents == 0 && enableDRAMPowerdown) {
         // verify that there are no events scheduled
         assert(!dram_pkt->rankRef.activateEvent.scheduled());
         assert(!dram_pkt->rankRef.prechargeEvent.scheduled());
@@ -1856,7 +1856,8 @@ DRAMCtrl::Rank::processPrechargeEvent()
     if (numBanksActive == 0) {
         // no reads to this rank in the Q and no pending
         // RD/WR or refresh commands
-        if (isQueueEmpty() && outstandingEvents == 0) {
+        if (isQueueEmpty() && outstandingEvents == 0 &&
+            memory.enableDRAMPowerdown) {
             // should still be in ACT state since bank still open
             assert(pwrState == PWR_ACT);
 
@@ -2057,7 +2058,7 @@ DRAMCtrl::Rank::processRefreshEvent()
 
             // Force PRE power-down if there are no outstanding commands
             // in Q after refresh.
-            } else if (isQueueEmpty()) {
+            } else if (isQueueEmpty() && memory.enableDRAMPowerdown) {
                 // still have refresh event outstanding but there should
                 // be no other events outstanding
                 assert(outstandingEvents == 1);
@@ -2328,7 +2329,8 @@ DRAMCtrl::Rank::processPowerEvent()
         // will issue refresh immediately upon entry
         if (pwrStatePostRefresh == PWR_PRE_PDN && isQueueEmpty() &&
            (memory.drainState() != DrainState::Draining) &&
-           (memory.drainState() != DrainState::Drained)) {
+           (memory.drainState() != DrainState::Drained) &&
+           memory.enableDRAMPowerdown) {
             DPRINTF(DRAMState, "Rank %d bypassing refresh and transitioning "
                     "to self refresh at %11u tick\n", rank, curTick());
             powerDownSleep(PWR_SREF, curTick());

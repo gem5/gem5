@@ -1140,6 +1140,9 @@ class DRAMCtrl : public QoS::MemCtrl
     /** The time when stats were last reset used to calculate average power */
     Tick lastStatsResetTick;
 
+    /** Enable or disable DRAM powerdown states. */
+    bool enableDRAMPowerdown;
+
     /**
      * Upstream caches need this packet until true is returned, so
      * hold it for deletion until a subsequent call

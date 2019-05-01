@@ -104,6 +104,8 @@ def addNoISAOptions(parser):
     parser.add_option("--mem-size", action="store", type="string",
                       default="512MB",
                       help="Specify the physical memory size (single memory)")
+    parser.add_option("--enable-dram-powerdown", action="store_true",
+                       help="Enable low-power states in DRAMCtrl")
 
 
     parser.add_option("--memchecker", action="store_true")

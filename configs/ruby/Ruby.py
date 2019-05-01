@@ -130,6 +130,11 @@ def setup_memory_controllers(system, ruby, dir_cntrls, options):
             else:
                 mem_ctrl.port = dir_cntrl.memory
 
+            # Enable low-power DRAM states if option is set
+            if issubclass(MemConfig.get(options.mem_type), DRAMCtrl):
+                mem_ctrl.enable_dram_powerdown = \
+                        options.enable_dram_powerdown
+
         index += 1
         dir_cntrl.addr_ranges = dir_ranges
 
