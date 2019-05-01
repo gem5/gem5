@@ -126,7 +126,7 @@ arch_configs = {
         't1000-simple-x86',
     ),
 
-    ("timing", None) : (
+    ("x86", None) : (
         'pc-simple-atomic',
         'pc-simple-timing',
         'pc-o3-timing',
