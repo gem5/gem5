@@ -212,7 +212,7 @@ class TLB : public BaseTLB
      */
     TlbEntry *lookup(Addr vpn, uint16_t asn, uint8_t vmid, bool hyp,
                      bool secure, bool functional,
-                     bool ignore_asn, uint8_t target_el);
+                     bool ignore_asn, ExceptionLevel target_el);
 
     virtual ~TLB();
 
@@ -249,13 +249,13 @@ class TLB : public BaseTLB
     /** Reset the entire TLB
      * @param secure_lookup if the operation affects the secure world
      */
-    void flushAllSecurity(bool secure_lookup, uint8_t target_el,
+    void flushAllSecurity(bool secure_lookup, ExceptionLevel target_el,
                           bool ignore_el = false);
 
     /** Remove all entries in the non secure world, depending on whether they
      *  were allocated in hyp mode or not
      */
-    void flushAllNs(uint8_t target_el, bool ignore_el = false);
+    void flushAllNs(ExceptionLevel target_el, bool ignore_el = false);
 
 
     /** Reset the entire TLB. Used for CPU switching to prevent stale
@@ -263,8 +263,8 @@ class TLB : public BaseTLB
      */
     void flushAll() override
     {
-        flushAllSecurity(false, 0, true);
-        flushAllSecurity(true, 0, true);
+        flushAllSecurity(false, EL0, true);
+        flushAllSecurity(true, EL0, true);
     }
 
     /** Remove any entries that match both a va and asn
@@ -273,19 +273,20 @@ class TLB : public BaseTLB
      * @param secure_lookup if the operation affects the secure world
      */
     void flushMvaAsid(Addr mva, uint64_t asn, bool secure_lookup,
-                      uint8_t target_el);
+                      ExceptionLevel target_el);
 
     /** Remove any entries that match the asn
      * @param asn contextid/asn to flush on match
      * @param secure_lookup if the operation affects the secure world
      */
-    void flushAsid(uint64_t asn, bool secure_lookup, uint8_t target_el);
+    void flushAsid(uint64_t asn, bool secure_lookup,
+                   ExceptionLevel target_el);
 
     /** Remove all entries that match the va regardless of asn
      * @param mva address to flush from cache
      * @param secure_lookup if the operation affects the secure world
      */
-    void flushMva(Addr mva, bool secure_lookup, uint8_t target_el);
+    void flushMva(Addr mva, bool secure_lookup, ExceptionLevel target_el);
 
     /**
      * Invalidate all entries in the stage 2 TLB that match the given ipa
@@ -293,7 +294,7 @@ class TLB : public BaseTLB
      * @param ipa the address to invalidate
      * @param secure_lookup if the operation affects the secure world
      */
-    void flushIpaVmid(Addr ipa, bool secure_lookup, uint8_t target_el);
+    void flushIpaVmid(Addr ipa, bool secure_lookup, ExceptionLevel target_el);
 
     Fault trickBoxCheck(const RequestPtr &req, Mode mode,
                         TlbEntry::DomainType domain);
@@ -450,9 +451,7 @@ private:
      * @param ignore_asn if the flush should ignore the asn
      */
     void _flushMva(Addr mva, uint64_t asn, bool secure_lookup,
-                   bool ignore_asn, uint8_t target_el);
-
-    bool checkELMatch(uint8_t target_el, uint8_t tentry_el, bool ignore_el);
+                   bool ignore_asn, ExceptionLevel target_el);
 
   public: /* Testing */
     Fault testTranslation(const RequestPtr &req, Mode mode,

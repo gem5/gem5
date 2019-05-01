@@ -2064,7 +2064,7 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool longDescriptor)
     if (currState->aarch64)
         te.el         = currState->el;
     else
-        te.el         = 1;
+        te.el         = EL1;
 
     statPageSizes[pageSizeNtoStatBin(te.N)]++;
     statRequestOrigin[COMPLETED][currState->isFetch]++;
