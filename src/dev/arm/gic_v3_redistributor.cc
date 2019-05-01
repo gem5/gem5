@@ -44,6 +44,7 @@ Gicv3Redistributor::Gicv3Redistributor(Gicv3 * gic, uint32_t cpu_id)
       distributor(nullptr),
       cpuInterface(nullptr),
       cpuId(cpu_id),
+      memProxy(nullptr),
       irqGroup(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
       irqEnabled(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
       irqPending(Gicv3::SGI_MAX + Gicv3::PPI_MAX),
@@ -61,6 +62,8 @@ Gicv3Redistributor::init()
 {
     distributor = gic->getDistributor();
     cpuInterface = gic->getCPUInterface(cpuId);
+
+    memProxy = &gic->getSystem()->physProxy;
 }
 
 void
@@ -804,7 +807,6 @@ Gicv3Redistributor::update()
 
     // Check LPIs
     if (EnableLPIs) {
-        ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
 
         const uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
         const uint32_t number_lpis = largest_lpi_id - SMALLEST_LPI_ID + 1;
@@ -812,13 +814,13 @@ Gicv3Redistributor::update()
         uint8_t lpi_pending_table[largest_lpi_id / 8];
         uint8_t lpi_config_table[number_lpis];
 
-        tc->getPhysProxy().readBlob(lpiPendingTablePtr,
-                                    (uint8_t *) lpi_pending_table,
-                                    sizeof(lpi_pending_table));
+        memProxy->readBlob(lpiPendingTablePtr,
+                           (uint8_t *) lpi_pending_table,
+                           sizeof(lpi_pending_table));
 
-        tc->getPhysProxy().readBlob(lpiConfigurationTablePtr,
-                (uint8_t*) lpi_config_table,
-                sizeof(lpi_config_table));
+        memProxy->readBlob(lpiConfigurationTablePtr,
+                           (uint8_t*) lpi_config_table,
+                           sizeof(lpi_config_table));
 
         for (int lpi_id = SMALLEST_LPI_ID; lpi_id < largest_lpi_id;
              lpi_id++) {
@@ -866,10 +868,9 @@ Gicv3Redistributor::readEntryLPI(uint32_t lpi_id)
     Addr lpi_pending_entry_ptr = lpiPendingTablePtr + (lpi_id / 8);
 
     uint8_t lpi_pending_entry;
-    ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
-    tc->getPhysProxy().readBlob(lpi_pending_entry_ptr,
-            (uint8_t*) &lpi_pending_entry,
-            sizeof(lpi_pending_entry));
+    memProxy->readBlob(lpi_pending_entry_ptr,
+                       (uint8_t*) &lpi_pending_entry,
+                       sizeof(lpi_pending_entry));
 
     return lpi_pending_entry;
 }
@@ -879,10 +880,9 @@ Gicv3Redistributor::writeEntryLPI(uint32_t lpi_id, uint8_t lpi_pending_entry)
 {
     Addr lpi_pending_entry_ptr = lpiPendingTablePtr + (lpi_id / 8);
 
-    ThreadContext * tc = gic->getSystem()->getThreadContext(cpuId);
-    tc->getPhysProxy().writeBlob(lpi_pending_entry_ptr,
-            (uint8_t*) &lpi_pending_entry,
-            sizeof(lpi_pending_entry));
+    memProxy->writeBlob(lpi_pending_entry_ptr,
+                        (uint8_t*) &lpi_pending_entry,
+                        sizeof(lpi_pending_entry));
 }
 
 bool

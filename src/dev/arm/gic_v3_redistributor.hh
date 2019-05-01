@@ -51,6 +51,7 @@ class Gicv3Redistributor : public Serializable
     Gicv3Distributor * distributor;
     Gicv3CPUInterface * cpuInterface;
     uint32_t cpuId;
+    PortProxy * memProxy;
 
     /*
      * GICv3 defines 2 contiguous 64KB frames for each redistributor.
