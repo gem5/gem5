@@ -62,9 +62,10 @@ SETranslatingPortProxy::SETranslatingPortProxy(MasterPort& port, Process *p,
 { }
 
 bool
-SETranslatingPortProxy::tryReadBlob(Addr addr, uint8_t *p, int size) const
+SETranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
 {
     int prevSize = 0;
+    auto *bytes = static_cast<uint8_t *>(p);
 
     for (ChunkGenerator gen(addr, size, PageBytes); !gen.done(); gen.next()) {
         Addr paddr;
@@ -72,7 +73,7 @@ SETranslatingPortProxy::tryReadBlob(Addr addr, uint8_t *p, int size) const
         if (!pTable->translate(gen.addr(),paddr))
             return false;
 
-        PortProxy::readBlobPhys(paddr, 0, p + prevSize, gen.size());
+        PortProxy::readBlobPhys(paddr, 0, bytes + prevSize, gen.size());
         prevSize += gen.size();
     }
 
@@ -81,10 +82,10 @@ SETranslatingPortProxy::tryReadBlob(Addr addr, uint8_t *p, int size) const
 
 
 bool
-SETranslatingPortProxy::tryWriteBlob(Addr addr, const uint8_t *p,
-                                     int size) const
+SETranslatingPortProxy::tryWriteBlob(Addr addr, const void *p, int size) const
 {
     int prevSize = 0;
+    auto *bytes = static_cast<const uint8_t *>(p);
 
     for (ChunkGenerator gen(addr, size, PageBytes); !gen.done(); gen.next()) {
         Addr paddr;
@@ -104,7 +105,7 @@ SETranslatingPortProxy::tryWriteBlob(Addr addr, const uint8_t *p,
             pTable->translate(gen.addr(), paddr);
         }
 
-        PortProxy::writeBlobPhys(paddr, 0, p + prevSize, gen.size());
+        PortProxy::writeBlobPhys(paddr, 0, bytes + prevSize, gen.size());
         prevSize += gen.size();
     }
 

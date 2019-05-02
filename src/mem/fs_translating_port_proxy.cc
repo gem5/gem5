@@ -67,7 +67,7 @@ FSTranslatingPortProxy::FSTranslatingPortProxy(MasterPort &port,
 }
 
 bool
-FSTranslatingPortProxy::tryReadBlob(Addr addr, uint8_t *p, int size) const
+FSTranslatingPortProxy::tryReadBlob(Addr addr, void *p, int size) const
 {
     Addr paddr;
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
@@ -79,14 +79,14 @@ FSTranslatingPortProxy::tryReadBlob(Addr addr, uint8_t *p, int size) const
             paddr = TheISA::vtophys(gen.addr());
 
         PortProxy::readBlobPhys(paddr, 0, p, gen.size());
-        p += gen.size();
+        p = static_cast<uint8_t *>(p) + gen.size();
     }
     return true;
 }
 
 bool
 FSTranslatingPortProxy::tryWriteBlob(
-        Addr addr, const uint8_t *p, int size) const
+        Addr addr, const void *p, int size) const
 {
     Addr paddr;
     for (ChunkGenerator gen(addr, size, TheISA::PageBytes); !gen.done();
@@ -98,7 +98,7 @@ FSTranslatingPortProxy::tryWriteBlob(
             paddr = TheISA::vtophys(gen.addr());
 
         PortProxy::writeBlobPhys(paddr, 0, p, gen.size());
-        p += gen.size();
+        p = static_cast<const uint8_t *>(p) + gen.size();
     }
     return true;
 }

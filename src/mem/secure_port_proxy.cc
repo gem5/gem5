@@ -40,14 +40,14 @@
 #include "mem/secure_port_proxy.hh"
 
 bool
-SecurePortProxy::tryReadBlob(Addr addr, uint8_t *p, int size) const
+SecurePortProxy::tryReadBlob(Addr addr, void *p, int size) const
 {
     readBlobPhys(addr, Request::SECURE, p, size);
     return true;
 }
 
 bool
-SecurePortProxy::tryWriteBlob(Addr addr, const uint8_t *p, int size) const
+SecurePortProxy::tryWriteBlob(Addr addr, const void *p, int size) const
 {
     writeBlobPhys(addr, Request::SECURE, p, size);
     return true;

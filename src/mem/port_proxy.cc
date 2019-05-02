@@ -43,7 +43,7 @@
 
 void
 PortProxy::readBlobPhys(Addr addr, Request::Flags flags,
-                        uint8_t *p, int size) const
+                        void *p, int size) const
 {
     for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
          gen.next()) {
@@ -52,15 +52,15 @@ PortProxy::readBlobPhys(Addr addr, Request::Flags flags,
             gen.addr(), gen.size(), flags, Request::funcMasterId);
 
         Packet pkt(req, MemCmd::ReadReq);
-        pkt.dataStatic(p);
+        pkt.dataStatic(static_cast<uint8_t *>(p));
         _port.sendFunctional(&pkt);
-        p += gen.size();
+        p = static_cast<uint8_t *>(p) + gen.size();
     }
 }
 
 void
 PortProxy::writeBlobPhys(Addr addr, Request::Flags flags,
-                         const uint8_t *p, int size) const
+                         const void *p, int size) const
 {
     for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
          gen.next()) {
@@ -69,9 +69,9 @@ PortProxy::writeBlobPhys(Addr addr, Request::Flags flags,
             gen.addr(), gen.size(), flags, Request::funcMasterId);
 
         Packet pkt(req, MemCmd::WriteReq);
-        pkt.dataStaticConst(p);
+        pkt.dataStaticConst(static_cast<const uint8_t *>(p));
         _port.sendFunctional(&pkt);
-        p += gen.size();
+        p = static_cast<const uint8_t *>(p) + gen.size();
     }
 }
 
@@ -92,7 +92,7 @@ bool
 PortProxy::tryWriteString(Addr addr, const char *str) const
 {
     do {
-        if (!tryWriteBlob(addr++, (uint8_t *)str, 1))
+        if (!tryWriteBlob(addr++, str, 1))
             return false;
     } while (*str++);
     return true;

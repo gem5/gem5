@@ -100,13 +100,13 @@ class PortProxy
      * Read size bytes memory at physical address and store in p.
      */
     void readBlobPhys(Addr addr, Request::Flags flags,
-                      uint8_t* p, int size) const;
+                      void *p, int size) const;
 
     /**
      * Write size bytes from p to physical address.
      */
     void writeBlobPhys(Addr addr, Request::Flags flags,
-                       const uint8_t* p, int size) const;
+                       const void *p, int size) const;
 
     /**
      * Fill size bytes starting at physical addr with byte value val.
@@ -123,7 +123,7 @@ class PortProxy
      * Returns true on success and false on failure.
      */
     virtual bool
-    tryReadBlob(Addr addr, uint8_t *p, int size) const
+    tryReadBlob(Addr addr, void *p, int size) const
     {
         readBlobPhys(addr, 0, p, size);
         return true;
@@ -134,7 +134,7 @@ class PortProxy
      * Returns true on success and false on failure.
      */
     virtual bool
-    tryWriteBlob(Addr addr, const uint8_t *p, int size) const
+    tryWriteBlob(Addr addr, const void *p, int size) const
     {
         writeBlobPhys(addr, 0, p, size);
         return true;
@@ -159,7 +159,7 @@ class PortProxy
      * Same as tryReadBlob, but insists on success.
      */
     void
-    readBlob(Addr addr, uint8_t* p, int size) const
+    readBlob(Addr addr, void *p, int size) const
     {
         if (!tryReadBlob(addr, p, size))
             fatal("readBlob(%#x, ...) failed", addr);
@@ -169,7 +169,7 @@ class PortProxy
      * Same as tryWriteBlob, but insists on success.
      */
     void
-    writeBlob(Addr addr, const uint8_t* p, int size) const
+    writeBlob(Addr addr, const void *p, int size) const
     {
         if (!tryWriteBlob(addr, p, size))
             fatal("writeBlob(%#x, ...) failed", addr);
@@ -250,7 +250,7 @@ T
 PortProxy::read(Addr address) const
 {
     T data;
-    readBlob(address, (uint8_t*)&data, sizeof(T));
+    readBlob(address, &data, sizeof(T));
     return data;
 }
 
@@ -258,7 +258,7 @@ template <typename T>
 void
 PortProxy::write(Addr address, T data) const
 {
-    writeBlob(address, (uint8_t*)&data, sizeof(T));
+    writeBlob(address, &data, sizeof(T));
 }
 
 template <typename T>
@@ -266,7 +266,7 @@ T
 PortProxy::read(Addr address, ByteOrder byte_order) const
 {
     T data;
-    readBlob(address, (uint8_t*)&data, sizeof(T));
+    readBlob(address, &data, sizeof(T));
     return gtoh(data, byte_order);
 }
 
@@ -275,7 +275,7 @@ void
 PortProxy::write(Addr address, T data, ByteOrder byte_order) const
 {
     data = htog(data, byte_order);
-    writeBlob(address, (uint8_t*)&data, sizeof(T));
+    writeBlob(address, &data, sizeof(T));
 }
 
 #endif // __MEM_PORT_PROXY_HH__

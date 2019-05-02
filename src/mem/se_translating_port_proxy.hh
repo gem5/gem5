@@ -85,8 +85,8 @@ class SETranslatingPortProxy : public PortProxy
 
     void setPageTable(EmulationPageTable *p) { pTable = p; }
     void setProcess(Process *p) { process = p; }
-    bool tryReadBlob(Addr addr, uint8_t *p, int size) const override;
-    bool tryWriteBlob(Addr addr, const uint8_t *p, int size) const override;
+    bool tryReadBlob(Addr addr, void *p, int size) const override;
+    bool tryWriteBlob(Addr addr, const void *p, int size) const override;
     bool tryMemsetBlob(Addr addr, uint8_t val, int size) const override;
 };
 
