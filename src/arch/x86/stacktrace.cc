@@ -47,7 +47,7 @@ namespace X86ISA
 static int32_t
 readSymbol(ThreadContext *tc, const std::string name)
 {
-    FSTranslatingPortProxy &vp = tc->getVirtProxy();
+    PortProxy &vp = tc->getVirtProxy();
     SymbolTable *symtab = tc->getSystemPtr()->kernelSymtab;
 
     Addr addr;
@@ -75,7 +75,7 @@ ProcessInfo::task(Addr ksp) const
 
     Addr tsk;
 
-    FSTranslatingPortProxy &vp = tc->getVirtProxy();
+    PortProxy &vp = tc->getVirtProxy();
     tsk = vp.read<Addr>(base + task_off, GuestByteOrder);
 
     return tsk;
@@ -90,7 +90,7 @@ ProcessInfo::pid(Addr ksp) const
 
     uint16_t pd;
 
-    FSTranslatingPortProxy &vp = tc->getVirtProxy();
+    PortProxy &vp = tc->getVirtProxy();
     pd = vp.read<uint16_t>(task + pid_off, GuestByteOrder);
 
     return pd;

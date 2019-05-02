@@ -107,7 +107,7 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
             }
         } else {
             Addr sp = tc->readIntReg(StackPointerReg);
-            FSTranslatingPortProxy &vp = tc->getVirtProxy();
+            PortProxy &vp = tc->getVirtProxy();
             uint64_t arg;
             if (size == sizeof(uint64_t)) {
                 // If the argument is even it must be aligned

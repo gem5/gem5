@@ -75,7 +75,8 @@ class BaseBufferArg {
     /**
      * copy data into simulator space (read from target memory)
      */
-    bool copyIn(SETranslatingPortProxy &memproxy)
+    bool
+    copyIn(PortProxy &memproxy)
     {
         memproxy.readBlob(addr, bufPtr, size);
         return true;    // no EFAULT detection for now
@@ -84,7 +85,8 @@ class BaseBufferArg {
     /**
      * copy data out of simulator space (write to target memory)
      */
-    bool copyOut(SETranslatingPortProxy &memproxy)
+    bool
+    copyOut(PortProxy &memproxy)
     {
         memproxy.writeBlob(addr, bufPtr, size);
         return true;    // no EFAULT detection for now

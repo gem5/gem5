@@ -42,7 +42,7 @@ template<class AddrType>
 void
 copyStringArray(std::vector<std::string> &strings,
         AddrType array_ptr, AddrType data_ptr,
-        SETranslatingPortProxy& memProxy)
+        PortProxy& memProxy)
 {
     AddrType data_ptr_swap;
     for (std::vector<std::string>::size_type i = 0; i < strings.size(); ++i) {

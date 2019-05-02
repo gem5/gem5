@@ -176,7 +176,7 @@ LinuxAlphaSystem::setDelayLoop(ThreadContext *tc)
     if (kernelSymtab->findAddress("loops_per_jiffy", addr)) {
         Tick cpuFreq = tc->getCpuPtr()->frequency();
         assert(intrFreq);
-        FSTranslatingPortProxy &vp = tc->getVirtProxy();
+        PortProxy &vp = tc->getVirtProxy();
         vp.write(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988),
                  GuestByteOrder);
     }

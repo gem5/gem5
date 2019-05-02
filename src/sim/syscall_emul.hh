@@ -603,7 +603,7 @@ convertStat64Buf(target_stat &tgt, host_stat64 *host, bool fakeTTY = false)
 // Here are a couple of convenience functions
 template<class OS>
 void
-copyOutStatBuf(SETranslatingPortProxy &mem, Addr addr,
+copyOutStatBuf(PortProxy &mem, Addr addr,
                hst_stat *host, bool fakeTTY = false)
 {
     typedef TypedBufferArg<typename OS::tgt_stat> tgt_stat_buf;
@@ -614,7 +614,7 @@ copyOutStatBuf(SETranslatingPortProxy &mem, Addr addr,
 
 template<class OS>
 void
-copyOutStat64Buf(SETranslatingPortProxy &mem, Addr addr,
+copyOutStat64Buf(PortProxy &mem, Addr addr,
                  hst_stat64 *host, bool fakeTTY = false)
 {
     typedef TypedBufferArg<typename OS::tgt_stat64> tgt_stat_buf;
@@ -625,7 +625,7 @@ copyOutStat64Buf(SETranslatingPortProxy &mem, Addr addr,
 
 template <class OS>
 void
-copyOutStatfsBuf(SETranslatingPortProxy &mem, Addr addr,
+copyOutStatfsBuf(PortProxy &mem, Addr addr,
                  hst_statfs *host)
 {
     TypedBufferArg<typename OS::tgt_statfs> tgt(addr);
@@ -1663,7 +1663,7 @@ readvFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         return -EBADF;
     int sim_fd = ffdp->getSimFD();
 
-    SETranslatingPortProxy &prox = tc->getMemProxy();
+    PortProxy &prox = tc->getMemProxy();
     uint64_t tiov_base = p->getSyscallArg(tc, index);
     size_t count = p->getSyscallArg(tc, index);
     typename OS::tgt_iovec tiov[count];
@@ -1703,7 +1703,7 @@ writevFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         return -EBADF;
     int sim_fd = hbfdp->getSimFD();
 
-    SETranslatingPortProxy &prox = tc->getMemProxy();
+    PortProxy &prox = tc->getMemProxy();
     uint64_t tiov_base = p->getSyscallArg(tc, index);
     size_t count = p->getSyscallArg(tc, index);
     struct iovec hiov[count];
@@ -1841,7 +1841,7 @@ mmapImpl(SyscallDesc *desc, int num, ThreadContext *tc, bool is_mmap2)
     p->allocateMem(start, length, clobber);
 
     // Transfer content into target address space.
-    SETranslatingPortProxy &tp = tc->getMemProxy();
+    PortProxy &tp = tc->getMemProxy();
     if (tgt_flags & OS::TGT_MAP_ANONYMOUS) {
         // In general, we should zero the mapped area for anonymous mappings,
         // with something like:
@@ -2124,16 +2124,15 @@ execveFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
     int index = 0;
     std::string path;
-    SETranslatingPortProxy & mem_proxy = tc->getMemProxy();
+    PortProxy & mem_proxy = tc->getMemProxy();
     if (!mem_proxy.tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
     if (access(path.c_str(), F_OK) == -1)
         return -EACCES;
 
-    auto read_in = [](std::vector<std::string> & vect,
-                      SETranslatingPortProxy & mem_proxy,
-                      Addr mem_loc)
+    auto read_in = [](std::vector<std::string> &vect,
+                      PortProxy &mem_proxy, Addr mem_loc)
     {
         for (int inc = 0; ; inc++) {
             BufferArg b((mem_loc + sizeof(Addr) * inc), sizeof(Addr));
@@ -2301,7 +2300,7 @@ timeFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (taddr != 0) {
         typename OS::time_t t = sec;
         t = TheISA::htog(t);
-        SETranslatingPortProxy &p = tc->getMemProxy();
+        PortProxy &p = tc->getMemProxy();
         p.writeBlob(taddr, &t, (int)sizeof(typename OS::time_t));
     }
     return sec;

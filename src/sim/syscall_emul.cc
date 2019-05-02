@@ -265,7 +265,7 @@ brkFunc(SyscallDesc *desc, int num, ThreadContext *tc)
             // if the address is already there, zero it out
             else {
                 uint8_t zero = 0;
-                SETranslatingPortProxy &tp = tc->getMemProxy();
+                PortProxy &tp = tc->getMemProxy();
 
                 // split non-page aligned accesses
                 Addr next_page = roundUp(gen.addr(), PageBytes);

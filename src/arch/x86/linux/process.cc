@@ -125,7 +125,7 @@ archPrctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     int code = process->getSyscallArg(tc, index);
     uint64_t addr = process->getSyscallArg(tc, index);
     uint64_t fsBase, gsBase;
-    SETranslatingPortProxy &p = tc->getMemProxy();
+    PortProxy &p = tc->getMemProxy();
     switch(code)
     {
       // Each of these valid options should actually check addr.
