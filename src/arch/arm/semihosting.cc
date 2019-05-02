@@ -47,7 +47,7 @@
 #include "debug/Semihosting.hh"
 #include "dev/serial/serial.hh"
 #include "mem/physical.hh"
-#include "mem/port_proxy.hh"
+#include "mem/secure_port_proxy.hh"
 #include "params/ArmSemihosting.hh"
 #include "sim/byteswap.hh"
 #include "sim/sim_exit.hh"

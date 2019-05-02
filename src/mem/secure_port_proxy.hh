@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2018 ARM Limited
+ * Copyright (c) 2011-2013, 2018 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,53 +37,45 @@
  * Authors: Andreas Hansson
  */
 
+/**
+ * @file
+ * PortProxy Object Declaration.
+ *
+ * Port proxies are used when non-structural entities need access to
+ * the memory system (or structural entities that want to peak into
+ * the memory system without making a real memory access).
+ *
+ * Proxy objects replace the previous FunctionalPort, TranslatingPort
+ * and VirtualPort objects, which provided the same functionality as
+ * the proxies, but were instances of ports not corresponding to real
+ * structural ports of the simulated system. Via the port proxies all
+ * the accesses go through an actual port (either the system port,
+ * e.g. for processes or initialisation, or a the data port of the
+ * CPU, e.g. for threads) and thus are transparent to a potentially
+ * distributed memory and automatically adhere to the memory map of
+ * the system.
+ */
+
+#ifndef __MEM_SECURE_PORT_PROXY_HH__
+#define __MEM_SECURE_PORT_PROXY_HH__
+
 #include "mem/port_proxy.hh"
 
-#include "base/chunk_generator.hh"
-
-void
-PortProxy::readBlobPhys(Addr addr, Request::Flags flags,
-                        uint8_t *p, int size) const
+/**
+ * This object is a proxy for a structural port, to be used for debug
+ * accesses to secure memory.
+ *
+ * The addresses are interpreted as physical addresses to secure memory.
+ */
+class SecurePortProxy : public PortProxy
 {
-    for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
-         gen.next()) {
+  public:
+    SecurePortProxy(MasterPort &port, unsigned int cache_line_size)
+        : PortProxy(port, cache_line_size) {}
 
-        auto req = std::make_shared<Request>(
-            gen.addr(), gen.size(), flags, Request::funcMasterId);
+    void readBlob(Addr addr, uint8_t *p, int size) const override;
+    void writeBlob(Addr addr, const uint8_t *p, int size) const override;
+    void memsetBlob(Addr addr, uint8_t val, int size) const override;
+};
 
-        Packet pkt(req, MemCmd::ReadReq);
-        pkt.dataStatic(p);
-        _port.sendFunctional(&pkt);
-        p += gen.size();
-    }
-}
-
-void
-PortProxy::writeBlobPhys(Addr addr, Request::Flags flags,
-                         const uint8_t *p, int size) const
-{
-    for (ChunkGenerator gen(addr, size, _cacheLineSize); !gen.done();
-         gen.next()) {
-
-        auto req = std::make_shared<Request>(
-            gen.addr(), gen.size(), flags, Request::funcMasterId);
-
-        Packet pkt(req, MemCmd::WriteReq);
-        pkt.dataStaticConst(p);
-        _port.sendFunctional(&pkt);
-        p += gen.size();
-    }
-}
-
-void
-PortProxy::memsetBlobPhys(Addr addr, Request::Flags flags,
-                          uint8_t v, int size) const
-{
-    // quick and dirty...
-    uint8_t *buf = new uint8_t[size];
-
-    std::memset(buf, v, size);
-    PortProxy::writeBlobPhys(addr, flags, buf, size);
-
-    delete [] buf;
-}
+#endif // __MEM_SECURE_PORT_PROXY_HH__

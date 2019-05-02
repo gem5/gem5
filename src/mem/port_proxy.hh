@@ -165,23 +165,6 @@ class PortProxy
 };
 
 
-/**
- * This object is a proxy for a structural port, to be used for debug
- * accesses to secure memory.
- *
- * The addresses are interpreted as physical addresses to secure memory.
- */
-class SecurePortProxy : public PortProxy
-{
-  public:
-    SecurePortProxy(MasterPort &port, unsigned int cache_line_size)
-        : PortProxy(port, cache_line_size) {}
-
-    void readBlob(Addr addr, uint8_t *p, int size) const override;
-    void writeBlob(Addr addr, const uint8_t *p, int size) const override;
-    void memsetBlob(Addr addr, uint8_t val, int size) const override;
-};
-
 template <typename T>
 T
 PortProxy::read(Addr address) const
