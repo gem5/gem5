@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013,2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -165,6 +165,8 @@ class RubyPort : public ClockedObject
     DrainState drain() override;
 
     bool isCPUSequencer() { return m_isCPUSequencer; }
+
+    virtual int functionalWrite(Packet *func_pkt);
 
   protected:
     void trySendRetries();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013,2019 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -408,6 +408,12 @@ RubyPort::MemSlavePort::recvFunctional(PacketPtr pkt)
 
         // turn packet around to go back to requester if response expected
         if (needsResponse) {
+            // The pkt is already turned into a reponse if the directory
+            // forwarded the request to the memory controller (see
+            // AbstractController::functionalMemoryWrite and
+            // AbstractMemory::functionalAccess)
+            if (!pkt->isResponse())
+                pkt->makeResponse();
             pkt->setFunctionalResponseStatus(accessSucceeded);
         }
 
@@ -619,4 +625,17 @@ RubyPort::PioMasterPort::recvRangeChange()
     if (r.gotAddrRanges == 0 && FullSystem) {
         r.pioSlavePort.sendRangeChange();
     }
+}
+
+
+int
+RubyPort::functionalWrite(Packet *func_pkt)
+{
+    int num_written = 0;
+    for (auto port : slave_ports) {
+        if (port->trySatisfyFunctional(func_pkt)) {
+            num_written += 1;
+        }
+    }
+    return num_written;
 }

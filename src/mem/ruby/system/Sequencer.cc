@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -110,6 +122,21 @@ Sequencer::wakeup()
         // If there are still outstanding requests, keep checking
         schedule(deadlockCheckEvent, clockEdge(m_deadlock_threshold));
     }
+}
+
+int
+Sequencer::functionalWrite(Packet *func_pkt)
+{
+    int num_written = RubyPort::functionalWrite(func_pkt);
+
+    for (const auto &table_entry : m_RequestTable) {
+        for (const auto& seq_req : table_entry.second) {
+            if (seq_req.functionalWrite(func_pkt))
+                ++num_written;
+        }
+    }
+
+    return num_written;
 }
 
 void Sequencer::resetStats()

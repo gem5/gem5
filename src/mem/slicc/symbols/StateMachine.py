@@ -323,6 +323,7 @@ class $c_ident : public AbstractController
 
     void recordCacheTrace(int cntrl, CacheRecorder* tr);
     Sequencer* getCPUSequencer() const;
+    DMASequencer* getDMASequencer() const;
     GPUCoalescer* getGPUCoalescer() const;
 
     bool functionalReadBuffers(PacketPtr&);
@@ -702,6 +703,12 @@ $c_ident::init()
                 assert(param.pointer)
                 seq_ident = "m_%s_ptr" % param.ident
 
+        dma_seq_ident = "NULL"
+        for param in self.config_parameters:
+            if param.ident == "dma_sequencer":
+                assert(param.pointer)
+                dma_seq_ident = "m_%s_ptr" % param.ident
+
         coal_ident = "NULL"
         for param in self.config_parameters:
             if param.ident == "coalescer":
@@ -725,6 +732,28 @@ $c_ident::getCPUSequencer() const
 
 Sequencer*
 $c_ident::getCPUSequencer() const
+{
+    return NULL;
+}
+''')
+
+        if dma_seq_ident != "NULL":
+            code('''
+DMASequencer*
+$c_ident::getDMASequencer() const
+{
+    if (NULL != $dma_seq_ident) {
+        return $dma_seq_ident;
+    } else {
+        return NULL;
+    }
+}
+''')
+        else:
+            code('''
+
+DMASequencer*
+$c_ident::getDMASequencer() const
 {
     return NULL;
 }

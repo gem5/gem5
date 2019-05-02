@@ -62,6 +62,7 @@
 
 class Network;
 class GPUCoalescer;
+class DMASequencer;
 
 // used to communicate that an in_port peeked the wrong message type
 class RejectException: public std::exception
@@ -101,6 +102,7 @@ class AbstractController : public ClockedObject, public Consumer
 
     virtual void recordCacheTrace(int cntrl, CacheRecorder* tr) = 0;
     virtual Sequencer* getCPUSequencer() const = 0;
+    virtual DMASequencer* getDMASequencer() const = 0;
     virtual GPUCoalescer* getGPUCoalescer() const = 0;
 
     // This latency is used by the sequencer when enqueueing requests.
