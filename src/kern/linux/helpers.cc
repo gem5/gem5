@@ -94,7 +94,7 @@ Linux::dumpDmesg(ThreadContext *tc, std::ostream &os)
 {
     System *system = tc->getSystemPtr();
     const SymbolTable *symtab = system->kernelSymtab;
-    FSTranslatingPortProxy proxy(tc);
+    PortProxy &proxy = tc->getVirtProxy();
 
     Addr addr_lb = 0, addr_lb_len = 0, addr_first = 0, addr_next = 0;
     const bool found_symbols =
