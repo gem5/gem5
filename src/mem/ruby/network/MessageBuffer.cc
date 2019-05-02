@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -438,17 +450,21 @@ MessageBuffer::regStats()
 }
 
 uint32_t
-MessageBuffer::functionalWrite(Packet *pkt)
+MessageBuffer::functionalAccess(Packet *pkt, bool is_read)
 {
-    uint32_t num_functional_writes = 0;
+    DPRINTF(RubyQueue, "functional %s for %#x\n",
+            is_read ? "read" : "write", pkt->getAddr());
+
+    uint32_t num_functional_accesses = 0;
 
     // Check the priority heap and write any messages that may
     // correspond to the address in the packet.
     for (unsigned int i = 0; i < m_prio_heap.size(); ++i) {
         Message *msg = m_prio_heap[i].get();
-        if (msg->functionalWrite(pkt)) {
-            num_functional_writes++;
-        }
+        if (is_read && msg->functionalRead(pkt))
+            return 1;
+        else if (!is_read && msg->functionalWrite(pkt))
+            num_functional_accesses++;
     }
 
     // Check the stall queue and write any messages that may
@@ -461,13 +477,14 @@ MessageBuffer::functionalWrite(Packet *pkt)
             it != (map_iter->second).end(); ++it) {
 
             Message *msg = (*it).get();
-            if (msg->functionalWrite(pkt)) {
-                num_functional_writes++;
-            }
+            if (is_read && msg->functionalRead(pkt))
+                return 1;
+            else if (!is_read && msg->functionalWrite(pkt))
+                num_functional_accesses++;
         }
     }
 
-    return num_functional_writes;
+    return num_functional_accesses;
 }
 
 MessageBuffer *

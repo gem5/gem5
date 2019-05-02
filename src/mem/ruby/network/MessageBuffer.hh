@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -133,11 +145,24 @@ class MessageBuffer : public SimObject
     // Function for figuring out if any of the messages in the buffer need
     // to be updated with the data from the packet.
     // Return value indicates the number of messages that were updated.
-    // This required for debugging the code.
-    uint32_t functionalWrite(Packet *pkt);
+    uint32_t functionalWrite(Packet *pkt)
+    {
+        return functionalAccess(pkt, false);
+    }
+
+    // Function for figuring if message in the buffer has valid data for
+    // the packet.
+    // Returns true only if a message was found with valid data and the
+    // read was performed.
+    bool functionalRead(Packet *pkt)
+    {
+        return functionalAccess(pkt, true) == 1;
+    }
 
   private:
     void reanalyzeList(std::list<MsgPtr> &, Tick);
+
+    uint32_t functionalAccess(Packet *pkt, bool is_read);
 
   private:
     // Data Members (m_ prefix)
