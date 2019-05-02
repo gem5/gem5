@@ -1,3 +1,15 @@
+# Copyright (c) 2019 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # Copyright (c) 2013 Advanced Micro Devices, Inc.
@@ -313,6 +325,7 @@ class $c_ident : public AbstractController
     Sequencer* getCPUSequencer() const;
     GPUCoalescer* getGPUCoalescer() const;
 
+    bool functionalReadBuffers(PacketPtr&);
     int functionalWriteBuffers(PacketPtr&);
 
     void countTransition(${ident}_State state, ${ident}_Event event);
@@ -1038,6 +1051,29 @@ $c_ident::functionalWriteBuffers(PacketPtr& pkt)
 
         code('''
     return num_functional_writes;
+}
+''')
+
+        # Function for functional reads to messages buffered in the controller
+        code('''
+bool
+$c_ident::functionalReadBuffers(PacketPtr& pkt)
+{
+''')
+        for var in self.objects:
+            vtype = var.type
+            if vtype.isBuffer:
+                vid = "m_%s_ptr" % var.ident
+                code('if ($vid->functionalRead(pkt)) return true;')
+
+        for var in self.config_parameters:
+            vtype = var.type_ast.type
+            if vtype.isBuffer:
+                vid = "m_%s_ptr" % var.ident
+                code('if ($vid->functionalRead(pkt)) return true;')
+
+        code('''
+    return false;
 }
 ''')
 

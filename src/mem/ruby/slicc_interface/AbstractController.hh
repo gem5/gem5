@@ -112,6 +112,7 @@ class AbstractController : public ClockedObject, public Consumer
 
     //! These functions are used by ruby system to read/write the data blocks
     //! that exist with in the controller.
+    virtual bool functionalReadBuffers(PacketPtr&) = 0;
     virtual void functionalRead(const Addr &addr, PacketPtr) = 0;
     void functionalMemoryRead(PacketPtr);
     //! The return value indicates the number of messages written with the
