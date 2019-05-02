@@ -84,7 +84,7 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     strcpy(name->version, "Generic_118558-21");
     strcpy(name->machine, "sun4u");
 
-    name.copyOut(tc->getMemProxy());
+    name.copyOut(tc->getVirtProxy());
 
     return 0;
 }

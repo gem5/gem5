@@ -140,12 +140,6 @@ class O3ThreadContext : public ThreadContext
         thread->initMemProxies(tc);
     }
 
-    PortProxy &
-    getMemProxy() override
-    {
-        return thread->getMemProxy();
-    }
-
     /** Returns this thread's status. */
     Status status() const override { return thread->status(); }
 

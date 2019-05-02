@@ -451,7 +451,7 @@ void Sparc32Process::flushWindows(ThreadContext *tc)
             for (int index = 16; index < 32; index++) {
                 uint32_t regVal = tc->readIntReg(index);
                 regVal = htog(regVal);
-                if (!tc->getMemProxy().tryWriteBlob(
+                if (!tc->getVirtProxy().tryWriteBlob(
                         sp + (index - 16) * 4, (uint8_t *)&regVal, 4)) {
                     warn("Failed to save register to the stack when "
                             "flushing windows.\n");
@@ -486,7 +486,7 @@ Sparc64Process::flushWindows(ThreadContext *tc)
             for (int index = 16; index < 32; index++) {
                 RegVal regVal = tc->readIntReg(index);
                 regVal = htog(regVal);
-                if (!tc->getMemProxy().tryWriteBlob(
+                if (!tc->getVirtProxy().tryWriteBlob(
                         sp + 2047 + (index - 16) * 8, (uint8_t *)&regVal, 8)) {
                     warn("Failed to save register to the stack when "
                             "flushing windows.\n");

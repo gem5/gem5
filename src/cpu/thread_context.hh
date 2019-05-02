@@ -160,8 +160,6 @@ class ThreadContext
      */
     virtual void initMemProxies(ThreadContext *tc) = 0;
 
-    virtual PortProxy &getMemProxy() = 0;
-
     virtual Process *getProcessPtr() = 0;
 
     virtual void setProcessPtr(Process *p) = 0;

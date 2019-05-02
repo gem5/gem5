@@ -624,13 +624,8 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
-    if (FullSystem) {
-        PortProxy &proxy = tc->getVirtProxy();
-        proxy.readBlob(vaddr, data, size);
-    } else {
-        PortProxy &proxy = tc->getMemProxy();
-        proxy.readBlob(vaddr, data, size);
-    }
+    PortProxy &proxy = tc->getVirtProxy();
+    proxy.readBlob(vaddr, data, size);
 
 #if TRACING_ON
     if (DTRACE(GDBRead)) {
@@ -667,13 +662,8 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
         } else
             DPRINTFNR("\n");
     }
-    if (FullSystem) {
-        PortProxy &proxy = tc->getVirtProxy();
-        proxy.writeBlob(vaddr, data, size);
-    } else {
-        PortProxy &proxy = tc->getMemProxy();
-        proxy.writeBlob(vaddr, data, size);
-    }
+    PortProxy &proxy = tc->getVirtProxy();
+    proxy.writeBlob(vaddr, data, size);
 
     return true;
 }

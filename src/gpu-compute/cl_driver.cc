@@ -137,7 +137,7 @@ ClDriver::ioctl(ThreadContext *tc, unsigned req)
                     k->numInsts() * sizeof(TheGpuISA::RawMachInst);
             }
 
-            sizes.copyOut(tc->getMemProxy());
+            sizes.copyOut(tc->getVirtProxy());
         }
         break;
 
@@ -158,7 +158,7 @@ ClDriver::ioctl(ThreadContext *tc, unsigned req)
                 ki->spill_mem_size   = kernelInfo[i].spill_mem_size;
             }
 
-            kinfo.copyOut(tc->getMemProxy());
+            kinfo.copyOut(tc->getVirtProxy());
         }
         break;
 
@@ -183,7 +183,7 @@ ClDriver::ioctl(ThreadContext *tc, unsigned req)
 
             assert(bufp - (char *)buf.bufferPtr() == string_table_size);
 
-            buf.copyOut(tc->getMemProxy());
+            buf.copyOut(tc->getVirtProxy());
         }
         break;
 
@@ -198,7 +198,7 @@ ClDriver::ioctl(ThreadContext *tc, unsigned req)
             memcpy(datap,
                    kernels.back()->readonly_data,
                    size);
-            data.copyOut(tc->getMemProxy());
+            data.copyOut(tc->getVirtProxy());
         }
         break;
 
@@ -227,7 +227,7 @@ ClDriver::ioctl(ThreadContext *tc, unsigned req)
                 }
             }
 
-            buf.copyOut(tc->getMemProxy());
+            buf.copyOut(tc->getVirtProxy());
         }
         break;
 
@@ -235,7 +235,7 @@ ClDriver::ioctl(ThreadContext *tc, unsigned req)
         {
             BufferArg buf(buf_addr, sizeof(uint32_t));
             *((uint32_t*)buf.bufferPtr()) = dispatcher->getNumCUs();
-            buf.copyOut(tc->getMemProxy());
+            buf.copyOut(tc->getVirtProxy());
         }
         break;
 
@@ -243,14 +243,14 @@ ClDriver::ioctl(ThreadContext *tc, unsigned req)
         {
             BufferArg buf(buf_addr, sizeof(uint32_t));
             *((uint32_t*)buf.bufferPtr()) = dispatcher->wfSize();
-            buf.copyOut(tc->getMemProxy());
+            buf.copyOut(tc->getVirtProxy());
         }
         break;
       case HSA_GET_HW_STATIC_CONTEXT_SIZE:
         {
             BufferArg buf(buf_addr, sizeof(uint32_t));
             *((uint32_t*)buf.bufferPtr()) = dispatcher->getStaticContextSize();
-            buf.copyOut(tc->getMemProxy());
+            buf.copyOut(tc->getVirtProxy());
         }
         break;
 

@@ -122,8 +122,6 @@ struct ThreadState : public Serializable {
         }
     }
 
-    PortProxy &getMemProxy();
-
     /** Reads the number of instructions functionally executed and
      * committed.
      */

@@ -51,7 +51,7 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "sparc");
 
-    name.copyOut(tc->getMemProxy());
+    name.copyOut(tc->getVirtProxy());
 
     return 0;
 }
@@ -71,19 +71,19 @@ getresuidFunc(SyscallDesc *desc, int num, ThreadContext *tc)
     if (ruid) {
         BufferArg ruidBuff(ruid, sizeof(uint64_t));
         memcpy(ruidBuff.bufferPtr(), &id, sizeof(uint64_t));
-        ruidBuff.copyOut(tc->getMemProxy());
+        ruidBuff.copyOut(tc->getVirtProxy());
     }
     // Set the euid
     if (euid) {
         BufferArg euidBuff(euid, sizeof(uint64_t));
         memcpy(euidBuff.bufferPtr(), &id, sizeof(uint64_t));
-        euidBuff.copyOut(tc->getMemProxy());
+        euidBuff.copyOut(tc->getVirtProxy());
     }
     // Set the suid
     if (suid) {
         BufferArg suidBuff(suid, sizeof(uint64_t));
         memcpy(suidBuff.bufferPtr(), &id, sizeof(uint64_t));
-        suidBuff.copyOut(tc->getMemProxy());
+        suidBuff.copyOut(tc->getVirtProxy());
     }
     return 0;
 }

@@ -223,12 +223,6 @@ class SimpleThread : public ThreadState, public ThreadContext
         ThreadState::initMemProxies(tc);
     }
 
-    PortProxy &
-    getMemProxy() override
-    {
-        return ThreadState::getMemProxy();
-    }
-
     Process *getProcessPtr() override { return ThreadState::getProcessPtr(); }
     void setProcessPtr(Process *p) override { ThreadState::setProcessPtr(p); }
 

@@ -117,7 +117,7 @@ unameFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc)
     strcpy(name->version, "#1 SMP Sat Dec  1 00:00:00 GMT 2012");
     strcpy(name->machine, "armv7l");
 
-    name.copyOut(tc->getMemProxy());
+    name.copyOut(tc->getVirtProxy());
     return 0;
 }
 
@@ -135,7 +135,7 @@ unameFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc)
     strcpy(name->version, "#1 SMP Sat Dec  1 00:00:00 GMT 2012");
     strcpy(name->machine, "armv8l");
 
-    name.copyOut(tc->getMemProxy());
+    name.copyOut(tc->getVirtProxy());
     return 0;
 }
 
@@ -147,7 +147,7 @@ setTLSFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc)
     auto process = tc->getProcessPtr();
     uint32_t tlsPtr = process->getSyscallArg(tc, index);
 
-    tc->getMemProxy().writeBlob(ArmLinuxProcess32::commPage + 0x0ff0,
+    tc->getVirtProxy().writeBlob(ArmLinuxProcess32::commPage + 0x0ff0,
                                 &tlsPtr, sizeof(tlsPtr));
     tc->setMiscReg(MISCREG_TPIDRURO,tlsPtr);
     return 0;
@@ -1737,8 +1737,8 @@ ArmLinuxProcess32::initState()
 
     // Fill this page with swi -1 so we'll no if we land in it somewhere.
     for (Addr addr = 0; addr < PageBytes; addr += sizeof(swiNeg1)) {
-        tc->getMemProxy().writeBlob(commPage + addr,
-                                    swiNeg1, sizeof(swiNeg1));
+        tc->getVirtProxy().writeBlob(commPage + addr,
+                                     swiNeg1, sizeof(swiNeg1));
     }
 
     uint8_t memory_barrier[] =
@@ -1746,8 +1746,8 @@ ArmLinuxProcess32::initState()
         0x5f, 0xf0, 0x7f, 0xf5, // dmb
         0x0e, 0xf0, 0xa0, 0xe1  // return
     };
-    tc->getMemProxy().writeBlob(commPage + 0x0fa0, memory_barrier,
-                                sizeof(memory_barrier));
+    tc->getVirtProxy().writeBlob(commPage + 0x0fa0, memory_barrier,
+                                 sizeof(memory_barrier));
 
     uint8_t cmpxchg[] =
     {
@@ -1760,7 +1760,7 @@ ArmLinuxProcess32::initState()
         0x5f, 0xf0, 0x7f, 0xf5,  // dmb
         0x0e, 0xf0, 0xa0, 0xe1   // return
     };
-    tc->getMemProxy().writeBlob(commPage + 0x0fc0, cmpxchg, sizeof(cmpxchg));
+    tc->getVirtProxy().writeBlob(commPage + 0x0fc0, cmpxchg, sizeof(cmpxchg));
 
     uint8_t get_tls[] =
     {
@@ -1768,7 +1768,7 @@ ArmLinuxProcess32::initState()
         0x70, 0x0f, 0x1d, 0xee, // mrc p15, 0, r0, c13, c0, 3
         0x0e, 0xf0, 0xa0, 0xe1  // return
     };
-    tc->getMemProxy().writeBlob(commPage + 0x0fe0, get_tls, sizeof(get_tls));
+    tc->getVirtProxy().writeBlob(commPage + 0x0fe0, get_tls, sizeof(get_tls));
 }
 
 void

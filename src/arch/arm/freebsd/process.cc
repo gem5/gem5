@@ -109,13 +109,13 @@ sysctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     BufferArg buf3(oldlenp, sizeof(size_t));
     BufferArg buf4(newp, sizeof(size_t));
 
-    buf.copyIn(tc->getMemProxy());
-    buf2.copyIn(tc->getMemProxy());
-    buf3.copyIn(tc->getMemProxy());
+    buf.copyIn(tc->getVirtProxy());
+    buf2.copyIn(tc->getVirtProxy());
+    buf3.copyIn(tc->getVirtProxy());
 
     void *hnewp = NULL;
     if (newp) {
-        buf4.copyIn(tc->getMemProxy());
+        buf4.copyIn(tc->getVirtProxy());
         hnewp = (void *)buf4.bufferPtr();
     }
 
@@ -125,11 +125,11 @@ sysctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
     ret = sysctl((int *)hnamep, namelen, holdp, holdlenp, hnewp, newlen);
 
-    buf.copyOut(tc->getMemProxy());
-    buf2.copyOut(tc->getMemProxy());
-    buf3.copyOut(tc->getMemProxy());
+    buf.copyOut(tc->getVirtProxy());
+    buf2.copyOut(tc->getVirtProxy());
+    buf3.copyOut(tc->getVirtProxy());
     if (newp)
-        buf4.copyOut(tc->getMemProxy());
+        buf4.copyOut(tc->getVirtProxy());
 
     return (ret);
 }

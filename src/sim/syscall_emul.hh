@@ -351,7 +351,7 @@ futexFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (OS::TGT_FUTEX_WAIT == op || OS::TGT_FUTEX_WAIT_BITSET == op) {
         // Ensure futex system call accessed atomically.
         BufferArg buf(uaddr, sizeof(int));
-        buf.copyIn(tc->getMemProxy());
+        buf.copyIn(tc->getVirtProxy());
         int mem_val = *(int*)buf.bufferPtr();
 
         /*
@@ -378,7 +378,7 @@ futexFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
         // Ensure futex system call accessed atomically.
         BufferArg buf(uaddr, sizeof(int));
-        buf.copyIn(tc->getMemProxy());
+        buf.copyIn(tc->getVirtProxy());
         int mem_val = *(int*)buf.bufferPtr();
         /*
          * For CMP_REQUEUE, the whole operation is only started only if
@@ -411,7 +411,7 @@ futexFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
          */
         // get value from simulated-space
         BufferArg buf(uaddr2, sizeof(int));
-        buf.copyIn(tc->getMemProxy());
+        buf.copyIn(tc->getVirtProxy());
         int oldval = *(int*)buf.bufferPtr();
         int newval = oldval;
         // extract op, oparg, cmp, cmparg from val3
@@ -435,7 +435,7 @@ futexFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
             newval ^= wake_oparg;
         // copy updated value back to simulated-space
         *(int*)buf.bufferPtr() = newval;
-        buf.copyOut(tc->getMemProxy());
+        buf.copyOut(tc->getVirtProxy());
         // perform the first wake-up
         int woken1 = futex_map.wakeup(uaddr, process->tgid(), val);
         int woken2 = 0;
@@ -699,20 +699,20 @@ ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
           case SIOCGIFCONF: {
             Addr conf_addr = p->getSyscallArg(tc, index);
             BufferArg conf_arg(conf_addr, sizeof(ifconf));
-            conf_arg.copyIn(tc->getMemProxy());
+            conf_arg.copyIn(tc->getVirtProxy());
 
             ifconf *conf = (ifconf*)conf_arg.bufferPtr();
             Addr ifc_buf_addr = (Addr)conf->ifc_buf;
             BufferArg ifc_buf_arg(ifc_buf_addr, conf->ifc_len);
-            ifc_buf_arg.copyIn(tc->getMemProxy());
+            ifc_buf_arg.copyIn(tc->getVirtProxy());
 
             conf->ifc_buf = (char*)ifc_buf_arg.bufferPtr();
 
             status = ioctl(sfdp->getSimFD(), req, conf_arg.bufferPtr());
             if (status != -1) {
                 conf->ifc_buf = (char*)ifc_buf_addr;
-                ifc_buf_arg.copyOut(tc->getMemProxy());
-                conf_arg.copyOut(tc->getMemProxy());
+                ifc_buf_arg.copyOut(tc->getVirtProxy());
+                conf_arg.copyOut(tc->getVirtProxy());
             }
 
             return status;
@@ -729,11 +729,11 @@ ioctlFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
           case SIOCGIFMTU: {
             Addr req_addr = p->getSyscallArg(tc, index);
             BufferArg req_arg(req_addr, sizeof(ifreq));
-            req_arg.copyIn(tc->getMemProxy());
+            req_arg.copyIn(tc->getVirtProxy());
 
             status = ioctl(sfdp->getSimFD(), req, req_arg.bufferPtr());
             if (status != -1)
-                req_arg.copyOut(tc->getMemProxy());
+                req_arg.copyOut(tc->getVirtProxy());
             return status;
           }
         }
@@ -768,7 +768,7 @@ openImpl(SyscallDesc *desc, int callnum, ThreadContext *tc, bool isopenat)
      * string from that memory space into the host's working memory space.
      */
     std::string path;
-    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+    if (!tc->getVirtProxy().tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
 #ifdef __CYGWIN32__
@@ -976,7 +976,7 @@ renameatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
     std::string old_name;
 
-    if (!tc->getMemProxy().tryReadString(old_name,
+    if (!tc->getVirtProxy().tryReadString(old_name,
                                          process->getSyscallArg(tc, index)))
         return -EFAULT;
 
@@ -986,7 +986,7 @@ renameatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
     std::string new_name;
 
-    if (!tc->getMemProxy().tryReadString(new_name,
+    if (!tc->getVirtProxy().tryReadString(new_name,
                                          process->getSyscallArg(tc, index)))
         return -EFAULT;
 
@@ -1013,7 +1013,7 @@ sysinfoFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     sysinfo->totalram = process->system->memSize();
     sysinfo->mem_unit = 1;
 
-    sysinfo.copyOut(tc->getMemProxy());
+    sysinfo.copyOut(tc->getVirtProxy());
 
     return 0;
 }
@@ -1027,7 +1027,7 @@ chmodFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     auto process = tc->getProcessPtr();
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path,
+    if (!tc->getVirtProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
@@ -1060,7 +1060,7 @@ pollFunc(SyscallDesc *desc, int num, ThreadContext *tc)
     int tmout = p->getSyscallArg(tc, index);
 
     BufferArg fdsBuf(fdsPtr, sizeof(struct pollfd) * nfds);
-    fdsBuf.copyIn(tc->getMemProxy());
+    fdsBuf.copyIn(tc->getVirtProxy());
 
     /**
      * Record the target file descriptors in a local variable. We need to
@@ -1120,7 +1120,7 @@ pollFunc(SyscallDesc *desc, int num, ThreadContext *tc)
      * Copy out the pollfd struct because the host may have updated fields
      * in the structure.
      */
-    fdsBuf.copyOut(tc->getMemProxy());
+    fdsBuf.copyOut(tc->getVirtProxy());
 
     return status;
 }
@@ -1236,7 +1236,7 @@ statFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     auto process = tc->getProcessPtr();
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path,
+    if (!tc->getVirtProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
@@ -1251,7 +1251,7 @@ statFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStatBuf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
 
     return 0;
 }
@@ -1266,7 +1266,7 @@ stat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
     auto process = tc->getProcessPtr();
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path,
+    if (!tc->getVirtProxy().tryReadString(path,
                 process->getSyscallArg(tc, index)))
         return -EFAULT;
     Addr bufPtr = process->getSyscallArg(tc, index);
@@ -1285,7 +1285,7 @@ stat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStat64Buf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
 
     return 0;
 }
@@ -1303,7 +1303,7 @@ fstatat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
         warn("fstatat64: first argument not AT_FDCWD; unlikely to work");
 
     std::string path;
-    if (!tc->getMemProxy().tryReadString(path,
+    if (!tc->getVirtProxy().tryReadString(path,
                 process->getSyscallArg(tc, index)))
         return -EFAULT;
     Addr bufPtr = process->getSyscallArg(tc, index);
@@ -1322,7 +1322,7 @@ fstatat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStat64Buf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
 
     return 0;
 }
@@ -1354,7 +1354,7 @@ fstat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, (sim_fd == 1));
+    copyOutStat64Buf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf, (sim_fd == 1));
 
     return 0;
 }
@@ -1369,7 +1369,7 @@ lstatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     auto process = tc->getProcessPtr();
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path,
+    if (!tc->getVirtProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
@@ -1384,7 +1384,7 @@ lstatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStatBuf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
 
     return 0;
 }
@@ -1398,7 +1398,7 @@ lstat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
     auto process = tc->getProcessPtr();
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path,
+    if (!tc->getVirtProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
@@ -1418,7 +1418,7 @@ lstat64Func(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStat64Buf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
 
     return 0;
 }
@@ -1446,7 +1446,7 @@ fstatFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, (sim_fd == 1));
+    copyOutStatBuf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf, (sim_fd == 1));
 
     return 0;
 }
@@ -1461,7 +1461,7 @@ statfsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     auto process = tc->getProcessPtr();
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path,
+    if (!tc->getVirtProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
@@ -1476,7 +1476,7 @@ statfsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (result < 0)
         return -errno;
 
-    copyOutStatfsBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStatfsBuf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
     return 0;
 #else
     warnUnsupportedOS("statfs");
@@ -1567,7 +1567,7 @@ cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         BufferArg ptidBuf(ptidPtr, sizeof(long));
         long *ptid = (long *)ptidBuf.bufferPtr();
         *ptid = cp->pid();
-        ptidBuf.copyOut(tc->getMemProxy());
+        ptidBuf.copyOut(tc->getVirtProxy());
     }
 
     if (flags & OS::TGT_CLONE_THREAD) {
@@ -1588,7 +1588,7 @@ cloneFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         BufferArg ctidBuf(ctidPtr, sizeof(long));
         long *ctid = (long *)ctidBuf.bufferPtr();
         *ctid = cp->pid();
-        ctidBuf.copyOut(ctc->getMemProxy());
+        ctidBuf.copyOut(ctc->getVirtProxy());
     }
 
     if (flags & OS::TGT_CLONE_CHILD_CLEARTID)
@@ -1644,7 +1644,7 @@ fstatfsFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (result < 0)
         return -errno;
 
-    copyOutStatfsBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStatfsBuf<OS>(tc->getVirtProxy(), bufPtr, &hostBuf);
 
     return 0;
 }
@@ -1663,7 +1663,7 @@ readvFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         return -EBADF;
     int sim_fd = ffdp->getSimFD();
 
-    PortProxy &prox = tc->getMemProxy();
+    PortProxy &prox = tc->getVirtProxy();
     uint64_t tiov_base = p->getSyscallArg(tc, index);
     size_t count = p->getSyscallArg(tc, index);
     typename OS::tgt_iovec tiov[count];
@@ -1703,7 +1703,7 @@ writevFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         return -EBADF;
     int sim_fd = hbfdp->getSimFD();
 
-    PortProxy &prox = tc->getMemProxy();
+    PortProxy &prox = tc->getVirtProxy();
     uint64_t tiov_base = p->getSyscallArg(tc, index);
     size_t count = p->getSyscallArg(tc, index);
     struct iovec hiov[count];
@@ -1841,7 +1841,7 @@ mmapImpl(SyscallDesc *desc, int num, ThreadContext *tc, bool is_mmap2)
     p->allocateMem(start, length, clobber);
 
     // Transfer content into target address space.
-    PortProxy &tp = tc->getMemProxy();
+    PortProxy &tp = tc->getVirtProxy();
     if (tgt_flags & OS::TGT_MAP_ANONYMOUS) {
         // In general, we should zero the mapped area for anonymous mappings,
         // with something like:
@@ -1922,7 +1922,7 @@ pwrite64Func(SyscallDesc *desc, int num, ThreadContext *tc)
     int sim_fd = ffdp->getSimFD();
 
     BufferArg bufArg(bufPtr, nbytes);
-    bufArg.copyIn(tc->getMemProxy());
+    bufArg.copyIn(tc->getVirtProxy());
 
     int bytes_written = pwrite(sim_fd, bufArg.bufferPtr(), nbytes, offset);
 
@@ -1976,7 +1976,7 @@ getrlimitFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         break;
     }
 
-    rlp.copyOut(tc->getMemProxy());
+    rlp.copyOut(tc->getVirtProxy());
     return 0;
 }
 
@@ -2017,7 +2017,7 @@ prlimitFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
             return -EINVAL;
             break;
         }
-        rlp.copyOut(tc->getMemProxy());
+        rlp.copyOut(tc->getVirtProxy());
     }
     return 0;
 }
@@ -2037,7 +2037,7 @@ clock_gettimeFunc(SyscallDesc *desc, int num, ThreadContext *tc)
     tp->tv_sec = TheISA::htog(tp->tv_sec);
     tp->tv_nsec = TheISA::htog(tp->tv_nsec);
 
-    tp.copyOut(tc->getMemProxy());
+    tp.copyOut(tc->getVirtProxy());
 
     return 0;
 }
@@ -2055,7 +2055,7 @@ clock_getresFunc(SyscallDesc *desc, int num, ThreadContext *tc)
     tp->tv_sec = 0;
     tp->tv_nsec = 1;
 
-    tp.copyOut(tc->getMemProxy());
+    tp.copyOut(tc->getVirtProxy());
 
     return 0;
 }
@@ -2074,7 +2074,7 @@ gettimeofdayFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     tp->tv_sec = TheISA::htog(tp->tv_sec);
     tp->tv_usec = TheISA::htog(tp->tv_usec);
 
-    tp.copyOut(tc->getMemProxy());
+    tp.copyOut(tc->getVirtProxy());
 
     return 0;
 }
@@ -2089,14 +2089,14 @@ utimesFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     auto process = tc->getProcessPtr();
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path,
+    if (!tc->getVirtProxy().tryReadString(path,
                 process->getSyscallArg(tc, index))) {
         return -EFAULT;
     }
 
     TypedBufferArg<typename OS::timeval [2]>
         tp(process->getSyscallArg(tc, index));
-    tp.copyIn(tc->getMemProxy());
+    tp.copyIn(tc->getVirtProxy());
 
     struct timeval hostTimeval[2];
     for (int i = 0; i < 2; ++i) {
@@ -2124,7 +2124,7 @@ execveFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
     int index = 0;
     std::string path;
-    PortProxy & mem_proxy = tc->getMemProxy();
+    PortProxy & mem_proxy = tc->getVirtProxy();
     if (!mem_proxy.tryReadString(path, p->getSyscallArg(tc, index)))
         return -EFAULT;
 
@@ -2254,7 +2254,7 @@ getrusageFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
              who);
     }
 
-    rup.copyOut(tc->getMemProxy());
+    rup.copyOut(tc->getVirtProxy());
 
     return 0;
 }
@@ -2279,7 +2279,7 @@ timesFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     bufp->tms_utime = TheISA::htog(bufp->tms_utime);
 
     // Write back
-    bufp.copyOut(tc->getMemProxy());
+    bufp.copyOut(tc->getVirtProxy());
 
     // Return clock ticks since system boot
     return clocks;
@@ -2300,7 +2300,7 @@ timeFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     if (taddr != 0) {
         typename OS::time_t t = sec;
         t = TheISA::htog(t);
-        PortProxy &p = tc->getMemProxy();
+        PortProxy &p = tc->getVirtProxy();
         p.writeBlob(taddr, &t, (int)sizeof(typename OS::time_t));
     }
     return sec;
@@ -2398,7 +2398,7 @@ socketpairFunc(SyscallDesc *desc, int num, ThreadContext *tc)
     fds[0] = p->fds->allocFD(sfdp1);
     auto sfdp2 = std::make_shared<SocketFDEntry>(fds[1], domain, type, prot);
     fds[1] = p->fds->allocFD(sfdp2);
-    svBuf.copyOut(tc->getMemProxy());
+    svBuf.copyOut(tc->getVirtProxy());
 
     return status;
 }
@@ -2438,11 +2438,11 @@ selectFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
      * Copy in the fd_set from the target.
      */
     if (fds_read_ptr)
-        rd_t.copyIn(tc->getMemProxy());
+        rd_t.copyIn(tc->getVirtProxy());
     if (fds_writ_ptr)
-        wr_t.copyIn(tc->getMemProxy());
+        wr_t.copyIn(tc->getVirtProxy());
     if (fds_excp_ptr)
-        ex_t.copyIn(tc->getMemProxy());
+        ex_t.copyIn(tc->getVirtProxy());
 
     /**
      * We need to translate the target file descriptor set into a host file
@@ -2588,13 +2588,13 @@ selectFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     }
 
     if (fds_read_ptr)
-        rd_t.copyOut(tc->getMemProxy());
+        rd_t.copyOut(tc->getVirtProxy());
     if (fds_writ_ptr)
-        wr_t.copyOut(tc->getMemProxy());
+        wr_t.copyOut(tc->getVirtProxy());
     if (fds_excp_ptr)
-        ex_t.copyOut(tc->getMemProxy());
+        ex_t.copyOut(tc->getVirtProxy());
     if (time_val_ptr)
-        tp.copyOut(tc->getMemProxy());
+        tp.copyOut(tc->getVirtProxy());
 
     return retval;
 }
@@ -2625,7 +2625,7 @@ readFunc(SyscallDesc *desc, int num, ThreadContext *tc)
     int bytes_read = read(sim_fd, buf_arg.bufferPtr(), nbytes);
 
     if (bytes_read > 0)
-        buf_arg.copyOut(tc->getMemProxy());
+        buf_arg.copyOut(tc->getVirtProxy());
 
     return (bytes_read == -1) ? -errno : bytes_read;
 }
@@ -2646,7 +2646,7 @@ writeFunc(SyscallDesc *desc, int num, ThreadContext *tc)
     int sim_fd = hbfdp->getSimFD();
 
     BufferArg buf_arg(buf_ptr, nbytes);
-    buf_arg.copyIn(tc->getMemProxy());
+    buf_arg.copyIn(tc->getVirtProxy());
 
     struct pollfd pfd;
     pfd.fd = sim_fd;
@@ -2726,7 +2726,7 @@ success:
     const int EXITED = 0;
     BufferArg statusBuf(statPtr, sizeof(int));
     *(int *)statusBuf.bufferPtr() = EXITED;
-    statusBuf.copyOut(tc->getMemProxy());
+    statusBuf.copyOut(tc->getVirtProxy());
 
     // Return the child PID.
     pid_t retval = iter->sender->pid();
@@ -2770,14 +2770,14 @@ acceptFunc(SyscallDesc *desc, int num, ThreadContext *tc)
 
     if (lenPtr) {
         lenBufPtr = new BufferArg(lenPtr, sizeof(socklen_t));
-        lenBufPtr->copyIn(tc->getMemProxy());
+        lenBufPtr->copyIn(tc->getVirtProxy());
         memcpy(&addrLen, (socklen_t *)lenBufPtr->bufferPtr(),
                sizeof(socklen_t));
     }
 
     if (addrPtr) {
         addrBufPtr = new BufferArg(addrPtr, sizeof(struct sockaddr));
-        addrBufPtr->copyIn(tc->getMemProxy());
+        addrBufPtr->copyIn(tc->getVirtProxy());
         memcpy(&sa, (struct sockaddr *)addrBufPtr->bufferPtr(),
                sizeof(struct sockaddr));
     }
@@ -2789,13 +2789,13 @@ acceptFunc(SyscallDesc *desc, int num, ThreadContext *tc)
 
     if (addrPtr) {
         memcpy(addrBufPtr->bufferPtr(), &sa, sizeof(sa));
-        addrBufPtr->copyOut(tc->getMemProxy());
+        addrBufPtr->copyOut(tc->getVirtProxy());
         delete(addrBufPtr);
     }
 
     if (lenPtr) {
         *(socklen_t *)lenBufPtr->bufferPtr() = addrLen;
-        lenBufPtr->copyOut(tc->getMemProxy());
+        lenBufPtr->copyOut(tc->getVirtProxy());
         delete(lenBufPtr);
     }
 

@@ -164,12 +164,6 @@ class CheckerThreadContext : public ThreadContext
         actualTC->connectMemPorts(tc);
     }
 
-    PortProxy &
-    getMemProxy() override
-    {
-        return actualTC->getMemProxy();
-    }
-
     /** Executes a syscall in SE mode. */
     void
     syscall(int64_t callnum, Fault *fault) override
