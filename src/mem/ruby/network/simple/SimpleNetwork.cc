@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -178,9 +190,12 @@ bool
 SimpleNetwork::functionalRead(Packet *pkt)
 {
     for (unsigned int i = 0; i < m_switches.size(); i++) {
-        if (m_switches[i]->functionalRead(pkt)) {
+        if (m_switches[i]->functionalRead(pkt))
             return true;
-        }
+    }
+    for (unsigned int i = 0; i < m_int_link_buffers.size(); ++i) {
+        if (m_int_link_buffers[i]->functionalRead(pkt))
+            return true;
     }
 
     return false;
