@@ -110,3 +110,18 @@ PortProxy::tryReadString(std::string &str, Addr addr) const
         str += c;
     }
 }
+
+bool
+PortProxy::tryReadString(char *str, Addr addr, size_t maxlen) const
+{
+    assert(maxlen);
+    while (maxlen--) {
+        if (!tryReadBlob(addr++, str, 1))
+            return false;
+        if (!*str++)
+            return true;
+    }
+    // We ran out of room, so back up and add a terminator.
+    *--str = '\0';
+    return true;
+}

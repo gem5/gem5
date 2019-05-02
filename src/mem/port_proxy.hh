@@ -59,6 +59,8 @@
 #ifndef __MEM_PORT_PROXY_HH__
 #define __MEM_PORT_PROXY_HH__
 
+#include <limits>
+
 #include "mem/port.hh"
 #include "sim/byteswap.hh"
 
@@ -240,6 +242,23 @@ class PortProxy
     readString(std::string &str, Addr addr) const
     {
         if (!tryReadString(str, addr))
+            fatal("readString(%#x, ...) failed", addr);
+    }
+
+    /**
+     * Reads the string at guest address addr into the char * str, reading up
+     * to maxlen characters. The last character read is always a nul
+     * terminator. Returns true on success and false on failure.
+     */
+    bool tryReadString(char *str, Addr addr, size_t maxlen) const;
+
+    /**
+     * Same as tryReadString, but insists on success.
+     */
+    void
+    readString(char *str, Addr addr, size_t maxlen) const
+    {
+        if (!tryReadString(str, addr, maxlen))
             fatal("readString(%#x, ...) failed", addr);
     }
 };
