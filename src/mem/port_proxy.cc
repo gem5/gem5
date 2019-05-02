@@ -87,3 +87,26 @@ PortProxy::memsetBlobPhys(Addr addr, Request::Flags flags,
 
     delete [] buf;
 }
+
+bool
+PortProxy::tryWriteString(Addr addr, const char *str) const
+{
+    do {
+        if (!tryWriteBlob(addr++, (uint8_t *)str, 1))
+            return false;
+    } while (*str++);
+    return true;
+}
+
+bool
+PortProxy::tryReadString(std::string &str, Addr addr) const
+{
+    while (true) {
+        uint8_t c;
+        if (!tryReadBlob(addr++, &c, 1))
+            return false;
+        if (!c)
+            return true;
+        str += c;
+    }
+}

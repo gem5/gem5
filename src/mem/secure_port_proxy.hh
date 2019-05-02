@@ -73,9 +73,9 @@ class SecurePortProxy : public PortProxy
     SecurePortProxy(MasterPort &port, unsigned int cache_line_size)
         : PortProxy(port, cache_line_size) {}
 
-    void readBlob(Addr addr, uint8_t *p, int size) const override;
-    void writeBlob(Addr addr, const uint8_t *p, int size) const override;
-    void memsetBlob(Addr addr, uint8_t val, int size) const override;
+    bool tryReadBlob(Addr addr, uint8_t *p, int size) const override;
+    bool tryWriteBlob(Addr addr, const uint8_t *p, int size) const override;
+    bool tryMemsetBlob(Addr addr, uint8_t val, int size) const override;
 };
 
 #endif // __MEM_SECURE_PORT_PROXY_HH__

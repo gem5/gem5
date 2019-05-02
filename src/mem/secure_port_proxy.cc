@@ -39,20 +39,23 @@
 
 #include "mem/secure_port_proxy.hh"
 
-void
-SecurePortProxy::readBlob(Addr addr, uint8_t *p, int size) const
+bool
+SecurePortProxy::tryReadBlob(Addr addr, uint8_t *p, int size) const
 {
     readBlobPhys(addr, Request::SECURE, p, size);
+    return true;
 }
 
-void
-SecurePortProxy::writeBlob(Addr addr, const uint8_t *p, int size) const
+bool
+SecurePortProxy::tryWriteBlob(Addr addr, const uint8_t *p, int size) const
 {
     writeBlobPhys(addr, Request::SECURE, p, size);
+    return true;
 }
 
-void
-SecurePortProxy::memsetBlob(Addr addr, uint8_t v, int size) const
+bool
+SecurePortProxy::tryMemsetBlob(Addr addr, uint8_t v, int size) const
 {
     memsetBlobPhys(addr, Request::SECURE, v, size);
+    return true;
 }
