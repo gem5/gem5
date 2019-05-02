@@ -626,10 +626,10 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 
     if (FullSystem) {
         FSTranslatingPortProxy &proxy = tc->getVirtProxy();
-        proxy.readBlob(vaddr, (uint8_t*)data, size);
+        proxy.readBlob(vaddr, data, size);
     } else {
         SETranslatingPortProxy &proxy = tc->getMemProxy();
-        proxy.readBlob(vaddr, (uint8_t*)data, size);
+        proxy.readBlob(vaddr, data, size);
     }
 
 #if TRACING_ON
@@ -669,10 +669,10 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
     }
     if (FullSystem) {
         FSTranslatingPortProxy &proxy = tc->getVirtProxy();
-        proxy.writeBlob(vaddr, (uint8_t*)data, size);
+        proxy.writeBlob(vaddr, data, size);
     } else {
         SETranslatingPortProxy &proxy = tc->getMemProxy();
-        proxy.writeBlob(vaddr, (uint8_t*)data, size);
+        proxy.writeBlob(vaddr, data, size);
     }
 
     return true;

@@ -170,7 +170,7 @@ MipsProcess::argsInit(int pageSize)
 
     argc = htog((IntType)argc);
 
-    initVirtMem.writeBlob(memState->getStackMin(), (uint8_t*)&argc, intSize);
+    initVirtMem.writeBlob(memState->getStackMin(), &argc, intSize);
 
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 

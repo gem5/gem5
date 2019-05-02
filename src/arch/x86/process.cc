@@ -239,7 +239,7 @@ X86_64Process::initState()
         uint8_t numGDTEntries = 0;
         uint64_t nullDescriptor = 0;
         physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            (uint8_t *)(&nullDescriptor), 8);
+                            &nullDescriptor, 8);
         numGDTEntries++;
 
         SegDescriptor initDesc = 0;
@@ -260,7 +260,7 @@ X86_64Process::initState()
         csLowPLDesc.dpl = 0;
         uint64_t csLowPLDescVal = csLowPLDesc;
         physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            (uint8_t *)(&csLowPLDescVal), 8);
+                            &csLowPLDescVal, 8);
 
         numGDTEntries++;
 
@@ -274,7 +274,7 @@ X86_64Process::initState()
         dsLowPLDesc.dpl = 0;
         uint64_t dsLowPLDescVal = dsLowPLDesc;
         physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            (uint8_t *)(&dsLowPLDescVal), 8);
+                            &dsLowPLDescVal, 8);
 
         numGDTEntries++;
 
@@ -288,7 +288,7 @@ X86_64Process::initState()
         dsDesc.dpl = 3;
         uint64_t dsDescVal = dsDesc;
         physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            (uint8_t *)(&dsDescVal), 8);
+                            &dsDescVal, 8);
 
         numGDTEntries++;
 
@@ -302,7 +302,7 @@ X86_64Process::initState()
         csDesc.dpl = 3;
         uint64_t csDescVal = csDesc;
         physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            (uint8_t *)(&csDescVal), 8);
+                            &csDescVal, 8);
 
         numGDTEntries++;
 
@@ -335,7 +335,7 @@ X86_64Process::initState()
         } tssDescVal = {TSSDescLow, TSSDescHigh};
 
         physProxy.writeBlob(gdtPhysAddr + numGDTEntries * 8,
-                            (uint8_t *)(&tssDescVal), sizeof(tssDescVal));
+                            &tssDescVal, sizeof(tssDescVal));
 
         numGDTEntries++;
 
@@ -500,7 +500,7 @@ X86_64Process::initState()
         tss.RSP1_high = tss.IST1_high;
         tss.RSP2_low  = tss.IST1_low;
         tss.RSP2_high = tss.IST1_high;
-        physProxy.writeBlob(tssPhysAddr, (uint8_t *)(&tss), sizeof(tss));
+        physProxy.writeBlob(tssPhysAddr, &tss, sizeof(tss));
 
         /* Setting IDT gates */
         GateDescriptorLow PFGateLow = 0;
@@ -520,8 +520,7 @@ X86_64Process::initState()
             uint64_t high;
         } PFGate = {PFGateLow, PFGateHigh};
 
-        physProxy.writeBlob(idtPhysAddr + 0xE0,
-                            (uint8_t *)(&PFGate), sizeof(PFGate));
+        physProxy.writeBlob(idtPhysAddr + 0xE0, &PFGate, sizeof(PFGate));
 
         /* System call handler */
         uint8_t syscallBlob[] = {
@@ -999,7 +998,7 @@ X86Process::argsInit(int pageSize,
 
     // Write out the sentry void *
     IntType sentry_NULL = 0;
-    initVirtMem.writeBlob(sentry_base, (uint8_t*)&sentry_NULL, sentry_size);
+    initVirtMem.writeBlob(sentry_base, &sentry_NULL, sentry_size);
 
     // Write the file name
     initVirtMem.writeString(file_name_base, filename.c_str());
@@ -1029,7 +1028,7 @@ X86Process::argsInit(int pageSize,
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
-    initVirtMem.writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
+    initVirtMem.writeBlob(argc_base, &guestArgc, intSize);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     // Set the stack pointer register

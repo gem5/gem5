@@ -272,7 +272,7 @@ ArmSemihosting::readString(ThreadContext *tc, Addr ptr, size_t len)
     std::vector<char> buf(len + 1);
 
     buf[len] = '\0';
-    physProxy(tc).readBlob(ptr, (uint8_t *)buf.data(), len);
+    physProxy(tc).readBlob(ptr, buf.data(), len);
 
     return std::string(buf.data());
 }
@@ -479,8 +479,7 @@ ArmSemihosting::callTmpNam(ThreadContext *tc, bool aarch64,
     if (path_len >= max_len)
         return retError(ENOSPC);
 
-    physProxy(tc).writeBlob(
-        guest_buf, (const uint8_t *)path, path_len + 1);
+    physProxy(tc).writeBlob(guest_buf, path, path_len + 1);
     return retOK(0);
 }
 
@@ -551,9 +550,7 @@ ArmSemihosting::callGetCmdLine(ThreadContext *tc, bool aarch64,
     if (cmdLine.size() + 1 < argv[2]) {
         PortProxy &proxy = physProxy(tc);
         ByteOrder endian = ArmISA::byteOrder(tc);
-        proxy.writeBlob(
-            (Addr)argv[1],
-            (const uint8_t *)cmdLine.c_str(), cmdLine.size() + 1);
+        proxy.writeBlob((Addr)argv[1], cmdLine.c_str(), cmdLine.size() + 1);
 
         if (aarch64)
             proxy.write<uint64_t>(argv[0] + 1 * 8, cmdLine.size(), endian);

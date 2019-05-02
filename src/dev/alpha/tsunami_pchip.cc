@@ -283,14 +283,16 @@ TsunamiPChip::dmaAddr(const PciBusAddr &dev, Addr busAddr) const
                         to create an address for the SG page
                     */
 
-                    tbaMask = ~(((wsm[i] & (ULL(0xfff) << 20)) >> 10) | ULL(0x3ff));
+                    tbaMask = ~(((wsm[i] & (ULL(0xfff) << 20)) >> 10) |
+                                ULL(0x3ff));
                     baMask = (wsm[i] & (ULL(0xfff) << 20)) | (ULL(0x7f) << 13);
                     pteAddr = (tba[i] & tbaMask) | ((busAddr & baMask) >> 10);
 
-                    sys->physProxy.readBlob(pteAddr, (uint8_t*)&pteEntry,
+                    sys->physProxy.readBlob(pteAddr, &pteEntry,
                                             sizeof(uint64_t));
 
-                    dmaAddr = ((pteEntry & ~ULL(0x1)) << 12) | (busAddr & ULL(0x1fff));
+                    dmaAddr = ((pteEntry & ~ULL(0x1)) << 12) |
+                              (busAddr & ULL(0x1fff));
 
                 } else {
                     baMask = (wsm[i] & (ULL(0xfff) << 20)) | ULL(0xfffff);

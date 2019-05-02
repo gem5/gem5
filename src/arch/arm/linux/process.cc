@@ -148,7 +148,7 @@ setTLSFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc)
     uint32_t tlsPtr = process->getSyscallArg(tc, index);
 
     tc->getMemProxy().writeBlob(ArmLinuxProcess32::commPage + 0x0ff0,
-                                 (uint8_t *)&tlsPtr, sizeof(tlsPtr));
+                                &tlsPtr, sizeof(tlsPtr));
     tc->setMiscReg(MISCREG_TPIDRURO,tlsPtr);
     return 0;
 }

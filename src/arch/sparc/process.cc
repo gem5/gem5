@@ -364,8 +364,7 @@ SparcProcess::argsInit(int pageSize)
 
     // Write out the sentry void *
     uint64_t sentry_NULL = 0;
-    initVirtMem.writeBlob(sentry_base,
-            (uint8_t*)&sentry_NULL, sentry_size);
+    initVirtMem.writeBlob(sentry_base, &sentry_NULL, sentry_size);
 
     // Write the file name
     initVirtMem.writeString(file_name_base, filename.c_str());
@@ -385,7 +384,7 @@ SparcProcess::argsInit(int pageSize)
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
-    initVirtMem.writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
+    initVirtMem.writeBlob(argc_base, &guestArgc, intSize);
 
     // Set up space for the trap handlers into the processes address space.
     // Since the stack grows down and there is reserved address space abov
@@ -417,9 +416,9 @@ Sparc64Process::argsInit(int intSize, int pageSize)
 
     // Stuff the trap handlers into the process address space
     initVirtMem.writeBlob(fillStart,
-            (uint8_t*)fillHandler64, sizeof(MachInst) * numFillInsts);
+            fillHandler64, sizeof(MachInst) * numFillInsts);
     initVirtMem.writeBlob(spillStart,
-            (uint8_t*)spillHandler64, sizeof(MachInst) *  numSpillInsts);
+            spillHandler64, sizeof(MachInst) *  numSpillInsts);
 }
 
 void
@@ -429,9 +428,9 @@ Sparc32Process::argsInit(int intSize, int pageSize)
 
     // Stuff the trap handlers into the process address space
     initVirtMem.writeBlob(fillStart,
-            (uint8_t*)fillHandler32, sizeof(MachInst) * numFillInsts);
+            fillHandler32, sizeof(MachInst) * numFillInsts);
     initVirtMem.writeBlob(spillStart,
-            (uint8_t*)spillHandler32, sizeof(MachInst) *  numSpillInsts);
+            spillHandler32, sizeof(MachInst) *  numSpillInsts);
 }
 
 void Sparc32Process::flushWindows(ThreadContext *tc)

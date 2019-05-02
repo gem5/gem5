@@ -50,7 +50,7 @@ template<class T>
 void writeVal(T val, PortProxy& proxy, Addr &addr)
 {
     T guestVal = htog(val);
-    proxy.writeBlob(addr, (uint8_t *)&guestVal, sizeof(T));
+    proxy.writeBlob(addr, &guestVal, sizeof(T));
     addr += sizeof(T);
 }
 
@@ -64,7 +64,7 @@ void X86ISA::E820Table::writeTo(PortProxy& proxy, Addr countAddr, Addr addr)
 
     uint8_t guestE820Nr = htog(e820Nr);
 
-    proxy.writeBlob(countAddr, (uint8_t *)&guestE820Nr, sizeof(guestE820Nr));
+    proxy.writeBlob(countAddr, &guestE820Nr, sizeof(guestE820Nr));
 
     for (int i = 0; i < e820Nr; i++) {
         writeVal(entries[i]->addr, proxy, addr);

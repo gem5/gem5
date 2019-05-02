@@ -87,7 +87,7 @@ class ThreadInfo
             addr = tc->readMiscRegNoEffect(TheISA::CurThreadInfoReg);
 
         PortProxy &p = tc->getPhysProxy();
-        p.readBlob(addr, (uint8_t *)&sp, sizeof(Addr));
+        p.readBlob(addr, &sp, sizeof(Addr));
 
         return sp & ~ULL(0x3fff);
     }

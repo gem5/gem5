@@ -162,7 +162,7 @@ AlphaProcess::argsInit(int intSize, int pageSize)
     else
         panic("Unknown int size");
 
-    initVirtMem.writeBlob(memState->getStackMin(), (uint8_t*)&argc, intSize);
+    initVirtMem.writeBlob(memState->getStackMin(), &argc, intSize);
 
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);

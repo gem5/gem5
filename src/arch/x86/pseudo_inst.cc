@@ -73,8 +73,8 @@ m5PageFault(ThreadContext *tc)
         int size = 6;
         uint64_t is[size];
         // reading the interrupt handler stack
-        proxy.readBlob(ISTVirtAddr + PageBytes - size*sizeof(uint64_t),
-                       (uint8_t *)&is, sizeof(is));
+        proxy.readBlob(ISTVirtAddr + PageBytes - size * sizeof(uint64_t),
+                       &is, sizeof(is));
         panic("Page fault at addr %#x\n\tInterrupt handler stack:\n"
                 "\tss: %#x\n"
                 "\trsp: %#x\n"

@@ -81,7 +81,7 @@ VirtDescriptor::update()
     assert(_index < queue->getSize());
     const Addr desc_addr(vq_addr + sizeof(desc) * _index);
     vring_desc guest_desc;
-    memProxy->readBlob(desc_addr, (uint8_t *)&guest_desc, sizeof(guest_desc));
+    memProxy->readBlob(desc_addr, &guest_desc, sizeof(guest_desc));
     desc = vtoh_legacy(guest_desc);
     DPRINTF(VIO,
             "VirtDescriptor(%i): Addr: 0x%x, Len: %i, Flags: 0x%x, "
@@ -161,7 +161,7 @@ VirtDescriptor::write(size_t offset, const uint8_t *src, size_t size)
     if (!isOutgoing())
         panic("Trying to write to incoming buffer\n");
 
-    memProxy->writeBlob(desc.addr + offset, const_cast<uint8_t *>(src), size);
+    memProxy->writeBlob(desc.addr + offset, src, size);
 }
 
 void

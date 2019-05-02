@@ -1670,7 +1670,7 @@ readvFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     struct iovec hiov[count];
     for (size_t i = 0; i < count; ++i) {
         prox.readBlob(tiov_base + (i * sizeof(typename OS::tgt_iovec)),
-                      (uint8_t*)&tiov[i], sizeof(typename OS::tgt_iovec));
+                      &tiov[i], sizeof(typename OS::tgt_iovec));
         hiov[i].iov_len = TheISA::gtoh(tiov[i].iov_len);
         hiov[i].iov_base = new char [hiov[i].iov_len];
     }
@@ -1681,7 +1681,7 @@ readvFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
     for (size_t i = 0; i < count; ++i) {
         if (result != -1) {
             prox.writeBlob(TheISA::htog(tiov[i].iov_base),
-                           (uint8_t*)hiov[i].iov_base, hiov[i].iov_len);
+                           hiov[i].iov_base, hiov[i].iov_len);
         }
         delete [] (char *)hiov[i].iov_base;
     }
@@ -1711,10 +1711,10 @@ writevFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         typename OS::tgt_iovec tiov;
 
         prox.readBlob(tiov_base + i*sizeof(typename OS::tgt_iovec),
-                      (uint8_t*)&tiov, sizeof(typename OS::tgt_iovec));
+                      &tiov, sizeof(typename OS::tgt_iovec));
         hiov[i].iov_len = TheISA::gtoh(tiov.iov_len);
         hiov[i].iov_base = new char [hiov[i].iov_len];
-        prox.readBlob(TheISA::gtoh(tiov.iov_base), (uint8_t *)hiov[i].iov_base,
+        prox.readBlob(TheISA::gtoh(tiov.iov_base), hiov[i].iov_base,
                       hiov[i].iov_len);
     }
 
@@ -2302,7 +2302,7 @@ timeFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
         typename OS::time_t t = sec;
         t = TheISA::htog(t);
         SETranslatingPortProxy &p = tc->getMemProxy();
-        p.writeBlob(taddr, (uint8_t*)&t, (int)sizeof(typename OS::time_t));
+        p.writeBlob(taddr, &t, (int)sizeof(typename OS::time_t));
     }
     return sec;
 }

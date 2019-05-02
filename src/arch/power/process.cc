@@ -233,8 +233,7 @@ PowerProcess::argsInit(int intSize, int pageSize)
 
     //Write out the sentry void *
     uint32_t sentry_NULL = 0;
-    initVirtMem.writeBlob(sentry_base,
-            (uint8_t*)&sentry_NULL, sentry_size);
+    initVirtMem.writeBlob(sentry_base, &sentry_NULL, sentry_size);
 
     //Fix up the aux vectors which point to other data
     for (int i = auxv.size() - 1; i >= 0; i--) {
@@ -261,7 +260,7 @@ PowerProcess::argsInit(int intSize, int pageSize)
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
-    initVirtMem.writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
+    initVirtMem.writeBlob(argc_base, &guestArgc, intSize);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 

@@ -492,7 +492,7 @@ public:
         /** Update the ring buffer header with data from the guest. */
         void readHeader() {
             assert(_base != 0);
-            _proxy.readBlob(_base, (uint8_t *)&header, sizeof(header));
+            _proxy.readBlob(_base, &header, sizeof(header));
             header.flags = vtoh_legacy(header.flags);
             header.index = vtoh_legacy(header.index);
         }
@@ -502,7 +502,7 @@ public:
             assert(_base != 0);
             out.flags = htov_legacy(header.flags);
             out.index = htov_legacy(header.index);
-            _proxy.writeBlob(_base, (uint8_t *)&out, sizeof(out));
+            _proxy.writeBlob(_base, &out, sizeof(out));
         }
 
         void read() {
@@ -511,7 +511,7 @@ public:
             /* Read and byte-swap the elements in the ring */
             T temp[ring.size()];
             _proxy.readBlob(_base + sizeof(header),
-                            (uint8_t *)temp, sizeof(T) * ring.size());
+                            temp, sizeof(T) * ring.size());
             for (int i = 0; i < ring.size(); ++i)
                 ring[i] = vtoh_legacy(temp[i]);
         }
@@ -524,7 +524,7 @@ public:
             for (int i = 0; i < ring.size(); ++i)
                 temp[i] = htov_legacy(ring[i]);
             _proxy.writeBlob(_base + sizeof(header),
-                             (uint8_t *)temp, sizeof(T) * ring.size());
+                             temp, sizeof(T) * ring.size());
             writeHeader();
         }
 

@@ -119,7 +119,7 @@ AlphaSystem::initState()
      * others do.)
      */
     if (consoleSymtab->findAddress("env_booted_osflags", addr)) {
-        virtProxy.writeBlob(addr, (uint8_t*)params()->boot_osflags.c_str(),
+        virtProxy.writeBlob(addr, params()->boot_osflags.c_str(),
                             strlen(params()->boot_osflags.c_str()));
     }
 
