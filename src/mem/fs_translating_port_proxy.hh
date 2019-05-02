@@ -97,9 +97,4 @@ class FSTranslatingPortProxy : public PortProxy
     bool tryMemsetBlob(Addr address, uint8_t  v, int size) const override;
 };
 
-void CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen);
-void CopyIn(ThreadContext *tc, Addr dest, const void *source, size_t cplen);
-void CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen);
-void CopyStringIn(ThreadContext *tc, const char *src, Addr vaddr);
-
 #endif //__MEM_FS_TRANSLATING_PORT_PROXY_HH__
