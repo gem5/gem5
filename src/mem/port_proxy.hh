@@ -195,7 +195,7 @@ class PortProxy
      * Write object T to address. Writes sizeof(T) bytes.
      */
     template <typename T>
-    void write(Addr address, T data) const;
+    void write(Addr address, const T &data) const;
 
     /**
      * Read sizeof(T) bytes from address and return as object T.
@@ -256,7 +256,7 @@ PortProxy::read(Addr address) const
 
 template <typename T>
 void
-PortProxy::write(Addr address, T data) const
+PortProxy::write(Addr address, const T &data) const
 {
     writeBlob(address, &data, sizeof(T));
 }
