@@ -49,7 +49,7 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
       _contextId(0), _threadId(_tid), lastActivate(0), lastSuspend(0),
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
       kernelStats(NULL), process(_process), physProxy(NULL), virtProxy(NULL),
-      proxy(NULL), funcExeInst(0), storeCondFailures(0)
+      funcExeInst(0), storeCondFailures(0)
 {
 }
 
@@ -59,8 +59,6 @@ ThreadState::~ThreadState()
         delete physProxy;
     if (virtProxy != NULL)
         delete virtProxy;
-    if (proxy != NULL)
-        delete proxy;
 }
 
 void
@@ -118,8 +116,8 @@ ThreadState::initMemProxies(ThreadContext *tc)
         assert(virtProxy == NULL);
         virtProxy = new FSTranslatingPortProxy(tc);
     } else {
-        assert(proxy == NULL);
-        proxy = new SETranslatingPortProxy(baseCpu->getDataPort(),
+        assert(virtProxy == NULL);
+        virtProxy = new SETranslatingPortProxy(baseCpu->getDataPort(),
                                            process,
                                            SETranslatingPortProxy::NextPage);
     }
@@ -145,8 +143,8 @@ PortProxy &
 ThreadState::getMemProxy()
 {
     assert(!FullSystem);
-    assert(proxy != NULL);
-    return *proxy;
+    assert(virtProxy != NULL);
+    return *virtProxy;
 }
 
 void

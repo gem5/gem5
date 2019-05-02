@@ -115,9 +115,9 @@ struct ThreadState : public Serializable {
          * the se translating port proxy needs to be reinitialized since it
          * holds a pointer to the process class.
          */
-        if (proxy) {
-            delete proxy;
-            proxy = NULL;
+        if (virtProxy) {
+            delete virtProxy;
+            virtProxy = NULL;
             initMemProxies(NULL);
         }
     }
@@ -197,8 +197,7 @@ struct ThreadState : public Serializable {
 
     /** A translating port proxy, outgoing only, for functional
      * accesse to virtual addresses. */
-    FSTranslatingPortProxy *virtProxy;
-    SETranslatingPortProxy *proxy;
+    PortProxy *virtProxy;
 
   public:
     /*
