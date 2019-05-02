@@ -367,7 +367,7 @@ class GPUCoalescer : public RubyPort
     // since the two following issue functions are protocol-specific,
     // they must be implemented in a derived coalescer
     virtual void issueRequest(CoalescedRequest* crequest) = 0;
-//    virtual void issueMemSyncRequest(PacketPtr pkt) = 0;
+    virtual void issueMemSyncRequest(PacketPtr pkt) {}
 
     void kernelCallback(int wavefront_id);
 

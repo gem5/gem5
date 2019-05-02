@@ -251,7 +251,7 @@ RubyPort::MemSlavePort::recvTimingReq(PacketPtr pkt)
     }
     // Check for pio requests and directly send them to the dedicated
     // pio port.
-    if (pkt->cmd != MemCmd::MemFenceReq) {
+    if (pkt->cmd != MemCmd::MemSyncReq) {
         if (!isPhysMemAddress(pkt)) {
             assert(ruby_port->memMasterPort.isConnected());
             DPRINTF(RubyPort, "Request address %#x assumed to be a "
@@ -312,7 +312,7 @@ RubyPort::MemSlavePort::recvAtomic(PacketPtr pkt)
 
     // Check for pio requests and directly send them to the dedicated
     // pio port.
-    if (pkt->cmd != MemCmd::MemFenceReq) {
+    if (pkt->cmd != MemCmd::MemSyncReq) {
         if (!isPhysMemAddress(pkt)) {
             assert(ruby_port->memMasterPort.isConnected());
             DPRINTF(RubyPort, "Request address %#x assumed to be a "
@@ -539,7 +539,7 @@ RubyPort::MemSlavePort::hitCallback(PacketPtr pkt)
     }
 
     // Flush, acquire, release requests don't access physical memory
-    if (pkt->isFlush() || pkt->cmd == MemCmd::MemFenceReq) {
+    if (pkt->isFlush() || pkt->cmd == MemCmd::MemSyncReq) {
         accessPhysMem = false;
     }
 

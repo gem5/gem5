@@ -553,24 +553,25 @@ GPUCoalescer::makeRequest(PacketPtr pkt)
     assert(pkt->req->hasInstSeqNum());
 
     if (pkt->cmd == MemCmd::MemSyncReq) {
-        // let the child coalescer handle MemSyncReq because this is
-        // cache coherence protocol specific
-        return RequestStatus_Issued;
-    }
-    // otherwise, this must be either read or write command
-    assert(pkt->isRead() || pkt->isWrite());
+        // issue mem_sync requests immediately to the cache system without
+        // going through uncoalescedTable like normal LD/ST/Atomic requests
+        issueMemSyncRequest(pkt);
+    } else {
+        // otherwise, this must be either read or write command
+        assert(pkt->isRead() || pkt->isWrite());
 
-    // the pkt is temporarily stored in the uncoalesced table until
-    // it's picked for coalescing process later in this cycle or in a
-    // future cycle
-    uncoalescedTable.insertPacket(pkt);
-    DPRINTF(GPUCoalescer, "Put pkt with addr 0x%X to uncoalescedTable\n",
-            pkt->getAddr());
+        // the pkt is temporarily stored in the uncoalesced table until
+        // it's picked for coalescing process later in this cycle or in a
+        // future cycle
+        uncoalescedTable.insertPacket(pkt);
+        DPRINTF(GPUCoalescer, "Put pkt with addr 0x%X to uncoalescedTable\n",
+                pkt->getAddr());
 
-    // we schedule an issue event here to process the uncoalesced table
-    // and try to issue Ruby request to cache system
-    if (!issueEvent.scheduled()) {
-        schedule(issueEvent, curTick());
+        // we schedule an issue event here to process the uncoalesced table
+        // and try to issue Ruby request to cache system
+        if (!issueEvent.scheduled()) {
+            schedule(issueEvent, curTick());
+        }
     }
 
     // we always return RequestStatus_Issued in this coalescer
