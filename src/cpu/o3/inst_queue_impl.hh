@@ -1481,36 +1481,7 @@ template <class Impl>
 int
 InstructionQueue<Impl>::countInsts()
 {
-#if 0
-    //ksewell:This works but definitely could use a cleaner write
-    //with a more intuitive way of counting. Right now it's
-    //just brute force ....
-    // Change the #if if you want to use this method.
-    int total_insts = 0;
-
-    for (ThreadID tid = 0; tid < numThreads; ++tid) {
-        ListIt count_it = instList[tid].begin();
-
-        while (count_it != instList[tid].end()) {
-            if (!(*count_it)->isSquashed() && !(*count_it)->isSquashedInIQ()) {
-                if (!(*count_it)->isIssued()) {
-                    ++total_insts;
-                } else if ((*count_it)->isMemRef() &&
-                           !(*count_it)->memOpDone) {
-                    // Loads that have not been marked as executed still count
-                    // towards the total instructions.
-                    ++total_insts;
-                }
-            }
-
-            ++count_it;
-        }
-    }
-
-    return total_insts;
-#else
     return numEntries - freeEntries;
-#endif
 }
 
 template <class Impl>

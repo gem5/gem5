@@ -123,10 +123,6 @@ LinuxAlphaSystem::setupFuncEvents()
 #ifndef NDEBUG
     kernelPanicEvent = addKernelFuncEventOrPanic<BreakPCEvent>("panic");
 
-#if 0
-    kernelDieEvent = addKernelFuncEventOrPanic<BreakPCEvent>("die_if_kernel");
-#endif
-
 #endif
 
     /**

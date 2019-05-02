@@ -86,17 +86,6 @@ LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
 
     taken = getPrediction(counter_val);
 
-#if 0
-    // Speculative update.
-    if (taken) {
-        DPRINTF(Fetch, "Branch updated as taken.\n");
-        localCtrs[local_predictor_idx]++;
-    } else {
-        DPRINTF(Fetch, "Branch updated as not taken.\n");
-        localCtrs[local_predictor_idx]--;
-    }
-#endif
-
     return taken;
 }
 

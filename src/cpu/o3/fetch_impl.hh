@@ -1587,12 +1587,6 @@ template<class Impl>
 ThreadID
 DefaultFetch<Impl>::branchCount()
 {
-#if 0
-    list<ThreadID>::iterator thread = activeThreads->begin();
-    assert(thread != activeThreads->end());
-    ThreadID tid = *thread;
-#endif
-
     panic("Branch Count Fetch policy unimplemented\n");
     return InvalidThreadID;
 }

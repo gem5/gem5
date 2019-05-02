@@ -1294,12 +1294,6 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
     zero() const
     {
         return data(0)->zero();
-#if 0
-        for (off_type i = 0; i < size(); ++i)
-            if (!data(i)->zero())
-                return false;
-        return true;
-#endif
     }
 
     /**

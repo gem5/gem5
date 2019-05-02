@@ -508,58 +508,6 @@ RubySystem::functionalWrite(PacketPtr pkt)
     return true;
 }
 
-#ifdef CHECK_COHERENCE
-// This code will check for cases if the given cache block is exclusive in
-// one node and shared in another-- a coherence violation
-//
-// To use, the SLICC specification must call sequencer.checkCoherence(address)
-// when the controller changes to a state with new permissions.  Do this
-// in setState.  The SLICC spec must also define methods "isBlockShared"
-// and "isBlockExclusive" that are specific to that protocol
-//
-void
-RubySystem::checkGlobalCoherenceInvariant(const Address& addr)
-{
-#if 0
-    NodeID exclusive = -1;
-    bool sharedDetected = false;
-    NodeID lastShared = -1;
-
-    for (int i = 0; i < m_chip_vector.size(); i++) {
-        if (m_chip_vector[i]->isBlockExclusive(addr)) {
-            if (exclusive != -1) {
-                // coherence violation
-                WARN_EXPR(exclusive);
-                WARN_EXPR(m_chip_vector[i]->getID());
-                WARN_EXPR(addr);
-                WARN_EXPR(getTime());
-                ERROR_MSG("Coherence Violation Detected -- 2 exclusive chips");
-            } else if (sharedDetected) {
-                WARN_EXPR(lastShared);
-                WARN_EXPR(m_chip_vector[i]->getID());
-                WARN_EXPR(addr);
-                WARN_EXPR(getTime());
-                ERROR_MSG("Coherence Violation Detected -- exclusive chip with >=1 shared");
-            } else {
-                exclusive = m_chip_vector[i]->getID();
-            }
-        } else if (m_chip_vector[i]->isBlockShared(addr)) {
-            sharedDetected = true;
-            lastShared = m_chip_vector[i]->getID();
-
-            if (exclusive != -1) {
-                WARN_EXPR(lastShared);
-                WARN_EXPR(exclusive);
-                WARN_EXPR(addr);
-                WARN_EXPR(getTime());
-                ERROR_MSG("Coherence Violation Detected -- exclusive chip with >=1 shared");
-            }
-        }
-    }
-#endif
-}
-#endif
-
 RubySystem *
 RubySystemParams::create()
 {

@@ -1170,40 +1170,6 @@ Device::rxFilter(const EthPacketPtr &packet)
 
     panic("receive filter not implemented\n");
     bool drop = true;
-
-#if 0
-    string type;
-
-    EthHdr *eth = packet->eth();
-    if (eth->unicast()) {
-        // If we're accepting all unicast addresses
-        if (acceptUnicast)
-            drop = false;
-
-        // If we make a perfect match
-        if (acceptPerfect && params->eaddr == eth.dst())
-            drop = false;
-
-        if (acceptArp && eth->type() == ETH_TYPE_ARP)
-            drop = false;
-
-    } else if (eth->broadcast()) {
-        // if we're accepting broadcasts
-        if (acceptBroadcast)
-            drop = false;
-
-    } else if (eth->multicast()) {
-        // if we're accepting all multicasts
-        if (acceptMulticast)
-            drop = false;
-
-    }
-
-    if (drop) {
-        DPRINTF(Ethernet, "rxFilter drop\n");
-        DDUMP(EthernetData, packet->data, packet->length);
-    }
-#endif
     return drop;
 }
 

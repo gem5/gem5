@@ -2328,38 +2328,6 @@ BaseCache::regStats()
         overallMshrUncacheableLatency.subname(i, system->getMasterName(i));
     }
 
-#if 0
-    // MSHR access formulas
-    for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
-        MemCmd cmd(access_idx);
-        const string &cstr = cmd.toString();
-
-        mshrAccesses[access_idx]
-            .name(name() + "." + cstr + "_mshr_accesses")
-            .desc("number of " + cstr + " mshr accesses(hits+misses)")
-            .flags(total | nozero | nonan)
-            ;
-        mshrAccesses[access_idx] =
-            mshr_hits[access_idx] + mshr_misses[access_idx]
-            + mshr_uncacheable[access_idx];
-    }
-
-    demandMshrAccesses
-        .name(name() + ".demand_mshr_accesses")
-        .desc("number of demand (read+write) mshr accesses")
-        .flags(total | nozero | nonan)
-        ;
-    demandMshrAccesses = demandMshrHits + demandMshrMisses;
-
-    overallMshrAccesses
-        .name(name() + ".overall_mshr_accesses")
-        .desc("number of overall (read+write) mshr accesses")
-        .flags(total | nozero | nonan)
-        ;
-    overallMshrAccesses = overallMshrHits + overallMshrMisses
-        + overallMshrUncacheable;
-#endif
-
     // MSHR miss rate formulas
     for (int access_idx = 0; access_idx < MemCmd::NUM_MEM_CMDS; ++access_idx) {
         MemCmd cmd(access_idx);

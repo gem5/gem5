@@ -89,11 +89,6 @@ class LinuxAlphaSystem : public AlphaSystem
     /** Event to halt the simulator if the kernel calls panic()  */
     BreakPCEvent *kernelPanicEvent;
 
-#if 0
-    /** Event to halt the simulator if the kernel calls die_if_kernel  */
-    BreakPCEvent *kernelDieEvent;
-#endif
-
 #endif
 
     /**

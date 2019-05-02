@@ -98,12 +98,6 @@ namespace X86ISA
          */
         setMask = numSets - 1;
 
-    #if 0
-        // GpuTLB doesn't yet support full system
-        walker = p->walker;
-        walker->setTLB(this);
-    #endif
-
         maxCoalescedReqs = p->maxOutstandingReqs;
 
         // Do not allow maxCoalescedReqs to be more than the TLB associativity

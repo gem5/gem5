@@ -387,11 +387,6 @@ Process::serialize(CheckpointOut &cp) const
      */
 
     warn("Checkpoints for file descriptors currently do not work.");
-#if 0
-    for (int x = 0; x < fds->getSize(); x++)
-        (*fds)[x].serializeSection(cp, csprintf("FDEntry%d", x));
-#endif
-
 }
 
 void
@@ -404,11 +399,6 @@ Process::unserialize(CheckpointIn &cp)
      * come back and fix them at a later date.
      */
     warn("Checkpoints for file descriptors currently do not work.");
-#if 0
-    for (int x = 0; x < fds->getSize(); x++)
-        (*fds)[x]->unserializeSection(cp, csprintf("FDEntry%d", x));
-    fds->restoreFileOffsets();
-#endif
     // The above returns a bool so that you could do something if you don't
     // find the param in the checkpoint if you wanted to, like set a default
     // but in this case we'll just stick with the instantiated value if not

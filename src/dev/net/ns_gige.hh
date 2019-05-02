@@ -170,10 +170,6 @@ class NSGigE : public EtherDevBase
 
     /** pci settings */
     bool ioEnable;
-#if 0
-    bool memEnable;
-    bool bmEnable;
-#endif
 
     /*** BASIC STRUCTURES FOR TX/RX ***/
     /* Data FIFOs */

@@ -984,9 +984,6 @@ GPUCoalescer::print(ostream& out) const
 void
 GPUCoalescer::checkCoherence(Addr addr)
 {
-#ifdef CHECK_COHERENCE
-    m_ruby_system->checkGlobalCoherenceInvariant(addr);
-#endif
 }
 
 void

@@ -264,23 +264,6 @@ TsunamiPChip::dmaAddr(const PciBusAddr &dev, Addr busAddr) const
     Addr pteAddr;
     Addr dmaAddr;
 
-#if 0
-    DPRINTF(IdeDisk, "Translation for bus address: %#x\n", busAddr);
-    for (int i = 0; i < 4; i++) {
-        DPRINTF(IdeDisk, "(%d) base:%#x mask:%#x\n",
-                i, wsba[i], wsm[i]);
-
-        windowBase = wsba[i];
-        windowMask = ~wsm[i] & (ULL(0xfff) << 20);
-
-        if ((busAddr & windowMask) == (windowBase & windowMask)) {
-            DPRINTF(IdeDisk, "Would have matched %d (wb:%#x wm:%#x --> ba&wm:%#x wb&wm:%#x)\n",
-                    i, windowBase, windowMask, (busAddr & windowMask),
-                    (windowBase & windowMask));
-        }
-    }
-#endif
-
     for (int i = 0; i < 4; i++) {
 
         windowBase = wsba[i];
