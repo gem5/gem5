@@ -170,7 +170,7 @@ CPA::swSmBegin(ThreadContext *tc)
         debugSymbolTable->findNearestSymbol(
             tc->readIntReg(ReturnAddressReg), st, junk);
 
-    CopyStringOut(tc, sm, args[0], 50);
+    tc->getVirtProxy().readString(sm, args[0], 50);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());
 
@@ -256,7 +256,7 @@ CPA::swSmEnd(ThreadContext *tc)
 
     Arguments args(tc);
     char sm[50];
-    CopyStringOut(tc, sm, args[0], 50);
+    tc->getVirtProxy().readString(sm, args[0], 50);
     System *sys = tc->getSystemPtr();
     doSwSmEnd(sys, tc->contextId(), sm, getFrame(tc));
 }
@@ -324,7 +324,7 @@ CPA::swExplictBegin(ThreadContext *tc)
 
     Arguments args(tc);
     char st[50];
-    CopyStringOut(tc, st, args[1], 50);
+    tc->getVirtProxy().readString(st, args[1], 50);
 
     StringWrap name(tc->getSystemPtr()->name());
     DPRINTF(Annotate, "Explict begin of state %s\n", st);
@@ -428,7 +428,7 @@ CPA::swQ(ThreadContext *tc)
     char q[50];
     Arguments args(tc);
     uint64_t id = args[0];
-    CopyStringOut(tc, q, args[1], 50);
+    tc->getVirtProxy().readString(q, args[1], 50);
     int32_t count = args[2];
     System *sys = tc->getSystemPtr();
 
@@ -459,7 +459,7 @@ CPA::swDq(ThreadContext *tc)
     char q[50];
     Arguments args(tc);
     uint64_t id = args[0];
-    CopyStringOut(tc, q, args[1], 50);
+    tc->getVirtProxy().readString(q, args[1], 50);
     int32_t count = args[2];
     System *sys = tc->getSystemPtr();
 
@@ -488,7 +488,7 @@ CPA::swPq(ThreadContext *tc)
     char q[50];
     Arguments args(tc);
     uint64_t id = args[0];
-    CopyStringOut(tc, q, args[1], 50);
+    tc->getVirtProxy().readString(q, args[1], 50);
     System *sys = tc->getSystemPtr();
     int32_t count = args[2];
 
@@ -523,7 +523,7 @@ CPA::swRq(ThreadContext *tc)
     char q[50];
     Arguments args(tc);
     uint64_t id = args[0];
-    CopyStringOut(tc, q, args[1], 50);
+    tc->getVirtProxy().readString(q, args[1], 50);
     System *sys = tc->getSystemPtr();
     int32_t count = args[2];
 
@@ -554,7 +554,7 @@ CPA::swWf(ThreadContext *tc)
     char q[50];
     Arguments args(tc);
     uint64_t id = args[0];
-    CopyStringOut(tc, q, args[1], 50);
+    tc->getVirtProxy().readString(q, args[1], 50);
     System *sys = tc->getSystemPtr();
     int32_t count = args[3];
 
@@ -568,7 +568,7 @@ CPA::swWf(ThreadContext *tc)
 
     if (!!args[2]) {
         char sm[50];
-        CopyStringOut(tc, sm, args[2], 50);
+        tc->getVirtProxy().readString(sm, args[2], 50);
         doSwSmEnd(tc->getSystemPtr(), tc->contextId(), sm, getFrame(tc));
     }
 }
@@ -582,7 +582,7 @@ CPA::swWe(ThreadContext *tc)
     char q[50];
     Arguments args(tc);
     uint64_t id = args[0];
-    CopyStringOut(tc, q, args[1], 50);
+    tc->getVirtProxy().readString(q, args[1], 50);
     System *sys = tc->getSystemPtr();
     int32_t count = args[3];
 
@@ -596,7 +596,7 @@ CPA::swWe(ThreadContext *tc)
 
     if (!!args[2]) {
         char sm[50];
-        CopyStringOut(tc, sm, args[2], 50);
+        tc->getVirtProxy().readString(sm, args[2], 50);
         doSwSmEnd(tc->getSystemPtr(), tc->contextId(), sm, getFrame(tc));
     }
 }
@@ -610,7 +610,7 @@ CPA::swSq(ThreadContext *tc)
     char q[50];
     Arguments args(tc);
     uint64_t id = args[0];
-    CopyStringOut(tc, q, args[1], 50);
+    tc->getVirtProxy().readString(q, args[1], 50);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());
     int32_t size = args[2];
@@ -678,7 +678,7 @@ CPA::swAq(ThreadContext *tc)
     char q[50];
     Arguments args(tc);
     uint64_t id = args[0];
-    CopyStringOut(tc, q, args[1], 50);
+    tc->getVirtProxy().readString(q, args[1], 50);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());
     int32_t size = args[2];
@@ -714,7 +714,7 @@ CPA::swLink(ThreadContext *tc)
 
     char lsm[50];
     Arguments args(tc);
-    CopyStringOut(tc, lsm, args[0], 50);
+    tc->getVirtProxy().readString(lsm, args[0], 50);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());
 
@@ -738,7 +738,7 @@ CPA::swLink(ThreadContext *tc)
 
     if (!!args[2]) {
         char sm[50];
-        CopyStringOut(tc, sm, args[2], 50);
+        tc->getVirtProxy().readString(sm, args[2], 50);
         doSwSmEnd(tc->getSystemPtr(), tc->contextId(), sm, getFrame(tc));
     }
 }
@@ -789,7 +789,7 @@ CPA::swSyscallLink(ThreadContext  *tc)
 
     char lsm[50];
     Arguments args(tc);
-    CopyStringOut(tc, lsm, args[0], 50);
+    tc->getVirtProxy().readString(lsm, args[0], 50);
     System *sys = tc->getSystemPtr();
     StringWrap name(sys->name());
     int sysi = getSys(sys);
@@ -815,7 +815,7 @@ CPA::swSyscallLink(ThreadContext  *tc)
 
     if (!!args[1]) {
         char sm[50];
-        CopyStringOut(tc, sm, args[1], 50);
+        tc->getVirtProxy().readString(sm, args[1], 50);
         doSwSmEnd(tc->getSystemPtr(), tc->contextId(), sm, getFrame(tc));
     }
 }

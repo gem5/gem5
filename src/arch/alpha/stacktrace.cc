@@ -111,7 +111,7 @@ ProcessInfo::name(Addr ksp) const
         return "console";
 
     char comm[256];
-    CopyStringOut(tc, comm, task + name_off, sizeof(comm));
+    tc->getVirtProxy().readString(comm, task + name_off, sizeof(comm));
     if (!comm[0])
         return "startup";
 
@@ -311,8 +311,7 @@ StackTrace::decodePrologue(Addr sp, Addr callpc, Addr func, int &size,
     ra = 0;
 
     for (Addr pc = func; pc < callpc; pc += sizeof(MachInst)) {
-        MachInst inst;
-        CopyOut(tc, (uint8_t *)&inst, pc, sizeof(MachInst));
+        MachInst inst = tc->getVirtProxy().read<MachInst>(pc);
 
         int reg, disp;
         if (decodeStack(inst, disp)) {
@@ -323,7 +322,7 @@ StackTrace::decodePrologue(Addr sp, Addr callpc, Addr func, int &size,
             size += disp;
         } else if (decodeSave(inst, reg, disp)) {
             if (!ra && reg == ReturnAddressReg) {
-                CopyOut(tc, (uint8_t *)&ra, sp + disp, sizeof(Addr));
+                ra = tc->getVirtProxy().read<Addr>(sp + disp);
                 if (!ra) {
                     // panic("no return address value pc=%#x\n", pc);
                     return false;

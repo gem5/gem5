@@ -104,7 +104,7 @@ ProcessInfo::name(Addr ksp) const
         return "unknown";
 
     char comm[256];
-    CopyStringOut(tc, comm, task + name_off, sizeof(comm));
+    tc->getVirtProxy().readString(comm, task + name_off, sizeof(comm));
     if (!comm[0])
         return "startup";
 

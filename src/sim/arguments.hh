@@ -34,9 +34,8 @@
 #include <cassert>
 #include <memory>
 
+#include "cpu/thread_context.hh"
 #include "mem/fs_translating_port_proxy.hh"
-
-class ThreadContext;
 
 class Arguments
 {
@@ -137,13 +136,13 @@ class Arguments
     template <class T>
     operator T *() {
         T *buf = (T *)data->alloc(sizeof(T));
-        CopyOut(tc, buf, getArg(sizeof(T)), sizeof(T));
+        tc->getVirtProxy().readBlob(getArg(sizeof(T)), buf, sizeof(T));
         return buf;
     }
 
     operator char *() {
         char *buf = data->alloc(2048);
-        CopyStringOut(tc, buf, getArg(), 2048);
+        tc->getVirtProxy().readString(buf, getArg(), 2048);
         return buf;
     }
 };
