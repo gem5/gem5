@@ -47,6 +47,9 @@ namespace Kernel {
 
 class Checkpoint;
 
+class FSTranslatingPortProxy;
+class SETranslatingPortProxy;
+
 /**
  *  Struct for holding general thread state that is needed across CPU
  *  models.  This includes things such as pointers to the process,
@@ -100,7 +103,7 @@ struct ThreadState : public Serializable {
 
     PortProxy &getPhysProxy();
 
-    FSTranslatingPortProxy &getVirtProxy();
+    PortProxy &getVirtProxy();
 
     Process *getProcessPtr() { return process; }
 
@@ -119,7 +122,7 @@ struct ThreadState : public Serializable {
         }
     }
 
-    SETranslatingPortProxy &getMemProxy();
+    PortProxy &getMemProxy();
 
     /** Reads the number of instructions functionally executed and
      * committed.

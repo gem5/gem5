@@ -133,7 +133,7 @@ ThreadState::getPhysProxy()
     return *physProxy;
 }
 
-FSTranslatingPortProxy &
+PortProxy &
 ThreadState::getVirtProxy()
 {
     assert(FullSystem);
@@ -141,7 +141,7 @@ ThreadState::getVirtProxy()
     return *virtProxy;
 }
 
-SETranslatingPortProxy &
+PortProxy &
 ThreadState::getMemProxy()
 {
     assert(!FullSystem);

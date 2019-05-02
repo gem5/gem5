@@ -132,7 +132,7 @@ class O3ThreadContext : public ThreadContext
 
     PortProxy &getPhysProxy() override { return thread->getPhysProxy(); }
 
-    FSTranslatingPortProxy &getVirtProxy() override;
+    PortProxy &getVirtProxy() override;
 
     void
     initMemProxies(ThreadContext *tc) override
@@ -140,7 +140,7 @@ class O3ThreadContext : public ThreadContext
         thread->initMemProxies(tc);
     }
 
-    SETranslatingPortProxy &
+    PortProxy &
     getMemProxy() override
     {
         return thread->getMemProxy();

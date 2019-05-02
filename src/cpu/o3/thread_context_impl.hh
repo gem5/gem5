@@ -54,7 +54,7 @@
 #include "debug/O3CPU.hh"
 
 template <class Impl>
-FSTranslatingPortProxy&
+PortProxy&
 O3ThreadContext<Impl>::getVirtProxy()
 {
     return thread->getVirtProxy();

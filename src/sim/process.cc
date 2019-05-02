@@ -161,7 +161,9 @@ Process::clone(ThreadContext *otc, ThreadContext *ntc,
          */
         delete np->pTable;
         np->pTable = pTable;
-        ntc->getMemProxy().setPageTable(np->pTable);
+        auto &proxy = dynamic_cast<SETranslatingPortProxy &>(
+                ntc->getMemProxy());
+        proxy.setPageTable(np->pTable);
 
         np->memState = memState;
     } else {

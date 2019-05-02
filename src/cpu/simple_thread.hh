@@ -216,18 +216,14 @@ class SimpleThread : public ThreadState, public ThreadContext
     }
 
     PortProxy &getPhysProxy() override { return ThreadState::getPhysProxy(); }
-    FSTranslatingPortProxy &
-    getVirtProxy() override
-    {
-        return ThreadState::getVirtProxy();
-    }
+    PortProxy &getVirtProxy() override { return ThreadState::getVirtProxy(); }
 
     void initMemProxies(ThreadContext *tc) override
     {
         ThreadState::initMemProxies(tc);
     }
 
-    SETranslatingPortProxy &
+    PortProxy &
     getMemProxy() override
     {
         return ThreadState::getMemProxy();
