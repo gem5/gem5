@@ -109,9 +109,7 @@ structure(RequestMsg, desc="...", interface="Message") {
 
   bool functionalRead(Packet *pkt) {
     // Read only those messages that contain the data
-    if (Type == CoherenceRequestType:DMA_READ ||
-        Type == CoherenceRequestType:DMA_WRITE ||
-        Type == CoherenceRequestType:WRITEBACK_CLEAN_DATA ||
+    if (Type == CoherenceRequestType:WRITEBACK_CLEAN_DATA ||
         Type == CoherenceRequestType:WRITEBACK_DIRTY_DATA) {
         return testAndRead(addr, DataBlk, pkt);
     }

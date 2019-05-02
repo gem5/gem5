@@ -56,31 +56,40 @@ machine(MachineType:Directory, "Directory protocol")
 
    MessageBuffer * requestToMemory;
    MessageBuffer * responseFromMemory;
+
+   MessageBuffer * triggerQueue;
 {
   // STATES
   state_declaration(State, desc="Directory states", default="Directory_State_I") {
     // Base states
     I, AccessPermission:Read_Write, desc="Invalid";
-    S, AccessPermission:Read_Only, desc="Shared";
+    S, AccessPermission:Read_Write, desc="Shared";
     O, AccessPermission:Maybe_Stale, desc="Owner";
     M, AccessPermission:Maybe_Stale, desc="Modified";
 
-    IS, AccessPermission:Busy, desc="Blocked, was in idle";
+    // Transient states
+    // The memory has valid data in some of these
+    IS_M, AccessPermission:Read_Write, desc="Blocked, was in I, waiting for mem";
+    IS, AccessPermission:Read_Write, desc="Blocked, was in I, data forwarded";
     SS, AccessPermission:Read_Only, desc="Blocked, was in shared";
     OO, AccessPermission:Busy, desc="Blocked, was in owned";
     MO, AccessPermission:Busy, desc="Blocked, going to owner or maybe modified";
-    MM, AccessPermission:Busy, desc="Blocked, going to modified";
+    MM_M, AccessPermission:Read_Only, desc="Blocked, fetching from memory, going to MM";
+    MM, AccessPermission:Busy,      desc="Blocked, req or mem data forwarded, going to modified";
 
     MI, AccessPermission:Busy, desc="Blocked on a writeback";
     MIS, AccessPermission:Busy, desc="Blocked on a writeback, but don't remove from sharers when received";
     OS, AccessPermission:Busy, desc="Blocked on a writeback";
     OSS, AccessPermission:Busy, desc="Blocked on a writeback, but don't remove from sharers when received";
 
-    XI_M, AccessPermission:Busy, desc="Blocked, going to I, waiting for the memory controller";
-    XI_M_U, AccessPermission:Busy, desc="Blocked, going to XI_U, waiting for the memory controller";
-    XI_U, AccessPermission:Busy, desc="Blocked, going to I, waiting for an unblock";
-    OI_D, AccessPermission:Busy, desc="In O, going to I, waiting for data";
+    // We have valid data in a TBE
+    WBI, AccessPermission:Read_Only, desc="Sent writeback, waiting for memory; will be I";
+    WBS, AccessPermission:Read_Only, desc="Sent writeback, waiting for memory; will be S";
+    XI_M, AccessPermission:Read_Only, desc="Blocked, going to I, waiting for the memory controller";
+    XI_M_U, AccessPermission:Read_Only, desc="Blocked, going to XI_U, waiting for the memory controller";
+    XI_U, AccessPermission:Read_Only, desc="Blocked, going to I, waiting for an unblock";
 
+    OI_D, AccessPermission:Busy, desc="In O, going to I, waiting for data";
     OD, AccessPermission:Busy, desc="In O, waiting for dma ack from L2";
     MD, AccessPermission:Busy, desc="In M, waiting for dma ack from L2";
   }
@@ -105,6 +114,7 @@ machine(MachineType:Directory, "Directory protocol")
     DMA_WRITE_PARTIAL, desc="DMA Write partial line";
     DMA_ACK,       desc="DMA Ack";
     Data,          desc="Data to directory";
+    All_Acks,      desk="All pending acks, unblocks, etc have been received";
   }
 
   // TYPES
@@ -122,6 +132,8 @@ machine(MachineType:Directory, "Directory protocol")
     int Len,           desc="Length of request";
     DataBlock DataBlk, desc="DataBlk";
     MachineID Requestor, desc="original requestor";
+    bool WaitingWBAck, desc="DataBlk WB request sent, but no ack from mem yet";
+    bool WaitingDMAAck, desc="DMA ack sent, waiting for unblock";
   }
 
   structure(TBETable, external = "yes") {
@@ -212,10 +224,10 @@ machine(MachineType:Directory, "Directory protocol")
     if (directory.isPresent(addr)) {
       Entry dir_entry := static_cast(Entry, "pointer", directory[addr]);
       if (is_valid(dir_entry)) {
-        DPRINTF(RubySlicc, "%s\n", Directory_State_to_permission(dir_entry.DirectoryState));
+        DPRINTF(RubySlicc, "%s,%s\n", dir_entry.DirectoryState, Directory_State_to_permission(dir_entry.DirectoryState));
         return Directory_State_to_permission(dir_entry.DirectoryState);
       } else {
-        DPRINTF(RubySlicc, "%s\n", Directory_State_to_permission(State:I));
+        DPRINTF(RubySlicc, "%s,%s\n", State:I, Directory_State_to_permission(State:I));
         return Directory_State_to_permission(State:I);
       }
     }
@@ -235,11 +247,21 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   void functionalRead(Addr addr, Packet *pkt) {
-    functionalMemoryRead(pkt);
+    TBE tbe := TBEs[addr];
+    if (is_valid(tbe) && tbe.WaitingWBAck) {
+      testAndRead(addr, tbe.DataBlk, pkt);
+    } else {
+      functionalMemoryRead(pkt);
+    }
   }
 
   int functionalWrite(Addr addr, Packet *pkt) {
     int num_functional_writes := 0;
+    TBE tbe := TBEs[addr];
+    if (is_valid(tbe)) {
+      num_functional_writes := num_functional_writes +
+        testAndWrite(addr, tbe.DataBlk, pkt);
+    }
     num_functional_writes := num_functional_writes + functionalMemoryWrite(pkt);
     return num_functional_writes;
   }
@@ -272,7 +294,22 @@ machine(MachineType:Directory, "Directory protocol")
   // For inserting internal unblocks only
   out_port(unblockNetwork_out_internal, ResponseMsg, responseToDir);
 
+  out_port(triggerQueue_out, TriggerMsg, triggerQueue);
+
   // ** IN_PORTS **
+
+  // Trigger Queue
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue, rank=3) {
+    if (triggerQueue_in.isReady(clockEdge())) {
+      peek(triggerQueue_in, TriggerMsg) {
+        if (in_msg.Type == TriggerType:ALL_ACKS) {
+          trigger(Event:All_Acks, in_msg.addr, TBEs[in_msg.addr]);
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
 
   in_port(unblockNetwork_in, ResponseMsg, responseToDir, rank=2) {
     if (unblockNetwork_in.isReady(clockEdge())) {
@@ -395,6 +432,18 @@ machine(MachineType:Directory, "Directory protocol")
     }
   }
 
+  action(clearDMA, "cD", desc="Clear DMA flag in TBE") {
+    assert(is_valid(tbe));
+    assert(tbe.WaitingDMAAck);
+    tbe.WaitingDMAAck := false;
+  }
+
+  action(clearWBAck, "cWb", desc="Clear WB ack flag in TBE") {
+    assert(is_valid(tbe));
+    assert(tbe.WaitingWBAck);
+    tbe.WaitingWBAck := false;
+  }
+
   action(c_clearOwner, "c", desc="Clear the owner field") {
     getDirectoryEntry(address).Owner.clear();
   }
@@ -509,6 +558,21 @@ machine(MachineType:Directory, "Directory protocol")
     unblockNetwork_in.dequeue(clockEdge());
   }
 
+  action(popTriggerQueue, "pt", desc="Pop trigger queue.") {
+    triggerQueue_in.dequeue(clockEdge());
+  }
+
+  action(checkForCompletion, "\o", desc="Check if we have received all the messages required for completion") {
+    assert(is_valid(tbe));
+    if ((tbe.WaitingDMAAck == false) &&
+        (tbe.WaitingWBAck == false)) {
+      enqueue(triggerQueue_out, TriggerMsg) {
+        out_msg.addr := address;
+        out_msg.Type := TriggerType:ALL_ACKS;
+      }
+    }
+  }
+
   action(m_addUnlockerToSharers, "m", desc="Add the unlocker to the sharer list") {
     peek(unblockNetwork_in, ResponseMsg) {
       if (in_msg.SenderMachine == MachineType:L2Cache) {
@@ -544,25 +608,17 @@ machine(MachineType:Directory, "Directory protocol")
 
   action(qw_queueMemoryWBFromCacheRequest, "qw", desc="Queue off-chip writeback request") {
     peek(requestQueue_in, RequestMsg) {
-      if (is_valid(tbe)) {
-        enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
-          out_msg.addr := address;
-          out_msg.Type := MemoryRequestType:MEMORY_WB;
-          out_msg.Sender := tbe.Requestor;
-          out_msg.MessageSize := MessageSizeType:Writeback_Data;
-          out_msg.DataBlk := in_msg.DataBlk;
-          out_msg.Len := 0;
-        }
-      } else {
-        enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
-          out_msg.addr := address;
-          out_msg.Type := MemoryRequestType:MEMORY_WB;
-          out_msg.Sender := in_msg.Requestor;
-          out_msg.MessageSize := MessageSizeType:Writeback_Data;
-          out_msg.DataBlk := in_msg.DataBlk;
-          out_msg.Len := 0;
-        }
+      assert(is_valid(tbe));
+      enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
+        out_msg.addr := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := in_msg.Requestor;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Len := 0;
       }
+      tbe.DataBlk := in_msg.DataBlk;
+      tbe.WaitingWBAck := true;
     }
   }
 
@@ -581,6 +637,8 @@ machine(MachineType:Directory, "Directory protocol")
         out_msg.DataBlk := DataBlk;
         out_msg.Len := 0;
       }
+      tbe.DataBlk := DataBlk;
+      tbe.WaitingWBAck := true;
     }
   }
 
@@ -599,11 +657,14 @@ machine(MachineType:Directory, "Directory protocol")
         out_msg.DataBlk := DataBlk;
         out_msg.Len := 0;
       }
+      tbe.DataBlk := DataBlk;
+      tbe.WaitingWBAck := true;
     }
   }
 
   action(qw_queueMemoryWBFromDMARequest, "/qw", desc="Queue off-chip writeback request") {
     peek(requestQueue_in, RequestMsg) {
+      assert(is_valid(tbe));
       enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
         out_msg.addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
@@ -612,6 +673,8 @@ machine(MachineType:Directory, "Directory protocol")
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Len := 0;
       }
+      tbe.DataBlk := in_msg.DataBlk;
+      tbe.WaitingWBAck := true;
     }
   }
 
@@ -622,6 +685,7 @@ machine(MachineType:Directory, "Directory protocol")
   action(a_sendDMAAckFromReq, "\a", desc="Send DMA Ack that write completed, along with Inv Ack count") {
     peek(requestQueue_in, RequestMsg) {
       enqueue(responseNetwork_out, ResponseMsg, 1) {
+        assert(is_valid(tbe));
         out_msg.addr := address;
         out_msg.Sender := machineID;
         out_msg.SenderMachine := MachineType:Directory;
@@ -629,6 +693,7 @@ machine(MachineType:Directory, "Directory protocol")
         out_msg.Acks := getDirectoryEntry(address).Sharers.count();  // for dma requests
         out_msg.Type := CoherenceResponseType:DMA_ACK;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        tbe.WaitingDMAAck := true;
       }
     }
   }
@@ -643,28 +708,35 @@ machine(MachineType:Directory, "Directory protocol")
       out_msg.Acks := getDirectoryEntry(address).Sharers.count();  // for dma requests
       out_msg.Type := CoherenceResponseType:DMA_ACK;
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      tbe.WaitingDMAAck := true;
     }
   }
 
   action(v_allocateTBE, "v", desc="Allocate TBE entry") {
     peek (requestQueue_in, RequestMsg) {
+      assert(is_valid(tbe) == false);
       TBEs.allocate(address);
       set_tbe(TBEs[address]);
       tbe.PhysicalAddress := in_msg.addr;
       tbe.Len := in_msg.Len;
       tbe.DataBlk := in_msg.DataBlk;
       tbe.Requestor := in_msg.Requestor;
+      tbe.WaitingWBAck := false;
+      tbe.WaitingDMAAck := false;
     }
   }
 
   action(w_deallocateTBE, "w", desc="Deallocate TBE entry") {
+    assert(is_valid(tbe));
+    assert(tbe.WaitingWBAck == false);
+    assert(tbe.WaitingDMAAck == false);
     TBEs.deallocate(address);
     unset_tbe();
   }
 
 
   // TRANSITIONS
-  transition(I, GETX, MM) {
+  transition(I, GETX, MM_M) {
     allocDirEntry;
     qf_queueMemoryFetchRequest;
     i_popIncomingRequestQueue;
@@ -678,6 +750,7 @@ machine(MachineType:Directory, "Directory protocol")
 
   transition(I, DMA_WRITE_LINE, XI_U) {
     allocDirEntry;
+    v_allocateTBE;
     qw_queueMemoryWBFromDMARequest;
     a_sendDMAAckFromReq;  // ack count may be zero
     i_popIncomingRequestQueue;
@@ -693,7 +766,6 @@ machine(MachineType:Directory, "Directory protocol")
   transition(XI_M_U, Memory_Data_DMA, XI_U) {
     qw_queueMemoryWBFromMemResp;
     a_sendDMAAckFromTBE;  // ack count may be zero
-    w_deallocateTBE;
     q_popMemQueue;
   }
 
@@ -703,20 +775,34 @@ machine(MachineType:Directory, "Directory protocol")
     q_popMemQueue;
   }
 
-  transition(XI_U, Exclusive_Unblock, I) {
+  transition(XI_U, Exclusive_Unblock, XI_U) {
     cc_clearSharers;
     c_clearOwner;
-    deallocDirEntry;
+    clearDMA;
+    checkForCompletion;
     j_popIncomingUnblockQueue;
   }
 
-  transition(S, GETX, MM) {
+  transition(XI_U, Memory_Ack, XI_U) {
+    clearWBAck;
+    checkForCompletion;
+    q_popMemQueue;
+  }
+
+  transition(XI_U, All_Acks, I) {
+    deallocDirEntry;
+    w_deallocateTBE;
+    popTriggerQueue;
+  }
+
+  transition(S, GETX, MM_M) {
     qf_queueMemoryFetchRequest;
     g_sendInvalidations;
     i_popIncomingRequestQueue;
   }
 
   transition(S, DMA_WRITE_LINE, XI_U) {
+    v_allocateTBE;
     qw_queueMemoryWBFromDMARequest;
     a_sendDMAAckFromReq;  // ack count may be zero
     g_sendInvalidations;  // the DMA will collect invalidations
@@ -730,7 +816,7 @@ machine(MachineType:Directory, "Directory protocol")
     i_popIncomingRequestQueue;
   }
 
-  transition(I, GETS, IS) {
+  transition(I, GETS, IS_M) {
     allocDirEntry;
     qf_queueMemoryFetchRequest;
     i_popIncomingRequestQueue;
@@ -777,7 +863,6 @@ machine(MachineType:Directory, "Directory protocol")
   transition(OI_D, Data, XI_U) {
     qw_queueMemoryWBFromCacheResp;
     a_sendDMAAckFromTBE;  // ack count may be zero
-    w_deallocateTBE;
     j_popIncomingUnblockQueue;
   }
 
@@ -834,7 +919,7 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
 
-  transition({MM, MO, MI, MIS, OS, OSS, XI_M, XI_M_U, XI_U, OI_D, OD, MD}, {GETS, GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ, DMA_WRITE_LINE, DMA_WRITE_PARTIAL}) {
+  transition({MM_M, MM, MO, MI, MIS, OS, OSS, WBI, WBS, XI_M, XI_M_U, XI_U, OI_D, OD, MD}, {GETS, GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ, DMA_WRITE_LINE, DMA_WRITE_PARTIAL}) {
     zz_recycleRequest;
   }
 
@@ -849,11 +934,11 @@ machine(MachineType:Directory, "Directory protocol")
     j_popIncomingUnblockQueue;
   }
 
-  transition({IS, SS, OO}, {GETX, PUTO, PUTO_SHARERS, PUTX, DMA_WRITE_LINE,DMA_WRITE_PARTIAL}) {
+  transition({IS, IS_M, SS, OO}, {GETX, PUTO, PUTO_SHARERS, PUTX, DMA_WRITE_LINE,DMA_WRITE_PARTIAL}) {
     zz_recycleRequest;
   }
 
-  transition(IS, {GETS, DMA_READ}) {
+  transition({IS, IS_M}, {GETS, DMA_READ}) {
     zz_recycleRequest;
   }
 
@@ -892,16 +977,24 @@ machine(MachineType:Directory, "Directory protocol")
     j_popIncomingUnblockQueue;
   }
 
-  transition(MI, Dirty_Writeback, I) {
+  transition(MI, Dirty_Writeback, WBI) {
     c_clearOwner;
     cc_clearSharers;
+    v_allocateTBE;
     qw_queueMemoryWBFromCacheRequest;
-    deallocDirEntry;
     i_popIncomingRequestQueue;
   }
 
-  transition(MIS, Dirty_Writeback, S) {
+  transition(WBI, Memory_Ack, I) {
+    clearWBAck;
+    w_deallocateTBE;
+    deallocDirEntry;
+    q_popMemQueue;
+  }
+
+  transition(MIS, Dirty_Writeback, WBS) {
     c_moveOwnerToSharer;
+    v_allocateTBE;
     qw_queueMemoryWBFromCacheRequest;
     i_popIncomingRequestQueue;
   }
@@ -911,16 +1004,24 @@ machine(MachineType:Directory, "Directory protocol")
     i_popIncomingRequestQueue;
   }
 
-  transition(OS, Dirty_Writeback, S) {
+  transition(OS, Dirty_Writeback, WBS) {
     c_clearOwner;
+    v_allocateTBE;
     qw_queueMemoryWBFromCacheRequest;
     i_popIncomingRequestQueue;
   }
 
-  transition(OSS, Dirty_Writeback, S) {
+  transition(OSS, Dirty_Writeback, WBS) {
     c_moveOwnerToSharer;
+    v_allocateTBE;
     qw_queueMemoryWBFromCacheRequest;
     i_popIncomingRequestQueue;
+  }
+
+  transition(WBS, Memory_Ack, S) {
+    clearWBAck;
+    w_deallocateTBE;
+    q_popMemQueue;
   }
 
   transition(OSS, Clean_Writeback, S) {
@@ -940,15 +1041,17 @@ machine(MachineType:Directory, "Directory protocol")
     i_popIncomingRequestQueue;
   }
 
-  transition({MI, MIS}, Unblock, M) {
-    j_popIncomingUnblockQueue;
+  transition({S, O, M, SS, OO}, Memory_Data_Cache) {
+    d_sendDataMsg;
+    q_popMemQueue;
   }
 
-  transition({OS, OSS}, Unblock, O) {
-    j_popIncomingUnblockQueue;
+  transition(IS_M, Memory_Data_Cache, IS) {
+    d_sendDataMsg;
+    q_popMemQueue;
   }
 
-  transition({S, O, M, IS, SS, OO, MO, MM, MI, MIS, OS, OSS}, Memory_Data_Cache) {
+  transition(MM_M, Memory_Data_Cache, MM) {
     d_sendDataMsg;
     q_popMemQueue;
   }
@@ -956,10 +1059,6 @@ machine(MachineType:Directory, "Directory protocol")
   transition(SS, Memory_Data_DMA) {
     d_sendDataMsg;
     insertDMAUnblock; // DMA will not send unblocks in response to reads
-    q_popMemQueue;
-  }
-
-  transition({I, S, O, M, IS, SS, OO, MO, MM, MI, MIS, OS, OSS, XI_U, XI_M, XI_M_U}, Memory_Ack) {
     q_popMemQueue;
   }
 

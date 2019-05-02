@@ -74,19 +74,20 @@ machine(MachineType:L1Cache, "L1 cache protocol")
     I, AccessPermission:Invalid, desc="Idle";
     S, AccessPermission:Read_Only, desc="Shared";
     O, AccessPermission:Read_Only, desc="Owned";
-    M, AccessPermission:Read_Only, desc="Modified (dirty)";
-    M_W, AccessPermission:Read_Only, desc="Modified (dirty)";
+    M, AccessPermission:Read_Write, desc="Modified (dirty)";
+    M_W, AccessPermission:Read_Write, desc="Modified (dirty)";
     MM, AccessPermission:Read_Write, desc="Modified (dirty and locally modified)";
     MM_W, AccessPermission:Read_Write, desc="Modified (dirty and locally modified)";
 
     // Transient States
+    // Notice we still have a valid copy of the block in most states
     IM, AccessPermission:Busy, "IM", desc="Issued GetX";
+    IS, AccessPermission:Busy, "IS", desc="Issued GetS";
     SM, AccessPermission:Read_Only, "SM", desc="Issued GetX, we still have an old copy of the line";
     OM, AccessPermission:Read_Only, "SM", desc="Issued GetX, received data";
-    IS, AccessPermission:Busy, "IS", desc="Issued GetS";
-    SI, AccessPermission:Busy, "OI", desc="Issued PutS, waiting for ack";
-    OI, AccessPermission:Busy, "OI", desc="Issued PutO, waiting for ack";
-    MI, AccessPermission:Busy, "MI", desc="Issued PutX, waiting for ack";
+    SI, AccessPermission:Read_Only, "OI", desc="Issued PutS, waiting for ack";
+    OI, AccessPermission:Read_Only, "OI", desc="Issued PutO, waiting for ack";
+    MI, AccessPermission:Read_Write, "MI", desc="Issued PutX, waiting for ack";
     II, AccessPermission:Busy, "II", desc="Issued PutX/O, saw Fwd_GETS or Fwd_GETX, waiting for ack";
   }
 
@@ -225,13 +226,13 @@ machine(MachineType:L1Cache, "L1 cache protocol")
   AccessPermission getAccessPermission(Addr addr) {
     TBE tbe := TBEs[addr];
     if(is_valid(tbe)) {
-      DPRINTF(RubySlicc, "%s\n", L1Cache_State_to_permission(tbe.TBEState));
+      DPRINTF(RubySlicc, "%s,%s\n", tbe.TBEState, L1Cache_State_to_permission(tbe.TBEState));
       return L1Cache_State_to_permission(tbe.TBEState);
     }
 
     Entry cache_entry := getCacheEntry(addr);
     if(is_valid(cache_entry)) {
-      DPRINTF(RubySlicc, "%s\n", L1Cache_State_to_permission(cache_entry.CacheState));
+      DPRINTF(RubySlicc, "%s,%s\n", cache_entry.CacheState, L1Cache_State_to_permission(cache_entry.CacheState));
       return L1Cache_State_to_permission(cache_entry.CacheState);
     }
 
@@ -270,8 +271,10 @@ machine(MachineType:L1Cache, "L1 cache protocol")
     }
 
     TBE tbe := TBEs[addr];
-    num_functional_writes := num_functional_writes +
-        testAndWrite(addr, tbe.DataBlk, pkt);
+    if (is_valid(tbe)){
+      num_functional_writes := num_functional_writes +
+          testAndWrite(addr, tbe.DataBlk, pkt);
+    }
     return num_functional_writes;
   }
 
