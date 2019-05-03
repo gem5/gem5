@@ -82,6 +82,10 @@ class Fiber
     ///
     bool finished() const { return _finished; };
 
+    /// Returns whether the "main" function of this fiber has started.
+    ///
+    bool started() const { return _started; };
+
     /// Get a pointer to the current running Fiber.
     ///
     static Fiber *currentFiber();
@@ -96,7 +100,7 @@ class Fiber
     /// mark itself as finished and switch to its link fiber.
     virtual void main() = 0;
 
-    void setStarted() { started = true; }
+    void setStarted() { _started = true; }
 
   private:
     static void entryTrampoline();
@@ -114,7 +118,7 @@ class Fiber
     unsigned valgrindStackId;
 #endif
 
-    bool started;
+    bool _started;
     bool _finished;
     void createContext();
 };

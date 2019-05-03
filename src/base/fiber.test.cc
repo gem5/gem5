@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2019 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright 2018 Google, Inc.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,6 +37,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
+ *          Giacomo Travaglini
  */
 
 #include <gtest/gtest.h>
@@ -34,6 +47,29 @@
 #include <vector>
 
 #include "base/fiber.hh"
+
+/** This test is checking if the "started" member has its expected
+ * value before and after the fiber runs. In the test an empty fiber
+ * is used since we are just interested on the _started member and
+ * nothing more.
+ */
+TEST(Fiber, Starting)
+{
+    class StartingFiber : public Fiber
+    {
+      public:
+        StartingFiber(Fiber *link) : Fiber(link) {}
+        void main() { /** Do nothing */ }
+    };
+
+    StartingFiber fiber(Fiber::primaryFiber());
+
+    ASSERT_FALSE(fiber.started());
+
+    fiber.run();
+
+    ASSERT_TRUE(fiber.started());
+}
 
 class SwitchingFiber : public Fiber
 {
