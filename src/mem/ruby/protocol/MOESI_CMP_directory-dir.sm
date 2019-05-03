@@ -695,7 +695,7 @@ machine(MachineType:Directory, "Directory protocol")
     i_popIncomingRequestQueue;
   }
 
-  transition({I, S}, PUTO) {
+  transition({I, S}, {PUTO, PUTO_SHARERS}) {
     b_sendWriteBackNack;
     i_popIncomingRequestQueue;
   }
