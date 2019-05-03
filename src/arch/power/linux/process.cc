@@ -36,6 +36,7 @@
 
 #include "arch/power/isa_traits.hh"
 #include "arch/power/linux/linux.hh"
+#include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
@@ -46,6 +47,36 @@
 
 using namespace std;
 using namespace PowerISA;
+
+namespace
+{
+
+class PowerLinuxObjectFileLoader : public ObjectFile::Loader
+{
+  public:
+    Process *
+    load(ProcessParams *params, ObjectFile *obj_file) override
+    {
+        if (obj_file->getArch() != ObjectFile::Power)
+            return nullptr;
+
+        auto opsys = obj_file->getOpSys();
+
+        if (opsys == ObjectFile::UnknownOpSys) {
+            warn("Unknown operating system; assuming Linux.");
+            opsys = ObjectFile::Linux;
+        }
+
+        if (opsys != ObjectFile::Linux)
+            return nullptr;
+
+        return new PowerLinuxProcess(params, obj_file);
+    }
+};
+
+PowerLinuxObjectFileLoader loader;
+
+} // anonymous namespace
 
 /// Target uname() handler.
 static SyscallReturn
