@@ -41,6 +41,7 @@
 
 #include "arch/arm/freebsd/freebsd.hh"
 #include "arch/arm/isa_traits.hh"
+#include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/freebsd/freebsd.hh"
@@ -51,6 +52,37 @@
 
 using namespace std;
 using namespace ArmISA;
+
+namespace
+{
+
+class ArmFreebsdObjectFileLoader : public ObjectFile::Loader
+{
+  public:
+    Process *
+    load(ProcessParams *params, ObjectFile *obj_file) override
+    {
+        auto arch = obj_file->getArch();
+        auto opsys = obj_file->getOpSys();
+
+        if (arch != ObjectFile::Arm && arch != ObjectFile::Thumb &&
+                arch != ObjectFile::Arm64) {
+            return nullptr;
+        }
+
+        if (opsys != ObjectFile::FreeBSD)
+            return nullptr;
+
+        if (arch == ObjectFile::Arm64)
+            return new ArmFreebsdProcess64(params, obj_file, arch);
+        else
+            return new ArmFreebsdProcess32(params, obj_file, arch);
+    }
+};
+
+ArmFreebsdObjectFileLoader loader;
+
+} // anonymous namespace
 
 static SyscallReturn
 issetugidFunc(SyscallDesc *desc, int callnum, Process *process,
