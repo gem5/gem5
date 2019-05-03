@@ -40,6 +40,7 @@
 #include <cstdio>
 #include <list>
 #include <string>
+#include <vector>
 
 #include "base/cprintf.hh"
 #include "base/loader/aout_object.hh"
@@ -95,6 +96,37 @@ ObjectFile::loadSections(PortProxy& mem_proxy, Addr addr_mask, Addr offset)
     return (loadSection(&text, mem_proxy, addr_mask, offset)
             && loadSection(&data, mem_proxy, addr_mask, offset)
             && loadSection(&bss, mem_proxy, addr_mask, offset));
+}
+
+namespace
+{
+
+typedef std::vector<ObjectFile::Loader *> LoaderList;
+
+LoaderList &
+object_file_loaders()
+{
+    static LoaderList loaders;
+    return loaders;
+}
+
+} // anonymous namespace
+
+ObjectFile::Loader::Loader()
+{
+    object_file_loaders().emplace_back(this);
+}
+
+Process *
+ObjectFile::tryLoaders(ProcessParams *params, ObjectFile *obj_file)
+{
+    for (auto &loader: object_file_loaders()) {
+        Process *p = loader->load(params, obj_file);
+        if (p)
+            return p;
+    }
+
+    return nullptr;
 }
 
 static bool

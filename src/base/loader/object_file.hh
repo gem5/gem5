@@ -39,6 +39,8 @@
 #include "base/types.hh"
 
 class PortProxy;
+class Process;
+class ProcessParams;
 class SymbolTable;
 
 class ObjectFile
@@ -150,6 +152,38 @@ class ObjectFile
      * @param a address to load the binary/text section at
      */
     void setTextBase(Addr a) { text.baseAddr = a; }
+
+    /**
+     * Each instance of a Loader subclass will have a chance to try to load
+     * an object file when tryLoaders is called. If they can't because they
+     * aren't compatible with it (wrong arch, wrong OS, etc), then they
+     * silently fail by returning nullptr so other loaders can try.
+     */
+    class Loader
+    {
+      public:
+        Loader();
+
+        /* Loader instances are singletons. */
+        Loader(const Loader &) = delete;
+        void operator=(const Loader &) = delete;
+
+        virtual ~Loader() {}
+
+        /**
+         * Each subclass needs to implement this method. If the loader is
+         * compatible with the passed in object file, it should return the
+         * created Process object corresponding to it. If not, it should fail
+         * silently and return nullptr. If there's a non-compatibliity related
+         * error like file IO errors, etc., those should fail non-silently
+         * with a panic or fail as normal.
+         */
+        virtual Process *load(ProcessParams *params, ObjectFile *obj_file) = 0;
+    };
+
+    // Try all the Loader instance's "load" methods one by one until one is
+    // successful. If none are, complain and fail.
+    static Process *tryLoaders(ProcessParams *params, ObjectFile *obj_file);
 };
 
 ObjectFile *createObjectFile(const std::string &fname, bool raw = false);
