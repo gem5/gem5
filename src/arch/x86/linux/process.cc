@@ -44,6 +44,7 @@
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/linux/linux.hh"
 #include "arch/x86/registers.hh"
+#include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/linux/linux.hh"
@@ -53,6 +54,40 @@
 
 using namespace std;
 using namespace X86ISA;
+
+namespace
+{
+
+class X86LinuxObjectFileLoader : public ObjectFile::Loader
+{
+  public:
+    Process *
+    load(ProcessParams *params, ObjectFile *obj_file) override
+    {
+        auto arch = obj_file->getArch();
+        auto opsys = obj_file->getOpSys();
+
+        if (arch != ObjectFile::X86_64 && arch != ObjectFile::I386)
+            return nullptr;
+
+        if (opsys == ObjectFile::UnknownOpSys) {
+            warn("Unknown operating system; assuming Linux.");
+            opsys = ObjectFile::Linux;
+        }
+
+        if (opsys != ObjectFile::Linux)
+            return nullptr;
+
+        if (arch == ObjectFile::X86_64)
+            return new X86_64LinuxProcess(params, obj_file);
+        else
+            return new I386LinuxProcess(params, obj_file);
+    }
+};
+
+X86LinuxObjectFileLoader loader;
+
+} // anonymous namespace
 
 /// Target uname() handler.
 static SyscallReturn
