@@ -33,6 +33,7 @@
 
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/linux/linux.hh"
+#include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/SyscallVerbose.hh"
@@ -43,6 +44,36 @@
 
 using namespace std;
 using namespace AlphaISA;
+
+namespace
+{
+
+class AlphaLinuxObjectFileLoader : public ObjectFile::Loader
+{
+  public:
+    Process *
+    load(ProcessParams *params, ObjectFile *obj_file) override
+    {
+        if (obj_file->getArch() != ObjectFile::Alpha)
+            return nullptr;
+
+        auto opsys = obj_file->getOpSys();
+
+        if (opsys == ObjectFile::UnknownOpSys) {
+            warn("Unknown operating system; assuming Linux.");
+            opsys = ObjectFile::Linux;
+        }
+
+        if (opsys != ObjectFile::Linux)
+            return nullptr;
+
+        return new AlphaLinuxProcess(params, obj_file);
+    }
+};
+
+AlphaLinuxObjectFileLoader loader;
+
+} // anonymous namespace
 
 /// Target uname() handler.
 static SyscallReturn
