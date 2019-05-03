@@ -32,6 +32,7 @@
 
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/registers.hh"
+#include "base/loader/object_file.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "kern/solaris/solaris.hh"
@@ -41,6 +42,32 @@
 
 using namespace std;
 using namespace SparcISA;
+
+namespace
+{
+
+class SparcSolarisObjectFileLoader : public ObjectFile::Loader
+{
+  public:
+    Process *
+    load(ProcessParams *params, ObjectFile *obj_file) override
+    {
+        auto arch = obj_file->getArch();
+        auto opsys = obj_file->getOpSys();
+
+        if (arch != ObjectFile::SPARC64 && arch != ObjectFile::SPARC32)
+            return nullptr;
+
+        if (opsys != ObjectFile::Solaris)
+            return nullptr;
+
+        return new SparcSolarisProcess(params, obj_file);
+    }
+};
+
+SparcSolarisObjectFileLoader loader;
+
+} // anonymous namespace
 
 
 /// Target uname() handler.
