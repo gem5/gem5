@@ -59,9 +59,12 @@
 /// This file defines objects used to emulate syscalls from the target
 /// application on the host machine.
 
-#ifdef __linux__
+#if defined(__linux__)
 #include <sys/eventfd.h>
 #include <sys/statfs.h>
+
+#else
+#include <sys/mount.h>
 
 #endif
 
@@ -778,12 +781,12 @@ ioctlFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
             return status;
           }
           case SIOCGIFFLAGS:
-#ifdef __linux__
+#if defined(__linux__)
           case SIOCGIFINDEX:
 #endif
           case SIOCGIFNETMASK:
           case SIOCGIFADDR:
-#ifdef __linux__
+#if defined(__linux__)
           case SIOCGIFHWADDR:
 #endif
           case SIOCGIFMTU: {
@@ -1515,7 +1518,7 @@ SyscallReturn
 statfsFunc(SyscallDesc *desc, int callnum, Process *process,
            ThreadContext *tc)
 {
-#ifdef __linux__
+#if defined(__linux__)
     std::string path;
 
     int index = 0;
@@ -2851,7 +2854,7 @@ template <class OS>
 SyscallReturn
 eventfdFunc(SyscallDesc *desc, int num, Process *p, ThreadContext *tc)
 {
-#ifdef __linux__
+#if defined(__linux__)
     int index = 0;
     unsigned initval = p->getSyscallArg(tc, index);
     int in_flags = p->getSyscallArg(tc, index);

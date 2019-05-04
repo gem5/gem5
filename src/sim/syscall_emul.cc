@@ -1039,7 +1039,7 @@ getegidFunc(SyscallDesc *desc, int callnum, Process *process,
 SyscallReturn
 fallocateFunc(SyscallDesc *desc, int callnum, Process *p, ThreadContext *tc)
 {
-#if __linux__
+#if defined(__linux__)
     int index = 0;
     int tgt_fd = p->getSyscallArg(tc, index);
     int mode = p->getSyscallArg(tc, index);
