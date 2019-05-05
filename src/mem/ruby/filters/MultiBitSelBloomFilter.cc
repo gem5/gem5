@@ -94,23 +94,6 @@ MultiBitSelBloomFilter::getCount(Addr addr)
 }
 
 int
-MultiBitSelBloomFilter::getIndex(Addr addr)
-{
-    return 0;
-}
-
-int
-MultiBitSelBloomFilter::readBit(const int index)
-{
-    return 0;
-}
-
-void
-MultiBitSelBloomFilter::writeBit(const int index, const int value)
-{
-}
-
-int
 MultiBitSelBloomFilter::getTotalCount()
 {
     int count = 0;

@@ -105,24 +105,6 @@ NonCountingBloomFilter::getTotalCount()
 }
 
 int
-NonCountingBloomFilter::getIndex(Addr addr)
-{
-    return get_index(addr);
-}
-
-int
-NonCountingBloomFilter::readBit(const int index)
-{
-    return m_filter[index];
-}
-
-void
-NonCountingBloomFilter::writeBit(const int index, const int value)
-{
-    m_filter[index] = value;
-}
-
-int
 NonCountingBloomFilter::get_index(Addr addr)
 {
     return bitSelect(addr, RubySystem::getBlockSizeBits() + m_offset,

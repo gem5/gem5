@@ -164,25 +164,6 @@ BulkBloomFilter::getTotalCount()
 }
 
 int
-BulkBloomFilter::getIndex(Addr addr)
-{
-    return get_index(addr);
-}
-
-int
-BulkBloomFilter::readBit(const int index)
-{
-    return 0;
-    // TODO
-}
-
-void
-BulkBloomFilter::writeBit(const int index, const int value)
-{
-    // TODO
-}
-
-int
 BulkBloomFilter::get_index(Addr addr)
 {
     return bitSelect(addr, RubySystem::getBlockSizeBits(),

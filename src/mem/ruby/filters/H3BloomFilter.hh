@@ -48,10 +48,6 @@ class H3BloomFilter : public AbstractBloomFilter
     int getCount(Addr addr);
     int getTotalCount();
 
-    int getIndex(Addr addr);
-    int readBit(const int index);
-    void writeBit(const int index, const int value);
-
     int
     operator[](const int index) const
     {

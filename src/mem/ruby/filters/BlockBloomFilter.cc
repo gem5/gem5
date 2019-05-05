@@ -100,24 +100,6 @@ BlockBloomFilter::getTotalCount()
 }
 
 int
-BlockBloomFilter::getIndex(Addr addr)
-{
-    return get_index(addr);
-}
-
-int
-BlockBloomFilter::readBit(const int index)
-{
-    return m_filter[index];
-}
-
-void
-BlockBloomFilter::writeBit(const int index, const int value)
-{
-    m_filter[index] = value;
-}
-
-int
 BlockBloomFilter::get_index(Addr addr)
 {
     // Pull out some bit field ==> B1

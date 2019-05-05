@@ -439,23 +439,6 @@ H3BloomFilter::getCount(Addr addr)
 }
 
 int
-H3BloomFilter::getIndex(Addr addr)
-{
-    return 0;
-}
-
-int
-H3BloomFilter::readBit(const int index)
-{
-    return 0;
-}
-
-void
-H3BloomFilter::writeBit(const int index, const int value)
-{
-}
-
-int
 H3BloomFilter::getTotalCount()
 {
     int count = 0;

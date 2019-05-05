@@ -47,9 +47,6 @@ class MultiGrainBloomFilter : public AbstractBloomFilter
     bool isSet(Addr addr);
     int getCount(Addr addr);
     int getTotalCount();
-    int getIndex(Addr addr);
-    int readBit(const int index);
-    void writeBit(const int index, const int value);
 
   private:
     int get_block_index(Addr addr);

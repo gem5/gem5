@@ -102,25 +102,6 @@ LSB_CountingBloomFilter::getTotalCount()
 }
 
 int
-LSB_CountingBloomFilter::getIndex(Addr addr)
-{
-    return get_index(addr);
-}
-
-int
-LSB_CountingBloomFilter::readBit(const int index)
-{
-    return 0;
-    // TODO
-}
-
-void
-LSB_CountingBloomFilter::writeBit(const int index, const int value)
-{
-    // TODO
-}
-
-int
 LSB_CountingBloomFilter::get_index(Addr addr)
 {
     return bitSelect(addr, RubySystem::getBlockSizeBits(),

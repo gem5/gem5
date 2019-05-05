@@ -112,26 +112,6 @@ MultiGrainBloomFilter::getTotalCount()
 }
 
 int
-MultiGrainBloomFilter::getIndex(Addr addr)
-{
-    return 0;
-    // TODO
-}
-
-int
-MultiGrainBloomFilter::readBit(const int index)
-{
-    return 0;
-    // TODO
-}
-
-void
-MultiGrainBloomFilter::writeBit(const int index, const int value)
-{
-    // TODO
-}
-
-int
 MultiGrainBloomFilter::get_block_index(Addr addr)
 {
     // grap a chunk of bits after byte offset
