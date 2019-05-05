@@ -32,7 +32,7 @@
 #include "mem/ruby/system/RubySystem.hh"
 
 MultiGrainBloomFilter::MultiGrainBloomFilter(int head, int tail)
-    : AbstractBloomFilter(head),
+    : AbstractBloomFilter(head, 2),
       pageFilter(tail), pageFilterSizeBits(floorLog2(tail))
 {
 }
@@ -61,21 +61,13 @@ MultiGrainBloomFilter::set(Addr addr)
 
 }
 
-bool
-MultiGrainBloomFilter::isSet(Addr addr)
+int
+MultiGrainBloomFilter::getCount(Addr addr) const
 {
     int i = hash(addr);
     assert(i < filter.size());
     assert(pageHash(addr) < pageFilter.size());
-    // we have to have both indices set
-    return (filter[i] && pageFilter[i]);
-}
-
-int
-MultiGrainBloomFilter::getCount(Addr addr)
-{
-    // not used
-    return 0;
+    return filter[i] + pageFilter[i];
 }
 
 int

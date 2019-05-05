@@ -32,7 +32,7 @@
 #include "mem/ruby/system/RubySystem.hh"
 
 NonCountingBloomFilter::NonCountingBloomFilter(std::size_t size, int skip_bits)
-    : AbstractBloomFilter(size), skipBits(skip_bits)
+    : AbstractBloomFilter(size, 1), skipBits(skip_bits)
 {
 }
 
@@ -62,15 +62,8 @@ NonCountingBloomFilter::unset(Addr addr)
     filter[hash(addr)] = 0;
 }
 
-bool
-NonCountingBloomFilter::isSet(Addr addr)
-{
-    return filter[hash(addr)];
-}
-
-
 int
-NonCountingBloomFilter::getCount(Addr addr)
+NonCountingBloomFilter::getCount(Addr addr) const
 {
     return filter[hash(addr)];
 }

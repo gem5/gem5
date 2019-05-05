@@ -40,8 +40,7 @@ class MultiBitSelBloomFilter : public AbstractBloomFilter
 
     void merge(const AbstractBloomFilter* other) override;
     void set(Addr addr) override;
-    bool isSet(Addr addr);
-    int getCount(Addr addr);
+    int getCount(Addr addr) const override;
 
   private:
     int hash(Addr addr, int hash_number) const;

@@ -32,7 +32,7 @@
 
 MultiBitSelBloomFilter::MultiBitSelBloomFilter(std::size_t filter_size,
     int num_hashes, int skip_bits, bool is_parallel)
-    : AbstractBloomFilter(filter_size), numHashes(num_hashes),
+    : AbstractBloomFilter(filter_size, num_hashes), numHashes(num_hashes),
       skipBits(skip_bits),
       parFilterSize(filter_size / numHashes),
       isParallel(is_parallel)
@@ -62,22 +62,14 @@ MultiBitSelBloomFilter::set(Addr addr)
     }
 }
 
-bool
-MultiBitSelBloomFilter::isSet(Addr addr)
-{
-    bool res = true;
-
-    for (int i=0; i < numHashes; i++) {
-        int idx = hash(addr, i);
-        res = res && filter[idx];
-    }
-    return res;
-}
-
 int
-MultiBitSelBloomFilter::getCount(Addr addr)
+MultiBitSelBloomFilter::getCount(Addr addr) const
 {
-    return isSet(addr)? 1: 0;
+    int count = 0;
+    for (int i=0; i < numHashes; i++) {
+        count += filter[hash(addr, i)];
+    }
+    return count;
 }
 
 int

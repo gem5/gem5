@@ -32,7 +32,7 @@
 #include "mem/ruby/system/RubySystem.hh"
 
 BulkBloomFilter::BulkBloomFilter(int size)
-    : AbstractBloomFilter(size), sectorBits(sizeBits - 1)
+    : AbstractBloomFilter(size, 1), sectorBits(sizeBits - 1)
 {
 }
 
@@ -61,7 +61,7 @@ BulkBloomFilter::set(Addr addr)
 }
 
 bool
-BulkBloomFilter::isSet(Addr addr)
+BulkBloomFilter::isSet(Addr addr) const
 {
     // c0 contains the cache index bits
     const int filter_size = filter.size();
@@ -119,9 +119,9 @@ BulkBloomFilter::isSet(Addr addr)
 }
 
 int
-BulkBloomFilter::getCount(Addr addr)
+BulkBloomFilter::getCount(Addr addr) const
 {
-    // not used
+    // TODO as in the multi-hashed filters
     return 0;
 }
 

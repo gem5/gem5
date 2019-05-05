@@ -46,12 +46,18 @@ class AbstractBloomFilter
     /** Number of bits needed to represent the size of the filter. */
     const int sizeBits;
 
+    /** Threshold at which a filter entry starts being considered as set. */
+    const int setThreshold;
+
   public:
     /**
      * Create and clear the filter.
+     *
+     * @param size The number of filter entries.
+     * @param threshold The threshold that limits a set entry.
      */
-    AbstractBloomFilter(std::size_t size)
-        : filter(size), sizeBits(floorLog2(size))
+    AbstractBloomFilter(std::size_t size, int threshold)
+        : filter(size), sizeBits(floorLog2(size)), setThreshold(threshold)
     {
         clear();
     }
@@ -94,7 +100,11 @@ class AbstractBloomFilter
      * @param addr The address being parsed.
      * @return Whether the respective filter entry is set.
      */
-    virtual bool isSet(Addr addr) = 0;
+    virtual bool
+    isSet(Addr addr) const
+    {
+        return getCount(addr) >= setThreshold;
+    }
 
     /**
      * Get the value stored in the corresponding filter entry of an address.
@@ -102,7 +112,7 @@ class AbstractBloomFilter
      * @param addr The address being parsed.
      * @param Get the value stored in the respective filter entry.
      */
-    virtual int getCount(Addr addr) { return 0; }
+    virtual int getCount(Addr addr) const { return 0; }
 
     /**
      * Get the total value stored in the filter entries.

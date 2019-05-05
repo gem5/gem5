@@ -33,7 +33,9 @@
 
 LSB_CountingBloomFilter::LSB_CountingBloomFilter(std::size_t filter_size,
                                                  int max_value)
-    : AbstractBloomFilter(filter_size), maxValue(max_value)
+    // Here we assume that isSet will return true only when the counter
+    // saturates
+    : AbstractBloomFilter(filter_size, max_value), maxValue(max_value)
 {
 }
 
@@ -57,15 +59,8 @@ LSB_CountingBloomFilter::unset(Addr addr)
         filter[i] -= 1;
 }
 
-bool
-LSB_CountingBloomFilter::isSet(Addr addr)
-{
-    // TODO
-    return false;
-}
-
 int
-LSB_CountingBloomFilter::getCount(Addr addr)
+LSB_CountingBloomFilter::getCount(Addr addr) const
 {
     return filter[hash(addr)];
 }

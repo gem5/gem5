@@ -46,8 +46,7 @@ class MultiGrainBloomFilter : public AbstractBloomFilter
     void clear() override;
     void set(Addr addr) override;
 
-    bool isSet(Addr addr);
-    int getCount(Addr addr);
+    int getCount(Addr addr) const override;
     int getTotalCount() const override;
 
   private:

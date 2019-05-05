@@ -354,8 +354,8 @@ static int H3[64][16] = {
 };
 
 H3BloomFilter::H3BloomFilter(int size, int num_hashes, bool parallel)
-    : AbstractBloomFilter(size), numHashes(num_hashes), isParallel(parallel),
-      parFilterSize(filter.size() / numHashes)
+    : AbstractBloomFilter(size, num_hashes), numHashes(num_hashes),
+      isParallel(parallel), parFilterSize(filter.size() / numHashes)
 {
     fatal_if(numHashes > 16, "There are only 16 hash functions implemented.");
 }
@@ -382,22 +382,14 @@ H3BloomFilter::set(Addr addr)
     }
 }
 
-bool
-H3BloomFilter::isSet(Addr addr)
-{
-    bool res = true;
-
-    for (int i = 0; i < numHashes; i++) {
-        int idx = hash(addr, i);
-        res = res && filter[idx];
-    }
-    return res;
-}
-
 int
-H3BloomFilter::getCount(Addr addr)
+H3BloomFilter::getCount(Addr addr) const
 {
-    return isSet(addr)? 1: 0;
+    int count = 0;
+    for (int i=0; i < numHashes; i++) {
+        count += filter[hash(addr, i)];
+    }
+    return count;
 }
 
 int

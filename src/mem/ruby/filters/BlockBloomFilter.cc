@@ -32,7 +32,7 @@
 #include "mem/ruby/system/RubySystem.hh"
 
 BlockBloomFilter::BlockBloomFilter(int size)
-    : AbstractBloomFilter(size)
+    : AbstractBloomFilter(size, 1)
 {
 }
 
@@ -52,14 +52,8 @@ BlockBloomFilter::unset(Addr addr)
     filter[hash(addr)] = 0;
 }
 
-bool
-BlockBloomFilter::isSet(Addr addr)
-{
-    return filter[hash(addr)];
-}
-
 int
-BlockBloomFilter::getCount(Addr addr)
+BlockBloomFilter::getCount(Addr addr) const
 {
     return filter[hash(addr)];
 }

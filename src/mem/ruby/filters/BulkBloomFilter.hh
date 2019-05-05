@@ -45,8 +45,8 @@ class BulkBloomFilter : public AbstractBloomFilter
 
     void set(Addr addr) override;
 
-    bool isSet(Addr addr);
-    int getCount(Addr addr);
+    bool isSet(Addr addr) const override;
+    int getCount(Addr addr) const override;
 
   private:
     /** Permutes the address to generate its signature. */

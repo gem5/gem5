@@ -43,8 +43,7 @@ class H3BloomFilter : public AbstractBloomFilter
 
     void merge(const AbstractBloomFilter* other) override;
     void set(Addr addr) override;
-    bool isSet(Addr addr);
-    int getCount(Addr addr) override;
+    int getCount(Addr addr) const override;
 
   private:
     /**

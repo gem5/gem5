@@ -39,9 +39,7 @@ class BlockBloomFilter : public AbstractBloomFilter
 
     void set(Addr addr) override;
     void unset(Addr addr) override;
-
-    bool isSet(Addr addr);
-    int getCount(Addr addr);
+    int getCount(Addr addr) const override;
 
   private:
     int hash(Addr addr) const;
