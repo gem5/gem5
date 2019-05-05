@@ -28,19 +28,13 @@
 
 #include "mem/ruby/filters/LSB_CountingBloomFilter.hh"
 
-#include "base/intmath.hh"
+#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-LSB_CountingBloomFilter::LSB_CountingBloomFilter(int head, int tail)
+LSB_CountingBloomFilter::LSB_CountingBloomFilter(std::size_t filter_size,
+                                                 int max_value)
+    : AbstractBloomFilter(filter_size), maxValue(max_value)
 {
-    m_filter_size = head;
-    m_filter_size_bits = floorLog2(m_filter_size);
-
-    m_count = tail;
-    m_count_bits = floorLog2(m_count);
-
-    m_filter.resize(m_filter_size);
-    clear();
 }
 
 LSB_CountingBloomFilter::~LSB_CountingBloomFilter()
@@ -48,33 +42,19 @@ LSB_CountingBloomFilter::~LSB_CountingBloomFilter()
 }
 
 void
-LSB_CountingBloomFilter::clear()
-{
-    for (int i = 0; i < m_filter_size; i++) {
-        m_filter[i] = 0;
-    }
-}
-
-void
-LSB_CountingBloomFilter::merge(AbstractBloomFilter * other_filter)
-{
-    // TODO
-}
-
-void
 LSB_CountingBloomFilter::set(Addr addr)
 {
-    int i = get_index(addr);
-    if (m_filter[i] < m_count)
-        m_filter[i] += 1;
+    const int i = hash(addr);
+    if (filter[i] < maxValue)
+        filter[i] += 1;
 }
 
 void
 LSB_CountingBloomFilter::unset(Addr addr)
 {
-    int i = get_index(addr);
-    if (m_filter[i] > 0)
-        m_filter[i] -= 1;
+    const int i = hash(addr);
+    if (filter[i] > 0)
+        filter[i] -= 1;
 }
 
 bool
@@ -87,26 +67,15 @@ LSB_CountingBloomFilter::isSet(Addr addr)
 int
 LSB_CountingBloomFilter::getCount(Addr addr)
 {
-    return m_filter[get_index(addr)];
+    return filter[hash(addr)];
 }
 
 int
-LSB_CountingBloomFilter::getTotalCount()
-{
-    int count = 0;
-
-    for (int i = 0; i < m_filter_size; i++) {
-        count += m_filter[i];
-    }
-    return count;
-}
-
-int
-LSB_CountingBloomFilter::get_index(Addr addr)
+LSB_CountingBloomFilter::hash(Addr addr) const
 {
     return bitSelect(addr, RubySystem::getBlockSizeBits(),
                      RubySystem::getBlockSizeBits() +
-                     m_filter_size_bits - 1);
+                     sizeBits - 1);
 }
 
 

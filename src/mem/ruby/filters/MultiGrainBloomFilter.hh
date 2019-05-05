@@ -31,35 +31,33 @@
 
 #include <vector>
 
-#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
 class MultiGrainBloomFilter : public AbstractBloomFilter
 {
   public:
+    /**
+     * @param head Size of 1st bloom filter.
+     * @param tail size of 2nd bloom filter.
+     */
     MultiGrainBloomFilter(int head, int tail);
     ~MultiGrainBloomFilter();
 
-    void clear();
-    void merge(AbstractBloomFilter * other_filter);
-    void set(Addr addr);
+    void clear() override;
+    void set(Addr addr) override;
 
     bool isSet(Addr addr);
     int getCount(Addr addr);
-    int getTotalCount();
+    int getTotalCount() const override;
 
   private:
-    int get_block_index(Addr addr);
-    int get_page_index(Addr addr);
+    int hash(Addr addr) const;
+    int pageHash(Addr addr) const;
 
-    // The block filter
-    std::vector<int> m_filter;
-    int m_filter_size;
-    int m_filter_size_bits;
-    // The page number filter
-    std::vector<int> m_page_filter;
-    int m_page_filter_size;
-    int m_page_filter_size_bits;
+    // The block filter uses the filter vector declared in the base class
+    /** The page number filter. */
+    std::vector<int> pageFilter;
+    int pageFilterSizeBits;
 };
 
 #endif // __MEM_RUBY_FILTERS_MULTIGRAINBLOOMFILTER_HH__

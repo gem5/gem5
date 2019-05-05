@@ -29,39 +29,29 @@
 #ifndef __MEM_RUBY_FILTERS_NONCOUNTINGBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_NONCOUNTINGBLOOMFILTER_HH__
 
-#include <vector>
-
-#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
 class NonCountingBloomFilter : public AbstractBloomFilter
 {
   public:
-    NonCountingBloomFilter(int head, int tail);
+    NonCountingBloomFilter(std::size_t filter_size, int skip_bits);
     ~NonCountingBloomFilter();
 
-    void clear();
-    void merge(AbstractBloomFilter * other_filter);
-    void set(Addr addr);
+    void merge(const AbstractBloomFilter* other) override;
+    void set(Addr addr) override;
     void unset(Addr addr) override;
 
     bool isSet(Addr addr);
     int getCount(Addr addr);
-    int getTotalCount();
-
-    int
-    operator[](const int index) const
-    {
-        return this->m_filter[index];
-    }
 
   private:
-    int get_index(Addr addr);
+    int hash(Addr addr) const;
 
-    std::vector<int> m_filter;
-    int m_filter_size;
-    int m_offset;
-    int m_filter_size_bits;
+    /**
+     * Bit offset from block number. Used to simulate bit selection hashing
+     * on larger than cache-line granularities, by skipping some bits.
+     */
+    int skipBits;
 };
 
 #endif // __MEM_RUBY_FILTERS_NONCOUNTINGBLOOMFILTER_HH__

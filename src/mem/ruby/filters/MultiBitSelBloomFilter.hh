@@ -29,10 +29,6 @@
 #ifndef __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__
 
-#include <vector>
-
-#include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
 class MultiBitSelBloomFilter : public AbstractBloomFilter
@@ -42,37 +38,31 @@ class MultiBitSelBloomFilter : public AbstractBloomFilter
                            int skip_bits, bool is_parallel);
     ~MultiBitSelBloomFilter();
 
-    void clear();
-    void merge(AbstractBloomFilter * other_filter);
-    void set(Addr addr);
-
+    void merge(const AbstractBloomFilter* other) override;
+    void set(Addr addr) override;
     bool isSet(Addr addr);
     int getCount(Addr addr);
-    int getTotalCount();
-
-    int
-    operator[](const int index) const
-    {
-        return this->m_filter[index];
-    }
 
   private:
-    int get_index(Addr addr, int hashNumber);
+    int hash(Addr addr, int hash_number) const;
 
-    int hash_bitsel(uint64_t value, int index, int jump, int maxBits,
-                    int numBits);
+    int hashBitsel(uint64_t value, int index, int jump, int maxBits,
+                    int numBits) const;
 
-    std::vector<int> m_filter;
-    int m_filter_size;
-    int m_num_hashes;
-    int m_filter_size_bits;
-    // Bit offset from block number
-    int m_skip_bits;
+    /** Number of hashes. */
+    const int numHashes;
 
-    int m_par_filter_size;
-    int m_par_filter_size_bits;
+    /**
+     * Bit offset from block number. Used to simulate bit selection hashing
+     * on larger than cache-line granularities, by skipping some bits.
+     */
+    const int skipBits;
 
-    bool isParallel;
+    /** Size of the filter when doing parallel hashing. */
+    const int parFilterSize;
+
+    /** Whether hashing should be performed in parallel. */
+    const bool isParallel;
 };
 
 #endif // __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__

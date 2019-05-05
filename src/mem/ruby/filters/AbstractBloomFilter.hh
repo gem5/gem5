@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019 Inria
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -24,19 +25,57 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Daniel Carvalho
  */
 
 #ifndef __MEM_RUBY_FILTERS_ABSTRACTBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_ABSTRACTBLOOMFILTER_HH__
 
-#include "mem/ruby/common/Address.hh"
+#include <vector>
+
+#include "base/intmath.hh"
+#include "base/types.hh"
 
 class AbstractBloomFilter
 {
+  protected:
+    /** The filter itself. */
+    std::vector<int> filter;
+
+    /** Number of bits needed to represent the size of the filter. */
+    const int sizeBits;
+
   public:
+    /**
+     * Create and clear the filter.
+     */
+    AbstractBloomFilter(std::size_t size)
+        : filter(size), sizeBits(floorLog2(size))
+    {
+        clear();
+    }
     virtual ~AbstractBloomFilter() {};
-    virtual void clear() = 0;
-    virtual void merge(AbstractBloomFilter * other_filter) = 0;
+
+    /**
+     * Clear the filter by resetting all values.
+     */
+    virtual void clear()
+    {
+        for (auto& entry : filter) {
+            entry = 0;
+        }
+    }
+
+    /** Merges the contents of both filters into this'. */
+    virtual void merge(const AbstractBloomFilter* other) {}
+
+    /**
+     * Perform the filter specific function to set the corresponding
+     * entries (can be multiple) of an address.
+     *
+     * @param addr The address being parsed.
+     */
     virtual void set(Addr addr) = 0;
 
     /**
@@ -48,9 +87,36 @@ class AbstractBloomFilter
      */
     virtual void unset(Addr addr) {};
 
+    /**
+     * Check if the corresponding filter entries of an address should be
+     * considered as set.
+     *
+     * @param addr The address being parsed.
+     * @return Whether the respective filter entry is set.
+     */
     virtual bool isSet(Addr addr) = 0;
-    virtual int getCount(Addr addr) = 0;
-    virtual int getTotalCount() = 0;
+
+    /**
+     * Get the value stored in the corresponding filter entry of an address.
+     *
+     * @param addr The address being parsed.
+     * @param Get the value stored in the respective filter entry.
+     */
+    virtual int getCount(Addr addr) { return 0; }
+
+    /**
+     * Get the total value stored in the filter entries.
+     *
+     * @return The sum of all filter entries.
+     */
+    virtual int getTotalCount() const
+    {
+        int count = 0;
+        for (const auto& entry : filter) {
+            count += entry;
+        }
+        return count;
+    }
 };
 
 #endif // __MEM_RUBY_FILTERS_ABSTRACTBLOOMFILTER_HH__

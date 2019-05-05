@@ -28,26 +28,12 @@
 
 #include "mem/ruby/filters/BulkBloomFilter.hh"
 
-#include <cassert>
-
-#include "base/intmath.hh"
+#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 BulkBloomFilter::BulkBloomFilter(int size)
+    : AbstractBloomFilter(size), sectorBits(sizeBits - 1)
 {
-    m_filter_size = size;
-    m_filter_size_bits = floorLog2(m_filter_size);
-    // split the filter bits in half, c0 and c1
-    m_sector_bits = m_filter_size_bits - 1;
-
-    m_temp_filter.resize(m_filter_size);
-    m_filter.resize(m_filter_size);
-    clear();
-
-    // clear temp filter
-    for (int i = 0; i < m_filter_size; ++i) {
-        m_temp_filter[i] = 0;
-    }
 }
 
 BulkBloomFilter::~BulkBloomFilter()
@@ -55,92 +41,80 @@ BulkBloomFilter::~BulkBloomFilter()
 }
 
 void
-BulkBloomFilter::clear()
-{
-    for (int i = 0; i < m_filter_size; i++) {
-        m_filter[i] = 0;
-    }
-}
-
-void
-BulkBloomFilter::merge(AbstractBloomFilter * other_filter)
-{
-    // TODO
-}
-
-void
 BulkBloomFilter::set(Addr addr)
 {
     // c0 contains the cache index bits
-    int set_bits = m_sector_bits;
+    int set_bits = sectorBits;
     int block_bits = RubySystem::getBlockSizeBits();
     int c0 = bitSelect(addr, block_bits, block_bits + set_bits - 1);
-    // c1 contains the lower m_sector_bits permuted bits
+    // c1 contains the lower sectorBits permuted bits
     //Address permuted_bits = permute(addr);
     //int c1 = permuted_bits.bitSelect(0, set_bits-1);
     int c1 = bitSelect(addr, block_bits+set_bits, (block_bits+2*set_bits) - 1);
-    //assert(c0 < (m_filter_size/2));
-    //assert(c0 + (m_filter_size/2) < m_filter_size);
-    //assert(c1 < (m_filter_size/2));
+    //assert(c0 < (filter_size/2));
+    //assert(c0 + (filter_size/2) < filter_size);
+    //assert(c1 < (filter_size/2));
     // set v0 bit
-    m_filter[c0 + (m_filter_size/2)] = 1;
+    filter[c0 + (filter.size()/2)] = 1;
     // set v1 bit
-    m_filter[c1] = 1;
+    filter[c1] = 1;
 }
 
 bool
 BulkBloomFilter::isSet(Addr addr)
 {
     // c0 contains the cache index bits
-    int set_bits = m_sector_bits;
+    const int filter_size = filter.size();
+    int set_bits = sectorBits;
     int block_bits = RubySystem::getBlockSizeBits();
     int c0 = bitSelect(addr, block_bits, block_bits + set_bits - 1);
     // c1 contains the lower 10 permuted bits
     //Address permuted_bits = permute(addr);
     //int c1 = permuted_bits.bitSelect(0, set_bits-1);
     int c1 = bitSelect(addr, block_bits+set_bits, (block_bits+2*set_bits) - 1);
-    //assert(c0 < (m_filter_size/2));
-    //assert(c0 + (m_filter_size/2) < m_filter_size);
-    //assert(c1 < (m_filter_size/2));
+    //assert(c0 < (filter_size/2));
+    //assert(c0 + (filter_size/2) < filter_size);
+    //assert(c1 < (filter_size/2));
     // set v0 bit
-    m_temp_filter[c0 + (m_filter_size/2)] = 1;
+    std::vector<int> temp_filter(filter.size(), 0);
+    temp_filter[c0 + (filter_size/2)] = 1;
     // set v1 bit
-    m_temp_filter[c1] = 1;
+    temp_filter[c1] = 1;
 
     // perform filter intersection. If any c part is 0, no possibility
     // of address being in signature.  get first c intersection part
     bool zero = false;
-    for (int i = 0; i < m_filter_size/2; ++i){
+    for (int i = 0; i < filter_size/2; ++i){
         // get intersection of signatures
-        m_temp_filter[i] = m_temp_filter[i] && m_filter[i];
-        zero = zero || m_temp_filter[i];
+        temp_filter[i] = temp_filter[i] && filter[i];
+        zero = zero || temp_filter[i];
     }
     zero = !zero;
     if (zero) {
         // one section is zero, no possiblility of address in signature
         // reset bits we just set
-        m_temp_filter[c0 + (m_filter_size / 2)] = 0;
-        m_temp_filter[c1] = 0;
+        temp_filter[c0 + (filter_size / 2)] = 0;
+        temp_filter[c1] = 0;
         return false;
     }
 
     // check second section
     zero = false;
-    for (int i = m_filter_size / 2; i < m_filter_size; ++i) {
+    for (int i = filter_size / 2; i < filter_size; ++i) {
         // get intersection of signatures
-        m_temp_filter[i] =  m_temp_filter[i] && m_filter[i];
-        zero = zero || m_temp_filter[i];
+        temp_filter[i] =  temp_filter[i] && filter[i];
+        zero = zero || temp_filter[i];
     }
     zero = !zero;
     if (zero) {
         // one section is zero, no possiblility of address in signature
-        m_temp_filter[c0 + (m_filter_size / 2)] = 0;
-        m_temp_filter[c1] = 0;
+        temp_filter[c0 + (filter_size / 2)] = 0;
+        temp_filter[c1] = 0;
         return false;
     }
     // one section has at least one bit set
-    m_temp_filter[c0 + (m_filter_size / 2)] = 0;
-    m_temp_filter[c1] = 0;
+    temp_filter[c0 + (filter_size / 2)] = 0;
+    temp_filter[c1] = 0;
     return true;
 }
 
@@ -151,28 +125,8 @@ BulkBloomFilter::getCount(Addr addr)
     return 0;
 }
 
-int
-BulkBloomFilter::getTotalCount()
-{
-    int count = 0;
-    for (int i = 0; i < m_filter_size; i++) {
-        if (m_filter[i]) {
-            count++;
-        }
-    }
-    return count;
-}
-
-int
-BulkBloomFilter::get_index(Addr addr)
-{
-    return bitSelect(addr, RubySystem::getBlockSizeBits(),
-                     RubySystem::getBlockSizeBits() +
-                     m_filter_size_bits - 1);
-}
-
 Addr
-BulkBloomFilter::permute(Addr addr)
+BulkBloomFilter::hash(Addr addr) const
 {
     // permutes the original address bits according to Table 5
     int block_offset = RubySystem::getBlockSizeBits();

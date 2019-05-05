@@ -28,20 +28,15 @@
 
 #include "mem/ruby/filters/MultiBitSelBloomFilter.hh"
 
-#include <vector>
-
-#include "base/intmath.hh"
+#include "mem/ruby/common/Address.hh"
 
 MultiBitSelBloomFilter::MultiBitSelBloomFilter(std::size_t filter_size,
     int num_hashes, int skip_bits, bool is_parallel)
-    : m_filter_size(filter_size), m_num_hashes(num_hashes),
-      m_filter_size_bits(floorLog2(m_filter_size)), m_skip_bits(skip_bits),
-      m_par_filter_size(m_filter_size / m_num_hashes),
-      m_par_filter_size_bits(floorLog2(m_par_filter_size)),
+    : AbstractBloomFilter(filter_size), numHashes(num_hashes),
+      skipBits(skip_bits),
+      parFilterSize(filter_size / numHashes),
       isParallel(is_parallel)
 {
-    m_filter.resize(m_filter_size);
-    clear();
 }
 
 MultiBitSelBloomFilter::~MultiBitSelBloomFilter()
@@ -49,29 +44,21 @@ MultiBitSelBloomFilter::~MultiBitSelBloomFilter()
 }
 
 void
-MultiBitSelBloomFilter::clear()
+MultiBitSelBloomFilter::merge(const AbstractBloomFilter *other)
 {
-    for (int i = 0; i < m_filter_size; i++) {
-        m_filter[i] = 0;
-    }
-}
-
-void
-MultiBitSelBloomFilter::merge(AbstractBloomFilter *other_filter)
-{
-    // assumes both filters are the same size!
-    MultiBitSelBloomFilter * temp = (MultiBitSelBloomFilter*) other_filter;
-    for (int i = 0; i < m_filter_size; ++i){
-        m_filter[i] |= (*temp)[i];
+    auto cast_other = static_cast<const MultiBitSelBloomFilter*>(other);
+    assert(filter.size() == cast_other->filter.size());
+    for (int i = 0; i < filter.size(); ++i){
+        filter[i] |= cast_other->filter[i];
     }
 }
 
 void
 MultiBitSelBloomFilter::set(Addr addr)
 {
-    for (int i = 0; i < m_num_hashes; i++) {
-        int idx = get_index(addr, i);
-        m_filter[idx] = 1;
+    for (int i = 0; i < numHashes; i++) {
+        int idx = hash(addr, i);
+        filter[idx] = 1;
     }
 }
 
@@ -80,9 +67,9 @@ MultiBitSelBloomFilter::isSet(Addr addr)
 {
     bool res = true;
 
-    for (int i=0; i < m_num_hashes; i++) {
-        int idx = get_index(addr, i);
-        res = res && m_filter[idx];
+    for (int i=0; i < numHashes; i++) {
+        int idx = hash(addr, i);
+        res = res && filter[idx];
     }
     return res;
 }
@@ -94,36 +81,22 @@ MultiBitSelBloomFilter::getCount(Addr addr)
 }
 
 int
-MultiBitSelBloomFilter::getTotalCount()
+MultiBitSelBloomFilter::hash(Addr addr, int hash_number) const
 {
-    int count = 0;
-
-    for (int i = 0; i < m_filter_size; i++) {
-        count += m_filter[i];
-    }
-    return count;
-}
-
-int
-MultiBitSelBloomFilter::get_index(Addr addr, int i)
-{
-    // m_skip_bits is used to perform BitSelect after skipping some
-    // bits. Used to simulate BitSel hashing on larger than cache-line
-    // granularities
-    uint64_t x = (makeLineAddress(addr) >> m_skip_bits);
-    int y = hash_bitsel(x, i, m_num_hashes, 30, m_filter_size_bits);
+    uint64_t x = (makeLineAddress(addr) >> skipBits);
+    int y = hashBitsel(x, hash_number, numHashes, 30, sizeBits);
     //36-bit addresses, 6-bit cache lines
 
     if (isParallel) {
-        return (y % m_par_filter_size) + i*m_par_filter_size;
+        return (y % parFilterSize) + hash_number * parFilterSize;
     } else {
-        return y % m_filter_size;
+        return y % filter.size();
     }
 }
 
 int
-MultiBitSelBloomFilter::hash_bitsel(uint64_t value, int index, int jump,
-                                    int maxBits, int numBits)
+MultiBitSelBloomFilter::hashBitsel(uint64_t value, int index, int jump,
+                                    int maxBits, int numBits) const
 {
     uint64_t mask = 1;
     int result = 0;

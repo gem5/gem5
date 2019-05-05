@@ -29,9 +29,6 @@
 #ifndef __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__
 
-#include <vector>
-
-#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
 class BlockBloomFilter : public AbstractBloomFilter
@@ -40,21 +37,14 @@ class BlockBloomFilter : public AbstractBloomFilter
     BlockBloomFilter(int size);
     ~BlockBloomFilter();
 
-    void clear();
-    void merge(AbstractBloomFilter * other_filter);
-    void set(Addr addr);
+    void set(Addr addr) override;
     void unset(Addr addr) override;
 
     bool isSet(Addr addr);
     int getCount(Addr addr);
-    int getTotalCount();
 
   private:
-    int get_index(Addr addr);
-
-    std::vector<int> m_filter;
-    int m_filter_size;
-    int m_filter_size_bits;
+    int hash(Addr addr) const;
 };
 
 #endif // __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__

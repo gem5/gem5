@@ -28,7 +28,8 @@
 
 #include "mem/ruby/filters/H3BloomFilter.hh"
 
-#include "base/intmath.hh"
+#include "base/logging.hh"
+#include "mem/ruby/common/Address.hh"
 
 static int H3[64][16] = {
     { 33268410,   395488709,  311024285,  456111753,
@@ -352,41 +353,11 @@ static int H3[64][16] = {
       394261773,  848616745,  15446017,   517723271,  },
 };
 
-H3BloomFilter::H3BloomFilter(int size, int hashes, bool parallel)
+H3BloomFilter::H3BloomFilter(int size, int num_hashes, bool parallel)
+    : AbstractBloomFilter(size), numHashes(num_hashes), isParallel(parallel),
+      parFilterSize(filter.size() / numHashes)
 {
-    //TODO: change this ugly init code...
-    primes_list[0] = 9323;
-    primes_list[1] = 11279;
-    primes_list[2] = 10247;
-    primes_list[3] = 30637;
-    primes_list[4] = 25717;
-    primes_list[5] = 43711;
-
-    mults_list[0] = 255;
-    mults_list[1] = 29;
-    mults_list[2] = 51;
-    mults_list[3] = 3;
-    mults_list[4] = 77;
-    mults_list[5] = 43;
-
-    adds_list[0] = 841;
-    adds_list[1] = 627;
-    adds_list[2] = 1555;
-    adds_list[3] = 241;
-    adds_list[4] = 7777;
-    adds_list[5] = 65931;
-
-    m_filter_size = size;
-    m_num_hashes = hashes;
-    isParallel = parallel;
-
-    m_filter_size_bits = floorLog2(m_filter_size);
-
-    m_par_filter_size = m_filter_size / m_num_hashes;
-    m_par_filter_size_bits = floorLog2(m_par_filter_size);
-
-    m_filter.resize(m_filter_size);
-    clear();
+    fatal_if(numHashes > 16, "There are only 16 hash functions implemented.");
 }
 
 H3BloomFilter::~H3BloomFilter()
@@ -394,29 +365,20 @@ H3BloomFilter::~H3BloomFilter()
 }
 
 void
-H3BloomFilter::clear()
+H3BloomFilter::merge(const AbstractBloomFilter *other)
 {
-    for (int i = 0; i < m_filter_size; i++) {
-        m_filter[i] = 0;
-    }
-}
-
-void
-H3BloomFilter::merge(AbstractBloomFilter *other_filter)
-{
-    // assumes both filters are the same size!
-    H3BloomFilter * temp = (H3BloomFilter*) other_filter;
-    for (int i = 0; i < m_filter_size; ++i){
-        m_filter[i] |= (*temp)[i];
+    auto* cast_other = static_cast<const H3BloomFilter*>(other);
+    assert(filter.size() == cast_other->filter.size());
+    for (int i = 0; i < filter.size(); ++i){
+        filter[i] |= cast_other->filter[i];
     }
 }
 
 void
 H3BloomFilter::set(Addr addr)
 {
-    for (int i = 0; i < m_num_hashes; i++) {
-        int idx = get_index(addr, i);
-        m_filter[idx] = 1;
+    for (int i = 0; i < numHashes; i++) {
+        filter[hash(addr, i)] = 1;
     }
 }
 
@@ -425,9 +387,9 @@ H3BloomFilter::isSet(Addr addr)
 {
     bool res = true;
 
-    for (int i = 0; i < m_num_hashes; i++) {
-        int idx = get_index(addr, i);
-        res = res && m_filter[idx];
+    for (int i = 0; i < numHashes; i++) {
+        int idx = hash(addr, i);
+        res = res && filter[idx];
     }
     return res;
 }
@@ -439,32 +401,20 @@ H3BloomFilter::getCount(Addr addr)
 }
 
 int
-H3BloomFilter::getTotalCount()
-{
-    int count = 0;
-
-    for (int i = 0; i < m_filter_size; i++) {
-        count += m_filter[i];
-    }
-    return count;
-}
-
-int
-H3BloomFilter::get_index(Addr addr, int i)
+H3BloomFilter::hash(Addr addr, int hash_number) const
 {
     uint64_t x = makeLineAddress(addr);
-    // uint64_t y = (x*mults_list[i] + adds_list[i]) % primes_list[i];
-    int y = hash_H3(x,i);
+    int y = hashH3(x, hash_number);
 
     if (isParallel) {
-        return (y % m_par_filter_size) + i*m_par_filter_size;
+        return (y % parFilterSize) + hash_number * parFilterSize;
     } else {
-        return y % m_filter_size;
+        return y % filter.size();
     }
 }
 
 int
-H3BloomFilter::hash_H3(uint64_t value, int index)
+H3BloomFilter::hashH3(uint64_t value, int index) const
 {
     uint64_t mask = 1;
     uint64_t val = value;

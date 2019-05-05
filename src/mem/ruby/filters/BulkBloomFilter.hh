@@ -31,35 +31,29 @@
 
 #include <vector>
 
-#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
+/**
+ * Implementation of the bloom filter, as described in "Bulk Disambiguation of
+ * Speculative Threads in Multiprocessors", by Ceze, Luis, et al.
+ */
 class BulkBloomFilter : public AbstractBloomFilter
 {
   public:
     BulkBloomFilter(int size);
     ~BulkBloomFilter();
 
-    void clear();
-    void merge(AbstractBloomFilter * other_filter);
-    void set(Addr addr);
+    void set(Addr addr) override;
 
     bool isSet(Addr addr);
     int getCount(Addr addr);
-    int getTotalCount();
 
   private:
-    int get_index(Addr addr);
-    Addr permute(Addr addr);
+    /** Permutes the address to generate its signature. */
+    Addr hash(Addr addr) const;
 
-    std::vector<int> m_filter;
-    std::vector<int> m_temp_filter;
-
-    int m_filter_size;
-    int m_filter_size_bits;
-
-    int m_sector_bits;
-
+    // split the filter bits in half, c0 and c1
+    const int sectorBits;
 };
 
 #endif // __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__

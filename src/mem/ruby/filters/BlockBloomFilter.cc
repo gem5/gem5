@@ -28,17 +28,12 @@
 
 #include "mem/ruby/filters/BlockBloomFilter.hh"
 
-#include "base/intmath.hh"
+#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 BlockBloomFilter::BlockBloomFilter(int size)
+    : AbstractBloomFilter(size)
 {
-    m_filter_size = size;
-    m_filter_size_bits = floorLog2(m_filter_size);
-
-    m_filter.resize(m_filter_size);
-
-    clear();
 }
 
 BlockBloomFilter::~BlockBloomFilter()
@@ -46,61 +41,31 @@ BlockBloomFilter::~BlockBloomFilter()
 }
 
 void
-BlockBloomFilter::clear()
-{
-    for (int i = 0; i < m_filter_size; i++) {
-        m_filter[i] = 0;
-    }
-}
-
-void
-BlockBloomFilter::merge(AbstractBloomFilter * other_filter)
-{
-    // TODO
-}
-
-void
 BlockBloomFilter::set(Addr addr)
 {
-    int i = get_index(addr);
-    m_filter[i] = 1;
+    filter[hash(addr)] = 1;
 }
 
 void
 BlockBloomFilter::unset(Addr addr)
 {
-    int i = get_index(addr);
-    m_filter[i] = 0;
+    filter[hash(addr)] = 0;
 }
 
 bool
 BlockBloomFilter::isSet(Addr addr)
 {
-    int i = get_index(addr);
-    return (m_filter[i]);
+    return filter[hash(addr)];
 }
 
 int
 BlockBloomFilter::getCount(Addr addr)
 {
-    return m_filter[get_index(addr)];
+    return filter[hash(addr)];
 }
 
 int
-BlockBloomFilter::getTotalCount()
-{
-    int count = 0;
-
-    for (int i = 0; i < m_filter_size; i++) {
-        if (m_filter[i]) {
-            count++;
-        }
-    }
-    return count;
-}
-
-int
-BlockBloomFilter::get_index(Addr addr)
+BlockBloomFilter::hash(Addr addr) const
 {
     // Pull out some bit field ==> B1
     // Pull out additional bits, not the same as B1 ==> B2
@@ -111,9 +76,9 @@ BlockBloomFilter::get_index(Addr addr)
     Addr other_bits = bitSelect(addr,
                        2 * RubySystem::getBlockSizeBits() + offset,
                        2 * RubySystem::getBlockSizeBits() + offset +
-                       m_filter_size_bits - 1);
+                       sizeBits - 1);
     int index = block_bits ^ other_bits;
-    assert(index < m_filter_size);
+    assert(index < filter.size());
     return index;
 }
 

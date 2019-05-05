@@ -29,49 +29,48 @@
 #ifndef __MEM_RUBY_FILTERS_H3BLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_H3BLOOMFILTER_HH__
 
-#include <vector>
-
-#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
+/**
+ * Implementation of the bloom filter as described in "Implementing Signatures
+ * for Transactional Memory", by Sanchez, Daniel, et al.
+ */
 class H3BloomFilter : public AbstractBloomFilter
 {
   public:
-    H3BloomFilter(int size, int hashes, bool parallel);
+    H3BloomFilter(int size, int num_hashes, bool parallel);
     ~H3BloomFilter();
 
-    void clear();
-    void merge(AbstractBloomFilter * other_filter);
-    void set(Addr addr);
-
+    void merge(const AbstractBloomFilter* other) override;
+    void set(Addr addr) override;
     bool isSet(Addr addr);
-    int getCount(Addr addr);
-    int getTotalCount();
-
-    int
-    operator[](const int index) const
-    {
-        return this->m_filter[index];
-    }
+    int getCount(Addr addr) override;
 
   private:
-    int get_index(Addr addr, int hashNumber);
+    /**
+     * Apply a hash functions to an address.
+     *
+     * @param addr The address to hash.
+     * @param hash_number Index of the H3 hash function to be used.
+     */
+    int hash(Addr addr, int hash_number) const;
 
-    int hash_H3(uint64_t value, int index);
+    /**
+     * Apply one of the H3 hash functions to a value.
+     *
+     * @param value The value to hash.
+     * @param hash_number Index of the hash function to be used.
+     */
+    int hashH3(uint64_t value, int hash_number) const;
 
-    std::vector<int> m_filter;
-    int m_filter_size;
-    int m_num_hashes;
-    int m_filter_size_bits;
+    /** The number of hashes used in this filter. Can be at most 16. */
+    const int numHashes;
 
-    int m_par_filter_size;
-    int m_par_filter_size_bits;
-
-    int primes_list[6];// = {9323,11279,10247,30637,25717,43711};
-    int mults_list[6]; //= {255,29,51,3,77,43};
-    int adds_list[6]; //= {841,627,1555,241,7777,65391};
-
+    /** Whether hashing should be performed in parallel. */
     bool isParallel;
+
+    /** Size of the filter when doing parallel hashing. */
+    int parFilterSize;
 };
 
 #endif // __MEM_RUBY_FILTERS_H3BLOOMFILTER_HH__

@@ -28,19 +28,12 @@
 
 #include "mem/ruby/filters/NonCountingBloomFilter.hh"
 
-#include "base/intmath.hh"
-#include "base/str.hh"
+#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-NonCountingBloomFilter::NonCountingBloomFilter(int head, int tail)
+NonCountingBloomFilter::NonCountingBloomFilter(std::size_t size, int skip_bits)
+    : AbstractBloomFilter(size), skipBits(skip_bits)
 {
-    // head contains filter size, tail contains bit offset from block number
-    m_filter_size = head;
-    m_offset = tail;
-    m_filter_size_bits = floorLog2(m_filter_size);
-
-    m_filter.resize(m_filter_size);
-    clear();
 }
 
 NonCountingBloomFilter::~NonCountingBloomFilter()
@@ -48,68 +41,46 @@ NonCountingBloomFilter::~NonCountingBloomFilter()
 }
 
 void
-NonCountingBloomFilter::clear()
+NonCountingBloomFilter::merge(const AbstractBloomFilter *other)
 {
-    for (int i = 0; i < m_filter_size; i++) {
-        m_filter[i] = 0;
-    }
-}
-
-void
-NonCountingBloomFilter::merge(AbstractBloomFilter *other_filter)
-{
-    // assumes both filters are the same size!
-    NonCountingBloomFilter * temp = (NonCountingBloomFilter*) other_filter;
-    for (int i = 0; i < m_filter_size; ++i){
-        m_filter[i] |= (*temp)[i];
+    auto* cast_other = static_cast<const NonCountingBloomFilter*>(other);
+    assert(filter.size() == cast_other->filter.size());
+    for (int i = 0; i < filter.size(); ++i){
+        filter[i] |= cast_other->filter[i];
     }
 }
 
 void
 NonCountingBloomFilter::set(Addr addr)
 {
-    int i = get_index(addr);
-    m_filter[i] = 1;
+    filter[hash(addr)] = 1;
 }
 
 void
 NonCountingBloomFilter::unset(Addr addr)
 {
-    int i = get_index(addr);
-    m_filter[i] = 0;
+    filter[hash(addr)] = 0;
 }
 
 bool
 NonCountingBloomFilter::isSet(Addr addr)
 {
-    int i = get_index(addr);
-    return (m_filter[i]);
+    return filter[hash(addr)];
 }
 
 
 int
 NonCountingBloomFilter::getCount(Addr addr)
 {
-    return m_filter[get_index(addr)];
+    return filter[hash(addr)];
 }
 
 int
-NonCountingBloomFilter::getTotalCount()
+NonCountingBloomFilter::hash(Addr addr) const
 {
-    int count = 0;
-
-    for (int i = 0; i < m_filter_size; i++) {
-        count += m_filter[i];
-    }
-    return count;
-}
-
-int
-NonCountingBloomFilter::get_index(Addr addr)
-{
-    return bitSelect(addr, RubySystem::getBlockSizeBits() + m_offset,
-                     RubySystem::getBlockSizeBits() + m_offset +
-                     m_filter_size_bits - 1);
+    return bitSelect(addr, RubySystem::getBlockSizeBits() + skipBits,
+                     RubySystem::getBlockSizeBits() + skipBits +
+                     sizeBits - 1);
 }
 
 
