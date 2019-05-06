@@ -32,35 +32,17 @@
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
-#include "base/str.hh"
 
 using namespace std;
 
-MultiBitSelBloomFilter::MultiBitSelBloomFilter(string str)
+MultiBitSelBloomFilter::MultiBitSelBloomFilter(std::size_t filter_size,
+    int num_hashes, int skip_bits, bool is_parallel)
+    : m_filter_size(filter_size), m_num_hashes(num_hashes),
+      m_filter_size_bits(floorLog2(m_filter_size)), m_skip_bits(skip_bits),
+      m_par_filter_size(m_filter_size / m_num_hashes),
+      m_par_filter_size_bits(floorLog2(m_par_filter_size)),
+      isParallel(is_parallel)
 {
-    vector<string> items;
-    tokenize(items, str, '_');
-    assert(items.size() == 4);
-
-    // head contains filter size, tail contains bit offset from block number
-    m_filter_size = atoi(items[0].c_str());
-    m_num_hashes = atoi(items[1].c_str());
-    m_skip_bits = atoi(items[2].c_str());
-
-    if (items[3] == "Regular") {
-        isParallel = false;
-    } else if (items[3] == "Parallel") {
-        isParallel = true;
-    } else {
-        panic("ERROR: Incorrect config string for MultiBitSel Bloom! :%s",
-              str);
-    }
-
-    m_filter_size_bits = floorLog2(m_filter_size);
-
-    m_par_filter_size = m_filter_size / m_num_hashes;
-    m_par_filter_size_bits = floorLog2(m_par_filter_size);
-
     m_filter.resize(m_filter_size);
     clear();
 }

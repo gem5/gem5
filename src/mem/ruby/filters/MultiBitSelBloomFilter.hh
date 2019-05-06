@@ -30,7 +30,6 @@
 #define __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__
 
 #include <iostream>
-#include <string>
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
@@ -40,7 +39,8 @@
 class MultiBitSelBloomFilter : public AbstractBloomFilter
 {
   public:
-    MultiBitSelBloomFilter(std::string config);
+    MultiBitSelBloomFilter(std::size_t filter_size, int num_hashes,
+                           int skip_bits, bool is_parallel);
     ~MultiBitSelBloomFilter();
 
     void clear();
@@ -75,6 +75,7 @@ class MultiBitSelBloomFilter : public AbstractBloomFilter
     int m_filter_size;
     int m_num_hashes;
     int m_filter_size_bits;
+    // Bit offset from block number
     int m_skip_bits;
 
     int m_par_filter_size;
