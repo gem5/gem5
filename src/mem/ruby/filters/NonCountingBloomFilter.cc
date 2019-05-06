@@ -30,9 +30,11 @@
 
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/RubySystem.hh"
+#include "params/NonCountingBloomFilter.hh"
 
-NonCountingBloomFilter::NonCountingBloomFilter(std::size_t size, int skip_bits)
-    : AbstractBloomFilter(size, 1), skipBits(skip_bits)
+NonCountingBloomFilter::NonCountingBloomFilter(
+    const NonCountingBloomFilterParams* p)
+    : AbstractBloomFilter(p), skipBits(p->skip_bits)
 {
 }
 
@@ -76,4 +78,8 @@ NonCountingBloomFilter::hash(Addr addr) const
                      sizeBits - 1);
 }
 
-
+NonCountingBloomFilter*
+NonCountingBloomFilterParams::create()
+{
+    return new NonCountingBloomFilter(this);
+}

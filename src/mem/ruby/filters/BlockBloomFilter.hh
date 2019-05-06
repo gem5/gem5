@@ -31,10 +31,12 @@
 
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
+struct BlockBloomFilterParams;
+
 class BlockBloomFilter : public AbstractBloomFilter
 {
   public:
-    BlockBloomFilter(int size);
+    BlockBloomFilter(const BlockBloomFilterParams* p);
     ~BlockBloomFilter();
 
     void set(Addr addr) override;

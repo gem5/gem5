@@ -30,12 +30,11 @@
 
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/RubySystem.hh"
+#include "params/LSB_CountingBloomFilter.hh"
 
-LSB_CountingBloomFilter::LSB_CountingBloomFilter(std::size_t filter_size,
-                                                 int max_value)
-    // Here we assume that isSet will return true only when the counter
-    // saturates
-    : AbstractBloomFilter(filter_size, max_value), maxValue(max_value)
+LSB_CountingBloomFilter::LSB_CountingBloomFilter(
+    const LSB_CountingBloomFilterParams* p)
+    : AbstractBloomFilter(p), maxValue(p->max_value)
 {
 }
 
@@ -73,4 +72,8 @@ LSB_CountingBloomFilter::hash(Addr addr) const
                      sizeBits - 1);
 }
 
-
+LSB_CountingBloomFilter*
+LSB_CountingBloomFilterParams::create()
+{
+    return new LSB_CountingBloomFilter(this);
+}

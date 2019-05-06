@@ -31,10 +31,12 @@
 
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
+struct LSB_CountingBloomFilterParams;
+
 class LSB_CountingBloomFilter : public AbstractBloomFilter
 {
   public:
-    LSB_CountingBloomFilter(std::size_t filter_size, int max_value);
+    LSB_CountingBloomFilter(const LSB_CountingBloomFilterParams* p);
     ~LSB_CountingBloomFilter();
 
     void set(Addr addr) override;

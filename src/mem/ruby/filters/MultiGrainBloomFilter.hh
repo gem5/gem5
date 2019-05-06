@@ -33,14 +33,12 @@
 
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
+struct MultiGrainBloomFilterParams;
+
 class MultiGrainBloomFilter : public AbstractBloomFilter
 {
   public:
-    /**
-     * @param head Size of 1st bloom filter.
-     * @param tail size of 2nd bloom filter.
-     */
-    MultiGrainBloomFilter(int head, int tail);
+    MultiGrainBloomFilter(const MultiGrainBloomFilterParams* p);
     ~MultiGrainBloomFilter();
 
     void clear() override;

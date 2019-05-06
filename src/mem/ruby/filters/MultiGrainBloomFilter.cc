@@ -30,10 +30,12 @@
 
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/RubySystem.hh"
+#include "params/MultiGrainBloomFilter.hh"
 
-MultiGrainBloomFilter::MultiGrainBloomFilter(int head, int tail)
-    : AbstractBloomFilter(head, 2),
-      pageFilter(tail), pageFilterSizeBits(floorLog2(tail))
+MultiGrainBloomFilter::MultiGrainBloomFilter(
+    const MultiGrainBloomFilterParams* p)
+    : AbstractBloomFilter(p), pageFilter(p->page_filter_size),
+      pageFilterSizeBits(floorLog2(p->page_filter_size))
 {
 }
 
@@ -100,6 +102,8 @@ MultiGrainBloomFilter::pageHash(Addr addr) const
     return bitSelect(addr, bits, bits + pageFilterSizeBits - 1);
 }
 
-
-
-
+MultiGrainBloomFilter*
+MultiGrainBloomFilterParams::create()
+{
+    return new MultiGrainBloomFilter(this);
+}

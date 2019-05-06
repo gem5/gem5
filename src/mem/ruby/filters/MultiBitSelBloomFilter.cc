@@ -29,13 +29,14 @@
 #include "mem/ruby/filters/MultiBitSelBloomFilter.hh"
 
 #include "mem/ruby/common/Address.hh"
+#include "params/MultiBitSelBloomFilter.hh"
 
-MultiBitSelBloomFilter::MultiBitSelBloomFilter(std::size_t filter_size,
-    int num_hashes, int skip_bits, bool is_parallel)
-    : AbstractBloomFilter(filter_size, num_hashes), numHashes(num_hashes),
-      skipBits(skip_bits),
-      parFilterSize(filter_size / numHashes),
-      isParallel(is_parallel)
+MultiBitSelBloomFilter::MultiBitSelBloomFilter(
+    const MultiBitSelBloomFilterParams* p)
+    : AbstractBloomFilter(p), numHashes(p->num_hashes),
+      skipBits(p->skip_bits),
+      parFilterSize(p->size / numHashes),
+      isParallel(p->is_parallel)
 {
 }
 
@@ -99,4 +100,10 @@ MultiBitSelBloomFilter::hashBitsel(uint64_t value, int index, int jump,
         if (value & (mask << bit)) result += mask << i;
     }
     return result;
+}
+
+MultiBitSelBloomFilter*
+MultiBitSelBloomFilterParams::create()
+{
+    return new MultiBitSelBloomFilter(this);
 }

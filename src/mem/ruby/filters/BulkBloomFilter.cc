@@ -30,9 +30,10 @@
 
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/RubySystem.hh"
+#include "params/BulkBloomFilter.hh"
 
-BulkBloomFilter::BulkBloomFilter(int size)
-    : AbstractBloomFilter(size, 1), sectorBits(sizeBits - 1)
+BulkBloomFilter::BulkBloomFilter(const BulkBloomFilterParams* p)
+    : AbstractBloomFilter(p), sectorBits(sizeBits - 1)
 {
 }
 
@@ -154,4 +155,10 @@ BulkBloomFilter::hash(Addr addr) const
     result = result | remaining_bits;
 
     return result;
+}
+
+BulkBloomFilter*
+BulkBloomFilterParams::create()
+{
+    return new BulkBloomFilter(this);
 }

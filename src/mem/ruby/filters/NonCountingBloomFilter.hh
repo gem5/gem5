@@ -31,10 +31,12 @@
 
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
+struct NonCountingBloomFilterParams;
+
 class NonCountingBloomFilter : public AbstractBloomFilter
 {
   public:
-    NonCountingBloomFilter(std::size_t filter_size, int skip_bits);
+    NonCountingBloomFilter(const NonCountingBloomFilterParams* p);
     ~NonCountingBloomFilter();
 
     void merge(const AbstractBloomFilter* other) override;

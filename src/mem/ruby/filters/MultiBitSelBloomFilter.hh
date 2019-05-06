@@ -31,11 +31,12 @@
 
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
+struct MultiBitSelBloomFilterParams;
+
 class MultiBitSelBloomFilter : public AbstractBloomFilter
 {
   public:
-    MultiBitSelBloomFilter(std::size_t filter_size, int num_hashes,
-                           int skip_bits, bool is_parallel);
+    MultiBitSelBloomFilter(const MultiBitSelBloomFilterParams* p);
     ~MultiBitSelBloomFilter();
 
     void merge(const AbstractBloomFilter* other) override;

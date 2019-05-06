@@ -30,9 +30,10 @@
 
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/RubySystem.hh"
+#include "params/BlockBloomFilter.hh"
 
-BlockBloomFilter::BlockBloomFilter(int size)
-    : AbstractBloomFilter(size, 1)
+BlockBloomFilter::BlockBloomFilter(const BlockBloomFilterParams* p)
+    : AbstractBloomFilter(p)
 {
 }
 
@@ -76,4 +77,8 @@ BlockBloomFilter::hash(Addr addr) const
     return index;
 }
 
-
+BlockBloomFilter*
+BlockBloomFilterParams::create()
+{
+    return new BlockBloomFilter(this);
+}

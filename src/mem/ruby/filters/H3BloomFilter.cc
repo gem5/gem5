@@ -30,6 +30,7 @@
 
 #include "base/logging.hh"
 #include "mem/ruby/common/Address.hh"
+#include "params/H3BloomFilter.hh"
 
 static int H3[64][16] = {
     { 33268410,   395488709,  311024285,  456111753,
@@ -353,9 +354,9 @@ static int H3[64][16] = {
       394261773,  848616745,  15446017,   517723271,  },
 };
 
-H3BloomFilter::H3BloomFilter(int size, int num_hashes, bool parallel)
-    : AbstractBloomFilter(size, num_hashes), numHashes(num_hashes),
-      isParallel(parallel), parFilterSize(filter.size() / numHashes)
+H3BloomFilter::H3BloomFilter(const H3BloomFilterParams* p)
+    : AbstractBloomFilter(p), numHashes(p->num_hashes),
+      isParallel(p->is_parallel), parFilterSize(p->size / numHashes)
 {
     fatal_if(numHashes > 16, "There are only 16 hash functions implemented.");
 }
@@ -419,3 +420,8 @@ H3BloomFilter::hashH3(uint64_t value, int index) const
     return result;
 }
 
+H3BloomFilter*
+H3BloomFilterParams::create()
+{
+    return new H3BloomFilter(this);
+}

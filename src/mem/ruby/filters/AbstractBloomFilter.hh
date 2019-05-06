@@ -36,8 +36,10 @@
 
 #include "base/intmath.hh"
 #include "base/types.hh"
+#include "params/AbstractBloomFilter.hh"
+#include "sim/sim_object.hh"
 
-class AbstractBloomFilter
+class AbstractBloomFilter : public SimObject
 {
   protected:
     /** The filter itself. */
@@ -52,12 +54,10 @@ class AbstractBloomFilter
   public:
     /**
      * Create and clear the filter.
-     *
-     * @param size The number of filter entries.
-     * @param threshold The threshold that limits a set entry.
      */
-    AbstractBloomFilter(std::size_t size, int threshold)
-        : filter(size), sizeBits(floorLog2(size)), setThreshold(threshold)
+    AbstractBloomFilter(const AbstractBloomFilterParams* p)
+        : SimObject(p), filter(p->size), sizeBits(floorLog2(p->size)),
+          setThreshold(p->threshold)
     {
         clear();
     }

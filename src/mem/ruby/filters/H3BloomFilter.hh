@@ -31,6 +31,8 @@
 
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
+struct H3BloomFilterParams;
+
 /**
  * Implementation of the bloom filter as described in "Implementing Signatures
  * for Transactional Memory", by Sanchez, Daniel, et al.
@@ -38,7 +40,7 @@
 class H3BloomFilter : public AbstractBloomFilter
 {
   public:
-    H3BloomFilter(int size, int num_hashes, bool parallel);
+    H3BloomFilter(const H3BloomFilterParams* p);
     ~H3BloomFilter();
 
     void merge(const AbstractBloomFilter* other) override;

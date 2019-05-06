@@ -33,6 +33,8 @@ Import('*')
 if env['PROTOCOL'] == 'None':
     Return()
 
+SimObject('BloomFilters.py')
+
 Source('BlockBloomFilter.cc')
 Source('BulkBloomFilter.cc')
 Source('H3BloomFilter.cc')
