@@ -58,23 +58,6 @@ LSB_CountingBloomFilter::clear()
 }
 
 void
-LSB_CountingBloomFilter::increment(Addr addr)
-{
-    int i = get_index(addr);
-    if (m_filter[i] < m_count)
-        m_filter[i] += 1;
-}
-
-
-void
-LSB_CountingBloomFilter::decrement(Addr addr)
-{
-    int i = get_index(addr);
-    if (m_filter[i] > 0)
-        m_filter[i] -= 1;
-}
-
-void
 LSB_CountingBloomFilter::merge(AbstractBloomFilter * other_filter)
 {
     // TODO
@@ -83,13 +66,17 @@ LSB_CountingBloomFilter::merge(AbstractBloomFilter * other_filter)
 void
 LSB_CountingBloomFilter::set(Addr addr)
 {
-    // TODO
+    int i = get_index(addr);
+    if (m_filter[i] < m_count)
+        m_filter[i] += 1;
 }
 
 void
 LSB_CountingBloomFilter::unset(Addr addr)
 {
-    // TODO
+    int i = get_index(addr);
+    if (m_filter[i] > 0)
+        m_filter[i] -= 1;
 }
 
 bool

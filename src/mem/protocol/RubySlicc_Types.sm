@@ -235,8 +235,6 @@ structure (TimerTable, inport="yes", external = "yes") {
 
 structure (AbstractBloomFilter, external = "yes") {
   void clear(int);
-  void increment(Addr, int);
-  void decrement(Addr, int);
   void set(Addr, int);
   void unset(Addr, int);
 

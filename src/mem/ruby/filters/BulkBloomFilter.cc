@@ -66,18 +66,6 @@ BulkBloomFilter::clear()
 }
 
 void
-BulkBloomFilter::increment(Addr addr)
-{
-    // Not used
-}
-
-void
-BulkBloomFilter::decrement(Addr addr)
-{
-    // Not used
-}
-
-void
 BulkBloomFilter::merge(AbstractBloomFilter * other_filter)
 {
     // TODO

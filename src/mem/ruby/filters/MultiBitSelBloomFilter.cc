@@ -60,19 +60,6 @@ MultiBitSelBloomFilter::clear()
 }
 
 void
-MultiBitSelBloomFilter::increment(Addr addr)
-{
-    // Not used
-}
-
-
-void
-MultiBitSelBloomFilter::decrement(Addr addr)
-{
-    // Not used
-}
-
-void
 MultiBitSelBloomFilter::merge(AbstractBloomFilter *other_filter)
 {
     // assumes both filters are the same size!

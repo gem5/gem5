@@ -58,18 +58,6 @@ NonCountingBloomFilter::clear()
 }
 
 void
-NonCountingBloomFilter::increment(Addr addr)
-{
-    // Not used
-}
-
-void
-NonCountingBloomFilter::decrement(Addr addr)
-{
-    // Not used
-}
-
-void
 NonCountingBloomFilter::merge(AbstractBloomFilter *other_filter)
 {
     // assumes both filters are the same size!

@@ -405,18 +405,6 @@ H3BloomFilter::clear()
 }
 
 void
-H3BloomFilter::increment(Addr addr)
-{
-    // Not used
-}
-
-void
-H3BloomFilter::decrement(Addr addr)
-{
-    // Not used
-}
-
-void
 H3BloomFilter::merge(AbstractBloomFilter *other_filter)
 {
     // assumes both filters are the same size!

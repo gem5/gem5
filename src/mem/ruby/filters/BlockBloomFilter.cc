@@ -57,18 +57,6 @@ BlockBloomFilter::clear()
 }
 
 void
-BlockBloomFilter::increment(Addr addr)
-{
-    // Not used
-}
-
-void
-BlockBloomFilter::decrement(Addr addr)
-{
-    // Not used
-}
-
-void
 BlockBloomFilter::merge(AbstractBloomFilter * other_filter)
 {
     // TODO

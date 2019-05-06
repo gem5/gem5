@@ -38,8 +38,6 @@ class AbstractBloomFilter
   public:
     virtual ~AbstractBloomFilter() {};
     virtual void clear() = 0;
-    virtual void increment(Addr addr) = 0;
-    virtual void decrement(Addr addr) = 0;
     virtual void merge(AbstractBloomFilter * other_filter) = 0;
     virtual void set(Addr addr) = 0;
     virtual void unset(Addr addr) = 0;

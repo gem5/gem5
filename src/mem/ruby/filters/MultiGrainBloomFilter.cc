@@ -65,19 +65,6 @@ MultiGrainBloomFilter::clear()
 }
 
 void
-MultiGrainBloomFilter::increment(Addr addr)
-{
-    // Not used
-}
-
-
-void
-MultiGrainBloomFilter::decrement(Addr addr)
-{
-    // Not used
-}
-
-void
 MultiGrainBloomFilter::merge(AbstractBloomFilter *other_filter)
 {
     // TODO

@@ -42,8 +42,6 @@ class LSB_CountingBloomFilter : public AbstractBloomFilter
     ~LSB_CountingBloomFilter();
 
     void clear();
-    void increment(Addr addr);
-    void decrement(Addr addr);
     void merge(AbstractBloomFilter * other_filter);
     void set(Addr addr);
     void unset(Addr addr);
