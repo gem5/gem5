@@ -37,6 +37,9 @@ class AbstractBloomFilter(SimObject):
 
     size = Param.Int(4096, "Number of entries in the filter")
 
+    # By default assume that bloom filters are used for 64-byte cache lines
+    offset_bits = Param.Unsigned(6, "Number of bits in a cache line offset")
+
     # Most of the filters are booleans, and thus saturate on 1
     threshold = Param.Int(1, "Value at which an entry is considered as set")
 

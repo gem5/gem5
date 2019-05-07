@@ -42,6 +42,9 @@
 class AbstractBloomFilter : public SimObject
 {
   protected:
+    /** Number of LSB bits to ignore from the the addresses. */
+    const unsigned offsetBits;
+
     /** The filter itself. */
     std::vector<int> filter;
 
@@ -56,8 +59,8 @@ class AbstractBloomFilter : public SimObject
      * Create and clear the filter.
      */
     AbstractBloomFilter(const AbstractBloomFilterParams* p)
-        : SimObject(p), filter(p->size), sizeBits(floorLog2(p->size)),
-          setThreshold(p->threshold)
+        : SimObject(p), offsetBits(p->offset_bits), filter(p->size),
+          sizeBits(floorLog2(p->size)), setThreshold(p->threshold)
     {
         clear();
     }

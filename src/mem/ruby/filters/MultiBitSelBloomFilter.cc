@@ -76,7 +76,7 @@ MultiBitSelBloomFilter::getCount(Addr addr) const
 int
 MultiBitSelBloomFilter::hash(Addr addr, int hash_number) const
 {
-    uint64_t x = (makeLineAddress(addr) >> skipBits);
+    uint64_t x = (maskLowOrderBits(addr, offsetBits) >> skipBits);
     int y = hashBitsel(x, hash_number, numHashes, 30, sizeBits);
     //36-bit addresses, 6-bit cache lines
 

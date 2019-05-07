@@ -29,7 +29,6 @@
 #include "mem/ruby/filters/MultiGrainBloomFilter.hh"
 
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/system/RubySystem.hh"
 #include "params/MultiGrainBloomFilter.hh"
 
 MultiGrainBloomFilter::MultiGrainBloomFilter(
@@ -88,15 +87,13 @@ int
 MultiGrainBloomFilter::hash(Addr addr) const
 {
     // grap a chunk of bits after byte offset
-    return bitSelect(addr, RubySystem::getBlockSizeBits(),
-                     RubySystem::getBlockSizeBits() +
-                     sizeBits - 1);
+    return bitSelect(addr, offsetBits, offsetBits + sizeBits - 1);
 }
 
 int
 MultiGrainBloomFilter::pageHash(Addr addr) const
 {
-    int bits = RubySystem::getBlockSizeBits() + sizeBits - 1;
+    int bits = offsetBits + sizeBits - 1;
 
     // grap a chunk of bits after first chunk
     return bitSelect(addr, bits, bits + pageFilterSizeBits - 1);

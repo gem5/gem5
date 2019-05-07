@@ -396,7 +396,7 @@ H3BloomFilter::getCount(Addr addr) const
 int
 H3BloomFilter::hash(Addr addr, int hash_number) const
 {
-    uint64_t x = makeLineAddress(addr);
+    uint64_t x = maskLowOrderBits(addr, offsetBits);
     int y = hashH3(x, hash_number);
 
     if (isParallel) {
