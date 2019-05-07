@@ -28,7 +28,7 @@
 
 #include "mem/ruby/filters/BlockBloomFilter.hh"
 
-#include "mem/ruby/common/Address.hh"
+#include "base/bitfield.hh"
 #include "params/BlockBloomFilter.hh"
 
 BlockBloomFilter::BlockBloomFilter(const BlockBloomFilterParams* p)
@@ -64,10 +64,10 @@ BlockBloomFilter::hash(Addr addr) const
     // Pull out some bit field ==> B1
     // Pull out additional bits, not the same as B1 ==> B2
     //  XOR B1 and B2 to get hash index
-    Addr block_bits = bitSelect(addr, offsetBits, 2 * offsetBits - 1);
+    Addr block_bits = bits(addr, 2 * offsetBits - 1, offsetBits);
     int offset = 5;
-    Addr other_bits = bitSelect(addr, 2 * offsetBits + offset,
-                       2 * offsetBits + offset + sizeBits - 1);
+    Addr other_bits = bits(addr, 2 * offsetBits + offset + sizeBits - 1,
+        2 * offsetBits + offset);
     int index = block_bits ^ other_bits;
     assert(index < filter.size());
     return index;

@@ -28,7 +28,9 @@
 
 #include "mem/ruby/filters/BulkBloomFilter.hh"
 
-#include "mem/ruby/common/Address.hh"
+#include <limits>
+
+#include "base/bitfield.hh"
 #include "params/BulkBloomFilter.hh"
 
 BulkBloomFilter::BulkBloomFilter(const BulkBloomFilterParams* p)
@@ -44,12 +46,11 @@ void
 BulkBloomFilter::set(Addr addr)
 {
     // c0 contains the cache index bits
-    int set_bits = sectorBits;
-    int c0 = bitSelect(addr, offsetBits, offsetBits + set_bits - 1);
+    int c0 = bits(addr, offsetBits + sectorBits - 1, offsetBits);
     // c1 contains the lower sectorBits permuted bits
     //Address permuted_bits = permute(addr);
-    //int c1 = permuted_bits.bitSelect(0, set_bits-1);
-    int c1 = bitSelect(addr, offsetBits+set_bits, (offsetBits+2*set_bits) - 1);
+    int c1 = bits(addr, (offsetBits + 2 * sectorBits) - 1,
+        offsetBits + sectorBits);
     //assert(c0 < (filter_size/2));
     //assert(c0 + (filter_size/2) < filter_size);
     //assert(c1 < (filter_size/2));
@@ -64,12 +65,11 @@ BulkBloomFilter::isSet(Addr addr) const
 {
     // c0 contains the cache index bits
     const int filter_size = filter.size();
-    int set_bits = sectorBits;
-    int c0 = bitSelect(addr, offsetBits, offsetBits + set_bits - 1);
+    int c0 = bits(addr, offsetBits + sectorBits - 1, offsetBits);
     // c1 contains the lower 10 permuted bits
     //Address permuted_bits = permute(addr);
-    //int c1 = permuted_bits.bitSelect(0, set_bits-1);
-    int c1 = bitSelect(addr, offsetBits+set_bits, (offsetBits+2*set_bits) - 1);
+    int c1 = bits(addr, (offsetBits + 2 * sectorBits) - 1,
+        offsetBits + sectorBits);
     //assert(c0 < (filter_size/2));
     //assert(c0 + (filter_size/2) < filter_size);
     //assert(c1 < (filter_size/2));
@@ -127,27 +127,26 @@ Addr
 BulkBloomFilter::hash(Addr addr) const
 {
     // permutes the original address bits according to Table 5
-    Addr part1  = bitSelect(addr, offsetBits, offsetBits + 6),
-         part2  = bitSelect(addr, offsetBits + 9, offsetBits + 9),
-         part3  = bitSelect(addr, offsetBits + 11, offsetBits + 11),
-         part4  = bitSelect(addr, offsetBits + 17, offsetBits + 17),
-         part5  = bitSelect(addr, offsetBits + 7, offsetBits + 8),
-         part6  = bitSelect(addr, offsetBits + 10, offsetBits + 10),
-         part7  = bitSelect(addr, offsetBits + 12, offsetBits + 12),
-         part8  = bitSelect(addr, offsetBits + 13, offsetBits + 13),
-         part9  = bitSelect(addr, offsetBits + 15, offsetBits + 16),
-         part10 = bitSelect(addr, offsetBits + 18, offsetBits + 20),
-         part11 = bitSelect(addr, offsetBits + 14, offsetBits + 14);
+    Addr part1  = bits(addr, offsetBits + 6, offsetBits),
+         part2  = bits(addr, offsetBits + 9),
+         part3  = bits(addr, offsetBits + 11),
+         part4  = bits(addr, offsetBits + 17),
+         part5  = bits(addr, offsetBits + 8, offsetBits + 7),
+         part6  = bits(addr, offsetBits + 10),
+         part7  = bits(addr, offsetBits + 12),
+         part8  = bits(addr, offsetBits + 13),
+         part9  = bits(addr, offsetBits + 16, offsetBits + 15),
+         part10 = bits(addr, offsetBits + 20, offsetBits + 18),
+         part11 = bits(addr, offsetBits + 14);
 
     Addr result =
         (part1 << 14) | (part2 << 13) | (part3 << 12) | (part4 << 11) |
         (part5 << 9)  | (part6 << 8)  | (part7 << 7)  | (part8 << 6)  |
         (part9 << 4)  | (part10 << 1) | (part11);
 
-    // assume 32 bit addresses (both virtual and physical)
-    // select the remaining high-order 11 bits
-    Addr remaining_bits =
-        bitSelect(addr, offsetBits + 21, 31) << 21;
+    // Select the remaining high-order bits
+    Addr remaining_bits = bits(addr, std::numeric_limits<Addr>::digits - 1,
+        offsetBits + 21) << 21;
     result = result | remaining_bits;
 
     return result;

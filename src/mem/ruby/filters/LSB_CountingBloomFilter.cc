@@ -28,7 +28,7 @@
 
 #include "mem/ruby/filters/LSB_CountingBloomFilter.hh"
 
-#include "mem/ruby/common/Address.hh"
+#include "base/bitfield.hh"
 #include "params/LSB_CountingBloomFilter.hh"
 
 LSB_CountingBloomFilter::LSB_CountingBloomFilter(
@@ -66,7 +66,7 @@ LSB_CountingBloomFilter::getCount(Addr addr) const
 int
 LSB_CountingBloomFilter::hash(Addr addr) const
 {
-    return bitSelect(addr, offsetBits, offsetBits + sizeBits - 1);
+    return bits(addr, offsetBits + sizeBits - 1, offsetBits);
 }
 
 LSB_CountingBloomFilter*

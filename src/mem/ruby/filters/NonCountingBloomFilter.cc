@@ -28,7 +28,7 @@
 
 #include "mem/ruby/filters/NonCountingBloomFilter.hh"
 
-#include "mem/ruby/common/Address.hh"
+#include "base/bitfield.hh"
 #include "params/NonCountingBloomFilter.hh"
 
 NonCountingBloomFilter::NonCountingBloomFilter(
@@ -72,8 +72,7 @@ NonCountingBloomFilter::getCount(Addr addr) const
 int
 NonCountingBloomFilter::hash(Addr addr) const
 {
-    return bitSelect(addr, offsetBits + skipBits,
-                     offsetBits + skipBits + sizeBits - 1);
+    return bits(addr, offsetBits + skipBits + sizeBits - 1, offsetBits + skipBits);
 }
 
 NonCountingBloomFilter*

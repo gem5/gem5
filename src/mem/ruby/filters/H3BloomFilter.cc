@@ -28,8 +28,10 @@
 
 #include "mem/ruby/filters/H3BloomFilter.hh"
 
+#include <limits>
+
 #include "base/logging.hh"
-#include "mem/ruby/common/Address.hh"
+#include "base/bitfield.hh"
 #include "params/H3BloomFilter.hh"
 
 static int H3[64][16] = {
@@ -396,7 +398,7 @@ H3BloomFilter::getCount(Addr addr) const
 int
 H3BloomFilter::hash(Addr addr, int hash_number) const
 {
-    uint64_t x = maskLowOrderBits(addr, offsetBits);
+    uint64_t x = bits(addr, std::numeric_limits<Addr>::digits - 1, offsetBits);
     int y = hashH3(x, hash_number);
 
     if (isParallel) {

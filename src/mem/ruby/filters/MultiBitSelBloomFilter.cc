@@ -28,7 +28,9 @@
 
 #include "mem/ruby/filters/MultiBitSelBloomFilter.hh"
 
-#include "mem/ruby/common/Address.hh"
+#include <limits>
+
+#include "base/bitfield.hh"
 #include "params/MultiBitSelBloomFilter.hh"
 
 MultiBitSelBloomFilter::MultiBitSelBloomFilter(
@@ -76,7 +78,8 @@ MultiBitSelBloomFilter::getCount(Addr addr) const
 int
 MultiBitSelBloomFilter::hash(Addr addr, int hash_number) const
 {
-    uint64_t x = (maskLowOrderBits(addr, offsetBits) >> skipBits);
+    uint64_t x = bits(addr, std::numeric_limits<Addr>::digits - 1,
+        offsetBits) >> skipBits;
     int y = hashBitsel(x, hash_number, numHashes, 30, sizeBits);
     //36-bit addresses, 6-bit cache lines
 
