@@ -40,7 +40,15 @@ class AbstractBloomFilter
     virtual void clear() = 0;
     virtual void merge(AbstractBloomFilter * other_filter) = 0;
     virtual void set(Addr addr) = 0;
-    virtual void unset(Addr addr) = 0;
+
+    /**
+     * Perform the filter specific function to clear the corresponding
+     * entries (can be multiple) of an address. By default a bloom
+     * filter does not support element deletion.
+     *
+     * @param addr The address being parsed.
+     */
+    virtual void unset(Addr addr) {};
 
     virtual bool isSet(Addr addr) = 0;
     virtual int getCount(Addr addr) = 0;

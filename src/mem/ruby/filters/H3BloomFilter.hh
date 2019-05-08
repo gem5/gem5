@@ -44,7 +44,6 @@ class H3BloomFilter : public AbstractBloomFilter
     void clear();
     void merge(AbstractBloomFilter * other_filter);
     void set(Addr addr);
-    void unset(Addr addr);
 
     bool isSet(Addr addr);
     int getCount(Addr addr);

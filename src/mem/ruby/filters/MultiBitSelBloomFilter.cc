@@ -78,12 +78,6 @@ MultiBitSelBloomFilter::set(Addr addr)
     }
 }
 
-void
-MultiBitSelBloomFilter::unset(Addr addr)
-{
-    panic("ERROR: Unset should never be called in a Bloom filter");
-}
-
 bool
 MultiBitSelBloomFilter::isSet(Addr addr)
 {

@@ -423,12 +423,6 @@ H3BloomFilter::set(Addr addr)
     }
 }
 
-void
-H3BloomFilter::unset(Addr addr)
-{
-    panic("ERROR: Unset should never be called in a Bloom filter");
-}
-
 bool
 H3BloomFilter::isSet(Addr addr)
 {

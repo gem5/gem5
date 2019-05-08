@@ -91,12 +91,6 @@ BulkBloomFilter::set(Addr addr)
     m_filter[c1] = 1;
 }
 
-void
-BulkBloomFilter::unset(Addr addr)
-{
-    // not used
-}
-
 bool
 BulkBloomFilter::isSet(Addr addr)
 {

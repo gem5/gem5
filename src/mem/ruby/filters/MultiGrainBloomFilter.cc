@@ -81,12 +81,6 @@ MultiGrainBloomFilter::set(Addr addr)
 
 }
 
-void
-MultiGrainBloomFilter::unset(Addr addr)
-{
-    // not used
-}
-
 bool
 MultiGrainBloomFilter::isSet(Addr addr)
 {

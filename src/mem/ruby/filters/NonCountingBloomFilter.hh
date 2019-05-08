@@ -44,7 +44,7 @@ class NonCountingBloomFilter : public AbstractBloomFilter
     void clear();
     void merge(AbstractBloomFilter * other_filter);
     void set(Addr addr);
-    void unset(Addr addr);
+    void unset(Addr addr) override;
 
     bool isSet(Addr addr);
     int getCount(Addr addr);
