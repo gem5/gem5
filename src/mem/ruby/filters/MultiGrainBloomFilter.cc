@@ -54,21 +54,23 @@ MultiGrainBloomFilter::clear()
 void
 MultiGrainBloomFilter::set(Addr addr)
 {
-    int i = hash(addr);
-    assert(i < filter.size());
-    assert(pageHash(addr) < pageFilter.size());
-    filter[i] = 1;
-    pageFilter[i] = 1;
+    const int index = hash(addr);
+    assert(index < filter.size());
+    filter[index] = 1;
 
+    const int page_index = pageHash(addr);
+    assert(page_index < pageFilter.size());
+    pageFilter[page_index] = 1;
 }
 
 int
 MultiGrainBloomFilter::getCount(Addr addr) const
 {
-    int i = hash(addr);
-    assert(i < filter.size());
-    assert(pageHash(addr) < pageFilter.size());
-    return filter[i] + pageFilter[i];
+    const int index = hash(addr);
+    const int page_index = pageHash(addr);
+    assert(index < filter.size());
+    assert(page_index < pageFilter.size());
+    return filter[index] + pageFilter[page_index];
 }
 
 int
