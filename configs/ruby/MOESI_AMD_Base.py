@@ -38,7 +38,7 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 from Ruby import create_topology
 from Ruby import send_evicts
-import FileSystemConfig
+from common import FileSystemConfig
 
 addToPath('../')
 
