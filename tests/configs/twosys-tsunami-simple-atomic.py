@@ -31,8 +31,8 @@ from m5.objects import *
 m5.util.addToPath('../configs/')
 from common import Benchmarks, FSConfig, SysPaths
 
-test_sys = makeLinuxAlphaSystem('atomic',
-                                SysConfig('netperf-stream-client.rcS'))
+test_sys = FSConfig.makeLinuxAlphaSystem('atomic',
+    Benchmarks.SysConfig('netperf-stream-client.rcS'))
 test_sys.kernel = SysPaths.binary('vmlinux')
 
 # Dummy voltage domain for all test_sys clock domains
@@ -68,8 +68,8 @@ test_sys.iobridge.master = test_sys.membus.slave
 test_sys.physmem = SimpleMemory(range = test_sys.mem_ranges[0])
 test_sys.physmem.port = test_sys.membus.master
 
-drive_sys = makeLinuxAlphaSystem('atomic',
-                                 SysConfig('netperf-server.rcS'))
+drive_sys = FSConfig.makeLinuxAlphaSystem('atomic',
+    Benchmarks.SysConfig('netperf-server.rcS'))
 drive_sys.kernel = SysPaths.binary('vmlinux')
 # Dummy voltage domain for all drive_sys clock domains
 drive_sys.voltage_domain = VoltageDomain()
@@ -100,6 +100,6 @@ drive_sys.iobridge.master = drive_sys.membus.slave
 drive_sys.physmem = SimpleMemory(range = drive_sys.mem_ranges[0])
 drive_sys.physmem.port = drive_sys.membus.master
 
-root = makeDualRoot(True, test_sys, drive_sys, "ethertrace")
+root = FSConfig.makeDualRoot(True, test_sys, drive_sys, "ethertrace")
 
 maxtick = 199999999
