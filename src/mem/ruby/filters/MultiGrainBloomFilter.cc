@@ -29,10 +29,7 @@
 #include "mem/ruby/filters/MultiGrainBloomFilter.hh"
 
 #include "base/intmath.hh"
-#include "base/str.hh"
 #include "mem/ruby/system/RubySystem.hh"
-
-using namespace std;
 
 MultiGrainBloomFilter::MultiGrainBloomFilter(int head, int tail)
 {
@@ -132,11 +129,6 @@ void
 MultiGrainBloomFilter::writeBit(const int index, const int value)
 {
     // TODO
-}
-
-void
-MultiGrainBloomFilter::print(ostream& out) const
-{
 }
 
 int

@@ -31,8 +31,6 @@
 #include "base/intmath.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-using namespace std;
-
 LSB_CountingBloomFilter::LSB_CountingBloomFilter(int head, int tail)
 {
     m_filter_size = head;
@@ -107,11 +105,6 @@ int
 LSB_CountingBloomFilter::getIndex(Addr addr)
 {
     return get_index(addr);
-}
-
-void
-LSB_CountingBloomFilter::print(ostream& out) const
-{
 }
 
 int

@@ -29,7 +29,6 @@
 #ifndef __MEM_RUBY_FILTERS_MULTIGRAINBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_MULTIGRAINBLOOMFILTER_HH__
 
-#include <iostream>
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
@@ -51,8 +50,6 @@ class MultiGrainBloomFilter : public AbstractBloomFilter
     int getIndex(Addr addr);
     int readBit(const int index);
     void writeBit(const int index, const int value);
-
-    void print(std::ostream& out) const;
 
   private:
     int get_block_index(Addr addr);

@@ -29,10 +29,7 @@
 #include "mem/ruby/filters/BlockBloomFilter.hh"
 
 #include "base/intmath.hh"
-#include "base/str.hh"
 #include "mem/ruby/system/RubySystem.hh"
-
-using namespace std;
 
 BlockBloomFilter::BlockBloomFilter(int size)
 {
@@ -106,11 +103,6 @@ int
 BlockBloomFilter::getIndex(Addr addr)
 {
     return get_index(addr);
-}
-
-void
-BlockBloomFilter::print(ostream& out) const
-{
 }
 
 int

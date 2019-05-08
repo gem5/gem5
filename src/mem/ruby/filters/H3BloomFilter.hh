@@ -29,7 +29,6 @@
 #ifndef __MEM_RUBY_FILTERS_H3BLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_H3BLOOMFILTER_HH__
 
-#include <iostream>
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
@@ -48,7 +47,6 @@ class H3BloomFilter : public AbstractBloomFilter
     bool isSet(Addr addr);
     int getCount(Addr addr);
     int getTotalCount();
-    void print(std::ostream& out) const;
 
     int getIndex(Addr addr);
     int readBit(const int index);

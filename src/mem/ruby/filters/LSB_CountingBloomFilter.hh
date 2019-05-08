@@ -29,7 +29,6 @@
 #ifndef __MEM_RUBY_FILTERS_LSB_COUNTINGBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_LSB_COUNTINGBLOOMFILTER_HH__
 
-#include <iostream>
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
@@ -52,8 +51,6 @@ class LSB_CountingBloomFilter : public AbstractBloomFilter
     int getIndex(Addr addr);
     int readBit(const int index);
     void writeBit(const int index, const int value);
-
-    void print(std::ostream& out) const;
 
   private:
     int get_index(Addr addr);

@@ -32,8 +32,6 @@
 #include "base/str.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
-using namespace std;
-
 NonCountingBloomFilter::NonCountingBloomFilter(int head, int tail)
 {
     // head contains filter size, tail contains bit offset from block number
@@ -104,11 +102,6 @@ NonCountingBloomFilter::getTotalCount()
         count += m_filter[i];
     }
     return count;
-}
-
-void
-NonCountingBloomFilter::print(ostream& out) const
-{
 }
 
 int

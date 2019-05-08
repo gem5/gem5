@@ -31,10 +31,7 @@
 #include <cassert>
 
 #include "base/intmath.hh"
-#include "base/str.hh"
 #include "mem/ruby/system/RubySystem.hh"
-
-using namespace std;
 
 BulkBloomFilter::BulkBloomFilter(int size)
 {
@@ -183,11 +180,6 @@ void
 BulkBloomFilter::writeBit(const int index, const int value)
 {
     // TODO
-}
-
-void
-BulkBloomFilter::print(ostream& out) const
-{
 }
 
 int

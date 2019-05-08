@@ -31,9 +31,6 @@
 #include <vector>
 
 #include "base/intmath.hh"
-#include "base/logging.hh"
-
-using namespace std;
 
 MultiBitSelBloomFilter::MultiBitSelBloomFilter(std::size_t filter_size,
     int num_hashes, int skip_bits, bool is_parallel)
@@ -122,11 +119,6 @@ MultiBitSelBloomFilter::getTotalCount()
         count += m_filter[i];
     }
     return count;
-}
-
-void
-MultiBitSelBloomFilter::print(ostream& out) const
-{
 }
 
 int

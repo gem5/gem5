@@ -29,8 +29,6 @@
 #ifndef __MEM_RUBY_FILTERS_ABSTRACTBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_ABSTRACTBLOOMFILTER_HH__
 
-#include <iostream>
-
 #include "mem/ruby/common/Address.hh"
 
 class AbstractBloomFilter
@@ -53,8 +51,6 @@ class AbstractBloomFilter
     virtual bool isSet(Addr addr) = 0;
     virtual int getCount(Addr addr) = 0;
     virtual int getTotalCount() = 0;
-
-    virtual void print(std::ostream& out) const = 0;
 
     virtual int getIndex(Addr addr) = 0;
     virtual int readBit(const int index) = 0;

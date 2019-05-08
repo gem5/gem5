@@ -29,9 +29,6 @@
 #include "mem/ruby/filters/H3BloomFilter.hh"
 
 #include "base/intmath.hh"
-#include "base/logging.hh"
-
-using namespace std;
 
 static int H3[64][16] = {
     { 33268410,   395488709,  311024285,  456111753,
@@ -467,11 +464,6 @@ H3BloomFilter::getTotalCount()
         count += m_filter[i];
     }
     return count;
-}
-
-void
-H3BloomFilter::print(ostream& out) const
-{
 }
 
 int

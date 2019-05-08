@@ -29,7 +29,6 @@
 #ifndef __MEM_RUBY_FILTERS_NONCOUNTINGBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_NONCOUNTINGBLOOMFILTER_HH__
 
-#include <iostream>
 #include <vector>
 
 #include "mem/ruby/common/Address.hh"
@@ -53,8 +52,6 @@ class NonCountingBloomFilter : public AbstractBloomFilter
     int getIndex(Addr addr);
     int readBit(const int index);
     void writeBit(const int index, const int value);
-
-    void print(std::ostream& out) const;
 
     int
     operator[](const int index) const
