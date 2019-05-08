@@ -105,7 +105,7 @@ MultiGrainBloomFilter::getTotalCount()
     }
 
     for (int i=0; i < m_page_filter_size; ++i) {
-        count += m_page_filter[i] = 0;
+        count += m_page_filter[i];
     }
 
     return count;
