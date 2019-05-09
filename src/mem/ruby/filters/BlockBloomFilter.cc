@@ -29,11 +29,26 @@
 #include "mem/ruby/filters/BlockBloomFilter.hh"
 
 #include "base/bitfield.hh"
+#include "base/logging.hh"
 #include "params/BlockBloomFilter.hh"
 
 BlockBloomFilter::BlockBloomFilter(const BlockBloomFilterParams* p)
-    : AbstractBloomFilter(p)
+    : AbstractBloomFilter(p), masksLSBs(p->masks_lsbs),
+      masksSizes(p->masks_sizes)
 {
+    fatal_if(masksLSBs.size() != masksSizes.size(),
+        "Masks haven't been properly provided");
+    fatal_if(masksLSBs.size() < 2,
+        "There must be at least two masks to XOR");
+
+    for (int i = 0; i < masksLSBs.size(); i++) {
+        fatal_if((masksSizes[i] > sizeBits) || (masksSizes[i] <= 0),
+            "The bitfields must be indexable in the filter");
+        fatal_if(masksLSBs[i] + masksSizes[i] >
+            std::numeric_limits<Addr>::digits,
+            "The total size of the bitfields cannot be bigger than the " \
+            "number of bits in an address");
+    }
 }
 
 BlockBloomFilter::~BlockBloomFilter()
@@ -61,16 +76,14 @@ BlockBloomFilter::getCount(Addr addr) const
 int
 BlockBloomFilter::hash(Addr addr) const
 {
-    // Pull out some bit field ==> B1
-    // Pull out additional bits, not the same as B1 ==> B2
-    //  XOR B1 and B2 to get hash index
-    Addr block_bits = bits(addr, 2 * offsetBits - 1, offsetBits);
-    int offset = 5;
-    Addr other_bits = bits(addr, 2 * offsetBits + offset + sizeBits - 1,
-        2 * offsetBits + offset);
-    int index = block_bits ^ other_bits;
-    assert(index < filter.size());
-    return index;
+    Addr hashed_addr = 0;
+    for (int i = 0; i < masksLSBs.size(); i++) {
+        hashed_addr ^=
+            bits(addr, offsetBits + masksLSBs[i] + masksSizes[i] - 1,
+            offsetBits + masksLSBs[i]);
+    }
+    assert(hashed_addr < filter.size());
+    return hashed_addr;
 }
 
 BlockBloomFilter*

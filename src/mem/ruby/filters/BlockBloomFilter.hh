@@ -29,10 +29,16 @@
 #ifndef __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__
 #define __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__
 
+#include <vector>
+
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
 struct BlockBloomFilterParams;
 
+/**
+ * Simple deletable (with false negatives) bloom filter that extracts
+ * bitfields of an address to use as indexes of the filter vector.
+ */
 class BlockBloomFilter : public AbstractBloomFilter
 {
   public:
@@ -44,7 +50,19 @@ class BlockBloomFilter : public AbstractBloomFilter
     int getCount(Addr addr) const override;
 
   private:
+    /**
+     * XOR hash between bitfields of an address, provided by the mask vector.
+     *
+     * @param addr The address to be hashed.
+     * @return The value of the XOR of the masked bitfields of the address.
+     */
     int hash(Addr addr) const;
+
+    /** Position of the LSB of each mask. */
+    std::vector<unsigned> masksLSBs;
+
+    /** Number of bits in each mask. */
+    std::vector<unsigned> masksSizes;
 };
 
 #endif // __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__

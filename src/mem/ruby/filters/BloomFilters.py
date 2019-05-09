@@ -48,6 +48,11 @@ class BlockBloomFilter(AbstractBloomFilter):
     cxx_class = 'BlockBloomFilter'
     cxx_header = "mem/ruby/filters/BlockBloomFilter.hh"
 
+    masks_lsbs = VectorParam.Unsigned([Self.offset_bits,
+        2 * Self.offset_bits], "Position of the LSB of each mask")
+    masks_sizes = VectorParam.Unsigned([Self.offset_bits, Self.offset_bits],
+        "Size, in number of bits, of each mask")
+
 class BulkBloomFilter(AbstractBloomFilter):
     type = 'BulkBloomFilter'
     cxx_class = 'BulkBloomFilter'
