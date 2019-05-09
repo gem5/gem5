@@ -60,6 +60,20 @@ def config_filesystem(options):
     procdir = joinpath(fsdir, 'proc')
     mkdir(procdir)
 
+    cpu_clock = '0'
+    if hasattr(options, 'cpu_clock'):
+        cpu_clock = options.cpu_clock
+    cpu_clock = toFrequency(cpu_clock)/mega
+
+    l2_size = '0'
+    if hasattr(options, 'l2_size'):
+        l2_size = options.l2_size
+    l2_size = toMemorySize(l2_size)/kibi
+
+    cacheline_size = '0'
+    if hasattr(options, 'cacheline_size'):
+        cacheline_size = options.cacheline_size
+
     for i in xrange(options.num_cpus):
         one_cpu = 'processor       : %d\n' % (i)                  + \
                   'vendor_id       : Generic\n'                   + \
@@ -68,9 +82,9 @@ def config_filesystem(options):
                   'model name      : Generic\n'                   + \
                   'stepping        : 0\n'                         + \
                   'cpu MHz         : %0.3d\n'                       \
-                        % (toFrequency(options.cpu_clock)/mega)   + \
+                        % cpu_clock                               + \
                   'cache size:     : %dK\n'                         \
-                        % (toMemorySize(options.l2_size)/kibi)    + \
+                        % l2_size                                 + \
                   'physical id     : 0\n'                         + \
                   'siblings        : %s\n'                          \
                         % options.num_cpus                        + \
@@ -84,7 +98,7 @@ def config_filesystem(options):
                   'wp              : yes\n'                       + \
                   'flags           : fpu\n'                       + \
                   'cache alignment : %d\n'                          \
-                        % options.cacheline_size                  + \
+                        % cacheline_size                          + \
                   '\n'
         file_append((procdir, 'cpuinfo'), one_cpu)
 
