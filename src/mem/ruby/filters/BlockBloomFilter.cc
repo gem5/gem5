@@ -38,8 +38,8 @@ BlockBloomFilter::BlockBloomFilter(const BlockBloomFilterParams* p)
 {
     fatal_if(masksLSBs.size() != masksSizes.size(),
         "Masks haven't been properly provided");
-    fatal_if(masksLSBs.size() < 2,
-        "There must be at least two masks to XOR");
+    fatal_if(masksLSBs.size() < 1,
+        "There must be at least one mask to extract an address bitfield");
 
     for (int i = 0; i < masksLSBs.size(); i++) {
         fatal_if((masksSizes[i] > sizeBits) || (masksSizes[i] <= 0),

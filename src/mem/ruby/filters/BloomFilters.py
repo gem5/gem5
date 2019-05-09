@@ -105,10 +105,3 @@ class MultiGrainBloomFilter(AbstractBloomFilter):
 
     # By default match this with the number of sub-filters
     threshold = 2
-
-class NonCountingBloomFilter(AbstractBloomFilter):
-    type = 'NonCountingBloomFilter'
-    cxx_class = 'NonCountingBloomFilter'
-    cxx_header = "mem/ruby/filters/NonCountingBloomFilter.hh"
-
-    skip_bits = Param.Int(2, "Offset from block number")
