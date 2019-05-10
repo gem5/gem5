@@ -39,6 +39,7 @@ class LSB_CountingBloomFilter : public AbstractBloomFilter
     LSB_CountingBloomFilter(const LSB_CountingBloomFilterParams* p);
     ~LSB_CountingBloomFilter();
 
+    void merge(const AbstractBloomFilter* other) override;
     void set(Addr addr) override;
     void unset(Addr addr) override;
 

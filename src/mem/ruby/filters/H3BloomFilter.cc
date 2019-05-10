@@ -368,16 +368,6 @@ H3BloomFilter::~H3BloomFilter()
 }
 
 void
-H3BloomFilter::merge(const AbstractBloomFilter *other)
-{
-    auto* cast_other = static_cast<const H3BloomFilter*>(other);
-    assert(filter.size() == cast_other->filter.size());
-    for (int i = 0; i < filter.size(); ++i){
-        filter[i] |= cast_other->filter[i];
-    }
-}
-
-void
 H3BloomFilter::set(Addr addr)
 {
     for (int i = 0; i < numHashes; i++) {

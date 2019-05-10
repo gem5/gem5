@@ -76,8 +76,20 @@ class AbstractBloomFilter : public SimObject
         }
     }
 
-    /** Merges the contents of both filters into this'. */
-    virtual void merge(const AbstractBloomFilter* other) {}
+    /**
+     * Merges the contents of both filters into this' (Bloom Filter union).
+     * Both must have the same number of entries.
+     *
+     * @param other The other bloom filter to merge with.
+     */
+    virtual void
+    merge(const AbstractBloomFilter* other)
+    {
+        assert(filter.size() == other->filter.size());
+        for (int i = 0; i < filter.size(); ++i){
+            filter[i] |= other->filter[i];
+        }
+    }
 
     /**
      * Perform the filter specific function to set the corresponding

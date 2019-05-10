@@ -39,7 +39,6 @@ class MultiBitSelBloomFilter : public AbstractBloomFilter
     MultiBitSelBloomFilter(const MultiBitSelBloomFilterParams* p);
     ~MultiBitSelBloomFilter();
 
-    void merge(const AbstractBloomFilter* other) override;
     void set(Addr addr) override;
     int getCount(Addr addr) const override;
 

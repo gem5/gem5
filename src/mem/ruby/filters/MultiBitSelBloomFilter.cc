@@ -47,16 +47,6 @@ MultiBitSelBloomFilter::~MultiBitSelBloomFilter()
 }
 
 void
-MultiBitSelBloomFilter::merge(const AbstractBloomFilter *other)
-{
-    auto cast_other = static_cast<const MultiBitSelBloomFilter*>(other);
-    assert(filter.size() == cast_other->filter.size());
-    for (int i = 0; i < filter.size(); ++i){
-        filter[i] |= cast_other->filter[i];
-    }
-}
-
-void
 MultiBitSelBloomFilter::set(Addr addr)
 {
     for (int i = 0; i < numHashes; i++) {

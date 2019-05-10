@@ -42,6 +42,20 @@ LSB_CountingBloomFilter::~LSB_CountingBloomFilter()
 }
 
 void
+LSB_CountingBloomFilter::merge(const AbstractBloomFilter* other)
+{
+    auto* cast_other = static_cast<const LSB_CountingBloomFilter*>(other);
+    assert(filter.size() == cast_other->filter.size());
+    for (int i = 0; i < filter.size(); ++i){
+        if (filter[i] < maxValue - cast_other->filter[i]) {
+            filter[i] += cast_other->filter[i];
+        } else {
+            filter[i] = maxValue;
+        }
+    }
+}
+
+void
 LSB_CountingBloomFilter::set(Addr addr)
 {
     const int i = hash(addr);
