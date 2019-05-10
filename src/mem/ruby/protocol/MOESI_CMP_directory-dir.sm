@@ -459,6 +459,9 @@ machine(MachineType:Directory, "Directory protocol")
 
   action(d_sendDataMsg, "d", desc="Send data to requestor") {
     peek(memQueue_in, MemoryMsg) {
+      // Not using tbe here, but we must have allocated on a memory
+      // request
+      assert(is_valid(tbe));
       enqueue(responseNetwork_out, ResponseMsg, 1) {
         out_msg.addr := address;
         out_msg.Sender := machineID;
@@ -596,6 +599,7 @@ machine(MachineType:Directory, "Directory protocol")
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestQueue_in, RequestMsg) {
+      assert(is_valid(tbe));
       enqueue(memQueue_out, MemoryMsg, to_memory_controller_latency) {
         out_msg.addr := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
@@ -713,6 +717,7 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   action(v_allocateTBE, "v", desc="Allocate TBE entry") {
+    check_allocate(TBEs);
     peek (requestQueue_in, RequestMsg) {
       assert(is_valid(tbe) == false);
       TBEs.allocate(address);
@@ -738,12 +743,14 @@ machine(MachineType:Directory, "Directory protocol")
   // TRANSITIONS
   transition(I, GETX, MM_M) {
     allocDirEntry;
+    v_allocateTBE;
     qf_queueMemoryFetchRequest;
     i_popIncomingRequestQueue;
   }
 
   transition(I, DMA_READ, XI_M) {
     allocDirEntry;
+    v_allocateTBE;
     qf_queueMemoryFetchRequest;
     i_popIncomingRequestQueue;
   }
@@ -772,6 +779,7 @@ machine(MachineType:Directory, "Directory protocol")
   transition(XI_M, Memory_Data_DMA, I) {
     d_sendDataMsg;  // ack count may be zero
     deallocDirEntry;
+    w_deallocateTBE;
     q_popMemQueue;
   }
 
@@ -796,6 +804,7 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   transition(S, GETX, MM_M) {
+    v_allocateTBE;
     qf_queueMemoryFetchRequest;
     g_sendInvalidations;
     i_popIncomingRequestQueue;
@@ -818,11 +827,19 @@ machine(MachineType:Directory, "Directory protocol")
 
   transition(I, GETS, IS_M) {
     allocDirEntry;
+    v_allocateTBE;
     qf_queueMemoryFetchRequest;
     i_popIncomingRequestQueue;
   }
 
-  transition({S, SS}, {GETS, DMA_READ}, SS) {
+  transition(S, {GETS, DMA_READ}, SS) {
+    v_allocateTBE;
+    qf_queueMemoryFetchRequest;
+    n_incrementOutstanding;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(SS, {GETS, DMA_READ}) {
     qf_queueMemoryFetchRequest;
     n_incrementOutstanding;
     i_popIncomingRequestQueue;
@@ -888,22 +905,26 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   transition(M, GETS, MO) {
+    v_allocateTBE;
     f_forwardRequest;
     i_popIncomingRequestQueue;
   }
 
   transition(M, PUTX, MI) {
+    v_allocateTBE;
     a_sendWriteBackAck;
     i_popIncomingRequestQueue;
   }
 
   // happens if M->O transition happens on-chip
   transition(M, PUTO, MI) {
+    v_allocateTBE;
     a_sendWriteBackAck;
     i_popIncomingRequestQueue;
   }
 
   transition(M, PUTO_SHARERS, MIS) {
+    v_allocateTBE;
     a_sendWriteBackAck;
     i_popIncomingRequestQueue;
   }
@@ -924,12 +945,14 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   transition({MM, MO}, Exclusive_Unblock, M) {
+    w_deallocateTBE;
     cc_clearSharers;
     e_ownerIsUnblocker;
     j_popIncomingUnblockQueue;
   }
 
   transition(MO, Unblock, O) {
+    w_deallocateTBE;
     m_addUnlockerToSharers;
     j_popIncomingUnblockQueue;
   }
@@ -943,11 +966,13 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   transition(IS, Unblock, S) {
+    w_deallocateTBE;
     m_addUnlockerToSharers;
     j_popIncomingUnblockQueue;
   }
 
   transition(IS, Exclusive_Unblock, M) {
+    w_deallocateTBE;
     cc_clearSharers;
     e_ownerIsUnblocker;
     j_popIncomingUnblockQueue;
@@ -960,6 +985,7 @@ machine(MachineType:Directory, "Directory protocol")
   }
 
   transition(SS, Last_Unblock, S) {
+    w_deallocateTBE;
     m_addUnlockerToSharers;
     o_decrementOutstanding;
     j_popIncomingUnblockQueue;
@@ -980,7 +1006,6 @@ machine(MachineType:Directory, "Directory protocol")
   transition(MI, Dirty_Writeback, WBI) {
     c_clearOwner;
     cc_clearSharers;
-    v_allocateTBE;
     qw_queueMemoryWBFromCacheRequest;
     i_popIncomingRequestQueue;
   }
@@ -994,13 +1019,13 @@ machine(MachineType:Directory, "Directory protocol")
 
   transition(MIS, Dirty_Writeback, WBS) {
     c_moveOwnerToSharer;
-    v_allocateTBE;
     qw_queueMemoryWBFromCacheRequest;
     i_popIncomingRequestQueue;
   }
 
   transition(MIS, Clean_Writeback, S) {
     c_moveOwnerToSharer;
+    w_deallocateTBE;
     i_popIncomingRequestQueue;
   }
 
@@ -1032,6 +1057,7 @@ machine(MachineType:Directory, "Directory protocol")
   transition(MI, Clean_Writeback, I) {
     c_clearOwner;
     cc_clearSharers;
+    w_deallocateTBE;
     deallocDirEntry;
     i_popIncomingRequestQueue;
   }
@@ -1041,7 +1067,7 @@ machine(MachineType:Directory, "Directory protocol")
     i_popIncomingRequestQueue;
   }
 
-  transition({S, O, M, SS, OO}, Memory_Data_Cache) {
+  transition({S, SS}, Memory_Data_Cache) {
     d_sendDataMsg;
     q_popMemQueue;
   }

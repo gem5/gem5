@@ -255,6 +255,7 @@ machine(MachineType:DMA, "DMA Controller")
   }
 
   action(v_allocateTBE, "v", desc="Allocate TBE entry") {
+    check_allocate(TBEs);
     TBEs.allocate(address);
     set_tbe(TBEs[address]);
   }
