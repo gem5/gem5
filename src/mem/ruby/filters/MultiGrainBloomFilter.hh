@@ -35,6 +35,11 @@
 
 struct MultiGrainBloomFilterParams;
 
+/**
+ * This BloomFilter has multiple sub-filters, each with its own hashing
+ * functionality. The results of the operations are the results of applying
+ * them to each sub-filter.
+ */
 class MultiGrainBloomFilter : public AbstractBloomFilter
 {
   public:
@@ -43,18 +48,16 @@ class MultiGrainBloomFilter : public AbstractBloomFilter
 
     void clear() override;
     void set(Addr addr) override;
+    void unset(Addr addr) override;
 
+    void merge(const AbstractBloomFilter* other) override;
+    bool isSet(Addr addr) const override;
     int getCount(Addr addr) const override;
     int getTotalCount() const override;
 
   private:
-    int hash(Addr addr) const;
-    int pageHash(Addr addr) const;
-
-    // The block filter uses the filter vector declared in the base class
-    /** The page number filter. */
-    std::vector<int> pageFilter;
-    int pageFilterSizeBits;
+    /** Sub-filters used by this filter. */
+    std::vector<AbstractBloomFilter*> filters;
 };
 
 #endif // __MEM_RUBY_FILTERS_MULTIGRAINBLOOMFILTER_HH__

@@ -93,10 +93,18 @@ class MultiGrainBloomFilter(AbstractBloomFilter):
     cxx_class = 'MultiGrainBloomFilter'
     cxx_header = "mem/ruby/filters/MultiGrainBloomFilter.hh"
 
-    # This is the maximum value achievable of the sum of the hashed respective
-    # entry of the two filters
+    # The base filter should not be used, since this filter is the combination
+    # of multiple sub-filters
+    size = 0
+
+    # By default there are two sub-filters that hash sequential bitfields
+    filters = VectorParam.AbstractBloomFilter([
+        BlockBloomFilter(size = 4096, masks_lsbs = [6, 12]),
+        BlockBloomFilter(size = 1024, masks_lsbs = [18, 24])],
+        "Sub-filters to be combined")
+
+    # By default match this with the number of sub-filters
     threshold = 2
-    page_filter_size = Param.Int(1024, "Number of entries in the page filter")
 
 class NonCountingBloomFilter(AbstractBloomFilter):
     type = 'NonCountingBloomFilter'
