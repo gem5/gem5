@@ -30,10 +30,12 @@
 
 #include "base/bitfield.hh"
 #include "base/logging.hh"
-#include "params/BlockBloomFilter.hh"
+#include "params/BloomFilterBlock.hh"
 
-BlockBloomFilter::BlockBloomFilter(const BlockBloomFilterParams* p)
-    : AbstractBloomFilter(p), masksLSBs(p->masks_lsbs),
+namespace BloomFilter {
+
+Block::Block(const BloomFilterBlockParams* p)
+    : Base(p), masksLSBs(p->masks_lsbs),
       masksSizes(p->masks_sizes)
 {
     fatal_if(masksLSBs.size() != masksSizes.size(),
@@ -51,30 +53,30 @@ BlockBloomFilter::BlockBloomFilter(const BlockBloomFilterParams* p)
     }
 }
 
-BlockBloomFilter::~BlockBloomFilter()
+Block::~Block()
 {
 }
 
 void
-BlockBloomFilter::set(Addr addr)
+Block::set(Addr addr)
 {
     filter[hash(addr)] = 1;
 }
 
 void
-BlockBloomFilter::unset(Addr addr)
+Block::unset(Addr addr)
 {
     filter[hash(addr)] = 0;
 }
 
 int
-BlockBloomFilter::getCount(Addr addr) const
+Block::getCount(Addr addr) const
 {
     return filter[hash(addr)];
 }
 
 int
-BlockBloomFilter::hash(Addr addr) const
+Block::hash(Addr addr) const
 {
     Addr hashed_addr = 0;
     for (int i = 0; i < masksLSBs.size(); i++) {
@@ -86,8 +88,11 @@ BlockBloomFilter::hash(Addr addr) const
     return hashed_addr;
 }
 
-BlockBloomFilter*
-BlockBloomFilterParams::create()
+} // namespace BloomFilter
+
+BloomFilter::Block*
+BloomFilterBlockParams::create()
 {
-    return new BlockBloomFilter(this);
+    return new BloomFilter::Block(this);
 }
+

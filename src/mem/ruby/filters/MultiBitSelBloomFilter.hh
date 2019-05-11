@@ -31,17 +31,19 @@
 
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
-struct MultiBitSelBloomFilterParams;
+struct BloomFilterMultiBitSelParams;
+
+namespace BloomFilter {
 
 /**
  * The MultiBitSel Bloom Filter associates an address to multiple entries
  * through the use of multiple hash functions.
  */
-class MultiBitSelBloomFilter : public AbstractBloomFilter
+class MultiBitSel : public Base
 {
   public:
-    MultiBitSelBloomFilter(const MultiBitSelBloomFilterParams* p);
-    ~MultiBitSelBloomFilter();
+    MultiBitSel(const BloomFilterMultiBitSelParams* p);
+    ~MultiBitSel();
 
     void set(Addr addr) override;
     int getCount(Addr addr) const override;
@@ -71,5 +73,7 @@ class MultiBitSelBloomFilter : public AbstractBloomFilter
      */
     const int skipBits;
 };
+
+} // namespace BloomFilter
 
 #endif // __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__

@@ -31,15 +31,17 @@
 
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
-struct LSB_CountingBloomFilterParams;
+struct BloomFilterLSBCountingParams;
 
-class LSB_CountingBloomFilter : public AbstractBloomFilter
+namespace BloomFilter {
+
+class LSBCounting : public Base
 {
   public:
-    LSB_CountingBloomFilter(const LSB_CountingBloomFilterParams* p);
-    ~LSB_CountingBloomFilter();
+    LSBCounting(const BloomFilterLSBCountingParams* p);
+    ~LSBCounting();
 
-    void merge(const AbstractBloomFilter* other) override;
+    void merge(const Base* other) override;
     void set(Addr addr) override;
     void unset(Addr addr) override;
 
@@ -51,5 +53,7 @@ class LSB_CountingBloomFilter : public AbstractBloomFilter
     /** Maximum value of the filter entries. */
     const int maxValue;
 };
+
+} // namespace BloomFilter
 
 #endif //__MEM_RUBY_FILTERS_LSB_COUNTINGBLOOMFILTER_HH__

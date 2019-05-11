@@ -31,20 +31,24 @@
 
 #include "mem/ruby/filters/MultiBitSelBloomFilter.hh"
 
-struct H3BloomFilterParams;
+struct BloomFilterH3Params;
+
+namespace BloomFilter {
 
 /**
  * Implementation of the bloom filter as described in "Implementing Signatures
  * for Transactional Memory", by Sanchez, Daniel, et al.
  */
-class H3BloomFilter : public MultiBitSelBloomFilter
+class H3 : public MultiBitSel
 {
   public:
-    H3BloomFilter(const H3BloomFilterParams* p);
-    ~H3BloomFilter();
+    H3(const BloomFilterH3Params* p);
+    ~H3();
 
   protected:
     int hash(Addr addr, int hash_number) const override;
 };
+
+} // namespace BloomFilter
 
 #endif // __MEM_RUBY_FILTERS_H3BLOOMFILTER_HH__

@@ -32,9 +32,11 @@
 
 #include "base/logging.hh"
 #include "base/bitfield.hh"
-#include "params/H3BloomFilter.hh"
+#include "params/BloomFilterH3.hh"
 
-static int H3[64][16] = {
+namespace BloomFilter {
+
+static int H3Matrix[64][16] = {
     { 33268410,   395488709,  311024285,  456111753,
       181495008,  119997521,  220697869,  433891432,
       755927921,  515226970,  719448198,  349842774,
@@ -356,18 +358,18 @@ static int H3[64][16] = {
       394261773,  848616745,  15446017,   517723271,  },
 };
 
-H3BloomFilter::H3BloomFilter(const H3BloomFilterParams* p)
-    : MultiBitSelBloomFilter(p)
+H3::H3(const BloomFilterH3Params* p)
+    : MultiBitSel(p)
 {
     fatal_if(numHashes > 16, "There are only 16 H3 functions implemented.");
 }
 
-H3BloomFilter::~H3BloomFilter()
+H3::~H3()
 {
 }
 
 int
-H3BloomFilter::hash(Addr addr, int hash_number) const
+H3::hash(Addr addr, int hash_number) const
 {
     uint64_t val =
         bits(addr, std::numeric_limits<Addr>::digits - 1, offsetBits);
@@ -375,7 +377,7 @@ H3BloomFilter::hash(Addr addr, int hash_number) const
 
     for (int i = 0; (i < 64) && val; i++, val >>= 1) {
         if (val & 1) {
-            result ^= H3[i][hash_number];
+            result ^= H3Matrix[i][hash_number];
         }
     }
 
@@ -386,8 +388,11 @@ H3BloomFilter::hash(Addr addr, int hash_number) const
     }
 }
 
-H3BloomFilter*
-H3BloomFilterParams::create()
+} // namespace BloomFilter
+
+BloomFilter::H3*
+BloomFilterH3Params::create()
 {
-    return new H3BloomFilter(this);
+    return new BloomFilter::H3(this);
 }
+

@@ -33,31 +33,35 @@
 
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
-struct MultiGrainBloomFilterParams;
+struct BloomFilterMultiGrainParams;
+
+namespace BloomFilter {
 
 /**
  * This BloomFilter has multiple sub-filters, each with its own hashing
  * functionality. The results of the operations are the results of applying
  * them to each sub-filter.
  */
-class MultiGrainBloomFilter : public AbstractBloomFilter
+class MultiGrain : public Base
 {
   public:
-    MultiGrainBloomFilter(const MultiGrainBloomFilterParams* p);
-    ~MultiGrainBloomFilter();
+    MultiGrain(const BloomFilterMultiGrainParams* p);
+    ~MultiGrain();
 
     void clear() override;
     void set(Addr addr) override;
     void unset(Addr addr) override;
 
-    void merge(const AbstractBloomFilter* other) override;
+    void merge(const Base* other) override;
     bool isSet(Addr addr) const override;
     int getCount(Addr addr) const override;
     int getTotalCount() const override;
 
   private:
     /** Sub-filters used by this filter. */
-    std::vector<AbstractBloomFilter*> filters;
+    std::vector<Base*> filters;
 };
+
+} // namespace BloomFilter
 
 #endif // __MEM_RUBY_FILTERS_MULTIGRAINBLOOMFILTER_HH__

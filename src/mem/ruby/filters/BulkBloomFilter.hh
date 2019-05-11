@@ -33,17 +33,19 @@
 
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
-struct BulkBloomFilterParams;
+struct BloomFilterBulkParams;
+
+namespace BloomFilter {
 
 /**
  * Implementation of the bloom filter, as described in "Bulk Disambiguation of
  * Speculative Threads in Multiprocessors", by Ceze, Luis, et al.
  */
-class BulkBloomFilter : public AbstractBloomFilter
+class Bulk : public Base
 {
   public:
-    BulkBloomFilter(const BulkBloomFilterParams* p);
-    ~BulkBloomFilter();
+    Bulk(const BloomFilterBulkParams* p);
+    ~Bulk();
 
     void set(Addr addr) override;
 
@@ -57,5 +59,7 @@ class BulkBloomFilter : public AbstractBloomFilter
     // split the filter bits in half, c0 and c1
     const int sectorBits;
 };
+
+} // namespace BloomFilter
 
 #endif // __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__

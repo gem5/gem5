@@ -33,17 +33,19 @@
 
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
-struct BlockBloomFilterParams;
+struct BloomFilterBlockParams;
+
+namespace BloomFilter {
 
 /**
  * Simple deletable (with false negatives) bloom filter that extracts
  * bitfields of an address to use as indexes of the filter vector.
  */
-class BlockBloomFilter : public AbstractBloomFilter
+class Block : public Base
 {
   public:
-    BlockBloomFilter(const BlockBloomFilterParams* p);
-    ~BlockBloomFilter();
+    Block(const BloomFilterBlockParams* p);
+    ~Block();
 
     void set(Addr addr) override;
     void unset(Addr addr) override;
@@ -64,5 +66,7 @@ class BlockBloomFilter : public AbstractBloomFilter
     /** Number of bits in each mask. */
     std::vector<unsigned> masksSizes;
 };
+
+} // namespace BloomFilter
 
 #endif // __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__

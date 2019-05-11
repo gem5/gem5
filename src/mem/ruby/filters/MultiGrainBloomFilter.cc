@@ -29,20 +29,21 @@
 #include "mem/ruby/filters/MultiGrainBloomFilter.hh"
 
 #include "base/logging.hh"
-#include "params/MultiGrainBloomFilter.hh"
+#include "params/BloomFilterMultiGrain.hh"
 
-MultiGrainBloomFilter::MultiGrainBloomFilter(
-    const MultiGrainBloomFilterParams* p)
-    : AbstractBloomFilter(p), filters(p->filters)
+namespace BloomFilter {
+
+MultiGrain::MultiGrain(const BloomFilterMultiGrainParams* p)
+    : Base(p), filters(p->filters)
 {
 }
 
-MultiGrainBloomFilter::~MultiGrainBloomFilter()
+MultiGrain::~MultiGrain()
 {
 }
 
 void
-MultiGrainBloomFilter::clear()
+MultiGrain::clear()
 {
     for (auto& sub_filter : filters) {
         sub_filter->clear();
@@ -50,9 +51,9 @@ MultiGrainBloomFilter::clear()
 }
 
 void
-MultiGrainBloomFilter::merge(const AbstractBloomFilter* other)
+MultiGrain::merge(const Base* other)
 {
-    auto* cast_other = static_cast<const MultiGrainBloomFilter*>(other);
+    auto* cast_other = static_cast<const MultiGrain*>(other);
     assert(filters.size() == cast_other->filters.size());
     for (int i = 0; i < filters.size(); ++i){
         filters[i]->merge(cast_other->filters[i]);
@@ -60,7 +61,7 @@ MultiGrainBloomFilter::merge(const AbstractBloomFilter* other)
 }
 
 void
-MultiGrainBloomFilter::set(Addr addr)
+MultiGrain::set(Addr addr)
 {
     for (auto& sub_filter : filters) {
         sub_filter->set(addr);
@@ -68,7 +69,7 @@ MultiGrainBloomFilter::set(Addr addr)
 }
 
 void
-MultiGrainBloomFilter::unset(Addr addr)
+MultiGrain::unset(Addr addr)
 {
     for (auto& sub_filter : filters) {
         sub_filter->unset(addr);
@@ -76,7 +77,7 @@ MultiGrainBloomFilter::unset(Addr addr)
 }
 
 bool
-MultiGrainBloomFilter::isSet(Addr addr) const
+MultiGrain::isSet(Addr addr) const
 {
     int count = 0;
     for (const auto& sub_filter : filters) {
@@ -88,7 +89,7 @@ MultiGrainBloomFilter::isSet(Addr addr) const
 }
 
 int
-MultiGrainBloomFilter::getCount(Addr addr) const
+MultiGrain::getCount(Addr addr) const
 {
     int count = 0;
     for (const auto& sub_filter : filters) {
@@ -98,7 +99,7 @@ MultiGrainBloomFilter::getCount(Addr addr) const
 }
 
 int
-MultiGrainBloomFilter::getTotalCount() const
+MultiGrain::getTotalCount() const
 {
     int count = 0;
     for (const auto& sub_filter : filters) {
@@ -107,8 +108,11 @@ MultiGrainBloomFilter::getTotalCount() const
     return count;
 }
 
-MultiGrainBloomFilter*
-MultiGrainBloomFilterParams::create()
+} // namespace BloomFilter
+
+BloomFilter::MultiGrain*
+BloomFilterMultiGrainParams::create()
 {
-    return new MultiGrainBloomFilter(this);
+    return new BloomFilter::MultiGrain(this);
 }
+

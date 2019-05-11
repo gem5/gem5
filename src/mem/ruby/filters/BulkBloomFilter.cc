@@ -31,19 +31,21 @@
 #include <limits>
 
 #include "base/bitfield.hh"
-#include "params/BulkBloomFilter.hh"
+#include "params/BloomFilterBulk.hh"
 
-BulkBloomFilter::BulkBloomFilter(const BulkBloomFilterParams* p)
-    : AbstractBloomFilter(p), sectorBits(sizeBits - 1)
+namespace BloomFilter {
+
+Bulk::Bulk(const BloomFilterBulkParams* p)
+    : Base(p), sectorBits(sizeBits - 1)
 {
 }
 
-BulkBloomFilter::~BulkBloomFilter()
+Bulk::~Bulk()
 {
 }
 
 void
-BulkBloomFilter::set(Addr addr)
+Bulk::set(Addr addr)
 {
     // c0 contains the cache index bits
     int c0 = bits(addr, offsetBits + sectorBits - 1, offsetBits);
@@ -61,7 +63,7 @@ BulkBloomFilter::set(Addr addr)
 }
 
 bool
-BulkBloomFilter::isSet(Addr addr) const
+Bulk::isSet(Addr addr) const
 {
     // c0 contains the cache index bits
     const int filter_size = filter.size();
@@ -117,14 +119,14 @@ BulkBloomFilter::isSet(Addr addr) const
 }
 
 int
-BulkBloomFilter::getCount(Addr addr) const
+Bulk::getCount(Addr addr) const
 {
     // TODO as in the multi-hashed filters
     return 0;
 }
 
 Addr
-BulkBloomFilter::hash(Addr addr) const
+Bulk::hash(Addr addr) const
 {
     // permutes the original address bits according to Table 5
     Addr part1  = bits(addr, offsetBits + 6, offsetBits),
@@ -152,8 +154,11 @@ BulkBloomFilter::hash(Addr addr) const
     return result;
 }
 
-BulkBloomFilter*
-BulkBloomFilterParams::create()
+} // namespace BloomFilter
+
+BloomFilter::Bulk*
+BloomFilterBulkParams::create()
 {
-    return new BulkBloomFilter(this);
+    return new BloomFilter::Bulk(this);
 }
+

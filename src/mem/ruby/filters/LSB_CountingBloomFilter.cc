@@ -29,22 +29,24 @@
 #include "mem/ruby/filters/LSB_CountingBloomFilter.hh"
 
 #include "base/bitfield.hh"
-#include "params/LSB_CountingBloomFilter.hh"
+#include "params/BloomFilterLSBCounting.hh"
 
-LSB_CountingBloomFilter::LSB_CountingBloomFilter(
-    const LSB_CountingBloomFilterParams* p)
-    : AbstractBloomFilter(p), maxValue(p->max_value)
+namespace BloomFilter {
+
+LSBCounting::LSBCounting(
+    const BloomFilterLSBCountingParams* p)
+    : Base(p), maxValue(p->max_value)
 {
 }
 
-LSB_CountingBloomFilter::~LSB_CountingBloomFilter()
+LSBCounting::~LSBCounting()
 {
 }
 
 void
-LSB_CountingBloomFilter::merge(const AbstractBloomFilter* other)
+LSBCounting::merge(const Base* other)
 {
-    auto* cast_other = static_cast<const LSB_CountingBloomFilter*>(other);
+    auto* cast_other = static_cast<const LSBCounting*>(other);
     assert(filter.size() == cast_other->filter.size());
     for (int i = 0; i < filter.size(); ++i){
         if (filter[i] < maxValue - cast_other->filter[i]) {
@@ -56,7 +58,7 @@ LSB_CountingBloomFilter::merge(const AbstractBloomFilter* other)
 }
 
 void
-LSB_CountingBloomFilter::set(Addr addr)
+LSBCounting::set(Addr addr)
 {
     const int i = hash(addr);
     if (filter[i] < maxValue)
@@ -64,7 +66,7 @@ LSB_CountingBloomFilter::set(Addr addr)
 }
 
 void
-LSB_CountingBloomFilter::unset(Addr addr)
+LSBCounting::unset(Addr addr)
 {
     const int i = hash(addr);
     if (filter[i] > 0)
@@ -72,19 +74,22 @@ LSB_CountingBloomFilter::unset(Addr addr)
 }
 
 int
-LSB_CountingBloomFilter::getCount(Addr addr) const
+LSBCounting::getCount(Addr addr) const
 {
     return filter[hash(addr)];
 }
 
 int
-LSB_CountingBloomFilter::hash(Addr addr) const
+LSBCounting::hash(Addr addr) const
 {
     return bits(addr, offsetBits + sizeBits - 1, offsetBits);
 }
 
-LSB_CountingBloomFilter*
-LSB_CountingBloomFilterParams::create()
+} // namespace BloomFilter
+
+BloomFilter::LSBCounting*
+BloomFilterLSBCountingParams::create()
 {
-    return new LSB_CountingBloomFilter(this);
+    return new BloomFilter::LSBCounting(this);
 }
+
