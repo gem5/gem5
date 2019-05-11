@@ -31,15 +31,19 @@
 #include <limits>
 
 #include "base/bitfield.hh"
+#include "base/logging.hh"
 #include "params/MultiBitSelBloomFilter.hh"
 
 MultiBitSelBloomFilter::MultiBitSelBloomFilter(
     const MultiBitSelBloomFilterParams* p)
     : AbstractBloomFilter(p), numHashes(p->num_hashes),
-      skipBits(p->skip_bits),
       parFilterSize(p->size / numHashes),
-      isParallel(p->is_parallel)
+      isParallel(p->is_parallel), skipBits(p->skip_bits)
 {
+    if (p->size % numHashes) {
+        fatal("Can't divide filter (%d) in %d equal portions", p->size,
+              numHashes);
+    }
 }
 
 MultiBitSelBloomFilter::~MultiBitSelBloomFilter()
@@ -68,31 +72,24 @@ MultiBitSelBloomFilter::getCount(Addr addr) const
 int
 MultiBitSelBloomFilter::hash(Addr addr, int hash_number) const
 {
-    uint64_t x = bits(addr, std::numeric_limits<Addr>::digits - 1,
+    uint64_t value = bits(addr, std::numeric_limits<Addr>::digits - 1,
         offsetBits) >> skipBits;
-    int y = hashBitsel(x, hash_number, numHashes, 30, sizeBits);
-    //36-bit addresses, 6-bit cache lines
-
-    if (isParallel) {
-        return (y % parFilterSize) + hash_number * parFilterSize;
-    } else {
-        return y % filter.size();
-    }
-}
-
-int
-MultiBitSelBloomFilter::hashBitsel(uint64_t value, int index, int jump,
-                                    int maxBits, int numBits) const
-{
-    uint64_t mask = 1;
+    const int max_bits = std::numeric_limits<Addr>::digits - offsetBits;
     int result = 0;
     int bit, i;
 
-    for (i = 0; i < numBits; i++) {
-        bit = (index + jump*i) % maxBits;
-        if (value & (mask << bit)) result += mask << i;
+    for (i = 0; i < sizeBits; i++) {
+        bit = (hash_number + numHashes * i) % max_bits;
+        if (value & (1 << bit)) {
+            result += 1 << i;
+        }
     }
-    return result;
+
+    if (isParallel) {
+        return (result % parFilterSize) + hash_number * parFilterSize;
+    } else {
+        return result % filter.size();
+    }
 }
 
 MultiBitSelBloomFilter*

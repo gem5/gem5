@@ -58,15 +58,6 @@ class BulkBloomFilter(AbstractBloomFilter):
     cxx_class = 'BulkBloomFilter'
     cxx_header = "mem/ruby/filters/BulkBloomFilter.hh"
 
-class H3BloomFilter(AbstractBloomFilter):
-    type = 'H3BloomFilter'
-    cxx_class = 'H3BloomFilter'
-    cxx_header = "mem/ruby/filters/H3BloomFilter.hh"
-
-    num_hashes = Param.Int(3, "Number of hashes")
-    threshold = Self.num_hashes
-    is_parallel = Param.Bool(False, "Whether hashing is done in parallel")
-
 class LSB_CountingBloomFilter(AbstractBloomFilter):
     type = 'LSB_CountingBloomFilter'
     cxx_class = 'LSB_CountingBloomFilter'
@@ -83,10 +74,15 @@ class MultiBitSelBloomFilter(AbstractBloomFilter):
     cxx_class = 'MultiBitSelBloomFilter'
     cxx_header = "mem/ruby/filters/MultiBitSelBloomFilter.hh"
 
-    num_hashes = Param.Int(3, "Number of hashes")
+    num_hashes = Param.Int(4, "Number of hashes")
     threshold = Self.num_hashes
     skip_bits = Param.Int(2, "Offset from block number")
     is_parallel = Param.Bool(False, "Whether hashing is done in parallel")
+
+class H3BloomFilter(MultiBitSelBloomFilter):
+    type = 'H3BloomFilter'
+    cxx_class = 'H3BloomFilter'
+    cxx_header = "mem/ruby/filters/H3BloomFilter.hh"
 
 class MultiGrainBloomFilter(AbstractBloomFilter):
     type = 'MultiGrainBloomFilter'
@@ -94,8 +90,8 @@ class MultiGrainBloomFilter(AbstractBloomFilter):
     cxx_header = "mem/ruby/filters/MultiGrainBloomFilter.hh"
 
     # The base filter should not be used, since this filter is the combination
-    # of multiple sub-filters
-    size = 0
+    # of multiple sub-filters, so we use a dummy value
+    size = 1
 
     # By default there are two sub-filters that hash sequential bitfields
     filters = VectorParam.AbstractBloomFilter([

@@ -357,59 +357,33 @@ static int H3[64][16] = {
 };
 
 H3BloomFilter::H3BloomFilter(const H3BloomFilterParams* p)
-    : AbstractBloomFilter(p), numHashes(p->num_hashes),
-      isParallel(p->is_parallel), parFilterSize(p->size / numHashes)
+    : MultiBitSelBloomFilter(p)
 {
-    fatal_if(numHashes > 16, "There are only 16 hash functions implemented.");
+    fatal_if(numHashes > 16, "There are only 16 H3 functions implemented.");
 }
 
 H3BloomFilter::~H3BloomFilter()
 {
 }
 
-void
-H3BloomFilter::set(Addr addr)
-{
-    for (int i = 0; i < numHashes; i++) {
-        filter[hash(addr, i)] = 1;
-    }
-}
-
-int
-H3BloomFilter::getCount(Addr addr) const
-{
-    int count = 0;
-    for (int i=0; i < numHashes; i++) {
-        count += filter[hash(addr, i)];
-    }
-    return count;
-}
-
 int
 H3BloomFilter::hash(Addr addr, int hash_number) const
 {
-    uint64_t x = bits(addr, std::numeric_limits<Addr>::digits - 1, offsetBits);
-    int y = hashH3(x, hash_number);
-
-    if (isParallel) {
-        return (y % parFilterSize) + hash_number * parFilterSize;
-    } else {
-        return y % filter.size();
-    }
-}
-
-int
-H3BloomFilter::hashH3(uint64_t value, int index) const
-{
-    uint64_t mask = 1;
-    uint64_t val = value;
+    uint64_t val =
+        bits(addr, std::numeric_limits<Addr>::digits - 1, offsetBits);
     int result = 0;
 
-    for (int i = 0; i < 64; i++) {
-        if (val&mask) result ^= H3[i][index];
-        val = val >> 1;
+    for (int i = 0; (i < 64) && val; i++, val >>= 1) {
+        if (val & 1) {
+            result ^= H3[i][hash_number];
+        }
     }
-    return result;
+
+    if (isParallel) {
+        return (result % parFilterSize) + hash_number * parFilterSize;
+    } else {
+        return result % filter.size();
+    }
 }
 
 H3BloomFilter*
