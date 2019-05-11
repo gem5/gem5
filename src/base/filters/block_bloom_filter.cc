@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019 Inria
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -24,56 +25,77 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Daniel Carvalho
  */
 
-#ifndef __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__
-#define __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__
+#include "base/filters/block_bloom_filter.hh"
 
-#include "mem/ruby/filters/AbstractBloomFilter.hh"
-
-struct BloomFilterMultiBitSelParams;
+#include "base/bitfield.hh"
+#include "base/logging.hh"
+#include "params/BloomFilterBlock.hh"
 
 namespace BloomFilter {
 
-/**
- * The MultiBitSel Bloom Filter associates an address to multiple entries
- * through the use of multiple hash functions.
- */
-class MultiBitSel : public Base
+Block::Block(const BloomFilterBlockParams* p)
+    : Base(p), masksLSBs(p->masks_lsbs),
+      masksSizes(p->masks_sizes)
 {
-  public:
-    MultiBitSel(const BloomFilterMultiBitSelParams* p);
-    ~MultiBitSel();
+    fatal_if(masksLSBs.size() != masksSizes.size(),
+        "Masks haven't been properly provided");
+    fatal_if(masksLSBs.size() < 1,
+        "There must be at least one mask to extract an address bitfield");
 
-    void set(Addr addr) override;
-    int getCount(Addr addr) const override;
+    for (int i = 0; i < masksLSBs.size(); i++) {
+        fatal_if((masksSizes[i] > sizeBits) || (masksSizes[i] <= 0),
+            "The bitfields must be indexable in the filter");
+        fatal_if(masksLSBs[i] + masksSizes[i] >
+            std::numeric_limits<Addr>::digits,
+            "The total size of the bitfields cannot be bigger than the " \
+            "number of bits in an address");
+    }
+}
 
-  protected:
-    /**
-     * Apply the selected the hash functions to an address.
-     *
-     * @param addr The address to hash.
-     * @param hash_number Index of the hash function to be used.
-     */
-    virtual int hash(Addr addr, int hash_number) const;
+Block::~Block()
+{
+}
 
-    /** Number of hashes. */
-    const int numHashes;
+void
+Block::set(Addr addr)
+{
+    filter[hash(addr)] = 1;
+}
 
-    /** Size of the filter when doing parallel hashing. */
-    const int parFilterSize;
+void
+Block::unset(Addr addr)
+{
+    filter[hash(addr)] = 0;
+}
 
-    /** Whether hashing should be performed in parallel. */
-    const bool isParallel;
+int
+Block::getCount(Addr addr) const
+{
+    return filter[hash(addr)];
+}
 
-  private:
-    /**
-     * Bit offset from block number. Used to simulate bit selection hashing
-     * on larger than cache-line granularities, by skipping some bits.
-     */
-    const int skipBits;
-};
+int
+Block::hash(Addr addr) const
+{
+    Addr hashed_addr = 0;
+    for (int i = 0; i < masksLSBs.size(); i++) {
+        hashed_addr ^=
+            bits(addr, offsetBits + masksLSBs[i] + masksSizes[i] - 1,
+            offsetBits + masksLSBs[i]);
+    }
+    assert(hashed_addr < filter.size());
+    return hashed_addr;
+}
 
 } // namespace BloomFilter
 
-#endif // __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__
+BloomFilter::Block*
+BloomFilterBlockParams::create()
+{
+    return new BloomFilter::Block(this);
+}
+

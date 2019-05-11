@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019 Inria
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -24,95 +25,82 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Daniel Carvalho
  */
 
-#include "mem/ruby/filters/MultiGrainBloomFilter.hh"
+#include "base/filters/multi_bit_sel_bloom_filter.hh"
 
+#include <limits>
+
+#include "base/bitfield.hh"
 #include "base/logging.hh"
-#include "params/BloomFilterMultiGrain.hh"
+#include "params/BloomFilterMultiBitSel.hh"
 
 namespace BloomFilter {
 
-MultiGrain::MultiGrain(const BloomFilterMultiGrainParams* p)
-    : Base(p), filters(p->filters)
+MultiBitSel::MultiBitSel(const BloomFilterMultiBitSelParams* p)
+    : Base(p), numHashes(p->num_hashes),
+      parFilterSize(p->size / numHashes),
+      isParallel(p->is_parallel), skipBits(p->skip_bits)
 {
+    if (p->size % numHashes) {
+        fatal("Can't divide filter (%d) in %d equal portions", p->size,
+              numHashes);
+    }
 }
 
-MultiGrain::~MultiGrain()
+MultiBitSel::~MultiBitSel()
 {
 }
 
 void
-MultiGrain::clear()
+MultiBitSel::set(Addr addr)
 {
-    for (auto& sub_filter : filters) {
-        sub_filter->clear();
+    for (int i = 0; i < numHashes; i++) {
+        int idx = hash(addr, i);
+        filter[idx] = 1;
     }
 }
 
-void
-MultiGrain::merge(const Base* other)
-{
-    auto* cast_other = static_cast<const MultiGrain*>(other);
-    assert(filters.size() == cast_other->filters.size());
-    for (int i = 0; i < filters.size(); ++i){
-        filters[i]->merge(cast_other->filters[i]);
-    }
-}
-
-void
-MultiGrain::set(Addr addr)
-{
-    for (auto& sub_filter : filters) {
-        sub_filter->set(addr);
-    }
-}
-
-void
-MultiGrain::unset(Addr addr)
-{
-    for (auto& sub_filter : filters) {
-        sub_filter->unset(addr);
-    }
-}
-
-bool
-MultiGrain::isSet(Addr addr) const
+int
+MultiBitSel::getCount(Addr addr) const
 {
     int count = 0;
-    for (const auto& sub_filter : filters) {
-        if (sub_filter->isSet(addr)) {
-            count++;
+    for (int i=0; i < numHashes; i++) {
+        count += filter[hash(addr, i)];
+    }
+    return count;
+}
+
+int
+MultiBitSel::hash(Addr addr, int hash_number) const
+{
+    uint64_t value = bits(addr, std::numeric_limits<Addr>::digits - 1,
+        offsetBits) >> skipBits;
+    const int max_bits = std::numeric_limits<Addr>::digits - offsetBits;
+    int result = 0;
+    int bit, i;
+
+    for (i = 0; i < sizeBits; i++) {
+        bit = (hash_number + numHashes * i) % max_bits;
+        if (value & (1 << bit)) {
+            result += 1 << i;
         }
     }
-    return count >= setThreshold;
-}
 
-int
-MultiGrain::getCount(Addr addr) const
-{
-    int count = 0;
-    for (const auto& sub_filter : filters) {
-        count += sub_filter->getCount(addr);
+    if (isParallel) {
+        return (result % parFilterSize) + hash_number * parFilterSize;
+    } else {
+        return result % filter.size();
     }
-    return count;
-}
-
-int
-MultiGrain::getTotalCount() const
-{
-    int count = 0;
-    for (const auto& sub_filter : filters) {
-        count += sub_filter->getTotalCount();
-    }
-    return count;
 }
 
 } // namespace BloomFilter
 
-BloomFilter::MultiGrain*
-BloomFilterMultiGrainParams::create()
+BloomFilter::MultiBitSel*
+BloomFilterMultiBitSelParams::create()
 {
-    return new BloomFilter::MultiGrain(this);
+    return new BloomFilter::MultiBitSel(this);
 }
 

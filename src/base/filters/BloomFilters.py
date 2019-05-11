@@ -33,7 +33,7 @@ from m5.SimObject import SimObject
 class BloomFilterBase(SimObject):
     type = 'BloomFilterBase'
     abstract = True
-    cxx_header = "mem/ruby/filters/AbstractBloomFilter.hh"
+    cxx_header = "base/filters/base.hh"
     cxx_class = 'BloomFilter::Base'
 
     size = Param.Int(4096, "Number of entries in the filter")
@@ -47,7 +47,7 @@ class BloomFilterBase(SimObject):
 class BloomFilterBlock(BloomFilterBase):
     type = 'BloomFilterBlock'
     cxx_class = 'BloomFilter::Block'
-    cxx_header = "mem/ruby/filters/BlockBloomFilter.hh"
+    cxx_header = "base/filters/block_bloom_filter.hh"
 
     masks_lsbs = VectorParam.Unsigned([Self.offset_bits,
         2 * Self.offset_bits], "Position of the LSB of each mask")
@@ -57,12 +57,12 @@ class BloomFilterBlock(BloomFilterBase):
 class BloomFilterBulk(BloomFilterBase):
     type = 'BloomFilterBulk'
     cxx_class = 'BloomFilter::Bulk'
-    cxx_header = "mem/ruby/filters/BulkBloomFilter.hh"
+    cxx_header = "base/filters/bulk_bloom_filter.hh"
 
 class BloomFilterLSBCounting(BloomFilterBase):
     type = 'BloomFilterLSBCounting'
     cxx_class = 'BloomFilter::LSBCounting'
-    cxx_header = "mem/ruby/filters/LSB_CountingBloomFilter.hh"
+    cxx_header = "base/filters/lsb_counting_bloom_filter.hh"
 
     # By default use 4-bit saturating counters
     max_value = Param.Int(15, "Maximum value of the filter entries")
@@ -73,7 +73,7 @@ class BloomFilterLSBCounting(BloomFilterBase):
 class BloomFilterMultiBitSel(BloomFilterBase):
     type = 'BloomFilterMultiBitSel'
     cxx_class = 'BloomFilter::MultiBitSel'
-    cxx_header = "mem/ruby/filters/MultiBitSelBloomFilter.hh"
+    cxx_header = "base/filters/multi_bit_sel_bloom_filter.hh"
 
     num_hashes = Param.Int(4, "Number of hashes")
     threshold = Self.num_hashes
@@ -83,12 +83,12 @@ class BloomFilterMultiBitSel(BloomFilterBase):
 class BloomFilterH3(BloomFilterMultiBitSel):
     type = 'BloomFilterH3'
     cxx_class = 'BloomFilter::H3'
-    cxx_header = "mem/ruby/filters/H3BloomFilter.hh"
+    cxx_header = "base/filters/h3_bloom_filter.hh"
 
-class BloomFilterMultiGrain(BloomFilterBase):
-    type = 'BloomFilterMultiGrain'
-    cxx_class = 'BloomFilter::MultiGrain'
-    cxx_header = "mem/ruby/filters/MultiGrainBloomFilter.hh"
+class BloomFilterMulti(BloomFilterBase):
+    type = 'BloomFilterMulti'
+    cxx_class = 'BloomFilter::Multi'
+    cxx_header = "base/filters/multi_bloom_filter.hh"
 
     # The base filter should not be used, since this filter is the combination
     # of multiple sub-filters, so we use a dummy value

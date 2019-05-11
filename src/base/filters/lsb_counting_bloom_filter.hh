@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019 Inria
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -24,75 +25,38 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Daniel Carvalho
  */
 
-#include "mem/ruby/filters/BlockBloomFilter.hh"
+#ifndef __BASE_FILTERS_LSB_COUNTING_BLOOM_FILTER_HH__
+#define __BASE_FILTERS_LSB_COUNTING_BLOOM_FILTER_HH__
 
-#include "base/bitfield.hh"
-#include "base/logging.hh"
-#include "params/BloomFilterBlock.hh"
+#include "base/filters/base.hh"
+
+struct BloomFilterLSBCountingParams;
 
 namespace BloomFilter {
 
-Block::Block(const BloomFilterBlockParams* p)
-    : Base(p), masksLSBs(p->masks_lsbs),
-      masksSizes(p->masks_sizes)
+class LSBCounting : public Base
 {
-    fatal_if(masksLSBs.size() != masksSizes.size(),
-        "Masks haven't been properly provided");
-    fatal_if(masksLSBs.size() < 1,
-        "There must be at least one mask to extract an address bitfield");
+  public:
+    LSBCounting(const BloomFilterLSBCountingParams* p);
+    ~LSBCounting();
 
-    for (int i = 0; i < masksLSBs.size(); i++) {
-        fatal_if((masksSizes[i] > sizeBits) || (masksSizes[i] <= 0),
-            "The bitfields must be indexable in the filter");
-        fatal_if(masksLSBs[i] + masksSizes[i] >
-            std::numeric_limits<Addr>::digits,
-            "The total size of the bitfields cannot be bigger than the " \
-            "number of bits in an address");
-    }
-}
+    void merge(const Base* other) override;
+    void set(Addr addr) override;
+    void unset(Addr addr) override;
 
-Block::~Block()
-{
-}
+    int getCount(Addr addr) const override;
 
-void
-Block::set(Addr addr)
-{
-    filter[hash(addr)] = 1;
-}
+  private:
+    int hash(Addr addr) const;
 
-void
-Block::unset(Addr addr)
-{
-    filter[hash(addr)] = 0;
-}
-
-int
-Block::getCount(Addr addr) const
-{
-    return filter[hash(addr)];
-}
-
-int
-Block::hash(Addr addr) const
-{
-    Addr hashed_addr = 0;
-    for (int i = 0; i < masksLSBs.size(); i++) {
-        hashed_addr ^=
-            bits(addr, offsetBits + masksLSBs[i] + masksSizes[i] - 1,
-            offsetBits + masksLSBs[i]);
-    }
-    assert(hashed_addr < filter.size());
-    return hashed_addr;
-}
+    /** Maximum value of the filter entries. */
+    const int maxValue;
+};
 
 } // namespace BloomFilter
 
-BloomFilter::Block*
-BloomFilterBlockParams::create()
-{
-    return new BloomFilter::Block(this);
-}
-
+#endif //__BASE_FILTERS_LSB_COUNTING_BLOOM_FILTER_HH__

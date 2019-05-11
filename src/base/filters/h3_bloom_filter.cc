@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019 Inria
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -24,14 +25,16 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Daniel Carvalho
  */
 
-#include "mem/ruby/filters/H3BloomFilter.hh"
+#include "base/filters/h3_bloom_filter.hh"
 
 #include <limits>
 
-#include "base/logging.hh"
 #include "base/bitfield.hh"
+#include "base/logging.hh"
 #include "params/BloomFilterH3.hh"
 
 namespace BloomFilter {

@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019 Inria
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -24,36 +25,97 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Daniel Carvalho
  */
 
-#ifndef __MEM_RUBY_FILTERS_LSB_COUNTINGBLOOMFILTER_HH__
-#define __MEM_RUBY_FILTERS_LSB_COUNTINGBLOOMFILTER_HH__
+#include "base/filters/multi_bloom_filter.hh"
 
-#include "mem/ruby/filters/AbstractBloomFilter.hh"
-
-struct BloomFilterLSBCountingParams;
+#include "base/logging.hh"
+#include "params/BloomFilterMulti.hh"
 
 namespace BloomFilter {
 
-class LSBCounting : public Base
+Multi::Multi(const BloomFilterMultiParams* p)
+    : Base(p), filters(p->filters)
 {
-  public:
-    LSBCounting(const BloomFilterLSBCountingParams* p);
-    ~LSBCounting();
+}
 
-    void merge(const Base* other) override;
-    void set(Addr addr) override;
-    void unset(Addr addr) override;
+Multi::~Multi()
+{
+}
 
-    int getCount(Addr addr) const override;
+void
+Multi::clear()
+{
+    for (auto& sub_filter : filters) {
+        sub_filter->clear();
+    }
+}
 
-  private:
-    int hash(Addr addr) const;
+void
+Multi::merge(const Base* other)
+{
+    auto* cast_other = static_cast<const Multi*>(other);
+    assert(filters.size() == cast_other->filters.size());
+    for (int i = 0; i < filters.size(); ++i){
+        filters[i]->merge(cast_other->filters[i]);
+    }
+}
 
-    /** Maximum value of the filter entries. */
-    const int maxValue;
-};
+void
+Multi::set(Addr addr)
+{
+    for (auto& sub_filter : filters) {
+        sub_filter->set(addr);
+    }
+}
+
+void
+Multi::unset(Addr addr)
+{
+    for (auto& sub_filter : filters) {
+        sub_filter->unset(addr);
+    }
+}
+
+bool
+Multi::isSet(Addr addr) const
+{
+    int count = 0;
+    for (const auto& sub_filter : filters) {
+        if (sub_filter->isSet(addr)) {
+            count++;
+        }
+    }
+    return count >= setThreshold;
+}
+
+int
+Multi::getCount(Addr addr) const
+{
+    int count = 0;
+    for (const auto& sub_filter : filters) {
+        count += sub_filter->getCount(addr);
+    }
+    return count;
+}
+
+int
+Multi::getTotalCount() const
+{
+    int count = 0;
+    for (const auto& sub_filter : filters) {
+        count += sub_filter->getTotalCount();
+    }
+    return count;
+}
 
 } // namespace BloomFilter
 
-#endif //__MEM_RUBY_FILTERS_LSB_COUNTINGBLOOMFILTER_HH__
+BloomFilter::Multi*
+BloomFilterMultiParams::create()
+{
+    return new BloomFilter::Multi(this);
+}
+

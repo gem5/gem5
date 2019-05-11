@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019 Inria
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -24,14 +25,16 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Daniel Carvalho
  */
 
-#ifndef __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__
-#define __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__
+#ifndef __BASE_FILTERS_BLOCK_BLOOM_FILTER_HH__
+#define __BASE_FILTERS_BLOCK_BLOOM_FILTER_HH__
 
 #include <vector>
 
-#include "mem/ruby/filters/AbstractBloomFilter.hh"
+#include "base/filters/base.hh"
 
 struct BloomFilterBlockParams;
 
@@ -69,4 +72,4 @@ class Block : public Base
 
 } // namespace BloomFilter
 
-#endif // __MEM_RUBY_FILTERS_BLOCKBLOOMFILTER_HH__
+#endif // __BASE_FILTERS_BLOCK_BLOOM_FILTER_HH__

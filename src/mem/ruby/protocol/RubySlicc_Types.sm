@@ -233,15 +233,6 @@ structure (TimerTable, inport="yes", external = "yes") {
   bool isSet(Addr);
 }
 
-structure (AbstractBloomFilter, external = "yes") {
-  void clear(int);
-  void set(Addr, int);
-  void unset(Addr, int);
-
-  bool isSet(Addr, int);
-  int getCount(Addr, int);
-}
-
 structure (Prefetcher, external = "yes") {
     void observeMiss(Addr, RubyRequestType);
     void observePfHit(Addr);

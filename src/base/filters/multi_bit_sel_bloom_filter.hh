@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019 Inria
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -24,80 +25,58 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Daniel Carvalho
  */
 
-#include "mem/ruby/filters/MultiBitSelBloomFilter.hh"
+#ifndef __BASE_FILTERS_MULTI_BIT_SEL_BLOOM_FILTER_HH__
+#define __BASE_FILTERS_MULTI_BIT_SEL_BLOOM_FILTER_HH__
 
-#include <limits>
+#include "base/filters/base.hh"
 
-#include "base/bitfield.hh"
-#include "base/logging.hh"
-#include "params/BloomFilterMultiBitSel.hh"
+struct BloomFilterMultiBitSelParams;
 
 namespace BloomFilter {
 
-MultiBitSel::MultiBitSel(const BloomFilterMultiBitSelParams* p)
-    : Base(p), numHashes(p->num_hashes),
-      parFilterSize(p->size / numHashes),
-      isParallel(p->is_parallel), skipBits(p->skip_bits)
+/**
+ * The MultiBitSel Bloom Filter associates an address to multiple entries
+ * through the use of multiple hash functions.
+ */
+class MultiBitSel : public Base
 {
-    if (p->size % numHashes) {
-        fatal("Can't divide filter (%d) in %d equal portions", p->size,
-              numHashes);
-    }
-}
+  public:
+    MultiBitSel(const BloomFilterMultiBitSelParams* p);
+    ~MultiBitSel();
 
-MultiBitSel::~MultiBitSel()
-{
-}
+    void set(Addr addr) override;
+    int getCount(Addr addr) const override;
 
-void
-MultiBitSel::set(Addr addr)
-{
-    for (int i = 0; i < numHashes; i++) {
-        int idx = hash(addr, i);
-        filter[idx] = 1;
-    }
-}
+  protected:
+    /**
+     * Apply the selected the hash functions to an address.
+     *
+     * @param addr The address to hash.
+     * @param hash_number Index of the hash function to be used.
+     */
+    virtual int hash(Addr addr, int hash_number) const;
 
-int
-MultiBitSel::getCount(Addr addr) const
-{
-    int count = 0;
-    for (int i=0; i < numHashes; i++) {
-        count += filter[hash(addr, i)];
-    }
-    return count;
-}
+    /** Number of hashes. */
+    const int numHashes;
 
-int
-MultiBitSel::hash(Addr addr, int hash_number) const
-{
-    uint64_t value = bits(addr, std::numeric_limits<Addr>::digits - 1,
-        offsetBits) >> skipBits;
-    const int max_bits = std::numeric_limits<Addr>::digits - offsetBits;
-    int result = 0;
-    int bit, i;
+    /** Size of the filter when doing parallel hashing. */
+    const int parFilterSize;
 
-    for (i = 0; i < sizeBits; i++) {
-        bit = (hash_number + numHashes * i) % max_bits;
-        if (value & (1 << bit)) {
-            result += 1 << i;
-        }
-    }
+    /** Whether hashing should be performed in parallel. */
+    const bool isParallel;
 
-    if (isParallel) {
-        return (result % parFilterSize) + hash_number * parFilterSize;
-    } else {
-        return result % filter.size();
-    }
-}
+  private:
+    /**
+     * Bit offset from block number. Used to simulate bit selection hashing
+     * on larger than cache-line granularities, by skipping some bits.
+     */
+    const int skipBits;
+};
 
 } // namespace BloomFilter
 
-BloomFilter::MultiBitSel*
-BloomFilterMultiBitSelParams::create()
-{
-    return new BloomFilter::MultiBitSel(this);
-}
-
+#endif // __BASE_FILTERS_MULTI_BIT_SEL_BLOOM_FILTER_HH__

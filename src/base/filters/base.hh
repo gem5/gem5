@@ -29,8 +29,8 @@
  * Authors: Daniel Carvalho
  */
 
-#ifndef __MEM_RUBY_FILTERS_ABSTRACTBLOOMFILTER_HH__
-#define __MEM_RUBY_FILTERS_ABSTRACTBLOOMFILTER_HH__
+#ifndef __BASE_FILTERS_BASE_HH__
+#define __BASE_FILTERS_BASE_HH__
 
 #include <vector>
 
@@ -148,4 +148,4 @@ class Base : public SimObject
 
 } // namespace BloomFilter
 
-#endif // __MEM_RUBY_FILTERS_ABSTRACTBLOOMFILTER_HH__
+#endif // __BASE_FILTERS_BASE_HH__

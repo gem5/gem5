@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019 Inria
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -24,42 +25,33 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Daniel Carvalho
  */
 
-#ifndef __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__
-#define __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__
+#ifndef __BASE_FILTERS_H3_BLOOM_FILTER_HH__
+#define __BASE_FILTERS_H3_BLOOM_FILTER_HH__
 
-#include <vector>
+#include "base/filters/multi_bit_sel_bloom_filter.hh"
 
-#include "mem/ruby/filters/AbstractBloomFilter.hh"
-
-struct BloomFilterBulkParams;
+struct BloomFilterH3Params;
 
 namespace BloomFilter {
 
 /**
- * Implementation of the bloom filter, as described in "Bulk Disambiguation of
- * Speculative Threads in Multiprocessors", by Ceze, Luis, et al.
+ * Implementation of the bloom filter as described in "Implementing Signatures
+ * for Transactional Memory", by Sanchez, Daniel, et al.
  */
-class Bulk : public Base
+class H3 : public MultiBitSel
 {
   public:
-    Bulk(const BloomFilterBulkParams* p);
-    ~Bulk();
+    H3(const BloomFilterH3Params* p);
+    ~H3();
 
-    void set(Addr addr) override;
-
-    bool isSet(Addr addr) const override;
-    int getCount(Addr addr) const override;
-
-  private:
-    /** Permutes the address to generate its signature. */
-    Addr hash(Addr addr) const;
-
-    // split the filter bits in half, c0 and c1
-    const int sectorBits;
+  protected:
+    int hash(Addr addr, int hash_number) const override;
 };
 
 } // namespace BloomFilter
 
-#endif // __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__
+#endif // __BASE_FILTERS_H3_BLOOM_FILTER_HH__

@@ -1,5 +1,6 @@
 # -*- mode:python -*-
 
+# Copyright (c) 2019 Inria
 # Copyright (c) 2009 The Hewlett-Packard Development Company
 # All rights reserved.
 #
@@ -27,17 +28,15 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Nathan Binkert
+#          Daniel Carvalho
 
 Import('*')
 
-if env['PROTOCOL'] == 'None':
-    Return()
-
 SimObject('BloomFilters.py')
 
-Source('BlockBloomFilter.cc')
-Source('BulkBloomFilter.cc')
-Source('H3BloomFilter.cc')
-Source('LSB_CountingBloomFilter.cc')
-Source('MultiBitSelBloomFilter.cc')
-Source('MultiGrainBloomFilter.cc')
+Source('block_bloom_filter.cc')
+Source('bulk_bloom_filter.cc')
+Source('h3_bloom_filter.cc')
+Source('lsb_counting_bloom_filter.cc')
+Source('multi_bit_sel_bloom_filter.cc')
+Source('multi_bloom_filter.cc')

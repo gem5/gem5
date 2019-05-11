@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2019 Inria
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -24,72 +25,46 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Daniel Carvalho
  */
 
-#include "mem/ruby/filters/LSB_CountingBloomFilter.hh"
+#ifndef __BASE_FILTERS_MULTI_BLOOM_FILTER_HH__
+#define __BASE_FILTERS_MULTI_BLOOM_FILTER_HH__
 
-#include "base/bitfield.hh"
-#include "params/BloomFilterLSBCounting.hh"
+#include <vector>
+
+#include "base/filters/base.hh"
+
+struct BloomFilterMultiParams;
 
 namespace BloomFilter {
 
-LSBCounting::LSBCounting(
-    const BloomFilterLSBCountingParams* p)
-    : Base(p), maxValue(p->max_value)
+/**
+ * This BloomFilter has multiple sub-filters, each with its own hashing
+ * functionality. The results of the operations are the results of applying
+ * them to each sub-filter.
+ */
+class Multi : public Base
 {
-}
+  public:
+    Multi(const BloomFilterMultiParams* p);
+    ~Multi();
 
-LSBCounting::~LSBCounting()
-{
-}
+    void clear() override;
+    void set(Addr addr) override;
+    void unset(Addr addr) override;
 
-void
-LSBCounting::merge(const Base* other)
-{
-    auto* cast_other = static_cast<const LSBCounting*>(other);
-    assert(filter.size() == cast_other->filter.size());
-    for (int i = 0; i < filter.size(); ++i){
-        if (filter[i] < maxValue - cast_other->filter[i]) {
-            filter[i] += cast_other->filter[i];
-        } else {
-            filter[i] = maxValue;
-        }
-    }
-}
+    void merge(const Base* other) override;
+    bool isSet(Addr addr) const override;
+    int getCount(Addr addr) const override;
+    int getTotalCount() const override;
 
-void
-LSBCounting::set(Addr addr)
-{
-    const int i = hash(addr);
-    if (filter[i] < maxValue)
-        filter[i] += 1;
-}
-
-void
-LSBCounting::unset(Addr addr)
-{
-    const int i = hash(addr);
-    if (filter[i] > 0)
-        filter[i] -= 1;
-}
-
-int
-LSBCounting::getCount(Addr addr) const
-{
-    return filter[hash(addr)];
-}
-
-int
-LSBCounting::hash(Addr addr) const
-{
-    return bits(addr, offsetBits + sizeBits - 1, offsetBits);
-}
+  private:
+    /** Sub-filters used by this filter. */
+    std::vector<Base*> filters;
+};
 
 } // namespace BloomFilter
 
-BloomFilter::LSBCounting*
-BloomFilterLSBCountingParams::create()
-{
-    return new BloomFilter::LSBCounting(this);
-}
-
+#endif // __BASE_FILTERS_MULTI_BLOOM_FILTER_HH__
