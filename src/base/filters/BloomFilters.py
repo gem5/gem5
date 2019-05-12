@@ -54,11 +54,6 @@ class BloomFilterBlock(BloomFilterBase):
     masks_sizes = VectorParam.Unsigned([Self.offset_bits, Self.offset_bits],
         "Size, in number of bits, of each mask")
 
-class BloomFilterBulk(BloomFilterBase):
-    type = 'BloomFilterBulk'
-    cxx_class = 'BloomFilter::Bulk'
-    cxx_header = "base/filters/bulk_bloom_filter.hh"
-
 class BloomFilterLSBCounting(BloomFilterBase):
     type = 'BloomFilterLSBCounting'
     cxx_class = 'BloomFilter::LSBCounting'
@@ -79,6 +74,11 @@ class BloomFilterMultiBitSel(BloomFilterBase):
     threshold = Self.num_hashes
     skip_bits = Param.Int(2, "Offset from block number")
     is_parallel = Param.Bool(False, "Whether hashing is done in parallel")
+
+class BloomFilterBulk(BloomFilterMultiBitSel):
+    type = 'BloomFilterBulk'
+    cxx_class = 'BloomFilter::Bulk'
+    cxx_header = "base/filters/bulk_bloom_filter.hh"
 
 class BloomFilterH3(BloomFilterMultiBitSel):
     type = 'BloomFilterH3'

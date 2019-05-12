@@ -32,7 +32,7 @@
 #ifndef __BASE_FILTERS_BULK_BLOOM_FILTER_HH__
 #define __BASE_FILTERS_BULK_BLOOM_FILTER_HH__
 
-#include "base/filters/base.hh"
+#include "base/filters/multi_bit_sel_bloom_filter.hh"
 
 struct BloomFilterBulkParams;
 
@@ -41,23 +41,27 @@ namespace BloomFilter {
 /**
  * Implementation of the bloom filter, as described in "Bulk Disambiguation of
  * Speculative Threads in Multiprocessors", by Ceze, Luis, et al.
+ * The number of hashes indicates the number of c bitfields.
  */
-class Bulk : public Base
+class Bulk : public MultiBitSel
 {
   public:
     Bulk(const BloomFilterBulkParams* p);
     ~Bulk();
 
-    void set(Addr addr) override;
-
-    bool isSet(Addr addr) const override;
-    int getCount(Addr addr) const override;
+  protected:
+    int hash(Addr addr, int hash_number) const override;
 
   private:
     /** Permutes the address to generate its signature. */
-    Addr hash(Addr addr) const;
+    Addr permute(Addr addr) const;
 
-    // split the filter bits in half, c0 and c1
+    /**
+     * Number of bits used per sector. The filter is split into sectors,
+     * each of which with its own hash function. When an address is hashed
+     * all sectors are parsed to generate c indexes. These indexes are then
+     * used to find the respective v indexes in the main filter.
+     */
     const int sectorBits;
 };
 

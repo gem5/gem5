@@ -31,107 +31,45 @@
 
 #include "base/filters/bulk_bloom_filter.hh"
 
-#include <vector>
-
 #include <limits>
 
 #include "base/bitfield.hh"
+#include "base/logging.hh"
 #include "params/BloomFilterBulk.hh"
 
 namespace BloomFilter {
 
 Bulk::Bulk(const BloomFilterBulkParams* p)
-    : Base(p), sectorBits(sizeBits - 1)
+    : MultiBitSel(p), sectorBits(floorLog2(parFilterSize))
 {
+    fatal_if((numHashes * sectorBits) >
+        (std::numeric_limits<Addr>::digits - offsetBits),
+        "Sectors need more bits than available");
 }
 
 Bulk::~Bulk()
 {
 }
 
-void
-Bulk::set(Addr addr)
-{
-    // c0 contains the cache index bits
-    int c0 = bits(addr, offsetBits + sectorBits - 1, offsetBits);
-    // c1 contains the lower sectorBits permuted bits
-    //Address permuted_bits = permute(addr);
-    int c1 = bits(addr, (offsetBits + 2 * sectorBits) - 1,
-        offsetBits + sectorBits);
-    //assert(c0 < (filter_size/2));
-    //assert(c0 + (filter_size/2) < filter_size);
-    //assert(c1 < (filter_size/2));
-    // set v0 bit
-    filter[c0 + (filter.size()/2)] = 1;
-    // set v1 bit
-    filter[c1] = 1;
-}
-
-bool
-Bulk::isSet(Addr addr) const
-{
-    // c0 contains the cache index bits
-    const int filter_size = filter.size();
-    int c0 = bits(addr, offsetBits + sectorBits - 1, offsetBits);
-    // c1 contains the lower 10 permuted bits
-    //Address permuted_bits = permute(addr);
-    int c1 = bits(addr, (offsetBits + 2 * sectorBits) - 1,
-        offsetBits + sectorBits);
-    //assert(c0 < (filter_size/2));
-    //assert(c0 + (filter_size/2) < filter_size);
-    //assert(c1 < (filter_size/2));
-    // set v0 bit
-    std::vector<int> temp_filter(filter.size(), 0);
-    temp_filter[c0 + (filter_size/2)] = 1;
-    // set v1 bit
-    temp_filter[c1] = 1;
-
-    // perform filter intersection. If any c part is 0, no possibility
-    // of address being in signature.  get first c intersection part
-    bool zero = false;
-    for (int i = 0; i < filter_size/2; ++i){
-        // get intersection of signatures
-        temp_filter[i] = temp_filter[i] && filter[i];
-        zero = zero || temp_filter[i];
-    }
-    zero = !zero;
-    if (zero) {
-        // one section is zero, no possiblility of address in signature
-        // reset bits we just set
-        temp_filter[c0 + (filter_size / 2)] = 0;
-        temp_filter[c1] = 0;
-        return false;
-    }
-
-    // check second section
-    zero = false;
-    for (int i = filter_size / 2; i < filter_size; ++i) {
-        // get intersection of signatures
-        temp_filter[i] =  temp_filter[i] && filter[i];
-        zero = zero || temp_filter[i];
-    }
-    zero = !zero;
-    if (zero) {
-        // one section is zero, no possiblility of address in signature
-        temp_filter[c0 + (filter_size / 2)] = 0;
-        temp_filter[c1] = 0;
-        return false;
-    }
-    // one section has at least one bit set
-    temp_filter[c0 + (filter_size / 2)] = 0;
-    temp_filter[c1] = 0;
-    return true;
-}
-
 int
-Bulk::getCount(Addr addr) const
+Bulk::hash(Addr addr, int hash_number) const
 {
-    // TODO as in the multi-hashed filters
-    return 0;
+    addr = permute(addr);
+
+    // Get the sector-based c index
+    int c = bits(addr, (offsetBits + (hash_number + 1) * sectorBits) - 1,
+                 offsetBits + hash_number * sectorBits);
+    assert(c < filter.size()/numHashes);
+
+    // Transform the sector-based c index into a filder index (v)
+    c += (numHashes - 1 - hash_number) * (filter.size()/numHashes);
+    assert(c < filter.size());
+
+    return c;
 }
 
 Addr
-Bulk::hash(Addr addr) const
+Bulk::permute(Addr addr) const
 {
     // permutes the original address bits according to Table 5
     Addr part1  = bits(addr, offsetBits + 6, offsetBits),
