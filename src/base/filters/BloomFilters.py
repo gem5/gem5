@@ -92,3 +92,11 @@ class BloomFilterMulti(BloomFilterBase):
 
     # By default match this with the number of sub-filters
     threshold = 2
+
+class BloomFilterPerfect(BloomFilterBase):
+    type = 'BloomFilterPerfect'
+    cxx_class = 'BloomFilter::Perfect'
+    cxx_header = "base/filters/perfect_bloom_filter.hh"
+
+    # The base filter is not needed. Use a dummy value.
+    size = 1
