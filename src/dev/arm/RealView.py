@@ -543,6 +543,24 @@ class HDLcd(AmbaDmaDevice):
 
         yield node
 
+class MmioSRAM(SimpleMemory):
+    def generateDeviceTree(self, state):
+        node = FdtNode("sram@%x" % long(self.range.start))
+        node.appendCompatible(["mmio-sram"])
+        node.append(FdtPropertyWords("reg",
+            state.addrCells(self.range.start) +
+            state.sizeCells(self.range.size()) ))
+
+        local_state = FdtState(addr_cells=2, size_cells=2, cpu_cells=1)
+        node.append(local_state.addrCellsProperty())
+        node.append(local_state.sizeCellsProperty())
+        node.append(FdtPropertyWords("ranges",
+            local_state.addrCells(0) +
+            state.addrCells(self.range.start) +
+            state.sizeCells(self.range.size()) ))
+
+        yield node
+
 class FVPBasePwrCtrl(BasicPioDevice):
     """
 Based on Fast Models Base_PowerController v11.8
@@ -898,6 +916,8 @@ Memory map:
 
        0x2d000000-0x2d00ffff: GPU (reserved)
 
+       0x2e000000-0x2e007fff: Non-trusted SRAM
+
        0x2f000000-0x2fffffff: PCI IO space
        0x30000000-0x3fffffff: PCI config space
 
@@ -964,6 +984,10 @@ Interrupts:
     trusted_sram = SimpleMemory(range=AddrRange(0x04000000, size='256kB'),
                                 conf_table_reported=False)
 
+    # Non-Trusted SRAM
+    non_trusted_sram = MmioSRAM(range=AddrRange(0x2e000000, size=0x8000),
+                                conf_table_reported=False)
+
     # Platform control device (off-chip)
     realview_io = RealViewCtrl(proc_id0=0x14000000, proc_id1=0x14000000,
                                idreg=0x30101100, pio_addr=0x1c010000)
@@ -1004,6 +1028,7 @@ Interrupts:
         memories = [
             self.bootmem,
             self.trusted_sram,
+            self.non_trusted_sram,
             self.flash0,
         ]
         return memories
