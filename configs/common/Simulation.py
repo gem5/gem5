@@ -486,7 +486,7 @@ def run(options, root, testsys, cpu_class):
             if options.indirect_bp_type:
                 IndirectBPClass = \
                     BPConfig.get_indirect(options.indirect_bp_type)
-                switch_cpus[i].branchPred.branchPred.indirectBranchPred = \
+                switch_cpus[i].branchPred.indirectBranchPred = \
                     IndirectBPClass()
 
         # If elastic tracing is enabled attach the elastic trace probe
