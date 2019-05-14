@@ -63,13 +63,13 @@ Block::~Block()
 void
 Block::set(Addr addr)
 {
-    filter[hash(addr)] = 1;
+    filter[hash(addr)]++;
 }
 
 void
 Block::unset(Addr addr)
 {
-    filter[hash(addr)] = 0;
+    filter[hash(addr)]--;
 }
 
 int

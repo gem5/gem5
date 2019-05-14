@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "base/intmath.hh"
+#include "base/sat_counter.hh"
 #include "base/types.hh"
 #include "params/BloomFilterBase.hh"
 #include "sim/sim_object.hh"
@@ -48,7 +49,7 @@ class Base : public SimObject
     const unsigned offsetBits;
 
     /** The filter itself. */
-    std::vector<int> filter;
+    std::vector<SatCounter> filter;
 
     /** Number of bits needed to represent the size of the filter. */
     const int sizeBits;
@@ -61,7 +62,8 @@ class Base : public SimObject
      * Create and clear the filter.
      */
     Base(const BloomFilterBaseParams* p)
-        : SimObject(p), offsetBits(p->offset_bits), filter(p->size),
+        : SimObject(p), offsetBits(p->offset_bits),
+          filter(p->size, SatCounter(p->num_bits)),
           sizeBits(floorLog2(p->size)), setThreshold(p->threshold)
     {
         clear();
@@ -74,7 +76,7 @@ class Base : public SimObject
     virtual void clear()
     {
         for (auto& entry : filter) {
-            entry = 0;
+            entry.reset();
         }
     }
 
@@ -89,7 +91,7 @@ class Base : public SimObject
     {
         assert(filter.size() == other->filter.size());
         for (int i = 0; i < filter.size(); ++i){
-            filter[i] |= other->filter[i];
+            filter[i] += other->filter[i];
         }
     }
 

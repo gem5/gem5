@@ -58,8 +58,7 @@ void
 MultiBitSel::set(Addr addr)
 {
     for (int i = 0; i < numHashes; i++) {
-        int idx = hash(addr, i);
-        filter[idx] = 1;
+        filter[hash(addr, i)]++;
     }
 }
 

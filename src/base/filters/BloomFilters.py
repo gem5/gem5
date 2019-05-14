@@ -42,6 +42,7 @@ class BloomFilterBase(SimObject):
     offset_bits = Param.Unsigned(6, "Number of bits in a cache line offset")
 
     # Most of the filters are booleans, and thus saturate on 1
+    num_bits = Param.Int(1, "Number of bits in a filter entry")
     threshold = Param.Int(1, "Value at which an entry is considered as set")
 
 class BloomFilterBlock(BloomFilterBase):
@@ -53,17 +54,6 @@ class BloomFilterBlock(BloomFilterBase):
         2 * Self.offset_bits], "Position of the LSB of each mask")
     masks_sizes = VectorParam.Unsigned([Self.offset_bits, Self.offset_bits],
         "Size, in number of bits, of each mask")
-
-class BloomFilterLSBCounting(BloomFilterBase):
-    type = 'BloomFilterLSBCounting'
-    cxx_class = 'BloomFilter::LSBCounting'
-    cxx_header = "base/filters/lsb_counting_bloom_filter.hh"
-
-    # By default use 4-bit saturating counters
-    max_value = Param.Int(15, "Maximum value of the filter entries")
-
-    # We assume that isSet will return true only when the counter saturates
-    threshold = Self.max_value
 
 class BloomFilterMultiBitSel(BloomFilterBase):
     type = 'BloomFilterMultiBitSel'
