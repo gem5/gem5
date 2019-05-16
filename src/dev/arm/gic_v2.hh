@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, 2015-2018 ARM Limited
+ * Copyright (c) 2010, 2013, 2015-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -309,8 +309,11 @@ class GicV2 : public BaseGic, public BaseGicRegisters
             if (gem5ExtensionsEnabled) {
                 ctx_mask = ctx;
             } else {
-            // convert the CPU id number into a bit mask
-                ctx_mask = power(2, ctx);
+                fatal_if(ctx >= 8,
+                    "%s requires the gem5_extensions parameter to support "
+                    "more than 8 cores\n", name());
+                // convert the CPU id number into a bit mask
+                ctx_mask = 1 << ctx;
             }
             return ctx_mask;
         } else {
