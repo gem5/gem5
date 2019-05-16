@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 ARM Limited
+ * Copyright (c) 2010,2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -73,7 +73,7 @@ A9SCU::read(PacketPtr pkt)
                 fatal("Too many CPUs (%d) for A9SCU!\n", sys->numContexts());
         }
         int smp_bits, core_cnt;
-        smp_bits = power(2,sys->numContexts()) - 1;
+        smp_bits = (1 << sys->numContexts()) - 1;
         core_cnt = sys->numContexts() - 1;
         pkt->setLE(smp_bits << 4 | core_cnt);
         break;
