@@ -213,6 +213,11 @@ class AddrRange
             _start = ranges.front()._start;
             _end = ranges.front()._end;
             masks = ranges.front().masks;
+            intlvMatch = ranges.front().intlvMatch;
+        }
+        // either merge if got all ranges or keep this equal to the single
+        // interleaved range
+        if (ranges.size() > 1) {
 
             if (ranges.size() != (ULL(1) << masks.size()))
                 fatal("Got %d ranges spanning %d interleaving bits\n",
@@ -231,6 +236,7 @@ class AddrRange
                 ++match;
             }
             masks.clear();
+            intlvMatch = 0;
         }
     }
 
