@@ -52,7 +52,24 @@ def replace_tree(path):
         rmtree(path)
     mkdir(path)
 
-def config_filesystem(options):
+def config_filesystem(system, options = None):
+    """ This function parses the system object to create the pseudo file system
+    @param system: The system to create the config for
+    @param options: An optional argument which contains an Options.py options
+           object. This is useful if when use se.py and will set the L2 cache
+           size and the clock in /proc/cpuinfo if provided.
+
+    First, this function walks the system object to find all CPUs.
+    Then, this function creates the following files with the CPU information
+      - /proc/cpuinfo which contains the clock  and the L2 size
+        (assumes all L2s private and the same size)
+      - /proc/stat simply lists all CPUs
+      - /sys/devices/system/cpu/online and /sys/devices/system/cpu/possible
+        These files list all of the CPUs in this system.
+      - /tmp
+
+    These files are created in the `fs` directory in the outdir path.
+    """
     fsdir = joinpath(m5.options.outdir, 'fs')
     replace_tree(fsdir)
 
@@ -60,50 +77,47 @@ def config_filesystem(options):
     procdir = joinpath(fsdir, 'proc')
     mkdir(procdir)
 
-    cpu_clock = '0'
+    cpus = [obj for obj in system.descendants() if isinstance(obj, BaseCPU)]
+
+    cpu_clock = 0
     if hasattr(options, 'cpu_clock'):
-        cpu_clock = options.cpu_clock
-    cpu_clock = toFrequency(cpu_clock)/mega
+        cpu_clock = toFrequency(options.cpu_clock) / mega
 
-    l2_size = '0'
+    l2_size = 0
     if hasattr(options, 'l2_size'):
-        l2_size = options.l2_size
-    l2_size = toMemorySize(l2_size)/kibi
+        l2_size = toMemorySize(options.l2_size) / kibi
 
-    cacheline_size = '0'
-    if hasattr(options, 'cacheline_size'):
-        cacheline_size = options.cacheline_size
-
-    for i in xrange(options.num_cpus):
-        one_cpu = 'processor       : %d\n' % (i)                  + \
+    for i,cpu in enumerate(cpus):
+        one_cpu = 'processor       : {proc}\n'                    + \
                   'vendor_id       : Generic\n'                   + \
                   'cpu family      : 0\n'                         + \
                   'model           : 0\n'                         + \
                   'model name      : Generic\n'                   + \
                   'stepping        : 0\n'                         + \
-                  'cpu MHz         : %0.3d\n'                       \
-                        % cpu_clock                               + \
-                  'cache size:     : %dK\n'                         \
-                        % l2_size                                 + \
+                  'cpu MHz         : {clock:0.3f}\n'              + \
+                  'cache size:     : {l2_size}K\n'                + \
                   'physical id     : 0\n'                         + \
-                  'siblings        : %s\n'                          \
-                        % options.num_cpus                        + \
-                  'core id         : %d\n'                          \
-                        % i                                       + \
-                  'cpu cores       : %d\n'                          \
-                        % options.num_cpus                        + \
+                  'siblings        : {num_cpus}\n'                + \
+                  'core id         : {proc}\n'                    + \
+                  'cpu cores       : {num_cpus}\n'                + \
                   'fpu             : yes\n'                       + \
                   'fpu exception   : yes\n'                       + \
                   'cpuid level     : 1\n'                         + \
                   'wp              : yes\n'                       + \
                   'flags           : fpu\n'                       + \
-                  'cache alignment : %d\n'                          \
-                        % cacheline_size                          + \
+                  'cache alignment : {cacheline_size}\n'          + \
                   '\n'
+        one_cpu = one_cpu.format(proc = i, num_cpus = len(cpus),
+                       # Note: it would be nice to use cpu.clock, but it hasn't
+                       # been finalized yet since m5.instantiate() isn't done.
+                       clock = cpu_clock,
+                       # Note: this assumes the L2 is private to each core
+                       l2_size = l2_size,
+                       cacheline_size=system.cache_line_size.getValue())
         file_append((procdir, 'cpuinfo'), one_cpu)
 
     file_append((procdir, 'stat'), 'cpu 0 0 0 0 0 0 0\n')
-    for i in xrange(options.num_cpus):
+    for i in xrange(len(cpus)):
         file_append((procdir, 'stat'), 'cpu%d 0 0 0 0 0 0 0\n' % i)
 
     # Set up /sys
@@ -114,12 +128,18 @@ def config_filesystem(options):
     cpudir = joinpath(sysdir, 'devices', 'system', 'cpu')
     makedirs(cpudir)
 
-    file_append((cpudir, 'online'), '0-%d' % (options.num_cpus-1))
-    file_append((cpudir, 'possible'), '0-%d' % (options.num_cpus-1))
+    file_append((cpudir, 'online'), '0-%d' % (len(cpus) - 1))
+    file_append((cpudir, 'possible'), '0-%d' % (len(cpus) - 1))
 
     # Set up /tmp
     tmpdir = joinpath(fsdir, 'tmp')
     replace_tree(tmpdir)
+
+    if options and hasattr(options, 'chroot'):
+        chroot = os.path.expanduser(options.chroot)
+    else:
+        chroot = '/'
+    system.redirect_paths = _redirect_paths(chroot)
 
 def register_node(cpu_list, mem, node_number):
     nodebasedir = joinpath(m5.options.outdir, 'fs', 'sys', 'devices',
@@ -176,7 +196,7 @@ def register_cache(level, idu_type, size, line_size, assoc, cpus):
         file_append((indexdir, 'physical_line_partition'), '1')
         file_append((indexdir, 'shared_cpu_map'), hex_mask(cpus))
 
-def redirect_paths(chroot):
+def _redirect_paths(chroot):
     # Redirect filesystem syscalls from src to the first matching dests
     redirect_paths = [RedirectPath(app_path = "/proc",
                           host_paths = ["%s/fs/proc" % m5.options.outdir]),

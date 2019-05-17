@@ -64,7 +64,7 @@ from common import CacheConfig
 from common import CpuConfig
 from common import BPConfig
 from common import MemConfig
-from common.FileSystemConfig import redirect_paths, config_filesystem
+from common.FileSystemConfig import config_filesystem
 from common.Caches import *
 from common.cpu2000 import *
 
@@ -246,9 +246,6 @@ for i in range(np):
 
     system.cpu[i].createThreads()
 
-system.redirect_paths = redirect_paths(os.path.expanduser(options.chroot))
-config_filesystem(options)
-
 if options.ruby:
     Ruby.create_system(options, False, system)
     assert(options.num_cpus == len(system.ruby._cpu_ports))
@@ -278,6 +275,7 @@ else:
     system.system_port = system.membus.slave
     CacheConfig.config_cache(options, system)
     MemConfig.config_mem(options, system)
+    config_filesystem(system, options)
 
 root = Root(full_system = False, system = system)
 Simulation.run(options, root, system, FutureClass)

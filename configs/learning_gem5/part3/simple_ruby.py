@@ -45,6 +45,10 @@ import m5
 # import all of the SimObjects
 from m5.objects import *
 
+# Needed for running C++ threads
+m5.util.addToPath('../../')
+from common.FileSystemConfig import config_filesystem
+
 # You can import ruby_caches_MI_example to use the MI_example protocol instead
 # of the MSI protocol
 from msi_caches import MyCacheSystem
@@ -94,6 +98,9 @@ process.cmd = [binary]
 for cpu in system.cpu:
     cpu.workload = process
     cpu.createThreads()
+
+# Set up the pseudo file system for the threads function above
+config_filesystem(system)
 
 # set up the root SimObject and start the simulation
 root = Root(full_system = False, system = system)

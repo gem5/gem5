@@ -263,8 +263,6 @@ def create_system(options, full_system, system, dma_ports, bootmem,
         all_cntrls = all_cntrls + [io_controller]
     # Register configuration with filesystem
     else:
-        FileSystemConfig.config_filesystem(options)
-
         for i in xrange(options.num_clusters):
             for j in xrange(num_cpus_per_cluster):
                 FileSystemConfig.register_cpu(physical_package_id = 0,

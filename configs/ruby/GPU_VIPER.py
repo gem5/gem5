@@ -501,7 +501,6 @@ def create_system(options, full_system, system, dma_devices, bootmem,
 
     # Register CPUs and caches for each CorePair and directory (SE mode only)
     if not full_system:
-        FileSystemConfig.config_filesystem(options)
         for i in xrange((options.num_cpus + 1) // 2):
             FileSystemConfig.register_cpu(physical_package_id = 0,
                                           core_siblings = \
