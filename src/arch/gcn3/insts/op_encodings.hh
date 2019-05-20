@@ -651,7 +651,7 @@ namespace Gcn3ISA
                      * non-formatted accesses, this is done on a per-lane
                      * basis.
                      */
-                    if (rsrc_desc.stride == 0 || !rsrc_desc.swizzleEn) {
+                    if (stride == 0 || !rsrc_desc.swizzleEn) {
                         if (buf_off + stride * buf_idx >=
                             rsrc_desc.numRecords - s_offset.rawData()) {
                             DPRINTF(GCN3, "mubuf out-of-bounds condition 1: "
@@ -659,13 +659,13 @@ namespace Gcn3ISA
                                     "const_stride = %llx, "
                                     "const_num_records = %llx\n",
                                     lane, buf_off + stride * buf_idx,
-                                    rsrc_desc.stride, rsrc_desc.numRecords);
+                                    stride, rsrc_desc.numRecords);
                             oobMask.set(lane);
                             continue;
                         }
                     }
 
-                    if (rsrc_desc.stride != 0 && rsrc_desc.swizzleEn) {
+                    if (stride != 0 && rsrc_desc.swizzleEn) {
                         if (buf_idx >= rsrc_desc.numRecords ||
                             buf_off >= stride) {
                             DPRINTF(GCN3, "mubuf out-of-bounds condition 2: "
