@@ -1,3 +1,15 @@
+# Copyright (c) 2021 ARM Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
@@ -37,10 +49,31 @@ class SimpleNetwork(RubyNetwork):
     cxx_class = 'gem5::ruby::SimpleNetwork'
 
     buffer_size = Param.Int(0,
-        "default buffer size; 0 indicates infinite buffering");
-    endpoint_bandwidth = Param.Int(1000, "bandwidth adjustment factor");
-    adaptive_routing = Param.Bool(False, "enable adaptive routing");
+        "default buffer size; 0 indicates infinite buffering")
+    endpoint_bandwidth = Param.Int(1000, "bandwidth adjustment factor")
+    adaptive_routing = Param.Bool(False, "enable adaptive routing")
     int_link_buffers = VectorParam.MessageBuffer("Buffers for int_links")
+
+    physical_vnets_channels = VectorParam.Int([],
+        "Set to emulate multiple channels for each vnet."
+        "If not set, all vnets share the same physical channel.")
+
+    physical_vnets_bandwidth = VectorParam.Int([],
+        "Assign a different link bandwidth factor for each vnet channels."
+        "Only valid when physical_vnets_channels is set. This overrides the"
+        "bandwidth_factor parameter set for the  individual links.")
+
+    def vnet_buffer_size(self, vnet):
+        """
+        Gets the size of the message buffers associated to a vnet
+        If physical_vnets_channels is set we just multiply the size of the
+        buffers as SimpleNetwork does not actually creates multiple physical
+        channels per vnet.
+        """
+        if len(self.physical_vnets_channels) == 0:
+            return self.buffer_size
+        else:
+            return self.buffer_size * self.physical_vnets_channels[vnet]
 
     def setup_buffers(self):
         # Note that all SimpleNetwork MessageBuffers are currently ordered
@@ -49,8 +82,10 @@ class SimpleNetwork(RubyNetwork):
             # The network needs number_of_virtual_networks buffers per
             # int_link port
             for i in range(int(self.number_of_virtual_networks)):
-                network_buffers.append(MessageBuffer(ordered = True))
-                network_buffers.append(MessageBuffer(ordered = True))
+                network_buffers.append(MessageBuffer(ordered = True,
+                                     buffer_size = self.vnet_buffer_size(i)))
+                network_buffers.append(MessageBuffer(ordered = True,
+                                     buffer_size = self.vnet_buffer_size(i)))
         self.int_link_buffers = network_buffers
 
         # Also add buffers for all router-link connections
@@ -61,14 +96,16 @@ class SimpleNetwork(RubyNetwork):
             for link in self.int_links:
                 if link.dst_node == router:
                     for i in range(int(self.number_of_virtual_networks)):
-                        router_buffers.append(MessageBuffer(ordered = True))
+                        router_buffers.append(MessageBuffer(ordered = True,
+                                     buffer_size = self.vnet_buffer_size(i)))
 
             # Add message buffers to routers for each external link connection
             for link in self.ext_links:
                 # Routers can only be int_nodes on ext_links
                 if link.int_node in self.routers:
                     for i in range(int(self.number_of_virtual_networks)):
-                        router_buffers.append(MessageBuffer(ordered = True))
+                        router_buffers.append(MessageBuffer(ordered = True,
+                                     buffer_size = self.vnet_buffer_size(i)))
             router.port_buffers = router_buffers
 
 class Switch(BasicRouter):

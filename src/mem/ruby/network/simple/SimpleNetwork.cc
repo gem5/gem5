@@ -74,6 +74,23 @@ SimpleNetwork::SimpleNetwork(const Params &p)
 
     m_int_link_buffers = p.int_link_buffers;
     m_num_connected_buffers = 0;
+
+    const std::vector<int> &physical_vnets_channels =
+        p.physical_vnets_channels;
+    const std::vector<int> &physical_vnets_bandwidth =
+        p.physical_vnets_bandwidth;
+    bool physical_vnets = physical_vnets_channels.size() > 0;
+    int vnets = p.number_of_virtual_networks;
+
+    fatal_if(physical_vnets && (physical_vnets_channels.size() != vnets),
+        "physical_vnets_channels must provide channel count for all vnets");
+
+    fatal_if(!physical_vnets && (physical_vnets_bandwidth.size() != 0),
+        "physical_vnets_bandwidth also requires physical_vnets_channels");
+
+    fatal_if((physical_vnets_bandwidth.size() != vnets) &&
+             (physical_vnets_bandwidth.size() != 0),
+        "physical_vnets_bandwidth must provide BW for all vnets");
 }
 
 void
@@ -99,6 +116,12 @@ SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     assert(m_switches[src] != NULL);
 
     SimpleExtLink *simple_link = safe_cast<SimpleExtLink*>(link);
+
+    // some destinations don't use all vnets, but Switch requires the size
+    // output buffer list to match the number of vnets
+    int num_vnets = params().number_of_virtual_networks;
+    gem5_assert(num_vnets >= m_fromNetQueues[local_dest].size());
+    m_fromNetQueues[local_dest].resize(num_vnets, nullptr);
 
     m_switches[src]->addOutPort(m_fromNetQueues[local_dest],
                                 routing_table_entry[0], simple_link->m_latency,

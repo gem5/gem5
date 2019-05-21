@@ -80,6 +80,10 @@ def define_options(parser):
         "--garnet-deadlock-threshold", action="store",
         type=int, default=50000,
         help="network-level deadlock threshold.")
+    parser.add_argument("--simple-physical-channels", action="store_true",
+        default=False,
+        help="""SimpleNetwork links uses a separate physical
+            channel for each virtual network""")
 
 def create_network(options, ruby):
 
@@ -187,6 +191,9 @@ def init_network(options, network, InterfaceClass):
             extLink.int_cred_bridge = int_cred_bridges
 
     if options.network == "simple":
+        if options.simple_physical_channels:
+            network.physical_vnets_channels = \
+                [1] * int(network.number_of_virtual_networks)
         network.setup_buffers()
 
     if InterfaceClass != None:

@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2021 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -57,10 +69,17 @@ class Switch;
 
 class Throttle : public Consumer
 {
+  private:
+    Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
+             int endpoint_bandwidth, Switch *em);
   public:
     Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
              int link_bandwidth_multiplier, int endpoint_bandwidth,
              Switch *em);
+    Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
+             const std::vector<int> &vnet_channels,
+             const std::vector<int> &vnet_bandwidth_multiplier,
+             int endpoint_bandwidth, Switch *em);
     ~Throttle() {}
 
     std::string name()
@@ -76,8 +95,11 @@ class Throttle : public Consumer
     const statistics::Vector & getMsgCount(unsigned int type) const
     { return *(throttleStats.m_msg_counts[type]); }
 
-    int getLinkBandwidth() const
-    { return m_endpoint_bandwidth * m_link_bandwidth_multiplier; }
+    int getLinkBandwidth(int vnet) const;
+
+    int getTotalLinkBandwidth() const;
+
+    int getChannelCnt(int vnet) const;
 
     Cycles getLatency() const { return m_link_latency; }
 
@@ -89,7 +111,8 @@ class Throttle : public Consumer
   private:
     void init(NodeID node, Cycles link_latency, int link_bandwidth_multiplier,
               int endpoint_bandwidth);
-    void operateVnet(int vnet, int &bw_remainin, bool &schedule_wakeup,
+    void operateVnet(int vnet, int channel, int &total_bw_remaining,
+                     bool &schedule_wakeup,
                      MessageBuffer *in, MessageBuffer *out);
 
     // Private copy constructor and assignment operator
@@ -99,13 +122,15 @@ class Throttle : public Consumer
     std::vector<MessageBuffer*> m_in;
     std::vector<MessageBuffer*> m_out;
     unsigned int m_vnets;
-    std::vector<int> m_units_remaining;
+    std::vector<std::vector<int>> m_units_remaining;
 
     const int m_switch_id;
     Switch *m_switch;
     NodeID m_node;
 
-    int m_link_bandwidth_multiplier;
+    bool m_physical_vnets;
+    std::vector<int> m_link_bandwidth_multiplier;
+    std::vector<int> m_vnet_channels;
     Cycles m_link_latency;
     int m_wakeups_wo_switch;
     int m_endpoint_bandwidth;

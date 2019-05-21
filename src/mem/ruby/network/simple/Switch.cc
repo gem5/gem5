@@ -85,10 +85,26 @@ Switch::addOutPort(const std::vector<MessageBuffer*>& out,
                    const NetDest& routing_table_entry,
                    Cycles link_latency, int bw_multiplier)
 {
+    const std::vector<int> &physical_vnets_channels =
+        m_network_ptr->params().physical_vnets_channels;
+
     // Create a throttle
-    throttles.emplace_back(m_id, m_network_ptr->params().ruby_system,
-        throttles.size(), link_latency, bw_multiplier,
-        m_network_ptr->getEndpointBandwidth(), this);
+    if (physical_vnets_channels.size() > 0 && !out.empty()) {
+        // Assign a different bandwith for each vnet channel if specified by
+        // physical_vnets_bandwidth, otherwise all channels use bw_multiplier
+        std::vector<int> physical_vnets_bandwidth =
+            m_network_ptr->params().physical_vnets_bandwidth;
+        physical_vnets_bandwidth.resize(out.size(), bw_multiplier);
+
+        throttles.emplace_back(m_id, m_network_ptr->params().ruby_system,
+            throttles.size(), link_latency,
+            physical_vnets_channels, physical_vnets_bandwidth,
+            m_network_ptr->getEndpointBandwidth(), this);
+    } else {
+        throttles.emplace_back(m_id, m_network_ptr->params().ruby_system,
+            throttles.size(), link_latency, bw_multiplier,
+            m_network_ptr->getEndpointBandwidth(), this);
+    }
 
     // Create one buffer per vnet (these are intermediaryQueues)
     std::vector<MessageBuffer*> intermediateBuffers;

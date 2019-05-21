@@ -61,7 +61,8 @@ class Switch;
 class SimpleNetwork : public Network
 {
   public:
-    typedef SimpleNetworkParams Params;
+    PARAMS(SimpleNetwork);
+
     SimpleNetwork(const Params &p);
     ~SimpleNetwork() = default;
 
