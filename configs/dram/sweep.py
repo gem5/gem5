@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2015, 2018-2019 ARM Limited
+# Copyright (c) 2014-2015, 2018-2020 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -146,7 +146,8 @@ page_size = system.mem_ctrls[0].devices_per_rank.value * \
 
 # match the maximum bandwidth of the memory, the parameter is in seconds
 # and we need it in ticks (ps)
-itt = system.mem_ctrls[0].tBURST.value * 1000000000000
+itt =  getattr(system.mem_ctrls[0].tBURST_MIN, 'value',
+               system.mem_ctrls[0].tBURST.value) * 1000000000000
 
 # assume we start at 0
 max_addr = mem_range.end
@@ -180,8 +181,8 @@ m5.instantiate()
 def trace():
     addr_map = ObjectList.dram_addr_map_list.get(options.addr_map)
     generator = dram_generators[options.mode](system.tgen)
-    for bank in range(1, nbr_banks + 1):
-        for stride_size in range(burst_size, max_stride + 1, burst_size):
+    for stride_size in range(burst_size, max_stride + 1, burst_size):
+        for bank in range(1, nbr_banks + 1):
             num_seq_pkts = int(math.ceil(float(stride_size) / burst_size))
             yield generator(period,
                             0, max_addr, burst_size, int(itt), int(itt),
@@ -194,5 +195,5 @@ system.tgen.start(trace())
 
 m5.simulate()
 
-print("DRAM sweep with burst: %d, banks: %d, max stride: %d" %
-    (burst_size, nbr_banks, max_stride))
+print("DRAM sweep with burst: %d, banks: %d, max stride: %d, request \
+       generation period: %d" % (burst_size, nbr_banks, max_stride, itt))

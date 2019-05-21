@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2019 ARM Limited
+ * Copyright (c) 2010-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -77,12 +77,22 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
     minWritesPerSwitch(p->min_writes_per_switch),
     writesThisTime(0), readsThisTime(0),
     tCK(p->tCK), tRTW(p->tRTW), tCS(p->tCS), tBURST(p->tBURST),
+    tBURST_MIN(p->tBURST_MIN),
     tCCD_L_WR(p->tCCD_L_WR),
     tCCD_L(p->tCCD_L), tRCD(p->tRCD), tCL(p->tCL), tRP(p->tRP), tRAS(p->tRAS),
     tWR(p->tWR), tRTP(p->tRTP), tRFC(p->tRFC), tREFI(p->tREFI), tRRD(p->tRRD),
-    tRRD_L(p->tRRD_L), tXAW(p->tXAW), tXP(p->tXP), tXS(p->tXS),
+    tRRD_L(p->tRRD_L), tPPD(p->tPPD), tAAD(p->tAAD), tXAW(p->tXAW),
+    tXP(p->tXP), tXS(p->tXS),
+    clkResyncDelay(tCL + p->tBURST_MAX),
+    maxCommandsPerBurst(burstLength / p->beats_per_clock),
+    dataClockSync(p->data_clock_sync),
+    twoCycleActivate(p->two_cycle_activate),
     activationLimit(p->activation_limit), rankToRankDly(tCS + tBURST),
     wrToRdDly(tCL + tBURST + p->tWTR), rdToWrDly(tRTW + tBURST),
+    wrToRdDlySameBG(tCL + p->tBURST_MAX + p->tWTR_L),
+    rdToWrDlySameBG(tRTW + p->tBURST_MAX),
+    burstInterleave(tBURST != tBURST_MIN),
+    burstDataCycles(burstInterleave ? p->tBURST_MAX / 2 : tBURST),
     memSchedPolicy(p->mem_sched_policy), addrMapping(p->addr_mapping),
     pageMgmt(p->page_policy),
     maxAccessesPerRow(p->max_accesses_per_row),
@@ -103,7 +113,6 @@ DRAMCtrl::DRAMCtrl(const DRAMCtrlParams* p) :
              "must be a power of two\n", burstSize);
     readQueue.resize(p->qos_priorities);
     writeQueue.resize(p->qos_priorities);
-
 
     for (int i = 0; i < ranksPerChannel; i++) {
         Rank* rank = new Rank(*this, p, i);
@@ -668,7 +677,8 @@ DRAMCtrl::processRespondEvent()
     // track if this is the last packet before idling
     // and that there are no outstanding commands to this rank
     if (dram_pkt->rankRef.isQueueEmpty() &&
-        dram_pkt->rankRef.outstandingEvents == 0 && enableDRAMPowerdown) {
+        dram_pkt->rankRef.outstandingEvents == 0 &&
+        dram_pkt->rankRef.inRefIdleState() && enableDRAMPowerdown) {
         // verify that there are no events scheduled
         assert(!dram_pkt->rankRef.activateEvent.scheduled());
         assert(!dram_pkt->rankRef.prechargeEvent.scheduled());
@@ -720,6 +730,11 @@ DRAMCtrl::processRespondEvent()
 
             DPRINTF(Drain, "DRAM controller done draining\n");
             signalDrainDone();
+        } else if ((dram_pkt->rankRef.refreshState == REF_PRE) &&
+                   !dram_pkt->rankRef.prechargeEvent.scheduled()) {
+            // kick the refresh event loop into action again if banks already
+            // closed and just waiting for read to complete
+            schedule(dram_pkt->rankRef.refreshEvent, curTick());
         }
     }
 
@@ -803,8 +818,8 @@ DRAMCtrl::chooseNextFRFCFS(DRAMPacketQueue& queue, Tick extra_col_delay)
         const Tick col_allowed_at = dram_pkt->isRead() ? bank.rdAllowedAt :
                                                          bank.wrAllowedAt;
 
-        DPRINTF(DRAM, "%s checking packet in bank %d\n",
-                __func__, dram_pkt->bankRef.bank);
+        DPRINTF(DRAM, "%s checking packet in bank %d, row %d\n",
+                __func__, dram_pkt->bankRef.bank, dram_pkt->row);
 
         // check if rank is not doing a refresh and thus is available, if not,
         // jump to the next packet
@@ -914,12 +929,126 @@ DRAMCtrl::accessAndRespond(PacketPtr pkt, Tick static_latency)
 }
 
 void
+DRAMCtrl::pruneBurstTick()
+{
+    auto it = burstTicks.begin();
+    while (it != burstTicks.end()) {
+        auto current_it = it++;
+        if (curTick() > *current_it) {
+            DPRINTF(DRAM, "Removing burstTick for %d\n", *current_it);
+            burstTicks.erase(current_it);
+        }
+    }
+}
+
+Tick
+DRAMCtrl::getBurstWindow(Tick cmd_tick)
+{
+    // get tick aligned to burst window
+    Tick burst_offset = cmd_tick % burstDataCycles;
+    return (cmd_tick - burst_offset);
+}
+
+Tick
+DRAMCtrl::verifySingleCmd(Tick cmd_tick)
+{
+    // start with assumption that there is no contention on command bus
+    Tick cmd_at = cmd_tick;
+
+    // get tick aligned to burst window
+    Tick burst_tick = getBurstWindow(cmd_tick);
+
+    // verify that we have command bandwidth to issue the command
+    // if not, iterate over next window(s) until slot found
+    while (burstTicks.count(burst_tick) >= maxCommandsPerBurst) {
+        DPRINTF(DRAM, "Contention found on command bus at %d\n", burst_tick);
+        burst_tick += burstDataCycles;
+        cmd_at = burst_tick;
+    }
+
+    // add command into burst window and return corresponding Tick
+    burstTicks.insert(burst_tick);
+    return cmd_at;
+}
+
+Tick
+DRAMCtrl::verifyMultiCmd(Tick cmd_tick, Tick max_multi_cmd_split)
+{
+    // start with assumption that there is no contention on command bus
+    Tick cmd_at = cmd_tick;
+
+    // get tick aligned to burst window
+    Tick burst_tick = getBurstWindow(cmd_tick);
+
+    // Command timing requirements are from 2nd command
+    // Start with assumption that 2nd command will issue at cmd_at and
+    // find prior slot for 1st command to issue
+    // Given a maximum latency of max_multi_cmd_split between the commands,
+    // find the burst at the maximum latency prior to cmd_at
+    Tick burst_offset = 0;
+    Tick first_cmd_offset = cmd_tick % burstDataCycles;
+    while (max_multi_cmd_split > (first_cmd_offset + burst_offset)) {
+        burst_offset += burstDataCycles;
+    }
+    // get the earliest burst aligned address for first command
+    // ensure that the time does not go negative
+    Tick first_cmd_tick = burst_tick - std::min(burst_offset, burst_tick);
+
+    // Can required commands issue?
+    bool first_can_issue = false;
+    bool second_can_issue = false;
+    // verify that we have command bandwidth to issue the command(s)
+    while (!first_can_issue || !second_can_issue) {
+        bool same_burst = (burst_tick == first_cmd_tick);
+        auto first_cmd_count = burstTicks.count(first_cmd_tick);
+        auto second_cmd_count = same_burst ? first_cmd_count + 1 :
+                                   burstTicks.count(burst_tick);
+
+        first_can_issue = first_cmd_count < maxCommandsPerBurst;
+        second_can_issue = second_cmd_count < maxCommandsPerBurst;
+
+        if (!second_can_issue) {
+            DPRINTF(DRAM, "Contention (cmd2) found on command bus at %d\n",
+                    burst_tick);
+            burst_tick += burstDataCycles;
+            cmd_at = burst_tick;
+        }
+
+        // Verify max_multi_cmd_split isn't violated when command 2 is shifted
+        // If commands initially were issued in same burst, they are
+        // now in consecutive bursts and can still issue B2B
+        bool gap_violated = !same_burst &&
+             ((burst_tick - first_cmd_tick) > max_multi_cmd_split);
+
+        if (!first_can_issue || (!second_can_issue && gap_violated)) {
+            DPRINTF(DRAM, "Contention (cmd1) found on command bus at %d\n",
+                    first_cmd_tick);
+            first_cmd_tick += burstDataCycles;
+        }
+    }
+
+    // Add command to burstTicks
+    burstTicks.insert(burst_tick);
+    burstTicks.insert(first_cmd_tick);
+
+    return cmd_at;
+}
+
+void
 DRAMCtrl::activateBank(Rank& rank_ref, Bank& bank_ref,
                        Tick act_tick, uint32_t row)
 {
     assert(rank_ref.actTicks.size() == activationLimit);
 
-    DPRINTF(DRAM, "Activate at tick %d\n", act_tick);
+    // verify that we have command bandwidth to issue the activate
+    // if not, shift to next burst window
+    Tick act_at;
+    if (twoCycleActivate)
+        act_at = verifyMultiCmd(act_tick, tAAD);
+    else
+        act_at = verifySingleCmd(act_tick);
+
+    DPRINTF(DRAM, "Activate at tick %d\n", act_at);
 
     // update the open row
     assert(bank_ref.openRow == Bank::NO_ROW);
@@ -935,21 +1064,21 @@ DRAMCtrl::activateBank(Rank& rank_ref, Bank& bank_ref,
     assert(rank_ref.numBanksActive <= banksPerRank);
 
     DPRINTF(DRAM, "Activate bank %d, rank %d at tick %lld, now got %d active\n",
-            bank_ref.bank, rank_ref.rank, act_tick,
+            bank_ref.bank, rank_ref.rank, act_at,
             ranks[rank_ref.rank]->numBanksActive);
 
     rank_ref.cmdList.push_back(Command(MemCommand::ACT, bank_ref.bank,
-                               act_tick));
+                               act_at));
 
-    DPRINTF(DRAMPower, "%llu,ACT,%d,%d\n", divCeil(act_tick, tCK) -
+    DPRINTF(DRAMPower, "%llu,ACT,%d,%d\n", divCeil(act_at, tCK) -
             timeStampOffset, bank_ref.bank, rank_ref.rank);
 
     // The next access has to respect tRAS for this bank
-    bank_ref.preAllowedAt = act_tick + tRAS;
+    bank_ref.preAllowedAt = act_at + tRAS;
 
     // Respect the row-to-column command delay for both read and write cmds
-    bank_ref.rdAllowedAt = std::max(act_tick + tRCD, bank_ref.rdAllowedAt);
-    bank_ref.wrAllowedAt = std::max(act_tick + tRCD, bank_ref.wrAllowedAt);
+    bank_ref.rdAllowedAt = std::max(act_at + tRCD, bank_ref.rdAllowedAt);
+    bank_ref.wrAllowedAt = std::max(act_at + tRCD, bank_ref.wrAllowedAt);
 
     // start by enforcing tRRD
     for (int i = 0; i < banksPerRank; i++) {
@@ -959,13 +1088,13 @@ DRAMCtrl::activateBank(Rank& rank_ref, Bank& bank_ref,
             // bank group architecture requires longer delays between
             // ACT commands within the same bank group.  Use tRRD_L
             // in this case
-            rank_ref.banks[i].actAllowedAt = std::max(act_tick + tRRD_L,
+            rank_ref.banks[i].actAllowedAt = std::max(act_at + tRRD_L,
                                              rank_ref.banks[i].actAllowedAt);
         } else {
             // use shorter tRRD value when either
             // 1) bank group architecture is not supportted
             // 2) bank is in a different bank group
-            rank_ref.banks[i].actAllowedAt = std::max(act_tick + tRRD,
+            rank_ref.banks[i].actAllowedAt = std::max(act_at + tRRD,
                                              rank_ref.banks[i].actAllowedAt);
         }
     }
@@ -975,10 +1104,10 @@ DRAMCtrl::activateBank(Rank& rank_ref, Bank& bank_ref,
     if (!rank_ref.actTicks.empty()) {
         // sanity check
         if (rank_ref.actTicks.back() &&
-           (act_tick - rank_ref.actTicks.back()) < tXAW) {
+           (act_at - rank_ref.actTicks.back()) < tXAW) {
             panic("Got %d activates in window %d (%llu - %llu) which "
-                  "is smaller than %llu\n", activationLimit, act_tick -
-                  rank_ref.actTicks.back(), act_tick,
+                  "is smaller than %llu\n", activationLimit, act_at -
+                  rank_ref.actTicks.back(), act_at,
                   rank_ref.actTicks.back(), tXAW);
         }
 
@@ -987,13 +1116,13 @@ DRAMCtrl::activateBank(Rank& rank_ref, Bank& bank_ref,
         rank_ref.actTicks.pop_back();
 
         // record an new activation (in the future)
-        rank_ref.actTicks.push_front(act_tick);
+        rank_ref.actTicks.push_front(act_at);
 
         // cannot activate more than X times in time window tXAW, push the
         // next one (the X + 1'st activate) to be tXAW away from the
         // oldest in our window of X
         if (rank_ref.actTicks.back() &&
-           (act_tick - rank_ref.actTicks.back()) < tXAW) {
+           (act_at - rank_ref.actTicks.back()) < tXAW) {
             DPRINTF(DRAM, "Enforcing tXAW with X = %d, next activate "
                     "no earlier than %llu\n", activationLimit,
                     rank_ref.actTicks.back() + tXAW);
@@ -1008,14 +1137,15 @@ DRAMCtrl::activateBank(Rank& rank_ref, Bank& bank_ref,
     // at the point when this activate takes place, make sure we
     // transition to the active power state
     if (!rank_ref.activateEvent.scheduled())
-        schedule(rank_ref.activateEvent, act_tick);
-    else if (rank_ref.activateEvent.when() > act_tick)
+        schedule(rank_ref.activateEvent, act_at);
+    else if (rank_ref.activateEvent.when() > act_at)
         // move it sooner in time
-        reschedule(rank_ref.activateEvent, act_tick);
+        reschedule(rank_ref.activateEvent, act_at);
 }
 
 void
-DRAMCtrl::prechargeBank(Rank& rank_ref, Bank& bank, Tick pre_at, bool trace)
+DRAMCtrl::prechargeBank(Rank& rank_ref, Bank& bank, Tick pre_tick,
+                        bool auto_or_preall, bool trace)
 {
     // make sure the bank has an open row
     assert(bank.openRow != Bank::NO_ROW);
@@ -1026,8 +1156,21 @@ DRAMCtrl::prechargeBank(Rank& rank_ref, Bank& bank, Tick pre_at, bool trace)
 
     bank.openRow = Bank::NO_ROW;
 
-    // no precharge allowed before this one
-    bank.preAllowedAt = pre_at;
+    Tick pre_at = pre_tick;
+    if (auto_or_preall) {
+        // no precharge allowed before this one
+        bank.preAllowedAt = pre_at;
+    } else {
+        // Issuing an explicit PRE command
+        // Verify that we have command bandwidth to issue the precharge
+        // if not, shift to next burst window
+        pre_at = verifySingleCmd(pre_tick);
+        // enforce tPPD
+        for (int i = 0; i < banksPerRank; i++) {
+            rank_ref.banks[i].preAllowedAt = std::max(pre_at + tPPD,
+                                             rank_ref.banks[i].preAllowedAt);
+        }
+    }
 
     Tick pre_done_at = pre_at + tRP;
 
@@ -1047,6 +1190,7 @@ DRAMCtrl::prechargeBank(Rank& rank_ref, Bank& bank, Tick pre_at, bool trace)
         DPRINTF(DRAMPower, "%llu,PRE,%d,%d\n", divCeil(pre_at, tCK) -
                 timeStampOffset, bank.bank, rank_ref.rank);
     }
+
     // if we look at the current number of active banks we might be
     // tempted to think the DRAM is now idle, however this can be
     // undone by an activate that is scheduled to happen before we
@@ -1067,6 +1211,10 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
 {
     DPRINTF(DRAM, "Timing access to addr %lld, rank/bank/row %d %d %d\n",
             dram_pkt->addr, dram_pkt->rank, dram_pkt->bank, dram_pkt->row);
+
+    // first clean up the burstTick set, removing old entries
+    // before adding new entries for next burst
+    pruneBurstTick();
 
     // get the rank
     Rank& rank = dram_pkt->rankRef;
@@ -1113,8 +1261,35 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     // the command; need minimum of tBURST between commands
     Tick cmd_at = std::max({col_allowed_at, nextBurstAt, curTick()});
 
+    // verify that we have command bandwidth to issue the burst
+    // if not, shift to next burst window
+    if (dataClockSync && ((cmd_at - rank.lastBurstTick) > clkResyncDelay))
+        cmd_at = verifyMultiCmd(cmd_at, tCK);
+    else
+        cmd_at = verifySingleCmd(cmd_at);
+
+    // if we are interleaving bursts, ensure that
+    // 1) we don't double interleave on next burst issue
+    // 2) we are at an interleave boundary; if not, shift to next boundary
+    Tick burst_gap = tBURST_MIN;
+    if (burstInterleave) {
+        if (cmd_at == (rank.lastBurstTick + tBURST_MIN)) {
+            // already interleaving, push next command to end of full burst
+            burst_gap = tBURST;
+        } else if (cmd_at < (rank.lastBurstTick + tBURST)) {
+            // not at an interleave boundary after bandwidth check
+            // Shift command to tBURST boundary to avoid data contention
+            // Command will remain in the same burstTicks window given that
+            // tBURST is less than tBURST_MAX
+            cmd_at = rank.lastBurstTick + tBURST;
+        }
+    }
+    DPRINTF(DRAM, "Schedule RD/WR burst at tick %d\n", cmd_at);
+
     // update the packet ready time
     dram_pkt->readyTime = cmd_at + tCL + tBURST;
+
+    rank.lastBurstTick = cmd_at;
 
     // update the time for the next read/write burst for each
     // bank (add a max with tCCD/tCCD_L/tCCD_L_WR here)
@@ -1134,14 +1309,15 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
                     // tCCD_L_WR is required for write-to-write
                     // Need to also take bus turnaround delays into account
                     dly_to_rd_cmd = dram_pkt->isRead() ?
-                                    tCCD_L : std::max(tCCD_L, wrToRdDly);
+                                    tCCD_L : std::max(tCCD_L, wrToRdDlySameBG);
                     dly_to_wr_cmd = dram_pkt->isRead() ?
-                                    std::max(tCCD_L, rdToWrDly) : tCCD_L_WR;
+                                    std::max(tCCD_L, rdToWrDlySameBG) :
+                                    tCCD_L_WR;
                 } else {
                     // tBURST is default requirement for diff BG timing
                     // Need to also take bus turnaround delays into account
-                    dly_to_rd_cmd = dram_pkt->isRead() ? tBURST : wrToRdDly;
-                    dly_to_wr_cmd = dram_pkt->isRead() ? rdToWrDly : tBURST;
+                    dly_to_rd_cmd = dram_pkt->isRead() ? burst_gap : wrToRdDly;
+                    dly_to_wr_cmd = dram_pkt->isRead() ? rdToWrDly : burst_gap;
                 }
             } else {
                 // different rank is by default in a different bank group and
@@ -1236,8 +1412,7 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
                                                    MemCommand::WR;
 
     // Update bus state to reflect when previous command was issued
-    nextBurstAt = cmd_at + tBURST;
-
+    nextBurstAt = cmd_at + burst_gap;
     DPRINTF(DRAM, "Access to %lld, ready at %lld next burst at %lld.\n",
             dram_pkt->addr, dram_pkt->readyTime, nextBurstAt);
 
@@ -1252,7 +1427,8 @@ DRAMCtrl::doDRAMAccess(DRAMPacket* dram_pkt)
     if (auto_precharge) {
         // if auto-precharge push a PRE command at the correct tick to the
         // list used by DRAMPower library to calculate power
-        prechargeBank(rank, bank, std::max(curTick(), bank.preAllowedAt));
+        prechargeBank(rank, bank, std::max(curTick(), bank.preAllowedAt),
+                      true);
 
         DPRINTF(DRAM, "Auto-precharged bank: %d\n", dram_pkt->bankId);
     }
@@ -1689,7 +1865,7 @@ DRAMCtrl::Rank::Rank(DRAMCtrl& _memory, const DRAMCtrlParams* _p, int rank)
       refreshState(REF_IDLE), inLowPowerState(false), rank(rank),
       readEntries(0), writeEntries(0), outstandingEvents(0),
       wakeUpAllowedAt(0), power(_p, false), banks(_p->banks_per_rank),
-      numBanksActive(0), actTicks(_p->activation_limit, 0),
+      numBanksActive(0), actTicks(_p->activation_limit, 0), lastBurstTick(0),
       writeDoneEvent([this]{ processWriteDoneEvent(); }, name()),
       activateEvent([this]{ processActivateEvent(); }, name()),
       prechargeEvent([this]{ processPrechargeEvent(); }, name()),
@@ -1922,7 +2098,7 @@ DRAMCtrl::Rank::processRefreshEvent()
 
             for (auto &b : banks) {
                 if (b.openRow != Bank::NO_ROW) {
-                    memory.prechargeBank(*this, b, pre_at, false);
+                    memory.prechargeBank(*this, b, pre_at, true, false);
                 } else {
                     b.actAllowedAt = std::max(b.actAllowedAt, act_allowed_at);
                     b.preAllowedAt = std::max(b.preAllowedAt, pre_at);
@@ -1946,17 +2122,21 @@ DRAMCtrl::Rank::processRefreshEvent()
         } else {
             // banks state is closed but haven't transitioned pwrState to IDLE
             // or have outstanding ACT,RD/WR,Auto-PRE sequence scheduled
-            // should have outstanding precharge event in this case
-            assert(prechargeEvent.scheduled());
+            // should have outstanding precharge or read response event
+            assert(prechargeEvent.scheduled() ||
+                   memory.respondEvent.scheduled());
             // will start refresh when pwrState transitions to IDLE
         }
 
         assert(numBanksActive == 0);
 
-        // wait for all banks to be precharged, at which point the
-        // power state machine will transition to the idle state, and
-        // automatically move to a refresh, at that point it will also
-        // call this method to get the refresh event loop going again
+        // wait for all banks to be precharged or read to complete
+        // When precharge commands are done, power state machine will
+        // transition to the idle state, and automatically move to a
+        // refresh, at that point it will also call this method to get
+        // the refresh event loop going again
+        // Similarly, when read response completes, if all banks are
+        // precharged, will call this method to get loop re-started
         return;
     }
 
@@ -2612,7 +2792,8 @@ DRAMCtrl::DRAMStats::regStats()
     avgWrBW = (bytesWritten / 1000000) / simSeconds;
     avgRdBWSys = (bytesReadSys / 1000000) / simSeconds;
     avgWrBWSys = (bytesWrittenSys / 1000000) / simSeconds;
-    peakBW = (SimClock::Frequency / dram.tBURST) * dram.burstSize / 1000000;
+    peakBW = (SimClock::Frequency / dram.burstDataCycles) *
+              dram.burstSize / 1000000;
 
     busUtil = (avgRdBW + avgWrBW) / peakBW * 100;
 

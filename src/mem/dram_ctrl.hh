@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2019 ARM Limited
+ * Copyright (c) 2012-2020 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -446,6 +446,11 @@ class DRAMCtrl : public QoS::MemCtrl
         /** List to keep track of activate ticks */
         std::deque<Tick> actTicks;
 
+        /**
+         * Track when we issued the last read/write burst
+         */
+        Tick lastBurstTick;
+
         Rank(DRAMCtrl& _memory, const DRAMCtrlParams* _p, int rank);
 
         const std::string name() const
@@ -863,6 +868,46 @@ class DRAMCtrl : public QoS::MemCtrl
     minBankPrep(const DRAMPacketQueue& queue, Tick min_col_at) const;
 
     /**
+     * Remove commands that have already issued from burstTicks
+     */
+    void pruneBurstTick();
+
+    /**
+     * Calculate burst window aligned tick
+     *
+     * @param cmd_tick Initial tick of command
+     * @return burst window aligned tick
+     */
+    Tick getBurstWindow(Tick cmd_tick);
+
+    /**
+     * Check for command bus contention for single cycle command.
+     * If there is contention, shift command to next burst.
+     * Check verifies that the commands issued per burst is less
+     * than a defined max number, maxCommandsPerBurst.
+     * Therefore, contention per cycle is not verified and instead
+     * is done based on a burst window.
+     *
+     * @param cmd_tick Initial tick of command, to be verified
+     * @return tick for command issue without contention
+     */
+    Tick verifySingleCmd(Tick cmd_tick);
+
+    /**
+     * Check for command bus contention for multi-cycle (2 currently)
+     * command. If there is contention, shift command(s) to next burst.
+     * Check verifies that the commands issued per burst is less
+     * than a defined max number, maxCommandsPerBurst.
+     * Therefore, contention per cycle is not verified and instead
+     * is done based on a burst window.
+     *
+     * @param cmd_tick Initial tick of command, to be verified
+     * @param max_multi_cmd_split Maximum delay between commands
+     * @return tick for command issue without contention
+     */
+    Tick verifyMultiCmd(Tick cmd_tick, Tick max_multi_cmd_split = 0);
+
+    /**
      * Keep track of when row activations happen, in order to enforce
      * the maximum number of activations in the activation window. The
      * method updates the time that the banks become available based
@@ -883,11 +928,13 @@ class DRAMCtrl : public QoS::MemCtrl
      *
      * @param rank_ref The rank to precharge
      * @param bank_ref The bank to precharge
-     * @param pre_at Time when the precharge takes place
+     * @param pre_tick Time when the precharge takes place
+     * @param auto_or_preall Is this an auto-precharge or precharge all command
      * @param trace Is this an auto precharge then do not add to trace
      */
     void prechargeBank(Rank& rank_ref, Bank& bank_ref,
-                       Tick pre_at, bool trace = true);
+                       Tick pre_tick, bool auto_or_preall = false,
+                       bool trace = true);
 
     /**
      * Used for debugging to observe the contents of the queues.
@@ -927,6 +974,13 @@ class DRAMCtrl : public QoS::MemCtrl
      * be added together.
      */
     std::deque<DRAMPacket*> respQueue;
+
+    /**
+     * Holds count of commands issued in burst window starting at
+     * defined Tick. This is used to ensure that the command bandwidth
+     * does not exceed the allowable media constraints.
+     */
+    std::unordered_multiset<Tick> burstTicks;
 
     /**
      * Vector of ranks
@@ -969,6 +1023,7 @@ class DRAMCtrl : public QoS::MemCtrl
     const Tick tRTW;
     const Tick tCS;
     const Tick tBURST;
+    const Tick tBURST_MIN;
     const Tick tCCD_L_WR;
     const Tick tCCD_L;
     const Tick tRCD;
@@ -981,13 +1036,23 @@ class DRAMCtrl : public QoS::MemCtrl
     const Tick tREFI;
     const Tick tRRD;
     const Tick tRRD_L;
+    const Tick tPPD;
+    const Tick tAAD;
     const Tick tXAW;
     const Tick tXP;
     const Tick tXS;
+    const Tick clkResyncDelay;
+    unsigned int maxCommandsPerBurst;
+    const bool dataClockSync;
+    const uint8_t twoCycleActivate;
     const uint32_t activationLimit;
     const Tick rankToRankDly;
     const Tick wrToRdDly;
     const Tick rdToWrDly;
+    const Tick wrToRdDlySameBG;
+    const Tick rdToWrDlySameBG;
+    const bool burstInterleave;
+    const Tick burstDataCycles;
 
     /**
      * Memory controller configuration initialized based on parameter
