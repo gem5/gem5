@@ -224,6 +224,9 @@ class Process : public SimObject
     std::string tgtCwd;
     std::string hostCwd;
 
+    // Syscall emulation uname release.
+    std::string release;
+
     // Id of the owner of the process
     uint64_t _uid;
     uint64_t _euid;

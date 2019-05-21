@@ -113,7 +113,7 @@ unameFunc32(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
-    strcpy(name->release, "3.7.0+");
+    strcpy(name->release, process->release.c_str());
     strcpy(name->version, "#1 SMP Sat Dec  1 00:00:00 GMT 2012");
     strcpy(name->machine, "armv7l");
 
@@ -131,7 +131,7 @@ unameFunc64(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "gem5");
-    strcpy(name->release, "4.10.8+");
+    strcpy(name->release, process->release.c_str());
     strcpy(name->version, "#1 SMP Sat Dec  1 00:00:00 GMT 2012");
     strcpy(name->machine, "armv8l");
 

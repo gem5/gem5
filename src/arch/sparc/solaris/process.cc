@@ -80,7 +80,7 @@ unameFunc(SyscallDesc *desc, int callnum, ThreadContext *tc)
 
     strcpy(name->sysname, "SunOS");
     strcpy(name->nodename, "m5.eecs.umich.edu");
-    strcpy(name->release, "5.9"); //?? do we want this or something newer?
+    strcpy(name->release, process->release.c_str());
     strcpy(name->version, "Generic_118558-21");
     strcpy(name->machine, "sun4u");
 

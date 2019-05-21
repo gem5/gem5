@@ -62,6 +62,7 @@ class Process(SimObject):
     cwd = Param.String(getcwd(), "current working directory")
     simpoint = Param.UInt64(0, 'simulation point at which to start simulation')
     drivers = VectorParam.EmulatedDriver([], 'Available emulated drivers')
+    release = Param.String('5.1.0', "Linux kernel uname release")
 
     @classmethod
     def export_methods(cls, code):
