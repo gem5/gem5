@@ -541,7 +541,6 @@ AtomicSimpleCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
         {
             if (req->isLockedRMW() && fault == NoFault) {
                 assert(byteEnable.empty());
-                assert(locked && curr_frag_id == 0);
                 locked = false;
             }
 
