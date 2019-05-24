@@ -66,7 +66,17 @@ class CompressionBlk : public SectorSubBlk
     CompressionBlk();
     CompressionBlk(const CompressionBlk&) = delete;
     CompressionBlk& operator=(const CompressionBlk&) = delete;
-    ~CompressionBlk() {};
+    CompressionBlk(CompressionBlk&&) = delete;
+    /**
+     * Move assignment operator.
+     * This should only be used to move an existing valid entry into an
+     * invalid one, not to create a new entry. In the end the valid entry
+     * will become invalid, and the invalid, valid. All location related
+     * variables will remain the same.
+     */
+    CompressionBlk& operator=(CompressionBlk&& other);
+    CacheBlk& operator=(CacheBlk&& other);
+    ~CompressionBlk() = default;
 
     /**
      * Check if this block holds compressed data.

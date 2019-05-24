@@ -41,6 +41,30 @@ CompressionBlk::CompressionBlk()
 {
 }
 
+CacheBlk&
+CompressionBlk::operator=(CacheBlk&& other)
+{
+    operator=(std::move(static_cast<CompressionBlk&&>(other)));
+    return *this;
+}
+
+CompressionBlk&
+CompressionBlk::operator=(CompressionBlk&& other)
+{
+    // Copy internal variables; if moving, that means we had an expansion or
+    // contraction, and therefore the size is no longer valid, so it is not
+    // moved
+    setDecompressionLatency(other.getDecompressionLatency());
+    if (other.isCompressed()) {
+        setCompressed();
+    } else {
+        setUncompressed();
+    }
+
+    CacheBlk::operator=(std::move(other));
+    return *this;
+}
+
 bool
 CompressionBlk::isCompressed() const
 {

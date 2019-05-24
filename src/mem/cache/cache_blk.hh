@@ -155,6 +155,39 @@ class CacheBlk : public TaggedEntry
 
     CacheBlk(const CacheBlk&) = delete;
     CacheBlk& operator=(const CacheBlk&) = delete;
+    CacheBlk(const CacheBlk&&) = delete;
+    /**
+     * Move assignment operator.
+     * This should only be used to move an existing valid entry into an
+     * invalid one, not to create a new entry. In the end the valid entry
+     * will become invalid, and the invalid, valid. All location related
+     * variables will remain the same, that is, an entry cannot move its
+     * data, just its metadata contents.
+     */
+    virtual CacheBlk&
+    operator=(CacheBlk&& other)
+    {
+        // Copying an entry into a valid one would imply in skipping all
+        // replacement steps, so it cannot be allowed
+        assert(!isValid());
+        assert(other.isValid());
+
+        insert(other.getTag(), other.isSecure());
+
+        if (other.wasPrefetched()) {
+            setPrefetched();
+        }
+        setCoherenceBits(other.coherence);
+        setTaskId(other.getTaskId());
+        setWhenReady(curTick());
+        setRefCount(other.getRefCount());
+        setSrcRequestorId(other.getSrcRequestorId());
+        std::swap(lockList, other.lockList);
+
+        other.invalidate();
+
+        return *this;
+    }
     virtual ~CacheBlk() {};
 
     /**
@@ -168,7 +201,7 @@ class CacheBlk : public TaggedEntry
         clearCoherenceBits(AllBits);
 
         setTaskId(ContextSwitchTaskId::Unknown);
-        whenReady = MaxTick;
+        setWhenReady(MaxTick);
         setRefCount(0);
         setSrcRequestorId(Request::invldRequestorId);
         lockList.clear();

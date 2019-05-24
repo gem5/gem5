@@ -62,7 +62,17 @@ class SectorSubBlk : public CacheBlk
     SectorSubBlk() : CacheBlk(), _sectorBlk(nullptr), _sectorOffset(0) {}
     SectorSubBlk(const SectorSubBlk&) = delete;
     SectorSubBlk& operator=(const SectorSubBlk&) = delete;
-    ~SectorSubBlk() {};
+    SectorSubBlk(SectorSubBlk&&) = delete;
+    /**
+     * Move assignment operator.
+     * This should only be used to move an existing valid entry into an
+     * invalid one, not to create a new entry. In the end the valid entry
+     * will become invalid, and the invalid, valid. All location related
+     * variables will remain the same, that is, an entry cannot change
+     * its sector block nor its offset.
+     */
+    SectorSubBlk& operator=(SectorSubBlk&& other) = default;
+    ~SectorSubBlk() = default;
 
     /**
      * Set sector block associated to this block.
