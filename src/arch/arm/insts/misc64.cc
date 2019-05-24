@@ -269,6 +269,7 @@ MiscRegOp64::checkEL2Trap(ThreadContext *tc, const MiscRegIndex misc_reg,
             break;
           case MISCREG_IMPDEF_UNIMPL:
             trap_to_hyp = hcr.tidcp && el == EL1;
+            break;
           // GICv3 regs
           case MISCREG_ICC_SGI0R_EL1:
             if (tc->getIsaPtr()->haveGICv3CpuIfc())
