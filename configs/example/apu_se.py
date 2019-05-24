@@ -456,11 +456,18 @@ if options.env:
         env = [line.rstrip() for line in f]
 else:
     env = ['LD_LIBRARY_PATH=%s' % ':'.join([
-               "/proj/radl_tools/rocm-1.6/lib",
-               "/proj/radl_tools/rocm-1.6/hcc/lib64",
-               "/tool/pandora64/.package/libunwind-1.1/lib",
-               "/tool/pandora64/.package/gcc-6.4.0/lib64"
+               os.getenv('ROCM_PATH','/opt/rocm')+'/lib',
+               os.getenv('HCC_HOME','/opt/rocm/hcc')+'/lib',
+               os.getenv('HSA_PATH','/opt/rocm/hsa')+'/lib',
+               os.getenv('HIP_PATH','/opt/rocm/hip')+'/lib',
+               os.getenv('ROCM_PATH','/opt/rocm')+'/libhsakmt/lib',
+               os.getenv('ROCM_PATH','/opt/rocm')+'/miopen/lib',
+               os.getenv('ROCM_PATH','/opt/rocm')+'/miopengemm/lib',
+               os.getenv('ROCM_PATH','/opt/rocm')+'/hipblas/lib',
+               os.getenv('ROCM_PATH','/opt/rocm')+'/rocblas/lib',
+               "/usr/lib/x86_64-linux-gnu"
            ]),
+           'HOME=%s' % os.getenv('HOME','/'),
            "HSA_ENABLE_INTERRUPT=0"]
 
 process = Process(executable = executable, cmd = [options.cmd]
