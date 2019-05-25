@@ -153,7 +153,7 @@ void
 ROB<Impl>::resetEntries()
 {
     if (robPolicy != SMTQueuePolicy::Dynamic || numThreads > 1) {
-        int active_threads = activeThreads->size();
+        auto active_threads = activeThreads->size();
 
         list<ThreadID>::iterator threads = activeThreads->begin();
         list<ThreadID>::iterator end = activeThreads->end();
@@ -195,7 +195,7 @@ ROB<Impl>::countInsts()
 }
 
 template <class Impl>
-int
+size_t
 ROB<Impl>::countInsts(ThreadID tid)
 {
     return instList[tid].size();

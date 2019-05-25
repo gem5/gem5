@@ -258,7 +258,7 @@ class ROB
      *  threadEntries to get the instructions in the ROB unless you are
      *  double checking that variable.
      */
-    int countInsts(ThreadID tid);
+    size_t countInsts(ThreadID tid);
 
     /** Registers statistics. */
     void regStats();
