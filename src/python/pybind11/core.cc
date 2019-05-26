@@ -154,7 +154,6 @@ init_range(py::module &m_native)
         .def("__str__", &AddrRange::to_string)
 
         .def("interleaved", &AddrRange::interleaved)
-        .def("hashed", &AddrRange::hashed)
         .def("granularity", &AddrRange::granularity)
         .def("stripes", &AddrRange::stripes)
         .def("size", &AddrRange::size)
