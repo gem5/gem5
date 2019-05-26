@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
  */
 
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 #include "python/pybind11/core.hh"
 
@@ -148,6 +149,7 @@ init_range(py::module &m_native)
     py::class_<AddrRange>(m, "AddrRange")
         .def(py::init<>())
         .def(py::init<Addr &, Addr &>())
+        .def(py::init<Addr, Addr, const std::vector<Addr> &, uint8_t>())
         .def(py::init<const std::vector<AddrRange> &>())
         .def(py::init<Addr, Addr, uint8_t, uint8_t, uint8_t, uint8_t>())
 

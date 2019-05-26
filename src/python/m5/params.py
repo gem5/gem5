@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014, 2017, 2018 ARM Limited
+# Copyright (c) 2012-2014, 2017-2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -761,6 +761,7 @@ class AddrRange(ParamValue):
         self.xorHighBit = 0
         self.intlvBits = 0
         self.intlvMatch = 0
+        self.masks = []
 
         def handle_kwargs(self, kwargs):
             # An address range needs to have an upper limit, specified
@@ -774,14 +775,27 @@ class AddrRange(ParamValue):
                 raise TypeError("Either end or size must be specified")
 
             # Now on to the optional bit
-            if 'intlvHighBit' in kwargs:
-                self.intlvHighBit = int(kwargs.pop('intlvHighBit'))
-            if 'xorHighBit' in kwargs:
-                self.xorHighBit = int(kwargs.pop('xorHighBit'))
-            if 'intlvBits' in kwargs:
-                self.intlvBits = int(kwargs.pop('intlvBits'))
             if 'intlvMatch' in kwargs:
                 self.intlvMatch = int(kwargs.pop('intlvMatch'))
+
+            if 'masks' in kwargs:
+                self.masks = [ long(x) for x in list(kwargs.pop('masks')) ]
+                self.intlvBits = len(self.masks)
+            else:
+                if 'intlvHighBit' in kwargs:
+                    intlv_high_bit = int(kwargs.pop('intlvHighBit'))
+                if 'xorHighBit' in kwargs:
+                    xor_high_bit = int(kwargs.pop('xorHighBit'))
+                if 'intlvBits' in kwargs:
+                    self.intlvBits = int(kwargs.pop('intlvBits'))
+                    self.masks = [0] * self.intlvBits
+                for i in range(0, self.intlvBits):
+                    bit1 = intlv_high_bit - i
+                    mask = 1 << bit1
+                    if xor_high_bit != 0:
+                        bit2 = xor_high_bit - i
+                        mask |= 1 << bit2
+                    self.masks[self.intlvBits - i - 1] = mask
 
         if len(args) == 0:
             self.start = Addr(kwargs.pop('start'))
@@ -808,9 +822,11 @@ class AddrRange(ParamValue):
             raise TypeError("Too many keywords: %s" % list(kwargs.keys()))
 
     def __str__(self):
-        return '%s:%s:%s:%s:%s:%s' \
-            % (self.start, self.end, self.intlvHighBit, self.xorHighBit,\
-               self.intlvBits, self.intlvMatch)
+        if len(self.masks) == 0:
+            return '%s:%s' % (self.start, self.end)
+        else:
+            return '%s:%s:%s:%s' % (self.start, self.end, self.intlvMatch,
+                                    ':'.join(str(m) for m in self.masks))
 
     def size(self):
         # Divide the size by the size of the interleaving slice
@@ -829,31 +845,35 @@ class AddrRange(ParamValue):
     @classmethod
     def cxx_ini_predecls(cls, code):
         code('#include <sstream>')
+        code('#include <vector>')
+        code('#include "base/types.hh"')
 
     @classmethod
     def cxx_ini_parse(cls, code, src, dest, ret):
-        code('uint64_t _start, _end, _intlvHighBit = 0, _xorHighBit = 0;')
-        code('uint64_t _intlvBits = 0, _intlvMatch = 0;')
+        code('bool _ret = true;')
+        code('uint64_t _start, _end, _intlvMatch = 0;')
+        code('std::vector<Addr> _masks;')
         code('char _sep;')
         code('std::istringstream _stream(${src});')
         code('_stream >> _start;')
         code('_stream.get(_sep);')
+        code('_ret = _sep == \':\';')
         code('_stream >> _end;')
         code('if (!_stream.fail() && !_stream.eof()) {')
         code('    _stream.get(_sep);')
-        code('    _stream >> _intlvHighBit;')
-        code('    _stream.get(_sep);')
-        code('    _stream >> _xorHighBit;')
-        code('    _stream.get(_sep);')
-        code('    _stream >> _intlvBits;')
-        code('    _stream.get(_sep);')
+        code('    _ret = ret && _sep == \':\';')
         code('    _stream >> _intlvMatch;')
+        code('    while (!_stream.fail() && !_stream.eof()) {')
+        code('        _stream.get(_sep);')
+        code('        _ret = ret && _sep == \':\';')
+        code('        Addr mask;')
+        code('        _stream >> mask;')
+        code('        _masks.push_back(mask);')
+        code('    }')
         code('}')
-        code('bool _ret = !_stream.fail() &&'
-            '_stream.eof() && _sep == \':\';')
+        code('_ret = _ret && !_stream.fail() && _stream.eof();')
         code('if (_ret)')
-        code('   ${dest} = AddrRange(_start, _end, _intlvHighBit, \
-                _xorHighBit, _intlvBits, _intlvMatch);')
+        code('   ${dest} = AddrRange(_start, _end, _masks, _intlvMatch);')
         code('${ret} _ret;')
 
     def getValue(self):
@@ -861,8 +881,7 @@ class AddrRange(ParamValue):
         from _m5.range import AddrRange
 
         return AddrRange(long(self.start), long(self.end),
-                         int(self.intlvHighBit), int(self.xorHighBit),
-                         int(self.intlvBits), int(self.intlvMatch))
+                         self.masks, int(self.intlvMatch))
 
 # Boolean parameter type.  Python doesn't let you subclass bool, since
 # it doesn't want to let you create multiple instances of True and
