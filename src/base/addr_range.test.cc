@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018-2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -40,6 +40,7 @@
 #include <gtest/gtest.h>
 
 #include "base/addr_range.hh"
+#include "base/bitfield.hh"
 
 TEST(AddrRangeComp, AddrRangeIsSubset)
 {
@@ -88,4 +89,132 @@ TEST(AddrRangeComp, AddrRangeIsSubset)
     r = AddrRange(0xbf, 0xc0);
     EXPECT_FALSE(r.isSubset(r1));
     EXPECT_FALSE(r.isSubset(r2));
+}
+
+class AddrRangeBase : public testing::Test {
+  protected:
+
+    virtual int getIndex(Addr addr) = 0;
+
+    void testContains()
+    {
+        for (Addr addr = start; addr <= end; addr++) {
+            int i = getIndex(addr);
+            ASSERT_TRUE(range[i].contains(addr));
+            for (int j = 1; j < intlvSize; j++) {
+                ASSERT_FALSE(range[(i + j) % intlvSize].contains(addr));
+            }
+        }
+    }
+
+    void testGetOffset()
+    {
+        Addr offsets[intlvSize] = {0, 0, 0, 0};
+        for (Addr addr = start; addr <= end; addr++) {
+            int i = getIndex(addr);
+            Addr offset = range[i].getOffset(addr);
+            ASSERT_EQ(offsets[i], offset);
+            offsets[i]++;
+        }
+        for (Addr offset: offsets) {
+            ASSERT_EQ(offset, (end - start + 1) / intlvSize);
+        }
+    }
+
+    static const Addr end = 0x1ffff;
+    static const Addr start = 0x0;
+    static const int intlvSize = 4;
+
+    AddrRange range[intlvSize];
+};
+
+
+class AddrRangeCont : public AddrRangeBase {
+  protected:
+    void SetUp() override
+    {
+        std::vector<Addr> masks = {
+            1UL << xorBits0[0] | 1UL << xorBits0[1],
+            1UL << xorBits1[0] | 1UL << xorBits1[1]
+        };
+        for (auto i = 0; i < intlvSize; i++) {
+            range[i] = AddrRange(start, end, masks, i);
+        }
+    }
+
+    int getIndex(Addr addr) override
+    {
+        return bits(addr, xorBits1[1], xorBits0[1]) ^
+            bits(addr, xorBits1[0], xorBits0[0]);
+    }
+
+    const int xorBits0[2] = {8, 14};
+    const int xorBits1[2] = {9, 15};
+};
+
+TEST_F(AddrRangeCont, AddrRangeContains)
+{
+    testContains();
+}
+
+TEST_F(AddrRangeCont, AddrRangeGetOffset)
+{
+    testGetOffset();
+}
+
+
+class AddrRangeContLegacy : public AddrRangeCont {
+  protected:
+    void SetUp() override
+    {
+        // Test interleaved ranges with hashing
+        for (auto i = 0; i < intlvSize; i++) {
+            range[i] = AddrRange(start, end, xorBits1[0], xorBits1[1],
+                                 2, i);
+        }
+    }
+};
+
+TEST_F(AddrRangeContLegacy, AddrRangeContains)
+{
+    testContains();
+}
+
+TEST_F(AddrRangeContLegacy, AddrRangeGetOffset)
+{
+    testGetOffset();
+}
+
+
+class AddrRangeArb : public AddrRangeBase {
+  protected:
+    void SetUp() override
+    {
+        std::vector<Addr> masks = {
+            1UL << xorBits0[0] | 1UL << xorBits0[1],
+            1UL << xorBits1[0] | 1UL << xorBits1[1]
+        };
+        for (auto i = 0; i < intlvSize; i++) {
+            range[i] = AddrRange(start, end, masks, i);
+        }
+    }
+
+    int getIndex(Addr addr) override
+    {
+        return (bits(addr, xorBits0[0]) ^ bits(addr, xorBits0[1])) |
+            (bits(addr, xorBits1[0]) ^ bits(addr, xorBits1[1])) << 1;
+    }
+
+    const int xorBits0[2] = {11, 12};
+    const int xorBits1[2] = {8, 15};
+};
+
+TEST_F(AddrRangeArb, AddrRangeContains)
+{
+    testContains();
+}
+
+TEST_F(AddrRangeArb, AddrRangeGetOffset)
+{
+    testGetOffset();
 }
