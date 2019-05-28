@@ -40,6 +40,7 @@ Import('*')
 if env['TARGET_ISA'] == 'arm':
     SimObject('AbstractNVM.py')
     SimObject('Display.py')
+    SimObject('Doorbell.py')
     SimObject('FlashDevice.py')
     SimObject('GenericTimer.py')
     SimObject('Gic.py')
