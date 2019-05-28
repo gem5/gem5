@@ -285,12 +285,12 @@ inline uint64_t alignToPowerOfTwo(uint64_t val)
 /**
  * Count trailing zeros in a 32-bit value.
  *
- * Returns 32 if the value is zero. Note that the GCC builtin is
- * undefined if the value is zero.
+ * @param An input value
+ * @return The number of trailing zeros or 32 if the value is zero.
  */
 inline int ctz32(uint32_t value)
 {
-    return value ? __builtin_ctz(value) : 32;
+    return value ? __builtin_ctzl(value) : 32;
 }
 
 /**
