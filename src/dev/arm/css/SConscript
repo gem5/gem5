@@ -39,8 +39,12 @@ Import('*')
 
 if env['TARGET_ISA'] == 'arm':
     SimObject('MHU.py')
+    SimObject('Scmi.py')
     SimObject('Scp.py')
 
     Source('mhu.cc')
+    Source('scmi_platform.cc')
+    Source('scmi_protocols.cc')
 
     DebugFlag('MHU')
+    DebugFlag('SCMI')
