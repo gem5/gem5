@@ -42,23 +42,26 @@ valid_isas = {
 }
 
 
+base_path = joinpath(absdirpath(__file__), 'benchmarks', 'bin')
+base_url = 'http://gem5.org/dist/current/gem5/cpu_tests/benchmarks/bin/'
 for isa in valid_isas:
-    bm_dir = joinpath('gem5/cpu_tests/benchmarks/bin/', isa)
+    path = joinpath(base_path, isa)
     for workload in workloads:
         ref_path = joinpath(getcwd(), 'ref', workload)
         verifiers = (
                 verifier.MatchStdout(ref_path),
         )
 
-        workload_binary = DownloadedProgram(bm_dir, workload)
-        workload_path = workload_binary.path
+        url = base_url + isa + '/' + workload
+        workload_binary = DownloadedProgram(url, path, workload)
+        binary = joinpath(workload_binary.path, workload)
 
         for cpu in valid_isas[isa]:
            gem5_verify_config(
                   name='cpu_test_{}_{}'.format(cpu,workload),
                   verifiers=verifiers,
                   config=joinpath(getcwd(), 'run.py'),
-                  config_args=['--cpu={}'.format(cpu), workload_path],
+                  config_args=['--cpu={}'.format(cpu), binary],
                   valid_isas=(isa.upper(),),
                   fixtures=[workload_binary]
            )

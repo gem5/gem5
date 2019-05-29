@@ -37,11 +37,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Sean Wilson
+#          Nikos Nikoleris
 
 import os
 import tempfile
 import shutil
 import threading
+import urllib
+import urllib2
 
 from testlib.fixture import Fixture
 from testlib.config import config, constants
@@ -239,44 +242,43 @@ class TestProgram(MakeTarget):
         elif not os.path.exists(self.path):
             super(MakeTarget, self).setup()
 
-class DownloadedProgram(Fixture):
+class DownloadedProgram(UniqueFixture):
     """ Like TestProgram, but checks the version in the gem5 binary repository
         and downloads an updated version if it is needed.
     """
-    urlbase = "http://gem5.org/dist/current/"
 
-    def __init__(self, path, program, **kwargs):
+    def __new__(cls, url, path, filename):
+        target = joinpath(path, filename)
+        return super(DownloadedProgram, cls).__new__(cls, target)
+
+    def _init(self, url, path, filename, **kwargs):
         """
+        url: string
+            The url of the archive
         path: string
-            The path to the directory containing the binary relative to
-            $GEM5_BASE/tests
-        program: string
-            The name of the binary file
+            The absolute path of the directory containing the archive
+        filename: string
+            The name of the archive
         """
-        super(DownloadedProgram, self).__init__("download-" + program,
-                                                build_once=True, **kwargs)
 
-        self.program_dir = path
-        relative_path = joinpath(self.program_dir, program)
-        self.url = self.urlbase + relative_path
-        self.path = os.path.realpath(
-                        joinpath(absdirpath(__file__), '../', relative_path)
-                    )
+        self.url = url
+        self.path = path
+        self.filename = joinpath(path, filename)
+        self.name = "Downloaded:" + self.filename
 
     def _download(self):
-        import urllib
         import errno
         log.test_log.debug("Downloading " + self.url + " to " + self.path)
-        if not os.path.exists(self.program_dir):
+        if not os.path.exists(self.path):
             try:
-                os.makedirs(self.program_dir)
+                os.makedirs(self.path)
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
-        urllib.urlretrieve(self.url, self.path)
+        urllib.urlretrieve(self.url, self.filename)
 
     def _getremotetime(self):
-        import  urllib2, datetime, time
+        import datetime, time
         import _strptime # Needed for python threading bug
 
         u = urllib2.urlopen(self.url)
@@ -284,18 +286,44 @@ class DownloadedProgram(Fixture):
                     u.info().getheaders("Last-Modified")[0],
                     "%a, %d %b %Y %X GMT").timetuple())
 
-    def setup(self, testitem):
-        import urllib2
+    def _setup(self, testitem):
         # Check to see if there is a file downloaded
-        if not os.path.exists(self.path):
+        if not os.path.exists(self.filename):
             self._download()
         else:
             try:
                 t = self._getremotetime()
             except urllib2.URLError:
                 # Problem checking the server, use the old files.
-                log.debug("Could not contact server. Binaries may be old.")
+                log.test_log.debug("Could not contact server. Binaries may be old.")
                 return
             # If the server version is more recent, download it
-            if t > os.path.getmtime(self.path):
+            if t > os.path.getmtime(self.filename):
                 self._download()
+
+class DownloadedArchive(DownloadedProgram):
+    """ Like TestProgram, but checks the version in the gem5 binary repository
+        and downloads an updated version if it is needed.
+    """
+
+    def _extract(self):
+        import tarfile
+        with tarfile.open(self.filename) as tf:
+            tf.extractall(self.path)
+
+    def _setup(self, testitem):
+        # Check to see if there is a file downloaded
+        if not os.path.exists(self.filename):
+            self._download()
+            self._extract()
+        else:
+            try:
+                t = self._getremotetime()
+            except urllib2.URLError:
+                # Problem checking the server, use the old files.
+                log.test_log.debug("Could not contact server. Binaries may be old.")
+                return
+            # If the server version is more recent, download it
+            if t > os.path.getmtime(self.filename):
+                self._download()
+                self._extract()
