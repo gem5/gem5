@@ -139,10 +139,6 @@ Switch::regStats()
 {
     BasicRouter::regStats();
 
-    for (auto& throttle : throttles) {
-        throttle.regStats();
-    }
-
     for (const auto& throttle : throttles) {
         switchStats.m_avg_utilization += throttle.getUtilization();
     }
@@ -177,18 +173,12 @@ void
 Switch::resetStats()
 {
     perfectSwitch.clearStats();
-    for (auto& throttle : throttles) {
-        throttle.clearStats();
-    }
 }
 
 void
 Switch::collateStats()
 {
     perfectSwitch.collateStats();
-    for (auto& throttle : throttles) {
-        throttle.collateStats();
-    }
 }
 
 void
