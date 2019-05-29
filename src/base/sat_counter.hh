@@ -235,6 +235,18 @@ class SatCounter
      */
     bool isSaturated() const { return counter == maxVal; }
 
+    /**
+     * Saturate the counter.
+     *
+     * @return The value added to the counter to reach saturation.
+     */
+    uint8_t saturate()
+    {
+        const uint8_t diff = maxVal - counter;
+        counter = maxVal;
+        return diff;
+    }
+
   private:
     uint8_t initialVal;
     uint8_t maxVal;
