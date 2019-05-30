@@ -128,17 +128,18 @@ FALRU::invalidate(CacheBlk *blk)
 }
 
 CacheBlk*
-FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat)
+FALRU::accessBlock(const PacketPtr pkt, Cycles &lat)
 {
-    return accessBlock(addr, is_secure, lat, 0);
+    return accessBlock(pkt, lat, 0);
 }
 
 CacheBlk*
-FALRU::accessBlock(Addr addr, bool is_secure, Cycles &lat,
+FALRU::accessBlock(const PacketPtr pkt, Cycles &lat,
                    CachesMask *in_caches_mask)
 {
     CachesMask mask = 0;
-    FALRUBlk* blk = static_cast<FALRUBlk*>(findBlock(addr, is_secure));
+    FALRUBlk* blk =
+        static_cast<FALRUBlk*>(findBlock(pkt->getAddr(), pkt->isSecure()));
 
     // If a cache hit
     if (blk && blk->isValid()) {

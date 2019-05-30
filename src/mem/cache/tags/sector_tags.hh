@@ -136,12 +136,11 @@ class SectorTags : public BaseTags
      * access and should only be used as such. Returns the tag lookup latency
      * as a side effect.
      *
-     * @param addr The address to find.
-     * @param is_secure True if the target memory space is secure.
+     * @param pkt The packet holding the address to find.
      * @param lat The latency of the tag lookup.
      * @return Pointer to the cache block if found.
      */
-    CacheBlk* accessBlock(Addr addr, bool is_secure, Cycles &lat) override;
+    CacheBlk* accessBlock(const PacketPtr pkt, Cycles &lat) override;
 
     /**
      * Insert the new block into the cache and update replacement data.
