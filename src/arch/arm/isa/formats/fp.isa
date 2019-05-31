@@ -2539,6 +2539,23 @@ let {{
                 }
             }
           case 0x8:
+            if (machInst.condCode == 0xF) {
+                const bool op = bits(machInst, 6);
+                const uint32_t size = bits(machInst, 9, 8);
+                if (op) {
+                    if (size == 1) {
+                        return new FailUnimplemented("vminnm.f16", machInst);
+                    }
+                    return decodeNeonSizeSingleDouble<VminnmS, VminnmD>(
+                        size, machInst, vd, vn, vm);
+                } else {
+                    if (size == 1) {
+                        return new FailUnimplemented("vmaxnm.f16", machInst);
+                    }
+                    return decodeNeonSizeSingleDouble<VmaxnmS, VmaxnmD>(
+                        size, machInst, vd, vn, vm);
+                }
+            }
             if ((opc3 & 0x1) == 0) {
                 if (single) {
                     return decodeVfpRegRegRegOp<VdivS>(
