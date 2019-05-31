@@ -40,6 +40,11 @@
 #ifndef __BASE_CIRCULAR_QUEUE_HH__
 #define __BASE_CIRCULAR_QUEUE_HH__
 
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <iterator>
+#include <type_traits>
 #include <vector>
 
 /** Circular queue.
