@@ -45,7 +45,6 @@ Random::Random(const Params &p)
 
 void
 Random::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-const
 {
     // Unprioritize replacement data victimization
     std::static_pointer_cast<RandomReplData>(

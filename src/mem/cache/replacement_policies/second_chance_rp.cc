@@ -54,7 +54,7 @@ SecondChance::useSecondChance(
 
 void
 SecondChance::invalidate(
-    const std::shared_ptr<ReplacementData>& replacement_data) const
+    const std::shared_ptr<ReplacementData>& replacement_data)
 {
     FIFO::invalidate(replacement_data);
 

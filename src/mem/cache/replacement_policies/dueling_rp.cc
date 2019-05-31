@@ -45,8 +45,7 @@ Dueling::Dueling(const Params &p)
 }
 
 void
-Dueling::invalidate(
-    const std::shared_ptr<ReplacementData>& replacement_data) const
+Dueling::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);

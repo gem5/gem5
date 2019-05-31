@@ -44,7 +44,6 @@ LFU::LFU(const Params &p)
 
 void
 LFU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-const
 {
     // Reset reference count
     std::static_pointer_cast<LFUReplData>(replacement_data)->refCount = 0;

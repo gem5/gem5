@@ -48,7 +48,6 @@ BRRIP::BRRIP(const Params &p)
 
 void
 BRRIP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-const
 {
     std::shared_ptr<BRRIPReplData> casted_replacement_data =
         std::static_pointer_cast<BRRIPReplData>(replacement_data);

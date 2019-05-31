@@ -45,7 +45,6 @@ FIFO::FIFO(const Params &p)
 
 void
 FIFO::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-const
 {
     // Reset insertion tick
     std::static_pointer_cast<FIFOReplData>(

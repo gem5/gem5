@@ -75,7 +75,8 @@ class WeightedLRU : public Base
      * @param replacement_data Replacement data to be invalidated.
      */
     void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-                                                              const override;
+                                                                    override;
+
     /**
      * Touch an entry to update its replacement data.
      * Sets its last touch tick as the current tick.

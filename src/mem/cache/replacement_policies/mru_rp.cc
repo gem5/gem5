@@ -45,7 +45,6 @@ MRU::MRU(const Params &p)
 
 void
 MRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-const
 {
     // Reset last touch timestamp
     std::static_pointer_cast<MRUReplData>(

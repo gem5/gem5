@@ -107,8 +107,7 @@ TreePLRU::TreePLRU(const Params &p)
 }
 
 void
-TreePLRU::invalidate(
-    const std::shared_ptr<ReplacementData>& replacement_data) const
+TreePLRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 {
     // Cast replacement data
     std::shared_ptr<TreePLRUReplData> treePLRU_replacement_data =

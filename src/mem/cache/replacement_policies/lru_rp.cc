@@ -45,7 +45,6 @@ LRU::LRU(const Params &p)
 
 void
 LRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-const
 {
     // Reset last touch timestamp
     std::static_pointer_cast<LRUReplData>(

@@ -61,7 +61,7 @@ class Base : public SimObject
      * @param replacement_data Replacement data to be invalidated.
      */
     virtual void invalidate(const std::shared_ptr<ReplacementData>&
-                                                replacement_data) const = 0;
+        replacement_data) = 0;
 
     /**
      * Update replacement data.

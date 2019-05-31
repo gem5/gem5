@@ -115,8 +115,8 @@ WeightedLRU::reset(const std::shared_ptr<ReplacementData>&
 }
 
 void
-WeightedLRU::invalidate(const std::shared_ptr<ReplacementData>&
-                                                    replacement_data) const
+WeightedLRU::invalidate(
+    const std::shared_ptr<ReplacementData>& replacement_data)
 {
     // Reset last touch timestamp
     std::static_pointer_cast<WeightedLRUReplData>(

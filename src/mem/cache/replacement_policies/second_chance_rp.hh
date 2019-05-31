@@ -87,7 +87,7 @@ class SecondChance : public FIFO
      * @param replacement_data Replacement data to be invalidated.
      */
     void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-                                                              const override;
+                                                                    override;
 
     /**
      * Touch an entry to update its re-insertion tick and second chance bit.
