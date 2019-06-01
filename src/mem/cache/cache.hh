@@ -87,7 +87,8 @@ class Cache : public BaseCache
      */
     void promoteWholeLineWrites(PacketPtr pkt);
 
-    bool access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat) override;
+    bool access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
+                PacketList &writebacks) override;
 
     void handleTimingReqHit(PacketPtr pkt, CacheBlk *blk,
                             Tick request_time) override;
@@ -98,9 +99,9 @@ class Cache : public BaseCache
 
     void recvTimingReq(PacketPtr pkt) override;
 
-    void doWritebacks(PacketPtr pkt, Tick forward_time) override;
+    void doWritebacks(PacketList& writebacks, Tick forward_time) override;
 
-    void doWritebacksAtomic(PacketPtr pkt) override;
+    void doWritebacksAtomic(PacketList& writebacks) override;
 
     void serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt,
                             CacheBlk *blk) override;
@@ -109,7 +110,8 @@ class Cache : public BaseCache
 
     void recvTimingSnoopResp(PacketPtr pkt) override;
 
-    Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk) override;
+    Cycles handleAtomicReqMiss(PacketPtr pkt, CacheBlk *&blk,
+                               PacketList &writebacks) override;
 
     Tick recvAtomic(PacketPtr pkt) override;
 

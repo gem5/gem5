@@ -342,11 +342,20 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     // the delay provided by the crossbar
     Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
 
-    // Note that lat is passed by reference here. The function
-    // access() will set the lat value.
     Cycles lat;
     CacheBlk *blk = nullptr;
-    bool satisfied = access(pkt, blk, lat);
+    bool satisfied = false;
+    {
+        PacketList writebacks;
+        // Note that lat is passed by reference here. The function
+        // access() will set the lat value.
+        satisfied = access(pkt, blk, lat, writebacks);
+
+        // After the evicted blocks are selected, they must be forwarded
+        // to the write buffer to ensure they logically precede anything
+        // happening below
+        doWritebacks(writebacks, clockEdge(lat + forwardLatency));
+    }
 
     // Here we charge the headerDelay that takes into account the latencies
     // of the bus, if the packet comes from it.
@@ -448,6 +457,8 @@ BaseCache::recvTimingResp(PacketPtr pkt)
             miss_latency;
     }
 
+    PacketList writebacks;
+
     bool is_fill = !mshr->isForward &&
         (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp ||
          mshr->wasWholeLineWrite);
@@ -464,7 +475,7 @@ BaseCache::recvTimingResp(PacketPtr pkt)
 
         const bool allocate = (writeAllocator && mshr->wasWholeLineWrite) ?
             writeAllocator->allocate() : mshr->allocOnFill();
-        blk = handleFill(pkt, blk, allocate);
+        blk = handleFill(pkt, blk, writebacks, allocate);
         assert(blk != nullptr);
         ppFill->notify(pkt);
     }
@@ -520,8 +531,12 @@ BaseCache::recvTimingResp(PacketPtr pkt)
 
     // if we used temp block, check to see if its valid and then clear it out
     if (blk == tempBlock && tempBlock->isValid()) {
-        evictBlock(blk, clockEdge(forwardLatency) + pkt->headerDelay);
+        evictBlock(blk, writebacks);
     }
+
+    const Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
+    // copy writebacks to write buffer
+    doWritebacks(writebacks, forward_time);
 
     DPRINTF(CacheVerbose, "%s: Leaving with %s\n", __func__, pkt->print());
     delete pkt;
@@ -540,7 +555,8 @@ BaseCache::recvAtomic(PacketPtr pkt)
     Cycles lat = lookupLatency;
 
     CacheBlk *blk = nullptr;
-    bool satisfied = access(pkt, blk, lat);
+    PacketList writebacks;
+    bool satisfied = access(pkt, blk, lat, writebacks);
 
     if (pkt->isClean() && blk && blk->isDirty()) {
         // A cache clean opearation is looking for a dirty
@@ -550,12 +566,17 @@ BaseCache::recvAtomic(PacketPtr pkt)
         DPRINTF(CacheVerbose, "%s: packet %s found block: %s\n",
                 __func__, pkt->print(), blk->print());
         PacketPtr wb_pkt = writecleanBlk(blk, pkt->req->getDest(), pkt->id);
+        writebacks.push_back(wb_pkt);
         pkt->setSatisfied();
-        doWritebacksAtomic(wb_pkt);
     }
 
+    // handle writebacks resulting from the access here to ensure they
+    // logically precede anything happening below
+    doWritebacksAtomic(writebacks);
+    assert(writebacks.empty());
+
     if (!satisfied) {
-        lat += handleAtomicReqMiss(pkt, blk);
+        lat += handleAtomicReqMiss(pkt, blk, writebacks);
     }
 
     // Note that we don't invoke the prefetcher at all in atomic mode.
@@ -568,6 +589,9 @@ BaseCache::recvAtomic(PacketPtr pkt)
     // for an example (though we'd want to issue the prefetch(es)
     // immediately rather than calling requestMemSideBus() as we do
     // there).
+
+    // do any writebacks resulting from the response handling
+    doWritebacksAtomic(writebacks);
 
     // if we used temp block, check to see if its valid and if so
     // clear it out, but only do so after the call to recvAtomic is
@@ -776,7 +800,7 @@ BaseCache::getNextQueueEntry()
 
 bool
 BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
-    uint32_t delay, Cycles tag_latency)
+                                 PacketList &writebacks)
 {
     // tempBlock does not exist in the tags, so don't do anything for it.
     if (blk == tempBlock) {
@@ -866,8 +890,7 @@ BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
             if (evict_blk->wasPrefetched()) {
                 unusedPrefetches++;
             }
-            Cycles lat = calculateAccessLatency(evict_blk, delay, tag_latency);
-            evictBlock(evict_blk, clockEdge(lat + forwardLatency));
+            evictBlock(evict_blk, writebacks);
         }
     }
 
@@ -1001,7 +1024,8 @@ BaseCache::calculateAccessLatency(const CacheBlk* blk, const uint32_t delay,
 }
 
 bool
-BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat)
+BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
+                  PacketList &writebacks)
 {
     // sanity check
     assert(pkt->isRequest());
@@ -1100,7 +1124,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat)
 
         if (!blk) {
             // need to do a replacement
-            blk = allocateBlock(pkt, tag_latency);
+            blk = allocateBlock(pkt, writebacks);
             if (!blk) {
                 // no replaceable block available: give up, fwd to next level.
                 incMissCount(pkt);
@@ -1119,7 +1143,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat)
             // a smaller size, and now it doesn't fit the entry anymore).
             // If that is the case we might need to evict blocks.
             if (!updateCompressionData(blk, pkt->getConstPtr<uint64_t>(),
-                pkt->headerDelay, tag_latency)) {
+                writebacks)) {
                 // This is a failed data expansion (write), which happened
                 // after finding the replacement entries and accessing the
                 // block's data. There were no replaceable entries available
@@ -1195,7 +1219,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat)
                 return false;
             } else {
                 // a writeback that misses needs to allocate a new block
-                blk = allocateBlock(pkt, tag_latency);
+                blk = allocateBlock(pkt, writebacks);
                 if (!blk) {
                     // no replaceable block available: give up, fwd to
                     // next level.
@@ -1218,7 +1242,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat)
             // a smaller size, and now it doesn't fit the entry anymore).
             // If that is the case we might need to evict blocks.
             if (!updateCompressionData(blk, pkt->getConstPtr<uint64_t>(),
-                pkt->headerDelay, tag_latency)) {
+                writebacks)) {
                 // This is a failed data expansion (write), which happened
                 // after finding the replacement entries and accessing the
                 // block's data. There were no replaceable entries available
@@ -1311,7 +1335,8 @@ BaseCache::maintainClusivity(bool from_cache, CacheBlk *blk)
 }
 
 CacheBlk*
-BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, bool allocate)
+BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
+                      bool allocate)
 {
     assert(pkt->isResponse());
     Addr addr = pkt->getAddr();
@@ -1328,12 +1353,9 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, bool allocate)
         // better have read new data...
         assert(pkt->hasData() || pkt->cmd == MemCmd::InvalidateResp);
 
-        // Need to do a replacement if allocating, otherwise we stick
-        // with the temporary storage. The tag lookup has already been
-        // done to decide the eviction victims, so it is set to 0 here.
-        // The eviction itself, however, is delayed until the new data
-        // for the block that is requesting the replacement arrives.
-        blk = allocate ? allocateBlock(pkt, Cycles(0)) : nullptr;
+        // need to do a replacement if allocating, otherwise we stick
+        // with the temporary storage
+        blk = allocate ? allocateBlock(pkt, writebacks) : nullptr;
 
         if (!blk) {
             // No replaceable block or a mostly exclusive
@@ -1434,7 +1456,7 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, bool allocate)
 }
 
 CacheBlk*
-BaseCache::allocateBlock(const PacketPtr pkt, Cycles tag_latency)
+BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 {
     // Get address
     const Addr addr = pkt->getAddr();
@@ -1507,9 +1529,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, Cycles tag_latency)
                     unusedPrefetches++;
                 }
 
-                Cycles lat =
-                    calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
-                evictBlock(blk, clockEdge(lat + forwardLatency));
+                evictBlock(blk, writebacks);
             }
         }
 
@@ -1542,15 +1562,11 @@ BaseCache::invalidateBlock(CacheBlk *blk)
 }
 
 void
-BaseCache::evictBlock(CacheBlk *blk, Tick forward_timing)
+BaseCache::evictBlock(CacheBlk *blk, PacketList &writebacks)
 {
     PacketPtr pkt = evictBlock(blk);
     if (pkt) {
-        if (system->isTimingMode()) {
-            doWritebacks(pkt, forward_timing);
-        } else {
-            doWritebacksAtomic(pkt);
-        }
+        writebacks.push_back(pkt);
     }
 }
 
@@ -1819,7 +1835,9 @@ BaseCache::sendMSHRQueuePacket(MSHR* mshr)
                     __func__, pkt->print(), blk->print());
             PacketPtr wb_pkt = writecleanBlk(blk, pkt->req->getDest(),
                                              pkt->id);
-            doWritebacks(wb_pkt, 0);
+            PacketList writebacks;
+            writebacks.push_back(wb_pkt);
+            doWritebacks(writebacks, 0);
         }
 
         return false;
