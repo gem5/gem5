@@ -114,6 +114,31 @@ class NRURP(BRRIPRP):
     btp = 100
     num_bits = 1
 
+class SHiPRP(BRRIPRP):
+    type = 'SHiPRP'
+    abstract = True
+    cxx_class = 'replacement_policy::SHiP'
+    cxx_header = "mem/cache/replacement_policies/ship_rp.hh"
+
+    shct_size = Param.Unsigned(16384, "Number of SHCT entries")
+    # By default any value greater than 0 is enough to change insertion policy
+    insertion_threshold = Param.Percent(1,
+        "Percentage at which an entry changes insertion policy")
+    # Always make hits mark entries as last to be evicted
+    hit_priority = True
+    # Let the predictor decide when to change insertion policy
+    btp = 0
+
+class SHiPMemRP(SHiPRP):
+    type = 'SHiPMemRP'
+    cxx_class = 'replacement_policy::SHiPMem'
+    cxx_header = "mem/cache/replacement_policies/ship_rp.hh"
+
+class SHiPPCRP(SHiPRP):
+    type = 'SHiPPCRP'
+    cxx_class = 'replacement_policy::SHiPPC'
+    cxx_header = "mem/cache/replacement_policies/ship_rp.hh"
+
 class TreePLRURP(BaseReplacementPolicy):
     type = 'TreePLRURP'
     cxx_class = 'replacement_policy::TreePLRU'
