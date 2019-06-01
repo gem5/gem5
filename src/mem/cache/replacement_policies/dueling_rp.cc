@@ -54,12 +54,38 @@ Dueling::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
+Dueling::touch(const std::shared_ptr<ReplacementData>& replacement_data,
+    const PacketPtr pkt)
+{
+    std::shared_ptr<DuelerReplData> casted_replacement_data =
+        std::static_pointer_cast<DuelerReplData>(replacement_data);
+    replPolicyA->touch(casted_replacement_data->replDataA, pkt);
+    replPolicyB->touch(casted_replacement_data->replDataB, pkt);
+}
+
+void
 Dueling::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);
     replPolicyA->touch(casted_replacement_data->replDataA);
     replPolicyB->touch(casted_replacement_data->replDataB);
+}
+
+void
+Dueling::reset(const std::shared_ptr<ReplacementData>& replacement_data,
+    const PacketPtr pkt)
+{
+    std::shared_ptr<DuelerReplData> casted_replacement_data =
+        std::static_pointer_cast<DuelerReplData>(replacement_data);
+    replPolicyA->reset(casted_replacement_data->replDataA, pkt);
+    replPolicyB->reset(casted_replacement_data->replDataB, pkt);
+
+    // A miss in a set is a sample to the duel. A call to this function
+    // implies in the replacement of an entry, which was either caused by
+    // a miss, an external invalidation, or the initialization of the table
+    // entry (when warming up)
+    duelingMonitor.sample(static_cast<Dueler*>(casted_replacement_data.get()));
 }
 
 void

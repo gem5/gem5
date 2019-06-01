@@ -33,6 +33,7 @@
 
 #include "base/compiler.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "mem/packet.hh"
 #include "params/BaseReplacementPolicy.hh"
 #include "sim/sim_object.hh"
 
@@ -67,17 +68,29 @@ class Base : public SimObject
      * Update replacement data.
      *
      * @param replacement_data Replacement data to be touched.
+     * @param pkt Packet that generated this access.
      */
     virtual void touch(const std::shared_ptr<ReplacementData>&
-                                                replacement_data) const = 0;
+        replacement_data, const PacketPtr pkt)
+    {
+        touch(replacement_data);
+    }
+    virtual void touch(const std::shared_ptr<ReplacementData>&
+        replacement_data) const = 0;
 
     /**
      * Reset replacement data. Used when it's holder is inserted/validated.
      *
      * @param replacement_data Replacement data to be reset.
+     * @param pkt Packet that generated this access.
      */
     virtual void reset(const std::shared_ptr<ReplacementData>&
-                                                replacement_data) const = 0;
+        replacement_data, const PacketPtr pkt)
+    {
+        reset(replacement_data);
+    }
+    virtual void reset(const std::shared_ptr<ReplacementData>&
+        replacement_data) const = 0;
 
     /**
      * Find replacement victim among candidates.

@@ -143,7 +143,7 @@ class BaseSetAssoc : public BaseTags
             blk->increaseRefCount();
 
             // Update replacement data of accessed block
-            replacementPolicy->touch(blk->replacementData);
+            replacementPolicy->touch(blk->replacementData, pkt);
         }
 
         // The tag lookup latency is the same for a hit or a miss
@@ -195,7 +195,7 @@ class BaseSetAssoc : public BaseTags
         stats.tagsInUse++;
 
         // Update replacement policy
-        replacementPolicy->reset(blk->replacementData);
+        replacementPolicy->reset(blk->replacementData, pkt);
     }
 
     void moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk) override;

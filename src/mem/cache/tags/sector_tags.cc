@@ -163,7 +163,7 @@ SectorTags::accessBlock(const PacketPtr pkt, Cycles &lat)
 
         // Update replacement data of accessed block, which is shared with
         // the whole sector it belongs to
-        replacementPolicy->touch(sector_blk->replacementData);
+        replacementPolicy->touch(sector_blk->replacementData, pkt);
     }
 
     // The tag lookup latency is the same for a hit or a miss
@@ -183,14 +183,14 @@ SectorTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     // sector was not previously present in the cache.
     if (sector_blk->isValid()) {
         // An existing entry's replacement data is just updated
-        replacementPolicy->touch(sector_blk->replacementData);
+        replacementPolicy->touch(sector_blk->replacementData, pkt);
     } else {
         // Increment tag counter
         stats.tagsInUse++;
         assert(stats.tagsInUse.value() <= numSectors);
 
         // A new entry resets the replacement data
-        replacementPolicy->reset(sector_blk->replacementData);
+        replacementPolicy->reset(sector_blk->replacementData, pkt);
     }
 
     // Do common block insertion functionality
