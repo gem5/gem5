@@ -236,6 +236,8 @@ class SuperBlk : public SectorBlk
     void setCompressionFactor(const uint8_t compression_factor);
 
     void invalidate() override;
+
+    std::string print() const override;
 };
 
 #endif //__MEM_CACHE_TAGS_SUPER_BLK_HH__

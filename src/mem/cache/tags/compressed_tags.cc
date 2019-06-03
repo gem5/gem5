@@ -150,12 +150,8 @@ CompressedTags::findVictim(Addr addr, const bool is_secure,
         assert(!victim->isValid());
 
         // Print all co-allocated blocks
-        DPRINTF(CacheComp, "Co-Allocation: offset %d with blocks\n", offset);
-        for (const auto& blk : victim_superblock->blks){
-            if (blk->isValid()) {
-                DPRINTFR(CacheComp, "\t[%s]\n", blk->print());
-            }
-        }
+        DPRINTF(CacheComp, "Co-Allocation: offset %d of %s\n", offset,
+                victim_superblock->print());
     }
 
     // Update number of sub-blocks evicted due to a replacement

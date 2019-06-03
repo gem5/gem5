@@ -177,6 +177,13 @@ class SectorBlk : public TaggedEntry
      * @param way The way of this entry and sub-entries.
      */
     void setPosition(const uint32_t set, const uint32_t way) override;
+
+    /**
+     * Print relevant information for this sector block and its sub-blocks.
+     *
+     * @return A string with the contents of the sector block.
+     */
+    std::string print() const override;
 };
 
 #endif //__MEM_CACHE_TAGS_SECTOR_BLK_HH__

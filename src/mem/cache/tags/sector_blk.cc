@@ -150,3 +150,16 @@ SectorBlk::setPosition(const uint32_t set, const uint32_t way)
         blk->setPosition(set, way);
     }
 }
+
+std::string
+SectorBlk::print() const
+{
+    std::string sub_blk_print;
+    for (const auto& sub_blk : blks) {
+        if (sub_blk->isValid()) {
+            sub_blk_print += "\t[" + sub_blk->print() + "]\n";
+        }
+    }
+    return csprintf("%s valid sub-blks (%d):\n%s",
+        TaggedEntry::print(), getNumValid(), sub_blk_print);
+}

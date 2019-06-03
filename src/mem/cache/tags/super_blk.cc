@@ -236,3 +236,9 @@ SuperBlk::setCompressionFactor(const uint8_t compression_factor)
         compressionFactor = compression_factor;
     }
 }
+
+std::string
+SuperBlk::print() const
+{
+    return csprintf("CF: %d %s", getCompressionFactor(), SectorBlk::print());
+}
