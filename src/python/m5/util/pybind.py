@@ -1,4 +1,4 @@
-# Copyright (c) 2017 ARM Limited
+# Copyright (c) 2017, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -59,11 +59,12 @@ class PyBindProperty(PyBindExport):
 
 class PyBindMethod(PyBindExport):
     def __init__(self, name, cxx_name=None, args=None,
-                 return_value_policy=None):
+                 return_value_policy=None, static=False):
         self.name = name
         self.cxx_name = cxx_name if cxx_name else name
         self.args = args
         self.return_value_policy = return_value_policy
+        self.method_def = 'def_static' if static else 'def'
 
     def _conv_arg(self, value):
         if isinstance(value, bool):
@@ -88,4 +89,4 @@ class PyBindMethod(PyBindExport):
                     return 'py::arg("%s")' % arg
 
             arguments.extend(list([ get_arg_decl(a) for a in self.args ]))
-        code('.def(' + ', '.join(arguments) + ')')
+        code('.' + self.method_def + '(' + ', '.join(arguments) + ')')
