@@ -34,7 +34,10 @@
 
 #include "mem/cache/tags/super_blk.hh"
 
-#include "base/logging.hh"
+#include <climits>
+#include <cmath>
+
+#include "base/bitfield.hh"
 
 CompressionBlk::CompressionBlk()
     : SectorSubBlk(), _size(0), _decompressionLatency(0), _compressed(false)
@@ -95,6 +98,9 @@ CompressionBlk::setSizeBits(const std::size_t size)
     _size = size;
 
     SuperBlk* superblock = static_cast<SuperBlk*>(getSectorBlock());
+    const uint8_t compression_factor =
+        superblock->calculateCompressionFactor(size);
+    superblock->setCompressionFactor(compression_factor);
 
     // Either this function is called after an insertion, or an update.
     // If somebody else is present in the block, keep the superblock's
@@ -102,7 +108,7 @@ CompressionBlk::setSizeBits(const std::size_t size)
     const uint8_t num_valid = superblock->getNumValid();
     assert(num_valid >= 1);
     if (num_valid == 1) {
-        if (superblock->canCoAllocate(size)) {
+        if (compression_factor != 1) {
             setCompressed();
         } else {
             setUncompressed();
@@ -138,16 +144,17 @@ CompressionBlk::invalidate()
 CompressionBlk::OverwriteType
 CompressionBlk::checkExpansionContraction(const std::size_t size) const
 {
-    // @todo As of now only two states are supported: compressed to its
-    // maximum compression, and uncompressed. Support for intermediate
-    // states (e.g., if MaxCR=4, 2/4 and 3/4 of the blkSize) should be added
+    // An expansion happens when a block passes from a compressible state
+    // to a less compressible state (e.g., blkSize/4 to (blkSize/2 or blkSize),
+    // or blkSize/2 to blkSize). A contraction happens when a block passes
+    // from a less compressible state to a more compressible state (i.e., the
+    // opposite of expansion)
     const SuperBlk* superblock =
         static_cast<const SuperBlk*>(getSectorBlock());
-    const bool prev_compressed = isCompressed();
-    const bool new_compressed = superblock->canCoAllocate(size);
-    return (prev_compressed == new_compressed) ? UNCHANGED :
-        ((prev_compressed & !new_compressed) ? DATA_EXPANSION :
-        DATA_CONTRACTION);
+    const uint8_t prev_cf = superblock->getCompressionFactor();
+    const uint8_t new_cf = superblock->calculateCompressionFactor(size);
+    return (new_cf < prev_cf) ? DATA_EXPANSION :
+        ((new_cf > prev_cf) ? DATA_CONTRACTION : UNCHANGED);
 }
 
 std::string
@@ -156,6 +163,18 @@ CompressionBlk::print() const
     return csprintf("%s compressed: %d size: %llu decompression latency: %d",
                     SectorSubBlk::print(), isCompressed(), getSizeBits(),
                     getDecompressionLatency());
+}
+
+SuperBlk::SuperBlk()
+    : SectorBlk(), blkSize(0), compressionFactor(1)
+{
+}
+
+void
+SuperBlk::invalidate()
+{
+    SectorBlk::invalidate();
+    compressionFactor = 1;
 }
 
 bool
@@ -174,10 +193,11 @@ SuperBlk::isCompressed(const CompressionBlk* ignored_blk) const
 bool
 SuperBlk::canCoAllocate(const std::size_t compressed_size) const
 {
-    // Simple co-allocation function: at most numBlocksPerSector blocks that
-    // compress at least to (100/numBlocksPerSector)% of their original size
-    // can share a superblock
-    return (compressed_size <= (blkSize * 8) / blks.size());
+    // A YACC-like (Sardashti et al., 2016) co-allocation function: at most
+    // numBlocksPerSector blocks that compress at least to fit in the space
+    // allocated by its compression factor can share a superblock
+    return (getNumValid() < getCompressionFactor()) &&
+        (compressed_size <= (blkSize * CHAR_BIT) / getCompressionFactor());
 }
 
 void
@@ -185,4 +205,34 @@ SuperBlk::setBlkSize(const std::size_t blk_size)
 {
     assert(blkSize == 0);
     blkSize = blk_size;
+}
+
+uint8_t
+SuperBlk::calculateCompressionFactor(const std::size_t size) const
+{
+    // The number of blocks per sector determines the maximum comp factor.
+    // If the compressed size is worse than the uncompressed size, we assume
+    // the size is the uncompressed size, and thus the compression factor is 1
+    const std::size_t blk_size_bits = CHAR_BIT * blkSize;
+    const std::size_t compression_factor = (size > blk_size_bits) ? 1 :
+        ((size == 0) ? blk_size_bits :
+        alignToPowerOfTwo(std::floor(double(blk_size_bits) / size)));
+    return std::min(compression_factor, blks.size());
+}
+
+uint8_t
+SuperBlk::getCompressionFactor() const
+{
+    return compressionFactor;
+}
+
+void
+SuperBlk::setCompressionFactor(const uint8_t compression_factor)
+{
+    // Either the block is alone, in which case the compression factor
+    // must be set, or it co-allocates with someone with a worse or
+    // equal compression factor, in which case it should not be updated
+    if (getNumValid() <= 1) {
+        compressionFactor = compression_factor;
+    }
 }

@@ -60,10 +60,6 @@ struct CompressedTagsParams;
  * tag, to virtually implement compression without increasing the complexity
  * of the simulator.
  *
- * This is a simple implementation of cache compression, where superblocks
- * can only have at most numBlocksPerSector compressed blocks, each compressed
- * to at least (100/numBlocksPerSector)% of its size.
- *
  * numBlocksPerSector holds the maximum number of blocks a superblock with
  * the best possible compression factor would hold. It is equivalent to CR
  * from the previous definition.

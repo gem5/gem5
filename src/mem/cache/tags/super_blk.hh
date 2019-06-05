@@ -170,8 +170,15 @@ class SuperBlk : public SectorBlk
     /** Block size, in bytes. */
     std::size_t blkSize;
 
+    /**
+     * Superblock's compression factor. It is aligned to be a power of two,
+     * limited by the maximum compression ratio, and calculated as:
+     *   compressionFactor = uncompressedSize/compressedSize
+     */
+    uint8_t compressionFactor;
+
   public:
-    SuperBlk() : SectorBlk(), blkSize(0) {}
+    SuperBlk();
     SuperBlk(const SuperBlk&) = delete;
     SuperBlk& operator=(const SuperBlk&) = delete;
     ~SuperBlk() {};
@@ -199,6 +206,36 @@ class SuperBlk : public SectorBlk
      * @param blk_size The uncompressed block size.
      */
     void setBlkSize(const std::size_t blk_size);
+
+    /**
+     * Calculate the compression factor (cf) given a compressed size and the
+     * maximum compression ratio. Therefore cf is:
+     *  1 if comp_size > blk_size/2,
+     *  2 if comp_size > blk_size/4,
+     *  4 if comp_size > blk_size/8,
+     *  8 if comp_size > blk_size/16,
+     * and so on.
+     *
+     * @param size The compressed size.
+     * @return Compression factor corresponding to the size.
+     */
+    uint8_t calculateCompressionFactor(const std::size_t size) const;
+
+    /**
+     * Get the compression factor of this superblock.
+     *
+     * @return The compression factor.
+     */
+    uint8_t getCompressionFactor() const;
+
+    /**
+     * Set the compression factor of this superblock.
+     *
+     * @param compression_factor The new compression factor.
+     */
+    void setCompressionFactor(const uint8_t compression_factor);
+
+    void invalidate() override;
 };
 
 #endif //__MEM_CACHE_TAGS_SUPER_BLK_HH__
