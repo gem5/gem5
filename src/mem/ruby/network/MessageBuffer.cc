@@ -225,6 +225,9 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
     // Increment the number of messages statistic
     m_buf_msgs++;
 
+    assert((m_max_size == 0) ||
+           ((m_prio_heap.size() + m_stall_map_size) <= m_max_size));
+
     DPRINTF(RubyQueue, "Enqueue arrival_time: %lld, Message: %s\n",
             arrival_time, *(message.get()));
 
