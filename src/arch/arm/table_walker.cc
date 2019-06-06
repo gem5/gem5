@@ -130,7 +130,10 @@ TableWalker::getPort(const std::string &if_name, PortID idx)
 TableWalker::WalkerState::WalkerState() :
     tc(nullptr), aarch64(false), el(EL0), physAddrRange(0), req(nullptr),
     asid(0), vmid(0), isHyp(false), transState(nullptr),
-    vaddr(0), vaddr_tainted(0), isWrite(false), isFetch(false), isSecure(false),
+    vaddr(0), vaddr_tainted(0),
+    sctlr(0), scr(0), cpsr(0), tcr(0),
+    htcr(0), hcr(0), vtcr(0),
+    isWrite(false), isFetch(false), isSecure(false),
     secureLookup(false), rwTable(false), userTable(false), xnTable(false),
     pxnTable(false), stage2Req(false),
     stage2Tran(nullptr), timing(false), functional(false),

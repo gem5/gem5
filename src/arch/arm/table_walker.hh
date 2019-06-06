@@ -67,6 +67,8 @@ class TableWalker : public ClockedObject
 
     class DescriptorBase {
       public:
+        DescriptorBase() : lookupLevel(L0) {}
+
         /** Current lookup level for this descriptor */
         LookupLevel lookupLevel;
 
@@ -381,6 +383,8 @@ class TableWalker : public ClockedObject
             Block,
             Page
         };
+
+        LongDescriptor() : data(0), _dirty(false) {}
 
         /** The raw bits of the entry */
         uint64_t data;
