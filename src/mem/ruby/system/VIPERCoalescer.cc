@@ -213,12 +213,16 @@ VIPERCoalescer::invL1()
     for (int i = 0; i < size; i++) {
         Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
         // Evict Read-only data
+        RubyRequestType request_type = RubyRequestType_REPLACEMENT;
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
             clockEdge(), addr, (uint8_t*) 0, 0, 0,
-            RubyRequestType_REPLACEMENT, RubyAccessMode_Supervisor,
+            request_type, RubyAccessMode_Supervisor,
             nullptr);
         assert(m_mandatory_q_ptr != NULL);
-        m_mandatory_q_ptr->enqueue(msg, clockEdge(), m_data_cache_hit_latency);
+        Tick latency = cyclesToTicks(
+                            m_controller->mandatoryQueueLatency(request_type));
+        assert(latency > 0);
+        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
         m_outstanding_inv++;
     }
     DPRINTF(GPUCoalescer,
@@ -240,12 +244,16 @@ VIPERCoalescer::wbL1()
     for (int i = 0; i < size; i++) {
         Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
         // Write dirty data back
+        RubyRequestType request_type = RubyRequestType_FLUSH;
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
             clockEdge(), addr, (uint8_t*) 0, 0, 0,
-            RubyRequestType_FLUSH, RubyAccessMode_Supervisor,
+            request_type, RubyAccessMode_Supervisor,
             nullptr);
         assert(m_mandatory_q_ptr != NULL);
-        m_mandatory_q_ptr->enqueue(msg, clockEdge(), m_data_cache_hit_latency);
+        Tick latency = cyclesToTicks(
+                            m_controller->mandatoryQueueLatency(request_type));
+        assert(latency > 0);
+        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
         m_outstanding_wb++;
     }
     DPRINTF(GPUCoalescer,
@@ -264,24 +272,32 @@ VIPERCoalescer::invwbL1()
     for (int i = 0; i < size; i++) {
         Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
         // Evict Read-only data
+        RubyRequestType request_type = RubyRequestType_REPLACEMENT;
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
             clockEdge(), addr, (uint8_t*) 0, 0, 0,
-            RubyRequestType_REPLACEMENT, RubyAccessMode_Supervisor,
+            request_type, RubyAccessMode_Supervisor,
             nullptr);
         assert(m_mandatory_q_ptr != NULL);
-        m_mandatory_q_ptr->enqueue(msg, clockEdge(), m_data_cache_hit_latency);
+        Tick latency = cyclesToTicks(
+                            m_controller->mandatoryQueueLatency(request_type));
+        assert(latency > 0);
+        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
         m_outstanding_inv++;
     }
     // Walk the cache
     for (int i = 0; i< size; i++) {
         Addr addr = m_dataCache_ptr->getAddressAtIdx(i);
         // Write dirty data back
+        RubyRequestType request_type = RubyRequestType_FLUSH;
         std::shared_ptr<RubyRequest> msg = std::make_shared<RubyRequest>(
             clockEdge(), addr, (uint8_t*) 0, 0, 0,
-            RubyRequestType_FLUSH, RubyAccessMode_Supervisor,
+            request_type, RubyAccessMode_Supervisor,
             nullptr);
         assert(m_mandatory_q_ptr != NULL);
-        m_mandatory_q_ptr->enqueue(msg, clockEdge(), m_data_cache_hit_latency);
+        Tick latency = cyclesToTicks(
+                m_controller->mandatoryQueueLatency(request_type));
+        assert(latency > 0);
+        m_mandatory_q_ptr->enqueue(msg, clockEdge(), latency);
         m_outstanding_wb++;
     }
 }
