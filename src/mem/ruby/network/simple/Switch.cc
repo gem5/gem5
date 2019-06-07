@@ -58,8 +58,8 @@ using stl_helpers::operator<<;
 
 Switch::Switch(const Params &p)
   : BasicRouter(p),
-    perfectSwitch(m_id, this, p.virt_nets), m_num_connected_buffers(0),
-    switchStats(this)
+    perfectSwitch(m_id, this, p.virt_nets),  m_latency(p.latency),
+    m_num_connected_buffers(0), switchStats(this)
 {
     m_port_buffers.reserve(p.port_buffers.size());
     for (auto& buffer : p.port_buffers) {

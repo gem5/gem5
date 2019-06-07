@@ -97,6 +97,7 @@ class SimpleNetwork(RubyNetwork):
                 if link.dst_node == router:
                     for i in range(int(self.number_of_virtual_networks)):
                         router_buffers.append(MessageBuffer(ordered = True,
+                                     allow_zero_latency = True,
                                      buffer_size = self.vnet_buffer_size(i)))
 
             # Add message buffers to routers for each external link connection
@@ -105,6 +106,7 @@ class SimpleNetwork(RubyNetwork):
                 if link.int_node in self.routers:
                     for i in range(int(self.number_of_virtual_networks)):
                         router_buffers.append(MessageBuffer(ordered = True,
+                                     allow_zero_latency = True,
                                      buffer_size = self.vnet_buffer_size(i)))
             router.port_buffers = router_buffers
 

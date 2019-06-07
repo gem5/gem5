@@ -66,7 +66,7 @@ static int network_message_to_size(Message* net_msg_ptr);
 
 Throttle::Throttle(int sID, RubySystem *rs, NodeID node, Cycles link_latency,
                    int endpoint_bandwidth, Switch *em)
-    : Consumer(em),
+    : Consumer(em,  Switch::THROTTLE_EV_PRI),
       m_switch_id(sID), m_switch(em), m_node(node),
       m_physical_vnets(false), m_ruby_system(rs),
       throttleStats(em, node)

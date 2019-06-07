@@ -77,6 +77,12 @@ class SimpleNetwork;
 class Switch : public BasicRouter
 {
   public:
+
+    // Makes sure throttle sends messages to the links after the switch is
+    // done forwarding the messages in the same cycle
+    static constexpr Event::Priority PERFECTSWITCH_EV_PRI = Event::Default_Pri;
+    static constexpr Event::Priority THROTTLE_EV_PRI = Event::Default_Pri + 1;
+
     typedef SwitchParams Params;
     Switch(const Params &p);
     ~Switch() = default;
@@ -100,6 +106,10 @@ class Switch : public BasicRouter
     bool functionalRead(Packet *, WriteMask&);
     uint32_t functionalWrite(Packet *);
 
+    Cycles latencyCycles() const { return m_latency; }
+
+    Tick latencyTicks() const { return cyclesToTicks(m_latency); }
+
   private:
     // Private copy constructor and assignment operator
     Switch(const Switch& obj);
@@ -108,6 +118,8 @@ class Switch : public BasicRouter
     PerfectSwitch perfectSwitch;
     SimpleNetwork* m_network_ptr;
     std::list<Throttle> throttles;
+
+    const Cycles m_latency;
 
     unsigned m_num_connected_buffers;
     std::vector<MessageBuffer*> m_port_buffers;

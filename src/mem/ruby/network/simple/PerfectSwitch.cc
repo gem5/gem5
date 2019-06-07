@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -55,7 +67,8 @@ operator<(const LinkOrder& l1, const LinkOrder& l2)
 }
 
 PerfectSwitch::PerfectSwitch(SwitchID sid, Switch *sw, uint32_t virt_nets)
-    : Consumer(sw), m_switch_id(sid), m_switch(sw)
+    : Consumer(sw, Switch::PERFECTSWITCH_EV_PRI),
+      m_switch_id(sid), m_switch(sw)
 {
     m_round_robin_start = 0;
     m_wakeups_wo_switch = 0;
@@ -281,7 +294,7 @@ PerfectSwitch::operateMessageBuffer(MessageBuffer *buffer, int incoming,
                     incoming, vnet, outgoing, vnet);
 
             m_out[outgoing][vnet]->enqueue(msg_ptr, current_time,
-                                           m_switch->cyclesToTicks(Cycles(1)));
+                                           m_switch->latencyTicks());
         }
     }
 }
