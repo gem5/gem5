@@ -226,6 +226,12 @@ FALRU::insertBlock(const PacketPtr pkt, CacheBlk *blk)
 }
 
 void
+FALRU::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
+{
+    panic("Moving blocks in FALRU has not been implemented");
+}
+
+void
 FALRU::moveToHead(FALRUBlk *blk)
 {
     // If block is not already head, do the moving

@@ -128,6 +128,7 @@ SectorTags::invalidate(CacheBlk *blk)
     if (!sector_blk->isValid()) {
         // Decrease the number of tags in use
         stats.tagsInUse--;
+        assert(stats.tagsInUse.value() >= 0);
 
         // Invalidate replacement data, as we're invalidating the sector
         replacementPolicy->invalidate(sector_blk->replacementData);
@@ -186,6 +187,7 @@ SectorTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     } else {
         // Increment tag counter
         stats.tagsInUse++;
+        assert(stats.tagsInUse.value() <= numSectors);
 
         // A new entry resets the replacement data
         replacementPolicy->reset(sector_blk->replacementData);
@@ -193,6 +195,52 @@ SectorTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
 
     // Do common block insertion functionality
     BaseTags::insertBlock(pkt, blk);
+}
+
+void
+SectorTags::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
+{
+    const bool dest_was_valid =
+        static_cast<SectorSubBlk*>(dest_blk)->getSectorBlock()->isValid();
+
+    BaseTags::moveBlock(src_blk, dest_blk);
+
+    // Get blocks' sectors. The blocks have effectively been swapped by now,
+    // so src points to an invalid block, and dest to the moved valid one.
+    SectorSubBlk* src_sub_blk = static_cast<SectorSubBlk*>(src_blk);
+    const SectorBlk* src_sector_blk = src_sub_blk->getSectorBlock();
+    SectorSubBlk* dest_sub_blk = static_cast<SectorSubBlk*>(dest_blk);
+    const SectorBlk* dest_sector_blk = dest_sub_blk->getSectorBlock();
+
+    // Since the blocks were using different replacement data pointers,
+    // we must touch the replacement data of the new entry, and invalidate
+    // the one that is being moved.
+    // When a block in a sector is invalidated, it does not make the tag
+    // invalid automatically, as there might be other blocks in the sector
+    // using it. The tag is invalidated only when there is a single block
+    // in the sector.
+    if (!src_sector_blk->isValid()) {
+        // Invalidate replacement data, as we're invalidating the sector
+        replacementPolicy->invalidate(src_sector_blk->replacementData);
+
+        if (dest_was_valid) {
+            // If destination sector was valid, and the source sector became
+            // invalid, there is one less tag being used
+            stats.tagsInUse--;
+            assert(stats.tagsInUse.value() >= 0);
+        }
+    } else if (!dest_was_valid) {
+        // If destination sector was invalid and became valid, and the source
+        // sector is still valid, there is one extra tag being used
+        stats.tagsInUse++;
+        assert(stats.tagsInUse.value() <= numSectors);
+    }
+
+    if (dest_was_valid) {
+        replacementPolicy->touch(dest_sector_blk->replacementData);
+    } else {
+        replacementPolicy->reset(dest_sector_blk->replacementData);
+    }
 }
 
 CacheBlk*

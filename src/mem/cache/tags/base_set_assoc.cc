@@ -93,3 +93,15 @@ BaseSetAssoc::invalidate(CacheBlk *blk)
     // Invalidate replacement data
     replacementPolicy->invalidate(blk->replacementData);
 }
+
+void
+BaseSetAssoc::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
+{
+    BaseTags::moveBlock(src_blk, dest_blk);
+
+    // Since the blocks were using different replacement data pointers,
+    // we must touch the replacement data of the new entry, and invalidate
+    // the one that is being moved.
+    replacementPolicy->invalidate(src_blk->replacementData);
+    replacementPolicy->reset(dest_blk->replacementData);
+}

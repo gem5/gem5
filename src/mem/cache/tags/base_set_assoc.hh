@@ -199,6 +199,8 @@ class BaseSetAssoc : public BaseTags
         replacementPolicy->reset(blk->replacementData);
     }
 
+    void moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk) override;
+
     /**
      * Limit the allocation for the cache ways.
      * @param ways The maximum number of ways available for replacement.

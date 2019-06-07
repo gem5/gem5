@@ -149,6 +149,8 @@ class SectorTags : public BaseTags
      */
     void insertBlock(const PacketPtr pkt, CacheBlk *blk) override;
 
+    void moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk) override;
+
     /**
      * Finds the given address in the cache, do not update replacement data.
      * i.e. This is a no-side-effect find of a block.

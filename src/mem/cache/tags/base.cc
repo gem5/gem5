@@ -123,6 +123,19 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     stats.dataAccesses += 1;
 }
 
+void
+BaseTags::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
+{
+    assert(!dest_blk->isValid());
+    assert(src_blk->isValid());
+
+    // Move src's contents to dest's
+    *dest_blk = std::move(*src_blk);
+
+    assert(dest_blk->isValid());
+    assert(!src_blk->isValid());
+}
+
 Addr
 BaseTags::extractTag(const Addr addr) const
 {

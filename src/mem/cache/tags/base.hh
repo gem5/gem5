@@ -309,6 +309,16 @@ class BaseTags : public ClockedObject
     virtual void insertBlock(const PacketPtr pkt, CacheBlk *blk);
 
     /**
+     * Move a block's metadata to another location decided by the replacement
+     * policy. It behaves as a swap, however, since the destination block
+     * should be invalid, the result is a move.
+     *
+     * @param src_blk The source block.
+     * @param dest_blk The destination block. Must be invalid.
+     */
+    virtual void moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk);
+
+    /**
      * Regenerate the block address.
      *
      * @param block The block.

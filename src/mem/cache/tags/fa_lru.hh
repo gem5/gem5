@@ -232,6 +232,8 @@ class FALRU : public BaseTags
      */
     void insertBlock(const PacketPtr pkt, CacheBlk *blk) override;
 
+    void moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk) override;
+
     /**
      * Generate the tag from the addres. For fully associative this is just the
      * block address.
