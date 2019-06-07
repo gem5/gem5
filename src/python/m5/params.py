@@ -1485,7 +1485,9 @@ class Enum(ParamValue):
         for elem_name in cls.map.keys():
             code('} else if (%s == "%s") {' % (src, elem_name))
             code.indent()
-            code('%s = Enums::%s;' % (dest, elem_name))
+            name = cls.__name__ if cls.enum_name is None else cls.enum_name
+            code('%s = %s::%s;' % (dest, name if cls.is_class else 'Enums',
+                                   elem_name))
             code('%s true;' % ret)
             code.dedent()
         code('} else {')
