@@ -103,6 +103,8 @@ class BaseCache(ClockedObject):
         "Replacement policy")
 
     compressor = Param.BaseCacheCompressor(NULL, "Cache compressor.")
+    replace_expansions = Param.Bool(True, "Apply replacement policy to " \
+        "decide which blocks should be evicted on a data expansion")
 
     sequential_access = Param.Bool(False,
         "Whether to access tags and data sequentially")

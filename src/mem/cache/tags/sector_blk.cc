@@ -45,7 +45,7 @@ SectorSubBlk::setSectorBlock(SectorBlk* sector_blk)
     _sectorBlk = sector_blk;
 }
 
-const SectorBlk*
+SectorBlk*
 SectorSubBlk::getSectorBlock() const
 {
     return _sectorBlk;

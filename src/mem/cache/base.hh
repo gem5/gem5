@@ -677,7 +677,7 @@ class BaseCache : public ClockedObject
      * @param writebacks List for any writebacks that need to be performed.
      * @return Whether operation is successful or not.
      */
-    bool updateCompressionData(CacheBlk *blk, const uint64_t* data,
+    bool updateCompressionData(CacheBlk *&blk, const uint64_t* data,
                                PacketList &writebacks);
 
     /**
@@ -892,6 +892,14 @@ class BaseCache : public ClockedObject
      * never have to do any writebacks).
      */
     const bool isReadOnly;
+
+    /**
+     * when a data expansion of a compressed block happens it will not be
+     * able to co-allocate where it is at anymore. If true, the replacement
+     * policy is called to chose a new location for the block. Otherwise,
+     * all co-allocated blocks are evicted.
+     */
+    const bool replaceExpansions;
 
     /**
      * Bit vector of the blocking reasons for the access path.

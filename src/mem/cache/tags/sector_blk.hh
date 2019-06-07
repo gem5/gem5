@@ -86,7 +86,7 @@ class SectorSubBlk : public CacheBlk
      *
      * @return The sector block pointer.
      */
-    const SectorBlk* getSectorBlock() const;
+    SectorBlk* getSectorBlock() const;
 
     /**
      * Set offset of this sub-block within the sector.

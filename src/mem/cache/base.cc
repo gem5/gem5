@@ -99,6 +99,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       forwardSnoops(true),
       clusivity(p.clusivity),
       isReadOnly(p.is_read_only),
+      replaceExpansions(p.replace_expansions),
       blocked(0),
       order(0),
       noTargetMSHR(nullptr),
@@ -831,18 +832,13 @@ BaseCache::handleEvictions(std::vector<CacheBlk*> &evict_blks,
 }
 
 bool
-BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
+BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
                                  PacketList &writebacks)
 {
     // tempBlock does not exist in the tags, so don't do anything for it.
     if (blk == tempBlock) {
         return true;
     }
-
-    // Get superblock of the given block
-    CompressionBlk* compression_blk = static_cast<CompressionBlk*>(blk);
-    const SuperBlk* superblock = static_cast<const SuperBlk*>(
-        compression_blk->getSectorBlock());
 
     // The compressor is called to compress the updated data, so that its
     // metadata can be updated.
@@ -857,24 +853,53 @@ BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
     // the bigger block
 
     // Get previous compressed size
+    CompressionBlk* compression_blk = static_cast<CompressionBlk*>(blk);
     M5_VAR_USED const std::size_t prev_size = compression_blk->getSizeBits();
 
     // Check if new data is co-allocatable
+    const SuperBlk* superblock =
+        static_cast<const SuperBlk*>(compression_blk->getSectorBlock());
     const bool is_co_allocatable = superblock->isCompressed(compression_blk) &&
         superblock->canCoAllocate(compression_size);
 
     // If block was compressed, possibly co-allocated with other blocks, and
     // cannot be co-allocated anymore, one or more blocks must be evicted to
-    // make room for the expanded block. As of now we decide to evict the co-
-    // allocated blocks to make room for the expansion, but other approaches
-    // that take the replacement data of the superblock into account may
-    // generate better results
+    // make room for the expanded block
     const bool was_compressed = compression_blk->isCompressed();
     if (was_compressed && !is_co_allocatable) {
         std::vector<CacheBlk*> evict_blks;
-        for (const auto& sub_blk : superblock->blks) {
-            if (sub_blk->isValid() && (compression_blk != sub_blk)) {
-                evict_blks.push_back(sub_blk);
+        bool victim_itself = false;
+        CacheBlk *victim = nullptr;
+        if (replaceExpansions) {
+            victim = tags->findVictim(regenerateBlkAddr(blk),
+                blk->isSecure(), compression_size, evict_blks);
+
+            // It is valid to return nullptr if there is no victim
+            if (!victim) {
+                return false;
+            }
+
+            // If the victim block is itself the block won't need to be moved,
+            // and the victim should not be evicted
+            if (blk == victim) {
+                victim_itself = true;
+                auto it = std::find_if(evict_blks.begin(), evict_blks.end(),
+                    [&blk](CacheBlk* evict_blk){ return evict_blk == blk; });
+                evict_blks.erase(it);
+            }
+
+            // Print victim block's information
+            DPRINTF(CacheRepl, "Data expansion replacement victim: %s\n",
+                victim->print());
+        } else {
+            // If we do not move the expanded block, we must make room for
+            // the expansion to happen, so evict every co-allocated block
+            superblock = static_cast<const SuperBlk*>(
+                compression_blk->getSectorBlock());
+            for (auto& sub_blk : superblock->blks) {
+                if (sub_blk->isValid() && (blk != sub_blk)) {
+                    evict_blks.push_back(sub_blk);
+                }
             }
         }
 
@@ -885,9 +910,16 @@ BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
 
         // Update the number of data expansions
         stats.dataExpansions++;
-
         DPRINTF(CacheComp, "Data expansion: expanding [%s] from %d to %d bits"
                 "\n", blk->print(), prev_size, compression_size);
+
+        if (!victim_itself && replaceExpansions) {
+            // Move the block's contents to the invalid block so that it now
+            // co-allocates with the other existing superblock entry
+            tags->moveBlock(blk, victim);
+            blk = victim;
+            compression_blk = static_cast<CompressionBlk*>(blk);
+        }
     }
 
     // We always store compressed blocks when possible
