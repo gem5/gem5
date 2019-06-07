@@ -35,48 +35,48 @@
 
 #include "base/fiber.hh"
 
-class TestFiber : public Fiber
+class SwitchingFiber : public Fiber
 {
   public:
     const char *name;
     std::vector<Fiber *> next;
 
-    TestFiber(const char *name, std::initializer_list<Fiber *> l);
+    SwitchingFiber(const char *name, std::initializer_list<Fiber *> l);
 
     void checkExpected();
     void main();
 };
 
-extern TestFiber a;
-extern TestFiber b;
-extern TestFiber c;
+extern SwitchingFiber a;
+extern SwitchingFiber b;
+extern SwitchingFiber c;
 
-TestFiber a("A", { &b, &a, Fiber::primaryFiber(), &b, &c });
-TestFiber b("B", { &a, &c });
-TestFiber c("C", { &a, Fiber::primaryFiber(), Fiber::primaryFiber() });
+SwitchingFiber a("A", { &b, &a, Fiber::primaryFiber(), &b, &c });
+SwitchingFiber b("B", { &a, &c });
+SwitchingFiber c("C", { &a, Fiber::primaryFiber(), Fiber::primaryFiber() });
 
-std::vector<TestFiber *>::iterator expectedIt;
-std::vector<TestFiber *> expected({
+std::vector<SwitchingFiber *>::iterator expectedIt;
+std::vector<SwitchingFiber *> expected({
     &a, &b, &a, &a, /* main Fiber, */
     &a, &b, &c, &a, &c,
     /* main Fiber, */ &c, &c
 });
 
-TestFiber::TestFiber(
+SwitchingFiber::SwitchingFiber(
         const char *name, std::initializer_list<Fiber *> l) :
     name(name), next(l)
 {}
 
 void
-TestFiber::checkExpected()
+SwitchingFiber::checkExpected()
 {
     ASSERT_NE(expectedIt, expected.end());
-    TestFiber *e = *expectedIt++;
+    SwitchingFiber *e = *expectedIt++;
     EXPECT_EQ(e, this) << "Expected " << e->name << ", got " << name;
 }
 
 void
-TestFiber::main()
+SwitchingFiber::main()
 {
     checkExpected();
     for (auto &n : next) {
