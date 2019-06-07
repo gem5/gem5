@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019,2020 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -57,7 +57,8 @@ MessageBuffer::MessageBuffer(const Params *p)
     m_max_size(p->buffer_size), m_time_last_time_size_checked(0),
     m_time_last_time_enqueue(0), m_time_last_time_pop(0),
     m_last_arrival_time(0), m_strict_fifo(p->ordered),
-    m_randomization(p->randomization)
+    m_randomization(p->randomization),
+    m_allow_zero_latency(p->allow_zero_latency)
 {
     m_msg_counter = 0;
     m_consumer = NULL;
@@ -172,7 +173,7 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
 
     // Calculate the arrival time of the message, that is, the first
     // cycle the message can be dequeued.
-    assert(delta > 0);
+    assert((delta > 0) || m_allow_zero_latency);
     Tick arrival_time = 0;
 
     // random delays are inserted if either RubySystem level randomization flag
@@ -193,7 +194,7 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta)
     }
 
     // Check the arrival time
-    assert(arrival_time > current_time);
+    assert(arrival_time >= current_time);
     if (m_strict_fifo) {
         if (arrival_time < m_last_arrival_time) {
             panic("FIFO ordering violated: %s name: %s current time: %d "

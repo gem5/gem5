@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2020 ARM Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2012 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -30,26 +42,51 @@
 
 using namespace std;
 
+Consumer::Consumer(ClockedObject *_em)
+    : m_wakeup_event([this]{ processCurrentEvent(); },
+                    "Consumer Event", false),
+      em(_em)
+{ }
+
 void
 Consumer::scheduleEvent(Cycles timeDelta)
 {
-    scheduleEventAbsolute(em->clockEdge(timeDelta));
+    m_wakeup_ticks.insert(em->clockEdge(timeDelta));
+    scheduleNextWakeup();
 }
 
 void
 Consumer::scheduleEventAbsolute(Tick evt_time)
 {
-    if (!alreadyScheduled(evt_time)) {
-        // This wakeup is not redundant
-        auto *evt = new EventFunctionWrapper(
-            [this]{ wakeup(); }, "Consumer Event", true);
+    m_wakeup_ticks.insert(
+        divCeil(evt_time, em->clockPeriod()) * em->clockPeriod());
+    scheduleNextWakeup();
+}
 
-        em->schedule(evt, evt_time);
-        insertScheduledWakeupTime(evt_time);
+void
+Consumer::scheduleNextWakeup()
+{
+    // look for the next tick in the future to schedule
+    auto it = m_wakeup_ticks.lower_bound(em->clockEdge());
+    if (it != m_wakeup_ticks.end()) {
+        Tick when = *it;
+        assert(when >= em->clockEdge());
+        if (m_wakeup_event.scheduled() && (when < m_wakeup_event.when()))
+            em->reschedule(m_wakeup_event, when, true);
+        else if (!m_wakeup_event.scheduled())
+            em->schedule(m_wakeup_event, when);
     }
+}
 
-    Tick t = em->clockEdge();
-    set<Tick>::iterator bit = m_scheduled_wakeups.begin();
-    set<Tick>::iterator eit = m_scheduled_wakeups.lower_bound(t);
-    m_scheduled_wakeups.erase(bit,eit);
+void
+Consumer::processCurrentEvent()
+{
+    auto curr = m_wakeup_ticks.begin();
+    assert(em->clockEdge() == *curr);
+
+    // remove the current tick from the wakeup list, wake up, and then schedule
+    // the next wakeup
+    m_wakeup_ticks.erase(curr);
+    wakeup();
+    scheduleNextWakeup();
 }

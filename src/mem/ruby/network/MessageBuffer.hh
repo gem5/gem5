@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 ARM Limited
+ * Copyright (c) 2019,2020 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -249,6 +249,7 @@ class MessageBuffer : public SimObject
     int m_priority_rank;
     const bool m_strict_fifo;
     const bool m_randomization;
+    const bool m_allow_zero_latency;
 
     int m_input_link_id;
     int m_vnet_id;
