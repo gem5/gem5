@@ -50,6 +50,12 @@ class PrefetchType(Enum): vals = [
     'PF_END',
     ]
 
+class GfxVersion(ScopedEnum): vals = [
+    'gfx801',
+    'gfx803',
+    'gfx900',
+    ]
+
 class PoolManager(SimObject):
     type = 'PoolManager'
     abstract = True
@@ -237,6 +243,7 @@ class GPUComputeDriver(HSADriver):
     type = 'GPUComputeDriver'
     cxx_header = 'gpu-compute/gpu_compute_driver.hh'
     isdGPU = Param.Bool(False, 'Driver is for a dGPU')
+    gfxVersion = Param.GfxVersion('gfx801', 'ISA of gpu to model')
     dGPUPoolID = Param.Int(False, 'Pool ID for dGPU.')
     # Default Mtype for caches
     #--     1   1   1   C_RW_S  (Cached-ReadWrite-Shared)

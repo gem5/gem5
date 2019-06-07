@@ -47,7 +47,8 @@
 #include "sim/syscall_emul_buf.hh"
 
 GPUComputeDriver::GPUComputeDriver(const Params &p)
-    : HSADriver(p), isdGPU(p.isdGPU)
+    : HSADriver(p), isdGPU(p.isdGPU), gfxVersion(p.gfxVersion),
+      dGPUPoolID(p.dGPUPoolID)
 {
     device->attachDriver(this);
     DPRINTF(GPUDriver, "Constructing KFD: device\n");
@@ -175,10 +176,34 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                     gpuVmApeLimit(args->process_apertures[i].gpuvm_base);
 
                 // NOTE: Must match ID populated by hsaTopology.py
-                if (isdGPU)
-                    args->process_apertures[i].gpu_id = 50156;
-                else
-                    args->process_apertures[i].gpu_id = 2765;
+                //
+                // https://github.com/RadeonOpenCompute/ROCK-Kernel-Driver/
+                // blob/6a986c0943e9acd8c4c0cf2a9d510ff42167b43f/include/uapi/
+                // linux/kfd_ioctl.h#L564
+                //
+                // The gpu_id is a device identifier used by the driver for
+                // ioctls that allocate arguments. Each device has an unique
+                // id composed out of a non-zero base and an offset.
+                if (isdGPU) {
+                    switch (gfxVersion) {
+                      case GfxVersion::gfx803:
+                        args->process_apertures[i].gpu_id = 50156;
+                        break;
+                      case GfxVersion::gfx900:
+                        args->process_apertures[i].gpu_id = 22124;
+                        break;
+                      default:
+                        fatal("Invalid gfx version for dGPU\n");
+                    }
+                } else {
+                    switch (gfxVersion) {
+                      case GfxVersion::gfx801:
+                        args->process_apertures[i].gpu_id = 2765;
+                        break;
+                      default:
+                        fatal("Invalid gfx version for APU\n");
+                    }
+                }
 
                 DPRINTF(GPUDriver, "GPUVM base for node[%i] = %#x\n", i,
                         args->process_apertures[i].gpuvm_base);
@@ -610,10 +635,26 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
                 ape_args->gpuvm_limit = gpuVmApeLimit(ape_args->gpuvm_base);
 
                 // NOTE: Must match ID populated by hsaTopology.py
-                if (isdGPU)
-                    ape_args->gpu_id = 50156;
-                else
-                    ape_args->gpu_id = 2765;
+                if (isdGPU) {
+                    switch (gfxVersion) {
+                      case GfxVersion::gfx803:
+                        ape_args->gpu_id = 50156;
+                        break;
+                      case GfxVersion::gfx900:
+                        ape_args->gpu_id = 22124;
+                        break;
+                      default:
+                        fatal("Invalid gfx version for dGPU\n");
+                    }
+                } else {
+                    switch (gfxVersion) {
+                      case GfxVersion::gfx801:
+                        ape_args->gpu_id = 2765;
+                        break;
+                      default:
+                        fatal("Invalid gfx version for APU\n");
+                    }
+                }
 
                 assert(bits<Addr>(ape_args->scratch_base, 63, 47) != 0x1ffff);
                 assert(bits<Addr>(ape_args->scratch_base, 63, 47) != 0);

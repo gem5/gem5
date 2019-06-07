@@ -188,6 +188,9 @@ parser.add_argument("--m-type", type='int', default=5,
                     "the driver on a per-page basis.  Valid values are "
                     "between 0-7")
 
+parser.add_argument("--gfx-version", type="string", default='gfx801',
+                    help="Gfx version for gpu: gfx801, gfx803, gfx900")
+
 Ruby.define_options(parser)
 
 # add TLB options to the parser
@@ -430,6 +433,7 @@ if args.dgpu:
 
 # HSA kernel mode driver
 gpu_driver = GPUComputeDriver(filename = "kfd", isdGPU = args.dgpu,
+                              gfxVersion = args.gfx_version,
                               dGPUPoolID = 1, m_type = args.m_type)
 
 # Creating the GPU kernel launching components: that is the HSA
@@ -667,8 +671,15 @@ root = Root(system=system, full_system=False)
 # Create the /sys/devices filesystem for the simulator so that the HSA Runtime
 # knows what type of GPU hardware we are simulating
 if args.dgpu:
-    hsaTopology.createFijiTopology(args)
+    assert (args.gfx_version in ['gfx803', 'gfx900']),\
+            "Incorrect gfx version for dGPU"
+    if args.gfx_version == 'gfx803':
+        hsaTopology.createFijiTopology(args)
+    elif args.gfx_version == 'gfx900':
+        hsaTopology.createVegaTopology(args)
 else:
+    assert (args.gfx_version in ['gfx801']),\
+            "Incorrect gfx version for APU"
     hsaTopology.createCarrizoTopology(args)
 
 m5.ticks.setGlobalFrequency('1THz')

@@ -44,6 +44,7 @@
 
 #include "base/addr_range_map.hh"
 #include "dev/hsa/hsa_driver.hh"
+#include "enums/GfxVersion.hh"
 #include "mem/request.hh"
 
 struct GPUComputeDriverParams;
@@ -68,6 +69,7 @@ class GPUComputeDriver final : public HSADriver
 
   private:
     bool isdGPU;
+    GfxVersion gfxVersion;
     int dGPUPoolID;
 
     /**
