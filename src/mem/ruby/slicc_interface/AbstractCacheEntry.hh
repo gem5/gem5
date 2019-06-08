@@ -38,19 +38,22 @@
 #include "base/logging.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/slicc_interface/AbstractEntry.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
 
 class DataBlock;
 
-class AbstractCacheEntry : public AbstractEntry
+class AbstractCacheEntry : public ReplaceableEntry
 {
   public:
     AbstractCacheEntry();
     virtual ~AbstractCacheEntry() = 0;
 
     // Get/Set permission of the entry
+    AccessPermission getPermission() const;
     void changePermission(AccessPermission new_perm);
 
+    virtual void print(std::ostream& out) const = 0;
+    
     // The methods below are those called by ruby runtime, add when it
     // is absolutely necessary and should all be virtual function.
     virtual DataBlock& getDataBlk()
@@ -68,11 +71,11 @@ class AbstractCacheEntry : public AbstractEntry
     void clearLocked();
     bool isLocked(int context) const;
 
-    void setSetIndex(uint32_t s) { m_set_index = s; }
-    uint32_t getSetIndex() const { return m_set_index; }
+    void setSetIndex(uint32_t s) { setPosition(s, getWay()); }
+    uint32_t getSetIndex() const { return getSet(); }
 
-    void setWayIndex(uint32_t s) { m_way_index = s; }
-    uint32_t getWayIndex() const { return m_way_index; }
+    void setWayIndex(uint32_t s) { setPosition(getSet(), s); }
+    uint32_t getWayIndex() const { return getWay() }
 
     // Address of this block, required by CacheMemory
     Addr m_Address;
@@ -80,11 +83,10 @@ class AbstractCacheEntry : public AbstractEntry
     // Required for implementing LL/SC operations.
     int m_locked;
 
-  private:
-    // Set and way coordinates of the entry within the cache memory object.
-    uint32_t m_set_index;
-    uint32_t m_way_index;
-};
+    AccessPermission m_Permission; // Access permission for this
+                                     // block, required by CacheMemory
+                                     
+}
 
 inline std::ostream&
 operator<<(std::ostream& out, const AbstractCacheEntry& obj)
