@@ -42,10 +42,17 @@ AbstractCacheEntry::~AbstractCacheEntry()
 {
 }
 
+// Added functions from AbstractEntry.cc
+AccessPermission
+AbstractCacheEntry::getPermission() const
+{
+    return m_Permission;
+}
+
 void
 AbstractCacheEntry::changePermission(AccessPermission new_perm)
 {
-    AbstractEntry::changePermission(new_perm);
+    m_Permission = new_perm;
     if ((new_perm == AccessPermission_Invalid) ||
         (new_perm == AccessPermission_NotPresent)) {
         m_locked = -1;
