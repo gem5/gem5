@@ -36,7 +36,7 @@ AbstractEntry::AbstractEntry()
 AbstractEntry::~AbstractEntry()
 {
 }
-
+/*
 AccessPermission
 AbstractEntry::getPermission() const
 {
@@ -48,3 +48,4 @@ AbstractEntry::changePermission(AccessPermission new_perm)
 {
     m_Permission = new_perm;
 }
+*/
