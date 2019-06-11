@@ -99,6 +99,13 @@ let {{
             if self.flavor in ("acex", "exclusive", "exp", "acexp"):
                 self.memFlags.append("Request::LLSC")
 
+            # Using a different execute template for fp flavoured loads.
+            # In this specific template the memacc_code is executed
+            # conditionally depending of wether the memory load has
+            # generated any fault
+            if flavor == "fp":
+                self.fullExecTemplate = eval(self.execBase + 'FpExecute')
+
         def buildEACode(self):
             # Address computation code
             eaCode = ""
