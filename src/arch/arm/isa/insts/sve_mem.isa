@@ -89,13 +89,11 @@ output header {{
     StaticInstPtr
     decodeSveContigLoadSIInsts(uint8_t dtype, ExtMachInst machInst,
                                IntRegIndex zt, IntRegIndex pg, IntRegIndex rn,
-                               uint64_t imm, bool firstFaulting,
+                               uint64_t imm, bool nonFaulting,
                                bool replicate = false)
     {
-        assert(!(replicate && firstFaulting));
-
-        const char* mn = replicate ? "ld1r" :
-                                     (firstFaulting ? "ldff1" : "ld1");
+        assert(!(nonFaulting && replicate));
+        const char* mn = replicate ? "ld1r" : (nonFaulting ? "ldnf1" : "ld1");
         switch (dtype) {
           case 0x0:
             return new Base<uint8_t, uint8_t>(mn, machInst, zt, pg, rn, imm);
@@ -210,75 +208,87 @@ output decoder {{
     decodeSveGatherLoadVIInsts(uint8_t dtype, ExtMachInst machInst,
                                IntRegIndex zt, IntRegIndex pg, IntRegIndex zn,
                                uint64_t imm, bool esizeIs32,
-                               bool firstFaulting)
+                               bool firstFault)
     {
-        const char* mn = firstFaulting ? "ldff1" : "ld1";
+        const char* mn = firstFault ? "ldff1" : "ld1";
         switch (dtype) {
           case 0x0:
             if (esizeIs32) {
                 return new SveIndexedMemVI<int32_t, int8_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             } else {
                 return new SveIndexedMemVI<int64_t, int8_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             }
           case 0x1:
             if (esizeIs32) {
                 return new SveIndexedMemVI<uint32_t, uint8_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             } else {
                 return new SveIndexedMemVI<uint64_t, uint8_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             }
           case 0x2:
             if (esizeIs32) {
                 return new SveIndexedMemVI<int32_t, int16_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             } else {
                 return new SveIndexedMemVI<int64_t, int16_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             }
           case 0x3:
             if (esizeIs32) {
                 return new SveIndexedMemVI<uint32_t, uint16_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             } else {
                 return new SveIndexedMemVI<uint64_t, uint16_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             }
           case 0x4:
             if (esizeIs32) {
                 break;
             } else {
                 return new SveIndexedMemVI<int64_t, int32_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             }
           case 0x5:
             if (esizeIs32) {
                 return new SveIndexedMemVI<uint32_t, uint32_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             } else {
                 return new SveIndexedMemVI<uint64_t, uint32_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             }
           case 0x7:
             if (esizeIs32) {
                 break;
             } else {
                 return new SveIndexedMemVI<uint64_t, uint64_t,
-                                           SveGatherLoadVIMicroop>(
-                    mn, machInst, MemReadOp, zt, pg, zn, imm);
+                                           SveGatherLoadVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, zn, imm, firstFault);
             }
         }
         return new Unknown64(machInst);
@@ -289,87 +299,99 @@ output decoder {{
                                IntRegIndex zt, IntRegIndex pg, IntRegIndex rn,
                                IntRegIndex zm, bool esizeIs32, bool offsetIs32,
                                bool offsetIsSigned, bool offsetIsScaled,
-                               bool firstFaulting)
+                               bool firstFault)
     {
-        const char* mn = firstFaulting ? "ldff1" : "ld1";
+        const char* mn = firstFault ? "ldff1" : "ld1";
         switch (dtype) {
           case 0x0:
             if (esizeIs32) {
                 return new SveIndexedMemSV<int32_t, int8_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             } else {
                 return new SveIndexedMemSV<int64_t, int8_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             }
           case 0x1:
             if (esizeIs32) {
                 return new SveIndexedMemSV<uint32_t, uint8_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             } else {
                 return new SveIndexedMemSV<uint64_t, uint8_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             }
           case 0x2:
             if (esizeIs32) {
                 return new SveIndexedMemSV<int32_t, int16_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             } else {
                 return new SveIndexedMemSV<int64_t, int16_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             }
           case 0x3:
             if (esizeIs32) {
                 return new SveIndexedMemSV<uint32_t, uint16_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             } else {
                 return new SveIndexedMemSV<uint64_t, uint16_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             }
           case 0x4:
             if (esizeIs32) {
                 break;
             } else {
                 return new SveIndexedMemSV<int64_t, int32_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             }
           case 0x5:
             if (esizeIs32) {
                 return new SveIndexedMemSV<uint32_t, uint32_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             } else {
                 return new SveIndexedMemSV<uint64_t, uint32_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             }
           case 0x7:
             if (esizeIs32) {
                 break;
             } else {
                 return new SveIndexedMemSV<uint64_t, uint64_t,
-                                           SveGatherLoadSVMicroop>(
+                                           SveGatherLoadSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemReadOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, firstFault);
             }
         }
         return new Unknown64(machInst);
@@ -386,40 +408,47 @@ output decoder {{
           case 0x0:
             if (esizeIs32) {
                 return new SveIndexedMemVI<uint32_t, uint8_t,
-                                           SveScatterStoreVIMicroop>(
-                    mn, machInst, MemWriteOp, zt, pg, zn, imm);
+                                           SveScatterStoreVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, zn, imm, false);
             } else {
                 return new SveIndexedMemVI<uint64_t, uint8_t,
-                                           SveScatterStoreVIMicroop>(
-                    mn, machInst, MemWriteOp, zt, pg, zn, imm);
+                                           SveScatterStoreVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, zn, imm, false);
             }
           case 0x1:
             if (esizeIs32) {
                 return new SveIndexedMemVI<uint32_t, uint16_t,
-                                           SveScatterStoreVIMicroop>(
-                    mn, machInst, MemWriteOp, zt, pg, zn, imm);
+                                           SveScatterStoreVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, zn, imm, false);
             } else {
                 return new SveIndexedMemVI<uint64_t, uint16_t,
-                                           SveScatterStoreVIMicroop>(
-                    mn, machInst, MemWriteOp, zt, pg, zn, imm);
+                                           SveScatterStoreVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, zn, imm, false);
             }
           case 0x2:
             if (esizeIs32) {
                 return new SveIndexedMemVI<uint32_t, uint32_t,
-                                           SveScatterStoreVIMicroop>(
-                    mn, machInst, MemWriteOp, zt, pg, zn, imm);
+                                           SveScatterStoreVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, zn, imm, false);
             } else {
                 return new SveIndexedMemVI<uint64_t, uint32_t,
-                                           SveScatterStoreVIMicroop>(
-                    mn, machInst, MemWriteOp, zt, pg, zn, imm);
+                                           SveScatterStoreVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, zn, imm, false);
             }
           case 0x3:
             if (esizeIs32) {
                 break;
             } else {
                 return new SveIndexedMemVI<uint64_t, uint64_t,
-                                           SveScatterStoreVIMicroop>(
-                    mn, machInst, MemWriteOp, zt, pg, zn, imm);
+                                           SveScatterStoreVIMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, zn, imm, false);
             }
         }
         return new Unknown64(machInst);
@@ -437,47 +466,54 @@ output decoder {{
           case 0x0:
             if (esizeIs32) {
                 return new SveIndexedMemSV<uint32_t, uint8_t,
-                                           SveScatterStoreSVMicroop>(
+                                           SveScatterStoreSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemWriteOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, false);
             } else {
                 return new SveIndexedMemSV<uint64_t, uint8_t,
-                                           SveScatterStoreSVMicroop>(
+                                           SveScatterStoreSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemWriteOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, false);
             }
           case 0x1:
             if (esizeIs32) {
                 return new SveIndexedMemSV<uint32_t, uint16_t,
-                                           SveScatterStoreSVMicroop>(
+                                           SveScatterStoreSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemWriteOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, false);
             } else {
                 return new SveIndexedMemSV<uint64_t, uint16_t,
-                                           SveScatterStoreSVMicroop>(
+                                           SveScatterStoreSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemWriteOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, false);
             }
           case 0x2:
             if (esizeIs32) {
                 return new SveIndexedMemSV<uint32_t, uint32_t,
-                                           SveScatterStoreSVMicroop>(
+                                           SveScatterStoreSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemWriteOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, false);
             } else {
                 return new SveIndexedMemSV<uint64_t, uint32_t,
-                                           SveScatterStoreSVMicroop>(
+                                           SveScatterStoreSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemWriteOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, false);
             }
           case 0x3:
             if (esizeIs32) {
                 break;
             } else {
                 return new SveIndexedMemSV<uint64_t, uint64_t,
-                                           SveScatterStoreSVMicroop>(
+                                           SveScatterStoreSVMicroop,
+                                           SveFirstFaultWritebackMicroop>(
                     mn, machInst, MemWriteOp, zt, pg, rn, zm,
-                    offsetIs32, offsetIsSigned, offsetIsScaled);
+                    offsetIs32, offsetIsSigned, offsetIsScaled, false);
             }
         }
         return new Unknown64(machInst);
@@ -505,6 +541,9 @@ let {{
         int memAccessSize = %(memacc_size)s;
         EA = XBase + ((int64_t) imm * %(memacc_size)s)''' % {
             'memacc_size': 'eCount / 8' if isPred else 'eCount'}
+        loadRdEnableCode = '''
+        auto rdEn = std::vector<bool>();
+        '''
         if isPred:
             loadMemAccCode = '''
             int index = 0;
@@ -551,6 +590,8 @@ let {{
              'tpl_args': '',
              'memacc_code': loadMemAccCode,
              'ea_code' : sveEnabledCheckCode + eaCode,
+             'rden_code' : loadRdEnableCode,
+             'fault_code' : '',
              'fa_code' : ''},
             ['IsMemRef', 'IsLoad'])
         storeIop = InstObjParams('str',
@@ -633,6 +674,11 @@ let {{
     # Generates definitions for SVE contiguous loads
     def emitSveContigMemInsts(offsetIsImm):
         global header_output, exec_output, decoders
+        # First-faulting instructions only have a scalar plus scalar form,
+        # while non-faulting instructions only a scalar plus immediate form, so
+        # `offsetIsImm` is used to determine which class of instructions is
+        # generated
+        firstFaulting = not offsetIsImm
         tplHeader = 'template <class RegElemType, class MemElemType>'
         tplArgs = '<RegElemType, MemElemType>'
         eaCode = SPAlignmentCheckCode + '''
@@ -642,6 +688,16 @@ let {{
             eaCode += '((int64_t) this->imm * eCount * sizeof(MemElemType))'
         else:
             eaCode += '(XOffset * sizeof(MemElemType));'
+        loadRdEnableCode = '''
+        auto rdEn = std::vector<bool>(sizeof(MemElemType) * eCount, true);
+        for (int i = 0; i < eCount; i++) {
+            if (!GpOp_x[i]) {
+                for (int j = 0; j < sizeof(MemElemType); j++) {
+                    rdEn[sizeof(MemElemType) * i + j] = false;
+                }
+            }
+        }
+        '''
         loadMemAccCode = '''
         for (int i = 0; i < eCount; i++) {
             if (GpOp_x[i]) {
@@ -666,13 +722,60 @@ let {{
         storeWrEnableCode = '''
         auto wrEn = std::vector<bool>(sizeof(MemElemType) * eCount, true);
         '''
+        ffrReadBackCode = '''
+        auto& firstFaultReg = Ffr;'''
+        fautlingLoadmemAccCode = '''
+        for (int i = 0; i < eCount; i++) {
+            if (GpOp_x[i] && firstFaultReg[i * sizeof(RegElemType)]) {
+                AA64FpDest_x[i] = memDataView[i];
+            } else {
+                AA64FpDest_x[i] = 0;
+            }
+        }
+        '''
+        nonFaultingCode = 'true ||'
+        faultCode = '''
+        Addr fault_addr;
+        if (fault == NoFault || getFaultVAddr(fault, fault_addr)) {
+            unsigned fault_elem_index;
+            if (fault != NoFault) {
+                assert(fault_addr >= EA);
+                fault_elem_index = (fault_addr - EA) / sizeof(MemElemType);
+            } else {
+                fault_elem_index = eCount + 1;
+            }
+            int first_active_index;
+            for (first_active_index = 0;
+                 first_active_index < eCount && !(GpOp_x[first_active_index]);
+                 first_active_index++);
+            if (%s first_active_index < fault_elem_index) {
+                for (int i = 0; i < eCount; i++) {
+                    for (int j = 0; j < sizeof(RegElemType); j++) {
+                        if (i < fault_elem_index) {
+                            Ffr_ub[i * sizeof(RegElemType) + j] = FfrAux_x[i];
+                        } else {
+                            Ffr_ub[i * sizeof(RegElemType) + j] = 0;
+                        }
+                    }
+                }
+                fault = NoFault;
+                if (first_active_index >= fault_elem_index) {
+                    // non-faulting load needs this
+                    xc->setMemAccPredicate(false);
+                }
+            }
+        }
+        ''' % ('' if firstFaulting else nonFaultingCode)
+
         loadIop = InstObjParams('ld1',
             'SveContigLoadSI' if offsetIsImm else 'SveContigLoadSS',
             'SveContigMemSI' if offsetIsImm else 'SveContigMemSS',
             {'tpl_header': tplHeader,
              'tpl_args': tplArgs,
+             'rden_code' : loadRdEnableCode,
              'memacc_code': loadMemAccCode,
              'ea_code' : sveEnabledCheckCode + eaCode,
+             'fault_code' : '',
              'fa_code' : ''},
             ['IsMemRef', 'IsLoad'])
         storeIop = InstObjParams('st1',
@@ -685,19 +788,38 @@ let {{
              'ea_code' : sveEnabledCheckCode + eaCode,
              'fa_code' : ''},
             ['IsMemRef', 'IsStore'])
+        faultIop = InstObjParams('ldff1' if firstFaulting else 'ldnf1',
+            'SveContigFFLoadSS' if firstFaulting else 'SveContigNFLoadSI',
+            'SveContigMemSS' if firstFaulting else 'SveContigMemSI',
+            {'tpl_header': tplHeader,
+             'tpl_args': tplArgs,
+             'rden_code' : loadRdEnableCode,
+             'memacc_code': fautlingLoadmemAccCode,
+             'ea_code' : sveEnabledCheckCode + eaCode,
+             'fault_code' : faultCode,
+             'fa_code' : ''},
+            ['IsMemRef', 'IsLoad'])
+        faultIop.snippets['memacc_code'] = (ffrReadBackCode +
+                                           faultIop.snippets['memacc_code'])
         if offsetIsImm:
             header_output += SveContigMemSIOpDeclare.subst(loadIop)
             header_output += SveContigMemSIOpDeclare.subst(storeIop)
+            header_output += SveContigMemSIOpDeclare.subst(faultIop)
         else:
             header_output += SveContigMemSSOpDeclare.subst(loadIop)
             header_output += SveContigMemSSOpDeclare.subst(storeIop)
+            header_output += SveContigMemSSOpDeclare.subst(faultIop)
         exec_output += (
             SveContigLoadExecute.subst(loadIop) +
             SveContigLoadInitiateAcc.subst(loadIop) +
             SveContigLoadCompleteAcc.subst(loadIop) +
             SveContigStoreExecute.subst(storeIop) +
             SveContigStoreInitiateAcc.subst(storeIop) +
-            SveContigStoreCompleteAcc.subst(storeIop))
+            SveContigStoreCompleteAcc.subst(storeIop) +
+            SveContigLoadExecute.subst(faultIop) +
+            SveContigLoadInitiateAcc.subst(faultIop) +
+            SveContigLoadCompleteAcc.subst(faultIop))
+
         for args in loadTplArgs:
             substDict = {'tpl_args': '<%s>' % ', '.join(args),
                          'class_name': 'SveContigLoadSI' if offsetIsImm
@@ -708,6 +830,12 @@ let {{
                          'class_name': 'SveContigStoreSI' if offsetIsImm
                                        else 'SveContigStoreSS'}
             exec_output += SveContigMemExecDeclare.subst(substDict)
+        for args in loadTplArgs:
+            substDict = {'tpl_args': '<%s>' % ', '.join(args),
+                         'class_name': 'SveContigFFLoadSS' if firstFaulting
+                                       else 'SveContigNFLoadSI'}
+            exec_output += SveContigMemExecDeclare.subst(substDict)
+
 
     # Generates definitions for SVE load-and-replicate instructions
     def emitSveLoadAndRepl():
@@ -773,16 +901,14 @@ let {{
         }
         EA = XBase + offset'''
         loadMemAccCode = '''
-            if (GpOp_x[elemIndex]) {
-                AA64FpDest_x[elemIndex] = memData;
-            } else {
-                AA64FpDest_x[elemIndex] = 0;
-            }
+            AA64FpDest_x[elemIndex] = memData;
         '''
         storeMemAccCode = '''
             memData = AA64FpDest_x[elemIndex];
         '''
-        predCheckCode = 'GpOp_x[elemIndex]'
+        predCheckCode = 'GpOp_x[index]'
+        faultStatusSetCode = 'PUreg0_x[elemIndex] = 1;'
+        faultStatusResetCode = 'PUreg0_x[elemIndex] = 0;'
         loadIop = InstObjParams('ld1',
             ('SveGatherLoadVIMicroop'
              if indexed_addr_form == IndexedAddrForm.VEC_PLUS_IMM
@@ -792,6 +918,8 @@ let {{
              'tpl_args': tplArgs,
              'memacc_code': loadMemAccCode,
              'ea_code' : sveEnabledCheckCode + eaCode,
+             'fault_status_set_code' : faultStatusSetCode,
+             'fault_status_reset_code' : faultStatusResetCode,
              'pred_check_code' : predCheckCode,
              'fa_code' : ''},
             ['IsMicroop', 'IsMemRef', 'IsLoad'])
@@ -839,6 +967,39 @@ let {{
             # TODO: this should become SveMemExecDeclare
             exec_output += SveContigMemExecDeclare.subst(substDict)
 
+    firstFaultTplArgs = ('int32_t', 'int64_t', 'uint32_t', 'uint64_t')
+
+    def emitSveFirstFaultWritebackMicroop():
+        global header_output, exec_output, decoders
+        tplHeader = 'template <class RegElemType>'
+        tplArgs = '<RegElemType>'
+        faultStatusCheckCode = 'PUreg0_x[index]'
+        firstFaultResetCode = '''
+        for(int j = 0; j < sizeof(RegElemType); j++) {
+            Ffr_ub[index * sizeof(RegElemType) + j] = 0;
+        }
+        '''
+        firstFaultForwardCode = '''
+        for(int j = 0; j < sizeof(RegElemType); j++) {
+            Ffr_ub[index * sizeof(RegElemType) + j] = FfrAux_x[index];
+        }
+        '''
+        iop = InstObjParams('ldff1',
+            'SveFirstFaultWritebackMicroop',
+            'MicroOp',
+            {'tpl_header': tplHeader,
+             'tpl_args': tplArgs,
+             'fault_status_check_code' : faultStatusCheckCode,
+             'first_fault_reset_code' : firstFaultResetCode,
+             'first_fault_forward_code' : firstFaultForwardCode},
+             ['IsMicroop'])
+        header_output += SveFirstFaultWritebackMicroopDeclare.subst(iop)
+        exec_output += SveFirstFaultWritebackMicroopExecute.subst(iop)
+        for args in firstFaultTplArgs:
+            substDict = {'targs': args,
+                         'class_name' : 'SveFirstFaultWritebackMicroop' }
+            exec_output += SveOpExecDeclare.subst(substDict)
+
     # Generates definitions for the first microop of SVE gather loads, required
     # to propagate the source vector register to the transfer microops
     def emitSveGatherLoadCpySrcVecMicroop():
@@ -859,9 +1020,11 @@ let {{
 
     # LD1[S]{B,H,W,D} (scalar plus immediate)
     # ST1[S]{B,H,W,D} (scalar plus immediate)
+    # LDNF1[S]{B,H,W,D} (scalar plus immediate)
     emitSveContigMemInsts(True)
     # LD1[S]{B,H,W,D} (scalar plus scalar)
     # ST1[S]{B,H,W,D} (scalar plus scalar)
+    # LDFF1[S]{B,H,W,D} (scalar plus vector)
     emitSveContigMemInsts(False)
 
     # LD1R[S]{B,H,W,D}
@@ -874,12 +1037,16 @@ let {{
 
     # LD1[S]{B,H,W,D} (vector plus immediate)
     # ST1[S]{B,H,W,D} (vector plus immediate)
+    # LDFF1[S]{B,H,W,D} (scalar plus immediate)
     emitSveIndexedMemMicroops(IndexedAddrForm.VEC_PLUS_IMM)
     # LD1[S]{B,H,W,D} (scalar plus vector)
     # ST1[S]{B,H,W,D} (scalar plus vector)
+    # LDFF1[S]{B,H,W,D} (scalar plus vector)
     emitSveIndexedMemMicroops(IndexedAddrForm.SCA_PLUS_VEC)
+
+    # FFR writeback microop for gather loads
+    emitSveFirstFaultWritebackMicroop()
 
     # Source vector copy microop for gather loads
     emitSveGatherLoadCpySrcVecMicroop()
-
 }};

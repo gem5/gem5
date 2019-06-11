@@ -234,6 +234,8 @@ class ArmFault : public FaultBase
     virtual bool isStage2() const { return false; }
     virtual FSR getFsr(ThreadContext *tc) const { return 0; }
     virtual void setSyndrome(ThreadContext *tc, MiscRegIndex syndrome_reg);
+    virtual bool getFaultVAddr(Addr &va) const { return false; }
+
 };
 
 template<typename T>
@@ -435,6 +437,8 @@ class AbortFault : public ArmFaultVals<T>
         stage2(_stage2), s1ptw(false), tranMethod(_tranMethod)
     {}
 
+    bool getFaultVAddr(Addr &va) const override;
+
     void invoke(ThreadContext *tc, const StaticInstPtr &inst =
                 StaticInst::nullStaticInstPtr) override;
 
@@ -624,6 +628,18 @@ template<> ArmFault::FaultVals ArmFaultVals<SPAlignmentFault>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SystemError>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<SoftwareBreakpoint>::vals;
 template<> ArmFault::FaultVals ArmFaultVals<ArmSev>::vals;
+
+/**
+ * Returns true if the fault passed as a first argument was triggered
+ * by a memory access, false otherwise.
+ * If true it is storing the faulting address in the va argument
+ *
+ * @param fault generated fault
+ * @param va function will modify this passed-by-reference parameter
+ *           with the correct faulting virtual address
+ * @return true if va contains a valid value, false otherwise
+ */
+bool getFaultVAddr(Fault fault, Addr &va);
 
 
 } // namespace ArmISA

@@ -151,13 +151,15 @@ def template SveContigLoadExecute {{
         TheISA::VecRegContainer memData;
         auto memDataView = memData.as<MemElemType>();
 
-        if (fault == NoFault) {
-            fault = xc->readMem(EA, memData.raw_ptr<uint8_t>(), memAccessSize,
-                this->memAccessFlags);
-            %(memacc_code)s;
-        }
+        %(rden_code)s;
+
+        fault = xc->readMem(EA, memData.raw_ptr<uint8_t>(), memAccessSize,
+            this->memAccessFlags, rdEn);
+
+        %(fault_code)s;
 
         if (fault == NoFault) {
+            %(memacc_code)s;
             %(op_wb)s;
         }
 
@@ -178,13 +180,14 @@ def template SveContigLoadInitiateAcc {{
 
         %(op_src_decl)s;
         %(op_rd)s;
-
         %(ea_code)s;
 
-        if (fault == NoFault) {
-            fault = xc->initiateMemRead(EA, memAccessSize,
-                this->memAccessFlags);
-        }
+        %(rden_code)s;
+
+        fault = xc->initiateMemRead(EA, memAccessSize, this->memAccessFlags,
+            rdEn);
+
+        %(fault_code)s;
 
         return fault;
     }
@@ -195,7 +198,6 @@ def template SveContigLoadCompleteAcc {{
     Fault %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
         bool aarch64 M5_VAR_USED = true;
         unsigned eCount = ArmStaticInst::getCurSveVecLen<RegElemType>(
             xc->tcBase());
@@ -206,18 +208,15 @@ def template SveContigLoadCompleteAcc {{
         TheISA::VecRegContainer memData;
         auto memDataView = memData.as<MemElemType>();
 
-        memcpy(memData.raw_ptr<uint8_t>(), pkt->getPtr<uint8_t>(),
-            pkt->getSize());
-
-        if (fault == NoFault) {
-            %(memacc_code)s;
+        if (xc->readMemAccPredicate()) {
+            memcpy(memData.raw_ptr<uint8_t>(), pkt->getPtr<uint8_t>(),
+                   pkt->getSize());
         }
 
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
+        %(memacc_code)s;
+        %(op_wb)s;
 
-        return fault;
+        return NoFault;
     }
 }};
 
@@ -398,24 +397,29 @@ def template SveIndexedMemVIMicroopDeclare {{
 
         int elemIndex;
         int numElems;
+        bool firstFault;
 
         unsigned memAccessFlags;
 
       public:
         %(class_name)s(const char* mnem, ExtMachInst machInst,
             OpClass __opClass, IntRegIndex _dest, IntRegIndex _gp,
-            IntRegIndex _base, uint64_t _imm, int _elemIndex, int _numElems)
+            IntRegIndex _base, uint64_t _imm, int _elemIndex, int _numElems,
+            bool _firstFault)
             : %(base_class)s(mnem, machInst, %(op_class)s),
               dest(_dest), gp(_gp), base(_base), imm(_imm),
               elemIndex(_elemIndex), numElems(_numElems),
+              firstFault(_firstFault),
               memAccessFlags(ArmISA::TLB::AllowUnaligned |
                              ArmISA::TLB::MustBeOne)
         {
             %(constructor)s;
             if (_opClass == MemReadOp && elemIndex == 0) {
                 // The first micro-op is responsible for pinning the
-                // destination register
-                _destRegIdx[0].setNumPinnedWrites(numElems - 1);
+                // destination and the fault status registers
+                assert(_numDestRegs == 2);
+               _destRegIdx[0].setNumPinnedWrites(numElems - 1);
+               _destRegIdx[1].setNumPinnedWrites(numElems - 1);
             }
         }
 
@@ -471,6 +475,7 @@ def template SveIndexedMemSVMicroopDeclare {{
 
         int elemIndex;
         int numElems;
+        bool firstFault;
 
         unsigned memAccessFlags;
 
@@ -479,20 +484,22 @@ def template SveIndexedMemSVMicroopDeclare {{
             OpClass __opClass, IntRegIndex _dest, IntRegIndex _gp,
             IntRegIndex _base, IntRegIndex _offset, bool _offsetIs32,
             bool _offsetIsSigned, bool _offsetIsScaled, int _elemIndex,
-            int _numElems)
+            int _numElems, bool _firstFault)
             : %(base_class)s(mnem, machInst, %(op_class)s),
               dest(_dest), gp(_gp), base(_base), offset(_offset),
               offsetIs32(_offsetIs32), offsetIsSigned(_offsetIsSigned),
               offsetIsScaled(_offsetIsScaled), elemIndex(_elemIndex),
-              numElems(_numElems),
+              numElems(_numElems), firstFault(_firstFault),
               memAccessFlags(ArmISA::TLB::AllowUnaligned |
                              ArmISA::TLB::MustBeOne)
         {
             %(constructor)s;
             if (_opClass == MemReadOp && elemIndex == 0) {
                 // The first micro-op is responsible for pinning the
-                // destination register
-                _destRegIdx[0].setNumPinnedWrites(numElems - 1);
+                // destination and the fault status registers
+                assert(_numDestRegs == 2);
+               _destRegIdx[0].setNumPinnedWrites(numElems - 1);
+               _destRegIdx[1].setNumPinnedWrites(numElems - 1);
             }
         }
 
@@ -542,18 +549,33 @@ def template SveGatherLoadMicroopExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        MemElemType memData;
+        MemElemType memData = 0;
 
+        int index = elemIndex;
         if (%(pred_check_code)s) {
             fault = readMemAtomic(xc, traceData, EA, memData,
                 this->memAccessFlags);
         }
 
         if (fault == NoFault) {
+            %(fault_status_reset_code)s;
             %(memacc_code)s;
             %(op_wb)s;
-        }
+        } else {
+            %(fault_status_set_code)s;
+            if (firstFault) {
+               for (index = 0;
+                    index < numElems && !(%(pred_check_code)s);
+                    index++);
 
+               if (index < elemIndex) {
+                  fault = NoFault;
+                  memData = 0;
+                  %(memacc_code)s;
+                  %(op_wb)s;
+               }
+            }
+        }
         return fault;
     }
 }};
@@ -573,11 +595,27 @@ def template SveGatherLoadMicroopInitiateAcc {{
 
         MemElemType memData;
 
+        int index = elemIndex;
         if (%(pred_check_code)s) {
             fault = initiateMemRead(xc, traceData, EA, memData,
                 this->memAccessFlags);
+            if (fault != NoFault) {
+                %(fault_status_set_code)s;
+                if (firstFault) {
+                    for (index = 0;
+                         index < numElems && !(%(pred_check_code)s);
+                         index++);
+                    if (index < elemIndex) {
+                        fault = NoFault;
+                        xc->setMemAccPredicate(false);
+                    }
+                }
+            } else {
+                %(fault_status_reset_code)s;
+            }
         } else {
             xc->setMemAccPredicate(false);
+            %(fault_status_reset_code)s;
         }
 
         return fault;
@@ -589,26 +627,20 @@ def template SveGatherLoadMicroopCompleteAcc {{
     Fault %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
-        Fault fault = NoFault;
         bool aarch64 M5_VAR_USED = true;
 
         %(op_decl)s;
         %(op_rd)s;
 
         MemElemType memData = 0;
-        if (%(pred_check_code)s) {
+        if (xc->readMemAccPredicate()) {
             getMem(pkt, memData, traceData);
         }
 
-        if (fault == NoFault) {
-            %(memacc_code)s;
-        }
+        %(memacc_code)s;
+        %(op_wb)s;
 
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
-        return fault;
+        return NoFault;
     }
 }};
 
@@ -628,6 +660,7 @@ def template SveScatterStoreMicroopExecute {{
         MemElemType memData;
         %(memacc_code)s;
 
+        int index = elemIndex;
         if (%(pred_check_code)s) {
             fault = writeMemAtomic(xc, traceData, memData, EA,
                                    this->memAccessFlags, NULL);
@@ -657,6 +690,7 @@ def template SveScatterStoreMicroopInitiateAcc {{
         MemElemType memData;
         %(memacc_code)s;
 
+        int index = elemIndex;
         if (%(pred_check_code)s) {
             fault = writeMemTiming(xc, traceData, memData, EA,
                                    this->memAccessFlags, NULL);
@@ -673,6 +707,64 @@ def template SveScatterStoreMicroopCompleteAcc {{
     Fault %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
         ExecContext *xc, Trace::InstRecord *traceData) const
     {
+        return NoFault;
+    }
+}};
+
+def template SveFirstFaultWritebackMicroopDeclare {{
+    %(tpl_header)s
+    class SveFirstFaultWritebackMicroop : public MicroOp
+    {
+      protected:
+        typedef RegElemType TPElem;
+
+        int numElems;
+        StaticInst *macroOp;
+
+      public:
+        SveFirstFaultWritebackMicroop(const char* mnem, ExtMachInst machInst,
+            OpClass __opClass, int _numElems, StaticInst *_macroOp)
+            : MicroOp(mnem, machInst, __opClass),
+              numElems(_numElems), macroOp(_macroOp)
+        {
+            %(constructor)s;
+        }
+
+        Fault execute(ExecContext *, Trace::InstRecord *) const;
+
+        std::string
+        generateDisassembly(Addr pc, const SymbolTable *symtab) const
+        {
+            std::stringstream ss;
+            ccprintf(ss, "%s", macroOp->disassemble(pc, symtab));
+            ccprintf(ss, " (uop%d)", numElems);
+            return ss.str();
+        }
+    };
+}};
+
+def template SveFirstFaultWritebackMicroopExecute {{
+    %(tpl_header)s
+    Fault %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
+        Trace::InstRecord *traceData) const
+    {
+        bool aarch64 M5_VAR_USED = true;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        int  index, firstFaultIndex;
+        for (index = 0;
+             index < numElems && !%(fault_status_check_code)s;
+             index++);
+        firstFaultIndex = index;
+        for (index = 0; index < numElems; index++) {
+            if (index < firstFaultIndex) {
+                %(first_fault_forward_code)s;
+            } else {
+                %(first_fault_reset_code)s;
+            }
+        }
         return NoFault;
     }
 }};

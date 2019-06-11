@@ -1216,6 +1216,14 @@ AbortFault<T>::isMMUFault() const
          (source <  ArmFault::PermissionLL + 4));
 }
 
+template<class T>
+bool
+AbortFault<T>::getFaultVAddr(Addr &va) const
+{
+    va = (stage2 ?  OVAddr : faultAddr);
+    return true;
+}
+
 ExceptionClass
 PrefetchAbort::ec(ThreadContext *tc) const
 {
@@ -1618,5 +1626,29 @@ template class AbortFault<VirtualDataAbort>;
 IllegalInstSetStateFault::IllegalInstSetStateFault()
 {}
 
+bool
+getFaultVAddr(Fault fault, Addr &va)
+{
+    auto arm_fault = dynamic_cast<ArmFault *>(fault.get());
+
+    if (arm_fault) {
+        return arm_fault->getFaultVAddr(va);
+    } else {
+        auto pgt_fault = dynamic_cast<GenericPageTableFault *>(fault.get());
+        if (pgt_fault) {
+            va = pgt_fault->getFaultVAddr();
+            return true;
+        }
+
+        auto align_fault = dynamic_cast<GenericAlignmentFault *>(fault.get());
+        if (align_fault) {
+            va = align_fault->getFaultVAddr();
+            return true;
+        }
+
+        // Return false since it's not an address triggered exception
+        return false;
+    }
+}
 
 } // namespace ArmISA

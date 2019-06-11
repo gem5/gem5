@@ -581,6 +581,8 @@ def operands {{
     'PDest': vecPredReg('dest'),
     'PDestMerge': vecPredReg('dest'),
     'Ffr': vecPredReg('PREDREG_FFR'),
+    'FfrAux': vecPredReg('PREDREG_FFR'),
+    'PUreg0': vecPredReg('PREDREG_UREG0'),
 
     #Abstracted control reg operands
     'MiscDest': cntrlReg('dest'),
