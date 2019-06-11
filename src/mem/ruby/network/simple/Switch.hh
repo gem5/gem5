@@ -61,6 +61,7 @@
 #include "mem/ruby/network/BasicRouter.hh"
 #include "mem/ruby/network/simple/PerfectSwitch.hh"
 #include "mem/ruby/network/simple/Throttle.hh"
+#include "mem/ruby/network/simple/routing/BaseRoutingUnit.hh"
 #include "mem/ruby/protocol/MessageSizeType.hh"
 #include "params/Switch.hh"
 
@@ -91,7 +92,8 @@ class Switch : public BasicRouter
     void addInPort(const std::vector<MessageBuffer*>& in);
     void addOutPort(const std::vector<MessageBuffer*>& out,
                     const NetDest& routing_table_entry,
-                    Cycles link_latency, int bw_multiplier);
+                    Cycles link_latency, int bw_multiplier,
+                    PortDirection dst_inport = "");
 
     void resetStats();
     void collateStats();
@@ -110,6 +112,8 @@ class Switch : public BasicRouter
 
     Tick latencyTicks() const { return cyclesToTicks(m_latency); }
 
+    BaseRoutingUnit& getRoutingUnit() { return m_routing_unit; }
+
   private:
     // Private copy constructor and assignment operator
     Switch(const Switch& obj);
@@ -120,6 +124,8 @@ class Switch : public BasicRouter
     std::list<Throttle> throttles;
 
     const Cycles m_latency;
+
+    BaseRoutingUnit &m_routing_unit;
 
     unsigned m_num_connected_buffers;
     std::vector<MessageBuffer*> m_port_buffers;

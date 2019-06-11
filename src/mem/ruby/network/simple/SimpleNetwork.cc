@@ -61,7 +61,6 @@ namespace ruby
 SimpleNetwork::SimpleNetwork(const Params &p)
     : Network(p), m_buffer_size(p.buffer_size),
       m_endpoint_bandwidth(p.endpoint_bandwidth),
-      m_adaptive_routing(p.adaptive_routing),
       networkStats(this)
 {
     // record the routers
@@ -162,7 +161,8 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     m_switches[dest]->addInPort(queues);
     m_switches[src]->addOutPort(queues, routing_table_entry[0],
                                 simple_link->m_latency,
-                                simple_link->m_bw_multiplier);
+                                simple_link->m_bw_multiplier,
+                                dst_inport);
 }
 
 void

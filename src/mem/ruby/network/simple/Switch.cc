@@ -59,7 +59,8 @@ using stl_helpers::operator<<;
 Switch::Switch(const Params &p)
   : BasicRouter(p),
     perfectSwitch(m_id, this, p.virt_nets),  m_latency(p.latency),
-    m_num_connected_buffers(0), switchStats(this)
+    m_routing_unit(*p.routing_unit), m_num_connected_buffers(0),
+    switchStats(this)
 {
     m_port_buffers.reserve(p.port_buffers.size());
     for (auto& buffer : p.port_buffers) {
@@ -72,6 +73,7 @@ Switch::init()
 {
     BasicRouter::init();
     perfectSwitch.init(m_network_ptr);
+    m_routing_unit.init_parent(this);
 }
 
 void
@@ -83,7 +85,8 @@ Switch::addInPort(const std::vector<MessageBuffer*>& in)
 void
 Switch::addOutPort(const std::vector<MessageBuffer*>& out,
                    const NetDest& routing_table_entry,
-                   Cycles link_latency, int bw_multiplier)
+                   Cycles link_latency, int bw_multiplier,
+                   PortDirection dst_inport)
 {
     const std::vector<int> &physical_vnets_channels =
         m_network_ptr->params().physical_vnets_channels;
@@ -118,7 +121,8 @@ Switch::addOutPort(const std::vector<MessageBuffer*>& out,
     }
 
     // Hook the queues to the PerfectSwitch
-    perfectSwitch.addOutPort(intermediateBuffers, routing_table_entry);
+    perfectSwitch.addOutPort(intermediateBuffers, routing_table_entry,
+        dst_inport);
 
     // Hook the queues to the Throttle
     throttles.back().addLinks(intermediateBuffers, out);

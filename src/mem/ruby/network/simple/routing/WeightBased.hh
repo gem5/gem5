@@ -38,22 +38,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Perfect switch, of course it is perfect and no latency or what so
- * ever. Every cycle it is woke up and perform all the necessary
- * routings that must be done. Note, this switch also has number of
- * input ports/output ports and has a routing table as well.
- */
+#ifndef __MEM_RUBY_NETWORK_SIMPLE_WEIGHTBASEDROUTINGUNIT_HH__
+#define __MEM_RUBY_NETWORK_SIMPLE_WEIGHTBASEDROUTINGUNIT_HH__
 
-#ifndef __MEM_RUBY_NETWORK_SIMPLE_PERFECTSWITCH_HH__
-#define __MEM_RUBY_NETWORK_SIMPLE_PERFECTSWITCH_HH__
-
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/common/TypeDefines.hh"
+#include "mem/ruby/network/simple/routing/BaseRoutingUnit.hh"
+#include "params/WeightBased.hh"
 
 namespace gem5
 {
@@ -61,69 +50,40 @@ namespace gem5
 namespace ruby
 {
 
-class MessageBuffer;
-class NetDest;
-class SimpleNetwork;
-class Switch;
-
-class PerfectSwitch : public Consumer
+class WeightBased : public BaseRoutingUnit
 {
   public:
-    PerfectSwitch(SwitchID sid, Switch *, uint32_t);
-    ~PerfectSwitch();
+    PARAMS(WeightBased);
 
-    std::string name()
-    { return csprintf("PerfectSwitch-%i", m_switch_id); }
+    WeightBased(const Params &p);
 
-    void init(SimpleNetwork *);
-    void addInPort(const std::vector<MessageBuffer*>& in);
-    void addOutPort(const std::vector<MessageBuffer*>& out,
+    void addOutPort(LinkID link_id,
+                    const std::vector<MessageBuffer*>& m_out_buffer,
                     const NetDest& routing_table_entry,
-                    const PortDirection &dst_inport);
+                    const PortDirection &direction) override;
 
-    int getInLinks() const { return m_in.size(); }
-    int getOutLinks() const { return m_out.size(); }
-
-    void wakeup();
-    void storeEventInfo(int info);
-
-    void clearStats();
-    void collateStats();
-    void print(std::ostream& out) const;
+    void route(const Message &msg,
+                int vnet,
+                bool deterministic,
+                std::vector<RouteInfo> &out_links) override;
 
   private:
-    // Private copy constructor and assignment operator
-    PerfectSwitch(const PerfectSwitch& obj);
-    PerfectSwitch& operator=(const PerfectSwitch& obj);
 
-    void operateVnet(int vnet);
-    void operateMessageBuffer(MessageBuffer *b, int incoming, int vnet);
+    struct LinkInfo {
+        const LinkID m_link_id;
+        const NetDest m_routing_entry;
+        const std::vector<MessageBuffer*> m_out_buffers;
+        int m_order;
+    };
 
-    const SwitchID m_switch_id;
-    Switch * const m_switch;
+    std::vector<std::unique_ptr<LinkInfo>> m_links;
 
-    // vector of queues from the components
-    std::vector<std::vector<MessageBuffer*> > m_in;
-    std::vector<std::vector<MessageBuffer*> > m_out;
+    void findRoute(const Message &msg,
+                   std::vector<RouteInfo> &out_links) const;
 
-    uint32_t m_virtual_networks;
-    int m_wakeups_wo_switch;
-
-    SimpleNetwork* m_network_ptr;
-    std::vector<int> m_pending_message_count;
-
-    MessageBuffer* inBuffer(int in_port, int vnet) const;
 };
-
-inline std::ostream&
-operator<<(std::ostream& out, const PerfectSwitch& obj)
-{
-    obj.print(out);
-    out << std::flush;
-    return out;
-}
 
 } // namespace ruby
 } // namespace gem5
 
-#endif // __MEM_RUBY_NETWORK_SIMPLE_PERFECTSWITCH_HH__
+#endif // __MEM_RUBY_NETWORK_SIMPLE_WEIGHTBASEDROUTINGUNIT_HH__

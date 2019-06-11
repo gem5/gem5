@@ -70,7 +70,6 @@ class SimpleNetwork : public Network
 
     int getBufferSize() { return m_buffer_size; }
     int getEndpointBandwidth() { return m_endpoint_bandwidth; }
-    bool getAdaptiveRouting() {return m_adaptive_routing; }
 
     void collateStats();
     void regStats();
@@ -108,7 +107,6 @@ class SimpleNetwork : public Network
     int m_num_connected_buffers;
     const int m_buffer_size;
     const int m_endpoint_bandwidth;
-    const bool m_adaptive_routing;
 
 
     struct NetworkStats : public statistics::Group

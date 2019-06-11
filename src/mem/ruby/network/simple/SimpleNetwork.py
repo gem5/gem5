@@ -39,6 +39,7 @@
 from m5.params import *
 from m5.proxy import *
 
+from m5.SimObject import SimObject
 from m5.objects.Network import RubyNetwork
 from m5.objects.BasicRouter import BasicRouter
 from m5.objects.MessageBuffer import MessageBuffer
@@ -51,7 +52,6 @@ class SimpleNetwork(RubyNetwork):
     buffer_size = Param.Int(0,
         "default buffer size; 0 indicates infinite buffering")
     endpoint_bandwidth = Param.Int(1000, "bandwidth adjustment factor")
-    adaptive_routing = Param.Bool(False, "enable adaptive routing")
     int_link_buffers = VectorParam.MessageBuffer("Buffers for int_links")
 
     physical_vnets_channels = VectorParam.Int([],
@@ -110,6 +110,22 @@ class SimpleNetwork(RubyNetwork):
                                      buffer_size = self.vnet_buffer_size(i)))
             router.port_buffers = router_buffers
 
+
+class BaseRoutingUnit(SimObject):
+    type = 'BaseRoutingUnit'
+    abstract = True
+    cxx_header = 'mem/ruby/network/simple/routing/BaseRoutingUnit.hh'
+    cxx_class = 'gem5::ruby::BaseRoutingUnit'
+
+
+class WeightBased(BaseRoutingUnit):
+    type = 'WeightBased'
+    cxx_header = 'mem/ruby/network/simple/routing/WeightBased.hh'
+    cxx_class = 'gem5::ruby::WeightBased'
+
+    adaptive_routing = Param.Bool(False, "enable adaptive routing")
+
+
 class Switch(BasicRouter):
     type = 'Switch'
     cxx_header = 'mem/ruby/network/simple/Switch.hh'
@@ -118,3 +134,7 @@ class Switch(BasicRouter):
     virt_nets = Param.Int(Parent.number_of_virtual_networks,
                           "number of virtual networks")
     port_buffers = VectorParam.MessageBuffer("Port buffers")
+
+    routing_unit = Param.BaseRoutingUnit(
+                        WeightBased(adaptive_routing = False),
+                        "Routing strategy to be used")
