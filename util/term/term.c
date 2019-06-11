@@ -168,15 +168,6 @@ readwrite(int nfd)
             perror("Select Error:");
         }
 
-        if (n == 0) {
-            if (read(nfd, buf, 0) < 0)
-                return;
-            continue;
-        }
-
-        if (read(nfd, buf, 0) < 0)
-            return;
-
         if (FD_ISSET(nfd, &read_fds)) {
             if ((n = read(nfd, buf, sizeof(buf))) < 0)
                 return;
