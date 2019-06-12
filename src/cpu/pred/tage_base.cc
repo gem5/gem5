@@ -59,12 +59,14 @@ TAGEBase::TAGEBase(const TAGEBaseParams *p)
      logTagTableSizes(p->logTagTableSizes),
      threadHistory(p->numThreads),
      logUResetPeriod(p->logUResetPeriod),
+     initialTCounterValue(p->initialTCounterValue),
      numUseAltOnNa(p->numUseAltOnNa),
      useAltOnNaBits(p->useAltOnNaBits),
      maxNumAlloc(p->maxNumAlloc),
      noSkip(p->noSkip),
      speculativeHistUpdate(p->speculativeHistUpdate),
-     instShiftAmt(p->instShiftAmt)
+     instShiftAmt(p->instShiftAmt),
+     initialized(false)
 {
     if (noSkip.empty()) {
         // Set all the table to enabled by default
@@ -80,6 +82,9 @@ TAGEBase::makeBranchInfo() {
 void
 TAGEBase::init()
 {
+    if (initialized) {
+       return;
+    }
     // Current method for periodically resetting the u counter bits only
     // works for 1 or 2 bits
     // Also make sure that it is not 0
@@ -91,7 +96,7 @@ TAGEBase::init()
 
     // initialize the counter to half of the period
     assert(logUResetPeriod != 0);
-    tCounter = ULL(1) << (logUResetPeriod - 1);
+    tCounter = initialTCounterValue;
 
     assert(histBufferSize > maxHist * 2);
 
@@ -134,6 +139,7 @@ TAGEBase::init()
 
     tableIndices = new int [nHistoryTables+1];
     tableTags = new int [nHistoryTables+1];
+    initialized = true;
 }
 
 void
@@ -339,7 +345,7 @@ TAGEBase::calculateIndicesAndTags(ThreadID tid, Addr branch_pc,
 }
 
 unsigned
-TAGEBase::getUseAltIdx(BranchInfo* bi)
+TAGEBase::getUseAltIdx(BranchInfo* bi, Addr branch_pc)
 {
     // There is only 1 counter on the base TAGE implementation
     return 0;
@@ -397,8 +403,8 @@ TAGEBase::tagePredict(ThreadID tid, Addr branch_pc,
             //if the entry is recognized as a newly allocated entry and
             //useAltPredForNewlyAllocated is positive use the alternate
             //prediction
-            if ((useAltPredForNewlyAllocated[getUseAltIdx(bi)] < 0) ||
-                ! bi->pseudoNewAlloc) {
+            if ((useAltPredForNewlyAllocated[getUseAltIdx(bi, branch_pc)] < 0)
+                || ! bi->pseudoNewAlloc) {
                 bi->tagePred = bi->longestMatchPred;
                 bi->provider = TAGE_LONGEST_MATCH;
             } else {
@@ -501,11 +507,16 @@ TAGEBase::resetUctr(uint8_t & u)
 
 void
 TAGEBase::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
-                       BranchInfo* bi, int nrand, Addr corrTarget, bool pred)
+    BranchInfo* bi, int nrand, Addr corrTarget, bool pred, bool preAdjustAlloc)
 {
     // TAGE UPDATE
     // try to allocate a  new entries only if prediction was wrong
     bool alloc = (bi->tagePred != taken) && (bi->hitBank < nHistoryTables);
+
+    if (preAdjustAlloc) {
+        adjustAlloc(alloc, taken, pred);
+    }
+
     if (bi->hitBank > 0) {
         // Manage the selection between longest matching and alternate
         // matching for "pseudo"-newly allocated longest matching entry
@@ -519,13 +530,16 @@ TAGEBase::condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
             // if it was delivering the correct prediction, no need to
             // allocate new entry even if the overall prediction was false
             if (bi->longestMatchPred != bi->altTaken) {
-                ctrUpdate(useAltPredForNewlyAllocated[getUseAltIdx(bi)],
-                     bi->altTaken == taken, useAltOnNaBits);
+                ctrUpdate(
+                    useAltPredForNewlyAllocated[getUseAltIdx(bi, branch_pc)],
+                    bi->altTaken == taken, useAltOnNaBits);
             }
         }
     }
 
-    adjustAlloc(alloc, taken, pred);
+    if (!preAdjustAlloc) {
+        adjustAlloc(alloc, taken, pred);
+    }
 
     handleAllocAndUReset(alloc, taken, bi, nrand);
 
@@ -787,6 +801,23 @@ bool
 TAGEBase::isSpeculativeUpdateEnabled() const
 {
     return speculativeHistUpdate;
+}
+
+size_t
+TAGEBase::getSizeInBits() const {
+    size_t bits = 0;
+    for (int i = 1; i <= nHistoryTables; i++) {
+        bits += (1 << logTagTableSizes[i]) *
+            (tagTableCounterBits + tagTableUBits + tagTableTagWidths[i]);
+    }
+    uint64_t bimodalTableSize = ULL(1) << logTagTableSizes[0];
+    bits += numUseAltOnNa * useAltOnNaBits;
+    bits += bimodalTableSize;
+    bits += (bimodalTableSize >> logRatioBiModalHystEntries);
+    bits += histLengths[nHistoryTables];
+    bits += pathHistBits;
+    bits += logUResetPeriod;
+    return bits;
 }
 
 TAGEBase*

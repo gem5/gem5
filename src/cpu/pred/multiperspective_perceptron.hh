@@ -358,9 +358,9 @@ class MultiperspectivePerceptron : public BPredUnit
     int ghist_length;
     int modghist_length;
     int path_length;
-    unsigned int randSeed;
     int thresholdCounter;
     int theta;
+    int extrabits;
     std::vector<int> imli_counter_bits;
     std::vector<int> modhist_indices;
     std::vector<int> modhist_lengths;
@@ -416,9 +416,10 @@ class MultiperspectivePerceptron : public BPredUnit
      * @param num_filter_entries number of entries of the filter
      * @param nlocal_histories number of local history entries
      * @param local_history_length size of each local history entry
+     * @param ignore_path_size ignore the path length storage
      */
     void computeBits(int num_filter_entries, int nlocal_histories,
-            int local_history_length);
+            int local_history_length, bool ignore_path_size);
 
     /**
      * Creates the tables of the predictor
@@ -1012,6 +1013,13 @@ class MultiperspectivePerceptron : public BPredUnit
 
     public:
     MultiperspectivePerceptron(const MultiperspectivePerceptronParams *params);
+
+    /**
+     * Sets the starting number of storage bits to compute the number of
+     * table entries
+     * @param bits number of bits used
+     */
+    void setExtraBits(int bits);
 
     void init() override;
 

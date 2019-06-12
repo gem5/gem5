@@ -360,6 +360,15 @@ LoopPredictor::regStats()
               "the prediction is wrong");
 }
 
+size_t
+LoopPredictor::getSizeInBits() const
+{
+    return (1ULL << logSizeLoopPred) *
+        ((useSpeculation ? 3 : 2) * loopTableIterBits +
+        loopTableConfidenceBits + loopTableTagBits +
+        loopTableAgeBits + useDirectionBit);
+}
+
 LoopPredictor *
 LoopPredictorParams::create()
 {

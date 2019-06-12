@@ -99,8 +99,8 @@ class TAGE_SC_L_8KB_StatisticalCorrector : public StatisticalCorrector
     int gIndexLogsSubstr(int nbr, int i) override;
 
     void scHistoryUpdate(
-        Addr branch_pc, int brtype, bool taken, BranchInfo * tage_bi,
-        Addr corrTarget) override;
+        Addr branch_pc, const StaticInstPtr &inst, bool taken,
+        BranchInfo * tage_bi, Addr corrTarget) override;
 
     void gUpdates(ThreadID tid, Addr pc, bool taken, BranchInfo* bi,
         int64_t phist) override;

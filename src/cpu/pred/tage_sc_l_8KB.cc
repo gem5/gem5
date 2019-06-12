@@ -101,9 +101,14 @@ int TAGE_SC_L_8KB_StatisticalCorrector::gIndexLogsSubstr(int nbr, int i)
 }
 
 void
-TAGE_SC_L_8KB_StatisticalCorrector::scHistoryUpdate(Addr branch_pc, int brtype,
-    bool taken, BranchInfo * tage_bi, Addr corrTarget)
+TAGE_SC_L_8KB_StatisticalCorrector::scHistoryUpdate(Addr branch_pc,
+    const StaticInstPtr &inst, bool taken, BranchInfo *tage_bi,
+    Addr corrTarget)
 {
+    int brtype = inst->isDirectCtrl() ? 0 : 2;
+    if (! inst->isUncondCtrl()) {
+        ++brtype;
+    }
     // Non speculative SC histories update
     if (brtype & 1) {
         SC_8KB_ThreadHistory *sh =
@@ -111,7 +116,7 @@ TAGE_SC_L_8KB_StatisticalCorrector::scHistoryUpdate(Addr branch_pc, int brtype,
         sh->globalHist = (sh->globalHist << 1) + taken;
     }
 
-    StatisticalCorrector::scHistoryUpdate(branch_pc, brtype, taken, tage_bi,
+    StatisticalCorrector::scHistoryUpdate(branch_pc, inst, taken, tage_bi,
                                           corrTarget);
 }
 

@@ -38,6 +38,7 @@
 
 #include "cpu/pred/multiperspective_perceptron.hh"
 
+#include "base/random.hh"
 #include "debug/Branch.hh"
 
 int
@@ -121,12 +122,18 @@ MultiperspectivePerceptron::MultiperspectivePerceptron(
     tuneonly(p->tuneonly), extra_rounds(p->extra_rounds), speed(p->speed),
     budgetbits(p->budgetbits), speculative_update(p->speculative_update),
     threadData(p->numThreads, nullptr), doing_local(false),
-    doing_recency(false), assoc(0), ghist_length(1), modghist_length(1),
-    path_length(1), randSeed(0xdeadbeef), thresholdCounter(0),
-    theta(p->initial_theta), imli_counter_bits(4), modhist_indices(),
-    modhist_lengths(), modpath_indices(), modpath_lengths()
+    doing_recency(false), assoc(0), ghist_length(p->initial_ghist_length),
+    modghist_length(1), path_length(1), thresholdCounter(0),
+    theta(p->initial_theta), extrabits(0), imli_counter_bits(4),
+    modhist_indices(), modhist_lengths(), modpath_indices(), modpath_lengths()
 {
     fatal_if(speculative_update, "Speculative update not implemented");
+}
+
+void
+MultiperspectivePerceptron::setExtraBits(int bits)
+{
+    extrabits = bits;
 }
 
 void
@@ -147,7 +154,7 @@ MultiperspectivePerceptron::init()
         static_cast<const MultiperspectivePerceptronParams *>(params());
 
     computeBits(p->num_filter_entries, p->num_local_histories,
-                p->local_history_length);
+                p->local_history_length, p->ignore_path_size);
 
     for (int i = 0; i < threadData.size(); i += 1) {
         threadData[i] = new ThreadData(p->num_filter_entries,
@@ -163,19 +170,24 @@ MultiperspectivePerceptron::init()
 
 void
 MultiperspectivePerceptron::computeBits(int num_filter_entries,
-        int nlocal_histories, int local_history_length) {
-    int totalbits = 0;
+        int nlocal_histories, int local_history_length, bool ignore_path_size)
+{
+    int totalbits = extrabits;
     for (auto &imli_bits : imli_counter_bits) {
         totalbits += imli_bits;
     }
     totalbits += ghist_length;
-    totalbits += path_length * 16;
+    if (!ignore_path_size) {
+        totalbits += path_length * 16;
+    }
     totalbits += (threshold >= 0) ? (tunebits * specs.size()) : 0;
     for (auto &len : modhist_lengths) {
         totalbits += len;
     }
-    for (auto &len : modpath_lengths) {
-        totalbits += 16 * len;
+    if (!ignore_path_size) {
+        for (auto &len : modpath_lengths) {
+            totalbits += 16 * len;
+        }
     }
     totalbits += doing_local ? (nlocal_histories * local_history_length) : 0;
     totalbits += doing_recency ? (assoc * 16) : 0;
@@ -482,7 +494,7 @@ MultiperspectivePerceptron::train(ThreadID tid, MPPBranchInfo &bi, bool taken)
             do {
                 // udpate a random weight
                 int besti = -1;
-                int nrand = rand_r(&randSeed) % specs.size();
+                int nrand = random_mt.random<int>() % specs.size();
                 int pout;
                 found = false;
                 for (int j = 0; j < specs.size(); j += 1) {
@@ -645,7 +657,8 @@ MultiperspectivePerceptron::update(ThreadID tid, Addr instPC, bool taken,
         // filter, blow a random filter entry away
         if (decay && transition &&
             ((threadData[tid]->occupancy > decay) || (decay == 1))) {
-            int rnd = rand_r(&randSeed) % threadData[tid]->filterTable.size();
+            int rnd = random_mt.random<int>() %
+                      threadData[tid]->filterTable.size();
             FilterEntry &frand = threadData[tid]->filterTable[rnd];
             if (frand.seenTaken && frand.seenUntaken) {
                 threadData[tid]->occupancy -= 1;

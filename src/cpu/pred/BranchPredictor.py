@@ -133,6 +133,7 @@ class TAGEBase(SimObject):
     logUResetPeriod = Param.Unsigned(18,
         "Log period in number of branches to reset TAGE useful counters")
     numUseAltOnNa = Param.Unsigned(1, "Number of USE_ALT_ON_NA counters")
+    initialTCounterValue = Param.Int(1 << 17, "Initial value of tCounter")
     useAltOnNaBits = Param.Unsigned(4, "Size of the USE_ALT_ON_NA counter(s)")
 
     maxNumAlloc = Param.Unsigned(1,
@@ -210,6 +211,7 @@ class TAGE_SC_L_TAGE(TAGEBase):
     pathHistBits = 27
     maxNumAlloc = 2
     logUResetPeriod = 10
+    initialTCounterValue = 1 << 9
     useAltOnNaBits = 5
     # TODO No speculation implemented as of now
     speculativeHistUpdate = False
@@ -334,14 +336,20 @@ class StatisticalCorrector(SimObject):
     bwnb = Param.Unsigned("Num global backward branch GEHL lengths")
     bwm = VectorParam.Int("Global backward branch GEHL lengths")
     logBwnb = Param.Unsigned("Log num of global backward branch GEHL entries")
+    bwWeightInitValue = Param.Int(
+     "Initial value of the weights of the global backward branch GEHL entries")
 
     lnb = Param.Unsigned("Num first local history GEHL lenghts")
     lm = VectorParam.Int("First local history GEHL lengths")
     logLnb = Param.Unsigned("Log number of first local history GEHL entries")
+    lWeightInitValue = Param.Int(
+        "Initial value of the weights of the first local history GEHL entries")
 
     inb = Param.Unsigned(1, "Num IMLI GEHL lenghts")
     im = VectorParam.Int([8], "IMLI history GEHL lengths")
     logInb = Param.Unsigned("Log number of IMLI GEHL entries")
+    iWeightInitValue = Param.Int(
+        "Initial value of the weights of the IMLI history GEHL entries")
 
     logBias = Param.Unsigned("Log size of Bias tables")
 
@@ -361,6 +369,9 @@ class StatisticalCorrector(SimObject):
         "Number of bits for the extra weights")
 
     scCountersWidth = Param.Unsigned(6, "Statistical corrector counters width")
+
+    initialUpdateThresholdValue = Param.Int(0,
+        "Initial pUpdate threshold counter value")
 
 # TAGE-SC-L branch predictor as desribed in
 # https://www.jilp.org/cbp2016/paper/AndreSeznecLimited.pdf
@@ -425,12 +436,15 @@ class TAGE_SC_L_64KB_StatisticalCorrector(StatisticalCorrector):
     bwnb = 3
     bwm = [40, 24, 10]
     logBwnb = 10
+    bwWeightInitValue = 7
 
     lnb = 3
     lm = [11, 6, 3]
     logLnb = 10
+    lWeightInitValue = 7
 
     logInb = 8
+    iWeightInitValue = 7
 
 class TAGE_SC_L_8KB_StatisticalCorrector(StatisticalCorrector):
     type = 'TAGE_SC_L_8KB_StatisticalCorrector'
@@ -447,12 +461,15 @@ class TAGE_SC_L_8KB_StatisticalCorrector(StatisticalCorrector):
     bwnb = 2
     logBwnb = 7
     bwm = [16, 8]
+    bwWeightInitValue = 7
 
     lnb = 2
     logLnb = 7
     lm = [6, 3]
+    lWeightInitValue = 7
 
     logInb = 7
+    iWeightInitValue = 7
 
 # 64KB TAGE-SC-L branch predictor as described in
 # http://www.jilp.org/cbp2016/paper/AndreSeznecLimited.pdf
@@ -536,6 +553,9 @@ class MultiperspectivePerceptron(BranchPredictor):
     speculative_update = Param.Bool(False,
         "Use speculative update for histories")
 
+    initial_ghist_length = Param.Int(1, "Initial GHist length value")
+    ignore_path_size = Param.Bool(False, "Ignore the path storage")
+
 class MultiperspectivePerceptron8KB(MultiperspectivePerceptron):
     type = 'MultiperspectivePerceptron8KB'
     cxx_class = 'MultiperspectivePerceptron8KB'
@@ -557,3 +577,177 @@ class MultiperspectivePerceptron64KB(MultiperspectivePerceptron):
     imli_mask1 = 0xc1000
     imli_mask4 = 0x80008000
     recencypos_mask = 0x100000090
+
+class MPP_TAGE(TAGEBase):
+    type = 'MPP_TAGE'
+    cxx_class = 'MPP_TAGE'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_tage.hh'
+    nHistoryTables = 15
+    pathHistBits = 27
+    instShiftAmt = 0
+    histBufferSize = 16384
+    maxHist = 4096;
+    tagTableTagWidths = [0, 7, 9, 9, 9, 10, 11, 11, 12, 12,
+                         12, 13, 14, 15, 15, 15]
+    logTagTableSizes = [14, 10, 11, 11, 11, 11, 11, 12, 12,
+                         10, 11, 11, 9, 7, 7, 8]
+    tunedHistoryLengths = VectorParam.Unsigned([0, 5, 12, 15, 21, 31, 43, 64,
+        93, 137, 200, 292, 424, 612, 877, 1241], "Tuned history lengths")
+
+    logUResetPeriod = 10
+    initialTCounterValue = 0
+    numUseAltOnNa = 512
+    speculativeHistUpdate = False
+
+class MPP_LoopPredictor(LoopPredictor):
+    type = 'MPP_LoopPredictor'
+    cxx_class = 'MPP_LoopPredictor'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_tage.hh'
+    useDirectionBit = True
+    useHashing = True
+    useSpeculation = False
+    loopTableConfidenceBits = 4
+    loopTableAgeBits = 4
+    initialLoopAge = 7
+    initialLoopIter = 0
+    loopTableIterBits = 12
+    optionalAgeReset = False
+    restrictAllocation = True
+    logSizeLoopPred = 6
+    loopTableTagBits = 10
+
+class MPP_StatisticalCorrector(StatisticalCorrector):
+    type = 'MPP_StatisticalCorrector'
+    cxx_class = 'MPP_StatisticalCorrector'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_tage.hh'
+    abstract = True
+
+    # Unused in this Statistical Corrector
+    bwnb = 0
+    bwm = [ ]
+    logBwnb = 0
+    bwWeightInitValue = -1
+
+    # Unused in this Statistical Corrector
+    logInb = 0
+    iWeightInitValue = -1
+
+    extraWeightsWidth = 0
+    pUpdateThresholdWidth = 10
+    initialUpdateThresholdValue = 35
+    logSizeUp = 5
+
+    lnb = 3
+    lm = [11, 6, 3]
+    logLnb = 10
+    lWeightInitValue = -1
+
+    gnb = Param.Unsigned(4, "Num global branch GEHL lengths")
+    gm = VectorParam.Int([27, 22, 17, 14], "Global branch GEHL lengths")
+    logGnb = Param.Unsigned(10, "Log number of global branch GEHL entries")
+
+    pnb = Param.Unsigned(4, "Num variation global branch GEHL lengths")
+    pm = VectorParam.Int([16, 11, 6, 3],
+        "Variation global branch GEHL lengths")
+    logPnb = Param.Unsigned(9,
+        "Log number of variation global branch GEHL entries")
+
+class MultiperspectivePerceptronTAGE(MultiperspectivePerceptron):
+    type = 'MultiperspectivePerceptronTAGE'
+    cxx_class = 'MultiperspectivePerceptronTAGE'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_tage.hh'
+    abstract = True
+    instShiftAmt = 4
+
+    imli_mask1 = 0x70
+    imli_mask4 = 0
+    num_filter_entries = 0
+    num_local_histories = 0
+    recencypos_mask = 0 # Unused
+    threshold = -1
+    initial_ghist_length = 0
+    ignore_path_size = True
+    n_sign_bits = 1;
+
+    tage = Param.TAGEBase("Tage object")
+    loop_predictor = Param.LoopPredictor("Loop predictor")
+    statistical_corrector = Param.StatisticalCorrector("Statistical Corrector")
+
+class MPP_StatisticalCorrector_64KB(MPP_StatisticalCorrector):
+    type = 'MPP_StatisticalCorrector_64KB'
+    cxx_class = 'MPP_StatisticalCorrector_64KB'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_tage_64KB.hh'
+
+    logBias = 8
+
+    snb = Param.Unsigned(4, "Num second local history GEHL lenghts")
+    sm = VectorParam.Int([16, 11, 6, 3], "Second local history GEHL lengths")
+    logSnb = Param.Unsigned(9,
+        "Log number of second local history GEHL entries")
+
+    tnb = Param.Unsigned(3, "Num third local history GEHL lenghts")
+    tm = VectorParam.Int([22, 17, 14], "Third local history GEHL lengths")
+    logTnb = Param.Unsigned(9,
+        "Log number of third local history GEHL entries")
+
+    numEntriesSecondLocalHistories = Param.Unsigned(16,
+        "Number of entries for second local histories")
+    numEntriesThirdLocalHistories = Param.Unsigned(16,
+        "Number of entries for second local histories")
+
+    numEntriesFirstLocalHistories = 256
+
+class MultiperspectivePerceptronTAGE64KB(MultiperspectivePerceptronTAGE):
+    type = 'MultiperspectivePerceptronTAGE64KB'
+    cxx_class = 'MultiperspectivePerceptronTAGE64KB'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_tage_64KB.hh'
+
+    budgetbits = 65536 * 8 + 2048
+
+    tage = MPP_TAGE()
+    loop_predictor = MPP_LoopPredictor()
+    statistical_corrector = MPP_StatisticalCorrector_64KB()
+
+class MPP_TAGE_8KB(MPP_TAGE):
+    type = 'MPP_TAGE_8KB'
+    cxx_class = 'MPP_TAGE_8KB'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_tage_8KB.hh'
+    nHistoryTables = 10
+    tagTableTagWidths = [0, 7, 7, 7, 8, 9, 10, 10, 11, 13, 13]
+    logTagTableSizes = [12, 8, 8, 9, 9, 8, 8, 8, 7, 6, 7]
+    tunedHistoryLengths = [0, 4, 8, 13, 23, 36, 56, 93, 145, 226, 359]
+
+class MPP_LoopPredictor_8KB(MPP_LoopPredictor):
+    type = 'MPP_LoopPredictor_8KB'
+    cxx_class = 'MPP_LoopPredictor_8KB'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_tage_8KB.hh'
+    loopTableIterBits = 10
+    logSizeLoopPred = 4
+
+class MPP_StatisticalCorrector_8KB(MPP_StatisticalCorrector):
+    type = 'MPP_StatisticalCorrector_8KB'
+    cxx_class = 'MPP_StatisticalCorrector_8KB'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_tage_8KB.hh'
+
+    logBias = 7
+
+    lnb = 2
+    lm = [8, 3]
+    logLnb = 9
+
+    logGnb = 9
+
+    logPnb = 7
+
+    numEntriesFirstLocalHistories = 64
+
+class MultiperspectivePerceptronTAGE8KB(MultiperspectivePerceptronTAGE):
+    type = 'MultiperspectivePerceptronTAGE8KB'
+    cxx_class = 'MultiperspectivePerceptronTAGE8KB'
+    cxx_header = 'cpu/pred/multiperspective_perceptron_tage_8KB.hh'
+
+    budgetbits = 8192 * 8 + 2048
+
+    tage = MPP_TAGE_8KB()
+    loop_predictor = MPP_LoopPredictor_8KB()
+    statistical_corrector = MPP_StatisticalCorrector_8KB()

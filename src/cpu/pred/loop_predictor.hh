@@ -259,5 +259,7 @@ class LoopPredictor : public SimObject
     void regStats() override;
 
     LoopPredictor(LoopPredictorParams *p);
+
+    size_t getSizeInBits() const;
 };
 #endif//__CPU_PRED_LOOP_PREDICTOR_HH__
