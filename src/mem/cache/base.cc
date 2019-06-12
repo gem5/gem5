@@ -795,6 +795,43 @@ BaseCache::getNextQueueEntry()
 }
 
 bool
+BaseCache::handleEvictions(std::vector<CacheBlk*> &evict_blks,
+    PacketList &writebacks)
+{
+    bool replacement = false;
+    for (const auto& blk : evict_blks) {
+        if (blk->isValid()) {
+            replacement = true;
+
+            const MSHR* mshr =
+                mshrQueue.findMatch(regenerateBlkAddr(blk), blk->isSecure());
+            if (mshr) {
+                // Must be an outstanding upgrade or clean request on a block
+                // we're about to replace
+                assert((!blk->isWritable() && mshr->needsWritable()) ||
+                       mshr->isCleaning());
+                return false;
+            }
+        }
+    }
+
+    // The victim will be replaced by a new entry, so increase the replacement
+    // counter if a valid block is being replaced
+    if (replacement) {
+        stats.replacements++;
+
+        // Evict valid blocks associated to this victim block
+        for (auto& blk : evict_blks) {
+            if (blk->isValid()) {
+                evictBlock(blk, writebacks);
+            }
+        }
+    }
+
+    return true;
+}
+
+bool
 BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
                                  PacketList &writebacks)
 {
@@ -833,35 +870,18 @@ BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
     // allocated blocks to make room for the expansion, but other approaches
     // that take the replacement data of the superblock into account may
     // generate better results
-    std::vector<CacheBlk*> evict_blks;
     const bool was_compressed = compression_blk->isCompressed();
     if (was_compressed && !is_co_allocatable) {
-        // Get all co-allocated blocks
+        std::vector<CacheBlk*> evict_blks;
         for (const auto& sub_blk : superblock->blks) {
             if (sub_blk->isValid() && (compression_blk != sub_blk)) {
-                // Check for transient state allocations. If any of the
-                // entries listed for eviction has a transient state, the
-                // allocation fails
-                const Addr repl_addr = regenerateBlkAddr(sub_blk);
-                const MSHR *repl_mshr =
-                    mshrQueue.findMatch(repl_addr, sub_blk->isSecure());
-                if (repl_mshr) {
-                    DPRINTF(CacheRepl, "Aborting data expansion of %s due " \
-                            "to replacement of block in transient state: %s\n",
-                            compression_blk->print(), sub_blk->print());
-                    // Too hard to replace block with transient state, so it
-                    // cannot be evicted. Mark the update as failed and expect
-                    // the caller to evict this block. Since this is called
-                    // only when writebacks arrive, and packets do not contain
-                    // compressed data, there is no need to decompress
-                    compression_blk->setSizeBits(blkSize * 8);
-                    compression_blk->setDecompressionLatency(Cycles(0));
-                    compression_blk->setUncompressed();
-                    return false;
-                }
-
                 evict_blks.push_back(sub_blk);
             }
+        }
+
+        // Try to evict blocks; if it fails, give up on update
+        if (!handleEvictions(evict_blks, writebacks)) {
+            return false;
         }
 
         // Update the number of data expansions
@@ -879,13 +899,6 @@ BaseCache::updateCompressionData(CacheBlk *blk, const uint64_t* data,
     }
     compression_blk->setSizeBits(compression_size);
     compression_blk->setDecompressionLatency(decompression_lat);
-
-    // Evict valid blocks
-    for (const auto& evict_blk : evict_blks) {
-        if (evict_blk->isValid()) {
-            evictBlock(evict_blk, writebacks);
-        }
-    }
 
     return true;
 }
@@ -1427,42 +1440,9 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // Print victim block's information
     DPRINTF(CacheRepl, "Replacement victim: %s\n", victim->print());
 
-    // Check for transient state allocations. If any of the entries listed
-    // for eviction has a transient state, the allocation fails
-    bool replacement = false;
-    for (const auto& blk : evict_blks) {
-        if (blk->isValid()) {
-            replacement = true;
-
-            Addr repl_addr = regenerateBlkAddr(blk);
-            MSHR *repl_mshr = mshrQueue.findMatch(repl_addr, blk->isSecure());
-            if (repl_mshr) {
-                // must be an outstanding upgrade or clean request
-                // on a block we're about to replace...
-                assert((!blk->isWritable() && repl_mshr->needsWritable()) ||
-                       repl_mshr->isCleaning());
-
-                // too hard to replace block with transient state
-                // allocation failed, block not inserted
-                return nullptr;
-            }
-        }
-    }
-
-    // The victim will be replaced by a new entry, so increase the replacement
-    // counter if a valid block is being replaced
-    if (replacement) {
-        // Evict valid blocks associated to this victim block
-        for (const auto& blk : evict_blks) {
-            if (blk->isValid()) {
-                DPRINTF(CacheRepl, "Evicting %s (%#llx) to make room for " \
-                        "%#llx (%s)\n", blk->print(), regenerateBlkAddr(blk),
-                        addr, is_secure);
-                evictBlock(blk, writebacks);
-            }
-        }
-
-        stats.replacements++;
+    // Try to evict blocks; if it fails, give up on allocation
+    if (!handleEvictions(evict_blks, writebacks)) {
+        return nullptr;
     }
 
     // If using a compressor, set compression data. This must be done before
