@@ -757,8 +757,6 @@ class AddrRange(ParamValue):
 
     def __init__(self, *args, **kwargs):
         # Disable interleaving and hashing by default
-        self.intlvHighBit = 0
-        self.xorHighBit = 0
         self.intlvBits = 0
         self.intlvMatch = 0
         self.masks = []
@@ -782,20 +780,22 @@ class AddrRange(ParamValue):
                 self.masks = [ long(x) for x in list(kwargs.pop('masks')) ]
                 self.intlvBits = len(self.masks)
             else:
-                if 'intlvHighBit' in kwargs:
-                    intlv_high_bit = int(kwargs.pop('intlvHighBit'))
-                if 'xorHighBit' in kwargs:
-                    xor_high_bit = int(kwargs.pop('xorHighBit'))
                 if 'intlvBits' in kwargs:
                     self.intlvBits = int(kwargs.pop('intlvBits'))
                     self.masks = [0] * self.intlvBits
-                for i in range(0, self.intlvBits):
-                    bit1 = intlv_high_bit - i
-                    mask = 1 << bit1
-                    if xor_high_bit != 0:
-                        bit2 = xor_high_bit - i
-                        mask |= 1 << bit2
-                    self.masks[self.intlvBits - i - 1] = mask
+                    if 'intlvHighBit' not in kwargs:
+                        raise TypeError("No interleave bits specified")
+                    intlv_high_bit = int(kwargs.pop('intlvHighBit'))
+                    xor_high_bit = 0
+                    if 'xorHighBit' in kwargs:
+                        xor_high_bit = int(kwargs.pop('xorHighBit'))
+                    for i in range(0, self.intlvBits):
+                        bit1 = intlv_high_bit - i
+                        mask = 1 << bit1
+                        if xor_high_bit != 0:
+                            bit2 = xor_high_bit - i
+                            mask |= 1 << bit2
+                        self.masks[self.intlvBits - i - 1] = mask
 
         if len(args) == 0:
             self.start = Addr(kwargs.pop('start'))
