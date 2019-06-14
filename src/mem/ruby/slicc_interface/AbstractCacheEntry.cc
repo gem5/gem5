@@ -31,21 +31,29 @@
 #include "base/trace.hh"
 #include "debug/RubyCache.hh"
 
-AbstractCacheEntry::AbstractCacheEntry()
+AbstractCacheEntry::AbstractCacheEntry() : ReplaceableEntry()
 {
     m_Permission = AccessPermission_NotPresent;
     m_Address = 0;
     m_locked = -1;
+    m_last_touch_tick = 0;
 }
 
 AbstractCacheEntry::~AbstractCacheEntry()
 {
 }
 
+// Get cache permission
+AccessPermission
+AbstractCacheEntry::getPermission() const
+{
+    return m_Permission;
+}
+
 void
 AbstractCacheEntry::changePermission(AccessPermission new_perm)
 {
-    AbstractEntry::changePermission(new_perm);
+    m_Permission = new_perm;
     if ((new_perm == AccessPermission_Invalid) ||
         (new_perm == AccessPermission_NotPresent)) {
         m_locked = -1;

@@ -61,9 +61,10 @@ class LocalVariableAST(StatementAST):
                 self.pairs)
         self.symtab.newSymbol(v)
         if self.pointer or str(type) == "TBE" or (
+        # Check whether type is Entry by checking interface since
+        # entries in protocol files use AbstractCacheEntry as interfaces.
            "interface" in type and (
-               type["interface"] == "AbstractCacheEntry" or
-               type["interface"] == "AbstractEntry")):
+               type["interface"] == "AbstractCacheEntry")):
             code += "%s* %s" % (type.c_ident, ident)
         else:
             code += "%s %s" % (type.c_ident, ident)

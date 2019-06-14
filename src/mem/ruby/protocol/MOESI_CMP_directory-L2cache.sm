@@ -193,7 +193,7 @@ machine(MachineType:L2Cache, "Token protocol")
   }
 
 
-  structure(DirEntry, desc="...", interface="AbstractEntry") {
+  structure(DirEntry, desc="...", interface="AbstractCacheEntry", main="false") {
     NetDest Sharers,            desc="Set of the internal processors that want the block in shared state";
     MachineID Owner,   desc="ID of the L1 cache to forward the block to once we get a response";
     bool OwnerValid, default="false", desc="true if Owner means something";

@@ -55,7 +55,7 @@ machine(MachineType:Directory, "Garnet_standalone Directory")
 
   // TYPES
   // DirectoryEntry
-  structure(Entry, desc="...", interface="AbstractEntry") {
+  structure(Entry, desc="...", interface="AbstractCacheEntry", main="false") {
     State DirectoryState,          desc="Directory state";
     DataBlock DataBlk,             desc="data for the block";
   }

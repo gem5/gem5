@@ -35,7 +35,7 @@ machine(MachineType:L2Cache, "Token protocol")
 
    // L2 BANK QUEUES
    // From local bank of L2 cache TO the network
- 
+
    // this L2 bank -> a local L1 || mod-directory
    MessageBuffer * responseFromL2Cache, network="To", virtual_network="4",
         vnet_type="response";
@@ -45,10 +45,10 @@ machine(MachineType:L2Cache, "Token protocol")
    // this L2 bank -> a local L1
    MessageBuffer * L1RequestFromL2Cache, network="To", virtual_network="1",
         vnet_type="request";
- 
- 
+
+
    // FROM the network to this local bank of L2 cache
- 
+
    // a local L1 || mod-directory -> this L2 bank
    MessageBuffer * responseToL2Cache, network="From", virtual_network="4",
         vnet_type="response";
@@ -123,7 +123,7 @@ machine(MachineType:L2Cache, "Token protocol")
     DataBlock DataBlk,       desc="data for the block";
   }
 
-  structure(DirEntry, desc="...", interface="AbstractEntry") {
+  structure(DirEntry, desc="...", interface="AbstractCacheEntry", main="false") {
     Set Sharers,            desc="Set of the internal processors that want the block in shared state";
     bool exclusive, default="false", desc="if local exclusive is likely";
   }

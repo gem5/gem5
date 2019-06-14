@@ -91,11 +91,11 @@ def create_system(options, full_system, system, dma_ports, bootmem,
             #
             l0i_cache = L0Cache(size = '4096B', assoc = 1, is_icache = True,
                 start_index_bit = block_size_bits,
-                replacement_policy = LRUReplacementPolicy())
+                replacement_policy = LRURP())
 
             l0d_cache = L0Cache(size = '4096B', assoc = 1, is_icache = False,
                 start_index_bit = block_size_bits,
-                replacement_policy = LRUReplacementPolicy())
+                replacement_policy = LRURP())
 
             # the ruby random tester reuses num_cpus to specify the
             # number of cpu ports connected to the tester object, which

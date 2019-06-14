@@ -125,7 +125,7 @@ machine(MachineType:Directory, "Directory protocol")
 
     // NOTE: We use a netdest for the sharers and the owner so we can simply
     // copy the structure into the message we send as a response.
-    structure(Entry, desc="...", interface="AbstractEntry") {
+    structure(Entry, desc="...", interface="AbstractCacheEntry", main="false") {
         State DirState,         desc="Directory state";
         NetDest Sharers,        desc="Sharers for this block";
         NetDest Owner,          desc="Owner of this block";

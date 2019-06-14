@@ -174,20 +174,16 @@ structure(RubyRequest, desc="...", interface="Message", external="yes") {
   PacketPtr pkt,             desc="Packet associated with this request";
 }
 
-structure(AbstractEntry, primitive="yes", external = "yes") {
+structure(AbstractCacheEntry, primitive="yes", external = "yes") {
   void changePermission(AccessPermission);
 }
 
 structure (DirectoryMemory, external = "yes") {
-  AbstractEntry allocate(Addr, AbstractEntry);
-  AbstractEntry lookup(Addr);
+  AbstractCacheEntry allocate(Addr, AbstractCacheEntry);
+  AbstractCacheEntry lookup(Addr);
   bool isPresent(Addr);
   void invalidateBlock(Addr);
   void recordRequestType(DirectoryRequestType);
-}
-
-structure(AbstractCacheEntry, primitive="yes", external = "yes") {
-  void changePermission(AccessPermission);
 }
 
 structure (CacheMemory, external = "yes") {

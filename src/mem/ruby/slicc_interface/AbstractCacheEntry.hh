@@ -36,20 +36,27 @@
 #include <iostream>
 
 #include "base/logging.hh"
+#include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/protocol/AccessPermission.hh"
-#include "mem/ruby/slicc_interface/AbstractEntry.hh"
 
 class DataBlock;
 
-class AbstractCacheEntry : public AbstractEntry
+class AbstractCacheEntry : public ReplaceableEntry
 {
+  private:
+    // The last access tick for the cache entry.
+    Tick m_last_touch_tick;
+
   public:
     AbstractCacheEntry();
     virtual ~AbstractCacheEntry() = 0;
 
     // Get/Set permission of the entry
+    AccessPermission getPermission() const;
     void changePermission(AccessPermission new_perm);
+
+    virtual void print(std::ostream& out) const = 0;
 
     // The methods below are those called by ruby runtime, add when it
     // is absolutely necessary and should all be virtual function.
@@ -68,22 +75,20 @@ class AbstractCacheEntry : public AbstractEntry
     void clearLocked();
     bool isLocked(int context) const;
 
-    void setSetIndex(uint32_t s) { m_set_index = s; }
-    uint32_t getSetIndex() const { return m_set_index; }
-
-    void setWayIndex(uint32_t s) { m_way_index = s; }
-    uint32_t getWayIndex() const { return m_way_index; }
-
     // Address of this block, required by CacheMemory
     Addr m_Address;
     // Holds info whether the address is locked.
     // Required for implementing LL/SC operations.
     int m_locked;
 
-  private:
-    // Set and way coordinates of the entry within the cache memory object.
-    uint32_t m_set_index;
-    uint32_t m_way_index;
+    AccessPermission m_Permission; // Access permission for this
+                                   // block, required by CacheMemory
+
+    // Get the last access Tick.
+    Tick getLastAccess() { return m_last_touch_tick; }
+
+    // Set the last access Tick.
+    void setLastAccess(Tick tick) { m_last_touch_tick = tick; }
 };
 
 inline std::ostream&

@@ -33,10 +33,9 @@
 
 from m5.params import *
 from m5.proxy import *
-from m5.objects.ReplacementPolicy import ReplacementPolicy
+from m5.objects.ReplacementPolicies import BaseReplacementPolicy
 
-class WeightedLRUReplacementPolicy(ReplacementPolicy):
+class WeightedLRUReplacementPolicy(BaseReplacementPolicy):
     type = "WeightedLRUReplacementPolicy"
     cxx_class = "WeightedLRUPolicy"
     cxx_header = "mem/ruby/system/WeightedLRUPolicy.hh"
-    cache = Param.RubyCache("")

@@ -106,7 +106,7 @@ machine(MachineType:Directory, "Directory protocol")
   // TYPES
 
   // DirectoryEntry
-  structure(Entry, desc="...", interface='AbstractEntry') {
+  structure(Entry, desc="...", interface='AbstractCacheEntry', main="false") {
     State DirectoryState,          desc="Directory state";
     NetDest Sharers,                   desc="Sharers for this block";
     NetDest Owner,                     desc="Owner of this block";

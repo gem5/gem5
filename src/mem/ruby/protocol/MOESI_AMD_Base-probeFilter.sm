@@ -148,7 +148,7 @@ machine(MachineType:Directory, "AMD Baseline protocol")
   }
 
   // DirectoryEntry
-  structure(Entry, desc="...", interface="AbstractEntry") {
+  structure(Entry, desc="...", interface="AbstractCacheEntry", main="false") {
     State DirectoryState,          desc="Directory state";
     DataBlock DataBlk,             desc="data for the block";
     NetDest VicDirtyIgnore,  desc="VicDirty coming from whom to ignore";

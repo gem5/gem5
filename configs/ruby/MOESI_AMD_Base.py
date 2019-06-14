@@ -71,21 +71,21 @@ class L1DCache(RubyCache):
     def create(self, options):
         self.size = MemorySize(options.l1d_size)
         self.assoc = options.l1d_assoc
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 class L1ICache(RubyCache):
     resourceStalls = False
     def create(self, options):
         self.size = MemorySize(options.l1i_size)
         self.assoc = options.l1i_assoc
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 class L2Cache(RubyCache):
     resourceStalls = False
     def create(self, options):
         self.size = MemorySize(options.l2_size)
         self.assoc = options.l2_assoc
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 class CPCntrl(CorePair_Controller, CntrlBase):
 
@@ -143,7 +143,7 @@ class L3Cache(RubyCache):
         self.dataAccessLatency = options.l3_data_latency
         self.tagAccessLatency = options.l3_tag_latency
         self.resourceStalls = options.no_resource_stalls
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 class L3Cntrl(L3Cache_Controller, CntrlBase):
     def create(self, options, ruby_system, system):

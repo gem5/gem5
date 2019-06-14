@@ -47,7 +47,7 @@
 #include "base/addr_range.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/protocol/DirectoryRequestType.hh"
-#include "mem/ruby/slicc_interface/AbstractEntry.hh"
+#include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
 #include "params/RubyDirectoryMemory.hh"
 #include "sim/sim_object.hh"
 
@@ -76,8 +76,8 @@ class DirectoryMemory : public SimObject
     uint64_t getSize() { return m_size_bytes; }
 
     bool isPresent(Addr address);
-    AbstractEntry *lookup(Addr address);
-    AbstractEntry *allocate(Addr address, AbstractEntry* new_entry);
+    AbstractCacheEntry *lookup(Addr address);
+    AbstractCacheEntry *allocate(Addr address, AbstractCacheEntry* new_entry);
 
     void print(std::ostream& out) const;
     void recordRequestType(DirectoryRequestType requestType);
@@ -89,7 +89,7 @@ class DirectoryMemory : public SimObject
 
   private:
     const std::string m_name;
-    AbstractEntry **m_entries;
+    AbstractCacheEntry **m_entries;
     // int m_size;  // # of memory module blocks this directory is
                     // responsible for
     uint64_t m_size_bytes;

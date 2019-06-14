@@ -47,17 +47,17 @@ machine(MachineType:Directory, "Token protocol")
 
    MessageBuffer * requestFromDir, network="To", virtual_network="1",
         vnet_type="request";
- 
+
    // Message Queues to dir from other controllers / network
    MessageBuffer * responseToDir, network="From", virtual_network="4",
         vnet_type="response";
 
    MessageBuffer * persistentToDir, network="From", virtual_network="3",
         vnet_type="persistent";
-   
+
    MessageBuffer * requestToDir, network="From", virtual_network="2",
         vnet_type="request";
-   
+
    MessageBuffer * dmaRequestToDir, network="From", virtual_network="0",
         vnet_type="request";
 
@@ -120,7 +120,7 @@ machine(MachineType:Directory, "Token protocol")
   // TYPES
 
   // DirectoryEntry
-  structure(Entry, desc="...", interface="AbstractEntry") {
+  structure(Entry, desc="...", interface="AbstractCacheEntry", main="false") {
     State DirectoryState,          desc="Directory state";
     int Tokens, default="max_tokens()", desc="Number of tokens for the line we're holding";
 

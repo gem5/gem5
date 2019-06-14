@@ -75,7 +75,7 @@ class L1Cache(RubyCache):
     def create(self, size, assoc, options):
         self.size = MemorySize(size)
         self.assoc = assoc
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 class L2Cache(RubyCache):
     resourceStalls = False
@@ -85,7 +85,7 @@ class L2Cache(RubyCache):
     def create(self, size, assoc, options):
         self.size = MemorySize(size)
         self.assoc = assoc
-        self.replacement_policy = PseudoLRUReplacementPolicy()
+        self.replacement_policy = TreePLRURP()
 
 class CPCntrl(CorePair_Controller, CntrlBase):
 
@@ -139,7 +139,7 @@ class TCPCache(RubyCache):
         self.dataAccessLatency = 4
         self.tagAccessLatency = 1
         self.resourceStalls = options.no_tcc_resource_stalls
-        self.replacement_policy = PseudoLRUReplacementPolicy(assoc = self.assoc)
+        self.replacement_policy = TreePLRURP(num_leaves = self.assoc)
 
 class TCPCntrl(TCP_Controller, CntrlBase):
 
@@ -179,7 +179,7 @@ class SQCCache(RubyCache):
     def create(self, options):
         self.size = MemorySize(options.sqc_size)
         self.assoc = options.sqc_assoc
-        self.replacement_policy = PseudoLRUReplacementPolicy(assoc = self.assoc)
+        self.replacement_policy = TreePLRURP(num_leaves = self.assoc)
 
 class SQCCntrl(SQC_Controller, CntrlBase):
 
@@ -223,7 +223,7 @@ class TCC(RubyCache):
             self.size.value = long(128 * self.assoc)
         self.start_index_bit = math.log(options.cacheline_size, 2) + \
                                math.log(options.num_tccs, 2)
-        self.replacement_policy = PseudoLRUReplacementPolicy(assoc = self.assoc)
+        self.replacement_policy = TreePLRURP(num_leaves = self.assoc)
 
 class TCCCntrl(TCC_Controller, CntrlBase):
     def create(self, options, ruby_system, system):
@@ -249,7 +249,7 @@ class L3Cache(RubyCache):
         self.dataAccessLatency = options.l3_data_latency
         self.tagAccessLatency = options.l3_tag_latency
         self.resourceStalls = False
-        self.replacement_policy = PseudoLRUReplacementPolicy(assoc = self.assoc)
+        self.replacement_policy = TreePLRURP(num_leaves = self.assoc)
 
 class L3Cntrl(L3Cache_Controller, CntrlBase):
     def create(self, options, ruby_system, system):
@@ -328,7 +328,7 @@ class RegionDir(RubyCache):
         self.dataAccessLatency = 1
         self.resourceStalls = options.no_resource_stalls
         self.start_index_bit = 6 + int(math.log(options.blocks_per_region, 2))
-        self.replacement_policy = PseudoLRUReplacementPolicy(assoc = self.assoc)
+        self.replacement_policy = TreePLRURP(num_leaves = self.assoc)
 # Region directory controller : Contains region directory and associated state
 # machine for dealing with region coherence requests.
 class RegionCntrl(RegionDir_Controller, CntrlBase):
@@ -386,7 +386,7 @@ class RBCntrl(RegionBuffer_Controller, CntrlBase):
         if options.recycle_latency:
             self.recycle_latency = options.recycle_latency
         self.cacheMemory.replacement_policy = \
-            PseudoLRUReplacementPolicy(assoc = self.cacheMemory.assoc)
+            TreePLRURP(num_leaves = self.cacheMemory.assoc)
 
 def define_options(parser):
     parser.add_option("--num-subcaches", type="int", default=4)

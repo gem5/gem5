@@ -111,7 +111,6 @@ def MakeInclude(source):
     include_action = MakeAction(MakeIncludeAction, Transform("MAKE INC", 1))
     env.Command(target, source, include_action)
 
-MakeInclude('slicc_interface/AbstractEntry.hh')
 MakeInclude('slicc_interface/AbstractCacheEntry.hh')
 MakeInclude('slicc_interface/Message.hh')
 MakeInclude('slicc_interface/RubyRequest.hh')
