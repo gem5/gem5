@@ -105,6 +105,11 @@ class BaseCache(ClockedObject):
     compressor = Param.BaseCacheCompressor(NULL, "Cache compressor.")
     replace_expansions = Param.Bool(True, "Apply replacement policy to " \
         "decide which blocks should be evicted on a data expansion")
+    # When a block passes from uncompressed to compressed, it may become
+    # co-allocatable with another existing entry of the same superblock,
+    # so try move the block to co-allocate it
+    move_contractions = Param.Bool(True, "Try to co-allocate blocks that "
+        "contract")
 
     sequential_access = Param.Bool(False,
         "Whether to access tags and data sequentially")

@@ -100,6 +100,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
       clusivity(p.clusivity),
       isReadOnly(p.is_read_only),
       replaceExpansions(p.replace_expansions),
+      moveContractions(p.move_contractions),
       blocked(0),
       order(0),
       noTargetMSHR(nullptr),
@@ -862,15 +863,31 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
     const bool is_co_allocatable = superblock->isCompressed(compression_blk) &&
         superblock->canCoAllocate(compression_size);
 
-    // If block was compressed, possibly co-allocated with other blocks, and
-    // cannot be co-allocated anymore, one or more blocks must be evicted to
-    // make room for the expanded block
+    // If compressed size didn't change enough to modify its co-allocatability
+    // there is nothing to do. Otherwise we may be facing a data expansion
+    // (block passing from more compressed to less compressed state), or a
+    // data contraction (less to more).
     const bool was_compressed = compression_blk->isCompressed();
+    bool is_data_expansion = false;
+    bool is_data_contraction = false;
+    string op_name = "";
     if (was_compressed && !is_co_allocatable) {
+        is_data_expansion = true;
+        op_name = "expansion";
+    } else if (moveContractions && !was_compressed && is_co_allocatable) {
+        is_data_contraction = true;
+        op_name = "contraction";
+    }
+
+    // If block changed compression state, it was possibly co-allocated with
+    // other blocks and cannot be co-allocated anymore, so one or more blocks
+    // must be evicted to make room for the expanded/contracted block
+    std::vector<CacheBlk*> evict_blks;
+    if (is_data_expansion || is_data_contraction) {
         std::vector<CacheBlk*> evict_blks;
         bool victim_itself = false;
         CacheBlk *victim = nullptr;
-        if (replaceExpansions) {
+        if (replaceExpansions || is_data_contraction) {
             victim = tags->findVictim(regenerateBlkAddr(blk),
                 blk->isSecure(), compression_size, evict_blks);
 
@@ -889,8 +906,8 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
             }
 
             // Print victim block's information
-            DPRINTF(CacheRepl, "Data expansion replacement victim: %s\n",
-                victim->print());
+            DPRINTF(CacheRepl, "Data %s replacement victim: %s\n",
+                op_name, victim->print());
         } else {
             // If we do not move the expanded block, we must make room for
             // the expansion to happen, so evict every co-allocated block
@@ -908,12 +925,10 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
             return false;
         }
 
-        // Update the number of data expansions
-        stats.dataExpansions++;
-        DPRINTF(CacheComp, "Data expansion: expanding [%s] from %d to %d bits"
-                "\n", blk->print(), prev_size, compression_size);
+        DPRINTF(CacheComp, "Data %s: [%s] from %d to %d bits\n",
+                op_name, blk->print(), prev_size, compression_size);
 
-        if (!victim_itself && replaceExpansions) {
+        if (!victim_itself && (replaceExpansions || is_data_contraction)) {
             // Move the block's contents to the invalid block so that it now
             // co-allocates with the other existing superblock entry
             tags->moveBlock(blk, victim);
@@ -922,14 +937,26 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
         }
     }
 
-    // We always store compressed blocks when possible
-    if (is_co_allocatable) {
-        compression_blk->setCompressed();
-    } else {
-        compression_blk->setUncompressed();
+    // Update the number of data expansions/contractions
+    if (is_data_expansion) {
+        stats.dataExpansions++;
+    } else if (is_data_contraction) {
+        stats.dataContractions++;
     }
+
     compression_blk->setSizeBits(compression_size);
     compression_blk->setDecompressionLatency(decompression_lat);
+
+    if (is_data_expansion || is_data_contraction) {
+        // If contracting data, for sure data is compressed. If expanding,
+        // both situations can arise. When no contraction or expansion happens
+        // block keeps its old state
+        if (is_co_allocatable) {
+            compression_blk->setCompressed();
+        } else {
+            compression_blk->setUncompressed();
+        }
+    }
 
     return true;
 }
@@ -2088,6 +2115,7 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     replacements(this, "replacements", "number of replacements"),
 
     dataExpansions(this, "data_expansions", "number of data expansions"),
+    dataContractions(this, "data_contractions", "number of data contractions"),
     cmd(MemCmd::NUM_MEM_CMDS)
 {
     for (int idx = 0; idx < MemCmd::NUM_MEM_CMDS; ++idx)
@@ -2307,6 +2335,7 @@ BaseCache::CacheStats::regStats()
     }
 
     dataExpansions.flags(nozero | nonan);
+    dataContractions.flags(nozero | nonan);
 }
 
 void

@@ -902,6 +902,14 @@ class BaseCache : public ClockedObject
     const bool replaceExpansions;
 
     /**
+     * Similar to data expansions, after a block improves its compression,
+     * it may need to be moved elsewhere compatible with the new compression
+     * factor, or, if not required by the compaction method, it may be moved
+     * to co-allocate with an existing block and thus free an entry.
+     */
+    const bool moveContractions;
+
+    /**
      * Bit vector of the blocking reasons for the access path.
      * @sa #BlockedCause
      */
@@ -1073,6 +1081,12 @@ class BaseCache : public ClockedObject
 
         /** Number of data expansions. */
         Stats::Scalar dataExpansions;
+
+        /**
+         * Number of data contractions (blocks that had their compression
+         * factor improved).
+         */
+        Stats::Scalar dataContractions;
 
         /** Per-command statistics */
         std::vector<std::unique_ptr<CacheCmdStats>> cmd;
