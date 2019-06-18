@@ -1,3 +1,15 @@
+# Copyright (c) 2019 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2017 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
@@ -29,6 +41,7 @@
 import os
 import tempfile
 import shutil
+import threading
 
 from testlib.fixture import Fixture, globalfixture
 from testlib.config import config, constants
@@ -58,6 +71,45 @@ class TempdirFixture(Fixture):
     def skip_cleanup(self):
         # Set path to none so it's not deleted
         self.path = None
+
+class UniqueFixture(Fixture):
+    '''
+    Base class for fixtures that generate a target in the
+    filesystem. If the same fixture is used by more than one
+    test/suite, rather than creating a copy of the fixture, it returns
+    the same object and makes sure that setup is only executed
+    once. Devired classses should override the _init and _setup
+    functions.
+
+    :param target: The absolute path of the target in the filesystem.
+
+    '''
+    fixtures = {}
+
+    def __new__(cls, target):
+        if target in cls.fixtures:
+            obj = cls.fixtures[target]
+        else:
+            obj = super(UniqueFixture, cls).__new__(cls)
+            obj.lock = threading.Lock()
+            obj.target = target
+            cls.fixtures[target] = obj
+        return obj
+
+    def __init__(self, *args, **kwargs):
+        with self.lock:
+            if hasattr(self, '_init_done'):
+                return
+            super(UniqueFixture, self).__init__(self, **kwargs)
+            self._init(*args, **kwargs)
+            self._init_done = True
+
+    def setup(self, testitem):
+        with self.lock:
+            if hasattr(self, '_setup_done'):
+                return
+            self._setup_done = True
+            self._setup(testitem)
 
 
 class SConsFixture(Fixture):
