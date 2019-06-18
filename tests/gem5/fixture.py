@@ -43,7 +43,7 @@ import tempfile
 import shutil
 import threading
 
-from testlib.fixture import Fixture, globalfixture
+from testlib.fixture import Fixture
 from testlib.config import config, constants
 from testlib.helper import log_call, cacheresult, joinpath, absdirpath
 import testlib.log as log
@@ -112,7 +112,7 @@ class UniqueFixture(Fixture):
             self._setup(testitem)
 
 
-class SConsFixture(Fixture):
+class SConsFixture(UniqueFixture):
     '''
     Fixture will wait until all SCons targets are collected and tests are
     about to be ran, then will invocate a single instance of SCons for all
@@ -121,21 +121,18 @@ class SConsFixture(Fixture):
     :param directory: The directory which scons will -C (cd) into before
         executing. If None is provided, will choose the config base_dir.
     '''
-    def __init__(self, directory=None, target_class=None, options=[]):
-        self.directory = directory if directory else config.base_dir
-        self.target_class = target_class if target_class else SConsTarget
-        self.threads = config.threads
-        self.targets = set()
-        self.options = options
-        super(SConsFixture, self).__init__()
 
-    def setup(self, testitem):
+    def __new__(cls, target):
+        obj = super(SConsFixture, cls).__new__(cls, target)
+        return obj
+
+    def _setup(self, testitem):
         if config.skip_build:
             return
 
         command = [
             'scons', '-C', self.directory,
-            '-j', str(self.threads),
+            '-j', str(config.threads),
             '--ignore-style'
         ]
 
@@ -159,70 +156,27 @@ class SConsFixture(Fixture):
             command.extend(self.options)
         log_call(log.test_log, command)
 
-
-class SConsTarget(Fixture):
-    # The singleton scons fixture we'll use for all targets.
-    default_scons_invocation = None
-
-    def __init__(self, target, build_dir=None, invocation=None):
-        '''
-        Represents a target to be built by an 'invocation' of scons.
-
-        :param target: The target known to scons.
-
-        :param build_dir: The 'build' directory path which will be prepended
-            to the target name.
-
-        :param invocation: Represents an invocation of scons which we will
-            automatically attach this target to. If None provided, uses the
-            main 'scons' invocation.
-        '''
-
-        if build_dir is None:
-            build_dir = config.build_dir
-        self.target = os.path.join(build_dir, target)
-        super(SConsTarget, self).__init__(name=target)
-
-        if invocation is None:
-            if self.default_scons_invocation is None:
-                SConsTarget.default_scons_invocation = SConsFixture()
-                globalfixture(SConsTarget.default_scons_invocation)
-
-            invocation = self.default_scons_invocation
-        self.invocation = invocation
-
-    def schedule_finalized(self, schedule):
-        self.invocation.targets.add(self.target)
-        return Fixture.schedule_finalized(self, schedule)
-
-class Gem5Fixture(SConsTarget):
-    other_invocations = {} # stores scons invocations other than the default
-
-    def __init__(self, isa, variant, protocol=None):
+class Gem5Fixture(SConsFixture):
+    def __new__(cls, isa, variant, protocol=None):
+        target_dir = joinpath(config.build_dir, isa.upper())
         if protocol:
-            # When specifying an non-default protocol, we have to make a
-            # separate scons invocation with specific parameters. However, if
-            # more than one tests needs the same target, we need to make sure
-            # that we don't call scons too many times.
-            target_dir = isa.upper()+'-'+protocol
-            target = joinpath(target_dir, 'gem5.%s' % variant)
-            if target_dir in self.other_invocations.keys():
-                invocation = self.other_invocations[target_dir]
-            else:
-                options = ['PROTOCOL='+protocol, '--default='+isa.upper()]
-                invocation = SConsFixture(options=options)
-                globalfixture(invocation)
-                Gem5Fixture.other_invocations[target_dir] = invocation
-        else:
-            target = joinpath(isa.upper(), 'gem5.%s' % variant)
-            invocation = None # use default
-        super(Gem5Fixture, self).__init__(target, invocation=invocation)
+            target_dir += '_' + protocol
+        target = joinpath(target_dir, 'gem5.%s' % variant)
+        obj = super(Gem5Fixture, cls).__new__(cls, target)
+        return obj
 
+    def _init(self, isa, variant, protocol=None):
         self.name = constants.gem5_binary_fixture_name
-        self.path = self.target
-        self.isa = isa
-        self.variant = variant
 
+        self.targets = [self.target]
+        self.path = self.target
+        self.directory = config.base_dir
+
+        self.options = []
+        if protocol:
+            self.options = [ '--default=' + isa.upper(),
+                             'PROTOCOL=' + protocol ]
+        self.set_global()
 
 class MakeFixture(Fixture):
     def __init__(self, directory, *args, **kwargs):

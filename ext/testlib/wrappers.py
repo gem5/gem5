@@ -1,3 +1,15 @@
+# Copyright (c) 2019 ARM Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2017 Mark D. Hill and David A. Wood
 # All rights reserved.
 #
@@ -179,9 +191,8 @@ class LoadedLibrary(LoadedTestable):
     Wraps a collection of all loaded test suites and
     provides utility functions for accessing fixtures.
     '''
-    def __init__(self, suites, global_fixtures):
+    def __init__(self, suites):
         LoadedTestable.__init__(self, suites)
-        self.global_fixtures = global_fixtures
 
     def _generate_metadata(self):
         return LibraryMetadata( **{
@@ -196,19 +207,13 @@ class LoadedLibrary(LoadedTestable):
         '''
         return iter(self.obj)
 
-    def all_fixture_tuples(self):
-        return itertools.chain(
-                self.global_fixtures,
-                *(suite.fixtures for suite in self.obj))
-
     def all_fixtures(self):
         '''
         :returns: an interator overall all global, suite,
           and test fixtures
         '''
         return itertools.chain(itertools.chain(
-                self.global_fixtures,
-                *(suite.fixtures for suite in self.obj)),
+            *(suite.fixtures for suite in self.obj)),
             *(self.test_fixtures(suite) for suite in self.obj)
         )
 
@@ -221,7 +226,11 @@ class LoadedLibrary(LoadedTestable):
 
     @property
     def fixtures(self):
-        return self.global_fixtures
+        global_fixtures = []
+        for fixture in self.all_fixtures():
+            if fixture.is_global():
+                global_fixtures.append(fixture)
+        return global_fixtures
 
     @property
     def uid(self):

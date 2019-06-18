@@ -147,7 +147,7 @@ class Loader(object):
 
     @property
     def schedule(self):
-        return wrappers.LoadedLibrary(self.suites, fixture_mod.global_fixtures)
+        return wrappers.LoadedLibrary(self.suites)
 
     def load_schedule_for_suites(self, *uids):
         files = {uid.UID.uid_to_path(id_) for id_ in uids}
@@ -155,8 +155,7 @@ class Loader(object):
             self.load_file(file_)
 
         return wrappers.LoadedLibrary(
-                [self.suite_uids[id_] for id_ in uids],
-                fixture_mod.global_fixtures)
+                [self.suite_uids[id_] for id_ in uids])
 
     def _verify_no_duplicate_suites(self, new_suites):
         new_suite_uids = self.suite_uids.copy()

@@ -32,8 +32,6 @@ import traceback
 import helper
 import log
 
-global_fixtures = []
-
 class SkipException(Exception):
     def __init__(self, fixture, testitem):
         self.fixture = fixture
@@ -71,20 +69,10 @@ class Fixture(object):
         if name is None:
             name = self.__class__.__name__
         self.name = name
+        self._is_global = False
 
     def skip(self, testitem):
         raise SkipException(self.name, testitem.metadata)
-
-    def schedule_finalized(self, schedule):
-        '''
-        This method is called once the schedule of for tests is known.
-        To enable tests to use the same fixture defintion for each execution
-        fixtures must return a copy of themselves in this method.
-
-        :returns: a copy of this fixture which will be setup/torndown
-          when the test item this object is tied to is about to execute.
-        '''
-        return self.copy()
 
     def init(self, *args, **kwargs):
         pass
@@ -95,9 +83,6 @@ class Fixture(object):
     def teardown(self, testitem):
         pass
 
-    def copy(self):
-        return copy.deepcopy(self)
-
     def skip_cleanup(self):
         '''
         If this method is called, then we should make sure that nothing is
@@ -105,11 +90,8 @@ class Fixture(object):
         '''
         pass
 
+    def set_global(self):
+        self._is_global = True
 
-def globalfixture(fixture):
-    '''
-    Store the given fixture as a global fixture. Its setup() method
-    will be called before the first test is executed.
-    '''
-    global_fixtures.append(fixture)
-    return fixture
+    def is_global(self):
+        return self._is_global

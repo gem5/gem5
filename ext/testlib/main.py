@@ -254,20 +254,6 @@ def run_schedule(test_schedule, log_handler):
 
     log_handler.schedule_finalized(test_schedule)
 
-    # Iterate through all fixtures notifying them of the test schedule.
-    for suite in test_schedule:
-        copied_fixtures = []
-        for fixture in suite.fixtures:
-            copied_fixtures.append(fixture.schedule_finalized(test_schedule))
-        suite.fixtures = copied_fixtures
-
-        for test in suite:
-            copied_fixtures = []
-            for fixture in test.fixtures:
-                copied_fixtures.append(fixture.schedule_finalized(
-                        test_schedule))
-            test.fixtures = copied_fixtures
-
     log.test_log.message(terminal.separator())
     log.test_log.message('Running Tests from {} suites'
             .format(len(test_schedule.suites)), bold=True)
