@@ -78,6 +78,24 @@ SMMUTranslRequest::prefetch(Addr addr, uint32_t sid, uint32_t ssid)
     return req;
 }
 
+SMMUTranslationProcess::SMMUTranslationProcess(const std::string &name,
+    SMMUv3 &_smmu, SMMUv3SlaveInterface &_ifc)
+  :
+    SMMUProcess(name, _smmu),
+    ifc(_ifc)
+{
+    // Decrease number of pending translation slots on the slave interface
+    assert(ifc.xlateSlotsRemaining > 0);
+    ifc.xlateSlotsRemaining--;
+    reinit();
+}
+
+SMMUTranslationProcess::~SMMUTranslationProcess()
+{
+    // Increase number of pending translation slots on the slave interface
+    ifc.xlateSlotsRemaining++;
+}
+
 void
 SMMUTranslationProcess::beginTransaction(const SMMUTranslRequest &req)
 {
@@ -1173,8 +1191,6 @@ SMMUTranslationProcess::issuePrefetch(Addr addr)
     if (!ifc.prefetchEnable || ifc.xlateSlotsRemaining == 0)
         return;
 
-    ifc.xlateSlotsRemaining--;
-
     std::string proc_name = csprintf("%sprf", name());
     SMMUTranslationProcess *proc =
         new SMMUTranslationProcess(proc_name, smmu, ifc);
@@ -1201,7 +1217,6 @@ SMMUTranslationProcess::completeTransaction(Yield &yield,
 
 
     smmu.translationTimeDist.sample(curTick() - recvTick);
-    ifc.xlateSlotsRemaining++;
     if (!request.isAtsRequest && request.isWrite)
         ifc.wrBufSlotsRemaining +=
             (request.size + (ifc.portWidth-1)) / ifc.portWidth;
@@ -1249,8 +1264,6 @@ SMMUTranslationProcess::completeTransaction(Yield &yield,
 void
 SMMUTranslationProcess::completePrefetch(Yield &yield)
 {
-    ifc.xlateSlotsRemaining++;
-
     SMMUAction a;
     a.type = ACTION_TERMINATE;
     a.pkt = NULL;

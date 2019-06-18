@@ -173,15 +173,9 @@ class SMMUTranslationProcess : public SMMUProcess
 
   public:
     SMMUTranslationProcess(const std::string &name, SMMUv3 &_smmu,
-        SMMUv3SlaveInterface &_ifc)
-      :
-        SMMUProcess(name, _smmu),
-        ifc(_ifc)
-    {
-        reinit();
-    }
+        SMMUv3SlaveInterface &_ifc);
 
-    virtual ~SMMUTranslationProcess() {}
+    virtual ~SMMUTranslationProcess();
 
     void beginTransaction(const SMMUTranslRequest &req);
     void resumeTransaction();

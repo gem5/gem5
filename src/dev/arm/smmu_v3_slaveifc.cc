@@ -157,7 +157,6 @@ SMMUv3SlaveInterface::recvTimingReq(PacketPtr pkt)
         return false;
     }
 
-    xlateSlotsRemaining--;
     if (pkt->isWrite())
         wrBufSlotsRemaining -= nbeats;
 
@@ -202,8 +201,6 @@ SMMUv3SlaveInterface::atsSlaveRecvTimingReq(PacketPtr pkt)
         deviceNeedsRetry = true;
         return false;
     }
-
-    xlateSlotsRemaining--;
 
     std::string proc_name = csprintf("%s.atsport", name());
     const bool ats_request = true;
