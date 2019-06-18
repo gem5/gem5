@@ -91,22 +91,22 @@ HSAPacketProcessor::~HSAPacketProcessor()
 }
 
 void
-HSAPacketProcessor::unsetDeviceQueueDesc(uint64_t queue_id)
+HSAPacketProcessor::unsetDeviceQueueDesc(uint64_t queue_id, int doorbellSize)
 {
-    hwSchdlr->unregisterQueue(queue_id);
+    hwSchdlr->unregisterQueue(queue_id, doorbellSize);
 }
 
 void
 HSAPacketProcessor::setDeviceQueueDesc(uint64_t hostReadIndexPointer,
                                        uint64_t basePointer,
                                        uint64_t queue_id,
-                                       uint32_t size)
+                                       uint32_t size, int doorbellSize)
 {
     DPRINTF(HSAPacketProcessor,
              "%s:base = %p, qID = %d, ze = %d\n", __FUNCTION__,
              (void *)basePointer, queue_id, size);
     hwSchdlr->registerNewQueue(hostReadIndexPointer,
-                               basePointer, queue_id, size);
+                               basePointer, queue_id, size, doorbellSize);
 }
 
 AddrRangeList
@@ -133,7 +133,16 @@ HSAPacketProcessor::write(Packet *pkt)
           "%s: write of size %d to reg-offset %d (0x%x)\n",
           __FUNCTION__, pkt->getSize(), daddr, daddr);
 
-    uint32_t doorbell_reg = pkt->getLE<uint32_t>();
+    int doorbellSize = gpu_device->driver()->doorbellSize();
+    assert(doorbellSize == pkt->getSize());
+
+    uint64_t doorbell_reg(0);
+    if (pkt->getSize() == 8)
+        doorbell_reg = pkt->getLE<uint64_t>() + 1;
+    else if (pkt->getSize() == 4)
+        doorbell_reg = pkt->getLE<uint32_t>();
+    else
+        fatal("invalid db size");
 
     DPRINTF(HSAPacketProcessor,
             "%s: write data 0x%x to offset %d (0x%x)\n",

@@ -81,6 +81,21 @@ class GPUComputeDriver final : public EmulatedDriver
      */
     void setMtype(RequestPtr req);
 
+    int
+    doorbellSize()
+    {
+        switch (gfxVersion) {
+          case GfxVersion::gfx801:
+          case GfxVersion::gfx803:
+            return 4;
+          case GfxVersion::gfx900:
+            return 8;
+          default:
+            fatal("Invalid GPU type\n");
+        }
+        return 4;
+    }
+
     class DriverWakeupEvent : public Event
     {
       public:

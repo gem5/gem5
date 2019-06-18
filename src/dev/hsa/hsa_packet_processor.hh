@@ -331,8 +331,8 @@ class HSAPacketProcessor: public DmaDevice
     void setDeviceQueueDesc(uint64_t hostReadIndexPointer,
                             uint64_t basePointer,
                             uint64_t queue_id,
-                            uint32_t size);
-    void unsetDeviceQueueDesc(uint64_t queue_id);
+                            uint32_t size, int doorbellSize);
+    void unsetDeviceQueueDesc(uint64_t queue_id, int doorbellSize);
     void setDevice(GPUCommandProcessor * dev);
     void updateReadIndex(int, uint32_t);
     void getCommandsFromHost(int pid, uint32_t rl_idx);

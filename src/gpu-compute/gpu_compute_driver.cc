@@ -149,18 +149,22 @@ GPUComputeDriver::allocateQueue(PortProxy &mem_proxy, Addr ioc_buf)
     TypedBufferArg<kfd_ioctl_create_queue_args> args(ioc_buf);
     args.copyIn(mem_proxy);
 
-    if ((sizeof(uint32_t) * queueId) > 4096) {
+    if ((doorbellSize() * queueId) > 4096) {
         fatal("%s: Exceeded maximum number of HSA queues allowed\n", name());
     }
 
     args->doorbell_offset = (KFD_MMAP_TYPE_DOORBELL |
         KFD_MMAP_GPU_ID(args->gpu_id)) << PAGE_SHIFT;
 
+    // for vega offset needs to include exact value of doorbell
+    if (doorbellSize())
+        args->doorbell_offset += queueId * doorbellSize();
+
     args->queue_id = queueId++;
     auto &hsa_pp = device->hsaPacketProc();
     hsa_pp.setDeviceQueueDesc(args->read_pointer_address,
                               args->ring_base_address, args->queue_id,
-                              args->ring_size);
+                              args->ring_size, doorbellSize());
     args.copyOut(mem_proxy);
 }
 
@@ -243,7 +247,8 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
             args.copyIn(virt_proxy);
             DPRINTF(GPUDriver, "ioctl: AMDKFD_IOC_DESTROY_QUEUE;" \
                     "queue offset %d\n", args->queue_id);
-            device->hsaPacketProc().unsetDeviceQueueDesc(args->queue_id);
+            device->hsaPacketProc().unsetDeviceQueueDesc(args->queue_id,
+                                                         doorbellSize());
           }
           break;
         case AMDKFD_IOC_SET_MEMORY_POLICY:

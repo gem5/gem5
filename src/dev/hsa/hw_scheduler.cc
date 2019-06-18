@@ -84,18 +84,13 @@ void
 HWScheduler::registerNewQueue(uint64_t hostReadIndexPointer,
                               uint64_t basePointer,
                               uint64_t queue_id,
-                              uint32_t size)
+                              uint32_t size, int doorbellSize)
 {
     assert(queue_id < MAX_ACTIVE_QUEUES);
     // Map queue ID to doorbell.
     // We are only using offset to pio base address as doorbell
     // We use the same mapping function used by hsa runtime to do this mapping
-    //
-    // Originally
-    // #define VOID_PTR_ADD32(ptr,n)
-    //     (void*)((uint32_t*)(ptr) + n)/*ptr + offset*/
-    // (Addr)VOID_PTR_ADD32(0, queue_id)
-    Addr db_offset = sizeof(uint32_t)*queue_id;
+    Addr db_offset = queue_id * doorbellSize;
     if (dbMap.find(db_offset) != dbMap.end()) {
         panic("Creating an already existing queue (queueID %d)", queue_id);
     }
@@ -318,7 +313,7 @@ HWScheduler::isRLQIdle(uint32_t rl_idx)
 }
 
 void
-HWScheduler::write(Addr db_addr, uint32_t doorbell_reg)
+HWScheduler::write(Addr db_addr, uint64_t doorbell_reg)
 {
     auto dbmap_iter = dbMap.find(db_addr);
     if (dbmap_iter == dbMap.end()) {
@@ -335,17 +330,9 @@ HWScheduler::write(Addr db_addr, uint32_t doorbell_reg)
 }
 
 void
-HWScheduler::unregisterQueue(uint64_t queue_id)
+HWScheduler::unregisterQueue(uint64_t queue_id, int doorbellSize)
 {
-    // Pointer arithmetic on a null pointer is undefined behavior. Clang
-    // compilers therefore complain if the following reads:
-    // `(Addr)(VOID_PRT_ADD32(0, queue_id))`
-    //
-    // Originally
-    // #define VOID_PTR_ADD32(ptr,n)
-    //     (void*)((uint32_t*)(ptr) + n)/*ptr + offset*/
-    // (Addr)VOID_PTR_ADD32(0, queue_id)
-    Addr db_offset = sizeof(uint32_t)*queue_id;
+    Addr db_offset = queue_id * doorbellSize;
     auto dbmap_iter = dbMap.find(db_offset);
     if (dbmap_iter == dbMap.end()) {
         panic("Destroying a non-existing queue (db_offset %x)",
