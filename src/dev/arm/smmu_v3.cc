@@ -741,7 +741,11 @@ SMMUv3::regStats()
 DrainState
 SMMUv3::drain()
 {
-    panic("SMMUv3 doesn't support draining\n");
+    // Wait until the Command Executor is not busy
+    if (commandExecutor.isBusy()) {
+        return DrainState::Draining;
+    }
+    return DrainState::Drained;
 }
 
 void

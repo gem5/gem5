@@ -253,6 +253,16 @@ SMMUv3SlaveInterface::scheduleDeviceRetry()
     }
 }
 
+DrainState
+SMMUv3SlaveInterface::drain()
+{
+    // Wait until all SMMU translations are completed
+    if (xlateSlotsRemaining < params()->xlate_slots) {
+        return DrainState::Draining;
+    }
+    return DrainState::Drained;
+}
+
 SMMUv3SlaveInterface*
 SMMUv3SlaveInterfaceParams::create()
 {

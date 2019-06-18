@@ -75,6 +75,8 @@ SMMUCommandExecProcess::main(Yield &yield)
         }
 
         busy = false;
+        // No more commands to process, signal the SMMU as drained
+        smmu.signalDrainDone();
 
         doSleep(yield);
     }

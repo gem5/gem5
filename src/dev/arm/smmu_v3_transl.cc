@@ -94,6 +94,11 @@ SMMUTranslationProcess::~SMMUTranslationProcess()
 {
     // Increase number of pending translation slots on the slave interface
     ifc.xlateSlotsRemaining++;
+    // If no more SMMU translations are pending (all slots available),
+    // signal SMMU Slave Interface as drained
+    if (ifc.xlateSlotsRemaining == ifc.params()->xlate_slots) {
+        ifc.signalDrainDone();
+    }
 }
 
 void

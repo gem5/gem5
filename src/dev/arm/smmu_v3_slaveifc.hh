@@ -56,6 +56,9 @@ class SMMUSlavePort;
 
 class SMMUv3SlaveInterface : public MemObject
 {
+  protected:
+    friend class SMMUTranslationProcess;
+
   public:
     SMMUv3 *smmu;
     SMMUTLB* microTLB;
@@ -123,6 +126,14 @@ class SMMUv3SlaveInterface : public MemObject
         delete microTLB;
         delete mainTLB;
     }
+
+    const SMMUv3SlaveInterfaceParams *
+    params() const
+    {
+        return static_cast<const SMMUv3SlaveInterfaceParams *>(_params);
+    }
+
+    DrainState drain() override;
 
     void setSMMU(SMMUv3 *_smmu) { smmu = _smmu; }
     void sendRange();
