@@ -165,6 +165,7 @@ def config_mem(options, system):
                                          None)
     opt_elastic_trace_en = getattr(options, "elastic_trace_en", False)
     opt_mem_ranks = getattr(options, "mem_ranks", None)
+    opt_dram_powerdown = getattr(options, "enable_dram_powerdown", None)
 
     if opt_mem_type == "HMC_2500_1x32":
         HMChost = HMC.config_hmc_host_ctrl(options, system)
@@ -226,8 +227,7 @@ def config_mem(options, system):
 
             # Enable low-power DRAM states if option is set
             if issubclass(cls, m5.objects.DRAMCtrl):
-                mem_ctrl.enable_dram_powerdown = \
-                        options.enable_dram_powerdown
+                mem_ctrl.enable_dram_powerdown = opt_dram_powerdown
 
             if opt_elastic_trace_en:
                 mem_ctrl.latency = '1ns'
