@@ -37,8 +37,6 @@ from m5.SimObject import SimObject
 from m5.objects.Bridge import Bridge
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.Device import DmaDevice
-from m5.objects.HSADevice import HSADevice
-from m5.objects.HSADriver import HSADriver
 from m5.objects.LdsState import LdsState
 from m5.objects.Process import EmulatedDriver
 
@@ -239,9 +237,10 @@ class Shader(ClockedObject):
     idlecu_timeout = Param.Tick(0, "Idle CU watchdog timeout threshold")
     max_valu_insts = Param.Int(0, "Maximum vALU insts before exiting")
 
-class GPUComputeDriver(HSADriver):
+class GPUComputeDriver(EmulatedDriver):
     type = 'GPUComputeDriver'
     cxx_header = 'gpu-compute/gpu_compute_driver.hh'
+    device = Param.GPUCommandProcessor('GPU controlled by this driver')
     isdGPU = Param.Bool(False, 'Driver is for a dGPU')
     gfxVersion = Param.GfxVersion('gfx801', 'ISA of gpu to model')
     dGPUPoolID = Param.Int(False, 'Pool ID for dGPU.')
@@ -259,10 +258,12 @@ class GPUDispatcher(SimObject):
     type = 'GPUDispatcher'
     cxx_header = 'gpu-compute/dispatcher.hh'
 
-class GPUCommandProcessor(HSADevice):
+class GPUCommandProcessor(DmaDevice):
     type = 'GPUCommandProcessor'
     cxx_header = 'gpu-compute/gpu_command_processor.hh'
     dispatcher = Param.GPUDispatcher('workgroup dispatcher for the GPU')
+
+    hsapp = Param.HSAPacketProcessor('PP attached to this device')
 
 class StorageClassType(Enum): vals = [
     'SC_SPILL',

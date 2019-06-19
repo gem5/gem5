@@ -33,6 +33,9 @@
 
 #include "gpu-compute/gpu_command_processor.hh"
 
+#include <cassert>
+
+#include "base/chunk_generator.hh"
 #include "debug/GPUCommandProc.hh"
 #include "debug/GPUKernelInfo.hh"
 #include "gpu-compute/dispatcher.hh"
@@ -42,9 +45,73 @@
 #include "sim/syscall_emul_buf.hh"
 
 GPUCommandProcessor::GPUCommandProcessor(const Params &p)
-    : HSADevice(p), dispatcher(*p.dispatcher), _driver(nullptr)
+    : DmaDevice(p), dispatcher(*p.dispatcher), _driver(nullptr), hsaPP(p.hsapp)
 {
+    assert(hsaPP);
+    hsaPP->setDevice(this);
     dispatcher.setCommandProcessor(this);
+}
+
+HSAPacketProcessor&
+GPUCommandProcessor::hsaPacketProc()
+{
+    return *hsaPP;
+}
+
+void
+GPUCommandProcessor::dmaReadVirt(Addr host_addr, unsigned size,
+                                 DmaCallback *cb, void *data, Tick delay)
+{
+    dmaVirt(&DmaDevice::dmaRead, host_addr, size, cb, data, delay);
+}
+
+void
+GPUCommandProcessor::dmaWriteVirt(Addr host_addr, unsigned size,
+                                  DmaCallback *cb, void *data, Tick delay)
+{
+    dmaVirt(&DmaDevice::dmaWrite, host_addr, size, cb, data, delay);
+}
+
+void
+GPUCommandProcessor::dmaVirt(DmaFnPtr dmaFn, Addr addr, unsigned size,
+                             DmaCallback *cb, void *data, Tick delay)
+{
+    if (size == 0) {
+        if (cb)
+            schedule(cb->getChunkEvent(), curTick() + delay);
+        return;
+    }
+
+    // move the buffer data pointer with the chunks
+    uint8_t *loc_data = (uint8_t*)data;
+
+    for (ChunkGenerator gen(addr, size, PAGE_SIZE); !gen.done(); gen.next()) {
+        Addr phys;
+
+        // translate pages into their corresponding frames
+        translateOrDie(gen.addr(), phys);
+
+        Event *event = cb ? cb->getChunkEvent() : nullptr;
+
+        (this->*dmaFn)(phys, gen.size(), event, loc_data, delay);
+
+        loc_data += gen.size();
+    }
+}
+
+void
+GPUCommandProcessor::translateOrDie(Addr vaddr, Addr &paddr)
+{
+    /**
+     * Grab the process and try to translate the virtual address with it;
+     * with new extensions, it will likely be wrong to just arbitrarily
+     * grab context zero.
+     */
+    auto process = sys->threads[0]->getProcessPtr();
+
+    if (!process->pTable->translate(vaddr, paddr)) {
+        fatal("failed translation: vaddr 0x%x\n", vaddr);
+    }
 }
 
 /**
@@ -192,12 +259,12 @@ GPUCommandProcessor::updateHsaSignal(Addr signal_handle, uint64_t signal_value,
 }
 
 void
-GPUCommandProcessor::attachDriver(HSADriver *hsa_driver)
+GPUCommandProcessor::attachDriver(GPUComputeDriver *gpu_driver)
 {
     fatal_if(_driver, "Should not overwrite driver.");
     // TODO: GPU Driver inheritance hierarchy doesn't really make sense.
     // Should get rid of the base class.
-    _driver = dynamic_cast<GPUComputeDriver *>(hsa_driver);
+    _driver = gpu_driver;
     assert(_driver);
 }
 

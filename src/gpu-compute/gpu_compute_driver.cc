@@ -33,22 +33,26 @@
 
 #include "gpu-compute/gpu_compute_driver.hh"
 
+#include <memory>
+
+#include "base/logging.hh"
+#include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "debug/GPUDriver.hh"
 #include "debug/GPUShader.hh"
-#include "dev/hsa/hsa_device.hh"
 #include "dev/hsa/hsa_packet_processor.hh"
 #include "dev/hsa/kfd_event_defines.h"
 #include "dev/hsa/kfd_ioctl.h"
 #include "gpu-compute/gpu_command_processor.hh"
 #include "gpu-compute/shader.hh"
+#include "mem/port_proxy.hh"
 #include "params/GPUComputeDriver.hh"
 #include "sim/process.hh"
 #include "sim/syscall_emul_buf.hh"
 
 GPUComputeDriver::GPUComputeDriver(const Params &p)
-    : HSADriver(p), isdGPU(p.isdGPU), gfxVersion(p.gfxVersion),
-      dGPUPoolID(p.dGPUPoolID)
+    : EmulatedDriver(p), device(p.device), queueId(0),
+      isdGPU(p.isdGPU), gfxVersion(p.gfxVersion), dGPUPoolID(p.dGPUPoolID)
 {
     device->attachDriver(this);
     DPRINTF(GPUDriver, "Constructing KFD: device\n");
@@ -63,6 +67,146 @@ GPUComputeDriver::GPUComputeDriver(const Params &p)
 
     if (MtypeFlags::CACHED & p.m_type)
         defaultMtype.set(Request::CACHED);
+}
+
+const char*
+GPUComputeDriver::DriverWakeupEvent::description() const
+{
+    return "DriverWakeupEvent";
+}
+
+/**
+ * Create an FD entry for the KFD inside of the owning process.
+ */
+int
+GPUComputeDriver::open(ThreadContext *tc, int mode, int flags)
+{
+    DPRINTF(GPUDriver, "Opened %s\n", filename);
+    auto process = tc->getProcessPtr();
+    auto device_fd_entry = std::make_shared<DeviceFDEntry>(this, filename);
+    int tgt_fd = process->fds->allocFD(device_fd_entry);
+    return tgt_fd;
+}
+
+/**
+ * Currently, mmap() will simply setup a mapping for the associated
+ * device's packet processor's doorbells and creates the event page.
+ */
+Addr
+GPUComputeDriver::mmap(ThreadContext *tc, Addr start, uint64_t length,
+                       int prot, int tgt_flags, int tgt_fd, off_t offset)
+{
+    auto process = tc->getProcessPtr();
+    auto mem_state = process->memState;
+
+    Addr pg_off = offset >> PAGE_SHIFT;
+    Addr mmap_type = pg_off & KFD_MMAP_TYPE_MASK;
+    DPRINTF(GPUDriver, "amdkfd mmap (start: %p, length: 0x%x,"
+            "offset: 0x%x)\n", start, length, offset);
+
+    switch(mmap_type) {
+        case KFD_MMAP_TYPE_DOORBELL:
+            DPRINTF(GPUDriver, "amdkfd mmap type DOORBELL offset\n");
+            start = mem_state->extendMmap(length);
+            process->pTable->map(start, device->hsaPacketProc().pioAddr,
+                    length, false);
+            break;
+        case KFD_MMAP_TYPE_EVENTS:
+            DPRINTF(GPUDriver, "amdkfd mmap type EVENTS offset\n");
+            panic_if(start != 0,
+                     "Start address should be provided by KFD\n");
+            panic_if(length != 8 * KFD_SIGNAL_EVENT_LIMIT,
+                     "Requested length %d, expected length %d; length "
+                     "mismatch\n", length, 8* KFD_SIGNAL_EVENT_LIMIT);
+            /**
+             * We don't actually access these pages.  We just need to reserve
+             * some VA space.  See commit id 5ce8abce for details on how
+             * events are currently implemented.
+             */
+            if (!eventPage) {
+                eventPage = mem_state->extendMmap(length);
+                start = eventPage;
+            }
+            break;
+        default:
+            warn_once("Unrecognized kfd mmap type %llx\n", mmap_type);
+            break;
+    }
+
+    return start;
+}
+
+/**
+ * Forward relevant parameters to packet processor; queueId
+ * is used to link doorbell. The queueIDs are not re-used
+ * in current implementation, and we allocate only one page
+ * (4096 bytes) for doorbells, so check if this queueID can
+ * be mapped into that page.
+ */
+void
+GPUComputeDriver::allocateQueue(PortProxy &mem_proxy, Addr ioc_buf)
+{
+    TypedBufferArg<kfd_ioctl_create_queue_args> args(ioc_buf);
+    args.copyIn(mem_proxy);
+
+    if ((sizeof(uint32_t) * queueId) > 4096) {
+        fatal("%s: Exceeded maximum number of HSA queues allowed\n", name());
+    }
+
+    args->doorbell_offset = (KFD_MMAP_TYPE_DOORBELL |
+        KFD_MMAP_GPU_ID(args->gpu_id)) << PAGE_SHIFT;
+
+    args->queue_id = queueId++;
+    auto &hsa_pp = device->hsaPacketProc();
+    hsa_pp.setDeviceQueueDesc(args->read_pointer_address,
+                              args->ring_base_address, args->queue_id,
+                              args->ring_size);
+    args.copyOut(mem_proxy);
+}
+
+void
+GPUComputeDriver::DriverWakeupEvent::scheduleWakeup(Tick wakeup_delay)
+{
+    assert(driver);
+    driver->schedule(this, curTick() + wakeup_delay);
+}
+
+void
+GPUComputeDriver::signalWakeupEvent(uint32_t event_id)
+{
+    panic_if(event_id >= eventSlotIndex,
+        "Trying wakeup on an event that is not yet created\n");
+    if (ETable[event_id].threadWaiting) {
+        panic_if(!ETable[event_id].tc,
+                 "No thread context to wake up\n");
+        ThreadContext *tc = ETable[event_id].tc;
+        DPRINTF(GPUDriver,
+                "Signal event: Waking up CPU %d\n", tc->cpuId());
+        // Remove events that can wakeup this thread
+        TCEvents[tc].clearEvents();
+        // Now wakeup this thread
+        tc->activate();
+    } else {
+       // This may be a race condition between an ioctl call asking to wait on
+       // this event and this signalWakeupEvent. Taking care of this race
+       // condition here by setting the event here. The ioctl call should take
+       // the necessary action when waiting on an already set event.  However,
+       // this may be a genuine instance in which the runtime has decided not
+       // to wait on this event. But since we cannot distinguish this case with
+       // the race condition, we are any way setting the event.
+       ETable[event_id].setEvent = true;
+    }
+}
+
+void
+GPUComputeDriver::DriverWakeupEvent::process()
+{
+    DPRINTF(GPUDriver,
+            "Timer event: Waking up CPU %d\n", tc->cpuId());
+    // Remove events that can wakeup this thread
+    driver->TCEvents[tc].clearEvents();
+    // Now wakeup this thread
+    tc->activate();
 }
 
 int
@@ -88,7 +232,7 @@ GPUComputeDriver::ioctl(ThreadContext *tc, unsigned req, Addr ioc_buf)
           {
             DPRINTF(GPUDriver, "ioctl: AMDKFD_IOC_CREATE_QUEUE\n");
 
-            allocateQueue(tc, ioc_buf);
+            allocateQueue(virt_proxy, ioc_buf);
 
             DPRINTF(GPUDriver, "Creating queue %d\n", queueId);
           }

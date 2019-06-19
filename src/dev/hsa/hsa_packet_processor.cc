@@ -42,9 +42,9 @@
 #include "base/trace.hh"
 #include "debug/HSAPacketProcessor.hh"
 #include "dev/dma_device.hh"
-#include "dev/hsa/hsa_device.hh"
 #include "dev/hsa/hsa_packet.hh"
 #include "dev/hsa/hw_scheduler.hh"
+#include "gpu-compute/gpu_command_processor.hh"
 #include "mem/packet_access.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
@@ -330,14 +330,24 @@ HSAPacketProcessor::processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr)
         DPRINTF(HSAPacketProcessor, "%s: submitting vendor specific pkt" \
                 " active list ID = %d\n", __FUNCTION__, rl_idx);
         // Submit packet to HSA device (dispatcher)
-        hsa_device->submitVendorPkt((void *)disp_pkt, rl_idx, host_pkt_addr);
+        gpu_device->submitVendorPkt((void *)disp_pkt, rl_idx, host_pkt_addr);
         is_submitted = UNBLOCKED;
     } else if (pkt_type == HSA_PACKET_TYPE_KERNEL_DISPATCH) {
         DPRINTF(HSAPacketProcessor, "%s: submitting kernel dispatch pkt" \
                 " active list ID = %d\n", __FUNCTION__, rl_idx);
         // Submit packet to HSA device (dispatcher)
-        hsa_device->submitDispatchPkt((void *)disp_pkt, rl_idx, host_pkt_addr);
+        gpu_device->submitDispatchPkt((void *)disp_pkt, rl_idx, host_pkt_addr);
         is_submitted = UNBLOCKED;
+        /*
+          If this packet is using the "barrier bit" to enforce ordering with
+          subsequent kernels, set the bit for this queue now, after
+          dispatching.
+        */
+        if (IS_BARRIER(disp_pkt)) {
+            DPRINTF(HSAPacketProcessor, "%s: setting barrier bit for active" \
+                    " list ID = %d\n", __FUNCTION__, rl_idx);
+            regdQList[rl_idx]->setBarrierBit(true);
+        }
     } else if (pkt_type == HSA_PACKET_TYPE_BARRIER_AND) {
         DPRINTF(HSAPacketProcessor, "%s: Processing barrier packet" \
                 " active list ID = %d\n", __FUNCTION__, rl_idx);
@@ -404,14 +414,14 @@ HSAPacketProcessor::processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr)
                 // I'm going to cheat here and read out
                 // the value from main memory using functional
                 // access, and then just DMA the decremented value.
-                uint64_t signal_value = hsa_device->functionalReadHsaSignal(\
+                uint64_t signal_value = gpu_device->functionalReadHsaSignal(\
                                             bar_and_pkt->completion_signal);
 
                 DPRINTF(HSAPacketProcessor, "Triggering barrier packet" \
                        " completion signal! Addr: %x\n",
                        bar_and_pkt->completion_signal);
 
-                hsa_device->updateHsaSignal(bar_and_pkt->completion_signal,
+                gpu_device->updateHsaSignal(bar_and_pkt->completion_signal,
                                             signal_value - 1);
             }
         }
@@ -428,7 +438,7 @@ HSAPacketProcessor::processPkt(void* pkt, uint32_t rl_idx, Addr host_pkt_addr)
         DPRINTF(HSAPacketProcessor, "%s: submitting agent dispatch pkt" \
                 " active list ID = %d\n", __FUNCTION__, rl_idx);
         // Submit packet to HSA device (dispatcher)
-        hsa_device->submitAgentDispatchPkt(
+        gpu_device->submitAgentDispatchPkt(
                 (void *)disp_pkt, rl_idx, host_pkt_addr);
         is_submitted = UNBLOCKED;
         sendAgentDispatchCompletionSignal((void *)disp_pkt,0);
@@ -633,9 +643,9 @@ AQLRingBuffer::freeEntry(void *pkt)
 }
 
 void
-HSAPacketProcessor::setDevice(HSADevice *dev)
+HSAPacketProcessor::setDevice(GPUCommandProcessor *dev)
 {
-    this->hsa_device = dev;
+    this->gpu_device = dev;
 }
 
 int
@@ -670,15 +680,13 @@ HSAPacketProcessor::finishPkt(void *pvPkt, uint32_t rl_idx)
         DPRINTF(HSAPacketProcessor,
                 "Unset barrier bit for active list ID %d\n", rl_idx);
         regdQList[rl_idx]->setBarrierBit(false);
-        panic_if(!regdQList[rl_idx]->dispPending(),
-                 "There should be pending kernels in this queue\n");
-        DPRINTF(HSAPacketProcessor,
-                "Rescheduling active list ID %d after unsetting barrier "
-                "bit\n", rl_idx);
-        // Try to schedule wakeup in the next cycle.  There is a minimum
-        // pktProcessDelay for queue wake up. If that processing delay is
-        // elapsed, schedAQLProcessing will wakeup next tick.
-        schedAQLProcessing(rl_idx, 1);
+        // if pending kernels in the queue after this kernel, reschedule
+        if (regdQList[rl_idx]->dispPending()) {
+            DPRINTF(HSAPacketProcessor,
+                    "Rescheduling active list ID %d after unsetting barrier "
+                    "bit\n", rl_idx);
+            schedAQLProcessing(rl_idx);
+        }
     }
 
     // If set, then blocked schedule, so need to reschedule

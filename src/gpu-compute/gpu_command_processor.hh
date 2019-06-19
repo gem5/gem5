@@ -45,17 +45,27 @@
 #ifndef __DEV_HSA_GPU_COMMAND_PROCESSOR_HH__
 #define __DEV_HSA_GPU_COMMAND_PROCESSOR_HH__
 
+#include <cstdint>
+#include <functional>
+
+#include "base/logging.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
 #include "debug/GPUCommandProc.hh"
-#include "dev/hsa/hsa_device.hh"
+#include "dev/dma_device.hh"
+#include "dev/hsa/hsa_packet_processor.hh"
 #include "dev/hsa/hsa_signal.hh"
+#include "gpu-compute/dispatcher.hh"
 #include "gpu-compute/gpu_compute_driver.hh"
 #include "gpu-compute/hsa_queue_entry.hh"
+#include "params/GPUCommandProcessor.hh"
 
 struct GPUCommandProcessorParams;
+class GPUComputeDriver;
 class GPUDispatcher;
 class Shader;
 
-class GPUCommandProcessor : public HSADevice
+class GPUCommandProcessor : public DmaDevice
 {
   public:
     typedef GPUCommandProcessorParams Params;
@@ -63,6 +73,13 @@ class GPUCommandProcessor : public HSADevice
 
     GPUCommandProcessor() = delete;
     GPUCommandProcessor(const Params &p);
+
+    HSAPacketProcessor& hsaPacketProc();
+
+    void dmaReadVirt(Addr host_addr, unsigned size, DmaCallback *cb,
+                     void *data, Tick delay = 0);
+    void dmaWriteVirt(Addr host_addr, unsigned size, DmaCallback *b,
+                      void *data, Tick delay = 0);
 
     void setShader(Shader *shader);
     Shader* shader();
@@ -75,12 +92,13 @@ class GPUCommandProcessor : public HSADevice
     };
 
     void submitAgentDispatchPkt(void *raw_pkt, uint32_t queue_id,
-                           Addr host_pkt_addr) override;
+                           Addr host_pkt_addr);
     void submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
-                           Addr host_pkt_addr) override;
+                           Addr host_pkt_addr);
     void submitVendorPkt(void *raw_pkt, uint32_t queue_id,
-                         Addr host_pkt_addr) override;
-    void attachDriver(HSADriver *driver) override;
+                         Addr host_pkt_addr);
+    void attachDriver(GPUComputeDriver *driver);
+
     void dispatchPkt(HSAQueueEntry *task);
     void signalWakeupEvent(uint32_t event_id);
 
@@ -91,9 +109,9 @@ class GPUCommandProcessor : public HSADevice
 
     void updateHsaSignal(Addr signal_handle, uint64_t signal_value,
                          HsaSignalCallbackFunction function =
-                            [] (const uint64_t &) { }) override;
+                            [] (const uint64_t &) { });
 
-    uint64_t functionalReadHsaSignal(Addr signal_handle) override;
+    uint64_t functionalReadHsaSignal(Addr signal_handle);
 
     Addr getHsaSignalValueAddr(Addr signal_handle)
     {
@@ -115,8 +133,13 @@ class GPUCommandProcessor : public HSADevice
     GPUDispatcher &dispatcher;
     GPUComputeDriver *_driver;
 
+    // Typedefing dmaRead and dmaWrite function pointer
+    typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event*, uint8_t*, Tick);
     void initABI(HSAQueueEntry *task);
-
+    HSAPacketProcessor *hsaPP;
+    void dmaVirt(DmaFnPtr, Addr host_addr, unsigned size, DmaCallback *cb,
+                 void *data, Tick delay = 0);
+    void translateOrDie(Addr vaddr, Addr &paddr);
 
     /**
      * Wraps a std::function object in a DmaCallback.  Much cleaner than

@@ -34,12 +34,6 @@ from m5.params import *
 from m5.proxy import *
 from m5.objects.Device import DmaDevice
 
-class HSADevice(DmaDevice):
-    type = 'HSADevice'
-    abstract = True
-    cxx_header = "dev/hsa/hsa_device.hh"
-    hsapp = Param.HSAPacketProcessor("PP attached to this device")
-
 class HSAPacketProcessor(DmaDevice):
     type = 'HSAPacketProcessor'
     cxx_header = 'dev/hsa/hsa_packet_processor.hh'

@@ -37,12 +37,8 @@ if not env['BUILD_GPU']:
     Return()
 
 SimObject('HSADevice.py')
-SimObject('HSADriver.py')
 
-Source('hsa_device.cc')
-Source('hsa_driver.cc')
 Source('hsa_packet_processor.cc')
 Source('hw_scheduler.cc')
 
-DebugFlag('HSADriver')
 DebugFlag('HSAPacketProcessor')

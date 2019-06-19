@@ -66,7 +66,7 @@ typedef enum
                    // barrier packet completes.
 } Q_STATE;
 
-class HSADevice;
+class GPUCommandProcessor;
 class HWScheduler;
 
 // Our internal representation of an HSA queue
@@ -120,7 +120,7 @@ class HSAQueueDescriptor
  * FREE: Entry is empty
  * ALLOCATED: Entry has been allocated for a packet, but the DMA has not
  *            yet completed
- * SUBMITTED: Packet has been submitted to the HSADevice, but has not
+ * SUBMITTED: Packet has been submitted to the GPUCommandProcessor, but has not
  *            yet completed
  */
 class AQLRingBuffer
@@ -224,7 +224,7 @@ class HSAPacketProcessor: public DmaDevice
     friend class HWScheduler;
   protected:
     typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event*, uint8_t*, Tick);
-    HSADevice *hsa_device;
+    GPUCommandProcessor *gpu_device;
     HWScheduler *hwSchdlr;
 
     // Structure to store the read values of dependency signals
@@ -333,7 +333,7 @@ class HSAPacketProcessor: public DmaDevice
                             uint64_t queue_id,
                             uint32_t size);
     void unsetDeviceQueueDesc(uint64_t queue_id);
-    void setDevice(HSADevice * dev);
+    void setDevice(GPUCommandProcessor * dev);
     void updateReadIndex(int, uint32_t);
     void getCommandsFromHost(int pid, uint32_t rl_idx);
 
