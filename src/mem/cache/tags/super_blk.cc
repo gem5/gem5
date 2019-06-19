@@ -114,6 +114,21 @@ CompressionBlk::invalidate()
     setUncompressed();
 }
 
+CompressionBlk::OverwriteType
+CompressionBlk::checkExpansionContraction(const std::size_t size) const
+{
+    // @todo As of now only two states are supported: compressed to its
+    // maximum compression, and uncompressed. Support for intermediate
+    // states (e.g., if MaxCR=4, 2/4 and 3/4 of the blkSize) should be added
+    const SuperBlk* superblock =
+        static_cast<const SuperBlk*>(getSectorBlock());
+    const bool prev_compressed = isCompressed();
+    const bool new_compressed = superblock->canCoAllocate(size);
+    return (prev_compressed == new_compressed) ? UNCHANGED :
+        ((prev_compressed & !new_compressed) ? DATA_EXPANSION :
+        DATA_CONTRACTION);
+}
+
 std::string
 CompressionBlk::print() const
 {

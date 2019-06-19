@@ -63,6 +63,21 @@ class CompressionBlk : public SectorSubBlk
     bool _compressed;
 
   public:
+    /**
+     * When an overwrite happens, the data size may change an not fit in its
+     * current container any longer. This enum declared which kind of size
+     * change happened in this situation.
+     */
+    enum OverwriteType : int
+    {
+        /** New data contents are considered smaller than previous contents. */
+        DATA_CONTRACTION = -1,
+        /** New and old contents are considered of similar sizes. */
+        UNCHANGED = 0,
+        /** New data contents are considered larger than previous contents. */
+        DATA_EXPANSION = 1,
+    };
+
     CompressionBlk();
     CompressionBlk(const CompressionBlk&) = delete;
     CompressionBlk& operator=(const CompressionBlk&) = delete;
@@ -124,6 +139,18 @@ class CompressionBlk : public SectorSubBlk
     void setDecompressionLatency(const Cycles lat);
 
     void invalidate() override;
+
+    /**
+     * Determines if changing the size of the block will cause a data
+     * expansion (new size is bigger) or contraction (new size is smaller).
+     * Sizes are not necessarily compared at at bit granularities (e.g., 20
+     * bits is considered equal to 23 bits when blocks use 32-bit spaces as
+     * minimum allocation units).
+     *
+     * @param size The new compressed size.
+     * @return Type of size change. @sa OverwriteType.
+     */
+    OverwriteType checkExpansionContraction(const std::size_t size) const;
 
     /**
      * Pretty-print sector offset and other CacheBlk information.

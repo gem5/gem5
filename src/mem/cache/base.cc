@@ -849,10 +849,6 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
         compressor->compress(data, compression_lat, decompression_lat);
     std::size_t compression_size = comp_data->getSizeBits();
 
-    // If block's compression factor increased, it may not be co-allocatable
-    // anymore. If so, some blocks might need to be evicted to make room for
-    // the bigger block
-
     // Get previous compressed size
     CompressionBlk* compression_blk = static_cast<CompressionBlk*>(blk);
     M5_VAR_USED const std::size_t prev_size = compression_blk->getSizeBits();
@@ -867,16 +863,18 @@ BaseCache::updateCompressionData(CacheBlk *&blk, const uint64_t* data,
     // there is nothing to do. Otherwise we may be facing a data expansion
     // (block passing from more compressed to less compressed state), or a
     // data contraction (less to more).
-    const bool was_compressed = compression_blk->isCompressed();
     bool is_data_expansion = false;
     bool is_data_contraction = false;
+    const CompressionBlk::OverwriteType overwrite_type =
+        compression_blk->checkExpansionContraction(compression_size);
     string op_name = "";
-    if (was_compressed && !is_co_allocatable) {
-        is_data_expansion = true;
+    if (overwrite_type == CompressionBlk::DATA_EXPANSION) {
         op_name = "expansion";
-    } else if (moveContractions && !was_compressed && is_co_allocatable) {
-        is_data_contraction = true;
+        is_data_expansion = true;
+    } else if ((overwrite_type == CompressionBlk::DATA_CONTRACTION) &&
+        moveContractions) {
         op_name = "contraction";
+        is_data_contraction = true;
     }
 
     // If block changed compression state, it was possibly co-allocated with
