@@ -1910,6 +1910,9 @@ machine(MachineType:L2Cache, "Token protocol")
     i_allocateTBE;
     t_recordFwdXID;
     ee_sendLocalInv;
+    gg_clearLocalSharers;
+    checkCacheNoSharersNoOwner;
+    rr_deallocateL2CacheBlock;
     m_popRequestQueue;
   }
 
@@ -1921,10 +1924,7 @@ machine(MachineType:L2Cache, "Token protocol")
 
   transition(OLSF, All_Acks, I) {
     c_sendDataFromTBEToFwdGETX;
-    gg_clearLocalSharers;
     s_deallocateTBE;
-    checkCacheNoSharersNoOwner;
-    rr_deallocateL2CacheBlock;
     n_popTriggerQueue;
     wa_wakeUpDependents;
   }
