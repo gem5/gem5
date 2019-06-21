@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2017-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -36,7 +36,7 @@
 
 #include <array>
 
-#include "arch/gcn3/registers.hh"
+#include "arch/amdgpu/gcn3/gpu_registers.hh"
 #include "arch/generic/vec_reg.hh"
 #include "gpu-compute/scalar_register_file.hh"
 #include "gpu-compute/vector_register_file.hh"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -34,8 +34,8 @@
 #ifndef __ARCH_GCN3_GPU_MEM_HELPERS_HH__
 #define __ARCH_GCN3_GPU_MEM_HELPERS_HH__
 
-#include "arch/gcn3/insts/gpu_static_inst.hh"
-#include "arch/gcn3/insts/op_encodings.hh"
+#include "arch/amdgpu/gcn3/insts/gpu_static_inst.hh"
+#include "arch/amdgpu/gcn3/insts/op_encodings.hh"
 #include "debug/GPUMem.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
 

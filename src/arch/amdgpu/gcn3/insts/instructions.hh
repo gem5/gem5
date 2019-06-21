@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2015-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -34,9 +34,9 @@
 #ifndef __ARCH_GCN3_INSTS_INSTRUCTIONS_HH__
 #define __ARCH_GCN3_INSTS_INSTRUCTIONS_HH__
 
-#include "arch/gcn3/gpu_decoder.hh"
-#include "arch/gcn3/insts/gpu_static_inst.hh"
-#include "arch/gcn3/insts/op_encodings.hh"
+#include "arch/amdgpu/gcn3/gpu_decoder.hh"
+#include "arch/amdgpu/gcn3/insts/gpu_static_inst.hh"
+#include "arch/amdgpu/gcn3/insts/op_encodings.hh"
 #include "debug/GCN3.hh"
 
 namespace Gcn3ISA

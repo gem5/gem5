@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2015-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -31,11 +31,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/gcn3/insts/instructions.hh"
+#include "arch/amdgpu/gcn3/insts/instructions.hh"
 
 #include <cmath>
 
-#include "arch/gcn3/insts/inst_util.hh"
+#include "arch/amdgpu/gcn3/insts/inst_util.hh"
 #include "debug/GCN3.hh"
 #include "debug/GPUSync.hh"
 #include "gpu-compute/shader.hh"

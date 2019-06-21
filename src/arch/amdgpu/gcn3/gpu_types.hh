@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2015-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -31,27 +31,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/gcn3/insts/gpu_static_inst.hh"
+#ifndef __ARCH_GCN3_GPU_TYPES_HH__
+#define __ARCH_GCN3_GPU_TYPES_HH__
 
-#include "arch/gcn3/gpu_decoder.hh"
-#include "arch/gcn3/insts/instructions.hh"
-#include "debug/GPUExec.hh"
-#include "gpu-compute/shader.hh"
+#include <cstdint>
 
 namespace Gcn3ISA
 {
-    GCN3GPUStaticInst::GCN3GPUStaticInst(const std::string &opcode)
-        : GPUStaticInst(opcode), _srcLiteral(0)
-    {
-    }
+    union InstFormat;
 
-    GCN3GPUStaticInst::~GCN3GPUStaticInst()
-    {
-    }
+    /**
+     * used to represnt a GPU inst in its raw format. GCN3
+     * instructions may be 32b or 64b, therefore we represent
+     * a raw inst with 64b to ensure that all of its inst data,
+     * including potential immediate values, may be represented
+     * in the worst case.
+     */
+    typedef uint64_t RawMachInst;
 
-    void
-    GCN3GPUStaticInst::panicUnimplemented() const
-    {
-        fatal("Encountered unimplemented GCN3 instruction: %s\n", _opcode);
-    }
+    /**
+     * used to represent the encoding of a GCN3 inst. each portion
+     * of a GCN3 inst must be 1 DWORD (32b), so we use a pointer
+     * to InstFormat type (which is 32b). for the case in which we
+     * need multiple DWORDS to represnt a single inst, this pointer
+     * essentialy acts as an array of the DWORDs needed to represent
+     * the entire inst encoding.
+     */
+    typedef InstFormat *MachInst;
+
 } // namespace Gcn3ISA
+
+#endif // __ARCH_GCN3_GPU_TYPES_HH__

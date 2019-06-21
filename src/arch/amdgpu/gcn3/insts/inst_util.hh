@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2015-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -36,7 +36,7 @@
 
 #include <cmath>
 
-#include "arch/gcn3/registers.hh"
+#include "arch/amdgpu/gcn3/gpu_registers.hh"
 
 // values for SDWA select operations
 enum SDWASelVals : int

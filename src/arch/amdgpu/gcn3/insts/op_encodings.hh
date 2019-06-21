@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2016-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -34,10 +34,10 @@
 #ifndef __ARCH_GCN3_INSTS_OP_ENCODINGS_HH__
 #define __ARCH_GCN3_INSTS_OP_ENCODINGS_HH__
 
-#include "arch/gcn3/gpu_decoder.hh"
-#include "arch/gcn3/gpu_mem_helpers.hh"
-#include "arch/gcn3/insts/gpu_static_inst.hh"
-#include "arch/gcn3/operand.hh"
+#include "arch/amdgpu/gcn3/gpu_decoder.hh"
+#include "arch/amdgpu/gcn3/gpu_mem_helpers.hh"
+#include "arch/amdgpu/gcn3/insts/gpu_static_inst.hh"
+#include "arch/amdgpu/gcn3/operand.hh"
 #include "debug/GCN3.hh"
 #include "debug/GPUExec.hh"
 #include "mem/ruby/system/RubySystem.hh"

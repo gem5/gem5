@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 Advanced Micro Devices, Inc.
+ * Copyright (c) 2016-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -37,7 +37,7 @@
 #include <array>
 #include <type_traits>
 
-#include "arch/gcn3/registers.hh"
+#include "arch/amdgpu/gcn3/gpu_registers.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "gpu-compute/hsa_queue_entry.hh"
 #include "gpu-compute/misc.hh"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2015-2021 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * For use for simulation and test purposes only
@@ -34,8 +34,8 @@
 #ifndef __ARCH_GCN3_INSTS_GPU_STATIC_INST_HH__
 #define __ARCH_GCN3_INSTS_GPU_STATIC_INST_HH__
 
-#include "arch/gcn3/operand.hh"
-#include "arch/gcn3/registers.hh"
+#include "arch/amdgpu/gcn3/gpu_registers.hh"
+#include "arch/amdgpu/gcn3/operand.hh"
 #include "gpu-compute/gpu_static_inst.hh"
 #include "gpu-compute/scalar_register_file.hh"
 #include "gpu-compute/vector_register_file.hh"
