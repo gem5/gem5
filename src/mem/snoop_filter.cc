@@ -206,9 +206,6 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
 
     SnoopItem& sf_item = sf_it->second;
 
-    DPRINTF(SnoopFilter, "%s:   old SF value %x.%x\n",
-            __func__, sf_item.requested, sf_item.holder);
-
     SnoopMask interested = (sf_item.holder | sf_item.requested);
 
     totSnoops++;
@@ -232,12 +229,13 @@ SnoopFilter::lookupSnoop(const Packet* cpkt)
         // Early clear of the holder, if no other request is currently going on
         // @todo: This should possibly be updated even though we do not filter
         // upward snoops
+        DPRINTF(SnoopFilter, "%s:   old SF value %x.%x\n",
+                __func__, sf_item.requested, sf_item.holder);
         sf_item.holder = 0;
+        DPRINTF(SnoopFilter, "%s:   new SF value %x.%x\n",
+                __func__, sf_item.requested, sf_item.holder);
+        eraseIfNullEntry(sf_it);
     }
-
-    eraseIfNullEntry(sf_it);
-    DPRINTF(SnoopFilter, "%s:   new SF value %x.%x interest: %x \n",
-            __func__, sf_item.requested, sf_item.holder, interested);
 
     return snoopSelected(maskToPortList(interested), lookupLatency);
 }
@@ -320,21 +318,20 @@ SnoopFilter::updateSnoopForward(const Packet* cpkt,
     if (!is_hit)
         return;
 
-    SnoopItem& sf_item = sf_it->second;
-
-    DPRINTF(SnoopFilter, "%s:   old SF value %x.%x\n",
-            __func__,  sf_item.requested, sf_item.holder);
-
     // If the snoop response has no sharers the line is passed in
     // Modified state, and we know that there are no other copies, or
     // they will all be invalidated imminently
     if (!cpkt->hasSharers()) {
-        sf_item.holder = 0;
-    }
-    DPRINTF(SnoopFilter, "%s:   new SF value %x.%x\n",
-            __func__, sf_item.requested, sf_item.holder);
-    eraseIfNullEntry(sf_it);
+        SnoopItem& sf_item = sf_it->second;
 
+        DPRINTF(SnoopFilter, "%s:   old SF value %x.%x\n",
+                __func__, sf_item.requested, sf_item.holder);
+        sf_item.holder = 0;
+        DPRINTF(SnoopFilter, "%s:   new SF value %x.%x\n",
+                __func__, sf_item.requested, sf_item.holder);
+
+        eraseIfNullEntry(sf_it);
+    }
 }
 
 void
