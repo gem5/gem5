@@ -1280,8 +1280,7 @@ SMMUTranslationProcess::completePrefetch(Yield &yield)
 void
 SMMUTranslationProcess::sendEvent(Yield &yield, const SMMUEvent &ev)
 {
-    int sizeMask = mask(smmu.regs.eventq_base & Q_BASE_SIZE_MASK) &
-            Q_CONS_PROD_MASK;
+    int sizeMask = mask(smmu.regs.eventq_base & Q_BASE_SIZE_MASK);
 
     if (((smmu.regs.eventq_prod+1) & sizeMask) ==
             (smmu.regs.eventq_cons & sizeMask))
