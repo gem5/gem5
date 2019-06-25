@@ -203,7 +203,7 @@ class MSHR : public QueueEntry, public Printable
         }
 
         void resetFlags() {
-            onlyWrites = true;
+            canMergeWrites = true;
             std::fill(writesBitmap.begin(), writesBitmap.end(), false);
 
             needsWritable = false;
@@ -227,27 +227,37 @@ class MSHR : public QueueEntry, public Printable
          *
          * @param pkt Packet considered for adding
          */
-        void updateWriteFlags(PacketPtr pkt) {
-             const Request::FlagsType noMergeFlags =
-                 Request::UNCACHEABLE |
-                 Request::STRICT_ORDER | Request::MMAPPED_IPR |
-                 Request::PRIVILEGED | Request::LLSC |
-                 Request::MEM_SWAP | Request::MEM_SWAP_COND |
-                 Request::SECURE;
+        void
+        updateWriteFlags(PacketPtr pkt)
+        {
+            // if we have already seen writes for the full block stop
+            // here, this might be a full line write followed by
+            // other compatible requests (e.g., reads)
+            if (!isWholeLineWrite()) {
+                // Avoid merging requests with special flags (e.g.,
+                // strictly ordered)
+                const Request::FlagsType no_merge_flags =
+                    Request::UNCACHEABLE | Request::STRICT_ORDER |
+                    Request::MMAPPED_IPR | Request::PRIVILEGED |
+                    Request::LLSC | Request::MEM_SWAP |
+                    Request::MEM_SWAP_COND | Request::SECURE;
+                const auto &req_flags = pkt->req->getFlags();
+                bool compat_write = pkt->isWrite() &&
+                    !req_flags.isSet(no_merge_flags);
+                canMergeWrites &= compat_write;
 
-             // if we have already seen writes for the full block stop
-             // here, this might be a full line write followed by
-             // other compatible requests (e.g., reads)
-             if (!isWholeLineWrite()) {
-                 bool can_merge_write = pkt->isWrite() &&
-                     ((pkt->req->getFlags() & noMergeFlags) == 0);
-                 onlyWrites &= can_merge_write;
-                 if (onlyWrites) {
-                     auto offset = pkt->getOffset(blkSize);
-                     auto begin = writesBitmap.begin() + offset;
-                     std::fill(begin, begin + pkt->getSize(), true);
-                 }
-             }
+                // if this request is the first target in this list
+                // and additionally a whole-line write, we need to
+                // service it as a whole-line even if we won't allow
+                // any further merging (e.g., SECURE whole line
+                // write).
+                bool first_write = pkt->isWrite() && (size() == 0);
+                if (first_write || compat_write) {
+                    auto offset = pkt->getOffset(blkSize);
+                    auto begin = writesBitmap.begin() + offset;
+                    std::fill(begin, begin + pkt->getSize(), true);
+                }
+            }
          }
 
         /**
@@ -258,7 +268,7 @@ class MSHR : public QueueEntry, public Printable
          */
         bool isReset() const {
             return !needsWritable && !hasUpgrade && !allocOnFill &&
-                !hasFromCache && onlyWrites;
+                !hasFromCache && canMergeWrites;
         }
 
         /**
@@ -289,17 +299,16 @@ class MSHR : public QueueEntry, public Printable
                    const std::string &prefix) const;
 
         /**
-         * Check if this list contains only compatible writes, and if they
-         * span the entire cache line. This is used as part of the
-         * miss-packet creation. Note that new requests may arrive after a
-         * miss-packet has been created, and for the fill we therefore use
-         * the wasWholeLineWrite field.
+         * Check if this list contains writes that cover an entire
+         * cache line. This is used as part of the miss-packet
+         * creation. Note that new requests may arrive after a
+         * miss-packet has been created, and for the corresponding
+         * fill we use the wasWholeLineWrite field.
          */
         bool isWholeLineWrite() const
         {
-            return onlyWrites &&
-                std::all_of(writesBitmap.begin(),
-                            writesBitmap.end(), [](bool i) { return i; });
+            return std::all_of(writesBitmap.begin(), writesBitmap.end(),
+                               [](bool i) { return i; });
         }
 
       private:
@@ -309,8 +318,8 @@ class MSHR : public QueueEntry, public Printable
         /** Size of the cache block. */
         Addr blkSize;
 
-        /** Are we only dealing with writes. */
-        bool onlyWrites;
+        /** Indicates whether we can merge incoming write requests */
+        bool canMergeWrites;
 
         // NOTE: std::vector<bool> might not meet satisfy the
         // ForwardIterator requirement and therefore cannot be used
