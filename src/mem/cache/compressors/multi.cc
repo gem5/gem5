@@ -73,6 +73,15 @@ Multi::~Multi()
     }
 }
 
+void
+Multi::setCache(BaseCache *_cache)
+{
+    Base::setCache(_cache);
+    for (auto& compressor : compressors) {
+        compressor->setCache(_cache);
+    }
+}
+
 std::unique_ptr<Base::CompressionData>
 Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
     Cycles& decomp_lat)

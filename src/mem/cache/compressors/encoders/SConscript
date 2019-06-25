@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2018 Inria
+# Copyright (c) 2020 Inria
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,4 @@
 
 Import('*')
 
-SimObject('Compressors.py')
-
-Source('base.cc')
-Source('base_dictionary_compressor.cc')
-Source('base_delta.cc')
-Source('cpack.cc')
-Source('fpc.cc')
-Source('fpcd.cc')
-Source('frequent_values.cc')
-Source('multi.cc')
-Source('perfect.cc')
-Source('repeated_qwords.cc')
-Source('zero.cc')
+Source('huffman.cc')

@@ -123,6 +123,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     tags->tagsInit();
     if (prefetcher)
         prefetcher->setCache(this);
+    if (compressor)
+        compressor->setCache(this);
 }
 
 BaseCache::~BaseCache()

@@ -42,6 +42,7 @@
 #include "base/types.hh"
 #include "sim/sim_object.hh"
 
+class BaseCache;
 class CacheBlk;
 struct BaseCacheCompressorParams;
 
@@ -119,6 +120,9 @@ class Base : public SimObject
      */
     const Cycles decompExtraLatency;
 
+    /** Pointer to the parent cache. */
+    BaseCache* cache;
+
     struct BaseStats : public Stats::Group
     {
         const Base& compressor;
@@ -192,6 +196,9 @@ class Base : public SimObject
     typedef BaseCacheCompressorParams Params;
     Base(const Params &p);
     virtual ~Base() = default;
+
+    /** The cache can only be set once. */
+    virtual void setCache(BaseCache *_cache);
 
     /**
      * Apply the compression process to the cache line. Ignores compression

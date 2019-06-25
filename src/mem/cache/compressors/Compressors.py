@@ -26,7 +26,10 @@
 
 from m5.params import *
 from m5.proxy import *
-from m5.SimObject import SimObject
+from m5.SimObject import *
+
+from m5.objects.IndexingPolicies import *
+from m5.objects.ReplacementPolicies import *
 
 class BaseCacheCompressor(SimObject):
     type = 'BaseCacheCompressor'
@@ -177,6 +180,38 @@ class FPCD(BaseDictionaryCompressor):
     decomp_extra_latency = 0
 
     dictionary_size = 2
+
+class FrequentValuesCompressor(BaseCacheCompressor):
+    type = 'FrequentValuesCompressor'
+    cxx_class = 'Compressor::FrequentValues'
+    cxx_header = "mem/cache/compressors/frequent_values.hh"
+
+    chunk_size_bits = 32
+    code_generation_ticks = Param.Unsigned(10000, "Number of elapsed " \
+        "ticks until the samples are analyzed and their codes are generated.")
+    # @todo The width of a counter width is determined by the maximum
+    # number of times a given value appears in the cache - i.e.,
+    # log2(cache_size/chunk_size_bits))".
+    counter_bits = Param.Unsigned(18, "Number of bits per frequency counter.")
+    max_code_length = Param.Unsigned(18, "Maximum number of bits in a "
+        "codeword. If 0, table indices are not encoded.")
+    num_samples = Param.Unsigned(100000, "Number of samples that must be " \
+        "taken before compression is effectively used.")
+    check_saturation = Param.Bool(False, "Whether the counters should be " \
+        "manipulated in case of saturation.")
+
+    vft_assoc = Param.Int(16, "Associativity of the VFT.")
+    vft_entries = Param.MemorySize("1024", "Number of entries of the VFT.")
+    vft_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(entry_size = 1, assoc = Parent.vft_assoc,
+        size = Parent.vft_entries), "Indexing policy of the VFT.")
+    vft_replacement_policy = Param.BaseReplacementPolicy(LFURP(),
+        "Replacement policy of the VFT.")
+
+    comp_chunks_per_cycle = 1
+    comp_extra_latency = 1
+    decomp_chunks_per_cycle = 1
+    decomp_extra_latency = 0
 
 class MultiCompressor(BaseCacheCompressor):
     type = 'MultiCompressor'
