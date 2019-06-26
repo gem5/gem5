@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019 Arm Limited
- * All rights reserved.
+ * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
  * not be construed as granting a license to any other intellectual
@@ -10,9 +10,6 @@
  * terms below provided that you ensure that this notice is replicated
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,70 +34,96 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
+ * Authors: Andreas Sandberg
  */
 
-#ifndef __BASE_STATS_TEXT_HH__
-#define __BASE_STATS_TEXT_HH__
+#include "base/stats/group.hh"
 
-#include <iosfwd>
-#include <stack>
-#include <string>
+#include <cassert>
 
-#include "base/stats/output.hh"
-#include "base/stats/types.hh"
-#include "base/output.hh"
+#include "base/stats/info.hh"
+#include "base/trace.hh"
+#include "debug/Stats.hh"
+#include "sim/sim_object.hh"
 
 namespace Stats {
 
-class Text : public Output
+Group::Group(Group *parent, const char *name)
+    : mergedParent(name ? nullptr : parent)
 {
-  protected:
-    bool mystream;
-    std::ostream *stream;
+    if (parent && name) {
+        parent->addStatGroup(name, this);
+    } else if (parent && !name) {
+        parent->mergeStatGroup(this);
+    }
+}
 
-    // Object/group path
-    std::stack<std::string> path;
+Group::~Group()
+{
+}
 
-  protected:
-    bool noOutput(const Info &info);
+void
+Group::regStats()
+{
+    for (auto &g : mergedStatGroups)
+        g->regStats();
 
-  public:
-    bool descriptions;
+    for (auto &g : statGroups) {
+        if (DTRACE(Stats)) {
+            const SimObject *so = dynamic_cast<const SimObject *>(this);
+            DPRINTF(Stats, "%s: regStats in group %s\n",
+                    so ? so->name() : "?",
+                    g.first);
+        }
+        g.second->regStats();
+    }
+}
 
-  public:
-    Text();
-    Text(std::ostream &stream);
-    Text(const std::string &file);
-    ~Text();
+void
+Group::resetStats()
+{
+    for (auto &s : stats)
+        s->reset();
 
-    void open(std::ostream &stream);
-    void open(const std::string &file);
-    std::string statName(const std::string &name) const;
+    for (auto &g : mergedStatGroups)
+        g->resetStats();
 
-    // Implement Visit
-    void visit(const ScalarInfo &info) override;
-    void visit(const VectorInfo &info) override;
-    void visit(const DistInfo &info) override;
-    void visit(const VectorDistInfo &info) override;
-    void visit(const Vector2dInfo &info) override;
-    void visit(const FormulaInfo &info) override;
-    void visit(const SparseHistInfo &info) override;
+    for (auto &g : statGroups)
+        g.second->resetStats();
+}
 
-    // Group handling
-    void beginGroup(const char *name) override;
-    void endGroup() override;
+void
+Group::addStat(Stats::Info *info)
+{
+    stats.push_back(info);
+    if (mergedParent)
+        mergedParent->addStat(info);
+}
 
-    // Implement Output
-    bool valid() const override;
-    void begin() override;
-    void end() override;
-};
+void
+Group::addStatGroup(const char *name, Group *block)
+{
+    assert(statGroups.find(name) == statGroups.end());
 
-std::string ValueToString(Result value, int precision);
+    statGroups[name] = block;
+}
 
-Output *initText(const std::string &filename, bool desc);
+void
+Group::mergeStatGroup(Group *block)
+{
+    mergedStatGroups.push_back(block);
+}
+
+const std::map<std::string, Group *> &
+Group::getStatGroups() const
+{
+    return statGroups;
+}
+
+const std::vector<Info *> &
+Group::getStats() const
+{
+    return stats;
+}
 
 } // namespace Stats
-
-#endif // __BASE_STATS_TEXT_HH__

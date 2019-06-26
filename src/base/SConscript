@@ -81,6 +81,7 @@ Source('loader/object_file.cc')
 Source('loader/raw_object.cc')
 Source('loader/symtab.cc')
 
+Source('stats/group.cc')
 Source('stats/text.cc')
 
 GTest('addr_range.test', 'addr_range.test.cc')
@@ -101,6 +102,7 @@ DebugFlag('GDBRecv', "Messages received from the remote application")
 DebugFlag('GDBSend', "Messages sent to the remote application")
 DebugFlag('GDBWrite', "Writes to the remote address space")
 DebugFlag('SQL', "SQL queries sent to the server")
+DebugFlag('Stats', "Statistics management")
 DebugFlag('StatEvents', "Statistics event tracking")
 
 CompoundFlag('GDBAll',

@@ -1,4 +1,4 @@
-# Copyright (c) 2017 ARM Limited
+# Copyright (c) 2017, 2019 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -158,6 +158,29 @@ def initSimStats():
     _m5.stats.initSimStats()
     _m5.stats.registerPythonStatsHandlers()
 
+def _visit_groups(root, visitor):
+    for group in root.getStatGroups().values():
+        visitor(group)
+        _visit_groups(group, visitor)
+
+def _visit_stats(root, visitor):
+    def for_each_stat(g):
+        for stat in g.getStats():
+            visitor(g, stat)
+    _visit_groups(root, for_each_stat)
+
+def _bindStatHierarchy(root):
+    def _bind_obj(name, obj):
+        if m5.SimObject.isSimObjectVector(obj):
+            for idx, obj in enumerate(obj):
+                _bind_obj("{}{}".format(name, idx), obj)
+        else:
+            root.addStatGroup(name, obj.getCCObject())
+            _bindStatHierarchy(obj)
+
+    for name, obj in root._children.items():
+        _bind_obj(name, obj)
+
 names = []
 stats_dict = {}
 stats_list = []
@@ -166,10 +189,7 @@ def enable():
     enabled, all statistics must be created and initialized and once
     the package is enabled, no more statistics can be created.'''
 
-    global stats_list
-    stats_list = list(_m5.stats.statsList())
-
-    for stat in stats_list:
+    def check_stat(group, stat):
         if not stat.check() or not stat.baseCheck():
             fatal("statistic '%s' (%d) was not properly initialized " \
                   "by a regStats() function\n", stat.name, stat.id)
@@ -177,10 +197,23 @@ def enable():
         if not (stat.flags & flags.display):
             stat.name = "__Stat%06d" % stat.id
 
+
+    # Legacy stat
+    global stats_list
+    stats_list = list(_m5.stats.statsList())
+
+    for stat in stats_list:
+        check_stat(None, stat)
+
     stats_list.sort(key=lambda s: s.name.split('.'))
     for stat in stats_list:
         stats_dict[stat.name] = stat
         stat.enable()
+
+
+    # New stats
+    _visit_stats(Root.getInstance(), check_stat)
+    _visit_stats(Root.getInstance(), lambda g, s: s.enable())
 
     _m5.stats.enable();
 
@@ -188,10 +221,33 @@ def prepare():
     '''Prepare all stats for data access.  This must be done before
     dumping and serialization.'''
 
+    # Legacy stats
     for stat in stats_list:
         stat.prepare()
 
+    # New stats
+    _visit_stats(Root.getInstance(), lambda g, s: s.prepare())
+
 lastDump = 0
+
+def _dump_to_visitor(visitor):
+    # Legacy stats
+    for stat in stats_list:
+        stat.visit(visitor)
+
+    # New stats
+    def dump_group(group):
+        for stat in group.getStats():
+            stat.visit(visitor)
+
+        for n, g in group.getStatGroups().items():
+            visitor.beginGroup(n)
+            dump_group(g)
+            visitor.endGroup()
+
+    dump_group(Root.getInstance())
+
+
 def dump():
     '''Dump all statistics data to the registered outputs'''
 
@@ -210,8 +266,7 @@ def dump():
     for output in outputList:
         if output.valid():
             output.begin()
-            for stat in stats_list:
-                stat.visit(output)
+            _dump_to_visitor(output)
             output.end()
 
 def reset():
@@ -220,9 +275,9 @@ def reset():
     # call reset stats on all SimObjects
     root = Root.getInstance()
     if root:
-        for obj in root.descendants(): obj.resetStats()
+        root.resetStats()
 
-    # call any other registered stats reset callbacks
+    # call any other registered legacy stats reset callbacks
     for stat in stats_list:
         stat.reset()
 

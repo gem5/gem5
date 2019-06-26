@@ -1086,7 +1086,7 @@ class SimObject(object):
     abstract = True
 
     cxx_header = "sim/sim_object.hh"
-    cxx_extra_bases = [ "Drainable", "Serializable" ]
+    cxx_extra_bases = [ "Drainable", "Serializable", "Stats::Group" ]
     eventq_index = Param.UInt32(Parent.eventq_index, "Event Queue Index")
 
     cxx_exports = [
@@ -1094,8 +1094,6 @@ class SimObject(object):
         PyBindMethod("initState"),
         PyBindMethod("memInvalidate"),
         PyBindMethod("memWriteback"),
-        PyBindMethod("regStats"),
-        PyBindMethod("resetStats"),
         PyBindMethod("regProbePoints"),
         PyBindMethod("regProbeListeners"),
         PyBindMethod("startup"),

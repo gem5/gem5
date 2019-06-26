@@ -52,6 +52,7 @@
 #include <string>
 #include <vector>
 
+#include "base/stats/group.hh"
 #include "params/SimObject.hh"
 #include "sim/drain.hh"
 #include "sim/eventq.hh"
@@ -92,7 +93,8 @@ class ProbeManager;
  * SimObject.py). This has the effect of calling the method on the
  * parent node <i>before</i> its children.
  */
-class SimObject : public EventManager, public Serializable, public Drainable
+class SimObject : public EventManager, public Serializable, public Drainable,
+                  public Stats::Group
 {
   private:
     typedef std::vector<SimObject *> SimObjectList;
@@ -144,16 +146,6 @@ class SimObject : public EventManager, public Serializable, public Drainable
      * initializations that are only required for a "cold start".
      */
     virtual void initState();
-
-    /**
-     * Register statistics for this object.
-     */
-    virtual void regStats();
-
-    /**
-     * Reset statistics associated with this object.
-     */
-    virtual void resetStats();
 
     /**
      * Register probe points for this object.

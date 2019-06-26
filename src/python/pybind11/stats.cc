@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017, 2019 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -93,9 +93,12 @@ pybind_init_stats(py::module &m_native)
         .def("begin", &Stats::Output::begin)
         .def("end", &Stats::Output::end)
         .def("valid", &Stats::Output::valid)
+        .def("beginGroup", &Stats::Output::beginGroup)
+        .def("endGroup", &Stats::Output::endGroup)
         ;
 
-    py::class_<Stats::Info>(m, "Info")
+    py::class_<Stats::Info, std::unique_ptr<Stats::Info, py::nodelete>>(
+        m, "Info")
         .def_readwrite("name", &Stats::Info::name)
         .def_readonly("desc", &Stats::Info::desc)
         .def_readonly("id", &Stats::Info::id)
@@ -109,5 +112,14 @@ pybind_init_stats(py::module &m_native)
         .def("reset", &Stats::Info::reset)
         .def("zero", &Stats::Info::zero)
         .def("visit", &Stats::Info::visit)
+        ;
+
+    py::class_<Stats::Group, std::unique_ptr<Stats::Group, py::nodelete>>(
+        m, "Group")
+        .def("regStats", &Stats::Group::regStats)
+        .def("resetStats", &Stats::Group::resetStats)
+        .def("getStats", &Stats::Group::getStats)
+        .def("getStatGroups", &Stats::Group::getStatGroups)
+        .def("addStatGroup", &Stats::Group::addStatGroup)
         ;
 }

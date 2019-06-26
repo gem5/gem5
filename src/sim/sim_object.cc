@@ -56,7 +56,9 @@ SimObject::SimObjectList SimObject::simObjectList;
 // SimObject constructor: used to maintain static simObjectList
 //
 SimObject::SimObject(const Params *p)
-    : EventManager(getEventQueue(p->eventq_index)), _params(p)
+    : EventManager(getEventQueue(p->eventq_index)),
+      Stats::Group(nullptr),
+      _params(p)
 {
 #ifdef DEBUG
     doDebugBreak = false;
@@ -95,19 +97,6 @@ SimObject::initState()
 
 void
 SimObject::startup()
-{
-}
-
-//
-// no default statistics, so nothing to do in base implementation
-//
-void
-SimObject::regStats()
-{
-}
-
-void
-SimObject::resetStats()
 {
 }
 

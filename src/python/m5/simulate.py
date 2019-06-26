@@ -124,7 +124,8 @@ def instantiate(ckpt_dir=None):
     for obj in root.descendants(): obj.init()
 
     # Do a third pass to initialize statistics
-    for obj in root.descendants(): obj.regStats()
+    stats._bindStatHierarchy(root)
+    root.regStats()
 
     # Do a fourth pass to initialize probe points
     for obj in root.descendants(): obj.regProbePoints()
