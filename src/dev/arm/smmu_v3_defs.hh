@@ -67,7 +67,7 @@ enum {
 
 enum {
     ST_CFG_SPLIT_SHIFT = 6,
-    ST_CD_ADDR_SHIFT   = 5,
+    ST_CD_ADDR_SHIFT   = 6,
     CD_TTB_SHIFT       = 4,
     STE_S2TTB_SHIFT    = 4,
 };
