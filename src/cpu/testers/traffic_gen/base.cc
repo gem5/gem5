@@ -80,6 +80,7 @@ BaseTrafficGen::BaseTrafficGen(const BaseTrafficGenParams* p)
       retryPkt(NULL),
       retryPktTick(0), blockedWaitingResp(false),
       updateEvent([this]{ update(); }, name()),
+      stats(this),
       masterID(system->getMasterId(this)),
       streamGenerator(StreamGen::create(p))
 {
@@ -195,7 +196,7 @@ BaseTrafficGen::update()
         // suppress packets that are not destined for a memory, such as
         // device accesses that could be part of a trace
         if (pkt && system->isMemAddr(pkt->getAddr())) {
-            numPackets++;
+            stats.numPackets++;
             // Only attempts to send if not blocked by pending responses
             blockedWaitingResp = allocateWaitingRespSlot(pkt);
             if (blockedWaitingResp || !port.sendTimingReq(pkt)) {
@@ -206,10 +207,10 @@ BaseTrafficGen::update()
             DPRINTF(TrafficGen, "Suppressed packet %s 0x%x\n",
                     pkt->cmdString(), pkt->getAddr());
 
-            ++numSuppressed;
-            if (!(static_cast<int>(numSuppressed.value()) % 10000))
+            ++stats.numSuppressed;
+            if (!(static_cast<int>(stats.numSuppressed.value()) % 10000))
                 warn("%s suppressed %d packets with non-memory addresses\n",
-                     name(), numSuppressed.value());
+                     name(), stats.numSuppressed.value());
 
             delete pkt;
             pkt = nullptr;
@@ -288,7 +289,7 @@ void
 BaseTrafficGen::recvReqRetry()
 {
     DPRINTF(TrafficGen, "Received retry\n");
-    numRetries++;
+    stats.numRetries++;
     retryReq();
 }
 
@@ -308,7 +309,7 @@ BaseTrafficGen::retryReq()
         // the tick for the next packet
         Tick delay = curTick() - retryPktTick;
         retryPktTick = 0;
-        retryTicks += delay;
+        stats.retryTicks += delay;
 
         if (drainState() != DrainState::Draining) {
             // packet is sent, so find out when the next one is due
@@ -331,74 +332,28 @@ BaseTrafficGen::noProgress()
           name(), progressCheck);
 }
 
-void
-BaseTrafficGen::regStats()
+BaseTrafficGen::StatGroup::StatGroup(Stats::Group *parent)
+    : Stats::Group(parent),
+      ADD_STAT(numSuppressed,
+               "Number of suppressed packets to non-memory space"),
+      ADD_STAT(numPackets, "Number of packets generated"),
+      ADD_STAT(numRetries, "Number of retries"),
+      ADD_STAT(retryTicks, "Time spent waiting due to back-pressure (ticks)"),
+      ADD_STAT(bytesRead, "Number of bytes read"),
+      ADD_STAT(bytesWritten, "Number of bytes written"),
+      ADD_STAT(totalReadLatency, "Total latency of read requests"),
+      ADD_STAT(totalWriteLatency, "Total latency of write requests"),
+      ADD_STAT(totalReads, "Total num of reads"),
+      ADD_STAT(totalWrites, "Total num of writes"),
+      ADD_STAT(avgReadLatency, "Avg latency of read requests",
+               totalReadLatency / totalReads),
+      ADD_STAT(avgWriteLatency, "Avg latency of write requests",
+               totalWriteLatency / totalWrites),
+      ADD_STAT(readBW, "Read bandwidth in bytes/s",
+               bytesRead / simSeconds),
+      ADD_STAT(writeBW, "Write bandwidth in bytes/s",
+               bytesWritten / simSeconds)
 {
-    ClockedObject::regStats();
-
-    // Initialise all the stats
-    using namespace Stats;
-
-    numPackets
-        .name(name() + ".numPackets")
-        .desc("Number of packets generated");
-
-    numSuppressed
-        .name(name() + ".numSuppressed")
-        .desc("Number of suppressed packets to non-memory space");
-
-    numRetries
-        .name(name() + ".numRetries")
-        .desc("Number of retries");
-
-    retryTicks
-        .name(name() + ".retryTicks")
-        .desc("Time spent waiting due to back-pressure (ticks)");
-
-    bytesRead
-        .name(name() + ".bytesRead")
-        .desc("Number of bytes read");
-
-    bytesWritten
-        .name(name() + ".bytesWritten")
-        .desc("Number of bytes written");
-
-    totalReadLatency
-        .name(name() + ".totalReadLatency")
-        .desc("Total latency of read requests");
-
-    totalWriteLatency
-        .name(name() + ".totalWriteLatency")
-        .desc("Total latency of write requests");
-
-    totalReads
-        .name(name() + ".totalReads")
-        .desc("Total num of reads");
-
-    totalWrites
-        .name(name() + ".totalWrites")
-        .desc("Total num of writes");
-
-    avgReadLatency
-        .name(name() + ".avgReadLatency")
-        .desc("Avg latency of read requests");
-    avgReadLatency = totalReadLatency / totalReads;
-
-    avgWriteLatency
-        .name(name() + ".avgWriteLatency")
-        .desc("Avg latency of write requests");
-    avgWriteLatency = totalWriteLatency / totalWrites;
-
-    readBW
-        .name(name() + ".readBW")
-        .desc("Read bandwidth in bytes/s");
-    readBW = bytesRead / simSeconds;
-
-    writeBW
-        .name(name() + ".writeBW")
-        .desc("Write bandwidth in bytes/s");
-    writeBW = bytesWritten / simSeconds;
-
 }
 
 std::shared_ptr<BaseGen>
@@ -516,13 +471,13 @@ BaseTrafficGen::recvTimingResp(PacketPtr pkt)
     assert(iter->second <= curTick());
 
     if (pkt->isWrite()) {
-        ++totalWrites;
-        bytesWritten += pkt->req->getSize();
-        totalWriteLatency += curTick() - iter->second;
+        ++stats.totalWrites;
+        stats.bytesWritten += pkt->req->getSize();
+        stats.totalWriteLatency += curTick() - iter->second;
     } else {
-        ++totalReads;
-        bytesRead += pkt->req->getSize();
-        totalReadLatency += curTick() - iter->second;
+        ++stats.totalReads;
+        stats.bytesRead += pkt->req->getSize();
+        stats.totalReadLatency += curTick() - iter->second;
     }
 
     waitingResp.erase(iter);
