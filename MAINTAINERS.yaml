@@ -68,6 +68,12 @@ arch-gcn3:
     - Matt Poremba <matthew.poremba@amd.com>
     - Matt Sinclair <sinclair@cs.wisc.edu>
 
+arch-vega:
+  status: maintained
+  maintainers:
+    - Matt Poremba <matthew.poremba@amd.com>
+    - Matt Sinclair <sinclair@cs.wisc.edu>
+
 arch-mips:
   status: orphaned
 

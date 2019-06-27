@@ -67,7 +67,7 @@ env.SwitchingHeaders(
         '''),
     env.subst('${TARGET_ISA}'))
 
-amdgpu_isa = ['gcn3']
+amdgpu_isa = ['gcn3', 'vega']
 
 env.SwitchingHeaders(
     Split('''
