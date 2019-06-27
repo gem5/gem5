@@ -350,11 +350,11 @@ namespace VegaISA
         InFmt_VINTRP instData;
     }; // Inst_VINTRP
 
-    class Inst_VOP3 : public VEGAGPUStaticInst
+    class Inst_VOP3A : public VEGAGPUStaticInst
     {
       public:
-        Inst_VOP3(InFmt_VOP3*, const std::string &opcode, bool sgpr_dst);
-        ~Inst_VOP3();
+        Inst_VOP3A(InFmt_VOP3A*, const std::string &opcode, bool sgpr_dst);
+        ~Inst_VOP3A();
 
         int instSize() const override;
         void generateDisassembly() override;
@@ -365,12 +365,12 @@ namespace VegaISA
 
       protected:
         // first instruction DWORD
-        InFmt_VOP3 instData;
+        InFmt_VOP3A instData;
         // second instruction DWORD
         InFmt_VOP3_1 extData;
 
       private:
-        bool hasSecondDword(InFmt_VOP3 *);
+        bool hasSecondDword(InFmt_VOP3A *);
         /**
          * the v_cmp and readlane instructions in the VOP3
          * encoding are unique because they are the only
@@ -382,13 +382,13 @@ namespace VegaISA
          * from which we are reading.
          */
         const bool sgprDst;
-    }; // Inst_VOP3
+    }; // Inst_VOP3A
 
-    class Inst_VOP3_SDST_ENC : public VEGAGPUStaticInst
+    class Inst_VOP3B : public VEGAGPUStaticInst
     {
       public:
-        Inst_VOP3_SDST_ENC(InFmt_VOP3_SDST_ENC*, const std::string &opcode);
-        ~Inst_VOP3_SDST_ENC();
+        Inst_VOP3B(InFmt_VOP3B*, const std::string &opcode);
+        ~Inst_VOP3B();
 
         int instSize() const override;
         void generateDisassembly() override;
@@ -399,13 +399,13 @@ namespace VegaISA
 
       protected:
         // first instruction DWORD
-        InFmt_VOP3_SDST_ENC instData;
+        InFmt_VOP3B instData;
         // second instruction DWORD
         InFmt_VOP3_1 extData;
 
       private:
-        bool hasSecondDword(InFmt_VOP3_SDST_ENC *);
-    }; // Inst_VOP3_SDST_ENC
+        bool hasSecondDword(InFmt_VOP3B *);
+    }; // Inst_VOP3B
 
     class Inst_DS : public VEGAGPUStaticInst
     {

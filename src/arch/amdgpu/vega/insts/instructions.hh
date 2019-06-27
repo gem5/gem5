@@ -32265,10 +32265,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VINTRP__V_INTERP_MOV_F32
 
-    class Inst_VOP3__V_CMP_CLASS_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_CLASS_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_CLASS_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_CLASS_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_CLASS_F32();
 
         int
@@ -32331,10 +32331,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_CLASS_F32
 
-    class Inst_VOP3__V_CMPX_CLASS_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_CLASS_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_CLASS_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_CLASS_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_CLASS_F32();
 
         int
@@ -32397,10 +32397,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_CLASS_F32
 
-    class Inst_VOP3__V_CMP_CLASS_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_CLASS_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_CLASS_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_CLASS_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_CLASS_F64();
 
         int
@@ -32463,10 +32463,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_CLASS_F64
 
-    class Inst_VOP3__V_CMPX_CLASS_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_CLASS_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_CLASS_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_CLASS_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_CLASS_F64();
 
         int
@@ -32529,10 +32529,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_CLASS_F64
 
-    class Inst_VOP3__V_CMP_CLASS_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_CLASS_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_CLASS_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_CLASS_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_CLASS_F16();
 
         int
@@ -32595,10 +32595,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_CLASS_F16
 
-    class Inst_VOP3__V_CMPX_CLASS_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_CLASS_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_CLASS_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_CLASS_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_CLASS_F16();
 
         int
@@ -32661,10 +32661,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_CLASS_F16
 
-    class Inst_VOP3__V_CMP_F_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_F_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_F_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_F_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_F_F16();
 
         int
@@ -32727,10 +32727,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_F_F16
 
-    class Inst_VOP3__V_CMP_LT_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LT_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LT_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LT_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LT_F16();
 
         int
@@ -32793,10 +32793,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LT_F16
 
-    class Inst_VOP3__V_CMP_EQ_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_EQ_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_EQ_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_EQ_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_EQ_F16();
 
         int
@@ -32859,10 +32859,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_EQ_F16
 
-    class Inst_VOP3__V_CMP_LE_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LE_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LE_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LE_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LE_F16();
 
         int
@@ -32925,10 +32925,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LE_F16
 
-    class Inst_VOP3__V_CMP_GT_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GT_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GT_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GT_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GT_F16();
 
         int
@@ -32991,10 +32991,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GT_F16
 
-    class Inst_VOP3__V_CMP_LG_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LG_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LG_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LG_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LG_F16();
 
         int
@@ -33057,10 +33057,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LG_F16
 
-    class Inst_VOP3__V_CMP_GE_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GE_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GE_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GE_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GE_F16();
 
         int
@@ -33123,10 +33123,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GE_F16
 
-    class Inst_VOP3__V_CMP_O_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_O_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_O_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_O_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_O_F16();
 
         int
@@ -33189,10 +33189,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_O_F16
 
-    class Inst_VOP3__V_CMP_U_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_U_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_U_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_U_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_U_F16();
 
         int
@@ -33255,10 +33255,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_U_F16
 
-    class Inst_VOP3__V_CMP_NGE_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NGE_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NGE_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NGE_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NGE_F16();
 
         int
@@ -33321,10 +33321,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NGE_F16
 
-    class Inst_VOP3__V_CMP_NLG_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NLG_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NLG_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NLG_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NLG_F16();
 
         int
@@ -33387,10 +33387,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NLG_F16
 
-    class Inst_VOP3__V_CMP_NGT_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NGT_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NGT_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NGT_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NGT_F16();
 
         int
@@ -33453,10 +33453,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NGT_F16
 
-    class Inst_VOP3__V_CMP_NLE_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NLE_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NLE_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NLE_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NLE_F16();
 
         int
@@ -33519,10 +33519,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NLE_F16
 
-    class Inst_VOP3__V_CMP_NEQ_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NEQ_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NEQ_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NEQ_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NEQ_F16();
 
         int
@@ -33585,10 +33585,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NEQ_F16
 
-    class Inst_VOP3__V_CMP_NLT_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NLT_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NLT_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NLT_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NLT_F16();
 
         int
@@ -33651,10 +33651,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NLT_F16
 
-    class Inst_VOP3__V_CMP_TRU_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_TRU_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_TRU_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_TRU_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_TRU_F16();
 
         int
@@ -33717,10 +33717,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_TRU_F16
 
-    class Inst_VOP3__V_CMPX_F_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_F_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_F_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_F_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_F_F16();
 
         int
@@ -33783,10 +33783,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_F_F16
 
-    class Inst_VOP3__V_CMPX_LT_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LT_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LT_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LT_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LT_F16();
 
         int
@@ -33849,10 +33849,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LT_F16
 
-    class Inst_VOP3__V_CMPX_EQ_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_EQ_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_EQ_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_EQ_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_EQ_F16();
 
         int
@@ -33915,10 +33915,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_EQ_F16
 
-    class Inst_VOP3__V_CMPX_LE_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LE_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LE_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LE_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LE_F16();
 
         int
@@ -33981,10 +33981,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LE_F16
 
-    class Inst_VOP3__V_CMPX_GT_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GT_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GT_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GT_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GT_F16();
 
         int
@@ -34047,10 +34047,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GT_F16
 
-    class Inst_VOP3__V_CMPX_LG_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LG_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LG_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LG_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LG_F16();
 
         int
@@ -34113,10 +34113,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LG_F16
 
-    class Inst_VOP3__V_CMPX_GE_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GE_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GE_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GE_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GE_F16();
 
         int
@@ -34179,10 +34179,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GE_F16
 
-    class Inst_VOP3__V_CMPX_O_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_O_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_O_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_O_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_O_F16();
 
         int
@@ -34245,10 +34245,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_O_F16
 
-    class Inst_VOP3__V_CMPX_U_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_U_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_U_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_U_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_U_F16();
 
         int
@@ -34311,10 +34311,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_U_F16
 
-    class Inst_VOP3__V_CMPX_NGE_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NGE_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NGE_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NGE_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NGE_F16();
 
         int
@@ -34377,10 +34377,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NGE_F16
 
-    class Inst_VOP3__V_CMPX_NLG_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NLG_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NLG_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NLG_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NLG_F16();
 
         int
@@ -34443,10 +34443,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NLG_F16
 
-    class Inst_VOP3__V_CMPX_NGT_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NGT_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NGT_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NGT_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NGT_F16();
 
         int
@@ -34509,10 +34509,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NGT_F16
 
-    class Inst_VOP3__V_CMPX_NLE_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NLE_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NLE_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NLE_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NLE_F16();
 
         int
@@ -34575,10 +34575,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NLE_F16
 
-    class Inst_VOP3__V_CMPX_NEQ_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NEQ_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NEQ_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NEQ_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NEQ_F16();
 
         int
@@ -34641,10 +34641,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NEQ_F16
 
-    class Inst_VOP3__V_CMPX_NLT_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NLT_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NLT_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NLT_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NLT_F16();
 
         int
@@ -34707,10 +34707,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NLT_F16
 
-    class Inst_VOP3__V_CMPX_TRU_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_TRU_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_TRU_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_TRU_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_TRU_F16();
 
         int
@@ -34773,10 +34773,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_TRU_F16
 
-    class Inst_VOP3__V_CMP_F_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_F_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_F_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_F_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_F_F32();
 
         int
@@ -34839,10 +34839,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_F_F32
 
-    class Inst_VOP3__V_CMP_LT_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LT_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LT_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LT_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LT_F32();
 
         int
@@ -34905,10 +34905,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LT_F32
 
-    class Inst_VOP3__V_CMP_EQ_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_EQ_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_EQ_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_EQ_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_EQ_F32();
 
         int
@@ -34971,10 +34971,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_EQ_F32
 
-    class Inst_VOP3__V_CMP_LE_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LE_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LE_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LE_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LE_F32();
 
         int
@@ -35037,10 +35037,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LE_F32
 
-    class Inst_VOP3__V_CMP_GT_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GT_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GT_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GT_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GT_F32();
 
         int
@@ -35103,10 +35103,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GT_F32
 
-    class Inst_VOP3__V_CMP_LG_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LG_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LG_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LG_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LG_F32();
 
         int
@@ -35169,10 +35169,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LG_F32
 
-    class Inst_VOP3__V_CMP_GE_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GE_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GE_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GE_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GE_F32();
 
         int
@@ -35235,10 +35235,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GE_F32
 
-    class Inst_VOP3__V_CMP_O_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_O_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_O_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_O_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_O_F32();
 
         int
@@ -35301,10 +35301,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_O_F32
 
-    class Inst_VOP3__V_CMP_U_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_U_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_U_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_U_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_U_F32();
 
         int
@@ -35367,10 +35367,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_U_F32
 
-    class Inst_VOP3__V_CMP_NGE_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NGE_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NGE_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NGE_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NGE_F32();
 
         int
@@ -35433,10 +35433,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NGE_F32
 
-    class Inst_VOP3__V_CMP_NLG_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NLG_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NLG_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NLG_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NLG_F32();
 
         int
@@ -35499,10 +35499,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NLG_F32
 
-    class Inst_VOP3__V_CMP_NGT_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NGT_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NGT_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NGT_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NGT_F32();
 
         int
@@ -35565,10 +35565,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NGT_F32
 
-    class Inst_VOP3__V_CMP_NLE_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NLE_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NLE_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NLE_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NLE_F32();
 
         int
@@ -35631,10 +35631,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NLE_F32
 
-    class Inst_VOP3__V_CMP_NEQ_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NEQ_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NEQ_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NEQ_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NEQ_F32();
 
         int
@@ -35697,10 +35697,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NEQ_F32
 
-    class Inst_VOP3__V_CMP_NLT_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NLT_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NLT_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NLT_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NLT_F32();
 
         int
@@ -35763,10 +35763,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NLT_F32
 
-    class Inst_VOP3__V_CMP_TRU_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_TRU_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_TRU_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_TRU_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_TRU_F32();
 
         int
@@ -35829,10 +35829,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_TRU_F32
 
-    class Inst_VOP3__V_CMPX_F_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_F_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_F_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_F_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_F_F32();
 
         int
@@ -35895,10 +35895,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_F_F32
 
-    class Inst_VOP3__V_CMPX_LT_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LT_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LT_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LT_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LT_F32();
 
         int
@@ -35961,10 +35961,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LT_F32
 
-    class Inst_VOP3__V_CMPX_EQ_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_EQ_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_EQ_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_EQ_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_EQ_F32();
 
         int
@@ -36027,10 +36027,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_EQ_F32
 
-    class Inst_VOP3__V_CMPX_LE_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LE_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LE_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LE_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LE_F32();
 
         int
@@ -36093,10 +36093,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LE_F32
 
-    class Inst_VOP3__V_CMPX_GT_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GT_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GT_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GT_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GT_F32();
 
         int
@@ -36159,10 +36159,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GT_F32
 
-    class Inst_VOP3__V_CMPX_LG_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LG_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LG_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LG_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LG_F32();
 
         int
@@ -36225,10 +36225,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LG_F32
 
-    class Inst_VOP3__V_CMPX_GE_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GE_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GE_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GE_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GE_F32();
 
         int
@@ -36291,10 +36291,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GE_F32
 
-    class Inst_VOP3__V_CMPX_O_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_O_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_O_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_O_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_O_F32();
 
         int
@@ -36357,10 +36357,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_O_F32
 
-    class Inst_VOP3__V_CMPX_U_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_U_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_U_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_U_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_U_F32();
 
         int
@@ -36423,10 +36423,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_U_F32
 
-    class Inst_VOP3__V_CMPX_NGE_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NGE_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NGE_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NGE_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NGE_F32();
 
         int
@@ -36489,10 +36489,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NGE_F32
 
-    class Inst_VOP3__V_CMPX_NLG_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NLG_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NLG_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NLG_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NLG_F32();
 
         int
@@ -36555,10 +36555,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NLG_F32
 
-    class Inst_VOP3__V_CMPX_NGT_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NGT_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NGT_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NGT_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NGT_F32();
 
         int
@@ -36621,10 +36621,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NGT_F32
 
-    class Inst_VOP3__V_CMPX_NLE_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NLE_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NLE_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NLE_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NLE_F32();
 
         int
@@ -36687,10 +36687,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NLE_F32
 
-    class Inst_VOP3__V_CMPX_NEQ_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NEQ_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NEQ_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NEQ_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NEQ_F32();
 
         int
@@ -36753,10 +36753,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NEQ_F32
 
-    class Inst_VOP3__V_CMPX_NLT_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NLT_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NLT_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NLT_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NLT_F32();
 
         int
@@ -36819,10 +36819,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NLT_F32
 
-    class Inst_VOP3__V_CMPX_TRU_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_TRU_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_TRU_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_TRU_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_TRU_F32();
 
         int
@@ -36885,10 +36885,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_TRU_F32
 
-    class Inst_VOP3__V_CMP_F_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_F_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_F_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_F_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_F_F64();
 
         int
@@ -36951,10 +36951,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_F_F64
 
-    class Inst_VOP3__V_CMP_LT_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LT_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LT_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LT_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LT_F64();
 
         int
@@ -37017,10 +37017,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LT_F64
 
-    class Inst_VOP3__V_CMP_EQ_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_EQ_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_EQ_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_EQ_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_EQ_F64();
 
         int
@@ -37083,10 +37083,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_EQ_F64
 
-    class Inst_VOP3__V_CMP_LE_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LE_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LE_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LE_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LE_F64();
 
         int
@@ -37149,10 +37149,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LE_F64
 
-    class Inst_VOP3__V_CMP_GT_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GT_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GT_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GT_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GT_F64();
 
         int
@@ -37215,10 +37215,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GT_F64
 
-    class Inst_VOP3__V_CMP_LG_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LG_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LG_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LG_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LG_F64();
 
         int
@@ -37281,10 +37281,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LG_F64
 
-    class Inst_VOP3__V_CMP_GE_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GE_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GE_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GE_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GE_F64();
 
         int
@@ -37347,10 +37347,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GE_F64
 
-    class Inst_VOP3__V_CMP_O_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_O_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_O_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_O_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_O_F64();
 
         int
@@ -37413,10 +37413,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_O_F64
 
-    class Inst_VOP3__V_CMP_U_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_U_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_U_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_U_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_U_F64();
 
         int
@@ -37479,10 +37479,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_U_F64
 
-    class Inst_VOP3__V_CMP_NGE_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NGE_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NGE_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NGE_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NGE_F64();
 
         int
@@ -37545,10 +37545,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NGE_F64
 
-    class Inst_VOP3__V_CMP_NLG_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NLG_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NLG_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NLG_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NLG_F64();
 
         int
@@ -37611,10 +37611,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NLG_F64
 
-    class Inst_VOP3__V_CMP_NGT_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NGT_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NGT_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NGT_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NGT_F64();
 
         int
@@ -37677,10 +37677,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NGT_F64
 
-    class Inst_VOP3__V_CMP_NLE_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NLE_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NLE_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NLE_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NLE_F64();
 
         int
@@ -37743,10 +37743,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NLE_F64
 
-    class Inst_VOP3__V_CMP_NEQ_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NEQ_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NEQ_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NEQ_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NEQ_F64();
 
         int
@@ -37809,10 +37809,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NEQ_F64
 
-    class Inst_VOP3__V_CMP_NLT_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NLT_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NLT_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NLT_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NLT_F64();
 
         int
@@ -37875,10 +37875,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NLT_F64
 
-    class Inst_VOP3__V_CMP_TRU_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_TRU_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_TRU_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_TRU_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_TRU_F64();
 
         int
@@ -37941,10 +37941,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_TRU_F64
 
-    class Inst_VOP3__V_CMPX_F_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_F_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_F_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_F_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_F_F64();
 
         int
@@ -38007,10 +38007,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_F_F64
 
-    class Inst_VOP3__V_CMPX_LT_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LT_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LT_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LT_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LT_F64();
 
         int
@@ -38073,10 +38073,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LT_F64
 
-    class Inst_VOP3__V_CMPX_EQ_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_EQ_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_EQ_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_EQ_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_EQ_F64();
 
         int
@@ -38139,10 +38139,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_EQ_F64
 
-    class Inst_VOP3__V_CMPX_LE_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LE_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LE_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LE_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LE_F64();
 
         int
@@ -38205,10 +38205,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LE_F64
 
-    class Inst_VOP3__V_CMPX_GT_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GT_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GT_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GT_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GT_F64();
 
         int
@@ -38271,10 +38271,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GT_F64
 
-    class Inst_VOP3__V_CMPX_LG_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LG_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LG_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LG_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LG_F64();
 
         int
@@ -38337,10 +38337,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LG_F64
 
-    class Inst_VOP3__V_CMPX_GE_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GE_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GE_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GE_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GE_F64();
 
         int
@@ -38403,10 +38403,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GE_F64
 
-    class Inst_VOP3__V_CMPX_O_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_O_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_O_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_O_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_O_F64();
 
         int
@@ -38469,10 +38469,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_O_F64
 
-    class Inst_VOP3__V_CMPX_U_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_U_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_U_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_U_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_U_F64();
 
         int
@@ -38535,10 +38535,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_U_F64
 
-    class Inst_VOP3__V_CMPX_NGE_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NGE_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NGE_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NGE_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NGE_F64();
 
         int
@@ -38601,10 +38601,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NGE_F64
 
-    class Inst_VOP3__V_CMPX_NLG_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NLG_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NLG_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NLG_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NLG_F64();
 
         int
@@ -38667,10 +38667,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NLG_F64
 
-    class Inst_VOP3__V_CMPX_NGT_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NGT_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NGT_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NGT_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NGT_F64();
 
         int
@@ -38733,10 +38733,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NGT_F64
 
-    class Inst_VOP3__V_CMPX_NLE_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NLE_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NLE_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NLE_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NLE_F64();
 
         int
@@ -38799,10 +38799,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NLE_F64
 
-    class Inst_VOP3__V_CMPX_NEQ_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NEQ_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NEQ_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NEQ_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NEQ_F64();
 
         int
@@ -38865,10 +38865,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NEQ_F64
 
-    class Inst_VOP3__V_CMPX_NLT_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NLT_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NLT_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NLT_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NLT_F64();
 
         int
@@ -38931,10 +38931,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NLT_F64
 
-    class Inst_VOP3__V_CMPX_TRU_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_TRU_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_TRU_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_TRU_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_TRU_F64();
 
         int
@@ -38997,10 +38997,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_TRU_F64
 
-    class Inst_VOP3__V_CMP_F_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_F_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_F_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_F_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_F_I16();
 
         int
@@ -39063,10 +39063,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_F_I16
 
-    class Inst_VOP3__V_CMP_LT_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LT_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LT_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LT_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LT_I16();
 
         int
@@ -39129,10 +39129,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LT_I16
 
-    class Inst_VOP3__V_CMP_EQ_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_EQ_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_EQ_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_EQ_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_EQ_I16();
 
         int
@@ -39195,10 +39195,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_EQ_I16
 
-    class Inst_VOP3__V_CMP_LE_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LE_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LE_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LE_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LE_I16();
 
         int
@@ -39261,10 +39261,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LE_I16
 
-    class Inst_VOP3__V_CMP_GT_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GT_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GT_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GT_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GT_I16();
 
         int
@@ -39327,10 +39327,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GT_I16
 
-    class Inst_VOP3__V_CMP_NE_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NE_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NE_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NE_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NE_I16();
 
         int
@@ -39393,10 +39393,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NE_I16
 
-    class Inst_VOP3__V_CMP_GE_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GE_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GE_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GE_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GE_I16();
 
         int
@@ -39459,10 +39459,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GE_I16
 
-    class Inst_VOP3__V_CMP_T_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_T_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_T_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_T_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_T_I16();
 
         int
@@ -39525,10 +39525,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_T_I16
 
-    class Inst_VOP3__V_CMP_F_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_F_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_F_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_F_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_F_U16();
 
         int
@@ -39591,10 +39591,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_F_U16
 
-    class Inst_VOP3__V_CMP_LT_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LT_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LT_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LT_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LT_U16();
 
         int
@@ -39657,10 +39657,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LT_U16
 
-    class Inst_VOP3__V_CMP_EQ_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_EQ_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_EQ_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_EQ_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_EQ_U16();
 
         int
@@ -39723,10 +39723,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_EQ_U16
 
-    class Inst_VOP3__V_CMP_LE_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LE_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LE_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LE_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LE_U16();
 
         int
@@ -39789,10 +39789,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LE_U16
 
-    class Inst_VOP3__V_CMP_GT_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GT_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GT_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GT_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GT_U16();
 
         int
@@ -39855,10 +39855,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GT_U16
 
-    class Inst_VOP3__V_CMP_NE_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NE_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NE_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NE_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NE_U16();
 
         int
@@ -39921,10 +39921,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NE_U16
 
-    class Inst_VOP3__V_CMP_GE_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GE_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GE_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GE_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GE_U16();
 
         int
@@ -39987,10 +39987,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GE_U16
 
-    class Inst_VOP3__V_CMP_T_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_T_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_T_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_T_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_T_U16();
 
         int
@@ -40053,10 +40053,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_T_U16
 
-    class Inst_VOP3__V_CMPX_F_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_F_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_F_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_F_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_F_I16();
 
         int
@@ -40119,10 +40119,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_F_I16
 
-    class Inst_VOP3__V_CMPX_LT_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LT_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LT_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LT_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LT_I16();
 
         int
@@ -40185,10 +40185,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LT_I16
 
-    class Inst_VOP3__V_CMPX_EQ_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_EQ_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_EQ_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_EQ_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_EQ_I16();
 
         int
@@ -40251,10 +40251,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_EQ_I16
 
-    class Inst_VOP3__V_CMPX_LE_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LE_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LE_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LE_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LE_I16();
 
         int
@@ -40317,10 +40317,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LE_I16
 
-    class Inst_VOP3__V_CMPX_GT_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GT_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GT_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GT_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GT_I16();
 
         int
@@ -40383,10 +40383,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GT_I16
 
-    class Inst_VOP3__V_CMPX_NE_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NE_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NE_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NE_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NE_I16();
 
         int
@@ -40449,10 +40449,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NE_I16
 
-    class Inst_VOP3__V_CMPX_GE_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GE_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GE_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GE_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GE_I16();
 
         int
@@ -40515,10 +40515,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GE_I16
 
-    class Inst_VOP3__V_CMPX_T_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_T_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_T_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_T_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_T_I16();
 
         int
@@ -40581,10 +40581,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_T_I16
 
-    class Inst_VOP3__V_CMPX_F_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_F_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_F_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_F_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_F_U16();
 
         int
@@ -40647,10 +40647,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_F_U16
 
-    class Inst_VOP3__V_CMPX_LT_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LT_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LT_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LT_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LT_U16();
 
         int
@@ -40713,10 +40713,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LT_U16
 
-    class Inst_VOP3__V_CMPX_EQ_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_EQ_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_EQ_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_EQ_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_EQ_U16();
 
         int
@@ -40779,10 +40779,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_EQ_U16
 
-    class Inst_VOP3__V_CMPX_LE_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LE_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LE_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LE_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LE_U16();
 
         int
@@ -40845,10 +40845,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LE_U16
 
-    class Inst_VOP3__V_CMPX_GT_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GT_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GT_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GT_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GT_U16();
 
         int
@@ -40911,10 +40911,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GT_U16
 
-    class Inst_VOP3__V_CMPX_NE_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NE_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NE_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NE_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NE_U16();
 
         int
@@ -40977,10 +40977,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NE_U16
 
-    class Inst_VOP3__V_CMPX_GE_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GE_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GE_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GE_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GE_U16();
 
         int
@@ -41043,10 +41043,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GE_U16
 
-    class Inst_VOP3__V_CMPX_T_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_T_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_T_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_T_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_T_U16();
 
         int
@@ -41109,10 +41109,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_T_U16
 
-    class Inst_VOP3__V_CMP_F_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_F_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_F_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_F_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_F_I32();
 
         int
@@ -41175,10 +41175,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_F_I32
 
-    class Inst_VOP3__V_CMP_LT_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LT_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LT_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LT_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LT_I32();
 
         int
@@ -41241,10 +41241,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LT_I32
 
-    class Inst_VOP3__V_CMP_EQ_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_EQ_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_EQ_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_EQ_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_EQ_I32();
 
         int
@@ -41307,10 +41307,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_EQ_I32
 
-    class Inst_VOP3__V_CMP_LE_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LE_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LE_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LE_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LE_I32();
 
         int
@@ -41373,10 +41373,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LE_I32
 
-    class Inst_VOP3__V_CMP_GT_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GT_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GT_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GT_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GT_I32();
 
         int
@@ -41439,10 +41439,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GT_I32
 
-    class Inst_VOP3__V_CMP_NE_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NE_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NE_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NE_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NE_I32();
 
         int
@@ -41505,10 +41505,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NE_I32
 
-    class Inst_VOP3__V_CMP_GE_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GE_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GE_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GE_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GE_I32();
 
         int
@@ -41571,10 +41571,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GE_I32
 
-    class Inst_VOP3__V_CMP_T_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_T_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_T_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_T_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_T_I32();
 
         int
@@ -41637,10 +41637,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_T_I32
 
-    class Inst_VOP3__V_CMP_F_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_F_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_F_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_F_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_F_U32();
 
         int
@@ -41703,10 +41703,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_F_U32
 
-    class Inst_VOP3__V_CMP_LT_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LT_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LT_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LT_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LT_U32();
 
         int
@@ -41769,10 +41769,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LT_U32
 
-    class Inst_VOP3__V_CMP_EQ_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_EQ_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_EQ_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_EQ_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_EQ_U32();
 
         int
@@ -41835,10 +41835,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_EQ_U32
 
-    class Inst_VOP3__V_CMP_LE_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LE_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LE_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LE_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LE_U32();
 
         int
@@ -41901,10 +41901,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LE_U32
 
-    class Inst_VOP3__V_CMP_GT_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GT_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GT_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GT_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GT_U32();
 
         int
@@ -41967,10 +41967,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GT_U32
 
-    class Inst_VOP3__V_CMP_NE_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NE_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NE_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NE_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NE_U32();
 
         int
@@ -42033,10 +42033,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NE_U32
 
-    class Inst_VOP3__V_CMP_GE_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GE_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GE_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GE_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GE_U32();
 
         int
@@ -42099,10 +42099,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GE_U32
 
-    class Inst_VOP3__V_CMP_T_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_T_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_T_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_T_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_T_U32();
 
         int
@@ -42165,10 +42165,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_T_U32
 
-    class Inst_VOP3__V_CMPX_F_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_F_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_F_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_F_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_F_I32();
 
         int
@@ -42231,10 +42231,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_F_I32
 
-    class Inst_VOP3__V_CMPX_LT_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LT_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LT_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LT_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LT_I32();
 
         int
@@ -42297,10 +42297,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LT_I32
 
-    class Inst_VOP3__V_CMPX_EQ_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_EQ_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_EQ_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_EQ_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_EQ_I32();
 
         int
@@ -42363,10 +42363,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_EQ_I32
 
-    class Inst_VOP3__V_CMPX_LE_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LE_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LE_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LE_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LE_I32();
 
         int
@@ -42429,10 +42429,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LE_I32
 
-    class Inst_VOP3__V_CMPX_GT_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GT_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GT_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GT_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GT_I32();
 
         int
@@ -42495,10 +42495,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GT_I32
 
-    class Inst_VOP3__V_CMPX_NE_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NE_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NE_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NE_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NE_I32();
 
         int
@@ -42561,10 +42561,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NE_I32
 
-    class Inst_VOP3__V_CMPX_GE_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GE_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GE_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GE_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GE_I32();
 
         int
@@ -42627,10 +42627,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GE_I32
 
-    class Inst_VOP3__V_CMPX_T_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_T_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_T_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_T_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_T_I32();
 
         int
@@ -42693,10 +42693,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_T_I32
 
-    class Inst_VOP3__V_CMPX_F_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_F_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_F_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_F_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_F_U32();
 
         int
@@ -42759,10 +42759,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_F_U32
 
-    class Inst_VOP3__V_CMPX_LT_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LT_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LT_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LT_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LT_U32();
 
         int
@@ -42825,10 +42825,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LT_U32
 
-    class Inst_VOP3__V_CMPX_EQ_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_EQ_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_EQ_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_EQ_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_EQ_U32();
 
         int
@@ -42891,10 +42891,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_EQ_U32
 
-    class Inst_VOP3__V_CMPX_LE_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LE_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LE_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LE_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LE_U32();
 
         int
@@ -42957,10 +42957,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LE_U32
 
-    class Inst_VOP3__V_CMPX_GT_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GT_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GT_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GT_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GT_U32();
 
         int
@@ -43023,10 +43023,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GT_U32
 
-    class Inst_VOP3__V_CMPX_NE_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NE_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NE_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NE_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NE_U32();
 
         int
@@ -43089,10 +43089,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NE_U32
 
-    class Inst_VOP3__V_CMPX_GE_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GE_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GE_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GE_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GE_U32();
 
         int
@@ -43155,10 +43155,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GE_U32
 
-    class Inst_VOP3__V_CMPX_T_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_T_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_T_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_T_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_T_U32();
 
         int
@@ -43221,10 +43221,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_T_U32
 
-    class Inst_VOP3__V_CMP_F_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_F_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_F_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_F_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_F_I64();
 
         int
@@ -43287,10 +43287,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_F_I64
 
-    class Inst_VOP3__V_CMP_LT_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LT_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LT_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LT_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LT_I64();
 
         int
@@ -43353,10 +43353,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LT_I64
 
-    class Inst_VOP3__V_CMP_EQ_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_EQ_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_EQ_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_EQ_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_EQ_I64();
 
         int
@@ -43419,10 +43419,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_EQ_I64
 
-    class Inst_VOP3__V_CMP_LE_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LE_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LE_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LE_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LE_I64();
 
         int
@@ -43485,10 +43485,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LE_I64
 
-    class Inst_VOP3__V_CMP_GT_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GT_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GT_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GT_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GT_I64();
 
         int
@@ -43551,10 +43551,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GT_I64
 
-    class Inst_VOP3__V_CMP_NE_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NE_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NE_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NE_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NE_I64();
 
         int
@@ -43617,10 +43617,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NE_I64
 
-    class Inst_VOP3__V_CMP_GE_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GE_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GE_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GE_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GE_I64();
 
         int
@@ -43683,10 +43683,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GE_I64
 
-    class Inst_VOP3__V_CMP_T_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_T_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_T_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_T_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_T_I64();
 
         int
@@ -43749,10 +43749,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_T_I64
 
-    class Inst_VOP3__V_CMP_F_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_F_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_F_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_F_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_F_U64();
 
         int
@@ -43815,10 +43815,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_F_U64
 
-    class Inst_VOP3__V_CMP_LT_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LT_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LT_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LT_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LT_U64();
 
         int
@@ -43881,10 +43881,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LT_U64
 
-    class Inst_VOP3__V_CMP_EQ_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_EQ_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_EQ_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_EQ_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_EQ_U64();
 
         int
@@ -43947,10 +43947,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_EQ_U64
 
-    class Inst_VOP3__V_CMP_LE_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_LE_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_LE_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_LE_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_LE_U64();
 
         int
@@ -44013,10 +44013,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_LE_U64
 
-    class Inst_VOP3__V_CMP_GT_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GT_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GT_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GT_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GT_U64();
 
         int
@@ -44079,10 +44079,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GT_U64
 
-    class Inst_VOP3__V_CMP_NE_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_NE_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_NE_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_NE_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_NE_U64();
 
         int
@@ -44145,10 +44145,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_NE_U64
 
-    class Inst_VOP3__V_CMP_GE_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_GE_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_GE_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_GE_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_GE_U64();
 
         int
@@ -44211,10 +44211,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_GE_U64
 
-    class Inst_VOP3__V_CMP_T_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMP_T_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMP_T_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMP_T_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMP_T_U64();
 
         int
@@ -44277,10 +44277,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMP_T_U64
 
-    class Inst_VOP3__V_CMPX_F_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_F_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_F_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_F_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_F_I64();
 
         int
@@ -44343,10 +44343,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_F_I64
 
-    class Inst_VOP3__V_CMPX_LT_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LT_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LT_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LT_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LT_I64();
 
         int
@@ -44409,10 +44409,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LT_I64
 
-    class Inst_VOP3__V_CMPX_EQ_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_EQ_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_EQ_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_EQ_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_EQ_I64();
 
         int
@@ -44475,10 +44475,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_EQ_I64
 
-    class Inst_VOP3__V_CMPX_LE_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LE_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LE_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LE_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LE_I64();
 
         int
@@ -44541,10 +44541,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LE_I64
 
-    class Inst_VOP3__V_CMPX_GT_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GT_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GT_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GT_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GT_I64();
 
         int
@@ -44607,10 +44607,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GT_I64
 
-    class Inst_VOP3__V_CMPX_NE_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NE_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NE_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NE_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NE_I64();
 
         int
@@ -44673,10 +44673,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NE_I64
 
-    class Inst_VOP3__V_CMPX_GE_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GE_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GE_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GE_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GE_I64();
 
         int
@@ -44739,10 +44739,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GE_I64
 
-    class Inst_VOP3__V_CMPX_T_I64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_T_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_T_I64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_T_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_T_I64();
 
         int
@@ -44805,10 +44805,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_T_I64
 
-    class Inst_VOP3__V_CMPX_F_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_F_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_F_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_F_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_F_U64();
 
         int
@@ -44871,10 +44871,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_F_U64
 
-    class Inst_VOP3__V_CMPX_LT_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LT_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LT_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LT_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LT_U64();
 
         int
@@ -44937,10 +44937,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LT_U64
 
-    class Inst_VOP3__V_CMPX_EQ_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_EQ_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_EQ_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_EQ_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_EQ_U64();
 
         int
@@ -45003,10 +45003,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_EQ_U64
 
-    class Inst_VOP3__V_CMPX_LE_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_LE_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_LE_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_LE_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_LE_U64();
 
         int
@@ -45069,10 +45069,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_LE_U64
 
-    class Inst_VOP3__V_CMPX_GT_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GT_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GT_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GT_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GT_U64();
 
         int
@@ -45135,10 +45135,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GT_U64
 
-    class Inst_VOP3__V_CMPX_NE_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_NE_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_NE_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_NE_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_NE_U64();
 
         int
@@ -45201,10 +45201,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_NE_U64
 
-    class Inst_VOP3__V_CMPX_GE_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_GE_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_GE_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_GE_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_GE_U64();
 
         int
@@ -45267,10 +45267,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_GE_U64
 
-    class Inst_VOP3__V_CMPX_T_U64 : public Inst_VOP3
+    class Inst_VOP3__V_CMPX_T_U64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CMPX_T_U64(InFmt_VOP3*);
+        Inst_VOP3__V_CMPX_T_U64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CMPX_T_U64();
 
         int
@@ -45333,10 +45333,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CMPX_T_U64
 
-    class Inst_VOP3__V_CNDMASK_B32 : public Inst_VOP3
+    class Inst_VOP3__V_CNDMASK_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CNDMASK_B32(InFmt_VOP3*);
+        Inst_VOP3__V_CNDMASK_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CNDMASK_B32();
 
         int
@@ -45405,10 +45405,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CNDMASK_B32
 
-    class Inst_VOP3__V_ADD_F32 : public Inst_VOP3
+    class Inst_VOP3__V_ADD_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_ADD_F32(InFmt_VOP3*);
+        Inst_VOP3__V_ADD_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_ADD_F32();
 
         int
@@ -45471,10 +45471,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_ADD_F32
 
-    class Inst_VOP3__V_SUB_F32 : public Inst_VOP3
+    class Inst_VOP3__V_SUB_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SUB_F32(InFmt_VOP3*);
+        Inst_VOP3__V_SUB_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_SUB_F32();
 
         int
@@ -45537,10 +45537,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SUB_F32
 
-    class Inst_VOP3__V_SUBREV_F32 : public Inst_VOP3
+    class Inst_VOP3__V_SUBREV_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SUBREV_F32(InFmt_VOP3*);
+        Inst_VOP3__V_SUBREV_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_SUBREV_F32();
 
         int
@@ -45603,10 +45603,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SUBREV_F32
 
-    class Inst_VOP3__V_MUL_LEGACY_F32 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_LEGACY_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_LEGACY_F32(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_LEGACY_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_LEGACY_F32();
 
         int
@@ -45669,10 +45669,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_LEGACY_F32
 
-    class Inst_VOP3__V_MUL_F32 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_F32(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_F32();
 
         int
@@ -45735,10 +45735,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_F32
 
-    class Inst_VOP3__V_MUL_I32_I24 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_I32_I24 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_I32_I24(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_I32_I24(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_I32_I24();
 
         int
@@ -45801,10 +45801,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_I32_I24
 
-    class Inst_VOP3__V_MUL_HI_I32_I24 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_HI_I32_I24 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_HI_I32_I24(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_HI_I32_I24(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_HI_I32_I24();
 
         int
@@ -45867,10 +45867,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_HI_I32_I24
 
-    class Inst_VOP3__V_MUL_U32_U24 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_U32_U24 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_U32_U24(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_U32_U24(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_U32_U24();
 
         int
@@ -45933,10 +45933,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_U32_U24
 
-    class Inst_VOP3__V_MUL_HI_U32_U24 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_HI_U32_U24 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_HI_U32_U24(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_HI_U32_U24(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_HI_U32_U24();
 
         int
@@ -45999,10 +45999,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_HI_U32_U24
 
-    class Inst_VOP3__V_MIN_F32 : public Inst_VOP3
+    class Inst_VOP3__V_MIN_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MIN_F32(InFmt_VOP3*);
+        Inst_VOP3__V_MIN_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MIN_F32();
 
         int
@@ -46065,10 +46065,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MIN_F32
 
-    class Inst_VOP3__V_MAX_F32 : public Inst_VOP3
+    class Inst_VOP3__V_MAX_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAX_F32(InFmt_VOP3*);
+        Inst_VOP3__V_MAX_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAX_F32();
 
         int
@@ -46131,10 +46131,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAX_F32
 
-    class Inst_VOP3__V_MIN_I32 : public Inst_VOP3
+    class Inst_VOP3__V_MIN_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MIN_I32(InFmt_VOP3*);
+        Inst_VOP3__V_MIN_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MIN_I32();
 
         int
@@ -46197,10 +46197,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MIN_I32
 
-    class Inst_VOP3__V_MAX_I32 : public Inst_VOP3
+    class Inst_VOP3__V_MAX_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAX_I32(InFmt_VOP3*);
+        Inst_VOP3__V_MAX_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAX_I32();
 
         int
@@ -46263,10 +46263,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAX_I32
 
-    class Inst_VOP3__V_MIN_U32 : public Inst_VOP3
+    class Inst_VOP3__V_MIN_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MIN_U32(InFmt_VOP3*);
+        Inst_VOP3__V_MIN_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MIN_U32();
 
         int
@@ -46329,10 +46329,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MIN_U32
 
-    class Inst_VOP3__V_MAX_U32 : public Inst_VOP3
+    class Inst_VOP3__V_MAX_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAX_U32(InFmt_VOP3*);
+        Inst_VOP3__V_MAX_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAX_U32();
 
         int
@@ -46395,10 +46395,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAX_U32
 
-    class Inst_VOP3__V_LSHRREV_B32 : public Inst_VOP3
+    class Inst_VOP3__V_LSHRREV_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LSHRREV_B32(InFmt_VOP3*);
+        Inst_VOP3__V_LSHRREV_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_LSHRREV_B32();
 
         int
@@ -46461,10 +46461,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LSHRREV_B32
 
-    class Inst_VOP3__V_ASHRREV_I32 : public Inst_VOP3
+    class Inst_VOP3__V_ASHRREV_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_ASHRREV_I32(InFmt_VOP3*);
+        Inst_VOP3__V_ASHRREV_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_ASHRREV_I32();
 
         int
@@ -46527,10 +46527,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_ASHRREV_I32
 
-    class Inst_VOP3__V_LSHLREV_B32 : public Inst_VOP3
+    class Inst_VOP3__V_LSHLREV_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LSHLREV_B32(InFmt_VOP3*);
+        Inst_VOP3__V_LSHLREV_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_LSHLREV_B32();
 
         int
@@ -46593,10 +46593,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LSHLREV_B32
 
-    class Inst_VOP3__V_AND_B32 : public Inst_VOP3
+    class Inst_VOP3__V_AND_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_AND_B32(InFmt_VOP3*);
+        Inst_VOP3__V_AND_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_AND_B32();
 
         int
@@ -46659,10 +46659,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_AND_B32
 
-    class Inst_VOP3__V_OR_B32 : public Inst_VOP3
+    class Inst_VOP3__V_OR_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_OR_B32(InFmt_VOP3*);
+        Inst_VOP3__V_OR_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_OR_B32();
 
         int
@@ -46725,10 +46725,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_OR_B32
 
-    class Inst_VOP3__V_XOR_B32 : public Inst_VOP3
+    class Inst_VOP3__V_XOR_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_XOR_B32(InFmt_VOP3*);
+        Inst_VOP3__V_XOR_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_XOR_B32();
 
         int
@@ -46791,10 +46791,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_XOR_B32
 
-    class Inst_VOP3__V_MAC_F32 : public Inst_VOP3
+    class Inst_VOP3__V_MAC_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAC_F32(InFmt_VOP3*);
+        Inst_VOP3__V_MAC_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAC_F32();
 
         int
@@ -46857,10 +46857,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAC_F32
 
-    class Inst_VOP3__V_ADD_U32 : public Inst_VOP3_SDST_ENC
+    class Inst_VOP3__V_ADD_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_ADD_U32(InFmt_VOP3_SDST_ENC*);
+        Inst_VOP3__V_ADD_U32(InFmt_VOP3B*);
         ~Inst_VOP3__V_ADD_U32();
 
         int
@@ -46929,10 +46929,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_ADD_U32
 
-    class Inst_VOP3__V_SUB_U32 : public Inst_VOP3_SDST_ENC
+    class Inst_VOP3__V_SUB_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_SUB_U32(InFmt_VOP3_SDST_ENC*);
+        Inst_VOP3__V_SUB_U32(InFmt_VOP3B*);
         ~Inst_VOP3__V_SUB_U32();
 
         int
@@ -47001,10 +47001,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SUB_U32
 
-    class Inst_VOP3__V_SUBREV_U32 : public Inst_VOP3_SDST_ENC
+    class Inst_VOP3__V_SUBREV_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_SUBREV_U32(InFmt_VOP3_SDST_ENC*);
+        Inst_VOP3__V_SUBREV_U32(InFmt_VOP3B*);
         ~Inst_VOP3__V_SUBREV_U32();
 
         int
@@ -47073,10 +47073,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SUBREV_U32
 
-    class Inst_VOP3__V_ADDC_U32 : public Inst_VOP3_SDST_ENC
+    class Inst_VOP3__V_ADDC_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_ADDC_U32(InFmt_VOP3_SDST_ENC*);
+        Inst_VOP3__V_ADDC_U32(InFmt_VOP3B*);
         ~Inst_VOP3__V_ADDC_U32();
 
         int
@@ -47151,10 +47151,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_ADDC_U32
 
-    class Inst_VOP3__V_SUBB_U32 : public Inst_VOP3_SDST_ENC
+    class Inst_VOP3__V_SUBB_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_SUBB_U32(InFmt_VOP3_SDST_ENC*);
+        Inst_VOP3__V_SUBB_U32(InFmt_VOP3B*);
         ~Inst_VOP3__V_SUBB_U32();
 
         int
@@ -47229,10 +47229,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SUBB_U32
 
-    class Inst_VOP3__V_SUBBREV_U32 : public Inst_VOP3_SDST_ENC
+    class Inst_VOP3__V_SUBBREV_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_SUBBREV_U32(InFmt_VOP3_SDST_ENC*);
+        Inst_VOP3__V_SUBBREV_U32(InFmt_VOP3B*);
         ~Inst_VOP3__V_SUBBREV_U32();
 
         int
@@ -47307,10 +47307,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SUBBREV_U32
 
-    class Inst_VOP3__V_ADD_F16 : public Inst_VOP3
+    class Inst_VOP3__V_ADD_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_ADD_F16(InFmt_VOP3*);
+        Inst_VOP3__V_ADD_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_ADD_F16();
 
         int
@@ -47373,10 +47373,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_ADD_F16
 
-    class Inst_VOP3__V_SUB_F16 : public Inst_VOP3
+    class Inst_VOP3__V_SUB_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SUB_F16(InFmt_VOP3*);
+        Inst_VOP3__V_SUB_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_SUB_F16();
 
         int
@@ -47439,10 +47439,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SUB_F16
 
-    class Inst_VOP3__V_SUBREV_F16 : public Inst_VOP3
+    class Inst_VOP3__V_SUBREV_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SUBREV_F16(InFmt_VOP3*);
+        Inst_VOP3__V_SUBREV_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_SUBREV_F16();
 
         int
@@ -47505,10 +47505,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SUBREV_F16
 
-    class Inst_VOP3__V_MUL_F16 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_F16(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_F16();
 
         int
@@ -47571,10 +47571,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_F16
 
-    class Inst_VOP3__V_MAC_F16 : public Inst_VOP3
+    class Inst_VOP3__V_MAC_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAC_F16(InFmt_VOP3*);
+        Inst_VOP3__V_MAC_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAC_F16();
 
         int
@@ -47637,10 +47637,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAC_F16
 
-    class Inst_VOP3__V_ADD_U16 : public Inst_VOP3
+    class Inst_VOP3__V_ADD_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_ADD_U16(InFmt_VOP3*);
+        Inst_VOP3__V_ADD_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_ADD_U16();
 
         int
@@ -47703,10 +47703,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_ADD_U16
 
-    class Inst_VOP3__V_SUB_U16 : public Inst_VOP3
+    class Inst_VOP3__V_SUB_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SUB_U16(InFmt_VOP3*);
+        Inst_VOP3__V_SUB_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_SUB_U16();
 
         int
@@ -47769,10 +47769,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SUB_U16
 
-    class Inst_VOP3__V_SUBREV_U16 : public Inst_VOP3
+    class Inst_VOP3__V_SUBREV_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SUBREV_U16(InFmt_VOP3*);
+        Inst_VOP3__V_SUBREV_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_SUBREV_U16();
 
         int
@@ -47835,10 +47835,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SUBREV_U16
 
-    class Inst_VOP3__V_MUL_LO_U16 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_LO_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_LO_U16(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_LO_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_LO_U16();
 
         int
@@ -47901,10 +47901,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_LO_U16
 
-    class Inst_VOP3__V_LSHLREV_B16 : public Inst_VOP3
+    class Inst_VOP3__V_LSHLREV_B16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LSHLREV_B16(InFmt_VOP3*);
+        Inst_VOP3__V_LSHLREV_B16(InFmt_VOP3A*);
         ~Inst_VOP3__V_LSHLREV_B16();
 
         int
@@ -47967,10 +47967,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LSHLREV_B16
 
-    class Inst_VOP3__V_LSHRREV_B16 : public Inst_VOP3
+    class Inst_VOP3__V_LSHRREV_B16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LSHRREV_B16(InFmt_VOP3*);
+        Inst_VOP3__V_LSHRREV_B16(InFmt_VOP3A*);
         ~Inst_VOP3__V_LSHRREV_B16();
 
         int
@@ -48033,10 +48033,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LSHRREV_B16
 
-    class Inst_VOP3__V_ASHRREV_I16 : public Inst_VOP3
+    class Inst_VOP3__V_ASHRREV_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_ASHRREV_I16(InFmt_VOP3*);
+        Inst_VOP3__V_ASHRREV_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_ASHRREV_I16();
 
         int
@@ -48099,10 +48099,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_ASHRREV_I16
 
-    class Inst_VOP3__V_MAX_F16 : public Inst_VOP3
+    class Inst_VOP3__V_MAX_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAX_F16(InFmt_VOP3*);
+        Inst_VOP3__V_MAX_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAX_F16();
 
         int
@@ -48165,10 +48165,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAX_F16
 
-    class Inst_VOP3__V_MIN_F16 : public Inst_VOP3
+    class Inst_VOP3__V_MIN_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MIN_F16(InFmt_VOP3*);
+        Inst_VOP3__V_MIN_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MIN_F16();
 
         int
@@ -48231,10 +48231,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MIN_F16
 
-    class Inst_VOP3__V_MAX_U16 : public Inst_VOP3
+    class Inst_VOP3__V_MAX_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAX_U16(InFmt_VOP3*);
+        Inst_VOP3__V_MAX_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAX_U16();
 
         int
@@ -48297,10 +48297,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAX_U16
 
-    class Inst_VOP3__V_MAX_I16 : public Inst_VOP3
+    class Inst_VOP3__V_MAX_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAX_I16(InFmt_VOP3*);
+        Inst_VOP3__V_MAX_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAX_I16();
 
         int
@@ -48363,10 +48363,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAX_I16
 
-    class Inst_VOP3__V_MIN_U16 : public Inst_VOP3
+    class Inst_VOP3__V_MIN_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MIN_U16(InFmt_VOP3*);
+        Inst_VOP3__V_MIN_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MIN_U16();
 
         int
@@ -48429,10 +48429,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MIN_U16
 
-    class Inst_VOP3__V_MIN_I16 : public Inst_VOP3
+    class Inst_VOP3__V_MIN_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MIN_I16(InFmt_VOP3*);
+        Inst_VOP3__V_MIN_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MIN_I16();
 
         int
@@ -48495,10 +48495,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MIN_I16
 
-    class Inst_VOP3__V_LDEXP_F16 : public Inst_VOP3
+    class Inst_VOP3__V_LDEXP_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LDEXP_F16(InFmt_VOP3*);
+        Inst_VOP3__V_LDEXP_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_LDEXP_F16();
 
         int
@@ -48561,10 +48561,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LDEXP_F16
 
-    class Inst_VOP3__V_NOP : public Inst_VOP3
+    class Inst_VOP3__V_NOP : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_NOP(InFmt_VOP3*);
+        Inst_VOP3__V_NOP(InFmt_VOP3A*);
         ~Inst_VOP3__V_NOP();
 
         int
@@ -48609,10 +48609,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_NOP
 
-    class Inst_VOP3__V_MOV_B32 : public Inst_VOP3
+    class Inst_VOP3__V_MOV_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MOV_B32(InFmt_VOP3*);
+        Inst_VOP3__V_MOV_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MOV_B32();
 
         int
@@ -48669,10 +48669,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MOV_B32
 
-    class Inst_VOP3__V_CVT_I32_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_I32_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_I32_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_I32_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_I32_F64();
 
         int
@@ -48729,10 +48729,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_I32_F64
 
-    class Inst_VOP3__V_CVT_F64_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F64_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F64_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F64_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F64_I32();
 
         int
@@ -48789,10 +48789,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F64_I32
 
-    class Inst_VOP3__V_CVT_F32_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F32_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F32_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F32_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F32_I32();
 
         int
@@ -48849,10 +48849,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F32_I32
 
-    class Inst_VOP3__V_CVT_F32_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F32_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F32_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F32_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F32_U32();
 
         int
@@ -48909,10 +48909,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F32_U32
 
-    class Inst_VOP3__V_CVT_U32_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_U32_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_U32_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_U32_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_U32_F32();
 
         int
@@ -48969,10 +48969,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_U32_F32
 
-    class Inst_VOP3__V_CVT_I32_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_I32_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_I32_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_I32_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_I32_F32();
 
         int
@@ -49029,10 +49029,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_I32_F32
 
-    class Inst_VOP3__V_MOV_FED_B32 : public Inst_VOP3
+    class Inst_VOP3__V_MOV_FED_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MOV_FED_B32(InFmt_VOP3*);
+        Inst_VOP3__V_MOV_FED_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MOV_FED_B32();
 
         int
@@ -49089,10 +49089,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MOV_FED_B32
 
-    class Inst_VOP3__V_CVT_F16_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F16_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F16_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F16_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F16_F32();
 
         int
@@ -49149,10 +49149,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F16_F32
 
-    class Inst_VOP3__V_CVT_F32_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F32_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F32_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F32_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F32_F16();
 
         int
@@ -49209,10 +49209,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F32_F16
 
-    class Inst_VOP3__V_CVT_RPI_I32_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_RPI_I32_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_RPI_I32_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_RPI_I32_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_RPI_I32_F32();
 
         int
@@ -49269,10 +49269,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_RPI_I32_F32
 
-    class Inst_VOP3__V_CVT_FLR_I32_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_FLR_I32_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_FLR_I32_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_FLR_I32_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_FLR_I32_F32();
 
         int
@@ -49329,10 +49329,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_FLR_I32_F32
 
-    class Inst_VOP3__V_CVT_OFF_F32_I4 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_OFF_F32_I4 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_OFF_F32_I4(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_OFF_F32_I4(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_OFF_F32_I4();
 
         int
@@ -49389,10 +49389,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_OFF_F32_I4
 
-    class Inst_VOP3__V_CVT_F32_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F32_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F32_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F32_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F32_F64();
 
         int
@@ -49449,10 +49449,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F32_F64
 
-    class Inst_VOP3__V_CVT_F64_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F64_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F64_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F64_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F64_F32();
 
         int
@@ -49509,10 +49509,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F64_F32
 
-    class Inst_VOP3__V_CVT_F32_UBYTE0 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F32_UBYTE0 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F32_UBYTE0(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F32_UBYTE0(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F32_UBYTE0();
 
         int
@@ -49569,10 +49569,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F32_UBYTE0
 
-    class Inst_VOP3__V_CVT_F32_UBYTE1 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F32_UBYTE1 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F32_UBYTE1(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F32_UBYTE1(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F32_UBYTE1();
 
         int
@@ -49629,10 +49629,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F32_UBYTE1
 
-    class Inst_VOP3__V_CVT_F32_UBYTE2 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F32_UBYTE2 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F32_UBYTE2(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F32_UBYTE2(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F32_UBYTE2();
 
         int
@@ -49689,10 +49689,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F32_UBYTE2
 
-    class Inst_VOP3__V_CVT_F32_UBYTE3 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F32_UBYTE3 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F32_UBYTE3(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F32_UBYTE3(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F32_UBYTE3();
 
         int
@@ -49749,10 +49749,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F32_UBYTE3
 
-    class Inst_VOP3__V_CVT_U32_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_U32_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_U32_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_U32_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_U32_F64();
 
         int
@@ -49809,10 +49809,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_U32_F64
 
-    class Inst_VOP3__V_CVT_F64_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F64_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F64_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F64_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F64_U32();
 
         int
@@ -49869,10 +49869,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F64_U32
 
-    class Inst_VOP3__V_TRUNC_F64 : public Inst_VOP3
+    class Inst_VOP3__V_TRUNC_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_TRUNC_F64(InFmt_VOP3*);
+        Inst_VOP3__V_TRUNC_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_TRUNC_F64();
 
         int
@@ -49929,10 +49929,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_TRUNC_F64
 
-    class Inst_VOP3__V_CEIL_F64 : public Inst_VOP3
+    class Inst_VOP3__V_CEIL_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CEIL_F64(InFmt_VOP3*);
+        Inst_VOP3__V_CEIL_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_CEIL_F64();
 
         int
@@ -49989,10 +49989,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CEIL_F64
 
-    class Inst_VOP3__V_RNDNE_F64 : public Inst_VOP3
+    class Inst_VOP3__V_RNDNE_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_RNDNE_F64(InFmt_VOP3*);
+        Inst_VOP3__V_RNDNE_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_RNDNE_F64();
 
         int
@@ -50049,10 +50049,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_RNDNE_F64
 
-    class Inst_VOP3__V_FLOOR_F64 : public Inst_VOP3
+    class Inst_VOP3__V_FLOOR_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FLOOR_F64(InFmt_VOP3*);
+        Inst_VOP3__V_FLOOR_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_FLOOR_F64();
 
         int
@@ -50109,10 +50109,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FLOOR_F64
 
-    class Inst_VOP3__V_FRACT_F32 : public Inst_VOP3
+    class Inst_VOP3__V_FRACT_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FRACT_F32(InFmt_VOP3*);
+        Inst_VOP3__V_FRACT_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_FRACT_F32();
 
         int
@@ -50169,10 +50169,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FRACT_F32
 
-    class Inst_VOP3__V_TRUNC_F32 : public Inst_VOP3
+    class Inst_VOP3__V_TRUNC_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_TRUNC_F32(InFmt_VOP3*);
+        Inst_VOP3__V_TRUNC_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_TRUNC_F32();
 
         int
@@ -50229,10 +50229,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_TRUNC_F32
 
-    class Inst_VOP3__V_CEIL_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CEIL_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CEIL_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CEIL_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CEIL_F32();
 
         int
@@ -50289,10 +50289,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CEIL_F32
 
-    class Inst_VOP3__V_RNDNE_F32 : public Inst_VOP3
+    class Inst_VOP3__V_RNDNE_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_RNDNE_F32(InFmt_VOP3*);
+        Inst_VOP3__V_RNDNE_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_RNDNE_F32();
 
         int
@@ -50349,10 +50349,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_RNDNE_F32
 
-    class Inst_VOP3__V_FLOOR_F32 : public Inst_VOP3
+    class Inst_VOP3__V_FLOOR_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FLOOR_F32(InFmt_VOP3*);
+        Inst_VOP3__V_FLOOR_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_FLOOR_F32();
 
         int
@@ -50409,10 +50409,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FLOOR_F32
 
-    class Inst_VOP3__V_EXP_F32 : public Inst_VOP3
+    class Inst_VOP3__V_EXP_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_EXP_F32(InFmt_VOP3*);
+        Inst_VOP3__V_EXP_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_EXP_F32();
 
         int
@@ -50469,10 +50469,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_EXP_F32
 
-    class Inst_VOP3__V_LOG_F32 : public Inst_VOP3
+    class Inst_VOP3__V_LOG_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LOG_F32(InFmt_VOP3*);
+        Inst_VOP3__V_LOG_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_LOG_F32();
 
         int
@@ -50529,10 +50529,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LOG_F32
 
-    class Inst_VOP3__V_RCP_F32 : public Inst_VOP3
+    class Inst_VOP3__V_RCP_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_RCP_F32(InFmt_VOP3*);
+        Inst_VOP3__V_RCP_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_RCP_F32();
 
         int
@@ -50589,10 +50589,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_RCP_F32
 
-    class Inst_VOP3__V_RCP_IFLAG_F32 : public Inst_VOP3
+    class Inst_VOP3__V_RCP_IFLAG_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_RCP_IFLAG_F32(InFmt_VOP3*);
+        Inst_VOP3__V_RCP_IFLAG_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_RCP_IFLAG_F32();
 
         int
@@ -50649,10 +50649,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_RCP_IFLAG_F32
 
-    class Inst_VOP3__V_RSQ_F32 : public Inst_VOP3
+    class Inst_VOP3__V_RSQ_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_RSQ_F32(InFmt_VOP3*);
+        Inst_VOP3__V_RSQ_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_RSQ_F32();
 
         int
@@ -50709,10 +50709,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_RSQ_F32
 
-    class Inst_VOP3__V_RCP_F64 : public Inst_VOP3
+    class Inst_VOP3__V_RCP_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_RCP_F64(InFmt_VOP3*);
+        Inst_VOP3__V_RCP_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_RCP_F64();
 
         int
@@ -50769,10 +50769,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_RCP_F64
 
-    class Inst_VOP3__V_RSQ_F64 : public Inst_VOP3
+    class Inst_VOP3__V_RSQ_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_RSQ_F64(InFmt_VOP3*);
+        Inst_VOP3__V_RSQ_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_RSQ_F64();
 
         int
@@ -50829,10 +50829,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_RSQ_F64
 
-    class Inst_VOP3__V_SQRT_F32 : public Inst_VOP3
+    class Inst_VOP3__V_SQRT_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SQRT_F32(InFmt_VOP3*);
+        Inst_VOP3__V_SQRT_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_SQRT_F32();
 
         int
@@ -50889,10 +50889,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SQRT_F32
 
-    class Inst_VOP3__V_SQRT_F64 : public Inst_VOP3
+    class Inst_VOP3__V_SQRT_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SQRT_F64(InFmt_VOP3*);
+        Inst_VOP3__V_SQRT_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_SQRT_F64();
 
         int
@@ -50949,10 +50949,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SQRT_F64
 
-    class Inst_VOP3__V_SIN_F32 : public Inst_VOP3
+    class Inst_VOP3__V_SIN_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SIN_F32(InFmt_VOP3*);
+        Inst_VOP3__V_SIN_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_SIN_F32();
 
         int
@@ -51009,10 +51009,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SIN_F32
 
-    class Inst_VOP3__V_COS_F32 : public Inst_VOP3
+    class Inst_VOP3__V_COS_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_COS_F32(InFmt_VOP3*);
+        Inst_VOP3__V_COS_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_COS_F32();
 
         int
@@ -51069,10 +51069,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_COS_F32
 
-    class Inst_VOP3__V_NOT_B32 : public Inst_VOP3
+    class Inst_VOP3__V_NOT_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_NOT_B32(InFmt_VOP3*);
+        Inst_VOP3__V_NOT_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_NOT_B32();
 
         int
@@ -51129,10 +51129,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_NOT_B32
 
-    class Inst_VOP3__V_BFREV_B32 : public Inst_VOP3
+    class Inst_VOP3__V_BFREV_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_BFREV_B32(InFmt_VOP3*);
+        Inst_VOP3__V_BFREV_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_BFREV_B32();
 
         int
@@ -51189,10 +51189,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_BFREV_B32
 
-    class Inst_VOP3__V_FFBH_U32 : public Inst_VOP3
+    class Inst_VOP3__V_FFBH_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FFBH_U32(InFmt_VOP3*);
+        Inst_VOP3__V_FFBH_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_FFBH_U32();
 
         int
@@ -51249,10 +51249,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FFBH_U32
 
-    class Inst_VOP3__V_FFBL_B32 : public Inst_VOP3
+    class Inst_VOP3__V_FFBL_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FFBL_B32(InFmt_VOP3*);
+        Inst_VOP3__V_FFBL_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_FFBL_B32();
 
         int
@@ -51309,10 +51309,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FFBL_B32
 
-    class Inst_VOP3__V_FFBH_I32 : public Inst_VOP3
+    class Inst_VOP3__V_FFBH_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FFBH_I32(InFmt_VOP3*);
+        Inst_VOP3__V_FFBH_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_FFBH_I32();
 
         int
@@ -51369,10 +51369,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FFBH_I32
 
-    class Inst_VOP3__V_FREXP_EXP_I32_F64 : public Inst_VOP3
+    class Inst_VOP3__V_FREXP_EXP_I32_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FREXP_EXP_I32_F64(InFmt_VOP3*);
+        Inst_VOP3__V_FREXP_EXP_I32_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_FREXP_EXP_I32_F64();
 
         int
@@ -51429,10 +51429,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FREXP_EXP_I32_F64
 
-    class Inst_VOP3__V_FREXP_MANT_F64 : public Inst_VOP3
+    class Inst_VOP3__V_FREXP_MANT_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FREXP_MANT_F64(InFmt_VOP3*);
+        Inst_VOP3__V_FREXP_MANT_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_FREXP_MANT_F64();
 
         int
@@ -51489,10 +51489,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FREXP_MANT_F64
 
-    class Inst_VOP3__V_FRACT_F64 : public Inst_VOP3
+    class Inst_VOP3__V_FRACT_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FRACT_F64(InFmt_VOP3*);
+        Inst_VOP3__V_FRACT_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_FRACT_F64();
 
         int
@@ -51549,10 +51549,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FRACT_F64
 
-    class Inst_VOP3__V_FREXP_EXP_I32_F32 : public Inst_VOP3
+    class Inst_VOP3__V_FREXP_EXP_I32_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FREXP_EXP_I32_F32(InFmt_VOP3*);
+        Inst_VOP3__V_FREXP_EXP_I32_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_FREXP_EXP_I32_F32();
 
         int
@@ -51609,10 +51609,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FREXP_EXP_I32_F32
 
-    class Inst_VOP3__V_FREXP_MANT_F32 : public Inst_VOP3
+    class Inst_VOP3__V_FREXP_MANT_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FREXP_MANT_F32(InFmt_VOP3*);
+        Inst_VOP3__V_FREXP_MANT_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_FREXP_MANT_F32();
 
         int
@@ -51669,10 +51669,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FREXP_MANT_F32
 
-    class Inst_VOP3__V_CLREXCP : public Inst_VOP3
+    class Inst_VOP3__V_CLREXCP : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CLREXCP(InFmt_VOP3*);
+        Inst_VOP3__V_CLREXCP(InFmt_VOP3A*);
         ~Inst_VOP3__V_CLREXCP();
 
         int
@@ -51717,10 +51717,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CLREXCP
 
-    class Inst_VOP3__V_CVT_F16_U16 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F16_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F16_U16(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F16_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F16_U16();
 
         int
@@ -51777,10 +51777,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F16_U16
 
-    class Inst_VOP3__V_CVT_F16_I16 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_F16_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_F16_I16(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_F16_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_F16_I16();
 
         int
@@ -51837,10 +51837,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_F16_I16
 
-    class Inst_VOP3__V_CVT_U16_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_U16_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_U16_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_U16_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_U16_F16();
 
         int
@@ -51897,10 +51897,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_U16_F16
 
-    class Inst_VOP3__V_CVT_I16_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_I16_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_I16_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_I16_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_I16_F16();
 
         int
@@ -51957,10 +51957,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_I16_F16
 
-    class Inst_VOP3__V_RCP_F16 : public Inst_VOP3
+    class Inst_VOP3__V_RCP_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_RCP_F16(InFmt_VOP3*);
+        Inst_VOP3__V_RCP_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_RCP_F16();
 
         int
@@ -52017,10 +52017,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_RCP_F16
 
-    class Inst_VOP3__V_SQRT_F16 : public Inst_VOP3
+    class Inst_VOP3__V_SQRT_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SQRT_F16(InFmt_VOP3*);
+        Inst_VOP3__V_SQRT_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_SQRT_F16();
 
         int
@@ -52077,10 +52077,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SQRT_F16
 
-    class Inst_VOP3__V_RSQ_F16 : public Inst_VOP3
+    class Inst_VOP3__V_RSQ_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_RSQ_F16(InFmt_VOP3*);
+        Inst_VOP3__V_RSQ_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_RSQ_F16();
 
         int
@@ -52137,10 +52137,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_RSQ_F16
 
-    class Inst_VOP3__V_LOG_F16 : public Inst_VOP3
+    class Inst_VOP3__V_LOG_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LOG_F16(InFmt_VOP3*);
+        Inst_VOP3__V_LOG_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_LOG_F16();
 
         int
@@ -52197,10 +52197,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LOG_F16
 
-    class Inst_VOP3__V_EXP_F16 : public Inst_VOP3
+    class Inst_VOP3__V_EXP_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_EXP_F16(InFmt_VOP3*);
+        Inst_VOP3__V_EXP_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_EXP_F16();
 
         int
@@ -52257,10 +52257,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_EXP_F16
 
-    class Inst_VOP3__V_FREXP_MANT_F16 : public Inst_VOP3
+    class Inst_VOP3__V_FREXP_MANT_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FREXP_MANT_F16(InFmt_VOP3*);
+        Inst_VOP3__V_FREXP_MANT_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_FREXP_MANT_F16();
 
         int
@@ -52317,10 +52317,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FREXP_MANT_F16
 
-    class Inst_VOP3__V_FREXP_EXP_I16_F16 : public Inst_VOP3
+    class Inst_VOP3__V_FREXP_EXP_I16_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FREXP_EXP_I16_F16(InFmt_VOP3*);
+        Inst_VOP3__V_FREXP_EXP_I16_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_FREXP_EXP_I16_F16();
 
         int
@@ -52377,10 +52377,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FREXP_EXP_I16_F16
 
-    class Inst_VOP3__V_FLOOR_F16 : public Inst_VOP3
+    class Inst_VOP3__V_FLOOR_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FLOOR_F16(InFmt_VOP3*);
+        Inst_VOP3__V_FLOOR_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_FLOOR_F16();
 
         int
@@ -52437,10 +52437,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FLOOR_F16
 
-    class Inst_VOP3__V_CEIL_F16 : public Inst_VOP3
+    class Inst_VOP3__V_CEIL_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CEIL_F16(InFmt_VOP3*);
+        Inst_VOP3__V_CEIL_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_CEIL_F16();
 
         int
@@ -52497,10 +52497,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CEIL_F16
 
-    class Inst_VOP3__V_TRUNC_F16 : public Inst_VOP3
+    class Inst_VOP3__V_TRUNC_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_TRUNC_F16(InFmt_VOP3*);
+        Inst_VOP3__V_TRUNC_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_TRUNC_F16();
 
         int
@@ -52557,10 +52557,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_TRUNC_F16
 
-    class Inst_VOP3__V_RNDNE_F16 : public Inst_VOP3
+    class Inst_VOP3__V_RNDNE_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_RNDNE_F16(InFmt_VOP3*);
+        Inst_VOP3__V_RNDNE_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_RNDNE_F16();
 
         int
@@ -52617,10 +52617,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_RNDNE_F16
 
-    class Inst_VOP3__V_FRACT_F16 : public Inst_VOP3
+    class Inst_VOP3__V_FRACT_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FRACT_F16(InFmt_VOP3*);
+        Inst_VOP3__V_FRACT_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_FRACT_F16();
 
         int
@@ -52677,10 +52677,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FRACT_F16
 
-    class Inst_VOP3__V_SIN_F16 : public Inst_VOP3
+    class Inst_VOP3__V_SIN_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SIN_F16(InFmt_VOP3*);
+        Inst_VOP3__V_SIN_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_SIN_F16();
 
         int
@@ -52737,10 +52737,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SIN_F16
 
-    class Inst_VOP3__V_COS_F16 : public Inst_VOP3
+    class Inst_VOP3__V_COS_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_COS_F16(InFmt_VOP3*);
+        Inst_VOP3__V_COS_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_COS_F16();
 
         int
@@ -52797,10 +52797,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_COS_F16
 
-    class Inst_VOP3__V_EXP_LEGACY_F32 : public Inst_VOP3
+    class Inst_VOP3__V_EXP_LEGACY_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_EXP_LEGACY_F32(InFmt_VOP3*);
+        Inst_VOP3__V_EXP_LEGACY_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_EXP_LEGACY_F32();
 
         int
@@ -52857,10 +52857,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_EXP_LEGACY_F32
 
-    class Inst_VOP3__V_LOG_LEGACY_F32 : public Inst_VOP3
+    class Inst_VOP3__V_LOG_LEGACY_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LOG_LEGACY_F32(InFmt_VOP3*);
+        Inst_VOP3__V_LOG_LEGACY_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_LOG_LEGACY_F32();
 
         int
@@ -52917,10 +52917,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LOG_LEGACY_F32
 
-    class Inst_VOP3__V_MAD_LEGACY_F32 : public Inst_VOP3
+    class Inst_VOP3__V_MAD_LEGACY_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAD_LEGACY_F32(InFmt_VOP3*);
+        Inst_VOP3__V_MAD_LEGACY_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAD_LEGACY_F32();
 
         int
@@ -52989,10 +52989,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAD_LEGACY_F32
 
-    class Inst_VOP3__V_MAD_F32 : public Inst_VOP3
+    class Inst_VOP3__V_MAD_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAD_F32(InFmt_VOP3*);
+        Inst_VOP3__V_MAD_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAD_F32();
 
         int
@@ -53061,10 +53061,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAD_F32
 
-    class Inst_VOP3__V_MAD_I32_I24 : public Inst_VOP3
+    class Inst_VOP3__V_MAD_I32_I24 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAD_I32_I24(InFmt_VOP3*);
+        Inst_VOP3__V_MAD_I32_I24(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAD_I32_I24();
 
         int
@@ -53133,10 +53133,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAD_I32_I24
 
-    class Inst_VOP3__V_MAD_U32_U24 : public Inst_VOP3
+    class Inst_VOP3__V_MAD_U32_U24 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAD_U32_U24(InFmt_VOP3*);
+        Inst_VOP3__V_MAD_U32_U24(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAD_U32_U24();
 
         int
@@ -53205,10 +53205,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAD_U32_U24
 
-    class Inst_VOP3__V_CUBEID_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CUBEID_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CUBEID_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CUBEID_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CUBEID_F32();
 
         int
@@ -53277,10 +53277,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CUBEID_F32
 
-    class Inst_VOP3__V_CUBESC_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CUBESC_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CUBESC_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CUBESC_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CUBESC_F32();
 
         int
@@ -53349,10 +53349,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CUBESC_F32
 
-    class Inst_VOP3__V_CUBETC_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CUBETC_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CUBETC_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CUBETC_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CUBETC_F32();
 
         int
@@ -53421,10 +53421,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CUBETC_F32
 
-    class Inst_VOP3__V_CUBEMA_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CUBEMA_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CUBEMA_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CUBEMA_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CUBEMA_F32();
 
         int
@@ -53493,10 +53493,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CUBEMA_F32
 
-    class Inst_VOP3__V_BFE_U32 : public Inst_VOP3
+    class Inst_VOP3__V_BFE_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_BFE_U32(InFmt_VOP3*);
+        Inst_VOP3__V_BFE_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_BFE_U32();
 
         int
@@ -53565,10 +53565,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_BFE_U32
 
-    class Inst_VOP3__V_BFE_I32 : public Inst_VOP3
+    class Inst_VOP3__V_BFE_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_BFE_I32(InFmt_VOP3*);
+        Inst_VOP3__V_BFE_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_BFE_I32();
 
         int
@@ -53637,10 +53637,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_BFE_I32
 
-    class Inst_VOP3__V_BFI_B32 : public Inst_VOP3
+    class Inst_VOP3__V_BFI_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_BFI_B32(InFmt_VOP3*);
+        Inst_VOP3__V_BFI_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_BFI_B32();
 
         int
@@ -53709,10 +53709,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_BFI_B32
 
-    class Inst_VOP3__V_FMA_F32 : public Inst_VOP3
+    class Inst_VOP3__V_FMA_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FMA_F32(InFmt_VOP3*);
+        Inst_VOP3__V_FMA_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_FMA_F32();
 
         int
@@ -53781,10 +53781,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FMA_F32
 
-    class Inst_VOP3__V_FMA_F64 : public Inst_VOP3
+    class Inst_VOP3__V_FMA_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FMA_F64(InFmt_VOP3*);
+        Inst_VOP3__V_FMA_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_FMA_F64();
 
         int
@@ -53853,10 +53853,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FMA_F64
 
-    class Inst_VOP3__V_LERP_U8 : public Inst_VOP3
+    class Inst_VOP3__V_LERP_U8 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LERP_U8(InFmt_VOP3*);
+        Inst_VOP3__V_LERP_U8(InFmt_VOP3A*);
         ~Inst_VOP3__V_LERP_U8();
 
         int
@@ -53925,10 +53925,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LERP_U8
 
-    class Inst_VOP3__V_ALIGNBIT_B32 : public Inst_VOP3
+    class Inst_VOP3__V_ALIGNBIT_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_ALIGNBIT_B32(InFmt_VOP3*);
+        Inst_VOP3__V_ALIGNBIT_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_ALIGNBIT_B32();
 
         int
@@ -53997,10 +53997,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_ALIGNBIT_B32
 
-    class Inst_VOP3__V_ALIGNBYTE_B32 : public Inst_VOP3
+    class Inst_VOP3__V_ALIGNBYTE_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_ALIGNBYTE_B32(InFmt_VOP3*);
+        Inst_VOP3__V_ALIGNBYTE_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_ALIGNBYTE_B32();
 
         int
@@ -54069,10 +54069,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_ALIGNBYTE_B32
 
-    class Inst_VOP3__V_MIN3_F32 : public Inst_VOP3
+    class Inst_VOP3__V_MIN3_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MIN3_F32(InFmt_VOP3*);
+        Inst_VOP3__V_MIN3_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MIN3_F32();
 
         int
@@ -54141,10 +54141,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MIN3_F32
 
-    class Inst_VOP3__V_MIN3_I32 : public Inst_VOP3
+    class Inst_VOP3__V_MIN3_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MIN3_I32(InFmt_VOP3*);
+        Inst_VOP3__V_MIN3_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MIN3_I32();
 
         int
@@ -54213,10 +54213,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MIN3_I32
 
-    class Inst_VOP3__V_MIN3_U32 : public Inst_VOP3
+    class Inst_VOP3__V_MIN3_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MIN3_U32(InFmt_VOP3*);
+        Inst_VOP3__V_MIN3_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MIN3_U32();
 
         int
@@ -54285,10 +54285,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MIN3_U32
 
-    class Inst_VOP3__V_MAX3_F32 : public Inst_VOP3
+    class Inst_VOP3__V_MAX3_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAX3_F32(InFmt_VOP3*);
+        Inst_VOP3__V_MAX3_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAX3_F32();
 
         int
@@ -54357,10 +54357,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAX3_F32
 
-    class Inst_VOP3__V_MAX3_I32 : public Inst_VOP3
+    class Inst_VOP3__V_MAX3_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAX3_I32(InFmt_VOP3*);
+        Inst_VOP3__V_MAX3_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAX3_I32();
 
         int
@@ -54429,10 +54429,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAX3_I32
 
-    class Inst_VOP3__V_MAX3_U32 : public Inst_VOP3
+    class Inst_VOP3__V_MAX3_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAX3_U32(InFmt_VOP3*);
+        Inst_VOP3__V_MAX3_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAX3_U32();
 
         int
@@ -54501,10 +54501,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAX3_U32
 
-    class Inst_VOP3__V_MED3_F32 : public Inst_VOP3
+    class Inst_VOP3__V_MED3_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MED3_F32(InFmt_VOP3*);
+        Inst_VOP3__V_MED3_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MED3_F32();
 
         int
@@ -54573,10 +54573,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MED3_F32
 
-    class Inst_VOP3__V_MED3_I32 : public Inst_VOP3
+    class Inst_VOP3__V_MED3_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MED3_I32(InFmt_VOP3*);
+        Inst_VOP3__V_MED3_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MED3_I32();
 
         int
@@ -54645,10 +54645,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MED3_I32
 
-    class Inst_VOP3__V_MED3_U32 : public Inst_VOP3
+    class Inst_VOP3__V_MED3_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MED3_U32(InFmt_VOP3*);
+        Inst_VOP3__V_MED3_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MED3_U32();
 
         int
@@ -54717,10 +54717,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MED3_U32
 
-    class Inst_VOP3__V_SAD_U8 : public Inst_VOP3
+    class Inst_VOP3__V_SAD_U8 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SAD_U8(InFmt_VOP3*);
+        Inst_VOP3__V_SAD_U8(InFmt_VOP3A*);
         ~Inst_VOP3__V_SAD_U8();
 
         int
@@ -54789,10 +54789,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SAD_U8
 
-    class Inst_VOP3__V_SAD_HI_U8 : public Inst_VOP3
+    class Inst_VOP3__V_SAD_HI_U8 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SAD_HI_U8(InFmt_VOP3*);
+        Inst_VOP3__V_SAD_HI_U8(InFmt_VOP3A*);
         ~Inst_VOP3__V_SAD_HI_U8();
 
         int
@@ -54861,10 +54861,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SAD_HI_U8
 
-    class Inst_VOP3__V_SAD_U16 : public Inst_VOP3
+    class Inst_VOP3__V_SAD_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SAD_U16(InFmt_VOP3*);
+        Inst_VOP3__V_SAD_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_SAD_U16();
 
         int
@@ -54933,10 +54933,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SAD_U16
 
-    class Inst_VOP3__V_SAD_U32 : public Inst_VOP3
+    class Inst_VOP3__V_SAD_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_SAD_U32(InFmt_VOP3*);
+        Inst_VOP3__V_SAD_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_SAD_U32();
 
         int
@@ -55005,10 +55005,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_SAD_U32
 
-    class Inst_VOP3__V_CVT_PK_U8_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_PK_U8_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_PK_U8_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_PK_U8_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_PK_U8_F32();
 
         int
@@ -55077,10 +55077,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_PK_U8_F32
 
-    class Inst_VOP3__V_DIV_FIXUP_F32 : public Inst_VOP3
+    class Inst_VOP3__V_DIV_FIXUP_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_DIV_FIXUP_F32(InFmt_VOP3*);
+        Inst_VOP3__V_DIV_FIXUP_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_DIV_FIXUP_F32();
 
         int
@@ -55149,10 +55149,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_DIV_FIXUP_F32
 
-    class Inst_VOP3__V_DIV_FIXUP_F64 : public Inst_VOP3
+    class Inst_VOP3__V_DIV_FIXUP_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_DIV_FIXUP_F64(InFmt_VOP3*);
+        Inst_VOP3__V_DIV_FIXUP_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_DIV_FIXUP_F64();
 
         int
@@ -55221,10 +55221,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_DIV_FIXUP_F64
 
-    class Inst_VOP3__V_DIV_SCALE_F32 : public Inst_VOP3_SDST_ENC
+    class Inst_VOP3__V_DIV_SCALE_F32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_DIV_SCALE_F32(InFmt_VOP3_SDST_ENC*);
+        Inst_VOP3__V_DIV_SCALE_F32(InFmt_VOP3B*);
         ~Inst_VOP3__V_DIV_SCALE_F32();
 
         int
@@ -55299,10 +55299,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_DIV_SCALE_F32
 
-    class Inst_VOP3__V_DIV_SCALE_F64 : public Inst_VOP3_SDST_ENC
+    class Inst_VOP3__V_DIV_SCALE_F64 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_DIV_SCALE_F64(InFmt_VOP3_SDST_ENC*);
+        Inst_VOP3__V_DIV_SCALE_F64(InFmt_VOP3B*);
         ~Inst_VOP3__V_DIV_SCALE_F64();
 
         int
@@ -55377,10 +55377,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_DIV_SCALE_F64
 
-    class Inst_VOP3__V_DIV_FMAS_F32 : public Inst_VOP3
+    class Inst_VOP3__V_DIV_FMAS_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_DIV_FMAS_F32(InFmt_VOP3*);
+        Inst_VOP3__V_DIV_FMAS_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_DIV_FMAS_F32();
 
         int
@@ -55455,10 +55455,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_DIV_FMAS_F32
 
-    class Inst_VOP3__V_DIV_FMAS_F64 : public Inst_VOP3
+    class Inst_VOP3__V_DIV_FMAS_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_DIV_FMAS_F64(InFmt_VOP3*);
+        Inst_VOP3__V_DIV_FMAS_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_DIV_FMAS_F64();
 
         int
@@ -55527,10 +55527,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_DIV_FMAS_F64
 
-    class Inst_VOP3__V_MSAD_U8 : public Inst_VOP3
+    class Inst_VOP3__V_MSAD_U8 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MSAD_U8(InFmt_VOP3*);
+        Inst_VOP3__V_MSAD_U8(InFmt_VOP3A*);
         ~Inst_VOP3__V_MSAD_U8();
 
         int
@@ -55599,10 +55599,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MSAD_U8
 
-    class Inst_VOP3__V_QSAD_PK_U16_U8 : public Inst_VOP3
+    class Inst_VOP3__V_QSAD_PK_U16_U8 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_QSAD_PK_U16_U8(InFmt_VOP3*);
+        Inst_VOP3__V_QSAD_PK_U16_U8(InFmt_VOP3A*);
         ~Inst_VOP3__V_QSAD_PK_U16_U8();
 
         int
@@ -55671,10 +55671,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_QSAD_PK_U16_U8
 
-    class Inst_VOP3__V_MQSAD_PK_U16_U8 : public Inst_VOP3
+    class Inst_VOP3__V_MQSAD_PK_U16_U8 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MQSAD_PK_U16_U8(InFmt_VOP3*);
+        Inst_VOP3__V_MQSAD_PK_U16_U8(InFmt_VOP3A*);
         ~Inst_VOP3__V_MQSAD_PK_U16_U8();
 
         int
@@ -55743,10 +55743,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MQSAD_PK_U16_U8
 
-    class Inst_VOP3__V_MQSAD_U32_U8 : public Inst_VOP3
+    class Inst_VOP3__V_MQSAD_U32_U8 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MQSAD_U32_U8(InFmt_VOP3*);
+        Inst_VOP3__V_MQSAD_U32_U8(InFmt_VOP3A*);
         ~Inst_VOP3__V_MQSAD_U32_U8();
 
         int
@@ -55815,10 +55815,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MQSAD_U32_U8
 
-    class Inst_VOP3__V_MAD_U64_U32 : public Inst_VOP3_SDST_ENC
+    class Inst_VOP3__V_MAD_U64_U32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_MAD_U64_U32(InFmt_VOP3_SDST_ENC*);
+        Inst_VOP3__V_MAD_U64_U32(InFmt_VOP3B*);
         ~Inst_VOP3__V_MAD_U64_U32();
 
         int
@@ -55893,10 +55893,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAD_U64_U32
 
-    class Inst_VOP3__V_MAD_I64_I32 : public Inst_VOP3_SDST_ENC
+    class Inst_VOP3__V_MAD_I64_I32 : public Inst_VOP3B
     {
       public:
-        Inst_VOP3__V_MAD_I64_I32(InFmt_VOP3_SDST_ENC*);
+        Inst_VOP3__V_MAD_I64_I32(InFmt_VOP3B*);
         ~Inst_VOP3__V_MAD_I64_I32();
 
         int
@@ -55971,10 +55971,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAD_I64_I32
 
-    class Inst_VOP3__V_MAD_F16 : public Inst_VOP3
+    class Inst_VOP3__V_MAD_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAD_F16(InFmt_VOP3*);
+        Inst_VOP3__V_MAD_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAD_F16();
 
         int
@@ -56043,10 +56043,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAD_F16
 
-    class Inst_VOP3__V_MAD_U16 : public Inst_VOP3
+    class Inst_VOP3__V_MAD_U16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAD_U16(InFmt_VOP3*);
+        Inst_VOP3__V_MAD_U16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAD_U16();
 
         int
@@ -56115,10 +56115,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAD_U16
 
-    class Inst_VOP3__V_MAD_I16 : public Inst_VOP3
+    class Inst_VOP3__V_MAD_I16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAD_I16(InFmt_VOP3*);
+        Inst_VOP3__V_MAD_I16(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAD_I16();
 
         int
@@ -56187,10 +56187,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAD_I16
 
-    class Inst_VOP3__V_PERM_B32 : public Inst_VOP3
+    class Inst_VOP3__V_PERM_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_PERM_B32(InFmt_VOP3*);
+        Inst_VOP3__V_PERM_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_PERM_B32();
 
         int
@@ -56287,10 +56287,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_PERM_B32
 
-    class Inst_VOP3__V_FMA_F16 : public Inst_VOP3
+    class Inst_VOP3__V_FMA_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_FMA_F16(InFmt_VOP3*);
+        Inst_VOP3__V_FMA_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_FMA_F16();
 
         int
@@ -56359,10 +56359,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_FMA_F16
 
-    class Inst_VOP3__V_DIV_FIXUP_F16 : public Inst_VOP3
+    class Inst_VOP3__V_DIV_FIXUP_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_DIV_FIXUP_F16(InFmt_VOP3*);
+        Inst_VOP3__V_DIV_FIXUP_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_DIV_FIXUP_F16();
 
         int
@@ -56431,10 +56431,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_DIV_FIXUP_F16
 
-    class Inst_VOP3__V_CVT_PKACCUM_U8_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_PKACCUM_U8_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_PKACCUM_U8_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_PKACCUM_U8_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_PKACCUM_U8_F32();
 
         int
@@ -56497,10 +56497,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_PKACCUM_U8_F32
 
-    class Inst_VOP3__V_INTERP_P1_F32 : public Inst_VOP3
+    class Inst_VOP3__V_INTERP_P1_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_INTERP_P1_F32(InFmt_VOP3*);
+        Inst_VOP3__V_INTERP_P1_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_INTERP_P1_F32();
 
         int
@@ -56563,10 +56563,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_INTERP_P1_F32
 
-    class Inst_VOP3__V_INTERP_P2_F32 : public Inst_VOP3
+    class Inst_VOP3__V_INTERP_P2_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_INTERP_P2_F32(InFmt_VOP3*);
+        Inst_VOP3__V_INTERP_P2_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_INTERP_P2_F32();
 
         int
@@ -56629,10 +56629,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_INTERP_P2_F32
 
-    class Inst_VOP3__V_INTERP_MOV_F32 : public Inst_VOP3
+    class Inst_VOP3__V_INTERP_MOV_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_INTERP_MOV_F32(InFmt_VOP3*);
+        Inst_VOP3__V_INTERP_MOV_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_INTERP_MOV_F32();
 
         int
@@ -56695,10 +56695,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_INTERP_MOV_F32
 
-    class Inst_VOP3__V_INTERP_P1LL_F16 : public Inst_VOP3
+    class Inst_VOP3__V_INTERP_P1LL_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_INTERP_P1LL_F16(InFmt_VOP3*);
+        Inst_VOP3__V_INTERP_P1LL_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_INTERP_P1LL_F16();
 
         int
@@ -56761,10 +56761,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_INTERP_P1LL_F16
 
-    class Inst_VOP3__V_INTERP_P1LV_F16 : public Inst_VOP3
+    class Inst_VOP3__V_INTERP_P1LV_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_INTERP_P1LV_F16(InFmt_VOP3*);
+        Inst_VOP3__V_INTERP_P1LV_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_INTERP_P1LV_F16();
 
         int
@@ -56833,10 +56833,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_INTERP_P1LV_F16
 
-    class Inst_VOP3__V_INTERP_P2_F16 : public Inst_VOP3
+    class Inst_VOP3__V_INTERP_P2_F16 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_INTERP_P2_F16(InFmt_VOP3*);
+        Inst_VOP3__V_INTERP_P2_F16(InFmt_VOP3A*);
         ~Inst_VOP3__V_INTERP_P2_F16();
 
         int
@@ -56905,10 +56905,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_INTERP_P2_F16
 
-    class Inst_VOP3__V_ADD_F64 : public Inst_VOP3
+    class Inst_VOP3__V_ADD_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_ADD_F64(InFmt_VOP3*);
+        Inst_VOP3__V_ADD_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_ADD_F64();
 
         int
@@ -56971,10 +56971,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_ADD_F64
 
-    class Inst_VOP3__V_MUL_F64 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_F64(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_F64();
 
         int
@@ -57037,10 +57037,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_F64
 
-    class Inst_VOP3__V_MIN_F64 : public Inst_VOP3
+    class Inst_VOP3__V_MIN_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MIN_F64(InFmt_VOP3*);
+        Inst_VOP3__V_MIN_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_MIN_F64();
 
         int
@@ -57103,10 +57103,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MIN_F64
 
-    class Inst_VOP3__V_MAX_F64 : public Inst_VOP3
+    class Inst_VOP3__V_MAX_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MAX_F64(InFmt_VOP3*);
+        Inst_VOP3__V_MAX_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_MAX_F64();
 
         int
@@ -57169,10 +57169,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MAX_F64
 
-    class Inst_VOP3__V_LDEXP_F64 : public Inst_VOP3
+    class Inst_VOP3__V_LDEXP_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LDEXP_F64(InFmt_VOP3*);
+        Inst_VOP3__V_LDEXP_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_LDEXP_F64();
 
         int
@@ -57235,10 +57235,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LDEXP_F64
 
-    class Inst_VOP3__V_MUL_LO_U32 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_LO_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_LO_U32(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_LO_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_LO_U32();
 
         int
@@ -57301,10 +57301,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_LO_U32
 
-    class Inst_VOP3__V_MUL_HI_U32 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_HI_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_HI_U32(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_HI_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_HI_U32();
 
         int
@@ -57367,10 +57367,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_HI_U32
 
-    class Inst_VOP3__V_MUL_HI_I32 : public Inst_VOP3
+    class Inst_VOP3__V_MUL_HI_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MUL_HI_I32(InFmt_VOP3*);
+        Inst_VOP3__V_MUL_HI_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MUL_HI_I32();
 
         int
@@ -57433,10 +57433,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MUL_HI_I32
 
-    class Inst_VOP3__V_LDEXP_F32 : public Inst_VOP3
+    class Inst_VOP3__V_LDEXP_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LDEXP_F32(InFmt_VOP3*);
+        Inst_VOP3__V_LDEXP_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_LDEXP_F32();
 
         int
@@ -57499,10 +57499,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LDEXP_F32
 
-    class Inst_VOP3__V_READLANE_B32 : public Inst_VOP3
+    class Inst_VOP3__V_READLANE_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_READLANE_B32(InFmt_VOP3*);
+        Inst_VOP3__V_READLANE_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_READLANE_B32();
 
         int
@@ -57565,10 +57565,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_READLANE_B32
 
-    class Inst_VOP3__V_WRITELANE_B32 : public Inst_VOP3
+    class Inst_VOP3__V_WRITELANE_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_WRITELANE_B32(InFmt_VOP3*);
+        Inst_VOP3__V_WRITELANE_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_WRITELANE_B32();
 
         int
@@ -57631,10 +57631,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_WRITELANE_B32
 
-    class Inst_VOP3__V_BCNT_U32_B32 : public Inst_VOP3
+    class Inst_VOP3__V_BCNT_U32_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_BCNT_U32_B32(InFmt_VOP3*);
+        Inst_VOP3__V_BCNT_U32_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_BCNT_U32_B32();
 
         int
@@ -57697,10 +57697,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_BCNT_U32_B32
 
-    class Inst_VOP3__V_MBCNT_LO_U32_B32 : public Inst_VOP3
+    class Inst_VOP3__V_MBCNT_LO_U32_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MBCNT_LO_U32_B32(InFmt_VOP3*);
+        Inst_VOP3__V_MBCNT_LO_U32_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MBCNT_LO_U32_B32();
 
         int
@@ -57763,10 +57763,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MBCNT_LO_U32_B32
 
-    class Inst_VOP3__V_MBCNT_HI_U32_B32 : public Inst_VOP3
+    class Inst_VOP3__V_MBCNT_HI_U32_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_MBCNT_HI_U32_B32(InFmt_VOP3*);
+        Inst_VOP3__V_MBCNT_HI_U32_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_MBCNT_HI_U32_B32();
 
         int
@@ -57829,10 +57829,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_MBCNT_HI_U32_B32
 
-    class Inst_VOP3__V_LSHLREV_B64 : public Inst_VOP3
+    class Inst_VOP3__V_LSHLREV_B64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LSHLREV_B64(InFmt_VOP3*);
+        Inst_VOP3__V_LSHLREV_B64(InFmt_VOP3A*);
         ~Inst_VOP3__V_LSHLREV_B64();
 
         int
@@ -57895,10 +57895,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LSHLREV_B64
 
-    class Inst_VOP3__V_LSHRREV_B64 : public Inst_VOP3
+    class Inst_VOP3__V_LSHRREV_B64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_LSHRREV_B64(InFmt_VOP3*);
+        Inst_VOP3__V_LSHRREV_B64(InFmt_VOP3A*);
         ~Inst_VOP3__V_LSHRREV_B64();
 
         int
@@ -57961,10 +57961,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_LSHRREV_B64
 
-    class Inst_VOP3__V_ASHRREV_I64 : public Inst_VOP3
+    class Inst_VOP3__V_ASHRREV_I64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_ASHRREV_I64(InFmt_VOP3*);
+        Inst_VOP3__V_ASHRREV_I64(InFmt_VOP3A*);
         ~Inst_VOP3__V_ASHRREV_I64();
 
         int
@@ -58027,10 +58027,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_ASHRREV_I64
 
-    class Inst_VOP3__V_TRIG_PREOP_F64 : public Inst_VOP3
+    class Inst_VOP3__V_TRIG_PREOP_F64 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_TRIG_PREOP_F64(InFmt_VOP3*);
+        Inst_VOP3__V_TRIG_PREOP_F64(InFmt_VOP3A*);
         ~Inst_VOP3__V_TRIG_PREOP_F64();
 
         int
@@ -58093,10 +58093,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_TRIG_PREOP_F64
 
-    class Inst_VOP3__V_BFM_B32 : public Inst_VOP3
+    class Inst_VOP3__V_BFM_B32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_BFM_B32(InFmt_VOP3*);
+        Inst_VOP3__V_BFM_B32(InFmt_VOP3A*);
         ~Inst_VOP3__V_BFM_B32();
 
         int
@@ -58159,10 +58159,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_BFM_B32
 
-    class Inst_VOP3__V_CVT_PKNORM_I16_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_PKNORM_I16_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_PKNORM_I16_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_PKNORM_I16_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_PKNORM_I16_F32();
 
         int
@@ -58225,10 +58225,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_PKNORM_I16_F32
 
-    class Inst_VOP3__V_CVT_PKNORM_U16_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_PKNORM_U16_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_PKNORM_U16_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_PKNORM_U16_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_PKNORM_U16_F32();
 
         int
@@ -58291,10 +58291,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_PKNORM_U16_F32
 
-    class Inst_VOP3__V_CVT_PKRTZ_F16_F32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_PKRTZ_F16_F32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_PKRTZ_F16_F32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_PKRTZ_F16_F32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_PKRTZ_F16_F32();
 
         int
@@ -58357,10 +58357,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_PKRTZ_F16_F32
 
-    class Inst_VOP3__V_CVT_PK_U16_U32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_PK_U16_U32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_PK_U16_U32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_PK_U16_U32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_PK_U16_U32();
 
         int
@@ -58423,10 +58423,10 @@ namespace VegaISA
         void execute(GPUDynInstPtr) override;
     }; // Inst_VOP3__V_CVT_PK_U16_U32
 
-    class Inst_VOP3__V_CVT_PK_I16_I32 : public Inst_VOP3
+    class Inst_VOP3__V_CVT_PK_I16_I32 : public Inst_VOP3A
     {
       public:
-        Inst_VOP3__V_CVT_PK_I16_I32(InFmt_VOP3*);
+        Inst_VOP3__V_CVT_PK_I16_I32(InFmt_VOP3A*);
         ~Inst_VOP3__V_CVT_PK_I16_I32();
 
         int

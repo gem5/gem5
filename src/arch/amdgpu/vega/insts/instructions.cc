@@ -5952,14 +5952,14 @@ namespace VegaISA
 
             DPRINTF(VEGA, "Handling V_ADD_F32 SRC DPP. SRC0: register v[%d], "
                     "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
-                    "SRC1_ABS: %d, SRC1_NEG: %d, BOUND_CTRL: %d, "
+                    "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
                     "BANK_MASK: %d, ROW_MASK: %d\n", extData.iFmt_VOP_DPP.SRC0,
                     extData.iFmt_VOP_DPP.DPP_CTRL,
                     extData.iFmt_VOP_DPP.SRC0_ABS,
                     extData.iFmt_VOP_DPP.SRC0_NEG,
                     extData.iFmt_VOP_DPP.SRC1_ABS,
                     extData.iFmt_VOP_DPP.SRC1_NEG,
-                    extData.iFmt_VOP_DPP.BOUND_CTRL,
+                    extData.iFmt_VOP_DPP.BC,
                     extData.iFmt_VOP_DPP.BANK_MASK,
                     extData.iFmt_VOP_DPP.ROW_MASK);
 
@@ -6280,12 +6280,12 @@ namespace VegaISA
             origSrc1.read();
 
             DPRINTF(VEGA, "Handling V_MUL_U32_U24 SRC SDWA. SRC0: register "
-                    "v[%d], DST_SEL: %d, DST_UNUSED: %d, CLAMP: %d, SRC0_SEL: "
+                    "v[%d], DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: "
                     "%d, SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: "
                     "%d, SRC1_SEXT: %d, SRC1_NEG: %d, SRC1_ABS: %d\n",
                     extData.iFmt_VOP_SDWA.SRC0, extData.iFmt_VOP_SDWA.DST_SEL,
-                    extData.iFmt_VOP_SDWA.DST_UNUSED,
-                    extData.iFmt_VOP_SDWA.CLAMP,
+                    extData.iFmt_VOP_SDWA.DST_U,
+                    extData.iFmt_VOP_SDWA.CLMP,
                     extData.iFmt_VOP_SDWA.SRC0_SEL,
                     extData.iFmt_VOP_SDWA.SRC0_SEXT,
                     extData.iFmt_VOP_SDWA.SRC0_NEG,
@@ -6664,12 +6664,12 @@ namespace VegaISA
             origSrc1.read();
 
             DPRINTF(VEGA, "Handling V_LSHLREV_B32 SRC SDWA. SRC0: register "
-                    "v[%d], DST_SEL: %d, DST_UNUSED: %d, CLAMP: %d, SRC0_SEL: "
+                    "v[%d], DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: "
                     "%d, SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: "
                     "%d, SRC1_SEXT: %d, SRC1_NEG: %d, SRC1_ABS: %d\n",
                     extData.iFmt_VOP_SDWA.SRC0, extData.iFmt_VOP_SDWA.DST_SEL,
-                    extData.iFmt_VOP_SDWA.DST_UNUSED,
-                    extData.iFmt_VOP_SDWA.CLAMP,
+                    extData.iFmt_VOP_SDWA.DST_U,
+                    extData.iFmt_VOP_SDWA.CLMP,
                     extData.iFmt_VOP_SDWA.SRC0_SEL,
                     extData.iFmt_VOP_SDWA.SRC0_SEXT,
                     extData.iFmt_VOP_SDWA.SRC0_NEG,
@@ -6773,12 +6773,12 @@ namespace VegaISA
             origSrc1.read();
 
             DPRINTF(VEGA, "Handling V_OR_B32 SRC SDWA. SRC0: register v[%d], "
-                    "DST_SEL: %d, DST_UNUSED: %d, CLAMP: %d, SRC0_SEL: %d, "
+                    "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, "
                     "SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, "
                     "SRC1_SEXT: %d, SRC1_NEG: %d, SRC1_ABS: %d\n",
                     extData.iFmt_VOP_SDWA.SRC0, extData.iFmt_VOP_SDWA.DST_SEL,
-                    extData.iFmt_VOP_SDWA.DST_UNUSED,
-                    extData.iFmt_VOP_SDWA.CLAMP,
+                    extData.iFmt_VOP_SDWA.DST_U,
+                    extData.iFmt_VOP_SDWA.CLMP,
                     extData.iFmt_VOP_SDWA.SRC0_SEL,
                     extData.iFmt_VOP_SDWA.SRC0_SEXT,
                     extData.iFmt_VOP_SDWA.SRC0_NEG,
@@ -6879,14 +6879,14 @@ namespace VegaISA
 
             DPRINTF(VEGA, "Handling V_MAC_F32 SRC DPP. SRC0: register v[%d], "
                     "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
-                    "SRC1_ABS: %d, SRC1_NEG: %d, BOUND_CTRL: %d, "
+                    "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
                     "BANK_MASK: %d, ROW_MASK: %d\n", extData.iFmt_VOP_DPP.SRC0,
                     extData.iFmt_VOP_DPP.DPP_CTRL,
                     extData.iFmt_VOP_DPP.SRC0_ABS,
                     extData.iFmt_VOP_DPP.SRC0_NEG,
                     extData.iFmt_VOP_DPP.SRC1_ABS,
                     extData.iFmt_VOP_DPP.SRC1_NEG,
-                    extData.iFmt_VOP_DPP.BOUND_CTRL,
+                    extData.iFmt_VOP_DPP.BC,
                     extData.iFmt_VOP_DPP.BANK_MASK,
                     extData.iFmt_VOP_DPP.ROW_MASK);
 
@@ -7032,12 +7032,12 @@ namespace VegaISA
             origSrc1.read();
 
             DPRINTF(VEGA, "Handling V_ADD_U32 SRC SDWA. SRC0: register v[%d], "
-                    "DST_SEL: %d, DST_UNUSED: %d, CLAMP: %d, SRC0_SEL: %d, "
+                    "DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: %d, "
                     "SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: %d, "
                     "SRC1_SEXT: %d, SRC1_NEG: %d, SRC1_ABS: %d\n",
                     extData.iFmt_VOP_SDWA.SRC0, extData.iFmt_VOP_SDWA.DST_SEL,
-                    extData.iFmt_VOP_SDWA.DST_UNUSED,
-                    extData.iFmt_VOP_SDWA.CLAMP,
+                    extData.iFmt_VOP_SDWA.DST_U,
+                    extData.iFmt_VOP_SDWA.CLMP,
                     extData.iFmt_VOP_SDWA.SRC0_SEL,
                     extData.iFmt_VOP_SDWA.SRC0_SEXT,
                     extData.iFmt_VOP_SDWA.SRC0_NEG,
@@ -7942,14 +7942,14 @@ namespace VegaISA
 
             DPRINTF(VEGA, "Handling V_MOV_B32 SRC DPP. SRC0: register v[%d], "
                     "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
-                    "SRC1_ABS: %d, SRC1_NEG: %d, BOUND_CTRL: %d, "
+                    "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
                     "BANK_MASK: %d, ROW_MASK: %d\n", extData.iFmt_VOP_DPP.SRC0,
                     extData.iFmt_VOP_DPP.DPP_CTRL,
                     extData.iFmt_VOP_DPP.SRC0_ABS,
                     extData.iFmt_VOP_DPP.SRC0_NEG,
                     extData.iFmt_VOP_DPP.SRC1_ABS,
                     extData.iFmt_VOP_DPP.SRC1_NEG,
-                    extData.iFmt_VOP_DPP.BOUND_CTRL,
+                    extData.iFmt_VOP_DPP.BC,
                     extData.iFmt_VOP_DPP.BANK_MASK,
                     extData.iFmt_VOP_DPP.ROW_MASK);
 
@@ -16836,8 +16836,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_CLASS_F32 class methods ---
 
     Inst_VOP3__V_CMP_CLASS_F32::Inst_VOP3__V_CMP_CLASS_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_class_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_class_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -16952,8 +16952,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_CLASS_F32 class methods ---
 
     Inst_VOP3__V_CMPX_CLASS_F32::Inst_VOP3__V_CMPX_CLASS_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_class_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_class_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -17071,8 +17071,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_CLASS_F64 class methods ---
 
     Inst_VOP3__V_CMP_CLASS_F64::Inst_VOP3__V_CMP_CLASS_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_class_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_class_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -17187,8 +17187,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_CLASS_F64 class methods ---
 
     Inst_VOP3__V_CMPX_CLASS_F64::Inst_VOP3__V_CMPX_CLASS_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_class_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_class_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -17306,8 +17306,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_CLASS_F16 class methods ---
 
     Inst_VOP3__V_CMP_CLASS_F16::Inst_VOP3__V_CMP_CLASS_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_class_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_class_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17339,8 +17339,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_CLASS_F16 class methods ---
 
     Inst_VOP3__V_CMPX_CLASS_F16::Inst_VOP3__V_CMPX_CLASS_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_class_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_class_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17373,8 +17373,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_F_F16 class methods ---
 
-    Inst_VOP3__V_CMP_F_F16::Inst_VOP3__V_CMP_F_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_f_f16", true)
+    Inst_VOP3__V_CMP_F_F16::Inst_VOP3__V_CMP_F_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_f_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17394,8 +17394,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LT_F16 class methods ---
 
     Inst_VOP3__V_CMP_LT_F16::Inst_VOP3__V_CMP_LT_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lt_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lt_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17415,8 +17415,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_EQ_F16 class methods ---
 
     Inst_VOP3__V_CMP_EQ_F16::Inst_VOP3__V_CMP_EQ_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_eq_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_eq_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17436,8 +17436,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LE_F16 class methods ---
 
     Inst_VOP3__V_CMP_LE_F16::Inst_VOP3__V_CMP_LE_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_le_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_le_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17457,8 +17457,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GT_F16 class methods ---
 
     Inst_VOP3__V_CMP_GT_F16::Inst_VOP3__V_CMP_GT_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_gt_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_gt_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17478,8 +17478,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LG_F16 class methods ---
 
     Inst_VOP3__V_CMP_LG_F16::Inst_VOP3__V_CMP_LG_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lg_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lg_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17499,8 +17499,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GE_F16 class methods ---
 
     Inst_VOP3__V_CMP_GE_F16::Inst_VOP3__V_CMP_GE_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ge_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ge_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17519,8 +17519,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_O_F16 class methods ---
 
-    Inst_VOP3__V_CMP_O_F16::Inst_VOP3__V_CMP_O_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_o_f16", true)
+    Inst_VOP3__V_CMP_O_F16::Inst_VOP3__V_CMP_O_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_o_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17539,8 +17539,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_U_F16 class methods ---
 
-    Inst_VOP3__V_CMP_U_F16::Inst_VOP3__V_CMP_U_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_u_f16", true)
+    Inst_VOP3__V_CMP_U_F16::Inst_VOP3__V_CMP_U_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_u_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17560,8 +17560,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NGE_F16 class methods ---
 
     Inst_VOP3__V_CMP_NGE_F16::Inst_VOP3__V_CMP_NGE_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nge_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nge_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17581,8 +17581,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NLG_F16 class methods ---
 
     Inst_VOP3__V_CMP_NLG_F16::Inst_VOP3__V_CMP_NLG_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nlg_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nlg_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17602,8 +17602,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NGT_F16 class methods ---
 
     Inst_VOP3__V_CMP_NGT_F16::Inst_VOP3__V_CMP_NGT_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ngt_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ngt_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17623,8 +17623,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NLE_F16 class methods ---
 
     Inst_VOP3__V_CMP_NLE_F16::Inst_VOP3__V_CMP_NLE_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nle_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nle_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17644,8 +17644,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NEQ_F16 class methods ---
 
     Inst_VOP3__V_CMP_NEQ_F16::Inst_VOP3__V_CMP_NEQ_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_neq_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_neq_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17665,8 +17665,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NLT_F16 class methods ---
 
     Inst_VOP3__V_CMP_NLT_F16::Inst_VOP3__V_CMP_NLT_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nlt_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nlt_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17686,8 +17686,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_TRU_F16 class methods ---
 
     Inst_VOP3__V_CMP_TRU_F16::Inst_VOP3__V_CMP_TRU_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_tru_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_tru_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17716,8 +17716,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_F_F16 class methods ---
 
     Inst_VOP3__V_CMPX_F_F16::Inst_VOP3__V_CMPX_F_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_f_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_f_f16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -17747,8 +17747,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LT_F16 class methods ---
 
     Inst_VOP3__V_CMPX_LT_F16::Inst_VOP3__V_CMPX_LT_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lt_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lt_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17769,8 +17769,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_EQ_F16 class methods ---
 
     Inst_VOP3__V_CMPX_EQ_F16::Inst_VOP3__V_CMPX_EQ_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_eq_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_eq_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17791,8 +17791,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LE_F16 class methods ---
 
     Inst_VOP3__V_CMPX_LE_F16::Inst_VOP3__V_CMPX_LE_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_le_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_le_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17813,8 +17813,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GT_F16 class methods ---
 
     Inst_VOP3__V_CMPX_GT_F16::Inst_VOP3__V_CMPX_GT_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_gt_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_gt_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17835,8 +17835,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LG_F16 class methods ---
 
     Inst_VOP3__V_CMPX_LG_F16::Inst_VOP3__V_CMPX_LG_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lg_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lg_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17857,8 +17857,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GE_F16 class methods ---
 
     Inst_VOP3__V_CMPX_GE_F16::Inst_VOP3__V_CMPX_GE_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ge_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ge_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17879,8 +17879,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_O_F16 class methods ---
 
     Inst_VOP3__V_CMPX_O_F16::Inst_VOP3__V_CMPX_O_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_o_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_o_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17902,8 +17902,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_U_F16 class methods ---
 
     Inst_VOP3__V_CMPX_U_F16::Inst_VOP3__V_CMPX_U_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_u_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_u_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17925,8 +17925,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NGE_F16 class methods ---
 
     Inst_VOP3__V_CMPX_NGE_F16::Inst_VOP3__V_CMPX_NGE_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nge_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nge_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17947,8 +17947,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NLG_F16 class methods ---
 
     Inst_VOP3__V_CMPX_NLG_F16::Inst_VOP3__V_CMPX_NLG_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nlg_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nlg_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17969,8 +17969,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NGT_F16 class methods ---
 
     Inst_VOP3__V_CMPX_NGT_F16::Inst_VOP3__V_CMPX_NGT_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ngt_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ngt_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -17991,8 +17991,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NLE_F16 class methods ---
 
     Inst_VOP3__V_CMPX_NLE_F16::Inst_VOP3__V_CMPX_NLE_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nle_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nle_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -18013,8 +18013,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NEQ_F16 class methods ---
 
     Inst_VOP3__V_CMPX_NEQ_F16::Inst_VOP3__V_CMPX_NEQ_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_neq_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_neq_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -18035,8 +18035,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NLT_F16 class methods ---
 
     Inst_VOP3__V_CMPX_NLT_F16::Inst_VOP3__V_CMPX_NLT_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nlt_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nlt_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -18057,8 +18057,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_TRU_F16 class methods ---
 
     Inst_VOP3__V_CMPX_TRU_F16::Inst_VOP3__V_CMPX_TRU_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_tru_f16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_tru_f16", true)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -18088,8 +18088,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_F_F32 class methods ---
 
-    Inst_VOP3__V_CMP_F_F32::Inst_VOP3__V_CMP_F_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_f_f32", true)
+    Inst_VOP3__V_CMP_F_F32::Inst_VOP3__V_CMP_F_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_f_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18118,8 +18118,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LT_F32 class methods ---
 
     Inst_VOP3__V_CMP_LT_F32::Inst_VOP3__V_CMP_LT_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lt_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lt_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18153,8 +18153,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_EQ_F32 class methods ---
 
     Inst_VOP3__V_CMP_EQ_F32::Inst_VOP3__V_CMP_EQ_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_eq_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_eq_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18188,8 +18188,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LE_F32 class methods ---
 
     Inst_VOP3__V_CMP_LE_F32::Inst_VOP3__V_CMP_LE_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_le_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_le_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18223,8 +18223,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GT_F32 class methods ---
 
     Inst_VOP3__V_CMP_GT_F32::Inst_VOP3__V_CMP_GT_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_gt_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_gt_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18258,8 +18258,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LG_F32 class methods ---
 
     Inst_VOP3__V_CMP_LG_F32::Inst_VOP3__V_CMP_LG_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lg_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lg_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18293,8 +18293,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GE_F32 class methods ---
 
     Inst_VOP3__V_CMP_GE_F32::Inst_VOP3__V_CMP_GE_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ge_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ge_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18327,8 +18327,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_O_F32 class methods ---
 
-    Inst_VOP3__V_CMP_O_F32::Inst_VOP3__V_CMP_O_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_o_f32", true)
+    Inst_VOP3__V_CMP_O_F32::Inst_VOP3__V_CMP_O_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_o_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18362,8 +18362,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_U_F32 class methods ---
 
-    Inst_VOP3__V_CMP_U_F32::Inst_VOP3__V_CMP_U_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_u_f32", true)
+    Inst_VOP3__V_CMP_U_F32::Inst_VOP3__V_CMP_U_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_u_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18398,8 +18398,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NGE_F32 class methods ---
 
     Inst_VOP3__V_CMP_NGE_F32::Inst_VOP3__V_CMP_NGE_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nge_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nge_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18433,8 +18433,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NLG_F32 class methods ---
 
     Inst_VOP3__V_CMP_NLG_F32::Inst_VOP3__V_CMP_NLG_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nlg_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nlg_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18469,8 +18469,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NGT_F32 class methods ---
 
     Inst_VOP3__V_CMP_NGT_F32::Inst_VOP3__V_CMP_NGT_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ngt_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ngt_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18504,8 +18504,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NLE_F32 class methods ---
 
     Inst_VOP3__V_CMP_NLE_F32::Inst_VOP3__V_CMP_NLE_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nle_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nle_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18539,8 +18539,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NEQ_F32 class methods ---
 
     Inst_VOP3__V_CMP_NEQ_F32::Inst_VOP3__V_CMP_NEQ_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_neq_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_neq_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18574,8 +18574,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NLT_F32 class methods ---
 
     Inst_VOP3__V_CMP_NLT_F32::Inst_VOP3__V_CMP_NLT_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nlt_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nlt_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18609,8 +18609,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_TRU_F32 class methods ---
 
     Inst_VOP3__V_CMP_TRU_F32::Inst_VOP3__V_CMP_TRU_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_tru_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_tru_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18639,8 +18639,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_F_F32 class methods ---
 
     Inst_VOP3__V_CMPX_F_F32::Inst_VOP3__V_CMPX_F_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_f_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_f_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18671,8 +18671,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LT_F32 class methods ---
 
     Inst_VOP3__V_CMPX_LT_F32::Inst_VOP3__V_CMPX_LT_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lt_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lt_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18708,8 +18708,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_EQ_F32 class methods ---
 
     Inst_VOP3__V_CMPX_EQ_F32::Inst_VOP3__V_CMPX_EQ_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_eq_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_eq_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18745,8 +18745,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LE_F32 class methods ---
 
     Inst_VOP3__V_CMPX_LE_F32::Inst_VOP3__V_CMPX_LE_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_le_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_le_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18782,8 +18782,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GT_F32 class methods ---
 
     Inst_VOP3__V_CMPX_GT_F32::Inst_VOP3__V_CMPX_GT_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_gt_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_gt_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18819,8 +18819,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LG_F32 class methods ---
 
     Inst_VOP3__V_CMPX_LG_F32::Inst_VOP3__V_CMPX_LG_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lg_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lg_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18857,8 +18857,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GE_F32 class methods ---
 
     Inst_VOP3__V_CMPX_GE_F32::Inst_VOP3__V_CMPX_GE_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ge_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ge_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18894,8 +18894,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_O_F32 class methods ---
 
     Inst_VOP3__V_CMPX_O_F32::Inst_VOP3__V_CMPX_O_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_o_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_o_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18933,8 +18933,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_U_F32 class methods ---
 
     Inst_VOP3__V_CMPX_U_F32::Inst_VOP3__V_CMPX_U_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_u_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_u_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -18972,8 +18972,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NGE_F32 class methods ---
 
     Inst_VOP3__V_CMPX_NGE_F32::Inst_VOP3__V_CMPX_NGE_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nge_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nge_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -19009,8 +19009,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NLG_F32 class methods ---
 
     Inst_VOP3__V_CMPX_NLG_F32::Inst_VOP3__V_CMPX_NLG_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nlg_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nlg_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -19047,8 +19047,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NGT_F32 class methods ---
 
     Inst_VOP3__V_CMPX_NGT_F32::Inst_VOP3__V_CMPX_NGT_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ngt_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ngt_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -19084,8 +19084,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NLE_F32 class methods ---
 
     Inst_VOP3__V_CMPX_NLE_F32::Inst_VOP3__V_CMPX_NLE_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nle_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nle_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -19121,8 +19121,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NEQ_F32 class methods ---
 
     Inst_VOP3__V_CMPX_NEQ_F32::Inst_VOP3__V_CMPX_NEQ_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_neq_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_neq_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -19158,8 +19158,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NLT_F32 class methods ---
 
     Inst_VOP3__V_CMPX_NLT_F32::Inst_VOP3__V_CMPX_NLT_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nlt_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nlt_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -19195,8 +19195,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_TRU_F32 class methods ---
 
     Inst_VOP3__V_CMPX_TRU_F32::Inst_VOP3__V_CMPX_TRU_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_tru_f32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_tru_f32", true)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -19226,8 +19226,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_F_F64 class methods ---
 
-    Inst_VOP3__V_CMP_F_F64::Inst_VOP3__V_CMP_F_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_f_f64", true)
+    Inst_VOP3__V_CMP_F_F64::Inst_VOP3__V_CMP_F_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_f_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19256,8 +19256,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LT_F64 class methods ---
 
     Inst_VOP3__V_CMP_LT_F64::Inst_VOP3__V_CMP_LT_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lt_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lt_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19313,8 +19313,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_EQ_F64 class methods ---
 
     Inst_VOP3__V_CMP_EQ_F64::Inst_VOP3__V_CMP_EQ_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_eq_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_eq_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19370,8 +19370,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LE_F64 class methods ---
 
     Inst_VOP3__V_CMP_LE_F64::Inst_VOP3__V_CMP_LE_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_le_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_le_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19427,8 +19427,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GT_F64 class methods ---
 
     Inst_VOP3__V_CMP_GT_F64::Inst_VOP3__V_CMP_GT_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_gt_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_gt_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19484,8 +19484,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LG_F64 class methods ---
 
     Inst_VOP3__V_CMP_LG_F64::Inst_VOP3__V_CMP_LG_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lg_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lg_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19542,8 +19542,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GE_F64 class methods ---
 
     Inst_VOP3__V_CMP_GE_F64::Inst_VOP3__V_CMP_GE_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ge_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ge_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19598,8 +19598,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_O_F64 class methods ---
 
-    Inst_VOP3__V_CMP_O_F64::Inst_VOP3__V_CMP_O_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_o_f64", true)
+    Inst_VOP3__V_CMP_O_F64::Inst_VOP3__V_CMP_O_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_o_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19655,8 +19655,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_U_F64 class methods ---
 
-    Inst_VOP3__V_CMP_U_F64::Inst_VOP3__V_CMP_U_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_u_f64", true)
+    Inst_VOP3__V_CMP_U_F64::Inst_VOP3__V_CMP_U_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_u_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19713,8 +19713,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NGE_F64 class methods ---
 
     Inst_VOP3__V_CMP_NGE_F64::Inst_VOP3__V_CMP_NGE_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nge_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nge_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19770,8 +19770,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NLG_F64 class methods ---
 
     Inst_VOP3__V_CMP_NLG_F64::Inst_VOP3__V_CMP_NLG_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nlg_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nlg_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19828,8 +19828,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NGT_F64 class methods ---
 
     Inst_VOP3__V_CMP_NGT_F64::Inst_VOP3__V_CMP_NGT_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ngt_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ngt_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19885,8 +19885,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NLE_F64 class methods ---
 
     Inst_VOP3__V_CMP_NLE_F64::Inst_VOP3__V_CMP_NLE_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nle_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nle_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19942,8 +19942,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NEQ_F64 class methods ---
 
     Inst_VOP3__V_CMP_NEQ_F64::Inst_VOP3__V_CMP_NEQ_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_neq_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_neq_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -19999,8 +19999,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NLT_F64 class methods ---
 
     Inst_VOP3__V_CMP_NLT_F64::Inst_VOP3__V_CMP_NLT_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_nlt_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_nlt_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20056,8 +20056,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_TRU_F64 class methods ---
 
     Inst_VOP3__V_CMP_TRU_F64::Inst_VOP3__V_CMP_TRU_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_tru_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_tru_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20086,8 +20086,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_F_F64 class methods ---
 
     Inst_VOP3__V_CMPX_F_F64::Inst_VOP3__V_CMPX_F_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_f_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_f_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20118,8 +20118,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LT_F64 class methods ---
 
     Inst_VOP3__V_CMPX_LT_F64::Inst_VOP3__V_CMPX_LT_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lt_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lt_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20177,8 +20177,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_EQ_F64 class methods ---
 
     Inst_VOP3__V_CMPX_EQ_F64::Inst_VOP3__V_CMPX_EQ_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_eq_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_eq_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20236,8 +20236,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LE_F64 class methods ---
 
     Inst_VOP3__V_CMPX_LE_F64::Inst_VOP3__V_CMPX_LE_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_le_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_le_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20295,8 +20295,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GT_F64 class methods ---
 
     Inst_VOP3__V_CMPX_GT_F64::Inst_VOP3__V_CMPX_GT_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_gt_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_gt_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20354,8 +20354,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LG_F64 class methods ---
 
     Inst_VOP3__V_CMPX_LG_F64::Inst_VOP3__V_CMPX_LG_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lg_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lg_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20414,8 +20414,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GE_F64 class methods ---
 
     Inst_VOP3__V_CMPX_GE_F64::Inst_VOP3__V_CMPX_GE_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ge_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ge_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20473,8 +20473,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_O_F64 class methods ---
 
     Inst_VOP3__V_CMPX_O_F64::Inst_VOP3__V_CMPX_O_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_o_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_o_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20534,8 +20534,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_U_F64 class methods ---
 
     Inst_VOP3__V_CMPX_U_F64::Inst_VOP3__V_CMPX_U_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_u_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_u_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20595,8 +20595,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NGE_F64 class methods ---
 
     Inst_VOP3__V_CMPX_NGE_F64::Inst_VOP3__V_CMPX_NGE_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nge_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nge_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20654,8 +20654,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NLG_F64 class methods ---
 
     Inst_VOP3__V_CMPX_NLG_F64::Inst_VOP3__V_CMPX_NLG_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nlg_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nlg_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20714,8 +20714,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NGT_F64 class methods ---
 
     Inst_VOP3__V_CMPX_NGT_F64::Inst_VOP3__V_CMPX_NGT_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ngt_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ngt_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20773,8 +20773,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NLE_F64 class methods ---
 
     Inst_VOP3__V_CMPX_NLE_F64::Inst_VOP3__V_CMPX_NLE_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nle_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nle_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20832,8 +20832,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NEQ_F64 class methods ---
 
     Inst_VOP3__V_CMPX_NEQ_F64::Inst_VOP3__V_CMPX_NEQ_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_neq_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_neq_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20891,8 +20891,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NLT_F64 class methods ---
 
     Inst_VOP3__V_CMPX_NLT_F64::Inst_VOP3__V_CMPX_NLT_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_nlt_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_nlt_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20950,8 +20950,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_TRU_F64 class methods ---
 
     Inst_VOP3__V_CMPX_TRU_F64::Inst_VOP3__V_CMPX_TRU_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_tru_f64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_tru_f64", true)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -20981,8 +20981,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_F_I16 class methods ---
 
-    Inst_VOP3__V_CMP_F_I16::Inst_VOP3__V_CMP_F_I16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_f_i16", true)
+    Inst_VOP3__V_CMP_F_I16::Inst_VOP3__V_CMP_F_I16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_f_i16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_F_I16
@@ -21010,8 +21010,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LT_I16 class methods ---
 
     Inst_VOP3__V_CMP_LT_I16::Inst_VOP3__V_CMP_LT_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lt_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lt_i16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LT_I16
@@ -21054,8 +21054,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_EQ_I16 class methods ---
 
     Inst_VOP3__V_CMP_EQ_I16::Inst_VOP3__V_CMP_EQ_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_eq_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_eq_i16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_EQ_I16
@@ -21098,8 +21098,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LE_I16 class methods ---
 
     Inst_VOP3__V_CMP_LE_I16::Inst_VOP3__V_CMP_LE_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_le_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_le_i16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LE_I16
@@ -21142,8 +21142,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GT_I16 class methods ---
 
     Inst_VOP3__V_CMP_GT_I16::Inst_VOP3__V_CMP_GT_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_gt_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_gt_i16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GT_I16
@@ -21186,8 +21186,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NE_I16 class methods ---
 
     Inst_VOP3__V_CMP_NE_I16::Inst_VOP3__V_CMP_NE_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ne_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ne_i16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_NE_I16
@@ -21230,8 +21230,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GE_I16 class methods ---
 
     Inst_VOP3__V_CMP_GE_I16::Inst_VOP3__V_CMP_GE_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ge_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ge_i16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GE_I16
@@ -21273,8 +21273,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_T_I16 class methods ---
 
-    Inst_VOP3__V_CMP_T_I16::Inst_VOP3__V_CMP_T_I16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_t_i16", true)
+    Inst_VOP3__V_CMP_T_I16::Inst_VOP3__V_CMP_T_I16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_t_i16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_T_I16
@@ -21301,8 +21301,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_F_U16 class methods ---
 
-    Inst_VOP3__V_CMP_F_U16::Inst_VOP3__V_CMP_F_U16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_f_u16", true)
+    Inst_VOP3__V_CMP_F_U16::Inst_VOP3__V_CMP_F_U16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_f_u16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_F_U16
@@ -21330,8 +21330,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LT_U16 class methods ---
 
     Inst_VOP3__V_CMP_LT_U16::Inst_VOP3__V_CMP_LT_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lt_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lt_u16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LT_U16
@@ -21374,8 +21374,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_EQ_U16 class methods ---
 
     Inst_VOP3__V_CMP_EQ_U16::Inst_VOP3__V_CMP_EQ_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_eq_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_eq_u16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_EQ_U16
@@ -21418,8 +21418,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LE_U16 class methods ---
 
     Inst_VOP3__V_CMP_LE_U16::Inst_VOP3__V_CMP_LE_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_le_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_le_u16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LE_U16
@@ -21462,8 +21462,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GT_U16 class methods ---
 
     Inst_VOP3__V_CMP_GT_U16::Inst_VOP3__V_CMP_GT_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_gt_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_gt_u16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GT_U16
@@ -21506,8 +21506,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NE_U16 class methods ---
 
     Inst_VOP3__V_CMP_NE_U16::Inst_VOP3__V_CMP_NE_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ne_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ne_u16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_NE_U16
@@ -21550,8 +21550,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GE_U16 class methods ---
 
     Inst_VOP3__V_CMP_GE_U16::Inst_VOP3__V_CMP_GE_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ge_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ge_u16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GE_U16
@@ -21593,8 +21593,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_T_U16 class methods ---
 
-    Inst_VOP3__V_CMP_T_U16::Inst_VOP3__V_CMP_T_U16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_t_u16", true)
+    Inst_VOP3__V_CMP_T_U16::Inst_VOP3__V_CMP_T_U16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_t_u16", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_T_U16
@@ -21622,8 +21622,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_F_I16 class methods ---
 
     Inst_VOP3__V_CMPX_F_I16::Inst_VOP3__V_CMPX_F_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_f_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_f_i16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -21653,8 +21653,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LT_I16 class methods ---
 
     Inst_VOP3__V_CMPX_LT_I16::Inst_VOP3__V_CMPX_LT_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lt_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lt_i16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -21699,8 +21699,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_EQ_I16 class methods ---
 
     Inst_VOP3__V_CMPX_EQ_I16::Inst_VOP3__V_CMPX_EQ_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_eq_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_eq_i16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -21745,8 +21745,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LE_I16 class methods ---
 
     Inst_VOP3__V_CMPX_LE_I16::Inst_VOP3__V_CMPX_LE_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_le_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_le_i16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -21791,8 +21791,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GT_I16 class methods ---
 
     Inst_VOP3__V_CMPX_GT_I16::Inst_VOP3__V_CMPX_GT_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_gt_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_gt_i16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -21837,8 +21837,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NE_I16 class methods ---
 
     Inst_VOP3__V_CMPX_NE_I16::Inst_VOP3__V_CMPX_NE_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ne_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ne_i16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -21883,8 +21883,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GE_I16 class methods ---
 
     Inst_VOP3__V_CMPX_GE_I16::Inst_VOP3__V_CMPX_GE_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ge_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ge_i16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -21929,8 +21929,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_T_I16 class methods ---
 
     Inst_VOP3__V_CMPX_T_I16::Inst_VOP3__V_CMPX_T_I16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_t_i16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_t_i16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -21960,8 +21960,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_F_U16 class methods ---
 
     Inst_VOP3__V_CMPX_F_U16::Inst_VOP3__V_CMPX_F_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_f_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_f_u16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -21991,8 +21991,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LT_U16 class methods ---
 
     Inst_VOP3__V_CMPX_LT_U16::Inst_VOP3__V_CMPX_LT_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lt_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lt_u16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -22037,8 +22037,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_EQ_U16 class methods ---
 
     Inst_VOP3__V_CMPX_EQ_U16::Inst_VOP3__V_CMPX_EQ_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_eq_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_eq_u16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -22083,8 +22083,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LE_U16 class methods ---
 
     Inst_VOP3__V_CMPX_LE_U16::Inst_VOP3__V_CMPX_LE_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_le_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_le_u16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -22129,8 +22129,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GT_U16 class methods ---
 
     Inst_VOP3__V_CMPX_GT_U16::Inst_VOP3__V_CMPX_GT_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_gt_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_gt_u16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -22175,8 +22175,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NE_U16 class methods ---
 
     Inst_VOP3__V_CMPX_NE_U16::Inst_VOP3__V_CMPX_NE_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ne_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ne_u16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -22221,8 +22221,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GE_U16 class methods ---
 
     Inst_VOP3__V_CMPX_GE_U16::Inst_VOP3__V_CMPX_GE_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ge_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ge_u16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -22267,8 +22267,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_T_U16 class methods ---
 
     Inst_VOP3__V_CMPX_T_U16::Inst_VOP3__V_CMPX_T_U16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_t_u16", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_t_u16", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -22297,8 +22297,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_F_I32 class methods ---
 
-    Inst_VOP3__V_CMP_F_I32::Inst_VOP3__V_CMP_F_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_f_i32", true)
+    Inst_VOP3__V_CMP_F_I32::Inst_VOP3__V_CMP_F_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_f_i32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_F_I32
@@ -22327,8 +22327,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LT_I32 class methods ---
 
     Inst_VOP3__V_CMP_LT_I32::Inst_VOP3__V_CMP_LT_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lt_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lt_i32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LT_I32
@@ -22371,8 +22371,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_EQ_I32 class methods ---
 
     Inst_VOP3__V_CMP_EQ_I32::Inst_VOP3__V_CMP_EQ_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_eq_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_eq_i32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_EQ_I32
@@ -22415,8 +22415,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LE_I32 class methods ---
 
     Inst_VOP3__V_CMP_LE_I32::Inst_VOP3__V_CMP_LE_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_le_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_le_i32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LE_I32
@@ -22459,8 +22459,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GT_I32 class methods ---
 
     Inst_VOP3__V_CMP_GT_I32::Inst_VOP3__V_CMP_GT_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_gt_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_gt_i32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GT_I32
@@ -22503,8 +22503,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NE_I32 class methods ---
 
     Inst_VOP3__V_CMP_NE_I32::Inst_VOP3__V_CMP_NE_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ne_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ne_i32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_NE_I32
@@ -22547,8 +22547,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GE_I32 class methods ---
 
     Inst_VOP3__V_CMP_GE_I32::Inst_VOP3__V_CMP_GE_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ge_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ge_i32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GE_I32
@@ -22590,8 +22590,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_T_I32 class methods ---
 
-    Inst_VOP3__V_CMP_T_I32::Inst_VOP3__V_CMP_T_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_t_i32", true)
+    Inst_VOP3__V_CMP_T_I32::Inst_VOP3__V_CMP_T_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_t_i32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_T_I32
@@ -22618,8 +22618,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_F_U32 class methods ---
 
-    Inst_VOP3__V_CMP_F_U32::Inst_VOP3__V_CMP_F_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_f_u32", true)
+    Inst_VOP3__V_CMP_F_U32::Inst_VOP3__V_CMP_F_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_f_u32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_F_U32
@@ -22647,8 +22647,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LT_U32 class methods ---
 
     Inst_VOP3__V_CMP_LT_U32::Inst_VOP3__V_CMP_LT_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lt_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lt_u32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LT_U32
@@ -22691,8 +22691,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_EQ_U32 class methods ---
 
     Inst_VOP3__V_CMP_EQ_U32::Inst_VOP3__V_CMP_EQ_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_eq_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_eq_u32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_EQ_U32
@@ -22735,8 +22735,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LE_U32 class methods ---
 
     Inst_VOP3__V_CMP_LE_U32::Inst_VOP3__V_CMP_LE_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_le_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_le_u32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LE_U32
@@ -22779,8 +22779,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GT_U32 class methods ---
 
     Inst_VOP3__V_CMP_GT_U32::Inst_VOP3__V_CMP_GT_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_gt_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_gt_u32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GT_U32
@@ -22823,8 +22823,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NE_U32 class methods ---
 
     Inst_VOP3__V_CMP_NE_U32::Inst_VOP3__V_CMP_NE_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ne_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ne_u32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_NE_U32
@@ -22867,8 +22867,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GE_U32 class methods ---
 
     Inst_VOP3__V_CMP_GE_U32::Inst_VOP3__V_CMP_GE_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ge_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ge_u32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GE_U32
@@ -22910,8 +22910,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_T_U32 class methods ---
 
-    Inst_VOP3__V_CMP_T_U32::Inst_VOP3__V_CMP_T_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_t_u32", true)
+    Inst_VOP3__V_CMP_T_U32::Inst_VOP3__V_CMP_T_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_t_u32", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_T_U32
@@ -22939,8 +22939,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_F_I32 class methods ---
 
     Inst_VOP3__V_CMPX_F_I32::Inst_VOP3__V_CMPX_F_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_f_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_f_i32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -22970,8 +22970,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LT_I32 class methods ---
 
     Inst_VOP3__V_CMPX_LT_I32::Inst_VOP3__V_CMPX_LT_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lt_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lt_i32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23016,8 +23016,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_EQ_I32 class methods ---
 
     Inst_VOP3__V_CMPX_EQ_I32::Inst_VOP3__V_CMPX_EQ_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_eq_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_eq_i32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23062,8 +23062,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LE_I32 class methods ---
 
     Inst_VOP3__V_CMPX_LE_I32::Inst_VOP3__V_CMPX_LE_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_le_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_le_i32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23108,8 +23108,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GT_I32 class methods ---
 
     Inst_VOP3__V_CMPX_GT_I32::Inst_VOP3__V_CMPX_GT_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_gt_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_gt_i32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23154,8 +23154,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NE_I32 class methods ---
 
     Inst_VOP3__V_CMPX_NE_I32::Inst_VOP3__V_CMPX_NE_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ne_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ne_i32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23200,8 +23200,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GE_I32 class methods ---
 
     Inst_VOP3__V_CMPX_GE_I32::Inst_VOP3__V_CMPX_GE_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ge_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ge_i32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23246,8 +23246,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_T_I32 class methods ---
 
     Inst_VOP3__V_CMPX_T_I32::Inst_VOP3__V_CMPX_T_I32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_t_i32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_t_i32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23277,8 +23277,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_F_U32 class methods ---
 
     Inst_VOP3__V_CMPX_F_U32::Inst_VOP3__V_CMPX_F_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_f_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_f_u32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23308,8 +23308,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LT_U32 class methods ---
 
     Inst_VOP3__V_CMPX_LT_U32::Inst_VOP3__V_CMPX_LT_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lt_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lt_u32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23354,8 +23354,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_EQ_U32 class methods ---
 
     Inst_VOP3__V_CMPX_EQ_U32::Inst_VOP3__V_CMPX_EQ_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_eq_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_eq_u32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23400,8 +23400,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LE_U32 class methods ---
 
     Inst_VOP3__V_CMPX_LE_U32::Inst_VOP3__V_CMPX_LE_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_le_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_le_u32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23446,8 +23446,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GT_U32 class methods ---
 
     Inst_VOP3__V_CMPX_GT_U32::Inst_VOP3__V_CMPX_GT_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_gt_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_gt_u32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23492,8 +23492,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NE_U32 class methods ---
 
     Inst_VOP3__V_CMPX_NE_U32::Inst_VOP3__V_CMPX_NE_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ne_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ne_u32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23538,8 +23538,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GE_U32 class methods ---
 
     Inst_VOP3__V_CMPX_GE_U32::Inst_VOP3__V_CMPX_GE_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ge_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ge_u32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23584,8 +23584,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_T_U32 class methods ---
 
     Inst_VOP3__V_CMPX_T_U32::Inst_VOP3__V_CMPX_T_U32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_t_u32", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_t_u32", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -23614,8 +23614,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_F_I64 class methods ---
 
-    Inst_VOP3__V_CMP_F_I64::Inst_VOP3__V_CMP_F_I64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_f_i64", true)
+    Inst_VOP3__V_CMP_F_I64::Inst_VOP3__V_CMP_F_I64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_f_i64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_F_I64
@@ -23643,8 +23643,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LT_I64 class methods ---
 
     Inst_VOP3__V_CMP_LT_I64::Inst_VOP3__V_CMP_LT_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lt_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lt_i64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LT_I64
@@ -23687,8 +23687,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_EQ_I64 class methods ---
 
     Inst_VOP3__V_CMP_EQ_I64::Inst_VOP3__V_CMP_EQ_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_eq_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_eq_i64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_EQ_I64
@@ -23731,8 +23731,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LE_I64 class methods ---
 
     Inst_VOP3__V_CMP_LE_I64::Inst_VOP3__V_CMP_LE_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_le_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_le_i64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LE_I64
@@ -23775,8 +23775,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GT_I64 class methods ---
 
     Inst_VOP3__V_CMP_GT_I64::Inst_VOP3__V_CMP_GT_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_gt_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_gt_i64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GT_I64
@@ -23819,8 +23819,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NE_I64 class methods ---
 
     Inst_VOP3__V_CMP_NE_I64::Inst_VOP3__V_CMP_NE_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ne_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ne_i64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_NE_I64
@@ -23863,8 +23863,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GE_I64 class methods ---
 
     Inst_VOP3__V_CMP_GE_I64::Inst_VOP3__V_CMP_GE_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ge_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ge_i64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GE_I64
@@ -23906,8 +23906,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_T_I64 class methods ---
 
-    Inst_VOP3__V_CMP_T_I64::Inst_VOP3__V_CMP_T_I64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_t_i64", true)
+    Inst_VOP3__V_CMP_T_I64::Inst_VOP3__V_CMP_T_I64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_t_i64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_T_I64
@@ -23934,8 +23934,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_F_U64 class methods ---
 
-    Inst_VOP3__V_CMP_F_U64::Inst_VOP3__V_CMP_F_U64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_f_u64", true)
+    Inst_VOP3__V_CMP_F_U64::Inst_VOP3__V_CMP_F_U64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_f_u64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_F_U64
@@ -23963,8 +23963,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LT_U64 class methods ---
 
     Inst_VOP3__V_CMP_LT_U64::Inst_VOP3__V_CMP_LT_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_lt_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_lt_u64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LT_U64
@@ -24007,8 +24007,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_EQ_U64 class methods ---
 
     Inst_VOP3__V_CMP_EQ_U64::Inst_VOP3__V_CMP_EQ_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_eq_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_eq_u64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_EQ_U64
@@ -24051,8 +24051,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_LE_U64 class methods ---
 
     Inst_VOP3__V_CMP_LE_U64::Inst_VOP3__V_CMP_LE_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_le_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_le_u64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_LE_U64
@@ -24095,8 +24095,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GT_U64 class methods ---
 
     Inst_VOP3__V_CMP_GT_U64::Inst_VOP3__V_CMP_GT_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_gt_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_gt_u64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GT_U64
@@ -24139,8 +24139,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_NE_U64 class methods ---
 
     Inst_VOP3__V_CMP_NE_U64::Inst_VOP3__V_CMP_NE_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ne_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ne_u64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_NE_U64
@@ -24183,8 +24183,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMP_GE_U64 class methods ---
 
     Inst_VOP3__V_CMP_GE_U64::Inst_VOP3__V_CMP_GE_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_ge_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_ge_u64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_GE_U64
@@ -24226,8 +24226,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CMP_T_U64 class methods ---
 
-    Inst_VOP3__V_CMP_T_U64::Inst_VOP3__V_CMP_T_U64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmp_t_u64", true)
+    Inst_VOP3__V_CMP_T_U64::Inst_VOP3__V_CMP_T_U64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmp_t_u64", true)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CMP_T_U64
@@ -24255,8 +24255,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_F_I64 class methods ---
 
     Inst_VOP3__V_CMPX_F_I64::Inst_VOP3__V_CMPX_F_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_f_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_f_i64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24286,8 +24286,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LT_I64 class methods ---
 
     Inst_VOP3__V_CMPX_LT_I64::Inst_VOP3__V_CMPX_LT_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lt_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lt_i64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24332,8 +24332,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_EQ_I64 class methods ---
 
     Inst_VOP3__V_CMPX_EQ_I64::Inst_VOP3__V_CMPX_EQ_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_eq_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_eq_i64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24378,8 +24378,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LE_I64 class methods ---
 
     Inst_VOP3__V_CMPX_LE_I64::Inst_VOP3__V_CMPX_LE_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_le_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_le_i64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24424,8 +24424,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GT_I64 class methods ---
 
     Inst_VOP3__V_CMPX_GT_I64::Inst_VOP3__V_CMPX_GT_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_gt_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_gt_i64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24470,8 +24470,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NE_I64 class methods ---
 
     Inst_VOP3__V_CMPX_NE_I64::Inst_VOP3__V_CMPX_NE_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ne_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ne_i64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24516,8 +24516,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GE_I64 class methods ---
 
     Inst_VOP3__V_CMPX_GE_I64::Inst_VOP3__V_CMPX_GE_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ge_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ge_i64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24562,8 +24562,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_T_I64 class methods ---
 
     Inst_VOP3__V_CMPX_T_I64::Inst_VOP3__V_CMPX_T_I64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_t_i64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_t_i64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24593,8 +24593,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_F_U64 class methods ---
 
     Inst_VOP3__V_CMPX_F_U64::Inst_VOP3__V_CMPX_F_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_f_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_f_u64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24624,8 +24624,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LT_U64 class methods ---
 
     Inst_VOP3__V_CMPX_LT_U64::Inst_VOP3__V_CMPX_LT_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_lt_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_lt_u64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24670,8 +24670,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_EQ_U64 class methods ---
 
     Inst_VOP3__V_CMPX_EQ_U64::Inst_VOP3__V_CMPX_EQ_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_eq_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_eq_u64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24716,8 +24716,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_LE_U64 class methods ---
 
     Inst_VOP3__V_CMPX_LE_U64::Inst_VOP3__V_CMPX_LE_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_le_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_le_u64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24762,8 +24762,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GT_U64 class methods ---
 
     Inst_VOP3__V_CMPX_GT_U64::Inst_VOP3__V_CMPX_GT_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_gt_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_gt_u64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24808,8 +24808,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_NE_U64 class methods ---
 
     Inst_VOP3__V_CMPX_NE_U64::Inst_VOP3__V_CMPX_NE_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ne_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ne_u64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24854,8 +24854,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_GE_U64 class methods ---
 
     Inst_VOP3__V_CMPX_GE_U64::Inst_VOP3__V_CMPX_GE_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_ge_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_ge_u64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24900,8 +24900,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CMPX_T_U64 class methods ---
 
     Inst_VOP3__V_CMPX_T_U64::Inst_VOP3__V_CMPX_T_U64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cmpx_t_u64", true)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cmpx_t_u64", true)
     {
         setFlag(ALU);
         setFlag(WritesExec);
@@ -24940,8 +24940,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CNDMASK_B32 class methods ---
 
-    Inst_VOP3__V_CNDMASK_B32::Inst_VOP3__V_CNDMASK_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cndmask_b32", false)
+    Inst_VOP3__V_CNDMASK_B32::Inst_VOP3__V_CNDMASK_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cndmask_b32", false)
     {
         setFlag(ALU);
         setFlag(ReadsVCC);
@@ -24988,8 +24988,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_ADD_F32 class methods ---
 
-    Inst_VOP3__V_ADD_F32::Inst_VOP3__V_ADD_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_add_f32", false)
+    Inst_VOP3__V_ADD_F32::Inst_VOP3__V_ADD_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_add_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -25045,8 +25045,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SUB_F32 class methods ---
 
-    Inst_VOP3__V_SUB_F32::Inst_VOP3__V_SUB_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sub_f32", false)
+    Inst_VOP3__V_SUB_F32::Inst_VOP3__V_SUB_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sub_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -25103,8 +25103,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SUBREV_F32 class methods ---
 
-    Inst_VOP3__V_SUBREV_F32::Inst_VOP3__V_SUBREV_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_subrev_f32", false)
+    Inst_VOP3__V_SUBREV_F32::Inst_VOP3__V_SUBREV_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_subrev_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -25161,8 +25161,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_LEGACY_F32 class methods ---
 
-    Inst_VOP3__V_MUL_LEGACY_F32::Inst_VOP3__V_MUL_LEGACY_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_legacy_f32", false)
+    Inst_VOP3__V_MUL_LEGACY_F32::Inst_VOP3__V_MUL_LEGACY_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_legacy_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp1);
@@ -25263,8 +25263,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_F32 class methods ---
 
-    Inst_VOP3__V_MUL_F32::Inst_VOP3__V_MUL_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_f32", false)
+    Inst_VOP3__V_MUL_F32::Inst_VOP3__V_MUL_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp1);
@@ -25365,8 +25365,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_I32_I24 class methods ---
 
-    Inst_VOP3__V_MUL_I32_I24::Inst_VOP3__V_MUL_I32_I24(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_i32_i24", false)
+    Inst_VOP3__V_MUL_I32_I24::Inst_VOP3__V_MUL_I32_I24(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_i32_i24", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp1);
@@ -25410,8 +25410,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_HI_I32_I24 class methods ---
 
-    Inst_VOP3__V_MUL_HI_I32_I24::Inst_VOP3__V_MUL_HI_I32_I24(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_hi_i32_i24", false)
+    Inst_VOP3__V_MUL_HI_I32_I24::Inst_VOP3__V_MUL_HI_I32_I24(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_hi_i32_i24", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp1);
@@ -25459,8 +25459,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_U32_U24 class methods ---
 
-    Inst_VOP3__V_MUL_U32_U24::Inst_VOP3__V_MUL_U32_U24(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_u32_u24", false)
+    Inst_VOP3__V_MUL_U32_U24::Inst_VOP3__V_MUL_U32_U24(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_u32_u24", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp1);
@@ -25503,8 +25503,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_HI_U32_U24 class methods ---
 
-    Inst_VOP3__V_MUL_HI_U32_U24::Inst_VOP3__V_MUL_HI_U32_U24(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_hi_u32_u24", false)
+    Inst_VOP3__V_MUL_HI_U32_U24::Inst_VOP3__V_MUL_HI_U32_U24(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_hi_u32_u24", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp1);
@@ -25549,8 +25549,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MIN_F32 class methods ---
 
-    Inst_VOP3__V_MIN_F32::Inst_VOP3__V_MIN_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_min_f32", false)
+    Inst_VOP3__V_MIN_F32::Inst_VOP3__V_MIN_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_min_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -25605,8 +25605,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAX_F32 class methods ---
 
-    Inst_VOP3__V_MAX_F32::Inst_VOP3__V_MAX_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_max_f32", false)
+    Inst_VOP3__V_MAX_F32::Inst_VOP3__V_MAX_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_max_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -25661,8 +25661,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MIN_I32 class methods ---
 
-    Inst_VOP3__V_MIN_I32::Inst_VOP3__V_MIN_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_min_i32", false)
+    Inst_VOP3__V_MIN_I32::Inst_VOP3__V_MIN_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_min_i32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MIN_I32
@@ -25704,8 +25704,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAX_I32 class methods ---
 
-    Inst_VOP3__V_MAX_I32::Inst_VOP3__V_MAX_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_max_i32", false)
+    Inst_VOP3__V_MAX_I32::Inst_VOP3__V_MAX_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_max_i32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MAX_I32
@@ -25747,8 +25747,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MIN_U32 class methods ---
 
-    Inst_VOP3__V_MIN_U32::Inst_VOP3__V_MIN_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_min_u32", false)
+    Inst_VOP3__V_MIN_U32::Inst_VOP3__V_MIN_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_min_u32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MIN_U32
@@ -25790,8 +25790,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAX_U32 class methods ---
 
-    Inst_VOP3__V_MAX_U32::Inst_VOP3__V_MAX_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_max_u32", false)
+    Inst_VOP3__V_MAX_U32::Inst_VOP3__V_MAX_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_max_u32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MAX_U32
@@ -25833,8 +25833,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LSHRREV_B32 class methods ---
 
-    Inst_VOP3__V_LSHRREV_B32::Inst_VOP3__V_LSHRREV_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_lshrrev_b32", false)
+    Inst_VOP3__V_LSHRREV_B32::Inst_VOP3__V_LSHRREV_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_lshrrev_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_LSHRREV_B32
@@ -25878,8 +25878,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_ASHRREV_I32 class methods ---
 
-    Inst_VOP3__V_ASHRREV_I32::Inst_VOP3__V_ASHRREV_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ashrrev_i32", false)
+    Inst_VOP3__V_ASHRREV_I32::Inst_VOP3__V_ASHRREV_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ashrrev_i32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_ASHRREV_I32
@@ -25923,8 +25923,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LSHLREV_B32 class methods ---
 
-    Inst_VOP3__V_LSHLREV_B32::Inst_VOP3__V_LSHLREV_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_lshlrev_b32", false)
+    Inst_VOP3__V_LSHLREV_B32::Inst_VOP3__V_LSHLREV_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_lshlrev_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_LSHLREV_B32
@@ -25967,8 +25967,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_AND_B32 class methods ---
 
-    Inst_VOP3__V_AND_B32::Inst_VOP3__V_AND_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_and_b32", false)
+    Inst_VOP3__V_AND_B32::Inst_VOP3__V_AND_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_and_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_AND_B32
@@ -26011,8 +26011,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_OR_B32 class methods ---
 
-    Inst_VOP3__V_OR_B32::Inst_VOP3__V_OR_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_or_b32", false)
+    Inst_VOP3__V_OR_B32::Inst_VOP3__V_OR_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_or_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_OR_B32
@@ -26055,8 +26055,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_XOR_B32 class methods ---
 
-    Inst_VOP3__V_XOR_B32::Inst_VOP3__V_XOR_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_xor_b32", false)
+    Inst_VOP3__V_XOR_B32::Inst_VOP3__V_XOR_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_xor_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_XOR_B32
@@ -26099,8 +26099,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAC_F32 class methods ---
 
-    Inst_VOP3__V_MAC_F32::Inst_VOP3__V_MAC_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mac_f32", false)
+    Inst_VOP3__V_MAC_F32::Inst_VOP3__V_MAC_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mac_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp0);
@@ -26159,8 +26159,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_ADD_U32 class methods ---
 
-    Inst_VOP3__V_ADD_U32::Inst_VOP3__V_ADD_U32(InFmt_VOP3_SDST_ENC *iFmt)
-        : Inst_VOP3_SDST_ENC(iFmt, "v_add_u32")
+    Inst_VOP3__V_ADD_U32::Inst_VOP3__V_ADD_U32(InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_add_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
@@ -26208,8 +26208,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SUB_U32 class methods ---
 
-    Inst_VOP3__V_SUB_U32::Inst_VOP3__V_SUB_U32(InFmt_VOP3_SDST_ENC *iFmt)
-        : Inst_VOP3_SDST_ENC(iFmt, "v_sub_u32")
+    Inst_VOP3__V_SUB_U32::Inst_VOP3__V_SUB_U32(InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_sub_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
@@ -26257,8 +26257,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_SUBREV_U32 class methods ---
 
     Inst_VOP3__V_SUBREV_U32::Inst_VOP3__V_SUBREV_U32(
-          InFmt_VOP3_SDST_ENC *iFmt)
-        : Inst_VOP3_SDST_ENC(iFmt, "v_subrev_u32")
+          InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_subrev_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
@@ -26306,8 +26306,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_ADDC_U32 class methods ---
 
-    Inst_VOP3__V_ADDC_U32::Inst_VOP3__V_ADDC_U32(InFmt_VOP3_SDST_ENC *iFmt)
-        : Inst_VOP3_SDST_ENC(iFmt, "v_addc_u32")
+    Inst_VOP3__V_ADDC_U32::Inst_VOP3__V_ADDC_U32(InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_addc_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
@@ -26362,8 +26362,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SUBB_U32 class methods ---
 
-    Inst_VOP3__V_SUBB_U32::Inst_VOP3__V_SUBB_U32(InFmt_VOP3_SDST_ENC *iFmt)
-        : Inst_VOP3_SDST_ENC(iFmt, "v_subb_u32")
+    Inst_VOP3__V_SUBB_U32::Inst_VOP3__V_SUBB_U32(InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_subb_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
@@ -26417,8 +26417,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_SUBBREV_U32 class methods ---
 
     Inst_VOP3__V_SUBBREV_U32::Inst_VOP3__V_SUBBREV_U32(
-          InFmt_VOP3_SDST_ENC *iFmt)
-        : Inst_VOP3_SDST_ENC(iFmt, "v_subbrev_u32")
+          InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_subbrev_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
@@ -26472,8 +26472,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_ADD_F16 class methods ---
 
-    Inst_VOP3__V_ADD_F16::Inst_VOP3__V_ADD_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_add_f16", false)
+    Inst_VOP3__V_ADD_F16::Inst_VOP3__V_ADD_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_add_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -26493,8 +26493,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SUB_F16 class methods ---
 
-    Inst_VOP3__V_SUB_F16::Inst_VOP3__V_SUB_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sub_f16", false)
+    Inst_VOP3__V_SUB_F16::Inst_VOP3__V_SUB_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sub_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -26515,8 +26515,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SUBREV_F16 class methods ---
 
-    Inst_VOP3__V_SUBREV_F16::Inst_VOP3__V_SUBREV_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_subrev_f16", false)
+    Inst_VOP3__V_SUBREV_F16::Inst_VOP3__V_SUBREV_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_subrev_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -26537,8 +26537,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_F16 class methods ---
 
-    Inst_VOP3__V_MUL_F16::Inst_VOP3__V_MUL_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_f16", false)
+    Inst_VOP3__V_MUL_F16::Inst_VOP3__V_MUL_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -26558,8 +26558,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAC_F16 class methods ---
 
-    Inst_VOP3__V_MAC_F16::Inst_VOP3__V_MAC_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mac_f16", false)
+    Inst_VOP3__V_MAC_F16::Inst_VOP3__V_MAC_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mac_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -26581,8 +26581,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_ADD_U16 class methods ---
 
-    Inst_VOP3__V_ADD_U16::Inst_VOP3__V_ADD_U16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_add_u16", false)
+    Inst_VOP3__V_ADD_U16::Inst_VOP3__V_ADD_U16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_add_u16", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_ADD_U16
@@ -26625,8 +26625,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SUB_U16 class methods ---
 
-    Inst_VOP3__V_SUB_U16::Inst_VOP3__V_SUB_U16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sub_u16", false)
+    Inst_VOP3__V_SUB_U16::Inst_VOP3__V_SUB_U16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sub_u16", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_SUB_U16
@@ -26669,8 +26669,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SUBREV_U16 class methods ---
 
-    Inst_VOP3__V_SUBREV_U16::Inst_VOP3__V_SUBREV_U16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_subrev_u16", false)
+    Inst_VOP3__V_SUBREV_U16::Inst_VOP3__V_SUBREV_U16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_subrev_u16", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_SUBREV_U16
@@ -26714,8 +26714,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_LO_U16 class methods ---
 
-    Inst_VOP3__V_MUL_LO_U16::Inst_VOP3__V_MUL_LO_U16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_lo_u16", false)
+    Inst_VOP3__V_MUL_LO_U16::Inst_VOP3__V_MUL_LO_U16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_lo_u16", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MUL_LO_U16
@@ -26758,8 +26758,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LSHLREV_B16 class methods ---
 
-    Inst_VOP3__V_LSHLREV_B16::Inst_VOP3__V_LSHLREV_B16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_lshlrev_b16", false)
+    Inst_VOP3__V_LSHLREV_B16::Inst_VOP3__V_LSHLREV_B16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_lshlrev_b16", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_LSHLREV_B16
@@ -26802,8 +26802,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LSHRREV_B16 class methods ---
 
-    Inst_VOP3__V_LSHRREV_B16::Inst_VOP3__V_LSHRREV_B16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_lshrrev_b16", false)
+    Inst_VOP3__V_LSHRREV_B16::Inst_VOP3__V_LSHRREV_B16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_lshrrev_b16", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_LSHRREV_B16
@@ -26853,8 +26853,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_ASHRREV_I16 class methods ---
 
-    Inst_VOP3__V_ASHRREV_I16::Inst_VOP3__V_ASHRREV_I16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ashrrev_i16", false)
+    Inst_VOP3__V_ASHRREV_I16::Inst_VOP3__V_ASHRREV_I16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ashrrev_i16", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_ASHRREV_I16
@@ -26898,8 +26898,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAX_F16 class methods ---
 
-    Inst_VOP3__V_MAX_F16::Inst_VOP3__V_MAX_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_max_f16", false)
+    Inst_VOP3__V_MAX_F16::Inst_VOP3__V_MAX_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_max_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -26920,8 +26920,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MIN_F16 class methods ---
 
-    Inst_VOP3__V_MIN_F16::Inst_VOP3__V_MIN_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_min_f16", false)
+    Inst_VOP3__V_MIN_F16::Inst_VOP3__V_MIN_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_min_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -26942,8 +26942,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAX_U16 class methods ---
 
-    Inst_VOP3__V_MAX_U16::Inst_VOP3__V_MAX_U16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_max_u16", false)
+    Inst_VOP3__V_MAX_U16::Inst_VOP3__V_MAX_U16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_max_u16", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MAX_U16
@@ -26991,8 +26991,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAX_I16 class methods ---
 
-    Inst_VOP3__V_MAX_I16::Inst_VOP3__V_MAX_I16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_max_i16", false)
+    Inst_VOP3__V_MAX_I16::Inst_VOP3__V_MAX_I16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_max_i16", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MAX_I16
@@ -27040,8 +27040,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MIN_U16 class methods ---
 
-    Inst_VOP3__V_MIN_U16::Inst_VOP3__V_MIN_U16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_min_u16", false)
+    Inst_VOP3__V_MIN_U16::Inst_VOP3__V_MIN_U16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_min_u16", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MIN_U16
@@ -27089,8 +27089,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MIN_I16 class methods ---
 
-    Inst_VOP3__V_MIN_I16::Inst_VOP3__V_MIN_I16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_min_i16", false)
+    Inst_VOP3__V_MIN_I16::Inst_VOP3__V_MIN_I16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_min_i16", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MIN_I16
@@ -27138,8 +27138,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LDEXP_F16 class methods ---
 
-    Inst_VOP3__V_LDEXP_F16::Inst_VOP3__V_LDEXP_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ldexp_f16", false)
+    Inst_VOP3__V_LDEXP_F16::Inst_VOP3__V_LDEXP_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ldexp_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -27158,8 +27158,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_NOP class methods ---
 
-    Inst_VOP3__V_NOP::Inst_VOP3__V_NOP(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_nop", false)
+    Inst_VOP3__V_NOP::Inst_VOP3__V_NOP(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_nop", false)
     {
         setFlag(Nop);
         setFlag(ALU);
@@ -27177,8 +27177,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MOV_B32 class methods ---
 
-    Inst_VOP3__V_MOV_B32::Inst_VOP3__V_MOV_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mov_b32", false)
+    Inst_VOP3__V_MOV_B32::Inst_VOP3__V_MOV_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mov_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MOV_B32
@@ -27209,8 +27209,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_I32_F64 class methods ---
 
-    Inst_VOP3__V_CVT_I32_F64::Inst_VOP3__V_CVT_I32_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_i32_f64", false)
+    Inst_VOP3__V_CVT_I32_F64::Inst_VOP3__V_CVT_I32_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_i32_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -27263,8 +27263,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F64_I32 class methods ---
 
-    Inst_VOP3__V_CVT_F64_I32::Inst_VOP3__V_CVT_F64_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f64_i32", false)
+    Inst_VOP3__V_CVT_F64_I32::Inst_VOP3__V_CVT_F64_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f64_i32", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -27303,8 +27303,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F32_I32 class methods ---
 
-    Inst_VOP3__V_CVT_F32_I32::Inst_VOP3__V_CVT_F32_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f32_i32", false)
+    Inst_VOP3__V_CVT_F32_I32::Inst_VOP3__V_CVT_F32_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f32_i32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27345,8 +27345,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F32_U32 class methods ---
 
-    Inst_VOP3__V_CVT_F32_U32::Inst_VOP3__V_CVT_F32_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f32_u32", false)
+    Inst_VOP3__V_CVT_F32_U32::Inst_VOP3__V_CVT_F32_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f32_u32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27385,8 +27385,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_U32_F32 class methods ---
 
-    Inst_VOP3__V_CVT_U32_F32::Inst_VOP3__V_CVT_U32_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_u32_f32", false)
+    Inst_VOP3__V_CVT_U32_F32::Inst_VOP3__V_CVT_U32_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_u32_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27441,8 +27441,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_I32_F32 class methods ---
 
-    Inst_VOP3__V_CVT_I32_F32::Inst_VOP3__V_CVT_I32_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_i32_f32", false)
+    Inst_VOP3__V_CVT_I32_F32::Inst_VOP3__V_CVT_I32_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_i32_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27503,8 +27503,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MOV_FED_B32 class methods ---
 
-    Inst_VOP3__V_MOV_FED_B32::Inst_VOP3__V_MOV_FED_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mov_fed_b32", false)
+    Inst_VOP3__V_MOV_FED_B32::Inst_VOP3__V_MOV_FED_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mov_fed_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MOV_FED_B32
@@ -27525,8 +27525,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F16_F32 class methods ---
 
-    Inst_VOP3__V_CVT_F16_F32::Inst_VOP3__V_CVT_F16_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f16_f32", false)
+    Inst_VOP3__V_CVT_F16_F32::Inst_VOP3__V_CVT_F16_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f16_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27546,8 +27546,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F32_F16 class methods ---
 
-    Inst_VOP3__V_CVT_F32_F16::Inst_VOP3__V_CVT_F32_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f32_f16", false)
+    Inst_VOP3__V_CVT_F32_F16::Inst_VOP3__V_CVT_F32_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f32_f16", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27568,8 +27568,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CVT_RPI_I32_F32 class methods ---
 
     Inst_VOP3__V_CVT_RPI_I32_F32::Inst_VOP3__V_CVT_RPI_I32_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_rpi_i32_f32", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_rpi_i32_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27609,8 +27609,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CVT_FLR_I32_F32 class methods ---
 
     Inst_VOP3__V_CVT_FLR_I32_F32::Inst_VOP3__V_CVT_FLR_I32_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_flr_i32_f32", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_flr_i32_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27649,8 +27649,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_OFF_F32_I4 class methods ---
 
-    Inst_VOP3__V_CVT_OFF_F32_I4::Inst_VOP3__V_CVT_OFF_F32_I4(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_off_f32_i4", false)
+    Inst_VOP3__V_CVT_OFF_F32_I4::Inst_VOP3__V_CVT_OFF_F32_I4(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_off_f32_i4", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27670,8 +27670,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F32_F64 class methods ---
 
-    Inst_VOP3__V_CVT_F32_F64::Inst_VOP3__V_CVT_F32_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f32_f64", false)
+    Inst_VOP3__V_CVT_F32_F64::Inst_VOP3__V_CVT_F32_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f32_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -27718,8 +27718,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F64_F32 class methods ---
 
-    Inst_VOP3__V_CVT_F64_F32::Inst_VOP3__V_CVT_F64_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f64_f32", false)
+    Inst_VOP3__V_CVT_F64_F32::Inst_VOP3__V_CVT_F64_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f64_f32", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -27766,8 +27766,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F32_UBYTE0 class methods ---
 
-    Inst_VOP3__V_CVT_F32_UBYTE0::Inst_VOP3__V_CVT_F32_UBYTE0(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f32_ubyte0", false)
+    Inst_VOP3__V_CVT_F32_UBYTE0::Inst_VOP3__V_CVT_F32_UBYTE0(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f32_ubyte0", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27806,8 +27806,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F32_UBYTE1 class methods ---
 
-    Inst_VOP3__V_CVT_F32_UBYTE1::Inst_VOP3__V_CVT_F32_UBYTE1(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f32_ubyte1", false)
+    Inst_VOP3__V_CVT_F32_UBYTE1::Inst_VOP3__V_CVT_F32_UBYTE1(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f32_ubyte1", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27846,8 +27846,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F32_UBYTE2 class methods ---
 
-    Inst_VOP3__V_CVT_F32_UBYTE2::Inst_VOP3__V_CVT_F32_UBYTE2(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f32_ubyte2", false)
+    Inst_VOP3__V_CVT_F32_UBYTE2::Inst_VOP3__V_CVT_F32_UBYTE2(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f32_ubyte2", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27886,8 +27886,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F32_UBYTE3 class methods ---
 
-    Inst_VOP3__V_CVT_F32_UBYTE3::Inst_VOP3__V_CVT_F32_UBYTE3(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f32_ubyte3", false)
+    Inst_VOP3__V_CVT_F32_UBYTE3::Inst_VOP3__V_CVT_F32_UBYTE3(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f32_ubyte3", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -27926,8 +27926,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_U32_F64 class methods ---
 
-    Inst_VOP3__V_CVT_U32_F64::Inst_VOP3__V_CVT_U32_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_u32_f64", false)
+    Inst_VOP3__V_CVT_U32_F64::Inst_VOP3__V_CVT_U32_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_u32_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -27982,8 +27982,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F64_U32 class methods ---
 
-    Inst_VOP3__V_CVT_F64_U32::Inst_VOP3__V_CVT_F64_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f64_u32", false)
+    Inst_VOP3__V_CVT_F64_U32::Inst_VOP3__V_CVT_F64_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f64_u32", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -28022,8 +28022,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_TRUNC_F64 class methods ---
 
-    Inst_VOP3__V_TRUNC_F64::Inst_VOP3__V_TRUNC_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_trunc_f64", false)
+    Inst_VOP3__V_TRUNC_F64::Inst_VOP3__V_TRUNC_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_trunc_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -28062,8 +28062,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CEIL_F64 class methods ---
 
-    Inst_VOP3__V_CEIL_F64::Inst_VOP3__V_CEIL_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ceil_f64", false)
+    Inst_VOP3__V_CEIL_F64::Inst_VOP3__V_CEIL_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ceil_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -28103,8 +28103,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_RNDNE_F64 class methods ---
 
-    Inst_VOP3__V_RNDNE_F64::Inst_VOP3__V_RNDNE_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_rndne_f64", false)
+    Inst_VOP3__V_RNDNE_F64::Inst_VOP3__V_RNDNE_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_rndne_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -28143,8 +28143,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FLOOR_F64 class methods ---
 
-    Inst_VOP3__V_FLOOR_F64::Inst_VOP3__V_FLOOR_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_floor_f64", false)
+    Inst_VOP3__V_FLOOR_F64::Inst_VOP3__V_FLOOR_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_floor_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -28184,8 +28184,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FRACT_F32 class methods ---
 
-    Inst_VOP3__V_FRACT_F32::Inst_VOP3__V_FRACT_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_fract_f32", false)
+    Inst_VOP3__V_FRACT_F32::Inst_VOP3__V_FRACT_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_fract_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28226,8 +28226,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_TRUNC_F32 class methods ---
 
-    Inst_VOP3__V_TRUNC_F32::Inst_VOP3__V_TRUNC_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_trunc_f32", false)
+    Inst_VOP3__V_TRUNC_F32::Inst_VOP3__V_TRUNC_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_trunc_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -28266,8 +28266,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CEIL_F32 class methods ---
 
-    Inst_VOP3__V_CEIL_F32::Inst_VOP3__V_CEIL_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ceil_f32", false)
+    Inst_VOP3__V_CEIL_F32::Inst_VOP3__V_CEIL_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ceil_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -28307,8 +28307,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_RNDNE_F32 class methods ---
 
-    Inst_VOP3__V_RNDNE_F32::Inst_VOP3__V_RNDNE_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_rndne_f32", false)
+    Inst_VOP3__V_RNDNE_F32::Inst_VOP3__V_RNDNE_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_rndne_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -28347,8 +28347,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FLOOR_F32 class methods ---
 
-    Inst_VOP3__V_FLOOR_F32::Inst_VOP3__V_FLOOR_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_floor_f32", false)
+    Inst_VOP3__V_FLOOR_F32::Inst_VOP3__V_FLOOR_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_floor_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -28388,8 +28388,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_EXP_F32 class methods ---
 
-    Inst_VOP3__V_EXP_F32::Inst_VOP3__V_EXP_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_exp_f32", false)
+    Inst_VOP3__V_EXP_F32::Inst_VOP3__V_EXP_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_exp_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28429,8 +28429,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LOG_F32 class methods ---
 
-    Inst_VOP3__V_LOG_F32::Inst_VOP3__V_LOG_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_log_f32", false)
+    Inst_VOP3__V_LOG_F32::Inst_VOP3__V_LOG_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_log_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28478,8 +28478,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_RCP_F32 class methods ---
 
-    Inst_VOP3__V_RCP_F32::Inst_VOP3__V_RCP_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_rcp_f32", false)
+    Inst_VOP3__V_RCP_F32::Inst_VOP3__V_RCP_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_rcp_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28519,8 +28519,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_RCP_IFLAG_F32 class methods ---
 
-    Inst_VOP3__V_RCP_IFLAG_F32::Inst_VOP3__V_RCP_IFLAG_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_rcp_iflag_f32", false)
+    Inst_VOP3__V_RCP_IFLAG_F32::Inst_VOP3__V_RCP_IFLAG_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_rcp_iflag_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28562,8 +28562,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_RSQ_F32 class methods ---
 
-    Inst_VOP3__V_RSQ_F32::Inst_VOP3__V_RSQ_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_rsq_f32", false)
+    Inst_VOP3__V_RSQ_F32::Inst_VOP3__V_RSQ_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_rsq_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28603,8 +28603,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_RCP_F64 class methods ---
 
-    Inst_VOP3__V_RCP_F64::Inst_VOP3__V_RCP_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_rcp_f64", false)
+    Inst_VOP3__V_RCP_F64::Inst_VOP3__V_RCP_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_rcp_f64", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28656,8 +28656,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_RSQ_F64 class methods ---
 
-    Inst_VOP3__V_RSQ_F64::Inst_VOP3__V_RSQ_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_rsq_f64", false)
+    Inst_VOP3__V_RSQ_F64::Inst_VOP3__V_RSQ_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_rsq_f64", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28707,8 +28707,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SQRT_F32 class methods ---
 
-    Inst_VOP3__V_SQRT_F32::Inst_VOP3__V_SQRT_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sqrt_f32", false)
+    Inst_VOP3__V_SQRT_F32::Inst_VOP3__V_SQRT_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sqrt_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28748,8 +28748,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SQRT_F64 class methods ---
 
-    Inst_VOP3__V_SQRT_F64::Inst_VOP3__V_SQRT_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sqrt_f64", false)
+    Inst_VOP3__V_SQRT_F64::Inst_VOP3__V_SQRT_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sqrt_f64", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28789,8 +28789,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SIN_F32 class methods ---
 
-    Inst_VOP3__V_SIN_F32::Inst_VOP3__V_SIN_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sin_f32", false)
+    Inst_VOP3__V_SIN_F32::Inst_VOP3__V_SIN_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sin_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28834,8 +28834,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_COS_F32 class methods ---
 
-    Inst_VOP3__V_COS_F32::Inst_VOP3__V_COS_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cos_f32", false)
+    Inst_VOP3__V_COS_F32::Inst_VOP3__V_COS_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cos_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -28879,8 +28879,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_NOT_B32 class methods ---
 
-    Inst_VOP3__V_NOT_B32::Inst_VOP3__V_NOT_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_not_b32", false)
+    Inst_VOP3__V_NOT_B32::Inst_VOP3__V_NOT_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_not_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_NOT_B32
@@ -28919,8 +28919,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_BFREV_B32 class methods ---
 
-    Inst_VOP3__V_BFREV_B32::Inst_VOP3__V_BFREV_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_bfrev_b32", false)
+    Inst_VOP3__V_BFREV_B32::Inst_VOP3__V_BFREV_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_bfrev_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_BFREV_B32
@@ -28951,8 +28951,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FFBH_U32 class methods ---
 
-    Inst_VOP3__V_FFBH_U32::Inst_VOP3__V_FFBH_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ffbh_u32", false)
+    Inst_VOP3__V_FFBH_U32::Inst_VOP3__V_FFBH_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ffbh_u32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_FFBH_U32
@@ -28991,8 +28991,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FFBL_B32 class methods ---
 
-    Inst_VOP3__V_FFBL_B32::Inst_VOP3__V_FFBL_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ffbl_b32", false)
+    Inst_VOP3__V_FFBL_B32::Inst_VOP3__V_FFBL_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ffbl_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_FFBL_B32
@@ -29031,8 +29031,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FFBH_I32 class methods ---
 
-    Inst_VOP3__V_FFBH_I32::Inst_VOP3__V_FFBH_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ffbh_i32", false)
+    Inst_VOP3__V_FFBH_I32::Inst_VOP3__V_FFBH_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ffbh_i32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_FFBH_I32
@@ -29072,8 +29072,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_FREXP_EXP_I32_F64 class methods ---
 
     Inst_VOP3__V_FREXP_EXP_I32_F64::Inst_VOP3__V_FREXP_EXP_I32_F64(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_frexp_exp_i32_f64", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_frexp_exp_i32_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -29118,8 +29118,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FREXP_MANT_F64 class methods ---
 
-    Inst_VOP3__V_FREXP_MANT_F64::Inst_VOP3__V_FREXP_MANT_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_frexp_mant_f64", false)
+    Inst_VOP3__V_FREXP_MANT_F64::Inst_VOP3__V_FREXP_MANT_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_frexp_mant_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -29159,8 +29159,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FRACT_F64 class methods ---
 
-    Inst_VOP3__V_FRACT_F64::Inst_VOP3__V_FRACT_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_fract_f64", false)
+    Inst_VOP3__V_FRACT_F64::Inst_VOP3__V_FRACT_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_fract_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -29201,8 +29201,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_FREXP_EXP_I32_F32 class methods ---
 
     Inst_VOP3__V_FREXP_EXP_I32_F32::Inst_VOP3__V_FREXP_EXP_I32_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_frexp_exp_i32_f32", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_frexp_exp_i32_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -29251,8 +29251,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FREXP_MANT_F32 class methods ---
 
-    Inst_VOP3__V_FREXP_MANT_F32::Inst_VOP3__V_FREXP_MANT_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_frexp_mant_f32", false)
+    Inst_VOP3__V_FREXP_MANT_F32::Inst_VOP3__V_FREXP_MANT_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_frexp_mant_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -29301,8 +29301,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CLREXCP class methods ---
 
-    Inst_VOP3__V_CLREXCP::Inst_VOP3__V_CLREXCP(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_clrexcp", false)
+    Inst_VOP3__V_CLREXCP::Inst_VOP3__V_CLREXCP(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_clrexcp", false)
     {
     } // Inst_VOP3__V_CLREXCP
 
@@ -29319,8 +29319,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F16_U16 class methods ---
 
-    Inst_VOP3__V_CVT_F16_U16::Inst_VOP3__V_CVT_F16_U16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f16_u16", false)
+    Inst_VOP3__V_CVT_F16_U16::Inst_VOP3__V_CVT_F16_U16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f16_u16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29340,8 +29340,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_F16_I16 class methods ---
 
-    Inst_VOP3__V_CVT_F16_I16::Inst_VOP3__V_CVT_F16_I16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_f16_i16", false)
+    Inst_VOP3__V_CVT_F16_I16::Inst_VOP3__V_CVT_F16_I16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_f16_i16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29361,8 +29361,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_U16_F16 class methods ---
 
-    Inst_VOP3__V_CVT_U16_F16::Inst_VOP3__V_CVT_U16_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_u16_f16", false)
+    Inst_VOP3__V_CVT_U16_F16::Inst_VOP3__V_CVT_U16_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_u16_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29382,8 +29382,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_I16_F16 class methods ---
 
-    Inst_VOP3__V_CVT_I16_F16::Inst_VOP3__V_CVT_I16_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_i16_f16", false)
+    Inst_VOP3__V_CVT_I16_F16::Inst_VOP3__V_CVT_I16_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_i16_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29403,8 +29403,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_RCP_F16 class methods ---
 
-    Inst_VOP3__V_RCP_F16::Inst_VOP3__V_RCP_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_rcp_f16", false)
+    Inst_VOP3__V_RCP_F16::Inst_VOP3__V_RCP_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_rcp_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29426,8 +29426,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SQRT_F16 class methods ---
 
-    Inst_VOP3__V_SQRT_F16::Inst_VOP3__V_SQRT_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sqrt_f16", false)
+    Inst_VOP3__V_SQRT_F16::Inst_VOP3__V_SQRT_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sqrt_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29449,8 +29449,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_RSQ_F16 class methods ---
 
-    Inst_VOP3__V_RSQ_F16::Inst_VOP3__V_RSQ_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_rsq_f16", false)
+    Inst_VOP3__V_RSQ_F16::Inst_VOP3__V_RSQ_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_rsq_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29472,8 +29472,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LOG_F16 class methods ---
 
-    Inst_VOP3__V_LOG_F16::Inst_VOP3__V_LOG_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_log_f16", false)
+    Inst_VOP3__V_LOG_F16::Inst_VOP3__V_LOG_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_log_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29495,8 +29495,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_EXP_F16 class methods ---
 
-    Inst_VOP3__V_EXP_F16::Inst_VOP3__V_EXP_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_exp_f16", false)
+    Inst_VOP3__V_EXP_F16::Inst_VOP3__V_EXP_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_exp_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29518,8 +29518,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FREXP_MANT_F16 class methods ---
 
-    Inst_VOP3__V_FREXP_MANT_F16::Inst_VOP3__V_FREXP_MANT_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_frexp_mant_f16", false)
+    Inst_VOP3__V_FREXP_MANT_F16::Inst_VOP3__V_FREXP_MANT_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_frexp_mant_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29546,8 +29546,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_FREXP_EXP_I16_F16 class methods ---
 
     Inst_VOP3__V_FREXP_EXP_I16_F16::Inst_VOP3__V_FREXP_EXP_I16_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_frexp_exp_i16_f16", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_frexp_exp_i16_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29572,8 +29572,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FLOOR_F16 class methods ---
 
-    Inst_VOP3__V_FLOOR_F16::Inst_VOP3__V_FLOOR_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_floor_f16", false)
+    Inst_VOP3__V_FLOOR_F16::Inst_VOP3__V_FLOOR_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_floor_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29593,8 +29593,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CEIL_F16 class methods ---
 
-    Inst_VOP3__V_CEIL_F16::Inst_VOP3__V_CEIL_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ceil_f16", false)
+    Inst_VOP3__V_CEIL_F16::Inst_VOP3__V_CEIL_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ceil_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29614,8 +29614,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_TRUNC_F16 class methods ---
 
-    Inst_VOP3__V_TRUNC_F16::Inst_VOP3__V_TRUNC_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_trunc_f16", false)
+    Inst_VOP3__V_TRUNC_F16::Inst_VOP3__V_TRUNC_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_trunc_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29635,8 +29635,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_RNDNE_F16 class methods ---
 
-    Inst_VOP3__V_RNDNE_F16::Inst_VOP3__V_RNDNE_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_rndne_f16", false)
+    Inst_VOP3__V_RNDNE_F16::Inst_VOP3__V_RNDNE_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_rndne_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29657,8 +29657,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FRACT_F16 class methods ---
 
-    Inst_VOP3__V_FRACT_F16::Inst_VOP3__V_FRACT_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_fract_f16", false)
+    Inst_VOP3__V_FRACT_F16::Inst_VOP3__V_FRACT_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_fract_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29677,8 +29677,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SIN_F16 class methods ---
 
-    Inst_VOP3__V_SIN_F16::Inst_VOP3__V_SIN_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sin_f16", false)
+    Inst_VOP3__V_SIN_F16::Inst_VOP3__V_SIN_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sin_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29697,8 +29697,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_COS_F16 class methods ---
 
-    Inst_VOP3__V_COS_F16::Inst_VOP3__V_COS_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cos_f16", false)
+    Inst_VOP3__V_COS_F16::Inst_VOP3__V_COS_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cos_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -29717,8 +29717,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_EXP_LEGACY_F32 class methods ---
 
-    Inst_VOP3__V_EXP_LEGACY_F32::Inst_VOP3__V_EXP_LEGACY_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_exp_legacy_f32", false)
+    Inst_VOP3__V_EXP_LEGACY_F32::Inst_VOP3__V_EXP_LEGACY_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_exp_legacy_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -29766,8 +29766,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LOG_LEGACY_F32 class methods ---
 
-    Inst_VOP3__V_LOG_LEGACY_F32::Inst_VOP3__V_LOG_LEGACY_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_log_legacy_f32", false)
+    Inst_VOP3__V_LOG_LEGACY_F32::Inst_VOP3__V_LOG_LEGACY_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_log_legacy_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -29799,8 +29799,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAD_LEGACY_F32 class methods ---
 
-    Inst_VOP3__V_MAD_LEGACY_F32::Inst_VOP3__V_MAD_LEGACY_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mad_legacy_f32", false)
+    Inst_VOP3__V_MAD_LEGACY_F32::Inst_VOP3__V_MAD_LEGACY_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mad_legacy_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp0);
@@ -29861,8 +29861,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAD_F32 class methods ---
 
-    Inst_VOP3__V_MAD_F32::Inst_VOP3__V_MAD_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mad_f32", false)
+    Inst_VOP3__V_MAD_F32::Inst_VOP3__V_MAD_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mad_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp0);
@@ -29923,8 +29923,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAD_I32_I24 class methods ---
 
-    Inst_VOP3__V_MAD_I32_I24::Inst_VOP3__V_MAD_I32_I24(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mad_i32_i24", false)
+    Inst_VOP3__V_MAD_I32_I24::Inst_VOP3__V_MAD_I32_I24(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mad_i32_i24", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp0);
@@ -29971,8 +29971,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAD_U32_U24 class methods ---
 
-    Inst_VOP3__V_MAD_U32_U24::Inst_VOP3__V_MAD_U32_U24(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mad_u32_u24", false)
+    Inst_VOP3__V_MAD_U32_U24::Inst_VOP3__V_MAD_U32_U24(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mad_u32_u24", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp0);
@@ -30019,8 +30019,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CUBEID_F32 class methods ---
 
-    Inst_VOP3__V_CUBEID_F32::Inst_VOP3__V_CUBEID_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cubeid_f32", false)
+    Inst_VOP3__V_CUBEID_F32::Inst_VOP3__V_CUBEID_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cubeid_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -30040,8 +30040,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CUBESC_F32 class methods ---
 
-    Inst_VOP3__V_CUBESC_F32::Inst_VOP3__V_CUBESC_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cubesc_f32", false)
+    Inst_VOP3__V_CUBESC_F32::Inst_VOP3__V_CUBESC_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cubesc_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30062,8 +30062,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CUBETC_F32 class methods ---
 
-    Inst_VOP3__V_CUBETC_F32::Inst_VOP3__V_CUBETC_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cubetc_f32", false)
+    Inst_VOP3__V_CUBETC_F32::Inst_VOP3__V_CUBETC_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cubetc_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30084,8 +30084,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CUBEMA_F32 class methods ---
 
-    Inst_VOP3__V_CUBEMA_F32::Inst_VOP3__V_CUBEMA_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cubema_f32", false)
+    Inst_VOP3__V_CUBEMA_F32::Inst_VOP3__V_CUBEMA_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cubema_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30106,8 +30106,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_BFE_U32 class methods ---
 
-    Inst_VOP3__V_BFE_U32::Inst_VOP3__V_BFE_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_bfe_u32", false)
+    Inst_VOP3__V_BFE_U32::Inst_VOP3__V_BFE_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_bfe_u32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30154,8 +30154,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_BFE_I32 class methods ---
 
-    Inst_VOP3__V_BFE_I32::Inst_VOP3__V_BFE_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_bfe_i32", false)
+    Inst_VOP3__V_BFE_I32::Inst_VOP3__V_BFE_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_bfe_i32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30202,8 +30202,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_BFI_B32 class methods ---
 
-    Inst_VOP3__V_BFI_B32::Inst_VOP3__V_BFI_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_bfi_b32", false)
+    Inst_VOP3__V_BFI_B32::Inst_VOP3__V_BFI_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_bfi_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_BFI_B32
@@ -30248,8 +30248,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FMA_F32 class methods ---
 
-    Inst_VOP3__V_FMA_F32::Inst_VOP3__V_FMA_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_fma_f32", false)
+    Inst_VOP3__V_FMA_F32::Inst_VOP3__V_FMA_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_fma_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp0);
@@ -30310,8 +30310,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FMA_F64 class methods ---
 
-    Inst_VOP3__V_FMA_F64::Inst_VOP3__V_FMA_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_fma_f64", false)
+    Inst_VOP3__V_FMA_F64::Inst_VOP3__V_FMA_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_fma_f64", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp0);
@@ -30372,8 +30372,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LERP_U8 class methods ---
 
-    Inst_VOP3__V_LERP_U8::Inst_VOP3__V_LERP_U8(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_lerp_u8", false)
+    Inst_VOP3__V_LERP_U8::Inst_VOP3__V_LERP_U8(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_lerp_u8", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30434,8 +30434,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_ALIGNBIT_B32 class methods ---
 
-    Inst_VOP3__V_ALIGNBIT_B32::Inst_VOP3__V_ALIGNBIT_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_alignbit_b32", false)
+    Inst_VOP3__V_ALIGNBIT_B32::Inst_VOP3__V_ALIGNBIT_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_alignbit_b32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30483,8 +30483,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_ALIGNBYTE_B32 class methods ---
 
-    Inst_VOP3__V_ALIGNBYTE_B32::Inst_VOP3__V_ALIGNBYTE_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_alignbyte_b32", false)
+    Inst_VOP3__V_ALIGNBYTE_B32::Inst_VOP3__V_ALIGNBYTE_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_alignbyte_b32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30533,8 +30533,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MIN3_F32 class methods ---
 
-    Inst_VOP3__V_MIN3_F32::Inst_VOP3__V_MIN3_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_min3_f32", false)
+    Inst_VOP3__V_MIN3_F32::Inst_VOP3__V_MIN3_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_min3_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30595,8 +30595,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MIN3_I32 class methods ---
 
-    Inst_VOP3__V_MIN3_I32::Inst_VOP3__V_MIN3_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_min3_i32", false)
+    Inst_VOP3__V_MIN3_I32::Inst_VOP3__V_MIN3_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_min3_i32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30642,8 +30642,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MIN3_U32 class methods ---
 
-    Inst_VOP3__V_MIN3_U32::Inst_VOP3__V_MIN3_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_min3_u32", false)
+    Inst_VOP3__V_MIN3_U32::Inst_VOP3__V_MIN3_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_min3_u32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30689,8 +30689,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAX3_F32 class methods ---
 
-    Inst_VOP3__V_MAX3_F32::Inst_VOP3__V_MAX3_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_max3_f32", false)
+    Inst_VOP3__V_MAX3_F32::Inst_VOP3__V_MAX3_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_max3_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30751,8 +30751,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAX3_I32 class methods ---
 
-    Inst_VOP3__V_MAX3_I32::Inst_VOP3__V_MAX3_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_max3_i32", false)
+    Inst_VOP3__V_MAX3_I32::Inst_VOP3__V_MAX3_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_max3_i32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30798,8 +30798,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAX3_U32 class methods ---
 
-    Inst_VOP3__V_MAX3_U32::Inst_VOP3__V_MAX3_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_max3_u32", false)
+    Inst_VOP3__V_MAX3_U32::Inst_VOP3__V_MAX3_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_max3_u32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30845,8 +30845,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MED3_F32 class methods ---
 
-    Inst_VOP3__V_MED3_F32::Inst_VOP3__V_MED3_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_med3_f32", false)
+    Inst_VOP3__V_MED3_F32::Inst_VOP3__V_MED3_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_med3_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30906,8 +30906,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MED3_I32 class methods ---
 
-    Inst_VOP3__V_MED3_I32::Inst_VOP3__V_MED3_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_med3_i32", false)
+    Inst_VOP3__V_MED3_I32::Inst_VOP3__V_MED3_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_med3_i32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30952,8 +30952,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MED3_U32 class methods ---
 
-    Inst_VOP3__V_MED3_U32::Inst_VOP3__V_MED3_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_med3_u32", false)
+    Inst_VOP3__V_MED3_U32::Inst_VOP3__V_MED3_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_med3_u32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -30998,8 +30998,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SAD_U8 class methods ---
 
-    Inst_VOP3__V_SAD_U8::Inst_VOP3__V_SAD_U8(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sad_u8", false)
+    Inst_VOP3__V_SAD_U8::Inst_VOP3__V_SAD_U8(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sad_u8", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -31054,8 +31054,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SAD_HI_U8 class methods ---
 
-    Inst_VOP3__V_SAD_HI_U8::Inst_VOP3__V_SAD_HI_U8(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sad_hi_u8", false)
+    Inst_VOP3__V_SAD_HI_U8::Inst_VOP3__V_SAD_HI_U8(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sad_hi_u8", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -31105,8 +31105,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SAD_U16 class methods ---
 
-    Inst_VOP3__V_SAD_U16::Inst_VOP3__V_SAD_U16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sad_u16", false)
+    Inst_VOP3__V_SAD_U16::Inst_VOP3__V_SAD_U16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sad_u16", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -31156,8 +31156,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_SAD_U32 class methods ---
 
-    Inst_VOP3__V_SAD_U32::Inst_VOP3__V_SAD_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_sad_u32", false)
+    Inst_VOP3__V_SAD_U32::Inst_VOP3__V_SAD_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_sad_u32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -31203,8 +31203,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_PK_U8_F32 class methods ---
 
-    Inst_VOP3__V_CVT_PK_U8_F32::Inst_VOP3__V_CVT_PK_U8_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_pk_u8_f32", false)
+    Inst_VOP3__V_CVT_PK_U8_F32::Inst_VOP3__V_CVT_PK_U8_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_pk_u8_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -31262,8 +31262,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_DIV_FIXUP_F32 class methods ---
 
-    Inst_VOP3__V_DIV_FIXUP_F32::Inst_VOP3__V_DIV_FIXUP_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_div_fixup_f32", false)
+    Inst_VOP3__V_DIV_FIXUP_F32::Inst_VOP3__V_DIV_FIXUP_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_div_fixup_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -31340,8 +31340,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_DIV_FIXUP_F64 class methods ---
 
-    Inst_VOP3__V_DIV_FIXUP_F64::Inst_VOP3__V_DIV_FIXUP_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_div_fixup_f64", false)
+    Inst_VOP3__V_DIV_FIXUP_F64::Inst_VOP3__V_DIV_FIXUP_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_div_fixup_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -31432,8 +31432,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_DIV_SCALE_F32 class methods ---
 
     Inst_VOP3__V_DIV_SCALE_F32::Inst_VOP3__V_DIV_SCALE_F32(
-          InFmt_VOP3_SDST_ENC *iFmt)
-        : Inst_VOP3_SDST_ENC(iFmt, "v_div_scale_f32")
+          InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_div_scale_f32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
@@ -31490,8 +31490,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_DIV_SCALE_F64 class methods ---
 
     Inst_VOP3__V_DIV_SCALE_F64::Inst_VOP3__V_DIV_SCALE_F64(
-          InFmt_VOP3_SDST_ENC *iFmt)
-        : Inst_VOP3_SDST_ENC(iFmt, "v_div_scale_f64")
+          InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_div_scale_f64")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
@@ -31578,8 +31578,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_DIV_FMAS_F32 class methods ---
 
-    Inst_VOP3__V_DIV_FMAS_F32::Inst_VOP3__V_DIV_FMAS_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_div_fmas_f32", false)
+    Inst_VOP3__V_DIV_FMAS_F32::Inst_VOP3__V_DIV_FMAS_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_div_fmas_f32", false)
     {
         setFlag(ALU);
         setFlag(ReadsVCC);
@@ -31642,8 +31642,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_DIV_FMAS_F64 class methods ---
 
-    Inst_VOP3__V_DIV_FMAS_F64::Inst_VOP3__V_DIV_FMAS_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_div_fmas_f64", false)
+    Inst_VOP3__V_DIV_FMAS_F64::Inst_VOP3__V_DIV_FMAS_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_div_fmas_f64", false)
     {
         setFlag(ALU);
         setFlag(ReadsVCC);
@@ -31713,8 +31713,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MSAD_U8 class methods ---
 
-    Inst_VOP3__V_MSAD_U8::Inst_VOP3__V_MSAD_U8(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_msad_u8", false)
+    Inst_VOP3__V_MSAD_U8::Inst_VOP3__V_MSAD_U8(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_msad_u8", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -31733,8 +31733,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_QSAD_PK_U16_U8 class methods ---
 
-    Inst_VOP3__V_QSAD_PK_U16_U8::Inst_VOP3__V_QSAD_PK_U16_U8(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_qsad_pk_u16_u8", false)
+    Inst_VOP3__V_QSAD_PK_U16_U8::Inst_VOP3__V_QSAD_PK_U16_U8(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_qsad_pk_u16_u8", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -31755,8 +31755,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_MQSAD_PK_U16_U8 class methods ---
 
     Inst_VOP3__V_MQSAD_PK_U16_U8::Inst_VOP3__V_MQSAD_PK_U16_U8(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mqsad_pk_u16_u8", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mqsad_pk_u16_u8", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -31776,8 +31776,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MQSAD_U32_U8 class methods ---
 
-    Inst_VOP3__V_MQSAD_U32_U8::Inst_VOP3__V_MQSAD_U32_U8(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mqsad_u32_u8", false)
+    Inst_VOP3__V_MQSAD_U32_U8::Inst_VOP3__V_MQSAD_U32_U8(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mqsad_u32_u8", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MQSAD_U32_U8
@@ -31797,8 +31797,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_MAD_U64_U32 class methods ---
 
     Inst_VOP3__V_MAD_U64_U32::Inst_VOP3__V_MAD_U64_U32(
-          InFmt_VOP3_SDST_ENC *iFmt)
-        : Inst_VOP3_SDST_ENC(iFmt, "v_mad_u64_u32")
+          InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_mad_u64_u32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
@@ -31847,8 +31847,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_MAD_I64_I32 class methods ---
 
     Inst_VOP3__V_MAD_I64_I32::Inst_VOP3__V_MAD_I64_I32(
-          InFmt_VOP3_SDST_ENC *iFmt)
-        : Inst_VOP3_SDST_ENC(iFmt, "v_mad_i64_i32")
+          InFmt_VOP3B *iFmt)
+        : Inst_VOP3B(iFmt, "v_mad_i64_i32")
     {
         setFlag(ALU);
         setFlag(WritesVCC);
@@ -31895,8 +31895,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAD_F16 class methods ---
 
-    Inst_VOP3__V_MAD_F16::Inst_VOP3__V_MAD_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mad_f16", false)
+    Inst_VOP3__V_MAD_F16::Inst_VOP3__V_MAD_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mad_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -31917,8 +31917,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAD_U16 class methods ---
 
-    Inst_VOP3__V_MAD_U16::Inst_VOP3__V_MAD_U16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mad_u16", false)
+    Inst_VOP3__V_MAD_U16::Inst_VOP3__V_MAD_U16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mad_u16", false)
     {
         setFlag(ALU);
         setFlag(MAD);
@@ -31964,8 +31964,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAD_I16 class methods ---
 
-    Inst_VOP3__V_MAD_I16::Inst_VOP3__V_MAD_I16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mad_i16", false)
+    Inst_VOP3__V_MAD_I16::Inst_VOP3__V_MAD_I16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mad_i16", false)
     {
         setFlag(ALU);
         setFlag(MAD);
@@ -32011,8 +32011,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_PERM_B32 class methods ---
 
-    Inst_VOP3__V_PERM_B32::Inst_VOP3__V_PERM_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_perm_b32", false)
+    Inst_VOP3__V_PERM_B32::Inst_VOP3__V_PERM_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_perm_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_PERM_B32
@@ -32074,8 +32074,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_FMA_F16 class methods ---
 
-    Inst_VOP3__V_FMA_F16::Inst_VOP3__V_FMA_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_fma_f16", false)
+    Inst_VOP3__V_FMA_F16::Inst_VOP3__V_FMA_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_fma_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -32096,8 +32096,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_DIV_FIXUP_F16 class methods ---
 
-    Inst_VOP3__V_DIV_FIXUP_F16::Inst_VOP3__V_DIV_FIXUP_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_div_fixup_f16", false)
+    Inst_VOP3__V_DIV_FIXUP_F16::Inst_VOP3__V_DIV_FIXUP_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_div_fixup_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -32145,8 +32145,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CVT_PKACCUM_U8_F32 class methods ---
 
     Inst_VOP3__V_CVT_PKACCUM_U8_F32::Inst_VOP3__V_CVT_PKACCUM_U8_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_pkaccum_u8_f32", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_pkaccum_u8_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -32170,8 +32170,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_INTERP_P1_F32 class methods ---
 
-    Inst_VOP3__V_INTERP_P1_F32::Inst_VOP3__V_INTERP_P1_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_interp_p1_f32", false)
+    Inst_VOP3__V_INTERP_P1_F32::Inst_VOP3__V_INTERP_P1_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_interp_p1_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp0);
@@ -32198,8 +32198,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_INTERP_P2_F32 class methods ---
 
-    Inst_VOP3__V_INTERP_P2_F32::Inst_VOP3__V_INTERP_P2_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_interp_p2_f32", false)
+    Inst_VOP3__V_INTERP_P2_F32::Inst_VOP3__V_INTERP_P2_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_interp_p2_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp0);
@@ -32224,8 +32224,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_INTERP_MOV_F32 class methods ---
 
-    Inst_VOP3__V_INTERP_MOV_F32::Inst_VOP3__V_INTERP_MOV_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_interp_mov_f32", false)
+    Inst_VOP3__V_INTERP_MOV_F32::Inst_VOP3__V_INTERP_MOV_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_interp_mov_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -32245,8 +32245,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_INTERP_P1LL_F16 class methods ---
 
     Inst_VOP3__V_INTERP_P1LL_F16::Inst_VOP3__V_INTERP_P1LL_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_interp_p1ll_f16", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_interp_p1ll_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -32274,8 +32274,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_INTERP_P1LV_F16 class methods ---
 
     Inst_VOP3__V_INTERP_P1LV_F16::Inst_VOP3__V_INTERP_P1LV_F16(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_interp_p1lv_f16", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_interp_p1lv_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -32303,8 +32303,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_INTERP_P2_F16 class methods ---
 
-    Inst_VOP3__V_INTERP_P2_F16::Inst_VOP3__V_INTERP_P2_F16(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_interp_p2_f16", false)
+    Inst_VOP3__V_INTERP_P2_F16::Inst_VOP3__V_INTERP_P2_F16(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_interp_p2_f16", false)
     {
         setFlag(ALU);
         setFlag(F16);
@@ -32330,8 +32330,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_ADD_F64 class methods ---
 
-    Inst_VOP3__V_ADD_F64::Inst_VOP3__V_ADD_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_add_f64", false)
+    Inst_VOP3__V_ADD_F64::Inst_VOP3__V_ADD_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_add_f64", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -32430,8 +32430,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_F64 class methods ---
 
-    Inst_VOP3__V_MUL_F64::Inst_VOP3__V_MUL_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_f64", false)
+    Inst_VOP3__V_MUL_F64::Inst_VOP3__V_MUL_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_f64", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp1);
@@ -32532,8 +32532,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MIN_F64 class methods ---
 
-    Inst_VOP3__V_MIN_F64::Inst_VOP3__V_MIN_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_min_f64", false)
+    Inst_VOP3__V_MIN_F64::Inst_VOP3__V_MIN_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_min_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -32588,8 +32588,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MAX_F64 class methods ---
 
-    Inst_VOP3__V_MAX_F64::Inst_VOP3__V_MAX_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_max_f64", false)
+    Inst_VOP3__V_MAX_F64::Inst_VOP3__V_MAX_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_max_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -32644,8 +32644,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LDEXP_F64 class methods ---
 
-    Inst_VOP3__V_LDEXP_F64::Inst_VOP3__V_LDEXP_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ldexp_f64", false)
+    Inst_VOP3__V_LDEXP_F64::Inst_VOP3__V_LDEXP_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ldexp_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -32705,8 +32705,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_LO_U32 class methods ---
 
-    Inst_VOP3__V_MUL_LO_U32::Inst_VOP3__V_MUL_LO_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_lo_u32", false)
+    Inst_VOP3__V_MUL_LO_U32::Inst_VOP3__V_MUL_LO_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_lo_u32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp1);
@@ -32751,8 +32751,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_HI_U32 class methods ---
 
-    Inst_VOP3__V_MUL_HI_U32::Inst_VOP3__V_MUL_HI_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_hi_u32", false)
+    Inst_VOP3__V_MUL_HI_U32::Inst_VOP3__V_MUL_HI_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_hi_u32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp1);
@@ -32798,8 +32798,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_MUL_HI_I32 class methods ---
 
-    Inst_VOP3__V_MUL_HI_I32::Inst_VOP3__V_MUL_HI_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mul_hi_i32", false)
+    Inst_VOP3__V_MUL_HI_I32::Inst_VOP3__V_MUL_HI_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mul_hi_i32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp1);
@@ -32845,8 +32845,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LDEXP_F32 class methods ---
 
-    Inst_VOP3__V_LDEXP_F32::Inst_VOP3__V_LDEXP_F32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ldexp_f32", false)
+    Inst_VOP3__V_LDEXP_F32::Inst_VOP3__V_LDEXP_F32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ldexp_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -32887,8 +32887,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_READLANE_B32 class methods ---
 
-    Inst_VOP3__V_READLANE_B32::Inst_VOP3__V_READLANE_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_readlane_b32", true)
+    Inst_VOP3__V_READLANE_B32::Inst_VOP3__V_READLANE_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_readlane_b32", true)
     {
         setFlag(ALU);
         setFlag(IgnoreExec);
@@ -32928,8 +32928,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_WRITELANE_B32 class methods ---
 
-    Inst_VOP3__V_WRITELANE_B32::Inst_VOP3__V_WRITELANE_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_writelane_b32", false)
+    Inst_VOP3__V_WRITELANE_B32::Inst_VOP3__V_WRITELANE_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_writelane_b32", false)
     {
         setFlag(ALU);
         setFlag(IgnoreExec);
@@ -32972,8 +32972,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_BCNT_U32_B32 class methods ---
 
-    Inst_VOP3__V_BCNT_U32_B32::Inst_VOP3__V_BCNT_U32_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_bcnt_u32_b32", false)
+    Inst_VOP3__V_BCNT_U32_B32::Inst_VOP3__V_BCNT_U32_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_bcnt_u32_b32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -33017,8 +33017,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_MBCNT_LO_U32_B32 class methods ---
 
     Inst_VOP3__V_MBCNT_LO_U32_B32::Inst_VOP3__V_MBCNT_LO_U32_B32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mbcnt_lo_u32_b32", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mbcnt_lo_u32_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MBCNT_LO_U32_B32
@@ -33067,8 +33067,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_MBCNT_HI_U32_B32 class methods ---
 
     Inst_VOP3__V_MBCNT_HI_U32_B32::Inst_VOP3__V_MBCNT_HI_U32_B32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_mbcnt_hi_u32_b32", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_mbcnt_hi_u32_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_MBCNT_HI_U32_B32
@@ -33116,8 +33116,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LSHLREV_B64 class methods ---
 
-    Inst_VOP3__V_LSHLREV_B64::Inst_VOP3__V_LSHLREV_B64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_lshlrev_b64", false)
+    Inst_VOP3__V_LSHLREV_B64::Inst_VOP3__V_LSHLREV_B64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_lshlrev_b64", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_LSHLREV_B64
@@ -33160,8 +33160,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_LSHRREV_B64 class methods ---
 
-    Inst_VOP3__V_LSHRREV_B64::Inst_VOP3__V_LSHRREV_B64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_lshrrev_b64", false)
+    Inst_VOP3__V_LSHRREV_B64::Inst_VOP3__V_LSHRREV_B64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_lshrrev_b64", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_LSHRREV_B64
@@ -33205,8 +33205,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_ASHRREV_I64 class methods ---
 
-    Inst_VOP3__V_ASHRREV_I64::Inst_VOP3__V_ASHRREV_I64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_ashrrev_i64", false)
+    Inst_VOP3__V_ASHRREV_I64::Inst_VOP3__V_ASHRREV_I64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_ashrrev_i64", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_ASHRREV_I64
@@ -33251,8 +33251,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_TRIG_PREOP_F64 class methods ---
 
-    Inst_VOP3__V_TRIG_PREOP_F64::Inst_VOP3__V_TRIG_PREOP_F64(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_trig_preop_f64", false)
+    Inst_VOP3__V_TRIG_PREOP_F64::Inst_VOP3__V_TRIG_PREOP_F64(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_trig_preop_f64", false)
     {
         setFlag(ALU);
         setFlag(F64);
@@ -33276,8 +33276,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_BFM_B32 class methods ---
 
-    Inst_VOP3__V_BFM_B32::Inst_VOP3__V_BFM_B32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_bfm_b32", false)
+    Inst_VOP3__V_BFM_B32::Inst_VOP3__V_BFM_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_bfm_b32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_BFM_B32
@@ -33322,8 +33322,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CVT_PKNORM_I16_F32 class methods ---
 
     Inst_VOP3__V_CVT_PKNORM_I16_F32::Inst_VOP3__V_CVT_PKNORM_I16_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_pknorm_i16_f32", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_pknorm_i16_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -33343,8 +33343,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CVT_PKNORM_U16_F32 class methods ---
 
     Inst_VOP3__V_CVT_PKNORM_U16_F32::Inst_VOP3__V_CVT_PKNORM_U16_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_pknorm_u16_f32", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_pknorm_u16_f32", false)
     {
         setFlag(ALU);
         setFlag(F32);
@@ -33364,8 +33364,8 @@ namespace VegaISA
     // --- Inst_VOP3__V_CVT_PKRTZ_F16_F32 class methods ---
 
     Inst_VOP3__V_CVT_PKRTZ_F16_F32::Inst_VOP3__V_CVT_PKRTZ_F16_F32(
-          InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_pkrtz_f16_f32", false)
+          InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_pkrtz_f16_f32", false)
     {
         setFlag(ALU);
         setFlag(ValuCacGrp2);
@@ -33388,8 +33388,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_PK_U16_U32 class methods ---
 
-    Inst_VOP3__V_CVT_PK_U16_U32::Inst_VOP3__V_CVT_PK_U16_U32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_pk_u16_u32", false)
+    Inst_VOP3__V_CVT_PK_U16_U32::Inst_VOP3__V_CVT_PK_U16_U32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_pk_u16_u32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CVT_PK_U16_U32
@@ -33407,8 +33407,8 @@ namespace VegaISA
     } // execute
     // --- Inst_VOP3__V_CVT_PK_I16_I32 class methods ---
 
-    Inst_VOP3__V_CVT_PK_I16_I32::Inst_VOP3__V_CVT_PK_I16_I32(InFmt_VOP3 *iFmt)
-        : Inst_VOP3(iFmt, "v_cvt_pk_i16_i32", false)
+    Inst_VOP3__V_CVT_PK_I16_I32::Inst_VOP3__V_CVT_PK_I16_I32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_cvt_pk_i16_i32", false)
     {
         setFlag(ALU);
     } // Inst_VOP3__V_CVT_PK_I16_I32

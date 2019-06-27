@@ -1390,7 +1390,9 @@ namespace VegaISA
     };
 
     struct InFmt_FLAT {
-        unsigned int  pad_0_15 : 16;
+        unsigned int    OFFSET : 13;
+        unsigned int       LDS : 1;
+        unsigned int       SEG : 2;
         unsigned int       GLC : 1;
         unsigned int       SLC : 1;
         unsigned int        OP : 7;
@@ -1401,8 +1403,8 @@ namespace VegaISA
     struct InFmt_FLAT_1 {
         unsigned int      ADDR : 8;
         unsigned int      DATA : 8;
-        unsigned int pad_16_22 : 7;
-        unsigned int       TFE : 1;
+        unsigned int     SADDR : 7;
+        unsigned int        NV : 1;
         unsigned int      VDST : 8;
     };
 
@@ -1411,12 +1413,13 @@ namespace VegaISA
     };
 
     struct InFmt_MIMG {
-        unsigned int   pad_0_7 : 8;
+        unsigned int       OPM : 1;
+        unsigned int   pad_1_7 : 7;
         unsigned int     DMASK : 4;
-        unsigned int     UNORM : 1;
+        unsigned int      UNRM : 1;
         unsigned int       GLC : 1;
         unsigned int        DA : 1;
-        unsigned int      R128 : 1;
+        unsigned int       A16 : 1;
         unsigned int       TFE : 1;
         unsigned int       LWE : 1;
         unsigned int        OP : 7;
@@ -1479,7 +1482,9 @@ namespace VegaISA
     struct InFmt_SMEM {
         unsigned int     SBASE : 6;
         unsigned int     SDATA : 7;
-        unsigned int pad_13_15 : 3;
+        unsigned int    pad_13 : 1;
+        unsigned int       SOE : 1;
+        unsigned int        NV : 1;
         unsigned int       GLC : 1;
         unsigned int       IMM : 1;
         unsigned int        OP : 8;
@@ -1487,7 +1492,9 @@ namespace VegaISA
     };
 
     struct InFmt_SMEM_1 {
-        unsigned int    OFFSET : 20;
+        unsigned int    OFFSET : 21;
+        unsigned int pad_21_24 : 4;
+        unsigned int   SOFFSET : 7;
     };
 
     struct InFmt_SOP1 {
@@ -1549,10 +1556,10 @@ namespace VegaISA
         unsigned int  ENCODING : 1;
     };
 
-    struct InFmt_VOP3 {
+    struct InFmt_VOP3A {
         unsigned int      VDST : 8;
         unsigned int       ABS : 3;
-        unsigned int pad_11_14 : 4;
+        unsigned int     OPSEL : 4;
         unsigned int     CLAMP : 1;
         unsigned int        OP : 10;
         unsigned int  ENCODING : 6;
@@ -1566,7 +1573,7 @@ namespace VegaISA
         unsigned int       NEG : 3;
     };
 
-    struct InFmt_VOP3_SDST_ENC {
+    struct InFmt_VOP3B {
         unsigned int      VDST : 8;
         unsigned int      SDST : 7;
         unsigned int     CLAMP : 1;
@@ -1585,7 +1592,7 @@ namespace VegaISA
         unsigned int       SRC0 : 8;
         unsigned int   DPP_CTRL : 9;
         unsigned int  pad_17_18 : 2;
-        unsigned int BOUND_CTRL : 1;
+        unsigned int         BC : 1;
         unsigned int   SRC0_NEG : 1;
         unsigned int   SRC0_ABS : 1;
         unsigned int   SRC1_NEG : 1;
@@ -1597,18 +1604,57 @@ namespace VegaISA
     struct InFmt_VOP_SDWA {
         unsigned int       SRC0 : 8;
         unsigned int    DST_SEL : 3;
-        unsigned int DST_UNUSED : 2;
-        unsigned int      CLAMP : 1;
-        unsigned int  pad_14_15 : 2;
+        unsigned int      DST_U : 2;
+        unsigned int       CLMP : 1;
+        unsigned int       OMOD : 2;
         unsigned int   SRC0_SEL : 3;
         unsigned int  SRC0_SEXT : 1;
         unsigned int   SRC0_NEG : 1;
         unsigned int   SRC0_ABS : 1;
-        unsigned int  pad_22_23 : 2;
+        unsigned int     pad_22 : 1;
+        unsigned int         S0 : 1;
         unsigned int   SRC1_SEL : 3;
         unsigned int  SRC1_SEXT : 1;
         unsigned int   SRC1_NEG : 1;
         unsigned int   SRC1_ABS : 1;
+        unsigned int     pad_30 : 1;
+        unsigned int         S1 : 1;
+    };
+
+    struct InFmt_VOP_SDWAB {
+        unsigned int       SRC0 : 8;
+        unsigned int       SDST : 7;
+        unsigned int         SD : 1;
+        unsigned int   SRC0_SEL : 3;
+        unsigned int  SRC0_SEXT : 1;
+        unsigned int   SRC0_NEG : 1;
+        unsigned int   SRC0_ABS : 1;
+        unsigned int     pad_22 : 1;
+        unsigned int         S0 : 1;
+        unsigned int   SRC1_SEL : 3;
+        unsigned int  SRC1_SEXT : 1;
+        unsigned int   SRC1_NEG : 1;
+        unsigned int   SRC1_ABS : 1;
+        unsigned int     pad_30 : 1;
+        unsigned int         S1 : 1;
+    };
+
+    struct InFmt_VOP3P {
+        unsigned int      VDST : 8;
+        unsigned int    NEG_HI : 3;
+        unsigned int     OPSEL : 3;
+        unsigned int OPSEL_HI2 : 1;
+        unsigned int      CLMP : 1;
+        unsigned int        OP : 7;
+        unsigned int  ENCODING : 9;
+    };
+
+    struct InFmt_VOP3P_1 {
+        unsigned int      SRC0 : 9;
+        unsigned int      SRC1 : 9;
+        unsigned int      SRC2 : 9;
+        unsigned int  OPSEL_HI : 2;
+        unsigned int       NEG : 3;
     };
 
     union InstFormat {
@@ -1635,12 +1681,15 @@ namespace VegaISA
         InFmt_VINTRP        iFmt_VINTRP;
         InFmt_VOP1          iFmt_VOP1;
         InFmt_VOP2          iFmt_VOP2;
-        InFmt_VOP3          iFmt_VOP3;
+        InFmt_VOP3A         iFmt_VOP3A;
         InFmt_VOP3_1        iFmt_VOP3_1;
-        InFmt_VOP3_SDST_ENC iFmt_VOP3_SDST_ENC;
+        InFmt_VOP3B         iFmt_VOP3B;
         InFmt_VOPC          iFmt_VOPC;
         InFmt_VOP_DPP       iFmt_VOP_DPP;
         InFmt_VOP_SDWA      iFmt_VOP_SDWA;
+        InFmt_VOP_SDWAB     iFmt_VOP_SDWAB;
+        InFmt_VOP3P         iFmt_VOP3P;
+        InFmt_VOP3P_1       iFmt_VOP3P_1;
         uint32_t            imm_u32;
         float               imm_f32;
     }; // union InstFormat

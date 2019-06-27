@@ -416,7 +416,7 @@ namespace VegaISA
     {
         // local variables
         SqDPPVals dppCtrl = (SqDPPVals)dppInst.DPP_CTRL;
-        int boundCtrl = dppInst.BOUND_CTRL;
+        int boundCtrl = dppInst.BC;
         int bankMask = dppInst.BANK_MASK;
         int rowMask = dppInst.ROW_MASK;
         // row, bank info to be calculated per lane
@@ -879,9 +879,9 @@ namespace VegaISA
     {
         // local variables
         const SDWADstVals dst_unusedBits_format =
-            (SDWADstVals)sdwaInst.DST_UNUSED;
+            (SDWADstVals)sdwaInst.DST_U;
         const SDWASelVals dst_sel = (SDWASelVals)sdwaInst.DST_SEL;
-        const bool clamp = sdwaInst.CLAMP;
+        const bool clamp = sdwaInst.CLMP;
 
         /**
          * STEP 1: select the appropriate bits for dst and pad/sign-extend as

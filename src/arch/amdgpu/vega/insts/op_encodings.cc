@@ -1190,9 +1190,9 @@ namespace VegaISA
         return 4;
     } // instSize
 
-    // --- Inst_VOP3 base class methods ---
+    // --- Inst_VOP3A base class methods ---
 
-    Inst_VOP3::Inst_VOP3(InFmt_VOP3 *iFmt, const std::string &opcode,
+    Inst_VOP3A::Inst_VOP3A(InFmt_VOP3A *iFmt, const std::string &opcode,
                          bool sgpr_dst)
         : VEGAGPUStaticInst(opcode), sgprDst(sgpr_dst)
     {
@@ -1201,20 +1201,20 @@ namespace VegaISA
         // copy second instruction DWORD
         extData = ((InFmt_VOP3_1 *)iFmt)[1];
         _srcLiteral = *reinterpret_cast<uint32_t*>(&iFmt[1]);
-    } // Inst_VOP3
+    } // Inst_VOP3A
 
-    Inst_VOP3::~Inst_VOP3()
+    Inst_VOP3A::~Inst_VOP3A()
     {
-    } // ~Inst_VOP3
+    } // ~Inst_VOP3A
 
     int
-    Inst_VOP3::instSize() const
+    Inst_VOP3A::instSize() const
     {
         return 8;
     } // instSize
 
     void
-    Inst_VOP3::generateDisassembly()
+    Inst_VOP3A::generateDisassembly()
     {
         std::stringstream dis_stream;
         dis_stream << _opcode << " ";
@@ -1272,7 +1272,7 @@ namespace VegaISA
     }
 
     bool
-    Inst_VOP3::isScalarRegister(int opIdx)
+    Inst_VOP3A::isScalarRegister(int opIdx)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -1346,7 +1346,7 @@ namespace VegaISA
     }
 
     bool
-    Inst_VOP3::isVectorRegister(int opIdx)
+    Inst_VOP3A::isVectorRegister(int opIdx)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -1420,7 +1420,7 @@ namespace VegaISA
     }
 
     int
-    Inst_VOP3::getRegisterIndex(int opIdx, int num_scalar_regs)
+    Inst_VOP3A::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -1489,10 +1489,9 @@ namespace VegaISA
         }
     }
 
-    // --- Inst_VOP3_SDST_ENC base class methods ---
+    // --- Inst_VOP3B base class methods ---
 
-    Inst_VOP3_SDST_ENC::Inst_VOP3_SDST_ENC(InFmt_VOP3_SDST_ENC *iFmt,
-                                           const std::string &opcode)
+    Inst_VOP3B::Inst_VOP3B(InFmt_VOP3B *iFmt, const std::string &opcode)
         : VEGAGPUStaticInst(opcode)
     {
         // copy first instruction DWORD
@@ -1500,20 +1499,20 @@ namespace VegaISA
         // copy second instruction DWORD
         extData = ((InFmt_VOP3_1 *)iFmt)[1];
         _srcLiteral = *reinterpret_cast<uint32_t*>(&iFmt[1]);
-    } // Inst_VOP3_SDST_ENC
+    } // Inst_VOP3B
 
-    Inst_VOP3_SDST_ENC::~Inst_VOP3_SDST_ENC()
+    Inst_VOP3B::~Inst_VOP3B()
     {
-    } // ~Inst_VOP3_SDST_ENC
+    } // ~Inst_VOP3B
 
     int
-    Inst_VOP3_SDST_ENC::instSize() const
+    Inst_VOP3B::instSize() const
     {
         return 8;
     } // instSize
 
     void
-    Inst_VOP3_SDST_ENC::generateDisassembly()
+    Inst_VOP3B::generateDisassembly()
     {
         std::stringstream dis_stream;
         dis_stream << _opcode << " ";
@@ -1557,7 +1556,7 @@ namespace VegaISA
     }
 
     bool
-    Inst_VOP3_SDST_ENC::isScalarRegister(int opIdx)
+    Inst_VOP3B::isScalarRegister(int opIdx)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -1631,7 +1630,7 @@ namespace VegaISA
     }
 
     bool
-    Inst_VOP3_SDST_ENC::isVectorRegister(int opIdx)
+    Inst_VOP3B::isVectorRegister(int opIdx)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
@@ -1705,7 +1704,7 @@ namespace VegaISA
     }
 
     int
-    Inst_VOP3_SDST_ENC::getRegisterIndex(int opIdx, int num_scalar_regs)
+    Inst_VOP3B::getRegisterIndex(int opIdx, int num_scalar_regs)
     {
         assert(opIdx >= 0);
         assert(opIdx < getNumOperands());
