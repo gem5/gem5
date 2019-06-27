@@ -1623,19 +1623,19 @@ namespace VegaISA
         &Decoder::decode_OP_FLAT__FLAT_LOAD_DWORDX3,
         &Decoder::decode_OP_FLAT__FLAT_LOAD_DWORDX4,
         &Decoder::decode_OP_FLAT__FLAT_STORE_BYTE,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_FLAT__FLAT_STORE_BYTE_D16_HI,
         &Decoder::decode_OP_FLAT__FLAT_STORE_SHORT,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_FLAT__FLAT_STORE_SHORT_D16_HI,
         &Decoder::decode_OP_FLAT__FLAT_STORE_DWORD,
         &Decoder::decode_OP_FLAT__FLAT_STORE_DWORDX2,
         &Decoder::decode_OP_FLAT__FLAT_STORE_DWORDX3,
         &Decoder::decode_OP_FLAT__FLAT_STORE_DWORDX4,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
-        &Decoder::decode_invalid,
+        &Decoder::decode_OP_FLAT__FLAT_LOAD_UBYTE_D16,
+        &Decoder::decode_OP_FLAT__FLAT_LOAD_UBYTE_D16_HI,
+        &Decoder::decode_OP_FLAT__FLAT_LOAD_SBYTE_D16,
+        &Decoder::decode_OP_FLAT__FLAT_LOAD_SBYTE_D16_HI,
+        &Decoder::decode_OP_FLAT__FLAT_LOAD_SHORT_D16,
+        &Decoder::decode_OP_FLAT__FLAT_LOAD_SHORT_D16_HI,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -1707,6 +1707,137 @@ namespace VegaISA
         &Decoder::decode_OP_FLAT__FLAT_ATOMIC_XOR_X2,
         &Decoder::decode_OP_FLAT__FLAT_ATOMIC_INC_X2,
         &Decoder::decode_OP_FLAT__FLAT_ATOMIC_DEC_X2,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid
+    };
+
+    IsaDecodeMethod Decoder::tableSubDecode_OP_GLOBAL[] = {
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_UBYTE,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SBYTE,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_USHORT,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SSHORT,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORD,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORDX2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORDX3,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORDX4,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_STORE_BYTE,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_STORE_BYTE_D16_HI,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_STORE_SHORT,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_STORE_SHORT_D16_HI,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORD,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORDX2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORDX3,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORDX4,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_UBYTE_D16,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_UBYTE_D16_HI,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SBYTE_D16,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SBYTE_D16_HI,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SHORT_D16,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SHORT_D16_HI,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SWAP,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_CMPSWAP,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_ADD,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SUB,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMIN,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMIN,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMAX,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMAX,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_AND,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_OR,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_XOR,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_INC,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_DEC,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SWAP_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_CMPSWAP_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_ADD_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SUB_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMIN_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMIN_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMAX_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMAX_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_AND_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_OR_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_XOR_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_INC_X2,
+        &Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_DEC_X2,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
@@ -2007,6 +2138,137 @@ namespace VegaISA
         &Decoder::decode_invalid,
         &Decoder::decode_invalid,
         &Decoder::decode_invalid
+    };
+
+    IsaDecodeMethod Decoder::tableSubDecode_OP_SCRATCH[] = {
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_UBYTE,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SBYTE,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_USHORT,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SSHORT,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORD,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORDX2,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORDX3,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORDX4,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_STORE_BYTE,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_STORE_BYTE_D16_HI,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_STORE_SHORT,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_STORE_SHORT_D16_HI,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORD,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORDX2,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORDX3,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORDX4,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_UBYTE_D16,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_UBYTE_D16_HI,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SBYTE_D16,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SBYTE_D16_HI,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SHORT_D16,
+        &Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SHORT_D16_HI,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
+        &Decoder::decode_invalid,
     };
 
     IsaDecodeMethod Decoder::tableSubDecode_OP_SMEM[] = {
@@ -3206,7 +3468,20 @@ namespace VegaISA
     Decoder::subDecode_OP_FLAT(MachInst iFmt)
     {
         InFmt_FLAT *enc = &iFmt->iFmt_FLAT;
-        IsaDecodeMethod method = tableSubDecode_OP_FLAT[enc->OP];
+        IsaDecodeMethod method;
+        switch (enc->SEG) {
+            case 0:
+                method = tableSubDecode_OP_FLAT[enc->OP];
+                break;
+            case 1:
+                method = tableSubDecode_OP_SCRATCH[enc->OP];
+                break;
+            case 2:
+                method = tableSubDecode_OP_GLOBAL[enc->OP];
+                break;
+            default:
+                fatal("Invalid SEG for FLAT encoding: %d\n", enc->SEG);
+        }
         return (this->*method)(iFmt);
     } // subDecode_OP_FLAT
 
@@ -7243,10 +7518,22 @@ namespace VegaISA
     } // decode_OP_FLAT__FLAT_STORE_BYTE
 
     GPUStaticInst*
+    Decoder::decode_OP_FLAT__FLAT_STORE_BYTE_D16_HI(MachInst iFmt)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
     Decoder::decode_OP_FLAT__FLAT_STORE_SHORT(MachInst iFmt)
     {
         return new Inst_FLAT__FLAT_STORE_SHORT(&iFmt->iFmt_FLAT);
     } // decode_OP_FLAT__FLAT_STORE_SHORT
+
+    GPUStaticInst*
+    Decoder::decode_OP_FLAT__FLAT_STORE_SHORT_D16_HI(MachInst iFmt)
+    {
+        return nullptr;
+    }
 
     GPUStaticInst*
     Decoder::decode_OP_FLAT__FLAT_STORE_DWORD(MachInst iFmt)
@@ -7271,6 +7558,42 @@ namespace VegaISA
     {
         return new Inst_FLAT__FLAT_STORE_DWORDX4(&iFmt->iFmt_FLAT);
     } // decode_OP_FLAT__FLAT_STORE_DWORDX4
+
+    GPUStaticInst*
+    Decoder::decode_OP_FLAT__FLAT_LOAD_UBYTE_D16(MachInst iFmt)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_FLAT__FLAT_LOAD_UBYTE_D16_HI(MachInst iFmt)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_FLAT__FLAT_LOAD_SBYTE_D16(MachInst iFmt)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_FLAT__FLAT_LOAD_SBYTE_D16_HI(MachInst iFmt)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_FLAT__FLAT_LOAD_SHORT_D16(MachInst iFmt)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_FLAT__FLAT_LOAD_SHORT_D16_HI(MachInst iFmt)
+    {
+        return nullptr;
+    }
 
     GPUStaticInst*
     Decoder::decode_OP_FLAT__FLAT_ATOMIC_SWAP(MachInst iFmt)
@@ -7427,6 +7750,294 @@ namespace VegaISA
     {
         return new Inst_FLAT__FLAT_ATOMIC_DEC_X2(&iFmt->iFmt_FLAT);
     } // decode_OP_FLAT__FLAT_ATOMIC_DEC_X2
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_UBYTE(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SBYTE(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_USHORT(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SSHORT(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORD(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORDX2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORDX3(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_DWORDX4(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_STORE_BYTE(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_STORE_BYTE_D16_HI(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_STORE_SHORT(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_STORE_SHORT_D16_HI(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORD(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORDX2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORDX3(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_STORE_DWORDX4(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_UBYTE_D16(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_UBYTE_D16_HI(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SBYTE_D16(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SBYTE_D16_HI(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SHORT_D16(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_LOAD_SHORT_D16_HI(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SWAP(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_CMPSWAP(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_ADD(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SUB(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMIN(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMIN(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMAX(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMAX(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_AND(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_OR(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_XOR(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_INC(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_DEC(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SWAP_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_CMPSWAP_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_ADD_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SUB_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMIN_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMIN_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_SMAX_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_UMAX_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_AND_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_OR_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_XOR_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_INC_X2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_DEC_X2(MachInst)
+    {
+        return nullptr;
+    }
 
     GPUStaticInst*
     Decoder::decode_OP_MIMG__IMAGE_LOAD(MachInst iFmt)
@@ -8412,6 +9023,138 @@ namespace VegaISA
     {
         return new Inst_MUBUF__BUFFER_ATOMIC_DEC_X2(&iFmt->iFmt_MUBUF);
     } // decode_OP_MUBUF__BUFFER_ATOMIC_DEC_X2
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_UBYTE(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SBYTE(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_USHORT(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SSHORT(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORD(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORDX2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORDX3(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_DWORDX4(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_STORE_BYTE(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_STORE_BYTE_D16_HI(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_STORE_SHORT(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_STORE_SHORT_D16_HI(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORD(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORDX2(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORDX3(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_STORE_DWORDX4(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_UBYTE_D16(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_UBYTE_D16_HI(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SBYTE_D16(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SBYTE_D16_HI(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SHORT_D16(MachInst)
+    {
+        return nullptr;
+    }
+
+    GPUStaticInst*
+    Decoder::decode_OP_SCRATCH__SCRATCH_LOAD_SHORT_D16_HI(MachInst)
+    {
+        return nullptr;
+    }
 
     GPUStaticInst*
     Decoder::decode_OP_SMEM__S_LOAD_DWORD(MachInst iFmt)
