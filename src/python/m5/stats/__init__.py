@@ -158,16 +158,18 @@ def initSimStats():
     _m5.stats.initSimStats()
     _m5.stats.registerPythonStatsHandlers()
 
-def _visit_groups(root, visitor):
+def _visit_groups(visitor, root=None):
+    if root is None:
+        root = Root.getInstance()
     for group in root.getStatGroups().values():
         visitor(group)
-        _visit_groups(group, visitor)
+        _visit_groups(visitor, root=group)
 
-def _visit_stats(root, visitor):
+def _visit_stats(visitor, root=None):
     def for_each_stat(g):
         for stat in g.getStats():
             visitor(g, stat)
-    _visit_groups(root, for_each_stat)
+    _visit_groups(for_each_stat, root=root)
 
 def _bindStatHierarchy(root):
     def _bind_obj(name, obj):
@@ -212,8 +214,8 @@ def enable():
 
 
     # New stats
-    _visit_stats(Root.getInstance(), check_stat)
-    _visit_stats(Root.getInstance(), lambda g, s: s.enable())
+    _visit_stats(check_stat)
+    _visit_stats(lambda g, s: s.enable())
 
     _m5.stats.enable();
 
@@ -226,14 +228,13 @@ def prepare():
         stat.prepare()
 
     # New stats
-    _visit_stats(Root.getInstance(), lambda g, s: s.prepare())
+    _visit_stats(lambda g, s: s.prepare())
 
-lastDump = 0
-
-def _dump_to_visitor(visitor):
+def _dump_to_visitor(visitor, root=None):
     # Legacy stats
-    for stat in stats_list:
-        stat.visit(visitor)
+    if root is None:
+        for stat in stats_list:
+            stat.visit(visitor)
 
     # New stats
     def dump_group(group):
@@ -245,28 +246,39 @@ def _dump_to_visitor(visitor):
             dump_group(g)
             visitor.endGroup()
 
-    dump_group(Root.getInstance())
+    if root is not None:
+        for p in root.path_list():
+            visitor.beginGroup(p)
+    dump_group(root if root is not None else Root.getInstance())
+    if root is not None:
+        for p in reversed(root.path_list()):
+            visitor.endGroup()
 
+lastDump = 0
 
-def dump():
+def dump(root=None):
     '''Dump all statistics data to the registered outputs'''
 
-    curTick = m5.curTick()
-
+    now = m5.curTick()
     global lastDump
-    assert lastDump <= curTick
-    if lastDump == curTick:
+    assert lastDump <= now
+    new_dump = lastDump != now
+    lastDump = now
+
+    # Don't allow multiple global stat dumps in the same tick. It's
+    # still possible to dump a multiple sub-trees.
+    if not new_dump and root is None:
         return
-    lastDump = curTick
 
-    _m5.stats.processDumpQueue()
-
-    prepare()
+    # Only prepare stats the first time we dump them in the same tick.
+    if new_dump:
+        _m5.stats.processDumpQueue()
+        prepare()
 
     for output in outputList:
         if output.valid():
             output.begin()
-            _dump_to_visitor(output)
+            _dump_to_visitor(output, root=root)
             output.end()
 
 def reset():

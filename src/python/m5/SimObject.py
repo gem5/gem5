@@ -1413,6 +1413,13 @@ class SimObject(object):
             return self._name
         return ppath + "." + self._name
 
+    def path_list(self):
+        if self._parent:
+            return self._parent.path_list() + [ self._name, ]
+        else:
+            # Don't include the root node
+            return []
+
     def __str__(self):
         return self.path()
 
