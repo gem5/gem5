@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015, 2018 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2018-2019 ARM Limited
  * Copyright (c) 2016 Google Inc.
  * Copyright (c) 2017, Centre National de la Recherche Scientifique
  * All rights reserved.
@@ -80,7 +80,6 @@ class CommMonitor : public SimObject
     CommMonitor(Params* params);
 
     void init() override;
-    void regStats() override;
     void startup() override;
     void regProbePoints() override;
 
@@ -275,9 +274,8 @@ class CommMonitor : public SimObject
     bool tryTiming(PacketPtr pkt);
 
     /** Stats declarations, all in a struct for convenience. */
-    struct MonitorStats
+    struct MonitorStats : public Stats::Group
     {
-
         /** Disable flag for burst length histograms **/
         bool disableBurstLengthHists;
 
@@ -296,8 +294,8 @@ class CommMonitor : public SimObject
          */
         unsigned int readBytes;
         Stats::Histogram readBandwidthHist;
-        Stats::Formula averageReadBW;
         Stats::Scalar totalReadBytes;
+        Stats::Formula averageReadBandwidth;
 
         /**
          * Histogram for write bandwidth per sample window. The
@@ -305,8 +303,8 @@ class CommMonitor : public SimObject
          */
         unsigned int writtenBytes;
         Stats::Histogram writeBandwidthHist;
-        Stats::Formula averageWriteBW;
         Stats::Scalar totalWrittenBytes;
+        Stats::Formula averageWriteBandwidth;
 
         /** Disable flag for latency histograms. */
         bool disableLatencyHists;
@@ -389,21 +387,7 @@ class CommMonitor : public SimObject
          * that are not statistics themselves, but used to control the
          * stats or track values during a sample period.
          */
-        MonitorStats(const CommMonitorParams* params) :
-            disableBurstLengthHists(params->disable_burst_length_hists),
-            disableBandwidthHists(params->disable_bandwidth_hists),
-            readBytes(0), writtenBytes(0),
-            disableLatencyHists(params->disable_latency_hists),
-            disableITTDists(params->disable_itt_dists),
-            timeOfLastRead(0), timeOfLastWrite(0), timeOfLastReq(0),
-            disableOutstandingHists(params->disable_outstanding_hists),
-            outstandingReadReqs(0), outstandingWriteReqs(0),
-            disableTransactionHists(params->disable_transaction_hists),
-            readTrans(0), writeTrans(0),
-            disableAddrDists(params->disable_addr_dists),
-            readAddrMask(params->read_addr_mask),
-            writeAddrMask(params->write_addr_mask)
-        { }
+        MonitorStats(Stats::Group *parent, const CommMonitorParams* params);
 
         void updateReqStats(const ProbePoints::PacketInfo& pkt, bool is_atomic,
                             bool expects_response);

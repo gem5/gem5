@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2015, 2018 ARM Limited
+ * Copyright (c) 2012-2013, 2015, 2018-2019 ARM Limited
  * Copyright (c) 2016 Google Inc.
  * Copyright (c) 2017, Centre National de la Recherche Scientifique
  * All rights reserved.
@@ -55,7 +55,7 @@ CommMonitor::CommMonitor(Params* params)
       samplePeriodicEvent([this]{ samplePeriodic(); }, name()),
       samplePeriodTicks(params->sample_period),
       samplePeriod(params->sample_period / SimClock::Float::s),
-      stats(params)
+      stats(this, params)
 {
     DPRINTF(CommMonitor,
             "Created monitor %s with sample period %d ticks (%f ms)\n",
@@ -105,6 +105,141 @@ void
 CommMonitor::recvFunctionalSnoop(PacketPtr pkt)
 {
     slavePort.sendFunctionalSnoop(pkt);
+}
+
+CommMonitor::MonitorStats::MonitorStats(Stats::Group *parent,
+                                        const CommMonitorParams *params)
+    : Stats::Group(parent),
+
+      disableBurstLengthHists(params->disable_burst_length_hists),
+      ADD_STAT(readBurstLengthHist,
+               "Histogram of burst lengths of transmitted packets"),
+      ADD_STAT(writeBurstLengthHist,
+               "Histogram of burst lengths of transmitted packets"),
+
+      disableBandwidthHists(params->disable_bandwidth_hists),
+      readBytes(0),
+      ADD_STAT(readBandwidthHist,
+               "Histogram of read bandwidth per sample period (bytes/s)"),
+      ADD_STAT(totalReadBytes, "Number of bytes read"),
+      ADD_STAT(averageReadBandwidth, "Average read bandwidth (bytes/s)",
+               totalReadBytes / simSeconds),
+
+      writtenBytes(0),
+      ADD_STAT(writeBandwidthHist, "Histogram of write bandwidth (bytes/s)"),
+      ADD_STAT(totalWrittenBytes, "Number of bytes written"),
+      ADD_STAT(averageWriteBandwidth, "Average write bandwidth (bytes/s)",
+               totalWrittenBytes / simSeconds),
+
+      disableLatencyHists(params->disable_latency_hists),
+      ADD_STAT(readLatencyHist, "Read request-response latency"),
+      ADD_STAT(writeLatencyHist, "Write request-response latency"),
+
+      disableITTDists(params->disable_itt_dists),
+      ADD_STAT(ittReadRead, "Read-to-read inter transaction time"),
+      ADD_STAT(ittWriteWrite , "Write-to-write inter transaction time"),
+      ADD_STAT(ittReqReq, "Request-to-request inter transaction time"),
+      timeOfLastRead(0), timeOfLastWrite(0), timeOfLastReq(0),
+
+      disableOutstandingHists(params->disable_outstanding_hists),
+      ADD_STAT(outstandingReadsHist, "Outstanding read transactions"),
+      outstandingReadReqs(0),
+      ADD_STAT(outstandingWritesHist, "Outstanding write transactions"),
+      outstandingWriteReqs(0),
+
+      disableTransactionHists(params->disable_transaction_hists),
+      ADD_STAT(readTransHist,
+               "Histogram of read transactions per sample period"),
+      readTrans(0),
+      ADD_STAT(writeTransHist,
+               "Histogram of write transactions per sample period"),
+      writeTrans(0),
+
+      disableAddrDists(params->disable_addr_dists),
+      readAddrMask(params->read_addr_mask),
+      writeAddrMask(params->write_addr_mask),
+      ADD_STAT(readAddrDist, "Read address distribution"),
+      ADD_STAT(writeAddrDist, "Write address distribution")
+{
+    using namespace Stats;
+
+    readBurstLengthHist
+        .init(params->burst_length_bins)
+        .flags(disableBurstLengthHists ? nozero : pdf);
+
+    writeBurstLengthHist
+        .init(params->burst_length_bins)
+        .flags(disableBurstLengthHists ? nozero : pdf);
+
+    // Stats based on received responses
+    readBandwidthHist
+        .init(params->bandwidth_bins)
+        .flags(disableBandwidthHists ? nozero : pdf);
+
+    averageReadBandwidth
+        .flags(disableBandwidthHists ? nozero : pdf);
+
+    totalReadBytes
+        .flags(disableBandwidthHists ? nozero : pdf);
+
+    // Stats based on successfully sent requests
+    writeBandwidthHist
+        .init(params->bandwidth_bins)
+        .flags(disableBandwidthHists ? (pdf | nozero) : pdf);
+
+    averageWriteBandwidth
+        .flags(disableBandwidthHists ? nozero : pdf);
+
+    totalWrittenBytes
+        .flags(disableBandwidthHists ? nozero : pdf);
+
+
+    readLatencyHist
+        .init(params->latency_bins)
+        .flags(disableLatencyHists ? nozero : pdf);
+
+    writeLatencyHist
+        .init(params->latency_bins)
+        .flags(disableLatencyHists ? nozero : pdf);
+
+    ittReadRead
+        .init(1, params->itt_max_bin, params->itt_max_bin /
+              params->itt_bins)
+        .flags(disableITTDists ? nozero : pdf);
+
+    ittWriteWrite
+        .init(1, params->itt_max_bin, params->itt_max_bin /
+              params->itt_bins)
+        .flags(disableITTDists ? nozero : pdf);
+
+    ittReqReq
+        .init(1, params->itt_max_bin, params->itt_max_bin /
+              params->itt_bins)
+        .flags(disableITTDists ? nozero : pdf);
+
+    outstandingReadsHist
+        .init(params->outstanding_bins)
+        .flags(disableOutstandingHists ? nozero : pdf);
+
+    outstandingWritesHist
+        .init(params->outstanding_bins)
+        .flags(disableOutstandingHists ? nozero : pdf);
+
+    readTransHist
+        .init(params->transaction_bins)
+        .flags(disableTransactionHists ? nozero : pdf);
+
+    writeTransHist
+        .init(params->transaction_bins)
+        .flags(disableTransactionHists ? nozero : pdf);
+
+    readAddrDist
+        .init(0)
+        .flags(disableAddrDists ? nozero : pdf);
+
+    writeAddrDist
+        .init(0)
+        .flags(disableAddrDists ? nozero : pdf);
 }
 
 void
@@ -377,134 +512,6 @@ void
 CommMonitor::recvRangeChange()
 {
     slavePort.sendRangeChange();
-}
-
-void
-CommMonitor::regStats()
-{
-    SimObject::regStats();
-
-    // Initialise all the monitor stats
-    using namespace Stats;
-
-    stats.readBurstLengthHist
-        .init(params()->burst_length_bins)
-        .name(name() + ".readBurstLengthHist")
-        .desc("Histogram of burst lengths of transmitted packets")
-        .flags(stats.disableBurstLengthHists ? nozero : pdf);
-
-    stats.writeBurstLengthHist
-        .init(params()->burst_length_bins)
-        .name(name() + ".writeBurstLengthHist")
-        .desc("Histogram of burst lengths of transmitted packets")
-        .flags(stats.disableBurstLengthHists ? nozero : pdf);
-
-    // Stats based on received responses
-    stats.readBandwidthHist
-        .init(params()->bandwidth_bins)
-        .name(name() + ".readBandwidthHist")
-        .desc("Histogram of read bandwidth per sample period (bytes/s)")
-        .flags(stats.disableBandwidthHists ? nozero : pdf);
-
-    stats.averageReadBW
-        .name(name() + ".averageReadBandwidth")
-        .desc("Average read bandwidth (bytes/s)")
-        .flags(stats.disableBandwidthHists ? nozero : pdf);
-
-    stats.totalReadBytes
-        .name(name() + ".totalReadBytes")
-        .desc("Number of bytes read")
-        .flags(stats.disableBandwidthHists ? nozero : pdf);
-
-    stats.averageReadBW = stats.totalReadBytes / simSeconds;
-
-    // Stats based on successfully sent requests
-    stats.writeBandwidthHist
-        .init(params()->bandwidth_bins)
-        .name(name() + ".writeBandwidthHist")
-        .desc("Histogram of write bandwidth (bytes/s)")
-        .flags(stats.disableBandwidthHists ? (pdf | nozero) : pdf);
-
-    stats.averageWriteBW
-        .name(name() + ".averageWriteBandwidth")
-        .desc("Average write bandwidth (bytes/s)")
-        .flags(stats.disableBandwidthHists ? nozero : pdf);
-
-    stats.totalWrittenBytes
-        .name(name() + ".totalWrittenBytes")
-        .desc("Number of bytes written")
-        .flags(stats.disableBandwidthHists ? nozero : pdf);
-
-    stats.averageWriteBW = stats.totalWrittenBytes / simSeconds;
-
-    stats.readLatencyHist
-        .init(params()->latency_bins)
-        .name(name() + ".readLatencyHist")
-        .desc("Read request-response latency")
-        .flags(stats.disableLatencyHists ? nozero : pdf);
-
-    stats.writeLatencyHist
-        .init(params()->latency_bins)
-        .name(name() + ".writeLatencyHist")
-        .desc("Write request-response latency")
-        .flags(stats.disableLatencyHists ? nozero : pdf);
-
-    stats.ittReadRead
-        .init(1, params()->itt_max_bin, params()->itt_max_bin /
-              params()->itt_bins)
-        .name(name() + ".ittReadRead")
-        .desc("Read-to-read inter transaction time")
-        .flags(stats.disableITTDists ? nozero : pdf);
-
-    stats.ittWriteWrite
-        .init(1, params()->itt_max_bin, params()->itt_max_bin /
-              params()->itt_bins)
-        .name(name() + ".ittWriteWrite")
-        .desc("Write-to-write inter transaction time")
-        .flags(stats.disableITTDists ? nozero : pdf);
-
-    stats.ittReqReq
-        .init(1, params()->itt_max_bin, params()->itt_max_bin /
-              params()->itt_bins)
-        .name(name() + ".ittReqReq")
-        .desc("Request-to-request inter transaction time")
-        .flags(stats.disableITTDists ? nozero : pdf);
-
-    stats.outstandingReadsHist
-        .init(params()->outstanding_bins)
-        .name(name() + ".outstandingReadsHist")
-        .desc("Outstanding read transactions")
-        .flags(stats.disableOutstandingHists ? nozero : pdf);
-
-    stats.outstandingWritesHist
-        .init(params()->outstanding_bins)
-        .name(name() + ".outstandingWritesHist")
-        .desc("Outstanding write transactions")
-        .flags(stats.disableOutstandingHists ? nozero : pdf);
-
-    stats.readTransHist
-        .init(params()->transaction_bins)
-        .name(name() + ".readTransHist")
-        .desc("Histogram of read transactions per sample period")
-        .flags(stats.disableTransactionHists ? nozero : pdf);
-
-    stats.writeTransHist
-        .init(params()->transaction_bins)
-        .name(name() + ".writeTransHist")
-        .desc("Histogram of write transactions per sample period")
-        .flags(stats.disableTransactionHists ? nozero : pdf);
-
-    stats.readAddrDist
-        .init(0)
-        .name(name() + ".readAddrDist")
-        .desc("Read address distribution")
-        .flags(stats.disableAddrDists ? nozero : pdf);
-
-    stats.writeAddrDist
-        .init(0)
-        .name(name() + ".writeAddrDist")
-        .desc("Write address distribution")
-        .flags(stats.disableAddrDists ? nozero : pdf);
 }
 
 void
