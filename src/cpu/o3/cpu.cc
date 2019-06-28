@@ -1022,7 +1022,7 @@ FullO3CPU<Impl>::drain()
 
     // Wake the CPU and record activity so everything can drain out if
     // the CPU was not able to immediately drain.
-    if (!isDrained())  {
+    if (!isCpuDrained())  {
         // If a thread is suspended, wake it up so it can be drained
         for (auto t : threadContexts) {
             if (t->status() == ThreadContext::Suspended){
@@ -1048,7 +1048,7 @@ FullO3CPU<Impl>::drain()
         // Flush out any old data from the time buffers.  In
         // particular, there might be some data in flight from the
         // fetch stage that isn't visible in any of the CPU buffers we
-        // test in isDrained().
+        // test in isCpuDrained().
         for (int i = 0; i < timeBuffer.getSize(); ++i) {
             timeBuffer.advance();
             fetchQueue.advance();
@@ -1066,7 +1066,7 @@ template <class Impl>
 bool
 FullO3CPU<Impl>::tryDrain()
 {
-    if (drainState() != DrainState::Draining || !isDrained())
+    if (drainState() != DrainState::Draining || !isCpuDrained())
         return false;
 
     if (tickEvent.scheduled())
@@ -1082,7 +1082,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::drainSanityCheck() const
 {
-    assert(isDrained());
+    assert(isCpuDrained());
     fetch.drainSanityCheck();
     decode.drainSanityCheck();
     rename.drainSanityCheck();
@@ -1092,7 +1092,7 @@ FullO3CPU<Impl>::drainSanityCheck() const
 
 template <class Impl>
 bool
-FullO3CPU<Impl>::isDrained() const
+FullO3CPU<Impl>::isCpuDrained() const
 {
     bool drained(true);
 

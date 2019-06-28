@@ -88,7 +88,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      * <li>Stay at PC is true.
      * </ul>
      */
-    bool isDrained() {
+    bool isCpuDrained() const {
         SimpleExecContext &t_info = *threadInfo[curThread];
 
         return t_info.thread->microPC() == 0 &&

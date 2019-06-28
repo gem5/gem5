@@ -248,7 +248,7 @@ class FullO3CPU : public BaseO3CPU
     void drainSanityCheck() const;
 
     /** Check if a system is in a drained state. */
-    bool isDrained() const;
+    bool isCpuDrained() const;
 
   public:
     /** Constructs a CPU with the given parameters. */

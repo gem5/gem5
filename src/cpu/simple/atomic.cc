@@ -112,7 +112,7 @@ AtomicSimpleCPU::drain()
     if (switchedOut())
         return DrainState::Drained;
 
-    if (!isDrained()) {
+    if (!isCpuDrained()) {
         DPRINTF(Drain, "Requesting drain.\n");
         return DrainState::Draining;
     } else {
@@ -183,7 +183,7 @@ AtomicSimpleCPU::tryCompleteDrain()
         return false;
 
     DPRINTF(Drain, "tryCompleteDrain.\n");
-    if (!isDrained())
+    if (!isCpuDrained())
         return false;
 
     DPRINTF(Drain, "CPU done draining, processing drain event\n");
@@ -200,7 +200,7 @@ AtomicSimpleCPU::switchOut()
 
     assert(!tickEvent.scheduled());
     assert(_status == BaseSimpleCPU::Running || _status == Idle);
-    assert(isDrained());
+    assert(isCpuDrained());
 }
 
 

@@ -100,7 +100,7 @@ TimingSimpleCPU::drain()
         return DrainState::Drained;
 
     if (_status == Idle ||
-        (_status == BaseSimpleCPU::Running && isDrained())) {
+        (_status == BaseSimpleCPU::Running && isCpuDrained())) {
         DPRINTF(Drain, "No need to drain.\n");
         activeThreads.clear();
         return DrainState::Drained;
@@ -161,7 +161,7 @@ TimingSimpleCPU::tryCompleteDrain()
         return false;
 
     DPRINTF(Drain, "tryCompleteDrain.\n");
-    if (!isDrained())
+    if (!isCpuDrained())
         return false;
 
     DPRINTF(Drain, "CPU done draining, processing drain event\n");
