@@ -851,7 +851,8 @@ def template AmoOpConstructor {{
                           _dest, _base, _result)
     {
         %(constructor)s;
-
+        flags[IsStore] = false;
+        flags[IsLoad] = false;
     }
 }};
 
@@ -897,7 +898,8 @@ def template AmoPairOpConstructor {{
         _srcRegIdx[_numSrcRegs++] = RegId(IntRegClass, r2);
         r2_dst = _numDestRegs ;
         _destRegIdx[_numDestRegs++] = RegId(IntRegClass, r2);
-
+        flags[IsStore] = false;
+        flags[IsLoad] = false;
     }
 }};
 
@@ -932,8 +934,9 @@ def template AmoArithmeticOpConstructor {{
         %(constructor)s;
         isXZR = false;
         uint32_t r2 = RegId(IntRegClass, dest).index() ;
+        flags[IsStore] = false;
+        flags[IsLoad] = false;
         if (r2 == 31){
-            flags[IsReadBarrier] = false;
             isXZR = true;
         }
     }

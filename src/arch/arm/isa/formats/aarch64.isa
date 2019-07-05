@@ -541,6 +541,544 @@ output decoder {{
 namespace Aarch64
 {
     StaticInstPtr
+    decodeAtomicArithOp(ExtMachInst machInst)
+    {
+        uint8_t opc  = bits(machInst, 14, 12);
+        uint8_t o3  = bits(machInst, 15);
+        uint8_t size_ar = bits(machInst, 23, 22)<<0 | bits(machInst, 31, 30)<<2;
+        IntRegIndex rt = (IntRegIndex)(uint8_t)bits(machInst, 4, 0);
+        IntRegIndex rn = (IntRegIndex)(uint8_t)bits(machInst, 9, 5);
+        IntRegIndex rnsp = makeSP(rn);
+        IntRegIndex rs = (IntRegIndex)(uint8_t)bits(machInst, 20, 16);
+        uint8_t  A_rt = bits(machInst, 4, 0)<<0 | bits(machInst, 23)<<5;
+
+        switch(opc) {
+            case 0x0:
+                switch(size_ar){
+                    case 0x0:
+                        if (o3 == 1)
+                            return new SWPB(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (o3 == 1)
+                            return new SWPLB(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        if (o3 == 1)
+                            return new SWPAB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        if (o3 == 1)
+                            return new SWPLAB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (o3 == 1)
+                            return new SWPH(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (o3 == 1)
+                            return new SWPLH(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        if (o3 == 1)
+                            return new SWPAH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        if (o3 == 1)
+                            return new SWPLAH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (o3 == 1)
+                            return new SWP(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADD(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADD(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (o3 == 1)
+                            return new SWPL(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        if (o3 == 1)
+                            return new SWPA(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        if (o3 == 1)
+                            return new SWPLA(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (o3 == 1)
+                            return new SWP64(machInst, rt, rnsp, rs);
+
+                        else if (A_rt == 0x1f)
+                            return new STADD64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADD64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (o3 == 1)
+                            return new SWPL64(machInst, rt, rnsp, rs);
+                        else if (A_rt == 0x1f)
+                            return new STADDL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        if (o3 == 1)
+                            return new SWPA64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        if (o3 == 1)
+                            return new SWPLA64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDADDLA64(machInst, rt, rnsp, rs);
+                }
+            case 0x1:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STCLRB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STCLRLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDCLRAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDCLRLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STCLRH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STCLRLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDCLRAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDCLRLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STCLR(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLR(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STCLRL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDCLRA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDCLRLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STCLR64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLR64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STCLRL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDCLRL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDCLRA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDCLRLA64(machInst, rt, rnsp, rs);
+                }
+            case 0x2:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STEORB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STEORLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDEORAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDEORLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STEORH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STEORLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDEORAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDEORLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STEOR(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEOR(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STEORL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDEORA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDEORLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STEOR64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEOR64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STEORL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDEORL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDEORA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDEORLA64(machInst, rt, rnsp, rs);
+                }
+            case 0x3:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STSETB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STSETLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDSETAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDSETLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STSETH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STSETLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDSETAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDSETLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STSET(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSET(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STSETL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDSETA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDSETLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STSET64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSET64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STSETL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSETL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDSETA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDSETLA64(machInst, rt, rnsp, rs);
+                }
+            case 0x4:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STSMAXB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STSMAXLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDSMAXAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDSMAXLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STSMAXH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STSMAXLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDSMAXAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDSMAXLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STSMAX(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAX(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STSMAXL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDSMAXA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDSMAXLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STSMAX64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAX64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STSMAXL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMAXL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDSMAXA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDSMAXLA64(machInst, rt, rnsp, rs);
+                }
+            case 0x5:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STSMINB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STSMINLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDSMINAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDSMINLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STSMINH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STSMINLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDSMINAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDSMINLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STSMIN(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMIN(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STSMINL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDSMINA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDSMINLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STSMIN64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMIN64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STSMINL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDSMINL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDSMINA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDSMINLA64(machInst, rt, rnsp, rs);
+                }
+            case 0x6:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STUMAXB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STUMAXLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDUMAXAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDUMAXLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STUMAXH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STUMAXLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDUMAXAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDUMAXLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STUMAX(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAX(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STUMAXL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDUMAXA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDUMAXLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STUMAX64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAX64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STUMAXL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMAXL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDUMAXA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDUMAXLA64(machInst, rt, rnsp, rs);
+                }
+            case 0x7:
+                switch(size_ar){
+                    case 0x0:
+                        if (A_rt == 0x1f)
+                            return new STUMINB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINB(machInst, rt, rnsp, rs);
+                    case 0x1 :
+                        if (A_rt == 0x1f)
+                            return new STUMINLB(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINLB(machInst, rt, rnsp, rs);
+                    case 0x2:
+                        return new LDUMINAB(machInst, rt, rnsp, rs);
+                    case 0x3:
+                        return new LDUMINLAB(machInst, rt, rnsp, rs);
+                    case 0x4:
+                        if (A_rt == 0x1f)
+                            return new STUMINH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINH(machInst, rt, rnsp, rs);
+                    case 0x5 :
+                        if (A_rt == 0x1f)
+                            return new STUMINLH(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINLH(machInst, rt, rnsp, rs);
+                    case 0x6:
+                        return new LDUMINAH(machInst, rt, rnsp, rs);
+                    case 0x7:
+                        return new LDUMINLAH(machInst, rt, rnsp, rs);
+                    case 0x8:
+                        if (A_rt == 0x1f)
+                            return new STUMIN(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMIN(machInst, rt, rnsp, rs);
+                    case 0x9 :
+                        if (A_rt == 0x1f)
+                            return new STUMINL(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINL(machInst, rt, rnsp, rs);
+                    case 0xa:
+                        return new LDUMINA(machInst, rt, rnsp, rs);
+                    case 0xb:
+                        return new LDUMINLA(machInst, rt, rnsp, rs);
+                    case 0xc:
+                        if (A_rt == 0x1f)
+                            return new STUMIN64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMIN64(machInst, rt, rnsp, rs);
+                    case 0xd :
+                        if (A_rt == 0x1f)
+                            return new STUMINL64(machInst, rt, rnsp, rs);
+                        else
+                            return new LDUMINL64(machInst, rt, rnsp, rs);
+                    case 0xe:
+                        return new LDUMINA64(machInst, rt, rnsp, rs);
+                    case 0xf:
+                        return new LDUMINLA64(machInst, rt, rnsp, rs);
+                }
+            default:
+                return new Unknown64(machInst);
+        }
+    }
+}
+}};
+
+
+output decoder {{
+namespace Aarch64
+{
+
+    StaticInstPtr
     decodeLoadsStores(ExtMachInst machInst)
     {
         // bit 27,25=10
@@ -925,7 +1463,7 @@ namespace Aarch64
                                 M5_UNREACHABLE;
                             }
                         } else {
-                            return new Unknown64(machInst);
+                            return decodeAtomicArithOp(machInst);
                         }
                     }
                   case 0x2:
