@@ -306,6 +306,28 @@ class AtomicGeneric3Op : public TypedAtomicOpFunctor<T>
     std::function<void(T*, T, T)> op;
 };
 
+template<typename T>
+class AtomicGenericPair3Op : public TypedAtomicOpFunctor<T>
+{
+  public:
+    AtomicGenericPair3Op(std::array<T, 2>& _a, std::array<T, 2> _c,
+           std::function<void(T*, std::array<T, 2>&, std::array<T, 2>)> _op)
+        : a(_a), c(_c), op(_op)
+    {}
+    AtomicOpFunctor* clone() override
+    {
+        return new AtomicGenericPair3Op<T>(*this);
+    }
+    void execute(T* b) override
+    {
+        op(b, a, c);
+    }
+  private:
+    std::array<T, 2> a;
+    std::array<T, 2> c;
+    std::function<void(T*, std::array<T, 2>&, std::array<T, 2>)> op;
+};
+
 }
 
 #endif //__ARCH_ARM_INSTS_MEM_HH__

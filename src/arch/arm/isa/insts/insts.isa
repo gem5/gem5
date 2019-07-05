@@ -43,6 +43,9 @@
 //Useful bits shared by memory instructions
 ##include "mem.isa"
 
+//AArch64 atomic operations
+##include "amo64.isa"
+
 //Loads of a single item
 ##include "ldr.isa"
 

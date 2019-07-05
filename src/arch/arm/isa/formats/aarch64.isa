@@ -587,8 +587,9 @@ namespace Aarch64
                   case 0x2:
                     switch (size) {
                       case 0x0:
+                        return new CASP32(machInst, rt, rnsp, rs);
                       case 0x1:
-                        return new Unknown64(machInst);
+                        return new CASP64(machInst, rt, rnsp, rs);
                       case 0x2:
                         return new STXPW64(machInst, rs, rt, rt2, rnsp);
                       case 0x3:
@@ -600,8 +601,9 @@ namespace Aarch64
                   case 0x3:
                     switch (size) {
                       case 0x0:
+                        return new CASPL32(machInst, rt, rnsp, rs);
                       case 0x1:
-                        return new Unknown64(machInst);
+                        return new CASPL64(machInst, rt, rnsp, rs);
                       case 0x2:
                         return new STLXPW64(machInst, rs, rt, rt2, rnsp);
                       case 0x3:
@@ -639,8 +641,9 @@ namespace Aarch64
                   case 0x6:
                     switch (size) {
                       case 0x0:
+                        return new CASPA32(machInst, rt, rnsp, rs);
                       case 0x1:
-                        return new Unknown64(machInst);
+                        return new CASPA64(machInst, rt, rnsp, rs);
                       case 0x2:
                         return new LDXPW64(machInst, rt, rt2, rnsp);
                       case 0x3:
@@ -648,12 +651,12 @@ namespace Aarch64
                       default:
                         M5_UNREACHABLE;
                     }
-
                   case 0x7:
                     switch (size) {
                       case 0x0:
+                        return new CASPAL32(machInst, rt, rnsp, rs);
                       case 0x1:
-                        return new Unknown64(machInst);
+                        return new CASPAL64(machInst, rt, rnsp, rs);
                       case 0x2:
                         return new LDAXPW64(machInst, rt, rt2, rnsp);
                       case 0x3:
@@ -661,7 +664,6 @@ namespace Aarch64
                       default:
                         M5_UNREACHABLE;
                     }
-
                   case 0x9:
                     switch (size) {
                       case 0x0:
@@ -675,6 +677,32 @@ namespace Aarch64
                       default:
                         M5_UNREACHABLE;
                     }
+                  case 0xa:
+                    switch (size) {
+                      case 0x0:
+                        return new CASB(machInst, rt, rnsp, rs);
+                      case 0x1:
+                        return new CASH(machInst, rt, rnsp, rs);
+                      case 0x2:
+                        return new CAS32(machInst, rt, rnsp, rs);
+                      case 0x3:
+                        return new CAS64(machInst, rt, rnsp, rs);
+                      default:
+                        M5_UNREACHABLE;
+                    }
+                  case 0xb:
+                    switch (size) {
+                      case 0x0:
+                        return new CASLB(machInst, rt, rnsp, rs);
+                      case 0x1:
+                        return new CASLH(machInst, rt, rnsp, rs);
+                      case 0x2:
+                        return new CASL32(machInst, rt, rnsp, rs);
+                      case 0x3:
+                        return new CASL64(machInst, rt, rnsp, rs);
+                      default:
+                        M5_UNREACHABLE;
+                    }
                   case 0xd:
                     switch (size) {
                       case 0x0:
@@ -685,6 +713,32 @@ namespace Aarch64
                         return new LDARW64(machInst, rt, rnsp);
                       case 0x3:
                         return new LDARX64(machInst, rt, rnsp);
+                      default:
+                        M5_UNREACHABLE;
+                    }
+                  case 0xe:
+                    switch (size) {
+                      case 0x0:
+                        return new CASAB(machInst, rt, rnsp, rs);
+                      case 0x1:
+                        return new CASAH(machInst, rt, rnsp, rs);
+                      case 0x2:
+                        return new CASA32(machInst, rt, rnsp, rs);
+                      case 0x3:
+                        return new CASA64(machInst, rt, rnsp, rs);
+                      default:
+                        M5_UNREACHABLE;
+                    }
+                  case 0xf:
+                    switch (size) {
+                      case 0x0:
+                        return new CASALB(machInst, rt, rnsp, rs);
+                      case 0x1:
+                        return new CASALH(machInst, rt, rnsp, rs);
+                      case 0x2:
+                        return new CASAL32(machInst, rt, rnsp, rs);
+                      case 0x3:
+                        return new CASAL64(machInst, rt, rnsp, rs);
                       default:
                         M5_UNREACHABLE;
                     }
